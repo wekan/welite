@@ -161,9 +161,32 @@ _fpcup_build_fpclazup() {
   [ -n "$fpclazup" ] && [ -x "$fpclazup" ] || {
     echo "  lazbuild did not produce fpclazup — see $log."; return 1; }
 
+  # fpclazup needs a bootstrap FPC matching the source (the fixes-3.2 branch wants a 3.2.x
+  # compiler) but does not always download one; the system FPC matches, so seed the bootstrap dir.
+  local boot="$inst/fpcbootstrap"; mkdir -p "$boot"
+  local ppc=""
+  case "$host" in aarch64) ppc=ppca64 ;; x86_64) ppc=ppcx64 ;; esac
+  if [ -n "$ppc" ] && command -v "$ppc" >/dev/null 2>&1; then
+    cp -f "$(command -v "$ppc")" "$boot/$ppc"; chmod +x "$boot/$ppc"
+    echo "   seeded bootstrap: $boot/$ppc (from system $(command -v "$ppc"))"
+  fi
+
+  # Common fpclazup options. fpcVersion=fixes-3.2: the 3.2.2 *release* does not link on glibc>=2.34
+  # (Ubuntu 26.04 = glibc 2.43) because cprt0 references the removed __libc_csu_init/_fini; the
+  # fixes-3.2 branch has the fix. --disablejobs avoids a parallel-make race in the RTL build.
+  # --only=FPC builds just the FPC compiler (no Lazarus/LCLCross, which otherwise fails the run).
+  local FOPT=( --installdir="$inst" --fpcVersion=fixes-3.2.gitlab --fpcbootstrapdir="$boot"
+               --disablejobs --only=FPC --noconfirm --verbose )
+  local newfpc="$inst/fpc/bin/$host-linux/fpc"
+
   echo ">> Installing base (native) FPC into $inst  [LONG — watch: tail -f $log]"
-  "$fpclazup" --installdir="$inst" --noconfirm --verbose --skip=lazarus >>"$log" 2>&1 \
-    || { echo "  base FPC install failed — see $log."; return 1; }
+  # fpclazup may still exit non-zero on a trailing module; treat "a working fpc binary exists" as
+  # the real success signal rather than the exit code.
+  "$fpclazup" "${FOPT[@]}" >>"$log" 2>&1 || true
+  if [ ! -x "$newfpc" ] || ! "$newfpc" -iV >/dev/null 2>&1; then
+    echo "  base FPC install failed (no working compiler at $newfpc) — see $log."; return 1
+  fi
+  echo "   native FPC $("$newfpc" -iV 2>/dev/null) ready at $newfpc"
 
   local entry label cpu os ok=0 fail=0 skip=0
   for entry in "${FPCUP_CROSS[@]}"; do
@@ -172,8 +195,9 @@ _fpcup_build_fpclazup() {
       echo "   -- $label  (host-native, already built)"; skip=$((skip + 1)); continue
     fi
     echo "   -- $label  ($cpu-$os)  [LONG]"
-    if "$fpclazup" --installdir="$inst" --noconfirm --verbose --skip=lazarus \
-         --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1; then
+    # success = the cross units dir got created (cross compiler/RTL present)
+    if "$fpclazup" "${FOPT[@]}" --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1 \
+       || [ -d "$inst/fpc/units/$cpu-$os" ]; then
       ok=$((ok + 1))
     else
       fail=$((fail + 1)); echo "      FAILED ($cpu-$os) — see $log (target may be unsupported)"

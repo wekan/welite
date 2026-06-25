@@ -34,13 +34,16 @@ flow, a Global Admin Panel, and reorganized the build output. Verified on FreePa
   exotic OSes have no Ubuntu binutils), so this uses
   [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe). Preferred path: apt-install
   Lazarus (`lazbuild` + nogui LCL), build fpcupdeluxe's real headless console tool `fpclazup`
-  (`LCLWidgetType=nogui`), and run it to build the cross compiler + cross-binutils per target —
-  Amiga/AROS/MorphOS/Haiku/macOS as well as Linux/Windows/DOS — then point the session `FPC` at the
-  result. If that can't be set up it falls back to downloading and launching the fpcupdeluxe GUI
-  (the released binary is GUI-only and does nothing when driven headless). The install dir is kept
-  outside the repo (default `~/fpcupdeluxe`) and the GUI is launched from there — fpcupdeluxe
-  derives its basedir from the working directory and aborts if that sits inside another git repo.
-  Verbose log to `build/log/xtools.log`, per-target pass/fail.
+  (`LCLWidgetType=nogui`, forced to the host CPU/OS), then run it to build the FPC compiler + cross
+  compiler/binutils per target — Amiga/AROS/MorphOS/Haiku/macOS as well as Linux/Windows/DOS — and
+  point the session `FPC` at the result. Getting this working on Ubuntu 26.04 needed several
+  pieces, all handled automatically: seed the bootstrap compiler from the system FPC; `--disablejobs`
+  (the parallel RTL build races); `--fpcVersion=fixes-3.2` (FPC 3.2.2 doesn't link on glibc ≥2.34,
+  which removed `__libc_csu_init/_fini`); `--only=FPC` (skip Lazarus/LCLCross); and treat "a working
+  `fpc` binary exists" as success rather than fpclazup's exit code. If the build path can't be set
+  up it falls back to launching the fpcupdeluxe GUI. The install dir is kept outside the repo
+  (default `~/fpcupdeluxe`); fpcupdeluxe derives its basedir from the working dir and aborts if that
+  is inside another git repo. Verbose log to `build/log/xtools.log`, per-target pass/fail.
 - **`CLAUDE.md`**: documents the DOS 8.3 filename rule (≤8-char names, ≤3-char extensions, safe
   charset, tooling exceptions) with an audit snippet, plus the build-output layout. Audited the
   tracked tree: zero 8.3 violations outside host tooling (`.gitignore`, `.tx/`).
