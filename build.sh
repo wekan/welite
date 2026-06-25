@@ -138,7 +138,17 @@ _fpcup_build_fpclazup() {
   echo ">> Cloning fpcupdeluxe and building headless fpclazup (nogui)  [verbose -> $log]"
   rm -rf "$src"
   git clone --depth 1 https://github.com/LongDirtyAnimAlf/fpcupdeluxe "$src" >>"$log" 2>&1 || return 1
-  ( cd "$src" && lazbuild --ws=nogui fpclazup.lpi ) >>"$log" 2>&1
+
+  # lazbuild on Ubuntu often defaults to a non-existent Lazarus dir (e.g. /usr/share/lazarus/X/),
+  # so point it at the packaged one (/usr/lib/lazarus/<ver>) and use a fresh primary config path.
+  local lazdir
+  lazdir="$(ls -d /usr/lib/lazarus/*/ /usr/share/lazarus/*/ 2>/dev/null | sort -V | tail -1)"
+  if [ -z "$lazdir" ]; then
+    echo "  Lazarus dir not found under /usr/lib/lazarus or /usr/share/lazarus."; return 1; fi
+  local pcp="$inst/lazcfg"; mkdir -p "$pcp"
+  echo "   lazbuild --lazarusdir=$lazdir --pcp=$pcp --widgetset=nogui fpclazup.lpi"
+  ( cd "$src" && lazbuild --lazarusdir="$lazdir" --pcp="$pcp" --widgetset=nogui fpclazup.lpi ) \
+    >>"$log" 2>&1
   local fpclazup
   fpclazup="$(find "$src" -maxdepth 2 -type f -name fpclazup -perm -u+x 2>/dev/null | head -1)"
   [ -n "$fpclazup" ] || { echo "  lazbuild did not produce fpclazup — see $log."; return 1; }
