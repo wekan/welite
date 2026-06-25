@@ -1,0 +1,144 @@
+# ChangeLog
+
+WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLite-only, no-JS /
+no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
+Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
+
+## 2026-06-25 WeKan-Lite FreePascal — v0.1
+
+First skeleton of the FreePascal backend. Compiles and links on FreePascal 3.2.3 (aarch64),
+both the linked-SQLite and `-dWLDB_CLI` backends; the server runs, resolves tenants by Host,
+and renders a board page from SQLite.
+
+### Updates
+
+- Reorganized the tree: design docs live in `freepascal/docs/`, the FreePascal code and
+  `schema.sql` / `designer-schema.sql` / `README.md` at `freepascal/`, and the [`wami/`](https://github.com/wekan/wami), [`omi/`](https://github.com/wekan/omi),
+  [`tcl-tk-kanban/`](https://github.com/wekan/tcl-tk-kanban), [`minio-metadata/`](https://github.com/wekan/minio-metadata) prototypes alongside them.
+- Updated every cross-reference path to match the new layout — `README.md` (docs → `docs/`,
+  prototypes → siblings), `docs/*.md` (co-located docs lose `../`, prototypes/`schema.sql`
+  keep `../`), and code comments (prototypes → siblings, design docs → `docs/`).
+- Verified the whole unit set still builds on FreePascal 3.2.3 after the move.
+- Documented SQLite on Amiga/retro targets (`docs/sqlite-access-decision.md`): FreePascal
+  bundles no SQLite (its `sqlite3` unit is only bindings); Amiga/MorphOS/AROS have none, so
+  statically link the official amalgamation (no Aminet port needed), with retro build notes.
+
+### Features
+
+- Architecture & stack (`wlhttp.lpr`, `docs/architecture.md`): `fphttpapp` + `httproute`
+  (RTL-only, no C deps), tenant → auth → endpoint request lifecycle, HTML 3.2 baseline +
+  HTML 4 enhancement tiers.
+- Multitenancy (`wltenant.pas`, `wlregistry.pas`, `docs/goals.md`): one binary serves many
+  domains; `Host:` → `data/domains/<domain>/db/data.db` (unknown host → 404, no fallback);
+  reserved `data/admin/` Global Admin tenant + per-domain Domain Global Admin; central TLS
+  certs in `data/certs/<host>/`; per-operation scratch in `data/temp/YYYY-MM-DD_MM-SS_COUNTER/`.
+- Authentication (`wlauth.pas`): no-cookie / no-JS sessions (session id in URL + hidden fields)
+  with replay- and context-bound per-action tokens and idle timeout, persisted to
+  `schema.sql` `login_tokens`.
+- Database (`wldb.pas`, `docs/sqlite-access-decision.md`): SQLite behind one interface — linked
+  SQLite (default single binary) or the external `sqlite3` CLI (`-dWLDB_CLI` bootstrap).
+- Schema & import (`schema.sql`, `docs/schema-decision.md`): canonical 24-table schema;
+  Kanboard SQLite (incl. BigBoard) and Meteor WeKan Mongo data imported into it.
+- Designer (`wldesigner.pas`, `designer-schema.sql`, `docs/designer.md`): data-driven pages
+  (page + widgets) with a no-JS/no-cookie form editor, custom URLs, seeded editable built-ins,
+  LTR/RTL mirrored from one definition, and import/export (`.wlpage` JSON, all pages as `.zip`).
+- Table component (`wldesigner.pas`): reusable no-JS data table — search, "Page n / m"
+  pagination, column-visibility chooser, click-a-cell-to-edit — all stateless in the URL.
+- Colors & theming (`wlcolors.pas`, `docs/theming.md`): WeKan named colors or any hex on any
+  element; selectable picker components (hex / named / swatches / native wheel / web-safe grid);
+  imported Trello/Kanboard palettes mapped to WeKan colors.
+- Vector graphics (`wlvector.pas`): Red Strings render as SVG (modern/NetSurf), VML (old IE),
+  or ASCII arrows (IBrowse/Dillo/Lynx).
+- Progressive enhancement (`wlenhance.pas`, `docs/progressive-enhancement.md`): no-JS form
+  baseline always works; MultiDrag (from [`wami/public/multidrag`](https://github.com/wekan/wami/tree/main/public/multidrag)) auto-activates with JS+touch
+  to drag many cards at once on a big touch screen, driving the same endpoints.
+- Combined move component (`wlmove.pas`, `docs/move-component.md`): one no-JS arrows keypad
+  (▲◀▼▶) moves all selected swimlanes/lists/cards via `POST /board/move` (reorder/relocate over
+  `sort` / `listId` / `swimlaneId`), modeled on the combined [`tcl-tk-kanban/kanban.go`](https://github.com/wekan/tcl-tk-kanban/blob/main/kanban.go).
+- Static assets (`wlstatic.pas`, `docs/static-assets.md`): serve `public/` at a configurable URL
+  (default '/'), embedded in the binary (`-dWLEMBED`, FPC resources via `tools/genassets.py`) or
+  from disk; `convert-languages.py` regenerates `public/languages.json`.
+- REST API (`wlapi.pas`, `docs/api.md`): subset of `public/api/wekan.yml` with Bearer-token auth
+  (`POST /users/login` + `Authorization: Bearer`), so WeKan's Python CLI `api.py` works unchanged
+  — verified login → board/swimlanes/lists → createlist → addcard → cardsbyswimlane on FPC 3.2.3.
+- REST API — card editing & counts (`wlapi.pas`): `PUT .../cards/:cardId`
+  (title/description/color, and `labelIds` → `card_labels`), `GET .../lists/:listId/cards`, and
+  `.../cards_count` / board `.../cards_count`. Verified via api.py `editcard` / `editcardcolor`
+  / `get_list_cards_count` / `get_board_cards_count`.
+- REST API — board title & copy (`wlapi.pas`): `PUT .../boards/:boardId/title`;
+  `POST .../boards/:boardId/copy` structural deep copy (board + members + swimlanes + lists +
+  cards, ids remapped). Verified via api.py `editboardtitle` / `copyboard`.
+- REST API — board labels (`wlapi.pas`): `PUT .../boards/:boardId/labels` creates a label
+  (nested `{label:{color,name}}` body) → `board_labels`; adding a label to a card already works
+  via the card `PUT labelIds`. Verified via api.py `createlabel`.
+- REST API — checklists (`wlapi.pas`): `GET`/`POST .../cards/:cardId/checklists`,
+  `GET .../checklists/:checklistId` (with items), `POST .../checklists/:checklistId/items`.
+  Verified via api.py `addchecklist` (title + items) and `checklistid`.
+- REST API — card comments (`wlapi.pas`): `GET`/`POST .../cards/:cardId/comments`,
+  `GET`/`DELETE .../comments/:commentId` → `card_comments`. Verified: post comment → `{_id}`,
+  list returns it.
+- REST API — create swimlane + delete operations (`wlapi.pas`): `POST .../swimlanes`, and
+  `DELETE` board / swimlane / list / card. Children cascade via FK (board→swimlanes/lists/cards
+  →card children; list/swimlane remove their cards first). Verified: delete card removed its
+  comment, delete board removed its lists+cards.
+- REST API — card members & assignees (`wlapi.pas`): `POST`/`DELETE .../cards/:cardId/members/:member`
+  and `.../assignees/:assignee` → `card_members` / `card_assignees`; the card JSON now includes
+  `members` and `assignees`. Verified: add/remove reflected in the returned card.
+- REST API — custom fields (`wlapi.pas`): `GET`/`POST .../boards/:boardId/custom-fields`,
+  `GET .../custom-fields/:customField`, and `POST .../cards/:cardId/customFields/:customField`
+  (set card value → `card_custom_field_values`). Verified via curl: create → list → get → set
+  value. (api.py's own `addcustomfieldtoboard` has a `json.loads('')` bug on empty settings.)
+- REST API — card JSON now includes `customFields` (`[{_id,value}]`) alongside `labelIds`,
+  `members`, `assignees`. Verified: getcard returns the set custom-field value.
+- REST API — attachments (`wlapi.pas`, new `attachments` table in `schema.sql`): `POST
+  /api/attachment/upload` (JSON + base64), `GET .../download/:id`, `.../info/:id`,
+  `DELETE .../delete/:id`, and `GET /api/boards/:boardId/attachments`. Bytes are stored on disk
+  in `data/domains/<domain>/files/attachments/<id>` (`storageBackend: filesystem`). Verified
+  end-to-end via api.py: upload → info → download (base64 round-trip) → list → delete (row + file
+  removed).
+- REST API — list card attachments (`wlapi.pas`): `GET /api/attachment/list/:b/:s/:l/:cardId`
+  returns `{success, attachments:[{attachmentId,fileName,fileType,fileSize,…}]}`. Verified via
+  api.py `listcardattachments`.
+- REST API — checklist items (`wlapi.pas`): `GET`/`PUT`/`DELETE
+  .../checklists/:checklistId/items/:item`; PUT toggles `isFinished` and/or edits the title.
+  Verified: get (false) → toggle (true) → delete.
+- REST API — card archive (`wlapi.pas`): `POST .../cards/:cardId/archive` sets `archived=1`
+  (+`archivedAt`); body `isArchive=false` unarchives. Verified: archive → 1, unarchive → 0.
+
+### Security
+
+- Password hashing (`wlpassword.pas`): real PBKDF2-HMAC-SHA1 (RTL-only, salt from
+  `/dev/urandom`) replaces the placeholder "any non-empty password". The stored hash lives in
+  `users.services_json.password`; web sign-in and API `POST /users/login` both verify it, and
+  accounts without a real hash can't be logged into. Seed/set with `wekanlite hashpw <plain>`.
+  Verified: correct password → token, wrong/empty → 401.
+- Authorization (`wlapi.pas` `ApiAuthBoard`): board-scoped API endpoints now require the token's
+  user to be an active `board_members` row (writes blocked for `isReadOnly`); public boards are
+  read-only to non-members; site admins (`users.isAdmin`) bypass; `/api/users` is admin-only,
+  `/api/users/:id/boards` self-or-admin. Verified: member read private → 200, outsider → 403,
+  outsider write (even public) → 403, public read → 200.
+
+### Fixes
+
+- `wldesigner.pas`: replaced an SQL-style `--` comment inside a Pascal record (compile error
+  "END expected but - found") with a `//` comment.
+- `wldesigner.pas` zip import: `TUnZipper.UnZipAllFiles(stream)` is not available in
+  FreePascal 3.2.x — spool the uploaded archive into a per-operation `data/temp/` dir and unzip
+  via `UnZipper.FileName`, removing the dir afterwards.
+- `docs/contract.md`: reverted a path-rewrite false positive — the prose "([wami](https://github.com/wekan/wami)/[omi](https://github.com/wekan/omi))
+  reimplementation" was turned into a `../wami/omi` path and is now restored.
+- `wldb.pas`: `journal_mode` is now `DELETE` under `{$IF DEFINED(AMIGA) or MORPHOS or AROS}`
+  (WAL needs shared-memory/mmap that classic Amiga filesystems lack), WAL elsewhere.
+- `wlhttp.lpr`: call `Randomize` at startup — without it `NewId` (api/designer) produced the
+  same id sequence on every run, so restarts collided on board/list/card ids.
+- `wlhttp.lpr`: dropped `cmem` — FPC's `hmac` unit (used by password hashing) corrupts the heap
+  under `cmem` ("free(): invalid pointer"); the default FPC memory manager is already
+  thread-safe, so `cmem` was unnecessary.
+- `wldb.pas` (CLI backend): pass `-cmd "PRAGMA foreign_keys=ON"` to `sqlite3` so `ON DELETE
+  CASCADE` fires (the CLI opens each connection with foreign keys off by default).
+
+### Known TODO (carried forward)
+
+Board/list `dataview` renderers; `wl-multidrag.js`; password hashing into
+`users.services_json`; Domain-Global-Admin role checks; list↕-across-swimlanes and the
+Edit/Clone/Delete/Export move actions.
