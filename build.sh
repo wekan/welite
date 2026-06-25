@@ -112,6 +112,81 @@ select_platform() {
   fi
 }
 
+# Ubuntu 26.04 (amd64/arm64 host) convenience: install the host FPC + RTL source + the Linux
+# cross-binutils Ubuntu ships, then build the FPC cross compilers/RTLs for the targets Ubuntu can
+# support. The Linux CPU variants need cross-binutils; the Windows/DOS targets use FPC's internal
+# assembler+linker (no binutils). macOS, Amiga, AmigaOS4, MorphOS, AROS and Haiku are NOT in
+# Ubuntu's repos — build those with fpcupdeluxe (https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
+install_toolchains() {
+  if [ ! -r /etc/os-release ] || ! grep -qi '^ID=ubuntu' /etc/os-release; then
+    echo "  Not Ubuntu (per /etc/os-release) — this installer is Ubuntu-only. Aborting."; return 1
+  fi
+  case "$(uname -m)" in
+    x86_64|aarch64) ;;
+    *) echo "  Host arch $(uname -m) unsupported (expected amd64/arm64). Aborting."; return 1 ;;
+  esac
+  local SUDO=""
+  if [ "$(id -u)" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1; then SUDO="sudo"; else
+      echo "  Need root or sudo to apt-get install. Re-run as root."; return 1; fi
+  fi
+
+  echo ">> apt-get: host FPC, RTL source, and Linux cross-binutils"
+  $SUDO apt-get update || { echo "  apt-get update failed."; return 1; }
+  $SUDO apt-get install -y fpc fpc-source make \
+    binutils-x86-64-linux-gnu \
+    binutils-aarch64-linux-gnu \
+    binutils-arm-linux-gnueabihf \
+    binutils-s390x-linux-gnu \
+    binutils-powerpc-linux-gnu \
+    binutils-powerpc64le-linux-gnu \
+    || { echo "  apt-get install failed."; return 1; }
+
+  local fpcsrc
+  fpcsrc="$(ls -d /usr/share/fpcsrc/* 2>/dev/null | sort -V | tail -1)"
+  if [ -z "$fpcsrc" ] || [ ! -d "$fpcsrc" ]; then
+    echo "  Cross-binutils installed, but the FPC source tree (fpc-source) was not found under"
+    echo "  /usr/share/fpcsrc — cannot build cross RTLs. Install 'fpc-source' and re-run."
+    return 1
+  fi
+
+  mkdir -p "$OUTDIR/log"
+  local log="$OUTDIR/log/xtools.log"
+  : > "$log"
+  echo ">> Building FPC cross compilers from $fpcsrc  (verbose output -> $log)"
+
+  # feasible cross targets:  cpu | os | binutils-prefix (empty = FPC-internal) | CROSSOPT
+  local CROSS=(
+    "x86_64|linux|x86_64-linux-gnu-|"
+    "aarch64|linux|aarch64-linux-gnu-|"
+    "arm|linux|arm-linux-gnueabihf-|-CaEABIHF -CfVFPV3"
+    "s390x|linux|s390x-linux-gnu-|"
+    "powerpc|linux|powerpc-linux-gnu-|"
+    "powerpc64|linux|powerpc64le-linux-gnu-|-Caelfv2"
+    "x86_64|win64||"
+    "i386|win32||"
+    "i386|go32v2||"
+  )
+  local entry cpu os pfx copt ok=0 fail=0
+  for entry in "${CROSS[@]}"; do
+    IFS='|' read -r cpu os pfx copt <<< "$entry"
+    echo "   -- $cpu-$os"
+    local -a margs=( -C "$fpcsrc" crossinstall
+                     CPU_TARGET="$cpu" OS_TARGET="$os"
+                     FPC="$(command -v fpc)" INSTALL_PREFIX=/usr )
+    [ -n "$pfx" ]  && margs+=( BINUTILSPREFIX="$pfx" )
+    [ -n "$copt" ] && margs+=( CROSSOPT="$copt" )
+    if $SUDO make "${margs[@]}" >>"$log" 2>&1; then
+      ok=$((ok + 1))
+    else
+      fail=$((fail + 1)); echo "      FAILED ($cpu-$os) — see $log"
+    fi
+  done
+  echo "== cross toolchains: $ok built, $fail failed (host-native target already present) =="
+  echo "   Not available via Ubuntu apt (use fpcupdeluxe): macOS arm64, Amiga m68k,"
+  echo "   AmigaOS 4.1 PPC, MorphOS, AROS x86/amd64/arm64/m68k/ppc, Haiku."
+}
+
 while true; do
   cat <<MENU
 
@@ -119,7 +194,8 @@ while true; do
   1) Build for current platform
   2) Build for all platforms
   3) Select platform and build for it
-  4) Quit
+  4) Install FPC cross-toolchains (Ubuntu 26.04 amd64/arm64)
+  5) Quit
 MENU
   printf "  Choice: "
   read -r c || exit 0
@@ -127,7 +203,8 @@ MENU
     1) build_current ;;
     2) build_all ;;
     3) select_platform ;;
-    4) exit 0 ;;
-    *) echo "  Pick 1-4." ;;
+    4) install_toolchains ;;
+    5) exit 0 ;;
+    *) echo "  Pick 1-5." ;;
   esac
 done
