@@ -37,6 +37,7 @@ ehthumbs.db
 /fp.*
 # wekanlite build outputs
 /wekanlite
+/build/
 /data/
 # FreePascal compile artifacts
 *.o
