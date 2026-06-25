@@ -1,7 +1,7 @@
-unit wlenhance;
+unit wlenhanc;
 
 {
-  WeKan-Lite — progressive enhancement (docs/progressive-enhancement.md)
+  WeKan-Lite — progressive enhancement (docs/enhance.md)
 
   The baseline UI is no-JS / no-cookie HTML 3.2 forms (works on IBrowse/NetSurf/Lynx). Where
   JavaScript and touch are available, richer features light up AUTOMATICALLY — most notably
@@ -14,9 +14,9 @@ unit wlenhance;
       (draggable class + data-* attributes) — retro browsers ignore the hooks;
     * the enhancement <script> is emitted by default and SELF-GATES client-side (checks for
       pointer/touch + JS); browsers that can't run it simply don't;
-    * wlbrowser can optionally suppress the <script> bytes for known no-JS browsers.
+    * wlbrowse can optionally suppress the <script> bytes for known no-JS browsers.
 
-  v0.1 reference skeleton. The actual interact.js + wl-multidrag.js are static assets under
+  v0.1 reference skeleton. The actual interact.js + wlmdrag.js are static assets under
   the tenant's public/ (served by the file route); this unit emits the markup that wires them.
 }
 
@@ -26,7 +26,7 @@ unit wlenhance;
 interface
 
 uses
-  SysUtils, wlbrowser;
+  SysUtils, wlbrowse;
 
 // Hooks to attach to a draggable element (card/list/swimlane) so the enhancement layer can
 // wire it. Harmless on retro browsers (unknown class/attributes are ignored). MoveUrl is the
@@ -74,15 +74,15 @@ function EnhancementScripts(B: TWLBrowser): string;
 begin
   if not ShouldEnhance(B) then
     Exit('');
-  // interact.js = the drag/multi-touch engine; wl-multidrag.js = WeKan-Lite glue that, on drop,
+  // interact.js = the drag/multi-touch engine; wlmdrag.js = WeKan-Lite glue that, on drop,
   // POSTs {from,to,sort} to each dragged element's data-move-url. Both self-gate on
   // touch/pointer + JS, so this is safe to emit by default — MultiDrag "just appears" on a big
   // touch screen, OneDrag on a single-touch device, and nothing changes on no-JS browsers.
   // served from public/js/ by wlstatic (default mount '/'); interact.js is vendored,
-  // wl-multidrag.js is the WeKan-Lite glue (TODO, see progressive-enhancement.md)
+  // wlmdrag.js is the WeKan-Lite glue (TODO, see enhance.md)
   Result :=
     '<script src="/js/interact.js"></script>' + LineEnding +
-    '<script src="/js/wl-multidrag.js"></script>' + LineEnding;
+    '<script src="/js/wlmdrag.js"></script>' + LineEnding;
 end;
 
 end.

@@ -36,7 +36,7 @@ interface
 
 uses
   SysUtils, Classes, HTTPDefs, fpjson, jsonparser, DateUtils, base64,
-  wldb, wltenant, wlauth, wlpassword;
+  wldb, wltenant, wlauth, wlpasswd;
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);

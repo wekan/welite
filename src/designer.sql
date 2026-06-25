@@ -2,7 +2,7 @@
 -- WeKan-Lite-specific (NOT part of the canonical ../schema.sql, which mirrors Meteor WeKan).
 -- Lives in each tenant's data/domains/<domain>/db/data.db so every domain designs its own UI.
 -- Conventions match schema.sql: TEXT 17-char ids, ISO-8601 TEXT dates, INTEGER 0/1 booleans.
--- Companion doc: designer.md. Engine: wldesigner.pas.
+-- Companion doc: designer.md. Engine: wldesign.pas.
 
 PRAGMA foreign_keys = ON;
 
@@ -32,7 +32,7 @@ CREATE INDEX idx_pages_url ON pages(url);
 --   type     : heading|label|link|button|textinput|password|textarea|select|checkbox|hr|
 --              dataview|table|color|movepanel
 --   movepanel: the combined no-JS arrows move component (select swimlanes/lists/cards, move
---              all selected with one ▲◀▼▶ keypad). See move-component.md / wlmove.pas.
+--              all selected with one ▲◀▼▶ keypad). See move.md / wlmove.pas.
 --   color    : a color-input field; options_json = {target, style} where style picks the
 --              picker component (hex|named|swatches|wheel|websafe). See theming.md / wlcolors.
 --   fgColor/bgColor on ANY widget tint its text / background (WeKan name or hex).

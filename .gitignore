@@ -35,8 +35,8 @@ ehthumbs.db
 .devcontainer/volumes*/
 .coverage
 /fp.*
-# wekanlite build outputs
-/wekanlite
+# welite build outputs
+/welite
 /build/
 /data/
 # FreePascal compile artifacts
@@ -44,7 +44,7 @@ ehthumbs.db
 *.ppu
 src/link*.res
 src/ppas*.sh
-# generated embedded assets (releases/genassets.py)
+# generated embedded assets (releases/genasset.py)
 src/wlassets.pas
 src/wlpublic.rc
 src/wlpublic.res

@@ -23,7 +23,7 @@ unit wlvector;
 interface
 
 uses
-  SysUtils, wlbrowser, wlcolors;
+  SysUtils, wlbrowse, wlcolors;
 
 type
   TVectorMode = (vmAuto, vmSvg, vmVml, vmAscii);

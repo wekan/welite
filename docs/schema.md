@@ -1,6 +1,6 @@
 # WeKan-Lite — schema decision: `schema.sql` vs [`kanboard/`](https://github.com/kanboard/kanboard) vs [`minio-metadata/`](https://github.com/wekan/minio-metadata) — v0.1
 
-Companion to `contract.md`, `schema.sql`, and `web-stack-decision.md`. This doc decides
+Companion to `contract.md`, `schema.sql`, and `webstack.md`. This doc decides
 **which schema WeKan-Lite is built on**, and how the two *source* datasets in this
 directory map into it. The driving use case: **import Kanboard data (the BigBoard
 instance and any other Kanboard SQLite database) into WeKan-Lite**, alongside data

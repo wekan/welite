@@ -66,7 +66,7 @@ function NormalizeHex(const Value: string): string;
 function ResolveColor(const Value: string): string;
 
 // Map an imported color token from an external system to a WeKan color (name or hex), for the
-// importers (see docs/schema-decision.md). Source: 'trello' | 'kanboard' | 'wekan'.
+// importers (see docs/schema.md). Source: 'trello' | 'kanboard' | 'wekan'.
 //   * Trello: names mostly match WeKan (green/yellow/orange/red/purple/blue/sky/lime/pink/
 //     black); newer _light/_dark/_subtle variants collapse to their base; 'null' -> ''.
 //   * Kanboard: palette keys (yellow, blue, grey, brown, deep_orange, …) -> nearest WeKan name.

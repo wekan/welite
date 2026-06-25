@@ -4,26 +4,62 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
-## 2026-06-25 WeKan-Lite — minimal `wekanlite` repo
+## 2026-06-25 WeKan-Lite — `welite` rename, DOS 8.3 names, build scripts
 
-Split WeKan-Lite into its own minimal repo, https://github.com/wekan/wekanlite (only the
+Renamed the repo/binary to `welite` and made the whole tree DOS 8.3-safe (≤8-char names,
+≤3-char extensions, one dot) so the sources copy onto a FAT filesystem and compile there.
+
+- Added cross-platform build scripts at the repo root — `build.sh` (bash), `build.bat`
+  (cmd.exe), `build.ami` (AmigaDOS) — each a 4-item menu (current platform / all / select /
+  quit) that builds `src/wlhttp.lpr` with FreePascal for Linux amd64/arm64/armhf/armv7/s390x/
+  ppc/ppc64le, macOS arm64, Windows x86/amd64, DOS (go32v2), Haiku, Amiga m68k, AmigaOS 4.1 PPC,
+  MorphOS, and AROS x86/amd64/arm64/m68k/ppc. Output to `build/` (gitignored).
+- Rebrand `wekanlite` → `welite`: binary name (also fixes its own 8.3 overflow, 9→6 chars),
+  env vars `WEKANLITE_*` → `WELITE_*`, repo URL, `.gitignore`, and the designer export JSON keys
+  (`welite_page` / `welite_pages`). The human product name **WeKan-Lite** is unchanged.
+- 8.3 source renames (FPC unit name = filename): `wlbrowser`→`wlbrowse`, `wldesigner`→`wldesign`,
+  `wlenhance`→`wlenhanc`, `wlpassword`→`wlpasswd`, `wlregistry`→`wlregist`,
+  `designer-schema.sql`→`designer.sql`; designer export ext `.wlpage`→`.wlp`, zip index
+  `manifest.json`→`manifest.jsn`; the glue script `wl-multidrag.js`→`wlmdrag.js`.
+- 8.3 docs: `architecture`→`arch`, `sqlite-access-decision`→`sqlite`, `move-component`→`move`,
+  `progressive-enhancement`→`enhance`, `static-assets`→`static`, `schema-decision`→`schema`,
+  `web-stack-decision`→`webstack`; `CHANGELOG.md`→`CHANGES.md`; dirs `docs/multidrag`→`docs/mdrag`,
+  `docs/roundcard`→`docs/round` (`.html`→`.htm`, `round-blue.gif`→`rndblue.gif`).
+- 8.3 helper scripts: `genassets.py`→`genasset.py`, `convert-languages.py`→`convlang.py`,
+  `changelog.sh`→`chglog.sh`, `releases/translations/`→`releases/xlate/`
+  (`push-translation.sh`→`txpush.sh`, etc.).
+- 8.3 translations: `i18n/languages.json`→`i18n/langs.jsn`; all 154 `i18n/data/<tag>.i18n.json`
+  → `<tag>.jsn` (`ca@valencia`→`cavalenc.jsn`); updated the import index, `.tx/config`, and the
+  `.jsn` MIME mapping in `wlstatic`.
+- 8.3 static assets: `public/windows11/`→`public/win11/` (tiles renumbered `w001..w080`),
+  `public/font/notification/`→`.../notif/`, `wekan.html`→`wekan.htm`,
+  `interact-bottom.js`→`interbot.js`, `site.webmanifest.default`→`manifest.def`, and ~120
+  favicon/PWA icons given short names; `manifest.def` (the PWA manifest) rewritten to match.
+- Verified on FreePascal 3.2.3 (aarch64): builds clean, repo-wide 8.3 check passes, and the
+  server serves the renamed URLs (`/i18n/langs.jsn`, `/i18n/data/en.jsn`, `/win11/w001.png`,
+  `/js/interbot.js`, `/manifest.def`). DOS cross-compile additionally needs the FPC i386/go32v2
+  cross build installed.
+
+## 2026-06-25 WeKan-Lite — minimal `welite` repo
+
+Split WeKan-Lite into its own minimal repo, https://github.com/wekan/welite (only the
 required files), out of the old `wami2` tree where it lived under `freepascal/`.
 
 - Moved the `freepascal/` contents to the repo root: FreePascal units, `wlhttp.lpr`, and the
   `*.sql` schemas now live in `src/`; design docs in `docs/`; static assets in `public/`.
 - Split translations into their own tree: `public/i18n/` → `i18n/data/`, and
-  `public/languages.json` → `i18n/languages.json`. `wlstatic` now serves `i18n/` as a second
-  static root mounted at `/i18n` (`StaticAddRoot`), and `releases/genassets.py` embeds both the
+  `public/langs.jsn` → `i18n/langs.jsn`. `wlstatic` now serves `i18n/` as a second
+  static root mounted at `/i18n` (`StaticAddRoot`), and `releases/genasset.py` embeds both the
   `public/` and `i18n/` trees, so translation URLs stay stable in disk and single-binary builds.
-- Moved the build/release helper scripts under `releases/`: `genassets.py` (embed
-  `public/` + `i18n/`) and `convert-languages.py` (regenerate `i18n/languages.json` from the
+- Moved the build/release helper scripts under `releases/`: `genasset.py` (embed
+  `public/` + `i18n/`) and `convlang.py` (regenerate `i18n/langs.jsn` from the
   sibling `../wekan` repo's `imports/i18n/languages.js`).
 - Updated every cross-reference path to the new layout: `README.md`, `docs/*.md`, the FPC unit
-  comments, `.tx/config` (`i18n/data/<lang>.i18n.json`), and the helper scripts' defaults.
-- Refreshed `.gitignore` for the new binary name (`/wekanlite`), the runtime `/data/` tree, and
+  comments, `.tx/config` (`i18n/data/<lang>.jsn`), and the helper scripts' defaults.
+- Refreshed `.gitignore` for the new binary name (`/welite`), the runtime `/data/` tree, and
   the generated embed artifacts (`src/wlassets.pas`, `src/wlpublic.{rc,res}`, `*.o` / `*.ppu`).
 - Verified on FreePascal 3.2.3 (aarch64): the tree builds, and the server serves both roots —
-  `/robots.txt` (public) and `/i18n/languages.json` + `/i18n/data/en.i18n.json` (translations).
+  `/robots.txt` (public) and `/i18n/langs.jsn` + `/i18n/data/en.jsn` (translations).
 
 ## 2026-06-25 WeKan-Lite FreePascal — v0.1
 
@@ -34,52 +70,52 @@ and renders a board page from SQLite.
 ### Updates
 
 - Reorganized the tree: design docs live in `freepascal/docs/`, the FreePascal code and
-  `schema.sql` / `designer-schema.sql` / `README.md` at `freepascal/`, and the [`wami/`](https://github.com/wekan/wami), [`omi/`](https://github.com/wekan/omi),
+  `schema.sql` / `designer.sql` / `README.md` at `freepascal/`, and the [`wami/`](https://github.com/wekan/wami), [`omi/`](https://github.com/wekan/omi),
   [`tcl-tk-kanban/`](https://github.com/wekan/tcl-tk-kanban), [`minio-metadata/`](https://github.com/wekan/minio-metadata) prototypes alongside them.
 - Updated every cross-reference path to match the new layout — `README.md` (docs → `docs/`,
   prototypes → siblings), `docs/*.md` (co-located docs lose `../`, prototypes/`schema.sql`
   keep `../`), and code comments (prototypes → siblings, design docs → `docs/`).
 - Verified the whole unit set still builds on FreePascal 3.2.3 after the move.
-- Documented SQLite on Amiga/retro targets (`docs/sqlite-access-decision.md`): FreePascal
+- Documented SQLite on Amiga/retro targets (`docs/sqlite.md`): FreePascal
   bundles no SQLite (its `sqlite3` unit is only bindings); Amiga/MorphOS/AROS have none, so
   statically link the official amalgamation (no Aminet port needed), with retro build notes.
 
 ### Features
 
-- Architecture & stack (`wlhttp.lpr`, `docs/architecture.md`): `fphttpapp` + `httproute`
+- Architecture & stack (`wlhttp.lpr`, `docs/arch.md`): `fphttpapp` + `httproute`
   (RTL-only, no C deps), tenant → auth → endpoint request lifecycle, HTML 3.2 baseline +
   HTML 4 enhancement tiers.
-- Multitenancy (`wltenant.pas`, `wlregistry.pas`, `docs/goals.md`): one binary serves many
+- Multitenancy (`wltenant.pas`, `wlregist.pas`, `docs/goals.md`): one binary serves many
   domains; `Host:` → `data/domains/<domain>/db/data.db` (unknown host → 404, no fallback);
   reserved `data/admin/` Global Admin tenant + per-domain Domain Global Admin; central TLS
   certs in `data/certs/<host>/`; per-operation scratch in `data/temp/YYYY-MM-DD_MM-SS_COUNTER/`.
 - Authentication (`wlauth.pas`): no-cookie / no-JS sessions (session id in URL + hidden fields)
   with replay- and context-bound per-action tokens and idle timeout, persisted to
   `schema.sql` `login_tokens`.
-- Database (`wldb.pas`, `docs/sqlite-access-decision.md`): SQLite behind one interface — linked
+- Database (`wldb.pas`, `docs/sqlite.md`): SQLite behind one interface — linked
   SQLite (default single binary) or the external `sqlite3` CLI (`-dWLDB_CLI` bootstrap).
-- Schema & import (`schema.sql`, `docs/schema-decision.md`): canonical 24-table schema;
+- Schema & import (`schema.sql`, `docs/schema.md`): canonical 24-table schema;
   Kanboard SQLite (incl. BigBoard) and Meteor WeKan Mongo data imported into it.
-- Designer (`wldesigner.pas`, `designer-schema.sql`, `docs/designer.md`): data-driven pages
+- Designer (`wldesign.pas`, `designer.sql`, `docs/designer.md`): data-driven pages
   (page + widgets) with a no-JS/no-cookie form editor, custom URLs, seeded editable built-ins,
-  LTR/RTL mirrored from one definition, and import/export (`.wlpage` JSON, all pages as `.zip`).
-- Table component (`wldesigner.pas`): reusable no-JS data table — search, "Page n / m"
+  LTR/RTL mirrored from one definition, and import/export (`.wlp` JSON, all pages as `.zip`).
+- Table component (`wldesign.pas`): reusable no-JS data table — search, "Page n / m"
   pagination, column-visibility chooser, click-a-cell-to-edit — all stateless in the URL.
 - Colors & theming (`wlcolors.pas`, `docs/theming.md`): WeKan named colors or any hex on any
   element; selectable picker components (hex / named / swatches / native wheel / web-safe grid);
   imported Trello/Kanboard palettes mapped to WeKan colors.
 - Vector graphics (`wlvector.pas`): Red Strings render as SVG (modern/NetSurf), VML (old IE),
   or ASCII arrows (IBrowse/Dillo/Lynx).
-- Progressive enhancement (`wlenhance.pas`, `docs/progressive-enhancement.md`): no-JS form
+- Progressive enhancement (`wlenhanc.pas`, `docs/enhance.md`): no-JS form
   baseline always works; MultiDrag (from [`wami/public/multidrag`](https://github.com/wekan/wami/tree/main/public/multidrag)) auto-activates with JS+touch
   to drag many cards at once on a big touch screen, driving the same endpoints.
-- Combined move component (`wlmove.pas`, `docs/move-component.md`): one no-JS arrows keypad
+- Combined move component (`wlmove.pas`, `docs/move.md`): one no-JS arrows keypad
   (▲◀▼▶) moves all selected swimlanes/lists/cards via `POST /board/move` (reorder/relocate over
   `sort` / `listId` / `swimlaneId`), modeled on the combined [`tcl-tk-kanban/kanban.go`](https://github.com/wekan/tcl-tk-kanban/blob/main/kanban.go).
-- Static assets (`wlstatic.pas`, `docs/static-assets.md`): serve `public/` at a configurable URL
-  (default '/'), plus the `i18n/` translations tree at `/i18n` (`i18n/languages.json` +
-  `i18n/data/`); embedded in the binary (`-dWLEMBED`, FPC resources via `releases/genassets.py`)
-  or from disk; `releases/convert-languages.py` regenerates `i18n/languages.json`.
+- Static assets (`wlstatic.pas`, `docs/static.md`): serve `public/` at a configurable URL
+  (default '/'), plus the `i18n/` translations tree at `/i18n` (`i18n/langs.jsn` +
+  `i18n/data/`); embedded in the binary (`-dWLEMBED`, FPC resources via `releases/genasset.py`)
+  or from disk; `releases/convlang.py` regenerates `i18n/langs.jsn`.
 - REST API (`wlapi.pas`, `docs/api.md`): subset of `public/api/wekan.yml` with Bearer-token auth
   (`POST /users/login` + `Authorization: Bearer`), so WeKan's Python CLI `api.py` works unchanged
   — verified login → board/swimlanes/lists → createlist → addcard → cardsbyswimlane on FPC 3.2.3.
@@ -129,10 +165,10 @@ and renders a board page from SQLite.
 
 ### Security
 
-- Password hashing (`wlpassword.pas`): real PBKDF2-HMAC-SHA1 (RTL-only, salt from
+- Password hashing (`wlpasswd.pas`): real PBKDF2-HMAC-SHA1 (RTL-only, salt from
   `/dev/urandom`) replaces the placeholder "any non-empty password". The stored hash lives in
   `users.services_json.password`; web sign-in and API `POST /users/login` both verify it, and
-  accounts without a real hash can't be logged into. Seed/set with `wekanlite hashpw <plain>`.
+  accounts without a real hash can't be logged into. Seed/set with `welite hashpw <plain>`.
   Verified: correct password → token, wrong/empty → 401.
 - Authorization (`wlapi.pas` `ApiAuthBoard`): board-scoped API endpoints now require the token's
   user to be an active `board_members` row (writes blocked for `isReadOnly`); public boards are
@@ -142,9 +178,9 @@ and renders a board page from SQLite.
 
 ### Fixes
 
-- `wldesigner.pas`: replaced an SQL-style `--` comment inside a Pascal record (compile error
+- `wldesign.pas`: replaced an SQL-style `--` comment inside a Pascal record (compile error
   "END expected but - found") with a `//` comment.
-- `wldesigner.pas` zip import: `TUnZipper.UnZipAllFiles(stream)` is not available in
+- `wldesign.pas` zip import: `TUnZipper.UnZipAllFiles(stream)` is not available in
   FreePascal 3.2.x — spool the uploaded archive into a per-operation `data/temp/` dir and unzip
   via `UnZipper.FileName`, removing the dir afterwards.
 - `docs/contract.md`: reverted a path-rewrite false positive — the prose "([wami](https://github.com/wekan/wami)/[omi](https://github.com/wekan/omi))
@@ -161,6 +197,6 @@ and renders a board page from SQLite.
 
 ### Known TODO (carried forward)
 
-Board/list `dataview` renderers; `wl-multidrag.js`; password hashing into
+Board/list `dataview` renderers; `wlmdrag.js`; password hashing into
 `users.services_json`; Domain-Global-Admin role checks; list↕-across-swimlanes and the
 Edit/Clone/Delete/Export move actions.

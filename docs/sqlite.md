@@ -1,6 +1,6 @@
 # WeKan-Lite — FreePascal SQLite access decision — v0.1
 
-Companion to `architecture.md`. The two prototypes in this tree reach SQLite in **opposite
+Companion to `arch.md`. The two prototypes in this tree reach SQLite in **opposite
 ways**, so this is a real fork to settle. The `goals.md` constraints (G1 single binary, G3
 SQLite-only, G2 runs on 68k/Haiku/AROS) drive the answer.
 

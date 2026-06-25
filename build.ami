@@ -1,0 +1,162 @@
+; WeKan-Lite build script - AmigaDOS (Amiga / AmigaOS 4 / MorphOS / AROS shell).
+; Run with:  Execute build.ami
+;
+; Builds src/wlhttp.lpr with FreePascal (fpc). Needs C:RequestChoice (AmigaOS 3.5+, AROS,
+; MorphOS, AmigaOS 4). On a real Amiga you normally pick "Build for current platform"
+; (native m68k/ppc); the cross targets need a matching FPC cross build and will fail otherwise.
+;
+; RequestChoice returns the gadget number counting from the left (1,2,3,...); the RIGHTMOST
+; gadget returns 0. The mappings below follow that rule.
+
+Set wlfpc   "fpc"
+Set wlbase  "-O3 -Xs -Fusrc"
+Set wlsrc   "src/wlhttp.lpr"
+Set wlout   "build"
+
+If NOT Exists build
+  MakeDir build
+EndIf
+
+Lab menu
+RequestChoice >ENV:wlc "WeKan-Lite build" "Select an action:" "Build current|Build all|Select platform|Quit"
+
+; Quit (rightmost) = 0
+If "$wlc" EQ "0"
+  Skip done
+EndIf
+
+If "$wlc" EQ "1"
+  Echo ">> Building for current platform"
+  $wlfpc $wlbase -o$wlout/welite $wlsrc
+  Skip BACK menu
+EndIf
+
+If "$wlc" EQ "2"
+  Skip buildall
+EndIf
+
+If "$wlc" EQ "3"
+  Skip selectplat
+EndIf
+
+Skip BACK menu
+
+; -------------------------------------------------------------------------- build all
+Lab buildall
+Echo ">> Building all platforms"
+$wlfpc $wlbase -Px86_64    -Tlinux   -o$wlout/welite-linux-amd64       $wlsrc
+$wlfpc $wlbase -Paarch64   -Tlinux   -o$wlout/welite-linux-arm64       $wlsrc
+$wlfpc $wlbase -Parm       -Tlinux -CaEABIHF -CfVFPV3 -o$wlout/welite-linux-armhf $wlsrc
+$wlfpc $wlbase -Parm       -Tlinux -Cparmv7a -CfVFPV3 -CaEABIHF -o$wlout/welite-linux-armv7 $wlsrc
+$wlfpc $wlbase -Ps390x     -Tlinux   -o$wlout/welite-linux-s390x       $wlsrc
+$wlfpc $wlbase -Ppowerpc   -Tlinux   -o$wlout/welite-linux-ppc         $wlsrc
+$wlfpc $wlbase -Ppowerpc64 -Tlinux -Caelfv2 -o$wlout/welite-linux-ppc64le $wlsrc
+$wlfpc $wlbase -Paarch64   -Tdarwin  -o$wlout/welite-macos-arm64       $wlsrc
+$wlfpc $wlbase -Pi386      -Twin32   -o$wlout/welite-windows-x86.exe   $wlsrc
+$wlfpc $wlbase -Px86_64    -Twin64   -o$wlout/welite-windows-amd64.exe $wlsrc
+$wlfpc $wlbase -Pi386      -Tgo32v2  -o$wlout/welite-dos.exe           $wlsrc
+$wlfpc $wlbase -Px86_64    -Thaiku   -o$wlout/welite-haiku             $wlsrc
+$wlfpc $wlbase -Pm68k      -Tamiga   -o$wlout/welite-amiga-m68k        $wlsrc
+$wlfpc $wlbase -Ppowerpc   -Tamiga   -o$wlout/welite-amigaos4-ppc      $wlsrc
+$wlfpc $wlbase -Ppowerpc   -Tmorphos -o$wlout/welite-morphos           $wlsrc
+$wlfpc $wlbase -Pi386      -Taros    -o$wlout/welite-aros-x86          $wlsrc
+$wlfpc $wlbase -Px86_64    -Taros    -o$wlout/welite-aros-amd64        $wlsrc
+$wlfpc $wlbase -Paarch64   -Taros    -o$wlout/welite-aros-arm64        $wlsrc
+$wlfpc $wlbase -Pm68k      -Taros    -o$wlout/welite-aros-m68k         $wlsrc
+$wlfpc $wlbase -Ppowerpc   -Taros    -o$wlout/welite-aros-ppc          $wlsrc
+Echo "== done =="
+Skip BACK menu
+
+; -------------------------------------------------------------------------- select platform
+Lab selectplat
+RequestChoice >ENV:wlcat "Select platform" "Choose a family:" "Linux|Desktop|Amiga|AROS"
+; AROS (rightmost) = 0
+
+If "$wlcat" EQ "1"
+  RequestChoice >ENV:wlp "Linux" "CPU:" "amd64|arm64|armhf|armv7|s390x|ppc|ppc64le"
+  ; amd64=1 arm64=2 armhf=3 armv7=4 s390x=5 ppc=6 ppc64le=0 (rightmost)
+  If "$wlp" EQ "1"
+    $wlfpc $wlbase -Px86_64    -Tlinux -o$wlout/welite-linux-amd64 $wlsrc
+  EndIf
+  If "$wlp" EQ "2"
+    $wlfpc $wlbase -Paarch64   -Tlinux -o$wlout/welite-linux-arm64 $wlsrc
+  EndIf
+  If "$wlp" EQ "3"
+    $wlfpc $wlbase -Parm       -Tlinux -CaEABIHF -CfVFPV3 -o$wlout/welite-linux-armhf $wlsrc
+  EndIf
+  If "$wlp" EQ "4"
+    $wlfpc $wlbase -Parm       -Tlinux -Cparmv7a -CfVFPV3 -CaEABIHF -o$wlout/welite-linux-armv7 $wlsrc
+  EndIf
+  If "$wlp" EQ "5"
+    $wlfpc $wlbase -Ps390x     -Tlinux -o$wlout/welite-linux-s390x $wlsrc
+  EndIf
+  If "$wlp" EQ "6"
+    $wlfpc $wlbase -Ppowerpc   -Tlinux -o$wlout/welite-linux-ppc $wlsrc
+  EndIf
+  If "$wlp" EQ "0"
+    $wlfpc $wlbase -Ppowerpc64 -Tlinux -Caelfv2 -o$wlout/welite-linux-ppc64le $wlsrc
+  EndIf
+  Skip BACK menu
+EndIf
+
+If "$wlcat" EQ "2"
+  RequestChoice >ENV:wlp "Desktop" "Target:" "macOS arm64|Windows x86|Windows amd64|DOS|Haiku"
+  ; macOS=1 winx86=2 winamd64=3 DOS=4 Haiku=0 (rightmost)
+  If "$wlp" EQ "1"
+    $wlfpc $wlbase -Paarch64 -Tdarwin -o$wlout/welite-macos-arm64 $wlsrc
+  EndIf
+  If "$wlp" EQ "2"
+    $wlfpc $wlbase -Pi386    -Twin32  -o$wlout/welite-windows-x86.exe $wlsrc
+  EndIf
+  If "$wlp" EQ "3"
+    $wlfpc $wlbase -Px86_64  -Twin64  -o$wlout/welite-windows-amd64.exe $wlsrc
+  EndIf
+  If "$wlp" EQ "4"
+    $wlfpc $wlbase -Pi386    -Tgo32v2 -o$wlout/welite-dos.exe $wlsrc
+  EndIf
+  If "$wlp" EQ "0"
+    $wlfpc $wlbase -Px86_64  -Thaiku  -o$wlout/welite-haiku $wlsrc
+  EndIf
+  Skip BACK menu
+EndIf
+
+If "$wlcat" EQ "3"
+  RequestChoice >ENV:wlp "Amiga family" "Target:" "Amiga m68k|AmigaOS 4.1 PPC|MorphOS"
+  ; m68k=1 OS4=2 MorphOS=0 (rightmost)
+  If "$wlp" EQ "1"
+    $wlfpc $wlbase -Pm68k    -Tamiga   -o$wlout/welite-amiga-m68k $wlsrc
+  EndIf
+  If "$wlp" EQ "2"
+    $wlfpc $wlbase -Ppowerpc -Tamiga   -o$wlout/welite-amigaos4-ppc $wlsrc
+  EndIf
+  If "$wlp" EQ "0"
+    $wlfpc $wlbase -Ppowerpc -Tmorphos -o$wlout/welite-morphos $wlsrc
+  EndIf
+  Skip BACK menu
+EndIf
+
+If "$wlcat" EQ "0"
+  RequestChoice >ENV:wlp "AROS" "CPU:" "x86|amd64|arm64|m68k|ppc"
+  ; x86=1 amd64=2 arm64=3 m68k=4 ppc=0 (rightmost)
+  If "$wlp" EQ "1"
+    $wlfpc $wlbase -Pi386    -Taros -o$wlout/welite-aros-x86 $wlsrc
+  EndIf
+  If "$wlp" EQ "2"
+    $wlfpc $wlbase -Px86_64  -Taros -o$wlout/welite-aros-amd64 $wlsrc
+  EndIf
+  If "$wlp" EQ "3"
+    $wlfpc $wlbase -Paarch64 -Taros -o$wlout/welite-aros-arm64 $wlsrc
+  EndIf
+  If "$wlp" EQ "4"
+    $wlfpc $wlbase -Pm68k    -Taros -o$wlout/welite-aros-m68k $wlsrc
+  EndIf
+  If "$wlp" EQ "0"
+    $wlfpc $wlbase -Ppowerpc -Taros -o$wlout/welite-aros-ppc $wlsrc
+  EndIf
+  Skip BACK menu
+EndIf
+
+Skip BACK menu
+
+Lab done
+Echo "Bye."

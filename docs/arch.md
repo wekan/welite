@@ -1,7 +1,7 @@
 # WeKan-Lite — FreePascal architecture — v0.1
 
-Companion to `contract.md`, `../src/schema.sql`, `goals.md`, `web-stack-decision.md`,
-`schema-decision.md`. This doc distills the **two working FreePascal prototypes** into the
+Companion to `contract.md`, `../src/schema.sql`, `goals.md`, `webstack.md`,
+`schema.md`. This doc distills the **two working FreePascal prototypes** into the
 architecture WeKan-Lite should build on, and the reference units in the repo's `src/`
 directory implement the load-bearing pieces.
 
@@ -16,7 +16,7 @@ Prototypes mined (read them — they are real, compiling code):
   to the `sqlite3` CLI via `TProcess`**. Proves auth + persistence on retro targets.
 
 Both prototypes independently chose **`fphttpapp` + `httproute`** — so that, not the lower
-`fphttpserver` named in `web-stack-decision.md` Decision 1, is the concrete stack. (They are
+`fphttpserver` named in `webstack.md` Decision 1, is the concrete stack. (They are
 the same server; `fphttpapp` is the thin `TCustomApplication` wrapper + `httproute` is the
 dispatcher. The portability argument in Decision 1 holds unchanged: RTL-only, no C deps.)
 
@@ -86,7 +86,7 @@ move-card JS is the enhancement layer over a `POST …/move {from,to,sort}`.
 ## Persistence — the one real fork
 
 The prototypes show **two different ways to reach SQLite**, and this is a genuine decision
-(not yet settled), so it gets its own doc: **`sqlite-access-decision.md`**.
+(not yet settled), so it gets its own doc: **`sqlite.md`**.
 
 - omi: **shell out to the `sqlite3` CLI** via `TProcess` (`ExecSqlOnDb`, `-separator | -batch
   -noheader`). Zero FFI, compiles anywhere, but needs a `sqlite3` binary present and parses
@@ -104,16 +104,16 @@ The prototypes show **two different ways to reach SQLite**, and this is a genuin
 |------|------|----------------|
 | `wlhttp.lpr` | program entry: config, route table, start `fphttpapp` | wami `begin…end.` + omi `LoadSettings` |
 | `wltenant.pas` | `Host:` → tenant dir + `data.db` handle cache (G8) | **new** (prototypes are single-tenant) |
-| `wlregistry.pas` | domain registry over `data/admin/db/data.db` (G8) | **new** (Global Admin store) |
+| `wlregist.pas` | domain registry over `data/admin/db/data.db` (G8) | **new** (Global Admin store) |
 | `wlauth.pas` | no-cookie/no-JS sessions + action-tokens (G4) | omi session/token functions |
 | `wldb.pas` | SQLite access behind one interface (CLI or linked) | omi `ExecSqlOnDb` + `sqlite3` unit |
 | `wlhtml.pas` | retro-safe HTML helpers + HTML-3.2 pretty printer + dir wrapper | omi `PrettyHtml32`, `HtmlEncode`; wami layout |
-| `wlbrowser.pas` | User-Agent → browser id (tune output per client) | wami `WebBrowserName` |
-| `wldesigner.pas` | **Designer** — data-driven pages, render, LTR/RTL, import/export | **new** (see `designer.md`) |
+| `wlbrowse.pas` | User-Agent → browser id (tune output per client) | wami `WebBrowserName` |
+| `wldesign.pas` | **Designer** — data-driven pages, render, LTR/RTL, import/export | **new** (see `designer.md`) |
 | `wlcolors.pas` | color palette + picker components + import-color mapping | **new** (see `theming.md`) |
 | `wlvector.pas` | Red Strings / connectors: SVG / VML / ASCII per browser | **new** (see `theming.md`) |
-| `wlenhance.pas` | progressive enhancement: MultiDrag/touch hooks + scripts | **new** (see `progressive-enhancement.md`) |
-| `wlmove.pas` | combined no-JS arrows move component + `/board/move` | **new** (see `move-component.md`) |
+| `wlenhanc.pas` | progressive enhancement: MultiDrag/touch hooks + scripts | **new** (see `enhance.md`) |
+| `wlmove.pas` | combined no-JS arrows move component + `/board/move` | **new** (see `move.md`) |
 
 All seven ship alongside this doc as v0.1 skeletons — faithful to the prototypes' style
 (`{$mode objfpc}{$H+}`, `{$CODEPAGE UTF8}`, `TRequest`/`TResponse`), self-contained in their
@@ -125,7 +125,7 @@ remaining gaps: password hashing and the linked-SQLite binding).
 ## Build (per `SERVER_FREEPASCAL.md`, confirmed working)
 
 ```bash
-fpc -O3 -Xs -o wekanlite wlhttp.lpr     # release, stripped (~2-4 MB)
+fpc -O3 -Xs -o welite wlhttp.lpr     # release, stripped (~2-4 MB)
 ```
 Cross-compile targets (one binary each, no runtime):
 ```bash
@@ -133,7 +133,7 @@ fpc -Px86_64           …   # Linux/macOS/FreeBSD/Windows(x86_64)
 fpc -Paarch64          …   # macOS Apple Silicon, arm64 Linux
 fpc -Pm68k -Tamiga     …   # classic Amiga 68k
 ```
-TLS stays out of the binary (`web-stack-decision.md` Decision 5): AmiSSL (Amiga) / OpenSSL
+TLS stays out of the binary (`webstack.md` Decision 5): AmiSSL (Amiga) / OpenSSL
 (modern) dynamically loaded, or plaintext behind a Caddy/proxy that terminates TLS.
 
 ---

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Convert WeKan's imports/i18n/languages.js into i18n/languages.json.
+Convert WeKan's imports/i18n/languages.js into i18n/langs.jsn.
 
-languages.json has the SAME body as the JS module (the object literal with its `code` / `tag` /
+langs.jsn has the SAME body as the JS module (the object literal with its `code` / `tag` /
 `name` / `load` / `rtl` fields, in source order) — it is just the JS file with the
 `export default ` prefix and the trailing `;` removed. This regenerates it from the current
 languages.js (e.g. picking up newly added languages).
 
 Usage:
-    python3 releases/convert-languages.py [languages.js] [languages.json]
+    python3 releases/convlang.py [languages.js] [langs.jsn]
 
 Defaults (resolved relative to this script's location, releases/):
     src  = ../../wekan/imports/i18n/languages.js   (the sibling Meteor WeKan repo)
-    dst  = ../i18n/languages.json
+    dst  = ../i18n/langs.jsn
 """
 import os
 import re
@@ -20,7 +20,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_SRC = os.path.normpath(os.path.join(HERE, "..", "..", "wekan", "imports", "i18n", "languages.js"))
-DEFAULT_DST = os.path.normpath(os.path.join(HERE, "..", "i18n", "languages.json"))
+DEFAULT_DST = os.path.normpath(os.path.join(HERE, "..", "i18n", "langs.jsn"))
 
 
 def convert(text: str) -> str:
@@ -37,14 +37,14 @@ def main() -> int:
     src = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SRC
     dst = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_DST
     if not os.path.isfile(src):
-        print(f"convert-languages: no such file: {src}", file=sys.stderr)
+        print(f"convlang: no such file: {src}", file=sys.stderr)
         return 1
     with open(src, encoding="utf-8") as f:
         out = convert(f.read())
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     with open(dst, "w", encoding="utf-8") as f:
         f.write(out)
-    print(f"convert-languages: wrote {dst} ({out.count(chr(10))} lines) from {src}")
+    print(f"convlang: wrote {dst} ({out.count(chr(10))} lines) from {src}")
     return 0
 
 

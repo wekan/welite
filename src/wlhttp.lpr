@@ -7,18 +7,18 @@ program wlhttp;
     fphttpapp + httproute   (stack used by both https://github.com/wekan/wami/blob/main/wekan.pas and https://github.com/wekan/omi/blob/main/public/server.pas)
     wltenant                Host: header -> data/domains/<domain>/db/data.db   (docs/goals.md G8)
     wlauth                  no-cookie / no-JS sessions + action-tokens          (docs/goals.md G4)
-    wldb                    SQLite behind one interface                         (docs/sqlite-access-decision.md)
+    wldb                    SQLite behind one interface                         (docs/sqlite.md)
 
   Build (see https://github.com/wekan/omi/blob/main/docs/SERVER_FREEPASCAL.md for per-platform flags):
-    fpc -O3 -Xs -o wekanlite wlhttp.lpr            # linked SQLite (default); serves ./public + ./i18n from disk
-    fpc -dWLDB_CLI -o wekanlite wlhttp.lpr         # bootstrap: external sqlite3 CLI
-    fpc -Pm68k -Tamiga -o wekanlite wlhttp.lpr     # classic Amiga 68k
-    # single binary with public/ + i18n/ embedded (docs/static-assets.md):
-    #   python3 releases/genassets.py   # writes src/wlassets.pas + src/wlpublic.rc
+    fpc -O3 -Xs -o welite wlhttp.lpr            # linked SQLite (default); serves ./public + ./i18n from disk
+    fpc -dWLDB_CLI -o welite wlhttp.lpr         # bootstrap: external sqlite3 CLI
+    fpc -Pm68k -Tamiga -o welite wlhttp.lpr     # classic Amiga 68k
+    # single binary with public/ + i18n/ embedded (docs/static.md):
+    #   python3 releases/genasset.py   # writes src/wlassets.pas + src/wlpublic.rc
     #   cd src && fpcres wlpublic.rc -o wlpublic.res -of res
-    #   fpc -dWLEMBED -O3 -Xs -o ../wekanlite wlhttp.lpr
+    #   fpc -dWLEMBED -O3 -Xs -o ../welite wlhttp.lpr
 
-  TLS stays out of the binary (docs/web-stack-decision.md Decision 5): terminate at Caddy/proxy,
+  TLS stays out of the binary (docs/webstack.md Decision 5): terminate at Caddy/proxy,
   or load AmiSSL/OpenSSL dynamically. Run plain HTTP here.
 }
 
@@ -26,21 +26,21 @@ program wlhttp;
 {$CODEPAGE UTF8}
 
 uses
-  // cthreads for the threaded server; NOT cmem — FPC's `hmac` unit (used by wlpassword)
+  // cthreads for the threaded server; NOT cmem — FPC's `hmac` unit (used by wlpasswd)
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
   SysUtils, Classes, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowser, wldesigner, wlmove, wlstatic, wlapi, wlpassword
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 const
-  DEFAULT_PORT  = 5500;       // wami used 5500; omi 3001. Override with WEKANLITE_PORT.
+  DEFAULT_PORT  = 5500;       // wami used 5500; omi 3001. Override with WELITE_PORT.
   DATA_ROOT     = 'data';     // data/admin, data/domains/<domain>, data/certs
-  DEFAULT_PUBLIC = 'public';  // static assets dir (disk mode). Override with WEKANLITE_PUBLIC.
-  DEFAULT_MOUNT = '/';        // URL the public/ tree is served under. Override WEKANLITE_STATIC_URL.
-  DEFAULT_I18N  = 'i18n';     // translations dir (i18n/languages.json + i18n/data). Override WEKANLITE_I18N.
-  I18N_MOUNT    = '/i18n';    // URL the i18n/ tree is served under (i18n/languages.json -> /i18n/languages.json).
+  DEFAULT_PUBLIC = 'public';  // static assets dir (disk mode). Override with WELITE_PUBLIC.
+  DEFAULT_MOUNT = '/';        // URL the public/ tree is served under. Override WELITE_STATIC_URL.
+  DEFAULT_I18N  = 'i18n';     // translations dir (i18n/langs.jsn + i18n/data). Override WELITE_I18N.
+  I18N_MOUNT    = '/i18n';    // URL the i18n/ tree is served under (i18n/langs.jsn -> /i18n/langs.jsn).
 
 // Resolve the tenant for this request or answer 404 (never fall back into another tenant).
 function RequireTenant(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant): Boolean;
@@ -163,7 +163,7 @@ var
   S: TWLSession;
 begin
   // Static assets (global, tenant-independent): public/robots.txt -> /robots.txt,
-  // public/js/interact.js -> /js/interact.js, i18n/languages.json -> /i18n/languages.json,
+  // public/js/interact.js -> /js/interact.js, i18n/langs.jsn -> /i18n/langs.jsn,
   // etc. Tried before tenant pages.
   if ServeStatic(aRequest, aResponse) then Exit;
   if RequireTenant(aRequest, aResponse, T) then
@@ -184,9 +184,9 @@ end;
 var
   PortEnv, PublicDir, StaticUrl, I18nDir: string;
 begin
-  Randomize;            // seed the RNG used by NewId (wlapi/wldesigner) — else ids repeat per run
+  Randomize;            // seed the RNG used by NewId (wlapi/wldesign) — else ids repeat per run
 
-  // ops/seed helper: `wekanlite hashpw <plain>` prints a PBKDF2 hash for users.services_json
+  // ops/seed helper: `welite hashpw <plain>` prints a PBKDF2 hash for users.services_json
   if (ParamCount >= 2) and (ParamStr(1) = 'hashpw') then
   begin
     Writeln(HashPassword(ParamStr(2)));
@@ -196,13 +196,13 @@ begin
   TenantInit(DATA_ROOT);
 
   // static assets: configurable mount + disk dir (embedded build ignores the disk dir)
-  PublicDir := GetEnvironmentVariable('WEKANLITE_PUBLIC');
+  PublicDir := GetEnvironmentVariable('WELITE_PUBLIC');
   if PublicDir = '' then PublicDir := DEFAULT_PUBLIC;
-  StaticUrl := GetEnvironmentVariable('WEKANLITE_STATIC_URL');
+  StaticUrl := GetEnvironmentVariable('WELITE_STATIC_URL');
   if StaticUrl = '' then StaticUrl := DEFAULT_MOUNT;
   StaticInit(StaticUrl, PublicDir);
-  // translations: i18n/ tree (i18n/languages.json + i18n/data/*.i18n.json) served at /i18n
-  I18nDir := GetEnvironmentVariable('WEKANLITE_I18N');
+  // translations: i18n/ tree (i18n/langs.jsn + i18n/data/*.jsn) served at /i18n
+  I18nDir := GetEnvironmentVariable('WELITE_I18N');
   if I18nDir = '' then I18nDir := DEFAULT_I18N;
   StaticAddRoot(I18N_MOUNT, 'i18n/', I18nDir);
 
@@ -228,7 +228,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/attachments', rmGet, @ApiBoardAttachments);
   HTTPRouter.RegisterRoute('/api/attachment/list/:boardId/:swimlaneId/:listId/:cardId', rmGet, @ApiCardAttachmentsList);
 
-  // Combined no-JS move component (arrows keypad) — see docs/move-component.md
+  // Combined no-JS move component (arrows keypad) — see docs/move.md
   HTTPRouter.RegisterRoute('/board/move', rmPost, @BoardMoveEndpoint);
 
   // REST API (subset of public/api/wekan.yml) so the WeKan Python CLI api.py works — see wlapi
@@ -281,7 +281,7 @@ begin
   // Everything else: tenant designer pages (pages.url) then 404
   HTTPRouter.RegisterRoute('/*', rmAll, @CatchAll, True);
 
-  PortEnv := GetEnvironmentVariable('WEKANLITE_PORT');
+  PortEnv := GetEnvironmentVariable('WELITE_PORT');
   Application.Port := StrToIntDef(PortEnv, DEFAULT_PORT);
   Application.Threaded := True;
   Application.Initialize;

@@ -18,11 +18,11 @@ Tokens are stored in `schema.sql` `login_tokens` (`hashedToken = HashText(token)
 table the no-cookie web sessions use. Multitenancy is by `Host:` header, so point `api.py`'s
 `wekanurl` at the tenant's domain.
 
-**Passwords** are verified with PBKDF2-HMAC-SHA1 (`wlpassword.pas`); the stored hash lives in
+**Passwords** are verified with PBKDF2-HMAC-SHA1 (`wlpasswd.pas`); the stored hash lives in
 `users.services_json` under `"password"` (form `pbkdf2_sha1$iters$saltHex$dkHex`). Set/seed one
 with the built-in helper:
 ```
-./wekanlite hashpw 'mypassword'      # prints the hash to store in services_json.password
+./welite hashpw 'mypassword'      # prints the hash to store in services_json.password
 ```
 Accounts without a real hash cannot be logged into.
 

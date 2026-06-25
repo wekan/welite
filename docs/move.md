@@ -1,6 +1,6 @@
 # WeKan-Lite — combined arrows move component — v0.1
 
-Companion to `designer.md`, `progressive-enhancement.md`. Defines the **default, no-JS way to
+Companion to `designer.md`, `enhance.md`. Defines the **default, no-JS way to
 move board items** on HTML 3.2 / HTML 4 pages: select source swimlanes/lists/cards and move
 them with an arrow keypad and buttons — when no JavaScript/drag is available. Code:
 `wlmove.pas`. Endpoint: `POST /board/move`.
@@ -72,7 +72,7 @@ in `kanban.go` (`reorderCards`, `moveCardToRightList`, …), backed by SQL inste
 
 ## Relationship to the rest
 
-- **Baseline for MultiDrag** (`progressive-enhancement.md`): this keypad is the always-present
+- **Baseline for MultiDrag** (`enhance.md`): this keypad is the always-present
   fallback. The InteractJS/touch layer, when available, drags items and POSTs to the **same**
   `/board/move` endpoint — so there is one move implementation, enhanced on capable devices.
 - **A default Designer component** (`designer.md`): exposed as the `movepanel` widget plus the

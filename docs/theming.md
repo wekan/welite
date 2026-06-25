@@ -67,7 +67,7 @@ consistently.
 ## Imported color systems (Trello, Kanboard, …)
 
 Imports carry their own palettes; `MapImportColor(source, value)` folds them into WeKan colors
-(used by the importers in `schema-decision.md`):
+(used by the importers in `schema.md`):
 - **Trello**: label names already match WeKan (`green`, `yellow`, `orange`, `red`, `purple`,
   `blue`, `sky`, `lime`, `pink`, `black`); newer shade variants (`green_light`, `green_dark`,
   `*_subtle`) collapse to their base; `null` → no color.
@@ -77,7 +77,7 @@ Imports carry their own palettes; `MapImportColor(source, value)` folds them int
 - **Unknown / WeKan**: passes through if already a valid WeKan name or hex.
 
 Anything unmapped falls back to a default (no color), never an error — consistent with the
-"preserve, don't drop" stance in `schema-decision.md`.
+"preserve, don't drop" stance in `schema.md`.
 
 ---
 
@@ -85,7 +85,7 @@ Anything unmapped falls back to a default (no color), never an error — consist
 
 WeKan's **Red Strings** (card dependencies, `schema.sql card_dependencies`) draw lines between
 cards. Vector support varies, so `wlvector.pas` renders the connector in the best mode for the
-client (`PickVectorMode` keys off `wlbrowser`):
+client (`PickVectorMode` keys off `wlbrowse`):
 
 | Mode | Output | Target |
 |------|--------|--------|

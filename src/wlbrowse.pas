@@ -1,4 +1,4 @@
-unit wlbrowser;
+unit wlbrowse;
 
 {
   WeKan-Lite — User-Agent detection (docs/goals.md G2/G4)

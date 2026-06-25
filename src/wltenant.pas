@@ -64,7 +64,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregistry;   // domain registry lookup (host -> enabled?), backed by data/admin/db/data.db
+  wlregist;   // domain registry lookup (host -> enabled?), backed by data/admin/db/data.db
 
 var
   DataRoot   : string;                 // absolute path to data/

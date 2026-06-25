@@ -1,30 +1,30 @@
 unit wlstatic;
 
 {
-  WeKan-Lite — static asset serving (docs/static-assets.md)
+  WeKan-Lite — static asset serving (docs/static.md)
 
   Serves the development-time files under public/ at a configured URL mount (default '/'), so
   public/robots.txt -> http://<host>/robots.txt, public/js/interact.js -> /js/interact.js, etc.
 
   Several roots can be registered, each mapping a URL mount to an on-disk directory. The
   default wiring (wlhttp.lpr) registers two: public/ at '/' and the translations tree i18n/
-  at '/i18n' (i18n/languages.json -> /i18n/languages.json, i18n/data/en.i18n.json ->
-  /i18n/data/en.i18n.json). i18n used to live under public/i18n + public/languages.json; it is
-  now its own tree (i18n/data + i18n/languages.json), served here so URLs stay stable.
+  at '/i18n' (i18n/langs.jsn -> /i18n/langs.jsn, i18n/data/en.jsn ->
+  /i18n/data/en.jsn). i18n used to live under public/i18n + public/langs.jsn; it is
+  now its own tree (i18n/data + i18n/langs.jsn), served here so URLs stay stable.
 
   Two sources, tried in order per root — embedded first, then disk:
     * EMBEDDED  : when built with -dWLEMBED, the generated `wlassets` unit registers an
                   EmbeddedLookup that reads files bundled into the executable as FPC resources
                   ({$R wlpublic.rc}); true single binary, nothing on disk. Keys are the full
                   URL-relative path (Embed prefix + path under the mount), e.g.
-                  'js/interact.js' and 'i18n/data/en.i18n.json'.
+                  'js/interact.js' and 'i18n/data/en.jsn'.
     * DISK      : otherwise (dev, and targets without a resource compiler) read from the
                   configured directory for that root, next to the binary.
 
   Why not embed everything as Pascal const byte arrays? the assets are ~24 MB (mostly i18n JSON);
   byte-array literals would balloon the source past what FPC can compile. FPC *resources*
-  bundle the real bytes with no source bloat, so embedding uses those; see docs/static-assets.md
-  and the generator releases/genassets.py.
+  bundle the real bytes with no source bloat, so embedding uses those; see docs/static.md
+  and the generator releases/genasset.py.
 
   Static assets are GLOBAL (same for every tenant) and are served before tenant resolution.
   v0.1 reference skeleton.
@@ -41,7 +41,7 @@ uses
 type
   // Provided by the generated `wlassets` unit under -dWLEMBED (nil = disk-only build).
   // Key is the full URL-relative path (the Embed prefix + path under the mount), e.g.
-  // 'js/interact.js' or 'i18n/data/en.i18n.json'.
+  // 'js/interact.js' or 'i18n/data/en.jsn'.
   TEmbeddedLookup = function(const RelPath: string; out Data: TBytes; out Mime: string): Boolean;
 
 var
@@ -52,7 +52,7 @@ var
 procedure StaticInit(const AMount, ADiskRoot: string);
 
 // Register an additional root: requests under AMount are served from ADiskRoot on disk, and
-// from embedded resources under the AEmbed key prefix (must match what genassets.py emits for
+// from embedded resources under the AEmbed key prefix (must match what genasset.py emits for
 // that tree — e.g. AMount='/i18n', AEmbed='i18n/', ADiskRoot='i18n').
 procedure StaticAddRoot(const AMount, AEmbed, ADiskRoot: string);
 
@@ -98,7 +98,7 @@ begin
     '.html', '.htm':  Result := 'text/html; charset=utf-8';
     '.css':           Result := 'text/css';
     '.js':            Result := 'application/javascript';
-    '.json':          Result := 'application/json';
+    '.json', '.jsn':  Result := 'application/json';
     '.txt':           Result := 'text/plain; charset=utf-8';
     '.xml', '.yml', '.yaml': Result := 'text/plain; charset=utf-8';
     '.svg':           Result := 'image/svg+xml';
@@ -106,7 +106,7 @@ begin
     '.gif':           Result := 'image/gif';
     '.jpg', '.jpeg':  Result := 'image/jpeg';
     '.ico':           Result := 'image/x-icon';
-    '.webmanifest', '.default': Result := 'application/manifest+json';
+    '.webmanifest', '.default', '.def': Result := 'application/manifest+json';
     '.woff':          Result := 'font/woff';
     '.woff2':         Result := 'font/woff2';
   else

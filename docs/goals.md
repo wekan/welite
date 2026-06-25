@@ -1,7 +1,7 @@
 # WeKan-Lite — FreePascal goals — v0.1
 
-Companion to `contract.md`, `schema.sql`, `web-stack-decision.md`, and
-`schema-decision.md`. This file records *why* WeKan-Lite is a FreePascal reimplementation
+Companion to `contract.md`, `schema.sql`, `webstack.md`, and
+`schema.md`. This file records *why* WeKan-Lite is a FreePascal reimplementation
 and the concrete goals that follow from that choice.
 
 Source / rationale: the WeKan 3.0 migration discussion
@@ -45,13 +45,13 @@ Windows/Linux/macOS. Pure-Pascal / RTL-only where possible; **no GTK/Qt or heavy
 ### G3 — SQLite as the only datastore
 Text data lives in one SQLite file per the canonical `schema.sql`; **no MongoDB**. This is
 the Sandstorm/Amiga enabler called out in the thread. Files (attachments/avatars) live
-**outside** SQLite (MinIO/S3 or filesystem) — see [`minio-metadata/`](https://github.com/wekan/minio-metadata) and `schema-decision.md`.
+**outside** SQLite (MinIO/S3 or filesystem) — see [`minio-metadata/`](https://github.com/wekan/minio-metadata) and `schema.md`.
 
 ### G4 — No-JS, no-cookie capable
 Every interactive element works as a plain `<form>` POST; session token carried in the URL
 path or hidden fields, **not** a required cookie. Must render in **Netsurf and Amiga
 IBrowse**. JS and drag-and-drop are progressive enhancement only — never required for any
-operation. (See `web-stack-decision.md` for the stack that enforces this.)
+operation. (See `webstack.md` for the stack that enforces this.)
 
 ### G5 — Offline, self-contained build
 Build with **only FPC + the RTL/FCL and vendored sources** — no package manager pulling the
@@ -62,7 +62,7 @@ Internet at build time. Reproducible cross-compiles from one host. Templates/ass
 Stay faithful to WeKan's domain model and JSON API: implement `schema.sql` (Mongo-style
 TEXT IDs, ISO-8601 dates) and the `public/api/wekan.yml` surface so existing WeKan exports
 import cleanly and the two implementations interoperate. Also a viable **import target for
-Kanboard/BigBoard SQLite data** (see `schema-decision.md`).
+Kanboard/BigBoard SQLite data** (see `schema.md`).
 
 ### G7 — Small and frugal
 Run comfortably in the RAM/CPU budget of a 68k Amiga or a Sandstorm grain: modest memory
@@ -146,13 +146,13 @@ FreePascal executable** handles all tenants, and the Global Admin manages all do
 ## How the goals constrain the design (pointers)
 
 - G1/G2/G5 → raw `fphttpserver` + hand-written dispatcher, RTL-only, no libsagui/GTK/Qt
-  (`web-stack-decision.md`, Decisions 1 & 4).
+  (`webstack.md`, Decisions 1 & 4).
 - G3/G6 → `schema.sql` is canonical; Kanboard and Mongo data are *imported into* it, not
-  adopted as the model (`schema-decision.md`).
+  adopted as the model (`schema.md`).
 - G4 → `fptemplate` plain-HTML rendering, `<form>`-first interactions
-  (`web-stack-decision.md`, Decision 2).
+  (`webstack.md`, Decision 2).
 - G8 → `Host`-header → `data/domains/<domain>/db/data.db` resolution in the dispatcher;
   per-tenant DB-handle cache; file paths rooted at `data/domains/<domain>/files/`.
 - G2/G4 → TLS via a dynamically-loaded backend behind `TSSLSocketHandler` — **AmiSSL** on
   Amiga, **OpenSSL** on modern OSes — or plain HTTP behind Caddy/proxy; all certs in one
-  host-keyed `data/certs/` store (`web-stack-decision.md`, Decision 5).
+  host-keyed `data/certs/` store (`webstack.md`, Decision 5).

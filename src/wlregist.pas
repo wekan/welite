@@ -1,4 +1,4 @@
-unit wlregistry;
+unit wlregist;
 
 {
   WeKan-Lite — domain registry (docs/goals.md G8, the Global Admin's data store)

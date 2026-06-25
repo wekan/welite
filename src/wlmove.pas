@@ -1,7 +1,7 @@
 unit wlmove;
 
 {
-  WeKan-Lite — combined arrows move component (docs/move-component.md)
+  WeKan-Lite — combined arrows move component (docs/move.md)
 
   The no-JS / HTML 3.2|4 baseline for moving board items. Mirrors the COMBINED toolbar in
   https://github.com/wekan/tcl-tk-kanban/blob/main/kanban.go (Go/Fyne): one arrow keypad
@@ -26,7 +26,7 @@ unit wlmove;
     swimlanes : up/down reorder within the board
   Maps to schema.sql sort / listId / swimlaneId.
 
-  This is the BASELINE that MultiDrag (wlenhance.pas) progressively enhances — drag ends in
+  This is the BASELINE that MultiDrag (wlenhanc.pas) progressively enhances — drag ends in
   this same /board/move endpoint. v0.1 reference skeleton.
 }
 

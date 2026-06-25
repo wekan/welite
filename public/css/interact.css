@@ -14,7 +14,7 @@ v\:* {
   padding: 20px;
   /* background GIF produces dithered background at Amiga IBrowse, so better to use
   table background color to get solid color
-  background:url("../../roundcard/round-blue.gif") top left no-repeat;
+  background:url("../../round/rndblue.gif") top left no-repeat;
   */
   outline: none; /* Remove default browser focus outline */
   transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */

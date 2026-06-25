@@ -1,7 +1,7 @@
 unit wldb;
 
 {
-  WeKan-Lite — SQLite access behind one interface (see docs/sqlite-access-decision.md)
+  WeKan-Lite — SQLite access behind one interface (see docs/sqlite.md)
 
   Two backends, chosen at compile time, so endpoints never care which is built in:
 
@@ -85,7 +85,7 @@ begin
   // recommended pragmas for a single-writer embedded server
   Exec('PRAGMA foreign_keys = ON;');
   // WAL needs shared-memory/mmap, which classic Amiga filesystems don't provide; fall back to
-  // the portable rollback journal there (see docs/sqlite-access-decision.md).
+  // the portable rollback journal there (see docs/sqlite.md).
   {$IF DEFINED(AMIGA) or DEFINED(MORPHOS) or DEFINED(AROS)}
   Exec('PRAGMA journal_mode = DELETE;');
   {$ELSE}

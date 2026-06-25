@@ -1,13 +1,13 @@
 # WeKan-Lite — Designer — v0.1
 
-Companion to `architecture.md`, `designer-schema.sql`, and `wldesigner.pas`. The Designer is
+Companion to `arch.md`, `designer.sql`, and `wldesign.pas`. The Designer is
 a **no-cookie / no-JS, HTML 3.2 (or HTML 4) table-layout page builder** built into
 WeKan-Lite. It lets an admin open *any* page (allboards, swimlanes, gantt, …), rearrange its
 buttons / input fields / data regions, change its URL, and create entirely new pages — all
 from IBrowse, NetSurf, Dillo, Lynx, etc., with nothing but `<form>` POSTs.
 
 This works because WeKan-Lite's UI is **data-driven**: every page is a row in `pages` plus a
-set of `page_widgets` (see `designer-schema.sql`). The normal renderer turns that data into a
+set of `page_widgets` (see `designer.sql`). The normal renderer turns that data into a
 retro HTML table; the Designer is just a second set of pages that *edit* that same data. So
 "the Designer can load any page" is literally true — built-in pages are seeded as rows and are
 editable like custom ones.
@@ -37,7 +37,7 @@ CSRF-safe with no JS.
 
 ## Data model (per-tenant, in `data/domains/<domain>/db/data.db`)
 
-Two tables, defined in `designer-schema.sql` and following `schema.sql` conventions (TEXT
+Two tables, defined in `designer.sql` and following `schema.sql` conventions (TEXT
 ids, ISO-8601 TEXT dates, INTEGER 0/1 booleans):
 
 - **`pages`** — one row per route: `url` (the path, e.g. `/allboards`), `title`, `kind`
@@ -65,7 +65,7 @@ browser. This is its own concern — see **`theming.md`** (`wlcolors.pas`, `wlve
 ### Combined move component (default, no-JS)
 By default, board pages include a **combined arrows move component**: checkboxes select
 swimlanes/lists/cards and one `▲◀▼▶` keypad moves all selected items, no JavaScript — the
-baseline that MultiDrag enhances. Widget type `movepanel`; see **`move-component.md`**
+baseline that MultiDrag enhances. Widget type `movepanel`; see **`move.md`**
 (`wlmove.pas`).
 
 ### Data-bound regions (`dataview`)
@@ -116,7 +116,7 @@ Configured per placement via the widget's `options_json`:
 Per-widget request state (so several tables coexist on one page): `tq_<id>` search,
 `tp_<id>` page, `tc_<id>` visible column (repeatable). Because everything is in the URL, the
 whole component is stateless on the server — no cookies, no session-stored table state.
-Implemented as `RenderTable` in `wldesigner.pas`.
+Implemented as `RenderTable` in `wldesign.pas`.
 
 ---
 
@@ -146,8 +146,8 @@ refused as custom URLs to avoid shadowing the fixed routes.)
 | `POST /designer/widget/move` | `{widgetId, dir∈{up,down,left,right}}` → adjust `row`/`col`. |
 | `POST /designer/widget/sort` | `{widgetId, dir∈{up,down}}` → adjust `sort` within a cell. |
 | `POST /designer/widget/delete` / `POST /designer/page/delete` | Remove. |
-| `GET /designer/page/export?url=…` | Download **one** page as a `.wlpage` file. |
-| `POST /designer/page/import` | Upload one `.wlpage` file → upsert that page. |
+| `GET /designer/page/export?url=…` | Download **one** page as a `.wlp` file. |
+| `POST /designer/page/import` | Upload one `.wlp` file → upsert that page. |
 | `GET /designer/export` | Download **all** pages as one `.zip`. |
 | `POST /designer/import` | Upload a `.zip` → import every page in it. |
 
@@ -225,12 +225,12 @@ the compiled-in template if an admin wants the original layout back. Custom page
 
 A page's design is portable data, so the Designer can move it between tenants/installs.
 
-### One page → `.wlpage` (JSON)
-`GET /designer/page/export?url=/allboards` downloads a `<slug>.wlpage` file — a JSON document
+### One page → `.wlp` (JSON)
+`GET /designer/page/export?url=/allboards` downloads a `<slug>.wlp` file — a JSON document
 holding everything that *is* the page:
 ```json
 {
-  "wekanlite_page": 1,
+  "welite_page": 1,
   "page":   { "url": "/allboards", "title": "All Boards", "kind": "custom",
               "cols": 2, "doctype": "html32", "dir": "auto", "minRole": "member",
               "enabled": true },
@@ -252,21 +252,21 @@ page at that URL is replaced, otherwise a new one is created.
 ### All pages → one `.zip`
 `GET /designer/export` streams `<host>-pages.zip` containing:
 ```
-manifest.json          { "wekanlite_pages": 1, "count": N, "urls": [ ... ] }
-allboards.wlpage
-board.wlpage
-gantt.wlpage
-...                    one <slug>.wlpage per page
+manifest.jsn          { "welite_pages": 1, "count": N, "urls": [ ... ] }
+allboards.wlp
+board.wlp
+gantt.wlp
+...                    one <slug>.wlp per page
 ```
-`POST /designer/import` takes such a `.zip` and imports **every** `.wlpage` entry (each
+`POST /designer/import` takes such a `.zip` and imports **every** `.wlp` entry (each
 upserted by URL; the manifest is advisory). This is the one-click "move/backup the whole UI
 design" path — e.g. design on a staging tenant, export the zip, import on production.
 
 Built with FPC's RTL `zipper` unit (`TZipper`/`TUnzipper`) and `fpjson` — no external tools,
 consistent with the single-binary goal. Import is transactional per page; a malformed
-`.wlpage` is skipped, not fatal.
+`.wlp` is skipped, not fatal.
 
-## Implementation (`wldesigner.pas`)
+## Implementation (`wldesign.pas`)
 The reference unit provides: the `TPage`/`TWidget` model, `LoadPageByUrl` / `LoadWidgets`,
 `RenderPage` (data → HTML 3.2 table via `wlhtml.pas`, with RTL column mirroring), the
 `RegisterDataView` registry for `dataview` bindings, `ResolveDir`/`LangIsRtl` for direction,

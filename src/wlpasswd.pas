@@ -1,4 +1,4 @@
-unit wlpassword;
+unit wlpasswd;
 
 {
   WeKan-Lite — password hashing (PBKDF2-HMAC-SHA1, RTL-only, portable)

@@ -1,7 +1,7 @@
-unit wldesigner;
+unit wldesign;
 
 {
-  WeKan-Lite — Designer engine (docs/designer.md, designer-schema.sql)
+  WeKan-Lite — Designer engine (docs/designer.md, designer.sql)
 
   Data-driven pages: a page is a `pages` row + its `page_widgets`; the renderer turns that
   into a retro HTML 3.2 (or HTML 4) table, and the Designer is a second set of pages that edit
@@ -25,7 +25,7 @@ interface
 
 uses
   SysUtils, Classes, HTTPDefs, fpjson, jsonparser, zipper,
-  wldb, wltenant, wlauth, wlhtml, wlcolors, wlenhance, wlbrowser;
+  wldb, wltenant, wlauth, wlhtml, wlcolors, wlenhanc, wlbrowse;
 
 type
   TWidget = record
@@ -79,14 +79,14 @@ function TryServePage(ATenant: TWLTenant; const S: TWLSession;
 // --- import / export ----------------------------------------------------------------------
 // Serialize one page (its pages row + page_widgets) to a portable JSON document. Tenant-local
 // ids are omitted; positions are logical (direction-neutral), so a page exported from an RTL
-// tenant imports correctly into an LTR one. File extension: .wlpage (JSON inside).
+// tenant imports correctly into an LTR one. File extension: .wlp (JSON inside).
 function ExportPageJson(Db: TWLDb; const P: TPage): string;
-// Import one .wlpage JSON: upsert by url (existing page with same url is replaced), new ids
+// Import one .wlp JSON: upsert by url (existing page with same url is replaced), new ids
 // generated. Returns the imported page's url, or '' on failure.
 function ImportPageJson(Db: TWLDb; const Json: string): string;
-// Export ALL pages as a .zip (manifest.json + one <slug>.wlpage per page) to OutStream.
+// Export ALL pages as a .zip (manifest.jsn + one <slug>.wlp per page) to OutStream.
 procedure ExportAllPages(Db: TWLDb; OutStream: TStream);
-// Import a .zip produced by ExportAllPages: each .wlpage entry is imported. Returns count.
+// Import a .zip produced by ExportAllPages: each .wlp entry is imported. Returns count.
 function ImportAllPages(Db: TWLDb; InStream: TStream): Integer;
 
 // --- editor endpoints (register these under /designer in wlhttp.lpr) ----------------------
@@ -94,7 +94,7 @@ procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerEditPage(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
-procedure DesignerPageExport(aRequest: TRequest; aResponse: TResponse);   // GET  ?id=  -> .wlpage
+procedure DesignerPageExport(aRequest: TRequest; aResponse: TResponse);   // GET  ?id=  -> .wlp
 procedure DesignerPageImport(aRequest: TRequest; aResponse: TResponse);   // POST file -> upsert
 procedure DesignerExportAll(aRequest: TRequest; aResponse: TResponse);    // GET        -> .zip
 procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);    // POST .zip  -> upsert
@@ -568,7 +568,7 @@ var
 begin
   O := TJSONObject.Create;
   try
-    O.Add('wekanlite_page', 1);                 // format version
+    O.Add('welite_page', 1);                 // format version
     PgO := TJSONObject.Create;
     PgO.Add('url', P.Url);          PgO.Add('title', P.Title);
     PgO.Add('kind', P.Kind);        PgO.Add('builtinKey', P.BuiltinKey);
@@ -693,16 +693,16 @@ begin
       begin
         Entry := TStringStream.Create(ExportPageJson(Db, P));
         Streams.Add(Entry);
-        Z.Entries.AddFileEntry(Entry, UrlToSlug(P.Url) + '.wlpage');
+        Z.Entries.AddFileEntry(Entry, UrlToSlug(P.Url) + '.wlp');
         Urls.Add(P.Url);
       end;
 
-    Manifest.Add('wekanlite_pages', 1);
+    Manifest.Add('welite_pages', 1);
     Manifest.Add('count', Urls.Count);
     Manifest.Add('urls', Urls);
     Entry := TStringStream.Create(Manifest.FormatJSON);
     Streams.Add(Entry);
-    Z.Entries.AddFileEntry(Entry, 'manifest.json');
+    Z.Entries.AddFileEntry(Entry, 'manifest.jsn');
     Manifest.Free;
 
     Z.SaveToStream(OutStream);   // NOTE: exact stream API may vary by FPC version
@@ -730,7 +730,7 @@ end;
 procedure TZipSink.DoDone(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
 var S: TStringStream;
 begin
-  if LowerCase(ExtractFileExt(AItem.ArchiveFileName)) = '.wlpage' then
+  if LowerCase(ExtractFileExt(AItem.ArchiveFileName)) = '.wlp' then
   begin
     AStream.Position := 0;
     S := TStringStream.Create('');
@@ -930,7 +930,7 @@ begin
   aResponse.SendContent;
 end;
 
-// GET /designer/page/export?url=... -> downloads one .wlpage (JSON) file
+// GET /designer/page/export?url=... -> downloads one .wlp (JSON) file
 procedure DesignerPageExport(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; P: TPage;
@@ -948,7 +948,7 @@ begin
   aResponse.Code := 200;
   aResponse.ContentType := 'application/json';
   aResponse.SetCustomHeader('Content-Disposition',
-    'attachment; filename="' + UrlToSlug(P.Url) + '.wlpage"');
+    'attachment; filename="' + UrlToSlug(P.Url) + '.wlp"');
   aResponse.Content := ExportPageJson(T.Db, P);
   aResponse.ContentLength := Length(aResponse.Content);
   aResponse.SendContent;
@@ -1012,7 +1012,7 @@ begin
   end;
 end;
 
-// POST /designer/import (multipart .zip 'file') -> import every .wlpage in the archive
+// POST /designer/import (multipart .zip 'file') -> import every .wlp in the archive
 procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; N: Integer;
