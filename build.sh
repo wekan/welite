@@ -28,28 +28,41 @@ FPCFLAGS="${FPCFLAGS:-}"
 # .o/.ppu/link intermediates), then the finished executable is copied to build/bin/w<code>.exe.
 # <code> is a <=7-char platform name so the binary base "w"+<code> stays <=8 chars; every path
 # component is <=8 chars and the extension is .exe, so the whole tree is DOS 8.3 / Amiga safe.
+# Cross-compiling needs the per-target FPC cross compiler installed first (menu option 4 /
+# fpcupdeluxe). Every NON-Windows target carries -dWLDB_CLI because welite's default build links
+# libsqlite3, which can't be cross-linked (no target lib); -dWLDB_CLI uses the external sqlite3
+# binary instead and links nothing. Windows links sqlite3.dll at runtime, so it keeps the default.
+# ("Build for current platform" always builds the native, linked-SQLite default.)
+#
+# Verified 2026-06-25 on an aarch64 (Apple Silicon) Ubuntu host — "ok" = cross compiler builds and
+# welite cross-compiles; "needs x-bins" = fpcupdeluxe has no cross-binutils/libs for an aarch64
+# host (these generally DO work from an x86_64 host, which has prebuilt cross-bins for them).
+# Plain `-Parm -Tlinux` (soft-float EABI5) also builds, but the armhf/armv7 hard-float flags below
+# clash with the soft-float arm RTL fpcupdeluxe installs ("different FPU mode") — to use them,
+# rebuild the arm cross RTL with matching CROSSOPT.
+#
 # label | fpc -P (cpu) | fpc -T (os) | extra flags | code (<=7 chars)
 PLATFORMS=(
-  "Linux amd64|x86_64|linux||linx64"
-  "Linux arm64|aarch64|linux||lina64"
-  "Linux armhf|arm|linux|-CaEABIHF -CfVFPV3|linahf"
-  "Linux armv7|arm|linux|-Cparmv7a -CfVFPV3 -CaEABIHF|linav7"
-  "Linux s390x|s390x|linux||lins390"
-  "Linux ppc|powerpc|linux||linppc"
-  "Linux ppc64le|powerpc64|linux|-Caelfv2|linp64l"
-  "macOS arm64|aarch64|darwin||maca64"
-  "Windows x86|i386|win32||winx86"
-  "Windows amd64|x86_64|win64||winx64"
-  "DOS|i386|go32v2||dos"
-  "Haiku|x86_64|haiku||haiku"
-  "Amiga m68k|m68k|amiga||ami68k"
-  "AmigaOS 4.1 PPC|powerpc|amiga||amios4"
-  "MorphOS|powerpc|morphos||morphos"
-  "AROS x86|i386|aros||arosx86"
-  "AROS amd64|x86_64|aros||arosx64"
-  "AROS arm64|aarch64|aros||arosa64"
-  "AROS m68k|m68k|aros||aros68k"
-  "AROS ppc|powerpc|aros||arosppc"
+  "Linux amd64|x86_64|linux|-dWLDB_CLI|linx64"                       # ok
+  "Linux arm64|aarch64|linux|-dWLDB_CLI|lina64"                      # ok (native on arm64 host)
+  "Linux armhf|arm|linux|-CaEABIHF -CfVFPV3 -dWLDB_CLI|linahf"       # needs hard-float arm RTL
+  "Linux armv7|arm|linux|-Cparmv7a -CfVFPV3 -CaEABIHF -dWLDB_CLI|linav7"  # needs hard-float arm RTL
+  "Linux s390x|s390x|linux|-dWLDB_CLI|lins390"                       # no: fpcupdeluxe rejects s390x
+  "Linux ppc|powerpc|linux|-dWLDB_CLI|linppc"                        # needs x-bins
+  "Linux ppc64le|powerpc64|linux|-Caelfv2 -dWLDB_CLI|linp64l"        # needs x-bins
+  "macOS arm64|aarch64|darwin|-dWLDB_CLI|maca64"                     # needs x-bins
+  "Windows x86|i386|win32||winx86"                                   # ok (linked SQLite)
+  "Windows amd64|x86_64|win64||winx64"                               # ok (linked SQLite)
+  "DOS|i386|go32v2|-dWLDB_CLI|dos"                                   # needs x-bins
+  "Haiku|x86_64|haiku|-dWLDB_CLI|haiku"                              # needs x-bins
+  "Amiga m68k|m68k|amiga|-dWLDB_CLI|ami68k"                          # needs x-bins
+  "AmigaOS 4.1 PPC|powerpc|amiga|-dWLDB_CLI|amios4"                  # needs x-bins
+  "MorphOS|powerpc|morphos|-dWLDB_CLI|morphos"                       # needs x-bins
+  "AROS x86|i386|aros|-dWLDB_CLI|arosx86"                            # needs x-bins
+  "AROS amd64|x86_64|aros|-dWLDB_CLI|arosx64"                        # needs x-bins
+  "AROS arm64|aarch64|aros|-dWLDB_CLI|arosa64"                       # needs x-bins
+  "AROS m68k|m68k|aros|-dWLDB_CLI|aros68k"                           # needs x-bins
+  "AROS ppc|powerpc|aros|-dWLDB_CLI|arosppc"                         # needs x-bins
 )
 
 # Build into build/arch/<code>/ then copy the executable to build/bin/w<code>.exe.

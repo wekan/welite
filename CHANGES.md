@@ -46,6 +46,15 @@ flow, a Global Admin Panel, and reorganized the build output. Verified on FreePa
   falls back to launching the fpcupdeluxe GUI. The install dir is kept outside the repo
   (default `~/fpcupdeluxe`); fpcupdeluxe derives its basedir from the working dir and aborts if that
   is inside another git repo. Verbose log to `build/log/xtools.log`, per-target pass/fail.
+- **Cross-target sweep + per-target flags**: swept all 18 cross targets (install cross FPC, then
+  cross-build welite) on an aarch64 host. Working there: `x86_64-linux`, `arm-linux`, `i386-win32`,
+  `x86_64-win64` (plus native `aarch64-linux`); the rest fail because fpcupdeluxe ships no
+  aarch64-host cross-binutils/libs for them (they work from an x86_64 host). welite's default build
+  links `libsqlite3`, which can't be cross-linked, so every non-Windows `PLATFORMS` entry now carries
+  `-dWLDB_CLI` (external `sqlite3`, links nothing); Windows keeps the linked default (runtime DLL).
+  armhf/armv7's hard-float flags clash with fpcupdeluxe's soft-float arm RTL ("different FPU mode").
+  Each `PLATFORMS` row is annotated with its host requirement; "Build for current platform" still
+  builds the native linked-SQLite default.
 - **`CLAUDE.md`**: documents the DOS 8.3 filename rule (≤8-char names, ≤3-char extensions, safe
   charset, tooling exceptions) with an audit snippet, plus the build-output layout. Audited the
   tracked tree: zero 8.3 violations outside host tooling (`.gitignore`, `.tx/`).
