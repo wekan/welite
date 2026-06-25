@@ -29,12 +29,15 @@ flow, a Global Admin Panel, and reorganized the build output. Verified on FreePa
   the executable to `build/bin/w<code>.exe` — a `w` prefix plus a ≤7-char platform code
   (`wlinx64.exe`, `wdos.exe`, `wami68k.exe`, …) so every path component stays ≤8 chars and the
   binaries are unique in one directory. "Build current platform" → `build/bin/wcurrent.exe`.
-- **Cross-toolchain installer** (`build.sh` menu option 4, "Install FPC cross-toolchains (Ubuntu
-  26.04 amd64/arm64)"): `apt-get` installs the host FPC, RTL source and Linux cross-binutils, then
-  builds the FPC cross compilers/RTLs it can — the Linux CPU variants (arm64/armhf/s390x/ppc/
-  ppc64le) plus Windows x86/amd64 and DOS (FPC's internal assembler+linker). Verbose output to
-  `build/log/xtools.log`; reports per-target pass/fail. macOS, Amiga, AmigaOS4, MorphOS, AROS and
-  Haiku are not in Ubuntu's repos and still need fpcupdeluxe.
+- **Cross-compiler installer** (`build.sh` menu option 4, "Install FPC cross-compilers via
+  fpcupdeluxe (Ubuntu amd64/arm64)"): apt can't provide FPC cross-compilers (none packaged,
+  `fpc-source` is stripped of the build Makefiles, exotic OSes have no Ubuntu binutils), so this
+  downloads [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe), which fetches the FPC
+  source and builds the cross compiler + cross-binutils per target — covering Amiga/AROS/MorphOS/
+  Haiku/macOS as well as Linux/Windows/DOS. The released binary is a GTK GUI driven headless under
+  `xvfb-run` (`--installdir --cputarget --ostarget --noconfirm --skip=lazarus`); apt installs the
+  build prerequisites + `xvfb`. Verbose log to `build/log/xtools.log`, per-target pass/fail, and the
+  session's `FPC` is pointed at the new compiler so the build menu can use the cross targets.
 - **`CLAUDE.md`**: documents the DOS 8.3 filename rule (≤8-char names, ≤3-char extensions, safe
   charset, tooling exceptions) with an audit snippet, plus the build-output layout. Audited the
   tracked tree: zero 8.3 violations outside host tooling (`.gitignore`, `.tx/`).

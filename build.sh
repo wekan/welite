@@ -112,79 +112,91 @@ select_platform() {
   fi
 }
 
-# Ubuntu 26.04 (amd64/arm64 host) convenience: install the host FPC + RTL source + the Linux
-# cross-binutils Ubuntu ships, then build the FPC cross compilers/RTLs for the targets Ubuntu can
-# support. The Linux CPU variants need cross-binutils; the Windows/DOS targets use FPC's internal
-# assembler+linker (no binutils). macOS, Amiga, AmigaOS4, MorphOS, AROS and Haiku are NOT in
-# Ubuntu's repos — build those with fpcupdeluxe (https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
+# Install FPC cross-compilers via fpcupdeluxe (https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
+# Ubuntu/Debian, amd64 or arm64 host. apt can't provide FPC cross-compilers (no packaged cross
+# compilers, fpc-source is stripped of the build Makefiles, and the exotic OSes have no Ubuntu
+# binutils), so this downloads fpcupdeluxe — which fetches the FPC source and builds the cross
+# compiler + cross-binutils for each target, including Amiga/AROS/MorphOS/Haiku. The released
+# fpcupdeluxe binary is a GTK GUI that needs a display even in command-line mode, so it is driven
+# headless under xvfb-run. This is LONG (each target downloads + compiles FPC); failures (e.g.
+# targets fpcupdeluxe does not support) are logged per target and do not stop the rest.
 install_toolchains() {
-  if [ ! -r /etc/os-release ] || ! grep -qi '^ID=ubuntu' /etc/os-release; then
-    echo "  Not Ubuntu (per /etc/os-release) — this installer is Ubuntu-only. Aborting."; return 1
-  fi
-  case "$(uname -m)" in
+  case "$(uname -s)" in Linux) ;; *) echo "  Linux host required."; return 1 ;; esac
+  local host; host="$(uname -m)"     # x86_64 / aarch64 — matches the fpcupdeluxe asset arch
+  case "$host" in
     x86_64|aarch64) ;;
-    *) echo "  Host arch $(uname -m) unsupported (expected amd64/arm64). Aborting."; return 1 ;;
+    *) echo "  Host arch $host unsupported (need amd64/arm64). Aborting."; return 1 ;;
   esac
+  if ! command -v apt-get >/dev/null 2>&1; then
+    echo "  apt-get not found — this installer targets Ubuntu/Debian. Aborting."; return 1
+  fi
   local SUDO=""
   if [ "$(id -u)" -ne 0 ]; then
     if command -v sudo >/dev/null 2>&1; then SUDO="sudo"; else
       echo "  Need root or sudo to apt-get install. Re-run as root."; return 1; fi
   fi
+  local inst="${FPCUP_DIR:-$HOME/fpcupdeluxe}"
 
-  echo ">> apt-get: host FPC, RTL source, and Linux cross-binutils"
+  echo ">> apt-get: fpcupdeluxe build prerequisites (+ xvfb for headless GUI)"
   $SUDO apt-get update || { echo "  apt-get update failed."; return 1; }
-  $SUDO apt-get install -y fpc fpc-source make \
-    binutils-x86-64-linux-gnu \
-    binutils-aarch64-linux-gnu \
-    binutils-arm-linux-gnueabihf \
-    binutils-s390x-linux-gnu \
-    binutils-powerpc-linux-gnu \
-    binutils-powerpc64le-linux-gnu \
-    || { echo "  apt-get install failed."; return 1; }
-
-  local fpcsrc
-  fpcsrc="$(ls -d /usr/share/fpcsrc/* 2>/dev/null | sort -V | tail -1)"
-  if [ -z "$fpcsrc" ] || [ ! -d "$fpcsrc" ]; then
-    echo "  Cross-binutils installed, but the FPC source tree (fpc-source) was not found under"
-    echo "  /usr/share/fpcsrc — cannot build cross RTLs. Install 'fpc-source' and re-run."
-    return 1
+  $SUDO apt-get install -y \
+      build-essential git subversion unzip make curl ca-certificates \
+      xvfb xauth libgtk2.0-0 \
+      || { echo "  apt-get install failed."; return 1; }
+  if ! command -v xvfb-run >/dev/null 2>&1; then
+    echo "  xvfb-run missing after install — cannot drive fpcupdeluxe headless. Aborting."; return 1
   fi
 
-  mkdir -p "$OUTDIR/log"
-  local log="$OUTDIR/log/xtools.log"
-  : > "$log"
-  echo ">> Building FPC cross compilers from $fpcsrc  (verbose output -> $log)"
+  mkdir -p "$inst" "$OUTDIR/log"
+  local log="$OUTDIR/log/xtools.log"; : > "$log"
+  local fpcup="$inst/fpcupdeluxe"
+  local url="https://github.com/LongDirtyAnimAlf/fpcupdeluxe/releases/latest/download/fpcupdeluxe-$host-linux"
+  echo ">> Downloading fpcupdeluxe ($host) -> $fpcup"
+  curl -fSL --retry 3 -o "$fpcup" "$url" || { echo "  download failed: $url"; return 1; }
+  chmod +x "$fpcup"
 
-  # feasible cross targets:  cpu | os | binutils-prefix (empty = FPC-internal) | CROSSOPT
+  # fpcupdeluxe's released binary is a GUI app; passing CLI args runs it headless, but it still
+  # needs a display to init the widgetset, hence xvfb-run. --skip=lazarus keeps it FPC-only.
+  run_fpcup() { xvfb-run -a "$fpcup" --installdir="$inst" --noconfirm --verbose --skip=lazarus "$@"; }
+
+  echo ">> Installing base (native) FPC into $inst  [LONG; verbose -> $log]"
+  if ! run_fpcup >>"$log" 2>&1; then
+    echo "  base FPC install failed — see $log"; return 1
+  fi
+
+  # build.sh targets -> fpcupdeluxe cpu/os. The host-native Linux target is skipped (just built).
   local CROSS=(
-    "x86_64|linux|x86_64-linux-gnu-|"
-    "aarch64|linux|aarch64-linux-gnu-|"
-    "arm|linux|arm-linux-gnueabihf-|-CaEABIHF -CfVFPV3"
-    "s390x|linux|s390x-linux-gnu-|"
-    "powerpc|linux|powerpc-linux-gnu-|"
-    "powerpc64|linux|powerpc64le-linux-gnu-|-Caelfv2"
-    "x86_64|win64||"
-    "i386|win32||"
-    "i386|go32v2||"
+    "Linux amd64|x86_64|linux"   "Linux arm64|aarch64|linux"  "Linux armhf/armv7|arm|linux"
+    "Linux s390x|s390x|linux"    "Linux ppc|powerpc|linux"    "Linux ppc64le|powerpc64|linux"
+    "macOS arm64|aarch64|darwin" "Windows x86|i386|win32"     "Windows amd64|x86_64|win64"
+    "DOS|i386|go32v2"            "Haiku|x86_64|haiku"         "Amiga m68k|m68k|amiga"
+    "AmigaOS 4.1 PPC|powerpc|amiga" "MorphOS|powerpc|morphos" "AROS x86|i386|aros"
+    "AROS amd64|x86_64|aros"     "AROS arm64|aarch64|aros"    "AROS m68k|m68k|aros"
+    "AROS ppc|powerpc|aros"
   )
-  local entry cpu os pfx copt ok=0 fail=0
+  local entry label cpu os ok=0 fail=0 skip=0
   for entry in "${CROSS[@]}"; do
-    IFS='|' read -r cpu os pfx copt <<< "$entry"
-    echo "   -- $cpu-$os"
-    local -a margs=( -C "$fpcsrc" crossinstall
-                     CPU_TARGET="$cpu" OS_TARGET="$os"
-                     FPC="$(command -v fpc)" INSTALL_PREFIX=/usr )
-    [ -n "$pfx" ]  && margs+=( BINUTILSPREFIX="$pfx" )
-    [ -n "$copt" ] && margs+=( CROSSOPT="$copt" )
-    if $SUDO make "${margs[@]}" >>"$log" 2>&1; then
+    IFS='|' read -r label cpu os <<< "$entry"
+    if [ "$os" = linux ] && [ "$cpu" = "$host" ]; then
+      echo "   -- $label  (host-native, already built)"; skip=$((skip + 1)); continue
+    fi
+    echo "   -- $label  ($cpu-$os)  [LONG]"
+    if run_fpcup --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1; then
       ok=$((ok + 1))
     else
-      fail=$((fail + 1)); echo "      FAILED ($cpu-$os) — see $log"
+      fail=$((fail + 1)); echo "      FAILED ($cpu-$os) — see $log (target may be unsupported)"
     fi
   done
-  echo "== cross toolchains: $ok built, $fail failed (host-native target already present) =="
-  echo "   Not available via Ubuntu apt (use fpcupdeluxe): macOS arm64, Amiga m68k,"
-  echo "   AmigaOS 4.1 PPC, MorphOS, AROS x86/amd64/arm64/m68k/ppc, Haiku."
+  echo "== cross compilers: $ok built, $fail failed, $skip native =="
+
+  # point build.sh at the fpcupdeluxe compiler so the build menu uses the new cross targets
+  local newfpc="$inst/fpc/bin/$host-linux/fpc"
+  if [ -x "$newfpc" ]; then
+    FPC="$newfpc"
+    echo "   Using FPC=$FPC for this session (export it to make it permanent)."
+  else
+    echo "   Set FPC to the fpcupdeluxe compiler before building, e.g. $inst/fpc/bin/$host-linux/fpc"
+  fi
 }
 
 while true; do
@@ -194,7 +206,7 @@ while true; do
   1) Build for current platform
   2) Build for all platforms
   3) Select platform and build for it
-  4) Install FPC cross-toolchains (Ubuntu 26.04 amd64/arm64)
+  4) Install FPC cross-compilers via fpcupdeluxe (Ubuntu amd64/arm64)
   5) Quit
 MENU
   printf "  Choice: "
