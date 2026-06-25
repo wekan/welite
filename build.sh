@@ -264,7 +264,9 @@ _fpcup_launch_gui() {
 # `fpclazup` and runs it to build the cross compiler + cross-binutils per target (Amiga/AROS/
 # MorphOS/Haiku included). If that can't be set up it falls back to launching the fpcupdeluxe GUI.
 # LONG-running; per-target results + verbose output go to build/log/xtools.log.
+# See docs/cross.md for the full build chain and the verified per-target support matrix.
 install_toolchains() {
+  echo ">> FPC cross-compiler install (fpcupdeluxe). Details + support matrix: docs/cross.md"
   case "$(uname -s)" in Linux) ;; *) echo "  Linux host required."; return 1 ;; esac
   local host; host="$(uname -m)"     # x86_64 / aarch64 — matches the fpcupdeluxe asset arch
   case "$host" in

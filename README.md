@@ -34,6 +34,8 @@ working prototypes in this tree** and aligned to the portable contract:
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
   Code: `wlapi.pas`.
+- **`docs/cross.md`** — cross-compiling for every target via `build.sh` option 4 (fpcupdeluxe):
+  the build chain, the `-dWLDB_CLI` rule, and the verified per-target support matrix.
 
 ## Reference units (v0.1 skeletons)
 | File | Implements | Notes |
