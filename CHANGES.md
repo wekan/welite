@@ -40,8 +40,10 @@ flow, a Global Admin Panel, and reorganized the build output. Verified on FreePa
   pieces, all handled automatically: seed the bootstrap compiler from the system FPC; `--disablejobs`
   (the parallel RTL build races); `--fpcVersion=fixes-3.2` (FPC 3.2.2 doesn't link on glibc ≥2.34,
   which removed `__libc_csu_init/_fini`); `--only=FPC` (skip Lazarus/LCLCross); and treat "a working
-  `fpc` binary exists" as success rather than fpclazup's exit code. If the build path can't be set
-  up it falls back to launching the fpcupdeluxe GUI. The install dir is kept outside the repo
+  `fpc` binary exists" as success rather than fpclazup's exit code. `do_build` also exports
+  `PPC_CONFIG_PATH` next to the chosen `FPC` so the fpcupdeluxe `fpc.cfg`/units are used (the static
+  compiler otherwise falls back to the system `/etc/fpc.cfg`). If the build path can't be set up it
+  falls back to launching the fpcupdeluxe GUI. The install dir is kept outside the repo
   (default `~/fpcupdeluxe`); fpcupdeluxe derives its basedir from the working dir and aborts if that
   is inside another git repo. Verbose log to `build/log/xtools.log`, per-target pass/fail.
 - **`CLAUDE.md`**: documents the DOS 8.3 filename rule (≤8-char names, ≤3-char extensions, safe

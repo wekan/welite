@@ -57,6 +57,11 @@ do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
   local code="$1" label="$2"; shift 2
   local arch="$ARCHROOT/$code" bin="w$code.exe"
   mkdir -p "$arch" "$BINDIR"
+  # When $FPC is an fpcupdeluxe-style compiler, its fpc.cfg sits next to the binary but the
+  # (statically linked) compiler searches ../etc and /etc, so it would use the system /etc/fpc.cfg
+  # and the wrong units. Point PPC_CONFIG_PATH at that fpc.cfg so the right config/units are used.
+  local cfgdir; cfgdir="$(dirname "$FPC")"
+  [ -f "$cfgdir/fpc.cfg" ] && export PPC_CONFIG_PATH="$cfgdir"
   echo ">> Building $label  -> $arch/$bin"
   # shellcheck disable=SC2086
   if "$FPC" $BASEFLAGS $FPCFLAGS "$@" -FU"$arch" -FE"$arch" -o"$arch/$bin" "$SRC"; then
