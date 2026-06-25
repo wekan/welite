@@ -3,6 +3,8 @@
 NOTE: This WeKan-Lite version has retro-look. Modern-look original WeKan is at
 https://wekan.fi and https://github.com/wekan/wekan .
 
+Uses DOS filenames 8 characters, with extension 3 characters, like FILENAME.TXT
+
 FreePascal-specific design docs and reference code for WeKan-Lite, **distilled from the two
 working prototypes in this tree** and aligned to the portable contract:
 
