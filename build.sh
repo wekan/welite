@@ -112,14 +112,87 @@ select_platform() {
   fi
 }
 
-# Install FPC cross-compilers via fpcupdeluxe (https://github.com/LongDirtyAnimAlf/fpcupdeluxe).
-# Ubuntu/Debian, amd64 or arm64 host. apt can't provide FPC cross-compilers (no packaged cross
-# compilers, fpc-source is stripped of the build Makefiles, and the exotic OSes have no Ubuntu
-# binutils), so this downloads fpcupdeluxe — which fetches the FPC source and builds the cross
-# compiler + cross-binutils for each target, including Amiga/AROS/MorphOS/Haiku. The released
-# fpcupdeluxe binary is a GTK GUI that needs a display even in command-line mode, so it is driven
-# headless under xvfb-run. This is LONG (each target downloads + compiles FPC); failures (e.g.
-# targets fpcupdeluxe does not support) are logged per target and do not stop the rest.
+# build.sh target -> fpcupdeluxe cpu/os. Used by both the fpclazup and GUI paths.
+FPCUP_CROSS=(
+  "Linux amd64|x86_64|linux"   "Linux arm64|aarch64|linux"  "Linux armhf/armv7|arm|linux"
+  "Linux s390x|s390x|linux"    "Linux ppc|powerpc|linux"    "Linux ppc64le|powerpc64|linux"
+  "macOS arm64|aarch64|darwin" "Windows x86|i386|win32"     "Windows amd64|x86_64|win64"
+  "DOS|i386|go32v2"            "Haiku|x86_64|haiku"         "Amiga m68k|m68k|amiga"
+  "AmigaOS 4.1 PPC|powerpc|amiga" "MorphOS|powerpc|morphos" "AROS x86|i386|aros"
+  "AROS amd64|x86_64|aros"     "AROS arm64|aarch64|aros"    "AROS m68k|m68k|aros"
+  "AROS ppc|powerpc|aros"
+)
+
+# Automated path: build fpcupdeluxe's real console tool `fpclazup` (LCL nogui widgetset) with
+# lazbuild, then run it headless to fetch the FPC source and build the cross compiler +
+# cross-binutils per target. Returns 0 only if base FPC was installed; 1 on any setup failure so
+# the caller can fall back to the GUI. Verbose output -> $log.   args: host inst src log SUDO
+_fpcup_build_fpclazup() {
+  local host="$1" inst="$2" src="$3" log="$4" SUDO="$5"
+  echo ">> apt-get: Lazarus (lazbuild + nogui LCL) and build prerequisites"
+  $SUDO apt-get update            || return 1
+  $SUDO apt-get install -y lazarus lcl-nogui git subversion build-essential make unzip \
+        curl ca-certificates      || return 1
+  command -v lazbuild >/dev/null 2>&1 || { echo "  lazbuild not found after install."; return 1; }
+
+  echo ">> Cloning fpcupdeluxe and building headless fpclazup (nogui)  [verbose -> $log]"
+  rm -rf "$src"
+  git clone --depth 1 https://github.com/LongDirtyAnimAlf/fpcupdeluxe "$src" >>"$log" 2>&1 || return 1
+  ( cd "$src" && lazbuild --ws=nogui fpclazup.lpi ) >>"$log" 2>&1
+  local fpclazup
+  fpclazup="$(find "$src" -maxdepth 2 -type f -name fpclazup -perm -u+x 2>/dev/null | head -1)"
+  [ -n "$fpclazup" ] || { echo "  lazbuild did not produce fpclazup — see $log."; return 1; }
+
+  echo ">> Installing base (native) FPC into $inst  [LONG — watch: tail -f $log]"
+  "$fpclazup" --installdir="$inst" --noconfirm --verbose --skip=lazarus >>"$log" 2>&1 \
+    || { echo "  base FPC install failed — see $log."; return 1; }
+
+  local entry label cpu os ok=0 fail=0 skip=0
+  for entry in "${FPCUP_CROSS[@]}"; do
+    IFS='|' read -r label cpu os <<< "$entry"
+    if [ "$os" = linux ] && [ "$cpu" = "$host" ]; then
+      echo "   -- $label  (host-native, already built)"; skip=$((skip + 1)); continue
+    fi
+    echo "   -- $label  ($cpu-$os)  [LONG]"
+    if "$fpclazup" --installdir="$inst" --noconfirm --verbose --skip=lazarus \
+         --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1; then
+      ok=$((ok + 1))
+    else
+      fail=$((fail + 1)); echo "      FAILED ($cpu-$os) — see $log (target may be unsupported)"
+    fi
+  done
+  echo "== cross compilers: $ok built, $fail failed, $skip native =="
+  return 0
+}
+
+# Fallback path: the released fpcupdeluxe is GUI-only and will not run headless, so download it and
+# (if a display exists) launch it for the user to install FPC + tick the cross targets by hand.
+_fpcup_launch_gui() {
+  local host="$1" inst="$2"
+  local gui="$inst/fpcupdeluxe"
+  if [ ! -x "$gui" ]; then
+    local url="https://github.com/LongDirtyAnimAlf/fpcupdeluxe/releases/latest/download/fpcupdeluxe-$host-linux"
+    echo "   Downloading $url"
+    curl -fSL --retry 3 -o "$gui" "$url" || { echo "   download failed."; return 1; }
+    chmod +x "$gui"
+  fi
+  echo "   In the GUI: set the install directory to $inst, install FPC, then tick the cross"
+  echo "   targets you need (Amiga/AROS/MorphOS/Haiku/Windows/DOS/macOS) and install them."
+  echo "   Afterwards build here with:  FPC=$inst/fpc/bin/$host-linux/fpc ./build.sh"
+  if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    echo "   Launching the GUI now..."
+    ( "$gui" >/dev/null 2>&1 & )
+  else
+    echo "   No display detected — run it on a desktop session:  $gui"
+  fi
+}
+
+# Install FPC cross-compilers (Ubuntu/Debian, amd64/arm64). apt can't provide them (no packaged
+# cross compilers; fpc-source ships without the build Makefiles; exotic OSes have no Ubuntu
+# binutils), so this uses fpcupdeluxe. It first builds fpcupdeluxe's headless console tool
+# `fpclazup` and runs it to build the cross compiler + cross-binutils per target (Amiga/AROS/
+# MorphOS/Haiku included). If that can't be set up it falls back to launching the fpcupdeluxe GUI.
+# LONG-running; per-target results + verbose output go to build/log/xtools.log.
 install_toolchains() {
   case "$(uname -s)" in Linux) ;; *) echo "  Linux host required."; return 1 ;; esac
   local host; host="$(uname -m)"     # x86_64 / aarch64 — matches the fpcupdeluxe asset arch
@@ -136,67 +209,20 @@ install_toolchains() {
       echo "  Need root or sudo to apt-get install. Re-run as root."; return 1; fi
   fi
   local inst="${FPCUP_DIR:-$HOME/fpcupdeluxe}"
-
-  echo ">> apt-get: fpcupdeluxe build prerequisites (+ xvfb for headless GUI)"
-  $SUDO apt-get update || { echo "  apt-get update failed."; return 1; }
-  $SUDO apt-get install -y \
-      build-essential git subversion unzip make curl ca-certificates \
-      xvfb xauth libgtk2.0-0 \
-      || { echo "  apt-get install failed."; return 1; }
-  if ! command -v xvfb-run >/dev/null 2>&1; then
-    echo "  xvfb-run missing after install — cannot drive fpcupdeluxe headless. Aborting."; return 1
-  fi
-
+  local src="$inst/fpcupsrc"
   mkdir -p "$inst" "$OUTDIR/log"
   local log="$OUTDIR/log/xtools.log"; : > "$log"
-  local fpcup="$inst/fpcupdeluxe"
-  local url="https://github.com/LongDirtyAnimAlf/fpcupdeluxe/releases/latest/download/fpcupdeluxe-$host-linux"
-  echo ">> Downloading fpcupdeluxe ($host) -> $fpcup"
-  curl -fSL --retry 3 -o "$fpcup" "$url" || { echo "  download failed: $url"; return 1; }
-  chmod +x "$fpcup"
 
-  # fpcupdeluxe's released binary is a GUI app; passing CLI args runs it headless, but it still
-  # needs a display to init the widgetset, hence xvfb-run. --skip=lazarus keeps it FPC-only.
-  run_fpcup() { xvfb-run -a "$fpcup" --installdir="$inst" --noconfirm --verbose --skip=lazarus "$@"; }
-
-  echo ">> Installing base (native) FPC into $inst  [LONG; verbose -> $log]"
-  if ! run_fpcup >>"$log" 2>&1; then
-    echo "  base FPC install failed — see $log"; return 1
+  if _fpcup_build_fpclazup "$host" "$inst" "$src" "$log" "$SUDO"; then
+    local newfpc="$inst/fpc/bin/$host-linux/fpc"
+    if [ -x "$newfpc" ]; then
+      FPC="$newfpc"; echo "   Using FPC=$FPC for this session (export it to make it permanent)."
+    fi
+    return 0
   fi
 
-  # build.sh targets -> fpcupdeluxe cpu/os. The host-native Linux target is skipped (just built).
-  local CROSS=(
-    "Linux amd64|x86_64|linux"   "Linux arm64|aarch64|linux"  "Linux armhf/armv7|arm|linux"
-    "Linux s390x|s390x|linux"    "Linux ppc|powerpc|linux"    "Linux ppc64le|powerpc64|linux"
-    "macOS arm64|aarch64|darwin" "Windows x86|i386|win32"     "Windows amd64|x86_64|win64"
-    "DOS|i386|go32v2"            "Haiku|x86_64|haiku"         "Amiga m68k|m68k|amiga"
-    "AmigaOS 4.1 PPC|powerpc|amiga" "MorphOS|powerpc|morphos" "AROS x86|i386|aros"
-    "AROS amd64|x86_64|aros"     "AROS arm64|aarch64|aros"    "AROS m68k|m68k|aros"
-    "AROS ppc|powerpc|aros"
-  )
-  local entry label cpu os ok=0 fail=0 skip=0
-  for entry in "${CROSS[@]}"; do
-    IFS='|' read -r label cpu os <<< "$entry"
-    if [ "$os" = linux ] && [ "$cpu" = "$host" ]; then
-      echo "   -- $label  (host-native, already built)"; skip=$((skip + 1)); continue
-    fi
-    echo "   -- $label  ($cpu-$os)  [LONG]"
-    if run_fpcup --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1; then
-      ok=$((ok + 1))
-    else
-      fail=$((fail + 1)); echo "      FAILED ($cpu-$os) — see $log (target may be unsupported)"
-    fi
-  done
-  echo "== cross compilers: $ok built, $fail failed, $skip native =="
-
-  # point build.sh at the fpcupdeluxe compiler so the build menu uses the new cross targets
-  local newfpc="$inst/fpc/bin/$host-linux/fpc"
-  if [ -x "$newfpc" ]; then
-    FPC="$newfpc"
-    echo "   Using FPC=$FPC for this session (export it to make it permanent)."
-  else
-    echo "   Set FPC to the fpcupdeluxe compiler before building, e.g. $inst/fpc/bin/$host-linux/fpc"
-  fi
+  echo "!! Automated fpclazup path unavailable — see $log. Falling back to the fpcupdeluxe GUI."
+  _fpcup_launch_gui "$host" "$inst"
 }
 
 while true; do

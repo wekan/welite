@@ -56,3 +56,10 @@ src/wlpublic.res
 /uploads
 /build
 /dist
+
+# fpcupdeluxe GUI config files (created if launched from the repo dir)
+fpcup.ini
+settings.ini
+defmods.ini
+fpcupdeluxe.en.po
+fpcupdeluxe

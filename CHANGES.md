@@ -29,15 +29,16 @@ flow, a Global Admin Panel, and reorganized the build output. Verified on FreePa
   the executable to `build/bin/w<code>.exe` — a `w` prefix plus a ≤7-char platform code
   (`wlinx64.exe`, `wdos.exe`, `wami68k.exe`, …) so every path component stays ≤8 chars and the
   binaries are unique in one directory. "Build current platform" → `build/bin/wcurrent.exe`.
-- **Cross-compiler installer** (`build.sh` menu option 4, "Install FPC cross-compilers via
-  fpcupdeluxe (Ubuntu amd64/arm64)"): apt can't provide FPC cross-compilers (none packaged,
-  `fpc-source` is stripped of the build Makefiles, exotic OSes have no Ubuntu binutils), so this
-  downloads [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe), which fetches the FPC
-  source and builds the cross compiler + cross-binutils per target — covering Amiga/AROS/MorphOS/
-  Haiku/macOS as well as Linux/Windows/DOS. The released binary is a GTK GUI driven headless under
-  `xvfb-run` (`--installdir --cputarget --ostarget --noconfirm --skip=lazarus`); apt installs the
-  build prerequisites + `xvfb`. Verbose log to `build/log/xtools.log`, per-target pass/fail, and the
-  session's `FPC` is pointed at the new compiler so the build menu can use the cross targets.
+- **Cross-compiler installer** (`build.sh` menu option 4, Ubuntu/Debian amd64/arm64): apt can't
+  provide FPC cross-compilers (none packaged, `fpc-source` is stripped of the build Makefiles,
+  exotic OSes have no Ubuntu binutils), so this uses
+  [fpcupdeluxe](https://github.com/LongDirtyAnimAlf/fpcupdeluxe). Preferred path: apt-install
+  Lazarus (`lazbuild` + nogui LCL), build fpcupdeluxe's real headless console tool `fpclazup`
+  (`LCLWidgetType=nogui`), and run it to build the cross compiler + cross-binutils per target —
+  Amiga/AROS/MorphOS/Haiku/macOS as well as Linux/Windows/DOS — then point the session `FPC` at the
+  result. If that can't be set up it falls back to downloading and launching the fpcupdeluxe GUI
+  (the released binary is GUI-only and does nothing when driven headless). Verbose log to
+  `build/log/xtools.log`, per-target pass/fail.
 - **`CLAUDE.md`**: documents the DOS 8.3 filename rule (≤8-char names, ≤3-char extensions, safe
   charset, tooling exceptions) with an audit snippet, plus the build-output layout. Audited the
   tracked tree: zero 8.3 violations outside host tooling (`.gitignore`, `.tx/`).
