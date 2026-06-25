@@ -31,7 +31,7 @@ uses
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
   SysUtils, Classes, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 const
@@ -64,19 +64,57 @@ begin
   aResponse.SendContent;
 end;
 
+// 17-char Mongo-style id (schema.sql convention; same alphabet as wlapi.NewId). Seeded by the
+// Randomize at program start.
+function NewId: string;
+const A = '23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz';
+var i: Integer;
+begin
+  SetLength(Result, 17);
+  for i := 1 to 17 do Result[i] := A[Random(Length(A)) + 1];
+end;
+
+// True when the tenant has no accounts yet — the first person to register becomes Global Admin.
+function NoUsersYet(T: TWLTenant): Boolean;
+var Rows: TWLRows;
+begin
+  Rows := T.Db.Query('SELECT COUNT(*) FROM users;');
+  Result := (Length(Rows) > 0) and (Length(Rows[0]) > 0) and (Rows[0][0] = '0');
+end;
+
 // GET / — board list for the resolved tenant (HTML 3.2 baseline; enhance later).
 procedure HomeEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
+  S: TWLSession;
   Rows: TWLRows;
   Body: string;
   i: Integer;
+  IsGAdmin: Boolean;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
 
+  // No accounts yet -> send the visitor to the login page (which links to register). The first
+  // person to register becomes the Global Admin; everyone after is a Normal user.
+  if NoUsersYet(T) then
+  begin
+    aResponse.Code := 302;
+    aResponse.SetCustomHeader('Location', '/sign-in');
+    aResponse.SendContent;
+    Exit;
+  end;
+
+  // Greet the signed-in user and flag the Global Admin (users.isAdmin = 1).
+  IsGAdmin := False;
+  if ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
+    IsGAdmin := IsGlobalAdmin(T.Db, S);
+
   Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
-  if T.IsAdmin then
-    Body := Body + '<p><b>Global Admin</b> &mdash; manage all domains.</p>' + LineEnding;
+  if IsGAdmin then
+    Body := Body + '<p><b>Global Admin</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
+            '<a href="' + HtmlAttr(WithSessionId('/admin', S.SessionId)) + '">Admin Panel</a></p>' + LineEnding
+  else if S.Username <> '' then
+    Body := Body + '<p>Signed in as ' + HtmlEncode(S.Username) + '.</p>' + LineEnding;
 
   Rows := T.Db.Query('SELECT title FROM boards WHERE archived=0 ORDER BY sort;');
   Body := Body + '<h2>Boards</h2><ul>' + LineEnding;
@@ -86,7 +124,7 @@ begin
   if Length(Rows) = 0 then
     Body := Body + '<li><i>No boards yet.</i></li>' + LineEnding;
   Body := Body + '</ul>' + LineEnding +
-          '<p><a href="/sign-in">Sign in</a></p>';
+          '<p><a href="/sign-in">Sign in</a> | <a href="/register">Register</a></p>';
   // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
   Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
   SendHtml(aResponse, Page32('WeKan-Lite', Body));
@@ -119,7 +157,8 @@ begin
       Exit;
     end;
     SendHtml(aResponse, Page32('Sign in',
-      '<p>Invalid login.</p><p><a href="/sign-in">Try again</a></p>'));
+      '<p>Invalid login.</p><p><a href="/sign-in">Try again</a>' +
+      ' | <a href="/register">Register</a></p>'));
     Exit;
   end;
 
@@ -130,7 +169,84 @@ begin
     '  Username <input name="username"><br>' + LineEnding +
     '  Password <input type="password" name="password"><br>' + LineEnding +
     '  <input type="submit" value="Sign in">' + LineEnding +
-    '</form>'));
+    '</form>' + LineEnding +
+    '<p><a href="/register">Create an account (Register)</a></p>'));
+end;
+
+// GET/POST /register — create an account. The first account in a tenant becomes the Global
+// Admin (users.isAdmin = 1); subsequent accounts are Normal users. No-JS / no-cookie, like sign-in.
+procedure RegisterEndpoint(aRequest: TRequest; aResponse: TResponse);
+var
+  T: TWLTenant;
+  S: TWLSession;
+  Username, Password, Confirm, Uid, Hash, Iso, Body: string;
+  First: Boolean;
+begin
+  if not RequireTenant(aRequest, aResponse, T) then Exit;
+
+  if aRequest.Method = 'POST' then
+  begin
+    Username := Trim(aRequest.ContentFields.Values['username']);
+    Password := aRequest.ContentFields.Values['password'];
+    Confirm  := aRequest.ContentFields.Values['confirm'];
+
+    if (Username = '') or (Password = '') then
+    begin
+      SendHtml(aResponse, Page32('Register',
+        '<p>Username and password are required.</p><p><a href="/register">Back</a></p>'));
+      Exit;
+    end;
+    if Password <> Confirm then
+    begin
+      SendHtml(aResponse, Page32('Register',
+        '<p>Passwords do not match.</p><p><a href="/register">Back</a></p>'));
+      Exit;
+    end;
+    if Length(T.Db.Query(Format('SELECT id FROM users WHERE username=%s LIMIT 1;',
+                                [QuotedStr(Username)]))) > 0 then
+    begin
+      SendHtml(aResponse, Page32('Register',
+        '<p>That username is taken.</p><p><a href="/register">Back</a></p>'));
+      Exit;
+    end;
+
+    First := NoUsersYet(T);                 // first account -> Global Admin
+    Uid   := NewId;
+    Hash  := HashPassword(Password);        // pbkdf2_sha1$...; stored under services.password
+    Iso   := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', Now);
+    if not T.Db.Exec(Format(
+      'INSERT INTO users(id,username,isAdmin,authenticationMethod,createdAt,modifiedAt,' +
+      'services_json,profile_json) VALUES(%s,%s,%d,''password'',%s,%s,%s,''{}'');',
+      [QuotedStr(Uid), QuotedStr(Username), Ord(First), QuotedStr(Iso), QuotedStr(Iso),
+       QuotedStr('{"password":"' + Hash + '"}')])) then
+    begin
+      SendHtml(aResponse, Page32('Register',
+        '<p>Could not create the account.</p><p><a href="/register">Back</a></p>'));
+      Exit;
+    end;
+
+    // Log the new user straight in (cookie-free session via URL), then go to the board list.
+    S := CreateSession(T.Db, aRequest, Uid, Username, HashText(Username), 30 * 24 * 60 * 60);
+    aResponse.Code := 302;
+    aResponse.SetCustomHeader('Location', WithSessionId('/', S.SessionId));
+    aResponse.SendContent;
+    Exit;
+  end;
+
+  // GET — registration form.
+  First := NoUsersYet(T);
+  Body := '<h1>Register</h1>' + LineEnding;
+  if First then
+    Body := Body + '<p>This first account will be the <b>Global Admin</b>.</p>' + LineEnding;
+  Body := Body +
+    '<form method="POST" action="/register">' + LineEnding +
+    '  Username <input name="username"><br>' + LineEnding +
+    '  Password <input type="password" name="password"><br>' + LineEnding +
+    '  Confirm <input type="password" name="confirm"><br>' + LineEnding +
+    '  <input type="submit" value="Register">' + LineEnding +
+    '</form>' + LineEnding +
+    '<p><a href="/sign-in">Already have an account? Sign in</a></p>';
+  SendHtml(aResponse, Page32('Register', Body));
 end;
 
 // Catch-all: after the fixed routes, try the tenant's designer pages table (pages.url),
@@ -209,6 +325,15 @@ begin
   HTTPRouter.RegisterRoute('/', rmGet, @HomeEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmGet, @SignInEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmPost, @SignInEndpoint);
+  HTTPRouter.RegisterRoute('/register', rmGet, @RegisterEndpoint);
+  HTTPRouter.RegisterRoute('/register', rmPost, @RegisterEndpoint);
+
+  // Global Admin Panel (Domains / Designer / People) — see wladmin; Designer lives at /designer
+  HTTPRouter.RegisterRoute('/admin', rmGet, @AdminIndex);
+  HTTPRouter.RegisterRoute('/admin/domains', rmGet, @AdminDomains);
+  HTTPRouter.RegisterRoute('/admin/domains', rmPost, @AdminDomains);
+  HTTPRouter.RegisterRoute('/admin/people', rmGet, @AdminPeople);
+  HTTPRouter.RegisterRoute('/admin/people', rmPost, @AdminPeople);
 
   // Designer (Domain Global Admin; no-JS/no-cookie) — see docs/designer.md
   HTTPRouter.RegisterRoute('/designer', rmGet, @DesignerIndex);

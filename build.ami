@@ -5,16 +5,91 @@
 ; MorphOS, AmigaOS 4). On a real Amiga you normally pick "Build for current platform"
 ; (native m68k/ppc); the cross targets need a matching FPC cross build and will fail otherwise.
 ;
+; DOS 8.3 layout (see CLAUDE.md): each platform builds into build/arch/<code>/ (exe +
+; .o/.ppu/link intermediates), then the executable is copied to build/bin/w<code>.exe.
+; <code> is <=7 chars so the binary base "w"+<code> stays <=8; every path component is <=8 chars.
+;
 ; RequestChoice returns the gadget number counting from the left (1,2,3,...); the RIGHTMOST
 ; gadget returns 0. The mappings below follow that rule.
 
 Set wlfpc   "fpc"
 Set wlbase  "-O3 -Xs -Fusrc"
 Set wlsrc   "src/wlhttp.lpr"
-Set wlout   "build"
+Set wlbin   "build/bin"
+Set wlarch  "build/arch"
 
+; ----- output tree (all names <=8 chars), created once up front ----------------------------
 If NOT Exists build
   MakeDir build
+EndIf
+If NOT Exists build/bin
+  MakeDir build/bin
+EndIf
+If NOT Exists build/arch
+  MakeDir build/arch
+EndIf
+If NOT Exists build/arch/current
+  MakeDir build/arch/current
+EndIf
+If NOT Exists build/arch/linx64
+  MakeDir build/arch/linx64
+EndIf
+If NOT Exists build/arch/lina64
+  MakeDir build/arch/lina64
+EndIf
+If NOT Exists build/arch/linahf
+  MakeDir build/arch/linahf
+EndIf
+If NOT Exists build/arch/linav7
+  MakeDir build/arch/linav7
+EndIf
+If NOT Exists build/arch/lins390
+  MakeDir build/arch/lins390
+EndIf
+If NOT Exists build/arch/linppc
+  MakeDir build/arch/linppc
+EndIf
+If NOT Exists build/arch/linp64l
+  MakeDir build/arch/linp64l
+EndIf
+If NOT Exists build/arch/maca64
+  MakeDir build/arch/maca64
+EndIf
+If NOT Exists build/arch/winx86
+  MakeDir build/arch/winx86
+EndIf
+If NOT Exists build/arch/winx64
+  MakeDir build/arch/winx64
+EndIf
+If NOT Exists build/arch/dos
+  MakeDir build/arch/dos
+EndIf
+If NOT Exists build/arch/haiku
+  MakeDir build/arch/haiku
+EndIf
+If NOT Exists build/arch/ami68k
+  MakeDir build/arch/ami68k
+EndIf
+If NOT Exists build/arch/amios4
+  MakeDir build/arch/amios4
+EndIf
+If NOT Exists build/arch/morphos
+  MakeDir build/arch/morphos
+EndIf
+If NOT Exists build/arch/arosx86
+  MakeDir build/arch/arosx86
+EndIf
+If NOT Exists build/arch/arosx64
+  MakeDir build/arch/arosx64
+EndIf
+If NOT Exists build/arch/arosa64
+  MakeDir build/arch/arosa64
+EndIf
+If NOT Exists build/arch/aros68k
+  MakeDir build/arch/aros68k
+EndIf
+If NOT Exists build/arch/arosppc
+  MakeDir build/arch/arosppc
 EndIf
 
 Lab menu
@@ -27,7 +102,8 @@ EndIf
 
 If "$wlc" EQ "1"
   Echo ">> Building for current platform"
-  $wlfpc $wlbase -o$wlout/welite $wlsrc
+  $wlfpc $wlbase -FU$wlarch/current -FE$wlarch/current -o$wlarch/current/wcurrent.exe $wlsrc
+  Copy $wlarch/current/wcurrent.exe $wlbin/wcurrent.exe
   Skip BACK menu
 EndIf
 
@@ -44,26 +120,46 @@ Skip BACK menu
 ; -------------------------------------------------------------------------- build all
 Lab buildall
 Echo ">> Building all platforms"
-$wlfpc $wlbase -Px86_64    -Tlinux   -o$wlout/welite-linux-amd64       $wlsrc
-$wlfpc $wlbase -Paarch64   -Tlinux   -o$wlout/welite-linux-arm64       $wlsrc
-$wlfpc $wlbase -Parm       -Tlinux -CaEABIHF -CfVFPV3 -o$wlout/welite-linux-armhf $wlsrc
-$wlfpc $wlbase -Parm       -Tlinux -Cparmv7a -CfVFPV3 -CaEABIHF -o$wlout/welite-linux-armv7 $wlsrc
-$wlfpc $wlbase -Ps390x     -Tlinux   -o$wlout/welite-linux-s390x       $wlsrc
-$wlfpc $wlbase -Ppowerpc   -Tlinux   -o$wlout/welite-linux-ppc         $wlsrc
-$wlfpc $wlbase -Ppowerpc64 -Tlinux -Caelfv2 -o$wlout/welite-linux-ppc64le $wlsrc
-$wlfpc $wlbase -Paarch64   -Tdarwin  -o$wlout/welite-macos-arm64       $wlsrc
-$wlfpc $wlbase -Pi386      -Twin32   -o$wlout/welite-windows-x86.exe   $wlsrc
-$wlfpc $wlbase -Px86_64    -Twin64   -o$wlout/welite-windows-amd64.exe $wlsrc
-$wlfpc $wlbase -Pi386      -Tgo32v2  -o$wlout/welite-dos.exe           $wlsrc
-$wlfpc $wlbase -Px86_64    -Thaiku   -o$wlout/welite-haiku             $wlsrc
-$wlfpc $wlbase -Pm68k      -Tamiga   -o$wlout/welite-amiga-m68k        $wlsrc
-$wlfpc $wlbase -Ppowerpc   -Tamiga   -o$wlout/welite-amigaos4-ppc      $wlsrc
-$wlfpc $wlbase -Ppowerpc   -Tmorphos -o$wlout/welite-morphos           $wlsrc
-$wlfpc $wlbase -Pi386      -Taros    -o$wlout/welite-aros-x86          $wlsrc
-$wlfpc $wlbase -Px86_64    -Taros    -o$wlout/welite-aros-amd64        $wlsrc
-$wlfpc $wlbase -Paarch64   -Taros    -o$wlout/welite-aros-arm64        $wlsrc
-$wlfpc $wlbase -Pm68k      -Taros    -o$wlout/welite-aros-m68k         $wlsrc
-$wlfpc $wlbase -Ppowerpc   -Taros    -o$wlout/welite-aros-ppc          $wlsrc
+$wlfpc $wlbase -Px86_64    -Tlinux   -FU$wlarch/linx64 -FE$wlarch/linx64 -o$wlarch/linx64/wlinx64.exe $wlsrc
+Copy $wlarch/linx64/wlinx64.exe $wlbin/wlinx64.exe
+$wlfpc $wlbase -Paarch64   -Tlinux   -FU$wlarch/lina64 -FE$wlarch/lina64 -o$wlarch/lina64/wlina64.exe $wlsrc
+Copy $wlarch/lina64/wlina64.exe $wlbin/wlina64.exe
+$wlfpc $wlbase -Parm       -Tlinux -CaEABIHF -CfVFPV3 -FU$wlarch/linahf -FE$wlarch/linahf -o$wlarch/linahf/wlinahf.exe $wlsrc
+Copy $wlarch/linahf/wlinahf.exe $wlbin/wlinahf.exe
+$wlfpc $wlbase -Parm       -Tlinux -Cparmv7a -CfVFPV3 -CaEABIHF -FU$wlarch/linav7 -FE$wlarch/linav7 -o$wlarch/linav7/wlinav7.exe $wlsrc
+Copy $wlarch/linav7/wlinav7.exe $wlbin/wlinav7.exe
+$wlfpc $wlbase -Ps390x     -Tlinux   -FU$wlarch/lins390 -FE$wlarch/lins390 -o$wlarch/lins390/wlins390.exe $wlsrc
+Copy $wlarch/lins390/wlins390.exe $wlbin/wlins390.exe
+$wlfpc $wlbase -Ppowerpc   -Tlinux   -FU$wlarch/linppc -FE$wlarch/linppc -o$wlarch/linppc/wlinppc.exe $wlsrc
+Copy $wlarch/linppc/wlinppc.exe $wlbin/wlinppc.exe
+$wlfpc $wlbase -Ppowerpc64 -Tlinux -Caelfv2 -FU$wlarch/linp64l -FE$wlarch/linp64l -o$wlarch/linp64l/wlinp64l.exe $wlsrc
+Copy $wlarch/linp64l/wlinp64l.exe $wlbin/wlinp64l.exe
+$wlfpc $wlbase -Paarch64   -Tdarwin  -FU$wlarch/maca64 -FE$wlarch/maca64 -o$wlarch/maca64/wmaca64.exe $wlsrc
+Copy $wlarch/maca64/wmaca64.exe $wlbin/wmaca64.exe
+$wlfpc $wlbase -Pi386      -Twin32   -FU$wlarch/winx86 -FE$wlarch/winx86 -o$wlarch/winx86/wwinx86.exe $wlsrc
+Copy $wlarch/winx86/wwinx86.exe $wlbin/wwinx86.exe
+$wlfpc $wlbase -Px86_64    -Twin64   -FU$wlarch/winx64 -FE$wlarch/winx64 -o$wlarch/winx64/wwinx64.exe $wlsrc
+Copy $wlarch/winx64/wwinx64.exe $wlbin/wwinx64.exe
+$wlfpc $wlbase -Pi386      -Tgo32v2  -FU$wlarch/dos -FE$wlarch/dos -o$wlarch/dos/wdos.exe $wlsrc
+Copy $wlarch/dos/wdos.exe $wlbin/wdos.exe
+$wlfpc $wlbase -Px86_64    -Thaiku   -FU$wlarch/haiku -FE$wlarch/haiku -o$wlarch/haiku/whaiku.exe $wlsrc
+Copy $wlarch/haiku/whaiku.exe $wlbin/whaiku.exe
+$wlfpc $wlbase -Pm68k      -Tamiga   -FU$wlarch/ami68k -FE$wlarch/ami68k -o$wlarch/ami68k/wami68k.exe $wlsrc
+Copy $wlarch/ami68k/wami68k.exe $wlbin/wami68k.exe
+$wlfpc $wlbase -Ppowerpc   -Tamiga   -FU$wlarch/amios4 -FE$wlarch/amios4 -o$wlarch/amios4/wamios4.exe $wlsrc
+Copy $wlarch/amios4/wamios4.exe $wlbin/wamios4.exe
+$wlfpc $wlbase -Ppowerpc   -Tmorphos -FU$wlarch/morphos -FE$wlarch/morphos -o$wlarch/morphos/wmorphos.exe $wlsrc
+Copy $wlarch/morphos/wmorphos.exe $wlbin/wmorphos.exe
+$wlfpc $wlbase -Pi386      -Taros    -FU$wlarch/arosx86 -FE$wlarch/arosx86 -o$wlarch/arosx86/warosx86.exe $wlsrc
+Copy $wlarch/arosx86/warosx86.exe $wlbin/warosx86.exe
+$wlfpc $wlbase -Px86_64    -Taros    -FU$wlarch/arosx64 -FE$wlarch/arosx64 -o$wlarch/arosx64/warosx64.exe $wlsrc
+Copy $wlarch/arosx64/warosx64.exe $wlbin/warosx64.exe
+$wlfpc $wlbase -Paarch64   -Taros    -FU$wlarch/arosa64 -FE$wlarch/arosa64 -o$wlarch/arosa64/warosa64.exe $wlsrc
+Copy $wlarch/arosa64/warosa64.exe $wlbin/warosa64.exe
+$wlfpc $wlbase -Pm68k      -Taros    -FU$wlarch/aros68k -FE$wlarch/aros68k -o$wlarch/aros68k/waros68k.exe $wlsrc
+Copy $wlarch/aros68k/waros68k.exe $wlbin/waros68k.exe
+$wlfpc $wlbase -Ppowerpc   -Taros    -FU$wlarch/arosppc -FE$wlarch/arosppc -o$wlarch/arosppc/warosppc.exe $wlsrc
+Copy $wlarch/arosppc/warosppc.exe $wlbin/warosppc.exe
 Echo "== done =="
 Skip BACK menu
 
@@ -76,25 +172,32 @@ If "$wlcat" EQ "1"
   RequestChoice >ENV:wlp "Linux" "CPU:" "amd64|arm64|armhf|armv7|s390x|ppc|ppc64le"
   ; amd64=1 arm64=2 armhf=3 armv7=4 s390x=5 ppc=6 ppc64le=0 (rightmost)
   If "$wlp" EQ "1"
-    $wlfpc $wlbase -Px86_64    -Tlinux -o$wlout/welite-linux-amd64 $wlsrc
+    $wlfpc $wlbase -Px86_64    -Tlinux -FU$wlarch/linx64 -FE$wlarch/linx64 -o$wlarch/linx64/wlinx64.exe $wlsrc
+    Copy $wlarch/linx64/wlinx64.exe $wlbin/wlinx64.exe
   EndIf
   If "$wlp" EQ "2"
-    $wlfpc $wlbase -Paarch64   -Tlinux -o$wlout/welite-linux-arm64 $wlsrc
+    $wlfpc $wlbase -Paarch64   -Tlinux -FU$wlarch/lina64 -FE$wlarch/lina64 -o$wlarch/lina64/wlina64.exe $wlsrc
+    Copy $wlarch/lina64/wlina64.exe $wlbin/wlina64.exe
   EndIf
   If "$wlp" EQ "3"
-    $wlfpc $wlbase -Parm       -Tlinux -CaEABIHF -CfVFPV3 -o$wlout/welite-linux-armhf $wlsrc
+    $wlfpc $wlbase -Parm       -Tlinux -CaEABIHF -CfVFPV3 -FU$wlarch/linahf -FE$wlarch/linahf -o$wlarch/linahf/wlinahf.exe $wlsrc
+    Copy $wlarch/linahf/wlinahf.exe $wlbin/wlinahf.exe
   EndIf
   If "$wlp" EQ "4"
-    $wlfpc $wlbase -Parm       -Tlinux -Cparmv7a -CfVFPV3 -CaEABIHF -o$wlout/welite-linux-armv7 $wlsrc
+    $wlfpc $wlbase -Parm       -Tlinux -Cparmv7a -CfVFPV3 -CaEABIHF -FU$wlarch/linav7 -FE$wlarch/linav7 -o$wlarch/linav7/wlinav7.exe $wlsrc
+    Copy $wlarch/linav7/wlinav7.exe $wlbin/wlinav7.exe
   EndIf
   If "$wlp" EQ "5"
-    $wlfpc $wlbase -Ps390x     -Tlinux -o$wlout/welite-linux-s390x $wlsrc
+    $wlfpc $wlbase -Ps390x     -Tlinux -FU$wlarch/lins390 -FE$wlarch/lins390 -o$wlarch/lins390/wlins390.exe $wlsrc
+    Copy $wlarch/lins390/wlins390.exe $wlbin/wlins390.exe
   EndIf
   If "$wlp" EQ "6"
-    $wlfpc $wlbase -Ppowerpc   -Tlinux -o$wlout/welite-linux-ppc $wlsrc
+    $wlfpc $wlbase -Ppowerpc   -Tlinux -FU$wlarch/linppc -FE$wlarch/linppc -o$wlarch/linppc/wlinppc.exe $wlsrc
+    Copy $wlarch/linppc/wlinppc.exe $wlbin/wlinppc.exe
   EndIf
   If "$wlp" EQ "0"
-    $wlfpc $wlbase -Ppowerpc64 -Tlinux -Caelfv2 -o$wlout/welite-linux-ppc64le $wlsrc
+    $wlfpc $wlbase -Ppowerpc64 -Tlinux -Caelfv2 -FU$wlarch/linp64l -FE$wlarch/linp64l -o$wlarch/linp64l/wlinp64l.exe $wlsrc
+    Copy $wlarch/linp64l/wlinp64l.exe $wlbin/wlinp64l.exe
   EndIf
   Skip BACK menu
 EndIf
@@ -103,19 +206,24 @@ If "$wlcat" EQ "2"
   RequestChoice >ENV:wlp "Desktop" "Target:" "macOS arm64|Windows x86|Windows amd64|DOS|Haiku"
   ; macOS=1 winx86=2 winamd64=3 DOS=4 Haiku=0 (rightmost)
   If "$wlp" EQ "1"
-    $wlfpc $wlbase -Paarch64 -Tdarwin -o$wlout/welite-macos-arm64 $wlsrc
+    $wlfpc $wlbase -Paarch64 -Tdarwin -FU$wlarch/maca64 -FE$wlarch/maca64 -o$wlarch/maca64/wmaca64.exe $wlsrc
+    Copy $wlarch/maca64/wmaca64.exe $wlbin/wmaca64.exe
   EndIf
   If "$wlp" EQ "2"
-    $wlfpc $wlbase -Pi386    -Twin32  -o$wlout/welite-windows-x86.exe $wlsrc
+    $wlfpc $wlbase -Pi386    -Twin32  -FU$wlarch/winx86 -FE$wlarch/winx86 -o$wlarch/winx86/wwinx86.exe $wlsrc
+    Copy $wlarch/winx86/wwinx86.exe $wlbin/wwinx86.exe
   EndIf
   If "$wlp" EQ "3"
-    $wlfpc $wlbase -Px86_64  -Twin64  -o$wlout/welite-windows-amd64.exe $wlsrc
+    $wlfpc $wlbase -Px86_64  -Twin64  -FU$wlarch/winx64 -FE$wlarch/winx64 -o$wlarch/winx64/wwinx64.exe $wlsrc
+    Copy $wlarch/winx64/wwinx64.exe $wlbin/wwinx64.exe
   EndIf
   If "$wlp" EQ "4"
-    $wlfpc $wlbase -Pi386    -Tgo32v2 -o$wlout/welite-dos.exe $wlsrc
+    $wlfpc $wlbase -Pi386    -Tgo32v2 -FU$wlarch/dos -FE$wlarch/dos -o$wlarch/dos/wdos.exe $wlsrc
+    Copy $wlarch/dos/wdos.exe $wlbin/wdos.exe
   EndIf
   If "$wlp" EQ "0"
-    $wlfpc $wlbase -Px86_64  -Thaiku  -o$wlout/welite-haiku $wlsrc
+    $wlfpc $wlbase -Px86_64  -Thaiku  -FU$wlarch/haiku -FE$wlarch/haiku -o$wlarch/haiku/whaiku.exe $wlsrc
+    Copy $wlarch/haiku/whaiku.exe $wlbin/whaiku.exe
   EndIf
   Skip BACK menu
 EndIf
@@ -124,13 +232,16 @@ If "$wlcat" EQ "3"
   RequestChoice >ENV:wlp "Amiga family" "Target:" "Amiga m68k|AmigaOS 4.1 PPC|MorphOS"
   ; m68k=1 OS4=2 MorphOS=0 (rightmost)
   If "$wlp" EQ "1"
-    $wlfpc $wlbase -Pm68k    -Tamiga   -o$wlout/welite-amiga-m68k $wlsrc
+    $wlfpc $wlbase -Pm68k    -Tamiga   -FU$wlarch/ami68k -FE$wlarch/ami68k -o$wlarch/ami68k/wami68k.exe $wlsrc
+    Copy $wlarch/ami68k/wami68k.exe $wlbin/wami68k.exe
   EndIf
   If "$wlp" EQ "2"
-    $wlfpc $wlbase -Ppowerpc -Tamiga   -o$wlout/welite-amigaos4-ppc $wlsrc
+    $wlfpc $wlbase -Ppowerpc -Tamiga   -FU$wlarch/amios4 -FE$wlarch/amios4 -o$wlarch/amios4/wamios4.exe $wlsrc
+    Copy $wlarch/amios4/wamios4.exe $wlbin/wamios4.exe
   EndIf
   If "$wlp" EQ "0"
-    $wlfpc $wlbase -Ppowerpc -Tmorphos -o$wlout/welite-morphos $wlsrc
+    $wlfpc $wlbase -Ppowerpc -Tmorphos -FU$wlarch/morphos -FE$wlarch/morphos -o$wlarch/morphos/wmorphos.exe $wlsrc
+    Copy $wlarch/morphos/wmorphos.exe $wlbin/wmorphos.exe
   EndIf
   Skip BACK menu
 EndIf
@@ -139,19 +250,24 @@ If "$wlcat" EQ "0"
   RequestChoice >ENV:wlp "AROS" "CPU:" "x86|amd64|arm64|m68k|ppc"
   ; x86=1 amd64=2 arm64=3 m68k=4 ppc=0 (rightmost)
   If "$wlp" EQ "1"
-    $wlfpc $wlbase -Pi386    -Taros -o$wlout/welite-aros-x86 $wlsrc
+    $wlfpc $wlbase -Pi386    -Taros -FU$wlarch/arosx86 -FE$wlarch/arosx86 -o$wlarch/arosx86/warosx86.exe $wlsrc
+    Copy $wlarch/arosx86/warosx86.exe $wlbin/warosx86.exe
   EndIf
   If "$wlp" EQ "2"
-    $wlfpc $wlbase -Px86_64  -Taros -o$wlout/welite-aros-amd64 $wlsrc
+    $wlfpc $wlbase -Px86_64  -Taros -FU$wlarch/arosx64 -FE$wlarch/arosx64 -o$wlarch/arosx64/warosx64.exe $wlsrc
+    Copy $wlarch/arosx64/warosx64.exe $wlbin/warosx64.exe
   EndIf
   If "$wlp" EQ "3"
-    $wlfpc $wlbase -Paarch64 -Taros -o$wlout/welite-aros-arm64 $wlsrc
+    $wlfpc $wlbase -Paarch64 -Taros -FU$wlarch/arosa64 -FE$wlarch/arosa64 -o$wlarch/arosa64/warosa64.exe $wlsrc
+    Copy $wlarch/arosa64/warosa64.exe $wlbin/warosa64.exe
   EndIf
   If "$wlp" EQ "4"
-    $wlfpc $wlbase -Pm68k    -Taros -o$wlout/welite-aros-m68k $wlsrc
+    $wlfpc $wlbase -Pm68k    -Taros -FU$wlarch/aros68k -FE$wlarch/aros68k -o$wlarch/aros68k/waros68k.exe $wlsrc
+    Copy $wlarch/aros68k/waros68k.exe $wlbin/waros68k.exe
   EndIf
   If "$wlp" EQ "0"
-    $wlfpc $wlbase -Ppowerpc -Taros -o$wlout/welite-aros-ppc $wlsrc
+    $wlfpc $wlbase -Ppowerpc -Taros -FU$wlarch/arosppc -FE$wlarch/arosppc -o$wlarch/arosppc/warosppc.exe $wlsrc
+    Copy $wlarch/arosppc/warosppc.exe $wlbin/warosppc.exe
   EndIf
   Skip BACK menu
 EndIf

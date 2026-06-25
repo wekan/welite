@@ -4,6 +4,35 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-06-25 Local tenant, registration / Global Admin, Admin Panel, build layout
+
+First-run usability: browsing `http://localhost:5500/` used to answer `404 Unknown domain`
+because `localhost` matched no registered domain. Added a built-in tenant, an account/registration
+flow, a Global Admin Panel, and reorganized the build output. Verified on FreePascal 3.2.3 (aarch64).
+
+- **Built-in `local` tenant** (`wltenant`): loopback hosts (`localhost`, `127.0.0.1`, `::1`) now
+  resolve to a `local` tenant stored at `data/local/` (`db/data.db`, `files/attachments`,
+  `files/avatars`), auto-provisioned on first request from `src/schema.sql` (override with
+  `WELITE_SCHEMA`). The reserved `admin` registry dir is also created up front so a fresh checkout
+  just works; unknown domains still 404 with no fallback.
+- **Registration + first-user Global Admin** (`wlhttp.lpr`): `GET /` redirects to `/sign-in` when
+  the tenant has no users; new `/register` page (no-JS/no-cookie) creates an account, the **first**
+  account in a tenant becomes the Global Admin (`users.isAdmin=1`) and the rest are Normal users.
+  Sign-in/home pages cross-link to register; passwords hashed via the existing PBKDF2 path.
+- **Global Admin Panel** (new `wladmin` unit): gated to `users.isAdmin=1` (404/redirect/403 as
+  appropriate) with three sections — **Domains** (registry add / enable / disable, via new
+  `wlregist.RegistryListDomains`), **Designer** (links to the existing `/designer`), and **People**
+  (promote/demote Global Admin, enable/disable login; cannot self-demote or self-lock-out). Same
+  action-token + PRG contract as the rest of the app.
+- **Build output layout** (`build.sh`/`build.bat`/`build.ami`): each target now builds into
+  `build/arch/<code>/` (executable + `.o`/`.ppu`/link intermediates via `fpc -FU -FE`), then copies
+  the executable to `build/bin/w<code>.exe` — a `w` prefix plus a ≤7-char platform code
+  (`wlinx64.exe`, `wdos.exe`, `wami68k.exe`, …) so every path component stays ≤8 chars and the
+  binaries are unique in one directory. "Build current platform" → `build/bin/wcurrent.exe`.
+- **`CLAUDE.md`**: documents the DOS 8.3 filename rule (≤8-char names, ≤3-char extensions, safe
+  charset, tooling exceptions) with an audit snippet, plus the build-output layout. Audited the
+  tracked tree: zero 8.3 violations outside host tooling (`.gitignore`, `.tx/`).
+
 ## 2026-06-25 WeKan-Lite — `welite` rename, DOS 8.3 names, build scripts
 
 Renamed the repo/binary to `welite` and made the whole tree DOS 8.3-safe (≤8-char names,

@@ -49,6 +49,9 @@ function RegistryCanonicalHost(const Host: string): string;
 function RegistryAddDomain(const Host: string): Boolean;
 function RegistrySetEnabled(const Host: string; Enabled: Boolean): Boolean;
 
+// All registered domains as rows of (host, enabled, createdAt), for the Global Admin panel.
+function RegistryListDomains: TWLRows;
+
 implementation
 
 uses
@@ -126,6 +129,13 @@ begin
   Result := AdminDb.Exec(Format(
     'UPDATE domains SET enabled=%d, modifiedAt=%s WHERE host=%s;',
     [Flag, QuotedStr(NowIso), QuotedStr(Host)]));
+end;
+
+function RegistryListDomains: TWLRows;
+begin
+  SetLength(Result, 0);
+  if AdminDb = nil then Exit;
+  Result := AdminDb.Query('SELECT host, enabled, createdAt FROM domains ORDER BY host;');
 end;
 
 finalization

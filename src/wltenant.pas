@@ -28,6 +28,7 @@ uses
 
 const
   ADMIN_TENANT = 'admin';   // reserved; never a served public domain
+  LOCAL_TENANT = 'local';   // loopback (localhost/127.0.0.1/::1) -> data/local, no registry needed
 
 type
   TWLTenant = record
@@ -68,6 +69,7 @@ uses
 
 var
   DataRoot   : string;                 // absolute path to data/
+  SchemaPath : string;                 // tenant schema applied when provisioning a fresh db
   HandleCache: TStringList = nil;      // host -> TWLDb (as Pointer), pooled across requests
   TempCounter: Integer = 0;            // process-global, atomically bumped per temp op
 
@@ -93,7 +95,18 @@ begin
     HandleCache.CaseSensitive := False;
     HandleCache.Sorted := True;        // binary search on host key
   end;
-  RegistryInit(DataRoot + 'admin' + PathDelim + 'db' + PathDelim + 'data.db');
+  // Tenant schema (users/boards/...), applied once to provision a fresh tenant db. Configurable
+  // so a release that ships schema.sql elsewhere still finds it; defaults to the repo layout.
+  SchemaPath := GetEnvironmentVariable('WELITE_SCHEMA');
+  if SchemaPath = '' then
+  begin
+    SchemaPath := 'src' + PathDelim + 'schema.sql';
+    if not FileExists(SchemaPath) then SchemaPath := 'schema.sql';
+  end;
+  // The Global Admin registry lives in data/admin; ensure its dir exists before opening the db
+  // (sqlite3_open creates the file, not the parent directory).
+  ForceDirectories(DataRoot + ADMIN_TENANT + PathDelim + 'db');
+  RegistryInit(DataRoot + ADMIN_TENANT + PathDelim + 'db' + PathDelim + 'data.db');
 end;
 
 function NormalizeHost(const RawHost: string): string;
@@ -117,8 +130,52 @@ function TenantDir(const Host: string): string;
 begin
   if SameText(Host, ADMIN_TENANT) then
     Result := DataRoot + ADMIN_TENANT + PathDelim
+  else if SameText(Host, LOCAL_TENANT) then
+    Result := DataRoot + LOCAL_TENANT + PathDelim   // data/local (not data/domains/local)
   else
     Result := DataRoot + 'domains' + PathDelim + Host + PathDelim;
+end;
+
+// Loopback access (browsing http://localhost:5500/) maps to the single built-in `local` tenant,
+// so a fresh checkout works without registering any domain in the Global Admin registry.
+function IsLocalHost(const Host: string): Boolean;
+begin
+  Result := SameText(Host, 'localhost') or SameText(Host, LOCAL_TENANT) or
+            (Pos('127.0.0.1', Host) > 0) or (Pos('::1', Host) > 0);
+end;
+
+function LoadSchemaSql: string;
+var SL: TStringList;
+begin
+  Result := '';
+  if (SchemaPath = '') or (not FileExists(SchemaPath)) then Exit;
+  SL := TStringList.Create;
+  try
+    SL.LoadFromFile(SchemaPath);
+    Result := SL.Text;
+  finally
+    SL.Free;
+  end;
+end;
+
+// Create a tenant's directory layout (db/, files/attachments/, files/avatars/) and, the first
+// time, its SQLite db with the schema applied. Idempotent; safe to call on every request.
+procedure EnsureTenantStore(const Tenant: TWLTenant);
+var Db: TWLDb; Sql: string;
+begin
+  ForceDirectories(Tenant.Dir + 'db');
+  ForceDirectories(Tenant.FilesDir + 'attachments');
+  ForceDirectories(Tenant.FilesDir + 'avatars');
+  if FileExists(Tenant.DbPath) then Exit;     // already provisioned
+  Sql := LoadSchemaSql;
+  if Sql = '' then Exit;                       // no schema available -> leave db absent (404)
+  Db := WLDbOpen(Tenant.DbPath);
+  if Db = nil then Exit;
+  try
+    Db.Exec(Sql);                             // sqlite3_exec runs the whole multi-statement script
+  finally
+    WLDbClose(Db);
+  end;
 end;
 
 function TenantCertDir(const Host: string): string;
@@ -128,7 +185,8 @@ end;
 
 function ResolveTenant(ARequest: TRequest; out Tenant: TWLTenant): Boolean;
 var
-  Host: string;
+  Host, Key: string;
+  AutoProvision: Boolean;
 begin
   Result := False;
   FillChar(Tenant, SizeOf(Tenant), 0);
@@ -137,16 +195,27 @@ begin
   if Host = '' then
     Exit;
 
-  // 'admin' host is reserved for the Global Admin tenant; it must be configured, not guessed.
+  AutoProvision := False;
   if SameText(Host, ADMIN_TENANT) then
-    Tenant.IsAdmin := True
-  else if not RegistryHostEnabled(Host) then   // unknown or disabled -> 404, no fallback
+    // 'admin' host is reserved for the Global Admin tenant; it must be configured, not guessed.
+    Key := ADMIN_TENANT
+  else if IsLocalHost(Host) then
+    // loopback -> the built-in `local` tenant, created on demand (no registry entry required)
+    begin Key := LOCAL_TENANT; AutoProvision := True; end
+  else if RegistryHostEnabled(Host) then       // unknown or disabled -> 404, no fallback
+    Key := RegistryCanonicalHost(Host)
+  else
     Exit;
 
-  Tenant.Host     := Host;
-  Tenant.Dir      := TenantDir(Host);
+  Tenant.Host     := Key;
+  Tenant.IsAdmin  := SameText(Key, ADMIN_TENANT);
+  Tenant.Dir      := TenantDir(Key);
   Tenant.DbPath   := Tenant.Dir + 'db' + PathDelim + 'data.db';
   Tenant.FilesDir := Tenant.Dir + 'files' + PathDelim;
+
+  if AutoProvision then
+    EnsureTenantStore(Tenant);
+
   Result := DirectoryExists(Tenant.Dir) and FileExists(Tenant.DbPath);
 end;
 

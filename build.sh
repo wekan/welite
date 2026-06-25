@@ -19,47 +19,63 @@ cd "$(dirname "$0")" || exit 1
 FPC="${FPC:-fpc}"
 SRC="src/wlhttp.lpr"
 OUTDIR="build"
+BINDIR="$OUTDIR/bin"        # collected binaries: build/bin/w<code>.exe
+ARCHROOT="$OUTDIR/arch"     # per-platform build dirs:   build/arch/<code>/
 BASEFLAGS="-O3 -Xs -Fusrc"
 FPCFLAGS="${FPCFLAGS:-}"
 
-# label | fpc -P (cpu) | fpc -T (os) | extra flags | output file
+# DOS 8.3 layout (see CLAUDE.md): each platform builds into build/arch/<code>/ (exe +
+# .o/.ppu/link intermediates), then the finished executable is copied to build/bin/w<code>.exe.
+# <code> is a <=7-char platform name so the binary base "w"+<code> stays <=8 chars; every path
+# component is <=8 chars and the extension is .exe, so the whole tree is DOS 8.3 / Amiga safe.
+# label | fpc -P (cpu) | fpc -T (os) | extra flags | code (<=7 chars)
 PLATFORMS=(
-  "Linux amd64|x86_64|linux||welite-linux-amd64"
-  "Linux arm64|aarch64|linux||welite-linux-arm64"
-  "Linux armhf|arm|linux|-CaEABIHF -CfVFPV3|welite-linux-armhf"
-  "Linux armv7|arm|linux|-Cparmv7a -CfVFPV3 -CaEABIHF|welite-linux-armv7"
-  "Linux s390x|s390x|linux||welite-linux-s390x"
-  "Linux ppc|powerpc|linux||welite-linux-ppc"
-  "Linux ppc64le|powerpc64|linux|-Caelfv2|welite-linux-ppc64le"
-  "macOS arm64|aarch64|darwin||welite-macos-arm64"
-  "Windows x86|i386|win32||welite-windows-x86.exe"
-  "Windows amd64|x86_64|win64||welite-windows-amd64.exe"
-  "DOS|i386|go32v2||welite-dos.exe"
-  "Haiku|x86_64|haiku||welite-haiku"
-  "Amiga m68k|m68k|amiga||welite-amiga-m68k"
-  "AmigaOS 4.1 PPC|powerpc|amiga||welite-amigaos4-ppc"
-  "MorphOS|powerpc|morphos||welite-morphos"
-  "AROS x86|i386|aros||welite-aros-x86"
-  "AROS amd64|x86_64|aros||welite-aros-amd64"
-  "AROS arm64|aarch64|aros||welite-aros-arm64"
-  "AROS m68k|m68k|aros||welite-aros-m68k"
-  "AROS ppc|powerpc|aros||welite-aros-ppc"
+  "Linux amd64|x86_64|linux||linx64"
+  "Linux arm64|aarch64|linux||lina64"
+  "Linux armhf|arm|linux|-CaEABIHF -CfVFPV3|linahf"
+  "Linux armv7|arm|linux|-Cparmv7a -CfVFPV3 -CaEABIHF|linav7"
+  "Linux s390x|s390x|linux||lins390"
+  "Linux ppc|powerpc|linux||linppc"
+  "Linux ppc64le|powerpc64|linux|-Caelfv2|linp64l"
+  "macOS arm64|aarch64|darwin||maca64"
+  "Windows x86|i386|win32||winx86"
+  "Windows amd64|x86_64|win64||winx64"
+  "DOS|i386|go32v2||dos"
+  "Haiku|x86_64|haiku||haiku"
+  "Amiga m68k|m68k|amiga||ami68k"
+  "AmigaOS 4.1 PPC|powerpc|amiga||amios4"
+  "MorphOS|powerpc|morphos||morphos"
+  "AROS x86|i386|aros||arosx86"
+  "AROS amd64|x86_64|aros||arosx64"
+  "AROS arm64|aarch64|aros||arosa64"
+  "AROS m68k|m68k|aros||aros68k"
+  "AROS ppc|powerpc|aros||arosppc"
 )
 
-build_current() {
-  mkdir -p "$OUTDIR"
-  echo ">> Building for current platform"
+# Build into build/arch/<code>/ then copy the executable to build/bin/w<code>.exe.
+do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
+  local code="$1" label="$2"; shift 2
+  local arch="$ARCHROOT/$code" bin="w$code.exe"
+  mkdir -p "$arch" "$BINDIR"
+  echo ">> Building $label  -> $arch/$bin"
   # shellcheck disable=SC2086
-  "$FPC" $BASEFLAGS $FPCFLAGS -o"$OUTDIR/welite" "$SRC"
+  if "$FPC" $BASEFLAGS $FPCFLAGS "$@" -FU"$arch" -FE"$arch" -o"$arch/$bin" "$SRC"; then
+    cp -f "$arch/$bin" "$BINDIR/$bin"
+    echo "   copied -> $BINDIR/$bin"
+  else
+    return 1
+  fi
+}
+
+build_current() {
+  do_build current "current platform"
 }
 
 build_platform() {  # $1 = a PLATFORMS entry
-  local entry="$1" label cpu os flags out
-  IFS='|' read -r label cpu os flags out <<< "$entry"
-  mkdir -p "$OUTDIR"
-  echo ">> Building $label  (-P$cpu -T$os $flags)"
+  local entry="$1" label cpu os flags code
+  IFS='|' read -r label cpu os flags code <<< "$entry"
   # shellcheck disable=SC2086
-  "$FPC" $BASEFLAGS $FPCFLAGS -P"$cpu" -T"$os" $flags -o"$OUTDIR/$out" "$SRC"
+  do_build "$code" "$label  (-P$cpu -T$os $flags)" -P"$cpu" -T"$os" $flags
 }
 
 build_all() {
