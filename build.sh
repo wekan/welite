@@ -176,14 +176,19 @@ _fpcup_launch_gui() {
     curl -fSL --retry 3 -o "$gui" "$url" || { echo "   download failed."; return 1; }
     chmod +x "$gui"
   fi
-  echo "   In the GUI: set the install directory to $inst, install FPC, then tick the cross"
-  echo "   targets you need (Amiga/AROS/MorphOS/Haiku/Windows/DOS/macOS) and install them."
-  echo "   Afterwards build here with:  FPC=$inst/fpc/bin/$host-linux/fpc ./build.sh"
+  echo "   In the GUI choose 'Install/update FPC only' (NOT Lazarus — Lazarus needs gtk2 dev libs);"
+  echo "   then add the cross targets you need (Amiga/AROS/MorphOS/Haiku/Windows/DOS/macOS)."
+  echo "   Install dir: $inst  (kept OUTSIDE the git repo). Afterwards build here with:"
+  echo "       FPC=$inst/fpc/bin/$host-linux/fpc ./build.sh"
+  # fpcupdeluxe derives its basedir from the current directory and refuses to run inside another
+  # git repo, so launch it from $inst's parent (outside this repo) and also pass --installdir.
+  local parent; parent="$(dirname "$inst")"
   if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
     echo "   Launching the GUI now..."
-    ( "$gui" >/dev/null 2>&1 & )
+    ( cd "$parent" && "$gui" --installdir="$inst" >/dev/null 2>&1 & )
   else
-    echo "   No display detected — run it on a desktop session:  $gui"
+    echo "   No display detected — run it on a desktop session, from outside the repo:"
+    echo "       ( cd $parent && $gui --installdir=$inst )"
   fi
 }
 
@@ -209,6 +214,13 @@ install_toolchains() {
       echo "  Need root or sudo to apt-get install. Re-run as root."; return 1; fi
   fi
   local inst="${FPCUP_DIR:-$HOME/fpcupdeluxe}"
+  case "$inst" in /*) ;; *) inst="$PWD/$inst" ;; esac          # absolutize
+  # fpcupdeluxe (and the FPC source git checkout) must NOT live inside this repo, or git commands
+  # in the checkout resolve to the welite repo and fpcupdeluxe aborts on a remote-URL mismatch.
+  case "$inst/" in
+    "$PWD"/*) echo "  FPCUP_DIR ($inst) is inside this repo — fpcupdeluxe must run outside a git"
+              echo "  repo. Use a path outside it (default: ~/fpcupdeluxe). Aborting."; return 1 ;;
+  esac
   local src="$inst/fpcupsrc"
   mkdir -p "$inst" "$OUTDIR/log"
   local log="$OUTDIR/log/xtools.log"; : > "$log"

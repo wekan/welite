@@ -57,9 +57,8 @@ src/wlpublic.res
 /build
 /dist
 
-# fpcupdeluxe GUI config files (created if launched from the repo dir)
+# fpcupdeluxe install dir + config it drops if ever launched from the repo dir
+fpcupdeluxe*
 fpcup.ini
 settings.ini
 defmods.ini
-fpcupdeluxe.en.po
-fpcupdeluxe
