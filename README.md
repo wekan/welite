@@ -27,8 +27,9 @@ working prototypes in this tree** and aligned to the portable contract:
   on top, driving the same endpoints. Code: `wlenhance.pas`.
 - **`docs/move-component.md`** — the default no-JS move UI: select swimlanes/lists/cards, move all
   with one `▲◀▼▶` keypad (combined, like `kanban.go`). Code: `wlmove.pas`.
-- **`docs/static-assets.md`** — serving `public/` (robots.txt, css, js, …) from disk or embedded
-  in the binary. Code: `wlstatic.pas`; tools `tools/genassets.py`, `convert-languages.py`.
+- **`docs/static-assets.md`** — serving `public/` (robots.txt, css, js, …) and the `i18n/`
+  translations tree (`i18n/languages.json` + `i18n/data/`) from disk or embedded in the binary.
+  Code: `wlstatic.pas`; tools `releases/genassets.py`, `releases/convert-languages.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
   Code: `wlapi.pas`.
 
@@ -47,11 +48,12 @@ working prototypes in this tree** and aligned to the portable contract:
 | `wlvector.pas` | Red Strings / connectors as SVG / VML / ASCII per browser | `docs/theming.md` |
 | `wlenhance.pas` | progressive enhancement — MultiDrag/touch hooks + script include | `docs/progressive-enhancement.md` |
 | `wlmove.pas` | combined no-JS arrows move component + `/board/move` apply | `docs/move-component.md` |
-| `wlstatic.pas` | serve `public/` (robots.txt, css, js, …) embedded-or-from-disk | `docs/static-assets.md` |
+| `wlstatic.pas` | serve `public/` + `i18n/` (robots.txt, css, js, translations) embedded-or-from-disk | `docs/static-assets.md` |
 | `wlapi.pas` | REST API subset (Bearer auth) so WeKan's `api.py` works | `docs/api.md` |
 
-Build helpers: `tools/genassets.py` (embed `public/` into the binary), `convert-languages.py`
-(regenerate `public/languages.json` from WeKan's `imports/i18n/languages.js`).
+The reference units, `wlhttp.lpr`, and the `*.sql` schemas live in `src/`. Build helpers:
+`releases/genassets.py` (embed `public/` + `i18n/` into the binary), `releases/convert-languages.py`
+(regenerate `i18n/languages.json` from WeKan's `imports/i18n/languages.js`).
 
 > These are *skeletons* — faithful to the prototypes' style (`{$mode objfpc}{$H+}`,
 > `{$CODEPAGE UTF8}`, `TRequest`/`TResponse`, `HTTPRouter.RegisterRoute`) and meant as the
@@ -63,9 +65,9 @@ Build helpers: `tools/genassets.py` (embed `public/` into the binary), `convert-
 
 ## Build
 ```bash
-fpc -O3 -Xs -o wekanlite wlhttp.lpr            # release, linked SQLite (single binary)
-fpc -dWLDB_CLI -o wekanlite wlhttp.lpr         # bootstrap: external sqlite3 CLI
-fpc -Pm68k -Tamiga -o wekanlite wlhttp.lpr     # classic Amiga 68k
+fpc -O3 -Xs -o wekanlite src/wlhttp.lpr            # release, linked SQLite (single binary)
+fpc -dWLDB_CLI -o wekanlite src/wlhttp.lpr         # bootstrap: external sqlite3 CLI
+fpc -Pm68k -Tamiga -o wekanlite src/wlhttp.lpr     # classic Amiga 68k
 ```
 Run plaintext HTTP; terminate TLS at a proxy or load AmiSSL/OpenSSL dynamically
 (`docs/web-stack-decision.md` Decision 5). Default port 5500, override with `WEKANLITE_PORT`.

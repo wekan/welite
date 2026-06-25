@@ -1,9 +1,9 @@
 # WeKan-Lite — FreePascal architecture — v0.1
 
-Companion to `contract.md`, `../schema.sql`, `goals.md`, `web-stack-decision.md`,
-`schema-decision.md`. This doc distills the **two working FreePascal prototypes in this
-tree** into the architecture WeKan-Lite should build on, and the reference units in this
-`freepascal/` directory implement the load-bearing pieces.
+Companion to `contract.md`, `../src/schema.sql`, `goals.md`, `web-stack-decision.md`,
+`schema-decision.md`. This doc distills the **two working FreePascal prototypes** into the
+architecture WeKan-Lite should build on, and the reference units in the repo's `src/`
+directory implement the load-bearing pieces.
 
 Prototypes mined (read them — they are real, compiling code):
 - **[`wami/wekan.pas`](https://github.com/wekan/wami/blob/main/wekan.pas)** — single-file WeKan web prototype: `fphttpapp` + `httproute`,

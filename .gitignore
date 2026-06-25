@@ -35,9 +35,18 @@ ehthumbs.db
 .devcontainer/volumes*/
 .coverage
 /fp.*
-/wekan
-/wekan.o
-/wekan.db
+# wekanlite build outputs
+/wekanlite
+/data/
+# FreePascal compile artifacts
+*.o
+*.ppu
+src/link*.res
+src/ppas*.sh
+# generated embedded assets (releases/genassets.py)
+src/wlassets.pas
+src/wlpublic.rc
+src/wlpublic.res
 # Helm chart
 # Chart dependencies
 /helm/wekan/**/*.tgz

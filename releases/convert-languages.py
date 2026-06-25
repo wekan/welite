@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Convert WeKan's imports/i18n/languages.js into freepascal/public/languages.json.
+Convert WeKan's imports/i18n/languages.js into i18n/languages.json.
 
 languages.json has the SAME body as the JS module (the object literal with its `code` / `tag` /
 `name` / `load` / `rtl` fields, in source order) — it is just the JS file with the
@@ -8,19 +8,19 @@ languages.json has the SAME body as the JS module (the object literal with its `
 languages.js (e.g. picking up newly added languages).
 
 Usage:
-    python3 freepascal/convert-languages.py [languages.js] [languages.json]
+    python3 releases/convert-languages.py [languages.js] [languages.json]
 
-Defaults (resolved relative to this script's location):
-    src  = ../imports/i18n/languages.js
-    dst  = public/languages.json
+Defaults (resolved relative to this script's location, releases/):
+    src  = ../../wekan/imports/i18n/languages.js   (the sibling Meteor WeKan repo)
+    dst  = ../i18n/languages.json
 """
 import os
 import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_SRC = os.path.normpath(os.path.join(HERE, "..", "imports", "i18n", "languages.js"))
-DEFAULT_DST = os.path.join(HERE, "public", "languages.json")
+DEFAULT_SRC = os.path.normpath(os.path.join(HERE, "..", "..", "wekan", "imports", "i18n", "languages.js"))
+DEFAULT_DST = os.path.normpath(os.path.join(HERE, "..", "i18n", "languages.json"))
 
 
 def convert(text: str) -> str:

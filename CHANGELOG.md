@@ -4,6 +4,27 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-06-25 WeKan-Lite — minimal `wekanlite` repo
+
+Split WeKan-Lite into its own minimal repo, https://github.com/wekan/wekanlite (only the
+required files), out of the old `wami2` tree where it lived under `freepascal/`.
+
+- Moved the `freepascal/` contents to the repo root: FreePascal units, `wlhttp.lpr`, and the
+  `*.sql` schemas now live in `src/`; design docs in `docs/`; static assets in `public/`.
+- Split translations into their own tree: `public/i18n/` → `i18n/data/`, and
+  `public/languages.json` → `i18n/languages.json`. `wlstatic` now serves `i18n/` as a second
+  static root mounted at `/i18n` (`StaticAddRoot`), and `releases/genassets.py` embeds both the
+  `public/` and `i18n/` trees, so translation URLs stay stable in disk and single-binary builds.
+- Moved the build/release helper scripts under `releases/`: `genassets.py` (embed
+  `public/` + `i18n/`) and `convert-languages.py` (regenerate `i18n/languages.json` from the
+  sibling `../wekan` repo's `imports/i18n/languages.js`).
+- Updated every cross-reference path to the new layout: `README.md`, `docs/*.md`, the FPC unit
+  comments, `.tx/config` (`i18n/data/<lang>.i18n.json`), and the helper scripts' defaults.
+- Refreshed `.gitignore` for the new binary name (`/wekanlite`), the runtime `/data/` tree, and
+  the generated embed artifacts (`src/wlassets.pas`, `src/wlpublic.{rc,res}`, `*.o` / `*.ppu`).
+- Verified on FreePascal 3.2.3 (aarch64): the tree builds, and the server serves both roots —
+  `/robots.txt` (public) and `/i18n/languages.json` + `/i18n/data/en.i18n.json` (translations).
+
 ## 2026-06-25 WeKan-Lite FreePascal — v0.1
 
 First skeleton of the FreePascal backend. Compiles and links on FreePascal 3.2.3 (aarch64),
@@ -56,8 +77,9 @@ and renders a board page from SQLite.
   (▲◀▼▶) moves all selected swimlanes/lists/cards via `POST /board/move` (reorder/relocate over
   `sort` / `listId` / `swimlaneId`), modeled on the combined [`tcl-tk-kanban/kanban.go`](https://github.com/wekan/tcl-tk-kanban/blob/main/kanban.go).
 - Static assets (`wlstatic.pas`, `docs/static-assets.md`): serve `public/` at a configurable URL
-  (default '/'), embedded in the binary (`-dWLEMBED`, FPC resources via `tools/genassets.py`) or
-  from disk; `convert-languages.py` regenerates `public/languages.json`.
+  (default '/'), plus the `i18n/` translations tree at `/i18n` (`i18n/languages.json` +
+  `i18n/data/`); embedded in the binary (`-dWLEMBED`, FPC resources via `releases/genassets.py`)
+  or from disk; `releases/convert-languages.py` regenerates `i18n/languages.json`.
 - REST API (`wlapi.pas`, `docs/api.md`): subset of `public/api/wekan.yml` with Bearer-token auth
   (`POST /users/login` + `Authorization: Bearer`), so WeKan's Python CLI `api.py` works unchanged
   — verified login → board/swimlanes/lists → createlist → addcard → cardsbyswimlane on FPC 3.2.3.
