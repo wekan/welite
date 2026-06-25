@@ -139,19 +139,27 @@ _fpcup_build_fpclazup() {
   rm -rf "$src"
   git clone --depth 1 https://github.com/LongDirtyAnimAlf/fpcupdeluxe "$src" >>"$log" 2>&1 || return 1
 
-  # lazbuild on Ubuntu often defaults to a non-existent Lazarus dir (e.g. /usr/share/lazarus/X/),
-  # so point it at the packaged one (/usr/lib/lazarus/<ver>) and use a fresh primary config path.
-  local lazdir
-  lazdir="$(ls -d /usr/lib/lazarus/*/ /usr/share/lazarus/*/ 2>/dev/null | sort -V | tail -1)"
+  # lazbuild on Ubuntu defaults to a non-existent Lazarus dir, so point it at the packaged one that
+  # matches lazbuild's own version. fpclazup.lpi's saved active build mode targets x86_64-openbsd,
+  # so force the host CPU/OS; the binary lands in upbin/fpclazup-<host>-linux.
+  local lazver lazdir
+  lazver="$(lazbuild --version 2>/dev/null | tail -1 | tr -d '[:space:]')"
+  if [ -n "$lazver" ] && [ -d "/usr/lib/lazarus/$lazver" ]; then
+    lazdir="/usr/lib/lazarus/$lazver"
+  else
+    lazdir="$(ls -d /usr/lib/lazarus/*/ /usr/share/lazarus/*/ 2>/dev/null | sort -V | tail -1)"
+  fi
   if [ -z "$lazdir" ]; then
     echo "  Lazarus dir not found under /usr/lib/lazarus or /usr/share/lazarus."; return 1; fi
   local pcp="$inst/lazcfg"; mkdir -p "$pcp"
-  echo "   lazbuild --lazarusdir=$lazdir --pcp=$pcp --widgetset=nogui fpclazup.lpi"
-  ( cd "$src" && lazbuild --lazarusdir="$lazdir" --pcp="$pcp" --widgetset=nogui fpclazup.lpi ) \
-    >>"$log" 2>&1
-  local fpclazup
-  fpclazup="$(find "$src" -maxdepth 2 -type f -name fpclazup -perm -u+x 2>/dev/null | head -1)"
-  [ -n "$fpclazup" ] || { echo "  lazbuild did not produce fpclazup — see $log."; return 1; }
+  echo "   lazbuild --lazarusdir=$lazdir --cpu=$host --os=linux --widgetset=nogui fpclazup.lpi"
+  ( cd "$src" && lazbuild --lazarusdir="$lazdir" --pcp="$pcp" \
+        --cpu="$host" --os=linux --widgetset=nogui fpclazup.lpi ) >>"$log" 2>&1
+  local fpclazup="$src/upbin/fpclazup-$host-linux"
+  [ -x "$fpclazup" ] || \
+    fpclazup="$(find "$src" -type f -name 'fpclazup*' -perm -u+x 2>/dev/null | head -1)"
+  [ -n "$fpclazup" ] && [ -x "$fpclazup" ] || {
+    echo "  lazbuild did not produce fpclazup — see $log."; return 1; }
 
   echo ">> Installing base (native) FPC into $inst  [LONG — watch: tail -f $log]"
   "$fpclazup" --installdir="$inst" --noconfirm --verbose --skip=lazarus >>"$log" 2>&1 \
