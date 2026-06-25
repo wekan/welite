@@ -176,18 +176,24 @@ _fpcup_build_fpclazup() {
     echo "   seeded bootstrap: $boot/$ppc (from system $(command -v "$ppc"))"
   fi
 
-  # Common fpclazup options. fpcVersion=fixes-3.2: the 3.2.2 *release* does not link on glibc>=2.34
-  # (Ubuntu 26.04 = glibc 2.43) because cprt0 references the removed __libc_csu_init/_fini; the
-  # fixes-3.2 branch has the fix. --disablejobs avoids a parallel-make race in the RTL build.
-  # --only=FPC builds just the FPC compiler (no Lazarus/LCLCross, which otherwise fails the run).
-  local FOPT=( --installdir="$inst" --fpcVersion=fixes-3.2.gitlab --fpcbootstrapdir="$boot"
-               --disablejobs --only=FPC --noconfirm --verbose )
   local newfpc="$inst/fpc/bin/$host-linux/fpc"
+  # Common fpclazup options. --disablejobs avoids a parallel-make race in the RTL build; --only=FPC
+  # builds just the FPC compiler (no Lazarus/LCLCross, which otherwise fails the run).
+  local COMMON=( --installdir="$inst" --fpcbootstrapdir="$boot" --disablejobs --only=FPC
+                 --noconfirm --verbose )
+  # Base build: select fixes-3.2 ONLY on a fresh tree — the 3.2.2 *release* does not link on
+  # glibc>=2.34 (Ubuntu 26.04 = glibc 2.43; cprt0 references removed __libc_csu_init/_fini), and the
+  # fixes-3.2 branch has the fix. Once fpcupdeluxe has pinned the version (fpcsrc exists) it rejects
+  # --fpcVersion ("wrong command line options"), so omit it on re-runs.
+  local BOPT=( "${COMMON[@]}" )
+  [ -d "$inst/fpcsrc" ] || BOPT+=( --fpcVersion=fixes-3.2.gitlab )
+  # Cross builds additionally need --autotools to auto-download the per-target cross-libs/cross-bins.
+  local XOPT=( "${COMMON[@]}" --autotools )
 
   echo ">> Installing base (native) FPC into $inst  [LONG — watch: tail -f $log]"
   # fpclazup may still exit non-zero on a trailing module; treat "a working fpc binary exists" as
   # the real success signal rather than the exit code.
-  "$fpclazup" "${FOPT[@]}" >>"$log" 2>&1 || true
+  "$fpclazup" "${BOPT[@]}" >>"$log" 2>&1 || true
   if [ ! -x "$newfpc" ] || ! "$newfpc" -iV >/dev/null 2>&1; then
     echo "  base FPC install failed (no working compiler at $newfpc) — see $log."; return 1
   fi
@@ -201,7 +207,7 @@ _fpcup_build_fpclazup() {
     fi
     echo "   -- $label  ($cpu-$os)  [LONG]"
     # success = the cross units dir got created (cross compiler/RTL present)
-    if "$fpclazup" "${FOPT[@]}" --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1 \
+    if "$fpclazup" "${XOPT[@]}" --cputarget="$cpu" --ostarget="$os" >>"$log" 2>&1 \
        || [ -d "$inst/fpc/units/$cpu-$os" ]; then
       ok=$((ok + 1))
     else
