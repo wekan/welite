@@ -235,6 +235,47 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 for table in ['custom_field_boards','custom_field_dropdown_items']:
                     assert sql('SELECT count(*) FROM '+table+';')==[['0']]
 
+                # Private tokens reference a user view without invalid SQLite FKs.
+                build(root/'tests/token.lpr',out/'tokens',flags)
+                def auth(mode,token='api-test-token'):
+                    result=subprocess.run([str(out/'tokens/token'),mode,str(db),token],env=settings,capture_output=True,text=True,timeout=30)
+                    assert result.returncode==0,result.stderr
+                    return result.stdout.strip()
+                assert sql('PRAGMA foreign_key_list(login_tokens);')==[]
+                assert sql('PRAGMA foreign_key_list(authmeta);')[0][2]=='login_tokens'
+                assert sql("INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES('u','user',"+q(stamp)+','+q(stamp)+",'{\"password\":\"credential\"}');",'exec')=='ok'
+                assert auth('issue')=='yes' and auth('check')=='yes'
+                assert sql('SELECT count(*) FROM authmeta;')==[['1']]
+                assert sql("INSERT INTO login_tokens VALUES('bad','absent','now',NULL);",'exec')=='error'
+                assert sql("UPDATE login_tokens SET userId='absent';",'exec')=='error'
+                assert auth('check')=='yes'
+                assert sql(mode='install')=='ok' and auth('check')=='yes'
+                assert sql("UPDATE users SET services_json='{\"password\":\"changed\"}' WHERE id='u';",'exec')=='ok'
+                assert auth('check')=='no'
+                assert sql("UPDATE users SET services_json='{\"password\":\"credential\"}' WHERE id='u';",'exec')=='ok'
+                assert auth('issue')=='yes'
+                assert sql("DELETE FROM users WHERE id='u';",'exec')=='ok'
+                assert auth('check')=='no'
+                assert sql('SELECT count(*) FROM login_tokens;')==[['0']] and sql('SELECT count(*) FROM authmeta;')==[['0']]
+                client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password='credential'))]})
+                assert auth('issue')=='yes' and auth('check')=='yes'
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='u'),limit=1)]})
+                assert auth('check')=='no'
+                assert sql('SELECT count(*) FROM login_tokens;')==[['0']] and sql('SELECT count(*) FROM authmeta;')==[['0']]
+                client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password='credential'))]})
+                assert auth('issue')=='yes'
+                assert sql('PRAGMA foreign_keys=OFF; DELETE FROM login_tokens;','exec')=='ok'
+                assert sql('SELECT count(*) FROM authmeta;')==[['0']]
+                # A denial during token cleanup rolls the entire Mongo user deletion back.
+                assert auth('issue')=='yes'
+                assert sql("CREATE TRIGGER deny_meta BEFORE DELETE ON authmeta BEGIN SELECT RAISE(ABORT,'test denial'); END;",'exec')=='ok'
+                response=client.command({'delete':'users','deletes':[dict(q=dict(_id='u'),limit=1)]},check=False)
+                assert response.get('ok')==0 and 'test denial' in response.get('errmsg',''),response
+                assert client.find('users','u') and auth('check')=='yes'
+                assert sql('DROP TRIGGER deny_meta;','exec')=='ok'
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='u'),limit=1)]})
+                assert sql('SELECT count(*) FROM authmeta;')==[['0']]
+
                 # Normalized tables must never be overwritten by this installer.
                 rejected=out/'legacy.db'
                 with sqlite3.connect(rejected) as con:con.execute('CREATE TABLE boards(value TEXT)');con.execute("INSERT INTO boards VALUES('preserve')")
@@ -248,6 +289,13 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql(mode='install',database=child_rejected)=='error'
                 with sqlite3.connect(child_rejected) as con:
                     assert con.execute('SELECT * FROM board_labels').fetchall()==[('preserve child',)]
+                    assert not con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchall()
+                private_rejected=out/'private.db'
+                with sqlite3.connect(private_rejected) as con:
+                    con.execute('CREATE TABLE login_tokens(value TEXT)');con.execute("INSERT INTO login_tokens VALUES('preserve token')")
+                assert sql(mode='install',database=private_rejected)=='error'
+                with sqlite3.connect(private_rejected) as con:
+                    assert con.execute('SELECT * FROM login_tokens').fetchall()==[('preserve token',)]
                     assert not con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchall()
                 fresh=out/'fresh';fresh.mkdir();freshdb=fresh/'wekan.sqlite'
                 assert sql(mode='install',database=freshdb)=='ok'
@@ -297,7 +345,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     oldserver.terminate()
                     try:oldserver.wait(timeout=10)
                     except subprocess.TimeoutExpired:oldserver.kill();oldserver.wait()
-                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views, references/cascades and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
+                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views, references/cascades, private tokens and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
             finally:
                 server.terminate()
                 try:server.wait(timeout=10)

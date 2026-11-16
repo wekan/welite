@@ -63,7 +63,7 @@ def decode(raw,offset=0):
     return doc,end
 class Client:
     def __init__(self,port):self.port=port
-    def command(self,doc,database='wekan'):
+    def command(self,doc,database='wekan',check=True):
         body=struct.pack('<i',0)+b'\0'+encode(dict(doc,**{'$db':database}))
         message=struct.pack('<iiii',len(body)+16,1,0,2013)+body
         with socket.create_connection(('127.0.0.1',self.port),timeout=10) as conn:
@@ -79,7 +79,7 @@ class Client:
             assert response==1 and opcode==2013,(response,opcode)
             data=read(length-16);assert data[4]==0
             result,_=decode(data,5)
-            assert result.get('ok')==1,result
+            if check:assert result.get('ok')==1,result
             return result
     def find(self,collection,identity):
         result=self.command({'find':collection,'filter':{'_id':identity},'batchSize':100})

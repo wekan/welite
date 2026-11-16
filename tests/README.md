@@ -70,7 +70,10 @@ embedded object/scalar array insert/update/delete, all thirteen child SQL views,
 simultaneous key/value edits, custom child trigger retention, unowned child-table refusal
 and byte-exact failed-edit preservation. Every declared root foreign key is tested on
 insert/update; a forced nested cascade failure checks all collection bytes before/after,
-followed by successful cascade deletion and unrelated-record retention.
+followed by successful cascade deletion and unrelated-record retention. The real token
+harness also checks private-token issuance/validation through fresh processes, user
+references, reinstall persistence, credentials, SQL/Mongo deletion cleanup and atomic
+restoration after a forced Mongo cleanup failure.
 Set `FERRETDB` to a native server built from the companion source revision documented in
 `docs/ferret.md`. Use normal-sidecar SQLite for this test: a short-name library must not
 open the same live database as a normal-sidecar FerretDB binary. No production data is used.

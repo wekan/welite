@@ -160,16 +160,40 @@ root deletion also removes their embedded child rows. Both SQLite backends pass.
 
 These are Welite view constraints. Direct Mongo writes retain FerretDB's existing
 semantics: the adapter adds no reference-enforcement triggers to physical collections.
-Existing dangling Mongo references are not rewritten at installation. Private auth/token
-tables and account uniqueness are separate application-activation gates.
+Existing dangling Mongo references are not rewritten at installation. Private token cleanup
+has a separate physical user-deletion trigger described below; account uniqueness remains open.
+
+## Private token storage
+
+`wlpriv.pas` installs owned `login_tokens` and `authmeta` tables. SQLite cannot use a
+view as a foreign-key parent, so token insert/update triggers check the user view
+explicitly. Metadata keeps its foreign key to the real token table. A private ownership
+signature and exact table definition are checked before reuse; unowned or altered
+objects stop the entire installer without mutation. Compatible reinstallation retains
+existing private tokens.
+
+An AFTER DELETE trigger on the physical user collection removes private tokens.
+A token deletion trigger explicitly removes metadata as well, including on connections
+with foreign keys disabled. These triggers use SQLite built-ins rather than Pascal
+extension functions, so live Mongo deletion can execute them. A forced metadata-cleanup
+failure rolls back the Mongo deletion and preserves the user's valid token. Collection
+DROP/recreation and authentication migration still need application-level policy; the
+physical delete trigger handles document deletion, not collection removal.
+
+Tests run the actual `IssueLoginToken` and `ValidateLoginToken` implementation through
+fresh harness processes on linked and CLI SQLite, including credentials, missing users,
+reinstallation and both SQL/Mongo deletion. The existing hashing, tenant binding and
+legacy-token denial regression suite also passes. These are Welite private tokens;
+Meteor `services.resume.loginTokens` is not mapped by this step. Shared Meteor password
+and session compatibility remains unfinished.
 
 ## Remaining before the checklist can be checked
 
-- Complete account uniqueness and private auth/token references; reconcile typed
+- Complete account uniqueness and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile existing Meteor password/session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
-  normalized database; adapt cloning/export and private authentication-table references.
+  normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
   rollback with both Welite SQLite backends.
 - Resolve shared database filename/8.3 policy and document target-specific limitations

@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Private tokens with FerretDB user views
+
+- Install owned private `login_tokens` and `authmeta` tables alongside document views.
+  Replace the invalid foreign key to a user view with explicit token insert/update
+  checks; retain the real metadata-to-token foreign key. Refuse unowned or structurally
+  changed private objects rather than overwriting them.
+- Remove private tokens and metadata after physical user deletion, whether initiated
+  by Welite SQL or Mongo. Explicit metadata cleanup also works with foreign keys off
+  on the deleting connection. Keep tokens across compatible adapter reinstallation.
+- Exercise the actual token issue/validate code against both adapters: restart-safe
+  validation, credential changes, missing users, SQL/Mongo deletion and cleanup with
+  foreign keys off. Force a Mongo cleanup failure and verify user/token restoration.
+  Codec/extension and existing SHA/HMAC/durable-token regression tests also pass.
+- These remain Welite private tokens, not Meteor resume tokens. Shared password/session
+  compatibility, username uniqueness and application activation are still open.
+
 ## 2026-11-16 FerretDB view references and delete cascades
 
 - Generate root foreign-key metadata directly from the canonical schema. Reject SQL

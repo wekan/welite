@@ -1,7 +1,7 @@
 unit wlferr;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wlrefs;
+uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wlrefs,wlpriv;
 // Installs root and child projections. Application activation and shared-account
 // compatibility remain separate gates before this is a finished store adapter.
 function InstallRootModels(Db:TWLDb):Boolean;
@@ -190,7 +190,7 @@ begin
         'INSERT OR REPLACE INTO _wl_models VALUES('+Q(ViewName)+','+Q(TableName)+','+Q(Spec)+',1); ';
       for j:=0 to High(Custom) do Sql:=Sql+Custom[j][0]+'; ';
     end;
-    Result:=Sql+RelationScript(Db,Tables)+'COMMIT;';
+    Result:=Sql+RelationScript(Db,Tables)+PrivateScript(Db,Tables)+'COMMIT;';
   finally Tables.Free;Roots.Free;Used.Free;Models.Free;end;
 end;
 function InstallRootModels(Db:TWLDb):Boolean;
