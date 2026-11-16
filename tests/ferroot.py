@@ -10,7 +10,7 @@ import struct
 import subprocess
 import tempfile
 import time
-from wire import Client,Long,DateMs,Binary,ObjectId,Timestamp,Regex
+from wire import encode,Client,Long,DateMs,Binary,ObjectId,Timestamp,Regex
 root=Path(__file__).resolve().parents[1]
 tools=root.parents[1]
 # Never mix short-sidecar and normal-sidecar libraries on a live shared database.
@@ -107,6 +107,36 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE boards SET settings_json='{"+chr(34)+"replacement"+chr(34)+":null}' WHERE id='copy';",'exec')=='ok'
                 clone=client.find('boards','copy')[0]
                 assert clone['replacement'] is None and 'unknown' not in clone and clone['title']=='Copy'
+                # Embedded relation edits retain per-row unknown BSON metadata.
+                client.command({'update':'boards','updates':[{'q':{'_id':'board'},'u':{'$set':{'members':[{'userId':'member','isActive':True,'unknown':{'when':DateMs(-1),'large':Long(9007199254740993)}},{'userId':'second','isActive':False}]}}}]})
+                member_spec={'path':'members','keys':['userId'],'fields':[
+                    dict(name='userId',type='TEXT',required=True,default=None),
+                    dict(name='isActive',type='INTEGER',kind='bool',required=True,default=1)]}
+                def relation(spec,op,old,values):
+                    command=json.dumps(dict(op=op,old=old,values=values),ensure_ascii=False)
+                    expression='wl_relation(json(_ferretdb_sjson),'+q(command)+','+q(json.dumps(spec))+')'
+                    return sql('UPDATE '+q(physical)+' SET _ferretdb_sjson=CASE WHEN wl_storage('+q(physical)+")='blob' THEN jsonb("+expression+') ELSE '+expression+" END WHERE _ferretdb_sjson->>'_id'='board';",'exec')
+                assert relation(member_spec,'update',{'userId':'member'},{'isActive':0})=='ok'
+                members=client.find('boards','board')[0]['members']
+                assert [v['userId'] for v in members]==['member','second'] and members[0]['isActive'] is False
+                assert isinstance(members[0]['unknown']['when'],DateMs) and isinstance(members[0]['unknown']['large'],Long)
+                assert relation(member_spec,'insert',{},dict(userId='third'))=='ok'
+                assert client.find('boards','board')[0]['members'][2]=={'userId':'third','isActive':True}
+                saved=encode(client.find('boards','board')[0])
+                for op,old,values in [('insert',{},dict(userId='third')),('update',dict(userId='second'),dict(userId='member')),('update',dict(userId='member'),dict(isActive=2)),('update',dict(userId='absent'),dict(isActive=1)),('insert',{},dict(userId=None)),('update',dict(userId='member'),dict(unknown='no'))]:
+                    assert relation(member_spec,op,old,values)=='error'
+                    assert encode(client.find('boards','board')[0])==saved
+                assert relation(member_spec,'delete',dict(userId='second'),{})=='ok'
+                assert [v['userId'] for v in client.find('boards','board')[0]['members']]==['member','third']
+                scalar_spec={'path':'test.ids','scalar':True,'keys':['id'],'fields':[dict(name='id',type='TEXT',required=True,default=None)]}
+                assert relation(scalar_spec,'insert',{},dict(id='日本語'))=='ok'
+                assert relation(scalar_spec,'insert',{},dict(id='two'))=='ok'
+                assert relation(scalar_spec,'update',dict(id='日本語'),dict(id='renamed'))=='ok'
+                assert client.find('boards','board')[0]['test']['ids']==['renamed','two']
+                assert relation(scalar_spec,'delete',dict(id='renamed'),{})=='ok'
+                assert client.find('boards','board')[0]['test']['ids']==['two']
+                client.command({'update':'boards','updates':[{'q':{'_id':'board'},'u':{'$set':{'test':{'ids':'malformed'}}}}]})
+                assert relation(scalar_spec,'insert',{},dict(id='denied'))=='error'
                 before=sql("SELECT json(_ferretdb_sjson) FROM "+q(sql("SELECT table_name FROM _ferretdb_collections WHERE name='boards';")[0][0])+" ORDER BY rowid;")
                 assert sql("BEGIN; UPDATE boards SET title='rollback' WHERE id='new'; UPDATE boards SET createdAt='invalid' WHERE id='new'; COMMIT;",'exec')=='error'
                 assert sql("SELECT json(_ferretdb_sjson) FROM "+q(sql("SELECT table_name FROM _ferretdb_collections WHERE name='boards';")[0][0])+" ORDER BY rowid;")==before
@@ -175,7 +205,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     oldserver.terminate()
                     try:oldserver.wait(timeout=10)
                     except subprocess.TimeoutExpired:oldserver.kill();oldserver.wait()
-                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, rollback, immutable IDs and ownership-safe reinstall')
+                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, typed object/scalar relation edits, rollback, immutable IDs and ownership-safe reinstall')
             finally:
                 server.terminate()
                 try:server.wait(timeout=10)

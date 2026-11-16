@@ -3,6 +3,7 @@ unit wlproj;
 interface
 uses SysUtils,Classes,fpjson,DateUtils,Math,wlsjson;
 function ProjectDocument(const Previous,Columns,Model,Mode:string):string;
+function RelationDocument(const Previous,Command,Model:string):string;
 implementation
 procedure Invalid;
 begin raise Exception.Create('Invalid model projection');end;
@@ -171,5 +172,97 @@ begin
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,Hints.AsJSON);
   finally Extra.Free;Known.Free;Hints.Free;Spec.Free;Patch.Free;Doc.Free;end;
+end;
+// Edit one embedded row without rebuilding its siblings from SQL projections.
+// The caller supplies all key columns; unknown object fields remain in place.
+function RelationDocument(const Previous,Command,Model:string):string;
+var Doc,Cmd,Spec,Old,Values,Row,Field,Seen:TJSONObject;Fields,Keys,Rows:TJSONArray;
+  Item,Value,Converted,Container:TJSONData;Path,Op,Name,Signature:string;
+  i,j,Found:Integer;Scalar,Match:Boolean;
+  function KeyOf(Entry:TJSONData):string;
+  var k:Integer;Part:TJSONData;
+  begin
+    Result:='';
+    for k:=0 to Keys.Count-1 do
+    begin
+      if Scalar then Part:=Entry
+      else if Entry is TJSONObject then Part:=AtPath(TJSONObject(Entry),Keys.Strings[k])
+      else begin Invalid;Part:=nil;end;
+      if (Part=nil) or (Part.JSONType<>jtString) or (Part.AsString='') then Invalid;
+      Result:=Result+IntToStr(Length(Part.AsString))+':'+Part.AsString;
+    end;
+  end;
+begin
+  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;
+  try
+    Doc:=ExactObject(PlainDocument(Previous));Cmd:=ExactObject(Command);Spec:=ExactObject(Model);
+    Path:=Spec.Get('path','');Scalar:=Spec.Get('scalar',False);
+    if (Path='') or (RootOf(Path)='$s') then Invalid;
+    if not (Spec.Find('fields') is TJSONArray) or not (Spec.Find('keys') is TJSONArray) then Invalid;
+    Fields:=TJSONArray(Spec.Find('fields'));Keys:=TJSONArray(Spec.Find('keys'));
+    if (Keys.Count=0) or (Scalar and (Keys.Count<>1)) then Invalid;
+    Op:=Cmd.Get('op','');if (Op<>'insert') and (Op<>'update') and (Op<>'delete') then Invalid;
+    if not (Cmd.Find('old') is TJSONObject) or not (Cmd.Find('values') is TJSONObject) then Invalid;
+    Old:=TJSONObject(Cmd.Find('old'));Values:=TJSONObject(Cmd.Find('values'));
+    Container:=AtPath(Doc,Path);
+    if Container=nil then begin PutPath(Doc,Path,TJSONArray.Create);Container:=AtPath(Doc,Path);end;
+    if not (Container is TJSONArray) then Invalid;Rows:=TJSONArray(Container);
+    Found:=-1;
+    for i:=0 to Rows.Count-1 do
+    begin
+      Item:=Rows.Items[i];Match:=True;
+      for j:=0 to Keys.Count-1 do
+      begin
+        Name:=Keys.Strings[j];Value:=Old.Find(Name);
+        if Scalar then Converted:=Item
+        else if Item is TJSONObject then Converted:=AtPath(TJSONObject(Item),Name)
+        else begin Invalid;Converted:=nil;end;
+        if (Value=nil) or (Converted=nil) then Match:=False
+        else if (Value.JSONType<>jtString) or (Converted.JSONType<>jtString) or
+          (Value.AsString<>Converted.AsString) then Match:=False;
+      end;
+      if Match then begin if Found>=0 then Invalid;Found:=i;end;
+    end;
+    if Op='insert' then begin if Found>=0 then Invalid;Row:=TJSONObject.Create;end
+    else begin
+      if Found<0 then Invalid;
+      if Scalar then begin Row:=TJSONObject.Create;Row.Add(Keys.Strings[0],Rows.Items[Found].Clone);end
+      else if Rows.Items[Found] is TJSONObject then Row:=TJSONObject(Rows.Items[Found].Clone)
+      else Invalid;
+    end;
+    if Op='delete' then Rows.Delete(Found)
+    else
+    begin
+      for i:=0 to Values.Count-1 do
+      begin
+        j:=0;while (j<Fields.Count) and (Fields.Objects[j].Get('name','')<>Values.Names[i]) do Inc(j);
+        if j=Fields.Count then Invalid;
+      end;
+      for i:=0 to Fields.Count-1 do
+      begin
+        Field:=Fields.Objects[i];Name:=Field.Get('name','');Value:=Values.Find(Name);
+        if (Value=nil) and (Op='update') then Continue;
+        if Value=nil then Value:=Field.Find('default');if Value=nil then Invalid;
+        Converted:=Coerce(Value,Field);
+        try
+          if Field.Get('required',False) and (Converted.JSONType=jtNull) then Invalid;
+          PutPath(Row,Field.Get('path',Name),Converted);Converted:=nil;
+        finally Converted.Free;end;
+      end;
+      if Scalar then
+      begin
+        Value:=Row.Find(Keys.Strings[0]);if Value=nil then Invalid;Item:=Value.Clone;
+      end else Item:=Row.Clone;
+      if Op='insert' then Rows.Add(Item) else Rows.Items[Found]:=Item;
+    end;
+    // Refuse ambiguous source arrays as well as duplicate newly inserted keys.
+    Seen:=TJSONObject.Create;
+    for i:=0 to Rows.Count-1 do
+    begin
+      Signature:=KeyOf(Rows.Items[i]);if Seen.IndexOfName(Signature)>=0 then Invalid;
+      Seen.Add(Signature,True);
+    end;
+    Result:=TypedDocument(Doc.AsJSON,Previous,'{}');
+  finally Seen.Free;Row.Free;Spec.Free;Cmd.Free;Doc.Free;end;
 end;
 end.

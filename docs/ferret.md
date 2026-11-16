@@ -48,6 +48,7 @@ The linked backend registers these deterministic, side-effect-free SQLite functi
 wl_plain(sjson_text)
 wl_sjson(complete_plain_json, previous_sjson_text_or_empty, field_hints_json)
 wl_model(previous_sjson_text_or_empty, column_patch_json, model_spec_json, mode)
+wl_relation(previous_sjson_text, command_json, relation_spec_json)
 ```
 
 Use `json(document_column)` when reading either SQLite storage form, and wrap the
@@ -112,6 +113,21 @@ fresh SQL-created collections readable/writable by FerretDB, Mongo edits visible
 legacy TEXT after restart, typed unknown data, exact numeric bits, atomic failed edits,
 ID protection and ownership-safe reinstallation. These are root-storage tests; application
 HTTP authorization and relation workflows are not yet exercised against this adapter.
+
+## Embedded relation editing kernel
+
+`wl_relation` applies one row edit to an array inside a typed document. The relation
+specification supplies `path`, `keys`, `fields` (the same coercion contract as root
+columns), and optional `scalar: true` for arrays of string IDs. A command supplies
+`op` (`insert`, `update`, `delete`), `old` key values and sparse `values`. Insert uses
+field defaults; update preserves omitted fields and unknown row properties. The
+result retains sibling order and is passed through the typed codec. Duplicate keys,
+missing targets, malformed arrays and invalid patches fail the SQL statement.
+
+Live root tests exercise both object members and nested scalar ID arrays through
+this function, decoded by FerretDB, with byte-exact BSON comparisons after rejected
+edits. The function is available in linked SQLite and the CLI extension. Child SQL
+views and their constraints are still the next integration step.
 
 ## Remaining before the checklist can be checked
 

@@ -58,6 +58,15 @@ begin
     ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
   except ResultError(Context,'Invalid model projection',-1);end;
 end;
+procedure RelationFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
+var Value:string;
+begin
+  try
+    if Count<>3 then raise Exception.Create('Invalid argument count');
+    Value:=RelationDocument(ReadArg(PArgs(Args)^[0]),ReadArg(PArgs(Args)^[1]),ReadArg(PArgs(Args)^[2]));
+    ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
+  except ResultError(Context,'Invalid relation projection',-1);end;
+end;
 procedure StorageFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
 var Name,Value:string;DataType:PAnsiChar;Db:Pointer;
 begin
@@ -79,6 +88,7 @@ begin
   Result:=CreateFunc(Db,'wl_sjson',3,Flags,nil,@TypedFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_plain',1,Flags,nil,@PlainFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_model',4,Flags,nil,@ModelFunc,nil,nil,nil);
+  if Result=0 then Result:=CreateFunc(Db,'wl_relation',3,Flags,nil,@RelationFunc,nil,nil,nil);
   // Schema state can change: innocuous, but deliberately NOT deterministic.
   if Result=0 then Result:=CreateFunc(Db,'wl_storage',1,1 or $200000,nil,@StorageFunc,nil,nil,nil);
 end;

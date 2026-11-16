@@ -238,6 +238,7 @@ not merely a design document. Platform/browser claims require testing on those t
   Large CLI adapter scripts now use private short scratch files without argument-size limits.
   Eleven root collection views now pass live two-way Mongo-wire tests on both backends,
   including fresh collection creation, legacy TEXT/restart and preservation of typed unknown fields.
+  Typed embedded-array editing now passes live object/scalar relation tests on both backends.
   Remaining: child relation views/triggers and constraints, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Typed embedded relation editing
+
+- Add the shared `wl_relation` SQL function for sparse insert/update/delete of embedded
+  object and scalar arrays, including nested array paths. Preserve sibling order,
+  unmodeled member fields and existing BSON metadata instead of rebuilding arrays
+  from flattened SQL rows.
+- Validate required values and booleans; reject duplicate keys, missing update/delete
+  targets, unknown patch columns and malformed source arrays. Return an SQL error so
+  failed statements cannot partially replace documents.
+- Verify real FerretDB reads after linked/CLI relation writes, including typed nested
+  dates/int64, default values, Unicode scalar keys and byte-exact BSON after denial.
+  Re-run the source-codec and TEXT/JSONB tests. Child SQL views, reference constraints
+  and application integration remain to be wired before interoperability is complete.
+
 ## 2026-11-16 FerretDB root document projections
 
 - Generate eleven root-model specifications from the canonical schema and install
