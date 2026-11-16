@@ -1055,3 +1055,33 @@ shared authentication migration policy or activate shared stores automatically.
   rollback with both Welite SQLite backends.
 - Resolve shared database filename/8.3 policy and document target-specific limitations
   from actual tests. Never share a file through aliases with different WAL names.
+
+### Opt-in HTTP activation of existing stores
+
+Set `WELITE_SHARED=1` to open existing public tenant FerretDB stores through the
+HTTP application. The local tenant uses
+`WELITE_DATA/local/files/db/wekan.sqlite`; enabled domains use their existing
+registry-derived `domains/dXXXXXXX/files/db/` directory. The adapter installs its
+owned projections on the existing physical collections. The reserved admin
+registry remains native at `admin/files/db/wekan.db`. Empty/unset or `0` retains
+native public provisioning; other mode values fail initialization.
+
+Selection never copies, renames or links database files. Shared mode requires an
+existing FerretDB metadata table and refuses normalized public stores. A recognized
+FerretDB store already named `wekan.db` can also be opened explicitly. Both known
+filenames together are refused, as are orphan known sidecars; native provisioning
+refuses a foreign `.sqlite` file rather than silently creating a shadow database.
+Ordinary mode refuses the canonical shared filename and FerretDB metadata in the
+short filename. Resolve ambiguous files and recovery state offline first.
+
+`WELITE_SHORT_NAMES=1` refuses `wekan.sqlite`: the actual FerretDB server uses
+normal SQLite sidecar names. This opt-in path does not establish a portable shared
+filename policy, create fresh shared databases or migrate normalized data. Do not
+rename or alias an open database to work around these checks. Full Meteor application
+observer/index/cache and file-byte compatibility remain separate acceptance gates.
+
+`tests/shrhttp.py` uses the actual FerretDB server and both SQLite backends. It
+checks canonical selection/refusal, HTTP API login and card creation, Mongo title
+updates visible through HTTP, preserved BSON Long/Date values, private browser
+sessions, restart persistence and revocation by removing the shared resume record.
+It also proves ordinary mode does not create `wekan.db` beside `wekan.sqlite`.

@@ -67,7 +67,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregist,wltmp,wlmaint;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
+  wlregist,wltmp,wlmaint,wldbfile,wlferr;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
 
 type
   TUploadCleanup=class(TUploadedFile)
@@ -109,6 +109,7 @@ end;
 
 procedure TenantInit(const ADataRoot: string);
 begin
+  if not ValidStoreMode then raise Exception.Create('WELITE_SHARED must be 0 or 1');
   DataRoot := IncludeTrailingPathDelimiter(ExpandFileName(ADataRoot));
   if HandleCache = nil then
   begin
@@ -199,12 +200,26 @@ function EnsureTenantStore(const Tenant: TWLTenant): Boolean;
 var Db: TWLDb; Sql: string; R: TWLRows;
 begin
   Result:=False;
+  if SharedStoresRequested and not Tenant.IsAdmin then
+  begin
+    if not FileExists(Tenant.DbPath) then Exit;
+    Db:=WLDbOpen(Tenant.DbPath);if Db=nil then Exit;
+    try
+      R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''_ferretdb_collections'';');
+      Result:=(Length(R)=1) and (R[0][0]='table');
+    finally Db.Free;end;
+    Exit;
+  end;
   ForceDirectories(Tenant.FilesDir+'db');
   ForceDirectories(Tenant.FilesDir+'attachme');
   ForceDirectories(Tenant.FilesDir+'avatars');
   Db:=WLDbOpen(Tenant.DbPath);
   if Db=nil then Exit;
   try
+    R:=Db.Query('SELECT name FROM sqlite_master WHERE name=''_ferretdb_collections'';');
+    if Length(R)>0 then Exit; // Never initialize normalized tables over source storage.
+    R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''users'';');
+    if (Length(R)>0) and (R[0][0]<>'table') then Exit;
     R:=Db.Query('SELECT name FROM sqlite_master WHERE type=''table'' AND name=''users'';');
     if Length(R)>0 then Exit(True);
     Sql:=LoadSchemaSql;
@@ -223,7 +238,8 @@ begin
   if Key<>ADMIN_TENANT then Key:=RegistryCanonicalHost(Key);
   T:=Default(TWLTenant);
   T.Host:=Key; T.Dir:=TenantDir(Key); T.FilesDir:=T.Dir+'files'+PathDelim;
-  T.DbPath:=T.FilesDir+'db'+PathDelim+'wekan.db';
+  T.IsAdmin:=Key=ADMIN_TENANT;
+  if not SelectStoreFile(T.FilesDir+'db',SharedStoresRequested and not T.IsAdmin,T.DbPath) then Exit;
   Result:=EnsureTenantStore(T);
 end;
 
@@ -263,7 +279,7 @@ begin
   Tenant.IsAdmin  := SameText(Key, ADMIN_TENANT);
   Tenant.Dir      := TenantDir(Key);
   Tenant.FilesDir := Tenant.Dir + 'files' + PathDelim;
-  Tenant.DbPath:=Tenant.FilesDir+'db'+PathDelim+'wekan.db';
+  if not SelectStoreFile(Tenant.FilesDir+'db',SharedStoresRequested and not Tenant.IsAdmin,Tenant.DbPath) then Exit;
 
   if AutoProvision and not EnsureTenantStore(Tenant) then Exit;
 
@@ -288,6 +304,16 @@ begin
   Result := Assigned(Tenant.Db);
   if Result then
   begin
+    if SharedStoresRequested and not Tenant.IsAdmin then
+    begin
+      if not EnsureTenantStore(Tenant) or not InstallRootModels(Tenant.Db) then
+      begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
+    end
+    else
+    begin
+      if Length(Tenant.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))>0 then
+      begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
+    end;
     HandleCache.AddObject(Tenant.Host, TObject(Tenant.Db));
     RegisterMaintenanceDb(Tenant.Db);
   end;

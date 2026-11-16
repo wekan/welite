@@ -313,3 +313,11 @@ real password issuance and pending setup. It checks inclusive expiry, valid/repl
 retention, optional table absence, ignored deletes and checkpoint seed/update rollback,
 concurrent due calls, backwards clocks, incompatible/mixed layout refusal and actual
 idle worker cleanup. No shared/history tables or missing optional auth tables are created.
+
+`python3 tests/shrhttp.py` requires `FERRETDB` pointing to the maintained live
+FerretDB binary and normal SQLite filename mode. It builds both HTTP backends and
+the CLI extension, checks canonical filename refusal without file creation, then
+opens an existing Mongo-created store with `WELITE_SHARED=1`. It verifies both-way
+HTTP/Mongo changes, BSON preservation, private browser sessions, API restart and
+shared revocation, with no normalized shadow database. Fresh shared creation,
+strict 8.3 sharing and full Meteor application workflows are not covered by this test.

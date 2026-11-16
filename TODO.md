@@ -278,9 +278,10 @@ not merely a design document. Platform/browser claims require testing on those t
   Shared-store sweeps now atomically retire linked hash/raw records, remove expired private credentials/orphan metadata and retain identity/history, with rollback, sibling/BSON and idle-worker tests. Legacy unknown hashes use shared expiry plus observed raw revocation without guessing.
   Shared maintenance now also removes expired private pending enrollment at equality, with rollback, unexpired retention, replay preservation and idle-worker tests.
   Normalized legacy stores now have guarded, atomic token/optional-metadata/pending expiry and idle-worker dispatch, with schema, clock, rollback, concurrency and replay-preservation tests on both backends.
+  Existing shared stores now activate explicitly through HTTP with WELITE_SHARED=1, canonical-file refusal guards and real Mongo/HTTP/restart/revocation tests on both backends. Admin registry remains native.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
-  application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
+  fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.

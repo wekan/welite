@@ -46,6 +46,12 @@ option and refuses non-8.3 database leaf names (including entropy stocks). SQLit
 storage is in memory in this mode. Native long-filename hosts can leave strict
 mode off while using the same tenant/file layout.
 
+Existing FerretDB stores can be opened explicitly with `WELITE_SHARED=1`; see
+[shared activation](ferret.md#opt-in-http-activation-of-existing-stores). That mode
+uses the existing canonical `wekan.sqlite` without renaming it and refuses it in
+strict 8.3 mode. It does not create fresh shared stores; the admin registry remains
+native. Never alias a shared database to obtain a different filename.
+
 **Every program accessing the database must use the same naming policy**, including
 backup utilities, Python, FerretDB and CLI maintenance tools. Mixing policies can
 miss a live WAL or hot journal and corrupt data. Stop all clients and checkpoint

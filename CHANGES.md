@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Open existing shared stores through HTTP
+
+- Add explicit `WELITE_SHARED=1` activation for existing public FerretDB stores,
+  installing the guarded root projections when opening a tenant. Keep the admin
+  registry native and refuse missing or normalized public stores in shared mode.
+- Select the existing canonical `wekan.sqlite` without aliases, copies or renames.
+  Refuse ambiguous database files, orphan sidecars and long shared filenames in
+  strict 8.3 mode. Ordinary mode refuses source storage instead of creating a
+  normalized database beside it. Validate the mode before tenant initialization.
+- Use the same file selection for idle maintenance discovery. Verify linked/CLI
+  HTTP login, Mongo-to-HTTP reads, HTTP-to-Mongo card writes, BSON preservation,
+  private browser sessions, API restart persistence and shared revocation with the
+  actual FerretDB server. Exercise filename refusal cases without creating files.
+- Fresh shared creation/default activation, portable shared filenames, migration,
+  Mongo-managed index/cache parity and full Meteor application workflows remain open.
+
 ## 2026-11-17 Maintain normalized legacy-store expiry
 
 - Add a legacy-store sweep for the existing normalized token layout. Remove expired
