@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 FerretDB typed storage kernel
+
+- Add a Pascal SJSON codec preserving BSON metadata, ordered keys, nested values and
+  exact numeric literals. Explicit field hints cover new dates, int32, timestamps,
+  binary subtypes and ObjectIDs. Reject malformed JSON/UTF-8/schema, duplicate keys,
+  incompatible hints and out-of-range values instead of silently rounding integers.
+- Register pure typed-document SQL functions in linked SQLite and expose the same code
+  as an optional local CLI extension using the host API table. Failed extension loading
+  blocks SQL execution. This does not yet switch application models to FerretDB storage.
+- Verify actual FerretDB source encoding/decoding, all its scalar types, reordered arrays,
+  Unicode/NUL text and exact double bits (including negative zero), plus transactional
+  SQL-view edits of old TEXT/current JSONB records on both backends. Existing SQL, entropy,
+  HTTP and no-JS/no-cookie browser workflows pass with the extension loaded.
+- Keep the overall interoperability task open: collection/model mappings, shared accounts
+  and files, filename policy and live application-level two-way tests remain.
+
 ## 2026-11-16 Framework upload scratch paths
 
 - Route the FPC RTL temporary-file hook into atomically reserved short directories

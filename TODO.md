@@ -234,6 +234,9 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Add optional card drag/drop, checked-card groups and simultaneous pointers through the shared move endpoint.
 - [x] Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars, framework upload scratch and offline legacy migration.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
+  Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
+  Remaining: collection/model views and relation triggers, existing-account/file compatibility,
+  fresh/shared-file installation policy and live two-way FerretDB application tests (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.

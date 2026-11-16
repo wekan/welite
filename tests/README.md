@@ -48,3 +48,11 @@ load a library compiled with `SQLITE_ENABLE_8_3_NAMES=2`; the CLI must have that
 option. See `docs/runtime.md`. In strict mode, `admin.py` also scans the complete
 live runtime tree, including WAL/SHM and hashed attachment components. `store.py`
 checks binary upload/download/delete and preservation of original Unicode names.
+
+`python3 tests/sjson.py` uses the **actual companion FerretDB Go codec** as its oracle,
+with a temporary Go overlay and cached dependencies (`GOPROXY=off`). Set `GO` and,
+if necessary, `FERRET_SRC`, `GOMODCACHE`, `GOCACHE`, `GOPATH`. It compiles the Pascal
+codec, linked SQL harness and CLI extension; checks the extension ABI against
+`sqlite3ext.h`; verifies typed TEXT/JSONB view updates and rollback against FerretDB;
+and compares exact floating-point bits. It requires FPC, Go, a C compiler, SQLite
+headers and SQLite 3.45+ for JSONB. See `docs/ferret.md` for the remaining adapter work.

@@ -21,7 +21,7 @@ interface
 
 uses
   SysUtils, Classes
-  {$IFDEF WLDB_CLI}, Process {$ELSE}, sqlite3 {$ENDIF};
+  {$IFDEF WLDB_CLI}, Process {$ELSE}, sqlite3,wlfuncs {$ENDIF};
 
 type
   TWLDb = class;                       // opaque to callers (tenant just holds a reference)
@@ -95,6 +95,7 @@ begin
   {$IFNDEF WLDB_CLI}
   if sqlite3_open(PChar(FPath), @FHandle) <> SQLITE_OK then
     raise Exception.CreateFmt('wldb: cannot open %s', [FPath]);
+  if not RegisterFunctions(FHandle) then raise Exception.Create('Could not register typed-document SQL functions');
   Exec('PRAGMA busy_timeout=5000;');
   {$ENDIF}
   if GetEnvironmentVariable('WELITE_SHORT_NAMES')='1' then
@@ -130,15 +131,25 @@ end;
 {$IFDEF WLDB_CLI}
 // --- Backend A: external sqlite3 CLI (mirrors omi ExecSqlOnDb) -----------------------------
 function RunSqlite(const DbPath, Sql: string; out Output: string): Boolean;
+var Extension,InitSql:string;
 begin
   Output := '';
+  Extension:=GetEnvironmentVariable('WELITE_SQLITE_EXT');InitSql:='';
+  if Extension<>'' then InitSql:='SELECT load_extension('+QuotedStr(ExpandFileName(Extension))+'); ';
   try
     // RunCommand drains both pipes while the child is running, avoiding deadlocks on
     // large query output. It checks the child exit status and keeps stderr separate.
     // Leading whitespace keeps schema comments (-- ...) from becoming CLI options.
     Result := RunCommand('sqlite3', ['-batch', '-bail', '-csv', '-noheader',
       '-cmd','.timeout 5000', ExpandFileName(DbPath),
-      ' PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+Sql], Output);
+      ' PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+InitSql+Sql], Output);
+    if Result and (Extension<>'') then
+    begin
+      // load_extension returns exactly one NULL CSV row; hide only that row.
+      if Copy(Output,1,2)=#13#10 then Delete(Output,1,2)
+      else if Copy(Output,1,1)=#10 then Delete(Output,1,1)
+      else begin Result:=False;Output:='';end;
+    end;
   except
     Result := False;
   end;
