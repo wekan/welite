@@ -22,7 +22,7 @@ unit wlmove;
 
   Spatial model (WeKan): lists are horizontal, cards vertical, swimlanes vertical.
     cards     : up/down reorder within a list; left/right move to the adjacent list
-    lists     : left/right reorder within a swimlane; up/down move to adjacent swimlane (TODO)
+    lists     : left/right reorder within a swimlane; up/down move to adjacent swimlane
     swimlanes : up/down reorder within the board
   Maps to schema.sql sort / listId / swimlaneId.
 
@@ -159,6 +159,36 @@ begin
     [q(Target), q(MaxR[0][0]), q(CardId)]));
 end;
 
+// Relocate a list and all of its cards, including archived cards, as one transaction.
+// Keep boardId in every scope: legacy rows may have an empty swimlaneId.
+procedure MoveListAcrossSwimlane(Db: TWLDb; const ListId: string; Next: Boolean);
+var
+  L, Neighbors, MaxR: TWLRows;
+  BoardId, Target, Cmp, Ord: string;
+begin
+  L := Db.Query('SELECT l.boardId,s.sort,s.id FROM lists l JOIN swimlanes s ' +
+    'ON s.id=l.swimlaneId AND s.boardId=l.boardId ' +
+    'WHERE l.archived=0 AND s.archived=0 AND l.id=' + q(ListId) + ';');
+  if Length(L) = 0 then Exit;
+  BoardId := L[0][0];
+  if Next then begin Cmp := '>'; Ord := 'ASC'; end
+          else begin Cmp := '<'; Ord := 'DESC'; end;
+  Neighbors := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + q(BoardId) +
+    ' AND archived=0 AND (sort ' + Cmp + ' ' + q(L[0][1]) +
+    ' OR (sort=' + q(L[0][1]) + ' AND id ' + Cmp + ' ' + q(L[0][2]) +
+    ')) ORDER BY sort ' + Ord + ',id ' + Ord + ' LIMIT 1;');
+  if Length(Neighbors) = 0 then Exit;
+  Target := Neighbors[0][0];
+  MaxR := Db.Query('SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId=' +
+    q(BoardId) + ' AND swimlaneId=' + q(Target) + ' AND archived=0;');
+  // One Exec also works with the CLI backend, which opens one connection per call.
+  if not Db.Exec('BEGIN IMMEDIATE; UPDATE lists SET swimlaneId=' + q(Target) +
+    ',sort=' + q(MaxR[0][0]) + ' WHERE id=' + q(ListId) + ' AND boardId=' +
+    q(BoardId) + '; UPDATE cards SET swimlaneId=' + q(Target) +
+    ' WHERE listId=' + q(ListId) + ' AND boardId=' + q(BoardId) + '; COMMIT;') then
+    Db.Exec('ROLLBACK;');
+end;
+
 function ApplyMove(Db: TWLDb; Params: TStrings): Boolean;
 var
   Dir: string;
@@ -184,7 +214,8 @@ begin
       case Dir of
         'left':  SwapNeighbor(Db, 'lists', 'swimlaneId', Lists[i], True);
         'right': SwapNeighbor(Db, 'lists', 'swimlaneId', Lists[i], False);
-        // up/down = move list to adjacent swimlane — TODO (relocate, like MoveCardAcrossList)
+        'up':    MoveListAcrossSwimlane(Db, Lists[i], False);
+        'down':  MoveListAcrossSwimlane(Db, Lists[i], True);
       end;
     for i := 0 to Swimlanes.Count - 1 do
       case Dir of

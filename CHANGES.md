@@ -4,6 +4,15 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Move lists across swimlanes
+
+- Implemented up/down list movement to adjacent active swimlanes on the same board,
+  appending after existing lists and moving all list cards, including archived cards.
+- List/card updates share one transaction in both SQLite backends. Boundary, archived,
+  missing and legacy lists remain unchanged; other-board cards cannot be reparented.
+- Verified executable Pascal regressions with `tests/movelist.py`, using the canonical
+  schema and both linked and CLI SQLite backends, including multi-list movement.
+
 ## 2026-11-16 Implementation audit and remaining steps
 
 - Added a sequential, testable implementation checklist to `TODO.md`, preserving the

@@ -212,7 +212,7 @@ The design above remains the acceptance criteria; a checked item means verified 
 not merely a design document. Platform/browser claims require testing on those targets.
 
 - [x] Audit the current implementation and record the remaining work (2026-11-16).
-- [ ] Move lists up/down across swimlanes, preserving their cards and board boundaries.
+- [x] Move lists up/down across swimlanes, preserving their cards and board boundaries.
 - [ ] Enforce tenant-local administrator permissions on every Designer endpoint.
 - [ ] Finish Designer page listing, creation, editing, disabling and deletion.
 - [ ] Finish Designer widget add/edit/delete, options and bounded layout controls.

@@ -61,7 +61,7 @@ Lists are horizontal, cards and swimlanes vertical:
 | Item | ▲ / ▼ (up/down) | ◀ / ▶ (left/right) |
 |------|-----------------|--------------------|
 | **card** | reorder within its list (`cards.sort`) | move to the adjacent list (`cards.listId` + new sort) |
-| **list** | move to adjacent swimlane *(TODO)* | reorder within its swimlane (`lists.sort`) |
+| **list** | move to adjacent swimlane | reorder within its swimlane (`lists.sort`) |
 | **swimlane** | reorder within the board (`swimlanes.sort`) | — |
 
 `ApplyMove` reorders via `SwapNeighbor` (swap `sort` with the neighbor in the same parent) and
@@ -83,7 +83,8 @@ in `kanban.go` (`reorderCards`, `moveCardToRightList`, …), backed by SQL inste
 
 ## Status
 `wlmove.pas` implements the form/keypad rendering and `ApplyMove` for card up/down/left/right,
-list left/right, and swimlane up/down. TODO: list↕ (move across swimlanes), the Edit/Clone/
+list left/right/up/down, and swimlane up/down. Lists carry their cards across active
+swimlanes within the board. TODO: the Edit/Clone/
 Delete/Export action handlers, and wiring `SelectCheckbox`/`MoveFormBegin`/`MoveKeypad` into
 the board `dataview` renderer (a stub today). Selection reading mirrors the repeated-key
 pattern used by the `table` component's column chooser.
