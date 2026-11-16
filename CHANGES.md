@@ -4,6 +4,19 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Authorized board views and no-JS card movement
+
+- Added real board links on the home page and registered Designer board/board-list
+  dataviews. Board pages render active swimlanes, lists and cards with escaped text.
+- Full editors receive one selection form with board ID, action token, return path and
+  shared arrow controls. Other viewers see board data without mutation controls.
+- Scope neighbor/card-list queries to the board and swimlane, include legacy shared
+  lists, and deduplicate repeated selections. RTL board pages reverse list columns.
+- Verified HTTP visibility/controls and Chromium selection-to-right-arrow card movement
+  with JavaScript and cookies disabled, including the resulting persisted list ID.
+- Unfinished action buttons remain hidden until their handlers are implemented. Minimap,
+  responsive retro color verification and optional drag/drop remain separate TODO steps.
+
 ## 2026-11-16 Shared board permissions and move selection isolation
 
 - Added shared board read/write checks used by UI visibility, move authorization and

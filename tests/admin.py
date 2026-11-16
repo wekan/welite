@@ -92,6 +92,21 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             assert b'Private title' not in request('GET', '/')[2]
             assert request('POST', '/board/move', {'sessionId':member, 'boardId':'protected', 'sel_card':'foreign'})[0] == 403
             print('PASS: shared API board policy, private home visibility and move guard')
+            with sqlite3.connect(db) as con:
+                con.execute("INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('lane','protected','Swimlane <one>',0,'now')")
+                for lid, title, order in [('todo','To do',0), ('doing','Doing',1)]:
+                    con.execute("INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(?,'protected','lane',?,?,'now')", (lid,title,order))
+                con.execute("INSERT INTO cards(id,boardId,listId,swimlaneId,title,userId,createdAt,modifiedAt,dateLastActivity) VALUES('card','protected','todo','lane','Card <test>',?,'now','now','now')", (uid,))
+            assert request('GET', '/board?id=protected')[0] == 404
+            status, _, body = request('GET', '/board?id=protected&sessionId='+member)
+            assert status == 200 and b'Card &lt;test&gt;' in body and b'sel_card' not in body
+            status, _, body = request('GET', '/board?id=protected&sessionId='+admin)
+            assert status == 200 and b'sel_card' in body and b'Swimlane &lt;one&gt;' in body
+            if os.environ.get('WELITE_UI') == '1':
+                subprocess.run([os.environ.get('NODE', 'node'), str(ROOT/'tests/board.js'), 'http://localhost:'+str(port), admin], check=True)
+                with sqlite3.connect(db) as con:
+                    assert con.execute("SELECT listId FROM cards WHERE id='card'").fetchone()[0] == 'doing'
+            print('PASS: authorized board renderer, escaped content and read-only controls')
             class HiddenFields(HTMLParser):
                 def __init__(self):
                     super().__init__()

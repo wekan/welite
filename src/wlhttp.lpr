@@ -31,7 +31,7 @@ uses
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
   SysUtils, Classes, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 const
@@ -117,15 +117,7 @@ begin
   else if S.Username <> '' then
     Body := Body + '<p>Signed in as ' + HtmlEncode(S.Username) + '.</p>' + LineEnding;
 
-  Rows := T.Db.Query('SELECT title,id FROM boards WHERE archived=0 ORDER BY sort;');
-  Body := Body + '<h2>Boards</h2><ul>' + LineEnding;
-  for i := 0 to High(Rows) do
-    if (Length(Rows[i]) > 1) and BoardCanRead(T.Db,S.UserId,Rows[i][1]) then
-      Body := Body + '<li>' + HtmlEncode(Rows[i][0]) + '</li>' + LineEnding;
-  if Length(Rows) = 0 then
-    Body := Body + '<li><i>No boards yet.</i></li>' + LineEnding;
-  Body := Body + '</ul>' + LineEnding +
-          '<p><a href="/sign-in">Sign in</a> | <a href="/register">Register</a></p>';
+  Body:=Body+BoardListHtml(T.Db,S)+'<p><a href="/sign-in">Sign in</a> | <a href="/register">Register</a></p>';
   // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
   Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
   SendHtml(aResponse, Page32('WeKan-Lite', Body));
@@ -365,6 +357,7 @@ begin
   HTTPRouter.RegisterRoute('/api/attachment/list/:boardId/:swimlaneId/:listId/:cardId', rmGet, @ApiCardAttachmentsList);
 
   // Combined no-JS move component (arrows keypad) — see docs/move.md
+  HTTPRouter.RegisterRoute('/board', rmGet, @BoardEndpoint);
   HTTPRouter.RegisterRoute('/board/move', rmPost, @BoardMoveEndpoint);
 
   // REST API (subset of public/api/wekan.yml) so the WeKan Python CLI api.py works — see wlapi

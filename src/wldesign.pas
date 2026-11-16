@@ -932,7 +932,7 @@ begin
   if (Url='/sign-in') or (Url='/register') or (Url='/users/login') or
     (Url='/admin') or (Pos('/admin/',Url)=1) or (Url='/designer') or
     (Pos('/designer/',Url)=1) or (Url='/api') or (Pos('/api/',Url)=1) or
-    (Pos('/board/',Url)=1) then Exit;
+    ((Url='/board') or (Pos('/board/',Url)=1)) then Exit;
   Result:=True;
 end;
 

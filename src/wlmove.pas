@@ -47,7 +47,8 @@ function MoveFormBegin(const S: TWLSession; const ActionUrl: string): string;
 function MoveFormEnd: string;
 
 // The combined keypad + action buttons + selection summary. Counts are for the summary label.
-function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer): string;
+function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
+  IncludeActions: Boolean = True): string;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
 // True if anything moved. Register the endpoint at POST /board/move (see wlhttp.lpr).
@@ -81,7 +82,8 @@ begin
   Result := '</form>';
 end;
 
-function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer): string;
+function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
+  IncludeActions: Boolean): string;
 begin
   // keypad as a 2-row table of submit buttons (joystick layout), like kanban.go's arrowKeys
   Result :=
@@ -92,13 +94,15 @@ begin
     '<td><input type="submit" name="dir" value="left"></td>' +
     '<td><input type="submit" name="dir" value="down"></td>' +
     '<td><input type="submit" name="dir" value="right"></td>' +
-    '</tr></table>' + LineEnding +
+    '</tr></table>' + LineEnding;
+  if IncludeActions then Result:=Result+
     // action buttons (same form, distinct submit name=action)
     '<input type="submit" name="action" value="edit"> ' +
     '<input type="submit" name="action" value="clone"> ' +
     '<input type="submit" name="action" value="delete"> ' +
     '<input type="submit" name="action" value="clear"> ' +
-    '<input type="submit" name="action" value="export">' + LineEnding +
+    '<input type="submit" name="action" value="export">' + LineEnding;
+  Result:=Result+
     // selection summary (mirrors kanban.go selectionInfo)
     '<p>Selected: ' + IntToStr(SwimlaneSel) + ' swimlanes, ' +
     IntToStr(ListSel) + ' lists, ' + IntToStr(CardSel) + ' cards.</p>';
@@ -112,7 +116,8 @@ begin
   if Params = nil then Exit;
   for i := 0 to Params.Count - 1 do
     if SameText(Params.Names[i], 'sel_' + Kind) and (Trim(Params.ValueFromIndex[i]) <> '') then
-      Result.Add(Trim(Params.ValueFromIndex[i]));
+      if Result.IndexOf(Trim(Params.ValueFromIndex[i]))<0 then
+        Result.Add(Trim(Params.ValueFromIndex[i]));
 end;
 
 // ---- reorder within a parent (up/down) ---------------------------------------------------
@@ -120,16 +125,20 @@ end;
 procedure SwapNeighbor(Db: TWLDb; const Table, ScopeCol, Id: string; GoSmaller: Boolean);
 var
   Me, N: TWLRows;
-  Scope, MySort, NId, NSort, Cmp, Ord: string;
+  Scope, MySort, NId, NSort, Cmp, Ord, ScopeExtra, ExtraColumn: string;
 begin
-  Me := Db.Query(Format('SELECT %s,sort FROM %s WHERE id=%s LIMIT 1;', [ScopeCol, Table, q(Id)]));
+  ExtraColumn:='';
+  if Table='cards' then ExtraColumn:=',swimlaneId';
+  Me := Db.Query(Format('SELECT %s,sort,boardId%s FROM %s WHERE id=%s LIMIT 1;', [ScopeCol,ExtraColumn,Table,q(Id)]));
   if (Length(Me) = 0) or (Length(Me[0]) < 2) then Exit;
   Scope := Me[0][0]; MySort := Me[0][1];
+  ScopeExtra:=' AND boardId='+q(Me[0][2])+' AND archived=0';
+  if Table='cards' then ScopeExtra:=ScopeExtra+' AND swimlaneId='+q(Me[0][3]);
   if GoSmaller then begin Cmp := '<'; Ord := 'DESC'; end
                else begin Cmp := '>'; Ord := 'ASC';  end;
   N := Db.Query(Format(
-    'SELECT id,sort FROM %s WHERE %s=%s AND sort %s %s ORDER BY sort %s LIMIT 1;',
-    [Table, ScopeCol, q(Scope), Cmp, q(MySort), Ord]));
+    'SELECT id,sort FROM %s WHERE %s=%s%s AND sort %s %s ORDER BY sort %s LIMIT 1;',
+    [Table, ScopeCol, q(Scope), ScopeExtra, Cmp, q(MySort), Ord]));
   if (Length(N) = 0) or (Length(N[0]) < 2) then Exit;   // already at the edge
   NId := N[0][0]; NSort := N[0][1];
   Db.Exec(Format('UPDATE %s SET sort=%s WHERE id=%s;', [Table, q(NSort), q(Id)]));
@@ -140,13 +149,13 @@ end;
 procedure MoveCardAcrossList(Db: TWLDb; const CardId: string; Next: Boolean);
 var
   C, L, MaxR: TWLRows;
-  Sw, CurList, Target: string;
+  Sw, CurList, Target, BoardId: string;
   i, idx: Integer;
 begin
-  C := Db.Query(Format('SELECT swimlaneId,listId FROM cards WHERE id=%s LIMIT 1;', [q(CardId)]));
+  C := Db.Query(Format('SELECT swimlaneId,listId,boardId FROM cards WHERE id=%s LIMIT 1;', [q(CardId)]));
   if (Length(C) = 0) or (Length(C[0]) < 2) then Exit;
-  Sw := C[0][0]; CurList := C[0][1];
-  L := Db.Query(Format('SELECT id FROM lists WHERE swimlaneId=%s AND archived=0 ORDER BY sort;', [q(Sw)]));
+  Sw := C[0][0]; CurList := C[0][1]; BoardId:=C[0][2];
+  L := Db.Query(Format('SELECT id FROM lists WHERE boardId=%s AND (swimlaneId=%s OR swimlaneId='''') AND archived=0 ORDER BY sort,id;', [q(BoardId),q(Sw)]));
   idx := -1;
   for i := 0 to High(L) do
     if (Length(L[i]) > 0) and (L[i][0] = CurList) then begin idx := i; Break; end;
@@ -154,7 +163,7 @@ begin
   if Next then Inc(idx) else Dec(idx);
   if (idx < 0) or (idx > High(L)) then Exit;             // no list that way
   Target := L[idx][0];
-  MaxR := Db.Query(Format('SELECT COALESCE(MAX(sort),0)+1 FROM cards WHERE listId=%s;', [q(Target)]));
+  MaxR := Db.Query(Format('SELECT COALESCE(MAX(sort),0)+1 FROM cards WHERE listId=%s AND swimlaneId=%s AND boardId=%s;', [q(Target),q(Sw),q(BoardId)]));
   Db.Exec(Format('UPDATE cards SET listId=%s, sort=%s WHERE id=%s;',
     [q(Target), q(MaxR[0][0]), q(CardId)]));
 end;
