@@ -1,0 +1,205 @@
+# WeLite — FreePascal code + design
+
+NOTE: This WeKan-Lite version has retro-look. Modern-look original WeKan is at
+https://wekan.fi and https://github.com/wekan/wekan .
+
+Uses DOS filenames 8 characters, with extension 3 characters, like FILENAME.TXT
+
+FreePascal-specific design docs and reference code for WeKan-Lite, **distilled from the two
+working prototypes in this tree** and aligned to the portable contract:
+
+- [`.tools/w/wami/wekan.pas`](https://github.com/wekan/wami/blob/main/wekan.pas) — single-file WeKan web prototype (routing + retro HTML surface).
+- [`.tools/w/omi/public/server.pas`](https://github.com/wekan/omi/blob/main/public/server.pas) — mature server (no-cookie/no-JS auth, SQLite-via-CLI, i18n).
+- `docs/contract.md`, `schema.sql`, `docs/goals.md`, `docs/webstack.md`,
+  `docs/schema.md` — the portable contract these target.
+
+## Testing
+
+- Testing with Playwright Chromium, cookies disabled, javascript disabled.
+  Running tests like at wekan repo build.sh
+
+## Design
+
+- HTML4 needs to be usable at all screen sizes, like FreeDOS Dillo running at VirtualBox,
+  AmigaOS 3.x and 4.x, MorphOS, smartphones, tablets, 55" touch screen, etc.
+- Moving swimlanes, lists, cards etc is with checkbox selection and arrow buttons,
+  like at .tools/w/tcl-tk-kanban/screenshot-go-fyne.png and
+  .tools/w/tcl-tk-kanban/kanban.go where is also SQLite examples what happens when moving
+  swimlanes, lists, etc.
+- Directory structure is same like at .tools/w/weddy , so at multitenancy each domain has it's
+  own directory where is files/db/wekan.db , files/attachme/ , files/avatars/ etc according to
+  8.3 DOS limit structure, with longer domain names, settings etc at sqlite databases.
+- Database structure at WeLite is same like at WeKan FerretDB SQLite .tools/w/FerretDB/ ,
+  WeLite is drop-in replacement, but using SQL queries directly, not Javascript queries.
+- Moving to other areas of kanban board is done with minimap (like game minimap),
+  that is at right top corner of screen, there color highlighted is current position in map.
+  Clicking other position at minimap changes that position content to be visible below
+  arrows navigation and minimap. There is also visible position coordinates of minimap,
+  at left side of minimap, like "X 4 Y 2".
+  At minimap is shown is there some data at other positions of map, or is it empty.
+- Order of swimlanes, lists, cards etc is similar like at wekan/clients/components/ .jade and .css
+  files, with same colors, but with below HTML4 calendar type code that is visible at all browsers
+- HTML4 needs to be like this calendar example at wami/wekan.pas,
+  so that colors are seen correctly at browsers like Dillo, Amiga IBrowse and Netsurf:
+
+```
+procedure calendarEndpoint(aRequest: TRequest; aResponse: TResponse);
+begin
+  // This calendar has been tested to be visible at: Amiga IBrowse, FreeDOS Dillo, Linux Dillo/Netsurf/Chrome
+  //
+  // For accessibility, use only one table. Not nested table. Avoid merged or split cells.
+  // Consider Alternative Views: For calendars, offer a "list view" or other simplified
+  // representations that are inherently more linear and accessible for assistive technology users.
+  //
+
+  // background-color: #d1e7dd; Light green to highlight today
+
+  aResponse.Content := '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">' + LineEnding +
+                      '<html lang="en">' + LineEnding +
+                      '<head>' + LineEnding +
+                      '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">' + LineEnding +
+                      '  <title>July 2025 Calendar</title>' + LineEnding +
+                      '  <style type="text/css">' + LineEnding +
+                      '    table      { width: 100%; border-collapse: collapse; margin-bottom: 20px; }' + LineEnding +
+                      '    th, td     { border: 1px solid #ccc; padding: 8px; text-align: center; }' + LineEnding +
+                      '    th         { background-color: #f2f2f2; }' + LineEnding +
+                      '    .empty-day { background-color: #eee; color: #999; }' + LineEnding +
+                      '    .today     { background-color: #d1e7dd; font-weight: bold; border: 2px solid #007bff; }' + LineEnding +
+                      '    caption    { font-size: 1.5em; margin-bottom: 10px; font-weight: bold; text-align: left; }' + LineEnding +
+                      '  </style>' + LineEnding +
+                      '</head>' + LineEnding +
+                      '<body bgcolor="#FFFFFF">' + LineEnding +
+                      '<p><a href="../">All Pages</a></p>' + LineEnding +
+                      '<h1><font face="arial">July 2025</font></h1>' + LineEnding +
+                      '<table summary="This table displays the calendar. Days of the week are column headers, and dates are listed under them." width="100%" border-collapse="collapse" margin-bottom="20" border="1" cellpadding="5" cellspacing="0" id="calendartable">' + LineEnding +
+                      '  <caption><font size="4" face="arial">July 2025</font></caption>' + LineEnding +
+                      '  <thead>' + LineEnding +
+                      '    <tr>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Monday</font></th>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Tuesday</font></th>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Wednesday</font></th>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Thursday</font></th>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Friday</font></th>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Saturday</font></th>' + LineEnding +
+                      '      <th scope="col" border="1" padding="8" align="center" bgcolor="#f2f2f2"><font size="4" face="arial">Sunday</font></th>' + LineEnding +
+                      '    </tr>' + LineEnding +
+                      '  </thead>' + LineEnding +
+                      '  <tbody>' + LineEnding +
+                      '    <tr>' + LineEnding +
+                      '      <td class="empty-day" border="1" padding="8" align="center" color="#999999" bgcolor="#eeeeee"><font size="4" face="arial"></font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">1</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">2</font></td>' + LineEnding +
+                      '      <td class="today" border="3" padding="8" align="center" bgcolor="#d1e7dd" border="2"><b><font size="4" face="arial">3</font></b></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">4</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">5</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">6</font></td>' + LineEnding +
+                      '    </tr>' + LineEnding +
+                      '    <tr>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">7</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">8</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">9</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">10</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">11</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">12</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">13</font></td>' + LineEnding +
+                      '    </tr>' + LineEnding +
+                      '    <tr>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">14</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">15</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">16</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">17</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">18</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">19</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">20</font></td>' + LineEnding +
+                      '    </tr>' + LineEnding +
+                      '    <tr>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">21</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">22</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">23</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">24</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">25</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">26</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">27</font></td>' + LineEnding +
+                      '    </tr>' + LineEnding +
+                      '    <tr>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">28</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">29</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">30</font></td>' + LineEnding +
+                      '      <td border="1" padding="8" align="center"><font size="4" face="arial">31</font></td>' + LineEnding +
+                      '      <td class="empty-day" border="1" padding="8" align="center" color="#999999" bgcolor="#eeeeee"><font size="4" face="arial"></font></td>' + LineEnding +
+                      '      <td class="empty-day" border="1" padding="8" align="center" color="#999999" bgcolor="#eeeeee"><font size="4" face="arial"></font></td>' + LineEnding +
+                      '      <td class="empty-day" border="1" padding="8" align="center" color="#999999" bgcolor="#eeeeee"><font size="4" face="arial"></font></td>' + LineEnding +
+                      '    </tr>' + LineEnding +
+                      '  </tbody>' + LineEnding +
+                      '</table>' + LineEnding +
+                      '<p><a href=".">Back to Home</a></p>' + LineEnding +
+                      '</body></html>';
+  aResponse.Code := 200;
+  aResponse.ContentType := 'text/html';
+  aResponse.ContentLength := Length(aResponse.Content);
+  aResponse.SendContent;
+end;
+```
+
+## Read first
+- **`docs/arch.md`** — how the prototypes map onto WeKan-Lite: request lifecycle
+  (tenant → auth → endpoint), retro-HTML tiers, unit layout, what's still missing.
+- **`docs/sqlite.md`** — the one real fork: linked SQLite (default) vs the
+  `sqlite3` CLI via `TProcess` (bootstrap/fallback). Both live behind `wldb.pas`.
+- **`docs/designer.md`** — the no-JS/no-cookie page builder: data-driven pages, form-driven
+  layout editing, custom URLs, LTR/RTL mirroring (one definition), import/export
+  (`.wlp` / `.zip`). Schema in `designer.sql`, engine in `wldesign.pas`.
+- **`docs/theming.md`** — colors for any element (WeKan palette or hex), choosable color-picker
+  components, imported-palette mapping (Trello/Kanboard), and Red Strings as SVG/VML/ASCII
+  per browser. Code: `wlcolors.pas`, `wlvector.pas`.
+- **`docs/enhance.md`** — the layering rule: no-JS form baseline always works;
+  JS+touch features (MultiDrag — drag many cards at once on a big touch screen) auto-activate
+  on top, driving the same endpoints. Code: `wlenhanc.pas`.
+- **`docs/move.md`** — the default no-JS move UI: select swimlanes/lists/cards, move all
+  with one `▲◀▼▶` keypad (combined, like `kanban.go`). Code: `wlmove.pas`.
+- **`docs/static.md`** — serving `public/` (robots.txt, css, js, …) and the `i18n/`
+  translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
+  Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
+- **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
+  Code: `wlapi.pas`.
+- **`docs/cross.md`** — cross-compiling for every target via `build.sh` option 4 (fpcupdeluxe):
+  the build chain, the `-dWLDB_CLI` rule, and the verified per-target support matrix.
+
+## Reference units (v0.1 skeletons)
+| File | Implements | Notes |
+|------|-----------|-------|
+| `wlhttp.lpr` | program entry: routes + `fphttpapp` | wires all units below |
+| `wltenant.pas` | **multitenancy** — `Host:` → `data/domains/<domain>/db/data.db` (G8) | the new core; prototypes are single-tenant |
+| `wlregist.pas` | domain registry over `data/admin/db/data.db` (G8) | host→tenant map the Global Admin edits |
+| `wlauth.pas` | **no-cookie/no-JS auth** — sessions + action-tokens (G4) | from omi; persists to `schema.sql` `login_tokens` |
+| `wldb.pas` | SQLite behind one interface; CLI **or** linked backend | `{$DEFINE WLDB_CLI}` selects CLI |
+| `wlhtml.pas` | retro-safe HTML 3.2 helpers + pretty printer + dir wrapper | from omi `HtmlEncode`/`PrettyHtml32` |
+| `wlbrowse.pas` | User-Agent → browser id (tune output per client) | from wami `WebBrowserName` |
+| `wldesign.pas` | **Designer** — data-driven pages, render, LTR/RTL, import/export | new; `docs/designer.md` + `designer.sql` |
+| `wlcolors.pas` | WeKan color palette + color-picker components + import-color mapping | `docs/theming.md` |
+| `wlvector.pas` | Red Strings / connectors as SVG / VML / ASCII per browser | `docs/theming.md` |
+| `wlenhanc.pas` | progressive enhancement — MultiDrag/touch hooks + script include | `docs/enhance.md` |
+| `wlmove.pas` | combined no-JS arrows move component + `/board/move` apply | `docs/move.md` |
+| `wlstatic.pas` | serve `public/` + `i18n/` (robots.txt, css, js, translations) embedded-or-from-disk | `docs/static.md` |
+| `wlapi.pas` | REST API subset (Bearer auth) so WeKan's `api.py` works | `docs/api.md` |
+
+The reference units, `wlhttp.lpr`, and the `*.sql` schemas live in `src/`. Build helpers:
+`releases/genasset.py` (embed `public/` + `i18n/` into the binary), `releases/convlang.py`
+(regenerate `i18n/langs.jsn` from WeKan's `imports/i18n/languages.js`).
+
+> These are *skeletons* — faithful to the prototypes' style (`{$mode objfpc}{$H+}`,
+> `{$CODEPAGE UTF8}`, `TRequest`/`TResponse`, `HTTPRouter.RegisterRoute`) and meant as the
+> starting point. The unit set is now self-contained (no dangling `uses`), but it is not yet
+> a finished server: passwords are still placeholder — real hashing into
+> `users.services_json` is required before use — and the linked-SQLite path in `wldb.pas`
+> needs the FPC `sqlite3` binding + vendored amalgamation present to compile (the
+> `-dWLDB_CLI` path only needs a `sqlite3` binary).
+
+## Build
+```bash
+fpc -O3 -Xs -o welite src/wlhttp.lpr            # release, linked SQLite (single binary)
+fpc -dWLDB_CLI -o welite src/wlhttp.lpr         # bootstrap: external sqlite3 CLI
+fpc -Pm68k -Tamiga -o welite src/wlhttp.lpr     # classic Amiga 68k
+```
+Run plaintext HTTP; terminate TLS at a proxy or load AmiSSL/OpenSSL dynamically
+(`docs/webstack.md` Decision 5). Default port 5500, override with `PORT`.
