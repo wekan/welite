@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Reliable CLI SQLite results and errors
+
+- Use FreePascal's process runner to drain stdout/stderr while SQLite runs and check
+  its exit code. Syntax, constraint and foreign-key failures now return false.
+- Use SQLite CSV output instead of splitting on pipes/newlines; preserve quoted commas,
+  pipes, quotes, UTF-8 and embedded CRLF/LF while retaining empty/NULL text semantics.
+- Verified both SQLite backends with executable Pascal text/error regressions and a
+  5,000-row result larger than pipe capacity. Existing move and Designer HTTP tests pass.
+- Reference: SQLite CLI output modes (`https://www.sqlite.org/cli.html`) and the
+  FreePascal `TProcess`/`RunCommand` implementation in the installed FCL sources.
+
 ## 2026-11-16 Working Designer widget editor
 
 - Added full no-JS widget forms and persisted creation, updates and deletion, with

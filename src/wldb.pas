@@ -9,7 +9,7 @@ unit wldb;
     {$DEFINE WLDB_CLI}: shell out to the `sqlite3` CLI via TProcess (omi-style bootstrap)
 
   Surface kept deliberately tiny: open/close, an Exec for writes, and a Query that returns
-  rows as a TStringList of '|'-free cell arrays. v0.1 reference skeleton — the linked path
+  rows as arrays of text cells. v0.1 reference skeleton — the linked path
   shows intent (real code uses sqlite3_prepare_v2 / bound params; the CLI path mirrors
   https://github.com/wekan/omi/blob/main/public/server.pas ExecSqlOnDb).
 }
@@ -106,38 +106,17 @@ end;
 {$IFDEF WLDB_CLI}
 // --- Backend A: external sqlite3 CLI (mirrors omi ExecSqlOnDb) -----------------------------
 function RunSqlite(const DbPath, Sql: string; out Output: string): Boolean;
-var
-  Proc: TProcess;
-  Buf: TStringStream;
 begin
-  Result := False;
   Output := '';
-  Proc := TProcess.Create(nil);
-  Buf := TStringStream.Create('');
   try
-    Proc.Executable := 'sqlite3';
-    Proc.Parameters.Add(ExpandFileName(DbPath));
-    Proc.Parameters.Add('-separator'); Proc.Parameters.Add('|');
-    Proc.Parameters.Add('-batch');
-    Proc.Parameters.Add('-noheader');
-    // CLI opens a fresh connection per call with foreign_keys OFF by default; enable it so
-    // ON DELETE CASCADE fires (matches the linked backend, which sets the pragma on open).
-    Proc.Parameters.Add('-cmd'); Proc.Parameters.Add('PRAGMA foreign_keys=ON');
-    Proc.Parameters.Add(Sql);
-    Proc.Options := [poWaitOnExit, poUsePipes];
-    try
-      Proc.Execute;
-      if Assigned(Proc.Output) then
-        Buf.CopyFrom(Proc.Output, 0);
-      Output := Buf.DataString;
-      Result := True;
-    except
-      Result := False;
-    end;
-  finally
-    Buf.Free;
-    Proc.Free;
+    // RunCommand drains both pipes while the child is running, avoiding deadlocks on
+    // large query output. It checks the child exit status and keeps stderr separate.
+    Result := RunCommand('sqlite3', ['-batch', '-bail', '-csv', '-noheader',
+      '-cmd', 'PRAGMA foreign_keys=ON', ExpandFileName(DbPath), Sql], Output);
+  except
+    Result := False;
   end;
+  if not Result then Output := '';
 end;
 
 function TWLDb.Exec(const Sql: string): Boolean;
@@ -147,22 +126,43 @@ begin
 end;
 
 function TWLDb.Query(const Sql: string): TWLRows;
-var
-  Raw: string;
-  Lines: TStringList;
-  i: Integer;
-begin
-  SetLength(Result, 0);
-  if not RunSqlite(FPath, Sql, Raw) then Exit;
-  Lines := TStringList.Create;
-  try
-    Lines.Text := Raw;
-    SetLength(Result, Lines.Count);
-    for i := 0 to Lines.Count - 1 do
-      Result[i] := Lines[i].Split(['|']);   // NOTE: text parsing; data '|'/newlines are a hazard
-  finally
-    Lines.Free;
+var Raw, Cell: string; Row: TWLRow; i, n: Integer; InQuotes: Boolean;
+  procedure AddCell;
+  begin
+    n:=Length(Row); SetLength(Row,n+1); Row[n]:=Cell; Cell:='';
   end;
+  procedure AddRow;
+  begin
+    AddCell;
+    n:=Length(Result); SetLength(Result,n+1); Result[n]:=Row;
+    Row:=nil;
+  end;
+begin
+  Result:=nil; Row:=nil;
+  if not RunSqlite(FPath,Sql,Raw) or (Raw='') then Exit;
+  // SQLite CSV quotes commas, quotes and embedded newlines. Preserve bytes inside
+  // quotes, including CRLF: text must round-trip identically to the linked backend.
+  i:=1; Cell:=''; InQuotes:=False;
+  while i<=Length(Raw) do
+  begin
+    case Raw[i] of
+      '"':
+        if InQuotes and (i<Length(Raw)) and (Raw[i+1]='"') then
+        begin Cell:=Cell+'"'; Inc(i); end
+        else InQuotes:=not InQuotes;
+      ',': if InQuotes then Cell:=Cell+Raw[i] else AddCell;
+      #10,#13:
+        if InQuotes then Cell:=Cell+Raw[i]
+        else
+        begin
+          AddRow;
+          if (Raw[i]=#13) and (i<Length(Raw)) and (Raw[i+1]=#10) then Inc(i);
+        end;
+    else Cell:=Cell+Raw[i];
+    end;
+    Inc(i);
+  end;
+  if (Length(Cell)>0) or (Length(Row)>0) then AddRow;
 end;
 {$ELSE}
 // --- Backend B: linked SQLite (production default) ----------------------------------------
