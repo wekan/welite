@@ -210,3 +210,8 @@ It compiles the direct Pascal harness and both SQLite backends/extension. `ferro
 checks live stored BSON, shifted Date/legacy/binary/long metadata, precision-sensitive
 doubles, duplicate removal, rollback and clearing. Shared bearer authorization, expiry,
 revocation and legacy conversion remain separate integration steps.
+
+`resume.py` additionally checks typed/legacy token validity, equality-at-expiry, fractional
+Date truncation, strict-before pruning, future timestamps, duplicate ambiguity and
+Date/lifetime bounds. `ferroot.py` verifies live validity and expiry pruning with exact
+BSON preservation. Shared bearer authorization and lifecycle wiring remain open.

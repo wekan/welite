@@ -277,6 +277,14 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql(resume_sql(dict(op='remove',hashedToken=first_hash)),'exec')=='ok'
                 resume_doc['services']['resume']['loginTokens']=[value for value in resume_doc['services']['resume']['loginTokens'] if value.get('hashedToken')!=first_hash]
                 assert encode(client.find('users','resume-doc')[0])==encode(resume_doc),'Removal changed shifted legacy token types/bits'
+                def resume_state(hash_value,at,life):
+                    return sql('SELECT wl_rescheck(json(_ferretdb_sjson),'+q(hash_value)+','+str(at)+','+str(life)+') FROM '+q(resume_table)+" WHERE _ferretdb_sjson->>'_id'='resume-doc';")[0][0]
+                assert resume_state(new_hash,1794835201122,1000)=='valid'
+                assert resume_state(new_hash,1794835201123,1000)=='expired'
+                assert sql(resume_sql(dict(op='expire',before=1794835200123)),'exec')=='ok'
+                resume_doc['services']['resume']['loginTokens']=[value for value in resume_doc['services']['resume']['loginTokens'] if value['when']>=1794835200123]
+                assert encode(client.find('users','resume-doc')[0])==encode(resume_doc)
+                assert resume_state(new_hash,1794835201122,1000)=='valid'
                 stable_resume=encode(client.find('users','resume-doc')[0])
                 assert sql('BEGIN IMMEDIATE; '+resume_sql(dict(op='append',hashedToken=meteor_hash('rolled-back'),when=1))+resume_sql(dict(op='append',hashedToken='invalid',when=1))+' COMMIT;','exec')=='error'
                 assert encode(client.find('users','resume-doc')[0])==stable_resume

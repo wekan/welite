@@ -638,6 +638,33 @@ This is a storage prerequisite. HTTP login still issues the existing private cre
 shared resume issuance/validation, expiry, logout/revocation, legacy token conversion,
 source/policy binding and Mongo token-index parity remain to be integrated and tested.
 
+## Resume validity and expiry
+
+`CheckResumeToken` takes a canonical hash, trusted current milliseconds and an explicit
+positive lifetime. It distinguishes absent, valid, expired and invalid records, requires
+one matching hashed record and returns timestamps only on success. It accepts BSON
+Date and legacy int/long/double timestamps; numeric fractions use JavaScript Date
+truncation. Missing/string/nonfinite/out-of-range timestamps and duplicate hashes fail
+closed. A future stamp remains governed by the supplied lifetime, matching the source
+comparison rather than adding a different clock policy. Raw legacy tokens still require
+conversion and are not accepted through this hashed-record checker.
+
+[Meteor's resume handler and expiry sweep](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_server.js)
+use different boundaries: authentication expires at equality, while the sweep removes
+records strictly older than its cutoff. `wl_rescheck(document, hash, nowMs, lifetimeMs)`
+returns the checker state; `wl_resume` now accepts `{"op":"expire","before":cutoffMs}`.
+Pruning compares the original numeric value (including fractions), removes Date/numeric
+records strictly before the cutoff and retains unsupported timestamps. Schema entries
+move with their retained records. Cutoffs and validation arithmetic stay within the
+[JavaScript Date semantics used by accounts-common](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_common.js).
+
+`tests/resume.py` verifies Date/legacy boundaries, fractional truncation versus pruning,
+future stamps, duplicate ambiguity, positive lifetime requirements and Date limits on
+both TEXT/JSONB backends. `ferroot.py` checks validity and pruning against live Mongo
+records while comparing complete stored BSON. These are pure primitives; application
+issuance/authorization, configured lifetime policy, expiry scheduling and revocation
+still need integration. Browser sessions remain private to retain client binding.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

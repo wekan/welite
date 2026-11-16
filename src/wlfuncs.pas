@@ -76,6 +76,16 @@ begin
     ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
   except ResultError(Context,'Invalid resume token document',-1);end;
 end;
+procedure ResumeCheckFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
+var Value:string;At,Life,Stamp,Expiration:Int64;
+begin
+  try
+    if Count<>4 then raise Exception.Create('Invalid argument count');
+    if not TryStrToInt64(ReadArg(PArgs(Args)^[2]),At) or not TryStrToInt64(ReadArg(PArgs(Args)^[3]),Life) then raise Exception.Create('Invalid time');
+    Value:=ResumeStateName(CheckResumeToken(ReadArg(PArgs(Args)^[0]),ReadArg(PArgs(Args)^[1]),At,Life,Stamp,Expiration));
+    ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
+  except ResultError(Context,'Invalid resume token check',-1);end;
+end;
 procedure StorageFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
 var Name,Value:string;DataType:PAnsiChar;Db:Pointer;
 begin
@@ -99,6 +109,7 @@ begin
   if Result=0 then Result:=CreateFunc(Db,'wl_model',4,Flags,nil,@ModelFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_relation',3,Flags,nil,@RelationFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_resume',2,Flags,nil,@ResumeFunc,nil,nil,nil);
+  if Result=0 then Result:=CreateFunc(Db,'wl_rescheck',4,Flags,nil,@ResumeCheckFunc,nil,nil,nil);
   // Schema state can change: innocuous, but deliberately NOT deterministic.
   if Result=0 then Result:=CreateFunc(Db,'wl_storage',1,1 or $200000,nil,@StorageFunc,nil,nil,nil);
 end;

@@ -261,7 +261,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Shared auth now binds to the users collection UUID/table, rejects stale proofs/tokens and verifies atomic recreation/legacy-upgrade cleanup.
   Owned physical model unique keys now protect direct Mongo and SQL username writes, with mixed-writer and ownership/repair tests.
   Meteor SHA256/base64 digests and typed resume-array append/remove/clear now pass TEXT/JSONB, concurrency and live BSON tests.
-  Remaining: shared resume issuance/validation, expiry/revocation and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Typed resume validity and Date/numeric expiry pruning now pass boundary, ambiguity, range and live BSON tests.
+  Remaining: shared resume issuance/authorization, lifecycle expiry/revocation wiring and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Resume timestamp validation and expiry
+
+- Add typed hashed-token checking with absent/valid/expired/invalid results. Require one
+  matching record, a BSON Date or legacy numeric timestamp, and an explicit positive
+  lifetime. Reject ambiguous hashes, malformed timestamps and invalid Date ranges;
+  failed checks leave output timestamps empty.
+- Match the resume expiry boundary: now equal to expiry is expired. Legacy fractional
+  numeric milliseconds follow Date(number) truncation; expiration arithmetic is bounded
+  to JavaScript's Date range without integer overflow.
+- Add strict-before expiry pruning for Date and numeric records, including legacy plain
+  records. Preserve unrelated/malformed timestamp records and shifted sibling schemas.
+  Expose pure wl_rescheck alongside wl_resume on linked/CLI SQLite.
+- Verify both backends with exact boundaries, future stamps, lifetime/range failures,
+  legacy fractions, duplicates and live Mongo typed pruning/BSON preservation.
+- Shared bearer authorization/issuance and revocation remain open. Browser sessions stay
+  private so cross-application bearer use cannot bypass their client binding.
+
 ## 2026-11-16 Typed Meteor resume-token kernel
 
 - Add Meteor SHA256/base64 token hashing, separate from WeLite's tenant-scoped private
