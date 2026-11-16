@@ -94,3 +94,9 @@ independent salts for identical plaintext, long UTF-8 passwords, `hashpw` JSON-o
 seeding and token invalidation after replacing a credential. An independently generated
 Python PBKDF2 fixture also verifies legacy web/API login without rewriting its bytes.
 The CLI/portable-entropy variant exercises these same new-account paths.
+
+`python3 tests/blake.py` compares BLAKE2b with Python hashlib and Argon2 H' with the
+actual cached Go helper (Go 1.26+, `GO`/`CRYPTO_SRC` as for bcrypt). Isolated copies and
+a temporary export overlay leave cached source unchanged. Normal/checked Pascal builds
+cover binary/Unicode/NUL data, empty and exact/partial blocks, variable output boundaries
+through 1 KiB and invalid lengths. This tests the hash foundation, not full Argon2 login.

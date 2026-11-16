@@ -242,11 +242,32 @@ routes and credential invalidation on linked/CLI SQLite. Live FerretDB tests ver
 Mongo-created account through the real login lookup/verifier and compare its BSON bytes
 to prove no credential or metadata rewrite.
 
+## Argon2 hash foundation
+
+`wlblake.pas` implements unkeyed BLAKE2b from [RFC 7693](https://www.rfc-editor.org/rfc/rfc7693.html)
+and Argon2's length-prefixed variable-output H' from
+[RFC 9106 section 3.3](https://www.rfc-editor.org/rfc/rfc9106.html#section-3.3).
+It uses explicit little-endian loads/stores, modulo-64-bit arithmetic, fixed-size
+compression state and preallocated variable output. Empty/exact/partial final blocks
+and digest sizes below/above 64 bytes are tested. Temporary compression state is cleared.
+
+`tests/blake.py` compares raw BLAKE2b with Python hashlib and H' with the actual Go
+Argon2 helper from cached `golang.org/x/crypto` v0.59.0. It copies only the needed
+packages into a temporary test module and overlays an export wrapper; the original
+module cache is unchanged. Normal and overflow/range-checked Pascal builds pass input
+block boundaries, binary/Unicode/NUL input and output boundaries through 1 KiB.
+Verification so far is native Linux; other target builds remain in the platform gate.
+
+This is a prerequisite, not an Argon2 credential verifier. Memory-block filling and
+indexing, parameter/PHC parsing, resource validation and login integration remain open.
+The existing explicit denial of Argon2 password records is retained until those pass.
+
 ## Remaining before the checklist can be checked
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Implement Argon2; reconcile Meteor session formats and file-store metadata/bytes.
+- Complete Argon2 memory-block processing, credential parsing/resource validation and
+  login integration; reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

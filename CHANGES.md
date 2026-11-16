@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Portable Argon2 hash foundation
+
+- Implement unkeyed BLAKE2b and Argon2's variable-length H' in Pascal as the hashing
+  foundation for shared Argon2 credentials. Use explicit little-endian byte loading/
+  output and modulo-64-bit arithmetic, with no native crypto library or assembly.
+- Preserve final-block handling for empty, exact-block and partial inputs, and the
+  distinct digest-size parameter and length prefix required by H'. Preallocate output
+  instead of repeatedly concatenating growing hashes; clear temporary working state.
+- Compare BLAKE2b with Python hashlib and H' with the actual maintained Go Argon2 helper,
+  using isolated cached source copies and a temporary overlay. Verify normal/checked
+  Pascal builds, binary/Unicode/NUL input, input block boundaries and variable outputs
+  through 1 KiB. Invalid digest lengths are rejected.
+- Keep Argon2 incomplete in TODO: memory-block filling/indexing, credential parsing,
+  resource checks and login integration still remain.
+
 ## 2026-11-16 Shared-format credentials for new accounts
 
 - Make registration and local admin bootstrap create Meteor services.password bcrypt
