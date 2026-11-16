@@ -204,3 +204,31 @@ fpc -Pm68k -Tamiga -o welite src/wlhttp.lpr     # classic Amiga 68k
 ```
 Run plaintext HTTP; terminate TLS at a proxy or load AmiSSL/OpenSSL dynamically
 (`docs/webstack.md` Decision 5). Default port 5500, override with `PORT`.
+
+## Implementation checklist
+
+Complete these steps sequentially, with regression tests and a local commit for each.
+The design above remains the acceptance criteria; a checked item means verified code,
+not merely a design document. Platform/browser claims require testing on those targets.
+
+- [x] Audit the current implementation and record the remaining work (2026-11-16).
+- [ ] Move lists up/down across swimlanes, preserving their cards and board boundaries.
+- [ ] Enforce tenant-local administrator permissions on every Designer endpoint.
+- [ ] Finish Designer page listing, creation, editing, disabling and deletion.
+- [ ] Finish Designer widget add/edit/delete, options and bounded layout controls.
+- [ ] Render authorized board/list/swimlane/card data with the shared selection form.
+- [ ] Implement selected-item Edit, Clone, Delete, Clear and Export actions.
+- [ ] Enforce board permissions and safe return URLs on every board mutation.
+- [ ] Add the board minimap, coordinates and occupied/current-position indicators.
+- [ ] Add optional drag/drop and multiple selection using the same move endpoint.
+- [ ] Align runtime tenant/file paths with DOS 8.3 and the requested Weddy layout.
+- [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
+- [ ] Complete language selection, translation rendering and RTL behavior.
+- [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
+- [ ] Verify embedded assets, linked/CLI SQLite and supported cross-platform builds.
+- [ ] Reconcile README/design status against completed code and document platform limits.
+
+Already implemented before this checklist: PBKDF2 password hashing in `wlpasswd.pas`,
+web/API password verification, registration, loopback tenant provisioning, REST API
+subset and the initial Global Admin panel. These need regression coverage as their
+related workflows are completed; they are not missing skeletons.

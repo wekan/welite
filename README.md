@@ -13,3 +13,10 @@ working prototypes in this tree** and aligned to the portable contract:
 - `docs/contract.md`, `schema.sql`, `docs/goals.md`, `docs/webstack.md`,
   `docs/schema.md` — the portable contract these target.
 
+## Source and build conventions
+
+Keep shipped path components DOS 8.3-safe: names of at most eight characters,
+extensions of at most three, letters/digits/hyphen/underscore, and one extension dot.
+Host-only VCS/editor dotfiles are exceptions. Build intermediates belong under
+`build/arch/<code>/` and collected binaries under `build/bin/w<code>.exe`, with platform
+codes of at most seven characters. See `TODO.md` for implementation status.

@@ -4,6 +4,15 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Implementation audit and remaining steps
+
+- Added a sequential, testable implementation checklist to `TODO.md`, preserving the
+  original design requirements and distinguishing existing code from remaining work.
+- Confirmed password hashing already exists; identified unfinished board rendering,
+  Designer handlers/permissions, move actions, minimap and progressive enhancement.
+- Removed the duplicate repository instruction file; parent repository instructions
+  apply here, while the existing build layout and DOS 8.3 rules remain documented below.
+
 ## 2026-06-25 Local tenant, registration / Global Admin, Admin Panel, build layout
 
 First-run usability: browsing `http://localhost:5500/` used to answer `404 Unknown domain`
