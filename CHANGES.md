@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Guarded shared expiry sweep
+
+- Add owned durable `_wl_sweep` scheduling state and a ten-minute due-check kernel.
+  Calculate the cutoff with binary64 lifetime subtraction followed by Date truncation,
+  then remove strictly older Date/legacy numeric records across shared accounts.
+- Commit the due timestamp and every typed edit together. Bind work to source/settings
+  snapshots, reject backwards clocks and concurrent stale claims, and assert cleanup
+  and checkpoint writes succeeded. Failed/ignored writes roll back all accounts and
+  scheduling state. Retained BSON types, precision, unknowns and token history survive.
+- Verify linked/CLI live due boundaries, concurrent callers, ignored account/checkpoint
+  updates, rollback/retry, reinstall, fractional cutoffs against Node.js and stale source.
+- The callable sweep is not yet a running background service. Local credential cleanup,
+  the HTTP timer hook and full shared-store/application activation remain to be connected.
+
 ## 2026-11-16 Adopt existing shared Meteor bearers
 
 - On API validation, adopt a previously unseen shared hash or legacy raw bearer only

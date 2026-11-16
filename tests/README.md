@@ -270,3 +270,9 @@ validators, exact issue/expiry and BSON, ignored metadata/conversion writes with
 and retry, expiration, duplicate ownership, disabling, MFA resume without OTP consumption,
 credential-change revocation and restored-record denial. Conservative policy gates and
 full shared HTTP/Meteor application workflows remain separate work.
+
+Shared expiry sweep tests in `ferroot.py` compile `sweep.lpr` and check owned durable
+cadence, Date/numeric strict cutoff and equality, concurrent due callers, ignored account
+and checkpoint writes with complete rollback/retry, reinstall, backwards clocks, stale
+source and fractional cutoff against Node.js. Retained BSON/precision/unknowns are
+compared exactly on both backends. Background timer/local cleanup wiring remains open.

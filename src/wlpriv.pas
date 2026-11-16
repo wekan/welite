@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc,wlseen;
+uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc,wlseen,wlsweep;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const
@@ -19,7 +19,7 @@ begin
   Owners:=nil;
   for i:=0 to High(Objects) do if Objects[i][0]='_wl_models' then
     Owners:=Db.Query('SELECT name,table_name,spec,version FROM _wl_models;');
-  for k:=0 to 6 do
+  for k:=0 to 7 do
   begin
     if k=0 then begin Name:='login_tokens';DDL:=TokenDDL;end
     else if k=1 then begin Name:='authmeta';DDL:=MetaDDL;end
@@ -27,7 +27,8 @@ begin
     else if k=3 then begin Name:='_wl_attempt';DDL:=AttemptDDL;end
     else if k=4 then begin Name:='_wl_enrol';DDL:=EnrollDDL;end
     else if k=5 then begin Name:='_wl_authsrc';DDL:=AuthSourceDDL;end
-    else begin Name:='_wl_seen';DDL:=SeenDDL;end;
+    else if k=6 then begin Name:='_wl_seen';DDL:=SeenDDL;end
+    else begin Name:='_wl_sweep';DDL:=SweepDDL;end;
     Exists:=False;Owned:=False;
     for i:=0 to High(Owners) do
       if (Owners[i][0]=Name) and (Owners[i][1]=Name) and (Owners[i][2]=Signature) and (Owners[i][3]='1') then Owned:=True;
@@ -40,6 +41,7 @@ begin
     if not Exists then Result:=Result+DDL+'; ';
     Result:=Result+'INSERT OR REPLACE INTO _wl_models VALUES('+QuotedStr(Name)+','+QuotedStr(Name)+','+QuotedStr(Signature)+',1); ';
   end;
+  Result:=Result+'INSERT INTO _wl_sweep VALUES(1,-600000) ON CONFLICT(id) DO NOTHING; ';
   // Backfill before source cleanup; history survives credential invalidation.
   Result:=Result+'INSERT INTO _wl_seen SELECT hashedToken FROM login_tokens WHERE 1 ON CONFLICT(hashedToken) DO NOTHING; '+
     'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t WHERE NOT EXISTS(SELECT 1 FROM _wl_seen s WHERE s.hashedToken=t.hashedToken)) THEN NULL ELSE version END WHERE name=''_wl_seen''; '+AuthSourceScript(Users);

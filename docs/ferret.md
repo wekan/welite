@@ -859,11 +859,40 @@ upgrade. Shared HTTP activation and full Meteor application round trips remain g
 local/shared writes and retry, expiry, duplicate ownership, disabled accounts, MFA resume
 without OTP consumption, credential changes and refusal after shared restoration.
 
+## Durable shared expiry sweep
+
+`SweepSharedTokens(Db, NowMs)` in `wlsweep.pas` performs due maintenance on a shared
+store. Owned private `_wl_sweep` state starts due and retains the last successful time
+across reinstall/source rebinding. Calls less than ten minutes apart are successful
+no-ops; backwards clocks, invalid source identity and invalid configuration refuse work.
+The caller supplies nonnegative UTC epoch milliseconds.
+
+The cutoff follows [Meteor accounts-base expiry](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_server.js):
+subtract the current binary64 lifetime from the clock, construct the Date cutoff by
+truncation, and remove records strictly older than that cutoff. This intentionally
+keeps equality-at-cutoff records until a later sweep; authentication already rejects
+expiry equality independently. Date and legacy numeric fractions retain their respective
+comparison behavior. Unsupported timestamps are retained without becoming valid bearers.
+
+A transaction checks the source/settings and previous checkpoint, advances the durable
+time, edits every actual shared users document with an array of resume records, then
+asserts no further expiry edit would change a document. Checkpoint and source/settings
+assertions also catch ignored writes. Failed/ignored updates and stale concurrent claims
+roll back all account edits and the checkpoint. Typed edits preserve retained BSON and
+unknowns; bearer history is untouched. `ferroot.py` covers failure/retry, ignored clock
+writes, concurrent callers, cadence, reinstall, stale source and fractional cutoffs
+against Node.js on linked/CLI SQLite.
+
+This is a callable maintenance kernel, not an active HTTP/background timer. Local
+credential cleanup, the timer lifecycle and shared-store activation/application observer
+behavior still need integration. No idle-time cleanup or Meteor connection-close behavior
+is claimed by this database-only step.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity and scheduled expiry; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity, local expiry cleanup and running scheduler integration; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

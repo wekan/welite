@@ -271,7 +271,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Typed legacy raw-to-hashed resume conversion now passes concurrency, ambiguity, rollback and live BSON preservation tests without renewing timestamps.
   Durable owned bearer-digest history now follows private token inserts/updates/deletes, backfills upgrades and survives source/account revocation; ignored writes roll back.
   Existing shared hashed/legacy bearer adoption now guards source/account/settings/history snapshots and atomically preserves original expiry, metadata and conversion; live concurrency/rollback/revocation tests cover it.
-  Remaining: broader resume-policy parity and expiry scheduling; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Shared expiry now has an owned durable ten-minute due checkpoint and atomic typed sweep, with live rollback, concurrency, Date/numeric/fractional cutoff and source tests.
+  Remaining: broader resume-policy parity, local expiry cleanup and running scheduler/HTTP integration; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

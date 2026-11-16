@@ -41,6 +41,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
         build(root/'tests/attempt.lpr',out/'attempt',flags)
         build(root/'tests/enroll.lpr',out/'enroll',flags)
         build(root/'tests/revoke.lpr',out/'revoke',flags)
+        build(root/'tests/sweep.lpr',out/'sweep',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS',None)
@@ -302,6 +303,57 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 resume_doc['services']['resume']['loginTokens']=[]
                 assert encode(client.find('users','resume-doc')[0])==encode(resume_doc)
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='resume-doc'),limit=1)]})
+
+                # A durable due sweep uses Meteor's strict-before cutoff across accounts.
+                sweep_now=1794835200000;cutoff=sweep_now-90*86400000
+                sweep_docs=[dict(_id='sweep-'+str(i),services=dict(resume=dict(loginTokens=[dict(hashedToken=meteor_hash('sweep-old-'+str(i)),when=DateMs(cutoff-1),extra=Long(9007199254740993)),dict(token='sweep-numeric-'+str(i),when=cutoff-0.5),dict(hashedToken=meteor_hash('sweep-boundary-'+str(i)),when=DateMs(cutoff),keep=Binary(b'keep',4)),dict(token='sweep-future-'+str(i),when=DateMs(sweep_now+1))],keep=DateMs(-1))),unknown=dict(precise=1.0000000000000002)) for i in range(2)]
+                client.command({'insert':'users','documents':sweep_docs})
+                sweep_docs=[client.find('users',doc['_id'])[0] for doc in sweep_docs]
+                def sweep(at):return subprocess.check_output([str(out/'sweep/sweep'),str(db),str(at)],env=settings,text=True).strip()
+                assert sql('CREATE TRIGGER deny_sweep BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='sweep-1' BEGIN SELECT RAISE(IGNORE); END;",'exec')=='ok'
+                assert sweep(sweep_now)=='no'
+                assert sql('SELECT lastAt FROM _wl_sweep;')==[['-600000']]
+                assert all(encode(client.find('users',doc['_id'])[0])==encode(doc) for doc in sweep_docs),'Failed sweep partially committed'
+                assert sql('DROP TRIGGER deny_sweep;','exec')=='ok'
+                assert sql('CREATE TRIGGER deny_clock BEFORE UPDATE ON _wl_sweep BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
+                assert sweep(sweep_now)=='no'
+                assert sql('SELECT lastAt FROM _wl_sweep;')==[['-600000']]
+                assert all(encode(client.find('users',doc['_id'])[0])==encode(doc) for doc in sweep_docs)
+                assert sql('DROP TRIGGER deny_clock;','exec')=='ok'
+                with ThreadPoolExecutor(max_workers=4) as pool:swept=list(pool.map(lambda _:sweep(sweep_now),range(4)))
+                assert 'yes' in swept and all(value in ['yes','no'] for value in swept),swept
+                for doc in sweep_docs:
+                    doc['services']['resume']['loginTokens']=doc['services']['resume']['loginTokens'][2:]
+                    assert encode(client.find('users',doc['_id'])[0])==encode(doc),'Sweep changed retained BSON types/bits'
+                assert sql('SELECT lastAt FROM _wl_sweep;')==[[str(sweep_now)]]
+                assert sweep(sweep_now-1)=='no','Clock rollback advanced expiry maintenance'
+                assert sweep(sweep_now+599999)=='yes' and sql('SELECT lastAt FROM _wl_sweep;')==[[str(sweep_now)]]
+                assert sql(mode='install')=='ok' and sql('SELECT lastAt FROM _wl_sweep;')==[[str(sweep_now)]]
+                assert sweep(sweep_now+600000)=='yes'
+                for doc in sweep_docs:
+                    doc['services']['resume']['loginTokens']=doc['services']['resume']['loginTokens'][1:]
+                    assert encode(client.find('users',doc['_id'])[0])==encode(doc)
+                client.command({'delete':'users','deletes':[dict(q=dict(_id=doc['_id']),limit=1) for doc in sweep_docs]})
+                # Fractional configured lifetime clips the cutoff after subtraction.
+                fractional_now=sweep_now+1200000;fractional_days=0.000001
+                fractional_cutoff=int(subprocess.check_output([os.environ.get('NODE','node'),'-e','console.log(new Date(Number(process.argv[1])-Number(process.argv[2])*86400000).getTime())',str(fractional_now),str(fractional_days)],text=True))
+                client.command({'create':'settings'})
+                client.command({'insert':'settings','documents':[dict(_id='sweep-settings',loginOptions=dict(loginExpirationInDays=fractional_days))]})
+                fractional_doc=dict(_id='sweep-fraction',services=dict(resume=dict(loginTokens=[dict(token='before',when=DateMs(fractional_cutoff-1)),dict(token='equal',when=DateMs(fractional_cutoff),extra=Long(9007199254740993)),dict(token='numeric',when=fractional_cutoff-0.5)])))
+                client.command({'insert':'users','documents':[fractional_doc]})
+                fractional_doc=client.find('users','sweep-fraction')[0]
+                assert sweep(fractional_now)=='yes'
+                fractional_doc['services']['resume']['loginTokens']=fractional_doc['services']['resume']['loginTokens'][1:2]
+                assert encode(client.find('users','sweep-fraction')[0])==encode(fractional_doc)
+                # Bad source identity cannot advance a durable due timestamp.
+                sweep_source=sql("SELECT settings FROM _ferretdb_collections WHERE name='users';")[0][0]
+                assert sql("UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid','bad') WHERE name='users';",'exec')=='ok'
+                assert sweep(fractional_now+600000)=='no'
+                assert sql('SELECT lastAt FROM _wl_sweep;')==[[str(fractional_now)]]
+                assert sql("UPDATE _ferretdb_collections SET settings="+q(sweep_source)+" WHERE name='users';",'exec')=='ok'
+                client.command({'drop':'settings'})
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='sweep-fraction'),limit=1)]})
+
 
                 # Private tokens reference a user view without invalid SQLite FKs.
                 build(root/'tests/token.lpr',out/'tokens',flags)
@@ -787,7 +839,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 source_settings=sql("SELECT table_name,settings FROM _ferretdb_collections WHERE name='users';")[0]
                 old_uuid=json.loads(source_settings[1])['uuid']
                 assert sql('SELECT userTable,userUUID FROM _wl_authsrc;')==[[source_settings[0],old_uuid]]
-                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc','_wl_seen']
+                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc','_wl_seen','_wl_sweep']
                 def private_snapshot():return {name:sql('SELECT * FROM '+q(name)+' ORDER BY 1;') for name in private_tables}
                 # Proofs cannot cross a rebind even when account snapshots match.
                 rebound_uuid='11111111-2222-4333-8444-555555555555'
