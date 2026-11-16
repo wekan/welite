@@ -198,6 +198,43 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql('SELECT value FROM audit;')==[['Child audit'],['Audited']]
                 assert client.find('boards','new')[0]['title']=='Audited'
 
+                # Declared root references are enforced on both insert and update.
+                assert sql("INSERT INTO card_comments(id,boardId,cardId,userId,text,createdAt,modifiedAt) VALUES('cascade-comment','board','card','author','Text',"+q(stamp)+','+q(stamp)+');','exec')=='ok'
+                physicals=dict(sql('SELECT name,table_name FROM _ferretdb_collections;'))
+                def snapshot():
+                    return {name:sql('SELECT json(_ferretdb_sjson) FROM '+q(table)+' ORDER BY rowid;') for name,table in physicals.items()}
+                references=[('swimlanes','lane','boardId'),('lists','list','boardId'),('cards','card','boardId'),('card_comments','cascade-comment','boardId'),('card_comments','cascade-comment','cardId'),('checklists','check','cardId'),('checklist_items','item','checklistId')]
+                stable=snapshot()
+                for table,identity,column in references:
+                    assert sql('UPDATE '+table+' SET '+column+"='missing' WHERE id="+q(identity)+';','exec')=='error',(table,column)
+                    assert snapshot()==stable
+                    physical_name=physicals[names.get(table,table)]
+                    source=sql('SELECT json(_ferretdb_sjson) FROM '+q(physical_name)+" WHERE _ferretdb_sjson->>'_id'="+q(identity)+';')[0][0]
+                    assert sql('INSERT INTO '+table+'(id,'+column+',_wl_source) VALUES('+q('bad-'+table+'-'+column)+",'missing',"+q(source)+');','exec')=='error',(table,column)
+                    assert snapshot()==stable
+                # Optional references permit NULL, while undeclared references retain
+                # schema semantics (attachments/activities are not cascade-owned).
+                assert sql("UPDATE cards SET boardId=NULL WHERE id='card';",'exec')=='ok'
+                assert sql("UPDATE cards SET boardId='board' WHERE id='card';",'exec')=='ok'
+                stable=snapshot()
+                assert sql("CREATE TRIGGER block_cascade INSTEAD OF DELETE ON checklist_items WHEN OLD.id='item' BEGIN SELECT RAISE(ABORT,'test denial');END;",'exec')=='ok'
+                assert sql("DELETE FROM boards WHERE id='board';",'exec')=='error'
+                assert snapshot()==stable,'A failed nested cascade partially deleted records'
+                assert sql('DROP TRIGGER block_cascade;','exec')=='ok'
+                assert sql("DELETE FROM boards WHERE id='board';",'exec')=='ok'
+                for collection,identity in [('boards','board'),('swimlanes','lane'),('lists','list'),('cards','card'),('card_comments','cascade-comment'),('checklists','check'),('checklistItems','item')]:
+                    assert client.find(collection,identity)==[],collection
+                for table in ['board_members','board_orgs','board_teams','board_domains','card_members','card_assignees','card_labels','card_custom_field_values','card_dependencies']:
+                    assert sql('SELECT count(*) FROM '+table+';')==[['0']],table
+                assert client.find('boards','new')[0]['title']=='Audited'
+                assert client.find('attachments','file') and client.find('activities','activity') and client.find('users','author') and client.find('customFields','field')
+                # Deleting a different root only removes its embedded children.
+                assert sql("DELETE FROM users WHERE id='author';",'exec')=='ok'
+                assert sql('SELECT count(*) FROM user_emails;')==[['0']]
+                assert sql("DELETE FROM custom_fields WHERE id='field';",'exec')=='ok'
+                for table in ['custom_field_boards','custom_field_dropdown_items']:
+                    assert sql('SELECT count(*) FROM '+table+';')==[['0']]
+
                 # Normalized tables must never be overwritten by this installer.
                 rejected=out/'legacy.db'
                 with sqlite3.connect(rejected) as con:con.execute('CREATE TABLE boards(value TEXT)');con.execute("INSERT INTO boards VALUES('preserve')")
@@ -260,7 +297,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     oldserver.terminate()
                     try:oldserver.wait(timeout=10)
                     except subprocess.TimeoutExpired:oldserver.kill();oldserver.wait()
-                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
+                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views, references/cascades and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
             finally:
                 server.terminate()
                 try:server.wait(timeout=10)

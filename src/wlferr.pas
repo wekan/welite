@@ -1,7 +1,7 @@
 unit wlferr;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel;
+uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wlrefs;
 // Installs root and child projections. Application activation and shared-account
 // compatibility remain separate gates before this is a finished store adapter.
 function InstallRootModels(Db:TWLDb):Boolean;
@@ -175,16 +175,18 @@ begin
       finally FreeAndNil(Roots);end;
       Sql:=Sql+'CREATE INDEX IF NOT EXISTS '+Ident('_wl_'+ViewName+'_id')+' ON '+Ident(TableName)+'('+Expr('_id')+'); '+
         'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_i')+' INSTEAD OF INSERT ON '+Ident(ViewName)+' BEGIN '+
+        ReferenceChecks(Model,'wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')')+
         'INSERT INTO '+Ident(TableName)+'('+Ident(DocCol)+') VALUES('+Wrapped('wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')')+'); END; ';
       for j:=0 to Fields.Count-1 do
       begin
         Field:=Fields.Objects[j];Root:=Field.Get('name','');
         Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_u_'+Root)+' INSTEAD OF UPDATE OF '+Ident(Root)+' ON '+Ident(ViewName)+' BEGIN '+
+          ColumnReferenceChecks(Model,Root,'NEW.'+Ident(Root))+
           'UPDATE '+Ident(TableName)+' SET '+Ident(DocCol)+'='+Wrapped('wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+',NEW.'+Ident(Root)+'),'+Q(Spec)+',''update'')')+
           ' WHERE '+Expr('_id')+'=OLD.id; END; ';
       end;
       Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_source')+' INSTEAD OF UPDATE OF _wl_source ON '+Ident(ViewName)+' BEGIN SELECT RAISE(ABORT,''Read-only source seed''); END; '+
-        'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_d')+' INSTEAD OF DELETE ON '+Ident(ViewName)+' BEGIN DELETE FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id; END; '+
+        'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_d')+' INSTEAD OF DELETE ON '+Ident(ViewName)+' BEGIN '+DeleteCascades(Models,ViewName)+'DELETE FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id; END; '+
         'INSERT OR REPLACE INTO _wl_models VALUES('+Q(ViewName)+','+Q(TableName)+','+Q(Spec)+',1); ';
       for j:=0 to High(Custom) do Sql:=Sql+Custom[j][0]+'; ';
     end;

@@ -240,7 +240,8 @@ not merely a design document. Platform/browser claims require testing on those t
   including fresh collection creation, legacy TEXT/restart and preservation of typed unknown fields.
   Typed embedded-array editing now passes live object/scalar relation tests on both backends.
   Thirteen writable child views now pass live tests, including nested paths and safe reinstall.
-  Remaining: cascades/reference/account uniqueness constraints, complete typed custom-value and legacy
+  Declared root foreign keys and nested delete cascades now pass missing-reference/rollback tests.
+  Remaining: account uniqueness/private-token references, complete typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

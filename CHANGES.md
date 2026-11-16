@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 FerretDB view references and delete cascades
+
+- Generate root foreign-key metadata directly from the canonical schema. Reject SQL
+  inserts and reference-column updates that point at missing parent models, including
+  typed clone-source inserts. Preserve nullable-reference semantics.
+- Reproduce declared root ON DELETE CASCADE chains through writable views: deleting a
+  board removes its lanes/lists/cards/comments, with card/checklist descendants removed
+  recursively. Embedded children disappear with their owning document. Retain records
+  whose references are deliberately not foreign keys in the schema.
+- Verify every declared root reference on insert/update against live FerretDB, optional
+  NULL references, unrelated-record retention and nested cascades on both backends.
+  Force a checklist-item deletion failure and compare every collection's stored SJSON
+  before/after to prove rollback of the complete board deletion. Source-codec tests pass.
+- These checks govern Welite SQL views; no foreign-key triggers are added to FerretDB's
+  physical tables. Account uniqueness/private-token references and other compatibility
+  gates remain before application activation.
+
 ## 2026-11-16 Writable FerretDB child views
 
 - Generate thirteen child contracts from the canonical SQL schema and install writable

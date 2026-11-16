@@ -137,14 +137,35 @@ is `cardDependencies`, with target `cardId`; labels and dropdown IDs use `_id`.
 
 Live tests cover every child view, Mongo edits visible to SQL, SQL edits decoded by Mongo,
 unknown typed child properties, multi-column key edits, duplicates, missing parents and
-ownership refusal. Full cascades and reference validation, typed custom-field value
-conversion and legacy bare-string dependency normalization are not yet implemented.
+ownership refusal. Declared root cascades and references are implemented as described below. Typed custom-field
+value conversion and legacy bare-string dependency normalization remain open.
 SQL `INSERT OR REPLACE` conflict behavior also needs application-level reconciliation
 before these views replace normalized tables.
 
+## Schema references and cascades
+
+The generator reads root `PRAGMA foreign_key_list` metadata into each model contract.
+`wlrefs.pas` emits reference checks in insert/update view triggers and declared delete
+cascades in the root deletion trigger. Insert checks inspect the fully projected document,
+so clone-source fields cannot bypass validation. Nullable references remain optional.
+Embedded child arrays disappear with their root; they need no separate cascade. Cascades
+through cards and checklists execute inside the initiating SQL statement.
+
+Live tests check every declared root foreign key on insertion and update, including
+source-based inserts. A forced failure during checklist-item deletion restores every
+collection's SJSON exactly after a board deletion attempt. Successful deletion removes
+the board-owned graph while retaining unrelated boards and unconstrained attachment,
+activity, user and custom-field records, according to `schema.sql`. User/custom-field
+root deletion also removes their embedded child rows. Both SQLite backends pass.
+
+These are Welite view constraints. Direct Mongo writes retain FerretDB's existing
+semantics: the adapter adds no reference-enforcement triggers to physical collections.
+Existing dangling Mongo references are not rewritten at installation. Private auth/token
+tables and account uniqueness are separate application-activation gates.
+
 ## Remaining before the checklist can be checked
 
-- Complete cascades, reference checks and account uniqueness rules; reconcile typed
+- Complete account uniqueness and private auth/token references; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile existing Meteor password/session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

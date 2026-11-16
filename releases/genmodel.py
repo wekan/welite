@@ -23,7 +23,8 @@ for table,collection in collections.items():
         if table=='attachments' and name in ['boardId','swimlaneId','listId','cardId']:path='meta.'+name
         value=db.execute('SELECT '+default).fetchone()[0] if default is not None else None
         fields.append(dict(name=name,path=path,kind=kind,type=typ,required=bool(required or pk),default=value))
-    models.append(dict(table=table,collection=collection,fields=fields,managed=managed.get(table,[])))
+    foreign_keys=[dict(column=row[3],parent=row[2],key=row[4],delete=row[6]) for row in db.execute('PRAGMA foreign_key_list('+table+')')]
+    models.append(dict(table=table,collection=collection,fields=fields,managed=managed.get(table,[]),foreignKeys=foreign_keys))
 relations=[]
 relation_map={
  'board_labels':('boards','boardId','labels',False),
