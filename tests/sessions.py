@@ -76,5 +76,28 @@ def run(request,db,admin):
     assert response[0]==200 and b'Invalid login' in response[2]
     assert request('GET','/api/user?token='+meteor_api)[0]==401
     assert request('GET','/designer?sessionId='+meteor_web)[0]==302
+    # Version-19 Argon2 is the active credential even when bcrypt is present.
+    meteor['password']['argon2']='$argon2id$v=19$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$eL9VAPxb5H9dbhpqPyL7Z7AkFp72MImsQmo94Yh0kAY'
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
+    response=request('POST','/sign-in',dict(username=user,password=password))
+    assert response[0]==302
+    argon_web=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
+    response=request('POST','/users/login',dict(username=user,password=password))
+    assert response[0]==200
+    argon_api=json.loads(response[2])['token']
+    assert request('GET','/api/user?token='+argon_api)[0]==200
+    assert request('GET','/api/user?token='+argon_web)[0]==200
+    assert request('POST','/users/login',dict(username=user,password='wrong'))[0]==401
+    with sqlite3.connect(db) as con:
+        assert json.loads(con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0])==meteor
+    # Exceeding a verification budget never falls back to otherwise correct bcrypt.
+    meteor['password']['argon2']=meteor['password']['argon2'].replace('m=32','m=65537')
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
+    assert request('POST','/users/login',dict(username=user,password=password))[0]==401
+    response=request('POST','/sign-in',dict(username=user,password=password))
+    assert response[0]==200 and b'Invalid login' in response[2]
+    assert request('GET','/api/user?token='+argon_api)[0]==401
+    assert request('GET','/designer?sessionId='+argon_web)[0]==302
+    print('PASS: actual Meteor Argon2 web/API logins, metadata preservation, credential-bound tokens and over-budget/stale-bcrypt denial')
     print('PASS: actual Meteor bcrypt web/API logins, unknown service preservation, credential-bound tokens and Argon2 precedence denial')
     print('PASS: disabled web/API logins and live tokens denied, panel revocation survives re-enable, fresh nonces and token persistence failures')

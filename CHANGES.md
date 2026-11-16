@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Argon2 v19 credential verification
+
+- Parse Argon2d/i/id PHC v19 strings with canonical unpadded base64, unsigned decimal
+  parameters and optional associated data. Reject duplicate/unknown parameters,
+  malformed padding/bits, short salt/hash values, unsupported versions and oversized
+  records before expensive derivation. Bound structural splitting as well as output.
+- Verify Meteor Argon2 objects over the SHA256 plaintext digest and compare tags in
+  constant time. Keep Argon2 precedence over bcrypt even when parsing, resource checks
+  or verification fails. Preserve credential metadata and existing token binding.
+- Add explicit memory/pass/lane/key verification budgets with operator environment
+  overrides. Reject rather than reduce stored costs; verify a higher-memory record
+  only after raising its configured budget.
+- Match Go-generated PHC fixtures in normal/checked builds, including associated data,
+  long UTF-8/NUL passwords, malformed/duplicate records and budget changes. Both linked
+  and CLI HTTP suites pass actual Argon2 web/API login and token revocation; live
+  FerretDB accounts verify without BSON changes. Bcrypt/legacy oracle tests still pass.
+- Keep legacy v16/out-of-band secret policy and broader shared session/index integration
+  open. New account generation remains Meteor-compatible bcrypt.
+
 ## 2026-11-16 Portable Argon2 memory processing
 
 - Implement Argon2 v1.3 d/i/id key derivation: parameter hashing, first-block expansion,

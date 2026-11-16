@@ -251,6 +251,11 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert auth('password','meteor-account','test-password')=='yes'
                 assert auth('password','meteor-account','wrong')=='no'
                 assert encode(client.find('users','meteor-account')[0])==shared_before
+                client.command({'update':'users','updates':[dict(q=dict(_id='meteor-account'),u={'$set':{'services.password.argon2':'$argon2id$v=19$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$eL9VAPxb5H9dbhpqPyL7Z7AkFp72MImsQmo94Yh0kAY'}})]})
+                argon_before=encode(client.find('users','meteor-account')[0])
+                assert auth('password','meteor-account','test-password')=='yes'
+                assert auth('password','meteor-account','wrong')=='no'
+                assert encode(client.find('users','meteor-account')[0])==argon_before
                 # SQL uniqueness follows the canonical BINARY/NULL semantics.
                 assert auth('lookup','user')=='yes' and auth('lookup','User')=='no'
                 assert sql("INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('duplicate','user',"+q(stamp)+','+q(stamp)+');','exec')=='error'

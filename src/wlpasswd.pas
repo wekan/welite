@@ -10,7 +10,8 @@ unit wlpasswd;
 
   Legacy hashes use the portable RTL HMAC-SHA1 implementation. Meteor bcrypt
   verification uses the portable wlbcrypt kernel over a SHA256 plaintext digest;
-  HashMeteorPassword returns a services.password JSON object. Argon2 remains unsupported.
+  HashMeteorPassword returns a services.password JSON object. Argon2 v19 is verified
+  through a bounded PHC parser and portable derivation.
 
   Salt/token entropy comes from wlentrop: OS random sources, or a configured one-use
   SQLite stock for targets without a kernel random source. There is no Random fallback.
@@ -23,7 +24,7 @@ unit wlpasswd;
 interface
 
 uses
-  SysUtils,Classes,hmac,wlentrop,wlcrypt,wlbcrypt,fpjson,wlsjson;
+  SysUtils,Classes,hmac,wlentrop,wlcrypt,wlbcrypt,fpjson,wlsjson,wlphc;
 
 // Hash a plaintext password -> "pbkdf2_sha1$iters$saltHex$dkHex".
 function HashPassword(const Plain: string): string;
@@ -34,7 +35,7 @@ function HashMeteorPassword(const Plain:string):string;
 // 256-bit random token using the configured platform salt source. OS randomness or a committed one-use stock block is required.
 function NewAuthToken:string;
 
-// Verify legacy PBKDF2 strings or Meteor password JSON with bcrypt(SHA256(plaintext)). False on mismatch
+// Verify legacy PBKDF2 or Meteor bcrypt/Argon2 JSON over SHA256(plaintext). False on mismatch
 // or malformed/empty stored value (so accounts with no real hash cannot be logged into).
 function VerifyPassword(const Plain, Stored: string): Boolean;
 
@@ -144,7 +145,11 @@ begin
       Password:=ExactObject(Text);Value:=Password.Find('argon2');
       // Meteor chooses Argon2 first. Never accept a stale bcrypt fallback.
       if (Value<>nil) and (Value.JSONType<>jtNull) then
-        if (Value.JSONType<>jtString) or (Value.AsString<>'') then Exit;
+      begin
+        if Value.JSONType<>jtString then Exit;
+        if Value.AsString<>'' then
+        begin Result:=VerifyArgonPHC(Sha256Hex(Plain),Value.AsString,ArgonVerifyLimits);Exit;end;
+      end;
       Value:=Password.Find('bcrypt');
       if (Value=nil) or (Value.JSONType<>jtString) then Exit;
       Result:=BcryptVerify(Sha256Hex(Plain),Value.AsString);

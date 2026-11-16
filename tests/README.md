@@ -107,3 +107,10 @@ source/overlay approach as `blake.py`. Normal/checked builds exercise lanes, pas
 memory rounding and addressing, secret/associated data, binary/Unicode/NUL input,
 a 64 MiB profile and rejected budgets. On POSIX, a memory-limited child checks allocation
 failure. Credential parsing and HTTP Argon2 login are not covered by this kernel test.
+
+`argon.py` also builds `phc.lpr` and checks Go-generated PHC/Meteor credentials in
+normal/checked builds, including associated data, long UTF-8/NUL input, malformed and
+duplicate records, canonical base64, structural limits, lowered/raised operator budgets
+and stale-bcrypt refusal. `admin.py` tests actual Argon2 web/API logins and revocation
+on each SQLite backend; `ferroot.py` checks a Mongo-created Argon2 account without BSON
+changes. Legacy v16 and out-of-band secrets remain separate work.

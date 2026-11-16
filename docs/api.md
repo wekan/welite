@@ -31,8 +31,11 @@ for a seed record with:
 Store this output as the **object value** of `services.password`, without quoting the
 whole output as a string. Existing `pbkdf2_sha1$iters$saltHex$dkHex` string credentials
 still verify; login does not rewrite them. Accounts with malformed/no password credentials
-cannot log in. Argon2 records are currently denied, including when a stale bcrypt value
-is also present. Shared Meteor resume-token compatibility remains in progress.
+cannot log in. Existing Argon2 v19 d/i/id records also verify over the SHA256 plaintext
+digest, including encoded associated data. Argon2 takes precedence over bcrypt; failures
+never retry an older bcrypt value. Verification budgets are documented in
+[the adapter notes](ferret.md#argon2-v19-credential-verification). Legacy v16 and
+out-of-band secrets remain unsupported. Shared Meteor resume-token work is in progress.
 
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by

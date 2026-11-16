@@ -247,7 +247,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Registration, local bootstrap and CLI seeding now create shared-format Meteor bcrypt objects.
   Portable BLAKE2b and Argon2 H' now pass hashlib/Go helper oracles in normal/checked builds.
   Argon2d/i/id memory processing now passes RFC/Go vectors with explicit kernel resource limits.
-  Remaining: Argon2 credential parser/verification policy/login integration, Mongo account/index/session policy, typed custom-value and legacy
+  Argon2 v19 PHC parsing, configurable verification budgets and live/HTTP logins now pass on both backends.
+  Remaining: legacy Argon2 v16/secret policy, Mongo account/index/session policy, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

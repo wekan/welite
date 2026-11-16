@@ -185,8 +185,8 @@ Tests run the actual `IssueLoginToken` and `ValidateLoginToken` implementation t
 fresh harness processes on linked and CLI SQLite, including credentials, missing users,
 reinstallation and both SQL/Mongo deletion. The existing hashing, tenant binding and
 legacy-token denial regression suite also passes. These are Welite private tokens;
-Meteor `services.resume.loginTokens` is not mapped by this step. Meteor bcrypt credential compatibility is now available as described below; Argon2
-and shared-session compatibility remain unfinished.
+Meteor `services.resume.loginTokens` is not mapped by this step. Meteor bcrypt credential compatibility and Argon2 v19 verification are now available as described below; legacy
+Argon2 and shared-session compatibility remain unfinished.
 
 ## SQL unique keys and account lookup
 
@@ -229,8 +229,9 @@ string. Existing PBKDF2 records remain readable without login-time rewriting. Re
 other password-object properties remain unchanged on login.
 
 Current [Meteor accounts-password source](https://raw.githubusercontent.com/meteor/meteor/devel/packages/accounts-password/password_server.js)
-also selects an Argon2 credential ahead of bcrypt. Argon2 is not implemented yet:
-a nonempty Argon2 value causes denial rather than accepting an older bcrypt value.
+also selects an Argon2 credential ahead of bcrypt:
+a nonempty Argon2 value is selected for bounded verification and never falls back to
+an older bcrypt value, including on parse/verification/resource failure.
 Malformed object values and duplicate keys also fail closed. This is partial shared
 account compatibility, not completion of all Meteor authentication modes or sessions.
 
@@ -270,7 +271,7 @@ Callers must provide `TArgonLimits`; the default kernel policy permits 65,536 Ki
 below eight blocks per lane, short salts/keys and platform byte-count overflow are
 rejected before allocation. No parameter is silently weakened. Available RAM can still
 be lower than these limits; allocation failure propagates to the caller. The tested
-harness converts it to failure. Runtime PHC parsing/verification policy is still pending.
+harness converts it to failure. Runtime PHC parsing/verification policy is described below.
 
 `tests/argon.py` compares all three variants with the actual maintained Go deriveKey
 helper and fixed [RFC 9106 section 5 tags](https://www.rfc-editor.org/rfc/rfc9106.html#section-5).
@@ -280,15 +281,51 @@ A constrained child process verifies graceful allocation failure on the native t
 Other target builds remain unverified. The derivation source retains the Go BSD notice
 and `docs/gocrypt.txt` license.
 
-These kernels are not yet an Argon2 credential verifier. PHC parsing, verification
-policy and login integration remain open; Argon2 account login remains explicitly denied.
+The v19 credential verifier now uses these kernels as described below. Legacy versions
+and out-of-band secret policy are still separate compatibility gates.
+
+## Argon2 v19 credential verification
+
+`wlphc.pas` parses six-field PHC v19 records for Argon2d/i/id, requiring one each of
+`m`, `t`, `p` and optionally base64 `data`. Parameters may be reordered but cannot repeat;
+unknown parameters, signs/leading zeroes, invalid lengths, padding and noncanonical base64
+bits are rejected. Records are bounded to 1 MiB; salt and associated data to 64 KiB each.
+Structural separator counts are bounded before splitting. These encodings follow the
+[node-argon2 implementation](https://raw.githubusercontent.com/ranisalt/node-argon2/master/argon2.cjs)
+and its [PHC serializer](https://raw.githubusercontent.com/simonepri/phc-format/master/index.js).
+
+`VerifyPassword` passes the SHA256 plaintext digest to Argon2, selecting it ahead of
+bcrypt when present. Parse errors, unsupported versions, resource excess, allocation
+failure and wrong tags return denial without bcrypt fallback. Derived temporary tags
+are cleared after constant-time comparison. Login does not rewrite service metadata.
+
+Operator verification limits default to the kernel policy and can be overridden with
+positive canonical decimal environment values:
+
+| Variable | Default |
+| --- | --- |
+| `WELITE_ARGON_MEMORY_KIB` | 65536 |
+| `WELITE_ARGON_PASSES` | 16 |
+| `WELITE_ARGON_LANES` | 64 |
+| `WELITE_ARGON_KEY_BYTES` | 1024 |
+
+Invalid configured values deny Argon2 verification. Actual platform allocation bounds
+still apply. No stored cost is silently reduced. These verification limits do not change
+new-account creation, which continues to use compatible bcrypt objects.
+
+Go-generated fixtures test all three PHC variants, associated data, Meteor envelopes,
+long UTF-8/NUL plaintext, malformed/duplicate structures and both lowering and raising
+budgets. Both HTTP backends pass real web/API logins, metadata retention and credential
+revocation tests. The live FerretDB test compares BSON before/after actual verification.
+Legacy Argon2 v16 (including records without a version) and out-of-band secrets are not
+yet supported; they currently fail closed and remain tracked in TODO.
 
 ## Remaining before the checklist can be checked
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Complete Argon2 credential parsing, verification policy and login integration;
-  reconcile Meteor session formats and file-store metadata/bytes.
+- Complete legacy Argon2 v16/out-of-band secret policy; reconcile Meteor session
+  formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
