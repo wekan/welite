@@ -218,7 +218,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Finish Designer page listing, creation, editing, disabling and deletion.
 - [x] Finish Designer widget add/edit/delete, options and bounded layout controls.
 - [x] Honor widget row/column spans and required inputs in published pages; add cell sort arrows.
-- [ ] Make Designer imports validate atomically against the same page/widget rules.
+- [x] Make Designer imports validate atomically against the same page/widget rules.
 - [x] Report CLI SQLite failures and preserve UTF-8 text, delimiters, quotes and line endings.
 - [x] Render authorized board/list/swimlane/card data with the shared selection form.
 - [ ] Implement selected-item Edit, Clone, Delete, Clear and Export actions.

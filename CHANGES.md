@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Atomic, validated Designer imports
+
+- Share page/widget validation and span rules between forms and imports. Decode and
+  validate all content before replacing existing pages, then execute one transaction.
+- ZIP imports validate every page, duplicate URLs, entry names and the manifest before
+  committing the whole bundle. A malformed page or SQL error leaves every old page intact;
+  ZIP entry streams never fall back to filesystem extraction.
+- Add working no-JS upload/export forms and authenticated raw JSON imports using the
+  same action token in `X-Welite-Action`, `X-Welite-Counter`, `X-Welite-Hash` headers.
+- Export disabled pages too; use `page.wlp`, `pages.zip`, and numbered DOS 8.3 bundle entries.
+- Verified invalid models, traversal/duplicate/manifest errors, token replay and forced SQL
+  failures (including failure on the second ZIP page) without database changes. JSON/ZIP
+  browser upload/download and round trips pass with JS/cookies disabled on both backends.
+
 ## 2026-11-16 Render Designer spans and cell ordering
 
 - Render row/column spans once in published and editor grids, suppressing covered cells

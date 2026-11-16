@@ -87,9 +87,9 @@ function ExportPageJson(Db: TWLDb; const P: TPage): string;
 // Import one .wlp JSON: upsert by url (existing page with same url is replaced), new ids
 // generated. Returns the imported page's url, or '' on failure.
 function ImportPageJson(Db: TWLDb; const Json: string): string;
-// Export ALL pages as a .zip (manifest.jsn + one <slug>.wlp per page) to OutStream.
+// Export ALL pages as a .zip (manifest.jsn + one numbered DOS 8.3 .wlp per page) to OutStream.
 procedure ExportAllPages(Db: TWLDb; OutStream: TStream);
-// Import a .zip produced by ExportAllPages: each .wlp entry is imported. Returns count.
+// Import a validated ZIP atomically. Returns count, or -1 if any entry fails.
 function ImportAllPages(Db: TWLDb; InStream: TStream): Integer;
 
 // --- editor endpoints (register these under /designer in wlhttp.lpr) ----------------------
@@ -712,75 +712,113 @@ begin
   end;
 end;
 
-function ImportPageJson(Db: TWLDb; const Json: string): string;
-var
-  D: TJSONData;
-  O, PgO, WO: TJSONObject;
-  A: TJSONArray;
-  Url, PageId: string;
-  i: Integer;
+function ValidPageUrl(const Url:string):Boolean; forward;
+function SafeWidgetTarget(const Target:string):Boolean; forward;
+
+function ValidPageModel(const P:TPage):Boolean;
 begin
-  Result := '';
-  try
-    D := GetJSON(Json);
-  except
-    Exit;
-  end;
-  try
-    if not (D is TJSONObject) then Exit;
-    O := TJSONObject(D);
-    PgO := O.Find('page') as TJSONObject;
-    if PgO = nil then Exit;
-    Url := PgO.Get('url', '');
-    if Url = '' then Exit;
-
-    // upsert by url: replace any existing page of that url (cascade clears its widgets)
-    Db.Exec(Format('DELETE FROM pages WHERE url=%s;', [QuotedStr(Url)]));
-    PageId := NewId;
-    Db.Exec(Format(
-      'INSERT INTO pages(id,url,title,kind,builtinKey,cols,doctype,dir,minRole,enabled,' +
-      'createdAt,modifiedAt) VALUES(%s,%s,%s,%s,%s,%d,%s,%s,%s,%d,%s,%s);',
-      [ QuotedStr(PageId), QuotedStr(Url), QuotedStr(PgO.Get('title', Url)),
-        QuotedStr(PgO.Get('kind', 'custom')), QuotedStr(PgO.Get('builtinKey', '')),
-        PgO.Get('cols', 1), QuotedStr(PgO.Get('doctype', 'html32')),
-        QuotedStr(PgO.Get('dir', 'auto')), QuotedStr(PgO.Get('minRole', 'member')),
-        Ord(PgO.Get('enabled', True)), QuotedStr(NowIso), QuotedStr(NowIso) ]));
-
-    A := O.Find('widgets') as TJSONArray;
-    if A <> nil then
-      for i := 0 to A.Count - 1 do
-      begin
-        WO := A.Objects[i];
-        Db.Exec(Format(
-          'INSERT INTO page_widgets(id,pageId,row,col,rowspan,colspan,sort,type,label,name,' +
-          'value,target,binding,options_json,fgColor,bgColor,required,createdAt,modifiedAt) ' +
-          'VALUES(%s,%s,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s,%s);',
-          [ QuotedStr(NewId), QuotedStr(PageId),
-            WO.Get('row', 0), WO.Get('col', 0), WO.Get('rowspan', 1), WO.Get('colspan', 1),
-            QuotedStr(FloatToStr(WO.Get('sort', 0.0))), QuotedStr(WO.Get('type', 'label')),
-            QuotedStr(WO.Get('label', '')), QuotedStr(WO.Get('name', '')),
-            QuotedStr(WO.Get('value', '')), QuotedStr(WO.Get('target', '')),
-            QuotedStr(WO.Get('binding', '')), QuotedStr(WO.Get('options_json', '{}')),
-            QuotedStr(WO.Get('fgColor', '')), QuotedStr(WO.Get('bgColor', '')),
-            Ord(WO.Get('required', False)), QuotedStr(NowIso), QuotedStr(NowIso) ]));
-      end;
-    Result := Url;
-  finally
-    D.Free;
-  end;
+  Result:=ValidPageUrl(P.Url) and (Trim(P.Title)<>'') and (P.Cols>=1) and (P.Cols<=12) and
+    ((P.Kind='custom') or (P.Kind='builtin')) and
+    ((P.Doctype='html32') or (P.Doctype='html4')) and
+    ((P.Dir='auto') or (P.Dir='ltr') or (P.Dir='rtl')) and
+    ((P.MinRole='anon') or (P.MinRole='member') or (P.MinRole='admin'));
 end;
 
-function UrlToSlug(const Url: string): string;
-var i: Integer;
+function ValidWidgetModel(const P:TPage; const W:TWidget):Boolean;
+var D:TJSONData; OptionsValid:Boolean;
 begin
-  Result := '';
-  for i := 1 to Length(Url) do
-    if Url[i] in ['A'..'Z','a'..'z','0'..'9','-','_'] then
-      Result := Result + Url[i]
-    else
-      Result := Result + '_';
-  while (Result <> '') and (Result[1] = '_') do Delete(Result, 1, 1);
-  if Result = '' then Result := 'index';
+  D:=nil; OptionsValid:=False;
+  try
+    try D:=GetJSON(W.OptionsJson); OptionsValid:=D is TJSONObject; except end;
+  finally D.Free; end;
+  Result:=(Pos('|'+W.Typ+'|','|heading|label|link|button|textinput|password|textarea|select|checkbox|hr|spacer|dataview|table|color|movepanel|')>0) and
+    OptionsValid and (W.Row>=0) and (W.Row<=99) and (W.Col>=0) and (W.Col<P.Cols) and
+    (W.RowSpan>=1) and (W.RowSpan<=100-W.Row) and (W.ColSpan>=1) and (W.ColSpan<=P.Cols-W.Col) and
+    not IsNan(W.Sort) and not IsInfinite(W.Sort) and
+    ((W.FgColor='') or (ResolveColor(W.FgColor)<>'')) and
+    ((W.BgColor='') or (ResolveColor(W.BgColor)<>'')) and SafeWidgetTarget(W.Target);
+end;
+
+function WidgetPairFits(const A,B:TWidget):Boolean;
+begin
+  if (A.Row=B.Row) and (A.Col=B.Col) then
+    Exit((A.RowSpan=B.RowSpan) and (A.ColSpan=B.ColSpan));
+  Result:=not ((A.Row<B.Row+B.RowSpan) and (A.Row+A.RowSpan>B.Row) and
+    (A.Col<B.Col+B.ColSpan) and (A.Col+A.ColSpan>B.Col));
+end;
+
+function SqlNumber(Value:Double):string;
+begin
+  Result:=StringReplace(FloatToStr(Value),DefaultFormatSettings.DecimalSeparator,'.',[]);
+end;
+
+// Prepare SQL only after decoding and validating the complete page. Nothing is written here.
+function PreparePageImport(const Json:string; out Url,Sql:string):Boolean;
+var D:TJSONData; O,Pg,WO:TJSONObject; A:TJSONArray; P:TPage; W:TWidgetArray; i,j:Integer;
+begin
+  Result:=False; Url:=''; Sql:=''; D:=nil;
+  if Length(Json)>8*1024*1024 then Exit;
+  try
+    try
+      D:=GetJSON(Json);
+      if not (D is TJSONObject) then Exit;
+      O:=TJSONObject(D);
+      if O.Get('welite_page',0)<>1 then Exit;
+      if not (O.Find('page') is TJSONObject) or not (O.Find('widgets') is TJSONArray) then Exit;
+      Pg:=TJSONObject(O.Find('page')); A:=TJSONArray(O.Find('widgets'));
+      if A.Count>1000 then Exit;
+      P:=Default(TPage); P.Id:=NewId;
+      P.Url:=Trim(Pg.Get('url','')); P.Title:=Trim(Pg.Get('title',''));
+      P.Kind:=Pg.Get('kind','custom'); P.BuiltinKey:=Pg.Get('builtinKey','');
+      P.Cols:=Pg.Get('cols',1); P.Doctype:=Pg.Get('doctype','html32'); P.Dir:=Pg.Get('dir','auto');
+      P.MinRole:=Pg.Get('minRole','member'); P.Enabled:=Pg.Get('enabled',True);
+      if not ValidPageModel(P) then Exit;
+      SetLength(W,A.Count);
+      for i:=0 to A.Count-1 do
+      begin
+        if not (A.Items[i] is TJSONObject) then Exit;
+        WO:=TJSONObject(A.Items[i]); W[i]:=Default(TWidget); W[i].Id:=NewId;
+        W[i].Typ:=LowerCase(WO.Get('type','label')); W[i].Lbl:=WO.Get('label','');
+        W[i].Name:=WO.Get('name',''); W[i].Value:=WO.Get('value',''); W[i].Target:=WO.Get('target','');
+        W[i].Binding:=WO.Get('binding',''); W[i].OptionsJson:=WO.Get('options_json','{}');
+        if W[i].OptionsJson='' then W[i].OptionsJson:='{}';
+        W[i].FgColor:=WO.Get('fgColor',''); W[i].BgColor:=WO.Get('bgColor','');
+        W[i].Row:=WO.Get('row',0); W[i].Col:=WO.Get('col',0);
+        W[i].RowSpan:=WO.Get('rowspan',1); W[i].ColSpan:=WO.Get('colspan',1);
+        W[i].Sort:=WO.Get('sort',0.0); W[i].Required:=WO.Get('required',False);
+        if not ValidWidgetModel(P,W[i]) then Exit;
+        for j:=0 to i-1 do if not WidgetPairFits(W[i],W[j]) then Exit;
+      end;
+      Sql:='DELETE FROM pages WHERE url='+QuotedStr(P.Url)+'; '+
+        'INSERT INTO pages(id,url,title,kind,builtinKey,cols,doctype,dir,minRole,enabled,createdAt,modifiedAt) VALUES('+
+        QuotedStr(P.Id)+','+QuotedStr(P.Url)+','+QuotedStr(P.Title)+','+QuotedStr(P.Kind)+','+
+        QuotedStr(P.BuiltinKey)+','+IntToStr(P.Cols)+','+QuotedStr(P.Doctype)+','+QuotedStr(P.Dir)+','+
+        QuotedStr(P.MinRole)+','+IntToStr(Ord(P.Enabled))+','+QuotedStr(NowIso)+','+QuotedStr(NowIso)+'); ';
+      for i:=0 to High(W) do
+        Sql:=Sql+'INSERT INTO page_widgets(id,pageId,row,col,rowspan,colspan,sort,type,label,name,value,target,'+
+          'binding,options_json,fgColor,bgColor,required,createdAt,modifiedAt) VALUES('+
+          QuotedStr(W[i].Id)+','+QuotedStr(P.Id)+','+IntToStr(W[i].Row)+','+IntToStr(W[i].Col)+','+
+          IntToStr(W[i].RowSpan)+','+IntToStr(W[i].ColSpan)+','+SqlNumber(W[i].Sort)+','+
+          QuotedStr(W[i].Typ)+','+QuotedStr(W[i].Lbl)+','+QuotedStr(W[i].Name)+','+QuotedStr(W[i].Value)+','+
+          QuotedStr(W[i].Target)+','+QuotedStr(W[i].Binding)+','+QuotedStr(W[i].OptionsJson)+','+
+          QuotedStr(W[i].FgColor)+','+QuotedStr(W[i].BgColor)+','+IntToStr(Ord(W[i].Required))+','+
+          QuotedStr(NowIso)+','+QuotedStr(NowIso)+'); ';
+      Url:=P.Url; Result:=True;
+    except Result:=False; Url:=''; Sql:=''; end;
+  finally D.Free; end;
+end;
+
+function ExecuteImport(Db:TWLDb; const Sql:string):Boolean;
+begin
+  Result:=Db.Exec('BEGIN IMMEDIATE; '+Sql+' COMMIT;');
+  if not Result then Db.Exec('ROLLBACK;');
+end;
+
+function ImportPageJson(Db:TWLDb; const Json:string):string;
+var Url,Sql:string;
+begin
+  Result:='';
+  if PreparePageImport(Json,Url,Sql) and ExecuteImport(Db,Sql) then Result:=Url;
 end;
 
 procedure ExportAllPages(Db: TWLDb; OutStream: TStream);
@@ -800,13 +838,13 @@ begin
     Manifest := TJSONObject.Create;
     Urls := TJSONArray.Create;
 
-    R := Db.Query('SELECT url FROM pages ORDER BY url;');
+    R := Db.Query('SELECT id FROM pages ORDER BY url;');
     for i := 0 to High(R) do
-      if (Length(R[i]) > 0) and LoadPageByUrl(Db, R[i][0], P) then
+      if (Length(R[i]) > 0) and LoadPageById(Db,R[i][0],P) then
       begin
         Entry := TStringStream.Create(ExportPageJson(Db, P));
         Streams.Add(Entry);
-        Z.Entries.AddFileEntry(Entry, UrlToSlug(P.Url) + '.wlp');
+        Z.Entries.AddFileEntry(Entry,'p'+Format('%.7d',[Urls.Count+1])+'.wlp');
         Urls.Add(P.Url);
       end;
 
@@ -827,72 +865,89 @@ begin
 end;
 
 type
-  // small helper so TUnZipper can hand each entry to us as an in-memory stream
   TZipSink = class
-    Db: TWLDb;
-    Count: Integer;
-    procedure DoCreate(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
-    procedure DoDone(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
+    Pages:TStringList;
+    Manifest:string;
+    HasManifest:Boolean;
+    Total:Int64;
+    constructor Create;
+    destructor Destroy; override;
+    procedure DoCreate(Sender:TObject; var AStream:TStream; AItem:TFullZipFileEntry);
+    procedure DoDone(Sender:TObject; var AStream:TStream; AItem:TFullZipFileEntry);
   end;
-
-procedure TZipSink.DoCreate(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
+constructor TZipSink.Create;
+begin inherited Create; Pages:=TStringList.Create; Total:=0; end;
+destructor TZipSink.Destroy;
+begin Pages.Free; inherited Destroy; end;
+procedure TZipSink.DoCreate(Sender:TObject; var AStream:TStream; AItem:TFullZipFileEntry);
+var Name:string;
 begin
-  AStream := TMemoryStream.Create;     // capture this entry into memory
+  Name:=AItem.ArchiveFileName;
+  if (Name='') or (Pos('/',Name)>0) or (Pos('\',Name)>0) or (Pos(':',Name)>0) or
+    (Name[1]='.') or ((LowerCase(Name)<>'manifest.jsn') and (LowerCase(ExtractFileExt(Name))<>'.wlp')) then
+    raise Exception.Create('Invalid archive entry');
+  if (AItem.Size<0) or (AItem.Size>8*1024*1024) or (Pages.Count>1000) then
+    raise Exception.Create('Archive limits exceeded');
+  Total:=Total+AItem.Size;
+  if Total>64*1024*1024 then raise Exception.Create('Archive limits exceeded');
+  // Never return nil: TUnZipper would otherwise fall back to filesystem extraction.
+  AStream:=TMemoryStream.Create;
 end;
-
-procedure TZipSink.DoDone(Sender: TObject; var AStream: TStream; AItem: TFullZipFileEntry);
-var S: TStringStream;
+procedure TZipSink.DoDone(Sender:TObject; var AStream:TStream; AItem:TFullZipFileEntry);
+var S:TStringStream;
 begin
-  if LowerCase(ExtractFileExt(AItem.ArchiveFileName)) = '.wlp' then
-  begin
-    AStream.Position := 0;
-    S := TStringStream.Create('');
-    try
-      S.CopyFrom(AStream, 0);
-      if ImportPageJson(Db, S.DataString) <> '' then Inc(Count);
-    finally
-      S.Free;
-    end;
-  end;
-  AStream.Free;
-  AStream := nil;
-end;
-
-function ImportAllPages(Db: TWLDb; InStream: TStream): Integer;
-var
-  UZ: TUnZipper;
-  Sink: TZipSink;
-  Tmp, TmpDir: string;
-  FS: TFileStream;
-begin
-  Result := 0;
-  Sink := TZipSink.Create;
-  UZ := TUnZipper.Create;
-  // TUnZipper unzips from a FileName; spool the uploaded stream to a per-operation temp dir
-  // (data/temp/<stamp>_<counter>_import/). Entry bytes are still captured in memory via the
-  // OnCreateStream/OnDoneStream events.
-  TmpDir := WLTempDir('import');
-  Tmp := TmpDir + 'upload.zip';
+  S:=TStringStream.Create('');
   try
-    InStream.Position := 0;
-    FS := TFileStream.Create(Tmp, fmCreate);
+    AStream.Position:=0; S.CopyFrom(AStream,0);
+    if LowerCase(AItem.ArchiveFileName)='manifest.jsn' then
+    begin
+      if HasManifest then raise Exception.Create('Duplicate manifest');
+      HasManifest:=True; Manifest:=S.DataString;
+    end
+    else Pages.Add(S.DataString);
+  finally S.Free; FreeAndNil(AStream); end;
+end;
+
+function ImportAllPages(Db:TWLDb; InStream:TStream):Integer;
+var UZ:TUnZipper; Sink:TZipSink; Tmp,TmpDir,Sql,Part,Url:string; FS:TFileStream;
+  i:Integer; D:TJSONData; O:TJSONObject; Urls:TJSONArray; Seen:TStringList;
+begin
+  Result:=-1; D:=nil; Seen:=TStringList.Create; Seen.CaseSensitive:=True;
+  Sink:=TZipSink.Create; UZ:=TUnZipper.Create;
+  TmpDir:=WLTempDir('import'); Tmp:=TmpDir+'upload.zip';
+  try
     try
-      FS.CopyFrom(InStream, 0);
-    finally
-      FS.Free;
-    end;
-    Sink.Db := Db;
-    Sink.Count := 0;
-    UZ.OnCreateStream := @Sink.DoCreate;
-    UZ.OnDoneStream := @Sink.DoDone;
-    UZ.FileName := Tmp;
-    UZ.UnZipAllFiles;
-    Result := Sink.Count;
+      InStream.Position:=0;
+      FS:=TFileStream.Create(Tmp,fmCreate);
+      try FS.CopyFrom(InStream,0); finally FS.Free; end;
+      UZ.OnCreateStream:=@Sink.DoCreate; UZ.OnDoneStream:=@Sink.DoDone;
+      UZ.FileName:=Tmp; UZ.UnZipAllFiles;
+      if Sink.Manifest='' then Exit;
+      D:=GetJSON(Sink.Manifest);
+      if not (D is TJSONObject) then Exit;
+      O:=TJSONObject(D);
+      if (O.Get('welite_pages',0)<>1) or (O.Get('count',-1)<>Sink.Pages.Count) or
+        not (O.Find('urls') is TJSONArray) then Exit;
+      Urls:=TJSONArray(O.Find('urls'));
+      if Urls.Count<>Sink.Pages.Count then Exit;
+      Sql:='';
+      for i:=0 to Sink.Pages.Count-1 do
+      begin
+        if not PreparePageImport(Sink.Pages[i],Url,Part) or (Seen.IndexOf(Url)>=0) then Exit;
+        Seen.Add(Url); Sql:=Sql+Part;
+      end;
+      // The manifest must describe exactly this bundle, independent of archive order.
+      for i:=0 to Urls.Count-1 do
+      begin
+        if Seen.IndexOf(Urls.Strings[i])<0 then Exit;
+        Seen.Delete(Seen.IndexOf(Urls.Strings[i]));
+      end;
+      if ExecuteImport(Db,Sql) then Result:=Sink.Pages.Count;
+    except Result:=-1; end;
   finally
-    UZ.Free;
-    Sink.Free;
+    D.Free; Seen.Free; UZ.Free; Sink.Free;
     if FileExists(Tmp) then DeleteFile(Tmp);
-    RemoveDir(TmpDir);                // drop the per-operation temp dir when done
+    RemoveDir(TmpDir);
   end;
 end;
 
@@ -960,12 +1015,21 @@ begin
       '</td><td>'+HtmlEncode(Rows[i][3])+'</td><td><a href="'+
       HtmlAttr(WithSessionId('/designer/page?id='+Id,S.SessionId))+'">Edit</a> '+
       '<a href="'+HtmlAttr(WithSessionId(Rows[i][1],S.SessionId))+'">Preview</a> '+
+      '<a href="'+HtmlAttr(WithSessionId('/designer/page/export?id='+Id,S.SessionId))+'">Export</a> '+
       ToolButton(S,'/designer/page/save',Toggle,'pageId',Id,'action',Toggle)+
       ToolButton(S,'/designer/page/save','Delete','pageId',Id,'action','delete')+'</td></tr>';
   end;
   if Length(Rows)=0 then Body:=Body+'<tr><td colspan="4">No pages yet.</td></tr>';
   P := Default(TPage); P.Cols:=1; P.Doctype:='html32'; P.Dir:='auto'; P.MinRole:='member';
-  Body:=Body+'</table><h2>Add page</h2><form method="POST" action="/designer/page/save">'+
+  Body:=Body+'</table><h2>Import/export</h2><p><a href="'+
+    HtmlAttr(WithSessionId('/designer/export',S.SessionId))+'">Export all pages</a></p>'+
+    '<form method="POST" enctype="multipart/form-data" action="/designer/page/import">'+
+    AuthHiddenFields(S,'designer:/designer/page/import')+
+    '<input type="file" name="file"><input type="submit" value="Import page"></form>'+
+    '<form method="POST" enctype="multipart/form-data" action="/designer/import">'+
+    AuthHiddenFields(S,'designer:/designer/import')+
+    '<input type="file" name="file"><input type="submit" value="Import ZIP"></form>'+
+    '<h2>Add page</h2><form method="POST" action="/designer/page/save">'+
     AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P)+
     '<input type="submit" name="action" value="save"></form>';
   aResponse.Content:=Page32('Designer',Body);
@@ -994,6 +1058,7 @@ begin
   if not VerifyActionToken(aRequest,S,'designer:/designer/page/save') then
   begin DesignerError(aResponse,403,'Bad token'); Exit; end;
   F:=aRequest.ContentFields; Id:=F.Values['pageId']; Action:=F.Values['action'];
+  P:=Default(TPage); P.Kind:='custom';
   if (Id<>'') and not LoadPageById(T.Db,Id,P) then
   begin DesignerError(aResponse,404,'Page not found'); Exit; end;
   if Action='delete' then
@@ -1006,10 +1071,7 @@ begin
     P.Url:=Trim(F.Values['url']); P.Title:=Trim(F.Values['title']);
     P.Cols:=StrToIntDef(F.Values['cols'],0); P.Doctype:=F.Values['doctype'];
     P.Dir:=F.Values['dir']; P.MinRole:=F.Values['minRole'];
-    if not ValidPageUrl(P.Url) or (P.Title='') or (P.Cols<1) or (P.Cols>12) or
-      not ((P.Doctype='html32') or (P.Doctype='html4')) or
-      not ((P.Dir='auto') or (P.Dir='ltr') or (P.Dir='rtl')) or
-      not ((P.MinRole='anon') or (P.MinRole='member') or (P.MinRole='admin')) then
+    if not ValidPageModel(P) then
     begin DesignerError(aResponse,400,'Invalid page fields'); Exit; end;
     if Length(T.Db.Query('SELECT id FROM pages WHERE url='+QuotedStr(P.Url)+
       ' AND id<>'+QuotedStr(Id)+';'))>0 then
@@ -1161,15 +1223,8 @@ function WidgetPlacementFits(Db:TWLDb; const PageId:string; const W:TWidget):Boo
 var All:TWidgetArray; i:Integer;
 begin
   All:=LoadWidgets(Db,PageId); Result:=False;
-  for i:=0 to High(All) do if All[i].Id<>W.Id then
-  begin
-    if (All[i].Row=W.Row) and (All[i].Col=W.Col) then
-    begin
-      if (All[i].RowSpan<>W.RowSpan) or (All[i].ColSpan<>W.ColSpan) then Exit;
-    end
-    else if (W.Row<All[i].Row+All[i].RowSpan) and (W.Row+W.RowSpan>All[i].Row) and
-      (W.Col<All[i].Col+All[i].ColSpan) and (W.Col+W.ColSpan>All[i].Col) then Exit;
-  end;
+  for i:=0 to High(All) do
+    if (All[i].Id<>W.Id) and not WidgetPairFits(All[i],W) then Exit;
   Result:=True;
 end;
 
@@ -1258,7 +1313,7 @@ end;
 
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; S: TWLSession; P: TPage; W: TWidget; F: TStrings;
-  PageId, ExistingPage, Sql, Values: string; D: TJSONData; Valid: Boolean;
+  PageId,ExistingPage,Sql,Values:string;
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/widget/save') then
@@ -1278,17 +1333,7 @@ begin
   W.FgColor:=F.Values['fgColor']; W.BgColor:=F.Values['bgColor'];
   W.Required:=F.Values['required']='1'; W.OptionsJson:=F.Values['options_json'];
   if W.OptionsJson='' then W.OptionsJson:='{}';
-  D:=nil; Valid:=False;
-  try
-    try D:=GetJSON(W.OptionsJson); Valid:=D is TJSONObject; except end;
-  finally D.Free; end;
-  if (Pos('|'+W.Typ+'|','|heading|label|link|button|textinput|password|textarea|select|checkbox|hr|spacer|dataview|table|color|movepanel|')=0) or
-    not Valid or (W.Row<0) or (W.Row>99) or (W.Col<0) or (W.Col>=P.Cols) or
-    (W.RowSpan<1) or (W.RowSpan>100-W.Row) or (W.ColSpan<1) or (W.ColSpan>P.Cols-W.Col) or
-    IsNan(W.Sort) or IsInfinite(W.Sort) or
-    ((W.FgColor<>'') and (ResolveColor(W.FgColor)='')) or
-    ((W.BgColor<>'') and (ResolveColor(W.BgColor)='')) or
-    not SafeWidgetTarget(W.Target) then
+  if not ValidWidgetModel(P,W) then
   begin DesignerError(aResponse,400,'Invalid widget fields'); Exit; end;
   if not WidgetPlacementFits(T.Db,PageId,W) then
   begin DesignerError(aResponse,409,'Widget spans overlap'); Exit; end;
@@ -1319,14 +1364,16 @@ var
   T: TWLTenant; S: TWLSession; P: TPage;
 begin
   if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
-  if not LoadPageByUrl(T.Db, aRequest.QueryFields.Values['url'], P) then
+  if not ((aRequest.QueryFields.Values['id']<>'') and
+    LoadPageById(T.Db,aRequest.QueryFields.Values['id'],P)) and
+    not LoadPageByUrl(T.Db,aRequest.QueryFields.Values['url'],P) then
   begin
     aResponse.Code := 404; aResponse.Content := 'No such page'; aResponse.SendContent; Exit;
   end;
   aResponse.Code := 200;
   aResponse.ContentType := 'application/json';
   aResponse.SetCustomHeader('Content-Disposition',
-    'attachment; filename="' + UrlToSlug(P.Url) + '.wlp"');
+    'attachment; filename="page.wlp"');
   aResponse.Content := ExportPageJson(T.Db, P);
   aResponse.ContentLength := Length(aResponse.Content);
   aResponse.SendContent;
@@ -1354,6 +1401,7 @@ begin
     Json := aRequest.Content;
 
   Url := ImportPageJson(T.Db, Json);
+  if Url='' then begin DesignerError(aResponse,400,'Invalid page or import failed; existing pages are unchanged'); Exit; end;
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', WithSessionId('/designer', S.SessionId));
   aResponse.SendContent;
@@ -1372,7 +1420,7 @@ begin
     aResponse.Code := 200;
     aResponse.ContentType := 'application/zip';
     aResponse.SetCustomHeader('Content-Disposition',
-      'attachment; filename="' + T.Host + '-pages.zip"');
+      'attachment; filename="pages.zip"');
     aResponse.ContentStream := Zip;        // response takes ownership / streams it out
     aResponse.SendContent;
   finally
@@ -1391,9 +1439,10 @@ begin
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
   end;
-  N := 0;
+  N := -1;
   if aRequest.Files.Count > 0 then
     N := ImportAllPages(T.Db, aRequest.Files[0].Stream);
+  if N<0 then begin DesignerError(aResponse,400,'Invalid archive or import failed; existing pages are unchanged'); Exit; end;
   Writeln('Designer: imported ', N, ' pages for ', T.Host);
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', WithSessionId('/designer', S.SessionId));

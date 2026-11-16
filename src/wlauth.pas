@@ -190,6 +190,11 @@ begin
   PostedAction  := Trim(ARequest.ContentFields.Values['auth_action']);
   PostedHash    := Trim(ARequest.ContentFields.Values['auth_hash']);
   PostedCounter := StrToInt64Def(ARequest.ContentFields.Values['auth_counter'], -1);
+  // Raw JSON imports cannot carry form fields; expose the same signed token in headers.
+  if PostedAction='' then PostedAction:=Trim(ARequest.CustomHeaders.Values['X-Welite-Action']);
+  if PostedHash='' then PostedHash:=Trim(ARequest.CustomHeaders.Values['X-Welite-Hash']);
+  if PostedCounter<0 then PostedCounter:=StrToInt64Def(ARequest.CustomHeaders.Values['X-Welite-Counter'],-1);
+
 
   if (PostedAction = '') or (PostedHash = '') then Exit;
   if not SameText(PostedAction, RequiredAction) then Exit;

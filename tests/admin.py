@@ -3,6 +3,7 @@ import http.client
 from apiscope import run as check_api_scope
 from tiers import run as check_admin_tiers
 from layout import run as check_layout
+from imports import run as check_imports
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -35,11 +36,12 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
     assert repeat.returncode != 0 and b'already initialized' in repeat.stderr
     with (tmp/'server.log').open('w+') as log:
         proc = subprocess.Popen([str(build/'wlhttp')], cwd=tmp, env=env, stdout=log, stderr=log)
-        def request(method, path, data=None, agent='Welite-test', host='localhost'):
+        def request(method, path, data=None, agent='Welite-test', host='localhost', content_type=None, extra_headers=None):
             conn = http.client.HTTPConnection('127.0.0.1', port, timeout=5)
             headers = {'Host': host, 'User-Agent': agent}
             if data is not None:
-                headers['Content-Type'] = 'application/json' if isinstance(data, bytes) else 'application/x-www-form-urlencoded'
+                headers['Content-Type'] = content_type or ('application/json' if isinstance(data, bytes) else 'application/x-www-form-urlencoded')
+            headers.update(extra_headers or {})
             conn.request(method, path, data if isinstance(data, bytes) else urlencode(data) if data is not None else None, headers)
             resp = conn.getresponse()
             result = resp.status, dict(resp.getheaders()), resp.read()
@@ -207,6 +209,9 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             layout_editor = check_layout(request,db,admin)
             if os.environ.get('WELITE_UI') == '1':
                 subprocess.run([os.environ.get('NODE','node'), str(ROOT/'tests/layout.js'), 'http://localhost:'+str(port), admin, layout_editor],check=True)
+            check_imports(request,db,admin)
+            if os.environ.get('WELITE_UI') == '1':
+                subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/imports.js'),'http://localhost:'+str(port),admin],check=True)
             with sqlite3.connect(db) as con:
                 con.execute("UPDATE users SET isAdmin=0 WHERE username='administrator'")
             assert request('GET', '/designer?sessionId='+admin)[0] == 403

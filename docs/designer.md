@@ -226,7 +226,7 @@ the compiled-in template if an admin wants the original layout back. Custom page
 A page's design is portable data, so the Designer can move it between tenants/installs.
 
 ### One page → `.wlp` (JSON)
-`GET /designer/page/export?url=/allboards` downloads a `<slug>.wlp` file — a JSON document
+`GET /designer/page/export?url=/allboards` downloads `page.wlp` — a JSON document
 holding everything that *is* the page:
 ```json
 {
@@ -250,16 +250,16 @@ holding everything that *is* the page:
 page at that URL is replaced, otherwise a new one is created.
 
 ### All pages → one `.zip`
-`GET /designer/export` streams `<host>-pages.zip` containing:
+`GET /designer/export` streams `pages.zip` containing:
 ```
 manifest.jsn          { "welite_pages": 1, "count": N, "urls": [ ... ] }
-allboards.wlp
-board.wlp
-gantt.wlp
-...                    one <slug>.wlp per page
+p0000001.wlp
+p0000002.wlp
+p0000003.wlp
+...                    one numbered DOS 8.3 .wlp per page
 ```
 `POST /designer/import` takes such a `.zip` and imports **every** `.wlp` entry (each
-upserted by URL; the manifest is advisory). This is the one-click "move/backup the whole UI
+upserted by URL; the manifest must match the complete bundle). This is the one-click "move/backup the whole UI
 design" path — e.g. design on a staging tenant, export the zip, import on production.
 
 Built with FPC's RTL `zipper` unit (`TZipper`/`TUnzipper`) and `fpjson` — no external tools,
@@ -289,3 +289,21 @@ metadata. Older browsers display the marker; the endpoint that handles a form mu
 still validate its required fields. A marker cannot replace server-side validation.
 RTL uses the same logical rectangles, mirrored once at rendering time; an explicit
 page direction overrides the viewer language.
+
+## Import validation and atomic replacement
+
+Both upload forms are on the Designer index. A page import uses the same URL, layout,
+widget type, options, color and local-target rules as the editor. All ZIP pages and the
+manifest are validated before any change; duplicate URLs, unsafe entry paths and invalid
+models reject the bundle. All replacements commit in one transaction. A database error,
+even on the last page, rolls back the earlier replacements.
+
+`GET /designer/page/export?id=...` also exports disabled pages. ZIP entries are named
+`p0000001.wlp`, `p0000002.wlp`, etc.; the manifest's URL list identifies their pages.
+Single page and complete bundle downloads use `page.wlp` and `pages.zip` respectively.
+Imports accept at most 1,000 widgets per page, 8 MiB per document/ZIP entry and 64 MiB of
+expanded ZIP content. Malformed input returns 400 and preserves the existing design.
+
+For raw JSON, put `sessionId` in the request URL and send the form's action-token values
+in `X-Welite-Action`, `X-Welite-Counter`, and `X-Welite-Hash` headers. The counter remains
+single-use; headers do not bypass the normal tenant administrator, client or token checks.
