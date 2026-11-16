@@ -13,6 +13,8 @@ function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:strin
 function UnixMillis(At:TDateTime):Int64;
 function SharedIssueSQL(Db:TWLDb;const UserId,Token,Key:string;WhenMs:Int64):string;
 function SharedBearerValid(Db:TWLDb;const UserId,Token:string):Boolean;
+function SharedResumeCandidate(Db:TWLDb;const Token:string;out UserId,Condition,ConversionSQL:string;
+  out WhenMs,ExpiresMs:Int64):Boolean;
 implementation
 function Id(const S:string):string;
 begin Result:='"'+StringReplace(S,'"','""',[rfReplaceAll])+'"';end;
@@ -158,6 +160,34 @@ begin
   Present:='EXISTS(SELECT 1 FROM '+Id(TableName)+' WHERE json_extract('+Doc+',''$."_id"'')='+QuotedStr(UserId)+
     ' AND wl_rescheck(json('+Doc+'),'+QuotedStr(Hash)+','+IntToStr(WhenMs)+',1)=''valid'')';
   Result:=Result+'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND (NOT ('+Issued+') OR ('+Present+')) THEN userUUID ELSE NULL END WHERE id=1; ';
+end;
+function SharedResumeCandidate(Db:TWLDb;const Token:string;out UserId,Condition,ConversionSQL:string;
+  out WhenMs,ExpiresMs:Int64):Boolean;
+var Rows:TWLRows;TableName,Doc,Hash,Match,Converted,Command,SettingsCondition,Scope,Present:string;
+  Cmd:TJSONObject;Life:Double;
+begin
+  Result:=False;UserId:='';Condition:='0';ConversionSQL:='';WhenMs:=0;ExpiresMs:=0;
+  try
+    if not SharedStore(Db) or not AuthSourceCurrent(Db) then Exit;
+    TableName:=UsersTable(Db);Doc:=Id('_ferretdb_sjson');Hash:=MeteorTokenHash(Token);Match:=MatchSQL(Token,Hash);
+    Scope:='EXISTS(SELECT 1 FROM json_each(p.'+Doc+',''$.services.resume.loginTokens'') j WHERE '+Match+')';
+    Rows:=Db.Query('SELECT json_extract(p.'+Doc+',''$."_id"''),json(p.'+Doc+') FROM '+Id(TableName)+' p WHERE '+Scope+' LIMIT 2;');
+    if (Length(Rows)<>1) or (Rows[0][0]='') then Exit;
+    Cmd:=TJSONObject.Create;
+    try Cmd.Add('op','convert');Cmd.Add('token',Token);Command:=Cmd.AsJSON;finally Cmd.Free;end;
+    Converted:=ResumeDocument(Rows[0][1],Command);
+    Life:=ApiTokenLifetimeMs(Db,SettingsCondition);
+    if CheckResumeToken(Converted,Hash,UnixMillis(Now),Life,WhenMs,ExpiresMs)<>rsValid then Exit;
+    UserId:=Rows[0][0];
+    Condition:='('+SettingsCondition+') AND (SELECT count(*) FROM '+Id(TableName)+' p WHERE '+Scope+')=1 AND EXISTS(SELECT 1 FROM '+Id(TableName)+
+      ' WHERE json_extract('+Doc+',''$."_id"'')='+QuotedStr(UserId)+' AND json('+Doc+')='+QuotedStr(Rows[0][1])+')';
+    ConversionSQL:='UPDATE '+Id(TableName)+' SET '+Doc+'=CASE WHEN wl_storage('+QuotedStr(TableName)+')=''blob'' THEN jsonb(wl_resume(json('+Doc+'),'+QuotedStr(Command)+')) ELSE wl_resume(json('+Doc+'),'+QuotedStr(Command)+') END '+
+      'WHERE json_extract('+Doc+',''$."_id"'')='+QuotedStr(UserId)+'; ';
+    Present:='EXISTS(SELECT 1 FROM '+Id(TableName)+' WHERE json_extract('+Doc+',''$."_id"'')='+QuotedStr(UserId)+
+      ' AND json('+Doc+')=json('+QuotedStr(Converted)+'))';
+    ConversionSQL:=ConversionSQL+'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+SettingsCondition+') AND ('+Present+') THEN userUUID ELSE NULL END WHERE id=1; ';
+    Result:=True;
+  except UserId:='';Condition:='0';ConversionSQL:='';Result:=False;end;
 end;
 function SharedBearerValid(Db:TWLDb;const UserId,Token:string):Boolean;
 var Rows:TWLRows;TableName,Doc,Hash:string;Stamp,Expiration:Int64;Life:Double;Condition:string;

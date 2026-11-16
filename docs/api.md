@@ -71,7 +71,10 @@ without issuing an application session. New setup replaces an earlier pending to
 For a shared FerretDB store, new API credentials also create typed Meteor resume
 records in the same transaction. Both local authorization metadata and the shared record
 must remain valid. Removing the shared record logs that bearer out of WeLite as well;
-older private-only shared-store API credentials need a fresh login. Browser sessions
+older private-only shared-store API credentials need a fresh login. Previously unseen
+Meteor-issued hashed or legacy raw bearers can be adopted with their original expiry
+when shared ownership, account policy and source/settings snapshots are valid. Seen
+local digests are never automatically re-adopted after deletion. Browser sessions
 retain their private client-bound format. Stored `loginOptions.loginExpirationInDays`
 wins over `ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS`; absent/zero means 90 days. Supported
 lifetimes are positive decimal/scientific days through 36500, including fractions;

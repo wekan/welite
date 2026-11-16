@@ -488,6 +488,41 @@ begin
   finally LeaveCriticalSection(SessionLock); end;
 end;
 
+function AdoptSharedToken(Db:TWLDb;const Token:string):Boolean;
+var Uid,Condition,Conversion,PolicyCondition,Secret,Reference,Key,Created,Expires,Guard,Sql:string;
+  Stamp,Expiry:Int64;Rows:TWLRows;Policy:TFactorPolicy;
+  function Iso(Ms:Int64):string;
+  begin Result:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncMilliSecond(UnixToDateTime(Ms div 1000,True),Ms mod 1000));end;
+begin
+  Result:=False;Secret:='';
+  try
+    try
+      if not SharedStore(Db) then Exit;
+      Key:=TokenHash(Db,Token);
+      Rows:=Db.Query('SELECT 1 FROM _wl_seen WHERE hashedToken='+QuotedStr(Key)+' UNION ALL SELECT 1 FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+' UNION ALL SELECT 1 FROM authmeta WHERE hashedToken='+QuotedStr(Key)+';');
+      if Length(Rows)<>0 then Exit;
+      if not SharedResumeCandidate(Db,Token,Uid,Condition,Conversion,Stamp,Expiry) then Exit;
+      Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(authenticationMethod,''password''),services_json,CAST(COALESCE(isAdmin,0) AS TEXT) FROM users WHERE id='+QuotedStr(Uid)+' AND COALESCE(loginDisabled,0)=0;');
+      if Length(Rows)<>1 then Exit;
+      Policy:=ResolvedFactorPolicy(Db,Rows[0][1],Rows[0][2],Rows[0][3]='1',Secret,PolicyCondition);
+      if not (Policy in [fpNone,fpOTP]) then Exit;
+      Reference:=CredentialFingerprint(Rows[0][0]);if Reference='' then Exit;
+      if Policy=fpOTP then Reference:=FactorReference(Reference,OTPFactorKey(Secret));
+      Guard:='('+Condition+') AND ('+PolicyCondition+') AND NOT EXISTS(SELECT 1 FROM _wl_seen WHERE hashedToken='+QuotedStr(Key)+') '+
+        'AND NOT EXISTS(SELECT 1 FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+') AND NOT EXISTS(SELECT 1 FROM authmeta WHERE hashedToken='+QuotedStr(Key)+') '+
+        'AND EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Uid)+' AND COALESCE(loginDisabled,0)=0 AND services_json='+QuotedStr(Rows[0][2])+
+        ' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Rows[0][1])+' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Rows[0][3])+')';
+      Created:=Iso(Stamp);Expires:=Iso(Expiry);
+      Sql:='BEGIN IMMEDIATE; UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Guard+') THEN userUUID ELSE NULL END WHERE id=1; '+
+        'INSERT INTO login_tokens VALUES('+QuotedStr(Key)+','+QuotedStr(Uid)+','+QuotedStr(Created)+','+QuotedStr(Expires)+'); '+
+        'INSERT INTO authmeta VALUES('+QuotedStr(Key)+','+QuotedStr(HashText(ExpandFileName(Db.Path)))+','+QuotedStr(Reference)+',''api''); '+
+        'UPDATE _wl_authsrc SET userUUID=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t JOIN authmeta m USING(hashedToken) JOIN _wl_seen s USING(hashedToken) WHERE t.hashedToken='+QuotedStr(Key)+
+        ' AND t.userId='+QuotedStr(Uid)+' AND m.kind=''api'' AND m.credentialRef='+QuotedStr(Reference)+') THEN userUUID ELSE NULL END WHERE id=1; '+Conversion+'COMMIT;';
+      if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
+      Result:=True;
+    except Db.Exec('ROLLBACK;');Result:=False;end;
+  finally if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;end;
+end;
 function ValidateLoginToken(Db:TWLDb; Request:TRequest; const Token:string; out UserId:string):Boolean;
 var Rows:TWLRows; S:TWLSession; Key:string;
 begin
@@ -495,6 +530,7 @@ begin
   Key:=TokenHash(Db,Token);
   if not AuthSourceCurrent(Db) then
   begin RevokeStoredToken(Db,Token);Exit;end;
+  AdoptSharedToken(Db,Token);
   Rows:=Db.Query('SELECT t.userId,COALESCE(json_extract(u.services_json,''$.password''),''''),'+
     'm.credentialRef,m.kind,COALESCE(u.authenticationMethod,''password''),u.services_json,COALESCE(u.isAdmin,0) FROM login_tokens t JOIN users u ON u.id=t.userId '+
     'JOIN authmeta m ON m.hashedToken=t.hashedToken WHERE ('+AuthSourceCondition(Db)+') AND t.hashedToken='+QuotedStr(Key)+

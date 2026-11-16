@@ -730,8 +730,8 @@ bypass WeLite's client binding by treating them as unrestricted resume bearers.
 API validation requires the existing tenant/credential/factor metadata plus a single
 matching shared account and a valid shared timestamp/lifetime. Shared removal, expiry or
 cross-account ambiguity triggers targeted cleanup. Restoring a source record does not
-restore deleted local metadata. This deliberately does not adopt arbitrary Meteor-issued
-tokens yet; their authentication-policy/credential provenance still needs integration.
+restore deleted local metadata. Previously unseen Meteor-issued tokens can now be adopted through the guarded path
+below; recorded local digests cannot be automatically re-adopted after revocation.
 Older private-only API tokens on a shared store require a fresh login after this update.
 
 Lifetime comes from the single actual Settings document's
@@ -758,8 +758,8 @@ Broader account configuration remains a compatibility gate.
 Mongo removal/expiry, restored-record denial, cross-account ambiguity, collision rollback
 with OTP retry, ignored-append rollback, stored lifetime precedence, stored MFA/LDAP overrides, null fallback, stale-policy
 proof refusal, password disable/restore and SQRL-only refusal on both backends. Existing native HTTP/hash/OTP/enrollment tests
-cover private-store behavior. A full Meteor DDP/HTTP application round trip, existing
-bearer adoption, scheduled expiry and Mongo-managed token indexes remain outstanding.
+cover private-store behavior. A full Meteor DDP/HTTP application round trip, broader resume-policy parity,
+scheduled expiry and Mongo-managed token indexes remain outstanding.
 
 ## Fractional expiry kernel
 
@@ -802,9 +802,9 @@ This follows [Meteor's legacy resume conversion](https://github.com/meteor/meteo
 in preserving issue time and preferring an existing hash. The SQL edit makes conversion
 atomic, retains extra source fields, and rejects ambiguous source data. It performs no
 authorization and can convert an expired record; callers must check expiry and policy
-before accepting credentials. Existing-bearer adoption still needs source/settings and
-cross-account guards plus atomic creation of local authorization metadata. Conversion
-alone does not make an arbitrary Meteor bearer valid in WeLite.
+before accepting credentials. The adopter below adds source/settings and cross-account
+guards plus atomic local authorization metadata. Conversion alone does not make an
+arbitrary Meteor bearer valid in WeLite.
 
 `resume.py` verifies TEXT/JSONB concurrency, legacy numeric fractions, idempotence,
 existing-hash precedence, malformed/ambiguous refusal and rollback. `ferroot.py` checks
@@ -820,24 +820,50 @@ history writes. Installation backfills existing token rows before source cleanup
 asserts coverage, so a failed/ignored backfill rolls back installation.
 
 History survives token/account deletion, source UUID replacement and legacy source
-rebinding. This conservative record is deliberately retained: once automatic adoption
-exists, a missing local credential with recorded history must be denied rather than
-recreated from a restored shared record. It cannot reconstruct credentials deleted
-before this upgrade, and does not yet record arbitrary Meteor-only credentials. No
-history-based automatic adoption is enabled by this step. The adopter still needs to
-check history, source/account/settings snapshots, cross-account ambiguity and original
-expiry, then create local authorization metadata atomically with any legacy conversion.
+rebinding. This conservative record is deliberately retained: automatic adoption denies
+a missing local credential with recorded history instead of recreating it from a
+restored shared record. It cannot reconstruct credentials deleted before this upgrade,
+and unpresented Meteor-only credentials have no local history. No
+history-only lookup authorizes a bearer. The adopter below combines history checks with
+source/account/settings snapshots, cross-account ambiguity and original expiry, then
+creates local metadata atomically with any legacy conversion.
 Native-store private schema and browser session behavior are unchanged.
 
 `ferroot.py` tests backfill and ignored-backfill refusal, ignored issuance-history writes,
 SQL digest updates/deletion, revocation retention, reinstall and source migrations with
 actual FerretDB on both SQLite backends.
 
+## Existing shared bearer adoption
+
+API validation can adopt a previously unseen Meteor hashed or legacy raw bearer.
+The candidate must belong to exactly one shared account and pass typed expiry using
+its original `when` and current configured lifetime. Duplicate hash/raw-only records,
+invalid timestamps, disabled accounts and denied/required-factor policies are refused.
+The same current credential/optional OTP factor reference used by co-issued credentials
+is captured at adoption. An existing authenticated resume token needs no fresh OTP claim.
+
+Before committing, the adopter rechecks source UUID/table, complete account document,
+Settings/policy snapshots, the global matching-account count and absence of local token,
+metadata and seen digest. It atomically creates local authorization and history and
+converts any legacy raw record. Local-row and resulting-document assertions catch
+ignored writes; errors roll back conversion, token, metadata and history together.
+Concurrent validators can observe one committed adoption. Subsequent validation keeps
+normal shared membership/expiry, credential/factor, tenant and observed-revocation checks.
+Restoring a revoked shared record cannot recreate a locally seen credential.
+
+This still uses the conservative resolved account policy: broader Meteor resume-policy
+parity (including non-password/deployment restrictions) remains to be reconciled. A
+storage record cannot establish history for credentials removed before the history
+upgrade. Shared HTTP activation and full Meteor application round trips remain gated.
+`ferroot.py` verifies concurrency, exact original dates/BSON, hash/legacy paths, ignored
+local/shared writes and retry, expiry, duplicate ownership, disabled accounts, MFA resume
+without OTP consumption, credential changes and refusal after shared restoration.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Integrate existing Meteor bearer adoption, scheduled expiry and legacy conversion; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity and scheduled expiry; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

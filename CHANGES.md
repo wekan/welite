@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Adopt existing shared Meteor bearers
+
+- On API validation, adopt a previously unseen shared hash or legacy raw bearer only
+  from one current account with valid typed expiry and an allowed account policy.
+  Preserve the original issue/expiry timestamps and bind local metadata to the current
+  credential and optional OTP factor. Resume does not consume a fresh OTP code.
+- Guard the transaction with the users-source, full source document, Settings, policy,
+  global account-match count and absent local/history snapshots. Atomically create local
+  credential/metadata/history and convert a legacy record, asserting both local rows and
+  the resulting shared document. Failed/ignored writes roll back every effect.
+- Keep existing web/client checks, expiry and observed revocation. Seen digests prevent
+  recreating deleted local credentials from restored shared records. Concurrent validators
+  may share one successful adoption and then use the same committed authorization.
+- Verify live linked/CLI hashed/legacy adoption, concurrency, exact BSON and original
+  expiry, ignored local/shared writes, retry, expiration, duplicate ownership, disabling,
+  credential-change revocation and restored-record denial. Native token regressions pass.
+- Broader resume-policy parity, scheduled expiry, normal shared-store activation and full
+  Meteor application round trips remain outstanding.
+
 ## 2026-11-16 Durable shared bearer history
 
 - Add owned private `_wl_seen` storage containing local bearer digests. Backfill current

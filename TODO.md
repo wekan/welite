@@ -270,7 +270,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Fractional shared lifetimes now preserve exact milliseconds through snapshot-guarded password/OTP issuance and validation, with live Node.js/SQL boundary tests.
   Typed legacy raw-to-hashed resume conversion now passes concurrency, ambiguity, rollback and live BSON preservation tests without renewing timestamps.
   Durable owned bearer-digest history now follows private token inserts/updates/deletes, backfills upgrades and survives source/account revocation; ignored writes roll back.
-  Remaining: existing Meteor bearer adoption using history guards, expiry scheduling and legacy conversion/adoption wiring; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Existing shared hashed/legacy bearer adoption now guards source/account/settings/history snapshots and atomically preserves original expiry, metadata and conversion; live concurrency/rollback/revocation tests cover it.
+  Remaining: broader resume-policy parity and expiry scheduling; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

@@ -232,8 +232,8 @@ retain tenant/client-bound behavior on both SQLite backends.
 Date output, source removal/expiry and restored-record denial, global ownership ambiguity,
 collision with OTP rollback/retry, ignored-append rollback, stored lifetime precedence and
 policy/SQRL-only refusal. Native suites retain private/browser behavior. Full Meteor
-application round trips, existing-bearer adoption and broader settings/lifetime support
-remain separate gates.
+application round trips and broader settings compatibility remain separate gates;
+existing-bearer adoption and fractional lifetimes are covered below.
 
 Stored-policy coverage in `ferroot.py` verifies MFA overriding an opposite environment,
 LDAP enable/fallback/migration overrides and null fallback, changed settings after proof
@@ -251,15 +251,22 @@ Fractional lifetime integration in `ferroot.py` checks live password/OTP issuanc
 exact local expiry against Node.js using the BSON Date issue timestamp, submillisecond
 expiry without rounding up, stored/null/environment precedence and invalid settings.
 `resume.py` checks fractional millisecond SQL expiry boundaries. Configuration and
-issuance now use the kernel; existing Meteor bearer adoption and scheduled expiry remain.
+issuance now use the kernel; existing-bearer adoption is covered below and scheduled
+expiry remains open.
 
 Legacy conversion in `resume.py` covers atomic TEXT/JSONB raw-to-hashed edits,
 16 concurrent callers, original fractional timestamp preservation, idempotence,
 already-installed hash precedence, ambiguous/malformed refusal and rollback. Live
 `ferroot.py` checks eight concurrent conversions with exact BSON Date/Long/unknown
-and sibling preservation. Authorization/adoption of existing bearers remains separate.
+and sibling preservation. The guarded authorization/adoption path is covered below.
 
 Shared bearer history tests in `ferroot.py` check owned `_wl_seen` creation/backfill,
 ignored backfill/issuance write rollback, direct SQL old/new digest retention and history
 survival after token revocation, reinstall and source UUID/unbound-store migration.
-Existing-bearer adoption is still disabled pending use of this history guard.
+The adopter below uses this history to refuse re-creation of deleted credentials.
+
+Shared adoption tests in `ferroot.py` exercise existing hash/legacy bearers, concurrent
+validators, exact issue/expiry and BSON, ignored metadata/conversion writes with rollback
+and retry, expiration, duplicate ownership, disabling, MFA resume without OTP consumption,
+credential-change revocation and restored-record denial. Conservative policy gates and
+full shared HTTP/Meteor application workflows remain separate work.

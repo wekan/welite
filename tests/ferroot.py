@@ -529,6 +529,46 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     return subprocess.check_output([str(out/'factor/factor'),str(db),'api','paired-api','test-password',entered,raw],env=dict(settings,**(extra or {})),text=True).strip()
                 def local_hash(raw):return hashlib.sha256(('welite-token-v2\0'+str(db.resolve())+'\0'+raw).encode()).hexdigest()
                 def paired_check(raw):return subprocess.check_output([str(out/'factor/factor'),str(db),'check',raw],env=settings,text=True).strip()
+                # Existing Meteor bearers are adopted without refreshing their expiry.
+                adopted_when=int(time.time()*1000)-12345
+                adopt_doc=dict(_id='adopted-user',username='adopted-user',services=dict(password=shared_password,resume=dict(loginTokens=[dict(token='adopt-legacy',when=DateMs(adopted_when),extra=Long(9007199254740993)),dict(hashedToken=meteor_hash('adopt-hashed'),when=DateMs(adopted_when))])),unknown=Binary(b'keep',4))
+                client.command({'insert':'users','documents':[adopt_doc]})
+                adopt_doc=client.find('users','adopted-user')[0]
+                with ThreadPoolExecutor(max_workers=4) as pool:adopted=list(pool.map(lambda _:paired_check('adopt-legacy'),range(4)))
+                assert adopted==['yes']*4,adopted
+                old=adopt_doc['services']['resume']['loginTokens'][0];del old['token'];old['hashedToken']=meteor_hash('adopt-legacy')
+                assert encode(client.find('users','adopted-user')[0])==encode(adopt_doc)
+                assert paired_check('adopt-hashed')=='yes'
+                dates=sql('SELECT createdAt,expiresAt FROM login_tokens WHERE hashedToken='+q(local_hash('adopt-legacy'))+';')[0]
+                assert round(datetime.fromisoformat(dates[0].replace('Z','+00:00')).timestamp()*1000)==adopted_when
+                assert round(datetime.fromisoformat(dates[1].replace('Z','+00:00')).timestamp()*1000)==adopted_when+90*86400000
+                # A later local-metadata or shared-write failure rolls conversion/history back.
+                rollback_record=dict(token='adopt-rollback',when=DateMs(adopted_when))
+                client.command({'update':'users','updates':[dict(q=dict(_id='adopted-user'),u={'$push':{'services.resume.loginTokens':rollback_record}})]})
+                stable_adopt=encode(client.find('users','adopted-user')[0])
+                for trigger in ["CREATE TRIGGER fail_adopt BEFORE INSERT ON authmeta BEGIN SELECT RAISE(IGNORE); END;",'CREATE TRIGGER fail_adopt BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='adopted-user' BEGIN SELECT RAISE(IGNORE); END;"]:
+                    assert sql(trigger,'exec')=='ok'
+                    assert paired_check('adopt-rollback')=='no'
+                    assert encode(client.find('users','adopted-user')[0])==stable_adopt
+                    assert sql('SELECT count(*) FROM _wl_seen WHERE hashedToken='+q(local_hash('adopt-rollback'))+';')==[['0']]
+                    assert sql('SELECT count(*) FROM login_tokens WHERE hashedToken='+q(local_hash('adopt-rollback'))+';')==[['0']]
+                    assert sql('DROP TRIGGER fail_adopt;','exec')=='ok'
+                assert paired_check('adopt-rollback')=='yes'
+                # Expiry, duplicate ownership and disabled accounts deny adoption.
+                for raw,records in [('adopt-expired',[dict(token='adopt-expired',when=DateMs(0))]),('adopt-duplicate',[dict(token='adopt-duplicate',when=DateMs(adopted_when)),dict(token='adopt-duplicate',when=DateMs(adopted_when+1))])]:
+                    client.command({'update':'users','updates':[dict(q=dict(_id='adopted-user'),u={'$push':{'services.resume.loginTokens':{'$each':records}}})]})
+                    assert paired_check(raw)=='no'
+                client.command({'insert':'users','documents':[dict(_id='adopt-conflict',services=dict(resume=dict(loginTokens=[dict(hashedToken=meteor_hash('adopt-foreign'),when=DateMs(adopted_when))])))]})
+                client.command({'update':'users','updates':[dict(q=dict(_id='adopted-user'),u={'$push':{'services.resume.loginTokens':dict(token='adopt-foreign',when=DateMs(adopted_when))}})]})
+                assert paired_check('adopt-foreign')=='no'
+                client.command({'update':'users','updates':[dict(q=dict(_id='adopted-user'),u={'$set':{'loginDisabled':True},'$push':{'services.resume.loginTokens':dict(token='adopt-disabled',when=DateMs(adopted_when))}})]})
+                assert paired_check('adopt-disabled')=='no'
+                # Observed password mutation revokes and history prevents restored-record adoption.
+                client.command({'update':'users','updates':[dict(q=dict(_id='adopted-user'),u={'$set':{'loginDisabled':False,'services.password':{'bcrypt':'changed'}}})]})
+                assert paired_check('adopt-legacy')=='no'
+                client.command({'update':'users','updates':[dict(q=dict(_id='adopted-user'),u={'$set':{'services.password':shared_password},'$push':{'services.resume.loginTokens':old}})]})
+                assert paired_check('adopt-legacy')=='no'
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='adopted-user'),limit=1),dict(q=dict(_id='adopt-conflict'),limit=1)]})
                 assert pair('paired-first')=='yes'
                 first=client.find('users','paired-api')[0]['services']['resume']['loginTokens'][0]
                 assert first['hashedToken']==meteor_hash('paired-first') and isinstance(first['when'],DateMs)
@@ -618,6 +658,10 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 mfa_expiry=sql('SELECT expiresAt FROM login_tokens WHERE hashedToken='+q(local_hash('stored-mfa'))+';')[0][0]
                 assert round(datetime.fromisoformat(mfa_expiry.replace('Z','+00:00')).timestamp()*1000)==int(mfa_record['when'])+43200000
                 assert paired_check('stored-mfa')=='yes'
+                client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$push':{'services.resume.loginTokens':dict(hashedToken=meteor_hash('meteor-mfa-resume'),when=DateMs(int(time.time()*1000)))}})]})
+                assert paired_check('meteor-mfa-resume')=='yes'
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='paired-api';")==[[str(setup_counter+1)]],'Resuming an approved Meteor session consumed another OTP'
+
                 # Stored LDAP disabling/enabling and fallback also override env.
                 client.command({'insert':'users','documents':[dict(_id='override-ldap',username='override-ldap',authenticationMethod='ldap',services=dict(password=shared_password))]})
                 def ldap_pair(raw,flags=None):
