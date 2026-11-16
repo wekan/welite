@@ -264,7 +264,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Typed resume validity and Date/numeric expiry pruning now pass boundary, ambiguity, range and live BSON tests.
   Account disabling and MFA enrollment now atomically clear shared/local credentials and pending setup, with source/rollback/isolation tests.
   Targeted shared/local bearer revocation now handles observed validation failure and local expiry without revoking sibling sessions.
-  Remaining: shared resume issuance/authorization, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Co-issued shared API bearers now commit with local/OTP state and require unambiguous current Meteor membership/expiry, with rollback and lifetime tests.
+  Remaining: existing Meteor bearer adoption, direct differing auth-override resolution, fractional lifetimes, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

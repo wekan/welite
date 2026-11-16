@@ -22,7 +22,7 @@ unit wlauth;
 interface
 
 uses
-  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,wlreplay,wltotp,wlautsrc,wlrevoke,Sockets;
+  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,wlreplay,wltotp,wlautsrc,wlrevoke,wlshared,Sockets;
 
 type
   TWLLoginProof=class
@@ -60,6 +60,7 @@ function RequestUserAgent(ARequest: TRequest): string;
 function WithSessionId(const TargetPath, SessionId: string): string;
 
 // --- token machinery ----------------------------------------------------------------------
+function ApiTokenLifetime(Db:TWLDb):Int64;
 function HashText(const Value:string):string; // SHA-256, lowercase hex
 function ActionHash(const S: TWLSession; const ActionName: string): string;
 
@@ -219,6 +220,8 @@ end;
 
 function HashText(const Value:string):string;
 begin Result:=Sha256Hex(Value); end;
+function ApiTokenLifetime(Db:TWLDb):Int64;
+begin Result:=wlshared.ApiTokenLifetime(Db);end;
 function TokenHash(Db:TWLDb; const Token:string):string;
 begin
   Result:=TenantTokenHash(Db.Path,Token);
@@ -312,30 +315,32 @@ function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string;
 const Schema='CREATE TABLE IF NOT EXISTS authmeta ('+
   'hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,'+
   'tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));';
-var Rows:TWLRows; Key,TenantKey,NowIso,Expires:string;
+var Rows:TWLRows; Key,TenantKey,NowIso,Expires,SharedSql:string;At:TDateTime;
 begin
   Result:=False;
   if not AuthSourceCurrent(Db) then Exit;
   if (Token='') or ((Kind<>'web') and (Kind<>'api')) or (TtlSeconds<1) then Exit;
+  if (Kind='api') and SharedStore(Db) and (TtlSeconds<>ApiTokenLifetime(Db)) then Exit;
   Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(authenticationMethod,''password''),services_json,COALESCE(isAdmin,0) FROM users '+
     'WHERE id='+QuotedStr(UserId)+' AND COALESCE(loginDisabled,0)=0;');
   if (Length(Rows)=0) or not PasswordOnlyAllowed(Rows[0][1],Rows[0][2],Rows[0][3]='1') or not CredentialMatches(Rows[0][0],CredentialRef) then Exit;
   Key:=TokenHash(Db,Token); TenantKey:=HashText(ExpandFileName(Db.Path));
-  NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
-  Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(Now),TtlSeconds));
+  At:=Now;NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(At));
+  Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(At),TtlSeconds));
+  SharedSql:='';if Kind='api' then SharedSql:=SharedIssueSQL(Db,UserId,Token,Key,UnixMillis(At));
   if not Db.Exec(Schema) then Exit;
   if not Db.Exec('BEGIN IMMEDIATE; INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) '+
     'SELECT '+QuotedStr(Key)+',id,'+QuotedStr(NowIso)+','+QuotedStr(Expires)+' FROM users WHERE id='+QuotedStr(UserId)+
     ' AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+
     ' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Rows[0][1])+' AND services_json='+QuotedStr(Rows[0][2])+' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Rows[0][3])+' AND ('+AuthSourceCondition(Db)+'); '+
     'INSERT INTO authmeta(hashedToken,tenantKey,credentialRef,kind) SELECT hashedToken,'+QuotedStr(TenantKey)+','+
-    QuotedStr(CredentialRef)+','+QuotedStr(Kind)+' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; COMMIT;') then
+    QuotedStr(CredentialRef)+','+QuotedStr(Kind)+' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; '+SharedSql+'COMMIT;') then
   begin Db.Exec('ROLLBACK;'); Exit; end;
   Result:=Length(Db.Query('SELECT hashedToken FROM authmeta WHERE hashedToken='+QuotedStr(Key)+';'))=1;
 end;
 
 function IssueAccountToken(Db:TWLDb;Proof:TWLLoginProof;const Token,Kind:string;TtlSeconds:Int64):Boolean;
-var Rows:TWLRows;Secret,Key,Sql,NowIso,Expires:string;Policy:TFactorPolicy;Last,Matched,NowAt:Int64;
+var Rows:TWLRows;Secret,Key,Sql,NowIso,Expires:string;Policy:TFactorPolicy;Last,Matched,NowAt:Int64;At:TDateTime;
 begin
   Result:=False;Secret:='';
   if (Proof=nil) or not Proof.FVerified or (Token='') or ((Kind<>'web') and (Kind<>'api')) or (TtlSeconds<1) then Exit;
@@ -355,16 +360,19 @@ begin
       if (Policy<>fpOTP) or (OTPFactorKey(Secret)<>Proof.FFactorKey) or not EnsureOTPReplay(Db) then Exit;
       if not LastOTPCounter(Db,Proof.FUserId,Proof.FFactorKey,Last) then Exit;
       if not OTPMatch(Secret,Proof.FCode,NowAt,10,Last,Matched) or (Matched<>Proof.FCounter) then Exit;
-      Key:=TokenHash(Db,Token);
-      NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
-      Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(Now),TtlSeconds));
+      if (Kind='api') and SharedStore(Db) and (TtlSeconds<>ApiTokenLifetime(Db)) then Exit;
+      Key:=TokenHash(Db,Token);At:=Now;
+      NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(At));
+      Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(At),TtlSeconds));
       if not Db.Exec('CREATE TABLE IF NOT EXISTS authmeta(hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));') then Exit;
       Sql:='BEGIN IMMEDIATE; INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) SELECT '+QuotedStr(Key)+',id,'+QuotedStr(NowIso)+','+QuotedStr(Expires)+
         ' FROM users WHERE id='+QuotedStr(Proof.FUserId)+' AND username='+QuotedStr(Proof.FUsername)+' AND COALESCE(loginDisabled,0)=0 '+
         'AND services_json='+QuotedStr(Proof.FServices)+' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Proof.FMethod)+
         ' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Proof.FAdmin)+' AND ('+Proof.FSource+'); '+
         'INSERT INTO authmeta(hashedToken,tenantKey,credentialRef,kind) SELECT hashedToken,'+QuotedStr(HashText(ExpandFileName(Db.Path)))+','+QuotedStr(Proof.FTokenRef)+','+QuotedStr(Kind)+
-        ' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; '+OTPReplaySQL(Proof.FUserId,Proof.FFactorKey,Key,Proof.FCounter)+'COMMIT;';
+        ' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; '+OTPReplaySQL(Proof.FUserId,Proof.FFactorKey,Key,Proof.FCounter);
+      if Kind='api' then Sql:=Sql+SharedIssueSQL(Db,Proof.FUserId,Token,Key,UnixMillis(At));
+      Sql:=Sql+'COMMIT;';
       if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
       Result:=Length(Db.Query('SELECT hashedToken FROM authmeta WHERE hashedToken='+QuotedStr(Key)+';'))=1;
       if Result then Proof.FVerified:=False;
@@ -486,6 +494,7 @@ begin
     UserId:=S.UserId; Exit(True);
   end;
   if Rows[0][3]<>'api' then Exit;
+  if not SharedBearerValid(Db,Rows[0][0],Token) then begin RevokeStoredToken(Db,Token);Exit;end;
   UserId:=Rows[0][0]; Result:=True;
 end;
 

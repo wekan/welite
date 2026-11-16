@@ -339,7 +339,7 @@ var
   T: TWLTenant;
   Username, Password, Token:string;
   Proof:TWLLoginProof;
-  O:TJSONObject;
+  O:TJSONObject;Ttl:Int64;Expires:TWLRows;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   Username:=Trim(BodyField(aRequest,'username'));
@@ -354,13 +354,15 @@ begin
   if not AuthenticateAccount(T.Db,Username,Password,BodyField(aRequest,'code'),Proof) then
   begin SendError(aResponse,401,'Incorrect credentials or one-time code');Exit;end;
   try
-    Token:=NewAuthToken;
-    if not IssueAccountToken(T.Db,Proof,Token,'api',90*24*60*60) then
+    Token:=NewAuthToken;Ttl:=ApiTokenLifetime(T.Db);
+    if not IssueAccountToken(T.Db,Proof,Token,'api',Ttl) then
     begin SendError(aResponse,500,'Could not create login token');Exit;end;
+    Expires:=T.Db.Query('SELECT expiresAt FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(T.Db,Token))+';');
+    if (Length(Expires)<>1) or (Expires[0][0]='') then begin SendError(aResponse,500,'Could not read token expiry');Exit;end;
     O:=TJSONObject.Create;
     try
       O.Add('id',Proof.UserId);O.Add('token',Token);
-      O.Add('tokenExpires',FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncDay(LocalTimeToUniversal(Now),90)));
+      O.Add('tokenExpires',Expires[0][0]);
       SendJson(aResponse,O.AsJSON);
     finally O.Free;end;
   finally Proof.Free;end;

@@ -227,3 +227,10 @@ of one bearer, retains other sessions, checks ignored/failed-write rollback, mis
 no-op and exact BSON, and exercises actual validator cleanup on credential change and
 local expiry. `resume.py` checks the dual-form command, while session/native HTTP suites
 retain tenant/client-bound behavior on both SQLite backends.
+
+`ferroot.py` now verifies co-issued shared API tokens: atomic local/OTP/Meteor records,
+Date output, source removal/expiry and restored-record denial, global ownership ambiguity,
+collision with OTP rollback/retry, ignored-append rollback, stored lifetime precedence and
+policy/SQRL-only refusal. Native suites retain private/browser behavior. Full Meteor
+application round trips, existing-bearer adoption and broader settings/lifetime support
+remain separate gates.

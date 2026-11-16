@@ -8,11 +8,11 @@ begin
     R.RemoteAddress:='127.0.0.1';R.UserAgent:='token-test';
     if ParamStr(1)='proof' then
     begin Rows:=LoginAccount(Db,ParamStr(3));if (Length(Rows)=1) and VerifyCredential(ParamStr(4),Rows[0][1],Reference) then Writeln(Reference) else Writeln('no');Halt(0);end
-    else if ParamStr(1)='issue-ref' then Ok:=IssueLoginToken(Db,ParamStr(3),ParamStr(4),ParamStr(5),'api',3600)
+    else if ParamStr(1)='issue-ref' then Ok:=IssueLoginToken(Db,ParamStr(3),ParamStr(4),ParamStr(5),'api',ApiTokenLifetime(Db))
     else if ParamStr(1)='password' then
     begin Rows:=LoginAccount(Db,ParamStr(3));Ok:=(Length(Rows)=1) and VerifyPassword(ParamStr(4),Rows[0][1]);end
     else if ParamStr(1)='lookup' then Ok:=Length(LoginAccount(Db,ParamStr(3)))=1
-    else if ParamStr(1)='issue' then Ok:=IssueLoginToken(Db,'u','api-test-token',HashText('credential'),'api',3600)
+    else if ParamStr(1)='issue' then Ok:=IssueLoginToken(Db,'u',ParamStr(3),HashText('credential'),'api',ApiTokenLifetime(Db))
     else if ParamStr(1)='web' then
     begin
       S:=CreateSession(Db,R,'u','user',HashText('credential'),3600);Writeln(S.SessionId);Halt(0);

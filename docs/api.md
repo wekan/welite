@@ -68,6 +68,17 @@ After confirmation, wait for a new code and sign in normally: the activation cod
 already been consumed. Registration under required-factor policy directs users to setup
 without issuing an application session. New setup replaces an earlier pending token.
 
+For a shared FerretDB store, new API credentials also create typed Meteor resume
+records in the same transaction. Both local authorization metadata and the shared record
+must remain valid. Removing the shared record logs that bearer out of WeLite as well;
+older private-only shared-store API credentials need a fresh login. Browser sessions
+retain their private client-bound format. Stored `loginOptions.loginExpirationInDays`
+wins over `ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS`; absent/zero means 90 days. Supported
+lifetimes are whole days from 1 to 36500; unsupported values deny issuance. The response
+returns the expiry committed to the local credential. Native-store defaults stay 90 days.
+See [paired shared API bearers](ferret.md#paired-shared-api-bearers) for deployment policy
+requirements and remaining compatibility gates.
+
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by
 anyone; site admins (`users.isAdmin`) bypass. `/api/users` is admin-only; `/api/users/:id/boards`

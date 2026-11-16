@@ -717,11 +717,49 @@ local expiry through the real validators on both backends. Native session and HT
 regressions cover client/tenant and account behavior. Shared issuance/authorization,
 scheduled expiry and legacy conversion remain separate integration work.
 
+## Paired shared API bearers
+
+`wlshared.pas` connects API issuance to the typed resume kernel. Shared-store API token,
+authmeta, optional OTP claim and Meteor `{hashedToken, when: BSON Date}` append commit
+together. Both password-only and OTP proof issuers use the fragment. Global checks refuse
+an existing hash or legacy raw bearer in any account. Source/settings snapshots and a
+post-append assertion make collisions or ignored writes roll back the complete issuance,
+including an OTP claim. Browser credentials remain private so another application cannot
+bypass WeLite's client binding by treating them as unrestricted resume bearers.
+
+API validation requires the existing tenant/credential/factor metadata plus a single
+matching shared account and a valid shared timestamp/lifetime. Shared removal, expiry or
+cross-account ambiguity triggers targeted cleanup. Restoring a source record does not
+restore deleted local metadata. This deliberately does not adopt arbitrary Meteor-issued
+tokens yet; their authentication-policy/credential provenance still needs integration.
+Older private-only API tokens on a shared store require a fresh login after this update.
+
+Lifetime comes from the single actual Settings document's
+`loginOptions.loginExpirationInDays`, then `ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS`,
+then 90 days (zero also selects the default). Whole days 1–36500 are supported. Invalid,
+fractional or ambiguous configuration fails closed. Issuers must request this lifetime;
+REST responses read the exact committed expiry. Apply the same deployment fallback to
+both applications and restart Meteor after changing its startup-applied lifetime.
+
+Stored MFA/LDAP overrides must agree with deployment policy while the core proof policy
+still uses those deployment values; disagreement refuses shared issuance/use. Stored
+password-login disabling and enabled SQRL-only identities also prevent password-based
+shared issuance. Settings are rechecked inside the transaction to catch changes after
+reading them. Direct override resolution, fractional lifetime support and broader account
+configuration remain explicit gates rather than silently selecting a weaker policy.
+
+`ferroot.py` tests actual paired password/Argon2-secret/OTP issuance, BSON Date output,
+Mongo removal/expiry, restored-record denial, cross-account ambiguity, collision rollback
+with OTP retry, ignored-append rollback, stored lifetime precedence, conflicting policy
+and SQRL-only refusal on both backends. Existing native HTTP/hash/OTP/enrollment tests
+cover private-store behavior. A full Meteor DDP/HTTP application round trip, existing
+bearer adoption, scheduled expiry and Mongo-managed token indexes remain outstanding.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Integrate shared resume issuance/validation, expiry/revocation and legacy conversion; reconcile file-store metadata/bytes.
+- Integrate existing Meteor bearer adoption, direct auth-override resolution, fractional lifetimes, scheduled expiry and legacy conversion; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

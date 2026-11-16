@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Paired shared API bearer issuance
+
+- On shared stores, commit API credentials/authmeta, optional OTP consumption and a
+  typed Meteor resume record together. Refuse reused shared hashes/plain bearers across
+  accounts and assert the shared append succeeded; failed/ignored writes roll back all
+  local/shared effects. Browser sessions remain private and client-bound.
+- Require both local authorization metadata and one unambiguous, unexpired shared record
+  for co-issued API validation. Mongo removal/expiry or duplicate ownership invalidates
+  the local bearer through targeted revocation. Restoring a removed source record alone
+  cannot revive it. Existing private-only shared-store API tokens require a fresh login.
+- Read stored loginExpirationInDays before its deployment fallback; return the committed
+  local expiry in REST responses. Support default/zero 90 days and whole-day lifetimes
+  from 1 to 36500. Reject unsupported values rather than issuing mismatched credentials.
+- Snapshot shared settings in the issuance transaction. Refuse conflicting stored versus
+  deployment MFA/LDAP policy, disabled password login and enabled SQRL-only identities.
+  Direct resolution of differing authentication overrides remains a compatibility gate.
+- Verify linked/CLI live paired MFA/password issuance, membership/expiry removal,
+  cross-account ambiguity, global collision with OTP rollback/retry, ignored append
+  rollback, stored lifetime precedence and policy refusal. Native HTTP/hash/OTP and
+  enrollment regressions pass. Fixtures now issue fresh bearers instead of reusing them.
+- Existing Meteor bearer adoption, scheduled expiry, broader settings resolution and
+  Mongo-managed token indexes remain open; normal shared-store activation is still gated.
+
 ## 2026-11-16 Targeted shared token revocation
 
 - Add a transaction fragment that removes one bearer's shared hashed and matching

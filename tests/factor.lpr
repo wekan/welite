@@ -7,6 +7,7 @@ begin
   try
     Db:=TWLDb.Create(ParamStr(1));Mode:=ParamStr(2);Request:=TRequest.Create;
     Request.RemoteAddress:='127.0.0.1';Request.UserAgent:='factor-test';
+    if Mode='ttl' then begin Writeln(ApiTokenLifetime(Db));Halt(0);end;
     if Mode='check' then Ok:=ValidateLoginToken(Db,Request,ParamStr(3),UserId)
     else if not AuthenticateAccount(Db,ParamStr(3),ParamStr(4),ParamStr(5),Proof) then Ok:=False
     else if Mode='web' then
@@ -14,8 +15,8 @@ begin
     else
     begin
       if Mode='mutate' then Db.Exec(ParamStr(7));
-      Ok:=IssueAccountToken(Db,Proof,ParamStr(6),'api',3600);
-      if Ok and (Mode='twice') then Ok:=not IssueAccountToken(Db,Proof,'reuse-proof','api',3600);
+      Ok:=IssueAccountToken(Db,Proof,ParamStr(6),'api',ApiTokenLifetime(Db));
+      if Ok and (Mode='twice') then Ok:=not IssueAccountToken(Db,Proof,'reuse-proof','api',ApiTokenLifetime(Db));
     end;
     if Ok then Writeln('yes') else Writeln('no');
   except Writeln('error');end;

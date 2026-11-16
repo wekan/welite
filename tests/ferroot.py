@@ -42,6 +42,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
         build(root/'tests/revoke.lpr',out/'revoke',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
+        settings.pop('ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS',None)
         settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
         if backend=='cli':settings['WELITE_SQLITE_EXT']=str(tmp/'ext/wlfunc.so')
         data=out/'data';data.mkdir();state=out/'state';state.mkdir();listen=port();debug=port();db=data/'wekan.sqlite'
@@ -296,7 +297,12 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
 
                 # Private tokens reference a user view without invalid SQLite FKs.
                 build(root/'tests/token.lpr',out/'tokens',flags)
+                auth_state={'active':'api-test-token','sequence':0}
                 def auth(mode,token='api-test-token',password=''):
+                    if mode=='issue':
+                        auth_state['sequence']+=1;auth_state['active']='api-test-token-'+str(auth_state['sequence'])
+                        token=auth_state['active']
+                    elif mode=='check' and token=='api-test-token':token=auth_state['active']
                     result=subprocess.run([str(out/'tokens/token'),mode,str(db),token,password],env=settings,capture_output=True,text=True,timeout=30)
                     assert result.returncode==0,result.stderr
                     return result.stdout.strip()
@@ -354,15 +360,28 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 counter=int(time.time())//30
                 digest=hmac.new(b'12345678901234567890',struct.pack('>Q',counter),hashlib.sha1).digest();offset=digest[-1]&15
                 code=str((struct.unpack('>I',digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
-                def factor_call(mode):
-                    result=subprocess.run([str(out/'factor/factor'),str(db),mode,'meteor-account','test-password',code,'factor-shared'],env=settings,capture_output=True,text=True,timeout=30)
+                def factor_call(mode,raw='factor-shared',entered=code):
+                    result=subprocess.run([str(out/'factor/factor'),str(db),mode,'meteor-account','test-password',entered,raw],env=settings,capture_output=True,text=True,timeout=30)
                     assert result.returncode==0,result.stderr
                     return result.stdout.strip()
                 assert factor_call('api')=='yes'
                 assert factor_call('api')=='no','Shared account OTP replay succeeded'
                 checked=subprocess.run([str(out/'factor/factor'),str(db),'check','factor-shared'],env=settings,capture_output=True,text=True,timeout=30)
                 assert checked.returncode==0 and checked.stdout.strip()=='yes'
-                assert encode(client.find('users','meteor-account')[0])==factor_before
+                paired=client.find('users','meteor-account')[0]
+                stamped=paired['services'].pop('resume')['loginTokens']
+                assert len(stamped)==1 and stamped[0]['hashedToken']==meteor_hash('factor-shared') and isinstance(stamped[0]['when'],DateMs)
+                assert encode(paired)==factor_before
+                # A cross-account shared collision must also roll back OTP usage.
+                collision_raw='factor-global-collision'
+                client.command({'insert':'users','documents':[dict(_id='factor-collision',services=dict(resume=dict(loginTokens=[dict(hashedToken=meteor_hash(collision_raw),when=DateMs(1))])))]})
+                next_digest=hmac.new(b'12345678901234567890',struct.pack('>Q',counter+1),hashlib.sha1).digest();offset=next_digest[-1]&15
+                next_code=str((struct.unpack('>I',next_digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
+                assert factor_call('api',collision_raw,next_code)=='no'
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='meteor-account';")==[[str(counter)]]
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='factor-collision'),limit=1)]})
+                assert factor_call('api',collision_raw,next_code)=='yes','Failed paired issuance consumed OTP'
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='meteor-account';")==[[str(counter+1)]]
                 assert sql("DELETE FROM login_tokens WHERE userId='meteor-account';",'exec')=='ok'
                 settings.pop('WELITE_ARGON_SECRET_FILE')
                 # Limited enrollment changes only factor fields in actual shared BSON.
@@ -485,6 +504,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert auth('issue')=='yes'
                 assert sql('PRAGMA foreign_keys=OFF; DELETE FROM login_tokens;','exec')=='ok'
                 assert sql('SELECT count(*) FROM authmeta;')==[['0']]
+                client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'services.resume.loginTokens':[]}})]})
                 # A denial during token cleanup rolls the entire Mongo user deletion back.
                 assert auth('issue')=='yes'
                 assert sql("CREATE TRIGGER deny_meta BEFORE DELETE ON authmeta BEGIN SELECT RAISE(ABORT,'test denial'); END;",'exec')=='ok'
@@ -494,6 +514,53 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql('DROP TRIGGER deny_meta;','exec')=='ok'
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='u'),limit=1)]})
                 assert sql('SELECT count(*) FROM authmeta;')==[['0']]
+
+                # Paired API lifecycle: source removal/expiry is authoritative too.
+                client.command({'insert':'users','documents':[dict(_id='paired-api',username='paired-api',services=dict(password=shared_password,keep=DateMs(-1)))]})
+                def pair(raw,extra=None):
+                    return subprocess.check_output([str(out/'factor/factor'),str(db),'api','paired-api','test-password','',raw],env=dict(settings,**(extra or {})),text=True).strip()
+                def paired_check(raw):return subprocess.check_output([str(out/'factor/factor'),str(db),'check',raw],env=settings,text=True).strip()
+                assert pair('paired-first')=='yes'
+                first=client.find('users','paired-api')[0]['services']['resume']['loginTokens'][0]
+                assert first['hashedToken']==meteor_hash('paired-first') and isinstance(first['when'],DateMs)
+                client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$pull':{'services.resume.loginTokens':dict(hashedToken=meteor_hash('paired-first'))}})]})
+                assert paired_check('paired-first')=='no'
+                client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$push':{'services.resume.loginTokens':first}})]})
+                assert paired_check('paired-first')=='no','Restoring source record revived a revoked local credential'
+                snapshot=encode(client.find('users','paired-api')[0])
+                assert pair('paired-first')=='no','Existing shared hash was reused'
+                assert encode(client.find('users','paired-api')[0])==snapshot
+                assert sql("SELECT count(*) FROM login_tokens WHERE userId='paired-api';")==[['0']]
+                # A later failure while appending must roll back local token/meta too.
+                assert sql('CREATE TRIGGER fail_pair BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='paired-api' BEGIN SELECT RAISE(IGNORE); END;",'exec')=='ok'
+                assert pair('paired-failed')=='no' and encode(client.find('users','paired-api')[0])==snapshot
+                assert sql("SELECT count(*) FROM login_tokens WHERE userId='paired-api';")==[['0']]
+                assert sql('DROP TRIGGER fail_pair;','exec')=='ok'
+                assert pair('paired-next')=='yes'
+                tokens=client.find('users','paired-api')[0]['services']['resume']['loginTokens']
+                tokens[-1]['when']=DateMs(0)
+                client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$set':{'services.resume.loginTokens':tokens}})]})
+                assert paired_check('paired-next')=='no'
+                assert client.find('users','paired-api')[0]['services']['resume']['loginTokens']==[first]
+                assert pair('paired-ambiguous')=='yes'
+                client.command({'insert':'users','documents':[dict(_id='foreign-bearer',services=dict(resume=dict(loginTokens=[dict(hashedToken=meteor_hash('paired-ambiguous'),when=DateMs(1))])))]})
+                assert paired_check('paired-ambiguous')=='no'
+                assert client.find('users','foreign-bearer')[0]['services']['resume']['loginTokens']
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='foreign-bearer'),limit=1)]})
+                # Stored lifetime wins over env; conflicting auth overrides fail closed.
+                client.command({'create':'settings'})
+                client.command({'insert':'settings','documents':[dict(_id='shared-config',loginOptions=dict(loginExpirationInDays=2),ldap=dict(enabled=False))]})
+                assert subprocess.check_output([str(out/'factor/factor'),str(db),'ttl'],env=dict(settings,ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS='7'),text=True).strip()==str(2*86400)
+                assert pair('two-day',dict(ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS='7'))=='yes'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.require2fa':'all'}})]})
+                before_policy=encode(client.find('users','paired-api')[0])
+                assert pair('blocked-policy') in ['no','error']
+                assert encode(client.find('users','paired-api')[0])==before_policy
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.require2fa':'off','sqrlEnabled':True}})]})
+                client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$set':{'sqrl':dict(idk='identity',sqrlOnly=True)}})]})
+                assert pair('blocked-sqrl')=='no'
+                client.command({'delete':'settings','deletes':[dict(q=dict(_id='shared-config'),limit=1)]})
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='paired-api'),limit=1)]})
 
                 # Disabling clears shared and private bearers in one transaction.
                 revoke_token=meteor_hash('revokee-shared')
@@ -537,10 +604,13 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     client.command({'delete':'users','deletes':[dict(q=dict(_id=who),limit=1)]})
 
                 # Per-token revocation removes both hashed and legacy forms only.
-                single=dict(_id='single-revoke',username='single-revoke',services=dict(password=shared_password,resume=dict(loginTokens=[dict(hashedToken=meteor_hash('target-token'),when=DateMs(1)),dict(token='target-token',when=DateMs(2)),dict(hashedToken=meteor_hash('other-token'),when=DateMs(3)),dict(token='other-token',when=DateMs(4)),dict(hashedToken=meteor_hash('third-token'),when=DateMs(5)),dict(extra=Long(9007199254740993))],keep=DateMs(-1))))
+                single=dict(_id='single-revoke',username='single-revoke',services=dict(password=shared_password,resume=dict(loginTokens=[dict(extra=Long(9007199254740993))],keep=DateMs(-1))))
                 client.command({'insert':'users','documents':[single]})
                 for raw in ['target-token','other-token','third-token']:
                     assert subprocess.check_output([str(out/'factor/factor'),str(db),'api','single-revoke','test-password','',raw],env=settings,text=True).strip()=='yes'
+                for raw in ['target-token','other-token']:
+                    client.command({'update':'users','updates':[dict(q=dict(_id='single-revoke'),u={'$push':{'services.resume.loginTokens':dict(token=raw,when=DateMs(2))}})]})
+                single=client.find('users','single-revoke')[0]
                 def check_single(raw):return subprocess.check_output([str(out/'factor/factor'),str(db),'check',raw],env=settings,text=True).strip()
                 def revoke_one(raw):return subprocess.check_output([str(out/'revoke/revoke'),str(db),'single-revoke','one','',raw],env=settings,text=True).strip()
                 before_single=encode(client.find('users','single-revoke')[0])
@@ -553,7 +623,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     assert check_single('target-token')=='yes' and check_single('other-token')=='yes'
                     assert sql('DROP TRIGGER reject_single;','exec')=='ok'
                 assert revoke_one('target-token')=='yes'
-                single['services']['resume']['loginTokens']=single['services']['resume']['loginTokens'][2:]
+                single['services']['resume']['loginTokens']=[v for v in single['services']['resume']['loginTokens'] if v.get('hashedToken')!=meteor_hash('target-token') and v.get('token')!='target-token']
                 assert encode(client.find('users','single-revoke')[0])==encode(single)
                 assert check_single('target-token')=='no' and check_single('other-token')=='yes' and check_single('third-token')=='yes'
                 assert revoke_one('not-present')=='yes' and encode(client.find('users','single-revoke')[0])==encode(single)
