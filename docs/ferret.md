@@ -607,7 +607,7 @@ regressions cover the no-marker path.
 standard padded base64, matching
 [Meteor's token hashing](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_server.js).
 It accepts 1–4096 bytes and remains separate from the tenant-scoped private digest.
-Mutation commands require canonical 44-character digests decoding to 32 bytes.
+Hash-taking commands require canonical 44-character digests decoding to 32 bytes.
 
 `ResumeDocument` operates on the actual SJSON account document. `append` takes
 `hashedToken` and integer millisecond `when`, adds a record with a BSON Date and refuses
@@ -692,6 +692,30 @@ forced and ignored updates, failure after shared clearing, source switches and r
 `tests/revoke.lpr` executes the same fragment used by the HTTP administrator action;
 native `admin.py` verifies the real route. Shared bearer issuance/authorization,
 per-token revocation, legacy conversion and scheduled expiry remain to be connected.
+
+## Targeted shared revocation
+
+`RevokeTokenSQL` uses the same source-guarded edit/assertion path as all-user revocation,
+but selects one account and bearer. The typed `revoke` command derives the hash from
+its raw token and removes every matching hashed or legacy plain record. Other records,
+unknown BSON types, pending setup and replay state remain intact. Its local deletion
+also requires the account ID and tenant-scoped key. Token JSON escaping protects the
+SQL text from control bytes; SQL comparisons extract the raw selector from that JSON.
+
+The private hash now lives in `wlcrypt.TenantTokenHash`, with the same domain prefix,
+database path and raw-token input as before. `wlauth` delegates to it and uses a
+transactional stored-token revoker when validation observes credential/policy failure,
+expiry, disabled/invalid stored identity or an invalid source. For a replaced source,
+cleanup removes local state only. Browser IP/user-agent mismatch still refuses the
+request without deleting another client's session. Database/metadata failure rolls back
+targeted clearing; validation still refuses access.
+
+`tests/resume.py` checks the typed dual-form removal. `ferroot.py` tests hashed/plain
+fallback removal, retained sibling sessions, ignored updates, failure after shared
+clearing, exact BSON preservation, missing-token no-op, credential restoration and
+local expiry through the real validators on both backends. Native session and HTTP
+regressions cover client/tenant and account behavior. Shared issuance/authorization,
+scheduled expiry and legacy conversion remain separate integration work.
 
 ## Remaining before the checklist can be checked
 

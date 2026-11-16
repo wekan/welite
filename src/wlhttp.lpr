@@ -250,7 +250,7 @@ begin
   Token:=Request.ContentFields.Values['setupToken'];Binding:=EnrollmentBinding(Request);At:=DateTimeToUnix(Now,False);
   // Derive the admission account from server-side pending setup, never a posted
   // username. Invalid tokens still consume peer/tenant reservations before checking OTP.
-  Username:='#enrol-invalid#'+HashText(Token);
+  Username:='#enrol-invalid#'+HashText('welite-enrol-invalid-v1'+#0+Token);
   if Length(Token)=64 then
   begin
     Rows:=T.Db.Query('SELECT username FROM _wl_enrol WHERE tokenKey='+QuotedStr(TokenHash(T.Db,Token))+

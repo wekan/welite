@@ -536,6 +536,38 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 for who in ['revokee','revoke-other']:
                     client.command({'delete':'users','deletes':[dict(q=dict(_id=who),limit=1)]})
 
+                # Per-token revocation removes both hashed and legacy forms only.
+                single=dict(_id='single-revoke',username='single-revoke',services=dict(password=shared_password,resume=dict(loginTokens=[dict(hashedToken=meteor_hash('target-token'),when=DateMs(1)),dict(token='target-token',when=DateMs(2)),dict(hashedToken=meteor_hash('other-token'),when=DateMs(3)),dict(token='other-token',when=DateMs(4)),dict(hashedToken=meteor_hash('third-token'),when=DateMs(5)),dict(extra=Long(9007199254740993))],keep=DateMs(-1))))
+                client.command({'insert':'users','documents':[single]})
+                for raw in ['target-token','other-token','third-token']:
+                    assert subprocess.check_output([str(out/'factor/factor'),str(db),'api','single-revoke','test-password','',raw],env=settings,text=True).strip()=='yes'
+                def check_single(raw):return subprocess.check_output([str(out/'factor/factor'),str(db),'check',raw],env=settings,text=True).strip()
+                def revoke_one(raw):return subprocess.check_output([str(out/'revoke/revoke'),str(db),'single-revoke','one','',raw],env=settings,text=True).strip()
+                before_single=encode(client.find('users','single-revoke')[0])
+                for trigger in [
+                    'CREATE TRIGGER reject_single BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='single-revoke' BEGIN SELECT RAISE(IGNORE); END;",
+                    "CREATE TRIGGER reject_single BEFORE DELETE ON authmeta BEGIN SELECT RAISE(ABORT,'forced partial revoke'); END;",
+                ]:
+                    assert sql(trigger,'exec')=='ok' and revoke_one('target-token')=='no'
+                    assert encode(client.find('users','single-revoke')[0])==before_single
+                    assert check_single('target-token')=='yes' and check_single('other-token')=='yes'
+                    assert sql('DROP TRIGGER reject_single;','exec')=='ok'
+                assert revoke_one('target-token')=='yes'
+                single['services']['resume']['loginTokens']=single['services']['resume']['loginTokens'][2:]
+                assert encode(client.find('users','single-revoke')[0])==encode(single)
+                assert check_single('target-token')=='no' and check_single('other-token')=='yes' and check_single('third-token')=='yes'
+                assert revoke_one('not-present')=='yes' and encode(client.find('users','single-revoke')[0])==encode(single)
+                # An observed credential change uses targeted shared/local cleanup.
+                client.command({'update':'users','updates':[dict(q=dict(_id='single-revoke'),u={'$set':{'services.password.bcrypt':'changed'}})]})
+                assert check_single('other-token')=='no'
+                assert all(value.get('hashedToken')!=meteor_hash('other-token') and value.get('token')!='other-token' for value in client.find('users','single-revoke')[0]['services']['resume']['loginTokens'])
+                client.command({'update':'users','updates':[dict(q=dict(_id='single-revoke'),u={'$set':{'services.password':shared_password}})]})
+                assert check_single('other-token')=='no' and check_single('third-token')=='yes'
+                assert sql("UPDATE login_tokens SET expiresAt='2000-01-01T00:00:00.000Z' WHERE userId='single-revoke';",'exec')=='ok'
+                assert check_single('third-token')=='no'
+                assert client.find('users','single-revoke')[0]['services']['resume']['loginTokens']==[dict(extra=Long(9007199254740993))]
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='single-revoke'),limit=1)]})
+
                 # Bind private auth to users UUID, not just reused IDs/passwords.
                 source_user=dict(_id='u',username='user',services=dict(password='credential'))
                 pending_user=dict(_id='source-pending',username='source-pending',services=dict(password=shared_password))

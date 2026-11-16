@@ -263,7 +263,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Meteor SHA256/base64 digests and typed resume-array append/remove/clear now pass TEXT/JSONB, concurrency and live BSON tests.
   Typed resume validity and Date/numeric expiry pruning now pass boundary, ambiguity, range and live BSON tests.
   Account disabling and MFA enrollment now atomically clear shared/local credentials and pending setup, with source/rollback/isolation tests.
-  Remaining: shared resume issuance/authorization, per-token revocation, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Targeted shared/local bearer revocation now handles observed validation failure and local expiry without revoking sibling sessions.
+  Remaining: shared resume issuance/authorization, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

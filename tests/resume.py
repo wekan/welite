@@ -84,6 +84,9 @@ with tempfile.TemporaryDirectory(prefix='wlresume-',dir=os.environ['TMPDIR']) as
             assert remaining==[entries[3],entries[4],dict(hashedToken=digest('dated'),when=100)]
             assert current['services']['resume']['keep'] is True and current['unknown']==dict(keep=True)
             assert state('dated',1099)=='valid','Pruning shifted or lost the retained Date schema'
+            replace(dict(services=dict(resume=dict(loginTokens=[dict(hashedToken=digest('one'),when=1),dict(token='one',when=2),dict(hashedToken=digest('other'),when=3),'unknown']))))
+            assert edit(dict(op='revoke',token='one'))=='ok'
+            assert read()['services']['resume']['loginTokens']==[dict(hashedToken=digest('other'),when=3),'unknown']
             # Duplicate hash records are ambiguous even if only one is unexpired.
             replace(dict(services=dict(resume=dict(loginTokens=[dict(hashedToken=digest('duplicate'),when=1),dict(hashedToken=digest('duplicate'),when=1000)]))))
             assert state('duplicate',1000)=='invalid'

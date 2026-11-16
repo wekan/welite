@@ -221,3 +221,9 @@ and enrollment: shared/legacy and local token clearing, pending setup cleanup, a
 account's surviving credentials, failed/ignored writes, later metadata failure rollback,
 source-switch denial and re-enable behavior. `admin.py` covers the actual native HTTP
 disable route on both backends. Shared issuance and per-token lifecycle work remain open.
+
+Targeted revocation coverage in `ferroot.py` removes both hashed and legacy plain forms
+of one bearer, retains other sessions, checks ignored/failed-write rollback, missing-token
+no-op and exact BSON, and exercises actual validator cleanup on credential change and
+local expiry. `resume.py` checks the dual-form command, while session/native HTTP suites
+retain tenant/client-bound behavior on both SQLite backends.

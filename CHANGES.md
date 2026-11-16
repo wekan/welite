@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Targeted shared token revocation
+
+- Add a transaction fragment that removes one bearer's shared hashed and matching
+  legacy plain records plus its scoped local credential/metadata. Keep other sessions,
+  pending setup and replay counters untouched. Check source identity and assert no
+  matching shared record survived an ignored write before deleting local state.
+- Add the typed revoke command; derive its digest from the supplied bearer so a caller
+  cannot mismatch raw/hash selectors. Serialize the bearer through escaped JSON,
+  including the SQL comparison, rather than putting control bytes into SQL text.
+- Connect observed credential/policy failure, local expiry and invalid stored-session
+  identity to targeted cleanup. A stale collection removes only local state and never
+  edits the replacement collection. Preserve existing IP/user-agent mismatch behavior.
+- Centralize the unchanged tenant-scoped private hash for issuance and revocation;
+  give invalid enrollment attempt digests their own explicit domain prefix.
+- Verify both SQLite backends with hashed/legacy removal, ignored/failed-write rollback,
+  unchanged sibling sessions/BSON, missing-token no-op, credential restoration and local
+  expiry through live Mongo. Session/kernel and native HTTP account regressions pass.
+- Shared bearer issuance/authorization, expiry scheduling and legacy conversion remain
+  open; this step connects individual revocation to existing validation failures.
+
 ## 2026-11-16 Shared all-user token revocation
 
 - Connect administrator account disabling and OTP enrollment to one transactional

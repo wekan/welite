@@ -6,7 +6,8 @@ uses SysUtils,Math,fpjson,base64,wlcrypt,wlsjson;
 // It is deliberately distinct from WeLite's tenant-scoped private token digest.
 function MeteorTokenHash(const Token:string):string;
 // Pure SJSON edit: append {hashedToken,when:BSON Date}, remove matching hashes,
-// clear all resume records, or expire records before a cutoff. No authorization.
+// clear all records, expire old records, or revoke both forms of one raw bearer.
+// This function does not authorize the caller.
 function ResumeDocument(const Previous,Command:string):string;
 type TResumeState=(rsAbsent,rsValid,rsExpired,rsInvalid);
 function CheckResumeToken(const Previous,Hash:string;NowMs,LifetimeMs:Int64;
@@ -102,18 +103,19 @@ begin
 end;
 function ResumeDocument(const Previous,Command:string):string;
 var Doc,Raw,Cmd,Services,Resume,Hints,HintServices,HintResume,ArraySchema,Entry:TJSONObject;
-  Tokens,Types:TJSONArray;Value,OldTypes:TJSONData;Op,Hash,Name:string;
+  Tokens,Types:TJSONArray;Value,OldTypes:TJSONData;Op,Hash,Name,RawToken:string;
   i:Integer;WhenMs,BeforeMs:Int64;Number:Double;CreateMissing:Boolean;
 begin
   Doc:=nil;Raw:=nil;Cmd:=nil;Hints:=nil;Types:=nil;Entry:=nil;
   try
     Doc:=ExactObject(PlainDocument(Previous));Raw:=ExactObject(Previous);Cmd:=ExactObject(Command);
     Value:=Cmd.Find('op');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;Op:=Value.AsString;
-    if (Op<>'append') and (Op<>'remove') and (Op<>'clear') and (Op<>'expire') then Invalid;
+    if (Op<>'append') and (Op<>'remove') and (Op<>'clear') and (Op<>'expire') and (Op<>'revoke') then Invalid;
     for i:=0 to Cmd.Count-1 do
     begin
       Name:=Cmd.Names[i];if Name='op' then Continue;
       if (Name='hashedToken') and ((Op='append') or (Op='remove')) then Continue;
+      if (Name='token') and (Op='revoke') then Continue;
       if (Name='before') and (Op='expire') then Continue;
       if (Name='when') and (Op='append') then Continue;
       Invalid;
@@ -122,6 +124,12 @@ begin
     begin
       Value:=Cmd.Find('hashedToken');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;
       Hash:=Value.AsString;ValidateHash(Hash);
+    end;
+    RawToken:='';
+    if Op='revoke' then
+    begin
+      Value:=Cmd.Find('token');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;
+      RawToken:=Value.AsString;Hash:=MeteorTokenHash(RawToken);
     end;
     WhenMs:=0;
     if Op='append' then
@@ -168,7 +176,12 @@ begin
           Continue;
         end;
         Value:=Child(Tokens.Items[i],'hashedToken');
-        if (Value=nil) or (Value.JSONType<>jtString) or (Value.AsString<>Hash) then Continue;
+        if (Value=nil) or (Value.JSONType<>jtString) or (Value.AsString<>Hash) then
+        begin
+          if Op<>'revoke' then Continue;
+          Value:=Child(Tokens.Items[i],'token');
+          if (Value=nil) or (Value.JSONType<>jtString) or (Value.AsString<>RawToken) then Continue;
+        end;
         if Op='append' then Invalid;
         Tokens.Delete(i);Types.Delete(i);
       end;

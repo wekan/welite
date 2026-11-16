@@ -6,7 +6,8 @@ begin
   Db:=nil;
   try
     Db:=TWLDb.Create(ParamStr(1));
-    Sql:='BEGIN IMMEDIATE; '+RevokeUserTokensSQL(Db,ParamStr(2));
+    if ParamStr(3)='one' then Sql:='BEGIN IMMEDIATE; '+RevokeTokenSQL(Db,ParamStr(2),ParamStr(5))
+    else Sql:='BEGIN IMMEDIATE; '+RevokeUserTokensSQL(Db,ParamStr(2));
     if ParamStr(3)='disable' then Sql:=Sql+'UPDATE users SET loginDisabled=1 WHERE id='+QuotedStr(ParamStr(2))+'; ';
     Sql:=Sql+'COMMIT;';
     if ParamStr(4)<>'' then Db.Exec(ParamStr(4));

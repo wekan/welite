@@ -22,7 +22,7 @@ unit wlauth;
 interface
 
 uses
-  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,wlreplay,wltotp,wlautsrc,Sockets;
+  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,wlreplay,wltotp,wlautsrc,wlrevoke,Sockets;
 
 type
   TWLLoginProof=class
@@ -221,7 +221,7 @@ function HashText(const Value:string):string;
 begin Result:=Sha256Hex(Value); end;
 function TokenHash(Db:TWLDb; const Token:string):string;
 begin
-  Result:=HashText('welite-token-v2'+#0+ExpandFileName(Db.Path)+#0+Token);
+  Result:=TenantTokenHash(Db.Path,Token);
 end;
 function ActionHash(const S:TWLSession; const ActionName:string):string;
 var Context:TJSONArray;
@@ -409,6 +409,21 @@ begin
   try PackMeta(Result); finally LeaveCriticalSection(SessionLock); end;
 end;
 
+function RevokeStoredToken(Db:TWLDb;const Token:string):Boolean;
+var Rows:TWLRows;Key,Sql:string;
+begin
+  Result:=False;Key:=TokenHash(Db,Token);
+  try
+    Rows:=Db.Query('SELECT userId FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';');
+    if Length(Rows)=0 then Exit(True);
+    if Length(Rows)<>1 then Exit;
+    if AuthSourceCurrent(Db) then Sql:=RevokeTokenSQL(Db,Rows[0][0],Token)
+    else Sql:='DELETE FROM authmeta WHERE hashedToken='+QuotedStr(Key)+'; DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';';
+    Result:=Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;');
+    if not Result then Db.Exec('ROLLBACK;');
+  except Db.Exec('ROLLBACK;');Result:=False;end;
+end;
+
 function ValidateSession(Db:TWLDb; ARequest:TRequest; const SessionId:string; out S:TWLSession):Boolean;
 var Rows:TWLRows; Current:TWLSession; NowTs,IdleSeconds:Int64;
 begin
@@ -419,7 +434,7 @@ begin
     if Current.TenantDb<>ExpandFileName(Db.Path) then Exit;
     if not AuthSourceCurrent(Db) then
     begin
-      Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,SessionId))+';');
+      RevokeStoredToken(Db,SessionId);
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;
     end;
     Rows:=Db.Query('SELECT u.id,u.username,COALESCE(json_extract(u.services_json,''$.password''),''''),'+
@@ -429,10 +444,11 @@ begin
       ' AND m.credentialRef='+QuotedStr(Current.PasswordRef)+' AND t.hashedToken='+QuotedStr(TokenHash(Db,SessionId))+
       ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
       QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
-    if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) then Exit;
+    if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) then
+    begin RevokeStoredToken(Db,SessionId);SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;end;
     if not AccountMatches(Rows[0][3],Rows[0][4],Rows[0][2],Current.PasswordRef,Rows[0][5]='1') then
     begin
-      Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,SessionId))+';');
+      RevokeStoredToken(Db,SessionId);
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;
     end;
     if (Current.Ip<>ClientIp(ARequest)) or (Current.UserAgent<>RequestUserAgent(ARequest)) then Exit;
@@ -441,7 +457,7 @@ begin
     if IdleSeconds<1 then IdleSeconds:=1800;
     if (NowTs<Current.LastSeenAt) or (NowTs-Current.LastSeenAt>IdleSeconds) then
     begin
-      Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,SessionId))+';');
+      RevokeStoredToken(Db,SessionId);
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId)); Exit;
     end;
     Current.LastSeenAt:=NowTs; PackMeta(Current); S:=Current; Result:=True;
@@ -454,16 +470,16 @@ begin
   Result:=False; UserId:=''; if Token='' then Exit;
   Key:=TokenHash(Db,Token);
   if not AuthSourceCurrent(Db) then
-  begin Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';');Exit;end;
+  begin RevokeStoredToken(Db,Token);Exit;end;
   Rows:=Db.Query('SELECT t.userId,COALESCE(json_extract(u.services_json,''$.password''),''''),'+
     'm.credentialRef,m.kind,COALESCE(u.authenticationMethod,''password''),u.services_json,COALESCE(u.isAdmin,0) FROM login_tokens t JOIN users u ON u.id=t.userId '+
     'JOIN authmeta m ON m.hashedToken=t.hashedToken WHERE ('+AuthSourceCondition(Db)+') AND t.hashedToken='+QuotedStr(Key)+
     ' AND m.tenantKey='+QuotedStr(HashText(ExpandFileName(Db.Path)))+
     ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
     QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
-  if Length(Rows)=0 then Exit;
+  if Length(Rows)=0 then begin RevokeStoredToken(Db,Token);Exit;end;
   if not AccountMatches(Rows[0][4],Rows[0][5],Rows[0][1],Rows[0][2],Rows[0][6]='1') then
-  begin Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';'); Exit; end;
+  begin RevokeStoredToken(Db,Token); Exit; end;
   if Rows[0][3]='web' then
   begin
     if not ValidateSession(Db,Request,Token,S) then Exit;

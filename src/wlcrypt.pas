@@ -3,6 +3,7 @@ unit wlcrypt;
 interface
 uses SysUtils,fpsha256;
 function Sha256Hex(const Value:RawByteString):string;
+function TenantTokenHash(const DatabasePath,Token:string):string;
 function Hmac256Hex(const Key,Value:RawByteString):string;
 function ConstantEqual(const A,B:string):Boolean;
 implementation
@@ -13,6 +14,8 @@ begin
   if Length(Value)>0 then C.Update(PByte(Pointer(Value)),Length(Value));
   C.Final; C.OutputHexa(Result); Result:=LowerCase(Result);
 end;
+function TenantTokenHash(const DatabasePath,Token:string):string;
+begin Result:=Sha256Hex('welite-token-v2'+#0+ExpandFileName(DatabasePath)+#0+Token);end;
 function Hmac256Hex(const Key,Value:RawByteString):string;
 var D:TSHA256Digest; i:Integer;
 begin
