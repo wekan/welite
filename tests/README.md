@@ -66,7 +66,9 @@ SQL defaults. The runtime uses private short files rather than an oversized SQL 
 `python3 tests/ferroot.py` builds the root projection harness and CLI extension, then
 runs isolated FerretDB servers to verify live two-way root collection edits, fresh SQL
 collection creation, legacy TEXT/restart, typed metadata, rollback and safe reinstallation. It also exercises
-embedded object/scalar array insert/update/delete and byte-exact failed-edit preservation.
+embedded object/scalar array insert/update/delete, all thirteen child SQL views,
+simultaneous key/value edits, custom child trigger retention, unowned child-table refusal
+and byte-exact failed-edit preservation.
 Set `FERRETDB` to a native server built from the companion source revision documented in
 `docs/ferret.md`. Use normal-sidecar SQLite for this test: a short-name library must not
 open the same live database as a normal-sidecar FerretDB binary. No production data is used.

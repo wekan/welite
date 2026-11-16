@@ -179,15 +179,24 @@ function RelationDocument(const Previous,Command,Model:string):string;
 var Doc,Cmd,Spec,Old,Values,Row,Field,Seen:TJSONObject;Fields,Keys,Rows:TJSONArray;
   Item,Value,Converted,Container:TJSONData;Path,Op,Name,Signature:string;
   i,j,Found:Integer;Scalar,Match:Boolean;
+  function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
+  var n:Integer;
+  begin
+    if Scalar then Exit(Entry);
+    if not (Entry is TJSONObject) then Invalid;
+    Result:=AtPath(TJSONObject(Entry),Key);
+    if Result=nil then
+      for n:=0 to Fields.Count-1 do
+        if Fields.Objects[n].Get('path',Fields.Objects[n].Get('name',''))=Key then
+          Exit(Fields.Objects[n].Find('default'));
+  end;
   function KeyOf(Entry:TJSONData):string;
   var k:Integer;Part:TJSONData;
   begin
     Result:='';
     for k:=0 to Keys.Count-1 do
     begin
-      if Scalar then Part:=Entry
-      else if Entry is TJSONObject then Part:=AtPath(TJSONObject(Entry),Keys.Strings[k])
-      else begin Invalid;Part:=nil;end;
+      Part:=KeyValue(Entry,Keys.Strings[k]);
       if (Part=nil) or (Part.JSONType<>jtString) or (Part.AsString='') then Invalid;
       Result:=Result+IntToStr(Length(Part.AsString))+':'+Part.AsString;
     end;
@@ -214,9 +223,7 @@ begin
       for j:=0 to Keys.Count-1 do
       begin
         Name:=Keys.Strings[j];Value:=Old.Find(Name);
-        if Scalar then Converted:=Item
-        else if Item is TJSONObject then Converted:=AtPath(TJSONObject(Item),Name)
-        else begin Invalid;Converted:=nil;end;
+        Converted:=KeyValue(Item,Name);
         if (Value=nil) or (Converted=nil) then Match:=False
         else if (Value.JSONType<>jtString) or (Converted.JSONType<>jtString) or
           (Value.AsString<>Converted.AsString) then Match:=False;

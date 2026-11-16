@@ -88,7 +88,8 @@ UTF-8, field order and bit-exact doubles. The Go oracle is a test dependency onl
 
 `releases/genmodel.py` generates `src/wlmodels.pas` from `schema.sql`; `--check`
 checks drift. Python is a build/test tool, not a runtime dependency. `wlferr.pas`
-exposes `InstallRootModels`, currently called only by the SQL test harness. It is
+exposes `InstallRootModels` (now installing roots and children), currently called only
+by the SQL test harness. It is
 intentionally not installed by normal server startup while the remaining gates are open.
 
 The eleven root views cover boards, swimlanes, lists, cards, comments, checklists,
@@ -126,13 +127,25 @@ missing targets, malformed arrays and invalid patches fail the SQL statement.
 
 Live root tests exercise both object members and nested scalar ID arrays through
 this function, decoded by FerretDB, with byte-exact BSON comparisons after rejected
-edits. The function is available in linked SQLite and the CLI extension. Child SQL
-views and their constraints are still the next integration step.
+edits. The function is available in linked SQLite and the CLI extension. `wlrel.pas` now installs thirteen child SQL views using generated relation contracts.
+They read arrays from the same physical parent document and write through `wl_relation`.
+A single sparse update supports key and value changes together; parent reassignment is
+refused. Missing parents fail insertion. The root installer includes child installation
+in its transaction, refuses unowned child objects and restores custom view triggers.
+Optional dependency type defaults participate in key matching. Actual dependency storage
+is `cardDependencies`, with target `cardId`; labels and dropdown IDs use `_id`.
+
+Live tests cover every child view, Mongo edits visible to SQL, SQL edits decoded by Mongo,
+unknown typed child properties, multi-column key edits, duplicates, missing parents and
+ownership refusal. Full cascades and reference validation, typed custom-field value
+conversion and legacy bare-string dependency normalization are not yet implemented.
+SQL `INSERT OR REPLACE` conflict behavior also needs application-level reconciliation
+before these views replace normalized tables.
 
 ## Remaining before the checklist can be checked
 
-- Map child relations through live SQL views/triggers, preserving parent arrays and
-  implementing required cascades, reference checks and account uniqueness rules.
+- Complete cascades, reference checks and account uniqueness rules; reconcile typed
+  custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile existing Meteor password/session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and private authentication-table references.

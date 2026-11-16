@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Writable FerretDB child views
+
+- Generate thirteen child contracts from the canonical SQL schema and install writable
+  views for board labels/members/groups/domains, card membership/labels/custom values/
+  dependencies, custom-field boards/dropdown items and user emails. Use actual `_id`
+  fields and nested paths; correct dependencies to `cardDependencies`.
+- Apply one sparse patch per SQL row update, including simultaneous key/value changes.
+  Preserve unknown child properties and BSON metadata. Match omitted optional dependency
+  types using their defaults; reject duplicate child keys, invalid booleans, missing
+  parents and parent reassignment.
+- Install root and child views in one transaction, refuse unowned child tables/views,
+  and retain custom child-view triggers across reinstallation.
+- Verify every child view against live FerretDB on linked and CLI SQLite, SQL/Mongo
+  updates in both directions, typed unknown data, failed inserts and ownership refusal.
+  Source-codec tests pass again. Cascades, full typed custom-value conversion, shared
+  account/file support and application activation remain open.
+
 ## 2026-11-16 Typed embedded relation editing
 
 - Add the shared `wl_relation` SQL function for sparse insert/update/delete of embedded

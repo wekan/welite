@@ -97,6 +97,52 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert client.find('checklistItems','item')[0]['isFinished'] is True
                 assert client.find('users','author')[0]['profile']=={'language':'fi'}
                 assert client.find('activities','activity')[0]['other'] is None
+                # All generated child views map to the actual embedded model paths.
+                children=[
+                    ('board_labels','boards','board','labels',dict(boardId='board',id='label',name='Label',color='red')),
+                    ('board_members','boards','board','members',dict(boardId='board',userId='extra',isAdmin=1)),
+                    ('board_orgs','boards','board','orgs',dict(boardId='board',orgId='org',orgDisplayName='Org')),
+                    ('board_teams','boards','board','teams',dict(boardId='board',teamId='team',teamDisplayName='Team')),
+                    ('board_domains','boards','board','domains',dict(boardId='board',domain='example.org')),
+                    ('card_members','cards','card','members',dict(cardId='card',userId='author')),
+                    ('card_assignees','cards','card','assignees',dict(cardId='card',userId='author')),
+                    ('card_labels','cards','card','labelIds',dict(cardId='card',labelId='label')),
+                    ('card_custom_field_values','cards','card','customFields',dict(cardId='card',customFieldId='field',value='plain text')),
+                    ('card_dependencies','cards','card','cardDependencies',dict(cardId='card',targetCardId='target')),
+                    ('custom_field_boards','customFields','field','boardIds',dict(customFieldId='field',boardId='board')),
+                    ('custom_field_dropdown_items','customFields','field','settings.dropdownItems',dict(customFieldId='field',id='option',name='Option',sort=1)),
+                    ('user_emails','users','author','emails',dict(userId='author',address='user@example.org',verified=1)),
+                ]
+                for table,collection,identity,path,values in children:
+                    statement='INSERT INTO '+table+'('+','.join(values)+') VALUES('+','.join(str(v) if isinstance(v,int) else q(v) for v in values.values())+');'
+                    assert sql(statement,'exec')=='ok',(table,statement)
+                    document=client.find(collection,identity)[0]
+                    for key in path.split('.'):document=document[key]
+                    assert isinstance(document,list) and len(document)>0,table
+                    assert sql('SELECT count(*) FROM '+table+';')[0][0]!='0',table
+                    assert sql(statement,'exec')=='error',table
+                assert client.find('cards','card')[0]['cardDependencies']==[dict(cardId='target',type='related-to',color='#eb144c',icon='link')]
+                assert client.find('customFields','field')[0]['settings']['dropdownItems'][0]['_id']=='option'
+                assert client.find('boards','board')[0]['labels'][0]['_id']=='label'
+                assert client.find('users','author')[0]['emails'][0]['verified'] is True
+                assert sql("UPDATE board_labels SET id='renamed',name='Changed',color='blue' WHERE boardId='board' AND id='label';",'exec')=='ok'
+                assert client.find('boards','board')[0]['labels']==[dict(_id='renamed',name='Changed',color='blue')]
+                assert sql("UPDATE board_labels SET boardId='new' WHERE boardId='board';",'exec')=='error'
+                assert sql("INSERT INTO board_labels(boardId,id,color) VALUES('absent','bad','red');",'exec')=='error'
+                assert sql("UPDATE board_members SET isAdmin=2 WHERE userId='extra';",'exec')=='error'
+                # Mongo edits are immediately visible, with unknown properties preserved by SQL.
+                client.command({'update':'boards','updates':[{'q':{'_id':'board'},'u':{'$set':{'labels':[dict(_id='renamed',name='Mongo',color='blue',unknown=DateMs(-1))]}}}]})
+                assert sql("SELECT name FROM board_labels WHERE id='renamed';")==[['Mongo']]
+                assert sql("UPDATE board_labels SET name='SQL' WHERE id='renamed';",'exec')=='ok'
+                assert isinstance(client.find('boards','board')[0]['labels'][0]['unknown'],DateMs)
+                assert sql("DELETE FROM board_labels WHERE id='renamed';",'exec')=='ok'
+                assert client.find('boards','board')[0]['labels']==[]
+                # Optional dependency type defaults participate in matching and uniqueness.
+                client.command({'update':'cards','updates':[{'q':{'_id':'card'},'u':{'$set':{'cardDependencies':[dict(cardId='target',unknown=DateMs(-1))]}}}]})
+                assert sql("UPDATE card_dependencies SET color='green' WHERE cardId='card' AND targetCardId='target' AND type='related-to';",'exec')=='ok'
+                dependency=client.find('cards','card')[0]['cardDependencies'][0]
+                assert dependency['color']=='green' and isinstance(dependency['unknown'],DateMs)
+                assert sql("INSERT INTO card_dependencies(cardId,targetCardId) VALUES('card','target');",'exec')=='error'
                 # Clone seed retains unknown BSON metadata; managed arrays start empty
                 # because relation insertion must remap their child identifiers later.
                 physical=sql("SELECT table_name FROM _ferretdb_collections WHERE name='boards';")[0][0]
@@ -145,9 +191,11 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE boards SET _wl_source='{}' WHERE id='new';",'exec')=='error'
                 assert sql("INSERT INTO boards(id,title,slug,createdAt) VALUES('new','Duplicate','duplicate',"+q(stamp)+');','exec')=='error'
                 assert sql('CREATE TABLE audit(value TEXT); CREATE TRIGGER custom_audit INSTEAD OF UPDATE OF title ON boards BEGIN INSERT INTO audit VALUES(NEW.title);END;','exec')=='ok'
+                assert sql('CREATE TRIGGER child_audit INSTEAD OF UPDATE OF name ON custom_field_dropdown_items BEGIN INSERT INTO audit VALUES(NEW.name);END;','exec')=='ok'
                 assert sql(mode='install')=='ok' and client.find('boards','new')[0]['title']=='New'
+                assert sql("UPDATE custom_field_dropdown_items SET name='Child audit' WHERE id='option';",'exec')=='ok'
                 assert sql("UPDATE boards SET title='Audited' WHERE id='new';",'exec')=='ok'
-                assert sql('SELECT value FROM audit;')==[['Audited']]
+                assert sql('SELECT value FROM audit;')==[['Child audit'],['Audited']]
                 assert client.find('boards','new')[0]['title']=='Audited'
 
                 # Normalized tables must never be overwritten by this installer.
@@ -156,6 +204,13 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql(mode='install',database=rejected)=='error'
                 with sqlite3.connect(rejected) as con:
                     assert con.execute('SELECT * FROM boards').fetchall()==[('preserve',)]
+                    assert not con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchall()
+                child_rejected=out/'child.db'
+                with sqlite3.connect(child_rejected) as con:
+                    con.execute('CREATE TABLE board_labels(value TEXT)');con.execute("INSERT INTO board_labels VALUES('preserve child')")
+                assert sql(mode='install',database=child_rejected)=='error'
+                with sqlite3.connect(child_rejected) as con:
+                    assert con.execute('SELECT * FROM board_labels').fetchall()==[('preserve child',)]
                     assert not con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchall()
                 fresh=out/'fresh';fresh.mkdir();freshdb=fresh/'wekan.sqlite'
                 assert sql(mode='install',database=freshdb)=='ok'
@@ -205,7 +260,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     oldserver.terminate()
                     try:oldserver.wait(timeout=10)
                     except subprocess.TimeoutExpired:oldserver.kill();oldserver.wait()
-                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, typed object/scalar relation edits, rollback, immutable IDs and ownership-safe reinstall')
+                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
             finally:
                 server.terminate()
                 try:server.wait(timeout=10)

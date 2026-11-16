@@ -1,9 +1,9 @@
 unit wlferr;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd;
-// Installs only root projections. Child-array views and application activation
-// remain separate gates; callers must not treat this as a finished store adapter.
+uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel;
+// Installs root and child projections. Application activation and shared-account
+// compatibility remain separate gates before this is a finished store adapter.
 function InstallRootModels(Db:TWLDb):Boolean;
 function RootModelScript(Db:TWLDb):string;
 implementation
@@ -58,7 +58,7 @@ begin
 end;
 function RootModelScript(Db:TWLDb):string;
 var Models:TJSONArray;Model,Field,Settings,IndexDef:TJSONObject;Fields,Managed,Indexes,Keys:TJSONArray;
-  Registry,Rows,Owner,Objects,Custom:TWLRows;Used,Roots:TStringList;
+  Registry,Rows,Owner,Objects,Custom:TWLRows;Used,Roots,Tables:TStringList;
   Sql,TableName,ViewName,Collection,Storage,Existing,ReadExpr,Columns,Spec,SettingsText,Body,Root:string;
   Hash:LongWord;i,j,k:Integer;Fresh,MetadataExists,OwnerExists,Found:Boolean;
   function Wrapped(const Value:string):string;
@@ -74,7 +74,7 @@ var Models:TJSONArray;Model,Field,Settings,IndexDef:TJSONObject;Fields,Managed,I
     for n:=0 to High(Objects) do if SameText(Objects[n][0],Name) then Exit(True);
   end;
 begin
-  Result:='';Models:=nil;Used:=nil;Roots:=nil;
+  Result:='';Models:=nil;Used:=nil;Roots:=nil;Tables:=nil;
   Rows:=Db.Query('SELECT wl_model('''',''{}'',''{"fields":[],"managed":[]}'',''insert'') IS NOT NULL,json_valid(json(jsonb(''{}'')));');
   if (Length(Rows)<>1) or (Rows[0][0]<>'1') or (Rows[0][1]<>'1') then
     raise Exception.Create('Typed projection functions and SQLite JSONB are required');
@@ -84,7 +84,7 @@ begin
   if MetadataExists then Registry:=Db.Query('SELECT name,table_name,settings FROM _ferretdb_collections;');
   if OwnerExists then Owner:=Db.Query('SELECT name,table_name FROM _wl_models;');
   try
-    Models:=TJSONArray(GetJSON(ModelJson));Used:=TStringList.Create;Used.CaseSensitive:=False;
+    Models:=TJSONArray(GetJSON(ModelJson));Tables:=TStringList.Create;Used:=TStringList.Create;Used.CaseSensitive:=False;
     for i:=0 to High(Registry) do
     begin
       if Used.IndexOf(Registry[i][1])>=0 then raise Exception.Create('Duplicate physical collection mapping');
@@ -130,6 +130,7 @@ begin
             raise Exception.Create('Collection storage metadata disagrees with its column');
         finally Settings.Free;end;
       end;
+      Tables.Values[ViewName]:=TableName;
       Existing:='';
       for j:=0 to High(Objects) do if SameText(Objects[j][0],ViewName) then Existing:=Objects[j][1];
       if Existing<>'' then
@@ -187,8 +188,8 @@ begin
         'INSERT OR REPLACE INTO _wl_models VALUES('+Q(ViewName)+','+Q(TableName)+','+Q(Spec)+',1); ';
       for j:=0 to High(Custom) do Sql:=Sql+Custom[j][0]+'; ';
     end;
-    Result:=Sql+'COMMIT;';
-  finally Roots.Free;Used.Free;Models.Free;end;
+    Result:=Sql+RelationScript(Db,Tables)+'COMMIT;';
+  finally Tables.Free;Roots.Free;Used.Free;Models.Free;end;
 end;
 function InstallRootModels(Db:TWLDb):Boolean;
 var Sql:string;
