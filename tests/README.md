@@ -275,11 +275,18 @@ Shared expiry sweep tests in `ferroot.py` compile `sweep.lpr` and check owned du
 cadence, Date/numeric strict cutoff and equality, concurrent due callers, ignored account
 and checkpoint writes with complete rollback/retry, reinstall, backwards clocks, stale
 source and fractional cutoff against Node.js. Retained BSON/precision/unknowns are
-compared exactly on both backends. Background worker coverage follows; local cleanup and startup discovery remain open.
+compared exactly on both backends. Background worker/discovery coverage follows; local cleanup remains open.
 
 Background maintenance coverage in `ferroot.py` uses the real `maint.lpr` worker with
 separate connections and an accelerated polling interval. It observes a failed sweep,
 checks no partial commit, removes the failure and verifies idle retry, another due pass,
 exact BSON, native/missing path isolation and clean stop. Production polling remains one
 minute with the durable ten-minute cadence. `enrhttp.py` verifies both-backend HTTP
-startup/registration/enrollment regressions; startup discovery and local cleanup remain.
+startup/registration/enrollment regressions; root discovery is covered below and local
+cleanup remains open.
+
+`discov.py`, called by `ferroot.py`, tests root-based startup and refreshed discovery
+without HTTP access. Independent SQLite backups of real shared data verify local and
+enabled-domain cleanup, dynamic enabling/new registry entries, disabled/orphan/invalid
+host exclusion, no provisioning of missing directories, native-registry skip, broken
+registry detection/recovery and clean shutdown. The copies are separate databases, never filename aliases. Both backends run.

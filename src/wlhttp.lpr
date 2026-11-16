@@ -587,6 +587,6 @@ begin
   Application.Threaded := True;
   Application.Initialize;
   Writeln('WeKan-Lite listening on :', Application.Port, ' (data root: ', DATA_ROOT, ')');
-  StartMaintenance;
+  StartMaintenance(DataDir);
   try Application.Run;finally StopMaintenance;end;
 end.

@@ -16,6 +16,7 @@ import subprocess
 import tempfile
 import time
 from wire import encode,Client,Long,DateMs,Binary,ObjectId,Timestamp,Regex
+from discov import run as check_discovery
 root=Path(__file__).resolve().parents[1]
 tools=root.parents[1]
 # Never mix short-sidecar and normal-sidecar libraries on a live shared database.
@@ -396,6 +397,15 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert not missing_store.exists()
                 with sqlite3.connect(native_store) as native:assert native.execute('SELECT * FROM users').fetchall()==[('unchanged',)]
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='worker-user'),limit=1)]})
+
+                # Startup discovery uses separate backups under the managed layout.
+                discovery_doc=dict(_id='discovery-user',services=dict(resume=dict(loginTokens=[dict(token='discovery-old',when=DateMs(0)),dict(token='discovery-future',when=DateMs(int(time.time()*1000)+86400000))])))
+                client.command({'insert':'users','documents':[discovery_doc]})
+                checkpoint=sql('SELECT lastAt FROM _wl_sweep;')[0][0]
+                assert sql('UPDATE _wl_sweep SET lastAt=-600000;','exec')=='ok'
+                check_discovery(out,db,physicals['users'],settings)
+                assert sql('UPDATE _wl_sweep SET lastAt='+checkpoint+';','exec')=='ok'
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='discovery-user'),limit=1)]})
 
                 # Private tokens reference a user view without invalid SQLite FKs.
                 build(root/'tests/token.lpr',out/'tokens',flags)

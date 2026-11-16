@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Discover idle tenants before first access
+
+- Give the HTTP maintenance worker its configured data root. Discover existing local,
+  admin and enabled canonical-domain stores on startup and each polling pass, using
+  registry numeric short-directory keys rather than host strings as paths.
+- Refresh eligibility without a request: newly enabled/registered domains join the next
+  pass; disabled, orphaned, invalid-host and missing stores are skipped. Discovery does
+  not provision directories or schemas. Registry failures are isolated and retried.
+- Keep explicit-path mode for standalone callers. Root-based discovery is authoritative
+  when configured; tenant registration wakes a refresh. Native/registry stores without
+  a shared users view are skipped without recording false sweep failures.
+- Verify startup/idle discovery, registry changes and read-failure recovery on independent
+  backups of actual
+  shared data on linked/CLI SQLite, with no HTTP request. Existing live worker/interop
+  and both-backend HTTP enrollment/registration regressions pass.
+- Local credential cleanup, broader resume-policy parity, actual shared-store activation,
+  filename/sidecar policy and application/observer workflows remain outstanding.
+
 ## 2026-11-16 Background shared expiry lifecycle
 
 - Add a worker that maintains registered shared stores during idle HTTP periods, with

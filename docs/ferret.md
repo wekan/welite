@@ -890,9 +890,9 @@ by the database sweep alone.
 
 ## Background maintenance lifecycle
 
-`wlmaint.pas` owns a worker with a locked, deduplicated absolute-path set. New paths wake
-it immediately; otherwise it polls once a minute and lets the durable ten-minute sweep
-checkpoint decide whether work is due. Each pass opens and closes its own connection;
+`wlmaint.pas` owns a worker with either root-based discovery or a locked, deduplicated
+explicit-path set. Registration wakes it; otherwise it polls once a minute and lets the
+durable ten-minute sweep checkpoint decide whether work is due. Each pass opens and closes its own connection;
 request/cached handles stay with the caller. Missing files are skipped, native stores
 are not swept and a failed store does not terminate work for other stores. An atomic
 failed-pass counter permits observing retry behavior. Failure leaves the durable sweep
@@ -900,8 +900,9 @@ checkpoint unchanged, so later passes retry.
 
 The HTTP run loop starts maintenance and stops it in a `finally` block. Tenant open
 registers shared stores for both cached/new handles; unsupported registration cannot
-break a request. The path set is per process. Registered stores remain eligible during
-idle periods, without a subsequent HTTP request. Stopping signals the wait event, joins
+break a request. Without a data root, the explicit path set is per process. With a data root, each pass
+refreshes the registry-based set described below. Eligible stores are maintained during
+idle periods without an HTTP request. Stopping signals the wait event, joins
 the worker after its current database operation and releases worker-owned state.
 
 `ferroot.py` runs the actual worker on both backends. It observes an injected failed
@@ -909,16 +910,42 @@ sweep before allowing recovery, then checks idle cleanup, another due pass, exac
 missing/native-store isolation and a clean stop. `enrhttp.py` covers HTTP startup and
 registration/enrollment regressions on linked/CLI SQLite.
 
-Existing tenants that have not been opened since startup are not discovered yet.
 Local credential cleanup, actual shared-store HTTP activation, process-signal lifecycle
 and full Meteor observer/application workflows remain explicit integration work. The
 worker does not resolve the shared filename/sidecar policy or activate the adapter.
+
+## Startup and refreshed tenant discovery
+
+The HTTP worker receives the configured `WELITE_DATA` root. `wldisc.pas` finds existing
+`local/files/db/wekan.db`, `admin/files/db/wekan.db` and enabled canonical-domain files.
+It reads the admin registry using its own connection and joins `domains` to `tenantdirs`.
+Only valid canonical hosts and numeric keys 1–268435455 qualify; domain paths use the
+same `d` plus seven hexadecimal digits as tenant routing. Host strings never become
+filesystem paths. Missing files, disabled domains, orphan mappings and invalid hosts are
+skipped; discovery does not create tenant directories or apply schemas.
+
+Every polling pass refreshes this set, so enabled/new domains need no first HTTP request.
+Registry changes apply to subsequent passes; a pass already in progress may finish.
+When a data root is configured, this discovered set is authoritative and request-time
+registration wakes a refresh. Without a root, standalone explicit-path registration
+retains its prior behavior. A registry read failure is counted/retried while existing
+local/admin candidates remain available. Native and registry-only databases without a
+shared users view are skipped without a false sweep failure.
+
+`tests/discov.py`, invoked by `ferroot.py`, uses independent SQLite backups of actual
+shared source data under the managed directory layout. It verifies no-request startup
+cleanup, dynamic enabling/registration, exclusion of disabled/orphan/invalid mappings,
+missing-directory preservation, broken-registry detection/recovery and clean shutdown
+on both backends. These are separate
+databases, never `.db`/`.sqlite` aliases. Existing live tests cover the shared sweep itself;
+this discovery test does not claim filename migration, cloned-auth compatibility or a
+full Meteor observer round trip. `enrhttp.py` covers HTTP startup and enrollment regressions.
 
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity, local expiry cleanup and startup tenant discovery; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity, local expiry cleanup and process-signal lifecycle; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
