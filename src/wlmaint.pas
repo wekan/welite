@@ -50,7 +50,7 @@ end;
 function TWLMaintainer.FailedPasses:LongInt;
 begin Result:=InterlockedCompareExchange(FFailures,0,0);end;
 procedure TWLMaintainer.Execute;
-var Paths:TStringList;i:Integer;Db:TWLDb;Rows:TWLRows;
+var Paths:TStringList;i:Integer;Db:TWLDb;Rows:TWLRows;Succeeded:Boolean;
 begin
   Paths:=TStringList.Create;
   try
@@ -74,7 +74,13 @@ begin
           try
             Db:=TWLDb.Create(Paths[i]);
             Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''users'';');
-            if (Length(Rows)=1) and (Rows[0][0]='view') and not SweepSharedTokens(Db,UnixMillis(Now)) then InterlockedIncrement(FFailures);
+            Succeeded:=True;
+            if Length(Rows)=1 then
+            begin
+              if Rows[0][0]='view' then Succeeded:=SweepSharedTokens(Db,UnixMillis(Now))
+              else if Rows[0][0]='table' then Succeeded:=SweepLegacyTokens(Db,UnixMillis(Now));
+            end;
+            if not Succeeded then InterlockedIncrement(FFailures);
           except InterlockedIncrement(FFailures);end;
         finally Db.Free;end;
       end;
@@ -97,11 +103,15 @@ begin
   Previous.Free;
 end;
 procedure RegisterMaintenanceDb(Db:TWLDb);
+var Rows:TWLRows;
 begin
   EnterCriticalSection(WorkerLock);
   try
     if (Worker=nil) or (Db=nil) then Exit;
-    try if SharedStore(Db) then Worker.AddPath(Db.Path);except { Unsupported stores do not break a request. } end;
+    try
+      Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''users'';');
+      if (Length(Rows)=1) and ((Rows[0][0]='table') or (Rows[0][0]='view')) then Worker.AddPath(Db.Path);
+    except { Unsupported stores do not break a request. } end;
   finally LeaveCriticalSection(WorkerLock);end;
 end;
 initialization InitCriticalSection(WorkerLock);

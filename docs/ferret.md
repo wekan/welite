@@ -893,8 +893,8 @@ by the database sweep alone.
 `wlmaint.pas` owns a worker with either root-based discovery or a locked, deduplicated
 explicit-path set. Registration wakes it; otherwise it polls once a minute and lets the
 durable ten-minute sweep checkpoint decide whether work is due. Each pass opens and closes its own connection;
-request/cached handles stay with the caller. Missing files are skipped, native stores
-are not swept and a failed store does not terminate work for other stores. An atomic
+request/cached handles stay with the caller. Missing files are skipped, supported legacy
+stores use their own cleanup path, and a failed store does not stop other stores. An atomic
 failed-pass counter permits observing retry behavior. Failure leaves the durable sweep
 checkpoint unchanged, so later passes retry.
 
@@ -910,7 +910,7 @@ sweep before allowing recovery, then checks idle cleanup, another due pass, exac
 missing/native-store isolation and a clean stop. `enrhttp.py` covers HTTP startup and
 registration/enrollment regressions on linked/CLI SQLite.
 
-Normalized-store maintenance, actual shared-store HTTP activation, process-signal lifecycle
+Actual shared-store HTTP activation, process-signal lifecycle
 and full Meteor observer/application workflows remain explicit integration work. The
 worker does not resolve the shared filename/sidecar policy or activate the adapter.
 
@@ -997,8 +997,7 @@ OTP replay is deliberately retained; pending enrollment cleanup is described bel
 called by `ferroot.py`, covers inclusive deadlines, hash/raw/duplicate forms, scalar/BSON
 preservation, orphan rows, five ignored-write stages, retry, sibling/account isolation,
 null-hash behavior and a real idle-worker cleanup on linked/CLI SQLite. `resume.py` checks
-digest-set validation and SQLite hash output against Python. Native token regressions remain unchanged; normalized-store maintenance still needs
-integration.
+digest-set validation and SQLite hash output against Python. Normalized legacy-store cleanup is described below.
 
 ## Expired pending enrollment maintenance
 
@@ -1014,13 +1013,42 @@ a pending secret or clears OTP replay state. `expiry.py` creates real pending en
 through the proof/setup flow, checks equality and retained setup, injects an ignored
 pending deletion after earlier cleanup stages, then checks actual idle-worker expiry.
 Both SQLite backends run. `enroll.py` retains proof, binding, expiry, activation/replay
-and rollback coverage. Normalized legacy stores remain outside this shared-store sweep.
+and rollback coverage. Normalized legacy stores use the separate path below.
+
+## Normalized legacy-store maintenance
+
+`SweepLegacyTokens` handles the existing normalized `users`/`login_tokens` layout without
+converting credentials or introducing shared records. It checks the four expected text
+columns and single token primary key; optional `authmeta` needs its expected text fields,
+and optional pending/checkpoint tables must match known layouts. Minimal registry/stores
+without a credential table are skipped. A FerretDB collection marker or shared-source
+binding prevents use of this path.
+
+The sweep captures inspected schema definitions and optional-table absence in transaction
+guards. It creates only the private `_wl_sweep` checkpoint when needed, then applies the
+same ten-minute cadence and backwards-clock refusal. Expired tokens, credential/orphan
+metadata and pending setup are removed at inclusive deadlines; valid tokens and replay
+state survive. It does not create missing optional metadata, `_wl_pair`, `_wl_seen` or
+shared-source tables. A checkpoint with an incompatible layout is refused.
+
+Assertions catch ignored checkpoint seeds/updates and cleanup writes. Native SQLite
+`RAISE` is trigger-only, so lazy `CASE` with the integer-overflow failure of
+`abs(-9223372036854775808)` supplies statement assertions outside triggers. A failed or
+stale concurrent claim rolls back checkpoint/schema creation and every cleanup change.
+The worker dispatches by users table/view and registration wakes both supported layouts.
+
+`tests/lsweep.py` runs linked/CLI tests with actual password issuance and pending setup:
+equality, optional tables, three ignored cleanup stages, ignored checkpoint seed/update,
+concurrent calls, clock boundaries, unsupported/mixed schema refusal, replay preservation
+and real idle cleanup. HTTP admin/permissions and enrollment suites check the active
+legacy application. This maintenance support does not replace the offline normalized-to-
+shared authentication migration policy or activate shared stores automatically.
 
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity, normalized-store maintenance and process-signal lifecycle; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity and process-signal lifecycle; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

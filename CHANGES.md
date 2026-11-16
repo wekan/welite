@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Maintain normalized legacy-store expiry
+
+- Add a legacy-store sweep for the existing normalized token layout. Remove expired
+  credentials, optional credential/orphan metadata and optional pending enrollment at
+  inclusive deadlines, retaining valid sessions and OTP replay boundaries.
+- Validate expected text columns/primary keys and pending/checkpoint layouts. Snapshot
+  inspected schemas inside transaction guards, refuse mixed FerretDB/native stores and
+  avoid creating optional auth or shared/history tables. Only the private checkpoint is
+  added to a supported older store.
+- Commit the ten-minute checkpoint and cleanup atomically. Ignored metadata/token/setup
+  deletion or checkpoint seed/update rolls back; backwards clocks and stale concurrent
+  claims cannot advance work. Keep optional-metadata-free older stores supported.
+- Dispatch both layouts in the idle worker and wake it for newly opened legacy stores.
+  Verify linked/CLI equality, schema refusal, rollback, concurrency, replay retention and
+  actual idle cleanup. Shared interoperability and broad HTTP regressions also pass.
+- Broader resume-policy parity, process-signal lifecycle, actual shared-store activation,
+  migration/filename policy and full Meteor application/observer workflows remain open.
+
 ## 2026-11-17 Expire private pending enrollment during maintenance
 
 - Remove expired private enrollment records in the existing shared-store sweep
