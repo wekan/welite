@@ -1,13 +1,15 @@
 unit wlshared;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,DateUtils,fpjson,wldb,wlautsrc,wlresume,wlcrypt,wlsjson,wlpolicy;
+uses SysUtils,DateUtils,Math,wllife,fpjson,wldb,wlautsrc,wlresume,wlcrypt,wlsjson,wlpolicy;
 function AccountPolicyCondition(Db:TWLDb):string;
 function ResolvedFactorPolicy(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean;
   out Secret,Condition:string):TFactorPolicy;
 function ResolvedPasswordAllowed(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean):Boolean;
 function SharedStore(Db:TWLDb):Boolean;
 function ApiTokenLifetime(Db:TWLDb):Int64;
+function ApiTokenLifetimeMs(Db:TWLDb;out Condition:string):Double;
+function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:string):Int64;
 function UnixMillis(At:TDateTime):Int64;
 function SharedIssueSQL(Db:TWLDb;const UserId,Token,Key:string;WhenMs:Int64):string;
 function SharedBearerValid(Db:TWLDb;const UserId,Token:string):Boolean;
@@ -83,17 +85,29 @@ begin
   Result:=ResolvedFactorPolicy(Db,Method,Services,IsAdmin,Secret,Condition)=fpNone;
   if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;
 end;
-function ApiTokenLifetime(Db:TWLDb):Int64;
-var Days:Int64;Setting,Snapshot:string;Doc:TJSONObject;
+function ApiTokenLifetimeMs(Db:TWLDb;out Condition:string):Double;
+var Setting,Snapshot:string;Doc:TJSONObject;
 begin
-  Result:=90*86400;if not SharedStore(Db) then Exit;
+  Result:=90.0*86400000;Condition:=AuthSourceCondition(Db);if not SharedStore(Db) then Exit;
   Doc:=ReadSettings(Db,Snapshot);
   try
-    Setting:=Trim(SettingValue(Doc,'loginOptions','loginExpirationInDays',GetEnvironmentVariable('ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS')));
+    Setting:=SettingValue(Doc,'loginOptions','loginExpirationInDays',GetEnvironmentVariable('ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS'));
+    Result:=TokenLifetimeMs(Setting);Condition:='('+Condition+') AND ('+Snapshot+')';
   finally Doc.Free;end;
-  if (Setting='') or (Setting='0') then Days:=90
-  else if not TryStrToInt64(Setting,Days) or (Days<1) or (Days>36500) then raise Exception.Create('Unsupported shared token lifetime');
-  Result:=Days*86400;
+end;
+function ApiTokenLifetime(Db:TWLDb):Int64;
+var Condition:string;
+begin
+  // The existing caller contract is seconds; this is a request marker only.
+  // Shared expiry always uses the original binary64 milliseconds below.
+  Result:=Ceil(ApiTokenLifetimeMs(Db,Condition)/1000.0);
+end;
+function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:string):Int64;
+var Life:Double;
+begin
+  Life:=ApiTokenLifetimeMs(Db,Condition);
+  if TtlSeconds<>Ceil(Life/1000.0) then raise Exception.Create('Shared token lifetime changed');
+  Result:=TokenExpirationMs(WhenMs,Life);
 end;
 function UnixMillis(At:TDateTime):Int64;
 begin Result:=DateTimeToUnix(At,False)*1000+MilliSecondOf(At);end;
@@ -146,7 +160,7 @@ begin
   Result:=Result+'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND (NOT ('+Issued+') OR ('+Present+')) THEN userUUID ELSE NULL END WHERE id=1; ';
 end;
 function SharedBearerValid(Db:TWLDb;const UserId,Token:string):Boolean;
-var Rows:TWLRows;TableName,Doc,Hash:string;Stamp,Expiration:Int64;
+var Rows:TWLRows;TableName,Doc,Hash:string;Stamp,Expiration:Int64;Life:Double;Condition:string;
 begin
   Result:=False;
   try
@@ -155,7 +169,8 @@ begin
     Rows:=Db.Query('SELECT json_extract(p.'+Doc+',''$."_id"''),json(p.'+Doc+') FROM '+Id(TableName)+' p WHERE ('+AuthSourceCondition(Db)+
       ') AND EXISTS(SELECT 1 FROM json_each(p.'+Doc+',''$.services.resume.loginTokens'') j WHERE '+MatchSQL(Token,Hash)+') LIMIT 2;');
     if (Length(Rows)<>1) or (Rows[0][0]<>UserId) then Exit;
-    Result:=CheckResumeToken(Rows[0][1],Hash,UnixMillis(Now),ApiTokenLifetime(Db)*1000,Stamp,Expiration)=rsValid;
+    Life:=ApiTokenLifetimeMs(Db,Condition);
+    Result:=CheckResumeToken(Rows[0][1],Hash,UnixMillis(Now),Life,Stamp,Expiration)=rsValid;
   except Result:=False;end;
 end;
 end.

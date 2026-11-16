@@ -74,7 +74,9 @@ must remain valid. Removing the shared record logs that bearer out of WeLite as 
 older private-only shared-store API credentials need a fresh login. Browser sessions
 retain their private client-bound format. Stored `loginOptions.loginExpirationInDays`
 wins over `ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS`; absent/zero means 90 days. Supported
-lifetimes are whole days from 1 to 36500; unsupported values deny issuance. The response
+lifetimes are positive decimal/scientific days through 36500, including fractions;
+unsupported values deny issuance. Expiry uses the original milliseconds with Date
+truncation after addition, so subsecond lifetimes are not rounded up. The response
 returns the expiry committed to the local credential. Native-store defaults stay 90 days.
 Shared Settings MFA, LDAP and password-login overrides take precedence over deployment
 fallbacks; null/empty values use the fallback. Proofs bind to the settings snapshot, so a

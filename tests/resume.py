@@ -70,6 +70,8 @@ with tempfile.TemporaryDirectory(prefix='wlresume-',dir=os.environ['TMPDIR']) as
             replace(dict(services=dict(resume=dict(loginTokens=entries,keep=True)),unknown=dict(keep=True)))
             assert edit(dict(op='append',hashedToken=digest('dated'),when=100))=='ok'
             assert state('dated',1099)=='valid' and state('dated',1100)=='expired'
+            assert state('dated',100,0.5)=='expired'
+            assert state('dated',100,1.5)=='valid' and state('dated',101,1.5)=='expired'
             assert state('numeric',1098)=='valid' and state('numeric',1099)=='expired'
             assert state('fraction',1098)=='valid' and state('fraction',1099)=='expired'
             assert state('missing')=='invalid' and state('string')=='invalid'

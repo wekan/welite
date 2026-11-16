@@ -736,8 +736,9 @@ Older private-only API tokens on a shared store require a fresh login after this
 
 Lifetime comes from the single actual Settings document's
 `loginOptions.loginExpirationInDays`, then `ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS`,
-then 90 days (zero also selects the default). Whole days 1–36500 are supported. Invalid,
-fractional or ambiguous configuration fails closed. Issuers must request this lifetime;
+then 90 days (zero also selects the default). Positive decimal/scientific days through
+36500 are supported, including fractional and submillisecond durations. Invalid or
+ambiguous configuration fails closed. Issuers must request this lifetime;
 REST responses read the exact committed expiry. Apply the same deployment fallback to
 both applications and restart Meteor after changing its startup-applied lifetime.
 
@@ -751,7 +752,7 @@ Proofs and guarded writes capture the source and Settings snapshot from the deci
 changes require a fresh proof. Password-disabled registration creates no account, and
 observed disabling durably revokes an existing credential. Native-store policy behavior
 is preserved. Enabled SQRL-only identities also prevent shared password issuance.
-Fractional lifetime support and broader account configuration remain compatibility gates.
+Broader account configuration remains a compatibility gate.
 
 `ferroot.py` tests actual paired password/Argon2-secret/OTP issuance, BSON Date output,
 Mongo removal/expiry, restored-record denial, cross-account ambiguity, collision rollback
@@ -772,15 +773,25 @@ before adding it to a negative timestamp gives a different result and is avoided
 Resume validation uses this Date kernel. `lifetime.py` checks it against executable
 Node.js Number/Date expressions in normal and checked Pascal builds.
 
-The configuration reader and issuer still enforce whole-day lifetimes. Fractional
-configuration/issuance and millisecond-preserving local/shared expiry remain the next
-integration step; the pure kernel alone does not lift that gate.
+Shared configuration, password/OTP issuance and bearer checks now use this kernel.
+`ApiTokenLifetime` retains its seconds-valued caller contract as a rounded-up request
+marker; shared expiry always uses the original binary64 milliseconds. The expiry reader
+returns a source/settings SQL condition alongside the duration, and both issuers require
+that condition when inserting. A settings change after computation cannot commit an
+expiry calculated from the earlier configuration. Local ISO expiry keeps milliseconds;
+the REST response reads that exact committed value. SQL `wl_rescheck` also accepts
+fractional millisecond lifetimes. Native-store/browser durations are unchanged.
+
+`ferroot.py` compares live BSON issue timestamps and local expiry against Node.js for
+fractional days/seconds/submilliseconds, exercises fractional OTP issuance and null
+fallback to a fractional environment value, and rejects invalid/nonfinite settings.
+`resume.py` verifies SQL equality-at-expiry with fractional milliseconds on both backends.
 
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Integrate existing Meteor bearer adoption, fractional lifetimes, scheduled expiry and legacy conversion; reconcile file-store metadata/bytes.
+- Integrate existing Meteor bearer adoption, scheduled expiry and legacy conversion; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

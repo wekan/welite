@@ -245,4 +245,10 @@ backends; `enrhttp.py` also covers required-factor registration and setup.
 arithmetic against Node.js with 89 vectors in normal/checked builds: defaults, fractional
 and submillisecond durations, negative/positive timestamps, Date boundaries and rejected
 syntax/nonfinite/resource limits. Set `NODE` to the Node.js executable if needed.
-The shared configuration/issuer fractional-lifetime gate remains until integration.
+The shared configuration/issuer integration is covered below.
+
+Fractional lifetime integration in `ferroot.py` checks live password/OTP issuance,
+exact local expiry against Node.js using the BSON Date issue timestamp, submillisecond
+expiry without rounding up, stored/null/environment precedence and invalid settings.
+`resume.py` checks fractional millisecond SQL expiry boundaries. Configuration and
+issuance now use the kernel; existing Meteor bearer adoption and scheduled expiry remain.

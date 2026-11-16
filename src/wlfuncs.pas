@@ -77,11 +77,12 @@ begin
   except ResultError(Context,'Invalid resume token document',-1);end;
 end;
 procedure ResumeCheckFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
-var Value:string;At,Life,Stamp,Expiration:Int64;
+var Value:string;At,Stamp,Expiration:Int64;Life:Double;Settings:TFormatSettings;
 begin
   try
     if Count<>4 then raise Exception.Create('Invalid argument count');
-    if not TryStrToInt64(ReadArg(PArgs(Args)^[2]),At) or not TryStrToInt64(ReadArg(PArgs(Args)^[3]),Life) then raise Exception.Create('Invalid time');
+    Settings:=DefaultFormatSettings;Settings.DecimalSeparator:='.';
+    if not TryStrToInt64(ReadArg(PArgs(Args)^[2]),At) or not TryStrToFloat(ReadArg(PArgs(Args)^[3]),Life,Settings) then raise Exception.Create('Invalid time');
     Value:=ResumeStateName(CheckResumeToken(ReadArg(PArgs(Args)^[0]),ReadArg(PArgs(Args)^[1]),At,Life,Stamp,Expiration));
     ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
   except ResultError(Context,'Invalid resume token check',-1);end;

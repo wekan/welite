@@ -10,7 +10,7 @@ function MeteorTokenHash(const Token:string):string;
 // This function does not authorize the caller.
 function ResumeDocument(const Previous,Command:string):string;
 type TResumeState=(rsAbsent,rsValid,rsExpired,rsInvalid);
-function CheckResumeToken(const Previous,Hash:string;NowMs,LifetimeMs:Int64;
+function CheckResumeToken(const Previous,Hash:string;NowMs:Int64;LifetimeMs:Double;
   out WhenMs,ExpiresMs:Int64):TResumeState;
 function ResumeStateName(State:TResumeState):string;
 implementation
@@ -66,7 +66,7 @@ end;
 function ResumeStateName(State:TResumeState):string;
 const Names:array[TResumeState] of string=('absent','valid','expired','invalid');
 begin Result:=Names[State];end;
-function CheckResumeToken(const Previous,Hash:string;NowMs,LifetimeMs:Int64;
+function CheckResumeToken(const Previous,Hash:string;NowMs:Int64;LifetimeMs:Double;
   out WhenMs,ExpiresMs:Int64):TResumeState;
 const MaxDateMs:Int64=8640000000000000; // JavaScript Date TimeClip limit
 var Doc,Raw,Services,Resume:TJSONObject;Tokens,Schemas,Value:TJSONData;
@@ -76,7 +76,7 @@ begin
   try
     try
       ValidateHash(Hash);
-      if (NowMs< -MaxDateMs) or (NowMs>MaxDateMs) or (LifetimeMs<=0) or (LifetimeMs>2*MaxDateMs) then Exit;
+      if (NowMs< -MaxDateMs) or (NowMs>MaxDateMs) or IsNan(LifetimeMs) or IsInfinite(LifetimeMs) or (LifetimeMs<=0) or (LifetimeMs>2*MaxDateMs) then Exit;
       Doc:=ExactObject(PlainDocument(Previous));Raw:=ExactObject(Previous);
       Services:=ObjectField(Doc,'services',False);if Services=nil then Exit(rsAbsent);
       Resume:=ObjectField(Services,'resume',False);if Resume=nil then Exit(rsAbsent);

@@ -267,7 +267,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Co-issued shared API bearers now commit with local/OTP state and require unambiguous current Meteor membership/expiry, with rollback and lifetime tests.
   Stored MFA/LDAP/password-login overrides now resolve before deployment defaults, with snapshot-bound proofs, registration and live precedence/revocation tests.
   Fractional day/Date expiry arithmetic now passes 89 Node.js oracle vectors in normal/checked builds; resume validation reuses the Date kernel.
-  Remaining: existing Meteor bearer adoption, fractional lifetime configuration/issuer wiring, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Fractional shared lifetimes now preserve exact milliseconds through snapshot-guarded password/OTP issuance and validation, with live Node.js/SQL boundary tests.
+  Remaining: existing Meteor bearer adoption, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

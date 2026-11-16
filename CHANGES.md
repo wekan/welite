@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Fractional shared API lifetimes
+
+- Activate decimal/scientific fractional login-expiration days in shared configuration,
+  password/OTP issuance and bearer validation. Preserve binary64 milliseconds until
+  Date truncation; local expiry and the existing REST response retain the committed
+  millisecond timestamp. A submillisecond duration does not become a one-second grant.
+- Bind expiry computation and insertion to the same source/settings snapshot. Keep the
+  seconds-valued caller parameter as a rounded-up request marker, never as the shared
+  expiry duration. Native-store and browser lifetimes retain their existing behavior.
+- Accept fractional milliseconds in the SQLite resume checker. Verify exact live BSON
+  issue-time/local-expiry agreement against Node.js, fractional OTP issuance, stored and
+  environment precedence, invalid configuration and fractional SQL expiry boundaries
+  on linked/CLI SQLite. Native credential/token regressions also pass.
+- Scheduled expiry, legacy conversion and adoption of existing Meteor bearers remain
+  outstanding, as do broader shared-store activation and application round trips.
+
 ## 2026-11-16 Fractional expiry arithmetic kernel
 
 - Add decimal/scientific day parsing and IEEE binary64 millisecond expiry arithmetic

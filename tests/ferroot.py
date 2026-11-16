@@ -1,5 +1,6 @@
 """Real FerretDB and Welite root projections share one SQLite document file."""
 import json
+from datetime import datetime
 import base64
 import hashlib
 import hmac
@@ -519,6 +520,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 client.command({'insert':'users','documents':[dict(_id='paired-api',username='paired-api',services=dict(password=shared_password,keep=DateMs(-1)))]})
                 def pair(raw,extra=None,entered=''):
                     return subprocess.check_output([str(out/'factor/factor'),str(db),'api','paired-api','test-password',entered,raw],env=dict(settings,**(extra or {})),text=True).strip()
+                def local_hash(raw):return hashlib.sha256(('welite-token-v2\0'+str(db.resolve())+'\0'+raw).encode()).hexdigest()
                 def paired_check(raw):return subprocess.check_output([str(out/'factor/factor'),str(db),'check',raw],env=settings,text=True).strip()
                 assert pair('paired-first')=='yes'
                 first=client.find('users','paired-api')[0]['services']['resume']['loginTokens'][0]
@@ -547,11 +549,30 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert paired_check('paired-ambiguous')=='no'
                 assert client.find('users','foreign-bearer')[0]['services']['resume']['loginTokens']
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='foreign-bearer'),limit=1)]})
-                # Stored lifetime wins over env; conflicting auth overrides fail closed.
+                # Stored lifetime wins over env; stored auth overrides resolve directly.
                 client.command({'create':'settings'})
                 client.command({'insert':'settings','documents':[dict(_id='shared-config',loginOptions=dict(loginExpirationInDays=2),ldap=dict(enabled=False))]})
                 assert subprocess.check_output([str(out/'factor/factor'),str(db),'ttl'],env=dict(settings,ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS='7'),text=True).strip()==str(2*86400)
                 assert pair('two-day',dict(ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS='7'))=='yes'
+                # Fractional days retain exact Date milliseconds, not rounded seconds.
+                for ordinal,days in enumerate([0.5,1.23456789012345,0.000001,1e-8]):
+                    client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.loginExpirationInDays':days}})]})
+                    raw='fractional-'+str(ordinal)
+                    assert pair(raw)=='yes'
+                    record=next(entry for entry in client.find('users','paired-api')[0]['services']['resume']['loginTokens'] if entry.get('hashedToken')==meteor_hash(raw))
+                    when=int(record['when'])
+                    expected=int(subprocess.check_output([os.environ.get('NODE','node'),'-e','console.log(new Date(Number(process.argv[1])+Number(process.argv[2])*86400000).getTime())',str(when),str(days)],text=True))
+                    expiry=sql("SELECT expiresAt FROM login_tokens WHERE hashedToken="+q(local_hash(raw))+";")[0][0]
+                    actual=round(datetime.fromisoformat(expiry.replace('Z','+00:00')).timestamp()*1000)
+                    assert actual==expected,(backend,days,when,expiry,actual,expected)
+                    if days>=0.5:assert paired_check(raw)=='yes'
+                    if days==1e-8:assert paired_check(raw)=='no','Submillisecond token was rounded up to a second'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.loginExpirationInDays':None}})]})
+                assert subprocess.check_output([str(out/'factor/factor'),str(db),'ttl'],env=dict(settings,ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS='.5'),text=True).strip()=='43200'
+                for value in ['NaN','Infinity','-1','36501','1,5']:
+                    client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.loginExpirationInDays':value}})]})
+                    assert pair('invalid-lifetime-'+value) in ['no','error']
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.loginExpirationInDays':2}})]})
                 client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.require2fa':'all'}})]})
                 before_policy=encode(client.find('users','paired-api')[0])
                 assert pair('blocked-policy') in ['no','error']
@@ -564,7 +585,12 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     return str((struct.unpack('>I',value[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
                 assert subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',setup_token,binding,setup_code(setup_counter)],env=settings,text=True).strip()=='yes'
                 assert pair('stored-mfa-no-code')=='no'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.loginExpirationInDays':0.5}})]})
                 assert pair('stored-mfa',dict(REQUIRE_2FA='off'),setup_code(setup_counter+1))=='yes','Stored MFA mode did not override deployment off'
+                mfa_record=next(entry for entry in client.find('users','paired-api')[0]['services']['resume']['loginTokens'] if entry.get('hashedToken')==meteor_hash('stored-mfa'))
+                mfa_expiry=sql('SELECT expiresAt FROM login_tokens WHERE hashedToken='+q(local_hash('stored-mfa'))+';')[0][0]
+                assert round(datetime.fromisoformat(mfa_expiry.replace('Z','+00:00')).timestamp()*1000)==int(mfa_record['when'])+43200000
+                assert paired_check('stored-mfa')=='yes'
                 # Stored LDAP disabling/enabling and fallback also override env.
                 client.command({'insert':'users','documents':[dict(_id='override-ldap',username='override-ldap',authenticationMethod='ldap',services=dict(password=shared_password))]})
                 def ldap_pair(raw,flags=None):
