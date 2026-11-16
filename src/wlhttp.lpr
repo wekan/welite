@@ -284,7 +284,8 @@ begin
   if ServeStatic(aRequest, aResponse) then Exit;
   if RequireTenant(aRequest, aResponse, T) then
   begin
-    ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
+    if not ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
+      S := Default(TWLSession);
     // direction mirrors RTL languages from one page definition (no separate files);
     // QueryFields carry table search/page/column-visibility state (no-JS, no cookies)
     if TryServePage(T, S, aRequest.PathInfo,
@@ -338,6 +339,7 @@ begin
   // Designer (Domain Global Admin; no-JS/no-cookie) — see docs/designer.md
   HTTPRouter.RegisterRoute('/designer', rmGet, @DesignerIndex);
   HTTPRouter.RegisterRoute('/designer/page', rmGet, @DesignerEditPage);
+  HTTPRouter.RegisterRoute('/designer/page/save', rmPost, @DesignerPageSave);
   HTTPRouter.RegisterRoute('/designer/widget/move', rmPost, @DesignerWidgetMove);
   HTTPRouter.RegisterRoute('/designer/widget/save', rmPost, @DesignerWidgetSave);
   HTTPRouter.RegisterRoute('/designer/page/export', rmGet, @DesignerPageExport);

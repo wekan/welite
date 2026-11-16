@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Working Designer page management
+
+- Added page listing, creation, editing by ID (including disabled pages), enable/disable
+  and deletion with cascading widget removal, using plain forms and action tokens.
+- Provision Designer tables on first administrator access without replacing existing
+  pages; schema statements are idempotent. `WELITE_DESIGNER` overrides `src/designer.sql`.
+- Validate local URLs, reserved routes, columns, document type, direction and access role;
+  reject duplicate URLs and column changes that would hide widgets. Published admin pages
+  now require the actual administrator role; invalid sessions cannot retain page access.
+- Verified page workflows, invalid inputs, authorization and deletion over HTTP, plus
+  Chromium form create/edit/disable/enable/delete with JavaScript and cookies disabled.
+
 ## 2026-11-16 Require administrator permissions throughout Designer
 
 - Guarded every Designer listing, editor, import and export endpoint with the shared

@@ -50,8 +50,11 @@ type
 // --- dataview registry --------------------------------------------------------------------
 procedure RegisterDataView(const Binding: string; Renderer: TDataViewRenderer);
 
+function EnsureDesignerSchema(Db: TWLDb): Boolean;
+
 // --- model --------------------------------------------------------------------------------
 function LoadPageByUrl(Db: TWLDb; const Url: string; out P: TPage): Boolean;
+function LoadPageById(Db: TWLDb; const Id: string; out P: TPage): Boolean;
 function LoadWidgets(Db: TWLDb; const PageId: string): TWidgetArray;
 
 // --- direction (LTR/RTL) ------------------------------------------------------------------
@@ -91,6 +94,7 @@ function ImportAllPages(Db: TWLDb; InStream: TStream): Integer;
 
 // --- editor endpoints (register these under /designer in wlhttp.lpr) ----------------------
 procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
+procedure DesignerPageSave(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerEditPage(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
@@ -128,14 +132,31 @@ begin
     Result := TDataViewRenderer(Pointer(DataViews.Objects[Idx]));
 end;
 
+// Provision Designer tables independently of the portable board schema. Existing tenants
+// are upgraded when they first enter Designer; never recreate or overwrite their pages.
+function EnsureDesignerSchema(Db: TWLDb): Boolean;
+var R: TWLRows; FileName: string; Sql: TStringList;
+begin
+  R := Db.Query('SELECT COUNT(*) FROM sqlite_master WHERE type=''table'' AND name IN (''pages'',''page_widgets'');');
+  if (Length(R)>0) and (R[0][0]='2') then Exit(True);
+  FileName := GetEnvironmentVariable('WELITE_DESIGNER');
+  if FileName='' then FileName := 'src/designer.sql';
+  if not FileExists(FileName) then Exit(False);
+  Sql := TStringList.Create;
+  try
+    Sql.LoadFromFile(FileName);
+    Result := Db.Exec(Sql.Text);
+  finally Sql.Free; end;
+end;
+
 // ------------------------------------------------------------------ model
-function LoadPageByUrl(Db: TWLDb; const Url: string; out P: TPage): Boolean;
+function LoadPageWhere(Db: TWLDb; const Where: string; out P: TPage): Boolean;
 var R: TWLRows;
 begin
   FillChar(P, SizeOf(P), 0);
   R := Db.Query(Format(
     'SELECT id,url,title,kind,builtinKey,cols,doctype,minRole,dir,enabled ' +
-    'FROM pages WHERE url=%s AND enabled=1 LIMIT 1;', [QuotedStr(Url)]));
+    'FROM pages WHERE %s LIMIT 1;', [Where]));
   Result := (Length(R) > 0) and (Length(R[0]) >= 10);
   if not Result then Exit;
   P.Id := R[0][0];        P.Url := R[0][1];      P.Title := R[0][2];
@@ -143,6 +164,16 @@ begin
   P.Cols := StrToIntDef(R[0][5], 1);
   P.Doctype := R[0][6];   P.MinRole := R[0][7];   P.Dir := R[0][8];
   P.Enabled := R[0][9] = '1';
+end;
+
+function LoadPageByUrl(Db: TWLDb; const Url: string; out P: TPage): Boolean;
+begin
+  Result := LoadPageWhere(Db, 'url='+QuotedStr(Url)+' AND enabled=1', P);
+end;
+
+function LoadPageById(Db: TWLDb; const Id: string; out P: TPage): Boolean;
+begin
+  Result := LoadPageWhere(Db, 'id='+QuotedStr(Id), P);
 end;
 
 function LoadWidgets(Db: TWLDb; const PageId: string): TWidgetArray;
@@ -518,11 +549,11 @@ begin
 end;
 
 // ------------------------------------------------------------------ dispatcher hook
-function RoleAllows(const MinRole: string; const S: TWLSession): Boolean;
+function RoleAllows(Db: TWLDb; const MinRole: string; const S: TWLSession): Boolean;
 begin
   if SameText(MinRole, 'anon') then Exit(True);
-  // member/admin both require a session; admin check is delegated to the caller's role lookup
-  Result := S.UserId <> '';
+  if SameText(MinRole,'admin') then Exit(IsGlobalAdmin(Db,S));
+  Result := SameText(MinRole,'member') and (S.UserId<>'');
 end;
 
 function TryServePage(ATenant: TWLTenant; const S: TWLSession;
@@ -531,7 +562,7 @@ var P: TPage;
 begin
   Result := False;
   if not LoadPageByUrl(ATenant.Db, Path, P) then Exit;   // no enabled page at this path
-  if not RoleAllows(P.MinRole, S) then Exit;             // -> caller falls through to 404
+  if not RoleAllows(ATenant.Db, P.MinRole, S) then Exit;             // -> caller falls through to 404
   aResponse.Code := 200;
   aResponse.ContentType := 'text/html; charset=utf-8';
   aResponse.Content := RenderPage(ATenant.Db, P, S, Params, Dir);
@@ -802,14 +833,130 @@ end;
 // Every editor/import/export endpoint uses the shared tenant-local administrator gate.
 // Mutations additionally consume their action token before writing.
 
-procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; S: TWLSession;
+procedure DesignerError(aResponse: TResponse; Code: Integer; const Msg: string);
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
-  // GET /designer — list pages (builtin + custom) with Edit/Preview/Disable/Delete buttons
-  // and an "Add page" form (url,title,cols,doctype). All form-driven, no JS. TODO.
-  aResponse.Content := Page32('Designer', '<h1>Designer</h1><p>Page list — TODO.</p>');
+  aResponse.Code := Code;
   aResponse.ContentType := 'text/html; charset=utf-8';
+  aResponse.Content := Page32('Designer', '<p>'+HtmlEncode(Msg)+'</p>');
+  aResponse.SendContent;
+end;
+
+function RequireDesigner(aRequest: TRequest; aResponse: TResponse;
+  out T: TWLTenant; out S: TWLSession): Boolean;
+begin
+  Result := RequireGlobalAdmin(aRequest, aResponse, T, S);
+  if not Result then Exit;
+  Result := EnsureDesignerSchema(T.Db);
+  if not Result then DesignerError(aResponse, 503, 'Designer schema unavailable');
+end;
+
+function PageFields(const P: TPage): string;
+begin
+  Result := ' URL <input name="url" value="'+HtmlAttr(P.Url)+'">' +
+    ' Title <input name="title" value="'+HtmlAttr(P.Title)+'">' +
+    ' Columns <input name="cols" size="2" value="'+IntToStr(P.Cols)+'">' +
+    ' HTML <select name="doctype"><option>'+HtmlEncode(P.Doctype)+'</option>' +
+    '<option>html32</option><option>html4</option></select>' +
+    ' Direction <select name="dir"><option>'+HtmlEncode(P.Dir)+'</option>' +
+    '<option>auto</option><option>ltr</option><option>rtl</option></select>' +
+    ' Access <select name="minRole"><option>'+HtmlEncode(P.MinRole)+'</option>' +
+    '<option>anon</option><option>member</option><option>admin</option></select>';
+end;
+
+procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession; Rows: TWLRows; P: TPage; Body, Id, Toggle: string; i: Integer;
+begin
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
+  Rows := T.Db.Query('SELECT id,url,title,enabled FROM pages ORDER BY url;');
+  Body := '<h1>Designer</h1><table border="1" cellpadding="4"><tr>' +
+    '<th>Page</th><th>URL</th><th>Enabled</th><th>Actions</th></tr>';
+  for i:=0 to High(Rows) do
+  begin
+    Id := Rows[i][0];
+    if Rows[i][3]='1' then Toggle:='disable' else Toggle:='enable';
+    Body := Body+'<tr><td>'+HtmlEncode(Rows[i][2])+'</td><td>'+HtmlEncode(Rows[i][1])+
+      '</td><td>'+HtmlEncode(Rows[i][3])+'</td><td><a href="'+
+      HtmlAttr(WithSessionId('/designer/page?id='+Id,S.SessionId))+'">Edit</a> '+
+      '<a href="'+HtmlAttr(WithSessionId(Rows[i][1],S.SessionId))+'">Preview</a> '+
+      ToolButton(S,'/designer/page/save',Toggle,'pageId',Id,'action',Toggle)+
+      ToolButton(S,'/designer/page/save','Delete','pageId',Id,'action','delete')+'</td></tr>';
+  end;
+  if Length(Rows)=0 then Body:=Body+'<tr><td colspan="4">No pages yet.</td></tr>';
+  P := Default(TPage); P.Cols:=1; P.Doctype:='html32'; P.Dir:='auto'; P.MinRole:='member';
+  Body:=Body+'</table><h2>Add page</h2><form method="POST" action="/designer/page/save">'+
+    AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P)+
+    '<input type="submit" name="action" value="save"></form>';
+  aResponse.Content:=Page32('Designer',Body);
+  aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
+end;
+
+function ValidPageUrl(const Url: string): Boolean;
+var i: Integer;
+begin
+  Result:=False;
+  if (Length(Url)<2) or (Url[1]<>'/') or (Pos('//',Url)>0) or
+    (Pos('..',Url)>0) or (Url[Length(Url)]='/') then Exit;
+  for i:=2 to Length(Url) do
+    if not (Url[i] in ['a'..'z','A'..'Z','0'..'9','/','-','_']) then Exit;
+  if (Url='/sign-in') or (Url='/register') or (Url='/users/login') or
+    (Url='/admin') or (Pos('/admin/',Url)=1) or (Url='/designer') or
+    (Pos('/designer/',Url)=1) or (Url='/api') or (Pos('/api/',Url)=1) or
+    (Pos('/board/',Url)=1) then Exit;
+  Result:=True;
+end;
+
+procedure DesignerPageSave(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession; P: TPage; Id, Action, Sql: string; F: TStrings;
+begin
+  if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
+  if not VerifyActionToken(aRequest,S,'designer:/designer/page/save') then
+  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  F:=aRequest.ContentFields; Id:=F.Values['pageId']; Action:=F.Values['action'];
+  if (Id<>'') and not LoadPageById(T.Db,Id,P) then
+  begin DesignerError(aResponse,404,'Page not found'); Exit; end;
+  if Action='delete' then
+    Sql:='DELETE FROM pages WHERE id='+QuotedStr(Id)+';'
+  else if (Action='enable') or (Action='disable') then
+    Sql:='UPDATE pages SET enabled='+IntToStr(Ord(Action='enable'))+
+      ',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Id)+';'
+  else if Action='save' then
+  begin
+    P.Url:=Trim(F.Values['url']); P.Title:=Trim(F.Values['title']);
+    P.Cols:=StrToIntDef(F.Values['cols'],0); P.Doctype:=F.Values['doctype'];
+    P.Dir:=F.Values['dir']; P.MinRole:=F.Values['minRole'];
+    if not ValidPageUrl(P.Url) or (P.Title='') or (P.Cols<1) or (P.Cols>12) or
+      not ((P.Doctype='html32') or (P.Doctype='html4')) or
+      not ((P.Dir='auto') or (P.Dir='ltr') or (P.Dir='rtl')) or
+      not ((P.MinRole='anon') or (P.MinRole='member') or (P.MinRole='admin')) then
+    begin DesignerError(aResponse,400,'Invalid page fields'); Exit; end;
+    if Length(T.Db.Query('SELECT id FROM pages WHERE url='+QuotedStr(P.Url)+
+      ' AND id<>'+QuotedStr(Id)+';'))>0 then
+    begin DesignerError(aResponse,409,'Page URL already exists'); Exit; end;
+    if Id='' then
+    begin
+      Id:=NewId;
+      Sql:='INSERT INTO pages(id,url,title,cols,doctype,dir,minRole,createdAt,modifiedAt) VALUES('+
+        QuotedStr(Id)+','+QuotedStr(P.Url)+','+QuotedStr(P.Title)+','+IntToStr(P.Cols)+','+
+        QuotedStr(P.Doctype)+','+QuotedStr(P.Dir)+','+QuotedStr(P.MinRole)+','+
+        QuotedStr(NowIso)+','+QuotedStr(NowIso)+');';
+    end
+    else
+    begin
+      // Reject shrinking a page if it would hide existing widgets.
+      if Length(T.Db.Query('SELECT id FROM page_widgets WHERE pageId='+QuotedStr(Id)+
+        ' AND col+colspan>'+IntToStr(P.Cols)+' LIMIT 1;'))>0 then
+      begin DesignerError(aResponse,400,'Columns would hide widgets'); Exit; end;
+      Sql:='UPDATE pages SET url='+QuotedStr(P.Url)+',title='+QuotedStr(P.Title)+
+        ',cols='+IntToStr(P.Cols)+',doctype='+QuotedStr(P.Doctype)+',dir='+QuotedStr(P.Dir)+
+        ',minRole='+QuotedStr(P.MinRole)+',modifiedAt='+QuotedStr(NowIso)+
+        ' WHERE id='+QuotedStr(Id)+';';
+    end;
+  end
+  else begin DesignerError(aResponse,400,'Unknown page action'); Exit; end;
+  if not T.Db.Exec(Sql) then
+  begin DesignerError(aResponse,500,'Could not save page'); Exit; end;
+  aResponse.Code:=302;
+  aResponse.SetCustomHeader('Location',WithSessionId('/designer',S.SessionId));
   aResponse.SendContent;
 end;
 
@@ -821,12 +968,13 @@ var
   r, c, i, MaxRow, ViewCol: Integer;
   Rtl: Boolean;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
 
   PageId := aRequest.QueryFields.Values['id'];
-  // load the page by id (helper omitted; reuse LoadPageByUrl pattern keyed on id). TODO.
-  if not LoadPageByUrl(T.Db, aRequest.QueryFields.Values['url'], P) then
+  if not ((PageId<> '') and LoadPageById(T.Db,PageId,P)) and
+    not LoadPageByUrl(T.Db,aRequest.QueryFields.Values['url'],P) then
   begin
+    aResponse.Code := 404;
     aResponse.Content := Page32('Designer', '<p>Page not found.</p>');
     aResponse.ContentType := 'text/html; charset=utf-8'; aResponse.SendContent; Exit;
   end;
@@ -840,7 +988,11 @@ begin
   Rtl := SameText(Dir, 'rtl');
 
   // grid editor: outer table = page grid; each cell shows widget preview + a button toolbar
-  Body := '<h1>Edit: ' + HtmlEncode(P.Title) + '</h1>' + LineEnding +
+  Body := '<h1>Edit: ' + HtmlEncode(P.Title) + '</h1>' +
+    '<form method="POST" action="/designer/page/save">'+
+    AuthHiddenFields(S,'designer:/designer/page/save')+
+    '<input type="hidden" name="pageId" value="'+HtmlAttr(P.Id)+'">'+PageFields(P)+
+    '<input type="submit" name="action" value="save"></form>'+LineEnding +
           '<table border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
   for r := 0 to MaxRow do
   begin
@@ -885,7 +1037,7 @@ var
   T: TWLTenant; S: TWLSession;
   WidgetId, Dir, SetClause: string;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/widget/move') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
@@ -916,7 +1068,7 @@ end;
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; S: TWLSession;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:add') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
@@ -933,7 +1085,7 @@ procedure DesignerPageExport(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; P: TPage;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not LoadPageByUrl(T.Db, aRequest.QueryFields.Values['url'], P) then
   begin
     aResponse.Code := 404; aResponse.Content := 'No such page'; aResponse.SendContent; Exit;
@@ -952,7 +1104,7 @@ procedure DesignerPageImport(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; Json, Url: string;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/page/import') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
@@ -979,7 +1131,7 @@ procedure DesignerExportAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; Zip: TMemoryStream;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   Zip := TMemoryStream.Create;
   try
     ExportAllPages(T.Db, Zip);
@@ -1001,7 +1153,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; N: Integer;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/import') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;

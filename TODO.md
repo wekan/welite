@@ -215,7 +215,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Move lists up/down across swimlanes, preserving their cards and board boundaries.
 - [x] Enforce tenant-local administrator permissions on every Designer endpoint.
 - [ ] Separate reserved-host Global Admin domain management from tenant administrators.
-- [ ] Finish Designer page listing, creation, editing, disabling and deletion.
+- [x] Finish Designer page listing, creation, editing, disabling and deletion.
 - [ ] Finish Designer widget add/edit/delete, options and bounded layout controls.
 - [ ] Render authorized board/list/swimlane/card data with the shared selection form.
 - [ ] Implement selected-item Edit, Clone, Delete, Clear and Export actions.
