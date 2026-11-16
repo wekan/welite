@@ -76,6 +76,14 @@ begin
     ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
   except ResultError(Context,'Invalid resume token document',-1);end;
 end;
+procedure MeteorHashFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
+var Value:string;
+begin
+  Value:='';
+  try if Count=1 then Value:=MeteorTokenHash(ReadArg(PArgs(Args)^[0]));except Value:='';end;
+  // Invalid source raw entries cannot match a canonical digest; do not invent one.
+  ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
+end;
 procedure ResumeCheckFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
 var Value:string;At,Stamp,Expiration:Int64;Life:Double;Settings:TFormatSettings;
 begin
@@ -111,6 +119,7 @@ begin
   if Result=0 then Result:=CreateFunc(Db,'wl_relation',3,Flags,nil,@RelationFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_resume',2,Flags,nil,@ResumeFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_rescheck',4,Flags,nil,@ResumeCheckFunc,nil,nil,nil);
+  if Result=0 then Result:=CreateFunc(Db,'wl_methash',1,Flags,nil,@MeteorHashFunc,nil,nil,nil);
   // Schema state can change: innocuous, but deliberately NOT deterministic.
   if Result=0 then Result:=CreateFunc(Db,'wl_storage',1,1 or $200000,nil,@StorageFunc,nil,nil,nil);
 end;

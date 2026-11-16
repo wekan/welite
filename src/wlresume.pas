@@ -1,7 +1,7 @@
 unit wlresume;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Math,fpjson,base64,wlcrypt,wlsjson,wllife;
+uses SysUtils,Classes,Math,fpjson,base64,wlcrypt,wlsjson,wllife;
 // Meteor's shared token digest is SHA256(raw UTF-8 bytes), standard padded base64.
 // It is deliberately distinct from WeLite's tenant-scoped private token digest.
 function MeteorTokenHash(const Token:string):string;
@@ -155,19 +155,20 @@ end;
 function ResumeDocument(const Previous,Command:string):string;
 var Doc,Raw,Cmd,Services,Resume,Hints,HintServices,HintResume,ArraySchema,Entry:TJSONObject;
   Tokens,Types:TJSONArray;Value,OldTypes:TJSONData;Op,Hash,Name,RawToken:string;
-  i:Integer;WhenMs,BeforeMs:Int64;Number:Double;CreateMissing:Boolean;
+  i,j:Integer;WhenMs,BeforeMs:Int64;Number:Double;CreateMissing,Matched:Boolean;Hashes:TStringList;
 begin
-  Doc:=nil;Raw:=nil;Cmd:=nil;Hints:=nil;Types:=nil;Entry:=nil;
+  Doc:=nil;Raw:=nil;Cmd:=nil;Hints:=nil;Types:=nil;Entry:=nil;Hashes:=nil;
   try
     Doc:=ExactObject(PlainDocument(Previous));Raw:=ExactObject(Previous);Cmd:=ExactObject(Command);
     Value:=Cmd.Find('op');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;Op:=Value.AsString;
-    if (Op<>'append') and (Op<>'remove') and (Op<>'clear') and (Op<>'expire') and (Op<>'revoke') and (Op<>'convert') then Invalid;
+    if (Op<>'append') and (Op<>'remove') and (Op<>'clear') and (Op<>'expire') and (Op<>'revoke') and (Op<>'convert') and (Op<>'retire') then Invalid;
     for i:=0 to Cmd.Count-1 do
     begin
       Name:=Cmd.Names[i];if Name='op' then Continue;
       if (Name='hashedToken') and ((Op='append') or (Op='remove')) then Continue;
       if (Name='token') and ((Op='revoke') or (Op='convert')) then Continue;
       if (Name='before') and (Op='expire') then Continue;
+      if (Name='hashes') and (Op='retire') then Continue;
       if (Name='when') and (Op='append') then Continue;
       Invalid;
     end;
@@ -175,6 +176,16 @@ begin
     begin
       Value:=Cmd.Find('hashedToken');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;
       Hash:=Value.AsString;ValidateHash(Hash);
+    end;
+    if Op='retire' then
+    begin
+      Value:=Cmd.Find('hashes');if not (Value is TJSONArray) then Invalid;
+      Hashes:=TStringList.Create;Hashes.Sorted:=True;Hashes.CaseSensitive:=True;Hashes.Duplicates:=dupIgnore;
+      for j:=0 to Value.Count-1 do
+      begin
+        if Value.Items[j].JSONType<>jtString then Invalid;
+        Hash:=Value.Items[j].AsString;ValidateHash(Hash);Hashes.Add(Hash);
+      end;
     end;
     RawToken:='';
     if (Op='revoke') or (Op='convert') then
@@ -227,6 +238,19 @@ begin
           begin Tokens.Delete(i);Types.Delete(i);end;
           Continue;
         end;
+        if Op='retire' then
+        begin
+          Matched:=False;Value:=Child(Tokens.Items[i],'hashedToken');
+          if (Value<>nil) and (Value.JSONType=jtString) then Matched:=Hashes.IndexOf(Value.AsString)>=0;
+          if not Matched then
+          begin
+            Value:=Child(Tokens.Items[i],'token');
+            if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString<>'') and (Length(Value.AsString)<=4096) then
+              Matched:=Hashes.IndexOf(MeteorTokenHash(Value.AsString))>=0;
+          end;
+          if Matched then begin Tokens.Delete(i);Types.Delete(i);end;
+          Continue;
+        end;
         Value:=Child(Tokens.Items[i],'hashedToken');
         if (Value=nil) or (Value.JSONType<>jtString) or (Value.AsString<>Hash) then
         begin
@@ -253,6 +277,6 @@ begin
     ArraySchema:=TJSONObject.Create;HintResume.Add('loginTokens',ArraySchema);
     ArraySchema.Add('t','array');ArraySchema.Add('i',Types);Types:=nil;
     Result:=TypedDocument(Doc.AsJSON,Previous,Hints.AsJSON);
-  finally Entry.Free;Types.Free;Hints.Free;Cmd.Free;Raw.Free;Doc.Free;end;
+  finally Hashes.Free;Entry.Free;Types.Free;Hints.Free;Cmd.Free;Raw.Free;Doc.Free;end;
 end;
 end.

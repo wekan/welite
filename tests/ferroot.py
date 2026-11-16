@@ -17,6 +17,7 @@ import tempfile
 import time
 from wire import encode,Client,Long,DateMs,Binary,ObjectId,Timestamp,Regex
 from discov import run as check_discovery
+from expiry import run as check_expiry
 root=Path(__file__).resolve().parents[1]
 tools=root.parents[1]
 # Never mix short-sidecar and normal-sidecar libraries on a live shared database.
@@ -826,6 +827,8 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert paired_check('stored-mfa')=='no','Policy restoration revived a revoked API credential'
                 client.command({'delete':'settings','deletes':[dict(q=dict(_id='shared-config'),limit=1)]})
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='paired-api'),limit=1)]})
+
+                check_expiry(out,db,client,sql,physicals['users'],shared_password,settings,meteor_hash,local_hash)
 
                 # Disabling clears shared and private bearers in one transaction.
                 revoke_token=meteor_hash('revokee-shared')

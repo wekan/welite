@@ -275,15 +275,14 @@ Shared expiry sweep tests in `ferroot.py` compile `sweep.lpr` and check owned du
 cadence, Date/numeric strict cutoff and equality, concurrent due callers, ignored account
 and checkpoint writes with complete rollback/retry, reinstall, backwards clocks, stale
 source and fractional cutoff against Node.js. Retained BSON/precision/unknowns are
-compared exactly on both backends. Background worker/discovery coverage follows; local cleanup remains open.
+compared exactly on both backends. Background worker/discovery and shared-store local cleanup coverage follow.
 
 Background maintenance coverage in `ferroot.py` uses the real `maint.lpr` worker with
 separate connections and an accelerated polling interval. It observes a failed sweep,
 checks no partial commit, removes the failure and verifies idle retry, another due pass,
 exact BSON, native/missing path isolation and clean stop. Production polling remains one
 minute with the durable ten-minute cadence. `enrhttp.py` verifies both-backend HTTP
-startup/registration/enrollment regressions; root discovery is covered below and local
-cleanup remains open.
+startup/registration/enrollment regressions; root discovery and shared-store local cleanup are covered below.
 
 `discov.py`, called by `ferroot.py`, tests root-based startup and refreshed discovery
 without HTTP access. Independent SQLite backups of real shared data verify local and
@@ -294,4 +293,11 @@ registry detection/recovery and clean shutdown. The copies are separate database
 Bearer-link coverage in `ferroot.py` checks owned `_wl_pair` records for shared issuance
 and adoption, ignored insert/backfill rollback, unknown-hash migration, validated-access
 enrichment, post-local-deletion targeted revocation and source isolation/reinstall.
-`crypto.py` retains native/private token behavior. Local expiry cleanup remains open.
+`crypto.py` retains native/private token behavior. Shared-store local cleanup follows.
+
+`expiry.py`, invoked by `ferroot.py`, verifies shared-store local expiry at equality,
+linked hash/legacy/duplicate retirement, orphan cleanup, retained BSON/scalar entries,
+unknown-hash identity, history, sibling/account isolation and five ignored-write rollback
+stages. A real worker then removes an expired private/shared credential during idle time.
+`resume.py` verifies digest-set commands and SQL hash vectors including Unicode/NUL on
+both backends. Pending-enrollment and normalized legacy-store maintenance remain open.

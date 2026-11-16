@@ -910,7 +910,7 @@ sweep before allowing recovery, then checks idle cleanup, another due pass, exac
 missing/native-store isolation and a clean stop. `enrhttp.py` covers HTTP startup and
 registration/enrollment regressions on linked/CLI SQLite.
 
-Local credential cleanup, actual shared-store HTTP activation, process-signal lifecycle
+Pending-state/normalized-store maintenance, actual shared-store HTTP activation, process-signal lifecycle
 and full Meteor observer/application workflows remain explicit integration work. The
 worker does not resolve the shared filename/sidecar policy or activate the adapter.
 
@@ -952,7 +952,7 @@ Installation backfills older active API identity with a null shared hash, preser
 known links and refusing incomplete backfill. It never guesses a shared digest from
 issue timestamps. After normal local/shared validation, a presented raw bearer can fill
 an unknown link. A link-write failure denies that access without declaring the underlying
-credential invalid. Known links take the read-only path. Native/browser storage is unchanged.
+credential invalid. Known links take the read-only path. Active native/browser token formats are unchanged.
 
 Links survive local credential deletion. A subsequent raw request can therefore revoke
 the corresponding shared hash/legacy form for the recorded user even when its local
@@ -963,16 +963,49 @@ to prevent automatic re-adoption. This does not add authorization for a deleted 
 
 `ferroot.py` covers known links, ignored insert/backfill rollback, null-hash migration,
 lazy enrichment, adoption rollback, targeted revocation after local deletion, unchanged
-known links on reinstall and source isolation. Local background cleanup remains the next
-step: shared-hash links identify current co-issued/adopted records, while legacy null-hash
-records require an explicit cleanup policy. The current sweep still edits shared records
-only; no local cleanup is claimed by this linkage step.
+known links on reinstall and source isolation. The sweep below now uses these links for
+private cleanup and defines the conservative null-hash migration behavior.
+
+## Atomic private expiry cleanup in shared stores
+
+The due sweep now removes expired private `login_tokens` rows and their `authmeta`, plus
+orphan metadata, in the same transaction as shared age pruning and the durable checkpoint.
+Private deadline equality is expired (`expiresAt <= Now`); shared age pruning deliberately
+retains equality at its Date cutoff. A local deadline can precede the currently configured
+Meteor lifetime, so known links explicitly retire only that expired credential's shared
+records before deleting its private row.
+
+`wl_resume` accepts `{"op":"retire","hashes":[...]}` with canonical Meteor digests.
+It removes matching hashed records and legacy raw records whose computed digest matches,
+preserving unrelated entries and their complete BSON schemas. SQLite `wl_methash` computes
+the same digest for source matching; unsupported/empty inputs return an empty string that
+cannot match a canonical digest. Nested type guards preserve scalar, null and unsupported
+source siblings. Retirement commands contain only distinct hashes actually present in the
+current source array, not an unbounded private history. The private source/user/hash index
+supports scoped lookup.
+
+Before deletion, missing links retain account/source identity with a null hash. This also
+covers old web/orphan private rows without publishing them as Meteor credentials. Seen
+history and identity links survive deletion. A legacy null-hash record cannot be mapped
+by guessing timestamps: its shared record follows Meteor's current age expiry until a
+presented raw bearer permits targeted revocation through retained identity. The deleted
+local credential remains denied and cannot be re-adopted; healthy siblings stay valid.
+
+Cleanup assertions run before deleting the rows needed to prove each stage. Ignored link,
+shared, metadata, token or history writes roll back all effects and the due checkpoint.
+OTP replay and pending enrollment records are deliberately retained. `tests/expiry.py`,
+called by `ferroot.py`, covers inclusive deadlines, hash/raw/duplicate forms, scalar/BSON
+preservation, orphan rows, five ignored-write stages, retry, sibling/account isolation,
+null-hash behavior and a real idle-worker cleanup on linked/CLI SQLite. `resume.py` checks
+digest-set validation and SQLite hash output against Python. Native token regressions
+remain unchanged; normalized-store and expired pending-enrollment maintenance still need
+integration.
 
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity, local expiry cleanup and process-signal lifecycle; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity, pending/normalized-store maintenance and process-signal lifecycle; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

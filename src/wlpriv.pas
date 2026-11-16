@@ -51,6 +51,7 @@ begin
     'DELETE FROM _wl_pair WHERE sourceUUID<>(SELECT userUUID FROM _wl_authsrc WHERE id=1); '+
     'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM _wl_pair WHERE sourceUUID<>(SELECT userUUID FROM _wl_authsrc WHERE id=1)) THEN NULL ELSE version END WHERE name=''_wl_pair''; ';
   Result:=Result+'CREATE INDEX IF NOT EXISTS idx_login_tokens_user ON login_tokens(userId); '+
+    'CREATE INDEX IF NOT EXISTS _wl_pair_shared ON _wl_pair(sourceUUID,userId,sharedHash); '+
     'DROP TRIGGER IF EXISTS _wl_token_i; DROP TRIGGER IF EXISTS _wl_token_u; '+
     'DROP TRIGGER IF EXISTS _wl_token_d; DROP TRIGGER IF EXISTS _wl_user_tokens; '+
     'DROP TRIGGER IF EXISTS _wl_seen_i; DROP TRIGGER IF EXISTS _wl_seen_d; DROP TRIGGER IF EXISTS _wl_seen_u; '+

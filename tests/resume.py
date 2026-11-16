@@ -121,10 +121,20 @@ with tempfile.TemporaryDirectory(prefix='wlresume-',dir=os.environ['TMPDIR']) as
             update='UPDATE '+table+' SET _ferretdb_sjson='+wrap('wl_resume(json(_ferretdb_sjson),'+q(json.dumps(dict(op='convert',token='rollback')))+')')+';'
             assert sql('BEGIN IMMEDIATE; '+update+' SELECT no_such_function(); COMMIT;','exec')=='error'
             assert read()==before,'Failed transaction committed legacy conversion'
+            # Digest-set retirement removes hashed and legacy forms, not siblings.
+            replace(dict(services=dict(resume=dict(loginTokens=[dict(hashedToken=digest('retire'),when=1),dict(token='retire',when=2),dict(token='keep',when=3,extra=dict(keep=True))]))))
+            assert edit(dict(op='retire',hashes=[digest('retire'),digest('retire')]))=='ok'
+            assert read()['services']['resume']['loginTokens']==[dict(token='keep',when=3,extra=dict(keep=True))]
+            before=read();assert edit(dict(op='retire',hashes=[]))=='ok' and read()==before
+            for command in [dict(op='retire'),dict(op='retire',hashes='bad'),dict(op='retire',hashes=[1]),dict(op='retire',hashes=['bad']),dict(op='retire',hashes=[],token='keep')]:
+                assert edit(command)=='error' and read()==before
+            for raw in ['retire','Meteor 🔑 日本語','a\0b','x'*4096]:
+                assert sql('SELECT wl_methash(json_extract('+q(json.dumps(raw))+",'$'));")[0][0]==digest(raw)
+            for raw in ['', 'x'*4097]:assert sql('SELECT wl_methash('+q(raw)+');')[0][0]==''
             # Malformed containers are never replaced silently.
             for document in [dict(services=None),dict(services=dict(resume='bad')),dict(services=dict(resume=dict(loginTokens=None))),dict(services=dict(resume=dict(loginTokens={})))]:
                 assert sql('UPDATE '+table+' SET _ferretdb_sjson='+wrap('wl_sjson('+q(json.dumps(document))+",'','{}')")+';','exec')=='ok'
                 before=read();assert edit(dict(op='append',hashedToken=digest('new'),when=1))=='error' and read()==before
                 if isinstance(document.get('services'),dict) and isinstance(document['services'].get('resume'),dict):
                     assert edit(dict(op='clear'))=='ok' and read()['services']['resume']['loginTokens']==[]
-        print('PASS: '+backend+' Meteor SHA256/base64 hashes, typed Date append/remove/clear, strict input, TEXT/JSONB atomic writes, 16 concurrent distinct tokens, one duplicate winner, typed/legacy validity, expiry boundaries, pruning and atomic legacy conversion')
+        print('PASS: '+backend+' Meteor SHA256/base64 hashes, typed Date append/remove/clear, strict input, TEXT/JSONB atomic writes, 16 concurrent distinct tokens, one duplicate winner, typed/legacy validity, expiry boundaries, pruning, legacy conversion and digest-set retirement')

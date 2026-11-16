@@ -4,6 +4,27 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Sweep expired local credentials in shared stores
+
+- Extend the due shared-store transaction to retire linked shared hash/legacy records,
+  delete expired private credentials and metadata, and remove orphan metadata. Local
+  expiry is inclusive at its committed deadline; shared age pruning keeps its existing
+  strict-before cutoff. Healthy sibling sessions/accounts remain intact.
+- Add typed digest-set retirement and the pure SQLite Meteor-hash helper. Build commands
+  from distinct matching source records, using a private source/user/hash index instead
+  of serializing accumulated private history. Preserve shifted BSON schemas and unknown
+  scalar/object siblings.
+- Preserve source-bound identity before deleting older/unlinked local rows, and retain
+  seen history. Unknown legacy hashes stay on Meteor's expiry schedule until raw bearer
+  observation can revoke them; never guess another session's hash or log out all siblings.
+- Assert each cleanup stage before proceeding. Ignored source, metadata, token, link and
+  history writes roll back private/shared changes and the checkpoint together. OTP replay
+  boundaries and pending enrollment remain untouched.
+- Verify linked/CLI equality, hashed/raw forms, BSON/scalar preservation, orphan cleanup,
+  rollback/retry, sibling isolation and actual idle-worker private/shared cleanup. Resume
+  and native/private token regressions pass. Normalized-store/pending-state maintenance,
+  broader policy parity and application/observer activation remain open.
+
 ## 2026-11-17 Source-bound shared bearer links
 
 - Add owned private `_wl_pair` metadata linking a local bearer digest to its account,
