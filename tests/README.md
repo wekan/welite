@@ -73,7 +73,9 @@ insert/update; a forced nested cascade failure checks all collection bytes befor
 followed by successful cascade deletion and unrelated-record retention. The real token
 harness also checks private-token issuance/validation through fresh processes, user
 references, reinstall persistence, credentials, SQL/Mongo deletion cleanup and atomic
-restoration after a forced Mongo cleanup failure.
+restoration after a forced Mongo cleanup failure. It also checks schema username
+uniqueness, typed-source and update denial, concurrent SQL writers, BINARY/NULL semantics,
+ambiguous/disabled account lookup and duplicate-source preflight refusal/recovery.
 Set `FERRETDB` to a native server built from the companion source revision documented in
 `docs/ferret.md`. Use normal-sidecar SQLite for this test: a short-name library must not
 open the same live database as a normal-sidecar FerretDB binary. No production data is used.

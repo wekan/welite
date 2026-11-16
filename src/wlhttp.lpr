@@ -149,9 +149,7 @@ begin
   begin
     Username := Trim(aRequest.ContentFields.Values['username']);
     Password := aRequest.ContentFields.Values['password'];
-    Rows := T.Db.Query(Format(
-      'SELECT id, COALESCE(json_extract(services_json,''$.password''),'''') ' +
-      'FROM users WHERE username=%s AND COALESCE(loginDisabled,0)=0 LIMIT 1;', [QuotedStr(Username)]));
+    Rows := LoginAccount(T.Db,Username);
     if (Length(Rows) > 0) and (Length(Rows[0]) >= 2) and VerifyPassword(Password, Rows[0][1]) then
     begin
       S := CreateSession(T.Db, aRequest, Rows[0][0], Username,

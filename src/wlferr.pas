@@ -1,7 +1,7 @@
 unit wlferr;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wlrefs,wlpriv;
+uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wlrefs,wlpriv,wluniq;
 // Installs root and child projections. Application activation and shared-account
 // compatibility remain separate gates before this is a finished store adapter.
 function InstallRootModels(Db:TWLDb):Boolean;
@@ -107,7 +107,9 @@ begin
         Hash:=NameHash(Collection);TableName:=Candidate(Collection,Hash);
         while Used.IndexOf(TableName)>=0 do begin Inc(Hash);TableName:=Candidate(Collection,Hash);end;
         Used.Add(TableName);
-        if HasObject(TableName) then Storage:=ColumnStorage(Db,TableName) else Storage:='blob';
+        if HasObject(TableName) then
+        begin Storage:=ColumnStorage(Db,TableName);ValidateUnique(Db,Model,TableName);end
+        else Storage:='blob';
         Settings:=TJSONObject.Create;
         try
           Settings.Add('uuid',Uuid);Settings.Add('cappedSize',0);Settings.Add('cappedDocuments',0);
@@ -122,6 +124,7 @@ begin
       end
       else
       begin
+        ValidateUnique(Db,Model,TableName);
         Storage:=ColumnStorage(Db,TableName);Settings:=TJSONObject(GetJSON(SettingsText));
         try
           if (Settings.Get('cappedSize',Int64(0))<>0) or (Settings.Get('cappedDocuments',Int64(0))<>0) then
@@ -176,12 +179,14 @@ begin
       Sql:=Sql+'CREATE INDEX IF NOT EXISTS '+Ident('_wl_'+ViewName+'_id')+' ON '+Ident(TableName)+'('+Expr('_id')+'); '+
         'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_i')+' INSTEAD OF INSERT ON '+Ident(ViewName)+' BEGIN '+
         ReferenceChecks(Model,'wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')')+
+        UniqueChecks(Model,'wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')','','')+
         'INSERT INTO '+Ident(TableName)+'('+Ident(DocCol)+') VALUES('+Wrapped('wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')')+'); END; ';
       for j:=0 to Fields.Count-1 do
       begin
         Field:=Fields.Objects[j];Root:=Field.Get('name','');
         Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_u_'+Root)+' INSTEAD OF UPDATE OF '+Ident(Root)+' ON '+Ident(ViewName)+' BEGIN '+
           ColumnReferenceChecks(Model,Root,'NEW.'+Ident(Root))+
+          UniqueChecks(Model,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+',NEW.'+Ident(Root)+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)','OLD.id',Root)+
           'UPDATE '+Ident(TableName)+' SET '+Ident(DocCol)+'='+Wrapped('wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+',NEW.'+Ident(Root)+'),'+Q(Spec)+',''update'')')+
           ' WHERE '+Expr('_id')+'=OLD.id; END; ';
       end;

@@ -24,7 +24,8 @@ for table,collection in collections.items():
         value=db.execute('SELECT '+default).fetchone()[0] if default is not None else None
         fields.append(dict(name=name,path=path,kind=kind,type=typ,required=bool(required or pk),default=value))
     foreign_keys=[dict(column=row[3],parent=row[2],key=row[4],delete=row[6]) for row in db.execute('PRAGMA foreign_key_list('+table+')')]
-    models.append(dict(table=table,collection=collection,fields=fields,managed=managed.get(table,[]),foreignKeys=foreign_keys))
+    unique_keys=[[col[2] for col in db.execute('PRAGMA index_info('+index[1]+')')] for index in db.execute('PRAGMA index_list('+table+')') if index[2] and index[3]!='pk']
+    models.append(dict(table=table,collection=collection,fields=fields,managed=managed.get(table,[]),foreignKeys=foreign_keys,uniqueKeys=unique_keys))
 relations=[]
 relation_map={
  'board_labels':('boards','boardId','labels',False),

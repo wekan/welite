@@ -161,7 +161,8 @@ root deletion also removes their embedded child rows. Both SQLite backends pass.
 These are Welite view constraints. Direct Mongo writes retain FerretDB's existing
 semantics: the adapter adds no reference-enforcement triggers to physical collections.
 Existing dangling Mongo references are not rewritten at installation. Private token cleanup
-has a separate physical user-deletion trigger described below; account uniqueness remains open.
+has a separate physical user-deletion trigger described below. SQL account uniqueness
+and ambiguous-login handling are described in their own section.
 
 ## Private token storage
 
@@ -187,9 +188,33 @@ legacy-token denial regression suite also passes. These are Welite private token
 Meteor `services.resume.loginTokens` is not mapped by this step. Shared Meteor password
 and session compatibility remains unfinished.
 
+## SQL unique keys and account lookup
+
+The generator reads non-primary unique indexes from `schema.sql` into the root model
+contract. Its current unique key is `users.username`. `wluniq.pas` checks insert and
+relevant update projections against the live SQL model, excluding the current row on
+update. Typed clone-source values participate in the same check. The canonical schema
+uses BINARY case comparison and permits multiple NULL usernames; both are retained.
+SQLite serializes statement writes, so simultaneous SQL insertions cannot both pass the
+check. Preflight refuses existing duplicate keys without rewriting the source records.
+
+`LoginAccount` is shared by web/API login. It fetches at most two username matches,
+including disabled accounts, and returns a login candidate only for one enabled match.
+This matters because direct Mongo writes can introduce duplicates outside SQL view
+checks. Existing id-bound sessions are not resolved by username and keep their existing
+credential binding. Account index provisioning through Mongo is still separate work;
+this step adds no physical unique index or registry index entry.
+
+Tests verify normal and typed-source duplicates, unchanged stored bytes after denial,
+case/NULL behavior, exactly one success among four concurrent SQL insertions, a disabled
+Mongo duplicate causing login denial, duplicate preflight refusal and repair/reinstall
+recovery on both backends. The shared lookup is exercised through fresh auth harness
+processes, and both HTTP application regression suites pass. Shared Meteor account
+formats and index policy still need integration before normal server activation.
+
 ## Remaining before the checklist can be checked
 
-- Complete account uniqueness and collection-recreation/auth migration policy; reconcile typed
+- Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile existing Meteor password/session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

@@ -1,5 +1,6 @@
 """Real FerretDB and Welite root projections share one SQLite document file."""
 import json
+from concurrent.futures import ThreadPoolExecutor
 import os
 import sys
 from pathlib import Path
@@ -244,6 +245,32 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql('PRAGMA foreign_key_list(login_tokens);')==[]
                 assert sql('PRAGMA foreign_key_list(authmeta);')[0][2]=='login_tokens'
                 assert sql("INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES('u','user',"+q(stamp)+','+q(stamp)+",'{\"password\":\"credential\"}');",'exec')=='ok'
+                # SQL uniqueness follows the canonical BINARY/NULL semantics.
+                assert auth('lookup','user')=='yes' and auth('lookup','User')=='no'
+                assert sql("INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('duplicate','user',"+q(stamp)+','+q(stamp)+');','exec')=='error'
+                for identity,username in [('other','other'),('upper','User'),('nil1',None),('nil2',None)]:
+                    assert sql('INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('+q(identity)+','+('NULL' if username is None else q(username))+','+q(stamp)+','+q(stamp)+');','exec')=='ok'
+                users_before=sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+' ORDER BY rowid;')
+                assert sql("UPDATE users SET username='user' WHERE id='other';",'exec')=='error'
+                source=sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+" WHERE _ferretdb_sjson->>'_id'='u';")[0][0]
+                assert sql("INSERT INTO users(id,_wl_source) VALUES('source-duplicate',"+q(source)+');','exec')=='error'
+                assert sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+' ORDER BY rowid;')==users_before
+                assert sql("UPDATE users SET username='other',modifiedAt="+q(stamp)+" WHERE id='other';",'exec')=='ok'
+                def concurrent_user(index):
+                    return sql('INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('+q('race-'+str(index))+",'race',"+q(stamp)+','+q(stamp)+');','exec')
+                with ThreadPoolExecutor(max_workers=4) as executor:outcomes=list(executor.map(concurrent_user,range(4)))
+                assert outcomes.count('ok')==1 and outcomes.count('error')==3,outcomes
+                # A later direct Mongo duplicate must never select an arbitrary login.
+                client.command({'insert':'users','documents':[dict(_id='mongo-duplicate',username='user',loginDisabled=True)]})
+                assert auth('lookup','user')=='no'
+                duplicate_before=sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+' ORDER BY rowid;')
+                assert sql(mode='install')=='error'
+                assert sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+' ORDER BY rowid;')==duplicate_before
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='mongo-duplicate'),limit=1)]})
+                assert auth('lookup','user')=='yes' and sql(mode='install')=='ok'
+                assert sql("UPDATE users SET loginDisabled=1 WHERE id='u';",'exec')=='ok'
+                assert auth('lookup','user')=='no'
+                assert sql("UPDATE users SET loginDisabled=0 WHERE id='u';",'exec')=='ok'
                 assert auth('issue')=='yes' and auth('check')=='yes'
                 assert sql('SELECT count(*) FROM authmeta;')==[['1']]
                 assert sql("INSERT INTO login_tokens VALUES('bad','absent','now',NULL);",'exec')=='error'
@@ -345,7 +372,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     oldserver.terminate()
                     try:oldserver.wait(timeout=10)
                     except subprocess.TimeoutExpired:oldserver.kill();oldserver.wait()
-                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views, references/cascades, private tokens and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
+                print('PASS:',backend,'live FerretDB-to-SQL and SQL-to-FerretDB roots, BSON types/bits, nested paths, defaults, all child views, references/cascades, private tokens, unique accounts and typed relation edits, rollback, immutable IDs and ownership-safe reinstall')
             finally:
                 server.terminate()
                 try:server.wait(timeout=10)

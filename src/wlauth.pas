@@ -59,6 +59,7 @@ function AuthHiddenFields(const S: TWLSession; const ActionName: string): string
 function VerifyActionToken(ARequest: TRequest; var S: TWLSession;
   const RequiredAction:string; Consume:Boolean=True):Boolean;
 
+function LoginAccount(Db:TWLDb;const Username:string):TWLRows;
 function TokenHash(Db:TWLDb; const Token:string):string;
 function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64):Boolean;
 function ValidateLoginToken(Db:TWLDb; Request:TRequest; const Token:string; out UserId:string):Boolean;
@@ -72,6 +73,15 @@ function ValidateSession(Db: TWLDb; ARequest: TRequest;
   const SessionId: string; out S: TWLSession): Boolean;
 
 implementation
+
+function LoginAccount(Db:TWLDb;const Username:string):TWLRows;
+begin
+  // Count disabled accounts too: an ambiguous identity is never a login choice.
+  Result:=Db.Query('SELECT id,COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(loginDisabled,0) '+
+    'FROM users WHERE username='+QuotedStr(Username)+' COLLATE BINARY LIMIT 2;');
+  if Length(Result)<>1 then begin Result:=nil;Exit;end;
+  if Result[0][2]<>'0' then Result:=nil;
+end;
 
 // In-memory session context (IP/UA/counter). The durable token lives in login_tokens; this
 // holds the volatile per-session metadata the omi scheme binds into the action-token.

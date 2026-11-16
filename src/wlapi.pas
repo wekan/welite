@@ -345,9 +345,7 @@ begin
   if Username = '' then Username := BodyField(aRequest, 'email');
   Password := BodyField(aRequest, 'password');
 
-  R := T.Db.Query(Format(
-    'SELECT id, COALESCE(json_extract(services_json,''$.password''),'''') ' +
-    'FROM users WHERE username=%s AND COALESCE(loginDisabled,0)=0 LIMIT 1;', [QuotedStr(Username)]));
+  R := LoginAccount(T.Db,Username);
   if (Length(R) = 0) or (Length(R[0]) < 2) or (not VerifyPassword(Password, R[0][1])) then
   begin SendError(aResponse, 401, 'Incorrect username or password'); Exit; end;
   UserId := R[0][0];

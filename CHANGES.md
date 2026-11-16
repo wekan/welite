@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Account uniqueness and unambiguous login
+
+- Derive non-primary unique keys from the canonical schema and enforce them in SQL
+  model insert/update triggers. Check the fully typed projection so clone sources
+  cannot bypass username uniqueness. Preserve BINARY case comparison and nullable
+  username behavior; refuse existing duplicates during adapter preflight.
+- Use one account lookup for web/API login. Require exactly one matching username,
+  counting disabled matches too, then check its enabled state. Direct Mongo duplicates
+  can no longer cause an arbitrary first account to be selected.
+- Verify duplicate inserts/updates/source clones, NULL/case behavior, four concurrent
+  writers, duplicate-source reinstall refusal and recovery, disabled/ambiguous lookup
+  denial and record preservation on both SQLite backends. Linked/CLI HTTP application
+  regressions and the source-codec/extension tests pass.
+- Keep Mongo index provisioning and Meteor account/session compatibility as separate
+  integration work; these SQL guards do not introduce a new Mongo uniqueness policy.
+
 ## 2026-11-16 Private tokens with FerretDB user views
 
 - Install owned private `login_tokens` and `authmeta` tables alongside document views.
