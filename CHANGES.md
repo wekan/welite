@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Portable Argon2 memory processing
+
+- Implement Argon2 v1.3 d/i/id key derivation: parameter hashing, first-block expansion,
+  BlaMka mixing, dependent/independent addresses, cross-lane indexing, subsequent-pass
+  XOR and final lane reduction. Process synchronized slices sequentially for portability;
+  retain logical lane semantics without requiring OS worker threads.
+- Preserve original memory cost in the parameter hash while rounding allocated blocks
+  to the required lane/slice multiple. Include secret/associated-data inputs and explicit
+  little-endian block conversion. Clear allocated blocks and temporary state on exit.
+- Require caller-supplied resource limits and check them before allocation; validate
+  minimum memory/salt/key sizes and platform byte-count bounds. Default kernel limits
+  cover 64 MiB, 16 passes, 64 lanes and 1 KiB keys without silently reducing parameters.
+- Match maintained Go source and all three published RFC 9106 tags in normal and checked
+  Pascal builds. Verify memory rounding, address boundaries, multiple lanes/passes,
+  binary/Unicode/NUL inputs, a 64 MiB profile, budget denial and graceful allocation failure.
+  Underlying BLAKE2b/H' oracle tests pass again.
+- Keep PHC credential parsing, verification policy and login integration open; Argon2
+  account login remains disabled until those steps are verified.
+
 ## 2026-11-16 Portable Argon2 hash foundation
 
 - Implement unkeyed BLAKE2b and Argon2's variable-length H' in Pascal as the hashing

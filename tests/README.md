@@ -100,3 +100,10 @@ actual cached Go helper (Go 1.26+, `GO`/`CRYPTO_SRC` as for bcrypt). Isolated co
 a temporary export overlay leave cached source unchanged. Normal/checked Pascal builds
 cover binary/Unicode/NUL data, empty and exact/partial blocks, variable output boundaries
 through 1 KiB and invalid lengths. This tests the hash foundation, not full Argon2 login.
+
+`python3 tests/argon.py` checks portable Argon2 v1.3 d/i/id derivation against the
+maintained Go helper and all three published RFC tags. It uses the same isolated cached
+source/overlay approach as `blake.py`. Normal/checked builds exercise lanes, passes,
+memory rounding and addressing, secret/associated data, binary/Unicode/NUL input,
+a 64 MiB profile and rejected budgets. On POSIX, a memory-limited child checks allocation
+failure. Credential parsing and HTTP Argon2 login are not covered by this kernel test.

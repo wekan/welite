@@ -258,16 +258,37 @@ module cache is unchanged. Normal and overflow/range-checked Pascal builds pass 
 block boundaries, binary/Unicode/NUL input and output boundaries through 1 KiB.
 Verification so far is native Linux; other target builds remain in the platform gate.
 
-This is a prerequisite, not an Argon2 credential verifier. Memory-block filling and
-indexing, parameter/PHC parsing, resource validation and login integration remain open.
-The existing explicit denial of Argon2 password records is retained until those pass.
+`wlargon.pas` now supplies Argon2 v1.3 d/i/id key derivation: initial parameter hashing,
+first blocks, BlaMka mixing, dependent/independent addresses, lane indexing, pass XOR
+and final lane reduction. Original memory cost participates in the hash; allocation is
+rounded to the required lane/slice multiple. Logical lanes run sequentially inside each
+synchronized slice, preserving their result without requiring OS threads. Secret and
+associated-data inputs are supported. Allocated blocks/temporary state are cleared.
+
+Callers must provide `TArgonLimits`; the default kernel policy permits 65,536 KiB,
+16 passes, 64 lanes and 1,024 output bytes. Parameters beyond the chosen limits, memory
+below eight blocks per lane, short salts/keys and platform byte-count overflow are
+rejected before allocation. No parameter is silently weakened. Available RAM can still
+be lower than these limits; allocation failure propagates to the caller. The tested
+harness converts it to failure. Runtime PHC parsing/verification policy is still pending.
+
+`tests/argon.py` compares all three variants with the actual maintained Go deriveKey
+helper and fixed [RFC 9106 section 5 tags](https://www.rfc-editor.org/rfc/rfc9106.html#section-5).
+Normal/checked builds cover original-cost rounding, address-block boundaries, lanes and
+passes, secret/associated data, binary/Unicode/NUL inputs, 64 MiB and invalid budgets.
+A constrained child process verifies graceful allocation failure on the native test host.
+Other target builds remain unverified. The derivation source retains the Go BSD notice
+and `docs/gocrypt.txt` license.
+
+These kernels are not yet an Argon2 credential verifier. PHC parsing, verification
+policy and login integration remain open; Argon2 account login remains explicitly denied.
 
 ## Remaining before the checklist can be checked
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Complete Argon2 memory-block processing, credential parsing/resource validation and
-  login integration; reconcile Meteor session formats and file-store metadata/bytes.
+- Complete Argon2 credential parsing, verification policy and login integration;
+  reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

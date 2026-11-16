@@ -246,7 +246,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Portable Meteor bcrypt verification/generation now passes an independent oracle, live account and HTTP tests.
   Registration, local bootstrap and CLI seeding now create shared-format Meteor bcrypt objects.
   Portable BLAKE2b and Argon2 H' now pass hashlib/Go helper oracles in normal/checked builds.
-  Remaining: Argon2 memory blocks/parser/resource checks/login integration, Mongo account/index/session policy, typed custom-value and legacy
+  Argon2d/i/id memory processing now passes RFC/Go vectors with explicit kernel resource limits.
+  Remaining: Argon2 credential parser/verification policy/login integration, Mongo account/index/session policy, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
