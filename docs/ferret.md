@@ -71,7 +71,11 @@ uses the host SQLite API table, never a second library on the host's connection.
 SQLite 3.35 or newer is required to load this extension; JSONB needs 3.45 or newer.
 A missing or failed configured extension prevents the requested SQL from executing.
 No external code is fetched or loaded unless this local path is explicitly configured.
-Only the native Linux extension ABI has been verified so far.
+The CLI transports SQL through a private short `query.sql` file rather than a process
+argument, so large adapter scripts and documents do not hit the OS argument-size limit.
+Script files are removed on success/failure. Control-containing SQL literals retain their
+exact bytes through the shell reader. Only the native Linux extension ABI has been
+verified so far.
 
 `tests/sjson.py` builds a Go oracle from the companion FerretDB source using an overlay;
 it edits no files there. It requires Go and already cached dependencies. Tests cover

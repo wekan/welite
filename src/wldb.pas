@@ -21,7 +21,7 @@ interface
 
 uses
   SysUtils, Classes
-  {$IFDEF WLDB_CLI}, Process {$ELSE}, sqlite3,wlfuncs {$ENDIF};
+  {$IFDEF WLDB_CLI}, Process,wltmp {$IFDEF UNIX},BaseUnix{$ENDIF} {$ELSE}, sqlite3,wlfuncs {$ENDIF};
 
 type
   TWLDb = class;                       // opaque to callers (tenant just holds a reference)
@@ -130,30 +130,109 @@ end;
 
 {$IFDEF WLDB_CLI}
 // --- Backend A: external sqlite3 CLI (mirrors omi ExecSqlOnDb) -----------------------------
-function RunSqlite(const DbPath, Sql: string; out Output: string): Boolean;
-var Extension,InitSql:string;
+function ScriptSql(const Sql:string):string;
+type TState=(normal,quoted,identifier,backtick,bracket,linecomment,blockcomment);
+var State:TState;i,j,k:Integer;C:Char;Part:string;Pieces:TStringList;Control,LineStart:Boolean;
+  procedure Add(const Value:string);
+  begin
+    Part:=Part+Value;
+    if Length(Part)>=8192 then begin Pieces.Add(Part);Part:='';end;
+  end;
 begin
-  Output := '';
+  // SQLite .read normalizes physical CRLF lines, even inside literals. A literal
+  // containing control bytes becomes one parenthesized hex-to-TEXT expression.
+  // This also handles large newline-rich values without deep concatenation trees.
+  State:=normal;Pieces:=TStringList.Create;
+  try
+    Part:='';i:=1;LineStart:=True;
+    while i<=Length(Sql) do
+    begin
+      C:=Sql[i];
+      if LineStart and (State=normal) and (C='.') then
+        raise Exception.Create('CLI input accepts SQL, not shell dot commands');
+      if (State=normal) and (C='''') then
+      begin
+        j:=i+1;Control:=False;
+        while j<=Length(Sql) do
+        begin
+          if Sql[j]='''' then
+          begin
+            if (j<Length(Sql)) and (Sql[j+1]='''') then Inc(j) else Break;
+          end;
+          if Sql[j] in [#0,#10,#13] then Control:=True;
+          Inc(j);
+        end;
+        if Control and (j<=Length(Sql)) then
+        begin
+          Add('(CAST(X'+'''');k:=i+1;
+          while k<j do
+          begin
+            Add(IntToHex(Ord(Sql[k]),2));
+            if (Sql[k]='''') and (k+1<j) and (Sql[k+1]='''') then Inc(k);
+            Inc(k);
+          end;
+          Add(''''+ ' AS TEXT))');i:=j+1;LineStart:=False;Continue;
+        end;
+      end;
+      if (State in [identifier,backtick,bracket]) and (C in [#0,#10,#13]) then
+        raise Exception.Create('Multiline SQL identifiers are not supported by the CLI script reader');
+      Add(C);
+      case State of
+        normal:case C of
+          '''':State:=quoted;'"':State:=identifier;'`':State:=backtick;'[':State:=bracket;
+          '-':if (i<Length(Sql)) and (Sql[i+1]='-') then begin Add('-');Inc(i);State:=linecomment;end;
+          '/':if (i<Length(Sql)) and (Sql[i+1]='*') then begin Add('*');Inc(i);State:=blockcomment;end;
+        end;
+        quoted:if C='''' then
+          if (i<Length(Sql)) and (Sql[i+1]='''') then begin Add('''');Inc(i);end else State:=normal;
+        identifier:if C='"' then
+          if (i<Length(Sql)) and (Sql[i+1]='"') then begin Add('"');Inc(i);end else State:=normal;
+        backtick:if C='`' then State:=normal;
+        bracket:if C=']' then State:=normal;
+        linecomment:if C=#10 then State:=normal;
+        blockcomment:if (C='*') and (i<Length(Sql)) and (Sql[i+1]='/') then
+          begin Add('/');Inc(i);State:=normal;end;
+      end;
+      LineStart:=C=#10;Inc(i);
+    end;
+    Pieces.Add(Part);Result:='';for i:=0 to Pieces.Count-1 do Result:=Result+Pieces[i];
+  finally Pieces.Free;end;
+end;
+
+function RunSqlite(const DbPath, Sql: string; out Output: string): Boolean;
+var Extension,InitSql,Directory,Script,Database,Text:string;Stream:TFileStream;
+begin
+  Result:=False;Output:='';Directory:='';Script:='';
   Extension:=GetEnvironmentVariable('WELITE_SQLITE_EXT');InitSql:='';
   if Extension<>'' then InitSql:='SELECT load_extension('+QuotedStr(ExpandFileName(Extension))+'); ';
+  Database:=ExpandFileName(DbPath);
   try
-    // RunCommand drains both pipes while the child is running, avoiding deadlocks on
-    // large query output. It checks the child exit status and keeps stderr separate.
-    // Leading whitespace keeps schema comments (-- ...) from becoming CLI options.
-    Result := RunCommand('sqlite3', ['-batch', '-bail', '-csv', '-noheader',
-      '-cmd','.timeout 5000', ExpandFileName(DbPath),
-      ' PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+InitSql+Sql], Output);
-    if Result and (Extension<>'') then
-    begin
-      // load_extension returns exactly one NULL CSV row; hide only that row.
-      if Copy(Output,1,2)=#13#10 then Delete(Output,1,2)
-      else if Copy(Output,1,1)=#10 then Delete(Output,1,1)
-      else begin Result:=False;Output:='';end;
-    end;
-  except
-    Result := False;
+    try
+      Directory:=NewTempDir;Script:=Directory+'query.sql';
+      Stream:=TFileStream.Create(Script,fmCreate);
+      try
+        {$IFDEF UNIX}
+        if fpChmod(PChar(Script),&600)<>0 then raise Exception.Create('Could not protect SQL scratch permissions');
+        {$ENDIF}
+        Text:='.bail on'+#10+'.timeout 5000'+#10+'.mode csv'+#10+'.headers off'+#10+'PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+ScriptSql(InitSql+Sql);
+        if Text<>'' then Stream.WriteBuffer(Text[1],Length(Text));
+      finally Stream.Free;end;
+      // -init takes a structured filename argument: no shell/meta-command quoting.
+      // Retain the caller's CWD so relative ATTACH/VACUUM paths keep their meaning.
+      // RunCommand drains stdout/stderr concurrently and checks the child exit code.
+      Result:=RunCommand('sqlite3',['-batch','-bail','-csv','-noheader',
+        '-init',Script,Database,'.quit'],Output);
+      if Result and (Extension<>'') then
+      begin
+        if Copy(Output,1,2)=#13#10 then Delete(Output,1,2)
+        else if Copy(Output,1,1)=#10 then Delete(Output,1,1)
+        else begin Result:=False;Output:='';end;
+      end;
+    except Result:=False;Output:='';end;
+  finally
+    if Script<>'' then DeleteFile(Script);
+    if Directory<>'' then RemoveDir(ExcludeTrailingPathDelimiter(Directory));
   end;
-  if not Result then Output := '';
 end;
 
 function TWLDb.Exec(const Sql: string): Boolean;
@@ -163,10 +242,18 @@ begin
 end;
 
 function TWLDb.Query(const Sql: string): TWLRows;
-var Raw, Cell: string; Row: TWLRow; i, n: Integer; InQuotes: Boolean;
+var Raw, Cell:string;Row:TWLRow;i,n,CellLength,Capacity:SizeInt;InQuotes:Boolean;
+  procedure AddByte(C:Char);
+  begin
+    if CellLength=Length(Cell) then
+    begin
+      Capacity:=Length(Cell)*2;if Capacity<256 then Capacity:=256;SetLength(Cell,Capacity);
+    end;
+    Inc(CellLength);Cell[CellLength]:=C;
+  end;
   procedure AddCell;
   begin
-    n:=Length(Row); SetLength(Row,n+1); Row[n]:=Cell; Cell:='';
+    n:=Length(Row);SetLength(Row,n+1);SetString(Row[n],PChar(Cell),CellLength);CellLength:=0;
   end;
   procedure AddRow;
   begin
@@ -179,27 +266,27 @@ begin
   if not RunSqlite(FPath,Sql,Raw) or (Raw='') then Exit;
   // SQLite CSV quotes commas, quotes and embedded newlines. Preserve bytes inside
   // quotes, including CRLF: text must round-trip identically to the linked backend.
-  i:=1; Cell:=''; InQuotes:=False;
+  i:=1;Cell:='';CellLength:=0;InQuotes:=False;
   while i<=Length(Raw) do
   begin
     case Raw[i] of
       '"':
         if InQuotes and (i<Length(Raw)) and (Raw[i+1]='"') then
-        begin Cell:=Cell+'"'; Inc(i); end
+        begin AddByte('"');Inc(i);end
         else InQuotes:=not InQuotes;
-      ',': if InQuotes then Cell:=Cell+Raw[i] else AddCell;
+      ',': if InQuotes then AddByte(Raw[i]) else AddCell;
       #10,#13:
-        if InQuotes then Cell:=Cell+Raw[i]
+        if InQuotes then AddByte(Raw[i])
         else
         begin
           AddRow;
           if (Raw[i]=#13) and (i<Length(Raw)) and (Raw[i+1]=#10) then Inc(i);
         end;
-    else Cell:=Cell+Raw[i];
+    else AddByte(Raw[i]);
     end;
     Inc(i);
   end;
-  if (Length(Cell)>0) or (Length(Row)>0) then AddRow;
+  if (CellLength>0) or (Length(Row)>0) then AddRow;
 end;
 {$ELSE}
 // --- Backend B: linked SQLite (production default) ----------------------------------------

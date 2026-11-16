@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Large SQL scripts through the CLI backend
+
+- Remove the per-argument size ceiling before installing the FerretDB model adapter.
+  Feed the SQLite shell a private `query.sql` through its structured `-init` filename
+  option; user SQL and values never become process arguments. Preserve the caller's
+  working directory for relative ATTACH/VACUUM paths.
+- Share short temporary-directory allocation with framework uploads. On Unix, reserve
+  directories as 0700 and SQL files as 0600; delete script bytes and the directory after
+  success, SQL failure or failure to spawn the CLI.
+- Preserve control-containing string literals as parenthesized hex-to-TEXT expressions,
+  avoiding the shell's physical CRLF normalization and expression-depth limits for many
+  newlines. Keep comments and quoted identifiers distinct, and reject shell dot commands
+  in SQL input. Replace quadratic CSV field concatenation with a geometrically
+  growing byte buffer.
+- Verify megabyte inputs/outputs, 2,000 newlines, Unicode and quoted paths, multiline
+  defaults, relative ATTACH paths, private modes, structured arguments and failure cleanup,
+  plus typed SJSON, entropy, strict paths and existing HTTP/browser regressions.
+  Model mapping remains open.
+
 ## 2026-11-16 FerretDB typed storage kernel
 
 - Add a Pascal SJSON codec preserving BSON metadata, ordered keys, nested values and

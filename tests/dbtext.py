@@ -12,4 +12,4 @@ with tempfile.TemporaryDirectory(prefix="wldb-", dir=os.environ["TMPDIR"]) as tm
         result = subprocess.run([os.environ.get("FPC", "fpc"), *flags, "-B", "-Fu"+str(root/"src"), "-FU"+str(out), "-FE"+str(out), str(root/"tests/dbtext.lpr")], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         if result.returncode:
             raise RuntimeError(result.stdout)
-        subprocess.run([str(out/"dbtext"), str(out/"data.db")], check=True, timeout=15)
+        subprocess.run([str(out/"dbtext"), str(out/"data.db")], check=True, timeout=15, cwd=out)

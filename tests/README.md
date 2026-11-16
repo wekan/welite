@@ -56,3 +56,9 @@ codec, linked SQL harness and CLI extension; checks the extension ABI against
 `sqlite3ext.h`; verifies typed TEXT/JSONB view updates and rollback against FerretDB;
 and compares exact floating-point bits. It requires FPC, Go, a C compiler, SQLite
 headers and SQLite 3.45+ for JSONB. See `docs/ferret.md` for the remaining adapter work.
+
+`python3 tests/clifile.py` observes the real SQLite CLI boundary through a test wrapper:
+megabyte script input, private 0700 directories/0600 files, quoted Unicode temp paths,
+structured `-init` arguments, relative ATTACH paths and cleanup after success, SQL errors and spawn failure.
+`dbtext.py` also checks a megabyte field with 2,000 newlines, exact CRLF and multiline
+SQL defaults. The runtime uses private short files rather than an oversized SQL argv.

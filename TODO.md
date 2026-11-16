@@ -235,6 +235,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars, framework upload scratch and offline legacy migration.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
+  Large CLI adapter scripts now use private short scratch files without argument-size limits.
   Remaining: collection/model views and relation triggers, existing-account/file compatibility,
   fresh/shared-file installation policy and live two-way FerretDB application tests (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

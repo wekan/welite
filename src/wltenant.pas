@@ -67,7 +67,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregist;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
+  wlregist,wltmp;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
 
 type
   TUploadCleanup=class(TUploadedFile)
@@ -82,25 +82,9 @@ var
   DataRoot   : string;                 // absolute path to data/
   SchemaPath : string;                 // tenant schema applied when provisioning a fresh db
   HandleCache: TStringList = nil;      // host -> TWLDb (as Pointer), pooled across requests
-  TempCounter: Integer = 0;            // process-global, atomically bumped per temp op
 
 function WLTempDir(const Op: string = ''): string;
-var
-  Stamp: string;
-  Root:string;
-  N: Integer;
-begin
-  N := InterLockedIncrement(TempCounter);
-  Root:=DataRoot+'temp'+PathDelim;
-  if not ForceDirectories(Root) then raise Exception.Create('Could not create temporary root');
-  repeat
-    Stamp:='t'+LowerCase(IntToHex(N and $0fffffff,7));
-    Result:=Root+Stamp+PathDelim;
-    if CreateDir(ExcludeTrailingPathDelimiter(Result)) then Exit;
-    if not DirectoryExists(Result) then raise Exception.Create('Could not create temporary directory');
-    N:=InterLockedIncrement(TempCounter);
-  until False;
-end;
+begin Result:=NewTempDir;end;
 
 procedure CleanupUploads(Request:TRequest);
 var i:Integer; Path,Root:string;
@@ -145,6 +129,7 @@ begin
   if FileExists(DataRoot+'admin'+PathDelim+'db'+PathDelim+'data.db') or
     FileExists(DataRoot+'local'+PathDelim+'db'+PathDelim+'data.db') then
     raise Exception.Create('Legacy paths detected; stop the server and run releases/pathmove.py first');
+  SetTempRoot(DataRoot+'temp');
   ForceDirectories(DataRoot+ADMIN_TENANT+PathDelim+'files'+PathDelim+'db');
   RegistryInit(DataRoot+ADMIN_TENANT+PathDelim+'files'+PathDelim+'db'+PathDelim+'wekan.db');
   OnGetTempFile:=@RuntimeTempFile;

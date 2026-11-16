@@ -27,12 +27,14 @@ of eight hex digits followed by the final eight digits plus `.bin`. This avoids
 long filenames and preserves distinctions between case-sensitive IDs on
 case-insensitive filesystems. `wlstore.pas` defines the mapping; uploads, downloads,
 selection export/clone/delete all use it. Empty hash directories may remain after
-file deletion. Temp directories use atomic create-and-retry with short counters;
+file deletion. The shared `wltmp.pas` allocator uses atomic create-and-retry with short counters;
 existing directories from another process or an earlier run are skipped.
 The RTL temporary-file hook also routes framework multipart uploads into private
 short directories under this root. Router cleanup removes uploaded files and their
 private directories in a try/finally, including denied requests and handler failures.
-Other empty scratch directories can remain.
+Other empty scratch directories can remain. CLI SQL input uses a private `query.sql`
+inside a reserved directory, removed after each command. Unix directories/files have
+0700/0600 permissions; the script and user values are absent from process arguments.
 
 ## SQLite auxiliary files
 
