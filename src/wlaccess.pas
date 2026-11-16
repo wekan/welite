@@ -44,7 +44,7 @@ begin
   if (Params=nil) or not BoardCanWrite(Db,UserId,BoardId) then Exit;
   for i:=0 to Params.Count-1 do
   begin
-    case Params.Names[i] of
+    case LowerCase(Params.Names[i]) of
       'sel_card': TableName:='cards';
       'sel_list': TableName:='lists';
       'sel_swimlane': TableName:='swimlanes';

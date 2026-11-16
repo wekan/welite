@@ -48,7 +48,7 @@ function MoveFormEnd: string;
 
 // The combined keypad + action buttons + selection summary. Counts are for the summary label.
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean = True): string;
+  IncludeActions: Boolean = True; IncludeClone:Boolean=False): string;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
 // True if anything moved. Register the endpoint at POST /board/move (see wlhttp.lpr).
@@ -83,7 +83,7 @@ begin
 end;
 
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean): string;
+  IncludeActions: Boolean; IncludeClone:Boolean): string;
 begin
   // keypad as a 2-row table of submit buttons (joystick layout), like kanban.go's arrowKeys
   Result :=
@@ -98,10 +98,11 @@ begin
   if IncludeActions then Result:=Result+
     // action buttons (same form, distinct submit name=action)
     '<input type="submit" name="action" value="edit"> ' +
-    '<input type="submit" name="action" value="clone"> ' +
     '<input type="submit" name="action" value="delete"> ' +
     '<input type="submit" name="action" value="clear"> ' +
     '<input type="submit" name="action" value="export">' + LineEnding;
+  if IncludeActions and IncludeClone then
+    Result:=Result+'<input type="submit" name="action" value="clone"> ';
   Result:=Result+
     // selection summary (mirrors kanban.go selectionInfo)
     '<p>Selected: ' + IntToStr(SwimlaneSel) + ' swimlanes, ' +

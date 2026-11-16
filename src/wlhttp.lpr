@@ -31,7 +31,7 @@ uses
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
   SysUtils, Classes, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard, wlselect
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 const
@@ -263,15 +263,18 @@ begin
   begin
     aResponse.Code:=403; aResponse.Content:='Sign in required'; aResponse.SendContent; Exit;
   end;
-  if not BoardSelectionAllowed(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'],
-    aRequest.ContentFields) then
+  if ((aRequest.ContentFields.Values['action']='clear') and
+      not BoardCanWrite(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'])) or
+    ((aRequest.ContentFields.Values['action']<>'clear') and
+      not BoardSelectionAllowed(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'],aRequest.ContentFields)) then
   begin
     aResponse.Code:=403; aResponse.Content:='Board selection forbidden'; aResponse.SendContent; Exit;
   end;
-  if not VerifyActionToken(aRequest, S, 'board:move') then
+  if not VerifyActionToken(aRequest,S,'board:move',aRequest.ContentFields.Values['action']<>'export') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
   end;
+  if HandleSelection(T,S,aRequest,aResponse) then Exit;
   ApplyMove(T.Db, aRequest.ContentFields);
   BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;

@@ -81,10 +81,28 @@ in `kanban.go` (`reorderCards`, `moveCardToRightList`, …), backed by SQL inste
 - **Colors/RTL** apply as elsewhere — the keypad table mirrors under RTL (column reversal) and
   honors widget `fgColor`/`bgColor`.
 
+## Selected-item actions
+
+Edit opens a plain form for each selected root item. Titles and colors can be changed
+for swimlanes, lists and cards; cards also expose description. Save validates every item
+before a transactional update. Delete first shows a confirmation, then removes the selected
+containers, their cards (including descendant subtasks), child rows, activities and
+attachments. Filesystem bytes are unlinked after the database commit; an unlink failure
+can leave an unreachable file for storage cleanup, rather than invalidate a live row.
+
+Clear returns to the board with unchecked controls and also works when a selected item
+has already disappeared. Export downloads `select.jsn` (`welite_selection: 1`), containing
+selected domain rows and related data, typed JSON values and base64 filesystem attachment
+bytes. External attachment backends retain their storage references. Account services,
+passwords and login tokens are never part of a selection export.
+
+Exports are read-only and do not consume the still-visible form token. A subsequent
+mutation consumes it normally, after which old submissions fail. Every action is gated
+by the board and selected-item ownership checks before reaching its handler.
+
 ## Status
-`wlmove.pas` implements the form/keypad rendering and `ApplyMove` for card up/down/left/right,
-list left/right/up/down, and swimlane up/down. Lists carry their cards across active
-swimlanes within the board. TODO: the Edit/Clone/
-Delete/Export action handlers, and wiring `SelectCheckbox`/`MoveFormBegin`/`MoveKeypad` into
-the board `dataview` renderer (a stub today). Selection reading mirrors the repeated-key
-pattern used by the `table` component's column chooser.
+
+The board renderer wires the selection form, shared move keypad and the implemented
+actions. `wlmove.pas` handles movement; `wlselect.pas` handles the action forms and data.
+Deep Clone, including remapped child references and attachment copies, remains unfinished
+and its button stays hidden until the handler is implemented and verified.

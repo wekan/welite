@@ -59,9 +59,10 @@ function ActionHash(const S: TWLSession; const ActionName: string): string;
 // Hidden fields to embed in every POST form: sessionId + action + counter + auth_hash.
 function AuthHiddenFields(const S: TWLSession; const ActionName: string): string;
 
-// Verify (and consume, by bumping the counter) the action-token on an incoming POST.
+// Verify the action token; mutating operations consume it by default. Read-only downloads
+// may opt out of consumption so the still-visible no-JS form remains usable afterward.
 function VerifyActionToken(ARequest: TRequest; var S: TWLSession;
-  const RequiredAction: string): Boolean;
+  const RequiredAction:string; Consume:Boolean=True):Boolean;
 
 // --- session lifecycle against schema.sql.login_tokens ------------------------------------
 // Create a login token row (hashedToken, userId, createdAt, expiresAt) and return the session.
@@ -181,7 +182,7 @@ begin
 end;
 
 function VerifyActionToken(ARequest: TRequest; var S: TWLSession;
-  const RequiredAction: string): Boolean;
+  const RequiredAction:string; Consume:Boolean):Boolean;
 var
   PostedAction, PostedHash: string;
   PostedCounter: Int64;
@@ -203,9 +204,12 @@ begin
      (S.UserAgent <> RequestUserAgent(ARequest)) then Exit;      // context binding
   if not SameText(ActionHash(S, RequiredAction), PostedHash) then Exit;
 
-  Inc(S.Counter);                                                // consume the token
-  S.LastSeenAt := DateTimeToUnix(Now);
-  PackMeta(S);
+  if Consume then
+  begin
+    Inc(S.Counter);
+    S.LastSeenAt:=DateTimeToUnix(Now);
+    PackMeta(S);
+  end;
   Result := True;
 end;
 

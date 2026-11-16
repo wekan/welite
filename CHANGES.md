@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Selected-item editing, deletion, clearing and export
+
+- Enable selected-item Edit/Save forms for swimlane/list/card titles and colors, plus card
+  descriptions. Validate the complete form before one transactional update; failed SQL
+  rolls back all selected edits.
+- Add explicit Delete confirmation, then remove selected containers, descendant cards,
+  child records, activities and attachment metadata transactionally. Unlink filesystem
+  attachment bytes only after commit, so rollback never removes live attachment content.
+- Add Clear (including stale selections) and `select.jsn` export of selected entities,
+  related records and base64 filesystem attachment content. Account/token data is excluded.
+- Read-only downloads retain the visible form's token, allowing the next no-JS action;
+  mutations still consume it. Mixed-case selection names now use the same ownership policy
+  as movement, closing an authorization/selection parsing mismatch.
+- Verified HTTP data/bytes, descendant cleanup, bad fields and forced edit/delete failures,
+  plus Chromium Edit/Save/Export/Clear/Delete workflows with JS/cookies disabled on both
+  SQLite backends. Deep Clone remains a separate unfinished TODO and stays hidden.
+
 ## 2026-11-16 Atomic, validated Designer imports
 
 - Share page/widget validation and span rules between forms and imports. Decode and

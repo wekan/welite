@@ -130,7 +130,7 @@ begin
     end;
     Result:=Result+'</tr></table>';
   end;
-  if Writable then Result:=Result+MoveKeypad(S,0,0,0,False)+MoveFormEnd;
+  if Writable then Result:=Result+MoveKeypad(S,0,0,0,True,False)+MoveFormEnd;
 end;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; S:TWLSession; Body,Dir:string;
