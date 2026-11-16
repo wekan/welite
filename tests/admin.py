@@ -1,5 +1,6 @@
 """HTTP regressions for every Designer administrator gate; no cookies or JS."""
 import http.client
+from apiscope import run as check_api_scope
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -31,8 +32,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             conn = http.client.HTTPConnection('127.0.0.1', port, timeout=5)
             headers = {'Host': 'localhost', 'User-Agent': agent}
             if data is not None:
-                headers['Content-Type'] = 'application/x-www-form-urlencoded'
-            conn.request(method, path, urlencode(data) if data is not None else None, headers)
+                headers['Content-Type'] = 'application/json' if isinstance(data, bytes) else 'application/x-www-form-urlencoded'
+            conn.request(method, path, data if isinstance(data, bytes) else urlencode(data) if data is not None else None, headers)
             resp = conn.getresponse()
             result = resp.status, dict(resp.getheaders()), resp.read()
             conn.close()
@@ -109,6 +110,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             status, _, body = request('GET', '/board?id=protected&x=999&y=-5&sessionId='+admin)
             assert status == 200 and b'X 2 Y 1' in body and b'data-list="doing"' in body
             assert b'data-list="todo"' not in body
+            check_api_scope(request, db, admin)
             print('PASS: authorized board renderer, escaped content and read-only controls')
             class HiddenFields(HTMLParser):
                 def __init__(self):

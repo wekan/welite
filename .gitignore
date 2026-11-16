@@ -62,3 +62,6 @@ fpcupdeluxe*
 fpcup.ini
 settings.ini
 defmods.ini
+
+# Python host test cache
+__pycache__/

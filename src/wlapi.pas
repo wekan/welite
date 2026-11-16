@@ -160,11 +160,48 @@ begin
 end;
 
 // Common guard for board-scoped endpoints: boardId from the route, write = non-GET.
+// Check the whole resource chain, even for site administrators: permission on board A
+// never makes a card/list/checklist from board B a child of A.
+function ApiChildrenBelong(Db:TWLDb; const BoardId, LaneId, ListId, CardId,
+  ChecklistId, ItemId, CommentId, CustomFieldId:string):Boolean;
+  function Exists(const Sql:string):Boolean;
+  begin Result:=Length(Db.Query(Sql))>0; end;
+var Scope:string;
+begin
+  Result:=False;
+  if (LaneId<>'') and not Exists('SELECT id FROM swimlanes WHERE id='+QuotedStr(LaneId)+
+    ' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+  Scope:='';
+  if LaneId<>'' then Scope:=' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(LaneId)+')';
+  if (ListId<>'') and not Exists('SELECT id FROM lists WHERE id='+QuotedStr(ListId)+
+    ' AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
+  Scope:='';
+  if ListId<>'' then Scope:=Scope+' AND listId='+QuotedStr(ListId);
+  if LaneId<>'' then Scope:=Scope+' AND swimlaneId='+QuotedStr(LaneId);
+  if (CardId<>'') and not Exists('SELECT id FROM cards WHERE id='+QuotedStr(CardId)+
+    ' AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
+  if (ChecklistId<>'') and not Exists('SELECT id FROM checklists WHERE id='+QuotedStr(ChecklistId)+
+    ' AND cardId='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+  if (ItemId<>'') and not Exists('SELECT id FROM checklist_items WHERE id='+QuotedStr(ItemId)+
+    ' AND checklistId='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(CardId)+
+    ' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+  if (CommentId<>'') and not Exists('SELECT id FROM card_comments WHERE id='+QuotedStr(CommentId)+
+    ' AND cardId='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+  if (CustomFieldId<>'') and not Exists('SELECT customFieldId FROM custom_field_boards WHERE customFieldId='+
+    QuotedStr(CustomFieldId)+' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+  Result:=True;
+end;
+
 function ApiBoardGuard(const T: TWLTenant; aRequest: TRequest; aResponse: TResponse;
   const UserId: string): Boolean;
 begin
   Result := ApiAuthBoard(T, aResponse, UserId, aRequest.RouteParams['boardId'],
     aRequest.Method <> 'GET');
+  if not Result then Exit;
+  Result:=ApiChildrenBelong(T.Db,aRequest.RouteParams['boardId'],aRequest.RouteParams['swimlaneId'],
+    aRequest.RouteParams['listId'],aRequest.RouteParams['cardId'],aRequest.RouteParams['checklistId'],
+    aRequest.RouteParams['item'],aRequest.RouteParams['commentId'],aRequest.RouteParams['customField']);
+  if not Result then SendError(aResponse,404,'Resource does not belong to this board or parent');
 end;
 
 // read a form OR json field from the request body
@@ -592,6 +629,11 @@ begin
   Title    := BodyField(aRequest, 'title');
   Descr    := BodyField(aRequest, 'description');
   Swimlane := BodyField(aRequest, 'swimlaneId');
+  if not ApiChildrenBelong(T.Db,BoardId,Swimlane,ListId,'','','','','') then
+  begin SendError(aResponse,400,'Invalid card parent'); Exit; end;
+  if (Swimlane<>'') and (Length(T.Db.Query('SELECT id FROM lists WHERE id='+QuotedStr(ListId)+
+    ' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(Swimlane)+');'))=0) then
+  begin SendError(aResponse,400,'List is in another swimlane'); Exit; end;
   Id := NewId;
   T.Db.Exec(Format(
     'INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,' +
@@ -695,15 +737,15 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM cards WHERE listId=%s AND archived=0 ORDER BY sort;',
-    [QuotedStr(aRequest.RouteParams['listId'])]))));
+    'SELECT id,title FROM cards WHERE listId=%s AND boardId=%s AND archived=0 ORDER BY sort;',
+    [QuotedStr(aRequest.RouteParams['listId']),QuotedStr(aRequest.RouteParams['boardId'])]))));
 end;
 
-function CountOf(Db: TWLDb; const WhereCol, Id: string): Integer;
+function CountOf(Db: TWLDb; const WhereCol, Id, BoardId: string): Integer;
 var R: TWLRows;
 begin
-  R := Db.Query(Format('SELECT COUNT(*) FROM cards WHERE %s=%s AND archived=0;',
-    [WhereCol, QuotedStr(Id)]));
+  R := Db.Query(Format('SELECT COUNT(*) FROM cards WHERE %s=%s AND boardId=%s AND archived=0;',
+    [WhereCol, QuotedStr(Id),QuotedStr(BoardId)]));
   if (Length(R) > 0) and (Length(R[0]) > 0) then Result := StrToIntDef(R[0][0], 0) else Result := 0;
 end;
 
@@ -714,7 +756,7 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SendJson(aResponse, Format('{"list_cards_count":%d}',
-    [CountOf(T.Db, 'listId', aRequest.RouteParams['listId'])]));
+    [CountOf(T.Db, 'listId', aRequest.RouteParams['listId'],aRequest.RouteParams['boardId'])]));
 end;
 
 procedure ApiBoardCardsCount(aRequest: TRequest; aResponse: TResponse);
@@ -724,7 +766,7 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SendJson(aResponse, Format('{"board_cards_count":%d}',
-    [CountOf(T.Db, 'boardId', aRequest.RouteParams['boardId'])]));
+    [CountOf(T.Db, 'boardId', aRequest.RouteParams['boardId'],aRequest.RouteParams['boardId'])]));
 end;
 
 procedure ApiSwimlaneCards(aRequest: TRequest; aResponse: TResponse);
@@ -734,8 +776,8 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM cards WHERE swimlaneId=%s AND archived=0 ORDER BY sort;',
-    [QuotedStr(aRequest.RouteParams['swimlaneId'])]))));
+    'SELECT id,title FROM cards WHERE swimlaneId=%s AND boardId=%s AND archived=0 ORDER BY sort;',
+    [QuotedStr(aRequest.RouteParams['swimlaneId']),QuotedStr(aRequest.RouteParams['boardId'])]))));
 end;
 
 // GET checklists of a card / POST create a checklist
@@ -981,7 +1023,7 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   ListId := aRequest.RouteParams['listId'];
-  T.Db.Exec(Format('DELETE FROM cards WHERE listId=%s;', [QuotedStr(ListId)]));
+  T.Db.Exec(Format('DELETE FROM cards WHERE listId=%s AND boardId=%s;', [QuotedStr(ListId),QuotedStr(aRequest.RouteParams['boardId'])]));
   T.Db.Exec(Format('DELETE FROM lists WHERE id=%s;', [QuotedStr(ListId)]));
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(ListId, '"')]));
 end;
@@ -994,7 +1036,7 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SwimlaneId := aRequest.RouteParams['swimlaneId'];
-  T.Db.Exec(Format('DELETE FROM cards WHERE swimlaneId=%s;', [QuotedStr(SwimlaneId)]));
+  T.Db.Exec(Format('DELETE FROM cards WHERE swimlaneId=%s AND boardId=%s;', [QuotedStr(SwimlaneId),QuotedStr(aRequest.RouteParams['boardId'])]));
   T.Db.Exec(Format('DELETE FROM swimlanes WHERE id=%s;', [QuotedStr(SwimlaneId)]));
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(SwimlaneId, '"')]));
 end;
@@ -1057,6 +1099,8 @@ begin
     FileName := O.Get('fileName', 'file');
     FileType := O.Get('fileType', 'application/octet-stream');
     if not ApiAuthBoard(T, aResponse, UserId, BoardId, True) then Exit;
+    if not ApiChildrenBelong(T.Db,BoardId,Sw,Lst,Crd,'','','','') then
+    begin SendError(aResponse,400,'Invalid attachment parent'); Exit; end;
     Bytes := DecodeStringBase64(O.Get('fileData', ''));
     Id := NewId;
     ForceDirectories(AttachDir(T));

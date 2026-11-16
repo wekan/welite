@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Enforce API resource ownership
+
+- Added a shared child-resource chain check after board authorization: swimlane/list/card,
+  checklist/item/comment and custom-field IDs must belong to the board and parents named
+  in the route, including when the caller is a site administrator.
+- Validate card/attachment upload parents before writes. Board-scoped list/swimlane card
+  queries, counts and deletes also constrain boardId, protecting against inconsistent
+  legacy child rows.
+- Verified 29 forged-resource requests across endpoint families return rejection without
+  any database change, while the valid card remains readable. Added source-wide guard
+  coverage so another child endpoint cannot silently omit ownership checks.
+- Body label/member/assignee/author validation and disabled-login/session behavior remain
+  explicit follow-up steps in TODO.
+
 ## 2026-11-16 Board minimap and coordinate navigation
 
 - Added a top-right, server-rendered minimap with occupied/empty markers, a yellow
