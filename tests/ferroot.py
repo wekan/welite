@@ -416,6 +416,66 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='u'),limit=1)]})
                 assert sql('SELECT count(*) FROM authmeta;')==[['0']]
 
+                # Bind private auth to users UUID, not just reused IDs/passwords.
+                source_user=dict(_id='u',username='user',services=dict(password='credential'))
+                pending_user=dict(_id='source-pending',username='source-pending',services=dict(password=shared_password))
+                client.command({'insert':'users','documents':[source_user,pending_user]})
+                assert auth('issue')=='yes' and auth('check')=='yes'
+                replayed=subprocess.check_output([str(out/'replay/replay'),str(db),'claim','u','JBSWY3DPEHPK3PXP','100','source-ledger'],env=settings,text=True).strip()
+                assert replayed=='ok'
+                def pending_source():
+                    values=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','source-pending','test-password',binding],env=enroll_settings,text=True,timeout=30).strip().splitlines()
+                    assert len(values)==2,values
+                    return values
+                pending_token,pending_secret=pending_source()
+                source_settings=sql("SELECT table_name,settings FROM _ferretdb_collections WHERE name='users';")[0]
+                old_uuid=json.loads(source_settings[1])['uuid']
+                assert sql('SELECT userTable,userUUID FROM _wl_authsrc;')==[[source_settings[0],old_uuid]]
+                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc']
+                def private_snapshot():return {name:sql('SELECT * FROM '+q(name)+' ORDER BY 1;') for name in private_tables}
+                # Proofs cannot cross a rebind even when account snapshots match.
+                rebound_uuid='11111111-2222-4333-8444-555555555555'
+                rebind="UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid',"+q(rebound_uuid)+") WHERE name='users'; UPDATE _wl_authsrc SET userUUID="+q(rebound_uuid)+';'
+                stale_proof=subprocess.check_output([str(out/'factor/factor'),str(db),'mutate','source-pending','test-password','','stale-source-proof',rebind],env=settings,text=True).strip()
+                assert stale_proof=='no'
+                assert sql("UPDATE _ferretdb_collections SET settings="+q(source_settings[1])+" WHERE name='users'; UPDATE _wl_authsrc SET userUUID="+q(old_uuid)+';','exec')=='ok'
+                stale_setup=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','source-pending','test-password',binding,rebind],env=enroll_settings,text=True).strip()
+                assert stale_setup=='no'
+                assert sql("UPDATE _ferretdb_collections SET settings="+q(source_settings[1])+" WHERE name='users'; UPDATE _wl_authsrc SET userUUID="+q(old_uuid)+';','exec')=='ok'
+                preserved=private_snapshot()
+                assert sql(mode='install')=='ok' and private_snapshot()==preserved and auth('check')=='yes'
+                # Bad source metadata aborts installer cleanup and source rebinding together.
+                assert sql("UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid','bad') WHERE name='users';",'exec')=='ok'
+                assert auth('lookup','user')=='no'
+                assert sql(mode='install')=='error' and private_snapshot()==preserved
+                assert sql("UPDATE _ferretdb_collections SET settings="+q(source_settings[1])+" WHERE name='users';",'exec')=='ok'
+                assert auth('check')=='yes'
+                # Upgrade an older unbound adapter: revoke credentials/setup once,
+                # retaining its conservative replay boundary until provenance is known.
+                assert sql('DROP TABLE _wl_authsrc;','exec')=='ok'
+                assert auth('lookup','user')=='no'
+                assert sql(mode='install')=='ok'
+                for name in ['login_tokens','authmeta','_wl_enrol']:assert sql('SELECT count(*) FROM '+q(name)+';')==[['0']]
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='u';")==[['100']]
+                assert auth('issue')=='yes'
+                pending_token,pending_secret=pending_source()
+                client.command({'drop':'users'})
+                # Even before repair/reinstall, a replacement collection cannot use
+                # stale views/credentials; source guard also covers proof factories.
+                client.command({'create':'users'})
+                client.command({'insert':'users','documents':[source_user,pending_user]})
+                new_uuid=json.loads(sql("SELECT settings FROM _ferretdb_collections WHERE name='users';")[0][0])['uuid']
+                assert new_uuid!=old_uuid
+                assert auth('lookup','user')=='no' and auth('issue')=='no' and auth('check')=='no'
+                counter=int(time.time())//30
+                digest=hmac.new(base64.b32decode(pending_secret),struct.pack('>Q',counter),hashlib.sha1).digest();offset=digest[-1]&15
+                code=str((struct.unpack('>I',digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
+                assert subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',pending_token,binding,code],env=enroll_settings,text=True).strip()=='no'
+                assert sql(mode='install')=='ok'
+                assert sql('SELECT userUUID FROM _wl_authsrc;')==[[new_uuid]]
+                for name in ['login_tokens','authmeta','_wl_otp','_wl_enrol']:assert sql('SELECT count(*) FROM '+q(name)+';')==[['0']]
+                assert auth('check')=='no' and auth('issue')=='yes' and auth('check')=='yes'
+
                 # Normalized tables must never be overwritten by this installer.
                 rejected=out/'legacy.db'
                 with sqlite3.connect(rejected) as con:con.execute('CREATE TABLE boards(value TEXT)');con.execute("INSERT INTO boards VALUES('preserve')")

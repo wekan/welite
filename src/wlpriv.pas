@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenroll;
+uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenroll,wlautsrc;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const
@@ -19,13 +19,14 @@ begin
   Owners:=nil;
   for i:=0 to High(Objects) do if Objects[i][0]='_wl_models' then
     Owners:=Db.Query('SELECT name,table_name,spec,version FROM _wl_models;');
-  for k:=0 to 4 do
+  for k:=0 to 5 do
   begin
     if k=0 then begin Name:='login_tokens';DDL:=TokenDDL;end
     else if k=1 then begin Name:='authmeta';DDL:=MetaDDL;end
     else if k=2 then begin Name:='_wl_otp';DDL:=OTPReplayDDL;end
     else if k=3 then begin Name:='_wl_attempt';DDL:=AttemptDDL;end
-    else begin Name:='_wl_enrol';DDL:=EnrollDDL;end;
+    else if k=4 then begin Name:='_wl_enrol';DDL:=EnrollDDL;end
+    else begin Name:='_wl_authsrc';DDL:=AuthSourceDDL;end;
     Exists:=False;Owned:=False;
     for i:=0 to High(Owners) do
       if (Owners[i][0]=Name) and (Owners[i][1]=Name) and (Owners[i][2]=Signature) and (Owners[i][3]='1') then Owned:=True;
@@ -38,6 +39,7 @@ begin
     if not Exists then Result:=Result+DDL+'; ';
     Result:=Result+'INSERT OR REPLACE INTO _wl_models VALUES('+QuotedStr(Name)+','+QuotedStr(Name)+','+QuotedStr(Signature)+',1); ';
   end;
+  Result:=Result+AuthSourceScript(Users);
   Result:=Result+'CREATE INDEX IF NOT EXISTS idx_login_tokens_user ON login_tokens(userId); '+
     'DROP TRIGGER IF EXISTS _wl_token_i; DROP TRIGGER IF EXISTS _wl_token_u; '+
     'DROP TRIGGER IF EXISTS _wl_token_d; DROP TRIGGER IF EXISTS _wl_user_tokens; '+

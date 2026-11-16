@@ -4,6 +4,28 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Shared authentication collection identity
+
+- Bind private authentication state to the FerretDB users collection's physical table
+  and UUID in an owned source record. Routine adapter reinstall preserves credentials,
+  OTP counters and pending setup; replacing the collection invalidates the old state
+  even when IDs, usernames and password records are reused.
+- Check source identity during account lookup, login/enrollment proof use and web/API
+  validation. Carry the observed source condition into token/setup mutations and OTP
+  activation transactions, closing changes between the initial read and SQL write.
+  Observed stale token validation also removes that credential and web context.
+- On a known source change, atomically revoke local tokens/metadata and pending setup,
+  reset the old replay ledger and bind the new source. Older unbound adapters revoke
+  credentials/setup once while retaining conservative replay boundaries. Tenant attempt
+  allowances survive either transition.
+- Refuse missing/non-string/wrong-length UUIDs through the source-record constraints;
+  failed binding rolls back cleanup and the rest of adapter installation together.
+- Verify both backends against actual Mongo collection drop/recreate, reused account
+  credentials, normal reinstall, proof rebinding, legacy backfill and malformed-metadata
+  rollback. Native password/OTP, enrollment, session and public HTTP tests still pass.
+- Mongo account index parity, shared Meteor resume tokens and application activation
+  remain open; source identity does not complete those compatibility gates.
+
 ## 2026-11-16 HTTP OTP enrollment
 
 - Add plain HTML setup and confirmation forms, linked from sign-in. Require a fresh

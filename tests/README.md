@@ -188,3 +188,10 @@ peer allowances, spoofed posted usernames/forwarded headers, rollback/retry, pen
 restart, expiry/replacement and fresh-code sign-in. `WELITE_UI=1` runs `enrhttp.js` with
 the same Playwright/Node settings as `otphttp.py`, completing setup, confirmation and
 sign-in with JavaScript disabled and Cookie headers removed.
+
+`ferroot.py` also verifies private auth source identity against actual users collection
+UUID/table metadata: normal reinstall retains state; Mongo drop/recreate with reused IDs
+and credentials denies old authentication before repair and clears it atomically on
+reinstall. It covers stale login/enrollment proofs, old unbound-adapter migration with
+conservative replay retention, and malformed-source rollback without private data loss.
+Native factor/enrollment/session and public HTTP tests verify the no-marker path.

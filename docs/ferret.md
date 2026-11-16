@@ -534,9 +534,40 @@ expiry/replacement, restart and rollback/retry on both backends. With `WELITE_UI
 Chromium completes setup, confirmation and sign-in with JavaScript disabled and Cookie
 headers removed. Existing HTTP authorization/credential tests also cover both backends.
 
+## Authentication source identity
+
+`wlautsrc.pas` binds private authentication to the physical users table and its FerretDB
+collection UUID in owned `_wl_authsrc` storage. User IDs and password fingerprints alone
+do not identify a collection: Mongo can drop/recreate users and reuse both. Account
+lookup, token validation and login/enrollment proof use now check the source record
+against live collection metadata and the model registry. Proofs retain the observed
+source condition; token insertion, pending setup creation and OTP activation check it
+inside their SQL mutation as well. Token validation that observes a stale source deletes
+that credential; web validation also removes its in-memory context.
+
+Adapter reinstall with the same source preserves private state. A known new source
+atomically clears local tokens/authmeta, pending enrollment and the old OTP ledger,
+then records the new table/UUID. Before reinstall, runtime guards deny the replacement
+source. Older installed adapters without a source record revoke local tokens/pending
+setup on their first upgrade, retaining the unproven replay boundary conservatively.
+Attempt allowances are tenant-scoped and survive these transitions. Native normalized
+stores continue to authenticate without a shared-source marker; a marker beside a
+native users table is not treated as an automatic migration.
+
+Missing, non-string or wrong-length UUID metadata aborts source binding, including the
+preceding cleanup and adapter changes. The source table follows the same exact-schema
+and ownership checks as other private tables. This binds local credentials only; shared
+Meteor resume-token/index formats and normalized-store migration remain separate work.
+
+`tests/ferroot.py` exercises actual Mongo drop/recreate with reused account IDs and
+credentials, refusal before reinstall, source rebinding, pending/OTP/token cleanup,
+normal reinstall preservation, stale proof denial, old-adapter backfill and malformed
+metadata rollback on both backends. Native factor/enrollment/session and public HTTP
+regressions cover the no-marker path.
+
 ## Remaining before the checklist can be checked
 
-- Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete shared Mongo account/index and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

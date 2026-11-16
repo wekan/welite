@@ -1,11 +1,11 @@
 unit wlenroll;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,DateUtils,wldb,wlpasswd,wlcrypt,wlpolicy,wltotp,wlreplay,wlentrop,wlauth;
+uses SysUtils,DateUtils,wldb,wlpasswd,wlcrypt,wlpolicy,wltotp,wlreplay,wlentrop,wlauth,wlautsrc;
 const EnrollDDL='CREATE TABLE _wl_enrol(userId TEXT PRIMARY KEY,tokenKey TEXT NOT NULL UNIQUE,binding TEXT NOT NULL,secret TEXT NOT NULL,created INTEGER NOT NULL CHECK(created>=0),expires INTEGER NOT NULL CHECK(expires>created),credentialRef TEXT NOT NULL,username TEXT NOT NULL,method TEXT NOT NULL,services TEXT NOT NULL,admin TEXT NOT NULL) STRICT';
 type TWLEnrollProof=class
   private
-    FDb,FUser,FUsername,FMethod,FServices,FAdmin,FRef:string;
+    FDb,FUser,FUsername,FMethod,FServices,FAdmin,FRef,FSource:string;
     FAt:Int64;
     FVerified:Boolean;
     constructor Create;
@@ -44,6 +44,7 @@ begin
 end;
 function Account(Db:TWLDb;const Username:string):TWLRows;
 begin
+  Result:=nil;if not AuthSourceCurrent(Db) then Exit;
   Result:=Db.Query('SELECT id,COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(loginDisabled,0),COALESCE(authenticationMethod,''password''),services_json,COALESCE(isAdmin,0),username FROM users WHERE username='+QuotedStr(Username)+' COLLATE BINARY LIMIT 2;');
   if Length(Result)<>1 then begin Result:=nil;Exit;end;
   if Result[0][2]<>'0' then Result:=nil;
@@ -74,7 +75,7 @@ begin
   try
     try
       Rows:=Account(Db,Username);if (Length(Rows)<>1) or not Allowed(Rows[0]) then Exit;
-      Pending:=TWLEnrollProof.Create;
+      Pending:=TWLEnrollProof.Create;Pending.FSource:=AuthSourceCondition(Db);
       if not VerifyCredential(Password,Rows[0][1],Pending.FRef) then Exit;
       Pending.FDb:=ExpandFileName(Db.Path);Pending.FUser:=Rows[0][0];Pending.FUsername:=Rows[0][6];
       Pending.FMethod:=Rows[0][3];Pending.FServices:=Rows[0][4];Pending.FAdmin:=Rows[0][5];
@@ -91,7 +92,7 @@ begin
   try
     try
       At:=DateTimeToUnix(Now,False);
-      if (Proof.FDb<>ExpandFileName(Db.Path)) or (At<Proof.FAt) or (At-Proof.FAt>30) then Exit;
+      if (Proof.FDb<>ExpandFileName(Db.Path)) or (Proof.FSource<>AuthSourceCondition(Db)) or (At<Proof.FAt) or (At-Proof.FAt>30) then Exit;
       Rows:=Account(Db,Proof.FUsername);
       if (Length(Rows)<>1) or not Allowed(Rows[0]) or (Rows[0][0]<>Proof.FUser) or
         (Rows[0][3]<>Proof.FMethod) or (Rows[0][4]<>Proof.FServices) or (Rows[0][5]<>Proof.FAdmin) or
@@ -101,7 +102,7 @@ begin
       Sql:='INSERT INTO _wl_enrol(userId,tokenKey,binding,secret,created,expires,credentialRef,username,method,services,admin) SELECT id,'+
         QuotedStr(Key)+','+QuotedStr(Binding)+','+QuotedStr(PendingSecret)+','+IntToStr(At)+','+IntToStr(At+300)+','+QuotedStr(Proof.FRef)+',username,'+
         QuotedStr(Proof.FMethod)+','+QuotedStr(Proof.FServices)+','+QuotedStr(Proof.FAdmin)+' FROM users WHERE '+
-        Scope(Proof.FUser,Proof.FUsername,Proof.FMethod,Proof.FServices,Proof.FAdmin)+
+        Scope(Proof.FUser,Proof.FUsername,Proof.FMethod,Proof.FServices,Proof.FAdmin)+' AND ('+Proof.FSource+')'+
         ' ON CONFLICT(userId) DO UPDATE SET tokenKey=excluded.tokenKey,binding=excluded.binding,secret=excluded.secret,created=excluded.created,expires=excluded.expires,credentialRef=excluded.credentialRef,username=excluded.username,method=excluded.method,services=excluded.services,admin=excluded.admin RETURNING tokenKey;';
       Rows:=Db.Query(Sql);
       if (Length(Rows)<>1) or (Rows[0][0]<>Key) then Exit;
@@ -132,7 +133,7 @@ begin
       UserScope:=Scope(Rows[0][0],Rows[0][5],Rows[0][6],Rows[0][7],Rows[0][8]);
       Pending:='EXISTS(SELECT 1 FROM _wl_enrol WHERE tokenKey='+QuotedStr(Key)+' AND binding='+QuotedStr(Binding)+
         ' AND userId='+QuotedStr(Rows[0][0])+' AND secret='+QuotedStr(Rows[0][1])+' AND credentialRef='+QuotedStr(Rows[0][4])+
-        ' AND created<='+IntToStr(At)+' AND expires>'+IntToStr(At)+') AND EXISTS(SELECT 1 FROM users WHERE '+UserScope+')';
+        ' AND created<='+IntToStr(At)+' AND expires>'+IntToStr(At)+') AND EXISTS(SELECT 1 FROM users WHERE '+UserScope+') AND ('+AuthSourceCondition(Db)+')';
       if not Db.Exec('CREATE TABLE IF NOT EXISTS authmeta(hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));') then Exit;
       // A stale setup or competing confirmer MUST abort, never silently update zero
       // users and then revoke tokens/consume a counter. NOT NULL is the assertion.
