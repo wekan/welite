@@ -27,13 +27,21 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
     tmp = Path(tmp)
     build = tmp / 'build'
     build.mkdir()
-    result = subprocess.run([os.environ.get('FPC', 'fpc'), *(['-dWLDB_CLI'] if os.environ.get('WELITE_DB_CLI')=='1' else []), '-B', '-FU'+str(build), '-FE'+str(build), str(ROOT/'src/wlhttp.lpr')], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    result = subprocess.run([os.environ.get('FPC', 'fpc'), *(['-dWLNOOSRAND'] if os.environ.get('WELITE_NO_OS_RNG')=='1' else []), *(['-dWLDB_CLI'] if os.environ.get('WELITE_DB_CLI')=='1' else []), '-B', '-FU'+str(build), '-FE'+str(build), str(ROOT/'src/wlhttp.lpr')], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     if result.returncode:
         raise RuntimeError(result.stdout)
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
     env = dict(os.environ, WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'))
+    env.pop('WELITE_ENTROPY_FILE',None)  # Never consume an operator's stock in tests.
+    if os.environ.get('WELITE_NO_OS_RNG')=='1':
+        import secrets
+        stock=tmp/'random.db'
+        with sqlite3.connect(stock) as db:
+            db.execute('CREATE TABLE entropy(id INTEGER PRIMARY KEY,value BLOB CHECK(length(value)=32))')
+            db.executemany('INSERT INTO entropy(value) VALUES(?)',[(secrets.token_bytes(32),) for _ in range(2048)])
+        env['WELITE_ENTROPY_FILE']=str(stock)
     bootstrap_env = dict(env, WELITE_ADMIN_PASSWORD='global-test-password')
     bootstrap = subprocess.run([str(build/'wlhttp'),'initadmin','global-admin'],cwd=tmp,env=bootstrap_env,capture_output=True)
     assert bootstrap.returncode == 0, bootstrap.stderr

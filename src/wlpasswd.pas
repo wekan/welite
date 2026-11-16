@@ -13,8 +13,8 @@ unit wlpasswd;
   PBKDF2-SHA256 would be stronger but need a C lib or a hand-rolled HMAC-SHA256; SHA1-PBKDF2
   with a high iteration count is a defensible, dependency-free baseline.
 
-  The salt is read from /dev/urandom on Unix (a real CSPRNG); on platforms without it (e.g.
-  Amiga) it falls back to Random (seed via Randomize) — acceptable but weaker, flagged TODO.
+  Salt/token entropy comes from wlentrop: OS random sources, or a configured one-use
+  SQLite stock for targets without a kernel random source. There is no Random fallback.
 
   v0.1 reference skeleton.
 }
@@ -24,13 +24,12 @@ unit wlpasswd;
 interface
 
 uses
-  SysUtils, Classes, hmac;
+  SysUtils,Classes,hmac,wlentrop;
 
 // Hash a plaintext password -> "pbkdf2_sha1$iters$saltHex$dkHex".
 function HashPassword(const Plain: string): string;
 
-// 256-bit random token using the configured platform salt source. The retro fallback
-// remains part of the explicit portable-entropy hardening TODO.
+// 256-bit random token using the configured platform salt source. OS randomness or a committed one-use stock block is required.
 function NewAuthToken:string;
 
 // Verify a plaintext password against a stored "pbkdf2_sha1$..." string. False on any mismatch
@@ -87,23 +86,8 @@ begin
   Result := DigestToStr(T);
 end;
 
-function RandomBytes(N: Integer): string;
-var i: Integer; ok: Boolean; fs: TFileStream;
-begin
-  SetLength(Result, N);
-  ok := False;
-  {$IFDEF UNIX}
-  try
-    fs := TFileStream.Create('/dev/urandom', fmOpenRead);
-    try
-      fs.ReadBuffer(Result[1], N);
-      ok := True;
-    finally fs.Free; end;
-  except end;
-  {$ENDIF}
-  if not ok then                                   // fallback (e.g. Amiga): Random, weaker
-    for i := 1 to N do Result[i] := Chr(Random(256));
-end;
+function RandomBytes(N:Integer):string;
+begin Result:=SecureBytes(N);end;
 
 function NewAuthToken:string;
 begin Result:=ToHex(RandomBytes(32)); end;

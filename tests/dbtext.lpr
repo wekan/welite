@@ -25,6 +25,11 @@ begin
     Check(Db.Exec('INSERT INTO textdata VALUES(2,'''');'),'empty insert');
     R:=Db.Query('SELECT value FROM textdata WHERE id=2;');
     Check((Length(R)=1) and (Length(R[0])=1) and (R[0][0]=''),'single empty field');
+    Check(Db.Exec('CREATE TABLE deferred_child(id INTEGER REFERENCES textdata(id) DEFERRABLE INITIALLY DEFERRED);'),'deferred setup');
+    R:=Db.Query('INSERT INTO deferred_child VALUES(999) RETURNING id;');
+    Check(Length(R)=0,'uncommitted RETURNING values withheld after failure');
+    R:=Db.Query('SELECT COUNT(*) FROM deferred_child;');
+    Check(R[0][0]='0','failed returning write rolled back');
     Writeln('PASS: SQLite text fidelity, command failures, foreign keys and large results');
   finally Db.Free; end;
 end.

@@ -61,3 +61,31 @@ until the first untrusted hop. Configure only proxies under your control that ap
 replace the real client address. CIDR ranges and hostnames are not proxy-list entries.
 
 Portable entropy remains in TODO: the existing non-Unix random fallback is unfinished.
+
+### Secure entropy on native and retro hosts
+
+Password salts and authentication tokens require secure entropy. Unix uses
+`/dev/urandom`; Windows dynamically loads `BCryptGenRandom`, with `RtlGenRandom`
+for older systems. There is no pseudorandom fallback. Native APIs on non-Linux
+platforms still require target build/runtime verification.
+
+For a target without an OS random source, generate a fresh stock on a supported host:
+
+```
+welite entropy random.db 1048576
+```
+
+Transfer this unused private file to exactly one instance, then set
+`WELITE_ENTROPY_FILE` to its absolute path. The producer refuses existing files and
+sets Unix permissions to 0600. Apply equivalent private ACLs on other systems.
+The default size is 1 MiB; explicit sizes must be multiples of 32, up to 64 MiB.
+Each salt/token request consumes one 32-byte block with an atomic SQLite deletion,
+FULL synchronization and successful commit before bytes are returned. This requires
+SQLite 3.35 or newer, including CLI installations. Missing, exhausted, malformed or
+unwritable stocks refuse authentication operations, even if OS randomness exists.
+
+Never share a stock between separate copies, restore a consumed stock from backup,
+or reuse a deployment image containing an already allocated stock. Restarting the
+same instance with its current stock is supported. Refill by generating a new file
+with a fresh name, then change the configured path; retain no reusable snapshots.
+`-dWLNOOSRAND` disables OS providers for portable-path regression testing.

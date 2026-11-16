@@ -36,7 +36,7 @@ type
     FHandle: Pointer;                  // psqlite3
     {$ENDIF}
   public
-    constructor Create(const APath: string);
+    constructor Create(const APath:string; Portable:Boolean=False);
     destructor Destroy; override;
     // Parameterless write (DDL/INSERT/UPDATE). Returns False on error.
     function Exec(const Sql: string): Boolean;
@@ -75,13 +75,14 @@ end;
 
 { TWLDb }
 
-constructor TWLDb.Create(const APath: string);
+constructor TWLDb.Create(const APath:string; Portable:Boolean);
 begin
   inherited Create;
   FPath := APath;
   {$IFNDEF WLDB_CLI}
   if sqlite3_open(PChar(FPath), @FHandle) <> SQLITE_OK then
     raise Exception.CreateFmt('wldb: cannot open %s', [FPath]);
+  Exec('PRAGMA busy_timeout=5000;');
   // recommended pragmas for a single-writer embedded server
   Exec('PRAGMA foreign_keys = ON;');
   // WAL needs shared-memory/mmap, which classic Amiga filesystems don't provide; fall back to
@@ -89,7 +90,7 @@ begin
   {$IF DEFINED(AMIGA) or DEFINED(MORPHOS) or DEFINED(AROS)}
   Exec('PRAGMA journal_mode = DELETE;');
   {$ELSE}
-  Exec('PRAGMA journal_mode = WAL;');
+  if Portable then Exec('PRAGMA journal_mode=DELETE;') else Exec('PRAGMA journal_mode=WAL;');
   {$ENDIF}
   {$ENDIF}
 end;
@@ -113,7 +114,7 @@ begin
     // large query output. It checks the child exit status and keeps stderr separate.
     // Leading whitespace keeps schema comments (-- ...) from becoming CLI options.
     Result := RunCommand('sqlite3', ['-batch', '-bail', '-csv', '-noheader',
-      '-cmd', 'PRAGMA foreign_keys=ON', ExpandFileName(DbPath), ' '+Sql], Output);
+      '-cmd','.timeout 5000','-cmd','PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL;', ExpandFileName(DbPath), ' '+Sql], Output);
   except
     Result := False;
   end;
@@ -180,7 +181,7 @@ end;
 function TWLDb.Query(const Sql: string): TWLRows;
 var
   Stmt: Pointer;
-  Cols, c, n: Integer;
+  Cols,c,n,StepCode:Integer;
 begin
   SetLength(Result, 0);
   // Real code prepares once and binds params; this skeleton runs a literal statement.
@@ -189,14 +190,16 @@ begin
   try
     Cols := sqlite3_column_count(Stmt);
     n := 0;
-    while sqlite3_step(Stmt) = SQLITE_ROW do
+    StepCode:=sqlite3_step(Stmt);
+    while StepCode=SQLITE_ROW do
     begin
       SetLength(Result, n + 1);
       SetLength(Result[n], Cols);
       for c := 0 to Cols - 1 do
         Result[n][c] := string(sqlite3_column_text(Stmt, c));
-      Inc(n);
+      Inc(n); StepCode:=sqlite3_step(Stmt);
     end;
+    if StepCode<>SQLITE_DONE then Result:=nil;
   finally
     sqlite3_finalize(Stmt);
   end;

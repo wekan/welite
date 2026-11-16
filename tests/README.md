@@ -28,3 +28,9 @@ with `WELITE_UI=1` to repeat the browser workflows against that backend.
 
 Server processes and test databases are removed on success or failure. Browser tests
 use no persistent profile and assert the cookie store remains empty.
+
+`python3 tests/entropy.py` checks OS and portable entropy for linked and CLI SQLite,
+including concurrent processes, stock exhaustion/corruption and failed deletions.
+Set `WELITE_NO_OS_RNG=1` when running `admin.py` to compile without OS providers and
+use a fresh test-only stock. Combine with `WELITE_DB_CLI=1 WELITE_UI=1` to exercise
+the complete HTTP and no-JS/no-cookie browser workflows through this portable path.

@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Fail-closed native and portable entropy
+
+- Remove the weak Random fallback from password salts and authentication tokens.
+  Use OS randomness or an explicitly configured private one-use SQLite entropy stock.
+- Add `welite entropy random.db [bytes]` for offline provisioning from a supported
+  host. Atomic committed deletion prevents concurrent consumers from reusing blocks;
+  exhaustion, missing files and database failures refuse to return entropy.
+- Withhold linked SQLite RETURNING rows until SQLITE_DONE succeeds, including deferred
+  foreign-key commit failures. Add busy timeouts and portable rollback-journal stocks.
+- Verify Linux OS randomness and forced OS-less consumption on linked/CLI backends,
+  concurrent fresh processes, private-file generation, refusal to overwrite, invalid
+  and exhausted stocks, and SQL failures. Target-specific native API verification
+  remains in the cross-platform checklist. Full HTTP regressions pass with native RNG;
+  all no-JS/no-cookie Chromium flows also pass with OS randomness disabled and a
+  fresh stock through CLI SQLite.
+
 ## 2026-11-16 Cryptographic tokens, durable binding and trusted proxies
 
 - Replace FNV with SHA-256 token/credential digests and HMAC-SHA-256 action tokens using

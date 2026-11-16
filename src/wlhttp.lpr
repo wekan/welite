@@ -31,7 +31,7 @@ uses
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
   SysUtils, Classes, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard, wlselect
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 const
@@ -342,6 +342,15 @@ begin
   // HTTP, SQLite text and JSON use UTF-8 even on hosts whose system codepage is unset.
   SetMultiByteConversionCodePage(CP_UTF8);
   Randomize;            // seed the RNG used by NewId (wlapi/wldesign) — else ids repeat per run
+
+  if (ParamCount>=2) and (ParamStr(1)='entropy') then
+  begin
+    try
+      CreateEntropyStock(ParamStr(2),StrToInt64Def(ParamStr(3),1024*1024));
+      Writeln('Created one-use entropy stock. Keep it private and allocate it to one instance.');
+      Halt(0);
+    except on E:Exception do begin Writeln(StdErr,E.Message);Halt(1);end;end;
+  end;
 
   // ops/seed helper: `welite hashpw <plain>` prints a PBKDF2 hash for users.services_json
   if (ParamCount >= 2) and (ParamStr(1) = 'hashpw') then
