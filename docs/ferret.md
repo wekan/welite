@@ -390,8 +390,8 @@ Native/CLI tests cover pending versus active/malformed factors, LDAP fallback ru
 required-factor modes/admin promotion, password-route denial without token creation,
 metadata retention and durable revocation. Live Mongo edits exercise the same lookup
 policy without BSON changes. Normal HTTP/secret/crypto/session concurrency tests pass.
-HTTP OTP login is implemented below. Enrollment and shared Meteor session integration
-remain required before the shared-account task is complete.
+HTTP OTP login and enrollment are implemented below. Shared Meteor session integration
+remains required before the shared-account task is complete.
 
 ## Portable TOTP foundation
 
@@ -412,7 +412,7 @@ Decoded key buffers and working HMAC digests are cleared.
 `tests/totp.py` checks published HOTP/TOTP SHA1 vectors and independent Python HMAC,
 base32 padding/case and binary secrets, counter/time boundaries, leading zeroes, drift
 edges and replay boundaries in normal/checked builds. Atomic token consumption is
-implemented below; enrollment remains open.
+implemented below, including HTTP enrollment.
 
 ## Durable one-time-code replay state
 
@@ -460,7 +460,7 @@ existing tokens, even if the original values are later restored.
 factor replacement, required-factor modes and LDAP fallback. `ferroot.py` exercises an
 actual shared Argon2 account with an operator secret and active OTP, preserving its BSON.
 HTTP login forms and API code routing now use these proofs with the durable attempt
-limiter below. Enrollment remains open.
+limiter below. Enrollment is described below.
 
 ## Durable login attempt reservations
 
@@ -519,11 +519,24 @@ activation rollback, 16 concurrent confirmations and normal login afterward. `fe
 checks actual shared BSON, adapter reinstall and physical deletion cleanup. Shared JSON
 TEXT columns explicitly strip SQLite's expression subtype before constructing patch JSON;
 this supports `json_set` without confusing an object with the patcher's text value.
-HTTP setup/confirmation forms and per-attempt admission checks remain to be connected.
+HTTP `/two-factor/setup` and POST `/two-factor/confirm` now use the core without
+JavaScript or cookies. Setup verifies the password and displays a manual authenticator
+secret; confirmation retains only a hidden bearer token. Both routes send no-store and
+no-referrer headers and use a digest of socket peer/user agent for binding. Both reserve
+attempts before authentication/code matching. Confirmation derives its admission account
+from matching pending state, ignoring posted usernames. Invalid tokens still consume
+peer/tenant allowances. Setup tokens and secrets never enter navigation URLs.
+
+Required-factor registration creates the account, then links to setup without granting
+application access. Confirmation shows instructions to sign in with a fresh code.
+`tests/enrhttp.py` verifies required registration, admission identity/caps, binding,
+expiry/replacement, restart and rollback/retry on both backends. With `WELITE_UI=1`,
+Chromium completes setup, confirmation and sign-in with JavaScript disabled and Cookie
+headers removed. Existing HTTP authorization/credential tests also cover both backends.
 
 ## Remaining before the checklist can be checked
 
-- Complete HTTP second-factor enrollment/confirmation with admission limits, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

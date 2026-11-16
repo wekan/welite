@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 HTTP OTP enrollment
+
+- Add plain HTML setup and confirmation forms, linked from sign-in. Require a fresh
+  password, display a manual authenticator secret and retain only an opaque setup
+  token in the confirmation form. Never place setup secrets/tokens in navigation URLs
+  or grant a session before activation; send no-store and no-referrer headers.
+- Bind setup to socket peer and user agent. Share durable login allowances with setup
+  and confirmation; derive the confirmation account from pending server state so
+  posted usernames cannot rotate its budget. Denials return 429 with Retry-After.
+- Send newly registered accounts covered by REQUIRE_2FA to enrollment without issuing
+  application tokens or returning a misleading account-creation error. After confirming,
+  instruct users to wait for a fresh authenticator code and sign in normally.
+- Verify both backends through HTTP: required-factor registration, wrong passwords/codes,
+  client binding, attempt caps, forwarded-header/username spoofing, setup expiry and
+  replacement, restart persistence, failed activation rollback/retry, no early access
+  and consumed-code denial. Verify setup, confirmation and sign-in in Chromium with
+  JavaScript disabled and Cookie headers removed, plus existing HTTP regressions.
+- Shared Mongo account/index/session integration and application activation remain open;
+  completing enrollment does not complete the shared-database checklist.
+
 ## 2026-11-16 Limited OTP enrollment core
 
 - Add a distinct, unit-owned password proof for accounts without an active factor,

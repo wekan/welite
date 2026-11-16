@@ -30,7 +30,7 @@ uses
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
-  SysUtils, Classes, DateUtils, wlattemp, fphttpapp, httpdefs, httproute,
+  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, fphttpapp, httpdefs, httproute,
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
@@ -166,7 +166,7 @@ begin
     finally Proof.Free;end;
     SendHtml(aResponse, Page32('Sign in',
       '<p>Invalid login.</p><p><a href="/sign-in">Try again</a>' +
-      ' | <a href="/register">Register</a></p>'));
+      ' | <a href="/two-factor/setup">Set up one-time codes</a> | <a href="/register">Register</a></p>'));
     Exit;
   end;
 
@@ -179,7 +179,92 @@ begin
     '  One-time code (if enabled) <input name="code" size="6" maxlength="6"><br>' + LineEnding +
     '  <input type="submit" value="Sign in">' + LineEnding +
     '</form>' + LineEnding +
-    '<p><a href="/register">Create an account (Register)</a></p>'));
+    '<p><a href="/two-factor/setup">Set up one-time codes</a> | <a href="/register">Create an account (Register)</a></p>'));
+end;
+
+// Enrollment secrets and bearer tokens only travel in POST bodies/responses.
+function EnrollmentBinding(Request:TRequest):string;
+begin Result:=HashText('welite-enrol-client-v1'+#0+Request.RemoteAddress+#0+RequestUserAgent(Request));end;
+procedure EnrollmentHeaders(Response:TResponse);
+begin
+  Response.SetCustomHeader('Cache-Control','no-store');
+  Response.SetCustomHeader('Referrer-Policy','no-referrer');
+end;
+function EnrollmentAdmission(Db:TWLDb;Request:TRequest;Response:TResponse;const Username:string):Boolean;
+begin
+  Result:=ReserveLoginAttempt(Db,Username,Request.RemoteAddress,DateTimeToUnix(Now,False));
+  if not Result then
+  begin
+    Response.Code:=429;Response.SetCustomHeader('Retry-After','300');
+    Response.Content:='Too many login attempts. Try again later.';Response.SendContent;
+  end;
+end;
+function ConfirmationForm(const Token,Message:string):string;
+begin
+  Result:='<h1>Confirm one-time codes</h1><p>'+HtmlEncode(Message)+'</p>'+
+    '<form method="POST" action="/two-factor/confirm">'+
+    '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
+    'One-time code <input name="code" size="6" maxlength="6"><br>'+
+    '<input type="submit" value="Confirm"></form>'+
+    '<p><a href="/two-factor/setup">Start setup again</a> | <a href="/sign-in">Sign in</a></p>';
+end;
+procedure EnrollmentEndpoint(Request:TRequest;Response:TResponse);
+var T:TWLTenant;Username,Token,Secret,Body:string;Proof:TWLEnrollProof;
+begin
+  EnrollmentHeaders(Response);
+  if not RequireTenant(Request,Response,T) then Exit;
+  if Request.Method='POST' then
+  begin
+    Username:=Trim(Request.ContentFields.Values['username']);
+    if not EnrollmentAdmission(T.Db,Request,Response,Username) then Exit;
+    Proof:=nil;
+    if not AuthenticateEnrollment(T.Db,Username,Request.ContentFields.Values['password'],Proof) then
+    begin
+      SendHtml(Response,Page32('Set up one-time codes','<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="/two-factor/setup">Try again</a></p>'));Exit;
+    end;
+    try
+      if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
+      begin Response.Code:=500;Response.Content:='Could not start setup';Response.SendContent;Exit;end;
+      Body:='<h1>Set up one-time codes</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
+        '<p>Enter this secret in your authenticator: <code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
+        '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
+        ConfirmationForm(Token,'Enter a code from your authenticator to enable one-time codes.');
+      SendHtml(Response,Page32('Set up one-time codes',Body));
+    finally
+      Proof.Free;
+      if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;
+    end;
+    Exit;
+  end;
+  SendHtml(Response,Page32('Set up one-time codes','<h1>Set up one-time codes</h1>'+
+    '<p>Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.</p>'+
+    '<form method="POST" action="/two-factor/setup">Username <input name="username"><br>'+
+    'Password <input type="password" name="password"><br><input type="submit" value="Start setup"></form>'+
+    '<p><a href="/sign-in">Sign in</a></p>'));
+end;
+procedure EnrollmentConfirmEndpoint(Request:TRequest;Response:TResponse);
+var T:TWLTenant;Token,Binding,Username:string;Rows:TWLRows;At:Int64;
+begin
+  EnrollmentHeaders(Response);
+  if not RequireTenant(Request,Response,T) then Exit;
+  Token:=Request.ContentFields.Values['setupToken'];Binding:=EnrollmentBinding(Request);At:=DateTimeToUnix(Now,False);
+  // Derive the admission account from server-side pending setup, never a posted
+  // username. Invalid tokens still consume peer/tenant reservations before checking OTP.
+  Username:='#enrol-invalid#'+HashText(Token);
+  if Length(Token)=64 then
+  begin
+    Rows:=T.Db.Query('SELECT username FROM _wl_enrol WHERE tokenKey='+QuotedStr(TokenHash(T.Db,Token))+
+      ' AND binding='+QuotedStr(Binding)+' AND created<='+IntToStr(At)+' AND expires>'+IntToStr(At)+';');
+    if Length(Rows)=1 then Username:=Rows[0][0];
+  end;
+  if not EnrollmentAdmission(T.Db,Request,Response,Username) then Exit;
+  if ConfirmOTPEnrollment(T.Db,Token,Binding,Request.ContentFields.Values['code']) then
+    SendHtml(Response,Page32('One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="/sign-in">sign in</a>. The confirmation code has been used.</p>'))
+  else
+  begin
+    if Length(Token)<>64 then Token:='';
+    SendHtml(Response,Page32('Confirm one-time codes',ConfirmationForm(Token,'Invalid code or setup. Try a new code, or start setup again if it has expired.')));
+  end;
 end;
 
 // GET/POST /register — create an account. The first account in a tenant becomes the Global
@@ -188,7 +273,7 @@ procedure RegisterEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  Username, Password, Confirm, Uid, Hash, Iso, Body: string;
+  Username, Password, Confirm, Uid, Hash, Iso, Body, PolicySecret: string;
   First: Boolean;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
@@ -238,6 +323,11 @@ begin
       SendHtml(aResponse, Page32('Register',
         '<p>Could not create the account.</p><p><a href="/register">Back</a></p>'));
       Exit;
+    end;
+
+    if FactorPolicy('password','{"password":'+Hash+'}',First,PolicySecret)=fpRequired then
+    begin
+      SendHtml(aResponse,Page32('Account created','<h1>Account created</h1><p><a href="/two-factor/setup">Set up one-time codes</a> before signing in.</p>'));Exit;
     end;
 
     // Log the new user straight in (cookie-free session via URL), then go to the board list.
@@ -400,6 +490,9 @@ begin
   HTTPRouter.RegisterRoute('/', rmGet, @HomeEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmGet, @SignInEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmPost, @SignInEndpoint);
+  HTTPRouter.RegisterRoute('/two-factor/setup', rmGet, @EnrollmentEndpoint);
+  HTTPRouter.RegisterRoute('/two-factor/setup', rmPost, @EnrollmentEndpoint);
+  HTTPRouter.RegisterRoute('/two-factor/confirm', rmPost, @EnrollmentConfirmEndpoint);
   HTTPRouter.RegisterRoute('/register', rmGet, @RegisterEndpoint);
   HTTPRouter.RegisterRoute('/register', rmPost, @RegisterEndpoint);
 

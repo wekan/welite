@@ -50,9 +50,23 @@ restart and are shared across web/API routes. Forwarded headers cannot change th
 admission peer. Proxied clients share the proxy socket's peer allowance.
 
 Malformed/unknown factor policies and covered `REQUIRE_2FA` accounts without an active
-factor are denied; enrollment remains under implementation. LDAP enable/fallback policy
+factor are denied until enrollment is confirmed. LDAP enable/fallback policy
 still applies. Tokens are bound to the current password and canonical active factor;
 observed policy or credential changes revoke them. See [shared account policy guards](ferret.md#shared-account-policy-guards).
+
+**Enroll one-time codes** through `/two-factor/setup` (plain HTML, no JavaScript or
+cookies required). Confirm your password, copy the secret to a time-based authenticator
+(SHA1, six digits, 30 seconds), then submit its code to `/two-factor/confirm`. Setup
+expires after five minutes and is bound to the socket peer/user agent. Its bearer token
+is carried in a hidden POST field, never an application token or navigation URL. Setup
+pages send `Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+
+Setup and confirmation share login attempt allowances. Confirmation uses the account
+stored with the setup token, ignoring posted usernames for admission. A wrong/expired
+code cannot enable the factor; an active factor cannot be replaced by a password alone.
+After confirmation, wait for a new code and sign in normally: the activation code has
+already been consumed. Registration under required-factor policy directs users to setup
+without issuing an application session. New setup replaces an earlier pending token.
 
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by

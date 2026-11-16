@@ -137,13 +137,13 @@ cross-process validation, promotion to admin and permanent observed revocation;
 `session.py` requires a fresh session after credential restoration before exercising
 concurrent counters. `admin.py` tests both password routes and live web/API token denial,
 while `ferroot.py` tests actual Mongo policy changes without rewriting source records.
-HTTP OTP login is covered below; enrollment remains a separate implementation step.
+HTTP OTP login and enrollment are covered below.
 
 `python3 tests/totp.py` verifies the portable one-time-code core against RFC SHA1
 HOTP/TOTP vectors and independent Python HMAC, with normal/checked Pascal builds.
 Coverage includes base32 case/padding/binary inputs, wide counters/timestamps, leading
 zeroes, Meteor-window edges, malformed input and the replay boundary. Durable counter
-consumption is covered below; enrollment remains separate integration work.
+consumption and HTTP enrollment are covered below.
 
 `python3 tests/replay.py` verifies durable OTP counter claims on linked/CLI SQLite:
 sixteen concurrent processes with one winner, rollback of token/metadata on stale or
@@ -156,7 +156,7 @@ composes the actual claim with a token transaction.
 tokens on both SQLite backends: single successful proof use, sixteen concurrent logins,
 replay denial, forced metadata/counter rollback and retry, stale policy/factor snapshots,
 required-factor modes and LDAP fallback. `ferroot.py` additionally checks a live shared
-Argon2-secret/OTP account without BSON changes. HTTP code routing and attempt limits are covered below; enrollment remains separate work.
+Argon2-secret/OTP account without BSON changes. HTTP code routing, attempt limits and enrollment are covered below.
 
 `python3 tests/attempt.py` verifies durable pre-authentication reservations on linked/CLI
 SQLite: sixteen concurrent attempts, account/peer/tenant caps, exact window boundaries,
@@ -179,4 +179,12 @@ setup replacement, stale policy, forced and ignored activation rollback/retry, s
 concurrent confirmations, local token revocation, consumed-code login denial, fresh-code
 login and user cleanup. `ferroot.py` verifies activation through shared JSON TEXT views,
 unchanged unrelated BSON types, pending ownership/reinstall and physical user cleanup.
-HTTP enrollment routing and its attempt limiting remain a separate step.
+HTTP enrollment routing and its attempt limiting are covered below.
+
+`python3 tests/enrhttp.py` verifies required-factor registration and public setup/
+confirmation on linked/CLI SQLite: no early application access, fresh passwords, manual
+secret, no-store/referrer headers, hidden POST tokens, client binding, shared account/
+peer allowances, spoofed posted usernames/forwarded headers, rollback/retry, pending
+restart, expiry/replacement and fresh-code sign-in. `WELITE_UI=1` runs `enrhttp.js` with
+the same Playwright/Node settings as `otphttp.py`, completing setup, confirmation and
+sign-in with JavaScript disabled and Cookie headers removed.
