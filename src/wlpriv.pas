@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc;
+uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc,wlseen;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const
@@ -19,14 +19,15 @@ begin
   Owners:=nil;
   for i:=0 to High(Objects) do if Objects[i][0]='_wl_models' then
     Owners:=Db.Query('SELECT name,table_name,spec,version FROM _wl_models;');
-  for k:=0 to 5 do
+  for k:=0 to 6 do
   begin
     if k=0 then begin Name:='login_tokens';DDL:=TokenDDL;end
     else if k=1 then begin Name:='authmeta';DDL:=MetaDDL;end
     else if k=2 then begin Name:='_wl_otp';DDL:=OTPReplayDDL;end
     else if k=3 then begin Name:='_wl_attempt';DDL:=AttemptDDL;end
     else if k=4 then begin Name:='_wl_enrol';DDL:=EnrollDDL;end
-    else begin Name:='_wl_authsrc';DDL:=AuthSourceDDL;end;
+    else if k=5 then begin Name:='_wl_authsrc';DDL:=AuthSourceDDL;end
+    else begin Name:='_wl_seen';DDL:=SeenDDL;end;
     Exists:=False;Owned:=False;
     for i:=0 to High(Owners) do
       if (Owners[i][0]=Name) and (Owners[i][1]=Name) and (Owners[i][2]=Signature) and (Owners[i][3]='1') then Owned:=True;
@@ -39,10 +40,23 @@ begin
     if not Exists then Result:=Result+DDL+'; ';
     Result:=Result+'INSERT OR REPLACE INTO _wl_models VALUES('+QuotedStr(Name)+','+QuotedStr(Name)+','+QuotedStr(Signature)+',1); ';
   end;
-  Result:=Result+AuthSourceScript(Users);
+  // Backfill before source cleanup; history survives credential invalidation.
+  Result:=Result+'INSERT INTO _wl_seen SELECT hashedToken FROM login_tokens WHERE 1 ON CONFLICT(hashedToken) DO NOTHING; '+
+    'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t WHERE NOT EXISTS(SELECT 1 FROM _wl_seen s WHERE s.hashedToken=t.hashedToken)) THEN NULL ELSE version END WHERE name=''_wl_seen''; '+AuthSourceScript(Users);
   Result:=Result+'CREATE INDEX IF NOT EXISTS idx_login_tokens_user ON login_tokens(userId); '+
     'DROP TRIGGER IF EXISTS _wl_token_i; DROP TRIGGER IF EXISTS _wl_token_u; '+
     'DROP TRIGGER IF EXISTS _wl_token_d; DROP TRIGGER IF EXISTS _wl_user_tokens; '+
+    'DROP TRIGGER IF EXISTS _wl_seen_i; DROP TRIGGER IF EXISTS _wl_seen_d; DROP TRIGGER IF EXISTS _wl_seen_u; '+
+    'CREATE TRIGGER _wl_seen_i AFTER INSERT ON login_tokens BEGIN '+
+      'INSERT INTO _wl_seen VALUES(NEW.hashedToken) ON CONFLICT(hashedToken) DO NOTHING; '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM _wl_seen WHERE hashedToken=NEW.hashedToken) THEN RAISE(ABORT,''Missing bearer history'') END; END; '+
+    'CREATE TRIGGER _wl_seen_u AFTER UPDATE OF hashedToken ON login_tokens BEGIN '+
+      'INSERT INTO _wl_seen VALUES(OLD.hashedToken) ON CONFLICT(hashedToken) DO NOTHING; '+
+      'INSERT INTO _wl_seen VALUES(NEW.hashedToken) ON CONFLICT(hashedToken) DO NOTHING; '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM _wl_seen WHERE hashedToken=OLD.hashedToken) OR NOT EXISTS(SELECT 1 FROM _wl_seen WHERE hashedToken=NEW.hashedToken) THEN RAISE(ABORT,''Missing bearer history'') END; END; '+
+    'CREATE TRIGGER _wl_seen_d BEFORE DELETE ON login_tokens BEGIN '+
+      'INSERT INTO _wl_seen VALUES(OLD.hashedToken) ON CONFLICT(hashedToken) DO NOTHING; '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM _wl_seen WHERE hashedToken=OLD.hashedToken) THEN RAISE(ABORT,''Missing bearer history'') END; END; '+
     'CREATE TRIGGER _wl_token_i BEFORE INSERT ON login_tokens BEGIN '+
       'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM users WHERE id=NEW.userId) THEN RAISE(ABORT,''Missing token user'') END; END; '+
     'CREATE TRIGGER _wl_token_u BEFORE UPDATE OF userId ON login_tokens BEGIN '+

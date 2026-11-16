@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Durable shared bearer history
+
+- Add owned private `_wl_seen` storage containing local bearer digests. Backfill current
+  credentials before source cleanup, and retain history through token/account deletion,
+  source UUID changes and legacy unbound-store migration.
+- Record inserts, digest updates (old and new) and deletions in the credential's own
+  transaction. Assert history writes succeeded so ignored/failed writes cannot commit
+  partial issuance or revocation; incomplete installer backfill also rolls back.
+- Verify live linked/CLI history creation, upgrade backfill, ignored-write rollback,
+  SQL digest changes and retention after revocation/reinstall/source migration.
+- This prepares the no-resurrection guard for existing-bearer adoption. Automatic
+  adoption remains disabled until it checks this history and atomically validates and
+  records source membership, account policy and original expiry.
+
 ## 2026-11-16 Typed legacy resume conversion
 
 - Add an atomic `wl_resume` convert operation for one raw Meteor bearer. Replace the

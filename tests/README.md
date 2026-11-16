@@ -258,3 +258,8 @@ Legacy conversion in `resume.py` covers atomic TEXT/JSONB raw-to-hashed edits,
 already-installed hash precedence, ambiguous/malformed refusal and rollback. Live
 `ferroot.py` checks eight concurrent conversions with exact BSON Date/Long/unknown
 and sibling preservation. Authorization/adoption of existing bearers remains separate.
+
+Shared bearer history tests in `ferroot.py` check owned `_wl_seen` creation/backfill,
+ignored backfill/issuance write rollback, direct SQL old/new digest retention and history
+survival after token revocation, reinstall and source UUID/unbound-store migration.
+Existing-bearer adoption is still disabled pending use of this history guard.

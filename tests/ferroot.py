@@ -532,10 +532,30 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert pair('paired-first')=='yes'
                 first=client.find('users','paired-api')[0]['services']['resume']['loginTokens'][0]
                 assert first['hashedToken']==meteor_hash('paired-first') and isinstance(first['when'],DateMs)
+                seen_key=hashlib.sha256(('welite-token-v2\0'+str(db.resolve())+'\0paired-first').encode()).hexdigest()
+                assert sql('SELECT hashedToken FROM _wl_seen WHERE hashedToken='+q(seen_key)+';')==[[seen_key]]
+                # Upgrade backfills existing credentials without touching shared BSON.
+                assert sql('DELETE FROM _wl_seen WHERE hashedToken='+q(seen_key)+';','exec')=='ok'
+                assert sql('CREATE TRIGGER deny_history BEFORE INSERT ON _wl_seen BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
+                assert sql(mode='install')=='error','Ignored backfill committed an incomplete bearer history'
+                assert sql('DROP TRIGGER deny_history;','exec')=='ok'
+                assert sql(mode='install')=='ok'
+                assert sql('SELECT hashedToken FROM _wl_seen WHERE hashedToken='+q(seen_key)+';')==[[seen_key]]
+                # Direct SQL digest changes preserve both old and new history.
+                assert sql("INSERT INTO login_tokens VALUES('history-old','paired-api','date',NULL); UPDATE login_tokens SET hashedToken='history-new' WHERE hashedToken='history-old'; DELETE FROM login_tokens WHERE hashedToken='history-new';",'exec')=='ok'
+                assert sql("SELECT hashedToken FROM _wl_seen WHERE hashedToken IN ('history-old','history-new') ORDER BY hashedToken;")==[['history-new'],['history-old']]
+                # An ignored history write must roll back local/shared issuance.
+                assert sql('CREATE TRIGGER deny_history BEFORE INSERT ON _wl_seen BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
+                history_before=encode(client.find('users','paired-api')[0])
+                assert pair('history-denied') in ['no','error']
+                assert encode(client.find('users','paired-api')[0])==history_before
+                assert sql('DROP TRIGGER deny_history;','exec')=='ok'
+
                 client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$pull':{'services.resume.loginTokens':dict(hashedToken=meteor_hash('paired-first'))}})]})
                 assert paired_check('paired-first')=='no'
                 client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$push':{'services.resume.loginTokens':first}})]})
                 assert paired_check('paired-first')=='no','Restoring source record revived a revoked local credential'
+                assert sql('SELECT hashedToken FROM _wl_seen WHERE hashedToken='+q(seen_key)+';')==[[seen_key]],'Revocation erased bearer history'
                 snapshot=encode(client.find('users','paired-api')[0])
                 assert pair('paired-first')=='no','Existing shared hash was reused'
                 assert encode(client.find('users','paired-api')[0])==snapshot
@@ -723,7 +743,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 source_settings=sql("SELECT table_name,settings FROM _ferretdb_collections WHERE name='users';")[0]
                 old_uuid=json.loads(source_settings[1])['uuid']
                 assert sql('SELECT userTable,userUUID FROM _wl_authsrc;')==[[source_settings[0],old_uuid]]
-                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc']
+                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc','_wl_seen']
                 def private_snapshot():return {name:sql('SELECT * FROM '+q(name)+' ORDER BY 1;') for name in private_tables}
                 # Proofs cannot cross a rebind even when account snapshots match.
                 rebound_uuid='11111111-2222-4333-8444-555555555555'
@@ -735,6 +755,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert stale_setup=='no'
                 assert sql("UPDATE _ferretdb_collections SET settings="+q(source_settings[1])+" WHERE name='users'; UPDATE _wl_authsrc SET userUUID="+q(old_uuid)+';','exec')=='ok'
                 preserved=private_snapshot()
+                seen_before_rebind=sql('SELECT hashedToken FROM _wl_seen ORDER BY hashedToken;')
                 assert sql(mode='install')=='ok' and private_snapshot()==preserved and auth('check')=='yes'
                 # Bad source metadata aborts installer cleanup and source rebinding together.
                 assert sql("UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid','bad') WHERE name='users';",'exec')=='ok'
@@ -748,6 +769,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert auth('lookup','user')=='no'
                 assert sql(mode='install')=='ok'
                 for name in ['login_tokens','authmeta','_wl_enrol']:assert sql('SELECT count(*) FROM '+q(name)+';')==[['0']]
+                assert sql('SELECT hashedToken FROM _wl_seen ORDER BY hashedToken;')==seen_before_rebind
                 assert sql("SELECT counter FROM _wl_otp WHERE userId='u';")==[['100']]
                 assert auth('issue')=='yes'
                 pending_token,pending_secret=pending_source()
@@ -765,6 +787,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',pending_token,binding,code],env=enroll_settings,text=True).strip()=='no'
                 assert sql(mode='install')=='ok'
                 assert sql('SELECT userUUID FROM _wl_authsrc;')==[[new_uuid]]
+                assert set(map(tuple,seen_before_rebind)).issubset(set(map(tuple,sql('SELECT hashedToken FROM _wl_seen;'))))
                 for name in ['login_tokens','authmeta','_wl_otp','_wl_enrol']:assert sql('SELECT count(*) FROM '+q(name)+';')==[['0']]
                 assert auth('check')=='no' and auth('issue')=='yes' and auth('check')=='yes'
 

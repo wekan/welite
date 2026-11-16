@@ -811,6 +811,28 @@ existing-hash precedence, malformed/ambiguous refusal and rollback. `ferroot.py`
 concurrent conversion against actual FerretDB with exact BSON Date/Long/unknown/sibling
 preservation on linked/CLI SQLite.
 
+## Durable bearer history before adoption
+
+The owned private `_wl_seen` table stores the local tenant-scoped token digest, never
+the raw bearer. Credential inserts, digest changes and deletions record history in the
+same transaction; digest changes retain both values. Trigger assertions refuse ignored
+history writes. Installation backfills existing token rows before source cleanup and
+asserts coverage, so a failed/ignored backfill rolls back installation.
+
+History survives token/account deletion, source UUID replacement and legacy source
+rebinding. This conservative record is deliberately retained: once automatic adoption
+exists, a missing local credential with recorded history must be denied rather than
+recreated from a restored shared record. It cannot reconstruct credentials deleted
+before this upgrade, and does not yet record arbitrary Meteor-only credentials. No
+history-based automatic adoption is enabled by this step. The adopter still needs to
+check history, source/account/settings snapshots, cross-account ambiguity and original
+expiry, then create local authorization metadata atomically with any legacy conversion.
+Native-store private schema and browser session behavior are unchanged.
+
+`ferroot.py` tests backfill and ignored-backfill refusal, ignored issuance-history writes,
+SQL digest updates/deletion, revocation retention, reinstall and source migrations with
+actual FerretDB on both SQLite backends.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
