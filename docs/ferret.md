@@ -883,16 +883,42 @@ unknowns; bearer history is untouched. `ferroot.py` covers failure/retry, ignore
 writes, concurrent callers, cadence, reinstall, stale source and fractional cutoffs
 against Node.js on linked/CLI SQLite.
 
-This is a callable maintenance kernel, not an active HTTP/background timer. Local
-credential cleanup, the timer lifecycle and shared-store activation/application observer
-behavior still need integration. No idle-time cleanup or Meteor connection-close behavior
-is claimed by this database-only step.
+The background worker below calls this kernel for registered stores. Local credential
+cleanup, discovery before first tenant access and shared-store activation/application
+observer behavior still need integration. No Meteor connection-close behavior is claimed
+by the database sweep alone.
+
+## Background maintenance lifecycle
+
+`wlmaint.pas` owns a worker with a locked, deduplicated absolute-path set. New paths wake
+it immediately; otherwise it polls once a minute and lets the durable ten-minute sweep
+checkpoint decide whether work is due. Each pass opens and closes its own connection;
+request/cached handles stay with the caller. Missing files are skipped, native stores
+are not swept and a failed store does not terminate work for other stores. An atomic
+failed-pass counter permits observing retry behavior. Failure leaves the durable sweep
+checkpoint unchanged, so later passes retry.
+
+The HTTP run loop starts maintenance and stops it in a `finally` block. Tenant open
+registers shared stores for both cached/new handles; unsupported registration cannot
+break a request. The path set is per process. Registered stores remain eligible during
+idle periods, without a subsequent HTTP request. Stopping signals the wait event, joins
+the worker after its current database operation and releases worker-owned state.
+
+`ferroot.py` runs the actual worker on both backends. It observes an injected failed
+sweep before allowing recovery, then checks idle cleanup, another due pass, exact BSON,
+missing/native-store isolation and a clean stop. `enrhttp.py` covers HTTP startup and
+registration/enrollment regressions on linked/CLI SQLite.
+
+Existing tenants that have not been opened since startup are not discovered yet.
+Local credential cleanup, actual shared-store HTTP activation, process-signal lifecycle
+and full Meteor observer/application workflows remain explicit integration work. The
+worker does not resolve the shared filename/sidecar policy or activate the adapter.
 
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity, local expiry cleanup and running scheduler integration; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity, local expiry cleanup and startup tenant discovery; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

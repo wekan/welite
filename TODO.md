@@ -272,7 +272,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Durable owned bearer-digest history now follows private token inserts/updates/deletes, backfills upgrades and survives source/account revocation; ignored writes roll back.
   Existing shared hashed/legacy bearer adoption now guards source/account/settings/history snapshots and atomically preserves original expiry, metadata and conversion; live concurrency/rollback/revocation tests cover it.
   Shared expiry now has an owned durable ten-minute due checkpoint and atomic typed sweep, with live rollback, concurrency, Date/numeric/fractional cutoff and source tests.
-  Remaining: broader resume-policy parity, local expiry cleanup and running scheduler/HTTP integration; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Registered shared stores now sweep during HTTP idle time through a separate-connection worker, with retry/failure, isolation and shutdown tests; tenant open and HTTP lifecycle hooks are wired.
+  Remaining: broader resume-policy parity, local expiry cleanup and startup discovery before first tenant access; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

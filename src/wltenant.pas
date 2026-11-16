@@ -67,7 +67,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregist,wltmp;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
+  wlregist,wltmp,wlmaint;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
 
 type
   TUploadCleanup=class(TUploadedFile)
@@ -280,13 +280,17 @@ begin
   if Idx >= 0 then
   begin
     Tenant.Db := TWLDb(HandleCache.Objects[Idx]);
+    RegisterMaintenanceDb(Tenant.Db);
     Exit(True);
   end;
 
   Tenant.Db := WLDbOpen(Tenant.DbPath);
   Result := Assigned(Tenant.Db);
   if Result then
+  begin
     HandleCache.AddObject(Tenant.Host, TObject(Tenant.Db));
+    RegisterMaintenanceDb(Tenant.Db);
+  end;
 end;
 
 initialization

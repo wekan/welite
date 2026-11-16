@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Background shared expiry lifecycle
+
+- Add a worker that maintains registered shared stores during idle HTTP periods, with
+  one-minute polling and the existing durable ten-minute sweep checkpoint. Deduplicate
+  absolute paths and wake promptly when a new store registers.
+- Use separate per-pass database connections; never pass request handles to the worker.
+  Isolate failed stores, count failed passes and retry without advancing a failed sweep.
+  Missing files are skipped and native stores are not swept. Termination wakes and joins
+  the worker, including an in-progress transaction, before releasing its state.
+- Start/stop maintenance around the HTTP run loop and register shared stores through
+  both cached and newly opened tenant handles. Unsupported stores do not break requests.
+- Verify linked/CLI live idle cleanup, an observed failing pass followed by recovery,
+  repeated work, retained BSON, native/missing-store isolation and clean worker shutdown.
+  Both-backend HTTP enrollment/registration regressions also pass.
+- Discovery of existing tenants before their first request, local credential cleanup,
+  shared-store activation and application/observer workflows remain open.
+
 ## 2026-11-16 Guarded shared expiry sweep
 
 - Add owned durable `_wl_sweep` scheduling state and a ten-minute due-check kernel.

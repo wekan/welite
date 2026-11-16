@@ -42,6 +42,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
         build(root/'tests/enroll.lpr',out/'enroll',flags)
         build(root/'tests/revoke.lpr',out/'revoke',flags)
         build(root/'tests/sweep.lpr',out/'sweep',flags)
+        build(root/'tests/maint.lpr',out/'maint',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS',None)
@@ -354,6 +355,47 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 client.command({'drop':'settings'})
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='sweep-fraction'),limit=1)]})
 
+
+                # A real worker retries failures and sweeps without further requests.
+                missing_store=out/'missing.db';native_store=out/'native.db'
+                with sqlite3.connect(native_store) as native:
+                    native.execute('CREATE TABLE users(id TEXT)');native.execute("INSERT INTO users VALUES('unchanged')")
+                worker_doc=dict(_id='worker-user',services=dict(resume=dict(loginTokens=[dict(token='worker-old',when=DateMs(0)),dict(token='worker-future',when=DateMs(int(time.time()*1000)+86400000),extra=Long(9007199254740993))])),keep=Binary(b'worker',4))
+                client.command({'insert':'users','documents':[worker_doc]})
+                worker_doc=client.find('users','worker-user')[0]
+                assert sql('UPDATE _wl_sweep SET lastAt=-600000;','exec')=='ok'
+                assert sql('CREATE TRIGGER deny_worker BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='worker-user' BEGIN SELECT RAISE(IGNORE); END;",'exec')=='ok'
+                maint=subprocess.Popen([str(out/'maint/maint'),str(db),str(native_store),str(missing_store)],env=settings,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+                try:
+                    assert maint.stdout.readline().strip()=='ready'
+                    for attempt in range(100):
+                        maint.stdin.write('status\n');maint.stdin.flush()
+                        if int(maint.stdout.readline().strip())>0:break
+                        assert maint.poll() is None;time.sleep(.05)
+                    else:raise AssertionError('Worker did not report an attempted failing sweep')
+                    assert maint.poll() is None and sql('SELECT lastAt FROM _wl_sweep;')==[['-600000']]
+                    assert encode(client.find('users','worker-user')[0])==encode(worker_doc)
+                    assert sql('DROP TRIGGER deny_worker;','exec')=='ok'
+                    for attempt in range(100):
+                        if len(client.find('users','worker-user')[0]['services']['resume']['loginTokens'])==1:break
+                        assert maint.poll() is None;time.sleep(.05)
+                    else:raise AssertionError('Idle background maintenance did not retry')
+                    worker_doc['services']['resume']['loginTokens']=worker_doc['services']['resume']['loginTokens'][1:]
+                    assert encode(client.find('users','worker-user')[0])==encode(worker_doc)
+                    # Force another due interval and verify the same worker keeps running.
+                    client.command({'update':'users','updates':[dict(q=dict(_id='worker-user'),u={'$push':{'services.resume.loginTokens':dict(token='worker-later',when=DateMs(0))}})]})
+                    assert sql('UPDATE _wl_sweep SET lastAt=-600000;','exec')=='ok'
+                    for attempt in range(100):
+                        if len(client.find('users','worker-user')[0]['services']['resume']['loginTokens'])==1:break
+                        assert maint.poll() is None;time.sleep(.05)
+                    else:raise AssertionError('Background worker stopped after its first pass')
+                    output,errors=maint.communicate('stop\n',timeout=10)
+                    assert maint.returncode==0 and output.strip()=='stopped',(output,errors)
+                finally:
+                    if maint.poll() is None:maint.kill();maint.wait()
+                assert not missing_store.exists()
+                with sqlite3.connect(native_store) as native:assert native.execute('SELECT * FROM users').fetchall()==[('unchanged',)]
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='worker-user'),limit=1)]})
 
                 # Private tokens reference a user view without invalid SQLite FKs.
                 build(root/'tests/token.lpr',out/'tokens',flags)
