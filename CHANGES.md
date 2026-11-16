@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Optional selected-card and multi-touch dragging
+
+- Activate local vendored InteractJS on editable boards while retaining checkbox and
+  arrow controls. Drag one card or its checked-card group to a visible list/lane cell.
+- Support disjoint simultaneous pointer selections. Serialize drop requests and refresh
+  the single-use counter/MAC from each redirected form before the next queued request.
+  Use the explicit form action attribute so action buttons cannot shadow its URL.
+- Extend `/board/move` with validated same-board destination cells and atomic append
+  of selected cards. Preserve existing session, write permission and token checks.
+- Verify target ownership/lane rejection, rollback on SQL failure and replay refusal,
+  plus Chromium real-pointer selection dragging and simultaneous two-finger moves with
+  cookies absent. Existing JavaScript-disabled browser flows pass independently.
+  Physical touch-display and retro-browser verification remains on the platform list.
+
 ## 2026-11-16 Fail-closed native and portable entropy
 
 - Remove the weak Random fallback from password salts and authentication tokens.

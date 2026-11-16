@@ -52,6 +52,7 @@ function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
 // True if anything moved. Register the endpoint at POST /board/move (see wlhttp.lpr).
+function ApplyCardDrop(Db:TWLDb; Params:TStrings):Boolean;
 function ApplyMove(Db: TWLDb; Params: TStrings): Boolean;
 
 implementation
@@ -197,6 +198,29 @@ begin
     q(BoardId) + '; UPDATE cards SET swimlaneId=' + q(Target) +
     ' WHERE listId=' + q(ListId) + ' AND boardId=' + q(BoardId) + '; COMMIT;') then
     Db.Exec('ROLLBACK;');
+end;
+
+function ApplyCardDrop(Db:TWLDb; Params:TStrings):Boolean;
+var Cards:TStringList; R:TWLRows; i:Integer; Sql,B,L,S:string;
+begin
+  Result:=False; B:=Params.Values['boardId'];L:=Params.Values['targetList'];S:=Params.Values['targetLane'];
+  Cards:=CollectSel(Params,'card');
+  try
+    if Cards.Count=0 then Exit;
+    R:=Db.Query('SELECT id FROM lists WHERE id='+QuotedStr(L)+' AND boardId='+QuotedStr(B)+
+      ' AND archived=0 AND (swimlaneId='+QuotedStr(S)+' OR swimlaneId='''');');
+    if Length(R)=0 then Exit;
+    R:=Db.Query('SELECT id FROM swimlanes WHERE id='+QuotedStr(S)+' AND boardId='+QuotedStr(B)+' AND archived=0;');
+    if Length(R)=0 then Exit;
+    Sql:='BEGIN IMMEDIATE; ';
+    for i:=0 to Cards.Count-1 do
+      Sql:=Sql+'UPDATE cards SET listId='+QuotedStr(L)+',swimlaneId='+QuotedStr(S)+
+        ',sort=(SELECT COALESCE(MAX(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(B)+
+        ' AND listId='+QuotedStr(L)+' AND swimlaneId='+QuotedStr(S)+') WHERE id='+QuotedStr(Cards[i])+
+        ' AND boardId='+QuotedStr(B)+' AND archived=0; ';
+    Result:=Db.Exec(Sql+'COMMIT;');
+    if not Result then Db.Exec('ROLLBACK;');
+  finally Cards.Free;end;
 end;
 
 function ApplyMove(Db: TWLDb; Params: TStrings): Boolean;

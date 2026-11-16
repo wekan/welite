@@ -279,7 +279,12 @@ begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
   end;
   if HandleSelection(T,S,aRequest,aResponse) then Exit;
-  ApplyMove(T.Db, aRequest.ContentFields);
+  if aRequest.ContentFields.Values['dir']='drop' then
+  begin
+    if not ApplyCardDrop(T.Db,aRequest.ContentFields) then
+    begin aResponse.Code:=400;aResponse.Content:='Invalid drop or database failure';aResponse.SendContent;Exit;end;
+  end
+  else ApplyMove(T.Db, aRequest.ContentFields);
   BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', WithSessionId(BackTo, S.SessionId));

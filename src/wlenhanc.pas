@@ -1,23 +1,9 @@
 unit wlenhanc;
 
 {
-  WeKan-Lite — progressive enhancement (docs/enhance.md)
-
-  The baseline UI is no-JS / no-cookie HTML 3.2 forms (works on IBrowse/NetSurf/Lynx). Where
-  JavaScript and touch are available, richer features light up AUTOMATICALLY — most notably
-  MultiDrag (https://github.com/wekan/wami/tree/main/public/multidrag, InteractJS): on a big touch screen many cards can be
-  dragged at once, each finger a different card. Enhancements NEVER replace the baseline: a
-  drag just POSTs to the same `.../move` endpoint the form buttons already use.
-
-  Strategy (no server-side capability assumptions needed for correctness):
-    * components always emit the baseline form controls AND harmless enhancement hooks
-      (draggable class + data-* attributes) — retro browsers ignore the hooks;
-    * the enhancement <script> is emitted by default and SELF-GATES client-side (checks for
-      pointer/touch + JS); browsers that can't run it simply don't;
-    * wlbrowse can optionally suppress the <script> bytes for known no-JS browsers.
-
-  v0.1 reference skeleton. The actual interact.js + wlmdrag.js are static assets under
-  the tenant's public/ (served by the file route); this unit emits the markup that wires them.
+  Optional card drag enhancement. Checkbox/arrow forms remain the baseline.
+  Vendored InteractJS supports independent pointers; wlmdrag.js serializes drops
+  through /board/move, refreshing the single-use form token between requests.
 }
 
 {$mode objfpc}{$H+}
@@ -30,7 +16,7 @@ uses
 
 // Hooks to attach to a draggable element (card/list/swimlane) so the enhancement layer can
 // wire it. Harmless on retro browsers (unknown class/attributes are ignored). MoveUrl is the
-// SAME endpoint the form-based move buttons post to; the JS posts {from,to,sort} there.
+// SAME endpoint the form-based move buttons post to; drops submit selected IDs and target cells.
 //   Kind: 'card' | 'list' | 'swimlane'
 function DraggableAttrs(const Kind, Id, MoveUrl: string): string;
 
@@ -46,7 +32,9 @@ implementation
 
 function HtmlAttr(const V: string): string;
 begin
-  Result := StringReplace(V, '"', '&quot;', [rfReplaceAll]);
+  Result:=StringReplace(V,'&','&amp;',[rfReplaceAll]);
+  Result:=StringReplace(Result,'<','&lt;',[rfReplaceAll]);
+  Result:=StringReplace(Result,'"','&quot;',[rfReplaceAll]);
 end;
 
 function ShouldEnhance(B: TWLBrowser): Boolean;
@@ -74,12 +62,7 @@ function EnhancementScripts(B: TWLBrowser): string;
 begin
   if not ShouldEnhance(B) then
     Exit('');
-  // interact.js = the drag/multi-touch engine; wlmdrag.js = WeKan-Lite glue that, on drop,
-  // POSTs {from,to,sort} to each dragged element's data-move-url. Both self-gate on
-  // touch/pointer + JS, so this is safe to emit by default — MultiDrag "just appears" on a big
-  // touch screen, OneDrag on a single-touch device, and nothing changes on no-JS browsers.
-  // served from public/js/ by wlstatic (default mount '/'); interact.js is vendored,
-  // wlmdrag.js is the WeKan-Lite glue (TODO, see enhance.md)
+  // Both assets are local; the glue self-gates and requires an editable board form.
   Result :=
     '<script src="/js/interact.js"></script>' + LineEnding +
     '<script src="/js/wlmdrag.js"></script>' + LineEnding;

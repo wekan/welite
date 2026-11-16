@@ -117,7 +117,7 @@ begin
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
       if not AllItems and (c<>X-1) then Continue;
-      Result:=Result+'<td valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'">';
+      Result:=Result+'<td valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'" data-lane="'+HtmlAttr(Lanes[i][0])+'">';
       Cards:=Db.Query('SELECT id,title,color,description FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[i][0])+' AND listId='+QuotedStr(Lists[c][0])+
         ' AND archived=0 ORDER BY sort,id;');

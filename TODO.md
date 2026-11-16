@@ -231,7 +231,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Remove weak entropy fallback; verify native Linux and portable one-use SQLite stocks (both backends).
   Windows APIs and retro hardware remain part of the cross-platform verification below.
 - [x] Add the board minimap, coordinates and occupied/current-position indicators.
-- [ ] Add optional drag/drop and multiple selection using the same move endpoint.
+- [x] Add optional card drag/drop, checked-card groups and simultaneous pointers through the shared move endpoint.
 - [ ] Align runtime tenant/file paths with DOS 8.3 and the requested Weddy layout.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
 - [ ] Complete language selection, translation rendering and RTL behavior.

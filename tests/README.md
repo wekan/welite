@@ -34,3 +34,9 @@ including concurrent processes, stock exhaustion/corruption and failed deletions
 Set `WELITE_NO_OS_RNG=1` when running `admin.py` to compile without OS providers and
 use a fresh test-only stock. Combine with `WELITE_DB_CLI=1 WELITE_UI=1` to exercise
 the complete HTTP and no-JS/no-cookie browser workflows through this portable path.
+
+`drop.py` runs through `admin.py`: shared-route multi-card drop persistence, invalid
+board/lane destinations, SQL rollback and action-token replay refusal. With
+`WELITE_UI=1`, `drag.js` additionally uses real Chromium mouse movement and CDP
+simultaneous touch contacts, with cookies stripped, to verify selection groups and
+serialized independent multi-touch drops. Baseline browser scripts still disable JS.
