@@ -118,3 +118,15 @@ Tenant administrators may attribute a card/comment to another enabled active mem
 that same board, supporting controlled imports. Invalid attribution is rejected before
 creation. Malformed JSON and invalid relation collections return 400; forbidden author
 attribution returns 403; database write failures return 500 with no partial card change.
+
+## Durable token binding
+
+API login credentials use a tenant-scoped SHA-256 lookup and supplemental `authmeta`
+credential binding. They survive a server restart at the same database path. A copied
+or relocated database requires a fresh login, and a detected password-hash change revokes
+the old token. Disabling a user revokes credentials as described in `admin.md`.
+
+A web session ID used with an API route retains its client, idle and in-memory session
+checks. Dedicated API credentials are issued by `/users/login`. Earlier weak digests have
+no compatibility acceptance path. See `tests/crypto.py` for independent digest/MAC vectors,
+process-restart persistence and copied-database/credential-revocation checks.

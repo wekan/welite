@@ -5,6 +5,8 @@ Set `FPC` to your FreePascal compiler and, if needed, `PPC_CONFIG_PATH` to its c
 No system installs or changes to production databases are needed. Each runner creates
 and removes its own temporary directory.
 
+- `python3 tests/crypto.py`: compare SHA/HMAC to independent vectors, test proxy chains,
+  and verify durable API token binding across process restart, copied DBs and credentials.
 - `python3 tests/session.py`: exercise real session/tenant/credential boundaries,
   16 concurrent token consumers and idle expiry with both SQLite backends.
 - `python3 tests/access.py`: verify board role permissions, selection isolation and

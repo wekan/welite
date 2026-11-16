@@ -34,7 +34,7 @@ begin
     Check(S.SessionId<>'','persist session');
     Check(ValidateSession(Db,R,S.SessionId,Seen),'valid session with delimiter/Unicode name');
     Check(not ValidateSession(Other,R,S.SessionId,Seen) and (Seen.UserId=''),'database binding');
-    Other.Exec('INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) VALUES('+QuotedStr(HashText(S.SessionId))+',''u'',''now'',''2099-01-01'');');
+    Other.Exec('INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) VALUES('+QuotedStr(TokenHash(Db,S.SessionId))+',''u'',''now'',''2099-01-01'');');
     Check(not ValidateSession(Other,R,S.SessionId,Seen) and (Seen.UserId=''),'copied token and user IDs do not cross databases');
     R.UserAgent:='Wrong client';
     Check(not ValidateSession(Db,R,S.SessionId,Seen) and (Seen.UserId=''),'failed validation clears identity');

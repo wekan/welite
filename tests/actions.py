@@ -81,7 +81,7 @@ def run(request, db, session):
     assert data['card_custom_field_values'][0]['value']=='Value'
     assert data['custom_fields'][0]['name']=='Field'
     assert base64.b64decode(graph['files'][0]['base64Data'])==attachment.read_bytes()
-    assert 'users' not in data and 'login_tokens' not in data
+    assert all(key not in data for key in ['users','login_tokens','authmeta'])
     before=snapshot()
     assert action('export',{'sel_list':'alist'},token=token)[0]==200
     assert snapshot()==before

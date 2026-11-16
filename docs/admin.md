@@ -50,5 +50,14 @@ context. Their default idle limit is 1,800 seconds; `WELITE_SESSION_IDLE` overri
 a positive number of seconds. Idle expiry removes the durable token. Concurrent state-changing
 submissions consume a form token once; downloads retain their read-only behavior.
 
-Cryptographic hash/MAC upgrades, portable entropy and the remaining API/proxy binding audit
-are tracked separately in TODO. The existing non-Unix random fallback is still unfinished.
+Token digests use tenant-scoped SHA-256; action tokens use HMAC-SHA-256 with a server-only
+session key. Supplemental `authmeta` records bind durable credentials to the tenant path
+and current password hash. Digest upgrades and moving a database to another path require a
+fresh sign-in. Existing weak token records are not accepted through a legacy fallback.
+
+Forwarded IP headers are ignored unless the actual peer is in `WELITE_TRUSTED_PROXIES`, a
+comma-separated list of exact IPv4/IPv6 proxy addresses. The chain is walked right-to-left
+until the first untrusted hop. Configure only proxies under your control that append or
+replace the real client address. CIDR ranges and hostnames are not proxy-list entries.
+
+Portable entropy remains in TODO: the existing non-Unix random fallback is unfinished.

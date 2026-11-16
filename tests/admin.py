@@ -8,6 +8,7 @@ from actions import run as check_actions
 from clone import run as check_clone
 from bodyids import run as check_body_ids
 from sessions import run as check_sessions
+from tokens import run as check_tokens
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -222,6 +223,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             if os.environ.get('WELITE_UI') == '1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/actions.js'),'http://localhost:'+str(port),admin],check=True)
             check_sessions(request,db,admin)
+            check_tokens(request,db,admin)
             with sqlite3.connect(db) as con:
                 con.execute("UPDATE users SET isAdmin=0 WHERE username='administrator'")
             assert request('GET', '/designer?sessionId='+admin)[0] == 403

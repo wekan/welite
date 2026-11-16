@@ -7,18 +7,11 @@ unit wlauth;
   Dillo / Lynx": the session id rides in the URL and in hidden <form> fields (never a required
   cookie), and every state-changing POST carries an action-token bound to the session.
 
-  Mechanism (unchanged from omi, retargeted onto schema.sql):
-    * sessionId        : from ?sessionId= (query) or a hidden form field, not a cookie.
-    * action-token     : Hash(action | username | passwordRef | ip | userAgent | loginAt |
-                          counter | sessionId), placed in a hidden field on each form.
-    * counter          : per-action, increments on every accepted token -> replay protection.
-    * IP + User-Agent  : bound into the token; mismatch invalidates the session.
-    * idle timeout     : session expires after N idle seconds.
-
-  Difference from omi: the bearer/login token is persisted in schema.sql's login_tokens table
-  (hashedToken, userId, createdAt, expiresAt) instead of RAM + flat files, matching
-  docs/contract.md's auth flow. HashText below is omi's FNV-1a (pure Pascal, no crypto lib so
-  it builds on 68k); swap in SHA-256 where a backend is linked.
+  Sessions use an independent server-only HMAC-SHA-256 key and a canonical JSON context
+  containing tenant, identity, client and counter. Token lookup uses a tenant-scoped SHA-256
+  digest. Supplemental authmeta rows bind durable tokens to the current credential hash
+  and distinguish API credentials from web sessions. Web tokens retain client/idle checks
+  when used with API routes. No legacy FNV token fallback is accepted.
 
   v0.1 reference skeleton.
 }
@@ -29,11 +22,12 @@ unit wlauth;
 interface
 
 uses
-  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd;
+  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,Sockets;
 
 type
   TWLSession = record
     TenantDb   : string;     // exact database binding; copied user IDs never cross tenants
+    ActionKey  : string;     // independent, server-only HMAC secret
     SessionId  : string;
     UserId     : string;
     Username   : string;
@@ -54,7 +48,7 @@ function RequestUserAgent(ARequest: TRequest): string;
 function WithSessionId(const TargetPath, SessionId: string): string;
 
 // --- token machinery ----------------------------------------------------------------------
-function HashText(const Value: string): string;                       // FNV-1a, omi-compatible
+function HashText(const Value:string):string; // SHA-256, lowercase hex
 function ActionHash(const S: TWLSession; const ActionName: string): string;
 
 // Hidden fields to embed in every POST form: sessionId + action + counter + auth_hash.
@@ -64,6 +58,10 @@ function AuthHiddenFields(const S: TWLSession; const ActionName: string): string
 // may opt out of consumption so the still-visible no-JS form remains usable afterward.
 function VerifyActionToken(ARequest: TRequest; var S: TWLSession;
   const RequiredAction:string; Consume:Boolean=True):Boolean;
+
+function TokenHash(Db:TWLDb; const Token:string):string;
+function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64):Boolean;
+function ValidateLoginToken(Db:TWLDb; Request:TRequest; const Token:string; out UserId:string):Boolean;
 
 // --- session lifecycle against schema.sql.login_tokens ------------------------------------
 // Create a login token row (hashedToken, userId, createdAt, expiresAt) and return the session.
@@ -88,11 +86,37 @@ begin
     Result := Trim(ARequest.QueryFields.Values['sessionId']);
 end;
 
-function ClientIp(ARequest: TRequest): string;
+function NormalIp(const Value:string):string;
+var V:string; V4:in_addr; V6:in6_addr;
 begin
-  Result := Trim(ARequest.CustomHeaders.Values['X-Forwarded-For']);
-  if Result = '' then Result := Trim(ARequest.RemoteAddress);
-  if Result = '' then Result := '0.0.0.0';
+  V:=Trim(Value); Result:='';
+  if (Copy(V,1,1)='[') and (Copy(V,Length(V),1)=']') then V:=Copy(V,2,Length(V)-2);
+  if TryStrToHostAddr(V,V4) then Exit(HostAddrToStr(V4));
+  if TryStrToHostAddr6(V,V6) then Result:=LowerCase(HostAddrToStr6(V6));
+end;
+function ClientIp(ARequest:TRequest):string;
+var Trusted,Hops:TStringArray; Peer,Header,Hop:string; i:Integer;
+  function TrustedIp(const Value:string):Boolean;
+  var n:Integer;
+  begin
+    Result:=False;
+    for n:=0 to High(Trusted) do if (NormalIp(Trusted[n])<>'') and (NormalIp(Trusted[n])=Value) then Exit(True);
+  end;
+begin
+  Peer:=NormalIp(ARequest.RemoteAddress); if Peer='' then Peer:='0.0.0.0';
+  Result:=Peer; Trusted:=GetEnvironmentVariable('WELITE_TRUSTED_PROXIES').Split([',']);
+  if not TrustedIp(Peer) then Exit;
+  Header:=Trim(ARequest.CustomHeaders.Values['X-Forwarded-For']); if Header='' then Exit;
+  Hops:=Header.Split([',']);
+  // Walk from the nearest hop. Untrusted callers cannot choose the effective client by
+  // prepending an address to a chain that a real proxy appended to.
+  for i:=High(Hops) downto 0 do
+  begin
+    if not TrustedIp(Result) then Break;
+    Hop:=NormalIp(Hops[i]);
+    if Hop='' then Exit(Peer);
+    Result:=Hop;
+  end;
 end;
 
 function RequestUserAgent(ARequest: TRequest): string;
@@ -113,25 +137,22 @@ begin
     Result := Result + '?sessionId=' + SessionId;
 end;
 
-function HashText(const Value: string): string;
-var
-  i: Integer;
-  H: QWord;
+function HashText(const Value:string):string;
+begin Result:=Sha256Hex(Value); end;
+function TokenHash(Db:TWLDb; const Token:string):string;
 begin
-  H := QWord(1469598103934665603);          // FNV offset basis
-  for i := 1 to Length(Value) do
-  begin
-    H := H xor Ord(Value[i]);
-    H := H * QWord(1099511628211);           // FNV prime
-  end;
-  Result := IntToHex(H, 16);
+  Result:=HashText('welite-token-v2'+#0+ExpandFileName(Db.Path)+#0+Token);
 end;
-
-function ActionHash(const S: TWLSession; const ActionName: string): string;
+function ActionHash(const S:TWLSession; const ActionName:string):string;
+var Context:TJSONArray;
 begin
-  Result := HashText(ActionName + '|' + S.Username + '|' + S.PasswordRef + '|' +
-    S.Ip + '|' + S.UserAgent + '|' + IntToStr(S.LoginAt) + '|' +
-    IntToStr(S.Counter) + '|' + S.SessionId);
+  Context:=TJSONArray.Create;
+  try
+    Context.Add('welite-action-v2'); Context.Add(ActionName); Context.Add(S.TenantDb);
+    Context.Add(S.UserId); Context.Add(S.Username); Context.Add(S.PasswordRef);
+    Context.Add(S.Ip); Context.Add(S.UserAgent); Context.Add(S.LoginAt); Context.Add(S.Counter); Context.Add(S.SessionId);
+    Result:=Hmac256Hex(S.ActionKey,Context.AsJSON);
+  finally Context.Free; end;
 end;
 
 function HtmlAttr(const V: string): string;
@@ -157,7 +178,7 @@ var O:TJSONObject;
 begin
   O:=TJSONObject.Create;
   try
-    O.Add('tenantDb',S.TenantDb); O.Add('userId',S.UserId); O.Add('username',S.Username);
+    O.Add('actionKey',S.ActionKey); O.Add('tenantDb',S.TenantDb); O.Add('userId',S.UserId); O.Add('username',S.Username);
     O.Add('passwordRef',S.PasswordRef); O.Add('ip',S.Ip); O.Add('userAgent',S.UserAgent);
     O.Add('loginAt',S.LoginAt); O.Add('lastSeenAt',S.LastSeenAt); O.Add('counter',S.Counter);
     SessionMeta.Values[S.SessionId]:=O.AsJSON;
@@ -171,11 +192,11 @@ begin
   try
     try
       D:=GetJSON(Raw); if not (D is TJSONObject) then Exit;
-      O:=TJSONObject(D); S.SessionId:=SessionId; S.TenantDb:=O.Get('tenantDb','');
+      O:=TJSONObject(D); S.ActionKey:=O.Get('actionKey',''); S.SessionId:=SessionId; S.TenantDb:=O.Get('tenantDb','');
       S.UserId:=O.Get('userId',''); S.Username:=O.Get('username','');
       S.PasswordRef:=O.Get('passwordRef',''); S.Ip:=O.Get('ip',''); S.UserAgent:=O.Get('userAgent','');
       S.LoginAt:=O.Get('loginAt',Int64(0)); S.LastSeenAt:=O.Get('lastSeenAt',Int64(0)); S.Counter:=O.Get('counter',Int64(0));
-      Result:=(S.UserId<>'') and (S.TenantDb<>'');
+      Result:=(S.UserId<>'') and (S.TenantDb<>'') and (S.ActionKey<>'');
     except S:=Default(TWLSession); end;
   finally D.Free; end;
 end;
@@ -198,7 +219,7 @@ begin
     if (Current.UserId<>S.UserId) or (Current.TenantDb<>S.TenantDb) then Exit;
     if not SameText(PostedAction,RequiredAction) or (PostedCounter<>Current.Counter) then Exit;
     if (Current.Ip<>ClientIp(ARequest)) or (Current.UserAgent<>RequestUserAgent(ARequest)) then Exit;
-    if not SameText(ActionHash(Current,RequiredAction),PostedHash) then Exit;
+    if not ConstantEqual(ActionHash(Current,RequiredAction),LowerCase(PostedHash)) then Exit;
     if Consume then
     begin
       Inc(Current.Counter); Current.LastSeenAt:=DateTimeToUnix(Now,False); PackMeta(Current);
@@ -207,16 +228,39 @@ begin
   finally LeaveCriticalSection(SessionLock); end;
 end;
 
+function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64):Boolean;
+const Schema='CREATE TABLE IF NOT EXISTS authmeta ('+
+  'hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,'+
+  'tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));';
+var Rows:TWLRows; Key,TenantKey,NowIso,Expires:string;
+begin
+  Result:=False;
+  if (Token='') or ((Kind<>'web') and (Kind<>'api')) or (TtlSeconds<1) then Exit;
+  Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),'''') FROM users '+
+    'WHERE id='+QuotedStr(UserId)+' AND COALESCE(loginDisabled,0)=0;');
+  if (Length(Rows)=0) or not ConstantEqual(HashText(Rows[0][0]),CredentialRef) then Exit;
+  Key:=TokenHash(Db,Token); TenantKey:=HashText(ExpandFileName(Db.Path));
+  NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
+  Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(Now),TtlSeconds));
+  if not Db.Exec(Schema) then Exit;
+  if not Db.Exec('BEGIN IMMEDIATE; INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) '+
+    'SELECT '+QuotedStr(Key)+',id,'+QuotedStr(NowIso)+','+QuotedStr(Expires)+' FROM users WHERE id='+QuotedStr(UserId)+
+    ' AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+'; '+
+    'INSERT INTO authmeta(hashedToken,tenantKey,credentialRef,kind) SELECT hashedToken,'+QuotedStr(TenantKey)+','+
+    QuotedStr(CredentialRef)+','+QuotedStr(Kind)+' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; COMMIT;') then
+  begin Db.Exec('ROLLBACK;'); Exit; end;
+  Result:=Length(Db.Query('SELECT hashedToken FROM authmeta WHERE hashedToken='+QuotedStr(Key)+';'))=1;
+end;
+
 function CreateSession(Db: TWLDb; ARequest: TRequest;
   const UserId, Username, PasswordRef: string; TtlSeconds: Int64): TWLSession;
 var
   NowTs: Int64;
-  Hashed: string;
 begin
   NowTs:=DateTimeToUnix(Now,False);
   FillChar(Result, SizeOf(Result), 0);
   // A fresh token prevents login collisions and reuse after disable/re-enable.
-  Result.SessionId:=NewAuthToken;
+  Result.SessionId:=NewAuthToken; Result.ActionKey:=NewAuthToken;
   Result.TenantDb:=ExpandFileName(Db.Path);
   Result.UserId      := UserId;
   Result.Username    := Username;
@@ -228,14 +272,7 @@ begin
   Result.Counter     := 0;
 
 
-  // persist the bearer token (schema.sql: login_tokens). hashedToken = hash of the session id.
-  Hashed := HashText(Result.SessionId);
-  if not Db.Exec(Format(
-    'INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) ' +
-    'VALUES(%s,%s,%s,%s);',
-    [ QuotedStr(Hashed), QuotedStr(UserId),
-      QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now))),
-      QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(Now),TtlSeconds))) ])) then
+  if not IssueLoginToken(Db,UserId,Result.SessionId,PasswordRef,'web',TtlSeconds) then
   begin Result:=Default(TWLSession); Exit; end;
   EnterCriticalSection(SessionLock);
   try PackMeta(Result); finally LeaveCriticalSection(SessionLock); end;
@@ -250,7 +287,9 @@ begin
     if not UnpackMeta(SessionId,Current) then Exit;
     if Current.TenantDb<>ExpandFileName(Db.Path) then Exit;
     Rows:=Db.Query('SELECT u.id,u.username,COALESCE(json_extract(u.services_json,''$.password''),'''') '+
-      'FROM login_tokens t JOIN users u ON u.id=t.userId WHERE t.hashedToken='+QuotedStr(HashText(SessionId))+
+      'FROM login_tokens t JOIN users u ON u.id=t.userId JOIN authmeta m ON m.hashedToken=t.hashedToken '+
+      'WHERE m.kind=''web'' AND m.tenantKey='+QuotedStr(HashText(ExpandFileName(Db.Path)))+
+      ' AND m.credentialRef='+QuotedStr(Current.PasswordRef)+' AND t.hashedToken='+QuotedStr(TokenHash(Db,SessionId))+
       ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
       QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
     if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) or
@@ -261,11 +300,34 @@ begin
     if IdleSeconds<1 then IdleSeconds:=1800;
     if (NowTs<Current.LastSeenAt) or (NowTs-Current.LastSeenAt>IdleSeconds) then
     begin
-      Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(HashText(SessionId))+';');
+      Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,SessionId))+';');
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId)); Exit;
     end;
     Current.LastSeenAt:=NowTs; PackMeta(Current); S:=Current; Result:=True;
   finally LeaveCriticalSection(SessionLock); end;
+end;
+
+function ValidateLoginToken(Db:TWLDb; Request:TRequest; const Token:string; out UserId:string):Boolean;
+var Rows:TWLRows; S:TWLSession; Key:string;
+begin
+  Result:=False; UserId:=''; if Token='' then Exit;
+  Key:=TokenHash(Db,Token);
+  Rows:=Db.Query('SELECT t.userId,COALESCE(json_extract(u.services_json,''$.password''),''''),'+
+    'm.credentialRef,m.kind FROM login_tokens t JOIN users u ON u.id=t.userId '+
+    'JOIN authmeta m ON m.hashedToken=t.hashedToken WHERE t.hashedToken='+QuotedStr(Key)+
+    ' AND m.tenantKey='+QuotedStr(HashText(ExpandFileName(Db.Path)))+
+    ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
+    QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
+  if Length(Rows)=0 then Exit;
+  if not ConstantEqual(HashText(Rows[0][1]),Rows[0][2]) then
+  begin Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';'); Exit; end;
+  if Rows[0][3]='web' then
+  begin
+    if not ValidateSession(Db,Request,Token,S) then Exit;
+    UserId:=S.UserId; Exit(True);
+  end;
+  if Rows[0][3]<>'api' then Exit;
+  UserId:=Rows[0][0]; Result:=True;
 end;
 
 initialization

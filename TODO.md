@@ -227,7 +227,8 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Validate API child routes against their board/parent chain and block unrestricted assignment roles.
 - [x] Validate API body label/member/assignee/author IDs before atomic writes.
 - [x] Enforce disabled-account denial/revocation, session identity/credential binding, idle expiry and atomic action counters.
-- [ ] Finish cryptographic token hashes/MACs, secure entropy on every target, durable API credential/tenant binding and trusted-proxy client-IP handling.
+- [x] Use cryptographic token hashes/MACs, durable API credential/tenant binding and trusted-proxy client-IP handling.
+- [ ] Replace the weak entropy fallback and verify secure native/retro entropy sources.
 - [x] Add the board minimap, coordinates and occupied/current-position indicators.
 - [ ] Add optional drag/drop and multiple selection using the same move endpoint.
 - [ ] Align runtime tenant/file paths with DOS 8.3 and the requested Weddy layout.

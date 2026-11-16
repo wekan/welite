@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Cryptographic tokens, durable binding and trusted proxies
+
+- Replace FNV with SHA-256 token/credential digests and HMAC-SHA-256 action tokens using
+  an independent server-only key and unambiguous JSON context. MAC comparisons scan all
+  bytes of equal-length values. Legacy weak token records have no acceptance fallback.
+- Add supplemental `authmeta` binding and tenant-scoped token digests. Durable API tokens
+  survive process restart, reject copied databases/credential changes, and revoke on a
+  detected credential mismatch. Web tokens used in API calls retain client/idle checks.
+- Ignore forwarded IP headers by default. `WELITE_TRUSTED_PROXIES` lists exact proxy IPs;
+  validation walks the forwarded chain from the nearest trusted hop and normalizes IPs.
+- Verified SHA/HMAC against independent Python/RFC 4231 vectors, source-wide weak-hash
+  guards, proxy spoof/chain cases, fresh-process persistence and credential/tenant binding,
+  plus live MAC tamper/client checks and all no-JS/no-cookie browser flows on both backends.
+- Existing sessions require fresh sign-in after the digest change. Portable entropy is
+  still tracked separately because the previous non-Unix `Random` fallback remains.
+
 ## 2026-11-16 Disabled-account revocation and session integrity
 
 - Refuse disabled accounts at web/API sign-in and every token lookup. Disabling through
