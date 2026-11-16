@@ -3,20 +3,34 @@ unit wlpolicy;
 interface
 uses SysUtils,fpjson,wlsjson,wltotp;
 type TFactorPolicy=(fpDenied,fpNone,fpRequired,fpOTP);
+  TFactorSettings=record
+    Mode,LDAPEnabled,LDAPFallback,LDAPMigration,PasswordEnabled:string;
+  end;
+function EnvironmentFactorSettings:TFactorSettings;
+function FactorPolicyWithSettings(const Method,Services:string;IsAdmin:Boolean;
+  const Settings:TFactorSettings;out Secret:string):TFactorPolicy;
 function FactorPolicy(const Method,Services:string;IsAdmin:Boolean;out Secret:string):TFactorPolicy;
 function PasswordOnlyAllowed(const Method,Services:string;IsAdmin:Boolean=False):Boolean;
 implementation
+function EnvironmentFactorSettings:TFactorSettings;
+begin
+  Result.Mode:=GetEnvironmentVariable('REQUIRE_2FA');Result.LDAPEnabled:=GetEnvironmentVariable('LDAP_ENABLE');
+  Result.LDAPFallback:=GetEnvironmentVariable('LDAP_LOGIN_FALLBACK');Result.LDAPMigration:=GetEnvironmentVariable('LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN');
+  Result.PasswordEnabled:='true'; // preserve the native-store policy contract
+end;
 function FactorPolicy(const Method,Services:string;IsAdmin:Boolean;out Secret:string):TFactorPolicy;
+begin Result:=FactorPolicyWithSettings(Method,Services,IsAdmin,EnvironmentFactorSettings,Secret);end;
+function FactorPolicyWithSettings(const Method,Services:string;IsAdmin:Boolean;const Settings:TFactorSettings;out Secret:string):TFactorPolicy;
 var Root:TJSONObject;Factor,Kind,Value,Password:TJSONData;Mode,Canonical:string;Required:Boolean;
 begin
   Result:=fpDenied;Secret:='';Root:=nil;
-  if (Method='ldap') and (GetEnvironmentVariable('LDAP_ENABLE')='true') and
-    (GetEnvironmentVariable('LDAP_LOGIN_FALLBACK')<>'true') and
-    (GetEnvironmentVariable('LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN')<>'true') then Exit;
+  if Settings.PasswordEnabled='false' then Exit;
+  if (Method='ldap') and (Settings.LDAPEnabled='true') and
+    (Settings.LDAPFallback<>'true') and (Settings.LDAPMigration<>'true') then Exit;
   try
     try
       Root:=ExactObject(Services);Password:=Root.Find('password');
-      Mode:=LowerCase(Trim(GetEnvironmentVariable('REQUIRE_2FA')));
+      Mode:=LowerCase(Trim(Settings.Mode));
       Required:=((Method='') or (Method='password')) and (Password<>nil) and (Password.JSONType<>jtNull) and
         ((Mode='all') or ((Mode='admins') and IsAdmin));
       Factor:=Root.Find('twoFactorAuthentication');

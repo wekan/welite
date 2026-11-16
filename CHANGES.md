@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Resolve stored account authentication policy
+
+- Resolve shared Settings MFA, LDAP enable/fallback/migration and password-login
+  overrides before deployment defaults, including null/empty fallback. Pass explicit
+  policy values to the portable kernel without changing process environment variables.
+- Use the resolved policy for password lookup, authentication proofs, issuance,
+  validation, enrollment and registration. Bind proofs and writes to the source and
+  settings snapshot; changed settings reject stale proofs. Denied registration creates
+  no account. Observed password disabling revokes credentials durably.
+- Verify stored MFA against an opposite deployment default, LDAP override combinations,
+  null fallback, settings changes after proof creation and disable/restore behavior with
+  live FerretDB on linked/CLI SQLite. Native policy, crypto, enrollment, admin HTTP and
+  required-factor registration/enrollment HTTP regressions pass on both backends.
+- Existing Meteor bearer adoption, fractional lifetimes, scheduled expiry, legacy
+  conversion and broader account configuration remain open.
+
 ## 2026-11-16 Paired shared API bearer issuance
 
 - On shared stores, commit API credentials/authmeta, optional OTP consumption and a

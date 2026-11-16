@@ -30,7 +30,7 @@ uses
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
-  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, fphttpapp, httpdefs, httproute,
+  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, fphttpapp, httpdefs, httproute,
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
@@ -273,8 +273,8 @@ procedure RegisterEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  Username, Password, Confirm, Uid, Hash, Iso, Body, PolicySecret: string;
-  First: Boolean;
+  Username, Password, Confirm, Uid, Hash, Iso, Body, PolicySecret, PolicyCondition: string;
+  First: Boolean;RegistrationPolicy:TFactorPolicy;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if T.IsAdmin then
@@ -313,19 +313,23 @@ begin
     First := NoUsersYet(T);                 // first account -> Global Admin
     Uid   := NewId;
     Hash  := HashMeteorPassword(Password); // JSON object stored at services.password
+    RegistrationPolicy:=ResolvedFactorPolicy(T.Db,'password','{"password":'+Hash+'}',First,PolicySecret,PolicyCondition);
+    if not (RegistrationPolicy in [fpNone,fpRequired]) then
+    begin SendHtml(aResponse,Page32('Register','<p>Registration with a password is unavailable.</p>'));Exit;end;
     Iso   := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', Now);
     if not T.Db.Exec(Format(
       'INSERT INTO users(id,username,isAdmin,authenticationMethod,createdAt,modifiedAt,' +
-      'services_json,profile_json) VALUES(%s,%s,%d,''password'',%s,%s,%s,''{}'');',
+      'services_json,profile_json) SELECT %s,%s,%d,''password'',%s,%s,%s,''{}'' WHERE (%s);',
       [QuotedStr(Uid), QuotedStr(Username), Ord(First), QuotedStr(Iso), QuotedStr(Iso),
-       QuotedStr('{"password":' + Hash + '}')])) then
+       QuotedStr('{"password":' + Hash + '}'),PolicyCondition])) or
+      (Length(T.Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Uid)+';'))<>1) then
     begin
       SendHtml(aResponse, Page32('Register',
         '<p>Could not create the account.</p><p><a href="/register">Back</a></p>'));
       Exit;
     end;
 
-    if FactorPolicy('password','{"password":'+Hash+'}',First,PolicySecret)=fpRequired then
+    if RegistrationPolicy=fpRequired then
     begin
       SendHtml(aResponse,Page32('Account created','<h1>Account created</h1><p><a href="/two-factor/setup">Set up one-time codes</a> before signing in.</p>'));Exit;
     end;

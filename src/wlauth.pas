@@ -109,17 +109,17 @@ end;
 function LoginAccount(Db:TWLDb;const Username:string):TWLRows;
 begin
   Result:=AccountRows(Db,Username);
-  if (Length(Result)=1) and not PasswordOnlyAllowed(Result[0][3],Result[0][4],Result[0][5]='1') then Result:=nil;
+  if (Length(Result)=1) and not ResolvedPasswordAllowed(Db,Result[0][3],Result[0][4],Result[0][5]='1') then Result:=nil;
 end;
 function FactorReference(const Base,Key:string):string;
 begin Result:=Sha256Hex('welite-otp-session-v1'+#0+Base+#0+Key);end;
-function AccountMatches(const Method,Services,Password,Reference:string;IsAdmin:Boolean):Boolean;
-var Secret,Base,Expected:string;Policy:TFactorPolicy;
+function AccountMatches(Db:TWLDb;const Method,Services,Password,Reference:string;IsAdmin:Boolean):Boolean;
+var Secret,Base,Expected,PolicyCondition:string;Policy:TFactorPolicy;
 begin
   Result:=False;Secret:='';
   try
     try
-      Policy:=FactorPolicy(Method,Services,IsAdmin,Secret);
+      Policy:=ResolvedFactorPolicy(Db,Method,Services,IsAdmin,Secret,PolicyCondition);
       if Policy=fpNone then Exit(CredentialMatches(Password,Reference));
       if Policy<>fpOTP then Exit;
       Base:=CredentialFingerprint(Password);if Base='' then Exit;
@@ -129,15 +129,15 @@ begin
   finally if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;end;
 end;
 function AuthenticateAccount(Db:TWLDb;const Username,Password,Code:string;out Proof:TWLLoginProof):Boolean;
-var Rows:TWLRows;Secret:string;Policy:TFactorPolicy;Pending:TWLLoginProof;Last:Int64;
+var Rows:TWLRows;Secret,PolicyCondition:string;Policy:TFactorPolicy;Pending:TWLLoginProof;Last:Int64;
 begin
   Result:=False;Proof:=nil;Pending:=nil;Secret:='';
   try
     try
       Rows:=AccountRows(Db,Username);if Length(Rows)<>1 then Exit;
-      Policy:=FactorPolicy(Rows[0][3],Rows[0][4],Rows[0][5]='1',Secret);
+      Policy:=ResolvedFactorPolicy(Db,Rows[0][3],Rows[0][4],Rows[0][5]='1',Secret,PolicyCondition);
       if not (Policy in [fpNone,fpOTP]) then Exit;
-      Pending:=TWLLoginProof.Create;Pending.FSource:=AuthSourceCondition(Db);
+      Pending:=TWLLoginProof.Create;Pending.FSource:=PolicyCondition;
       if not VerifyCredential(Password,Rows[0][1],Pending.FCredentialRef) then Exit;
       Pending.FUserId:=Rows[0][0];Pending.FUsername:=Rows[0][6];Pending.FMethod:=Rows[0][3];Pending.FServices:=Rows[0][4];Pending.FAdmin:=Rows[0][5];
       Pending.FAt:=DateTimeToUnix(Now,False);Pending.FTokenRef:=Pending.FCredentialRef;
@@ -315,7 +315,7 @@ function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string;
 const Schema='CREATE TABLE IF NOT EXISTS authmeta ('+
   'hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,'+
   'tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));';
-var Rows:TWLRows; Key,TenantKey,NowIso,Expires,SharedSql:string;At:TDateTime;
+var Rows:TWLRows; Key,TenantKey,NowIso,Expires,SharedSql,PolicyCondition,PolicySecret:string;At:TDateTime;Policy:TFactorPolicy;
 begin
   Result:=False;
   if not AuthSourceCurrent(Db) then Exit;
@@ -323,7 +323,10 @@ begin
   if (Kind='api') and SharedStore(Db) and (TtlSeconds<>ApiTokenLifetime(Db)) then Exit;
   Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(authenticationMethod,''password''),services_json,COALESCE(isAdmin,0) FROM users '+
     'WHERE id='+QuotedStr(UserId)+' AND COALESCE(loginDisabled,0)=0;');
-  if (Length(Rows)=0) or not PasswordOnlyAllowed(Rows[0][1],Rows[0][2],Rows[0][3]='1') or not CredentialMatches(Rows[0][0],CredentialRef) then Exit;
+  if Length(Rows)=0 then Exit;
+  Policy:=ResolvedFactorPolicy(Db,Rows[0][1],Rows[0][2],Rows[0][3]='1',PolicySecret,PolicyCondition);
+  if PolicySecret<>'' then begin UniqueString(PolicySecret);FillChar(PolicySecret[1],Length(PolicySecret),0);end;
+  if (Policy<>fpNone) or not CredentialMatches(Rows[0][0],CredentialRef) then Exit;
   Key:=TokenHash(Db,Token); TenantKey:=HashText(ExpandFileName(Db.Path));
   At:=Now;NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(At));
   Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(At),TtlSeconds));
@@ -332,7 +335,7 @@ begin
   if not Db.Exec('BEGIN IMMEDIATE; INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) '+
     'SELECT '+QuotedStr(Key)+',id,'+QuotedStr(NowIso)+','+QuotedStr(Expires)+' FROM users WHERE id='+QuotedStr(UserId)+
     ' AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+
-    ' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Rows[0][1])+' AND services_json='+QuotedStr(Rows[0][2])+' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Rows[0][3])+' AND ('+AuthSourceCondition(Db)+'); '+
+    ' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Rows[0][1])+' AND services_json='+QuotedStr(Rows[0][2])+' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Rows[0][3])+' AND ('+PolicyCondition+'); '+
     'INSERT INTO authmeta(hashedToken,tenantKey,credentialRef,kind) SELECT hashedToken,'+QuotedStr(TenantKey)+','+
     QuotedStr(CredentialRef)+','+QuotedStr(Kind)+' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; '+SharedSql+'COMMIT;') then
   begin Db.Exec('ROLLBACK;'); Exit; end;
@@ -340,17 +343,17 @@ begin
 end;
 
 function IssueAccountToken(Db:TWLDb;Proof:TWLLoginProof;const Token,Kind:string;TtlSeconds:Int64):Boolean;
-var Rows:TWLRows;Secret,Key,Sql,NowIso,Expires:string;Policy:TFactorPolicy;Last,Matched,NowAt:Int64;At:TDateTime;
+var Rows:TWLRows;Secret,Key,Sql,NowIso,Expires,PolicyCondition:string;Policy:TFactorPolicy;Last,Matched,NowAt:Int64;At:TDateTime;
 begin
   Result:=False;Secret:='';
   if (Proof=nil) or not Proof.FVerified or (Token='') or ((Kind<>'web') and (Kind<>'api')) or (TtlSeconds<1) then Exit;
   try
     try
-      NowAt:=DateTimeToUnix(Now,False);if (Proof.FSource<>AuthSourceCondition(Db)) or (NowAt<Proof.FAt) or (NowAt-Proof.FAt>30) then Exit;
+      NowAt:=DateTimeToUnix(Now,False);if (Proof.FSource<>AccountPolicyCondition(Db)) or (NowAt<Proof.FAt) or (NowAt-Proof.FAt>30) then Exit;
       Rows:=AccountRows(Db,Proof.FUsername);
       if (Length(Rows)<>1) or (Rows[0][0]<>Proof.FUserId) or (Rows[0][3]<>Proof.FMethod) or
         (Rows[0][4]<>Proof.FServices) or (Rows[0][5]<>Proof.FAdmin) or not CredentialMatches(Rows[0][1],Proof.FCredentialRef) then Exit;
-      Policy:=FactorPolicy(Rows[0][3],Rows[0][4],Rows[0][5]='1',Secret);
+      Policy:=ResolvedFactorPolicy(Db,Rows[0][3],Rows[0][4],Rows[0][5]='1',Secret,PolicyCondition);
       if Policy=fpNone then
       begin
         if (Proof.FFactorKey<>'') or (Proof.FCounter<> -1) then Exit;
@@ -454,7 +457,7 @@ begin
       QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
     if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) then
     begin RevokeStoredToken(Db,SessionId);SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;end;
-    if not AccountMatches(Rows[0][3],Rows[0][4],Rows[0][2],Current.PasswordRef,Rows[0][5]='1') then
+    if not AccountMatches(Db,Rows[0][3],Rows[0][4],Rows[0][2],Current.PasswordRef,Rows[0][5]='1') then
     begin
       RevokeStoredToken(Db,SessionId);
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;
@@ -486,7 +489,7 @@ begin
     ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
     QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
   if Length(Rows)=0 then begin RevokeStoredToken(Db,Token);Exit;end;
-  if not AccountMatches(Rows[0][4],Rows[0][5],Rows[0][1],Rows[0][2],Rows[0][6]='1') then
+  if not AccountMatches(Db,Rows[0][4],Rows[0][5],Rows[0][1],Rows[0][2],Rows[0][6]='1') then
   begin RevokeStoredToken(Db,Token); Exit; end;
   if Rows[0][3]='web' then
   begin

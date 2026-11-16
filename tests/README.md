@@ -234,3 +234,9 @@ collision with OTP rollback/retry, ignored-append rollback, stored lifetime prec
 policy/SQRL-only refusal. Native suites retain private/browser behavior. Full Meteor
 application round trips, existing-bearer adoption and broader settings/lifetime support
 remain separate gates.
+
+Stored-policy coverage in `ferroot.py` verifies MFA overriding an opposite environment,
+LDAP enable/fallback/migration overrides and null fallback, changed settings after proof
+creation, and password disable/restore with durable observed bearer revocation. The
+native policy/crypto/enrollment and HTTP suites retain private-store behavior on both
+backends; `enrhttp.py` also covers required-factor registration and setup.

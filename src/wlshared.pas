@@ -1,7 +1,11 @@
 unit wlshared;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,DateUtils,fpjson,wldb,wlautsrc,wlresume,wlcrypt,wlsjson;
+uses SysUtils,DateUtils,fpjson,wldb,wlautsrc,wlresume,wlcrypt,wlsjson,wlpolicy;
+function AccountPolicyCondition(Db:TWLDb):string;
+function ResolvedFactorPolicy(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean;
+  out Secret,Condition:string):TFactorPolicy;
+function ResolvedPasswordAllowed(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean):Boolean;
 function SharedStore(Db:TWLDb):Boolean;
 function ApiTokenLifetime(Db:TWLDb):Int64;
 function UnixMillis(At:TDateTime):Int64;
@@ -46,21 +50,38 @@ begin
   if Value.JSONType=jtBoolean then Result:=LowerCase(Value.AsString) else Result:=Value.AsString;
   if Result='' then Result:=Fallback;
 end;
-procedure RequirePolicyAgreement(Doc:TJSONObject);
-const Sections:array[0..3] of string=('loginOptions','ldap','ldap','ldap');
-  Keys:array[0..3] of string=('require2fa','enabled','loginFallback','migrationAllowPasswordLogin');
-  Envs:array[0..3] of string=('REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN');
-var i:Integer;Actual,Expected:string;
+function AccountPolicyCondition(Db:TWLDb):string;
+var Doc:TJSONObject;Snapshot:string;
 begin
-  for i:=0 to 3 do
-  begin
-    Expected:=GetEnvironmentVariable(Envs[i]);Actual:=SettingValue(Doc,Sections[i],Keys[i],Expected);
-    if i=0 then begin Expected:=LowerCase(Trim(Expected));Actual:=LowerCase(Trim(Actual));if Expected='' then Expected:='off';if Actual='' then Actual:='off';end;
-    if i>0 then begin if Expected='true' then Expected:='true' else Expected:='false';if Actual='true' then Actual:='true' else Actual:='false';end;
-    if Actual<>Expected then raise Exception.Create('Shared authentication overrides require matching deployment policy');
-  end;
-  if SettingValue(Doc,'loginOptions','passwordLoginEnabled',GetEnvironmentVariable('PASSWORD_LOGIN_ENABLED'))='false' then
-    raise Exception.Create('Password login disabled');
+  Result:=AuthSourceCondition(Db);if not SharedStore(Db) then Exit;
+  Doc:=ReadSettings(Db,Snapshot);Doc.Free;Result:='('+Result+') AND ('+Snapshot+')';
+end;
+function ResolvedFactorPolicy(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean;
+  out Secret,Condition:string):TFactorPolicy;
+var Doc:TJSONObject;Snapshot:string;Settings:TFactorSettings;
+begin
+  Result:=fpDenied;Secret:='';Condition:='0';Doc:=nil;
+  try
+    try
+      Settings:=EnvironmentFactorSettings;Condition:=AuthSourceCondition(Db);
+      if SharedStore(Db) then
+      begin
+        Doc:=ReadSettings(Db,Snapshot);Condition:='('+Condition+') AND ('+Snapshot+')';
+        Settings.Mode:=SettingValue(Doc,'loginOptions','require2fa',Settings.Mode);
+        Settings.LDAPEnabled:=SettingValue(Doc,'ldap','enabled',Settings.LDAPEnabled);
+        Settings.LDAPFallback:=SettingValue(Doc,'ldap','loginFallback',Settings.LDAPFallback);
+        Settings.LDAPMigration:=SettingValue(Doc,'ldap','migrationAllowPasswordLogin',Settings.LDAPMigration);
+        Settings.PasswordEnabled:=SettingValue(Doc,'loginOptions','passwordLoginEnabled',GetEnvironmentVariable('PASSWORD_LOGIN_ENABLED'));
+      end;
+      Result:=FactorPolicyWithSettings(Method,Services,IsAdmin,Settings,Secret);
+    except Result:=fpDenied;Secret:='';Condition:='0';end;
+  finally Doc.Free;end;
+end;
+function ResolvedPasswordAllowed(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean):Boolean;
+var Secret,Condition:string;
+begin
+  Result:=ResolvedFactorPolicy(Db,Method,Services,IsAdmin,Secret,Condition)=fpNone;
+  if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;
 end;
 function ApiTokenLifetime(Db:TWLDb):Int64;
 var Days:Int64;Setting,Snapshot:string;Doc:TJSONObject;
@@ -68,7 +89,6 @@ begin
   Result:=90*86400;if not SharedStore(Db) then Exit;
   Doc:=ReadSettings(Db,Snapshot);
   try
-    RequirePolicyAgreement(Doc);
     Setting:=Trim(SettingValue(Doc,'loginOptions','loginExpirationInDays',GetEnvironmentVariable('ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS')));
   finally Doc.Free;end;
   if (Setting='') or (Setting='0') then Days:=90
@@ -100,7 +120,7 @@ begin
   TableName:=UsersTable(Db);Doc:=Id('_ferretdb_sjson');Hash:=MeteorTokenHash(Token);Condition:=AuthSourceCondition(Db);
   Settings:=ReadSettings(Db,Snapshot);
   try
-    RequirePolicyAgreement(Settings);Enabled:=Settings.Find('sqrlEnabled');
+    Enabled:=Settings.Find('sqrlEnabled');
     Restrictions:='1';
     if (Enabled<>nil) and (Enabled.JSONType=jtBoolean) and Enabled.AsBoolean then
     begin

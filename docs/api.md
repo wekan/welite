@@ -76,8 +76,11 @@ retain their private client-bound format. Stored `loginOptions.loginExpirationIn
 wins over `ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS`; absent/zero means 90 days. Supported
 lifetimes are whole days from 1 to 36500; unsupported values deny issuance. The response
 returns the expiry committed to the local credential. Native-store defaults stay 90 days.
-See [paired shared API bearers](ferret.md#paired-shared-api-bearers) for deployment policy
-requirements and remaining compatibility gates.
+Shared Settings MFA, LDAP and password-login overrides take precedence over deployment
+fallbacks; null/empty values use the fallback. Proofs bind to the settings snapshot, so a
+configuration change requires fresh authentication. Disabled password registration
+creates no account. See [paired shared API bearers](ferret.md#paired-shared-api-bearers)
+for supported policy fields and remaining compatibility gates.
 
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by

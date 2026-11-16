@@ -741,17 +741,22 @@ fractional or ambiguous configuration fails closed. Issuers must request this li
 REST responses read the exact committed expiry. Apply the same deployment fallback to
 both applications and restart Meteor after changing its startup-applied lifetime.
 
-Stored MFA/LDAP overrides must agree with deployment policy while the core proof policy
-still uses those deployment values; disagreement refuses shared issuance/use. Stored
-password-login disabling and enabled SQRL-only identities also prevent password-based
-shared issuance. Settings are rechecked inside the transaction to catch changes after
-reading them. Direct override resolution, fractional lifetime support and broader account
-configuration remain explicit gates rather than silently selecting a weaker policy.
+Shared authentication resolves stored `loginOptions.require2fa`,
+`loginOptions.passwordLoginEnabled`, `ldap.enabled`, `ldap.loginFallback` and
+`ldap.migrationAllowPasswordLogin` before their deployment defaults. Null and empty
+values fall back; stored boolean false remains an explicit override. The portable
+factor kernel receives these values explicitly without process-environment mutation.
+Lookup, proofs, token issuance/validation, enrollment and registration use this policy.
+Proofs and guarded writes capture the source and Settings snapshot from the decision;
+changes require a fresh proof. Password-disabled registration creates no account, and
+observed disabling durably revokes an existing credential. Native-store policy behavior
+is preserved. Enabled SQRL-only identities also prevent shared password issuance.
+Fractional lifetime support and broader account configuration remain compatibility gates.
 
 `ferroot.py` tests actual paired password/Argon2-secret/OTP issuance, BSON Date output,
 Mongo removal/expiry, restored-record denial, cross-account ambiguity, collision rollback
-with OTP retry, ignored-append rollback, stored lifetime precedence, conflicting policy
-and SQRL-only refusal on both backends. Existing native HTTP/hash/OTP/enrollment tests
+with OTP retry, ignored-append rollback, stored lifetime precedence, stored MFA/LDAP overrides, null fallback, stale-policy
+proof refusal, password disable/restore and SQRL-only refusal on both backends. Existing native HTTP/hash/OTP/enrollment tests
 cover private-store behavior. A full Meteor DDP/HTTP application round trip, existing
 bearer adoption, scheduled expiry and Mongo-managed token indexes remain outstanding.
 
@@ -759,7 +764,7 @@ bearer adoption, scheduled expiry and Mongo-managed token indexes remain outstan
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Integrate existing Meteor bearer adoption, direct auth-override resolution, fractional lifetimes, scheduled expiry and legacy conversion; reconcile file-store metadata/bytes.
+- Integrate existing Meteor bearer adoption, fractional lifetimes, scheduled expiry and legacy conversion; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

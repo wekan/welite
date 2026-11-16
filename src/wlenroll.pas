@@ -1,7 +1,7 @@
 unit wlenroll;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,DateUtils,wldb,wlpasswd,wlcrypt,wlpolicy,wltotp,wlreplay,wlentrop,wlauth,wlautsrc,wlrevoke,wlenmeta;
+uses SysUtils,DateUtils,wldb,wlpasswd,wlcrypt,wlpolicy,wltotp,wlreplay,wlentrop,wlauth,wlautsrc,wlrevoke,wlenmeta,wlshared;
 
 type TWLEnrollProof=class
   private
@@ -49,10 +49,10 @@ begin
   if Length(Result)<>1 then begin Result:=nil;Exit;end;
   if Result[0][2]<>'0' then Result:=nil;
 end;
-function Allowed(const Row:TWLRow):Boolean;
+function Allowed(Db:TWLDb;const Row:TWLRow;out PolicyCondition:string):Boolean;
 var Secret:string;
 begin
-  try Result:=FactorPolicy(Row[3],Row[4],Row[5]='1',Secret) in [fpNone,fpRequired];
+  try Result:=ResolvedFactorPolicy(Db,Row[3],Row[4],Row[5]='1',Secret,PolicyCondition) in [fpNone,fpRequired];
   finally Wipe(Secret);end;
 end;
 function Scope(const UserId,Username,Method,Services,Admin:string):string;
@@ -69,13 +69,13 @@ begin
   Result:=True;
 end;
 function AuthenticateEnrollment(Db:TWLDb;const Username,Password:string;out Proof:TWLEnrollProof):Boolean;
-var Rows:TWLRows;Pending:TWLEnrollProof;
+var Rows:TWLRows;PolicyCondition:string;Pending:TWLEnrollProof;
 begin
   Result:=False;Proof:=nil;Pending:=nil;
   try
     try
-      Rows:=Account(Db,Username);if (Length(Rows)<>1) or not Allowed(Rows[0]) then Exit;
-      Pending:=TWLEnrollProof.Create;Pending.FSource:=AuthSourceCondition(Db);
+      Rows:=Account(Db,Username);if (Length(Rows)<>1) or not Allowed(Db,Rows[0],PolicyCondition) then Exit;
+      Pending:=TWLEnrollProof.Create;Pending.FSource:=PolicyCondition;
       if not VerifyCredential(Password,Rows[0][1],Pending.FRef) then Exit;
       Pending.FDb:=ExpandFileName(Db.Path);Pending.FUser:=Rows[0][0];Pending.FUsername:=Rows[0][6];
       Pending.FMethod:=Rows[0][3];Pending.FServices:=Rows[0][4];Pending.FAdmin:=Rows[0][5];
@@ -85,16 +85,16 @@ begin
   finally Pending.Free;end;
 end;
 function StartOTPEnrollment(Db:TWLDb;Proof:TWLEnrollProof;const Binding:string;out Token,Secret:string):Boolean;
-var Rows:TWLRows;At:Int64;Bytes:RawByteString;PendingToken,PendingSecret,Key,Sql:string;
+var Rows:TWLRows;At:Int64;Bytes:RawByteString;PendingToken,PendingSecret,Key,Sql,PolicyCondition:string;
 begin
   Result:=False;Token:='';Secret:='';Bytes:='';PendingSecret:='';
   if (Proof=nil) or not Proof.FVerified or not ValidBinding(Binding) then Exit;
   try
     try
       At:=DateTimeToUnix(Now,False);
-      if (Proof.FDb<>ExpandFileName(Db.Path)) or (Proof.FSource<>AuthSourceCondition(Db)) or (At<Proof.FAt) or (At-Proof.FAt>30) then Exit;
+      if (Proof.FDb<>ExpandFileName(Db.Path)) or (Proof.FSource<>AccountPolicyCondition(Db)) or (At<Proof.FAt) or (At-Proof.FAt>30) then Exit;
       Rows:=Account(Db,Proof.FUsername);
-      if (Length(Rows)<>1) or not Allowed(Rows[0]) or (Rows[0][0]<>Proof.FUser) or
+      if (Length(Rows)<>1) or not Allowed(Db,Rows[0],PolicyCondition) or (Rows[0][0]<>Proof.FUser) or
         (Rows[0][3]<>Proof.FMethod) or (Rows[0][4]<>Proof.FServices) or (Rows[0][5]<>Proof.FAdmin) or
         not CredentialMatches(Rows[0][1],Proof.FRef) then Exit;
       if not EnsureEnrollment(Db) then Exit;
@@ -113,7 +113,7 @@ begin
   finally if Bytes<>'' then begin UniqueString(Bytes);FillChar(Bytes[1],Length(Bytes),0);Bytes:='';end;Wipe(PendingSecret);end;
 end;
 function ConfirmOTPEnrollment(Db:TWLDb;const Token,Binding,Code:string):Boolean;
-var Rows,Users:TWLRows;At,Created,Expires,Counter,Last:Int64;Key,Factor,Pending,UserScope,Sql,Secret:string;
+var Rows,Users:TWLRows;At,Created,Expires,Counter,Last:Int64;Key,Factor,Pending,UserScope,Sql,Secret,PolicyCondition:string;
 begin
   Result:=False;Secret:='';
   if (Length(Token)<>64) or not ValidBinding(Binding) then Exit;
@@ -125,7 +125,7 @@ begin
       if Length(Rows)<>1 then Exit;
       if not TryStrToInt64(Rows[0][2],Created) or not TryStrToInt64(Rows[0][3],Expires) or (At<Created) or (At>=Expires) then Exit;
       Users:=Account(Db,Rows[0][5]);
-      if (Length(Users)<>1) or not Allowed(Users[0]) or (Users[0][0]<>Rows[0][0]) or
+      if (Length(Users)<>1) or not Allowed(Db,Users[0],PolicyCondition) or (Users[0][0]<>Rows[0][0]) or
         (Users[0][3]<>Rows[0][6]) or (Users[0][4]<>Rows[0][7]) or (Users[0][5]<>Rows[0][8]) or
         not CredentialMatches(Users[0][1],Rows[0][4]) then Exit;
       Secret:=OTPCanonicalSecret(Rows[0][1]);Factor:=OTPFactorKey(Secret);
@@ -133,7 +133,7 @@ begin
       UserScope:=Scope(Rows[0][0],Rows[0][5],Rows[0][6],Rows[0][7],Rows[0][8]);
       Pending:='EXISTS(SELECT 1 FROM _wl_enrol WHERE tokenKey='+QuotedStr(Key)+' AND binding='+QuotedStr(Binding)+
         ' AND userId='+QuotedStr(Rows[0][0])+' AND secret='+QuotedStr(Rows[0][1])+' AND credentialRef='+QuotedStr(Rows[0][4])+
-        ' AND created<='+IntToStr(At)+' AND expires>'+IntToStr(At)+') AND EXISTS(SELECT 1 FROM users WHERE '+UserScope+') AND ('+AuthSourceCondition(Db)+')';
+        ' AND created<='+IntToStr(At)+' AND expires>'+IntToStr(At)+') AND EXISTS(SELECT 1 FROM users WHERE '+UserScope+') AND ('+PolicyCondition+')';
       if not Db.Exec('CREATE TABLE IF NOT EXISTS authmeta(hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));') then Exit;
       // A stale setup or competing confirmer MUST abort, never silently update zero
       // users and then revoke tokens/consume a counter. NOT NULL is the assertion.

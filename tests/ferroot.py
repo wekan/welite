@@ -517,8 +517,8 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
 
                 # Paired API lifecycle: source removal/expiry is authoritative too.
                 client.command({'insert':'users','documents':[dict(_id='paired-api',username='paired-api',services=dict(password=shared_password,keep=DateMs(-1)))]})
-                def pair(raw,extra=None):
-                    return subprocess.check_output([str(out/'factor/factor'),str(db),'api','paired-api','test-password','',raw],env=dict(settings,**(extra or {})),text=True).strip()
+                def pair(raw,extra=None,entered=''):
+                    return subprocess.check_output([str(out/'factor/factor'),str(db),'api','paired-api','test-password',entered,raw],env=dict(settings,**(extra or {})),text=True).strip()
                 def paired_check(raw):return subprocess.check_output([str(out/'factor/factor'),str(db),'check',raw],env=settings,text=True).strip()
                 assert pair('paired-first')=='yes'
                 first=client.find('users','paired-api')[0]['services']['resume']['loginTokens'][0]
@@ -556,9 +556,46 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 before_policy=encode(client.find('users','paired-api')[0])
                 assert pair('blocked-policy') in ['no','error']
                 assert encode(client.find('users','paired-api')[0])==before_policy
+                setup=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','paired-api','test-password',binding],env=settings,text=True).strip().splitlines()
+                assert len(setup)==2,setup
+                setup_token,setup_secret=setup;setup_counter=int(time.time())//30
+                def setup_code(counter):
+                    value=hmac.new(base64.b32decode(setup_secret),struct.pack('>Q',counter),hashlib.sha1).digest();offset=value[-1]&15
+                    return str((struct.unpack('>I',value[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
+                assert subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',setup_token,binding,setup_code(setup_counter)],env=settings,text=True).strip()=='yes'
+                assert pair('stored-mfa-no-code')=='no'
+                assert pair('stored-mfa',dict(REQUIRE_2FA='off'),setup_code(setup_counter+1))=='yes','Stored MFA mode did not override deployment off'
+                # Stored LDAP disabling/enabling and fallback also override env.
+                client.command({'insert':'users','documents':[dict(_id='override-ldap',username='override-ldap',authenticationMethod='ldap',services=dict(password=shared_password))]})
+                def ldap_pair(raw,flags=None):
+                    return subprocess.check_output([str(out/'factor/factor'),str(db),'api','override-ldap','test-password','',raw],env=dict(settings,**(flags or {})),text=True).strip()
+                assert ldap_pair('stored-ldap-off',dict(LDAP_ENABLE='true'))=='yes'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'ldap.enabled':True}})]})
+                assert ldap_pair('stored-ldap-on')=='no'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'ldap.loginFallback':True}})]})
+                assert ldap_pair('stored-ldap-fallback')=='yes'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'ldap.loginFallback':False,'ldap.migrationAllowPasswordLogin':True}})]})
+                assert ldap_pair('stored-ldap-migration')=='yes'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'ldap.migrationAllowPasswordLogin':None}})]})
+                assert ldap_pair('migration-null-env',dict(LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN='true'))=='yes'
+                assert ldap_pair('migration-null-denied')=='no'
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='override-ldap'),limit=1)]})
                 client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.require2fa':'off','sqrlEnabled':True}})]})
                 client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$set':{'sqrl':dict(idk='identity',sqrlOnly=True)}})]})
-                assert pair('blocked-sqrl')=='no'
+                assert pair('blocked-sqrl',entered=setup_code(setup_counter+2))=='no'
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='paired-api';")==[[str(setup_counter+1)]]
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'sqrlEnabled':False,'loginOptions.require2fa':'off'}})]})
+                config_table=sql("SELECT table_name FROM _ferretdb_collections WHERE name='settings';")[0][0]
+                mutate_policy='UPDATE '+q(config_table)+" SET _ferretdb_sjson=jsonb(json_set(json(_ferretdb_sjson),'$.loginOptions.require2fa','all'));"
+                stale=subprocess.check_output([str(out/'factor/factor'),str(db),'mutate','paired-api','test-password',setup_code(setup_counter+2),'stale-settings-proof',mutate_policy],env=settings,text=True).strip()
+                assert stale=='no'
+                assert sql("SELECT json_extract(_ferretdb_sjson,'$.loginOptions.require2fa') FROM "+q(config_table)+';')==[['all']]
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='paired-api';")==[[str(setup_counter+1)]]
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.passwordLoginEnabled':False}})]})
+                assert pair('password-disabled',entered=setup_code(setup_counter+2))=='no'
+                assert paired_check('stored-mfa')=='no'
+                client.command({'update':'settings','updates':[dict(q=dict(_id='shared-config'),u={'$set':{'loginOptions.passwordLoginEnabled':True}})]})
+                assert paired_check('stored-mfa')=='no','Policy restoration revived a revoked API credential'
                 client.command({'delete':'settings','deletes':[dict(q=dict(_id='shared-config'),limit=1)]})
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='paired-api'),limit=1)]})
 
