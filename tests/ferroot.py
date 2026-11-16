@@ -1,5 +1,6 @@
 """Real FerretDB and Welite root projections share one SQLite document file."""
 import json
+import base64
 import hashlib
 import hmac
 from concurrent.futures import ThreadPoolExecutor
@@ -37,6 +38,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
         build(root/'tests/replay.lpr',out/'replay',flags)
         build(root/'tests/factor.lpr',out/'factor',flags)
         build(root/'tests/attempt.lpr',out/'attempt',flags)
+        build(root/'tests/enroll.lpr',out/'enroll',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
@@ -243,6 +245,14 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 for table in ['custom_field_boards','custom_field_dropdown_items']:
                     assert sql('SELECT count(*) FROM '+table+';')==[['0']]
 
+                # SQLite JSON subtypes must not change TEXT patch value types.
+                json_services=dict(password=dict(bcrypt='test-only'))
+                assert sql("INSERT INTO users(id,username,createdAt,modifiedAt,services_json,profile_json) VALUES('json-user','json-user',"+q(stamp)+','+q(stamp)+',json('+q(json.dumps(json_services))+"),json_object('language','fi'));",'exec')=='ok'
+                json_user=client.find('users','json-user')[0]
+                assert json_user['services']==json_services and json_user['profile']==dict(language='fi')
+                assert sql("UPDATE users SET profile_json=json_set(profile_json,'$.language','sv') WHERE id='json-user';",'exec')=='ok'
+                assert client.find('users','json-user')[0]['profile']==dict(language='sv')
+                assert sql("DELETE FROM users WHERE id='json-user';",'exec')=='ok'
                 # Private tokens reference a user view without invalid SQLite FKs.
                 build(root/'tests/token.lpr',out/'tokens',flags)
                 def auth(mode,token='api-test-token',password=''):
@@ -314,6 +324,34 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert encode(client.find('users','meteor-account')[0])==factor_before
                 assert sql("DELETE FROM login_tokens WHERE userId='meteor-account';",'exec')=='ok'
                 settings.pop('WELITE_ARGON_SECRET_FILE')
+                # Limited enrollment changes only factor fields in actual shared BSON.
+                enrolling=dict(_id='enrolling',username='enrolling',services=dict(password=shared_password,other=dict(keep=DateMs(-1))),unknown=Long(9007199254740993))
+                client.command({'insert':'users','documents':[enrolling]})
+                binding=hashlib.sha256(b'enrollment-client').hexdigest()
+                enroll_settings=dict(settings,REQUIRE_2FA='all')
+                started=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','enrolling','test-password',binding],env=enroll_settings,text=True,timeout=30).strip().splitlines()
+                assert len(started)==2,started
+                setup_token,setup_secret=started
+                assert encode(client.find('users','enrolling')[0])==encode(enrolling)
+                assert sql(mode='install')=='ok','Reinstall lost pending enrollment ownership'
+                counter=int(time.time())//30
+                digest=hmac.new(base64.b32decode(setup_secret),struct.pack('>Q',counter),hashlib.sha1).digest();offset=digest[-1]&15
+                setup_code=str((struct.unpack('>I',digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
+                confirmed=subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',setup_token,binding,setup_code],env=enroll_settings,text=True,timeout=30).strip()
+                assert confirmed=='yes',confirmed
+                enrolling['services']['twoFactorAuthentication']=dict(type='otp',secret=setup_secret)
+                assert encode(client.find('users','enrolling')[0])==encode(enrolling)
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='enrolling';")==[[str(counter)]]
+                assert sql("SELECT count(*) FROM _wl_enrol WHERE userId='enrolling';")==[['0']]
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='enrolling'),limit=1)]})
+                assert sql("SELECT count(*) FROM _wl_otp WHERE userId='enrolling';")==[['0']]
+                # Physical Mongo deletion also removes a pending private secret.
+                enrolling['services'].pop('twoFactorAuthentication')
+                client.command({'insert':'users','documents':[enrolling]})
+                pending=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','enrolling','test-password',binding],env=enroll_settings,text=True,timeout=30).strip().splitlines()
+                assert len(pending)==2,pending
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='enrolling'),limit=1)]})
+                assert sql("SELECT count(*) FROM _wl_enrol WHERE userId='enrolling';")==[['0']]
                 # SQL uniqueness follows the canonical BINARY/NULL semantics.
                 assert auth('lookup','user')=='yes' and auth('lookup','User')=='no'
                 assert sql("INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('duplicate','user',"+q(stamp)+','+q(stamp)+');','exec')=='error'

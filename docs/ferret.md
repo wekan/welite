@@ -399,7 +399,7 @@ remain required before the shared-account task is complete.
 using explicit big-endian counter bytes and dynamic truncation. The Meteor profile is
 six digits, 30-second steps and up to ten steps of validation drift; eight-digit output
 is available for RFC vectors. Base32 is ASCII, case-insensitive, bounded to 1,024 decoded
-bytes, and checks canonical padding/unused bits. New enrollment will use fresh 20-byte
+bytes, and checks canonical padding/unused bits. New enrollment uses fresh 20-byte
 secrets; the core does not silently replace existing imported secrets.
 
 `OTPMatch` scans the whole selected window, returns a matching counter and rejects
@@ -489,9 +489,41 @@ spoofed forwarded headers, restart persistence and transactional OTP rollback/re
 `WELITE_UI=1`, Chromium submits the form and reloads its session with JavaScript disabled
 and Cookie headers removed, on both SQLite backends.
 
+## Limited OTP enrollment core
+
+`wlenroll.pas` owns `TWLEnrollProof`, a separate type from application login proofs.
+`AuthenticateEnrollment` verifies an enabled, unambiguous account's password and allows
+only no-factor or required-enrollment policy. Active/unknown/malformed factors cannot
+be replaced with a password alone. Proofs retain database/credential/policy snapshots,
+never plaintext passwords, expire after 30 seconds and start setup only once successfully.
+
+`StartOTPEnrollment` creates an independent random bearer token and a fresh 20-byte
+base32 secret in private `_wl_enrol` storage, one pending setup per user. The returned
+token is hashed with the database binding; it is not a login credential. Setup expires
+after five minutes and binds to a server-derived client digest. It leaves shared account
+services untouched, replaces older pending setup and removes expired records on a later
+successful start. Native and physical shared-user deletion remove pending secrets.
+
+`ConfirmOTPEnrollment` checks token/client/time, the current credential fingerprint and
+account snapshot, and an unused OTP. One transaction activates the factor, consumes the
+counter, deletes pending setup and revokes all local web/API tokens and metadata. A
+constraint assertion makes a stale/competing setup abort; another assertion catches user
+triggers that ignore activation. Other factor metadata and unknown account fields/types
+are retained. Successful activation grants no application session: sign in with a fresh
+code, since the confirmation code is already consumed. Shared Meteor resume-token
+revocation remains part of the outstanding session integration.
+
+`tests/enroll.py` exercises both backends, including required enrollment, private token
+isolation, 20-byte secrets, replacement, binding/expiry, stale snapshots, forced/ignored
+activation rollback, 16 concurrent confirmations and normal login afterward. `ferroot.py`
+checks actual shared BSON, adapter reinstall and physical deletion cleanup. Shared JSON
+TEXT columns explicitly strip SQLite's expression subtype before constructing patch JSON;
+this supports `json_set` without confusing an object with the patcher's text value.
+HTTP setup/confirmation forms and per-attempt admission checks remain to be connected.
+
 ## Remaining before the checklist can be checked
 
-- Complete second-factor enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete HTTP second-factor enrollment/confirmation with admission limits, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

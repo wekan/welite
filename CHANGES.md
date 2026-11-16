@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Limited OTP enrollment core
+
+- Add a distinct, unit-owned password proof for accounts without an active factor,
+  including accounts covered by REQUIRE_2FA. It cannot authorize application tokens.
+  Bind it to the database and credential/policy snapshot, expire it after 30 seconds
+  and allow only one successful setup start.
+- Generate fresh 20-byte secrets and independent bearer tokens. Keep pending setup in
+  private owned storage for five minutes, bound to a server-derived client digest.
+  Starting setup leaves shared services unchanged and creates no login token. New setup
+  invalidates an earlier pending token; user deletion removes pending secrets.
+- Confirm the code and current credentials/policy, then activate the factor, consume its
+  counter, remove pending setup and revoke local tokens in one transaction. Deny stale,
+  expired, replaced or competing setup, and roll back failed or ignored user updates.
+  The activation code cannot be reused for login; a fresh code signs in normally.
+- Normalize SQLite JSON-expression subtypes at shared TEXT projection boundaries, so
+  json_set updates and JSON-valued inserts reach the typed patcher as text.
+- Verify linked/CLI limited proofs, independent OTPs, fresh secrets, binding/expiry,
+  snapshot changes, sixteen concurrent confirmations, full rollback/retry, token
+  revocation, null factor metadata and schema refusal. Verify shared BSON preservation,
+  reinstall and physical user-deletion cleanup against live FerretDB.
+- HTTP enrollment forms, setup confirmation routing and admission limiting remain open.
+  This step supplies the core; it does not yet expose enrollment to users.
+
 ## 2026-11-16 HTTP password and OTP login
 
 - Connect no-cookie web sign-in and REST login to the password/OTP proof factory and

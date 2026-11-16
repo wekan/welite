@@ -59,7 +59,7 @@ end;
 function RootModelScript(Db:TWLDb):string;
 var Models:TJSONArray;Model,Field,Settings,IndexDef:TJSONObject;Fields,Managed,Indexes,Keys:TJSONArray;
   Registry,Rows,Owner,Objects,Custom:TWLRows;Used,Roots,Tables:TStringList;
-  Sql,TableName,ViewName,Collection,Storage,Existing,ReadExpr,Columns,Spec,SettingsText,Body,Root:string;
+  Sql,TableName,ViewName,Collection,Storage,Existing,ReadExpr,Columns,Spec,SettingsText,Body,Root,Incoming:string;
   Hash:LongWord;i,j,k:Integer;Fresh,MetadataExists,OwnerExists,Found:Boolean;
   function Wrapped(const Value:string):string;
   begin
@@ -172,7 +172,11 @@ begin
           end;
           if j>0 then begin Body:=Body+',';Columns:=Columns+',';end;
           Body:=Body+ReadExpr+' AS '+Ident(Field.Get('name',''));
-          Columns:=Columns+Q(Field.Get('name',''))+',NEW.'+Ident(Field.Get('name',''));
+          Incoming:='NEW.'+Ident(Field.Get('name',''));
+          // JSON expressions carry SQLite's subtype through NEW. These projected
+          // columns are TEXT; strip that subtype before wrapping patch JSON.
+          if (Field.Get('kind','')='json') or (Field.Get('kind','')='extra') then Incoming:='('+Incoming+'||'+Q('')+')';
+          Columns:=Columns+Q(Field.Get('name',''))+','+Incoming;
         end;
         Sql:=Sql+Body+',NULL AS _wl_source FROM '+Ident(TableName)+'; ';
       finally FreeAndNil(Roots);end;
@@ -184,10 +188,12 @@ begin
       for j:=0 to Fields.Count-1 do
       begin
         Field:=Fields.Objects[j];Root:=Field.Get('name','');
+        Incoming:='NEW.'+Ident(Root);
+        if (Field.Get('kind','')='json') or (Field.Get('kind','')='extra') then Incoming:='('+Incoming+'||'+Q('')+')';
         Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_u_'+Root)+' INSTEAD OF UPDATE OF '+Ident(Root)+' ON '+Ident(ViewName)+' BEGIN '+
           ColumnReferenceChecks(Model,Root,'NEW.'+Ident(Root))+
-          UniqueChecks(Model,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+',NEW.'+Ident(Root)+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)','OLD.id',Root)+
-          'UPDATE '+Ident(TableName)+' SET '+Ident(DocCol)+'='+Wrapped('wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+',NEW.'+Ident(Root)+'),'+Q(Spec)+',''update'')')+
+          UniqueChecks(Model,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)','OLD.id',Root)+
+          'UPDATE '+Ident(TableName)+' SET '+Ident(DocCol)+'='+Wrapped('wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'')')+
           ' WHERE '+Expr('_id')+'=OLD.id; END; ';
       end;
       Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_source')+' INSTEAD OF UPDATE OF _wl_source ON '+Ident(ViewName)+' BEGIN SELECT RAISE(ABORT,''Read-only source seed''); END; '+

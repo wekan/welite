@@ -172,3 +172,11 @@ required enrollment denial and factor-bound revocation. Set `WELITE_UI=1` with `
 with JavaScript disabled and Cookie headers removed. Older `admin.py` and `secret.py`
 credential-mutation cases explicitly expire attempt windows between independent cases;
 `otphttp.py` retains real counters while testing admission policy.
+
+`python3 tests/enroll.py` checks the limited enrollment core on linked/CLI SQLite:
+password-only proof isolation, fresh 20-byte secrets, private token/client/expiry binding,
+setup replacement, stale policy, forced and ignored activation rollback/retry, sixteen
+concurrent confirmations, local token revocation, consumed-code login denial, fresh-code
+login and user cleanup. `ferroot.py` verifies activation through shared JSON TEXT views,
+unchanged unrelated BSON types, pending ownership/reinstall and physical user cleanup.
+HTTP enrollment routing and its attempt limiting remain a separate step.
