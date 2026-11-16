@@ -259,7 +259,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Limited enrollment proofs, private pending setup and atomic activation now pass concurrency, rollback and shared BSON tests.
   HTTP enrollment/confirmation, required-factor registration and shared attempt limits now pass both-backend HTTP and no-JS/no-cookie Chromium tests.
   Shared auth now binds to the users collection UUID/table, rejects stale proofs/tokens and verifies atomic recreation/legacy-upgrade cleanup.
-  Remaining: Mongo account/index/session integration, typed custom-value and legacy
+  Owned physical model unique keys now protect direct Mongo and SQL username writes, with mixed-writer and ownership/repair tests.
+  Remaining: Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

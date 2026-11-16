@@ -357,6 +357,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('duplicate','user',"+q(stamp)+','+q(stamp)+');','exec')=='error'
                 for identity,username in [('other','other'),('upper','User'),('nil1',None),('nil2',None)]:
                     assert sql('INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('+q(identity)+','+('NULL' if username is None else q(username))+','+q(stamp)+','+q(stamp)+');','exec')=='ok'
+                client.command({'insert':'users','documents':[dict(_id='null-user-one',username=None),dict(_id='null-user-two',username=None),dict(_id='no-username-one'),dict(_id='no-username-two')]})
                 users_before=sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+' ORDER BY rowid;')
                 assert sql("UPDATE users SET username='user' WHERE id='other';",'exec')=='error'
                 source=sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+" WHERE _ferretdb_sjson->>'_id'='u';")[0][0]
@@ -367,6 +368,28 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     return sql('INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('+q('race-'+str(index))+",'race',"+q(stamp)+','+q(stamp)+');','exec')
                 with ThreadPoolExecutor(max_workers=4) as executor:outcomes=list(executor.map(concurrent_user,range(4)))
                 assert outcomes.count('ok')==1 and outcomes.count('error')==3,outcomes
+                # Physical keys protect writes that never pass through SQL views.
+                unique_name=sql("SELECT name FROM _wl_models WHERE table_name="+q(physicals['users'])+" AND json_extract(spec,'$.kind')='unique-model-key';")[0][0]
+                indexes_before=client.command({'listIndexes':'users'})['cursor']['firstBatch']
+                rejected=client.command({'insert':'users','documents':[dict(_id='blocked-mongo',username='user')]},check=False)
+                assert rejected.get('writeErrors') and rejected['writeErrors'][0]['code']==11000,rejected
+                assert client.find('users','blocked-mongo')==[]
+                rejected=client.command({'update':'users','updates':[dict(q=dict(_id='other'),u={'$set':dict(username='user')})]},check=False)
+                assert rejected.get('writeErrors') or rejected.get('ok')==0,rejected
+                assert client.find('users','other')[0]['username']=='other'
+                def mixed_writer(index):
+                    if index%2==0:
+                        return sql('INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('+q('mixed-'+str(index))+",'mixed-race',"+q(stamp)+','+q(stamp)+');','exec')=='ok'
+                    response=Client(listen).command({'insert':'users','documents':[dict(_id='mixed-'+str(index),username='mixed-race')]},check=False)
+                    return response.get('ok')==1 and not response.get('writeErrors')
+                with ThreadPoolExecutor(max_workers=8) as executor:mixed=list(executor.map(mixed_writer,range(8)))
+                assert mixed.count(True)==1,mixed
+                # Private constraints do not invent managed Mongo index metadata.
+                assert client.command({'listIndexes':'users'})['cursor']['firstBatch']==indexes_before
+                saved_index=sql('SELECT sql FROM sqlite_master WHERE name='+q(unique_name)+';')[0][0]
+                # Simulate an older store or an externally removed constraint to keep
+                # ambiguous-login denial and duplicate preflight covered independently.
+                assert sql('DROP INDEX '+q(unique_name)+';','exec')=='ok'
                 # A later direct Mongo duplicate must never select an arbitrary login.
                 client.command({'insert':'users','documents':[dict(_id='mongo-duplicate',username='user',loginDisabled=True)]})
                 assert auth('lookup','user')=='no'
@@ -375,6 +398,20 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql('SELECT json(_ferretdb_sjson) FROM '+q(physicals['users'])+' ORDER BY rowid;')==duplicate_before
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='mongo-duplicate'),limit=1)]})
                 assert auth('lookup','user')=='yes' and sql(mode='install')=='ok'
+                assert sql('SELECT sql FROM sqlite_master WHERE name='+q(unique_name)+';')==[[saved_index]]
+                # Owned but altered definitions cannot be silently adopted or replaced.
+                assert sql('DROP INDEX '+q(unique_name)+';','exec')=='ok'
+                assert sql('CREATE INDEX '+q(unique_name)+' ON '+q(physicals['users'])+'(_ferretdb_sjson);','exec')=='ok'
+                altered=sql('SELECT sql FROM sqlite_master WHERE name='+q(unique_name)+';')
+                assert sql(mode='install')=='error'
+                assert sql('SELECT sql FROM sqlite_master WHERE name='+q(unique_name)+';')==altered
+                assert sql('DROP INDEX '+q(unique_name)+';','exec')=='ok' and sql(mode='install')=='ok'
+                owner=sql('SELECT name,table_name,spec,version FROM _wl_models WHERE name='+q(unique_name)+';')[0]
+                assert sql('DELETE FROM _wl_models WHERE name='+q(unique_name)+';','exec')=='ok'
+                assert sql(mode='install')=='error','Unowned physical constraint was silently adopted'
+                assert sql('SELECT sql FROM sqlite_master WHERE name='+q(unique_name)+';')==[[saved_index]]
+                assert sql('INSERT INTO _wl_models VALUES('+','.join(q(value) for value in owner[:3])+',1);','exec')=='ok'
+                assert sql(mode='install')=='ok'
                 assert sql("UPDATE users SET loginDisabled=1 WHERE id='u';",'exec')=='ok'
                 assert auth('lookup','user')=='no'
                 assert sql("UPDATE users SET loginDisabled=0 WHERE id='u';",'exec')=='ok'
@@ -511,6 +548,9 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                             time.sleep(.05)
                     else:raise AssertionError('Fresh FerretDB did not start')
                     assert document['title']=='Fresh' and document['createdAt']==DateMs(1794832496789)
+                    freshclient.command({'insert':'users','documents':[dict(_id='boot-user',username='boot-user')]})
+                    duplicate=freshclient.command({'insert':'users','documents':[dict(_id='boot-duplicate',username='boot-user')]},check=False)
+                    assert duplicate.get('writeErrors') and duplicate['writeErrors'][0]['code']==11000,duplicate
                     freshclient.command({'insert':'boards','documents':[{'_id':'from-ferret','title':'From Ferret'}]})
                     assert sql("SELECT title FROM boards WHERE id='from-ferret';",database=freshdb)==[['From Ferret']]
                 finally:

@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Physical model unique keys
+
+- Install owned SQLite unique expression indexes for declared model unique keys,
+  including usernames. Enforce the existing BINARY/canonical SQL NULL semantics on
+  physical FerretDB documents, protecting both SQL views and direct Mongo writes.
+- Record index ownership/definition in the adapter registry. Preserve exact owned
+  definitions, repair an absent owned index and refuse unowned or altered objects
+  without replacing them. Index creation and registry installation remain atomic;
+  existing duplicates still require repair rather than rewriting account documents.
+- Verify linked/CLI live Mongo duplicate inserts (11000), rejected duplicate updates,
+  eight mixed Mongo/SQL writers with one winner, case/NULL/missing values, fresh server
+  startup, removed-index repair, altered/unowned refusal and legacy ambiguous-login
+  denial with duplicate preflight/repair. Mongo listIndexes metadata is unchanged.
+- Keep Meteor-managed sparse/multikey account indexes and registry-cache coordination
+  open. These private SQL constraints do not implement Mongo sparse NULL semantics,
+  emails/resume-token multikey uniqueness or full Mongo duplicate-update error mapping.
+
 ## 2026-11-16 Shared authentication collection identity
 
 - Bind private authentication state to the FerretDB users collection's physical table

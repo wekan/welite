@@ -4,6 +4,7 @@ interface
 uses SysUtils,fpjson,wldb;
 function UniqueChecks(Model:TJSONObject;const Document,ExcludeId,ChangedColumn:string):string;
 procedure ValidateUnique(Db:TWLDb;Model:TJSONObject;const TableName:string);
+function UniqueIndexScript(Db:TWLDb;Model:TJSONObject;const TableName:string):string;
 implementation
 function Id(const S:string):string;
 begin Result:='"'+StringReplace(S,'"','""',[rfReplaceAll])+'"';end;
@@ -58,4 +59,39 @@ begin
     if Length(Rows)>0 then raise Exception.Create('Existing duplicate model keys require repair');
   end;
 end;
+function UniqueIndexScript(Db:TWLDb;Model:TJSONObject;const TableName:string):string;
+var Keys,Key:TJSONArray;Description:TJSONObject;Owners,Objects:TWLRows;
+  i,j:Integer;Name,Columns,DDL,Spec:string;Owned:Boolean;
+begin
+  Result:='';Keys:=TJSONArray(Model.Find('uniqueKeys'));
+  for i:=0 to Keys.Count-1 do
+  begin
+    Key:=TJSONArray(Keys.Items[i]);if Key.Count=0 then raise Exception.Create('Empty model unique key');
+    Name:='_wl_'+TableName+'_uq_'+IntToStr(i);Columns:='';
+    for j:=0 to Key.Count-1 do
+    begin
+      if Columns<>'' then Columns:=Columns+',';
+      Columns:=Columns+Extract('"_ferretdb_sjson"',FieldPath(Model,Key.Strings[j]))+' COLLATE BINARY';
+    end;
+    DDL:='CREATE UNIQUE INDEX '+Id(Name)+' ON '+Id(TableName)+' ('+Columns+')';
+    Description:=TJSONObject.Create;
+    try
+      Description.Add('kind','unique-model-key');Description.Add('columns',Key.Clone);Spec:=Description.AsJSON;
+    finally Description.Free;end;
+    Owners:=Db.Query('SELECT table_name,spec,version FROM _wl_models WHERE name='+QuotedStr(Name)+';');
+    Owned:=(Length(Owners)=1) and (Owners[0][0]=TableName) and (Owners[0][1]=Spec) and (Owners[0][2]='1');
+    if (Length(Owners)>0) and not Owned then raise Exception.Create('Incompatible model unique-key owner');
+    Objects:=Db.Query('SELECT type,tbl_name,sql FROM sqlite_master WHERE name='+QuotedStr(Name)+';');
+    if Length(Objects)>0 then
+    begin
+      if not Owned or (Length(Objects)<>1) or (Objects[0][0]<>'index') or
+        (Objects[0][1]<>TableName) or (Objects[0][2]<>DDL) then
+        raise Exception.Create('Refusing incompatible model unique-key index');
+    end
+    else Result:=Result+DDL+'; ';
+    Result:=Result+'INSERT OR REPLACE INTO _wl_models(name,table_name,spec,version) VALUES('+
+      QuotedStr(Name)+','+QuotedStr(TableName)+','+QuotedStr(Spec)+',1); ';
+  end;
+end;
+
 end.

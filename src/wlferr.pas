@@ -133,6 +133,7 @@ begin
             raise Exception.Create('Collection storage metadata disagrees with its column');
         finally Settings.Free;end;
       end;
+      Sql:=Sql+UniqueIndexScript(Db,Model,TableName);
       Tables.Values[ViewName]:=TableName;
       Existing:='';
       for j:=0 to High(Objects) do if SameText(Objects[j][0],ViewName) then Existing:=Objects[j][1];

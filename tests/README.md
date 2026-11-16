@@ -195,3 +195,10 @@ and credentials denies old authentication before repair and clears it atomically
 reinstall. It covers stale login/enrollment proofs, old unbound-adapter migration with
 conservative replay retention, and malformed-source rollback without private data loss.
 Native factor/enrollment/session and public HTTP tests verify the no-marker path.
+
+`ferroot.py` verifies owned physical model unique keys on both SQLite backends: Mongo
+insert duplicate code 11000, rejected duplicate updates, eight concurrent mixed SQL/
+Mongo attempts with one winner, case/NULL/missing usernames, fresh FerretDB startup,
+altered/unowned index refusal, removed-index repair and legacy duplicate preflight/
+ambiguous-login denial. It confirms managed listIndexes metadata stays unchanged.
+Mongo-managed sparse/multikey account indexes and cache/error coordination remain open.

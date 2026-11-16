@@ -200,10 +200,10 @@ check. Preflight refuses existing duplicate keys without rewriting the source re
 
 `LoginAccount` is shared by web/API login. It fetches at most two username matches,
 including disabled accounts, and returns a login candidate only for one enabled match.
-This matters because direct Mongo writes can introduce duplicates outside SQL view
-checks. Existing id-bound sessions are not resolved by username and keep their existing
-credential binding. Account index provisioning through Mongo is still separate work;
-this step adds no physical unique index or registry index entry.
+This remains necessary for older stores or an externally removed physical constraint.
+Existing id-bound sessions are not resolved by username and keep their existing
+credential binding. Owned physical keys are now described below; Mongo-managed account
+index provisioning remains separate work.
 
 Tests verify normal and typed-source duplicates, unchanged stored bytes after denial,
 case/NULL behavior, exactly one success among four concurrent SQL insertions, a disabled
@@ -211,6 +211,42 @@ Mongo duplicate causing login denial, duplicate preflight refusal and repair/rei
 recovery on both backends. The shared lookup is exercised through fresh auth harness
 processes, and both HTTP application regression suites pass. Shared Meteor account
 formats and index policy still need integration before normal server activation.
+
+## Physical model unique keys
+
+`UniqueIndexScript` in `wluniq.pas` installs private SQLite unique expression indexes
+on physical SJSON documents for the model's declared keys (currently username). BINARY
+comparison and SQL NULL-distinct semantics match the canonical schema and existing
+view checks. Direct Mongo insert/update operations therefore cannot bypass those model
+constraints. Missing and explicit-null usernames remain separate documents with no
+non-null unique value; differently cased names remain distinct.
+
+Each index is registered with its physical table, key specification and version in
+`_wl_models`. Installation accepts an existing index only with matching ownership and
+exact DDL, repairs a missing owned index, and refuses an altered or unowned object.
+Fresh creation and owner registration participate in the complete adapter transaction.
+Duplicate preflight still refuses older inconsistent stores without rewriting documents.
+Tests deliberately remove an owned index to retain ambiguous-login/repair coverage.
+
+These constraints leave FerretDB-managed `settings.indexes` and Mongo `listIndexes`
+unchanged. At inspected FerretDB revision `984be0e8`, createIndexes ignores `sparse`,
+and registry index operations use cached settings. Writing managed index metadata
+behind that cache would risk later overwrites; cache coordination remains required.
+
+[Meteor's current account setup](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_server.js)
+requests sparse unique username, email-address and resume-token indexes plus timestamp
+indexes. Those are still a separate compatibility gate. In particular,
+[MongoDB sparse indexes](https://www.mongodb.com/docs/manual/core/index-sparse/) include
+explicit nulls and skip missing fields: the private SQL NULL-distinct invariant does
+not replace that behavior. Email/resume-token arrays also require multikey enforcement.
+FerretDB's insert constraint path reports 11000; full duplicate-update error mapping
+remains part of Mongo index parity.
+
+`tests/ferroot.py` verifies both backends against actual Mongo duplicate inserts and
+updates, eight mixed SQL/Mongo writers with exactly one success, case/NULL/missing
+values, private ownership/alteration refusal, removed-index repair, unchanged managed
+index metadata and fresh FerretDB startup. Existing duplicate preflight and all shared
+account/source/enrollment scenarios remain covered.
 
 ## Meteor bcrypt credentials
 
@@ -567,7 +603,7 @@ regressions cover the no-marker path.
 
 ## Remaining before the checklist can be checked
 
-- Complete shared Mongo account/index and normalized-store authentication migration policy; reconcile typed
+- Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
