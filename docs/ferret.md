@@ -178,8 +178,8 @@ A token deletion trigger explicitly removes metadata as well, including on conne
 with foreign keys disabled. These triggers use SQLite built-ins rather than Pascal
 extension functions, so live Mongo deletion can execute them. A forced metadata-cleanup
 failure rolls back the Mongo deletion and preserves the user's valid token. Collection
-DROP/recreation and authentication migration still need application-level policy; the
-physical delete trigger handles document deletion, not collection removal.
+Collection identity policy is now implemented below; the physical delete trigger
+handles document deletion, while source binding handles collection replacement.
 
 Tests run the actual `IssueLoginToken` and `ValidateLoginToken` implementation through
 fresh harness processes on linked and CLI SQLite, including credentials, missing users,
@@ -601,11 +601,48 @@ normal reinstall preservation, stale proof denial, old-adapter backfill and malf
 metadata rollback on both backends. Native factor/enrollment/session and public HTTP
 regressions cover the no-marker path.
 
+## Typed Meteor resume-token kernel
+
+`wlresume.pas` implements `MeteorTokenHash`: SHA256 of raw UTF-8 token bytes encoded as
+standard padded base64, matching
+[Meteor's token hashing](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_server.js).
+It accepts 1–4096 bytes and remains separate from the tenant-scoped private digest.
+Mutation commands require canonical 44-character digests decoding to 32 bytes.
+
+`ResumeDocument` operates on the actual SJSON account document. `append` takes
+`hashedToken` and integer millisecond `when`, adds a record with a BSON Date and refuses
+a duplicate hash. `remove` removes every matching hashed record; absent paths are left
+absent. `clear` sets the token array to empty, including an explicitly malformed token
+value, without replacing parent fields. Existing non-object parent containers fail
+closed. New records never contain raw tokens; existing legacy plain records and unknown
+fields remain until targeted legacy conversion or explicit clearing.
+
+The editor copies complete original item schemas into an explicit array hint, deleting
+schema items alongside removed records. This retains shifted BSON dates, binary/long
+subtypes and other unknown metadata instead of guessing their types from position.
+Append creates the new date schema explicitly. `wl_resume(previous, command)` exposes
+the same pure operation through linked SQLite and the CLI host-API extension. It neither
+reads external state nor authorizes the caller. Mutating a physical document with this
+function in its UPDATE expression lets SQLite serialize concurrent writers without a
+read/replace lost update.
+
+`tests/resume.py` checks independent Python hash vectors, canonical digest/command/date
+validation, signed millisecond dates, malformed parent refusal, TEXT/JSONB writes,
+16 distinct concurrent appends and one winner for duplicate hashes on both backends.
+`ferroot.py` checks actual stored BSON before/after append, removal with shifted legacy
+siblings and duplicate hashes, rollback and clearing, including dates, binary, long and
+precision-sensitive double values. Comparisons start from BSON read after the backend's
+original insert, so source insertion normalization is not attributed to a later edit.
+
+This is a storage prerequisite. HTTP login still issues the existing private credentials;
+shared resume issuance/validation, expiry, logout/revocation, legacy token conversion,
+source/policy binding and Mongo token-index parity remain to be integrated and tested.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile Meteor session formats and file-store metadata/bytes.
+- Integrate shared resume issuance/validation, expiry/revocation and legacy conversion; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

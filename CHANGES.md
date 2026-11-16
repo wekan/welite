@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Typed Meteor resume-token kernel
+
+- Add Meteor SHA256/base64 token hashing, separate from WeLite's tenant-scoped private
+  digest. Verify ASCII, Unicode/NUL and bounded input against Python's independent
+  hashlib/base64 results; reject empty/oversized raw tokens and noncanonical digests.
+- Add pure append/remove/clear operations on services.resume.loginTokens. New records
+  contain a hash and BSON Date; no new raw token is stored. Retain legacy records,
+  unknown fields, field order and complete sibling schemas when array positions shift.
+- Expose the kernel as wl_resume on linked SQLite and the host-API CLI extension.
+  Refuse duplicate appends, invalid commands/dates and malformed parent containers.
+  Explicit clear can empty a malformed token value while preserving its parent fields.
+- Verify TEXT/JSONB atomic writes and rollback, sixteen concurrent distinct appends
+  without lost records, one winner for duplicate appends, shifted Date metadata and
+  live Mongo BSON round trips including legacy tokens and precision-sensitive values.
+- Keep shared token issuance/validation, expiry, logout/revocation, legacy conversion
+  and Mongo token indexes open. This storage kernel does not authorize shared sessions
+  or change the existing HTTP/private-token authentication paths.
+
 ## 2026-11-16 Physical model unique keys
 
 - Install owned SQLite unique expression indexes for declared model unique keys,

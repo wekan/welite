@@ -253,6 +253,38 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE users SET profile_json=json_set(profile_json,'$.language','sv') WHERE id='json-user';",'exec')=='ok'
                 assert client.find('users','json-user')[0]['profile']==dict(language='sv')
                 assert sql("DELETE FROM users WHERE id='json-user';",'exec')=='ok'
+                # Shared resume writes retain BSON Date and shifted sibling schemas.
+                def meteor_hash(raw):return base64.b64encode(hashlib.sha256(raw.encode()).digest()).decode()
+                first_hash=meteor_hash('first-resume-token');new_hash=meteor_hash('new-resume-token')
+                resume_doc=dict(_id='resume-doc',username='resume-doc',services=dict(password=dict(reset=dict(when=DateMs(-1))),resume=dict(loginTokens=[dict(hashedToken=first_hash,when=DateMs(-1234),extra=Binary(b'keep',4)),dict(token='legacy-plain-token',when=DateMs(1794835200000),extra=Long(9007199254740993))],other=dict(retain=True)),other=DateMs(-5)),unknown=dict(long=Long(9007199254740993),zero=-0.0,precise=1.0000000000000002))
+                client.command({'insert':'users','documents':[resume_doc]})
+                # Compare against actual stored BSON, including any source backend
+                # normalization that occurred before the WeLite mutation.
+                resume_doc=client.find('users','resume-doc')[0]
+                assert struct.pack('>d',resume_doc['unknown']['precise'])==struct.pack('>d',1.0000000000000002)
+                resume_table=physicals['users']
+                def resume_sql(command):
+                    value='wl_resume(json(_ferretdb_sjson),'+q(json.dumps(command))+')'
+                    return 'UPDATE '+q(resume_table)+" SET _ferretdb_sjson=CASE WHEN wl_storage("+q(resume_table)+")='blob' THEN jsonb("+value+') ELSE '+value+" END WHERE _ferretdb_sjson->>'_id'='resume-doc';"
+                assert sql(resume_sql(dict(op='append',hashedToken=new_hash,when=1794835200123)),'exec')=='ok'
+                resume_doc['services']['resume']['loginTokens'].append(dict(hashedToken=new_hash,when=DateMs(1794835200123)))
+                actual_resume=client.find('users','resume-doc')[0]
+                assert encode(actual_resume)==encode(resume_doc),(repr(actual_resume),repr(resume_doc))
+                # Duplicate hashes already present in one document are all removed.
+                duplicated=dict(hashedToken=first_hash,when=DateMs(100),extra=Long(42))
+                client.command({'update':'users','updates':[dict(q=dict(_id='resume-doc'),u={'$push':{'services.resume.loginTokens':duplicated}})]})
+                resume_doc['services']['resume']['loginTokens'].append(duplicated)
+                assert sql(resume_sql(dict(op='remove',hashedToken=first_hash)),'exec')=='ok'
+                resume_doc['services']['resume']['loginTokens']=[value for value in resume_doc['services']['resume']['loginTokens'] if value.get('hashedToken')!=first_hash]
+                assert encode(client.find('users','resume-doc')[0])==encode(resume_doc),'Removal changed shifted legacy token types/bits'
+                stable_resume=encode(client.find('users','resume-doc')[0])
+                assert sql('BEGIN IMMEDIATE; '+resume_sql(dict(op='append',hashedToken=meteor_hash('rolled-back'),when=1))+resume_sql(dict(op='append',hashedToken='invalid',when=1))+' COMMIT;','exec')=='error'
+                assert encode(client.find('users','resume-doc')[0])==stable_resume
+                assert sql(resume_sql(dict(op='clear')),'exec')=='ok'
+                resume_doc['services']['resume']['loginTokens']=[]
+                assert encode(client.find('users','resume-doc')[0])==encode(resume_doc)
+                client.command({'delete':'users','deletes':[dict(q=dict(_id='resume-doc'),limit=1)]})
+
                 # Private tokens reference a user view without invalid SQLite FKs.
                 build(root/'tests/token.lpr',out/'tokens',flags)
                 def auth(mode,token='api-test-token',password=''):

@@ -202,3 +202,11 @@ Mongo attempts with one winner, case/NULL/missing usernames, fresh FerretDB star
 altered/unowned index refusal, removed-index repair and legacy duplicate preflight/
 ambiguous-login denial. It confirms managed listIndexes metadata stays unchanged.
 Mongo-managed sparse/multikey account indexes and cache/error coordination remain open.
+
+`python3 tests/resume.py` verifies Meteor SHA256/base64 hashes against Python, strict
+command/digest/date input, typed append/remove/clear on TEXT/JSONB, malformed parent
+refusal, 16 concurrent distinct appends without lost tokens and one duplicate winner.
+It compiles the direct Pascal harness and both SQLite backends/extension. `ferroot.py`
+checks live stored BSON, shifted Date/legacy/binary/long metadata, precision-sensitive
+doubles, duplicate removal, rollback and clearing. Shared bearer authorization, expiry,
+revocation and legacy conversion remain separate integration steps.
