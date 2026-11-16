@@ -185,8 +185,8 @@ Tests run the actual `IssueLoginToken` and `ValidateLoginToken` implementation t
 fresh harness processes on linked and CLI SQLite, including credentials, missing users,
 reinstallation and both SQL/Mongo deletion. The existing hashing, tenant binding and
 legacy-token denial regression suite also passes. These are Welite private tokens;
-Meteor `services.resume.loginTokens` is not mapped by this step. Shared Meteor password
-and session compatibility remains unfinished.
+Meteor `services.resume.loginTokens` is not mapped by this step. Meteor bcrypt credential compatibility is now available as described below; Argon2
+and shared-session compatibility remain unfinished.
 
 ## SQL unique keys and account lookup
 
@@ -212,11 +212,41 @@ recovery on both backends. The shared lookup is exercised through fresh auth har
 processes, and both HTTP application regression suites pass. Shared Meteor account
 formats and index policy still need integration before normal server activation.
 
+## Meteor bcrypt credentials
+
+`wlbcrypt.pas` implements portable bcrypt with a 16-byte salt, canonical bcrypt base64,
+2a/2b/2y formats, standard cost range and byte-preserving password input up to 72 bytes.
+Its arithmetic is explicitly modulo 2^32 even in checked builds. Blowfish constants and
+expansion are adapted from maintained `golang.org/x/crypto` v0.59.0; the original BSD
+notice is retained in `docs/gocrypt.txt` and must accompany binary distribution too.
+
+`VerifyPassword` accepts legacy PBKDF2 strings and Meteor password objects. Meteor
+passes the lowercase SHA256 plaintext digest into bcrypt, avoiding its raw key-size
+limit for long plaintext. `HashMeteorPassword` generates a fresh-salt cost-10 bcrypt
+object compatible with `services.password`. It is available for the upcoming shared
+credential creation transition; current registration/bootstrap still creates legacy
+credentials. Reset and other password-object properties remain unchanged on login.
+
+Current [Meteor accounts-password source](https://raw.githubusercontent.com/meteor/meteor/devel/packages/accounts-password/password_server.js)
+also selects an Argon2 credential ahead of bcrypt. Argon2 is not implemented yet:
+a nonempty Argon2 value causes denial rather than accepting an older bcrypt value.
+Malformed object values and duplicate keys also fail closed. This is partial shared
+account compatibility, not completion of all Meteor authentication modes or sessions.
+
+`tests/bcrypt.py` compares exact generated hashes and verifies new credentials with
+independent Go crypto code, using cached dependencies without network access. It checks
+several costs, Unicode/NUL and boundary cases, malformed input, SHA256 envelopes, random
+salts and legacy compatibility in normal/checked builds. HTTP tests exercise both login
+routes and credential invalidation on linked/CLI SQLite. Live FerretDB tests verify a
+Mongo-created account through the real login lookup/verifier and compare its BSON bytes
+to prove no credential or metadata rewrite.
+
 ## Remaining before the checklist can be checked
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile existing Meteor password/session formats and file-store metadata/bytes.
+- Implement Argon2 and default shared-format credential creation; reconcile Meteor
+  session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

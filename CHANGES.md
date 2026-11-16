@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Portable Meteor bcrypt credentials
+
+- Add a pure Pascal bcrypt kernel with explicit modulo-32-bit Blowfish arithmetic,
+  canonical salt/hash parsing, 2a/2b/2y support and constant-time hash comparison.
+  Adapt maintained Go crypto expansion/constants with their BSD license retained.
+  No platform crypto library or external password service is required at runtime.
+- Verify Meteor services.password JSON objects using bcrypt over the SHA256 plaintext
+  digest. Retain legacy Welite PBKDF2 verification and add a fresh-salt cost-10 Meteor
+  credential generator. Reject malformed/duplicate-key envelopes; a nonempty Argon2
+  credential takes precedence and is denied until supported, never falling back to
+  potentially stale bcrypt. Existing default account creation is unchanged in this step.
+- Verify against the independent Go implementation with normal and checked Pascal
+  builds: several costs, versions, Unicode/NUL/72-byte inputs, malformed hashes, long
+  Meteor plaintext, fresh salts and legacy credentials. Exercise real web/API logins
+  and credential-bound tokens on both SQLite backends, plus byte-preserving reads of
+  an actual FerretDB account. Existing HTTP regressions pass.
+- Keep Argon2, default shared-format credential creation, Meteor resume-session/index
+  policy and application activation open in the interoperability checklist.
+
 ## 2026-11-16 Account uniqueness and unambiguous login
 
 - Derive non-primary unique keys from the canonical schema and enforce them in SQL

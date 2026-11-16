@@ -80,3 +80,11 @@ Set `FERRETDB` to a native server built from the companion source revision docum
 `docs/ferret.md`. Use normal-sidecar SQLite for this test: a short-name library must not
 open the same live database as a normal-sidecar FerretDB binary. No production data is used.
 `python3 releases/genmodel.py --check` checks generated root specifications against DDL.
+
+`python3 tests/bcrypt.py` verifies portable bcrypt against cached `golang.org/x/crypto`
+v0.59.0 (Go 1.26+; set `GO` and optionally `CRYPTO_SRC`). Normal and checked Pascal
+builds cover 2a/2b/2y, several costs, Unicode/NUL/key boundaries, malformed encodings,
+Meteor SHA256 envelopes, fresh cost-10 credentials and legacy PBKDF2. No runtime crypto
+library or service is used. `admin.py` additionally tests actual Meteor bcrypt web/API
+logins, preserved service metadata and Argon2 precedence denial on each SQLite backend;
+`ferroot.py` tests the real verifier against a Mongo-created typed account.

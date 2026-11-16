@@ -55,4 +55,26 @@ def run(request,db,admin):
     with sqlite3.connect(db) as con:
         assert '\n'.join(con.iterdump())==before
         con.execute('DROP TRIGGER reject_session')
+    # Actual Meteor services.password object; fixture independently checked by Go.
+    meteor=dict(password=dict(bcrypt='$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y',reset=dict(token='preserve-reset')),resume=dict(loginTokens=[dict(hashedToken='meteor-resume-not-private')]))
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
+    response=request('POST','/sign-in',dict(username=user,password=password))
+    assert response[0]==302
+    meteor_web=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
+    response=request('POST','/users/login',dict(username=user,password=password))
+    assert response[0]==200
+    meteor_api=json.loads(response[2])['token']
+    assert request('GET','/api/user?token='+meteor_api)[0]==200
+    assert request('POST','/users/login',dict(username=user,password='wrong'))[0]==401
+    with sqlite3.connect(db) as con:
+        assert json.loads(con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0])==meteor
+    # Current Meteor gives Argon2 precedence. A stale bcrypt must not authorize login.
+    meteor['password']['argon2']='$argon2id$unsupported-test'
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
+    assert request('POST','/users/login',dict(username=user,password=password))[0]==401
+    response=request('POST','/sign-in',dict(username=user,password=password))
+    assert response[0]==200 and b'Invalid login' in response[2]
+    assert request('GET','/api/user?token='+meteor_api)[0]==401
+    assert request('GET','/designer?sessionId='+meteor_web)[0]==302
+    print('PASS: actual Meteor bcrypt web/API logins, unknown service preservation, credential-bound tokens and Argon2 precedence denial')
     print('PASS: disabled web/API logins and live tokens denied, panel revocation survives re-enable, fresh nonces and token persistence failures')

@@ -8,10 +8,9 @@ unit wlpasswd;
 
       pbkdf2_sha1$<iterations>$<saltHex>$<derivedKeyHex>
 
-  PBKDF2-HMAC-SHA1 uses FPC's `hmac` unit (the RTL has HMAC-SHA1, not -SHA256), so it compiles
-  everywhere FPC does — including retro targets — with no external crypto library. bcrypt/
-  PBKDF2-SHA256 would be stronger but need a C lib or a hand-rolled HMAC-SHA256; SHA1-PBKDF2
-  with a high iteration count is a defensible, dependency-free baseline.
+  Legacy hashes use the portable RTL HMAC-SHA1 implementation. Meteor bcrypt
+  verification uses the portable wlbcrypt kernel over a SHA256 plaintext digest;
+  HashMeteorPassword returns a services.password JSON object. Argon2 remains unsupported.
 
   Salt/token entropy comes from wlentrop: OS random sources, or a configured one-use
   SQLite stock for targets without a kernel random source. There is no Random fallback.
@@ -24,15 +23,18 @@ unit wlpasswd;
 interface
 
 uses
-  SysUtils,Classes,hmac,wlentrop;
+  SysUtils,Classes,hmac,wlentrop,wlcrypt,wlbcrypt,fpjson,wlsjson;
 
 // Hash a plaintext password -> "pbkdf2_sha1$iters$saltHex$dkHex".
 function HashPassword(const Plain: string): string;
 
+// Meteor services.password object, bcrypt(SHA256(plaintext)) with a fresh salt.
+function HashMeteorPassword(const Plain:string):string;
+
 // 256-bit random token using the configured platform salt source. OS randomness or a committed one-use stock block is required.
 function NewAuthToken:string;
 
-// Verify a plaintext password against a stored "pbkdf2_sha1$..." string. False on any mismatch
+// Verify legacy PBKDF2 strings or Meteor password JSON with bcrypt(SHA256(plaintext)). False on mismatch
 // or malformed/empty stored value (so accounts with no real hash cannot be logged into).
 function VerifyPassword(const Plain, Stored: string): Boolean;
 
@@ -110,7 +112,7 @@ begin
   Result := d = 0;
 end;
 
-function VerifyPassword(const Plain, Stored: string): Boolean;
+function VerifyLegacyPassword(const Plain, Stored: string): Boolean;
 var
   P: TStringArray;
   Iters: Integer;
@@ -125,6 +127,29 @@ begin
   Salt := FromHex(P[2]);
   DKHex := ToHex(Pbkdf2Sha1(Plain, Salt, Iters));
   Result := SameHex(DKHex, P[3]);
+end;
+
+function HashMeteorPassword(const Plain:string):string;
+begin
+  Result:='{"bcrypt":"'+BcryptHash(Sha256Hex(Plain),BcryptSalt(RandomBytes(16),10))+'"}';
+end;
+function VerifyPassword(const Plain,Stored:string):Boolean;
+var Password:TJSONObject;Value:TJSONData;Text:string;
+begin
+  Text:=Trim(Stored);
+  if (Text='') or (Text[1]<>'{') then Exit(VerifyLegacyPassword(Plain,Stored));
+  Result:=False;Password:=nil;
+  try
+    try
+      Password:=ExactObject(Text);Value:=Password.Find('argon2');
+      // Meteor chooses Argon2 first. Never accept a stale bcrypt fallback.
+      if (Value<>nil) and (Value.JSONType<>jtNull) then
+        if (Value.JSONType<>jtString) or (Value.AsString<>'') then Exit;
+      Value:=Password.Find('bcrypt');
+      if (Value=nil) or (Value.JSONType<>jtString) then Exit;
+      Result:=BcryptVerify(Sha256Hex(Plain),Value.AsString);
+    except Result:=False;end;
+  finally Password.Free;end;
 end;
 
 end.
