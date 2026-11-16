@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 FerretDB root document projections
+
+- Generate eleven root-model specifications from the canonical schema and install
+  writable SQL views over actual registered FerretDB collections. Discover physical
+  names, create compatible metadata/indexes for missing collections, and refuse
+  unowned normalized tables. Preserve physical records, indexes and custom view triggers.
+- Apply sparse typed patches, preserving unknown fields, BSON types and numeric bits.
+  Map nested attachment parents/WIP settings, booleans, dates and JSON columns; validate
+  required values and immutable IDs. Keep clone source metadata separate from child arrays.
+- Resolve TEXT/JSONB storage at write time through the host SQLite metadata API, including
+  the CLI's restricted trigger environment. Keep installation atomic and repeatable.
+- Verify both directions over the Mongo wire against maintained FerretDB source
+  984be0e8ee59afe5d19005336b81c76d44c0e695, on linked and CLI SQLite: all roots,
+  fresh collections, old TEXT/restart, exact scalar bits, unknown fields and failed-edit rollback.
+- Keep this installer outside application startup until child relations, account/file
+  compatibility and shared-file policy are complete. Overall interoperability remains open.
+
 ## 2026-11-16 Large SQL scripts through the CLI backend
 
 - Remove the per-argument size ceiling before installing the FerretDB model adapter.

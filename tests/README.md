@@ -62,3 +62,11 @@ megabyte script input, private 0700 directories/0600 files, quoted Unicode temp 
 structured `-init` arguments, relative ATTACH paths and cleanup after success, SQL errors and spawn failure.
 `dbtext.py` also checks a megabyte field with 2,000 newlines, exact CRLF and multiline
 SQL defaults. The runtime uses private short files rather than an oversized SQL argv.
+
+`python3 tests/ferroot.py` builds the root projection harness and CLI extension, then
+runs isolated FerretDB servers to verify live two-way root collection edits, fresh SQL
+collection creation, legacy TEXT/restart, typed metadata, rollback and safe reinstallation.
+Set `FERRETDB` to a native server built from the companion source revision documented in
+`docs/ferret.md`. Use normal-sidecar SQLite for this test: a short-name library must not
+open the same live database as a normal-sidecar FerretDB binary. No production data is used.
+`python3 releases/genmodel.py --check` checks generated root specifications against DDL.

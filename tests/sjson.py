@@ -88,9 +88,9 @@ with tempfile.TemporaryDirectory(prefix='wlsjson-',dir=os.environ['TMPDIR']) as 
     print('PASS: FerretDB source oracle, every BSON scalar, nested/reordered type retention, Unicode/NUL/order, explicit hints and malformed/deep document denial')
     extension=tmp/'extension';build(root/'src/wlfunc.lpr',extension,['-Cg','-dWLSQLEXT'],'wlfunc.so')
     # Verify the API-table offsets against the installed authoritative C header.
-    (tmp/'abi.c').write_text('#include <stddef.h>\n#include <stdio.h>\n#include <sqlite3ext.h>\nint main(void){printf("%zu %zu %zu %zu %zu %zu",offsetof(sqlite3_api_routines,create_function_v2)/sizeof(void*),offsetof(sqlite3_api_routines,value_text)/sizeof(void*),offsetof(sqlite3_api_routines,value_bytes)/sizeof(void*),offsetof(sqlite3_api_routines,result_text)/sizeof(void*),offsetof(sqlite3_api_routines,result_error)/sizeof(void*),offsetof(sqlite3_api_routines,libversion_number)/sizeof(void*));return 0;}')
+    (tmp/'abi.c').write_text('#include <stddef.h>\n#include <stdio.h>\n#include <sqlite3ext.h>\nint main(void){printf("%zu %zu %zu %zu %zu %zu %zu %zu",offsetof(sqlite3_api_routines,create_function_v2)/sizeof(void*),offsetof(sqlite3_api_routines,value_text)/sizeof(void*),offsetof(sqlite3_api_routines,value_bytes)/sizeof(void*),offsetof(sqlite3_api_routines,result_text)/sizeof(void*),offsetof(sqlite3_api_routines,result_error)/sizeof(void*),offsetof(sqlite3_api_routines,libversion_number)/sizeof(void*),offsetof(sqlite3_api_routines,context_db_handle)/sizeof(void*),offsetof(sqlite3_api_routines,table_column_metadata)/sizeof(void*));return 0;}')
     checked([os.environ.get('CC','cc'),str(tmp/'abi.c'),'-o',str(tmp/'abi')])
-    assert checked([str(tmp/'abi')])=='162 109 103 85 80 67'
+    assert checked([str(tmp/'abi')])=='162 109 103 85 80 67 149 95'
     for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
         out=tmp/backend;build(root/'tests/sjsql.lpr',out,flags)
         settings=dict(os.environ);settings.pop('WELITE_SQLITE_EXT',None)
@@ -100,6 +100,10 @@ with tempfile.TemporaryDirectory(prefix='wlsjson-',dir=os.environ['TMPDIR']) as 
             output=checked([str(out/'sjsql'),str(db),*(['exec'] if execute else [])],input=query,env=settings).strip()
             return output if execute else json.loads(output)
         assert sql('SELECT json_valid(wl_sjson(\'{"_id":"test"}\',\'\',\'{}\'));')==[['1']]
+        projection=json.dumps({'fields':[{'name':'title','path':'title','kind':'scalar','type':'TEXT','required':False,'default':None}],'managed':[]})
+        projected_raw=sql('SELECT wl_model('+quote(fixtures[0])+','+quote('{"title":"Projected"}')+','+quote(projection)+','+quote('update')+');')[0][0]
+        assert oracle_bits(projected_raw)==oracle_bits(fixtures[0]),'Projection changed floating-point bits'
+        assert oracle_decode(json.loads(projected_raw))==json.loads(projected_raw)
         # The exact physical document column and both old TEXT/new JSONB storage
         # forms are exercised; table names are discovered from FerretDB metadata.
         assert sql('CREATE TABLE _ferretdb_collections(name TEXT UNIQUE,table_name TEXT UNIQUE,settings TEXT);',True)=='ok'

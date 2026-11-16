@@ -236,8 +236,10 @@ not merely a design document. Platform/browser claims require testing on those t
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
   Large CLI adapter scripts now use private short scratch files without argument-size limits.
-  Remaining: collection/model views and relation triggers, existing-account/file compatibility,
-  fresh/shared-file installation policy and live two-way FerretDB application tests (docs/ferret.md).
+  Eleven root collection views now pass live two-way Mongo-wire tests on both backends,
+  including fresh collection creation, legacy TEXT/restart and preservation of typed unknown fields.
+  Remaining: child relation views/triggers and constraints, existing-account/file compatibility,
+  application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.

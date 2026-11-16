@@ -42,11 +42,12 @@ input/output to 16 MiB and document nesting to 100; it does not truncate records
 This bound applies to serialized SJSON, including its schema, and must be considered
 when the full model adapter's document-size policy is finalized.
 
-The linked backend registers two deterministic, side-effect-free SQLite functions:
+The linked backend registers these deterministic, side-effect-free SQLite functions:
 
 ```
 wl_plain(sjson_text)
 wl_sjson(complete_plain_json, previous_sjson_text_or_empty, field_hints_json)
+wl_model(previous_sjson_text_or_empty, column_patch_json, model_spec_json, mode)
 ```
 
 Use `json(document_column)` when reading either SQLite storage form, and wrap the
@@ -82,14 +83,44 @@ it edits no files there. It requires Go and already cached dependencies. Tests c
 both backends, TEXT/JSONB view writes, rollback, explicit hints, malformed/deep input,
 UTF-8, field order and bit-exact doubles. The Go oracle is a test dependency only.
 
+## Verified root projections
+
+`releases/genmodel.py` generates `src/wlmodels.pas` from `schema.sql`; `--check`
+checks drift. Python is a build/test tool, not a runtime dependency. `wlferr.pas`
+exposes `InstallRootModels`, currently called only by the SQL test harness. It is
+intentionally not installed by normal server startup while the remaining gates are open.
+
+The eleven root views cover boards, swimlanes, lists, cards, comments, checklists,
+checklist items, custom fields, users, activities and attachments. The installer discovers
+registered physical tables and creates missing compatible collections, UUID metadata and
+unique ID indexes. It owns only its marked views/triggers and private model registry;
+existing normalized tables are refused, physical indexes retained and custom view triggers
+recreated. Installation is one transaction. Sparse updates preserve unedited fields and
+BSON metadata rather than materializing defaults into every document. Required fields,
+immutable IDs, nested attachment parents/WIP settings, dates and JSON remainder fields
+are checked. `_wl_source` is a write-only source for typed root cloning; child arrays
+are omitted until their new IDs can be mapped by the relation layer.
+
+`wl_storage(physical_table)` queries the host connection's actual document-column type
+through SQLite's metadata API. It is innocuous but not deterministic: FerretDB can upgrade
+TEXT to JSONB after installation. This avoids querying a pragma virtual table from CLI
+triggers with `trusted_schema` disabled.
+
+`tests/ferroot.py` runs isolated local FerretDB servers and the real SQL projections on
+both backends. Verified with a binary built from the inspected revision above, including
+fresh SQL-created collections readable/writable by FerretDB, Mongo edits visible in SQL,
+legacy TEXT after restart, typed unknown data, exact numeric bits, atomic failed edits,
+ID protection and ownership-safe reinstallation. These are root-storage tests; application
+HTTP authorization and relation workflows are not yet exercised against this adapter.
+
 ## Remaining before the checklist can be checked
 
-- Discover/create collections and their metadata safely, and select the shared database
-  without silently provisioning a separate normalized store.
-- Map every supported Welite model and child relation through live SQL views/triggers,
-  preserving unknown document fields, BSON types, parent arrays and collection indexes.
+- Map child relations through live SQL views/triggers, preserving parent arrays and
+  implementing required cascades, reference checks and account uniqueness rules.
 - Reconcile existing Meteor password/session formats and file-store metadata/bytes.
-- Verify real FerretDB reads after Welite writes and the reverse through HTTP/Mongo-wire
-  workflows, including restart, rollback, permissions and both Welite SQLite backends.
-- Verify fresh default-format installs and existing database transitions; resolve the
-  filename/8.3 policy and document target-specific limitations from actual tests.
+- Activate the adapter for fresh and existing stores without silently creating a separate
+  normalized database; adapt cloning/export and private authentication-table references.
+- Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
+  rollback with both Welite SQLite backends.
+- Resolve shared database filename/8.3 policy and document target-specific limitations
+  from actual tests. Never share a file through aliases with different WAL names.

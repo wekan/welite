@@ -1,13 +1,16 @@
 program sjsql;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
-uses SysUtils,Classes,fpjson,wldb;
+uses SysUtils,Classes,fpjson,wldb,wlferr;
 var Db:TWLDb;Sql,Line:string;Rows:TWLRows;OutputRows,Row:TJSONArray;i,j:Integer;
 begin
   SetMultiByteConversionCodePage(CP_UTF8);Db:=nil;OutputRows:=nil;
   try
     Db:=TWLDb.Create(ParamStr(1));Sql:='';
     while not EOF(Input) do begin Readln(Line);Sql:=Sql+Line+#10;end;
-    if ParamStr(2)='exec' then
+    if ParamStr(2)='install' then
+    begin if InstallRootModels(Db) then Writeln('ok') else Writeln('error');end
+    else if ParamStr(2)='script' then Writeln(RootModelScript(Db))
+    else if ParamStr(2)='exec' then
     begin if Db.Exec(Sql) then Writeln('ok') else Writeln('error');end
     else
     begin
