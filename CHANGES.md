@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Argon2 secret policy and token binding
+
+- Keep the default empty-secret Meteor policy and add optional operator-selected binary
+  `WELITE_ARGON_SECRET_FILE` input. Read 1–65,536 bytes without trimming; reject missing,
+  empty or oversized configured files. Unix reads require a private regular file,
+  reject symlinks/FIFOs and validate the opened inode; other targets use file sharing/ACLs.
+- Capture a credential binding from the same secret snapshot used to verify a password.
+  With a configured Argon2 secret, use a domain-separated HMAC fingerprint; otherwise
+  preserve existing SHA256 bindings. Recheck the current binding at token issuance and
+  validation, and remove rejected web/API credentials so observed rotation cannot revive
+  them after restoration. Never retry an empty secret or bcrypt fallback.
+- Verify exact secret bytes and HMAC markers against the official C reference/Python,
+  including NUL/high-bit/newline bytes, 64 KiB and malformed/private-file cases. Test
+  actual linked/CLI web/API login, rotation between proof and issuance, cross-process
+  bearer validation, missing/empty secret denial, durable revocation and bcrypt isolation.
+- Live FerretDB account verification preserves BSON; native/CLI HTTP and durable-token
+  crypto regressions pass. Secrets and their paths are not stored in account metadata.
+  Broader Mongo account/index/session policy remains in TODO.
+
 ## 2026-11-16 Legacy Argon2 compatibility
 
 - Add explicit v16 derivation alongside default v19. Include the selected version in

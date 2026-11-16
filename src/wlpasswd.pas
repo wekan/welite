@@ -1,22 +1,10 @@
 unit wlpasswd;
 
 {
-  WeKan-Lite — password hashing (PBKDF2-HMAC-SHA1, RTL-only, portable)
-
-  Replaces the placeholder "any non-empty password" check. Stored form (in
-  users.services_json under "password"):
-
-      pbkdf2_sha1$<iterations>$<saltHex>$<derivedKeyHex>
-
-  Legacy hashes use the portable RTL HMAC-SHA1 implementation. Meteor bcrypt
-  verification uses the portable wlbcrypt kernel over a SHA256 plaintext digest;
-  HashMeteorPassword returns a services.password JSON object. Argon2 v19 is verified
-  through a bounded PHC parser and portable derivation.
-
-  Salt/token entropy comes from wlentrop: OS random sources, or a configured one-use
-  SQLite stock for targets without a kernel random source. There is no Random fallback.
-
-  v0.1 reference skeleton.
+  Portable password credentials: new Meteor bcrypt objects, legacy PBKDF2 strings,
+  and bounded Argon2 v16/v19 verification over the SHA256 plaintext digest.
+  Optional Argon2 secret files bind both password proof and durable token validation.
+  Salt/token entropy comes from wlentrop; there is no weak random fallback.
 }
 
 {$mode objfpc}{$H+}
@@ -24,9 +12,9 @@ unit wlpasswd;
 interface
 
 uses
-  SysUtils,Classes,hmac,wlentrop,wlcrypt,wlbcrypt,fpjson,wlsjson,wlphc;
+  SysUtils,Classes,hmac,wlentrop,wlcrypt,wlbcrypt,fpjson,wlsjson,wlphc,wlsecret;
 
-// Hash a plaintext password -> "pbkdf2_sha1$iters$saltHex$dkHex".
+// Legacy fixture/import utility; new accounts use HashMeteorPassword.
 function HashPassword(const Plain: string): string;
 
 // Meteor services.password object, bcrypt(SHA256(plaintext)) with a fresh salt.
@@ -38,6 +26,12 @@ function NewAuthToken:string;
 // Verify legacy PBKDF2 or Meteor bcrypt/Argon2 JSON over SHA256(plaintext). False on mismatch
 // or malformed/empty stored value (so accounts with no real hash cannot be logged into).
 function VerifyPassword(const Plain, Stored: string): Boolean;
+
+// Return a binding captured with the same secret snapshot as password verification.
+function VerifyCredential(const Plain,Stored:string;out Reference:string):Boolean;
+// Token issuance/validation rechecks current secret policy; unavailable policy returns empty.
+function CredentialFingerprint(const Stored:string):string;
+function CredentialMatches(const Stored,Reference:string):Boolean;
 
 implementation
 
@@ -134,27 +128,65 @@ function HashMeteorPassword(const Plain:string):string;
 begin
   Result:='{"bcrypt":"'+BcryptHash(Sha256Hex(Plain),BcryptSalt(RandomBytes(16),10))+'"}';
 end;
-function VerifyPassword(const Plain,Stored:string):Boolean;
+function ArgonField(const Stored:string;out Hash:string):Boolean;
 var Password:TJSONObject;Value:TJSONData;Text:string;
 begin
-  Text:=Trim(Stored);
-  if (Text='') or (Text[1]<>'{') then Exit(VerifyLegacyPassword(Plain,Stored));
-  Result:=False;Password:=nil;
+  Result:=False;Hash:='';Text:=Trim(Stored);
+  if (Text='') or (Text[1]<>'{') then Exit;
+  Password:=ExactObject(Text);
   try
-    try
-      Password:=ExactObject(Text);Value:=Password.Find('argon2');
-      // Meteor chooses Argon2 first. Never accept a stale bcrypt fallback.
-      if (Value<>nil) and (Value.JSONType<>jtNull) then
-      begin
-        if Value.JSONType<>jtString then Exit;
-        if Value.AsString<>'' then
-        begin Result:=VerifyArgonPHC(Sha256Hex(Plain),Value.AsString,ArgonVerifyLimits);Exit;end;
-      end;
-      Value:=Password.Find('bcrypt');
-      if (Value=nil) or (Value.JSONType<>jtString) then Exit;
-      Result:=BcryptVerify(Sha256Hex(Plain),Value.AsString);
-    except Result:=False;end;
+    Value:=Password.Find('argon2');if (Value=nil) or (Value.JSONType=jtNull) then Exit;
+    if Value.JSONType<>jtString then raise Exception.Create('Invalid Argon2 field');
+    Hash:=Value.AsString;Result:=Hash<>'';
   finally Password.Free;end;
 end;
+function Fingerprint(const Stored:string;const Secret:RawByteString):string;
+begin
+  if Secret='' then Result:=Sha256Hex(Stored)
+  else Result:=Hmac256Hex(Secret,'welite-argon-secret-v1'+#0+Stored);
+end;
+function CredentialFingerprint(const Stored:string):string;
+var Hash:string;Secret:RawByteString;
+begin
+  Result:='';Secret:='';
+  try
+    try
+      if ArgonField(Stored,Hash) then Secret:=ArgonSecret;
+      Result:=Fingerprint(Stored,Secret);
+    except Result:='';end;
+  finally WipeSecret(Secret);end;
+end;
+function CredentialMatches(const Stored,Reference:string):Boolean;
+var Current:string;
+begin
+  Current:=CredentialFingerprint(Stored);
+  Result:=(Current<>'') and (Reference<>'') and ConstantEqual(Current,Reference);
+end;
+function VerifyCredential(const Plain,Stored:string;out Reference:string):Boolean;
+var Password:TJSONObject;Value:TJSONData;Text,Hash:string;Secret:RawByteString;
+begin
+  Result:=False;Reference:='';Password:=nil;Secret:='';Text:=Trim(Stored);
+  try
+    try
+      if ArgonField(Stored,Hash) then
+      begin
+        Secret:=ArgonSecret;
+        Result:=VerifyArgonPHC(Sha256Hex(Plain),Hash,ArgonVerifyLimits,Secret);
+      end
+      else if (Text='') or (Text[1]<>'{') then Result:=VerifyLegacyPassword(Plain,Stored)
+      else
+      begin
+        Password:=ExactObject(Text);Value:=Password.Find('bcrypt');
+        if (Value<>nil) and (Value.JSONType=jtString) then Result:=BcryptVerify(Sha256Hex(Plain),Value.AsString);
+      end;
+      // The proof and binding use the very same secret snapshot. Issuance checks
+      // this reference against current policy again before creating a token.
+      if Result then Reference:=Fingerprint(Stored,Secret);
+    except Result:=False;Reference:='';end;
+  finally Password.Free;WipeSecret(Secret);end;
+end;
+function VerifyPassword(const Plain,Stored:string):Boolean;
+var Reference:string;
+begin Result:=VerifyCredential(Plain,Stored,Reference);end;
 
 end.

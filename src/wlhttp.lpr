@@ -139,7 +139,7 @@ end;
 procedure SignInEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  Username, Password: string;
+  Username, Password,CredentialRef: string;
   Rows: TWLRows;
   S: TWLSession;
 begin
@@ -150,10 +150,10 @@ begin
     Username := Trim(aRequest.ContentFields.Values['username']);
     Password := aRequest.ContentFields.Values['password'];
     Rows := LoginAccount(T.Db,Username);
-    if (Length(Rows) > 0) and (Length(Rows[0]) >= 2) and VerifyPassword(Password, Rows[0][1]) then
+    if (Length(Rows) > 0) and (Length(Rows[0]) >= 2) and VerifyCredential(Password,Rows[0][1],CredentialRef) then
     begin
       S := CreateSession(T.Db, aRequest, Rows[0][0], Username,
-                         HashText(Rows[0][1]),30*24*60*60);
+                         CredentialRef,30*24*60*60);
       if S.SessionId='' then
       begin aResponse.Code:=500; aResponse.Content:='Could not create session'; aResponse.SendContent; Exit; end;
       aResponse.Code := 302;

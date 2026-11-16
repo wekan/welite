@@ -249,7 +249,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Argon2d/i/id memory processing now passes RFC/Go vectors with explicit kernel resource limits.
   Argon2 v19 PHC parsing, configurable verification budgets and live/HTTP logins now pass on both backends.
   Legacy v16/versionless Argon2 now passes official C-reference, live database and HTTP tests.
-  Remaining: Argon2 secret policy, Mongo account/index/session policy, typed custom-value and legacy
+  Optional private Argon2 secret files and secret-bound token issuance/revocation now pass C/HTTP/live tests.
+  Remaining: Mongo account/index/session policy, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

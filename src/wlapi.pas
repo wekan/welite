@@ -337,7 +337,7 @@ end;
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  Username, Password, Token,UserId: string;
+  Username, Password, Token,UserId,CredentialRef: string;
   R: TWLRows;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
@@ -346,12 +346,12 @@ begin
   Password := BodyField(aRequest, 'password');
 
   R := LoginAccount(T.Db,Username);
-  if (Length(R) = 0) or (Length(R[0]) < 2) or (not VerifyPassword(Password, R[0][1])) then
+  if (Length(R) = 0) or (Length(R[0]) < 2) or (not VerifyCredential(Password,R[0][1],CredentialRef)) then
   begin SendError(aResponse, 401, 'Incorrect username or password'); Exit; end;
   UserId := R[0][0];
 
   Token:=NewAuthToken;
-  if not IssueLoginToken(T.Db,UserId,Token,HashText(R[0][1]),'api',90*24*60*60) then
+  if not IssueLoginToken(T.Db,UserId,Token,CredentialRef,'api',90*24*60*60) then
   begin SendError(aResponse,500,'Could not create login token'); Exit; end;
 
   SendJson(aResponse, Format('{"id":%s,"token":%s,"tokenExpires":%s}',

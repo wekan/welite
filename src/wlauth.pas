@@ -248,7 +248,7 @@ begin
   if (Token='') or ((Kind<>'web') and (Kind<>'api')) or (TtlSeconds<1) then Exit;
   Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),'''') FROM users '+
     'WHERE id='+QuotedStr(UserId)+' AND COALESCE(loginDisabled,0)=0;');
-  if (Length(Rows)=0) or not ConstantEqual(HashText(Rows[0][0]),CredentialRef) then Exit;
+  if (Length(Rows)=0) or not CredentialMatches(Rows[0][0],CredentialRef) then Exit;
   Key:=TokenHash(Db,Token); TenantKey:=HashText(ExpandFileName(Db.Path));
   NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
   Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(Now),TtlSeconds));
@@ -302,8 +302,12 @@ begin
       ' AND m.credentialRef='+QuotedStr(Current.PasswordRef)+' AND t.hashedToken='+QuotedStr(TokenHash(Db,SessionId))+
       ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
       QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
-    if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) or
-      (HashText(Rows[0][2])<>Current.PasswordRef) then Exit;
+    if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) then Exit;
+    if not CredentialMatches(Rows[0][2],Current.PasswordRef) then
+    begin
+      Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,SessionId))+';');
+      SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;
+    end;
     if (Current.Ip<>ClientIp(ARequest)) or (Current.UserAgent<>RequestUserAgent(ARequest)) then Exit;
     NowTs:=DateTimeToUnix(Now,False);
     IdleSeconds:=StrToInt64Def(GetEnvironmentVariable('WELITE_SESSION_IDLE'),1800);
@@ -329,7 +333,7 @@ begin
     ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
     QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
   if Length(Rows)=0 then Exit;
-  if not ConstantEqual(HashText(Rows[0][1]),Rows[0][2]) then
+  if not CredentialMatches(Rows[0][1],Rows[0][2]) then
   begin Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';'); Exit; end;
   if Rows[0][3]='web' then
   begin

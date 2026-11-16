@@ -39,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
     env = dict(os.environ, WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'))
-    for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES']:env.pop(variable,None)
+    for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES','WELITE_ARGON_SECRET_FILE']:env.pop(variable,None)
     env.pop('WELITE_ENTROPY_FILE',None)  # Never consume an operator's stock in tests.
     if os.environ.get('WELITE_NO_OS_RNG')=='1':
         import secrets

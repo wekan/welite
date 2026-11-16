@@ -58,7 +58,7 @@ with tempfile.TemporaryDirectory(prefix='wlargon-',dir=os.environ['TMPDIR']) as 
         built=subprocess.run([os.environ.get('FPC','fpc'),*(['-Cr','-Co'] if checked else []),'-B','-Fu'+str(root/'src'),'-FU'+str(out),'-FE'+str(out),str(root/'tests/phc.lpr')],capture_output=True,text=True)
         assert built.returncode==0,built.stdout+built.stderr
         credential_env=dict(os.environ)
-        for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES']:credential_env.pop(variable,None)
+        for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES','WELITE_ARGON_SECRET_FILE']:credential_env.pop(variable,None)
         def verify(password,record,mode='raw',overrides=None):
             value=password if isinstance(password,bytes) else password.encode()
             return subprocess.check_output([str(out/'phc'),mode],input=value.hex()+'\n'+record+'\n',text=True,env=dict(credential_env,**(overrides or {})),timeout=30).strip()

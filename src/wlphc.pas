@@ -3,7 +3,7 @@ unit wlphc;
 interface
 uses SysUtils,wlargon,wlcrypt;
 function ArgonVerifyLimits:TArgonLimits;
-function VerifyArgonPHC(const Password,Stored:RawByteString;const Limits:TArgonLimits):Boolean;
+function VerifyArgonPHC(const Password,Stored:RawByteString;const Limits:TArgonLimits;const Secret:RawByteString=''):Boolean;
 implementation
 procedure Invalid;
 begin raise Exception.Create('Invalid Argon2 credential');end;
@@ -47,7 +47,7 @@ begin
   end;
   if (Bits>0) and ((Buffer and ((LongWord(1) shl Bits)-1))<>0) then Invalid;
 end;
-function VerifyArgonPHC(const Password,Stored:RawByteString;const Limits:TArgonLimits):Boolean;
+function VerifyArgonPHC(const Password,Stored:RawByteString;const Limits:TArgonLimits;const Secret:RawByteString):Boolean;
 var Parts,Params,Pair:TStringArray;Mode,i,Count,ParamField:Integer;M,T,P,Version:LongWord;HaveM,HaveT,HaveP,HaveData:Boolean;
   Salt,Data,Expected,Actual:RawByteString;
 begin
@@ -82,7 +82,7 @@ begin
       if not (HaveM and HaveT and HaveP) then Invalid;
       if (M>Limits.MemoryKiB) or (T>Limits.Iterations) or (P>Limits.Lanes) then Invalid;
       Salt:=Base64(Parts[ParamField+1],65536);Expected:=Base64(Parts[ParamField+2],Limits.KeyBytes);
-      Actual:=ArgonKey(Mode,Password,Salt,'',Data,T,M,P,Length(Expected),Limits,Version);
+      Actual:=ArgonKey(Mode,Password,Salt,Secret,Data,T,M,P,Length(Expected),Limits,Version);
       Result:=ConstantEqual(Actual,Expected);
     except Result:=False;end;
   finally if Actual<>'' then begin UniqueString(Actual);FillChar(Actual[1],Length(Actual),0);end;end;

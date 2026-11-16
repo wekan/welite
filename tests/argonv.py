@@ -2,6 +2,7 @@
 import base64
 import ctypes as c
 import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -39,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='wlargv-',dir=os.environ['TMPDIR']) as d
             actual=subprocess.check_output([str(out/'argon'),str(mode),str(t),str(m),str(p),str(n),str(version)],input='\n'.join(v.hex() for v in [password,salt,secret,data])+'\n',text=True,timeout=30).strip()
             assert actual==expected,(checked,args,actual,expected)
         settings=dict(os.environ)
-        for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES']:settings.pop(variable,None)
+        for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES','WELITE_ARGON_SECRET_FILE']:settings.pop(variable,None)
         def verify(password,record,mode='raw'):
             return subprocess.check_output([str(out/'phc'),mode],input=password.hex()+'\n'+record+'\n',env=settings,text=True,timeout=30).strip()
         def b64(value):return base64.b64encode(value).decode().rstrip('=')
@@ -60,6 +61,47 @@ with tempfile.TemporaryDirectory(prefix='wlargv-',dir=os.environ['TMPDIR']) as d
         for version in [0,15,17,20,255,256,4294967295]:
             denied=subprocess.check_output([str(out/'argon'),'2','1','32','1','32',str(version)],input='70\n3132333435363738\n\n\n',text=True,timeout=5).strip()
             assert denied=='error',version
+        secret=b'operator\0secret\n';secret_file=tmp/'pepper.key';secret_file.write_bytes(secret);secret_file.chmod(0o600)
+        for version in [16,19]:
+            tag=bytes.fromhex(oracle(2,digest,bytes(range(16)),secret,b'',2,32,1,32,version))
+            phc=f'$argon2id$v={version}$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$'+b64(tag)
+            envelope=json.dumps(dict(argon2=phc))
+            assert verify(plaintext.encode(),envelope,'meteor')=='no'
+            settings['WELITE_ARGON_SECRET_FILE']=str(secret_file)
+            assert verify(plaintext.encode(),envelope,'meteor')=='yes'
+            expected_ref=hmac.new(secret,b'welite-argon-secret-v1\0'+envelope.encode(),hashlib.sha256).hexdigest()
+            assert verify(plaintext.encode(),envelope,'proof')==expected_ref
+            secret_file.write_bytes(b'wrong')
+            assert verify(plaintext.encode(),envelope,'meteor')=='no'
+            assert verify(plaintext.encode(),envelope,'fingerprint')!=expected_ref
+            secret_file.write_bytes(b'')
+            assert verify(plaintext.encode(),envelope,'meteor')=='no'
+            assert verify(plaintext.encode(),envelope,'fingerprint')=='no'
+            secret_file.write_bytes(secret);secret_file.chmod(0o644)
+            if os.name=='posix':assert verify(plaintext.encode(),envelope,'meteor')=='no'
+            secret_file.chmod(0o600)
+            if os.name=='posix':
+                link=tmp/'link.key';link.symlink_to(secret_file);settings['WELITE_ARGON_SECRET_FILE']=str(link)
+                assert verify(plaintext.encode(),envelope,'meteor')=='no'
+                link.unlink()
+                fifo=tmp/'fifo.key';os.mkfifo(fifo);settings['WELITE_ARGON_SECRET_FILE']=str(fifo)
+                assert verify(plaintext.encode(),envelope,'meteor')=='no'
+                fifo.unlink()
+            settings['WELITE_ARGON_SECRET_FILE']=str(tmp/'missing.key')
+            assert verify(plaintext.encode(),envelope,'meteor')=='no'
+            secret_file.write_bytes(b'x'*65537);settings['WELITE_ARGON_SECRET_FILE']=str(secret_file)
+            assert verify(plaintext.encode(),envelope,'meteor')=='no'
+            secret_file.write_bytes(secret);settings.pop('WELITE_ARGON_SECRET_FILE')
+        for binary_secret in [b'\0\xff\x80\n',b'x'*65536]:
+            tag=bytes.fromhex(oracle(2,digest,bytes(range(16)),binary_secret,b'',2,32,1,32,19))
+            envelope=json.dumps(dict(argon2='$argon2id$v=19$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$'+b64(tag)))
+            secret_file.write_bytes(binary_secret);settings['WELITE_ARGON_SECRET_FILE']=str(secret_file)
+            assert verify(plaintext.encode(),envelope,'meteor')=='yes'
+        secret_file.write_bytes(secret);settings.pop('WELITE_ARGON_SECRET_FILE')
+        # Fixed independent fixture for the actual HTTP/token lifecycle test.
+        tag=bytes.fromhex(oracle(2,hashlib.sha256(b'test-password').hexdigest().encode(),bytes(range(16)),secret,b'',2,32,1,32,19))
+        secret_fixture='$argon2id$v=19$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$'+b64(tag)
+        assert secret_fixture=='$argon2id$v=19$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$YP4w4kIb5cnL7j3QC7YWdgIgvtjmj5Q22x+qTOqyF+w'
         tag=bytes.fromhex(oracle(2,hashlib.sha256(b'test-password').hexdigest().encode(),bytes(range(16)),b'',b'',2,32,1,32,16))
         fixture='$argon2id$v=16$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$'+b64(tag)
         assert fixture=='$argon2id$v=16$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$shmop4+uHY9Bws9kfsVWl7IO3PvjjDUJpB4nB4wjPno'

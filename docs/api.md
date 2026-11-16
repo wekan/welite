@@ -34,8 +34,8 @@ still verify; login does not rewrite them. Accounts with malformed/no password c
 cannot log in. Existing Argon2 v16/v19 d/i/id records also verify over the SHA256 plaintext
 digest, including encoded associated data. Argon2 takes precedence over bcrypt; failures
 never retry an older bcrypt value. Verification budgets are documented in
-[the adapter notes](ferret.md#argon2-credential-verification). Versionless legacy records use v16; unknown versions are denied. Out-of-band secrets
-remain unsupported. Shared Meteor resume-token work is in progress.
+[the adapter notes](ferret.md#argon2-credential-verification). Versionless legacy records use v16; unknown versions are denied. Optional out-of-band secrets come from `WELITE_ARGON_SECRET_FILE`; configured-file
+failures deny Argon2 login. See the adapter notes for private-file and token-binding policy. Shared Meteor resume-token work is in progress.
 
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by

@@ -113,7 +113,7 @@ normal/checked builds, including associated data, long UTF-8/NUL input, malforme
 duplicate records, canonical base64, structural limits, lowered/raised operator budgets
 and stale-bcrypt refusal. `admin.py` tests actual Argon2 web/API logins and revocation
 on each SQLite backend; `ferroot.py` checks a Mongo-created Argon2 account without BSON
-changes. Legacy v16 is covered by `argonv.py`; out-of-band secret policy remains separate work.
+changes. Legacy v16 and secret policy are covered by `argonv.py` and `secret.py`.
 
 `python3 tests/argonv.py` builds the official P-H-C/phc-winner-argon2 C reference only
 as a temporary test oracle. Set `ARGON2_SRC` to an unpacked official source checkout;
@@ -121,3 +121,11 @@ verified revision `f57e61e19229e23c4445b85494dbf7c07de721cb`. A C compiler is re
 Normal/checked Pascal builds cover d/i/id v16/v19, secret/associated data, lanes/passes,
 rounding, explicit/versionless PHC and unsupported-version denial. Actual legacy
 web/API and live FerretDB account tests run through `admin.py` and `ferroot.py`.
+
+`python3 tests/secret.py` checks actual native/CLI secret-backed Argon2 web/API login,
+independent credential HMAC markers, rotation between password proof and token issuance,
+missing/empty secret denial, cross-process token validation and permanent revocation
+after observed failure. Bcrypt accounts stay usable under a broken Argon2 file policy.
+`argonv.py` additionally compares binary and 64 KiB file secrets with the official C
+reference, private-file rejection and Python HMAC; `ferroot.py` checks a secret-backed
+Mongo account without modifying BSON. Test runners discard operator secret settings.

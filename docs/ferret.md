@@ -283,7 +283,7 @@ and `docs/gocrypt.txt` license.
 
 The credential verifier uses these kernels as described below. Default derivation is
 v19; selecting v16 changes both the parameter hash and subsequent-pass overwrite/XOR
-rule. Out-of-band secret policy remains a separate compatibility gate.
+rule. Optional out-of-band secret policy is documented below.
 
 ## Argon2 credential verification
 
@@ -327,15 +327,46 @@ revision: `f57e61e19229e23c4445b85494dbf7c07de721cb`. The test covers d/i/id, bo
 secret/associated data, lane/pass/rounding boundaries, explicit/versionless envelopes,
 wrong version/tag combinations and normal/checked builds. Native/CLI HTTP and live
 FerretDB tests verify both legacy encodings without rewriting credentials. Unknown
-versions remain denied. Out-of-band secrets are still unsupported at login and tracked
-in TODO; the raw kernel already supports them.
+versions remain denied. Optional operator secret files are supported as described below.
+
+## Optional Argon2 secrets and credential binding
+
+The default secret is empty, matching standard Meteor accounts-password usage.
+`WELITE_ARGON_SECRET_FILE` selects a binary secret for **all Argon2 credentials in the
+process**, including all its tenants. This is explicit policy: the verifier does not
+try empty/alternate secrets after failure. Bcrypt and legacy PBKDF2 remain independent
+of this setting. New-account generation remains compatible bcrypt.
+
+`wlsecret.pas` reads 1–65,536 exact bytes with no newline stripping or text conversion.
+Missing/empty/oversized configured files cause denial. On Unix the file must be regular
+with no group/world permission bits; symlinks and FIFOs are rejected and the opened inode
+is checked against the inspected path. Other targets use read-only shared-file access
+and rely on operator ACLs; those targets remain in the platform verification gate.
+Use a private short filename such as `pepper.key` for strict runtime layouts. Rotate
+files atomically so readers receive one coherent version. No secret is generated,
+transmitted or saved into SQLite by this setting.
+
+`VerifyCredential` returns a binding captured from the same bytes used in verification.
+For Argon2 with a configured secret it is HMAC-SHA256 over the stored password object
+with a dedicated domain prefix. Without a secret it retains the previous SHA256 marker.
+Token issuance rechecks current policy, refusing rotation between proof and issuance.
+Web/API validation also rechecks it: changed/unavailable secrets deny access, and failed
+credential validation removes the token (plus the in-memory web context) so an observed
+failure cannot revive after restoring the prior file. This is request-time validation;
+there is no filesystem watcher or historical key registry. Secret fingerprints are
+server-side credential bindings, not raw secrets or an alternate login mechanism.
+
+`argonv.py` checks binary/64 KiB secrets and fingerprints against the official C oracle
+and Python HMAC, including private-mode, missing/empty/oversized, symlink and FIFO cases.
+`secret.py` runs actual native/CLI HTTP login, issuance races, cross-process bearer checks,
+revocation/restoration and unaffected bcrypt login. `ferroot.py` verifies a secret-backed
+Mongo account without changing its BSON. Existing HTTP/crypto regressions still pass.
 
 ## Remaining before the checklist can be checked
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Complete Argon2 out-of-band secret policy; reconcile Meteor session
-  formats and file-store metadata/bytes.
+- Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
