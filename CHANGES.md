@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Validate API relation IDs and author attribution
+
+- Validate card label/member/assignee collections before creation or edits. Labels must
+  belong to the board; user targets must be enabled active board members. Arrays and
+  comma-separated strings support deduplication and explicit clearing.
+- Apply card text/relations in one transaction and report write failures. Invalid mixed
+  collections or SQL errors leave both existing cards and attempted new cards unchanged.
+- Validate path-based member/assignee additions too; deletion remains available to remove
+  stale associations. Ordinary editors can attribute cards/comments to themselves; tenant
+  admins may explicitly attribute them to an enabled member of the same board.
+- Reject malformed/non-object JSON before API writes. Verified foreign/missing/disabled/
+  inactive targets, author forgery, clear/dedup formats, malformed JSON and forced SQL
+  failures against both SQLite backends. Disabled-login/session audit remains in TODO.
+
 ## 2026-11-16 Deep selected-item cloning
 
 - Enable Clone for selected cards, lists and swimlanes. Coalesce overlapping selections,

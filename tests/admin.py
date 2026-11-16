@@ -6,6 +6,7 @@ from layout import run as check_layout
 from imports import run as check_imports
 from actions import run as check_actions
 from clone import run as check_clone
+from bodyids import run as check_body_ids
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -214,6 +215,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             check_imports(request,db,admin)
             if os.environ.get('WELITE_UI') == '1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/imports.js'),'http://localhost:'+str(port),admin],check=True)
+            check_body_ids(request,db,admin,member)
             check_clone(request,db,admin)
             check_actions(request,db,admin)
             if os.environ.get('WELITE_UI') == '1':

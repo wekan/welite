@@ -225,7 +225,8 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Implement deep selected-item Clone with remapped child IDs and attachment copies.
 - [x] Add shared board read/write checks, validate move selections and safe return URLs.
 - [x] Validate API child routes against their board/parent chain and block unrestricted assignment roles.
-- [ ] Validate API body label/member/assignee/author IDs and audit disabled-login/session behavior.
+- [x] Validate API body label/member/assignee/author IDs before atomic writes.
+- [ ] Audit and fix disabled-login/session behavior.
 - [x] Add the board minimap, coordinates and occupied/current-position indicators.
 - [ ] Add optional drag/drop and multiple selection using the same move endpoint.
 - [ ] Align runtime tenant/file paths with DOS 8.3 and the requested Weddy layout.

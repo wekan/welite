@@ -101,3 +101,20 @@ SQLite DB.
   import/export, label edit/delete, card move, attachment
   copy/move + board backgrounds + S3/MinIO storage backend. Real password hashing and per-board
   authorization are done.
+
+## Relation IDs and authors
+
+Card creation and card edits accept `labelIds`, `members`, and `assignees` as JSON arrays
+or comma-separated strings. Explicit `[]` or an empty string clears the given relation;
+omitting a field preserves it. Duplicate IDs are stored once. All collections validate
+before the card and its relations commit in one transaction.
+
+Labels belong to the route board. Member/assignee targets must be enabled users with
+active membership on that board; the path-based add endpoints use the same rule. Removal
+can clean up a user whose membership is no longer active.
+
+An omitted `authorId` means the acting user. Ordinary editors may specify themselves.
+Tenant administrators may attribute a card/comment to another enabled active member of
+that same board, supporting controlled imports. Invalid attribution is rejected before
+creation. Malformed JSON and invalid relation collections return 400; forbidden author
+attribution returns 403; database write failures return 500 with no partial card change.

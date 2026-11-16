@@ -110,12 +110,25 @@ begin
   SendJson(aResponse, Format('{"error":%d,"reason":%s}', [Code, AnsiQuotedStr(Reason, '"')]), Code);
 end;
 
+function ApiBodyValid(Request:TRequest):Boolean;
+var D:TJSONData;
+begin
+  Result:=True;
+  if (Request.Method='GET') or (Request.Content='') or
+    (Pos('application/json',LowerCase(Request.ContentType))<>1) then Exit;
+  D:=nil;
+  try
+    try D:=GetJSON(Request.Content); Result:=D is TJSONObject; except Result:=False; end;
+  finally D.Free; end;
+end;
+
 // Resolve the tenant for an API request, or send a JSON error. Static, no web session needed.
 function ApiTenant(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant): Boolean;
 begin
   Result := ResolveTenant(aRequest, T) and TenantOpen(T);
-  if not Result then
-    SendError(aResponse, 404, 'Unknown domain');
+  if not Result then SendError(aResponse,404,'Unknown domain')
+  else if not ApiBodyValid(aRequest) then
+  begin Result:=False; SendError(aResponse,400,'Expected a valid JSON object'); end;
 end;
 
 // Bearer token -> userId via login_tokens; sends 401 JSON if missing/invalid.
@@ -145,7 +158,7 @@ end;
 function IsSiteAdmin(Db: TWLDb; const UserId: string): Boolean;
 var R: TWLRows;
 begin
-  R := Db.Query(Format('SELECT isAdmin FROM users WHERE id=%s LIMIT 1;', [QuotedStr(UserId)]));
+  R := Db.Query(Format('SELECT isAdmin FROM users WHERE id=%s AND COALESCE(loginDisabled,0)=0 LIMIT 1;', [QuotedStr(UserId)]));
   Result := (Length(R) > 0) and (Length(R[0]) > 0) and (R[0][0] = '1');
 end;
 
@@ -210,13 +223,102 @@ var D: TJSONData;
 begin
   Result := aRequest.ContentFields.Values[Name];
   if Result <> '' then Exit;
-  if (aRequest.Content <> '') and (aRequest.Content[1] = '{') then
+  if aRequest.Content<>'' then
     try
       D := GetJSON(aRequest.Content);
       try
         if D is TJSONObject then Result := TJSONObject(D).Get(Name, '');
       finally D.Free; end;
     except end;
+end;
+
+function BodyHasField(Request:TRequest; const Name:string):Boolean;
+var D:TJSONData;
+begin
+  Result:=Request.ContentFields.IndexOfName(Name)>=0;
+  if Result or (Request.Content='') then Exit;
+  D:=nil;
+  try
+    try D:=GetJSON(Request.Content); Result:=(D is TJSONObject) and (TJSONObject(D).Find(Name)<>nil); except Result:=False; end;
+  finally D.Free; end;
+end;
+function EnabledBoardMember(Db:TWLDb; const BoardId,TargetId:string):Boolean;
+begin
+  Result:=Length(Db.Query('SELECT u.id FROM users u JOIN board_members m ON m.userId=u.id '+
+    'WHERE u.id='+QuotedStr(TargetId)+' AND COALESCE(u.loginDisabled,0)=0 AND m.boardId='+QuotedStr(BoardId)+
+    ' AND m.isActive=1;'))>0;
+end;
+function ValidAuthor(Db:TWLDb; const BoardId,Actor,Author:string):Boolean;
+begin
+  Result:=False;
+  if Length(Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Author)+' AND COALESCE(loginDisabled,0)=0;'))=0 then Exit;
+  if Actor=Author then Exit(True);
+  Result:=IsSiteAdmin(Db,Actor) and EnabledBoardMember(Db,BoardId,Author);
+end;
+function ReadBodyIds(Request:TRequest; const Name:string; Ids:TStrings):Boolean;
+var D,V:TJSONData; A:TJSONArray; i:Integer; Text,Id:string; Parts:TStringArray;
+begin
+  Result:=False; D:=nil; Text:='';
+  try
+    try
+      if Request.ContentFields.IndexOfName(Name)>=0 then Text:=Request.ContentFields.Values[Name]
+      else
+      begin
+        D:=GetJSON(Request.Content);
+        if not (D is TJSONObject) then Exit;
+        V:=TJSONObject(D).Find(Name); if V=nil then Exit;
+        if V is TJSONArray then
+        begin
+          A:=TJSONArray(V);
+          for i:=0 to A.Count-1 do
+          begin
+            if A.Items[i].JSONType<>jtString then Exit;
+            Id:=Trim(A.Items[i].AsString); if Id='' then Exit;
+            if Ids.IndexOf(Id)<0 then Ids.Add(Id);
+          end;
+          Exit(True);
+        end;
+        if V.JSONType<>jtString then Exit;
+        Text:=V.AsString;
+      end;
+      if Trim(Text)='' then Exit(True);
+      Parts:=Text.Split([',']);
+      for i:=0 to High(Parts) do
+      begin
+        Id:=Trim(Parts[i]); if Id='' then Exit;
+        if Ids.IndexOf(Id)<0 then Ids.Add(Id);
+      end;
+      Result:=True;
+    except Result:=False; end;
+  finally D.Free; end;
+end;
+// Build relation changes only after validating all identifiers. The caller executes these
+// changes with the card write in one transaction, so invalid data cannot partially edit it.
+function CardRelationSql(const T:TWLTenant; Request:TRequest; Response:TResponse;
+  const BoardId,CardId:string; out Sql:string):Boolean;
+const Fields:array[0..2] of string=('labelIds','members','assignees');
+  Tables:array[0..2] of string=('card_labels','card_members','card_assignees');
+var Ids:TStringList; i,j:Integer; Column:string;
+begin
+  Result:=False; Sql:=''; Ids:=TStringList.Create; Ids.CaseSensitive:=True;
+  try
+    for i:=0 to High(Fields) do if BodyHasField(Request,Fields[i]) then
+    begin
+      Ids.Clear;
+      if not ReadBodyIds(Request,Fields[i],Ids) then
+      begin SendError(Response,400,'Expected an ID array or comma-separated string'); Exit; end;
+      if i=0 then Column:='labelId' else Column:='userId';
+      for j:=0 to Ids.Count-1 do
+        if ((i=0) and (Length(T.Db.Query('SELECT id FROM board_labels WHERE boardId='+QuotedStr(BoardId)+
+          ' AND id='+QuotedStr(Ids[j])+';'))=0)) or
+          ((i>0) and not EnabledBoardMember(T.Db,BoardId,Ids[j])) then
+        begin SendError(Response,400,'ID does not belong to an enabled board member or board label'); Exit; end;
+      Sql:=Sql+'DELETE FROM '+Tables[i]+' WHERE cardId='+QuotedStr(CardId)+'; ';
+      for j:=0 to Ids.Count-1 do Sql:=Sql+'INSERT INTO '+Tables[i]+'(cardId,'+Column+') VALUES('+
+        QuotedStr(CardId)+','+QuotedStr(Ids[j])+'); ';
+    end;
+    Result:=True;
+  finally Ids.Free; end;
 end;
 
 // ---- rows -> JSON array of {_id,title} ---------------------------------------------------
@@ -617,7 +719,7 @@ begin
 end;
 
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, ListId, Id, Author, Title, Descr, Swimlane: string;
+var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations:string;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -626,6 +728,8 @@ begin
   BoardId  := aRequest.RouteParams['boardId'];
   ListId   := aRequest.RouteParams['listId'];
   Author   := BodyField(aRequest, 'authorId'); if Author = '' then Author := UserId;
+  if not ValidAuthor(T.Db,BoardId,UserId,Author) then
+  begin SendError(aResponse,403,'Invalid author attribution'); Exit; end;
   Title    := BodyField(aRequest, 'title');
   Descr    := BodyField(aRequest, 'description');
   Swimlane := BodyField(aRequest, 'swimlaneId');
@@ -635,13 +739,15 @@ begin
     ' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(Swimlane)+');'))=0) then
   begin SendError(aResponse,400,'List is in another swimlane'); Exit; end;
   Id := NewId;
-  T.Db.Exec(Format(
+  if not CardRelationSql(T,aRequest,aResponse,BoardId,Id,Relations) then Exit;
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+Format(
     'INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,' +
     'dateLastActivity,createdAt,modifiedAt,sort) ' +
     'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0);',
     [QuotedStr(Id), QuotedStr(BoardId), QuotedStr(ListId), QuotedStr(Swimlane),
      QuotedStr(Title), QuotedStr(Descr), QuotedStr(Author),
-     QuotedStr(NowIso), QuotedStr(NowIso), QuotedStr(NowIso)]));
+     QuotedStr(NowIso),QuotedStr(NowIso),QuotedStr(NowIso)])+Relations+' COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
 end;
 
@@ -697,37 +803,22 @@ begin
 end;
 
 // PUT card — update any of title/description/color and replace labelIds if given.
-procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);
-var
-  T: TWLTenant; UserId, CardId, Title, Descr, Color, LabelIds, Sets: string;
-  Parts: TStringArray; i: Integer;
+procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
+var T:TWLTenant; UserId,CardId,Sets,Relations:string;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  CardId := aRequest.RouteParams['cardId'];
-
-  Title := BodyField(aRequest, 'title');
-  Descr := BodyField(aRequest, 'description');
-  Color := BodyField(aRequest, 'color');
-  Sets  := 'modifiedAt=' + QuotedStr(NowIso) + ', dateLastActivity=' + QuotedStr(NowIso);
-  if Title <> '' then Sets := Sets + ', title=' + QuotedStr(Title);
-  if Descr <> '' then Sets := Sets + ', description=' + QuotedStr(Descr);
-  if Color <> '' then Sets := Sets + ', color=' + QuotedStr(Color);
-  T.Db.Exec(Format('UPDATE cards SET %s WHERE id=%s;', [Sets, QuotedStr(CardId)]));
-
-  LabelIds := BodyField(aRequest, 'labelIds');
-  if LabelIds <> '' then
-  begin
-    T.Db.Exec(Format('DELETE FROM card_labels WHERE cardId=%s;', [QuotedStr(CardId)]));
-    Parts := StringReplace(LabelIds, ' ', '', [rfReplaceAll]).Split([',']);
-    for i := 0 to High(Parts) do
-      if Parts[i] <> '' then
-        T.Db.Exec(Format('INSERT OR IGNORE INTO card_labels(cardId,labelId) VALUES(%s,%s);',
-          [QuotedStr(CardId), QuotedStr(Parts[i])]));
-  end;
-
-  SendCardById(aResponse, T.Db, CardId);
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId) then Exit;
+  CardId:=aRequest.RouteParams['cardId'];
+  if not CardRelationSql(T,aRequest,aResponse,aRequest.RouteParams['boardId'],CardId,Relations) then Exit;
+  Sets:='modifiedAt='+QuotedStr(NowIso)+',dateLastActivity='+QuotedStr(NowIso);
+  if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
+  if BodyHasField(aRequest,'description') then Sets:=Sets+',description='+QuotedStr(BodyField(aRequest,'description'));
+  if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET '+Sets+' WHERE id='+QuotedStr(CardId)+'; '+
+    Relations+' COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not edit card'); Exit; end;
+  SendCardById(aResponse,T.Db,CardId);
 end;
 
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);
@@ -900,6 +991,8 @@ begin
   if aRequest.Method = 'POST' then
   begin
     Author := BodyField(aRequest, 'authorId'); if Author = '' then Author := UserId;
+    if not ValidAuthor(T.Db,BoardId,UserId,Author) then
+    begin SendError(aResponse,403,'Invalid author attribution'); Exit; end;
     Text1  := BodyField(aRequest, 'comment');
     Id := NewId;
     T.Db.Exec(Format(
@@ -951,38 +1044,44 @@ end;
 
 // POST add / DELETE remove a card member (userId in the path).
 procedure ApiCardMember(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, MemberId: string;
+var T: TWLTenant; UserId, CardId, MemberId:string; Ok:Boolean;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   CardId := aRequest.RouteParams['cardId'];
   MemberId := aRequest.RouteParams['member'];
+  if (aRequest.Method<>'DELETE') and not EnabledBoardMember(T.Db,aRequest.RouteParams['boardId'],MemberId) then
+  begin SendError(aResponse,400,'Target is not an enabled board member'); Exit; end;
   if aRequest.Method = 'DELETE' then
-    T.Db.Exec(Format('DELETE FROM card_members WHERE cardId=%s AND userId=%s;',
+    Ok:=T.Db.Exec(Format('DELETE FROM card_members WHERE cardId=%s AND userId=%s;',
       [QuotedStr(CardId), QuotedStr(MemberId)]))
   else
-    T.Db.Exec(Format('INSERT OR IGNORE INTO card_members(cardId,userId) VALUES(%s,%s);',
+    Ok:=T.Db.Exec(Format('INSERT OR IGNORE INTO card_members(cardId,userId) VALUES(%s,%s);',
       [QuotedStr(CardId), QuotedStr(MemberId)]));
-  SendCardById(aResponse, T.Db, CardId);
+  if not Ok then begin SendError(aResponse,500,'Could not update card membership'); Exit; end;
+  SendCardById(aResponse,T.Db,CardId);
 end;
 
 // POST add / DELETE remove a card assignee (userId in the path).
 procedure ApiCardAssignee(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, AssigneeId: string;
+var T: TWLTenant; UserId, CardId, AssigneeId:string; Ok:Boolean;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   CardId := aRequest.RouteParams['cardId'];
   AssigneeId := aRequest.RouteParams['assignee'];
+  if (aRequest.Method<>'DELETE') and not EnabledBoardMember(T.Db,aRequest.RouteParams['boardId'],AssigneeId) then
+  begin SendError(aResponse,400,'Target is not an enabled board member'); Exit; end;
   if aRequest.Method = 'DELETE' then
-    T.Db.Exec(Format('DELETE FROM card_assignees WHERE cardId=%s AND userId=%s;',
+    Ok:=T.Db.Exec(Format('DELETE FROM card_assignees WHERE cardId=%s AND userId=%s;',
       [QuotedStr(CardId), QuotedStr(AssigneeId)]))
   else
-    T.Db.Exec(Format('INSERT OR IGNORE INTO card_assignees(cardId,userId) VALUES(%s,%s);',
+    Ok:=T.Db.Exec(Format('INSERT OR IGNORE INTO card_assignees(cardId,userId) VALUES(%s,%s);',
       [QuotedStr(CardId), QuotedStr(AssigneeId)]));
-  SendCardById(aResponse, T.Db, CardId);
+  if not Ok then begin SendError(aResponse,500,'Could not update card membership'); Exit; end;
+  SendCardById(aResponse,T.Db,CardId);
 end;
 
 // POST card archive — archives by default; body isArchive=false unarchives.
