@@ -26,6 +26,10 @@ uses
 // True when the session's user is a Global Admin (users.isAdmin = 1) in the given tenant db.
 function IsGlobalAdmin(Db: TWLDb; const S: TWLSession): Boolean;
 
+// Shared tenant-local administrator gate for Admin Panel and Designer endpoints.
+function RequireGlobalAdmin(aRequest: TRequest; aResponse: TResponse;
+  out T: TWLTenant; out S: TWLSession): Boolean;
+
 procedure AdminIndex(aRequest: TRequest; aResponse: TResponse);     // GET  /admin
 procedure AdminDomains(aRequest: TRequest; aResponse: TResponse);   // GET/POST /admin/domains
 procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST /admin/people
@@ -54,7 +58,7 @@ var Rows: TWLRows;
 begin
   Result := False;
   if (Db = nil) or (S.UserId = '') then Exit;
-  Rows := Db.Query(Format('SELECT isAdmin FROM users WHERE id=%s LIMIT 1;',
+  Rows := Db.Query(Format('SELECT isAdmin FROM users WHERE id=%s AND loginDisabled=0 LIMIT 1;',
                           [QuotedStr(S.UserId)]));
   Result := (Length(Rows) > 0) and (Length(Rows[0]) > 0) and (Rows[0][0] = '1');
 end;
@@ -70,8 +74,7 @@ begin
     aResponse.Code := 404; aResponse.ContentType := 'text/plain';
     aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
   end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
-  if S.UserId = '' then
+  if not ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
   begin
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', '/sign-in');

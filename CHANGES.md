@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Require administrator permissions throughout Designer
+
+- Guarded every Designer listing, editor, import and export endpoint with the shared
+  tenant-local administrator gate. Mutations also require their action token.
+- The gate now checks session validation's Boolean result, so revoked tokens and wrong
+  client bindings cannot reuse residual session fields. Disabled users cannot administer.
+- Verified all eight endpoints over HTTP with no cookies: anonymous, normal user,
+  invalid session, mismatched client, administrator, missing action token, demotion,
+  disabled account and revoked token cases (`tests/admin.py`).
+- Recorded the remaining distinction between reserved-host Global Admin domain management
+  and tenant-local administration in `TODO.md`; this step only secures Designer access.
+
 ## 2026-11-16 Move lists across swimlanes
 
 - Implemented up/down list movement to adjacent active swimlanes on the same board,

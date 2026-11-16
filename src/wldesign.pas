@@ -102,7 +102,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);    // POS
 implementation
 
 uses
-  DateUtils, StrUtils;
+  DateUtils, StrUtils, wladmin;
 
 var
   DataViews: TStringList = nil;   // binding -> TDataViewRenderer (as Pointer)
@@ -799,12 +799,13 @@ begin
 end;
 
 // ------------------------------------------------------------------ editor endpoints
-// NOTE: each endpoint must (1) ResolveTenant + TenantOpen, (2) ValidateSession, (3) require the
-// Domain Global Admin role, and (4) on POST, VerifyActionToken before mutating. The skeleton
-// below shows the grid editor render and a move handler; auth wiring is summarized, not inlined.
+// Every editor/import/export endpoint uses the shared tenant-local administrator gate.
+// Mutations additionally consume their action token before writing.
 
 procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession;
 begin
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
   // GET /designer — list pages (builtin + custom) with Edit/Preview/Disable/Delete buttons
   // and an "Add page" form (url,title,cols,doctype). All form-driven, no JS. TODO.
   aResponse.Content := Page32('Designer', '<h1>Designer</h1><p>Page list — TODO.</p>');
@@ -820,12 +821,7 @@ var
   r, c, i, MaxRow, ViewCol: Integer;
   Rtl: Boolean;
 begin
-  // Auth: resolve tenant, validate session, require Domain Global Admin (else 404). [summarized]
-  if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
-  begin
-    aResponse.Code := 404; aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
-  end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
 
   PageId := aRequest.QueryFields.Values['id'];
   // load the page by id (helper omitted; reuse LoadPageByUrl pattern keyed on id). TODO.
@@ -889,11 +885,7 @@ var
   T: TWLTenant; S: TWLSession;
   WidgetId, Dir, SetClause: string;
 begin
-  if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
-  begin
-    aResponse.Code := 404; aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
-  end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/widget/move') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
@@ -922,7 +914,13 @@ begin
 end;
 
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession;
 begin
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not VerifyActionToken(aRequest, S, 'designer:add') then
+  begin
+    aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+  end;
   // Create/update a page_widgets row from the add/edit form (type,label,name,target,binding,
   // row,col,rowspan,colspan,sort,required). Validate token first. TODO.
   aResponse.Code := 302;
@@ -935,12 +933,7 @@ procedure DesignerPageExport(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; P: TPage;
 begin
-  if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
-  begin
-    aResponse.Code := 404; aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
-  end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
-  // TODO: require Domain Global Admin
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
   if not LoadPageByUrl(T.Db, aRequest.QueryFields.Values['url'], P) then
   begin
     aResponse.Code := 404; aResponse.Content := 'No such page'; aResponse.SendContent; Exit;
@@ -959,11 +952,7 @@ procedure DesignerPageImport(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; Json, Url: string;
 begin
-  if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
-  begin
-    aResponse.Code := 404; aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
-  end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/page/import') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
@@ -990,12 +979,7 @@ procedure DesignerExportAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; Zip: TMemoryStream;
 begin
-  if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
-  begin
-    aResponse.Code := 404; aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
-  end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
-  // TODO: require Domain Global Admin
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
   Zip := TMemoryStream.Create;
   try
     ExportAllPages(T.Db, Zip);
@@ -1017,11 +1001,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession; N: Integer;
 begin
-  if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
-  begin
-    aResponse.Code := 404; aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
-  end;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
+  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/import') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
