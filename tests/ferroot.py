@@ -1,5 +1,7 @@
 """Real FerretDB and Welite root projections share one SQLite document file."""
 import json
+import hashlib
+import hmac
 from concurrent.futures import ThreadPoolExecutor
 import os
 import sys
@@ -33,6 +35,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
     for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
         out=tmp/backend;build(root/'tests/sjsql.lpr',out,flags)
         build(root/'tests/replay.lpr',out/'replay',flags)
+        build(root/'tests/factor.lpr',out/'factor',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
@@ -284,6 +287,24 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 client.command({'update':'users','updates':[dict(q=dict(_id='meteor-account'),u={'$unset':{'services.twoFactorAuthentication.type':''}})]})
                 settings['WELITE_ARGON_SECRET_FILE']=str(pepper);pepper.write_bytes(b'operator\0secret\n')
                 assert auth('password','meteor-account','test-password')=='yes'
+                settings.pop('WELITE_ARGON_SECRET_FILE')
+                factor_secret='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
+                client.command({'update':'users','updates':[dict(q=dict(_id='meteor-account'),u={'$set':{'services.twoFactorAuthentication':dict(type='otp',secret=factor_secret)}})]})
+                settings['WELITE_ARGON_SECRET_FILE']=str(pepper)
+                factor_before=encode(client.find('users','meteor-account')[0])
+                counter=int(time.time())//30
+                digest=hmac.new(b'12345678901234567890',struct.pack('>Q',counter),hashlib.sha1).digest();offset=digest[-1]&15
+                code=str((struct.unpack('>I',digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
+                def factor_call(mode):
+                    result=subprocess.run([str(out/'factor/factor'),str(db),mode,'meteor-account','test-password',code,'factor-shared'],env=settings,capture_output=True,text=True,timeout=30)
+                    assert result.returncode==0,result.stderr
+                    return result.stdout.strip()
+                assert factor_call('api')=='yes'
+                assert factor_call('api')=='no','Shared account OTP replay succeeded'
+                checked=subprocess.run([str(out/'factor/factor'),str(db),'check','factor-shared'],env=settings,capture_output=True,text=True,timeout=30)
+                assert checked.returncode==0 and checked.stdout.strip()=='yes'
+                assert encode(client.find('users','meteor-account')[0])==factor_before
+                assert sql("DELETE FROM login_tokens WHERE userId='meteor-account';",'exec')=='ok'
                 settings.pop('WELITE_ARGON_SECRET_FILE')
                 # SQL uniqueness follows the canonical BINARY/NULL semantics.
                 assert auth('lookup','user')=='yes' and auth('lookup','User')=='no'

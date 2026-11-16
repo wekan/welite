@@ -143,12 +143,18 @@ Challenge/enrollment support remains a separate implementation step.
 HOTP/TOTP vectors and independent Python HMAC, with normal/checked Pascal builds.
 Coverage includes base32 case/padding/binary inputs, wide counters/timestamps, leading
 zeroes, Meteor-window edges, malformed input and the replay boundary. Durable counter
-consumption and HTTP challenge/enrollment remain separate integration work.
+consumption is covered below; HTTP challenge/enrollment remain separate integration work.
 
 `python3 tests/replay.py` verifies durable OTP counter claims on linked/CLI SQLite:
 sixteen concurrent processes with one winner, rollback of token/metadata on stale or
 failed claims, retry, restart, canonical aliases, user/factor isolation, missing-token
 behavior, logout retention and corrupt-schema/NULL/duplicate/negative state refusal.
 `ferroot.py` also checks replay storage/cleanup in the live shared adapter. The harness
-composes the actual claim with a token transaction; production factor-proof and HTTP
-issuer wiring remain separate work.
+composes the actual claim with a token transaction.
+
+`python3 tests/factor.py` exercises real password/OTP proofs and factor-bound web/API
+tokens on both SQLite backends: single successful proof use, sixteen concurrent logins,
+replay denial, forced metadata/counter rollback and retry, stale policy/factor snapshots,
+required-factor modes and LDAP fallback. `ferroot.py` additionally checks a live shared
+Argon2-secret/OTP account without BSON changes. HTTP code routing, attempt limits and
+enrollment remain separate work.

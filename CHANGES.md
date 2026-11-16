@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Password and OTP token proofs
+
+- Add unit-owned password/OTP proofs with a 30-second lifetime and single successful
+  issuance. Retain credential/policy snapshots and the matched code, never plaintext
+  passwords. Recheck current policy, credentials and code before issuing a token.
+- Commit token, metadata and replay consumption together. Failed writes roll back;
+  competing logins using the same counter have exactly one winner. Bind web/API
+  validation to the current password and canonical active factor, including Argon2
+  secret-file policy. Observed changes revoke existing credentials permanently.
+- Verify both SQLite backends, sixteen concurrent logins, stale account/factor policy,
+  forced metadata/counter failures and retry, LDAP fallback and required-factor modes.
+  Verify a live shared FerretDB account with Argon2 secret plus OTP without BSON changes.
+- Keep HTTP code forms/API routing, failed-attempt limits and enrollment open. The
+  existing HTTP password-only routes still deny active or required factors.
+
 ## 2026-11-16 Durable OTP replay claims
 
 - Add private per-user/per-factor replay counters. Canonical base32 identity makes

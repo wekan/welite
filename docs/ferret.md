@@ -411,8 +411,8 @@ Decoded key buffers and working HMAC digests are cleared.
 
 `tests/totp.py` checks published HOTP/TOTP SHA1 vectors and independent Python HMAC,
 base32 padding/case and binary secrets, counter/time boundaries, leading zeroes, drift
-edges and replay boundaries in normal/checked builds. Login/enrollment routes and
-atomic consumption remain open; the active-factor guard is retained until integration.
+edges and replay boundaries in normal/checked builds. Atomic token consumption is
+implemented below; public login/enrollment routes remain open.
 
 ## Durable one-time-code replay state
 
@@ -429,18 +429,42 @@ negative or duplicate rows. `EnsureOTPReplay` checks the exact table/cleanup sch
 it claims only for an existing token belonging to that user, and a stale/duplicate
 counter aborts with a constraint error. The caller must roll back the entire transaction
 on any failure. It is not an independent authorization operation and does not verify a
-password/code; production login wiring remains the next step.
+password/code; the proof-aware issuer below supplies that authorization.
 
 `tests/replay.py` exercises real linked/CLI backends with sixteen concurrent processes,
 exactly one successful counter claim, complete token/metadata rollback, retry after a
 forced failure, process restart, aliases, user/factor isolation, logout retention,
 missing-token behavior and malformed-state/schema refusal. `ferroot.py` checks replay
 storage inside the live shared adapter and user cleanup; TOTP vectors still pass.
-No public challenge/enrollment route is enabled by this replay-only step.
+No public challenge/enrollment route is enabled by the replay kernel.
+
+## Password and OTP proofs
+
+`AuthenticateAccount` returns an opaque, unit-owned `TWLLoginProof` after password
+verification and, for an active OTP factor, matching an unused code. Policy distinguishes
+password-only, active OTP, required enrollment and denied accounts. Required enrollment
+still denies full access. Proofs retain account/policy snapshots, a credential fingerprint
+and the matched OTP; they never retain the plaintext password or leave the process.
+
+`IssueAccountToken` accepts a proof for at most 30 seconds, rereads credentials/policy,
+rechecks the code and inserts the token, metadata and replay claim in one transaction.
+Any write failure rolls back all three. Successful issuance invalidates the proof.
+`CreateAuthenticatedSession` uses this issuer for web context. Factor-bound token
+references combine the credential fingerprint and canonical factor identity; web/API
+validation checks both without consuming another code. Password-only issuer calls
+remain unable to authorize active factors. Observed credential/policy changes revoke
+existing tokens, even if the original values are later restored.
+
+`tests/factor.py` checks both SQLite backends, independent Python OTPs, web/API validation,
+16 concurrent attempts, proof reuse, metadata/counter rollback and retry, stale snapshots,
+factor replacement, required-factor modes and LDAP fallback. `ferroot.py` exercises an
+actual shared Argon2 account with an operator secret and active OTP, preserving its BSON.
+HTTP login forms/API code routing, failed-attempt limits and enrollment remain to be wired;
+existing password-only HTTP routes retain their guards until then.
 
 ## Remaining before the checklist can be checked
 
-- Complete second-factor login/enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete HTTP second-factor login, failed-attempt limits and enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
