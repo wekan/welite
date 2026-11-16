@@ -1,5 +1,7 @@
 """HTTP regressions for every Designer administrator gate; no cookies or JS."""
 import http.client
+import json
+import hashlib
 from apiscope import run as check_api_scope
 from tiers import run as check_admin_tiers
 from layout import run as check_layout
@@ -83,6 +85,38 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             member = register('member')
             check_admin_tiers(request,tmp,admin)
             db = tmp/'data/local/files/db/wekan.db'
+            with sqlite3.connect(db) as con:
+                passwords=[json.loads(row[0])['password'] for row in con.execute("SELECT services_json FROM users WHERE username IN ('administrator','member') ORDER BY username")]
+            with sqlite3.connect(tmp/'data/admin/files/db/wekan.db') as con:
+                bootstrap_password=json.loads(con.execute('SELECT services_json FROM users').fetchone()[0])['password']
+            for value in passwords+[bootstrap_password]:
+                assert isinstance(value,dict) and value['bcrypt'].startswith('$2b$10$'),value
+            assert passwords[0]!=passwords[1],'New accounts must receive independent salts'
+            # Long UTF-8 plaintext works through registration and the CLI seed contract.
+            seeded_password='日本語 🔑 '+('long-password-'*8)
+            response=request('POST','/register',dict(username='credential-format',password=seeded_password,confirm=seeded_password))
+            assert response[0]==302,response
+            original_session=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
+            assert request('GET','/api/user?token='+original_session)[0]==200
+            generated=subprocess.run([str(build/'wlhttp'),'hashpw',seeded_password],cwd=tmp,env=env,capture_output=True,text=True,check=True)
+            seed=json.loads(generated.stdout)
+            assert isinstance(seed,dict) and seed['bcrypt'].startswith('$2b$10$')
+            with sqlite3.connect(db) as con:
+                con.execute('UPDATE users SET services_json=? WHERE username=?',(json.dumps(dict(password=seed)),'credential-format'))
+            assert request('GET','/api/user?token='+original_session)[0]==401
+            assert request('POST','/sign-in',dict(username='credential-format',password=seeded_password))[0]==302
+            assert request('POST','/users/login',dict(username='credential-format',password=seeded_password))[0]==200
+            assert request('POST','/users/login',dict(username='credential-format',password=seeded_password+'wrong'))[0]==401
+            # Existing PBKDF2 records still authenticate; login never rewrites them.
+            legacy_salt=bytes(range(16))
+            legacy='pbkdf2_sha1$50000$'+legacy_salt.hex()+'$'+hashlib.pbkdf2_hmac('sha1',seeded_password.encode(),legacy_salt,50000).hex()
+            legacy_services=json.dumps(dict(password=legacy))
+            with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE username=?',(legacy_services,'credential-format'))
+            assert request('POST','/sign-in',dict(username='credential-format',password=seeded_password))[0]==302
+            assert request('POST','/users/login',dict(username='credential-format',password=seeded_password))[0]==200
+            with sqlite3.connect(db) as con:
+                assert con.execute('SELECT services_json FROM users WHERE username=?',('credential-format',)).fetchone()[0]==legacy_services
+            print('PASS: default registration/bootstrap Meteor bcrypt objects, fresh salts, long UTF-8 passwords, CLI JSON seeding, legacy login and credential revocation')
             assert request('GET', '/designer?sessionId='+admin)[0] == 200
             with sqlite3.connect(db) as con:
                 con.execute("INSERT INTO pages(id,url,title,createdAt,modifiedAt) VALUES('p','/demo','Secret page','now','now')")

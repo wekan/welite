@@ -223,9 +223,10 @@ notice is retained in `docs/gocrypt.txt` and must accompany binary distribution 
 `VerifyPassword` accepts legacy PBKDF2 strings and Meteor password objects. Meteor
 passes the lowercase SHA256 plaintext digest into bcrypt, avoiding its raw key-size
 limit for long plaintext. `HashMeteorPassword` generates a fresh-salt cost-10 bcrypt
-object compatible with `services.password`. It is available for the upcoming shared
-credential creation transition; current registration/bootstrap still creates legacy
-credentials. Reset and other password-object properties remain unchanged on login.
+object compatible with `services.password`. Registration, local admin bootstrap and the `hashpw` CLI now create this object by
+default. The CLI output is an object to embed at `services.password`, not a quoted hash
+string. Existing PBKDF2 records remain readable without login-time rewriting. Reset and
+other password-object properties remain unchanged on login.
 
 Current [Meteor accounts-password source](https://raw.githubusercontent.com/meteor/meteor/devel/packages/accounts-password/password_server.js)
 also selects an Argon2 credential ahead of bcrypt. Argon2 is not implemented yet:
@@ -245,8 +246,7 @@ to prove no credential or metadata rewrite.
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Implement Argon2 and default shared-format credential creation; reconcile Meteor
-  session formats and file-store metadata/bytes.
+- Implement Argon2; reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

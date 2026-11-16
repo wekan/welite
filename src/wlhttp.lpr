@@ -223,13 +223,13 @@ begin
 
     First := NoUsersYet(T);                 // first account -> Global Admin
     Uid   := NewId;
-    Hash  := HashPassword(Password);        // pbkdf2_sha1$...; stored under services.password
+    Hash  := HashMeteorPassword(Password); // JSON object stored at services.password
     Iso   := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', Now);
     if not T.Db.Exec(Format(
       'INSERT INTO users(id,username,isAdmin,authenticationMethod,createdAt,modifiedAt,' +
       'services_json,profile_json) VALUES(%s,%s,%d,''password'',%s,%s,%s,''{}'');',
       [QuotedStr(Uid), QuotedStr(Username), Ord(First), QuotedStr(Iso), QuotedStr(Iso),
-       QuotedStr('{"password":"' + Hash + '"}')])) then
+       QuotedStr('{"password":' + Hash + '}')])) then
     begin
       SendHtml(aResponse, Page32('Register',
         '<p>Could not create the account.</p><p><a href="/register">Back</a></p>'));
@@ -341,10 +341,10 @@ begin
     if not (ResolveTenant(R,T) and TenantOpen(T)) then Halt(1);
     if not NoUsersYet(T) then
     begin Writeln(StdErr,'Global Admin is already initialized'); Halt(1); end;
-    Uid:=NewId; Hash:=HashPassword(Password); Iso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Now);
+    Uid:=NewId; Hash:=HashMeteorPassword(Password); Iso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Now);
     if not T.Db.Exec('INSERT INTO users(id,username,isAdmin,createdAt,modifiedAt,services_json) '+
       'SELECT '+QuotedStr(Uid)+','+QuotedStr(Username)+',1,'+QuotedStr(Iso)+','+QuotedStr(Iso)+','+
-      QuotedStr('{"password":"'+Hash+'"}')+' WHERE NOT EXISTS(SELECT 1 FROM users);') or
+      QuotedStr('{"password":'+Hash+'}')+' WHERE NOT EXISTS(SELECT 1 FROM users);') or
       (Length(T.Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Uid)+';'))=0) then
     begin Writeln(StdErr,'Global Admin initialization failed'); Halt(1); end;
     Writeln('Global Admin initialized. Sign in using the reserved admin host.');
@@ -367,10 +367,10 @@ begin
     except on E:Exception do begin Writeln(StdErr,E.Message);Halt(1);end;end;
   end;
 
-  // ops/seed helper: `welite hashpw <plain>` prints a PBKDF2 hash for users.services_json
+  // ops/seed helper: prints a Meteor services.password JSON object, not a quoted string.
   if (ParamCount >= 2) and (ParamStr(1) = 'hashpw') then
   begin
-    Writeln(HashPassword(ParamStr(2)));
+    Writeln(HashMeteorPassword(ParamStr(2)));
     Halt(0);
   end;
 

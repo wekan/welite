@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Shared-format credentials for new accounts
+
+- Make registration and local admin bootstrap create Meteor services.password bcrypt
+  objects by default, using SHA256 plaintext digests, cost 10 and independent random
+  salts. Bind the initial session to the complete serialized password object.
+- Change `hashpw` output to the same JSON object for direct embedding at
+  services.password. Update seed instructions to avoid quoting the object as a string.
+  Keep existing PBKDF2 string verification and leave stored legacy records unchanged.
+- Verify new registration/bootstrap object shapes and salt independence, long UTF-8
+  plaintext, CLI JSON seeding, password-change token revocation and legacy web/API
+  logins against an independently generated Python PBKDF2 record. Update the token
+  binding test to hash an object credential correctly.
+- All HTTP regressions pass on linked SQLite and CLI SQLite, with the CLI build forced
+  through portable one-use entropy. Argon2, shared Mongo session/index policy and
+  application storage activation remain open.
+
 ## 2026-11-16 Portable Meteor bcrypt credentials
 
 - Add a pure Pascal bcrypt kernel with explicit modulo-32-bit Blowfish arithmetic,

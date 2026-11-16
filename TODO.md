@@ -244,7 +244,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Private token tables now pass actual issuance/validation and SQL/Mongo deletion cleanup tests.
   SQL username uniqueness and ambiguous-login denial now pass concurrent-writer/Mongo-duplicate tests.
   Portable Meteor bcrypt verification/generation now passes an independent oracle, live account and HTTP tests.
-  Remaining: Argon2, default shared-format credential creation, Mongo account/index/session policy, typed custom-value and legacy
+  Registration, local bootstrap and CLI seeding now create shared-format Meteor bcrypt objects.
+  Remaining: Argon2, Mongo account/index/session policy, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

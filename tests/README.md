@@ -88,3 +88,9 @@ Meteor SHA256 envelopes, fresh cost-10 credentials and legacy PBKDF2. No runtime
 library or service is used. `admin.py` additionally tests actual Meteor bcrypt web/API
 logins, preserved service metadata and Argon2 precedence denial on each SQLite backend;
 `ferroot.py` tests the real verifier against a Mongo-created typed account.
+
+`admin.py` checks the default Meteor credential object for registration and bootstrap,
+independent salts for identical plaintext, long UTF-8 passwords, `hashpw` JSON-object
+seeding and token invalidation after replacing a credential. An independently generated
+Python PBKDF2 fixture also verifies legacy web/API login without rewriting its bytes.
+The CLI/portable-entropy variant exercises these same new-account paths.

@@ -14,17 +14,25 @@ POST /users/login        JSON {"username","password"}  -> {"id","token","tokenEx
 Authorization: Bearer <token>   on every /api/... request
 ```
 
-Tokens are stored in `schema.sql` `login_tokens` (`hashedToken = HashText(token)`) — the same
+Tokens are stored in `schema.sql` `login_tokens` (`hashedToken = TokenHash(tenantDb, token)`) — the same
 table the no-cookie web sessions use. Multitenancy is by `Host:` header, so point `api.py`'s
 `wekanurl` at the tenant's domain.
 
-**Passwords** are verified with PBKDF2-HMAC-SHA1 (`wlpasswd.pas`); the stored hash lives in
-`users.services_json` under `"password"` (form `pbkdf2_sha1$iters$saltHex$dkHex`). Set/seed one
-with the built-in helper:
+**Passwords** for new accounts use Meteor's `services.password.bcrypt` object:
+bcrypt (cost 10, independent random salts) over the lowercase SHA256 plaintext digest.
+The SQL `users.services_json` column stores `{"password":{"bcrypt":"$2b$10$..."}}`.
+Registration and local `initadmin` bootstrap both create that format. Generate an object
+for a seed record with:
+
 ```
-./welite hashpw 'mypassword'      # prints the hash to store in services_json.password
+./welite hashpw 'mypassword'      # prints {"bcrypt":"$2b$10$..."}
 ```
-Accounts without a real hash cannot be logged into.
+
+Store this output as the **object value** of `services.password`, without quoting the
+whole output as a string. Existing `pbkdf2_sha1$iters$saltHex$dkHex` string credentials
+still verify; login does not rewrite them. Accounts with malformed/no password credentials
+cannot log in. Argon2 records are currently denied, including when a stale bcrypt value
+is also present. Shared Meteor resume-token compatibility remains in progress.
 
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by

@@ -25,7 +25,9 @@ def run(request,db,admin):
         user=con.execute('SELECT id,username,createdAt,modifiedAt,services_json FROM users WHERE id=?',(uid,)).fetchone()
         services=user[4]
         assert meta[1]==hashlib.sha256(str(db).encode()).hexdigest()
-        assert meta[2]==hashlib.sha256(json.loads(services)['password'].encode()).hexdigest() and meta[3]=='api'
+        credential=json.loads(services)['password']
+        if isinstance(credential,dict):credential=json.dumps(credential,ensure_ascii=False,separators=(',',':'))
+        assert meta[2]==hashlib.sha256(credential.encode()).hexdigest() and meta[3]=='api'
     other=domain_db(db.parents[3],'team.example')
     with sqlite3.connect(other) as con:
         con.execute('INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES(?,?,?,?,?)',user)
