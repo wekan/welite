@@ -276,7 +276,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Root-based worker discovery now covers existing local/admin/enabled-domain stores before first access and refreshes registry changes, with independent shared-backup and HTTP regression tests.
   Source-bound local/shared digest links now accompany issuance/adoption, backfill older identity without guessing hashes, enrich on validated access and retain targeted revocation after local deletion.
   Shared-store sweeps now atomically retire linked hash/raw records, remove expired private credentials/orphan metadata and retain identity/history, with rollback, sibling/BSON and idle-worker tests. Legacy unknown hashes use shared expiry plus observed raw revocation without guessing.
-  Remaining: broader resume-policy parity and maintenance for expired pending enrollment/normalized legacy stores; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Shared maintenance now also removes expired private pending enrollment at equality, with rollback, unexpired retention, replay preservation and idle-worker tests.
+  Remaining: broader resume-policy parity and normalized legacy-store maintenance; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

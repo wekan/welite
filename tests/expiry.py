@@ -23,7 +23,12 @@ def run(out,db,client,sql,physical,password,env,meteor_hash,local_hash):
     records.append(dict(token='expired-both',when=DateMs(int(time.time()*1000)),extra=Long(9007199254740993)))
     records.extend(['opaque',None,123,dict(token=123,when=DateMs(int(time.time()*1000)))])
     client.command({'update':'users','updates':[dict(q=dict(_id='cleanup-user'),u={'$set':{'services.resume.loginTokens':records}})]})
+    # Real pending setup records: expire one at equality, retain the other.
+    for uid in ['cleanup-user','cleanup-other']:
+        setup=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start',uid,'test-password','e'*64],env=env,text=True).strip().splitlines()
+        assert len(setup)==2
     now=int(time.time()*1000)
+    assert sql("UPDATE _wl_enrol SET created="+str(now//1000-1)+",expires=CASE WHEN userId='cleanup-user' THEN "+str(now//1000)+" ELSE "+str(now//1000+3600)+" END WHERE userId IN ('cleanup-user','cleanup-other');",'exec')=='ok'
     for raw in dead:
         assert sql('UPDATE login_tokens SET expiresAt='+q(iso(now))+' WHERE hashedToken='+q(local_hash(raw))+';','exec')=='ok'
     assert sql('UPDATE _wl_pair SET sharedHash=NULL WHERE hashedToken='+q(local_hash('legacy-unknown'))+';','exec')=='ok'
@@ -43,6 +48,7 @@ def run(out,db,client,sql,physical,password,env,meteor_hash,local_hash):
         'BEFORE DELETE ON login_tokens',
         'BEFORE INSERT ON _wl_pair',
         'BEFORE INSERT ON _wl_seen',
+        'BEFORE DELETE ON _wl_enrol',
     ]
     for clause in triggers:
         assert sql('CREATE TRIGGER fail_expiry '+clause+' BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
@@ -65,7 +71,10 @@ def run(out,db,client,sql,physical,password,env,meteor_hash,local_hash):
         assert sql('SELECT userId FROM _wl_pair WHERE hashedToken='+q(key)+';')==[['cleanup-user']]
     assert sql("SELECT count(*) FROM authmeta WHERE hashedToken='orphan-meta';")==[['0']]
     assert sql('SELECT * FROM _wl_otp ORDER BY 1;')==before['_wl_otp']
-    assert sql('SELECT * FROM _wl_enrol ORDER BY 1;')==before['_wl_enrol']
+    retained_setup=[row for row in before['_wl_enrol'] if int(row[5])>now//1000]
+    assert sql('SELECT * FROM _wl_enrol ORDER BY 1;')==retained_setup
+    assert sql("SELECT count(*) FROM _wl_enrol WHERE userId='cleanup-user';")==[['0']]
+    assert sql("SELECT count(*) FROM _wl_enrol WHERE userId='cleanup-other';")==[['1']]
     assert check('active-sibling')=='yes' and check('other-active')=='yes'
     assert check('expired-hash')=='no'
     # Unknown legacy hash stays on Meteor's own expiry schedule until raw observation.
@@ -77,6 +86,8 @@ def run(out,db,client,sql,physical,password,env,meteor_hash,local_hash):
     # The running idle worker executes the same private cleanup, without a request.
     issue('cleanup-user','idle-expired')
     assert sql('UPDATE login_tokens SET expiresAt='+q(iso(int(time.time()*1000)-1))+' WHERE hashedToken='+q(local_hash('idle-expired'))+'; UPDATE _wl_sweep SET lastAt=-600000;','exec')=='ok'
+    pending_now=int(time.time())
+    assert sql("UPDATE _wl_enrol SET created="+str(pending_now-1)+',expires='+str(pending_now)+" WHERE userId='cleanup-other';",'exec')=='ok'
     worker=subprocess.Popen([str(out/'maint/maint'),str(db)],env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
     try:
         assert worker.stdout.readline().strip()=='ready'
@@ -85,6 +96,7 @@ def run(out,db,client,sql,physical,password,env,meteor_hash,local_hash):
             assert worker.poll() is None;time.sleep(.05)
         else:raise AssertionError('Idle worker did not clean an expired private credential')
         assert encode(client.find('users','cleanup-user')[0])==encode(expected)
+        assert sql("SELECT count(*) FROM _wl_enrol WHERE userId IN ('cleanup-user','cleanup-other');")==[['0']]
         output,errors=worker.communicate('stop\n',timeout=10)
         assert worker.returncode==0 and output.strip()=='stopped',(output,errors)
     finally:

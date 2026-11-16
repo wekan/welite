@@ -910,7 +910,7 @@ sweep before allowing recovery, then checks idle cleanup, another due pass, exac
 missing/native-store isolation and a clean stop. `enrhttp.py` covers HTTP startup and
 registration/enrollment regressions on linked/CLI SQLite.
 
-Pending-state/normalized-store maintenance, actual shared-store HTTP activation, process-signal lifecycle
+Normalized-store maintenance, actual shared-store HTTP activation, process-signal lifecycle
 and full Meteor observer/application workflows remain explicit integration work. The
 worker does not resolve the shared filename/sidecar policy or activate the adapter.
 
@@ -993,19 +993,34 @@ local credential remains denied and cannot be re-adopted; healthy siblings stay 
 
 Cleanup assertions run before deleting the rows needed to prove each stage. Ignored link,
 shared, metadata, token or history writes roll back all effects and the due checkpoint.
-OTP replay and pending enrollment records are deliberately retained. `tests/expiry.py`,
+OTP replay is deliberately retained; pending enrollment cleanup is described below. `tests/expiry.py`,
 called by `ferroot.py`, covers inclusive deadlines, hash/raw/duplicate forms, scalar/BSON
 preservation, orphan rows, five ignored-write stages, retry, sibling/account isolation,
 null-hash behavior and a real idle-worker cleanup on linked/CLI SQLite. `resume.py` checks
-digest-set validation and SQLite hash output against Python. Native token regressions
-remain unchanged; normalized-store and expired pending-enrollment maintenance still need
+digest-set validation and SQLite hash output against Python. Native token regressions remain unchanged; normalized-store maintenance still needs
 integration.
+
+## Expired pending enrollment maintenance
+
+The same shared-store sweep transaction deletes `_wl_enrol` rows whose seconds-based
+`expires` is less than or equal to the sweep clock's whole UTC seconds. This matches
+confirmation's requirement that `expires > Now`. An assertion checks that no expired
+pending row survives; an ignored deletion rolls back all credential/source cleanup and
+the checkpoint as well. The ten-minute maintenance cadence bounds cleanup opportunities,
+while confirmation already refuses an expired setup independently of maintenance.
+
+Unexpired pending records survive unchanged. Cleanup never activates a factor, publishes
+a pending secret or clears OTP replay state. `expiry.py` creates real pending enrollment
+through the proof/setup flow, checks equality and retained setup, injects an ignored
+pending deletion after earlier cleanup stages, then checks actual idle-worker expiry.
+Both SQLite backends run. `enroll.py` retains proof, binding, expiry, activation/replay
+and rollback coverage. Normalized legacy stores remain outside this shared-store sweep.
 
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity, pending/normalized-store maintenance and process-signal lifecycle; reconcile file-store metadata/bytes.
+- Reconcile broader resume-policy parity, normalized-store maintenance and process-signal lifecycle; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and

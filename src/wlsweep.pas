@@ -57,7 +57,9 @@ begin
       'DELETE FROM authmeta WHERE hashedToken IN(SELECT t.hashedToken FROM login_tokens t WHERE '+Expired+') OR NOT EXISTS(SELECT 1 FROM login_tokens t WHERE t.hashedToken=authmeta.hashedToken); '+
       'UPDATE _wl_authsrc SET userUUID=CASE WHEN NOT EXISTS(SELECT 1 FROM authmeta m LEFT JOIN login_tokens t USING(hashedToken) WHERE t.hashedToken IS NULL OR ('+Expired+')) THEN userUUID ELSE NULL END WHERE id=1; '+
       'DELETE FROM login_tokens AS t WHERE '+Expired+'; '+
-      'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND NOT EXISTS(SELECT 1 FROM login_tokens t WHERE '+Expired+') THEN userUUID ELSE NULL END WHERE id=1; COMMIT;';
+      'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND NOT EXISTS(SELECT 1 FROM login_tokens t WHERE '+Expired+') THEN userUUID ELSE NULL END WHERE id=1; '+
+      'DELETE FROM _wl_enrol WHERE expires<='+IntToStr(NowMs div 1000)+'; '+
+      'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND NOT EXISTS(SELECT 1 FROM _wl_enrol WHERE expires<='+IntToStr(NowMs div 1000)+') THEN userUUID ELSE NULL END WHERE id=1; COMMIT;';
     Result:=Db.Exec(Sql);if not Result then Db.Exec('ROLLBACK;');
   except Db.Exec('ROLLBACK;');Result:=False;end;
 end;

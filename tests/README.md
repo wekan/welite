@@ -300,4 +300,10 @@ linked hash/legacy/duplicate retirement, orphan cleanup, retained BSON/scalar en
 unknown-hash identity, history, sibling/account isolation and five ignored-write rollback
 stages. A real worker then removes an expired private/shared credential during idle time.
 `resume.py` verifies digest-set commands and SQL hash vectors including Unicode/NUL on
-both backends. Pending-enrollment and normalized legacy-store maintenance remain open.
+both backends. Pending-enrollment coverage follows; normalized legacy-store maintenance remains open.
+
+Pending enrollment cleanup in `expiry.py` creates real setup records, expires one at
+confirmation equality and retains another unchanged. An ignored pending deletion rolls
+back shared/local/history cleanup and the due checkpoint. The idle worker later removes
+the other expired setup. OTP replay state remains unchanged. Both backends and the
+separate `enroll.py` proof/activation/binding/replay suites verify the lifecycle.

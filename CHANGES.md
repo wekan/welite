@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Expire private pending enrollment during maintenance
+
+- Remove expired private enrollment records in the existing shared-store sweep
+  transaction, using the same inclusive second-based deadline as confirmation.
+  Assert deletion succeeded before committing; ignored writes roll back shared/local
+  credential cleanup, pending removal and the durable checkpoint together.
+- Retain unexpired setup records and all OTP replay boundaries. Cleanup neither
+  activates a factor nor publishes pending secrets into shared account documents.
+- Verify real pending setup at equality, unexpired retention, ignored-delete rollback
+  and idle-worker removal on linked/CLI SQLite. Enrollment proof, activation, replay
+  and binding/expiry regressions also pass on both backends.
+- Normalized legacy-store maintenance, broader resume-policy parity, process-signal
+  lifecycle and full shared-store/application activation remain open.
+
 ## 2026-11-17 Sweep expired local credentials in shared stores
 
 - Extend the due shared-store transaction to retire linked shared hash/legacy records,
