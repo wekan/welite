@@ -26,6 +26,7 @@ working prototypes in this tree** and aligned to the portable contract:
   like at .tools/w/tcl-tk-kanban/screenshot-go-fyne.png and
   .tools/w/tcl-tk-kanban/kanban.go where is also SQLite examples what happens when moving
   swimlanes, lists, etc.
+- If there is javascript drag drop available, make possible drag drop and multidrag like at .tools/w/weddy/
 - Directory structure is same like at .tools/w/weddy , so at multitenancy each domain has it's
   own directory where is files/db/wekan.db , files/attachme/ , files/avatars/ etc according to
   8.3 DOS limit structure, with longer domain names, settings etc at sqlite databases.
