@@ -1,6 +1,6 @@
 -- WeKan-Lite Designer schema — v0.1
 -- WeKan-Lite-specific (NOT part of the canonical ../schema.sql, which mirrors Meteor WeKan).
--- Lives in each tenant's data/domains/<domain>/db/data.db so every domain designs its own UI.
+-- Lives in each tenant's data/domains/<key>/files/db/wekan.db so every domain designs its own UI.
 -- Conventions match schema.sql: TEXT 17-char ids, ISO-8601 TEXT dates, INTEGER 0/1 booleans.
 -- Companion doc: designer.md. Engine: wldesign.pas.
 

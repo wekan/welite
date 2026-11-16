@@ -5,6 +5,7 @@ from pathlib import Path
 import base64
 import json
 import sqlite3
+from paths import stored
 
 def run(request, db, session):
     with sqlite3.connect(db) as con:
@@ -27,7 +28,8 @@ def run(request, db, session):
         con.execute("INSERT INTO card_custom_field_values(cardId,customFieldId,value) VALUES('acard','afield','Value')")
         con.execute("INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,userId,createdAt) VALUES('afile','actions','alane','alist','acard','note.bin','application/octet-stream',5,'u','now')")
         con.execute("INSERT INTO activities(id,activityType,boardId,cardId,createdAt) VALUES('activity','createCard','actions','acard','now')")
-    attachment=Path(db).parents[1]/'files/attachments/afile'
+    attachment=stored(db,'afile')
+    attachment.parent.mkdir(parents=True,exist_ok=True)
     attachment.write_bytes(b'a\0b\r\n')
     board='/board?'+urlencode(dict(id='actions',view='all',sessionId=session))
     def hidden(body):

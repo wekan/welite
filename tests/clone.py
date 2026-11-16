@@ -4,6 +4,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 import json
 import sqlite3
+from paths import stored
 
 def run(request, db, session):
     with sqlite3.connect(db) as con:
@@ -30,9 +31,10 @@ def run(request, db, session):
             con.execute("INSERT INTO attachments(id,boardId,listId,swimlaneId,cardId,name,type,size,userId,createdAt) VALUES(?,'clone','clist','clane','ccard',?,'application/octet-stream',4,'u','old')",(aid,aid+'.bin'))
         con.execute("UPDATE cards SET coverId='cfile',description=? WHERE id='ccard'",('UTF-8: 日本語\0tail',))
         con.execute("INSERT INTO activities(id,activityType,boardId,cardId,createdAt) VALUES('chistory','createCard','clone','ccard','old')")
-    files=Path(db).parents[1]/'files/attachments'
-    (files/'cfile').write_bytes(b'a\0b\n')
-    (files/'czfile').write_bytes(b'z\r\nx')
+    files=Path(db).parents[1]/'attachme'
+    for identity in ['cfile','czfile']:stored(db,identity).parent.mkdir(parents=True,exist_ok=True)
+    stored(db,'cfile').write_bytes(b'a\0b\n')
+    stored(db,'czfile').write_bytes(b'z\r\nx')
     board='/board?'+urlencode(dict(id='clone',view='all',sessionId=session))
     def token():
         parser=Forms();parser.feed(request('GET',board)[2].decode());return parser.forms[-1][1]
@@ -42,15 +44,15 @@ def run(request, db, session):
         return request('POST','/board/move',data)
     def snapshot():
         with sqlite3.connect(db) as con:data='\n'.join(con.iterdump())
-        return data,{p.name:p.read_bytes() for p in files.iterdir() if p.is_file()}
+        return data,{str(p.relative_to(files)):p.read_bytes() for p in files.rglob('*') if p.is_file()}
     assert clone()[0]==400
     before=snapshot()
     assert clone({'sel_card':'foreigncard'})[0]==403 and snapshot()==before
     # A second source file failure occurs after the first attachment has been copied.
-    (files/'czfile').unlink();before=snapshot()
+    stored(db,'czfile').unlink();before=snapshot()
     assert clone({'sel_swimlane':'clane'})[0]==500
     assert snapshot()==before,'Failed file preparation left cloned rows or partial files'
-    (files/'czfile').write_bytes(b'z\r\nx')
+    stored(db,'czfile').write_bytes(b'z\r\nx')
     with sqlite3.connect(db) as con:
         con.execute("UPDATE attachments SET storageBackend='external' WHERE id='czfile'")
     before=snapshot()
@@ -103,7 +105,7 @@ def run(request, db, session):
         assert len(new['attachments'])==2
         for attachment in new['attachments']:
             assert attachment['cardId']==root['id'] and attachment['listId']==lst['id'] and attachment['swimlaneId']==lane['id']
-            assert (files/attachment['id']).read_bytes()==(files/Path(attachment['name']).stem).read_bytes()
+            assert stored(db,attachment['id']).read_bytes()==stored(db,Path(attachment['name']).stem).read_bytes()
         assert root['coverId']==next(a['id'] for a in new['attachments'] if a['name']=='cfile.bin')
         assert con.execute("SELECT COUNT(*) FROM activities WHERE activityType='clone' AND boardId='clone'").fetchone()[0]==5
         assert con.execute('SELECT COUNT(*) FROM users').fetchone()[0]==users

@@ -5,10 +5,10 @@ unit wltenant;
 
   Maps the HTTP Host: header to a per-tenant directory and SQLite database:
 
-    data/admin/db/data.db                         reserved Global Admin tenant
-    data/domains/<domain>/db/data.db              one served tenant per domain
-    data/domains/<domain>/files/{attachments,avatars}/
-    data/certs/<host>/                            TLS material (central, Caddy-style)
+    data/admin/files/db/wekan.db                         reserved Global Admin tenant
+    data/domains/<key>/files/db/wekan.db              one served tenant per domain
+    data/domains/<key>/files/{attachme,avatars}/
+    data/certs/<key>/                            TLS material (central, Caddy-style)
 
   A single WeKan-Lite binary serves every domain; the Global Admin (data/admin) manages
   them. There is no shared database — isolation is structural (one SQLite file per tenant).
@@ -33,8 +33,8 @@ const
 type
   TWLTenant = record
     Host    : string;       // normalized host key, e.g. 'wekan.example.com' or 'admin'
-    Dir     : string;       // data/domains/<host>/  (or data/admin/)
-    DbPath  : string;       // <Dir>db/data.db
+    Dir     : string;       // data/domains/<key>/  (or data/admin/)
+    DbPath  : string;       // <Dir>files/db/wekan.db
     FilesDir: string;       // <Dir>files/
     IsAdmin : Boolean;      // True for the data/admin tenant
     Db      : TWLDb;        // cached open handle (see TenantOpen)
@@ -53,13 +53,11 @@ function TenantOpen(var Tenant: TWLTenant): Boolean;
 // Provision an explicitly enabled domain, or the reserved admin tenant for local bootstrap.
 function ProvisionTenant(const Host: string): Boolean;
 
-// Absolute path to the central TLS cert dir for a host: data/certs/<host>/
+// Absolute path to the central TLS cert dir for a host: data/certs/<key>/
 function TenantCertDir(const Host: string): string;
 
-// Create and return a fresh, unique temp directory for one temp operation:
-//   data/temp/YYYY-MM-DD_MM-SS_COUNTER[_<Op>]/   (with trailing path delimiter)
-// COUNTER is a process-global atomic counter so names never collide even within one second or
-// across threads. Callers do their scratch work inside it and should delete it when done.
+// Atomically allocate a new short directory data/temp/t<7 hex digits>/.
+// Existing directories are skipped across process restarts; Op is retained for callers.
 function WLTempDir(const Op: string = ''): string;
 
 // Call once at startup to set the data/ root and load the domain registry.
@@ -68,7 +66,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregist;   // domain registry lookup (host -> enabled?), backed by data/admin/db/data.db
+  wlregist;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
 
 var
   DataRoot   : string;                 // absolute path to data/
@@ -79,14 +77,19 @@ var
 function WLTempDir(const Op: string = ''): string;
 var
   Stamp: string;
+  Root:string;
   N: Integer;
 begin
   N := InterLockedIncrement(TempCounter);
-  // YYYY-MM-DD_MM-SS (nn=minutes, ss=seconds) + atomic counter -> always unique
-  Stamp := FormatDateTime('yyyy-mm-dd_nn-ss', Now) + '_' + IntToStr(N);
-  if Op <> '' then Stamp := Stamp + '_' + Op;
-  Result := DataRoot + 'temp' + PathDelim + Stamp + PathDelim;
-  ForceDirectories(Result);
+  Root:=DataRoot+'temp'+PathDelim;
+  if not ForceDirectories(Root) then raise Exception.Create('Could not create temporary root');
+  repeat
+    Stamp:='t'+LowerCase(IntToHex(N and $0fffffff,7));
+    Result:=Root+Stamp+PathDelim;
+    if CreateDir(ExcludeTrailingPathDelimiter(Result)) then Exit;
+    if not DirectoryExists(Result) then raise Exception.Create('Could not create temporary directory');
+    N:=InterLockedIncrement(TempCounter);
+  until False;
 end;
 
 procedure TenantInit(const ADataRoot: string);
@@ -108,8 +111,11 @@ begin
   end;
   // The Global Admin registry lives in data/admin; ensure its dir exists before opening the db
   // (sqlite3_open creates the file, not the parent directory).
-  ForceDirectories(DataRoot + ADMIN_TENANT + PathDelim + 'db');
-  RegistryInit(DataRoot + ADMIN_TENANT + PathDelim + 'db' + PathDelim + 'data.db');
+  if FileExists(DataRoot+'admin'+PathDelim+'db'+PathDelim+'data.db') or
+    FileExists(DataRoot+'local'+PathDelim+'db'+PathDelim+'data.db') then
+    raise Exception.Create('Legacy paths detected; stop the server and run releases/pathmove.py first');
+  ForceDirectories(DataRoot+ADMIN_TENANT+PathDelim+'files'+PathDelim+'db');
+  RegistryInit(DataRoot+ADMIN_TENANT+PathDelim+'files'+PathDelim+'db'+PathDelim+'wekan.db');
 end;
 
 function NormalizeHost(const RawHost: string): string;
@@ -132,13 +138,20 @@ begin
 end;
 
 function TenantDir(const Host: string): string;
+var Key:string;
 begin
   if SameText(Host, ADMIN_TENANT) then
     Result := DataRoot + ADMIN_TENANT + PathDelim
   else if SameText(Host, LOCAL_TENANT) then
     Result := DataRoot + LOCAL_TENANT + PathDelim   // data/local (not data/domains/local)
   else
-    Result := DataRoot + 'domains' + PathDelim + Host + PathDelim;
+  begin
+    Key:=RegistryStorageKey(Host);
+    if Key='' then raise Exception.Create('Missing tenant directory mapping');
+    if FileExists(DataRoot+'domains'+PathDelim+Host+PathDelim+'db'+PathDelim+'data.db') then
+      raise Exception.Create('Legacy domain paths detected; run releases/pathmove.py offline');
+    Result:=DataRoot+'domains'+PathDelim+Key+PathDelim;
+  end;
 end;
 
 // Loopback access (browsing http://localhost:5500/) maps to the single built-in `local` tenant,
@@ -163,14 +176,14 @@ begin
   end;
 end;
 
-// Create a tenant's directory layout (db/, files/attachments/, files/avatars/) and, the first
+// Create files/db/, files/attachme/ and files/avatars/ and, the first
 // time, its SQLite db with the schema applied. Idempotent; safe to call on every request.
 function EnsureTenantStore(const Tenant: TWLTenant): Boolean;
 var Db: TWLDb; Sql: string; R: TWLRows;
 begin
   Result:=False;
-  ForceDirectories(Tenant.Dir+'db');
-  ForceDirectories(Tenant.FilesDir+'attachments');
+  ForceDirectories(Tenant.FilesDir+'db');
+  ForceDirectories(Tenant.FilesDir+'attachme');
   ForceDirectories(Tenant.FilesDir+'avatars');
   Db:=WLDbOpen(Tenant.DbPath);
   if Db=nil then Exit;
@@ -193,13 +206,16 @@ begin
   if Key<>ADMIN_TENANT then Key:=RegistryCanonicalHost(Key);
   T:=Default(TWLTenant);
   T.Host:=Key; T.Dir:=TenantDir(Key); T.FilesDir:=T.Dir+'files'+PathDelim;
-  T.DbPath:=T.Dir+'db'+PathDelim+'data.db';
+  T.DbPath:=T.FilesDir+'db'+PathDelim+'wekan.db';
   Result:=EnsureTenantStore(T);
 end;
 
 function TenantCertDir(const Host: string): string;
 begin
-  Result := DataRoot + 'certs' + PathDelim + Host + PathDelim;
+  if (Host=ADMIN_TENANT) or (Host=LOCAL_TENANT) then Result:=Host
+  else Result:=RegistryStorageKey(Host);
+  if Result='' then raise Exception.Create('Unknown certificate tenant');
+  Result:=DataRoot+'certs'+PathDelim+Result+PathDelim;
 end;
 
 function ResolveTenant(ARequest: TRequest; out Tenant: TWLTenant): Boolean;
@@ -229,8 +245,8 @@ begin
   Tenant.Host     := Key;
   Tenant.IsAdmin  := SameText(Key, ADMIN_TENANT);
   Tenant.Dir      := TenantDir(Key);
-  Tenant.DbPath   := Tenant.Dir + 'db' + PathDelim + 'data.db';
   Tenant.FilesDir := Tenant.Dir + 'files' + PathDelim;
+  Tenant.DbPath:=Tenant.FilesDir+'db'+PathDelim+'wekan.db';
 
   if AutoProvision and not EnsureTenantStore(Tenant) then Exit;
 

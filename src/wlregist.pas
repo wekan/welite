@@ -3,7 +3,7 @@ unit wlregist;
 {
   WeKan-Lite — domain registry (docs/goals.md G8, the Global Admin's data store)
 
-  Backed by data/admin/db/data.db. Holds the host -> tenant mapping that the Global Admin
+  Backed by data/admin/files/db/wekan.db. Holds the host -> tenant mapping that the Global Admin
   edits (create/rename/disable a domain, aliases). wltenant.pas consults this on every
   request to decide whether a Host: is a served tenant.
 
@@ -52,6 +52,8 @@ function RegistryValidHost(const Host: string): Boolean;
 function RegistryAddDomain(const Host: string): Boolean;
 function RegistrySetEnabled(const Host: string; Enabled: Boolean): Boolean;
 
+// Stable short directory key of a canonical domain (aliases share its mapping).
+function RegistryStorageKey(const Host:string):string;
 // All registered domains as rows of (host, enabled, createdAt), for the Global Admin panel.
 function RegistryListDomains: TWLRows;
 
@@ -73,7 +75,7 @@ begin
   if AdminDb <> nil then
     Exit;
   // The admin tenant dir/db is expected to exist (created by the Global Admin bootstrap).
-  AdminDb := WLDbOpen(AdminDbPath);
+  AdminDb := TWLDb.Create(AdminDbPath);
   if AdminDb = nil then
     Exit;
   AdminDb.Exec(
@@ -86,6 +88,8 @@ begin
     'CREATE TABLE IF NOT EXISTS domain_aliases (' +
     '  alias TEXT PRIMARY KEY,' +
     '  host TEXT NOT NULL REFERENCES domains(host) ON DELETE CASCADE);');
+  if not AdminDb.Exec('CREATE TABLE IF NOT EXISTS tenantdirs(id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 268435455),host TEXT NOT NULL UNIQUE); INSERT INTO tenantdirs(host) SELECT host FROM domains WHERE host NOT IN (SELECT host FROM tenantdirs) ORDER BY host;') then
+    raise Exception.Create('Could not initialize tenant directory mapping');
 end;
 
 function RegistryCanonicalHost(const Host: string): string;
@@ -137,8 +141,9 @@ begin
   Result := False;
   if (AdminDb=nil) or not RegistryValidHost(Host) then Exit;
   Result := AdminDb.Exec(Format(
-    'INSERT OR IGNORE INTO domains(host,enabled,createdAt) VALUES(%s,1,%s);',
-    [QuotedStr(Host), QuotedStr(NowIso)]));
+    'BEGIN IMMEDIATE; INSERT OR IGNORE INTO domains(host,enabled,createdAt) VALUES(%s,1,%s); INSERT INTO tenantdirs(host) VALUES(%s) ON CONFLICT(host) DO NOTHING; COMMIT;',
+    [QuotedStr(Host), QuotedStr(NowIso),QuotedStr(Host)]));
+  if not Result then AdminDb.Exec('ROLLBACK;');
 end;
 
 function RegistrySetEnabled(const Host: string; Enabled: Boolean): Boolean;
@@ -151,6 +156,16 @@ begin
   Result := AdminDb.Exec(Format(
     'UPDATE domains SET enabled=%d, modifiedAt=%s WHERE host=%s;',
     [Flag, QuotedStr(NowIso), QuotedStr(Host)]));
+end;
+
+function RegistryStorageKey(const Host:string):string;
+var R:TWLRows; N:LongInt;
+begin
+  Result:='';if AdminDb=nil then Exit;
+  R:=AdminDb.Query('SELECT id FROM tenantdirs WHERE host='+QuotedStr(RegistryCanonicalHost(Host))+';');
+  if Length(R)<>1 then Exit;
+  N:=StrToIntDef(R[0][0],0);if (N<1) or (N>268435455) then Exit;
+  Result:='d'+LowerCase(IntToHex(N,7));
 end;
 
 function RegistryListDomains: TWLRows;

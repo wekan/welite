@@ -17,6 +17,6 @@ working prototypes in this tree** and aligned to the portable contract:
 
 Keep shipped path components DOS 8.3-safe: names of at most eight characters,
 extensions of at most three, letters/digits/hyphen/underscore, and one extension dot.
-Host-only VCS/editor dotfiles are exceptions. Build intermediates belong under
+Host-only VCS/editor dotfiles are exceptions. Runtime paths, strict SQLite auxiliary names and offline migration are documented in [docs/runtime.md](docs/runtime.md). Build intermediates belong under
 `build/arch/<code>/` and collected binaries under `build/bin/w<code>.exe`, with platform
 codes of at most seven characters. See `TODO.md` for implementation status.

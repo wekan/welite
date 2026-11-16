@@ -10,6 +10,7 @@ from bodyids import run as check_body_ids
 from sessions import run as check_sessions
 from tokens import run as check_tokens
 from drop import run as check_drop
+from store import run as check_store
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -81,7 +82,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             admin = register('administrator')
             member = register('member')
             check_admin_tiers(request,tmp,admin)
-            db = tmp/'data/local/db/data.db'
+            db = tmp/'data/local/files/db/wekan.db'
             assert request('GET', '/designer?sessionId='+admin)[0] == 200
             with sqlite3.connect(db) as con:
                 con.execute("INSERT INTO pages(id,url,title,createdAt,modifiedAt) VALUES('p','/demo','Secret page','now','now')")
@@ -233,6 +234,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             if os.environ.get('WELITE_UI') == '1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/actions.js'),'http://localhost:'+str(port),admin],check=True)
             check_sessions(request,db,admin)
+            check_store(request,db,admin)
             check_drop(request,db,admin)
             if os.environ.get('WELITE_UI')=='1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/drag.js'),'http://localhost:'+str(port),admin],check=True)
@@ -246,6 +248,11 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             with sqlite3.connect(db) as con:
                 con.execute('DELETE FROM login_tokens')
             assert request('GET', '/designer?sessionId='+admin)[0] == 302
+            if os.environ.get('WELITE_SHORT_NAMES')=='1':
+                import re
+                for path in (tmp/'data').rglob('*'):
+                    assert re.fullmatch(r'[A-Za-z0-9_-]{1,8}(\.[A-Za-z0-9_-]{1,3})?',path.name),path
+                print('PASS: every live generated runtime component, including SQLite sidecars and attachment bytes, is DOS 8.3')
             print('PASS: all Designer gates, role changes, disabled users, revoked tokens, client binding')
         finally:
             proc.terminate()

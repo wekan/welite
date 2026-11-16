@@ -88,6 +88,8 @@ var Db:TWLDb; Lock,Sql:string; Bytes:RawByteString; Remaining:Int64; i,Amount:In
 begin
   if (ByteCount<32) or (ByteCount mod 32<>0) or (ByteCount>64*1024*1024) then
     raise Exception.Create('Entropy stock size must be a multiple of 32 between 32 bytes and 64 MiB');
+  if (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1') and not ShortDbName(FileName) then
+    raise Exception.Create('Strict mode requires an 8.3 database filename with an extension');
   if LowerCase(ExtractFileExt(FileName))<>'.db' then raise Exception.Create('Entropy stock needs a .db filename');
   if not ForceDirectories(ExtractFileDir(ExpandFileName(FileName))) then raise Exception.Create('Could not create entropy directory');
   Lock:=ChangeFileExt(FileName,'.lck');

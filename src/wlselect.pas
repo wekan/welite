@@ -8,6 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
+uses wlstore;
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -99,13 +100,8 @@ begin
   finally Ids.Free; end;
 end;
 function AttachmentPath(const T:TWLTenant; const Id:string):string;
-var i:Integer;
-begin
-  if Id='' then raise Exception.Create('Invalid attachment ID');
-  for i:=1 to Length(Id) do if not (Id[i] in ['a'..'z','A'..'Z','0'..'9','-','_']) then
-    raise Exception.Create('Invalid attachment ID');
-  Result:=T.FilesDir+'attachments'+PathDelim+Id;
-end;
+begin Result:=StoreFilePath(T.FilesDir,'attachme',Id);end;
+
 procedure Error(Response:TResponse; Code:Integer; const Message:string);
 begin
   Response.Code:=Code; Response.ContentType:='text/html; charset=utf-8';
@@ -354,6 +350,7 @@ begin
         Source:=TFileStream.Create(SourcePath,fmOpenRead or fmShareDenyNone);
         try
           if FileExists(DestPath) then raise Exception.Create('Attachment destination exists');
+          if not ForceDirectories(ExtractFileDir(DestPath)) then raise Exception.Create('Could not create attachment directory');
           Copied.Add(DestPath);
           Dest:=TFileStream.Create(DestPath,fmCreate);
           try Dest.CopyFrom(Source,0); finally Dest.Free; end;

@@ -81,6 +81,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
+uses wlstore;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -1143,10 +1144,10 @@ begin
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(BoardId, '"')]));
 end;
 
-// ---- attachments: metadata in `attachments`, bytes in files/attachments/<id> --------------
+// ---- attachments: metadata in `attachments`, bytes in files/attachme/<digest components> --------------
 function AttachDir(const T: TWLTenant): string;
 begin
-  Result := T.FilesDir + 'attachments' + PathDelim;
+  Result := T.FilesDir + 'attachme' + PathDelim;
 end;
 
 function ReadFileBytes(const Path: string): string;
@@ -1192,8 +1193,8 @@ begin
     begin SendError(aResponse,400,'Invalid attachment parent'); Exit; end;
     Bytes := DecodeStringBase64(O.Get('fileData', ''));
     Id := NewId;
-    ForceDirectories(AttachDir(T));
-    WriteFileBytes(AttachDir(T) + Id, Bytes);
+    ForceDirectories(ExtractFileDir(StoreFilePath(T.FilesDir,'attachme',Id)));
+    WriteFileBytes(StoreFilePath(T.FilesDir,'attachme',Id), Bytes);
     T.Db.Exec(Format(
       'INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,' +
       'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
@@ -1223,7 +1224,7 @@ begin
   Id := aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse, T.Db, Id, R) then Exit;
   if not ApiAuthBoard(T, aResponse, UserId, R[0][0], False) then Exit;
-  Bytes := ReadFileBytes(AttachDir(T) + Id);
+  Bytes := ReadFileBytes(StoreFilePath(T.FilesDir,'attachme',Id));
   SendJson(aResponse, Format(
     '{"success":true,"base64Data":%s,"fileName":%s,"fileSize":%d,"storageBackend":"filesystem"}',
     [AnsiQuotedStr(EncodeStringBase64(Bytes), '"'), AnsiQuotedStr(R[0][4], '"'), Length(Bytes)]));
@@ -1260,7 +1261,7 @@ begin
   Id := aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse, T.Db, Id, R) then Exit;
   if not ApiAuthBoard(T, aResponse, UserId, R[0][0], True) then Exit;
-  if FileExists(AttachDir(T) + Id) then DeleteFile(AttachDir(T) + Id);
+  if FileExists(StoreFilePath(T.FilesDir,'attachme',Id)) then DeleteFile(StoreFilePath(T.FilesDir,'attachme',Id));
   T.Db.Exec(Format('DELETE FROM attachments WHERE id=%s;', [QuotedStr(Id)]));
   SendJson(aResponse, Format('{"success":true,"attachmentId":%s,"fileName":%s}',
     [AnsiQuotedStr(Id, '"'), AnsiQuotedStr(R[0][4], '"')]));

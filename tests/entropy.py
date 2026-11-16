@@ -22,6 +22,9 @@ with tempfile.TemporaryDirectory(prefix='wlrandom-',dir=os.environ['TMPDIR']) as
             settings=dict(env)
             if stock is not None:settings['WELITE_ENTROPY_FILE']=str(stock)
             return subprocess.run([str(program),*map(str,args)],env=settings,capture_output=True,text=True,timeout=30)
+        if os.environ.get('WELITE_SHORT_NAMES')=='1':
+            invalid=run(native,'create',tmp/'overlongname.db',32)
+            assert invalid.returncode!=0 and '8.3 database filename' in invalid.stderr
         assert len(run(native).stdout.strip())==64
         assert run(portable).returncode!=0
         stock=tmp/(backend+'.db')

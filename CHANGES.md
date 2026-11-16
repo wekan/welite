@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Short runtime paths and offline data migration
+
+- Store tenant databases under `files/db/wekan.db`, attachment bytes under `attachme`
+  and avatars under `avatars`. Persist short domain keys in the reserved registry;
+  preserve full names, aliases and IDs in SQLite. Hash full file IDs into short path
+  components so case-sensitive IDs remain distinct on case-insensitive filesystems.
+- Atomically allocate short temporary directories and skip pre-existing names. Add
+  `WELITE_DATA` for selecting the runtime root. Refuse detected legacy layouts.
+- Add `releases/pathmove.py`: copy legacy databases/bytes to a fresh verified tree,
+  publish only after preparation succeeds and retain the original data unchanged.
+- Add strict `WELITE_SHORT_NAMES=1` validation of `SQLITE_ENABLE_8_3_NAMES=2`, including
+  actual live WAL/SHM/journal filenames. Every database client must use the same policy.
+  Use one CLI initialization argument to retain query execution on SQLite 3.54.1.
+- Verify durable domain keys, restart and temp collisions, migrated row/byte retention,
+  unsafe migration refusal, attachment upload/download/delete and full HTTP workflows
+  with linked and CLI backends. Real retro filesystem verification remains pending.
+
 ## 2026-11-16 Optional selected-card and multi-touch dragging
 
 - Activate local vendored InteractJS on editable boards while retaining checkbox and

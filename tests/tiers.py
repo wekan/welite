@@ -2,6 +2,7 @@
 from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlsplit
 import sqlite3
+from paths import domain_db
 
 class Fields(HTMLParser):
     def __init__(self):
@@ -29,7 +30,7 @@ def run(request, tmp, local_admin):
     assert request('GET', '/admin/domains?sessionId='+global_admin, host='admin')[0] == 200
     assert request('GET', '/admin/domains?sessionId='+local_admin, host='admin')[0] == 302
     assert request('GET', '/admin/domains?sessionId='+global_admin)[0] == 302
-    registry = tmp/'data/admin/db/data.db'
+    registry = tmp/'data/admin/files/db/wekan.db'
     def action(host, verb='add'):
         status, _, body = request('GET','/admin/domains?sessionId='+global_admin,host='admin')
         assert status == 200
@@ -39,7 +40,7 @@ def run(request, tmp, local_admin):
     for bad in ['../escape','admin','local','localhost','127.0.0.1','bad/host','bad..host','-bad.example','bad-.example']:
         assert action(bad)[0] == 400, bad
     assert action('team.example')[0] == 302
-    db = tmp/'data/domains/team.example/db/data.db'
+    db = domain_db(tmp/'data','team.example')
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
     status, headers, _ = request('POST','/register',{'username':'team-admin','password':'test-password','confirm':'test-password'},host='team.example')

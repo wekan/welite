@@ -45,6 +45,7 @@ type
     property Path: string read FPath;
   end;
 
+function ShortDbName(const Path:string):Boolean;
 function WLDbOpen(const APath: string): TWLDb;
 procedure WLDbClose(Db: TWLDb);
 
@@ -75,14 +76,35 @@ end;
 
 { TWLDb }
 
+function ShortDbName(const Path:string):Boolean;
+var Base,Ext,Text:string;i:Integer;
+begin
+  Base:=ChangeFileExt(ExtractFileName(Path),'');Ext:=Copy(ExtractFileExt(Path),2,MaxInt);
+  Result:=(Length(Base)>=1) and (Length(Base)<=8) and (Length(Ext)>=1) and (Length(Ext)<=3);
+  Text:=Base+Ext;
+  for i:=1 to Length(Text) do if not (Text[i] in ['a'..'z','A'..'Z','0'..'9','-','_']) then Result:=False;
+end;
+
 constructor TWLDb.Create(const APath:string; Portable:Boolean);
+var Options:TWLRows;
 begin
   inherited Create;
   FPath := APath;
+  if (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1') and not ShortDbName(APath) then
+    raise Exception.Create('Strict mode requires an 8.3 database filename with an extension');
   {$IFNDEF WLDB_CLI}
   if sqlite3_open(PChar(FPath), @FHandle) <> SQLITE_OK then
     raise Exception.CreateFmt('wldb: cannot open %s', [FPath]);
   Exec('PRAGMA busy_timeout=5000;');
+  {$ENDIF}
+  if GetEnvironmentVariable('WELITE_SHORT_NAMES')='1' then
+  begin
+    Options:=Query('SELECT sqlite_compileoption_used(''ENABLE_8_3_NAMES=2'');');
+    if (Length(Options)<>1) or (Options[0][0]<>'1') then
+      raise Exception.Create('Short filenames require SQLite built with SQLITE_ENABLE_8_3_NAMES=2 for every database tool');
+    if not Exec('PRAGMA temp_store=MEMORY;') then raise Exception.Create('Could not configure short-name temporary storage');
+  end;
+  {$IFNDEF WLDB_CLI}
   // recommended pragmas for a single-writer embedded server
   Exec('PRAGMA foreign_keys = ON;');
   // WAL needs shared-memory/mmap, which classic Amiga filesystems don't provide; fall back to
@@ -93,6 +115,7 @@ begin
   if Portable then Exec('PRAGMA journal_mode=DELETE;') else Exec('PRAGMA journal_mode=WAL;');
   {$ENDIF}
   {$ENDIF}
+
 end;
 
 destructor TWLDb.Destroy;
@@ -114,7 +137,8 @@ begin
     // large query output. It checks the child exit status and keeps stderr separate.
     // Leading whitespace keeps schema comments (-- ...) from becoming CLI options.
     Result := RunCommand('sqlite3', ['-batch', '-bail', '-csv', '-noheader',
-      '-cmd','.timeout 5000','-cmd','PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL;', ExpandFileName(DbPath), ' '+Sql], Output);
+      '-cmd','.timeout 5000', ExpandFileName(DbPath),
+      ' PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+Sql], Output);
   except
     Result := False;
   end;

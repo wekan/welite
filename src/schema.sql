@@ -307,7 +307,7 @@ CREATE INDEX idx_activities_board ON activities(boardId, createdAt);
 CREATE INDEX idx_activities_card  ON activities(cardId, createdAt);
 
 -- ============================ ATTACHMENTS ============================
--- File metadata only; bytes live outside SQLite in data/domains/<domain>/files/attachments/<id>
+-- File metadata only; bytes live outside SQLite in data/domains/<key>/files/attachme/<digest components>
 -- (or an external store). IDs/refs kept as plain TEXT (not FK-constrained) to avoid insert
 -- ordering pain, consistent with the board defaults above.
 CREATE TABLE attachments (

@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlsplit
 import hashlib
 import json
 import sqlite3
+from paths import domain_db
 
 def run(request,db,admin):
     name='crypto-user';password='test-password'
@@ -25,7 +26,7 @@ def run(request,db,admin):
         services=user[4]
         assert meta[1]==hashlib.sha256(str(db).encode()).hexdigest()
         assert meta[2]==hashlib.sha256(json.loads(services)['password'].encode()).hexdigest() and meta[3]=='api'
-    other=db.parents[2]/'domains/team.example/db/data.db'
+    other=domain_db(db.parents[3],'team.example')
     with sqlite3.connect(other) as con:
         con.execute('INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES(?,?,?,?,?)',user)
         con.execute('INSERT INTO login_tokens VALUES(?,?,?,?)',token)

@@ -5,7 +5,7 @@ program wlhttp;
 
   Wires the pieces distilled from the prototypes into one multitenant server:
     fphttpapp + httproute   (stack used by both https://github.com/wekan/wami/blob/main/wekan.pas and https://github.com/wekan/omi/blob/main/public/server.pas)
-    wltenant                Host: header -> data/domains/<domain>/db/data.db   (docs/goals.md G8)
+    wltenant                Host: header -> data/domains/<key>/files/db/wekan.db   (docs/goals.md G8)
     wlauth                  no-cookie / no-JS sessions + action-tokens          (docs/goals.md G4)
     wldb                    SQLite behind one interface                         (docs/sqlite.md)
 
@@ -342,7 +342,7 @@ begin
 end;
 
 var
-  PortEnv, PublicDir, StaticUrl, I18nDir: string;
+  PortEnv, PublicDir, StaticUrl, I18nDir,DataDir: string;
 begin
   // HTTP, SQLite text and JSON use UTF-8 even on hosts whose system codepage is unset.
   SetMultiByteConversionCodePage(CP_UTF8);
@@ -364,7 +364,9 @@ begin
     Halt(0);
   end;
 
-  TenantInit(DATA_ROOT);
+  DataDir:=GetEnvironmentVariable('WELITE_DATA');
+  if DataDir='' then DataDir:=DATA_ROOT;
+  TenantInit(DataDir);
   if (ParamCount>0) and (ParamStr(1)='initadmin') then
   begin InitGlobalAdmin; Halt(0); end;
 
