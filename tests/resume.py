@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory(prefix='wlresume-',dir=os.environ['TMPDIR']) as
             schema=current['$s']['p']['services']['$s']['p']['resume']['$s']['p']['loginTokens']['i'][0]
             assert schema['$s']['p']['when']==dict(t='date')
             before=read()
-            for command in [dict(op='append',hashedToken=digest('first'),when=1),dict(op='append',hashedToken='a'*64,when=1),dict(op='append',hashedToken=digest('x').rstrip('='),when=1),dict(op='append',hashedToken=digest('x'),when='2026-11-16'),dict(op='append',hashedToken=digest('x'),when=1.5),dict(op='append',hashedToken=digest('x'),when=2**63),dict(op='append',hashedToken=digest('x'),when=1,token='never-store'),dict(op='clear',hashedToken=digest('first')),dict(op='unknown')]:
+            for command in [dict(op='append',hashedToken=digest('first'),when=1),dict(op='append',hashedToken='a'*64,when=1),dict(op='append',hashedToken=digest('x').rstrip('='),when=1),dict(op='append',hashedToken=digest('x'),when='2026-11-16'),dict(op='append',hashedToken=digest('x'),when=1.5),dict(op='append',hashedToken=digest('x'),when=2**63),dict(op='append',hashedToken=digest('x'),when=1,token='never-store'),dict(op='clear',hashedToken=digest('first')),dict(op='convert',token=''),dict(op='convert',token='x'*4097),dict(op='convert',token='first',when=123),dict(op='unknown')]:
                 assert edit(command)=='error',command
                 assert read()==before,'Rejected resume edit changed its source'
             assert edit(dict(op='append',hashedToken=digest('second'),when=2**63-1))=='ok'
@@ -95,10 +95,36 @@ with tempfile.TemporaryDirectory(prefix='wlresume-',dir=os.environ['TMPDIR']) as
             for stamp,at,life,expected in [(8640000000000000,0,1,'invalid'),(8640000000000000-1,8640000000000000-1,1,'valid'),(-8640000000000000,-8640000000000000,1,'valid'),(-8640000000000000,-8640000000000000+1,1,'expired'),(2**63-1,0,1,'invalid')]:
                 replace(dict(services=dict(resume=dict(loginTokens=[dict(hashedToken=digest('edge'),when=stamp)]))))
                 assert state('edge',at,life)==expected,(stamp,at,life)
+            # Conversion preserves the legacy timestamp/type and unknown siblings.
+            replace(dict(services=dict(resume=dict(loginTokens=[dict(token='convert',when=99.9,extra=dict(keep=True)),dict(hashedToken=digest('sibling'),when=123)],keep=True))))
+            assert edit(dict(op='convert',token='absent'))=='ok'
+            with ThreadPoolExecutor(max_workers=16) as pool:
+                results=list(pool.map(lambda _:edit(dict(op='convert',token='convert')),range(16)))
+            assert results==['ok']*16,results
+            converted=read();tokens=converted['services']['resume']['loginTokens']
+            assert tokens==[dict(when=99.9,extra=dict(keep=True),hashedToken=digest('convert')),dict(hashedToken=digest('sibling'),when=123)]
+            assert state('convert',1098)=='valid' and state('convert',1099)=='expired'
+            assert edit(dict(op='convert',token='convert'))=='ok' and read()==converted
+            # An already-installed hash wins; the raw duplicate cannot renew it.
+            replace(dict(services=dict(resume=dict(loginTokens=[dict(token='race',when=500),dict(hashedToken=digest('race'),when=1)]))))
+            assert edit(dict(op='convert',token='race'))=='ok'
+            assert read()['services']['resume']['loginTokens']==[dict(hashedToken=digest('race'),when=1)]
+            for entries in [[dict(token='bad',when=1),dict(token='bad',when=2)],
+                            [dict(hashedToken=digest('bad'),when=1),dict(hashedToken=digest('bad'),when=2)],
+                            [dict(token='bad',hashedToken=digest('bad'),when=1)],
+                            [dict(token='bad',when='100')], [dict(token='bad')],
+                            [dict(token='bad',when=8640000000000001)]]:
+                replace(dict(services=dict(resume=dict(loginTokens=entries))))
+                before=read();assert edit(dict(op='convert',token='bad'))=='error' and read()==before
+            replace(dict(services=dict(resume=dict(loginTokens=[dict(token='rollback',when=1)]))))
+            before=read()
+            update='UPDATE '+table+' SET _ferretdb_sjson='+wrap('wl_resume(json(_ferretdb_sjson),'+q(json.dumps(dict(op='convert',token='rollback')))+')')+';'
+            assert sql('BEGIN IMMEDIATE; '+update+' SELECT no_such_function(); COMMIT;','exec')=='error'
+            assert read()==before,'Failed transaction committed legacy conversion'
             # Malformed containers are never replaced silently.
             for document in [dict(services=None),dict(services=dict(resume='bad')),dict(services=dict(resume=dict(loginTokens=None))),dict(services=dict(resume=dict(loginTokens={})))]:
                 assert sql('UPDATE '+table+' SET _ferretdb_sjson='+wrap('wl_sjson('+q(json.dumps(document))+",'','{}')")+';','exec')=='ok'
                 before=read();assert edit(dict(op='append',hashedToken=digest('new'),when=1))=='error' and read()==before
                 if isinstance(document.get('services'),dict) and isinstance(document['services'].get('resume'),dict):
                     assert edit(dict(op='clear'))=='ok' and read()['services']['resume']['loginTokens']==[]
-        print('PASS: '+backend+' Meteor SHA256/base64 hashes, typed Date append/remove/clear, strict input, TEXT/JSONB atomic writes, 16 concurrent distinct tokens, one duplicate winner, typed/legacy validity, expiry boundaries and pruning')
+        print('PASS: '+backend+' Meteor SHA256/base64 hashes, typed Date append/remove/clear, strict input, TEXT/JSONB atomic writes, 16 concurrent distinct tokens, one duplicate winner, typed/legacy validity, expiry boundaries, pruning and atomic legacy conversion')

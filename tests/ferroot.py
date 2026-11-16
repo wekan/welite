@@ -273,6 +273,13 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 resume_doc['services']['resume']['loginTokens'].append(dict(hashedToken=new_hash,when=DateMs(1794835200123)))
                 actual_resume=client.find('users','resume-doc')[0]
                 assert encode(actual_resume)==encode(resume_doc),(repr(actual_resume),repr(resume_doc))
+                # A conversion keeps the exact BSON timestamp and unknown metadata.
+                with ThreadPoolExecutor(max_workers=8) as pool:
+                    converted=list(pool.map(lambda _:sql(resume_sql(dict(op='convert',token='legacy-plain-token')),'exec'),range(8)))
+                assert converted==['ok']*8,converted
+                legacy=resume_doc['services']['resume']['loginTokens'][1]
+                del legacy['token'];legacy['hashedToken']=meteor_hash('legacy-plain-token')
+                assert encode(client.find('users','resume-doc')[0])==encode(resume_doc),'Legacy conversion changed BSON types/bits or sibling data'
                 # Duplicate hashes already present in one document are all removed.
                 duplicated=dict(hashedToken=first_hash,when=DateMs(100),extra=Long(42))
                 client.command({'update':'users','updates':[dict(q=dict(_id='resume-doc'),u={'$push':{'services.resume.loginTokens':duplicated}})]})

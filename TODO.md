@@ -268,7 +268,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Stored MFA/LDAP/password-login overrides now resolve before deployment defaults, with snapshot-bound proofs, registration and live precedence/revocation tests.
   Fractional day/Date expiry arithmetic now passes 89 Node.js oracle vectors in normal/checked builds; resume validation reuses the Date kernel.
   Fractional shared lifetimes now preserve exact milliseconds through snapshot-guarded password/OTP issuance and validation, with live Node.js/SQL boundary tests.
-  Remaining: existing Meteor bearer adoption, expiry scheduling and legacy conversion; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
+  Typed legacy raw-to-hashed resume conversion now passes concurrency, ambiguity, rollback and live BSON preservation tests without renewing timestamps.
+  Remaining: existing Meteor bearer adoption, expiry scheduling and legacy conversion/adoption wiring; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

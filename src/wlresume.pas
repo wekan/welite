@@ -6,7 +6,7 @@ uses SysUtils,Math,fpjson,base64,wlcrypt,wlsjson,wllife;
 // It is deliberately distinct from WeLite's tenant-scoped private token digest.
 function MeteorTokenHash(const Token:string):string;
 // Pure SJSON edit: append {hashedToken,when:BSON Date}, remove matching hashes,
-// clear all records, expire old records, or revoke both forms of one raw bearer.
+// clear/expire records, revoke both forms, or convert a legacy raw bearer.
 // This function does not authorize the caller.
 function ResumeDocument(const Previous,Command:string):string;
 type TResumeState=(rsAbsent,rsValid,rsExpired,rsInvalid);
@@ -100,6 +100,58 @@ begin
     except Result:=rsInvalid;WhenMs:=0;ExpiresMs:=0;end;
   finally Raw.Free;Doc.Free;end;
 end;
+procedure ConvertLegacy(Tokens,Types:TJSONArray;const RawToken,Hash:string);
+var i,OldIndex,HashIndex,OldCount,HashCount:Integer;Value,Schema:TJSONData;
+  Entry,Hints,Typed,Item:TJSONObject;Number:Double;
+begin
+  OldIndex:=-1;HashIndex:=-1;OldCount:=0;HashCount:=0;
+  for i:=0 to Tokens.Count-1 do
+  begin
+    Value:=Child(Tokens.Items[i],'hashedToken');
+    if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString=Hash) then
+    begin Inc(HashCount);HashIndex:=i;end;
+    Value:=Child(Tokens.Items[i],'token');
+    if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString=RawToken) then
+    begin
+      // A hybrid record can otherwise be removed after selecting its hash.
+      if Child(Tokens.Items[i],'hashedToken')<>nil then Invalid;
+      Inc(OldCount);OldIndex:=i;
+    end;
+  end;
+  if (HashCount>1) or ((HashCount=0) and (OldCount>1)) then Invalid;
+  if HashCount=1 then
+  begin
+    if not Timestamp(Tokens.Items[HashIndex],Types.Items[HashIndex],Number) or
+      (Number< -8640000000000000) or (Number>8640000000000000) then Invalid;
+  end
+  else if OldCount=1 then
+  begin
+    if not Timestamp(Tokens.Items[OldIndex],Types.Items[OldIndex],Number) or
+      (Number< -8640000000000000) or (Number>8640000000000000) then Invalid;
+    Entry:=nil;Hints:=nil;Typed:=nil;Item:=nil;
+    try
+      // Keep unknown fields and their complete BSON schemas. Replace only the
+      // raw bearer field; never mint a new timestamp or infer a legacy number.
+      Entry:=TJSONObject(Tokens.Items[OldIndex].Clone);Entry.Delete('token');Entry.Add('hashedToken',Hash);
+      Schema:=Child(Child(Types.Items[OldIndex],'$s'),'p');
+      if not (Schema is TJSONObject) then Invalid;
+      Hints:=TJSONObject(Schema.Clone);Hints.Delete('token');
+      Hints.Add('hashedToken','string');
+      Typed:=ExactObject(TypedDocument(Entry.AsJSON,'',Hints.AsJSON));
+      Item:=TJSONObject.Create;Item.Add('t','object');Item.Add('$s',Child(Typed,'$s').Clone);
+      Tokens.Items[OldIndex]:=Entry;Entry:=nil;Types.Items[OldIndex]:=Item;Item:=nil;
+      Exit;
+    finally Item.Free;Typed.Free;Hints.Free;Entry.Free;end;
+  end;
+  // If another converter already installed the hash, retain that record and
+  // remove matching raw records atomically, without changing its timestamp.
+  for i:=Tokens.Count-1 downto 0 do
+  begin
+    Value:=Child(Tokens.Items[i],'token');
+    if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString=RawToken) then
+    begin Tokens.Delete(i);Types.Delete(i);end;
+  end;
+end;
 function ResumeDocument(const Previous,Command:string):string;
 var Doc,Raw,Cmd,Services,Resume,Hints,HintServices,HintResume,ArraySchema,Entry:TJSONObject;
   Tokens,Types:TJSONArray;Value,OldTypes:TJSONData;Op,Hash,Name,RawToken:string;
@@ -109,12 +161,12 @@ begin
   try
     Doc:=ExactObject(PlainDocument(Previous));Raw:=ExactObject(Previous);Cmd:=ExactObject(Command);
     Value:=Cmd.Find('op');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;Op:=Value.AsString;
-    if (Op<>'append') and (Op<>'remove') and (Op<>'clear') and (Op<>'expire') and (Op<>'revoke') then Invalid;
+    if (Op<>'append') and (Op<>'remove') and (Op<>'clear') and (Op<>'expire') and (Op<>'revoke') and (Op<>'convert') then Invalid;
     for i:=0 to Cmd.Count-1 do
     begin
       Name:=Cmd.Names[i];if Name='op' then Continue;
       if (Name='hashedToken') and ((Op='append') or (Op='remove')) then Continue;
-      if (Name='token') and (Op='revoke') then Continue;
+      if (Name='token') and ((Op='revoke') or (Op='convert')) then Continue;
       if (Name='before') and (Op='expire') then Continue;
       if (Name='when') and (Op='append') then Continue;
       Invalid;
@@ -125,7 +177,7 @@ begin
       Hash:=Value.AsString;ValidateHash(Hash);
     end;
     RawToken:='';
-    if Op='revoke' then
+    if (Op='revoke') or (Op='convert') then
     begin
       Value:=Cmd.Find('token');if (Value=nil) or (Value.JSONType<>jtString) then Invalid;
       RawToken:=Value.AsString;Hash:=MeteorTokenHash(RawToken);
@@ -165,6 +217,7 @@ begin
       for i:=0 to Tokens.Count-1 do Types.Add(OldTypes.Items[i].Clone);
     end;
     if Op='clear' then begin Tokens.Clear;Types.Clear;end
+    else if Op='convert' then ConvertLegacy(Tokens,Types,RawToken,Hash)
     else
       for i:=Tokens.Count-1 downto 0 do
       begin

@@ -252,3 +252,9 @@ exact local expiry against Node.js using the BSON Date issue timestamp, submilli
 expiry without rounding up, stored/null/environment precedence and invalid settings.
 `resume.py` checks fractional millisecond SQL expiry boundaries. Configuration and
 issuance now use the kernel; existing Meteor bearer adoption and scheduled expiry remain.
+
+Legacy conversion in `resume.py` covers atomic TEXT/JSONB raw-to-hashed edits,
+16 concurrent callers, original fractional timestamp preservation, idempotence,
+already-installed hash precedence, ambiguous/malformed refusal and rollback. Live
+`ferroot.py` checks eight concurrent conversions with exact BSON Date/Long/unknown
+and sibling preservation. Authorization/adoption of existing bearers remains separate.

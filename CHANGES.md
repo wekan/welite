@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Typed legacy resume conversion
+
+- Add an atomic `wl_resume` convert operation for one raw Meteor bearer. Replace the
+  raw field with its SHA256/base64 hash while retaining the original timestamp/type,
+  unknown fields and sibling BSON metadata. Never refresh the issue time.
+- If a hash was already installed, retain its timestamp and remove matching raw
+  records. Repeated/concurrent conversion is idempotent. Refuse duplicate hash ownership
+  within the document, ambiguous raw-only entries, hybrid records and invalid timestamps.
+- Verify TEXT/JSONB conversion, 16 simultaneous callers, already-hashed races, fractional
+  legacy timestamps, rejection without mutation and transaction rollback on both SQLite
+  backends. Live FerretDB tests check concurrent conversion and exact BSON preservation.
+- This is a storage operation, not bearer authorization: expiry/policy/source checks,
+  cross-account ambiguity and atomic local adoption must be integrated before existing
+  Meteor credentials can authenticate through it.
+
 ## 2026-11-16 Fractional shared API lifetimes
 
 - Activate decimal/scientific fractional login-expiration days in shared configuration,

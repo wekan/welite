@@ -787,6 +787,30 @@ fractional days/seconds/submilliseconds, exercises fractional OTP issuance and n
 fallback to a fractional environment value, and rejects invalid/nonfinite settings.
 `resume.py` verifies SQL equality-at-expiry with fractional milliseconds on both backends.
 
+## Typed legacy resume conversion
+
+`wl_resume(document, '{"op":"convert","token":"raw-bearer"}')` is an atomic
+storage edit. It replaces a single old raw record's token field with the canonical
+SHA256/base64 hash, retaining its original `when`, BSON type and unknown fields.
+Sibling records and metadata remain intact. Missing records are not created. If a
+single hashed record already exists, its timestamp wins and matching raw records are
+removed. Duplicate hashes, multiple raw-only candidates, matching hybrid entries and
+invalid/missing timestamps are refused. Concurrent callers cannot renew a timestamp
+or produce duplicate hash records.
+
+This follows [Meteor's legacy resume conversion](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_server.js)
+in preserving issue time and preferring an existing hash. The SQL edit makes conversion
+atomic, retains extra source fields, and rejects ambiguous source data. It performs no
+authorization and can convert an expired record; callers must check expiry and policy
+before accepting credentials. Existing-bearer adoption still needs source/settings and
+cross-account guards plus atomic creation of local authorization metadata. Conversion
+alone does not make an arbitrary Meteor bearer valid in WeLite.
+
+`resume.py` verifies TEXT/JSONB concurrency, legacy numeric fractions, idempotence,
+existing-hash precedence, malformed/ambiguous refusal and rollback. `ferroot.py` checks
+concurrent conversion against actual FerretDB with exact BSON Date/Long/unknown/sibling
+preservation on linked/CLI SQLite.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
