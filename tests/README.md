@@ -137,13 +137,13 @@ cross-process validation, promotion to admin and permanent observed revocation;
 `session.py` requires a fresh session after credential restoration before exercising
 concurrent counters. `admin.py` tests both password routes and live web/API token denial,
 while `ferroot.py` tests actual Mongo policy changes without rewriting source records.
-Challenge/enrollment support remains a separate implementation step.
+HTTP OTP login is covered below; enrollment remains a separate implementation step.
 
 `python3 tests/totp.py` verifies the portable one-time-code core against RFC SHA1
 HOTP/TOTP vectors and independent Python HMAC, with normal/checked Pascal builds.
 Coverage includes base32 case/padding/binary inputs, wide counters/timestamps, leading
 zeroes, Meteor-window edges, malformed input and the replay boundary. Durable counter
-consumption is covered below; HTTP challenge/enrollment remain separate integration work.
+consumption is covered below; enrollment remains separate integration work.
 
 `python3 tests/replay.py` verifies durable OTP counter claims on linked/CLI SQLite:
 sixteen concurrent processes with one winner, rollback of token/metadata on stale or
@@ -156,12 +156,19 @@ composes the actual claim with a token transaction.
 tokens on both SQLite backends: single successful proof use, sixteen concurrent logins,
 replay denial, forced metadata/counter rollback and retry, stale policy/factor snapshots,
 required-factor modes and LDAP fallback. `ferroot.py` additionally checks a live shared
-Argon2-secret/OTP account without BSON changes. HTTP code routing, attempt limits and
-enrollment remain separate work.
+Argon2-secret/OTP account without BSON changes. HTTP code routing and attempt limits are covered below; enrollment remains separate work.
 
 `python3 tests/attempt.py` verifies durable pre-authentication reservations on linked/CLI
 SQLite: sixteen concurrent attempts, account/peer/tenant caps, exact window boundaries,
 clock rollback, restart persistence, bounded expiry cleanup, forced write rollback/retry,
 schema refusal and separate tenants. `ferroot.py` checks private ownership and persistence
-across shared-adapter reinstall while preserving account BSON. Public login route wiring
-remains a separate step.
+across shared-adapter reinstall while preserving account BSON.
+
+`python3 tests/otphttp.py` verifies public web/form/JSON OTP login on both backends:
+wrong/missing/malformed codes, replay, forced issuer rollback/retry, durable shared
+web/API limits, spoofed forwarded headers, process restart, password-only compatibility,
+required enrollment denial and factor-bound revocation. Set `WELITE_UI=1` with `NODE`,
+`WELITE_PLAYWRIGHT` and `PLAYWRIGHT_BROWSERS_PATH` to run actual Chromium sign-in/reload
+with JavaScript disabled and Cookie headers removed. Older `admin.py` and `secret.py`
+credential-mutation cases explicitly expire attempt windows between independent cases;
+`otphttp.py` retains real counters while testing admission policy.

@@ -5,7 +5,7 @@ unit wlapi;
   against the FreePascal server unchanged.
 
   Auth (as api.py does it):
-    POST /users/login   JSON {username,password}     -> {"id","token","tokenExpires"}
+    POST /users/login   JSON {username,password,code?}     -> {"id","token","tokenExpires"}
     then every /api/... request sends  Authorization: Bearer <token>
 
   Tokens are persisted in schema.sql login_tokens (hashedToken = TokenHash(tenantDb,token)), the same
@@ -26,7 +26,7 @@ unit wlapi;
     GET  /api/boards/:boardId/lists/:listId/cards/:cardId   card
     GET  /api/boards/:boardId/swimlanes/:swimlaneId/cards   cards on a swimlane
 
-  v0.1 reference skeleton. Password check is still placeholder (same TODO as the web sign-in).
+  Password/OTP proofs and durable attempt limits are shared with the web sign-in.
 }
 
 {$mode objfpc}{$H+}
@@ -36,7 +36,7 @@ interface
 
 uses
   SysUtils, Classes, HTTPDefs, fpjson, jsonparser, DateUtils, base64,
-  wldb, wltenant, wlauth, wlpasswd, wlaccess;
+  wldb, wltenant, wlauth, wlpasswd, wlaccess, wlattemp;
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
@@ -337,26 +337,33 @@ end;
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  Username, Password, Token,UserId,CredentialRef: string;
-  R: TWLRows;
+  Username, Password, Token:string;
+  Proof:TWLLoginProof;
+  O:TJSONObject;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  Username := BodyField(aRequest, 'username');
-  if Username = '' then Username := BodyField(aRequest, 'email');
-  Password := BodyField(aRequest, 'password');
-
-  R := LoginAccount(T.Db,Username);
-  if (Length(R) = 0) or (Length(R[0]) < 2) or (not VerifyCredential(Password,R[0][1],CredentialRef)) then
-  begin SendError(aResponse, 401, 'Incorrect username or password'); Exit; end;
-  UserId := R[0][0];
-
-  Token:=NewAuthToken;
-  if not IssueLoginToken(T.Db,UserId,Token,CredentialRef,'api',90*24*60*60) then
-  begin SendError(aResponse,500,'Could not create login token'); Exit; end;
-
-  SendJson(aResponse, Format('{"id":%s,"token":%s,"tokenExpires":%s}',
-    [AnsiQuotedStr(UserId, '"'), AnsiQuotedStr(Token, '"'),
-     AnsiQuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', IncDay(LocalTimeToUniversal(Now),90)), '"')]));
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  Username:=Trim(BodyField(aRequest,'username'));
+  if Username='' then Username:=Trim(BodyField(aRequest,'email'));
+  Password:=BodyField(aRequest,'password');
+  if not ReserveLoginAttempt(T.Db,Username,aRequest.RemoteAddress,DateTimeToUnix(Now,False)) then
+  begin
+    aResponse.SetCustomHeader('Retry-After','300');
+    SendError(aResponse,429,'Too many login attempts. Try again later.');Exit;
+  end;
+  Proof:=nil;
+  if not AuthenticateAccount(T.Db,Username,Password,BodyField(aRequest,'code'),Proof) then
+  begin SendError(aResponse,401,'Incorrect credentials or one-time code');Exit;end;
+  try
+    Token:=NewAuthToken;
+    if not IssueAccountToken(T.Db,Proof,Token,'api',90*24*60*60) then
+    begin SendError(aResponse,500,'Could not create login token');Exit;end;
+    O:=TJSONObject.Create;
+    try
+      O.Add('id',Proof.UserId);O.Add('token',Token);
+      O.Add('tokenExpires',FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncDay(LocalTimeToUniversal(Now),90)));
+      SendJson(aResponse,O.AsJSON);
+    finally O.Free;end;
+  finally Proof.Free;end;
 end;
 
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);

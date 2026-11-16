@@ -390,8 +390,8 @@ Native/CLI tests cover pending versus active/malformed factors, LDAP fallback ru
 required-factor modes/admin promotion, password-route denial without token creation,
 metadata retention and durable revocation. Live Mongo edits exercise the same lookup
 policy without BSON changes. Normal HTTP/secret/crypto/session concurrency tests pass.
-The actual second-factor challenge and enrollment flows are still required before the
-shared-account task is complete; these guards prevent bypass while that work remains.
+HTTP OTP login is implemented below. Enrollment and shared Meteor session integration
+remain required before the shared-account task is complete.
 
 ## Portable TOTP foundation
 
@@ -412,7 +412,7 @@ Decoded key buffers and working HMAC digests are cleared.
 `tests/totp.py` checks published HOTP/TOTP SHA1 vectors and independent Python HMAC,
 base32 padding/case and binary secrets, counter/time boundaries, leading zeroes, drift
 edges and replay boundaries in normal/checked builds. Atomic token consumption is
-implemented below; public login/enrollment routes remain open.
+implemented below; enrollment remains open.
 
 ## Durable one-time-code replay state
 
@@ -459,8 +459,8 @@ existing tokens, even if the original values are later restored.
 16 concurrent attempts, proof reuse, metadata/counter rollback and retry, stale snapshots,
 factor replacement, required-factor modes and LDAP fallback. `ferroot.py` exercises an
 actual shared Argon2 account with an operator secret and active OTP, preserving its BSON.
-HTTP login forms/API code routing, failed-attempt limits and enrollment remain to be wired;
-existing password-only HTTP routes retain their guards until then.
+HTTP login forms and API code routing now use these proofs with the durable attempt
+limiter below. Enrollment remains open.
 
 ## Durable login attempt reservations
 
@@ -482,12 +482,16 @@ in this first implementation; deployments behind a proxy share that socket peer 
 `tests/attempt.py` verifies both backends with 16 concurrent processes, account and peer
 independence, tenant capacity, window edges, clock rollback, forced write rollback/retry,
 cleanup, malformed schema and tenant isolation. `ferroot.py` verifies ownership and
-reinstall persistence without changing BSON. HTTP routes still need to call this limiter
-before the proof factory; this kernel alone does not limit existing public routes.
+reinstall persistence without changing BSON. Both HTTP login routes now call this limiter
+before the proof factory, using server time and the socket peer. Denials return 429 and
+`Retry-After: 300`. `tests/otphttp.py` checks actual form/JSON requests, shared route caps,
+spoofed forwarded headers, restart persistence and transactional OTP rollback/retry. With
+`WELITE_UI=1`, Chromium submits the form and reloads its session with JavaScript disabled
+and Cookie headers removed, on both SQLite backends.
 
 ## Remaining before the checklist can be checked
 
-- Complete HTTP second-factor login and attempt-limiter wiring, enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete second-factor enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

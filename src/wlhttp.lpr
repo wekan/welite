@@ -30,7 +30,7 @@ uses
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
-  SysUtils, Classes, fphttpapp, httpdefs, httproute,
+  SysUtils, Classes, DateUtils, wlattemp, fphttpapp, httpdefs, httproute,
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
@@ -139,8 +139,8 @@ end;
 procedure SignInEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  Username, Password,CredentialRef: string;
-  Rows: TWLRows;
+  Username, Password: string;
+  Proof: TWLLoginProof;
   S: TWLSession;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
@@ -149,18 +149,21 @@ begin
   begin
     Username := Trim(aRequest.ContentFields.Values['username']);
     Password := aRequest.ContentFields.Values['password'];
-    Rows := LoginAccount(T.Db,Username);
-    if (Length(Rows) > 0) and (Length(Rows[0]) >= 2) and VerifyCredential(Password,Rows[0][1],CredentialRef) then
+    if not ReserveLoginAttempt(T.Db,Username,aRequest.RemoteAddress,DateTimeToUnix(Now,False)) then
     begin
-      S := CreateSession(T.Db, aRequest, Rows[0][0], Username,
-                         CredentialRef,30*24*60*60);
+      aResponse.Code:=429;aResponse.SetCustomHeader('Retry-After','300');
+      aResponse.Content:='Too many login attempts. Try again later.';aResponse.SendContent;Exit;
+    end;
+    Proof:=nil;
+    if AuthenticateAccount(T.Db,Username,Password,aRequest.ContentFields.Values['code'],Proof) then
+    try
+      S:=CreateAuthenticatedSession(T.Db,aRequest,Proof,30*24*60*60);
       if S.SessionId='' then
       begin aResponse.Code:=500; aResponse.Content:='Could not create session'; aResponse.SendContent; Exit; end;
-      aResponse.Code := 302;
-      aResponse.SetCustomHeader('Location', WithSessionId('/', S.SessionId));
-      aResponse.SendContent;
-      Exit;
-    end;
+      aResponse.Code:=302;
+      aResponse.SetCustomHeader('Location',WithSessionId('/',S.SessionId));
+      aResponse.SendContent;Exit;
+    finally Proof.Free;end;
     SendHtml(aResponse, Page32('Sign in',
       '<p>Invalid login.</p><p><a href="/sign-in">Try again</a>' +
       ' | <a href="/register">Register</a></p>'));
@@ -173,6 +176,7 @@ begin
     '<form method="POST" action="/sign-in">' + LineEnding +
     '  Username <input name="username"><br>' + LineEnding +
     '  Password <input type="password" name="password"><br>' + LineEnding +
+    '  One-time code (if enabled) <input name="code" size="6" maxlength="6"><br>' + LineEnding +
     '  <input type="submit" value="Sign in">' + LineEnding +
     '</form>' + LineEnding +
     '<p><a href="/register">Create an account (Register)</a></p>'));

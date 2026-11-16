@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 HTTP password and OTP login
+
+- Connect no-cookie web sign-in and REST login to the password/OTP proof factory and
+  atomic token issuer. Add an optional six-digit code field to the plain HTML form;
+  accept `code` alongside username/password in JSON or form REST requests.
+- Reserve durable account/peer/tenant allowances before credential verification on
+  both routes. Return 429 with Retry-After when denied; use the actual socket peer,
+  ignoring forwarded headers for admission. Both routes share counters across restart.
+- Preserve password-only accounts, factor-bound session/API validation and transactional
+  replay consumption. Required accounts without an active factor remain denied pending
+  enrollment. Return API credentials using proper JSON string encoding.
+- Verify linked/CLI HTTP login, wrong/missing/malformed codes, replay, forced issuer
+  rollback/retry, restart persistence, spoofed peer headers, shared route caps, factor
+  replacement and required-factor policy. Verify actual Chromium form submission and
+  reload with JavaScript disabled and Cookie headers removed on both backends.
+- Keep legacy policy/secret test scenarios in independent attempt windows; token rollback
+  assertions permit the intentional pre-authentication reservation while still comparing
+  all other database data. Enrollment and shared Meteor session integration remain open.
+
 ## 2026-11-16 Durable login attempt reservations
 
 - Add atomic pre-authentication reservations: five attempts per account, thirty per

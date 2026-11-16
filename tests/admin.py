@@ -56,6 +56,14 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
     with (tmp/'server.log').open('w+') as log:
         proc = subprocess.Popen([str(build/'wlhttp')], cwd=tmp, env=env, stdout=log, stderr=log)
         def request(method, path, data=None, agent='Welite-test', host='localhost', content_type=None, extra_headers=None):
+            # Independent credential/policy scenarios get a fresh attempt window.
+            # otphttp.py tests shared web/API allowances without this fixture reset.
+            if method=='POST' and path in ('/sign-in','/users/login'):
+                database=tmp/'data/local/files/db/wekan.db'
+                if database.is_file():
+                    with sqlite3.connect(database) as con:
+                        if con.execute("SELECT 1 FROM sqlite_master WHERE name='_wl_attempt'").fetchone():
+                            con.execute('UPDATE _wl_attempt SET started=0')
             conn = http.client.HTTPConnection('127.0.0.1', port, timeout=5)
             headers = {'Host': host, 'User-Agent': agent}
             if data is not None:

@@ -47,6 +47,11 @@ with tempfile.TemporaryDirectory(prefix='wlsecret-',dir=os.environ['TMPDIR']) as
                     con.execute('UPDATE users SET services_json=? WHERE username=?',(json.dumps(services),'secret-user'))
                     uid=con.execute("SELECT id FROM users WHERE username='secret-user'").fetchone()[0]
                 def login(name='secret-user',route='/users/login'):
+                    # Each secret-rotation case uses a fresh login budget; otphttp.py
+                    # covers denial and persistence of the actual shared allowance.
+                    with sqlite3.connect(db) as con:
+                        if con.execute("SELECT 1 FROM sqlite_master WHERE name='_wl_attempt'").fetchone():
+                            con.execute('UPDATE _wl_attempt SET started=0')
                     return request('POST',route,dict(username=name,password='test-password'))
                 assert login()[0]==401
                 assert login(route='/sign-in')[0]==200

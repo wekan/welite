@@ -10,7 +10,7 @@ unchanged. Code: `wlapi.pas`.
 Exactly as `api.py` does it:
 
 ```
-POST /users/login        JSON {"username","password"}  -> {"id","token","tokenExpires"}
+POST /users/login        JSON {"username","password","code"?}  -> {"id","token","tokenExpires"}
 Authorization: Bearer <token>   on every /api/... request
 ```
 
@@ -37,11 +37,22 @@ never retry an older bcrypt value. Verification budgets are documented in
 [the adapter notes](ferret.md#argon2-credential-verification). Versionless legacy records use v16; unknown versions are denied. Optional out-of-band secrets come from `WELITE_ARGON_SECRET_FILE`; configured-file
 failures deny Argon2 login. See the adapter notes for private-file and token-binding policy. Shared Meteor resume-token work is in progress.
 
-The current password-only route refuses active or malformed second-factor policies and
-covered `REQUIRE_2FA` accounts until the challenge/enrollment flow is implemented. It
-also follows WeKan's LDAP enable/fallback rules; a provider label alone does not block
-an otherwise valid local password. Existing Welite tokens are rechecked against these
-policies on use. See [shared account policy guards](ferret.md#shared-account-policy-guards).
+For an account with an active OTP factor, include a six-digit `code` string with the
+password (JSON or form fields). Leading zeroes must be preserved. The plain `/sign-in`
+form offers the same optional field without JavaScript or cookies. Missing, malformed,
+wrong or previously consumed codes cannot issue a token. Token issuance and replay
+consumption commit together; a failed issuance does not consume the code.
+
+Both login routes reserve attempts before password verification: 5 per account, 30 per
+socket peer and 300 per tenant in 300-second windows. Successful attempts count too.
+Denied reservations return HTTP 429 and `Retry-After: 300`; counters persist across
+restart and are shared across web/API routes. Forwarded headers cannot change the
+admission peer. Proxied clients share the proxy socket's peer allowance.
+
+Malformed/unknown factor policies and covered `REQUIRE_2FA` accounts without an active
+factor are denied; enrollment remains under implementation. LDAP enable/fallback policy
+still applies. Tokens are bound to the current password and canonical active factor;
+observed policy or credential changes revoke them. See [shared account policy guards](ferret.md#shared-account-policy-guards).
 
 **Authorization** (`ApiAuthBoard`): board-scoped endpoints require the token's user to be an
 active `board_members` row (writes blocked for `isReadOnly`); public boards are readable by

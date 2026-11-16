@@ -49,11 +49,12 @@ def run(request,db,admin):
     with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(services,uid))
     with sqlite3.connect(db) as con:
         con.execute("CREATE TRIGGER reject_session BEFORE INSERT ON login_tokens BEGIN SELECT RAISE(ABORT,'forced token failure'); END")
-        before='\n'.join(con.iterdump())
+        # Pre-authentication reservations persist even when token issuance fails.
+        before='\n'.join(line for line in con.iterdump() if not line.startswith('INSERT INTO "_wl_attempt"'))
     assert request('POST','/sign-in',dict(username=user,password=password))[0]==500
     assert request('POST','/users/login',dict(username=user,password=password))[0]==500
     with sqlite3.connect(db) as con:
-        assert '\n'.join(con.iterdump())==before
+        assert '\n'.join(line for line in con.iterdump() if not line.startswith('INSERT INTO "_wl_attempt"'))==before
         con.execute('DROP TRIGGER reject_session')
     # Actual Meteor services.password object; fixture independently checked by Go.
     meteor=dict(password=dict(bcrypt='$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y',reset=dict(token='preserve-reset')),resume=dict(loginTokens=[dict(hashedToken='meteor-resume-not-private')]))
