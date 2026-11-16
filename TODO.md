@@ -214,7 +214,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Audit the current implementation and record the remaining work (2026-11-16).
 - [x] Move lists up/down across swimlanes, preserving their cards and board boundaries.
 - [x] Enforce tenant-local administrator permissions on every Designer endpoint.
-- [ ] Separate reserved-host Global Admin domain management from tenant administrators.
+- [x] Separate reserved-host Global Admin domain management from tenant administrators.
 - [x] Finish Designer page listing, creation, editing, disabling and deletion.
 - [x] Finish Designer widget add/edit/delete, options and bounded layout controls.
 - [ ] Honor widget row/column spans and required inputs in published pages; add cell sort arrows.

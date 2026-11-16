@@ -107,12 +107,12 @@ begin
   // Greet the signed-in user and flag the Global Admin (users.isAdmin = 1).
   IsGAdmin := False;
   if ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
-    IsGAdmin := IsGlobalAdmin(T.Db, S)
+    IsGAdmin := IsTenantAdmin(T.Db, S)
   else S:=Default(TWLSession);
 
   Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
   if IsGAdmin then
-    Body := Body + '<p><b>Global Admin</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
+    Body := Body + '<p><b>Tenant administrator</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
             '<a href="' + HtmlAttr(WithSessionId('/admin', S.SessionId)) + '">Admin Panel</a></p>' + LineEnding
   else if S.Username <> '' then
     Body := Body + '<p>Signed in as ' + HtmlEncode(S.Username) + '.</p>' + LineEnding;
@@ -176,6 +176,12 @@ var
   First: Boolean;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
+  if T.IsAdmin then
+  begin
+    aResponse.Code:=403; aResponse.Content:='Global Admin accounts are initialized locally; public registration is disabled.';
+    aResponse.SendContent; Exit;
+  end;
+
 
   if aRequest.Method = 'POST' then
   begin
@@ -230,7 +236,7 @@ begin
   First := NoUsersYet(T);
   Body := '<h1>Register</h1>' + LineEnding;
   if First then
-    Body := Body + '<p>This first account will be the <b>Global Admin</b>.</p>' + LineEnding;
+    Body := Body + '<p>This first account will be the <b>Domain Global Admin</b>.</p>' + LineEnding;
   Body := Body +
     '<form method="POST" action="/register">' + LineEnding +
     '  Username <input name="username"><br>' + LineEnding +
@@ -298,6 +304,31 @@ begin
   end;
 end;
 
+// Local-only bootstrap: never expose first-Global-Admin registration over HTTP.
+procedure InitGlobalAdmin;
+var T: TWLTenant; R: TRequest; Uid,Username,Password,Hash,Iso: string;
+begin
+  Username:=Trim(ParamStr(2)); Password:=GetEnvironmentVariable('WELITE_ADMIN_PASSWORD');
+  if (Username='') or (Password='') then
+  begin Writeln(StdErr,'Usage: WELITE_ADMIN_PASSWORD=... welite initadmin <username>'); Halt(1); end;
+  if not ProvisionTenant(ADMIN_TENANT) then
+  begin Writeln(StdErr,'Could not provision the reserved admin tenant'); Halt(1); end;
+  R:=TRequest.Create;
+  try
+    R.Host:=ADMIN_TENANT;
+    if not (ResolveTenant(R,T) and TenantOpen(T)) then Halt(1);
+    if not NoUsersYet(T) then
+    begin Writeln(StdErr,'Global Admin is already initialized'); Halt(1); end;
+    Uid:=NewId; Hash:=HashPassword(Password); Iso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Now);
+    if not T.Db.Exec('INSERT INTO users(id,username,isAdmin,createdAt,modifiedAt,services_json) '+
+      'SELECT '+QuotedStr(Uid)+','+QuotedStr(Username)+',1,'+QuotedStr(Iso)+','+QuotedStr(Iso)+','+
+      QuotedStr('{"password":"'+Hash+'"}')+' WHERE NOT EXISTS(SELECT 1 FROM users);') or
+      (Length(T.Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Uid)+';'))=0) then
+    begin Writeln(StdErr,'Global Admin initialization failed'); Halt(1); end;
+    Writeln('Global Admin initialized. Sign in using the reserved admin host.');
+  finally R.Free; end;
+end;
+
 var
   PortEnv, PublicDir, StaticUrl, I18nDir: string;
 begin
@@ -311,6 +342,8 @@ begin
   end;
 
   TenantInit(DATA_ROOT);
+  if (ParamCount>0) and (ParamStr(1)='initadmin') then
+  begin InitGlobalAdmin; Halt(0); end;
 
   // static assets: configurable mount + disk dir (embedded build ignores the disk dir)
   PublicDir := GetEnvironmentVariable('WELITE_PUBLIC');

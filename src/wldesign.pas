@@ -583,7 +583,7 @@ end;
 function RoleAllows(Db: TWLDb; const MinRole: string; const S: TWLSession): Boolean;
 begin
   if SameText(MinRole, 'anon') then Exit(True);
-  if SameText(MinRole,'admin') then Exit(IsGlobalAdmin(Db,S));
+  if SameText(MinRole,'admin') then Exit(IsTenantAdmin(Db,S));
   Result := SameText(MinRole,'member') and (S.UserId<>'');
 end;
 
@@ -875,7 +875,7 @@ end;
 function RequireDesigner(aRequest: TRequest; aResponse: TResponse;
   out T: TWLTenant; out S: TWLSession): Boolean;
 begin
-  Result := RequireGlobalAdmin(aRequest, aResponse, T, S);
+  Result := RequireTenantAdmin(aRequest, aResponse, T, S);
   if not Result then Exit;
   Result := EnsureDesignerSchema(T.Db);
   if not Result then DesignerError(aResponse, 503, 'Designer schema unavailable');

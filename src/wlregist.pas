@@ -45,6 +45,9 @@ function RegistryHostEnabled(const Host: string): Boolean;
 // Resolve an alias to its canonical host (returns Host unchanged if it is already canonical).
 function RegistryCanonicalHost(const Host: string): string;
 
+// Canonical DNS host only; never a path, loopback alias or reserved tenant name.
+function RegistryValidHost(const Host: string): Boolean;
+
 // Register / enable / disable a domain (Global Admin operations).
 function RegistryAddDomain(const Host: string): Boolean;
 function RegistrySetEnabled(const Host: string; Enabled: Boolean): Boolean;
@@ -110,10 +113,29 @@ begin
   Result := (Length(Rows) > 0) and (Length(Rows[0]) > 0) and (Rows[0][0] = '1');
 end;
 
+function RegistryValidHost(const Host: string): Boolean;
+var i, Start: Integer;
+begin
+  Result:=False;
+  if (Host='') or (Length(Host)>253) or (Host<>LowerCase(Host)) or
+    (Host='admin') or (Host='local') or (Host='localhost') or (Host='127.0.0.1') then Exit;
+  Start:=1;
+  for i:=1 to Length(Host)+1 do
+  begin
+    if (i>Length(Host)) or (Host[i]='.') then
+    begin
+      if (i=Start) or (i-Start>63) or (Host[Start]='-') or (Host[i-1]='-') then Exit;
+      Start:=i+1;
+    end
+    else if not (Host[i] in ['a'..'z','0'..'9','-']) then Exit;
+  end;
+  Result:=True;
+end;
+
 function RegistryAddDomain(const Host: string): Boolean;
 begin
   Result := False;
-  if AdminDb = nil then Exit;
+  if (AdminDb=nil) or not RegistryValidHost(Host) then Exit;
   Result := AdminDb.Exec(Format(
     'INSERT OR IGNORE INTO domains(host,enabled,createdAt) VALUES(%s,1,%s);',
     [QuotedStr(Host), QuotedStr(NowIso)]));

@@ -1,6 +1,7 @@
 """HTTP regressions for every Designer administrator gate; no cookies or JS."""
 import http.client
 from apiscope import run as check_api_scope
+from tiers import run as check_admin_tiers
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -26,11 +27,16 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
     env = dict(os.environ, WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'))
+    bootstrap_env = dict(env, WELITE_ADMIN_PASSWORD='global-test-password')
+    bootstrap = subprocess.run([str(build/'wlhttp'),'initadmin','global-admin'],cwd=tmp,env=bootstrap_env,capture_output=True)
+    assert bootstrap.returncode == 0, bootstrap.stderr
+    repeat = subprocess.run([str(build/'wlhttp'),'initadmin','second-admin'],cwd=tmp,env=bootstrap_env,capture_output=True)
+    assert repeat.returncode != 0 and b'already initialized' in repeat.stderr
     with (tmp/'server.log').open('w+') as log:
         proc = subprocess.Popen([str(build/'wlhttp')], cwd=tmp, env=env, stdout=log, stderr=log)
-        def request(method, path, data=None, agent='Welite-test'):
+        def request(method, path, data=None, agent='Welite-test', host='localhost'):
             conn = http.client.HTTPConnection('127.0.0.1', port, timeout=5)
-            headers = {'Host': 'localhost', 'User-Agent': agent}
+            headers = {'Host': host, 'User-Agent': agent}
             if data is not None:
                 headers['Content-Type'] = 'application/json' if isinstance(data, bytes) else 'application/x-www-form-urlencoded'
             conn.request(method, path, data if isinstance(data, bytes) else urlencode(data) if data is not None else None, headers)
@@ -56,6 +62,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 return parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
             admin = register('administrator')
             member = register('member')
+            check_admin_tiers(request,tmp,admin)
             db = tmp/'data/local/db/data.db'
             assert request('GET', '/designer?sessionId='+admin)[0] == 200
             with sqlite3.connect(db) as con:

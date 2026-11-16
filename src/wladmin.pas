@@ -23,10 +23,14 @@ interface
 uses
   SysUtils, Classes, HTTPDefs, wldb, wltenant, wlauth, wlhtml;
 
-// True when the session's user is a Global Admin (users.isAdmin = 1) in the given tenant db.
-function IsGlobalAdmin(Db: TWLDb; const S: TWLSession): Boolean;
+// True when the session's user is a tenant administrator (users.isAdmin = 1) in the given tenant db.
+function IsTenantAdmin(Db: TWLDb; const S: TWLSession): Boolean;
 
 // Shared tenant-local administrator gate for Admin Panel and Designer endpoints.
+function RequireTenantAdmin(aRequest: TRequest; aResponse: TResponse;
+  out T: TWLTenant; out S: TWLSession): Boolean;
+
+// Domain management is reserved to administrators in the reserved admin tenant.
 function RequireGlobalAdmin(aRequest: TRequest; aResponse: TResponse;
   out T: TWLTenant; out S: TWLSession): Boolean;
 
@@ -53,7 +57,7 @@ begin
   aResponse.SendContent;
 end;
 
-function IsGlobalAdmin(Db: TWLDb; const S: TWLSession): Boolean;
+function IsTenantAdmin(Db: TWLDb; const S: TWLSession): Boolean;
 var Rows: TWLRows;
 begin
   Result := False;
@@ -65,7 +69,7 @@ end;
 
 // Resolve tenant + session and require the Global Admin role. Sends the right error response
 // (404 unknown domain / 302 to sign-in / 403 forbidden) and returns False when access is denied.
-function RequireGlobalAdmin(aRequest: TRequest; aResponse: TResponse;
+function RequireTenantAdmin(aRequest: TRequest; aResponse: TResponse;
   out T: TWLTenant; out S: TWLSession): Boolean;
 begin
   Result := False;
@@ -80,14 +84,34 @@ begin
     aResponse.SetCustomHeader('Location', '/sign-in');
     aResponse.SendContent; Exit;
   end;
-  if not IsGlobalAdmin(T.Db, S) then
+  if not IsTenantAdmin(T.Db, S) then
   begin
     aResponse.Code := 403; aResponse.ContentType := 'text/html; charset=utf-8';
     aResponse.Content := Page32('Forbidden',
-      '<h1>Forbidden</h1><p>Global Admin only.</p><p><a href="/">Home</a></p>');
+      '<h1>Forbidden</h1><p>Tenant administrator only.</p><p><a href="/">Home</a></p>');
     aResponse.SendContent; Exit;
   end;
   Result := True;
+end;
+
+function RequireGlobalAdmin(aRequest: TRequest; aResponse: TResponse;
+  out T: TWLTenant; out S: TWLSession): Boolean;
+begin
+  Result:=RequireTenantAdmin(aRequest,aResponse,T,S);
+  if not Result then Exit;
+  Result:=T.IsAdmin;
+  if not Result then
+  begin
+    aResponse.Code:=403;
+    aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=Page32('Forbidden','<p>Domain management requires the reserved Global Admin tenant.</p>');
+    aResponse.SendContent;
+  end;
+end;
+
+function AdminRole(const T: TWLTenant): string;
+begin
+  if T.IsAdmin then Result:='Global Admin' else Result:='Domain Global Admin';
 end;
 
 // ------------------------------------------------------------------ shared chrome
@@ -101,16 +125,17 @@ begin
 end;
 
 // Wrap a section body in the panel page with the Domains | Designer | People nav.
-function AdminLayout(const S: TWLSession; const Active, Title, Body: string): string;
+function AdminLayout(const T: TWLTenant; const S: TWLSession; const Active, Title, Body: string): string;
 var Nav: string;
 begin
-  Nav := '<p>[ ' +
-    NavLink('/admin/domains', 'Domains',  S.SessionId, SameText(Active, 'domains')) + ' | ' +
+  Nav := '<p>[ ';
+  if T.IsAdmin then Nav:=Nav+NavLink('/admin/domains','Domains',S.SessionId,SameText(Active,'domains'))+' | ';
+  Nav := Nav +
     NavLink('/designer',      'Designer', S.SessionId, SameText(Active, 'designer')) + ' | ' +
     NavLink('/admin/people',  'People',   S.SessionId, SameText(Active, 'people')) +
     ' ]</p><hr>';
-  Result := Page32('Global Admin — ' + Title,
-    '<h1>Global Admin Panel</h1>' + Nav + Body);
+  Result := Page32(AdminRole(T)+' — '+Title,
+    '<h1>'+AdminRole(T)+' Panel</h1>'+Nav+Body);
 end;
 
 // A one-button POST form (action + a single id field) carrying the section's action-token.
@@ -126,19 +151,16 @@ end;
 
 // ------------------------------------------------------------------ /admin
 procedure AdminIndex(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; S: TWLSession;
+var T: TWLTenant; S: TWLSession; Body: string;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
-  SendHtml(aResponse, AdminLayout(S, '', 'Home',
-    '<p>Welcome, ' + HtmlEncode(S.Username) + '. Choose a section:</p>' +
-    '<ul>' +
-    '<li>' + NavLink('/admin/domains', 'Domains', S.SessionId, False) +
-      ' &mdash; register and enable/disable served domains.</li>' +
-    '<li>' + NavLink('/designer', 'Designer', S.SessionId, False) +
-      ' &mdash; edit data-driven pages.</li>' +
-    '<li>' + NavLink('/admin/people', 'People', S.SessionId, False) +
-      ' &mdash; manage users and roles.</li>' +
-    '</ul>'));
+  if not RequireTenantAdmin(aRequest,aResponse,T,S) then Exit;
+  Body:='<p>Welcome, '+HtmlEncode(S.Username)+'. Choose a section:</p><ul>';
+  if T.IsAdmin then Body:=Body+'<li>'+NavLink('/admin/domains','Domains',S.SessionId,False)+
+    ' &mdash; register and enable/disable served domains.</li>';
+  Body:=Body+'<li>'+NavLink('/designer','Designer',S.SessionId,False)+
+    ' &mdash; edit this tenant''s pages.</li><li>'+NavLink('/admin/people','People',S.SessionId,False)+
+    ' &mdash; manage this tenant''s users and roles.</li></ul>';
+  SendHtml(aResponse,AdminLayout(T,S,'','Home',Body));
 end;
 
 // ------------------------------------------------------------------ /admin/domains
@@ -159,12 +181,20 @@ begin
     end;
     Action := aRequest.ContentFields.Values['action'];
     Host   := NormalizeHost(aRequest.ContentFields.Values['host']);
-    if Host <> '' then
-      case Action of
-        'add':     RegistryAddDomain(Host);
-        'enable':  RegistrySetEnabled(Host, True);
-        'disable': RegistrySetEnabled(Host, False);
+    if not RegistryValidHost(Host) then
+    begin aResponse.Code:=400; aResponse.Content:='Invalid or reserved domain'; aResponse.SendContent; Exit; end;
+    case Action of
+      'add': begin
+        if not RegistryAddDomain(Host) or not ProvisionTenant(Host) then
+        begin
+          RegistrySetEnabled(Host,False);
+          aResponse.Code:=500; aResponse.Content:='Could not provision domain'; aResponse.SendContent; Exit;
+        end;
       end;
+      'enable': RegistrySetEnabled(Host,True);
+      'disable': RegistrySetEnabled(Host,False);
+    else begin aResponse.Code:=400; aResponse.Content:='Unknown domain action'; aResponse.SendContent; Exit; end;
+    end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', WithSessionId('/admin/domains', S.SessionId));
     aResponse.SendContent; Exit;
@@ -195,7 +225,7 @@ begin
     ' Host <input name="host"> <input type="submit" value="Add"></form>' + LineEnding +
     '<p><small>localhost is always served as the built-in <b>local</b> tenant and ' +
     'need not be registered.</small></p>';
-  SendHtml(aResponse, AdminLayout(S, 'domains', 'Domains', Body));
+  SendHtml(aResponse, AdminLayout(T,S, 'domains', 'Domains', Body));
 end;
 
 // ------------------------------------------------------------------ /admin/people
@@ -207,7 +237,7 @@ var
   i: Integer;
   SelfTarget: Boolean;
 begin
-  if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
+  if not RequireTenantAdmin(aRequest, aResponse, T, S) then Exit;
 
   if aRequest.Method = 'POST' then
   begin
@@ -245,7 +275,7 @@ begin
     Body := Body + '<tr><td>' + HtmlEncode(Uname);
     if SelfTarget then Body := Body + ' <i>(you)</i>';
     Body := Body + '</td><td>' +
-      IfThen(IsAdm = '1', 'Global Admin', 'Normal') + '</td><td>' +
+      IfThen(IsAdm='1',AdminRole(T),'Normal') + '</td><td>' +
       IfThen(Disabled = '1', 'disabled', 'enabled') + '</td><td>';
     // role toggle
     if IsAdm = '1' then
@@ -254,7 +284,7 @@ begin
         Body := Body + ActionButton(S, '/admin/people', 'admin:people', 'demote', 'userId', Uid, 'Make Normal');
     end
     else
-      Body := Body + ActionButton(S, '/admin/people', 'admin:people', 'promote', 'userId', Uid, 'Make Global Admin');
+      Body := Body + ActionButton(S, '/admin/people', 'admin:people', 'promote', 'userId', Uid, 'Make '+AdminRole(T));
     // login toggle
     if Disabled = '1' then
       Body := Body + ActionButton(S, '/admin/people', 'admin:people', 'enable', 'userId', Uid, 'Enable login')
@@ -263,9 +293,9 @@ begin
     Body := Body + '</td></tr>' + LineEnding;
   end;
   Body := Body + '</table>' + LineEnding +
-    '<p><small>The first registered user is the Global Admin; new sign-ups are Normal users. ' +
+    '<p><small>New sign-ups are Normal users after the first tenant administrator. ' +
     'You cannot demote or disable your own account.</small></p>';
-  SendHtml(aResponse, AdminLayout(S, 'people', 'People', Body));
+  SendHtml(aResponse, AdminLayout(T,S, 'people', 'People', Body));
 end;
 
 end.

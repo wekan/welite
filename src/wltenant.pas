@@ -50,6 +50,9 @@ function ResolveTenant(ARequest: TRequest; out Tenant: TWLTenant): Boolean;
 // Open (and cache) the tenant's SQLite handle. Idempotent; returns the cached handle.
 function TenantOpen(var Tenant: TWLTenant): Boolean;
 
+// Provision an explicitly enabled domain, or the reserved admin tenant for local bootstrap.
+function ProvisionTenant(const Host: string): Boolean;
+
 // Absolute path to the central TLS cert dir for a host: data/certs/<host>/
 function TenantCertDir(const Host: string): string;
 
@@ -121,6 +124,8 @@ begin
     if ColonPos > 0 then
       Result := Copy(Result, 1, ColonPos - 1);
   end;
+  if (Copy(Result,1,1)='[') and (Pos(']',Result)>0) then
+    Result:=Copy(Result,1,Pos(']',Result));
   // optional www. canonicalization
   if Copy(Result, 1, 4) = 'www.' then
     Result := Copy(Result, 5, Length(Result));
@@ -140,8 +145,8 @@ end;
 // so a fresh checkout works without registering any domain in the Global Admin registry.
 function IsLocalHost(const Host: string): Boolean;
 begin
-  Result := SameText(Host, 'localhost') or SameText(Host, LOCAL_TENANT) or
-            (Pos('127.0.0.1', Host) > 0) or (Pos('::1', Host) > 0);
+  Result:=SameText(Host,'localhost') or SameText(Host,LOCAL_TENANT) or
+    (Host='127.0.0.1') or (Host='::1') or (Host='[::1]');
 end;
 
 function LoadSchemaSql: string;
@@ -160,22 +165,36 @@ end;
 
 // Create a tenant's directory layout (db/, files/attachments/, files/avatars/) and, the first
 // time, its SQLite db with the schema applied. Idempotent; safe to call on every request.
-procedure EnsureTenantStore(const Tenant: TWLTenant);
-var Db: TWLDb; Sql: string;
+function EnsureTenantStore(const Tenant: TWLTenant): Boolean;
+var Db: TWLDb; Sql: string; R: TWLRows;
 begin
-  ForceDirectories(Tenant.Dir + 'db');
-  ForceDirectories(Tenant.FilesDir + 'attachments');
-  ForceDirectories(Tenant.FilesDir + 'avatars');
-  if FileExists(Tenant.DbPath) then Exit;     // already provisioned
-  Sql := LoadSchemaSql;
-  if Sql = '' then Exit;                       // no schema available -> leave db absent (404)
-  Db := WLDbOpen(Tenant.DbPath);
-  if Db = nil then Exit;
+  Result:=False;
+  ForceDirectories(Tenant.Dir+'db');
+  ForceDirectories(Tenant.FilesDir+'attachments');
+  ForceDirectories(Tenant.FilesDir+'avatars');
+  Db:=WLDbOpen(Tenant.DbPath);
+  if Db=nil then Exit;
   try
-    Db.Exec(Sql);                             // sqlite3_exec runs the whole multi-statement script
-  finally
-    WLDbClose(Db);
-  end;
+    R:=Db.Query('SELECT name FROM sqlite_master WHERE type=''table'' AND name=''users'';');
+    if Length(R)>0 then Exit(True);
+    Sql:=LoadSchemaSql;
+    if Sql='' then Exit;
+    Result:=Db.Exec('BEGIN IMMEDIATE; '+Sql+' COMMIT;');
+    if not Result then Db.Exec('ROLLBACK;');
+  finally WLDbClose(Db); end;
+end;
+
+function ProvisionTenant(const Host: string): Boolean;
+var T: TWLTenant; Key: string;
+begin
+  Result:=False;
+  Key:=NormalizeHost(Host);
+  if (Key<>ADMIN_TENANT) and not RegistryHostEnabled(Key) then Exit;
+  if Key<>ADMIN_TENANT then Key:=RegistryCanonicalHost(Key);
+  T:=Default(TWLTenant);
+  T.Host:=Key; T.Dir:=TenantDir(Key); T.FilesDir:=T.Dir+'files'+PathDelim;
+  T.DbPath:=T.Dir+'db'+PathDelim+'data.db';
+  Result:=EnsureTenantStore(T);
 end;
 
 function TenantCertDir(const Host: string): string;
@@ -213,8 +232,7 @@ begin
   Tenant.DbPath   := Tenant.Dir + 'db' + PathDelim + 'data.db';
   Tenant.FilesDir := Tenant.Dir + 'files' + PathDelim;
 
-  if AutoProvision then
-    EnsureTenantStore(Tenant);
+  if AutoProvision and not EnsureTenantStore(Tenant) then Exit;
 
   Result := DirectoryExists(Tenant.Dir) and FileExists(Tenant.DbPath);
 end;

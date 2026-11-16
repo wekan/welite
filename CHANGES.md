@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Separate Global Admin and domain administration
+
+- Reserve the central domain registry for administrators authenticated in `data/admin`;
+  administrators of `local` and served domains retain only their own People/Designer panels.
+  Navigation and role labels now distinguish Global Admin from Domain Global Admin.
+- Add local `welite initadmin <username>` bootstrap using `WELITE_ADMIN_PASSWORD`, refusing
+  repeat initialization. Public registration never creates accounts in the reserved tenant.
+- Provision new registered domains explicitly, applying the portable schema transactionally
+  even when the registry DB already exists. Reject reserved/malformed domain names and
+  match loopback hosts exactly instead of accepting attacker-controlled substrings.
+- Verified local bootstrap, tenant/session separation, domain creation, disable/enable,
+  malformed names and spoofed loopback hosts against both linked and CLI SQLite servers.
+  Operational instructions are in `docs/admin.md`.
+
 ## 2026-11-16 Verify fresh linked and CLI server installations
 
 - Keep SQL beginning with `--` comments from being parsed as SQLite command-line options;
