@@ -4,6 +4,19 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Fractional expiry arithmetic kernel
+
+- Add decimal/scientific day parsing and IEEE binary64 millisecond expiry arithmetic
+  matching Meteor's Date construction, including truncation after addition and Date
+  range refusal. Empty/zero retains the 90-day default; negative/nonfinite/out-of-policy
+  values fail closed. The supported positive day range remains at most 36500.
+- Reuse the Date arithmetic in resume validation. Verify 89 vectors against Node.js in
+  normal and checked builds, including fractional/submillisecond durations, negative
+  timestamps, range boundaries and invalid input; retain both-backend resume regressions.
+- Fractional configuration is not activated yet: shared issuer/configuration plumbing
+  still uses whole seconds/days. The next step must preserve millisecond expiry through
+  issuance, validation and REST responses before lifting that compatibility gate.
+
 ## 2026-11-16 Resolve stored account authentication policy
 
 - Resolve shared Settings MFA, LDAP enable/fallback/migration and password-login

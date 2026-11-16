@@ -240,3 +240,9 @@ LDAP enable/fallback/migration overrides and null fallback, changed settings aft
 creation, and password disable/restore with durable observed bearer revocation. The
 native policy/crypto/enrollment and HTTP suites retain private-store behavior on both
 backends; `enrhttp.py` also covers required-factor registration and setup.
+
+`python3 tests/lifetime.py` checks decimal/scientific day parsing and Date expiry
+arithmetic against Node.js with 89 vectors in normal/checked builds: defaults, fractional
+and submillisecond durations, negative/positive timestamps, Date boundaries and rejected
+syntax/nonfinite/resource limits. Set `NODE` to the Node.js executable if needed.
+The shared configuration/issuer fractional-lifetime gate remains until integration.

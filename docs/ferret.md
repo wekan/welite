@@ -760,6 +760,22 @@ proof refusal, password disable/restore and SQRL-only refusal on both backends. 
 cover private-store behavior. A full Meteor DDP/HTTP application round trip, existing
 bearer adoption, scheduled expiry and Mongo-managed token indexes remain outstanding.
 
+## Fractional expiry kernel
+
+`wllife.pas` parses decimal/scientific positive days through 36500, with empty/zero
+selecting 90 days, independently of the host decimal separator. Negative, nonfinite,
+nondecimal and out-of-range values are refused. Its expiry operation uses binary64
+addition followed by Date-range validation and truncation, matching
+[Meteor accounts-base](https://github.com/meteor/meteor/blob/devel/packages/accounts-base/accounts_common.js)
+`_getTokenLifetimeMs` and `_tokenExpiration`. In particular, truncating the duration
+before adding it to a negative timestamp gives a different result and is avoided.
+Resume validation uses this Date kernel. `lifetime.py` checks it against executable
+Node.js Number/Date expressions in normal and checked Pascal builds.
+
+The configuration reader and issuer still enforce whole-day lifetimes. Fractional
+configuration/issuance and millisecond-preserving local/shared expiry remain the next
+integration step; the pure kernel alone does not lift that gate.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

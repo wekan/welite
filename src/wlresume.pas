@@ -1,7 +1,7 @@
 unit wlresume;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Math,fpjson,base64,wlcrypt,wlsjson;
+uses SysUtils,Math,fpjson,base64,wlcrypt,wlsjson,wllife;
 // Meteor's shared token digest is SHA256(raw UTF-8 bytes), standard padded base64.
 // It is deliberately distinct from WeLite's tenant-scoped private token digest.
 function MeteorTokenHash(const Token:string):string;
@@ -94,8 +94,7 @@ begin
       if Found<0 then Exit(rsAbsent);
       if not Timestamp(Tokens.Items[Found],Schemas.Items[Found],Number) or (Number< -MaxDateMs) or (Number>MaxDateMs) then Exit;
       Stamp:=Trunc(Number); // Date(number) truncates fractional legacy milliseconds
-      if Stamp>MaxDateMs-LifetimeMs then Exit;
-      Expiration:=Stamp+LifetimeMs;
+      Expiration:=TokenExpirationMs(Stamp,Double(LifetimeMs));
       if NowMs>=Expiration then Exit(rsExpired);
       WhenMs:=Stamp;ExpiresMs:=Expiration;Result:=rsValid;
     except Result:=rsInvalid;WhenMs:=0;ExpiresMs:=0;end;
