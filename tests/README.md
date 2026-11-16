@@ -129,3 +129,12 @@ after observed failure. Bcrypt accounts stay usable under a broken Argon2 file p
 `argonv.py` additionally compares binary and 64 KiB file secrets with the official C
 reference, private-file rejection and Python HMAC; `ferroot.py` checks a secret-backed
 Mongo account without modifying BSON. Test runners discard operator secret settings.
+
+`python3 tests/policy.py` checks shared-account password-only guards in a checked
+Pascal build: pending/active/malformed factors, REQUIRE_2FA off/admins/all and LDAP
+fallback/opt-out rules. `crypto.py` tests policy denial at direct token issuance and
+cross-process validation, promotion to admin and permanent observed revocation;
+`session.py` requires a fresh session after credential restoration before exercising
+concurrent counters. `admin.py` tests both password routes and live web/API token denial,
+while `ferroot.py` tests actual Mongo policy changes without rewriting source records.
+Challenge/enrollment support remains a separate implementation step.

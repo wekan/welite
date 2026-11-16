@@ -17,4 +17,6 @@ with tempfile.TemporaryDirectory(prefix='wlsess-',dir=os.environ['TMPDIR']) as t
                     con.execute("INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES(?,?,'now','now',?)",(uid,username,json.dumps(dict(password='credential'))))
         build=subprocess.run([os.environ.get('FPC','fpc'),*flags,'-B','-Fu'+str(root/'src'),'-FU'+str(out),'-FE'+str(out),str(root/'tests/session.lpr')],capture_output=True,text=True)
         if build.returncode:raise RuntimeError(build.stdout+build.stderr)
-        subprocess.run([str(out/'session'),str(out/'main.db'),str(out/'other.db')],env=dict(os.environ,WELITE_SESSION_IDLE='1'),check=True,timeout=20)
+        env=dict(os.environ,WELITE_SESSION_IDLE='1')
+        for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:env.pop(variable,None)
+        subprocess.run([str(out/'session'),str(out/'main.db'),str(out/'other.db')],env=env,check=True,timeout=20)

@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix='wlsecret-',dir=os.environ['TMPDIR']) as
             assert result.returncode==0,result.stdout+result.stderr
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
         env=dict(os.environ,WELITE_PORT=str(port),WELITE_DATA=str(out/'data'),WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_DESIGNER=str(root/'src/designer.sql'),WELITE_ARGON_SECRET_FILE=str(pepper))
-        for variable in ['WELITE_ENTROPY_FILE','WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','WELITE_ARGON_KEY_BYTES']:env.pop(variable,None)
+        for variable in ['WELITE_ENTROPY_FILE','WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','WELITE_ARGON_KEY_BYTES']:env.pop(variable,None)
         initialized=subprocess.run([str(build/'wlhttp'),'initadmin','global'],cwd=out,env=dict(env,WELITE_ADMIN_PASSWORD='test-password'),capture_output=True,text=True)
         assert initialized.returncode==0,initialized.stderr
         with (out/'server.log').open('w+') as log:

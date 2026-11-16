@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Shared account guards for password-only flows
+
+- Centralize shared-account policy at login lookup, token issuance and every web/API
+  token validation. Active/unknown factor types and malformed factor metadata cannot
+  be bypassed with a password alone. Pending activation without a type remains usable
+  when no factor requirement applies.
+- Match WeKan's LDAP enable/fallback/explicit opt-out rules rather than treating every
+  provider label as a local-password ban. Honor REQUIRE_2FA off/admins/all for password
+  accounts, including an account promoted to admin after token issuance.
+- Recheck the method, services and admin snapshot in the atomic token insert. A policy
+  denial removes observed web/API credentials, so restoring the prior account state
+  does not revive them. Preserve all source account metadata.
+- Verify checked policy vectors, actual native/CLI password-route denial, durable
+  issuance/revocation, admin promotion, live Mongo changes and pending setup. HTTP,
+  secret, crypto and session/concurrent-counter tests pass. Update the older session
+  fixture to require fresh login after credential revocation.
+- This is a guard, not the completed two-factor flow: challenge/enrollment support,
+  shared index metadata and Meteor session interoperability remain in TODO.
+
 ## 2026-11-16 Argon2 secret policy and token binding
 
 - Keep the default empty-secret Meteor policy and add optional operator-selected binary

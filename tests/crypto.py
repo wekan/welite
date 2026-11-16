@@ -1,5 +1,6 @@
 """Independent SHA/HMAC vectors, proxy policy and cross-process durable token binding."""
 import hashlib
+import json
 import hmac
 import ipaddress
 import os
@@ -41,8 +42,10 @@ with tempfile.TemporaryDirectory(prefix='wlcrypto-',dir=os.environ['TMPDIR']) as
         with sqlite3.connect(db) as con:
             con.executescript((root/'src/schema.sql').read_text())
             con.execute("INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES('u','user','now','now','{\"password\":\"credential\"}')")
-        def token(mode, database=db, value='api-test-token'):
-            return subprocess.check_output([str(out/'token'),mode,str(database),value],text=True).strip()
+        base=dict(os.environ)
+        for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:base.pop(variable,None)
+        def token(mode,database=db,value='api-test-token',flags=None):
+            return subprocess.check_output([str(out/'token'),mode,str(database),value],env=dict(base,**(flags or {})),text=True).strip()
         assert token('issue')=='yes'
         assert token('check')=='yes','Durable token did not survive process restart'
         with sqlite3.connect(db) as con:
@@ -64,4 +67,25 @@ with tempfile.TemporaryDirectory(prefix='wlcrypto-',dir=os.environ['TMPDIR']) as
         assert token('check')=='no','Credential restoration revived a revoked token'
         web=token('web')
         assert token('check',value=web)=='no','Web context survived restart without server metadata'
+        baseline=dict(password='credential')
+        for changed,method,flags in [(dict(twoFactorAuthentication=dict(secret='fixture',type='otp')),'password',{}),(dict(twoFactorAuthentication='malformed'),'password',{}),({},'ldap',dict(LDAP_ENABLE='true')),({},'password',dict(REQUIRE_2FA='all'))]:
+            with sqlite3.connect(db) as con:con.execute("UPDATE users SET authenticationMethod='password',services_json=? WHERE id='u'",(json.dumps(baseline),))
+            assert token('issue')=='yes' and token('check')=='yes'
+            with sqlite3.connect(db) as con:con.execute("UPDATE users SET authenticationMethod=?,services_json=? WHERE id='u'",(method,json.dumps(dict(baseline,**changed))))
+            assert token('issue',flags=flags)=='no'
+            assert token('check',flags=flags)=='no'
+            with sqlite3.connect(db) as con:con.execute("UPDATE users SET authenticationMethod='password',services_json=? WHERE id='u'",(json.dumps(baseline),))
+            assert token('check')=='no','Policy restoration revived an observed revoked token'
+        with sqlite3.connect(db) as con:con.execute("UPDATE users SET services_json=? WHERE id='u'",(json.dumps(dict(baseline,twoFactorAuthentication=dict(secret='pending'))),))
+        assert token('issue')=='yes' and token('check')=='yes'
+        with sqlite3.connect(db) as con:
+            con.execute('PRAGMA foreign_keys=ON');con.execute('DELETE FROM login_tokens')
+            con.execute("UPDATE users SET isAdmin=0,services_json=? WHERE id='u'",(json.dumps(baseline),))
+        assert token('issue',flags=dict(REQUIRE_2FA='admins'))=='yes'
+        with sqlite3.connect(db) as con:con.execute("UPDATE users SET isAdmin=1 WHERE id='u'")
+        assert token('issue',flags=dict(REQUIRE_2FA='admins'))=='no'
+        assert token('check',flags=dict(REQUIRE_2FA='admins'))=='no'
+        with sqlite3.connect(db) as con:con.execute("UPDATE users SET isAdmin=0 WHERE id='u'")
+        assert token('check')=='no'
+        print('PASS:',backend,'factor/LDAP/required-factor policy at issuance and durable validation, permanent observed revocation and pending setup')
         print('PASS:',backend,'SHA/HMAC vectors, trusted proxy chain, durable API restart/credential/tenant binding and legacy denial')

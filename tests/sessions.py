@@ -111,6 +111,32 @@ def run(request,db,admin):
         assert request('POST','/users/login',dict(username=user,password='wrong'))[0]==401
         with sqlite3.connect(db) as con:
             assert json.loads(con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0])==meteor
+    # An imported factor policy must not be bypassed through either password route.
+    policy_services=json.loads(json.dumps(meteor))
+    for factor in [dict(type='otp',secret='JBSWY3DPEHPK3PXP'),dict(type='unknown',secret='fixture'),'malformed']:
+        before=request('POST','/users/login',dict(username=user,password=password));assert before[0]==200
+        policy_api=json.loads(before[2])['token']
+        before=request('POST','/sign-in',dict(username=user,password=password));assert before[0]==302
+        policy_web=parse_qs(urlsplit(before[1]['Location']).query)['sessionId'][0]
+        blocked=json.loads(json.dumps(policy_services));blocked['twoFactorAuthentication']=factor
+        with sqlite3.connect(db) as con:
+            con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(blocked),uid))
+            count=con.execute('SELECT count(*) FROM login_tokens WHERE userId=?',(uid,)).fetchone()[0]
+        assert request('POST','/users/login',dict(username=user,password=password))[0]==401
+        denied=request('POST','/sign-in',dict(username=user,password=password))
+        assert denied[0]==200 and b'Invalid login' in denied[2]
+        with sqlite3.connect(db) as con:
+            assert con.execute('SELECT count(*) FROM login_tokens WHERE userId=?',(uid,)).fetchone()[0]==count
+            assert json.loads(con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0])==blocked
+        assert request('GET','/api/user?token='+policy_api)[0]==401
+        assert request('GET','/designer?sessionId='+policy_web)[0]==302
+        with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(policy_services),uid))
+        assert request('GET','/api/user?token='+policy_api)[0]==401
+        assert request('GET','/designer?sessionId='+policy_web)[0]==302
+    pending=json.loads(json.dumps(policy_services));pending['twoFactorAuthentication']=dict(secret='pending')
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(pending),uid))
+    assert request('POST','/users/login',dict(username=user,password=password))[0]==200
+    print('PASS: active/unknown/malformed factors block password-only web/API login and observed old tokens stay revoked; pending setup remains allowed')
     print('PASS: legacy explicit-v16/versionless Argon2 web/API login and unchanged credential metadata')
     print('PASS: actual Meteor Argon2 web/API logins, metadata preservation, credential-bound tokens and over-budget/stale-bcrypt denial')
     print('PASS: actual Meteor bcrypt web/API logins, unknown service preservation, credential-bound tokens and Argon2 precedence denial')

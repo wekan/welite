@@ -22,7 +22,7 @@ unit wlauth;
 interface
 
 uses
-  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,Sockets;
+  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,Sockets;
 
 type
   TWLSession = record
@@ -77,10 +77,10 @@ implementation
 function LoginAccount(Db:TWLDb;const Username:string):TWLRows;
 begin
   // Count disabled accounts too: an ambiguous identity is never a login choice.
-  Result:=Db.Query('SELECT id,COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(loginDisabled,0) '+
+  Result:=Db.Query('SELECT id,COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(loginDisabled,0),COALESCE(authenticationMethod,''password''),services_json,COALESCE(isAdmin,0) '+
     'FROM users WHERE username='+QuotedStr(Username)+' COLLATE BINARY LIMIT 2;');
   if Length(Result)<>1 then begin Result:=nil;Exit;end;
-  if Result[0][2]<>'0' then Result:=nil;
+  if (Result[0][2]<>'0') or not PasswordOnlyAllowed(Result[0][3],Result[0][4],Result[0][5]='1') then Result:=nil;
 end;
 
 // In-memory session context (IP/UA/counter). The durable token lives in login_tokens; this
@@ -246,16 +246,17 @@ var Rows:TWLRows; Key,TenantKey,NowIso,Expires:string;
 begin
   Result:=False;
   if (Token='') or ((Kind<>'web') and (Kind<>'api')) or (TtlSeconds<1) then Exit;
-  Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),'''') FROM users '+
+  Rows:=Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(authenticationMethod,''password''),services_json,COALESCE(isAdmin,0) FROM users '+
     'WHERE id='+QuotedStr(UserId)+' AND COALESCE(loginDisabled,0)=0;');
-  if (Length(Rows)=0) or not CredentialMatches(Rows[0][0],CredentialRef) then Exit;
+  if (Length(Rows)=0) or not PasswordOnlyAllowed(Rows[0][1],Rows[0][2],Rows[0][3]='1') or not CredentialMatches(Rows[0][0],CredentialRef) then Exit;
   Key:=TokenHash(Db,Token); TenantKey:=HashText(ExpandFileName(Db.Path));
   NowIso:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
   Expires:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',IncSecond(LocalTimeToUniversal(Now),TtlSeconds));
   if not Db.Exec(Schema) then Exit;
   if not Db.Exec('BEGIN IMMEDIATE; INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) '+
     'SELECT '+QuotedStr(Key)+',id,'+QuotedStr(NowIso)+','+QuotedStr(Expires)+' FROM users WHERE id='+QuotedStr(UserId)+
-    ' AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+'; '+
+    ' AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+
+    ' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Rows[0][1])+' AND services_json='+QuotedStr(Rows[0][2])+' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Rows[0][3])+'; '+
     'INSERT INTO authmeta(hashedToken,tenantKey,credentialRef,kind) SELECT hashedToken,'+QuotedStr(TenantKey)+','+
     QuotedStr(CredentialRef)+','+QuotedStr(Kind)+' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; COMMIT;') then
   begin Db.Exec('ROLLBACK;'); Exit; end;
@@ -296,14 +297,15 @@ begin
   try
     if not UnpackMeta(SessionId,Current) then Exit;
     if Current.TenantDb<>ExpandFileName(Db.Path) then Exit;
-    Rows:=Db.Query('SELECT u.id,u.username,COALESCE(json_extract(u.services_json,''$.password''),'''') '+
+    Rows:=Db.Query('SELECT u.id,u.username,COALESCE(json_extract(u.services_json,''$.password''),''''),'+
+      'COALESCE(u.authenticationMethod,''password''),u.services_json,COALESCE(u.isAdmin,0) '+
       'FROM login_tokens t JOIN users u ON u.id=t.userId JOIN authmeta m ON m.hashedToken=t.hashedToken '+
       'WHERE m.kind=''web'' AND m.tenantKey='+QuotedStr(HashText(ExpandFileName(Db.Path)))+
       ' AND m.credentialRef='+QuotedStr(Current.PasswordRef)+' AND t.hashedToken='+QuotedStr(TokenHash(Db,SessionId))+
       ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
       QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
     if (Length(Rows)=0) or (Rows[0][0]<>Current.UserId) or (Rows[0][1]<>Current.Username) then Exit;
-    if not CredentialMatches(Rows[0][2],Current.PasswordRef) then
+    if not PasswordOnlyAllowed(Rows[0][3],Rows[0][4],Rows[0][5]='1') or not CredentialMatches(Rows[0][2],Current.PasswordRef) then
     begin
       Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,SessionId))+';');
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId));Exit;
@@ -327,13 +329,13 @@ begin
   Result:=False; UserId:=''; if Token='' then Exit;
   Key:=TokenHash(Db,Token);
   Rows:=Db.Query('SELECT t.userId,COALESCE(json_extract(u.services_json,''$.password''),''''),'+
-    'm.credentialRef,m.kind FROM login_tokens t JOIN users u ON u.id=t.userId '+
+    'm.credentialRef,m.kind,COALESCE(u.authenticationMethod,''password''),u.services_json,COALESCE(u.isAdmin,0) FROM login_tokens t JOIN users u ON u.id=t.userId '+
     'JOIN authmeta m ON m.hashedToken=t.hashedToken WHERE t.hashedToken='+QuotedStr(Key)+
     ' AND m.tenantKey='+QuotedStr(HashText(ExpandFileName(Db.Path)))+
     ' AND COALESCE(u.loginDisabled,0)=0 AND (t.expiresAt IS NULL OR t.expiresAt>'+
     QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now)))+') LIMIT 1;');
   if Length(Rows)=0 then Exit;
-  if not CredentialMatches(Rows[0][1],Rows[0][2]) then
+  if not PasswordOnlyAllowed(Rows[0][4],Rows[0][5],Rows[0][6]='1') or not CredentialMatches(Rows[0][1],Rows[0][2]) then
   begin Db.Exec('DELETE FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';'); Exit; end;
   if Rows[0][3]='web' then
   begin

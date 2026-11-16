@@ -362,9 +362,40 @@ and Python HMAC, including private-mode, missing/empty/oversized, symlink and FI
 revocation/restoration and unaffected bcrypt login. `ferroot.py` verifies a secret-backed
 Mongo account without changing its BSON. Existing HTTP/crypto regressions still pass.
 
+## Shared account policy guards
+
+WeKan enables `accounts-2fa`. Its [Meteor implementation](https://raw.githubusercontent.com/meteor/meteor/devel/packages/accounts-2fa/2fa-server.js)
+stores `services.twoFactorAuthentication.secret` and marks a confirmed factor with
+`type: 'otp'`. `wlpolicy.pas` guards the current password-only login path: a declared
+factor type (including unknown/malformed types) requires a challenge that this path
+cannot yet satisfy. Malformed scalar/array factor values and non-string secrets are
+refused. Pending activation without a type is allowed when no requirement applies.
+
+The helper follows [WeKan's LDAP password guard](https://github.com/wekan/wekan/blob/main/server/lib/ldapPasswordLoginGuard.js):
+`authenticationMethod='ldap'` blocks local-password login when `LDAP_ENABLE='true'`,
+unless `LDAP_LOGIN_FALLBACK='true'` or `LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN='true'`.
+Other provider labels alone do not forbid an existing real password. Provider-backed
+sign-in itself is not implemented by this password route.
+
+`REQUIRE_2FA` follows [WeKan's requirement modes](https://github.com/wekan/wekan/blob/main/models/lib/twoFactorRequirement.js):
+`off` (default), `admins` or `all`, trimmed/case-normalized; other values mean off.
+Covered password accounts cannot obtain full application access through the present
+password-only path. Login lookup, direct token issuance and existing token validation
+all enforce it. Issuance also compares the method/services/admin snapshot in the same
+SQL statement that inserts the credential, closing policy changes between reads and
+write. Observed policy failures delete durable tokens and web context; restoration
+cannot revive an already revoked credential.
+
+Native/CLI tests cover pending versus active/malformed factors, LDAP fallback rules,
+required-factor modes/admin promotion, password-route denial without token creation,
+metadata retention and durable revocation. Live Mongo edits exercise the same lookup
+policy without BSON changes. Normal HTTP/secret/crypto/session concurrency tests pass.
+The actual second-factor challenge and enrollment flows are still required before the
+shared-account task is complete; these guards prevent bypass while that work remains.
+
 ## Remaining before the checklist can be checked
 
-- Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete second-factor login/enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

@@ -32,7 +32,9 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
     build(root/'src/wlfunc.lpr',tmp/'ext',['-Cg','-dWLSQLEXT'],'wlfunc.so')
     for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
         out=tmp/backend;build(root/'tests/sjsql.lpr',out,flags)
-        settings=dict(os.environ);settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
+        settings=dict(os.environ)
+        for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
+        settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
         if backend=='cli':settings['WELITE_SQLITE_EXT']=str(tmp/'ext/wlfunc.so')
         data=out/'data';data.mkdir();state=out/'state';state.mkdir();listen=port();debug=port();db=data/'wekan.sqlite'
         with (out/'server.log').open('w+') as log:
@@ -272,6 +274,15 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 pepper.write_bytes(b'wrong')
                 assert auth('password','meteor-account','test-password')=='no'
                 assert encode(client.find('users','meteor-account')[0])==secret_before
+                settings.pop('WELITE_ARGON_SECRET_FILE')
+                client.command({'update':'users','updates':[dict(q=dict(_id='meteor-account'),u={'$set':{'services.twoFactorAuthentication':dict(type='otp',secret='JBSWY3DPEHPK3PXP')}})]})
+                policy_before=encode(client.find('users','meteor-account')[0])
+                assert auth('lookup','meteor-account')=='no'
+                assert auth('password','meteor-account','test-password')=='no'
+                assert encode(client.find('users','meteor-account')[0])==policy_before
+                client.command({'update':'users','updates':[dict(q=dict(_id='meteor-account'),u={'$unset':{'services.twoFactorAuthentication.type':''}})]})
+                settings['WELITE_ARGON_SECRET_FILE']=str(pepper);pepper.write_bytes(b'operator\0secret\n')
+                assert auth('password','meteor-account','test-password')=='yes'
                 settings.pop('WELITE_ARGON_SECRET_FILE')
                 # SQL uniqueness follows the canonical BINARY/NULL semantics.
                 assert auth('lookup','user')=='yes' and auth('lookup','User')=='no'

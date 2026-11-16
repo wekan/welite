@@ -46,7 +46,11 @@ begin
     Db.Exec('UPDATE users SET services_json=''{}'' WHERE id=''u'';');
     Check(not ValidateSession(Db,R,S.SessionId,Seen) and (Seen.UserId=''),'credential change');
     Db.Exec('UPDATE users SET services_json=''{"password":"credential"}'' WHERE id=''u'';');
-    Check(ValidateSession(Db,R,S.SessionId,Seen),'credential fixture restored');
+    Check(not ValidateSession(Db,R,S.SessionId,Seen),'restoration cannot revive a revoked credential');
+    Rows:=Db.Query('SELECT COUNT(*) FROM login_tokens WHERE hashedToken='+QuotedStr(TokenHash(Db,S.SessionId))+';');
+    Check(Rows[0][0]='0','credential change removed the durable token');
+    S:=CreateSession(Db,R,'u','user'+#2+'日本語',HashText('credential'),3600);
+    Check(ValidateSession(Db,R,S.SessionId,Seen),'fresh session after credential restoration');
     for i:=0 to High(Workers) do begin Workers[i]:=TAttempt.Create(True);Workers[i].Initial:=Seen;end;
     for i:=0 to High(Workers) do Workers[i].Start;
     Accepted:=0;

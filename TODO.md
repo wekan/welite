@@ -250,7 +250,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Argon2 v19 PHC parsing, configurable verification budgets and live/HTTP logins now pass on both backends.
   Legacy v16/versionless Argon2 now passes official C-reference, live database and HTTP tests.
   Optional private Argon2 secret files and secret-bound token issuance/revocation now pass C/HTTP/live tests.
-  Remaining: Mongo account/index/session policy, typed custom-value and legacy
+  Password-only routes now enforce active-factor, required-factor and deployment LDAP policy with durable revocation.
+  Remaining: two-factor login/enrollment, Mongo account/index/session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
