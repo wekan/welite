@@ -48,19 +48,25 @@ begin
   if (Bits>0) and ((Buffer and ((LongWord(1) shl Bits)-1))<>0) then Invalid;
 end;
 function VerifyArgonPHC(const Password,Stored:RawByteString;const Limits:TArgonLimits):Boolean;
-var Parts,Params,Pair:TStringArray;Mode,i,Count:Integer;M,T,P:LongWord;HaveM,HaveT,HaveP,HaveData:Boolean;
+var Parts,Params,Pair:TStringArray;Mode,i,Count,ParamField:Integer;M,T,P,Version:LongWord;HaveM,HaveT,HaveP,HaveData:Boolean;
   Salt,Data,Expected,Actual:RawByteString;
 begin
   Result:=False;Actual:='';
   try
     try
       if (Length(Stored)>1024*1024) or (Length(Stored)<20) then Invalid;
-      Count:=0;for i:=1 to Length(Stored) do if Stored[i]='$' then Inc(Count);if Count<>5 then Invalid;
-      Parts:=string(Stored).Split('$');if (Length(Parts)<>6) or (Parts[0]<>'') or (Parts[2]<>'v=19') then Invalid;
+      Count:=0;for i:=1 to Length(Stored) do if Stored[i]='$' then Inc(Count);if (Count<>4) and (Count<>5) then Invalid;
+      Parts:=string(Stored).Split('$');if (Parts[0]<>'') or ((Length(Parts)<>5) and (Length(Parts)<>6)) then Invalid;
+      Version:=16;ParamField:=2;
+      if Length(Parts)=6 then
+      begin
+        ParamField:=3;
+        if Parts[2]='v=19' then Version:=19 else if Parts[2]<>'v=16' then Invalid;
+      end;
       if Parts[1]='argon2d' then Mode:=0 else if Parts[1]='argon2i' then Mode:=1
       else if Parts[1]='argon2id' then Mode:=2 else begin Invalid;Mode:=0;end;
-      Count:=0;for i:=1 to Length(Parts[3]) do if Parts[3][i]=',' then Inc(Count);if (Count<2) or (Count>3) then Invalid;
-      Params:=Parts[3].Split(',');if (Length(Params)<3) or (Length(Params)>4) then Invalid;
+      Count:=0;for i:=1 to Length(Parts[ParamField]) do if Parts[ParamField][i]=',' then Inc(Count);if (Count<2) or (Count>3) then Invalid;
+      Params:=Parts[ParamField].Split(',');if (Length(Params)<3) or (Length(Params)>4) then Invalid;
       HaveM:=False;HaveT:=False;HaveP:=False;HaveData:=False;Data:='';M:=0;T:=0;P:=0;
       for i:=0 to High(Params) do
       begin
@@ -75,8 +81,8 @@ begin
       end;
       if not (HaveM and HaveT and HaveP) then Invalid;
       if (M>Limits.MemoryKiB) or (T>Limits.Iterations) or (P>Limits.Lanes) then Invalid;
-      Salt:=Base64(Parts[4],65536);Expected:=Base64(Parts[5],Limits.KeyBytes);
-      Actual:=ArgonKey(Mode,Password,Salt,'',Data,T,M,P,Length(Expected),Limits);
+      Salt:=Base64(Parts[ParamField+1],65536);Expected:=Base64(Parts[ParamField+2],Limits.KeyBytes);
+      Actual:=ArgonKey(Mode,Password,Salt,'',Data,T,M,P,Length(Expected),Limits,Version);
       Result:=ConstantEqual(Actual,Expected);
     except Result:=False;end;
   finally if Actual<>'' then begin UniqueString(Actual);FillChar(Actual[1],Length(Actual),0);end;end;

@@ -1,13 +1,13 @@
 unit wlargon;
 {$mode objfpc}{$H+}
-// Argon2 v1.3 block processing, adapted from golang.org/x/crypto v0.59.0.
+// Argon2 v16/v19 block processing, adapted from golang.org/x/crypto v0.59.0.
 // Copyright 2017 The Go Authors. BSD license: docs/gocrypt.txt.
 interface
 uses SysUtils,wlblake;
 type TArgonLimits=record MemoryKiB,Iterations,Lanes,KeyBytes:LongWord;end;
 const DefaultArgonLimits:TArgonLimits=(MemoryKiB:65536;Iterations:16;Lanes:64;KeyBytes:1024);
 function ArgonKey(Mode:Integer;const Password,Salt,Secret,Data:RawByteString;
-  Iterations,MemoryKiB,Lanes,KeyBytes:LongWord;const Limits:TArgonLimits):RawByteString;
+  Iterations,MemoryKiB,Lanes,KeyBytes:LongWord;const Limits:TArgonLimits;Version:LongWord=19):RawByteString;
 implementation
 {$PUSH}{$Q-} // BlaMka additions/multiplications are modulo 2^64.
 type TBlock=array[0..127] of QWord;TMemory=array of TBlock;TRound=array[0..15] of QWord;
@@ -70,7 +70,7 @@ begin
   Result:=RefLane*LaneLength+LongWord((QWord(Start)+M-(P+1)) mod LaneLength);
 end;
 function ArgonKey(Mode:Integer;const Password,Salt,Secret,Data:RawByteString;
-  Iterations,MemoryKiB,Lanes,KeyBytes:LongWord;const Limits:TArgonLimits):RawByteString;
+  Iterations,MemoryKiB,Lanes,KeyBytes:LongWord;const Limits:TArgonLimits;Version:LongWord):RawByteString;
 var B:TMemory;H0,Bytes:RawByteString;Addresses,Input,Zero,FinalBlock:TBlock;
   Memory,LaneLength,SegmentLength,Pass,Slice,Lane,Index,Offset,Prev,Ref:LongWord;
   Random:QWord;i:Integer;Independent:Boolean;
@@ -79,7 +79,7 @@ var B:TMemory;H0,Bytes:RawByteString;Addresses,Input,Zero,FinalBlock:TBlock;
   procedure Wipe(var S:RawByteString);
   begin if S<>'' then begin UniqueString(S);FillChar(S[1],Length(S),0);end;end;
 begin
-  if (Mode<0) or (Mode>2) or (Iterations<1) or (Iterations>Limits.Iterations) or
+  if not (Version in [16,19]) or (Mode<0) or (Mode>2) or (Iterations<1) or (Iterations>Limits.Iterations) or
     (Lanes<1) or (Lanes>Limits.Lanes) or (KeyBytes<4) or (KeyBytes>Limits.KeyBytes) or
     (KeyBytes>LongWord(High(Integer))) or (Length(Salt)<8) or (MemoryKiB>Limits.MemoryKiB) or
     (QWord(MemoryKiB)<8*QWord(Lanes)) or (QWord(MemoryKiB)*1024>QWord(High(SizeInt))) or
@@ -89,7 +89,7 @@ begin
   B:=nil;H0:='';Bytes:='';
   FillChar(Addresses,SizeOf(Addresses),0);FillChar(Input,SizeOf(Input),0);FillChar(Zero,SizeOf(Zero),0);FillChar(FinalBlock,SizeOf(FinalBlock),0);
   try
-    H0:=Blake2b(LE32(Lanes)+LE32(KeyBytes)+LE32(MemoryKiB)+LE32(Iterations)+LE32(19)+LE32(Mode)+
+    H0:=Blake2b(LE32(Lanes)+LE32(KeyBytes)+LE32(MemoryKiB)+LE32(Iterations)+LE32(Version)+LE32(Mode)+
       Blob(Password)+Blob(Salt)+Blob(Secret)+Blob(Data),64);
     Memory:=MemoryKiB div (4*Lanes)*(4*Lanes);LaneLength:=Memory div Lanes;SegmentLength:=LaneLength div 4;
     SetLength(B,Memory);
@@ -118,7 +118,7 @@ begin
             begin if (Index mod 128)=0 then NextAddresses;Random:=Addresses[Index mod 128];end
             else Random:=B[Prev][0];
             Ref:=Reference(Random,LaneLength,SegmentLength,Lanes,Pass,Slice,Lane,Index);
-            Process(B[Offset],B[Prev],B[Ref],Pass>0);Inc(Index);Inc(Offset);
+            Process(B[Offset],B[Prev],B[Ref],(Version=19) and (Pass>0));Inc(Index);Inc(Offset);
           end;
         end;
     FinalBlock:=B[Memory-1];

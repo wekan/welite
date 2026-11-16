@@ -98,6 +98,20 @@ def run(request,db,admin):
     assert response[0]==200 and b'Invalid login' in response[2]
     assert request('GET','/api/user?token='+argon_api)[0]==401
     assert request('GET','/designer?sessionId='+argon_web)[0]==302
+    legacy_argon='$argon2id$v=16$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$shmop4+uHY9Bws9kfsVWl7IO3PvjjDUJpB4nB4wjPno'
+    meteor['password'].pop('bcrypt',None)
+    for encoded in [legacy_argon,legacy_argon.replace('$v=16','')]:
+        meteor['password']['argon2']=encoded
+        with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
+        assert request('POST','/sign-in',dict(username=user,password=password))[0]==302
+        response=request('POST','/users/login',dict(username=user,password=password))
+        assert response[0]==200
+        token=json.loads(response[2])['token']
+        assert request('GET','/api/user?token='+token)[0]==200
+        assert request('POST','/users/login',dict(username=user,password='wrong'))[0]==401
+        with sqlite3.connect(db) as con:
+            assert json.loads(con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0])==meteor
+    print('PASS: legacy explicit-v16/versionless Argon2 web/API login and unchanged credential metadata')
     print('PASS: actual Meteor Argon2 web/API logins, metadata preservation, credential-bound tokens and over-budget/stale-bcrypt denial')
     print('PASS: actual Meteor bcrypt web/API logins, unknown service preservation, credential-bound tokens and Argon2 precedence denial')
     print('PASS: disabled web/API logins and live tokens denied, panel revocation survives re-enable, fresh nonces and token persistence failures')

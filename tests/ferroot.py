@@ -256,6 +256,13 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert auth('password','meteor-account','test-password')=='yes'
                 assert auth('password','meteor-account','wrong')=='no'
                 assert encode(client.find('users','meteor-account')[0])==argon_before
+                legacy_argon='$argon2id$v=16$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$shmop4+uHY9Bws9kfsVWl7IO3PvjjDUJpB4nB4wjPno'
+                for encoded in [legacy_argon,legacy_argon.replace('$v=16','')]:
+                    client.command({'update':'users','updates':[dict(q=dict(_id='meteor-account'),u={'$set':{'services.password.argon2':encoded},'$unset':{'services.password.bcrypt':''}})]})
+                    legacy_before=encode(client.find('users','meteor-account')[0])
+                    assert auth('password','meteor-account','test-password')=='yes'
+                    assert auth('password','meteor-account','wrong')=='no'
+                    assert encode(client.find('users','meteor-account')[0])==legacy_before
                 # SQL uniqueness follows the canonical BINARY/NULL semantics.
                 assert auth('lookup','user')=='yes' and auth('lookup','User')=='no'
                 assert sql("INSERT INTO users(id,username,createdAt,modifiedAt) VALUES('duplicate','user',"+q(stamp)+','+q(stamp)+');','exec')=='error'

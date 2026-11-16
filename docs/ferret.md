@@ -185,8 +185,8 @@ Tests run the actual `IssueLoginToken` and `ValidateLoginToken` implementation t
 fresh harness processes on linked and CLI SQLite, including credentials, missing users,
 reinstallation and both SQL/Mongo deletion. The existing hashing, tenant binding and
 legacy-token denial regression suite also passes. These are Welite private tokens;
-Meteor `services.resume.loginTokens` is not mapped by this step. Meteor bcrypt credential compatibility and Argon2 v19 verification are now available as described below; legacy
-Argon2 and shared-session compatibility remain unfinished.
+Meteor `services.resume.loginTokens` is not mapped by this step. Meteor bcrypt credential compatibility and Argon2 v16/v19 verification are now available as described below;
+shared-session compatibility remains unfinished.
 
 ## SQL unique keys and account lookup
 
@@ -259,7 +259,7 @@ module cache is unchanged. Normal and overflow/range-checked Pascal builds pass 
 block boundaries, binary/Unicode/NUL input and output boundaries through 1 KiB.
 Verification so far is native Linux; other target builds remain in the platform gate.
 
-`wlargon.pas` now supplies Argon2 v1.3 d/i/id key derivation: initial parameter hashing,
+`wlargon.pas` supplies Argon2 v16/v19 d/i/id key derivation: initial parameter hashing,
 first blocks, BlaMka mixing, dependent/independent addresses, lane indexing, pass XOR
 and final lane reduction. Original memory cost participates in the hash; allocation is
 rounded to the required lane/slice multiple. Logical lanes run sequentially inside each
@@ -281,12 +281,14 @@ A constrained child process verifies graceful allocation failure on the native t
 Other target builds remain unverified. The derivation source retains the Go BSD notice
 and `docs/gocrypt.txt` license.
 
-The v19 credential verifier now uses these kernels as described below. Legacy versions
-and out-of-band secret policy are still separate compatibility gates.
+The credential verifier uses these kernels as described below. Default derivation is
+v19; selecting v16 changes both the parameter hash and subsequent-pass overwrite/XOR
+rule. Out-of-band secret policy remains a separate compatibility gate.
 
-## Argon2 v19 credential verification
+## Argon2 credential verification
 
-`wlphc.pas` parses six-field PHC v19 records for Argon2d/i/id, requiring one each of
+`wlphc.pas` parses six-field PHC v16/v19 records for Argon2d/i/id, and five-field
+versionless legacy records as v16, requiring one each of
 `m`, `t`, `p` and optionally base64 `data`. Parameters may be reordered but cannot repeat;
 unknown parameters, signs/leading zeroes, invalid lengths, padding and noncanonical base64
 bits are rejected. Records are bounded to 1 MiB; salt and associated data to 64 KiB each.
@@ -317,14 +319,22 @@ Go-generated fixtures test all three PHC variants, associated data, Meteor envel
 long UTF-8/NUL plaintext, malformed/duplicate structures and both lowering and raising
 budgets. Both HTTP backends pass real web/API logins, metadata retention and credential
 revocation tests. The live FerretDB test compares BSON before/after actual verification.
-Legacy Argon2 v16 (including records without a version) and out-of-band secrets are not
-yet supported; they currently fail closed and remain tracked in TODO.
+Legacy v16 and versionless behavior is verified separately against the
+[official C reference](https://github.com/P-H-C/phc-winner-argon2/tree/f57e61e19229e23c4445b85494dbf7c07de721cb).
+`tests/argonv.py` builds that source only inside its temporary test directory; it is not
+a runtime dependency. Set `ARGON2_SRC` to an unpacked official source snapshot. Tested
+revision: `f57e61e19229e23c4445b85494dbf7c07de721cb`. The test covers d/i/id, both versions,
+secret/associated data, lane/pass/rounding boundaries, explicit/versionless envelopes,
+wrong version/tag combinations and normal/checked builds. Native/CLI HTTP and live
+FerretDB tests verify both legacy encodings without rewriting credentials. Unknown
+versions remain denied. Out-of-band secrets are still unsupported at login and tracked
+in TODO; the raw kernel already supports them.
 
 ## Remaining before the checklist can be checked
 
 - Complete shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
-- Complete legacy Argon2 v16/out-of-band secret policy; reconcile Meteor session
+- Complete Argon2 out-of-band secret policy; reconcile Meteor session
   formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
   normalized database; adapt cloning/export and finish authentication integration.

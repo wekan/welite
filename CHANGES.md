@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Legacy Argon2 compatibility
+
+- Add explicit v16 derivation alongside default v19. Include the selected version in
+  parameter hashing and use the legacy overwrite rule instead of subsequent-pass XOR.
+  Keep the same validation, resource budgets and memory clearing.
+- Accept explicit v16 PHC strings and versionless legacy strings (defined as v16).
+  Reject unknown versions and mismatched version/tag combinations rather than trying
+  both algorithms. Preserve current v19 behavior and Argon2-before-bcrypt selection.
+- Compare all d/i/id variants and both versions with the official C reference at
+  f57e61e19229e23c4445b85494dbf7c07de721cb, built only as an isolated test oracle.
+  Normal/checked tests cover secret/associated data, lanes/passes/memory rounding,
+  legacy/versionless credentials and unsupported version denial. Go/RFC v19 tests pass.
+- Verify actual explicit-v16/versionless web/API logins on linked/CLI SQLite, including
+  bearer validation and unchanged service metadata. Live FerretDB reads preserve BSON
+  exactly during verification. Runtime remains pure Pascal with no C library dependency.
+- Out-of-band secret policy and broader Mongo session/index integration remain open.
+
 ## 2026-11-16 Argon2 v19 credential verification
 
 - Parse Argon2d/i/id PHC v19 strings with canonical unpadded base64, unsigned decimal

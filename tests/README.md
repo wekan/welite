@@ -113,4 +113,11 @@ normal/checked builds, including associated data, long UTF-8/NUL input, malforme
 duplicate records, canonical base64, structural limits, lowered/raised operator budgets
 and stale-bcrypt refusal. `admin.py` tests actual Argon2 web/API logins and revocation
 on each SQLite backend; `ferroot.py` checks a Mongo-created Argon2 account without BSON
-changes. Legacy v16 and out-of-band secrets remain separate work.
+changes. Legacy v16 is covered by `argonv.py`; out-of-band secret policy remains separate work.
+
+`python3 tests/argonv.py` builds the official P-H-C/phc-winner-argon2 C reference only
+as a temporary test oracle. Set `ARGON2_SRC` to an unpacked official source checkout;
+verified revision `f57e61e19229e23c4445b85494dbf7c07de721cb`. A C compiler is required.
+Normal/checked Pascal builds cover d/i/id v16/v19, secret/associated data, lanes/passes,
+rounding, explicit/versionless PHC and unsupported-version denial. Actual legacy
+web/API and live FerretDB account tests run through `admin.py` and `ferroot.py`.
