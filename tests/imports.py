@@ -73,10 +73,13 @@ def run(request,db,session):
         assert con.execute("SELECT title FROM pages WHERE url='/imported'").fetchone()[0]=='New title'
         assert con.execute("SELECT title FROM pages WHERE url='/zipsecond'").fetchone()[0]=='Second'
     # Raw JSON shares exactly the form token, carried in explicit headers.
-    raw=page('/rawjson','Raw JSON')
+    raw=page('/rawjson','日本語 / العربية')
+    raw['widgets'][0]['label']='Suomi 日本語 العربية'
     token=fields('/designer/page/import')
     headers={'X-Welite-Action':token['auth_action'],'X-Welite-Counter':token['auth_counter'],'X-Welite-Hash':token['auth_hash']}
     assert request('POST','/designer/page/import?sessionId='+session,json.dumps(raw).encode(),extra_headers=headers)[0]==302
+    with sqlite3.connect(db) as con:
+        assert con.execute("SELECT title FROM pages WHERE url='/rawjson'").fetchone()[0]=='日本語 / العربية'
     # A token is still single-use, including when transported in headers.
     assert request('POST','/designer/page/import?sessionId='+session,json.dumps(raw).encode(),extra_headers=headers)[0]==403
     disabled=page('/disabled','Disabled page');disabled['page']['enabled']=False

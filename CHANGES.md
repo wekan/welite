@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Deep selected-item cloning
+
+- Enable Clone for selected cards, lists and swimlanes. Coalesce overlapping selections,
+  copy their content/descendants, and remap list/lane/parent/checklist/comment/cover and
+  internal dependency IDs while retaining shared board labels, fields and external targets.
+- Append copied items deterministically, assign new card numbers, and record clone events
+  under the acting user. Historical activities stay with the original entities.
+- Copy filesystem attachment bytes before one database transaction; missing files,
+  unsupported storage backends or SQL failures remove prepared copies and leave original
+  rows/bytes unchanged. Existing filesystem targets are never deliberately overwritten.
+- Initialize UTF-8 conversion explicitly: the host's unset Pascal codepage was turning
+  non-ASCII JSON strings into question marks. Cloning/import regressions now pin Unicode
+  fidelity, with embedded NUL text preserved through SQL hex literals when needed.
+- Verified mixed/card/list/swimlane clone variants, child IDs, shared references, covers,
+  original row preservation, byte copies, replay rejection and file/SQL rollback. HTTP and
+  Chromium Clone workflows pass with JS/cookies disabled on both SQLite backends.
+
 ## 2026-11-16 Selected-item editing, deletion, clearing and export
 
 - Enable selected-item Edit/Save forms for swimlane/list/card titles and colors, plus card

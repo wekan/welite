@@ -48,7 +48,7 @@ function MoveFormEnd: string;
 
 // The combined keypad + action buttons + selection summary. Counts are for the summary label.
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean = True; IncludeClone:Boolean=False): string;
+  IncludeActions: Boolean = True; IncludeClone:Boolean=True): string;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
 // True if anything moved. Register the endpoint at POST /board/move (see wlhttp.lpr).

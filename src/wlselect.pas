@@ -2,7 +2,7 @@ unit wlselect;
 {$mode objfpc}{$H+}
 {$CODEPAGE UTF8}
 interface
-uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlhtml,wlcolors,wlaccess;
+uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlhtml,wlcolors,wlaccess,DateUtils;
 // Called only after the endpoint validates session, every selected ID, and the action token.
 // Returns true when it sent the action response; false for an ordinary arrow move.
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
@@ -30,17 +30,22 @@ procedure AddQuery(Db:TWLDb; const Sql:string; Ids:TStrings);
 var R:TWLRows; i:Integer;
 begin R:=Db.Query(Sql); for i:=0 to High(R) do AddId(Ids,R[i][0]); end;
 function RowsJson(Db:TWLDb; const TableName,WhereClause:string):TJSONArray;
-var Columns,R:TWLRows; Sql:string; i:Integer;
+var Columns,R:TWLRows; Sql,Order:string; i:Integer; HasId,HasSort:Boolean;
 begin
   Result:=TJSONArray.Create;
   Columns:=Db.Query('PRAGMA table_info('+TableName+');');
-  Sql:='SELECT json_object(';
+  Sql:='SELECT json_object('; HasId:=False; HasSort:=False;
   for i:=0 to High(Columns) do
   begin
     if i>0 then Sql:=Sql+',';
     Sql:=Sql+q(Columns[i][1])+',"'+Columns[i][1]+'"';
+    HasId:=HasId or (Columns[i][1]='id'); HasSort:=HasSort or (Columns[i][1]='sort');
   end;
-  R:=Db.Query(Sql+') FROM '+TableName+' WHERE '+WhereClause+';');
+  Order:='';
+  if HasSort then Order:=' ORDER BY sort';
+  if HasId then
+    if HasSort then Order:=Order+',id' else Order:=' ORDER BY id';
+  R:=Db.Query(Sql+') FROM '+TableName+' WHERE '+WhereClause+Order+';');
   for i:=0 to High(R) do Result.Add(GetJSON(R[i][0]));
 end;
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
@@ -210,6 +215,209 @@ begin
   for i:=0 to A.Count-1 do if A.Objects[i].Get('storageBackend','filesystem')='filesystem' then
     try DeleteFile(AttachmentPath(T,A.Objects[i].Get('id',''))); except end;
 end;
+function NewCloneId(Db:TWLDb; const T:TWLTenant; const TableName:string; Used:TStrings):string;
+const Alphabet='23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz';
+var i:Integer;
+begin
+  repeat
+    SetLength(Result,17);
+    for i:=1 to 17 do Result[i]:=Alphabet[Random(Length(Alphabet))+1];
+  until (Used.IndexOf(Result)<0) and
+    (Length(Db.Query('SELECT id FROM '+TableName+' WHERE id='+q(Result)+';'))=0) and
+    ((TableName<>'attachments') or not FileExists(AttachmentPath(T,Result)));
+  Used.Add(Result);
+end;
+function CloneRef(Maps:TJSONObject; const TableName,Id:string):string;
+var Map:TJSONObject;
+begin
+  Map:=TJSONObject(Maps.Find(TableName));
+  if Map=nil then Exit(Id);
+  Result:=Map.Get(Id,Id);
+end;
+procedure PutString(Row:TJSONObject; const Name,Value:string);
+begin
+  Row.Delete(Name); Row.Add(Name,Value);
+end;
+function RefTable(const Name,TableName:string):string;
+begin
+  Result:='';
+  case Name of
+    'swimlaneId':Result:='swimlanes';
+    'listId':Result:='lists';
+    'cardId','targetCardId','linkedId':Result:='cards';
+    'checklistId':Result:='checklists';
+    'commentId':Result:='card_comments';
+    'itemId':Result:='checklist_items';
+    'coverId','attachmentId':Result:='attachments';
+    'parentId':if TableName='card_comments' then Result:='card_comments' else Result:='cards';
+  end;
+end;
+procedure RemapJson(D:TJSONData; Maps:TJSONObject; const TableName:string);
+var O:TJSONObject; A:TJSONArray; i:Integer; Key,Target,Value:string;
+begin
+  if D is TJSONObject then
+  begin
+    O:=TJSONObject(D);
+    // Replacing values does not change member count; walk backward as keys move to the end.
+    for i:=O.Count-1 downto 0 do
+    begin
+      Key:=O.Names[i]; Target:=RefTable(Key,TableName);
+      if (Target<>'') and (O.Items[i].JSONType=jtString) then
+      begin
+        Value:=CloneRef(Maps,Target,O.Items[i].AsString);
+        PutString(O,Key,Value);
+      end
+      else RemapJson(O.Items[i],Maps,TableName);
+    end;
+  end
+  else if D is TJSONArray then
+  begin
+    A:=TJSONArray(D);
+    for i:=0 to A.Count-1 do RemapJson(A.Items[i],Maps,TableName);
+  end;
+end;
+function SqlJsonValue(D:TJSONData):string;
+var V,Hex:string; i:Integer;
+begin
+  case D.JSONType of
+    jtNull:Result:='NULL';
+    jtBoolean:if D.AsBoolean then Result:='1' else Result:='0';
+    jtNumber:Result:=D.AsJSON;
+  else
+    V:=D.AsString;
+    if Pos(#0,V)=0 then Result:=q(V)
+    else
+    begin
+      Hex:=''; for i:=1 to Length(V) do Hex:=Hex+IntToHex(Ord(V[i]),2);
+      Result:='CAST(X'+q(Hex)+' AS TEXT)';
+    end;
+  end;
+end;
+function EqualField(Row:TJSONObject; const Name:string):string;
+var D:TJSONData;
+begin
+  D:=Row.Find(Name);
+  if (D=nil) or (D.JSONType=jtNull) then Result:='"'+Name+'" IS NULL'
+  else Result:='"'+Name+'"='+SqlJsonValue(D);
+end;
+function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings):Boolean;
+const Tables:array[0..11] of string=('swimlanes','lists','cards','checklists','checklist_items',
+  'card_members','card_assignees','card_labels','card_custom_field_values','card_dependencies',
+  'card_comments','attachments');
+var Data,Maps,Map,Original,Row,Activity:TJSONObject; A:TJSONArray;
+  Used,Copied:TStringList; i,j,k:Integer;
+  TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend:string;
+  Source,Dest:TFileStream;
+  function IsRoot(const Kind,OldId:string):Boolean;
+  var n:Integer;
+  begin
+    Result:=False;
+    for n:=0 to Params.Count-1 do
+      if SameText(Params.Names[n],'sel_'+Kind) and (Params.ValueFromIndex[n]=OldId) then Exit(True);
+  end;
+  function InsertRow(const Into:string; O:TJSONObject; const SortExpr:string):string;
+  var n:Integer; Cols,Vals,Key:string;
+  begin
+    Cols:=''; Vals:='';
+    for n:=0 to O.Count-1 do
+    begin
+      if n>0 then begin Cols:=Cols+','; Vals:=Vals+','; end;
+      Key:=O.Names[n]; Cols:=Cols+'"'+StringReplace(Key,'"','""',[rfReplaceAll])+'"';
+      if (Key='sort') and (SortExpr<>'') then Vals:=Vals+SortExpr
+      else if (Into='cards') and (Key='cardNumber') then
+        Vals:=Vals+'(SELECT COALESCE(MAX(cardNumber),0)+1 FROM cards WHERE '+EqualField(O,'boardId')+')'
+      else Vals:=Vals+SqlJsonValue(O.Items[n]);
+    end;
+    Result:='INSERT INTO '+Into+'('+Cols+') VALUES('+Vals+'); ';
+  end;
+begin
+  Result:=False; Data:=TJSONObject(Graph.Find('data')); Maps:=TJSONObject.Create;
+  Used:=TStringList.Create; Copied:=TStringList.Create;
+  try
+    try
+      // Allocate every map before inserting any row so forward/parent/cover references work.
+      for i:=0 to High(Tables) do
+      begin
+        TableName:=Tables[i];
+        A:=TJSONArray(Data.Find(TableName)); Map:=TJSONObject.Create; Maps.Add(TableName,Map);
+        for j:=0 to A.Count-1 do if A.Objects[j].Find('id')<>nil then
+          Map.Add(A.Objects[j].Get('id',''),NewCloneId(T.Db,T,TableName,Used));
+      end;
+      A:=TJSONArray(Data.Find('attachments'));
+      for j:=0 to A.Count-1 do
+      begin
+        Original:=A.Objects[j]; Backend:=Original.Get('storageBackend','filesystem');
+        if Backend='' then Backend:='filesystem';
+        if Backend<>'filesystem' then raise Exception.Create('Attachment backend cannot be cloned');
+        SourcePath:=AttachmentPath(T,Original.Get('id',''));
+        DestPath:=AttachmentPath(T,CloneRef(Maps,'attachments',Original.Get('id','')));
+        Source:=TFileStream.Create(SourcePath,fmOpenRead or fmShareDenyNone);
+        try
+          if FileExists(DestPath) then raise Exception.Create('Attachment destination exists');
+          Copied.Add(DestPath);
+          Dest:=TFileStream.Create(DestPath,fmCreate);
+          try Dest.CopyFrom(Source,0); finally Dest.Free; end;
+        finally Source.Free; end;
+      end;
+      Stamp:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
+      Sql:='BEGIN IMMEDIATE; ';
+      for i:=0 to High(Tables) do
+      begin
+        TableName:=Tables[i];
+        A:=TJSONArray(Data.Find(TableName));
+        for j:=0 to A.Count-1 do
+        begin
+          Original:=A.Objects[j]; Row:=TJSONObject(Original.Clone);
+          try
+            Id:=Original.Get('id','');
+            if Row.Find('id')<>nil then PutString(Row,'id',CloneRef(Maps,TableName,Id));
+            RemapJson(Row,Maps,TableName);
+            if Row.Find('createdAt')<>nil then PutString(Row,'createdAt',Stamp);
+            if Row.Find('modifiedAt')<>nil then PutString(Row,'modifiedAt',Stamp);
+            if Row.Find('dateLastActivity')<>nil then PutString(Row,'dateLastActivity',Stamp);
+            if ((TableName='cards') and IsRoot('card',Id)) or
+              ((TableName='lists') and IsRoot('list',Id)) or
+              ((TableName='swimlanes') and IsRoot('swimlane',Id)) then
+              PutString(Row,'title',Original.Get('title','')+' Copy');
+            Scope:='';
+            if (TableName='swimlanes') or (TableName='lists') or (TableName='cards') then Scope:=EqualField(Row,'boardId');
+            if TableName='lists' then Scope:=Scope+' AND '+EqualField(Row,'swimlaneId');
+            if TableName='cards' then Scope:=Scope+' AND '+EqualField(Row,'listId')+' AND '+EqualField(Row,'swimlaneId');
+            if TableName='checklists' then Scope:=EqualField(Row,'cardId');
+            if TableName='checklist_items' then Scope:=EqualField(Row,'checklistId');
+            Expr:='';
+            if (Scope<>'') and (Row.Find('sort')<>nil) then
+              Expr:='(SELECT COALESCE(MAX(sort),-1)+1 FROM '+TableName+' WHERE '+Scope+')';
+            Sql:=Sql+InsertRow(TableName,Row,Expr);
+            if (TableName='cards') or (TableName='lists') or (TableName='swimlanes') then
+            begin
+              Activity:=TJSONObject.Create;
+              try
+                Activity.Add('id',NewCloneId(T.Db,T,'activities',Used));
+                Activity.Add('activityType','clone'); Activity.Add('userId',S.UserId);
+                Activity.Add('boardId',Graph.Get('boardId','')); Activity.Add('createdAt',Stamp);
+                if TableName='cards' then Activity.Add('cardId',Row.Get('id',''));
+                if TableName='lists' then Activity.Add('listId',Row.Get('id',''));
+                if TableName='swimlanes' then Activity.Add('swimlaneId',Row.Get('id',''));
+                Map:=TJSONObject.Create;
+                try
+                  Map.Add('sourceId',Id); Map.Add('sourceType',TableName); Activity.Add('data_json',Map.AsJSON);
+                finally Map.Free; end;
+                Sql:=Sql+InsertRow('activities',Activity,'');
+              finally Activity.Free; end;
+            end;
+          finally Row.Free; end;
+        end;
+      end;
+      Result:=T.Db.Exec(Sql+'COMMIT;');
+      if not Result then T.Db.Exec('ROLLBACK;');
+    except Result:=False; end;
+  finally
+    if not Result then for k:=0 to Copied.Count-1 do DeleteFile(Copied[k]);
+    Copied.Free; Used.Free; Maps.Free;
+  end;
+end;
+
 function HandleSelection(const T:TWLTenant; const S:TWLSession; Request:TRequest; Response:TResponse):Boolean;
 var Action,Body:string; Graph,Data:TJSONObject; Count:Integer;
 begin
@@ -243,6 +451,12 @@ begin
     if Action='confirm-delete' then
     begin
       if not DeleteSelection(T,Graph,Request.ContentFields.Values['boardId']) then Error(Response,500,'Delete failed; selection is unchanged')
+      else Redirect(Response,S,Request.ContentFields);
+      Exit;
+    end;
+    if Action='clone' then
+    begin
+      if not CloneSelection(T,S,Graph,Request.ContentFields) then Error(Response,500,'Clone failed; originals are unchanged')
       else Redirect(Response,S,Request.ContentFields);
       Exit;
     end;

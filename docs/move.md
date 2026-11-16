@@ -104,5 +104,14 @@ by the board and selected-item ownership checks before reaching its handler.
 
 The board renderer wires the selection form, shared move keypad and the implemented
 actions. `wlmove.pas` handles movement; `wlselect.pas` handles the action forms and data.
-Deep Clone, including remapped child references and attachment copies, remains unfinished
-and its button stays hidden until the handler is implemented and verified.
+Clone copies selected roots and their descendant content once, including overlapping
+selections. Root titles receive a Copy suffix, children retain their titles, and internal
+IDs are remapped. Shared labels/custom fields and dependencies outside the selection keep
+their existing board-local references. New clone activities identify the acting user;
+historical activity remains attached to the original records.
+
+Filesystem attachments receive new IDs and byte-for-byte copies. Clone prepares files
+before committing all rows in one database transaction. Missing files, unsupported external
+attachment backends and database failures reject the clone and clean up the prepared files.
+External attachment backends require their own copy implementation before they can be cloned.
+Card/list/swimlane clone variants and the no-JS button are covered by the HTTP/browser tests.

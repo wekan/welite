@@ -222,7 +222,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Report CLI SQLite failures and preserve UTF-8 text, delimiters, quotes and line endings.
 - [x] Render authorized board/list/swimlane/card data with the shared selection form.
 - [x] Implement selected-item Edit/Save, confirmed Delete, Clear and Export actions.
-- [ ] Implement deep selected-item Clone with remapped child IDs and attachment copies.
+- [x] Implement deep selected-item Clone with remapped child IDs and attachment copies.
 - [x] Add shared board read/write checks, validate move selections and safe return URLs.
 - [x] Validate API child routes against their board/parent chain and block unrestricted assignment roles.
 - [ ] Validate API body label/member/assignee/author IDs and audit disabled-login/session behavior.
