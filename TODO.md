@@ -222,7 +222,8 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Report CLI SQLite failures and preserve UTF-8 text, delimiters, quotes and line endings.
 - [ ] Render authorized board/list/swimlane/card data with the shared selection form.
 - [ ] Implement selected-item Edit, Clone, Delete, Clear and Export actions.
-- [ ] Enforce board permissions and safe return URLs on every board mutation.
+- [x] Add shared board read/write checks, validate move selections and safe return URLs.
+- [ ] Audit every API child-ID mutation against the route board and assignment restrictions.
 - [ ] Add the board minimap, coordinates and occupied/current-position indicators.
 - [ ] Add optional drag/drop and multiple selection using the same move endpoint.
 - [ ] Align runtime tenant/file paths with DOS 8.3 and the requested Weddy layout.

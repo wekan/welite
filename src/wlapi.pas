@@ -36,7 +36,7 @@ interface
 
 uses
   SysUtils, Classes, HTTPDefs, fpjson, jsonparser, DateUtils, base64,
-  wldb, wltenant, wlauth, wlpasswd;
+  wldb, wltenant, wlauth, wlpasswd, wlaccess;
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
@@ -153,26 +153,10 @@ end;
 // read-only); public board → read only. Sends 403 and returns False otherwise.
 function ApiAuthBoard(const T: TWLTenant; aResponse: TResponse;
   const UserId, BoardId: string; NeedWrite: Boolean): Boolean;
-var R: TWLRows; ReadOnly: Boolean;
 begin
-  Result := False;
-  if IsSiteAdmin(T.Db, UserId) then Exit(True);
-  R := T.Db.Query(Format(
-    'SELECT isReadOnly FROM board_members WHERE boardId=%s AND userId=%s AND isActive=1 LIMIT 1;',
-    [QuotedStr(BoardId), QuotedStr(UserId)]));
-  if Length(R) > 0 then
-  begin
-    ReadOnly := (Length(R[0]) > 0) and (R[0][0] = '1');
-    if NeedWrite and ReadOnly then begin SendError(aResponse, 403, 'Read-only on this board'); Exit; end;
-    Exit(True);
-  end;
-  if not NeedWrite then
-  begin
-    R := T.Db.Query(Format('SELECT 1 FROM boards WHERE id=%s AND permission=''public'' LIMIT 1;',
-      [QuotedStr(BoardId)]));
-    if Length(R) > 0 then Exit(True);
-  end;
-  SendError(aResponse, 403, 'Not a member of this board');
+  if NeedWrite then Result:=BoardCanWrite(T.Db,UserId,BoardId)
+  else Result:=BoardCanRead(T.Db,UserId,BoardId);
+  if not Result then SendError(aResponse,403,'Board access forbidden');
 end;
 
 // Common guard for board-scoped endpoints: boardId from the route, write = non-GET.

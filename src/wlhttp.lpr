@@ -31,7 +31,7 @@ uses
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
   SysUtils, Classes, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 const
@@ -107,7 +107,8 @@ begin
   // Greet the signed-in user and flag the Global Admin (users.isAdmin = 1).
   IsGAdmin := False;
   if ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
-    IsGAdmin := IsGlobalAdmin(T.Db, S);
+    IsGAdmin := IsGlobalAdmin(T.Db, S)
+  else S:=Default(TWLSession);
 
   Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
   if IsGAdmin then
@@ -116,10 +117,10 @@ begin
   else if S.Username <> '' then
     Body := Body + '<p>Signed in as ' + HtmlEncode(S.Username) + '.</p>' + LineEnding;
 
-  Rows := T.Db.Query('SELECT title FROM boards WHERE archived=0 ORDER BY sort;');
+  Rows := T.Db.Query('SELECT title,id FROM boards WHERE archived=0 ORDER BY sort;');
   Body := Body + '<h2>Boards</h2><ul>' + LineEnding;
   for i := 0 to High(Rows) do
-    if Length(Rows[i]) > 0 then
+    if (Length(Rows[i]) > 1) and BoardCanRead(T.Db,S.UserId,Rows[i][1]) then
       Body := Body + '<li>' + HtmlEncode(Rows[i][0]) + '</li>' + LineEnding;
   if Length(Rows) = 0 then
     Body := Body + '<li><i>No boards yet.</i></li>' + LineEnding;
@@ -260,14 +261,21 @@ var
   BackTo: string;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
-  ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S);
+  if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
+  begin
+    aResponse.Code:=403; aResponse.Content:='Sign in required'; aResponse.SendContent; Exit;
+  end;
+  if not BoardSelectionAllowed(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'],
+    aRequest.ContentFields) then
+  begin
+    aResponse.Code:=403; aResponse.Content:='Board selection forbidden'; aResponse.SendContent; Exit;
+  end;
   if not VerifyActionToken(aRequest, S, 'board:move') then
   begin
     aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
   end;
   ApplyMove(T.Db, aRequest.ContentFields);
-  BackTo := aRequest.ContentFields.Values['back'];
-  if BackTo = '' then BackTo := '/';
+  BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', WithSessionId(BackTo, S.SessionId));
   aResponse.SendContent;

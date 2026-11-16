@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Shared board permissions and move selection isolation
+
+- Added shared board read/write checks used by UI visibility, move authorization and
+  API board guards. Private boards require active membership; full-board mutations
+  exclude read-only, comment-only, assignment-limited and worker roles.
+- Move requests require a validated session and an explicit board; every selected card,
+  list and swimlane must exist, be active and belong to that board before any mutation.
+- Restrict move return URLs to local paths and prevent anonymous home-page disclosure
+  of private board titles. Unknown/archived boards and disabled admins cannot write.
+- Verified both SQLite backends against a role/selection/redirect matrix and live API
+  editor/read-only/comment-only requests. Separate API child-ID scoping remains in TODO.
+
 ## 2026-11-16 Reliable CLI SQLite results and errors
 
 - Use FreePascal's process runner to drain stdout/stderr while SQLite runs and check

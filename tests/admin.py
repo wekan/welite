@@ -77,6 +77,21 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             for path in POSTS:
                 status, _, _ = request('POST', path, {'sessionId':admin})
                 assert status == 403, (path, 'missing action token', status)
+            with sqlite3.connect(db) as con:
+                uid = con.execute("SELECT id FROM users WHERE username='member'").fetchone()[0]
+                con.execute("INSERT INTO boards(id,title,slug,createdAt) VALUES('protected','Private title','protected','now')")
+                con.execute("INSERT INTO board_members(boardId,userId) VALUES('protected',?)", (uid,))
+            assert request('PUT', '/api/boards/protected/title?token='+member, {'title':'Updated'})[0] == 200
+            with sqlite3.connect(db) as con:
+                con.execute("UPDATE board_members SET isReadOnly=1 WHERE boardId='protected'")
+            assert request('PUT', '/api/boards/protected/title?token='+member, {'title':'Forbidden'})[0] == 403
+            assert request('GET', '/api/boards/protected?token='+member)[0] == 200
+            with sqlite3.connect(db) as con:
+                con.execute("UPDATE board_members SET isReadOnly=0,isCommentOnly=1 WHERE boardId='protected'")
+            assert request('PUT', '/api/boards/protected/title?token='+member, {'title':'Forbidden'})[0] == 403
+            assert b'Private title' not in request('GET', '/')[2]
+            assert request('POST', '/board/move', {'sessionId':member, 'boardId':'protected', 'sel_card':'foreign'})[0] == 403
+            print('PASS: shared API board policy, private home visibility and move guard')
             class HiddenFields(HTMLParser):
                 def __init__(self):
                     super().__init__()
