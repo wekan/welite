@@ -21,7 +21,7 @@ unit wladmin;
 interface
 
 uses
-  SysUtils, Classes, HTTPDefs, wldb, wltenant, wlauth, wlhtml;
+  SysUtils, Classes, HTTPDefs, wldb, wltenant, wlauth, wlhtml, wlrevoke;
 
 // True when the session's user is a tenant administrator (users.isAdmin = 1) in the given tenant db.
 function IsTenantAdmin(Db: TWLDb; const S: TWLSession): Boolean;
@@ -257,9 +257,13 @@ begin
     end;
     if (Uid <> '') and (SetClause <> '') then
     begin
-      if Action='disable' then SetClause:='BEGIN IMMEDIATE; DELETE FROM login_tokens WHERE userId='+QuotedStr(Uid)+
-        '; UPDATE users SET '+SetClause+',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Uid)+'; COMMIT;'
-      else SetClause:=Format('UPDATE users SET %s,modifiedAt=%s WHERE id=%s;',[SetClause,QuotedStr(NowIso),QuotedStr(Uid)]);
+      try
+        if Action='disable' then SetClause:='BEGIN IMMEDIATE; '+RevokeUserTokensSQL(T.Db,Uid)+
+          'UPDATE users SET '+SetClause+',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Uid)+'; COMMIT;'
+        else SetClause:=Format('UPDATE users SET %s,modifiedAt=%s WHERE id=%s;',[SetClause,QuotedStr(NowIso),QuotedStr(Uid)]);
+      except
+        aResponse.Code:=500;aResponse.Content:='Could not update account';aResponse.SendContent;Exit;
+      end;
       if not T.Db.Exec(SetClause) then
       begin T.Db.Exec('ROLLBACK;'); aResponse.Code:=500; aResponse.Content:='Could not update account'; aResponse.SendContent; Exit; end;
     end;

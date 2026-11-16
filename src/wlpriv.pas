@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenroll,wlautsrc;
+uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const

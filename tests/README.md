@@ -215,3 +215,9 @@ revocation and legacy conversion remain separate integration steps.
 Date truncation, strict-before pruning, future timestamps, duplicate ambiguity and
 Date/lifetime bounds. `ferroot.py` verifies live validity and expiry pruning with exact
 BSON preservation. Shared bearer authorization and lifecycle wiring remain open.
+
+`ferroot.py` also executes the real all-user revocation fragment through `revoke.lpr`
+and enrollment: shared/legacy and local token clearing, pending setup cleanup, another
+account's surviving credentials, failed/ignored writes, later metadata failure rollback,
+source-switch denial and re-enable behavior. `admin.py` covers the actual native HTTP
+disable route on both backends. Shared issuance and per-token lifecycle work remain open.

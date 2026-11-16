@@ -547,7 +547,7 @@ constraint assertion makes a stale/competing setup abort; another assertion catc
 triggers that ignore activation. Other factor metadata and unknown account fields/types
 are retained. Successful activation grants no application session: sign in with a fresh
 code, since the confirmation code is already consumed. Shared Meteor resume-token
-revocation remains part of the outstanding session integration.
+revocation is now connected through the all-user revocation helper below.
 
 `tests/enroll.py` exercises both backends, including required enrollment, private token
 isolation, 20-byte secrets, replacement, binding/expiry, stale snapshots, forced/ignored
@@ -664,6 +664,34 @@ both TEXT/JSONB backends. `ferroot.py` checks validity and pruning against live 
 records while comparing complete stored BSON. These are pure primitives; application
 issuance/authorization, configured lifetime policy, expiry scheduling and revocation
 still need integration. Browser sessions remain private to retain client binding.
+
+## Shared all-user revocation
+
+`wlrevoke.pas` builds a fragment for the caller's transaction. Administrator disabling
+and OTP confirmation both use it after validating the account action/proof. On a shared
+store, it clears the selected user's `services.resume.loginTokens` with the typed
+kernel, then deletes local credentials/authmeta and pending enrollment. Existing legacy
+plain records are cleared too. Other BSON fields/types, other accounts and OTP replay
+boundaries remain intact. Missing resume paths are left absent.
+
+The fragment checks its captured collection identity inside the transaction and asserts
+that a present shared token path became an empty array. A source switch or ignored
+physical update cannot silently delete local state while leaving shared bearers alive.
+The owning action rolls back the complete transaction on any error, including later
+metadata deletion failures. Re-enabling an account restores none of the deleted state.
+Native stores use the same local cleanup without introducing shared records.
+
+`wlenmeta.pas` owns the pending enrollment DDL used by setup, the shared adapter and
+revocation. Creation participates in the revocation transaction so concurrent first-time
+setup cannot evade cleanup between a schema probe and the write. Incompatible existing
+pending storage is refused rather than adopted.
+
+`tests/ferroot.py` exercises actual shared enrollment and disabling on both backends,
+including legacy/hashed tokens, pending setup, another account's surviving credentials,
+forced and ignored updates, failure after shared clearing, source switches and re-enable.
+`tests/revoke.lpr` executes the same fragment used by the HTTP administrator action;
+native `admin.py` verifies the real route. Shared bearer issuance/authorization,
+per-token revocation, legacy conversion and scheduled expiry remain to be connected.
 
 ## Remaining before the checklist can be checked
 

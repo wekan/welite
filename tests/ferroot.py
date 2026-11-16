@@ -39,6 +39,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
         build(root/'tests/factor.lpr',out/'factor',flags)
         build(root/'tests/attempt.lpr',out/'attempt',flags)
         build(root/'tests/enroll.lpr',out/'enroll',flags)
+        build(root/'tests/revoke.lpr',out/'revoke',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
@@ -365,7 +366,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("DELETE FROM login_tokens WHERE userId='meteor-account';",'exec')=='ok'
                 settings.pop('WELITE_ARGON_SECRET_FILE')
                 # Limited enrollment changes only factor fields in actual shared BSON.
-                enrolling=dict(_id='enrolling',username='enrolling',services=dict(password=shared_password,other=dict(keep=DateMs(-1))),unknown=Long(9007199254740993))
+                enrolling=dict(_id='enrolling',username='enrolling',services=dict(password=shared_password,other=dict(keep=DateMs(-1)),resume=dict(loginTokens=[dict(hashedToken=meteor_hash('before-enrollment'),when=DateMs(1794835200000)),dict(token='legacy-before-enrollment',when=DateMs(-1))],keep=Long(9007199254740993))),unknown=Long(9007199254740993))
                 client.command({'insert':'users','documents':[enrolling]})
                 binding=hashlib.sha256(b'enrollment-client').hexdigest()
                 enroll_settings=dict(settings,REQUIRE_2FA='all')
@@ -380,6 +381,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 confirmed=subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',setup_token,binding,setup_code],env=enroll_settings,text=True,timeout=30).strip()
                 assert confirmed=='yes',confirmed
                 enrolling['services']['twoFactorAuthentication']=dict(type='otp',secret=setup_secret)
+                enrolling['services']['resume']['loginTokens']=[]
                 assert encode(client.find('users','enrolling')[0])==encode(enrolling)
                 assert sql("SELECT counter FROM _wl_otp WHERE userId='enrolling';")==[[str(counter)]]
                 assert sql("SELECT count(*) FROM _wl_enrol WHERE userId='enrolling';")==[['0']]
@@ -492,6 +494,47 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql('DROP TRIGGER deny_meta;','exec')=='ok'
                 client.command({'delete':'users','deletes':[dict(q=dict(_id='u'),limit=1)]})
                 assert sql('SELECT count(*) FROM authmeta;')==[['0']]
+
+                # Disabling clears shared and private bearers in one transaction.
+                revoke_token=meteor_hash('revokee-shared')
+                revokee=dict(_id='revokee',username='revokee',services=dict(password=shared_password,resume=dict(loginTokens=[dict(hashedToken=revoke_token,when=DateMs(1794835200000)),dict(token='legacy-revokee',when=DateMs(-1))],unknown=Long(9007199254740993))),other=DateMs(-3))
+                bystander=dict(_id='revoke-other',username='revoke-other',services=dict(password=shared_password,resume=dict(loginTokens=[dict(hashedToken=meteor_hash('bystander-shared'),when=DateMs(1))])))
+                client.command({'insert':'users','documents':[revokee,bystander]})
+                for who in ['revokee','revoke-other']:
+                    assert subprocess.check_output([str(out/'factor/factor'),str(db),'api',who,'test-password','',who+'-local'],env=settings,text=True).strip()=='yes'
+                pending_revoke=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','revokee','test-password',binding],env=enroll_settings,text=True).strip().splitlines()
+                assert len(pending_revoke)==2,pending_revoke
+                revoke_before=encode(client.find('users','revokee')[0]);bystander_before=encode(client.find('users','revoke-other')[0])
+                def revoke(mutation=''):
+                    return subprocess.check_output([str(out/'revoke/revoke'),str(db),'revokee','disable',mutation],env=settings,text=True).strip()
+                def local_check(who):
+                    return subprocess.check_output([str(out/'factor/factor'),str(db),'check',who+'-local'],env=settings,text=True).strip()
+                for trigger in [
+                    'CREATE TRIGGER reject_revoke BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='revokee' BEGIN SELECT RAISE(ABORT,'forced shared failure'); END;",
+                    "CREATE TRIGGER reject_revoke BEFORE DELETE ON authmeta BEGIN SELECT RAISE(ABORT,'forced metadata failure'); END;",
+                    'CREATE TRIGGER reject_revoke BEFORE UPDATE ON '+q(physicals['users'])+" WHEN OLD._ferretdb_sjson->>'_id'='revokee' BEGIN SELECT RAISE(IGNORE); END;",
+                ]:
+                    assert sql(trigger,'exec')=='ok'
+                    assert revoke()=='no'
+                    assert encode(client.find('users','revokee')[0])==revoke_before
+                    assert local_check('revokee')=='yes'
+                    assert sql('DROP TRIGGER reject_revoke;','exec')=='ok'
+                # A changed source after script construction must abort before clearing.
+                saved_settings=sql("SELECT settings FROM _ferretdb_collections WHERE name='users';")[0][0]
+                assert revoke("UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid','11111111-2222-4333-8444-555555555555') WHERE name='users';")=='no'
+                assert encode(client.find('users','revokee')[0])==revoke_before
+                assert sql("UPDATE _ferretdb_collections SET settings="+q(saved_settings)+" WHERE name='users';",'exec')=='ok'
+                assert revoke()=='yes'
+                revokee['services']['resume']['loginTokens']=[];revokee['loginDisabled']=True
+                assert encode(client.find('users','revokee')[0])==encode(revokee)
+                assert sql("SELECT count(*) FROM login_tokens WHERE userId='revokee';")==[['0']]
+                assert sql("SELECT count(*) FROM _wl_enrol WHERE userId='revokee';")==[['0']]
+                assert local_check('revokee')=='no'
+                assert encode(client.find('users','revoke-other')[0])==bystander_before and local_check('revoke-other')=='yes'
+                assert sql("UPDATE users SET loginDisabled=0 WHERE id='revokee';",'exec')=='ok'
+                assert client.find('users','revokee')[0]['services']['resume']['loginTokens']==[] and local_check('revokee')=='no'
+                for who in ['revokee','revoke-other']:
+                    client.command({'delete':'users','deletes':[dict(q=dict(_id=who),limit=1)]})
 
                 # Bind private auth to users UUID, not just reused IDs/passwords.
                 source_user=dict(_id='u',username='user',services=dict(password='credential'))

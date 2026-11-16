@@ -1,8 +1,8 @@
 unit wlenroll;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,DateUtils,wldb,wlpasswd,wlcrypt,wlpolicy,wltotp,wlreplay,wlentrop,wlauth,wlautsrc;
-const EnrollDDL='CREATE TABLE _wl_enrol(userId TEXT PRIMARY KEY,tokenKey TEXT NOT NULL UNIQUE,binding TEXT NOT NULL,secret TEXT NOT NULL,created INTEGER NOT NULL CHECK(created>=0),expires INTEGER NOT NULL CHECK(expires>created),credentialRef TEXT NOT NULL,username TEXT NOT NULL,method TEXT NOT NULL,services TEXT NOT NULL,admin TEXT NOT NULL) STRICT';
+uses SysUtils,DateUtils,wldb,wlpasswd,wlcrypt,wlpolicy,wltotp,wlreplay,wlentrop,wlauth,wlautsrc,wlrevoke,wlenmeta;
+
 type TWLEnrollProof=class
   private
     FDb,FUser,FUsername,FMethod,FServices,FAdmin,FRef,FSource:string;
@@ -145,8 +145,7 @@ begin
         'UPDATE _wl_enrol SET secret=CASE WHEN EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Rows[0][0])+
         ' AND json_extract(services_json,''$.twoFactorAuthentication.type'')=''otp'' AND json_extract(services_json,''$.twoFactorAuthentication.secret'')='+QuotedStr(Secret)+
         ') THEN secret ELSE NULL END WHERE tokenKey='+QuotedStr(Key)+'; '+
-        'DELETE FROM authmeta WHERE hashedToken IN (SELECT hashedToken FROM login_tokens WHERE userId='+QuotedStr(Rows[0][0])+'); '+
-        'DELETE FROM login_tokens WHERE userId='+QuotedStr(Rows[0][0])+'; DELETE FROM _wl_enrol WHERE userId='+QuotedStr(Rows[0][0])+'; COMMIT;';
+        RevokeUserTokensSQL(Db,Rows[0][0])+'COMMIT;';
       Result:=Db.Exec(Sql);if not Result then Db.Exec('ROLLBACK;');
     except Db.Exec('ROLLBACK;');Result:=False;end;
   finally Wipe(Secret);end;

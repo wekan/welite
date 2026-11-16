@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Shared all-user token revocation
+
+- Connect administrator account disabling and OTP enrollment to one transactional
+  revocation fragment. Clear shared Meteor resume arrays, including legacy records,
+  alongside local token metadata/credentials and pending enrollment tokens.
+- Preserve unrelated BSON data and OTP replay boundaries. Leave absent resume paths
+  absent, and scope changes to the selected user; re-enabling cannot restore removed
+  shared/local bearers or pending setup. Native stores retain their private-token path.
+- Guard source identity again inside the transaction and assert shared records are
+  actually empty. Failed or ignored physical writes and later local deletion errors
+  roll back both revocation and the owning account change.
+- Share pending-enrollment schema in a small metadata unit, ensuring it exists within
+  revocation's transaction without circular imports or a setup-creation race.
+- Verify both SQLite backends with live Mongo enrollment/disable, shared and local
+  records, pending cleanup, source changes, forced/ignored writes, rollback/retry,
+  account isolation and re-enable behavior. Verify native HTTP account regressions.
+- Shared bearer issuance/authorization, per-token revocation and expiry scheduling
+  remain open; this step connects the all-user revocation events.
+
 ## 2026-11-16 Resume timestamp validation and expiry
 
 - Add typed hashed-token checking with absent/valid/expired/invalid results. Require one
