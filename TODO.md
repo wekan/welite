@@ -231,7 +231,8 @@ not merely a design document. Platform/browser claims require testing on those t
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
 - [ ] Complete language selection, translation rendering and RTL behavior.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
-- [ ] Verify embedded assets, linked/CLI SQLite and supported cross-platform builds.
+- [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.
+- [ ] Verify embedded assets and supported cross-platform builds.
 - [ ] Reconcile README/design status against completed code and document platform limits.
 
 Already implemented before this checklist: PBKDF2 password hashing in `wlpasswd.pas`,

@@ -111,8 +111,9 @@ begin
   try
     // RunCommand drains both pipes while the child is running, avoiding deadlocks on
     // large query output. It checks the child exit status and keeps stderr separate.
+    // Leading whitespace keeps schema comments (-- ...) from becoming CLI options.
     Result := RunCommand('sqlite3', ['-batch', '-bail', '-csv', '-noheader',
-      '-cmd', 'PRAGMA foreign_keys=ON', ExpandFileName(DbPath), Sql], Output);
+      '-cmd', 'PRAGMA foreign_keys=ON', ExpandFileName(DbPath), ' '+Sql], Output);
   except
     Result := False;
   end;

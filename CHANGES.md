@@ -4,6 +4,16 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Verify fresh linked and CLI server installations
+
+- Keep SQL beginning with `--` comments from being parsed as SQLite command-line options;
+  this fixes automatic schema provisioning and first registration on the CLI backend.
+- Added the leading-comment regression and a `WELITE_DB_CLI=1` HTTP/browser test mode.
+  The valid-card ownership assertion now follows the card's actual list after UI movement.
+- Verified fresh linked and CLI installations through registration, Designer page/widget
+  forms, board rendering/movement/minimap and 29 rejected API ownership attempts. Both
+  Chromium runs disable JavaScript and cookies; all accumulated Pascal DB/move/role tests pass.
+
 ## 2026-11-16 Enforce API resource ownership
 
 - Added a shared child-resource chain check after board authorization: swimlane/list/card,

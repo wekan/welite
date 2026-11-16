@@ -8,7 +8,7 @@ begin if not Condition then raise Exception.Create('FAIL: '+Msg); end;
 begin
   Db:=TWLDb.Create(ParamStr(1));
   try
-    Check(Db.Exec('CREATE TABLE textdata(id INTEGER PRIMARY KEY, value TEXT);'),'create');
+    Check(Db.Exec('-- schema comment'+#10+'CREATE TABLE textdata(id INTEGER PRIMARY KEY, value TEXT);'),'create');
     Text:=' pipe|comma,quote" apostrophe'' UTF-8: Suomi 日本語 '+#13+#10+'next'+#10+'line ';
     Check(Db.Exec('INSERT INTO textdata VALUES(1,'+QuotedStr(Text)+');'),'insert');
     R:=Db.Query('SELECT value,value,'''',NULL,42 FROM textdata;');

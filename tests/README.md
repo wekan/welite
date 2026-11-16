@@ -18,5 +18,8 @@ and removes its own temporary directory.
   `WELITE_PLAYWRIGHT` to an installed Playwright module path if absent on module search
   paths. `PLAYWRIGHT_BROWSERS_PATH` selects an existing browser installation.
 
+`WELITE_DB_CLI=1` selects the CLI SQLite server for `tests/admin.py`; combine it
+with `WELITE_UI=1` to repeat the browser workflows against that backend.
+
 Server processes and test databases are removed on success or failure. Browser tests
 use no persistent profile and assert the cookie store remains empty.

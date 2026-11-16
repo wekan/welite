@@ -70,5 +70,7 @@ def run(request, db, token):
     assert status == 400, (status,body)
     with sqlite3.connect(db) as con:
         assert '\n'.join(con.iterdump()) == before, 'Rejected requests changed the database'
-    assert request('GET', '/api/boards/protected/lists/todo/cards/card?token='+token)[0] == 200
+    with sqlite3.connect(db) as con:
+        current_list = con.execute("SELECT listId FROM cards WHERE id='card'").fetchone()[0]
+    assert request('GET', '/api/boards/protected/lists/'+current_list+'/cards/card?token='+token)[0] == 200
     print('PASS: 29 API cross-board/parent attempts rejected without database changes; valid card still readable')

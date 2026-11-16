@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
     tmp = Path(tmp)
     build = tmp / 'build'
     build.mkdir()
-    result = subprocess.run([os.environ.get('FPC', 'fpc'), '-B', '-FU'+str(build), '-FE'+str(build), str(ROOT/'src/wlhttp.lpr')], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    result = subprocess.run([os.environ.get('FPC', 'fpc'), *(['-dWLDB_CLI'] if os.environ.get('WELITE_DB_CLI')=='1' else []), '-B', '-FU'+str(build), '-FE'+str(build), str(ROOT/'src/wlhttp.lpr')], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     if result.returncode:
         raise RuntimeError(result.stdout)
     with socket.socket() as sock:
@@ -51,8 +51,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             else:
                 raise RuntimeError('Server did not start')
             def register(name):
-                status, headers, _ = request('POST', '/register', {'username':name, 'password':'test-password', 'confirm':'test-password'})
-                assert status == 302, (status, headers)
+                status, headers, body = request('POST', '/register', {'username':name, 'password':'test-password', 'confirm':'test-password'})
+                assert status == 302, (status, headers, body)
                 return parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
             admin = register('administrator')
             member = register('member')
