@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Board minimap and coordinate navigation
+
+- Added a top-right, server-rendered minimap with occupied/empty markers, a yellow
+  current position and X/Y coordinates. Each cell is a session-preserving navigation link.
+- Board pages default to one list in one swimlane for small-screen/retro use; view arrows
+  change that window and View all restores the full-board selection surface.
+- Clamp coordinates to existing rows/columns and preserve the viewport on form submission.
+- Verified map links, occupancy changes after moves, highlight, out-of-range coordinates
+  and all-items view. Chromium tests pass at widths 320/768/1920 with no horizontal
+  overflow in the fixture, with JavaScript and cookies disabled. Retro devices still
+  require the platform-specific checks listed in TODO.
+
 ## 2026-11-16 Authorized board views and no-JS card movement
 
 - Added real board links on the home page and registered Designer board/board-list

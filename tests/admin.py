@@ -106,6 +106,9 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 subprocess.run([os.environ.get('NODE', 'node'), str(ROOT/'tests/board.js'), 'http://localhost:'+str(port), admin], check=True)
                 with sqlite3.connect(db) as con:
                     assert con.execute("SELECT listId FROM cards WHERE id='card'").fetchone()[0] == 'doing'
+            status, _, body = request('GET', '/board?id=protected&x=999&y=-5&sessionId='+admin)
+            assert status == 200 and b'X 2 Y 1' in body and b'data-list="doing"' in body
+            assert b'data-list="todo"' not in body
             print('PASS: authorized board renderer, escaped content and read-only controls')
             class HiddenFields(HTMLParser):
                 def __init__(self):

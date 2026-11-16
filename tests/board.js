@@ -14,9 +14,25 @@ const assert = require('node:assert/strict');
     assert.equal(await page.locator('td[data-list=todo]').getByText('Card <test>').count(), 1);
     await page.locator('input[name=sel_card][value=card]').check();
     await page.locator('input[type=submit][name=dir][value=right]').click();
+    await page.getByRole('link', { name: 'View right', exact: true }).click();
+    assert.equal(await page.getByText('X 2 Y 1', { exact: false }).count(), 1);
     assert.equal(await page.locator('td[data-list=doing]').getByText('Card <test>').count(), 1);
     assert.equal(await page.locator('td[data-list=todo]').getByText('Card <test>').count(), 0);
+    const minimap = page.locator('table[summary="Board minimap"]');
+    assert.equal(await minimap.locator('td[bgcolor="#ffff66"]').count(), 1);
+    assert.equal(await minimap.locator('td').nth(0).textContent(), '-');
+    assert.equal(await minimap.locator('td').nth(1).textContent(), '*');
+    await minimap.locator('a').first().click();
+    assert.equal(await page.locator('td[data-list=todo]').count(), 1);
+    assert.equal(await page.locator('td[data-list=doing]').count(), 0);
+    for (const width of [320, 768, 1920]) {
+      await page.setViewportSize({ width, height: 800 });
+      assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth));
+    }
+    await page.getByRole('link', { name: 'View all', exact: true }).click();
+    assert.equal(await page.locator('td[data-list=todo]').count(), 1);
+    assert.equal(await page.locator('td[data-list=doing]').count(), 1);
     assert.equal((await context.cookies()).length, 0);
-    console.log('PASS: Chromium select and move card with JavaScript and cookies disabled');
+    console.log('PASS: Chromium card movement, minimap and viewport navigation with JavaScript and cookies disabled');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

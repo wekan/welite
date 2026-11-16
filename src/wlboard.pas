@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False):string;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
 function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
@@ -22,8 +22,9 @@ begin
   if Count=0 then Result:=Result+'<li>No boards available.</li>';
   Result:=Result+'</ul>';
 end;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string):string;
-var B,Lanes,Lists,Cards:TWLRows; i,j,k,c:Integer; Writable:Boolean; Back,Align:string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean):string;
+var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
+  Writable:Boolean; Back,Align,Map,Url,Color,CellText:string; Occupied:TWLRows;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -37,14 +38,67 @@ begin
   Back:='/board?id='+BoardId;
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><p><a href="'+
     HtmlAttr(WithSessionId('/',S.SessionId))+'">All boards</a></p>';
+  Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
+    ' AND archived=0 ORDER BY sort,id;');
+  if X<1 then X:=1;
+  if Y<1 then Y:=1;
+  if (Length(Lanes)>0) and (Y>Length(Lanes)) then Y:=Length(Lanes);
+  Width:=0;
+  Map:='<table align="right" border="1" cellpadding="3" cellspacing="0" summary="Board minimap">';
+  for MapY:=0 to High(Lanes) do
+  begin
+    MapLists:=Db.Query('SELECT id,title FROM lists WHERE boardId='+QuotedStr(BoardId)+
+      ' AND (swimlaneId='+QuotedStr(Lanes[MapY][0])+' OR swimlaneId='''') AND archived=0 ORDER BY sort,id;');
+    if MapY=Y-1 then
+    begin
+      Width:=Length(MapLists);
+      if (Width>0) and (X>Width) then X:=Width;
+    end;
+    Map:=Map+'<tr>';
+    for MapX:=0 to High(MapLists) do
+    begin
+      Occupied:=Db.Query('SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+
+        ' AND swimlaneId='+QuotedStr(Lanes[MapY][0])+' AND listId='+QuotedStr(MapLists[MapX][0])+
+        ' AND archived=0 LIMIT 1;');
+      if Length(Occupied)>0 then begin Color:='#cccccc'; CellText:='*'; end
+      else begin Color:='#ffffff'; CellText:='-'; end;
+      if (MapX=X-1) and (MapY=Y-1) then Color:='#ffff66';
+      Url:='/board?id='+BoardId+'&x='+IntToStr(MapX+1)+'&y='+IntToStr(MapY+1);
+      Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(WithSessionId(Url,S.SessionId))+
+        '" title="'+HtmlAttr(Lanes[MapY][1]+' / '+MapLists[MapX][1])+'">'+CellText+'</a></td>';
+    end;
+    if Length(MapLists)=0 then Map:=Map+'<td>-</td>';
+    Map:=Map+'</tr>';
+  end;
+  Map:=Map+'</table>';
+  Result:=Result+Map+'<p>X '+IntToStr(X)+' Y '+IntToStr(Y)+
+    ' (yellow: current; *: cards; -: empty)</p><p>';
+  for m:=0 to 3 do
+  begin
+    MapX:=X; MapY:=Y;
+    case m of
+      0: begin Dec(MapX); CellText:='View left'; end;
+      1: begin Inc(MapX); CellText:='View right'; end;
+      2: begin Dec(MapY); CellText:='View up'; end;
+      3: begin Inc(MapY); CellText:='View down'; end;
+    end;
+    if (MapX>=1) and (MapX<=Width) and (MapY>=1) and (MapY<=Length(Lanes)) then
+      Result:=Result+'<a href="'+HtmlAttr(WithSessionId('/board?id='+BoardId+
+        '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S.SessionId))+'">'+CellText+'</a> ';
+  end;
+  Result:=Result+'<a href="'+HtmlAttr(WithSessionId('/board?id='+BoardId+'&view=all',S.SessionId))+
+    '">View all</a></p><br clear="all">';
+  Back:='/board?id='+BoardId;
+  if AllItems then Back:=Back+'&view=all'
+  else Back:=Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y);
   if Writable then Result:=Result+MoveFormBegin(S,'/board/move')+
     '<input type="hidden" name="boardId" value="'+HtmlAttr(BoardId)+'">'+
     '<input type="hidden" name="back" value="'+HtmlAttr(Back)+'">';
-  Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
-    ' AND archived=0 ORDER BY sort,id;');
+
   if Length(Lanes)=0 then Result:=Result+'<p>No swimlanes yet.</p>';
   for i:=0 to High(Lanes) do
   begin
+    if not AllItems and (i<>Y-1) then Continue;
     Result:=Result+'<h2'+BgColorAttr(Lanes[i][2])+'>'+Selection('swimlane',Lanes[i][0])+
       HtmlEncode(Lanes[i][1])+'</h2>';
     Lists:=Db.Query('SELECT id,title,color FROM lists WHERE boardId='+QuotedStr(BoardId)+
@@ -54,6 +108,7 @@ begin
     for j:=0 to High(Lists) do
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
+      if not AllItems and (c<>X-1) then Continue;
       Result:=Result+'<th align="'+Align+'"'+BgColorAttr(Lists[c][2])+'>'+
         Selection('list',Lists[c][0])+HtmlEncode(Lists[c][1])+'</th>';
     end;
@@ -61,6 +116,7 @@ begin
     for j:=0 to High(Lists) do
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
+      if not AllItems and (c<>X-1) then Continue;
       Result:=Result+'<td valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'">';
       Cards:=Db.Query('SELECT id,title,color,description FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[i][0])+' AND listId='+QuotedStr(Lists[c][0])+
@@ -83,7 +139,9 @@ begin
   begin aResponse.Code:=404; aResponse.Content:='Unknown domain'; aResponse.SendContent; Exit; end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
   Dir:=ResolveDir(aRequest,'');
-  Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir);
+  Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
+    StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
+    aRequest.QueryFields.Values['view']='all');
   if Body='' then begin aResponse.Code:=404; aResponse.Content:='Board not found'; end
   else begin aResponse.Code:=200; aResponse.Content:=PageDir('Board',Body+EnhancementScripts(wbUnknown),Dir); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
@@ -97,7 +155,7 @@ begin
   try
     try D:=GetJSON(W.OptionsJson); if D is TJSONObject then Id:=TJSONObject(D).Get('boardId',''); except end;
   finally D.Free; end;
-  Result:=BoardHtml(Db,Id,S,'ltr');
+  Result:=BoardHtml(Db,Id,S,'ltr',1,1,True);
   if Result='' then Result:='<p>Board not available.</p>';
 end;
 initialization
