@@ -941,6 +941,33 @@ databases, never `.db`/`.sqlite` aliases. Existing live tests cover the shared s
 this discovery test does not claim filename migration, cloned-auth compatibility or a
 full Meteor observer round trip. `enrhttp.py` covers HTTP startup and enrollment regressions.
 
+## Source-bound bearer links for local cleanup
+
+Owned private `_wl_pair` rows contain the local digest, user ID, optional Meteor digest
+and source UUID. These distinct digests cannot be derived from one another. Shared
+issuance/adoption writes the link in its existing transaction and asserts coverage;
+ignored writes roll back token/metadata/shared edits and any OTP consumption.
+
+Installation backfills older active API identity with a null shared hash, preserving
+known links and refusing incomplete backfill. It never guesses a shared digest from
+issue timestamps. After normal local/shared validation, a presented raw bearer can fill
+an unknown link. A link-write failure denies that access without declaring the underlying
+credential invalid. Known links take the read-only path. Native/browser storage is unchanged.
+
+Links survive local credential deletion. A subsequent raw request can therefore revoke
+the corresponding shared hash/legacy form for the recorded user even when its local
+row is gone. Source UUID matching prevents this fallback from touching a replacement
+collection, and source rebinding clears obsolete links atomically. An ignored obsolete-
+link deletion aborts the rebinding transaction. Seen digests continue
+to prevent automatic re-adoption. This does not add authorization for a deleted token.
+
+`ferroot.py` covers known links, ignored insert/backfill rollback, null-hash migration,
+lazy enrichment, adoption rollback, targeted revocation after local deletion, unchanged
+known links on reinstall and source isolation. Local background cleanup remains the next
+step: shared-hash links identify current co-issued/adopted records, while legacy null-hash
+records require an explicit cleanup policy. The current sweep still edits shared records
+only; no local cleanup is claimed by this linkage step.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

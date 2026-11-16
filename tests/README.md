@@ -290,3 +290,8 @@ without HTTP access. Independent SQLite backups of real shared data verify local
 enabled-domain cleanup, dynamic enabling/new registry entries, disabled/orphan/invalid
 host exclusion, no provisioning of missing directories, native-registry skip, broken
 registry detection/recovery and clean shutdown. The copies are separate databases, never filename aliases. Both backends run.
+
+Bearer-link coverage in `ferroot.py` checks owned `_wl_pair` records for shared issuance
+and adoption, ignored insert/backfill rollback, unknown-hash migration, validated-access
+enrichment, post-local-deletion targeted revocation and source isolation/reinstall.
+`crypto.py` retains native/private token behavior. Local expiry cleanup remains open.

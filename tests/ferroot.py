@@ -643,6 +643,11 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 old=adopt_doc['services']['resume']['loginTokens'][0];del old['token'];old['hashedToken']=meteor_hash('adopt-legacy')
                 assert encode(client.find('users','adopted-user')[0])==encode(adopt_doc)
                 assert paired_check('adopt-hashed')=='yes'
+                assert sql('SELECT userId,sharedHash FROM _wl_pair WHERE hashedToken='+q(local_hash('adopt-hashed'))+';')==[['adopted-user',meteor_hash('adopt-hashed')]]
+                assert sql('DELETE FROM login_tokens WHERE hashedToken='+q(local_hash('adopt-hashed'))+';','exec')=='ok'
+                assert paired_check('adopt-hashed')=='no'
+                assert all(entry.get('hashedToken')!=meteor_hash('adopt-hashed') for entry in client.find('users','adopted-user')[0]['services']['resume']['loginTokens']),'Deleted local row lost shared revocation identity'
+
                 dates=sql('SELECT createdAt,expiresAt FROM login_tokens WHERE hashedToken='+q(local_hash('adopt-legacy'))+';')[0]
                 assert round(datetime.fromisoformat(dates[0].replace('Z','+00:00')).timestamp()*1000)==adopted_when
                 assert round(datetime.fromisoformat(dates[1].replace('Z','+00:00')).timestamp()*1000)==adopted_when+90*86400000
@@ -656,6 +661,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     assert encode(client.find('users','adopted-user')[0])==stable_adopt
                     assert sql('SELECT count(*) FROM _wl_seen WHERE hashedToken='+q(local_hash('adopt-rollback'))+';')==[['0']]
                     assert sql('SELECT count(*) FROM login_tokens WHERE hashedToken='+q(local_hash('adopt-rollback'))+';')==[['0']]
+                    assert sql('SELECT count(*) FROM _wl_pair WHERE hashedToken='+q(local_hash('adopt-rollback'))+';')==[['0']]
                     assert sql('DROP TRIGGER fail_adopt;','exec')=='ok'
                 assert paired_check('adopt-rollback')=='yes'
                 # Expiry, duplicate ownership and disabled accounts deny adoption.
@@ -677,6 +683,24 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 first=client.find('users','paired-api')[0]['services']['resume']['loginTokens'][0]
                 assert first['hashedToken']==meteor_hash('paired-first') and isinstance(first['when'],DateMs)
                 seen_key=hashlib.sha256(('welite-token-v2\0'+str(db.resolve())+'\0paired-first').encode()).hexdigest()
+                pair_uuid=sql('SELECT userUUID FROM _wl_authsrc;')[0][0]
+                assert sql('SELECT userId,sharedHash,sourceUUID FROM _wl_pair WHERE hashedToken='+q(seen_key)+';')==[['paired-api',meteor_hash('paired-first'),pair_uuid]]
+                # Legacy backfill knows the identity, never guesses the other digest.
+                assert sql('DELETE FROM _wl_pair WHERE hashedToken='+q(seen_key)+';','exec')=='ok'
+                assert sql('CREATE TRIGGER deny_pair BEFORE INSERT ON _wl_pair BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
+                assert sql(mode='install')=='error'
+                assert sql('DROP TRIGGER deny_pair;','exec')=='ok' and sql(mode='install')=='ok'
+                assert sql('SELECT userId,sharedHash,sourceUUID FROM _wl_pair WHERE hashedToken='+q(seen_key)+';')==[['paired-api','',pair_uuid]]
+                assert paired_check('paired-first')=='yes'
+                assert sql('SELECT sharedHash FROM _wl_pair WHERE hashedToken='+q(seen_key)+';')==[[meteor_hash('paired-first')]]
+                # Failure to record a new link rolls issuance and shared BSON back.
+                assert sql('CREATE TRIGGER deny_pair BEFORE INSERT ON _wl_pair BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
+                pair_before=encode(client.find('users','paired-api')[0])
+                assert pair('pair-denied') in ['no','error']
+                assert encode(client.find('users','paired-api')[0])==pair_before
+                assert sql('SELECT count(*) FROM login_tokens WHERE hashedToken='+q(local_hash('pair-denied'))+';')==[['0']]
+                assert sql('DROP TRIGGER deny_pair;','exec')=='ok'
+
                 assert sql('SELECT hashedToken FROM _wl_seen WHERE hashedToken='+q(seen_key)+';')==[[seen_key]]
                 # Upgrade backfills existing credentials without touching shared BSON.
                 assert sql('DELETE FROM _wl_seen WHERE hashedToken='+q(seen_key)+';','exec')=='ok'
@@ -700,6 +724,9 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$push':{'services.resume.loginTokens':first}})]})
                 assert paired_check('paired-first')=='no','Restoring source record revived a revoked local credential'
                 assert sql('SELECT hashedToken FROM _wl_seen WHERE hashedToken='+q(seen_key)+';')==[[seen_key]],'Revocation erased bearer history'
+                assert all(entry.get('hashedToken')!=meteor_hash('paired-first') for entry in client.find('users','paired-api')[0]['services']['resume']['loginTokens'])
+                # Seed the collision independently of the now-complete raw revocation.
+                client.command({'update':'users','updates':[dict(q=dict(_id='paired-api'),u={'$push':{'services.resume.loginTokens':first}})]})
                 snapshot=encode(client.find('users','paired-api')[0])
                 assert pair('paired-first')=='no','Existing shared hash was reused'
                 assert encode(client.find('users','paired-api')[0])==snapshot
@@ -883,6 +910,11 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert auth('issue')=='yes' and auth('check')=='yes'
                 replayed=subprocess.check_output([str(out/'replay/replay'),str(db),'claim','u','JBSWY3DPEHPK3PXP','100','source-ledger'],env=settings,text=True).strip()
                 assert replayed=='ok'
+                # The replay harness seeds a legacy API row without a digest link.
+                # Complete its one-time migration before the idempotence snapshot.
+                assert sql(mode='install')=='ok'
+                assert sql("SELECT userId,sharedHash FROM _wl_pair WHERE hashedToken='source-ledger';")==[['u','']]
+
                 def pending_source():
                     values=subprocess.check_output([str(out/'enroll/enroll'),str(db),'start','source-pending','test-password',binding],env=enroll_settings,text=True,timeout=30).strip().splitlines()
                     assert len(values)==2,values
@@ -891,7 +923,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 source_settings=sql("SELECT table_name,settings FROM _ferretdb_collections WHERE name='users';")[0]
                 old_uuid=json.loads(source_settings[1])['uuid']
                 assert sql('SELECT userTable,userUUID FROM _wl_authsrc;')==[[source_settings[0],old_uuid]]
-                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc','_wl_seen','_wl_sweep']
+                private_tables=['login_tokens','authmeta','_wl_otp','_wl_enrol','_wl_authsrc','_wl_seen','_wl_sweep','_wl_pair']
                 def private_snapshot():return {name:sql('SELECT * FROM '+q(name)+' ORDER BY 1;') for name in private_tables}
                 # Proofs cannot cross a rebind even when account snapshots match.
                 rebound_uuid='11111111-2222-4333-8444-555555555555'
@@ -904,7 +936,10 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE _ferretdb_collections SET settings="+q(source_settings[1])+" WHERE name='users'; UPDATE _wl_authsrc SET userUUID="+q(old_uuid)+';','exec')=='ok'
                 preserved=private_snapshot()
                 seen_before_rebind=sql('SELECT hashedToken FROM _wl_seen ORDER BY hashedToken;')
-                assert sql(mode='install')=='ok' and private_snapshot()==preserved and auth('check')=='yes'
+                assert sql(mode='install')=='ok','Reinstall failed with paired state'
+                after_reinstall=private_snapshot()
+                assert after_reinstall==preserved,[name for name in private_tables if preserved[name]!=after_reinstall[name]]
+                assert auth('check')=='yes'
                 # Bad source metadata aborts installer cleanup and source rebinding together.
                 assert sql("UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid','bad') WHERE name='users';",'exec')=='ok'
                 assert auth('lookup','user')=='no'
@@ -933,8 +968,16 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 digest=hmac.new(base64.b32decode(pending_secret),struct.pack('>Q',counter),hashlib.sha1).digest();offset=digest[-1]&15
                 code=str((struct.unpack('>I',digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
                 assert subprocess.check_output([str(out/'enroll/enroll'),str(db),'confirm',pending_token,binding,code],env=enroll_settings,text=True).strip()=='no'
+                old_pairs=sql('SELECT * FROM _wl_pair ORDER BY hashedToken;')
+                assert old_pairs
+                assert sql('CREATE TRIGGER deny_pair_clear BEFORE DELETE ON _wl_pair BEGIN SELECT RAISE(IGNORE); END;','exec')=='ok'
+                assert sql(mode='install')=='error','Ignored obsolete-link cleanup committed source rebinding'
+                assert sql('SELECT * FROM _wl_pair ORDER BY hashedToken;')==old_pairs
+                assert sql('SELECT userUUID FROM _wl_authsrc;')==[[old_uuid]]
+                assert sql('DROP TRIGGER deny_pair_clear;','exec')=='ok'
                 assert sql(mode='install')=='ok'
                 assert sql('SELECT userUUID FROM _wl_authsrc;')==[[new_uuid]]
+                assert sql('SELECT count(*) FROM _wl_pair;')==[['0']]
                 assert set(map(tuple,seen_before_rebind)).issubset(set(map(tuple,sql('SELECT hashedToken FROM _wl_seen;'))))
                 for name in ['login_tokens','authmeta','_wl_otp','_wl_enrol']:assert sql('SELECT count(*) FROM '+q(name)+';')==[['0']]
                 assert auth('check')=='no' and auth('issue')=='yes' and auth('check')=='yes'

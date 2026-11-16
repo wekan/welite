@@ -1,7 +1,7 @@
 unit wlshared;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,DateUtils,Math,wllife,fpjson,wldb,wlautsrc,wlresume,wlcrypt,wlsjson,wlpolicy;
+uses SysUtils,DateUtils,Math,wllife,fpjson,wldb,wlautsrc,wlresume,wlcrypt,wlsjson,wlpolicy,wlpair;
 function AccountPolicyCondition(Db:TWLDb):string;
 function ResolvedFactorPolicy(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean;
   out Secret,Condition:string):TFactorPolicy;
@@ -160,6 +160,7 @@ begin
   Present:='EXISTS(SELECT 1 FROM '+Id(TableName)+' WHERE json_extract('+Doc+',''$."_id"'')='+QuotedStr(UserId)+
     ' AND wl_rescheck(json('+Doc+'),'+QuotedStr(Hash)+','+IntToStr(WhenMs)+',1)=''valid'')';
   Result:=Result+'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND (NOT ('+Issued+') OR ('+Present+')) THEN userUUID ELSE NULL END WHERE id=1; ';
+  Result:=Result+StorePairSQL(Db,UserId,Token);
 end;
 function SharedResumeCandidate(Db:TWLDb;const Token:string;out UserId,Condition,ConversionSQL:string;
   out WhenMs,ExpiresMs:Int64):Boolean;

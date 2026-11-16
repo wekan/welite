@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc,wlseen,wlsweep;
+uses SysUtils,Classes,wldb,wlreplay,wlattemp,wlenmeta,wlautsrc,wlseen,wlsweep,wlpair;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const
@@ -19,7 +19,7 @@ begin
   Owners:=nil;
   for i:=0 to High(Objects) do if Objects[i][0]='_wl_models' then
     Owners:=Db.Query('SELECT name,table_name,spec,version FROM _wl_models;');
-  for k:=0 to 7 do
+  for k:=0 to 8 do
   begin
     if k=0 then begin Name:='login_tokens';DDL:=TokenDDL;end
     else if k=1 then begin Name:='authmeta';DDL:=MetaDDL;end
@@ -28,7 +28,8 @@ begin
     else if k=4 then begin Name:='_wl_enrol';DDL:=EnrollDDL;end
     else if k=5 then begin Name:='_wl_authsrc';DDL:=AuthSourceDDL;end
     else if k=6 then begin Name:='_wl_seen';DDL:=SeenDDL;end
-    else begin Name:='_wl_sweep';DDL:=SweepDDL;end;
+    else if k=7 then begin Name:='_wl_sweep';DDL:=SweepDDL;end
+    else begin Name:='_wl_pair';DDL:=PairDDL;end;
     Exists:=False;Owned:=False;
     for i:=0 to High(Owners) do
       if (Owners[i][0]=Name) and (Owners[i][1]=Name) and (Owners[i][2]=Signature) and (Owners[i][3]='1') then Owned:=True;
@@ -44,7 +45,11 @@ begin
   Result:=Result+'INSERT INTO _wl_sweep VALUES(1,-600000) ON CONFLICT(id) DO NOTHING; ';
   // Backfill before source cleanup; history survives credential invalidation.
   Result:=Result+'INSERT INTO _wl_seen SELECT hashedToken FROM login_tokens WHERE 1 ON CONFLICT(hashedToken) DO NOTHING; '+
-    'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t WHERE NOT EXISTS(SELECT 1 FROM _wl_seen s WHERE s.hashedToken=t.hashedToken)) THEN NULL ELSE version END WHERE name=''_wl_seen''; '+AuthSourceScript(Users);
+    'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t WHERE NOT EXISTS(SELECT 1 FROM _wl_seen s WHERE s.hashedToken=t.hashedToken)) THEN NULL ELSE version END WHERE name=''_wl_seen''; '+
+    'INSERT INTO _wl_pair SELECT t.hashedToken,t.userId,NULL,a.userUUID FROM login_tokens t JOIN authmeta m USING(hashedToken) CROSS JOIN _wl_authsrc a WHERE a.id=1 AND m.kind=''api'' ON CONFLICT(hashedToken) DO NOTHING; '+
+    'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t JOIN authmeta m USING(hashedToken) CROSS JOIN _wl_authsrc a WHERE a.id=1 AND m.kind=''api'' AND NOT EXISTS(SELECT 1 FROM _wl_pair p WHERE p.hashedToken=t.hashedToken AND p.userId=t.userId AND p.sourceUUID=a.userUUID)) THEN NULL ELSE version END WHERE name=''_wl_pair''; '+AuthSourceScript(Users)+
+    'DELETE FROM _wl_pair WHERE sourceUUID<>(SELECT userUUID FROM _wl_authsrc WHERE id=1); '+
+    'UPDATE _wl_models SET version=CASE WHEN EXISTS(SELECT 1 FROM _wl_pair WHERE sourceUUID<>(SELECT userUUID FROM _wl_authsrc WHERE id=1)) THEN NULL ELSE version END WHERE name=''_wl_pair''; ';
   Result:=Result+'CREATE INDEX IF NOT EXISTS idx_login_tokens_user ON login_tokens(userId); '+
     'DROP TRIGGER IF EXISTS _wl_token_i; DROP TRIGGER IF EXISTS _wl_token_u; '+
     'DROP TRIGGER IF EXISTS _wl_token_d; DROP TRIGGER IF EXISTS _wl_user_tokens; '+

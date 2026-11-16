@@ -22,7 +22,7 @@ unit wlauth;
 interface
 
 uses
-  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,wlreplay,wltotp,wlautsrc,wlrevoke,wlshared,Sockets;
+  SysUtils,Classes,HTTPDefs,DateUtils,fpjson,jsonparser,wldb,wlpasswd,wlcrypt,wlpolicy,wlreplay,wltotp,wlautsrc,wlrevoke,wlshared,wlpair,Sockets;
 
 type
   TWLLoginProof=class
@@ -439,6 +439,8 @@ begin
   Result:=False;Key:=TokenHash(Db,Token);
   try
     Rows:=Db.Query('SELECT userId FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+';');
+    if (Length(Rows)=0) and AuthSourceCurrent(Db) and SharedStore(Db) then
+      Rows:=Db.Query('SELECT p.userId FROM _wl_pair p JOIN _wl_authsrc a ON a.userUUID=p.sourceUUID WHERE a.id=1 AND p.hashedToken='+QuotedStr(Key)+';');
     if Length(Rows)=0 then Exit(True);
     if Length(Rows)<>1 then Exit;
     if AuthSourceCurrent(Db) then Sql:=RevokeTokenSQL(Db,Rows[0][0],Token)
@@ -517,7 +519,7 @@ begin
         'INSERT INTO login_tokens VALUES('+QuotedStr(Key)+','+QuotedStr(Uid)+','+QuotedStr(Created)+','+QuotedStr(Expires)+'); '+
         'INSERT INTO authmeta VALUES('+QuotedStr(Key)+','+QuotedStr(HashText(ExpandFileName(Db.Path)))+','+QuotedStr(Reference)+',''api''); '+
         'UPDATE _wl_authsrc SET userUUID=CASE WHEN EXISTS(SELECT 1 FROM login_tokens t JOIN authmeta m USING(hashedToken) JOIN _wl_seen s USING(hashedToken) WHERE t.hashedToken='+QuotedStr(Key)+
-        ' AND t.userId='+QuotedStr(Uid)+' AND m.kind=''api'' AND m.credentialRef='+QuotedStr(Reference)+') THEN userUUID ELSE NULL END WHERE id=1; '+Conversion+'COMMIT;';
+        ' AND t.userId='+QuotedStr(Uid)+' AND m.kind=''api'' AND m.credentialRef='+QuotedStr(Reference)+') THEN userUUID ELSE NULL END WHERE id=1; '+StorePairSQL(Db,Uid,Token)+Conversion+'COMMIT;';
       if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
       Result:=True;
     except Db.Exec('ROLLBACK;');Result:=False;end;
@@ -547,6 +549,7 @@ begin
   end;
   if Rows[0][3]<>'api' then Exit;
   if not SharedBearerValid(Db,Rows[0][0],Token) then begin RevokeStoredToken(Db,Token);Exit;end;
+  if SharedStore(Db) and not EnsurePair(Db,Rows[0][0],Token) then Exit;
   UserId:=Rows[0][0]; Result:=True;
 end;
 

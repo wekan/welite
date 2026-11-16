@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Source-bound shared bearer links
+
+- Add owned private `_wl_pair` metadata linking a local bearer digest to its account,
+  Meteor digest and source UUID. Commit links with shared issuance/adoption and assert
+  ignored writes cannot leave partially issued credentials or consumed OTP state.
+- Backfill known account/source identity for older active API rows with an explicitly
+  unknown shared hash. Never infer a hash from timestamps. A subsequently validated raw
+  bearer fills that hash; native/browser credentials keep their existing format.
+- Retain identity links after local deletion so a later raw request can still revoke its
+  scoped shared record. Keep history blocking re-adoption. Remove obsolete-source links
+  atomically when rebinding to a new users collection.
+- Verify linked/CLI mapping, ignored writes/backfill, lazy enrichment, adoption rollback,
+  post-local-deletion targeted revocation and source migration/ignored-cleanup rollback;
+  native token suites pass.
+- This is the linkage prerequisite for local background cleanup; the sweep still removes
+  shared expired records only. Legacy unknown-hash handling and local cleanup remain open.
+
 ## 2026-11-17 Discover idle tenants before first access
 
 - Give the HTTP maintenance worker its configured data root. Discover existing local,
