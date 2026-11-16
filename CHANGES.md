@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Portable one-time-code core
+
+- Add SHA1 HOTP/TOTP with explicit big-endian 64-bit counters, preserved leading zeroes
+  and 30-second time steps. Support the six-digit Meteor profile and eight-digit RFC
+  vectors. Parse bounded ASCII base32 with case-insensitive input, canonical unused
+  bits and correct optional padding; clear decoded keys and HMAC working digests.
+- Match the full bounded validation window without early success, return its counter,
+  and reject matches at/below the caller's replay boundary. A matching used counter
+  cannot be rescued by a colliding later counter in the same window. Counter consumption
+  still belongs in the upcoming atomic token-issuance integration.
+- Verify published RFC HOTP/TOTP SHA1 vectors and independent Python HMAC, including
+  binary secrets, padding/case, maximum counters, post-2038 times, window edges and
+  malformed inputs in normal/checked Pascal builds.
+- Keep active-factor login guarded until replay storage, login proof/issuance and
+  enrollment routes are implemented and verified.
+
 ## 2026-11-16 Shared account guards for password-only flows
 
 - Centralize shared-account policy at login lookup, token issuance and every web/API

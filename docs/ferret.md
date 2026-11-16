@@ -393,6 +393,27 @@ policy without BSON changes. Normal HTTP/secret/crypto/session concurrency tests
 The actual second-factor challenge and enrollment flows are still required before the
 shared-account task is complete; these guards prevent bypass while that work remains.
 
+## Portable TOTP foundation
+
+`wltotp.pas` implements SHA1 HOTP and TOTP from [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238.html),
+using explicit big-endian counter bytes and dynamic truncation. The Meteor profile is
+six digits, 30-second steps and up to ten steps of validation drift; eight-digit output
+is available for RFC vectors. Base32 is ASCII, case-insensitive, bounded to 1,024 decoded
+bytes, and checks canonical padding/unused bits. New enrollment will use fresh 20-byte
+secrets; the core does not silently replace existing imported secrets.
+
+`OTPMatch` scans the whole selected window, returns a matching counter and rejects
+counters at/below `MinCounter` (use -1 for no previous use). It also refuses a used-counter
+collision even if a higher counter in the window produces the same digits. Callers must
+consume the result atomically; this pure function does not provide durable replay storage.
+Negative timestamps, malformed six-digit codes and windows outside 0–10 fail closed.
+Decoded key buffers and working HMAC digests are cleared.
+
+`tests/totp.py` checks published HOTP/TOTP SHA1 vectors and independent Python HMAC,
+base32 padding/case and binary secrets, counter/time boundaries, leading zeroes, drift
+edges and replay boundaries in normal/checked builds. Login/enrollment routes and
+atomic consumption remain open; the active-factor guard is retained until integration.
+
 ## Remaining before the checklist can be checked
 
 - Complete second-factor login/enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed

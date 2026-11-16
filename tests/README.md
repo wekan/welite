@@ -138,3 +138,9 @@ cross-process validation, promotion to admin and permanent observed revocation;
 concurrent counters. `admin.py` tests both password routes and live web/API token denial,
 while `ferroot.py` tests actual Mongo policy changes without rewriting source records.
 Challenge/enrollment support remains a separate implementation step.
+
+`python3 tests/totp.py` verifies the portable one-time-code core against RFC SHA1
+HOTP/TOTP vectors and independent Python HMAC, with normal/checked Pascal builds.
+Coverage includes base32 case/padding/binary inputs, wide counters/timestamps, leading
+zeroes, Meteor-window edges, malformed input and the replay boundary. Durable counter
+consumption and HTTP challenge/enrollment remain separate integration work.
