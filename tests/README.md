@@ -158,3 +158,10 @@ replay denial, forced metadata/counter rollback and retry, stale policy/factor s
 required-factor modes and LDAP fallback. `ferroot.py` additionally checks a live shared
 Argon2-secret/OTP account without BSON changes. HTTP code routing, attempt limits and
 enrollment remain separate work.
+
+`python3 tests/attempt.py` verifies durable pre-authentication reservations on linked/CLI
+SQLite: sixteen concurrent attempts, account/peer/tenant caps, exact window boundaries,
+clock rollback, restart persistence, bounded expiry cleanup, forced write rollback/retry,
+schema refusal and separate tenants. `ferroot.py` checks private ownership and persistence
+across shared-adapter reinstall while preserving account BSON. Public login route wiring
+remains a separate step.

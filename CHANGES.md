@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Durable login attempt reservations
+
+- Add atomic pre-authentication reservations: five attempts per account, thirty per
+  socket peer and three hundred per tenant in 300-second windows starting at the first
+  reservation. Count successful attempts too; credential checks do not reset allowances.
+- Store hashed account/peer buckets privately in SQLite, retaining limits across
+  processes and restarts. Backward clock changes deny reservations; expired buckets
+  are removed on successful reservation, bounding stored bucket cardinality to 601.
+- Roll back every bucket on denial or write failure. Reject incompatible schema and
+  invalid identities/time rather than admitting an uncounted attempt. Register the
+  table in the shared adapter without changing account documents.
+- Verify linked/CLI concurrency, boundary times, rollback/retry, peer and tenant caps,
+  cleanup, separate tenants and live shared-adapter reinstall persistence.
+- HTTP login integration and enrollment remain open; callers must reserve using trusted
+  server time and the actual socket peer before performing credential verification.
+
 ## 2026-11-16 Password and OTP token proofs
 
 - Add unit-owned password/OTP proofs with a 30-second lifetime and single successful

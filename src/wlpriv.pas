@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb,wlreplay;
+uses SysUtils,Classes,wldb,wlreplay,wlattemp;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const
@@ -19,11 +19,12 @@ begin
   Owners:=nil;
   for i:=0 to High(Objects) do if Objects[i][0]='_wl_models' then
     Owners:=Db.Query('SELECT name,table_name,spec,version FROM _wl_models;');
-  for k:=0 to 2 do
+  for k:=0 to 3 do
   begin
     if k=0 then begin Name:='login_tokens';DDL:=TokenDDL;end
     else if k=1 then begin Name:='authmeta';DDL:=MetaDDL;end
-    else begin Name:='_wl_otp';DDL:=OTPReplayDDL;end;
+    else if k=2 then begin Name:='_wl_otp';DDL:=OTPReplayDDL;end
+    else begin Name:='_wl_attempt';DDL:=AttemptDDL;end;
     Exists:=False;Owned:=False;
     for i:=0 to High(Owners) do
       if (Owners[i][0]=Name) and (Owners[i][1]=Name) and (Owners[i][2]=Signature) and (Owners[i][3]='1') then Owned:=True;

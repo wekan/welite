@@ -462,9 +462,32 @@ actual shared Argon2 account with an operator secret and active OTP, preserving 
 HTTP login forms/API code routing, failed-attempt limits and enrollment remain to be wired;
 existing password-only HTTP routes retain their guards until then.
 
+## Durable login attempt reservations
+
+`wlattemp.pas` reserves login attempts in `_wl_attempt` before expensive credential
+verification. Windows last 300 seconds from each bucket's first reservation: account
+limit 5, socket peer limit 30, tenant limit 300. Successes consume the same allowance as
+failures; there is no reset based on whether an account exists or authenticates. All
+three counters commit together, or all roll back. The caller must supply trusted server
+Unix time and the socket peer, without trusting forwarded headers. This is a local
+admission policy, independent of imported Meteor account data.
+
+The table uses hashed account/peer identifiers and belongs to the shared adapter's
+private registry. Limits persist across process restarts and adapter reinstall. Backward
+clock movement fails closed until time catches up. Successful reservations remove
+expired buckets; the tenant cap bounds storage to at most 601 rows. Schema/query/write
+failures and invalid/oversized identifiers deny admission. Limits are deliberately fixed
+in this first implementation; deployments behind a proxy share that socket peer cap.
+
+`tests/attempt.py` verifies both backends with 16 concurrent processes, account and peer
+independence, tenant capacity, window edges, clock rollback, forced write rollback/retry,
+cleanup, malformed schema and tenant isolation. `ferroot.py` verifies ownership and
+reinstall persistence without changing BSON. HTTP routes still need to call this limiter
+before the proof factory; this kernel alone does not limit existing public routes.
+
 ## Remaining before the checklist can be checked
 
-- Complete HTTP second-factor login, failed-attempt limits and enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
+- Complete HTTP second-factor login and attempt-limiter wiring, enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile Meteor session formats and file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate

@@ -36,6 +36,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
         out=tmp/backend;build(root/'tests/sjsql.lpr',out,flags)
         build(root/'tests/replay.lpr',out/'replay',flags)
         build(root/'tests/factor.lpr',out/'factor',flags)
+        build(root/'tests/attempt.lpr',out/'attempt',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
@@ -254,6 +255,13 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 shared_password=dict(bcrypt='$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y',reset=dict(token='retain'))
                 client.command({'insert':'users','documents':[dict(_id='meteor-account',username='meteor-account',services=dict(password=shared_password,other=dict(retain=True)))]})
                 shared_before=encode(client.find('users','meteor-account')[0])
+                assert sql("SELECT spec FROM _wl_models WHERE name='_wl_attempt';")==[['{"kind":"private-auth","version":1}']]
+                for index in range(6):
+                    limited=subprocess.check_output([str(out/'attempt/attempt'),str(db),'meteor-account','127.0.0.1','1000'],env=settings,text=True,timeout=30).strip()
+                    assert limited==('yes' if index<5 else 'no')
+                assert encode(client.find('users','meteor-account')[0])==shared_before
+                assert sql(mode='install')=='ok'
+                assert subprocess.check_output([str(out/'attempt/attempt'),str(db),'meteor-account','127.0.0.1','1000'],env=settings,text=True,timeout=30).strip()=='no'
                 assert auth('password','meteor-account','test-password')=='yes'
                 assert auth('password','meteor-account','wrong')=='no'
                 assert encode(client.find('users','meteor-account')[0])==shared_before
