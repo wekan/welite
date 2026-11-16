@@ -29,6 +29,10 @@ uses
 // Hash a plaintext password -> "pbkdf2_sha1$iters$saltHex$dkHex".
 function HashPassword(const Plain: string): string;
 
+// 256-bit random token using the configured platform salt source. The retro fallback
+// remains part of the explicit portable-entropy hardening TODO.
+function NewAuthToken:string;
+
 // Verify a plaintext password against a stored "pbkdf2_sha1$..." string. False on any mismatch
 // or malformed/empty stored value (so accounts with no real hash cannot be logged into).
 function VerifyPassword(const Plain, Stored: string): Boolean;
@@ -100,6 +104,9 @@ begin
   if not ok then                                   // fallback (e.g. Amiga): Random, weaker
     for i := 1 to N do Result[i] := Chr(Random(256));
 end;
+
+function NewAuthToken:string;
+begin Result:=ToHex(RandomBytes(32)); end;
 
 function HashPassword(const Plain: string): string;
 var Salt, DK: string;

@@ -37,3 +37,18 @@ Domain entries are canonical DNS names, never filesystem paths. `admin`, `local`
 
 Every panel operation uses a session in the URL/hidden fields and an action token.
 Cookies and JavaScript are optional. Tokens issued by one tenant do not authorize another.
+
+## Disable and re-enable an account
+
+People's Disable login control changes the account flag and removes all of its durable
+login tokens in one transaction. Disabled accounts cannot sign in through either interface,
+and existing tokens are refused. Re-enabling permits a fresh login; previous tokens remain
+revoked. Each web login gets a new nonce, so re-enable does not recreate an old session.
+
+Web sessions bind to the tenant database, current user identity, credential hash and client
+context. Their default idle limit is 1,800 seconds; `WELITE_SESSION_IDLE` overrides it with
+a positive number of seconds. Idle expiry removes the durable token. Concurrent state-changing
+submissions consume a form token once; downloads retain their read-only behavior.
+
+Cryptographic hash/MAC upgrades, portable entropy and the remaining API/proxy binding audit
+are tracked separately in TODO. The existing non-Unix random fallback is still unfinished.

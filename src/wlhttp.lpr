@@ -139,11 +139,13 @@ begin
     Password := aRequest.ContentFields.Values['password'];
     Rows := T.Db.Query(Format(
       'SELECT id, COALESCE(json_extract(services_json,''$.password''),'''') ' +
-      'FROM users WHERE username=%s LIMIT 1;', [QuotedStr(Username)]));
+      'FROM users WHERE username=%s AND COALESCE(loginDisabled,0)=0 LIMIT 1;', [QuotedStr(Username)]));
     if (Length(Rows) > 0) and (Length(Rows[0]) >= 2) and VerifyPassword(Password, Rows[0][1]) then
     begin
       S := CreateSession(T.Db, aRequest, Rows[0][0], Username,
-                         HashText(Username), 30 * 24 * 60 * 60);
+                         HashText(Rows[0][1]),30*24*60*60);
+      if S.SessionId='' then
+      begin aResponse.Code:=500; aResponse.Content:='Could not create session'; aResponse.SendContent; Exit; end;
       aResponse.Code := 302;
       aResponse.SetCustomHeader('Location', WithSessionId('/', S.SessionId));
       aResponse.SendContent;
@@ -225,7 +227,9 @@ begin
     end;
 
     // Log the new user straight in (cookie-free session via URL), then go to the board list.
-    S := CreateSession(T.Db, aRequest, Uid, Username, HashText(Username), 30 * 24 * 60 * 60);
+    S := CreateSession(T.Db, aRequest, Uid,Username,HashText(Hash),30*24*60*60);
+    if S.SessionId='' then
+    begin aResponse.Code:=500; aResponse.Content:='Account created; sign in to continue'; aResponse.SendContent; Exit; end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', WithSessionId('/', S.SessionId));
     aResponse.SendContent;

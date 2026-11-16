@@ -1,0 +1,58 @@
+"""Web/API disabled-account denial and actual panel revocation/re-enable behavior."""
+from layout import Forms
+from urllib.parse import parse_qs, urlsplit
+import json
+import sqlite3
+
+def run(request,db,admin):
+    user='session-user';password='test-password'
+    status,headers,_=request('POST','/register',dict(username=user,password=password,confirm=password))
+    assert status==302
+    old=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    first=request('POST','/users/login',dict(username=user,password=password))
+    assert first[0]==200
+    api=json.loads(first[2])['token']
+    assert old!=api and len(old)==64 and len(api)==64
+    with sqlite3.connect(db) as con:uid=con.execute('SELECT id FROM users WHERE username=?',(user,)).fetchone()[0]
+    def people(action):
+        parser=Forms();parser.feed(request('GET','/admin/people?sessionId='+admin)[2].decode())
+        data=next(values for path,values in parser.forms if path=='/admin/people')
+        return request('POST','/admin/people',dict(data,action=action,userId=uid))
+    assert request('GET','/api/user?token='+api)[0]==200
+    # A direct disabled flag is checked on every request, independent of panel revocation.
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET loginDisabled=1 WHERE id=?',(uid,))
+    assert request('GET','/api/user?token='+api)[0]==401
+    assert request('GET','/designer?sessionId='+old)[0]==302
+    web=request('POST','/sign-in',dict(username=user,password=password))
+    assert web[0]==200 and b'Invalid login' in web[2] and 'Location' not in web[1]
+    assert request('POST','/users/login',dict(username=user,password=password))[0]==401
+    duplicate=request('POST','/register',dict(username=user,password=password,confirm=password))
+    assert duplicate[0]==200 and b'username is taken' in duplicate[2] and 'Location' not in duplicate[1]
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET loginDisabled=0 WHERE id=?',(uid,))
+    assert people('disable')[0]==302
+    with sqlite3.connect(db) as con:assert con.execute('SELECT COUNT(*) FROM login_tokens WHERE userId=?',(uid,)).fetchone()[0]==0
+    assert request('GET','/api/user?token='+old)[0]==401
+    assert request('GET','/api/user?token='+api)[0]==401
+    assert people('enable')[0]==302
+    # Re-enabling never revives the previously revoked credentials.
+    assert request('GET','/api/user?token='+api)[0]==401
+    assert request('GET','/designer?sessionId='+old)[0]==302
+    new=request('POST','/sign-in',dict(username=user,password=password))
+    assert new[0]==302
+    fresh=parse_qs(urlsplit(new[1]['Location']).query)['sessionId'][0]
+    assert fresh!=old
+    # A password-hash change invalidates the web context's credential binding.
+    with sqlite3.connect(db) as con:
+        services=con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0]
+        con.execute("UPDATE users SET services_json='{}' WHERE id=?",(uid,))
+    assert request('GET','/designer?sessionId='+fresh)[0]==302
+    with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(services,uid))
+    with sqlite3.connect(db) as con:
+        con.execute("CREATE TRIGGER reject_session BEFORE INSERT ON login_tokens BEGIN SELECT RAISE(ABORT,'forced token failure'); END")
+        before='\n'.join(con.iterdump())
+    assert request('POST','/sign-in',dict(username=user,password=password))[0]==500
+    assert request('POST','/users/login',dict(username=user,password=password))[0]==500
+    with sqlite3.connect(db) as con:
+        assert '\n'.join(con.iterdump())==before
+        con.execute('DROP TRIGGER reject_session')
+    print('PASS: disabled web/API logins and live tokens denied, panel revocation survives re-enable, fresh nonces and token persistence failures')

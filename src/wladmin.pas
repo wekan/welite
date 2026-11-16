@@ -256,8 +256,13 @@ begin
       'disable': if not SelfTarget then SetClause := 'loginDisabled=1';  // never self-lockout
     end;
     if (Uid <> '') and (SetClause <> '') then
-      T.Db.Exec(Format('UPDATE users SET %s, modifiedAt=%s WHERE id=%s;',
-        [SetClause, QuotedStr(NowIso), QuotedStr(Uid)]));
+    begin
+      if Action='disable' then SetClause:='BEGIN IMMEDIATE; DELETE FROM login_tokens WHERE userId='+QuotedStr(Uid)+
+        '; UPDATE users SET '+SetClause+',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Uid)+'; COMMIT;'
+      else SetClause:=Format('UPDATE users SET %s,modifiedAt=%s WHERE id=%s;',[SetClause,QuotedStr(NowIso),QuotedStr(Uid)]);
+      if not T.Db.Exec(SetClause) then
+      begin T.Db.Exec('ROLLBACK;'); aResponse.Code:=500; aResponse.Content:='Could not update account'; aResponse.SendContent; Exit; end;
+    end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', WithSessionId('/admin/people', S.SessionId));
     aResponse.SendContent; Exit;

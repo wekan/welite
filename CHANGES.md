@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Disabled-account revocation and session integrity
+
+- Refuse disabled accounts at web/API sign-in and every token lookup. Disabling through
+  People revokes durable tokens in the same transaction as the flag; re-enable keeps those
+  tokens revoked. Login token persistence failures return an error instead of false success.
+- Bind web metadata to the exact database, persisted user/username and password-hash
+  marker; failed validation returns an empty identity. JSON metadata preserves Unicode and
+  delimiter characters, and fresh login nonces replace username/time-derived session IDs.
+- Lock metadata validation/counter consumption so concurrent submissions cannot reuse a
+  mutation token or overwrite a newer counter. Enforce a 30-minute idle timeout (override
+  `WELITE_SESSION_IDLE` in seconds), revoking expired web tokens; compare timestamps in UTC.
+- Verified disabled login/live-token denial, actual panel revocation/re-enable, fresh login
+  and forced persistence failures over HTTP. Native tests cover copied DB/token IDs,
+  credential/client binding, empty failure identity, 16 competing token consumers and idle
+  expiry with both SQLite backends.
+- The audit also identified remaining FNV hashes/MACs, retro entropy fallback and API
+  credential/tenant/proxy binding work. These remain explicit TODOs; this step does not
+  claim to finish cryptographic or all-platform authentication hardening.
+
 ## 2026-11-16 Validate API relation IDs and author attribution
 
 - Validate card label/member/assignee collections before creation or edits. Labels must
