@@ -33,10 +33,11 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
                 if not line:raise AssertionError(proc.stderr.read())
                 if line.strip()=='READY':break
                 lines.append(line.strip())
-            assert len(lines)==5,lines
+            assert len(lines)==6,lines
             assert Path(lines[0])==data/'domains/d0000001/files/db/wekan.db'
             assert Path(lines[1])==data/'certs/d0000001'
             assert lines[2]!=lines[3] and all(Path(p).is_dir() for p in lines[2:4])
+            framework=Path(lines[4]);assert framework.name=='upload.tmp' and framework.parent.is_dir() and data in framework.parents
             if os.environ.get('WELITE_SHORT_NAMES')=='1':assert_short(data)
             proc.communicate('\n',timeout=10);assert proc.returncode==0
             with sqlite3.connect(lines[0]) as db:assert db.execute('SELECT COUNT(*) FROM durable').fetchone()[0]==attempt+1

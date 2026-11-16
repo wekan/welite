@@ -34,6 +34,12 @@ uses
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
+type
+  TWLCleanRouter=class(THTTPRouter)
+  protected
+    procedure DoRouteRequest(Request:TRequest;Response:TResponse);override;
+  end;
+
 const
   DEFAULT_PORT  = 5500;       // wami used 5500; omi 3001. Override with WELITE_PORT.
   DATA_ROOT     = 'data';     // data/admin, data/domains/<domain>, data/certs
@@ -41,6 +47,12 @@ const
   DEFAULT_MOUNT = '/';        // URL the public/ tree is served under. Override WELITE_STATIC_URL.
   DEFAULT_I18N  = 'i18n';     // translations dir (i18n/langs.jsn + i18n/data). Override WELITE_I18N.
   I18N_MOUNT    = '/i18n';    // URL the i18n/ tree is served under (i18n/langs.jsn -> /i18n/langs.jsn).
+
+procedure TWLCleanRouter.DoRouteRequest(Request:TRequest;Response:TResponse);
+begin
+  try inherited DoRouteRequest(Request,Response);
+  finally CleanupUploads(Request);end;
+end;
 
 // Resolve the tenant for this request or answer 404 (never fall back into another tenant).
 function RequireTenant(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant): Boolean;
@@ -369,6 +381,8 @@ begin
   TenantInit(DataDir);
   if (ParamCount>0) and (ParamStr(1)='initadmin') then
   begin InitGlobalAdmin; Halt(0); end;
+
+  THTTPRouter.SetServiceClass(TWLCleanRouter);
 
   // static assets: configurable mount + disk dir (embedded build ignores the disk dir)
   PublicDir := GetEnvironmentVariable('WELITE_PUBLIC');

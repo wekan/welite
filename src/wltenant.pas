@@ -61,12 +61,22 @@ function TenantCertDir(const Host: string): string;
 function WLTempDir(const Op: string = ''): string;
 
 // Call once at startup to set the data/ root and load the domain registry.
+procedure CleanupUploads(Request:TRequest);
 procedure TenantInit(const ADataRoot: string);
 
 implementation
 
 uses
   wlregist;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
+
+type
+  TUploadCleanup=class(TUploadedFile)
+  public
+    procedure RemoveTemporary;
+  end;
+
+procedure TUploadCleanup.RemoveTemporary;
+begin DeleteTempUploadedFile;end;
 
 var
   DataRoot   : string;                 // absolute path to data/
@@ -90,6 +100,27 @@ begin
     if not DirectoryExists(Result) then raise Exception.Create('Could not create temporary directory');
     N:=InterLockedIncrement(TempCounter);
   until False;
+end;
+
+procedure CleanupUploads(Request:TRequest);
+var i:Integer; Path,Root:string;
+begin
+  if Request.Files=nil then Exit;
+  Root:=DataRoot+'temp'+PathDelim;
+  for i:=0 to Request.Files.Count-1 do
+  begin
+    Path:=ExpandFileName(Request.Files[i].LocalFileName);
+    TUploadCleanup(Request.Files[i]).RemoveTemporary;
+    if (Copy(Path,1,Length(Root))=Root) and (ExtractFileName(Path)='upload.tmp') then
+      RemoveDir(ExtractFileDir(Path));
+  end;
+end;
+
+function RuntimeTempFile(const Dir,Prefix:string):string;
+begin
+  // FPC multipart uploads also use this RTL hook. Reserve a private short directory
+  // atomically instead of racing another request for CGI00000.tmp in a shared root.
+  Result:=WLTempDir('framework')+'upload.tmp';
 end;
 
 procedure TenantInit(const ADataRoot: string);
@@ -116,6 +147,7 @@ begin
     raise Exception.Create('Legacy paths detected; stop the server and run releases/pathmove.py first');
   ForceDirectories(DataRoot+ADMIN_TENANT+PathDelim+'files'+PathDelim+'db');
   RegistryInit(DataRoot+ADMIN_TENANT+PathDelim+'files'+PathDelim+'db'+PathDelim+'wekan.db');
+  OnGetTempFile:=@RuntimeTempFile;
 end;
 
 function NormalizeHost(const RawHost: string): string;

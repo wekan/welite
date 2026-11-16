@@ -252,6 +252,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 import re
                 for path in (tmp/'data').rglob('*'):
                     assert re.fullmatch(r'[A-Za-z0-9_-]{1,8}(\.[A-Za-z0-9_-]{1,3})?',path.name),path
+                assert not list((tmp/'data/temp').rglob('upload.tmp')),'Framework upload bytes were not cleaned up'
                 print('PASS: every live generated runtime component, including SQLite sidecars and attachment bytes, is DOS 8.3')
             print('PASS: all Designer gates, role changes, disabled users, revoked tokens, client binding')
         finally:

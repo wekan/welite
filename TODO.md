@@ -232,7 +232,7 @@ not merely a design document. Platform/browser claims require testing on those t
   Windows APIs and retro hardware remain part of the cross-platform verification below.
 - [x] Add the board minimap, coordinates and occupied/current-position indicators.
 - [x] Add optional card drag/drop, checked-card groups and simultaneous pointers through the shared move endpoint.
-- [x] Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars and offline legacy migration.
+- [x] Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars, framework upload scratch and offline legacy migration.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
 - [ ] Complete language selection, translation rendering and RTL behavior.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.

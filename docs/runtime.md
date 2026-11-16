@@ -29,6 +29,10 @@ case-insensitive filesystems. `wlstore.pas` defines the mapping; uploads, downlo
 selection export/clone/delete all use it. Empty hash directories may remain after
 file deletion. Temp directories use atomic create-and-retry with short counters;
 existing directories from another process or an earlier run are skipped.
+The RTL temporary-file hook also routes framework multipart uploads into private
+short directories under this root. Router cleanup removes uploaded files and their
+private directories in a try/finally, including denied requests and handler failures.
+Other empty scratch directories can remain.
 
 ## SQLite auxiliary files
 

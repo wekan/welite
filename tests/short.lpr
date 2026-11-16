@@ -13,6 +13,7 @@ begin
       if not ResolveTenant(R,T) then Halt(4);
       Writeln(T.DbPath);Writeln(TenantCertDir(T.Host));
       for i:=1 to 2 do Writeln(WLTempDir('ignored-long-operation-label'));
+      Writeln(GetTempFileName('ignored-long-system-dir','ignored-long-prefix'));
       Writeln(StoreFilePath(T.FilesDir,'attachme','Case-sensitive-attachment-ID'));
       Db:=TWLDb.Create(T.DbPath,ParamStr(2)='journal');
       try

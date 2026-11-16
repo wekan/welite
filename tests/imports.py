@@ -14,8 +14,8 @@ def run(request,db,session):
         parser=Forms()
         parser.feed(request('GET',home)[2].decode())
         return [data for action,data in parser.forms if action==path][0]
-    def upload(path, data, name):
-        form=fields(path)
+    def upload(path, data, name, override=None):
+        form=fields(path) if override is None else override
         boundary='welite-boundary-12345'
         body=b''
         for key,value in form.items():
@@ -27,6 +27,12 @@ def run(request,db,session):
     def snapshot():
         with sqlite3.connect(db) as con:
             return '\n'.join(con.iterdump())
+    before=snapshot()
+    assert upload('/designer/page/import',json.dumps(page('/anonymous-upload')).encode(),'denied.wlp',{})[0] in [302,403]
+    assert snapshot()==before,'Anonymous multipart import changed data'
+    invalid_token=fields('/designer/page/import');invalid_token['auth_hash']='bad'
+    assert upload('/designer/page/import',json.dumps(page('/bad-token-upload')).encode(),'denied.wlp',invalid_token)[0]==403
+    assert snapshot()==before,'Bad-token multipart import changed data'
     assert upload('/designer/page/import',json.dumps(page()).encode(),'page.wlp')[0]==302
     exported=request('GET','/designer/page/export?'+urlencode(dict(url='/imported',sessionId=session)))
     assert exported[0]==200 and json.loads(exported[2])['page']['title']=='Original'
