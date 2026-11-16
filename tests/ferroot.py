@@ -32,6 +32,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
     build(root/'src/wlfunc.lpr',tmp/'ext',['-Cg','-dWLSQLEXT'],'wlfunc.so')
     for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
         out=tmp/backend;build(root/'tests/sjsql.lpr',out,flags)
+        build(root/'tests/replay.lpr',out/'replay',flags)
         settings=dict(os.environ)
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:settings.pop(variable,None)
         settings.pop('WELITE_ARGON_SECRET_FILE',None);settings.pop('WELITE_SHORT_NAMES',None);settings.pop('WELITE_ENTROPY_FILE',None);settings.pop('WELITE_SQLITE_EXT',None)
@@ -310,6 +311,11 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE users SET loginDisabled=1 WHERE id='u';",'exec')=='ok'
                 assert auth('lookup','user')=='no'
                 assert sql("UPDATE users SET loginDisabled=0 WHERE id='u';",'exec')=='ok'
+                replay=subprocess.run([str(out/'replay/replay'),str(db),'claim','u','JBSWY3DPEHPK3PXP','100','replay-fixture'],env=settings,capture_output=True,text=True,timeout=30)
+                assert replay.returncode==0 and replay.stdout.strip()=='ok',replay.stdout+replay.stderr
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='u';")==[['100']]
+                assert sql("DELETE FROM login_tokens WHERE hashedToken='replay-fixture';",'exec')=='ok'
+                assert sql("SELECT counter FROM _wl_otp WHERE userId='u';")==[['100']]
                 assert auth('issue')=='yes' and auth('check')=='yes'
                 assert sql('SELECT count(*) FROM authmeta;')==[['1']]
                 assert sql("INSERT INTO login_tokens VALUES('bad','absent','now',NULL);",'exec')=='error'
@@ -322,6 +328,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert auth('issue')=='yes'
                 assert sql("DELETE FROM users WHERE id='u';",'exec')=='ok'
                 assert auth('check')=='no'
+                assert sql("SELECT count(*) FROM _wl_otp WHERE userId='u';")==[['0']]
                 assert sql('SELECT count(*) FROM login_tokens;')==[['0']] and sql('SELECT count(*) FROM authmeta;')==[['0']]
                 client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password='credential'))]})
                 assert auth('issue')=='yes' and auth('check')=='yes'

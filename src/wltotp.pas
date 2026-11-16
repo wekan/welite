@@ -3,6 +3,7 @@ unit wltotp;
 interface
 uses SysUtils,hmac;
 function OTPSecret(const Bytes:RawByteString):string;
+function OTPCanonicalSecret(const Secret:string):string;
 function OTPCode(const Secret:string;Counter:QWord;Digits:Integer=6):string;
 // Meteor uses SHA1, 30-second steps, six digits and a window of ten steps.
 // MinCounter=-1 means no prior use; callers must consume the result atomically.
@@ -55,6 +56,13 @@ begin
     end;
     if (BufferBits>0) and ((Buffer and ((LongWord(1) shl BufferBits)-1))<>0) then Invalid;
   except if Result<>'' then FillChar(Result[1],Length(Result),0);raise;end;
+end;
+function OTPCanonicalSecret(const Secret:string):string;
+var Key:RawByteString;
+begin
+  Key:=Decode(Secret);
+  try Result:=OTPSecret(Key);
+  finally if Key<>'' then begin UniqueString(Key);FillChar(Key[1],Length(Key),0);end;end;
 end;
 function WithKey(const Key:RawByteString;Counter:QWord;Digits:Integer):string;
 var Message:RawByteString;Digest:THMACSHA1Digest;Offset,i:Integer;Number,Divisor:LongWord;

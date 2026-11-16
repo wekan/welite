@@ -1,7 +1,7 @@
 unit wlpriv;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,Classes,wldb;
+uses SysUtils,Classes,wldb,wlreplay;
 function PrivateScript(Db:TWLDb;Tables:TStrings):string;
 implementation
 const
@@ -19,10 +19,11 @@ begin
   Owners:=nil;
   for i:=0 to High(Objects) do if Objects[i][0]='_wl_models' then
     Owners:=Db.Query('SELECT name,table_name,spec,version FROM _wl_models;');
-  for k:=0 to 1 do
+  for k:=0 to 2 do
   begin
     if k=0 then begin Name:='login_tokens';DDL:=TokenDDL;end
-    else begin Name:='authmeta';DDL:=MetaDDL;end;
+    else if k=1 then begin Name:='authmeta';DDL:=MetaDDL;end
+    else begin Name:='_wl_otp';DDL:=OTPReplayDDL;end;
     Exists:=False;Owned:=False;
     for i:=0 to High(Owners) do
       if (Owners[i][0]=Name) and (Owners[i][1]=Name) and (Owners[i][2]=Signature) and (Owners[i][3]='1') then Owned:=True;
@@ -45,6 +46,7 @@ begin
     // Explicit cleanup also works on a Mongo connection with foreign_keys disabled.
     'CREATE TRIGGER _wl_token_d AFTER DELETE ON login_tokens BEGIN DELETE FROM authmeta WHERE hashedToken=OLD.hashedToken; END; '+
     'CREATE TRIGGER _wl_user_tokens AFTER DELETE ON '+Id(Users)+' BEGIN '+
-      'DELETE FROM login_tokens WHERE userId=json_extract(OLD._ferretdb_sjson,''$."_id"''); END; ';
+      'DELETE FROM login_tokens WHERE userId=json_extract(OLD._ferretdb_sjson,''$."_id"''); '+
+      'DELETE FROM _wl_otp WHERE userId=json_extract(OLD._ferretdb_sjson,''$."_id"''); END; ';
 end;
 end.

@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Durable OTP replay claims
+
+- Add private per-user/per-factor replay counters. Canonical base32 identity makes
+  case/padding aliases share the same boundary. Preserve consumption across token
+  logout/expiry and process restart; keep users and changed factors independent.
+- Supply a claim statement for the same transaction as token/metadata insertion.
+  Stale or duplicate counters violate the counter constraint, requiring rollback of
+  the whole token transaction. A missing token cannot consume a counter; failed
+  token/metadata/counter writes leave the code available for a valid retry.
+- Distinguish unused factors from schema/query errors, NULL values, duplicate records
+  and invalid stored negative counters. Validate the private table/cleanup definition.
+- Include owned replay storage in the shared adapter and remove it with its physical
+  user, while token deletion retains it. Verify 16 concurrent claimants (one success),
+  rollback/retry, restart, aliases, isolation and corrupt-state denial on both SQLite
+  backends, plus shared FerretDB ownership/cleanup and existing TOTP vectors.
+- Keep second-factor proof validation, production token-issuer wiring and enrollment
+  open. The replay kernel does not authorize a login by itself.
+
 ## 2026-11-16 Portable one-time-code core
 
 - Add SHA1 HOTP/TOTP with explicit big-endian 64-bit counters, preserved leading zeroes

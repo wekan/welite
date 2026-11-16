@@ -414,6 +414,30 @@ base32 padding/case and binary secrets, counter/time boundaries, leading zeroes,
 edges and replay boundaries in normal/checked builds. Login/enrollment routes and
 atomic consumption remain open; the active-factor guard is retained until integration.
 
+## Durable one-time-code replay state
+
+`wlreplay.pas` defines `_wl_otp(userId, factorKey, counter)`. Factor identity hashes a
+canonical base32 secret with a domain prefix, so case/padding aliases cannot reset
+consumption. A new secret gets its own boundary. Replay rows survive token logout and
+expiry, and are removed when their user is deleted. The shared adapter owns this table
+in its private registry and cleans it through the physical user-deletion hook; native
+stores get a checked cleanup trigger when replay storage is initialized.
+
+`LastOTPCounter` distinguishes a new factor (-1) from failed queries and corrupt NULL,
+negative or duplicate rows. `EnsureOTPReplay` checks the exact table/cleanup schema.
+`OTPReplaySQL` is appended **inside the token transaction** after token/metadata insertion:
+it claims only for an existing token belonging to that user, and a stale/duplicate
+counter aborts with a constraint error. The caller must roll back the entire transaction
+on any failure. It is not an independent authorization operation and does not verify a
+password/code; production login wiring remains the next step.
+
+`tests/replay.py` exercises real linked/CLI backends with sixteen concurrent processes,
+exactly one successful counter claim, complete token/metadata rollback, retry after a
+forced failure, process restart, aliases, user/factor isolation, logout retention,
+missing-token behavior and malformed-state/schema refusal. `ferroot.py` checks replay
+storage inside the live shared adapter and user cleanup; TOTP vectors still pass.
+No public challenge/enrollment route is enabled by this replay-only step.
+
 ## Remaining before the checklist can be checked
 
 - Complete second-factor login/enrollment, shared Mongo account/index and collection-recreation/auth migration policy; reconcile typed

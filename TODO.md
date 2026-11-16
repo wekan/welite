@@ -252,7 +252,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Optional private Argon2 secret files and secret-bound token issuance/revocation now pass C/HTTP/live tests.
   Password-only routes now enforce active-factor, required-factor and deployment LDAP policy with durable revocation.
   Portable TOTP now passes RFC/Python vectors, Meteor-window and replay-boundary tests in checked/normal builds.
-  Remaining: atomic second-factor consumption/login proof and enrollment, Mongo account/index/session integration, typed custom-value and legacy
+  Durable OTP replay claims now pass concurrent/rollback/restart tests and shared-adapter cleanup.
+  Remaining: second-factor proof/token-issuer integration and enrollment, Mongo account/index/session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   application activation, shared-file/8.3 policy and two-way HTTP workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
