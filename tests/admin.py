@@ -12,7 +12,7 @@ from urllib.parse import urlencode, urlsplit, parse_qs
 
 ROOT = Path(__file__).resolve().parents[1]
 GETS = ['/designer', '/designer/page', '/designer/page/export', '/designer/export']
-POSTS = ['/designer/page/save', '/designer/widget/move', '/designer/widget/save', '/designer/page/import', '/designer/import']
+POSTS = ['/designer/widget/delete', '/designer/page/save', '/designer/widget/move', '/designer/widget/save', '/designer/page/import', '/designer/import']
 
 with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as tmp:
     tmp = Path(tmp)
@@ -81,12 +81,18 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 def __init__(self):
                     super().__init__()
                     self.fields = {}
+                    self.forms = []
+                    self.action = None
                 def handle_starttag(self, tag, attrs):
                     attrs = dict(attrs)
                     if tag == 'form':
                         self.fields = {}
+                        self.action = attrs.get('action')
                     if tag == 'input' and attrs.get('type') == 'hidden':
                         self.fields[attrs['name']] = attrs.get('value', '')
+                def handle_endtag(self, tag):
+                    if tag == 'form':
+                        self.forms.append((self.action, dict(self.fields)))
             def page_action(fields):
                 status, _, body = request('GET', '/designer?sessionId='+admin)
                 assert status == 200
@@ -118,6 +124,38 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             with sqlite3.connect(db) as con:
                 con.execute("INSERT INTO page_widgets(id,pageId,col,type,createdAt,modifiedAt) VALUES('widget',?,1,'label','now','now')", (page_id,))
             assert page_action(dict(base, pageId=page_id, cols='1'))[0] == 400
+            with sqlite3.connect(db) as con:
+                con.execute("DELETE FROM page_widgets WHERE id='widget'")
+            def widget_action(path, fields, widget_id=''):
+                target = '/designer/page?'+urlencode({'id':page_id, 'sessionId':admin, 'widgetId':widget_id})
+                status, _, body = request('GET', target)
+                assert status == 200
+                parser = HiddenFields()
+                parser.feed(body.decode())
+                forms = [data for action, data in parser.forms if action == path and (not widget_id or data.get('widgetId') == widget_id)]
+                assert forms, (path, widget_id)
+                return request('POST', path, dict(forms[-1], **fields))
+            widget = dict(type='select', label='<Choices>', name='choice', value='two', target='/sign-in', binding='', row='0', col='0', rowspan='1', colspan='1', sort='0.5', options_json='{"options":[{"value":"one","label":"<One>"},{"value":"two","label":"Two"}]}', fgColor='', bgColor='', required='1')
+            assert widget_action('/designer/widget/save', widget)[0] == 302
+            with sqlite3.connect(db) as con:
+                widget_id = con.execute('SELECT id FROM page_widgets WHERE pageId=?', (page_id,)).fetchone()[0]
+            status, _, body = request('GET', '/changed?sessionId='+admin)
+            assert status == 200 and b'&lt;One&gt;' in body and b'value="two" selected' in body
+            for bad in [dict(row='100'), dict(col='2'), dict(colspan='3'), dict(rowspan='0'), dict(type='unknown'), dict(options_json='[]'), dict(sort='NaN'), dict(target='javascript:alert(1)'), dict(bgColor='not-a-color')]:
+                assert widget_action('/designer/widget/save', dict(widget, **bad), widget_id)[0] == 400, bad
+            for direction in ['right', 'right', 'up', 'left', 'left']:
+                assert widget_action('/designer/widget/move', {'dir':direction}, widget_id)[0] == 302
+                with sqlite3.connect(db) as con:
+                    row, col = con.execute('SELECT row,col FROM page_widgets WHERE id=?', (widget_id,)).fetchone()
+                    assert row == 0 and 0 <= col < 2
+            assert widget_action('/designer/widget/move', {'dir':'invalid'}, widget_id)[0] == 400
+            assert widget_action('/designer/widget/save', dict(widget, label='Edited'), widget_id)[0] == 302
+            with sqlite3.connect(db) as con:
+                assert con.execute('SELECT label FROM page_widgets WHERE id=?', (widget_id,)).fetchone()[0] == 'Edited'
+            assert widget_action('/designer/widget/delete', {}, widget_id)[0] == 302
+            with sqlite3.connect(db) as con:
+                assert con.execute('SELECT COUNT(*) FROM page_widgets WHERE id=?', (widget_id,)).fetchone()[0] == 0
+            print('PASS: widget add/edit/delete, options escaping/selection, input validation and movement bounds')
             assert page_action(dict(pageId=page_id, action='delete'))[0] == 302
             with sqlite3.connect(db) as con:
                 assert con.execute("SELECT COUNT(*) FROM page_widgets WHERE id='widget'").fetchone()[0] == 0

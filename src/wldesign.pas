@@ -97,6 +97,7 @@ procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerPageSave(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerEditPage(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
+procedure DesignerWidgetDelete(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerPageExport(aRequest: TRequest; aResponse: TResponse);   // GET  ?id=  -> .wlp
 procedure DesignerPageImport(aRequest: TRequest; aResponse: TResponse);   // POST file -> upsert
@@ -106,7 +107,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);    // POS
 implementation
 
 uses
-  DateUtils, StrUtils, wladmin;
+  DateUtils, StrUtils, Math, wladmin;
 
 var
   DataViews: TStringList = nil;   // binding -> TDataViewRenderer (as Pointer)
@@ -225,6 +226,37 @@ begin
   end;
 end;
 
+function RenderSelect(const W: TWidget): string;
+var D, Item: TJSONData; A: TJSONArray; i: Integer; V, L: string;
+begin
+  Result:=HtmlEncode(W.Lbl)+' <select name="'+HtmlAttr(W.Name)+'">';
+  D:=nil;
+  try
+    try
+      D:=GetJSON(W.OptionsJson);
+      if D is TJSONObject then
+      begin
+        A:=TJSONObject(D).Find('options') as TJSONArray;
+        if A<>nil then for i:=0 to A.Count-1 do
+        begin
+          Item:=A.Items[i];
+          if Item is TJSONObject then
+          begin
+            V:=TJSONObject(Item).Get('value',''); L:=TJSONObject(Item).Get('label',V);
+          end
+          else begin V:=Item.AsString; L:=V; end;
+          Result:=Result+'<option value="'+HtmlAttr(V)+'"';
+          if V=W.Value then Result:=Result+' selected';
+          Result:=Result+'>'+HtmlEncode(L)+'</option>';
+        end;
+      end;
+    except
+      // Bad imported options must not take down a published page.
+    end;
+  finally D.Free; end;
+  Result:=Result+'</select>';
+end;
+
 function RenderWidget(Db: TWLDb; const W: TWidget; const S: TWLSession;
   Params: TStrings; const Dir: string): string;
 var DV: TDataViewRenderer;
@@ -251,8 +283,7 @@ begin
                            '">' + HtmlEncode(W.Value) + '</textarea>';
     'checkbox':  Result := '<input type="checkbox" name="' + HtmlAttr(W.Name) +
                            '"> ' + HtmlEncode(W.Lbl);
-    'select':    Result := HtmlEncode(W.Lbl) + ' <select name="' + HtmlAttr(W.Name) +
-                           '"><!-- options from options_json (TODO) --></select>';
+    'select':    Result := RenderSelect(W);
     'dataview':
       begin
         DV := FindDataView(W.Binding);
@@ -960,10 +991,32 @@ begin
   aResponse.SendContent;
 end;
 
+function WidgetForm(const S: TWLSession; const PageId: string; const W: TWidget;
+  const Caption: string): string;
+  function Field(const Name, Value: string): string;
+  begin
+    Result:=' '+HtmlEncode(Name)+' <input name="'+Name+'" value="'+HtmlAttr(Value)+'">';
+  end;
+begin
+  Result:='<h2>'+HtmlEncode(Caption)+'</h2><form method="POST" action="/designer/widget/save">'+
+    AuthHiddenFields(S,'designer:/designer/widget/save')+
+    '<input type="hidden" name="pageId" value="'+HtmlAttr(PageId)+'">'+
+    '<input type="hidden" name="widgetId" value="'+HtmlAttr(W.Id)+'">'+
+    Field('type',W.Typ)+Field('label',W.Lbl)+Field('name',W.Name)+Field('value',W.Value)+
+    Field('target',W.Target)+Field('binding',W.Binding)+
+    Field('row',IntToStr(W.Row))+Field('col',IntToStr(W.Col))+
+    Field('rowspan',IntToStr(W.RowSpan))+Field('colspan',IntToStr(W.ColSpan))+
+    Field('sort',FloatToStr(W.Sort))+Field('fgColor',W.FgColor)+Field('bgColor',W.BgColor)+
+    ' Options JSON <textarea name="options_json">'+HtmlEncode(W.OptionsJson)+'</textarea>'+
+    ' <input type="checkbox" name="required" value="1"';
+  if W.Required then Result:=Result+' checked';
+  Result:=Result+'> Required <input type="submit" value="'+HtmlAttr(Caption)+'"></form>';
+end;
+
 procedure DesignerEditPage(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant; S: TWLSession;
-  P: TPage; W: TWidgetArray;
+  P: TPage; W: TWidgetArray; EditWidget: TWidget;
   PageId, Body, Cell, Dir: string;
   r, c, i, MaxRow, ViewCol: Integer;
   Rtl: Boolean;
@@ -1010,7 +1063,8 @@ begin
             ToolButton(S, '/designer/widget/move', 'v', 'widgetId', W[i].Id, 'dir', 'down') +
             ToolButton(S, '/designer/widget/move', '<', 'widgetId', W[i].Id, 'dir', 'left') +
             ToolButton(S, '/designer/widget/move', '>', 'widgetId', W[i].Id, 'dir', 'right') +
-            ToolButton(S, '/designer/widget/save', 'Edit', 'widgetId', W[i].Id, '', '') +
+            '<a href="'+HtmlAttr(WithSessionId('/designer/page?id='+P.Id+
+              '&widgetId='+W[i].Id,S.SessionId))+'">Edit widget</a> ' +
             ToolButton(S, '/designer/widget/delete', 'Del', 'widgetId', W[i].Id, '', '') +
             '<hr>';
         end;
@@ -1018,66 +1072,138 @@ begin
     end;
     Body := Body + '</tr>' + LineEnding;
   end;
-  Body := Body + '</table>' + LineEnding +
-    // Add-widget form (POST /designer/widget/save) — type/row/col/label/name/target/binding. TODO fields.
-    '<h2>Add widget</h2>' +
-    '<form method="POST" action="/designer/widget/save">' + AuthHiddenFields(S, 'designer:add') +
-    '<input type="hidden" name="pageId" value="' + HtmlAttr(P.Id) + '">' +
-    ' type <input name="type"> row <input name="row" size="2"> col <input name="col" size="2">' +
-    ' label <input name="label"> <input type="submit" value="Add"></form>' + LineEnding +
-    '<p><a href="' + HtmlAttr(WithSessionId(P.Url, S.SessionId)) + '">Preview</a></p>';
+  Body:=Body+'</table>'+LineEnding;
+  EditWidget:=Default(TWidget); EditWidget.Typ:='label';
+  EditWidget.RowSpan:=1; EditWidget.ColSpan:=1; EditWidget.OptionsJson:='{}';
+  for i:=0 to High(W) do
+    if W[i].Id=aRequest.QueryFields.Values['widgetId'] then
+    begin EditWidget:=W[i]; Break; end;
+  if EditWidget.Id='' then
+    Body:=Body+WidgetForm(S,P.Id,EditWidget,'Add widget')
+  else
+    Body:=Body+WidgetForm(S,P.Id,EditWidget,'Save widget');
+  Body:=Body+'<p><a href="'+HtmlAttr(WithSessionId(P.Url,S.SessionId))+'">Preview</a></p>';
 
   aResponse.Content := PageDir('Designer — ' + P.Title, Body, Dir);
   aResponse.ContentType := 'text/html; charset=utf-8';
   aResponse.SendContent;
 end;
 
-procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
-var
-  T: TWLTenant; S: TWLSession;
-  WidgetId, Dir, SetClause: string;
+function LoadWidgetPage(Db: TWLDb; const WidgetId: string; out PageId: string): Boolean;
+var R: TWLRows;
 begin
-  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
-  if not VerifyActionToken(aRequest, S, 'designer:/designer/widget/move') then
-  begin
-    aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
-  end;
+  R:=Db.Query('SELECT pageId FROM page_widgets WHERE id='+QuotedStr(WidgetId)+';');
+  Result:=Length(R)>0;
+  if Result then PageId:=R[0][0] else PageId:='';
+end;
 
-  WidgetId := aRequest.ContentFields.Values['widgetId'];
-  Dir      := LowerCase(aRequest.ContentFields.Values['dir']);
-  // clamp at 0 via max(0, ...). Real impl loads current row/col; here a relative update.
-  case Dir of
-    'up':    SetClause := 'row = MAX(0, row - 1)';
-    'down':  SetClause := 'row = row + 1';
-    'left':  SetClause := 'col = MAX(0, col - 1)';
-    'right': SetClause := 'col = col + 1';
-  else
-    SetClause := '';
-  end;
-  if SetClause <> '' then
-    T.Db.Exec(Format('UPDATE page_widgets SET %s, modifiedAt=%s WHERE id=%s;',
-      [SetClause, QuotedStr(NowIso), QuotedStr(WidgetId)]));
-
-  // PRG: redirect back to the editor (cookie-free: sessionId in the URL)
-  aResponse.Code := 302;
-  aResponse.SetCustomHeader('Location',
-    WithSessionId('/designer/page?id=' + aRequest.ContentFields.Values['pageId'], S.SessionId));
+procedure EditorRedirect(aResponse: TResponse; const PageId: string; const S: TWLSession);
+begin
+  aResponse.Code:=302;
+  aResponse.SetCustomHeader('Location',WithSessionId('/designer/page?id='+PageId,S.SessionId));
   aResponse.SendContent;
 end;
 
-procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; S: TWLSession;
+procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession; WidgetId, PageId, Dir, SetClause: string;
 begin
-  if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
-  if not VerifyActionToken(aRequest, S, 'designer:add') then
-  begin
-    aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+  if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
+  if not VerifyActionToken(aRequest,S,'designer:/designer/widget/move') then
+  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  WidgetId:=aRequest.ContentFields.Values['widgetId'];
+  if not LoadWidgetPage(T.Db,WidgetId,PageId) then
+  begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  Dir:=aRequest.ContentFields.Values['dir'];
+  case Dir of
+    'up': SetClause:='row=MAX(0,row-1)';
+    'down': SetClause:='row=MIN(99-rowspan+1,row+1)';
+    'left': SetClause:='col=MAX(0,col-1)';
+    'right': SetClause:='col=MIN((SELECT cols FROM pages WHERE id=pageId)-colspan,col+1)';
+  else begin DesignerError(aResponse,400,'Invalid direction'); Exit; end;
   end;
-  // Create/update a page_widgets row from the add/edit form (type,label,name,target,binding,
-  // row,col,rowspan,colspan,sort,required). Validate token first. TODO.
-  aResponse.Code := 302;
-  aResponse.SetCustomHeader('Location', '/designer');
-  aResponse.SendContent;
+  if not T.Db.Exec('UPDATE page_widgets SET '+SetClause+',modifiedAt='+QuotedStr(NowIso)+
+    ' WHERE id='+QuotedStr(WidgetId)+';') then
+  begin DesignerError(aResponse,500,'Could not move widget'); Exit; end;
+  EditorRedirect(aResponse,PageId,S);
+end;
+
+procedure DesignerWidgetDelete(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession; WidgetId, PageId: string;
+begin
+  if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
+  if not VerifyActionToken(aRequest,S,'designer:/designer/widget/delete') then
+  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  WidgetId:=aRequest.ContentFields.Values['widgetId'];
+  if not LoadWidgetPage(T.Db,WidgetId,PageId) then
+  begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  if not T.Db.Exec('DELETE FROM page_widgets WHERE id='+QuotedStr(WidgetId)+';') then
+  begin DesignerError(aResponse,500,'Could not delete widget'); Exit; end;
+  EditorRedirect(aResponse,PageId,S);
+end;
+
+function SafeWidgetTarget(const Target: string): Boolean;
+var i: Integer;
+begin
+  if Target='' then Exit(True);
+  Result:=False;
+  if (Target[1]<>'/') or (Copy(Target,1,2)='//') or (Pos('\',Target)>0) then Exit;
+  for i:=1 to Length(Target) do if Ord(Target[i])<32 then Exit;
+  Result:=True;
+end;
+
+procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; S: TWLSession; P: TPage; W: TWidget; F: TStrings;
+  PageId, ExistingPage, Sql, Values: string; D: TJSONData; Valid: Boolean;
+begin
+  if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
+  if not VerifyActionToken(aRequest,S,'designer:/designer/widget/save') then
+  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  F:=aRequest.ContentFields; PageId:=F.Values['pageId']; W:=Default(TWidget);
+  W.Id:=F.Values['widgetId'];
+  if not LoadPageById(T.Db,PageId,P) then
+  begin DesignerError(aResponse,404,'Page not found'); Exit; end;
+  if W.Id<>'' then
+    if not LoadWidgetPage(T.Db,W.Id,ExistingPage) or (ExistingPage<>PageId) then
+    begin DesignerError(aResponse,404,'Widget not found on page'); Exit; end;
+  W.Typ:=LowerCase(F.Values['type']); W.Lbl:=F.Values['label']; W.Name:=F.Values['name'];
+  W.Value:=F.Values['value']; W.Target:=F.Values['target']; W.Binding:=F.Values['binding'];
+  W.Row:=StrToIntDef(F.Values['row'],-1); W.Col:=StrToIntDef(F.Values['col'],-1);
+  W.RowSpan:=StrToIntDef(F.Values['rowspan'],0); W.ColSpan:=StrToIntDef(F.Values['colspan'],0);
+  W.Sort:=StrToFloatDef(F.Values['sort'],NaN);
+  W.FgColor:=F.Values['fgColor']; W.BgColor:=F.Values['bgColor'];
+  W.Required:=F.Values['required']='1'; W.OptionsJson:=F.Values['options_json'];
+  if W.OptionsJson='' then W.OptionsJson:='{}';
+  D:=nil; Valid:=False;
+  try
+    try D:=GetJSON(W.OptionsJson); Valid:=D is TJSONObject; except end;
+  finally D.Free; end;
+  if (Pos('|'+W.Typ+'|','|heading|label|link|button|textinput|password|textarea|select|checkbox|hr|spacer|dataview|table|color|movepanel|')=0) or
+    not Valid or (W.Row<0) or (W.Row>99) or (W.Col<0) or (W.Col>=P.Cols) or
+    (W.RowSpan<1) or (W.RowSpan>100-W.Row) or (W.ColSpan<1) or (W.ColSpan>P.Cols-W.Col) or
+    IsNan(W.Sort) or IsInfinite(W.Sort) or
+    ((W.FgColor<>'') and (ResolveColor(W.FgColor)='')) or
+    ((W.BgColor<>'') and (ResolveColor(W.BgColor)='')) or
+    not SafeWidgetTarget(W.Target) then
+  begin DesignerError(aResponse,400,'Invalid widget fields'); Exit; end;
+  // Numeric sort uses an explicit dot independent of the process locale.
+  Values:= 'type='+QuotedStr(W.Typ)+',label='+QuotedStr(W.Lbl)+',name='+QuotedStr(W.Name)+
+    ',value='+QuotedStr(W.Value)+',target='+QuotedStr(W.Target)+',binding='+QuotedStr(W.Binding)+
+    ',options_json='+QuotedStr(W.OptionsJson)+',fgColor='+QuotedStr(W.FgColor)+
+    ',bgColor='+QuotedStr(W.BgColor)+',row='+IntToStr(W.Row)+',col='+IntToStr(W.Col)+
+    ',rowspan='+IntToStr(W.RowSpan)+',colspan='+IntToStr(W.ColSpan)+
+    ',sort='+StringReplace(FloatToStr(W.Sort),DefaultFormatSettings.DecimalSeparator,'.',[])+
+    ',required='+IntToStr(Ord(W.Required))+',modifiedAt='+QuotedStr(NowIso);
+  if W.Id='' then
+  begin
+    W.Id:=NewId;
+    Sql:='INSERT INTO page_widgets(id,pageId,type,createdAt,modifiedAt) VALUES('+
+      QuotedStr(W.Id)+','+QuotedStr(PageId)+',''label'','+QuotedStr(NowIso)+','+QuotedStr(NowIso)+');';
+  end
+  else Sql:='';
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+Sql+' UPDATE page_widgets SET '+Values+
+    ' WHERE id='+QuotedStr(W.Id)+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); DesignerError(aResponse,500,'Could not save widget'); Exit; end;
+  EditorRedirect(aResponse,PageId,S);
 end;
 
 // GET /designer/page/export?url=... -> downloads one .wlp (JSON) file

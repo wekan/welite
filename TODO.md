@@ -216,7 +216,10 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Enforce tenant-local administrator permissions on every Designer endpoint.
 - [ ] Separate reserved-host Global Admin domain management from tenant administrators.
 - [x] Finish Designer page listing, creation, editing, disabling and deletion.
-- [ ] Finish Designer widget add/edit/delete, options and bounded layout controls.
+- [x] Finish Designer widget add/edit/delete, options and bounded layout controls.
+- [ ] Honor widget row/column spans and required inputs in published pages; add cell sort arrows.
+- [ ] Make Designer imports validate atomically against the same page/widget rules.
+- [ ] Report CLI SQLite command failures accurately and preserve arbitrary text in query results.
 - [ ] Render authorized board/list/swimlane/card data with the shared selection form.
 - [ ] Implement selected-item Edit, Clone, Delete, Clear and Export actions.
 - [ ] Enforce board permissions and safe return URLs on every board mutation.

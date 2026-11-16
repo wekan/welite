@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Working Designer widget editor
+
+- Added full no-JS widget forms and persisted creation, updates and deletion, with
+  administrator gates, matching action tokens and session-preserving editor redirects.
+- Validate widget types, JSON options, finite sort values, colors, local targets and
+  row/column/span bounds; reject moving a widget between unrelated pages.
+- Move controls derive the owning page from the widget and clamp to its column and row
+  limits. Select widgets render escaped option labels/values and the selected value.
+- Verified widget operations, negative inputs and movement bounds over HTTP and through
+  Chromium with JavaScript and cookies disabled. Recorded separate remaining work for
+  published spans/required inputs, cell-sort arrows, import validation and CLI DB fidelity.
+
 ## 2026-11-16 Working Designer page management
 
 - Added page listing, creation, editing by ID (including disabled pages), enable/disable

@@ -342,6 +342,7 @@ begin
   HTTPRouter.RegisterRoute('/designer/page/save', rmPost, @DesignerPageSave);
   HTTPRouter.RegisterRoute('/designer/widget/move', rmPost, @DesignerWidgetMove);
   HTTPRouter.RegisterRoute('/designer/widget/save', rmPost, @DesignerWidgetSave);
+  HTTPRouter.RegisterRoute('/designer/widget/delete', rmPost, @DesignerWidgetDelete);
   HTTPRouter.RegisterRoute('/designer/page/export', rmGet, @DesignerPageExport);
   HTTPRouter.RegisterRoute('/designer/page/import', rmPost, @DesignerPageImport);
   HTTPRouter.RegisterRoute('/designer/export', rmGet, @DesignerExportAll);
