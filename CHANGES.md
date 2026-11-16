@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-16 Render Designer spans and cell ordering
+
+- Render row/column spans once in published and editor grids, suppressing covered cells
+  and using the same logical rectangles for LTR/RTL. Reject overlapping spans during
+  widget save/move and inconsistent spans among widgets sharing an anchor cell.
+- Add Sort up/down buttons that reorder widgets inside their cell transactionally,
+  normalizing sort positions so tied values also have deterministic ordering.
+- Emit required attributes and visible required markers for input widgets. Browsers
+  without native constraint validation still show the marker; endpoints retain their
+  own validation responsibilities.
+- Honor explicit page direction and avoid double-mirroring in modern browsers by fixing
+  the grid's physical direction while retaining per-cell text direction.
+- Verified HTTP span/overlap/required/sort/direction cases and Chromium physical RTL,
+  spanning cells and sort-button submissions with JS/cookies disabled on both backends.
+
 ## 2026-11-16 Separate Global Admin and domain administration
 
 - Reserve the central domain registry for administrators authenticated in `data/admin`;

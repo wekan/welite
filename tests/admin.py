@@ -2,6 +2,7 @@
 import http.client
 from apiscope import run as check_api_scope
 from tiers import run as check_admin_tiers
+from layout import run as check_layout
 from html.parser import HTMLParser
 import os
 from pathlib import Path
@@ -14,7 +15,7 @@ from urllib.parse import urlencode, urlsplit, parse_qs
 
 ROOT = Path(__file__).resolve().parents[1]
 GETS = ['/designer', '/designer/page', '/designer/page/export', '/designer/export']
-POSTS = ['/designer/widget/delete', '/designer/page/save', '/designer/widget/move', '/designer/widget/save', '/designer/page/import', '/designer/import']
+POSTS = ['/designer/widget/sort', '/designer/widget/delete', '/designer/page/save', '/designer/widget/move', '/designer/widget/save', '/designer/page/import', '/designer/import']
 
 with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as tmp:
     tmp = Path(tmp)
@@ -203,6 +204,9 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 assert con.execute("SELECT COUNT(*) FROM page_widgets WHERE id='widget'").fetchone()[0] == 0
             assert request('GET', '/designer/page?id='+page_id+'&sessionId='+admin)[0] == 404
             print('PASS: page creation/edit/enable/disable/delete, schema provisioning, validation, access roles and widget cascade')
+            layout_editor = check_layout(request,db,admin)
+            if os.environ.get('WELITE_UI') == '1':
+                subprocess.run([os.environ.get('NODE','node'), str(ROOT/'tests/layout.js'), 'http://localhost:'+str(port), admin, layout_editor],check=True)
             with sqlite3.connect(db) as con:
                 con.execute("UPDATE users SET isAdmin=0 WHERE username='administrator'")
             assert request('GET', '/designer?sessionId='+admin)[0] == 403

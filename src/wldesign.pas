@@ -96,6 +96,7 @@ function ImportAllPages(Db: TWLDb; InStream: TStream): Integer;
 procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerPageSave(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerEditPage(aRequest: TRequest; aResponse: TResponse);
+procedure DesignerWidgetSort(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetDelete(aRequest: TRequest; aResponse: TResponse);
 procedure DesignerWidgetSave(aRequest: TRequest; aResponse: TResponse);
@@ -183,7 +184,7 @@ begin
   R := Db.Query(Format(
     'SELECT id,type,label,name,value,target,binding,options_json,' +
     'row,col,rowspan,colspan,sort,required,fgColor,bgColor ' +
-    'FROM page_widgets WHERE pageId=%s ORDER BY row,col,sort;', [QuotedStr(PageId)]));
+    'FROM page_widgets WHERE pageId=%s ORDER BY row,col,sort,id;', [QuotedStr(PageId)]));
   SetLength(Result, Length(R));
   for i := 0 to High(R) do
     if Length(R[i]) >= 16 then
@@ -226,10 +227,15 @@ begin
   end;
 end;
 
+function RequiredAttrs(const W: TWidget): string;
+begin
+  if W.Required then Result:=' required="required"' else Result:='';
+end;
+
 function RenderSelect(const W: TWidget): string;
 var D, Item: TJSONData; A: TJSONArray; i: Integer; V, L: string;
 begin
-  Result:=HtmlEncode(W.Lbl)+' <select name="'+HtmlAttr(W.Name)+'">';
+  Result:=HtmlEncode(W.Lbl)+' <select name="'+HtmlAttr(W.Name)+'"'+RequiredAttrs(W)+'>';
   D:=nil;
   try
     try
@@ -276,13 +282,13 @@ begin
                 AuthHiddenFields(S, 'widget:' + W.Id) +
                 '<input type="submit" value="' + HtmlAttr(W.Lbl) + '"></form>';
     'textinput': Result := HtmlEncode(W.Lbl) + ' <input name="' + HtmlAttr(W.Name) +
-                           '" value="' + HtmlAttr(W.Value) + '">';
+                           '" value="' + HtmlAttr(W.Value) + '"'+RequiredAttrs(W)+'>';
     'password':  Result := HtmlEncode(W.Lbl) + ' <input type="password" name="' +
-                           HtmlAttr(W.Name) + '">';
+                           HtmlAttr(W.Name) + '"'+RequiredAttrs(W)+'>';
     'textarea':  Result := HtmlEncode(W.Lbl) + '<br><textarea name="' + HtmlAttr(W.Name) +
-                           '">' + HtmlEncode(W.Value) + '</textarea>';
+                           '"'+RequiredAttrs(W)+'>' + HtmlEncode(W.Value) + '</textarea>';
     'checkbox':  Result := '<input type="checkbox" name="' + HtmlAttr(W.Name) +
-                           '"> ' + HtmlEncode(W.Lbl);
+                           '"'+RequiredAttrs(W)+'> ' + HtmlEncode(W.Lbl);
     'select':    Result := RenderSelect(W);
     'dataview':
       begin
@@ -295,6 +301,16 @@ begin
   else
     Result := '<i>[' + HtmlEncode(W.Typ) + ']</i>';
   end;
+
+  if W.Required and SameText(W.Typ,'color') then
+  begin
+    Result:=StringReplace(Result,'<input ','<input required="required" ',[rfReplaceAll]);
+    Result:=StringReplace(Result,'<select ','<select required="required" ',[rfReplaceAll]);
+  end;
+
+  if W.Required and (Pos('|'+LowerCase(W.Typ)+'|',
+    '|textinput|password|textarea|checkbox|select|color|')>0) then
+    Result:=Result+' <b>* (required)</b>';
 
   // apply per-widget colors (WeKan name or hex) the retro-safe way: <font color> for text,
   // a 1-cell bgcolor table for background. Both degrade cleanly and modern browsers honor them.
@@ -528,25 +544,57 @@ begin
   if LangIsRtl(Lang) then Result := 'rtl' else Result := 'ltr';
 end;
 
+// A spanning cell is emitted at its visual leading edge. RTL uses the right edge
+// of the same logical rectangle, so its content is rendered once in either direction.
+function GridCell(const W: TWidgetArray; Row,Col,Cols:Integer; Rtl:Boolean;
+  out AnchorRow,AnchorCol,RowSpan,ColSpan:Integer):Boolean;
+var i,Leading:Integer;
+begin
+  AnchorRow:=Row; AnchorCol:=Col; RowSpan:=1; ColSpan:=1;
+  Result:=True;
+  for i:=0 to High(W) do
+    if (W[i].Row>=0) and (W[i].Row<100) and (W[i].Col>=0) and
+      (W[i].Col<Cols) and (W[i].RowSpan>0) and (W[i].ColSpan>0) and
+      (W[i].RowSpan<=100-W[i].Row) and (W[i].ColSpan<=Cols-W[i].Col) and
+      (Row>=W[i].Row) and (Row<W[i].Row+W[i].RowSpan) and
+      (Col>=W[i].Col) and (Col<W[i].Col+W[i].ColSpan) then
+    begin
+      AnchorRow:=W[i].Row; AnchorCol:=W[i].Col;
+      RowSpan:=W[i].RowSpan; ColSpan:=W[i].ColSpan;
+      Leading:=AnchorCol;
+      if Rtl then Leading:=AnchorCol+ColSpan-1;
+      Exit((Row=AnchorRow) and (Col=Leading));
+    end;
+end;
+
+function GridMaxRow(const W:TWidgetArray):Integer;
+var i:Integer;
+begin
+  Result:=0;
+  for i:=0 to High(W) do
+    if (W[i].Row>=0) and (W[i].Row<100) and (W[i].RowSpan>0) then
+      Result:=Max(Result,Min(99,W[i].Row+W[i].RowSpan-1));
+end;
+
 // ------------------------------------------------------------------ page render
 function RenderPage(Db: TWLDb; const P: TPage; const S: TWLSession;
   Params: TStrings; const Dir: string): string;
 var
   W: TWidgetArray;
   Body: string;
-  r, c, i, MaxRow, ViewCol: Integer;
-  CellHtml, Align: string;
+  r,c,i,MaxRow,ViewCol,AnchorRow,AnchorCol,RowSpan,ColSpan:Integer;
+  CellHtml,Align,PageDirection:string;
   Rtl: Boolean;
 begin
   W := LoadWidgets(Db, P.Id);
-  MaxRow := 0;
-  for i := 0 to High(W) do
-    if W[i].Row > MaxRow then MaxRow := W[i].Row;
+  MaxRow:=GridMaxRow(W);
 
-  Rtl := SameText(Dir, 'rtl');
+  PageDirection:=Dir;
+  if (P.Dir='rtl') or (P.Dir='ltr') then PageDirection:=P.Dir;
+  Rtl := SameText(PageDirection, 'rtl');
   if Rtl then Align := 'right' else Align := 'left';
 
-  Body := '<table border="0" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
+  Body := '<table dir="ltr" border="0" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
   for r := 0 to MaxRow do
   begin
     Body := Body + '<tr>' + LineEnding;
@@ -555,14 +603,17 @@ begin
     for ViewCol := 0 to P.Cols - 1 do
     begin
       if Rtl then c := P.Cols - 1 - ViewCol else c := ViewCol;
+      if not GridCell(W,r,c,P.Cols,Rtl,AnchorRow,AnchorCol,RowSpan,ColSpan) then Continue;
       CellHtml := '';
       for i := 0 to High(W) do                       // widgets already sorted by row,col,sort
-        if (W[i].Row = r) and (W[i].Col = c) then
+        if (W[i].Row=AnchorRow) and (W[i].Col=AnchorCol) then
         begin
           if CellHtml <> '' then CellHtml := CellHtml + '<br>';
-          CellHtml := CellHtml + RenderWidget(Db, W[i], S, Params, Dir);
+          CellHtml := CellHtml + RenderWidget(Db,W[i],S,Params,PageDirection);
         end;
-      Body := Body + '  <td valign="top" align="' + Align + '">' + CellHtml + '</td>' + LineEnding;
+      Body := Body + '  <td dir="'+PageDirection+'" valign="top" align="'+Align+'" rowspan="'+IntToStr(RowSpan)+
+        '" colspan="'+IntToStr(ColSpan)+'" data-grid-row="'+IntToStr(AnchorRow)+
+        '" data-grid-col="'+IntToStr(AnchorCol)+'">' + CellHtml + '</td>' + LineEnding;
     end;
     Body := Body + '</tr>' + LineEnding;
   end;
@@ -576,7 +627,7 @@ begin
 
   // doctype: html32 is the baseline; html4 adds dir="rtl" on <body> too (retro browsers ignore
   // it, hence the structural column reversal above). One page definition serves both directions.
-  Result := PageDir(P.Title, Body, Dir);
+  Result := PageDir(P.Title,Body,PageDirection);
 end;
 
 // ------------------------------------------------------------------ dispatcher hook
@@ -1018,7 +1069,7 @@ var
   T: TWLTenant; S: TWLSession;
   P: TPage; W: TWidgetArray; EditWidget: TWidget;
   PageId, Body, Cell, Dir: string;
-  r, c, i, MaxRow, ViewCol: Integer;
+  r,c,i,MaxRow,ViewCol,AnchorRow,AnchorCol,RowSpan,ColSpan:Integer;
   Rtl: Boolean;
 begin
   if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
@@ -1033,8 +1084,7 @@ begin
   end;
 
   W := LoadWidgets(T.Db, P.Id);
-  MaxRow := 0;
-  for i := 0 to High(W) do if W[i].Row > MaxRow then MaxRow := W[i].Row;
+  MaxRow:=GridMaxRow(W);
 
   // editor mirrors the same way published pages do, so an RTL admin edits in a mirrored grid
   Dir := ResolveDir(aRequest, P.Dir);
@@ -1046,16 +1096,17 @@ begin
     AuthHiddenFields(S,'designer:/designer/page/save')+
     '<input type="hidden" name="pageId" value="'+HtmlAttr(P.Id)+'">'+PageFields(P)+
     '<input type="submit" name="action" value="save"></form>'+LineEnding +
-          '<table border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
+          '<table dir="ltr" border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
   for r := 0 to MaxRow do
   begin
     Body := Body + '<tr>' + LineEnding;
     for ViewCol := 0 to P.Cols - 1 do
     begin
       if Rtl then c := P.Cols - 1 - ViewCol else c := ViewCol;
+      if not GridCell(W,r,c,P.Cols,Rtl,AnchorRow,AnchorCol,RowSpan,ColSpan) then Continue;
       Cell := '';
       for i := 0 to High(W) do
-        if (W[i].Row = r) and (W[i].Col = c) then
+        if (W[i].Row=AnchorRow) and (W[i].Col=AnchorCol) then
         begin
           Cell := Cell +
             '<b>[' + HtmlEncode(W[i].Typ) + ']</b> ' + HtmlEncode(W[i].Lbl) + '<br>' +
@@ -1063,12 +1114,14 @@ begin
             ToolButton(S, '/designer/widget/move', 'v', 'widgetId', W[i].Id, 'dir', 'down') +
             ToolButton(S, '/designer/widget/move', '<', 'widgetId', W[i].Id, 'dir', 'left') +
             ToolButton(S, '/designer/widget/move', '>', 'widgetId', W[i].Id, 'dir', 'right') +
+            ToolButton(S,'/designer/widget/sort','Sort up','widgetId',W[i].Id,'dir','up')+
+            ToolButton(S,'/designer/widget/sort','Sort down','widgetId',W[i].Id,'dir','down')+
             '<a href="'+HtmlAttr(WithSessionId('/designer/page?id='+P.Id+
               '&widgetId='+W[i].Id,S.SessionId))+'">Edit widget</a> ' +
             ToolButton(S, '/designer/widget/delete', 'Del', 'widgetId', W[i].Id, '', '') +
             '<hr>';
         end;
-      Body := Body + '  <td valign="top">' + Cell + '</td>' + LineEnding;
+      Body := Body + '  <td dir="'+Dir+'" valign="top" rowspan="'+IntToStr(RowSpan)+'" colspan="'+IntToStr(ColSpan)+'">'+Cell + '</td>' + LineEnding;
     end;
     Body := Body + '</tr>' + LineEnding;
   end;
@@ -1104,25 +1157,77 @@ begin
   aResponse.SendContent;
 end;
 
+function WidgetPlacementFits(Db:TWLDb; const PageId:string; const W:TWidget):Boolean;
+var All:TWidgetArray; i:Integer;
+begin
+  All:=LoadWidgets(Db,PageId); Result:=False;
+  for i:=0 to High(All) do if All[i].Id<>W.Id then
+  begin
+    if (All[i].Row=W.Row) and (All[i].Col=W.Col) then
+    begin
+      if (All[i].RowSpan<>W.RowSpan) or (All[i].ColSpan<>W.ColSpan) then Exit;
+    end
+    else if (W.Row<All[i].Row+All[i].RowSpan) and (W.Row+W.RowSpan>All[i].Row) and
+      (W.Col<All[i].Col+All[i].ColSpan) and (W.Col+W.ColSpan>All[i].Col) then Exit;
+  end;
+  Result:=True;
+end;
+
+procedure DesignerWidgetSort(aRequest:TRequest; aResponse:TResponse);
+var T:TWLTenant; S:TWLSession; R,Cell:TWLRows; Id,PageId,Dir,Sql,Tmp:string; i,Idx,Target:Integer;
+begin
+  if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
+  if not VerifyActionToken(aRequest,S,'designer:/designer/widget/sort') then
+  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  Id:=aRequest.ContentFields.Values['widgetId'];
+  R:=T.Db.Query('SELECT pageId,row,col FROM page_widgets WHERE id='+QuotedStr(Id)+';');
+  if Length(R)=0 then begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  PageId:=R[0][0]; Dir:=aRequest.ContentFields.Values['dir'];
+  if (Dir<>'up') and (Dir<>'down') then
+  begin DesignerError(aResponse,400,'Invalid direction'); Exit; end;
+  Cell:=T.Db.Query('SELECT id FROM page_widgets WHERE pageId='+QuotedStr(PageId)+
+    ' AND row='+R[0][1]+' AND col='+R[0][2]+' ORDER BY sort,id;');
+  Idx:=-1;
+  for i:=0 to High(Cell) do if Cell[i][0]=Id then Idx:=i;
+  Target:=Idx;
+  if Dir='up' then Dec(Target) else Inc(Target);
+  if (Idx>=0) and (Target>=0) and (Target<Length(Cell)) then
+  begin
+    Tmp:=Cell[Idx][0]; Cell[Idx][0]:=Cell[Target][0]; Cell[Target][0]:=Tmp;
+    Sql:='BEGIN IMMEDIATE; ';
+    for i:=0 to High(Cell) do Sql:=Sql+'UPDATE page_widgets SET sort='+IntToStr(i)+
+      ',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Cell[i][0])+'; ';
+    if not T.Db.Exec(Sql+'COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;'); DesignerError(aResponse,500,'Could not sort widgets'); Exit; end;
+  end;
+  EditorRedirect(aResponse,PageId,S);
+end;
+
 procedure DesignerWidgetMove(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; S: TWLSession; WidgetId, PageId, Dir, SetClause: string;
+var T:TWLTenant; S:TWLSession; WidgetId,PageId,Dir:string; W:TWidget; All:TWidgetArray;
+  P:TPage; i:Integer; Found:Boolean;
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/widget/move') then
   begin DesignerError(aResponse,403,'Bad token'); Exit; end;
   WidgetId:=aRequest.ContentFields.Values['widgetId'];
-  if not LoadWidgetPage(T.Db,WidgetId,PageId) then
+  if not LoadWidgetPage(T.Db,WidgetId,PageId) or not LoadPageById(T.Db,PageId,P) then
   begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  All:=LoadWidgets(T.Db,PageId); Found:=False;
+  for i:=0 to High(All) do if All[i].Id=WidgetId then begin W:=All[i]; Found:=True; Break; end;
+  if not Found then begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
   Dir:=aRequest.ContentFields.Values['dir'];
   case Dir of
-    'up': SetClause:='row=MAX(0,row-1)';
-    'down': SetClause:='row=MIN(99-rowspan+1,row+1)';
-    'left': SetClause:='col=MAX(0,col-1)';
-    'right': SetClause:='col=MIN((SELECT cols FROM pages WHERE id=pageId)-colspan,col+1)';
+    'up': W.Row:=Max(0,W.Row-1);
+    'down': W.Row:=Min(100-W.RowSpan,W.Row+1);
+    'left': W.Col:=Max(0,W.Col-1);
+    'right': W.Col:=Min(P.Cols-W.ColSpan,W.Col+1);
   else begin DesignerError(aResponse,400,'Invalid direction'); Exit; end;
   end;
-  if not T.Db.Exec('UPDATE page_widgets SET '+SetClause+',modifiedAt='+QuotedStr(NowIso)+
-    ' WHERE id='+QuotedStr(WidgetId)+';') then
+  if not WidgetPlacementFits(T.Db,PageId,W) then
+  begin DesignerError(aResponse,409,'Widget spans overlap'); Exit; end;
+  if not T.Db.Exec('UPDATE page_widgets SET row='+IntToStr(W.Row)+',col='+IntToStr(W.Col)+
+    ',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(WidgetId)+';') then
   begin DesignerError(aResponse,500,'Could not move widget'); Exit; end;
   EditorRedirect(aResponse,PageId,S);
 end;
@@ -1185,6 +1290,8 @@ begin
     ((W.BgColor<>'') and (ResolveColor(W.BgColor)='')) or
     not SafeWidgetTarget(W.Target) then
   begin DesignerError(aResponse,400,'Invalid widget fields'); Exit; end;
+  if not WidgetPlacementFits(T.Db,PageId,W) then
+  begin DesignerError(aResponse,409,'Widget spans overlap'); Exit; end;
   // Numeric sort uses an explicit dot independent of the process locale.
   Values:= 'type='+QuotedStr(W.Typ)+',label='+QuotedStr(W.Lbl)+',name='+QuotedStr(W.Name)+
     ',value='+QuotedStr(W.Value)+',target='+QuotedStr(W.Target)+',binding='+QuotedStr(W.Binding)+

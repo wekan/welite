@@ -276,3 +276,16 @@ tenant DB and `wlauth.pas` for tokens). It is a v0.1 skeleton — concrete on mo
 move, direction, and import/export; stubbed with clear TODOs on the richer widget editors and
 Domain-Global-Admin role checks. `zipper`/`Files.Stream` API details may need per-FPC-version
 tweaks.
+
+## Published grid and field metadata
+
+Widget `rowspan`/`colspan` apply to the published page and editor grid. Widgets may
+share one anchor cell if their spans agree, and their `sort` values set their order.
+Distinct anchors cannot overlap; save/move rejects such a placement. Sort up/down
+buttons reorder within the current cell and preserve the other cells.
+
+Required input widgets emit a visible `* (required)` marker and native `required`
+metadata. Older browsers display the marker; the endpoint that handles a form must
+still validate its required fields. A marker cannot replace server-side validation.
+RTL uses the same logical rectangles, mirrored once at rendering time; an explicit
+page direction overrides the viewer language.
