@@ -457,3 +457,7 @@ checking 400, matching language/direction metadata and unchanged card title/loca
 with query/posted/header language, checks 404 metadata and no registry provisioning,
 verifies inaccessible-board responses omit private content, and retains JSON API
 errors. The authenticated frame matrix also covers profile-based board/route 404s.
+
+Board error-frame coverage also checks missing/invalid sessions, forbidden selections,
+bad tokens and signed invalid drops. It verifies public fallback for invalid
+sessions, profile/posted choices for valid viewers and unchanged card data.

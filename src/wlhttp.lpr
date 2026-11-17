@@ -432,28 +432,35 @@ var
   S: TWLSession;
   BackTo: string;
   Language:TWLLanguage;
+  procedure Fail(Code:Integer;const Message:string);
+  begin
+    aResponse.Code:=Code;aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),
+      'Board action','<p>'+HtmlEncode(Message)+'</p>');
+    aResponse.SendContent;
+  end;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
   begin
-    aResponse.Code:=403; aResponse.Content:='Sign in required'; aResponse.SendContent; Exit;
+    S:=Default(TWLSession);Fail(403,'Sign in required');Exit;
   end;
   if ((aRequest.ContentFields.Values['action']='clear') and
       not BoardCanWrite(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'])) or
     ((aRequest.ContentFields.Values['action']<>'clear') and
       not BoardSelectionAllowed(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'],aRequest.ContentFields)) then
   begin
-    aResponse.Code:=403; aResponse.Content:='Board selection forbidden'; aResponse.SendContent; Exit;
+    Fail(403,'Board selection forbidden');Exit;
   end;
   if not VerifyActionToken(aRequest,S,'board:move',aRequest.ContentFields.Values['action']<>'export') then
   begin
-    aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+    Fail(403,'Bad token');Exit;
   end;
   if HandleSelection(T,S,aRequest,aResponse) then Exit;
   if aRequest.ContentFields.Values['dir']='drop' then
   begin
     if not ApplyCardDrop(T.Db,aRequest.ContentFields) then
-    begin aResponse.Code:=400;aResponse.Content:='Invalid drop or database failure';aResponse.SendContent;Exit;end;
+    begin Fail(400,'Invalid drop or database failure');Exit;end;
   end
   else begin
     Language:=ViewerLanguage(T.Db,S,aRequest);

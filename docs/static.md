@@ -252,3 +252,8 @@ query/posted language and Accept-Language, with no tenant/profile fallback. Know
 tenant route and missing/inaccessible-board 404 frames use normal viewer context.
 The generic messages omit requested private names/IDs. JSON API tenant errors
 continue through their existing separate JSON handler.
+
+Early board-move failures (missing session, forbidden selection, bad action token
+and invalid drop) now render the same frame. Failed session validation clears
+viewer identity before language resolution; validated failures can use their own
+tenant-bound profile. Rejection status/messages and card data remain unchanged.

@@ -66,6 +66,15 @@ def check_frames(request,database,session,editor):
         error('POST','/designer/widget/move',dict(fields,widgetId='missing-frame',dir='left'),404)
         with sqlite3.connect(database) as con:
             original_card=con.execute("SELECT title,listId,swimlaneId FROM cards WHERE id='card'").fetchone()
+        error('POST','/board/move',dict(lang='ar',boardId='protected'),403)
+        error('POST','/board/move',dict(sessionId='invalid',boardId='protected'),403,'fi')
+        error('POST','/board/move',dict(sessionId=session,boardId='missing-frame'),403)
+        error('POST','/board/move',dict(sessionId=session,boardId='protected',sel_card='card'),403)
+        for tag in ['ar','fi']:
+            body=check('/board?id=protected&view=all&sessionId='+session)
+            forms=Forms();forms.feed(body.decode())
+            fields=next(fields for path,fields in forms.forms if path=='/board/move')
+            error('POST','/board/move',dict(fields,dir='drop',sel_card='card',targetList='missing-frame',targetLane='lane',lang=tag),400,tag)
         for tag in ['ar','fi']:
             body=check('/board?id=protected&view=all&sessionId='+session)
             forms=Forms();forms.feed(body.decode())
