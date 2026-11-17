@@ -559,3 +559,9 @@ isolation. With `WELITE_UI=1`, `homelang.js` checks Arabic/Finnish/Hebrew captio
 roles, private-board visibility and translated sign-in navigation in Chromium with
 JavaScript disabled and Cookie headers removed. OTP/enrollment browser checks also
 assert account identity after the localized home label and chosen locale redirect.
+
+`viewlang.py`, called by `admin.py`, checks published board-list/header/profile/query
+locale consistency, translated links and signed widget hidden fields, fixed page
+direction independent of language, private-board/invalid-session isolation and
+unchanged profiles. `WELITE_UI=1` also runs `viewlang.js` to follow the generated
+board links and inspect signed fields without JavaScript or Cookie headers.

@@ -589,8 +589,12 @@ var
   Body: string;
   r,c,i,MaxRow,ViewCol,AnchorRow,AnchorCol,RowSpan,ColSpan:Integer;
   CellHtml,Align,PageDirection:string;
-  Rtl: Boolean;
+  Rtl: Boolean;ViewSession:TWLSession;Language:TWLLanguage;
 begin
+  // Locale is render context only: give every widget the same resolved language
+  // as the frame without changing the validated session or stored preferences.
+  ViewSession:=S;
+  if FindLanguage(LanguageTag,Language) then ViewSession.LanguageTag:=Language.Tag;
   W := LoadWidgets(Db, P.Id);
   MaxRow:=GridMaxRow(W);
 
@@ -614,7 +618,7 @@ begin
         if (W[i].Row=AnchorRow) and (W[i].Col=AnchorCol) then
         begin
           if CellHtml <> '' then CellHtml := CellHtml + '<br>';
-          CellHtml := CellHtml + RenderWidget(Db,W[i],S,Params,PageDirection,P.Url);
+          CellHtml := CellHtml + RenderWidget(Db,W[i],ViewSession,Params,PageDirection,P.Url);
         end;
       Body := Body + '  <td dir="'+PageDirection+'" valign="top" align="'+Align+'" rowspan="'+IntToStr(RowSpan)+
         '" colspan="'+IntToStr(ColSpan)+'" data-grid-row="'+IntToStr(AnchorRow)+

@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Share resolved page locale with published widgets
+
+- Reproduce a Finnish published frame with an English board-list heading when
+  language comes only from Accept-Language. Pass the resolved page locale into
+  widget rendering through a transient copy of the validated session.
+- Keep native view captions, board/state links and signed widget hidden fields
+  consistent with the frame for header/profile/query selection. Preserve user
+  preferences, session identity, access checks and independent saved page direction.
+- Add HTTP and no-JS/no-cookie Chromium checks for guest/member/admin views,
+  private boards, invalid sessions, query overrides, fixed LTR/RTL pages, fragments
+  and signed action context. Existing full linked/CLI HTTP/browser suites pass.
+- Other page/message translations, missing assets and remaining RTL/platform
+  acceptance continue in TODO.
+
 ## 2026-11-17 Translate native home-page captions
 
 - Resolve the viewer language before rendering the home body. Reuse existing

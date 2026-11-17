@@ -169,6 +169,13 @@ Re-login preserves a valid locale while dropping failed session identity. Langua
 choice does not modify stored profile preferences. Page text and direction/language
 metadata outside the completed renderers remain in `TODO.md`.
 
+Published page widgets receive the frame's resolved locale through a temporary
+copy of the validated session. Header/profile-based locale therefore reaches native
+board-list captions, links and signed widget hidden language, as explicit query
+locale already did. The original session and profile are unchanged; saved page
+LTR/RTL direction remains independent of the translation language. Invalid session
+identity cannot travel into generated widget links or reveal private boards.
+
 ### Viewer page frames
 
 `wllocale.pas` reads only an authenticated session's profile from its bound tenant,

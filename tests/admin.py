@@ -186,6 +186,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             check_language(request,db,admin)
             from homelang import run as check_home_language
             check_home_language(request,db,admin,member,'http://localhost:'+str(port))
+            from viewlang import run as check_view_language
+            check_view_language(request,db,admin,member,'http://localhost:'+str(port))
             print('PASS: authorized board renderer, escaped content and read-only controls')
             from notlang import run as check_not_found_language
             check_not_found_language(request,tmp/'data',admin)
