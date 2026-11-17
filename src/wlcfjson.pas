@@ -2,6 +2,8 @@ unit wlcfjson;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
 uses SysUtils,fpjson,wldb,wlsjson;
+function DocumentJson(const Document:string):TJSONObject;
+function ReadModelSjson(Db:TWLDb;const Model,Collection,Identity:string):string;
 function CustomFieldsJson(const Document:string):TJSONArray;
 function ReadCustomFields(Db:TWLDb;const CardId:string):TJSONArray;
 implementation
@@ -69,6 +71,26 @@ begin
       Result:=ObjectValue;ObjectValue:=nil;
     finally ObjectValue.Free;end;
   end else Result:=Value.Clone;
+end;
+function DocumentJson(const Document:string):TJSONObject;
+var Typed,Plain,Schema:TJSONObject;
+begin
+  Typed:=nil;Plain:=nil;Schema:=nil;
+  try
+    Plain:=ExactObject(PlainDocument(Document));Typed:=ExactObject(Document);
+    Schema:=TJSONObject.Create(['t','object']);Schema.Add('$s',Typed.Find('$s').Clone);
+    Result:=TJSONObject(JsonValue(Plain,Schema));
+  finally Schema.Free;Plain.Free;Typed.Free;end;
+end;
+function ReadModelSjson(Db:TWLDb;const Model,Collection,Identity:string):string;
+var Rows:TWLRows;Name:string;
+begin
+  Rows:=Db.Query('SELECT m.table_name FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+    'WHERE m.name='+QuotedStr(Model)+' AND c.name='+QuotedStr(Collection)+';');
+  if Length(Rows)<>1 then Invalid;
+  Name:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Name+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Identity)+';');
+  if Length(Rows)<>1 then Invalid;Result:=Rows[0][0];
 end;
 function CustomFieldsJson(const Document:string):TJSONArray;
 var Typed,Plain,Row,Reply:TJSONObject;Rows,Schemas,Schema,Value,Id:TJSONData;i:Integer;

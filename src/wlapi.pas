@@ -81,7 +81,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlpath;
+uses wlstore,wlsjson,Math,wlcfjson,wlpath,wlcfspec;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -619,7 +619,7 @@ end;
 type TDefinitionFlags=array[0..3] of Integer;
 const DefinitionFlagNames:array[0..3] of string=('showOnCard','automaticallyOnCard',
   'showLabelOnMiniCard','showSumAtTopOfList');
-function DefinitionInput(Request:TRequest;out Name,Kind:string;out Flags:TDefinitionFlags):Boolean;
+function DefinitionInput(Request:TRequest;out Name,Kind:string;out Flags:TDefinitionFlags;out Settings:TJSONObject):Boolean;
 var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
   function Flag(Data:TJSONData;out Number:Integer):Boolean;
   var Text:string;
@@ -633,7 +633,7 @@ var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
     else if (Text<>'false') and (Text<>'0') and (Text<>'') then Result:=False;
   end;
 begin
-  Result:=False;Name:='';Kind:='';Doc:=nil;
+  Result:=False;Name:='';Kind:='';Doc:=nil;Settings:=nil;
   try
     try
       if Pos('application/json',LowerCase(Request.ContentType))=1 then Doc:=ExactObject(Request.Content)
@@ -653,6 +653,7 @@ begin
       if Kind='' then Kind:='text';
       case Kind of 'text','number','currency','date','checkbox','dropdown','dropdownMultiSelect','stringtemplate':;
       else Exit;end;
+      if not SettingsInput(Doc.Find('settings'),Settings) then Exit;
       for i:=0 to High(Flags) do
       begin
         Value:=Doc.Find(DefinitionFlagNames[i]);Legacy:=Doc.Find(LowerCase(DefinitionFlagNames[i]));
@@ -663,12 +664,12 @@ begin
       end;
       Result:=True;
     except Result:=False;end;
-  finally Doc.Free;end;
+  finally if not Result then FreeAndNil(Settings);Doc.Free;end;
 end;
 
 // GET board custom fields / POST create a custom field
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Id, Name, Typ,Stamp,Sql: string;Flags:TDefinitionFlags;Reply,Data:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index:Integer;
+var T: TWLTenant; UserId, BoardId, Id, Name, Typ,Stamp,Sql: string;Flags:TDefinitionFlags;Reply,Data,Settings:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index:Integer;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -676,24 +677,27 @@ begin
   BoardId := aRequest.RouteParams['boardId'];
   if aRequest.Method = 'POST' then
   begin
-    if not DefinitionInput(aRequest,Name,Typ,Flags) then
-    begin SendError(aResponse,400,'Invalid custom-field name, type or options');Exit;end;
-    Id:=NewId;Stamp:=NowIso;
-    Sql:='BEGIN IMMEDIATE; '+Format(
-      'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
-      'showLabelOnMiniCard,showSumAtTopOfList,createdAt,modifiedAt) VALUES(%s,%s,%s,%d,%d,%d,%d,%s,%s);',
-      [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],QuotedStr(Stamp),QuotedStr(Stamp)])+
-      'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); ';
-    Data:=TJSONObject.Create(['customFieldId',Id]);
+    if not DefinitionInput(aRequest,Name,Typ,Flags,Settings) then
+    begin SendError(aResponse,400,'Invalid custom-field name, type, options or unsupported settings');Exit;end;
     try
-      Sql:=Sql+'INSERT INTO activities(id,activityType,userId,boardId,createdAt,modifiedAt,data_json) VALUES('+
-        QuotedStr(NewId)+',''createCustomField'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+
-        QuotedStr(Stamp)+','+QuotedStr(Stamp)+','+QuotedStr(Data.AsJSON)+'); COMMIT;';
-    finally Data.Free;end;
-    if not T.Db.Exec(Sql) then
-    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create custom field');Exit;end;
-    Reply:=TJSONObject.Create(['_id',Id]);
-    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+      Id:=NewId;Stamp:=NowIso;
+      Sql:='BEGIN IMMEDIATE; '+Format(
+        'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
+        'showLabelOnMiniCard,showSumAtTopOfList,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) VALUES(%s,%s,%s,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s);',
+        [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],QuotedStr(Stamp),QuotedStr(Stamp),SettingsLiteral(Settings,'currencyCode'),
+         SettingsLiteral(Settings,'stringtemplateFormat'),SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
+        'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); ';
+      Data:=TJSONObject.Create(['customFieldId',Id]);
+      try
+        Sql:=Sql+'INSERT INTO activities(id,activityType,userId,boardId,createdAt,modifiedAt,data_json) VALUES('+
+          QuotedStr(NewId)+',''createCustomField'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+
+          QuotedStr(Stamp)+','+QuotedStr(Stamp)+','+QuotedStr(Data.AsJSON)+'); COMMIT;';
+      finally Data.Free;end;
+      if not T.Db.Exec(Sql) then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create custom field');Exit;end;
+      Reply:=TJSONObject.Create(['_id',Id]);
+      try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+    finally Settings.Free;end;
     Exit;
   end;
   Rows:=T.Db.Query(Format('SELECT cf.id,cf.name,cf.type FROM custom_fields cf '+
@@ -707,19 +711,18 @@ begin
 end;
 
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId: string; R: TWLRows; O: TJSONObject;
+var T: TWLTenant; UserId: string; O: TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  R := T.Db.Query(Format('SELECT id,name,type FROM custom_fields WHERE id=%s LIMIT 1;',
-    [QuotedStr(aRequest.RouteParams['customField'])]));
-  if Length(R) = 0 then begin SendError(aResponse, 404, 'Custom field not found'); Exit; end;
-  O := TJSONObject.Create;
+  O:=nil;
   try
-    O.Add('_id', R[0][0]); O.Add('name', R[0][1]); O.Add('type', R[0][2]);
-    SendJson(aResponse, O.AsJSON);
-  finally O.Free; end;
+    try O:=ReadDefinition(T.Db,aRequest.RouteParams['customField']);
+    except SendError(aResponse,500,'Could not read custom-field definition');Exit;end;
+    if O=nil then begin SendError(aResponse,404,'Custom field not found');Exit;end;
+    SendJson(aResponse,O.AsJSON);
+  finally O.Free;end;
 end;
 
 // Keep JSON arrays as array text for the SQL relation contract. A JSON number

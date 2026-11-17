@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Map scalar custom-field settings through the definition API
+
+- Parse settings objects or form JSON, persist currency/template properties through
+  their canonical columns and retain other JSON settings in the protected remainder.
+  Definition creation keeps settings, board association and activity transactional.
+- Validate known string types, Jira enums/field IDs, strict recursive JSON and the
+  schema's JavaScript UTF-16 length limit. Reject invalid input before mutation.
+- Return supported native metadata with reconstructed settings and shared source
+  documents with BSON Date JSON conversion, flags, board IDs and timestamps.
+- Normal/checked validation tests and native/shared HTTP suites verify JSON/form
+  round trips, empty strings, Unicode limits, metadata reads and failure rollback.
+  The old committed API silently discards a supplied currency setting; all eight
+  Windows x86/x64 linked/CLI disk/embedded cross-build variants pass.
+- Dropdown-array creation remains a separate presence/managed-relation step and
+  is refused rather than silently discarded. Definition edit/delete, field-policy
+  parity, automatic-card policies, typed migration and clone/export remain in TODO.
+
 ## 2026-11-17 Store unmapped custom-field settings without shadowing columns
 
 - Add settings_json as a JSON-object remainder for settings beyond currency,

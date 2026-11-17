@@ -1221,6 +1221,34 @@ lack the column. Native/shared HTTP suites retain existing import/clone/API beha
 Full settings API mapping/validation and provenance-aware legacy-root normalization
 remain separate unfinished steps; this provides their storage foundation.
 
+## Scalar settings API mapping and definition reads
+
+Definition creation accepts a settings object or JSON object text (for form input).
+Currency/template properties go to their canonical columns; other JSON properties
+go to the protected remainder. Known settings must be strings. Jira time fields
+use original/remaining, estimate IDs match customfield_ plus 1..20 ASCII digits,
+and estimate units have the schema's 80 JavaScript UTF-16-unit limit. The pinned
+aldeed:simple-schema 1.13.1 doStringChecks implementation compares string.length.
+Strict typed-document validation also checks recursive UTF-8, unique keys, finite
+numbers and depth before creation. Empty template strings retain their meaning.
+
+Definition GET now reconstructs supported native flags, dates, board IDs and
+settings, including existing dropdown relation rows. On shared stores it validates
+and serializes the source document with the same BSON Date JSON conversion used
+for custom values; internal SJSON schema metadata is omitted. Native legacy date
+strings retain their existing representation.
+
+`tests/cfspec.py` checks normal/checked parsing and full-document conversion.
+`tests/setapi.py`, invoked by native/shared HTTP suites, covers JSON/form settings,
+known-column/remainder storage, full metadata, UTF-16 boundaries, invalid data and
+rollback after later transaction failures.
+
+This creation step does not accept dropdownItems payloads: exact managed-array
+creation and absent/empty presence need a coordinated native/shared contract.
+They return HTTP 400 instead of being silently dropped. Dropdown creation,
+definition edit/delete, adminOnly/readOnly field-policy parity, automatic-card
+policies, normalized typed migration and selection clone/export remain open.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

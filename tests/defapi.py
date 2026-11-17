@@ -2,6 +2,7 @@
 import json
 import sqlite3
 from urllib.parse import quote, urlencode
+from setapi import exercise as check_settings
 
 
 def exercise(call, board, uid, snapshot, verify, fail, clear):
@@ -71,6 +72,14 @@ def run_native(call, db, board, uid):
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER def_fail')
     exercise(call,board,uid,snapshot,verify,fail,clear)
+    def stored(identity,settings):
+        with sqlite3.connect(db) as con:
+            row=con.execute('SELECT currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json FROM custom_fields WHERE id=?',(identity,)).fetchone()
+            keys=['currencyCode','stringtemplateFormat','stringtemplateSeparator']
+            assert row[:3]==tuple(settings.get(key) for key in keys),row
+            assert json.loads(row[3])=={key:value for key,value in settings.items() if key not in keys},row
+    check_settings(call,board,snapshot,stored,fail,clear)
+
 
 
 def run_shared(call, client, db, board, uid):
@@ -96,3 +105,8 @@ def run_shared(call, client, db, board, uid):
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER def_fail')
     exercise(call,board,uid,snapshot,verify,fail,clear)
+    def stored(identity,settings):
+        document=client.find('customFields',identity)[0]
+        assert document['settings']==settings,(document,settings)
+        assert all(key not in document for key in ['currencyCode','stringtemplateFormat','stringtemplateSeparator','settings_json']),document
+    check_settings(call,board,snapshot,stored,fail,clear)
