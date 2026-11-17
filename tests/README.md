@@ -525,3 +525,8 @@ asset paths; disk-mode HTTP suites retain compatibility.
 compiles current disk/full embedded CLI servers with the isolated Linux amd64
 layout documented in `docs/cross.md`, then checks executable ELF64/x86-64 headers.
 It requires TMPDIR, removes temporary products, and does not execute the foreign binaries.
+
+`embhttp.py` accepts `WELITE_RUNNER` as a shell-quoted executable/argument list
+(parsed without a shell) and `WELITE_EMBED_BACKENDS=cli` for a CLI-only cross
+compiler. Defaults still build and execute both native backends. See `docs/cross.md`
+for the passing amd64 QEMU scenario and its native SQLite child-process limitation.

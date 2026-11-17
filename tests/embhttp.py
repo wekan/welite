@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import socket
 import sqlite3
 import subprocess
@@ -13,6 +14,9 @@ from urllib.parse import urlencode,parse_qs,urlsplit
 from layout import Forms
 root=Path(__file__).resolve().parents[1]
 fpc=os.environ.get('FPC','fpc');resource=os.environ.get('FPCRES',str(Path(fpc).with_name('fpcres')))
+runner=shlex.split(os.environ.get('WELITE_RUNNER',''))
+backends=os.environ.get('WELITE_EMBED_BACKENDS','linked,cli').split(',')
+assert backends and all(name in ('linked','cli') for name in backends), backends
 build_env=dict(os.environ)
 if Path(fpc).is_absolute():build_env['PATH']=str(Path(fpc).parent)+os.pathsep+build_env.get('PATH','')
 def command(args,**kwargs):
@@ -20,7 +24,8 @@ def command(args,**kwargs):
     assert result.returncode==0,result.stdout+result.stderr
     return result
 with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) as directory:
-    for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
+    for backend in backends:
+        flags=['-dWLDB_CLI'] if backend=='cli' else []
         out=Path(directory)/backend;build=out/'build';build.mkdir(parents=True);work=out/'run';work.mkdir()
         command(['python3',str(root/'releases/genasset.py'),str(build/'wlassets.pas'),str(build/'wlpublic.rc')],cwd=root)
         command([resource,'wlpublic.rc','-o','wlpublic.res','-of','res'],cwd=build)
@@ -34,21 +39,21 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                     'WELITE_ARGON_SECRET_FILE','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN',
                     'PASSWORD_LOGIN_ENABLED','ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS','WELITE_TRUSTED_PROXIES']:env.pop(key,None)
         missing=out/'bad';missing.mkdir()
-        refused=subprocess.run([str(binary),'initadmin','embedded-admin'],cwd=missing,
+        refused=subprocess.run([*runner,str(binary),'initadmin','embedded-admin'],cwd=missing,
             env=dict(env,WELITE_DATA=str(missing/'data'),WELITE_SCHEMA=str(missing/'none.sql')),capture_output=True,text=True)
         assert refused.returncode!=0,'Explicit missing schema silently fell back to resources'
-        initialized=subprocess.run([str(binary),'initadmin','embedded-admin'],cwd=work,env=env,capture_output=True,text=True)
+        initialized=subprocess.run([*runner,str(binary),'initadmin','embedded-admin'],cwd=work,env=env,capture_output=True,text=True)
         assert initialized.returncode==0,(backend,'directory-free initadmin',initialized.stdout,initialized.stderr)
         def request(method,path,fields=None,host='localhost'):
-            con=http.client.HTTPConnection('127.0.0.1',port,timeout=10)
+            con=http.client.HTTPConnection('127.0.0.1',port,timeout=30)
             headers={'Host':host,'User-Agent':'embedded-http'}
             if fields is not None:headers['Content-Type']='application/x-www-form-urlencoded'
             con.request(method,path,urlencode(fields) if fields is not None else None,headers)
             response=con.getresponse();result=response.status,dict(response.getheaders()),response.read();con.close();return result
         with (out/'http.log').open('w+') as log:
-            server=subprocess.Popen([str(binary)],cwd=work,env=env,stdout=log,stderr=log)
+            server=subprocess.Popen([*runner,str(binary)],cwd=work,env=env,stdout=log,stderr=log)
             try:
-                for attempt in range(100):
+                for attempt in range(600):
                     try:
                         if request('GET','/robots.txt')[0]==200:break
                     except OSError:pass
@@ -81,7 +86,7 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                     assert con.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('users','pages','page_widgets')").fetchone()==(3,)
             finally:
                 server.terminate()
-                try:server.wait(timeout=10)
+                try:server.wait(timeout=30)
                 except subprocess.TimeoutExpired:server.kill();server.wait();raise
                 if server.returncode:log.seek(0);raise AssertionError(log.read())
         print('PASS: '+backend+' fresh directory-free embedded admin/tenant/Designer bootstrap, exact static/catalog/locale bytes, translated auth, private SQL and clean shutdown')

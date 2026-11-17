@@ -52,8 +52,32 @@ WELITE_CROSS64="$PREFIX" FPCRES=/absolute/path/to/native/fpcres \
 The check explicitly selects the native `fpcres` with `-FR` (the default cross
 prefix otherwise makes FPC search for `x86_64-linux-gnu-fpcres`). It compiles today's complete server twice, generates the full embedded
 asset/private-SQL resource bundle, and validates ELF64/little-endian/x86-64 headers.
-Build products are temporary and removed. Other targets and actual foreign runtime
-acceptance remain open.
+Build products are temporary and removed.
+
+### Emulated amd64 embedded runtime (2026-11-17)
+
+The full directory-free embedded CLI HTTP acceptance also passes with Debian's
+ARM64 `qemu-user` 10.0.13 and the above target sysroot. Add the verified Debian
+`libgcc-s1-amd64-cross` 14.2.0-19cross1 package to the sysroot: glibc thread exit
+otherwise aborts with a missing `libgcc_s.so.1`. No binfmt registration or host
+package installation is needed.
+
+Use an executable compiler wrapper containing the flags from `tests/cross64.py`,
+forwarding arguments with `"$@"`, then run:
+
+```sh
+FPC=/absolute/path/to/cross-wrapper FPCRES=/absolute/path/to/native/fpcres \
+WELITE_EMBED_BACKENDS=cli \
+WELITE_RUNNER='/absolute/path/to/qemu-x86_64 -L /absolute/prefix/sysroot/usr/x86_64-linux-gnu' \
+  python3 tests/embhttp.py
+```
+
+This checks private SQL bootstrap/refusal, exact public/catalog/locale bytes,
+registration/login, translated auth, Designer creation, RTL published pages,
+non-public SQL and clean SIGTERM shutdown. The process runs x86-64 application
+and libc code, but executes the **host's native sqlite3 CLI child process**.
+It does not establish a target-native SQLite deployment, linked amd64 SQLite,
+physical amd64 hardware, or other operating-system acceptance. Those remain open.
 
 ---
 
