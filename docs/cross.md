@@ -141,6 +141,51 @@ exactly by linked variants. This extends source/build coverage to 32-bit widths;
 Windows runtime, resource bytes, entropy, DLL deployment and shutdown acceptance
 remain open for both targets.
 
+## Current Linux ARM hard-float build checks (2026-11-17)
+
+Both advertised `armhf` and `armv7` CLI variants now compile in disk and full
+embedded modes using a separate toolchain. Build GNU Binutils 2.47 for
+`arm-linux-gnueabihf`, and extract verified Debian cross libc/runtime packages
+under a private sysroot (`libc6-armhf-cross`, `libc6-dev-armhf-cross` 2.41-11cross1;
+`libgcc-s1-armhf-cross` 14.2.0-19cross1).
+
+For pinned FPC source, use the serial commands above with `CPU_TARGET=arm`,
+`OS_TARGET=linux`, `BINUTILSPREFIX=arm-linux-gnueabihf-`, and these options:
+
+```sh
+OPT='-O2 -dFPC_SOFT_FPUX80 -dFPC_ARMHF'
+CROSSOPT='-n -O2 -CaEABIHF -CfVFPV3'
+```
+
+Clean the isolated source build before changing these options: existing FPC build
+markers otherwise reuse the old compiler. `-dFPC_ARMHF` is a **compiler build**
+define, not an application define; without it this revision advertises ARMEL and
+selects `/lib/ld-linux.so.3` despite application `-CaEABIHF`. The corrected compiler
+advertises ARMHF and selects `/lib/ld-linux-armhf.so.3`. Matching CROSSOPT produces
+RTL units compatible with both build-menu application variants.
+
+```sh
+WELITE_ARMHF=/absolute/armhf/toolchain FPCRES=/absolute/native/fpcres \
+  python3 tests/armhf.py
+```
+
+All four current builds pass ELF32/little-endian/ARM/EABI5 and exact hard-float
+loader checks. The pinned compiler still emits a soft-float ELF flag, matching
+[FPC issue 40374](https://gitlab.com/freepascal.org/fpc/source/-/issues/40374).
+The regression reports its actual flags and accepts only the known soft/hard
+metadata values; it does not claim the flag is corrected. It also compiles a
+hard-float-only ABI probe for libc `strtod` returns and libm `pow` arguments/returns.
+Set `WELITE_ARM_RUNNER` to an executable/argument list to execute that probe.
+
+Runtime acceptance is **not verified on this host**. Both the ABI probe and fresh
+embedded CLI HTTP suite fail inside the target loader while mapping libc/libm.
+This host has 16 KiB pages, matching the reproduction in
+[Debian QEMU bug 1114725](https://bugs-devel.debian.org/cgi-bin/bugreport.cgi?bug=1114725).
+QEMU 10.0.13's deprecated `-p 4096` reports that it cannot change the host page
+size and does not resolve the failure. Run the ABI probe and copied-executable
+HTTP suite on a suitable host/emulator or physical ARM target before claiming
+runtime, floating-point-call or embedded-resource acceptance.
+
 ---
 
 ## TL;DR

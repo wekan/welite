@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Verify ARM hard-float cross-builds and record runtime limits
+
+- Build a separate ARMHF compiler and matching EABIHF/VFPV3 runtime units. Reproduce
+  the incorrect ARMEL loader from an ARMEL compiler with application ABI flags;
+  a clean compiler build with FPC_ARMHF selects the correct hard-float loader.
+- Add four current armhf/armv7 disk/embedded CLI compile checks with ELF32/ARM/
+  EABI5/loader validation and a compile-time hard-float libc/libm ABI probe.
+- Record the pinned compiler's known soft-float ELF metadata (FPC 40374). Runtime
+  ABI and embedded HTTP attempts fail inside QEMU's target loader on the 16 KiB-page
+  host, matching Debian 1114725; page-size override does not help. No ARM runtime
+  acceptance is claimed. Keep those checks and other platform work open in TODO.
+
 ## 2026-11-17 Verify current Windows x86 cross-builds
 
 - Build a separate pinned Windows i386 compiler/runtime prefix and compile the

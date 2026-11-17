@@ -544,3 +544,10 @@ compiler/units described in `docs/cross.md` and TMPDIR; no foreign code is execu
 `wincross.py` accepts `WELITE_WIN32` and/or `WELITE_WIN64`; both prefixes run all
 eight target/backend/resource combinations. PE checks resolve actual DLL imports
 and require the SQLite DLL only for linked builds, alongside target machine/format.
+
+`WELITE_ARMHF=/absolute/toolchain FPCRES=/absolute/native/fpcres python3 tests/armhf.py`
+checks disk/embedded armhf/armv7 CLI builds, ELF32/EABI5 and the exact hard-float
+loader. It reports the known pinned-FPC metadata issue and compiles an ABI probe.
+`WELITE_ARM_RUNNER` optionally executes that probe; runtime mapping fails with the
+current QEMU/16 KiB-page host, so a compile-only pass is not runtime acceptance.
+See `docs/cross.md` for clean compiler flags and linked upstream issue references.
