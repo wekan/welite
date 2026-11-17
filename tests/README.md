@@ -419,3 +419,7 @@ assert logical X coordinates and inspect the displayed list after each redirect.
 
 The Arabic browser flow also moves a card physically right then left and a list
 left then right, checking destination cells/geometry and restoring the fixture.
+
+Designer layout tests cover saved RTL direction overriding English on movement,
+span collisions/boundaries and reversible columns; browser geometry verifies both
+physical horizontal widget arrows without JavaScript or cookies.

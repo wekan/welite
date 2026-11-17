@@ -1272,6 +1272,8 @@ begin
   for i:=0 to High(All) do if All[i].Id=WidgetId then begin W:=All[i]; Found:=True; Break; end;
   if not Found then begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
   Dir:=aRequest.ContentFields.Values['dir'];
+  if ResolveDir(aRequest,P.Dir,SessionLanguage(T.Db,S))='rtl' then
+    if Dir='left' then Dir:='right' else if Dir='right' then Dir:='left';
   case Dir of
     'up': W.Row:=Max(0,W.Row-1);
     'down': W.Row:=Min(100-W.RowSpan,W.Row+1);

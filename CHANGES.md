@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Honor Designer page direction when moving widgets
+
+- Resolve saved page direction and viewer language before translating a horizontal
+  Designer move into a logical column change. Saved RTL overrides an English viewer;
+  retain vertical movement, bounds, span-collision and action authorization checks.
+- Add HTTP checks for RTL span collisions, boundary no-ops and reversible logical
+  column changes, plus no-JavaScript/no-cookie Chromium geometry assertions for
+  both physical arrow directions. The full linked-backend HTTP/browser suite passes.
+- Broader directional-control rendering, responsive colors and actual retro-platform
+  acceptance remain open; this does not close the language/RTL checklist.
+
 ## 2026-11-17 Move RTL selections toward physical neighbors
 
 - Resolve the validated viewer language at the authenticated board move endpoint

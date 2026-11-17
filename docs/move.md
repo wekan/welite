@@ -125,3 +125,7 @@ before committing all rows in one database transaction. Missing files, unsupport
 attachment backends and database failures reject the clone and clean up the prepared files.
 External attachment backends require their own copy implementation before they can be cloned.
 Card/list/swimlane clone variants and the no-JS button are covered by the HTTP/browser tests.
+
+Designer widget arrows also translate physical horizontal direction through the
+resolved page direction, including saved overrides, before applying normal column
+bounds and span-collision checks.

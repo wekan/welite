@@ -71,6 +71,17 @@ def run(request, db, session):
     legacy=request('GET','/layout?lang=en&sessionId='+session)[2]
     assert legacy.startswith(b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 FINAL//EN"')
     assert post(home,'/designer/page/save',dict(page,pageId=page_id,dir='rtl'))[0] == 302
+    # Saved RTL overrides an explicit LTR viewer for physical moves and collisions.
+    assert post(editor+'&lang=en','/designer/widget/move',dict(dir='right'),required_id)[0] == 409
+    assert post(editor+'&lang=en','/designer/widget/move',dict(dir='left'),required_id)[0] == 302
+    probe=dict(base,label='movement probe',row='3',col='0',rowspan='1',colspan='1')
+    assert post(editor,save,probe)[0] == 302
+    with sqlite3.connect(db) as con:
+        probe_id=con.execute("SELECT id FROM page_widgets WHERE pageId=? AND label='movement probe'",(page_id,)).fetchone()[0]
+    assert post(editor+'&lang=en','/designer/widget/move',dict(dir='left'),probe_id)[0] == 302
+    with sqlite3.connect(db) as con:assert con.execute('SELECT col FROM page_widgets WHERE id=?',(probe_id,)).fetchone()==(1,)
+    assert post(editor+'&lang=en','/designer/widget/move',dict(dir='right'),probe_id)[0] == 302
+    with sqlite3.connect(db) as con:assert con.execute('SELECT col FROM page_widgets WHERE id=?',(probe_id,)).fetchone()==(0,)
     fixed = request('GET','/layout?lang=en&sessionId='+session)[2]
     assert fixed.index(b'data-grid-col="2"') < fixed.index(b'data-grid-col="0"')
     print('PASS: spanning grids, covered/overlap cells, required metadata, cell sort and fixed/automatic RTL')
