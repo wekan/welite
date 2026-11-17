@@ -153,4 +153,14 @@ def run(request, db, session):
         root=next(row for row in cards if row['title']=='ccard')
         assert root['listId']==lists[0]['id'] and root['swimlaneId']=='clane'
         assert next(row for row in cards if row['title']=='cchild')['parentId']==root['id']
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO lists(id,boardId,title,createdAt) VALUES('case-list','clone','Case list','old')")
+        for identity in ['caseID','CASEID']:
+            con.execute("INSERT INTO cards(id,boardId,listId,title,userId,createdAt,modifiedAt,dateLastActivity) VALUES(?,'clone','case-list',?,'u','old','old','old')",(identity,identity))
+        before_cards={row[0] for row in con.execute('SELECT id FROM cards')}
+    assert clone({'sel_list':'case-list'})[0]==302
+    with sqlite3.connect(db) as con:
+        added=[row for row in con.execute('SELECT id,title FROM cards') if row[0] not in before_cards]
+        assert len(added)==2 and {row[1] for row in added}=={'caseID','CASEID'},added
+    print('PASS: native expanded selection IDs preserve exact case')
     print('PASS: deep Clone deduplicates mixed roots, remaps child/cover/dependency IDs, preserves shared references and original rows, copies bytes and rolls back file/SQL failures')

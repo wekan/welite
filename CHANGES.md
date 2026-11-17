@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep typed root references inside selection scope
+
+- Validate exact canonical board and explicit root identities before any selection
+  action. Reject mixed invalid roots instead of allowing edit/save parameters to
+  bypass filtering, and preserve case-distinct IDs during collection/deduplication.
+- Require BSON string identity for root board/lane/list/card/checklist links used
+  in expansion and collection, including nested attachment metadata and history.
+  Pair each OR branch with its own type check, retaining valid alternative links
+  and optional board fields on card/checklist-owned rows.
+- Cache owned root descriptors per graph, validate declared column mappings and
+  agree with projected values. Pin model/version/collection settings and view SQL
+  in queries and clone/export guards; ambiguous IDs and stale bindings deny use.
+  Physical ID probes use the installed index rather than repeated table scans.
+- Normal/checked linked/CLI tests cover typed fields, nested paths, descriptor/view
+  changes and indexed lookup. Live tests cover lookalikes, valid OR alternatives,
+  exact-case selections, mixed edit/save refusal and source/file preservation.
+  Native/shared HTTP and eight Windows cross-builds pass; Windows execution is
+  still unverified.
+- The expanded CLI export fixture took about 13 seconds locally because board-wide
+  permission checks issue per-card subprocess queries. Its test keeps all data and
+  assertions with a 30-second export timeout; policy batching remains open, along
+  with embedded-relation identities and broader graph/lifecycle parity.
+
 ## 2026-11-17 Respect BSON reference identity in shared checks and cascades
 
 - Declared root foreign keys now require actual nonempty BSON string references

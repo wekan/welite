@@ -8,7 +8,8 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
-uses wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed;
+uses wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp;
+type EInvalidSelection=class(Exception);
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -21,7 +22,11 @@ begin
   begin if i>0 then Result:=Result+','; Result:=Result+q(Ids[i]); end;
 end;
 procedure AddId(Ids:TStrings; const Id:string);
-begin if Ids.IndexOf(Id)<0 then Ids.Add(Id); end;
+var i:Integer;
+begin
+  for i:=0 to Ids.Count-1 do if Ids[i]=Id then Exit;
+  Ids.Add(Id);
+end;
 procedure Collect(Params:TStrings; const Name:string; Ids:TStrings);
 var i:Integer;
 begin
@@ -33,20 +38,6 @@ begin
   R:=Db.Query('SELECT ''__wl_ids__'' UNION ALL '+Sql);
   if (Length(R)=0) or (R[0][0]<>'__wl_ids__') then raise Exception.Create('Could not collect selection IDs');
   for i:=1 to High(R) do AddId(Ids,R[i][0]);
-end;
-function ParentCardCondition(Db:TWLDb):string;
-var Rows:TWLRows;Physical:string;
-begin
-  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''cards'';');
-  if Length(Rows)<>1 then raise Exception.Create('Missing card source');
-  Result:='1';if Rows[0][0]='table' then Exit;
-  Rows:=Db.Query('SELECT m.table_name FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
-    'WHERE m.name=''cards'' AND c.name=''cards'' AND json_extract(m.spec,''$.table'')=''cards'' AND json_extract(m.spec,''$.collection'')=''cards'';');
-  if Length(Rows)<>1 then raise Exception.Create('Missing card source ownership');
-  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
-  Result:='EXISTS(SELECT 1 FROM '+Physical+' cp WHERE json_extract(cp._ferretdb_sjson,''$._id'')=cards.id '+
-    'AND json_type(cp._ferretdb_sjson,''$.parentId'')=''text'' '+
-    'AND json_extract(cp._ferretdb_sjson,''$."$s".p.parentId.t'')=''string'')';
 end;
 function RowsJson(Db:TWLDb; const TableName,WhereClause:string;const Action:string;out Binding:string;out Audit:TJSONArray):TJSONArray;
 var Columns,R,Owner:TWLRows; Sql,Order,SeedExpr,Spec,Physical,OwnerTest,OwnerGuard,Collection,SourceTable:string; i:Integer; HasId,HasSort:Boolean;Row:TJSONObject;
@@ -129,12 +120,35 @@ begin
   Result:=True;
 end;
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
-var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope,ParentCondition:string; Previous:Integer;
+var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
   Data,AuditData:TJSONObject;Bindings:TJSONArray;
+  function Link(const Name,Column:string):string;
+  begin Result:=TypedScope.StringField(Name,Column);end;
+  function BoardScope(const Name:string):string;
+  begin Result:='boardId='+q(BoardId)+' AND '+Link(Name,'boardId')+' AND '+Link(Name,'id');end;
+  function CardOwner(const Name:string):string;
+  begin Result:='cardId IN ('+IdSet(Cards)+') AND '+Link(Name,'cardId');end;
+  procedure Resolve(const Name:string;Ids:TStringList);
+  var Valid:TStringList;i,j:Integer;Found:Boolean;
+  begin
+    Valid:=TStringList.Create;
+    try
+      AddQuery(T.Db,'SELECT id FROM '+Name+' WHERE '+BoardScope(Name)+' AND id IN ('+IdSet(Ids)+');',Valid);
+      if Valid.Count<>Ids.Count then raise EInvalidSelection.Create('Invalid selection root');
+      for i:=0 to Valid.Count-1 do
+      begin
+        Found:=False;for j:=0 to Ids.Count-1 do if Valid[i]=Ids[j] then Found:=True;
+        if not Found then raise EInvalidSelection.Create('Invalid selection identity');
+      end;
+      Ids.Assign(Valid);
+    finally Valid.Free;end;
+  end;
   procedure Table(const Name,WhereClause:string);
   var Binding:string;Audit:TJSONArray;
   begin
-    Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action'],Binding,Audit));
+    if TypedScope.IsRoot(Name) then
+      Data.Add(Name,RowsJson(T.Db,Name,'('+WhereClause+') AND '+Link(Name,'id'),Params.Values['action'],Binding,Audit))
+    else Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action'],Binding,Audit));
     if AuditData<>nil then AuditData.Add(Name,Audit)
     else if (Params.Values['action']='clone') and (Name='cards') then Result.Add('_clone_sources',Audit)
     else Audit.Free;
@@ -148,26 +162,28 @@ begin
     Bindings:=TJSONArray.Create;Result.Add('_export_bindings',Bindings);
     AuditData:=TJSONObject.Create;Result.Add('_export_audit',AuditData);
   end;
-  Lanes:=TStringList.Create; Lists:=TStringList.Create; Cards:=TStringList.Create; Checks:=TStringList.Create;
+  Lanes:=TStringList.Create; Lists:=TStringList.Create; Cards:=TStringList.Create; Checks:=TStringList.Create;TypedScope:=nil;
   try
     try
-    BoardId:=Params.Values['boardId']; Scope:='boardId='+q(BoardId);
+    TypedScope:=TSelectionScope.Create(T.Db);BoardId:=Params.Values['boardId'];Scope:='boardId='+q(BoardId);
     Result.Add('welite_selection',1); Result.Add('boardId',BoardId);
     Collect(Params,'sel_swimlane',Lanes); Collect(Params,'sel_list',Lists); Collect(Params,'sel_card',Cards);
-    AddQuery(T.Db,'SELECT id FROM lists WHERE '+Scope+' AND swimlaneId IN ('+IdSet(Lanes)+');',Lists);
-    AddQuery(T.Db,'SELECT id FROM cards WHERE '+Scope+' AND (listId IN ('+IdSet(Lists)+
-      ') OR swimlaneId IN ('+IdSet(Lanes)+'));',Cards);
-    ParentCondition:=ParentCardCondition(T.Db);
+    Resolve('swimlanes',Lanes);Resolve('lists',Lists);Resolve('cards',Cards);
+    AddQuery(T.Db,'SELECT id FROM lists WHERE '+BoardScope('lists')+' AND swimlaneId IN ('+IdSet(Lanes)+') AND '+Link('lists','swimlaneId')+';',Lists);
+    AddQuery(T.Db,'SELECT id FROM cards WHERE '+BoardScope('cards')+' AND ((listId IN ('+IdSet(Lists)+') AND '+Link('cards','listId')+
+      ') OR (swimlaneId IN ('+IdSet(Lanes)+') AND '+Link('cards','swimlaneId')+'));',Cards);
     repeat
       Previous:=Cards.Count;
-      AddQuery(T.Db,'SELECT id FROM cards WHERE '+Scope+' AND parentId IN ('+IdSet(Cards)+') AND '+ParentCondition+';',Cards);
+      AddQuery(T.Db,'SELECT id FROM cards WHERE '+BoardScope('cards')+' AND parentId IN ('+IdSet(Cards)+') AND '+Link('cards','parentId')+';',Cards);
     until Cards.Count=Previous;
     CardScope:='cardId IN ('+IdSet(Cards)+')';
-    AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardScope+';',Checks);
+    AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardOwner('checklists')+' AND '+Link('checklists','id')+';',Checks);
     Table('boards','id='+q(BoardId));
-    Table('swimlanes',Scope+' AND id IN ('+IdSet(Lanes)+')');
-    Table('lists',Scope+' AND id IN ('+IdSet(Lists)+')');
-    Table('cards',Scope+' AND id IN ('+IdSet(Cards)+')');
+    if (TJSONArray(Data.Find('boards')).Count<>1) or (TJSONArray(Data.Find('boards')).Objects[0].Get('id','')<>BoardId) then
+      raise EInvalidSelection.Create('Invalid selection board');
+    Table('swimlanes',BoardScope('swimlanes')+' AND id IN ('+IdSet(Lanes)+')');
+    Table('lists',BoardScope('lists')+' AND id IN ('+IdSet(Lists)+')');
+    Table('cards',BoardScope('cards')+' AND id IN ('+IdSet(Cards)+')');
     Table('board_labels','boardId='+q(BoardId)+' AND id IN (SELECT labelId FROM card_labels WHERE '+CardScope+')');
     Table('custom_fields','id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+
       ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+'))');
@@ -176,13 +192,15 @@ begin
       ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+'))');
     Table('card_members',CardScope); Table('card_assignees',CardScope); Table('card_labels',CardScope);
     Table('card_custom_field_values',CardScope); Table('card_dependencies',CardScope);
-    Table('card_comments',Scope+' AND '+CardScope);
+    Table('card_comments',BoardScope('card_comments')+' AND '+CardOwner('card_comments'));
     Table('checklists','id IN ('+IdSet(Checks)+')');
-    Table('checklist_items','checklistId IN ('+IdSet(Checks)+')');
-    Scope:=Scope+' AND ('+CardScope+' OR listId IN ('+IdSet(Lists)+') OR swimlaneId IN ('+IdSet(Lanes)+'))';
-    Table('attachments',Scope); Table('activities',Scope);
+    Table('checklist_items','checklistId IN ('+IdSet(Checks)+') AND '+Link('checklist_items','checklistId'));
+    for Scope in ['attachments','activities'] do
+      Table(Scope,BoardScope(Scope)+' AND (('+CardOwner(Scope)+') OR (listId IN ('+IdSet(Lists)+') AND '+Link(Scope,'listId')+
+        ') OR (swimlaneId IN ('+IdSet(Lanes)+') AND '+Link(Scope,'swimlaneId')+'))');
+    if Bindings<>nil then for BindingIndex:=0 to TypedScope.Bindings.Count-1 do Bindings.Add(TypedScope.Bindings[BindingIndex]);
     except FreeAndNil(Result);raise;end;
-  finally Lanes.Free; Lists.Free; Cards.Free; Checks.Free; end;
+  finally TypedScope.Free;Lanes.Free; Lists.Free; Cards.Free; Checks.Free; end;
 end;
 function ArrayIds(Data:TJSONObject; const TableName:string):string;
 var A:TJSONArray; Ids:TStringList; i:Integer;
@@ -649,7 +667,10 @@ begin
   if (Action='export') and not BoardFieldExportAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId']) then
   begin Error(T,S,Request,Response,403,'Export requires access to every custom-field value on this board');Exit;end;
   try Graph:=SelectionGraph(T,Request.ContentFields);
-  except Error(T,S,Request,Response,500,'Could not collect selection source');Exit;end;
+  except
+    on E:EInvalidSelection do begin Error(T,S,Request,Response,400,'Invalid selection');Exit;end;
+    else begin Error(T,S,Request,Response,500,'Could not collect selection source');Exit;end;
+  end;
   try
     Data:=TJSONObject(Graph.Find('data'));
     Count:=TJSONArray(Data.Find('cards')).Count+TJSONArray(Data.Find('lists')).Count+TJSONArray(Data.Find('swimlanes')).Count;

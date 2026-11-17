@@ -1449,6 +1449,47 @@ Remaining legacy relation forms, reference/lifecycle details and import
 permissions remain unfinished. Root seed support does not establish complete
 clone fidelity; mapped root presence is handled by the explicit patch below.
 
+## Typed root selection scopes
+
+`TSelectionScope` caches owned root descriptors for one graph. It validates each
+scope column's path against the compiled model, captures model/version/collection
+settings and exact view SQL, and builds predicates against the owned typed source.
+A root identity and each link used by a branch must be a nonempty BSON string.
+The stored scope value must also equal the projected column, so a misleading
+projection cannot borrow another stored value. Ambiguous plain IDs fail closed;
+physical ID probes use the installed quoted-path index.
+
+Board and explicit selected roots must resolve to exact canonical identities;
+mixed invalid roots reject the complete request before edit/save rendering or
+mutation. ID collection compares exact bytes and retains case-distinct IDs.
+Expanded lists/cards, recursive children, checklists/items, comments, attachments
+and activities check the actual link types used to establish membership. Each
+`card OR list OR lane` branch carries its own check, allowing a valid list link
+when a card field is merely opaque Regex data. Optional board properties on
+card/checklist-owned checklists/items do not become mandatory.
+
+Predicates check captured descriptor/view bindings when evaluated, and the full
+captured set joins existing clone/export preflight and transaction/delivery guards.
+This includes root classes whose selected rows are empty. Source document audits
+and field-policy gates still apply. These predicates establish root link identity
+and descriptor bindings, not a transaction-wide snapshot of multi-query graph
+collection. Embedded-relation identity scopes, broader HTML/query boundaries and
+remaining lifecycle/mixed-writer consistency remain unfinished.
+
+`tests/selscope.py` runs 36 TEXT/JSONB predicate/ownership cases per normal/checked
+linked/CLI variant, including nested paths, projection disagreement, model/epoch/
+view changes and actual query-plan index inspection. Native behavior and exact-case
+IDs have unit/live coverage. `tests/clroots.py` verifies export and clone exclusion
+of root lookalikes, legitimate OR alternatives, explicit nonstring refusal, mixed
+edit/save refusal, case-distinct IDs and unchanged source/file content. Clone tests
+also verify activity-model changes after mutation roll back the transaction.
+
+The richer CLI fixture measured roughly 13 seconds for a successful export after
+its prior clone batch, compared with about 0.1 seconds linked. Board-wide field
+visibility checks still invoke per-card subprocess queries and need batching.
+Only the heavy export test opts into a 30-second timeout; it retains all rows,
+policy checks and assertions, while other HTTP tests keep their default timeout.
+
 ## Mapped clone root fields
 
 Shared root clones build a partial column patch from captured typed source and
@@ -1473,7 +1514,8 @@ has BSON metadata; it is not interpreted as an envelope.
 Shared recursive child collection also checks the actual BSON string schema of
 `parentId`. A Regex pattern matching a selected parent is not a child link. Native
 parent links keep their SQL behavior, while failed selection-ID queries now deny
-graph collection. Typed scope checks for other selection references remain open.
+graph collection. The root scope rules above extend this to other root links;
+embedded-relation identities remain open.
 
 `tests/clpres.py` verifies normal/checked patches, nested null/missing parents,
 unchanged types, ID/envelope rejection and actual TEXT/JSONB SQL execution/rollback.

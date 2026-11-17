@@ -50,8 +50,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
         with (out/'ferret.log').open('w+') as mongo_log,(out/'http.log').open('w+') as app_log:
             server=subprocess.Popen([str(ferret),'--handler=sqlite','--sqlite-url='+data.as_uri()+'/','--state-dir='+str(state),'--listen-addr=127.0.0.1:'+str(mongo_port),'--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable'],env=env,stdout=mongo_log,stderr=mongo_log)
             client=Client(mongo_port)
-            def request(method,path,body=None,token=None):
-                con=http.client.HTTPConnection('127.0.0.1',http_port,timeout=10)
+            def request(method,path,body=None,token=None,timeout=10):
+                con=http.client.HTTPConnection('127.0.0.1',http_port,timeout=timeout)
                 headers={'Host':'localhost','User-Agent':'shared-http-test'}
                 if token:headers['Authorization']='Bearer '+token
                 if body is not None:headers['Content-Type']='application/json' if isinstance(body,(dict,bytes)) else 'application/x-www-form-urlencoded'
@@ -79,7 +79,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 client.command({'insert':'boards','documents':[dict(_id='b',title='Shared board',slug='shared-board',permission='private',createdAt=now,members=[dict(userId='u',isAdmin=True,isActive=True,isReadOnly=False)])]})
                 client.command({'insert':'swimlanes','documents':[dict(_id='s',boardId='b',title='Lane',createdAt=now)]})
                 client.command({'insert':'lists','documents':[dict(_id='l',boardId='b',title='List',createdAt=now)]})
-                app=start('0');assert request('GET','/')[0]==404 and not shadow.exists();stop()
+                app=start('0')
+                refused=request('GET','/')
+                assert refused[0]==404 and not shadow.exists(),(backend,refused[0],shadow.exists(),refused[2])
+                stop()
                 app=start('1')
                 status,_,body=request('POST','/users/login',dict(username='user',password='test-password'))
                 assert status==200,(backend,status,body)

@@ -83,6 +83,7 @@ def run_shared(request,client,db,token):
         clone(302)
         with sqlite3.connect(db) as con:tables={name:'"'+table.replace('"','""')+'"' for name,table in con.execute('SELECT name,table_name FROM _ferretdb_collections')}
         for mutation in ["UPDATE _wl_models SET version=version+1 WHERE name='cards';",
+                         "UPDATE _wl_models SET version=version+1 WHERE name='activities';",
                          "UPDATE _ferretdb_collections SET settings=json_set(settings,'$.uuid','changed-clone-epoch') WHERE name='cards';",
                          "UPDATE "+tables['customFields']+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.readOnly',json('true')) WHERE json_extract(_ferretdb_sjson,'$._id')='clone-field';",
                          "UPDATE "+tables['boards']+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.members[0].isActive',json('false')) WHERE json_extract(_ferretdb_sjson,'$._id')='clone-policy';"]:

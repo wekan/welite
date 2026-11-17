@@ -373,12 +373,24 @@ not merely a design document. Platform/browser claims require testing on those t
   deferred custom-trigger restoration preserve delete order on reinstall.
   Normal/checked mixed TEXT/JSONB SQL tests and live both-backend Mongo/SQL tests
   verify identity, explicit repairs, unchanged unsupported data and atomic cascades.
-  Next: reconcile remaining legacy relation forms and clone lifecycle details,
-  typed scope checks for other selection references, metadata-aware identifiers
-  for other payloads, import permissions, generic HTML
+  Root selection scopes now validate canonical board/explicit root identities and
+  exact case, rejecting mixed invalid edit/save roots before rendering or mutation.
+  Owned cached predicates check BSON string board/lane/list/card/checklist links,
+  nested attachments and history with independent OR branches. Optional board IDs
+  on card/checklist-owned rows remain optional. Descriptor/mapping/version/settings
+  and view SQL are pinned into query and clone/export guards; ambiguous identities
+  and projection mismatches cannot borrow authority. Normal/checked linked/CLI
+  tests verify indexed probes and stale metadata; live tests cover lookalikes,
+  mixed admission, case-distinct IDs, preserved source BSON and attachment bytes.
+  Next: reconcile embedded-relation scope identities, remaining legacy relation
+  forms and clone lifecycle/multi-query graph consistency, metadata-aware
+  identifiers for other payloads, import permissions, generic HTML
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
   established.
+  CLI export-policy batching remains: the expanded scope fixture took about 13
+  seconds locally with per-card subprocess queries. Its targeted export test
+  timeout is 30 seconds; ordinary request test timeouts retain their defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
