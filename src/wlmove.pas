@@ -86,9 +86,11 @@ end;
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
   IncludeActions: Boolean; IncludeClone:Boolean): string;
 begin
+  // Physical controls must not inherit RTL table-column reversal from the page.
+  // HTML 3.2 browsers ignore dir and already retain this source order.
   // keypad as a 2-row table of submit buttons (joystick layout), like kanban.go's arrowKeys
   Result :=
-    '<table border="0" cellpadding="2" cellspacing="0"><tr>' +
+    '<table dir="ltr" border="0" cellpadding="2" cellspacing="0"><tr>' +
     '<td></td>' +
     '<td align="center"><input type="submit" name="dir" value="up"></td>' +    // shows as "up"
     '<td></td></tr><tr>' +

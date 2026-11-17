@@ -30,6 +30,10 @@ combined design.
 |   Selected: 0 swimlanes, 0 lists, 1 cards.                |   <- selection summary
 +-----------------------------------------------------------+
 ```
+The keypad table explicitly uses `dir="ltr"` so RTL page inheritance cannot swap
+the physical left/right buttons in modern browsers. Browsers that ignore direction
+keep the same source order. RTL board movement semantics remain under audit.
+
 A checkbox on each item selects it; the keypad moves **all selected items at once**, whatever
 their type — one control instead of arrows scattered over every item.
 

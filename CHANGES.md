@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep RTL keypad buttons in physical order
+
+- Give the shared movement keypad an explicit left-to-right table direction so
+  an RTL page cannot place the left button on the right and vice versa. HTML 3.2
+  browsers retain their existing source order.
+- Reproduce the defect with a no-JavaScript/no-cookie Chromium geometry assertion
+  on the Arabic board. Verify left/down/right positions and up above down, then
+  pass the complete linked-backend HTTP and browser suite after the fix.
+- Board/minimap mirroring, logical versus physical movement and Designer widget
+  arrows remain part of the open RTL audit.
+
 ## 2026-11-17 Restore Italian and Swedish display arguments
 
 - Restore the missing Italian list-title `%s` and the translated Swedish result
