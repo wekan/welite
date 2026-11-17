@@ -24,6 +24,14 @@
     "file": "af_ZA.jsn"
   },
   {
+    "key": "bs",
+    "code": "bs",
+    "tag": "bs",
+    "name": "Bosanski",
+    "rtl": false,
+    "file": "bs.jsn"
+  },
+  {
     "key": "en_AU",
     "code": "en",
     "tag": "en_AU",

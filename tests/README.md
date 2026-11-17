@@ -502,3 +502,6 @@ after contextual custom-field/search-code repairs, without constraining human pr
 `python3 tests/zhargs.py` checks the Traditional Chinese attachment activity in
 Hong Kong/Traditional/Taiwan files: native deletion/swimlane vocabulary, no English
 swimlane fragment, English key order and exact source argument inventories.
+
+`python3 tests/bslang.py` verifies the Bosnian asset, native catalog name/terminology,
+compatibility prose and byte unit, English key order and every argument inventory.

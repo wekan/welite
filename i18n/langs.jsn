@@ -20,6 +20,13 @@
     load: () => import("./data/af_ZA.jsn"),
     rtl: false,
   },
+  "bs": {
+    code: "bs",
+    tag: "bs",
+    name: "Bosanski",
+    load: () => import("./data/bs.jsn"),
+    rtl: false,
+  },
   "en_AU": {
     code: "en",
     tag: "en_AU",

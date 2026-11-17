@@ -88,7 +88,7 @@ separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 153 installed language identities; 92 more source languages
+The current snapshot lists 154 installed language identities; 91 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
@@ -289,3 +289,11 @@ attachment/card/list/board arguments from the corresponding native noun labels.
 The English `at swimlane` fragment is replaced using each locale’s existing
 swimlane term. Correct Chinese prose, all other values and key order stay intact;
 argument and wrong-language-fragment regressions cover the three repaired keys.
+
+### Bosnian asset
+
+`bs.jsn` adds 2,101 keys in local English order. It retains 2,089 maintained
+source values, fills the English byte-unit placeholder and provides nine direct
+legacy phrases plus two literal title templates. Native source terminology
+(`tabla`, `kartica`, `lista`, `traka`) guides the phrases; catalog, vocabulary
+and exact argument inventories are verified.

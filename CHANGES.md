@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Add Bosnian language asset
+
+- Add the missing portable Bosnian asset in local English key order, retaining
+  2,089 maintained source values. Fill the English byte unit and nine compatibility
+  phrases using existing native terminology, plus two literal title templates.
+- Register the native Bosanski identity: 154 language identities are installed and
+  91 source entries still need assets. Add native vocabulary/legacy/unit/order and
+  exact argument-inventory regressions.
+- Catalog, token audit, all-identity negotiation and UTF-8 readers pass. All installed
+  authentication forms pass linked/CLI HTTP checks; final byte-unit and reader checks
+  also pass. The overall contextual token audit remains at 1,143 differences.
+
 ## 2026-11-17 Repair Traditional Chinese attachment activity
 
 - Restore canonical attachment/card/list/board arguments in Hong Kong, Traditional
