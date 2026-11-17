@@ -138,15 +138,38 @@ begin
   try Result:=CustomUpdate(Value,Schema,Field);finally Schema.Free;end;
 end;
 function ProjectDocument(const Previous,Columns,Model,Mode:string):string;
-var Doc,Patch,Spec,Hints,Field,Extra:TJSONObject;Fields,Managed:TJSONArray;
-  Known,Restricted:TStringList;Scope:TJSONObject;Value,Converted,OldValue,Target:TJSONData;i,j:Integer;Name,Path,Kind:string;InsertMode:Boolean;
+var Doc,Patch,Spec,Hints,Field,Extra,Seed:TJSONObject;Fields,Managed:TJSONArray;
+  Known,Restricted:TStringList;Scope:TJSONObject;Value,Converted,OldValue,Target:TJSONData;i,j:Integer;Name,Path,Kind:string;InsertMode,CloneMode:Boolean;
 begin
-  Doc:=nil;Patch:=nil;Spec:=nil;Hints:=nil;Known:=nil;Extra:=nil;
-  if not ((Mode='insert') or (Mode='update')) then Invalid;
-  InsertMode:=Mode='insert';
+  Doc:=nil;Patch:=nil;Spec:=nil;Hints:=nil;Known:=nil;Extra:=nil;Seed:=nil;
+  if not ((Mode='insert') or (Mode='update') or (Mode='clone')) then Invalid;
+  InsertMode:=Mode='insert';CloneMode:=Mode='clone';
   try
+    // An explicit insert-only envelope carries the partial clone patch through
+    // existing root views, so their reference and unique checks still apply.
+    if InsertMode and (Previous<>'') then
+    begin
+      Seed:=CheckedJsonObject(Previous);
+      if (Seed.Find('$s')=nil) and (Seed.Find('_wl_clone')<>nil) then
+      begin
+        if (Seed.Count<>3) or (Seed.Find('_wl_clone').AsJSON<>'1') or
+          not (Seed.Find('source') is TJSONString) or not (Seed.Find('columns') is TJSONObject) then Invalid;
+        Result:=ProjectDocument(Seed.Get('source',''),Seed.Find('columns').AsJSON,Model,'clone');Exit;
+      end;
+      FreeAndNil(Seed);
+    end;
     if Previous='' then Doc:=TJSONObject.Create else Doc:=ExactObject(PlainDocument(Previous));
-    Patch:=ExactObject(Columns);Spec:=ExactObject(Model);Hints:=TJSONObject.Create;
+    if CloneMode then Patch:=CheckedJsonObject(Columns) else Patch:=ExactObject(Columns);
+    Spec:=ExactObject(Model);Hints:=TJSONObject.Create;
+    if CloneMode then
+    begin
+      if Previous='' then Invalid;Seed:=ExactObject(Previous);
+      Value:=Seed.FindPath('$s.p._id.t');OldValue:=Doc.Find('_id');Target:=Patch.Find('id');
+      if (Value=nil) or (Value.AsString<>'string') or not (OldValue is TJSONString) or
+        (OldValue.AsString='') or not (Target is TJSONString) or (Target.AsString='') or
+        (Target.AsString=OldValue.AsString) then Invalid;
+      FreeAndNil(Seed);
+    end;
     if not (Spec.Find('fields') is TJSONArray) or not (Spec.Find('managed') is TJSONArray) then Invalid;
     Fields:=TJSONArray(Spec.Find('fields'));Managed:=TJSONArray(Spec.Find('managed'));
     Known:=TStringList.Create;Known.Sorted:=True;Known.CaseSensitive:=True;Known.Duplicates:=dupIgnore;
@@ -198,7 +221,7 @@ begin
         finally if Restricted<>Known then Restricted.Free;end;
       finally FreeAndNil(Extra);end;
     end;
-    if InsertMode then for i:=0 to Managed.Count-1 do RemovePath(Doc,Managed.Strings[i]);
+    if InsertMode or CloneMode then for i:=0 to Managed.Count-1 do RemovePath(Doc,Managed.Strings[i]);
     for i:=0 to Fields.Count-1 do
     begin
       Field:=Fields.Objects[i];Name:=Field.Get('name','');Path:=Field.Get('path','');Kind:=Field.Get('kind','scalar');
@@ -222,7 +245,7 @@ begin
         if Name='id' then
         begin
           if (Converted.JSONType<>jtString) or (Converted.AsString='') then Invalid;
-          if not InsertMode and ((OldValue=nil) or (OldValue.AsString<>Converted.AsString)) then Invalid;
+          if not (InsertMode or CloneMode) and ((OldValue=nil) or (OldValue.AsString<>Converted.AsString)) then Invalid;
         end;
         if InsertMode and (Converted.JSONType=jtNull) and (OldValue=nil) then Continue;
         PutPath(Doc,Path,Converted);Converted:=nil;
@@ -230,7 +253,7 @@ begin
       finally Converted.Free;end;
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,Hints.AsJSON);
-  finally Extra.Free;Known.Free;Hints.Free;Spec.Free;Patch.Free;Doc.Free;end;
+  finally Seed.Free;Extra.Free;Known.Free;Hints.Free;Spec.Free;Patch.Free;Doc.Free;end;
 end;
 // Edit one embedded row without rebuilding its siblings from SQL projections.
 // The caller supplies all key columns; unknown object fields remain in place.

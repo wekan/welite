@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Preserve mapped root-field presence during selection clones
+
+- Build explicit shared-root clone patches containing only intentional ID, title,
+  timestamp, ordering/counter and canonical reference changes. Untouched mapped
+  fields retain original BSON types, bits, nulls and absence, including required
+  fields missing in an existing source and nested parent objects.
+- Carry the partial patch in an insert-only source envelope through existing root
+  views, retaining their reference/unique checks. Ordinary inserts keep their
+  initialization/default behavior, and selection download formats stay unchanged.
+- Require a canonical string source ID and distinct string destination ID; reject
+  malformed envelopes, unknown patch columns and invalid identities. Nonstring
+  reference lookalikes retain their original data identity. Shared descendant
+  traversal accepts only BSON string parent links, and failed ID queries deny
+  graph collection instead of silently narrowing the selection.
+- Normal/checked and real SQL tests cover presence/type/identity and TEXT/JSONB
+  behavior. Live both-backend lane clones cover all seven root models, nested
+  settings, remapped references and preserved attachment bytes. Native HTTP,
+  root interoperability and eight Windows cross-builds pass; Windows execution
+  remains unverified. Legacy forms, other typed scopes and lifecycle parity stay open.
+
 ## 2026-11-17 Retain typed managed card relations during selection clones
 
 - Capture complete typed card source privately alongside the root seed. Audit

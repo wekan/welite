@@ -356,9 +356,18 @@ not merely a design document. Platform/browser claims require testing on those t
   duplicate checks plus source/destination guards surround the copy. Normal/checked
   and live both-backend tests cover these paths, hidden relation metadata and
   complete rollback after malformed keys or protected trigger writes.
-  Next: reconcile mapped-field presence in clones, remaining legacy relation forms
-  and clone lifecycle details, metadata-aware identifiers for other payloads,
-  import permissions, generic HTML
+  Shared root clones now use explicit partial patches through existing root views,
+  changing only intended IDs/titles/timestamps/order/counters and canonical string
+  references. Untouched mapped fields preserve BSON type/bits, nulls and absence,
+  including missing required source fields and nested parent state. Normal inserts
+  retain their defaults and reference/unique checks still apply. Clone identities
+  and envelopes are validated; shared descendant traversal excludes nonstring
+  parent lookalikes and ID-query failures deny collection. Normal/checked tests,
+  real TEXT/JSONB SQL tests and live all-seven-root clones on both backends cover
+  nested settings, source preservation, remapping and attachment bytes.
+  Next: reconcile remaining legacy relation forms and clone lifecycle details,
+  typed scope checks for other selection references, metadata-aware identifiers
+  for other payloads, import permissions, generic HTML
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
   established.

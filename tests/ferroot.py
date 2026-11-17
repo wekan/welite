@@ -178,6 +178,15 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE boards SET settings_json='{"+chr(34)+"replacement"+chr(34)+":null}' WHERE id='copy';",'exec')=='ok'
                 clone=client.find('boards','copy')[0]
                 assert clone['replacement'] is None and 'unknown' not in clone and clone['title']=='Copy'
+                # Explicit clone envelopes still run through actual root-view
+                # reference and unique checks; ordinary seed inserts above keep defaults.
+                list_seed=sql('SELECT json(_ferretdb_sjson) FROM '+q(sql("SELECT table_name FROM _ferretdb_collections WHERE name='lists';")[0][0])+" WHERE _ferretdb_sjson->>'_id'='list';")[0][0]
+                envelope=json.dumps(dict(_wl_clone=1,source=list_seed,columns=dict(id='clone-bad-reference',boardId='missing')))
+                assert sql("INSERT INTO lists(id,_wl_source) VALUES('clone-bad-reference',"+q(envelope)+');','exec')=='error'
+                assert sql("SELECT count(*) FROM lists WHERE id='clone-bad-reference';")==[['0']]
+                envelope=json.dumps(dict(_wl_clone=1,source=seed,columns=dict(id='new')))
+                assert sql("INSERT INTO boards(id,_wl_source) VALUES('new',"+q(envelope)+');','exec')=='error'
+                assert client.find('boards','new')[0]['title']=='New'
                 # Embedded relation edits retain per-row unknown BSON metadata.
                 client.command({'update':'boards','updates':[{'q':{'_id':'board'},'u':{'$set':{'members':[{'userId':'member','isActive':True,'unknown':{'when':DateMs(-1),'large':Long(9007199254740993)}},{'userId':'second','isActive':False}]}}}]})
                 member_spec={'path':'members','keys':['userId'],'fields':[

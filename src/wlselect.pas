@@ -29,7 +29,25 @@ begin
 end;
 procedure AddQuery(Db:TWLDb; const Sql:string; Ids:TStrings);
 var R:TWLRows; i:Integer;
-begin R:=Db.Query(Sql); for i:=0 to High(R) do AddId(Ids,R[i][0]); end;
+begin
+  R:=Db.Query('SELECT ''__wl_ids__'' UNION ALL '+Sql);
+  if (Length(R)=0) or (R[0][0]<>'__wl_ids__') then raise Exception.Create('Could not collect selection IDs');
+  for i:=1 to High(R) do AddId(Ids,R[i][0]);
+end;
+function ParentCardCondition(Db:TWLDb):string;
+var Rows:TWLRows;Physical:string;
+begin
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''cards'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing card source');
+  Result:='1';if Rows[0][0]='table' then Exit;
+  Rows:=Db.Query('SELECT m.table_name FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+    'WHERE m.name=''cards'' AND c.name=''cards'' AND json_extract(m.spec,''$.table'')=''cards'' AND json_extract(m.spec,''$.collection'')=''cards'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing card source ownership');
+  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Result:='EXISTS(SELECT 1 FROM '+Physical+' cp WHERE json_extract(cp._ferretdb_sjson,''$._id'')=cards.id '+
+    'AND json_type(cp._ferretdb_sjson,''$.parentId'')=''text'' '+
+    'AND json_extract(cp._ferretdb_sjson,''$."$s".p.parentId.t'')=''string'')';
+end;
 function RowsJson(Db:TWLDb; const TableName,WhereClause:string;const Action:string;out Binding:string;out Audit:TJSONArray):TJSONArray;
 var Columns,R,Owner:TWLRows; Sql,Order,SeedExpr,Spec,Physical,OwnerTest,OwnerGuard,Collection,SourceTable:string; i:Integer; HasId,HasSort:Boolean;Row:TJSONObject;
 begin
@@ -111,7 +129,7 @@ begin
   Result:=True;
 end;
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
-var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous:Integer;
+var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope,ParentCondition:string; Previous:Integer;
   Data,AuditData:TJSONObject;Bindings:TJSONArray;
   procedure Table(const Name,WhereClause:string);
   var Binding:string;Audit:TJSONArray;
@@ -139,9 +157,10 @@ begin
     AddQuery(T.Db,'SELECT id FROM lists WHERE '+Scope+' AND swimlaneId IN ('+IdSet(Lanes)+');',Lists);
     AddQuery(T.Db,'SELECT id FROM cards WHERE '+Scope+' AND (listId IN ('+IdSet(Lists)+
       ') OR swimlaneId IN ('+IdSet(Lanes)+'));',Cards);
+    ParentCondition:=ParentCardCondition(T.Db);
     repeat
       Previous:=Cards.Count;
-      AddQuery(T.Db,'SELECT id FROM cards WHERE '+Scope+' AND parentId IN ('+IdSet(Cards)+');',Cards);
+      AddQuery(T.Db,'SELECT id FROM cards WHERE '+Scope+' AND parentId IN ('+IdSet(Cards)+') AND '+ParentCondition+';',Cards);
     until Cards.Count=Previous;
     CardScope:='cardId IN ('+IdSet(Cards)+')';
     AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardScope+';',Checks);
@@ -316,19 +335,7 @@ begin
   Row.Delete(Name); Row.Add(Name,Value);
 end;
 function RefTable(const Name,TableName:string):string;
-begin
-  Result:='';
-  case Name of
-    'swimlaneId':Result:='swimlanes';
-    'listId':Result:='lists';
-    'cardId','targetCardId','linkedId':Result:='cards';
-    'checklistId':Result:='checklists';
-    'commentId':Result:='card_comments';
-    'itemId':Result:='checklist_items';
-    'coverId','attachmentId':Result:='attachments';
-    'parentId':if TableName='card_comments' then Result:='card_comments' else Result:='cards';
-  end;
-end;
+begin Result:=CloneReferenceTable(Name,TableName);end;
 procedure RemapJson(D:TJSONData; Maps:TJSONObject; const TableName:string);
 var O:TJSONObject; A:TJSONArray; i:Integer; Key,Target,Value:string;
 begin
@@ -418,7 +425,7 @@ begin
 end;
 function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings;const Guards:string):Boolean;
 var Data,Maps,Map,Original,Row,Activity,Seed:TJSONObject; A:TJSONArray;
-  Used,Copied:TStringList; i,j,k:Integer;
+  Used,Copied,Models:TStringList; i,j,k:Integer;
   TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend,DestGuards,RelationSql,Physical,Expression:string;Policy:TFieldPolicy;
   Source,Dest:TFileStream;
   function CardSource(const OldId:string):TJSONObject;
@@ -436,24 +443,50 @@ var Data,Maps,Map,Original,Row,Activity,Seed:TJSONObject; A:TJSONArray;
     for n:=0 to Params.Count-1 do
       if SameText(Params.Names[n],'sel_'+Kind) and (Params.ValueFromIndex[n]=OldId) then Exit(True);
   end;
-  function InsertRow(const Into:string; O:TJSONObject; const SortExpr:string):string;
-  var n:Integer; Cols,Vals,Key:string;
-  begin
-    Cols:=''; Vals:='';
-    for n:=0 to O.Count-1 do
+  function InsertRow(const Into:string; O:TJSONObject; const SortExpr:string;Before:TJSONObject=nil):string;
+  var n:Integer; Cols,Vals,Key,Model,PatchSql,Envelope:string;Patch:TJSONObject;Rows:TWLRows;
+    function ValueSql(const Name:string;Value:TJSONData):string;
     begin
-      if n>0 then begin Cols:=Cols+','; Vals:=Vals+','; end;
-      Key:=O.Names[n]; Cols:=Cols+'"'+StringReplace(Key,'"','""',[rfReplaceAll])+'"';
-      if (Key='sort') and (SortExpr<>'') then Vals:=Vals+SortExpr
-      else if (Into='cards') and (Key='cardNumber') then
-        Vals:=Vals+'(SELECT COALESCE(MAX(cardNumber),0)+1 FROM cards WHERE '+EqualField(O,'boardId')+')'
-      else Vals:=Vals+SqlJsonValue(O.Items[n]);
+      if (Name='sort') and (SortExpr<>'') then Exit(SortExpr);
+      if (Into='cards') and (Name='cardNumber') then
+        Exit('(SELECT COALESCE(MAX(cardNumber),0)+1 FROM cards WHERE '+EqualField(O,'boardId')+')');
+      Result:=SqlJsonValue(Value);
     end;
-    Result:='INSERT INTO '+Into+'('+Cols+') VALUES('+Vals+'); ';
+  begin
+    Cols:='';Vals:='';Envelope:='';Patch:=nil;
+    try
+      if (Before<>nil) and (Before.Find('_wl_source') is TJSONString) then
+      begin
+        Model:=Models.Values[Into];
+        if Model='' then
+        begin
+          Rows:=T.Db.Query('SELECT spec FROM _wl_models WHERE name='+q(Into)+';');
+          if Length(Rows)<>1 then raise Exception.Create('Missing clone model');
+          Model:=Rows[0][0];Models.Values[Into]:=Model;
+        end;
+        Patch:=CloneRootPatch(Before.Get('_wl_source',''),Model,Before,O,SortExpr<>'',Into='cards');
+        PatchSql:='json_object(';
+        for n:=0 to Patch.Count-1 do
+        begin
+          if n>0 then PatchSql:=PatchSql+',';
+          PatchSql:=PatchSql+q(Patch.Names[n])+','+ValueSql(Patch.Names[n],Patch.Items[n]);
+        end;
+        PatchSql:=PatchSql+')';
+        Envelope:='json_object(''_wl_clone'',1,''source'','+SqlJsonValue(O.Find('_wl_source'))+',''columns'','+PatchSql+')';
+      end;
+      for n:=0 to O.Count-1 do
+      begin
+        if n>0 then begin Cols:=Cols+',';Vals:=Vals+',';end;
+        Key:=O.Names[n];Cols:=Cols+'"'+StringReplace(Key,'"','""',[rfReplaceAll])+'"';
+        if (Key='_wl_source') and (Envelope<>'') then Vals:=Vals+Envelope
+        else Vals:=Vals+ValueSql(Key,O.Items[n]);
+      end;
+      Result:='INSERT INTO '+Into+'('+Cols+') VALUES('+Vals+'); ';
+    finally Patch.Free;end;
   end;
 begin
   Result:=False; Data:=TJSONObject(Graph.Find('data')); Maps:=TJSONObject.Create;
-  Used:=TStringList.Create; Copied:=TStringList.Create;
+  Used:=TStringList.Create; Copied:=TStringList.Create;Models:=TStringList.Create;
   try
     try
       // Allocate every map before inserting any row so forward/parent/cover references work.
@@ -536,7 +569,7 @@ begin
             Expr:='';
             if (Scope<>'') and (Row.Find('sort')<>nil) then
               Expr:='(SELECT COALESCE(MAX(sort),-1)+1 FROM '+TableName+' WHERE '+Scope+')';
-            Sql:=Sql+InsertRow(TableName,Row,Expr);
+            Sql:=Sql+InsertRow(TableName,Row,Expr,Original);
             if (TableName='cards') or (TableName='lists') or (TableName='swimlanes') then
             begin
               Activity:=TJSONObject.Create;
@@ -562,7 +595,7 @@ begin
     except Result:=False; end;
   finally
     if not Result then for k:=0 to Copied.Count-1 do DeleteFile(Copied[k]);
-    Copied.Free; Used.Free; Maps.Free;
+    Models.Free;Copied.Free; Used.Free; Maps.Free;
   end;
 end;
 

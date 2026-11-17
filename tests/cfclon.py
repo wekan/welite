@@ -4,6 +4,7 @@ import copy
 import sqlite3
 from urllib.parse import urlencode,parse_qs,urlsplit
 from layout import Forms
+from clroots import run as check_root_presence
 from wire import DateMs,Long,Binary,ObjectId,Timestamp,Regex,encode
 
 
@@ -48,6 +49,12 @@ def run_shared(request,client,db,token):
                     if entry['cardId']==cid:entry['cardId']=added[0]['_id']
             assert encode(dict(value=added[0][name]))==encode(dict(value=value)),(name,added[0],source_card)
 
+        deliberate={'_id','title','createdAt','modifiedAt','dateLastActivity','sort','cardNumber','members','assignees','labelIds','customFields','cardDependencies'}
+        for name in (set(source_card)|set(added[0]))-deliberate:
+            assert (name in added[0])==(name in source_card),(name,added[0],source_card)
+            value=source_card[name]
+            if name in ['parentId','linkedId'] and type(value) is str and value==cid:value=added[0]['_id']
+            assert encode(dict(value=added[0][name]))==encode(dict(value=value)),(name,added[0],source_card)
         assert encode(added[0]['opaque'])==encode(source_card['opaque']),{key:(encode(dict(value=value)).hex(),encode(dict(value=added[0]['opaque'][key])).hex()) for key,value in source_card['opaque'].items() if encode(dict(value=value))!=encode(dict(value=added[0]['opaque'][key]))}
         return added[0]
     try:
@@ -111,9 +118,10 @@ def run_shared(request,client,db,token):
         update('cards',cid,dict(members=[Regex('u','')]));clone(500)
         update('cards',cid,dict(members=['u','external-user'],customFields=[dict(_id=field,value=None,unknown=dict(customFieldId='deleted-field',value='Hidden relation metadata'))]));clone(403)
         update('cards',cid,dict(customFields=[dict(_id=field,value='original')]))
+        update('cards',cid,dict(userId=None,type=None,archived=None,description=None,requestedBy=Long(9007199254740993),spentTime=-0.0,endAt=DateMs(-9223372036854775808),parentId=Regex(cid,'')));clone(302)
         # A child selected through the parent graph remaps forward/back references.
         child='clone-child'
-        assert client.command({'insert':'cards','documents':[dict(_id=child,boardId=board,listId='clone-list',parentId=cid,userId=uid,title='Clone child',cardDependencies=[dict(cardId=cid,type='related-to',unknown=opaque)])]})['n']==1
+        assert client.command({'insert':'cards','documents':[dict(_id=child,boardId=board,listId='clone-list',parentId=cid,title='Clone child',cardDependencies=[dict(cardId=cid,type='related-to',unknown=opaque)])]})['n']==1
         update('cards',cid,dict(cardDependencies=[dict(cardId=child,type='related-to',unknown=opaque)]))
         status,_,body=request('GET','/board?'+urlencode(dict(id=board,sessionId=session)));assert status==200
         parser=Forms();parser.feed(body.decode());form=parser.forms[-1][1]
@@ -121,12 +129,13 @@ def run_shared(request,client,db,token):
         status,_,body=request('POST','/board/move',urlencode(dict(form,action='clone',sel_card=cid)));assert status==302,(status,body)
         added=[row for row in cards() if row['_id'] not in old];assert len(added)==2,added
         parent_copy=next(row for row in added if row['title']=='Clone card Copy');child_copy=next(row for row in added if row['title']=='Clone child')
-        assert child_copy['parentId']==parent_copy['_id']
+        assert child_copy['parentId']==parent_copy['_id'] and 'userId' not in child_copy and 'type' not in child_copy
         assert parent_copy['cardDependencies'][0]['cardId']==child_copy['_id']
         assert child_copy['cardDependencies'][0]['cardId']==parent_copy['_id']
         for row in added:
             assert encode(row['cardDependencies'][0]['unknown'])==encode(client.find('cards',cid)[0]['cardDependencies'][0]['unknown'])
         assert all(encode(client.find('cards',key)[0])==value for key,value in originals.items())
+        check_root_presence(request,client,db,board,session)
         print('PASS: shared cloned typed managed values/metadata/presence and selected/external dependency remapping')
         print('PASS: shared cloned unknown root BSON types/bits/order and missing ownership refusal')
         print('PASS: shared HTML clone ordinary/protected/null/admin boundaries, ignored uncopied history, role/flag revocation, injected destination values and exact source/transaction rollback')

@@ -1420,9 +1420,45 @@ rollback. The existing SJSON source oracle also passes using local Go 1.27.3 wit
 only its temporary probe module's directive lowered from 1.27.4; the declared
 1.27.4 toolchain itself was not verified. No maintained Go source/module is edited.
 
-Mapped-field presence, remaining legacy relation forms, reference/lifecycle
-details and import permissions remain unfinished. Root seed support does not
-establish complete clone fidelity.
+Remaining legacy relation forms, reference/lifecycle details and import
+permissions remain unfinished. Root seed support does not establish complete
+clone fidelity; mapped root presence is handled by the explicit patch below.
+
+## Mapped clone root fields
+
+Shared root clones build a partial column patch from captured typed source and
+intentional clone edits. IDs, declared creation/modification/activity timestamps,
+selected root titles, order/counters and changed canonical string references are
+written. Other mapped fields are left out, so SQL view defaults cannot materialize
+missing values or replace explicit nulls. Existing BSON type/bits and nested parent
+presence remain intact, even when an old source lacks a now-required model field.
+Reference lookalikes with nonstring BSON schemas retain their original identity.
+
+An insert-only `_wl_source` envelope contains exactly `_wl_clone: 1`, the typed
+source string and a `columns` object. `wl_model` validates this explicit envelope
+and applies clone projection to its partial patch. It requires a canonical string
+source ID, a distinct nonempty string new ID and known model columns. Managed
+paths are still stripped during root creation and copied in the separate guarded
+card-relation stage. Existing root-view reference/unique checks run on the computed
+clone document. Ordinary inserts retain their original defaults/validation, source
+seed updates stay read-only, and no new columns or download keys are introduced.
+A real typed source field named `_wl_clone` remains ordinary data because its root
+has BSON metadata; it is not interpreted as an envelope.
+
+Shared recursive child collection also checks the actual BSON string schema of
+`parentId`. A Regex pattern matching a selected parent is not a child link. Native
+parent links keep their SQL behavior, while failed selection-ID queries now deny
+graph collection. Typed scope checks for other selection references remain open.
+
+`tests/clpres.py` verifies normal/checked patches, nested null/missing parents,
+unchanged types, ID/envelope rejection and actual TEXT/JSONB SQL execution/rollback.
+`tests/ferroot.py` verifies that clone envelopes still hit actual root-view foreign
+reference and unique checks while ordinary inserts retain defaults. Live HTTP
+`tests/cfclon.py` and `tests/clroots.py` cover source absence/null/BSON preservation,
+nonstring parent identity, missing required child fields and lane clones containing
+swimlanes/lists/cards/checklists/items/comments/attachments. They verify remapped
+references, typed nested list settings and unchanged attachment bytes on both SQL
+backends. Broader source/lifecycle parity is still unfinished.
 
 ## Typed managed card clone relations
 
@@ -1456,8 +1492,8 @@ of failed copy transactions in both build modes.
 `tests/cfclon.py` exercises real shared HTTP/Mongo with Date/Long/Boolean/array/
 Binary/Timestamp/Regex/special-double values under a text definition, typed row
 extras, parent-child dependencies, malformed/duplicate keys, hidden metadata and
-triggered permission rollback. These paths run on both SQL backends; mapped root
-field presence and broader clone lifecycle behavior are still unfinished.
+triggered permission rollback. These paths run on both SQL backends; remaining
+legacy forms and broader clone lifecycle behavior are still unfinished.
 
 ## Remaining before the checklist can be checked
 
