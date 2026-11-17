@@ -25,7 +25,7 @@ begin
 end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
-  Writable:Boolean; Back,Align,Map,Url,Color,CellText:string; Occupied:TWLRows;
+  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText:string; Occupied:TWLRows;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -35,7 +35,8 @@ begin
   if not BoardCanRead(Db,S.UserId,BoardId) then Exit;
   B:=Db.Query('SELECT title,color FROM boards WHERE id='+QuotedStr(BoardId)+';');
   Writable:=BoardCanWrite(Db,S.UserId,BoardId);
-  if SameText(Dir,'rtl') then Align:='right' else Align:='left';
+  if SameText(Dir,'rtl') then begin Align:='right'; CellDir:='rtl'; end
+  else begin Align:='left'; CellDir:='ltr'; end;
   Back:='/board?id='+HTTPEncode(BoardId);
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><p><a href="'+
     HtmlAttr(SessionUrl('/',S))+'">All boards</a></p>';
@@ -45,7 +46,7 @@ begin
   if Y<1 then Y:=1;
   if (Length(Lanes)>0) and (Y>Length(Lanes)) then Y:=Length(Lanes);
   Width:=0;
-  Map:='<table align="right" border="1" cellpadding="3" cellspacing="0" summary="Board minimap">';
+  Map:='<table dir="ltr" align="right" border="1" cellpadding="3" cellspacing="0" summary="Board minimap">';
   for MapY:=0 to High(Lanes) do
   begin
     MapLists:=Db.Query('SELECT id,title FROM lists WHERE boardId='+QuotedStr(BoardId)+
@@ -56,8 +57,9 @@ begin
       if (Width>0) and (X>Width) then X:=Width;
     end;
     Map:=Map+'<tr>';
-    for MapX:=0 to High(MapLists) do
+    for j:=0 to High(MapLists) do
     begin
+      if Align='right' then MapX:=High(MapLists)-j else MapX:=j;
       Occupied:=Db.Query('SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[MapY][0])+' AND listId='+QuotedStr(MapLists[MapX][0])+
         ' AND archived=0 LIMIT 1;');
@@ -105,12 +107,12 @@ begin
     Lists:=Db.Query('SELECT id,title,color FROM lists WHERE boardId='+QuotedStr(BoardId)+
       ' AND (swimlaneId='+QuotedStr(Lanes[i][0])+' OR swimlaneId='''') AND archived=0 ORDER BY sort,id;');
     if Length(Lists)=0 then begin Result:=Result+'<p>No lists yet.</p>'; Continue; end;
-    Result:=Result+'<table width="100%" border="1" cellpadding="5" cellspacing="0"><tr>';
+    Result:=Result+'<table dir="ltr" width="100%" border="1" cellpadding="5" cellspacing="0"><tr>';
     for j:=0 to High(Lists) do
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
       if not AllItems and (c<>X-1) then Continue;
-      Result:=Result+'<th align="'+Align+'"'+BgColorAttr(Lists[c][2])+'>'+
+      Result:=Result+'<th dir="'+CellDir+'" align="'+Align+'"'+BgColorAttr(Lists[c][2])+'>'+
         Selection('list',Lists[c][0])+HtmlEncode(Lists[c][1])+'</th>';
     end;
     Result:=Result+'</tr><tr>';
@@ -118,7 +120,7 @@ begin
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
       if not AllItems and (c<>X-1) then Continue;
-      Result:=Result+'<td valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'" data-lane="'+HtmlAttr(Lanes[i][0])+'">';
+      Result:=Result+'<td dir="'+CellDir+'" valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'" data-lane="'+HtmlAttr(Lanes[i][0])+'">';
       Cards:=Db.Query('SELECT id,title,color,description FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[i][0])+' AND listId='+QuotedStr(Lists[c][0])+
         ' AND archived=0 ORDER BY sort,id;');

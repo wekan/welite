@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Mirror board columns and minimap once
+
+- Prevent inherited RTL table direction from reversing the board's already-reversed
+  source columns a second time. Keep explicit RTL text direction in list headers
+  and card cells; emit minimap columns in the same structural order as the board.
+  Logical list IDs and minimap coordinates stay unchanged.
+- Reproduce the wrong physical column placement in no-JavaScript/no-cookie Chromium,
+  then verify the first logical list and its minimap link both appear on the right.
+  The complete linked-backend HTTP/browser suite passes after the fix.
+- Directional move semantics, viewport navigation labels and Designer widget arrows
+  still require the remaining RTL audit; retro hardware is not verified here.
+
 ## 2026-11-17 Keep RTL keypad buttons in physical order
 
 - Give the shared movement keypad an explicit left-to-right table direction so

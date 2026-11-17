@@ -410,3 +410,6 @@ reader and form tests exercise the updated labels without a translation service.
 The Arabic navigation browser regression also measures the shared keypad: left,
 down and right must appear in physical order, with up above down, under an RTL
 page. It reproduces inherited table reversal without JavaScript or cookies.
+
+The same browser regression compares physical RTL board-column and minimap-link
+positions: the first logical list appears on the right in both tables.
