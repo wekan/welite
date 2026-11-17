@@ -21,6 +21,20 @@ function otp(secret,counter) {
     });
     const page=await context.newPage(); const base=process.argv[2];
     await page.goto(base+'/sign-in');
+    const languages=page.locator('select[name=lang]');
+    if (await languages.locator('option[value=fi]').count()) {
+      await languages.selectOption('fi');
+      await page.locator('form[method=GET] input[type=submit]').click();
+      assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
+      assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
+      assert.equal(await page.locator('html').getAttribute('lang'),'fi');
+      assert.equal(await page.locator('select[name=lang]').inputValue(),'fi');
+      assert.match(await page.locator('body').innerText(),/Käyttäjätunnus/);
+      await page.locator('select[name=lang]').selectOption('ar');
+      await page.locator('form[method=GET] input[type=submit]').click();
+      assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
+      await page.goto(base+'/sign-in');
+    }
     await page.getByRole('link',{name:'Set up one-time codes'}).click();
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
@@ -36,10 +50,12 @@ function otp(secret,counter) {
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
     await page.locator('input[name=code]').fill(otp(secret,counter+1));
+    const chosenLanguage=await page.locator('select[name=lang]').inputValue();
     await page.getByRole('button',{name:/^(Sign in|Log In)$/,exact:true}).click();
     await page.waitForURL(url=>url.searchParams.has('sessionId'));
     assert.match(await page.locator('body').innerText(),/Signed in as browser-enroll/);
-    assert.deepEqual([...new URL(page.url()).searchParams.keys()],['sessionId']);
+    assert.deepEqual([...new URL(page.url()).searchParams.keys()],['sessionId','lang']);
+    assert.equal(new URL(page.url()).searchParams.get('lang'),chosenLanguage);
     assert.equal((await context.cookies()).length,0);
     console.log('PASS: required enrollment, confirmation and sign-in in Chromium with JavaScript disabled and no Cookie headers');
     await context.close();

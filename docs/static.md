@@ -110,3 +110,11 @@ create-account keys. It emits `lang`/`dir`, `Content-Language` and
 `Vary: Accept-Language`, keeps language in its POST query, and works without scripts
 or cookies. Failed-login messages, enrollment flows, other application surfaces and
 language pickers/navigation still need localization; the checklist remains open.
+
+The sign-in picker is a separate GET form containing only `lang` and its apply
+button; native names and option values are HTML-escaped. Failed login re-renders
+the translated form with no entered credential values. Successful sign-in carries
+a valid explicit language in the session redirect; it does not change stored
+profile preferences. Registration/enrollment links and general navigation still
+need language propagation. The generic failed-login message remains English until
+remaining application messages receive translation keys.

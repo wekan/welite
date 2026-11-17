@@ -348,3 +348,9 @@ language retention and stable credential field names, without scripts/cookies.
 `WELITE_UI=1 python3 tests/enrhttp.py` also drives the translated English form through
 required-factor setup/login in Chromium with JavaScript/cookies disabled when
 `WELITE_I18N` points at the installed translations.
+
+Sign-in language coverage also verifies every picker option/native name/selected
+state, failed-retry credential secrecy, successful redirect language and hostile
+option names. The no-JavaScript/no-cookie Chromium enrollment test submits the
+Finnish and Arabic picker before its setup/login flow, then checks the chosen
+language survives the login redirect.

@@ -287,7 +287,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Catalog conversion now accepts current compact and legacy WeKan metadata, publishes matching browser/strict-JSON catalogs for 146 installed languages, uses native names/direction and excludes broken/missing assets without changing translation text.
   Server catalog loading now validates disk/embedded assets; language negotiation honors explicit/profile/weighted-header precedence, aliases and parent fallback. Board and Designer direction use catalog metadata, including live Mongo profile changes, with both-backend HTTP and all-language kernel tests.
   Per-page translation readers now preserve UTF-8/literal tokens and use English/explicit fallback. Sign-in GET labels, HTML language/direction and response headers render from existing translations, retaining the selected language in its POST action; all installed languages pass both-backend HTTP checks.
-  Remaining: import the 99 additional source languages with portable filenames, translate remaining pages/errors/enrollment flows, add language pickers/navigation-state preservation and direction across the remaining UI.
+  Sign-in now offers a native-name GET language picker, retains language/RTL on failed retry without echoing credentials, and carries valid choices into successful session redirects without changing profiles. Both-backend HTTP and no-JS/no-cookie Chromium cover the picker and state.
+  Remaining: import the 99 additional source languages with portable filenames, translate remaining pages/errors/enrollment flows, propagate language through registration/enrollment/general navigation and apply direction across the remaining UI.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.
 - [ ] Verify embedded assets and supported cross-platform builds.

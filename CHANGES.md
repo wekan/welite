@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Select and retain sign-in language
+
+- Add a plain GET language picker using installed native names and the selected
+  locale. Escape option names/values and apply labels, with no onchange script,
+  cookies or credential fields in the language-selection form.
+- Re-render the translated form after failed login without reflecting username,
+  password or OTP. Retain its locale and RTL metadata for retry. Keep a valid
+  explicit choice in the successful session redirect without writing profile data.
+- Verify every installed option, selected state, native names, credential secrecy,
+  redirect state and hostile option/text escaping on linked/CLI HTTP backends.
+  Chromium checks exercise Finnish/Arabic selection without JavaScript/cookies.
+- Language propagation through enrollment/registration and general navigation,
+  remaining translated messages/pages and missing language assets remain open.
+
 ## 2026-11-17 Render translated sign-in labels
 
 - Add a per-page translation reader for the selected installed language and English

@@ -135,7 +135,22 @@ begin
   SendHtml(aResponse, Page32('WeKan-Lite', Body));
 end;
 
-function SignInForm(Request:TRequest;Response:TResponse):string;
+function LanguagePicker(const Selected:TWLLanguage;Words:TWLTranslator):string;
+var i:Integer;Language:TWLLanguage;
+begin
+  Result:='<form method="GET" action="/sign-in"><label>'+HtmlEncode(Words.Text('language','Language'))+
+    ' <select name="lang">';
+  for i:=0 to LanguageCount-1 do
+  begin
+    Language:=LanguageAt(i);
+    Result:=Result+'<option value="'+HtmlAttr(Language.Tag)+'"';
+    if Language.Tag=Selected.Tag then Result:=Result+' selected="selected"';
+    Result:=Result+'>'+HtmlEncode(Language.Name)+'</option>';
+  end;
+  Result:=Result+'</select></label> <input type="submit" value="'+HtmlAttr(Words.Text('apply','Apply'))+'"></form>';
+end;
+
+function SignInForm(Request:TRequest;Response:TResponse;const Message:string=''):string;
 var Language:TWLLanguage;Words:TWLTranslator;Title,Dir,Tag:string;
 begin
   Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
@@ -145,7 +160,8 @@ begin
     if Language.Rtl then Dir:='rtl' else Dir:='ltr';
     Response.SetCustomHeader('Content-Language',StringReplace(Tag,'_','-',[rfReplaceAll]));
     Response.SetCustomHeader('Vary','Accept-Language');
-    Result:=PageDir(Title,'<h1>'+HtmlEncode(Title)+'</h1>'+LineEnding+
+    Result:=PageDir(Title,LanguagePicker(Language,Words)+'<h1>'+HtmlEncode(Title)+'</h1>'+LineEnding+
+      '<p>'+HtmlEncode(Message)+'</p>'+LineEnding+
       '<form method="POST" action="/sign-in?lang='+HtmlAttr(Tag)+'">'+LineEnding+
       '  '+HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+LineEnding+
       '  '+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+LineEnding+
@@ -163,6 +179,7 @@ var
   Username, Password: string;
   Proof: TWLLoginProof;
   S: TWLSession;
+  Language:TWLLanguage;Location:string;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
 
@@ -182,12 +199,12 @@ begin
       if S.SessionId='' then
       begin aResponse.Code:=500; aResponse.Content:='Could not create session'; aResponse.SendContent; Exit; end;
       aResponse.Code:=302;
-      aResponse.SetCustomHeader('Location',WithSessionId('/',S.SessionId));
+      Location:=WithSessionId('/',S.SessionId);
+      if FindLanguage(aRequest.QueryFields.Values['lang'],Language) then Location:=Location+'&lang='+Language.Tag;
+      aResponse.SetCustomHeader('Location',Location);
       aResponse.SendContent;Exit;
     finally Proof.Free;end;
-    SendHtml(aResponse, Page32('Sign in',
-      '<p>Invalid login.</p><p><a href="/sign-in">Try again</a>' +
-      ' | <a href="/two-factor/setup">Set up one-time codes</a> | <a href="/register">Register</a></p>'));
+    SendHtml(aResponse,SignInForm(aRequest,aResponse,'Invalid login.'));
     Exit;
   end;
 

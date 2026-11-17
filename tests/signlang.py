@@ -9,7 +9,7 @@ import socket
 import subprocess
 import tempfile
 import time
-from urllib.parse import quote
+from urllib.parse import quote,urlencode,urlsplit,parse_qs
 root=Path(__file__).resolve().parents[1]
 catalog=json.loads((root/'i18n/locales.jsn').read_text())
 english=json.loads((root/'i18n/data/en.jsn').read_text())
@@ -20,11 +20,13 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
         assert result.returncode==0,result.stdout+result.stderr
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
         env=dict(os.environ,WELITE_PORT=str(port),WELITE_DATA=str(out/'data'),WELITE_I18N=str(root/'i18n'),WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_DESIGNER=str(root/'src/designer.sql'),WELITE_SHARED='0')
-        for key in ['WELITE_ENTROPY_FILE','WELITE_SHORT_NAMES','WELITE_SQLITE_EXT']:env.pop(key,None)
-        def request(tag):
+        for key in ['WELITE_ENTROPY_FILE','WELITE_SHORT_NAMES','WELITE_SQLITE_EXT','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:env.pop(key,None)
+        def request(tag='',method='GET',data=None,path=None):
             con=http.client.HTTPConnection('127.0.0.1',port,timeout=5)
             try:
-                con.request('GET','/sign-in?lang='+quote(tag),headers={'Host':'localhost'})
+                headers={'Host':'localhost'}
+                if data is not None:headers['Content-Type']='application/x-www-form-urlencoded'
+                con.request(method,path or '/sign-in?lang='+quote(tag),urlencode(data) if data is not None else None,headers=headers)
                 response=con.getresponse();return response.status,dict(response.getheaders()),response.read().decode()
             finally:con.close()
         with (out/'http.log').open('w+') as log:
@@ -47,11 +49,24 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                         expected=html.escape(local.get(key) or english[key],quote=True).replace('&#x27;',"'")
                         assert expected in body,(row['tag'],key,expected)
                     assert 'action="/sign-in?lang='+row['tag']+'"' in body
+                    assert '<form method="GET" action="/sign-in">' in body
+                    assert '<option value="'+row['tag']+'" selected="selected">' in body
+                    assert html.escape(row['name'],quote=True).replace('&#x27;',"'") in body
                     assert '<script' not in body.lower()
                     for field in ['username','password','code']:assert 'name="'+field+'"' in body
+                wrong='wrongsecret-sensitive'
+                status,headers,body=request('ar','POST',dict(username='private-username',password=wrong))
+                assert status==200 and headers['Content-Language']=='ar' and 'dir="rtl"' in body
+                assert 'action="/sign-in?lang=ar"' in body and wrong not in body and 'private-username' not in body
+                status,_,_=request(method='POST',path='/register',data=dict(username='user',password='test-password',confirm='test-password'))
+                assert status==302
+                status,headers,_=request('fi','POST',dict(username='user',password='test-password'))
+                assert status==302
+                location=parse_qs(urlsplit(headers['Location']).query)
+                assert location['lang']==['fi'] and 'sessionId' in location and set(location)=={'lang','sessionId'}
                 app.terminate();assert app.wait(timeout=8)==0
                 fixture=out/'i18n';(fixture/'data').mkdir(parents=True)
-                en=next(row for row in catalog if row['tag']=='en')
+                en=dict(next(row for row in catalog if row['tag']=='en'),name='<script>native</script>')
                 (fixture/'locales.jsn').write_text(json.dumps([en]))
                 hostile=dict(english,username='<script>alert("label")</script>')
                 hostile['log-in']='" onfocus="alert(1)'
@@ -71,7 +86,7 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                 parsed=Markup();parsed.feed(body)
                 assert 'script' not in parsed.tags and '<script>' not in body
                 assert all('onfocus' not in fields for fields in parsed.inputs)
-                assert next(fields for fields in parsed.inputs if fields.get('type')=='submit')['value']==hostile['log-in']
+                assert any(fields.get('type')=='submit' and fields.get('value')==hostile['log-in'] for fields in parsed.inputs)
                 assert '&lt;script&gt;' in body
                 print('PASS:',backend,'all installed sign-in translations, escaped labels, language/direction headers, preserved form language and no scripts/cookies')
             finally:
