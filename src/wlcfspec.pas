@@ -68,7 +68,7 @@ begin
   finally CopyValue.Free;end;
 end;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
-const Flags:array[0..4] of string=('showOnCard','automaticallyOnCard','alwaysOnCard','showLabelOnMiniCard','showSumAtTopOfList');
+const Flags:array[0..6] of string=('showOnCard','automaticallyOnCard','alwaysOnCard','showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly');
   Keys:array[0..2] of string=('currencyCode','stringtemplateFormat','stringtemplateSeparator');
 var Rows,Children:TWLRows;Settings:TJSONObject;Boards,Items:TJSONArray;TypeName:string;i:Integer;
 begin
@@ -79,17 +79,17 @@ begin
   if TypeName='view' then Exit(DocumentJson(ReadModelSjson(Db,'custom_fields','customFields',Identity)));
   if TypeName<>'table' then raise Exception.Create('Invalid definition source');
   Rows:=Db.Query('SELECT id,name,type,showOnCard,automaticallyOnCard,alwaysOnCard,showLabelOnMiniCard,showSumAtTopOfList,'+
-    'createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json,'+
+    'readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json,'+
     'currencyCode IS NULL,stringtemplateFormat IS NULL,stringtemplateSeparator IS NULL FROM custom_fields WHERE id='+QuotedStr(Identity)+';');
   if Length(Rows)=0 then Exit;
-  if (Length(Rows)<>1) or (Length(Rows[0])<>17) then raise Exception.Create('Ambiguous definition');
+  if (Length(Rows)<>1) or (Length(Rows[0])<>19) then raise Exception.Create('Ambiguous definition');
   try
     try
-      Settings:=ExactObject(Rows[0][13]);
+      Settings:=ExactObject(Rows[0][15]);
       for i:=0 to High(Keys) do
       begin
         if Settings.Find(Keys[i])<>nil then raise Exception.Create('Shadowed setting');
-        if Rows[0][14+i]='0' then Settings.Add(Keys[i],Rows[0][10+i]);
+        if Rows[0][16+i]='0' then Settings.Add(Keys[i],Rows[0][12+i]);
       end;
       if Settings.Find('dropdownItems')<>nil then raise Exception.Create('Shadowed dropdown');
       Children:=Db.Query('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(Identity)+' ORDER BY sort,id;');
@@ -101,8 +101,8 @@ begin
       end;
       Result:=TJSONObject.Create(['_id',Rows[0][0],'name',Rows[0][1],'type',Rows[0][2]]);
       for i:=0 to High(Flags) do Result.Add(Flags[i],StrToIntDef(Rows[0][3+i],0)<>0);
-      if Rows[0][8]<>'' then Result.Add('createdAt',Rows[0][8]);
-      if Rows[0][9]<>'' then Result.Add('modifiedAt',Rows[0][9]);
+      if Rows[0][10]<>'' then Result.Add('createdAt',Rows[0][10]);
+      if Rows[0][11]<>'' then Result.Add('modifiedAt',Rows[0][11]);
       Result.Add('settings',Settings);Settings:=nil;
       Boards:=TJSONArray.Create;Children:=Db.Query('SELECT boardId FROM custom_field_boards WHERE customFieldId='+QuotedStr(Identity)+' ORDER BY boardId;');
       for i:=0 to High(Children) do Boards.Add(Children[i][0]);Result.Add('boardIds',Boards);Boards:=nil;

@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Store custom-field permission flags for policy enforcement
+
+- Add native readOnly/adminOnly boolean columns with false defaults and boolean
+  constraints. Upgrade older native stores before caching tenant handles, keeping
+  existing rows, related data and previously stored flags intact.
+- Validate existing column shape and values before adding either missing column;
+  refuse incompatible columns, views and foreign source stores. Accept concurrent
+  successful upgrades without rebuilding the definition table.
+- Map shared flags as BSON booleans and include native flags in definition reads.
+  Regression tests cover preserved true flags, defaults, incompatible data, live
+  Mongo/SQL edits, exact unrelated BSON preservation and older adapter upgrades.
+- Normal/checked definition tests and both-backend native upgrade/live SQL/shared
+  HTTP suites pass, as do both native HTTP suites. All eight Windows x86/x64 linked/CLI disk/embedded
+  cross-build variants pass; the committed baseline fails the new policy fixture.
+- This supplies storage and metadata only. Value visibility/write enforcement,
+  definition input controls and HTML/export/clone/activity policy parity remain
+  unfinished in TODO.md.
+
 ## 2026-11-17 Map scalar custom-field settings through the definition API
 
 - Parse settings objects or form JSON, persist currency/template properties through

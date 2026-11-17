@@ -85,31 +85,32 @@ const ModelJson=
   'e":"TEXT","required":false,"default":null},{"name":"stringtemplateFormat","path":"settings.stringtemplateFormat","kind":"scalar","type":"TEXT","required":false,"default":null},{"na'+
   'me":"stringtemplateSeparator","path":"settings.stringtemplateSeparator","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"showOnCard","path":"showOnCard","kin'+
   'd":"bool","type":"INTEGER","required":false,"default":0},{"name":"automaticallyOnCard","path":"automaticallyOnCard","kind":"bool","type":"INTEGER","required":false,"default":0},{"n'+
-  'ame":"alwaysOnCard","path":"alwaysOnCard","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"showLabelOnMiniCard","path":"showLabelOnMiniCard","kind":"bool","typ'+
-  'e":"INTEGER","required":false,"default":0},{"name":"showSumAtTopOfList","path":"showSumAtTopOfList","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"createdAt"'+
-  ',"path":"createdAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":true,"default":null'+
-  '},{"name":"settings_json","path":"settings","kind":"extra","type":"TEXT","required":true,"default":"{}","exclude":["currencyCode","dropdownItems","stringtemplateFormat","stringtemp'+
-  'lateSeparator"]}],"managed":["boardIds","settings.dropdownItems"],"foreignKeys":[],"uniqueKeys":[]},{"table":"users","collection":"users","fields":[{"name":"id","path":"_id","kind"'+
-  ':"scalar","type":"TEXT","required":true,"default":null},{"name":"username","path":"username","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"isAdmin","path"'+
-  ':"isAdmin","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"loginDisabled","path":"loginDisabled","kind":"bool","type":"INTEGER","required":false,"default":0},'+
-  '{"name":"authenticationMethod","path":"authenticationMethod","kind":"scalar","type":"TEXT","required":true,"default":"password"},{"name":"createdThroughApi","path":"createdThroughA'+
-  'pi","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"heartbeat","path":"heartbeat","kind":"date","type":"TEXT","required":false,"default":null},{"name":"lastCo'+
-  'nnectionDate","path":"lastConnectionDate","kind":"date","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required"'+
-  ':true,"default":null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"services_json","path":"services","kind":"json","'+
-  'type":"TEXT","required":true,"default":"{}"},{"name":"profile_json","path":"profile","kind":"json","type":"TEXT","required":true,"default":"{}"}],"managed":["emails"],"foreignKeys"'+
-  ':[],"uniqueKeys":[["username"]]},{"table":"activities","collection":"activities","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"default":null},{'+
-  '"name":"activityType","path":"activityType","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","required":'+
-  'false,"default":null},{"name":"boardId","path":"boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"cardId","kind":"scalar","type":"TEX'+
-  'T","required":false,"default":null},{"name":"listId","path":"listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"swimlaneId","kind":'+
-  '"scalar","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"modifiedAt","pat'+
-  'h":"modifiedAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"data_json","path":"","kind":"extra","type":"TEXT","required":true,"default":"{}"}],"managed":['+
-  '],"foreignKeys":[],"uniqueKeys":[]},{"table":"attachments","collection":"attachments","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"default":nu'+
-  'll},{"name":"boardId","path":"meta.boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"meta.swimlaneId","kind":"scalar","type":"TEX'+
-  'T","required":false,"default":null},{"name":"listId","path":"meta.listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"meta.cardId","kind'+
-  '":"scalar","type":"TEXT","required":false,"default":null},{"name":"name","path":"name","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"type","path":"type","'+
-  'kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"size","path":"size","kind":"scalar","type":"INTEGER","required":false,"default":0},{"name":"storageBackend","'+
-  'path":"storageBackend","kind":"scalar","type":"TEXT","required":false,"default":"filesystem"},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","required":false,"defau'+
-  'lt":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null}],"managed":[],"foreignKeys":[],"uniqueKeys":[]}]';
+  'ame":"alwaysOnCard","path":"alwaysOnCard","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"readOnly","path":"readOnly","kind":"bool","type":"INTEGER","required'+
+  '":true,"default":0},{"name":"adminOnly","path":"adminOnly","kind":"bool","type":"INTEGER","required":true,"default":0},{"name":"showLabelOnMiniCard","path":"showLabelOnMiniCard","k'+
+  'ind":"bool","type":"INTEGER","required":false,"default":0},{"name":"showSumAtTopOfList","path":"showSumAtTopOfList","kind":"bool","type":"INTEGER","required":false,"default":0},{"n'+
+  'ame":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":tru'+
+  'e,"default":null},{"name":"settings_json","path":"settings","kind":"extra","type":"TEXT","required":true,"default":"{}","exclude":["currencyCode","dropdownItems","stringtemplateFor'+
+  'mat","stringtemplateSeparator"]}],"managed":["boardIds","settings.dropdownItems"],"foreignKeys":[],"uniqueKeys":[]},{"table":"users","collection":"users","fields":[{"name":"id","pa'+
+  'th":"_id","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"username","path":"username","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":'+
+  '"isAdmin","path":"isAdmin","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"loginDisabled","path":"loginDisabled","kind":"bool","type":"INTEGER","required":fal'+
+  'se,"default":0},{"name":"authenticationMethod","path":"authenticationMethod","kind":"scalar","type":"TEXT","required":true,"default":"password"},{"name":"createdThroughApi","path":'+
+  '"createdThroughApi","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"heartbeat","path":"heartbeat","kind":"date","type":"TEXT","required":false,"default":null}'+
+  ',{"name":"lastConnectionDate","path":"lastConnectionDate","kind":"date","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"'+
+  'TEXT","required":true,"default":null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"services_json","path":"services"'+
+  ',"kind":"json","type":"TEXT","required":true,"default":"{}"},{"name":"profile_json","path":"profile","kind":"json","type":"TEXT","required":true,"default":"{}"}],"managed":["emails'+
+  '"],"foreignKeys":[],"uniqueKeys":[["username"]]},{"table":"activities","collection":"activities","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"'+
+  'default":null},{"name":"activityType","path":"activityType","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"userId","path":"userId","kind":"scalar","type":"T'+
+  'EXT","required":false,"default":null},{"name":"boardId","path":"boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"cardId","kind":"sca'+
+  'lar","type":"TEXT","required":false,"default":null},{"name":"listId","path":"listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"swi'+
+  'mlaneId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"'+
+  'modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"data_json","path":"","kind":"extra","type":"TEXT","required":true,"default":"{'+
+  '}"}],"managed":[],"foreignKeys":[],"uniqueKeys":[]},{"table":"attachments","collection":"attachments","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":t'+
+  'rue,"default":null},{"name":"boardId","path":"meta.boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"meta.swimlaneId","kind":"sca'+
+  'lar","type":"TEXT","required":false,"default":null},{"name":"listId","path":"meta.listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"me'+
+  'ta.cardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"name","path":"name","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"type"'+
+  ',"path":"type","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"size","path":"size","kind":"scalar","type":"INTEGER","required":false,"default":0},{"name":"s'+
+  'torageBackend","path":"storageBackend","kind":"scalar","type":"TEXT","required":false,"default":"filesystem"},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","requir'+
+  'ed":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null}],"managed":[],"foreignKeys":[],"uniqueKeys":[]}]';
 const RelationJson=
   '[{"table":"board_labels","parent":"boards","parentKey":"boardId","path":"labels","scalar":false,"fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"d'+
   'efault":null},{"name":"name","path":"name","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"color","path":"color","kind":"scalar","type":"TEXT","required":tr'+

@@ -7,7 +7,7 @@ def run(client, sql):
     q=lambda value:"'"+value.replace("'","''")+"'"
     columns=['currencyCode','stringtemplateFormat','stringtemplateSeparator']
     document=dict(_id='settings-field',name='Settings',type='currency',boardIds=['board'],
-                  currencyCode='legacy root currency',stringtemplateFormat='legacy root format',
+                  readOnly=True,adminOnly=False,currencyCode='legacy root currency',stringtemplateFormat='legacy root format',
                   stringtemplateSeparator='legacy root separator',modifiedAt=DateMs(0),
                   settings=dict(currencyCode='EUR',stringtemplateFormat='__card__',stringtemplateSeparator=' / ',
                                 dropdownItems=[dict(_id='option',name='Option',unknown=DateMs(-1))],
@@ -17,6 +17,12 @@ def run(client, sql):
         actual=client.find('customFields','settings-field')[0]
         assert encode(actual)==encode(document),(actual,document)
     def read():return sql("SELECT currencyCode,stringtemplateFormat,stringtemplateSeparator FROM custom_fields WHERE id='settings-field';")
+    assert sql("SELECT readOnly,adminOnly FROM custom_fields WHERE id='settings-field';")==[['1','0']]
+    for name in ['readOnly','adminOnly']:
+        assert sql('UPDATE custom_fields SET '+name+"=1 WHERE id='settings-field';",'exec')=='ok'
+        document[name]=True;equal()
+        assert sql('UPDATE custom_fields SET '+name+"=0 WHERE id='settings-field';",'exec')=='ok'
+        document[name]=False;equal()
     observed=read()
     assert observed==[['EUR','__card__',' / ']],observed
     remainder=json.loads(sql("SELECT settings_json FROM custom_fields WHERE id='settings-field';")[0][0])
@@ -60,18 +66,19 @@ def run(client, sql):
     equal();assert encode(client.find('customFields','settings-invalid')[0])==encode(invalid)
     # Reinstall an adapter view/descriptor in the old flat shape, then upgrade it.
     current=sql("SELECT sql FROM sqlite_master WHERE type='view' AND name='custom_fields';")[0][0]
-    names=[row[1] for row in sql('PRAGMA table_info(custom_fields);') if row[1]!='settings_json']
+    names=[row[1] for row in sql('PRAGMA table_info(custom_fields);') if row[1] not in ['settings_json','readOnly','adminOnly']]
     old='CREATE VIEW custom_fields AS SELECT '+','.join('"'+name+'"' for name in names)+' FROM (SELECT '+current.split(' AS SELECT ',1)[1]+')'
     for key in columns:old=old.replace('$."settings"."'+key+'"','$."'+key+'"')
     assert old!=current
     spec=json.loads(sql("SELECT spec FROM _wl_models WHERE name='custom_fields';")[0][0])
-    spec['fields']=[field for field in spec['fields'] if field['name']!='settings_json']
+    spec['fields']=[field for field in spec['fields'] if field['name'] not in ['settings_json','readOnly','adminOnly']]
     for field in spec['fields']:
         if field['name'] in columns:field['path']=field['name']
     assert sql('DROP VIEW custom_fields; '+old+'; UPDATE _wl_models SET spec='+q(json.dumps(spec))+" WHERE name='custom_fields';",'exec')=='ok'
     assert read()==[['legacy root currency','legacy root format','legacy root separator']]
     assert sql('', 'install')=='ok'
     assert read()==[['JPY','__board__',' | ']];equal()
+    assert sql("SELECT readOnly,adminOnly FROM custom_fields WHERE id='settings-field';")==[['0','0']]
     assert json.loads(sql("SELECT settings_json FROM custom_fields WHERE id='settings-field';")[0][0])==remainder
     assert encode(client.find('customFields','settings-insert')[0])==encode(inserted)
     assert encode(client.find('customFields','settings-missing')[0])==encode(missing)

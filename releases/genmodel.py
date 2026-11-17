@@ -6,7 +6,7 @@ from pathlib import Path
 import sqlite3
 root=Path(__file__).resolve().parents[1]
 collections={'boards':'boards','swimlanes':'swimlanes','lists':'lists','cards':'cards','card_comments':'card_comments','checklists':'checklists','checklist_items':'checklistItems','custom_fields':'customFields','users':'users','activities':'activities','attachments':'attachments'}
-booleans=set('archived isOvertime starred wip_enabled wip_soft dueComplete showActivities showListOnMinicard showChecklistAtMinicard hideFinishedChecklistIfItemsAreHidden hideCheckedChecklistItems hideAllChecklistItems isFinished showOnCard automaticallyOnCard alwaysOnCard showLabelOnMiniCard showSumAtTopOfList isAdmin loginDisabled createdThroughApi'.split())
+booleans=set('archived isOvertime starred wip_enabled wip_soft dueComplete showActivities showListOnMinicard showChecklistAtMinicard hideFinishedChecklistIfItemsAreHidden hideCheckedChecklistItems hideAllChecklistItems isFinished showOnCard automaticallyOnCard alwaysOnCard showLabelOnMiniCard showSumAtTopOfList readOnly adminOnly isAdmin loginDisabled createdThroughApi'.split())
 managed={'boards':['labels','members','orgs','teams','domains'],'cards':['members','assignees','labelIds','customFields','cardDependencies'],'custom_fields':['boardIds','settings.dropdownItems'],'users':['emails']}
 db=sqlite3.connect(':memory:');db.executescript((root/'src/schema.sql').read_text())
 models=[]

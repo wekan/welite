@@ -237,6 +237,8 @@ CREATE TABLE custom_fields (
   showOnCard          INTEGER DEFAULT 0,
   automaticallyOnCard INTEGER DEFAULT 0,
   alwaysOnCard        INTEGER DEFAULT 0,
+  readOnly            INTEGER NOT NULL DEFAULT 0 CHECK(readOnly IN (0,1)),
+  adminOnly           INTEGER NOT NULL DEFAULT 0 CHECK(adminOnly IN (0,1)),
   showLabelOnMiniCard INTEGER DEFAULT 0,
   showSumAtTopOfList  INTEGER DEFAULT 0,
   createdAt           TEXT,

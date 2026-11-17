@@ -23,10 +23,10 @@ with tempfile.TemporaryDirectory(prefix='wlcfspec-',dir=os.environ['TMPDIR']) as
     native=Path(directory)/'native.db'
     with sqlite3.connect(native) as con:
         con.executescript((root/'src/schema.sql').read_text())
-        con.execute("INSERT INTO custom_fields(id,name,type,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json,createdAt,modifiedAt) VALUES('read','Legacy','dropdown','EUR','__card__','',?, '1970-01-01T00:00:00.000Z','1970-01-01T00:00:00.001Z')",(json.dumps(dict(jiraTimeField='remaining')),))
+        con.execute("INSERT INTO custom_fields(id,name,type,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json,readOnly,adminOnly,createdAt,modifiedAt) VALUES('read','Legacy','dropdown','EUR','__card__','',?, 1,1,'1970-01-01T00:00:00.000Z','1970-01-01T00:00:00.001Z')",(json.dumps(dict(jiraTimeField='remaining')),))
         con.executemany("INSERT INTO custom_field_boards VALUES('read',?)",[('b',),('a',)])
         con.executemany("INSERT INTO custom_field_dropdown_items(customFieldId,id,name,sort) VALUES('read',?,?,?)",[('one','漢',1),('two','Two',0)])
-    native_expected=dict(_id='read',name='Legacy',type='dropdown',showOnCard=False,automaticallyOnCard=False,alwaysOnCard=False,showLabelOnMiniCard=False,showSumAtTopOfList=False,createdAt='1970-01-01T00:00:00.000Z',modifiedAt='1970-01-01T00:00:00.001Z',boardIds=['a','b'],settings=dict(jiraTimeField='remaining',currencyCode='EUR',stringtemplateFormat='__card__',stringtemplateSeparator='',dropdownItems=[dict(_id='two',name='Two'),dict(_id='one',name='漢')]))
+    native_expected=dict(_id='read',name='Legacy',type='dropdown',showOnCard=False,automaticallyOnCard=False,alwaysOnCard=False,readOnly=True,adminOnly=True,showLabelOnMiniCard=False,showSumAtTopOfList=False,createdAt='1970-01-01T00:00:00.000Z',modifiedAt='1970-01-01T00:00:00.001Z',boardIds=['a','b'],settings=dict(jiraTimeField='remaining',currencyCode='EUR',stringtemplateFormat='__card__',stringtemplateSeparator='',dropdownItems=[dict(_id='two',name='Two'),dict(_id='one',name='漢')]))
     cases.append((dict(mode='read',path=str(native),id='read'),native_expected))
     cases.append((dict(mode='read',path=str(native),id='missing'),None))
     for mode,flags in [('normal',[]),('checked',['-Cr','-Co','-Ci','-Sa'])]:

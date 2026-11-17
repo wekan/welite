@@ -286,6 +286,15 @@ not merely a design document. Platform/browser claims require testing on those t
   Existing shared currency/template SQL columns now map to canonical nested settings paths, with live both-backend tests for two-way edits, missing-object creation, unknown BSON/dropdown preservation, incompatible-parent rollback and old-view upgrade. Legacy root properties remain intact. Full settings API mapping/validation and legacy-root normalization policy remain open alongside the definition lifecycle and migration work above.
   Unmapped settings now have a protected settings_json remainder beside the canonical currency/template columns and dropdown table. Shared scoped remainder writes preserve mapped fields and unchanged typed BSON; native fresh schemas and additive/concurrent upgrades retain existing data and reject invalid/conflicting/foreign stores. Both-backend unit/live SQL/HTTP checks cover JSON ownership, rollback, old-view upgrade and broader clone/import compatibility. Full settings API mapping/validation and legacy-root normalization remain open.
   Definition creation now maps scalar/remainder settings from JSON/form input and validates known strings, Jira IDs/enums, recursive JSON and UTF-16 length limits. Definition GET returns supported native metadata/reconstructed settings or typed shared source JSON. Normal/checked and both-backend native/shared HTTP tests cover round trips and rollback. Dropdown-array creation/presence, edit/delete lifecycle, adminOnly/readOnly field-policy parity and automatic-card policies remain open; dropdown payloads are explicitly refused while their creation contract is unfinished.
+  Native custom-field readOnly/adminOnly flags now have constrained boolean storage,
+  additive/concurrent upgrades and definition metadata reads. Shared SQL projects
+  and writes them as BSON booleans without changing unrelated source data; old
+  adapters acquire the columns on reinstall. Storage regression tests cover true
+  flags, defaults, invalid column/value refusal and preserved legacy relations.
+  Next: enforce field visibility and write permissions in API reads/mutations with
+  transaction-time role/definition rechecks; validate definition flag input, then
+  reconcile HTML, selection clone/export, activity and other value-bearing paths.
+  Storage/metadata support does not yet implement those permission boundaries.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
