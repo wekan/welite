@@ -4,25 +4,29 @@ unit wlboard;
 interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
-function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
+function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''):string;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
 uses wli18n,wllocale;
-function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
-var R:TWLRows; i,Count:Integer;
+function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;
+var R:TWLRows; i,Count:Integer;Words:TWLTranslator;Tag:string;
 begin
-  R:=Db.Query('SELECT id,title,color FROM boards WHERE archived=0 ORDER BY sort,id;');
-  Result:='<h2>Boards</h2><ul>'; Count:=0;
-  for i:=0 to High(R) do if BoardCanRead(Db,S.UserId,R[i][0]) then
-  begin
-    Inc(Count);
-    Result:=Result+'<li><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(R[i][0]),S))+
-      '">'+HtmlEncode(R[i][1])+'</a></li>';
-  end;
-  if Count=0 then Result:=Result+'<li>No boards available.</li>';
-  Result:=Result+'</ul>';
+  Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
+  Words:=TWLTranslator.Create(ResolveLanguage(Tag,SessionLanguage(Db,S),''));
+  try
+    R:=Db.Query('SELECT id,title,color FROM boards WHERE archived=0 ORDER BY sort,id;');
+    Result:='<h2>'+HtmlEncode(Words.Text('boards','Boards'))+'</h2><ul>'; Count:=0;
+    for i:=0 to High(R) do if BoardCanRead(Db,S.UserId,R[i][0]) then
+    begin
+      Inc(Count);
+      Result:=Result+'<li><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(R[i][0]),S))+
+        '">'+HtmlEncode(R[i][1])+'</a></li>';
+    end;
+    if Count=0 then Result:=Result+'<li>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</li>';
+    Result:=Result+'</ul>';
+  finally Words.Free;end;
 end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath:string):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;

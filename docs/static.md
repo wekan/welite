@@ -145,6 +145,14 @@ escaped and private controls/proof handling remain in the enrollment endpoints.
 Long setup instructions, titles, retry explanations and completion/policy messages
 still require dedicated translation keys.
 
+The home page resolves its viewer locale before rendering body captions, so
+header/profile-driven output matches the frame metadata. Board-list headings and
+empty states reuse `boards` / `no-items-message`; account/admin and authentication
+links reuse existing native keys. Board titles and usernames remain user content,
+HTML-escaped without translation. Board visibility and administrator links retain
+their existing access checks. All installed guest/member captions, profile/query/
+header isolation and no-JS/no-cookie navigation have HTTP/browser coverage.
+
 ### Navigation language state
 
 A validated explicit locale travels in generated navigation URLs and action/GET

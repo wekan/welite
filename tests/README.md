@@ -551,3 +551,11 @@ loader. It reports the known pinned-FPC metadata issue and compiles an ABI probe
 `WELITE_ARM_RUNNER` optionally executes that probe; runtime mapping fails with the
 current QEMU/16 KiB-page host, so a compile-only pass is not runtime acceptance.
 See `docs/cross.md` for clean compiler flags and linked upstream issue references.
+
+`homelang.py`, called by `admin.py`, checks all installed native home board/empty/
+auth captions, member/administrator views, profile/query/header precedence, private
+board exclusion, invalid/client-mismatched sessions, escaped titles and request
+isolation. With `WELITE_UI=1`, `homelang.js` checks Arabic/Finnish/Hebrew captions,
+roles, private-board visibility and translated sign-in navigation in Chromium with
+JavaScript disabled and Cookie headers removed. OTP/enrollment browser checks also
+assert account identity after the localized home label and chosen locale redirect.

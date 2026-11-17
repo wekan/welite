@@ -69,7 +69,7 @@ function otp(secret,counter) {
     const chosenLanguage=await page.locator('select[name=lang]').inputValue();
     await page.getByRole('button',{name:/^(Sign in|Log In)$/,exact:true}).click();
     await page.waitForURL(url=>url.searchParams.has('sessionId'));
-    assert.match(await page.locator('body').innerText(),/Signed in as browser-enroll/);
+    assert.match(await page.locator('body').innerText(),/Username: browser-enroll/);
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['sessionId','lang']);
     assert.equal(new URL(page.url()).searchParams.get('lang'),chosenLanguage);
     assert.equal((await context.cookies()).length,0);

@@ -105,7 +105,7 @@ var
   Rows: TWLRows;
   Body: string;
   i: Integer;
-  IsGAdmin: Boolean;Language:TWLLanguage;
+  IsGAdmin: Boolean;Language:TWLLanguage;Words:TWLTranslator;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
 
@@ -126,18 +126,23 @@ begin
   else S:=Default(TWLSession);
   S.LanguageTag:=RequestLanguageTag(aRequest);
 
-  Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
-  if IsGAdmin then
-    Body := Body + '<p><b>Tenant administrator</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
-            '<a href="' + HtmlAttr(SessionUrl('/admin',S)) + '">Admin Panel</a></p>' + LineEnding
-  else if S.Username <> '' then
-    Body := Body + '<p>Signed in as ' + HtmlEncode(S.Username) + '.</p>' + LineEnding;
-
-  Body:=Body+BoardListHtml(T.Db,S)+'<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">Sign in</a> | <a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Register</a></p>';
-  // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
-  Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
   Language:=ViewerLanguage(T.Db,S,aRequest);
-  SendHtml(aResponse,LanguagePage(aResponse,Language,'WeKan-Lite',Body));
+  Words:=TWLTranslator.Create(Language);
+  try
+    Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
+    if IsGAdmin then
+      Body := Body + '<p><b>'+HtmlEncode(Words.Text('admin','Admin'))+'</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
+              '<a href="' + HtmlAttr(SessionUrl('/admin',S)) + '">'+HtmlEncode(Words.Text('admin-panel','Admin Panel'))+'</a></p>' + LineEnding
+    else if S.Username <> '' then
+      Body := Body + '<p>'+HtmlEncode(Words.Text('username','Username'))+': ' + HtmlEncode(S.Username) + '</p>' + LineEnding;
+
+    Body:=Body+BoardListHtml(T.Db,S,Language.Tag)+'<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">'+
+      HtmlEncode(Words.Text('log-in','Sign in'))+'</a> | <a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">'+
+      HtmlEncode(Words.Text('register','Register'))+'</a></p>';
+    // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
+    Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
+    SendHtml(aResponse,LanguagePage(aResponse,Language,'WeKan-Lite',Body));
+  finally Words.Free;end;
 end;
 
 function LanguageUrl(Request:TRequest;const Url:string):string;

@@ -81,7 +81,7 @@ with tempfile.TemporaryDirectory(prefix='wlotphttp-',dir=os.environ['TMPDIR']) a
                 response=login('/sign-in',otp(center+1));assert response[0]==302,response
                 assert 'Set-Cookie' not in response[1]
                 web=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
-                assert b'Signed in as factor' in request('GET',response[1]['Location'])[2]
+                assert b'Username: factor' in request('GET',response[1]['Location'])[2]
                 assert login('/sign-in',otp(center+1))[0]==200,'Replay was accepted'
                 # Existing password-only accounts still use the same issuer and limiter.
                 assert login(username='plain')[0]==200
@@ -112,7 +112,7 @@ with tempfile.TemporaryDirectory(prefix='wlotphttp-',dir=os.environ['TMPDIR']) a
                 with sqlite3.connect(db) as con:
                     con.execute("UPDATE users SET services_json=json_set(services_json,'$.twoFactorAuthentication.secret','JBSWY3DPEHPK3PXP') WHERE id='factor'")
                 assert request('GET','/api/user?token='+api)[0]==401
-                assert b'Signed in as factor' not in request('GET','/?sessionId='+web)[2]
+                assert b'Username: factor' not in request('GET','/?sessionId='+web)[2]
                 print('PASS: '+backend+' public OTP web/form/JSON login, replay and rollback, shared durable limits, spoof denial, restart, password-only compatibility, required enrollment and factor revocation')
             finally:
                 if server is not None and server.poll() is None:stop()

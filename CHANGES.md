@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Translate native home-page captions
+
+- Resolve the viewer language before rendering the home body. Reuse existing
+  board/empty-state, account/admin and sign-in/register translations, escaping
+  all captions and retaining board title text and access checks.
+- Reproduce the English-only body under an Acehnese frame, then verify every
+  installed locale on guest/member home views. Check profile/query/header
+  precedence, administrator isolation, invalid/client-mismatched sessions,
+  private-board refusal, escaped titles and absence of request-state leakage.
+- Linked/CLI HTTP suites and no-JS/no-cookie Chromium home/navigation checks pass.
+  OTP/enrollment HTTP/browser flows retain account identity; update stale browser
+  assertions to select the login form and retain its validated locale URL.
+- Home captions are complete for installed assets; other application messages,
+  enrollment instructions, language assets and RTL/retro acceptance remain open.
+
 ## 2026-11-17 Verify ARM hard-float cross-builds and record runtime limits
 
 - Build a separate ARMHF compiler and matching EABIHF/VFPV3 runtime units. Reproduce
