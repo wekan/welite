@@ -58,9 +58,42 @@ with tempfile.TemporaryDirectory(prefix='wlcfpol-',dir=os.environ['TMPDIR']) as 
                         con.executemany('INSERT INTO card_custom_field_values VALUES(?,?,?)',[(card,row['_id'],'readable') for row in fields[:130]])
                     trace.write_text('');assert run([dict(export=True)])==['1'];full_calls=trace.stat().st_size
                     assert full_calls==empty_calls,(empty_calls,full_calls,'Per-value CLI subprocess regression')
+                    with sqlite3.connect(db) as con:
+                        for index in range(130):
+                            identity='batch-definition '+str(index)
+                            con.execute("INSERT INTO custom_fields(id,name,type,modifiedAt) VALUES(?,?,'text','now')",(identity,identity))
+                            con.execute('INSERT INTO custom_field_boards VALUES(?,?)',(identity,board))
+                    trace.write_text('');assert run([dict(export=True)])==['1']
+                    assert trace.stat().st_size==empty_calls,'Per-definition CLI subprocess regression'
+                    with sqlite3.connect(db) as con:
+                        con.execute("UPDATE custom_fields SET adminOnly=1 WHERE id LIKE 'batch-definition %'")
+                        con.execute('UPDATE board_members SET isAdmin=1')
+                    trace.write_text('');assert run([dict(export=True)])==['1']
+                    assert trace.stat().st_size==empty_calls+1,'Repeat board-admin query per private definition'
+                    with sqlite3.connect(db) as con:
+                        con.execute("UPDATE custom_fields SET adminOnly=0 WHERE id LIKE 'batch-definition %'")
+                        con.execute('UPDATE board_members SET isAdmin=0')
+
+                    with sqlite3.connect(db) as con:con.execute('UPDATE custom_fields SET adminOnly=1 WHERE id=?',('batch-definition 129',))
+                    assert run([dict(export=True)])==['0'],'A late unassigned private definition gates export'
+                    with sqlite3.connect(db) as con:
+                        con.execute('UPDATE custom_fields SET adminOnly=0 WHERE id=?',('batch-definition 129',))
+                        con.execute('PRAGMA ignore_check_constraints=ON')
+                        con.execute('UPDATE custom_fields SET settings_json=? WHERE id=?',('{broken','batch-definition 129'))
+                    assert run([dict(export=True)])==['0'],'Validate complete native settings even without values'
+                    with sqlite3.connect(db) as con:
+                        con.execute('PRAGMA ignore_check_constraints=ON')
+                        con.execute('UPDATE custom_fields SET settings_json=?,adminOnly=? WHERE id=?',('{}','false','batch-definition 129'))
+                    assert run([dict(export=True)])==['0'],'Malformed stored native flags cannot masquerade as false'
+
+
                 finally:
                     os.environ['PATH']=previous
-                    with sqlite3.connect(db) as con:con.execute('DELETE FROM card_custom_field_values')
+                    with sqlite3.connect(db) as con:
+                        con.execute('DELETE FROM card_custom_field_values')
+                        con.execute('UPDATE board_members SET isAdmin=0')
+                        con.execute("DELETE FROM custom_field_boards WHERE customFieldId LIKE 'batch-definition %'")
+                        con.execute("DELETE FROM custom_fields WHERE id LIKE 'batch-definition %'")
             # Correlate both identifiers: a later card must not borrow the first
             # card's readable definition, and other boards do not gate this one.
             second=card+' second';outside=card+' outside'

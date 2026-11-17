@@ -397,10 +397,16 @@ not merely a design document. Platform/browser claims require testing on those t
   documents are checked even for absent/null values. Normal/checked TEXT/JSONB
   linked/CLI tests cover corrupt/missing/duplicate sources, malformed rows and
   native fallback; 70 additional cards add no per-card CLI subprocesses.
-  The expanded CLI scope export now measures about 3.3 seconds locally after
-  value/source batching (earlier about 13 seconds); linked is about 0.07 seconds.
-  Remaining export batching: per-definition reads and bounded-memory handling
-  for very large source batches. The heavy fixture retains its targeted 30-second
+  Expanded CLI scope exports now measure about 2.5–2.9 seconds locally after
+  batching (earlier about 13 seconds); linked is about 0.07–0.08 seconds.
+  Board definition validation is now batched on both backends, with complete
+  shared BSON/cardinality/ownership checks and reused native settings validation.
+  Administration is checked once if any definition requires it. Stored Date/NaN
+  flags cannot become harmless JSON null; malformed native flags also deny.
+  Normal/checked TEXT/JSONB/native regressions and process counts verify that
+  adding 130 definitions adds no per-definition CLI database subprocesses.
+  Remaining export batching: bounded-memory handling for very large card and
+  definition source batches. The heavy fixture retains its targeted 30-second
   timeout; ordinary request timeouts retain defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,

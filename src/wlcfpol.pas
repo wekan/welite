@@ -201,34 +201,18 @@ begin
   end;
 end;
 function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
-var Policy:TFieldPolicy;Rows,Values:TWLRows;Definition:TJSONObject;Flag:TJSONData;i:Integer;
-  function Checked(const Sql:string):TWLRows;
-  begin
-    Result:=Db.Query(Sql);
-    if (Length(Result)=0) or (Result[0][0]<>'ok') then raise Exception.Create('Missing export policy data');
-  end;
+var Policy:TFieldPolicy;Values:TWLRows;
 begin
-  Result:=False;Policy:=nil;Definition:=nil;
+  Result:=False;Policy:=nil;
   try
     try
       Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
       Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',False)+';');
       if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
-      Rows:=Checked('SELECT ''ok'' UNION ALL SELECT DISTINCT f.id FROM custom_fields f JOIN custom_field_boards x ON x.customFieldId=f.id WHERE x.boardId='+QuotedStr(BoardId)+';');
-      for i:=1 to High(Rows) do
+      if BoardDefinitionAdminRequired(Db,BoardId) then
       begin
-        Definition:=ReadDefinition(Db,Rows[i][0]);if Definition=nil then Exit;
-        Flag:=Definition.Find('adminOnly');
-        if (Flag<>nil) and (Flag.JSONType<>jtNull) then
-        begin
-          if Flag.JSONType<>jtBoolean then Exit;
-          if Flag.AsBoolean then
-          begin
-            Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',True)+';');
-            if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
-          end;
-        end;
-        FreeAndNil(Definition);
+        Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',True)+';');
+        if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
       end;
       ValidateBoardCustomFields(Db,BoardId);
       // Trusted correlation aliases let one statement check every assigned value.
@@ -240,7 +224,7 @@ begin
       if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
       Result:=True;
     except Result:=False;end;
-  finally Policy.Free;Definition.Free;end;
+  finally Policy.Free;end;
 end;
 function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray):Boolean;
 var Policy:TFieldPolicy;Row:TJSONObject;Card,Field,Value:TJSONData;LastCard:string;i:Integer;

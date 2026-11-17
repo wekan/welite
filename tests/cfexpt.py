@@ -39,6 +39,9 @@ def run_shared(request,client,db):
     try:
         export(403)
         update('customFields',field,dict(adminOnly=False,readOnly=True));export(200)
+        update('customFields',field,dict(adminOnly=DateMs(8640000000000001)));export(403)
+        update('customFields',field,dict(adminOnly=float('nan')));export(403)
+        update('customFields',field,dict(adminOnly=None));export(200)
         update('customFields',field,dict(adminOnly=True));update('users',uid,dict(isAdmin=True));export(403)
         update('boards',board,dict(members=[dict(userId=uid,isActive=True,isAdmin=True)]));export(200)
         update('customFields',field,dict(boardIds=[]));export(403)

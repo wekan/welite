@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Batch board export definition validation
+
+- Validate all board-associated definitions in a native/shared batch instead of
+  reconstructing a full response per definition. Shared batches recheck owned
+  table bindings and exact source cardinality, preserving quoted identity lookup
+  and complete BSON validation; native batches reuse the definition settings
+  validator without fetching unused dropdown and board response arrays.
+- Check active board administration once when any definition requires it. Stored
+  shared `adminOnly` flags must be missing/null or actual booleans: Date/NaN conversion to
+  JSON null cannot bypass the gate. Malformed native administrative flags also
+  deny export rather than becoming false during integer conversion.
+- Normal/checked linked/CLI regressions cover TEXT/JSONB/native sources, late
+  corruption/private definitions, settings shadows, ownership/cardinality errors,
+  quoted IDs and unrelated boards. Process-count checks prove that adding 130
+  definitions adds no per-definition CLI database subprocesses; 130 private
+  definitions require only one additional board-admin permission query.
+- Expanded live CLI scope exports measured about 2.5–2.9 seconds locally after
+  the batches (earlier about 13 seconds; about 3.3 after the previous step).
+- Full live shared API/export/clone suites pass on both backends; final checked
+  export runs also pass, including Date/NaN flag refusal and source preservation.
+- Bounded memory for very large card/definition batches and broader graph
+  snapshot/lifecycle parity remain open.
+
 ## 2026-11-17 Batch complete board card-source validation
 
 - Read shared board card sources in one database batch, retaining exactly-one

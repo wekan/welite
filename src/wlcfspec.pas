@@ -6,6 +6,7 @@ function SettingsInput(Value:TJSONData;out Settings:TJSONObject):Boolean;
 function SettingsLiteral(Settings:TJSONObject;const Name:string):string;
 function SettingsRemainder(Settings:TJSONObject):string;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
+function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
 implementation
 function Utf16Length(const Text:string):Integer;
 var i,N:Integer;B:Byte;
@@ -67,9 +68,80 @@ begin
     Result:=QuotedStr(CopyValue.AsJSON);
   finally CopyValue.Free;end;
 end;
+function DefinitionSettings(const Stored:string;const Columns,Nulls:array of string):TJSONObject;
+const Keys:array[0..2] of string=('currencyCode','stringtemplateFormat','stringtemplateSeparator');
+var i:Integer;
+begin
+  Result:=ExactObject(Stored);
+  try
+    for i:=0 to High(Keys) do
+    begin
+      if Result.Find(Keys[i])<>nil then raise Exception.Create('Shadowed setting');
+      if Nulls[i]='0' then Result.Add(Keys[i],Columns[i]);
+    end;
+    if Result.Find('dropdownItems')<>nil then raise Exception.Create('Shadowed dropdown');
+  except Result.Free;raise;end;
+end;
+function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
+var Rows:TWLRows;Name,Binding,Match,Sql,Kind:string;Doc:TJSONObject;Flag:TJSONData;i:Integer;
+begin
+  Result:=False;
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing definition source');
+  Kind:=Rows[0][0];
+  if Kind='view' then
+  begin
+    Rows:=Db.Query('SELECT m.table_name FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+      'WHERE m.name=''custom_fields'' AND c.name=''customFields'';');
+    if Length(Rows)<>1 then raise Exception.Create('Missing definition ownership');
+    Name:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+    Binding:='(SELECT count(*) FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+      'WHERE m.name=''custom_fields'' AND c.name=''customFields'')=1 AND '+
+      '(SELECT count(*) FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+      'WHERE m.name=''custom_fields'' AND c.name=''customFields'' AND m.table_name='+QuotedStr(Rows[0][0])+')=1';
+    // Preserve quoted-text lookup semantics without CAST comparison affinity.
+    Match:=' FROM '+Name+' s WHERE json_extract(s._ferretdb_sjson,''$."_id"'')=(CAST(v.id AS TEXT)||'''')';
+    Sql:='SELECT CASE WHEN '+Binding+' THEN ''ok'' ELSE json(''Stale definition source'') END,''0'','''' '+
+      'UNION ALL SELECT v.id,(SELECT count(*)'+Match+'),(SELECT json(s._ferretdb_sjson)'+Match+' LIMIT 1) '+
+      'FROM (SELECT DISTINCT f.id FROM custom_fields f JOIN custom_field_boards x ON x.customFieldId=f.id '+
+      'WHERE x.boardId='+QuotedStr(BoardId)+') v;';
+    Rows:=Db.Query(Sql);
+    if (Length(Rows)=0) or (Length(Rows[0])<>3) or (Rows[0][0]<>'ok') then raise Exception.Create('Missing definition batch');
+    for i:=1 to High(Rows) do
+    begin
+      if (Length(Rows[i])<>3) or (Rows[i][1]<>'1') then raise Exception.Create('Ambiguous definition');
+      // Inspect storage truth before JSON Date/special-double null conversion.
+      Doc:=ExactObject(PlainDocument(Rows[i][2]));
+      try
+        Flag:=Doc.Find('adminOnly');
+        if (Flag<>nil) and (Flag.JSONType<>jtNull) then
+        begin
+          if Flag.JSONType<>jtBoolean then raise Exception.Create('Invalid definition flag');
+          Result:=Result or Flag.AsBoolean;
+        end;
+      finally Doc.Free;end;
+    end;
+  end
+  else if Kind='table' then
+  begin
+    Rows:=Db.Query('SELECT ''ok'','''','''','''','''','''','''','''','''','''','''' UNION ALL '+
+      'SELECT f.id,f.adminOnly,f.settings_json,f.currencyCode,f.stringtemplateFormat,f.stringtemplateSeparator,'+
+      'f.currencyCode IS NULL,f.stringtemplateFormat IS NULL,f.stringtemplateSeparator IS NULL,'+
+      '(SELECT count(*) FROM custom_fields q WHERE q.id=f.id),typeof(f.adminOnly) FROM custom_fields f '+
+      'WHERE f.id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+QuotedStr(BoardId)+');');
+    if (Length(Rows)=0) or (Length(Rows[0])<>11) or (Rows[0][0]<>'ok') then raise Exception.Create('Missing definition batch');
+    for i:=1 to High(Rows) do
+    begin
+      if (Length(Rows[i])<>11) or (Rows[i][9]<>'1') then raise Exception.Create('Ambiguous definition');
+      if (Rows[i][10]<>'integer') or ((Rows[i][1]<>'0') and (Rows[i][1]<>'1')) then
+        raise Exception.Create('Invalid definition flag');
+      Doc:=DefinitionSettings(Rows[i][2],[Rows[i][3],Rows[i][4],Rows[i][5]],[Rows[i][6],Rows[i][7],Rows[i][8]]);
+      Doc.Free;Result:=Result or (Rows[i][1]='1');
+    end;
+  end else raise Exception.Create('Invalid definition source');
+end;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
 const Flags:array[0..6] of string=('showOnCard','automaticallyOnCard','alwaysOnCard','showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly');
-  Keys:array[0..2] of string=('currencyCode','stringtemplateFormat','stringtemplateSeparator');
 var Rows,Children:TWLRows;Settings:TJSONObject;Boards,Items:TJSONArray;TypeName:string;i:Integer;
 begin
   Result:=nil;Settings:=nil;Boards:=nil;Items:=nil;
@@ -85,13 +157,8 @@ begin
   if (Length(Rows)<>1) or (Length(Rows[0])<>19) then raise Exception.Create('Ambiguous definition');
   try
     try
-      Settings:=ExactObject(Rows[0][15]);
-      for i:=0 to High(Keys) do
-      begin
-        if Settings.Find(Keys[i])<>nil then raise Exception.Create('Shadowed setting');
-        if Rows[0][16+i]='0' then Settings.Add(Keys[i],Rows[0][12+i]);
-      end;
-      if Settings.Find('dropdownItems')<>nil then raise Exception.Create('Shadowed dropdown');
+      Settings:=DefinitionSettings(Rows[0][15],[Rows[0][12],Rows[0][13],Rows[0][14]],
+        [Rows[0][16],Rows[0][17],Rows[0][18]]);
       Children:=Db.Query('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(Identity)+' ORDER BY sort,id;');
       if Length(Children)>0 then
       begin
