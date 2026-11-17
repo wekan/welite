@@ -530,3 +530,8 @@ It requires TMPDIR, removes temporary products, and does not execute the foreign
 (parsed without a shell) and `WELITE_EMBED_BACKENDS=cli` for a CLI-only cross
 compiler. Defaults still build and execute both native backends. See `docs/cross.md`
 for the passing amd64 QEMU scenario and its native SQLite child-process limitation.
+
+Set `WELITE_CROSS_BACKENDS=cli,linked` for `cross64.py` to verify four disk/embedded
+builds when the sysroot also contains target SQLite development/runtime libraries.
+The embedded linked HTTP suite passes under amd64 QEMU with target SQLite; unlike
+the CLI scenario it needs no native database subprocess. See `docs/cross.md`.

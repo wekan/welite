@@ -77,7 +77,27 @@ registration/login, translated auth, Designer creation, RTL published pages,
 non-public SQL and clean SIGTERM shutdown. The process runs x86-64 application
 and libc code, but executes the **host's native sqlite3 CLI child process**.
 It does not establish a target-native SQLite deployment, linked amd64 SQLite,
-physical amd64 hardware, or other operating-system acceptance. Those remain open.
+physical amd64 hardware, or other operating-system acceptance.
+
+### Emulated linked amd64 SQLite (2026-11-17)
+
+A subsequent check adds Debian trixie's verified amd64 `libsqlite3-0` and
+`libsqlite3-dev` 3.46.1-7+deb13u2 packages beneath the same sysroot. The complete
+embedded HTTP suite passes with `WELITE_EMBED_BACKENDS=linked`: the application,
+libc and SQLite engine all execute as x86-64 code, with no SQLite CLI child needed.
+
+Add `-Fl$PREFIX/sysroot/usr/lib/x86_64-linux-gnu` to the compiler wrapper, and
+append this QEMU argument (substitute absolute paths):
+
+```sh
+-E LD_LIBRARY_PATH=/absolute/prefix/sysroot/usr/lib/x86_64-linux-gnu:/absolute/prefix/sysroot/usr/x86_64-linux-gnu/lib
+```
+
+Do not export the target library path into the host compiler or Python process.
+QEMU's `-E` applies it to the foreign process only. For all four disk/embedded
+and CLI/linked build checks, set `WELITE_CROSS_BACKENDS=cli,linked` when running
+`tests/cross64.py`; the default remains CLI-only for toolchains without SQLite.
+Physical amd64 hardware, foreign CLI deployment and other platforms remain open.
 
 ---
 
