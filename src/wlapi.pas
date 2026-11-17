@@ -81,7 +81,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math;
+uses wlstore,wlsjson,Math,wlcfjson;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -802,7 +802,7 @@ end;
 
 // Send one card as JSON (incl. its labelIds). Returns False (and sends 404) if missing.
 function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId: string): Boolean;
-var R, L: TWLRows; O, CFO: TJSONObject; A: TJSONArray; i: Integer;
+var R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;
 begin
   Result := False;
   R := Db.Query(Format(
@@ -826,16 +826,10 @@ begin
     L := Db.Query(Format('SELECT userId FROM card_assignees WHERE cardId=%s;', [QuotedStr(CardId)]));
     for i := 0 to High(L) do if Length(L[i]) > 0 then A.Add(L[i][0]);
     O.Add('assignees', A);
-    A := TJSONArray.Create;                          // customFields: [{_id, value}]
-    L := Db.Query(Format(
-      'SELECT customFieldId,value FROM card_custom_field_values WHERE cardId=%s;', [QuotedStr(CardId)]));
-    for i := 0 to High(L) do
-      if Length(L[i]) >= 2 then
-      begin
-        CFO := TJSONObject.Create;
-        CFO.Add('_id', L[i][0]); CFO.Add('value', L[i][1]);
-        A.Add(CFO);
-      end;
+    try A:=ReadCustomFields(Db,CardId);
+    except
+      SendError(aResponse,500,'Could not read custom-field values');Exit;
+    end;
     O.Add('customFields', A);
     SendJson(aResponse, O.AsJSON);
     Result := True;

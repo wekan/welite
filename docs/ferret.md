@@ -1093,10 +1093,28 @@ by native `tests/admin.py` and real shared `tests/shrhttp.py`, checks repeated
 writes, typed shared values, literal Unicode text, quoted IDs, missing/foreign
 fields and injected AFTER-write failures without partial rows or BSON changes.
 
-Explicit type changes, normalized-store typed migration, typed API response values
-and selection clone/export compatibility still need a coordinated contract. A
-shared INSERT requires a usable definition; the independent normalized table still
-stores TEXT and its API value validation/type policy remains a separate step.
+Shared card GET responses now read the matching owned card collection directly,
+validate the complete SJSON and serialize the declared custom-value kinds as JSON
+values. Strings stay literal, numbers/booleans/arrays retain JSON types, null stays
+null and absent values remain absent. Root/row-private properties and `$s` metadata
+are omitted. Scalar BSON kinds outside the declared model retain their plain SJSON
+scalar representation. Corrupt metadata returns a complete HTTP 500 response,
+without source mutations or a partial array.
+
+BSON Date values follow `JSON.stringify(Date)`: UTC millisecond strings, year zero,
+signed six-digit extended years, and null outside TimeClip. Non-finite doubles
+become null and negative zero becomes zero. Integer Gregorian arithmetic avoids
+host timezone/calendar limits. `tests/cfjson.py` compares normal and checked builds
+with 177 actual Node Date outputs; `tests/custapi.py` covers live source values,
+full-range dates, metadata omission, read-only GET and corrupt-source HTTP errors.
+All eight Windows x86/x64 linked/CLI disk/embedded cross-build variants also pass
+compilation and PE header/import inspection; platform runtime acceptance remains
+a separate gate.
+
+Explicit type changes, normalized-store typed migration/validation and selection
+clone/export compatibility still need a coordinated contract. A shared INSERT
+requires a usable definition; the independent normalized table still stores TEXT
+and its GET responses retain the existing text contract pending typed migration.
 Percent-encoded route IDs, including Unicode IDs, currently fail the parent guard
 before reaching this endpoint and require a separate route-decoding fix. None of
 these remaining requirements is closed by the write-path tests above.

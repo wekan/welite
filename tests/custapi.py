@@ -93,6 +93,12 @@ def run_native(request, db):
             assert value == str(int(expected)), (value, expected)
         else:
             assert value == str(expected), (value, expected)
+        status, _, body = call('GET', base, None)
+        assert status == 200, (status, body)
+        fields = json.loads(body)['customFields']
+        response = next(row['value'] for row in fields if row['_id'] == 'cust-' + kind)
+        assert isinstance(response, str), (kind, response)
+        assert response == value, (kind, response, value)
     def fail(operation):
         with sqlite3.connect(db) as con:
             con.execute('CREATE TRIGGER cust_fail AFTER ' + operation.upper() +
@@ -126,6 +132,21 @@ def run_shared(request, client, db, token):
         assert card['unknown'] == Long(9007199254740993)
         assert next(row for row in card['customFields'] if row['_id']=='cust-legacy')['value'] == Binary(b'keep', 4)
         assert next(row for row in card['customFields'] if row['_id']=='cust-text')['unknown'] == DateMs(-1)
+        before = encode(card)
+        status, _, body = call('GET', base, None)
+        assert status == 200, (status, body)
+        data = json.loads(body)
+        assert 'unknown' not in data and '_wl_source' not in data
+        assert all(set(row) <= {'_id', 'value'} for row in data['customFields'])
+        value = next(row['value'] for row in data['customFields'] if row['_id'] == 'cust-' + kind)
+        if isinstance(expected, DateMs):
+            from datetime import datetime, timezone
+            assert value == datetime.fromtimestamp(expected / 1000, timezone.utc).isoformat(timespec='milliseconds').replace('+00:00','Z'), (value, expected)
+        elif kind == 'number':
+            assert isinstance(value, (int, float)) and not isinstance(value, bool) and value == expected
+        else:
+            assert type(value) is type(expected) and value == expected, (kind, value, expected)
+        assert encode(client.find('cards', identity)[0]) == before, 'GET mutated BSON'
     def fail(operation):
         with sqlite3.connect(db) as con:
             physical=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='cards'").fetchone()[0]
@@ -136,3 +157,44 @@ def run_shared(request, client, db, token):
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER cust_fail')
     base='/api/boards/b/lists/l/cards/' + quote(identity, safe='"')
     exercise(call, base, snapshot, check, fail, un_fail, True)
+
+    # Live Mongo values, rather than current definitions, determine shared output.
+    special = [dict(_id='text',value='true',unknown='private'),
+               dict(_id='bool',value=True),dict(_id='number',value=9007199254740993),
+               dict(_id='array',value=['漢','one']),dict(_id='empty',value=[]),
+               dict(_id='null',value=None),dict(_id='missing'),
+               dict(_id='early',value=DateMs(-62167219200000)),
+               dict(_id='future',value=DateMs(253402300800000)),
+               dict(_id='minimum',value=DateMs(-8640000000000000)),
+               dict(_id='maximum',value=DateMs(8640000000000000)),
+               dict(_id='invalid',value=DateMs(8640000000000001))]
+    assert client.command({'update':'cards','updates':[dict(q=dict(_id=identity),u={'$set':dict(customFields=special)})]})['n'] == 1
+    before = snapshot()
+    status, _, body = call('GET',base,None)
+    assert status == 200, (status,body)
+    fields = json.loads(body)['customFields']
+    dates = dict(early='0000-01-01T00:00:00.000Z',future='+010000-01-01T00:00:00.000Z',
+                 minimum='-271821-04-20T00:00:00.000Z',maximum='+275760-09-13T00:00:00.000Z',invalid=None)
+    expected = [{key:dates.get(row['_id'],value) if key == 'value' and row['_id'] in dates else value
+                 for key,value in row.items() if key in ['_id','value']} for row in special]
+    assert fields == expected, (fields,expected)
+    assert snapshot() == before
+    # Corrupt metadata late in the array: return a complete error, never a prefix.
+    where=" WHERE json_extract(_ferretdb_sjson,'$._id')=?"
+    with sqlite3.connect(db) as con:
+        physical=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='cards'").fetchone()[0]
+        name='"'+physical.replace('"','""')+'"'
+        original=con.execute('SELECT _ferretdb_sjson FROM '+name+where,(identity,)).fetchone()[0]
+        corrupted=json.loads(con.execute('SELECT json(?)',(original,)).fetchone()[0])
+        corrupted['$s']['p']['customFields']['i'][2]['$s']['p']['value']['t']='bool'
+        con.execute('UPDATE '+name+' SET _ferretdb_sjson=jsonb(?)'+where,(json.dumps(corrupted),identity))
+    try:
+        status, _, body = call('GET',base,None)
+        assert status == 500, (status,body)
+        error=json.loads(body)
+        assert 'customFields' not in error and 'unknown' not in error
+    finally:
+        with sqlite3.connect(db) as con:
+            con.execute('UPDATE '+name+' SET _ferretdb_sjson=?'+where,(original,identity))
+    assert snapshot() == before
+    print('PASS: shared custom API typed GET, full-range Date JSON, missing/null values, unchanged BSON and controlled corrupt-source errors')

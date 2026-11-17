@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Return typed shared custom-field JSON values
+
+- Read shared card values through matching owned-model/collection metadata and
+  validate their complete SJSON before producing a response. Preserve numbers,
+  booleans, string arrays, nulls and missing values; keep literal text literal.
+- Render BSON Date values as UTC JSON Date strings, including year zero, signed
+  extended years and TimeClip boundaries. Match JSON.stringify for invalid dates,
+  non-finite doubles and negative zero without platform calendar dependencies.
+- Omit root/row-private fields and BSON schema metadata. Refuse corrupt typed data
+  with one complete HTTP error, leaving stored BSON unchanged. Native normalized
+  stores retain their existing TEXT response contract.
+- Normal/checked kernels pass 177 independent Node Date vectors. Shared HTTP tests
+  on both backends cover live typed values, full-range dates, read-only behavior,
+  missing/null values and corrupt metadata; native HTTP tests retain text output.
+  Against committed old code, the HTTP regression receives a string for an array.
+  All eight Windows x86/x64 linked/CLI disk/embedded cross-build variants pass.
+- Normalized typed migration/validation, explicit type changes, percent-encoded
+  route IDs and selection clone/export remain in TODO.
+
 ## 2026-11-17 Make custom-field API replacement atomic and truthful
 
 - Replace unchecked INSERT OR REPLACE with one transactional UPDATE followed by
