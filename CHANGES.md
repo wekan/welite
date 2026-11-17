@@ -4,6 +4,32 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep embedded relation identities inside clone/export scope
+
+- Scope selected board labels, card members/assignees/labels/custom values/
+  dependencies and definition board/dropdown links against their actual owned
+  BSON parent and embedded keys. Regex/ObjectId/numeric renderings cannot gain
+  string-reference authority; duplicate logical keys, including mixed-type
+  shadows and dependency defaults, deny collection instead of choosing one row.
+- Preserve missing/null dependency-type defaults and existing typed clone copies.
+  Require SQL root identity/link projections to remain text as well as matching
+  a canonical BSON string, closing numeric-cast projection lookalikes.
+- Validate compiled relation descriptor shape and parent ID mapping; pin relation
+  model/version, parent collection settings and root/relation view SQL through
+  collection and clone/export guards, including empty relation sets. Card relation
+  owners are rechecked against the canonical board scope in their read query.
+- Normal/checked linked/CLI tests cover 282 TEXT/JSONB relation cases and 44 root
+  scope cases, with actual indexed owner probes, descriptor/view/epoch changes,
+  nested dropdown keys and native compatibility. Live tests verify filtering,
+  duplicate refusal, exact source/clone arrays and relation-epoch rollback.
+- Full native HTTP, normal shared clone/export and final checked shared relation
+  tests pass on both backends. Eight Windows x86/x64 linked/CLI disk/embedded
+  variants cross-build; Windows execution remains unverified.
+- Ordinary root edit/save/delete forms retain their existing legacy-array behavior;
+  a title editor remains available when a copy/export would reject an ambiguous
+  relation. Other legacy forms, noncopy relation surfaces and graph-wide
+  snapshot/lifecycle parity remain open.
+
 ## 2026-11-17 Stream export source validation with bounded row buffering
 
 - Add a row-scan database API and consume complete card/definition validation

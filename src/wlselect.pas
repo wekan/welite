@@ -123,7 +123,13 @@ function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
 var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
   Data,AuditData:TJSONObject;Bindings:TJSONArray;
   function Link(const Name,Column:string):string;
-  begin Result:=TypedScope.StringField(Name,Column);end;
+  begin
+    // Copying needs typed relation identities; ordinary root forms do not edit
+    // these arrays and retain their existing behavior for legacy relation data.
+    if not TypedScope.IsRoot(Name) and (Params.Values['action']<>'clone') and
+      (Params.Values['action']<>'export') then Exit('1');
+    Result:=TypedScope.StringField(Name,Column);
+  end;
   function BoardScope(const Name:string):string;
   begin Result:='boardId='+q(BoardId)+' AND '+Link(Name,'boardId')+' AND '+Link(Name,'id');end;
   function CardOwner(const Name:string):string;
@@ -148,7 +154,7 @@ var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previo
   begin
     if TypedScope.IsRoot(Name) then
       Data.Add(Name,RowsJson(T.Db,Name,'('+WhereClause+') AND '+Link(Name,'id'),Params.Values['action'],Binding,Audit))
-    else Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action'],Binding,Audit));
+    else Data.Add(Name,RowsJson(T.Db,Name,'('+WhereClause+') AND '+Link(Name,TypedScope.ParentKey(Name)),Params.Values['action'],Binding,Audit));
     if AuditData<>nil then AuditData.Add(Name,Audit)
     else if (Params.Values['action']='clone') and (Name='cards') then Result.Add('_clone_sources',Audit)
     else Audit.Free;
@@ -176,7 +182,7 @@ begin
       Previous:=Cards.Count;
       AddQuery(T.Db,'SELECT id FROM cards WHERE '+BoardScope('cards')+' AND parentId IN ('+IdSet(Cards)+') AND '+Link('cards','parentId')+';',Cards);
     until Cards.Count=Previous;
-    CardScope:='cardId IN ('+IdSet(Cards)+')';
+    CardScope:='cardId IN (SELECT id FROM cards WHERE '+BoardScope('cards')+' AND id IN ('+IdSet(Cards)+'))';
     AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardOwner('checklists')+' AND '+Link('checklists','id')+';',Checks);
     Table('boards','id='+q(BoardId));
     if (TJSONArray(Data.Find('boards')).Count<>1) or (TJSONArray(Data.Find('boards')).Objects[0].Get('id','')<>BoardId) then
@@ -184,12 +190,12 @@ begin
     Table('swimlanes',BoardScope('swimlanes')+' AND id IN ('+IdSet(Lanes)+')');
     Table('lists',BoardScope('lists')+' AND id IN ('+IdSet(Lists)+')');
     Table('cards',BoardScope('cards')+' AND id IN ('+IdSet(Cards)+')');
-    Table('board_labels','boardId='+q(BoardId)+' AND id IN (SELECT labelId FROM card_labels WHERE '+CardScope+')');
-    Table('custom_fields','id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+
-      ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+'))');
-    Table('custom_field_boards',Scope+' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+')');
-    Table('custom_field_dropdown_items','customFieldId IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+
-      ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+'))');
+    Table('board_labels','boardId='+q(BoardId)+' AND id IN (SELECT labelId FROM card_labels WHERE '+CardScope+' AND '+Link('card_labels','labelId')+')');
+    Table('custom_fields','id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+' AND '+Link('custom_field_boards','boardId')+
+      ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+'))');
+    Table('custom_field_boards',Scope+' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+')');
+    Table('custom_field_dropdown_items','customFieldId IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+' AND '+Link('custom_field_boards','boardId')+
+      ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+'))');
     Table('card_members',CardScope); Table('card_assignees',CardScope); Table('card_labels',CardScope);
     Table('card_custom_field_values',CardScope); Table('card_dependencies',CardScope);
     Table('card_comments',BoardScope('card_comments')+' AND '+CardOwner('card_comments'));

@@ -49,7 +49,7 @@ with tempfile.TemporaryDirectory(prefix='wlscope-',dir=os.environ['TMPDIR']) as 
                             document['$s']['p']['_id']=dict(t='objectId')
                             con.execute('INSERT INTO owned VALUES('+('jsonb(?)' if storage=='blob' else '?')+')',(json.dumps(document),))
                     def run(command):
-                        result=subprocess.run([str(out/'selscope'),str(database)],input=json.dumps(dict(table=table,match=owner,**command))+'\n',capture_output=True,text=True)
+                        result=subprocess.run([str(out/'selscope'),str(database)],input=json.dumps(dict(dict(table=table,match=owner),**command))+'\n',capture_output=True,text=True)
                         assert result.returncode==0,result.stderr
                         actual=json.loads(result.stdout)
                         if 'expression' in actual:
@@ -75,6 +75,23 @@ with tempfile.TemporaryDirectory(prefix='wlscope-',dir=os.environ['TMPDIR']) as 
                         con.execute('CREATE VIEW '+table+' AS SELECT json_extract(_ferretdb_sjson,\'$._id\') id,'+q(owner)+' boardId FROM owned')
                     # The displayed foreign row cannot borrow a canonical source value.
                     assert run({})['ids']==['plain'];count+=1
+                    for cast_column in ['id','boardId']:
+                        setup()
+                        plain=dict(_id='7' if cast_column=='id' else 'plain')
+                        value='7' if cast_column=='boardId' else owner
+                        if table=='cards':plain['boardId']=value
+                        else:plain['meta']=dict(boardId=value)
+                        with sqlite3.connect(database) as con:
+                            con.execute('DELETE FROM owned')
+                            con.execute('INSERT INTO owned VALUES('+('jsonb(?)' if storage=='blob' else '?')+')',(json.dumps(typed(plain)),))
+                            con.execute('DROP VIEW '+table)
+                            id_expr="json_extract(_ferretdb_sjson,'$._id')"
+                            board_expr='json_extract(_ferretdb_sjson,'+q('$.'+path)+')'
+                            if cast_column=='id':id_expr='CAST('+id_expr+' AS INTEGER)'
+                            else:board_expr='CAST('+board_expr+' AS INTEGER)'
+                            con.execute('CREATE VIEW '+table+' AS SELECT '+id_expr+' id,'+board_expr+' boardId FROM owned')
+                        assert run(dict(match=value))['ids']==[];count+=1
+
             native=out/'native.db'
             with sqlite3.connect(native) as con:con.executescript("CREATE TABLE cards(id TEXT,boardId TEXT); INSERT INTO cards VALUES('native','"+owner+"');")
             result=subprocess.run([str(out/'selscope'),str(native)],input=json.dumps(dict(match=owner))+'\n',capture_output=True,text=True)

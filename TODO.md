@@ -382,8 +382,18 @@ not merely a design document. Platform/browser claims require testing on those t
   and projection mismatches cannot borrow authority. Normal/checked linked/CLI
   tests verify indexed probes and stale metadata; live tests cover lookalikes,
   mixed admission, case-distinct IDs, preserved source BSON and attachment bytes.
-  Next: reconcile embedded-relation scope identities, remaining legacy relation
-  forms and clone lifecycle/multi-query graph consistency, metadata-aware
+  Clone/export relation scopes now check canonical owned parents and embedded
+  string keys for labels, members/assignees, custom values/dependencies and field
+  board/dropdown links. Duplicate/mixed-type shadows deny collection; missing/null
+  dependency types keep their declared defaults. Descriptor shape, parent mapping,
+  model/version/settings and view SQL are pinned into private guards even for
+  empty sets; card relation queries also recheck canonical board ownership.
+  Numeric SQL root ID/link projections cannot inherit BSON string authority.
+  Normal/checked linked/CLI tests cover 282 TEXT/JSONB relation cases, indexed
+  probes and 44 root cases; live tests verify source/clone BSON, defaults,
+  duplicate refusal, relation epoch rollback and ordinary root-edit compatibility.
+  Next: remaining legacy relation forms, noncopy relation surfaces and clone
+  lifecycle/multi-query graph consistency, metadata-aware
   identifiers for other payloads, import permissions, generic HTML
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
@@ -397,8 +407,9 @@ not merely a design document. Platform/browser claims require testing on those t
   documents are checked even for absent/null values. Normal/checked TEXT/JSONB
   linked/CLI tests cover corrupt/missing/duplicate sources, malformed rows and
   native fallback; 70 additional cards add no per-card CLI subprocesses.
-  Expanded CLI scope exports now measure about 2.5–2.9 seconds locally after
-  batching (earlier about 13 seconds); linked is about 0.07–0.08 seconds.
+  Before embedded-relation checks, expanded CLI scope exports measured about
+  2.5–2.9 seconds locally after batching (earlier about 13 seconds); linked was
+  about 0.07–0.08 seconds. Large embedded-array matching still needs profiling.
   Board definition validation is now batched on both backends, with complete
   shared BSON/cardinality/ownership checks and reused native settings validation.
   Administration is checked once if any definition requires it. Stored Date/NaN

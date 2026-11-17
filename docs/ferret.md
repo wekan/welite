@@ -1492,8 +1492,9 @@ clone fidelity; mapped root presence is handled by the explicit patch below.
 scope column's path against the compiled model, captures model/version/collection
 settings and exact view SQL, and builds predicates against the owned typed source.
 A root identity and each link used by a branch must be a nonempty BSON string.
-The stored scope value must also equal the projected column, so a misleading
-projection cannot borrow another stored value. Ambiguous plain IDs fail closed;
+The stored scope value must also equal a text-valued projected identity/link
+column, so a misleading or numeric-cast projection cannot borrow another stored
+string value. Ambiguous plain IDs fail closed;
 physical ID probes use the installed quoted-path index.
 
 Board and explicit selected roots must resolve to exact canonical identities;
@@ -1510,10 +1511,10 @@ captured set joins existing clone/export preflight and transaction/delivery guar
 This includes root classes whose selected rows are empty. Source document audits
 and field-policy gates still apply. These predicates establish root link identity
 and descriptor bindings, not a transaction-wide snapshot of multi-query graph
-collection. Embedded-relation identity scopes, broader HTML/query boundaries and
-remaining lifecycle/mixed-writer consistency remain unfinished.
+collection. Broader HTML/query boundaries, legacy relation forms and remaining
+lifecycle/mixed-writer consistency remain unfinished.
 
-`tests/selscope.py` runs 36 TEXT/JSONB predicate/ownership cases per normal/checked
+`tests/selscope.py` runs 44 TEXT/JSONB predicate/ownership cases per normal/checked
 linked/CLI variant, including nested paths, projection disagreement, model/epoch/
 view changes and actual query-plan index inspection. Native behavior and exact-case
 IDs have unit/live coverage. `tests/clroots.py` verifies export and clone exclusion
@@ -1521,14 +1522,42 @@ of root lookalikes, legitimate OR alternatives, explicit nonstring refusal, mixe
 edit/save refusal, case-distinct IDs and unchanged source/file content. Clone tests
 also verify activity-model changes after mutation roll back the transaction.
 
+Clone/export collection also checks embedded relation keys against the owned
+parent source. Board labels, card members/assignees/labels/custom values/
+dependencies and definition board/dropdown links need a canonical string parent
+and nonempty BSON string key tuple. Projected keys must remain text. Dependency
+`type` may be missing/null when the descriptor supplies `related-to`; this does
+not change its stored presence/type during the typed clone copy.
+
+A projected row must match exactly one physical parent and one embedded key
+tuple, including defaults. Duplicate canonical keys or a string/Regex lookalike
+pair fail closed rather than letting one canonical match approve both projections.
+Card relation reads also join the current canonical board-scoped card set.
+Relation descriptor shape is compared with the compiled model, independently of
+object-property order. Parent ID mapping, model/spec/version, collection settings
+and exact root/relation view SQL join private guards even when no rows are selected.
+No new columns or public download keys are added.
+
+`tests/relscope.py` covers 282 TEXT/JSONB cases per normal/checked linked/CLI
+variant, including scalar/object/nested keys, defaults, duplicate shadows,
+metadata changes, native compatibility and actual physical-ID index probes.
+`tests/selrels.py` checks real shared HTML exports/clones: unsupported key
+lookalikes cannot pull definitions into a selection; mixed duplicate keys deny;
+valid arrays preserve source/clone BSON; a relation epoch change after mutation
+rolls back the entire clone. Ordinary root edit/save/delete forms do not use these
+copy-only relation-key checks, so unrelated legacy arrays do not block a title
+editor. Broader noncopy relation authorization and unsupported legacy shapes
+remain separate work.
+
 Before export-policy batching, the richer CLI fixture measured roughly 13 seconds
 for a successful export after its prior clone batch, compared with about 0.1
 seconds linked. Board value permissions, complete card-source validation and
-definition reads are now batched; expanded CLI exports measured about 2.5–2.9
-seconds locally, with linked about 0.07–0.08 seconds. Source validation now
+definition reads are now batched. Before embedded-relation scope checks, expanded
+CLI exports measured about 2.5–2.9 seconds locally, with linked about 0.07–0.08
+seconds. Source validation now
 streams result rows; it does not collect the board's complete BSON payload in
-memory. The final selection/export graph is still collected separately. Only the heavy export test opts into a 30-second timeout; it retains all
-rows, policy checks and assertions, while other HTTP tests keep their defaults.
+memory. The final selection/export graph is still collected separately. Only the
+heavy export test opts into a 30-second timeout; it retains all rows, policy checks and assertions, while other HTTP tests keep their defaults.
 
 ## Mapped clone root fields
 
@@ -1554,8 +1583,9 @@ has BSON metadata; it is not interpreted as an envelope.
 Shared recursive child collection also checks the actual BSON string schema of
 `parentId`. A Regex pattern matching a selected parent is not a child link. Native
 parent links keep their SQL behavior, while failed selection-ID queries now deny
-graph collection. The root scope rules above extend this to other root links;
-embedded-relation identities remain open.
+graph collection. The scope rules above extend this to other root links and
+selected clone/export embedded relation keys; legacy forms and broader lifecycle
+consistency remain open.
 
 `tests/clpres.py` verifies normal/checked patches, nested null/missing parents,
 unchanged types, ID/envelope rejection and actual TEXT/JSONB SQL execution/rollback.
