@@ -19,4 +19,4 @@ with tempfile.TemporaryDirectory(prefix='wlsess-',dir=os.environ['TMPDIR']) as t
         if build.returncode:raise RuntimeError(build.stdout+build.stderr)
         env=dict(os.environ,WELITE_SESSION_IDLE='1')
         for variable in ['REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN']:env.pop(variable,None)
-        subprocess.run([str(out/'session'),str(out/'main.db'),str(out/'other.db')],env=env,check=True,timeout=20)
+        subprocess.run([str(out/'session'),str(out/'main.db'),str(out/'other.db'),str(root/'i18n')],env=env,check=True,timeout=20)

@@ -16,7 +16,7 @@ begin
   for i:=0 to High(R) do if BoardCanRead(Db,S.UserId,R[i][0]) then
   begin
     Inc(Count);
-    Result:=Result+'<li><a href="'+HtmlAttr(WithSessionId('/board?id='+R[i][0],S.SessionId))+
+    Result:=Result+'<li><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(R[i][0]),S))+
       '">'+HtmlEncode(R[i][1])+'</a></li>';
   end;
   if Count=0 then Result:=Result+'<li>No boards available.</li>';
@@ -35,9 +35,9 @@ begin
   B:=Db.Query('SELECT title,color FROM boards WHERE id='+QuotedStr(BoardId)+';');
   Writable:=BoardCanWrite(Db,S.UserId,BoardId);
   if SameText(Dir,'rtl') then Align:='right' else Align:='left';
-  Back:='/board?id='+BoardId;
+  Back:='/board?id='+HTTPEncode(BoardId);
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><p><a href="'+
-    HtmlAttr(WithSessionId('/',S.SessionId))+'">All boards</a></p>';
+    HtmlAttr(SessionUrl('/',S))+'">All boards</a></p>';
   Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
     ' AND archived=0 ORDER BY sort,id;');
   if X<1 then X:=1;
@@ -63,8 +63,8 @@ begin
       if Length(Occupied)>0 then begin Color:='#cccccc'; CellText:='*'; end
       else begin Color:='#ffffff'; CellText:='-'; end;
       if (MapX=X-1) and (MapY=Y-1) then Color:='#ffff66';
-      Url:='/board?id='+BoardId+'&x='+IntToStr(MapX+1)+'&y='+IntToStr(MapY+1);
-      Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(WithSessionId(Url,S.SessionId))+
+      Url:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(MapX+1)+'&y='+IntToStr(MapY+1);
+      Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(SessionUrl(Url,S))+
         '" title="'+HtmlAttr(Lanes[MapY][1]+' / '+MapLists[MapX][1])+'">'+CellText+'</a></td>';
     end;
     if Length(MapLists)=0 then Map:=Map+'<td>-</td>';
@@ -83,12 +83,12 @@ begin
       3: begin Inc(MapY); CellText:='View down'; end;
     end;
     if (MapX>=1) and (MapX<=Width) and (MapY>=1) and (MapY<=Length(Lanes)) then
-      Result:=Result+'<a href="'+HtmlAttr(WithSessionId('/board?id='+BoardId+
-        '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S.SessionId))+'">'+CellText+'</a> ';
+      Result:=Result+'<a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+
+        '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S))+'">'+CellText+'</a> ';
   end;
-  Result:=Result+'<a href="'+HtmlAttr(WithSessionId('/board?id='+BoardId+'&view=all',S.SessionId))+
+  Result:=Result+'<a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+'&view=all',S))+
     '">View all</a></p><br clear="all">';
-  Back:='/board?id='+BoardId;
+  Back:='/board?id='+HTTPEncode(BoardId);
   if AllItems then Back:=Back+'&view=all'
   else Back:=Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y);
   if Writable then Result:=Result+MoveFormBegin(S,'/board/move')+
@@ -138,6 +138,7 @@ begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin aResponse.Code:=404; aResponse.Content:='Unknown domain'; aResponse.SendContent; Exit; end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
+  S.LanguageTag:=RequestLanguageTag(aRequest);
   Dir:=ResolveDir(aRequest,'',SessionLanguage(T.Db,S));
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),

@@ -110,7 +110,7 @@ end;
 procedure Redirect(Response:TResponse; const S:TWLSession; Params:TStrings);
 begin
   Response.Code:=302;
-  Response.SetCustomHeader('Location',WithSessionId(SafeReturnPath(Params.Values['back']),S.SessionId));
+  Response.SetCustomHeader('Location',SessionUrl(SafeReturnPath(Params.Values['back']),S));
   Response.SendContent;
 end;
 function SelectionFields(Params:TStrings):string;
@@ -442,7 +442,7 @@ begin
       Body:='<h1>Delete selected items?</h1><p>This includes '+IntToStr(Count)+' items and their related data.</p>'+
         '<form method="POST" action="/board/move">'+AuthHiddenFields(S,'board:move')+SelectionFields(Request.ContentFields)+
         '<input type="submit" name="action" value="confirm-delete"></form>'+
-        '<p><a href="'+HtmlAttr(WithSessionId(SafeReturnPath(Request.ContentFields.Values['back']),S.SessionId))+'">Cancel</a></p>';
+        '<p><a href="'+HtmlAttr(SessionUrl(SafeReturnPath(Request.ContentFields.Values['back']),S))+'">Cancel</a></p>';
       Response.Content:=Page32('Confirm deletion',Body); Response.ContentType:='text/html; charset=utf-8'; Response.SendContent; Exit;
     end;
     if Action='confirm-delete' then

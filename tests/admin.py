@@ -270,6 +270,10 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             layout_editor = check_layout(request,db,admin)
             if os.environ.get('WELITE_UI') == '1':
                 subprocess.run([os.environ.get('NODE','node'), str(ROOT/'tests/layout.js'), 'http://localhost:'+str(port), admin, layout_editor],check=True)
+            from langnav import check_navigation
+            check_navigation(request,db,admin)
+            if os.environ.get('WELITE_UI')=='1':
+                subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/langnav.js'),'http://localhost:'+str(port),admin,layout_editor],check=True)
             check_imports(request,db,admin)
             if os.environ.get('WELITE_UI') == '1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/imports.js'),'http://localhost:'+str(port),admin],check=True)

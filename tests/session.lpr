@@ -1,6 +1,6 @@
 program session;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
-uses {$IFDEF UNIX}cthreads,{$ENDIF} SysUtils,Classes,HTTPDefs,wldb,wlauth;
+uses {$IFDEF UNIX}cthreads,{$ENDIF} SysUtils,Classes,HTTPDefs,wldb,wlauth,wlstatic,wli18n;
 type
   TAttempt=class(TThread)
     Initial:TWLSession;
@@ -27,12 +27,31 @@ var Db,Other:TWLDb; R:TRequest; S,Seen:TWLSession; Workers:array[0..15] of TAtte
   i,Accepted:Integer; Rows:TWLRows;
 begin
   SetMultiByteConversionCodePage(CP_UTF8);
+  StaticInit('/',ParamStr(3));StaticAddRoot('/i18n','i18n/',ParamStr(3));Check(InitLanguages,'installed locale catalog');
   Db:=TWLDb.Create(ParamStr(1));Other:=TWLDb.Create(ParamStr(2));R:=TRequest.Create;
   try
     Setup(R);
     S:=CreateSession(Db,R,'u','user'+#2+'日本語',HashText('credential'),3600);
     Check(S.SessionId<>'','persist session');
     Check(ValidateSession(Db,R,S.SessionId,Seen),'valid session with delimiter/Unicode name');
+    R.QueryFields.Values['lang']:='ar';
+    Check(ValidateSession(Db,R,S.SessionId,Seen) and (Seen.LanguageTag='ar'),'query locale is request context');
+    Check(Pos('name="lang" value="ar"',AuthHiddenFields(Seen,'test:write'))>0,'action form carries locale');
+    Check(SessionUrl('/target#part',Seen)='/target?sessionId='+S.SessionId+'&lang=ar#part','locale/session precede fragment');
+    Check(SessionUrl('/target?%6cang=fi#part',Seen)='/target?%6cang=fi&sessionId='+S.SessionId+'#part','existing encoded locale wins');
+    Check(SessionUrl('/target?note=sessionId=x',Seen)='/target?note=sessionId=x&sessionId='+S.SessionId+'&lang=ar','parameter names are parsed');
+    R.QueryFields.Clear;R.ContentFields.Values['lang']:='fi';
+    Check(ValidateSession(Db,R,S.SessionId,Seen) and (Seen.LanguageTag='fi'),'posted locale is request context');
+    R.ContentFields.Values['auth_action']:='test:write';
+    R.ContentFields.Values['auth_counter']:=IntToStr(Seen.Counter);
+    R.ContentFields.Values['auth_hash']:=ActionHash(Seen,'test:write');
+    Check(VerifyActionToken(R,Seen,'test:write',False) and (Seen.LanguageTag='fi'),'verification retains posted locale');
+    Seen.LanguageTag:='bad"&lang=ar';
+    Check(LanguageHiddenField(Seen)='','unsafe locale cannot become an attribute');
+    Check(SessionUrl('/target',Seen)='/target?sessionId='+S.SessionId,'unsafe locale cannot become query state');
+    R.ContentFields.Clear;
+    Check(ValidateSession(Db,R,S.SessionId,Seen) and (Seen.LanguageTag=''),'locale is not persisted in auth metadata');
+
     Check(not ValidateSession(Other,R,S.SessionId,Seen) and (Seen.UserId=''),'database binding');
     Other.Exec('INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) VALUES('+QuotedStr(TokenHash(Db,S.SessionId))+',''u'',''now'',''2099-01-01'');');
     Check(not ValidateSession(Other,R,S.SessionId,Seen) and (Seen.UserId=''),'copied token and user IDs do not cross databases');

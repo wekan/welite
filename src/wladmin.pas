@@ -81,14 +81,15 @@ begin
   if not ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
   begin
     aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location', '/sign-in');
+    S.LanguageTag:=RequestLanguageTag(aRequest);
+    aResponse.SetCustomHeader('Location',SessionUrl('/sign-in',S));
     aResponse.SendContent; Exit;
   end;
   if not IsTenantAdmin(T.Db, S) then
   begin
     aResponse.Code := 403; aResponse.ContentType := 'text/html; charset=utf-8';
     aResponse.Content := Page32('Forbidden',
-      '<h1>Forbidden</h1><p>Tenant administrator only.</p><p><a href="/">Home</a></p>');
+      '<h1>Forbidden</h1><p>Tenant administrator only.</p><p><a href="'+HtmlAttr(SessionUrl('/',S))+'">Home</a></p>');
     aResponse.SendContent; Exit;
   end;
   Result := True;
@@ -115,12 +116,12 @@ begin
 end;
 
 // ------------------------------------------------------------------ shared chrome
-function NavLink(const Href, Caption, SessionId: string; Active: Boolean): string;
+function NavLink(const Href,Caption:string;const S:TWLSession;Active:Boolean):string;
 begin
   if Active then
     Result := '<b>' + HtmlEncode(Caption) + '</b>'
   else
-    Result := '<a href="' + HtmlAttr(WithSessionId(Href, SessionId)) + '">' +
+    Result := '<a href="' + HtmlAttr(SessionUrl(Href,S)) + '">' +
               HtmlEncode(Caption) + '</a>';
 end;
 
@@ -129,10 +130,10 @@ function AdminLayout(const T: TWLTenant; const S: TWLSession; const Active, Titl
 var Nav: string;
 begin
   Nav := '<p>[ ';
-  if T.IsAdmin then Nav:=Nav+NavLink('/admin/domains','Domains',S.SessionId,SameText(Active,'domains'))+' | ';
+  if T.IsAdmin then Nav:=Nav+NavLink('/admin/domains','Domains',S,SameText(Active,'domains'))+' | ';
   Nav := Nav +
-    NavLink('/designer',      'Designer', S.SessionId, SameText(Active, 'designer')) + ' | ' +
-    NavLink('/admin/people',  'People',   S.SessionId, SameText(Active, 'people')) +
+    NavLink('/designer',      'Designer', S, SameText(Active, 'designer')) + ' | ' +
+    NavLink('/admin/people',  'People',   S, SameText(Active, 'people')) +
     ' ]</p><hr>';
   Result := Page32(AdminRole(T)+' — '+Title,
     '<h1>'+AdminRole(T)+' Panel</h1>'+Nav+Body);
@@ -155,10 +156,10 @@ var T: TWLTenant; S: TWLSession; Body: string;
 begin
   if not RequireTenantAdmin(aRequest,aResponse,T,S) then Exit;
   Body:='<p>Welcome, '+HtmlEncode(S.Username)+'. Choose a section:</p><ul>';
-  if T.IsAdmin then Body:=Body+'<li>'+NavLink('/admin/domains','Domains',S.SessionId,False)+
+  if T.IsAdmin then Body:=Body+'<li>'+NavLink('/admin/domains','Domains',S,False)+
     ' &mdash; register and enable/disable served domains.</li>';
-  Body:=Body+'<li>'+NavLink('/designer','Designer',S.SessionId,False)+
-    ' &mdash; edit this tenant''s pages.</li><li>'+NavLink('/admin/people','People',S.SessionId,False)+
+  Body:=Body+'<li>'+NavLink('/designer','Designer',S,False)+
+    ' &mdash; edit this tenant''s pages.</li><li>'+NavLink('/admin/people','People',S,False)+
     ' &mdash; manage this tenant''s users and roles.</li></ul>';
   SendHtml(aResponse,AdminLayout(T,S,'','Home',Body));
 end;
@@ -196,7 +197,7 @@ begin
     else begin aResponse.Code:=400; aResponse.Content:='Unknown domain action'; aResponse.SendContent; Exit; end;
     end;
     aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location', WithSessionId('/admin/domains', S.SessionId));
+    aResponse.SetCustomHeader('Location', SessionUrl('/admin/domains',S));
     aResponse.SendContent; Exit;
   end;
 
@@ -268,7 +269,7 @@ begin
       begin T.Db.Exec('ROLLBACK;'); aResponse.Code:=500; aResponse.Content:='Could not update account'; aResponse.SendContent; Exit; end;
     end;
     aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location', WithSessionId('/admin/people', S.SessionId));
+    aResponse.SetCustomHeader('Location', SessionUrl('/admin/people',S));
     aResponse.SendContent; Exit;
   end;
 

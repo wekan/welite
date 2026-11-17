@@ -370,3 +370,10 @@ or cookies and checks the locale-only completion URL before its enrollment flow.
 All-language HTTP coverage includes enrollment setup labels and its private response
 headers. The actual Arabic enrollment test checks translated OTP/confirmation labels;
 the Chromium flow follows the translated English start/confirm/sign-in controls.
+
+Session tests also verify request-only locale state, safe hidden fields, encoded
+query names, fragment placement and absence from serialized auth metadata.
+`langnav.py`, called by `admin.py`, checks home/board/Designer/admin links and signed
+mutation returns, GET search forms, arbitrary IDs/search containing query characters,
+fragments, safe re-login and request isolation. With `WELITE_UI=1`, `langnav.js` drives
+board/clear/home/admin/Designer/save in Chromium with JavaScript/cookies disabled.

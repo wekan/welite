@@ -4,6 +4,27 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Retain locale through board and Designer navigation
+
+- Carry validated query/posted language as transient rendering context. Keep it out
+  of serialized session metadata and restore it after action-token verification.
+  Include it in signed-action form fields and table search GET forms.
+- Preserve locale in home/board/minimap/view links, selection returns, Designer
+  edit/preview/export/mutation redirects and admin navigation/re-login. Keep session
+  and locale query values before fragments and recognize existing encoded parameter
+  names without confusing text inside a value for a parameter name.
+- Encode search text and dynamic record IDs in generated URLs so literal query
+  characters retain their value instead of becoming locale or identity parameters.
+  Keep selected profile preferences unchanged and requests without explicit locale
+  independent of earlier requests.
+- Verify both-backend session identity/counter/idle boundaries plus actual HTTP
+  links, GET/POST fields, mutation redirects, encoded search/IDs and fragments.
+  No-JavaScript/no-cookie Chromium follows board/clear/home/admin/Designer/save;
+  live shared-store authentication and BSON regressions also pass.
+- Update older denial-text assertions to the installed translations while retaining
+  all disabled-account, credential, factor and revocation checks. Remaining page
+  translations, direction coverage and additional language assets stay in TODO.
+
 ## 2026-11-17 Translate enrollment credential and confirmation labels
 
 - Reuse per-request translation readers for setup username/password/start labels,

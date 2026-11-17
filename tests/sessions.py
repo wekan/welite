@@ -3,6 +3,10 @@ from layout import Forms
 from urllib.parse import parse_qs, urlsplit
 import json
 import sqlite3
+from pathlib import Path
+SOURCE_WORDS=json.loads((Path(__file__).resolve().parents[1]/'i18n/data/en.jsn').read_text())
+LOGIN_DENIAL=SOURCE_WORDS['invalid-credentials'].encode()
+USERNAME_TAKEN=SOURCE_WORDS['error-username-taken'].encode()
 
 def run(request,db,admin):
     user='session-user';password='test-password'
@@ -24,10 +28,10 @@ def run(request,db,admin):
     assert request('GET','/api/user?token='+api)[0]==401
     assert request('GET','/designer?sessionId='+old)[0]==302
     web=request('POST','/sign-in',dict(username=user,password=password))
-    assert web[0]==200 and b'Invalid login' in web[2] and 'Location' not in web[1]
+    assert web[0]==200 and LOGIN_DENIAL in web[2] and 'Location' not in web[1]
     assert request('POST','/users/login',dict(username=user,password=password))[0]==401
     duplicate=request('POST','/register',dict(username=user,password=password,confirm=password))
-    assert duplicate[0]==200 and b'username is taken' in duplicate[2] and 'Location' not in duplicate[1]
+    assert duplicate[0]==200 and USERNAME_TAKEN in duplicate[2] and 'Location' not in duplicate[1]
     with sqlite3.connect(db) as con:con.execute('UPDATE users SET loginDisabled=0 WHERE id=?',(uid,))
     assert people('disable')[0]==302
     with sqlite3.connect(db) as con:assert con.execute('SELECT COUNT(*) FROM login_tokens WHERE userId=?',(uid,)).fetchone()[0]==0
@@ -74,7 +78,7 @@ def run(request,db,admin):
     with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
     assert request('POST','/users/login',dict(username=user,password=password))[0]==401
     response=request('POST','/sign-in',dict(username=user,password=password))
-    assert response[0]==200 and b'Invalid login' in response[2]
+    assert response[0]==200 and LOGIN_DENIAL in response[2]
     assert request('GET','/api/user?token='+meteor_api)[0]==401
     assert request('GET','/designer?sessionId='+meteor_web)[0]==302
     # Version-19 Argon2 is the active credential even when bcrypt is present.
@@ -96,7 +100,7 @@ def run(request,db,admin):
     with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
     assert request('POST','/users/login',dict(username=user,password=password))[0]==401
     response=request('POST','/sign-in',dict(username=user,password=password))
-    assert response[0]==200 and b'Invalid login' in response[2]
+    assert response[0]==200 and LOGIN_DENIAL in response[2]
     assert request('GET','/api/user?token='+argon_api)[0]==401
     assert request('GET','/designer?sessionId='+argon_web)[0]==302
     legacy_argon='$argon2id$v=16$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$shmop4+uHY9Bws9kfsVWl7IO3PvjjDUJpB4nB4wjPno'
@@ -125,7 +129,7 @@ def run(request,db,admin):
             count=con.execute('SELECT count(*) FROM login_tokens WHERE userId=?',(uid,)).fetchone()[0]
         assert request('POST','/users/login',dict(username=user,password=password))[0]==401
         denied=request('POST','/sign-in',dict(username=user,password=password))
-        assert denied[0]==200 and b'Invalid login' in denied[2]
+        assert denied[0]==200 and LOGIN_DENIAL in denied[2]
         with sqlite3.connect(db) as con:
             assert con.execute('SELECT count(*) FROM login_tokens WHERE userId=?',(uid,)).fetchone()[0]==count
             assert json.loads(con.execute('SELECT services_json FROM users WHERE id=?',(uid,)).fetchone()[0])==blocked

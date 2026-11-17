@@ -277,7 +277,7 @@ begin
     'heading':   Result := '<h2>' + HtmlEncode(W.Lbl) + '</h2>';
     'label':     Result := HtmlEncode(W.Lbl);
     'hr', 'spacer': Result := '<hr>';
-    'link':      Result := '<a href="' + HtmlAttr(WithSessionId(W.Target, S.SessionId)) +
+    'link':      Result := '<a href="' + HtmlAttr(SessionUrl(W.Target,S)) +
                            '">' + HtmlEncode(W.Lbl) + '</a>';
     'button':    // POST form button with action-token (no JS)
       Result := '<form method="POST" action="' + HtmlAttr(W.Target) + '">' +
@@ -468,7 +468,8 @@ begin
 
     // query-only hrefs (start with '?') keep the current path on retro browsers; they replace
     // the whole query string, so we re-include sessionId + search + visible-column set each time.
-    BaseQ := '?sessionId=' + S.SessionId + '&tq_' + Slug + '=' + Q + ColQ;
+    BaseQ := '?sessionId=' + S.SessionId + '&tq_' + Slug + '=' + HTTPEncode(Q) + ColQ;
+    if S.LanguageTag<>'' then BaseQ:=BaseQ+'&lang='+S.LanguageTag;
 
     // --- top bar: search + column chooser (left), pagination "Page n / m" (right) --------
     // one GET form carries the search text AND the column checkboxes (Apply submits both)
@@ -476,7 +477,7 @@ begin
       '<table border="0" width="100%"><tr>' +
       '<td align="' + Align + '">' +
         '<form method="GET">' +
-        '<input type="hidden" name="sessionId" value="' + HtmlAttr(S.SessionId) + '">' +
+        '<input type="hidden" name="sessionId" value="' + HtmlAttr(S.SessionId) + '">' +LanguageHiddenField(S)+
         'Search <input name="tq_' + HtmlAttr(Slug) + '" value="' + HtmlAttr(Q) + '"> ' +
         '<br>Columns: ' + Chooser +
         '<input type="submit" value="Apply"></form>' +
@@ -510,8 +511,8 @@ begin
         // click an editable cell -> edit page for that field (date/text/etc.); that page is a
         // form and may itself be a Designer page. rowKey value is Rows[i][0].
         if VisEditable[j] and (EditUrl <> '') then
-          Cell := '<a href="' + HtmlAttr(WithSessionId(
-                    EditUrl + '?id=' + Rows[i][0] + '&field=' + VisName[j], S.SessionId)) +
+          Cell := '<a href="' + HtmlAttr(SessionUrl(
+                    EditUrl + '?id=' + HTTPEncode(Rows[i][0]) + '&field=' + HTTPEncode(VisName[j]),S)) +
                    '">' + Cell + '</a>';
         Result := Result + '<td align="' + Align + '">' + Cell + '</td>';
       end;
@@ -1017,16 +1018,16 @@ begin
     if Rows[i][3]='1' then Toggle:='disable' else Toggle:='enable';
     Body := Body+'<tr><td>'+HtmlEncode(Rows[i][2])+'</td><td>'+HtmlEncode(Rows[i][1])+
       '</td><td>'+HtmlEncode(Rows[i][3])+'</td><td><a href="'+
-      HtmlAttr(WithSessionId('/designer/page?id='+Id,S.SessionId))+'">Edit</a> '+
-      '<a href="'+HtmlAttr(WithSessionId(Rows[i][1],S.SessionId))+'">Preview</a> '+
-      '<a href="'+HtmlAttr(WithSessionId('/designer/page/export?id='+Id,S.SessionId))+'">Export</a> '+
+      HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(Id),S))+'">Edit</a> '+
+      '<a href="'+HtmlAttr(SessionUrl(Rows[i][1],S))+'">Preview</a> '+
+      '<a href="'+HtmlAttr(SessionUrl('/designer/page/export?id='+HTTPEncode(Id),S))+'">Export</a> '+
       ToolButton(S,'/designer/page/save',Toggle,'pageId',Id,'action',Toggle)+
       ToolButton(S,'/designer/page/save','Delete','pageId',Id,'action','delete')+'</td></tr>';
   end;
   if Length(Rows)=0 then Body:=Body+'<tr><td colspan="4">No pages yet.</td></tr>';
   P := Default(TPage); P.Cols:=1; P.Doctype:='html32'; P.Dir:='auto'; P.MinRole:='member';
   Body:=Body+'</table><h2>Import/export</h2><p><a href="'+
-    HtmlAttr(WithSessionId('/designer/export',S.SessionId))+'">Export all pages</a></p>'+
+    HtmlAttr(SessionUrl('/designer/export',S))+'">Export all pages</a></p>'+
     '<form method="POST" enctype="multipart/form-data" action="/designer/page/import">'+
     AuthHiddenFields(S,'designer:/designer/page/import')+
     '<input type="file" name="file"><input type="submit" value="Import page"></form>'+
@@ -1104,7 +1105,7 @@ begin
   if not T.Db.Exec(Sql) then
   begin DesignerError(aResponse,500,'Could not save page'); Exit; end;
   aResponse.Code:=302;
-  aResponse.SetCustomHeader('Location',WithSessionId('/designer',S.SessionId));
+  aResponse.SetCustomHeader('Location',SessionUrl('/designer',S));
   aResponse.SendContent;
 end;
 
@@ -1182,8 +1183,8 @@ begin
             ToolButton(S, '/designer/widget/move', '>', 'widgetId', W[i].Id, 'dir', 'right') +
             ToolButton(S,'/designer/widget/sort','Sort up','widgetId',W[i].Id,'dir','up')+
             ToolButton(S,'/designer/widget/sort','Sort down','widgetId',W[i].Id,'dir','down')+
-            '<a href="'+HtmlAttr(WithSessionId('/designer/page?id='+P.Id+
-              '&widgetId='+W[i].Id,S.SessionId))+'">Edit widget</a> ' +
+            '<a href="'+HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(P.Id)+
+              '&widgetId='+HTTPEncode(W[i].Id),S))+'">Edit widget</a> ' +
             ToolButton(S, '/designer/widget/delete', 'Del', 'widgetId', W[i].Id, '', '') +
             '<hr>';
         end;
@@ -1201,7 +1202,7 @@ begin
     Body:=Body+WidgetForm(S,P.Id,EditWidget,'Add widget')
   else
     Body:=Body+WidgetForm(S,P.Id,EditWidget,'Save widget');
-  Body:=Body+'<p><a href="'+HtmlAttr(WithSessionId(P.Url,S.SessionId))+'">Preview</a></p>';
+  Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl(P.Url,S))+'">Preview</a></p>';
 
   aResponse.Content := PageDir('Designer — ' + P.Title, Body, Dir);
   aResponse.ContentType := 'text/html; charset=utf-8';
@@ -1219,7 +1220,7 @@ end;
 procedure EditorRedirect(aResponse: TResponse; const PageId: string; const S: TWLSession);
 begin
   aResponse.Code:=302;
-  aResponse.SetCustomHeader('Location',WithSessionId('/designer/page?id='+PageId,S.SessionId));
+  aResponse.SetCustomHeader('Location',SessionUrl('/designer/page?id='+HTTPEncode(PageId),S));
   aResponse.SendContent;
 end;
 
@@ -1407,7 +1408,7 @@ begin
   Url := ImportPageJson(T.Db, Json);
   if Url='' then begin DesignerError(aResponse,400,'Invalid page or import failed; existing pages are unchanged'); Exit; end;
   aResponse.Code := 302;
-  aResponse.SetCustomHeader('Location', WithSessionId('/designer', S.SessionId));
+  aResponse.SetCustomHeader('Location', SessionUrl('/designer',S));
   aResponse.SendContent;
 end;
 
@@ -1449,7 +1450,7 @@ begin
   if N<0 then begin DesignerError(aResponse,400,'Invalid archive or import failed; existing pages are unchanged'); Exit; end;
   Writeln('Designer: imported ', N, ' pages for ', T.Host);
   aResponse.Code := 302;
-  aResponse.SetCustomHeader('Location', WithSessionId('/designer', S.SessionId));
+  aResponse.SetCustomHeader('Location', SessionUrl('/designer',S));
   aResponse.SendContent;
 end;
 

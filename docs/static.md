@@ -135,3 +135,19 @@ OTP/confirm and log-in keys through their own per-request readers. Output remain
 escaped and private controls/proof handling remain in the enrollment endpoints.
 Long setup instructions, titles, retry explanations and completion/policy messages
 still require dedicated translation keys.
+
+### Navigation language state
+
+A validated explicit locale travels in generated navigation URLs and action/GET
+hidden fields. `TWLSession.LanguageTag` holds only request rendering context; session
+serialization excludes it. Validation and action-token handling derive it from the
+current query or posted field, so an earlier request cannot silently set the next
+request's locale. Profile language continues to resolve at render time.
+
+Board/minimap/view/selection, Designer/table and admin links and mutation redirects
+use that context. Session/locale parameters are inserted before URL fragments;
+existing locale parameters are retained, including encoded names. Dynamic IDs and
+search values are URL-encoded so embedded query characters preserve data identity.
+Re-login preserves a valid locale while dropping failed session identity. Language
+choice does not modify stored profile preferences. Page text and direction/language
+metadata outside the completed renderers remain in `TODO.md`.

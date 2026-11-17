@@ -43,6 +43,7 @@ type
     SessionId  : string;
     UserId     : string;
     Username   : string;
+    LanguageTag: string;     // validated request context; never serialized as authentication metadata
     PasswordRef: string;     // a stable per-credential marker (e.g. hash of the stored hash)
     Ip         : string;
     UserAgent  : string;
@@ -58,6 +59,9 @@ function RequestUserAgent(ARequest: TRequest): string;
 
 // Append ?sessionId=.. (or &sessionId=..) to a link target, since we cannot rely on cookies.
 function WithSessionId(const TargetPath, SessionId: string): string;
+function RequestLanguageTag(Request:TRequest):string;
+function LanguageHiddenField(const S:TWLSession):string;
+function SessionUrl(const TargetPath:string;const S:TWLSession):string;
 
 // --- token machinery ----------------------------------------------------------------------
 function ApiTokenLifetime(Db:TWLDb):Int64;
@@ -89,6 +93,7 @@ function ValidateSession(Db: TWLDb; ARequest: TRequest;
   const SessionId: string; out S: TWLSession): Boolean;
 
 implementation
+uses wli18n;
 
 constructor TWLLoginProof.Create;
 begin inherited Create;FCounter:=-1;end;
@@ -207,15 +212,61 @@ begin
     Result := Trim(ARequest.CustomHeaders.Values['User-Agent']);
 end;
 
+function QueryHasName(const Url,Name:string):Boolean;
+var At,Stop,EqualAt:Integer;Query,Pair,Key:string;Parts:TStringList;i:Integer;
+begin
+  Result:=False;At:=Pos('?',Url);if At=0 then Exit;
+  Query:=Copy(Url,At+1,Length(Url));Stop:=Pos('#',Query);
+  if Stop>0 then Query:=Copy(Query,1,Stop-1);
+  Parts:=TStringList.Create;
+  try
+    Parts.StrictDelimiter:=True;Parts.Delimiter:='&';Parts.QuoteChar:=#0;Parts.DelimitedText:=Query;
+    for i:=0 to Parts.Count-1 do
+    begin
+      Pair:=Parts[i];EqualAt:=Pos('=',Pair);
+      if EqualAt>0 then Key:=Copy(Pair,1,EqualAt-1) else Key:=Pair;
+      if SameText(HTTPDecode(Key),Name) then Exit(True);
+    end;
+  finally Parts.Free;end;
+end;
+
 function WithSessionId(const TargetPath, SessionId: string): string;
 begin
   Result := TargetPath;
   if Trim(SessionId) = '' then Exit;
-  if Pos('sessionId=', Result) > 0 then Exit;
+  if QueryHasName(Result,'sessionId') then Exit;
   if Pos('?', Result) > 0 then
     Result := Result + '&sessionId=' + SessionId
   else
     Result := Result + '?sessionId=' + SessionId;
+end;
+
+function RequestLanguageTag(Request:TRequest):string;
+var Language:TWLLanguage;Value:string;
+begin
+  Result:='';if Request=nil then Exit;
+  Value:=Request.QueryFields.Values['lang'];
+  if Value='' then Value:=Request.ContentFields.Values['lang'];
+  if FindLanguage(Value,Language) then Result:=Language.Tag;
+end;
+function LanguageHiddenField(const S:TWLSession):string;
+var Language:TWLLanguage;
+begin
+  Result:='';if FindLanguage(S.LanguageTag,Language) then
+    Result:='<input type="hidden" name="lang" value="'+Language.Tag+'">';
+end;
+function SessionUrl(const TargetPath:string;const S:TWLSession):string;
+var Core,Fragment,Separator:string;At:Integer;Language:TWLLanguage;
+begin
+  Core:=TargetPath;Fragment:='';At:=Pos('#',Core);
+  if At>0 then begin Fragment:=Copy(Core,At,Length(Core));Core:=Copy(Core,1,At-1);end;
+  Core:=WithSessionId(Core,S.SessionId);
+  if FindLanguage(S.LanguageTag,Language) and not QueryHasName(Core,'lang') then
+  begin
+    if Pos('?',Core)>0 then Separator:='&' else Separator:='?';
+    Core:=Core+Separator+'lang='+Language.Tag;
+  end;
+  Result:=Core+Fragment;
 end;
 
 function HashText(const Value:string):string;
@@ -251,7 +302,7 @@ begin
     '<input type="hidden" name="sessionId"    value="' + HtmlAttr(S.SessionId) + '">' +
     '<input type="hidden" name="auth_action"  value="' + HtmlAttr(ActionName) + '">' +
     '<input type="hidden" name="auth_counter" value="' + IntToStr(S.Counter) + '">' +
-    '<input type="hidden" name="auth_hash"    value="' + HtmlAttr(ActionHash(S, ActionName)) + '">';
+    '<input type="hidden" name="auth_hash"    value="' + HtmlAttr(ActionHash(S, ActionName)) + '">'+LanguageHiddenField(S);
 end;
 
 // These helpers run under SessionLock. JSON preserves arbitrary user-agent/username
@@ -307,7 +358,7 @@ begin
     begin
       Inc(Current.Counter); Current.LastSeenAt:=DateTimeToUnix(Now,False); PackMeta(Current);
     end;
-    S:=Current; Result:=True;
+    Current.LanguageTag:=RequestLanguageTag(ARequest);S:=Current; Result:=True;
   finally LeaveCriticalSection(SessionLock); end;
 end;
 
@@ -486,7 +537,7 @@ begin
       RevokeStoredToken(Db,SessionId);
       SessionMeta.Delete(SessionMeta.IndexOfName(SessionId)); Exit;
     end;
-    Current.LastSeenAt:=NowTs; PackMeta(Current); S:=Current; Result:=True;
+    Current.LastSeenAt:=NowTs; PackMeta(Current); Current.LanguageTag:=RequestLanguageTag(ARequest);S:=Current; Result:=True;
   finally LeaveCriticalSection(SessionLock); end;
 end;
 

@@ -94,6 +94,8 @@ begin
   Result := (Length(Rows) > 0) and (Length(Rows[0]) > 0) and (Rows[0][0] = '0');
 end;
 
+function LanguageUrl(Request:TRequest;const Url:string):string;forward;
+
 // GET / — board list for the resolved tenant (HTML 3.2 baseline; enhance later).
 procedure HomeEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
@@ -111,7 +113,7 @@ begin
   if NoUsersYet(T) then
   begin
     aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location', '/sign-in');
+    aResponse.SetCustomHeader('Location',LanguageUrl(aRequest,'/sign-in'));
     aResponse.SendContent;
     Exit;
   end;
@@ -121,15 +123,16 @@ begin
   if ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
     IsGAdmin := IsTenantAdmin(T.Db, S)
   else S:=Default(TWLSession);
+  S.LanguageTag:=RequestLanguageTag(aRequest);
 
   Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
   if IsGAdmin then
     Body := Body + '<p><b>Tenant administrator</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
-            '<a href="' + HtmlAttr(WithSessionId('/admin', S.SessionId)) + '">Admin Panel</a></p>' + LineEnding
+            '<a href="' + HtmlAttr(SessionUrl('/admin',S)) + '">Admin Panel</a></p>' + LineEnding
   else if S.Username <> '' then
     Body := Body + '<p>Signed in as ' + HtmlEncode(S.Username) + '.</p>' + LineEnding;
 
-  Body:=Body+BoardListHtml(T.Db,S)+'<p><a href="/sign-in">Sign in</a> | <a href="/register">Register</a></p>';
+  Body:=Body+BoardListHtml(T.Db,S)+'<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">Sign in</a> | <a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Register</a></p>';
   // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
   Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
   SendHtml(aResponse, Page32('WeKan-Lite', Body));
@@ -455,7 +458,7 @@ begin
   else ApplyMove(T.Db, aRequest.ContentFields);
   BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;
-  aResponse.SetCustomHeader('Location', WithSessionId(BackTo, S.SessionId));
+  aResponse.SetCustomHeader('Location', SessionUrl(BackTo,S));
   aResponse.SendContent;
 end;
 
@@ -472,6 +475,7 @@ begin
   begin
     if not ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
       S := Default(TWLSession);
+    S.LanguageTag:=RequestLanguageTag(aRequest);
     // direction mirrors RTL languages from one page definition (no separate files);
     // QueryFields carry table search/page/column-visibility state (no-JS, no cookies)
     if TryServePage(T, S, aRequest.PathInfo,
