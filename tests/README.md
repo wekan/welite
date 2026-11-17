@@ -486,3 +486,8 @@ mutation so it does not wait for disabled page-script events.
 The data-table matrix also checks mirrored search/pagination source order, isolated
 physical previous/next arrows and browser geometry with ignored table direction.
 Both page directions retain search, selected columns and locale through page links.
+
+Admin frame coverage includes global-domain token/host/action validation and forced
+registry insertion failure. People management forces a failed account disable and
+checks unchanged flags plus still-valid member access after token-revocation rollback.
+Both failure types assert authenticated language/header/direction metadata.

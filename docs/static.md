@@ -263,3 +263,9 @@ reserved-admin registration denial now use the public authentication frame, hono
 query/posted/header language without a profile lookup. Existing retry and enrollment
 private-response headers remain intact; error prose is escaped and contains no
 credentials or setup secret. Full message translation remains separate work.
+
+Admin domain/account validation, bad-token and storage failures now use the
+authenticated viewer frame too. Forced domain insertion and account update
+failures verify frame metadata while preserving the registry/account transaction
+behavior and keeping rolled-back member credentials valid. Early Designer
+import/export failures remain the next frame audit step.

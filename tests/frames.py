@@ -8,7 +8,7 @@ class Document(HTMLParser):
     def handle_starttag(self,tag,attrs):
         if tag=='html':self.html=dict(attrs)
         if tag=='body':self.body=dict(attrs)
-def check_frames(request,database,session,editor):
+def check_frames(request,database,session,editor,member):
     with sqlite3.connect(database) as con:
         original=con.execute("SELECT profile_json FROM users WHERE username='administrator'").fetchone()[0]
         con.execute("UPDATE users SET profile_json=? WHERE username='administrator'",(json.dumps(dict(language='ar',keep=dict(value='unchanged'))),))
@@ -49,6 +49,8 @@ def check_frames(request,database,session,editor):
             assert (document.html.get('dir')=='rtl')==(tag=='ar')
             assert (document.body.get('dir')=='rtl')==(tag=='ar')
         missing='/designer/page?id=missing-frame&sessionId='+session
+        error('POST','/admin/people',dict(sessionId=session),403)
+        error('POST','/admin/people',dict(sessionId=session,lang='fi'),403,'fi')
         error('GET',missing,None,404)
         error('GET',missing+'&lang=fi',None,404,'fi')
         error('GET','/board?id=missing-frame&sessionId='+session,None,404)
@@ -64,6 +66,19 @@ def check_frames(request,database,session,editor):
         forms=Forms();forms.feed(body.decode())
         fields=next(fields for path,fields in forms.forms if path=='/designer/widget/move')
         error('POST','/designer/widget/move',dict(fields,widgetId='missing-frame',dir='left'),404)
+        body=check('/admin/people?sessionId='+session)
+        forms=Forms();forms.feed(body.decode())
+        fields=next(fields for path,fields in forms.forms if path=='/admin/people')
+        with sqlite3.connect(database) as con:
+            target=con.execute("SELECT id,isAdmin,loginDisabled FROM users WHERE username='member'").fetchone()
+            con.execute("CREATE TRIGGER frameact BEFORE UPDATE ON users WHEN NEW.username='member' BEGIN SELECT RAISE(ABORT,'forced'); END")
+        try:
+            error('POST','/admin/people',dict(fields,action='disable',userId=target[0]),500)
+            with sqlite3.connect(database) as con:
+                assert con.execute("SELECT id,isAdmin,loginDisabled FROM users WHERE username='member'").fetchone()==target
+            assert request('GET','/board?id=protected&sessionId='+member)[0]==200
+        finally:
+            with sqlite3.connect(database) as con:con.execute('DROP TRIGGER frameact')
         with sqlite3.connect(database) as con:
             original_card=con.execute("SELECT title,listId,swimlaneId FROM cards WHERE id='card'").fetchone()
         error('POST','/board/move',dict(lang='ar',boardId='protected'),403)

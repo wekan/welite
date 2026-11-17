@@ -278,7 +278,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             from langnav import check_navigation
             check_navigation(request,db,admin)
             from frames import check_frames
-            check_frames(request,db,admin,layout_editor)
+            check_frames(request,db,admin,layout_editor,member)
             from widgetrt import run as check_widget_direction
             check_widget_direction(request,db,admin,member,'http://localhost:'+str(port))
             from tabrtl import run as check_table_direction

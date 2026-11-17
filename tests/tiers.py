@@ -1,5 +1,6 @@
 """HTTP role and host isolation checks, called by admin.py."""
 from autherr import check as check_auth_error
+from frames import Document
 from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlsplit
 import sqlite3
@@ -33,14 +34,32 @@ def run(request, tmp, local_admin):
     assert request('GET', '/admin/domains?sessionId='+local_admin, host='admin')[0] == 302
     assert request('GET', '/admin/domains?sessionId='+global_admin)[0] == 302
     registry = tmp/'data/admin/files/db/wekan.db'
-    def action(host, verb='add'):
-        status, _, body = request('GET','/admin/domains?sessionId='+global_admin,host='admin')
+    def action(host,verb='add',language=''):
+        source='/admin/domains?sessionId='+global_admin
+        if language:source+='&lang='+language
+        status,_,body=request('GET',source,host='admin')
         assert status == 200
         parser = Fields()
         parser.feed(body.decode())
         return request('POST','/admin/domains',dict(parser.fields,host=host,action=verb),host='admin')
+    def error_frame(result,status,tag):
+        code,headers,body=result;assert code==status
+        doc=Document();doc.feed(body.decode())
+        assert headers['Content-Language']==tag and 'Accept-Language' in headers['Vary']
+        assert doc.html['lang']==tag and (doc.html.get('dir')=='rtl')==(tag=='ar')
+        assert (doc.body.get('dir')=='rtl')==(tag=='ar')
+    error_frame(request('POST','/admin/domains',dict(sessionId=global_admin,lang='ar'),host='admin'),403,'ar')
     for bad in ['../escape','admin','local','localhost','127.0.0.1','bad/host','bad..host','-bad.example','bad-.example']:
-        assert action(bad)[0] == 400, bad
+        error_frame(action(bad,language='ar'),400,'ar')
+    error_frame(action('unknown-action.example',verb='unknown',language='fi'),400,'fi')
+    with sqlite3.connect(registry) as con:
+        con.execute("CREATE TRIGGER frameprov BEFORE INSERT ON domains BEGIN SELECT RAISE(ABORT,'forced'); END")
+    try:
+        error_frame(action('failed.example',language='fi'),500,'fi')
+        with sqlite3.connect(registry) as con:
+            assert con.execute("SELECT 1 FROM domains WHERE host='failed.example'").fetchone() is None
+    finally:
+        with sqlite3.connect(registry) as con:con.execute('DROP TRIGGER frameprov')
     assert action('team.example')[0] == 302
     db = domain_db(tmp/'data','team.example')
     with sqlite3.connect(db) as con:

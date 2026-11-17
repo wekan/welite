@@ -57,6 +57,14 @@ begin
   aResponse.SendContent;
 end;
 
+procedure AdminError(Request:TRequest;Response:TResponse;Db:TWLDb;const S:TWLSession;
+  Code:Integer;const Message:string);
+begin
+  Response.Code:=Code;Response.ContentType:='text/html; charset=utf-8';
+  Response.Content:=LanguagePage(Response,ViewerLanguage(Db,S,Request),
+    'Admin','<p>'+HtmlEncode(Message)+'</p>');Response.SendContent;
+end;
+
 function IsTenantAdmin(Db: TWLDb; const S: TWLSession): Boolean;
 var Rows: TWLRows;
 begin
@@ -179,23 +187,23 @@ begin
   begin
     if not VerifyActionToken(aRequest, S, 'admin:domains') then
     begin
-      aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+      AdminError(aRequest,aResponse,T.Db,S,403,'Bad token');Exit;
     end;
     Action := aRequest.ContentFields.Values['action'];
     Host   := NormalizeHost(aRequest.ContentFields.Values['host']);
     if not RegistryValidHost(Host) then
-    begin aResponse.Code:=400; aResponse.Content:='Invalid or reserved domain'; aResponse.SendContent; Exit; end;
+    begin AdminError(aRequest,aResponse,T.Db,S,400,'Invalid or reserved domain');Exit; end;
     case Action of
       'add': begin
         if not RegistryAddDomain(Host) or not ProvisionTenant(Host) then
         begin
           RegistrySetEnabled(Host,False);
-          aResponse.Code:=500; aResponse.Content:='Could not provision domain'; aResponse.SendContent; Exit;
+          AdminError(aRequest,aResponse,T.Db,S,500,'Could not provision domain');Exit;
         end;
       end;
       'enable': RegistrySetEnabled(Host,True);
       'disable': RegistrySetEnabled(Host,False);
-    else begin aResponse.Code:=400; aResponse.Content:='Unknown domain action'; aResponse.SendContent; Exit; end;
+    else begin AdminError(aRequest,aResponse,T.Db,S,400,'Unknown domain action');Exit; end;
     end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', SessionUrl('/admin/domains',S));
@@ -245,7 +253,7 @@ begin
   begin
     if not VerifyActionToken(aRequest, S, 'admin:people') then
     begin
-      aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+      AdminError(aRequest,aResponse,T.Db,S,403,'Bad token');Exit;
     end;
     Action := aRequest.ContentFields.Values['action'];
     Uid    := aRequest.ContentFields.Values['userId'];
@@ -264,10 +272,10 @@ begin
           'UPDATE users SET '+SetClause+',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Uid)+'; COMMIT;'
         else SetClause:=Format('UPDATE users SET %s,modifiedAt=%s WHERE id=%s;',[SetClause,QuotedStr(NowIso),QuotedStr(Uid)]);
       except
-        aResponse.Code:=500;aResponse.Content:='Could not update account';aResponse.SendContent;Exit;
+        AdminError(aRequest,aResponse,T.Db,S,500,'Could not update account');Exit;
       end;
       if not T.Db.Exec(SetClause) then
-      begin T.Db.Exec('ROLLBACK;'); aResponse.Code:=500; aResponse.Content:='Could not update account'; aResponse.SendContent; Exit; end;
+      begin T.Db.Exec('ROLLBACK;'); AdminError(aRequest,aResponse,T.Db,S,500,'Could not update account');Exit; end;
     end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', SessionUrl('/admin/people',S));

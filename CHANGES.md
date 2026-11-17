@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep viewer metadata on Admin operation errors
+
+- Render domain/account validation, bad-token and storage failures with explicit
+  authenticated request context and escaped prose through the shared viewer frame.
+  Preserve existing statuses and transaction behavior.
+- Verify Arabic/Finnish domain token/host/action failures and forced registry insert
+  failure. Force account disable failure, checking unchanged flags and member access
+  after rolled-back token revocation. Both backends pass complete Admin HTTP suites.
+- Live maintained FerretDB/HTTP checks also pass on linked/CLI backends, including
+  Mongo profile changes, BSON preservation, private web sessions, restart and shared
+  revocation. Three early Designer import/export responses remain for the next step.
+
 ## 2026-11-17 Mirror data-table toolbar and pagination
 
 - Mirror search/pagination cells structurally, retaining logical leading/trailing
