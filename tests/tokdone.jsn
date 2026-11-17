@@ -395,17 +395,20 @@
     "zh-HK.jsn": [
       "act-removeChecklistItem",
       "board-open-and-move-between-remaining-and-workspaces",
-      "drag-board-to-workspace"
+      "drag-board-to-workspace",
+      "act-deleteAttachment"
     ],
     "zh-Hant.jsn": [
       "act-removeChecklistItem",
       "board-open-and-move-between-remaining-and-workspaces",
-      "drag-board-to-workspace"
+      "drag-board-to-workspace",
+      "act-deleteAttachment"
     ],
     "zh-TW.jsn": [
       "act-removeChecklistItem",
       "board-open-and-move-between-remaining-and-workspaces",
-      "drag-board-to-workspace"
+      "drag-board-to-workspace",
+      "act-deleteAttachment"
     ],
     "zh.jsn": [
       "act-removeChecklistItem"

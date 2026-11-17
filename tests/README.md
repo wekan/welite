@@ -498,3 +498,7 @@ browser import/export cases retain successful JSON/ZIP formats and download name
 
 The French regression also checks every baseline `fr.jsn` argument inventory
 after contextual custom-field/search-code repairs, without constraining human prose.
+
+`python3 tests/zhargs.py` checks the Traditional Chinese attachment activity in
+Hong Kong/Traditional/Taiwan files: native deletion/swimlane vocabulary, no English
+swimlane fragment, English key order and exact source argument inventories.

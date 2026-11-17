@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Repair Traditional Chinese attachment activity
+
+- Restore canonical attachment/card/list/board arguments in Hong Kong, Traditional
+  and Taiwan attachment-deletion templates, using each locale's existing native
+  noun labels as the reference. Replace their English swimlane fragment with the
+  existing Chinese term, retaining all correct Chinese prose and other values/order.
+- Record the three keys and add native-vocabulary/wrong-language-fragment regressions
+  alongside exact English argument inventories. Token, French and
+  installed-language UTF-8 reader checks pass.
+- The audit now leaves 1,143 contextual differences. Other language quality/assets
+  and untranslated application text remain open.
+
 ## 2026-11-17 Repair contextual French argument templates
 
 - Close the French custom-field value argument and repair two stale search-code

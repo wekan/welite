@@ -281,3 +281,11 @@ the source-authoritative literal search examples `user:` and `has:-due`. Only
 reviewed code spans changed; all surrounding French prose, other values and key
 order remain intact. The baseline French file now matches every English argument
 inventory, alongside the regional French asset checks.
+
+### Traditional Chinese attachment activity
+
+Hong Kong, Traditional and Taiwan activity templates now restore canonical
+attachment/card/list/board arguments from the corresponding native noun labels.
+The English `at swimlane` fragment is replaced using each locale’s existing
+swimlane term. Correct Chinese prose, all other values and key order stay intact;
+argument and wrong-language-fragment regressions cover the three repaired keys.

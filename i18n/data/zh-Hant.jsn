@@ -14,7 +14,7 @@
   "error-user-notSameOrgOrTeam": "You can only add users from the same Organization or Team",
   "act-activity-notify": "動態通知",
   "act-addAttachment": "附件 __attachment__ 已新增到卡片 __card__ 位於清單 __list__ 泳道 __swimlane__ 看板 __board__",
-  "act-deleteAttachment": "已刪除的附件__附件__卡片上__卡片__在清單__清單__at swimlane__swimlane__在看板__看板__",
+  "act-deleteAttachment": "已刪除的附件__attachment__卡片上__card__在清單__list__在泳道流程圖__swimlane__在看板__board__",
   "act-addSubtask": "新增子任務 __子任務 __ to card __卡片__ at list_清單__ at swimlane __分隔線__ at board __看板__",
   "act-addLabel": "新增標籤 __label__  到看板 __board__ 中的泳道 __swimlane__ 中的清單 __list__ 中的卡片 __card__ 中",
   "act-addedLabel": "新增標籤 __label__  到看板 __board__ 中的泳道 __swimlane__ 中的清單 __list__ 中的卡片 __card__ 中",
