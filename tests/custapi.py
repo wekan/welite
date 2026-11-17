@@ -3,6 +3,7 @@ import json
 import sqlite3
 from urllib.parse import quote, urlencode
 from wire import DateMs, Long, Binary, encode
+from pathhttp import run_native as check_native_paths, run_shared as check_shared_paths
 
 
 def exercise(call, base, snapshot, check, fail, un_fail, typed):
@@ -12,7 +13,7 @@ def exercise(call, base, snapshot, check, fail, un_fail, typed):
     def accepted(kind, value, expected):
         status, _, body = post(kind, value)
         assert status == 200, (kind, status, body)
-        assert json.loads(body)['_id'] == 'cust-"id'
+        assert json.loads(body)['_id'] == 'cust-"漢'
         check(kind, expected)
 
     accepted('text', 'first', 'first')
@@ -72,7 +73,7 @@ def run_native(request, db):
         con.execute("INSERT INTO boards(id,title,slug,createdAt) VALUES('cust-board','Custom','custom','now')")
         con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES('cust-board',?,1)", (login['id'],))
         con.execute("INSERT INTO lists(id,boardId,title,createdAt) VALUES('cust-list','cust-board','List','now')")
-        con.execute('INSERT INTO cards(id,boardId,listId,title,createdAt,userId,dateLastActivity,modifiedAt) VALUES(?,?,?,?,?,?,?,?)', ('cust-"id','cust-board','cust-list','Card','now',login['id'],'now','now'))
+        con.execute('INSERT INTO cards(id,boardId,listId,title,createdAt,userId,dateLastActivity,modifiedAt) VALUES(?,?,?,?,?,?,?,?)', ('cust-"漢','cust-board','cust-list','Card','now',login['id'],'now','now'))
         for kind, typ in kinds.items():
             con.execute('INSERT INTO custom_fields(id,name,type,modifiedAt) VALUES(?,?,?,?)', ('cust-' + kind, kind, typ,'now'))
             if kind != 'foreign':
@@ -83,10 +84,10 @@ def run_native(request, db):
         return request(method, path + '?token=' + login['token'], json.dumps(data).encode() if isinstance(data, dict) else data)
     def snapshot():
         with sqlite3.connect(db) as con:
-            return con.execute("SELECT * FROM card_custom_field_values WHERE cardId=? ORDER BY customFieldId", ('cust-"id',)).fetchall()
+            return con.execute("SELECT * FROM card_custom_field_values WHERE cardId=? ORDER BY customFieldId", ('cust-"漢',)).fetchall()
     def check(kind, expected):
         with sqlite3.connect(db) as con:
-            value = con.execute('SELECT value FROM card_custom_field_values WHERE cardId=? AND customFieldId=?', ('cust-"id', 'cust-' + kind)).fetchone()[0]
+            value = con.execute('SELECT value FROM card_custom_field_values WHERE cardId=? AND customFieldId=?', ('cust-"漢', 'cust-' + kind)).fetchone()[0]
         if isinstance(expected, list):
             assert json.loads(value) == expected, (value, expected)
         elif isinstance(expected, bool):
@@ -105,12 +106,13 @@ def run_native(request, db):
                         " ON card_custom_field_values WHEN NEW.value='fail' BEGIN SELECT RAISE(FAIL,'test failure'); END")
     def un_fail():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER cust_fail')
-    base='/api/boards/cust-board/lists/cust-list/cards/' + quote('cust-"id', safe='"')
+    base='/api/boards/cust-board/lists/cust-list/cards/' + quote('cust-"漢', safe='')
     exercise(call, base, snapshot, check, fail, un_fail, False)
+    check_native_paths(call,db,login['id'])
 
 
 def run_shared(request, client, db, token):
-    identity = 'cust-"id'
+    identity = 'cust-"漢'
     kinds = dict(text='text', array='dropdownMultiSelect', number='number', bool='checkbox', date='date', failure='text', foreign='text')
     definitions = [dict(_id='cust-' + kind, name=kind, type=typ, boardIds=[] if kind == 'foreign' else ['b']) for kind, typ in kinds.items()]
     assert client.command({'insert':'customFields','documents':definitions})['n'] == len(definitions)
@@ -151,12 +153,13 @@ def run_shared(request, client, db, token):
         with sqlite3.connect(db) as con:
             physical=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='cards'").fetchone()[0]
             con.execute('CREATE TRIGGER cust_fail AFTER UPDATE ON "' + physical.replace('"','""') +
-                        '" WHEN json_extract(NEW._ferretdb_sjson,\'$._id\')=' + "'cust-\"id'" +
+                        '" WHEN json_extract(NEW._ferretdb_sjson,\'$._id\')=' + "'cust-\"漢'" +
                         " AND instr(json(NEW._ferretdb_sjson),'fail')>0 BEGIN SELECT RAISE(FAIL,'test failure'); END")
     def un_fail():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER cust_fail')
-    base='/api/boards/b/lists/l/cards/' + quote(identity, safe='"')
+    base='/api/boards/b/lists/l/cards/' + quote(identity, safe='')
     exercise(call, base, snapshot, check, fail, un_fail, True)
+    check_shared_paths(call,client,'u')
 
     # Live Mongo values, rather than current definitions, determine shared output.
     special = [dict(_id='text',value='true',unknown='private'),

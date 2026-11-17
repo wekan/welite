@@ -1115,9 +1115,22 @@ Explicit type changes, normalized-store typed migration/validation and selection
 clone/export compatibility still need a coordinated contract. A shared INSERT
 requires a usable definition; the independent normalized table still stores TEXT
 and its GET responses retain the existing text contract pending typed migration.
-Percent-encoded route IDs, including Unicode IDs, currently fail the parent guard
-before reaching this endpoint and require a separate route-decoding fix. None of
-these remaining requirements is closed by the write-path tests above.
+The pinned FPC router copies raw captured route values into `Request.RouteParams`.
+API entry now percent-decodes all declared identifier keys once before tenant,
+authentication and parent checks. It preserves literal plus signs, validates strict
+UTF-8 and rejects malformed escapes/control bytes with HTTP 400. All values are
+staged before assignment; a private route-state marker prevents double decoding
+and cannot be supplied through query fields. Decoded slash characters remain inside
+the already-captured ID and do not cause another routing pass. Bodies and query
+fields retain their existing decoding rules.
+
+`tests/pathid.py` covers every API route key, malformed inputs, idempotence and
+atomic normalization in normal/checked builds. `tests/pathhttp.py`, called by native
+and shared HTTP suites, verifies Unicode/space/plus/percent/slash IDs, explicitly
+escaped user IDs, member/assignee routes and foreign-parent refusal without data
+changes. The custom-value HTTP suite again uses a quoted Unicode card ID through
+its normally encoded URL. This closes the recorded encoded-ID failure; the typed
+migration and clone/export requirements above remain open.
 
 ## Remaining before the checklist can be checked
 

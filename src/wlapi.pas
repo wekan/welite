@@ -81,7 +81,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson;
+uses wlstore,wlsjson,Math,wlcfjson,wlpath;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -126,6 +126,8 @@ end;
 // Resolve the tenant for an API request, or send a JSON error. Static, no web session needed.
 function ApiTenant(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant): Boolean;
 begin
+  if not DecodeApiPath(aRequest) then
+  begin Result:=False;SendError(aResponse,400,'Invalid encoded route identifier');Exit;end;
   Result := ResolveTenant(aRequest, T) and TenantOpen(T);
   if not Result then SendError(aResponse,404,'Unknown domain')
   else if not ApiBodyValid(aRequest) then

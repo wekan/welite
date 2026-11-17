@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Decode API route identifiers once before scope checks
+
+- Decode the pinned FPC router's raw captured identifiers before API tenant,
+  authentication and resource-parent handling. Preserve path plus signs and
+  decode encoded slash/percent characters inside the captured ID without routing
+  the path again.
+- Validate percent escapes, UTF-8 and control bytes. Stage all parameters before
+  committing them, then mark trusted request-local completion to prevent a second
+  decoding pass; query fields cannot supply that marker.
+- Normal/checked tests cover every API parameter, malformed input, atomic failure,
+  plus preservation and idempotence. Native/shared HTTP tests cover encoded Unicode,
+  spaces, plus/percent/slash IDs, user/member/assignee routes and foreign-parent
+  denial without mutation. Restore Unicode quoted IDs in custom-value regressions.
+  The old committed entry point reproduces the Unicode-ID 404; all eight Windows
+  x86/x64 linked/CLI disk/embedded cross-build variants pass.
+- Keep normalized typed migration/validation, explicit type changes and selection
+  clone/export in TODO, along with the broader platform/interoperability gates.
+
 ## 2026-11-17 Return typed shared custom-field JSON values
 
 - Read shared card values through matching owned-model/collection metadata and

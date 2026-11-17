@@ -7,6 +7,8 @@ uses SysUtils,Classes,fpjson,jsonparser,jsonscanner,Math;
 // Hints is a tree of field names to explicit type names or full scalar schemas.
 function TypedDocument(const NewJson,OldJson,Hints:string):string;
 function PlainDocument(const Sjson:string):string;
+// Shared strict UTF-8 validation for typed data and decoded identifiers.
+procedure CheckUtf8(const Text:string);
 // Strict parser retaining original numeric literals for other projection helpers.
 function ExactObject(const Text:string):TJSONObject;
 implementation
