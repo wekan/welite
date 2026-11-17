@@ -59,7 +59,7 @@ end;
 function RootModelScript(Db:TWLDb):string;
 var Models:TJSONArray;Model,Field,Settings,IndexDef:TJSONObject;Fields,Managed,Indexes,Keys:TJSONArray;
   Registry,Rows,Owner,Objects,Custom:TWLRows;Used,Roots,Tables:TStringList;
-  Sql,TableName,ViewName,Collection,Storage,Existing,ReadExpr,Columns,Spec,SettingsText,Body,Root,Incoming:string;
+  Sql,TableName,ViewName,Collection,Storage,Existing,ReadExpr,Columns,Spec,SettingsText,Body,Root,Incoming,DeferredCustom:string;
   Hash:LongWord;i,j,k:Integer;Fresh,MetadataExists,OwnerExists,Found:Boolean;
   function Wrapped(const Value:string):string;
   begin
@@ -74,7 +74,7 @@ var Models:TJSONArray;Model,Field,Settings,IndexDef:TJSONObject;Fields,Managed,I
     for n:=0 to High(Objects) do if SameText(Objects[n][0],Name) then Exit(True);
   end;
 begin
-  Result:='';Models:=nil;Used:=nil;Roots:=nil;Tables:=nil;
+  Result:='';DeferredCustom:='';Models:=nil;Used:=nil;Roots:=nil;Tables:=nil;
   Rows:=Db.Query('SELECT wl_model('''',''{}'',''{"fields":[],"managed":[]}'',''insert'') IS NOT NULL,json_valid(json(jsonb(''{}'')));');
   if (Length(Rows)<>1) or (Rows[0][0]<>'1') or (Rows[0][1]<>'1') then
     raise Exception.Create('Typed projection functions and SQLite JSONB are required');
@@ -194,7 +194,7 @@ begin
       finally FreeAndNil(Roots);end;
       Sql:=Sql+'CREATE INDEX IF NOT EXISTS '+Ident('_wl_'+ViewName+'_id')+' ON '+Ident(TableName)+'('+Expr('_id')+'); '+
         'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_i')+' INSTEAD OF INSERT ON '+Ident(ViewName)+' BEGIN '+
-        ReferenceChecks(Model,'wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')')+
+        ReferenceChecks(Model,'wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')',Tables)+
         UniqueChecks(Model,'wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')','','')+
         'INSERT INTO '+Ident(TableName)+'('+Ident(DocCol)+') VALUES('+Wrapped('wl_model(COALESCE(NEW._wl_source,''''),json_object('+Columns+'),'+Q(Spec)+',''insert'')')+'); END; ';
       for j:=0 to Fields.Count-1 do
@@ -203,17 +203,23 @@ begin
         Incoming:='NEW.'+Ident(Root);
         if (Field.Get('kind','')='json') or (Field.Get('kind','')='extra') then Incoming:='('+Incoming+'||'+Q('')+')';
         Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_u_'+Root)+' INSTEAD OF UPDATE OF '+Ident(Root)+' ON '+Ident(ViewName)+' BEGIN '+
-          ColumnReferenceChecks(Model,Root,'NEW.'+Ident(Root))+
+          ColumnReferenceChecks(Model,Root,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)',Tables)+
           UniqueChecks(Model,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)','OLD.id',Root)+
           'UPDATE '+Ident(TableName)+' SET '+Ident(DocCol)+'='+Wrapped('wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'')')+
           ' WHERE '+Expr('_id')+'=OLD.id; END; ';
       end;
       Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_source')+' INSTEAD OF UPDATE OF _wl_source ON '+Ident(ViewName)+' BEGIN SELECT RAISE(ABORT,''Read-only source seed''); END; '+
-        'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_d')+' INSTEAD OF DELETE ON '+Ident(ViewName)+' BEGIN '+DeleteCascades(Models,ViewName)+'DELETE FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id; END; '+
         'INSERT OR REPLACE INTO _wl_models VALUES('+Q(ViewName)+','+Q(TableName)+','+Q(Spec)+',1); ';
-      for j:=0 to High(Custom) do Sql:=Sql+Custom[j][0]+'; ';
+      for j:=0 to High(Custom) do DeferredCustom:=DeferredCustom+Custom[j][0]+'; ';
     end;
-    Result:=Sql+RelationScript(Db,Tables)+PrivateScript(Db,Tables)+'COMMIT;';
+    // Every physical root name is known before generating cascade predicates.
+    for i:=0 to Models.Count-1 do
+    begin
+      ViewName:=Models.Objects[i].Get('table','');TableName:=Tables.Values[ViewName];
+      Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_d')+' INSTEAD OF DELETE ON '+Ident(ViewName)+' BEGIN '+
+        DeleteCascades(Models,ViewName,Tables)+'DELETE FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id; END; ';
+    end;
+    Result:=Sql+DeferredCustom+RelationScript(Db,Tables)+PrivateScript(Db,Tables)+'COMMIT;';
   finally Tables.Free;Roots.Free;Used.Free;Models.Free;end;
 end;
 function InstallRootModels(Db:TWLDb):Boolean;

@@ -365,6 +365,14 @@ not merely a design document. Platform/browser claims require testing on those t
   parent lookalikes and ID-query failures deny collection. Normal/checked tests,
   real TEXT/JSONB SQL tests and live all-seven-root clones on both backends cover
   nested settings, source preservation, remapping and attachment bytes.
+  Shared declared root references now check BSON string identity on both the
+  reference and matching parent ID; plain ObjectId/Regex renderings cannot grant
+  a relationship. Explicit reference writes repair same-text legacy metadata to
+  strings, while null/missing references stay optional. Cascades retain nonstring
+  lookalikes and validate actual owner/child types. Complete physical mapping and
+  deferred custom-trigger restoration preserve delete order on reinstall.
+  Normal/checked mixed TEXT/JSONB SQL tests and live both-backend Mongo/SQL tests
+  verify identity, explicit repairs, unchanged unsupported data and atomic cascades.
   Next: reconcile remaining legacy relation forms and clone lifecycle details,
   typed scope checks for other selection references, metadata-aware identifiers
   for other payloads, import permissions, generic HTML

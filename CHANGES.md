@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Respect BSON reference identity in shared checks and cascades
+
+- Declared root foreign keys now require actual nonempty BSON string references
+  and string parent IDs, validating matching parent source metadata. ObjectId or
+  Regex lookalikes cannot acquire authority from a plain text SQL projection;
+  nullable/missing references remain optional.
+- Explicit reference writes establish BSON string metadata, including same-text
+  repairs of old Regex fields. Null clearing and unrelated typed source data are
+  preserved; source-based inserts without a canonical reference are rejected.
+- Delete cascades follow only canonical string owner/child relationships and
+  preserve unsupported lookalikes unchanged. Generate cascade predicates after
+  all physical root names are known and restore custom triggers after owned ones,
+  retaining their prior delete ordering through adapter reinstall.
+- Normal/checked SQL tests cover 48 mixed TEXT/JSONB reference cases, explicit
+  repairs, invalid-write rollback and typed cascade isolation. Live Mongo/SQL
+  tests verify parent/child identity, source preservation and custom delete order
+  on both backends. Native/shared HTTP and eight Windows cross-builds also pass;
+  Windows execution is unverified. Other scopes and lifecycle work stay open.
+
 ## 2026-11-17 Preserve mapped root-field presence during selection clones
 
 - Build explicit shared-root clone patches containing only intentional ID, title,

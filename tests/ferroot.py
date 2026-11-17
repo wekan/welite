@@ -17,6 +17,7 @@ import tempfile
 import time
 from wire import encode,Client,Long,DateMs,Binary,ObjectId,Timestamp,Regex
 from discov import run as check_discovery
+from refkind import run as check_reference_identity
 from expiry import run as check_expiry
 from custval import run as check_custom_values
 from custins import run as check_custom_inserts
@@ -246,6 +247,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     source=sql('SELECT json(_ferretdb_sjson) FROM '+q(physical_name)+" WHERE _ferretdb_sjson->>'_id'="+q(identity)+';')[0][0]
                     assert sql('INSERT INTO '+table+'(id,'+column+',_wl_source) VALUES('+q('bad-'+table+'-'+column)+",'missing',"+q(source)+');','exec')=='error',(table,column)
                     assert snapshot()==stable
+                check_reference_identity(sql,client)
                 # Optional references permit NULL, while undeclared references retain
                 # schema semantics (attachments/activities are not cascade-owned).
                 assert sql("UPDATE cards SET boardId=NULL WHERE id='card';",'exec')=='ok'

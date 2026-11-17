@@ -146,10 +146,27 @@ before these views replace normalized tables.
 
 The generator reads root `PRAGMA foreign_key_list` metadata into each model contract.
 `wlrefs.pas` emits reference checks in insert/update view triggers and declared delete
-cascades in the root deletion trigger. Insert checks inspect the fully projected document,
-so clone-source fields cannot bypass validation. Nullable references remain optional.
-Embedded child arrays disappear with their root; they need no separate cascade. Cascades
-through cards and checklists execute inside the initiating SQL statement.
+cascades in the root deletion trigger. Insert and reference-column update checks
+inspect the fully projected typed document, so source seeds cannot bypass
+validation. A nonnull reference must be a nonempty BSON string, and its matching
+parent must have a canonical string ID and valid source metadata. An ObjectId ID
+or Regex reference rendered as the same SQL text does not grant a relationship.
+Nullable and missing references remain optional, including when no parent is read.
+
+Explicit writes to a declared reference supply string metadata, so assigning the
+same text repairs an old Regex field rather than retaining its obsolete type.
+Null clearing remains null, and unrelated BSON source fields remain unchanged.
+Untouched unsupported references do not become canonical through a seed insert.
+These rules implement the SQL model's string reference contract; unsupported
+legacy identifier relationships still need a separate migration policy.
+
+Embedded child arrays disappear with their root; they need no separate cascade.
+Root cascades verify actual owner-ID and child-reference string schemas and
+validate matching source documents before deletion. They leave nonstring BSON
+lookalikes unchanged, and nested cascades execute inside the initiating SQL
+statement. Cascade triggers are generated after all physical root names are known.
+Custom root triggers are restored after owned triggers, preserving their previous
+delete ordering through reinstall.
 
 Live tests check every declared root foreign key on insertion and update, including
 source-based inserts. A forced failure during checklist-item deletion restores every
@@ -157,6 +174,14 @@ collection's SJSON exactly after a board deletion attempt. Successful deletion r
 the board-owned graph while retaining unrelated boards and unconstrained attachment,
 activity, user and custom-field records, according to `schema.sql`. User/custom-field
 root deletion also removes their embedded child rows. Both SQLite backends pass.
+
+`tests/refsql.py` executes generated SQL with the real projection extension in
+normal/checked builds. It covers 48 parent/child TEXT/JSONB combinations, Unicode
+and case-sensitive identities, optional references beside malformed unrelated
+parent data, explicit repairs, failed-write rollback and owner/child type isolation.
+`tests/refkind.py` runs through `tests/ferroot.py` against real Mongo/SQL roots on
+both backends, checking ObjectId parents, seeded Regex references, same-text
+repairs, preserved Regex/ObjectId children and custom delete-trigger ordering.
 
 These are Welite view constraints. Direct Mongo writes retain FerretDB's existing
 semantics: the adapter adds no reference-enforcement triggers to physical collections.

@@ -138,7 +138,7 @@ begin
   try Result:=CustomUpdate(Value,Schema,Field);finally Schema.Free;end;
 end;
 function ProjectDocument(const Previous,Columns,Model,Mode:string):string;
-var Doc,Patch,Spec,Hints,Field,Extra,Seed:TJSONObject;Fields,Managed:TJSONArray;
+var Doc,Patch,Spec,Hints,Field,Extra,Seed:TJSONObject;Fields,Managed,References:TJSONArray;
   Known,Restricted:TStringList;Scope:TJSONObject;Value,Converted,OldValue,Target:TJSONData;i,j:Integer;Name,Path,Kind:string;InsertMode,CloneMode:Boolean;
 begin
   Doc:=nil;Patch:=nil;Spec:=nil;Hints:=nil;Known:=nil;Extra:=nil;Seed:=nil;
@@ -250,6 +250,14 @@ begin
         if InsertMode and (Converted.JSONType=jtNull) and (OldValue=nil) then Continue;
         PutPath(Doc,Path,Converted);Converted:=nil;
         if Kind='date' then PutPath(Hints,Path,TJSONString.Create('date'));
+        // An explicit SQL write to a declared string reference establishes that
+        // type, including repairs whose old Regex pattern has the same text.
+        if (Spec.Find('foreignKeys') is TJSONArray) and (AtPath(Doc,Path).JSONType<>jtNull) then
+        begin
+          References:=TJSONArray(Spec.Find('foreignKeys'));
+          for j:=0 to References.Count-1 do
+            if References.Objects[j].Get('column','')=Name then PutPath(Hints,Path,TJSONString.Create('string'));
+        end;
       finally Converted.Free;end;
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,Hints.AsJSON);
