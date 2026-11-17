@@ -30,7 +30,7 @@ begin
 end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag:string):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
-  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;
+  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -54,7 +54,8 @@ begin
   if Y<1 then Y:=1;
   if (Length(Lanes)>0) and (Y>Length(Lanes)) then Y:=Length(Lanes);
   Width:=0;
-  Map:='<table dir="ltr" align="right" border="1" cellpadding="3" cellspacing="0" summary="Board minimap">';
+  Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" align="right" border="1" cellpadding="3" cellspacing="0" summary="'+
+    HtmlAttr(Words.Text('board','Board')+' / '+Words.Text('view','View'))+'">';
   for MapY:=0 to High(Lanes) do
   begin
     MapLists:=Db.Query('SELECT id,title FROM lists WHERE boardId='+QuotedStr(BoardId)+
@@ -83,25 +84,26 @@ begin
   end;
   Map:=Map+'</table>';
   Result:=Result+Map+'<p>X '+IntToStr(X)+' Y '+IntToStr(Y)+
-    ' (yellow: current; *: cards; -: empty)</p><p>';
+    ' ('+HtmlEncode(Words.Text('color-yellow','yellow')+': '+Words.Text('current','current')+
+    '; *: '+Words.Text('cards','Cards')+'; -: '+Words.Text('no-items-message','No items.'))+')</p><p>';
   for m:=0 to 3 do
   begin
     MapX:=X; MapY:=Y;
     case m of
       0: begin
         if Align='right' then Inc(MapX) else Dec(MapX);
-        CellText:='View left';
+        CellText:='<';ViewDir:='left';
       end;
       1: begin
         if Align='right' then Dec(MapX) else Inc(MapX);
-        CellText:='View right';
+        CellText:='>';ViewDir:='right';
       end;
-      2: begin Dec(MapY); CellText:='View up'; end;
-      3: begin Inc(MapY); CellText:='View down'; end;
+      2: begin Dec(MapY); CellText:='^';ViewDir:='up'; end;
+      3: begin Inc(MapY); CellText:='v';ViewDir:='down'; end;
     end;
     if (MapX>=1) and (MapX<=Width) and (MapY>=1) and (MapY<=Length(Lanes)) then
-      Result:=Result+'<a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+
-        '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S))+'">'+CellText+'</a> ';
+      Result:=Result+'<a dir="ltr" data-view-dir="'+ViewDir+'" href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+
+        '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S))+'">'+HtmlEncode(Words.Text('view','View')+' '+CellText)+'</a> ';
   end;
   Result:=Result+'<a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+'&view=all',S))+
     '">'+HtmlEncode(Words.Text('view-all','View all'))+'</a></p><br clear="all">';

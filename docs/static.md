@@ -158,8 +158,11 @@ all-boards/view-all and no-items captions, including header-only anonymous views
 Missing/inaccessible direct boards retain 404 status with translated not-found text;
 published unavailable board views use the same key without disclosing private data.
 Empty swimlane/list/card regions reuse the existing generic no-items string. User
-board/list/card titles retain their original text and are HTML-escaped. Movement
-command captions and minimap instructions still require their own localization work.
+board/list/card titles retain their original text and are HTML-escaped. Native movement arrows use fixed submit names and ASCII captions independent of
+command values. Viewport links use native View plus isolated ASCII arrows; minimap
+descriptions and legend reuse Board/View/yellow/current/cards/no-items keys. User
+labels and logical coordinates retain their meanings. Action-button and selection
+summary text still require localization.
 
 ### Navigation language state
 

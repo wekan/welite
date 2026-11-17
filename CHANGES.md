@@ -4,6 +4,19 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Translate viewport captions and minimap legend
+
+- Reuse native View/Board/color/current/cards/no-items keys for physical viewport
+  captions, map description and legend. Keep arrow captions in an isolated LTR
+  run; logical coordinates and physical RTL neighbor mapping remain unchanged.
+- Add stable map/direction data attributes so behavior does not depend on English
+  descriptions. Extend installed-locale HTTP checks to descriptions/legend/arrows
+  and browser checks to native captions and real Finnish/Arabic/Hebrew navigation.
+- Linked/CLI HTTP and no-JS/no-cookie Chromium suites pass, including existing
+  movement, published widget, map and progressive drag workflows.
+- Action-button/selection captions, other application prose, remaining language
+  assets and broader responsive/retro acceptance remain open in TODO.
+
 ## 2026-11-17 Decouple native movement arrows from submitted captions
 
 - Render fixed move_up/down/left/right submit names with ASCII arrow captions,

@@ -37,6 +37,10 @@ RTL columns and RTL text within board cells, avoiding double mirroring. Logical
 coordinates remain unchanged. Horizontal viewport links reverse their logical coordinate delta in RTL so their
 labels follow physical neighbors. The HTTP selection endpoint resolves the validated viewer language and reverses
 left/right logical deltas in RTL for both card relocation and list reordering.
+Viewport links carry stable `data-view-dir` names, native View captions and
+isolated ASCII arrows. The minimap carries `data-board-map` independently of its
+translated Board/View description. Its legend reuses native yellow/current/cards/
+no-items strings; X/Y and `*`/`-` remain coordinate/data symbols.
 Direct `ApplyMove` callers default to logical LTR semantics; vertical moves and
 explicit drag destinations retain their existing meaning.
 

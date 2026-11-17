@@ -414,7 +414,7 @@ page. It reproduces inherited table reversal without JavaScript or cookies.
 The same browser regression compares physical RTL board-column and minimap-link
 positions: the first logical list appears on the right in both tables.
 
-Arabic viewport checks follow View left/right without JavaScript or cookies,
+Arabic viewport checks follow physical left/right view arrows without JavaScript or cookies,
 assert logical X coordinates and inspect the displayed list after each redirect.
 
 The Arabic browser flow also moves a card physically right then left and a list
@@ -578,3 +578,7 @@ commands, unchanged rejected parameters and legacy direction/action compatibilit
 `keyhttp.py`, called by `admin.py`, exercises real RTL arrow round trips and rejected
 commands without board mutations or action-proof consumption. Existing no-JS/no-cookie
 board/widget/browser movement checks click fixed submit names instead of captions.
+
+The board-text regression also checks every installed native View/map description/
+legend/arrow caption. Browser cases follow actual physical neighbors in Finnish,
+Arabic and Hebrew; stable data attributes replace English-description selectors.

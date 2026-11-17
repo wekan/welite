@@ -14,6 +14,14 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
       await page.goto(base+'/board?id=boardtxt&lang='+tag);
       assert.equal(await page.title(),local.board);
       assert.equal(await page.locator('h1').innerText(),'Board <user>');
+      assert.equal(await page.locator('table[data-board-map]').getAttribute('summary'),local.board+' / '+local.view);
+      assert((await page.locator('body').innerText()).includes(local['color-yellow']+': '+local.current+'; *: '+local.cards+'; -: '+local['no-items-message']));
+      const direction=tag==='fi'?'right':'left';
+      const view=page.locator('a[data-view-dir='+direction+']');
+      assert.equal(await view.innerText(),local.view+' '+(direction==='right'?'>':'<'));
+      assert.equal(await view.getAttribute('dir'),'ltr');
+      await view.click();assert.equal(new URL(page.url()).searchParams.get('x'),'2');
+
       assert.equal(await page.getByRole('link',{name:local['all-boards'],exact:true}).count(),1);
       await page.getByRole('link',{name:local['view-all'],exact:true}).click();
       assert.equal(new URL(page.url()).searchParams.get('view'),'all');
