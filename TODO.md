@@ -300,9 +300,17 @@ not merely a design document. Platform/browser claims require testing on those t
   shared HTTP tests cover all card responses, role/site-admin boundaries, malformed
   data and triggered authority changes with complete rollback. Normal/checked
   batching/error tests and live shared multi-batch/corrupt-metadata tests pass.
-  Next: validate definition permission-flag input; enforce matching policy in HTML,
-  selection clone/export, activity, query and other value-bearing paths. The API
-  boundary does not yet establish field-policy parity across those other surfaces.
+  Definition creation now accepts/validates canonical/form/lowercase permission
+  flags and persists actual native/shared booleans. Board writers may create
+  read-only fields; admin-only creation requires active board administration,
+  including when the caller is a site admin. Transaction guards recheck authority,
+  the resulting definition, exact board association and shared bindings after the
+  activity, rolling back triggered revocation/repointing/malformed flag changes.
+  HTTP and normal/checked regressions verify these gates and stored values.
+  Next: enforce matching policy in HTML, selection clone/export, activity, query
+  and other value-bearing paths. Definition edit/delete and remaining creation/
+  automatic-card behavior are still open. API support does not establish parity
+  across those other surfaces.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

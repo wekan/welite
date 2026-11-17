@@ -32,8 +32,12 @@ with tempfile.TemporaryDirectory(prefix='wlcfpol-',dir=os.environ['TMPDIR']) as 
                 result=subprocess.run([str(out/'cfpol'),str(db),uid,board,card],input='\n'.join(json.dumps(case) for case in cases)+'\n',capture_output=True,text=True)
                 assert result.returncode==0,result.stderr
                 return result.stdout.splitlines()
-            result=run([dict(fields=fields),dict(field=fields[0]['_id'],write=True),dict(field=fields[1]['_id'],write=True)])
-            assert json.loads(result[0])==expected and result[1:]==['1','0'],result
+            result=run([dict(fields=fields),dict(field=fields[0]['_id'],write=True),dict(field=fields[1]['_id'],write=True),dict(definition=True),dict(definition=True,admin=True),dict(definition=True,field=fields[0]['_id']),dict(definition=True,field=fields[1]['_id'])])
+            assert json.loads(result[0])==expected and result[1:]==['1','0','1','0','1','0'],result
+            with sqlite3.connect(db) as con:con.execute('INSERT INTO custom_field_boards VALUES(?,?)',(fields[0]['_id'],'another-board'))
+            try:assert run([dict(definition=True,field=fields[0]['_id'])])==['0']
+            finally:
+                with sqlite3.connect(db) as con:con.execute('DELETE FROM custom_field_boards WHERE boardId=?',('another-board',))
             # A policy SQL error masks the complete chunk instead of returning data.
             with sqlite3.connect(db) as con:con.execute('ALTER TABLE custom_fields RENAME COLUMN adminOnly TO broken')
             try:

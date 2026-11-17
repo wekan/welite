@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Validate and authorize definition permission flags
+
+- Accept readOnly/adminOnly on definition creation through canonical JSON, form
+  fields and lowercase aliases. Validate their boolean values and reject invalid
+  or conflicting aliases before mutation; store native integers/shared BSON
+  booleans and return them through definition GET.
+- Follow model creation permissions: ordinary board writers may create read-only
+  fields, while admin-only fields require active administration of the board.
+  Site administration alone does not grant that protected-field permission.
+- Reuse typed board/user policy checks inside the creation transaction before
+  writes and after the activity. Check the resulting definition and exact board
+  association before commit; revoked roles, disabled users, changed bindings,
+  foreign-board additions and malformed permission flags roll back every write.
+- Both-backend native/shared HTTP tests cover input aliases, stored flags, editor
+  and global-admin boundaries and post-activity revocation rollback. Normal/checked
+  policy tests cover creation gates and exact board associations; the committed
+  API baseline silently discards requested flags. Windows cross-build checks pass.
+- HTML, selection clone/export, activity and query policy boundaries, definition
+  edit/delete, dropdown creation and automatic-card behavior remain in TODO.md.
+
 ## 2026-11-17 Enforce custom-field value policies at the API boundary
 
 - Mask unreadable values as null on every API card response while preserving field

@@ -1277,9 +1277,21 @@ checks. It also covers malformed BSON, corrupt metadata and shared batching.
 `tests/cfpol.py` checks normal/checked builds on both SQL backends, quoted Unicode
 IDs, multi-batch positions/missing values and fail-closed query errors.
 
-Definition flag input controls and the HTML, selection/export/clone, activity,
-query and other value-bearing boundaries still need equivalent policy checks.
-This API support does not establish application-wide field-policy parity.
+Definition POST accepts `readOnly`/`adminOnly` through canonical JSON, form fields
+or lowercase aliases. It validates boolean values and rejects conflicting aliases
+before mutation. Ordinary board writers may create read-only fields, matching the
+model's definition permissions; creating admin-only fields requires active board
+administration even for a site administrator. Unlike the current WeKan REST route,
+which ignores these two inputs, WeLite explicitly persists and enforces them.
+Creation guards check authority before writes and after the activity, validate
+resulting boolean flags and require exactly the requested board association.
+Triggered revocation, invalid flags, repointing or adapter-binding changes roll
+back the definition, association and activity together. Definition editing/deletion
+is still unfinished.
+
+The HTML, selection/export/clone, activity, query and other value-bearing
+boundaries still need equivalent policy checks. This API support does not
+establish application-wide field-policy parity.
 
 ## Remaining before the checklist can be checked
 

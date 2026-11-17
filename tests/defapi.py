@@ -12,7 +12,7 @@ def exercise(call, board, uid, snapshot, verify, fail, clear):
         fail(stage)
         try:
             before=snapshot()
-            status,_,body=call('POST',path,dict(name='definition-fail',type='text'))
+            status,_,body=call('POST',path,dict(name='definition-fail',type='text',readOnly=True,adminOnly=True))
             after=snapshot()
             assert status==500,(stage,status,before==after,body)
             assert after==before,stage
@@ -42,6 +42,24 @@ def exercise(call, board, uid, snapshot, verify, fail, clear):
         status,_,body=call('POST',path,data)
         assert status==200,(data,status,body)
         verify(json.loads(body)['_id'],name,'text',flags,uid)
+    for data,expected in [
+        (dict(name='private flag',readOnly=True,adminOnly=True),(True,True)),
+        (dict(name='false flags',readOnly=False,adminOnly=False),(False,False)),
+        (dict(name='legacy flags',readonly='1',adminonly='true'),(True,True)),
+        (urlencode(dict(name='form flags',readOnly='true',adminOnly='1')),(True,True)),
+        (dict(name='equivalent flag aliases',readOnly=True,readonly='1',adminOnly=False,adminonly='0'),(True,False)),
+    ]:
+        status,_,body=call('POST',path,data);assert status==200,(data,status,body)
+        identity=json.loads(body)['_id']
+        verify(identity,'form flags' if isinstance(data,str) else data['name'],'text',[0,0,0,0,*map(int,expected)],uid)
+        result=json.loads(call('GET',path+'/'+quote(identity,safe=''),None)[2])
+        assert (result['readOnly'],result['adminOnly'])==expected,result
+    for key in ['readOnly','adminOnly']:
+        for bad in [None,2,[],{},'yes']:
+            before=snapshot();response=call('POST',path,dict(name='Invalid flag',**{key:bad}))
+            assert response[0]==400,(key,bad,response);assert snapshot()==before
+        before=snapshot();response=call('POST',path,dict(name='Conflicting flag',**{key:True,key.lower():False}))
+        assert response[0]==400,(key,response);assert snapshot()==before
     invalid=[{},dict(name=''),dict(name='  '),dict(name=True),dict(name='bad',type='unsupported'),
              dict(name='bad',type={}),dict(name='bad',type=None),dict(name='\0'),
              dict(name='bad',showOnCard='yes'),dict(name='bad',showOnCard=None),
@@ -60,8 +78,8 @@ def run_native(call, db, board, uid):
             return [con.execute('SELECT * FROM '+name+' ORDER BY 1,2').fetchall() for name in ['custom_fields','custom_field_boards','activities']]
     def verify(identity,name,kind,flags,actor):
         with sqlite3.connect(db) as con:
-            row=con.execute('SELECT name,type,showOnCard,automaticallyOnCard,showLabelOnMiniCard,showSumAtTopOfList FROM custom_fields WHERE id=?',(identity,)).fetchone()
-            assert row==(name,kind,*flags),row
+            row=con.execute('SELECT name,type,showOnCard,automaticallyOnCard,showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly FROM custom_fields WHERE id=?',(identity,)).fetchone()
+            assert row==(name,kind,*(flags if len(flags)==6 else flags+[0,0])),row
             assert con.execute('SELECT boardId FROM custom_field_boards WHERE customFieldId=?',(identity,)).fetchall()==[(board,)]
             activities=con.execute("SELECT userId,boardId,data_json FROM activities WHERE activityType='createCustomField' AND json_extract(data_json,'$.customFieldId')=?",(identity,)).fetchall()
             assert len(activities)==1 and activities[0][:2]==(actor,board),activities
@@ -91,7 +109,7 @@ def run_shared(call, client, db, board, uid):
         row=client.find('customFields',identity)[0]
         assert (row['name'],row['type'],row['boardIds'])==(name,kind,[board]),row
         assert row['settings']=={},row
-        for key,value in zip(['showOnCard','automaticallyOnCard','showLabelOnMiniCard','showSumAtTopOfList'],flags):
+        for key,value in zip(['showOnCard','automaticallyOnCard','showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly'],flags if len(flags)==6 else flags+[0,0]):
             assert row[key] is bool(value),(key,row)
         response=client.command({'find':'activities','filter':dict(activityType='createCustomField',customFieldId=identity)})
         activities=response['cursor']['firstBatch']

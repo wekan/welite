@@ -10,10 +10,12 @@ type
     FShared:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
+    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean):string;
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
     function Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
+    function DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
   end;
@@ -54,11 +56,12 @@ begin
     FTables[2]:=Source('custom_fields','customFields');FTables[3]:=Source('cards','cards');
   end;
 end;
-function TFieldPolicy.Expression(const FieldId:string;WriteAccess:Boolean):string;
+function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
-var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema:string;i:Integer;
+var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql:string;i,Last:Integer;HasField:Boolean;
 begin
+  HasField:=not DefinitionAccess or (FieldId<>'');
   if not FShared then
   begin
     Admin:='EXISTS(SELECT 1 FROM board_members m WHERE m.boardId=b.id AND m.userId=u.id AND m.isActive=1 AND m.isAdmin=1)';
@@ -68,13 +71,23 @@ begin
     if not WriteAccess then Access:=Access+' OR b.permission=''public''';Access:=Access+')';
     Flags:='typeof(f.adminOnly)=''integer'' AND f.adminOnly IN (0,1) AND (f.adminOnly=0 OR '+Admin+')';
     if WriteAccess then Flags:=Flags+' AND typeof(f.readOnly)=''integer'' AND f.readOnly IN (0,1) AND (f.readOnly=0 OR '+Admin+')';
-    Exit('(SELECT count(*)=1 FROM custom_fields f,boards b,users u,cards c WHERE f.id='+QuotedStr(FieldId)+
-      ' AND b.id='+QuotedStr(FBoard)+' AND b.archived=0 AND u.id='+QuotedStr(FUser)+' AND u.loginDisabled=0'+
-      ' AND c.id='+QuotedStr(FCard)+' AND c.boardId=b.id AND '+Access+' AND '+Flags+
-      ' AND EXISTS(SELECT 1 FROM custom_field_boards x WHERE x.customFieldId=f.id AND x.boardId=b.id))');
+    Tables:='boards b,users u';WhereSql:='b.id='+QuotedStr(FBoard)+' AND b.archived=0 AND u.id='+QuotedStr(FUser)+' AND u.loginDisabled=0 AND '+Access;
+    if HasField then
+    begin
+      Tables:=Tables+',custom_fields f';WhereSql:=WhereSql+' AND f.id='+QuotedStr(FieldId)+
+        ' AND EXISTS(SELECT 1 FROM custom_field_boards x WHERE x.customFieldId=f.id AND x.boardId=b.id)';
+      if DefinitionAccess then Flags:='typeof(f.adminOnly)=''integer'' AND f.adminOnly IN (0,1) AND (f.adminOnly=0 OR '+Admin+')'+
+        ' AND (SELECT count(*) FROM custom_field_boards x WHERE x.customFieldId=f.id)=1';
+      WhereSql:=WhereSql+' AND '+Flags;
+    end;
+    if DefinitionAccess then
+    begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
+    else begin Tables:=Tables+',cards c';WhereSql:=WhereSql+' AND c.id='+QuotedStr(FCard)+' AND c.boardId=b.id';end;
+    Exit('(SELECT count(*)=1 FROM '+Tables+' WHERE '+WhereSql+')');
   end;
+  Last:=High(Aliases);if DefinitionAccess then begin Last:=1;if HasField then Last:=2;end;
   Prefix:='WITH ';
-  for i:=0 to High(Aliases) do
+  for i:=0 to Last do
   begin
     case i of 0:Value:=FUser;1:Value:=FBoard;2:Value:=FieldId;3:Value:=FCard;end;
     if i>0 then Prefix:=Prefix+',';
@@ -95,14 +108,31 @@ begin
   if not WriteAccess then Access:=Access+' OR json_extract(b.d,''$.permission'')=''public''';Access:=Access+')';
   Flags:='('+FalseFlag('f.d','adminOnly')+' OR (json_type(f.d,''$.adminOnly'')=''true'' AND '+Admin+'))';
   if WriteAccess then Flags:=Flags+' AND ('+FalseFlag('f.d','readOnly')+' OR (json_type(f.d,''$.readOnly'')=''true'' AND '+Admin+'))';
-  Ids:=StringId('u',FUser)+' AND '+StringId('b',FBoard)+' AND '+StringId('f',FieldId)+' AND '+StringId('c',FCard);
+  Ids:=StringId('u',FUser)+' AND '+StringId('b',FBoard);Tables:='u,b';
+  WhereSql:=Ids+' AND '+FalseFlag('u.d','loginDisabled')+' AND '+FalseFlag('b.d','archived')+' AND '+Access;
+  if HasField then
+  begin
+    Tables:=Tables+',f';
+    if DefinitionAccess then Flags:='json_type(f.d,''$.readOnly'') IN (''true'',''false'') AND '+
+      'json_type(f.d,''$.adminOnly'') IN (''true'',''false'') AND ('+FalseFlag('f.d','adminOnly')+' OR '+Admin+') AND json_array_length(f.d,''$.boardIds'')=1';
+    WhereSql:=WhereSql+' AND '+StringId('f',FieldId)+' AND '+Flags+
+      ' AND EXISTS(SELECT 1 FROM json_each(CASE WHEN json_type(f.d,''$.boardIds'')=''array'' THEN json_extract(f.d,''$.boardIds'') ELSE ''[]'' END) x '+
+      'WHERE x.type=''text'' AND x.value='+QuotedStr(FBoard)+' AND json_extract(f.s,''$."$s".p.boardIds.i[''||x.key||''].t'')=''string'')';
+  end;
+  if DefinitionAccess then
+  begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
+  else begin
+    Tables:=Tables+',c';WhereSql:=WhereSql+' AND '+StringId('c',FCard)+
+      ' AND json_type(c.d,''$.boardId'')=''text'' AND json_extract(c.s,''$."$s".p.boardId.t'')=''string'' AND json_extract(c.d,''$.boardId'')='+QuotedStr(FBoard);
+  end;
   Result:='('+Prefix+' SELECT '+FBinding;
-  for i:=0 to High(Aliases) do Result:=Result+' AND (SELECT count(*) FROM '+Aliases[i]+')=1';
-  Result:=Result+' AND EXISTS(SELECT 1 FROM u,b,f,c WHERE '+Ids+' AND '+FalseFlag('u.d','loginDisabled')+' AND '+FalseFlag('b.d','archived')+
-    ' AND json_type(c.d,''$.boardId'')=''text'' AND json_extract(c.s,''$."$s".p.boardId.t'')=''string'' AND json_extract(c.d,''$.boardId'')='+QuotedStr(FBoard)+
-    ' AND '+Access+' AND '+Flags+' AND EXISTS(SELECT 1 FROM json_each(CASE WHEN json_type(f.d,''$.boardIds'')=''array'' THEN json_extract(f.d,''$.boardIds'') ELSE ''[]'' END) x '+
-    'WHERE x.type=''text'' AND x.value='+QuotedStr(FBoard)+' AND json_extract(f.s,''$."$s".p.boardIds.i[''||x.key||''].t'')=''string'')))';
+  for i:=0 to Last do Result:=Result+' AND (SELECT count(*) FROM '+Aliases[i]+')=1';
+  Result:=Result+' AND EXISTS(SELECT 1 FROM '+Tables+' WHERE '+WhereSql+'))';
 end;
+function TFieldPolicy.Expression(const FieldId:string;WriteAccess:Boolean):string;
+begin Result:=Build(FieldId,WriteAccess,False,False);end;
+function TFieldPolicy.DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
+begin Result:=Build(FieldId,True,True,AdminRequired);end;
 function TFieldPolicy.Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
 var Rows:TWLRows;
 begin

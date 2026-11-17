@@ -29,6 +29,15 @@ def exercise(call,base,uid,role,site_admin,field,snapshot,fail,clear,shared):
     site_admin(False);role(True,True,False);expect(True)
     # Empty fields remain positionally present; hidden values never reach response routes.
     role(False,True,False);expect()
+    definition_path=base.split('/lists/',1)[0]+'/custom-fields'
+    def create(private,status):
+        before=snapshot();actual,_,body=call('POST',definition_path,dict(name='Policy creation',readOnly=True,adminOnly=private))
+        assert actual==status,(private,status,actual,body)
+        if status!=200:assert snapshot()==before
+        else:
+            result=json.loads(call('GET',definition_path+'/'+json.loads(body)['_id'],None)[2])
+            assert result['readOnly'] is True and result['adminOnly'] is private,result
+    create(False,200);create(True,403)
     for method,suffix,data in [('PUT','',dict(title='Policy card')),
                                ('POST','/members/'+quote(uid,safe=''),None),
                                ('DELETE','/members/'+quote(uid,safe=''),None),
@@ -44,6 +53,7 @@ def exercise(call,base,uid,role,site_admin,field,snapshot,fail,clear,shared):
     # A global administrator without active board administration still cannot
     # read/write protected fields, even though ordinary board access is allowed.
     site_admin(True);role(False,False,False);expect()
+    create(True,403)
     for name in ['policy-private','policy-locked','policy-both']:write(name,403)
     write('policy-open',200);field('policy-open',dict(value='open'))
     site_admin(False);role(True,True,False)
@@ -58,6 +68,10 @@ def exercise(call,base,uid,role,site_admin,field,snapshot,fail,clear,shared):
         try:
             before=snapshot();write('policy-open',500)
             assert snapshot()==before,stage
+        finally:clear()
+    for stage in ['definition','membership','disabled','association','repoint']+(['binding','readonly'] if shared else []):
+        fail(stage,True)
+        try:create(False,500)
         finally:clear()
     # Real BSON numeric/date values are never boolean policy grants.
     if shared:
@@ -103,15 +117,21 @@ def run_native(call,db,uid,board,list_id):
                 for key,value in changes.items():con.execute('UPDATE custom_fields SET '+key+'=? WHERE id=?',(value,name))
     def snapshot():
         with sqlite3.connect(db) as con:
-            return tuple(con.execute('SELECT * FROM '+table+' ORDER BY 1,2').fetchall() for table in ['cards','custom_fields','custom_field_boards','card_custom_field_values','board_members','users'])
-    def fail(stage):
+            return tuple(con.execute('SELECT * FROM '+table+' ORDER BY 1,2').fetchall() for table in ['cards','custom_fields','custom_field_boards','card_custom_field_values','board_members','users','activities'])
+    def fail(stage,creation=False):
         q=lambda value:"'"+value.replace("'","''")+"'"
-        action=dict(definition="UPDATE custom_fields SET adminOnly=1 WHERE id='policy-open';",
+        action=dict(repoint='SELECT 1;',definition="UPDATE custom_fields SET adminOnly=1 WHERE id='policy-open';",
                     membership='UPDATE board_members SET isActive=0 WHERE boardId='+q(board)+' AND userId='+q(uid)+';',
                     disabled='UPDATE users SET loginDisabled=1 WHERE id='+q(uid)+';',
                     association="DELETE FROM custom_field_boards WHERE customFieldId='policy-open';",
                     card='UPDATE cards SET boardId=\'other\' WHERE id='+q(cid)+';')[stage]
-        with sqlite3.connect(db) as con:con.execute("CREATE TRIGGER policy_fail AFTER UPDATE ON card_custom_field_values WHEN NEW.cardId='policy-card' AND NEW.customFieldId='policy-open' BEGIN "+action+' END')
+        if creation:
+            if stage=='definition':action="UPDATE custom_fields SET adminOnly=1 WHERE id=json_extract(NEW.data_json,'$.customFieldId');"
+            if stage=='association':action="DELETE FROM custom_field_boards WHERE customFieldId=json_extract(NEW.data_json,'$.customFieldId');"
+            if stage=='repoint':action="INSERT INTO custom_field_boards VALUES(json_extract(NEW.data_json,'$.customFieldId'),'path foreign 漢');"
+            target='AFTER INSERT ON activities'
+        else:target="AFTER UPDATE ON card_custom_field_values WHEN NEW.cardId='policy-card' AND NEW.customFieldId='policy-open'"
+        with sqlite3.connect(db) as con:con.execute('CREATE TRIGGER policy_fail '+target+' BEGIN '+action+' END')
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER policy_fail')
     try:exercise(call,base,uid,role,site_admin,field,snapshot,fail,clear,False)
@@ -139,19 +159,28 @@ def run_shared(call,client,db,uid,board,list_id):
             update('cards',cid,dict(customFields=card['customFields']))
         else:update('customFields',name,changes)
     def snapshot():
-        with sqlite3.connect(db) as con:registry=con.execute('SELECT * FROM _wl_models ORDER BY name').fetchall()
+        with sqlite3.connect(db) as con:
+            registry=con.execute('SELECT * FROM _wl_models ORDER BY name').fetchall()
+            for collection in ['customFields','activities']:
+                physical=con.execute('SELECT table_name FROM _ferretdb_collections WHERE name=?',(collection,)).fetchone()[0]
+                registry.append(con.execute('SELECT _ferretdb_sjson FROM "'+physical.replace('"','""')+'" ORDER BY json_extract(_ferretdb_sjson,\'$._id\')').fetchall())
         return registry,[encode(client.find(collection,identity)[0]) for collection,identity in [('users',uid),('boards',board),('cards',cid)]+[('customFields',row['_id']) for row in documents]]
-    def fail(stage):
+    def fail(stage,creation=False):
         q=lambda value:"'"+value.replace("'","''")+"'"
         with sqlite3.connect(db) as con:
             tables={name:'"'+table.replace('"','""')+'"' for name,table in con.execute('SELECT name,table_name FROM _ferretdb_collections')}
             field_table=tables['customFields'];board_table=tables['boards'];user_table=tables['users'];card_table=tables['cards']
-            action=dict(binding="DELETE FROM _wl_models WHERE name='custom_fields';",definition='UPDATE '+field_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.adminOnly',json('true')) WHERE json_extract(_ferretdb_sjson,'$._id')='policy-open';",
+            action=dict(repoint='UPDATE '+field_table+" SET _ferretdb_sjson=jsonb_insert(_ferretdb_sjson,'$.boardIds[#]','path foreign 漢','$.\"$s\".p.boardIds.i[#]',json('{\"t\":\"string\"}')) WHERE json_extract(_ferretdb_sjson,'$._id')='policy-open';",
+                        readonly='UPDATE '+field_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.readOnly',0,'$.\"$s\".p.readOnly.t','date') WHERE json_extract(_ferretdb_sjson,'$._id')='policy-open';",binding="DELETE FROM _wl_models WHERE name='custom_fields';",definition='UPDATE '+field_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.adminOnly',json('true')) WHERE json_extract(_ferretdb_sjson,'$._id')='policy-open';",
                         membership='UPDATE '+board_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.members[0].isActive',json('false')) WHERE json_extract(_ferretdb_sjson,'$._id')="+q(board)+';',
                         disabled='UPDATE '+user_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.loginDisabled',json('true'),'$.\"$s\".p.loginDisabled',json('{\"t\":\"bool\"}'),'$.\"$s\".\"$k\"[#]','loginDisabled') WHERE json_extract(_ferretdb_sjson,'$._id')="+q(uid)+';',
                         association='UPDATE '+field_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.boardIds',json('[]'),'$.\"$s\".p.boardIds.i',json('[]')) WHERE json_extract(_ferretdb_sjson,'$._id')='policy-open';",
                         card='UPDATE '+card_table+" SET _ferretdb_sjson=jsonb_set(_ferretdb_sjson,'$.boardId','other') WHERE json_extract(_ferretdb_sjson,'$._id')="+q(cid)+';')[stage]
-            con.execute('CREATE TRIGGER policy_fail AFTER UPDATE ON '+card_table+" WHEN json_extract(NEW._ferretdb_sjson,'$._id')='policy-card' BEGIN "+action+' END')
+            if creation:
+                action=action.replace("='policy-open'", "=json_extract(NEW._ferretdb_sjson,'$.customFieldId')")
+                target='AFTER INSERT ON '+tables['activities']
+            else:target='AFTER UPDATE ON '+card_table+" WHEN json_extract(NEW._ferretdb_sjson,'$._id')='policy-card'"
+            con.execute('CREATE TRIGGER policy_fail '+target+' BEGIN '+action+' END')
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER policy_fail')
     try:
