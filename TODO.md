@@ -279,6 +279,7 @@ not merely a design document. Platform/browser claims require testing on those t
   Shared maintenance now also removes expired private pending enrollment at equality, with rollback, unexpired retention, replay preservation and idle-worker tests.
   Normalized legacy stores now have guarded, atomic token/optional-metadata/pending expiry and idle-worker dispatch, with schema, clock, rollback, concurrency and replay-preservation tests on both backends.
   Existing shared stores now activate explicitly through HTTP with WELITE_SHARED=1, canonical-file refusal guards and real Mongo/HTTP/restart/revocation tests on both backends. Admin registry remains native.
+  Unix SIGTERM/SIGINT now request shutdown outside handlers; tracked sockets wake incomplete requests, HTTP threads drain before tenant handles close, and maintenance joins before signal restoration. Both backends pass idle/busy/repeated-signal/restart tests; other platform controls remain unverified.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

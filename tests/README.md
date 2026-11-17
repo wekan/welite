@@ -321,3 +321,8 @@ opens an existing Mongo-created store with `WELITE_SHARED=1`. It verifies both-w
 HTTP/Mongo changes, BSON preservation, private browser sessions, API restart and
 shared revocation, with no normalized shadow database. Fresh shared creation,
 strict 8.3 sharing and full Meteor application workflows are not covered by this test.
+
+`python3 tests/stop.py` verifies Unix SIGTERM/SIGINT on both HTTP backends: idle
+accept, sustained request traffic, an incomplete request, repeated stop signals,
+worker-cleanup completion, exit status zero, immediate restart and SQLite integrity.
+Incomplete sockets must be woken without leaving framework threads blocked.

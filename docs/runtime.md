@@ -93,3 +93,20 @@ the directory names while the server remains stopped. Retain the original backup
 Fresh sign-in is required because authentication tokens are bound to database paths.
 The current server refuses detected legacy paths instead of silently provisioning
 an empty parallel database. Python is needed only for this offline migration.
+
+## Unix process shutdown
+
+SIGTERM and SIGINT request an orderly HTTP stop. The handlers only set a flag;
+accept-loop callbacks handle it within the 100 ms idle poll or before accepting
+a new connection. The server stops admission, gives active requests one second
+to finish, then shuts down remaining sockets to wake blocked/incomplete reads.
+Connection tracking holds a lifecycle lock while using socket handles, preventing
+closed descriptor reuse. Framework threads finish before tenant database handles
+are finalized. Maintenance then joins, previous signal handlers are restored, and
+`WeKan-Lite stopped` is printed after worker cleanup. Repeated stop signals during
+cleanup remain requests rather than interrupting the join.
+
+`tests/stop.py` verifies linked/CLI idle, busy and incomplete HTTP connections,
+repeated signals, exit status zero, immediate restart and database integrity on
+Linux. Unix targets use this signal path; native Windows console control handling
+and retro-platform lifecycle behavior still need platform verification.

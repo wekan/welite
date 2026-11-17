@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Stop Unix HTTP and maintenance cleanly
+
+- Handle SIGTERM/SIGINT by setting a flag only. Poll it from the accept loop,
+  including connection admission under continuous traffic; perform object and thread
+  cleanup outside the signal handler. Keep handlers active through worker joining.
+- Track connection lifetimes under a lock. After a one-second request drain,
+  shut down remaining sockets before framework destruction so incomplete reads wake
+  without touching a reused descriptor. Drain HTTP threads before closing tenant
+  handles, then join maintenance and restore the previous signal handlers.
+- Verify idle, busy and incomplete requests, repeated signals, successful cleanup,
+  exit status zero, immediate port/database reuse and SQLite integrity on linked/CLI
+  backends. Native and live shared HTTP workflows also pass through the custom server.
+- Native Windows console controls and retro-platform shutdown remain unverified;
+  the new signal handlers and tracked sockets are compiled only for Unix.
+
 ## 2026-11-17 Open existing shared stores through HTTP
 
 - Add explicit `WELITE_SHARED=1` activation for existing public FerretDB stores,
