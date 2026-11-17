@@ -62,6 +62,15 @@ def check_frames(request,database,session,editor):
         fields=next(fields for path,fields in forms.forms if path=='/designer/widget/move')
         error('POST','/designer/widget/move',dict(fields,widgetId='missing-frame',dir='left'),404)
         with sqlite3.connect(database) as con:
+            original_card=con.execute("SELECT title,listId,swimlaneId FROM cards WHERE id='card'").fetchone()
+        for tag in ['ar','fi']:
+            body=check('/board?id=protected&view=all&sessionId='+session)
+            forms=Forms();forms.feed(body.decode())
+            fields=next(fields for path,fields in forms.forms if path=='/board/move')
+            error('POST','/board/move',dict(fields,action='unknown',sel_card='card',lang=tag),400,tag)
+        with sqlite3.connect(database) as con:
+            assert con.execute("SELECT title,listId,swimlaneId FROM cards WHERE id='card'").fetchone()==original_card
+        with sqlite3.connect(database) as con:
             assert json.loads(con.execute("SELECT profile_json FROM users WHERE username='administrator'").fetchone()[0])==dict(language='ar',keep=dict(value='unchanged'))
     finally:
         with sqlite3.connect(database) as con:

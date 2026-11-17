@@ -449,3 +449,6 @@ metadata and unchanged profile data. Error text remains escaped.
 `gatelang.py`, run by `admin.py`, exercises supported tenant/global administrator
 denial routes with different Arabic/Hebrew profiles, Finnish query/posted overrides
 and invalid-choice fallback, asserting 403, matching metadata and unchanged profiles.
+
+The frame matrix also posts invalid board selection actions in Arabic/Finnish,
+checking 400, matching language/direction metadata and unchanged card title/location.

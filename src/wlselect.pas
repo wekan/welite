@@ -102,10 +102,12 @@ end;
 function AttachmentPath(const T:TWLTenant; const Id:string):string;
 begin Result:=StoreFilePath(T.FilesDir,'attachme',Id);end;
 
-procedure Error(Response:TResponse; Code:Integer; const Message:string);
+procedure Error(const T:TWLTenant; const S:TWLSession; Request:TRequest;
+  Response:TResponse; Code:Integer; const Message:string);
 begin
   Response.Code:=Code; Response.ContentType:='text/html; charset=utf-8';
-  Response.Content:=Page32('Board action','<p>'+HtmlEncode(Message)+'</p>'); Response.SendContent;
+  Response.Content:=LanguagePage(Response,ViewerLanguage(T.Db,S,Request),
+    'Board action','<p>'+HtmlEncode(Message)+'</p>'); Response.SendContent;
 end;
 procedure Redirect(Response:TResponse; const S:TWLSession; Params:TStrings);
 begin
@@ -425,7 +427,7 @@ begin
   try
     Data:=TJSONObject(Graph.Find('data'));
     Count:=TJSONArray(Data.Find('cards')).Count+TJSONArray(Data.Find('lists')).Count+TJSONArray(Data.Find('swimlanes')).Count;
-    if Count=0 then begin Error(Response,400,'Select at least one item'); Exit; end;
+    if Count=0 then begin Error(T,S,Request,Response,400,'Select at least one item'); Exit; end;
     if Action='edit' then
     begin
       Response.Content:=LanguagePage(Response,ViewerLanguage(T.Db,S,Request),'Edit selection',EditSelection(T.Db,Request.ContentFields,S));
@@ -433,7 +435,7 @@ begin
     end;
     if Action='save' then
     begin
-      if not SaveSelection(T.Db,Request.ContentFields) then Error(Response,400,'Invalid fields or save failed; selection is unchanged')
+      if not SaveSelection(T.Db,Request.ContentFields) then Error(T,S,Request,Response,400,'Invalid fields or save failed; selection is unchanged')
       else Redirect(Response,S,Request.ContentFields);
       Exit;
     end;
@@ -447,25 +449,25 @@ begin
     end;
     if Action='confirm-delete' then
     begin
-      if not DeleteSelection(T,Graph,Request.ContentFields.Values['boardId']) then Error(Response,500,'Delete failed; selection is unchanged')
+      if not DeleteSelection(T,Graph,Request.ContentFields.Values['boardId']) then Error(T,S,Request,Response,500,'Delete failed; selection is unchanged')
       else Redirect(Response,S,Request.ContentFields);
       Exit;
     end;
     if Action='clone' then
     begin
-      if not CloneSelection(T,S,Graph,Request.ContentFields) then Error(Response,500,'Clone failed; originals are unchanged')
+      if not CloneSelection(T,S,Graph,Request.ContentFields) then Error(T,S,Request,Response,500,'Clone failed; originals are unchanged')
       else Redirect(Response,S,Request.ContentFields);
       Exit;
     end;
     if Action='export' then
     begin
       try ExportSelection(T,Graph);
-      except Error(Response,500,'Could not export attachment content'); Exit; end;
+      except Error(T,S,Request,Response,500,'Could not export attachment content'); Exit; end;
       Response.ContentType:='application/json';
       Response.SetCustomHeader('Content-Disposition','attachment; filename="select.jsn"');
       Response.Content:=Graph.AsJSON; Response.SendContent; Exit;
     end;
-    Error(Response,400,'Unknown selection action');
+    Error(T,S,Request,Response,400,'Unknown selection action');
   finally Graph.Free; end;
 end;
 end.

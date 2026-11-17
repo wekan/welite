@@ -240,3 +240,7 @@ Tenant-administrator and reserved Global Admin 403 HTML frames also use the
 denied authenticated viewer’s own language/profile context, including validated
 query/posted overrides. Their role and host restrictions remain the response gate.
 Unknown-domain and other early route frames remain separate outstanding work.
+
+Board selection errors (empty selection, invalid save/action and failed clone,
+delete or export) also use the authenticated request’s viewer frame. Error prose
+is escaped, with the existing failure status and rollback behavior retained.

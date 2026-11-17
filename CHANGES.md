@@ -4,6 +4,16 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Retain viewer metadata on selection errors
+
+- Pass authenticated tenant/session/request context into the board selection error
+  renderer and use the shared viewer frame for empty/invalid selections, failed
+  saves, deletes, clones and attachment exports. Keep escaped prose and failure status.
+- Add Arabic/Finnish invalid-action HTTP cases that assert Content-Language/Vary,
+  HTML/body direction and unchanged card title/list/swimlane. Full linked and CLI
+  HTTP suites pass, including existing mutation/rollback/authorization regressions.
+- Other early route errors and translated error text remain open.
+
 ## 2026-11-17 Retain viewer metadata on administrator denial
 
 - Render tenant-administrator and reserved Global Admin 403 pages through the shared
