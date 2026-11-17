@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Make custom-field API replacement atomic and truthful
+
+- Replace unchecked INSERT OR REPLACE with one transactional UPDATE followed by
+  insertion only when the row is absent. Existing embedded row properties and
+  BSON type metadata survive replacements; failed writes roll back and return
+  an error rather than a false success.
+- Parse JSON scalars and string arrays explicitly, retain form/JSON string input,
+  and reject missing/duplicate values, objects, nulls, non-string array elements,
+  NUL characters and non-finite JSON numbers before SQL mutation.
+- Serialize successful card IDs with the JSON writer, including quoted IDs.
+  Native/shared HTTP tests cover repeated writes, empty values, JSON/form arrays,
+  numbers, booleans, dates, Unicode text, scope guards and rollback after an
+  injected AFTER-write failure on both SQLite backends. Against committed old
+  code, a replacement returns HTTP 200 while Mongo still contains the old value.
+- Typed API response values, explicit field-type changes, normalized-store typed
+  migration, percent-encoded route IDs and clone/export compatibility remain open.
+
 ## 2026-11-17 Insert shared custom values by field definition
 
 - Read the current custom-field definition inside each shared SQL insertion.

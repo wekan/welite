@@ -12,6 +12,7 @@ import tempfile
 import time
 from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long
+from custapi import run_shared as check_custom_api
 root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
 with sqlite3.connect(':memory:') as con:assert con.execute("SELECT sqlite_compileoption_used('ENABLE_8_3_NAMES=2')").fetchone()==(0,)
@@ -51,7 +52,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 con=http.client.HTTPConnection('127.0.0.1',http_port,timeout=10)
                 headers={'Host':'localhost','User-Agent':'shared-http-test'}
                 if token:headers['Authorization']='Bearer '+token
-                if body is not None:headers['Content-Type']='application/json' if isinstance(body,dict) else 'application/x-www-form-urlencoded'
+                if body is not None:headers['Content-Type']='application/json' if isinstance(body,(dict,bytes)) else 'application/x-www-form-urlencoded'
                 con.request(method,path,json.dumps(body) if isinstance(body,dict) else body,headers)
                 response=con.getresponse();result=response.status,dict(response.getheaders()),response.read();con.close();return result
             def stop():
@@ -91,6 +92,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200,(backend,status,body)
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
+                check_custom_api(request,client,database,token)
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
                 assert request('GET',headers['Location'])[0]==200

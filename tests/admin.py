@@ -3,6 +3,7 @@ import http.client
 import json
 import hashlib
 from apiscope import run as check_api_scope
+from custapi import run_native as check_custom_api
 from tiers import run as check_admin_tiers
 from layout import run as check_layout
 from imports import run as check_imports
@@ -182,6 +183,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             assert status == 200 and b'X 2 Y 1' in body and b'data-list="doing"' in body
             assert b'data-list="todo"' not in body
             check_api_scope(request, db, admin)
+            check_custom_api(request, db)
             from langhttp import check_language
             check_language(request,db,admin)
             from homelang import run as check_home_language

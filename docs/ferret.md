@@ -1084,10 +1084,22 @@ still be updated by their existing BSON type without requiring a definition.
 type, definition changes, unknown siblings, missing/empty source arrays, invalid
 values, duplicate rows and multi-row rollback on both backends.
 
-Explicit type changes, normalized-store migration, API typed input/output and
-selection clone/export compatibility still need a coordinated contract. A shared
-INSERT now requires a usable definition; this does not alter the independent
-normalized TEXT table or close the broader interoperability milestone.
+The custom-value POST endpoint now sends JSON scalars/string-array text or form
+strings to that SQL contract and performs UPDATE plus INSERT-if-absent in one
+transaction. It does not delete/recreate an existing embedded row. A storage error
+rolls back the transaction and returns HTTP 500; malformed/ambiguous value bodies
+return HTTP 400. Successful IDs use proper JSON escaping. `tests/custapi.py`, run
+by native `tests/admin.py` and real shared `tests/shrhttp.py`, checks repeated
+writes, typed shared values, literal Unicode text, quoted IDs, missing/foreign
+fields and injected AFTER-write failures without partial rows or BSON changes.
+
+Explicit type changes, normalized-store typed migration, typed API response values
+and selection clone/export compatibility still need a coordinated contract. A
+shared INSERT requires a usable definition; the independent normalized table still
+stores TEXT and its API value validation/type policy remains a separate step.
+Percent-encoded route IDs, including Unicode IDs, currently fail the parent guard
+before reaching this endpoint and require a separate route-decoding fix. None of
+these remaining requirements is closed by the write-path tests above.
 
 ## Remaining before the checklist can be checked
 

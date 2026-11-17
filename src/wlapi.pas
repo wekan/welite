@@ -81,7 +81,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore;
+uses wlstore,wlsjson,Math;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -662,20 +662,71 @@ begin
   finally O.Free; end;
 end;
 
-// POST set a card's value for a custom field
+// Keep JSON arrays as array text for the SQL relation contract. A JSON number
+// or Boolean remains a SQL scalar; form values and JSON strings remain literal.
+function CustomValueSql(Request:TRequest;out Value:string):Boolean;
+var Doc:TJSONObject;Data:TJSONData;i,Count:Integer;
+begin
+  Result:=False;Value:='';Doc:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(Request.ContentType))=1 then
+      begin
+        Doc:=ExactObject(Request.Content);Data:=Doc.Find('value');
+        if Data=nil then Exit;
+        case Data.JSONType of
+          jtString:begin
+            if Pos(#0,Data.AsString)>0 then Exit;
+            Value:=QuotedStr(Data.AsString);
+          end;
+          jtNumber:begin
+            if IsNan(Data.AsFloat) or IsInfinite(Data.AsFloat) then Exit;
+            Value:=Data.AsJSON;
+          end;
+          jtBoolean:if Data.AsBoolean then Value:='1' else Value:='0';
+          jtArray:begin
+            for i:=0 to Data.Count-1 do
+              if (Data.Items[i].JSONType<>jtString) or (Pos(#0,Data.Items[i].AsString)>0) then Exit;
+            Value:=QuotedStr(Data.AsJSON);
+          end;
+        else Exit;
+        end;
+      end
+      else
+      begin
+        Count:=0;
+        for i:=0 to Request.ContentFields.Count-1 do
+          if Request.ContentFields.Names[i]='value' then Inc(Count);
+        if Count<>1 then Exit;
+        if Pos(#0,Request.ContentFields.Values['value'])>0 then Exit;
+        Value:=QuotedStr(Request.ContentFields.Values['value']);
+      end;
+      Result:=True;
+    except Result:=False;end;
+  finally Doc.Free;end;
+end;
+
+// POST set a card's value for a custom field. Do not delete an existing embedded
+// row: its unknown properties and BSON type metadata belong to the source store.
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, CfId, Value: string;
+var T: TWLTenant; UserId, CardId, CfId, Value,Scope: string;Reply:TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   CardId := aRequest.RouteParams['cardId'];
   CfId   := aRequest.RouteParams['customField'];
-  Value  := BodyField(aRequest, 'value');
-  T.Db.Exec(Format(
-    'INSERT OR REPLACE INTO card_custom_field_values(cardId,customFieldId,value) VALUES(%s,%s,%s);',
-    [QuotedStr(CardId), QuotedStr(CfId), QuotedStr(Value)]));
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(CardId, '"')]));
+  if not CustomValueSql(aRequest,Value) then
+  begin SendError(aResponse,400,'Expected one scalar or string-array value');Exit;end;
+  Scope:='cardId='+QuotedStr(CardId)+' AND customFieldId='+QuotedStr(CfId);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE card_custom_field_values SET value='+Value+
+    ' WHERE '+Scope+'; INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT '+
+    QuotedStr(CardId)+','+QuotedStr(CfId)+','+Value+' WHERE NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE '+Scope+'); COMMIT;') then
+  begin
+    T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not save custom-field value');Exit;
+  end;
+  Reply:=TJSONObject.Create(['_id',CardId]);
+  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);
