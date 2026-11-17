@@ -4,6 +4,7 @@ import sqlite3
 from urllib.parse import quote, urlencode
 from wire import DateMs, Long, Binary, encode
 from pathhttp import run_native as check_native_paths, run_shared as check_shared_paths
+from defapi import run_native as check_native_definitions, run_shared as check_shared_definitions
 
 
 def exercise(call, base, snapshot, check, fail, un_fail, typed):
@@ -109,6 +110,7 @@ def run_native(request, db):
     base='/api/boards/cust-board/lists/cust-list/cards/' + quote('cust-"漢', safe='')
     exercise(call, base, snapshot, check, fail, un_fail, False)
     check_native_paths(call,db,login['id'])
+    check_native_definitions(call,db,'cust-board',login['id'])
 
 
 def run_shared(request, client, db, token):
@@ -163,6 +165,7 @@ def run_shared(request, client, db, token):
     base='/api/boards/b/lists/l/cards/' + quote(identity, safe='')
     exercise(call, base, snapshot, check, fail, un_fail, True)
     check_shared_paths(call,client,'u')
+    check_shared_definitions(call,client,db,'b','u')
 
     # Live Mongo values, rather than current definitions, determine shared output.
     special = [dict(_id='text',value='true',unknown='private'),

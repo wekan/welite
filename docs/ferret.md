@@ -1145,6 +1145,28 @@ changes. The custom-value HTTP suite again uses a quoted Unicode card ID through
 its normally encoded URL. This closes the recorded encoded-ID failure; the typed
 migration and clone/export requirements above remain open.
 
+## Custom-field definition creation
+
+The definition POST endpoint now validates a non-empty string name, the eight
+maintained model type names and Boolean display/automatic options. Camel-case
+`showOnCard`, `automaticallyOnCard`, `showLabelOnMiniCard` and `showSumAtTopOfList`
+match the maintained `server/models/customFields.js` API. Legacy lowercase aliases
+remain accepted; conflicting JSON aliases and duplicate form/JSON fields fail
+before writes. Missing/empty type retains WeLite's existing text default.
+
+One transaction inserts the definition, board association and createCustomField
+activity. Activity identity comes from the authenticated user, never body authorId.
+The activity's customFieldId is stored in native data_json / shared root metadata.
+Any failing stage rolls everything back and returns HTTP 500. The list endpoint
+returns the maintained `_id`, `name`, `type` summary shape.
+
+`tests/defapi.py`, invoked by the native and real shared HTTP suites, covers every
+supported type, JSON/form/canonical/legacy options, authenticated attribution,
+malformed inputs and injected AFTER-write failures at all three stages. These
+checks concern the currently supported metadata. Definition settings/full payloads,
+edit/delete lifecycle and automatic-card policies still need source reconciliation;
+typed migration/explicit type changes and selection clone/export remain open too.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

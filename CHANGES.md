@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Make custom-field definition creation atomic
+
+- Commit the definition, board association and authenticated createCustomField
+  activity in one transaction. Roll back all three on storage failure and return
+  an error rather than a successful ID for partially created data.
+- Validate non-empty string names, the eight supported types and Boolean options.
+  Support canonical camel-case options and legacy lowercase spellings, reject
+  conflicting aliases/duplicate inputs, and retain the default text type.
+- Return _id/name/type from the definition-list endpoint, matching the maintained
+  API rather than renaming the field name to title and omitting its type.
+- Native/shared HTTP tests cover every type, canonical/legacy/form flags, malformed
+  bodies, authenticated activity attribution and injected AFTER-write failure at
+  each transaction stage. Against committed old code, a failed board link returns
+  HTTP 200 and leaves changed data. All eight Windows x86/x64 cross-build variants
+  pass. Source-side definition settings and remaining lifecycle
+  operations stay open in TODO alongside typed migration and clone/export.
+
 ## 2026-11-17 Type first edits of assigned custom-field values
 
 - Match WeKan's actual assignment paths, which initialize custom fields with null.

@@ -616,9 +616,59 @@ begin
   if (LowerCase(Trim(S)) = 'true') or (Trim(S) = '1') then Result := 1 else Result := 0;
 end;
 
+type TDefinitionFlags=array[0..3] of Integer;
+const DefinitionFlagNames:array[0..3] of string=('showOnCard','automaticallyOnCard',
+  'showLabelOnMiniCard','showSumAtTopOfList');
+function DefinitionInput(Request:TRequest;out Name,Kind:string;out Flags:TDefinitionFlags):Boolean;
+var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
+  function Flag(Data:TJSONData;out Number:Integer):Boolean;
+  var Text:string;
+  begin
+    Number:=0;if Data=nil then Exit(True);
+    if Data.JSONType=jtBoolean then begin Number:=Ord(Data.AsBoolean);Exit(True);end;
+    if Data.JSONType=jtString then Text:=LowerCase(Trim(Data.AsString))
+    else if Data.JSONType=jtNumber then Text:=Data.AsJSON else Exit(False);
+    Result:=True;
+    if (Text='true') or (Text='1') then Number:=1
+    else if (Text<>'false') and (Text<>'0') and (Text<>'') then Result:=False;
+  end;
+begin
+  Result:=False;Name:='';Kind:='';Doc:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(Request.ContentType))=1 then Doc:=ExactObject(Request.Content)
+      else begin
+        Doc:=TJSONObject.Create;
+        for i:=0 to Request.ContentFields.Count-1 do
+        begin
+          Key:=LowerCase(Request.ContentFields.Names[i]);
+          if (Key='') or (Doc.Find(Key)<>nil) then Exit;
+          Doc.Add(Key,Request.ContentFields.ValueFromIndex[i]);
+        end;
+      end;
+      Value:=Doc.Find('name');if (Value=nil) or (Value.JSONType<>jtString) then Exit;
+      Name:=Value.AsString;if (Trim(Name)='') or (Pos(#0,Name)>0) then Exit;CheckUtf8(Name);
+      Kind:='text';Value:=Doc.Find('type');
+      if Value<>nil then begin if Value.JSONType<>jtString then Exit;Kind:=Value.AsString;end;
+      if Kind='' then Kind:='text';
+      case Kind of 'text','number','currency','date','checkbox','dropdown','dropdownMultiSelect','stringtemplate':;
+      else Exit;end;
+      for i:=0 to High(Flags) do
+      begin
+        Value:=Doc.Find(DefinitionFlagNames[i]);Legacy:=Doc.Find(LowerCase(DefinitionFlagNames[i]));
+        if Value=nil then Value:=Legacy;
+        if not Flag(Value,Flags[i]) then Exit;
+        if (Value<>Legacy) and (Legacy<>nil) then
+        begin if not Flag(Legacy,Other) or (Other<>Flags[i]) then Exit;end;
+      end;
+      Result:=True;
+    except Result:=False;end;
+  finally Doc.Free;end;
+end;
+
 // GET board custom fields / POST create a custom field
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Id, Name, Typ: string;
+var T: TWLTenant; UserId, BoardId, Id, Name, Typ,Stamp,Sql: string;Flags:TDefinitionFlags;Reply,Data:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index:Integer;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -626,26 +676,34 @@ begin
   BoardId := aRequest.RouteParams['boardId'];
   if aRequest.Method = 'POST' then
   begin
-    Name := BodyField(aRequest, 'name');
-    Typ  := BodyField(aRequest, 'type'); if Typ = '' then Typ := 'text';
-    Id := NewId;
-    T.Db.Exec(Format(
-      'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,' +
-      'showLabelOnMiniCard,showSumAtTopOfList,createdAt,modifiedAt) ' +
-      'VALUES(%s,%s,%s,%d,%d,%d,%d,%s,%s);',
-      [QuotedStr(Id), QuotedStr(Name), QuotedStr(Typ),
-       BoolInt(BodyField(aRequest, 'showoncard')), BoolInt(BodyField(aRequest, 'automaticallyoncard')),
-       BoolInt(BodyField(aRequest, 'showlabelonminicard')), BoolInt(BodyField(aRequest, 'showsumattopoflist')),
-       QuotedStr(NowIso), QuotedStr(NowIso)]));
-    T.Db.Exec(Format('INSERT INTO custom_field_boards(customFieldId,boardId) VALUES(%s,%s);',
-      [QuotedStr(Id), QuotedStr(BoardId)]));
-    SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
+    if not DefinitionInput(aRequest,Name,Typ,Flags) then
+    begin SendError(aResponse,400,'Invalid custom-field name, type or options');Exit;end;
+    Id:=NewId;Stamp:=NowIso;
+    Sql:='BEGIN IMMEDIATE; '+Format(
+      'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
+      'showLabelOnMiniCard,showSumAtTopOfList,createdAt,modifiedAt) VALUES(%s,%s,%s,%d,%d,%d,%d,%s,%s);',
+      [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],QuotedStr(Stamp),QuotedStr(Stamp)])+
+      'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); ';
+    Data:=TJSONObject.Create(['customFieldId',Id]);
+    try
+      Sql:=Sql+'INSERT INTO activities(id,activityType,userId,boardId,createdAt,modifiedAt,data_json) VALUES('+
+        QuotedStr(NewId)+',''createCustomField'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+
+        QuotedStr(Stamp)+','+QuotedStr(Stamp)+','+QuotedStr(Data.AsJSON)+'); COMMIT;';
+    finally Data.Free;end;
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create custom field');Exit;end;
+    Reply:=TJSONObject.Create(['_id',Id]);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
     Exit;
   end;
-  SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT cf.id, cf.name FROM custom_fields cf ' +
-    'JOIN custom_field_boards b ON b.customFieldId=cf.id WHERE b.boardId=%s ORDER BY cf.name;',
-    [QuotedStr(BoardId)]))));
+  Rows:=T.Db.Query(Format('SELECT cf.id,cf.name,cf.type FROM custom_fields cf '+
+    'JOIN custom_field_boards b ON b.customFieldId=cf.id WHERE b.boardId=%s ORDER BY cf.name;',[QuotedStr(BoardId)]));
+  Items:=TJSONArray.Create;
+  try
+    for Index:=0 to High(Rows) do
+      Items.Add(TJSONObject.Create(['_id',Rows[Index][0],'name',Rows[Index][1],'type',Rows[Index][2]]));
+    SendJson(aResponse,Items.AsJSON);
+  finally Items.Free;end;
 end;
 
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);
