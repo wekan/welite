@@ -536,7 +536,11 @@ builds when the sysroot also contains target SQLite development/runtime librarie
 The embedded linked HTTP suite passes under amd64 QEMU with target SQLite; unlike
 the CLI scenario it needs no native database subprocess. See `docs/cross.md`.
 
-`WELITE_WIN64=/absolute/toolchain FPCRES=/absolute/native/fpcres python3 tests/win64.py`
+`WELITE_WIN64=/absolute/toolchain FPCRES=/absolute/native/fpcres python3 tests/wincross.py`
 checks current disk/embedded and linked/CLI Windows amd64 builds, PE32+ machine/
 console headers and linked SQLite DLL reference. It requires the pinned Windows
 compiler/units described in `docs/cross.md` and TMPDIR; no foreign code is executed.
+
+`wincross.py` accepts `WELITE_WIN32` and/or `WELITE_WIN64`; both prefixes run all
+eight target/backend/resource combinations. PE checks resolve actual DLL imports
+and require the SQLite DLL only for linked builds, alongside target machine/format.

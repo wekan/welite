@@ -108,7 +108,7 @@ internal assembler/linker sufficed; this check needed no Windows binutils/sysroo
 
 ```sh
 WELITE_WIN64=/absolute/windows/toolchain FPCRES=/absolute/native/fpcres \
-  python3 tests/win64.py
+  python3 tests/wincross.py
 ```
 
 All four current disk/embedded and linked/CLI variants pass. The check validates
@@ -119,6 +119,27 @@ Native resource lookup/private-seed checks and all four Linux amd64 build checks
 also pass after this correction. A PE build is not Windows runtime acceptance:
 SQLite DLL distribution, secure OS randomness, threading, resource lookup and
 console shutdown still require execution on Windows.
+
+## Current Windows x86 cross-build verification (2026-11-17)
+
+The pinned compiler source also passes serial `crossall` / `crossinstall` with
+`CPU_TARGET=i386 OS_TARGET=win32` into a separate prefix. Its compiler is
+`lib/fpc/3.2.3/ppcross386` and units are `units/i386-win32`; no external Windows
+binutils/sysroot was required. Run one or both installed target prefixes:
+
+```sh
+WELITE_WIN32=/absolute/windows32/toolchain \
+WELITE_WIN64=/absolute/windows64/toolchain FPCRES=/absolute/native/fpcres \
+  python3 tests/wincross.py
+```
+
+All eight current target/backend/resource combinations pass. x86 checks require
+i386 machine/PE32 headers; amd64 checks require AMD64/PE32+. Both require the
+console subsystem. The check now resolves real PE import-directory RVAs through
+section headers, requires kernel32.dll, and verifies sqlite3.dll is imported
+exactly by linked variants. This extends source/build coverage to 32-bit widths;
+Windows runtime, resource bytes, entropy, DLL deployment and shutdown acceptance
+remain open for both targets.
 
 ---
 

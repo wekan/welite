@@ -4,6 +4,16 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Verify current Windows x86 cross-builds
+
+- Build a separate pinned Windows i386 compiler/runtime prefix and compile the
+  current disk/embedded linked/CLI servers as PE32 console executables.
+- Generalize the Windows regression to independent x86/amd64 prefixes and parse
+  actual PE import directories through section headers. Require the correct
+  machine/format, kernel32 import and linked-only sqlite3.dll dependency.
+- All eight variants pass. Update reproduction docs and remaining TODO; Windows
+  runtime, entropy, DLL/resource and shutdown acceptance remain unverified.
+
 ## 2026-11-17 Fix Windows embedded resource compilation
 
 - Reproduce the current Windows amd64 embedded build failure: RT_RCDATA is not
