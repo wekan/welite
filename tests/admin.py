@@ -141,6 +141,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 # A session with the wrong client binding must never authorize an admin.
                 status, _, _ = request(method, path+'?'+urlencode({'sessionId':admin, 'url':'/demo'}), {'sessionId':admin} if method == 'POST' else None, 'Wrong-agent')
                 assert status == 302, (path, 'client binding', status)
+            from gatelang import run as check_gate_language
+            check_gate_language(request,db,admin,member)
             for path in GETS:
                 status, _, body = request('GET', path+'?'+urlencode({'sessionId':admin, 'url':'/demo'}))
                 assert status == 200, (path, status, body)

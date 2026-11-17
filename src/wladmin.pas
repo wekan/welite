@@ -88,7 +88,7 @@ begin
   if not IsTenantAdmin(T.Db, S) then
   begin
     aResponse.Code := 403; aResponse.ContentType := 'text/html; charset=utf-8';
-    aResponse.Content := Page32('Forbidden',
+    aResponse.Content := LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),'Forbidden',
       '<h1>Forbidden</h1><p>Tenant administrator only.</p><p><a href="'+HtmlAttr(SessionUrl('/',S))+'">Home</a></p>');
     aResponse.SendContent; Exit;
   end;
@@ -105,7 +105,7 @@ begin
   begin
     aResponse.Code:=403;
     aResponse.ContentType:='text/html; charset=utf-8';
-    aResponse.Content:=Page32('Forbidden','<p>Domain management requires the reserved Global Admin tenant.</p>');
+    aResponse.Content:=LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),'Forbidden','<p>Domain management requires the reserved Global Admin tenant.</p>');
     aResponse.SendContent;
   end;
 end;

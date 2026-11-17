@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Retain viewer metadata on administrator denial
+
+- Render tenant-administrator and reserved Global Admin 403 pages through the shared
+  viewer frame, using the denied authenticated account's tenant-bound profile and
+  validated query/posted language. Keep existing role/host restrictions and statuses.
+- Add supported GET/POST denial checks across Admin and Designer with separate
+  Arabic/Hebrew accounts, Finnish overrides and invalid-choice profile fallback.
+  Verify matching language/header/direction metadata and unchanged profile values.
+- Full linked and CLI HTTP suites pass. Unknown-domain, other early errors and
+  translated denial prose remain part of the remaining localization work.
+
 ## 2026-11-17 Keep viewer metadata on Designer errors
 
 - Pass request, database and authenticated session explicitly into Designer error

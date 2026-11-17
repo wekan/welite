@@ -445,3 +445,7 @@ and exact argument inventories.
 `frames.py` also exercises Designer 400/403/404 error frames, explicit query/posted
 language versus authenticated profile/header fallback, matching language/direction
 metadata and unchanged profile data. Error text remains escaped.
+
+`gatelang.py`, run by `admin.py`, exercises supported tenant/global administrator
+denial routes with different Arabic/Hebrew profiles, Finnish query/posted overrides
+and invalid-choice fallback, asserting 403, matching metadata and unchanged profiles.

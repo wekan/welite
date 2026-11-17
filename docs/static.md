@@ -235,3 +235,8 @@ viewer frame as normal pages, including explicit query/posted language, tenant-b
 profile fallback, Content-Language/Vary and HTML/body direction. Error prose stays
 escaped. Tenant/authentication gate failures and other early routes remain under
 audit; message translation is separate remaining work.
+
+Tenant-administrator and reserved Global Admin 403 HTML frames also use the
+denied authenticated viewer’s own language/profile context, including validated
+query/posted overrides. Their role and host restrictions remain the response gate.
+Unknown-domain and other early route frames remain separate outstanding work.
