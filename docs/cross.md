@@ -99,6 +99,27 @@ and CLI/linked build checks, set `WELITE_CROSS_BACKENDS=cli,linked` when running
 `tests/cross64.py`; the default remains CLI-only for toolchains without SQLite.
 Physical amd64 hardware, foreign CLI deployment and other platforms remain open.
 
+## Current Windows amd64 cross-build verification (2026-11-17)
+
+The same pinned FPC source builds a separate Windows compiler/unit prefix with
+`CPU_TARGET=x86_64 OS_TARGET=win64` in the serial `crossall` / `crossinstall`
+commands above. Keep `OPT='-O2 -dFPC_SOFT_FPUX80'` for the aarch64 host. FPC's
+internal assembler/linker sufficed; this check needed no Windows binutils/sysroot.
+
+```sh
+WELITE_WIN64=/absolute/windows/toolchain FPCRES=/absolute/native/fpcres \
+  python3 tests/win64.py
+```
+
+All four current disk/embedded and linked/CLI variants pass. The check validates
+MZ/PE signatures, AMD64 machine, PE32+ format and console subsystem; linked
+variants contain the SQLite DLL reference. Embedded generation conditionally
+imports `Windows` for `RT_RCDATA`, whose declaration is not in `Classes` there.
+Native resource lookup/private-seed checks and all four Linux amd64 build checks
+also pass after this correction. A PE build is not Windows runtime acceptance:
+SQLite DLL distribution, secure OS randomness, threading, resource lookup and
+console shutdown still require execution on Windows.
+
 ---
 
 ## TL;DR
@@ -161,7 +182,8 @@ Verbose output goes to `build/log/xtools.log`.
 `welite`'s default build links `libsqlite3` (`uses sqlite3`). That can't be **cross-linked** — the
 toolchain has no `libsqlite3` for the target arch — so the default cross build fails to link on
 Linux. The `-dWLDB_CLI` mode (in `wldb.pas`) shells out to the external `sqlite3` binary via
-`TProcess` and links nothing, so it cross-compiles cleanly.
+`TProcess` and avoids the SQLite library dependency. Target OS C/thread libraries
+may still be required, as the current Linux sysroot check above demonstrates.
 
 Therefore every **non-Windows** `PLATFORMS` entry in `build.sh` carries `-dWLDB_CLI`. Windows keeps
 the linked default (FPC loads `sqlite3.dll` at runtime, not at link time). "Build for current

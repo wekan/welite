@@ -535,3 +535,8 @@ Set `WELITE_CROSS_BACKENDS=cli,linked` for `cross64.py` to verify four disk/embe
 builds when the sysroot also contains target SQLite development/runtime libraries.
 The embedded linked HTTP suite passes under amd64 QEMU with target SQLite; unlike
 the CLI scenario it needs no native database subprocess. See `docs/cross.md`.
+
+`WELITE_WIN64=/absolute/toolchain FPCRES=/absolute/native/fpcres python3 tests/win64.py`
+checks current disk/embedded and linked/CLI Windows amd64 builds, PE32+ machine/
+console headers and linked SQLite DLL reference. It requires the pinned Windows
+compiler/units described in `docs/cross.md` and TMPDIR; no foreign code is executed.
