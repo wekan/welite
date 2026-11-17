@@ -6,6 +6,7 @@ function DocumentJson(const Document:string):TJSONObject;
 function ReadModelSjson(Db:TWLDb;const Model,Collection,Identity:string):string;
 function CustomFieldsJson(const Document:string):TJSONArray;
 function ReadCustomFields(Db:TWLDb;const CardId:string):TJSONArray;
+procedure ValidateBoardCustomFields(Db:TWLDb;const BoardId:string);
 implementation
 procedure Invalid;
 begin raise Exception.Create('Invalid custom-field source');end;
@@ -123,6 +124,39 @@ begin
       end;
     except FreeAndNil(Result);raise;end;
   finally Reply.Free;Plain.Free;Typed.Free;end;
+end;
+procedure ValidateBoardCustomFields(Db:TWLDb;const BoardId:string);
+var Rows:TWLRows;Name,Binding,Match,Sql:string;Fields:TJSONArray;i:Integer;
+begin
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''cards'';');
+  if Length(Rows)<>1 then Invalid;
+  // Native TEXT values carry no BSON metadata to validate.
+  if Rows[0][0]='table' then Exit;
+  if Rows[0][0]<>'view' then Invalid;
+  Rows:=Db.Query('SELECT m.table_name FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+    'WHERE m.name=''cards'' AND c.name=''cards'';');
+  if Length(Rows)<>1 then Invalid;
+  Name:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Binding:='(SELECT count(*) FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+    'WHERE m.name=''cards'' AND c.name=''cards'')=1 AND '+
+    '(SELECT count(*) FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+    'WHERE m.name=''cards'' AND c.name=''cards'' AND m.table_name='+QuotedStr(Rows[0][0])+')=1';
+  // Concatenation removes CAST affinity: retain the old quoted-text lookup
+  // instead of allowing SQLite to coerce a numeric source identity to text.
+  Match:=' FROM '+Name+' s WHERE json_extract(s._ferretdb_sjson,''$."_id"'')=(CAST(v.id AS TEXT)||'''')';
+  // One source batch, with an explicit cardinality per projected card. A LEFT
+  // JOIN alone would silently drop missing sources or accept duplicate IDs.
+  Sql:='SELECT CASE WHEN '+Binding+' THEN ''ok'' ELSE json(''Stale card source'') END,''0'','''' '+
+    'UNION ALL SELECT v.id,(SELECT count(*)'+Match+'),'+
+    '(SELECT json(s._ferretdb_sjson)'+Match+' LIMIT 1) FROM cards v WHERE v.boardId='+QuotedStr(BoardId)+';';
+  Rows:=Db.Query(Sql);
+  if (Length(Rows)=0) or (Length(Rows[0])<>3) or (Rows[0][0]<>'ok') then Invalid;
+  for i:=1 to High(Rows) do
+  begin
+    if (Length(Rows[i])<>3) or (Rows[i][1]<>'1') then Invalid;
+    // Validate every complete document, including missing/null customFields.
+    Fields:=CustomFieldsJson(Rows[i][2]);Fields.Free;
+  end;
 end;
 function ReadCustomFields(Db:TWLDb;const CardId:string):TJSONArray;
 var Rows:TWLRows;Name:string;i:Integer;Row:TJSONObject;

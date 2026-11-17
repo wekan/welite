@@ -392,10 +392,16 @@ not merely a design document. Platform/browser claims require testing on those t
   reused owned policy; both card and field identities remain checked. Normal/
   checked linked/CLI tests cover later-card orphans, nulls and other-board
   isolation; a process-count regression proves 130 values add no per-value CLI
-  subprocesses. Remaining export batching: full per-card source validation and
-  per-definition reads. The earlier expanded scope fixture took about 13 seconds
-  before this step; its targeted export timeout stays 30 seconds pending renewed
-  performance measurements, while ordinary request timeouts retain defaults.
+  subprocesses. Complete shared card-source validation now also uses one batch
+  with owned-table rechecks and exact per-card source cardinality; full typed
+  documents are checked even for absent/null values. Normal/checked TEXT/JSONB
+  linked/CLI tests cover corrupt/missing/duplicate sources, malformed rows and
+  native fallback; 70 additional cards add no per-card CLI subprocesses.
+  The expanded CLI scope export now measures about 3.3 seconds locally after
+  value/source batching (earlier about 13 seconds); linked is about 0.07 seconds.
+  Remaining export batching: per-definition reads and bounded-memory handling
+  for very large source batches. The heavy fixture retains its targeted 30-second
+  timeout; ordinary request timeouts retain defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

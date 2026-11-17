@@ -201,14 +201,14 @@ begin
   end;
 end;
 function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
-var Policy:TFieldPolicy;Rows,Values:TWLRows;Definition:TJSONObject;Fields:TJSONArray;Flag:TJSONData;i:Integer;
+var Policy:TFieldPolicy;Rows,Values:TWLRows;Definition:TJSONObject;Flag:TJSONData;i:Integer;
   function Checked(const Sql:string):TWLRows;
   begin
     Result:=Db.Query(Sql);
     if (Length(Result)=0) or (Result[0][0]<>'ok') then raise Exception.Create('Missing export policy data');
   end;
 begin
-  Result:=False;Policy:=nil;Definition:=nil;Fields:=nil;
+  Result:=False;Policy:=nil;Definition:=nil;
   try
     try
       Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
@@ -230,12 +230,7 @@ begin
         end;
         FreeAndNil(Definition);
       end;
-      Rows:=Checked('SELECT ''ok'' UNION ALL SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+';');
-      for i:=1 to High(Rows) do
-      begin
-        // Validate complete shared source metadata, including null/missing rows.
-        Fields:=ReadCustomFields(Db,Rows[i][0]);FreeAndNil(Fields);
-      end;
+      ValidateBoardCustomFields(Db,BoardId);
       // Trusted correlation aliases let one statement check every assigned value.
       // Keep storage NULL semantics: JSON conversion can turn nonnull BSON into null.
       Values:=Db.Query('SELECT NOT EXISTS(SELECT 1 FROM card_custom_field_values v '+
@@ -245,7 +240,7 @@ begin
       if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
       Result:=True;
     except Result:=False;end;
-  finally Policy.Free;Definition.Free;Fields.Free;end;
+  finally Policy.Free;Definition.Free;end;
 end;
 function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray):Boolean;
 var Policy:TFieldPolicy;Row:TJSONObject;Card,Field,Value:TJSONData;LastCard:string;i:Integer;

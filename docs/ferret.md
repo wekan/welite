@@ -1329,6 +1329,14 @@ block even an administrator's export. Null/missing orphan values and ordinary
 read-only values keep their source export semantics.
 
 Shared source metadata is validated and failed policy queries deny the export.
+Board value permissions use one correlated statement with both card and field
+identities. Complete shared card documents are fetched in a board batch, with an
+owned-table binding check and exactly one physical source required per projected
+card. Every returned document passes typed custom-field validation, including
+null/missing fields; unrelated corrupt metadata also rejects the export. Native
+TEXT storage has no BSON source metadata to convert. `tests/cfsbatch.py` covers
+TEXT/JSONB, cardinality/ownership/SQL failures and full-document corruption in
+normal/checked linked/CLI builds, plus constant per-card CLI subprocess counts.
 The final check also inspects captured nonnull relation rows, so clearing a stored
 private value after collection does not make that captured value exportable.
 Denied exports return HTML 403 without an attachment response or selection graph.
@@ -1484,11 +1492,14 @@ of root lookalikes, legitimate OR alternatives, explicit nonstring refusal, mixe
 edit/save refusal, case-distinct IDs and unchanged source/file content. Clone tests
 also verify activity-model changes after mutation roll back the transaction.
 
-The richer CLI fixture measured roughly 13 seconds for a successful export after
-its prior clone batch, compared with about 0.1 seconds linked. Board-wide field
-visibility checks still invoke per-card subprocess queries and need batching.
-Only the heavy export test opts into a 30-second timeout; it retains all rows,
-policy checks and assertions, while other HTTP tests keep their default timeout.
+Before export-policy batching, the richer CLI fixture measured roughly 13 seconds
+for a successful export after its prior clone batch, compared with about 0.1
+seconds linked. Board value permission checks and complete card-source validation
+are now batched; the same expanded CLI export measured about 3.3 seconds locally,
+with linked about 0.07 seconds. Per-definition reads remain. Source-batch memory
+is proportional to the board's complete BSON documents and needs bounded handling for very large
+boards. Only the heavy export test opts into a 30-second timeout; it retains all
+rows, policy checks and assertions, while other HTTP tests keep their defaults.
 
 ## Mapped clone root fields
 

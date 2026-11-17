@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Batch complete board card-source validation
+
+- Read shared board card sources in one database batch, retaining exactly-one
+  physical source checks for every projected card. Pin the owned table lookup in
+  that statement and use the installed physical identity index for probes.
+- Validate every complete typed document in memory, including absent/null fields;
+  missing/duplicate sources, corrupt unrelated BSON metadata, malformed field rows
+  and failed SQL all deny export. Native TEXT tables need no BSON conversion.
+- Normal/checked linked/CLI tests cover TEXT/JSONB, quoted Unicode identities,
+  ownership/cardinality failures, numeric identity refusal, late corrupt documents,
+  other-board isolation and native fallback. A CLI process-count regression
+  proves adding 70 cards adds
+  no per-card subprocesses. Existing field-policy regressions also pass.
+- Live shared export/clone/rollback suites pass on both backends, with final
+  checked shared export runs passing too. The expanded
+  CLI scope export measured about 3.3 seconds locally after the value/source
+  batches, versus the earlier 13-second measurement; linked remains about 0.07s.
+- Per-definition reads, bounded memory for very large source batches and broader
+  graph snapshot/lifecycle parity remain open.
+
 ## 2026-11-17 Batch board export value authorization
 
 - Check all nonnull assigned board custom-field values in one correlated SQL
