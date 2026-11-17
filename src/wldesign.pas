@@ -113,7 +113,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);    // POS
 implementation
 
 uses
-  DateUtils, StrUtils, Math, wladmin, wli18n, wllocale;
+  DateUtils, StrUtils, Math, wladmin, wli18n, wllocale, wlseed;
 
 var
   DataViews: TStringList = nil;   // binding -> TDataViewRenderer (as Pointer)
@@ -142,18 +142,14 @@ end;
 // Provision Designer tables independently of the portable board schema. Existing tenants
 // are upgraded when they first enter Designer; never recreate or overwrite their pages.
 function EnsureDesignerSchema(Db: TWLDb): Boolean;
-var R: TWLRows; FileName: string; Sql: TStringList;
+var R:TWLRows; FileName,Sql:string;
 begin
   R := Db.Query('SELECT COUNT(*) FROM sqlite_master WHERE type=''table'' AND name IN (''pages'',''page_widgets'');');
   if (Length(R)>0) and (R[0][0]='2') then Exit(True);
   FileName := GetEnvironmentVariable('WELITE_DESIGNER');
-  if FileName='' then FileName := 'src/designer.sql';
-  if not FileExists(FileName) then Exit(False);
-  Sql := TStringList.Create;
-  try
-    Sql.LoadFromFile(FileName);
-    Result := Db.Exec(Sql.Text);
-  finally Sql.Free; end;
+  if not LoadSeedSQL('designer.sql',FileName,
+    ['src'+PathDelim+'designer.sql','designer.sql'],Sql) then Exit(False);
+  Result:=Db.Exec(Sql);
 end;
 
 // ------------------------------------------------------------------ model

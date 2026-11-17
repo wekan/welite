@@ -1,6 +1,7 @@
 """Generated resources skip missing aliases and preserve real embedded bytes."""
 import os
 import json
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -25,10 +26,15 @@ with tempfile.TemporaryDirectory(prefix='wlembed-',dir=os.environ['TMPDIR']) as 
     run([resource,'wlpublic.rc','-o','wlpublic.res','-of','res'],cwd=out)
     (out/'embgen.lpr').write_text("""program embgen;
 {$mode objfpc}{$H+}
-uses SysUtils,Classes,wlstatic,wlassets;
-var Data:TBytes;i:Integer;
+uses SysUtils,Classes,wlstatic,wlseed,wlassets;
+var Data:TBytes;i:Integer;SQL:string;
 begin
   StaticInit('/','absent');
+  if ParamStr(1)='seed' then
+  begin
+    if not LoadSeedSQL('schema.sql','',[],SQL) then Halt(3);
+    Writeln(Length(SQL));Halt(0);
+  end;
   if not ReadStaticAsset('/',ParamStr(1),Data) then Halt(2);
   for i:=0 to High(Data) do Write(IntToHex(Data[i],2));
   Writeln;
@@ -38,6 +44,14 @@ end.
     for name,expected in [('robots.txt',text),('alias.txt',text),('thing.bin',binary)]:
         assert run([str(out/'embgen'),name],cwd=out).stdout.strip()==expected.hex().upper()
     assert subprocess.run([str(out/'embgen'),'lost.txt'],cwd=out,env=env,capture_output=True).returncode==2
+    assert int(run([str(out/'embgen'),'seed'],cwd=out).stdout)==(root/'src/schema.sql').stat().st_size
+    empty=out/'empty';empty.mkdir();emptyroot=empty/'web';emptyroot.mkdir()
+    run(['python3',str(root/'releases/genasset.py'),str(empty/'wlassets.pas'),str(empty/'wlpublic.rc'),str(emptyroot)])
+    run([resource,'wlpublic.rc','-o','wlpublic.res','-of','res'],cwd=empty)
+    shutil.copyfile(out/'embgen.lpr',empty/'embgen.lpr')
+    run([fpc,'-B','-Fu'+str(root/'src'),'-FU'+str(empty),'-FE'+str(empty),str(empty/'embgen.lpr')])
+    assert int(run([str(empty/'embgen'),'seed'],cwd=empty).stdout)==(root/'src/schema.sql').stat().st_size
+    assert subprocess.run([str(empty/'embgen'),'robots.txt'],cwd=empty,env=env,capture_output=True).returncode==2
     full=out/'full';full.mkdir()
     run(['python3',str(root/'releases/genasset.py'),str(full/'wlassets.pas'),str(full/'wlpublic.rc')],cwd=root)
     index=(full/'wlassets.pas').read_text()
@@ -47,4 +61,4 @@ end.
         if not (root/'i18n/data'/name).is_file():assert 'i18n/data/'+name not in index
     run([resource,'wlpublic.rc','-o','wlpublic.res','-of','res'],cwd=full)
     assert (full/'wlpublic.res').stat().st_size>0
-print('PASS: embedded generator skips dangling aliases, preserves real alias/UTF-8/binary lookup, and compiles the full current public/i18n resource bundle')
+print('PASS: embedded generator skips dangling aliases, preserves real alias/UTF-8/binary lookup, supports SQL-only bundles and compiles the full public/i18n/private-SQL resource bundle')

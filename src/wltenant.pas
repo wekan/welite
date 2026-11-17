@@ -67,7 +67,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregist,wltmp,wlmaint,wldbfile,wlferr;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
+  wlregist,wltmp,wlmaint,wldbfile,wlferr,wlseed;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
 
 type
   TUploadCleanup=class(TUploadedFile)
@@ -80,7 +80,7 @@ begin DeleteTempUploadedFile;end;
 
 var
   DataRoot   : string;                 // absolute path to data/
-  SchemaPath : string;                 // tenant schema applied when provisioning a fresh db
+  SchemaPath : string;                 // explicit override; empty uses embedded/disk defaults
   HandleCache: TStringList = nil;      // host -> TWLDb (as Pointer), pooled across requests
 
 function WLTempDir(const Op: string = ''): string;
@@ -117,14 +117,9 @@ begin
     HandleCache.CaseSensitive := False;
     HandleCache.Sorted := True;        // binary search on host key
   end;
-  // Tenant schema (users/boards/...), applied once to provision a fresh tenant db. Configurable
-  // so a release that ships schema.sql elsewhere still finds it; defaults to the repo layout.
+  // Explicit SQL overrides remain file paths; otherwise wlseed chooses the executable
+  // default or the portable disk candidates when provisioning a fresh tenant.
   SchemaPath := GetEnvironmentVariable('WELITE_SCHEMA');
-  if SchemaPath = '' then
-  begin
-    SchemaPath := 'src' + PathDelim + 'schema.sql';
-    if not FileExists(SchemaPath) then SchemaPath := 'schema.sql';
-  end;
   // The Global Admin registry lives in data/admin; ensure its dir exists before opening the db
   // (sqlite3_open creates the file, not the parent directory).
   if FileExists(DataRoot+'admin'+PathDelim+'db'+PathDelim+'data.db') or
@@ -181,17 +176,9 @@ begin
 end;
 
 function LoadSchemaSql: string;
-var SL: TStringList;
 begin
-  Result := '';
-  if (SchemaPath = '') or (not FileExists(SchemaPath)) then Exit;
-  SL := TStringList.Create;
-  try
-    SL.LoadFromFile(SchemaPath);
-    Result := SL.Text;
-  finally
-    SL.Free;
-  end;
+  if not LoadSeedSQL('schema.sql',SchemaPath,
+    ['src'+PathDelim+'schema.sql','schema.sql'],Result) then Result:='';
 end;
 
 // Create files/db/, files/attachme/ and files/avatars/ and, the first

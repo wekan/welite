@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Embed private database bootstrap SQL
+
+- Bundle tenant/Designer SQL separately from the public asset URL index and register
+  a private seed lookup. Fresh embedded binaries no longer require schema files or
+  source directories to initialize administrators, tenants and Designer tables.
+- Add bounded SQL selection with explicit file precedence, embedded defaults and
+  ordered disk candidates. Reject missing/empty/NUL/oversize overrides and invalid
+  callbacks without silent fallback; accept UTF-8/BOM input. Disk Designer lookup
+  also supports its SQL file beside the executable.
+- Reproduce missing-schema initialization failure, then build linked/CLI executables
+  and copy only each executable into an empty run directory. Verify admin/registration/
+  Designer/page workflows, exact static/catalog/locale bytes, translated forms,
+  non-public SQL URLs, explicit missing-file refusal and clean shutdown.
+- Private selection, UTF-8 override, SQL-only bundle and full resource checks pass;
+  both disk-mode HTTP suites retain compatibility. Update deployment docs/TODO;
+  supported cross-target builds and runtime acceptance remain open.
+
 ## 2026-11-17 Skip missing aliases in embedded assets
 
 - Skip dangling aliases and non-files when indexing embedded asset trees, matching

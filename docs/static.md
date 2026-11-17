@@ -45,7 +45,9 @@ compile. FPC **resources** bundle the real bytes with no source bloat, so embedd
 
 ## Build
 
-**Disk mode (default, dev, any target):** just ship the binary next to `public/` and `i18n/`.
+**Disk mode (default, dev, any target):** ship the binary, `public/`, `i18n/`,
+`schema.sql` and `designer.sql`, or configure the SQL file paths. Source checkouts
+use `src/schema.sql` and `src/designer.sql` as their first disk candidates.
 ```
 fpc -O3 -Xs -o welite src/wlhttp.lpr
 ./welite     # serves ./public/* and ./i18n/* ; WELITE_PUBLIC / WELITE_I18N override the dirs
@@ -55,15 +57,15 @@ fpc -O3 -Xs -o welite src/wlhttp.lpr
 ```
 python3 releases/genasset.py                       # writes src/wlassets.pas + src/wlpublic.rc
 cd src
-fpcres wlpublic.rc -o wlpublic.res -of res       # compile resources (public/ + i18n/)
+fpcres wlpublic.rc -o wlpublic.res -of res       # public/i18n + private SQL resources
 fpc -dWLEMBED -O3 -Xs -o ../welite wlhttp.lpr # embed + build
 ./../welite                   # serves from inside the exe; no public/ or i18n/ needed
 ```
 The generator skips missing/dangling aliases and non-files, matching disk asset
 availability; valid file aliases remain indexed. `tests/embgen.py` compiles the
-full current bundle and checks exact UTF-8/binary/alias resource bytes. Fresh tenant
-and Designer schema setup still reads SQL files; full directory-free HTTP bootstrap
-remains a separate verification step.
+full current bundle and checks exact UTF-8/binary/alias resource bytes, including
+a SQL-only bundle. The executable also carries private tenant/Designer SQL defaults
+through a separate lookup, excluded from public asset URLs.
 
 `genasset.py` embeds the `public/` and `i18n/` trees (overridable: `genasset.py OUT_PAS OUT_RC
 ROOT[:URL_PREFIX] …`). RCDATA paths are written relative to the `.rc` file's dir, so `fpcres`
@@ -303,3 +305,18 @@ source values, fills the English byte-unit placeholder and provides nine direct
 legacy phrases plus two literal title templates. Native source terminology
 (`tabla`, `kartica`, `lista`, `traka`) guides the phrases; catalog, vocabulary
 and exact argument inventories are verified.
+
+### Private bootstrap SQL
+
+`wlseed` resolves the two approved SQL kinds. An explicit `WELITE_SCHEMA` or
+`WELITE_DESIGNER` file wins; a missing/invalid explicit file fails instead of falling
+back. With no override, embedded defaults take priority. Ordinary disk builds try
+`src/<name>.sql` then `<name>.sql`. SQL inputs are bounded to 16 MiB and reject
+empty/NUL data; UTF-8 BOMs are accepted. Invalid embedded data never silently uses
+a different disk version.
+
+Native linked/CLI tests copy only the executable into an empty run directory,
+initialize the reserved administrator and local tenant, create Designer tables/pages
+and serve translated forms plus exact catalog/locale bytes. No source/asset/schema
+directories are needed, SQL requests return 404, invalid explicit schema paths fail,
+and shutdown is clean. Cross-target runtime acceptance remains separate.

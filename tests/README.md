@@ -511,3 +511,12 @@ compiler). It checks missing aliases are skipped, valid aliases and UTF-8/binary
 resource bytes load without disk assets, every installed locale is indexed, and
 the full current public/i18n resource script compiles. Temporary artifacts stay
 under TMPDIR and are removed.
+
+`python3 tests/seeds.py` verifies private SQL names, ordered disk defaults, embedded
+priority, UTF-8/BOM explicit overrides, and missing/empty/NUL/oversize/callback
+refusal without fallback. `embgen.py` also compiles a SQL-only resource unit.
+`python3 tests/embhttp.py` builds linked/CLI embedded executables, copies only each
+executable into an empty run directory and verifies admin/tenant/Designer bootstrap,
+exact static/catalog/locale bytes, translated auth, explicit missing-path refusal,
+non-public SQL URLs and clean shutdown. No source/static/schema directories are provided in its run location or configured
+asset paths; disk-mode HTTP suites retain compatibility.
