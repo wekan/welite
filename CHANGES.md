@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Create dropdown definitions atomically
+
+- Definition POST now accepts optional `settings.dropdownItems` in JSON and form
+  settings. Validate arrays of `_id`/`name` string objects, nonempty identities and
+  names, unique case-sensitive IDs, UTF-8 and recursive JSON. Reject malformed,
+  duplicate and extra item fields instead of dropping them.
+- Preserve omitted, explicitly empty and ordered populated arrays. Native stores
+  use their presence bit and item sort positions; shared stores retain canonical
+  BSON `_id`/`name` objects in array order without adding SQL-only sort fields.
+- Missing-only managed-array initialization refuses existing/null/invalid parents.
+  Append preserves omitted optional fields and typed siblings; ordinary SQL
+  relation inserts retain their existing projection behavior.
+- Create the definition, board link, array/items and activity in one guarded
+  transaction. Shared source/descriptor/view bindings are pinned around the writes;
+  canonical unambiguous parent identity is required before initialization.
+- Normal/checked parser and kernel regressions pass. HTTP tests cover JSON/form,
+  missing/empty/ordered/case-distinct arrays, exact BSON/GET round trips, invalid
+  input and complete rollback after the second item write or later activity failure.
+  Checked live shared tests pass on both backends, including binding-change and
+  duplicate-parent injection rollback. Full native HTTP suites pass on linked
+  and CLI backends.
+- Definition edit/delete and automatic-card policies remain unfinished.
+
 ## 2026-11-18 Preserve native optional dropdown-array presence
 
 - Native custom-field definitions now retain an explicit dropdown-array presence

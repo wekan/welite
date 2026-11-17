@@ -1,13 +1,15 @@
 unit wlcfspec;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,fpjson,wlsjson,wldb,wlcfjson;
+uses SysUtils,Classes,fpjson,wlsjson,wldb,wlcfjson;
 function SettingsInput(Value:TJSONData;out Settings:TJSONObject):Boolean;
 function SettingsLiteral(Settings:TJSONObject;const Name:string):string;
 function SettingsRemainder(Settings:TJSONObject):string;
+function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
 function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
 implementation
+uses jsonparser,wlmodels,wlselscp;
 function Utf16Length(const Text:string):Integer;
 var i,N:Integer;B:Byte;
 begin
@@ -23,7 +25,7 @@ end;
 function SettingsInput(Value:TJSONData;out Settings:TJSONObject):Boolean;
 const Strings:array[0..5] of string=('currencyCode','stringtemplateFormat','stringtemplateSeparator',
   'jiraTimeField','jiraEstimateFieldId','jiraEstimateUnit');
-var Data:TJSONData;Text:string;i,j:Integer;
+var Data,Item:TJSONData;Text:string;i,j:Integer;Seen:TStringList;
 begin
   Result:=False;Settings:=nil;
   try
@@ -34,8 +36,26 @@ begin
       else Exit;
       // Reuse strict recursive UTF-8, key, finite-number and depth validation.
       TypedDocument('{"settings":'+Settings.AsJSON+'}','','{}');
-      // Managed dropdown-array creation needs an explicit presence contract.
-      if Settings.Find('dropdownItems')<>nil then Exit;
+      Data:=Settings.Find('dropdownItems');
+      if Data<>nil then
+      begin
+        if not (Data is TJSONArray) then Exit;
+        Seen:=TStringList.Create;
+        try
+          Seen.CaseSensitive:=True;
+          for i:=0 to Data.Count-1 do
+          begin
+            Item:=Data.Items[i];
+            if not (Item is TJSONObject) or (Item.Count<>2) then Exit;
+            if not (TJSONObject(Item).Find('_id') is TJSONString) or
+              not (TJSONObject(Item).Find('name') is TJSONString) then Exit;
+            Text:=TJSONObject(Item).Get('_id','');
+            if (Text='') or (Pos(#0,Text)>0) or (Seen.IndexOf(Text)>=0) then Exit;
+            Seen.Add(Text);Text:=TJSONObject(Item).Get('name','');
+            if (Trim(Text)='') or (Pos(#0,Text)>0) then Exit;
+          end;
+        finally Seen.Free;end;
+      end;
       for i:=0 to High(Strings) do
       begin
         Data:=Settings.Find(Strings[i]);if Data=nil then Continue;
@@ -64,9 +84,54 @@ var CopyValue:TJSONObject;
 begin
   CopyValue:=TJSONObject(Settings.Clone);
   try
-    CopyValue.Delete('currencyCode');CopyValue.Delete('stringtemplateFormat');CopyValue.Delete('stringtemplateSeparator');
+    CopyValue.Delete('currencyCode');CopyValue.Delete('stringtemplateFormat');CopyValue.Delete('stringtemplateSeparator');CopyValue.Delete('dropdownItems');
     Result:=QuotedStr(CopyValue.AsJSON);
   finally CopyValue.Free;end;
+end;
+function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
+var Items:TJSONData;Rows:TWLRows;Scope:TSelectionScope;Specs:TJSONArray;Spec:TJSONObject;
+  TableName,Doc,Match,Expression,SpecText:string;i:Integer;Shared:Boolean;Command:TJSONObject;
+  function Q(const Text:string):string;
+  begin Result:=QuotedStr(Text);end;
+begin
+  Result:='';Guards:='';Shared:=False;Items:=Settings.Find('dropdownItems');if Items=nil then Exit;
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing definition source');
+  if Rows[0][0]='table' then
+    Result:='UPDATE custom_fields SET dropdownItemsPresent=1 WHERE id='+Q(Identity)+'; '
+  else if Rows[0][0]='view' then
+  begin
+    Shared:=True;Scope:=TSelectionScope.Create(Db);Specs:=nil;
+    try
+      Scope.StringField('custom_field_dropdown_items','id');
+      for i:=0 to Scope.Bindings.Count-1 do Guards:=Guards+Scope.Bindings[i];
+      Rows:=Db.Query('SELECT table_name FROM _wl_models WHERE name=''custom_fields'';');
+      if Length(Rows)<>1 then raise Exception.Create('Ambiguous definition source');
+      TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+      Specs:=TJSONArray(GetJSON(RelationJson));Spec:=nil;
+      for i:=0 to Specs.Count-1 do if Specs.Objects[i].Get('table','')='custom_field_dropdown_items' then Spec:=Specs.Objects[i];
+      if Spec=nil then raise Exception.Create('Missing dropdown descriptor');
+      SpecText:=Spec.AsJSON;Doc:='"_ferretdb_sjson"';
+      Match:='json_type('+Doc+',''$._id'')=''text'' AND json_extract('+Doc+',''$._id'')='+Q(Identity)+
+        ' AND json_extract('+Doc+',''$.$s.p._id.t'')=''string''';
+      Expression:='wl_relation(json('+Doc+'),''{"op":"init","old":{},"values":{}}'','+Q(Spec.AsJSON)+')';
+      Result:=Guards+'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE json_extract('+Doc+',''$._id'')='+Q(Identity)+')=1 AND '+
+        '(SELECT count(*) FROM '+TableName+' WHERE '+Match+')=1 '+
+        'THEN 1 ELSE json(''Ambiguous dropdown parent'') END; UPDATE '+TableName+' SET '+Doc+'=CASE WHEN wl_storage('+Q(Rows[0][0])+')=''blob'' '+
+        'THEN jsonb('+Expression+') ELSE '+Expression+' END WHERE '+Match+'; ';
+    finally Specs.Free;Scope.Free;end;
+  end else raise Exception.Create('Invalid definition source');
+  for i:=0 to Items.Count-1 do
+    if Shared then
+    begin
+      Command:=TJSONObject.Create(['op','append','old',TJSONObject.Create,'values',
+        TJSONObject.Create(['id',TJSONObject(Items.Items[i]).Get('_id',''),'name',TJSONObject(Items.Items[i]).Get('name','')])]);
+      try Expression:='wl_relation(json('+Doc+'),'+Q(Command.AsJSON)+','+Q(SpecText)+')';finally Command.Free;end;
+      Result:=Result+'UPDATE '+TableName+' SET '+Doc+'=CASE WHEN wl_storage('+Q(Rows[0][0])+')=''blob'' '+
+        'THEN jsonb('+Expression+') ELSE '+Expression+' END WHERE '+Match+'; ';
+    end
+    else Result:=Result+'INSERT INTO custom_field_dropdown_items(customFieldId,id,name,sort) VALUES('+
+      Q(Identity)+','+Q(TJSONObject(Items.Items[i]).Get('_id',''))+','+Q(TJSONObject(Items.Items[i]).Get('name',''))+','+IntToStr(i)+'); ';
 end;
 function DefinitionSettings(const Stored:string;const Columns,Nulls:array of string):TJSONObject;
 const Keys:array[0..2] of string=('currencyCode','stringtemplateFormat','stringtemplateSeparator');

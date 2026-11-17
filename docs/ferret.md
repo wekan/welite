@@ -1268,11 +1268,24 @@ strings retain their existing representation.
 known-column/remainder storage, full metadata, UTF-16 boundaries, invalid data and
 rollback after later transaction failures.
 
-This creation step does not accept dropdownItems payloads: exact managed-array
-creation and absent/empty presence need a coordinated native/shared contract.
-They return HTTP 400 instead of being silently dropped. Dropdown creation,
-definition edit/delete, adminOnly/readOnly field-policy parity, automatic-card
-policies, normalized typed migration and selection clone/export remain open.
+Definition POST accepts optional `settings.dropdownItems` arrays in JSON/form
+settings. Each item must contain exactly string `_id` and `name` fields, with
+nonempty IDs/names and case-sensitive unique IDs. Omitted arrays stay omitted;
+explicit empty arrays stay empty. Native items use SQL sort positions and a
+presence bit. Shared BSON uses canonical `_id`/`name` objects in array order,
+without introducing a `sort` property.
+
+Missing-only `wl_relation` initialization refuses an existing array, null or
+incompatible parent. Its append operation preserves missing optional fields and
+typed siblings; ordinary SQL relation inserts keep their existing projection
+semantics. Creation pins shared root/relation descriptors, versions, collection
+settings and view SQL, requires one canonical unambiguous new parent, and writes
+array/items before the activity in the same transaction. Failure rolls all writes
+back, including native presence. Tests force failure after the second item write
+and at later activity creation, then compare complete stored definitions/history.
+
+Definition edit/delete, full adminOnly/readOnly field-policy parity,
+automatic-card policies and normalized typed migration remain open.
 
 ## Custom-field API value permissions
 

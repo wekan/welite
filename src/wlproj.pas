@@ -268,7 +268,7 @@ end;
 function RelationDocument(const Previous,Command,Model:string):string;
 var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed,Hints:TJSONObject;Fields,Keys,Rows:TJSONArray;
   Item,Value,Converted,Container,Schema:TJSONData;Path,Op,Name,Signature:string;
-  i,j,Found,DateRow:Integer;Scalar,Match:Boolean;
+  i,j,Found,DateRow:Integer;Scalar,Match,AppendMode:Boolean;
   function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
   var n:Integer;
   begin
@@ -300,9 +300,20 @@ begin
     if not (Spec.Find('fields') is TJSONArray) or not (Spec.Find('keys') is TJSONArray) then Invalid;
     Fields:=TJSONArray(Spec.Find('fields'));Keys:=TJSONArray(Spec.Find('keys'));
     if (Keys.Count=0) or (Scalar and (Keys.Count<>1)) then Invalid;
-    Op:=Cmd.Get('op','');if (Op<>'insert') and (Op<>'update') and (Op<>'delete') then Invalid;
+    Op:=Cmd.Get('op','');if (Op<>'insert') and (Op<>'update') and (Op<>'delete') and (Op<>'init') and (Op<>'append') then Invalid;
     if not (Cmd.Find('old') is TJSONObject) or not (Cmd.Find('values') is TJSONObject) then Invalid;
     Old:=TJSONObject(Cmd.Find('old'));Values:=TJSONObject(Cmd.Find('values'));
+    // API append preserves missing optional fields; ordinary SQL inserts retain
+    // their existing default/null projection semantics.
+    AppendMode:=Op='append';
+    if AppendMode then begin if (Cmd.Count<>3) or (Old.Count<>0) then Invalid;Op:='insert';end;
+    // Initialization cannot reset an existing array or replace a null/scalar.
+    if Op='init' then
+    begin
+      if (Cmd.Count<>3) or (Old.Count<>0) or (Values.Count<>0) or (AtPath(Doc,Path)<>nil) then Invalid;
+      PutPath(Doc,Path,TJSONArray.Create);
+      Result:=TypedDocument(Doc.AsJSON,Previous,'{}');Exit;
+    end;
     Container:=AtPath(Doc,Path);
     if Container=nil then begin PutPath(Doc,Path,TJSONArray.Create);Container:=AtPath(Doc,Path);end;
     if not (Container is TJSONArray) then Invalid;Rows:=TJSONArray(Container);
@@ -338,7 +349,7 @@ begin
       for i:=0 to Fields.Count-1 do
       begin
         Field:=Fields.Objects[i];Name:=Field.Get('name','');Value:=Values.Find(Name);
-        if (Value=nil) and (Op='update') then Continue;
+        if (Value=nil) and ((Op='update') or (AppendMode and not Field.Get('required',False))) then Continue;
         if Value=nil then Value:=Field.Find('default');if Value=nil then Invalid;
         if (Spec.Get('table','')='card_custom_field_values') and (Name='value') and (Op='update') then
         begin

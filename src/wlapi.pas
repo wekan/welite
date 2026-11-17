@@ -669,7 +669,7 @@ end;
 
 // GET board custom fields / POST create a custom field
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Id, Name, Typ,Stamp,Sql: string;Flags:TDefinitionFlags;Reply,Data,Settings:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index:Integer;Policy:TFieldPolicy;GuardSql:string;
+var T: TWLTenant; UserId, BoardId, Id, Name, Typ,Stamp,Sql: string;Flags:TDefinitionFlags;Reply,Data,Settings:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index:Integer;Policy:TFieldPolicy;GuardSql,DropdownSql,DropdownGuards:string;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -688,19 +688,21 @@ begin
         begin SendError(aResponse,403,'Custom-field creation forbidden');Exit;end;
       except SendError(aResponse,403,'Custom-field creation forbidden');Exit;end;
       Id:=NewId;Stamp:=NowIso;
+      try DropdownSql:=DropdownScript(T.Db,Id,Settings,DropdownGuards);
+      except SendError(aResponse,500,'Could not prepare dropdown settings');Exit;end;
       GuardSql:='SELECT CASE WHEN '+Policy.DefinitionExpression('',Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; ';
-      Sql:='BEGIN IMMEDIATE; '+GuardSql+Format(
+      Sql:='BEGIN IMMEDIATE; '+DropdownGuards+GuardSql+Format(
         'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
         'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) VALUES(%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s);',
         [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],QuotedStr(Stamp),QuotedStr(Stamp),SettingsLiteral(Settings,'currencyCode'),
          SettingsLiteral(Settings,'stringtemplateFormat'),SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
-        'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); ';
+        'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); '+DropdownSql;
       Data:=TJSONObject.Create(['customFieldId',Id]);
       try
         Sql:=Sql+'INSERT INTO activities(id,activityType,userId,boardId,createdAt,modifiedAt,data_json) VALUES('+
           QuotedStr(NewId)+',''createCustomField'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+
           QuotedStr(Stamp)+','+QuotedStr(Stamp)+','+QuotedStr(Data.AsJSON)+'); '+
-          'SELECT CASE WHEN '+Policy.DefinitionExpression(Id,Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; COMMIT;';
+          'SELECT CASE WHEN '+Policy.DefinitionExpression(Id,Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; '+DropdownGuards+'COMMIT;';
       finally Data.Free;end;
       if not T.Db.Exec(Sql) then
       begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create custom field');Exit;end;

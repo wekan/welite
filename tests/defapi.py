@@ -84,9 +84,9 @@ def run_native(call, db, board, uid):
             activities=con.execute("SELECT userId,boardId,data_json FROM activities WHERE activityType='createCustomField' AND json_extract(data_json,'$.customFieldId')=?",(identity,)).fetchall()
             assert len(activities)==1 and activities[0][:2]==(actor,board),activities
     def fail(stage):
-        table=dict(board='custom_field_boards',activity='activities',definition='custom_fields')[stage]
+        table=dict(board='custom_field_boards',activity='activities',definition='custom_fields',dropdown='custom_field_dropdown_items')[stage]
         with sqlite3.connect(db) as con:
-            con.execute('CREATE TRIGGER def_fail AFTER INSERT ON '+table+" BEGIN SELECT RAISE(FAIL,'test definition failure'); END")
+            con.execute('CREATE TRIGGER def_fail AFTER INSERT ON '+table+(" WHEN NEW.id='second'" if stage=='dropdown' else '')+" BEGIN SELECT RAISE(FAIL,'test definition failure'); END")
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER def_fail')
     exercise(call,board,uid,snapshot,verify,fail,clear)
@@ -95,7 +95,9 @@ def run_native(call, db, board, uid):
             row=con.execute('SELECT currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json FROM custom_fields WHERE id=?',(identity,)).fetchone()
             keys=['currencyCode','stringtemplateFormat','stringtemplateSeparator']
             assert row[:3]==tuple(settings.get(key) for key in keys),row
-            assert json.loads(row[3])=={key:value for key,value in settings.items() if key not in keys},row
+            assert json.loads(row[3])=={key:value for key,value in settings.items() if key not in keys+['dropdownItems']},row
+            assert con.execute('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId=? ORDER BY sort,id',(identity,)).fetchall()==[(item['_id'],item['name']) for item in settings.get('dropdownItems',[])]
+            assert con.execute('SELECT dropdownItemsPresent FROM custom_fields WHERE id=?',(identity,)).fetchone()==(int('dropdownItems' in settings),)
     check_settings(call,board,snapshot,stored,fail,clear)
 
 
@@ -116,10 +118,10 @@ def run_shared(call, client, db, board, uid):
         assert len(activities)==1 and (activities[0]['userId'],activities[0]['boardId'])==(actor,board),activities
     def fail(stage):
         collection='activities' if stage=='activity' else 'customFields'
-        event='UPDATE' if stage=='board' else 'INSERT'
+        event='UPDATE' if stage in ['board','dropdown'] else 'INSERT'
         with sqlite3.connect(db) as con:
             name=con.execute('SELECT table_name FROM _ferretdb_collections WHERE name=?',(collection,)).fetchone()[0]
-            con.execute('CREATE TRIGGER def_fail AFTER '+event+' ON "'+name.replace('"','""')+'" BEGIN SELECT RAISE(FAIL,\'test definition failure\'); END')
+            con.execute('CREATE TRIGGER def_fail AFTER '+event+' ON "'+name.replace('"','""')+'"'+(" WHEN json_array_length(NEW._ferretdb_sjson,'$.settings.dropdownItems')=2" if stage=='dropdown' else '')+' BEGIN SELECT RAISE(FAIL,\'test definition failure\'); END')
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER def_fail')
     exercise(call,board,uid,snapshot,verify,fail,clear)
@@ -128,3 +130,5 @@ def run_shared(call, client, db, board, uid):
         assert document['settings']==settings,(document,settings)
         assert all(key not in document for key in ['currencyCode','stringtemplateFormat','stringtemplateSeparator','settings_json']),document
     check_settings(call,board,snapshot,stored,fail,clear)
+    from dropapi import run_shared as check_dropdown_guards
+    check_dropdown_guards(call,db,snapshot,board)

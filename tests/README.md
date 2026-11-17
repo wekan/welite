@@ -623,4 +623,9 @@ an intact sibling. Python checks actual removed/retained rows and attachment byt
 normal/checked linked and CLI builds: omitted/empty/ordered definition reads,
 retention after final-item deletion, additive concurrent tenant-column upgrades,
 and refusal of shared stores, views, incompatible columns and invalid data.
-This does not enable dropdown API creation.
+Dropdown API creation is covered by `setapi.py` through the native/shared HTTP
+suites, including exact ordered BSON objects, JSON/form input, invalid items and
+rollback after the second item write. `python3 tests/relinit.py` tests normal/checked
+missing-only array initialization, canonical append without optional-field
+materialization, typed sibling preservation and existing/null/incompatible-parent
+refusal.

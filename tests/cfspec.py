@@ -6,12 +6,12 @@ import subprocess
 import sqlite3
 import tempfile
 root=Path(__file__).resolve().parents[1]
-valid=[{},dict(currencyCode='EUR'),dict(stringtemplateFormat='__card__ 漢',stringtemplateSeparator=''),
+valid=[{},dict(dropdownItems=[]),dict(dropdownItems=[dict(_id='One',name='漢'),dict(_id='one',name='Case')]),dict(currencyCode='EUR'),dict(stringtemplateFormat='__card__ 漢',stringtemplateSeparator=''),
        dict(jiraTimeField='original',jiraEstimateFieldId='customfield_'+'1'*20,jiraEstimateUnit='x'*78+'😀'),
        dict(future=dict(flag=True,values=[None,'漢',3.5]))]
 invalid=[None,[],False,'bad',dict(currencyCode=7),dict(currencyCode='\0'),dict(stringtemplateSeparator=None),
          dict(jiraTimeField='bad'),dict(jiraEstimateFieldId='customfield_'),dict(jiraEstimateFieldId='customfield_'+'1'*21),
-         dict(jiraEstimateUnit='x'*79+'😀'),dict(dropdownItems=[])]
+         dict(jiraEstimateUnit='x'*79+'😀'),dict(dropdownItems=None),dict(dropdownItems=[dict(_id='one')]),dict(dropdownItems=[dict(_id='one',name='One'),dict(_id='one',name='Again')])]
 cases=[({},dict(ok=True,settings={}))]
 cases += [(dict(settings=value),dict(ok=True,settings=value)) for value in valid]
 cases += [(dict(settings=value),dict(ok=False)) for value in invalid]
@@ -37,4 +37,4 @@ with tempfile.TemporaryDirectory(prefix='wlcfspec-',dir=os.environ['TMPDIR']) as
         assert result.returncode==0,result.stderr
         actual=[json.loads(line) for line in result.stdout.splitlines()]
         assert actual==[expected for _,expected in cases],(mode,actual,cases)
-        print('PASS:',mode,'settings object/scalars/remainder, schema regex/UTF-16 limits, unsupported-array refusal and typed full-document JSON')
+        print('PASS:',mode,'settings object/scalars/remainder, schema regex/UTF-16 limits, dropdown shape/identity validation and typed full-document JSON')

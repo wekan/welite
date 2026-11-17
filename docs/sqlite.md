@@ -137,8 +137,9 @@ order using `sort,id` and reject invalid presence values.
 Tenant open adds the column to existing native stores without replacing their
 rows or relations. Concurrent openers accept the same valid result. Shared stores
 use their original BSON array presence and are never altered by this native
-upgrade. Dropdown API creation remains unavailable until its managed-array and
-transaction path is implemented.
+upgrade. Definition POST now writes presence and ordered items in the same
+transaction as the definition, board link and activity. Omitted input keeps the
+bit at 0; explicit empty input sets it to 1.
 
 `python3 tests/cfpres.py` verifies normal/checked linked and CLI reads, additive
 and concurrent upgrades, retained emptiness and incompatible/foreign-store refusal.
