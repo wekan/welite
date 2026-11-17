@@ -36,7 +36,7 @@ function Page32(const Title, Body: string): string;
 // browsers; HTML 3.2 retro browsers ignore the attribute, so the *real* RTL mirroring is done
 // structurally by the caller (reverse table columns + align="right"). Harmless to emit either
 // way — a single page definition serves both directions, no separate files.
-function PageDir(const Title, Body, Dir: string): string;
+function PageDir(const Title, Body, Dir: string; const Language:string=''): string;
 
 // Cosmetic re-indentation of an HTML 3.2 document; returns input unchanged for other doctypes.
 function PrettyHtml32(const Html: string): string;
@@ -61,7 +61,7 @@ begin
   Result := PageDir(Title, Body, 'ltr');
 end;
 
-function PageDir(const Title, Body, Dir: string): string;
+function PageDir(const Title, Body, Dir: string;const Language:string): string;
 var
   DirAttr: string;
 begin
@@ -69,10 +69,11 @@ begin
     DirAttr := ' dir="rtl"'
   else
     DirAttr := '';
+  if Language<>'' then DirAttr:=DirAttr+' lang="'+HtmlAttr(StringReplace(Language,'_','-',[rfReplaceAll]))+'"';
   Result :=
     DOCTYPE_32 + LineEnding +
     '<html' + DirAttr + '><head><title>' + HtmlEncode(Title) + '</title></head>' + LineEnding +
-    '<body' + DirAttr + '>' + LineEnding + Body + LineEnding + '</body></html>';
+    '<body' + IfThen(SameText(Dir,'rtl'),' dir="rtl"','') + '>' + LineEnding + Body + LineEnding + '</body></html>';
 end;
 
 function PrettyHtml32(const Html: string): string;

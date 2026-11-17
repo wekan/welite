@@ -12,6 +12,7 @@ begin
   finally Stream.Free;end;
 end;
 begin
+  SetMultiByteConversionCodePage(CP_UTF8);
   StaticInit('/',ParamStr(1));StaticAddRoot('/i18n','i18n/',ParamStr(1));
   if ParamStr(1)='embedded' then EmbeddedLookup:=@Embedded;
   if InitLanguages then Writeln('loaded') else Writeln('fallback');

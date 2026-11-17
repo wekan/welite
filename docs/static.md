@@ -91,5 +91,22 @@ The current snapshot lists 146 installed languages; 99 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
-Translated page rendering and complete RTL integration remain in `TODO.md`. `tests/catalog.py` verifies conversion and matching
+Sign-in GET labels now use per-page translation readers; other pages and complete
+RTL integration remain in `TODO.md`. `tests/catalog.py` verifies conversion and matching
 catalog contents against the files actually installed.
+
+### Server translation rendering
+
+`TWLTranslator` owns only the selected language and English objects for the page
+being rendered. It reads registered embedded assets before disk, with the same
+16 MiB asset limit as catalog loading. Local string values win; missing, empty,
+wrong-type or malformed local data falls back to English, then an explicit caller
+fallback. The reader returns literal text, including underscore and percent tokens;
+it does not interpret HTML or format substitutions. Renderers escape that text
+for their HTML text/attribute context. Callers use the application's UTF-8 codepage.
+
+The sign-in GET form uses the existing log-in, username, password, OTP and
+create-account keys. It emits `lang`/`dir`, `Content-Language` and
+`Vary: Accept-Language`, keeps language in its POST query, and works without scripts
+or cookies. Failed-login messages, enrollment flows, other application surfaces and
+language pickers/navigation still need localization; the checklist remains open.

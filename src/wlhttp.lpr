@@ -135,6 +135,27 @@ begin
   SendHtml(aResponse, Page32('WeKan-Lite', Body));
 end;
 
+function SignInForm(Request:TRequest;Response:TResponse):string;
+var Language:TWLLanguage;Words:TWLTranslator;Title,Dir,Tag:string;
+begin
+  Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
+  Words:=TWLTranslator.Create(Language);
+  try
+    Title:=Words.Text('log-in','Sign in');Tag:=Language.Tag;
+    if Language.Rtl then Dir:='rtl' else Dir:='ltr';
+    Response.SetCustomHeader('Content-Language',StringReplace(Tag,'_','-',[rfReplaceAll]));
+    Response.SetCustomHeader('Vary','Accept-Language');
+    Result:=PageDir(Title,'<h1>'+HtmlEncode(Title)+'</h1>'+LineEnding+
+      '<form method="POST" action="/sign-in?lang='+HtmlAttr(Tag)+'">'+LineEnding+
+      '  '+HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+LineEnding+
+      '  '+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+LineEnding+
+      '  '+HtmlEncode(Words.Text('otp','One-time code (if enabled)'))+' <input name="code" size="6" maxlength="6"><br>'+LineEnding+
+      '  <input type="submit" value="'+HtmlAttr(Title)+'">'+LineEnding+'</form>'+LineEnding+
+      '<p><a href="/two-factor/setup">Set up one-time codes</a> | <a href="/register">'+
+      HtmlEncode(Words.Text('create-account','Create an account (Register)'))+'</a></p>',Dir,Tag);
+  finally Words.Free;end;
+end;
+
 // POST /sign-in — authenticate against schema.sql users, then issue a cookie-free session.
 procedure SignInEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
@@ -170,16 +191,8 @@ begin
     Exit;
   end;
 
-  // GET — plain form, no JS, no cookie; session flows via URL/hidden field after login.
-  SendHtml(aResponse, Page32('Sign in',
-    '<h1>Sign in</h1>' + LineEnding +
-    '<form method="POST" action="/sign-in">' + LineEnding +
-    '  Username <input name="username"><br>' + LineEnding +
-    '  Password <input type="password" name="password"><br>' + LineEnding +
-    '  One-time code (if enabled) <input name="code" size="6" maxlength="6"><br>' + LineEnding +
-    '  <input type="submit" value="Sign in">' + LineEnding +
-    '</form>' + LineEnding +
-    '<p><a href="/two-factor/setup">Set up one-time codes</a> | <a href="/register">Create an account (Register)</a></p>'));
+  // GET — translated form, no JS/cookies; query retains the selected language on POST.
+  SendHtml(aResponse,SignInForm(aRequest,aResponse));
 end;
 
 // Enrollment secrets and bearer tokens only travel in POST bodies/responses.

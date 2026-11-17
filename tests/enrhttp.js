@@ -36,7 +36,7 @@ function otp(secret,counter) {
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
     await page.locator('input[name=code]').fill(otp(secret,counter+1));
-    await page.getByRole('button',{name:'Sign in',exact:true}).click();
+    await page.getByRole('button',{name:/^(Sign in|Log In)$/,exact:true}).click();
     await page.waitForURL(url=>url.searchParams.has('sessionId'));
     assert.match(await page.locator('body').innerText(),/Signed in as browser-enroll/);
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['sessionId']);

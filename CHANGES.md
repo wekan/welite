@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Render translated sign-in labels
+
+- Add a per-page translation reader for the selected installed language and English
+  fallback. Missing, empty, wrong-type or malformed local values fall back safely;
+  unknown keys retain an explicit caller fallback. Load bounded disk/embedded
+  assets without mutable global request language or whole-catalog text caches.
+- Translate sign-in title, username/password/OTP labels and account-creation link
+  from the existing assets. Escape text and attributes at rendering boundaries;
+  preserve literal format/underscore tokens in the reader without interpreting them.
+- Emit HTML language/direction and Content-Language/Vary headers. Keep selected
+  language in the form's POST query, with unchanged credential field names and
+  no script/cookie requirement. Missing assets retain the standalone English form.
+- Verify UTF-8 lookup across every installed language, fallback/error cases and
+  rendered labels/headers/forms and hostile-markup escaping on both HTTP backends.
+  No-JavaScript/no-cookie Chromium enrollment/login also passes with the translated
+  form; broader page/error/OTP-flow localization and language
+  navigation/pickers remain in TODO.
+
 ## 2026-11-17 Negotiate server language and page direction
 
 - Load an immutable, validated server catalog before request threads start, using

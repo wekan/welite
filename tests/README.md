@@ -339,3 +339,12 @@ ranges/catalogs, bounded disk/embedded asset lookup and traversal refusal. `admi
 uses the actual translation root and `langhttp.py` verifies native HTTP profile/header
 precedence and structural grid reversal on either backend. `shrhttp.py` also checks
 live Mongo profile-language changes, explicit override and preserved BSON profile data.
+
+`python3 tests/xlate.py` verifies per-page text lookup for every installed language,
+UTF-8, literal markup/tokens and English/explicit fallback for absent/empty/typed or
+malformed data. `python3 tests/signlang.py` checks every language's actual sign-in
+HTML on both backends: escaped labels, language/direction/response headers, form
+language retention and stable credential field names, without scripts/cookies.
+`WELITE_UI=1 python3 tests/enrhttp.py` also drives the translated English form through
+required-factor setup/login in Chromium with JavaScript/cookies disabled when
+`WELITE_I18N` points at the installed translations.

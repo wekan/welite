@@ -1,8 +1,17 @@
 unit wli18n;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses SysUtils,Classes;
-type TWLLanguage=record Key,Code,Tag,Name,FileName:string;Rtl:Boolean;end;
+uses SysUtils,Classes,fpjson;
+type
+  TWLLanguage=record Key,Code,Tag,Name,FileName:string;Rtl:Boolean;end;
+  TWLTranslator=class
+  private
+    FLocal,FEnglish:TJSONObject;
+  public
+    constructor Create(const Language:TWLLanguage);
+    destructor Destroy;override;
+    function Text(const Key,Fallback:string):string;
+  end;
 // Initialize once before starting request threads. Failed catalogs retain English only.
 function InitLanguages:Boolean;
 function LanguageCount:Integer;
@@ -11,7 +20,7 @@ function FindLanguage(const Value:string;out Language:TWLLanguage):Boolean;
 function ResolveLanguage(const Query,Profile,AcceptLanguage:string):TWLLanguage;
 function LanguageIsRtl(const Value:string):Boolean;
 implementation
-uses fpjson,jsonparser,wlstatic;
+uses jsonparser,wlstatic;
 var Languages:array of TWLLanguage;
 function English:TWLLanguage;
 begin
@@ -134,5 +143,39 @@ end;
 function LanguageIsRtl(const Value:string):Boolean;
 var Language:TWLLanguage;
 begin Result:=FindLanguage(Value,Language) and Language.Rtl;end;
+function LoadTranslation(const FileName:string):TJSONObject;
+var Data:TBytes;Source:string;Root:TJSONData;
+begin
+  Result:=nil;Root:=nil;
+  if not SafeName(FileName) or (ExtractFileExt(FileName)<>'.jsn') or
+    not ReadStaticAsset('/i18n','data/'+FileName,Data) or (Length(Data)=0) then Exit;
+  SetString(Source,PChar(@Data[0]),Length(Data));
+  try
+    try
+      Root:=GetJSON(Source,True);
+      if Root.JSONType=jtObject then begin Result:=TJSONObject(Root);Root:=nil;end;
+    except Result:=nil;end;
+  finally Root.Free;end;
+end;
+constructor TWLTranslator.Create(const Language:TWLLanguage);
+var Selected,Fallback:TWLLanguage;
+begin
+  inherited Create;
+  if not FindLanguage('en',Fallback) then Fallback:=English;
+  FEnglish:=LoadTranslation(Fallback.FileName);
+  if FindLanguage(Language.Tag,Selected) and (Selected.FileName<>Fallback.FileName) then
+    FLocal:=LoadTranslation(Selected.FileName);
+end;
+destructor TWLTranslator.Destroy;
+begin FLocal.Free;FEnglish.Free;inherited Destroy;end;
+function TWLTranslator.Text(const Key,Fallback:string):string;
+var Value:TJSONData;
+begin
+  Result:=Fallback;Value:=nil;
+  if FLocal<>nil then Value:=FLocal.Find(Key);
+  if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString<>'') then Exit(Value.AsString);
+  Value:=nil;if FEnglish<>nil then Value:=FEnglish.Find(Key);
+  if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString<>'') then Result:=Value.AsString;
+end;
 initialization SetLength(Languages,1);Languages[0]:=English;
 end.
