@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Register existing Khmer and Russian regional assets
+
+- Map Khmer/Cambodia and Russian/Russia source loaders to the existing portable
+  `km_KH.jsn` and `ru_RU.jsn` files instead of excluding them for filename mismatch.
+  Keep native catalog names, source identities and every translation byte unchanged.
+- Regenerate matching browser/data catalogs: 148 languages are installed and 97
+  source languages still need assets. Add explicit mapping regressions.
+- Catalog validation, all-identity negotiation and UTF-8 translation readers pass;
+  all installed-language sign-in/registration/setup rendering passes with linked
+  and CLI SQLite backends. Translation quality and remaining assets stay open.
+
 ## 2026-11-17 Honor Designer page direction when moving widgets
 
 - Resolve saved page direction and viewer language before translating a horizontal

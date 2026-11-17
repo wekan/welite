@@ -12,6 +12,7 @@ import sys
 HERE=Path(__file__).resolve().parent
 DEFAULT_DST=HERE.parent/'i18n/langs.jsn'
 STRING=r'"(?:\\.|[^"\\])*"'
+LOCAL_FILES={'ca@valencia.jsn':'cavalenc.jsn','km-KH.jsn':'km_KH.jsn','ru-RU.jsn':'ru_RU.jsn'}
 SAFE=re.compile(r'^[A-Za-z0-9][A-Za-z0-9_@.-]*$')
 def compact(text):
     match=re.search(r'\bconst\s+languageMetadata\s*=\s*\[',text)
@@ -81,9 +82,9 @@ def main():
     source=Path(sys.argv[1]) if len(sys.argv)>1 else default_source()
     destination=Path(sys.argv[2]) if len(sys.argv)>2 else DEFAULT_DST
     entries=parse(source.read_text(encoding='utf-8-sig'))
-    # Preserve WeLite's existing short filename for the Valencian asset.
+    # Preserve established local asset names instead of copying or renaming text.
     for row in entries:
-        if row['file']=='ca@valencia.jsn':row['file']='cavalenc.jsn'
+        row['file']=LOCAL_FILES.get(row['file'],row['file'])
     installed=[r for r in entries if (destination.parent/'data'/r['file']).is_file()]
     if not installed:raise ValueError('No installed translations; refusing empty catalog')
     if not any(r['tag']=='en' for r in installed):raise ValueError('English fallback is missing')

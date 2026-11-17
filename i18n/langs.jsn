@@ -503,6 +503,13 @@
     load: () => import("./data/km.jsn"),
     rtl: false,
   },
+  "km-KH": {
+    code: "km",
+    tag: "km_KH",
+    name: "ខ្មែរ (កម្ពុជា)",
+    load: () => import("./data/km_KH.jsn"),
+    rtl: false,
+  },
   "ko-KR": {
     code: "ko",
     tag: "ko-KR",
@@ -648,6 +655,13 @@
     tag: "ru",
     name: "Русский",
     load: () => import("./data/ru.jsn"),
+    rtl: false,
+  },
+  "ru-RU": {
+    code: "ru",
+    tag: "ru_RU",
+    name: "Русский язык (Россия)",
+    load: () => import("./data/ru_RU.jsn"),
     rtl: false,
   },
   "sk": {

@@ -423,3 +423,6 @@ left then right, checking destination cells/geometry and restoring the fixture.
 Designer layout tests cover saved RTL direction overriding English on movement,
 span collisions/boundaries and reversible columns; browser geometry verifies both
 physical horizontal widget arrows without JavaScript or cookies.
+
+Catalog regression checks also require the existing Khmer/Cambodia and
+Russian/Russia files under their established portable underscore filenames.

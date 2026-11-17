@@ -576,6 +576,14 @@
     "file": "km.jsn"
   },
   {
+    "key": "km-KH",
+    "code": "km",
+    "tag": "km_KH",
+    "name": "ខ្មែរ (កម្ពុជា)",
+    "rtl": false,
+    "file": "km_KH.jsn"
+  },
+  {
     "key": "ko-KR",
     "code": "ko",
     "tag": "ko-KR",
@@ -742,6 +750,14 @@
     "name": "Русский",
     "rtl": false,
     "file": "ru.jsn"
+  },
+  {
+    "key": "ru-RU",
+    "code": "ru",
+    "tag": "ru_RU",
+    "name": "Русский язык (Россия)",
+    "rtl": false,
+    "file": "ru_RU.jsn"
   },
   {
     "key": "sk",

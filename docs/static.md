@@ -82,12 +82,13 @@ and the older literal-object format, without executing either as JavaScript.
 `locales.jsn` is strict JSON containing `key`, `code`, `tag`, native `name`, `rtl`
 and translation `file`, for server use without a JavaScript interpreter. Both
 catalogs advertise only files present in the destination's `data/` directory.
-The existing Valencian asset remains `cavalenc.jsn`; source aliases remain
+Existing local asset mappings retain `cavalenc.jsn`, `km_KH.jsn` and `ru_RU.jsn`
+for their corresponding source loader identities; source aliases remain
 separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 146 installed languages; 99 more source languages
+The current snapshot lists 148 installed languages; 97 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
