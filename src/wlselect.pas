@@ -8,7 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
-uses wlstore,wllocale,wli18n,wlcfpol,wlcfscan;
+uses wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed;
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -30,34 +30,73 @@ end;
 procedure AddQuery(Db:TWLDb; const Sql:string; Ids:TStrings);
 var R:TWLRows; i:Integer;
 begin R:=Db.Query(Sql); for i:=0 to High(R) do AddId(Ids,R[i][0]); end;
-function RowsJson(Db:TWLDb; const TableName,WhereClause:string):TJSONArray;
-var Columns,R:TWLRows; Sql,Order:string; i:Integer; HasId,HasSort:Boolean;
+function RowsJson(Db:TWLDb; const TableName,WhereClause:string;CloneSeed:Boolean;out Binding:string):TJSONArray;
+var Columns,R,Owner:TWLRows; Sql,Order,SeedExpr,Spec,Physical,OwnerTest,OwnerGuard,Collection:string; i:Integer; HasId,HasSort:Boolean;Row:TJSONObject;
 begin
-  Result:=TJSONArray.Create;
-  Columns:=Db.Query('PRAGMA table_info('+TableName+');');
+  Result:=TJSONArray.Create;Binding:='';OwnerGuard:='';
+  try
+  Columns:=Db.Query('PRAGMA table_info('+TableName+');');SeedExpr:='';Spec:='';
+  if CloneSeed and ((TableName='cards') or (TableName='lists') or (TableName='swimlanes') or
+    (TableName='checklists') or (TableName='checklist_items') or (TableName='card_comments') or (TableName='attachments')) then
+  begin
+    Owner:=Db.Query('SELECT type FROM sqlite_master WHERE name='+q(TableName)+';');
+    if (Length(Owner)=1) and (Owner[0][0]='view') then
+    begin
+      Collection:=TableName;if TableName='checklist_items' then Collection:='checklistItems';
+      Owner:=Db.Query('SELECT m.table_name,m.spec,m.version,c.settings FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
+        'WHERE m.name='+q(TableName)+' AND c.name='+q(Collection)+' AND json_extract(m.spec,''$.table'')='+q(TableName)+' AND json_extract(m.spec,''$.collection'')=c.name;');
+      if Length(Owner)<>1 then raise Exception.Create('Missing clone root ownership');
+      Physical:='"'+StringReplace(Owner[0][0],'"','""',[rfReplaceAll])+'"';Spec:=Owner[0][1];
+      OwnerTest:='EXISTS(SELECT 1 FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name WHERE m.name='+q(TableName)+
+        ' AND m.table_name='+q(Owner[0][0])+' AND m.spec='+q(Spec)+' AND m.version='+q(Owner[0][2])+
+        ' AND c.settings='+q(Owner[0][3])+' AND json_extract(m.spec,''$.collection'')=c.name)';
+      OwnerGuard:='SELECT CASE WHEN '+OwnerTest+' THEN 1 ELSE json(''Clone root binding changed'') END; ';
+      // Scalar columns and the seed come from the same SQLite read snapshot.
+      SeedExpr:='(SELECT CASE WHEN count(*)=1 AND '+OwnerTest+' THEN json(min(_ferretdb_sjson)) ELSE json(''Ambiguous clone source'') END FROM '+Physical+
+        ' WHERE json_extract(_ferretdb_sjson,''$._id'')="'+TableName+'".id)';
+    end;
+  end;
   Sql:='SELECT json_object('; HasId:=False; HasSort:=False;
   for i:=0 to High(Columns) do
   begin
     if i>0 then Sql:=Sql+',';
-    Sql:=Sql+q(Columns[i][1])+',"'+Columns[i][1]+'"';
+    Sql:=Sql+q(Columns[i][1])+',';
+    if (Columns[i][1]='_wl_source') and (SeedExpr<>'') then Sql:=Sql+'('+SeedExpr+'||'+q('')+')'
+    else Sql:=Sql+'"'+Columns[i][1]+'"';
     HasId:=HasId or (Columns[i][1]='id'); HasSort:=HasSort or (Columns[i][1]='sort');
   end;
   Order:='';
   if HasSort then Order:=' ORDER BY sort';
   if HasId then
     if HasSort then Order:=Order+',id' else Order:=' ORDER BY id';
-  R:=Db.Query(Sql+') FROM '+TableName+' WHERE '+WhereClause+Order+';');
-  for i:=0 to High(R) do Result.Add(GetJSON(R[i][0]));
+  R:=Db.Query('SELECT ''__wl_rows__'' UNION ALL SELECT row_json FROM ('+Sql+') AS row_json FROM '+TableName+' WHERE '+WhereClause+Order+');');
+  if (Length(R)=0) or (R[0][0]<>'__wl_rows__') then raise Exception.Create('Could not read selection rows');
+  for i:=1 to High(R) do
+  begin
+    Row:=TJSONObject(GetJSON(R[i][0]));Result.Add(Row);
+    if SeedExpr<>'' then
+    begin
+      Physical:=RootCloneSeed(Row.Get('_wl_source',''),Spec);Row.Delete('_wl_source');Row.Add('_wl_source',Physical);
+    end;
+  end;
+  if Result.Count>0 then Binding:=OwnerGuard;
+  except Result.Free;raise;end;
 end;
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
 var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous:Integer;
-  Data:TJSONObject;
+  Data:TJSONObject;Bindings:TJSONArray;
   procedure Table(const Name,WhereClause:string);
-  begin Data.Add(Name,RowsJson(T.Db,Name,WhereClause)); end;
+  var Binding:string;
+  begin
+    Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action']='clone',Binding));
+    if Binding<>'' then Bindings.Add(Binding);
+  end;
 begin
-  Result:=TJSONObject.Create; Data:=TJSONObject.Create; Result.Add('data',Data);
+  Result:=TJSONObject.Create; Data:=TJSONObject.Create; Result.Add('data',Data);Bindings:=nil;
+  if Params.Values['action']='clone' then begin Bindings:=TJSONArray.Create;Result.Add('_clone_bindings',Bindings);end;
   Lanes:=TStringList.Create; Lists:=TStringList.Create; Cards:=TStringList.Create; Checks:=TStringList.Create;
   try
+    try
     BoardId:=Params.Values['boardId']; Scope:='boardId='+q(BoardId);
     Result.Add('welite_selection',1); Result.Add('boardId',BoardId);
     Collect(Params,'sel_swimlane',Lanes); Collect(Params,'sel_list',Lists); Collect(Params,'sel_card',Cards);
@@ -87,6 +126,7 @@ begin
     Table('checklist_items','checklistId IN ('+IdSet(Checks)+')');
     Scope:=Scope+' AND ('+CardScope+' OR listId IN ('+IdSet(Lists)+') OR swimlaneId IN ('+IdSet(Lanes)+'))';
     Table('attachments',Scope); Table('activities',Scope);
+    except FreeAndNil(Result);raise;end;
   finally Lanes.Free; Lists.Free; Cards.Free; Checks.Free; end;
 end;
 function ArrayIds(Data:TJSONObject; const TableName:string):string;
@@ -305,7 +345,7 @@ const CloneTables:array[0..11] of string=('swimlanes','lists','cards','checklist
   'card_members','card_assignees','card_labels','card_custom_field_values','card_dependencies',
   'card_comments','attachments');
 function ClonePermissionGuards(const T:TWLTenant;const S:TWLSession;Graph:TJSONObject;out Guards:string):Boolean;
-var Data:TJSONObject;Cards:TJSONArray;Policy:TFieldPolicy;Rows:TWLRows;Part,BoardId:string;i:Integer;
+var Data:TJSONObject;Cards,Bindings:TJSONArray;Policy:TFieldPolicy;Rows:TWLRows;Part,BoardId:string;i:Integer;
 begin
   Result:=False;Guards:='';Policy:=nil;Data:=TJSONObject(Graph.Find('data'));BoardId:=Graph.Get('boardId','');
   try
@@ -314,6 +354,13 @@ begin
       Part:=Policy.DefinitionExpression('',False);Rows:=T.Db.Query('SELECT '+Part+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then Exit;
       Guards:='SELECT CASE WHEN '+Part+' THEN 1 ELSE json(''Clone board permission denied'') END; ';FreeAndNil(Policy);
+      Bindings:=TJSONArray(Graph.Find('_clone_bindings'));
+      if Bindings<>nil then for i:=0 to Bindings.Count-1 do
+      begin
+        Part:=Bindings.Strings[i];Rows:=T.Db.Query(Part);
+        if (Length(Rows)<>1) or (Rows[0][0]<>'1') then Exit;
+        Guards:=Guards+Part;
+      end;
       for i:=0 to High(CloneTables) do
       begin
         if not PayloadCopyGuards(T.Db,S.UserId,BoardId,Data.Find(CloneTables[i]),Part) then Exit;
@@ -502,7 +549,8 @@ begin
   if Action='clear' then begin Redirect(Response,S,Request.ContentFields); Exit; end;
   if (Action='export') and not BoardFieldExportAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId']) then
   begin Error(T,S,Request,Response,403,'Export requires access to every custom-field value on this board');Exit;end;
-  Graph:=SelectionGraph(T,Request.ContentFields);
+  try Graph:=SelectionGraph(T,Request.ContentFields);
+  except Error(T,S,Request,Response,500,'Could not collect selection source');Exit;end;
   try
     Data:=TJSONObject(Graph.Find('data'));
     Count:=TJSONArray(Data.Find('cards')).Count+TJSONArray(Data.Find('lists')).Count+TJSONArray(Data.Find('swimlanes')).Count;

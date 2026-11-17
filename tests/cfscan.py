@@ -6,7 +6,7 @@ import sqlite3
 import subprocess
 import tempfile
 root=Path(__file__).resolve().parents[1]
-plain=[dict(note='ordinary value',value='public'),dict(customFields=[]),dict(customFields={}),dict(customFields=None),
+plain=[dict(extra_json=json.dumps(dict(_wl_source='literal source text',other_json='ordinary text'))),dict(data_json='{"timestamp":18446744073709551615}'),dict(note='ordinary value',value='public'),dict(customFields=[]),dict(customFields={}),dict(customFields=None),
        dict(customFields=[dict(_id='f',value='readable')]),dict(customFields=[dict(_id='missing',value=None)]),
        dict(customFieldId='f',oldValue='old',newValue='new',customFieldValue='alias'),
        dict(field='customFields',value=[dict(_id='f',value=True)]),dict(integrityHash=None,previousHash=None)]
@@ -28,7 +28,10 @@ with tempfile.TemporaryDirectory(prefix='wlcfscan-',dir=os.environ['TMPDIR']) as
         for board in ['board','foreign']:
             con.execute("INSERT INTO boards(id,title,slug,createdAt) VALUES(?,?,?,'now')",(board,board,board))
             con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES(?,'u',0)",(board,))
-        for identity,private in [('f',0),('p',1),('F',1)]:
+        collision='0123456789abcdef01234567'
+        con.execute("INSERT INTO boards(id,title,slug,createdAt) VALUES(?,?,?,'now')",(collision,collision,collision))
+        con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES(?,'u',1)",(collision,))
+        for identity,private in [('f',0),('p',1),('F',1),(collision,0)]:
             con.execute("INSERT INTO custom_fields(id,name,type,adminOnly,modifiedAt) VALUES(?,?,'text',?,'now')",(identity,identity,private))
             con.execute('INSERT INTO custom_field_boards VALUES(?,?)',(identity,'board'))
     cases=[]
@@ -38,6 +41,17 @@ with tempfile.TemporaryDirectory(prefix='wlcfscan-',dir=os.environ['TMPDIR']) as
                   (dict(payload=dict(extra_json=json.dumps(dict(nested=[payload])))),expected),
                   (dict(payload=payload,typed=True),expected)]
     cases += [(dict(payload=payload),0) for payload in invalid]
+    cases += [(dict(payload=dict(_wl_source=json.dumps({'$s':{}}),extra_json=json.dumps(hidden[0]))),0)]
+    collision='0123456789abcdef01234567'
+    cases += [
+        (dict(payload=dict(customFieldId=collision,value='typed orphan'),typed=True,hints=dict(customFieldId='objectId')),0),
+        (dict(payload=dict(boardId=collision,integrityHash='scope oracle'),typed=True,hints=dict(boardId='objectId')),0),
+        (dict(payload=dict(boardId=collision,note='ordinary opaque value'),typed=True,hints=dict(boardId='objectId')),1),
+        (dict(payload=dict(boardId=0,note='ordinary opaque date'),typed=True,hints=dict(boardId='date')),1),
+        (dict(payload=dict(boardId=0,customFieldId='f',value='wrong date scope'),typed=True,hints=dict(boardId='date')),0),
+        (dict(payload=dict(boardId=0,customFieldId='f',value='JSON falsey scope')),1),
+    ]
+
     for backend,options in [('linked',[]),('cli',['-dWLDB_CLI'])]:
         for mode,flags in [('normal',[]),('checked',['-Cr','-Co','-Ci','-Sa'])]:
             out=tmp/(backend+mode);out.mkdir()

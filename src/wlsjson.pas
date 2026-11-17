@@ -11,6 +11,8 @@ function PlainDocument(const Sjson:string):string;
 procedure CheckUtf8(const Text:string);
 // Strict parser retaining original numeric literals for other projection helpers.
 function ExactObject(const Text:string):TJSONObject;
+// Strict plain JSON validation without inferring BSON integer widths.
+function CheckedJsonObject(const Text:string):TJSONObject;
 implementation
 type
   TExactNumber=class(TJSONFloatNumber)
@@ -244,6 +246,23 @@ begin
   end
   else if not ScalarFits(Value,Schema) then Invalid;
   if Value.JSONType=jtString then CheckUtf8(Value.AsString);
+end;
+procedure CheckPlainJson(Data:TJSONData;Depth:Integer);
+var i:Integer;
+begin
+  if (Data=nil) or (Depth>MaxDepth) then Invalid;
+  case Data.JSONType of
+    jtObject:begin UniqueKeys(TJSONObject(Data));for i:=0 to Data.Count-1 do CheckPlainJson(Data.Items[i],Depth+1);end;
+    jtArray:for i:=0 to Data.Count-1 do CheckPlainJson(Data.Items[i],Depth+1);
+    jtString:CheckUtf8(Data.AsString);
+    jtNumber:if IsNan(Data.AsFloat) or IsInfinite(Data.AsFloat) then Invalid;
+    jtNull,jtBoolean:;
+  else Invalid;end;
+end;
+function CheckedJsonObject(const Text:string):TJSONObject;
+begin
+  Result:=ParseObject(Text);
+  try CheckPlainJson(Result,0);except Result.Free;raise;end;
 end;
 function OldPlain(Obj:TJSONObject):TJSONObject;
 var S:TJSONData;

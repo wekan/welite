@@ -1322,7 +1322,7 @@ Unreadable activity/embedded values, malformed encodings and non-admin hashes
 refuse the export. Historical visibility uses the definition and board, allowing
 readable history even after a card was removed. Inspection does not rewrite data
 or serialized columns; allowed unknown Date/Long/Binary source data remains
-unchanged. `tests/cfscan.py` runs 156 cases in normal/checked builds on both SQL
+unchanged. `tests/cfscan.py` runs 173 cases in normal/checked builds on both SQL
 backends; native/shared HTML tests cover actual activity, extras and hash gates.
 
 Clone/import, generic HTML/data/query surfaces and other value-bearing paths
@@ -1352,6 +1352,47 @@ injection. Normal/checked helpers cover collected SQL guards and correlated
 source/destination value checks. This establishes these clone permission gates;
 exact unknown BSON types/presence in newly cloned records, import permissions and
 other generic data/query surfaces remain unfinished.
+
+## Typed root clone seeds
+
+For shared root records, clone collection reads a typed source seed and its SQL
+columns in the same SQLite read snapshot. Owned metadata must match the root view
+and collection. Captured model descriptors, versions and collection settings are
+checked again during clone preflight and inside the transaction, so a changed
+binding or collection epoch cannot redirect a captured seed into another context.
+Missing ownership, malformed source or failed selection queries return a controlled
+error without cloned records/files.
+
+`RootCloneSeed` removes managed relation paths and their metadata. Existing relation
+copy/remapping reconstructs those arrays once, while root insertion overlays use
+original metadata for unchanged unknown values. Live Mongo/BSON checks compare an
+opaque subtree containing Date, Long, Binary subtypes, ObjectId, unsigned Timestamp,
+Regex, negative zero, NaN/infinity, arrays and nulls against the stored source.
+Comparisons use stored BSON, including its NaN canonicalization, rather than
+assuming the database retains every bit pattern supplied by the initial client.
+
+Plain JSON inspection validates structure/UTF-8/finite numbers without assigning
+BSON integer types, so unsigned timestamps are not rejected during inspection.
+After a SQL JSON/source column is decoded, keys such as `_wl_source` or `other_json`
+inside the actual data remain literal values; recursive field-policy checks still
+inspect actual objects and arrays. Typed seeds retain schema identity during these
+checks: ObjectId/Regex/Date lookalikes cannot become string field/board identifiers.
+Existing card-field row IDs also require canonical BSON strings for API/clone
+access. Ordinary opaque scope data without field values remains copyable. A typed
+seed supersedes its lossy root remainder only when every remainder key and value
+matches; the complete typed seed is still audited. Thus a Regex whose pattern is
+`customFields` cannot become a string activity marker through the SQL projection.
+Inspection never rewrites source values.
+
+`tests/clseed.py` covers normal/checked seed stripping, insert overlays and invalid
+source/model paths; shared HTTP tests verify stored BSON and metadata-change
+rollback. The existing SJSON source oracle also passes using local Go 1.27.3 with
+only its temporary probe module's directive lowered from 1.27.4; the declared
+1.27.4 toolchain itself was not verified. No maintained Go source/module is edited.
+
+Managed-relation unknown metadata/types and absent/empty/missing value distinctions,
+mapped-field presence, reference/lifecycle details and import permissions remain
+unfinished. Root seed support does not establish complete clone fidelity.
 
 ## Remaining before the checklist can be checked
 

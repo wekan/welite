@@ -96,7 +96,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 check_custom_api(request,client,database,token)
                 check_export_policy(request,client,database)
-                check_clone_policy(request,client,database)
+                check_clone_policy(request,client,database,token)
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
                 assert request('GET',headers['Location'])[0]==200

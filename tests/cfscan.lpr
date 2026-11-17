@@ -1,7 +1,7 @@
 program cfscan;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 uses SysUtils,fpjson,jsonparser,wldb,wlsjson,wlcfscan;
-var Db:TWLDb;Line,Before,Guards:string;InputDoc,Wrapper:TJSONObject;Payload:TJSONData;Allowed:Boolean;
+var Db:TWLDb;Line,Before,Guards,Hints:string;InputDoc,Wrapper:TJSONObject;Payload:TJSONData;Allowed:Boolean;
 begin
   SetMultiByteConversionCodePage(CP_UTF8);Db:=TWLDb.Create(ParamStr(1));
   try
@@ -11,7 +11,10 @@ begin
       try
         Payload:=InputDoc.Find('payload');
         if InputDoc.Get('typed',False) then
-        begin Wrapper:=TJSONObject.Create(['_wl_source',TypedDocument(Payload.AsJSON,'','')]);Payload:=Wrapper;end;
+        begin
+          Hints:='';if InputDoc.Find('hints')<>nil then Hints:=InputDoc.Find('hints').AsJSON;
+          Wrapper:=TJSONObject.Create(['_wl_source',TypedDocument(Payload.AsJSON,'',Hints)]);Payload:=Wrapper;
+        end;
         Before:=Payload.AsJSON;
         if InputDoc.Get('copy',False) then
         begin

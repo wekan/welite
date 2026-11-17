@@ -4,6 +4,32 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Retain unknown BSON subtrees in cloned root records
+
+- Capture typed root seeds alongside projected columns in the same SQLite read
+  snapshot. Validate owned root model/collection bindings and pin the descriptor,
+  version and collection settings through clone preflight and transaction guards.
+- Remove managed relations from seeds so existing clone remapping reconstructs
+  them once. Insert overlays retain unchanged unknown Date, Long, Binary subtype,
+  ObjectId, Timestamp, Regex and special-double metadata, bits and subtree order.
+- Validate plain JSON columns without inferring BSON integer widths, allowing
+  unsigned timestamps to be inspected. Decode SQL serialization boundaries once;
+  metadata-like string keys inside source data remain ordinary literal values.
+  Typed seed checks distinguish BSON identifiers from string lookalikes; existing
+  card field rows also require canonical string IDs before API/clone access.
+- Fail selection collection on SQL/ownership/source errors instead of silently
+  treating an error as an empty selection. Later model/collection changes roll
+  back cloned records and metadata through existing transaction/file cleanup.
+- Normal/checked seed and payload tests cover metadata retention, managed-array
+  exclusion, insert overlays, invalid paths/source, unsigned JSON and literal keys.
+  Live shared HTML clones compare stored opaque BSON byte-for-byte, including
+  types/bits/order; native/shared HTTP and Windows checks cover existing behavior.
+- The current FerretDB source oracle passes with installed Go 1.27.3 using only a
+  temporary probe-module directive override; its declared Go 1.27.4 toolchain is
+  unavailable. Maintained source files are unchanged.
+- Exact managed-relation metadata/presence, mapped-field presence and other clone
+  lifecycle details remain open, alongside import and generic query permissions.
+
 ## 2026-11-17 Enforce custom-field permissions during selection clones
 
 - Check only rows actually copied by a clone, including recognized fields inside

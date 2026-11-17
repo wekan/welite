@@ -136,6 +136,12 @@ begin
   else if not HistoryAccess then begin
     Tables:=Tables+',c';WhereSql:=WhereSql+' AND '+StringId('c',FCard)+
       ' AND json_type(c.d,''$.boardId'')=''text'' AND json_extract(c.s,''$."$s".p.boardId.t'')=''string'' AND json_extract(c.d,''$.boardId'')='+QuotedStr(FBoard);
+    if HasField then WhereSql:=WhereSql+
+      ' AND NOT EXISTS(SELECT 1 FROM json_each(CASE WHEN json_type(c.d,''$.customFields'')=''array'' THEN json_extract(c.d,''$.customFields'') ELSE ''[]'' END) cf '+
+      'WHERE json_extract(CASE WHEN cf.type=''object'' THEN cf.value ELSE ''{}'' END,''$._id'')='+FieldSql+
+      ' AND (json_type(CASE WHEN cf.type=''object'' THEN cf.value ELSE ''{}'' END,''$._id'') IS NOT ''text'' OR '+
+      'COALESCE(json_extract(c.s,''$."$s".p.customFields.i[''||cf.key||'']."$s".p._id.t''),'''')<>''string''))';
+
   end;
   Result:='('+Prefix+' SELECT '+FBinding;
   for i:=0 to Last do if not (CardOnly and (i=2)) then Result:=Result+' AND (SELECT count(*) FROM '+Aliases[i]+')=1';

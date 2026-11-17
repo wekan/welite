@@ -329,10 +329,23 @@ not merely a design document. Platform/browser claims require testing on those t
   Native/shared HTML tests on both backends verify role/flag revocation, source
   preservation and transaction rollback; native attachment cleanup remains covered.
   Normal/checked helper tests exercise correlated guards and collected SQL checks.
-  Next: reconcile exact unknown BSON/type/presence cloning, import permissions,
-  generic HTML data/query surfaces and other value-bearing paths. Definition
-  edit/delete and remaining creation/automatic-card behavior stay open; full
-  field-policy parity is not established.
+  Shared clones now capture typed seeds for root records in the same SQL read
+  snapshot as projected columns, validating/pinning owned descriptor, version and
+  collection bindings through commit. Managed arrays are excluded and rebuilt by
+  existing relation remapping. Unknown root BSON subtrees retain stored types,
+  bits and order, including Date/Long/Binary/ObjectId/Timestamp/Regex and special
+  doubles. Plain JSON inspection accepts unsigned timestamps without BSON-width
+  inference and preserves literal metadata-like source keys. Typed seed identifiers
+  retain their schema identity, and API/clone checks reject nonstring card-field
+  identifier lookalikes. Selection collection
+  fails closed on source/query/ownership errors. Checked/normal tests and live
+  shared BSON comparisons cover these paths and binding-change rollback.
+  Next: reconcile managed-relation metadata/type/presence and mapped-field presence
+  in clones, remaining clone lifecycle details, metadata-aware identifiers for
+  projected export/other payloads, import permissions, generic HTML
+  data/query surfaces and other value-bearing paths. Definition edit/delete and
+  creation/automatic-card behavior stay open; full field-policy parity is not
+  established.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
