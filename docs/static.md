@@ -88,7 +88,7 @@ separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 152 installed language identities; 93 more source languages
+The current snapshot lists 153 installed language identities; 92 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
@@ -220,3 +220,10 @@ order and every source argument inventory are verified.
 Both Portuguese Portugal source aliases (`pt-PT` and `pt_PT`) share the established
 `pt_PT.jsn` file. Exact source identity remains selectable; no regional prose is
 overwritten or duplicated to repair the loader filename mismatch.
+
+### Japanese Japan asset
+
+`ja-JP.jsn` replaces a broken link with 2,090 unchanged maintained regional
+source values, seven existing Japanese compatibility phrases, two literal title
+templates and direct Japanese translations for the legacy membership restriction
+and zoom hint. Vocabulary/script and every argument inventory are checked.

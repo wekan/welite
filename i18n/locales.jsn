@@ -584,6 +584,14 @@
     "file": "ja-HI.jsn"
   },
   {
+    "key": "ja-JP",
+    "code": "ja",
+    "tag": "ja-JP",
+    "name": "日本語（日本）",
+    "rtl": false,
+    "file": "ja-JP.jsn"
+  },
+  {
     "key": "ka",
     "code": "ka",
     "tag": "ka",

@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Restore Japanese Japan language asset
+
+- Replace the broken Japanese Japan symlink with a physical portable locale,
+  retaining 2,090 maintained regional source values and seven existing Japanese
+  compatibility phrases. Translate the legacy membership restriction and zoom hint;
+  preserve the two literal activity title templates and English key order.
+- Add physical-file, catalog, native-script/vocabulary, compatibility-prose and
+  exact argument-inventory regressions. Catalog/token/negotiation/UTF-8 readers and
+  all 153 installed-identity authentication forms pass on linked and CLI backends.
+- 92 source entries still need assets; 1,149 existing contextual token differences
+  and wider translation quality/application UI work remain open.
+
 ## 2026-11-17 Register Portuguese Portugal source alias
 
 - Map the hyphenated Portugal source loader to the protected existing `pt_PT.jsn`

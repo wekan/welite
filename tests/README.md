@@ -437,3 +437,7 @@ inventory, including translated legacy phrases absent from the source catalog.
 
 The catalog test also requires both Portugal source aliases to resolve to the
 same established `pt_PT.jsn` asset; all-identity kernel/form suites cover each alias.
+
+`python3 tests/jalang.py` checks the physical Japanese Japan asset, native
+vocabulary/script and compatibility prose, catalog identity, English key order
+and exact argument inventories.
