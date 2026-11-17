@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Type first edits of assigned custom-field values
+
+- Match WeKan's actual assignment paths, which initialize custom fields with null.
+  Use the live definition when SQL first edits an assigned null/missing value,
+  rather than turning numbers, checkboxes, dates and multi-select arrays into text.
+- Read definition counts/types inside the statement. Reject unsupported or ambiguous
+  definitions; preserve the established text fallback for untyped legacy rows with
+  no definition. Already typed values retain their stored BSON-type policy.
+- Apply Date schema hints to the selected existing row, preserving sibling/root
+  metadata and freeing the previous schema snapshot before rebuilding the hint.
+- Add live SQL tests for all eight supported definition types in null/missing states,
+  exact BSON, invalid-value refusal, definition changes and multi-row rollback.
+  Shared HTTP regressions now start typed fields in assigned-null state and verify
+  both database backends, typed responses and unchanged unknown BSON properties.
+  Against the previous commit, a first multi-select edit becomes text. All eight
+  Windows x86/x64 linked/CLI disk/embedded cross-build variants pass.
+- Explicit type changes, normalized typed migration/validation, clone/export and
+  the broader interoperability/platform gates remain in TODO.
+
 ## 2026-11-17 Decode API route identifiers once before scope checks
 
 - Decode the pinned FPC router's raw captured identifiers before API tenant,

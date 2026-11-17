@@ -119,6 +119,9 @@ def run_shared(request, client, db, token):
     original = dict(_id=identity, boardId='b', listId='l', title='Custom API',
                     customFields=[dict(_id='cust-text', value='original', unknown=DateMs(-1)),
                                   dict(_id='cust-legacy', value=Binary(b'keep', 4))], unknown=Long(9007199254740993))
+    # WeKan assigns fields as null before the first user edit.
+    original['customFields'][1:1]=[dict(_id='cust-'+kind,value=None,unknown=DateMs(-2))
+                                 for kind in ['array','number','bool','date']]
     assert client.command({'insert':'cards','documents':[original]})['n'] == 1
     def call(method, path, data):
         # Preserve raw malformed/duplicate JSON, rather than re-encoding it.

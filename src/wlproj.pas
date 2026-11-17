@@ -221,7 +221,7 @@ end;
 function RelationDocument(const Previous,Command,Model:string):string;
 var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed,Hints:TJSONObject;Fields,Keys,Rows:TJSONArray;
   Item,Value,Converted,Container,Schema:TJSONData;Path,Op,Name,Signature:string;
-  i,j,Found:Integer;Scalar,Match,InsertDate:Boolean;
+  i,j,Found,DateRow:Integer;Scalar,Match:Boolean;
   function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
   var n:Integer;
   begin
@@ -245,7 +245,7 @@ var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed,Hints:TJSONObject;Fields,Keys,R
     end;
   end;
 begin
-  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;Typed:=nil;Hints:=nil;InsertDate:=False;
+  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;Typed:=nil;Hints:=nil;DateRow:=-1;
   try
     Doc:=ExactObject(PlainDocument(Previous));Cmd:=ExactObject(Command);Spec:=ExactObject(Model);
     Path:=Spec.Get('path','');Scalar:=Spec.Get('scalar',False);
@@ -302,11 +302,16 @@ begin
           if not (Schema is TJSONArray) or (Found>=Schema.Count) then Invalid;
           if not (Schema.Items[Found] is TJSONObject) then Invalid;
           Schema:=AtPath(TJSONObject(Schema.Items[Found]),'$s.p.value');
-          Converted:=CustomUpdate(Value,Schema,Field);
+          if ((Schema=nil) or ((Schema is TJSONObject) and (TJSONObject(Schema).Get('t','')='null'))) and
+            (Cmd.Get('customCount',0)>0) then
+          begin
+            Converted:=CustomInsert(Value,Cmd.Get('customType',''),Field);
+            if (Cmd.Get('customType','')='date') and (Converted.JSONType<>jtNull) then DateRow:=Found;
+          end else Converted:=CustomUpdate(Value,Schema,Field);
         end else if (Spec.Get('table','')='card_custom_field_values') and (Name='value') and (Op='insert') then
         begin
           Converted:=CustomInsert(Value,Cmd.Get('customType',''),Field);
-          InsertDate:=(Cmd.Get('customType','')='date') and (Converted.JSONType<>jtNull);
+          if (Cmd.Get('customType','')='date') and (Converted.JSONType<>jtNull) then DateRow:=Rows.Count;
         end else Converted:=Coerce(Value,Field);
         try
           if Field.Get('required',False) and (Converted.JSONType=jtNull) then Invalid;
@@ -327,15 +332,16 @@ begin
       Seen.Add(Signature,True);
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,'{}');
-    if InsertDate then
+    if DateRow>=0 then
     begin
-      // Supply the complete validated array schema as a hint so the appended
-      // date receives Date metadata without rebuilding any sibling schema.
-      Typed:=ExactObject(Result);Schema:=AtPath(Typed,'$s.p.customFields');
+      // Supply the complete validated array schema as a hint so the
+      // selected value receives Date metadata without rebuilding sibling schemas.
+      FreeAndNil(Typed);Typed:=ExactObject(Result);Schema:=AtPath(Typed,'$s.p.customFields');
       if not (Schema is TJSONObject) then Invalid;
       Container:=TJSONObject(Schema).Find('i');
       if not (Container is TJSONArray) or (Container.Count<>Rows.Count) then Invalid;
-      Item:=Container.Items[Container.Count-1];
+      if DateRow>=Container.Count then Invalid;
+      Item:=Container.Items[DateRow];
       if not (Item is TJSONObject) then Invalid;
       Value:=AtPath(TJSONObject(Item),'$s.p.value');
       if not (Value is TJSONObject) then Invalid;

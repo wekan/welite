@@ -1064,7 +1064,9 @@ all supplied values to text:
 Unchanged values retain their exact source metadata, including unsupported BSON
 values. Attempts to replace unsupported BSON value types fail. Other row/root
 properties and sibling values survive edits; a bad value aborts the whole SQL
-statement. Missing/null values retain the existing ordinary text-write fallback.
+statement. Assigned null/missing values use a usable live definition for the first
+typed edit. Legacy untyped values with no definition retain the ordinary text
+write fallback; an existing unsupported/ambiguous definition is refused.
 
 `tests/custval.py`, invoked by the real-server `tests/ferroot.py` suite, compares
 Mongo BSON before/after SQL edits on both backends, including integers above 2^53,
@@ -1083,6 +1085,17 @@ still be updated by their existing BSON type without requiring a definition.
 `tests/custins.py` adds real-server insertion coverage for every supported field
 type, definition changes, unknown siblings, missing/empty source arrays, invalid
 values, duplicate rows and multi-row rollback on both backends.
+
+WeKan's `CustomFields.addToAllCards` and `Cards.assignCustomField` initialize
+assigned values as null (`models/customFields.js` and `models/cards.js`). UPDATE
+now reads definition count/type inside the statement and uses that definition
+when the previous value is null or absent. Non-null typed values continue following
+their stored BSON schema. Date hints select the edited row's index rather than the
+last array element, preserving unrelated typed properties and siblings.
+`tests/custnull.py`, run by the real-server suite, checks every supported type from
+null/missing states, exact BSON, first-edit refusal, current-definition changes,
+legacy fallback and multi-row rollback on both backends. Shared HTTP fixtures also
+begin number/checkbox/date/multi-select fields in the actual assigned-null state.
 
 The custom-value POST endpoint now sends JSON scalars/string-array text or form
 strings to that SQL contract and performs UPDATE plus INSERT-if-absent in one

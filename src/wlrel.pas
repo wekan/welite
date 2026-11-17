@@ -27,8 +27,8 @@ var Specs:TJSONArray;Spec,Field:TJSONObject;Fields:TJSONArray;
   var CustomType:string;
   begin
     CustomType:='';
-    if (Name='card_custom_field_values') and (Op='insert') then
-      CustomType:=',''customType'',(SELECT CASE WHEN count(*)=1 THEN min(type) ELSE NULL END FROM custom_fields WHERE id=NEW.customFieldId)';
+    if (Name='card_custom_field_values') and ((Op='insert') or (Op='update')) then
+      CustomType:=',''customCount'',(SELECT count(*) FROM custom_fields WHERE id=NEW.customFieldId),''customType'',(SELECT CASE WHEN count(*)=1 THEN min(type) ELSE NULL END FROM custom_fields WHERE id=NEW.customFieldId)';
     Result:='wl_relation(json('+Doc+'),json_object(''op'','+Q(Op)+CustomType+',''old'',json_object('+OldKeys+'),''values'',json('+PatchValues+')),'+Q(Spec.AsJSON)+')';
   end;
 begin
