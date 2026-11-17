@@ -73,13 +73,13 @@ function SessionLanguage(Db:TWLDb;const S:TWLSession):string;
 // ignore the dir attribute. Params = the request query fields (search term + page number for
 // any `table` components on the page; may be nil). Returns a full HTML doc.
 function RenderPage(Db: TWLDb; const P: TPage; const S: TWLSession;
-  Params: TStrings; const Dir: string): string;
+  Params: TStrings; const Dir: string;const LanguageTag:string=''): string;
 
 // --- dispatcher hook ----------------------------------------------------------------------
 // Try to serve `Path` from the pages table. Returns False if no enabled page matches (caller
 // then falls through to compiled-in routes / 404). Enforces pages.minRole. Dir mirrors RTL.
 function TryServePage(ATenant: TWLTenant; const S: TWLSession;
-  const Path, Dir: string; Params: TStrings; aResponse: TResponse): Boolean;
+  const Path, Dir: string; Params: TStrings; aResponse: TResponse;const LanguageTag:string=''): Boolean;
 
 // --- import / export ----------------------------------------------------------------------
 // Serialize one page (its pages row + page_widgets) to a portable JSON document. Tenant-local
@@ -110,7 +110,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);    // POS
 implementation
 
 uses
-  DateUtils, StrUtils, Math, wladmin, wli18n;
+  DateUtils, StrUtils, Math, wladmin, wli18n, wllocale;
 
 var
   DataViews: TStringList = nil;   // binding -> TDataViewRenderer (as Pointer)
@@ -530,21 +530,14 @@ function LangIsRtl(const Lang: string): Boolean;
 begin Result:=LanguageIsRtl(Lang);end;
 
 function SessionLanguage(Db:TWLDb;const S:TWLSession):string;
-var Rows:TWLRows;
-begin
-  Result:='';if (Db=nil) or (S.UserId='') then Exit;
-  Rows:=Db.Query('SELECT CASE WHEN json_valid(profile_json) THEN CASE WHEN '+
-    'json_type(profile_json,''$.language'')=''text'' THEN json_extract(profile_json,''$.language'') '+
-    'ELSE '+QuotedStr('')+' END ELSE '+QuotedStr('')+' END FROM users WHERE id='+QuotedStr(S.UserId)+';');
-  if (Length(Rows)=1) and (Length(Rows[0])=1) then Result:=Rows[0][0];
-end;
+begin Result:=wllocale.SessionLanguage(Db,S);end;
 
 function ResolveDir(aRequest: TRequest; const PageDirOverride: string;const ProfileLanguage:string): string;
 var Language:TWLLanguage;
 begin
   if SameText(PageDirOverride,'rtl') then Exit('rtl');
   if SameText(PageDirOverride,'ltr') then Exit('ltr');
-  Language:=ResolveLanguage(aRequest.QueryFields.Values['lang'],ProfileLanguage,
+  Language:=ResolveLanguage(RequestLanguageTag(aRequest),ProfileLanguage,
     aRequest.AcceptLanguage);
   if Language.Rtl then Result:='rtl' else Result:='ltr';
 end;
@@ -583,7 +576,7 @@ end;
 
 // ------------------------------------------------------------------ page render
 function RenderPage(Db: TWLDb; const P: TPage; const S: TWLSession;
-  Params: TStrings; const Dir: string): string;
+  Params: TStrings; const Dir: string;const LanguageTag:string): string;
 var
   W: TWidgetArray;
   Body: string;
@@ -632,7 +625,7 @@ begin
 
   // doctype: html32 is the baseline; html4 adds dir="rtl" on <body> too (retro browsers ignore
   // it, hence the structural column reversal above). One page definition serves both directions.
-  Result := PageDir(P.Title,Body,PageDirection,'',P.Doctype);
+  Result := PageDir(P.Title,Body,PageDirection,LanguageTag,P.Doctype);
 end;
 
 // ------------------------------------------------------------------ dispatcher hook
@@ -644,15 +637,17 @@ begin
 end;
 
 function TryServePage(ATenant: TWLTenant; const S: TWLSession;
-  const Path, Dir: string; Params: TStrings; aResponse: TResponse): Boolean;
-var P: TPage;
+  const Path, Dir: string; Params: TStrings; aResponse: TResponse;const LanguageTag:string): Boolean;
+var P: TPage;Language:TWLLanguage;
 begin
   Result := False;
   if not LoadPageByUrl(ATenant.Db, Path, P) then Exit;   // no enabled page at this path
   if not RoleAllows(ATenant.Db, P.MinRole, S) then Exit;             // -> caller falls through to 404
   aResponse.Code := 200;
   aResponse.ContentType := 'text/html; charset=utf-8';
-  aResponse.Content := RenderPage(ATenant.Db, P, S, Params, Dir);
+  if not FindLanguage(LanguageTag,Language) then Language:=ResolveLanguage('',SessionLanguage(ATenant.Db,S),'');
+  LanguageHeaders(aResponse,Language);
+  aResponse.Content := RenderPage(ATenant.Db, P, S, Params, Dir,Language.Tag);
   aResponse.ContentLength := Length(aResponse.Content);
   aResponse.SendContent;
   Result := True;
@@ -1037,7 +1032,7 @@ begin
     '<h2>Add page</h2><form method="POST" action="/designer/page/save">'+
     AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P)+
     '<input type="submit" name="action" value="save"></form>';
-  aResponse.Content:=Page32('Designer',Body);
+  aResponse.Content:=LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),'Designer',Body);
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
 end;
 
@@ -1204,7 +1199,7 @@ begin
     Body:=Body+WidgetForm(S,P.Id,EditWidget,'Save widget');
   Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl(P.Url,S))+'">Preview</a></p>';
 
-  aResponse.Content := PageDir('Designer — ' + P.Title, Body, Dir);
+  aResponse.Content := LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),'Designer — '+P.Title,Body,Dir);
   aResponse.ContentType := 'text/html; charset=utf-8';
   aResponse.SendContent;
 end;

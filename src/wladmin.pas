@@ -41,7 +41,7 @@ procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST 
 implementation
 
 uses
-  StrUtils, DateUtils, wlregist;
+  StrUtils, DateUtils, wlregist, wllocale;
 
 function NowIso: string;
 begin
@@ -126,7 +126,7 @@ begin
 end;
 
 // Wrap a section body in the panel page with the Domains | Designer | People nav.
-function AdminLayout(const T: TWLTenant; const S: TWLSession; const Active, Title, Body: string): string;
+function AdminLayout(const T:TWLTenant;const S:TWLSession;Request:TRequest;Response:TResponse;const Active,Title,Body:string):string;
 var Nav: string;
 begin
   Nav := '<p>[ ';
@@ -135,7 +135,7 @@ begin
     NavLink('/designer',      'Designer', S, SameText(Active, 'designer')) + ' | ' +
     NavLink('/admin/people',  'People',   S, SameText(Active, 'people')) +
     ' ]</p><hr>';
-  Result := Page32(AdminRole(T)+' — '+Title,
+  Result := LanguagePage(Response,ViewerLanguage(T.Db,S,Request),AdminRole(T)+' — '+Title,
     '<h1>'+AdminRole(T)+' Panel</h1>'+Nav+Body);
 end;
 
@@ -161,7 +161,7 @@ begin
   Body:=Body+'<li>'+NavLink('/designer','Designer',S,False)+
     ' &mdash; edit this tenant''s pages.</li><li>'+NavLink('/admin/people','People',S,False)+
     ' &mdash; manage this tenant''s users and roles.</li></ul>';
-  SendHtml(aResponse,AdminLayout(T,S,'','Home',Body));
+  SendHtml(aResponse,AdminLayout(T,S,aRequest,aResponse,'','Home',Body));
 end;
 
 // ------------------------------------------------------------------ /admin/domains
@@ -226,7 +226,7 @@ begin
     ' Host <input name="host"> <input type="submit" value="Add"></form>' + LineEnding +
     '<p><small>localhost is always served as the built-in <b>local</b> tenant and ' +
     'need not be registered.</small></p>';
-  SendHtml(aResponse, AdminLayout(T,S, 'domains', 'Domains', Body));
+  SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'domains', 'Domains', Body));
 end;
 
 // ------------------------------------------------------------------ /admin/people
@@ -305,7 +305,7 @@ begin
   Body := Body + '</table>' + LineEnding +
     '<p><small>New sign-ups are Normal users after the first tenant administrator. ' +
     'You cannot demote or disable your own account.</small></p>';
-  SendHtml(aResponse, AdminLayout(T,S, 'people', 'People', Body));
+  SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'people', 'People', Body));
 end;
 
 end.

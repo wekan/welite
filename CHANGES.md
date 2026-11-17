@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Share viewer language across page frames
+
+- Resolve query/posted language, the authenticated tenant-bound profile and standard
+  Accept-Language through one viewer helper. Keep malformed/non-string profile values
+  on fallback and retain explicit saved page-direction overrides.
+- Emit matching HTML language/body direction and Content-Language/Vary metadata for
+  home, board, Admin, Designer index/editor, published pages and selection edit/delete
+  forms. Keep saved published doctypes and private enrollment headers intact.
+- Verify profile/header/query/posted precedence across those real HTTP routes,
+  fixed-direction pages and unchanged profiles on both backends. Live Mongo profile
+  changes update matching headers/HTML while preserving typed BSON fields.
+- Chromium layout/navigation/selection regressions pass with JavaScript/cookies
+  disabled. Pin native HTTP test data/mode explicitly to their temporary fixture.
+- Remaining translations, early error-frame metadata, physical RTL controls and
+  additional language assets remain in the checklist.
+
 ## 2026-11-17 Honor saved Designer page doctypes
 
 - Emit HTML 4.01 Transitional for a published page saved with `doctype=html4`.

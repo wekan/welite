@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
-    env = dict(os.environ, WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'),WELITE_I18N=str(ROOT/'i18n'))
+    env = dict(os.environ, WELITE_DATA=str(tmp/'data'),WELITE_SHARED='0',WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'),WELITE_I18N=str(ROOT/'i18n'))
     for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','WELITE_ARGON_KEY_BYTES','WELITE_ARGON_SECRET_FILE']:env.pop(variable,None)
     env.pop('WELITE_ENTROPY_FILE',None)  # Never consume an operator's stock in tests.
     if os.environ.get('WELITE_NO_OS_RNG')=='1':
@@ -273,6 +273,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 subprocess.run([os.environ.get('NODE','node'), str(ROOT/'tests/layout.js'), 'http://localhost:'+str(port), admin, layout_editor],check=True)
             from langnav import check_navigation
             check_navigation(request,db,admin)
+            from frames import check_frames
+            check_frames(request,db,admin,layout_editor)
             if os.environ.get('WELITE_UI')=='1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/langnav.js'),'http://localhost:'+str(port),admin,layout_editor],check=True)
             check_imports(request,db,admin)

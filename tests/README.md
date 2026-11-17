@@ -381,3 +381,10 @@ board/clear/home/admin/Designer/save in Chromium with JavaScript/cookies disable
 Layout coverage switches an actual published page between HTML4 and HTML3.2 and
 checks invalid-doctype refusal. The Chromium layout test checks HTML 4.01 Transitional
 and standards parsing mode before its span/required/RTL/sorting assertions.
+
+`frames.py`, invoked by `admin.py`, tests language/header/body-direction metadata on
+home/board/Admin/Designer/published and posted selection edit/delete pages. It checks
+tenant-bound profile preferences against header/query/posted choices, saved fixed
+direction and unchanged profile data. The native harness pins its temporary data root
+and native mode. Shared HTTP tests also assert Mongo profile changes yield matching
+HTML and Content-Language without changing unrelated BSON profile values.

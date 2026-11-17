@@ -96,10 +96,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('GET',headers['Location'])[0]==200
                 web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
                 board_url='/board?id=b&sessionId='+web_session
-                assert b'dir="rtl"' in request('GET',board_url)[2]
+                profile_response=request('GET',board_url)
+                assert b'dir="rtl"' in profile_response[2] and b'lang="ar"' in profile_response[2]
+                assert profile_response[1]['Content-Language']=='ar'
                 assert b'dir="rtl"' not in request('GET',board_url+'&lang=fi')[2]
                 client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'profile.language':'fi'}})]})
-                assert b'dir="rtl"' not in request('GET',board_url)[2]
+                profile_response=request('GET',board_url)
+                assert b'dir="rtl"' not in profile_response[2] and profile_response[1]['Content-Language']=='fi'
                 assert client.find('users','u')[0]['profile']==dict(language='fi',retained=Long(9007199254740993))
                 assert len(client.find('users','u')[0]['services']['resume']['loginTokens'])==1,'Private browser session became a Meteor bearer'
                 stop();app=start('1')

@@ -8,6 +8,7 @@ function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False):string;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
+uses wli18n,wllocale;
 function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
 var R:TWLRows; i,Count:Integer;
 begin
@@ -133,18 +134,19 @@ begin
   if Writable then Result:=Result+MoveKeypad(S,0,0,0,True,True)+MoveFormEnd;
 end;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
-var T:TWLTenant; S:TWLSession; Body,Dir:string;
+var T:TWLTenant; S:TWLSession; Body,Dir:string;Language:TWLLanguage;
 begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin aResponse.Code:=404; aResponse.Content:='Unknown domain'; aResponse.SendContent; Exit; end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
   S.LanguageTag:=RequestLanguageTag(aRequest);
-  Dir:=ResolveDir(aRequest,'',SessionLanguage(T.Db,S));
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  if Language.Rtl then Dir:='rtl' else Dir:='ltr';
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all');
   if Body='' then begin aResponse.Code:=404; aResponse.Content:='Board not found'; end
-  else begin aResponse.Code:=200; aResponse.Content:=PageDir('Board',Body+EnhancementScripts(wbUnknown),Dir); end;
+  else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,'Board',Body+EnhancementScripts(wbUnknown),Dir); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
 end;
 function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession):string;

@@ -30,7 +30,7 @@ uses
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
-  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, fphttpapp, httpdefs, httproute,
+  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
@@ -104,7 +104,7 @@ var
   Rows: TWLRows;
   Body: string;
   i: Integer;
-  IsGAdmin: Boolean;
+  IsGAdmin: Boolean;Language:TWLLanguage;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
 
@@ -135,7 +135,8 @@ begin
   Body:=Body+BoardListHtml(T.Db,S)+'<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">Sign in</a> | <a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Register</a></p>';
   // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
   Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
-  SendHtml(aResponse, Page32('WeKan-Lite', Body));
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  SendHtml(aResponse,LanguagePage(aResponse,Language,'WeKan-Lite',Body));
 end;
 
 function LanguageUrl(Request:TRequest;const Url:string):string;
@@ -147,13 +148,10 @@ begin
   Result:=Url+Separator+'lang='+Language.Tag;
 end;
 function AuthPage(Request:TRequest;Response:TResponse;const Title,Body:string):string;
-var Language:TWLLanguage;Dir:string;
+var S:TWLSession;Language:TWLLanguage;
 begin
-  Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
-  if Language.Rtl then Dir:='rtl' else Dir:='ltr';
-  Response.SetCustomHeader('Content-Language',StringReplace(Language.Tag,'_','-',[rfReplaceAll]));
-  Response.SetCustomHeader('Vary','Accept-Language');
-  Result:=PageDir(Title,Body,Dir,Language.Tag);
+  S:=Default(TWLSession);Language:=ViewerLanguage(nil,S,Request);
+  Result:=LanguagePage(Response,Language,Title,Body);
 end;
 
 function LanguagePicker(const Selected:TWLLanguage;Words:TWLTranslator;const Path:string='/sign-in'):string;
@@ -174,7 +172,7 @@ end;
 function SignInForm(Request:TRequest;Response:TResponse;const Message:string=''):string;
 var Language:TWLLanguage;Words:TWLTranslator;Title,Dir,Tag,Notice:string;
 begin
-  Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
+  Language:=ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage);
   Words:=TWLTranslator.Create(Language);
   try
     Title:=Words.Text('log-in','Sign in');Tag:=Language.Tag;
@@ -265,7 +263,7 @@ var T:TWLTenant;Username,Token,Secret,Body:string;Proof:TWLEnrollProof;Words:TWL
 begin
   EnrollmentHeaders(Response);
   if not RequireTenant(Request,Response,T) then Exit;
-  Words:=TWLTranslator.Create(ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage));
+  Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage));
   try
   if Request.Method='POST' then
   begin
@@ -313,7 +311,7 @@ begin
     if Length(Rows)=1 then Username:=Rows[0][0];
   end;
   if not EnrollmentAdmission(T.Db,Request,Response,Username) then Exit;
-  Words:=TWLTranslator.Create(ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage));
+  Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage));
   try
   if ConfirmOTPEnrollment(T.Db,Token,Binding,Request.ContentFields.Values['code']) then
     SendHtml(Response,AuthPage(Request,Response,'One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','sign in'))+'</a>. The confirmation code has been used.</p>'))
@@ -329,7 +327,7 @@ function RegisterForm(Request:TRequest;Response:TResponse;First:Boolean;
   const MessageKey:string='';const Message:string=''):string;
 var Language:TWLLanguage;Words:TWLTranslator;Body,Title:string;
 begin
-  Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
+  Language:=ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage);
   Words:=TWLTranslator.Create(Language);
   try
     Title:=Words.Text('register','Register');
@@ -465,7 +463,7 @@ end;
 procedure CatchAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  S: TWLSession;
+  S: TWLSession;Language:TWLLanguage;Dir:string;
 begin
   // Static assets (global, tenant-independent): public/robots.txt -> /robots.txt,
   // public/js/interact.js -> /js/interact.js, i18n/langs.jsn -> /i18n/langs.jsn,
@@ -478,8 +476,9 @@ begin
     S.LanguageTag:=RequestLanguageTag(aRequest);
     // direction mirrors RTL languages from one page definition (no separate files);
     // QueryFields carry table search/page/column-visibility state (no-JS, no cookies)
-    if TryServePage(T, S, aRequest.PathInfo,
-                    ResolveDir(aRequest, '',SessionLanguage(T.Db,S)), aRequest.QueryFields, aResponse) then
+    Language:=ViewerLanguage(T.Db,S,aRequest);
+    if Language.Rtl then Dir:='rtl' else Dir:='ltr';
+    if TryServePage(T,S,aRequest.PathInfo,Dir,aRequest.QueryFields,aResponse,Language.Tag) then
       Exit;
     aResponse.Code := 404;
     aResponse.ContentType := 'text/plain';

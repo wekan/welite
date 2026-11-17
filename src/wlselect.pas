@@ -8,7 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
-uses wlstore;
+uses wlstore,wllocale;
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -428,7 +428,7 @@ begin
     if Count=0 then begin Error(Response,400,'Select at least one item'); Exit; end;
     if Action='edit' then
     begin
-      Response.Content:=Page32('Edit selection',EditSelection(T.Db,Request.ContentFields,S));
+      Response.Content:=LanguagePage(Response,ViewerLanguage(T.Db,S,Request),'Edit selection',EditSelection(T.Db,Request.ContentFields,S));
       Response.ContentType:='text/html; charset=utf-8'; Response.SendContent; Exit;
     end;
     if Action='save' then
@@ -443,7 +443,7 @@ begin
         '<form method="POST" action="/board/move">'+AuthHiddenFields(S,'board:move')+SelectionFields(Request.ContentFields)+
         '<input type="submit" name="action" value="confirm-delete"></form>'+
         '<p><a href="'+HtmlAttr(SessionUrl(SafeReturnPath(Request.ContentFields.Values['back']),S))+'">Cancel</a></p>';
-      Response.Content:=Page32('Confirm deletion',Body); Response.ContentType:='text/html; charset=utf-8'; Response.SendContent; Exit;
+      Response.Content:=LanguagePage(Response,ViewerLanguage(T.Db,S,Request),'Confirm deletion',Body); Response.ContentType:='text/html; charset=utf-8'; Response.SendContent; Exit;
     end;
     if Action='confirm-delete' then
     begin

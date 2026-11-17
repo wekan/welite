@@ -151,3 +151,14 @@ search values are URL-encoded so embedded query characters preserve data identit
 Re-login preserves a valid locale while dropping failed session identity. Language
 choice does not modify stored profile preferences. Page text and direction/language
 metadata outside the completed renderers remain in `TODO.md`.
+
+### Viewer page frames
+
+`wllocale.pas` reads only an authenticated session's profile from its bound tenant,
+then resolves explicit query/posted locale, profile and standard Accept-Language.
+Home, board, Admin, Designer index/editor, published and selection edit/delete frames
+emit matching HTML `lang`/body direction and Content-Language/Vary headers. Saved
+page direction overrides the derived direction; published page doctype is retained.
+Profile data remains read-only. Authentication forms reuse the frame helper while
+preserving enrollment no-store/no-referrer controls. Early error frames and physical
+RTL controls remain in the outstanding UI audit.
