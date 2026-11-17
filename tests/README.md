@@ -366,3 +366,7 @@ The sign-language HTTP test covers registration labels for every installed langu
 its picker, Finnish missing/mismatched/taken-username errors and blank credential
 retry forms. Chromium additionally submits Finnish registration without JavaScript
 or cookies and checks the locale-only completion URL before its enrollment flow.
+
+All-language HTTP coverage includes enrollment setup labels and its private response
+headers. The actual Arabic enrollment test checks translated OTP/confirmation labels;
+the Chromium flow follows the translated English start/confirm/sign-in controls.

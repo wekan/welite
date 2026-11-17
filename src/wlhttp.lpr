@@ -248,20 +248,22 @@ begin
     Response.Content:='Too many login attempts. Try again later.';Response.SendContent;
   end;
 end;
-function ConfirmationForm(Request:TRequest;const Token,Message:string):string;
+function ConfirmationForm(Request:TRequest;const Token,Message:string;Words:TWLTranslator):string;
 begin
   Result:='<h1>Confirm one-time codes</h1><p>'+HtmlEncode(Message)+'</p>'+
     '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/confirm'))+'">'+
     '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
-    'One-time code <input name="code" size="6" maxlength="6"><br>'+
-    '<input type="submit" value="Confirm"></form>'+
-    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Start setup again</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">Sign in</a></p>';
+    HtmlEncode(Words.Text('otp','One-time code'))+' <input name="code" size="6" maxlength="6"><br>'+
+    '<input type="submit" value="'+HtmlAttr(Words.Text('confirm','Confirm'))+'"></form>'+
+    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Start setup again</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
 end;
 procedure EnrollmentEndpoint(Request:TRequest;Response:TResponse);
-var T:TWLTenant;Username,Token,Secret,Body:string;Proof:TWLEnrollProof;
+var T:TWLTenant;Username,Token,Secret,Body:string;Proof:TWLEnrollProof;Words:TWLTranslator;
 begin
   EnrollmentHeaders(Response);
   if not RequireTenant(Request,Response,T) then Exit;
+  Words:=TWLTranslator.Create(ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage));
+  try
   if Request.Method='POST' then
   begin
     Username:=Trim(Request.ContentFields.Values['username']);
@@ -277,7 +279,7 @@ begin
       Body:='<h1>Set up one-time codes</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
         '<p>Enter this secret in your authenticator: <code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
-        ConfirmationForm(Request,Token,'Enter a code from your authenticator to enable one-time codes.');
+        ConfirmationForm(Request,Token,'Enter a code from your authenticator to enable one-time codes.',Words);
       SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes',Body));
     finally
       Proof.Free;
@@ -287,12 +289,13 @@ begin
   end;
   SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes','<h1>Set up one-time codes</h1>'+
     '<p>Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.</p>'+
-    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Username <input name="username"><br>'+
-    'Password <input type="password" name="password"><br><input type="submit" value="Start setup"></form>'+
-    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">Sign in</a></p>'));
+    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+
+    HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br><input type="submit" value="'+HtmlAttr(Words.Text('start','Start setup'))+'"></form>'+
+    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>'));
+  finally Words.Free;end;
 end;
 procedure EnrollmentConfirmEndpoint(Request:TRequest;Response:TResponse);
-var T:TWLTenant;Token,Binding,Username:string;Rows:TWLRows;At:Int64;
+var T:TWLTenant;Token,Binding,Username:string;Rows:TWLRows;At:Int64;Words:TWLTranslator;
 begin
   EnrollmentHeaders(Response);
   if not RequireTenant(Request,Response,T) then Exit;
@@ -307,13 +310,16 @@ begin
     if Length(Rows)=1 then Username:=Rows[0][0];
   end;
   if not EnrollmentAdmission(T.Db,Request,Response,Username) then Exit;
+  Words:=TWLTranslator.Create(ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage));
+  try
   if ConfirmOTPEnrollment(T.Db,Token,Binding,Request.ContentFields.Values['code']) then
-    SendHtml(Response,AuthPage(Request,Response,'One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">sign in</a>. The confirmation code has been used.</p>'))
+    SendHtml(Response,AuthPage(Request,Response,'One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','sign in'))+'</a>. The confirmation code has been used.</p>'))
   else
   begin
     if Length(Token)<>64 then Token:='';
-    SendHtml(Response,AuthPage(Request,Response,'Confirm one-time codes',ConfirmationForm(Request,Token,'Invalid code or setup. Try a new code, or start setup again if it has expired.')));
+    SendHtml(Response,AuthPage(Request,Response,'Confirm one-time codes',ConfirmationForm(Request,Token,'Invalid code or setup. Try a new code, or start setup again if it has expired.',Words)));
   end;
+  finally Words.Free;end;
 end;
 
 function RegisterForm(Request:TRequest;Response:TResponse;First:Boolean;

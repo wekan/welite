@@ -1,7 +1,12 @@
 """Language-only state through required enrollment and registration."""
 import re
+import json
+import html
+from pathlib import Path
 from urllib.parse import parse_qs,urlsplit
 def check_auth_language(request,database,otp):
+    words=json.loads((Path(__file__).resolve().parents[1]/'i18n/data/ar.jsn').read_text())
+    def translated(key):return html.escape(words[key],quote=True).replace('&#x27;',"'").encode()
     language='ar';user='language-user';password='language-test-password'
     status,headers,body=request('GET','/register?lang='+language)
     assert status==200 and headers['Content-Language']==language and b'dir="rtl"' in body
@@ -16,6 +21,7 @@ def check_auth_language(request,database,otp):
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password=password))
     assert status==200 and headers['Content-Language']==language and 'Location' not in headers and 'Set-Cookie' not in headers
     assert b'action="/two-factor/confirm?lang=ar"' in body
+    assert translated('otp') in body and translated('confirm') in body
     secret=re.search(rb'<code id="otp-secret">([A-Z2-7]{32})</code>',body).group(1).decode()
     token=re.search(rb'name="setupToken" value="([a-f0-9]{64})"',body).group(1).decode()
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code='bad'))

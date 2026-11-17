@@ -129,3 +129,9 @@ credential inputs. Failed registration renders empty inputs in the chosen locale
 failed sign-in reuses the shared invalid-credentials label. First-admin and
 account-completion/policy notices and enrollment instructions remain English pending
 remaining message keys; translation contents are unchanged by these renderers.
+
+Enrollment setup and confirmation reuse the existing username/password/start,
+OTP/confirm and log-in keys through their own per-request readers. Output remains
+escaped and private controls/proof handling remain in the enrollment endpoints.
+Long setup instructions, titles, retry explanations and completion/policy messages
+still require dedicated translation keys.

@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Translate enrollment credential and confirmation labels
+
+- Reuse per-request translation readers for setup username/password/start labels,
+  OTP code/confirm labels and sign-in links in enrollment and confirmation results.
+  Escape text and attribute values while retaining the existing private form fields,
+  proof checks, replay boundaries, response controls and language propagation.
+- Verify every installed setup-form language on linked/CLI HTTP backends, Arabic
+  OTP confirmation labels in the actual registration/enrollment/sign-in flow and
+  no-JavaScript/no-cookie Chromium registration/setup/confirmation/login.
+- Setup titles/instructions, retry explanations and completion/policy notices still
+  need dedicated localized messages; this does not close the localization checklist.
+
 ## 2026-11-17 Translate registration forms and validation
 
 - Reuse installed translations for registration title/button, username/password/

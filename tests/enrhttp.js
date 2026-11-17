@@ -52,7 +52,7 @@ function otp(secret,counter) {
     await page.getByRole('link',{name:'Set up one-time codes'}).click();
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
-    await page.getByRole('button',{name:'Start setup'}).click();
+    await page.getByRole('button',{name:/^(Start setup|Start)$/}).click();
     const secret=await page.locator('#otp-secret').innerText();assert.match(secret,/^[A-Z2-7]{32}$/);
     const counter=Math.floor(Date.now()/30000);
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
@@ -62,7 +62,7 @@ function otp(secret,counter) {
     assert.match(await page.locator('body').innerText(),/One-time codes enabled/);
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
     assert.equal(new URL(page.url()).searchParams.get('lang'),flowLanguage);
-    await page.getByRole('link',{name:'sign in',exact:true}).click();
+    await page.getByRole('link',{name:/^(sign in|Log In)$/,exact:true}).click();
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
     await page.locator('input[name=code]').fill(otp(secret,counter+1));

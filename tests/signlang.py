@@ -61,6 +61,13 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                         assert expected in registration,(row['tag'],key)
                     assert '<form method="GET" action="/register">' in registration
                     for field in ['username','password','confirm']:assert 'name="'+field+'"' in registration
+                    status,headers,enrollment=request(path='/two-factor/setup?lang='+quote(row['tag']))
+                    assert status==200 and headers['Content-Language']==row['tag'].replace('_','-')
+                    assert headers['Cache-Control']=='no-store' and headers['Referrer-Policy']=='no-referrer'
+                    assert ('dir="rtl"' in enrollment)==row['rtl']
+                    for key in ['username','password','start','log-in']:
+                        expected=html.escape(local.get(key) or english[key],quote=True).replace('&#x27;',"'")
+                        assert expected in enrollment,(row['tag'],key)
                     for field in ['username','password','code']:assert 'name="'+field+'"' in body
                 fi=json.loads((root/'i18n/data/fi.jsn').read_text())
                 for fields,key in [(dict(username='',password='private-password',confirm='private-password'),'username-password-required'),(dict(username='private-user',password='private-password',confirm='different-password'),'password-mismatch')]:
