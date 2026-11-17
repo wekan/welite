@@ -416,3 +416,6 @@ positions: the first logical list appears on the right in both tables.
 
 Arabic viewport checks follow View left/right without JavaScript or cookies,
 assert logical X coordinates and inspect the displayed list after each redirect.
+
+The Arabic browser flow also moves a card physically right then left and a list
+left then right, checking destination cells/geometry and restoring the fixture.

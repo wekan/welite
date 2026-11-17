@@ -430,6 +430,7 @@ var
   T: TWLTenant;
   S: TWLSession;
   BackTo: string;
+  Language:TWLLanguage;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
@@ -453,7 +454,10 @@ begin
     if not ApplyCardDrop(T.Db,aRequest.ContentFields) then
     begin aResponse.Code:=400;aResponse.Content:='Invalid drop or database failure';aResponse.SendContent;Exit;end;
   end
-  else ApplyMove(T.Db, aRequest.ContentFields);
+  else begin
+    Language:=ViewerLanguage(T.Db,S,aRequest);
+    ApplyMove(T.Db, aRequest.ContentFields,Language.Rtl);
+  end;
   BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', SessionUrl(BackTo,S));

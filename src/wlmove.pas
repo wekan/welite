@@ -53,7 +53,7 @@ function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
 // True if anything moved. Register the endpoint at POST /board/move (see wlhttp.lpr).
 function ApplyCardDrop(Db:TWLDb; Params:TStrings):Boolean;
-function ApplyMove(Db: TWLDb; Params: TStrings): Boolean;
+function ApplyMove(Db: TWLDb; Params: TStrings; RightToLeft:Boolean=False): Boolean;
 
 implementation
 
@@ -225,7 +225,7 @@ begin
   finally Cards.Free;end;
 end;
 
-function ApplyMove(Db: TWLDb; Params: TStrings): Boolean;
+function ApplyMove(Db: TWLDb; Params: TStrings; RightToLeft:Boolean): Boolean;
 var
   Dir: string;
   Cards, Lists, Swimlanes: TStringList;
@@ -233,6 +233,8 @@ var
 begin
   Result := False;
   Dir := LowerCase(Trim(Params.Values['dir']));
+  if RightToLeft then
+    if Dir='left' then Dir:='right' else if Dir='right' then Dir:='left';
   if Dir = '' then Exit;                                 // an action button (edit/clone/…), not a move
 
   Cards := CollectSel(Params, 'card');

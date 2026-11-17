@@ -37,6 +37,20 @@ const assert = require('node:assert/strict');
     const up=await keypad.locator('input[name=dir][value=up]').boundingBox();
     assert(left.x<down.x && down.x<right.x,'RTL keypad must retain physical left/down/right positions');
     assert(up.y<down.y,'up stays above down');
+    await page.locator('input[name=sel_card][value=card]').check();
+    await page.locator('input[name=dir][value=right]').click();locale();
+    assert.equal(await page.locator('td[data-list="todo"] input[name=sel_card][value=card]').count(),1);
+    await page.locator('input[name=sel_card][value=card]').check();
+    await page.locator('input[name=dir][value=left]').click();locale();
+    assert.equal(await page.locator('td[data-list="doing"] input[name=sel_card][value=card]').count(),1);
+    await page.locator('input[name=sel_list][value=todo]').check();
+    await page.locator('input[name=dir][value=left]').click();locale();
+    assert((await page.locator('td[data-list="todo"]').boundingBox()).x <
+      (await page.locator('td[data-list="doing"]').boundingBox()).x,'selected list moves physically left');
+    await page.locator('input[name=sel_list][value=todo]').check();
+    await page.locator('input[name=dir][value=right]').click();locale();
+    assert((await page.locator('td[data-list="todo"]').boundingBox()).x >
+      (await page.locator('td[data-list="doing"]').boundingBox()).x,'selected list moves physically right');
     await page.locator('input[name=action][value=clear]').click();locale();
     assert.equal(await page.locator('input[name=lang]').inputValue(),'ar');
     await page.getByRole('link',{name:'All boards',exact:true}).click();locale();

@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Move RTL selections toward physical neighbors
+
+- Resolve the validated viewer language at the authenticated board move endpoint
+  and invert horizontal logical deltas for RTL card relocation and list reordering.
+  Keep direct kernel callers' default logical semantics, vertical moves, explicit
+  drag destinations and existing authorization/action-token checks.
+- Verify reversible no-JavaScript/no-cookie Arabic card moves by destination cells
+  and list moves by physical geometry, restoring the original fixtures. Full linked
+  and CLI SQLite HTTP/browser suites pass; linked runs covered the card flow and
+  CLI runs also covered the new list geometry checks.
+- Designer widget arrows and broader RTL/retro acceptance remain open.
+
 ## 2026-11-17 Follow physical neighbors in RTL board view links
 
 - Reverse horizontal viewport coordinate deltas for RTL boards, so View left

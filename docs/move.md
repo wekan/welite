@@ -35,7 +35,10 @@ the physical left/right buttons in modern browsers. Browsers that ignore directi
 keep the same source order. Board and minimap tables use explicit LTR table flow with structurally reversed
 RTL columns and RTL text within board cells, avoiding double mirroring. Logical
 coordinates remain unchanged. Horizontal viewport links reverse their logical coordinate delta in RTL so their
-labels follow physical neighbors. Selection movement semantics remain under audit.
+labels follow physical neighbors. The HTTP selection endpoint resolves the validated viewer language and reverses
+left/right logical deltas in RTL for both card relocation and list reordering.
+Direct `ApplyMove` callers default to logical LTR semantics; vertical moves and
+explicit drag destinations retain their existing meaning.
 
 A checkbox on each item selects it; the keypad moves **all selected items at once**, whatever
 their type — one control instead of arrows scattered over every item.
