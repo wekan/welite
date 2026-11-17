@@ -50,6 +50,7 @@ procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);    // PUT board label
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);   // GET list / POST create
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);    // GET one
+procedure ApiDeleteDropdownItem(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET list / POST create
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
@@ -81,7 +82,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -734,6 +735,48 @@ begin
     if O=nil then begin SendError(aResponse,404,'Custom field not found');Exit;end;
     SendJson(aResponse,O.AsJSON);
   finally O.Free;end;
+end;
+
+procedure ApiDeleteDropdownItem(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,FieldId,ItemId,Parent,Item,Bindings,Permission,BeforeSql,AfterSql,Sql:string;
+  Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;i:Integer;Reply:TJSONObject;
+  function Q(const Text:string):string;
+  begin Result:=QuotedStr(Text);end;
+  function Guard(const Condition:string):string;
+  begin Result:='SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Dropdown deletion guard failed'') END; ';end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];ItemId:=aRequest.RouteParams['dropdownItem'];
+  Scope:=nil;Policy:=nil;
+  try
+    try
+      Scope:=TSelectionScope.Create(T.Db);Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+      Parent:='EXISTS(SELECT 1 FROM custom_fields WHERE id='+Q(FieldId)+' AND '+Scope.StringField('custom_fields','id')+') AND '+
+        'EXISTS(SELECT 1 FROM custom_field_boards WHERE customFieldId='+Q(FieldId)+' AND boardId='+Q(BoardId)+' AND '+Scope.StringField('custom_field_boards','boardId')+')';
+      Item:=' FROM custom_field_dropdown_items WHERE customFieldId='+Q(FieldId)+' AND id='+Q(ItemId);
+      Rows:=T.Db.Query('SELECT CASE WHEN '+Parent+' THEN (SELECT count(*)'+Item+' AND '+Scope.StringField('custom_field_dropdown_items','id')+') ELSE 0 END;');
+      if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not validate dropdown item');Exit;end;
+      if Rows[0][0]='0' then begin SendError(aResponse,404,'Dropdown item not found');Exit;end;
+      if Rows[0][0]<>'1' then begin SendError(aResponse,500,'Ambiguous dropdown item');Exit;end;
+      Permission:=Policy.DefinitionExpression('',False);
+      Rows:=T.Db.Query('SELECT '+Permission+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then begin SendError(aResponse,403,'Dropdown deletion forbidden');Exit;end;
+      Bindings:='';for i:=0 to Scope.Bindings.Count-1 do Bindings:=Bindings+Scope.Bindings[i];
+      BeforeSql:=Bindings+Guard(Permission+' AND '+Parent+' AND (SELECT count(*)'+Item+' AND '+Scope.StringField('custom_field_dropdown_items','id')+')=1');
+      AfterSql:=Bindings+Guard(Permission+' AND '+Parent+' AND NOT EXISTS(SELECT 1'+Item+')');
+      Sql:='BEGIN IMMEDIATE; '+BeforeSql;
+      Rows:=T.Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+      if (Length(Rows)=1) and (Rows[0][0]='table') then
+        Sql:=Sql+'UPDATE custom_fields SET dropdownItemsPresent=1 WHERE id='+Q(FieldId)+'; ';
+      Sql:=Sql+'UPDATE custom_fields SET modifiedAt='+Q(NowIso)+' WHERE id='+Q(FieldId)+'; DELETE'+Item+'; '+AfterSql+'COMMIT;';
+      if not T.Db.Exec(Sql) then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete dropdown item');Exit;end;
+      Reply:=TJSONObject.Create(['_id',FieldId]);
+      try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+    except SendError(aResponse,500,'Could not delete dropdown item');end;
+  finally Policy.Free;Scope.Free;end;
 end;
 
 // Keep JSON arrays as array text for the SQL relation contract. A JSON number

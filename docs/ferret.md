@@ -1287,6 +1287,32 @@ and at later activity creation, then compare complete stored definitions/history
 Definition edit/delete, full adminOnly/readOnly field-policy parity,
 automatic-card policies and normalized typed migration remain open.
 
+## Dropdown option deletion
+
+DELETE `/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem`
+removes one option from a definition linked to the requested board. Route IDs are
+decoded exactly once, retaining literal plus signs, percent sequences and Unicode.
+A missing option/field/board link returns 404. Typed scope checks exclude BSON
+Regex/ObjectId/numeric key renderings and reject duplicate logical option keys.
+
+The transaction rechecks the current canonical user/board write permission,
+definition and board-link identity, exact option key and shared source bindings.
+It updates the definition's modifiedAt and removes the option, then verifies the
+remaining parent scope, permission and binding before commit. It preserves the
+other options' order and unknown typed data. Native deletion sets array presence
+so deleting a legacy final item also leaves an explicit empty array. Shared arrays
+retain their existing BSON representation.
+
+Existing card custom-field values are deliberately retained, including values
+that name the removed option, matching the maintained API. This operation changes
+the definition's choices, not card values. Definition flags and broader lifecycle
+policies remain covered by their separate TODO work.
+
+`tests/optdel.py`, invoked by definition HTTP tests, checks exact IDs, retained
+assignments and empty arrays, typed siblings and unchanged state after missing/
+malformed IDs, storage failure or transaction-time account revocation. Shared
+cases also cover typed key/board lookalikes and mixed duplicate shadows.
+
 ## Custom-field API value permissions
 
 Native definitions now store `adminOnly` and `readOnly` as constrained booleans;

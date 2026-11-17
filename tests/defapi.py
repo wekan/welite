@@ -99,6 +99,8 @@ def run_native(call, db, board, uid):
             assert con.execute('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId=? ORDER BY sort,id',(identity,)).fetchall()==[(item['_id'],item['name']) for item in settings.get('dropdownItems',[])]
             assert con.execute('SELECT dropdownItemsPresent FROM custom_fields WHERE id=?',(identity,)).fetchone()==(int('dropdownItems' in settings),)
     check_settings(call,board,snapshot,stored,fail,clear)
+    from optdel import run_native as check_option_delete
+    check_option_delete(call,db,board,uid)
 
 
 
@@ -132,3 +134,5 @@ def run_shared(call, client, db, board, uid):
     check_settings(call,board,snapshot,stored,fail,clear)
     from dropapi import run_shared as check_dropdown_guards
     check_dropdown_guards(call,db,snapshot,board)
+    from optdel import run_shared as check_option_delete
+    check_option_delete(call,client,db,board,uid)

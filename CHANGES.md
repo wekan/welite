@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Delete dropdown options through the scoped API
+
+- Add DELETE `/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem`.
+  Resolve the exact once-decoded option identity under its canonical definition
+  and board link; missing/foreign resources return 404, malformed IDs return 400,
+  and ambiguous typed source keys deny deletion.
+- Recheck current board-write permission, typed parent/item identity and shared
+  model/relation/view bindings inside the transaction. Update modifiedAt and
+  delete the option atomically; later account revocation or storage failure rolls
+  all changes back. The response names the custom-field definition.
+- Retain other options, their array order and unknown BSON data, and leave card
+  assignments untouched, matching the maintained API. Removing the last option
+  retains an explicit empty array on native and shared stores.
+- Normal/checked route tests cover the new key. Native/shared HTTP regressions
+  cover quoted Unicode/plus/percent IDs, repeated/missing/malformed deletion,
+  retained assignments/empty arrays, typed siblings and post-mutation failure/
+  revocation rollback. Shared cases exclude Regex key/board lookalikes and refuse
+  mixed duplicate keys without mutation. Checked shared tests and full native HTTP
+  suites pass on both backends; targeted native checks also cover legacy populated
+  definitions whose presence marker is still zero.
+- Option rename/append, definition edit/delete and automatic-card behavior remain
+  separate unfinished lifecycle work.
+
 ## 2026-11-18 Create dropdown definitions atomically
 
 - Definition POST now accepts optional `settings.dropdownItems` in JSON and form

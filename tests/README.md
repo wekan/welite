@@ -629,3 +629,10 @@ rollback after the second item write. `python3 tests/relinit.py` tests normal/ch
 missing-only array initialization, canonical append without optional-field
 materialization, typed sibling preservation and existing/null/incompatible-parent
 refusal.
+
+`tests/optdel.py` runs through native/shared definition HTTP tests. It verifies
+scoped DELETE dropdown options, once-decoded reserved/Unicode identities,
+missing/malformed/repeated requests, retained card assignments, exact typed
+siblings and final-item empty arrays. Post-delete failures and account revocation
+must roll back every source change. Shared tests exclude typed key/board
+lookalikes and refuse mixed duplicate keys.
