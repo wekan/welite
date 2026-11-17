@@ -167,8 +167,11 @@ submit names separate those captions from action commands; the resolved board
 language reaches the toolbar even when selected by header or profile. Selection
 editing also reuses native edit/selection/item/title/color/description/Save keys.
 Labels are associated on supporting browsers, while raw field names/user content
-remain intact; `action_save` is caption-independent. Confirmation explanations and
-validation/error prose and other application messages remain open.
+remain intact; `action_save` is caption-independent. Confirmation reuses native
+Confirm/Delete selected/Details/Cancel and affected-kind labels in a structured
+deletion preview. Fixed confirmation names separate captions from commands, with
+scoped cascades/related counts and retained definitions checked by HTTP/browser
+fixtures. Validation/error prose and other application messages remain open.
 
 ### Navigation language state
 

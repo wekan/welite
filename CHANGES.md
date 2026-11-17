@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Render native deletion confirmation details
+
+- Replace the English generic confirmation count with native Confirm/Delete selected,
+  Details and Cancel captions plus per-kind selected/affected data counts. Count
+  card cascades and explicit same-board inbound dependencies; omit retained board
+  labels/custom-field definitions from the deletion list.
+- Dispatch fixed action_confirm-delete independently of captions, preserving legacy
+  confirmation, scoped permission checks and transactional deletion. Preview errors
+  retain the existing viewer frame without performing deletion.
+- Installed-locale HTTP and linked/CLI no-JS/no-cookie Chromium checks pass for
+  descendant cards, related rows, legacy duplicated comment metadata, inbound links,
+  retained definitions/foreign-card links, attachment bytes and cancel/confirm flows.
+  A valid-session probe precedes replay against an intact sibling, proving consumed
+  proof refusal without relying on missing IDs or incorrect client binding.
+- Existing complete HTTP/browser suites and native parser checks pass. Validation/
+  error prose, enrollment instructions, remaining locale data and broader RTL/platform
+  acceptance remain open in TODO.
+
 ## 2026-11-17 Advertise single-request HTTP connection closure
 
 - Reproduce HTTP/1.1 responses without Connection: close while the pinned FPC

@@ -88,7 +88,21 @@ names. Its `action_save` submit maps to the existing save handler; legacy
 and textarea label targets use safe deterministic IDs for stored Unicode/punctuation
 identities. Existing title/color/description values are escaped without translation.
 The color example is literal code, while other color-component callers retain their
-default hint. Confirmation explanations and validation/error prose remain unfinished.
+default hint. Validation/error prose remains unfinished.
+
+Deletion confirmation uses native Confirm/Delete selected/Details/Cancel captions
+and a definition list of selected roots plus affected card data. Counts follow
+card-owned cascades and explicitly removed same-board inbound dependency links;
+legacy duplicated board metadata does not hide cascade-bound comments. Card labels,
+members, assignees and custom fields are presented as card associations. Retained
+board label/custom-field/dropdown definitions are omitted from deletion counts.
+Preview/cancel preserve item rows and attachment bytes. The fixed
+`action_confirm-delete` name maps to the existing confirmation handler, which
+re-reads the selection and repeats permission/proof checks before transactional
+removal. Legacy `action=confirm-delete` remains supported. Replay tests retarget the
+consumed proof to an intact owned sibling after verifying client binding, then
+require refusal and preservation of that sibling.
+
 
 Because state travels in the form, the component is **stateless on the server** — no session-
 stored selection, no cookies. It renders and works identically in IBrowse / NetSurf / Lynx.

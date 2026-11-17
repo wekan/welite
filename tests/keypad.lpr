@@ -34,6 +34,10 @@ begin
     P.Clear;P.Add('action_save=delete');Check(NormalizeMoveSubmit(P),'Rejected native save');
     Check(P.Values['action']='save','Used save caption as command');
     Reject('action_save=x','action=save');Reject('action_save=x','move_right=x');
+    P.Clear;P.Add('action_confirm-delete=clear');Check(NormalizeMoveSubmit(P),'Rejected native confirmation');
+    Check(P.Values['action']='confirm-delete','Used confirmation caption as command');
+    Reject('action_confirm-delete=x','action=confirm-delete');Reject('action_confirm-delete=x','move_up=x');
+    Reject('action_confirm-delete=x','action_confirm-delete=y');
     Check(Pos('(hex, e.g. ffee22)',RenderColorInput('color','red','hex'))>0,'Changed default color hint');
     Check(Pos('(hex,',RenderColorInput('color','red','hex',False))=0,'Could not hide English color hint');
     Body:=MoveKeypad(Default(TWLSession),0,0,0);

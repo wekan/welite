@@ -609,3 +609,12 @@ a reusable Python client and rapid pooled Node requests (`conn.js`). It requires
 NODE/FPC/TMPDIR as other suites do and checks clean shutdown. The transport patch
 was also verified against committed source without pending UI changes, including
 `stop.py` and all Windows x86/amd64 build variants.
+
+`dellang.py`, called by `admin.py`, checks every installed native deletion heading/
+kind/count/Confirm/Cancel caption on a rich isolated fixture. It covers descendant
+cards, card-owned joins/comments/checklists/items, scoped attachments/activities,
+inbound/outbound dependencies, legacy duplicated comment metadata and retained
+definitions/foreign-card links. Preview leaves item rows and bytes unchanged.
+`dellang.js` follows native cancel/confirm in Finnish/Arabic/Hebrew without JS/cookies,
+then verifies a valid bound API client before replaying the consumed proof against
+an intact sibling. Python checks actual removed/retained rows and attachment bytes.

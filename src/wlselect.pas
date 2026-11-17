@@ -420,6 +420,47 @@ begin
   end;
 end;
 
+function DeletionDetails(Db:TWLDb;Data:TJSONObject;const BoardId:string;
+  Words:TWLTranslator;out Body:string):Boolean;
+var CardIds,Scope,Sql:string;Rows:TWLRows;Counts:array[0..7] of Int64;i:Integer;
+  function CountQuery(const TableName,WhereClause:string):string;
+  begin Result:='(SELECT COUNT(*) FROM '+TableName+' WHERE '+WhereClause+')';end;
+  procedure Row(const Kind,Caption:string;N:Int64;Always:Boolean=False);
+  begin
+    if Always or (N>0) then Body:=Body+'<dt data-delete-kind="'+Kind+'">'+HtmlEncode(Caption)+
+      '</dt><dd data-delete-count="'+Kind+'">'+IntToStr(N)+'</dd>';
+  end;
+  procedure RootRow(const Kind,Key,Fallback:string;Always:Boolean=False);
+  begin Row(Kind,Words.Text(Key,Fallback),TJSONArray(Data.Find(Kind)).Count,Always);end;
+begin
+  Result:=False;Body:='';CardIds:=ArrayIds(Data,'cards');Scope:='cardId IN ('+CardIds+')';
+  // Count actual card cascades, not retained label/custom-field definitions from
+  // the export graph. Include same-board inbound dependency links removed explicitly.
+  Sql:='SELECT '+CountQuery('card_members',Scope)+','+CountQuery('card_assignees',Scope)+','+
+    CountQuery('card_labels',Scope)+','+CountQuery('card_custom_field_values',Scope)+','+
+    CountQuery('card_dependencies',Scope+' OR (targetCardId IN ('+CardIds+
+      ') AND cardId IN (SELECT id FROM cards WHERE boardId='+q(BoardId)+'))')+','+
+    CountQuery('card_comments',Scope)+','+CountQuery('checklists',Scope)+','+
+    CountQuery('checklist_items','checklistId IN (SELECT id FROM checklists WHERE '+Scope+')')+';';
+  Rows:=Db.Query(Sql);
+  if (Length(Rows)<>1) or (Length(Rows[0])<>8) then Exit;
+  for i:=0 to 7 do
+  begin Counts[i]:=StrToInt64Def(Rows[0][i],-1);if Counts[i]<0 then Exit;end;
+  Body:='<h2>'+HtmlEncode(Words.Text('details','Details'))+'</h2><dl>';
+  RootRow('swimlanes','swimlanes','Swimlanes',True);
+  RootRow('lists','lists','Lists',True);RootRow('cards','cards','Cards',True);
+  RootRow('attachments','attachments','Attachments');RootRow('activities','activities','Activities');
+  Row('card_members',Words.Text('cards','Cards')+' / '+Words.Text('members','Members'),Counts[0]);
+  Row('card_assignees',Words.Text('cards','Cards')+' / '+Words.Text('assignees','Assignees'),Counts[1]);
+  Row('card_labels',Words.Text('cards','Cards')+' / '+Words.Text('labels','Labels'),Counts[2]);
+  Row('card_custom_field_values',Words.Text('cards','Cards')+' / '+Words.Text('custom-fields','Custom Fields'),Counts[3]);
+  Row('card_dependencies',Words.Text('card-dependencies','Dependencies'),Counts[4]);
+  Row('card_comments',Words.Text('comments','Comments'),Counts[5]);
+  Row('checklists',Words.Text('checklists','Checklists'),Counts[6]);
+  Row('checklist_items',Words.Text('checklists','Checklists')+' / '+Words.Text('r-item','item'),Counts[7]);
+  Body:=Body+'</dl>';Result:=True;
+end;
+
 function HandleSelection(const T:TWLTenant; const S:TWLSession; Request:TRequest; Response:TResponse):Boolean;
 var Action,Body:string; Graph,Data:TJSONObject; Count:Integer;Words:TWLTranslator;Language:TWLLanguage;
 begin
@@ -448,11 +489,18 @@ begin
     end;
     if Action='delete' then
     begin
-      Body:='<h1>Delete selected items?</h1><p>This includes '+IntToStr(Count)+' items and their related data.</p>'+
-        '<form method="POST" action="/board/move">'+AuthHiddenFields(S,'board:move')+SelectionFields(Request.ContentFields)+
-        '<input type="submit" name="action" value="confirm-delete"></form>'+
-        '<p><a href="'+HtmlAttr(SessionUrl(SafeReturnPath(Request.ContentFields.Values['back']),S))+'">Cancel</a></p>';
-      Response.Content:=LanguagePage(Response,ViewerLanguage(T.Db,S,Request),'Confirm deletion',Body); Response.ContentType:='text/html; charset=utf-8'; Response.SendContent; Exit;
+      Language:=ViewerLanguage(T.Db,S,Request);Words:=TWLTranslator.Create(Language);
+      try
+        if not DeletionDetails(T.Db,Data,Request.ContentFields.Values['boardId'],Words,Body) then
+        begin Error(T,S,Request,Response,500,'Could not prepare deletion details');Exit;end;
+        Body:='<h1 data-delete-confirm="1">'+HtmlEncode(Words.Text('confirm','Confirm')+' / '+Words.Text('r-delete-selected','Delete selected'))+'</h1>'+Body+
+          '<form method="POST" action="/board/move">'+AuthHiddenFields(S,'board:move')+SelectionFields(Request.ContentFields)+
+          '<input type="submit" name="action_confirm-delete" value="'+HtmlAttr(Words.Text('confirm','Confirm'))+'"></form>'+
+          '<p><a href="'+HtmlAttr(SessionUrl(SafeReturnPath(Request.ContentFields.Values['back']),S))+'">'+HtmlEncode(Words.Text('cancel','Cancel'))+'</a></p>';
+        Response.Content:=LanguagePage(Response,Language,Words.Text('confirm','Confirm')+' / '+Words.Text('r-delete-selected','Delete selected'),Body);
+        Response.ContentType:='text/html; charset=utf-8'; Response.SendContent;
+      finally Words.Free;end;
+      Exit;
     end;
     if Action='confirm-delete' then
     begin
