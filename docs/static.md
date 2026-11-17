@@ -71,6 +71,25 @@ other small target, either keep disk mode (binary + `public/` + `i18n/` folders)
 `genasset.py` against a trimmed `i18n/` (e.g. only the needed languages).
 
 ## Translations index
-`i18n/langs.jsn` (the language list consumed for i18n) is generated from WeKan's
-`imports/i18n/languages.js` by `../releases/convlang.py`; re-run it to pick up new
-languages. It writes `i18n/langs.jsn`; the per-language data lives in `i18n/data/`.
+
+Run `python3 releases/convlang.py [languages.js] [langs.jsn]` to regenerate the
+catalogs from WeKan metadata. Without arguments the script finds the enclosing
+WeKan checkout's `imports/i18n/languages.js` and writes this repository's
+`i18n/langs.jsn`. It understands the current compact metadata/static-loader format
+and the older literal-object format, without executing either as JavaScript.
+
+`langs.jsn` retains the browser object with literal dynamic imports. The adjacent
+`locales.jsn` is strict JSON containing `key`, `code`, `tag`, native `name`, `rtl`
+and translation `file`, for server use without a JavaScript interpreter. Both
+catalogs advertise only files present in the destination's `data/` directory.
+The existing Valencian asset remains `cavalenc.jsn`; source aliases remain
+separate identities. Unsafe paths, duplicate identities, invalid metadata and a
+missing English fallback are refused before writing output. Translation contents
+are never modified by this command.
+
+The current snapshot lists 146 installed languages; 99 more source languages
+still need local translation assets and portable filename decisions. Missing or
+broken legacy alias files are excluded rather than offered as failed imports.
+Server negotiation, translated page rendering and complete RTL integration are
+still tracked in `TODO.md`. `tests/catalog.py` verifies conversion and matching
+catalog contents against the files actually installed.

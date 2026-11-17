@@ -326,3 +326,9 @@ strict 8.3 sharing and full Meteor application workflows are not covered by this
 accept, sustained request traffic, an incomplete request, repeated stop signals,
 worker-cleanup completion, exit status zero, immediate restart and SQLite integrity.
 Incomplete sockets must be woken without leaving framework threads blocked.
+
+`python3 tests/catalog.py` checks current compact and legacy literal language
+metadata without JavaScript execution, native Unicode names, escaped text,
+malformed/unsafe/duplicate refusal, failed-input retention and exact agreement
+between the strict JSON and browser catalogs. Every advertised translation file
+must exist; the converter never changes translation bytes.

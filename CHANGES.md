@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Repair language catalog generation
+
+- Read both current compact WeKan language metadata and the previous literal
+  catalog without executing JavaScript. Locate the enclosing WeKan source by
+  default, validate identities/paths/types and preserve distinct source aliases.
+- Generate matching browser `langs.jsn` and strict JSON `locales.jsn` catalogs.
+  Advertise existing translation files only, retain the short Valencian filename,
+  require English fallback, and use the source's native language names/direction.
+  Existing translation bytes remain unchanged; broken legacy aliases are excluded.
+- Regenerate 146 installed language entries. Report 99 additional source languages
+  awaiting local translation files; server selection/rendering, profile/header
+  negotiation, complete translation imports and RTL integration remain open.
+- Verify compact/literal round trips, Unicode/escaping, malformed metadata refusal,
+  failed-input retention and exact browser/data catalog agreement.
+
 ## 2026-11-17 Stop Unix HTTP and maintenance cleanly
 
 - Handle SIGTERM/SIGINT by setting a flag only. Poll it from the accept loop,

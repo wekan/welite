@@ -1,0 +1,1170 @@
+[
+  {
+    "key": "ace",
+    "code": "ace",
+    "tag": "ace",
+    "name": "Bahsa Acèh",
+    "rtl": false,
+    "file": "ace.jsn"
+  },
+  {
+    "key": "af",
+    "code": "af",
+    "tag": "af",
+    "name": "Afrikaans",
+    "rtl": false,
+    "file": "af.jsn"
+  },
+  {
+    "key": "af_ZA",
+    "code": "af",
+    "tag": "af_ZA",
+    "name": "Afrikaans (Suid-Afrika)",
+    "rtl": false,
+    "file": "af_ZA.jsn"
+  },
+  {
+    "key": "en_AU",
+    "code": "en",
+    "tag": "en_AU",
+    "name": "English (Australia)",
+    "rtl": false,
+    "file": "en_AU.jsn"
+  },
+  {
+    "key": "en_ZA",
+    "code": "en",
+    "tag": "en_ZA",
+    "name": "English (South Africa)",
+    "rtl": false,
+    "file": "en_ZA.jsn"
+  },
+  {
+    "key": "ar-DZ",
+    "code": "ar",
+    "tag": "ar-DZ",
+    "name": "دزيرية",
+    "rtl": true,
+    "file": "ar-DZ.jsn"
+  },
+  {
+    "key": "ar-EG",
+    "code": "ar",
+    "tag": "ar-EG",
+    "name": "مَصرى",
+    "rtl": true,
+    "file": "ar-EG.jsn"
+  },
+  {
+    "key": "ar",
+    "code": "ar",
+    "tag": "ar",
+    "name": "العربية",
+    "rtl": true,
+    "file": "ar.jsn"
+  },
+  {
+    "key": "ary",
+    "code": "ary",
+    "tag": "ary",
+    "name": "عربي مغربي",
+    "rtl": true,
+    "file": "ary.jsn"
+  },
+  {
+    "key": "az-AZ",
+    "code": "az",
+    "tag": "az-AZ",
+    "name": "Azərbaycan (Azərbaycan)",
+    "rtl": false,
+    "file": "az-AZ.jsn"
+  },
+  {
+    "key": "az-LA",
+    "code": "az",
+    "tag": "az-LA",
+    "name": "Azərbaycan (Latin)",
+    "rtl": false,
+    "file": "az-LA.jsn"
+  },
+  {
+    "key": "az",
+    "code": "az",
+    "tag": "az",
+    "name": "Azərbaycan",
+    "rtl": false,
+    "file": "az.jsn"
+  },
+  {
+    "key": "bg",
+    "code": "bg",
+    "tag": "bg",
+    "name": "Български",
+    "rtl": false,
+    "file": "bg.jsn"
+  },
+  {
+    "key": "be",
+    "code": "be",
+    "tag": "be",
+    "name": "Беларуская",
+    "rtl": false,
+    "file": "be.jsn"
+  },
+  {
+    "key": "be-BE",
+    "code": "be",
+    "tag": "be-BE",
+    "name": "Беларуская (Беларусь)",
+    "rtl": false,
+    "file": "be.jsn"
+  },
+  {
+    "key": "br",
+    "code": "br",
+    "tag": "br",
+    "name": "Brezhoneg",
+    "rtl": false,
+    "file": "br.jsn"
+  },
+  {
+    "key": "ca",
+    "code": "ca",
+    "tag": "ca",
+    "name": "Català",
+    "rtl": false,
+    "file": "ca.jsn"
+  },
+  {
+    "key": "ca-ES",
+    "code": "ca",
+    "tag": "ca-ES",
+    "name": "Català (Espanya)",
+    "rtl": false,
+    "file": "ca_ES.jsn"
+  },
+  {
+    "key": "cmn",
+    "code": "cmn",
+    "tag": "cmn",
+    "name": "官話 / 官话",
+    "rtl": false,
+    "file": "cmn.jsn"
+  },
+  {
+    "key": "cs",
+    "code": "cs",
+    "tag": "cs",
+    "name": "čeština",
+    "rtl": false,
+    "file": "cs.jsn"
+  },
+  {
+    "key": "cs-CZ",
+    "code": "cs",
+    "tag": "cs-CZ",
+    "name": "čeština (Česká republika)",
+    "rtl": false,
+    "file": "cs-CZ.jsn"
+  },
+  {
+    "key": "cy-GB",
+    "code": "cy",
+    "tag": "cy-GB",
+    "name": "Cymraeg (Y Deyrnas Unedig)",
+    "rtl": false,
+    "file": "cy-GB.jsn"
+  },
+  {
+    "key": "cy",
+    "code": "cy",
+    "tag": "cy",
+    "name": "Cymraeg",
+    "rtl": false,
+    "file": "cy.jsn"
+  },
+  {
+    "key": "da",
+    "code": "da",
+    "tag": "da",
+    "name": "Dansk",
+    "rtl": false,
+    "file": "da.jsn"
+  },
+  {
+    "key": "de-AT",
+    "code": "de",
+    "tag": "de-AT",
+    "name": "Deutsch (Österreich)",
+    "rtl": false,
+    "file": "de-AT.jsn"
+  },
+  {
+    "key": "de-CH",
+    "code": "de",
+    "tag": "de-CH",
+    "name": "Deutsch (Schweiz)",
+    "rtl": false,
+    "file": "de-CH.jsn"
+  },
+  {
+    "key": "de-DE",
+    "code": "de",
+    "tag": "de-DE",
+    "name": "Deutsch (Deutschland)",
+    "rtl": false,
+    "file": "de_DE.jsn"
+  },
+  {
+    "key": "de",
+    "code": "de",
+    "tag": "de",
+    "name": "Deutsch",
+    "rtl": false,
+    "file": "de.jsn"
+  },
+  {
+    "key": "el-GR",
+    "code": "el",
+    "tag": "el-GR",
+    "name": "Ελληνικά (Ελλάδα)",
+    "rtl": false,
+    "file": "el-GR.jsn"
+  },
+  {
+    "key": "el",
+    "code": "el",
+    "tag": "el",
+    "name": "Ελληνικά",
+    "rtl": false,
+    "file": "el.jsn"
+  },
+  {
+    "key": "en-BR",
+    "code": "en",
+    "tag": "en-BR",
+    "name": "English (Brazil)",
+    "rtl": false,
+    "file": "en-BR.jsn"
+  },
+  {
+    "key": "en-DE",
+    "code": "en",
+    "tag": "en-DE",
+    "name": "English (Germany)",
+    "rtl": false,
+    "file": "en-DE.jsn"
+  },
+  {
+    "key": "en-GB",
+    "code": "en",
+    "tag": "en-GB",
+    "name": "English (UK)",
+    "rtl": false,
+    "file": "en-GB.jsn"
+  },
+  {
+    "key": "en-IT",
+    "code": "en",
+    "tag": "en-IT",
+    "name": "English (Italy)",
+    "rtl": false,
+    "file": "en-IT.jsn"
+  },
+  {
+    "key": "en-MY",
+    "code": "en",
+    "tag": "en-MY",
+    "name": "English (Malaysia)",
+    "rtl": false,
+    "file": "en-MY.jsn"
+  },
+  {
+    "key": "en-YS",
+    "code": "en",
+    "tag": "en-YS",
+    "name": "English (Yeshivish)",
+    "rtl": false,
+    "file": "en-YS.jsn"
+  },
+  {
+    "key": "en",
+    "code": "en",
+    "tag": "en",
+    "name": "English",
+    "rtl": false,
+    "file": "en.jsn"
+  },
+  {
+    "key": "eo",
+    "code": "eo",
+    "tag": "eo",
+    "name": "Esperanto",
+    "rtl": false,
+    "file": "eo.jsn"
+  },
+  {
+    "key": "ast-ES",
+    "code": "es",
+    "tag": "ast-ES",
+    "name": "Español de Asturias",
+    "rtl": false,
+    "file": "ast-ES.jsn"
+  },
+  {
+    "key": "es-AR",
+    "code": "es",
+    "tag": "es-AR",
+    "name": "Español de Argentina",
+    "rtl": false,
+    "file": "es-AR.jsn"
+  },
+  {
+    "key": "es-CL",
+    "code": "es",
+    "tag": "es-CL",
+    "name": "Español de Chile",
+    "rtl": false,
+    "file": "es-CL.jsn"
+  },
+  {
+    "key": "es-LA",
+    "code": "es",
+    "tag": "es-LA",
+    "name": "Español de América Latina",
+    "rtl": false,
+    "file": "es-LA.jsn"
+  },
+  {
+    "key": "es-MX",
+    "code": "es",
+    "tag": "es-MX",
+    "name": "Español de México",
+    "rtl": false,
+    "file": "es-MX.jsn"
+  },
+  {
+    "key": "es-PE",
+    "code": "es",
+    "tag": "es-PE",
+    "name": "Español de Perú",
+    "rtl": false,
+    "file": "es-PE.jsn"
+  },
+  {
+    "key": "es-PY",
+    "code": "es",
+    "tag": "es-PY",
+    "name": "Español de Paraguayo",
+    "rtl": false,
+    "file": "es-PY.jsn"
+  },
+  {
+    "key": "es",
+    "code": "es",
+    "tag": "es",
+    "name": "Español",
+    "rtl": false,
+    "file": "es.jsn"
+  },
+  {
+    "key": "et-EE",
+    "code": "et",
+    "tag": "et-EE",
+    "name": "Eesti keel (Eesti)",
+    "rtl": false,
+    "file": "et-EE.jsn"
+  },
+  {
+    "key": "eu",
+    "code": "eu",
+    "tag": "eu",
+    "name": "Euskara",
+    "rtl": false,
+    "file": "eu.jsn"
+  },
+  {
+    "key": "fa-IR",
+    "code": "fa",
+    "tag": "fa-IR",
+    "name": "فارسی/پارسی (ایران‎)",
+    "rtl": true,
+    "file": "fa-IR.jsn"
+  },
+  {
+    "key": "fa",
+    "code": "fa",
+    "tag": "fa",
+    "name": "فارسی",
+    "rtl": true,
+    "file": "fa.jsn"
+  },
+  {
+    "key": "fi",
+    "code": "fi",
+    "tag": "fi",
+    "name": "Suomi",
+    "rtl": false,
+    "file": "fi.jsn"
+  },
+  {
+    "key": "fr-CH",
+    "code": "fr",
+    "tag": "fr-CH",
+    "name": "Français (Schweiz)",
+    "rtl": false,
+    "file": "fr-CH.jsn"
+  },
+  {
+    "key": "fr",
+    "code": "fr",
+    "tag": "fr",
+    "name": "Français",
+    "rtl": false,
+    "file": "fr.jsn"
+  },
+  {
+    "key": "fy-NL",
+    "code": "fy",
+    "tag": "fy-NL",
+    "name": "Westerlauwersk Frysk (Nederlân)",
+    "rtl": false,
+    "file": "fy-NL.jsn"
+  },
+  {
+    "key": "fy",
+    "code": "fy",
+    "tag": "fy",
+    "name": "Westerlauwersk Frysk",
+    "rtl": false,
+    "file": "fy.jsn"
+  },
+  {
+    "key": "gl-ES",
+    "code": "gl",
+    "tag": "gl-ES",
+    "name": "Galego (España)",
+    "rtl": false,
+    "file": "gl-ES.jsn"
+  },
+  {
+    "key": "gl",
+    "code": "gl",
+    "tag": "gl",
+    "name": "Galego",
+    "rtl": false,
+    "file": "gl.jsn"
+  },
+  {
+    "key": "gu-IN",
+    "code": "gu",
+    "tag": "gu-IN",
+    "name": "ગુજરાતી",
+    "rtl": false,
+    "file": "gu-IN.jsn"
+  },
+  {
+    "key": "he-IL",
+    "code": "he",
+    "tag": "he-IL",
+    "name": "עברית (ישראל)",
+    "rtl": true,
+    "file": "he-IL.jsn"
+  },
+  {
+    "key": "he",
+    "code": "he",
+    "tag": "he",
+    "name": "עברית",
+    "rtl": true,
+    "file": "he.jsn"
+  },
+  {
+    "key": "hi-IN",
+    "code": "hi",
+    "tag": "hi-IN",
+    "name": "हिंदी (भारत)",
+    "rtl": false,
+    "file": "hi-IN.jsn"
+  },
+  {
+    "key": "hi",
+    "code": "hi",
+    "tag": "hi",
+    "name": "हिन्दी",
+    "rtl": false,
+    "file": "hi.jsn"
+  },
+  {
+    "key": "hr",
+    "code": "hr",
+    "tag": "hr",
+    "name": "Hrvatski",
+    "rtl": false,
+    "file": "hr.jsn"
+  },
+  {
+    "key": "hu",
+    "code": "hu",
+    "tag": "hu",
+    "name": "Magyar",
+    "rtl": false,
+    "file": "hu.jsn"
+  },
+  {
+    "key": "hy",
+    "code": "hy",
+    "tag": "hy",
+    "name": "Հայերեն",
+    "rtl": false,
+    "file": "hy.jsn"
+  },
+  {
+    "key": "id",
+    "code": "id",
+    "tag": "id",
+    "name": "Bahasa Indonesia",
+    "rtl": false,
+    "file": "id.jsn"
+  },
+  {
+    "key": "ig",
+    "code": "ig",
+    "tag": "ig",
+    "name": "Igbo",
+    "rtl": false,
+    "file": "ig.jsn"
+  },
+  {
+    "key": "it",
+    "code": "it",
+    "tag": "it",
+    "name": "Italiano",
+    "rtl": false,
+    "file": "it.jsn"
+  },
+  {
+    "key": "ja",
+    "code": "ja",
+    "tag": "ja",
+    "name": "日本語",
+    "rtl": false,
+    "file": "ja.jsn"
+  },
+  {
+    "key": "ja-Hira",
+    "code": "ja",
+    "tag": "ja-Hira",
+    "name": "平仮名",
+    "rtl": false,
+    "file": "ja-HI.jsn"
+  },
+  {
+    "key": "ka",
+    "code": "ka",
+    "tag": "ka",
+    "name": "ქართული",
+    "rtl": false,
+    "file": "ka.jsn"
+  },
+  {
+    "key": "km",
+    "code": "km",
+    "tag": "km",
+    "name": "ភាសាខ្មែរ",
+    "rtl": false,
+    "file": "km.jsn"
+  },
+  {
+    "key": "ko-KR",
+    "code": "ko",
+    "tag": "ko-KR",
+    "name": "한국어(한국)",
+    "rtl": false,
+    "file": "ko-KR.jsn"
+  },
+  {
+    "key": "ko",
+    "code": "ko",
+    "tag": "ko",
+    "name": "한국어",
+    "rtl": false,
+    "file": "ko.jsn"
+  },
+  {
+    "key": "lt",
+    "code": "lt",
+    "tag": "lt",
+    "name": "Lietuvių kalba",
+    "rtl": false,
+    "file": "lt.jsn"
+  },
+  {
+    "key": "lv",
+    "code": "lv",
+    "tag": "lv",
+    "name": "Latviešu valoda",
+    "rtl": false,
+    "file": "lv.jsn"
+  },
+  {
+    "key": "mk",
+    "code": "mk",
+    "tag": "mk",
+    "name": "македонски јазик",
+    "rtl": false,
+    "file": "mk.jsn"
+  },
+  {
+    "key": "mn",
+    "code": "mn",
+    "tag": "mn",
+    "name": "Монгол",
+    "rtl": false,
+    "file": "mn.jsn"
+  },
+  {
+    "key": "ms",
+    "code": "ms",
+    "tag": "ms",
+    "name": "Bahasa Melayu",
+    "rtl": false,
+    "file": "ms.jsn"
+  },
+  {
+    "key": "ms-MY",
+    "code": "ms",
+    "tag": "ms-MY",
+    "name": "Bahasa Melayu (Malaysia)",
+    "rtl": false,
+    "file": "ms-MY.jsn"
+  },
+  {
+    "key": "nb",
+    "code": "nb",
+    "tag": "nb",
+    "name": "Norsk bokmål",
+    "rtl": false,
+    "file": "nb.jsn"
+  },
+  {
+    "key": "nl-NL",
+    "code": "nl",
+    "tag": "nl-NL",
+    "name": "Nederlands (Nederland)",
+    "rtl": false,
+    "file": "nl-NL.jsn"
+  },
+  {
+    "key": "nl",
+    "code": "nl",
+    "tag": "nl",
+    "name": "Nederlands",
+    "rtl": false,
+    "file": "nl.jsn"
+  },
+  {
+    "key": "oc",
+    "code": "oc",
+    "tag": "oc",
+    "name": "Occitan",
+    "rtl": false,
+    "file": "oc.jsn"
+  },
+  {
+    "key": "or-IN",
+    "code": "or",
+    "tag": "or-IN",
+    "name": "ଓଡିଆ (ଭାରତ)",
+    "rtl": false,
+    "file": "or_IN.jsn"
+  },
+  {
+    "key": "pa",
+    "code": "pa",
+    "tag": "pa",
+    "name": "ਪੰਜਾਬੀ",
+    "rtl": false,
+    "file": "pa.jsn"
+  },
+  {
+    "key": "pl-PL",
+    "code": "pl",
+    "tag": "pl-PL",
+    "name": "Polski (Polska)",
+    "rtl": false,
+    "file": "pl-PL.jsn"
+  },
+  {
+    "key": "pl",
+    "code": "pl",
+    "tag": "pl",
+    "name": "Polski",
+    "rtl": false,
+    "file": "pl.jsn"
+  },
+  {
+    "key": "pt-BR",
+    "code": "pt",
+    "tag": "pt-BR",
+    "name": "Português do Brasil",
+    "rtl": false,
+    "file": "pt-BR.jsn"
+  },
+  {
+    "key": "pt",
+    "code": "pt",
+    "tag": "pt",
+    "name": "Português",
+    "rtl": false,
+    "file": "pt.jsn"
+  },
+  {
+    "key": "ro",
+    "code": "ro",
+    "tag": "ro",
+    "name": "Română",
+    "rtl": false,
+    "file": "ro.jsn"
+  },
+  {
+    "key": "ro-RO",
+    "code": "ro",
+    "tag": "ro-RO",
+    "name": "Română (România)",
+    "rtl": false,
+    "file": "ro-RO.jsn"
+  },
+  {
+    "key": "ru",
+    "code": "ru",
+    "tag": "ru",
+    "name": "Русский",
+    "rtl": false,
+    "file": "ru.jsn"
+  },
+  {
+    "key": "sk",
+    "code": "sk",
+    "tag": "sk",
+    "name": "Slovenčina",
+    "rtl": false,
+    "file": "sk.jsn"
+  },
+  {
+    "key": "sl",
+    "code": "sl",
+    "tag": "sl",
+    "name": "Slovenščina",
+    "rtl": false,
+    "file": "sl.jsn"
+  },
+  {
+    "key": "sl_SI",
+    "code": "sl",
+    "tag": "sl_SI",
+    "name": "Slovenščina (slovenija)",
+    "rtl": false,
+    "file": "sl_SI.jsn"
+  },
+  {
+    "key": "sr",
+    "code": "sr",
+    "tag": "sr",
+    "name": "Српски језик",
+    "rtl": false,
+    "file": "sr.jsn"
+  },
+  {
+    "key": "sv",
+    "code": "sv",
+    "tag": "sv",
+    "name": "Svenska",
+    "rtl": false,
+    "file": "sv.jsn"
+  },
+  {
+    "key": "sw",
+    "code": "sw",
+    "tag": "sw",
+    "name": "Kiswahili",
+    "rtl": false,
+    "file": "sw.jsn"
+  },
+  {
+    "key": "ta",
+    "code": "ta",
+    "tag": "ta",
+    "name": "தமிழ்",
+    "rtl": false,
+    "file": "ta.jsn"
+  },
+  {
+    "key": "te-IN",
+    "code": "te",
+    "tag": "te_IN",
+    "name": "తెలుగు (భారతదేశం)",
+    "rtl": false,
+    "file": "te-IN.jsn"
+  },
+  {
+    "key": "th",
+    "code": "th",
+    "tag": "th",
+    "name": "ไทย",
+    "rtl": false,
+    "file": "th.jsn"
+  },
+  {
+    "key": "tlh",
+    "code": "tlh",
+    "tag": "tlh",
+    "name": "TlhIngan Hol",
+    "rtl": false,
+    "file": "tlh.jsn"
+  },
+  {
+    "key": "tr",
+    "code": "tr",
+    "tag": "tr",
+    "name": "Türkçe",
+    "rtl": false,
+    "file": "tr.jsn"
+  },
+  {
+    "key": "ug",
+    "code": "ug",
+    "tag": "ug",
+    "name": "ئۇيغۇر تىلى",
+    "rtl": true,
+    "file": "ug.jsn"
+  },
+  {
+    "key": "uk",
+    "code": "uk",
+    "tag": "uk",
+    "name": "українська мова",
+    "rtl": false,
+    "file": "uk.jsn"
+  },
+  {
+    "key": "uk-UA",
+    "code": "uk",
+    "tag": "uk-UA",
+    "name": "Українська (Україна)",
+    "rtl": false,
+    "file": "uk-UA.jsn"
+  },
+  {
+    "key": "uz-AR",
+    "code": "uz",
+    "tag": "uz-AR",
+    "name": "O'zbek (arab)",
+    "rtl": true,
+    "file": "uz-AR.jsn"
+  },
+  {
+    "key": "uz-LA",
+    "code": "uz",
+    "tag": "uz-LA",
+    "name": "O'zbek (lotin)",
+    "rtl": false,
+    "file": "uz-LA.jsn"
+  },
+  {
+    "key": "uz-UZ",
+    "code": "uz",
+    "tag": "uz-UZ",
+    "name": "O'zbek (O'zbekiston)",
+    "rtl": false,
+    "file": "uz-UZ.jsn"
+  },
+  {
+    "key": "uz",
+    "code": "uz",
+    "tag": "uz",
+    "name": "O'zbek",
+    "rtl": false,
+    "file": "uz.jsn"
+  },
+  {
+    "key": "ve-CC",
+    "code": "ve",
+    "tag": "ve-CC",
+    "name": "Vèneto",
+    "rtl": false,
+    "file": "ve-CC.jsn"
+  },
+  {
+    "key": "ve-PP",
+    "code": "ve",
+    "tag": "ve-PP",
+    "name": "Vepsän kelʹ",
+    "rtl": false,
+    "file": "ve-PP.jsn"
+  },
+  {
+    "key": "ve",
+    "code": "ve",
+    "tag": "ve",
+    "name": "Tshivenḓa",
+    "rtl": false,
+    "file": "ve.jsn"
+  },
+  {
+    "key": "vi-VN",
+    "code": "vi",
+    "tag": "vi-VN",
+    "name": "Tiếng Việt (Việt Nam)",
+    "rtl": false,
+    "file": "vi-VN.jsn"
+  },
+  {
+    "key": "vi",
+    "code": "vi",
+    "tag": "vi",
+    "name": "Tiếng Việt",
+    "rtl": false,
+    "file": "vi.jsn"
+  },
+  {
+    "key": "vl-SS",
+    "code": "vl",
+    "tag": "vl-SS",
+    "name": "Vlaams",
+    "rtl": false,
+    "file": "vl-SS.jsn"
+  },
+  {
+    "key": "vo",
+    "code": "vo",
+    "tag": "vo",
+    "name": "Volapük",
+    "rtl": false,
+    "file": "vo.jsn"
+  },
+  {
+    "key": "wa-RR",
+    "code": "wa",
+    "tag": "wa-RR",
+    "name": "Wáray-Wáray",
+    "rtl": false,
+    "file": "wa-RR.jsn"
+  },
+  {
+    "key": "wa",
+    "code": "wa",
+    "tag": "wa",
+    "name": "Walon",
+    "rtl": false,
+    "file": "wa.jsn"
+  },
+  {
+    "key": "wo",
+    "code": "wo",
+    "tag": "wo",
+    "name": "Wolof",
+    "rtl": false,
+    "file": "wo.jsn"
+  },
+  {
+    "key": "xh",
+    "code": "xh",
+    "tag": "xh",
+    "name": "IsiXhosa",
+    "rtl": false,
+    "file": "xh.jsn"
+  },
+  {
+    "key": "yi",
+    "code": "yi",
+    "tag": "yi",
+    "name": "ייִדיש, יידיש",
+    "rtl": true,
+    "file": "yi.jsn"
+  },
+  {
+    "key": "yo",
+    "code": "yo",
+    "tag": "yo",
+    "name": "Èdè Yorùbá",
+    "rtl": false,
+    "file": "yo.jsn"
+  },
+  {
+    "key": "zgh",
+    "code": "zgh",
+    "tag": "zgh",
+    "name": "ⵜⴰⵎⴰⵣⵉⵖⵜ ⵜⴰⵏⴰⵡⴰⵢⵜ",
+    "rtl": false,
+    "file": "zgh.jsn"
+  },
+  {
+    "key": "yue_CN",
+    "code": "yue",
+    "tag": "yue_CN",
+    "name": "廣東話",
+    "rtl": false,
+    "file": "yue_CN.jsn"
+  },
+  {
+    "key": "wuu-Hans",
+    "code": "wuu",
+    "tag": "wuu-Hans",
+    "name": "吴语（简体）",
+    "rtl": false,
+    "file": "wuu-Hans.jsn"
+  },
+  {
+    "key": "zh",
+    "code": "zh",
+    "tag": "zh",
+    "name": "中文",
+    "rtl": false,
+    "file": "zh.jsn"
+  },
+  {
+    "key": "zh-CN",
+    "code": "zh",
+    "tag": "zh-CN",
+    "name": "简体中文",
+    "rtl": false,
+    "file": "zh-CN.jsn"
+  },
+  {
+    "key": "zh-GB",
+    "code": "zh",
+    "tag": "zh-GB",
+    "name": "简体中文 GB2312",
+    "rtl": false,
+    "file": "zh-GB.jsn"
+  },
+  {
+    "key": "zh-Hans",
+    "code": "zh",
+    "tag": "zh-Hans",
+    "name": "简化字",
+    "rtl": false,
+    "file": "zh-Hans.jsn"
+  },
+  {
+    "key": "zh-Hant",
+    "code": "zh",
+    "tag": "zh-Hant",
+    "name": "正體字",
+    "rtl": false,
+    "file": "zh-Hant.jsn"
+  },
+  {
+    "key": "zh-HK",
+    "code": "zh",
+    "tag": "zh-HK",
+    "name": "繁体中文（香港）",
+    "rtl": false,
+    "file": "zh-HK.jsn"
+  },
+  {
+    "key": "zh-SG",
+    "code": "zh",
+    "tag": "zh-SG",
+    "name": "中文 (新加坡)",
+    "rtl": false,
+    "file": "zh_SG.jsn"
+  },
+  {
+    "key": "zh-TW",
+    "code": "zh",
+    "tag": "zh-TW",
+    "name": "繁體中文（台灣）",
+    "rtl": false,
+    "file": "zh-TW.jsn"
+  },
+  {
+    "key": "zu-ZA",
+    "code": "zu",
+    "tag": "zu-ZA",
+    "name": "IsiZulu (Ningizimu Afrika)",
+    "rtl": false,
+    "file": "zu-ZA.jsn"
+  },
+  {
+    "key": "zu",
+    "code": "zu",
+    "tag": "zu",
+    "name": "IsiZulu",
+    "rtl": false,
+    "file": "zu.jsn"
+  },
+  {
+    "key": "ca-valencia",
+    "code": "ca",
+    "tag": "ca-valencia",
+    "name": "Català (Valencià)",
+    "rtl": false,
+    "file": "cavalenc.jsn"
+  },
+  {
+    "key": "en_ID",
+    "code": "en",
+    "tag": "en_ID",
+    "name": "English (Indonesia)",
+    "rtl": false,
+    "file": "en_ID.jsn"
+  },
+  {
+    "key": "en_SG",
+    "code": "en",
+    "tag": "en_SG",
+    "name": "English (Singapore)",
+    "rtl": false,
+    "file": "en_SG.jsn"
+  },
+  {
+    "key": "en_TR",
+    "code": "en",
+    "tag": "en_TR",
+    "name": "English (Turkey)",
+    "rtl": false,
+    "file": "en_TR.jsn"
+  },
+  {
+    "key": "es_CO",
+    "code": "es",
+    "tag": "es_CO",
+    "name": "Español (Colombia)",
+    "rtl": false,
+    "file": "es_CO.jsn"
+  },
+  {
+    "key": "fr-FR",
+    "code": "fr",
+    "tag": "fr-FR",
+    "name": "Français (France)",
+    "rtl": false,
+    "file": "fr-FR.jsn"
+  },
+  {
+    "key": "pt_PT",
+    "code": "pt",
+    "tag": "pt_PT",
+    "name": "Português (Portugal)",
+    "rtl": false,
+    "file": "pt_PT.jsn"
+  },
+  {
+    "key": "ru-UA",
+    "code": "ru",
+    "tag": "ru-UA",
+    "name": "Русский (Украина)",
+    "rtl": false,
+    "file": "ru-UA.jsn"
+  },
+  {
+    "key": "tk_TM",
+    "code": "tk",
+    "tag": "tk_TM",
+    "name": "Türkmençe (Türkmenistan)",
+    "rtl": false,
+    "file": "tk_TM.jsn"
+  }
+]
