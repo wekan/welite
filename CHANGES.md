@@ -4,6 +4,19 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Restore French regional language assets
+
+- Replace broken French Belgium/Canada symlinks with physical portable locale
+  files and register both source identities. Reuse 2,090 maintained regional values,
+  eight existing French compatibility phrases and two literal title templates;
+  translate the removed board-members restriction into French.
+- Preserve local English key order and exact argument inventories across all
+  2,101 keys per locale. Add physical-file, catalog, vocabulary and legacy-prose
+  regressions without freezing future human phrasing improvements.
+- Catalog, token, language negotiation and UTF-8 readers pass; all 150 installed
+  languages render authentication forms on linked and CLI backends. The audit stays
+  at 1,149 outstanding token differences; 95 source languages still need assets.
+
 ## 2026-11-17 Register existing Khmer and Russian regional assets
 
 - Map Khmer/Cambodia and Russian/Russia source loaders to the existing portable

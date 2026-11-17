@@ -356,6 +356,20 @@
     load: () => import("./data/fi.jsn"),
     rtl: false,
   },
+  "fr-BE": {
+    code: "fr",
+    tag: "fr-BE",
+    name: "Français (Belgique)",
+    load: () => import("./data/fr-BE.jsn"),
+    rtl: false,
+  },
+  "fr-CA": {
+    code: "fr",
+    tag: "fr-CA",
+    name: "Français (Canada)",
+    load: () => import("./data/fr-CA.jsn"),
+    rtl: false,
+  },
   "fr-CH": {
     code: "fr",
     tag: "fr-CH",

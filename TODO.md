@@ -284,7 +284,7 @@ not merely a design document. Platform/browser claims require testing on those t
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
-  Catalog conversion now accepts current compact and legacy WeKan metadata, publishes matching browser/strict-JSON catalogs for 148 installed languages, uses native names/direction and excludes broken/missing assets without changing translation text.
+  Catalog conversion now accepts current compact and legacy WeKan metadata, publishes matching browser/strict-JSON catalogs for 150 installed languages, uses native names/direction and excludes broken/missing assets without changing translation text.
   Server catalog loading now validates disk/embedded assets; language negotiation honors explicit/profile/weighted-header precedence, aliases and parent fallback. Board and Designer direction use catalog metadata, including live Mongo profile changes, with both-backend HTTP and all-language kernel tests.
   Per-page translation readers now preserve UTF-8/literal tokens and use English/explicit fallback. Sign-in GET labels, HTML language/direction and response headers render from existing translations, retaining the selected language in its POST action; all installed languages pass both-backend HTTP checks.
   Sign-in now offers a native-name GET language picker, retains language/RTL on failed retry without echoing credentials, and carries valid choices into successful session redirects without changing profiles. Both-backend HTTP and no-JS/no-cookie Chromium cover the picker and state.
@@ -303,7 +303,8 @@ not merely a design document. Platform/browser claims require testing on those t
   Authenticated board selection moves now invert horizontal logical deltas for validated RTL viewers; reversible card/list browser checks and linked/CLI HTTP suites pass. Designer arrows and broader RTL/retro acceptance remain open.
   Designer widget moves now honor resolved page direction and saved overrides; HTTP collisions/bounds and no-JS/no-cookie physical arrow round trips pass in the linked suite. Broader directional-control rendering and retro acceptance remain open.
   Existing Khmer (Cambodia) and Russian (Russia) files now register under their source identities through explicit portable filename mappings; no translation text was copied or changed.
-  Remaining: review 1,149 ambiguous token differences and other wrong/mixed-language data, import the 97 additional source languages with portable filenames, translate remaining pages/errors/enrollment flows, finish early error-frame metadata and audit physical RTL controls.
+  French Belgium/Canada broken links now have physical portable assets: maintained regional strings, existing French compatibility prose and a translated board-members restriction. Catalog registration, vocabulary, key order and every argument inventory are covered.
+  Remaining: review 1,149 ambiguous token differences and other wrong/mixed-language data, import the 95 additional source languages with portable filenames, translate remaining pages/errors/enrollment flows, finish early error-frame metadata and audit physical RTL controls.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
   Published Designer pages now honor saved HTML4 versus HTML3.2 doctypes, with both-backend round trips, invalid-input refusal and Chromium standards-mode checks. Remaining responsive/color and retro-target acceptance stays open.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.

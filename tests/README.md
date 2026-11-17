@@ -426,3 +426,7 @@ physical horizontal widget arrows without JavaScript or cookies.
 
 Catalog regression checks also require the existing Khmer/Cambodia and
 Russian/Russia files under their established portable underscore filenames.
+
+`python3 tests/frlang.py` verifies the physical French Belgium/Canada files,
+catalog registration, native vocabulary, non-English compatibility prose, exact
+English key order and every argument inventory.

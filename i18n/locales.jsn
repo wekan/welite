@@ -408,6 +408,22 @@
     "file": "fi.jsn"
   },
   {
+    "key": "fr-BE",
+    "code": "fr",
+    "tag": "fr-BE",
+    "name": "Français (Belgique)",
+    "rtl": false,
+    "file": "fr-BE.jsn"
+  },
+  {
+    "key": "fr-CA",
+    "code": "fr",
+    "tag": "fr-CA",
+    "name": "Français (Canada)",
+    "rtl": false,
+    "file": "fr-CA.jsn"
+  },
+  {
     "key": "fr-CH",
     "code": "fr",
     "tag": "fr-CH",

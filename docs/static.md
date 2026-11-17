@@ -88,7 +88,7 @@ separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 148 installed languages; 97 more source languages
+The current snapshot lists 150 installed languages; 95 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
@@ -201,3 +201,11 @@ for `keulabee` and `ubah`, and the government-published
 for `peusom`. Other technical wording follows the maintained Acehnese catalog.
 Correct-language human values remain preferred in future merges. Vocabulary
 regressions supplement script checks.
+
+### Regional French assets
+
+`fr-BE.jsn` and `fr-CA.jsn` are physical local assets replacing broken legacy
+symlinks. They retain 2,090 matching maintained regional source strings, eight
+existing French compatibility phrases and two code-only title templates. The
+removed board-members restriction phrase is translated directly into French.
+All values follow local English key order and exact argument inventories.
