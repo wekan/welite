@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Repair contextual French argument templates
+
+- Close the French custom-field value argument and repair two stale search-code
+  examples to the English source's literal `user:` and `has:-due` syntax. Compare
+  against the previous commit: exactly three reviewed code-span substitutions,
+  with all surrounding French prose, other values and key order unchanged.
+- Record repaired keys and verify every base French argument inventory in addition
+  to regional French checks. Token, Acehnese/Bulgarian and all-language UTF-8 reader
+  regressions pass; no translation service is used.
+- The overall audit leaves 1,146 contextual differences. Other language assets,
+  wrong/mixed-language review and remaining UI message translation stay open.
+
 ## 2026-11-17 Keep viewer metadata on Designer transfer errors
 
 - Route missing-page export and page/archive import token failures through the

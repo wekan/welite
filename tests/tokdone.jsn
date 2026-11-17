@@ -158,7 +158,10 @@
     "fr.jsn": [
       "act-addSubtask",
       "act-removeChecklistItem",
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "act-setCustomField",
+      "globalSearch-instructions-operator-at",
+      "globalSearch-instructions-operator-has"
     ],
     "he-IL.jsn": [
       "act-addSubtask"

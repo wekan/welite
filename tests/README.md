@@ -495,3 +495,6 @@ Both failure types assert authenticated language/header/direction metadata.
 Error-frame checks include missing Designer exports and token-denied page/archive
 imports, requiring HTML metadata and no attachment disposition. Existing HTTP and
 browser import/export cases retain successful JSON/ZIP formats and download names.
+
+The French regression also checks every baseline `fr.jsn` argument inventory
+after contextual custom-field/search-code repairs, without constraining human prose.

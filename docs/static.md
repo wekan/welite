@@ -273,3 +273,11 @@ import/export failures remain the next frame audit step.
 Designer missing-page exports and import action-token failures now use the shared
 HTML error frame, with no attachment disposition on failure. Successful page JSON
 and archive ZIP downloads keep their existing formats and filenames.
+
+### Contextual French arguments
+
+Three base French values now restore a missing custom-field closing fence and
+the source-authoritative literal search examples `user:` and `has:-due`. Only
+reviewed code spans changed; all surrounding French prose, other values and key
+order remain intact. The baseline French file now matches every English argument
+inventory, alongside the regional French asset checks.

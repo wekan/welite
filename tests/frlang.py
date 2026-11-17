@@ -21,4 +21,11 @@ for tag in ['fr-BE','fr-CA']:
     assert 'liste' in data['list'].lower() and 'carte' in data['card'].lower()
     for key in legacy:assert data[key].strip() and data[key]!=en[key],(tag,key)
     assert 'organisation' in data['board-members-same-org-team-only'].lower()
-print('PASS: physical French regional assets, native vocabulary, legacy prose, catalog identities, English key order and all token inventories')
+
+# The base French locale also has complete argument inventories after contextual
+# fence/search-example repairs; do not freeze human phrasing around those spans.
+base=json.loads((root/'i18n/data/fr.jsn').read_text())
+assert list(base)==list(en)
+for key,value in base.items():assert tokens.tokens(value)==tokens.tokens(en[key]),key
+
+print('PASS: French baseline/regional argument inventories, physical regional assets, vocabulary, legacy prose, catalog identities and English key order')
