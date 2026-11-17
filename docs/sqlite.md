@@ -73,6 +73,26 @@ large valid/corrupt sources under Linux address-space limits. Memory for those
 validators scales with the current row/document; SQL work sets and collected
 application graphs remain separate from row buffering.
 
+## Read snapshot scopes
+
+`BeginRead` pins a read-only transaction and holds the cached handle's gate until
+`EndRead` on the same thread. Query/Scan calls are reentrant for that owner;
+other handle users wait. Linked SQLite keeps its original connection and restores
+its prior query-only state after rollback. CLI SQLite keeps a private read-only
+process, issuing framed queries in the same transaction with one framing nonce
+per scope. Each query still streams rows; no full database backup is needed.
+
+The scope accepts single SELECT/WITH and read-only table/index introspection.
+Exec, transaction controls, writable pragmas and extra statements are refused.
+Nested begin returns false without closing the outer read. Callers must always
+end a successful begin, including when a query/handler fails. Results remain
+provisional until each read and the scope closure succeed.
+
+`tests/dbsnap.py` exercises snapshots across independent WAL writes/DDL, handle
+threads, readonly/control enforcement, framing/UTF-8 paths, failure/reuse and
+cleanup. Portable entropy-stock mode is covered too. Graph collection uses this
+scope; later file preparation and mutation transactions are separate phases.
+
 ## SQLite on Amiga / retro targets
 
 **FreePascal does not bundle SQLite on any platform** — its `sqlite3` unit (and `sqldb`'s

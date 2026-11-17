@@ -33,6 +33,10 @@ type
   TWLDb = class
   private
     FPath: string;
+    FGate:TRTLCriticalSection;
+    FGateReady,FRead,FBroken:Boolean;
+    FOldQueryOnly:string;
+    {$IFDEF WLDB_CLI}FReadSession:TObject;{$ENDIF}
     {$IFNDEF WLDB_CLI}
     FHandle: Pointer;                  // psqlite3
     {$ENDIF}
@@ -47,6 +51,9 @@ type
     // Row storage is reused: consume/copy cells during the callback.
     // A bounded handler must not retain rows or issue writes.
     function Scan(const Sql:string;Handler:TWLRowHandler):Boolean;
+    // A successful begin holds the handle gate until EndRead on this thread.
+    function BeginRead:Boolean;
+    function EndRead:Boolean;
     property Path: string read FPath;
   end;
 
@@ -59,6 +66,62 @@ procedure WLDbClose(Db: TWLDb);
 function SqlEscape(const Value: string): string;
 
 implementation
+{$IFDEF WLDB_CLI}uses wlentrop;{$ENDIF}
+
+function ReadStatement(const Sql:string):Boolean;
+type TState=(normal,quoted,identifier,backtick,bracket,linecomment,blockcomment);
+var State:TState;I,J:SizeInt;C:Char;Ended:Boolean;Verb,PragmaName:string;
+  function Token:string;
+  var Start:SizeInt;
+  begin
+    repeat
+      while (I<=Length(Sql)) and (Sql[I] in [#9,#10,#13,' ']) do Inc(I);
+      if (I<Length(Sql)) and (Copy(Sql,I,2)='--') then
+      begin while (I<=Length(Sql)) and not (Sql[I] in [#10,#13]) do Inc(I);end
+      else if (I<Length(Sql)) and (Copy(Sql,I,2)='/*') then
+      begin Inc(I,2);while (I<Length(Sql)) and (Copy(Sql,I,2)<>'*/') do Inc(I);Inc(I,2);end
+      else Break;
+    until False;
+    Start:=I;while (I<=Length(Sql)) and (Sql[I] in ['a'..'z','A'..'Z','_']) do Inc(I);
+    Result:=UpperCase(Copy(Sql,Start,I-Start));
+  end;
+begin
+  Result:=False;I:=1;Verb:=Token;
+  if Verb='PRAGMA' then
+  begin
+    PragmaName:=Token;
+    if (PragmaName<>'TABLE_INFO') and (PragmaName<>'TABLE_XINFO') and
+      (PragmaName<>'INDEX_INFO') and (PragmaName<>'INDEX_XINFO') and
+      (PragmaName<>'INDEX_LIST') and (PragmaName<>'FOREIGN_KEY_LIST') then Exit;
+  end else if (Verb<>'SELECT') and (Verb<>'WITH') then Exit;
+  State:=normal;Ended:=False;I:=1;
+  while I<=Length(Sql) do
+  begin
+    C:=Sql[I];
+    case State of
+      normal:
+      begin
+        if (C='-') and (I<Length(Sql)) and (Sql[I+1]='-') then begin State:=linecomment;Inc(I);end
+        else if (C='/') and (I<Length(Sql)) and (Sql[I+1]='*') then begin State:=blockcomment;Inc(I);end
+        else if C=';' then Ended:=True
+        else if Ended and not (C in [#9,#10,#13,' ']) then Exit
+        else case C of '''':State:=quoted;'"':State:=identifier;'`':State:=backtick;'[':State:=bracket;end;
+      end;
+      quoted,identifier,backtick:
+      begin
+        J:=0;
+        if ((State=quoted) and (C='''')) or ((State=identifier) and (C='"')) or ((State=backtick) and (C='`')) then
+          if (I<Length(Sql)) and (Sql[I+1]=C) then J:=1 else State:=normal;
+        Inc(I,J);
+      end;
+      bracket:if C=']' then State:=normal;
+      linecomment:if C in [#10,#13] then State:=normal;
+      blockcomment:if (C='*') and (I<Length(Sql)) and (Sql[I+1]='/') then begin State:=normal;Inc(I);end;
+    end;
+    Inc(I);
+  end;
+  Result:=State in [normal,linecomment];
+end;
 
 function SqlEscape(const Value: string): string;
 begin
@@ -93,7 +156,7 @@ end;
 constructor TWLDb.Create(const APath:string; Portable:Boolean);
 var Options:TWLRows;
 begin
-  inherited Create;
+  inherited Create;InitCriticalSection(FGate);FGateReady:=True;
   FPath := APath;
   if (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1') and not ShortDbName(APath) then
     raise Exception.Create('Strict mode requires an 8.3 database filename with an extension');
@@ -126,10 +189,15 @@ end;
 
 destructor TWLDb.Destroy;
 begin
-  {$IFNDEF WLDB_CLI}
-  if FHandle <> nil then
-    sqlite3_close(FHandle);
-  {$ENDIF}
+  if FGateReady then EnterCriticalSection(FGate);
+  try
+    if FRead then EndRead;
+    {$IFDEF WLDB_CLI}FReadSession.Free;FReadSession:=nil;{$ELSE}
+    if FHandle<>nil then sqlite3_close(FHandle);
+    {$ENDIF}
+  finally
+    if FGateReady then begin LeaveCriticalSection(FGate);DoneCriticalSection(FGate);end;
+  end;
   inherited Destroy;
 end;
 
@@ -323,10 +391,166 @@ begin
   if (FPrefix<>0) or (FState=2) then raise Exception.Create('Incomplete CSV output');
   if (FState<>0) or (FUsed>0) or (Length(FRow)>0) then AddRow;
 end;
+type
+  TReadFrame=class
+    Marker:string;
+    Done,Failed:Boolean;
+    Handler:TWLRowHandler;
+    procedure ReadRow(const Row:TWLRow);
+  end;
+  TReadRows=class
+    Rows:TWLRows;
+    procedure Add(const Row:TWLRow);
+  end;
+  TReadSession=class
+  private
+    FProc:TProcess;FInitDir,FInitScript,FKey:string;
+    FSequence:LongWord;FStarted,FDead,FPrefix:Boolean;
+    procedure Ignore(const Row:TWLRow);
+  public
+    function Open(const DbPath:string):Boolean;
+    function Read(const Sql:string;Handler:TWLRowHandler):Boolean;
+    function Close:Boolean;
+    destructor Destroy;override;
+  end;
+procedure TReadRows.Add(const Row:TWLRow);
+var N:SizeInt;
+begin N:=Length(Rows);SetLength(Rows,N+1);Rows[N]:=Copy(Row);end;
+procedure TReadFrame.ReadRow(const Row:TWLRow);
+begin
+  if Done then raise Exception.Create('Unexpected snapshot output');
+  if (Length(Row)=1) and (Row[0]=Marker) then begin Done:=True;Exit;end;
+  if not Failed then try Handler(Row);except Failed:=True;end;
+end;
+procedure TReadSession.Ignore(const Row:TWLRow);
+begin end;
+function DotPath(const Value:string):string;
+var I:SizeInt;
+begin
+  Result:='"';
+  for I:=1 to Length(Value) do case Value[I] of
+    #0:raise Exception.Create('Invalid snapshot script path');
+    #10:Result:=Result+'\n';#13:Result:=Result+'\r';#9:Result:=Result+'\t';
+    '"':Result:=Result+'\"';'\':Result:=Result+'\\';
+  else Result:=Result+Value[I];end;
+  Result:=Result+'"';
+end;
+function TReadSession.Open(const DbPath:string):Boolean;
+var Bytes:RawByteString;I:Integer;Extension:string;
+begin
+  Result:=False;
+  try
+    Bytes:=SecureBytes(16);FKey:='__wl_read_';
+    for I:=1 to Length(Bytes) do FKey:=FKey+LowerCase(IntToHex(Ord(Bytes[I]),2));
+    Extension:=GetEnvironmentVariable('WELITE_SQLITE_EXT');FPrefix:=Extension<>'';
+    WriteSqliteScript('',Extension,FInitDir,FInitScript);
+    FProc:=TProcess.Create(nil);FProc.Executable:='sqlite3';FProc.Options:=[poUsePipes];
+    FProc.Parameters.Add('-batch');FProc.Parameters.Add('-bail');FProc.Parameters.Add('-readonly');
+    FProc.Parameters.Add('-csv');FProc.Parameters.Add('-noheader');
+    FProc.Parameters.Add('-init');FProc.Parameters.Add(FInitScript);FProc.Parameters.Add(ExpandFileName(DbPath));
+    FProc.Execute;FStarted:=True;
+    Result:=Read('PRAGMA query_only=ON; BEGIN; SELECT count(*) FROM sqlite_master;',@Ignore);
+  except FDead:=True;end;
+end;
+function TReadSession.Read(const Sql:string;Handler:TWLRowHandler):Boolean;
+var Frame:TReadFrame;Parser:TScanCsv;Directory,Script,Text,Command:string;Stream:TFileStream;
+  Buffer:array of Byte;Count:LongInt;Progress:Boolean;
+begin
+  Result:=False;if FDead or not FStarted or not Assigned(Handler) then Exit;
+  Directory:='';Script:='';Frame:=nil;Parser:=nil;
+  try
+    try
+      if FSequence=High(LongWord) then raise Exception.Create('Snapshot sequence exhausted');
+      Inc(FSequence);Frame:=TReadFrame.Create;Frame.Marker:=FKey+'_'+IntToStr(FSequence);Frame.Handler:=Handler;
+      Parser:=TScanCsv.Create(@Frame.ReadRow,FPrefix);FPrefix:=False;SetLength(Buffer,8192);
+      Directory:=NewTempDir;Script:=Directory+'query.sql';Stream:=TFileStream.Create(Script,fmCreate);
+      try
+        {$IFDEF UNIX}
+        if fpChmod(PChar(Script),&600)<>0 then raise Exception.Create('Could not protect snapshot script');
+        {$ENDIF}
+        Text:=ScriptSql(Sql)+#10+';'+#10;
+        if Text<>'' then Stream.WriteBuffer(Text[1],Length(Text));
+      finally Stream.Free;end;
+      // The boundary is outside .read: receiving it proves that file is closed.
+      Command:='.read '+DotPath(ExpandFileName(Script))+#10+'SELECT '+QuotedStr(Frame.Marker)+';'+#10;
+      FProc.Input.WriteBuffer(Command[1],Length(Command));
+      repeat
+        Progress:=False;Count:=FProc.Output.NumBytesAvailable;
+        if Count>Length(Buffer) then Count:=Length(Buffer);
+        if Count>0 then
+        begin
+          Count:=FProc.Output.Read(Buffer[0],Count);
+          if Count<=0 then raise EReadError.Create('Could not read snapshot output');
+          Progress:=True;Parser.Feed(Buffer[0],Count);
+        end;
+        Count:=FProc.Stderr.NumBytesAvailable;
+        if Count>Length(Buffer) then Count:=Length(Buffer);
+        if Count>0 then
+        begin FProc.Stderr.Read(Buffer[0],Count);raise Exception.Create('Snapshot statement failed');end;
+        if Frame.Done then Break;
+        if not FProc.Running and (FProc.Output.NumBytesAvailable=0) then raise Exception.Create('Incomplete snapshot response');
+        if not Progress then Sleep(1);
+      until False;
+      Parser.Finish;
+      if not FProc.Running then raise Exception.Create('Snapshot reader exited');
+      Result:=not Frame.Failed;
+    except FDead:=True;Close;Result:=False;end;
+  finally
+    Parser.Free;Frame.Free;
+    if Script<>'' then DeleteFile(Script);
+    if Directory<>'' then RemoveDir(ExcludeTrailingPathDelimiter(Directory));
+  end;
+end;
+function TReadSession.Close:Boolean;
+var Buffer:array of Byte;Count:LongInt;Progress:Boolean;
+begin
+  Result:=False;
+  try
+    try
+      if FProc<>nil then
+      begin
+    if FStarted then
+    begin
+      SetLength(Buffer,8192);Result:=not FDead and FProc.Running;
+      if FProc.Running then
+        if FDead then FProc.Terminate(1) else FProc.CloseInput;
+      repeat
+        Progress:=False;Count:=FProc.Output.NumBytesAvailable;
+        if Count>Length(Buffer) then Count:=Length(Buffer);
+        if Count>0 then begin FProc.Output.Read(Buffer[0],Count);Progress:=True;Result:=False;end;
+        Count:=FProc.Stderr.NumBytesAvailable;
+        if Count>Length(Buffer) then Count:=Length(Buffer);
+        if Count>0 then begin FProc.Stderr.Read(Buffer[0],Count);Progress:=True;Result:=False;end;
+        if not FProc.Running and (FProc.Output.NumBytesAvailable=0) and (FProc.Stderr.NumBytesAvailable=0) then Break;
+        if not Progress then Sleep(1);
+      until False;
+      FProc.WaitOnExit;Result:=Result and (FProc.ExitStatus=0);
+    end;
+      end;
+    except Result:=False;end;
+  finally
+    if FProc<>nil then
+    begin
+      try if FProc.Running then begin FProc.Terminate(1);FProc.WaitOnExit;end;
+      except Result:=False;end;
+      FProc.Free;FProc:=nil;
+    end;
+    FStarted:=False;FDead:=True;
+    if FInitScript<>'' then begin DeleteFile(FInitScript);FInitScript:='';end;
+    if FInitDir<>'' then begin RemoveDir(ExcludeTrailingPathDelimiter(FInitDir));FInitDir:='';end;
+  end;
+end;
+destructor TReadSession.Destroy;
+begin Close;inherited Destroy;end;
+
 function TWLDb.Scan(const Sql:string;Handler:TWLRowHandler):Boolean;
 var Proc:TProcess;Parser:TScanCsv;Extension,Directory,Script:string;
   Buffer:array of Byte;Count:LongInt;Failed,Progress:Boolean;
 begin
+  EnterCriticalSection(FGate);
+  try
+    Result:=False;if FBroken or (FRead and not ReadStatement(Sql)) then Exit;
+    if FRead then Exit(TReadSession(FReadSession).Read(Sql,Handler));
   Result:=False;if not Assigned(Handler) then Exit;
   Proc:=nil;Parser:=nil;Directory:='';Script:='';
   try
@@ -379,12 +603,17 @@ begin
     if Script<>'' then DeleteFile(Script);
     if Directory<>'' then RemoveDir(ExcludeTrailingPathDelimiter(Directory));
   end;
+  finally LeaveCriticalSection(FGate);end;
 end;
 
 function TWLDb.Exec(const Sql: string): Boolean;
 var Ignored: string;
 begin
+  EnterCriticalSection(FGate);
+  try
+    Result:=False;if FBroken or FRead then Exit;
   Result := RunSqlite(FPath, Sql, Ignored);
+  finally LeaveCriticalSection(FGate);end;
 end;
 
 function TWLDb.Query(const Sql: string): TWLRows;
@@ -407,7 +636,18 @@ var Raw, Cell:string;Row:TWLRow;i,n,CellLength,Capacity:SizeInt;InQuotes:Boolean
     n:=Length(Result); SetLength(Result,n+1); Result[n]:=Row;
     Row:=nil;
   end;
+  function ReadRows:TWLRows;
+  var Collector:TReadRows;
+  begin
+    Collector:=TReadRows.Create;
+    try if TReadSession(FReadSession).Read(Sql,@Collector.Add) then Result:=Collector.Rows else Result:=nil;
+    finally Collector.Free;end;
+  end;
 begin
+  EnterCriticalSection(FGate);
+  try
+    Result:=nil;if FBroken or (FRead and not ReadStatement(Sql)) then Exit;
+    if FRead then Exit(ReadRows);
   Result:=nil; Row:=nil;
   if not RunSqlite(FPath,Sql,Raw) or (Raw='') then Exit;
   // SQLite CSV quotes commas, quotes and embedded newlines. Preserve bytes inside
@@ -433,6 +673,7 @@ begin
     Inc(i);
   end;
   if (CellLength>0) or (Length(Row)>0) then AddRow;
+  finally LeaveCriticalSection(FGate);end;
 end;
 {$ELSE}
 // --- Backend B: linked SQLite (production default) ----------------------------------------
@@ -440,15 +681,22 @@ function TWLDb.Exec(const Sql: string): Boolean;
 var
   ErrMsg: PChar;
 begin
+  EnterCriticalSection(FGate);
+  try
+    Result:=False;if FBroken or FRead then Exit;
   ErrMsg := nil;
   Result := sqlite3_exec(FHandle, PChar(Sql), nil, nil, @ErrMsg) = SQLITE_OK;
   if ErrMsg <> nil then
     sqlite3_free(ErrMsg);
+  finally LeaveCriticalSection(FGate);end;
 end;
 
 function TWLDb.Scan(const Sql:string;Handler:TWLRowHandler):Boolean;
 var Stmt:Pointer;Row:TWLRow;Cols,C,StepCode:Integer;
 begin
+  EnterCriticalSection(FGate);
+  try
+    Result:=False;if FBroken or (FRead and not ReadStatement(Sql)) then Exit;
   Result:=False;if not Assigned(Handler) then Exit;
   if sqlite3_prepare_v2(FHandle,PChar(Sql),-1,@Stmt,nil)<>SQLITE_OK then Exit;
   try
@@ -463,6 +711,7 @@ begin
       Result:=StepCode=SQLITE_DONE;
     except Result:=False;end;
   finally sqlite3_finalize(Stmt);end;
+  finally LeaveCriticalSection(FGate);end;
 end;
 
 function TWLDb.Query(const Sql: string): TWLRows;
@@ -470,6 +719,9 @@ var
   Stmt: Pointer;
   Cols,c,n,StepCode:Integer;
 begin
+  EnterCriticalSection(FGate);
+  try
+    Result:=nil;if FBroken or (FRead and not ReadStatement(Sql)) then Exit;
   SetLength(Result, 0);
   // Real code prepares once and binds params; this skeleton runs a literal statement.
   if sqlite3_prepare_v2(FHandle, PChar(Sql), -1, @Stmt, nil) <> SQLITE_OK then
@@ -490,7 +742,51 @@ begin
   finally
     sqlite3_finalize(Stmt);
   end;
+  finally LeaveCriticalSection(FGate);end;
 end;
 {$ENDIF}
+
+function TWLDb.BeginRead:Boolean;
+var Rows:TWLRows;Started:Boolean;
+begin
+  Result:=False;Started:=False;EnterCriticalSection(FGate);
+  try
+    if FBroken or FRead then Exit;
+    {$IFDEF WLDB_CLI}
+    FReadSession:=TReadSession.Create;
+    if not TReadSession(FReadSession).Open(FPath) then begin FreeAndNil(FReadSession);Exit;end;
+    {$ELSE}
+    if sqlite3_get_autocommit(FHandle)=0 then Exit;
+    Rows:=Query('PRAGMA query_only;');
+    if (Length(Rows)<>1) or ((Rows[0][0]<>'0') and (Rows[0][0]<>'1')) then Exit;
+    FOldQueryOnly:=Rows[0][0];
+    if not Exec('PRAGMA query_only=ON; BEGIN;') then
+    begin
+      if sqlite3_get_autocommit(FHandle)=0 then Exec('ROLLBACK;');
+      Exec('PRAGMA query_only='+FOldQueryOnly+';');Exit;
+    end;
+    Rows:=Query('SELECT count(*) FROM sqlite_master;');
+    if Length(Rows)<>1 then
+    begin Exec('ROLLBACK;');Exec('PRAGMA query_only='+FOldQueryOnly+';');Exit;end;
+    {$ENDIF}
+    FRead:=True;Started:=True;Result:=True;
+  finally if not Started then LeaveCriticalSection(FGate);end;
+end;
+function TWLDb.EndRead:Boolean;
+var Held,Restored:Boolean;
+begin
+  Result:=False;Held:=False;EnterCriticalSection(FGate);
+  try
+    if not FRead then Exit;
+    Held:=True;FRead:=False;
+    {$IFDEF WLDB_CLI}
+    Result:=TReadSession(FReadSession).Close;FreeAndNil(FReadSession);
+    {$ELSE}
+    Result:=Exec('ROLLBACK;');Restored:=Exec('PRAGMA query_only='+FOldQueryOnly+';');
+    Result:=Result and Restored and (sqlite3_get_autocommit(FHandle)<>0);
+    if not Result then FBroken:=True;
+    {$ENDIF}
+  finally LeaveCriticalSection(FGate);if Held then LeaveCriticalSection(FGate);end;
+end;
 
 end.

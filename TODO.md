@@ -392,8 +392,17 @@ not merely a design document. Platform/browser claims require testing on those t
   Normal/checked linked/CLI tests cover 282 TEXT/JSONB relation cases, indexed
   probes and 44 root cases; live tests verify source/clone BSON, defaults,
   duplicate refusal, relation epoch rollback and ordinary root-edit compatibility.
-  Next: remaining legacy relation forms, noncopy relation surfaces and clone
-  lifecycle/multi-query graph consistency, metadata-aware
+  Clone/export graph collection now runs in one pinned read-only transaction,
+  including resolution, descriptors, projected rows and typed source/audit data.
+  Cached-handle gates prevent another request from sharing that snapshot; the CLI
+  uses a private persistent reader with bounded CSV frames and one secure nonce
+  per snapshot, preserving plain SQLite and portable entropy-stock support.
+  Normal/checked tests verify concurrent WAL data/schema writes, readonly/control
+  guards, thread gating, failure/reuse and cleanup. A live writer between board/
+  card reads proves export/clone use one version while retaining the live update.
+  Reads end before file preparation, current permission checks and clone writes.
+  Next: remaining legacy relation forms, noncopy relation surfaces, file-byte
+  stability and authorization/later mutation lifecycle consistency, metadata-aware
   identifiers for other payloads, import permissions, generic HTML
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
@@ -423,7 +432,8 @@ not merely a design document. Platform/browser claims require testing on those t
   chunk/UTF-8 boundaries, partial/failed queries, handler errors, pipe pressure
   and scratch cleanup; process counts remain independent of card/definition count.
   Remaining resource work includes SQLite work sets and collected selection/export
-  graphs; transaction-wide graph/lifecycle consistency remains open. The heavy
+  graphs; collection now has a read snapshot, while later lifecycle consistency
+  remains open. The heavy
   fixture retains its targeted 30-second timeout; ordinary timeouts keep defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,

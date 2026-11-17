@@ -4,6 +4,35 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Collect clone/export graphs in one read snapshot
+
+- Pin clone/export graph collection to one read-only SQLite transaction, covering
+  root resolution, metadata, relation rows and typed source/audit captures. End
+  the read before file preparation, current permission checks and clone writes;
+  retain existing metadata and transaction guards for those later phases.
+- Gate cached database handles while a snapshot is active. Linked reads use the
+  existing handle; CLI reads keep one private read-only process and transaction,
+  using bounded CSV streaming and private per-query scripts rather than copying
+  the tenant database or spawning a connection for every graph query.
+- Frame private CLI responses with one secure nonce per snapshot and a query
+  counter. Reject transaction control, writes and extra statements; incomplete
+  responses/failed SQL deny collection and release the child/transaction. Restore
+  live handle behavior after closure, validation failure and exhaustion.
+- Normal/checked tests cover independently committed WAL data/schema changes,
+  nested begin refusal, SQL/handler failures, quoted UTF-8 paths, handle gating,
+  reuse and cleanup. Portable no-OS-random tests verify one stock block per CLI
+  snapshot, no per-query consumption and safe exhaustion.
+- A live test writer commits board/card changes between graph reads: export and
+  clone retain the original consistent version while live sources keep the new
+  data. File-byte stability, authorization lifetime and later mutation consistency
+  remain separate work; collection consistency alone does not establish full
+  clone/export lifecycle parity.
+- Full native/shared HTTP suites pass on both backends, alongside normal/checked
+  database streaming, snapshot, field-policy and entropy tests. Final checked
+  shared export/relation/concurrent-writer tests pass on both backends. Eight Windows
+  x86/x64 linked/CLI disk/embedded variants cross-build; Windows execution remains
+  unverified.
+
 ## 2026-11-17 Keep embedded relation identities inside clone/export scope
 
 - Scope selected board labels, card members/assignees/labels/custom values/

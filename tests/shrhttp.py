@@ -16,6 +16,7 @@ from custapi import run_shared as check_custom_api
 from cfexpt import run_shared as check_export_policy
 from cfclon import run_shared as check_clone_policy
 from selrels import run_shared as check_relation_scope
+from graphsnp import configure as snapshot_proxy,run_shared as check_graph_snapshot
 root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
 with sqlite3.connect(':memory:') as con:assert con.execute("SELECT sqlite_compileoption_used('ENABLE_8_3_NAMES=2')").fetchone()==(0,)
@@ -45,6 +46,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
         for key in ['WELITE_SHORT_NAMES','WELITE_SQLITE_EXT','WELITE_ENTROPY_FILE','WELITE_ARGON_SECRET_FILE','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','PASSWORD_LOGIN_ENABLED','ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS']:env.pop(key,None)
         if backend=='cli':
             build(root/'src/wlfunc.lpr',out/'ext',['-Cg','-dWLSQLEXT'],'wlfunc.so');env['WELITE_SQLITE_EXT']=str(out/'ext/wlfunc.so')
+        snapshot_control=snapshot_proxy(env,out) if backend=='cli' else None
         data=out/'data/local/files/db';data.mkdir(parents=True);state=out/'state';state.mkdir()
         mongo_port=port();http_port=port();env['WELITE_PORT']=str(http_port)
         database=data/'wekan.sqlite';shadow=data/'wekan.db';app=None
@@ -101,6 +103,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 check_custom_api(request,client,database,token)
                 check_export_policy(request,client,database)
                 check_relation_scope(request,client,database)
+                check_graph_snapshot(request,client,database,snapshot_control)
                 check_clone_policy(request,client,database,token)
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)

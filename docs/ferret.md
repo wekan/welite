@@ -1510,8 +1510,8 @@ Predicates check captured descriptor/view bindings when evaluated, and the full
 captured set joins existing clone/export preflight and transaction/delivery guards.
 This includes root classes whose selected rows are empty. Source document audits
 and field-policy gates still apply. These predicates establish root link identity
-and descriptor bindings, not a transaction-wide snapshot of multi-query graph
-collection. Broader HTML/query boundaries, legacy relation forms and remaining
+and descriptor bindings. Clone/export collection now also uses the read snapshot
+below. Broader HTML/query boundaries, legacy relation forms and remaining later
 lifecycle/mixed-writer consistency remain unfinished.
 
 `tests/selscope.py` runs 44 TEXT/JSONB predicate/ownership cases per normal/checked
@@ -1558,6 +1558,42 @@ seconds. Source validation now
 streams result rows; it does not collect the board's complete BSON payload in
 memory. The final selection/export graph is still collected separately. Only the
 heavy export test opts into a 30-second timeout; it retains all rows, policy checks and assertions, while other HTTP tests keep their defaults.
+
+## Consistent clone/export collection
+
+Clone/export graph collection calls `BeginRead` before resolving any root and
+`EndRead` after collecting all rows, descriptors, bindings and typed source/audit
+records. The first internal schema read pins SQLite's snapshot before the caller
+query. Other WAL connections can commit data/schema changes without mixing those
+versions into this graph. A cached-handle gate prevents another request from
+using or writing through the same connection during the collection interval.
+
+Linked reads use the original handle, avoiding a second file open. The CLI starts
+one private `-readonly` process, begins a transaction and uses per-query private
+SQL scripts plus bounded CSV response frames. A secure nonce is allocated once
+per snapshot, with a per-query counter; portable entropy stocks consume one block
+per snapshot, not per query. The response boundary follows `.read`, so receiving
+it also confirms the query script has closed. No tenant database copy is made.
+
+Only single SELECT/WITH or supported read-only introspection statements run in
+this mode. Exec, transaction controls, writable pragmas and extra statements are
+rejected; query-only/readonly connections also reject mutating CTEs. A malformed
+or incomplete response cannot authorize a partial graph. Failed SQL, handler
+exceptions and destruction release statements/processes and private files; live
+reads/writes resume after closure. Nested begins do not disturb the outer scope.
+
+`tests/dbsnap.py` runs normal/checked linked/CLI tests with independent WAL
+writers and schema changes, real cached-handle threads, readonly/control refusal,
+handler/SQL failure, quoted UTF-8 paths, reuse and cleanup. A no-OS-random CLI
+variant checks entropy-stock consumption/exhaustion. `tests/graphsnp.py` uses a
+test-only process proxy to commit board/card changes after the board row has been
+collected and before card collection. Actual exports and clones retain the old
+consistent graph while the live database retains the writer update.
+
+The read transaction ends before attachment file preparation and clone writes.
+Existing live permission/payload checks and metadata/transaction guards still run.
+This is collection consistency, not a claim that files, authorization and later
+mutations all share that read snapshot. Their lifecycle acceptance remains open.
 
 ## Mapped clone root fields
 

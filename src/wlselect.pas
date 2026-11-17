@@ -121,7 +121,7 @@ begin
 end;
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
 var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
-  Data,AuditData:TJSONObject;Bindings:TJSONArray;
+  Data,AuditData:TJSONObject;Bindings:TJSONArray;ReadHeld:Boolean;
   function Link(const Name,Column:string):string;
   begin
     // Copying needs typed relation identities; ordinary root forms do not edit
@@ -168,9 +168,14 @@ begin
     Bindings:=TJSONArray.Create;Result.Add('_export_bindings',Bindings);
     AuditData:=TJSONObject.Create;Result.Add('_export_audit',AuditData);
   end;
-  Lanes:=TStringList.Create; Lists:=TStringList.Create; Cards:=TStringList.Create; Checks:=TStringList.Create;TypedScope:=nil;
+  Lanes:=TStringList.Create; Lists:=TStringList.Create; Cards:=TStringList.Create; Checks:=TStringList.Create;TypedScope:=nil;ReadHeld:=False;
   try
     try
+    if (Params.Values['action']='clone') or (Params.Values['action']='export') then
+    begin
+      if not T.Db.BeginRead then raise Exception.Create('Could not pin selection read snapshot');
+      ReadHeld:=True;
+    end;
     TypedScope:=TSelectionScope.Create(T.Db);BoardId:=Params.Values['boardId'];Scope:='boardId='+q(BoardId);
     Result.Add('welite_selection',1); Result.Add('boardId',BoardId);
     Collect(Params,'sel_swimlane',Lanes); Collect(Params,'sel_list',Lists); Collect(Params,'sel_card',Cards);
@@ -206,7 +211,12 @@ begin
         ') OR (swimlaneId IN ('+IdSet(Lanes)+') AND '+Link(Scope,'swimlaneId')+'))');
     if Bindings<>nil then for BindingIndex:=0 to TypedScope.Bindings.Count-1 do Bindings.Add(TypedScope.Bindings[BindingIndex]);
     except FreeAndNil(Result);raise;end;
-  finally TypedScope.Free;Lanes.Free; Lists.Free; Cards.Free; Checks.Free; end;
+  finally
+    try
+      if ReadHeld and not T.Db.EndRead then
+      begin FreeAndNil(Result);raise Exception.Create('Could not close selection read snapshot');end;
+    finally TypedScope.Free;Lanes.Free;Lists.Free;Cards.Free;Checks.Free;end;
+  end;
 end;
 function ArrayIds(Data:TJSONObject; const TableName:string):string;
 var A:TJSONArray; Ids:TStringList; i:Integer;
