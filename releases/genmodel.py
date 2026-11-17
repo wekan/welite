@@ -22,8 +22,14 @@ for table,collection in collections.items():
         elif name.endswith('At') or name in ['heartbeat','lastConnectionDate','dateLastActivity']:kind='date'
         if table=='attachments' and name in ['boardId','swimlaneId','listId','cardId']:path='meta.'+name
         if table=='custom_fields' and name in ['currencyCode','stringtemplateFormat','stringtemplateSeparator']:path='settings.'+name
+        if table=='custom_fields' and name=='settings_json':path='settings';kind='extra'
         value=db.execute('SELECT '+default).fetchone()[0] if default is not None else None
         fields.append(dict(name=name,path=path,kind=kind,type=typ,required=bool(required or pk),default=value))
+    for field in fields:
+        if field['kind']=='extra' and field['path']:
+            prefix=field['path']+'.'
+            paths=[item['path'] for item in fields]+managed.get(table,[])
+            field['exclude']=sorted({path[len(prefix):].split('.')[0] for path in paths if path.startswith(prefix)})
     foreign_keys=[dict(column=row[3],parent=row[2],key=row[4],delete=row[6]) for row in db.execute('PRAGMA foreign_key_list('+table+')')]
     unique_keys=[[col[2] for col in db.execute('PRAGMA index_info('+index[1]+')')] for index in db.execute('PRAGMA index_list('+table+')') if index[2] and index[3]!='pk']
     models.append(dict(table=table,collection=collection,fields=fields,managed=managed.get(table,[]),foreignKeys=foreign_keys,uniqueKeys=unique_keys))

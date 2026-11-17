@@ -240,7 +240,13 @@ CREATE TABLE custom_fields (
   showLabelOnMiniCard INTEGER DEFAULT 0,
   showSumAtTopOfList  INTEGER DEFAULT 0,
   createdAt           TEXT,
-  modifiedAt          TEXT NOT NULL
+  modifiedAt          TEXT NOT NULL,
+  settings_json       TEXT NOT NULL DEFAULT '{}' CHECK(CASE WHEN json_valid(settings_json) THEN
+    json_type(settings_json)='object' AND
+    json_type(settings_json,'$.currencyCode') IS NULL AND
+    json_type(settings_json,'$.stringtemplateFormat') IS NULL AND
+    json_type(settings_json,'$.stringtemplateSeparator') IS NULL AND
+    json_type(settings_json,'$.dropdownItems') IS NULL ELSE 0 END)
 );
 CREATE TABLE custom_field_boards (
   customFieldId TEXT NOT NULL REFERENCES custom_fields(id) ON DELETE CASCADE,

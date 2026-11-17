@@ -1172,8 +1172,8 @@ typed migration/explicit type changes and selection clone/export remain open too
 The normalized SQL column names remain currencyCode, stringtemplateFormat and
 stringtemplateSeparator. On shared stores their generated source paths are now
 settings.currencyCode, settings.stringtemplateFormat and
-settings.stringtemplateSeparator, matching `models/customFields.js`. Native
-schema columns are unchanged. The adapter no longer treats same-named root
+settings.stringtemplateSeparator, matching `models/customFields.js`. These three native
+columns retain their names. The adapter no longer treats same-named root
 properties as these canonical settings.
 
 SQL edits create an absent settings object and preserve existing dropdownItems,
@@ -1186,9 +1186,40 @@ or deleted automatically.
 `tests/cfset.py`, run by the real-server suite on both backends, verifies SQL/Mongo
 round trips, explicit SQL inserts, missing parents, exact BSON preservation,
 dropdown edits, invalid-parent rollback and upgrading an old flat view/descriptor.
-Full settings API payloads/storage and a provenance-aware legacy-root normalization
+Full settings API mapping/validation and a provenance-aware legacy-root normalization
 policy remain open; this is a projection correction, not a full definition/settings
 migration or lifecycle implementation.
+
+## Unmapped settings remainder and native upgrade
+
+`custom_fields.settings_json` stores a JSON object for the remainder of settings.
+It excludes currencyCode, stringtemplateFormat, stringtemplateSeparator and
+dropdownItems, which belong to their existing columns/child relation. The generated
+shared descriptor records these exclusions. Scoped SQL reads omit those owned
+children; an explicit remainder write replaces only the other settings properties.
+Protected children cannot be supplied through this column. New shared definitions
+receive the empty-object default; existing insertion-seed settings stay intact.
+Unchanged values retain
+source BSON tags when the remainder is read, edited and written back.
+
+An absent settings object can be created; an existing incompatible scalar parent
+is refused. Malformed/non-object payloads and protected-name conflicts abort the
+whole SQL statement. Root-level remainder behavior for other models is unchanged.
+
+Fresh native schemas include the TEXT NOT NULL/default-object column with JSON
+object/protected-name CHECK constraints. Native tenant open checks an existing
+column's declaration and data, or adds the column in one transaction before caching
+the handle. Existing columns, rows and related tables are retained. Concurrent
+openers recognize a successful compatible upgrade. Incompatible columns/data,
+views and recognized FerretDB source stores are refused without definition/schema changes;
+unrelated minimal stores with no custom_fields object are left alone.
+
+`tests/cfextra.py` verifies native fresh/legacy/concurrent upgrades and negative
+schema/data cases on both backends. `tests/cfset.py` verifies shared protected-field
+ownership, typed round trips, invalid-parent rollback and rebuilding old views that
+lack the column. Native/shared HTTP suites retain existing import/clone/API behavior.
+Full settings API mapping/validation and provenance-aware legacy-root normalization
+remain separate unfinished steps; this provides their storage foundation.
 
 ## Remaining before the checklist can be checked
 

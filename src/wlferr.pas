@@ -158,9 +158,20 @@ begin
           Field:=Fields.Objects[j];Root:=Field.Get('path','');
           if Field.Get('kind','')='extra' then
           begin
-            ReadExpr:='json_remove(json('+Ident(DocCol)+'),''$."$s"''';
-            for k:=0 to Roots.Count-1 do ReadExpr:=ReadExpr+','+Q(JsonPath(Roots[k]));
-            ReadExpr:=ReadExpr+')';
+            if Root='' then
+            begin
+              ReadExpr:='json_remove(json('+Ident(DocCol)+'),''$."$s"''';
+              for k:=0 to Roots.Count-1 do ReadExpr:=ReadExpr+','+Q(JsonPath(Roots[k]));
+              ReadExpr:=ReadExpr+')';
+            end
+            else
+            begin
+              if not (Field.Find('exclude') is TJSONArray) then raise Exception.Create('Missing nested remainder exclusions');
+              ReadExpr:='CASE WHEN json_type('+Ident(DocCol)+','+Q(JsonPath(Root))+')=''object'' THEN json_remove('+Expr(Root);
+              for k:=0 to TJSONArray(Field.Find('exclude')).Count-1 do
+                ReadExpr:=ReadExpr+','+Q(JsonPath(TJSONArray(Field.Find('exclude')).Strings[k]));
+              ReadExpr:=ReadExpr+') ELSE ''{}'' END';
+            end;
           end
           else
           begin

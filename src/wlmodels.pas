@@ -88,27 +88,28 @@ const ModelJson=
   'ame":"alwaysOnCard","path":"alwaysOnCard","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"showLabelOnMiniCard","path":"showLabelOnMiniCard","kind":"bool","typ'+
   'e":"INTEGER","required":false,"default":0},{"name":"showSumAtTopOfList","path":"showSumAtTopOfList","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"createdAt"'+
   ',"path":"createdAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":true,"default":null'+
-  '}],"managed":["boardIds","settings.dropdownItems"],"foreignKeys":[],"uniqueKeys":[]},{"table":"users","collection":"users","fields":[{"name":"id","path":"_id","kind":"scalar","type'+
-  '":"TEXT","required":true,"default":null},{"name":"username","path":"username","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"isAdmin","path":"isAdmin","kin'+
-  'd":"bool","type":"INTEGER","required":false,"default":0},{"name":"loginDisabled","path":"loginDisabled","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"authen'+
-  'ticationMethod","path":"authenticationMethod","kind":"scalar","type":"TEXT","required":true,"default":"password"},{"name":"createdThroughApi","path":"createdThroughApi","kind":"boo'+
-  'l","type":"INTEGER","required":false,"default":0},{"name":"heartbeat","path":"heartbeat","kind":"date","type":"TEXT","required":false,"default":null},{"name":"lastConnectionDate","'+
-  'path":"lastConnectionDate","kind":"date","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default"'+
-  ':null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"services_json","path":"services","kind":"json","type":"TEXT","r'+
-  'equired":true,"default":"{}"},{"name":"profile_json","path":"profile","kind":"json","type":"TEXT","required":true,"default":"{}"}],"managed":["emails"],"foreignKeys":[],"uniqueKeys'+
-  '":[["username"]]},{"table":"activities","collection":"activities","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"activit'+
-  'yType","path":"activityType","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","required":false,"default"'+
-  ':null},{"name":"boardId","path":"boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"cardId","kind":"scalar","type":"TEXT","required":f'+
-  'alse,"default":null},{"name":"listId","path":"listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"swimlaneId","kind":"scalar","type"'+
-  ':"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"modifiedAt","path":"modifiedAt"'+
-  ',"kind":"date","type":"TEXT","required":false,"default":null},{"name":"data_json","path":"","kind":"extra","type":"TEXT","required":true,"default":"{}"}],"managed":[],"foreignKeys"'+
-  ':[],"uniqueKeys":[]},{"table":"attachments","collection":"attachments","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"bo'+
-  'ardId","path":"meta.boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"meta.swimlaneId","kind":"scalar","type":"TEXT","required":f'+
-  'alse,"default":null},{"name":"listId","path":"meta.listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"meta.cardId","kind":"scalar","typ'+
-  'e":"TEXT","required":false,"default":null},{"name":"name","path":"name","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"type","path":"type","kind":"scalar",'+
-  '"type":"TEXT","required":false,"default":null},{"name":"size","path":"size","kind":"scalar","type":"INTEGER","required":false,"default":0},{"name":"storageBackend","path":"storageB'+
-  'ackend","kind":"scalar","type":"TEXT","required":false,"default":"filesystem"},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","required":false,"default":null},{"nam'+
-  'e":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null}],"managed":[],"foreignKeys":[],"uniqueKeys":[]}]';
+  '},{"name":"settings_json","path":"settings","kind":"extra","type":"TEXT","required":true,"default":"{}","exclude":["currencyCode","dropdownItems","stringtemplateFormat","stringtemp'+
+  'lateSeparator"]}],"managed":["boardIds","settings.dropdownItems"],"foreignKeys":[],"uniqueKeys":[]},{"table":"users","collection":"users","fields":[{"name":"id","path":"_id","kind"'+
+  ':"scalar","type":"TEXT","required":true,"default":null},{"name":"username","path":"username","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"isAdmin","path"'+
+  ':"isAdmin","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"loginDisabled","path":"loginDisabled","kind":"bool","type":"INTEGER","required":false,"default":0},'+
+  '{"name":"authenticationMethod","path":"authenticationMethod","kind":"scalar","type":"TEXT","required":true,"default":"password"},{"name":"createdThroughApi","path":"createdThroughA'+
+  'pi","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"heartbeat","path":"heartbeat","kind":"date","type":"TEXT","required":false,"default":null},{"name":"lastCo'+
+  'nnectionDate","path":"lastConnectionDate","kind":"date","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required"'+
+  ':true,"default":null},{"name":"modifiedAt","path":"modifiedAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"services_json","path":"services","kind":"json","'+
+  'type":"TEXT","required":true,"default":"{}"},{"name":"profile_json","path":"profile","kind":"json","type":"TEXT","required":true,"default":"{}"}],"managed":["emails"],"foreignKeys"'+
+  ':[],"uniqueKeys":[["username"]]},{"table":"activities","collection":"activities","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"default":null},{'+
+  '"name":"activityType","path":"activityType","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","required":'+
+  'false,"default":null},{"name":"boardId","path":"boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"cardId","kind":"scalar","type":"TEX'+
+  'T","required":false,"default":null},{"name":"listId","path":"listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"swimlaneId","kind":'+
+  '"scalar","type":"TEXT","required":false,"default":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null},{"name":"modifiedAt","pat'+
+  'h":"modifiedAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"data_json","path":"","kind":"extra","type":"TEXT","required":true,"default":"{}"}],"managed":['+
+  '],"foreignKeys":[],"uniqueKeys":[]},{"table":"attachments","collection":"attachments","fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"default":nu'+
+  'll},{"name":"boardId","path":"meta.boardId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"swimlaneId","path":"meta.swimlaneId","kind":"scalar","type":"TEX'+
+  'T","required":false,"default":null},{"name":"listId","path":"meta.listId","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"cardId","path":"meta.cardId","kind'+
+  '":"scalar","type":"TEXT","required":false,"default":null},{"name":"name","path":"name","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"type","path":"type","'+
+  'kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"size","path":"size","kind":"scalar","type":"INTEGER","required":false,"default":0},{"name":"storageBackend","'+
+  'path":"storageBackend","kind":"scalar","type":"TEXT","required":false,"default":"filesystem"},{"name":"userId","path":"userId","kind":"scalar","type":"TEXT","required":false,"defau'+
+  'lt":null},{"name":"createdAt","path":"createdAt","kind":"date","type":"TEXT","required":true,"default":null}],"managed":[],"foreignKeys":[],"uniqueKeys":[]}]';
 const RelationJson=
   '[{"table":"board_labels","parent":"boards","parentKey":"boardId","path":"labels","scalar":false,"fields":[{"name":"id","path":"_id","kind":"scalar","type":"TEXT","required":true,"d'+
   'efault":null},{"name":"name","path":"name","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"color","path":"color","kind":"scalar","type":"TEXT","required":tr'+

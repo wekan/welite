@@ -139,7 +139,7 @@ begin
 end;
 function ProjectDocument(const Previous,Columns,Model,Mode:string):string;
 var Doc,Patch,Spec,Hints,Field,Extra:TJSONObject;Fields,Managed:TJSONArray;
-  Known:TStringList;Value,Converted,OldValue:TJSONData;i,j:Integer;Name,Path,Kind:string;InsertMode:Boolean;
+  Known,Restricted:TStringList;Scope:TJSONObject;Value,Converted,OldValue,Target:TJSONData;i,j:Integer;Name,Path,Kind:string;InsertMode:Boolean;
 begin
   Doc:=nil;Patch:=nil;Spec:=nil;Hints:=nil;Known:=nil;Extra:=nil;
   if not ((Mode='insert') or (Mode='update')) then Invalid;
@@ -162,7 +162,7 @@ begin
       while (j<Fields.Count) and (Fields.Objects[j].Get('name','')<>Name) do Inc(j);
       if j=Fields.Count then Invalid;
     end;
-    // A remainder column replaces only unmodeled root fields. Null values remain
+    // A remainder column replaces only unmodeled fields in its scope. Null values remain
     // actual nulls; RFC merge-patch's null-as-delete semantics would corrupt them.
     for i:=0 to Fields.Count-1 do
     begin
@@ -171,15 +171,31 @@ begin
       if Value.JSONType=jtNull then
       begin
         if not InsertMode then Invalid;
-        Continue;
+        Path:=Field.Get('path','');
+        if (Path='') or (AtPath(Doc,Path)<>nil) then Continue;
+        Value:=Field.Find('default');
+        if (Value=nil) or (Value.JSONType=jtNull) then Continue;
       end;
       if Value.JSONType<>jtString then Invalid;
       Extra:=ExactObject(Value.AsString);
       try
-        for j:=0 to Extra.Count-1 do
-          if (Known.IndexOf(Extra.Names[j])>=0) or (Extra.Names[j]='$s') then Invalid;
-        for j:=Doc.Count-1 downto 0 do if Known.IndexOf(Doc.Names[j])<0 then Doc.Delete(j);
-        for j:=0 to Extra.Count-1 do Doc.Add(Extra.Names[j],Extra.Items[j].Clone);
+        Path:=Field.Get('path','');Restricted:=nil;
+        try
+          if Path='' then begin Scope:=Doc;Restricted:=Known;end
+          else begin
+            if not (Field.Find('exclude') is TJSONArray) then Invalid;
+            Restricted:=TStringList.Create;Restricted.CaseSensitive:=True;
+            for j:=0 to TJSONArray(Field.Find('exclude')).Count-1 do
+              Restricted.Add(TJSONArray(Field.Find('exclude')).Strings[j]);
+            Target:=AtPath(Doc,Path);
+            if Target=nil then begin PutPath(Doc,Path,TJSONObject.Create);Target:=AtPath(Doc,Path);end;
+            if not (Target is TJSONObject) then Invalid;Scope:=TJSONObject(Target);
+          end;
+          for j:=0 to Extra.Count-1 do
+            if (Restricted.IndexOf(Extra.Names[j])>=0) or ((Path='') and (Extra.Names[j]='$s')) then Invalid;
+          for j:=Scope.Count-1 downto 0 do if Restricted.IndexOf(Scope.Names[j])<0 then Scope.Delete(j);
+          for j:=0 to Extra.Count-1 do Scope.Add(Extra.Names[j],Extra.Items[j].Clone);
+        finally if Restricted<>Known then Restricted.Free;end;
       finally FreeAndNil(Extra);end;
     end;
     if InsertMode then for i:=0 to Managed.Count-1 do RemovePath(Doc,Managed.Strings[i]);

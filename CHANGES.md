@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Store unmapped custom-field settings without shadowing columns
+
+- Add settings_json as a JSON-object remainder for settings beyond currency,
+  template fields and dropdown items. Generate explicit protected child names and
+  support scoped remainder projection/writes while retaining existing root remainders.
+  New shared definitions receive the object default without replacing seeded settings.
+- Preserve mapped settings/dropdowns and unchanged typed BSON when round-tripping
+  the remainder. Reject malformed objects, protected child keys and incompatible
+  parents; multi-row failures leave source data unchanged.
+- Add a transactional native column upgrade before handle caching, preserving
+  existing rows/relations and accepting concurrent successful upgrades. Validate
+  existing column shape/data and refuse conflicts, views and foreign source stores.
+- Both-backend upgrade tests cover fresh/old stores, concurrent openers, JSON checks
+  and refusal without mutation. Live SQL tests cover typed remainder round trips
+  and upgrades from older views/descriptors lacking the column; HTTP suites pass.
+  All eight Windows x86/x64 linked/CLI disk/embedded cross-build variants pass.
+- Full settings API mapping/validation, legacy-root normalization, typed migration
+  and remaining definition/clone/export lifecycle work stay open in TODO.
+
 ## 2026-11-17 Map custom-field SQL settings to their nested source paths
 
 - Generate currencyCode, stringtemplateFormat and stringtemplateSeparator columns

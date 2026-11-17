@@ -81,6 +81,7 @@ def run_shared(call, client, db, board, uid):
     def verify(identity,name,kind,flags,actor):
         row=client.find('customFields',identity)[0]
         assert (row['name'],row['type'],row['boardIds'])==(name,kind,[board]),row
+        assert row['settings']=={},row
         for key,value in zip(['showOnCard','automaticallyOnCard','showLabelOnMiniCard','showSumAtTopOfList'],flags):
             assert row[key] is bool(value),(key,row)
         response=client.command({'find':'activities','filter':dict(activityType='createCustomField',customFieldId=identity)})

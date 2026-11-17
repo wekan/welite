@@ -67,7 +67,7 @@ procedure TenantInit(const ADataRoot: string);
 implementation
 
 uses
-  wlregist,wltmp,wlmaint,wldbfile,wlferr,wlseed;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
+  wlregist,wltmp,wlmaint,wldbfile,wlferr,wlseed,wlcfup;   // domain registry lookup (host -> enabled?), backed by data/admin/files/db/wekan.db
 
 type
   TUploadCleanup=class(TUploadedFile)
@@ -299,6 +299,8 @@ begin
     else
     begin
       if Length(Tenant.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))>0 then
+      begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
+      if not EnsureSettingsColumn(Tenant.Db) then
       begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
     end;
     HandleCache.AddObject(Tenant.Host, TObject(Tenant.Db));
