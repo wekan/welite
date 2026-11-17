@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Restore code-only activity title arguments
+
+- Restore five malformed activity title templates in Indonesian, Georgian, Thai
+  and the two Vietnamese locale files to the exact English argument inventory.
+  Limit this repair to the two known code-only title keys and values containing
+  only argument containers and punctuation; preserve values containing prose.
+- Extend offline repair and regression coverage for translated names, single
+  fences, missing arguments and empty templates, with explicit prose refusals.
+  Verify all five production changes and unchanged values/key order against HEAD.
+- Token, Acehnese and Bulgarian regressions pass. The audit leaves 1,151 ambiguous
+  differences for contextual review; other localization and server tasks remain.
+
 ## 2026-11-17 Replace the wrong-language Acehnese seed
 
 - Replace the Malay/Indonesian seed in `ace.jsn` with the current Acehnese source

@@ -25,6 +25,12 @@ for source,before,expected in cases:
     assert module.tokens(changed)==module.tokens(source)
     assert module.prose(changed)==module.prose(before)
 for source,before in [('__user__ __card__','__nom__ __carte__'),('__user__ __card__','__user__ __user__'),('%s %s','ajouté'),('%s','%s'),('__user__','__nom__ + __broken'),('__user__','___nom___'),('__user__','__nom__ + __名前 空白__')]:assert module.repair(source,before) is None
+for before in ['__карта__[__Доска__]','_carte_ [_tableau_]','__اسم البطاقة__ [__اسم اللوح__]','__card__','']:
+    source='[__board__] __card__'
+    assert module.repair(source,before,'act-withCardTitle')==source
+for before in ['Carte __card__','Title: _carte_','__card__ prose','неизвестно']:
+    assert module.repair('[__board__] __card__',before,'act-withCardTitle') is None
+assert module.repair('[__board__] __card__','__карта__[__Доска__]') is None
 assert module.tokens('https://x/%D8%B9/%20')==Counter()
 assert module.tokens('https://x/%s/%1$s/__name__')==Counter({'%s':1,'%1$s':1,'__name__':1})
 assert module.tokens('https://x/%%20f')==Counter()

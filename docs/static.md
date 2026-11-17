@@ -167,7 +167,9 @@ RTL controls remain in the outstanding UI audit.
 
 `python3 releases/tokfix.py` audits existing physical locale files against
 `i18n/data/en.jsn`. It proposes only a unique unmatched placeholder or uniquely
-matched case differences. `--apply` writes those repairs; optionally use
+matched case differences. For the two known code-only activity title keys, it also
+restores malformed/missing arguments when no prose occurs outside argument
+containers. Values containing prose remain for contextual review. `--apply` writes those repairs; optionally use
 `--record tests/tokdone.jsn` to retain repaired-key regression coverage. Set TMPDIR
 to the parent checkout's existing `.tools/tmp` on the same filesystem. Files are
 staged there before individual atomic replacements; a changed input is refused.

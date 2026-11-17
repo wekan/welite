@@ -296,7 +296,7 @@ not merely a design document. Platform/browser claims require testing on those t
   Unambiguous token repair now restores 233 values across 86 locale files, preserving surrounding prose/other values/key order and validating recorded English inventories. The offline tool audits without writing by default and refuses ambiguous repairs.
   The Bulgarian custom-field activity now replaces a Serbian seed with maintained Bulgarian text and complete source tokens; vocabulary and inventory regression checks cover it.
   The Acehnese Malay/Indonesian seed now uses 2,090 maintained Acehnese strings plus nine low-confidence legacy prose phrases and two code-only values; vocabulary, English key order and every token inventory are verified.
-  Remaining: review 1,156 ambiguous token differences and other wrong/mixed-language data, import the 99 additional source languages with portable filenames, translate remaining pages/errors/enrollment flows, finish early error-frame metadata and audit physical RTL controls.
+  Remaining: review 1,151 ambiguous token differences and other wrong/mixed-language data, import the 99 additional source languages with portable filenames, translate remaining pages/errors/enrollment flows, finish early error-frame metadata and audit physical RTL controls.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
   Published Designer pages now honor saved HTML4 versus HTML3.2 doctypes, with both-backend round trips, invalid-input refusal and Chromium standards-mode checks. Remaining responsive/color and retro-target acceptance stays open.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.

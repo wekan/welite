@@ -183,7 +183,8 @@
       "and-n-other-card",
       "and-n-other-card_plural",
       "avatar-too-big",
-      "remove-member-pop"
+      "remove-member-pop",
+      "act-withCardTitle"
     ],
     "it.jsn": [
       "act-addChecklist"
@@ -201,7 +202,8 @@
       "label-not-found",
       "label-color-not-found",
       "operator-unknown-error",
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "act-withCardTitle"
     ],
     "ko-KR.jsn": [
       "act-addChecklistItem"
@@ -405,6 +407,15 @@
     ],
     "zh_SG.jsn": [
       "act-removeChecklistItem"
+    ],
+    "th.jsn": [
+      "act-withCardTitle"
+    ],
+    "vi-VN.jsn": [
+      "act-withCardTitle"
+    ],
+    "vi.jsn": [
+      "act-withCardTitle"
     ]
   }
 }

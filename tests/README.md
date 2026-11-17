@@ -391,7 +391,8 @@ HTML and Content-Language without changing unrelated BSON profile values.
 
 `python3 tests/tokfix.py` verifies token-only repairs preserve prose and untouched
 human text/key order; Unicode names, case, printf/named formats, URL octets,
-ambiguous/repeated refusal, dry run, guarded input/record paths, symlink isolation
+ambiguous/repeated refusal, known code-only title repairs with prose refusals,
+dry run, guarded input/record paths, symlink isolation
 and idempotence are covered. `tokdone.jsn` records repaired keys whose underscore
 and percent inventories must match English. It constrains tokens, allowing future
 human prose improvements. Ambiguous data remains explicitly tracked in TODO.

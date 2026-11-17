@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 URL=re.compile(r'''https?://[^\s<>"']+''')
 OCTET=re.compile(r'%[0-9a-f]{2}',re.I)
+CODE_TITLES={'act-withBoardTitle','act-withCardTitle'}
 TOKEN=re.compile(r'__[^\s]+?__|%\{[^}]+\}|%%|%(?:\d+\$)?[-+#0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?[A-Za-z]|%\d+')
 def spans(value):
     octets=[]
@@ -33,7 +34,14 @@ def prose(value):
     parts=[];at=0
     for start,end,_ in spans(value):parts.append(value[at:start]);at=end
     return ''.join(parts)+value[at:]
-def repair(source,value):
+def code_only(value):
+    # Accept translated/malformed underscore argument names, including single
+    # fences and spaces inside names, but never erase prose outside a container.
+    remainder=prose(value)
+    remainder=re.sub(r'_+[^_]+?_+','',remainder)
+    return re.search(r'[^\W_]',remainder,flags=re.UNICODE) is None
+def repair(source,value,key=''):
+    if key in CODE_TITLES and tokens(source)!=tokens(value) and code_only(source) and code_only(value):return source
     # Broken/unclosed markers or stacked fences need a separate contextual review.
     if '__' in prose(source) or '__' in prose(value) or '___' in source or '___' in value:return None
     expected=tokens(source);actual=tokens(value)
@@ -81,7 +89,7 @@ def plan(directory):
             if key not in original:continue
             value=original[key]
             if tokens(value)==tokens(source):continue
-            changed=repair(source,value)
+            changed=repair(source,value,key)
             if changed is None:deferred+=1;continue
             updated[key]=changed;keys.append(key)
         if keys:changes[path]=(original,updated,keys)
