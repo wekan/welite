@@ -1249,6 +1249,38 @@ They return HTTP 400 instead of being silently dropped. Dropdown creation,
 definition edit/delete, adminOnly/readOnly field-policy parity, automatic-card
 policies, normalized typed migration and selection clone/export remain open.
 
+## Custom-field API value permissions
+
+Native definitions now store `adminOnly` and `readOnly` as constrained booleans;
+older native stores receive additive columns before tenant-handle caching. Shared
+columns project and write BSON booleans without replacing unrelated source data.
+
+All API card payloads, including mutation responses, retain custom-field IDs and
+positions but replace unreadable values with JSON null. Missing values remain
+absent. A missing definition or one not associated with the card's board makes
+its value unreadable, even for an administrator. Active administration of the
+card's board permits reading `adminOnly` fields and writing `adminOnly`/`readOnly`
+fields; site administration alone is insufficient. Other members can read
+`readOnly` values under the ordinary board-access rules.
+
+Custom-value POST returns 403 for a failed initial field-policy check. It also
+checks the current user, board, card and definition within the write transaction,
+before mutation and before commit. A failed transactional guard produces a
+storage error and rolls back the complete write, including trigger changes.
+Shared checks validate the complete typed source and pin adapter bindings;
+nonboolean policy flags or unsupported identifier types cannot grant access.
+Read-policy failures mask values instead of returning an unredacted array.
+
+`tests/cfpolicy.py` exercises all card response routes and role changes against
+native/shared HTTP on both backends, with after-write revocation and exact rollback
+checks. It also covers malformed BSON, corrupt metadata and shared batching.
+`tests/cfpol.py` checks normal/checked builds on both SQL backends, quoted Unicode
+IDs, multi-batch positions/missing values and fail-closed query errors.
+
+Definition flag input controls and the HTML, selection/export/clone, activity,
+query and other value-bearing boundaries still need equivalent policy checks.
+This API support does not establish application-wide field-policy parity.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

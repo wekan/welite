@@ -291,10 +291,18 @@ not merely a design document. Platform/browser claims require testing on those t
   and writes them as BSON booleans without changing unrelated source data; old
   adapters acquire the columns on reinstall. Storage regression tests cover true
   flags, defaults, invalid column/value refusal and preserved legacy relations.
-  Next: enforce field visibility and write permissions in API reads/mutations with
-  transaction-time role/definition rechecks; validate definition flag input, then
-  reconcile HTML, selection clone/export, activity and other value-bearing paths.
-  Storage/metadata support does not yet implement those permission boundaries.
+  API card responses now mask unreadable custom values while retaining field IDs,
+  positions and missing values; absent/wrong-board definitions are unreadable even
+  to admins. Custom-value POST requires active board administration for protected
+  fields and rechecks the user, board, definition, association, card and shared
+  source bindings before and after mutation in one transaction. Shared checks
+  validate typed source metadata and reject nonboolean grants. Both-backend native/
+  shared HTTP tests cover all card responses, role/site-admin boundaries, malformed
+  data and triggered authority changes with complete rollback. Normal/checked
+  batching/error tests and live shared multi-batch/corrupt-metadata tests pass.
+  Next: validate definition permission-flag input; enforce matching policy in HTML,
+  selection clone/export, activity, query and other value-bearing paths. The API
+  boundary does not yet establish field-policy parity across those other surfaces.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

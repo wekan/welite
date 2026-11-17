@@ -4,6 +4,7 @@ import sqlite3
 from urllib.parse import quote, urlencode
 from wire import DateMs, Long, Binary, encode
 from pathhttp import run_native as check_native_paths, run_shared as check_shared_paths
+from cfpolicy import run_native as check_native_policy, run_shared as check_shared_policy
 from defapi import run_native as check_native_definitions, run_shared as check_shared_definitions
 
 
@@ -111,6 +112,7 @@ def run_native(request, db):
     exercise(call, base, snapshot, check, fail, un_fail, False)
     check_native_paths(call,db,login['id'])
     check_native_definitions(call,db,'cust-board',login['id'])
+    check_native_policy(call,db,login['id'],'cust-board','cust-list')
 
 
 def run_shared(request, client, db, token):
@@ -166,6 +168,7 @@ def run_shared(request, client, db, token):
     exercise(call, base, snapshot, check, fail, un_fail, True)
     check_shared_paths(call,client,'u')
     check_shared_definitions(call,client,db,'b','u')
+    check_shared_policy(call,client,db,'u','b','l')
 
     # Live Mongo values, rather than current definitions, determine shared output.
     special = [dict(_id='text',value='true',unknown='private'),
@@ -177,6 +180,7 @@ def run_shared(request, client, db, token):
                dict(_id='minimum',value=DateMs(-8640000000000000)),
                dict(_id='maximum',value=DateMs(8640000000000000)),
                dict(_id='invalid',value=DateMs(8640000000000001))]
+    assert client.command({'insert':'customFields','documents':[dict(_id=row['_id'],name=row['_id'],type='text',boardIds=['b']) for row in special]})['n']==len(special)
     assert client.command({'update':'cards','updates':[dict(q=dict(_id=identity),u={'$set':dict(customFields=special)})]})['n'] == 1
     before = snapshot()
     status, _, body = call('GET',base,None)

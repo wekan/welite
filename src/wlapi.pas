@@ -81,7 +81,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlpath,wlcfspec;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -772,7 +772,7 @@ end;
 // POST set a card's value for a custom field. Do not delete an existing embedded
 // row: its unknown properties and BSON type metadata belong to the source store.
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, CfId, Value,Scope: string;Reply:TJSONObject;
+var T: TWLTenant; UserId, CardId, CfId, Value,Scope,GuardSql: string;Reply:TJSONObject;Policy:TFieldPolicy;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -781,15 +781,24 @@ begin
   CfId   := aRequest.RouteParams['customField'];
   if not CustomValueSql(aRequest,Value) then
   begin SendError(aResponse,400,'Expected one scalar or string-array value');Exit;end;
-  Scope:='cardId='+QuotedStr(CardId)+' AND customFieldId='+QuotedStr(CfId);
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE card_custom_field_values SET value='+Value+
-    ' WHERE '+Scope+'; INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT '+
-    QuotedStr(CardId)+','+QuotedStr(CfId)+','+Value+' WHERE NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE '+Scope+'); COMMIT;') then
-  begin
-    T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not save custom-field value');Exit;
-  end;
-  Reply:=TJSONObject.Create(['_id',CardId]);
-  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  Policy:=nil;
+  try
+    try
+      Policy:=TFieldPolicy.Create(T.Db,UserId,aRequest.RouteParams['boardId'],CardId);
+      if not Policy.Allowed(CfId,True) then
+      begin SendError(aResponse,403,'Custom-field write forbidden');Exit;end;
+      GuardSql:=Policy.Guard(CfId);
+    except SendError(aResponse,403,'Custom-field write forbidden');Exit;end;
+    Scope:='cardId='+QuotedStr(CardId)+' AND customFieldId='+QuotedStr(CfId);
+    if not T.Db.Exec('BEGIN IMMEDIATE; '+GuardSql+'UPDATE card_custom_field_values SET value='+Value+
+      ' WHERE '+Scope+'; INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT '+
+      QuotedStr(CardId)+','+QuotedStr(CfId)+','+Value+' WHERE NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE '+Scope+'); '+GuardSql+'COMMIT;') then
+    begin
+      T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not save custom-field value');Exit;
+    end;
+    Reply:=TJSONObject.Create(['_id',CardId]);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  finally Policy.Free;end;
 end;
 
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);
@@ -864,8 +873,8 @@ begin
 end;
 
 // Send one card as JSON (incl. its labelIds). Returns False (and sends 404) if missing.
-function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId: string): Boolean;
-var R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;
+function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: string): Boolean;
+var R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
 begin
   Result := False;
   R := Db.Query(Format(
@@ -893,6 +902,16 @@ begin
     except
       SendError(aResponse,500,'Could not read custom-field values');Exit;
     end;
+    Policy:=nil;
+    try
+      try
+        Policy:=TFieldPolicy.Create(Db,UserId,R[0][5],CardId);Policy.Redact(A);
+      except
+        // Failure to resolve policy never returns the unredacted array.
+        for i:=0 to A.Count-1 do if TJSONObject(A.Items[i]).Find('value')<>nil then
+        begin TJSONObject(A.Items[i]).Delete('value');TJSONObject(A.Items[i]).Add('value',TJSONNull.Create);end;
+      end;
+    finally Policy.Free;end;
     O.Add('customFields', A);
     SendJson(aResponse, O.AsJSON);
     Result := True;
@@ -905,7 +924,7 @@ begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  SendCardById(aResponse, T.Db, aRequest.RouteParams['cardId']);
+  SendCardById(aResponse,T.Db,aRequest.RouteParams['cardId'],UserId);
 end;
 
 // PUT card — update any of title/description/color and replace labelIds if given.
@@ -924,7 +943,7 @@ begin
   if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET '+Sets+' WHERE id='+QuotedStr(CardId)+'; '+
     Relations+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not edit card'); Exit; end;
-  SendCardById(aResponse,T.Db,CardId);
+  SendCardById(aResponse,T.Db,CardId,UserId);
 end;
 
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);
@@ -1166,7 +1185,7 @@ begin
     Ok:=T.Db.Exec(Format('INSERT OR IGNORE INTO card_members(cardId,userId) VALUES(%s,%s);',
       [QuotedStr(CardId), QuotedStr(MemberId)]));
   if not Ok then begin SendError(aResponse,500,'Could not update card membership'); Exit; end;
-  SendCardById(aResponse,T.Db,CardId);
+  SendCardById(aResponse,T.Db,CardId,UserId);
 end;
 
 // POST add / DELETE remove a card assignee (userId in the path).
@@ -1187,7 +1206,7 @@ begin
     Ok:=T.Db.Exec(Format('INSERT OR IGNORE INTO card_assignees(cardId,userId) VALUES(%s,%s);',
       [QuotedStr(CardId), QuotedStr(AssigneeId)]));
   if not Ok then begin SendError(aResponse,500,'Could not update card membership'); Exit; end;
-  SendCardById(aResponse,T.Db,CardId);
+  SendCardById(aResponse,T.Db,CardId,UserId);
 end;
 
 // POST card archive — archives by default; body isArchive=false unarchives.
@@ -1205,7 +1224,7 @@ begin
   else
     T.Db.Exec(Format('UPDATE cards SET archived=0, archivedAt=NULL, modifiedAt=%s WHERE id=%s;',
       [QuotedStr(NowIso), QuotedStr(CardId)]));
-  SendCardById(aResponse, T.Db, CardId);
+  SendCardById(aResponse,T.Db,CardId,UserId);
 end;
 
 // DELETE card — children (labels/members/comments/checklists/…) cascade via FK.

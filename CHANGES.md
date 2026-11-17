@@ -4,6 +4,32 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Enforce custom-field value policies at the API boundary
+
+- Mask unreadable values as null on every API card response while preserving field
+  IDs, array positions and absent values. Missing definitions and definitions not
+  linked to the card board are unreadable, including for administrators.
+- Require active board administration to read adminOnly values or write adminOnly
+  and readOnly fields. Ordinary readOnly values remain readable. Site-admin status
+  alone does not grant protected-field access; ordinary board access is also checked.
+- Evaluate the current field, card, board and user inside the write transaction,
+  both before mutation and before commit. Revoked membership, disabled users,
+  changed definitions/associations, moved cards and changed adapter bindings cause
+  rollback of the value and triggered changes.
+- Resolve shared sources through owned metadata, validate complete typed documents
+  and require actual BSON string identifiers/boolean policy flags. Ambiguous,
+  missing, malformed or incompatible policy data fails closed without returning
+  unmasked values. Batch read checks in groups of 64.
+- Native/shared HTTP regressions on both backends cover all card response routes,
+  role changes, global-admin boundaries, missing definitions, malformed BSON and
+  post-write policy revocation. Normal/checked helper tests cover 132-field batches,
+  Unicode/quoted IDs and query-error masking; live shared tests cover 70-field
+  batches and corrupt metadata. The committed API baseline exposes missing/wrong-
+  board definition values under the new regression. Eight Windows cross-build
+  variants pass.
+- Definition permission-flag input controls and HTML, selection clone/export,
+  activity, query and other value-bearing policy paths remain open in TODO.md.
+
 ## 2026-11-17 Store custom-field permission flags for policy enforcement
 
 - Add native readOnly/adminOnly boolean columns with false defaults and boolean
