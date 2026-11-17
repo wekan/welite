@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Batch board export value authorization
+
+- Check all nonnull assigned board custom-field values in one correlated SQL
+  statement, reusing the owned source policy instead of rebuilding it per card
+  and spawning a database process for each value. Correlate both card and field
+  identities, preserving canonical BSON checks and active board-admin rules.
+- Retain full source validation for cards with missing/null fields, definition
+  administration checks and storage NULL semantics; JSON conversion does not
+  exempt nonnull Date or special-number data from authorization.
+- Normal/checked linked/CLI regressions cover later-card orphan refusal, readable
+  multi-card values, null orphans and other-board isolation. A CLI process-count
+  regression checks that 130 readable assignments add no per-value subprocesses.
+- Full live shared HTTP suites pass on linked and CLI SQLite, including export
+  identity/history checks, exact source preservation and clone rollback.
+- Per-card source reads and per-definition validation remain to be batched;
+  broader snapshot/lifecycle and field-policy parity remain open.
+
 ## 2026-11-17 Keep typed root references inside selection scope
 
 - Validate exact canonical board and explicit root identities before any selection

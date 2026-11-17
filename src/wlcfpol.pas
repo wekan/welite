@@ -10,7 +10,7 @@ type
     FShared:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
-    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False):string;
+    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False;CardColumn:Boolean=False):string;
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
@@ -65,13 +65,14 @@ begin
     FTables[2]:=Source('custom_fields','customFields');FTables[3]:=Source('cards','cards');
   end;
 end;
-function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn:Boolean):string;
+function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn,CardColumn:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
-var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql:string;i,Last:Integer;HasField:Boolean;
+var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql,CardSql:string;i,Last:Integer;HasField:Boolean;
 begin
   HasField:=not CardOnly and (not DefinitionAccess or (FieldId<>''));
   FieldSql:=QuotedStr(FieldId);if FieldColumn then FieldSql:='v.customFieldId';
+  CardSql:=QuotedStr(FCard);if CardColumn then CardSql:='v.cardId';
   if not FShared then
   begin
     Admin:='EXISTS(SELECT 1 FROM board_members m WHERE m.boardId=b.id AND m.userId=u.id AND m.isActive=1 AND m.isAdmin=1)';
@@ -92,7 +93,7 @@ begin
     end;
     if DefinitionAccess then
     begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
-    else if not HistoryAccess then begin Tables:=Tables+',cards c';WhereSql:=WhereSql+' AND c.id='+QuotedStr(FCard)+' AND c.boardId=b.id';end;
+    else if not HistoryAccess then begin Tables:=Tables+',cards c';WhereSql:=WhereSql+' AND c.id='+CardSql+' AND c.boardId=b.id';end;
     Exit('(SELECT count(*)=1 FROM '+Tables+' WHERE '+WhereSql+')');
   end;
   Last:=High(Aliases);if DefinitionAccess then begin Last:=1;if HasField then Last:=2;end else if HistoryAccess then Last:=2;
@@ -102,6 +103,7 @@ begin
     if CardOnly and (i=2) then Continue;
     case i of 0:Value:=FUser;1:Value:=FBoard;2:Value:=FieldId;3:Value:=FCard;end;
     ValueSql:=QuotedStr(Value);if (i=2) and FieldColumn then ValueSql:=FieldSql;
+    if (i=3) and CardColumn then ValueSql:=CardSql;
     if i>0 then Prefix:=Prefix+',';
     Prefix:=Prefix+Aliases[i]+' AS MATERIALIZED(SELECT json(_ferretdb_sjson) s,wl_plain(json(_ferretdb_sjson)) d FROM '+
       FTables[i]+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+ValueSql+')';
@@ -134,7 +136,7 @@ begin
   if DefinitionAccess then
   begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
   else if not HistoryAccess then begin
-    Tables:=Tables+',c';WhereSql:=WhereSql+' AND '+StringId('c',FCard)+
+    Tables:=Tables+',c';WhereSql:=WhereSql+' AND '+StringIdSql('c',CardSql)+
       ' AND json_type(c.d,''$.boardId'')=''text'' AND json_extract(c.s,''$."$s".p.boardId.t'')=''string'' AND json_extract(c.d,''$.boardId'')='+QuotedStr(FBoard);
     if HasField then WhereSql:=WhereSql+
       ' AND NOT EXISTS(SELECT 1 FROM json_each(CASE WHEN json_type(c.d,''$.customFields'')=''array'' THEN json_extract(c.d,''$.customFields'') ELSE ''[]'' END) cf '+
@@ -199,7 +201,7 @@ begin
   end;
 end;
 function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
-var Policy:TFieldPolicy;Rows,Values:TWLRows;Definition:TJSONObject;Fields:TJSONArray;Flag:TJSONData;i,j:Integer;
+var Policy:TFieldPolicy;Rows,Values:TWLRows;Definition:TJSONObject;Fields:TJSONArray;Flag:TJSONData;i:Integer;
   function Checked(const Sql:string):TWLRows;
   begin
     Result:=Db.Query(Sql);
@@ -229,18 +231,18 @@ begin
         FreeAndNil(Definition);
       end;
       Rows:=Checked('SELECT ''ok'' UNION ALL SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+';');
-      FreeAndNil(Policy);
       for i:=1 to High(Rows) do
       begin
         // Validate complete shared source metadata, including null/missing rows.
         Fields:=ReadCustomFields(Db,Rows[i][0]);FreeAndNil(Fields);
-        Policy:=TFieldPolicy.Create(Db,UserId,BoardId,Rows[i][0]);
-        Values:=Db.Query('SELECT ''ok'','''' UNION ALL SELECT customFieldId,value FROM card_custom_field_values WHERE cardId='+QuotedStr(Rows[i][0])+' AND value IS NOT NULL;');
-        if (Length(Values)=0) or (Values[0][0]<>'ok') then Exit;
-        for j:=1 to High(Values) do
-          if (Values[j][0]='') or not Policy.Allowed(Values[j][0],False) then Exit;
-        FreeAndNil(Policy);
       end;
+      // Trusted correlation aliases let one statement check every assigned value.
+      // Keep storage NULL semantics: JSON conversion can turn nonnull BSON into null.
+      Values:=Db.Query('SELECT NOT EXISTS(SELECT 1 FROM card_custom_field_values v '+
+        'WHERE v.cardId IN (SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+') '+
+        'AND v.value IS NOT NULL AND (v.customFieldId IS NULL OR v.customFieldId='''' OR NOT '+
+        Policy.Build('',False,False,False,False,False,True,True)+'));');
+      if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
       Result:=True;
     except Result:=False;end;
   finally Policy.Free;Definition.Free;Fields.Free;end;

@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import shlex
+import shutil
 import subprocess
 import tempfile
 root=Path(__file__).resolve().parents[1]
@@ -42,6 +44,39 @@ with tempfile.TemporaryDirectory(prefix='wlcfpol-',dir=os.environ['TMPDIR']) as 
             assert run([dict(export=True)])==['0'],'Unassigned private definition must gate the whole board'
             with sqlite3.connect(db) as con:con.execute('UPDATE custom_fields SET adminOnly=0')
             assert run([dict(export=True)])==['1']
+            if backend=='cli' and mode=='normal':
+                trace=tmp/'sqlcalls';wrapper=tmp/'tracebin';wrapper.mkdir()
+                cli=shutil.which('sqlite3');assert cli
+                script=wrapper/'sqlite3'
+                script.write_text('#!/bin/sh\nprintf x >> '+shlex.quote(str(trace))+'\nexec '+shlex.quote(cli)+' "$@"\n')
+                script.chmod(0o700)
+                previous=os.environ['PATH'];os.environ['PATH']=str(wrapper)+os.pathsep+previous
+                try:
+                    trace.write_text('');assert run([dict(export=True)])==['1'];empty_calls=trace.stat().st_size
+                    assert empty_calls>0,'CLI trace wrapper was not invoked'
+                    with sqlite3.connect(db) as con:
+                        con.executemany('INSERT INTO card_custom_field_values VALUES(?,?,?)',[(card,row['_id'],'readable') for row in fields[:130]])
+                    trace.write_text('');assert run([dict(export=True)])==['1'];full_calls=trace.stat().st_size
+                    assert full_calls==empty_calls,(empty_calls,full_calls,'Per-value CLI subprocess regression')
+                finally:
+                    os.environ['PATH']=previous
+                    with sqlite3.connect(db) as con:con.execute('DELETE FROM card_custom_field_values')
+            # Correlate both identifiers: a later card must not borrow the first
+            # card's readable definition, and other boards do not gate this one.
+            second=card+' second';outside=card+' outside'
+            with sqlite3.connect(db) as con:
+                for identity,owner in [(second,board),(outside,'other-board')]:
+                    con.execute("INSERT INTO cards(id,title,boardId,listId,userId,createdAt,modifiedAt,dateLastActivity) VALUES(?,?,?,'list',?,'now','now','now')",(identity,identity,owner,uid))
+                con.execute('INSERT INTO card_custom_field_values VALUES(?,?,?)',(second,fields[0]['_id'],'readable second card'))
+                con.execute('INSERT INTO card_custom_field_values VALUES(?,?,?)',(outside,'orphan','outside secret'))
+            assert run([dict(export=True)])==['1'],'Ignore values outside this board'
+            with sqlite3.connect(db) as con:con.execute('INSERT INTO card_custom_field_values VALUES(?,?,?)',(second,'orphan','second secret'))
+            assert run([dict(export=True)])==['0'],'Check every card and field correlation'
+            with sqlite3.connect(db) as con:con.execute('UPDATE card_custom_field_values SET value=NULL WHERE cardId=? AND customFieldId=?',(second,'orphan'))
+            assert run([dict(export=True)])==['1'],'Null orphan on another card stays exportable'
+            with sqlite3.connect(db) as con:
+                con.execute('DELETE FROM card_custom_field_values WHERE cardId IN (?,?)',(second,outside))
+                con.execute('DELETE FROM cards WHERE id IN (?,?)',(second,outside))
             with sqlite3.connect(db) as con:con.execute('INSERT INTO card_custom_field_values VALUES(?,?,?)',(card,'orphan','secret'))
             assert run([dict(export=True)])==['0'],'Unknown nonnull value must gate administrators too'
             with sqlite3.connect(db) as con:con.execute('UPDATE board_members SET isAdmin=1')

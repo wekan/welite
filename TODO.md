@@ -388,9 +388,14 @@ not merely a design document. Platform/browser claims require testing on those t
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
   established.
-  CLI export-policy batching remains: the expanded scope fixture took about 13
-  seconds locally with per-card subprocess queries. Its targeted export test
-  timeout is 30 seconds; ordinary request test timeouts retain their defaults.
+  Board export value authorization now uses one correlated statement with a
+  reused owned policy; both card and field identities remain checked. Normal/
+  checked linked/CLI tests cover later-card orphans, nulls and other-board
+  isolation; a process-count regression proves 130 values add no per-value CLI
+  subprocesses. Remaining export batching: full per-card source validation and
+  per-definition reads. The earlier expanded scope fixture took about 13 seconds
+  before this step; its targeted export timeout stays 30 seconds pending renewed
+  performance measurements, while ordinary request timeouts retain defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
