@@ -307,10 +307,19 @@ not merely a design document. Platform/browser claims require testing on those t
   the resulting definition, exact board association and shared bindings after the
   activity, rolling back triggered revocation/repointing/malformed flag changes.
   HTTP and normal/checked regressions verify these gates and stored values.
-  Next: enforce matching policy in HTML, selection clone/export, activity, query
-  and other value-bearing paths. Definition edit/delete and remaining creation/
-  automatic-card behavior are still open. API support does not establish parity
-  across those other surfaces.
+  Selection exports now check whole-board field visibility before graph collection
+  and before delivery. A narrow selection cannot bypass private values or an
+  unassigned admin-only definition elsewhere; site-admin status alone does not
+  bypass the gate. Nonnull orphan/wrong-board values deny even board admins,
+  while null/missing orphans and readable read-only values retain export behavior.
+  Captured nonnull rows are also checked, including values cleared after collection.
+  Native/shared HTML HTTP and checked/normal tests cover board scope, role gates,
+  null/read-only semantics and source/query refusal. Activity payloads and other
+  embedded/unknown export data still need their own policy reconciliation.
+  Next: reconcile activity/export payloads, selection clone/import, generic HTML
+  data/query surfaces and other value-bearing paths. Definition edit/delete and
+  remaining creation/automatic-card behavior stay open; full field-policy parity
+  across those other surfaces is not established.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

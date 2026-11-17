@@ -74,6 +74,25 @@ def run(request, db, session):
         assert snapshot()==before
     # The same case-insensitive selection handling is used by permission and arrow paths.
     assert action('',{'SEL_CARD':'foreigncard'},dict(dir='right'))[0]==403
+    with sqlite3.connect(db) as con:
+        uid=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()[0]
+        con.execute('INSERT INTO board_members(boardId,userId,isAdmin) VALUES(?,?,0)',('actions',uid))
+        con.execute("UPDATE custom_fields SET adminOnly=1 WHERE id='afield'")
+    before=snapshot();response=action('export',{'sel_card':'akeep'})
+    assert response[0]==403 and b'Value' not in response[2],response
+    assert snapshot()==before
+    with sqlite3.connect(db) as con:con.execute("UPDATE board_members SET isAdmin=1 WHERE boardId='actions' AND userId=?",(uid,))
+    assert action('export',{'sel_card':'akeep'})[0]==200
+    with sqlite3.connect(db) as con:con.execute("DELETE FROM custom_field_boards WHERE customFieldId='afield'")
+    assert action('export',{'sel_card':'akeep'})[0]==403,'Orphan value must block board admins'
+    with sqlite3.connect(db) as con:con.execute("UPDATE card_custom_field_values SET value=NULL WHERE customFieldId='afield'")
+    assert action('export',{'sel_card':'akeep'})[0]==200
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO custom_field_boards VALUES('afield','actions')")
+        con.execute("UPDATE card_custom_field_values SET value='Value' WHERE customFieldId='afield'")
+        con.execute("UPDATE custom_fields SET adminOnly=0,readOnly=1 WHERE id='afield'")
+        con.execute("UPDATE board_members SET isAdmin=0 WHERE boardId='actions' AND userId=?",(uid,))
+    assert action('export',{'sel_card':'akeep'})[0]==200,'Read-only values remain exportable'
     token=hidden(request('GET',board)[2])
     status,headers,body=action('export',{'sel_list':'alist'},token=token)
     assert status==200 and 'select.jsn' in headers['Content-Disposition']

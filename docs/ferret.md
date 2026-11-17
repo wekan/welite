@@ -1293,6 +1293,27 @@ The HTML, selection/export/clone, activity, query and other value-bearing
 boundaries still need equivalent policy checks. This API support does not
 establish application-wide field-policy parity.
 
+## Selection export field gate
+
+Selection exports check board-wide visibility before collecting the graph and
+again before delivery. Selecting only a harmless card does not evade an unreadable
+value on another card, or an admin-only definition without an assigned value.
+Active board administration is required for admin-only definitions; global admin
+status alone is insufficient. Nonnull values with missing/wrong-board definitions
+block even an administrator's export. Null/missing orphan values and ordinary
+read-only values keep their source export semantics.
+
+Shared source metadata is validated and failed policy queries deny the export.
+The final check also inspects captured nonnull relation rows, so clearing a stored
+private value after collection does not make that captured value exportable.
+Denied exports return HTML 403 without an attachment response or selection graph.
+`tests/actions.py` and `tests/cfexpt.py` cover native/shared actual HTML requests;
+normal/checked `tests/cfpol.py` covers board gates and captured rows on both backends.
+
+Activity payloads and other embedded/unknown graph data still need separate policy
+reconciliation, as do clone/import and generic data/query surfaces. This gate does
+not establish complete export or application-wide field-policy parity.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

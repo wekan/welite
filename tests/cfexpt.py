@@ -1,0 +1,45 @@
+"""Selection exports cannot narrow away unreadable values elsewhere on a board."""
+import json
+from urllib.parse import urlencode
+from layout import Forms
+from wire import DateMs,encode
+
+
+def run_shared(request,client,db):
+    uid='u';board='export-policy';cid='export-visible';hidden='export-hidden';field='export-field'
+    user=client.find('users',uid)[0]
+    def update(collection,identity,changes):
+        assert client.command({'update':collection,'updates':[dict(q=dict(_id=identity),u={'$set':changes})]})['n']==1
+    assert client.command({'insert':'boards','documents':[dict(_id=board,title=board,slug=board,permission='private',members=[dict(userId=uid,isActive=True,isAdmin=False)])]})['n']==1
+    assert client.command({'insert':'lists','documents':[dict(_id='export-list',boardId=board,title='Export')]})['n']==1
+    assert client.command({'insert':'customFields','documents':[dict(_id=field,name='Private',type='text',boardIds=[board],adminOnly=True)]})['n']==1
+    assert client.command({'insert':'cards','documents':[dict(_id=cid,title='Selected',boardId=board,listId='export-list'),dict(_id=hidden,title='Outside selection',boardId=board,listId='export-list',customFields=[dict(_id=field,value='EXPORT PRIVATE SECRET')])]})['n']==2
+    status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
+    assert status in [302,303],(status,body)
+    location=headers['Location']
+    from urllib.parse import parse_qs,urlsplit
+    session=parse_qs(urlsplit(location).query)['sessionId'][0]
+    def snapshot():return [encode(client.find(name,identity)[0]) for name,identity in [('boards',board),('cards',cid),('cards',hidden),('customFields',field)]]
+    def export(expected):
+        status,_,body=request('GET','/board?'+urlencode(dict(id=board,sessionId=session)))
+        assert status==200,(status,body)
+        parser=Forms();parser.feed(body.decode());form=parser.forms[-1][1]
+        before=snapshot();status,headers,body=request('POST','/board/move',urlencode(dict(form,action='export',sel_card=cid)))
+        assert status==expected,(expected,status,body)
+        assert snapshot()==before
+        if expected==403:
+            assert 'Content-Disposition' not in headers and b'EXPORT PRIVATE SECRET' not in body and b'_wl_source' not in body
+        else:assert [row['id'] for row in json.loads(body)['data']['cards']]==[cid]
+    try:
+        export(403)
+        update('customFields',field,dict(adminOnly=False,readOnly=True));export(200)
+        update('customFields',field,dict(adminOnly=True));update('users',uid,dict(isAdmin=True));export(403)
+        update('boards',board,dict(members=[dict(userId=uid,isActive=True,isAdmin=True)]));export(200)
+        update('customFields',field,dict(boardIds=[]));export(403)
+        update('cards',hidden,dict(customFields=[dict(_id=field,value=DateMs(8640000000000001))]));export(403)
+        update('cards',hidden,dict(customFields=[dict(_id=field,value=None)]));export(200)
+        update('customFields',field,dict(boardIds=[board]));update('boards',board,dict(members=[dict(userId=uid,isActive=True,isAdmin=False)]));export(403)
+        print('PASS: shared HTML selection export gates whole-board private/orphan values, unassigned definitions and site-admin bypass; readable/read-only/admin/null exports retain selected scope')
+    finally:
+        operation={'$set':dict(isAdmin=user['isAdmin'])} if 'isAdmin' in user else {'$unset':dict(isAdmin='')}
+        assert client.command({'update':'users','updates':[dict(q=dict(_id=uid),u=operation)]})['n']==1

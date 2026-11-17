@@ -19,7 +19,10 @@ type
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
   end;
+function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
+function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray):Boolean;
 implementation
+uses wlcfspec,wlcfjson;
 function FalseFlag(const Doc,Name:string):string;
 begin
   Result:='COALESCE(json_type('+Doc+',''$.'+Name+''') IN (''null'',''false''),1)';
@@ -166,5 +169,78 @@ begin
       end;
     i:=Last+1;
   end;
+end;
+function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
+var Policy:TFieldPolicy;Rows,Values:TWLRows;Definition:TJSONObject;Fields:TJSONArray;Flag:TJSONData;i,j:Integer;
+  function Checked(const Sql:string):TWLRows;
+  begin
+    Result:=Db.Query(Sql);
+    if (Length(Result)=0) or (Result[0][0]<>'ok') then raise Exception.Create('Missing export policy data');
+  end;
+begin
+  Result:=False;Policy:=nil;Definition:=nil;Fields:=nil;
+  try
+    try
+      Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
+      Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',False)+';');
+      if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
+      Rows:=Checked('SELECT ''ok'' UNION ALL SELECT DISTINCT f.id FROM custom_fields f JOIN custom_field_boards x ON x.customFieldId=f.id WHERE x.boardId='+QuotedStr(BoardId)+';');
+      for i:=1 to High(Rows) do
+      begin
+        Definition:=ReadDefinition(Db,Rows[i][0]);if Definition=nil then Exit;
+        Flag:=Definition.Find('adminOnly');
+        if (Flag<>nil) and (Flag.JSONType<>jtNull) then
+        begin
+          if Flag.JSONType<>jtBoolean then Exit;
+          if Flag.AsBoolean then
+          begin
+            Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',True)+';');
+            if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
+          end;
+        end;
+        FreeAndNil(Definition);
+      end;
+      Rows:=Checked('SELECT ''ok'' UNION ALL SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+';');
+      FreeAndNil(Policy);
+      for i:=1 to High(Rows) do
+      begin
+        // Validate complete shared source metadata, including null/missing rows.
+        Fields:=ReadCustomFields(Db,Rows[i][0]);FreeAndNil(Fields);
+        Policy:=TFieldPolicy.Create(Db,UserId,BoardId,Rows[i][0]);
+        Values:=Db.Query('SELECT ''ok'','''' UNION ALL SELECT customFieldId,value FROM card_custom_field_values WHERE cardId='+QuotedStr(Rows[i][0])+' AND value IS NOT NULL;');
+        if (Length(Values)=0) or (Values[0][0]<>'ok') then Exit;
+        for j:=1 to High(Values) do
+          if (Values[j][0]='') or not Policy.Allowed(Values[j][0],False) then Exit;
+        FreeAndNil(Policy);
+      end;
+      Result:=True;
+    except Result:=False;end;
+  finally Policy.Free;Definition.Free;Fields.Free;end;
+end;
+function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray):Boolean;
+var Policy:TFieldPolicy;Row:TJSONObject;Card,Field,Value:TJSONData;LastCard:string;i:Integer;
+begin
+  Result:=False;Policy:=nil;LastCard:='';
+  try
+    try
+      if Rows=nil then Exit;
+      for i:=0 to Rows.Count-1 do
+      begin
+        if not (Rows.Items[i] is TJSONObject) then Exit;
+        Row:=TJSONObject(Rows.Items[i]);Value:=Row.Find('value');
+        if (Value=nil) or (Value.JSONType=jtNull) then Continue;
+        Card:=Row.Find('cardId');Field:=Row.Find('customFieldId');
+        if (Card=nil) or (Field=nil) or (Card.JSONType<>jtString) or (Field.JSONType<>jtString) or
+          (Card.AsString='') or (Field.AsString='') then Exit;
+        if (Policy=nil) or (Card.AsString<>LastCard) then
+        begin
+          FreeAndNil(Policy);LastCard:=Card.AsString;
+          Policy:=TFieldPolicy.Create(Db,UserId,BoardId,LastCard);
+        end;
+        if not Policy.Allowed(Field.AsString,False) then Exit;
+      end;
+      Result:=True;
+    except Result:=False;end;
+  finally Policy.Free;end;
 end;
 end.

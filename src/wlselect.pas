@@ -8,7 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
-uses wlstore,wllocale,wli18n;
+uses wlstore,wllocale,wli18n,wlcfpol;
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -467,6 +467,8 @@ begin
   Action:=Request.ContentFields.Values['action']; Result:=Action<>'';
   if not Result then Exit;
   if Action='clear' then begin Redirect(Response,S,Request.ContentFields); Exit; end;
+  if (Action='export') and not BoardFieldExportAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId']) then
+  begin Error(T,S,Request,Response,403,'Export requires access to every custom-field value on this board');Exit;end;
   Graph:=SelectionGraph(T,Request.ContentFields);
   try
     Data:=TJSONObject(Graph.Find('data'));
@@ -518,6 +520,9 @@ begin
     begin
       try ExportSelection(T,Graph);
       except Error(T,S,Request,Response,500,'Could not export attachment content'); Exit; end;
+      if not BoardFieldExportAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId']) or
+        not FieldExportRowsAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId'],TJSONArray(Data.Find('card_custom_field_values'))) then
+      begin Error(T,S,Request,Response,403,'Export requires access to every custom-field value on this board');Exit;end;
       Response.ContentType:='application/json';
       Response.SetCustomHeader('Content-Disposition','attachment; filename="select.jsn"');
       Response.Content:=Graph.AsJSON; Response.SendContent; Exit;

@@ -13,6 +13,7 @@ import time
 from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long
 from custapi import run_shared as check_custom_api
+from cfexpt import run_shared as check_export_policy
 root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
 with sqlite3.connect(':memory:') as con:assert con.execute("SELECT sqlite_compileoption_used('ENABLE_8_3_NAMES=2')").fetchone()==(0,)
@@ -93,6 +94,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 check_custom_api(request,client,database,token)
+                check_export_policy(request,client,database)
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
                 assert request('GET',headers['Location'])[0]==200

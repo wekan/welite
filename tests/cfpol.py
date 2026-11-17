@@ -38,6 +38,21 @@ with tempfile.TemporaryDirectory(prefix='wlcfpol-',dir=os.environ['TMPDIR']) as 
             try:assert run([dict(definition=True,field=fields[0]['_id'])])==['0']
             finally:
                 with sqlite3.connect(db) as con:con.execute('DELETE FROM custom_field_boards WHERE boardId=?',('another-board',))
+            assert run([dict(export=True)])==['0'],'Unassigned private definition must gate the whole board'
+            with sqlite3.connect(db) as con:con.execute('UPDATE custom_fields SET adminOnly=0')
+            assert run([dict(export=True)])==['1']
+            with sqlite3.connect(db) as con:con.execute('INSERT INTO card_custom_field_values VALUES(?,?,?)',(card,'orphan','secret'))
+            assert run([dict(export=True)])==['0'],'Unknown nonnull value must gate administrators too'
+            with sqlite3.connect(db) as con:con.execute('UPDATE board_members SET isAdmin=1')
+            assert run([dict(export=True)])==['0']
+            with sqlite3.connect(db) as con:con.execute('UPDATE card_custom_field_values SET value=NULL')
+            assert run([dict(export=True)])==['1'],'Unknown null values do not contain private prose'
+            assert run([dict(export=True,rows=[dict(cardId=card,customFieldId='orphan',value='captured private value')])])==['0'],'Check captured rows even after the stored private value was cleared'
+            assert run([dict(export=True,rows=[dict(cardId=card,customFieldId=fields[0]['_id'],value='readable')])])==['1']
+            with sqlite3.connect(db) as con:
+                con.execute('DELETE FROM card_custom_field_values')
+                con.execute('UPDATE custom_fields SET adminOnly=CAST(substr(id,instr(id,\'漢 \')+2) AS INTEGER)%2')
+                con.execute('UPDATE board_members SET isAdmin=0')
             # A policy SQL error masks the complete chunk instead of returning data.
             with sqlite3.connect(db) as con:con.execute('ALTER TABLE custom_fields RENAME COLUMN adminOnly TO broken')
             try:

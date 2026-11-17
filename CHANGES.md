@@ -4,6 +4,27 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Gate selection exports on board-wide field visibility
+
+- Check every board card and associated definition before collecting a selection
+  export, following the source's board-wide export gate. A narrower selection
+  cannot bypass private values or unassigned admin-only definitions elsewhere.
+- Require active board administration for boards with admin-only definitions;
+  site administration alone does not bypass the gate. Unknown/wrong-board
+  nonnull custom values block exports even for admins. Null/missing orphan values
+  and readable read-only fields retain the source export behavior.
+- Validate shared typed source metadata and fail closed on missing/error policy
+  queries. Recheck board policy before response delivery and check captured
+  nonnull value rows too, including rows cleared after graph collection.
+- Native/shared HTML HTTP tests cover narrowed selections, private/orphan values,
+  global/admin boundaries, readable read-only fields and nulls. Normal/checked
+  tests cover board-wide checks and captured-row refusal on both SQL backends.
+  The committed selection handler fails the new export gate regression; all
+  eight Windows linked/CLI disk/embedded cross-build variants pass.
+- Activity payloads and other embedded/unknown export data still require their
+  own policy reconciliation. Clone/import and other value-bearing paths remain
+  open in TODO.md; this step does not establish full export/field-policy parity.
+
 ## 2026-11-17 Validate and authorize definition permission flags
 
 - Accept readOnly/adminOnly on definition creation through canonical JSON, form
