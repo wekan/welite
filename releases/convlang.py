@@ -12,7 +12,7 @@ import sys
 HERE=Path(__file__).resolve().parent
 DEFAULT_DST=HERE.parent/'i18n/langs.jsn'
 STRING=r'"(?:\\.|[^"\\])*"'
-LOCAL_FILES={'ca@valencia.jsn':'cavalenc.jsn','km-KH.jsn':'km_KH.jsn','ru-RU.jsn':'ru_RU.jsn'}
+LOCAL_FILES={'ca@valencia.jsn':'cavalenc.jsn','km-KH.jsn':'km_KH.jsn','ru-RU.jsn':'ru_RU.jsn','pt-PT.jsn':'pt_PT.jsn'}
 SAFE=re.compile(r'^[A-Za-z0-9][A-Za-z0-9_@.-]*$')
 def compact(text):
     match=re.search(r'\bconst\s+languageMetadata\s*=\s*\[',text)

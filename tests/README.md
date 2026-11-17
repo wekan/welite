@@ -434,3 +434,6 @@ English key order and every argument inventory.
 `python3 tests/eslang.py` checks the Colombian Spanish physical asset, catalog
 identity, core/compatibility vocabulary, English key order and every argument
 inventory, including translated legacy phrases absent from the source catalog.
+
+The catalog test also requires both Portugal source aliases to resolve to the
+same established `pt_PT.jsn` asset; all-identity kernel/form suites cover each alias.

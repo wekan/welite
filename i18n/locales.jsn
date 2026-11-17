@@ -752,6 +752,14 @@
     "file": "pt.jsn"
   },
   {
+    "key": "pt-PT",
+    "code": "pt",
+    "tag": "pt-PT",
+    "name": "Português de Portugal",
+    "rtl": false,
+    "file": "pt_PT.jsn"
+  },
+  {
     "key": "ro",
     "code": "ro",
     "tag": "ro",

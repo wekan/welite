@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix='wlcat-',dir=os.environ['TMPDIR']) as di
     assert any(row['tag']=='en' for row in installed)
     assert any(row['tag']=='fi' and row['name']=='Suomi' for row in installed)
     assert any(row['tag']=='he' and row['rtl'] for row in installed)
-    for tag,file in [('km_KH','km_KH.jsn'),('ru_RU','ru_RU.jsn')]:
+    for tag,file in [('km_KH','km_KH.jsn'),('ru_RU','ru_RU.jsn'),('pt-PT','pt_PT.jsn'),('pt_PT','pt_PT.jsn')]:
         assert next(row for row in installed if row['tag']==tag)['file']==file
         assert len(Path(file).stem)<=8
 print('PASS: compact/literal metadata, Unicode/escaping, unsafe/duplicate refusal, installed files, no translation writes, matching data/browser catalogs')

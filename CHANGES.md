@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Register Portuguese Portugal source alias
+
+- Map the hyphenated Portugal source loader to the protected existing `pt_PT.jsn`
+  file, sharing it with the underscore source alias. Preserve both exact identities
+  and native names without copying or overwriting translation data.
+- Regenerate matching catalogs with 152 installed identities and 93 source entries
+  still lacking local assets. Require both Portugal aliases to share the expected
+  portable filename in regression coverage.
+- Catalog, negotiation, UTF-8 readers and every installed-identity authentication
+  form pass with linked and CLI SQLite backends. Translation quality remains open.
+
 ## 2026-11-17 Restore Colombian Spanish language asset
 
 - Replace the broken Colombian Spanish symlink with a physical portable asset,

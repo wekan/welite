@@ -657,6 +657,13 @@
     load: () => import("./data/pt.jsn"),
     rtl: false,
   },
+  "pt-PT": {
+    code: "pt",
+    tag: "pt-PT",
+    name: "Português de Portugal",
+    load: () => import("./data/pt_PT.jsn"),
+    rtl: false,
+  },
   "ro": {
     code: "ro",
     tag: "ro",

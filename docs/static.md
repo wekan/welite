@@ -82,13 +82,13 @@ and the older literal-object format, without executing either as JavaScript.
 `locales.jsn` is strict JSON containing `key`, `code`, `tag`, native `name`, `rtl`
 and translation `file`, for server use without a JavaScript interpreter. Both
 catalogs advertise only files present in the destination's `data/` directory.
-Existing local asset mappings retain `cavalenc.jsn`, `km_KH.jsn` and `ru_RU.jsn`
+Existing local asset mappings retain `cavalenc.jsn`, `km_KH.jsn`, `ru_RU.jsn` and `pt_PT.jsn`
 for their corresponding source loader identities; source aliases remain
 separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 151 installed languages; 94 more source languages
+The current snapshot lists 152 installed language identities; 93 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
@@ -216,3 +216,7 @@ All values follow local English key order and exact argument inventories.
 source strings and eleven compatibility values: three existing Spanish phrases,
 six directly translated phrases and two literal title templates. English key
 order and every source argument inventory are verified.
+
+Both Portuguese Portugal source aliases (`pt-PT` and `pt_PT`) share the established
+`pt_PT.jsn` file. Exact source identity remains selectable; no regional prose is
+overwritten or duplicated to repair the loader filename mismatch.
