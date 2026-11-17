@@ -4,6 +4,19 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep empty swimlane viewport positions reachable
+
+- Reproduce an empty lane retaining X 999 with no vertical escape. Clamp its
+  column to X 1, keep vertical neighbors independent of horizontal list count,
+  and normalize a board with no swimlanes to X 1 / Y 1.
+- Render an empty lane's map placeholder as a clickable, current-position-colored
+  cell with a native no-items description, preserving session/locale URLs.
+- Linked/CLI HTTP and no-JS/no-cookie Chromium verify middle/last empty lanes,
+  up/down/map round trips, LTR/RTL locale continuity, coordinate bounds, current
+  color and unchanged board content. Existing movement and widget suites pass.
+- Record this completed minimap behavior in TODO; broader responsive/retro and
+  remaining localization/platform work remain open.
+
 ## 2026-11-17 Translate viewport captions and minimap legend
 
 - Reuse native View/Board/color/current/cards/no-items keys for physical viewport

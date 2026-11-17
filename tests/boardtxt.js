@@ -37,6 +37,25 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
       assert((await page.locator('body').innerText()).includes(local['board-not-found']));
       assert(!(await page.locator('body').innerText()).includes('Board <user>'));
     }
+
+    for(const tag of ['fi','ar']) {
+      await page.goto(base+'/board?id=boardtxt&x=999&y=3&lang='+tag);
+      assert((await page.locator('body').innerText()).includes('X 1 Y 3'));
+      assert.equal(await page.locator('a[data-view-dir]').count(),1);
+      const map=page.locator('table[data-board-map]');
+      assert.equal(await map.locator('a[title^="txtempty / "]').locator('..').getAttribute('bgcolor'),'#ffff66');
+      await page.locator('a[data-view-dir=up]').click();
+      assert((await page.locator('body').innerText()).includes('X 1 Y 2'));
+      await page.locator('a[data-view-dir=down]').click();
+      assert((await page.locator('body').innerText()).includes('X 1 Y 3'));
+      await page.locator('a[data-view-dir=up]').click();
+      await map.locator('a[title^="txtempty / "]').click();
+      assert((await page.locator('body').innerText()).includes('X 1 Y 3'));
+      assert.equal(new URL(page.url()).searchParams.get('lang'),tag);
+      await page.goto(base+'/board?id=boardnone&x=999&y=999&lang='+tag);
+      assert((await page.locator('body').innerText()).includes('X 1 Y 1'));
+      assert.equal(await page.locator('a[data-view-dir]').count(),0);
+    }
     await page.goto(base+'/board?id=boardtxt');
     assert.equal(await page.title(),words('fi').board);
     assert.equal(await page.getByRole('link',{name:words('fi')['view-all'],exact:true}).count(),1);

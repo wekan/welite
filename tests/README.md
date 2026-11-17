@@ -582,3 +582,7 @@ board/widget/browser movement checks click fixed submit names instead of caption
 The board-text regression also checks every installed native View/map description/
 legend/arrow caption. Browser cases follow actual physical neighbors in Finnish,
 Arabic and Hebrew; stable data attributes replace English-description selectors.
+
+Board-text fixtures include middle/last empty lanes and a board with no swimlanes.
+HTTP/browser checks cover bounded coordinates, vertical escape, clickable/current-
+colored empty map cells, up/down/map round trips in LTR/RTL and unchanged content.

@@ -231,6 +231,7 @@ not merely a design document. Platform/browser claims require testing on those t
 - [x] Remove weak entropy fallback; verify native Linux and portable one-use SQLite stocks (both backends).
   Windows APIs and retro hardware remain part of the cross-platform verification below.
 - [x] Add the board minimap, coordinates and occupied/current-position indicators.
+  Empty lanes now have clickable/highlighted X 1 map positions and vertical neighbors; no-swimlane boards normalize to X 1/Y 1. Linked/CLI HTTP and no-JS/no-cookie Chromium cover middle/last empty-lane round trips, LTR/RTL bounds, locale continuity and unchanged board content.
 - [x] Add optional card drag/drop, checked-card groups and simultaneous pointers through the shared move endpoint.
 - [x] Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars, framework upload scratch and offline legacy migration.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.

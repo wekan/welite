@@ -28,6 +28,12 @@ def run(request,database,administrator,base):
         con.execute("INSERT INTO page_widgets(id,pageId,type,binding,options_json,createdAt,modifiedAt) VALUES('boardtxt','boardtxt','dataview','board',?,'now','now')",(json.dumps({'boardId':'protected'}),))
         for lid,lane,order in [('txtlist','txtlane',0),('txtlist2','txtlane',1),('txtlist3','txtlane2',0),('txtlist4','txtlane2',1)]:
             con.execute("INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(?,'boardtxt',?,'List <user>',?,'now')",(lid,lane,order))
+    def content_state():
+        with sqlite3.connect(database) as con:
+            return [con.execute('SELECT * FROM '+table+' WHERE '+condition+' ORDER BY id').fetchall()
+                    for table,condition in [('boards',"id IN ('boardtxt','boardnone')"),
+                                            ('swimlanes',"boardId='boardtxt'"),('lists',"boardId='boardtxt'")]]
+    before=content_state()
     def check(tag,session='',query=None,header='en',board='boardtxt'):
         row=next(row for row in catalog if row['tag']==tag)
         local=json.loads((root/'i18n/data'/row['file']).read_text())
@@ -71,6 +77,34 @@ def run(request,database,administrator,base):
             assert html.escape(local['board-not-found'],quote=False).encode() in body
             assert b'Card &lt;test&gt;' not in body
 
+        # Empty lanes still occupy one navigable map position and allow vertical escape.
+        for tag in ('fi','ar'):
+            status,_,body=request('GET','/board?'+urlencode(dict(id='boardtxt',x=999,y=3,lang=tag)))
+            assert status==200 and b'X 1 Y 3' in body,(tag,'empty position')
+            page=BoardPage(body)
+            views={attrs['data-view-dir']:attrs['href'] for name,attrs,_ in page.items if name=='a' and 'data-view-dir' in attrs}
+            assert set(views)=={'up'},(tag,views)
+            assert parse_qs(urlsplit(views['up']).query)['y']==['2']
+            status,_,body=request('GET',views['up']);assert status==200 and b'X 1 Y 2' in body
+            page=BoardPage(body)
+            empty=next(attrs['href'] for name,attrs,_ in page.items if name=='a' and attrs.get('title','').startswith('txtempty / '))
+            params=parse_qs(urlsplit(empty).query)
+            assert params['x']==['1'] and params['y']==['3'] and params['lang']==[tag]
+            status,_,body=request('GET',empty);assert status==200 and b'X 1 Y 3' in body
+            status,_,body=request('GET','/board?'+urlencode(dict(id='boardnone',x=999,y=999,lang=tag)))
+            assert status==200 and b'X 1 Y 1' in body
+            assert not any('data-view-dir' in attrs for name,attrs,_ in BoardPage(body).items if name=='a')
+        # A middle empty lane must expose both vertical neighbors as well.
+        with sqlite3.connect(database) as con:con.execute("UPDATE swimlanes SET sort=0.5 WHERE id='txtempty'")
+        for tag in ('fi','ar'):
+            status,_,body=request('GET','/board?'+urlencode(dict(id='boardtxt',x=999,y=2,lang=tag)))
+            assert status==200 and b'X 1 Y 2' in body
+            views={attrs['data-view-dir']:attrs['href'] for name,attrs,_ in BoardPage(body).items if name=='a' and 'data-view-dir' in attrs}
+            assert set(views)=={'up','down'},views
+            for direction,target in [('up','1'),('down','3')]:
+                assert parse_qs(urlsplit(views[direction]).query)['y']==[target]
+                assert request('GET',views[direction])[0]==200
+        with sqlite3.connect(database) as con:con.execute("UPDATE swimlanes SET sort=2 WHERE id='txtempty'")
         check('fi',header='fi')
         with sqlite3.connect(database) as con:con.execute("UPDATE users SET profile_json=? WHERE username='administrator'",(json.dumps({'language':'ar'}),))
         check('ar',administrator,header='fi')
@@ -79,6 +113,7 @@ def run(request,database,administrator,base):
         if os.environ.get('WELITE_UI')=='1':
             subprocess.run([os.environ.get('NODE','node'),str(root/'tests/boardtxt.js'),base],check=True)
         check('en',header='en')
+        assert content_state()==before,'Viewport/map navigation changed board content'
     finally:
         with sqlite3.connect(database) as con:
             con.execute("DELETE FROM page_widgets WHERE pageId='boardtxt'")

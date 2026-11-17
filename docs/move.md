@@ -41,6 +41,11 @@ Viewport links carry stable `data-view-dir` names, native View captions and
 isolated ASCII arrows. The minimap carries `data-board-map` independently of its
 translated Board/View description. Its legend reuses native yellow/current/cards/
 no-items strings; X/Y and `*`/`-` remain coordinate/data symbols.
+An empty swimlane still has one map placeholder at X 1. The cell is clickable,
+highlights the current position, and vertical neighbors remain available even
+without lists. Horizontal arrows require a real neighboring list. Boards with no
+swimlanes normalize to X 1 / Y 1 and expose no nonexistent viewport neighbors.
+These GET navigations preserve locale/session state and do not change board content.
 Direct `ApplyMove` callers default to logical LTR semantics; vertical moves and
 explicit drag destinations retain their existing meaning.
 

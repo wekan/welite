@@ -52,7 +52,8 @@ begin
     ' AND archived=0 ORDER BY sort,id;');
   if X<1 then X:=1;
   if Y<1 then Y:=1;
-  if (Length(Lanes)>0) and (Y>Length(Lanes)) then Y:=Length(Lanes);
+  if Length(Lanes)=0 then begin X:=1;Y:=1;end
+  else if Y>Length(Lanes) then Y:=Length(Lanes);
   Width:=0;
   Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" align="right" border="1" cellpadding="3" cellspacing="0" summary="'+
     HtmlAttr(Words.Text('board','Board')+' / '+Words.Text('view','View'))+'">';
@@ -63,7 +64,7 @@ begin
     if MapY=Y-1 then
     begin
       Width:=Length(MapLists);
-      if (Width>0) and (X>Width) then X:=Width;
+      if Width=0 then X:=1 else if X>Width then X:=Width;
     end;
     Map:=Map+'<tr>';
     for j:=0 to High(MapLists) do
@@ -79,7 +80,13 @@ begin
       Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(SessionUrl(Url,S))+
         '" title="'+HtmlAttr(Lanes[MapY][1]+' / '+MapLists[MapX][1])+'">'+CellText+'</a></td>';
     end;
-    if Length(MapLists)=0 then Map:=Map+'<td>-</td>';
+    if Length(MapLists)=0 then
+    begin
+      Color:='#ffffff';if MapY=Y-1 then Color:='#ffff66';
+      Url:='/board?id='+HTTPEncode(BoardId)+'&x=1&y='+IntToStr(MapY+1);
+      Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(SessionUrl(Url,S))+
+        '" title="'+HtmlAttr(Lanes[MapY][1]+' / '+Words.Text('no-items-message','No items.'))+'">-</a></td>';
+    end;
     Map:=Map+'</tr>';
   end;
   Map:=Map+'</table>';
@@ -101,7 +108,8 @@ begin
       2: begin Dec(MapY); CellText:='^';ViewDir:='up'; end;
       3: begin Inc(MapY); CellText:='v';ViewDir:='down'; end;
     end;
-    if (MapX>=1) and (MapX<=Width) and (MapY>=1) and (MapY<=Length(Lanes)) then
+    if (MapY>=1) and (MapY<=Length(Lanes)) and
+      ((m>=2) or ((MapX>=1) and (MapX<=Width))) then
       Result:=Result+'<a dir="ltr" data-view-dir="'+ViewDir+'" href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+
         '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S))+'">'+HtmlEncode(Words.Text('view','View')+' '+CellText)+'</a> ';
   end;
