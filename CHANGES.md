@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Verify current Linux amd64 cross-builds
+
+- Build isolated x86-64 GNU binutils, FPC compiler/units and a verified Debian
+  target libc sysroot without modifying host libraries. Resolve aarch64-host
+  80-bit constant compilation and absolute target linker-script paths.
+- Compile the current disk and full embedded CLI servers and verify executable
+  ELF64/little-endian/x86-64 headers. Add a reproducible temporary build check;
+  both variants pass, including generated public/locale/private SQL resources.
+- Document exact compiler revision and build flags. Distinguish the historical
+  June matrix from current verification; foreign runtime and other targets remain open.
+
 ## 2026-11-17 Embed private database bootstrap SQL
 
 - Bundle tenant/Designer SQL separately from the public asset URL index and register

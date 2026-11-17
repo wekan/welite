@@ -520,3 +520,8 @@ executable into an empty run directory and verifies admin/tenant/Designer bootst
 exact static/catalog/locale bytes, translated auth, explicit missing-path refusal,
 non-public SQL URLs and clean shutdown. No source/static/schema directories are provided in its run location or configured
 asset paths; disk-mode HTTP suites retain compatibility.
+
+`WELITE_CROSS64=/absolute/toolchain FPCRES=/absolute/native/fpcres python3 tests/cross64.py`
+compiles current disk/full embedded CLI servers with the isolated Linux amd64
+layout documented in `docs/cross.md`, then checks executable ELF64/x86-64 headers.
+It requires TMPDIR, removes temporary products, and does not execute the foreign binaries.

@@ -7,6 +7,54 @@ Companion to the build scripts (`build.sh` / `build.bat` / `build.ami`) and `CLA
 (DOS 8.3 layout). Verified 2026-06-25 on an **aarch64 (Apple Silicon) Ubuntu** host with
 FPC 3.2.3 (the `fixes-3.2` branch) built via fpcupdeluxe.
 
+## Current Linux amd64 verification (2026-11-17)
+
+The matrix below records the June sweep; it is not a verification of today's source
+on every target. On the current **aarch64 Freedesktop SDK 25.08** host, the current
+server builds as a Linux x86-64 ELF in both disk and full embedded CLI modes.
+No foreign runtime or platform-specific behavior is implied by this link check.
+
+The isolated toolchain uses GNU Binutils 2.47 targeting `x86_64-linux-gnu`, FPC
+3.2.3 source revision `12e49a77d1c5b801fe8e4a2f77df27aa3dce848b`, and Debian
+trixie `libc6-amd64-cross` / `libc6-dev-amd64-cross` 2.41-11cross1. Downloads
+were checked against the official Binutils release hash and Debian package index
+SHA256 values. Extract library packages into a private sysroot; do not install
+foreign packages over the host libraries.
+
+Given a native `ppca64`, target binutils in `$PREFIX/bin`, and the FPC source tree,
+build and install the compiler/units serially (run each make separately):
+
+```sh
+make -j1 crossall CPU_TARGET=x86_64 OS_TARGET=linux FPC="$NATIVE_PPC" \
+  BINUTILSPREFIX=x86_64-linux-gnu- CROSSBINDIR="$PREFIX/bin" \
+  INSTALL_PREFIX="$PREFIX" OPT='-O2 -dFPC_SOFT_FPUX80' CROSSOPT='-n -O2'
+make -j1 crossinstall CPU_TARGET=x86_64 OS_TARGET=linux FPC="$NATIVE_PPC" \
+  BINUTILSPREFIX=x86_64-linux-gnu- CROSSBINDIR="$PREFIX/bin" \
+  INSTALL_PREFIX="$PREFIX" OPT='-O2 -dFPC_SOFT_FPUX80' CROSSOPT='-n -O2'
+```
+
+`FPC_SOFT_FPUX80` is needed when building this compiler on aarch64: without it,
+80-bit target constants fail with internal errors during RTL compilation. Merely
+selecting the external assembler does not fix that failure.
+
+Extract both Debian packages beneath `$PREFIX/sysroot`, retaining their
+`usr/x86_64-linux-gnu/lib` and `lib64` layout. Pass both `-Fl` for that library
+directory and `-k--sysroot=$PREFIX/sysroot` to the application build. `-XR` alone
+did not rebase the absolute paths in Debian's `libc.so` linker script.
+
+```sh
+export TMPDIR=/absolute/path/to/wekan/.tools/tmp
+mkdir -p "$TMPDIR"
+WELITE_CROSS64="$PREFIX" FPCRES=/absolute/path/to/native/fpcres \
+  python3 tests/cross64.py
+```
+
+The check explicitly selects the native `fpcres` with `-FR` (the default cross
+prefix otherwise makes FPC search for `x86_64-linux-gnu-fpcres`). It compiles today's complete server twice, generates the full embedded
+asset/private-SQL resource bundle, and validates ELF64/little-endian/x86-64 headers.
+Build products are temporary and removed. Other targets and actual foreign runtime
+acceptance remain open.
+
 ---
 
 ## TL;DR
