@@ -476,3 +476,9 @@ directions in Chromium without JavaScript/cookies.
 The Designer browser layout test also asserts computed LTR direction on physical
 left/right arrow inputs within an RTL editor, guarding against inherited glyph
 mirroring alongside its actual movement geometry checks.
+
+`tabrtl.py` verifies RTL/LTR data-table source order, selected column mapping and
+locale-preserving editable URLs. `tabrtl.js` checks header/cell geometry, forces
+table direction to LTR to simulate ignored dir attributes, and submits column
+selection without JavaScript/cookies. Test CSS insertion uses synchronous DOM
+mutation so it does not wait for disabled page-script events.

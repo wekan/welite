@@ -365,8 +365,8 @@ var
   Cfg: TJSONData;
   O: TJSONObject;
   Cols, SearchCols: TJSONArray;
-  Source, RowKey, EditUrl, Q, Align, SelList, WhereSql, Slug, BaseQ, ColQ, Hdr, Cell: string;
-  PageSize, PageNo, Total, TotalPages, Offset, i, j: Integer;
+  Source, RowKey, EditUrl, Q, Align, SelList, WhereSql, Slug, BaseQ, ColQ, Hdr, Cell, CellDir: string;
+  PageSize, PageNo, Total, TotalPages, Offset, i, j, ViewCol: Integer;
   Rows, CountRows: TWLRows;
   ColObj: TJSONObject;
   Chosen: TStringList;                 // explicit visible set from tc_ params ('' count -> default)
@@ -394,7 +394,8 @@ begin
     SearchCols := O.Find('search')  as TJSONArray;
     if (Source = '') or (Cols = nil) then Exit('<i>[table: source/columns missing]</i>');
 
-    if SameText(Dir, 'rtl') then Align := 'right' else Align := 'left';
+    if SameText(Dir,'rtl') then begin Align:='right';CellDir:='rtl';end
+    else begin Align:='left';CellDir:='ltr';end;
     Slug := W.Id;
     if Params <> nil then
     begin
@@ -497,19 +498,23 @@ begin
 
     // --- header row (visible columns only) ----------------------------------------------
     Hdr := '<tr>';
-    for j := 0 to High(VisName) do
-      Hdr := Hdr + '<th align="' + Align + '">' + HtmlEncode(VisLabel[j]) + '</th>';
+    for ViewCol:=0 to High(VisName) do
+    begin
+      if CellDir='rtl' then j:=High(VisName)-ViewCol else j:=ViewCol;
+      Hdr:=Hdr+'<th dir="'+CellDir+'" align="'+Align+'">'+HtmlEncode(VisLabel[j])+'</th>';
+    end;
     Hdr := Hdr + '</tr>';
 
     // --- body: visible cells; editable cells link to editUrl?id=..&field=.. --------------
-    Result := Result + '<table border="1" cellpadding="3" cellspacing="0" width="100%">' +
+    Result := Result + '<table dir="ltr" border="1" cellpadding="3" cellspacing="0" width="100%">' +
               LineEnding + Hdr + LineEnding;
     for i := 0 to High(Rows) do
     begin
       if Length(Rows[i]) < Length(VisName) + 1 then Continue;   // [0]=rowKey, [1..]=visible cols
       Result := Result + '<tr>';
-      for j := 0 to High(VisName) do
+      for ViewCol:=0 to High(VisName) do
       begin
+        if CellDir='rtl' then j:=High(VisName)-ViewCol else j:=ViewCol;
         Cell := HtmlEncode(Rows[i][j + 1]);
         // click an editable cell -> edit page for that field (date/text/etc.); that page is a
         // form and may itself be a Designer page. rowKey value is Rows[i][0].
@@ -517,7 +522,7 @@ begin
           Cell := '<a href="' + HtmlAttr(SessionUrl(
                     EditUrl + '?id=' + HTTPEncode(Rows[i][0]) + '&field=' + HTTPEncode(VisName[j]),S)) +
                    '">' + Cell + '</a>';
-        Result := Result + '<td align="' + Align + '">' + Cell + '</td>';
+        Result := Result + '<td dir="'+CellDir+'" align="' + Align + '">' + Cell + '</td>';
       end;
       Result := Result + '</tr>' + LineEnding;
     end;

@@ -281,6 +281,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             check_frames(request,db,admin,layout_editor)
             from widgetrt import run as check_widget_direction
             check_widget_direction(request,db,admin,member,'http://localhost:'+str(port))
+            from tabrtl import run as check_table_direction
+            check_table_direction(request,db,admin,'http://localhost:'+str(port))
             if os.environ.get('WELITE_UI')=='1':
                 subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/langnav.js'),'http://localhost:'+str(port),admin,layout_editor],check=True)
             check_imports(request,db,admin)

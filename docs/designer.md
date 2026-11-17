@@ -325,3 +325,10 @@ the database/widget/session. Board widgets use that direction and include their
 widget identity in mutation forms, so moves can re-read the enabled page, access
 role and board binding before applying a saved direction override. Successful
 actions return to the originating page with session and locale intact.
+
+Data-table headers and cells also mirror structurally for RTL: the emitted table
+uses LTR column flow, visits visible logical columns in reverse order and gives
+each header/cell the resolved text direction. Row values and editable field URLs
+still use their original logical column indices. This avoids dependence on table
+direction support; table search/pagination controls and real retro acceptance remain
+part of the wider UI audit.

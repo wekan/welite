@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Mirror Designer data-table columns structurally
+
+- Emit visible RTL headers/cells in reverse logical order with explicit LTR table
+  flow and native cell text direction. Preserve original row-field indices and
+  editable URL bindings; LTR and selected-column behavior remain consistent.
+- Reproduce the missing RTL source reversal in HTTP, then verify source order,
+  selected columns and locale-preserving edit links on both SQLite backends.
+  No-JavaScript/no-cookie Chromium checks header/cell geometry, column selection
+  and structural order when table direction is overridden to simulate ignored dir.
+- Full linked HTTP/browser and CLI HTTP suites pass. Toolbar/pagination and real
+  retro-platform acceptance remain part of the broader UI audit.
+
 ## 2026-11-17 Isolate Designer movement arrow captions
 
 - Give Designer movement inputs explicit LTR text direction so physical ASCII
