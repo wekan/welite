@@ -593,3 +593,12 @@ HTTP checks retain proof/data after foreign-selection refusal and keep native
 export read-only with JSON/proof reuse. Browser cases assert Finnish/Arabic native
 labels and invoke Unselect all; existing edit/save/copy/export/delete flows click
 fixed submit names independently of captions.
+
+`editlang.py`, called by `admin.py`, checks installed selection edit headings,
+item-kind/field/Save labels, raw field identities, safe textarea label targets,
+profile/query precedence and invalid-save rollback on isolated fixtures with a
+Unicode/punctuation card ID. `editlang.js` uses native associated labels and Save in
+Finnish/Arabic/Hebrew without JS/cookies, preserving UTF-8 values and locale through
+round trips. Successful-save comparisons permit expected modification timestamps;
+rejected saves require unchanged rows. Keypad checks retain the default shared
+color hint while permitting its suppression for a code-only native form example.

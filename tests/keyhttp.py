@@ -19,7 +19,8 @@ def run(request,database,session):
                       [('move_left','x'),('action','')], [('move_far','x')],
                       [('action_edit','x'),('action_clone','x')], [('action_delete','x'),('action_delete','y')],
                       [('action_clear','x'),('move_up','x')], [('action_export','x'),('dir','drop')],
-                      [('action_clone','x'),('action','clear')], [('action_unknown','x')] ]:
+                      [('action_clone','x'),('action','clear')], [('action_unknown','x')],
+                      [('action_save','x'),('action','save')], [('action_save','x'),('move_left','x')] ]:
         form=fields()
         status,headers,_=request('POST','/board/move',list(form.items())+commands)
         assert status==400 and headers['Content-Language']=='ar',(commands,status)
@@ -27,7 +28,7 @@ def run(request,database,session):
         # Reuse the exact proof from the rejected request: no command was admitted.
         status,_,_=request('POST','/board/move',dict(form,action_clear='ignored caption'))
         assert status==302,'Malformed submit consumed the proof'
-    for action in ('edit','delete','clone','export'):
+    for action in ('edit','delete','clone','export','save'):
         form=fields()
         status,_,_=request('POST','/board/move',dict(form,sel_card='foreigncard',**{'action_'+action:'native label'}))
         assert status==403,(action,'foreign selection accepted')

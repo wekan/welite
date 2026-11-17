@@ -17,7 +17,7 @@ const assert = require('node:assert/strict');
     await page.locator('input[name=action_edit]').click();
     await page.locator(`input[name="title_card_${id}"]`).fill('Browser edited card');
     await page.locator(`textarea[name="description_card_${id}"]`).fill('Changed in no-JS form');
-    await page.locator('input[name=action][value=save]').click();
+    await page.locator('input[name=action_save]').click();
     assert.equal(await page.getByText('Browser edited card',{exact:true}).count(),1);
     await select().check();
     const [download]=await Promise.all([page.waitForEvent('download'),page.locator('input[name=action_export]').click()]);

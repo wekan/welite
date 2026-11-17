@@ -1,6 +1,6 @@
 program keypad;
 {$mode objfpc}{$H+}
-uses SysUtils,Classes,wlmove,wlauth;
+uses SysUtils,Classes,wlmove,wlauth,wlcolors;
 var P:TStringList;S:TWLSession;Body,Before:string;
 procedure Check(Ok:Boolean;const Name:string);
 begin if not Ok then raise Exception.Create(Name);end;
@@ -31,6 +31,11 @@ begin
     Reject('action_edit=x','action_clone=y');Reject('action_delete=x','action_delete=y');
     Reject('action_clear=x','move_right=y');Reject('action_export=x','dir=left');
     Reject('action_clone=x','action=clear');Reject('action_unknown=x','');
+    P.Clear;P.Add('action_save=delete');Check(NormalizeMoveSubmit(P),'Rejected native save');
+    Check(P.Values['action']='save','Used save caption as command');
+    Reject('action_save=x','action=save');Reject('action_save=x','move_right=x');
+    Check(Pos('(hex, e.g. ffee22)',RenderColorInput('color','red','hex'))>0,'Changed default color hint');
+    Check(Pos('(hex,',RenderColorInput('color','red','hex',False))=0,'Could not hide English color hint');
     Body:=MoveKeypad(Default(TWLSession),0,0,0);
     Check(Pos('name="move_left" value="&lt;" dir="ltr"',Body)>0,'Missing left arrow');
     Check(Pos('name="move_right" value="&gt;" dir="ltr"',Body)>0,'Missing right arrow');

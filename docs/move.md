@@ -82,6 +82,14 @@ changing board data or consuming the action proof. Legacy-only request semantics
 submit names let future localized captions change without changing command values
 or requiring HTML4 button elements on the HTML3.2 baseline.
 
+Selection editing uses native edit/item/field/Save captions with fixed raw field
+names. Its `action_save` submit maps to the existing save handler; legacy
+`action=save` remains accepted. Native labels associate with unchanged input names,
+and textarea label targets use safe deterministic IDs for stored Unicode/punctuation
+identities. Existing title/color/description values are escaped without translation.
+The color example is literal code, while other color-component callers retain their
+default hint. Confirmation explanations and validation/error prose remain unfinished.
+
 Because state travels in the form, the component is **stateless on the server** — no session-
 stored selection, no cookies. It renders and works identically in IBrowse / NetSurf / Lynx.
 

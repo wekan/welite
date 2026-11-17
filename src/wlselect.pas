@@ -8,7 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
-uses wlstore,wllocale;
+uses wlstore,wllocale,wli18n;
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -131,10 +131,10 @@ function ItemTable(const Kind:string):string;
 begin
   case Kind of 'card':Result:='cards'; 'list':Result:='lists'; 'swimlane':Result:='swimlanes'; else Result:=''; end;
 end;
-function EditSelection(Db:TWLDb; Params:TStrings; const S:TWLSession):string;
-var i:Integer; Name,Kind,Id,TableName,Key:string; R:TWLRows;
+function EditSelection(Db:TWLDb; Params:TStrings; const S:TWLSession;Words:TWLTranslator):string;
+var i:Integer; Name,Kind,Id,TableName,Key,FieldId:string; R:TWLRows;
 begin
-  Result:='<h1>Edit selected items</h1><form method="POST" action="/board/move">'+
+  Result:='<h1>'+HtmlEncode(Words.Text('edit','Edit')+' / '+Words.Text('multi-selection','Multi-Selection'))+'</h1><form method="POST" action="/board/move">'+
     AuthHiddenFields(S,'board:move')+SelectionFields(Params);
   for i:=0 to Params.Count-1 do
   begin
@@ -143,16 +143,19 @@ begin
     Kind:=Copy(Name,5,Length(Name)); TableName:=ItemTable(Kind); if TableName='' then Continue;
     Id:=Params.ValueFromIndex[i]; Key:=Kind+'_'+Id;
     R:=Db.Query('SELECT title,color FROM '+TableName+' WHERE id='+q(Id)+';');
-    Result:=Result+'<fieldset><legend>'+HtmlEncode(Kind)+'</legend>Title <input name="title_'+HtmlAttr(Key)+
-      '" value="'+HtmlAttr(R[0][0])+'" required="required"> Color '+RenderColorInput('color_'+Key,R[0][1],'hex');
+    Result:=Result+'<fieldset><legend>'+HtmlEncode(Words.Text(Kind,Kind))+'</legend><label>'+HtmlEncode(Words.Text('title','Title'))+' <input name="title_'+HtmlAttr(Key)+
+      '" value="'+HtmlAttr(R[0][0])+'" required="required"></label> <label>'+HtmlEncode(Words.Text('allboards.workspace-color','Color'))+' '+
+      RenderColorInput('color_'+Key,R[0][1],'hex',False)+'</label> <code>#ffee22</code>';
     if Kind='card' then
     begin
       R:=Db.Query('SELECT description FROM cards WHERE id='+q(Id)+';');
-      Result:=Result+'<br>Description <textarea name="description_'+HtmlAttr(Key)+'">'+HtmlEncode(R[0][0])+'</textarea>';
+      // Stored IDs can contain Unicode/punctuation; label targets stay HTML4-safe.
+      FieldId:='desc_'+HashText(Key);
+      Result:=Result+'<br><label for="'+FieldId+'">'+HtmlEncode(Words.Text('description','Description'))+'</label> <textarea id="'+FieldId+'" name="description_'+HtmlAttr(Key)+'">'+HtmlEncode(R[0][0])+'</textarea>';
     end;
     Result:=Result+'</fieldset>';
   end;
-  Result:=Result+'<input type="submit" name="action" value="save"></form>';
+  Result:=Result+'<input type="submit" name="action_save" value="'+HtmlAttr(Words.Text('save','Save'))+'"></form>';
 end;
 function SaveSelection(Db:TWLDb; Params:TStrings):Boolean;
 var i:Integer; Name,Kind,Id,TableName,Key,Title,Color,Sql:string;
@@ -418,7 +421,7 @@ begin
 end;
 
 function HandleSelection(const T:TWLTenant; const S:TWLSession; Request:TRequest; Response:TResponse):Boolean;
-var Action,Body:string; Graph,Data:TJSONObject; Count:Integer;
+var Action,Body:string; Graph,Data:TJSONObject; Count:Integer;Words:TWLTranslator;Language:TWLLanguage;
 begin
   Action:=Request.ContentFields.Values['action']; Result:=Action<>'';
   if not Result then Exit;
@@ -430,8 +433,12 @@ begin
     if Count=0 then begin Error(T,S,Request,Response,400,'Select at least one item'); Exit; end;
     if Action='edit' then
     begin
-      Response.Content:=LanguagePage(Response,ViewerLanguage(T.Db,S,Request),'Edit selection',EditSelection(T.Db,Request.ContentFields,S));
-      Response.ContentType:='text/html; charset=utf-8'; Response.SendContent; Exit;
+      Language:=ViewerLanguage(T.Db,S,Request);Words:=TWLTranslator.Create(Language);
+      try
+        Response.Content:=LanguagePage(Response,Language,Words.Text('edit','Edit')+' / '+Words.Text('multi-selection','Multi-Selection'),EditSelection(T.Db,Request.ContentFields,S,Words));
+        Response.ContentType:='text/html; charset=utf-8'; Response.SendContent;
+      finally Words.Free;end;
+      Exit;
     end;
     if Action='save' then
     begin

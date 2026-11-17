@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Translate selection edit fields and native Save
+
+- Reuse native edit/selection, item-kind, title/color/description and Save keys
+  under the same resolved viewer locale as the edit frame. Retain stable submitted
+  field names and escaped original user values.
+- Add label associations on supporting browsers, with safe deterministic textarea
+  targets independent of Unicode/punctuation object IDs. Avoid including textarea
+  user content in its accessible label. Show a code-only color example; the shared
+  color component keeps its existing hint by default for other callers.
+- Dispatch fixed action_save independently of captions, retaining legacy Save and
+  selection/proof guards. Both-backend parser/color checks and linked/CLI installed-
+  locale HTTP/no-JS/no-cookie Chromium pass, including UTF-8 ID/content save round
+  trips, scoped fields, invalid saves and foreign/ambiguous command refusal.
+- Confirmation explanations, validation/error prose, other application text and
+  remaining locale/RTL/platform acceptance stay open in TODO.
+
 ## 2026-11-17 Translate native selection toolbar actions
 
 - Reuse existing native Edit/Delete selected/Unselect all/Export selected/Copy

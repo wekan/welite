@@ -165,7 +165,10 @@ labels and logical coordinates retain their meanings. Selection toolbar buttons 
 Unselect/Export/Copy selection and Multi-Selection/swimlanes/lists/cards keys. Fixed
 submit names separate those captions from action commands; the resolved board
 language reaches the toolbar even when selected by header or profile. Selection
-edit/confirmation prose and other application messages remain open.
+editing also reuses native edit/selection/item/title/color/description/Save keys.
+Labels are associated on supporting browsers, while raw field names/user content
+remain intact; `action_save` is caption-independent. Confirmation explanations and
+validation/error prose and other application messages remain open.
 
 ### Navigation language state
 

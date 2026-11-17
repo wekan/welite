@@ -192,6 +192,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             check_board_text(request,db,admin,'http://localhost:'+str(port))
             from keyhttp import run as check_keypad_protocol
             check_keypad_protocol(request,db,admin)
+            from editlang import run as check_edit_language
+            check_edit_language(request,db,admin,'http://localhost:'+str(port))
             print('PASS: authorized board renderer, escaped content and read-only controls')
             from notlang import run as check_not_found_language
             check_not_found_language(request,tmp/'data',admin)

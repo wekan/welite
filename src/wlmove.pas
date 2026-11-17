@@ -105,7 +105,8 @@ begin
     else if Copy(Name,1,7)='action_' then
     begin
       if not ((Name='action_edit') or (Name='action_delete') or
-        (Name='action_clear') or (Name='action_export') or (Name='action_clone')) then Exit;
+        (Name='action_clear') or (Name='action_export') or (Name='action_clone') or
+        (Name='action_save')) then Exit;
       Inc(Count);Command:=Copy(Name,8,Length(Name));Kind:='action';
     end;
   end;

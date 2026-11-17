@@ -86,7 +86,7 @@ function BgColorAttr(const Color: string): string; // ' bgcolor="#.."' or ''
 //   'wheel'    <input type="color">                — native wheel; old browsers show a text box
 //   'websafe'  216 web-safe color grid (radios)    — to see what a browser actually renders
 // FieldName = form field; Current = current value (name or hex).
-function RenderColorInput(const FieldName, Current, Style: string): string;
+function RenderColorInput(const FieldName, Current, Style: string;ShowHint:Boolean=True): string;
 
 implementation
 
@@ -240,7 +240,7 @@ begin
   Result := Result + '</table>';
 end;
 
-function RenderColorInput(const FieldName, Current, Style: string): string;
+function RenderColorInput(const FieldName, Current, Style: string;ShowHint:Boolean): string;
 begin
   case LowerCase(Style) of
     'named':    Result := RenderNamed(FieldName, Current);
@@ -253,8 +253,11 @@ begin
                 HtmlAttr(ResolveColor(Current)) + '">';
   else
     // 'hex' (default): a plain text box accepting 'ffee22' or '#ffee22' — works everywhere.
-    Result := '<input name="' + HtmlAttr(FieldName) + '" value="' +
-              HtmlAttr(Current) + '" size="8"> (hex, e.g. ffee22)';
+    begin
+      Result := '<input name="' + HtmlAttr(FieldName) + '" value="' +
+                HtmlAttr(Current) + '" size="8">';
+      if ShowHint then Result:=Result+' (hex, e.g. ffee22)';
+    end;
   end;
 end;
 
