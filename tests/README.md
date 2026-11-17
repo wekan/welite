@@ -472,3 +472,7 @@ physical moves, origin/locale redirects and invalid/disabled/rebound widget
 context refusals. It also denies a board writer borrowing an admin-only page’s
 override. `widgetrt.js` checks physical fixed RTL/LTR columns and both move
 directions in Chromium without JavaScript/cookies.
+
+The Designer browser layout test also asserts computed LTR direction on physical
+left/right arrow inputs within an RTL editor, guarding against inherited glyph
+mirroring alongside its actual movement geometry checks.

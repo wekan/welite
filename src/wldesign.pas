@@ -957,7 +957,10 @@ end;
 // Inline form button with action-token — the move/sort/edit/delete toolbar primitive.
 function ToolButton(const S: TWLSession; const ActionPath, Caption: string;
   const HiddenName1, HiddenVal1, HiddenName2, HiddenVal2: string): string;
+var DirectionAttr:string;
 begin
+  DirectionAttr:='';
+  if ActionPath='/designer/widget/move' then DirectionAttr:=' dir="ltr"';
   Result := '<form method="POST" action="' + HtmlAttr(ActionPath) +
             '" style="display:inline">' + AuthHiddenFields(S, 'designer:' + ActionPath);
   if HiddenName1 <> '' then
@@ -966,7 +969,7 @@ begin
   if HiddenName2 <> '' then
     Result := Result + '<input type="hidden" name="' + HtmlAttr(HiddenName2) +
               '" value="' + HtmlAttr(HiddenVal2) + '">';
-  Result := Result + '<input type="submit" value="' + HtmlAttr(Caption) + '"></form>';
+  Result := Result + '<input type="submit" value="' + HtmlAttr(Caption) + '"'+DirectionAttr+'></form>';
 end;
 
 // ------------------------------------------------------------------ editor endpoints

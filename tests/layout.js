@@ -24,6 +24,10 @@ const assert = require('node:assert/strict');
     await page.goto(base+process.argv[4]);
     const probe=page.locator('td').filter({hasText:'[label] movement probe'}).last();
     const original=(await probe.boundingBox()).x;
+    for(const caption of ['<','>']) {
+      const arrow=probe.locator(`input[value="${caption}"]`);
+      assert.equal(await arrow.evaluate(node=>getComputedStyle(node).direction),'ltr','physical arrow glyph must not inherit RTL text mirroring');
+    }
     await probe.locator('input[value="<"]').click();
     assert((await probe.boundingBox()).x<original,'RTL widget left arrow moves physically left');
     await probe.locator('input[value=">"]').click();

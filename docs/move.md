@@ -136,3 +136,7 @@ binding, resolves the saved page override and rejects invalid/stale contexts.
 The rendered callback and mutation therefore use the same logical direction,
 and the return path targets the originating page. Direct boards continue using
 viewer language when no widget context is present.
+
+Designer movement button captions also use explicit LTR text direction. This
+keeps ASCII left/right arrow glyphs from inheriting RTL text mirroring while
+the page, widget labels and translated content retain their own direction.

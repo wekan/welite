@@ -4,6 +4,16 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Isolate Designer movement arrow captions
+
+- Give Designer movement inputs explicit LTR text direction so physical ASCII
+  left/right arrow captions cannot inherit RTL glyph mirroring. Keep surrounding
+  page/widget labels in their existing direction and retain movement semantics.
+- Reproduce inherited RTL with a computed-style browser assertion, then verify
+  both captions use LTR alongside actual physical movement checks. The complete
+  linked HTTP/no-JavaScript/no-cookie Chromium suite passes after the fix.
+- Broader table/control and retro-platform acceptance remains open.
+
 ## 2026-11-17 Honor published board widget direction
 
 - Pass resolved page direction/origin URL into data-view callbacks and render board
