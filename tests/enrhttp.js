@@ -35,6 +35,19 @@ function otp(secret,counter) {
       assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
       await page.goto(base+'/sign-in');
     }
+    await page.locator('a[href^="/register"]').click();
+    await page.locator('select[name=lang]').selectOption('fi');
+    await page.locator('form[method=GET] input[type=submit]').click();
+    assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
+    await page.locator('input[name=username]').fill('browser-registration');
+    await page.locator('input[name=password]').fill('private-registration-password');
+    await page.locator('input[name=confirm]').fill('private-registration-password');
+    await page.locator('form[method=POST] input[type=submit]').click();
+    assert.match(await page.locator('body').innerText(),/Account created/);
+    assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
+    assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
+    assert.equal(await page.locator('html').getAttribute('lang'),'fi');
+    await page.goto(base+'/sign-in');
     const flowLanguage=await page.locator('select[name=lang]').inputValue();
     await page.getByRole('link',{name:'Set up one-time codes'}).click();
     await page.locator('input[name=username]').fill('browser-enroll');

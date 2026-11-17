@@ -53,13 +53,31 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                     assert '<option value="'+row['tag']+'" selected="selected">' in body
                     assert html.escape(row['name'],quote=True).replace('&#x27;',"'") in body
                     assert '<script' not in body.lower()
+                    status,headers,registration=request(path='/register?lang='+quote(row['tag']))
+                    assert status==200 and headers['Content-Language']==row['tag'].replace('_','-')
+                    assert ('dir="rtl"' in registration)==row['rtl']
+                    for key in ['register','username','password','password-again']:
+                        expected=html.escape(local.get(key) or english[key],quote=True).replace('&#x27;',"'")
+                        assert expected in registration,(row['tag'],key)
+                    assert '<form method="GET" action="/register">' in registration
+                    for field in ['username','password','confirm']:assert 'name="'+field+'"' in registration
                     for field in ['username','password','code']:assert 'name="'+field+'"' in body
+                fi=json.loads((root/'i18n/data/fi.jsn').read_text())
+                for fields,key in [(dict(username='',password='private-password',confirm='private-password'),'username-password-required'),(dict(username='private-user',password='private-password',confirm='different-password'),'password-mismatch')]:
+                    status,headers,body=request('fi','POST',fields,path='/register?lang=fi')
+                    assert status==200 and headers['Content-Language']=='fi'
+                    assert html.escape(fi.get(key) or english[key],quote=True).replace('&#x27;',"'") in body
+                    assert 'private-password' not in body and 'different-password' not in body and 'private-user' not in body
+                    assert 'action="/register?lang=fi"' in body
                 wrong='wrongsecret-sensitive'
                 status,headers,body=request('ar','POST',dict(username='private-username',password=wrong))
                 assert status==200 and headers['Content-Language']=='ar' and 'dir="rtl"' in body
                 assert 'action="/sign-in?lang=ar"' in body and wrong not in body and 'private-username' not in body
                 status,_,_=request(method='POST',path='/register',data=dict(username='user',password='test-password',confirm='test-password'))
                 assert status==302
+                status,headers,body=request('fi','POST',dict(username='user',password='different-private-password',confirm='different-private-password'),path='/register?lang=fi')
+                assert status==200 and html.escape(fi.get('error-username-taken') or english['error-username-taken'],quote=True).replace('&#x27;',"'") in body
+                assert 'different-private-password' not in body
                 status,headers,_=request('fi','POST',dict(username='user',password='test-password'))
                 assert status==302
                 location=parse_qs(urlsplit(headers['Location']).query)

@@ -361,3 +361,8 @@ sign-in on both backends. It checks language-only flow URLs, private response co
 unsupported language refusal and absence of credentials/setup secrets in redirects.
 The Chromium enrollment flow also asserts only language appears in setup/confirmation
 queries before the intended session redirect.
+
+The sign-language HTTP test covers registration labels for every installed language,
+its picker, Finnish missing/mismatched/taken-username errors and blank credential
+retry forms. Chromium additionally submits Finnish registration without JavaScript
+or cookies and checks the locale-only completion URL before its enrollment flow.

@@ -121,3 +121,11 @@ propagation. These routes emit language/direction metadata while retaining priva
 enrollment no-store/no-referrer controls. Only language is added to flow URLs,
 with credentials and setup tokens kept in POST bodies/response forms. The generic failed-login message remains English until
 remaining application messages receive translation keys.
+
+Registration shares the per-page translation reader for title/button,
+username/password/repeated-password labels, sign-in link and common validation
+messages. Its own GET picker switches native language names without including
+credential inputs. Failed registration renders empty inputs in the chosen locale;
+failed sign-in reuses the shared invalid-credentials label. First-admin and
+account-completion/policy notices and enrollment instructions remain English pending
+remaining message keys; translation contents are unchanged by these renderers.

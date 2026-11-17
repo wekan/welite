@@ -153,10 +153,10 @@ begin
   Result:=PageDir(Title,Body,Dir,Language.Tag);
 end;
 
-function LanguagePicker(const Selected:TWLLanguage;Words:TWLTranslator):string;
+function LanguagePicker(const Selected:TWLLanguage;Words:TWLTranslator;const Path:string='/sign-in'):string;
 var i:Integer;Language:TWLLanguage;
 begin
-  Result:='<form method="GET" action="/sign-in"><label>'+HtmlEncode(Words.Text('language','Language'))+
+  Result:='<form method="GET" action="'+HtmlAttr(Path)+'"><label>'+HtmlEncode(Words.Text('language','Language'))+
     ' <select name="lang">';
   for i:=0 to LanguageCount-1 do
   begin
@@ -169,7 +169,7 @@ begin
 end;
 
 function SignInForm(Request:TRequest;Response:TResponse;const Message:string=''):string;
-var Language:TWLLanguage;Words:TWLTranslator;Title,Dir,Tag:string;
+var Language:TWLLanguage;Words:TWLTranslator;Title,Dir,Tag,Notice:string;
 begin
   Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
   Words:=TWLTranslator.Create(Language);
@@ -178,8 +178,9 @@ begin
     if Language.Rtl then Dir:='rtl' else Dir:='ltr';
     Response.SetCustomHeader('Content-Language',StringReplace(Tag,'_','-',[rfReplaceAll]));
     Response.SetCustomHeader('Vary','Accept-Language');
+    Notice:='';if Message<>'' then Notice:='<p>'+HtmlEncode(Words.Text('invalid-credentials',Message))+'</p>';
     Result:=PageDir(Title,LanguagePicker(Language,Words)+'<h1>'+HtmlEncode(Title)+'</h1>'+LineEnding+
-      '<p>'+HtmlEncode(Message)+'</p>'+LineEnding+
+      Notice+LineEnding+
       '<form method="POST" action="/sign-in?lang='+HtmlAttr(Tag)+'">'+LineEnding+
       '  '+HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+LineEnding+
       '  '+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+LineEnding+
@@ -315,13 +316,34 @@ begin
   end;
 end;
 
+function RegisterForm(Request:TRequest;Response:TResponse;First:Boolean;
+  const MessageKey:string='';const Message:string=''):string;
+var Language:TWLLanguage;Words:TWLTranslator;Body,Title:string;
+begin
+  Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
+  Words:=TWLTranslator.Create(Language);
+  try
+    Title:=Words.Text('register','Register');
+    Body:=LanguagePicker(Language,Words,'/register')+'<h1>'+HtmlEncode(Title)+'</h1>';
+    if Message<>'' then Body:=Body+'<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>';
+    if First then Body:=Body+'<p>This first account will be the <b>Domain Global Admin</b>.</p>';
+    Body:=Body+'<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/register'))+'">'+
+      HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+
+      HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+
+      HtmlEncode(Words.Text('password-again','Confirm'))+' <input type="password" name="confirm"><br>'+
+      '<input type="submit" value="'+HtmlAttr(Title)+'"></form>'+
+      '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
+    Result:=AuthPage(Request,Response,Title,Body);
+  finally Words.Free;end;
+end;
+
 // GET/POST /register — create an account. The first account in a tenant becomes the Global
 // Admin (users.isAdmin = 1); subsequent accounts are Normal users. No-JS / no-cookie, like sign-in.
 procedure RegisterEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  Username, Password, Confirm, Uid, Hash, Iso, Body, PolicySecret, PolicyCondition: string;
+  Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition: string;
   First: Boolean;RegistrationPolicy:TFactorPolicy;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
@@ -340,21 +362,18 @@ begin
 
     if (Username = '') or (Password = '') then
     begin
-      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
-        '<p>Username and password are required.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
+      SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'username-password-required','Username and password are required.'));
       Exit;
     end;
     if Password <> Confirm then
     begin
-      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
-        '<p>Passwords do not match.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
+      SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'password-mismatch','Passwords do not match.'));
       Exit;
     end;
     if Length(T.Db.Query(Format('SELECT id FROM users WHERE username=%s LIMIT 1;',
                                 [QuotedStr(Username)]))) > 0 then
     begin
-      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
-        '<p>That username is taken.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
+      SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'error-username-taken','That username is taken.'));
       Exit;
     end;
 
@@ -372,8 +391,7 @@ begin
        QuotedStr('{"password":' + Hash + '}'),PolicyCondition])) or
       (Length(T.Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Uid)+';'))<>1) then
     begin
-      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
-        '<p>Could not create the account.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
+      SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'error-user-notCreated','Could not create the account.'));
       Exit;
     end;
 
@@ -392,20 +410,8 @@ begin
     Exit;
   end;
 
-  // GET — registration form.
-  First := NoUsersYet(T);
-  Body := '<h1>Register</h1>' + LineEnding;
-  if First then
-    Body := Body + '<p>This first account will be the <b>Domain Global Admin</b>.</p>' + LineEnding;
-  Body := Body +
-    '<form method="POST" action="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">' + LineEnding +
-    '  Username <input name="username"><br>' + LineEnding +
-    '  Password <input type="password" name="password"><br>' + LineEnding +
-    '  Confirm <input type="password" name="confirm"><br>' + LineEnding +
-    '  <input type="submit" value="Register">' + LineEnding +
-    '</form>' + LineEnding +
-    '<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">Already have an account? Sign in</a></p>';
-  SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register', Body));
+  // GET — translated registration form with no credential values.
+  SendHtml(aResponse,RegisterForm(aRequest,aResponse,NoUsersYet(T)));
 end;
 
 // Catch-all: after the fixed routes, try the tenant's designer pages table (pages.url),
