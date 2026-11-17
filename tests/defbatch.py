@@ -8,6 +8,7 @@ import shlex
 import shutil
 import sqlite3
 import subprocess
+import sys
 import tempfile
 root=Path(__file__).resolve().parents[1]
 @contextmanager
@@ -28,8 +29,11 @@ with tempfile.TemporaryDirectory(prefix='wldefb-',dir=os.environ['TMPDIR']) as d
             out=Path(directory)/(backend+mode);out.mkdir();db=out/'source.db'
             built=subprocess.run([os.environ.get('FPC','fpc'),'-B',*options,*flags,'-Fu'+str(root/'src'),'-FU'+str(out),'-FE'+str(out),str(root/'tests/defbatch.lpr')],capture_output=True,text=True)
             assert built.returncode==0,built.stdout+built.stderr
-            def run(expected,env=None):
-                result=subprocess.run([str(out/'defbatch'),str(db),board],env=env,capture_output=True,text=True)
+            def run(expected,env=None,memory=False):
+                def cap_memory():
+                    import resource
+                    resource.setrlimit(resource.RLIMIT_AS,(96*1024*1024,96*1024*1024))
+                result=subprocess.run([str(out/'defbatch'),str(db),board],env=env,capture_output=True,text=True,timeout=180,preexec_fn=cap_memory if memory else None)
                 assert result.returncode==0 and result.stdout.strip()==str(expected),(result.stdout,result.stderr,expected)
             for storage in ['text','blob']:
                 db.unlink(missing_ok=True)
@@ -101,4 +105,18 @@ with tempfile.TemporaryDirectory(prefix='wldefb-',dir=os.environ['TMPDIR']) as d
                 con.execute("INSERT INTO custom_fields(id,name,type,modifiedAt,settings_json,adminOnly) VALUES('outside','Other','text','now','broken','false')")
                 con.execute("INSERT INTO custom_field_boards VALUES('outside','other')")
             run(0)
+            if mode=='normal' and sys.platform.startswith('linux'):
+                large=json.dumps(dict(future='x'*65536))
+                with connect(db) as con:
+                    con.execute('DELETE FROM custom_field_boards');con.execute('DELETE FROM custom_fields')
+                    con.execute("WITH RECURSIVE seq(n) AS (VALUES(1) UNION ALL SELECT n+1 FROM seq WHERE n<2048) INSERT INTO custom_fields(id,name,type,modifiedAt,settings_json) SELECT 'memory '||n,'Memory','text','now',? FROM seq",(large,))
+                    con.execute('INSERT INTO custom_field_boards SELECT id,? FROM custom_fields',(board,))
+                    count,size=con.execute('SELECT count(*),sum(length(settings_json)) FROM custom_fields').fetchone()
+                    assert count==2048 and size>128*1024*1024,(count,size)
+                run(0,memory=True)
+                with connect(db) as con:
+                    con.execute('PRAGMA ignore_check_constraints=ON')
+                    con.execute("UPDATE custom_fields SET settings_json='broken' WHERE id='memory 2048'")
+                run('error',memory=True)
+                print('PASS:',backend,'over 128 MiB of native settings under a 96 MiB address-space limit')
             print('PASS:',backend,mode,'TEXT/JSONB/native definition batches, storage flags, settings, cardinality/ownership, late corruption and other-board isolation')

@@ -8,10 +8,10 @@ unit wldb;
     default          : linked SQLite via FPC's `sqlite3` binding (single binary, G1/G3)
     {$DEFINE WLDB_CLI}: shell out to the `sqlite3` CLI via TProcess (omi-style bootstrap)
 
-  Surface kept deliberately tiny: open/close, an Exec for writes, and a Query that returns
-  rows as arrays of text cells. v0.1 reference skeleton — the linked path
-  shows intent (real code uses sqlite3_prepare_v2 / bound params; the CLI path mirrors
-  https://github.com/wekan/omi/blob/main/public/server.pas ExecSqlOnDb).
+  Surface kept small: open/close, Exec for writes, Query for collected text rows,
+  and Scan for provisional rows consumed without collecting a complete result.
+  The CLI path uses private SQL scripts and TProcess; its bootstrap origin is
+  https://github.com/wekan/omi/blob/main/public/server.pas ExecSqlOnDb.
 }
 
 {$mode objfpc}{$H+}
@@ -28,6 +28,7 @@ type
 
   TWLRow   = array of string;
   TWLRows  = array of TWLRow;
+  TWLRowHandler = procedure(const Row:TWLRow) of object;
 
   TWLDb = class
   private
@@ -42,6 +43,10 @@ type
     function Exec(const Sql: string): Boolean;
     // Read query. SQL must already be a complete statement; returns rows of text cells.
     function Query(const Sql: string): TWLRows;
+    // Rows are provisional until True: SQL/CSV/handler failures return False.
+    // Row storage is reused: consume/copy cells during the callback.
+    // A bounded handler must not retain rows or issue writes.
+    function Scan(const Sql:string;Handler:TWLRowHandler):Boolean;
     property Path: string read FPath;
   end;
 
@@ -199,24 +204,31 @@ begin
   finally Pieces.Free;end;
 end;
 
+procedure WriteSqliteScript(const Sql,Extension:string;out Directory,Script:string);
+var InitSql,Text:string;Stream:TFileStream;
+begin
+  Directory:='';Script:='';InitSql:='';
+  if Extension<>'' then InitSql:='SELECT load_extension('+QuotedStr(ExpandFileName(Extension))+'); ';
+  Directory:=NewTempDir;Script:=Directory+'query.sql';
+  Stream:=TFileStream.Create(Script,fmCreate);
+  try
+    {$IFDEF UNIX}
+    if fpChmod(PChar(Script),&600)<>0 then raise Exception.Create('Could not protect SQL scratch permissions');
+    {$ENDIF}
+    Text:='.bail on'+#10+'.timeout 5000'+#10+'.mode csv'+#10+'.headers off'+#10+'PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+ScriptSql(InitSql+Sql);
+    if Text<>'' then Stream.WriteBuffer(Text[1],Length(Text));
+  finally Stream.Free;end;
+end;
+
 function RunSqlite(const DbPath, Sql: string; out Output: string): Boolean;
-var Extension,InitSql,Directory,Script,Database,Text:string;Stream:TFileStream;
+var Extension,Directory,Script,Database:string;
 begin
   Result:=False;Output:='';Directory:='';Script:='';
-  Extension:=GetEnvironmentVariable('WELITE_SQLITE_EXT');InitSql:='';
-  if Extension<>'' then InitSql:='SELECT load_extension('+QuotedStr(ExpandFileName(Extension))+'); ';
+  Extension:=GetEnvironmentVariable('WELITE_SQLITE_EXT');
   Database:=ExpandFileName(DbPath);
   try
     try
-      Directory:=NewTempDir;Script:=Directory+'query.sql';
-      Stream:=TFileStream.Create(Script,fmCreate);
-      try
-        {$IFDEF UNIX}
-        if fpChmod(PChar(Script),&600)<>0 then raise Exception.Create('Could not protect SQL scratch permissions');
-        {$ENDIF}
-        Text:='.bail on'+#10+'.timeout 5000'+#10+'.mode csv'+#10+'.headers off'+#10+'PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; PRAGMA temp_store=MEMORY; '+ScriptSql(InitSql+Sql);
-        if Text<>'' then Stream.WriteBuffer(Text[1],Length(Text));
-      finally Stream.Free;end;
+      WriteSqliteScript(Sql,Extension,Directory,Script);
       // -init takes a structured filename argument: no shell/meta-command quoting.
       // Retain the caller's CWD so relative ATTACH/VACUUM paths keep their meaning.
       // RunCommand drains stdout/stderr concurrently and checks the child exit code.
@@ -230,6 +242,140 @@ begin
       end;
     except Result:=False;Output:='';end;
   finally
+    if Script<>'' then DeleteFile(Script);
+    if Directory<>'' then RemoveDir(ExcludeTrailingPathDelimiter(Directory));
+  end;
+end;
+
+type
+  TScanCsv=class
+  private
+    FHandler:TWLRowHandler;
+    FRow:TWLRow;
+    FCell:string;
+    FUsed:SizeInt;
+    FState:Byte; // 0: field start; 1: unquoted; 2: quoted; 3: closing quote
+    FPrefix:Byte; // 0: complete; 1: extension newline; 2: extension LF after CR
+    FSkipLF:Boolean;
+    procedure AddByte(C:Char);
+    procedure AddCell;
+    procedure AddRow;
+  public
+    constructor Create(Handler:TWLRowHandler;Extension:Boolean);
+    procedure Feed(const Buffer;Count:SizeInt);
+    procedure Finish;
+  end;
+constructor TScanCsv.Create(Handler:TWLRowHandler;Extension:Boolean);
+begin inherited Create;FHandler:=Handler;if Extension then FPrefix:=1;end;
+procedure TScanCsv.AddByte(C:Char);
+var Capacity:SizeInt;
+begin
+  if FUsed=Length(FCell) then
+  begin
+    Capacity:=Length(FCell)*2;if Capacity<256 then Capacity:=256;
+    SetLength(FCell,Capacity);
+  end;
+  Inc(FUsed);FCell[FUsed]:=C;
+end;
+procedure TScanCsv.AddCell;
+var N:SizeInt;
+begin
+  N:=Length(FRow);SetLength(FRow,N+1);SetString(FRow[N],PChar(FCell),FUsed);
+  FUsed:=0;FState:=0;
+end;
+procedure TScanCsv.AddRow;
+begin AddCell;FHandler(FRow);FRow:=nil;end;
+procedure TScanCsv.Feed(const Buffer;Count:SizeInt);
+var Bytes:PByte;i:SizeInt;C:Char;
+begin
+  Bytes:=@Buffer;
+  for i:=0 to Count-1 do
+  begin
+    C:=Char(Bytes[i]);
+    if FPrefix<>0 then
+    begin
+      if (FPrefix=1) and (C=#13) then FPrefix:=2
+      else if C=#10 then FPrefix:=0
+      else raise Exception.Create('Invalid extension output');
+      Continue;
+    end;
+    if FSkipLF then begin FSkipLF:=False;if C=#10 then Continue;end;
+    if FState=2 then
+    begin if C='"' then FState:=3 else AddByte(C);Continue;end;
+    if FState=3 then
+    begin
+      if C='"' then begin AddByte(C);FState:=2;Continue;end;
+      if not (C in [',',#10,#13]) then raise Exception.Create('Invalid quoted CSV field');
+    end;
+    case C of
+      '"':begin
+        if FState<>0 then raise Exception.Create('Invalid CSV quote');
+        FState:=2;
+      end;
+      ',':AddCell;
+      #10,#13:begin AddRow;FSkipLF:=C=#13;end;
+    else AddByte(C);FState:=1;
+    end;
+  end;
+end;
+procedure TScanCsv.Finish;
+begin
+  if (FPrefix<>0) or (FState=2) then raise Exception.Create('Incomplete CSV output');
+  if (FState<>0) or (FUsed>0) or (Length(FRow)>0) then AddRow;
+end;
+function TWLDb.Scan(const Sql:string;Handler:TWLRowHandler):Boolean;
+var Proc:TProcess;Parser:TScanCsv;Extension,Directory,Script:string;
+  Buffer:array of Byte;Count:LongInt;Failed,Progress:Boolean;
+begin
+  Result:=False;if not Assigned(Handler) then Exit;
+  Proc:=nil;Parser:=nil;Directory:='';Script:='';
+  try
+    try
+      // Keep the fixed pipe buffer off small retro-target stacks.
+      SetLength(Buffer,8192);
+      Extension:=GetEnvironmentVariable('WELITE_SQLITE_EXT');
+      WriteSqliteScript(Sql,Extension,Directory,Script);
+      Parser:=TScanCsv.Create(Handler,Extension<>'');Proc:=TProcess.Create(nil);
+      Proc.Executable:='sqlite3';Proc.Options:=[poUsePipes];
+      Proc.Parameters.Add('-batch');Proc.Parameters.Add('-bail');
+      Proc.Parameters.Add('-csv');Proc.Parameters.Add('-noheader');
+      Proc.Parameters.Add('-init');Proc.Parameters.Add(Script);
+      Proc.Parameters.Add(ExpandFileName(FPath));Proc.Parameters.Add('.quit');
+      Proc.Execute;Failed:=False;
+      repeat
+        Progress:=False;
+        Count:=Proc.Output.NumBytesAvailable;
+        if Count>Length(Buffer) then Count:=Length(Buffer);
+        if Count>0 then
+        begin
+          Count:=Proc.Output.Read(Buffer[0],Count);
+          if Count<=0 then raise EReadError.Create('Could not read SQLite output');
+          Progress:=True;
+          if not Failed and (Count>0) then
+            try Parser.Feed(Buffer[0],Count);except Failed:=True;end;
+        end;
+        Count:=Proc.Stderr.NumBytesAvailable;
+        if Count>Length(Buffer) then Count:=Length(Buffer);
+        if Count>0 then
+        begin
+          Count:=Proc.Stderr.Read(Buffer[0],Count);
+          if Count<=0 then raise EReadError.Create('Could not read SQLite error output');
+          Failed:=True;Progress:=True;
+        end;
+        if not Proc.Running and (Proc.Output.NumBytesAvailable=0) and
+          (Proc.Stderr.NumBytesAvailable=0) then Break;
+        if not Progress then Sleep(1);
+      until False;
+      Proc.WaitOnExit;
+      if not Failed and (Proc.ExitStatus=0) then begin Parser.Finish;Result:=True;end;
+    except Result:=False;end;
+  finally
+    if Proc<>nil then
+    begin
+      if Proc.Running then begin Proc.Terminate(1);Proc.WaitOnExit;end;
+      Proc.Free;
+    end;
+    Parser.Free;
     if Script<>'' then DeleteFile(Script);
     if Directory<>'' then RemoveDir(ExcludeTrailingPathDelimiter(Directory));
   end;
@@ -298,6 +444,25 @@ begin
   Result := sqlite3_exec(FHandle, PChar(Sql), nil, nil, @ErrMsg) = SQLITE_OK;
   if ErrMsg <> nil then
     sqlite3_free(ErrMsg);
+end;
+
+function TWLDb.Scan(const Sql:string;Handler:TWLRowHandler):Boolean;
+var Stmt:Pointer;Row:TWLRow;Cols,C,StepCode:Integer;
+begin
+  Result:=False;if not Assigned(Handler) then Exit;
+  if sqlite3_prepare_v2(FHandle,PChar(Sql),-1,@Stmt,nil)<>SQLITE_OK then Exit;
+  try
+    try
+      Cols:=sqlite3_column_count(Stmt);SetLength(Row,Cols);
+      StepCode:=sqlite3_step(Stmt);
+      while StepCode=SQLITE_ROW do
+      begin
+        for C:=0 to Cols-1 do Row[C]:=string(sqlite3_column_text(Stmt,C));
+        Handler(Row);StepCode:=sqlite3_step(Stmt);
+      end;
+      Result:=StepCode=SQLITE_DONE;
+    except Result:=False;end;
+  finally sqlite3_finalize(Stmt);end;
 end;
 
 function TWLDb.Query(const Sql: string): TWLRows;

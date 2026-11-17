@@ -1347,8 +1347,24 @@ and require integer 0/1 administrative flags. The gate checks board administrati
 once if any definition requires it; it does not fetch unused response child rows.
 `tests/defbatch.py` covers normal/checked linked/CLI TEXT/JSONB/native sources and
 `tests/cfpol.py` verifies whole-board behavior and constant per-definition CLI
-subprocess counts. Very large card/definition source batches still need bounded
-memory handling.
+subprocess counts.
+
+Card and definition validation consume `TWLDb.Scan` callbacks within one SQL
+statement per batch. The linked backend steps one row at a time; the bootstrap
+CLI parses CSV from bounded pipe chunks while draining stderr. No new SQLite
+extension is needed. Full source/flag validation still applies to every row,
+including the last one, and handlers retain no source rows. A malformed stream,
+failed statement/child, stderr output or handler exception invalidates the batch;
+provisional rows cannot authorize delivery. Scratch files and statements are
+released on failure.
+
+`tests/dbscan.py` exercises normal/checked linked/CLI text/CSV/UTF-8 boundaries,
+late failures, handler exceptions, pipe pressure and cleanup. On Linux,
+`tests/cfsbatch.py` and `tests/defbatch.py` validate over 128 MiB of source BSON or
+native settings under a 96 MiB address-space cap on both backends, including late
+corruption. Buffering scales with the current row and parsed document, rather
+than total batch payload. SQLite work sets and the separately collected export
+graph still have their own resource requirements.
 
 The final check also inspects captured nonnull relation rows, so clearing a stored
 private value after collection does not make that captured value exportable.
@@ -1509,9 +1525,9 @@ Before export-policy batching, the richer CLI fixture measured roughly 13 second
 for a successful export after its prior clone batch, compared with about 0.1
 seconds linked. Board value permissions, complete card-source validation and
 definition reads are now batched; expanded CLI exports measured about 2.5–2.9
-seconds locally, with linked about 0.07–0.08 seconds. Source-batch memory is
-proportional to the board's complete BSON documents and needs bounded handling
-for very large boards. Only the heavy export test opts into a 30-second timeout; it retains all
+seconds locally, with linked about 0.07–0.08 seconds. Source validation now
+streams result rows; it does not collect the board's complete BSON payload in
+memory. The final selection/export graph is still collected separately. Only the heavy export test opts into a 30-second timeout; it retains all
 rows, policy checks and assertions, while other HTTP tests keep their defaults.
 
 ## Mapped clone root fields

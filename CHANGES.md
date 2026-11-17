@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Stream export source validation with bounded row buffering
+
+- Add a row-scan database API and consume complete card/definition validation
+  batches one row at a time. Keep one SQL statement per batch, source ownership
+  and cardinality guards, full BSON/settings validation and stored-flag checks.
+  The bootstrap CLI still works with plain SQLite without a new extension.
+- Linked scans finalize their statement on SQL or handler failure. CLI scans
+  decode CSV incrementally, preserving UTF-8, quotes and embedded line endings;
+  drain stdout/stderr concurrently, reject malformed/incomplete output and child
+  failures, and remove private SQL scratch files. Rows remain provisional until
+  the whole scan succeeds; no partially validated batch authorizes export.
+- Normal/checked linked/CLI tests cover chunk boundaries, empty fields/results,
+  SQL/handler errors, continued database use, pipe pressure and scratch cleanup.
+  On Linux, both backends validate over 128 MiB of complete card sources/native
+  settings under a 96 MiB address-space limit, including late corruption. An
+  isolated prior buffered validator succeeds uncapped and fails under that cap.
+- Native/shared HTTP suites pass on both backends, as do final checked shared
+  exports and existing database/policy/settings regressions. All eight Windows
+  x86/x64 linked/CLI disk/embedded variants cross-build; execution remains untested.
+- Row/document buffering no longer scales with total batch payload. SQLite work
+  sets, collected selection/export graphs and broader snapshot/lifecycle parity
+  remain separate resource/consistency work.
+
 ## 2026-11-17 Batch board export definition validation
 
 - Validate all board-associated definitions in a native/shared batch instead of

@@ -82,8 +82,46 @@ begin
     if Result.Find('dropdownItems')<>nil then raise Exception.Create('Shadowed dropdown');
   except Result.Free;raise;end;
 end;
+type
+  TDefinitionScan=class
+    Shared,SeenHeader,AdminRequired:Boolean;
+    procedure ReadRow(const Row:TWLRow);
+  end;
+procedure TDefinitionScan.ReadRow(const Row:TWLRow);
+var Doc:TJSONObject;Flag:TJSONData;Width:Integer;
+begin
+  Width:=11;if Shared then Width:=3;
+  if not SeenHeader then
+  begin
+    if (Length(Row)<>Width) or (Row[0]<>'ok') then raise Exception.Create('Missing definition batch');
+    SeenHeader:=True;Exit;
+  end;
+  if Length(Row)<>Width then raise Exception.Create('Invalid definition batch');
+  if Shared then
+  begin
+    if Row[1]<>'1' then raise Exception.Create('Ambiguous definition');
+    // Inspect storage truth before JSON Date/special-double null conversion.
+    Doc:=ExactObject(PlainDocument(Row[2]));
+    try
+      Flag:=Doc.Find('adminOnly');
+      if (Flag<>nil) and (Flag.JSONType<>jtNull) then
+      begin
+        if Flag.JSONType<>jtBoolean then raise Exception.Create('Invalid definition flag');
+        AdminRequired:=AdminRequired or Flag.AsBoolean;
+      end;
+    finally Doc.Free;end;
+  end
+  else
+  begin
+    if Row[9]<>'1' then raise Exception.Create('Ambiguous definition');
+    if (Row[10]<>'integer') or ((Row[1]<>'0') and (Row[1]<>'1')) then
+      raise Exception.Create('Invalid definition flag');
+    Doc:=DefinitionSettings(Row[2],[Row[3],Row[4],Row[5]],[Row[6],Row[7],Row[8]]);
+    Doc.Free;AdminRequired:=AdminRequired or (Row[1]='1');
+  end;
+end;
 function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
-var Rows:TWLRows;Name,Binding,Match,Sql,Kind:string;Doc:TJSONObject;Flag:TJSONData;i:Integer;
+var Rows:TWLRows;Name,Binding,Match,Sql,Kind:string;Reader:TDefinitionScan;
 begin
   Result:=False;
   Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
@@ -105,40 +143,22 @@ begin
       'UNION ALL SELECT v.id,(SELECT count(*)'+Match+'),(SELECT json(s._ferretdb_sjson)'+Match+' LIMIT 1) '+
       'FROM (SELECT DISTINCT f.id FROM custom_fields f JOIN custom_field_boards x ON x.customFieldId=f.id '+
       'WHERE x.boardId='+QuotedStr(BoardId)+') v;';
-    Rows:=Db.Query(Sql);
-    if (Length(Rows)=0) or (Length(Rows[0])<>3) or (Rows[0][0]<>'ok') then raise Exception.Create('Missing definition batch');
-    for i:=1 to High(Rows) do
-    begin
-      if (Length(Rows[i])<>3) or (Rows[i][1]<>'1') then raise Exception.Create('Ambiguous definition');
-      // Inspect storage truth before JSON Date/special-double null conversion.
-      Doc:=ExactObject(PlainDocument(Rows[i][2]));
-      try
-        Flag:=Doc.Find('adminOnly');
-        if (Flag<>nil) and (Flag.JSONType<>jtNull) then
-        begin
-          if Flag.JSONType<>jtBoolean then raise Exception.Create('Invalid definition flag');
-          Result:=Result or Flag.AsBoolean;
-        end;
-      finally Doc.Free;end;
-    end;
   end
   else if Kind='table' then
   begin
-    Rows:=Db.Query('SELECT ''ok'','''','''','''','''','''','''','''','''','''','''' UNION ALL '+
+    Sql:='SELECT ''ok'','''','''','''','''','''','''','''','''','''','''' UNION ALL '+
       'SELECT f.id,f.adminOnly,f.settings_json,f.currencyCode,f.stringtemplateFormat,f.stringtemplateSeparator,'+
       'f.currencyCode IS NULL,f.stringtemplateFormat IS NULL,f.stringtemplateSeparator IS NULL,'+
       '(SELECT count(*) FROM custom_fields q WHERE q.id=f.id),typeof(f.adminOnly) FROM custom_fields f '+
-      'WHERE f.id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+QuotedStr(BoardId)+');');
-    if (Length(Rows)=0) or (Length(Rows[0])<>11) or (Rows[0][0]<>'ok') then raise Exception.Create('Missing definition batch');
-    for i:=1 to High(Rows) do
-    begin
-      if (Length(Rows[i])<>11) or (Rows[i][9]<>'1') then raise Exception.Create('Ambiguous definition');
-      if (Rows[i][10]<>'integer') or ((Rows[i][1]<>'0') and (Rows[i][1]<>'1')) then
-        raise Exception.Create('Invalid definition flag');
-      Doc:=DefinitionSettings(Rows[i][2],[Rows[i][3],Rows[i][4],Rows[i][5]],[Rows[i][6],Rows[i][7],Rows[i][8]]);
-      Doc.Free;Result:=Result or (Rows[i][1]='1');
-    end;
+      'WHERE f.id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+QuotedStr(BoardId)+');';
   end else raise Exception.Create('Invalid definition source');
+  Reader:=TDefinitionScan.Create;
+  try
+    Reader.Shared:=Kind='view';
+    if not Db.Scan(Sql,@Reader.ReadRow) or not Reader.SeenHeader then
+      raise Exception.Create('Invalid definition batch');
+    Result:=Reader.AdminRequired;
+  finally Reader.Free;end;
 end;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
 const Flags:array[0..6] of string=('showOnCard','automaticallyOnCard','alwaysOnCard','showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly');

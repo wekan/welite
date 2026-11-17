@@ -405,9 +405,15 @@ not merely a design document. Platform/browser claims require testing on those t
   flags cannot become harmless JSON null; malformed native flags also deny.
   Normal/checked TEXT/JSONB/native regressions and process counts verify that
   adding 130 definitions adds no per-definition CLI database subprocesses.
-  Remaining export batching: bounded-memory handling for very large card and
-  definition source batches. The heavy fixture retains its targeted 30-second
-  timeout; ordinary request timeouts retain defaults.
+  Card/definition validators now consume one row at a time in the same SQL
+  statement, without buffering the whole source batch. Both backends validate
+  over 128 MiB of card sources/native settings under a 96 MiB Linux address-space
+  cap; late corruption still denies. Normal/checked linked/CLI tests cover CSV
+  chunk/UTF-8 boundaries, partial/failed queries, handler errors, pipe pressure
+  and scratch cleanup; process counts remain independent of card/definition count.
+  Remaining resource work includes SQLite work sets and collected selection/export
+  graphs; transaction-wide graph/lifecycle consistency remains open. The heavy
+  fixture retains its targeted 30-second timeout; ordinary timeouts keep defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

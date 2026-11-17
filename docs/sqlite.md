@@ -40,8 +40,9 @@ A stays useful and is **not** thrown away:
   (`{$DEFINE WLDB_CLI}` → A, default → B). Endpoints never see the difference.
 
 ## Consequences
-- `wldb.pas` exposes a tiny surface (`Open`, `Query`→rows, `Exec`, `Prepare`/bind) so the two
-  backends are swappable and endpoints stay backend-agnostic.
+- `wldb.pas` currently exposes open/close, `Query`→collected rows, `Scan`→row
+  callbacks and `Exec`, keeping callers independent of the backend. A general
+  prepare/bind interface remains a design target.
 - Ship the **SQLite amalgamation** (`sqlite3.c`/`sqlite3.h`) vendored in-tree for offline
   static builds (G5: no Internet at build time).
 - Keep `SqlEscape` only inside the CLI backend; the linked backend must use bound params, not
@@ -49,6 +50,28 @@ A stays useful and is **not** thrown away:
 - Per-tenant DBs (`data/domains/<domain>/db/data.db`) mean many open handles — the linked
   backend should pool/cache connection handles (see `wltenant.pas`), which A cannot do (it
   re-spawns every call).
+
+## Bounded validation reads
+
+`TWLDb.Scan(Sql, Handler)` consumes text cells without collecting the full result.
+The handler receives reusable row storage and must consume/copy cells during its
+callback. Rows are provisional until `Scan` returns true; a handler must not
+perform irreversible effects based on an incomplete scan. The export validators
+only update transient validation state and release each parsed document.
+
+Linked scans step/finalize a prepared statement. CLI scans use a private SQL
+script, incrementally decode CSV from fixed-size pipe reads and drain stderr
+concurrently. Malformed/incomplete CSV, stderr, SQL/child failure and handler
+exceptions return false; statements, pipes and scratch files are cleaned up.
+This path retains plain-SQLite bootstrap support. `Query` continues to collect
+rows for callers that need a result array; it is not a bounded-memory API.
+
+`tests/dbscan.py` covers normal/checked builds on both backends, UTF-8 and quoted
+CSV across read boundaries, empty values/results, late SQL/handler failures,
+subsequent reuse, pipe pressure and cleanup. Card/definition batch tests also run
+large valid/corrupt sources under Linux address-space limits. Memory for those
+validators scales with the current row/document; SQL work sets and collected
+application graphs remain separate from row buffering.
 
 ## SQLite on Amiga / retro targets
 

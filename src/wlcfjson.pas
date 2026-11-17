@@ -125,8 +125,25 @@ begin
     except FreeAndNil(Result);raise;end;
   finally Reply.Free;Plain.Free;Typed.Free;end;
 end;
+type
+  TCardSourceScan=class
+    SeenHeader:Boolean;
+    procedure ReadRow(const Row:TWLRow);
+  end;
+procedure TCardSourceScan.ReadRow(const Row:TWLRow);
+var Fields:TJSONArray;
+begin
+  if not SeenHeader then
+  begin
+    if (Length(Row)<>3) or (Row[0]<>'ok') then Invalid;
+    SeenHeader:=True;Exit;
+  end;
+  if (Length(Row)<>3) or (Row[1]<>'1') then Invalid;
+  // Validate every complete document, including missing/null customFields.
+  Fields:=CustomFieldsJson(Row[2]);Fields.Free;
+end;
 procedure ValidateBoardCustomFields(Db:TWLDb;const BoardId:string);
-var Rows:TWLRows;Name,Binding,Match,Sql:string;Fields:TJSONArray;i:Integer;
+var Rows:TWLRows;Name,Binding,Match,Sql:string;Reader:TCardSourceScan;
 begin
   Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''cards'';');
   if Length(Rows)<>1 then Invalid;
@@ -149,14 +166,10 @@ begin
   Sql:='SELECT CASE WHEN '+Binding+' THEN ''ok'' ELSE json(''Stale card source'') END,''0'','''' '+
     'UNION ALL SELECT v.id,(SELECT count(*)'+Match+'),'+
     '(SELECT json(s._ferretdb_sjson)'+Match+' LIMIT 1) FROM cards v WHERE v.boardId='+QuotedStr(BoardId)+';';
-  Rows:=Db.Query(Sql);
-  if (Length(Rows)=0) or (Length(Rows[0])<>3) or (Rows[0][0]<>'ok') then Invalid;
-  for i:=1 to High(Rows) do
-  begin
-    if (Length(Rows[i])<>3) or (Rows[i][1]<>'1') then Invalid;
-    // Validate every complete document, including missing/null customFields.
-    Fields:=CustomFieldsJson(Rows[i][2]);Fields.Free;
-  end;
+  Reader:=TCardSourceScan.Create;
+  try
+    if not Db.Scan(Sql,@Reader.ReadRow) or not Reader.SeenHeader then Invalid;
+  finally Reader.Free;end;
 end;
 function ReadCustomFields(Db:TWLDb;const CardId:string):TJSONArray;
 var Rows:TWLRows;Name:string;i:Integer;Row:TJSONObject;

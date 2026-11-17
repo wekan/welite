@@ -8,6 +8,7 @@ import shlex
 import shutil
 import sqlite3
 import subprocess
+import sys
 import tempfile
 root=Path(__file__).resolve().parents[1]
 @contextmanager
@@ -27,8 +28,11 @@ with tempfile.TemporaryDirectory(prefix='wlcfsb-',dir=os.environ['TMPDIR']) as d
             out=Path(directory)/(backend+mode);out.mkdir();db=out/'source.db'
             built=subprocess.run([os.environ.get('FPC','fpc'),'-B',*options,*flags,'-Fu'+str(root/'src'),'-FU'+str(out),'-FE'+str(out),str(root/'tests/cfsbatch.lpr')],capture_output=True,text=True)
             assert built.returncode==0,built.stdout+built.stderr
-            def run(expected,env=None):
-                result=subprocess.run([str(out/'cfsbatch'),str(db),"board ' 漢"],env=env,capture_output=True,text=True)
+            def run(expected,env=None,memory=False):
+                def cap_memory():
+                    import resource
+                    resource.setrlimit(resource.RLIMIT_AS,(96*1024*1024,96*1024*1024))
+                result=subprocess.run([str(out/'cfsbatch'),str(db),"board ' 漢"],env=env,capture_output=True,text=True,timeout=180,preexec_fn=cap_memory if memory else None)
                 assert result.returncode==0 and result.stdout.strip()==str(expected),(result.stdout,result.stderr,expected)
             for storage in ['text','blob']:
                 db.unlink(missing_ok=True)
@@ -70,6 +74,16 @@ with tempfile.TemporaryDirectory(prefix='wlcfsb-',dir=os.environ['TMPDIR']) as d
                     for index in range(70):insert(typed(dict(_id='card '+str(index),boardId="board ' 漢",customFields=[dict(_id='f',value='value')])))
                     trace.write_text('');run(1,env);assert trace.stat().st_size==one,'Per-card subprocess regression'
                     late=typed(dict(_id='late',boardId="board ' 漢"));late['$s']['p']['unknown']=dict(t='string');insert(late);run(0)
+                if mode=='normal' and storage=='text' and sys.platform.startswith('linux'):
+                    clear();large=typed(dict(_id='memory',boardId="board ' 漢",payload='x'*65536))
+                    with connect(db) as con:
+                        con.execute("WITH RECURSIVE seq(n) AS (VALUES(1) UNION ALL SELECT n+1 FROM seq WHERE n<2048) INSERT INTO owned SELECT json_set(?, '$._id','memory '||n) FROM seq",(json.dumps(large),))
+                        count,size=con.execute('SELECT count(*),sum(length(_ferretdb_sjson)) FROM owned').fetchone()
+                        assert count==2048 and size>128*1024*1024,(count,size)
+                    run(1,memory=True)
+                    # Complete validation must reach the final row under the same cap.
+                    late=typed(dict(_id='late-memory',boardId="board ' 漢"));late['$s']['p']['unknown']=dict(t='string');insert(late);run(0,memory=True)
+                    print('PASS:',backend,'over 128 MiB of source documents under a 96 MiB address-space limit')
                 # Invalid full metadata outside the requested board stays out of scope.
                 clear();insert(original);bad=typed(dict(_id='other',boardId='other'));bad['$s']['p']['unknown']=dict(t='string');insert(bad);run(1)
                 with connect(db) as con:con.execute('DROP TABLE owned')
