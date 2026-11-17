@@ -93,6 +93,23 @@ def run(request, db, session):
         con.execute("UPDATE custom_fields SET adminOnly=0,readOnly=1 WHERE id='afield'")
         con.execute("UPDATE board_members SET isAdmin=0 WHERE boardId='actions' AND userId=?",(uid,))
     assert action('export',{'sel_card':'akeep'})[0]==200,'Read-only values remain exportable'
+    for payload in [dict(customFieldId='deleted-field',newValue='ACTIVITY PRIVATE SECRET'),
+                    dict(nested=[dict(field='customFields',value=[dict(_id='deleted-field',value='NESTED PRIVATE SECRET')])]),
+                    dict(field='customFields',oldValue=[dict(_id='deleted-field',value='OLD BATCH PRIVATE SECRET')]),
+                    dict(integrityHash='ACTIVITY PRIVATE HASH')]:
+        with sqlite3.connect(db) as con:con.execute("UPDATE activities SET data_json=? WHERE id='activity'",(json.dumps(payload),))
+        before=snapshot();response=action('export',{'sel_card':'acard'})
+        assert response[0]==403 and b'PRIVATE' not in response[2],response
+        assert snapshot()==before
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE activities SET data_json=? WHERE id='activity'",(json.dumps(dict(customFieldId='afield',oldValue='Readable history')),))
+    assert action('export',{'sel_card':'acard'})[0]==200
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE activities SET data_json='{}' WHERE id='activity'")
+        con.execute("UPDATE cards SET extra_json=? WHERE id='acard'",(json.dumps(dict(unknown=dict(customFields=[dict(_id='deleted-field',value='EMBEDDED PRIVATE SECRET')]))),))
+    before=snapshot();assert action('export',{'sel_card':'acard'})[0]==403;assert snapshot()==before
+    with sqlite3.connect(db) as con:con.execute("UPDATE cards SET extra_json='{}' WHERE id='acard'")
+
     token=hidden(request('GET',board)[2])
     status,headers,body=action('export',{'sel_list':'alist'},token=token)
     assert status==200 and 'select.jsn' in headers['Content-Disposition']

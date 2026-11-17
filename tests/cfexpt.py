@@ -2,7 +2,7 @@
 import json
 from urllib.parse import urlencode
 from layout import Forms
-from wire import DateMs,encode
+from wire import DateMs,Long,Binary,encode
 
 
 def run_shared(request,client,db):
@@ -19,7 +19,7 @@ def run_shared(request,client,db):
     location=headers['Location']
     from urllib.parse import parse_qs,urlsplit
     session=parse_qs(urlsplit(location).query)['sessionId'][0]
-    def snapshot():return [encode(client.find(name,identity)[0]) for name,identity in [('boards',board),('cards',cid),('cards',hidden),('customFields',field)]]
+    def snapshot():return [encode(client.find(name,identity)[0]) for name,identity in [('boards',board),('cards',cid),('cards',hidden),('customFields',field)]]+[encode(row) for row in client.find('activities','export-activity')]
     def export(expected):
         status,_,body=request('GET','/board?'+urlencode(dict(id=board,sessionId=session)))
         assert status==200,(status,body)
@@ -39,6 +39,20 @@ def run_shared(request,client,db):
         update('cards',hidden,dict(customFields=[dict(_id=field,value=DateMs(8640000000000001))]));export(403)
         update('cards',hidden,dict(customFields=[dict(_id=field,value=None)]));export(200)
         update('customFields',field,dict(boardIds=[board]));update('boards',board,dict(members=[dict(userId=uid,isActive=True,isAdmin=False)]));export(403)
+        update('customFields',field,dict(adminOnly=False))
+        activity=dict(_id='export-activity',activityType='setCustomField',boardId=board,cardId=cid,createdAt=DateMs(0),customFieldId='deleted-field',oldValue=DateMs(-7),unknown=Long(9007199254740993),binary=Binary(b'preserve',4))
+        assert client.command({'insert':'activities','documents':[activity]})['n']==1
+        export(403)
+        update('activities','export-activity',dict(customFieldId=field));export(200)
+        update('activities','export-activity',dict(field='customFields',oldValue=[dict(_id='deleted-field',value='OLD BATCH PRIVATE SECRET')])) ;export(403)
+        update('activities','export-activity',dict(field=None,oldValue=DateMs(-7)));export(200)
+        update('activities','export-activity',dict(integrityHash='ACTIVITY PRIVATE HASH'));export(403)
+        update('boards',board,dict(members=[dict(userId=uid,isActive=True,isAdmin=True)]));export(200)
+        update('activities','export-activity',dict(integrityHash=None))
+        update('boards',board,dict(members=[dict(userId=uid,isActive=True,isAdmin=False)]))
+        update('cards',cid,dict(unknownPayload=dict(customFields=[dict(_id='deleted-field',value='EMBEDDED PRIVATE SECRET')])));export(403)
+        update('cards',cid,dict(unknownPayload=dict(customFields=[dict(_id=field,value='Readable embedded value')])));export(200)
+        print('PASS: shared activity/nested JSON export checks, readable history, hash administration and exact Date/Long/Binary source preservation')
         print('PASS: shared HTML selection export gates whole-board private/orphan values, unassigned definitions and site-admin bypass; readable/read-only/admin/null exports retain selected scope')
     finally:
         operation={'$set':dict(isAdmin=user['isAdmin'])} if 'isAdmin' in user else {'$unset':dict(isAdmin='')}

@@ -4,6 +4,27 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Check activity and embedded field payloads in selection exports
+
+- Inspect exported payloads recursively before delivery, including activity old/new
+  values, customFieldValue aliases, nested custom-field arrays and integrity hashes.
+  Decode JSON columns and validate typed source seeds where provided; refuse
+  unreadable values, malformed encodings and non-admin hash exports.
+- Resolve historical field visibility by board/definition without requiring a live
+  card. Board admins retain readable history; site-admin status alone does not
+  grant access to protected values or hashes. Preserve null/missing semantics.
+- Inspect without rewriting payloads or source rows. Unknown Date/Long/Binary
+  data and readable JSON remain unchanged, while denied responses contain no
+  graph or attachment headers. Existing board-wide and captured-row gates remain.
+- Normal/checked tests cover 156 direct/nested/JSON/BSON payload cases on both SQL
+  backends, including invalid input, aliases, hashes, case-sensitive IDs and
+  historical access. Native/shared HTML tests cover orphan activity data,
+  readable history, hash administration and nested card extras without mutation.
+  The committed exporter exposes orphan activity values under the new test; all
+  eight Windows linked/CLI disk/embedded cross-build variants pass.
+- Clone/import, generic HTML/query surfaces and other value-bearing paths remain
+  in TODO.md. This step covers selection export payloads, not every field surface.
+
 ## 2026-11-17 Gate selection exports on board-wide field visibility
 
 - Check every board card and associated definition before collecting a selection

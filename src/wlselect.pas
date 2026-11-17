@@ -8,7 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 implementation
-uses wlstore,wllocale,wli18n,wlcfpol;
+uses wlstore,wllocale,wli18n,wlcfpol,wlcfscan;
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
 function IdSet(Ids:TStrings):string;
@@ -521,6 +521,7 @@ begin
       try ExportSelection(T,Graph);
       except Error(T,S,Request,Response,500,'Could not export attachment content'); Exit; end;
       if not BoardFieldExportAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId']) or
+        not ExportPayloadAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId'],Data) or
         not FieldExportRowsAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId'],TJSONArray(Data.Find('card_custom_field_values'))) then
       begin Error(T,S,Request,Response,403,'Export requires access to every custom-field value on this board');Exit;end;
       Response.ContentType:='application/json';

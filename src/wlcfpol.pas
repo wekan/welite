@@ -10,12 +10,14 @@ type
     FShared:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
-    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean):string;
+    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False):string;
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
     function Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
     function DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
+    function HistoryExpression(const FieldId:string):string;
+    function ScopeAdminExpression:string;
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
   end;
@@ -59,7 +61,7 @@ begin
     FTables[2]:=Source('custom_fields','customFields');FTables[3]:=Source('cards','cards');
   end;
 end;
-function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean):string;
+function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
 var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql:string;i,Last:Integer;HasField:Boolean;
@@ -85,10 +87,10 @@ begin
     end;
     if DefinitionAccess then
     begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
-    else begin Tables:=Tables+',cards c';WhereSql:=WhereSql+' AND c.id='+QuotedStr(FCard)+' AND c.boardId=b.id';end;
+    else if not HistoryAccess then begin Tables:=Tables+',cards c';WhereSql:=WhereSql+' AND c.id='+QuotedStr(FCard)+' AND c.boardId=b.id';end;
     Exit('(SELECT count(*)=1 FROM '+Tables+' WHERE '+WhereSql+')');
   end;
-  Last:=High(Aliases);if DefinitionAccess then begin Last:=1;if HasField then Last:=2;end;
+  Last:=High(Aliases);if DefinitionAccess then begin Last:=1;if HasField then Last:=2;end else if HistoryAccess then Last:=2;
   Prefix:='WITH ';
   for i:=0 to Last do
   begin
@@ -124,7 +126,7 @@ begin
   end;
   if DefinitionAccess then
   begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
-  else begin
+  else if not HistoryAccess then begin
     Tables:=Tables+',c';WhereSql:=WhereSql+' AND '+StringId('c',FCard)+
       ' AND json_type(c.d,''$.boardId'')=''text'' AND json_extract(c.s,''$."$s".p.boardId.t'')=''string'' AND json_extract(c.d,''$.boardId'')='+QuotedStr(FBoard);
   end;
@@ -136,6 +138,10 @@ function TFieldPolicy.Expression(const FieldId:string;WriteAccess:Boolean):strin
 begin Result:=Build(FieldId,WriteAccess,False,False);end;
 function TFieldPolicy.DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
 begin Result:=Build(FieldId,True,True,AdminRequired);end;
+function TFieldPolicy.HistoryExpression(const FieldId:string):string;
+begin Result:=Build(FieldId,False,False,False,True);end;
+function TFieldPolicy.ScopeAdminExpression:string;
+begin Result:=Build('',False,True,True,True);end;
 function TFieldPolicy.Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
 var Rows:TWLRows;
 begin

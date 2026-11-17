@@ -314,12 +314,16 @@ not merely a design document. Platform/browser claims require testing on those t
   while null/missing orphans and readable read-only values retain export behavior.
   Captured nonnull rows are also checked, including values cleared after collection.
   Native/shared HTML HTTP and checked/normal tests cover board scope, role gates,
-  null/read-only semantics and source/query refusal. Activity payloads and other
-  embedded/unknown export data still need their own policy reconciliation.
-  Next: reconcile activity/export payloads, selection clone/import, generic HTML
-  data/query surfaces and other value-bearing paths. Definition edit/delete and
-  remaining creation/automatic-card behavior stay open; full field-policy parity
-  across those other surfaces is not established.
+  null/read-only semantics and source/query refusal. Selection export payloads now
+  receive recursive checks for activity old/new/customFieldValue data, nested
+  customFields arrays, integrity hashes, encoded JSON columns and typed source
+  seeds where supplied. Historical visibility resolves the field and board without
+  requiring a live card. Readable payloads and original BSON remain unchanged;
+  unreadable/malformed data denies the export. Normal/checked tests cover 156
+  payload cases per backend, and HTML tests cover history, extras and hash gates.
+  Next: reconcile selection clone/import, generic HTML data/query surfaces and
+  other value-bearing paths. Definition edit/delete and remaining creation/
+  automatic-card behavior stay open; full field-policy parity is not established.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

@@ -1310,9 +1310,24 @@ Denied exports return HTML 403 without an attachment response or selection graph
 `tests/actions.py` and `tests/cfexpt.py` cover native/shared actual HTML requests;
 normal/checked `tests/cfpol.py` covers board gates and captured rows on both backends.
 
-Activity payloads and other embedded/unknown graph data still need separate policy
-reconciliation, as do clone/import and generic data/query surfaces. This gate does
-not establish complete export or application-wide field-policy parity.
+Selection export payloads also receive a recursive audit before delivery. It
+checks custom-field arrays, activity value/oldValue/newValue/customFieldValue
+aliases and integrityHash/previousHash, respecting nested board scope. JSON
+columns are decoded for inspection, and non-null typed source seeds are validated
+before inspecting their plain values. Current shared read views normally expose
+`_wl_source` as null; the source-seed check covers any supplied seed rather than
+assuming that column contains an exported document.
+
+Unreadable activity/embedded values, malformed encodings and non-admin hashes
+refuse the export. Historical visibility uses the definition and board, allowing
+readable history even after a card was removed. Inspection does not rewrite data
+or serialized columns; allowed unknown Date/Long/Binary source data remains
+unchanged. `tests/cfscan.py` runs 156 cases in normal/checked builds on both SQL
+backends; native/shared HTML tests cover actual activity, extras and hash gates.
+
+Clone/import, generic HTML/data/query surfaces and other value-bearing paths
+still need policy reconciliation. These checks do not establish application-wide
+field-policy parity.
 
 ## Remaining before the checklist can be checked
 
