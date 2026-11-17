@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Retain typed managed card relations during selection clones
+
+- Capture complete typed card source privately alongside the root seed. Audit
+  copied relation metadata as well as projected values before preparing files.
+- Copy shared members, assignees, labels, custom-field values and dependencies in
+  a final typed transaction stage. Preserve stored BSON types, row extras, order
+  and missing/null/empty states instead of recreating values from today's field
+  definition. Native relation insertion keeps its existing behavior.
+- Remap selected dependency targets, including forward/back/self references;
+  retain external targets and opaque nested data. Validate canonical string keys,
+  destination identity/board binding and duplicate logical relation keys.
+- Recheck source/permission and destination-card guards before and after typed
+  relation writes. Failed validation, stale bindings and trigger-injected protected
+  values roll back records/activities and prepared attachment files.
+- Normal/checked kernel and live both-backend tests cover typed values, metadata,
+  presence, remapping, duplicate/type refusal and permission rollback. SQL extension
+  tests verify TEXT/JSONB and failed-transaction preservation; native HTTP and eight
+  Windows cross-builds cover existing behavior (Windows execution is unverified).
+  Mapped root field presence, other legacy forms and lifecycle parity remain open.
+
 ## 2026-11-17 Check typed BSON identity during selection exports
 
 - Capture complete typed source beside shared root projections in the same SQLite

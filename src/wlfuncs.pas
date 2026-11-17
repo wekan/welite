@@ -1,7 +1,7 @@
 unit wlfuncs;
 {$mode objfpc}{$H+}
 interface
-uses SysUtils,ctypes,wlsjson,wlproj,wlresume {$IFNDEF WLSQLEXT},sqlite3{$ENDIF};
+uses SysUtils,ctypes,wlsjson,wlproj,wlresume,wlclrel {$IFNDEF WLSQLEXT},sqlite3{$ENDIF};
 {$IFDEF WLSQLEXT}
 function LoadFunctions(Db,ApiTable:Pointer):cint;
 {$ELSE}
@@ -67,6 +67,15 @@ begin
     ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
   except ResultError(Context,'Invalid relation projection',-1);end;
 end;
+procedure CloneRelationsFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
+var Value:string;
+begin
+  try
+    if Count<>3 then raise Exception.Create('Invalid argument count');
+    Value:=CloneCardRelations(ReadArg(PArgs(Args)^[0]),ReadArg(PArgs(Args)^[1]),ReadArg(PArgs(Args)^[2]));
+    ResultText(Context,PAnsiChar(Value),Length(Value),Pointer(PtrInt(-1)));
+  except ResultError(Context,'Invalid clone relations',-1);end;
+end;
 procedure ResumeFunc(Context:Pointer;Count:cint;Args:Pointer);cdecl;
 var Value:string;
 begin
@@ -117,6 +126,7 @@ begin
   if Result=0 then Result:=CreateFunc(Db,'wl_plain',1,Flags,nil,@PlainFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_model',4,Flags,nil,@ModelFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_relation',3,Flags,nil,@RelationFunc,nil,nil,nil);
+  if Result=0 then Result:=CreateFunc(Db,'wl_clone_rel',3,Flags,nil,@CloneRelationsFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_resume',2,Flags,nil,@ResumeFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_rescheck',4,Flags,nil,@ResumeCheckFunc,nil,nil,nil);
   if Result=0 then Result:=CreateFunc(Db,'wl_methash',1,Flags,nil,@MeteorHashFunc,nil,nil,nil);

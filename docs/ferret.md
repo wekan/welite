@@ -1392,9 +1392,10 @@ binding or collection epoch cannot redirect a captured seed into another context
 Missing ownership, malformed source or failed selection queries return a controlled
 error without cloned records/files.
 
-`RootCloneSeed` removes managed relation paths and their metadata. Existing relation
-copy/remapping reconstructs those arrays once, while root insertion overlays use
-original metadata for unchanged unknown values. Live Mongo/BSON checks compare an
+`RootCloneSeed` removes managed relation paths and their metadata during root
+creation. Native relations use ordinary row insertion. Shared cards receive the
+complete typed relations in the guarded final stage described below, while root
+insertion overlays use original metadata for unchanged unknown values. Live Mongo/BSON checks compare an
 opaque subtree containing Date, Long, Binary subtypes, ObjectId, unsigned Timestamp,
 Regex, negative zero, NaN/infinity, arrays and nulls against the stored source.
 Comparisons use stored BSON, including its NaN canonicalization, rather than
@@ -1419,9 +1420,44 @@ rollback. The existing SJSON source oracle also passes using local Go 1.27.3 wit
 only its temporary probe module's directive lowered from 1.27.4; the declared
 1.27.4 toolchain itself was not verified. No maintained Go source/module is edited.
 
-Managed-relation unknown metadata/types and absent/empty/missing value distinctions,
-mapped-field presence, reference/lifecycle details and import permissions remain
-unfinished. Root seed support does not establish complete clone fidelity.
+Mapped-field presence, remaining legacy relation forms, reference/lifecycle
+details and import permissions remain unfinished. Root seed support does not
+establish complete clone fidelity.
+
+## Typed managed card clone relations
+
+Shared card collection retains a complete typed source privately, in addition to
+its stripped root seed. Recursive write-policy checks inspect that source before
+file preparation, including unknown metadata inside custom-field/dependency rows.
+Native cards keep ordinary relation insertion. Shared cards skip the five lossy
+relation insert batches and call the deterministic `wl_clone_rel` SQL function
+inside the existing clone transaction after root records and activities exist.
+
+The function validates both typed documents and the selected card map, checks
+canonical source/destination IDs and identical board binding, and copies members,
+assignees, label IDs, custom fields and dependencies with complete BSON schemas.
+It preserves relation field presence, explicit nulls, empty containers, array/row
+order and unknown typed row data. Stored custom values retain their existing type
+even if a current definition would initialize a new value differently. Canonical
+string relation keys and duplicate logical keys are checked before writing.
+Dependency `cardId` values are remapped for selected targets (including self and
+forward/back references); external targets and opaque nested keys stay unchanged.
+
+Source/binding/permission guards and destination-card guards run before this stage
+and again after it. This catches protected values injected before or during typed
+copy and prevents copying hidden relation metadata. A failed function, absent
+new card, binding change or guard failure rolls back all records/activities and
+uses existing attachment-file cleanup. Target TEXT/JSONB representation is kept.
+
+`tests/clrel.py` checks typed schemas, missing/null/empty states, remapping and
+invalid/duplicate/foreign bindings in normal and checked Pascal builds. It also
+loads the real SQLite extension to verify TEXT/JSONB representation and rollback
+of failed copy transactions in both build modes.
+`tests/cfclon.py` exercises real shared HTTP/Mongo with Date/Long/Boolean/array/
+Binary/Timestamp/Regex/special-double values under a text definition, typed row
+extras, parent-child dependencies, malformed/duplicate keys, hidden metadata and
+triggered permission rollback. These paths run on both SQL backends; mapped root
+field presence and broader clone lifecycle behavior are still unfinished.
 
 ## Remaining before the checklist can be checked
 

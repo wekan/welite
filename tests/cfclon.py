@@ -1,5 +1,6 @@
 """Shared HTML clone permissions and transaction-time field/role changes."""
 import json
+import copy
 import sqlite3
 from urllib.parse import urlencode,parse_qs,urlsplit
 from layout import Forms
@@ -38,8 +39,17 @@ def run_shared(request,client,db,token):
         assert encode(client.find('cards',cid)[0])==original
         if expected!=302:assert snapshot()==before;return
         added=[row for row in cards() if row['_id'] not in old];assert len(added)==1,added
-        assert added[0]['customFields']==client.find('cards',cid)[0]['customFields'],added
+        for name in ['members','assignees','labelIds','customFields','cardDependencies']:
+            assert (name in added[0])==(name in source_card),(name,added[0],source_card)
+            if name not in source_card:continue
+            value=copy.deepcopy(source_card[name])
+            if name=='cardDependencies' and isinstance(value,list):
+                for entry in value:
+                    if entry['cardId']==cid:entry['cardId']=added[0]['_id']
+            assert encode(dict(value=added[0][name]))==encode(dict(value=value)),(name,added[0],source_card)
+
         assert encode(added[0]['opaque'])==encode(source_card['opaque']),{key:(encode(dict(value=value)).hex(),encode(dict(value=added[0]['opaque'][key])).hex()) for key,value in source_card['opaque'].items() if encode(dict(value=value))!=encode(dict(value=added[0]['opaque'][key]))}
+        return added[0]
     try:
         clone(302)
         update('cards',cid,dict(identifierProbe=dict(customFieldId=Regex(field,''),value='Typed identifier must not grant access')))
@@ -88,6 +98,36 @@ def run_shared(request,client,db,token):
         try:clone(500)
         finally:
             with sqlite3.connect(db) as con:con.execute('INSERT INTO _wl_models VALUES(?,?,?,?)',model)
+        update('customFields',field,dict(readOnly=False))
+        # Stored values retain BSON identity even when today's definition is text.
+        for value in [DateMs(-7),Long(9007199254740993),True,['one','two'],Binary(b'row metadata',128),Timestamp(2**63+7),Regex('漢.*','im'),-0.0,float('nan')]:
+            update('cards',cid,dict(customFields=[dict(_id=field,value=value,unknown=opaque)]));clone(302)
+        for value in [None,[],[dict(_id=field)],[dict(_id=field,value=None)]]:
+            update('cards',cid,dict(customFields=value));clone(302)
+        assert client.command({'update':'cards','updates':[dict(q=dict(_id=cid),u={'$unset':{'customFields':''}})]})['n']==1
+        clone(302)
+        update('cards',cid,dict(customFields=[dict(_id=field,value='original')],members=['u','external-user'],assignees=[],labelIds=None,cardDependencies=[dict(cardId=cid,type='related-to',unknown=opaque),dict(cardId='external-card',unknown=opaque)]));clone(302)
+        update('cards',cid,dict(members=['u','u']));clone(500)
+        update('cards',cid,dict(members=[Regex('u','')]));clone(500)
+        update('cards',cid,dict(members=['u','external-user'],customFields=[dict(_id=field,value=None,unknown=dict(customFieldId='deleted-field',value='Hidden relation metadata'))]));clone(403)
+        update('cards',cid,dict(customFields=[dict(_id=field,value='original')]))
+        # A child selected through the parent graph remaps forward/back references.
+        child='clone-child'
+        assert client.command({'insert':'cards','documents':[dict(_id=child,boardId=board,listId='clone-list',parentId=cid,userId=uid,title='Clone child',cardDependencies=[dict(cardId=cid,type='related-to',unknown=opaque)])]})['n']==1
+        update('cards',cid,dict(cardDependencies=[dict(cardId=child,type='related-to',unknown=opaque)]))
+        status,_,body=request('GET','/board?'+urlencode(dict(id=board,sessionId=session)));assert status==200
+        parser=Forms();parser.feed(body.decode());form=parser.forms[-1][1]
+        old={row['_id'] for row in cards()};originals={key:encode(client.find('cards',key)[0]) for key in [cid,child]}
+        status,_,body=request('POST','/board/move',urlencode(dict(form,action='clone',sel_card=cid)));assert status==302,(status,body)
+        added=[row for row in cards() if row['_id'] not in old];assert len(added)==2,added
+        parent_copy=next(row for row in added if row['title']=='Clone card Copy');child_copy=next(row for row in added if row['title']=='Clone child')
+        assert child_copy['parentId']==parent_copy['_id']
+        assert parent_copy['cardDependencies'][0]['cardId']==child_copy['_id']
+        assert child_copy['cardDependencies'][0]['cardId']==parent_copy['_id']
+        for row in added:
+            assert encode(row['cardDependencies'][0]['unknown'])==encode(client.find('cards',cid)[0]['cardDependencies'][0]['unknown'])
+        assert all(encode(client.find('cards',key)[0])==value for key,value in originals.items())
+        print('PASS: shared cloned typed managed values/metadata/presence and selected/external dependency remapping')
         print('PASS: shared cloned unknown root BSON types/bits/order and missing ownership refusal')
         print('PASS: shared HTML clone ordinary/protected/null/admin boundaries, ignored uncopied history, role/flag revocation, injected destination values and exact source/transaction rollback')
     finally:

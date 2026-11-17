@@ -347,9 +347,18 @@ not merely a design document. Platform/browser claims require testing on those t
   identity. Private audit data never enters downloads; root bindings are rechecked
   before delivery. Live both-backend tests verify identity gates, unchanged output
   shape/source BSON and missing-ownership refusal.
-  Next: reconcile managed-relation metadata/type/presence and mapped-field presence
-  in clones, remaining clone lifecycle details, metadata-aware identifiers for
-  other payloads, import permissions, generic HTML
+  Shared card clones now capture complete typed sources privately and audit
+  relation extras before file preparation. A final guarded typed copy preserves
+  members/assignees/labels/custom values/dependencies with their BSON schemas,
+  metadata, order and missing/null/empty states. Stored custom values do not get
+  coerced through today's definition. Selected dependency targets are remapped;
+  external targets and opaque nested data stay intact. Canonical key/binding and
+  duplicate checks plus source/destination guards surround the copy. Normal/checked
+  and live both-backend tests cover these paths, hidden relation metadata and
+  complete rollback after malformed keys or protected trigger writes.
+  Next: reconcile mapped-field presence in clones, remaining legacy relation forms
+  and clone lifecycle details, metadata-aware identifiers for other payloads,
+  import permissions, generic HTML
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
   established.

@@ -31,12 +31,12 @@ procedure AddQuery(Db:TWLDb; const Sql:string; Ids:TStrings);
 var R:TWLRows; i:Integer;
 begin R:=Db.Query(Sql); for i:=0 to High(R) do AddId(Ids,R[i][0]); end;
 function RowsJson(Db:TWLDb; const TableName,WhereClause:string;const Action:string;out Binding:string;out Audit:TJSONArray):TJSONArray;
-var Columns,R,Owner:TWLRows; Sql,Order,SeedExpr,Spec,Physical,OwnerTest,OwnerGuard,Collection:string; i:Integer; HasId,HasSort:Boolean;Row:TJSONObject;
+var Columns,R,Owner:TWLRows; Sql,Order,SeedExpr,Spec,Physical,OwnerTest,OwnerGuard,Collection,SourceTable:string; i:Integer; HasId,HasSort:Boolean;Row:TJSONObject;
 begin
   Result:=TJSONArray.Create;Audit:=nil;Binding:='';OwnerGuard:='';
-  if Action='export' then Audit:=TJSONArray.Create;
+  if (Action='export') or ((Action='clone') and (TableName='cards')) then Audit:=TJSONArray.Create;
   try
-  Columns:=Db.Query('PRAGMA table_info('+TableName+');');SeedExpr:='';Spec:='';
+  Columns:=Db.Query('PRAGMA table_info('+TableName+');');SeedExpr:='';Spec:='';SourceTable:='';
   if ((Action='clone') or (Action='export')) and ((TableName='cards') or (TableName='lists') or (TableName='swimlanes') or
     (TableName='checklists') or (TableName='checklist_items') or (TableName='card_comments') or (TableName='attachments') or
     ((Action='export') and ((TableName='boards') or (TableName='custom_fields') or (TableName='activities')))) then
@@ -49,6 +49,7 @@ begin
       Owner:=Db.Query('SELECT m.table_name,m.spec,m.version,c.settings FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
         'WHERE m.name='+q(TableName)+' AND c.name='+q(Collection)+' AND json_extract(m.spec,''$.table'')='+q(TableName)+' AND json_extract(m.spec,''$.collection'')=c.name;');
       if Length(Owner)<>1 then raise Exception.Create('Missing selection root ownership');
+      SourceTable:=Owner[0][0];
       Physical:='"'+StringReplace(Owner[0][0],'"','""',[rfReplaceAll])+'"';Spec:=Owner[0][1];
       OwnerTest:='EXISTS(SELECT 1 FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name WHERE m.name='+q(TableName)+
         ' AND m.table_name='+q(Owner[0][0])+' AND m.spec='+q(Spec)+' AND m.version='+q(Owner[0][2])+
@@ -81,7 +82,10 @@ begin
     begin
       Physical:=Row.Get('_wl_source','');
       if Action='clone' then
-      begin Physical:=RootCloneSeed(Physical,Spec);Row.Delete('_wl_source');Row.Add('_wl_source',Physical);end
+      begin
+        if TableName='cards' then Audit.Add(TJSONObject.Create(['id',Row.Get('id',''),'table',SourceTable,'_wl_source',Physical]));
+        Physical:=RootCloneSeed(Physical,Spec);Row.Delete('_wl_source');Row.Add('_wl_source',Physical);
+      end
       else
       begin
         // Audit the complete typed source, never a lossy SQL rendering of it.
@@ -113,7 +117,9 @@ var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previo
   var Binding:string;Audit:TJSONArray;
   begin
     Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action'],Binding,Audit));
-    if AuditData<>nil then AuditData.Add(Name,Audit) else Audit.Free;
+    if AuditData<>nil then AuditData.Add(Name,Audit)
+    else if (Params.Values['action']='clone') and (Name='cards') then Result.Add('_clone_sources',Audit)
+    else Audit.Free;
     if Binding<>'' then Bindings.Add(Binding);
   end;
 begin
@@ -396,6 +402,8 @@ begin
         if not PayloadCopyGuards(T.Db,S.UserId,BoardId,Data.Find(CloneTables[i]),Part) then Exit;
         Guards:=Guards+Part;
       end;
+      if not PayloadCopyGuards(T.Db,S.UserId,BoardId,Graph.Find('_clone_sources'),Part) then Exit;
+      Guards:=Guards+Part;
       Cards:=TJSONArray(Data.Find('cards'));
       for i:=0 to Cards.Count-1 do
       begin
@@ -409,10 +417,18 @@ begin
   finally Policy.Free;end;
 end;
 function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings;const Guards:string):Boolean;
-var Data,Maps,Map,Original,Row,Activity:TJSONObject; A:TJSONArray;
+var Data,Maps,Map,Original,Row,Activity,Seed:TJSONObject; A:TJSONArray;
   Used,Copied:TStringList; i,j,k:Integer;
-  TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend,DestGuards:string;Policy:TFieldPolicy;
+  TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend,DestGuards,RelationSql,Physical,Expression:string;Policy:TFieldPolicy;
   Source,Dest:TFileStream;
+  function CardSource(const OldId:string):TJSONObject;
+  var Sources:TJSONArray;n:Integer;
+  begin
+    Result:=nil;Sources:=TJSONArray(Graph.Find('_clone_sources'));if Sources=nil then Exit;
+    for n:=0 to Sources.Count-1 do
+      if Sources.Objects[n].Get('id','')=OldId then
+      begin if Result<>nil then raise Exception.Create('Ambiguous clone card source');Result:=Sources.Objects[n];end;
+  end;
   function IsRoot(const Kind,OldId:string):Boolean;
   var n:Integer;
   begin
@@ -454,6 +470,22 @@ begin
         Policy:=TFieldPolicy.Create(T.Db,S.UserId,Graph.Get('boardId',''),CloneRef(Maps,'cards',A.Objects[j].Get('id','')));
         try DestGuards:=DestGuards+Policy.CloneCardGuard;finally Policy.Free;end;
       end;
+      RelationSql:='';A:=TJSONArray(Data.Find('cards'));
+      for j:=0 to A.Count-1 do
+      begin
+        Original:=A.Objects[j];Seed:=CardSource(Original.Get('id',''));
+        if Seed=nil then
+        begin
+          if (Original.Find('_wl_source')<>nil) and (Original.Find('_wl_source').JSONType<>jtNull) then
+            raise Exception.Create('Missing typed clone card source');
+          Continue;
+        end;
+        Physical:='"'+StringReplace(Seed.Get('table',''),'"','""',[rfReplaceAll])+'"';
+        Expression:='wl_clone_rel(json(_ferretdb_sjson),'+q(Seed.Get('_wl_source',''))+','+q(Maps.AsJSON)+')';
+        RelationSql:=RelationSql+'UPDATE '+Physical+' SET _ferretdb_sjson=CASE WHEN typeof(_ferretdb_sjson)=''blob'' THEN jsonb('+Expression+') ELSE '+Expression+' END '+
+          'WHERE json_extract(_ferretdb_sjson,''$._id'')='+q(CloneRef(Maps,'cards',Original.Get('id','')))+'; '+
+          'SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''Missing cloned card'') END; ';
+      end;
       A:=TJSONArray(Data.Find('attachments'));
       for j:=0 to A.Count-1 do
       begin
@@ -479,7 +511,11 @@ begin
         A:=TJSONArray(Data.Find(TableName));
         for j:=0 to A.Count-1 do
         begin
-          Original:=A.Objects[j]; Row:=TJSONObject(Original.Clone);
+          Original:=A.Objects[j];
+          if ((TableName='card_members') or (TableName='card_assignees') or (TableName='card_labels') or
+            (TableName='card_custom_field_values') or (TableName='card_dependencies')) and
+            (CardSource(Original.Get('cardId',''))<>nil) then Continue;
+          Row:=TJSONObject(Original.Clone);
           try
             Id:=Original.Get('id','');
             if Row.Find('id')<>nil then PutString(Row,'id',CloneRef(Maps,TableName,Id));
@@ -521,7 +557,7 @@ begin
           finally Row.Free; end;
         end;
       end;
-      Result:=T.Db.Exec(Sql+Guards+DestGuards+'COMMIT;');
+      Result:=T.Db.Exec(Sql+Guards+DestGuards+RelationSql+Guards+DestGuards+'COMMIT;');
       if not Result then T.Db.Exec('ROLLBACK;');
     except Result:=False; end;
   finally
