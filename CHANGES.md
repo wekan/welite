@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Correct a Serbian seed in Bulgarian activity text
+
+- Replace the Serbian `act-setCustomField` value in the Bulgarian locale with
+  the current Bulgarian source translation. Restore its complete `__board__`
+  token while preserving every other Bulgarian value and key order.
+- Add vocabulary checks against the Serbian seed, Bulgarian-specific word forms
+  and the exact English placeholder inventory; script checks alone are insufficient.
+  Token-repair and installed-language reader tests pass.
+- The ambiguous token audit now has 1,158 remaining differences. Other mixed-language
+  seeds and missing language assets remain open.
+
 ## 2026-11-17 Repair unambiguous translation tokens
 
 - Restore 233 placeholder spellings/cases in 86 locale files from the corresponding

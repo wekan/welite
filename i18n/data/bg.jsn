@@ -36,7 +36,7 @@
   "act-createCard": "је додао нови предмет __card__ у делу __list__ поступка __swimlane__ међу списе __board__",
   "act-createCustomField": "је додао нову рубрику __customField__ међу списе __board__",
   "act-deleteCustomField": "је избрисао рубрику __customField__ из списа __board__",
-  "act-setCustomField": "је изменио запис у рубрици __customField__:__customFieldValue__ у предмету __card__ у __list__ делу поступка __swimlane__ у списима __board",
+  "act-setCustomField": "редактира персонализираното поле __customField__: __customFieldValue__ на карта __card__ в списък __list__ в лента __swimlane__ на дъска __board__",
   "act-createList": "је придодао део поступка __list__ међу списе __board__",
   "act-addBoardMember": "примљен сарадник __member__ за рад на списима __board__",
   "act-archivedBoard": "Таблото  __board__ е преместено в Архива.",

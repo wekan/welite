@@ -395,3 +395,8 @@ ambiguous/repeated refusal, dry run, guarded input/record paths, symlink isolati
 and idempotence are covered. `tokdone.jsn` records repaired keys whose underscore
 and percent inventories must match English. It constrains tokens, allowing future
 human prose improvements. Ambiguous data remains explicitly tracked in TODO.
+
+`python3 tests/bglang.py` guards the Bulgarian custom-field activity against its
+former Serbian seed using vocabulary, distinctive letter/word forms and the exact
+English placeholder inventory. It permits Bulgarian phrasing changes while keeping
+source argument names/counts intact.
