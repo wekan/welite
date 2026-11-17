@@ -354,3 +354,10 @@ state, failed-retry credential secrecy, successful redirect language and hostile
 option names. The no-JavaScript/no-cookie Chromium enrollment test submits the
 Finnish and Arabic picker before its setup/login flow, then checks the chosen
 language survives the login redirect.
+
+`authlang.py`, invoked by `enrhttp.py`, verifies Arabic required-factor registration,
+setup failure/retry, secret issuance, invalid-code retry, confirmation and fresh-code
+sign-in on both backends. It checks language-only flow URLs, private response controls,
+unsupported language refusal and absence of credentials/setup secrets in redirects.
+The Chromium enrollment flow also asserts only language appears in setup/confirmation
+queries before the intended session redirect.

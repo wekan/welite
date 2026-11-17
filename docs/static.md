@@ -115,6 +115,9 @@ The sign-in picker is a separate GET form containing only `lang` and its apply
 button; native names and option values are HTML-escaped. Failed login re-renders
 the translated form with no entered credential values. Successful sign-in carries
 a valid explicit language in the session redirect; it does not change stored
-profile preferences. Registration/enrollment links and general navigation still
-need language propagation. The generic failed-login message remains English until
+profile preferences. Registration/enrollment now preserve validated language through their forms,
+retries, completion links and session redirects; general navigation still needs
+propagation. These routes emit language/direction metadata while retaining private
+enrollment no-store/no-referrer controls. Only language is added to flow URLs,
+with credentials and setup tokens kept in POST bodies/response forms. The generic failed-login message remains English until
 remaining application messages receive translation keys.

@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Carry language through registration and enrollment
+
+- Keep validated language choices in sign-in registration/setup links, registration
+  forms/errors and session redirects, OTP setup/confirmation forms, retries and
+  completion links. Ignore unsupported choices instead of reflecting them into URLs.
+- Render registration/enrollment language/direction and Content-Language/Vary
+  metadata while retaining no-store/no-referrer controls on private enrollment.
+  Credential fields and setup tokens remain in POST bodies; only language is added
+  to public flow URLs. Existing no-language direct requests remain supported.
+- Verify required-factor Arabic registration, password failure, setup, invalid-code
+  retry, confirmation and fresh-code sign-in on both backends. Assert URL state
+  contains no username/password/secret/setup token, and reject unsafe language input.
+- Enrollment/registration text still needs localization; this step carries preference
+  state without claiming all authentication messages or general navigation translated.
+
 ## 2026-11-17 Select and retain sign-in language
 
 - Add a plain GET language picker using installed native names and the selected

@@ -135,6 +135,24 @@ begin
   SendHtml(aResponse, Page32('WeKan-Lite', Body));
 end;
 
+function LanguageUrl(Request:TRequest;const Url:string):string;
+var Language:TWLLanguage;Separator:string;
+begin
+  Result:=Url;
+  if not FindLanguage(Request.QueryFields.Values['lang'],Language) then Exit;
+  if Pos('?',Url)>0 then Separator:='&' else Separator:='?';
+  Result:=Url+Separator+'lang='+Language.Tag;
+end;
+function AuthPage(Request:TRequest;Response:TResponse;const Title,Body:string):string;
+var Language:TWLLanguage;Dir:string;
+begin
+  Language:=ResolveLanguage(Request.QueryFields.Values['lang'],'',Request.AcceptLanguage);
+  if Language.Rtl then Dir:='rtl' else Dir:='ltr';
+  Response.SetCustomHeader('Content-Language',StringReplace(Language.Tag,'_','-',[rfReplaceAll]));
+  Response.SetCustomHeader('Vary','Accept-Language');
+  Result:=PageDir(Title,Body,Dir,Language.Tag);
+end;
+
 function LanguagePicker(const Selected:TWLLanguage;Words:TWLTranslator):string;
 var i:Integer;Language:TWLLanguage;
 begin
@@ -167,7 +185,7 @@ begin
       '  '+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+LineEnding+
       '  '+HtmlEncode(Words.Text('otp','One-time code (if enabled)'))+' <input name="code" size="6" maxlength="6"><br>'+LineEnding+
       '  <input type="submit" value="'+HtmlAttr(Title)+'">'+LineEnding+'</form>'+LineEnding+
-      '<p><a href="/two-factor/setup">Set up one-time codes</a> | <a href="/register">'+
+      '<p><a href="/two-factor/setup?lang='+HtmlAttr(Tag)+'">Set up one-time codes</a> | <a href="/register?lang='+HtmlAttr(Tag)+'">'+
       HtmlEncode(Words.Text('create-account','Create an account (Register)'))+'</a></p>',Dir,Tag);
   finally Words.Free;end;
 end;
@@ -229,14 +247,14 @@ begin
     Response.Content:='Too many login attempts. Try again later.';Response.SendContent;
   end;
 end;
-function ConfirmationForm(const Token,Message:string):string;
+function ConfirmationForm(Request:TRequest;const Token,Message:string):string;
 begin
   Result:='<h1>Confirm one-time codes</h1><p>'+HtmlEncode(Message)+'</p>'+
-    '<form method="POST" action="/two-factor/confirm">'+
+    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/confirm'))+'">'+
     '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
     'One-time code <input name="code" size="6" maxlength="6"><br>'+
     '<input type="submit" value="Confirm"></form>'+
-    '<p><a href="/two-factor/setup">Start setup again</a> | <a href="/sign-in">Sign in</a></p>';
+    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Start setup again</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">Sign in</a></p>';
 end;
 procedure EnrollmentEndpoint(Request:TRequest;Response:TResponse);
 var T:TWLTenant;Username,Token,Secret,Body:string;Proof:TWLEnrollProof;
@@ -250,7 +268,7 @@ begin
     Proof:=nil;
     if not AuthenticateEnrollment(T.Db,Username,Request.ContentFields.Values['password'],Proof) then
     begin
-      SendHtml(Response,Page32('Set up one-time codes','<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="/two-factor/setup">Try again</a></p>'));Exit;
+      SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes','<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Try again</a></p>'));Exit;
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
@@ -258,19 +276,19 @@ begin
       Body:='<h1>Set up one-time codes</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
         '<p>Enter this secret in your authenticator: <code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
-        ConfirmationForm(Token,'Enter a code from your authenticator to enable one-time codes.');
-      SendHtml(Response,Page32('Set up one-time codes',Body));
+        ConfirmationForm(Request,Token,'Enter a code from your authenticator to enable one-time codes.');
+      SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes',Body));
     finally
       Proof.Free;
       if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;
     end;
     Exit;
   end;
-  SendHtml(Response,Page32('Set up one-time codes','<h1>Set up one-time codes</h1>'+
+  SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes','<h1>Set up one-time codes</h1>'+
     '<p>Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.</p>'+
-    '<form method="POST" action="/two-factor/setup">Username <input name="username"><br>'+
+    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Username <input name="username"><br>'+
     'Password <input type="password" name="password"><br><input type="submit" value="Start setup"></form>'+
-    '<p><a href="/sign-in">Sign in</a></p>'));
+    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">Sign in</a></p>'));
 end;
 procedure EnrollmentConfirmEndpoint(Request:TRequest;Response:TResponse);
 var T:TWLTenant;Token,Binding,Username:string;Rows:TWLRows;At:Int64;
@@ -289,11 +307,11 @@ begin
   end;
   if not EnrollmentAdmission(T.Db,Request,Response,Username) then Exit;
   if ConfirmOTPEnrollment(T.Db,Token,Binding,Request.ContentFields.Values['code']) then
-    SendHtml(Response,Page32('One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="/sign-in">sign in</a>. The confirmation code has been used.</p>'))
+    SendHtml(Response,AuthPage(Request,Response,'One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">sign in</a>. The confirmation code has been used.</p>'))
   else
   begin
     if Length(Token)<>64 then Token:='';
-    SendHtml(Response,Page32('Confirm one-time codes',ConfirmationForm(Token,'Invalid code or setup. Try a new code, or start setup again if it has expired.')));
+    SendHtml(Response,AuthPage(Request,Response,'Confirm one-time codes',ConfirmationForm(Request,Token,'Invalid code or setup. Try a new code, or start setup again if it has expired.')));
   end;
 end;
 
@@ -322,21 +340,21 @@ begin
 
     if (Username = '') or (Password = '') then
     begin
-      SendHtml(aResponse, Page32('Register',
-        '<p>Username and password are required.</p><p><a href="/register">Back</a></p>'));
+      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
+        '<p>Username and password are required.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
       Exit;
     end;
     if Password <> Confirm then
     begin
-      SendHtml(aResponse, Page32('Register',
-        '<p>Passwords do not match.</p><p><a href="/register">Back</a></p>'));
+      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
+        '<p>Passwords do not match.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
       Exit;
     end;
     if Length(T.Db.Query(Format('SELECT id FROM users WHERE username=%s LIMIT 1;',
                                 [QuotedStr(Username)]))) > 0 then
     begin
-      SendHtml(aResponse, Page32('Register',
-        '<p>That username is taken.</p><p><a href="/register">Back</a></p>'));
+      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
+        '<p>That username is taken.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
       Exit;
     end;
 
@@ -345,7 +363,7 @@ begin
     Hash  := HashMeteorPassword(Password); // JSON object stored at services.password
     RegistrationPolicy:=ResolvedFactorPolicy(T.Db,'password','{"password":'+Hash+'}',First,PolicySecret,PolicyCondition);
     if not (RegistrationPolicy in [fpNone,fpRequired]) then
-    begin SendHtml(aResponse,Page32('Register','<p>Registration with a password is unavailable.</p>'));Exit;end;
+    begin SendHtml(aResponse,AuthPage(aRequest,aResponse,'Register','<p>Registration with a password is unavailable.</p>'));Exit;end;
     Iso   := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', Now);
     if not T.Db.Exec(Format(
       'INSERT INTO users(id,username,isAdmin,authenticationMethod,createdAt,modifiedAt,' +
@@ -354,14 +372,14 @@ begin
        QuotedStr('{"password":' + Hash + '}'),PolicyCondition])) or
       (Length(T.Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Uid)+';'))<>1) then
     begin
-      SendHtml(aResponse, Page32('Register',
-        '<p>Could not create the account.</p><p><a href="/register">Back</a></p>'));
+      SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register',
+        '<p>Could not create the account.</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">Back</a></p>'));
       Exit;
     end;
 
     if RegistrationPolicy=fpRequired then
     begin
-      SendHtml(aResponse,Page32('Account created','<h1>Account created</h1><p><a href="/two-factor/setup">Set up one-time codes</a> before signing in.</p>'));Exit;
+      SendHtml(aResponse,AuthPage(aRequest,aResponse,'Account created','<h1>Account created</h1><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">Set up one-time codes</a> before signing in.</p>'));Exit;
     end;
 
     // Log the new user straight in (cookie-free session via URL), then go to the board list.
@@ -369,7 +387,7 @@ begin
     if S.SessionId='' then
     begin aResponse.Code:=500; aResponse.Content:='Account created; sign in to continue'; aResponse.SendContent; Exit; end;
     aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location', WithSessionId('/', S.SessionId));
+    aResponse.SetCustomHeader('Location', LanguageUrl(aRequest,WithSessionId('/',S.SessionId)));
     aResponse.SendContent;
     Exit;
   end;
@@ -380,14 +398,14 @@ begin
   if First then
     Body := Body + '<p>This first account will be the <b>Domain Global Admin</b>.</p>' + LineEnding;
   Body := Body +
-    '<form method="POST" action="/register">' + LineEnding +
+    '<form method="POST" action="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">' + LineEnding +
     '  Username <input name="username"><br>' + LineEnding +
     '  Password <input type="password" name="password"><br>' + LineEnding +
     '  Confirm <input type="password" name="confirm"><br>' + LineEnding +
     '  <input type="submit" value="Register">' + LineEnding +
     '</form>' + LineEnding +
-    '<p><a href="/sign-in">Already have an account? Sign in</a></p>';
-  SendHtml(aResponse, Page32('Register', Body));
+    '<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">Already have an account? Sign in</a></p>';
+  SendHtml(aResponse, AuthPage(aRequest,aResponse,'Register', Body));
 end;
 
 // Catch-all: after the fixed routes, try the tenant's designer pages table (pages.url),
