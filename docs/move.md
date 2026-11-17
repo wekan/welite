@@ -24,8 +24,8 @@ combined design.
 |     |  [ ] Card: Docs    |  |  [ ] Card: Tests   |        |
 |     +--------------------+  +--------------------+         |
 |                                                           |
-|              [  up  ]                                     |   <- arrow keypad
-|     [ left ][ down ][ right ]                             |      (submit buttons)
+|              [  ^   ]                                     |   <- arrow keypad
+|     [  <   ][  v   ][  >    ]                             |      (submit buttons)
 |   [edit] [clone] [delete] [clear] [export]                |   <- action buttons
 |   Selected: 0 swimlanes, 0 lists, 1 cards.                |   <- selection summary
 +-----------------------------------------------------------+
@@ -51,13 +51,24 @@ The whole board is wrapped in a single `<form method="POST" action="/board/move"
 
 1. **Selection** — each swimlane/list/card carries `SelectCheckbox(kind, id)` →
    `sel_card` / `sel_list` / `sel_swimlane = <id>` (repeatable).
-2. **Direction** — the keypad arrows are `<input type="submit" name="dir" value="up|down|
-   left|right">`. A browser submits only the **clicked** button's name/value, so one click
-   sends "this direction" + every checked selection together. No JS needed to know which arrow.
+2. **Direction** — arrow inputs have fixed `move_up`, `move_down`, `move_left` and
+   `move_right` names with ASCII `^`, `v`, `<`, `>` captions. Each input and its table
+   use `dir="ltr"`. A browser submits only the clicked input alongside selections.
+   The server derives direction from the fixed name; the visible value is ignored.
+   Legacy `dir=up|down|left|right|drop` requests remain supported for existing clients
+   and progressive drag enhancement.
 3. **Actions** — Edit / Clone / Delete / Clear / Export are submit buttons `name="action"`
    in the same form (no `dir`, so `ApplyMove` ignores them and the action handler runs).
 4. **Apply + PRG** — `ApplyMove` updates the DB; the endpoint 302-redirects back to `back`
    with the session id in the URL (cookie-free). Re-render shows the moved items.
+
+`NormalizeMoveSubmit` runs after session validation, before selection admission,
+action-proof verification and mutations. One native arrow becomes the canonical
+`dir` command. Duplicate/multiple/unknown native arrows and native-arrow mixtures
+with legacy `dir` or `action` fields return 400 without changing board data or
+consuming the action proof. Legacy-only request semantics remain unchanged. Fixed
+submit names let future localized captions change without changing command values
+or requiring HTML4 button elements on the HTML3.2 baseline.
 
 Because state travels in the form, the component is **stateless on the server** — no session-
 stored selection, no cookies. It renders and works identically in IBrowse / NetSurf / Lynx.

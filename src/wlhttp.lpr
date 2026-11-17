@@ -458,6 +458,8 @@ begin
   begin
     S:=Default(TWLSession);Fail(403,'Sign in required');Exit;
   end;
+  if not NormalizeMoveSubmit(aRequest.ContentFields) then
+  begin Fail(400,'Ambiguous movement command');Exit;end;
   if ((aRequest.ContentFields.Values['action']='clear') and
       not BoardCanWrite(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'])) or
     ((aRequest.ContentFields.Values['action']<>'clear') and

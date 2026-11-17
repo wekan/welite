@@ -15,7 +15,7 @@ const assert=require('node:assert/strict');
       const right=(start==='todo')!==rtl;
       let step=0;
       for(const move of [right?'right':'left',right?'left':'right']) {
-        await card.check();await page.locator(`input[name=dir][value=${move}]`).click();
+        await card.check();await page.locator(`input[name=move_${move}]`).click();
         if(step++===0)assert.notEqual(await card.evaluate(node=>node.closest('td[data-list]').getAttribute('data-list')),start);
         assert.equal(new URL(page.url()).pathname,`/wb-${direction}`);
         assert.equal(new URL(page.url()).searchParams.get('lang'),language);

@@ -13,7 +13,7 @@ const assert = require('node:assert/strict');
     await page.goto(`${process.argv[2]}/board?id=protected&sessionId=${process.argv[3]}`);
     assert.equal(await page.locator('td[data-list=todo]').getByText('Card <test>').count(), 1);
     await page.locator('input[name=sel_card][value=card]').check();
-    await page.locator('input[type=submit][name=dir][value=right]').click();
+    await page.locator('input[type=submit][name=move_right]').click();
     await page.getByRole('link', { name: 'View right', exact: true }).click();
     assert.equal(await page.getByText('X 2 Y 1', { exact: false }).count(), 1);
     assert.equal(await page.locator('td[data-list=doing]').getByText('Card <test>').count(), 1);

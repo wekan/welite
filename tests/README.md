@@ -571,3 +571,10 @@ all-boards/view-all and empty captions, plus no-lane and missing/inaccessible di
 and published board text, query/profile/header precedence and escaped user titles.
 With `WELITE_UI=1`, `boardtxt.js` follows translated overview links and verifies empty/
 404 states in Finnish/Arabic/Hebrew, including header-only language and no cookies/JS.
+
+`python3 tests/keypad.py` checks actual native arrow markup/order and command
+normalization on both backends, including ignored captions, duplicate/unknown/mixed
+commands, unchanged rejected parameters and legacy direction/action compatibility.
+`keyhttp.py`, called by `admin.py`, exercises real RTL arrow round trips and rejected
+commands without board mutations or action-proof consumption. Existing no-JS/no-cookie
+board/widget/browser movement checks click fixed submit names instead of captions.

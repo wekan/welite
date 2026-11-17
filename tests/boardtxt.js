@@ -19,7 +19,7 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
       assert.equal(new URL(page.url()).searchParams.get('view'),'all');
       assert.equal(new URL(page.url()).searchParams.get('lang'),tag);
       assert((await page.locator('body').innerText()).includes(local['no-items-message']));
-      assert.equal(await page.locator('input[name=dir]').count(),0);
+      assert.equal(await page.locator('input[name^=move_]').count(),0);
       await page.getByRole('link',{name:local['all-boards'],exact:true}).click();
       assert.equal(await page.locator('h2').innerText(),local.boards);
       await page.goto(base+'/board?id=boardnone&lang='+tag);

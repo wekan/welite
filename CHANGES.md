@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Decouple native movement arrows from submitted captions
+
+- Render fixed move_up/down/left/right submit names with ASCII arrow captions,
+  keeping input/table direction isolated and the physical keypad order intact.
+  Direction no longer depends on visible English words; HTML3.2 inputs remain usable.
+- Normalize one native arrow before selection/proof admission. Reject duplicate,
+  unknown, multiple or legacy-mixed commands without data changes or proof
+  consumption. Existing legacy direction/drop/action clients retain their behavior.
+- Both-backend parser/markup checks pass. Linked/CLI real HTTP and no-JS/no-cookie
+  Chromium cover native RTL moves, caption-independent dispatch, rejected-command
+  rollback/proof reuse, published widget direction and progressive drag workflows.
+- Action-button/selection captions and minimap explanations remain untranslated
+  work in TODO; document the new input protocol and legacy compatibility.
+
 ## 2026-11-17 Translate board navigation and empty/not-found states
 
 - Reuse existing native board/title, all-boards/view-all and empty-item strings

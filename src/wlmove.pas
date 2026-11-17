@@ -15,8 +15,8 @@ unit wlmove;
 
   Mechanics (no JavaScript, no cookies): the whole board is ONE <form method="POST"
   action="/board/move">. Each item carries a selection checkbox (sel_card / sel_list /
-  sel_swimlane = id, repeatable). The keypad arrows are submit buttons named dir=up|down|
-  left|right; the browser sends only the clicked button's value plus every checked selection,
+  sel_swimlane = id, repeatable). The keypad arrows use stable move_up/down/left/right
+  submit names with ASCII arrow captions. The browser sends only the clicked submit name plus checked selections,
   so the server learns "move these items in this direction" in one round trip. PRG-redirects
   back with the session id in the URL.
 
@@ -49,6 +49,10 @@ function MoveFormEnd: string;
 // The combined keypad + action buttons + selection summary. Counts are for the summary label.
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
   IncludeActions: Boolean = True; IncludeClone:Boolean=True): string;
+
+// Normalize one native arrow submit name to the legacy dir command. Values are
+// presentation only. Reject ambiguous commands without changing Params.
+function NormalizeMoveSubmit(Params:TStrings):Boolean;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
 // True if anything moved. Register the endpoint at POST /board/move (see wlhttp.lpr).
@@ -83,6 +87,27 @@ begin
   Result := '</form>';
 end;
 
+function NormalizeMoveSubmit(Params:TStrings):Boolean;
+var i,Count,Legacy:Integer;Name,Direction:string;
+begin
+  Result:=False;if Params=nil then Exit;
+  Count:=0;Legacy:=0;Direction:='';
+  for i:=0 to Params.Count-1 do
+  begin
+    Name:=LowerCase(Params.Names[i]);
+    if (Name='dir') or (Name='action') then Inc(Legacy);
+    if Copy(Name,1,5)='move_' then
+    begin
+      if not ((Name='move_up') or (Name='move_down') or
+        (Name='move_left') or (Name='move_right')) then Exit;
+      Inc(Count);Direction:=Copy(Name,6,Length(Name));
+    end;
+  end;
+  if (Count>1) or ((Count=1) and (Legacy>0)) then Exit;
+  if Count=1 then Params.Values['dir']:=Direction;
+  Result:=True;
+end;
+
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
   IncludeActions: Boolean; IncludeClone:Boolean): string;
 begin
@@ -92,11 +117,11 @@ begin
   Result :=
     '<table dir="ltr" border="0" cellpadding="2" cellspacing="0"><tr>' +
     '<td></td>' +
-    '<td align="center"><input type="submit" name="dir" value="up"></td>' +    // shows as "up"
+    '<td align="center"><input type="submit" name="move_up" value="^" dir="ltr"></td>' +
     '<td></td></tr><tr>' +
-    '<td><input type="submit" name="dir" value="left"></td>' +
-    '<td><input type="submit" name="dir" value="down"></td>' +
-    '<td><input type="submit" name="dir" value="right"></td>' +
+    '<td><input type="submit" name="move_left" value="&lt;" dir="ltr"></td>' +
+    '<td><input type="submit" name="move_down" value="v" dir="ltr"></td>' +
+    '<td><input type="submit" name="move_right" value="&gt;" dir="ltr"></td>' +
     '</tr></table>' + LineEnding;
   if IncludeActions then Result:=Result+
     // action buttons (same form, distinct submit name=action)
