@@ -1353,6 +1353,35 @@ source/destination value checks. This establishes these clone permission gates;
 exact unknown BSON types/presence in newly cloned records, import permissions and
 other generic data/query surfaces remain unfinished.
 
+## Typed selection export audit
+
+Shared selection export collects the full typed source of each selected root row
+in the same SQLite read snapshot as its ordinary projected columns. In addition
+to cloneable roots, this includes boards, custom-field definitions and activities.
+A private audit graph replaces shared root projections with typed source wrappers;
+its native/relation rows retain the existing plain payload checks. The typed
+scanner validates complete source metadata and uses canonical string schemas for
+field/board identifiers. A Regex pattern matching a field ID cannot grant access,
+and a Regex pattern `customFields` remains literal data rather than a string
+activity marker. Keys such as `_wl_source` inside source data stay literal.
+
+The captured root descriptors, versions, collection names and settings must match
+owned metadata. Bindings are checked again before delivery, and missing ownership
+or failed source queries deny collection. The ordinary whole-board field gate and
+captured custom-value row checks still apply. The private audit graph/bindings are
+removed before serialization; source columns retain their original null output
+and no raw typed source is added to the download. This step establishes typed
+identity for selection export checks, not a new typed export/import file format.
+
+`tests/cfexpt.py` runs through real shared HTTP on both SQL backends and covers
+nonstring field/board identities in card extras, activities and selected definitions,
+literal Regex markers/source-like keys, exact source BSON preservation, unchanged
+public export shape and missing activity-root ownership. The same focused shared
+HTTP checks pass with range, overflow, I/O and assertion checks enabled in Pascal.
+The previous committed selection implementation returns a download for the new
+Regex field-ID case, confirming that the regression detects the original gap.
+Clone/import fidelity and other value-bearing routes remain unfinished.
+
 ## Typed root clone seeds
 
 For shared root records, clone collection reads a typed source seed and its SQL

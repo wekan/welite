@@ -30,29 +30,32 @@ end;
 procedure AddQuery(Db:TWLDb; const Sql:string; Ids:TStrings);
 var R:TWLRows; i:Integer;
 begin R:=Db.Query(Sql); for i:=0 to High(R) do AddId(Ids,R[i][0]); end;
-function RowsJson(Db:TWLDb; const TableName,WhereClause:string;CloneSeed:Boolean;out Binding:string):TJSONArray;
+function RowsJson(Db:TWLDb; const TableName,WhereClause:string;const Action:string;out Binding:string;out Audit:TJSONArray):TJSONArray;
 var Columns,R,Owner:TWLRows; Sql,Order,SeedExpr,Spec,Physical,OwnerTest,OwnerGuard,Collection:string; i:Integer; HasId,HasSort:Boolean;Row:TJSONObject;
 begin
-  Result:=TJSONArray.Create;Binding:='';OwnerGuard:='';
+  Result:=TJSONArray.Create;Audit:=nil;Binding:='';OwnerGuard:='';
+  if Action='export' then Audit:=TJSONArray.Create;
   try
   Columns:=Db.Query('PRAGMA table_info('+TableName+');');SeedExpr:='';Spec:='';
-  if CloneSeed and ((TableName='cards') or (TableName='lists') or (TableName='swimlanes') or
-    (TableName='checklists') or (TableName='checklist_items') or (TableName='card_comments') or (TableName='attachments')) then
+  if ((Action='clone') or (Action='export')) and ((TableName='cards') or (TableName='lists') or (TableName='swimlanes') or
+    (TableName='checklists') or (TableName='checklist_items') or (TableName='card_comments') or (TableName='attachments') or
+    ((Action='export') and ((TableName='boards') or (TableName='custom_fields') or (TableName='activities')))) then
   begin
     Owner:=Db.Query('SELECT type FROM sqlite_master WHERE name='+q(TableName)+';');
     if (Length(Owner)=1) and (Owner[0][0]='view') then
     begin
       Collection:=TableName;if TableName='checklist_items' then Collection:='checklistItems';
+      if TableName='custom_fields' then Collection:='customFields';
       Owner:=Db.Query('SELECT m.table_name,m.spec,m.version,c.settings FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name '+
         'WHERE m.name='+q(TableName)+' AND c.name='+q(Collection)+' AND json_extract(m.spec,''$.table'')='+q(TableName)+' AND json_extract(m.spec,''$.collection'')=c.name;');
-      if Length(Owner)<>1 then raise Exception.Create('Missing clone root ownership');
+      if Length(Owner)<>1 then raise Exception.Create('Missing selection root ownership');
       Physical:='"'+StringReplace(Owner[0][0],'"','""',[rfReplaceAll])+'"';Spec:=Owner[0][1];
       OwnerTest:='EXISTS(SELECT 1 FROM _wl_models m JOIN _ferretdb_collections c ON c.table_name=m.table_name WHERE m.name='+q(TableName)+
         ' AND m.table_name='+q(Owner[0][0])+' AND m.spec='+q(Spec)+' AND m.version='+q(Owner[0][2])+
         ' AND c.settings='+q(Owner[0][3])+' AND json_extract(m.spec,''$.collection'')=c.name)';
-      OwnerGuard:='SELECT CASE WHEN '+OwnerTest+' THEN 1 ELSE json(''Clone root binding changed'') END; ';
+      OwnerGuard:='SELECT CASE WHEN '+OwnerTest+' THEN 1 ELSE json(''Selection root binding changed'') END; ';
       // Scalar columns and the seed come from the same SQLite read snapshot.
-      SeedExpr:='(SELECT CASE WHEN count(*)=1 AND '+OwnerTest+' THEN json(min(_ferretdb_sjson)) ELSE json(''Ambiguous clone source'') END FROM '+Physical+
+      SeedExpr:='(SELECT CASE WHEN count(*)=1 AND '+OwnerTest+' THEN json(min(_ferretdb_sjson)) ELSE json(''Ambiguous selection source'') END FROM '+Physical+
         ' WHERE json_extract(_ferretdb_sjson,''$._id'')="'+TableName+'".id)';
     end;
   end;
@@ -76,24 +79,51 @@ begin
     Row:=TJSONObject(GetJSON(R[i][0]));Result.Add(Row);
     if SeedExpr<>'' then
     begin
-      Physical:=RootCloneSeed(Row.Get('_wl_source',''),Spec);Row.Delete('_wl_source');Row.Add('_wl_source',Physical);
-    end;
+      Physical:=Row.Get('_wl_source','');
+      if Action='clone' then
+      begin Physical:=RootCloneSeed(Physical,Spec);Row.Delete('_wl_source');Row.Add('_wl_source',Physical);end
+      else
+      begin
+        // Audit the complete typed source, never a lossy SQL rendering of it.
+        Audit.Add(TJSONObject.Create(['_wl_source',Physical]));
+        Row.Delete('_wl_source');Row.Add('_wl_source',TJSONNull.Create);
+      end;
+    end
+    else if Action='export' then Audit.Add(Row.Clone);
   end;
   if Result.Count>0 then Binding:=OwnerGuard;
-  except Result.Free;raise;end;
+  except Audit.Free;Audit:=nil;Result.Free;raise;end;
+end;
+function SelectionBindingsValid(Db:TWLDb;Bindings:TJSONArray):Boolean;
+var i:Integer;Rows:TWLRows;
+begin
+  Result:=False;if Bindings=nil then Exit;
+  for i:=0 to Bindings.Count-1 do
+  begin
+    if Bindings.Items[i].JSONType<>jtString then Exit;
+    Rows:=Db.Query(Bindings.Strings[i]);
+    if (Length(Rows)<>1) or (Rows[0][0]<>'1') then Exit;
+  end;
+  Result:=True;
 end;
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
 var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous:Integer;
-  Data:TJSONObject;Bindings:TJSONArray;
+  Data,AuditData:TJSONObject;Bindings:TJSONArray;
   procedure Table(const Name,WhereClause:string);
-  var Binding:string;
+  var Binding:string;Audit:TJSONArray;
   begin
-    Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action']='clone',Binding));
+    Data.Add(Name,RowsJson(T.Db,Name,WhereClause,Params.Values['action'],Binding,Audit));
+    if AuditData<>nil then AuditData.Add(Name,Audit) else Audit.Free;
     if Binding<>'' then Bindings.Add(Binding);
   end;
 begin
-  Result:=TJSONObject.Create; Data:=TJSONObject.Create; Result.Add('data',Data);Bindings:=nil;
+  Result:=TJSONObject.Create; Data:=TJSONObject.Create; Result.Add('data',Data);Bindings:=nil;AuditData:=nil;
   if Params.Values['action']='clone' then begin Bindings:=TJSONArray.Create;Result.Add('_clone_bindings',Bindings);end;
+  if Params.Values['action']='export' then
+  begin
+    Bindings:=TJSONArray.Create;Result.Add('_export_bindings',Bindings);
+    AuditData:=TJSONObject.Create;Result.Add('_export_audit',AuditData);
+  end;
   Lanes:=TStringList.Create; Lists:=TStringList.Create; Cards:=TStringList.Create; Checks:=TStringList.Create;
   try
     try
@@ -604,9 +634,12 @@ begin
       try ExportSelection(T,Graph);
       except Error(T,S,Request,Response,500,'Could not export attachment content'); Exit; end;
       if not BoardFieldExportAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId']) or
-        not ExportPayloadAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId'],Data) or
+        not ExportPayloadAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId'],Graph.Find('_export_audit')) or
         not FieldExportRowsAllowed(T.Db,S.UserId,Request.ContentFields.Values['boardId'],TJSONArray(Data.Find('card_custom_field_values'))) then
       begin Error(T,S,Request,Response,403,'Export requires access to every custom-field value on this board');Exit;end;
+      if not SelectionBindingsValid(T.Db,TJSONArray(Graph.Find('_export_bindings'))) then
+      begin Error(T,S,Request,Response,500,'Selection source binding changed');Exit;end;
+      Graph.Delete('_export_bindings');Graph.Delete('_export_audit');
       Response.ContentType:='application/json';
       Response.SetCustomHeader('Content-Disposition','attachment; filename="select.jsn"');
       Response.Content:=Graph.AsJSON; Response.SendContent; Exit;

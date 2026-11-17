@@ -4,6 +4,24 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Check typed BSON identity during selection exports
+
+- Capture complete typed source beside shared root projections in the same SQLite
+  read snapshot. Audit board/card/definition/history and other selected root data
+  using BSON metadata, so Regex/ObjectId/Date lookalikes cannot acquire string
+  identifier authority through a plain SQL JSON rendering.
+- Preserve literal nonstring activity markers and metadata-like string keys.
+  Audit native and relation rows with the existing payload checks, and recheck
+  captured root model/collection bindings before delivery. Missing ownership denies
+  collection without a downloadable payload.
+- Keep audit sources and binding checks private: downloaded selection JSON retains
+  its existing keys and null source columns, and source BSON remains unchanged.
+- Live tests cover typed field/board identifiers in nested card data, activities
+  and selected definitions, literal Regex markers, ownership refusal and exact
+  source preservation in normal and checked builds on both backends. Native/shared
+  HTTP and eight Windows cross-builds cover existing behavior; Windows execution
+  remains unverified. Broader clone/import/query and lifecycle work remains open.
+
 ## 2026-11-17 Retain unknown BSON subtrees in cloned root records
 
 - Capture typed root seeds alongside projected columns in the same SQLite read

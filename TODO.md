@@ -340,9 +340,16 @@ not merely a design document. Platform/browser claims require testing on those t
   identifier lookalikes. Selection collection
   fails closed on source/query/ownership errors. Checked/normal tests and live
   shared BSON comparisons cover these paths and binding-change rollback.
+  Shared selection exports now audit complete typed root source captured beside
+  projected columns, including boards, selected definitions and activities.
+  Nonstring BSON field/board identifiers cannot inherit authority from SQL string
+  renderings, while literal Regex markers and metadata-like keys retain their
+  identity. Private audit data never enters downloads; root bindings are rechecked
+  before delivery. Live both-backend tests verify identity gates, unchanged output
+  shape/source BSON and missing-ownership refusal.
   Next: reconcile managed-relation metadata/type/presence and mapped-field presence
   in clones, remaining clone lifecycle details, metadata-aware identifiers for
-  projected export/other payloads, import permissions, generic HTML
+  other payloads, import permissions, generic HTML
   data/query surfaces and other value-bearing paths. Definition edit/delete and
   creation/automatic-card behavior stay open; full field-policy parity is not
   established.
