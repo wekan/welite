@@ -1,0 +1,410 @@
+{
+  "version": 1,
+  "keys": {
+    "ace.jsn": [
+      "act-addAttachment",
+      "and-n-other-card",
+      "and-n-other-card_plural",
+      "avatar-too-big",
+      "remove-member-pop"
+    ],
+    "ar-DZ.jsn": [
+      "act-createBoard",
+      "act-archivedBoard",
+      "act-importBoard",
+      "act-withBoardTitle",
+      "email-invite-text",
+      "custom-field-stringtemplate-format"
+    ],
+    "ar-EG.jsn": [
+      "act-createBoard",
+      "act-archivedBoard",
+      "act-importBoard",
+      "act-withBoardTitle",
+      "email-invite-text"
+    ],
+    "ar.jsn": [
+      "act-createBoard",
+      "act-archivedBoard",
+      "act-importBoard",
+      "act-withBoardTitle",
+      "email-invite-text"
+    ],
+    "ary.jsn": [
+      "act-createBoard",
+      "act-archivedBoard",
+      "act-importBoard",
+      "act-withBoardTitle",
+      "email-invite-text"
+    ],
+    "ast-ES.jsn": [
+      "operator-number-expected"
+    ],
+    "bg.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "br.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "ca.jsn": [
+      "act-removeChecklistItem",
+      "act-unjoinMember",
+      "operator-number-expected",
+      "globalSearch-instructions-operator-sort"
+    ],
+    "ca_ES.jsn": [
+      "act-removeChecklistItem",
+      "act-unjoinMember",
+      "operator-number-expected",
+      "globalSearch-instructions-operator-sort"
+    ],
+    "cavalenc.jsn": [
+      "act-removeChecklistItem",
+      "act-unjoinMember",
+      "operator-number-expected",
+      "globalSearch-instructions-operator-sort"
+    ],
+    "cs-CZ.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "cs.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "da.jsn": [
+      "operator-number-expected",
+      "globalSearch-instructions-operator-creator"
+    ],
+    "de-AT.jsn": [
+      "act-addChecklistItem"
+    ],
+    "de-CH.jsn": [
+      "act-addChecklistItem"
+    ],
+    "de.jsn": [
+      "act-addChecklistItem"
+    ],
+    "de_DE.jsn": [
+      "act-addChecklistItem"
+    ],
+    "el-GR.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "el.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "eo.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "es-AR.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "es-MX.jsn": [
+      "and-n-other-card",
+      "and-n-other-card_plural"
+    ],
+    "et-EE.jsn": [
+      "act-addComment",
+      "act-editComment",
+      "act-deleteComment",
+      "act-createBoard",
+      "act-createCard",
+      "act-importBoard",
+      "act-restoredCard",
+      "act-withBoardTitle",
+      "and-n-other-card",
+      "and-n-other-card_plural",
+      "email-invite-subject",
+      "email-invite-register-subject",
+      "act-a-dueAt",
+      "act-withDue",
+      "act-almostdue",
+      "act-pastdue",
+      "act-duenow"
+    ],
+    "eu.jsn": [
+      "avatar-too-big",
+      "operator-number-expected"
+    ],
+    "fa-IR.jsn": [
+      "act-withBoardTitle",
+      "avatar-too-big",
+      "email-invite-text"
+    ],
+    "fa.jsn": [
+      "act-withBoardTitle",
+      "avatar-too-big",
+      "email-invite-text"
+    ],
+    "fi.jsn": [
+      "act-removeChecklistItem",
+      "email-verifyEmail-subject",
+      "custom-field-stringtemplate-format"
+    ],
+    "fr-CH.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "fr-FR.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "fr.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "he-IL.jsn": [
+      "act-addSubtask"
+    ],
+    "he.jsn": [
+      "act-addSubtask"
+    ],
+    "hi-IN.jsn": [
+      "act-addSubtask",
+      "avatar-too-big"
+    ],
+    "hi.jsn": [
+      "act-addSubtask",
+      "avatar-too-big"
+    ],
+    "hr.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "id.jsn": [
+      "act-addAttachment",
+      "and-n-other-card",
+      "and-n-other-card_plural",
+      "avatar-too-big",
+      "remove-member-pop"
+    ],
+    "it.jsn": [
+      "act-addChecklist"
+    ],
+    "ja-HI.jsn": [
+      "act-addChecklistItem"
+    ],
+    "ja.jsn": [
+      "act-addChecklistItem"
+    ],
+    "ka.jsn": [
+      "email-enrollAccount-subject",
+      "email-resetPassword-subject",
+      "email-verifyEmail-subject",
+      "label-not-found",
+      "label-color-not-found",
+      "operator-unknown-error",
+      "custom-field-stringtemplate-format"
+    ],
+    "ko-KR.jsn": [
+      "act-addChecklistItem"
+    ],
+    "ko.jsn": [
+      "act-addChecklistItem"
+    ],
+    "lv.jsn": [
+      "act-withBoardTitle"
+    ],
+    "mk.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "mn.jsn": [
+      "email-enrollAccount-subject",
+      "email-resetPassword-subject",
+      "email-verifyEmail-subject",
+      "label-not-found",
+      "label-color-not-found",
+      "operator-unknown-error",
+      "custom-field-stringtemplate-format"
+    ],
+    "ms-MY.jsn": [
+      "act-addAttachment",
+      "act-deleteAttachment",
+      "act-addChecklist"
+    ],
+    "ms.jsn": [
+      "act-addAttachment",
+      "act-deleteAttachment",
+      "act-addChecklist"
+    ],
+    "nb.jsn": [
+      "act-addAttachment",
+      "act-deleteAttachment",
+      "act-addChecklist",
+      "act-removeChecklist",
+      "act-removeChecklistItem",
+      "act-joinMember",
+      "act-unjoinMember",
+      "globalSearch-instructions-operator-team"
+    ],
+    "nl-NL.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "nl.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "oc.jsn": [
+      "act-addAttachment",
+      "act-deleteAttachment",
+      "act-removeChecklistItem",
+      "act-withBoardTitle",
+      "and-n-other-card",
+      "and-n-other-card_plural",
+      "custom-field-stringtemplate-format"
+    ],
+    "pl-PL.jsn": [
+      "act-moveCardToOtherBoard"
+    ],
+    "pl.jsn": [
+      "act-moveCardToOtherBoard"
+    ],
+    "pt-BR.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "ro-RO.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "ro.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "ru-UA.jsn": [
+      "email-enrollAccount-subject",
+      "email-resetPassword-subject",
+      "email-verifyEmail-subject",
+      "label-not-found",
+      "label-color-not-found",
+      "operator-unknown-error",
+      "custom-field-stringtemplate-format"
+    ],
+    "ru.jsn": [
+      "email-enrollAccount-subject",
+      "email-resetPassword-subject",
+      "email-verifyEmail-subject",
+      "label-not-found",
+      "label-color-not-found",
+      "operator-unknown-error",
+      "custom-field-stringtemplate-format"
+    ],
+    "ru_RU.jsn": [
+      "email-enrollAccount-subject",
+      "email-resetPassword-subject",
+      "email-verifyEmail-subject",
+      "label-not-found",
+      "label-color-not-found",
+      "operator-unknown-error",
+      "custom-field-stringtemplate-format"
+    ],
+    "sk.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "sl.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "sl_SI.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "sr.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "sv.jsn": [
+      "act-removeChecklistItem",
+      "operator-number-expected",
+      "globalSearch-instructions-operator-creator"
+    ],
+    "ta.jsn": [
+      "act-addSubtask",
+      "avatar-too-big"
+    ],
+    "tlh.jsn": [
+      "act-addChecklistItem"
+    ],
+    "tr.jsn": [
+      "act-addChecklistItem",
+      "act-removeChecklistItem"
+    ],
+    "uk-UA.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "uk.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "ve-CC.jsn": [
+      "act-addChecklist"
+    ],
+    "ve-PP.jsn": [
+      "act-removeChecklistItem",
+      "act-withBoardTitle",
+      "email-verifyEmail-subject",
+      "custom-field-stringtemplate-format"
+    ],
+    "vl-SS.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "vo.jsn": [
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "wa-RR.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "wa.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "wo.jsn": [
+      "act-addSubtask",
+      "act-removeChecklistItem",
+      "custom-field-stringtemplate-format"
+    ],
+    "yo.jsn": [
+      "custom-field-stringtemplate-format"
+    ],
+    "zgh.jsn": [
+      "act-createBoard",
+      "act-archivedBoard",
+      "act-importBoard",
+      "act-withBoardTitle",
+      "custom-field-stringtemplate-format"
+    ],
+    "zh-CN.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "zh-GB.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "zh-HK.jsn": [
+      "act-removeChecklistItem",
+      "board-open-and-move-between-remaining-and-workspaces",
+      "drag-board-to-workspace"
+    ],
+    "zh-Hant.jsn": [
+      "act-removeChecklistItem",
+      "board-open-and-move-between-remaining-and-workspaces",
+      "drag-board-to-workspace"
+    ],
+    "zh-TW.jsn": [
+      "act-removeChecklistItem",
+      "board-open-and-move-between-remaining-and-workspaces",
+      "drag-board-to-workspace"
+    ],
+    "zh.jsn": [
+      "act-removeChecklistItem"
+    ],
+    "zh_SG.jsn": [
+      "act-removeChecklistItem"
+    ]
+  }
+}

@@ -4,6 +4,25 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Repair unambiguous translation tokens
+
+- Restore 233 placeholder spellings/cases in 86 locale files from the corresponding
+  English key. Repair only a unique unmatched argument or a uniquely matched case
+  difference; leave missing/repeated/malformed/ambiguous slots for contextual review.
+- Preserve all surrounding prose, other translation values and key order. Treat
+  URL percent octets as data while retaining real named/printf arguments in URLs;
+  include non-Latin token names and exact printf width/precision spelling.
+- Add an offline audit/apply tool with flat/unique/UTF-8 input checks, symlink
+  isolation, stale-input refusal and staged file replacement under TMPDIR. Record
+  repaired keys so regression tests compare their inventories with English without
+  freezing future human prose improvements.
+- Verify synthetic Unicode/format/URL/ambiguity cases, dry run, guarded writes,
+  unchanged human text/key order, idempotence and all recorded inventories. Compare
+  every production change against the previous commit; only token spans changed.
+  Installed-language reader/catalog tests also pass.
+- 1,159 ambiguous token differences, wrong/mixed-language auditing and the missing
+  language assets remain open; this batch does not declare translation data complete.
+
 ## 2026-11-17 Share viewer language across page frames
 
 - Resolve query/posted language, the authenticated tenant-bound profile and standard

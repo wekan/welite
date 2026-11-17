@@ -388,3 +388,10 @@ tenant-bound profile preferences against header/query/posted choices, saved fixe
 direction and unchanged profile data. The native harness pins its temporary data root
 and native mode. Shared HTTP tests also assert Mongo profile changes yield matching
 HTML and Content-Language without changing unrelated BSON profile values.
+
+`python3 tests/tokfix.py` verifies token-only repairs preserve prose and untouched
+human text/key order; Unicode names, case, printf/named formats, URL octets,
+ambiguous/repeated refusal, dry run, guarded input/record paths, symlink isolation
+and idempotence are covered. `tokdone.jsn` records repaired keys whose underscore
+and percent inventories must match English. It constrains tokens, allowing future
+human prose improvements. Ambiguous data remains explicitly tracked in TODO.
