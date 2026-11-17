@@ -400,3 +400,8 @@ human prose improvements. Ambiguous data remains explicitly tracked in TODO.
 former Serbian seed using vocabulary, distinctive letter/word forms and the exact
 English placeholder inventory. It permits Bulgarian phrasing changes while keeping
 source argument names/counts intact.
+
+`python3 tests/acelang.py` guards Acehnese against its Malay/Indonesian seed using
+native core/activity/legacy vocabulary, beyond Latin-script checks. It verifies
+English key order and every underscore/percent inventory. The installed-language
+reader and form tests exercise the updated labels without a translation service.

@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Replace the wrong-language Acehnese seed
+
+- Replace the Malay/Indonesian seed in `ace.jsn` with the current Acehnese source
+  for 2,090 shared keys. Keep English key order and exact underscore/percent argument
+  inventories across all 2,101 values; code-only legacy title templates stay literal.
+- Fill nine removed-source compatibility phrases using the maintained Acehnese UI
+  vocabulary and dictionary/grammar references. These nine legacy prose phrases are
+  low confidence and remain open to native-speaker refinement.
+- Add vocabulary/core/activity/legacy-label regressions that distinguish the old seed
+  despite sharing a Latin script. Token records and installed-language reader checks
+  pass; rendered form coverage checks the updated native labels on both backends.
+- The ambiguous token audit now has 1,156 remaining differences. Other language data,
+  missing locales and remaining application messages still need work.
+
 ## 2026-11-17 Correct a Serbian seed in Bulgarian activity text
 
 - Replace the Serbian `act-setCustomField` value in the Bulgarian locale with
