@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Insert shared custom values by field definition
+
+- Read the current custom-field definition inside each shared SQL insertion.
+  Convert text, number/currency, checkbox, date, dropdown/multi-select and
+  stringtemplate values to their corresponding BSON types.
+- Supply an explicit Date schema hint for appended date values while retaining
+  existing sibling/root BSON metadata. Refuse missing/ambiguous/unsupported
+  definitions and invalid input rather than silently storing text.
+- Add real FerretDB tests for every supported type, live definition changes,
+  missing/empty source arrays, duplicate refusal, exact BSON and multi-row rollback
+  on both SQLite backends. The regression fails against the previous committed
+  code because a numeric value is stored as text.
+- Explicit type changes, typed API input/output, normalized migration and selection
+  clone/export remain in TODO; the broader interoperability milestone stays open.
+
 ## 2026-11-17 Preserve existing shared custom-field value types
 
 - Use the stored BSON schema when SQL updates an existing custom-field value.

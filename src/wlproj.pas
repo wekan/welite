@@ -94,8 +94,8 @@ begin
   end;
   Invalid;
 end;
-// Existing custom values retain their declared BSON type. New typed values need
-// an explicit insertion contract; ordinary text insertion remains unchanged.
+// Existing custom values retain their declared BSON type. Inserts select the
+// conversion from the current custom-field definition.
 function CustomUpdate(Value,Schema:TJSONData;Field:TJSONObject):TJSONData;
 var Kind:string;Spec,Parsed:TJSONObject;Items:TJSONData;i:Integer;
 begin
@@ -124,6 +124,18 @@ begin
     else if (Kind<>'string') and (Kind<>'null') then Invalid;
     Result:=Coerce(Value,Spec);
   finally Spec.Free;end;
+end;
+function CustomInsert(Value:TJSONData;const FieldType:string;Field:TJSONObject):TJSONData;
+var Kind:string;Schema:TJSONObject;
+begin
+  if (FieldType='text') or (FieldType='dropdown') or (FieldType='stringtemplate') then Kind:='string'
+  else if (FieldType='number') or (FieldType='currency') then Kind:='double'
+  else if FieldType='checkbox' then Kind:='bool'
+  else if FieldType='date' then Kind:='date'
+  else if FieldType='dropdownMultiSelect' then Kind:='array'
+  else begin Invalid;Exit(nil);end;
+  Schema:=TJSONObject.Create(['t',Kind]);
+  try Result:=CustomUpdate(Value,Schema,Field);finally Schema.Free;end;
 end;
 function ProjectDocument(const Previous,Columns,Model,Mode:string):string;
 var Doc,Patch,Spec,Hints,Field,Extra:TJSONObject;Fields,Managed:TJSONArray;
@@ -207,9 +219,9 @@ end;
 // Edit one embedded row without rebuilding its siblings from SQL projections.
 // The caller supplies all key columns; unknown object fields remain in place.
 function RelationDocument(const Previous,Command,Model:string):string;
-var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed:TJSONObject;Fields,Keys,Rows:TJSONArray;
+var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed,Hints:TJSONObject;Fields,Keys,Rows:TJSONArray;
   Item,Value,Converted,Container,Schema:TJSONData;Path,Op,Name,Signature:string;
-  i,j,Found:Integer;Scalar,Match:Boolean;
+  i,j,Found:Integer;Scalar,Match,InsertDate:Boolean;
   function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
   var n:Integer;
   begin
@@ -233,7 +245,7 @@ var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed:TJSONObject;Fields,Keys,Rows:TJ
     end;
   end;
 begin
-  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;Typed:=nil;
+  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;Typed:=nil;Hints:=nil;InsertDate:=False;
   try
     Doc:=ExactObject(PlainDocument(Previous));Cmd:=ExactObject(Command);Spec:=ExactObject(Model);
     Path:=Spec.Get('path','');Scalar:=Spec.Get('scalar',False);
@@ -291,6 +303,10 @@ begin
           if not (Schema.Items[Found] is TJSONObject) then Invalid;
           Schema:=AtPath(TJSONObject(Schema.Items[Found]),'$s.p.value');
           Converted:=CustomUpdate(Value,Schema,Field);
+        end else if (Spec.Get('table','')='card_custom_field_values') and (Name='value') and (Op='insert') then
+        begin
+          Converted:=CustomInsert(Value,Cmd.Get('customType',''),Field);
+          InsertDate:=(Cmd.Get('customType','')='date') and (Converted.JSONType<>jtNull);
         end else Converted:=Coerce(Value,Field);
         try
           if Field.Get('required',False) and (Converted.JSONType=jtNull) then Invalid;
@@ -311,6 +327,22 @@ begin
       Seen.Add(Signature,True);
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,'{}');
-  finally Typed.Free;Seen.Free;Row.Free;Spec.Free;Cmd.Free;Doc.Free;end;
+    if InsertDate then
+    begin
+      // Supply the complete validated array schema as a hint so the appended
+      // date receives Date metadata without rebuilding any sibling schema.
+      Typed:=ExactObject(Result);Schema:=AtPath(Typed,'$s.p.customFields');
+      if not (Schema is TJSONObject) then Invalid;
+      Container:=TJSONObject(Schema).Find('i');
+      if not (Container is TJSONArray) or (Container.Count<>Rows.Count) then Invalid;
+      Item:=Container.Items[Container.Count-1];
+      if not (Item is TJSONObject) then Invalid;
+      Value:=AtPath(TJSONObject(Item),'$s.p.value');
+      if not (Value is TJSONObject) then Invalid;
+      TJSONObject(Value).Strings['t']:='date';
+      Hints:=TJSONObject.Create;Hints.Add('customFields',Schema.Clone);
+      Result:=TypedDocument(Doc.AsJSON,Previous,Hints.AsJSON);
+    end;
+  finally Hints.Free;Typed.Free;Seen.Free;Row.Free;Spec.Free;Cmd.Free;Doc.Free;end;
 end;
 end.

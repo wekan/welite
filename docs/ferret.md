@@ -1044,7 +1044,7 @@ and real idle cleanup. HTTP admin/permissions and enrollment suites check the ac
 legacy application. This maintenance support does not replace the offline normalized-to-
 shared authentication migration policy or activate shared stores automatically.
 
-## Existing custom-field value updates
+## Shared custom-field value writes
 
 The maintained WeKan card schema accepts String, Number, Boolean, Date and
 arrays of strings (`models/cards.js`, `customFields.$.value`). The shared
@@ -1070,10 +1070,24 @@ statement. Missing/null values retain the existing ordinary text-write fallback.
 Mongo BSON before/after SQL edits on both backends, including integers above 2^53,
 negative dates, arrays, invalid values, no-op writes and multi-row rollback.
 
-This is **existing-value UPDATE** support. New typed inserts, explicit type changes,
-normalized-store migration, API typed input/output and selection clone/export
-compatibility still need a coordinated contract. Ordinary INSERT continues its
-text behavior; do not treat this step as complete typed-value interoperability.
+New SQL INSERT values use the current matching `custom_fields.type` definition.
+Text/dropdown/stringtemplate stay strings; number/currency become finite numbers;
+checkbox becomes Boolean; date becomes BSON Date; dropdownMultiSelect becomes an
+array of strings. Date insertion supplies the complete inferred array schema with
+an explicit Date hint on the appended row, preserving all sibling metadata.
+The field definition is read within the write statement, including definitions
+changed through Mongo after adapter installation. Missing, ambiguous or unsupported
+field definitions fail instead of guessing a type. Source-only legacy values may
+still be updated by their existing BSON type without requiring a definition.
+
+`tests/custins.py` adds real-server insertion coverage for every supported field
+type, definition changes, unknown siblings, missing/empty source arrays, invalid
+values, duplicate rows and multi-row rollback on both backends.
+
+Explicit type changes, normalized-store migration, API typed input/output and
+selection clone/export compatibility still need a coordinated contract. A shared
+INSERT now requires a usable definition; this does not alter the independent
+normalized TEXT table or close the broader interoperability milestone.
 
 ## Remaining before the checklist can be checked
 
