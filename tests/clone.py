@@ -48,6 +48,33 @@ def run(request, db, session):
     assert clone()[0]==400
     before=snapshot()
     assert clone({'sel_card':'foreigncard'})[0]==403 and snapshot()==before
+    with sqlite3.connect(db) as con:
+        uid=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()[0]
+        con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES('clone',?,0)",(uid,))
+    for flag in ['readOnly','adminOnly']:
+        with sqlite3.connect(db) as con:con.execute('UPDATE custom_fields SET '+flag+"=1 WHERE id='cfield'")
+        before=snapshot();assert clone({'sel_card':'ccard'})[0]==403;assert snapshot()==before
+        with sqlite3.connect(db) as con:con.execute('UPDATE custom_fields SET '+flag+"=0 WHERE id='cfield'")
+    with sqlite3.connect(db) as con:con.execute("UPDATE cards SET extra_json=? WHERE id='ccard'",(json.dumps(dict(customFields=[dict(_id='missing',value='Hidden copy')])),))
+    before=snapshot();assert clone({'sel_card':'ccard'})[0]==403;assert snapshot()==before
+    with sqlite3.connect(db) as con:con.execute("UPDATE cards SET extra_json='{\"nested\":true}' WHERE id='ccard'")
+    # Triggered authority changes occur after copied files and SQL rows exist.
+    for mutation in ["UPDATE custom_fields SET readOnly=1 WHERE id='cfield';",
+                     "UPDATE users SET loginDisabled=1 WHERE id='"+uid+"';"]:
+        with sqlite3.connect(db) as con:con.execute("CREATE TRIGGER clone_policy AFTER INSERT ON activities WHEN NEW.activityType='clone' AND NEW.boardId='clone' BEGIN "+mutation+' END')
+        before=snapshot();assert clone({'sel_card':'ccard'})[0]==500;assert snapshot()==before,'Policy rollback left rows or copied files'
+        with sqlite3.connect(db) as con:con.execute('DROP TRIGGER clone_policy')
+    # An assigned null is copyable, but a trigger cannot turn its new copy into
+    # a protected nonnull value before commit.
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE custom_fields SET readOnly=1 WHERE id='cfield'")
+        con.execute("UPDATE card_custom_field_values SET value=NULL WHERE cardId='ccard'")
+        con.execute("CREATE TRIGGER clone_policy AFTER INSERT ON card_custom_field_values WHEN NEW.cardId<>'ccard' AND NEW.customFieldId='cfield' AND NEW.value IS NULL BEGIN UPDATE card_custom_field_values SET value='Injected protected value' WHERE cardId=NEW.cardId AND customFieldId=NEW.customFieldId; END")
+    before=snapshot();assert clone({'sel_card':'ccard'})[0]==500;assert snapshot()==before
+    with sqlite3.connect(db) as con:
+        con.execute('DROP TRIGGER clone_policy')
+        con.execute("UPDATE custom_fields SET readOnly=0 WHERE id='cfield'")
+        con.execute("UPDATE card_custom_field_values SET value='Value' WHERE cardId='ccard'")
     # A second source file failure occurs after the first attachment has been copied.
     stored(db,'czfile').unlink();before=snapshot()
     assert clone({'sel_swimlane':'clane'})[0]==500

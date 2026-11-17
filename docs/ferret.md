@@ -1329,6 +1329,30 @@ Clone/import, generic HTML/data/query surfaces and other value-bearing paths
 still need policy reconciliation. These checks do not establish application-wide
 field-policy parity.
 
+## Selection clone field permissions
+
+Clone preflight checks the rows it will copy, rather than applying the whole-board
+export gate. Nonnull hidden/read-only custom values require active administration
+of the board, including for a site administrator. Nonnull values with missing or
+wrong-board definitions are denied even to administrators. Assigned null values
+are allowed under the source insert policy. Old activities are not copied and do not block a
+clone merely because their values are unreadable.
+
+Recognized nested field values and hashes in copied payloads receive the same
+scope checks, with field writes requiring write permission. Successful checks
+produce SQL guards. Those guards and the actor/board/source-card checks execute
+inside the clone transaction before writes and again before commit. Destination
+card checks also inspect actual nonnull custom values, catching protected values
+that a trigger inserted after a null assignment was copied. Failed guards roll
+back SQL changes and remove prepared attachment copies through existing cleanup.
+
+Native/shared HTML regressions on both SQL backends cover editor/admin/global
+boundaries, null values, uncopied history, late role/flag changes and destination
+injection. Normal/checked helpers cover collected SQL guards and correlated
+source/destination value checks. This establishes these clone permission gates;
+exact unknown BSON types/presence in newly cloned records, import permissions and
+other generic data/query surfaces remain unfinished.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

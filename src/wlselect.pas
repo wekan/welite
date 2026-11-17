@@ -301,13 +301,40 @@ begin
   if (D=nil) or (D.JSONType=jtNull) then Result:='"'+Name+'" IS NULL'
   else Result:='"'+Name+'"='+SqlJsonValue(D);
 end;
-function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings):Boolean;
-const Tables:array[0..11] of string=('swimlanes','lists','cards','checklists','checklist_items',
+const CloneTables:array[0..11] of string=('swimlanes','lists','cards','checklists','checklist_items',
   'card_members','card_assignees','card_labels','card_custom_field_values','card_dependencies',
   'card_comments','attachments');
+function ClonePermissionGuards(const T:TWLTenant;const S:TWLSession;Graph:TJSONObject;out Guards:string):Boolean;
+var Data:TJSONObject;Cards:TJSONArray;Policy:TFieldPolicy;Rows:TWLRows;Part,BoardId:string;i:Integer;
+begin
+  Result:=False;Guards:='';Policy:=nil;Data:=TJSONObject(Graph.Find('data'));BoardId:=Graph.Get('boardId','');
+  try
+    try
+      Policy:=TFieldPolicy.Create(T.Db,S.UserId,BoardId,'');
+      Part:=Policy.DefinitionExpression('',False);Rows:=T.Db.Query('SELECT '+Part+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then Exit;
+      Guards:='SELECT CASE WHEN '+Part+' THEN 1 ELSE json(''Clone board permission denied'') END; ';FreeAndNil(Policy);
+      for i:=0 to High(CloneTables) do
+      begin
+        if not PayloadCopyGuards(T.Db,S.UserId,BoardId,Data.Find(CloneTables[i]),Part) then Exit;
+        Guards:=Guards+Part;
+      end;
+      Cards:=TJSONArray(Data.Find('cards'));
+      for i:=0 to Cards.Count-1 do
+      begin
+        Policy:=TFieldPolicy.Create(T.Db,S.UserId,BoardId,Cards.Objects[i].Get('id',''));
+        Part:=Policy.CloneCardGuard;Rows:=T.Db.Query(Part);
+        if (Length(Rows)<>1) or (Rows[0][0]<>'1') then Exit;
+        Guards:=Guards+Part;FreeAndNil(Policy);
+      end;
+      Result:=True;
+    except Result:=False;end;
+  finally Policy.Free;end;
+end;
+function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings;const Guards:string):Boolean;
 var Data,Maps,Map,Original,Row,Activity:TJSONObject; A:TJSONArray;
   Used,Copied:TStringList; i,j,k:Integer;
-  TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend:string;
+  TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend,DestGuards:string;Policy:TFieldPolicy;
   Source,Dest:TFileStream;
   function IsRoot(const Kind,OldId:string):Boolean;
   var n:Integer;
@@ -337,12 +364,18 @@ begin
   try
     try
       // Allocate every map before inserting any row so forward/parent/cover references work.
-      for i:=0 to High(Tables) do
+      for i:=0 to High(CloneTables) do
       begin
-        TableName:=Tables[i];
+        TableName:=CloneTables[i];
         A:=TJSONArray(Data.Find(TableName)); Map:=TJSONObject.Create; Maps.Add(TableName,Map);
         for j:=0 to A.Count-1 do if A.Objects[j].Find('id')<>nil then
           Map.Add(A.Objects[j].Get('id',''),NewCloneId(T.Db,T,TableName,Used));
+      end;
+      DestGuards:='';A:=TJSONArray(Data.Find('cards'));
+      for j:=0 to A.Count-1 do
+      begin
+        Policy:=TFieldPolicy.Create(T.Db,S.UserId,Graph.Get('boardId',''),CloneRef(Maps,'cards',A.Objects[j].Get('id','')));
+        try DestGuards:=DestGuards+Policy.CloneCardGuard;finally Policy.Free;end;
       end;
       A:=TJSONArray(Data.Find('attachments'));
       for j:=0 to A.Count-1 do
@@ -362,10 +395,10 @@ begin
         finally Source.Free; end;
       end;
       Stamp:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
-      Sql:='BEGIN IMMEDIATE; ';
-      for i:=0 to High(Tables) do
+      Sql:='BEGIN IMMEDIATE; '+Guards;
+      for i:=0 to High(CloneTables) do
       begin
-        TableName:=Tables[i];
+        TableName:=CloneTables[i];
         A:=TJSONArray(Data.Find(TableName));
         for j:=0 to A.Count-1 do
         begin
@@ -411,7 +444,7 @@ begin
           finally Row.Free; end;
         end;
       end;
-      Result:=T.Db.Exec(Sql+'COMMIT;');
+      Result:=T.Db.Exec(Sql+Guards+DestGuards+'COMMIT;');
       if not Result then T.Db.Exec('ROLLBACK;');
     except Result:=False; end;
   finally
@@ -462,7 +495,7 @@ begin
 end;
 
 function HandleSelection(const T:TWLTenant; const S:TWLSession; Request:TRequest; Response:TResponse):Boolean;
-var Action,Body:string; Graph,Data:TJSONObject; Count:Integer;Words:TWLTranslator;Language:TWLLanguage;
+var Action,Body,CloneGuards:string; Graph,Data:TJSONObject; Count:Integer;Words:TWLTranslator;Language:TWLLanguage;
 begin
   Action:=Request.ContentFields.Values['action']; Result:=Action<>'';
   if not Result then Exit;
@@ -512,7 +545,9 @@ begin
     end;
     if Action='clone' then
     begin
-      if not CloneSelection(T,S,Graph,Request.ContentFields) then Error(T,S,Request,Response,500,'Clone failed; originals are unchanged')
+      if not ClonePermissionGuards(T,S,Graph,CloneGuards) then
+      begin Error(T,S,Request,Response,403,'Clone requires permission to copy custom-field values');Exit;end;
+      if not CloneSelection(T,S,Graph,Request.ContentFields,CloneGuards) then Error(T,S,Request,Response,500,'Clone failed; originals are unchanged')
       else Redirect(Response,S,Request.ContentFields);
       Exit;
     end;

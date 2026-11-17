@@ -48,6 +48,12 @@ with tempfile.TemporaryDirectory(prefix='wlcfscan-',dir=os.environ['TMPDIR']) as
                 assert result.returncode==0,result.stderr
                 return result.stdout.splitlines()
             result=run([case for case,_ in cases]);assert result==[str(expected) for _,expected in cases],[(i,a,e) for i,(a,(_,e)) in enumerate(zip(result,cases)) if a!=str(e)]
+            assert run([dict(payload=dict(customFieldId='f',value='copy'),copy=True)])==['1']
+            assert run([dict(payload=dict(customFieldId='f',value='copy'),copy=True,revoke=True)])==['0'],'Collected copy guards must recheck changed flags'
+            with sqlite3.connect(db) as con:con.execute("UPDATE custom_fields SET readOnly=1 WHERE id='f'")
+            assert run([dict(payload=dict(customFields=[dict(_id='f',value='readonly')]),copy=True)])==['0']
+            assert run([dict(payload=dict(customFields=[dict(_id='f',value=None)]),copy=True)])==['1']
+            with sqlite3.connect(db) as con:con.execute("UPDATE custom_fields SET readOnly=0 WHERE id='f'")
             with sqlite3.connect(db) as con:con.execute("UPDATE board_members SET isAdmin=1 WHERE boardId='board'")
             assert run([dict(payload=dict(customFieldId='p',oldValue='historical secret',integrityHash='hash'))])==['1'],'Board admins can read historical fields without a live card'
             with sqlite3.connect(db) as con:

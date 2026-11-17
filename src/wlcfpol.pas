@@ -10,13 +10,15 @@ type
     FShared:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
-    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False):string;
+    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False):string;
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
     function Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
     function DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
     function HistoryExpression(const FieldId:string):string;
+    function ScopeWriteExpression(const FieldId:string):string;
+    function CloneCardGuard:string;
     function ScopeAdminExpression:string;
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
@@ -29,11 +31,13 @@ function FalseFlag(const Doc,Name:string):string;
 begin
   Result:='COALESCE(json_type('+Doc+',''$.'+Name+''') IN (''null'',''false''),1)';
 end;
-function StringId(const Alias,Identity:string):string;
+function StringIdSql(const Alias,IdentitySql:string):string;
 begin
-  Result:='json_type('+Alias+'.d,''$._id'')=''text'' AND json_extract('+Alias+'.d,''$._id'')='+QuotedStr(Identity)+
+  Result:='json_type('+Alias+'.d,''$._id'')=''text'' AND json_extract('+Alias+'.d,''$._id'')='+IdentitySql+
     ' AND json_extract('+Alias+'.s,''$."$s".p._id.t'')=''string''';
 end;
+function StringId(const Alias,Identity:string):string;
+begin Result:=StringIdSql(Alias,QuotedStr(Identity));end;
 function TFieldPolicy.Source(const Model,Collection:string):string;
 var Rows:TWLRows;Name:string;
 begin
@@ -61,12 +65,13 @@ begin
     FTables[2]:=Source('custom_fields','customFields');FTables[3]:=Source('cards','cards');
   end;
 end;
-function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess:Boolean):string;
+function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
-var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql:string;i,Last:Integer;HasField:Boolean;
+var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql:string;i,Last:Integer;HasField:Boolean;
 begin
-  HasField:=not DefinitionAccess or (FieldId<>'');
+  HasField:=not CardOnly and (not DefinitionAccess or (FieldId<>''));
+  FieldSql:=QuotedStr(FieldId);if FieldColumn then FieldSql:='v.customFieldId';
   if not FShared then
   begin
     Admin:='EXISTS(SELECT 1 FROM board_members m WHERE m.boardId=b.id AND m.userId=u.id AND m.isActive=1 AND m.isAdmin=1)';
@@ -79,7 +84,7 @@ begin
     Tables:='boards b,users u';WhereSql:='b.id='+QuotedStr(FBoard)+' AND b.archived=0 AND u.id='+QuotedStr(FUser)+' AND u.loginDisabled=0 AND '+Access;
     if HasField then
     begin
-      Tables:=Tables+',custom_fields f';WhereSql:=WhereSql+' AND f.id='+QuotedStr(FieldId)+
+      Tables:=Tables+',custom_fields f';WhereSql:=WhereSql+' AND f.id='+FieldSql+
         ' AND EXISTS(SELECT 1 FROM custom_field_boards x WHERE x.customFieldId=f.id AND x.boardId=b.id)';
       if DefinitionAccess then Flags:='typeof(f.adminOnly)=''integer'' AND f.adminOnly IN (0,1) AND (f.adminOnly=0 OR '+Admin+')'+
         ' AND (SELECT count(*) FROM custom_field_boards x WHERE x.customFieldId=f.id)=1';
@@ -94,10 +99,12 @@ begin
   Prefix:='WITH ';
   for i:=0 to Last do
   begin
+    if CardOnly and (i=2) then Continue;
     case i of 0:Value:=FUser;1:Value:=FBoard;2:Value:=FieldId;3:Value:=FCard;end;
+    ValueSql:=QuotedStr(Value);if (i=2) and FieldColumn then ValueSql:=FieldSql;
     if i>0 then Prefix:=Prefix+',';
     Prefix:=Prefix+Aliases[i]+' AS MATERIALIZED(SELECT json(_ferretdb_sjson) s,wl_plain(json(_ferretdb_sjson)) d FROM '+
-      FTables[i]+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Value)+')';
+      FTables[i]+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+ValueSql+')';
   end;
   // wl_plain validates the complete BSON metadata; the schema checks below also
   // distinguish a BSON string ID from ObjectID and a boolean from numeric/date data.
@@ -120,7 +127,7 @@ begin
     Tables:=Tables+',f';
     if DefinitionAccess then Flags:='json_type(f.d,''$.readOnly'') IN (''true'',''false'') AND '+
       'json_type(f.d,''$.adminOnly'') IN (''true'',''false'') AND ('+FalseFlag('f.d','adminOnly')+' OR '+Admin+') AND json_array_length(f.d,''$.boardIds'')=1';
-    WhereSql:=WhereSql+' AND '+StringId('f',FieldId)+' AND '+Flags+
+    WhereSql:=WhereSql+' AND '+StringIdSql('f',FieldSql)+' AND '+Flags+
       ' AND EXISTS(SELECT 1 FROM json_each(CASE WHEN json_type(f.d,''$.boardIds'')=''array'' THEN json_extract(f.d,''$.boardIds'') ELSE ''[]'' END) x '+
       'WHERE x.type=''text'' AND x.value='+QuotedStr(FBoard)+' AND json_extract(f.s,''$."$s".p.boardIds.i[''||x.key||''].t'')=''string'')';
   end;
@@ -131,7 +138,7 @@ begin
       ' AND json_type(c.d,''$.boardId'')=''text'' AND json_extract(c.s,''$."$s".p.boardId.t'')=''string'' AND json_extract(c.d,''$.boardId'')='+QuotedStr(FBoard);
   end;
   Result:='('+Prefix+' SELECT '+FBinding;
-  for i:=0 to Last do Result:=Result+' AND (SELECT count(*) FROM '+Aliases[i]+')=1';
+  for i:=0 to Last do if not (CardOnly and (i=2)) then Result:=Result+' AND (SELECT count(*) FROM '+Aliases[i]+')=1';
   Result:=Result+' AND EXISTS(SELECT 1 FROM '+Tables+' WHERE '+WhereSql+'))';
 end;
 function TFieldPolicy.Expression(const FieldId:string;WriteAccess:Boolean):string;
@@ -140,6 +147,15 @@ function TFieldPolicy.DefinitionExpression(const FieldId:string;AdminRequired:Bo
 begin Result:=Build(FieldId,True,True,AdminRequired);end;
 function TFieldPolicy.HistoryExpression(const FieldId:string):string;
 begin Result:=Build(FieldId,False,False,False,True);end;
+function TFieldPolicy.ScopeWriteExpression(const FieldId:string):string;
+begin Result:=Build(FieldId,True,False,False,True);end;
+function TFieldPolicy.CloneCardGuard:string;
+begin
+  Result:='SELECT CASE WHEN '+Build('',True,False,False,False,True)+
+    ' AND NOT EXISTS(SELECT 1 FROM card_custom_field_values v WHERE v.cardId='+QuotedStr(FCard)+
+    ' AND v.value IS NOT NULL AND NOT '+Build('',True,False,False,False,False,True)+
+    ') THEN 1 ELSE json(''Clone field permission denied'') END; ';
+end;
 function TFieldPolicy.ScopeAdminExpression:string;
 begin Result:=Build('',False,True,True,True);end;
 function TFieldPolicy.Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;

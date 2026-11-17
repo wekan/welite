@@ -321,9 +321,18 @@ not merely a design document. Platform/browser claims require testing on those t
   requiring a live card. Readable payloads and original BSON remain unchanged;
   unreadable/malformed data denies the export. Normal/checked tests cover 156
   payload cases per backend, and HTML tests cover history, extras and hash gates.
-  Next: reconcile selection clone/import, generic HTML data/query surfaces and
-  other value-bearing paths. Definition edit/delete and remaining creation/
-  automatic-card behavior stay open; full field-policy parity is not established.
+  Selection clones now inspect copied rows/payloads and require board-admin
+  permission for nonnull hidden/read-only values, without blocking assigned nulls
+  or unrelated uncopied history. Collected payload, actor/board and source-card
+  guards execute before writes and again before commit; destination-card guards
+  inspect actual nonnull values, including trigger-injected protected values.
+  Native/shared HTML tests on both backends verify role/flag revocation, source
+  preservation and transaction rollback; native attachment cleanup remains covered.
+  Normal/checked helper tests exercise correlated guards and collected SQL checks.
+  Next: reconcile exact unknown BSON/type/presence cloning, import permissions,
+  generic HTML data/query surfaces and other value-bearing paths. Definition
+  edit/delete and remaining creation/automatic-card behavior stay open; full
+  field-policy parity is not established.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry-cache coordination and session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).

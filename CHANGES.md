@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Enforce custom-field permissions during selection clones
+
+- Check only rows actually copied by a clone, including recognized fields inside
+  their JSON/source payloads. Nonnull hidden/read-only values require active
+  board administration; site-admin status alone is insufficient. Assigned nulls
+  remain copyable, and unrelated history that is not copied does not block cloning.
+- Collect current payload/board/source-card guards before preparing files, execute
+  them inside the write transaction and repeat them before commit. Check every
+  destination card's actual nonnull custom values, including values introduced
+  by a trigger after an assigned null was copied.
+- Roll back copied rows, activities, policy changes and prepared attachment files
+  on failed guards. Preserve existing deep-clone remapping and file failure cleanup.
+- Both-backend native/shared HTML tests cover normal/protected/null/admin cases,
+  revocation, injected destination values and unchanged originals. Checked/normal
+  helper tests exercise correlated card guards and collected payload SQL checks.
+  The committed clone copies a read-only value for an ordinary editor under the
+  new regression. All eight Windows cross-build variants pass.
+- Exact unknown BSON/type/presence cloning, import permissions, generic HTML/query
+  surfaces and the remaining definition/automatic-card lifecycle stay in TODO.md.
+
 ## 2026-11-17 Check activity and embedded field payloads in selection exports
 
 - Inspect exported payloads recursively before delivery, including activity old/new

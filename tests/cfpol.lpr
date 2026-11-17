@@ -13,6 +13,10 @@ begin
       try
         Fields:=TJSONArray(Data.Find('fields'));
         if Fields<>nil then begin Policy.Redact(Fields);Writeln(Fields.AsJSON);end
+        else if Data.Get('clone',False) then
+        begin
+          Rows:=Db.Query(Policy.CloneCardGuard);if Length(Rows)=1 then Writeln(Rows[0][0]) else Writeln('0');
+        end
         else if Data.Get('export',False) then
         begin
           if Data.Find('rows')<>nil then Writeln(Ord(FieldExportRowsAllowed(Db,ParamStr(2),ParamStr(3),TJSONArray(Data.Find('rows')))))
