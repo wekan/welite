@@ -505,3 +505,9 @@ swimlane fragment, English key order and exact source argument inventories.
 
 `python3 tests/bslang.py` verifies the Bosnian asset, native catalog name/terminology,
 compatibility prose and byte unit, English key order and every argument inventory.
+
+`python3 tests/embgen.py` requires FPC/fpcres (FPCRES may override the resource
+compiler). It checks missing aliases are skipped, valid aliases and UTF-8/binary
+resource bytes load without disk assets, every installed locale is indexed, and
+the full current public/i18n resource script compiles. Temporary artifacts stay
+under TMPDIR and are removed.

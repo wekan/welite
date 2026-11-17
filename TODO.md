@@ -295,6 +295,7 @@ not merely a design document. Platform/browser claims require testing on those t
   Published Designer pages now honor saved HTML4 versus HTML3.2 doctypes, with both-backend round trips, invalid-input refusal and Chromium standards-mode checks. Remaining responsive/color and retro-target acceptance stays open.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.
 - [ ] Verify embedded assets and supported cross-platform builds.
+  Embedded generation now skips dangling/non-file aliases, with native exact UTF-8/binary/valid-alias lookup and full current public/i18n resource compilation. Every installed locale is indexed. Remaining: fresh HTTP bootstrap without asset/schema directories, complete embedded runtime checks and supported cross-target builds/acceptance.
 - [ ] Reconcile README/design status against completed code and document platform limits.
 
 Already implemented before this checklist: PBKDF2 password hashing in `wlpasswd.pas`,

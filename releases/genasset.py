@@ -63,6 +63,10 @@ def main() -> int:
         for root, _, names in os.walk(d):
             for n in names:
                 full = os.path.join(root, n)
+                # Match disk serving: dangling aliases and non-files have no bytes
+                # to bundle. Existing file aliases remain valid asset URLs.
+                if not os.path.isfile(full):
+                    continue
                 rel = os.path.relpath(full, d).replace(os.sep, "/")
                 url_key = key_prefix + rel
                 rc_path = os.path.relpath(os.path.abspath(full), rc_dir).replace(os.sep, "/")

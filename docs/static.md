@@ -59,6 +59,12 @@ fpcres wlpublic.rc -o wlpublic.res -of res       # compile resources (public/ + 
 fpc -dWLEMBED -O3 -Xs -o ../welite wlhttp.lpr # embed + build
 ./../welite                   # serves from inside the exe; no public/ or i18n/ needed
 ```
+The generator skips missing/dangling aliases and non-files, matching disk asset
+availability; valid file aliases remain indexed. `tests/embgen.py` compiles the
+full current bundle and checks exact UTF-8/binary/alias resource bytes. Fresh tenant
+and Designer schema setup still reads SQL files; full directory-free HTTP bootstrap
+remains a separate verification step.
+
 `genasset.py` embeds the `public/` and `i18n/` trees (overridable: `genasset.py OUT_PAS OUT_RC
 ROOT[:URL_PREFIX] …`). RCDATA paths are written relative to the `.rc` file's dir, so `fpcres`
 runs from `src/`. Verified on FPC 3.2.3 (aarch64): with `public/` and `i18n/` deleted, the

@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Skip missing aliases in embedded assets
+
+- Skip dangling aliases and non-files when indexing embedded asset trees, matching
+  disk availability while retaining valid file aliases. Reproduce the previous
+  full resource build failure on missing regional locale links.
+- Add a native resource/lookup regression for exact UTF-8, binary and valid-alias
+  bytes with no disk asset fallback, and compile the full current public/i18n bundle.
+  Require every installed catalog file in the index; all checks pass.
+- Fresh directory-free HTTP/schema bootstrap and cross-target acceptance remain
+  separate unfinished steps in the embedded-build checklist.
+
 ## 2026-11-17 Add Bosnian language asset
 
 - Add the missing portable Bosnian asset in local English key order, retaining
