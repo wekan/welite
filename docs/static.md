@@ -227,3 +227,11 @@ overwritten or duplicated to repair the loader filename mismatch.
 source values, seven existing Japanese compatibility phrases, two literal title
 templates and direct Japanese translations for the legacy membership restriction
 and zoom hint. Vocabulary/script and every argument inventory are checked.
+
+### Authenticated Designer errors
+
+Designer validation/missing-object/action-token errors use the same per-request
+viewer frame as normal pages, including explicit query/posted language, tenant-bound
+profile fallback, Content-Language/Vary and HTML/body direction. Error prose stays
+escaped. Tenant/authentication gate failures and other early routes remain under
+audit; message translation is separate remaining work.

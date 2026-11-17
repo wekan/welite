@@ -441,3 +441,7 @@ same established `pt_PT.jsn` asset; all-identity kernel/form suites cover each a
 `python3 tests/jalang.py` checks the physical Japanese Japan asset, native
 vocabulary/script and compatibility prose, catalog identity, English key order
 and exact argument inventories.
+
+`frames.py` also exercises Designer 400/403/404 error frames, explicit query/posted
+language versus authenticated profile/header fallback, matching language/direction
+metadata and unchanged profile data. Error text remains escaped.

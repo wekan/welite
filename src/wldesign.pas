@@ -970,11 +970,13 @@ end;
 // Every editor/import/export endpoint uses the shared tenant-local administrator gate.
 // Mutations additionally consume their action token before writing.
 
-procedure DesignerError(aResponse: TResponse; Code: Integer; const Msg: string);
+procedure DesignerError(aRequest:TRequest; aResponse:TResponse; Db:TWLDb;
+  const S:TWLSession; Code:Integer; const Msg:string);
 begin
   aResponse.Code := Code;
   aResponse.ContentType := 'text/html; charset=utf-8';
-  aResponse.Content := Page32('Designer', '<p>'+HtmlEncode(Msg)+'</p>');
+  aResponse.Content := LanguagePage(aResponse,ViewerLanguage(Db,S,aRequest),
+    'Designer','<p>'+HtmlEncode(Msg)+'</p>');
   aResponse.SendContent;
 end;
 
@@ -984,7 +986,7 @@ begin
   Result := RequireTenantAdmin(aRequest, aResponse, T, S);
   if not Result then Exit;
   Result := EnsureDesignerSchema(T.Db);
-  if not Result then DesignerError(aResponse, 503, 'Designer schema unavailable');
+  if not Result then DesignerError(aRequest,aResponse,T.Db,S, 503, 'Designer schema unavailable');
 end;
 
 function PageFields(const P: TPage): string;
@@ -1056,11 +1058,11 @@ var T: TWLTenant; S: TWLSession; P: TPage; Id, Action, Sql: string; F: TStrings;
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/page/save') then
-  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token'); Exit; end;
   F:=aRequest.ContentFields; Id:=F.Values['pageId']; Action:=F.Values['action'];
   P:=Default(TPage); P.Kind:='custom';
   if (Id<>'') and not LoadPageById(T.Db,Id,P) then
-  begin DesignerError(aResponse,404,'Page not found'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found'); Exit; end;
   if Action='delete' then
     Sql:='DELETE FROM pages WHERE id='+QuotedStr(Id)+';'
   else if (Action='enable') or (Action='disable') then
@@ -1072,10 +1074,10 @@ begin
     P.Cols:=StrToIntDef(F.Values['cols'],0); P.Doctype:=F.Values['doctype'];
     P.Dir:=F.Values['dir']; P.MinRole:=F.Values['minRole'];
     if not ValidPageModel(P) then
-    begin DesignerError(aResponse,400,'Invalid page fields'); Exit; end;
+    begin DesignerError(aRequest,aResponse,T.Db,S,400,'Invalid page fields'); Exit; end;
     if Length(T.Db.Query('SELECT id FROM pages WHERE url='+QuotedStr(P.Url)+
       ' AND id<>'+QuotedStr(Id)+';'))>0 then
-    begin DesignerError(aResponse,409,'Page URL already exists'); Exit; end;
+    begin DesignerError(aRequest,aResponse,T.Db,S,409,'Page URL already exists'); Exit; end;
     if Id='' then
     begin
       Id:=NewId;
@@ -1089,16 +1091,16 @@ begin
       // Reject shrinking a page if it would hide existing widgets.
       if Length(T.Db.Query('SELECT id FROM page_widgets WHERE pageId='+QuotedStr(Id)+
         ' AND col+colspan>'+IntToStr(P.Cols)+' LIMIT 1;'))>0 then
-      begin DesignerError(aResponse,400,'Columns would hide widgets'); Exit; end;
+      begin DesignerError(aRequest,aResponse,T.Db,S,400,'Columns would hide widgets'); Exit; end;
       Sql:='UPDATE pages SET url='+QuotedStr(P.Url)+',title='+QuotedStr(P.Title)+
         ',cols='+IntToStr(P.Cols)+',doctype='+QuotedStr(P.Doctype)+',dir='+QuotedStr(P.Dir)+
         ',minRole='+QuotedStr(P.MinRole)+',modifiedAt='+QuotedStr(NowIso)+
         ' WHERE id='+QuotedStr(Id)+';';
     end;
   end
-  else begin DesignerError(aResponse,400,'Unknown page action'); Exit; end;
+  else begin DesignerError(aRequest,aResponse,T.Db,S,400,'Unknown page action'); Exit; end;
   if not T.Db.Exec(Sql) then
-  begin DesignerError(aResponse,500,'Could not save page'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,500,'Could not save page'); Exit; end;
   aResponse.Code:=302;
   aResponse.SetCustomHeader('Location',SessionUrl('/designer',S));
   aResponse.SendContent;
@@ -1140,9 +1142,7 @@ begin
   if not ((PageId<> '') and LoadPageById(T.Db,PageId,P)) and
     not LoadPageByUrl(T.Db,aRequest.QueryFields.Values['url'],P) then
   begin
-    aResponse.Code := 404;
-    aResponse.Content := Page32('Designer', '<p>Page not found.</p>');
-    aResponse.ContentType := 'text/html; charset=utf-8'; aResponse.SendContent; Exit;
+    DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found.'); Exit;
   end;
 
   W := LoadWidgets(T.Db, P.Id);
@@ -1233,13 +1233,13 @@ var T:TWLTenant; S:TWLSession; R,Cell:TWLRows; Id,PageId,Dir,Sql,Tmp:string; i,I
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/widget/sort') then
-  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token'); Exit; end;
   Id:=aRequest.ContentFields.Values['widgetId'];
   R:=T.Db.Query('SELECT pageId,row,col FROM page_widgets WHERE id='+QuotedStr(Id)+';');
-  if Length(R)=0 then begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  if Length(R)=0 then begin DesignerError(aRequest,aResponse,T.Db,S,404,'Widget not found'); Exit; end;
   PageId:=R[0][0]; Dir:=aRequest.ContentFields.Values['dir'];
   if (Dir<>'up') and (Dir<>'down') then
-  begin DesignerError(aResponse,400,'Invalid direction'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,400,'Invalid direction'); Exit; end;
   Cell:=T.Db.Query('SELECT id FROM page_widgets WHERE pageId='+QuotedStr(PageId)+
     ' AND row='+R[0][1]+' AND col='+R[0][2]+' ORDER BY sort,id;');
   Idx:=-1;
@@ -1253,7 +1253,7 @@ begin
     for i:=0 to High(Cell) do Sql:=Sql+'UPDATE page_widgets SET sort='+IntToStr(i)+
       ',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(Cell[i][0])+'; ';
     if not T.Db.Exec(Sql+'COMMIT;') then
-    begin T.Db.Exec('ROLLBACK;'); DesignerError(aResponse,500,'Could not sort widgets'); Exit; end;
+    begin T.Db.Exec('ROLLBACK;'); DesignerError(aRequest,aResponse,T.Db,S,500,'Could not sort widgets'); Exit; end;
   end;
   EditorRedirect(aResponse,PageId,S);
 end;
@@ -1264,13 +1264,13 @@ var T:TWLTenant; S:TWLSession; WidgetId,PageId,Dir:string; W:TWidget; All:TWidge
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/widget/move') then
-  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token'); Exit; end;
   WidgetId:=aRequest.ContentFields.Values['widgetId'];
   if not LoadWidgetPage(T.Db,WidgetId,PageId) or not LoadPageById(T.Db,PageId,P) then
-  begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Widget not found'); Exit; end;
   All:=LoadWidgets(T.Db,PageId); Found:=False;
   for i:=0 to High(All) do if All[i].Id=WidgetId then begin W:=All[i]; Found:=True; Break; end;
-  if not Found then begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  if not Found then begin DesignerError(aRequest,aResponse,T.Db,S,404,'Widget not found'); Exit; end;
   Dir:=aRequest.ContentFields.Values['dir'];
   if ResolveDir(aRequest,P.Dir,SessionLanguage(T.Db,S))='rtl' then
     if Dir='left' then Dir:='right' else if Dir='right' then Dir:='left';
@@ -1279,13 +1279,13 @@ begin
     'down': W.Row:=Min(100-W.RowSpan,W.Row+1);
     'left': W.Col:=Max(0,W.Col-1);
     'right': W.Col:=Min(P.Cols-W.ColSpan,W.Col+1);
-  else begin DesignerError(aResponse,400,'Invalid direction'); Exit; end;
+  else begin DesignerError(aRequest,aResponse,T.Db,S,400,'Invalid direction'); Exit; end;
   end;
   if not WidgetPlacementFits(T.Db,PageId,W) then
-  begin DesignerError(aResponse,409,'Widget spans overlap'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,409,'Widget spans overlap'); Exit; end;
   if not T.Db.Exec('UPDATE page_widgets SET row='+IntToStr(W.Row)+',col='+IntToStr(W.Col)+
     ',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(WidgetId)+';') then
-  begin DesignerError(aResponse,500,'Could not move widget'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,500,'Could not move widget'); Exit; end;
   EditorRedirect(aResponse,PageId,S);
 end;
 
@@ -1294,12 +1294,12 @@ var T: TWLTenant; S: TWLSession; WidgetId, PageId: string;
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/widget/delete') then
-  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token'); Exit; end;
   WidgetId:=aRequest.ContentFields.Values['widgetId'];
   if not LoadWidgetPage(T.Db,WidgetId,PageId) then
-  begin DesignerError(aResponse,404,'Widget not found'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Widget not found'); Exit; end;
   if not T.Db.Exec('DELETE FROM page_widgets WHERE id='+QuotedStr(WidgetId)+';') then
-  begin DesignerError(aResponse,500,'Could not delete widget'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,500,'Could not delete widget'); Exit; end;
   EditorRedirect(aResponse,PageId,S);
 end;
 
@@ -1319,14 +1319,14 @@ var T: TWLTenant; S: TWLSession; P: TPage; W: TWidget; F: TStrings;
 begin
   if not RequireDesigner(aRequest,aResponse,T,S) then Exit;
   if not VerifyActionToken(aRequest,S,'designer:/designer/widget/save') then
-  begin DesignerError(aResponse,403,'Bad token'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token'); Exit; end;
   F:=aRequest.ContentFields; PageId:=F.Values['pageId']; W:=Default(TWidget);
   W.Id:=F.Values['widgetId'];
   if not LoadPageById(T.Db,PageId,P) then
-  begin DesignerError(aResponse,404,'Page not found'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found'); Exit; end;
   if W.Id<>'' then
     if not LoadWidgetPage(T.Db,W.Id,ExistingPage) or (ExistingPage<>PageId) then
-    begin DesignerError(aResponse,404,'Widget not found on page'); Exit; end;
+    begin DesignerError(aRequest,aResponse,T.Db,S,404,'Widget not found on page'); Exit; end;
   W.Typ:=LowerCase(F.Values['type']); W.Lbl:=F.Values['label']; W.Name:=F.Values['name'];
   W.Value:=F.Values['value']; W.Target:=F.Values['target']; W.Binding:=F.Values['binding'];
   W.Row:=StrToIntDef(F.Values['row'],-1); W.Col:=StrToIntDef(F.Values['col'],-1);
@@ -1336,9 +1336,9 @@ begin
   W.Required:=F.Values['required']='1'; W.OptionsJson:=F.Values['options_json'];
   if W.OptionsJson='' then W.OptionsJson:='{}';
   if not ValidWidgetModel(P,W) then
-  begin DesignerError(aResponse,400,'Invalid widget fields'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,400,'Invalid widget fields'); Exit; end;
   if not WidgetPlacementFits(T.Db,PageId,W) then
-  begin DesignerError(aResponse,409,'Widget spans overlap'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,409,'Widget spans overlap'); Exit; end;
   // Numeric sort uses an explicit dot independent of the process locale.
   Values:= 'type='+QuotedStr(W.Typ)+',label='+QuotedStr(W.Lbl)+',name='+QuotedStr(W.Name)+
     ',value='+QuotedStr(W.Value)+',target='+QuotedStr(W.Target)+',binding='+QuotedStr(W.Binding)+
@@ -1356,7 +1356,7 @@ begin
   else Sql:='';
   if not T.Db.Exec('BEGIN IMMEDIATE; '+Sql+' UPDATE page_widgets SET '+Values+
     ' WHERE id='+QuotedStr(W.Id)+'; COMMIT;') then
-  begin T.Db.Exec('ROLLBACK;'); DesignerError(aResponse,500,'Could not save widget'); Exit; end;
+  begin T.Db.Exec('ROLLBACK;'); DesignerError(aRequest,aResponse,T.Db,S,500,'Could not save widget'); Exit; end;
   EditorRedirect(aResponse,PageId,S);
 end;
 
@@ -1403,7 +1403,7 @@ begin
     Json := aRequest.Content;
 
   Url := ImportPageJson(T.Db, Json);
-  if Url='' then begin DesignerError(aResponse,400,'Invalid page or import failed; existing pages are unchanged'); Exit; end;
+  if Url='' then begin DesignerError(aRequest,aResponse,T.Db,S,400,'Invalid page or import failed; existing pages are unchanged'); Exit; end;
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', SessionUrl('/designer',S));
   aResponse.SendContent;
@@ -1444,7 +1444,7 @@ begin
   N := -1;
   if aRequest.Files.Count > 0 then
     N := ImportAllPages(T.Db, aRequest.Files[0].Stream);
-  if N<0 then begin DesignerError(aResponse,400,'Invalid archive or import failed; existing pages are unchanged'); Exit; end;
+  if N<0 then begin DesignerError(aRequest,aResponse,T.Db,S,400,'Invalid archive or import failed; existing pages are unchanged'); Exit; end;
   Writeln('Designer: imported ', N, ' pages for ', T.Host);
   aResponse.Code := 302;
   aResponse.SetCustomHeader('Location', SessionUrl('/designer',S));

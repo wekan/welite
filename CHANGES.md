@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep viewer metadata on Designer errors
+
+- Pass request, database and authenticated session explicitly into Designer error
+  rendering. Use the shared viewer frame for validation, missing objects, bad action
+  tokens and schema failures, including the missing-page editor response.
+- Retain escaped error prose and existing status/authorization behavior while adding
+  matching Content-Language/Vary and HTML/body language/direction metadata.
+- Add real HTTP 400/403/404 checks for query/posted language, invalid-choice profile
+  fallback and unchanged profile data. Full linked and CLI HTTP suites pass.
+- Earlier tenant/authentication gates, other error routes and translated error prose
+  remain open; this completes only authenticated Designer frame metadata.
+
 ## 2026-11-17 Restore Japanese Japan language asset
 
 - Replace the broken Japanese Japan symlink with a physical portable locale,

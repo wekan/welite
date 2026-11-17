@@ -39,10 +39,32 @@ def check_frames(request,database,session,editor):
             document=Document();document.feed(body.decode())
             assert document.html['lang']=='ar' and document.html['dir']=='rtl'
             assert b'name="lang" value="ar"' in body
+        def error(method,url,fields,status,tag='ar'):
+            result,headers,body=request(method,url,fields,extra_headers={'Accept-Language':'fi'})
+            assert result==status,(method,url,result,status)
+            document=Document();document.feed(body.decode())
+            assert headers['Content-Language']==tag,(url,headers)
+            assert 'Accept-Language' in headers['Vary']
+            assert document.html['lang']==tag
+            assert (document.html.get('dir')=='rtl')==(tag=='ar')
+            assert (document.body.get('dir')=='rtl')==(tag=='ar')
+        missing='/designer/page?id=missing-frame&sessionId='+session
+        error('GET',missing,None,404)
+        error('GET',missing+'&lang=fi',None,404,'fi')
+        error('POST','/designer/widget/move',dict(sessionId=session,lang='fi'),403,'fi')
+        error('POST','/designer/widget/move',dict(sessionId=session,lang='unknown'),403)
+        body=check('/designer?sessionId='+session)
+        forms=Forms();forms.feed(body.decode())
+        fields=next(fields for path,fields in forms.forms if path=='/designer/page/save')
+        error('POST','/designer/page/save',dict(fields,action='unknown'),400)
+        body=check(editor)
+        forms=Forms();forms.feed(body.decode())
+        fields=next(fields for path,fields in forms.forms if path=='/designer/widget/move')
+        error('POST','/designer/widget/move',dict(fields,widgetId='missing-frame',dir='left'),404)
         with sqlite3.connect(database) as con:
             assert json.loads(con.execute("SELECT profile_json FROM users WHERE username='administrator'").fetchone()[0])==dict(language='ar',keep=dict(value='unchanged'))
     finally:
         with sqlite3.connect(database) as con:
             con.execute("UPDATE users SET profile_json=? WHERE username='administrator'",(original,))
             con.execute("DELETE FROM pages WHERE id='frames'")
-    print('PASS: home/board/admin/Designer/published/selection language and direction metadata, profile/header/query/posted state, fixed overrides and unchanged profiles')
+    print('PASS: home/board/admin/Designer/published/selection language and direction metadata, profile/header/query/posted state, fixed overrides, Designer error frames and unchanged profiles')
