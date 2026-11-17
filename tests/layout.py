@@ -50,6 +50,7 @@ def run(request, db, session):
     assert post(editor,'/designer/widget/move',dict(dir='left'),required_id)[0] == 409
     status, _, body = request('GET','/layout?sessionId='+session)
     assert status == 200
+    assert body.startswith(b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"')
     assert body.count(b'rowspan="2" colspan="2"') == 1
     assert body.count(b'span first') == 1 and body.count(b'span second') == 1
     assert b'name="requiredText" value="" required="required"' in body and b'* (required)' in body
@@ -66,6 +67,9 @@ def run(request, db, session):
     assert rtl.index(b'data-grid-col="2"') < rtl.index(b'data-grid-col="0"')
     assert body.index(b'data-grid-col="0"') < body.index(b'data-grid-col="2"')
     assert b'<table dir="ltr"' in rtl and b'<td dir="rtl"' in rtl
+    assert post(home,'/designer/page/save',dict(page,pageId=page_id,dir='rtl',doctype='html32'))[0] == 302
+    legacy=request('GET','/layout?lang=en&sessionId='+session)[2]
+    assert legacy.startswith(b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 FINAL//EN"')
     assert post(home,'/designer/page/save',dict(page,pageId=page_id,dir='rtl'))[0] == 302
     fixed = request('GET','/layout?lang=en&sessionId='+session)[2]
     assert fixed.index(b'data-grid-col="2"') < fixed.index(b'data-grid-col="0"')

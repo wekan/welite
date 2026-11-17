@@ -4,6 +4,16 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Honor saved Designer page doctypes
+
+- Emit HTML 4.01 Transitional for a published page saved with `doctype=html4`.
+  The renderer previously emitted the HTML 3.2 declaration for both saved choices.
+  Retain HTML 3.2 for `html32` and the existing default page wrappers.
+- Verify actual published HTML4/HTML3.2 round trips and invalid-doctype refusal on
+  both HTTP backends. Chromium checks the HTML4 public identifier and standards
+  parsing mode while exercising required fields, spans, RTL and no-JS sorting.
+- Responsive colors and retro-browser/platform verification remain in the checklist.
+
 ## 2026-11-17 Retain locale through board and Designer navigation
 
 - Carry validated query/posted language as transient rendering context. Keep it out

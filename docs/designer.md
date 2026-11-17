@@ -310,3 +310,12 @@ expanded ZIP content. Malformed input returns 400 and preserves the existing des
 For raw JSON, put `sessionId` in the request URL and send the form's action-token values
 in `X-Welite-Action`, `X-Welite-Counter`, and `X-Welite-Hash` headers. The counter remains
 single-use; headers do not bypass the normal tenant administrator, client or token checks.
+
+## Published page doctype
+
+A saved `doctype=html4` page emits the HTML 4.01 Transitional declaration with its
+standard system identifier. `html32` emits HTML 3.2 Final. Both use the same stored
+page/widget model, structural RTL layout and escaped rendering. Unrecognized saved
+choices are rejected by page validation. The ordinary application wrappers retain
+their existing HTML 3.2 baseline. HTTP tests switch a real published page between
+both choices; Chromium verifies the HTML4 document identifier and standards mode.

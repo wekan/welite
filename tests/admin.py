@@ -215,6 +215,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 assert page_action(dict(base, url=bad))[0] == 400, bad
             assert page_action(dict(base, cols='0', url='/badcols'))[0] == 400
             assert page_action(dict(base, dir='invalid', url='/baddir'))[0] == 400
+            assert page_action(dict(base, doctype='invalid', url='/baddoc'))[0] == 400
             status, _, body = request('GET', '/designer/page?'+urlencode({'id':page_id, 'sessionId':admin}))
             assert status == 200 and b'&lt;Example &amp; title&gt;' in body
             assert request('GET', '/example?sessionId='+member)[0] == 404

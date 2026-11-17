@@ -632,7 +632,7 @@ begin
 
   // doctype: html32 is the baseline; html4 adds dir="rtl" on <body> too (retro browsers ignore
   // it, hence the structural column reversal above). One page definition serves both directions.
-  Result := PageDir(P.Title,Body,PageDirection);
+  Result := PageDir(P.Title,Body,PageDirection,'',P.Doctype);
 end;
 
 // ------------------------------------------------------------------ dispatcher hook

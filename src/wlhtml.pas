@@ -23,6 +23,7 @@ uses
 
 const
   DOCTYPE_32 = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 FINAL//EN">';
+  DOCTYPE_4 = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">';
 
 // Escape a text node: & < > "
 function HtmlEncode(const Value: string): string;
@@ -36,7 +37,7 @@ function Page32(const Title, Body: string): string;
 // browsers; HTML 3.2 retro browsers ignore the attribute, so the *real* RTL mirroring is done
 // structurally by the caller (reverse table columns + align="right"). Harmless to emit either
 // way — a single page definition serves both directions, no separate files.
-function PageDir(const Title, Body, Dir: string; const Language:string=''): string;
+function PageDir(const Title, Body, Dir: string; const Language:string='';const DocType:string='html32'): string;
 
 // Cosmetic re-indentation of an HTML 3.2 document; returns input unchanged for other doctypes.
 function PrettyHtml32(const Html: string): string;
@@ -61,17 +62,18 @@ begin
   Result := PageDir(Title, Body, 'ltr');
 end;
 
-function PageDir(const Title, Body, Dir: string;const Language:string): string;
+function PageDir(const Title, Body, Dir: string;const Language,DocType:string): string;
 var
-  DirAttr: string;
+  DirAttr,Declaration: string;
 begin
   if SameText(Dir, 'rtl') then
     DirAttr := ' dir="rtl"'
   else
     DirAttr := '';
   if Language<>'' then DirAttr:=DirAttr+' lang="'+HtmlAttr(StringReplace(Language,'_','-',[rfReplaceAll]))+'"';
+  if SameText(DocType,'html4') then Declaration:=DOCTYPE_4 else Declaration:=DOCTYPE_32;
   Result :=
-    DOCTYPE_32 + LineEnding +
+    Declaration + LineEnding +
     '<html' + DirAttr + '><head><title>' + HtmlEncode(Title) + '</title></head>' + LineEnding +
     '<body' + IfThen(SameText(Dir,'rtl'),' dir="rtl"','') + '>' + LineEnding + Body + LineEnding + '</body></html>';
 end;

@@ -11,6 +11,8 @@ const assert = require('node:assert/strict');
     });
     const page = await context.newPage(), base = process.argv[2], session = process.argv[3];
     await page.goto(`${base}/layout?sessionId=${session}`);
+    assert.equal(await page.evaluate(()=>document.doctype.publicId),'-//W3C//DTD HTML 4.01 Transitional//EN');
+    assert.equal(await page.evaluate(()=>document.compatMode),'CSS1Compat');
     const span = page.locator('td[data-grid-row="0"][data-grid-col="0"]');
     assert.equal(await span.getAttribute('rowspan'), '2');
     assert.equal(await span.getAttribute('colspan'), '2');

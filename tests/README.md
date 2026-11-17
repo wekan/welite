@@ -377,3 +377,7 @@ query names, fragment placement and absence from serialized auth metadata.
 mutation returns, GET search forms, arbitrary IDs/search containing query characters,
 fragments, safe re-login and request isolation. With `WELITE_UI=1`, `langnav.js` drives
 board/clear/home/admin/Designer/save in Chromium with JavaScript/cookies disabled.
+
+Layout coverage switches an actual published page between HTML4 and HTML3.2 and
+checks invalid-doctype refusal. The Chromium layout test checks HTML 4.01 Transitional
+and standards parsing mode before its span/required/RTL/sorting assertions.
