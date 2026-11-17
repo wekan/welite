@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep language metadata on UI not-found frames
+
+- Render unknown-domain UI failures using validated query/posted/header language
+  without a tenant/profile context. Render missing/inaccessible boards and known
+  tenant route misses through the normal viewer frame. Preserve generic 404 text.
+- Add a UI GET/POST matrix for Arabic/Finnish overrides and Hebrew header fallback,
+  verify unknown hosts create no registry entry and inaccessible boards disclose no
+  private content. Retain the API tenant error's separate JSON response format.
+- Linked and CLI HTTP suites pass; CLI also covers additional authenticated
+  profile-based board/route misses. Other mutation/authentication errors and
+  translated messages remain open.
+
 ## 2026-11-17 Retain viewer metadata on selection errors
 
 - Pass authenticated tenant/session/request context into the board selection error

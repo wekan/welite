@@ -452,3 +452,8 @@ and invalid-choice fallback, asserting 403, matching metadata and unchanged prof
 
 The frame matrix also posts invalid board selection actions in Arabic/Finnish,
 checking 400, matching language/direction metadata and unchanged card title/location.
+
+`notlang.py`, run by `admin.py`, exercises unknown-domain UI GET/POST routes
+with query/posted/header language, checks 404 metadata and no registry provisioning,
+verifies inaccessible-board responses omit private content, and retains JSON API
+errors. The authenticated frame matrix also covers profile-based board/route 404s.

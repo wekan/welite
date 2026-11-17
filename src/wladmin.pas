@@ -75,8 +75,9 @@ begin
   Result := False;
   if not (ResolveTenant(aRequest, T) and TenantOpen(T)) then
   begin
-    aResponse.Code := 404; aResponse.ContentType := 'text/plain';
-    aResponse.Content := 'Unknown domain'; aResponse.SendContent; Exit;
+    aResponse.Code := 404; aResponse.ContentType := 'text/html; charset=utf-8';
+    aResponse.Content := LanguagePage(aResponse,ViewerLanguage(nil,Default(TWLSession),aRequest),
+      'Not found','<p>Unknown domain</p>'); aResponse.SendContent; Exit;
   end;
   if not ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
   begin

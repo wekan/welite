@@ -51,6 +51,9 @@ def check_frames(request,database,session,editor):
         missing='/designer/page?id=missing-frame&sessionId='+session
         error('GET',missing,None,404)
         error('GET',missing+'&lang=fi',None,404,'fi')
+        error('GET','/board?id=missing-frame&sessionId='+session,None,404)
+        error('GET','/board?id=missing-frame&sessionId='+session+'&lang=fi',None,404,'fi')
+        error('GET','/missing-frame?sessionId='+session,None,404)
         error('POST','/designer/widget/move',dict(sessionId=session,lang='fi'),403,'fi')
         error('POST','/designer/widget/move',dict(sessionId=session,lang='unknown'),403)
         body=check('/designer?sessionId='+session)

@@ -61,8 +61,9 @@ begin
   if not Result then
   begin
     aResponse.Code := 404;
-    aResponse.ContentType := 'text/plain';
-    aResponse.Content := 'Unknown domain';
+    aResponse.ContentType := 'text/html; charset=utf-8';
+    aResponse.Content := LanguagePage(aResponse,ViewerLanguage(nil,Default(TWLSession),aRequest),
+      'Not found','<p>Unknown domain</p>');
     aResponse.SendContent;
   end;
 end;
@@ -485,8 +486,8 @@ begin
     if TryServePage(T,S,aRequest.PathInfo,Dir,aRequest.QueryFields,aResponse,Language.Tag) then
       Exit;
     aResponse.Code := 404;
-    aResponse.ContentType := 'text/plain';
-    aResponse.Content := 'Not found';
+    aResponse.ContentType := 'text/html; charset=utf-8';
+    aResponse.Content := LanguagePage(aResponse,Language,'Not found','<p>Not found</p>');
     aResponse.SendContent;
   end;
 end;

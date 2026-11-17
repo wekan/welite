@@ -244,3 +244,11 @@ Unknown-domain and other early route frames remain separate outstanding work.
 Board selection errors (empty selection, invalid save/action and failed clone,
 delete or export) also use the authenticated request’s viewer frame. Error prose
 is escaped, with the existing failure status and rollback behavior retained.
+
+### UI not-found frames
+
+Unknown-domain UI gates use a public viewer frame resolved from validated
+query/posted language and Accept-Language, with no tenant/profile fallback. Known
+tenant route and missing/inaccessible-board 404 frames use normal viewer context.
+The generic messages omit requested private names/IDs. JSON API tenant errors
+continue through their existing separate JSON handler.

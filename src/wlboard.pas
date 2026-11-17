@@ -145,7 +145,11 @@ procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; S:TWLSession; Body,Dir:string;Language:TWLLanguage;
 begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
-  begin aResponse.Code:=404; aResponse.Content:='Unknown domain'; aResponse.SendContent; Exit; end;
+  begin
+    aResponse.Code:=404; aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=LanguagePage(aResponse,ViewerLanguage(nil,Default(TWLSession),aRequest),
+      'Not found','<p>Unknown domain</p>'); aResponse.SendContent; Exit;
+  end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
   S.LanguageTag:=RequestLanguageTag(aRequest);
   Language:=ViewerLanguage(T.Db,S,aRequest);
@@ -153,7 +157,10 @@ begin
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all');
-  if Body='' then begin aResponse.Code:=404; aResponse.Content:='Board not found'; end
+  if Body='' then begin
+    aResponse.Code:=404;
+    aResponse.Content:=LanguagePage(aResponse,Language,'Board','<p>Board not found</p>');
+  end
   else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,'Board',Body+EnhancementScripts(wbUnknown),Dir); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
 end;

@@ -185,6 +185,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             from langhttp import check_language
             check_language(request,db,admin)
             print('PASS: authorized board renderer, escaped content and read-only controls')
+            from notlang import run as check_not_found_language
+            check_not_found_language(request,tmp/'data',admin)
             class HiddenFields(HTMLParser):
                 def __init__(self):
                     super().__init__()
