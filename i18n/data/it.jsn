@@ -61,7 +61,7 @@
   "activity-archived": "%s spostato nell'archivio",
   "activity-attached": "allegato %s a %s",
   "activity-created": "creato %s",
-  "activity-changedListTitle": "lista rinominata in ",
+  "activity-changedListTitle": "lista rinominata in %s",
   "activity-customfield-created": "creato campo personalizzato/a %s ",
   "activity-excluded": "escluso %s da %s",
   "activity-imported": "importato %s in %s da %s",

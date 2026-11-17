@@ -187,7 +187,8 @@
       "act-withCardTitle"
     ],
     "it.jsn": [
-      "act-addChecklist"
+      "act-addChecklist",
+      "activity-changedListTitle"
     ],
     "ja-HI.jsn": [
       "act-addChecklistItem"
@@ -321,7 +322,8 @@
     "sv.jsn": [
       "act-removeChecklistItem",
       "operator-number-expected",
-      "globalSearch-instructions-operator-creator"
+      "globalSearch-instructions-operator-creator",
+      "n-n-of-n-cards-found"
     ],
     "ta.jsn": [
       "act-addSubtask",

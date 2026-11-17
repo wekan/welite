@@ -1342,7 +1342,7 @@
   "no-cards-found": "Inga kort hittades",
   "one-card-found": "Ett kort hittades",
   "n-cards-found": "%s kort hittade",
-  "n-n-of-n-cards-found": "__start__-__slut__ av __totala__ kort hittade",
+  "n-n-of-n-cards-found": "__start__-__end__ av __total__ kort hittade",
   "operator-board": "tavla",
   "operator-board-abbrev": "b",
   "operator-swimlane": "simbana",

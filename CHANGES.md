@@ -4,6 +4,15 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Restore Italian and Swedish display arguments
+
+- Restore the missing Italian list-title `%s` and the translated Swedish result
+  range/count argument names from the current matching WeKan locale references.
+  Compare stripped token spans before replacing: every surrounding prose character,
+  other value and English key order stays unchanged.
+- Record both keys for exact English token-inventory regression coverage. The token
+  suite passes; the audit now leaves 1,149 differences for contextual review.
+
 ## 2026-11-17 Restore code-only activity title arguments
 
 - Restore five malformed activity title templates in Indonesian, Georgian, Thai
