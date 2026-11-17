@@ -161,8 +161,11 @@ Empty swimlane/list/card regions reuse the existing generic no-items string. Use
 board/list/card titles retain their original text and are HTML-escaped. Native movement arrows use fixed submit names and ASCII captions independent of
 command values. Viewport links use native View plus isolated ASCII arrows; minimap
 descriptions and legend reuse Board/View/yellow/current/cards/no-items keys. User
-labels and logical coordinates retain their meanings. Action-button and selection
-summary text still require localization.
+labels and logical coordinates retain their meanings. Selection toolbar buttons and count labels reuse existing native Edit/Delete/
+Unselect/Export/Copy selection and Multi-Selection/swimlanes/lists/cards keys. Fixed
+submit names separate those captions from action commands; the resolved board
+language reaches the toolbar even when selected by header or profile. Selection
+edit/confirmation prose and other application messages remain open.
 
 ### Navigation language state
 

@@ -1,5 +1,6 @@
 """Native arrow names dispatch without captions and ambiguous commands consume no proof."""
 import sqlite3
+import json
 from layout import Forms
 from urllib.parse import parse_qs,urlsplit
 
@@ -15,14 +16,29 @@ def run(request,database,session):
     before=snapshot()
     for commands in [ [('move_left','x'),('move_right','x')], [('move_up','x'),('move_up','y')],
                       [('move_left','x'),('dir','drop')], [('move_down','x'),('action','export')],
-                      [('move_left','x'),('action','')], [('move_far','x')] ]:
+                      [('move_left','x'),('action','')], [('move_far','x')],
+                      [('action_edit','x'),('action_clone','x')], [('action_delete','x'),('action_delete','y')],
+                      [('action_clear','x'),('move_up','x')], [('action_export','x'),('dir','drop')],
+                      [('action_clone','x'),('action','clear')], [('action_unknown','x')] ]:
         form=fields()
         status,headers,_=request('POST','/board/move',list(form.items())+commands)
         assert status==400 and headers['Content-Language']=='ar',(commands,status)
         assert snapshot()==before,'Rejected native command changed board data'
         # Reuse the exact proof from the rejected request: no command was admitted.
-        status,_,_=request('POST','/board/move',dict(form,action='clear'))
+        status,_,_=request('POST','/board/move',dict(form,action_clear='ignored caption'))
         assert status==302,'Malformed submit consumed the proof'
+    for action in ('edit','delete','clone','export'):
+        form=fields()
+        status,_,_=request('POST','/board/move',dict(form,sel_card='foreigncard',**{'action_'+action:'native label'}))
+        assert status==403,(action,'foreign selection accepted')
+        assert snapshot()==before,'Native action changed a foreign selection'
+        assert request('POST','/board/move',dict(form,action_clear='clear'))[0]==302,'Rejected foreign selection consumed proof'
+    form=fields();form['sel_card']='card'
+    status,headers,body=request('POST','/board/move',dict(form,action_export='delete'))
+    assert status==200 and headers['Content-Type'].startswith('application/json')
+    assert [row['id'] for row in json.loads(body)['data']['cards']]==['card']
+    assert snapshot()==before,'Native export mutated board data'
+    assert request('POST','/board/move',dict(form,action_clear='native clear'))[0]==302,'Native export consumed its proof'
     with sqlite3.connect(database) as con:
         original=con.execute("SELECT listId,swimlaneId,sort FROM cards WHERE id='card'").fetchone()
         lists=[row[0] for row in con.execute("SELECT id FROM lists WHERE boardId='protected' AND swimlaneId=? AND archived=0 ORDER BY sort,id",(original[1],))]

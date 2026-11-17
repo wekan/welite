@@ -51,7 +51,7 @@ const assert = require('node:assert/strict');
     await page.locator('input[name=move_right]').click();locale();
     assert((await page.locator('td[data-list="todo"]').boundingBox()).x >
       (await page.locator('td[data-list="doing"]').boundingBox()).x,'selected list moves physically right');
-    await page.locator('input[name=action][value=clear]').click();locale();
+    await page.locator('input[name=action_clear]').click();locale();
     assert.equal(await page.locator('input[name=lang]').inputValue(),'ar');
     await page.locator('a[href^="/?sessionId="]').click();locale();
     await page.locator('a[href^="/admin?"]').click();locale();

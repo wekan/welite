@@ -26,6 +26,11 @@ begin
     Reject('move_left=x','move_right=x');Reject('move_up=x','move_up=y');
     Reject('move_down=x','dir=drop');Reject('move_left=x','action=export');
     Reject('move_left=x','action=');Reject('move_far=x','');
+    P.Clear;P.Add('action_export=delete');Check(NormalizeMoveSubmit(P),'Rejected native export');
+    Check(P.Values['action']='export','Used action caption as command');
+    Reject('action_edit=x','action_clone=y');Reject('action_delete=x','action_delete=y');
+    Reject('action_clear=x','move_right=y');Reject('action_export=x','dir=left');
+    Reject('action_clone=x','action=clear');Reject('action_unknown=x','');
     Body:=MoveKeypad(Default(TWLSession),0,0,0);
     Check(Pos('name="move_left" value="&lt;" dir="ltr"',Body)>0,'Missing left arrow');
     Check(Pos('name="move_right" value="&gt;" dir="ltr"',Body)>0,'Missing right arrow');
@@ -34,6 +39,9 @@ begin
     Check(Pos('name="move_left"',Body)<Pos('name="move_down"',Body),'Wrong left/down order');
     Check(Pos('name="move_down"',Body)<Pos('name="move_right"',Body),'Wrong down/right order');
     Check(Pos('name="dir"',Body)=0,'Emitted caption-bound direction');
+    Check(Pos('name="action_edit"',Body)>0,'Missing native edit');
+    Check(Pos('name="action_clone"',Body)>0,'Missing native clone');
+    Check(Pos('name="action"',Body)=0,'Emitted caption-bound action');
     Writeln('PASS: caption-independent ASCII arrows, physical order, legacy commands and atomic ambiguous-submit refusal');
   finally P.Free;end;
 end.

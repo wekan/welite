@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Translate native selection toolbar actions
+
+- Reuse existing native Edit/Delete selected/Unselect all/Export selected/Copy
+  selection captions and Multi-Selection/swimlane/list/card summary labels. Pass
+  the resolved board locale into the toolbar, including header/profile selection.
+- Submit fixed action_edit/delete/clear/export/clone names independently of their
+  captions. Normalize before authorization/proof admission and reject duplicate,
+  unknown, multiple, arrow-mixed or legacy-mixed native commands. Legacy action
+  forms and non-consuming export semantics remain compatible.
+- Both-backend parser/markup checks, installed-locale guest/admin HTTP captions
+  and no-JS/no-cookie Chromium native labels/actions pass. Foreign selections and
+  ambiguous commands retain data/proofs; native export retains JSON and proof reuse.
+- Selection edit/confirmation prose, enrollment instructions, other application
+  messages and remaining language/RTL/platform acceptance stay open in TODO.
+
 ## 2026-11-17 Keep empty swimlane viewport positions reachable
 
 - Reproduce an empty lane retaining X 999 with no vertical escape. Clamp its

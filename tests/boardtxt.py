@@ -12,9 +12,10 @@ catalog=json.loads((root/'i18n/locales.jsn').read_text())
 english=json.loads((root/'i18n/data/en.jsn').read_text())
 
 class BoardPage(Page):
-    def __init__(self,body):self.maps=[];super().__init__(body)
+    def __init__(self,body):self.maps=[];self.submits=[];super().__init__(body)
     def handle_starttag(self,tag,attrs):
         if tag=='table' and 'data-board-map' in dict(attrs):self.maps.append(dict(attrs))
+        if tag=='input' and dict(attrs).get('type')=='submit':self.submits.append(dict(attrs))
         super().handle_starttag(tag,attrs)
 
 def run(request,database,administrator,base):
@@ -65,8 +66,20 @@ def run(request,database,administrator,base):
         assert all_captions==[words['view-all']],(tag,'view-all')
         assert html.escape(words['no-items-message'],quote=False).encode() in body,(tag,'empty')
         assert b'Board <user>' not in body and b'List <user>' not in body
+        actions={attrs['name']:attrs['value'] for attrs in page.submits if attrs['name'].startswith('action_')}
+        if session==administrator:
+            expected={'action_edit':words['edit'],'action_delete':words['r-delete-selected'],
+                      'action_clear':words['r-unselect-all'],'action_export':words['r-export-selected'],
+                      'action_clone':words['copySelectionPopup-title']}
+            assert actions==expected,(tag,actions,expected)
+            summary=words['multi-selection']+': '+words['swimlanes']+' 0; '+words['lists']+' 0; '+words['cards']+' 0'
+            assert html.escape(summary,quote=False).encode() in body,(tag,'selection summary')
+        else:assert not actions,(tag,'anonymous actions')
+
     try:
-        for row in catalog:check(row['tag'],query={'lang':row['tag']})
+        for row in catalog:
+            check(row['tag'],query={'lang':row['tag']})
+            check(row['tag'],administrator,{'lang':row['tag']})
         for tag in ('en','fi','ar','he'):
             check(tag,query={'lang':tag},board='boardnone')
             check(tag,query={'lang':tag},board='missing-txt')
@@ -111,7 +124,7 @@ def run(request,database,administrator,base):
         check('fi',administrator,{'lang':'fi'},'he')
         check('fi','invalid',header='fi')
         if os.environ.get('WELITE_UI')=='1':
-            subprocess.run([os.environ.get('NODE','node'),str(root/'tests/boardtxt.js'),base],check=True)
+            subprocess.run([os.environ.get('NODE','node'),str(root/'tests/boardtxt.js'),base,administrator],check=True)
         check('en',header='en')
         assert content_state()==before,'Viewport/map navigation changed board content'
     finally:

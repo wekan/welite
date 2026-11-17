@@ -56,6 +56,18 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
       assert((await page.locator('body').innerText()).includes('X 1 Y 1'));
       assert.equal(await page.locator('a[data-view-dir]').count(),0);
     }
+
+    for(const tag of ['fi','ar']) {
+      const local=words(tag);
+      await page.goto(base+'/board?id=boardtxt&view=all&sessionId='+process.argv[3]+'&lang='+tag);
+      const keys={edit:'edit',delete:'r-delete-selected',clear:'r-unselect-all',export:'r-export-selected',clone:'copySelectionPopup-title'};
+      for(const [action,key] of Object.entries(keys))
+        assert.equal(await page.locator('input[name=action_'+action+']').inputValue(),local[key]);
+      assert((await page.locator('body').innerText()).includes(local['multi-selection']+': '+local.swimlanes+' 0; '+local.lists+' 0; '+local.cards+' 0'));
+      await page.getByRole('button',{name:local['r-unselect-all'],exact:true}).click();
+      assert.equal(new URL(page.url()).searchParams.get('lang'),tag);
+      assert.equal(await page.locator('input[name=action_edit]').inputValue(),local.edit);
+    }
     await page.goto(base+'/board?id=boardtxt');
     assert.equal(await page.title(),words('fi').board);
     assert.equal(await page.getByRole('link',{name:words('fi')['view-all'],exact:true}).count(),1);

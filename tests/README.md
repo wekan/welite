@@ -586,3 +586,10 @@ Arabic and Hebrew; stable data attributes replace English-description selectors.
 Board-text fixtures include middle/last empty lanes and a board with no swimlanes.
 HTTP/browser checks cover bounded coordinates, vertical escape, clickable/current-
 colored empty map cells, up/down/map round trips in LTR/RTL and unchanged content.
+
+Native toolbar coverage includes all installed guest/admin captions and count
+labels, fixed action submit names and mixed/duplicate/unknown command rejection.
+HTTP checks retain proof/data after foreign-selection refusal and keep native
+export read-only with JSON/proof reuse. Browser cases assert Finnish/Arabic native
+labels and invoke Unselect all; existing edit/save/copy/export/delete flows click
+fixed submit names independently of captions.

@@ -30,7 +30,7 @@ begin
 end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag:string):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
-  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;
+  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -41,7 +41,8 @@ begin
   B:=Db.Query('SELECT title,color FROM boards WHERE id='+QuotedStr(BoardId)+';');
   Writable:=BoardCanWrite(Db,S.UserId,BoardId);
   Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
-  Words:=TWLTranslator.Create(ResolveLanguage(Tag,SessionLanguage(Db,S),''));
+  Language:=ResolveLanguage(Tag,SessionLanguage(Db,S),'');
+  Words:=TWLTranslator.Create(Language);
   try
   if SameText(Dir,'rtl') then begin Align:='right'; CellDir:='rtl'; end
   else begin Align:='left'; CellDir:='ltr'; end;
@@ -159,7 +160,7 @@ begin
     end;
     Result:=Result+'</tr></table>';
   end;
-  if Writable then Result:=Result+MoveKeypad(S,0,0,0,True,True)+MoveFormEnd;
+  if Writable then Result:=Result+MoveKeypad(S,0,0,0,True,True,Language.Tag)+MoveFormEnd;
   finally Words.Free;end;
 end;
 // A published widget may override viewer direction. Re-read its owned page and

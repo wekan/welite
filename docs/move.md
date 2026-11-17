@@ -66,16 +66,19 @@ The whole board is wrapped in a single `<form method="POST" action="/board/move"
    The server derives direction from the fixed name; the visible value is ignored.
    Legacy `dir=up|down|left|right|drop` requests remain supported for existing clients
    and progressive drag enhancement.
-3. **Actions** — Edit / Clone / Delete / Clear / Export are submit buttons `name="action"`
-   in the same form (no `dir`, so `ApplyMove` ignores them and the action handler runs).
+3. **Actions** — fixed `action_edit`, `action_clone`, `action_delete`, `action_clear`
+   and `action_export` submit names carry native captions from existing keys.
+   Copy selection dispatches the existing deep clone action; Unselect all clears
+   the selection. The server derives action from the submit name, not its caption.
+   Selection summary labels also use the resolved viewer locale.
 4. **Apply + PRG** — `ApplyMove` updates the DB; the endpoint 302-redirects back to `back`
    with the session id in the URL (cookie-free). Re-render shows the moved items.
 
 `NormalizeMoveSubmit` runs after session validation, before selection admission,
-action-proof verification and mutations. One native arrow becomes the canonical
-`dir` command. Duplicate/multiple/unknown native arrows and native-arrow mixtures
-with legacy `dir` or `action` fields return 400 without changing board data or
-consuming the action proof. Legacy-only request semantics remain unchanged. Fixed
+action-proof verification and mutations. One native arrow/action becomes its canonical
+`dir`/`action` command. Duplicate/multiple/unknown native commands and mixtures
+with another native command or legacy `dir`/`action` fields return 400 without
+changing board data or consuming the action proof. Legacy-only request semantics remain unchanged. Fixed
 submit names let future localized captions change without changing command values
 or requiring HTML4 button elements on the HTML3.2 baseline.
 

@@ -48,10 +48,10 @@ function MoveFormEnd: string;
 
 // The combined keypad + action buttons + selection summary. Counts are for the summary label.
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean = True; IncludeClone:Boolean=True): string;
+  IncludeActions: Boolean = True; IncludeClone:Boolean=True;const LanguageTag:string=''): string;
 
-// Normalize one native arrow submit name to the legacy dir command. Values are
-// presentation only. Reject ambiguous commands without changing Params.
+// Normalize one native movement/action submit name to its legacy command.
+// Values are presentation only. Reject ambiguity without changing Params.
 function NormalizeMoveSubmit(Params:TStrings):Boolean;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
@@ -62,7 +62,7 @@ function ApplyMove(Db: TWLDb; Params: TStrings; RightToLeft:Boolean=False): Bool
 implementation
 
 uses
-  StrUtils;
+  StrUtils,wli18n;
 
 function q(const V: string): string;
 begin
@@ -88,10 +88,10 @@ begin
 end;
 
 function NormalizeMoveSubmit(Params:TStrings):Boolean;
-var i,Count,Legacy:Integer;Name,Direction:string;
+var i,Count,Legacy:Integer;Name,Command,Kind:string;
 begin
   Result:=False;if Params=nil then Exit;
-  Count:=0;Legacy:=0;Direction:='';
+  Count:=0;Legacy:=0;Command:='';Kind:='';
   for i:=0 to Params.Count-1 do
   begin
     Name:=LowerCase(Params.Names[i]);
@@ -100,17 +100,29 @@ begin
     begin
       if not ((Name='move_up') or (Name='move_down') or
         (Name='move_left') or (Name='move_right')) then Exit;
-      Inc(Count);Direction:=Copy(Name,6,Length(Name));
+      Inc(Count);Command:=Copy(Name,6,Length(Name));Kind:='dir';
+    end
+    else if Copy(Name,1,7)='action_' then
+    begin
+      if not ((Name='action_edit') or (Name='action_delete') or
+        (Name='action_clear') or (Name='action_export') or (Name='action_clone')) then Exit;
+      Inc(Count);Command:=Copy(Name,8,Length(Name));Kind:='action';
     end;
   end;
   if (Count>1) or ((Count=1) and (Legacy>0)) then Exit;
-  if Count=1 then Params.Values['dir']:=Direction;
+  if Count=1 then Params.Values[Kind]:=Command;
   Result:=True;
 end;
 
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean; IncludeClone:Boolean): string;
+  IncludeActions: Boolean; IncludeClone:Boolean;const LanguageTag:string): string;
+var Words:TWLTranslator;Language:TWLLanguage;
+  function Button(const Action,Key,Fallback:string):string;
+  begin Result:='<input type="submit" name="action_'+Action+'" value="'+HtmlAttr(Words.Text(Key,Fallback))+'"> ';end;
 begin
+  if not FindLanguage(LanguageTag,Language) then Language:=ResolveLanguage(S.LanguageTag,'','');
+  Words:=TWLTranslator.Create(Language);
+  try
   // Physical controls must not inherit RTL table-column reversal from the page.
   // HTML 3.2 browsers ignore dir and already retain this source order.
   // keypad as a 2-row table of submit buttons (joystick layout), like kanban.go's arrowKeys
@@ -124,17 +136,15 @@ begin
     '<td><input type="submit" name="move_right" value="&gt;" dir="ltr"></td>' +
     '</tr></table>' + LineEnding;
   if IncludeActions then Result:=Result+
-    // action buttons (same form, distinct submit name=action)
-    '<input type="submit" name="action" value="edit"> ' +
-    '<input type="submit" name="action" value="delete"> ' +
-    '<input type="submit" name="action" value="clear"> ' +
-    '<input type="submit" name="action" value="export">' + LineEnding;
+    Button('edit','edit','Edit')+Button('delete','r-delete-selected','Delete selected')+
+    Button('clear','r-unselect-all','Unselect all')+Button('export','r-export-selected','Export selected')+LineEnding;
   if IncludeActions and IncludeClone then
-    Result:=Result+'<input type="submit" name="action" value="clone"> ';
-  Result:=Result+
-    // selection summary (mirrors kanban.go selectionInfo)
-    '<p>Selected: ' + IntToStr(SwimlaneSel) + ' swimlanes, ' +
-    IntToStr(ListSel) + ' lists, ' + IntToStr(CardSel) + ' cards.</p>';
+    Result:=Result+Button('clone','copySelectionPopup-title','Copy selection');
+  Result:=Result+'<p>'+HtmlEncode(Words.Text('multi-selection','Multi-Selection'))+': '+
+    HtmlEncode(Words.Text('swimlanes','Swimlanes'))+' '+IntToStr(SwimlaneSel)+'; '+
+    HtmlEncode(Words.Text('lists','Lists'))+' '+IntToStr(ListSel)+'; '+
+    HtmlEncode(Words.Text('cards','Cards'))+' '+IntToStr(CardSel)+'</p>';
+  finally Words.Free;end;
 end;
 
 // ---- selection reading -------------------------------------------------------------------
