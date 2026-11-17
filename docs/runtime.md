@@ -110,3 +110,21 @@ cleanup remain requests rather than interrupting the join.
 repeated signals, exit status zero, immediate restart and database integrity on
 Linux. Unix targets use this signal path; native Windows console control handling
 and retro-platform lifecycle behavior still need platform verification.
+
+## HTTP connection lifetime
+
+The pinned FPC 3.2.3 source (`12e49a77d1c5b801fe8e4a2f77df27aa3dce848b`)
+dispatches one request in `TFPHTTPConnection.HandleRequest` and frees its socket
+when the connection thread finishes. Its response writer emits HTTP/1.1. The
+common application handler therefore sets `Connection: close` when initializing
+responses, following [RFC 9112 section 9.3](https://www.rfc-editor.org/rfc/rfc9112.html#section-9.3).
+Clients/proxies reconnect instead of pooling a socket the server is closing.
+This header policy is shared across targets; Unix tracked draining remains intact,
+and other targets retain the framework's default server implementation.
+
+`tests/conn.py` checks linked/CLI HTML/static/JSON/error/redirect responses, actual
+wire EOF, repeated requests through one Python client and rapid pooled Node
+GET/POST requests. Both backends pass alongside shutdown/restart/integrity checks.
+An isolated snapshot of committed source plus only the transport patch also passes
+all eight Windows x86/amd64 backend/resource build variants. Windows and retro
+runtime acceptance remain unverified; a PE build alone does not establish them.

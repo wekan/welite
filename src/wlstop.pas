@@ -6,8 +6,16 @@ procedure StartHTTPStop;
 procedure FinishHTTPStop;
 procedure DoneHTTPStop;
 implementation
-uses SysUtils,Classes,CustApp,fphttpapp
-  {$IFDEF UNIX},BaseUnix,Sockets,SSockets,fphttpserver,custhttpapp,custweb{$ENDIF};
+uses SysUtils,Classes,CustApp,fphttpapp,HTTPDefs,custhttpapp,custweb
+  {$IFDEF UNIX},BaseUnix,Sockets,SSockets,fphttpserver{$ENDIF};
+type
+  TWLHandler=class(TFPHTTPServerHandler)
+    procedure InitResponse(AResponse:TResponse);override;
+    {$IFDEF UNIX}function CreateServer:TEmbeddedHttpServer;override;{$ENDIF}
+  end;
+  TWLApplication=class(THTTPApplication)
+    function InitializeWebHandler:TWebHandler;override;
+  end;
 {$IFDEF UNIX}
 type
   TWLConnection=class(TFPHTTPConnection)
@@ -16,12 +24,6 @@ type
   TWLServer=class(TEmbeddedHttpServer)
     function CreateConnection(Data:TSocketStream):TFPHTTPConnection;override;
     property ConnectionCount;
-  end;
-  TWLHandler=class(TFPHTTPServerHandler)
-    function CreateServer:TEmbeddedHttpServer;override;
-  end;
-  TWLApplication=class(THTTPApplication)
-    function InitializeWebHandler:TWebHandler;override;
   end;
   TStopEvents=class
   procedure Idle(Sender:TObject);
@@ -41,8 +43,6 @@ function TWLServer.CreateConnection(Data:TSocketStream):TFPHTTPConnection;
 begin Result:=TWLConnection.Create(Self,Data);Connections.Add(Result);end;
 function TWLHandler.CreateServer:TEmbeddedHttpServer;
 begin Result:=TWLServer.Create(Self);end;
-function TWLApplication.InitializeWebHandler:TWebHandler;
-begin Result:=TWLHandler.Create(Self);end;
 procedure ShutdownConnections;
 var Items:TList;i:Integer;
 begin
@@ -67,6 +67,14 @@ begin
   if TermInstalled then begin fpSigAction(SIGTERM,@OldTerm,nil);TermInstalled:=False;end;
 end;
 {$ENDIF}
+procedure TWLHandler.InitResponse(AResponse:TResponse);
+begin
+  inherited InitResponse(AResponse);
+  // The pinned FPC server closes after one request despite its HTTP/1.1 status line.
+  AResponse.Connection:='close';
+end;
+function TWLApplication.InitializeWebHandler:TWebHandler;
+begin Result:=TWLHandler.Create(Self);end;
 procedure StartHTTPStop;
 {$IFDEF UNIX}var Action:SigActionRec;{$ENDIF}
 begin
@@ -106,16 +114,14 @@ procedure DoneHTTPStop;
 begin
   {$IFDEF UNIX}RestoreSignals;FreeAndNil(Events);{$ENDIF}
 end;
-{$IFDEF UNIX}
 procedure InitApplication;
 var Previous:THTTPApplication;
 begin
-  Connections:=TThreadList.Create;
+  {$IFDEF UNIX}Connections:=TThreadList.Create;{$ENDIF}
   Previous:=Application;Application:=TWLApplication.Create(nil);
   if CustomApplication=Previous then CustomApplication:=Application;
   Previous.Free;
 end;
 initialization InitApplication;
-finalization FinishHTTPStop;DoneHTTPStop;Connections.Free;
-{$ENDIF}
+finalization FinishHTTPStop;DoneHTTPStop;{$IFDEF UNIX}Connections.Free;{$ENDIF}
 end.

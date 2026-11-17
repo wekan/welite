@@ -602,3 +602,10 @@ Finnish/Arabic/Hebrew without JS/cookies, preserving UTF-8 values and locale thr
 round trips. Successful-save comparisons permit expected modification timestamps;
 rejected saves require unchanged rows. Keypad checks retain the default shared
 color hint while permitting its suppression for a code-only native form example.
+
+`python3 tests/conn.py` verifies the pinned server's HTTP/1.1 Connection: close
+policy on both backends across HTML/static/JSON/errors/redirects, actual socket EOF,
+a reusable Python client and rapid pooled Node requests (`conn.js`). It requires
+NODE/FPC/TMPDIR as other suites do and checks clean shutdown. The transport patch
+was also verified against committed source without pending UI changes, including
+`stop.py` and all Windows x86/amd64 build variants.

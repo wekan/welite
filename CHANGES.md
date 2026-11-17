@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Advertise single-request HTTP connection closure
+
+- Reproduce HTTP/1.1 responses without Connection: close while the pinned FPC
+  server frees each socket after one request, causing immediate pooled requests
+  to fail with connection resets.
+- Set the close policy in common response initialization on every target. Retain
+  Unix connection tracking/signal handling and the default server on other targets.
+- Verify both database backends with mixed HTML/static/JSON/error/redirect statuses,
+  wire EOF, reusable Python clients and rapid pooled Node GET/POST requests.
+  Shutdown/restart/integrity tests and all eight Windows build variants pass.
+- Recheck committed source plus only this transport patch in an isolated snapshot,
+  independently of pending confirmation UI changes. Windows/retro runtime behavior
+  and other unfinished platform acceptance remain open in TODO.
+
 ## 2026-11-17 Translate selection edit fields and native Save
 
 - Reuse native edit/selection, item-kind, title/color/description and Save keys
