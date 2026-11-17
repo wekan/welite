@@ -193,6 +193,14 @@ begin
   finally Words.Free;end;
 end;
 
+procedure AuthError(Request:TRequest;Response:TResponse;Code:Integer;
+  const Title,Message:string);
+begin
+  Response.Code:=Code;Response.ContentType:='text/html; charset=utf-8';
+  Response.Content:=AuthPage(Request,Response,Title,'<p>'+HtmlEncode(Message)+'</p>');
+  Response.SendContent;
+end;
+
 // POST /sign-in — authenticate against schema.sql users, then issue a cookie-free session.
 procedure SignInEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
@@ -211,14 +219,14 @@ begin
     if not ReserveLoginAttempt(T.Db,Username,aRequest.RemoteAddress,DateTimeToUnix(Now,False)) then
     begin
       aResponse.Code:=429;aResponse.SetCustomHeader('Retry-After','300');
-      aResponse.Content:='Too many login attempts. Try again later.';aResponse.SendContent;Exit;
+      AuthError(aRequest,aResponse,429,'Sign in','Too many login attempts. Try again later.');Exit;
     end;
     Proof:=nil;
     if AuthenticateAccount(T.Db,Username,Password,aRequest.ContentFields.Values['code'],Proof) then
     try
       S:=CreateAuthenticatedSession(T.Db,aRequest,Proof,30*24*60*60);
       if S.SessionId='' then
-      begin aResponse.Code:=500; aResponse.Content:='Could not create session'; aResponse.SendContent; Exit; end;
+      begin AuthError(aRequest,aResponse,500,'Sign in','Could not create session');Exit; end;
       aResponse.Code:=302;
       Location:=WithSessionId('/',S.SessionId);
       if FindLanguage(aRequest.QueryFields.Values['lang'],Language) then Location:=Location+'&lang='+Language.Tag;
@@ -247,7 +255,7 @@ begin
   if not Result then
   begin
     Response.Code:=429;Response.SetCustomHeader('Retry-After','300');
-    Response.Content:='Too many login attempts. Try again later.';Response.SendContent;
+    AuthError(Request,Response,429,'One-time codes','Too many login attempts. Try again later.');
   end;
 end;
 function ConfirmationForm(Request:TRequest;const Token,Message:string;Words:TWLTranslator):string;
@@ -277,7 +285,7 @@ begin
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
-      begin Response.Code:=500;Response.Content:='Could not start setup';Response.SendContent;Exit;end;
+      begin AuthError(Request,Response,500,'One-time codes','Could not start setup');Exit;end;
       Body:='<h1>Set up one-time codes</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
         '<p>Enter this secret in your authenticator: <code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
@@ -357,8 +365,8 @@ begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if T.IsAdmin then
   begin
-    aResponse.Code:=403; aResponse.Content:='Global Admin accounts are initialized locally; public registration is disabled.';
-    aResponse.SendContent; Exit;
+    AuthError(aRequest,aResponse,403,'Register',
+      'Global Admin accounts are initialized locally; public registration is disabled.');Exit;
   end;
 
 
@@ -411,7 +419,7 @@ begin
     // Log the new user straight in (cookie-free session via URL), then go to the board list.
     S := CreateSession(T.Db, aRequest, Uid,Username,HashText(Hash),30*24*60*60);
     if S.SessionId='' then
-    begin aResponse.Code:=500; aResponse.Content:='Account created; sign in to continue'; aResponse.SendContent; Exit; end;
+    begin AuthError(aRequest,aResponse,500,'Register','Account created; sign in to continue');Exit; end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', LanguageUrl(aRequest,WithSessionId('/',S.SessionId)));
     aResponse.SendContent;

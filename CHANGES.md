@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep viewer metadata on authentication errors
+
+- Add an escaped public authentication error frame for sign-in rate/session failures,
+  enrollment admission/start failures, reserved-admin registration denial and failed
+  post-registration session issuance. Resolve request/header language without a
+  profile lookup, retaining existing status/messages and preset response headers.
+- Verify sign-in/setup/confirmation 429 metadata with Retry-After, reserved registration
+  denial and no cookies/credentials. Force enrollment storage failure to verify 500,
+  no-store/no-referrer, no setup secret and unchanged account/pending state.
+- Enrollment scenarios pass on linked/CLI backends; full Admin HTTP suites also pass
+  on both. Translating the remaining authentication instructions/messages stays open.
+
 ## 2026-11-17 Keep viewer metadata on early board move errors
 
 - Render missing-session, forbidden-selection, bad-token and invalid-drop failures

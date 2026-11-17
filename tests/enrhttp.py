@@ -1,4 +1,5 @@
 """Public required-factor enrollment without granting premature application access."""
+from autherr import check as check_auth_error
 import base64
 import hashlib
 import hmac
@@ -93,13 +94,31 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 api=json.loads(logged[2])['token'];assert request('GET','/api/user?token='+api)[0]==200
                 assert setup('required') is None,'Password alone replaced an active factor'
                 assert b'One-time codes enabled' not in confirm(token,otp(secret,center+2))[2]
+                # A private storage failure retains the frame without disclosing setup secrets.
+                register('frame-fail');expire();failure_before=services('frame-fail')
+                with sqlite3.connect(db) as con:
+                    con.execute("CREATE TRIGGER framefail BEFORE INSERT ON _wl_enrol BEGIN SELECT RAISE(ABORT,'forced'); END")
+                try:
+                    failed=request('POST','/two-factor/setup?lang=fi',dict(username='frame-fail',password='test-password'))
+                    assert failed[0]==500;check_auth_error(failed,'fi',private=True)
+                    assert services('frame-fail')==failure_before
+                    with sqlite3.connect(db) as con:
+                        assert con.execute("SELECT count(*) FROM _wl_enrol WHERE username='frame-fail'").fetchone()==(0,)
+                finally:
+                    with sqlite3.connect(db) as con:con.execute('DROP TRIGGER framefail')
+                expire()
                 # Confirmation account comes from pending setup, not posted fields.
                 register('limited');limited_before=services('limited');expire();token2,secret2=setup('limited')
                 for index in range(4):
                     denied=confirm(token2,'bad',username='rotate-'+str(index),headers={'X-Forwarded-For':'198.51.100.'+str(index)})
                     assert denied[0]==200 and b'Invalid code or setup' in denied[2]
-                denied=confirm(token2,otp(secret2,int(time.time())//30),username='another')
+                denied=confirm(token2,otp(secret2,int(time.time())//30),username='another',headers={'Accept-Language':'ar'})
                 assert denied[0]==429 and denied[1]['Retry-After']=='300'
+                check_auth_error(denied,'ar',private=True)
+                denied=request('POST','/two-factor/setup',dict(username='limited',password='test-password',lang='fi'))
+                assert denied[0]==429;check_auth_error(denied,'fi',private=True)
+                denied=request('POST','/sign-in?lang=ar',dict(username='limited',password='test-password'))
+                assert denied[0]==429;check_auth_error(denied,'ar')
                 assert services('limited')==limited_before
                 expire()
                 with sqlite3.connect(db) as con:con.execute("CREATE TRIGGER deny_enrol BEFORE UPDATE ON users BEGIN SELECT RAISE(ABORT,'forced'); END")

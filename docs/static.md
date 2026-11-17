@@ -257,3 +257,9 @@ Early board-move failures (missing session, forbidden selection, bad action toke
 and invalid drop) now render the same frame. Failed session validation clears
 viewer identity before language resolution; validated failures can use their own
 tenant-bound profile. Rejection status/messages and card data remain unchanged.
+
+Authentication rate-limit/session failures, enrollment admission/start failures and
+reserved-admin registration denial now use the public authentication frame, honoring
+query/posted/header language without a profile lookup. Existing retry and enrollment
+private-response headers remain intact; error prose is escaped and contains no
+credentials or setup secret. Full message translation remains separate work.

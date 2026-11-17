@@ -461,3 +461,8 @@ errors. The authenticated frame matrix also covers profile-based board/route 404
 Board error-frame coverage also checks missing/invalid sessions, forbidden selections,
 bad tokens and signed invalid drops. It verifies public fallback for invalid
 sessions, profile/posted choices for valid viewers and unchanged card data.
+
+`autherr.py` supplies shared frame/privacy assertions. Enrollment HTTP tests cover
+localized sign-in/setup/confirmation 429 responses and a forced enrollment-storage
+500 with unchanged account/pending state. Tenant-tier tests cover Arabic reserved
+registration denial, preserving status, private headers and Retry-After.

@@ -1,4 +1,5 @@
 """HTTP role and host isolation checks, called by admin.py."""
+from autherr import check as check_auth_error
 from html.parser import HTMLParser
 from urllib.parse import parse_qs, urlsplit
 import sqlite3
@@ -23,7 +24,8 @@ def run(request, tmp, local_admin):
     for host in ['unknown.example', '127.0.0.1.evil.example', 'x127.0.0.1x', 'fake::1.example']:
         assert request('GET', '/sign-in', host=host)[0] == 404, host
     assert request('GET', '/sign-in', host='[::1]:5500')[0] == 200
-    assert request('POST', '/register', {'username':'attacker','password':'x','confirm':'x'}, host='admin')[0] == 403
+    denied=request('POST','/register',dict(username='attacker',password='x',confirm='x',lang='ar'),host='admin')
+    assert denied[0]==403;check_auth_error(denied,'ar')
     status, headers, _ = request('POST', '/sign-in', {'username':'global-admin','password':'global-test-password'}, host='admin')
     assert status == 302, (status,headers)
     global_admin = parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
