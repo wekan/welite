@@ -21,6 +21,7 @@ for table,collection in collections.items():
         if name in booleans:kind='bool'
         elif name.endswith('At') or name in ['heartbeat','lastConnectionDate','dateLastActivity']:kind='date'
         if table=='attachments' and name in ['boardId','swimlaneId','listId','cardId']:path='meta.'+name
+        if table=='custom_fields' and name in ['currencyCode','stringtemplateFormat','stringtemplateSeparator']:path='settings.'+name
         value=db.execute('SELECT '+default).fetchone()[0] if default is not None else None
         fields.append(dict(name=name,path=path,kind=kind,type=typ,required=bool(required or pk),default=value))
     foreign_keys=[dict(column=row[3],parent=row[2],key=row[4],delete=row[6]) for row in db.execute('PRAGMA foreign_key_list('+table+')')]

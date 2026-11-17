@@ -1167,6 +1167,29 @@ checks concern the currently supported metadata. Definition settings/full payloa
 edit/delete lifecycle and automatic-card policies still need source reconciliation;
 typed migration/explicit type changes and selection clone/export remain open too.
 
+## Nested custom-field setting columns
+
+The normalized SQL column names remain currencyCode, stringtemplateFormat and
+stringtemplateSeparator. On shared stores their generated source paths are now
+settings.currencyCode, settings.stringtemplateFormat and
+settings.stringtemplateSeparator, matching `models/customFields.js`. Native
+schema columns are unchanged. The adapter no longer treats same-named root
+properties as these canonical settings.
+
+SQL edits create an absent settings object and preserve existing dropdownItems,
+unrelated settings and typed unknown properties. An existing incompatible scalar
+settings value is refused; a bad row rolls back the whole SQL statement. Reinstall
+rebuilds owned views/descriptors in the corrected shape without rewriting source
+documents. Legacy same-named root properties remain intact and are not promoted
+or deleted automatically.
+
+`tests/cfset.py`, run by the real-server suite on both backends, verifies SQL/Mongo
+round trips, explicit SQL inserts, missing parents, exact BSON preservation,
+dropdown edits, invalid-parent rollback and upgrading an old flat view/descriptor.
+Full settings API payloads/storage and a provenance-aware legacy-root normalization
+policy remain open; this is a projection correction, not a full definition/settings
+migration or lifecycle implementation.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

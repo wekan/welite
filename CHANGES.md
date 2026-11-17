@@ -4,6 +4,22 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Map custom-field SQL settings to their nested source paths
+
+- Generate currencyCode, stringtemplateFormat and stringtemplateSeparator columns
+  from settings.currencyCode/settings.stringtemplateFormat/settings.stringtemplateSeparator,
+  matching the maintained model instead of reading/writing unrelated root fields.
+- Verify live two-way SQL/Mongo edits, new SQL definitions, missing settings objects,
+  dropdown coexistence and exact preservation of unknown Date/Long/Binary metadata.
+  Refuse incompatible scalar settings parents with full multi-row rollback.
+- Reinstall corrected views/descriptors over the old flat projection without
+  changing source documents or legacy root properties. The old committed mapping
+  reproduces wrong root-value reads rather than the canonical settings values.
+  Shared HTTP checks and all eight Windows x86/x64 cross-build variants pass.
+- Full settings API payloads/storage, legacy-root normalization policy, definition
+  lifecycle, typed migration and clone/export remain in TODO; native schema columns
+  and the wider interoperability/platform gates are unchanged.
+
 ## 2026-11-17 Make custom-field definition creation atomic
 
 - Commit the definition, board association and authenticated createCustomField
