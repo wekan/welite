@@ -286,6 +286,13 @@
     load: () => import("./data/es-CL.jsn"),
     rtl: false,
   },
+  "es-CO": {
+    code: "es",
+    tag: "es-CO",
+    name: "Español en Colombia",
+    load: () => import("./data/es-CO.jsn"),
+    rtl: false,
+  },
   "es-LA": {
     code: "es",
     tag: "es-LA",

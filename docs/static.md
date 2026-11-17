@@ -88,7 +88,7 @@ separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 150 installed languages; 95 more source languages
+The current snapshot lists 151 installed languages; 94 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
 Server negotiation and board/Designer direction now use the strict catalog.
@@ -209,3 +209,10 @@ symlinks. They retain 2,090 matching maintained regional source strings, eight
 existing French compatibility phrases and two code-only title templates. The
 removed board-members restriction phrase is translated directly into French.
 All values follow local English key order and exact argument inventories.
+
+### Colombian Spanish asset
+
+`es-CO.jsn` replaces a broken symlink with 2,090 unchanged maintained regional
+source strings and eleven compatibility values: three existing Spanish phrases,
+six directly translated phrases and two literal title templates. English key
+order and every source argument inventory are verified.

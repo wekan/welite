@@ -328,6 +328,14 @@
     "file": "es-CL.jsn"
   },
   {
+    "key": "es-CO",
+    "code": "es",
+    "tag": "es-CO",
+    "name": "Español en Colombia",
+    "rtl": false,
+    "file": "es-CO.jsn"
+  },
+  {
     "key": "es-LA",
     "code": "es",
     "tag": "es-LA",

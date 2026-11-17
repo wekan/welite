@@ -430,3 +430,7 @@ Russian/Russia files under their established portable underscore filenames.
 `python3 tests/frlang.py` verifies the physical French Belgium/Canada files,
 catalog registration, native vocabulary, non-English compatibility prose, exact
 English key order and every argument inventory.
+
+`python3 tests/eslang.py` checks the Colombian Spanish physical asset, catalog
+identity, core/compatibility vocabulary, English key order and every argument
+inventory, including translated legacy phrases absent from the source catalog.

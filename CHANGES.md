@@ -4,6 +4,18 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Restore Colombian Spanish language asset
+
+- Replace the broken Colombian Spanish symlink with a physical portable asset,
+  retaining all 2,090 maintained regional source values. Supply the eleven legacy
+  keys from three existing Spanish phrases, six direct translations and two
+  code-only title templates, in local English key order.
+- Add physical-file/catalog/vocabulary/legacy-prose and exact token-inventory
+  regressions. Catalog, token audit, negotiation and UTF-8 reader tests pass;
+  authentication forms render for all 151 installed languages on both backends.
+- 94 source languages still need assets, and the existing token audit remains at
+  1,149 contextual differences. Translation quality review remains open.
+
 ## 2026-11-17 Restore French regional language assets
 
 - Replace broken French Belgium/Canada symlinks with physical portable locale
