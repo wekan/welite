@@ -4,6 +4,21 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Honor published board widget direction
+
+- Pass resolved page direction/origin URL into data-view callbacks and render board
+  widgets with that direction. Include widget identity and return to the originating
+  page with locale/session intact after actions.
+- Re-read the widget's enabled accessible page and matching board binding before
+  interpreting physical moves. Reject missing/disabled/rebound contexts rather than
+  trusting a posted direction flag; retain direct-board viewer-language behavior.
+- Verify fixed RTL/LTR and automatic page directions, reversible physical card moves,
+  source ordering and origin redirects. Negative HTTP cases preserve card data;
+  a board writer cannot borrow an admin-only page's saved override.
+- Full linked/CLI HTTP and no-JavaScript/no-cookie Chromium suites pass. CLI also
+  verifies the added page-role rejection and intermediate browser move assertions.
+  Wider UI/translation/retro acceptance remains open.
+
 ## 2026-11-17 Keep viewer metadata on authentication errors
 
 - Add an escaped public authentication error frame for sign-in rate/session failures,

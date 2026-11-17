@@ -439,7 +439,7 @@ var
   T: TWLTenant;
   S: TWLSession;
   BackTo: string;
-  Language:TWLLanguage;
+  MoveRtl:Boolean;
   procedure Fail(Code:Integer;const Message:string);
   begin
     aResponse.Code:=Code;aResponse.ContentType:='text/html; charset=utf-8';
@@ -464,6 +464,8 @@ begin
   begin
     Fail(403,'Bad token');Exit;
   end;
+  if not BoardMoveDirection(T.Db,S,aRequest,MoveRtl) then
+  begin Fail(400,'Invalid board widget context');Exit;end;
   if HandleSelection(T,S,aRequest,aResponse) then Exit;
   if aRequest.ContentFields.Values['dir']='drop' then
   begin
@@ -471,8 +473,7 @@ begin
     begin Fail(400,'Invalid drop or database failure');Exit;end;
   end
   else begin
-    Language:=ViewerLanguage(T.Db,S,aRequest);
-    ApplyMove(T.Db, aRequest.ContentFields,Language.Rtl);
+    ApplyMove(T.Db,aRequest.ContentFields,MoveRtl);
   end;
   BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;

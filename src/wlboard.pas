@@ -5,7 +5,8 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string=''):string;
+function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
 uses wli18n,wllocale;
@@ -23,7 +24,7 @@ begin
   if Count=0 then Result:=Result+'<li>No boards available.</li>';
   Result:=Result+'</ul>';
 end;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath:string):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
   Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText:string; Occupied:TWLRows;
   function Selection(const Kind,Id:string):string;
@@ -100,7 +101,9 @@ begin
   Back:='/board?id='+HTTPEncode(BoardId);
   if AllItems then Back:=Back+'&view=all'
   else Back:=Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y);
+  if OriginWidget<>'' then Back:=SafeReturnPath(OriginPath);
   if Writable then Result:=Result+MoveFormBegin(S,'/board/move')+
+    '<input type="hidden" name="boardWidget" value="'+HtmlAttr(OriginWidget)+'">'+
     '<input type="hidden" name="boardId" value="'+HtmlAttr(BoardId)+'">'+
     '<input type="hidden" name="back" value="'+HtmlAttr(Back)+'">';
 
@@ -141,6 +144,34 @@ begin
   end;
   if Writable then Result:=Result+MoveKeypad(S,0,0,0,True,True)+MoveFormEnd;
 end;
+// A published widget may override viewer direction. Re-read its owned page and
+// binding rather than trusting a posted direction flag or return URL.
+function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
+var Id:string;Rows:TWLRows;P:TPage;Widgets:TWidgetArray;i:Integer;D:TJSONData;
+  Language:TWLLanguage;
+begin
+  Language:=ViewerLanguage(Db,S,Request);Rtl:=Language.Rtl;Result:=True;
+  Id:=Request.ContentFields.Values['boardWidget'];if Id='' then Exit;
+  Result:=False;
+  Rows:=Db.Query('SELECT pageId FROM page_widgets WHERE id='+QuotedStr(Id)+';');
+  if (Length(Rows)<>1) or not LoadPageById(Db,Rows[0][0],P) then Exit;
+  if not P.Enabled or not RoleAllows(Db,P.MinRole,S) then Exit;
+  Widgets:=LoadWidgets(Db,P.Id);
+  for i:=0 to High(Widgets) do if Widgets[i].Id=Id then
+  begin
+    if not SameText(Widgets[i].Typ,'dataview') or
+      not (SameText(Widgets[i].Binding,'board') or SameText(Widgets[i].Binding,'swimlanes')) then Exit;
+    D:=nil;
+    try
+      try
+        D:=GetJSON(Widgets[i].OptionsJson);
+        if not (D is TJSONObject) or
+          (TJSONObject(D).Get('boardId','')<>Request.ContentFields.Values['boardId']) then Exit;
+      except Exit;end;
+    finally D.Free;end;
+    Rtl:=ResolveDir(Request,P.Dir,SessionLanguage(Db,S))='rtl';Result:=True;Exit;
+  end;
+end;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; S:TWLSession; Body,Dir:string;Language:TWLLanguage;
 begin
@@ -164,16 +195,16 @@ begin
   else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,'Board',Body+EnhancementScripts(wbUnknown),Dir); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
 end;
-function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession):string;
+function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;
 begin Result:=BoardListHtml(Db,S); end;
-function BoardView(Db:TWLDb; const W:TWidget; const S:TWLSession):string;
+function BoardView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;
 var D:TJSONData; Id:string;
 begin
   Id:=''; D:=nil;
   try
     try D:=GetJSON(W.OptionsJson); if D is TJSONObject then Id:=TJSONObject(D).Get('boardId',''); except end;
   finally D.Free; end;
-  Result:=BoardHtml(Db,Id,S,'ltr',1,1,True);
+  Result:=BoardHtml(Db,Id,S,Dir,1,1,True,W.Id,PageUrl);
   if Result='' then Result:='<p>Board not available.</p>';
 end;
 initialization

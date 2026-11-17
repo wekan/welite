@@ -319,3 +319,9 @@ page/widget model, structural RTL layout and escaped rendering. Unrecognized sav
 choices are rejected by page validation. The ordinary application wrappers retain
 their existing HTML 3.2 baseline. HTTP tests switch a real published page between
 both choices; Chromium verifies the HTML4 document identifier and standards mode.
+
+Data-view callbacks receive the resolved page direction and page URL alongside
+the database/widget/session. Board widgets use that direction and include their
+widget identity in mutation forms, so moves can re-read the enabled page, access
+role and board binding before applying a saved direction override. Successful
+actions return to the originating page with session and locale intact.

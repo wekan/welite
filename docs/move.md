@@ -129,3 +129,10 @@ Card/list/swimlane clone variants and the no-JS button are covered by the HTTP/b
 Designer widget arrows also translate physical horizontal direction through the
 resolved page direction, including saved overrides, before applying normal column
 bounds and span-collision checks.
+
+For a published board widget, the form carries `boardWidget` instead of a trusted
+direction flag. The endpoint re-reads its enabled, accessible page and board
+binding, resolves the saved page override and rejects invalid/stale contexts.
+The rendered callback and mutation therefore use the same logical direction,
+and the return path targets the originating page. Direct boards continue using
+viewer language when no widget context is present.

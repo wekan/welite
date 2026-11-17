@@ -44,13 +44,16 @@ type
   end;
 
   // A dataview renderer fills a data-bound region (e.g. the board list). It gets the tenant
-  // DB, the placed widget (for its options_json/binding params), and the auth context.
-  TDataViewRenderer = function(Db: TWLDb; const W: TWidget; const S: TWLSession): string;
+  // DB, placed widget/options, auth context and resolved direction/origin page URL.
+  TDataViewRenderer = function(Db: TWLDb; const W: TWidget; const S: TWLSession;
+    const Dir,PageUrl:string): string;
 
 // --- dataview registry --------------------------------------------------------------------
 procedure RegisterDataView(const Binding: string; Renderer: TDataViewRenderer);
 
 function EnsureDesignerSchema(Db: TWLDb): Boolean;
+
+function RoleAllows(Db:TWLDb;const MinRole:string;const S:TWLSession):Boolean;
 
 // --- model --------------------------------------------------------------------------------
 function LoadPageByUrl(Db: TWLDb; const Url: string; out P: TPage): Boolean;
@@ -266,7 +269,7 @@ begin
 end;
 
 function RenderWidget(Db: TWLDb; const W: TWidget; const S: TWLSession;
-  Params: TStrings; const Dir: string): string;
+  Params: TStrings; const Dir,PageUrl: string): string;
 var DV: TDataViewRenderer;
 begin
   case LowerCase(W.Typ) of
@@ -296,7 +299,7 @@ begin
       begin
         DV := FindDataView(W.Binding);
         if Assigned(DV) then
-          Result := DV(Db, W, S)
+          Result := DV(Db,W,S,Dir,PageUrl)
         else
           Result := '<i>[dataview: ' + HtmlEncode(W.Binding) + ' — no renderer]</i>';
       end;
@@ -607,7 +610,7 @@ begin
         if (W[i].Row=AnchorRow) and (W[i].Col=AnchorCol) then
         begin
           if CellHtml <> '' then CellHtml := CellHtml + '<br>';
-          CellHtml := CellHtml + RenderWidget(Db,W[i],S,Params,PageDirection);
+          CellHtml := CellHtml + RenderWidget(Db,W[i],S,Params,PageDirection,P.Url);
         end;
       Body := Body + '  <td dir="'+PageDirection+'" valign="top" align="'+Align+'" rowspan="'+IntToStr(RowSpan)+
         '" colspan="'+IntToStr(ColSpan)+'" data-grid-row="'+IntToStr(AnchorRow)+

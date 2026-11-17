@@ -466,3 +466,9 @@ sessions, profile/posted choices for valid viewers and unchanged card data.
 localized sign-in/setup/confirmation 429 responses and a forced enrollment-storage
 500 with unchanged account/pending state. Tenant-tier tests cover Arabic reserved
 registration denial, preserving status, private headers and Retry-After.
+
+`widgetrt.py` exercises published fixed/automatic board directions, reversible
+physical moves, origin/locale redirects and invalid/disabled/rebound widget
+context refusals. It also denies a board writer borrowing an admin-only page’s
+override. `widgetrt.js` checks physical fixed RTL/LTR columns and both move
+directions in Chromium without JavaScript/cookies.
