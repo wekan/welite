@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Preserve existing shared custom-field value types
+
+- Use the stored BSON schema when SQL updates an existing custom-field value.
+  Preserve numeric/boolean/Date/string-array values rather than turning them into
+  text; keep text literal and unknown fields/siblings intact.
+- Accept finite numeric input, checkbox values, integer/ISO dates and strict JSON
+  string-array text. Refuse invalid values and unsupported BSON replacement;
+  preserve unchanged values and statement-level rollback.
+- Add real FerretDB/SQL regression cases for both database backends, exact BSON,
+  integers above 2^53, pre-epoch dates, Unicode/escaped arrays, no-op updates and
+  multi-row rollback. The new test reproduces type loss with committed old code.
+- New typed insertion/type-change and API/clone/export contracts remain in TODO;
+  this step does not close the broader interoperability milestone.
+
 ## 2026-11-17 Render native deletion confirmation details
 
 - Replace the English generic confirmation count with native Confirm/Delete selected,

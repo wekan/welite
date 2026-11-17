@@ -1044,6 +1044,37 @@ and real idle cleanup. HTTP admin/permissions and enrollment suites check the ac
 legacy application. This maintenance support does not replace the offline normalized-to-
 shared authentication migration policy or activate shared stores automatically.
 
+## Existing custom-field value updates
+
+The maintained WeKan card schema accepts String, Number, Boolean, Date and
+arrays of strings (`models/cards.js`, `customFields.$.value`). The shared
+`card_custom_field_values` view reads the corresponding embedded values directly.
+An UPDATE now consults the existing SJSON value schema rather than converting
+all supplied values to text:
+
+- Strings remain literal text, including strings that resemble JSON or booleans.
+- Numbers accept finite SQL numbers or numeric strings. Existing BSON int/long/
+  double metadata is retained when compatible; numeric widening remains allowed.
+- Booleans accept 0/1 or true/false. Dates accept integer epoch milliseconds or
+  ISO timestamps and retain BSON Date metadata.
+- Existing string arrays accept JSON array text with string elements only. Empty
+  arrays, Unicode and escaped strings are supported. Malformed JSON, extra wrapper
+  members and non-string elements fail the statement.
+
+Unchanged values retain their exact source metadata, including unsupported BSON
+values. Attempts to replace unsupported BSON value types fail. Other row/root
+properties and sibling values survive edits; a bad value aborts the whole SQL
+statement. Missing/null values retain the existing ordinary text-write fallback.
+
+`tests/custval.py`, invoked by the real-server `tests/ferroot.py` suite, compares
+Mongo BSON before/after SQL edits on both backends, including integers above 2^53,
+negative dates, arrays, invalid values, no-op writes and multi-row rollback.
+
+This is **existing-value UPDATE** support. New typed inserts, explicit type changes,
+normalized-store migration, API typed input/output and selection clone/export
+compatibility still need a coordinated contract. Ordinary INSERT continues its
+text behavior; do not treat this step as complete typed-value interoperability.
+
 ## Remaining before the checklist can be checked
 
 - Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed

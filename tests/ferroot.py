@@ -18,6 +18,7 @@ import time
 from wire import encode,Client,Long,DateMs,Binary,ObjectId,Timestamp,Regex
 from discov import run as check_discovery
 from expiry import run as check_expiry
+from custval import run as check_custom_values
 root=Path(__file__).resolve().parents[1]
 tools=root.parents[1]
 # Never mix short-sidecar and normal-sidecar libraries on a live shared database.
@@ -138,6 +139,7 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                     assert isinstance(document,list) and len(document)>0,table
                     assert sql('SELECT count(*) FROM '+table+';')[0][0]!='0',table
                     assert sql(statement,'exec')=='error',table
+                check_custom_values(client,sql)
                 assert client.find('cards','card')[0]['cardDependencies']==[dict(cardId='target',type='related-to',color='#eb144c',icon='link')]
                 assert client.find('customFields','field')[0]['settings']['dropdownItems'][0]['_id']=='option'
                 assert client.find('boards','board')[0]['labels'][0]['_id']=='label'

@@ -94,6 +94,37 @@ begin
   end;
   Invalid;
 end;
+// Existing custom values retain their declared BSON type. New typed values need
+// an explicit insertion contract; ordinary text insertion remains unchanged.
+function CustomUpdate(Value,Schema:TJSONData;Field:TJSONObject):TJSONData;
+var Kind:string;Spec,Parsed:TJSONObject;Items:TJSONData;i:Integer;
+begin
+  if Schema=nil then Exit(Coerce(Value,Field));
+  if not (Schema is TJSONObject) then Invalid;
+  Kind:=TJSONObject(Schema).Get('t','');
+  if Kind='array' then
+  begin
+    if Value.JSONType=jtNull then Exit(Value.Clone);
+    if Value.JSONType<>jtString then Invalid;
+    Parsed:=ExactObject('{"value":'+Value.AsString+'}');
+    try
+      if Parsed.Count<>1 then Invalid;
+      Items:=Parsed.Find('value');if not (Items is TJSONArray) then Invalid;
+      for i:=0 to Items.Count-1 do if Items.Items[i].JSONType<>jtString then Invalid;
+      Result:=Items.Clone;
+    finally Parsed.Free;end;
+    Exit;
+  end;
+  Spec:=TJSONObject(Field.Clone);
+  try
+    Spec.Strings['kind']:='scalar';
+    if (Kind='int') or (Kind='long') or (Kind='double') then Spec.Strings['type']:='NUMERIC'
+    else if Kind='bool' then Spec.Strings['kind']:='bool'
+    else if Kind='date' then Spec.Strings['kind']:='date'
+    else if (Kind<>'string') and (Kind<>'null') then Invalid;
+    Result:=Coerce(Value,Spec);
+  finally Spec.Free;end;
+end;
 function ProjectDocument(const Previous,Columns,Model,Mode:string):string;
 var Doc,Patch,Spec,Hints,Field,Extra:TJSONObject;Fields,Managed:TJSONArray;
   Known:TStringList;Value,Converted,OldValue:TJSONData;i,j:Integer;Name,Path,Kind:string;InsertMode:Boolean;
@@ -176,8 +207,8 @@ end;
 // Edit one embedded row without rebuilding its siblings from SQL projections.
 // The caller supplies all key columns; unknown object fields remain in place.
 function RelationDocument(const Previous,Command,Model:string):string;
-var Doc,Cmd,Spec,Old,Values,Row,Field,Seen:TJSONObject;Fields,Keys,Rows:TJSONArray;
-  Item,Value,Converted,Container:TJSONData;Path,Op,Name,Signature:string;
+var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed:TJSONObject;Fields,Keys,Rows:TJSONArray;
+  Item,Value,Converted,Container,Schema:TJSONData;Path,Op,Name,Signature:string;
   i,j,Found:Integer;Scalar,Match:Boolean;
   function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
   var n:Integer;
@@ -202,7 +233,7 @@ var Doc,Cmd,Spec,Old,Values,Row,Field,Seen:TJSONObject;Fields,Keys,Rows:TJSONArr
     end;
   end;
 begin
-  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;
+  Doc:=nil;Cmd:=nil;Spec:=nil;Row:=nil;Seen:=nil;Typed:=nil;
   try
     Doc:=ExactObject(PlainDocument(Previous));Cmd:=ExactObject(Command);Spec:=ExactObject(Model);
     Path:=Spec.Get('path','');Scalar:=Spec.Get('scalar',False);
@@ -250,7 +281,17 @@ begin
         Field:=Fields.Objects[i];Name:=Field.Get('name','');Value:=Values.Find(Name);
         if (Value=nil) and (Op='update') then Continue;
         if Value=nil then Value:=Field.Find('default');if Value=nil then Invalid;
-        Converted:=Coerce(Value,Field);
+        if (Spec.Get('table','')='card_custom_field_values') and (Name='value') and (Op='update') then
+        begin
+          if Typed=nil then Typed:=ExactObject(Previous);
+          Schema:=AtPath(Typed,'$s.p.customFields');
+          if not (Schema is TJSONObject) then Invalid;
+          Schema:=TJSONObject(Schema).Find('i');
+          if not (Schema is TJSONArray) or (Found>=Schema.Count) then Invalid;
+          if not (Schema.Items[Found] is TJSONObject) then Invalid;
+          Schema:=AtPath(TJSONObject(Schema.Items[Found]),'$s.p.value');
+          Converted:=CustomUpdate(Value,Schema,Field);
+        end else Converted:=Coerce(Value,Field);
         try
           if Field.Get('required',False) and (Converted.JSONType=jtNull) then Invalid;
           PutPath(Row,Field.Get('path',Name),Converted);Converted:=nil;
@@ -270,6 +311,6 @@ begin
       Seen.Add(Signature,True);
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,'{}');
-  finally Seen.Free;Row.Free;Spec.Free;Cmd.Free;Doc.Free;end;
+  finally Typed.Free;Seen.Free;Row.Free;Spec.Free;Cmd.Free;Doc.Free;end;
 end;
 end.
