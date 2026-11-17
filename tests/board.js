@@ -29,7 +29,7 @@ const assert = require('node:assert/strict');
       await page.setViewportSize({ width, height: 800 });
       assert(await page.evaluate(() => document.body.scrollWidth <= window.innerWidth));
     }
-    await page.getByRole('link', { name: 'View all', exact: true }).click();
+    await page.locator('a[href*="view=all"]').click();
     assert.equal(await page.locator('td[data-list=todo]').count(), 1);
     assert.equal(await page.locator('td[data-list=doing]').count(), 1);
     assert.equal((await context.cookies()).length, 0);

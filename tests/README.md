@@ -565,3 +565,9 @@ locale consistency, translated links and signed widget hidden fields, fixed page
 direction independent of language, private-board/invalid-session isolation and
 unchanged profiles. `WELITE_UI=1` also runs `viewlang.js` to follow the generated
 board links and inspect signed fields without JavaScript or Cookie headers.
+
+`boardtxt.py`, called by `admin.py`, checks all installed native board/title,
+all-boards/view-all and empty captions, plus no-lane and missing/inaccessible direct
+and published board text, query/profile/header precedence and escaped user titles.
+With `WELITE_UI=1`, `boardtxt.js` follows translated overview links and verifies empty/
+404 states in Finnish/Arabic/Hebrew, including header-only language and no cookies/JS.

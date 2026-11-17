@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string=''):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
@@ -28,9 +28,9 @@ begin
     Result:=Result+'</ul>';
   finally Words.Free;end;
 end;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath:string):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag:string):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
-  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText:string; Occupied:TWLRows;
+  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -40,11 +40,14 @@ begin
   if not BoardCanRead(Db,S.UserId,BoardId) then Exit;
   B:=Db.Query('SELECT title,color FROM boards WHERE id='+QuotedStr(BoardId)+';');
   Writable:=BoardCanWrite(Db,S.UserId,BoardId);
+  Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
+  Words:=TWLTranslator.Create(ResolveLanguage(Tag,SessionLanguage(Db,S),''));
+  try
   if SameText(Dir,'rtl') then begin Align:='right'; CellDir:='rtl'; end
   else begin Align:='left'; CellDir:='ltr'; end;
   Back:='/board?id='+HTTPEncode(BoardId);
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><p><a href="'+
-    HtmlAttr(SessionUrl('/',S))+'">All boards</a></p>';
+    HtmlAttr(SessionUrl('/',S))+'">'+HtmlEncode(Words.Text('all-boards','All boards'))+'</a></p>';
   Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
     ' AND archived=0 ORDER BY sort,id;');
   if X<1 then X:=1;
@@ -101,7 +104,7 @@ begin
         '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S))+'">'+CellText+'</a> ';
   end;
   Result:=Result+'<a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+'&view=all',S))+
-    '">View all</a></p><br clear="all">';
+    '">'+HtmlEncode(Words.Text('view-all','View all'))+'</a></p><br clear="all">';
   Back:='/board?id='+HTTPEncode(BoardId);
   if AllItems then Back:=Back+'&view=all'
   else Back:=Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y);
@@ -111,7 +114,7 @@ begin
     '<input type="hidden" name="boardId" value="'+HtmlAttr(BoardId)+'">'+
     '<input type="hidden" name="back" value="'+HtmlAttr(Back)+'">';
 
-  if Length(Lanes)=0 then Result:=Result+'<p>No swimlanes yet.</p>';
+  if Length(Lanes)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
   for i:=0 to High(Lanes) do
   begin
     if not AllItems and (i<>Y-1) then Continue;
@@ -119,7 +122,7 @@ begin
       HtmlEncode(Lanes[i][1])+'</h2>';
     Lists:=Db.Query('SELECT id,title,color FROM lists WHERE boardId='+QuotedStr(BoardId)+
       ' AND (swimlaneId='+QuotedStr(Lanes[i][0])+' OR swimlaneId='''') AND archived=0 ORDER BY sort,id;');
-    if Length(Lists)=0 then begin Result:=Result+'<p>No lists yet.</p>'; Continue; end;
+    if Length(Lists)=0 then begin Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>'; Continue; end;
     Result:=Result+'<table dir="ltr" width="100%" border="1" cellpadding="5" cellspacing="0"><tr>';
     for j:=0 to High(Lists) do
     begin
@@ -141,12 +144,13 @@ begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
           HtmlEncode(Cards[k][1])+'</p>';
-      if Length(Cards)=0 then Result:=Result+'<p>No cards.</p>';
+      if Length(Cards)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
       Result:=Result+'</td>';
     end;
     Result:=Result+'</tr></table>';
   end;
   if Writable then Result:=Result+MoveKeypad(S,0,0,0,True,True)+MoveFormEnd;
+  finally Words.Free;end;
 end;
 // A published widget may override viewer direction. Re-read its owned page and
 // binding rather than trusting a posted direction flag or return URL.
@@ -177,7 +181,7 @@ begin
   end;
 end;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
-var T:TWLTenant; S:TWLSession; Body,Dir:string;Language:TWLLanguage;
+var T:TWLTenant; S:TWLSession; Body,Dir,Title:string;Language:TWLLanguage;Words:TWLTranslator;
 begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin
@@ -189,27 +193,36 @@ begin
   S.LanguageTag:=RequestLanguageTag(aRequest);
   Language:=ViewerLanguage(T.Db,S,aRequest);
   if Language.Rtl then Dir:='rtl' else Dir:='ltr';
+  Words:=TWLTranslator.Create(Language);
+  try
+  Title:=Words.Text('board','Board');
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
-    aRequest.QueryFields.Values['view']='all');
+    aRequest.QueryFields.Values['view']='all','','',Language.Tag);
   if Body='' then begin
     aResponse.Code:=404;
-    aResponse.Content:=LanguagePage(aResponse,Language,'Board','<p>Board not found</p>');
+    aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>');
   end
-  else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,'Board',Body+EnhancementScripts(wbUnknown),Dir); end;
+  else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+EnhancementScripts(wbUnknown),Dir); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
+  finally Words.Free;end;
 end;
 function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;
 begin Result:=BoardListHtml(Db,S); end;
 function BoardView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;
-var D:TJSONData; Id:string;
+var D:TJSONData; Id:string;Words:TWLTranslator;
 begin
   Id:=''; D:=nil;
   try
     try D:=GetJSON(W.OptionsJson); if D is TJSONObject then Id:=TJSONObject(D).Get('boardId',''); except end;
   finally D.Free; end;
   Result:=BoardHtml(Db,Id,S,Dir,1,1,True,W.Id,PageUrl);
-  if Result='' then Result:='<p>Board not available.</p>';
+  if Result='' then
+  begin
+    Words:=TWLTranslator.Create(ResolveLanguage(S.LanguageTag,SessionLanguage(Db,S),''));
+    try Result:='<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>';
+    finally Words.Free;end;
+  end;
 end;
 initialization
   RegisterDataView('boards',@BoardsView);

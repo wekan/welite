@@ -153,6 +153,14 @@ HTML-escaped without translation. Board visibility and administrator links retai
 their existing access checks. All installed guest/member captions, profile/query/
 header isolation and no-JS/no-cookie navigation have HTTP/browser coverage.
 
+Direct board rendering passes the resolved viewer locale to native board/title,
+all-boards/view-all and no-items captions, including header-only anonymous views.
+Missing/inaccessible direct boards retain 404 status with translated not-found text;
+published unavailable board views use the same key without disclosing private data.
+Empty swimlane/list/card regions reuse the existing generic no-items string. User
+board/list/card titles retain their original text and are HTML-escaped. Movement
+command captions and minimap instructions still require their own localization work.
+
 ### Navigation language state
 
 A validated explicit locale travels in generated navigation URLs and action/GET

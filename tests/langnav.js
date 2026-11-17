@@ -53,7 +53,7 @@ const assert = require('node:assert/strict');
       (await page.locator('td[data-list="doing"]').boundingBox()).x,'selected list moves physically right');
     await page.locator('input[name=action][value=clear]').click();locale();
     assert.equal(await page.locator('input[name=lang]').inputValue(),'ar');
-    await page.getByRole('link',{name:'All boards',exact:true}).click();locale();
+    await page.locator('a[href^="/?sessionId="]').click();locale();
     await page.locator('a[href^="/admin?"]').click();locale();
     await page.getByRole('link',{name:'Designer',exact:true}).first().click();locale();
     const id=new URL(process.argv[4],base).searchParams.get('id');

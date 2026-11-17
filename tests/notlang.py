@@ -1,5 +1,7 @@
 """Unknown UI tenants/routes and hidden boards retain public viewer metadata."""
 import json
+from pathlib import Path
+import html
 from urllib.parse import urlencode
 from frames import Document
 import sqlite3
@@ -30,7 +32,7 @@ def run(request,data,session):
         for table in ['domains','tenantdirs']:
             assert con.execute('SELECT 1 FROM '+table+' WHERE host=?',('lost.example',)).fetchone() is None
     for path in ['/board?id=protected','/board?id=missing-frame','/board?id=protected&sessionId=invalid']:
-        body=check('GET',path,'ar','fi','ar',host='localhost',message=b'Board not found')
+        body=check('GET',path,'ar','fi','ar',host='localhost',message=html.escape(json.loads((Path(__file__).resolve().parents[1]/'i18n/data/ar.jsn').read_text())['board-not-found'],quote=False).encode())
         assert b'Private title' not in body and b'Card &lt;test&gt;' not in body
     check('GET','/missing-route?sessionId='+session,'fi','ar','fi',host='localhost',message=b'Not found')
     # API tenant failures continue to use their own JSON handler.
