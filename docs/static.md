@@ -269,3 +269,7 @@ authenticated viewer frame too. Forced domain insertion and account update
 failures verify frame metadata while preserving the registry/account transaction
 behavior and keeping rolled-back member credentials valid. Early Designer
 import/export failures remain the next frame audit step.
+
+Designer missing-page exports and import action-token failures now use the shared
+HTML error frame, with no attachment disposition on failure. Successful page JSON
+and archive ZIP downloads keep their existing formats and filenames.

@@ -4,6 +4,19 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Keep viewer metadata on Designer transfer errors
+
+- Route missing-page export and page/archive import token failures through the
+  existing authenticated Designer error frame. Retain status/messages and keep
+  failures HTML without attachment disposition.
+- Add Arabic profile/Finnish override checks for those 403/404 paths and require HTML
+  metadata/no download headers across the negative frame matrix. Full linked HTTP/
+  no-JavaScript/no-cookie browser and CLI HTTP suites pass; successful JSON/ZIP
+  downloads and filenames remain covered by existing transfer regressions.
+- Remaining localization work is translation data/messages, broader error coverage
+  and physical controls/responsive/retro acceptance; the known bare UI error bodies
+  in these handlers are now framed.
+
 ## 2026-11-17 Keep viewer metadata on Admin operation errors
 
 - Render domain/account validation, bad-token and storage failures with explicit

@@ -1384,7 +1384,7 @@ begin
     LoadPageById(T.Db,aRequest.QueryFields.Values['id'],P)) and
     not LoadPageByUrl(T.Db,aRequest.QueryFields.Values['url'],P) then
   begin
-    aResponse.Code := 404; aResponse.Content := 'No such page'; aResponse.SendContent; Exit;
+    DesignerError(aRequest,aResponse,T.Db,S,404,'No such page');Exit;
   end;
   aResponse.Code := 200;
   aResponse.ContentType := 'application/json';
@@ -1403,7 +1403,7 @@ begin
   if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/page/import') then
   begin
-    aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+    DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token');Exit;
   end;
   if aRequest.Files.Count > 0 then
     with TStringStream.Create('') do
@@ -1453,7 +1453,7 @@ begin
   if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
   if not VerifyActionToken(aRequest, S, 'designer:/designer/import') then
   begin
-    aResponse.Code := 403; aResponse.Content := 'Bad token'; aResponse.SendContent; Exit;
+    DesignerError(aRequest,aResponse,T.Db,S,403,'Bad token');Exit;
   end;
   N := -1;
   if aRequest.Files.Count > 0 then

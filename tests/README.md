@@ -491,3 +491,7 @@ Admin frame coverage includes global-domain token/host/action validation and for
 registry insertion failure. People management forces a failed account disable and
 checks unchanged flags plus still-valid member access after token-revocation rollback.
 Both failure types assert authenticated language/header/direction metadata.
+
+Error-frame checks include missing Designer exports and token-denied page/archive
+imports, requiring HTML metadata and no attachment disposition. Existing HTTP and
+browser import/export cases retain successful JSON/ZIP formats and download names.

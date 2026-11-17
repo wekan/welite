@@ -42,6 +42,8 @@ def check_frames(request,database,session,editor,member):
         def error(method,url,fields,status,tag='ar'):
             result,headers,body=request(method,url,fields,extra_headers={'Accept-Language':'fi'})
             assert result==status,(method,url,result,status)
+            assert headers['Content-Type'].startswith('text/html')
+            assert 'Content-Disposition' not in headers
             document=Document();document.feed(body.decode())
             assert headers['Content-Language']==tag,(url,headers)
             assert 'Accept-Language' in headers['Vary']
@@ -53,6 +55,12 @@ def check_frames(request,database,session,editor,member):
         error('POST','/admin/people',dict(sessionId=session,lang='fi'),403,'fi')
         error('GET',missing,None,404)
         error('GET',missing+'&lang=fi',None,404,'fi')
+        export='/designer/page/export?id=missing-frame&sessionId='+session
+        error('GET',export,None,404)
+        error('GET',export+'&lang=fi',None,404,'fi')
+        for path in ['/designer/page/import','/designer/import']:
+            error('POST',path,dict(sessionId=session),403)
+            error('POST',path,dict(sessionId=session,lang='fi'),403,'fi')
         error('GET','/board?id=missing-frame&sessionId='+session,None,404)
         error('GET','/board?id=missing-frame&sessionId='+session+'&lang=fi',None,404,'fi')
         error('GET','/missing-frame?sessionId='+session,None,404)
