@@ -4,6 +4,16 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Follow physical neighbors in RTL board view links
+
+- Reverse horizontal viewport coordinate deltas for RTL boards, so View left
+  opens the logical next list and View right opens the previous list. Preserve
+  existing bounds checks, vertical navigation and locale/session links.
+- Extend the no-JavaScript/no-cookie Arabic browser flow to follow both links,
+  verify logical X values and inspect the actual displayed list. The complete
+  linked-backend HTTP/browser suite passes, including existing LTR navigation.
+- Selection moves and Designer widget arrows remain in the direction audit.
+
 ## 2026-11-17 Mirror board columns and minimap once
 
 - Prevent inherited RTL table direction from reversing the board's already-reversed

@@ -413,3 +413,6 @@ page. It reproduces inherited table reversal without JavaScript or cookies.
 
 The same browser regression compares physical RTL board-column and minimap-link
 positions: the first logical list appears on the right in both tables.
+
+Arabic viewport checks follow View left/right without JavaScript or cookies,
+assert logical X coordinates and inspect the displayed list after each redirect.

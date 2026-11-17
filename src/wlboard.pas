@@ -80,8 +80,14 @@ begin
   begin
     MapX:=X; MapY:=Y;
     case m of
-      0: begin Dec(MapX); CellText:='View left'; end;
-      1: begin Inc(MapX); CellText:='View right'; end;
+      0: begin
+        if Align='right' then Inc(MapX) else Dec(MapX);
+        CellText:='View left';
+      end;
+      1: begin
+        if Align='right' then Dec(MapX) else Inc(MapX);
+        CellText:='View right';
+      end;
       2: begin Dec(MapY); CellText:='View up'; end;
       3: begin Inc(MapY); CellText:='View down'; end;
     end;

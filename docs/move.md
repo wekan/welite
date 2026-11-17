@@ -34,7 +34,8 @@ The keypad table explicitly uses `dir="ltr"` so RTL page inheritance cannot swap
 the physical left/right buttons in modern browsers. Browsers that ignore direction
 keep the same source order. Board and minimap tables use explicit LTR table flow with structurally reversed
 RTL columns and RTL text within board cells, avoiding double mirroring. Logical
-coordinates remain unchanged. RTL movement and viewport-label semantics remain under audit.
+coordinates remain unchanged. Horizontal viewport links reverse their logical coordinate delta in RTL so their
+labels follow physical neighbors. Selection movement semantics remain under audit.
 
 A checkbox on each item selects it; the keypad moves **all selected items at once**, whatever
 their type — one control instead of arrows scattered over every item.
