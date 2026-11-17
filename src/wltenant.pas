@@ -300,7 +300,8 @@ begin
     begin
       if Length(Tenant.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))>0 then
       begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
-      if not EnsureSettingsColumn(Tenant.Db) or not EnsureFieldPolicyColumns(Tenant.Db) then
+      if not EnsureSettingsColumn(Tenant.Db) or not EnsureFieldPolicyColumns(Tenant.Db) or
+        not EnsureDropdownColumn(Tenant.Db) then
       begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
     end;
     HandleCache.AddObject(Tenant.Host, TObject(Tenant.Db));

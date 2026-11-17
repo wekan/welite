@@ -4,6 +4,7 @@ interface
 uses SysUtils,wldb;
 function EnsureSettingsColumn(Db:TWLDb):Boolean;
 function EnsureFieldPolicyColumns(Db:TWLDb):Boolean;
+function EnsureDropdownColumn(Db:TWLDb):Boolean;
 implementation
 const ValidSettings='CASE WHEN json_valid(settings_json) THEN json_type(settings_json)=''object'' AND '+
   'json_type(settings_json,''$.currencyCode'') IS NULL AND json_type(settings_json,''$.stringtemplateFormat'') IS NULL AND '+
@@ -67,6 +68,36 @@ begin
   if Sql='' then Exit(True);
   if not Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then Db.Exec('ROLLBACK;');
   Result:=Inspect and Found[0] and Found[1];
+end;
+
+function EnsureDropdownColumn(Db:TWLDb):Boolean;
+var Rows,Data:TWLRows;Found:Boolean;
+  function Inspect:Boolean;
+  var j:Integer;
+  begin
+    Result:=False;Found:=False;Rows:=Db.Query('PRAGMA table_info(custom_fields);');
+    for j:=0 to High(Rows) do if Rows[j][1]='dropdownItemsPresent' then
+    begin
+      Found:=True;
+      if (UpperCase(Rows[j][2])<>'INTEGER') or (Rows[j][3]<>'1') or
+        (Rows[j][4]<>'0') or (Rows[j][5]<>'0') then Exit;
+      Data:=Db.Query('SELECT count(*) FROM custom_fields WHERE dropdownItemsPresent IS NULL OR '+
+        'typeof(dropdownItemsPresent)<>''integer'' OR dropdownItemsPresent NOT IN (0,1);');
+      Exit((Length(Data)=1) and (Data[0][0]='0'));
+    end;
+    Result:=True;
+  end;
+begin
+  Result:=False;
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))>0 then Exit;
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+  if Length(Rows)=0 then Exit(True);
+  if (Length(Rows)<>1) or (Rows[0][0]<>'table') then Exit;
+  if not Inspect then Exit;
+  if Found then Exit(True);
+  if not Db.Exec('BEGIN IMMEDIATE; ALTER TABLE custom_fields ADD COLUMN dropdownItemsPresent '+
+    'INTEGER NOT NULL DEFAULT 0 CHECK(dropdownItemsPresent IN (0,1)); COMMIT;') then Db.Exec('ROLLBACK;');
+  Result:=Inspect and Found;
 end;
 
 end.

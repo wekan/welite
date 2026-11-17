@@ -243,6 +243,7 @@ CREATE TABLE custom_fields (
   showSumAtTopOfList  INTEGER DEFAULT 0,
   createdAt           TEXT,
   modifiedAt          TEXT NOT NULL,
+  dropdownItemsPresent INTEGER NOT NULL DEFAULT 0 CHECK(dropdownItemsPresent IN (0,1)),
   settings_json       TEXT NOT NULL DEFAULT '{}' CHECK(CASE WHEN json_valid(settings_json) THEN
     json_type(settings_json)='object' AND
     json_type(settings_json,'$.currencyCode') IS NULL AND

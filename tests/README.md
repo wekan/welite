@@ -618,3 +618,9 @@ definitions/foreign-card links. Preview leaves item rows and bytes unchanged.
 `dellang.js` follows native cancel/confirm in Finnish/Arabic/Hebrew without JS/cookies,
 then verifies a valid bound API client before replaying the consumed proof against
 an intact sibling. Python checks actual removed/retained rows and attachment bytes.
+
+`python3 tests/cfpres.py` verifies native optional dropdown-array presence on
+normal/checked linked and CLI builds: omitted/empty/ordered definition reads,
+retention after final-item deletion, additive concurrent tenant-column upgrades,
+and refusal of shared stores, views, incompatible columns and invalid data.
+This does not enable dropdown API creation.

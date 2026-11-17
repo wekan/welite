@@ -124,3 +124,21 @@ must be supplied. Three ways, in order of fit with the single-binary goal:
   linking a newer amalgamation is fine.
 
 (Not verified on real Amiga hardware/toolchain here — this is from how FPC + SQLite build.)
+
+## Optional native dropdown arrays
+
+Native `custom_fields.dropdownItemsPresent` records whether an empty
+`settings.dropdownItems` array is present. It is an integer restricted to 0/1,
+with default 0. Nonempty `custom_field_dropdown_items` rows also imply presence,
+so legacy populated definitions do not need rewriting. A value of 1 retains an
+explicit empty array after deleting its last item. Definition reads preserve item
+order using `sort,id` and reject invalid presence values.
+
+Tenant open adds the column to existing native stores without replacing their
+rows or relations. Concurrent openers accept the same valid result. Shared stores
+use their original BSON array presence and are never altered by this native
+upgrade. Dropdown API creation remains unavailable until its managed-array and
+transaction path is implemented.
+
+`python3 tests/cfpres.py` verifies normal/checked linked and CLI reads, additive
+and concurrent upgrades, retained emptiness and incompatible/foreign-store refusal.

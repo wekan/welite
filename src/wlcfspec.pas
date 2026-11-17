@@ -172,15 +172,16 @@ begin
   if TypeName<>'table' then raise Exception.Create('Invalid definition source');
   Rows:=Db.Query('SELECT id,name,type,showOnCard,automaticallyOnCard,alwaysOnCard,showLabelOnMiniCard,showSumAtTopOfList,'+
     'readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json,'+
-    'currencyCode IS NULL,stringtemplateFormat IS NULL,stringtemplateSeparator IS NULL FROM custom_fields WHERE id='+QuotedStr(Identity)+';');
+    'currencyCode IS NULL,stringtemplateFormat IS NULL,stringtemplateSeparator IS NULL,dropdownItemsPresent,typeof(dropdownItemsPresent) FROM custom_fields WHERE id='+QuotedStr(Identity)+';');
   if Length(Rows)=0 then Exit;
-  if (Length(Rows)<>1) or (Length(Rows[0])<>19) then raise Exception.Create('Ambiguous definition');
+  if (Length(Rows)<>1) or (Length(Rows[0])<>21) then raise Exception.Create('Ambiguous definition');
   try
     try
       Settings:=DefinitionSettings(Rows[0][15],[Rows[0][12],Rows[0][13],Rows[0][14]],
         [Rows[0][16],Rows[0][17],Rows[0][18]]);
       Children:=Db.Query('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(Identity)+' ORDER BY sort,id;');
-      if Length(Children)>0 then
+      if (Rows[0][20]<>'integer') or ((Rows[0][19]<>'0') and (Rows[0][19]<>'1')) then raise Exception.Create('Invalid dropdown presence');
+      if (Length(Children)>0) or (Rows[0][19]='1') then
       begin
         Items:=TJSONArray.Create;
         for i:=0 to High(Children) do Items.Add(TJSONObject.Create(['_id',Children[i][0],'name',Children[i][1]]));

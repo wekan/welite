@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Preserve native optional dropdown-array presence
+
+- Native custom-field definitions now retain an explicit dropdown-array presence
+  bit. Definition GET can distinguish an omitted array from an explicitly empty
+  one, including after its final item is removed; existing ordered item rows still
+  imply presence without changing legacy data.
+- Fresh stores include the constrained bit; existing native stores gain it through
+  an additive, concurrent-safe tenant-open upgrade. Shared/foreign stores, views,
+  incompatible columns and invalid values are refused without replacing data.
+- Normal/checked linked/CLI regressions cover omitted/empty/ordered arrays,
+  retained emptiness, concurrent upgrades and refusal cases. Existing native
+  settings/policy upgrade regressions and full native HTTP suites pass on both
+  backends.
+- This is groundwork for dropdown definition creation. API dropdown payloads remain
+  refused until managed-array initialization and atomic creation are implemented;
+  shared BSON keeps its existing source-level missing/empty distinction.
+
 ## 2026-11-17 Collect clone/export graphs in one read snapshot
 
 - Pin clone/export graph collection to one read-only SQLite transaction, covering
