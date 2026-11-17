@@ -4,6 +4,20 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Mirror data-table toolbar and pagination
+
+- Mirror search/pagination cells structurally, retaining logical leading/trailing
+  placement when table direction is ignored. Reverse physical previous/next order
+  and arrow captions in RTL while isolating their glyph direction; keep logical
+  page-number deltas and existing query/session/locale state.
+- Reproduce missing RTL toolbar source order, then verify both directions in HTTP
+  and no-JavaScript/no-cookie Chromium, including ignored-dir geometry and actual
+  next/previous navigation. CLI also checks filtered pagination with one selected
+  column, search text and locale intact; full linked/CLI browser suites pass.
+- Reconcile the language TODO status so completed controls/errors no longer appear
+  as stale remaining steps. Other messages/error routes and actual responsive/retro
+  acceptance remain open.
+
 ## 2026-11-17 Mirror Designer data-table columns structurally
 
 - Emit visible RTL headers/cells in reverse logical order with explicit LTR table

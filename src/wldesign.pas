@@ -366,6 +366,7 @@ var
   O: TJSONObject;
   Cols, SearchCols: TJSONArray;
   Source, RowKey, EditUrl, Q, Align, SelList, WhereSql, Slug, BaseQ, ColQ, Hdr, Cell, CellDir: string;
+  SearchBar,PageBar,PrevLink,NextLink,PrevCaption,NextCaption,PageAlign:string;
   PageSize, PageNo, Total, TotalPages, Offset, i, j, ViewCol: Integer;
   Rows, CountRows: TWLRows;
   ColObj: TJSONObject;
@@ -475,26 +476,28 @@ begin
     BaseQ := '?sessionId=' + S.SessionId + '&tq_' + Slug + '=' + HTTPEncode(Q) + ColQ;
     if S.LanguageTag<>'' then BaseQ:=BaseQ+'&lang='+S.LanguageTag;
 
-    // --- top bar: search + column chooser (left), pagination "Page n / m" (right) --------
-    // one GET form carries the search text AND the column checkboxes (Apply submits both)
-    Result :=
-      '<table border="0" width="100%"><tr>' +
-      '<td align="' + Align + '">' +
-        '<form method="GET">' +
-        '<input type="hidden" name="sessionId" value="' + HtmlAttr(S.SessionId) + '">' +LanguageHiddenField(S)+
-        'Search <input name="tq_' + HtmlAttr(Slug) + '" value="' + HtmlAttr(Q) + '"> ' +
-        '<br>Columns: ' + Chooser +
-        '<input type="submit" value="Apply"></form>' +
-      '</td>' +
-      '<td align="right" valign="top">';
-    if PageNo > 1 then
-      Result := Result + '<a href="' + HtmlAttr(BaseQ + '&tp_' + Slug + '=' +
-                IntToStr(PageNo - 1)) + '">&lt; Prev</a> ';
-    Result := Result + 'Page ' + IntToStr(PageNo) + ' / ' + IntToStr(TotalPages);
-    if PageNo < TotalPages then
-      Result := Result + ' <a href="' + HtmlAttr(BaseQ + '&tp_' + Slug + '=' +
-                IntToStr(PageNo + 1)) + '">Next &gt;</a>';
-    Result := Result + '</td></tr></table>' + LineEnding;
+    // Structural toolbar placement also works when table dir is ignored.
+    SearchBar:='<td dir="'+CellDir+'" align="'+Align+'">'+
+      '<form method="GET">'+
+      '<input type="hidden" name="sessionId" value="'+HtmlAttr(S.SessionId)+'">'+LanguageHiddenField(S)+
+      'Search <input name="tq_'+HtmlAttr(Slug)+'" value="'+HtmlAttr(Q)+'"> '+
+      '<br>Columns: '+Chooser+'<input type="submit" value="Apply"></form></td>';
+    if CellDir='rtl' then
+    begin PageAlign:='left';PrevCaption:='Prev &gt;';NextCaption:='&lt; Next';end
+    else begin PageAlign:='right';PrevCaption:='&lt; Prev';NextCaption:='Next &gt;';end;
+    PrevLink:='';NextLink:='';
+    if PageNo>1 then PrevLink:='<a dir="ltr" href="'+
+      HtmlAttr(BaseQ+'&tp_'+Slug+'='+IntToStr(PageNo-1))+'">'+PrevCaption+'</a> ';
+    if PageNo<TotalPages then NextLink:=' <a dir="ltr" href="'+
+      HtmlAttr(BaseQ+'&tp_'+Slug+'='+IntToStr(PageNo+1))+'">'+NextCaption+'</a>';
+    PageBar:='Page '+IntToStr(PageNo)+' / '+IntToStr(TotalPages);
+    if CellDir='rtl' then PageBar:=NextLink+' '+PageBar+' '+PrevLink
+    else PageBar:=PrevLink+PageBar+NextLink;
+    PageBar:='<td dir="ltr" align="'+PageAlign+'" valign="top">'+PageBar+'</td>';
+    Result:='<table dir="ltr" border="0" width="100%"><tr>';
+    if CellDir='rtl' then Result:=Result+PageBar+SearchBar
+    else Result:=Result+SearchBar+PageBar;
+    Result:=Result+'</tr></table>'+LineEnding;
 
     // --- header row (visible columns only) ----------------------------------------------
     Hdr := '<tr>';

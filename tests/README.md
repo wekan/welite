@@ -482,3 +482,7 @@ locale-preserving editable URLs. `tabrtl.js` checks header/cell geometry, forces
 table direction to LTR to simulate ignored dir attributes, and submits column
 selection without JavaScript/cookies. Test CSS insertion uses synchronous DOM
 mutation so it does not wait for disabled page-script events.
+
+The data-table matrix also checks mirrored search/pagination source order, isolated
+physical previous/next arrows and browser geometry with ignored table direction.
+Both page directions retain search, selected columns and locale through page links.

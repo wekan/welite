@@ -330,5 +330,10 @@ Data-table headers and cells also mirror structurally for RTL: the emitted table
 uses LTR column flow, visits visible logical columns in reverse order and gives
 each header/cell the resolved text direction. Row values and editable field URLs
 still use their original logical column indices. This avoids dependence on table
-direction support; table search/pagination controls and real retro acceptance remain
-part of the wider UI audit.
+direction support; real retro acceptance remains part of the wider UI audit.
+
+The data-table search/pagination toolbar mirrors structurally too: search remains
+at the logical leading edge, pagination at the trailing edge. Previous/next links
+retain logical page numbers but reverse physical order and arrow captions in RTL,
+with isolated LTR controls so glyphs do not mirror again. Locale, search and
+visible-column query state survive pagination.
