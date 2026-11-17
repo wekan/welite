@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
-    env = dict(os.environ, WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'))
+    env = dict(os.environ, WELITE_PORT=str(port), WELITE_SCHEMA=str(ROOT/'src/schema.sql'), WELITE_DESIGNER=str(ROOT/'src/designer.sql'),WELITE_I18N=str(ROOT/'i18n'))
     for variable in ['WELITE_ARGON_MEMORY_KIB','WELITE_ARGON_PASSES','WELITE_ARGON_LANES','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','WELITE_ARGON_KEY_BYTES','WELITE_ARGON_SECRET_FILE']:env.pop(variable,None)
     env.pop('WELITE_ENTROPY_FILE',None)  # Never consume an operator's stock in tests.
     if os.environ.get('WELITE_NO_OS_RNG')=='1':
@@ -180,6 +180,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             assert status == 200 and b'X 2 Y 1' in body and b'data-list="doing"' in body
             assert b'data-list="todo"' not in body
             check_api_scope(request, db, admin)
+            from langhttp import check_language
+            check_language(request,db,admin)
             print('PASS: authorized board renderer, escaped content and read-only controls')
             class HiddenFields(HTMLParser):
                 def __init__(self):

@@ -285,7 +285,8 @@ not merely a design document. Platform/browser claims require testing on those t
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
   Catalog conversion now accepts current compact and legacy WeKan metadata, publishes matching browser/strict-JSON catalogs for 146 installed languages, uses native names/direction and excludes broken/missing assets without changing translation text.
-  Remaining: import the 99 additional source languages with portable filenames, server selection/profile/header negotiation, translated rendering, language-state preservation and complete RTL behavior.
+  Server catalog loading now validates disk/embedded assets; language negotiation honors explicit/profile/weighted-header precedence, aliases and parent fallback. Board and Designer direction use catalog metadata, including live Mongo profile changes, with both-backend HTTP and all-language kernel tests.
+  Remaining: import the 99 additional source languages with portable filenames, translated rendering, language pickers/state preservation and direction across the remaining UI.
 - [ ] Verify responsive HTML4 colors and no-JS/no-cookie browser workflows.
 - [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.
 - [ ] Verify embedded assets and supported cross-platform builds.

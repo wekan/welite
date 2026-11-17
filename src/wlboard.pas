@@ -138,7 +138,7 @@ begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin aResponse.Code:=404; aResponse.Content:='Unknown domain'; aResponse.SendContent; Exit; end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
-  Dir:=ResolveDir(aRequest,'');
+  Dir:=ResolveDir(aRequest,'',SessionLanguage(T.Db,S));
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all');

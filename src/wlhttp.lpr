@@ -30,7 +30,7 @@ uses
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
-  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, fphttpapp, httpdefs, httproute,
+  SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, fphttpapp, httpdefs, httproute,
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
@@ -415,7 +415,7 @@ begin
     // direction mirrors RTL languages from one page definition (no separate files);
     // QueryFields carry table search/page/column-visibility state (no-JS, no cookies)
     if TryServePage(T, S, aRequest.PathInfo,
-                    ResolveDir(aRequest, ''), aRequest.QueryFields, aResponse) then
+                    ResolveDir(aRequest, '',SessionLanguage(T.Db,S)), aRequest.QueryFields, aResponse) then
       Exit;
     aResponse.Code := 404;
     aResponse.ContentType := 'text/plain';
@@ -490,6 +490,7 @@ begin
   I18nDir := GetEnvironmentVariable('WELITE_I18N');
   if I18nDir = '' then I18nDir := DEFAULT_I18N;
   StaticAddRoot(I18N_MOUNT, 'i18n/', I18nDir);
+  InitLanguages;
 
   HTTPRouter.RegisterRoute('/', rmGet, @HomeEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmGet, @SignInEndpoint);

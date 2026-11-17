@@ -10,7 +10,7 @@ import sqlite3
 import subprocess
 import tempfile
 import time
-from urllib.parse import urlencode
+from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long
 root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
@@ -72,7 +72,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
                 now=DateMs(int(time.time()*1000))
                 password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
-                client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password=password),extra=Long(9007199254740993))]})
+                client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password=password),profile=dict(language='ar',retained=Long(9007199254740993)),extra=Long(9007199254740993))]})
                 client.command({'insert':'boards','documents':[dict(_id='b',title='Shared board',slug='shared-board',permission='private',createdAt=now,members=[dict(userId='u',isAdmin=True,isActive=True,isReadOnly=False)])]})
                 client.command({'insert':'swimlanes','documents':[dict(_id='s',boardId='b',title='Lane',createdAt=now)]})
                 client.command({'insert':'lists','documents':[dict(_id='l',boardId='b',title='List',createdAt=now)]})
@@ -94,6 +94,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
                 assert request('GET',headers['Location'])[0]==200
+                web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                board_url='/board?id=b&sessionId='+web_session
+                assert b'dir="rtl"' in request('GET',board_url)[2]
+                assert b'dir="rtl"' not in request('GET',board_url+'&lang=fi')[2]
+                client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'profile.language':'fi'}})]})
+                assert b'dir="rtl"' not in request('GET',board_url)[2]
+                assert client.find('users','u')[0]['profile']==dict(language='fi',retained=Long(9007199254740993))
                 assert len(client.find('users','u')[0]['services']['resume']['loginTokens'])==1,'Private browser session became a Meteor bearer'
                 stop();app=start('1')
                 assert request('GET','/api/user',token=token)[0]==200,'API token did not survive adapter restart'

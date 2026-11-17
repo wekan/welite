@@ -332,3 +332,10 @@ metadata without JavaScript execution, native Unicode names, escaped text,
 malformed/unsafe/duplicate refusal, failed-input retention and exact agreement
 between the strict JSON and browser catalogs. Every advertised translation file
 must exist; the converter never changes translation bytes.
+
+`python3 tests/langsel.py` checks every installed language/direction, explicit/profile/
+weighted-header precedence, aliases, regional and legacy Hebrew fallback, invalid
+ranges/catalogs, bounded disk/embedded asset lookup and traversal refusal. `admin.py`
+uses the actual translation root and `langhttp.py` verifies native HTTP profile/header
+precedence and structural grid reversal on either backend. `shrhttp.py` also checks
+live Mongo profile-language changes, explicit override and preserved BSON profile data.

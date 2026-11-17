@@ -180,13 +180,16 @@ action-token fields — no JS, no cookies.
 
 ## LTR / RTL — mirrored from one definition, no separate files
 
-WeKan-Lite mirrors the whole UI for RTL languages (Arabic, Hebrew, Persian, Urdu, …) the way
-Meteor 3 WeKan does — **but a page is stored once**; direction is applied at *render time*, so
+WeKan-Lite mirrors board and Designer grids for RTL languages (Arabic, Hebrew, Persian, Urdu, …).
+Other page surfaces remain in the localization checklist. **A page is stored once**; direction is applied at *render time*, so
 there is never a second RTL copy of a page to maintain.
 
 - **Direction is runtime, derived from the viewer**: `ResolveDir` picks `rtl`/`ltr` from
-  `?lang=` → user profile → `Accept-Language`, against the known RTL set (`LangIsRtl`). The
-  same `pages`/`page_widgets` rows render either way.
+  `?lang=` → authenticated string `profile.language` → weighted `Accept-Language`, using
+  the installed catalog RTL metadata. Invalid/unsupported selections fall through; header
+  ranges with zero or malformed quality are skipped. Source aliases, regional parents
+  and legacy Hebrew codes resolve through the catalog. Explicit page direction wins.
+  The same `pages`/`page_widgets` rows render either way.
 - **Per-page override**: `pages.dir` = `auto` (default — follow the viewer's language), or a
   forced `ltr`/`rtl` when a page must always read one way.
 - **Structural mirroring for retro browsers**: HTML 3.2 browsers (IBrowse, NetSurf) don't

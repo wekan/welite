@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-17 Negotiate server language and page direction
+
+- Load an immutable, validated server catalog before request threads start, using
+  embedded assets before disk and a bounded asset reader. Invalid or absent catalogs
+  retain English fallback; unsafe filenames, duplicate identities and wrong field
+  types cannot become lookup paths.
+- Resolve explicit language, authenticated profile language, then weighted
+  Accept-Language preferences. Support source aliases, separator normalization,
+  regional parents and legacy Hebrew codes; skip malformed/zero-quality ranges.
+  Read the framework's standard AcceptLanguage property so real HTTP headers work.
+- Apply catalog RTL metadata to board, published Designer and Designer editor
+  direction. Read only a validated session's string profile.language, preserving
+  the profile and its other fields. Explicit page direction still wins.
+- Verify every installed language/direction, malformed catalogs, disk/embedded
+  lookup, traversal refusal, real linked/CLI HTTP profile/header precedence and
+  structural RTL order. Live Mongo profile changes drive HTTP direction while
+  retaining typed BSON profile fields.
+- Translated labels, language pickers/state preservation, missing translation
+  assets and direction across all remaining application pages are still open.
+
 ## 2026-11-17 Repair language catalog generation
 
 - Read both current compact WeKan language metadata and the previous literal

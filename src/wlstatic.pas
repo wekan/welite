@@ -59,6 +59,9 @@ procedure StaticAddRoot(const AMount, AEmbed, ADiskRoot: string);
 // Try to serve aRequest's path as a static asset. Returns True if it did (caller stops).
 function ServeStatic(aRequest: TRequest; aResponse: TResponse): Boolean;
 
+// Read a registered asset for server rendering, embedded before disk, bounded in memory.
+function ReadStaticAsset(const Mount,Relative:string;out Data:TBytes):Boolean;
+
 // MIME type for a file name / extension (public so other units can reuse it).
 function MimeForName(const Name: string): string;
 
@@ -140,6 +143,34 @@ begin
   if (Length(P) >= 2) and (P[2] = ':') then Exit;
   {$ENDIF}
   Result := P;                                  // forward-slash relative path, e.g. 'js/interact.js'
+end;
+
+function ReadStaticAsset(const Mount,Relative:string;out Data:TBytes):Boolean;
+var i:Integer;Mime,Path:string;Stream:TFileStream;
+begin
+  Result:=False;Data:=nil;
+  if (Relative='') or (RelFromRequest('/', '/'+Relative)<>Relative) or
+    (Pos('\',Relative)>0) or (Pos(':',Relative)>0) then Exit;
+  for i:=0 to High(Roots) do
+  begin
+    if Roots[i].Mount<>Mount then Continue;
+    if Assigned(EmbeddedLookup) and EmbeddedLookup(Roots[i].Embed+Relative,Data,Mime) then
+    begin
+      if Length(Data)>16*1024*1024 then begin Data:=nil;Exit;end;
+      Exit(True);
+    end;
+    Path:=Roots[i].Dir+StringReplace(Relative,'/',PathDelim,[rfReplaceAll]);
+    if not FileExists(Path) then Continue;
+    try
+      Stream:=TFileStream.Create(Path,fmOpenRead or fmShareDenyWrite);
+      try
+        if Stream.Size>16*1024*1024 then Exit;
+        SetLength(Data,Stream.Size);
+        if Length(Data)>0 then Stream.ReadBuffer(Data[0],Length(Data));
+        Exit(True);
+      finally Stream.Free;end;
+    except Data:=nil;Exit;end;
+  end;
 end;
 
 procedure SendBytes(aResponse: TResponse; const Data: TBytes; const Mime: string);

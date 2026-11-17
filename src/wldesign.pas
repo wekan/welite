@@ -63,7 +63,9 @@ function LoadWidgets(Db: TWLDb; const PageId: string): TWidgetArray;
 function LangIsRtl(const Lang: string): Boolean;
 // Resolve the viewer's writing direction from the request (lang query/profile/Accept-Language),
 // honoring an optional per-page override (pages.dir = auto|ltr|rtl). Returns 'ltr' or 'rtl'.
-function ResolveDir(aRequest: TRequest; const PageDirOverride: string): string;
+function ResolveDir(aRequest: TRequest; const PageDirOverride: string; const ProfileLanguage:string=''): string;
+
+function SessionLanguage(Db:TWLDb;const S:TWLSession):string;
 
 // --- render -------------------------------------------------------------------------------
 // Render a published page. Dir is 'ltr' or 'rtl'; when 'rtl' the table columns are reversed
@@ -108,7 +110,7 @@ procedure DesignerImportAll(aRequest: TRequest; aResponse: TResponse);    // POS
 implementation
 
 uses
-  DateUtils, StrUtils, Math, wladmin;
+  DateUtils, StrUtils, Math, wladmin, wli18n;
 
 var
   DataViews: TStringList = nil;   // binding -> TDataViewRenderer (as Pointer)
@@ -524,24 +526,26 @@ end;
 
 // ------------------------------------------------------------------ direction (LTR/RTL)
 function LangIsRtl(const Lang: string): Boolean;
-var L: string;
+begin Result:=LanguageIsRtl(Lang);end;
+
+function SessionLanguage(Db:TWLDb;const S:TWLSession):string;
+var Rows:TWLRows;
 begin
-  L := LowerCase(Copy(Trim(Lang), 1, 2));
-  // WeKan's RTL set: Arabic, Hebrew, Persian, Urdu, (and 'iw' legacy Hebrew code)
-  Result := (L = 'ar') or (L = 'he') or (L = 'fa') or (L = 'ur') or (L = 'iw');
+  Result:='';if (Db=nil) or (S.UserId='') then Exit;
+  Rows:=Db.Query('SELECT CASE WHEN json_valid(profile_json) THEN CASE WHEN '+
+    'json_type(profile_json,''$.language'')=''text'' THEN json_extract(profile_json,''$.language'') '+
+    'ELSE '+QuotedStr('')+' END ELSE '+QuotedStr('')+' END FROM users WHERE id='+QuotedStr(S.UserId)+';');
+  if (Length(Rows)=1) and (Length(Rows[0])=1) then Result:=Rows[0][0];
 end;
 
-function ResolveDir(aRequest: TRequest; const PageDirOverride: string): string;
-var Lang: string;
+function ResolveDir(aRequest: TRequest; const PageDirOverride: string;const ProfileLanguage:string): string;
+var Language:TWLLanguage;
 begin
-  // explicit per-page override wins (auto = follow the viewer's language)
-  if SameText(PageDirOverride, 'rtl') then Exit('rtl');
-  if SameText(PageDirOverride, 'ltr') then Exit('ltr');
-  // language: ?lang= wins, else (TODO) user profile, else Accept-Language
-  Lang := Trim(aRequest.QueryFields.Values['lang']);
-  if Lang = '' then
-    Lang := Trim(aRequest.CustomHeaders.Values['Accept-Language']);
-  if LangIsRtl(Lang) then Result := 'rtl' else Result := 'ltr';
+  if SameText(PageDirOverride,'rtl') then Exit('rtl');
+  if SameText(PageDirOverride,'ltr') then Exit('ltr');
+  Language:=ResolveLanguage(aRequest.QueryFields.Values['lang'],ProfileLanguage,
+    aRequest.AcceptLanguage);
+  if Language.Rtl then Result:='rtl' else Result:='ltr';
 end;
 
 // A spanning cell is emitted at its visual leading edge. RTL uses the right edge
@@ -1149,7 +1153,7 @@ begin
   MaxRow:=GridMaxRow(W);
 
   // editor mirrors the same way published pages do, so an RTL admin edits in a mirrored grid
-  Dir := ResolveDir(aRequest, P.Dir);
+  Dir := ResolveDir(aRequest, P.Dir,SessionLanguage(T.Db,S));
   Rtl := SameText(Dir, 'rtl');
 
   // grid editor: outer table = page grid; each cell shows widget preview + a button toolbar

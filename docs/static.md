@@ -90,6 +90,6 @@ are never modified by this command.
 The current snapshot lists 146 installed languages; 99 more source languages
 still need local translation assets and portable filename decisions. Missing or
 broken legacy alias files are excluded rather than offered as failed imports.
-Server negotiation, translated page rendering and complete RTL integration are
-still tracked in `TODO.md`. `tests/catalog.py` verifies conversion and matching
+Server negotiation and board/Designer direction now use the strict catalog.
+Translated page rendering and complete RTL integration remain in `TODO.md`. `tests/catalog.py` verifies conversion and matching
 catalog contents against the files actually installed.
