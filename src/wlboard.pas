@@ -266,7 +266,7 @@ begin
   begin
     aResponse.Code:=404; aResponse.ContentType:='text/html; charset=utf-8';
     aResponse.Content:=LanguagePage(aResponse,ViewerLanguage(nil,Default(TWLSession),aRequest),
-      'Not found','<p>Unknown domain</p>'); aResponse.SendContent; Exit;
+      'Not found','<p>Unknown domain</p>','','html4'); aResponse.SendContent; Exit;
   end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
   S.LanguageTag:=RequestLanguageTag(aRequest);
@@ -280,9 +280,9 @@ begin
     aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand'],aRequest.QueryFields.Values['subtasks']);
   if Body='' then begin
     aResponse.Code:=404;
-    aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>');
+    aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>','','html4');
   end
-  else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+EnhancementScripts(wbUnknown),Dir); end;
+  else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+EnhancementScripts(wbUnknown),Dir,'html4'); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
   finally Words.Free;end;
 end;

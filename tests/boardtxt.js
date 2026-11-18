@@ -103,6 +103,15 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
     assert.equal(await card.count(),0);
     assert.equal(new URL(page.url()).searchParams.get('expand'),null);
     console.log('PASS: HTML list expansion and collapse with JavaScript disabled and no cookies');
+    await page.setViewportSize({width:320,height:640});
+    await page.goto(base+'/board?id=boardtxt&lang=en');
+    assert.equal(await page.evaluate(()=>document.doctype.publicId),'-//W3C//DTD HTML 4.01 Transitional//EN');
+    assert.equal(await page.locator('meta[name=viewport]').getAttribute('content'),'width=device-width, initial-scale=1');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await page.locator('a[data-view-dir=right]').click();
+    assert.equal(new URL(page.url()).searchParams.get('x'),'2');
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    console.log('PASS: HTML4 board and minimap navigation fit a 320-pixel viewport');
     await page.goto(base+'/board?id=boardtxt');
     assert.equal(await page.title(),words('fi').board);
     assert.equal(await page.getByRole('link',{name:words('fi')['view-all'],exact:true}).count(),1);

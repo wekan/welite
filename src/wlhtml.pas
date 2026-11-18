@@ -64,17 +64,23 @@ end;
 
 function PageDir(const Title, Body, Dir: string;const Language,DocType:string): string;
 var
-  DirAttr,Declaration: string;
+  DirAttr,Declaration,Viewport: string;
 begin
   if SameText(Dir, 'rtl') then
     DirAttr := ' dir="rtl"'
   else
     DirAttr := '';
   if Language<>'' then DirAttr:=DirAttr+' lang="'+HtmlAttr(StringReplace(Language,'_','-',[rfReplaceAll]))+'"';
-  if SameText(DocType,'html4') then Declaration:=DOCTYPE_4 else Declaration:=DOCTYPE_32;
+  Viewport:='';
+  if SameText(DocType,'html4') then
+  begin
+    Declaration:=DOCTYPE_4;
+    Viewport:='<meta name="viewport" content="width=device-width, initial-scale=1">';
+  end
+  else Declaration:=DOCTYPE_32;
   Result :=
     Declaration + LineEnding +
-    '<html' + DirAttr + '><head><title>' + HtmlEncode(Title) + '</title></head>' + LineEnding +
+    '<html' + DirAttr + '><head><title>' + HtmlEncode(Title) + '</title>' + Viewport + '</head>' + LineEnding +
     '<body' + IfThen(SameText(Dir,'rtl'),' dir="rtl"','') + '>' + LineEnding + Body + LineEnding + '</body></html>';
 end;
 

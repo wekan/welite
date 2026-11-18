@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Use HTML 4.01 on the standalone board
+
+- Declare HTML 4.01 Transitional for board pages and give HTML4 pages a
+  device-width viewport. Verify narrow board navigation in Chromium.
+
 ## 2026-11-18 Show card spent time on the HTML board
 
 - Render recorded hours with the translated spent-time or overtime
