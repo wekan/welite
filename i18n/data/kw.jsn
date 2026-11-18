@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Ny veu kevys an karten.",
   "twoFactorAuth-manual-entry": "Po scryfewgh an cod ma gans agas leuv: ",
   "twoFactorCode-prompt": "Scryfewgh agas cod dowbrovyans a 6 nomber",
-  "twoFactorCode-invalid": "An cod dowbrovyans nyns yw gwir. Assayewgh arta."
+  "twoFactorCode-invalid": "An cod dowbrovyans nyns yw gwir. Assayewgh arta.",
+  "twoFactorAuth-enabled": "Dowbrovyans dew-fakta yw gwrys galosek rag agas akont."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Carta betg chattada.",
   "twoFactorAuth-manual-entry": "U endatescha quest code a maun: ",
   "twoFactorCode-prompt": "Endatescha tes code d'autentificaziun da 6 cifras",
-  "twoFactorCode-invalid": "Code d'autentificaziun nunvalid. Emprova anc ina giada."
+  "twoFactorCode-invalid": "Code d'autentificaziun nunvalid. Emprova anc ina giada.",
+  "twoFactorAuth-enabled": "L'autentificaziun cun dus fatters è activada per tes cont."
 }

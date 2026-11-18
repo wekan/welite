@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Karata ga e a hwetšwa.",
   "twoFactorAuth-manual-entry": "Goba tsenya khoutu ye ka seatla: ",
   "twoFactorCode-prompt": "Tsenya khoutu ya gago ya netefatšo ya dinomoro tše tshela",
-  "twoFactorCode-invalid": "Khoutu ya netefatšo ga se ya nnete. Leka gape."
+  "twoFactorCode-invalid": "Khoutu ya netefatšo ga se ya nnete. Leka gape.",
+  "twoFactorAuth-enabled": "Netefatšo ya mekgahlo e mebedi e diretšwe akhaonto ya gago."
 }

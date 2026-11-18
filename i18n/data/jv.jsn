@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kertu ora ketemu.",
   "twoFactorAuth-manual-entry": "Utawa ketik kode iki kanthi manual: ",
   "twoFactorCode-prompt": "Ketik kode otentikasi 6-digit sampeyan",
-  "twoFactorCode-invalid": "Kode otentikasi ora sah. Coba maneh."
+  "twoFactorCode-invalid": "Kode otentikasi ora sah. Coba maneh.",
+  "twoFactorAuth-enabled": "Otentikasi rong faktor wis diaktifake kanggo akun sampeyan."
 }

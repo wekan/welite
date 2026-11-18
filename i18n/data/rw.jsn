@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Ikarita ntiyabonetse.",
   "twoFactorAuth-manual-entry": "Cyangwa winjize iyi kode wenyine: ",
   "twoFactorCode-prompt": "Injiza kode yawe y'imibare 6 yo kwemeza",
-  "twoFactorCode-invalid": "Kode yo kwemeza ntabwo ari nziza. Nyamuneka ongera ugerageze."
+  "twoFactorCode-invalid": "Kode yo kwemeza ntabwo ari nziza. Nyamuneka ongera ugerageze.",
+  "twoFactorAuth-enabled": "Kwemeza mu bice bibiri byarakozwe kuri konti yawe."
 }

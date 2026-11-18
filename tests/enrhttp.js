@@ -59,7 +59,7 @@ function otp(secret,counter) {
     assert.equal(new URL(page.url()).searchParams.get('lang'),flowLanguage);
     await page.locator('input[name=code]').fill(otp(secret,counter));
     await page.getByRole('button',{name:'Confirm',exact:true}).click();
-    assert.match(await page.locator('body').innerText(),/One-time codes enabled/);
+    assert.match(await page.locator('body').innerText(),/Two-factor authentication is enabled/);
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
     assert.equal(new URL(page.url()).searchParams.get('lang'),flowLanguage);
     await page.getByRole('link',{name:/^(sign in|Log In)$/,exact:true}).click();

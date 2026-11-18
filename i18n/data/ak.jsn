@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Wɔanhunu kaad no.",
   "twoFactorAuth-manual-entry": "Anaasɛ fa wo nsa hyɛ koodu yi: ",
   "twoFactorCode-prompt": "Hyɛ wo nokwaredi nɔma 6 no",
-  "twoFactorCode-invalid": "Nokwaredi koodu no nteɛ. Yɛ sɔhwɛ bio."
+  "twoFactorCode-invalid": "Nokwaredi koodu no nteɛ. Yɛ sɔhwɛ bio.",
+  "twoFactorAuth-enabled": "Wɔama nneɛma abien nokwaredi so wɔ wo akontabuo no ho."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Không tìm thấy thẻ.",
   "twoFactorAuth-manual-entry": "Hoặc nhập mã này theo cách thủ công: ",
   "twoFactorCode-prompt": "Nhập mã xác thực 6 chữ số của bạn",
-  "twoFactorCode-invalid": "Mã xác thực không hợp lệ. Vui lòng thử lại."
+  "twoFactorCode-invalid": "Mã xác thực không hợp lệ. Vui lòng thử lại.",
+  "twoFactorAuth-enabled": "Xác thực hai yếu tố đang được bật cho tài khoản của bạn."
 }

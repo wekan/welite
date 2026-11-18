@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Achọtaghị kaadị.",
   "twoFactorAuth-manual-entry": "Ma ọ bụ tinye koodu a n'aka: ",
   "twoFactorCode-prompt": "Tinye koodu nyocha ọnụọgụ isii gị",
-  "twoFactorCode-invalid": "Koodu nyocha ezighị ezi. Biko nwaa ọzọ."
+  "twoFactorCode-invalid": "Koodu nyocha ezighị ezi. Biko nwaa ọzọ.",
+  "twoFactorAuth-enabled": "Nyocha ihe abụọ enwere ike maka akaụntụ gị."
 }

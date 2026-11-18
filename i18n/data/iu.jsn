@@ -2103,5 +2103,6 @@
   "field-link-not-found": "ᐊᓪᓚᖅᓯᒪᔪᖅ ᓇᓂᔭᐅᖏᑦᑐᖅ.",
   "twoFactorAuth-manual-entry": "ᐅᕝᕙᓘᓐᓃᑦ ᐊᑐᖅ ᓇᐃᓴᐃᔭᐅᑎᒥᒃ ᐃᓯᖅᑑᑎᒃᑯᑦ: ",
   "twoFactorCode-prompt": "ᐊᑐᖅ 6-ᖑᔪᑦ ᖃᐅᔨᓴᖅᑕᐅᓂᐅᑉ ᓇᐃᓴᐃᔭᐅᑎᖓᑦ",
-  "twoFactorCode-invalid": "ᖃᐅᔨᓴᖅᑕᐅᓂᐅᑉ ᓇᐃᓴᐃᔭᐅᑎᖓ ᓱᖏᐅᑎᓂᖅᐳᖅ. ᐋᒃᑲᓂᒃᑲᐃᒃ ᐊᑐᓕᖅᑎᑦᑏᑦ."
+  "twoFactorCode-invalid": "ᖃᐅᔨᓴᖅᑕᐅᓂᐅᑉ ᓇᐃᓴᐃᔭᐅᑎᖓ ᓱᖏᐅᑎᓂᖅᐳᖅ. ᐋᒃᑲᓂᒃᑲᐃᒃ ᐊᑐᓕᖅᑎᑦᑏᑦ.",
+  "twoFactorAuth-enabled": "ᒪᕐᕈᖕᓂᑦ ᖃᐅᔨᓴᖅᑕᐅᓂᖅ ᐊᑐᖅᑕᐅᓕᖅᑐᖅ ᐃᓕᖕᓄᑦ ᐃᓯᕐᕕᒃᓴᖅ."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "كارتا تېپىلمىدى.",
   "twoFactorAuth-manual-entry": "ياكى بۇ كودنى قولدا كىرگۈزۈڭ: ",
   "twoFactorCode-prompt": "6 خانىلىق دەلىللەش كودىڭىزنى كىرگۈزۈڭ",
-  "twoFactorCode-invalid": "ئىناۋەتسىز دەلىللەش كودى. قايتا سىناڭ."
+  "twoFactorCode-invalid": "ئىناۋەتسىز دەلىللەش كودى. قايتا سىناڭ.",
+  "twoFactorAuth-enabled": "ھېساباتىڭىز ئۈچۈن ئىككى ئامىللىق دەلىللەش قوزغىتىلدى."
 }

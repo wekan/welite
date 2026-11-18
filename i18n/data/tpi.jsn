@@ -2103,5 +2103,6 @@
   "field-link-not-found": "I no painim kat.",
   "twoFactorAuth-manual-entry": "O raitim dispela koud yu yet long han: ",
   "twoFactorCode-prompt": "Raitim namba 6-digit bilong tokim tru",
-  "twoFactorCode-invalid": "Namba bilong tokim tru i no stret. Traim gen."
+  "twoFactorCode-invalid": "Namba bilong tokim tru i no stret. Traim gen.",
+  "twoFactorAuth-enabled": "Tupela-step wok bilong sekiuriti i op long akaun bilong yu."
 }

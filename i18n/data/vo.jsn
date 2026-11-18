@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kad no petuvon.",
   "twoFactorAuth-manual-entry": "U penolös kodi at me nam: ",
   "twoFactorCode-prompt": "Penolös kodi fümükama olik numatas 6",
-  "twoFactorCode-invalid": "Kod fümükama no lonöfon. Begö! steifülolös dönu."
+  "twoFactorCode-invalid": "Kod fümükama no lonöfon. Begö! steifülolös dönu.",
+  "twoFactorAuth-enabled": "Fümükam me düfs tel pejäfükon pro kal olik."
 }

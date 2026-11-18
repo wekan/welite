@@ -2103,5 +2103,6 @@
   "field-link-not-found": "'echletHom tu'lu'be'.",
   "twoFactorAuth-manual-entry": "pagh mI' vam yIngIH: ",
   "twoFactorCode-prompt": "wa'maH loS mI' authentication yIngIH",
-  "twoFactorCode-invalid": "mI' authentication ghobe'. yIqIm."
+  "twoFactorCode-invalid": "mI' authentication ghobe'. yIqIm.",
+  "twoFactorAuth-enabled": "lIj account choq cha' Ser wa'Dich."
 }

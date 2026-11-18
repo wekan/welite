@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Nie nalazłé kôrtë.",
   "twoFactorAuth-manual-entry": "Abò wpiszë nen kòd rãczno: ",
   "twoFactorCode-prompt": "Wpiszë swój 6-cyfrowi kòd aùtentikacëji",
-  "twoFactorCode-invalid": "Zle kòd aùtentikacëji. Proszã spróbùjë jesz rôz."
+  "twoFactorCode-invalid": "Zle kòd aùtentikacëji. Proszã spróbùjë jesz rôz.",
+  "twoFactorAuth-enabled": "Dwuskładnikòwô aùtentikacëjô je włączonô dlô twòjégò kònta."
 }

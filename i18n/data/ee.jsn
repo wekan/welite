@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Womekpɔ kaɖi la o.",
   "twoFactorAuth-manual-entry": "Alo tsɔ mɔɖeɖe sia de eme kple asi: ",
   "twoFactorCode-prompt": "Tsɔ wò mɔɖeɖe si nye nɔmba 6 de eme",
-  "twoFactorCode-invalid": "Mɔɖeɖe si mesɔ o. Taflatse gadze agbagba."
+  "twoFactorCode-invalid": "Mɔɖeɖe si mesɔ o. Taflatse gadze agbagba.",
+  "twoFactorAuth-enabled": "Kpeɖodzi eveliawo le dɔ wɔm na wò akɔnt."
 }

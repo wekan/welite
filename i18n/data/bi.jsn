@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kad i no stap.",
   "twoFactorAuth-manual-entry": "O putum kod ia wetem han blong yu: ",
   "twoFactorCode-prompt": "Putum kod blong yu we i gat 6 namba blong pruvum",
-  "twoFactorCode-invalid": "Kod blong pruvum i no stret. Traem bakegen."
+  "twoFactorCode-invalid": "Kod blong pruvum i no stret. Traem bakegen.",
+  "twoFactorAuth-enabled": "Tu-fakta pruvum i wok long akaon blong yu."
 }

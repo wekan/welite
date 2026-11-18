@@ -2102,5 +2102,6 @@
   "field-link-not-found": "کارت تاپیلمدی.",
   "twoFactorAuth-manual-entry": "یا بو کودنی قۉلده کیریتینگ: ",
   "twoFactorCode-prompt": "6 خنه‌لی تصدیقلش کودینگیزنی کیریتینگ",
-  "twoFactorCode-invalid": "نوتۉغری تصدیقلش کودی. التماس، قیته اورینیب کۉرینگ."
+  "twoFactorCode-invalid": "نوتۉغری تصدیقلش کودی. التماس، قیته اورینیب کۉرینگ.",
+  "twoFactorAuth-enabled": "حسابینگیز اۉچون ایکی باسقیچلی تصدیقلش یاقیلگن."
 }

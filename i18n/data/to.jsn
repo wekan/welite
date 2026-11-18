@@ -2103,5 +2103,6 @@
   "field-link-not-found": "ʻOku ʻikai maʻu ʻa e kaati.",
   "twoFactorAuth-manual-entry": "Pe hū ʻa e koodi ni ʻaki ho nima: ",
   "twoFactorCode-prompt": "Hū hoʻo koodi fakamoʻoni 6-fika",
-  "twoFactorCode-invalid": "ʻOku hala ʻa e koodi fakamoʻoní. Kātaki ʻo toe feinga."
+  "twoFactorCode-invalid": "ʻOku hala ʻa e koodi fakamoʻoní. Kātaki ʻo toe feinga.",
+  "twoFactorAuth-enabled": "Kuo faʻa ngāue ʻa e fakamoʻoni ua-vahe ki hoʻo ʻakauni."
 }

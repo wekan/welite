@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Hindi nakita ang kard.",
   "twoFactorAuth-manual-entry": "O ilagay ang code na ito nang manual: ",
   "twoFactorCode-prompt": "Ilagay ang iyong 6-digit na authentication code",
-  "twoFactorCode-invalid": "Hindi wasto ang authentication code. Pakisubukang muli."
+  "twoFactorCode-invalid": "Hindi wasto ang authentication code. Pakisubukang muli.",
+  "twoFactorAuth-enabled": "Naka-enable na ang two-factor authentication para sa account mo."
 }

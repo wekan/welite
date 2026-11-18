@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Cardul nu a fost găsit.",
   "twoFactorAuth-manual-entry": "Sau introduceți manual acest cod: ",
   "twoFactorCode-prompt": "Introduceți codul de autentificare din 6 cifre",
-  "twoFactorCode-invalid": "Cod de autentificare invalid. Încercați din nou."
+  "twoFactorCode-invalid": "Cod de autentificare invalid. Încercați din nou.",
+  "twoFactorAuth-enabled": "Autentificarea în doi factori este activată pentru contul dumneavoastră."
 }

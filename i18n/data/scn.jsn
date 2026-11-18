@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Carta nun truvata.",
   "twoFactorAuth-manual-entry": "O metti stu còdici manualmenti: ",
   "twoFactorCode-prompt": "Metti lu to còdici di autinticazzioni di 6 numeri",
-  "twoFactorCode-invalid": "Còdici di autinticazzioni non vàlidu. Pruva arrè."
+  "twoFactorCode-invalid": "Còdici di autinticazzioni non vàlidu. Pruva arrè.",
+  "twoFactorAuth-enabled": "L'autinticazzioni a dui fatturi è attivata pû to account."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Karta njebu namakana.",
   "twoFactorAuth-manual-entry": "Abo zapodaj tutón kod manuelnje: ",
   "twoFactorCode-prompt": "Zapodaj swój 6-městnowy awtentifikaciski kod",
-  "twoFactorCode-invalid": "Njepłaćiwy awtentifikaciski kod. Prošu spytaj hišće raz."
+  "twoFactorCode-invalid": "Njepłaćiwy awtentifikaciski kod. Prošu spytaj hišće raz.",
+  "twoFactorAuth-enabled": "Dwustopnjowa awtentifikacija je za twoje konto zmóžnjena."
 }

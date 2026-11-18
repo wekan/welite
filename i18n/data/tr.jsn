@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kart bulunamadı.",
   "twoFactorAuth-manual-entry": "Veya bu kodu elle girin: ",
   "twoFactorCode-prompt": "6 haneli kimlik doğrulama kodunuzu girin",
-  "twoFactorCode-invalid": "Geçersiz kimlik doğrulama kodu. Lütfen tekrar deneyin."
+  "twoFactorCode-invalid": "Geçersiz kimlik doğrulama kodu. Lütfen tekrar deneyin.",
+  "twoFactorAuth-enabled": "Hesabınız için iki faktörlü kimlik doğrulama etkin."
 }

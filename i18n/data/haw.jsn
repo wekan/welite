@@ -2103,5 +2103,6 @@
   "field-link-not-found": "ʻAʻole i loaʻa ke kāleka.",
   "twoFactorAuth-manual-entry": "A i ʻole e komo lima i kēia helu: ",
   "twoFactorCode-prompt": "E komo i kāu helu hōʻoia 6-huahelu",
-  "twoFactorCode-invalid": "Helu hōʻoia hewa. E ʻoluʻolu e hoʻāʻo hou."
+  "twoFactorCode-invalid": "Helu hōʻoia hewa. E ʻoluʻolu e hoʻāʻo hou.",
+  "twoFactorAuth-enabled": "Ua hoʻāla ʻia ka hōʻoia ʻelua mea no kāu moʻokāki."
 }

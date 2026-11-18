@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kortet ble ikke funnet.",
   "twoFactorAuth-manual-entry": "Eller oppgi denne koden manuelt: ",
   "twoFactorCode-prompt": "Oppgi din 6-sifrede autentiseringskode",
-  "twoFactorCode-invalid": "Ugyldig autentiseringskode. Prøv igjen."
+  "twoFactorCode-invalid": "Ugyldig autentiseringskode. Prøv igjen.",
+  "twoFactorAuth-enabled": "Tofaktorautentisering er aktivert for kontoen din."
 }

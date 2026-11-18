@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Carte introuvable.",
   "twoFactorAuth-manual-entry": "Ou saisissez ce code manuellement : ",
   "twoFactorCode-prompt": "Saisissez votre code d'authentification à 6 chiffres",
-  "twoFactorCode-invalid": "Code d'authentification invalide. Veuillez réessayer."
+  "twoFactorCode-invalid": "Code d'authentification invalide. Veuillez réessayer.",
+  "twoFactorAuth-enabled": "L'authentification à deux facteurs est activée pour votre compte."
 }

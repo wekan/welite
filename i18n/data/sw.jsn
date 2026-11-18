@@ -2102,5 +2102,6 @@
   "field-link-not-found": "Kadi haikupatikana.",
   "twoFactorAuth-manual-entry": "Au ingiza msimbo huu kwa mkono: ",
   "twoFactorCode-prompt": "Ingiza msimbo wako wa uthibitishaji wa tarakimu 6",
-  "twoFactorCode-invalid": "Msimbo wa uthibitishaji si sahihi. Tafadhali jaribu tena."
+  "twoFactorCode-invalid": "Msimbo wa uthibitishaji si sahihi. Tafadhali jaribu tena.",
+  "twoFactorAuth-enabled": "Uthibitishaji wa hatua mbili umewashwa kwa akaunti yako."
 }

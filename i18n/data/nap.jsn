@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Carta nun truvata.",
   "twoFactorAuth-manual-entry": "O metti stu codice a mano: ",
   "twoFactorCode-prompt": "Metti 'o codice 'e autenticazione 'e 6 cifre tuoio",
-  "twoFactorCode-invalid": "Codice 'e autenticazione nun è valido. Prova n'ata vota."
+  "twoFactorCode-invalid": "Codice 'e autenticazione nun è valido. Prova n'ata vota.",
+  "twoFactorAuth-enabled": "L'autenticazione a doje fasce è attivata pe' 'o cunto tuoio."
 }

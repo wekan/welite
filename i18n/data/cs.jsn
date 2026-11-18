@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Karta nenalezena.",
   "twoFactorAuth-manual-entry": "Nebo zadejte tento kód ručně: ",
   "twoFactorCode-prompt": "Zadejte svůj 6místný ověřovací kód",
-  "twoFactorCode-invalid": "Neplatný ověřovací kód. Zkuste to znovu."
+  "twoFactorCode-invalid": "Neplatný ověřovací kód. Zkuste to znovu.",
+  "twoFactorAuth-enabled": "Dvoufaktorové ověřování je pro váš účet povoleno."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "কাৰ্ড পোৱা নগ'ল।",
   "twoFactorAuth-manual-entry": "নাইবা এই ক'ডটো হাতেৰে দিয়ক: ",
   "twoFactorCode-prompt": "আপোনাৰ 6-অংকীয় প্ৰমাণীকৰণ ক'ড দিয়ক",
-  "twoFactorCode-invalid": "অবৈধ প্ৰমাণীকৰণ ক'ড। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।"
+  "twoFactorCode-invalid": "অবৈধ প্ৰমাণীকৰণ ক'ড। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।",
+  "twoFactorAuth-enabled": "আপোনাৰ একাউণ্টৰ বাবে দুই-উপাদান প্ৰমাণীকৰণ সক্ৰিয় কৰা হৈছে।"
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "کارت ونه موندل شو.",
   "twoFactorAuth-manual-entry": "یا دا کوډ په لاسي ډول دننه کړئ: ",
   "twoFactorCode-prompt": "خپل 6 عددي تصدیق کوډ دننه کړئ",
-  "twoFactorCode-invalid": "ناسم تصدیق کوډ. مهرباني وکړئ بیا هڅه وکړئ."
+  "twoFactorCode-invalid": "ناسم تصدیق کوډ. مهرباني وکړئ بیا هڅه وکړئ.",
+  "twoFactorAuth-enabled": "ستاسو حساب لپاره دوه‌مرحلوي تصدیق فعال دی."
 }

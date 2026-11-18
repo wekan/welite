@@ -2103,5 +2103,6 @@
   "field-link-not-found": "N'eo ket bet kavet ar gartenn.",
   "twoFactorAuth-manual-entry": "Pe enankit ar c'hod-mañ gant an dorn: ",
   "twoFactorCode-prompt": "Enankit ho kod gwiriañ 6 sifr",
-  "twoFactorCode-invalid": "C'hod gwiriañ direizh. Klaskit en-dro mar plij."
+  "twoFactorCode-invalid": "C'hod gwiriañ direizh. Klaskit en-dro mar plij.",
+  "twoFactorAuth-enabled": "Gweredekaet eo ar wiriekadur daou-fakton evit ho kont."
 }

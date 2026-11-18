@@ -2102,5 +2102,6 @@
   "field-link-not-found": "Card not found.",
   "twoFactorAuth-manual-entry": "Atau masukkan kode ini secara manual: ",
   "twoFactorCode-prompt": "Masukkan kode autentikasi 6 digit Anda",
-  "twoFactorCode-invalid": "Kode autentikasi tidak valid. Silakan coba lagi."
+  "twoFactorCode-invalid": "Kode autentikasi tidak valid. Silakan coba lagi.",
+  "twoFactorAuth-enabled": "Autentikasi dua faktor diaktifkan untuk akun Anda."
 }

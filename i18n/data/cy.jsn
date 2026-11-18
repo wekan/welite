@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Heb ddod o hyd i'r cerdyn.",
   "twoFactorAuth-manual-entry": "Neu nodwch y cod hwn â llaw: ",
   "twoFactorCode-prompt": "Nodwch eich cod dilysu 6 digid",
-  "twoFactorCode-invalid": "Cod dilysu annilys. Rhowch gynnig arall arni."
+  "twoFactorCode-invalid": "Cod dilysu annilys. Rhowch gynnig arall arni.",
+  "twoFactorAuth-enabled": "Mae dilysiant dau ffactor wedi'i alluogi ar gyfer eich cyfrif."
 }

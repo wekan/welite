@@ -2103,5 +2103,6 @@
   "field-link-not-found": "ไม่พบการ์ด",
   "twoFactorAuth-manual-entry": "หรือป้อนรหัสนี้ด้วยตนเอง: ",
   "twoFactorCode-prompt": "ป้อนรหัสยืนยันตัวตน 6 หลักของคุณ",
-  "twoFactorCode-invalid": "รหัสยืนยันตัวตนไม่ถูกต้อง โปรดลองอีกครั้ง"
+  "twoFactorCode-invalid": "รหัสยืนยันตัวตนไม่ถูกต้อง โปรดลองอีกครั้ง",
+  "twoFactorAuth-enabled": "เปิดใช้งานการยืนยันตัวตนสองขั้นตอนสำหรับบัญชีของคุณแล้ว"
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kartice ni mogoče najti.",
   "twoFactorAuth-manual-entry": "Ali to kodo vnesite ročno: ",
   "twoFactorCode-prompt": "Vnesite svojo 6-mestno avtentikacijsko kodo",
-  "twoFactorCode-invalid": "Neveljavna avtentikacijska koda. Poskusite znova."
+  "twoFactorCode-invalid": "Neveljavna avtentikacijska koda. Poskusite znova.",
+  "twoFactorAuth-enabled": "Dvofaktorska avtentikacija je omogočena za vaš račun."
 }

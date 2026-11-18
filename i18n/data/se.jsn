@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Goarta ii gávdnon.",
   "twoFactorAuth-manual-entry": "Dahje čále dán koda gieđalaččat: ",
   "twoFactorCode-prompt": "Čále iežat 6-siffáraš dárkkistankoda",
-  "twoFactorCode-invalid": "Dárkkistankoda ii leat rivttes. Geahččal fas."
+  "twoFactorCode-invalid": "Dárkkistankoda ii leat rivttes. Geahččal fas.",
+  "twoFactorAuth-enabled": "Guovtti-fáktora dárkkisteapmi lea aktiivvalaš du kontos."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kad h'an meuteumee.",
   "twoFactorAuth-manual-entry": "Atawa tuléh kode nyoe ngon manual: ",
   "twoFactorCode-prompt": "Tuléh kode otentikasi 6 angka droe neuh",
-  "twoFactorCode-invalid": "Kode otentikasi hana sah. Neu-cuba lom."
+  "twoFactorCode-invalid": "Kode otentikasi hana sah. Neu-cuba lom.",
+  "twoFactorAuth-enabled": "Otentikasi dua faktor ka hudép keu akun droe neuh."
 }

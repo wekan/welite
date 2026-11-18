@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kaardiin hin argamne.",
   "twoFactorAuth-manual-entry": "Ykn kodii kana harka galchi: ",
   "twoFactorCode-prompt": "Kodii mirkaneessaa lakkoofsa 6 galchi",
-  "twoFactorCode-invalid": "Kodiin mirkaneessaa sirrii miti. Irra deebi'ii yaali."
+  "twoFactorCode-invalid": "Kodiin mirkaneessaa sirrii miti. Irra deebi'ii yaali.",
+  "twoFactorAuth-enabled": "Mirkaneessi lammataa akkaawuntii keetiif dandeessifameera."
 }

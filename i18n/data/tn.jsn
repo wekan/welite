@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Karata ga e a bonwa.",
   "twoFactorAuth-manual-entry": "Kgotsa tsenya khoutu eno ka seatla: ",
   "twoFactorCode-prompt": "Tsenya khoutu ya gago ya dipalo tse tshela ya netefatso",
-  "twoFactorCode-invalid": "Khoutu ya netefatso ga e a siama. Tswee-tswee leka gape."
+  "twoFactorCode-invalid": "Khoutu ya netefatso ga e a siama. Tswee-tswee leka gape.",
+  "twoFactorAuth-enabled": "Netefatso ya dikarolo tse pedi e diragetse mo akhaonteng ya gago."
 }

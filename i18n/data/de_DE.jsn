@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Karte nicht gefunden.",
   "twoFactorAuth-manual-entry": "Oder geben Sie diesen Code manuell ein: ",
   "twoFactorCode-prompt": "Geben Sie Ihren 6-stelligen Authentifizierungscode ein",
-  "twoFactorCode-invalid": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut."
+  "twoFactorCode-invalid": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut.",
+  "twoFactorAuth-enabled": "Die Zwei-Faktor-Authentifizierung ist für Ihr Konto aktiviert."
 }

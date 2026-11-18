@@ -2102,5 +2102,6 @@
   "field-link-not-found": "រកមិនឃើញកាត។",
   "twoFactorAuth-manual-entry": "ឬបញ្ចូលកូដនេះដោយដៃ៖ ",
   "twoFactorCode-prompt": "បញ្ចូលកូដផ្ទៀងផ្ទាត់៦ខ្ទង់របស់អ្នក",
-  "twoFactorCode-invalid": "កូដផ្ទៀងផ្ទាត់មិនត្រឹមត្រូវ។ សូមព្យាយាមម្តងទៀត។"
+  "twoFactorCode-invalid": "កូដផ្ទៀងផ្ទាត់មិនត្រឹមត្រូវ។ សូមព្យាយាមម្តងទៀត។",
+  "twoFactorAuth-enabled": "ការផ្ទៀងផ្ទាត់ពីរជំហានត្រូវបានបើកសម្រាប់គណនីរបស់អ្នក។"
 }

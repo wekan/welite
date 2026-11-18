@@ -2103,5 +2103,6 @@
   "field-link-not-found": "找不到卡片。",
   "twoFactorAuth-manual-entry": "或手動輸入此代碼：",
   "twoFactorCode-prompt": "請輸入您的 6 位數驗證碼",
-  "twoFactorCode-invalid": "驗證碼無效，請再試一次。"
+  "twoFactorCode-invalid": "驗證碼無效，請再試一次。",
+  "twoFactorAuth-enabled": "您的帳號已啟用兩階段驗證。"
 }

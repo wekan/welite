@@ -2103,5 +2103,6 @@
   "field-link-not-found": "No s'ha trobau a tarcheta.",
   "twoFactorAuth-manual-entry": "U introduzca iste codigo manualment: ",
   "twoFactorCode-prompt": "Introduzca lo suyo codigo d'autenticación de 6 digitos",
-  "twoFactorCode-invalid": "Codigo d'autenticación invalido. Per favor torne a intentar-lo."
+  "twoFactorCode-invalid": "Codigo d'autenticación invalido. Per favor torne a intentar-lo.",
+  "twoFactorAuth-enabled": "L'autenticación de dos factors ye activada ta la suya cuenta."
 }

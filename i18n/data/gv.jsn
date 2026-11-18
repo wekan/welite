@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Cha row y kaart feddynit.",
   "twoFactorAuth-manual-entry": "Ny cur stiagh y code shoh lesh laue: ",
   "twoFactorCode-prompt": "Cur stiagh dty chode firrinee shey-earroo",
-  "twoFactorCode-invalid": "Code firrinee neuchiart. Prow reesht my sailt."
+  "twoFactorCode-invalid": "Code firrinee neuchiart. Prow reesht my sailt.",
+  "twoFactorAuth-enabled": "Ta'n firrinaghey daa-ymmyd bio er dty coontys."
 }

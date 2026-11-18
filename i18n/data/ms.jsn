@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kad tidak ditemukan.",
   "twoFactorAuth-manual-entry": "Atau masukkan kod ini secara manual: ",
   "twoFactorCode-prompt": "Masukkan kod pengesahan 6 digit anda",
-  "twoFactorCode-invalid": "Kod pengesahan tidak sah. Sila cuba lagi."
+  "twoFactorCode-invalid": "Kod pengesahan tidak sah. Sila cuba lagi.",
+  "twoFactorAuth-enabled": "Pengesahan dua faktor diaktifkan untuk akaun anda."
 }

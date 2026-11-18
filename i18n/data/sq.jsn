@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Karta nuk u gjet.",
   "twoFactorAuth-manual-entry": "Ose vendosni këtë kod manualisht: ",
   "twoFactorCode-prompt": "Vendosni kodin tuaj 6-shifror të vërtetimit",
-  "twoFactorCode-invalid": "Kod vërtetimi i pavlefshëm. Provoni përsëri."
+  "twoFactorCode-invalid": "Kod vërtetimi i pavlefshëm. Provoni përsëri.",
+  "twoFactorAuth-enabled": "Vërtetimi me dy faktorë është aktivizuar për llogarinë tuaj."
 }

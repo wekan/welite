@@ -2103,5 +2103,6 @@
   "field-link-not-found": "ወረቀት ካርድ ኣይተረኽበትን።",
   "twoFactorAuth-manual-entry": "ወይ እዚ ኮድ ብኢድ ኣእቱ: ",
   "twoFactorCode-prompt": "ናትካ ናይ 6-ቁጽሪ ናይ ምርግጋጽ ኮድ ኣእቱ",
-  "twoFactorCode-invalid": "ኮድ መረጋገጺ ቀለጥ ሀለ። ዐይብከ፡ ካልእ ዶል ፈትን።"
+  "twoFactorCode-invalid": "ኮድ መረጋገጺ ቀለጥ ሀለ። ዐይብከ፡ ካልእ ዶል ፈትን።",
+  "twoFactorAuth-enabled": "ን ሕሳብካ ክልተ-ረቛሒ ምርግጋጽ ተኸፊቱ ኣሎ።"
 }

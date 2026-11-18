@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Tarjetax janiw jikxataskiti.",
   "twoFactorAuth-manual-entry": "Jan ukax aka código amparampi qillqam: ",
   "twoFactorCode-prompt": "Jumana 6 jakhu chiqapachäwi código qillqam",
-  "twoFactorCode-invalid": "Chiqapachäwi código janiw walikïti. Wasitat yant'am."
+  "twoFactorCode-invalid": "Chiqapachäwi código janiw walikïti. Wasitat yant'am.",
+  "twoFactorAuth-enabled": "Pä kunayman chaqañ chiqapachäwix jumanakan kuentanakaru apnaqäski."
 }

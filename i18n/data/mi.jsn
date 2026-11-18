@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kāore i kitea te kāri.",
   "twoFactorAuth-manual-entry": "Tāurutia rānei tēnei waehere ā-ringa: ",
   "twoFactorCode-prompt": "Tāurutia tō waehere whakamotuhēhē 6-mati",
-  "twoFactorCode-invalid": "Waehere whakamotuhēhē muhu. Tēnā whakamātauria anō."
+  "twoFactorCode-invalid": "Waehere whakamotuhēhē muhu. Tēnā whakamātauria anō.",
+  "twoFactorAuth-enabled": "Kua whakahohea te whakamotuhēhēnga e rua ngā take mō tō pūkete."
 }

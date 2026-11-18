@@ -310,7 +310,7 @@ begin
   finally Words.Free;end;
 end;
 procedure EnrollmentConfirmEndpoint(Request:TRequest;Response:TResponse);
-var T:TWLTenant;Token,Binding,Username:string;Rows:TWLRows;At:Int64;Words:TWLTranslator;
+var T:TWLTenant;Token,Binding,Username,Title:string;Rows:TWLRows;At:Int64;Words:TWLTranslator;
 begin
   EnrollmentHeaders(Response);
   if not RequireTenant(Request,Response,T) then Exit;
@@ -328,7 +328,12 @@ begin
   Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage));
   try
   if ConfirmOTPEnrollment(T.Db,Token,Binding,Request.ContentFields.Values['code']) then
-    SendHtml(Response,AuthPage(Request,Response,'One-time codes enabled','<h1>One-time codes enabled</h1><p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','sign in'))+'</a>. The confirmation code has been used.</p>'))
+  begin
+    Title:=Words.Text('twoFactorAuth-enabled','Two-factor authentication is enabled for your account.');
+    SendHtml(Response,AuthPage(Request,Response,Title,'<h1>'+HtmlEncode(Title)+'</h1>'+
+      '<p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+
+      '">'+HtmlEncode(Words.Text('log-in','sign in'))+'</a>. The confirmation code has been used.</p>'));
+  end
   else
   begin
     if Length(Token)<>64 then Token:='';

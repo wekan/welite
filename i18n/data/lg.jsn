@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kaadi tezuuliddwa.",
   "twoFactorAuth-manual-entry": "Oba yingiza akabonero kano n'emikono: ",
   "twoFactorCode-prompt": "Yingiza akabonero k'okukakasa ak'emiwendo mukaaga",
-  "twoFactorCode-invalid": "Akabonero k'okukakasa si ka mazima. Ddamu ogezeeko."
+  "twoFactorCode-invalid": "Akabonero k'okukakasa si ka mazima. Ddamu ogezeeko.",
+  "twoFactorAuth-enabled": "Okukakasa mu ngeri bbiri kukoledde ku akawunti yo."
 }

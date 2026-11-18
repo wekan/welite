@@ -37,7 +37,7 @@ def check_auth_language(request,database,otp):
     import time
     counter=int(time.time())//30
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code=otp(secret,counter)))
-    assert status==200 and b'One-time codes enabled' in body and b'href="/sign-in?lang=ar"' in body
+    assert status==200 and translated('twoFactorAuth-enabled') in body and b'href="/sign-in?lang=ar"' in body
     assert headers['Cache-Control']=='no-store' and headers['Referrer-Policy']=='no-referrer'
     status,headers,body=request('POST','/sign-in?lang='+language,dict(username=user,password=password,code=otp(secret,counter+1)))
     assert status==302

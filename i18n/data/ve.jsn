@@ -2102,5 +2102,6 @@
   "field-link-not-found": "Khadi a yo ngo wanala.",
   "twoFactorAuth-manual-entry": "Kana ni ḓivhadze khodo heyi nga tshanḓa: ",
   "twoFactorCode-prompt": "Ḓivhadzani khodo yaṋu ya tshinomboni tsha rathi",
-  "twoFactorCode-invalid": "Khodo ya u khwaṱhisedza a yo teisi. Ni ṱoḓea u lingedza hafhu."
+  "twoFactorCode-invalid": "Khodo ya u khwaṱhisedza a yo teisi. Ni ṱoḓea u lingedza hafhu.",
+  "twoFactorAuth-enabled": "U ṱhogomela nga zwibveledzwa zwivhili zwo vulwa kha akhaunthi yaṋu."
 }

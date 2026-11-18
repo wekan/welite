@@ -81,10 +81,10 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 with sqlite3.connect(db) as con:assert con.execute('SELECT count(*) FROM login_tokens').fetchone()==(0,)
                 assert request('GET','/api/user?token='+token)[0]==401
                 center=int(time.time())//30
-                assert b'One-time codes enabled' not in confirm(token,otp(secret,center),agent='different-browser')[2]
+                assert b'Two-factor authentication is enabled' not in confirm(token,otp(secret,center),agent='different-browser')[2]
                 assert services('required')==before
                 assert b'Invalid authentication code' in confirm(token,'bad')[2]
-                assert b'One-time codes enabled' in confirm(token,otp(secret,center))[2]
+                assert b'Two-factor authentication is enabled' in confirm(token,otp(secret,center))[2]
                 assert services('required')['twoFactorAuthentication']==dict(type='otp',secret=secret)
                 assert request('POST','/users/login',dict(username='required',password='test-password',code=otp(secret,center+1)))[0]==429,'Enrollment did not share login account limits'
                 expire()
@@ -93,7 +93,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 assert logged[0]==200,logged
                 api=json.loads(logged[2])['token'];assert request('GET','/api/user?token='+api)[0]==200
                 assert setup('required') is None,'Password alone replaced an active factor'
-                assert b'One-time codes enabled' not in confirm(token,otp(secret,center+2))[2]
+                assert b'Two-factor authentication is enabled' not in confirm(token,otp(secret,center+2))[2]
                 # A private storage failure retains the frame without disclosing setup secrets.
                 register('frame-fail');expire();failure_before=services('frame-fail')
                 with sqlite3.connect(db) as con:
@@ -122,20 +122,20 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 assert services('limited')==limited_before
                 expire()
                 with sqlite3.connect(db) as con:con.execute("CREATE TRIGGER deny_enrol BEFORE UPDATE ON users BEGIN SELECT RAISE(ABORT,'forced'); END")
-                assert b'One-time codes enabled' not in confirm(token2,otp(secret2,int(time.time())//30))[2]
+                assert b'Two-factor authentication is enabled' not in confirm(token2,otp(secret2,int(time.time())//30))[2]
                 assert services('limited')==limited_before
                 with sqlite3.connect(db) as con:
                     assert con.execute("SELECT count(*) FROM _wl_enrol WHERE username='limited'").fetchone()==(1,)
                     con.execute('DROP TRIGGER deny_enrol')
                 stop();start()
-                assert b'One-time codes enabled' in confirm(token2,otp(secret2,int(time.time())//30))[2],'Pending setup did not survive restart'
+                assert b'Two-factor authentication is enabled' in confirm(token2,otp(secret2,int(time.time())//30))[2],'Pending setup did not survive restart'
                 # Expired setup does not activate; a fresh setup replaces its secret/token.
                 register('expired');token3,secret3=setup('expired')
                 with sqlite3.connect(db) as con:con.execute("UPDATE _wl_enrol SET created=0,expires=1 WHERE username='expired'")
-                assert b'One-time codes enabled' not in confirm(token3,otp(secret3,int(time.time())//30))[2]
+                assert b'Two-factor authentication is enabled' not in confirm(token3,otp(secret3,int(time.time())//30))[2]
                 token4,secret4=setup('expired');assert token3!=token4 and secret3!=secret4
-                assert b'One-time codes enabled' not in confirm(token3,otp(secret3,int(time.time())//30))[2]
-                assert b'One-time codes enabled' in confirm(token4,otp(secret4,int(time.time())//30))[2]
+                assert b'Two-factor authentication is enabled' not in confirm(token3,otp(secret3,int(time.time())//30))[2]
+                assert b'Two-factor authentication is enabled' in confirm(token4,otp(secret4,int(time.time())//30))[2]
                 from authlang import check_auth_language
                 check_auth_language(request,db,otp)
                 if os.environ.get('WELITE_UI')=='1':

@@ -2102,5 +2102,6 @@
   "field-link-not-found": "Non se atopou a tarxeta.",
   "twoFactorAuth-manual-entry": "Ou introduza este código manualmente: ",
   "twoFactorCode-prompt": "Introduza o seu código de autenticación de 6 díxitos",
-  "twoFactorCode-invalid": "Código de autenticación non válido. Ténteo de novo."
+  "twoFactorCode-invalid": "Código de autenticación non válido. Ténteo de novo.",
+  "twoFactorAuth-enabled": "A autenticación de dous factores está activada para a súa conta."
 }

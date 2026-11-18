@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Cjarte no cjatade.",
   "twoFactorAuth-manual-entry": "O ben scrîf chest codiç a man: ",
   "twoFactorCode-prompt": "Scrîf il to codiç di autenticazion di 6 numars",
-  "twoFactorCode-invalid": "Codiç di autenticazion no valit. Torne prove pardabon."
+  "twoFactorCode-invalid": "Codiç di autenticazion no valit. Torne prove pardabon.",
+  "twoFactorAuth-enabled": "L'autenticazion a doi fatôrs e je ativade pal to account."
 }

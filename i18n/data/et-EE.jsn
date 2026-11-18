@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kaarti ei leitud.",
   "twoFactorAuth-manual-entry": "Või sisestage see kood käsitsi: ",
   "twoFactorCode-prompt": "Sisestage oma 6-kohaline autentimiskood",
-  "twoFactorCode-invalid": "Vigane autentimiskood. Proovige uuesti."
+  "twoFactorCode-invalid": "Vigane autentimiskood. Proovige uuesti.",
+  "twoFactorAuth-enabled": "Teie konto jaoks on kaheastmeline autentimine lubatud."
 }

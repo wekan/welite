@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kartica nije pronađena.",
   "twoFactorAuth-manual-entry": "Ili ručno unesite ovaj kod: ",
   "twoFactorCode-prompt": "Unesite svoj šestocifreni kod za autentifikaciju",
-  "twoFactorCode-invalid": "Nevažeći kod za autentifikaciju. Pokušajte ponovo."
+  "twoFactorCode-invalid": "Nevažeći kod za autentifikaciju. Pokušajte ponovo.",
+  "twoFactorAuth-enabled": "Dvofaktorska autentifikacija je omogućena za vaš nalog."
 }

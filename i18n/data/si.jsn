@@ -2103,5 +2103,6 @@
   "field-link-not-found": "කාඩ්පත හමු නොවීය.",
   "twoFactorAuth-manual-entry": "නැතහොත් මෙම කේතය අතින් ඇතුළත් කරන්න: ",
   "twoFactorCode-prompt": "ඔබගේ අංක 6 සත්‍යාපන කේතය ඇතුළත් කරන්න",
-  "twoFactorCode-invalid": "වැරදි සත්‍යාපන කේතයකි. කරුණාකර නැවත උත්සාහ කරන්න."
+  "twoFactorCode-invalid": "වැරදි සත්‍යාපන කේතයකි. කරුණාකර නැවත උත්සාහ කරන්න.",
+  "twoFactorAuth-enabled": "ඔබගේ ගිණුම සඳහා ද්වි-සාධක සත්‍යාපනය සක්‍රීයයි."
 }

@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Ikhadi kalitholakalanga.",
   "twoFactorAuth-manual-entry": "Kumbe faka ikhodi le ngesandla: ",
   "twoFactorCode-prompt": "Faka ikhodi yakho yokuqinisekisa elamanani ayisithupha",
-  "twoFactorCode-invalid": "Ikhodi yokuqinisekisa kayilungiswanga. Zama futhi."
+  "twoFactorCode-invalid": "Ikhodi yokuqinisekisa kayilungiswanga. Zama futhi.",
+  "twoFactorAuth-enabled": "Ukuqinisekiswa ngendlela ezimbili kuvuliwe ku-akhawunti yakho."
 }

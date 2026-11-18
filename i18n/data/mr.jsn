@@ -2103,5 +2103,6 @@
   "field-link-not-found": "कार्ड सापडले नाही.",
   "twoFactorAuth-manual-entry": "किंवा हा कोड स्वहस्ते टाका: ",
   "twoFactorCode-prompt": "तुमचा 6-अंकी प्रमाणीकरण कोड टाका",
-  "twoFactorCode-invalid": "अवैध प्रमाणीकरण कोड. कृपया पुन्हा प्रयत्न करा."
+  "twoFactorCode-invalid": "अवैध प्रमाणीकरण कोड. कृपया पुन्हा प्रयत्न करा.",
+  "twoFactorAuth-enabled": "तुमच्या खात्यासाठी द्वि-घटक प्रमाणीकरण सक्षम केले आहे."
 }

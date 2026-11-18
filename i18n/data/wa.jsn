@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Cåte nén trovêye.",
   "twoFactorAuth-manual-entry": "Ou tapez ç' côde chal al mwin: ",
   "twoFactorCode-prompt": "Tapez vosse côde di wårantixhaedje a 6 chifes",
-  "twoFactorCode-invalid": "Côde di wårantixhaedje nén corek. Sayîz on côp co."
+  "twoFactorCode-invalid": "Côde di wårantixhaedje nén corek. Sayîz on côp co.",
+  "twoFactorAuth-enabled": "Li wårantixhaedje a deus facteurs est en alaedje po vosse conte."
 }

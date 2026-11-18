@@ -2103,5 +2103,6 @@
   "field-link-not-found": "Kartiņa nav atrasta.",
   "twoFactorAuth-manual-entry": "Vai ievadiet šo kodu manuāli: ",
   "twoFactorCode-prompt": "Ievadiet savu 6 ciparu autentifikācijas kodu",
-  "twoFactorCode-invalid": "Nederīgs autentifikācijas kods. Mēģiniet vēlreiz."
+  "twoFactorCode-invalid": "Nederīgs autentifikācijas kods. Mēģiniet vēlreiz.",
+  "twoFactorAuth-enabled": "Jūsu kontam ir iespējota divfaktoru autentifikācija."
 }
