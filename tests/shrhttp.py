@@ -251,6 +251,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 status,_,body=request('GET',rules_path+'/rule-b',token=token)
                 assert status==200 and json.loads(body)==rule
                 assert request('GET',rules_path+'/rule-other',token=token)[0]==404
+                invalid_rule=dict(title='Bad rule',trigger=dict(activityType='createCard'),action={})
+                assert request('POST',rules_path,invalid_rule,token)[0]==400
+                good_rule=dict(title='Created rule',trigger=dict(activityType='createCard',boardId='other'),
+                               action=dict(actionType='moveCardToTop'))
+                status,_,body=request('POST',rules_path,good_rule,token)
+                assert status==200,(status,body)
+                ids=json.loads(body)
+                saved,=client.find('rules',ids['_id'])
+                trigger,=client.find('triggers',ids['triggerId'])
+                action,=client.find('actions',ids['actionId'])
+                assert saved['title']=='Created rule' and saved['triggerId']==trigger['_id'] and saved['actionId']==action['_id']
+                assert trigger['boardId']=='b' and action['boardId']=='b'
+                assert trigger['listName']==trigger['userId']==trigger['swimlaneName']==trigger['cardTitle']=='*'
+                print('PASS: shared REST rule creation saves typed linked parts and defaults missing trigger fields')
                 exported_user,=exported['users']
                 assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
                 assert all(key not in exported_user for key in ('services','emails','loginTokens'))

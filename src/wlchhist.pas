@@ -43,7 +43,7 @@ begin
   BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';Coordinated:=False;
   if Shared then
   begin
-    if not EnsureHistoryCollection(Db,'changeHistory') then Exit;
+    if not EnsureSharedCollection(Db,'changeHistory') then Exit;
     Rows:=CollectionTable('changeHistory');if Length(Rows)<>1 then Exit;
     TableName:=Rows[0][0];TableSql:=Ident(TableName);
     Guard:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''changeHistory'' AND table_name='+

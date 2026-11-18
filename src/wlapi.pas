@@ -51,6 +51,7 @@ procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
+procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
@@ -101,7 +102,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -832,6 +833,110 @@ begin
     else if (Result <> '') and (Result[Length(Result)] <> '-') then Result := Result + '-';
   end;
   if Result = '' then Result := 'board';
+end;
+
+procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
+const
+  TriggerFields=
+    '"createCard":["boardId","listName","userId","swimlaneName","cardTitle"],'+
+    '"moveCard":["boardId","listName","oldListName","userId","swimlaneName","cardTitle"],'+
+    '"archivedCard":["boardId","userId","cardTitle"],'+
+    '"addComment":["boardId","userId","cardTitle"],'+
+    '"restoredCard":["boardId","userId","cardTitle"],'+
+    '"joinMember":["boardId","username","userId"],'+
+    '"unjoinMember":["boardId","username","userId"],'+
+    '"joinAssignee":["boardId","username","userId"],'+
+    '"unjoinAssignee":["boardId","username","userId"],'+
+    '"addChecklist":["boardId","checklistName","userId"],'+
+    '"removeChecklist":["boardId","checklistName","userId"],'+
+    '"completeChecklist":["boardId","checklistName","userId"],'+
+    '"uncompleteChecklist":["boardId","checklistName","userId"],'+
+    '"addedChecklistItem":["boardId","checklistItemName","userId"],'+
+    '"removedChecklistItem":["boardId","checklistItemName","userId"],'+
+    '"checkedItem":["boardId","checklistItemName","userId"],'+
+    '"uncheckedItem":["boardId","checklistItemName","userId"],'+
+    '"addAttachment":["boardId","userId"],'+
+    '"deleteAttachment":["boardId","userId"],'+
+    '"addedLabel":["boardId","labelId","userId"],'+
+    '"removedLabel":["boardId","labelId","userId"],'+
+    '"a-receivedAt":["boardId","userId"],'+
+    '"a-startAt":["boardId","userId"],'+
+    '"a-dueAt":["boardId","userId"],'+
+    '"a-endAt":["boardId","userId"]';
+var T:TWLTenant;UserId,BoardId,Permission,RuleId,TriggerId,ActionId,Title,Sql,Guards:string;
+  Body,Rule,Trigger,Action,Fields,Reply:TJSONObject;Value,MatchFields:TJSONData;Rows:TWLRows;
+  Policy:TFieldPolicy;I:Integer;Name:string;
+  function WorkflowInsert(const Collection:string;Doc:TJSONObject):string;
+  var Found:TWLRows;TableName,QuotedTable,Payload:string;
+  begin
+    if not EnsureSharedCollection(T.Db,Collection) then raise Exception.Create('Workflow collection unavailable');
+    Found:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+';');
+    if Length(Found)<>1 then raise Exception.Create('Ambiguous workflow collection');
+    TableName:=Found[0][0];QuotedTable:='"'+StringReplace(TableName,'"','""',[rfReplaceAll])+'"';
+    Guards:=Guards+' AND (SELECT count(*) FROM _ferretdb_collections WHERE table_name='+QuotedStr(TableName)+
+      ' AND name='+QuotedStr(Collection)+')=1';
+    Payload:=QuotedStr(TypedDocument(Doc.AsJSON,'','{}'));
+    Result:='INSERT INTO '+QuotedTable+'(_ferretdb_sjson) VALUES(CASE WHEN wl_storage('+QuotedStr(TableName)+
+      ')=''blob'' THEN jsonb('+Payload+') ELSE '+Payload+' END); '+
+      'SELECT CASE WHEN (SELECT count(*) FROM '+QuotedTable+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+
+      QuotedStr(Doc.Get('_id',''))+')=1 THEN 1 ELSE json(''Workflow insert failed'') END; ';
+  end;
+  function PreparePart(const Part,Kind,Id:string):TJSONObject;
+  var Raw:TJSONData;Key:string;
+  begin
+    Raw:=Body.Find(Part);
+    if not (Raw is TJSONObject) then raise Exception.Create('Missing workflow part');
+    Raw:=TJSONObject(Raw).Find(Kind);
+    if not (Raw is TJSONString) or (Trim(Raw.AsString)='') then raise Exception.Create('Missing workflow part type');
+    Result:=TJSONObject(Body.Find(Part));
+    for Key in ['_id','boardId','createdAt','modifiedAt','updatedAt'] do Result.Delete(Key);
+    Result.Add('_id',Id);Result.Add('boardId',BoardId);
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>1 then
+  begin SendError(aResponse,501,'Rule creation requires shared workflow storage');Exit;end;
+  Body:=nil;Fields:=nil;Rule:=nil;
+  try
+    RuleId:=NewId;TriggerId:=NewId;ActionId:=NewId;
+    try
+      Body:=ExactObject(aRequest.Content);
+      Trigger:=PreparePart('trigger','activityType',TriggerId);
+      Action:=PreparePart('action','actionType',ActionId);
+      Fields:=ExactObject('{'+TriggerFields+'}');
+      MatchFields:=Fields.Find(Trigger.Get('activityType',''));
+      if MatchFields is TJSONArray then
+        for I:=0 to MatchFields.Count-1 do
+        begin
+          Name:=MatchFields.Items[I].AsString;Value:=Trigger.Find(Name);
+          if (Value=nil) or (Value.JSONType=jtNull) or ((Value is TJSONString) and (Value.AsString='')) then
+          begin Trigger.Delete(Name);Trigger.Add(Name,'*');end;
+        end;
+      Title:=Body.Get('title','');if Title='' then Title:='API rule';
+      Rule:=TJSONObject.Create(['_id',RuleId,'title',Title,'triggerId',TriggerId,
+        'actionId',ActionId,'boardId',BoardId,'enabled',True]);
+      if Trigger.Get('activityType','')='button' then
+      begin
+        Rule.Add('buttonType',Trigger.Get('buttonType','card'));
+        Rule.Add('buttonLabel',Trigger.Get('buttonLabel',Title));
+      end;
+    except SendError(aResponse,400,'Invalid workflow definition');Exit;end;
+    try
+      Guards:='';Sql:=WorkflowInsert('triggers',Trigger)+WorkflowInsert('actions',Action)+WorkflowInsert('rules',Rule);
+      if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+Guards+
+        ' THEN 1 ELSE json(''Workflow scope changed'') END; '+Sql+'COMMIT;') then
+        raise Exception.Create('Rule creation failed');
+    except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create rule');Exit;end;
+    Reply:=TJSONObject.Create(['_id',RuleId,'triggerId',TriggerId,'actionId',ActionId]);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  finally Rule.Free;Fields.Free;Body.Free;end;
 end;
 
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);

@@ -22,7 +22,7 @@ begin
   TableName:='_wl_position_history';
   if Shared then
   begin
-    if not EnsureHistoryCollection(Db,'userPositionHistory') then Exit;
+    if not EnsureSharedCollection(Db,'userPositionHistory') then Exit;
     Registry:=Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
       'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''userPositionHistory'';');
     if Length(Registry)<>1 then Exit;

@@ -658,6 +658,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId', rmGet, @ApiBoard);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export', rmGet, @ApiBoardExport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/rules', rmGet, @ApiBoardRules);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/rules', rmPost, @ApiCreateRule);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/rules/:ruleId', rmGet, @ApiBoardRules);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/cardSettings', rmGet, @ApiBoardCardSettings);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/cardSettings', rmPut, @ApiBoardCardSettings);

@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Create rules over REST in shared storage
+
+- Add board-admin rule creation with typed triggers and actions in one
+  transaction. Apply default matching fields to activity-driven triggers.
+
 ## 2026-11-18 Read board rules over REST
 
 - Add authenticated board-scoped rule collection and individual reads.
