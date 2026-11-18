@@ -658,4 +658,8 @@ dependencies installed, then run `python3 tests/shrhttp.py` with the usual share
 HTTP test environment. The runner builds WeLite, starts an isolated FerretDB
 database, and runs WeKan specs 17 and 23 unchanged against both services.
 Set `WELITE_SHARED_BACKEND=linked` to use only the linked SQLite build, or
-`WELITE_WEKAN_API_GREP` to focus a run by Playwright title pattern.
+`WELITE_WEKAN_API_GREP` to focus a run by Playwright title pattern. Set
+`WELITE_WEKAN_API_SPECS` to a space-separated list of filenames from WeKan's
+Playwright `specs` directory to run additional upstream compatibility cases.
+For example, `WELITE_WEKAN_API_SPECS='rest-list-archive.e2e.js rest-card-sort.e2e.js'`
+selects the list archive and card sort regressions.

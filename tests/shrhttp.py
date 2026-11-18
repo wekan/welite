@@ -24,11 +24,17 @@ root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
 backends = {'linked': [], 'cli': ['-dWLDB_CLI']}
 upstream = os.environ.get('WELITE_WEKAN_PLAYWRIGHT')
+upstream_specs = os.environ.get('WELITE_WEKAN_API_SPECS','17-rest-api.e2e.js 23-rest-api-more.e2e.js').split()
 if upstream:
     upstream = Path(upstream).resolve()
     playwright = upstream / 'node_modules/playwright/cli.js'
     if not playwright.is_file():
         raise SystemExit('WELITE_WEKAN_PLAYWRIGHT must point to WeKan tests/playwright with dependencies installed')
+    if not upstream_specs or any(
+        Path(name).name != name or name.startswith('-') or not name.endswith('.e2e.js')
+        or not (upstream / 'specs' / name).is_file() for name in upstream_specs
+    ):
+        raise SystemExit('WELITE_WEKAN_API_SPECS must name existing spec files in WeKan tests/playwright/specs')
 upstream_filter = os.environ.get('WELITE_WEKAN_API_GREP')
 selected_backend = os.environ.get('WELITE_SHARED_BACKEND')
 if selected_backend is not None:
@@ -112,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     app=start('1')
                     subprocess.run([
                         os.environ.get('NODE','node'),str(playwright),'test',
-                        '17-rest-api.e2e.js','23-rest-api-more.e2e.js',
+                        *upstream_specs,
                         '--reporter=list','--output',str(out/'playwright-results'),
                         *(['--grep', upstream_filter] if upstream_filter else []),
                     ],cwd=upstream,env=dict(env,
