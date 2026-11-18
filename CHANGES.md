@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify the current embedded build on emulated Linux amd64
+
+- At `427177f`, the embedded HTTP suite passes in QEMU on both SQLite
+  backends, including the expanded locale catalog, translated errors and
+  directory-free initialization. The CLI run uses the host SQLite executable.
+
 ## 2026-11-18 Verify bulk card attachment cleanup in Chromium
 
 - After a bulk REST delete, both cards disappear on reload and their files
