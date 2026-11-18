@@ -48,7 +48,7 @@ begin
     Result:=Result+'</ul>';
   finally Words.Free;end;
 end;
-function MiniCardFieldValue(Definition:TJSONObject;Value:TJSONData):string;
+function MiniCardFieldValue(Definition:TJSONObject;Value:TJSONData;Words:TWLTranslator):string;
 var Options,Selection,Parsed,Item:TJSONData;Kind,Display:string;I:Integer;
   function OptionName(const Id:string):string;
   var J:Integer;Option:TJSONData;
@@ -91,10 +91,16 @@ begin
   begin
     Result:=Value.AsString;
     if (Kind='dropdown') and (Value.JSONType=jtString) then Result:=OptionName(Result);
+    if Kind='checkbox' then
+    begin
+      if (Result='true') or (Result='1') then Result:=Words.Text('yes','Yes')
+      else if (Result='false') or (Result='0') then Result:=Words.Text('no','No')
+      else Result:='';
+    end;
   end;
 end;
 
-function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string):string;
+function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string;Words:TWLTranslator):string;
 var Values:TJSONArray;Field,Definition:TJSONObject;Value,ShowLabel:TJSONData;
   Policy:TFieldPolicy;Id,Caption,Display:string;I:Integer;Snapshot:Boolean;
 begin
@@ -113,7 +119,7 @@ begin
         Definition:=ReadDefinition(Db,Id);
         if Definition=nil then Continue;
         try
-          Display:=MiniCardFieldValue(Definition,Value);
+          Display:=MiniCardFieldValue(Definition,Value,Words);
           if Trim(Display)='' then Continue;
           Caption:='';
           ShowLabel:=Definition.Find('showLabelOnMiniCard');
@@ -302,7 +308,7 @@ begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
           '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
-        if ShowCustomFields then Result:=Result+MiniCardFields(Db,S.UserId,BoardId,Cards[k][0]);
+        if ShowCustomFields then Result:=Result+MiniCardFields(Db,S.UserId,BoardId,Cards[k][0],Words);
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
           if Cards[k][5]='1' then CellText:=Words.Text('overtime-hours','Overtime (hours)')

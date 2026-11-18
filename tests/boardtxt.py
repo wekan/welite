@@ -108,7 +108,13 @@ def run(request,database,administrator,member,base):
             ('native-mini-multi','one','First option'),('native-mini-multi','two','Second option')])
         con.executemany("INSERT INTO card_custom_field_values(cardId,customFieldId,value) VALUES('txtcard',?,?)",[
             ('native-mini-dropdown','option-key'),('native-mini-multi',json.dumps(['two','one']))])
+        con.execute("INSERT INTO custom_fields(id,name,type,showLabelOnMiniCard,modifiedAt) "
+                    "VALUES('native-mini-check','Confirmed','checkbox',1,'now')")
+        con.execute("INSERT INTO custom_field_boards VALUES('native-mini-check','boardtxt')")
+        con.execute("INSERT INTO card_custom_field_values VALUES('txtcard','native-mini-check','false')")
         con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES('boardtxt',?,1)",(author,))
+    status,_,french=request('GET',minicard+'&lang=fr&sessionId='+member)
+    assert status==200 and b'Confirmed: Non' in french
     visible=card_page(member)
     assert b'Original field: Visible &lt;value&gt;' in visible and b'Private field' not in visible and b'Hidden value' not in visible
     assert b'Private field: Hidden value' in card_page(administrator)
@@ -126,7 +132,7 @@ def run(request,database,administrator,member,base):
         con.execute("DELETE FROM card_custom_field_values WHERE cardId='txtcard'")
         con.execute("DELETE FROM custom_field_boards WHERE boardId='boardtxt'")
         con.execute("DELETE FROM custom_field_dropdown_items WHERE customFieldId IN ('native-mini-dropdown','native-mini-multi')")
-        con.execute("DELETE FROM custom_fields WHERE id IN ('native-mini-field','native-mini-private','native-mini-dropdown','native-mini-multi')")
+        con.execute("DELETE FROM custom_fields WHERE id IN ('native-mini-field','native-mini-private','native-mini-dropdown','native-mini-multi','native-mini-check')")
         con.execute("DELETE FROM board_members WHERE boardId='boardtxt' AND userId=?",(reader,))
         con.execute("DELETE FROM board_members WHERE boardId='boardtxt' AND userId=?",(author,))
         con.execute("UPDATE boards SET settings_json='{}' WHERE id='boardtxt'")
