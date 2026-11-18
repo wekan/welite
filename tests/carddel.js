@@ -237,6 +237,10 @@ const { readFileSync } = require('node:fs');
     assert.equal(await card.count(), 0);
     assert.equal((await context.request.delete(endpoint('l'), { headers })).status(), 404);
     console.log('PASS: Chromium wrong-list REST deletion preserves the card and checklist with JavaScript and cookies disabled');
+    const afterSingle = await context.request.get(boardUrl.origin + '/api/attachment/list/b', { headers });
+    assert.equal(afterSingle.status(), 200);
+    assert.ok(!(await afterSingle.json()).attachments.some(entry => entry.attachmentId === siblingFile.file));
+    console.log('PASS: Chromium single REST deletion hides the card attachment after preserving it during bulk deletion');
     metadata.set('cardId', 'brow-sort');
     metadata.set('fileName', 'selection-attachment.bin');
     const selectionUpload = await context.request.post(boardUrl.origin + '/api/attachment/upload?' + metadata, {
