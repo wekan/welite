@@ -650,6 +650,7 @@ begin
   HTTPRouter.RegisterRoute('/api/user', rmGet, @ApiUser);
   HTTPRouter.RegisterRoute('/api/user/cards', rmGet, @ApiMyCards);
   HTTPRouter.RegisterRoute('/api/users', rmGet, @ApiUsers);
+  HTTPRouter.RegisterRoute('/api/users/:userId', rmDelete, @ApiDeleteUser);
   HTTPRouter.RegisterRoute('/api/boards', rmGet, @ApiPublicBoards);
   HTTPRouter.RegisterRoute('/api/users/:userId/boards', rmGet, @ApiUserBoards);
   HTTPRouter.RegisterRoute('/api/boards/:boardId', rmGet, @ApiBoard);

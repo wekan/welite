@@ -320,6 +320,24 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('GET','/api/user',token=restart_token)[0]==200,'API token did not survive adapter restart'
                 client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'services.resume.loginTokens':[]}})]})
                 assert request('GET','/api/user',token=restart_token)[0]==401
+                target_token='fixture-delete-target-token'
+                target_hash=base64.b64encode(hashlib.sha256(target_token.encode()).digest()).decode()
+                client.command({'update':'users','updates':[dict(q=dict(_id='u'),
+                    u={'$set':{'services.resume.loginTokens':[dict(hashedToken=target_hash,when=now)]}})]})
+                assert request('GET','/api/user',token=target_token)[0]==200
+                admin_token='fixture-site-admin-token'
+                admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
+                client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
+                    services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                response=request('DELETE','/api/users/u',token=target_token)
+                assert response[0]==403 and client.find('users','u')
+                response=request('DELETE','/api/users/u',token=admin_token)
+                assert response[0]==200 and json.loads(response[2])=={'_id':'u'},response
+                assert not client.find('users','u')
+                assert request('GET','/api/user',token=target_token)[0]==401
+                response=request('DELETE','/api/users/u',token=admin_token)
+                assert response[0]==404 and json.loads(response[2])=={'error':'User not found'},response
+                print('PASS: REST user deletion requires site administration and invalidates the deleted account bearer')
                 assert not shadow.exists(),'A normalized public database shadowed the shared file'
                 with sqlite3.connect(database) as con:assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
                 stop()

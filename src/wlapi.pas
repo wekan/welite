@@ -42,6 +42,7 @@ procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
+procedure ApiDeleteUser(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
 procedure ApiPublicBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUserBoards(aRequest: TRequest; aResponse: TResponse);
@@ -94,7 +95,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -493,6 +494,36 @@ begin
     O.Add('_id', R[0][0]); O.Add('username', R[0][1]);
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
+end;
+
+procedure ApiDeleteUser(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"User not found"}';
+var T:TWLTenant;Actor,Target,Scope,Admin,Bindings,Sql:string;Source:TSelectionScope;I:Integer;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  if not IsSiteAdmin(T.Db,Actor) then
+  begin SendError(aResponse,403,'Site administration required');Exit;end;
+  Target:=aRequest.RouteParams['userId'];
+  try
+    Source:=TSelectionScope.Create(T.Db);
+    try
+      Scope:='id='+QuotedStr(Target)+' AND '+Source.StringField('users','id');
+      Admin:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
+        ' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0 AND '+Source.StringField('users','id')+')';
+      Bindings:='';
+      for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
+    finally Source.Free;end;
+    if Length(T.Db.Query('SELECT id FROM users WHERE '+Scope+';'))<>1 then
+    begin SendJson(aResponse,NotFound,404);Exit;end;
+    Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+Admin+
+      ' AND (SELECT count(*) FROM users WHERE '+Scope+')=1 THEN 1 ELSE json(''User deletion scope changed'') END; '+
+      RevokeUserTokensSQL(T.Db,Target)+'DELETE FROM users WHERE '+Scope+'; '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Target)+
+      ') THEN 1 ELSE json(''User deletion failed'') END; COMMIT;';
+    if not T.Db.Exec(Sql) then raise Exception.Create('User deletion failed');
+  except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete user');Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(Target)+'"}');
 end;
 
 procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
