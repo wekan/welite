@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Build an Amiga SQLite 3.53.4 shell
+
+- Run the Amiga C cross-compiler through QEMU on ARM64 Linux. Link the
+  upstream shell with the Amiga SQLite library and verify the version
+  under vamos. SQL execution still hits an emulator memory error.
+
 ## 2026-11-18 Probe the Amiga SQLite command-line port
 
 - Execute the m68k SQLite 3.34 shell under vamos and verify an on-disk

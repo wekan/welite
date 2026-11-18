@@ -157,6 +157,16 @@ This build lacks `json()`, which WeLite uses, and its `-init` script test
 stopped in the emulator's DOS file-handle implementation. Full server
 startup, networking and a compatible SQLite CLI remain open.
 
+A newer shell experiment links SQLite 3.53.4's `shell.c` against the
+GFOpenSQLite hard-float library. The
+[Amiga GCC release](https://github.com/AmigaPorts/m68k-amigaos-gcc/releases/tag/v16.2-rc25)
+runs via x86-64 QEMU on the ARM64 build host. The shell uses libnix and
+libpthread. Its home-directory lookup skips `getpwuid()`, which libnix
+does not export. The resulting executable reports SQLite 3.53.4 under
+vamos with an emulated 68040. Running the first SQL statement reaches an
+invalid memory access in the emulator. The shell has not passed database
+execution or been tested on AmigaOS.
+
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
 The same pinned FPC source builds a separate Windows compiler/unit prefix with
