@@ -165,7 +165,7 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
         PendingId:=Pending.Get('_id','');RowHash:=Pending.Get('integrityHash','');
         if (PendingId='') or (Pos(#0,PendingId)>0) or (Pending.Get('boardId','')<>BoardId) or
           not ValidHash(RowHash) or (Pending.Get('previousHash','')<>OldHash) then Exit;
-        ReservationHashes(PendingDoc,ExpectedRowHash,ExpectedPendingHash);
+        ReservationHashes(PendingDoc,ExpectedRowHash,ExpectedPendingHash,RowHash,PendingHash);
         if (ExpectedRowHash<>RowHash) or (ExpectedPendingHash<>PendingHash) then Exit;
       except Exit;end;
     finally Pending.Free;end;

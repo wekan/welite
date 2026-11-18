@@ -7,7 +7,8 @@ uses fpjson;
 function ListLifecycleHash(Row:TJSONObject):string;
 function HistoryBoardKey(const Prefix,BoardId:string):string;
 function ListReservationHash(Row:TJSONObject):string;
-procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string);
+procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string;
+  const LegacyHash:string='';const ExpectedPendingHash:string='');
 
 implementation
 uses SysUtils,Classes,Math,StrUtils,wlcrypt,wlcfjson,wlsjson;
@@ -286,25 +287,32 @@ end;
 
 function ReservationValue(Value,Schema:TJSONData):string;forward;
 
-function ReservationObject(Obj,Props:TJSONObject;ProtectedOnly:Boolean):string;
+function ReservationObject(Obj,Props:TJSONObject;Other:TJSONObject=nil):string;
 var Keys:TStringList;I:Integer;Key:string;
 begin
   Keys:=TStringList.Create;
   try
-    if ProtectedOnly then
-      for Key in ProtectedKeys do Keys.Add(Key)
-    else
-    begin
-      if Props<>nil then
-        for I:=0 to Props.Count-1 do Keys.Add(Props.Names[I]);
-      Keys.CustomSort(@CompareJsonKeys);
-    end;
+    if Props<>nil then
+      for I:=0 to Props.Count-1 do Keys.Add(Props.Names[I]);
+    if Other<>nil then
+      for I:=0 to Other.Count-1 do
+      begin
+        Key:=Other.Names[I];
+        // WeKan uses JavaScript's in operator against a normal object.
+        if (Obj.Find(Key)=nil) and not MatchStr(Key,[
+          '__proto__','constructor','hasOwnProperty','isPrototypeOf','propertyIsEnumerable',
+          'toLocaleString','toString','valueOf','__defineGetter__','__defineSetter__',
+          '__lookupGetter__','__lookupSetter__']) then Keys.Add(Key);
+      end;
+    Keys.CustomSort(@CompareJsonKeys);
     Result:='{';
     for I:=0 to Keys.Count-1 do
     begin
       if I<>0 then Result:=Result+',';
       Key:=Keys[I];
-      Result:=Result+JsonString(Key)+':'+ReservationValue(Obj.Find(Key),Props.Find(Key));
+      Result:=Result+JsonString(Key)+':';
+      if Obj.Find(Key)=nil then Result:=Result+'{"$undefined":true}'
+      else Result:=Result+ReservationValue(Obj.Find(Key),Props.Find(Key));
     end;
     Result:=Result+'}';
   finally Keys.Free;end;
@@ -341,7 +349,7 @@ begin
         Result:=IntToStr(Trunc(Number));
       end;
     'object':
-      Result:=ReservationObject(TJSONObject(Value),TJSONObject(TJSONObject(Schema).Objects['$s'].Find('p')),False);
+      Result:=ReservationObject(TJSONObject(Value),TJSONObject(TJSONObject(Schema).Objects['$s'].Find('p')));
     'array':
       begin
         Items:=TJSONObject(Schema).Arrays['i'];
@@ -357,16 +365,82 @@ begin
   end;
 end;
 
-procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string);
-var Row,Props:TJSONObject;
+procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string;
+  const LegacyHash,ExpectedPendingHash:string);
+const CleanedFields:array[0..7] of string=('boardId','swimlaneId','listId','cardId',
+  'group','batchId','restoredFromId','restoredByUserId');
+var Row,Props:TJSONObject;Value,BeforeValue,AfterValue:TJSONData;
+  Parts,LegacyParts:array[Low(ProtectedKeys)..High(ProtectedKeys)] of string;
+  CleanedBits:array[Low(ProtectedKeys)..High(ProtectedKeys)] of Integer;
+  I,Count,Mask:Integer;Key:string;HasLegacyContent:Boolean;
+
+  function Hash(Mask:Integer;LegacyContent:Boolean):string;
+  var J:Integer;Body:string;
+  begin
+    Body:='{';
+    for J:=Low(ProtectedKeys) to High(ProtectedKeys) do
+    begin
+      if J<>Low(ProtectedKeys) then Body:=Body+',';
+      Body:=Body+JsonString(ProtectedKeys[J])+':';
+      if (Mask and CleanedBits[J])<>0 then Body:=Body+'""'
+      else if LegacyContent then Body:=Body+LegacyParts[J]
+      else Body:=Body+Parts[J];
+    end;
+    Result:=Sha256Hex(Body+'}');
+  end;
+
+  function PropertySchema(const Name:string):TJSONObject;
+  begin
+    Result:=TJSONObject(TJSONObject(Props.Find(Name)).Objects['$s'].Find('p'));
+  end;
+
 begin
   // Validate the complete FerretDB value and its corresponding BSON metadata.
   PlainDocument(Document);
   Row:=ExactObject(Document);
   try
     Props:=Row.Objects['$s'].Objects['p'];
-    RowHash:=Sha256Hex(ReservationObject(Row,Props,True));
-    PendingHash:=Sha256Hex(ReservationObject(Row,Props,False));
+    PendingHash:=Sha256Hex(ReservationObject(Row,Props));
+    RowHash:='';
+    if (ExpectedPendingHash<>'') and (PendingHash<>ExpectedPendingHash) then Exit;
+    Count:=0;
+    for I:=Low(ProtectedKeys) to High(ProtectedKeys) do
+    begin
+      Key:=ProtectedKeys[I];
+      Value:=Row.Find(Key);
+      Parts[I]:=ReservationValue(Value,Props.Find(Key));
+      CleanedBits[I]:=0;
+      if ((Value=nil) or (Value.JSONType=jtNull)) and MatchStr(Key,CleanedFields) then
+      begin
+        CleanedBits[I]:=1 shl Count;
+        Inc(Count);
+      end;
+    end;
+    RowHash:=Hash(0,False);
+    if (LegacyHash='') or (RowHash=LegacyHash) then Exit;
+    BeforeValue:=Row.Find('previousContent');
+    AfterValue:=Row.Find('newContent');
+    HasLegacyContent:=False;
+    if (BeforeValue is TJSONObject) and (AfterValue is TJSONObject) then
+    begin
+      LegacyParts:=Parts;
+      for I:=Low(ProtectedKeys) to High(ProtectedKeys) do
+      begin
+        Key:=ProtectedKeys[I];
+        if Key='previousContent' then
+          LegacyParts[I]:=ReservationObject(TJSONObject(BeforeValue),PropertySchema(Key),TJSONObject(AfterValue))
+        else if Key='newContent' then
+          LegacyParts[I]:=ReservationObject(TJSONObject(AfterValue),PropertySchema(Key),TJSONObject(BeforeValue));
+        if Parts[I]<>LegacyParts[I] then HasLegacyContent:=True;
+      end;
+    end;
+    for Mask:=0 to (1 shl Count)-1 do
+      if ((Mask<>0) and (Hash(Mask,False)=LegacyHash)) or
+        (HasLegacyContent and (Hash(Mask,True)=LegacyHash)) then
+      begin
+        RowHash:=LegacyHash;
+        Exit;
+      end;
   finally Row.Free;end;
 end;
 

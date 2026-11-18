@@ -11,7 +11,7 @@ begin
     try
       if Row.Find('$s')<>nil then
       begin
-        ReservationHashes(Line,RowHash,PendingHash);
+        ReservationHashes(Line,RowHash,PendingHash,Row.Get('integrityHash',''));
         WriteLn(RowHash,' ',PendingHash);
       end
       else WriteLn(ListLifecycleHash(Row),' ',ListReservationHash(Row));

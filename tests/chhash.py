@@ -1,5 +1,6 @@
 """Compare the Pascal list lifecycle digest with the actual WeKan hash."""
 import json
+import hashlib
 import os
 import random
 import struct
@@ -59,9 +60,26 @@ for number in numbers:
     schema['p']['createdAt']['t'] = 'date'
     rows.append(dict(row, **{'$s': schema}))
 
+protected = ('batchId', 'boardId', 'cardId', 'changeType', 'createdAt', 'entityId', 'entityType',
+             'group', 'listId', 'newContent', 'previousContent', 'previousHash', 'restoredByUserId',
+             'restoredFromId', 'swimlaneId', 'userId')
+undefined = {'$undefined': True}
+for variant in ('undefined', 'cleaned', 'combined', 'tampered'):
+    row = dict(boardId='board', newContent={'added': 2}, previousContent={'removed': 1}, cardId=None)
+    original = {key: row.get(key, undefined) for key in protected}
+    if variant != 'cleaned':
+        original.update(newContent={'added': 2, 'removed': undefined},
+                        previousContent={'added': undefined, 'removed': 1})
+    if variant != 'undefined':
+        original.update(cardId='', group='')
+    row['integrityHash'] = hashlib.sha256(json.dumps(original, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+    if variant == 'tampered':
+        row['newContent']['added'] = 3
+    rows.append(dict(row, **{'$s': typed(row)['$s']}))
+
 payload = ''.join(json.dumps(row, ensure_ascii=False)+'\n' for row in rows)
 node = r"""
-const { hashHistoryRow, canonical, sha256 } = require(process.argv[1]);
+const { hashHistoryRow, rowHashIsValid, canonical, sha256 } = require(process.argv[1]);
 const fs = require('node:fs');
 for (const line of fs.readFileSync(0, 'utf8').trimEnd().split('\n')) {
   function decode(value, schema) {
@@ -77,7 +95,7 @@ for (const line of fs.readFileSync(0, 'utf8').trimEnd().split('\n')) {
   const row = input.$s ? decode(input, { t: 'object', $s: input.$s }) :
     JSON.parse(line, (key, value) =>
       (key === 'createdAt' || key === 'deletedAt') && typeof value === 'string' ? new Date(value) : value);
-  console.log(hashHistoryRow(row), sha256(canonical(row)));
+  console.log(rowHashIsValid(row) ? row.integrityHash : hashHistoryRow(row), sha256(canonical(row)));
 }
 """
 expected = subprocess.check_output([os.environ.get('NODE','node'), '-e', node, str(oracle)], input=payload, text=True)

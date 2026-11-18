@@ -237,7 +237,7 @@ def run(request, client, db, token, refresh_ferret, session):
         def digest(value):
             return hashlib.sha256(json.dumps(canonical_dates(value),sort_keys=True,
                 ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
-        for scenario in ('saved','unsaved','card'):
+        for scenario in ('saved','unsaved','card','undefined','cleaned','combined'):
             saved=dict(current,_id='wekan-'+scenario+'-reservation',entityId='other-list',listId='other-list',
                        previousHash=head['hash'])
             if scenario=='card':
@@ -247,7 +247,15 @@ def run(request, client, db, token, refresh_ferret, session):
             protected=('batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
                        'group','listId','newContent','previousContent','previousHash','restoredByUserId',
                        'restoredFromId','swimlaneId','userId')
-            saved['integrityHash']=digest({key:saved[key] for key in protected})
+            original={key:saved[key] for key in protected}
+            if scenario in ('undefined','combined'):
+                saved.update(previousContent={'before': 1}, newContent={'after': 2})
+                original.update(previousContent={'before': 1, 'after': {'$undefined': True}},
+                                newContent={'after': 2, 'before': {'$undefined': True}})
+            if scenario in ('cleaned','combined'):
+                assert saved['cardId'] is None and saved['restoredFromId'] is None
+                original.update(cardId='', restoredFromId='')
+            saved['integrityHash']=digest(original)
             if scenario=='saved':
                 assert client.command({'insert':'changeHistory','documents':[saved]})['n']==1
             assert client.command({'update':'historyChainHeads','updates':[
@@ -260,11 +268,15 @@ def run(request, client, db, token, refresh_ferret, session):
             assert client.find('changeHistory',saved['_id'])==[saved]
             assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
             head=client.find('historyChainHeads',head_id)[0]
-        print('PASS: coordinated lifecycle finalizes saved and unsaved list and card reservations before appending')
-        # A reservation owned by WeKan must survive a concurrent list mutation.
-        pending = dict(_id='wekan-pending-history', boardId='b', previousHash=head['hash'])
+        print('PASS: coordinated lifecycle finalizes saved and unsaved list, card and legacy reservations before appending')
+        # The pending digest can still match after contents were changed. Its
+        # row digest must independently verify before the chain may advance.
+        pending = dict(saved, _id='wekan-pending-history', previousHash=head['hash'])
+        original['previousHash']=head['hash']
+        pending['integrityHash']=digest(original)
+        pending['newContent']={'after': 3}
         result = client.command({'update':'historyChainHeads','updates':[
-            dict(q={'_id':head_id},u={'$set':dict(pending=pending,pendingHash='reserved')})]})
+            dict(q={'_id':head_id},u={'$set':dict(pending=pending,pendingHash=digest(pending))})]})
         assert result['n']==1, result
         reserved,=client.find('historyChainHeads',head_id)
         before=changes()
