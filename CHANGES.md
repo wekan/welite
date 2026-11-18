@@ -10,6 +10,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   file size, metadata transaction and file cleanup on failed registration.
   Chromium verifies a 262,400-byte file through upload, download and deletion.
 
+## 2026-11-18 Check the Windows resolver imports
+
+- Verify the Winsock startup, lookup, result disposal and cleanup imports
+  in all eight Windows cross-builds.
+
 ## 2026-11-18 Verify native attachment upload and deletion together
 
 - Upload a real file and delete its card via native HTML selection. Verify

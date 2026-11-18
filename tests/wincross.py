@@ -90,6 +90,6 @@ with tempfile.TemporaryDirectory(prefix='wlwincross-', dir=os.environ['TMPDIR'])
                 assert struct.unpack_from('<H', data, pe+24+68)[0] == 3
                 libraries = imports(data, pe, magic)
                 assert 'kernel32.dll' in libraries, libraries
-                assert {'getaddrinfo','freeaddrinfo'} <= libraries.get('ws2_32.dll',set()), libraries
+                assert {'wsastartup','getaddrinfo','freeaddrinfo','wsacleanup'} <= libraries.get('ws2_32.dll',set()), libraries
                 assert ('sqlite3.dll' in libraries) == (backend == 'linked'), libraries
                 print(backend + ' ' + ('embedded' if embedded else 'disk') + ': Windows ' + label + ' console verified')
