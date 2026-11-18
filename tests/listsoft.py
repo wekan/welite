@@ -108,6 +108,22 @@ def run(request, client, db, token, refresh_ferret, session):
     assert removed['previousHash'] is None and added['previousHash']==removed['integrityHash'], lifecycle
     assert removed['newContent']==added['previousContent'] and isinstance(removed['newContent']['deletedAt'],DateMs), lifecycle
     client.command({'create':'historyWriterGates'})
+    def board_key(kind):
+        return hashlib.sha256(json.dumps([kind,'b'],separators=(',',':')).encode()).hexdigest()
+    gate_id=board_key('history-writer-gate')
+    idle_gate=dict(_id=gate_id,boardId='b',version=1,mode='legacy',migrationId=None,writers=[])
+    assert client.command({'insert':'historyWriterGates','documents':[idle_gate]})['n']==1
+    try:
+        assert request('DELETE',path,token=token)[0]==200
+        assert changes()['removed']['previousHash']==added['integrityHash']
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        lifecycle=changes()
+        removed,added=lifecycle['removed'],lifecycle['added']
+        assert added['previousHash']==removed['integrityHash']
+        assert client.find('historyWriterGates',gate_id)==[idle_gate]
+    finally:
+        assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
+    print('PASS: shared lifecycle appends atomically through an idle legacy WeKan gate')
     assert client.command({'insert':'historyWriterGates','documents':[
         dict(_id='list-test-gate',boardId='b',mode='coordinated') ]})['n']==1
     try:
@@ -117,9 +133,6 @@ def run(request, client, db, token, refresh_ferret, session):
         assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':'list-test-gate'},limit=1)]})['n']==1
     print('PASS: shared legacy lifecycle chain links typed records and defers to a WeKan writer gate')
 
-    def board_key(kind):
-        return hashlib.sha256(json.dumps([kind,'b'],separators=(',',':')).encode()).hexdigest()
-    gate_id=board_key('history-writer-gate')
     head_id=board_key('history-chain')
     client.command({'create':'historyChainHeads'})
     assert client.command({'insert':'historyWriterGates','documents':[

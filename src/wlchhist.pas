@@ -91,8 +91,23 @@ begin
       begin
         GateTable:=Rows[0][0];
         Guard:=Guard+' AND EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name='+QuotedStr(Gate)+
-          ' AND table_name='+QuotedStr(GateTable)+') AND NOT EXISTS(SELECT 1 FROM '+Ident(GateTable)+
-          ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+')';
+          ' AND table_name='+QuotedStr(GateTable)+')';
+        GateScope:='json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql;
+        if Gate='historyWriterGates' then
+          // The complete append uses one SQLite writer transaction. An idle
+          // gate cannot acquire a writer or start migration inside it.
+          Guard:=Guard+' AND ((SELECT count(*) FROM '+Ident(GateTable)+' WHERE '+GateScope+')=0 OR '+
+            '((SELECT count(*) FROM '+Ident(GateTable)+' WHERE '+GateScope+')=1 AND EXISTS(SELECT 1 FROM '+
+            Ident(GateTable)+' WHERE '+GateScope+
+            ' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-writer-gate',BoardId))+
+            ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
+            ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
+            ' AND '+VersionOne+' AND json_extract(_ferretdb_sjson,''$.mode'')=''legacy'''+
+            ' AND json_extract(_ferretdb_sjson,''$.$s.p.mode.t'')=''string'''+
+            ' AND json_type(_ferretdb_sjson,''$.migrationId'')=''null'''+
+            ' AND json_type(_ferretdb_sjson,''$.writers'')=''array'' AND json_array_length(_ferretdb_sjson,''$.writers'')=0'+
+            ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7)))'
+        else Guard:=Guard+' AND NOT EXISTS(SELECT 1 FROM '+Ident(GateTable)+' WHERE '+GateScope+')';
       end else Exit;
     end;
     BoardScope:='json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+

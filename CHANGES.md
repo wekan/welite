@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Append list history through an idle legacy writer gate
+
+- Allow a list lifecycle change to extend the legacy history chain when
+  the WeKan writer gate is valid and idle throughout the SQLite transaction.
+
 ## 2026-11-18 Verify HTML4 board navigation in Linux NetSurf
 
 - Verify minimap color and viewport navigation in NetSurf 3.11 at
