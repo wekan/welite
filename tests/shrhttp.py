@@ -178,8 +178,17 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert child['parentId']==card['_id'] and child['members']==['u']
                 assert unassigned['members']==[] and unassigned['assignees']==[]
                 assert [child['cardNumber'],unassigned['cardNumber']]==[card['cardNumber']+1,card['cardNumber']+2]
-                for item in (child,unassigned):
-                    assert request('DELETE','/api/boards/b/lists/l/cards/'+item['_id'],token=token)[0]==200
+                delete_path='/api/boards/b/cards/bulk'
+                ids=[child['_id'],unassigned['_id']]
+                assert request('DELETE',delete_path,dict(cardIds=[ids[0],None]),token)[0]==400
+                assert client.find('cards',ids[0])
+                status,_,body=request('DELETE',delete_path,dict(cardIds=[ids[0],'missing',ids[1],ids[0]]),token)
+                assert (status,json.loads(body))==(200,dict(deleted=ids,notFound=['missing',ids[0]])),(status,body)
+                for card_id in ids:
+                    assert not client.find('cards',card_id)
+                    activity,=client.command({'find':'activities','filter':dict(cardId=card_id,activityType='deleteCard')})['cursor']['firstBatch']
+                    assert activity['userId']=='u' and activity['boardId']=='b'
+                print('PASS: shared REST bulk deletion reports missing entries and writes one activity per card')
                 print('PASS: shared REST bulk creation saves valid entries, assignment arrays and distinct card numbers')
 
                 check_shared_checklists(request,client,token,card)

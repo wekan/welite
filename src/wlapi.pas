@@ -83,6 +83,7 @@ procedure ApiCardAttachmentsList(aRequest: TRequest; aResponse: TResponse);// GE
 procedure ApiCardMember(aRequest: TRequest; aResponse: TResponse);     // POST/DELETE card member
 procedure ApiCardAssignee(aRequest: TRequest; aResponse: TResponse);   // POST/DELETE card assignee
 procedure ApiCardArchive(aRequest: TRequest; aResponse: TResponse);    // POST archive/unarchive
+procedure ApiBulkCardDelete(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardDelete(aRequest: TRequest; aResponse: TResponse);     // DELETE card
 procedure ApiListDelete(aRequest: TRequest; aResponse: TResponse);     // DELETE list (+ its cards)
 procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE board (cascade)
@@ -2223,15 +2224,80 @@ begin
 end;
 
 // DELETE card — children (labels/members/comments/checklists/…) cascade via FK.
-procedure ApiCardDelete(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId: string;
+// The activity records the claimed delete in the same transaction as the cascade.
+function DeleteRestCard(Db:TWLDb;const UserId,BoardId,ListId,CardId:string;out Removed:Boolean):Boolean;
+var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  CardId := aRequest.RouteParams['cardId'];
-  T.Db.Exec(Format('DELETE FROM cards WHERE id=%s;', [QuotedStr(CardId)]));
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(CardId, '"')]));
+  Result:=False;Removed:=False;Claim:=QuotedStr(NewId);Actor:=QuotedStr(UserId);Stamp:=QuotedStr(NowIso);
+  try
+    Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
+    try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+    Source:=TSelectionScope.Create(Db);
+    try
+      Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+        ' AND '+Source.StringField('cards','id')+' AND '+Source.StringField('cards','boardId');
+      Bindings:='';
+      for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
+    finally Source.Free;end;
+    if ListId<>'' then Scope:=Scope+' AND listId='+QuotedStr(ListId);
+    Sql:='BEGIN IMMEDIATE; '+Bindings+
+      'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Card deletion permission changed'') END; '+
+      'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+      'SELECT '+Claim+',''deleteCard'','+Actor+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
+      ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; '+
+      'DELETE FROM cards WHERE '+Scope+' AND EXISTS(SELECT 1 FROM activities WHERE id='+Claim+'); '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM cards WHERE '+Scope+
+      ') THEN 1 ELSE json(''Card deletion failed'') END; COMMIT;';
+    if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
+    Removed:=Length(Db.Query('SELECT id FROM activities WHERE id='+Claim+';'))=1;
+    Result:=True;
+  except Db.Exec('ROLLBACK;');end;
+end;
+
+procedure ApiCardDelete(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,CardId:string;Removed:Boolean;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];CardId:=aRequest.RouteParams['cardId'];
+  if not DeleteRestCard(T.Db,UserId,BoardId,aRequest.RouteParams['listId'],CardId,Removed) then
+  begin SendError(aResponse,500,'Could not delete card');Exit;end;
+  if not Removed then begin SendJson(aResponse,CardNotFound,404);Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}');
+end;
+
+procedure ApiBulkCardDelete(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,CardId:string;Body,Reply:TJSONObject;
+  Value:TJSONData;Cards,Deleted,NotFound:TJSONArray;Removed:Boolean;I:Integer;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];
+  if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
+  Body:=nil;Reply:=TJSONObject.Create;
+  try
+    try Body:=ExactObject(aRequest.Content);
+    except SendError(aResponse,400,'Expected a valid JSON object');Exit;end;
+    Value:=Body.Find('cardIds');
+    if not (Value is TJSONArray) or (Value.Count=0) or (Value.Count>500) then
+    begin SendError(aResponse,400,'cardIds must contain between 1 and 500 entries');Exit;end;
+    Cards:=TJSONArray(Value);
+    for I:=0 to Cards.Count-1 do
+      if (Cards.Items[I].JSONType<>jtString) or (Cards.Items[I].AsString='') or
+        (Pos(#0,Cards.Items[I].AsString)>0) then
+      begin SendError(aResponse,400,'Invalid card ID');Exit;end;
+    Deleted:=TJSONArray.Create;Reply.Add('deleted',Deleted);
+    NotFound:=TJSONArray.Create;Reply.Add('notFound',NotFound);
+    for I:=0 to Cards.Count-1 do
+    begin
+      CardId:=Cards.Strings[I];
+      if not DeleteRestCard(T.Db,UserId,BoardId,'',CardId,Removed) then
+      begin SendError(aResponse,500,'Could not delete card');Exit;end;
+      if Removed then Deleted.Add(CardId) else NotFound.Add(CardId);
+    end;
+    SendJson(aResponse,Reply.AsJSON);
+  finally Reply.Free;Body.Free;end;
 end;
 
 // DELETE list — its cards have no FK on listId, so remove them first (their children cascade).
