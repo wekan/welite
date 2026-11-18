@@ -19,6 +19,7 @@ type
     function HistoryExpression(const FieldId:string):string;
     function ScopeWriteExpression(const FieldId:string):string;
     function CloneCardGuard:string;
+    function ScopeBoardExpression(WriteAccess:Boolean):string;
     function ScopeAdminExpression(AllowSiteAdmin:Boolean=False):string;
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
@@ -166,6 +167,8 @@ begin
     ' AND v.value IS NOT NULL AND NOT '+Build('',True,False,False,False,False,True)+
     ') THEN 1 ELSE json(''Clone field permission denied'') END; ';
 end;
+function TFieldPolicy.ScopeBoardExpression(WriteAccess:Boolean):string;
+begin Result:=Build('',WriteAccess,True,False);end;
 function TFieldPolicy.ScopeAdminExpression(AllowSiteAdmin:Boolean):string;
 begin Result:=Build('',False,True,True,True);end;
 function TFieldPolicy.Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;

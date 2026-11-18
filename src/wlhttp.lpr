@@ -677,6 +677,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId', rmPut, @ApiListEdit);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId', rmDelete, @ApiListDelete);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards', rmGet, @ApiListCards);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/bulk', rmPost, @ApiBulkCards);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards', rmPost, @ApiCards);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards_count', rmGet, @ApiListCardsCount);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/cards_count', rmGet, @ApiBoardCardsCount);

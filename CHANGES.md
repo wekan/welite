@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Create REST cards in batches
+
+- Add the bulk-create route with indexed results, bounded input, placement
+  checks, parent visibility, assignment arrays and custom-field defaults.
+  Single and bulk REST creates allocate board card numbers in their insert
+  transaction from the existing board cards.
+
 ## 2026-11-18 Store empty card assignment arrays over REST
 
 - Initialize members and assignees on single-card creation. Explicit clears

@@ -165,6 +165,23 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert all(field not in cleared for field in dates)
                 print('PASS: shared REST card dates set as BSON Date and clear by field removal')
 
+                bulk_path='/api/boards/b/lists/l/cards/bulk'
+                status,_,body=request('POST',bulk_path,dict(swimlaneId='s',cards=[
+                    dict(title='Child',parentId=card['_id'],members=['u']),
+                    dict(title='Invalid placement',swimlaneId='missing'),
+                    dict(title='Unassigned',assignees=None),
+                ]),token)
+                assert status==200,(status,body)
+                created=json.loads(body)
+                assert created[1]==dict(index=1,error='Invalid card placement'),created
+                child,unassigned=[client.find('cards',created[i]['_id'])[0] for i in (0,2)]
+                assert child['parentId']==card['_id'] and child['members']==['u']
+                assert unassigned['members']==[] and unassigned['assignees']==[]
+                assert [child['cardNumber'],unassigned['cardNumber']]==[card['cardNumber']+1,card['cardNumber']+2]
+                for item in (child,unassigned):
+                    assert request('DELETE','/api/boards/b/lists/l/cards/'+item['_id'],token=token)[0]==200
+                print('PASS: shared REST bulk creation saves valid entries, assignment arrays and distinct card numbers')
+
                 check_shared_checklists(request,client,token,card)
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)

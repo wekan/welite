@@ -60,6 +60,7 @@ procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET li
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 procedure ApiListArchive(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST add card
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
@@ -269,18 +270,22 @@ begin
   if Actor=Author then Exit(True);
   Result:=IsSiteAdmin(Db,Actor) and EnabledBoardMember(Db,BoardId,Author);
 end;
-function ReadBodyIds(Request:TRequest; const Name:string; Ids:TStrings; AllowNull:Boolean=False):Boolean;
+function ReadBodyIds(Request:TRequest; const Name:string; Ids:TStrings; AllowNull:Boolean=False;Entry:TJSONObject=nil):Boolean;
 var D,V:TJSONData; A:TJSONArray; i:Integer; Text,Id:string; Parts:TStringArray;
 begin
   Result:=False; D:=nil; Text:='';
   try
     try
-      if Request.ContentFields.IndexOfName(Name)>=0 then Text:=Request.ContentFields.Values[Name]
+      if (Entry=nil) and (Request.ContentFields.IndexOfName(Name)>=0) then Text:=Request.ContentFields.Values[Name]
       else
       begin
-        D:=GetJSON(Request.Content);
-        if not (D is TJSONObject) then Exit;
-        V:=TJSONObject(D).Find(Name); if V=nil then Exit;
+        if Entry=nil then
+        begin
+          D:=GetJSON(Request.Content);
+          if not (D is TJSONObject) then Exit;
+          Entry:=TJSONObject(D);
+        end;
+        V:=Entry.Find(Name); if V=nil then Exit;
         if AllowNull and (V.JSONType=jtNull) then Exit(True);
         if V is TJSONArray then
         begin
@@ -344,32 +349,41 @@ end;
 // Build relation changes only after validating all identifiers. The caller executes these
 // changes with the card write in one transaction, so invalid data cannot partially edit it.
 function CardRelationSql(const T:TWLTenant; Request:TRequest; Response:TResponse;
-  const BoardId,CardId:string; out Sql:string; Creating:Boolean=False):Boolean;
+  const BoardId,CardId:string; out Sql:string; Creating:Boolean=False;Entry:TJSONObject=nil):Boolean;
 const Fields:array[0..2] of string=('labelIds','members','assignees');
   Tables:array[0..2] of string=('card_labels','card_members','card_assignees');
 var Ids:TStringList; i,j:Integer; Column:string;
+  function Present(const Field:string):Boolean;
+  begin
+    if Entry<>nil then Result:=Entry.Find(Field)<>nil
+    else Result:=BodyHasField(Request,Field);
+  end;
+  procedure Reject(Code:Integer;const Reason:string);
+  begin
+    if Response<>nil then SendError(Response,Code,Reason);
+  end;
 begin
   Result:=False; Sql:=''; Ids:=TStringList.Create; Ids.CaseSensitive:=True;
   try
-    for i:=0 to High(Fields) do if BodyHasField(Request,Fields[i]) then
+    for i:=0 to High(Fields) do if Present(Fields[i]) then
     begin
       Ids.Clear;
-      if not ReadBodyIds(Request,Fields[i],Ids,i>0) then
-      begin SendError(Response,400,'Expected an ID array or comma-separated string'); Exit; end;
+      if not ReadBodyIds(Request,Fields[i],Ids,i>0,Entry) then
+      begin Reject(400,'Expected an ID array or comma-separated string'); Exit; end;
       if i=0 then Column:='labelId' else Column:='userId';
       for j:=0 to Ids.Count-1 do
         if ((i=0) and (Length(T.Db.Query('SELECT id FROM board_labels WHERE boardId='+QuotedStr(BoardId)+
           ' AND id='+QuotedStr(Ids[j])+';'))=0)) or
           ((i>0) and not EnabledBoardMember(T.Db,BoardId,Ids[j])) then
-        begin SendError(Response,400,'ID does not belong to an enabled board member or board label'); Exit; end;
+        begin Reject(400,'ID does not belong to an enabled board member or board label'); Exit; end;
       Sql:=Sql+'DELETE FROM '+Tables[i]+' WHERE cardId='+QuotedStr(CardId)+'; ';
       for j:=0 to Ids.Count-1 do Sql:=Sql+'INSERT INTO '+Tables[i]+'(cardId,'+Column+') VALUES('+
         QuotedStr(CardId)+','+QuotedStr(Ids[j])+'); ';
     end;
     try
-      Sql:=InitializeSharedAssignments(T.Db,BoardId,CardId,Creating or BodyHasField(Request,'members'),
-        Creating or BodyHasField(Request,'assignees'))+Sql;
-    except SendError(Response,500,'Could not initialize card assignments');Exit;end;
+      Sql:=InitializeSharedAssignments(T.Db,BoardId,CardId,Creating or Present('members'),
+        Creating or Present('assignees'))+Sql;
+    except Reject(500,'Could not initialize card assignments');Exit;end;
     Result:=True;
   finally Ids.Free; end;
 end;
@@ -1434,6 +1448,86 @@ begin
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
+function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string):string;
+var Stamp,Board:string;
+begin
+  Stamp:=QuotedStr(NowIso);Board:=QuotedStr(BoardId);
+  Result:='INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,parentId,'+
+    'dateLastActivity,createdAt,modifiedAt,sort,cardNumber) SELECT '+QuotedStr(CardId)+','+Board+','+
+    QuotedStr(ListId)+','+QuotedStr(Lane)+','+QuotedStr(Title)+','+QuotedStr(Descr)+','+
+    QuotedStr(Author)+','+Parent+','+Stamp+','+Stamp+','+Stamp+','+Sort+
+    ',(SELECT max(0,coalesce(max(cardNumber),0))+1 FROM cards WHERE boardId='+Board+'); ';
+end;
+
+procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,ListId,Lane,DefaultLane,Parent,ParentSql,ParentGuard,CardId,Relations,Sql,Guard,WritePermission,LaneGuard:string;
+  Body,Entry,Item:TJSONObject;Input:TJSONData;Items,Reply:TJSONArray;Rows:TWLRows;I:Integer;
+  function Permission(const Board:string;WriteAccess:Boolean):string;
+  var Policy:TFieldPolicy;
+  begin
+    Policy:=TFieldPolicy.Create(T.Db,UserId,Board,'');
+    try Result:=Policy.ScopeBoardExpression(WriteAccess);finally Policy.Free;end;
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
+  if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
+  Guard:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
+  if Length(T.Db.Query('SELECT id FROM lists WHERE '+Guard+';'))<>1 then
+  begin SendError(aResponse,400,'Invalid card list');Exit;end;
+  WritePermission:=Permission(BoardId,True);
+  Body:=nil;Reply:=TJSONArray.Create;
+  try
+    try Body:=ExactObject(aRequest.Content);
+    except SendError(aResponse,400,'Expected a valid JSON object');Exit;end;
+    Input:=Body.Find('cards');
+    if not (Input is TJSONArray) or (Input.Count=0) or (Input.Count>500) then
+    begin SendError(aResponse,400,'cards must contain between 1 and 500 entries');Exit;end;
+    Items:=TJSONArray(Input);DefaultLane:=Body.Get('swimlaneId','');
+    for I:=0 to Items.Count-1 do
+    begin
+      Item:=TJSONObject.Create(['index',I]);Reply.Add(Item);
+      if not (Items.Items[I] is TJSONObject) then
+      begin Item.Add('error','Invalid card');Continue;end;
+      Entry:=Items.Objects[I];Lane:=Entry.Get('swimlaneId',DefaultLane);
+      if Lane='' then Lane:=DefaultLane;
+      if not ApiChildrenBelong(T.Db,BoardId,Lane,ListId,'','','','','') or
+        ((Lane<>'') and (Length(T.Db.Query('SELECT id FROM lists WHERE '+Guard+
+          ' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(Lane)+');'))<>1)) then
+      begin Item.Add('error','Invalid card placement');Continue;end;
+      LaneGuard:='';
+      if Lane<>'' then LaneGuard:=' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+QuotedStr(Lane)+
+        ' AND boardId='+QuotedStr(BoardId)+' AND archived=0)';
+      Parent:=Entry.Get('parentId','');ParentSql:='NULL';ParentGuard:='';
+      if Parent<>'' then
+      begin
+        Rows:=T.Db.Query('SELECT boardId FROM cards WHERE id='+QuotedStr(Parent)+' AND deletedAt IS NULL AND archived=0;');
+        if (Length(Rows)<>1) or not BoardCanRead(T.Db,UserId,Rows[0][0]) then
+        begin Item.Add('error','Forbidden');Continue;end;
+        ParentSql:=QuotedStr(Parent);
+        ParentGuard:=' AND EXISTS(SELECT 1 FROM cards WHERE id='+ParentSql+
+          ' AND boardId='+QuotedStr(Rows[0][0])+' AND archived=0 AND deletedAt IS NULL) AND '+Permission(Rows[0][0],False);
+      end;
+      CardId:=NewId;
+      if not CardRelationSql(T,nil,nil,BoardId,CardId,Relations,True,Entry) then
+      begin Item.Add('error','Invalid card assignments');Continue;end;
+      try
+        Sql:=CardCreateSql(BoardId,ListId,Lane,CardId,UserId,Entry.Get('title',''),Entry.Get('description',''),
+          ParentSql,'(SELECT count(*) FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND listId='+QuotedStr(ListId)+
+          ' AND archived=0 AND deletedAt IS NULL)')+Relations+InitializeCardFields(T.Db,BoardId,CardId);
+        if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+WritePermission+' AND EXISTS(SELECT 1 FROM lists WHERE '+Guard+')'+
+          LaneGuard+ParentGuard+' THEN 1 ELSE json(''Card placement changed'') END; '+Sql+'COMMIT;') then
+          raise Exception.Create('Bulk card creation failed');
+        Item.Add('_id',CardId);
+      except
+        T.Db.Exec('ROLLBACK;');Item.Add('error','Could not create card');
+      end;
+    end;
+    SendJson(aResponse,Reply.AsJSON);
+  finally Body.Free;Reply.Free;end;
+end;
+
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations,InitialFields:string;
 begin
@@ -1458,13 +1552,8 @@ begin
   if not CardRelationSql(T,aRequest,aResponse,BoardId,Id,Relations,True) then Exit;
   try InitialFields:=InitializeCardFields(T.Db,BoardId,Id);
   except SendError(aResponse,500,'Could not initialize custom fields');Exit;end;
-  if not T.Db.Exec('BEGIN IMMEDIATE; '+Format(
-    'INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,' +
-    'dateLastActivity,createdAt,modifiedAt,sort) ' +
-    'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0);',
-    [QuotedStr(Id), QuotedStr(BoardId), QuotedStr(ListId), QuotedStr(Swimlane),
-     QuotedStr(Title), QuotedStr(Descr), QuotedStr(Author),
-     QuotedStr(NowIso),QuotedStr(NowIso),QuotedStr(NowIso)])+Relations+InitialFields+' COMMIT;') then
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardCreateSql(BoardId,ListId,Swimlane,Id,Author,Title,Descr,'NULL','0')+
+    Relations+InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
 end;
