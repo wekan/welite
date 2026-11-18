@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Record REST card assignment additions
+
+- Store member and assignee addition activity with the target username
+  in the same transaction as the assignment. Repeated adds are idempotent.
+
 ## 2026-11-18 Record REST card assignment removals
 
 - Record member and assignee removals atomically, including stale

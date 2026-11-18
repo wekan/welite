@@ -252,6 +252,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert client.find('cards',card['_id'])[0]==stored
                 print('PASS: REST card sort persists zero and fractional values and rejects invalid edits atomically')
 
+                for relation,noun,key in [('members','Member','memberId'),('assignees','Assignee','assigneeId')]:
+                    endpoint=card_path+'/'+relation+'/u'
+                    for method,prefix,assigned in [('POST','join',['u']),('DELETE','unjoin',[])]:
+                        for _ in range(2):
+                            status,_,body=request(method,endpoint,token=token)
+                            assert status==200 and json.loads(body)[relation]==assigned,(status,body)
+                        events=client.command({'find':'activities','filter':{
+                            'cardId':card['_id'],'activityType':prefix+noun,key:'u'}})['cursor']['firstBatch']
+                        event,=events
+                        assert (event['username'],event['boardId'],event['listId'])==('user','b','l')
+                print('PASS: dedicated REST assignments record one activity for each actual addition or removal')
+
                 export_path='/api/boards/b/export'
                 assert request('GET',export_path+'?listId=l',token=token)[0]==400
                 for collection in ['rules','triggers','actions']:

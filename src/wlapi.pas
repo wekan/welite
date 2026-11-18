@@ -3993,40 +3993,48 @@ begin
   finally O.Free; end;
 end;
 
-// Dedicated member and assignee routes share card scope and removal history.
+// Dedicated member and assignee routes record history only for actual changes.
 procedure ChangeCardAssignment(aRequest:TRequest;aResponse:TResponse;
-  const RouteKey,TableName,ActivityType,ActivityKey:string);
-var T:TWLTenant;Actor,CardId,BoardId,ListId,Target,Scope,Pair,ActivityId,Stamp,Sql:string;
+  const RouteKey,TableName,ActivityNoun,ActivityKey:string);
+var T:TWLTenant;Actor,CardId,BoardId,ListId,TargetId,Target,Scope,Pair,Present,Changing,
+  ActivityType,ActivityId,Stamp,Sql,Mutation,FinalState,TargetGuard:string;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,Actor,CardNotFound) then Exit;
   CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
-  ListId:=aRequest.RouteParams['listId'];Target:=QuotedStr(aRequest.RouteParams[RouteKey]);
+  ListId:=aRequest.RouteParams['listId'];TargetId:=aRequest.RouteParams[RouteKey];Target:=QuotedStr(TargetId);
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND listId='+QuotedStr(ListId)+' AND deletedAt IS NULL';
+  Pair:='cardId='+QuotedStr(CardId)+' AND userId='+Target;
+  Present:='EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+')';
+  TargetGuard:='';
   if aRequest.Method='DELETE' then
   begin
-    Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
-      ' AND listId='+QuotedStr(ListId)+' AND deletedAt IS NULL';
-    Pair:='cardId='+QuotedStr(CardId)+' AND userId='+Target;
-    ActivityId:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
-    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
-      ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+
-      'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
-      ActivityId+','+QuotedStr(ActivityType)+','+QuotedStr(Actor)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
-      ',json_patch(json_object('+QuotedStr(ActivityKey)+','+Target+'),json_object(''username'',(SELECT username FROM users WHERE id='+Target+
-      '))) FROM cards WHERE '+Scope+' AND EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+'); '+
-      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+') OR EXISTS(SELECT 1 FROM activities WHERE id='+ActivityId+
-      ') THEN 1 ELSE json(''Assignment activity missing'') END; '+
-      'DELETE FROM '+TableName+' WHERE '+Pair+'; '+
-      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+
-      ') THEN 1 ELSE json(''Assignment removal failed'') END; COMMIT;';
+    ActivityType:='unjoin'+ActivityNoun;Changing:=Present;FinalState:='NOT '+Present;
+    Mutation:='DELETE FROM '+TableName+' WHERE '+Pair+'; ';
   end
   else
   begin
-    if not EnabledBoardMember(T.Db,BoardId,aRequest.RouteParams[RouteKey]) then
+    if not EnabledBoardMember(T.Db,BoardId,TargetId) then
     begin SendJson(aResponse,'{"error":"userId is not an active member of this board"}',400);Exit;end;
-    Sql:='INSERT OR IGNORE INTO '+TableName+'(cardId,userId) VALUES('+QuotedStr(CardId)+','+Target+');';
+    TargetGuard:='SELECT CASE WHEN EXISTS(SELECT 1 FROM users u JOIN board_members m ON m.userId=u.id '+
+      'WHERE u.id='+Target+' AND COALESCE(u.loginDisabled,0)=0 AND m.boardId='+QuotedStr(BoardId)+
+      ' AND m.isActive=1) THEN 1 ELSE json(''Assignment target changed'') END; ';
+    ActivityType:='join'+ActivityNoun;Changing:='NOT '+Present;FinalState:=Present;
+    Mutation:='INSERT INTO '+TableName+'(cardId,userId) SELECT '+QuotedStr(CardId)+','+Target+
+      ' WHERE '+Changing+'; ';
   end;
+  ActivityId:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+    ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+TargetGuard+
+    'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
+    ActivityId+','+QuotedStr(ActivityType)+','+QuotedStr(Actor)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
+    ',json_patch(json_object('+QuotedStr(ActivityKey)+','+Target+'),json_object(''username'',(SELECT username FROM users WHERE id='+Target+
+    '))) FROM cards WHERE '+Scope+' AND '+Changing+'; '+
+    'SELECT CASE WHEN NOT ('+Changing+') OR EXISTS(SELECT 1 FROM activities WHERE id='+ActivityId+
+    ') THEN 1 ELSE json(''Assignment activity missing'') END; '+Mutation+
+    'SELECT CASE WHEN '+FinalState+' THEN 1 ELSE json(''Assignment change failed'') END; COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update card membership');Exit;end;
   SendCardById(aResponse,T.Db,CardId,Actor,False,BoardId);
@@ -4034,12 +4042,12 @@ end;
 
 procedure ApiCardMember(aRequest:TRequest;aResponse:TResponse);
 begin
-  ChangeCardAssignment(aRequest,aResponse,'member','card_members','unjoinMember','memberId');
+  ChangeCardAssignment(aRequest,aResponse,'member','card_members','Member','memberId');
 end;
 
 procedure ApiCardAssignee(aRequest:TRequest;aResponse:TResponse);
 begin
-  ChangeCardAssignment(aRequest,aResponse,'assignee','card_assignees','unjoinAssignee','assigneeId');
+  ChangeCardAssignment(aRequest,aResponse,'assignee','card_assignees','Assignee','assigneeId');
 end;
 
 // POST card archive — archives by default; body isArchive=false unarchives.
