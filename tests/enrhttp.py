@@ -84,7 +84,17 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                     assert headers['Content-Language'] == lang
                     assert expected.encode() in body and f'lang="{lang}"'.encode() in body
                     assert (b'dir="rtl"' in body) == (direction == 'rtl')
+                notices = {}
+                for lang in ('fi','ar'):
+                    catalog = json.loads((root/'i18n'/'data'/f'{lang}.jsn').read_text())
+                    notices[lang] = catalog['registration-first-admin'].encode()
+                    status, headers, body = request('GET','/register?lang='+lang)
+                    assert status==200 and headers['Content-Language']==lang
+                    assert notices[lang] in body and 'Set-Cookie' not in headers
                 register('required');before=services('required')
+                for lang, notice in notices.items():
+                    status, headers, body = request('GET','/register?lang='+lang)
+                    assert status==200 and notice not in body
                 assert request('POST','/users/login',dict(username='required',password='test-password'))[0]==401
                 assert setup('required',password='wrong') is None
                 token,secret=setup('required');assert services('required')==before

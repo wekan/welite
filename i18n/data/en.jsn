@@ -2110,5 +2110,6 @@
   "enrollment-setup-denied": "Cannot start setup. Check your credentials and whether one-time codes are already enabled.",
   "enrollment-code-instructions": "Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.",
   "enrollment-confirmed-instructions": "The confirmation code has been used. Wait for a new code in your authenticator before signing in.",
-  "enrollment-account-created": "Account created"
+  "enrollment-account-created": "Account created",
+  "registration-first-admin": "This first account will be the Domain Global Admin."
 }

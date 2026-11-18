@@ -371,7 +371,8 @@ begin
     Title:=Words.Text('register','Register');
     Body:=LanguagePicker(Language,Words,'/register')+'<h1>'+HtmlEncode(Title)+'</h1>';
     if Message<>'' then Body:=Body+'<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>';
-    if First then Body:=Body+'<p>This first account will be the <b>Domain Global Admin</b>.</p>';
+    if First then Body:=Body+'<p>'+HtmlEncode(Words.Text('registration-first-admin',
+      'This first account will be the Domain Global Admin.'))+'</p>';
     Body:=Body+'<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/register'))+'">'+
       '<label for="register-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> '+
       '<input id="register-username" name="username"><br>'+
