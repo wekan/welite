@@ -1605,6 +1605,24 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Field:=Obj.Find(Key);
     Result:=IntToStr(Ord((Field is TJSONBoolean) and Field.AsBoolean));
   end;
+  function ImportedColor(Entry:TJSONObject):string;
+  var Field:TJSONData;Color:string;
+  begin
+    Field:=Entry.Find('color');
+    if not (Field is TJSONString) then Exit('NULL');
+    Color:=Field.AsString;
+    if ResolveColor(Color)='' then Exit('NULL');
+    Result:=QuotedStr(Color);
+  end;
+  function ImportedListWidth(Entry:TJSONObject):string;
+  var Field:TJSONData;Width:Double;
+  begin
+    Field:=Entry.Find('width');
+    if (Field=nil) or (Field.JSONType<>jtNumber) then Exit('272');
+    Width:=Field.AsFloat;
+    if IsNan(Width) or (Width<100) or (Width>1000) or (Width<>Trunc(Width)) then Exit('272');
+    Result:=IntToStr(Trunc(Width));
+  end;
   procedure IndexCardCreations;
   var Activities,Item,Kind,SourceId:TJSONData;Entry:TJSONObject;Id:string;K:Integer;
   begin
@@ -1854,8 +1872,9 @@ begin
       begin
         Row:=Arrays[0].Objects[J];LaneId:=Mapped(0,Text(Row,'_id'),True);
         if DefaultLane='' then DefaultLane:=LaneId;
-        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(LaneId)+
-          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortValue(Row)+','+Stamp+'); ';
+        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt,color,archived) VALUES('+QuotedStr(LaneId)+
+          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortValue(Row)+','+Stamp+','+
+          ImportedColor(Row)+','+BooleanValue(Row,'archived')+'); ';
       end;
       if DefaultLane='' then
       begin
@@ -1869,9 +1888,10 @@ begin
         LaneId:=Mapped(0,Text(Row,'swimlaneId'));
         if DefaultList='' then DefaultList:=ListId;
         ImportedListLanes.Add(ListId,LaneId);
-        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES('+
+        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
-          QuotedStr(Text(Row,'title'))+','+SortValue(Row)+','+Stamp+'); ';
+          QuotedStr(Text(Row,'title'))+','+SortValue(Row)+','+Stamp+','+ImportedColor(Row)+','+
+          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+'); ';
       end;
       if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
       begin

@@ -372,6 +372,26 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert restored_file['meta'][key]==restored[key]
                     assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: legacy board import assigns cards and attachments to usable fallback lists and swimlanes')
+                presentation=dict(title='List and swimlane display',lists=[
+                    dict(_id='valid-list',title='Wide list',color='#336699',width=486,archived=True),
+                    dict(_id='invalid-list',title='Default width',color='invalid color',width=2000),
+                ],swimlanes=[
+                    dict(_id='valid-lane',title='Colored lane',color='green',archived=True),
+                    dict(_id='invalid-lane',title='Default color',color=['green']),
+                ])
+                status,_,body=request('POST',import_path,dict(board=presentation),token)
+                assert status==200,(status,body)
+                imported_id=json.loads(body)['_id']
+                restored_lists={row['title']:row for row in imported_rows('lists')}
+                restored_lanes={row['title']:row for row in imported_rows('swimlanes')}
+                wide=restored_lists['Wide list']
+                assert wide['width']==486 and wide['color']=='#336699' and wide['archived'] is True
+                assert restored_lists['Default width']['width']==272 and not restored_lists['Default width'].get('color')
+                colored=restored_lanes['Colored lane']
+                assert colored['color']=='green' and colored['archived'] is True
+                assert not restored_lanes['Default color'].get('color')
+                assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
+                print('PASS: board import preserves list width, list and swimlane colors and archived state')
                 client.command({'create':'integrations'})
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
                     userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
