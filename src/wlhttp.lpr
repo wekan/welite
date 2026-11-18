@@ -332,7 +332,7 @@ begin
   else
   begin
     if Length(Token)<>64 then Token:='';
-    SendHtml(Response,AuthPage(Request,Response,'Confirm one-time codes',ConfirmationForm(Request,Token,'Invalid code or setup. Try a new code, or start setup again if it has expired.',Words)));
+    SendHtml(Response,AuthPage(Request,Response,'Confirm one-time codes',ConfirmationForm(Request,Token,Words.Text('twoFactorCode-invalid','Invalid authentication code. Please try again.'),Words)));
   end;
   finally Words.Free;end;
 end;

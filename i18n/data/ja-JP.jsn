@@ -2102,5 +2102,6 @@
   "protocol": "プロトコル",
   "field-link-not-found": "カードが見つかりません。",
   "twoFactorAuth-manual-entry": "またはこのコードを手動で入力してください: ",
-  "twoFactorCode-prompt": "6桁の認証コードを入力してください"
+  "twoFactorCode-prompt": "6桁の認証コードを入力してください",
+  "twoFactorCode-invalid": "認証コードが無効です。もう一度お試しください。"
 }

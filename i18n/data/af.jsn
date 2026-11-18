@@ -2101,5 +2101,6 @@
   "protocol": "Protokol",
   "field-link-not-found": "Kaart nie gevind nie.",
   "twoFactorAuth-manual-entry": "Of voer hierdie kode self in: ",
-  "twoFactorCode-prompt": "Voer jou 6-syfer-verifikasiekode in"
+  "twoFactorCode-prompt": "Voer jou 6-syfer-verifikasiekode in",
+  "twoFactorCode-invalid": "Ongeldige verifikasiekode. Probeer asseblief weer."
 }

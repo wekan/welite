@@ -2102,5 +2102,6 @@
   "protocol": "Pròtacal",
   "field-link-not-found": "Cha deach a’ chairt a lorg.",
   "twoFactorAuth-manual-entry": "No cuir a-steach an còd seo a làimh: ",
-  "twoFactorCode-prompt": "Cuir a-steach do chòd dearbhaidh 6-àireamh"
+  "twoFactorCode-prompt": "Cuir a-steach do chòd dearbhaidh 6-àireamh",
+  "twoFactorCode-invalid": "Còd dearbhaidh mì-dhligheach. Feuch ris a-rithist."
 }

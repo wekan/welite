@@ -2102,5 +2102,6 @@
   "protocol": "ፕሮቶኮል",
   "field-link-not-found": "ካርዱ አልተገኘም።",
   "twoFactorAuth-manual-entry": "ወይም ይህን ኮድ በእጅ ያስገቡ፦ ",
-  "twoFactorCode-prompt": "የ6-አሃዝ ማረጋገጫ ኮድዎን ያስገቡ"
+  "twoFactorCode-prompt": "የ6-አሃዝ ማረጋገጫ ኮድዎን ያስገቡ",
+  "twoFactorCode-invalid": "ልክ ያልሆነ ማረጋገጫ ኮድ። እባክዎ እንደገና ይሞክሩ።"
 }

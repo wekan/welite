@@ -2102,5 +2102,6 @@
   "protocol": "Protocol da communicaziun",
   "field-link-not-found": "Carta betg chattada.",
   "twoFactorAuth-manual-entry": "U endatescha quest code a maun: ",
-  "twoFactorCode-prompt": "Endatescha tes code d'autentificaziun da 6 cifras"
+  "twoFactorCode-prompt": "Endatescha tes code d'autentificaziun da 6 cifras",
+  "twoFactorCode-invalid": "Code d'autentificaziun nunvalid. Emprova anc ina giada."
 }

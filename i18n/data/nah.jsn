@@ -2102,5 +2102,6 @@
   "protocol": "Tlanahuatilli",
   "field-link-not-found": "Amatlapalli amo monextih.",
   "twoFactorAuth-manual-entry": "Ahnozo xictlali inin tlapohualli ika momah: ",
-  "twoFactorCode-prompt": "Xictlali motlapohual tlaixyeyecoliztli tlen chicuace tlapohualli"
+  "twoFactorCode-prompt": "Xictlali motlapohual tlaixyeyecoliztli tlen chicuace tlapohualli",
+  "twoFactorCode-invalid": "Tlapohualli tlaixyeyecoliztli ahmo melahuac. Xicyeyeco occepa."
 }

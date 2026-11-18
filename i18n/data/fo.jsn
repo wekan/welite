@@ -2102,5 +2102,6 @@
   "protocol": "Protokoll",
   "field-link-not-found": "Kortið varð ikki funnið.",
   "twoFactorAuth-manual-entry": "Ella skriva hesa kotuna við hond: ",
-  "twoFactorCode-prompt": "Skriva 6-siffra sanningarkotuna hjá tær"
+  "twoFactorCode-prompt": "Skriva 6-siffra sanningarkotuna hjá tær",
+  "twoFactorCode-invalid": "Ógildig sanningarkota. Vinarliga royn aftur."
 }

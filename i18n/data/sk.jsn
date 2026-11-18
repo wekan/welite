@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Karta sa nenašla.",
   "twoFactorAuth-manual-entry": "Alebo zadajte tento kód ručne: ",
-  "twoFactorCode-prompt": "Zadajte svoj 6-miestny overovací kód"
+  "twoFactorCode-prompt": "Zadajte svoj 6-miestny overovací kód",
+  "twoFactorCode-invalid": "Neplatný overovací kód. Skúste to znova."
 }

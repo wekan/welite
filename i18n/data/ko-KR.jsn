@@ -2102,5 +2102,6 @@
   "protocol": "协议",
   "field-link-not-found": "카드를 찾지 못했습니다.",
   "twoFactorAuth-manual-entry": "또는 이 코드를 수동으로 입력하세요: ",
-  "twoFactorCode-prompt": "6자리 인증 코드를 입력하세요"
+  "twoFactorCode-prompt": "6자리 인증 코드를 입력하세요",
+  "twoFactorCode-invalid": "잘못된 인증 코드입니다. 다시 시도하세요."
 }

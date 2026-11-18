@@ -2102,5 +2102,6 @@
   "protocol": "Protokoll",
   "field-link-not-found": "Kortet hittades inte.",
   "twoFactorAuth-manual-entry": "Eller ange den här koden manuellt: ",
-  "twoFactorCode-prompt": "Ange din 6-siffriga autentiseringskod"
+  "twoFactorCode-prompt": "Ange din 6-siffriga autentiseringskod",
+  "twoFactorCode-invalid": "Ogiltig autentiseringskod. Försök igen."
 }

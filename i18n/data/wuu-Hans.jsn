@@ -2101,5 +2101,6 @@
   "protocol": "协议",
   "field-link-not-found": "寻勿到卡片。",
   "twoFactorAuth-manual-entry": "或者手动输入该个代码： ",
-  "twoFactorCode-prompt": "请输入侬个 6 位数验证代码"
+  "twoFactorCode-prompt": "请输入侬个 6 位数验证代码",
+  "twoFactorCode-invalid": "验证代码勿对，请重新再试。"
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Ol rul bilong toktok namel long ol sistem",
   "field-link-not-found": "I no painim kat.",
   "twoFactorAuth-manual-entry": "O raitim dispela koud yu yet long han: ",
-  "twoFactorCode-prompt": "Raitim namba 6-digit bilong tokim tru"
+  "twoFactorCode-prompt": "Raitim namba 6-digit bilong tokim tru",
+  "twoFactorCode-invalid": "Namba bilong tokim tru i no stret. Traim gen."
 }

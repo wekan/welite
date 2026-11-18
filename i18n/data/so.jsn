@@ -2102,5 +2102,6 @@
   "protocol": "Hab-maamuus",
   "field-link-not-found": "Kaarka lama helin.",
   "twoFactorAuth-manual-entry": "Ama gacanta ku geli koodhkan: ",
-  "twoFactorCode-prompt": "Geli koodhkaaga xaqiijinta ee 6-lambarka ah"
+  "twoFactorCode-prompt": "Geli koodhkaaga xaqiijinta ee 6-lambarka ah",
+  "twoFactorCode-invalid": "Koodhka xaqiijinta waa khalad. Fadlan mar kale isku day."
 }

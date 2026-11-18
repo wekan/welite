@@ -2102,5 +2102,6 @@
   "protocol": "പ്രോട്ടോക്കോൾ",
   "field-link-not-found": "കാർഡ് കണ്ടെത്തിയില്ല.",
   "twoFactorAuth-manual-entry": "അല്ലെങ്കിൽ ഈ കോഡ് സ്വയം നൽകുക: ",
-  "twoFactorCode-prompt": "നിങ്ങളുടെ 6-അക്ക ആധികാരികത കോഡ് നൽകുക"
+  "twoFactorCode-prompt": "നിങ്ങളുടെ 6-അക്ക ആധികാരികത കോഡ് നൽകുക",
+  "twoFactorCode-invalid": "അസാധുവായ ആധികാരികത കോഡ്. ദയവായി വീണ്ടും ശ്രമിക്കുക."
 }

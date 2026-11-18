@@ -2102,5 +2102,6 @@
   "protocol": "પ્રોટોકોલ",
   "field-link-not-found": "कार्ड नहीं मिला।",
   "twoFactorAuth-manual-entry": "या इस कोड को मैन्युअल रूप से दर्ज करें: ",
-  "twoFactorCode-prompt": "अपना 6-अंकीय प्रमाणीकरण कोड दर्ज करें"
+  "twoFactorCode-prompt": "अपना 6-अंकीय प्रमाणीकरण कोड दर्ज करें",
+  "twoFactorCode-invalid": "अमान्य प्रमाणीकरण कोड। कृपया पुनः प्रयास करें।"
 }

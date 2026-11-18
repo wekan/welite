@@ -2102,5 +2102,6 @@
   "protocol": "Protocollu",
   "field-link-not-found": "Carta no agatada.",
   "twoFactorAuth-manual-entry": "O intra custu còdighe a manu: ",
-  "twoFactorCode-prompt": "Intra su còdighe de autenticatzione de 6 tzifras tuo"
+  "twoFactorCode-prompt": "Intra su còdighe de autenticatzione de 6 tzifras tuo",
+  "twoFactorCode-invalid": "Còdighe de autenticatzione non vàlidu. Torra a proare."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Протокол",
   "field-link-not-found": "Карточка тупӑнмарӗ.",
   "twoFactorAuth-manual-entry": "Е ҫак кода алпа кӗрт: ",
-  "twoFactorCode-prompt": "6 хисеплӗ ҫирӗплетӳ кодна кӗрт"
+  "twoFactorCode-prompt": "6 хисеплӗ ҫирӗплетӳ кодна кӗрт",
+  "twoFactorCode-invalid": "Ҫирӗплетӳ коди юрӑхсӑр. Тепӗр хут тӑрӑшса пӑхӑр."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Umgaqo-nkqubo",
   "field-link-not-found": "Ikhadi alifunyenwanga.",
   "twoFactorAuth-manual-entry": "Okanye faka le khowudi ngesandla: ",
-  "twoFactorCode-prompt": "Faka ikhowudi yakho yoqinisekiso yamanani ali-6"
+  "twoFactorCode-prompt": "Faka ikhowudi yakho yoqinisekiso yamanani ali-6",
+  "twoFactorCode-invalid": "Ikhowudi yoqinisekiso ayisebenzi. Nceda uphinde uzame."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Cjarte no cjatade.",
   "twoFactorAuth-manual-entry": "O ben scrîf chest codiç a man: ",
-  "twoFactorCode-prompt": "Scrîf il to codiç di autenticazion di 6 numars"
+  "twoFactorCode-prompt": "Scrîf il to codiç di autenticazion di 6 numars",
+  "twoFactorCode-invalid": "Codiç di autenticazion no valit. Torne prove pardabon."
 }

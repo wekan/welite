@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Kad tidak ditemukan.",
   "twoFactorAuth-manual-entry": "Atau masukkan kod ini secara manual: ",
-  "twoFactorCode-prompt": "Masukkan kod pengesahan 6 digit anda"
+  "twoFactorCode-prompt": "Masukkan kod pengesahan 6 digit anda",
+  "twoFactorCode-invalid": "Kod pengesahan tidak sah. Sila cuba lagi."
 }

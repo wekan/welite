@@ -2101,5 +2101,6 @@
   "protocol": "Protocolo",
   "field-link-not-found": "Cartão não encontrado.",
   "twoFactorAuth-manual-entry": "Ou introduza este código manualmente: ",
-  "twoFactorCode-prompt": "Introduza o seu código de autenticação de 6 dígitos"
+  "twoFactorCode-prompt": "Introduza o seu código de autenticação de 6 dígitos",
+  "twoFactorCode-invalid": "Código de autenticação inválido. Tente novamente."
 }

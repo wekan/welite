@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Kartica nije pronađena.",
   "twoFactorAuth-manual-entry": "Ili ručno unesite ovaj kod: ",
-  "twoFactorCode-prompt": "Unesite svoj šestocifreni kod za autentifikaciju"
+  "twoFactorCode-prompt": "Unesite svoj šestocifreni kod za autentifikaciju",
+  "twoFactorCode-invalid": "Nevažeći kod za autentifikaciju. Pokušajte ponovo."
 }

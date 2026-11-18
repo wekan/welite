@@ -2102,5 +2102,6 @@
   "protocol": "Prótacal",
   "field-link-not-found": "Níor aimsíodh an cárta.",
   "twoFactorAuth-manual-entry": "Nó cuir isteach an cód seo de láimh: ",
-  "twoFactorCode-prompt": "Cuir isteach do chód fíordheimhnithe 6 dhigit"
+  "twoFactorCode-prompt": "Cuir isteach do chód fíordheimhnithe 6 dhigit",
+  "twoFactorCode-invalid": "Cód fíordheimhnithe neamhbhailí. Bain triail eile as."
 }

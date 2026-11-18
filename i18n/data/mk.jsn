@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Картата не е најдена.",
   "twoFactorAuth-manual-entry": "Или внесете го овој код рачно: ",
-  "twoFactorCode-prompt": "Внесете го вашиот 6-цифрен код за автентикација"
+  "twoFactorCode-prompt": "Внесете го вашиот 6-цифрен код за автентикација",
+  "twoFactorCode-invalid": "Неважечки код за автентикација. Обидете се повторно."
 }

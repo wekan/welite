@@ -2101,5 +2101,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Card not found.",
   "twoFactorAuth-manual-entry": "Or enter this code manually: ",
-  "twoFactorCode-prompt": "Enter your 6-digit authentication code"
+  "twoFactorCode-prompt": "Enter your 6-digit authentication code",
+  "twoFactorCode-invalid": "Invalid authentication code. Please try again."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "iTuvatuva ni veitaratara",
   "field-link-not-found": "E sega ni kunei na kadi.",
   "twoFactorAuth-manual-entry": "Se vakacurumi na kodi qo ena ligamu: ",
-  "twoFactorCode-prompt": "Vakacurumi na nomu kodi ni vakadinadinataki e 6 na tikini"
+  "twoFactorCode-prompt": "Vakacurumi na nomu kodi ni vakadinadinataki e 6 na tikini",
+  "twoFactorCode-invalid": "Sega ni dodonu na kodi ni vakadinadinataki. Yalorerevaki o vakatovolea tale."
 }

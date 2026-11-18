@@ -2102,5 +2102,6 @@
   "protocol": "Samskiptareglur",
   "field-link-not-found": "Spjald fannst ekki.",
   "twoFactorAuth-manual-entry": "Eða sláðu inn þennan kóða handvirkt: ",
-  "twoFactorCode-prompt": "Sláðu inn 6 stafa auðkenningarkóðann þinn"
+  "twoFactorCode-prompt": "Sláðu inn 6 stafa auðkenningarkóðann þinn",
+  "twoFactorCode-invalid": "Ógildur auðkenningarkóði. Reyndu aftur."
 }

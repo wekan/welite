@@ -2102,5 +2102,6 @@
   "protocol": "Pulotokolo",
   "field-link-not-found": "Khadi silinapezeke.",
   "twoFactorAuth-manual-entry": "Kapena lowetsani khodi iyi pamanja: ",
-  "twoFactorCode-prompt": "Lowetsani nambala yanu ya 6-digit yotsimikizira"
+  "twoFactorCode-prompt": "Lowetsani nambala yanu ya 6-digit yotsimikizira",
+  "twoFactorCode-invalid": "Nambala yotsimikizira si yoyenera. Chonde yesaninso."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protocole",
   "field-link-not-found": "Cåte nén trovêye.",
   "twoFactorAuth-manual-entry": "Ou tapez ç' côde chal al mwin: ",
-  "twoFactorCode-prompt": "Tapez vosse côde di wårantixhaedje a 6 chifes"
+  "twoFactorCode-prompt": "Tapez vosse côde di wårantixhaedje a 6 chifes",
+  "twoFactorCode-invalid": "Côde di wårantixhaedje nén corek. Sayîz on côp co."
 }

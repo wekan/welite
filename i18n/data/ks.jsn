@@ -2102,5 +2102,6 @@
   "protocol": "پروٹوکول",
   "field-link-not-found": "کارڈ میوٗل نہٕ۔",
   "twoFactorAuth-manual-entry": "یا یہ کوڈ خودکار طور درج کریو: ",
-  "twoFactorCode-prompt": "توٚہنٛد 6-عددی تصدیقی کوڈ درج کریو"
+  "twoFactorCode-prompt": "توٚہنٛد 6-عددی تصدیقی کوڈ درج کریو",
+  "twoFactorCode-invalid": "غلط تصدیقی کوڈ. مہربانی کرِتھ فیر کوشش کریو."
 }

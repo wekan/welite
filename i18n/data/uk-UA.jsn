@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Картку не знайдено.",
   "twoFactorAuth-manual-entry": "Або введіть цей код вручну: ",
-  "twoFactorCode-prompt": "Введіть свій 6-значний код автентифікації"
+  "twoFactorCode-prompt": "Введіть свій 6-значний код автентифікації",
+  "twoFactorCode-invalid": "Недійсний код автентифікації. Спробуйте ще раз."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protocollum",
   "field-link-not-found": "Charta non inventa.",
   "twoFactorAuth-manual-entry": "Vel hunc codicem manu introduc: ",
-  "twoFactorCode-prompt": "Introduc codicem auctenticationis sex numerorum"
+  "twoFactorCode-prompt": "Introduc codicem auctenticationis sex numerorum",
+  "twoFactorCode-invalid": "Codex auctenticationis non validus. Iterum tempta."
 }

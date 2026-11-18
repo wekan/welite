@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "かーどが みつかりません。",
   "twoFactorAuth-manual-entry": "または、このコードを手動で入力してください: ",
-  "twoFactorCode-prompt": "6桁の認証コードを入力してください"
+  "twoFactorCode-prompt": "6桁の認証コードを入力してください",
+  "twoFactorCode-invalid": "認証コードが無効です。もう一度お試しください。"
 }

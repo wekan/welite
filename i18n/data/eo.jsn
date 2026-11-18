@@ -2102,5 +2102,6 @@
   "protocol": "Protocole",
   "field-link-not-found": "Karto ne trovita.",
   "twoFactorAuth-manual-entry": "Aŭ enigu ĉi tiun kodon permane: ",
-  "twoFactorCode-prompt": "Enigu vian 6-ciferan aŭtentigan kodon"
+  "twoFactorCode-prompt": "Enigu vian 6-ciferan aŭtentigan kodon",
+  "twoFactorCode-invalid": "Nevalida aŭtentiga kodo. Bonvolu reprovi."
 }

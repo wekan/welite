@@ -2102,5 +2102,6 @@
   "protocol": "پرۆتۆکۆل",
   "field-link-not-found": "کارت نەدۆزرایەوە.",
   "twoFactorAuth-manual-entry": "یان ئەم کۆدە بە دەست بنووسە: ",
-  "twoFactorCode-prompt": "کۆدی پشتڕاستکردنەوەی 6 ژمارەییت بنووسە"
+  "twoFactorCode-prompt": "کۆدی پشتڕاستکردنەوەی 6 ژمارەییت بنووسە",
+  "twoFactorCode-invalid": "کۆدی پشتڕاستکردنەوە نادروستە. تکایە دووبارە هەوڵبدەوە."
 }

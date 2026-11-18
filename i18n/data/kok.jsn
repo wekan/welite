@@ -2102,5 +2102,6 @@
   "protocol": "शिष्टाचार",
   "field-link-not-found": "कार्ड मेळ्ळें ना.",
   "twoFactorAuth-manual-entry": "वा हो कोड मॅन्युअली घालात: ",
-  "twoFactorCode-prompt": "तुमचो 6-अंकी प्रमाणीकरण कोड घालात"
+  "twoFactorCode-prompt": "तुमचो 6-अंकी प्रमाणीकरण कोड घालात",
+  "twoFactorCode-invalid": "अवैध प्रमाणीकरण कोड. उपरांत परतून यत्न करात."
 }

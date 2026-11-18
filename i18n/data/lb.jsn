@@ -2102,5 +2102,6 @@
   "protocol": "Protokoll",
   "field-link-not-found": "Kaart net fonnt.",
   "twoFactorAuth-manual-entry": "Oder gëff dëse Code manuell an: ",
-  "twoFactorCode-prompt": "Gëff däin 6-stellege Authentifikatiounscode an"
+  "twoFactorCode-prompt": "Gëff däin 6-stellege Authentifikatiounscode an",
+  "twoFactorCode-invalid": "Ongülege Authentifikatiounscode. Probéier w.e.g. nach eng Kéier."
 }

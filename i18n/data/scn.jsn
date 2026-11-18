@@ -2102,5 +2102,6 @@
   "protocol": "Protocollo",
   "field-link-not-found": "Carta nun truvata.",
   "twoFactorAuth-manual-entry": "O metti stu còdici manualmenti: ",
-  "twoFactorCode-prompt": "Metti lu to còdici di autinticazzioni di 6 numeri"
+  "twoFactorCode-prompt": "Metti lu to còdici di autinticazzioni di 6 numeri",
+  "twoFactorCode-invalid": "Còdici di autinticazzioni non vàlidu. Pruva arrè."
 }

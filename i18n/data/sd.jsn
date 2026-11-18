@@ -2102,5 +2102,6 @@
   "protocol": "پروٽوڪول",
   "field-link-not-found": "ڪارڊ نه مليو.",
   "twoFactorAuth-manual-entry": "يا هي ڪوڊ هٿ سان داخل ڪريو: ",
-  "twoFactorCode-prompt": "پنهنجو 6-عدد وارو تصديقي ڪوڊ داخل ڪريو"
+  "twoFactorCode-prompt": "پنهنجو 6-عدد وارو تصديقي ڪوڊ داخل ڪريو",
+  "twoFactorCode-invalid": "غلط تصديقي ڪوڊ. مهرباني ڪري ٻيهر ڪوشش ڪريو."
 }

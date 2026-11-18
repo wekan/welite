@@ -2101,5 +2101,6 @@
   "protocol": "Iphrothokholi",
   "field-link-not-found": "Ikhadi alitholakali.",
   "twoFactorAuth-manual-entry": "Noma faka le khodi ngesandla: ",
-  "twoFactorCode-prompt": "Faka ikhodi yakho yokuqinisekisa enezinombolo eziyisi-6"
+  "twoFactorCode-prompt": "Faka ikhodi yakho yokuqinisekisa enezinombolo eziyisi-6",
+  "twoFactorCode-invalid": "Ikhodi yokuqinisekisa ayilungile. Sicela uzame futhi."
 }

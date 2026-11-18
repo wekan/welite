@@ -2102,5 +2102,6 @@
   "protocol": "Бородукуол",
   "field-link-not-found": "Карточка көстүбэтэ.",
   "twoFactorAuth-manual-entry": "Эбэтэр бу кодту илиинэн киллэр: ",
-  "twoFactorCode-prompt": "6 сыыппаралаах бигэргэтии кодтугун киллэр"
+  "twoFactorCode-prompt": "6 сыыппаралаах бигэргэтии кодтугун киллэр",
+  "twoFactorCode-invalid": "Бигэргэтии коду сыыһа. Ханныгын хат холонон көр."
 }

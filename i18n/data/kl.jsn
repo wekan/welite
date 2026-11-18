@@ -2102,5 +2102,6 @@
   "protocol": "Protokoli",
   "field-link-not-found": "Kortsi nassaarineqanngilaq.",
   "twoFactorAuth-manual-entry": "Imaluunniit kodeq una assamik allattarigit: ",
-  "twoFactorCode-prompt": "Uppernarsaanermut kodeq 6-inik allattarigit"
+  "twoFactorCode-prompt": "Uppernarsaanermut kodeq 6-inik allattarigit",
+  "twoFactorCode-invalid": "Uppernarsaanermut kodeq eqqunngilaq. Uteqqiullugu misilikkit."
 }

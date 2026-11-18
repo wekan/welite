@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Scheda non trovata.",
   "twoFactorAuth-manual-entry": "Oppure inserisci questo codice manualmente: ",
-  "twoFactorCode-prompt": "Inserisci il tuo codice di autenticazione a 6 cifre"
+  "twoFactorCode-prompt": "Inserisci il tuo codice di autenticazione a 6 cifre",
+  "twoFactorCode-invalid": "Codice di autenticazione non valido. Riprova."
 }

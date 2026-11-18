@@ -2101,5 +2101,6 @@
   "protocol": "Protokol",
   "field-link-not-found": "Karta topilmadi.",
   "twoFactorAuth-manual-entry": "Yoki bu kodni qoʻlda kiriting: ",
-  "twoFactorCode-prompt": "6 xonali tasdiqlash kodingizni kiriting"
+  "twoFactorCode-prompt": "6 xonali tasdiqlash kodingizni kiriting",
+  "twoFactorCode-invalid": "Notoʻgʻri tasdiqlash kodi. Iltimos, qayta urinib koʻring."
 }

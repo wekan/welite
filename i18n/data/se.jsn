@@ -2102,5 +2102,6 @@
   "protocol": "Protokolla",
   "field-link-not-found": "Goarta ii gávdnon.",
   "twoFactorAuth-manual-entry": "Dahje čále dán koda gieđalaččat: ",
-  "twoFactorCode-prompt": "Čále iežat 6-siffáraš dárkkistankoda"
+  "twoFactorCode-prompt": "Čále iežat 6-siffáraš dárkkistankoda",
+  "twoFactorCode-invalid": "Dárkkistankoda ii leat rivttes. Geahččal fas."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protocole",
   "field-link-not-found": "Carta pas trobada.",
   "twoFactorAuth-manual-entry": "O picatz aqueste còdi manualament : ",
-  "twoFactorCode-prompt": "Picatz vòstre còdi d'autentificacion de 6 chifras"
+  "twoFactorCode-prompt": "Picatz vòstre còdi d'autentificacion de 6 chifras",
+  "twoFactorCode-invalid": "Còdi d'autentificacion invalid. Ensajatz tornarmai."
 }

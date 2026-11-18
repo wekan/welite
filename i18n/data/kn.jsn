@@ -2102,5 +2102,6 @@
   "protocol": "ಪ್ರೋಟೋಕಾಲ್",
   "field-link-not-found": "ಕಾರ್ಡ್ ಕಂಡುಬಂದಿಲ್ಲ.",
   "twoFactorAuth-manual-entry": "ಅಥವಾ ಈ ಕೋಡ್ ಅನ್ನು ಹಸ್ತಚಾಲಿತವಾಗಿ ನಮೂದಿಸಿ: ",
-  "twoFactorCode-prompt": "ನಿಮ್ಮ 6-ಅಂಕಿಯ ದೃಢೀಕರಣ ಕೋಡ್ ನಮೂದಿಸಿ"
+  "twoFactorCode-prompt": "ನಿಮ್ಮ 6-ಅಂಕಿಯ ದೃಢೀಕರಣ ಕೋಡ್ ನಮೂದಿಸಿ",
+  "twoFactorCode-invalid": "ಅಮಾನ್ಯ ದೃಢೀಕರಣ ಕೋಡ್. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
 }

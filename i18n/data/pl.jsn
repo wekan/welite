@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Nie znaleziono karty.",
   "twoFactorAuth-manual-entry": "Lub wprowadź ten kod ręcznie: ",
-  "twoFactorCode-prompt": "Wprowadź swój 6-cyfrowy kod uwierzytelniający"
+  "twoFactorCode-prompt": "Wprowadź swój 6-cyfrowy kod uwierzytelniający",
+  "twoFactorCode-invalid": "Nieprawidłowy kod uwierzytelniający. Spróbuj ponownie."
 }

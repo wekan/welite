@@ -2102,5 +2102,6 @@
   "protocol": "Maliega",
   "field-link-not-found": "E le maua le pepa.",
   "twoFactorAuth-manual-entry": "Po o le tuuina lea o le numera lea i lima: ",
-  "twoFactorCode-prompt": "Tuuina lau numera faamaoni e 6-numera"
+  "twoFactorCode-prompt": "Tuuina lau numera faamaoni e 6-numera",
+  "twoFactorCode-invalid": "Numera faamaoni e le saʻo. Faamolemole toe taumafai."
 }

@@ -2101,5 +2101,6 @@
   "protocol": "protokolas",
   "field-link-not-found": "Kortelė nerasta.",
   "twoFactorAuth-manual-entry": "Arba įveskite šį kodą rankiniu būdu: ",
-  "twoFactorCode-prompt": "Įveskite savo 6 skaitmenų autentifikavimo kodą"
+  "twoFactorCode-prompt": "Įveskite savo 6 skaitmenų autentifikavimo kodą",
+  "twoFactorCode-invalid": "Neteisingas autentifikavimo kodas. Bandykite dar kartą."
 }

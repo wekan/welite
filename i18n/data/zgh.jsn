@@ -2102,5 +2102,6 @@
   "protocol": "Protocole",
   "field-link-not-found": "ⵓⵔ ⵜⵜⵢⴰⴼⴰ ⵜⴽⴰⵕⴹⴰ.",
   "twoFactorAuth-manual-entry": "ⵏⵖ ⵙⴽⵛⵎ ⵜⴰⵏⴳⴰⵍⵜ ⴰⴷ ⵙ ⵓⴼⵓⵙ: ",
-  "twoFactorCode-prompt": "ⵙⴽⵛⵎ ⵜⴰⵏⴳⴰⵍⵜ ⵏⵏⴽ ⵏ ⵓⵙⵖⵣⵏ ⵏ 6 ⵉⵎⴹⴰⵏⵏ"
+  "twoFactorCode-prompt": "ⵙⴽⵛⵎ ⵜⴰⵏⴳⴰⵍⵜ ⵏⵏⴽ ⵏ ⵓⵙⵖⵣⵏ ⵏ 6 ⵉⵎⴹⴰⵏⵏ",
+  "twoFactorCode-invalid": "ⵜⴰⵏⴳⴰⵍⵜ ⵏ ⵓⵙⵖⵣⵏ ⵓⵔ ⵜⵖⵜⵉ. ⵜⵜⵅⵉⵍ, ⴰⵍⵙ ⴰⵔⵎ."
 }

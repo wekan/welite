@@ -83,7 +83,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 center=int(time.time())//30
                 assert b'One-time codes enabled' not in confirm(token,otp(secret,center),agent='different-browser')[2]
                 assert services('required')==before
-                assert b'Invalid code or setup' in confirm(token,'bad')[2]
+                assert b'Invalid authentication code' in confirm(token,'bad')[2]
                 assert b'One-time codes enabled' in confirm(token,otp(secret,center))[2]
                 assert services('required')['twoFactorAuthentication']==dict(type='otp',secret=secret)
                 assert request('POST','/users/login',dict(username='required',password='test-password',code=otp(secret,center+1)))[0]==429,'Enrollment did not share login account limits'
@@ -111,7 +111,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 register('limited');limited_before=services('limited');expire();token2,secret2=setup('limited')
                 for index in range(4):
                     denied=confirm(token2,'bad',username='rotate-'+str(index),headers={'X-Forwarded-For':'198.51.100.'+str(index)})
-                    assert denied[0]==200 and b'Invalid code or setup' in denied[2]
+                    assert denied[0]==200 and b'Invalid authentication code' in denied[2]
                 denied=confirm(token2,otp(secret2,int(time.time())//30),username='another',headers={'Accept-Language':'ar'})
                 assert denied[0]==429 and denied[1]['Retry-After']=='300'
                 check_auth_error(denied,'ar',private=True)

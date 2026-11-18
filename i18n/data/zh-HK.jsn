@@ -2102,5 +2102,6 @@
   "protocol": "協定",
   "field-link-not-found": "找不到卡片。",
   "twoFactorAuth-manual-entry": "或手動輸入此代碼：",
-  "twoFactorCode-prompt": "請輸入您的 6 位數驗證代碼"
+  "twoFactorCode-prompt": "請輸入您的 6 位數驗證代碼",
+  "twoFactorCode-invalid": "驗證代碼無效，請再試一次。"
 }

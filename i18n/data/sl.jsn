@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Kartice ni mogoče najti.",
   "twoFactorAuth-manual-entry": "Ali to kodo vnesite ročno: ",
-  "twoFactorCode-prompt": "Vnesite svojo 6-mestno avtentikacijsko kodo"
+  "twoFactorCode-prompt": "Vnesite svojo 6-mestno avtentikacijsko kodo",
+  "twoFactorCode-invalid": "Neveljavna avtentikacijska koda. Poskusite znova."
 }

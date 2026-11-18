@@ -2102,5 +2102,6 @@
   "protocol": "ፕሮቶኮል",
   "field-link-not-found": "ካርድ ኣይተረኽበን።",
   "twoFactorAuth-manual-entry": "ወይ እዚ ኮድ ብኢድ ኣእትዎ: ",
-  "twoFactorCode-prompt": "ናትካ ናይ 6-ኣሃዝ ናይ ምርግጋጽ ኮድ ኣእትዉ"
+  "twoFactorCode-prompt": "ናትካ ናይ 6-ኣሃዝ ናይ ምርግጋጽ ኮድ ኣእትዉ",
+  "twoFactorCode-invalid": "ናይ ምርግጋጽ ኮድ ልክዕ ኣይኮነን። በጃኻ ደጊምካ ፈትን።"
 }

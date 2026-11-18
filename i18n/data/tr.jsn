@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Kart bulunamadı.",
   "twoFactorAuth-manual-entry": "Veya bu kodu elle girin: ",
-  "twoFactorCode-prompt": "6 haneli kimlik doğrulama kodunuzu girin"
+  "twoFactorCode-prompt": "6 haneli kimlik doğrulama kodunuzu girin",
+  "twoFactorCode-invalid": "Geçersiz kimlik doğrulama kodu. Lütfen tekrar deneyin."
 }

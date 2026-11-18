@@ -2102,5 +2102,6 @@
   "protocol": "Протокол",
   "field-link-not-found": "Карточка табылмады.",
   "twoFactorAuth-manual-entry": "Яки бу кодны кулдан кертегез: ",
-  "twoFactorCode-prompt": "6 санлы аутентификация кодыгызны кертегез"
+  "twoFactorCode-prompt": "6 санлы аутентификация кодыгызны кертегез",
+  "twoFactorCode-invalid": "Аутентификация коды дөрес түгел. Зинһар, тагын бер тапкыр карагыз."
 }

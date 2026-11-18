@@ -2102,5 +2102,6 @@
   "protocol": "Хаттама",
   "field-link-not-found": "Карточка табылмады.",
   "twoFactorAuth-manual-entry": "Немесе бұл кодты қолмен енгізіңіз: ",
-  "twoFactorCode-prompt": "6 таңбалы аутентификация кодын енгізіңіз"
+  "twoFactorCode-prompt": "6 таңбалы аутентификация кодын енгізіңіз",
+  "twoFactorCode-invalid": "Жарамсыз аутентификация коды. Қайталап көріңіз."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protokoll",
   "field-link-not-found": "Kortet blev ikke fundet.",
   "twoFactorAuth-manual-entry": "Eller indtast denne kode manuelt: ",
-  "twoFactorCode-prompt": "Indtast din 6-cifrede godkendelseskode"
+  "twoFactorCode-prompt": "Indtast din 6-cifrede godkendelseskode",
+  "twoFactorCode-invalid": "Ugyldig godkendelseskode. Prøv igen."
 }

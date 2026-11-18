@@ -2101,5 +2101,6 @@
   "protocol": "પ્રોટોકોલ",
   "field-link-not-found": "કાર્ડ મળ્યું નથી.",
   "twoFactorAuth-manual-entry": "અથવા આ કોડ મેન્યુઅલી દાખલ કરો: ",
-  "twoFactorCode-prompt": "તમારો 6-અંકનો પ્રમાણીકરણ કોડ દાખલ કરો"
+  "twoFactorCode-prompt": "તમારો 6-અંકનો પ્રમાણીકરણ કોડ દાખલ કરો",
+  "twoFactorCode-invalid": "અમાન્ય પ્રમાણીકરણ કોડ. ફરી પ્રયાસ કરો."
 }

@@ -2101,5 +2101,6 @@
   "protocol": "Protokol",
   "field-link-not-found": "Kart tapılmadı.",
   "twoFactorAuth-manual-entry": "Və ya bu kodu əl ilə daxil edin: ",
-  "twoFactorCode-prompt": "6 rəqəmli doğrulama kodunuzu daxil edin"
+  "twoFactorCode-prompt": "6 rəqəmli doğrulama kodunuzu daxil edin",
+  "twoFactorCode-invalid": "Yanlış doğrulama kodu. Zəhmət olmasa yenidən cəhd edin."
 }

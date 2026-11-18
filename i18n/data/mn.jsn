@@ -2102,5 +2102,6 @@
   "protocol": "Protocol",
   "field-link-not-found": "Карт олдсонгүй.",
   "twoFactorAuth-manual-entry": "Эсвэл энэ кодыг гараар оруулна уу: ",
-  "twoFactorCode-prompt": "6 оронтой баталгаажуулах кодоо оруулна уу"
+  "twoFactorCode-prompt": "6 оронтой баталгаажуулах кодоо оруулна уу",
+  "twoFactorCode-invalid": "Баталгаажуулах код буруу байна. Дахин оролдоно уу."
 }

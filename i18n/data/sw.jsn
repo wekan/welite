@@ -2101,5 +2101,6 @@
   "protocol": "Itifaki",
   "field-link-not-found": "Kadi haikupatikana.",
   "twoFactorAuth-manual-entry": "Au ingiza msimbo huu kwa mkono: ",
-  "twoFactorCode-prompt": "Ingiza msimbo wako wa uthibitishaji wa tarakimu 6"
+  "twoFactorCode-prompt": "Ingiza msimbo wako wa uthibitishaji wa tarakimu 6",
+  "twoFactorCode-invalid": "Msimbo wa uthibitishaji si sahihi. Tafadhali jaribu tena."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protocole",
   "field-link-not-found": "Waray nakit-i an kard.",
   "twoFactorAuth-manual-entry": "O mano-mano nga isulod ini nga kodigo: ",
-  "twoFactorCode-prompt": "Isulod an imo 6 ka digit nga kodigo han pagpamatuod han identidad"
+  "twoFactorCode-prompt": "Isulod an imo 6 ka digit nga kodigo han pagpamatuod han identidad",
+  "twoFactorCode-invalid": "Diri balido an kodigo han pagpamatuod han identidad. Alayon sulayi utro."
 }

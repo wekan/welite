@@ -2102,5 +2102,6 @@
   "protocol": "Jaŋde",
   "field-link-not-found": "Kartal yiytaaka.",
   "twoFactorAuth-manual-entry": "Walla naatnu kod ɗoo ir juuɗe maa: ",
-  "twoFactorCode-prompt": "Naatnu kod seedantaagal maa 6 limoore"
+  "twoFactorCode-prompt": "Naatnu kod seedantaagal maa 6 limoore",
+  "twoFactorCode-invalid": "Kod seedantaagal moƴƴah. Tiiɗno eto kadi."
 }

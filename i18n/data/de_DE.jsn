@@ -2102,5 +2102,6 @@
   "protocol": "Protokoll",
   "field-link-not-found": "Karte nicht gefunden.",
   "twoFactorAuth-manual-entry": "Oder geben Sie diesen Code manuell ein: ",
-  "twoFactorCode-prompt": "Geben Sie Ihren 6-stelligen Authentifizierungscode ein"
+  "twoFactorCode-prompt": "Geben Sie Ihren 6-stelligen Authentifizierungscode ein",
+  "twoFactorCode-invalid": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut."
 }

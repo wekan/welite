@@ -2102,5 +2102,6 @@
   "protocol": "Ñe'ẽme'ẽ",
   "field-link-not-found": "Ndojejuhúi kuatia'i.",
   "twoFactorAuth-manual-entry": "Térã ehai ko código nde po-pe: ",
-  "twoFactorCode-prompt": "Ehai ne código autenticación 6 número"
+  "twoFactorCode-prompt": "Ehai ne código autenticación 6 número",
+  "twoFactorCode-invalid": "Código autenticación naiporãi. Eha'ã jey."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Pwotokòl",
   "field-link-not-found": "Kat la pa jwenn.",
   "twoFactorAuth-manual-entry": "Oswa antre kòd sa a manyèlman: ",
-  "twoFactorCode-prompt": "Antre kòd otantifikasyon 6-chif ou"
+  "twoFactorCode-prompt": "Antre kòd otantifikasyon 6-chif ou",
+  "twoFactorCode-invalid": "Kòd otantifikasyon envalid. Tanpri eseye ankò."
 }

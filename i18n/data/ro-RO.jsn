@@ -2102,5 +2102,6 @@
   "protocol": "Protocole",
   "field-link-not-found": "Cardul nu a fost găsit.",
   "twoFactorAuth-manual-entry": "Sau introduceți manual acest cod: ",
-  "twoFactorCode-prompt": "Introduceți codul de autentificare din 6 cifre"
+  "twoFactorCode-prompt": "Introduceți codul de autentificare din 6 cifre",
+  "twoFactorCode-invalid": "Cod de autentificare invalid. Încercați din nou."
 }

@@ -2102,5 +2102,6 @@
   "protocol": "Protokół",
   "field-link-not-found": "Niy znŏdziōno karty.",
   "twoFactorAuth-manual-entry": "Abo wpisz tyn kod ryncznie: ",
-  "twoFactorCode-prompt": "Wpisz twōj 6-cyfrowy kod autoryzacyjny"
+  "twoFactorCode-prompt": "Wpisz twōj 6-cyfrowy kod autoryzacyjny",
+  "twoFactorCode-invalid": "Niywłŏściwy kod autoryzacyjny. Sprōbuj jeszcze rŏz."
 }

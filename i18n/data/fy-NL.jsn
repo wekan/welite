@@ -2101,5 +2101,6 @@
   "protocol": "Protokol",
   "field-link-not-found": "Kaart net fûn.",
   "twoFactorAuth-manual-entry": "Of fier dizze koade mei de hân yn: ",
-  "twoFactorCode-prompt": "Fier jo 6-sifferige ferifikaasjekoade yn"
+  "twoFactorCode-prompt": "Fier jo 6-sifferige ferifikaasjekoade yn",
+  "twoFactorCode-invalid": "Unjildige ferifikaasjekoade. Besykje it nochris."
 }
