@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify both upstream browser board export modes
+
+- Pass 41 upstream core REST cases on shared linked SQLite. On both shared
+  SQLite backends, download board JSON from HTML with JavaScript and cookies
+  disabled and verify that only the full export contains the attachment bytes.
+
 ## 2026-11-18 Pass the upstream webhook settings REST spec
 
 - Pass all six cases on shared linked SQLite. The HTML settings page shows
