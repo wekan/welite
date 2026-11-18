@@ -1294,7 +1294,7 @@
   "shared-templates-select-scope": "Select a scope above (Organizations, Teams or Domains) to show shared templates.",
   "no-shared-templates": "No shared templates",
   "displayName": "نام نمایشی",
-  "shortName": "نام کوتاه",
+  "shortName": "السمية القصيرة",
   "autoAddUsersWithDomainName": "إضافة المستخدمين تلقائيًا باستخدام اسم المجال",
   "website": "موقع الكتروني",
   "person": "شخص",
