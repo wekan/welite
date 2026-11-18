@@ -81,7 +81,7 @@ function IssueAccountToken(Db:TWLDb;Proof:TWLLoginProof;const Token,Kind:string;
 function CreateAuthenticatedSession(Db:TWLDb;Request:TRequest;Proof:TWLLoginProof;TtlSeconds:Int64):TWLSession;
 function LoginAccount(Db:TWLDb;const Username:string):TWLRows;
 function TokenHash(Db:TWLDb; const Token:string):string;
-function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64):Boolean;
+function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64; const Guard:string='1'; const Audit:string=''):Boolean;
 function ValidateLoginToken(Db:TWLDb; Request:TRequest; const Token:string; out UserId:string):Boolean;
 
 // --- session lifecycle against schema.sql.login_tokens ------------------------------------
@@ -375,7 +375,7 @@ begin
   Result:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Expires);
 end;
 
-function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64):Boolean;
+function IssueLoginToken(Db:TWLDb; const UserId,Token,CredentialRef,Kind:string; TtlSeconds:Int64; const Guard,Audit:string):Boolean;
 const Schema='CREATE TABLE IF NOT EXISTS authmeta ('+
   'hashedToken TEXT PRIMARY KEY REFERENCES login_tokens(hashedToken) ON DELETE CASCADE,'+
   'tenantKey TEXT NOT NULL,credentialRef TEXT NOT NULL,kind TEXT NOT NULL CHECK(kind IN (''web'',''api'')));';
@@ -396,9 +396,13 @@ begin
   Expires:=IssuedExpiry(Db,Kind,TtlSeconds,At,LifetimeCondition);
   SharedSql:='';if Kind='api' then SharedSql:=SharedIssueSQL(Db,UserId,Token,Key,UnixMillis(At));
   if not Db.Exec(Schema) then Exit;
+  if Audit<>'' then
+    SharedSql:=SharedSql+'SELECT CASE WHEN ('+Guard+') AND EXISTS(SELECT 1 FROM authmeta '+
+      'WHERE hashedToken='+QuotedStr(Key)+') THEN 1 ELSE json(''Token issuance scope changed'') END; '+
+      Audit+'SELECT CASE WHEN ('+Guard+') THEN 1 ELSE json(''Token issuance scope changed'') END; ';
   if not Db.Exec('BEGIN IMMEDIATE; INSERT INTO login_tokens(hashedToken,userId,createdAt,expiresAt) '+
     'SELECT '+QuotedStr(Key)+',id,'+QuotedStr(NowIso)+','+QuotedStr(Expires)+' FROM users WHERE id='+QuotedStr(UserId)+
-    ' AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+
+    ' AND ('+Guard+') AND COALESCE(loginDisabled,0)=0 AND COALESCE(json_extract(services_json,''$.password''),'''')='+QuotedStr(Rows[0][0])+
     ' AND COALESCE(authenticationMethod,''password'')='+QuotedStr(Rows[0][1])+' AND services_json='+QuotedStr(Rows[0][2])+' AND CAST(COALESCE(isAdmin,0) AS TEXT)='+QuotedStr(Rows[0][3])+' AND ('+PolicyCondition+') AND ('+LifetimeCondition+'); '+
     'INSERT INTO authmeta(hashedToken,tenantKey,credentialRef,kind) SELECT hashedToken,'+QuotedStr(TenantKey)+','+
     QuotedStr(CredentialRef)+','+QuotedStr(Kind)+' FROM login_tokens WHERE hashedToken='+QuotedStr(Key)+'; '+SharedSql+'COMMIT;') then

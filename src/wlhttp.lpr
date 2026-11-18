@@ -650,6 +650,7 @@ begin
   // REST API (subset of public/api/wekan.yml) so the WeKan Python CLI api.py works — see wlapi
   HTTPRouter.RegisterRoute('/users/login', rmPost, @ApiLogin);
   HTTPRouter.RegisterRoute('/users/logout', rmPost, @ApiLogout);
+  HTTPRouter.RegisterRoute('/api/createtoken/:userId', rmPost, @ApiCreateToken);
   HTTPRouter.RegisterRoute('/api/deletetoken', rmPost, @ApiDeleteToken);
   HTTPRouter.RegisterRoute('/api/user', rmGet, @ApiUser);
   HTTPRouter.RegisterRoute('/api/user/cards', rmGet, @ApiMyCards);

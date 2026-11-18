@@ -1102,6 +1102,33 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
                 client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
                     services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                issue='/api/createtoken/u'
+                assert request('POST',issue,dict(reason='test'))[0]==401
+                assert request('POST',issue,dict(reason='test'),target_token)[0]==403
+                assert request('POST',issue,dict(reason='  '),admin_token)[0]==400
+                assert request('POST','/api/createtoken/missing',dict(reason='test'),admin_token)[0]==404
+                status,_,body=request('POST',issue,dict(reason='  Regression audit  '),admin_token)
+                issued=json.loads(body)
+                assert status==200 and issued['_id']=='u',(status,body)
+                assert request('GET','/api/user',token=issued['authToken'])[0]==200
+                reason='restCreateToken: Regression audit'
+                audit=client.command({'find':'impersonatedUsers','filter':dict(reason=reason)})['cursor']['firstBatch']
+                assert len(audit)==1 and audit[0]['adminId']=='fixture-admin' and audit[0]['userId']=='u'
+                assert isinstance(audit[0]['createdAt'],type(now)) and 'authToken' not in audit[0]
+                before=client.find('users','u')[0]['services']['resume']['loginTokens']
+                with sqlite3.connect(database) as con:
+                    physical=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='impersonatedUsers'").fetchone()[0]
+                    con.execute(f'CREATE TRIGGER issue_audit_fail BEFORE INSERT ON "{physical}" '
+                                "BEGIN SELECT RAISE(ABORT,'fixture audit failure'); END")
+                try:
+                    assert request('POST',issue,dict(reason='Rollback audit'),admin_token)[0]!=200
+                    assert client.find('users','u')[0]['services']['resume']['loginTokens']==before
+                finally:
+                    with sqlite3.connect(database) as con:
+                        con.execute('DROP TRIGGER issue_audit_fail')
+                issued_hash=base64.b64encode(hashlib.sha256(issued['authToken'].encode()).digest()).decode()
+                assert request('POST','/api/deletetoken',dict(userId='u',token=issued_hash),admin_token)[0]==200
+                print('PASS: admin issuance requires a reason, records a typed audit and rolls back on audit failure')
                 revoked_token='fixture-revoke-one'
                 revoked_hash=base64.b64encode(hashlib.sha256(revoked_token.encode()).digest()).decode()
                 client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$push':{

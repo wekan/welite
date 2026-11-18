@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Add audited administrative REST token issuance
+
+- Issue a bearer for an active account through `POST /api/createtoken/:userId`
+  when a site administrator supplies a reason. Store the impersonation audit
+  record in the same transaction as the bearer and its shared resume entry.
+- Pass the three upstream REST token issuance and revocation cases.
+
 ## 2026-11-18 Add administrative REST token revocation
 
 - Return a JSON 404 for missing users. Revoke all sessions or one shared

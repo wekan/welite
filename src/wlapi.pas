@@ -40,6 +40,7 @@ uses
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
+procedure ApiCreateToken(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
@@ -111,7 +112,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -496,6 +497,77 @@ begin
   end;
   if AllSessions then SendJson(aResponse,'{"message":"All login tokens have been invalidated."}')
   else SendJson(aResponse,'{"message":"You''ve been logged out!"}');
+end;
+
+procedure ApiCreateToken(aRequest:TRequest;aResponse:TResponse);
+const AuditCollection='impersonatedUsers';
+var T:TWLTenant;Actor,Target,Reason,Token,Guard,Audit,Source,Physical,Payload,Stamp,Reference:string;
+  Rows:TWLRows;Input,Doc:TJSONObject;Value:TJSONData;AtTime:TDateTime;AtMs:Int64;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  if not IsSiteAdmin(T.Db,Actor) then
+  begin SendError(aResponse,403,'Site administration required');Exit;end;
+  Target:=aRequest.RouteParams['userId'];
+  Reason:='';Input:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+      begin
+        Input:=ExactObject(aRequest.Content);Value:=Input.Find('reason');
+        if Value is TJSONString then Reason:=Value.AsString;
+      end
+      else Reason:=aRequest.ContentFields.Values['reason'];
+      Reason:=Trim(Reason);
+      if (Pos(#0,Reason)>0) or (Pos(#0,Target)>0) then raise Exception.Create('Invalid input');
+    except SendError(aResponse,400,'Invalid token creation request');Exit;end;
+  finally Input.Free;end;
+  if Reason='' then
+  begin SendJson(aResponse,'{"error":"A reason is required when creating a token for another user"}',400);Exit;end;
+  Rows:=T.Db.Query('SELECT COALESCE(json_extract(services_json,''$.password''),''''),COALESCE(loginDisabled,0) '+
+    'FROM users WHERE id='+QuotedStr(Target)+';');
+  if Length(Rows)<>1 then
+  begin SendJson(aResponse,'{"error":"User not found"}',404);Exit;end;
+  if Rows[0][1]<>'0' then
+  begin SendError(aResponse,403,'Account is disabled');Exit;end;
+  Guard:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0)'+
+    ' AND (SELECT count(*) FROM users WHERE id='+QuotedStr(Target)+' AND COALESCE(loginDisabled,0)=0)=1';
+  try
+    // Truncate by characters inside SQLite before constructing the audit document.
+    Reference:=CredentialFingerprint(Rows[0][0]);
+    Rows:=T.Db.Query('SELECT substr('+QuotedStr(Reason)+',1,500);');
+    if Length(Rows)<>1 then raise Exception.Create('Audit reason unavailable');
+    Reason:='restCreateToken: '+Rows[0][0];
+    AtTime:=LocalTimeToUniversal(Now);
+    if SharedStore(T.Db) then
+    begin
+      if not EnsureSharedCollection(T.Db,AuditCollection) then raise Exception.Create('Audit collection unavailable');
+      Rows:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(AuditCollection)+';');
+      if Length(Rows)<>1 then raise Exception.Create('Audit collection unavailable');
+      Source:=Rows[0][0];
+      Physical:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
+      Guard:=Guard+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(AuditCollection)+
+        ' AND table_name='+QuotedStr(Source)+')=1';
+      AtMs:=DateTimeToUnix(AtTime,True)*1000+MilliSecondOf(AtTime);
+      Doc:=TJSONObject.Create(['_id',NewId,'adminId',Actor,'userId',Target,'reason',Reason,'createdAt',AtMs,'modifiedAt',AtMs]);
+      try Payload:=QuotedStr(TypedDocument(Doc.AsJSON,'','{"createdAt":"date","modifiedAt":"date"}'));finally Doc.Free;end;
+      Audit:='INSERT INTO '+Physical+'(_ferretdb_sjson) VALUES(CASE WHEN wl_storage('+QuotedStr(Source)+
+        ')=''blob'' THEN jsonb('+Payload+') ELSE '+Payload+' END); ';
+    end
+    else
+    begin
+      Stamp:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',AtTime));
+      Audit:='CREATE TABLE IF NOT EXISTS impersonatedUsers(id TEXT PRIMARY KEY,adminId TEXT NOT NULL,'+
+        'userId TEXT NOT NULL,reason TEXT NOT NULL,createdAt TEXT NOT NULL,modifiedAt TEXT NOT NULL); '+
+        'INSERT INTO impersonatedUsers VALUES('+QuotedStr(NewId)+','+QuotedStr(Actor)+','+
+        QuotedStr(Target)+','+QuotedStr(Reason)+','+Stamp+','+Stamp+'); ';
+    end;
+    Token:=NewAuthToken;
+    if not IssueLoginToken(T.Db,Target,Token,Reference,'api',
+      wlauth.ApiTokenLifetime(T.Db),Guard,Audit) then raise Exception.Create('Token issuance failed');
+  except SendError(aResponse,403,'Could not issue a token for this account');Exit;end;
+  Doc:=TJSONObject.Create(['_id',Target,'authToken',Token]);
+  try SendJson(aResponse,Doc.AsJSON);finally Doc.Free;end;
 end;
 
 procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);

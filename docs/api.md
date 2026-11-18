@@ -220,6 +220,12 @@ The same page has HTML forms to create, edit and delete webhooks. The forms
 use one-use action tokens scoped to the board and integration, and successful
 submissions redirect back to the settings page.
 
+Site administrators can post to `/api/createtoken/:userId` with a nonblank
+`reason`. A successful response contains `_id` and the new `authToken`. The
+target must be active and eligible under WeLite's account policy. Issuance and
+the impersonation audit record commit together. The audit contains the actor,
+target, timestamp and up to 500 characters of the reason.
+
 Site administrators can post `userId` to `/api/deletetoken` to revoke all of
 that user's login sessions. To revoke one shared Meteor bearer, also supply
 its stored SHA-256 base64 digest in `token`. An unknown digest or a raw bearer
