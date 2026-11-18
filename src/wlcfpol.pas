@@ -10,7 +10,7 @@ type
     FShared:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
-    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False;CardColumn:Boolean=False):string;
+    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False;CardColumn:Boolean=False;AllowSiteAdmin:Boolean=False):string;
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
@@ -19,7 +19,7 @@ type
     function HistoryExpression(const FieldId:string):string;
     function ScopeWriteExpression(const FieldId:string):string;
     function CloneCardGuard:string;
-    function ScopeAdminExpression:string;
+    function ScopeAdminExpression(AllowSiteAdmin:Boolean=False):string;
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
   end;
@@ -65,7 +65,7 @@ begin
     FTables[2]:=Source('custom_fields','customFields');FTables[3]:=Source('cards','cards');
   end;
 end;
-function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn,CardColumn:Boolean):string;
+function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn,CardColumn,AllowSiteAdmin:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
 var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql,CardSql:string;i,Last:Integer;HasField:Boolean;
@@ -91,6 +91,7 @@ begin
         ' AND (SELECT count(*) FROM custom_field_boards x WHERE x.customFieldId=f.id)=1';
       WhereSql:=WhereSql+' AND '+Flags;
     end;
+    if AllowSiteAdmin then Admin:='(u.isAdmin=1 OR '+Admin+')';
     if DefinitionAccess then
     begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
     else if not HistoryAccess then begin Tables:=Tables+',cards c';WhereSql:=WhereSql+' AND c.id='+CardSql+' AND c.boardId=b.id';end;
@@ -133,6 +134,7 @@ begin
       ' AND EXISTS(SELECT 1 FROM json_each(CASE WHEN json_type(f.d,''$.boardIds'')=''array'' THEN json_extract(f.d,''$.boardIds'') ELSE ''[]'' END) x '+
       'WHERE x.type=''text'' AND x.value='+QuotedStr(FBoard)+' AND json_extract(f.s,''$."$s".p.boardIds.i[''||x.key||''].t'')=''string'')';
   end;
+  if AllowSiteAdmin then Admin:='(json_type(u.d,''$.isAdmin'')=''true'' OR '+Admin+')';
   if DefinitionAccess then
   begin if AdminRequired then WhereSql:=WhereSql+' AND '+Admin;end
   else if not HistoryAccess then begin
@@ -164,7 +166,7 @@ begin
     ' AND v.value IS NOT NULL AND NOT '+Build('',True,False,False,False,False,True)+
     ') THEN 1 ELSE json(''Clone field permission denied'') END; ';
 end;
-function TFieldPolicy.ScopeAdminExpression:string;
+function TFieldPolicy.ScopeAdminExpression(AllowSiteAdmin:Boolean):string;
 begin Result:=Build('',False,True,True,True);end;
 function TFieldPolicy.Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
 var Rows:TWLRows;

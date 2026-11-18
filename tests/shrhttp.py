@@ -175,6 +175,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert updated['wipLimit']['value']==4 and updated['wipLimit']['enabled'] is True and updated['wipLimit']['soft'] is False,updated
                 print('PASS: live shared list PUT stores typed WIP values and rejects unauthorized or invalid edits atomically')
 
+                label_path='/api/boards/b/labels'
+                assert request('PUT',label_path,dict(label=dict(name='Bad',color='invalid')),token)[0]==400
+                status,_,body=request('PUT',label_path,dict(label=' Bug '),token)
+                assert status==200,(status,body)
+                label_id=json.loads(body)
+                assert isinstance(label_id,str)
+                assert client.find('boards','b')[0]['labels']==[dict(_id=label_id,name='Bug',color='green')]
+                repeat=request('PUT',label_path,dict(label=dict(name='Bug',color='green')),token)
+                assert repeat[0]==200 and json.loads(repeat[2])==label_id
+                assert len(client.find('boards','b')[0]['labels'])==1
+                print('PASS: shared board label creation returns a bare ID and deduplicates trimmed names')
+
                 check_custom_api(request,client,database,token)
                 check_export_policy(request,client,database)
                 check_relation_scope(request,client,database)

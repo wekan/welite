@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Require board administration for REST label creation
+
+- Allow board and site admins to create labels and recheck authorization in
+  the write transaction. Match WeKan’s bare JSON label ID, validate the
+  color, and reuse existing labels with the same trimmed name and color.
+
 ## 2026-11-18 Run upstream REST API specs against WeLite
 
 - Add an opt-in runner that points WeKan’s unchanged REST specs and MongoDB

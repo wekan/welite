@@ -580,43 +580,67 @@ begin
     [QuotedStr(BoardId)]))));
 end;
 
-// read label.<key> from a JSON body {"label":{...}}, falling back to a flat field
-function LabelField(aRequest: TRequest; const Key: string): string;
-var D: TJSONData; Lbl: TJSONData;
-begin
-  Result := BodyField(aRequest, Key);
-  if Result <> '' then Exit;
-  if (aRequest.Content <> '') and (aRequest.Content[1] = '{') then
-    try
-      D := GetJSON(aRequest.Content);
-      try
-        if D is TJSONObject then
-        begin
-          Lbl := TJSONObject(D).Find('label');
-          if Lbl is TJSONObject then Result := TJSONObject(Lbl).Get(Key, '');
-        end;
-      finally D.Free; end;
-    except end;
-end;
-
-// PUT board label — create a board_labels row, return its id.
+// PUT board label — return the existing or newly created label ID as JSON.
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);
-var
-  T: TWLTenant; UserId, BoardId, Color, Name, Id: string; i: Integer;
-const A = '23456789abcdefghjkmnpqrstwxyz';
+const Colors='|white|green|yellow|orange|red|purple|blue|sky|lime|pink|black|silver|'+
+  'peachpuff|crimson|plum|darkgreen|slateblue|magenta|gold|navy|gray|saddlebrown|paleturquoise|mistyrose|indigo|';
+  Denied='Only a board admin can create or edit labels';
+var T:TWLTenant;UserId,BoardId,Color,Name,Id,Permission,Existing,Sql:string;
+  Policy:TFieldPolicy;Body:TJSONObject;LabelData,Value:TJSONData;Rows:TWLRows;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  BoardId := aRequest.RouteParams['boardId'];
-  Color := LabelField(aRequest, 'color');
-  Name  := LabelField(aRequest, 'name');
-  if Color = '' then Color := 'green';
-  SetLength(Id, 6);                              // 6-char label id, unique within board
-  for i := 1 to 6 do Id[i] := A[Random(Length(A)) + 1];
-  T.Db.Exec(Format('INSERT INTO board_labels(boardId,id,name,color) VALUES(%s,%s,%s,%s);',
-    [QuotedStr(BoardId), QuotedStr(Id), QuotedStr(Name), QuotedStr(Color)]));
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=QuotedStr(aRequest.RouteParams['boardId']);
+  if Length(T.Db.Query('SELECT id FROM boards WHERE id='+BoardId+';'))<>1 then
+  begin SendError(aResponse,404,'Board not found');Exit;end;
+  Policy:=TFieldPolicy.Create(T.Db,UserId,aRequest.RouteParams['boardId'],'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not check label permission');Exit;end;
+  if Rows[0][0]<>'1' then begin SendError(aResponse,403,Denied);Exit;end;
+  Name:='';Color:='';Body:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+      begin
+        Body:=ExactObject(aRequest.Content);LabelData:=Body.Find('label');
+        if LabelData=nil then raise Exception.Create('Missing label');
+        if LabelData.JSONType=jtString then Name:=LabelData.AsString
+        else if LabelData is TJSONObject then
+        begin
+          Value:=TJSONObject(LabelData).Find('name');
+          if (Value<>nil) and (Value.JSONType<>jtNull) then Name:=Value.AsString;
+          Value:=TJSONObject(LabelData).Find('color');
+          if (Value<>nil) and (Value.JSONType<>jtNull) then Color:=Value.AsString;
+        end else raise Exception.Create('Invalid label');
+      end else
+      begin
+        Name:=aRequest.ContentFields.Values['label'];
+        if Name='' then Name:=aRequest.ContentFields.Values['name'];
+        Color:=aRequest.ContentFields.Values['color'];
+        if (Name='') and (Color='') then raise Exception.Create('Missing label');
+      end;
+      Name:=Trim(Name);CheckUtf8(Name);
+      if Pos(#0,Name)>0 then raise Exception.Create('Invalid label name');
+      if Color='' then Color:='green';
+      if (Pos('|',Color)>0) or (Pos('|'+Color+'|',Colors)=0) then
+        raise Exception.Create('Invalid label color');
+    except SendError(aResponse,400,'Invalid label');Exit;end;
+  finally Body.Free;end;
+  Existing:='SELECT id FROM board_labels WHERE boardId='+BoardId+' AND name='+QuotedStr(Name)+
+    ' AND color='+QuotedStr(Color)+' ORDER BY id LIMIT 1';
+  Rows:=T.Db.Query('SELECT lower(hex(randomblob(3)));');
+  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not create label');Exit;end;
+  Id:=Rows[0][0];
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Label permission changed'') END; '+
+    'INSERT INTO board_labels(boardId,id,name,color) SELECT '+BoardId+','+QuotedStr(Id)+','+
+    QuotedStr(Name)+','+QuotedStr(Color)+' WHERE NOT EXISTS('+Existing+'); '+
+    'SELECT CASE WHEN '+Permission+' AND EXISTS('+Existing+') THEN 1 ELSE json(''Label write failed'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create label');Exit;end;
+  Rows:=T.Db.Query(Existing+';');
+  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not find label');Exit;end;
+  SendJson(aResponse,'"'+StringToJSONString(Rows[0][0])+'"');
 end;
 
 function BoolInt(const S: string): Integer;
