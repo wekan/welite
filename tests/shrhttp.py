@@ -94,7 +94,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
         for key in ['WELITE_SHORT_NAMES','WELITE_SQLITE_EXT','WELITE_ENTROPY_FILE','WELITE_ARGON_SECRET_FILE','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','PASSWORD_LOGIN_ENABLED','ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS']:env.pop(key,None)
         if backend=='cli':
             build(root/'src/wlfunc.lpr',out/'ext',['-Cg','-dWLSQLEXT'],'wlfunc.so');env['WELITE_SQLITE_EXT']=str(out/'ext/wlfunc.so')
-        snapshot_control=snapshot_proxy(env,out) if backend=='cli' else None
+        snapshot_control=snapshot_proxy(env,out) if backend=='cli' and not upstream else None
         data=out/'data/local/files/db';data.mkdir(parents=True);state=out/'state';state.mkdir()
         mongo_port=port();http_port=port();env['WELITE_PORT']=str(http_port)
         database=data/'wekan.sqlite';shadow=data/'wekan.db';app=None
