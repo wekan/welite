@@ -38,9 +38,10 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   begin
     Result:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+';');
   end;
-  procedure RecoverIdleLegacyLease(const GateName:string);
-  var LeaseRows:TWLRows;LeaseName,LeaseTable,GateIdentity,LeaseIdentity,Registry,WriterToken,Grace,
-    RecoverySql,Replacement:string;GraceMs:Int64;
+  procedure RecoverLegacyLease(const GateName:string);
+  var LeaseRows:TWLRows;LeaseName,LeaseTable,GateIdentity,LeaseIdentity,Registry,WriterToken,WriterId,Grace,
+    RecoverySql,Replacement,Claim,ClaimSql,FenceSql,FenceDoc,HistoryIdentity:string;GraceMs:Int64;
+    Tombstone:TJSONObject;
   begin
     Grace:=GetEnvironmentVariable('HISTORY_WRITER_LEASE_MS');
     if Grace='' then Grace:='30000';
@@ -60,7 +61,7 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
       ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7';
     LeaseRows:=Db.Query('SELECT json_extract(_ferretdb_sjson,''$.writers[0]'') FROM '+Ident(GateName)+' WHERE '+GateIdentity+';');
     if Length(LeaseRows)<>1 then Exit;
-    WriterToken:=QuotedStr(LeaseRows[0][0]);
+    WriterId:=LeaseRows[0][0];WriterToken:=QuotedStr(WriterId);
     GateIdentity:=GateIdentity+' AND json_extract(_ferretdb_sjson,''$.writers[0]'')='+WriterToken+
       ' AND '+WriterToken+' GLOB '+QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
         'x','[0-9a-f]',[rfReplaceAll]));
@@ -68,23 +69,44 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
       ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
-      ' AND '+VersionOne+' AND json_type(_ferretdb_sjson,''$.pending'')=''null'''+
+      ' AND '+VersionOne+' AND (json_type(_ferretdb_sjson,''$.pending'')=''null'' OR '+
+      '(json_extract(_ferretdb_sjson,''$.$s.p.pending.t'')=''string'' AND '+
+      'length(json_extract(_ferretdb_sjson,''$.pending'')) BETWEEN 1 AND 128))'+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p.state.t'')=''string'''+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p.expiresAt.t'')=''date'''+
       ' AND json_type(_ferretdb_sjson,''$.expiresAt'')=''integer'''+
       ' AND (json_extract(_ferretdb_sjson,''$.state'')=''fenced'' OR '+
       '(json_extract(_ferretdb_sjson,''$.state'')=''active'' AND '+
       'json_extract(_ferretdb_sjson,''$.expiresAt'')<=unixepoch(''subsec'')*1000-'+IntToStr(GraceMs)+'))'+
       ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7';
+    LeaseRows:=Db.Query('SELECT coalesce(json_extract(_ferretdb_sjson,''$.pending''),'''') FROM '+LeaseTable+
+      ' WHERE '+LeaseIdentity+';');
+    if Length(LeaseRows)<>1 then Exit;
+    Claim:=LeaseRows[0][0];FenceSql:='';
+    if Pos(#0,Claim)>0 then Exit;
+    if Claim='' then LeaseIdentity:=LeaseIdentity+' AND json_type(_ferretdb_sjson,''$.pending'')=''null'''
+    else
+    begin
+      ClaimSql:=QuotedStr(Claim);
+      LeaseIdentity:=LeaseIdentity+' AND json_extract(_ferretdb_sjson,''$.pending'')='+ClaimSql;
+      HistoryIdentity:='json_extract(_ferretdb_sjson,''$._id'')='+ClaimSql+
+        ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
+      Tombstone:=TJSONObject.Create(['_id',Claim,'boardId','#history-writer-fence','fencedWriter',WriterId]);
+      try FenceDoc:=QuotedStr(TypedDocument(Tombstone.AsJSON,'','{}'));finally Tombstone.Free;end;
+      FenceSql:='INSERT INTO '+TableSql+'(_ferretdb_sjson) SELECT CASE WHEN wl_storage('+QuotedStr(TableName)+
+        ')=''blob'' THEN jsonb('+FenceDoc+') ELSE '+FenceDoc+' END WHERE NOT EXISTS(SELECT 1 FROM '+
+        TableSql+' WHERE '+HistoryIdentity+'); SELECT CASE WHEN (SELECT count(*) FROM '+TableSql+
+        ' WHERE '+HistoryIdentity+')=1 THEN 1 ELSE json(''Legacy row fence failed'') END; ';
+    end;
     Registry:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''historyWriterLeases'' AND table_name='+
       QuotedStr(LeaseName)+')=1';
     Replacement:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.writers'',json(''[]'')),'+
       'json(_ferretdb_sjson),''{}'')';
-    // With no claimed row, holding the SQLite writer lock lets us retire both
-    // the lease and its gate token together. A concurrent future claim cannot
-    // match a deleted lease, and an earlier claim fails the pending-null guard.
+    // Fence the checked claim before retiring the lease and removing the gate
+    // token. A late insert cannot reuse the claimed ID after this commits.
     RecoverySql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' AND '+Registry+' AND (SELECT count(*) FROM '+
       Ident(GateName)+' WHERE '+GateIdentity+')=1 AND (SELECT count(*) FROM '+LeaseTable+' WHERE '+LeaseIdentity+
-      ')=1 THEN 1 ELSE json(''Legacy lease is not recoverable'') END; '+
+      ')=1 THEN 1 ELSE json(''Legacy lease is not recoverable'') END; '+FenceSql+
       'DELETE FROM '+LeaseTable+' WHERE '+LeaseIdentity+
       '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''Legacy lease changed'') END; UPDATE '+
       Ident(GateName)+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(GateName)+')=''blob'' THEN jsonb('+
@@ -214,7 +236,7 @@ begin
         GateScope:='json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql;
         if Gate='historyWriterGates' then
         begin
-          RecoverIdleLegacyLease(GateTable);
+          RecoverLegacyLease(GateTable);
           // The complete append uses one SQLite writer transaction. An idle
           // gate cannot acquire a writer or start migration inside it.
           Guard:=Guard+' AND ((SELECT count(*) FROM '+Ident(GateTable)+' WHERE '+GateScope+')=0 OR '+

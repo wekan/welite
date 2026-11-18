@@ -127,20 +127,27 @@ def run(request, client, db, token, refresh_ferret, session):
     client.command({'create':'historyWriterLeases'})
     writer='22222222-3333-4444-8555-666666666666'
     leased_gate=dict(idle_gate,writers=[writer])
-    lease=dict(_id=writer,boardId='b',version=1,state='active',expiresAt=DateMs(1000),pending=None)
-    assert client.command({'insert':'historyWriterGates','documents':[leased_gate]})['n']==1
-    assert client.command({'insert':'historyWriterLeases','documents':[lease]})['n']==1
-    try:
-        assert request('DELETE',path,token=token)[0]==200
-        assert not client.find('historyWriterLeases',writer)
-        assert client.find('historyWriterGates',gate_id)==[idle_gate]
-        assert changes()['removed']['previousHash']==added['integrityHash']
-        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
-        lifecycle=changes()
-        removed,added=lifecycle['removed'],lifecycle['added']
-    finally:
-        assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
-    print('PASS: shared lifecycle retires an expired legacy lease without a claimed row')
+    landed=encode(removed)
+    for claim in (None,'legacy-claimed-row',removed['_id']):
+        lease=dict(_id=writer,boardId='b',version=1,state='active',expiresAt=DateMs(1000),pending=claim)
+        assert client.command({'insert':'historyWriterGates','documents':[leased_gate]})['n']==1
+        assert client.command({'insert':'historyWriterLeases','documents':[lease]})['n']==1
+        try:
+            assert request('DELETE',path,token=token)[0]==200
+            assert not client.find('historyWriterLeases',writer)
+            if claim=='legacy-claimed-row':
+                assert client.find('changeHistory',claim)==[{
+                    '_id':claim,'boardId':'#history-writer-fence','fencedWriter':writer}]
+            elif claim is not None:
+                assert encode(client.find('changeHistory',claim)[0])==landed
+            assert client.find('historyWriterGates',gate_id)==[idle_gate]
+            assert changes()['removed']['previousHash']==added['integrityHash']
+            assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+            lifecycle=changes()
+            removed,added=lifecycle['removed'],lifecycle['added']
+        finally:
+            assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
+    print('PASS: shared lifecycle fences expired legacy claims and preserves landed history rows')
     assert client.command({'insert':'historyWriterGates','documents':[
         dict(_id='list-test-gate',boardId='b',mode='coordinated') ]})['n']==1
     try:
