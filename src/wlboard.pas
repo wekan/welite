@@ -9,6 +9,7 @@ function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
+procedure BoardAttachmentsEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
@@ -21,6 +22,17 @@ begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
 end;
 
+function BoardAttachmentsUrl(const Board:string;const S:TWLSession):string;
+begin
+  Result:=SessionUrl('/board/attachments?id='+HTTPEncode(Board),S);
+end;
+
+function AttachmentReturnUrl(Request:TRequest;const Board,Card:string;const S:TWLSession):string;
+begin
+  if Request.QueryFields.Values['from']='attachments' then Result:=BoardAttachmentsUrl(Board,S)
+  else Result:=CardUrl(Board,Card,S);
+end;
+
 function AttachmentUploadAction(const Board,Card:string):string;
 begin
   Result:='board:attachment-upload:'+IntToStr(Length(Board))+':'+Board+Card;
@@ -30,6 +42,32 @@ function AttachmentEditAction(const Operation,Board,Card,Id:string):string;
 begin
   Result:='board:attachment-'+Operation+':'+IntToStr(Length(Board))+':'+Board+
     IntToStr(Length(Card))+':'+Card+Id;
+end;
+
+function AttachmentPath(const Board,Card,Id:string):string;
+begin
+  Result:='/board/attachment?id='+HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Id);
+end;
+
+function AttachmentLink(const Board,Card,Id,Name:string;const S:TWLSession):string;
+begin
+  Result:='<a href="'+HtmlAttr(SessionUrl(AttachmentPath(Board,Card,Id),S))+'">'+HtmlEncode(Name)+'</a>';
+end;
+
+function AttachmentForms(const Board,Card,Id,Name,Origin:string;const S:TWLSession;Words:TWLTranslator):string;
+begin
+  Result:='<form method="POST" action="'+HtmlAttr('/board/attachment/rename?id='+
+    HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Id)+Origin)+'">'+
+    AuthHiddenFields(S,AttachmentEditAction('rename',Board,Card,Id))+
+    '<label>'+HtmlEncode(Words.Text('rename','Rename'))+
+    ' <input name="name" required value="'+HtmlAttr(ChangeFileExt(Name,''))+'"></label> '+
+    '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'"></form>'+
+    '<form method="POST" action="'+HtmlAttr('/board/attachment/delete?id='+
+    HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Id)+Origin)+'">'+
+    AuthHiddenFields(S,AttachmentEditAction('delete',Board,Card,Id))+
+    '<label><input type="checkbox" name="confirm" value="1" required> '+
+    HtmlEncode(Words.Text('attachmentDeletePopup-title','Delete attachment?'))+'</label> '+
+    '<input type="submit" value="'+HtmlAttr(Words.Text('delete','Delete'))+'"></form>';
 end;
 
 function ActiveCardAttachments(Db:TWLDb;Selector:TSelectionScope;const Board,Card:string):string;
@@ -457,7 +495,10 @@ begin
     aResponse.Code:=404;
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>','','html4');
   end
-  else begin aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+EnhancementScripts(wbUnknown),Dir,'html4'); end;
+  else begin
+    if S.UserId<>'' then Body:=Body+'<p><a href="'+HtmlAttr(BoardAttachmentsUrl(aRequest.QueryFields.Values['id'],S))+
+      '">'+HtmlEncode(Words.Text('attachments','Attachments'))+'</a></p>';
+    aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+EnhancementScripts(wbUnknown),Dir,'html4'); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
   finally Words.Free;end;
 end;
@@ -543,21 +584,8 @@ begin
                 Body:=Body+'<h2>'+HtmlEncode(Words.Text('attachments','Attachments'))+'</h2><ul>';
                 for Attached in Files do
                 begin
-                  Body:=Body+'<li><a href="'+HtmlAttr(SessionUrl('/board/attachment?id='+HTTPEncode(Board)+
-                    '&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]),S))+'">'+HtmlEncode(Attached[1])+'</a>';
-                  if Writable then
-                    Body:=Body+'<form method="POST" action="'+HtmlAttr('/board/attachment/rename?id='+
-                      HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]))+'">'+
-                      AuthHiddenFields(S,AttachmentEditAction('rename',Board,Card,Attached[0]))+
-                      '<label>'+HtmlEncode(Words.Text('rename','Rename'))+
-                      ' <input name="name" required value="'+HtmlAttr(ChangeFileExt(Attached[1],''))+'"></label> '+
-                      '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'"></form>'+
-                      '<form method="POST" action="'+HtmlAttr('/board/attachment/delete?id='+
-                      HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]))+'">'+
-                      AuthHiddenFields(S,AttachmentEditAction('delete',Board,Card,Attached[0]))+
-                      '<label><input type="checkbox" name="confirm" value="1" required> '+
-                      HtmlEncode(Words.Text('confirm-delete-attachment','Confirm attachment deletion'))+'</label> '+
-                      '<input type="submit" value="'+HtmlAttr(Words.Text('delete','Delete'))+'"></form>';
+                  Body:=Body+'<li>'+AttachmentLink(Board,Card,Attached[0],Attached[1],S);
+                  if Writable then Body:=Body+AttachmentForms(Board,Card,Attached[0],Attached[1],'',S,Words);
                   Body:=Body+'</li>';
                 end;
                 Body:=Body+'</ul>';
@@ -815,7 +843,7 @@ begin
   begin
     S.LanguageTag:=RequestLanguageTag(aRequest);
     aResponse.Code:=303;
-    aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+    aResponse.SetCustomHeader('Location',AttachmentReturnUrl(aRequest,Board,Card,S));
     aResponse.SendContent;Exit;
   end;
   Language:=ViewerLanguage(T.Db,S,aRequest);
@@ -829,8 +857,74 @@ begin
   finally Words.Free;end;
 end;
 
+procedure BoardAttachmentsEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
+  Board,Body,Title,Scope,Card,FilePath:string;Rows:TWLRows;Attached:TWLRow;Allowed,Writable,Snapshot:Boolean;
+begin
+  T:=Default(TWLTenant);S:=Default(TWLSession);
+  Board:=aRequest.QueryFields.Values['id'];
+  Allowed:=False;Snapshot:=False;Rows:=nil;Writable:=False;
+  if ResolveTenant(aRequest,T) and TenantOpen(T) and
+    ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) and
+    (Board<>'') and (Pos(#0,Board)=0) and T.Db.BeginRead then
+  begin
+    try
+      Allowed:=BoardCanRead(T.Db,S.UserId,Board);
+      if Allowed then
+      begin
+        Writable:=BoardCanWrite(T.Db,S.UserId,Board);
+        Selector:=TSelectionScope.Create(T.Db);
+        try
+          Scope:='attachments.boardId='+QuotedStr(Board)+' AND '+LiveAttachmentSQL(T.Db)+
+            ' AND '+Selector.StringField('attachments','id')+' AND '+Selector.StringField('attachments','cardId')+
+            ' AND '+Selector.StringField('attachments','boardId');
+          Rows:=T.Db.Query('SELECT attachments.id,attachments.name,attachments.cardId,attachments.type FROM attachments '+
+            'JOIN cards ON cards.id=attachments.cardId AND cards.boardId=attachments.boardId WHERE '+Scope+
+            ' AND cards.archived=0 AND cards.deletedAt IS NULL AND '+Selector.StringField('cards','id')+
+            ' AND '+Selector.StringField('cards','boardId')+' ORDER BY attachments.name,attachments.id;');
+        finally Selector.Free;end;
+      end;
+    finally Snapshot:=T.Db.EndRead;end;
+  end;
+  S.LanguageTag:=RequestLanguageTag(aRequest);
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  Words:=TWLTranslator.Create(Language);
+  try
+    Title:=Words.Text('attachments','Attachments');
+    aResponse.Code:=404;
+    Body:='<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>';
+    if Allowed and Snapshot then
+    begin
+      aResponse.Code:=200;
+      Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
+        HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>';
+      if Length(Rows)=0 then Body:=Body+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>'
+      else
+      begin
+        Body:=Body+'<ul>';
+        for Attached in Rows do
+        begin
+          Card:=Attached[2];
+          Body:=Body+'<li>'+AttachmentLink(Board,Card,Attached[0],Attached[1],S);
+          if RasterAttachment(Attached[3]) then
+          begin
+            FilePath:=SessionUrl(AttachmentPath(Board,Card,Attached[0])+'&preview=1',S);
+            Body:=Body+' <a href="'+HtmlAttr(FilePath)+'">'+HtmlEncode(Words.Text('view','View'))+'</a>';
+          end;
+          if Writable then Body:=Body+AttachmentForms(Board,Card,Attached[0],Attached[1],'&from=attachments',S,Words);
+          Body:=Body+'</li>';
+        end;
+        Body:=Body+'</ul>';
+      end;
+    end;
+    aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,'','html4');
+    aResponse.SendContent;
+  finally Words.Free;end;
+end;
+
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;S:TWLSession;Board,Card,Id,Scope:string;
+var T:TWLTenant;S:TWLSession;Board,Card,Id,Scope,PreviewType:string;
   Selector:TSelectionScope;Rows:TWLRows;Readable,Snapshot,Open:Boolean;Language:TWLLanguage;Words:TWLTranslator;
 begin
   Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];Id:=aRequest.QueryFields.Values['file'];
@@ -849,14 +943,19 @@ begin
             ' AND '+Selector.StringField('cards','id')+' AND '+Selector.StringField('cards','boardId');
           if Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+';'))=1 then
           begin
-            Rows:=T.Db.Query('SELECT id,name FROM attachments WHERE id='+QuotedStr(Id)+
+            Rows:=T.Db.Query('SELECT id,name,type FROM attachments WHERE id='+QuotedStr(Id)+
               ' AND '+ActiveCardAttachments(T.Db,Selector,Board,Card)+';');
             Readable:=Length(Rows)=1;
           end;
         finally Selector.Free;end;
       end;
     finally Snapshot:=T.Db.EndRead;end;
-    if Snapshot and Readable and SendStoredDownload(aResponse,StoreFilePath(T.FilesDir,'attachme',Id),Rows[0][1]) then Exit;
+    if Snapshot and Readable then
+    begin
+      PreviewType:='';
+      if aRequest.QueryFields.Values['preview']='1' then PreviewType:=Rows[0][2];
+      if SendStoredDownload(aResponse,StoreFilePath(T.FilesDir,'attachme',Id),Rows[0][1],PreviewType) then Exit;
+    end;
   end;
   aResponse.Code:=404;
   Language:=ViewerLanguage(T.Db,S,aRequest);

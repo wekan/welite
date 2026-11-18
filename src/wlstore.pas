@@ -5,8 +5,14 @@ uses SysUtils,Classes,HTTPDefs,wlcrypt;
 // Full SHA-256 IDs split into 8-character components: stable across platforms,
 // case-sensitive database IDs remain distinct on case-insensitive filesystems.
 function StoreFilePath(const FilesDir,Kind,Id:string):string;
-function SendStoredDownload(Response:TResponse;const Path:string;const Name:string=''):Boolean;
+function SendStoredDownload(Response:TResponse;const Path:string;const Name:string='';const PreviewType:string=''):Boolean;
+function RasterAttachment(const FileType:string):Boolean;
 implementation
+function RasterAttachment(const FileType:string):Boolean;
+begin
+  Result:=(FileType='image/png') or (FileType='image/jpeg') or
+    (FileType='image/gif') or (FileType='image/webp');
+end;
 function StoreFilePath(const FilesDir,Kind,Id:string):string;
 var Digest:string;i:Integer;
 begin
@@ -17,7 +23,7 @@ begin
   for i:=0 to 6 do Result:=Result+Copy(Digest,i*8+1,8)+PathDelim;
   Result:=Result+Copy(Digest,57,8)+'.bin';
 end;
-function SendStoredDownload(Response:TResponse;const Path,Name:string):Boolean;
+function SendStoredDownload(Response:TResponse;const Path,Name,PreviewType:string):Boolean;
 var Stream:TFileStream;Header,Encoded:string;C:Char;
 begin
   try Stream:=TFileStream.Create(Path,fmOpenRead or fmShareDenyWrite);
@@ -27,6 +33,11 @@ begin
   Response.Code:=200;
   Response.ContentType:='application/octet-stream';
   Header:='attachment';
+  if RasterAttachment(PreviewType) then
+  begin
+    Response.ContentType:=PreviewType;
+    Header:='inline';
+  end;
   if (Name<>'') and (Length(Name)<=255) then
   begin
     Encoded:='';

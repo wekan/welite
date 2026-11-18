@@ -4,6 +4,14 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify the upstream Version Control Attachments workflow
+
+- Open the board's HTML attachment list to preview raster images, download
+  original bytes, rename files, and confirm removal. The Chromium spec passes
+  with JavaScript and cookies disabled on both shared SQLite backends.
+- Previews require a valid browser session and board read access. Other file
+  types are served as downloads, and only writers see edit forms.
+
 ## 2026-11-18 Remove card attachments from HTML
 
 - Require board write access, a card-scoped form token and confirmation.

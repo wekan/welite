@@ -681,6 +681,7 @@ begin
   HTTPRouter.RegisterRoute('/board/attachment/rename', rmPost, @BoardAttachmentRenameEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment/delete', rmPost, @BoardAttachmentDeleteEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment', rmGet, @BoardAttachmentEndpoint);
+  HTTPRouter.RegisterRoute('/board/attachments', rmGet, @BoardAttachmentsEndpoint);
   HTTPRouter.RegisterRoute('/board/export', rmGet, @BrowserBoardExport);
   HTTPRouter.RegisterRoute('/board/webhooks', rmGet, @BrowserIntegrations);
   HTTPRouter.RegisterRoute('/board/webhooks', rmPost, @BrowserIntegrations);
