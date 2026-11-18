@@ -242,6 +242,13 @@ then faults with a zero library base. The experiment isolates the next
 test dependency. The production server still needs a thread or serial
 maintenance design and a real Amiga TCP/IP stack for HTTP verification.
 
+The pinned compiler supplies the native `athreads` unit. A scratch
+linked build loads it first and keeps the HTTP and maintenance threads.
+It passes runtime error 232 and reaches `dos.library CreateNewProc`, which
+vamos leaves unimplemented. The startup probe times out at 12 seconds.
+Native thread creation and a thread-safe SQLite build still need
+verification before enabling this configuration.
+
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
 prefix and probe-only startup aliases. That executable does not run to its
