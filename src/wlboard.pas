@@ -8,6 +8,7 @@ function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string='';const HeaderNavigation:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
+procedure BoardCalendarEndpoint(Request:TRequest;Response:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentsEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
@@ -16,7 +17,7 @@ procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses wli18n,wllocale,wladmin,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
+uses DateUtils,wli18n,wllocale,wladmin,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
@@ -236,7 +237,7 @@ end;
 
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string):string;
 var B,Lanes,Lists,Cards,MapLists,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
-  Writable,ShowSpentTime,ShowCustomFields:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;
+  Writable,ShowSpentTime,ShowCustomFields:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -260,6 +261,8 @@ begin
   else begin Align:='left'; CellDir:='ltr'; end;
   Back:='/board?id='+HTTPEncode(BoardId);
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1>'+HeaderNavigation;
+  NavState:=S;
+  NavState.LanguageTag:=Language.Tag;
   if HeaderNavigation='' then
   begin
     if S.SessionId='' then
@@ -267,6 +270,8 @@ begin
     else
       Result:=Result+NavigationButton('/',Words.Text('all-boards','All Boards'),S);
   end;
+  Result:=Result+NavigationButton('/board/calendar?id='+HTTPEncode(BoardId),
+    Words.Text('calendar','Calendar'),NavState);
   if S.UserId<>'' then
   begin
     Result:=Result+'<p><a href="'+HtmlAttr(BoardAttachmentsUrl(BoardId,S))+'">'+
@@ -516,6 +521,124 @@ begin
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
   finally Words.Free;end;
 end;
+procedure BoardCalendarEndpoint(Request:TRequest;Response:TResponse);
+const
+  WeekdayKeys:array[0..6] of string=('monday','tuesday','wednesday','thursday','friday','saturday','sunday');
+  Weekdays:array[0..6] of string=('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday');
+var
+  T:TWLTenant; S:TWLSession; Language:TWLLanguage; Words:TWLTranslator;
+  Board,MonthArg,MonthKey,NextKey,Title,Body,Path,DayKey,Color:string;
+  Today,MonthDate,RequestedDate,NextMonth:TDateTime;
+  Year,Month,Day:Word;
+  Offset,Slot,Count,Card,Column:Integer;
+  Boards,Cards:TWLRows; Available:Boolean;
+begin
+  T:=Default(TWLTenant);
+  S:=Default(TWLSession);
+  Board:=Request.QueryFields.Values['id'];
+  Today:=Date;
+  DecodeDate(Today,Year,Month,Day);
+  MonthDate:=EncodeDate(Year,Month,1);
+  MonthArg:=Request.QueryFields.Values['month'];
+  if (Length(MonthArg)=7) and
+    TryEncodeDate(StrToIntDef(Copy(MonthArg,1,4),0),StrToIntDef(Copy(MonthArg,6,2),0),1,RequestedDate) and
+    (FormatDateTime('yyyy-mm',RequestedDate)=MonthArg) and (YearOf(RequestedDate)<9999) then
+    MonthDate:=RequestedDate;
+  MonthKey:=FormatDateTime('yyyy-mm',MonthDate);
+  NextMonth:=IncMonth(MonthDate);
+  NextKey:=FormatDateTime('yyyy-mm',NextMonth);
+  Available:=False;
+  if ResolveTenant(Request,T) and TenantOpen(T) then
+  begin
+    if not ValidateSession(T.Db,Request,SessionIdFromRequest(Request),S) then S:=Default(TWLSession);
+    if (Board<>'') and (Pos(#0,Board)=0) and T.Db.BeginRead then
+    try
+      if BoardCanRead(T.Db,S.UserId,Board) then
+      begin
+        Boards:=T.Db.Query('SELECT title FROM boards WHERE id='+QuotedStr(Board)+';');
+        Available:=Length(Boards)=1;
+        if Available then
+          Cards:=T.Db.Query('SELECT c.id,c.title,substr(c.dueAt,1,10),c.color FROM cards c '+
+            'JOIN lists l ON l.id=c.listId AND l.boardId=c.boardId AND l.archived=0 AND l.deletedAt IS NULL '+
+            'JOIN swimlanes s ON s.id=c.swimlaneId AND s.boardId=c.boardId AND s.archived=0 '+
+            'WHERE c.boardId='+QuotedStr(Board)+' AND c.archived=0 AND c.deletedAt IS NULL '+
+            'AND c.dueAt>='+QuotedStr(MonthKey+'-01')+' AND c.dueAt<'+QuotedStr(NextKey+'-01')+
+            ' ORDER BY substr(c.dueAt,1,10),c.sort,c.id;');
+      end;
+    finally
+      if not T.Db.EndRead then Available:=False;
+    end;
+  end;
+  Language:=ViewerLanguage(T.Db,S,Request);
+  S.LanguageTag:=Language.Tag;
+  Words:=TWLTranslator.Create(Language);
+  try
+    Title:=Words.Text('calendar','Calendar');
+    Response.ContentType:='text/html; charset=utf-8';
+    Response.SetCustomHeader('Cache-Control','no-store');
+    Response.SetCustomHeader('Referrer-Policy','no-referrer');
+    if not Available then
+    begin
+      Response.Code:=404;
+      Body:='<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>';
+    end
+    else
+    begin
+      Response.Code:=200;
+      Path:='/board/calendar?id='+HTTPEncode(Board);
+      Body:='<h1>'+HtmlEncode(Title+' — '+Boards[0][0])+'</h1>'+
+        MainNavigation(T.Db,S,Language.Tag,T.IsAdmin)+
+        NavigationButton('/board?id='+HTTPEncode(Board)+'&view=all',Words.Text('board','Board'),S);
+      if MonthDate>EncodeDate(1,1,1) then
+        Body:=Body+NavigationButton(Path+'&month='+FormatDateTime('yyyy-mm',IncMonth(MonthDate,-1)),
+          Words.Text('previous','Previous'),S);
+      Body:=Body+NavigationButton(Path,Words.Text('today','Today'),S);
+      if YearOf(NextMonth)<9999 then
+        Body:=Body+NavigationButton(Path+'&month='+NextKey,Words.Text('next','Next'),S);
+      Body:=Body+'<table width="100%" border="1" cellpadding="5" cellspacing="0"><caption>'+
+        HtmlEncode(MonthKey)+'</caption><thead><tr>';
+      for Column:=0 to 6 do
+        Body:=Body+'<th scope="col" bgcolor="#f2f2f2">'+HtmlEncode(Words.Text(WeekdayKeys[Column],Weekdays[Column]))+'</th>';
+      Body:=Body+'</tr></thead><tbody>';
+      Offset:=DayOfTheWeek(MonthDate)-1;
+      Count:=DaysInAMonth(YearOf(MonthDate),MonthOf(MonthDate));
+      Slot:=0;
+      Card:=0;
+      while Slot<Offset+Count do
+      begin
+        Body:=Body+'<tr>';
+        for Column:=0 to 6 do
+        begin
+          if (Slot<Offset) or (Slot>=Offset+Count) then
+            Body:=Body+'<td bgcolor="#eeeeee">&nbsp;</td>'
+          else
+          begin
+            Day:=Slot-Offset+1;
+            DayKey:=FormatDateTime('yyyy-mm-dd',MonthDate+Day-1);
+            Color:='#ffffff';
+            if MonthDate+Day-1=Today then Color:='#d1e7dd';
+            Body:=Body+'<td valign="top"'+BgColorAttr(Color)+'><b>'+IntToStr(Day)+'</b>';
+            while (Card<Length(Cards)) and (Cards[Card][2]<DayKey) do Inc(Card);
+            while (Card<Length(Cards)) and (Cards[Card][2]=DayKey) do
+            begin
+              Body:=Body+'<div'+BgColorAttr(Cards[Card][3])+'>'+
+                NavigationButton('/board/card?id='+HTTPEncode(Board)+'&card='+HTTPEncode(Cards[Card][0]),
+                  CardCaption(Cards[Card][1],Words),S)+'</div>';
+              Inc(Card);
+            end;
+            Body:=Body+'</td>';
+          end;
+          Inc(Slot);
+        end;
+        Body:=Body+'</tr>';
+      end;
+      Body:=Body+'</tbody></table>';
+    end;
+    Response.Content:=LanguagePage(Response,Language,Title,Body,'','html4');
+    Response.SendContent;
+  finally Words.Free;end;
+end;
+
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
   Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel,FieldsHtml:string;

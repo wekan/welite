@@ -38,7 +38,7 @@ FPCFLAGS="${FPCFLAGS:-}"
 # .o/.ppu/link intermediates), then the finished executable is copied to build/bin/w<code>.exe.
 # <code> is a <=7-char platform name so the binary base "w"+<code> stays <=8 chars; every path
 # component is <=8 chars and the extension is .exe, so the whole tree is DOS 8.3 / Amiga safe.
-# Cross-compiling needs the per-target FPC cross compiler installed first (menu option 5 /
+# Cross-compiling needs the per-target FPC cross compiler installed first (menu option 6 /
 # fpcupdeluxe). Every NON-Windows target carries -dWLDB_CLI because welite's default build links
 # libsqlite3, which can't be cross-linked (no target lib); -dWLDB_CLI uses the external sqlite3
 # binary instead and links nothing. Windows links sqlite3.dll at runtime, so it keeps the default.
@@ -138,13 +138,64 @@ build_current() {
   do_build current "current platform"
 }
 
+example_root="$PWD/$OUTDIR/example"
+use_example=false
+
 run_current() {
   local bin="$BINDIR/wcurrent.exe"
   if [ ! -x "$bin" ]; then
     echo "  Build for current platform (option 1) first."
     return 1
   fi
-  "$bin"
+  if "$use_example"; then
+    WELITE_DATA="$example_root" WELITE_SHARED=0 WELITE_ADDRESS=127.0.0.1 REQUIRE_2FA=none "$bin"
+  else
+    "$bin"
+  fi
+}
+
+seed_example() (
+  set -o pipefail
+  local db="$1" hash scratch
+  umask 077
+  hash="$("$BINDIR/wcurrent.exe" hashpw garden-example)" || return 1
+  [ -n "$hash" ] || return 1
+  mkdir -p "${db%/*}" || return 1
+  export TMPDIR="$(cd ../.. && pwd -P)/tmp"
+  if [ "$(basename "$(dirname "$TMPDIR")")" != .tools ]; then
+    export TMPDIR="$PWD/$OUTDIR/tmp"
+  fi
+  mkdir -p "$TMPDIR" || return 1
+  scratch="$(mktemp -d "$TMPDIR/welite-example.XXXXXX")" || return 1
+  trap 'rm -f "$scratch/wekan.db"; rmdir "$scratch"' EXIT
+  {
+    printf '%s\n' 'PRAGMA foreign_keys=ON;' 'BEGIN;'
+    cat src/schema.sql || exit 1
+    printf "CREATE TEMP TABLE example_credentials(services TEXT NOT NULL CHECK(json_valid(services)));\n"
+    printf "INSERT INTO example_credentials VALUES(json_object('password',json('%s')));\n" "${hash//\'/\'\'}"
+    cat src/example.sql || exit 1
+    printf '%s\n' 'COMMIT;'
+  } | sqlite3 -batch -bail "$scratch/wekan.db" || return 1
+  ln "$scratch/wekan.db" "$db"
+)
+
+create_example() {
+  local db="$example_root/local/files/db/wekan.db"
+  if [ ! -f "$db" ]; then
+    if ! command -v sqlite3 >/dev/null; then
+      echo "  Install the sqlite3 command to create the example database."
+      return 1
+    fi
+    [ -x "$BINDIR/wcurrent.exe" ] || build_current || return 1
+    seed_example "$db" || return 1
+    echo "  Created $db"
+  else
+    echo "  Using the existing example database at $db"
+  fi
+  use_example=true
+  echo "  Choose 2 and open http://127.0.0.1:${WELITE_PORT:-5500}/"
+  echo "  Sign in as alex, sam, or lee with password garden-example."
+  echo "  Open Community garden under All Boards, then View all or Calendar."
 }
 
 build_platform() {  # $1 = a PLATFORMS entry
@@ -369,20 +420,22 @@ while true; do
   WeKan-Lite build  (fpc: $FPC)
   1) Build for current platform
   2) Run at current platform
-  3) Build for all platforms
-  4) Select platform and build for it
-  5) Install FPC cross-compilers via fpcupdeluxe (Ubuntu amd64/arm64)
-  6) Quit
+  3) Create example kanban
+  4) Build for all platforms
+  5) Select platform and build for it
+  6) Install FPC cross-compilers via fpcupdeluxe (Ubuntu amd64/arm64)
+  7) Quit
 MENU
   printf "  Choice: "
   read -r c || exit 0
   case "$c" in
     1) build_current ;;
     2) run_current ;;
-    3) build_all ;;
-    4) select_platform ;;
-    5) install_toolchains ;;
-    6) exit 0 ;;
-    *) echo "  Pick 1-6." ;;
+    3) create_example ;;
+    4) build_all ;;
+    5) select_platform ;;
+    6) install_toolchains ;;
+    7) exit 0 ;;
+    *) echo "  Pick 1-7." ;;
   esac
 done

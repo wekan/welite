@@ -716,6 +716,9 @@ begin
   HTTPRouter.RegisterRoute('/board', rmGet, @BoardEndpoint);
   HTTPRouter.RegisterRoute('/board', rmPost, @BoardEndpoint);
   HTTPRouter.RegisterRoute('/board/card', rmGet, @BoardCardEndpoint);
+  HTTPRouter.RegisterRoute('/board/card', rmPost, @BoardCardEndpoint);
+  HTTPRouter.RegisterRoute('/board/calendar', rmGet, @BoardCalendarEndpoint);
+  HTTPRouter.RegisterRoute('/board/calendar', rmPost, @BoardCalendarEndpoint);
   HTTPRouter.RegisterRoute('/board/card/dropdown', rmPost, @BoardDropdownEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment/upload', rmPost, @BoardAttachmentUploadEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment/rename', rmPost, @BoardAttachmentRenameEndpoint);
@@ -835,9 +838,10 @@ begin
 
   PortEnv := GetEnvironmentVariable('WELITE_PORT');
   Application.Port := StrToIntDef(PortEnv, DEFAULT_PORT);
+  Application.Address := GetEnvironmentVariable('WELITE_ADDRESS');
   Application.Threaded := True;
   Application.Initialize;
-  Writeln('WeKan-Lite listening on :', Application.Port, ' (data root: ', DATA_ROOT, ')');
+  Writeln('WeKan-Lite listening on :', Application.Port, ' (data root: ', DataDir, ')');
   StartHTTPStop;
   try
     StartMaintenance(DataDir);
