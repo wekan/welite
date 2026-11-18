@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify bulk card attachment cleanup in Chromium
+
+- After a bulk REST delete, both cards disappear on reload and their files
+  disappear from the active attachment list. A sibling attachment remains
+  downloadable with its original bytes.
+
 ## 2026-11-18 Verify board ownership transfer in Chromium
 
 - With JavaScript and cookies disabled, the target user can still see the

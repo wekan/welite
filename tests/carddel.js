@@ -184,6 +184,45 @@ const { readFileSync } = require('node:fs');
     await page.goto(boardUrl.href);
     console.log('PASS: Chromium opens card checklists and items without JavaScript or cookies');
 
+    const bulkCards = [];
+    for (const title of ['Bulk attachment first', 'Bulk attachment second']) {
+      const created = await context.request.post(boardUrl.origin + '/api/boards/b/lists/l/cards', {
+        headers, data: { title, swimlaneId: 's' },
+      });
+      assert.equal(created.status(), 200);
+      bulkCards.push({ id: (await created.json())._id, title });
+    }
+    const siblingFile = { id: 'brow-card', title: 'Retained sibling attachment' };
+    for (const entry of [...bulkCards, siblingFile]) {
+      metadata.set('cardId', entry.id);
+      metadata.set('fileName', entry.title + '.bin');
+      const added = await context.request.post(boardUrl.origin + '/api/attachment/upload?' + metadata, {
+        headers: { ...headers, 'Content-Type': 'application/octet-stream' }, data: attachment,
+      });
+      assert.equal(added.status(), 200);
+      entry.file = (await added.json()).attachmentId;
+    }
+    await page.reload();
+    for (const entry of bulkCards) assert.equal(await page.getByText(entry.title, { exact: true }).count(), 1);
+    const cardIds = bulkCards.map(entry => entry.id);
+    const bulk = await context.request.delete(boardUrl.origin + '/api/boards/b/cards/bulk', {
+      headers, data: { cardIds },
+    });
+    assert.equal(bulk.status(), 200);
+    assert.deepEqual(await bulk.json(), { deleted: cardIds, notFound: [] });
+    await page.reload();
+    for (const entry of bulkCards) assert.equal(await page.getByText(entry.title, { exact: true }).count(), 0);
+    const afterBulk = await context.request.get(boardUrl.origin + '/api/attachment/list/b', { headers });
+    assert.equal(afterBulk.status(), 200);
+    const listedFiles = (await afterBulk.json()).attachments.map(entry => entry.attachmentId);
+    for (const entry of bulkCards) assert.ok(!listedFiles.includes(entry.file));
+    assert.ok(listedFiles.includes(siblingFile.file));
+    const siblingDownload = await context.request.get(boardUrl.origin + '/api/attachment/download/' +
+      encodeURIComponent(siblingFile.file) + '?raw=1', { headers });
+    assert.equal(siblingDownload.status(), 200);
+    assert.deepEqual(await siblingDownload.body(), attachment);
+    console.log('PASS: Chromium bulk REST deletion hides both cards and preserves the sibling attachment');
+
     const wrong = await context.request.delete(endpoint('brow-list'), { headers });
     assert.equal(wrong.status(), 404);
     assert.deepEqual(await wrong.json(), { error: 'Card not found' });
