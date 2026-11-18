@@ -27,6 +27,23 @@ executable on linked/CLI SQLite without source or asset directories. Disk builds
 also need the SQL files or explicit path overrides. See [embedded builds](docs/static.md#build)
 and [SQL bootstrap](docs/static.md#private-bootstrap-sql); cross-target acceptance remains in TODO.
 
+## Run with standalone SQLite
+
+From the repository root, use Free Pascal with its FCL and SQLite units
+and the system SQLite library. To use the SQLite command-line tool
+instead, add `-dWLDB_CLI` and make `sqlite3` available on `PATH`.
+
+```sh
+mkdir -p build/native
+fpc -O3 -Xs -FUbuild/native -FEbuild/native -owelite src/wlhttp.lpr
+WELITE_SHARED=0 WELITE_DATA="$PWD/build/data" WELITE_PORT=5500 ./build/native/welite
+```
+
+Open `http://localhost:5500/`. Run the disk build from the repository root
+so it can load the SQL, assets, and catalogs. Plain HTTP is the default.
+The [cross-build record](docs/cross.md) gives target-specific compiler and
+SQLite requirements.
+
 ## Verified behavior and current limits
 
 - Native Linux linked and CLI SQLite builds run the [HTTP and Chromium suites](tests/README.md).

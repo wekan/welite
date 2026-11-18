@@ -191,22 +191,11 @@ The reference units, `wlhttp.lpr`, and the `*.sql` schemas live in `src/`. Build
 `releases/genasset.py` (embed `public/` + `i18n/` into the binary), `releases/convlang.py`
 (regenerate `i18n/langs.jsn` from WeKan's `imports/i18n/languages.js`).
 
-> These are *skeletons* — faithful to the prototypes' style (`{$mode objfpc}{$H+}`,
-> `{$CODEPAGE UTF8}`, `TRequest`/`TResponse`, `HTTPRouter.RegisterRoute`) and meant as the
-> starting point. The unit set is now self-contained (no dangling `uses`), but it is not yet
-> a finished server: passwords are still placeholder — real hashing into
-> `users.services_json` is required before use — and the linked-SQLite path in `wldb.pas`
-> needs the FPC `sqlite3` binding + vendored amalgamation present to compile (the
-> `-dWLDB_CLI` path only needs a `sqlite3` binary).
-
 ## Build
-```bash
-fpc -O3 -Xs -o welite src/wlhttp.lpr            # release, linked SQLite (single binary)
-fpc -dWLDB_CLI -o welite src/wlhttp.lpr         # bootstrap: external sqlite3 CLI
-fpc -Pm68k -Tamiga -o welite src/wlhttp.lpr     # classic Amiga 68k
-```
-Run plaintext HTTP; terminate TLS at a proxy or load AmiSSL/OpenSSL dynamically
-(`docs/webstack.md` Decision 5). Default port 5500, override with `PORT`.
+
+See the [standalone build and startup instructions](README.md#run-with-standalone-sqlite)
+and [cross-build records](docs/cross.md). The checklist below tracks the
+remaining platform and workflow verification.
 
 ## Implementation checklist
 

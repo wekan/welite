@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify standalone SQLite build and startup instructions
+
+- Build both native variants and launch each against a fresh standalone
+  database. Verify the Finnish home response and the native database path.
+
 ## 2026-11-18 Verify Free Pascal AROS target availability
 
 - Confirm x86 and AMD64 accept the AROS target and identify 32-bit ARM
