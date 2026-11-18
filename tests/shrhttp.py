@@ -967,6 +967,29 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     update_export_card({'$unset':{'description':''}})
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')
+                lane_id='delete-scope-lane'
+                lane_card='delete-scope-card'
+                client.command({'insert':'swimlanes','documents':[dict(
+                    _id=lane_id,boardId='b',title='Temporary lane',createdAt=now)]})
+                client.command({'insert':'cards','documents':[dict(
+                    _id=lane_card,boardId='b',listId='l',swimlaneId=lane_id,title='Temporary card',userId='u',createdAt=now)]})
+                lane_path='/api/boards/b/swimlanes/'+lane_id
+                with sqlite3.connect(database) as con:
+                    physical,=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='swimlanes'").fetchone()
+                    physical='"'+physical.replace('"','""')+'"'
+                    con.execute('CREATE TRIGGER reject_lane_delete AFTER DELETE ON '+physical+
+                                " BEGIN SELECT RAISE(FAIL,'fixture lane rollback'); END")
+                try:
+                    assert request('DELETE',lane_path,token=token)[0]==500
+                    assert client.find('cards',lane_card) and client.find('swimlanes',lane_id)
+                finally:
+                    with sqlite3.connect(database) as con:
+                        con.execute('DROP TRIGGER reject_lane_delete')
+                assert request('DELETE',lane_path,token=token)[0]==200
+                assert not client.find('cards',lane_card) and not client.find('swimlanes',lane_id)
+                status,_,body=request('DELETE',lane_path,token=token)
+                assert status==404 and json.loads(body)=={'error':'Swimlane not found'}
+                print('PASS: REST swimlane deletion rolls back its cards on failure and reports missing lanes')
                 check_list_soft_delete(request,client,database,token,web_session)
                 list_path='/api/boards/b/lists/l'
                 before=client.find('lists','l')[0]

@@ -4809,17 +4809,29 @@ begin
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
-// DELETE swimlane — its cards have no FK on swimlaneId, so remove them first.
-procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, SwimlaneId: string;
+// A swimlane and its cards are removed in one board-scoped transaction.
+procedure ApiSwimlaneDelete(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"Swimlane not found"}';
+var T:TWLTenant;UserId,BoardId,SwimlaneId,Scope,CardScope,Permission,Sql:string;
+  Policy:TFieldPolicy;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  SwimlaneId := aRequest.RouteParams['swimlaneId'];
-  T.Db.Exec(Format('DELETE FROM cards WHERE swimlaneId=%s AND boardId=%s;', [QuotedStr(SwimlaneId),QuotedStr(aRequest.RouteParams['boardId'])]));
-  T.Db.Exec(Format('DELETE FROM swimlanes WHERE id=%s;', [QuotedStr(SwimlaneId)]));
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(SwimlaneId, '"')]));
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];SwimlaneId:=aRequest.RouteParams['swimlaneId'];
+  Scope:='id='+QuotedStr(SwimlaneId)+' AND boardId='+QuotedStr(BoardId);
+  CardScope:='swimlaneId='+QuotedStr(SwimlaneId)+' AND boardId='+QuotedStr(BoardId);
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
+    ' AND (SELECT count(*) FROM swimlanes WHERE '+Scope+')=1 THEN 1 ELSE json(''Swimlane scope changed'') END; '+
+    'DELETE FROM cards WHERE '+CardScope+'; DELETE FROM swimlanes WHERE '+Scope+'; '+
+    'SELECT CASE WHEN '+Permission+' AND NOT EXISTS(SELECT 1 FROM swimlanes WHERE '+Scope+
+    ') AND NOT EXISTS(SELECT 1 FROM cards WHERE '+CardScope+
+    ') THEN 1 ELSE json(''Swimlane deletion failed'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete swimlane');Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(SwimlaneId)+'"}');
 end;
 
 // DELETE board — swimlanes/lists/cards/labels/members cascade via boardId FKs (and card
