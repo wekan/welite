@@ -101,7 +101,18 @@ The 2026-11-18 rerun at `6b30a9c` passed the linked and CLI embedded HTTP
 suites under QEMU, including the new RTL HTML4 board and viewport check.
 The CLI run still uses the host SQLite process.
 
-Physical amd64 hardware, foreign CLI deployment and other platforms remain open.
+### Emulated amd64 SQLite command-line process (2026-11-18)
+
+The CLI embedded HTTP suite also passed with Debian's amd64 SQLite 3.46.1
+CLI. Extract [the verified Debian package](https://packages.debian.org/trixie/amd64/sqlite3/download)
+and its amd64 Readline, tinfo, and zlib libraries into a separate test
+directory. Put a wrapper named `sqlite3` first on the test process's `PATH`.
+The wrapper runs the amd64 CLI under the same QEMU loader and passes the
+target library paths through QEMU's `-E LD_LIBRARY_PATH` option. With
+`WELITE_EMBED_BACKENDS=cli`, the harness verified bootstrap, RTL HTML4 board
+rendering, private SQL, and shutdown. The wrapper recorded 327 invocations.
+
+Physical amd64 hardware and other platforms remain open.
 
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
