@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Pass the upstream ownership REST spec
+
+- Select WeLite mode in the upstream harness so the ownership spec uses
+  native sign-in and board links. Both upstream cases pass while retaining
+  their REST and Mongo assertions.
+
 ## 2026-11-18 Show organization and team features in People
 
 - Render the organization and team feature flags on the native People page
