@@ -162,8 +162,6 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
-  - [ ] Match upstream REST overtime validation and reject invalid values before
-    applying any card edits.
   - [ ] Return the upstream card-scope error for checklist reads that target a
     missing or foreign card.
 

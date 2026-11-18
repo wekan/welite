@@ -228,6 +228,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert undecorated['dueComplete'] is False and undecorated['stickers']==[] and undecorated['locations']==[]
                 print('PASS: REST card decorations normalize coordinates and reject invalid updates atomically')
 
+                for payload,overtime in [(dict(isOverTime=True),True),('isOverTime=false',False)]:
+                    status,_,body=request('PUT',card_path,payload,token)
+                    assert status==200 and json.loads(body)==dict(_id=card['_id'])
+                    stored=client.find('cards',card['_id'])[0]
+                    assert stored['isOvertime'] is overtime and 'isOverTime' not in stored
+                    status,_,body=request('GET',card_path,token=token)
+                    assert status==200 and json.loads(body)['isOvertime'] is overtime
+                status,_,body=request('PUT',card_path,dict(isOverTime=None,title='Do not write'),token)
+                assert status==400 and json.loads(body)==dict(error='Invalid isOverTime')
+                assert client.find('cards',card['_id'])[0]==stored
+                print('PASS: REST overtime uses the canonical boolean and rejects invalid edits atomically')
+
                 export_path='/api/boards/b/export'
                 assert request('GET',export_path+'?listId=l',token=token)[0]==400
                 for collection in ['rules','triggers','actions']:
