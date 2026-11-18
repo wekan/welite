@@ -32,6 +32,10 @@ def run(request, db, token):
         ('GET','/lists/foreignlist/cards_count'),
         ('GET','/swimlanes/foreignlane/cards'),
         ('DELETE','/swimlanes/foreignlane'),
+        ('GET','/cards/foreigncard/dependencies'),
+        ('POST','/cards/foreigncard/dependencies'),
+        ('PUT','/cards/foreigncard/dependencies/card'),
+        ('DELETE','/cards/foreigncard/dependencies/card'),
         ('GET','/cards/foreigncard/checklists'),
         ('POST','/cards/foreigncard/checklists'),
         ('GET','/cards/card/checklists/foreigncheck'),
@@ -57,6 +61,11 @@ def run(request, db, token):
             continue
         if name.group(1) in {'ApiBoardCopy', 'ApiUserBoards'}:
             continue  # Copy only reads its source board; UserBoards uses a user route.
+        if name.group(1) == 'ApiDependencies':
+            assert 'SourceScope:=CardScope(Source)' in handler and 'Guard:=CanEdit(Source)' in handler
+            assert "SELECT CASE WHEN '+Guard+" in handler
+            checked += 1
+            continue  # Dependencies allow narrower write roles and guard their card scope directly.
         if name.group(1) == 'ApiBulkCards':
             assert 'if not ApiAuthBoard(' in handler and "FROM lists WHERE '+Guard" in handler
             continue  # The static bulk route has no card ID and checks the list directly.

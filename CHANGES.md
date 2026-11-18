@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify foreign-card dependency route scope
+
+- Exercise foreign-card dependency GET, POST, PUT and DELETE requests in the
+  native scope suite, including rollback-free rejection of every request.
+
 ## 2026-11-18 Accept binary REST attachment uploads
 
 - Accept octet-stream uploads with query-string metadata alongside JSON
