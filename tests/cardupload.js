@@ -25,7 +25,7 @@ const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
       form.locator('input[type=submit]').click(),
     ]);
     assert.equal(posted.status(), 303);
-    assert.equal(new URL(page.url()).searchParams.get('card'), 'brow-card');
+    assert.equal(new URL(page.url()).searchParams.get('card'), new URL(url).searchParams.get('card'));
     const link = page.getByRole('link', { name, exact: true });
     const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
     assert.deepEqual(readFileSync(await download.path()), bytes);
