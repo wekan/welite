@@ -27,6 +27,8 @@ def run(request, tmp, local_admin):
     assert request('GET', '/sign-in', host='[::1]:5500')[0] == 200
     denied=request('POST','/register',dict(username='attacker',password='x',confirm='x',lang='ar'),host='admin')
     assert denied[0]==403;check_auth_error(denied,'ar',title_key='register')
+    assert '<p>تُنشأ حسابات المسؤولين العامّين محليًا. التسجيل العام معطّل.</p>'.encode() in denied[2]
+    assert 'Location' not in denied[1]
     status, headers, _ = request('POST', '/sign-in', {'username':'global-admin','password':'global-test-password'}, host='admin')
     assert status == 302, (status,headers)
     global_admin = parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]

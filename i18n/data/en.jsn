@@ -2113,5 +2113,6 @@
   "enrollment-account-created": "Account created",
   "registration-first-admin": "This first account will be the Domain Global Admin.",
   "auth-too-many-attempts": "Too many login attempts. Try again later.",
-  "enrollment-setup-failed": "Could not start setup"
+  "enrollment-setup-failed": "Could not start setup",
+  "registration-global-admin-disabled": "Global Admin accounts are initialized locally. Public registration is disabled."
 }

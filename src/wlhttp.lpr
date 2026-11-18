@@ -399,7 +399,8 @@ begin
   if T.IsAdmin then
   begin
     AuthError(aRequest,aResponse,403,'register','Register',
-      'Global Admin accounts are initialized locally; public registration is disabled.');Exit;
+      'Global Admin accounts are initialized locally. Public registration is disabled.',
+      'registration-global-admin-disabled');Exit;
   end;
 
 
