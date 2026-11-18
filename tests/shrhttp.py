@@ -142,6 +142,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         WEKAN_MONGO_URL=f'mongodb://127.0.0.1:{mongo_port}/wekan',
                         WEKAN_PLAYWRIGHT_PROJECT='chromium',WEKAN_PLAYWRIGHT_PROBE='0',
                         WEKAN_PLAYWRIGHT_TARGET='welite',
+                        WELITE_TEST_DB=str(database),
                         WEKAN_PLAYWRIGHT_ALL='0',WEKAN_PLAYWRIGHT_WORKERS='1'),
                         check=True)
                     continue

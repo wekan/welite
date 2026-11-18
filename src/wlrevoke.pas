@@ -81,11 +81,22 @@ begin
     'DELETE FROM login_tokens WHERE '+Scope+'; ';
 end;
 function RevokeStoredTokenSQL(Db:TWLDb;const UserId,Hash:string):string;
+var PrivateHash,Scope:string;C:Char;
 begin
   Result:='';
-  if not ValidMeteorTokenHash(Hash) then Exit;
+  if ValidMeteorTokenHash(Hash) then
+  begin
+    if not AuthSourceCurrent(Db) then raise Exception.Create('Authentication source changed');
+    Exit(SharedTokenEdit(Db,UserId,Hash,False,True));
+  end;
+  if (Length(Hash)<>68) or (Copy(Hash,1,4)<>'web:') then Exit;
+  PrivateHash:=Copy(Hash,5,64);
+  for C in PrivateHash do if not (C in ['0'..'9','a'..'f']) then Exit;
   if not AuthSourceCurrent(Db) then raise Exception.Create('Authentication source changed');
-  Result:=SharedTokenEdit(Db,UserId,Hash,False,True);
+  Scope:='userId='+QuotedStr(UserId)+' AND hashedToken='+QuotedStr(PrivateHash)+
+    ' AND EXISTS(SELECT 1 FROM authmeta WHERE authmeta.hashedToken=login_tokens.hashedToken AND kind=''web'')';
+  // The private metadata references the token with ON DELETE CASCADE.
+  Result:='DELETE FROM login_tokens WHERE '+Scope+'; ';
 end;
 
 end.

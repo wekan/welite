@@ -4,6 +4,14 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Revoke individual browser sessions through the REST API
+
+- Allow site administrators to revoke a private browser session by its
+  stored digest. The next authenticated request is rejected and other
+  sessions remain active.
+- Pass all four upstream revocation cases on linked and CLI SQLite with
+  JavaScript and cookies disabled in the browser case.
+
 ## 2026-11-18 Pass upstream custom-field update and deletion specs
 
 - Pass all seven REST cases on shared linked SQLite. Verify accepted names

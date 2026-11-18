@@ -257,8 +257,12 @@ target, timestamp and up to 500 characters of the reason.
 
 Site administrators can post `userId` to `/api/deletetoken` to revoke all of
 that user's login sessions. To revoke one shared Meteor bearer, also supply
-its stored SHA-256 base64 digest in `token`. An unknown digest or a raw bearer
-leaves sessions unchanged. A missing target account returns JSON 404.
+its stored SHA-256 base64 digest in `token`. To revoke an individual WeLite
+browser session, supply `web:` followed by the lowercase hexadecimal digest
+stored in the tenant's private `login_tokens.hashedToken` column. The digest
+must belong to the target user and to a browser session. The browser loses
+access on its next request. Unknown digests and raw tokens leave sessions
+unchanged. A missing target account returns JSON 404.
 
 
 ## Card dependencies
