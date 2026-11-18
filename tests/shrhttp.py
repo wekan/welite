@@ -449,7 +449,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 presentation['cards']=[
                     dict(_id='palette-card',title='Green card',sort=100,cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='green'),
                     dict(_id='hex-card',title='Hex card',sort=200,cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
-                    dict(_id='unknown-card',title='Uncolored card',listId='invalid-list',swimlaneId='invalid-lane',color='unknown'),
+                    dict(_id='unknown-card',title='Uncolored card',parentId='palette-card',listId='invalid-list',swimlaneId='invalid-lane',color='unknown'),
                 ]
                 presentation['cards'][0]['cardDependencies']=[
                     dict(cardId='hex-card',type='blocks',color='#123abc',icon='link'),
@@ -500,6 +500,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200 and 'Set-Cookie' not in headers
                 assert b'bgcolor="#3cb500">Green card' in body and b'bgcolor="#123abc">Hex card' in body
                 assert b'>Uncolored card</p>' in body
+                assert b'<li>Uncolored card</li>' not in body
+                status,headers,body=request('GET','/board?id='+imported_id+'&view=all&subtasks='+green['_id'])
+                assert status==200 and 'Set-Cookie' not in headers and b'<li>Uncolored card</li>' in body
+                print('PASS: cookie-free board HTML reveals a card’s same-board subtasks on request')
                 assert body.index(b'>Green card</p>')<body.index(b'>Hex card</p>')
                 hex_path='/api/boards/'+imported_id+'/lists/'+hexa['listId']+'/cards/'+hexa['_id']
                 assert request('PUT',hex_path,dict(sort=0),token)[0]==200

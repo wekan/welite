@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string=''):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
@@ -28,8 +28,8 @@ begin
     Result:=Result+'</ul>';
   finally Words.Free;end;
 end;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList:string):string;
-var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard:string):string;
+var B,Lanes,Lists,Cards,MapLists,Subtasks:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
   Writable:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
   function Selection(const Kind,Id:string):string;
   begin
@@ -176,13 +176,30 @@ begin
         Result:=Result+'</td>';
         Continue;
       end;
-      Cards:=Db.Query('SELECT id,title,color,description FROM cards WHERE boardId='+QuotedStr(BoardId)+
-        ' AND swimlaneId='+QuotedStr(Lanes[i][0])+' AND listId='+QuotedStr(Lists[c][0])+
-        ' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+      Cards:=Db.Query('SELECT c.id,c.title,c.color,EXISTS(SELECT 1 FROM cards child WHERE child.parentId=c.id'+
+        ' AND child.boardId=c.boardId AND child.archived=0 AND child.deletedAt IS NULL) FROM cards c WHERE c.boardId='+
+        QuotedStr(BoardId)+' AND c.swimlaneId='+QuotedStr(Lanes[i][0])+' AND c.listId='+QuotedStr(Lists[c][0])+
+        ' AND c.archived=0 AND c.deletedAt IS NULL ORDER BY c.sort,c.id;');
       for k:=0 to High(Cards) do
+      begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
           HtmlEncode(Cards[k][1])+'</p>';
+        if Cards[k][3]<>'1' then Continue;
+        Url:=BoardPath;
+        if ExpandedList<>'' then Url:=Url+'&expand='+HTTPEncode(ExpandedList);
+        if SubtaskCard=Cards[k][0] then
+        begin
+          Result:=Result+'<a href="'+HtmlAttr(SessionUrl(Url,S))+'">'+
+            HtmlEncode(Words.Text('collapse','Collapse')+' '+Words.Text('subtasks','Subtasks'))+'</a><ul>';
+          Subtasks:=Db.Query('SELECT title FROM cards WHERE boardId='+QuotedStr(BoardId)+
+            ' AND parentId='+QuotedStr(Cards[k][0])+' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+          for Child:=0 to High(Subtasks) do Result:=Result+'<li>'+HtmlEncode(Subtasks[Child][0])+'</li>';
+          Result:=Result+'</ul>';
+        end else
+          Result:=Result+'<a href="'+HtmlAttr(SessionUrl(Url+'&subtasks='+HTTPEncode(Cards[k][0]),S))+
+            '">'+HtmlEncode(Words.Text('subtasks','Subtasks'))+'</a>';
+      end;
       if Length(Cards)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
       Result:=Result+'</td>';
     end;
@@ -250,7 +267,7 @@ begin
   Title:=Words.Text('board','Board');
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
-    aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand']);
+    aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand'],aRequest.QueryFields.Values['subtasks']);
   if Body='' then begin
     aResponse.Code:=404;
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>');

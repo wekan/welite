@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 View subtasks on the HTML board
+
+- Open or close a card's same-board subtask list with an ordinary link.
+  Preserve the board view and session without JavaScript or cookies.
+
 ## 2026-11-18 Update shared organization and team flags in bulk
 
 - Let site administrators set one feature flag across the selected
