@@ -84,6 +84,9 @@ withCookieFreeChromium(async (page, context) => {
   assert.equal(await page.locator('html').getAttribute('lang'),'fa');
   assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
   assert.match(await page.locator('body').innerText(),/گذرواژهٔ خود را تأیید کنید/);
+  await page.goto(base+'/two-factor/setup?lang=th');
+  assert.equal(await page.locator('html').getAttribute('lang'),'th');
+  assert.match(await page.locator('body').innerText(),/ยืนยันรหัสผ่านเพื่อเริ่มการตั้งค่า/);
 
   await page.goto(base+'/two-factor/setup?lang=fi');
   assert.match(await page.locator('body').innerText(),/Aloita vahvistamalla salasanasi/);
