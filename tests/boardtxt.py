@@ -41,11 +41,12 @@ def run(request,database,administrator,base):
                         (identity,title,author,archived))
     card_path='/board/card?id=boardtxt&card=txtcard'
     upload_path='/board/attachment/upload?id=boardtxt&card=txtcard'
-    status,headers,body=request('GET',card_path+'&sessionId='+administrator)
-    assert status==200 and 'Set-Cookie' not in headers
+    status,headers,body=request('GET',card_path+'&lang=ar&sessionId='+administrator)
+    assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
     forms=Forms()
     forms.feed(body.decode())
     fields,=[values for action,values in forms.forms if action==upload_path]
+    assert fields['lang']=='ar'
     boundary='welite-card-upload-fixture'
     data=b'\x00\x01\xff\n'
     body=b''.join(
@@ -58,7 +59,9 @@ def run(request,database,administrator,base):
     assert upload(upload_path.replace('card=txtcard','card=txtchild'))[0]==403
     status,headers,body_response=upload(upload_path)
     assert status==303 and 'Set-Cookie' not in headers,(status,body_response)
-    assert request('GET',headers['Location'])[0]==200
+    assert parse_qs(urlsplit(headers['Location']).query)['lang']==['ar']
+    status,headers,body_response=request('GET',headers['Location'])
+    assert status==200 and headers['Content-Language']=='ar' and b'dir="rtl"' in body_response
     assert upload(upload_path)[0]==403
     with sqlite3.connect(database) as con:
         identity,=con.execute("SELECT id FROM attachments WHERE cardId='txtcard' AND name='native.bin'").fetchone()
