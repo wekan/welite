@@ -15,8 +15,9 @@ working prototypes in this tree** and aligned to the portable contract:
 
 ## Testing
 
-- Testing with Playwright Chromium, cookies disabled, javascript disabled.
-  Running tests like at wekan repo build.sh
+- The upstream REST suite and browser checks with JavaScript and cookies
+  disabled are recorded in [CHANGES.md](CHANGES.md). Platform-specific
+  browser acceptance remains in the implementation checklist.
 
 ## Design
 

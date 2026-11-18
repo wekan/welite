@@ -676,7 +676,9 @@ Set `WELITE_WEKAN_PLAYWRIGHT` to WeKan's `tests/playwright` directory with its
 dependencies installed, then run `python3 tests/shrhttp.py` with the usual shared
 HTTP test environment. The runner builds WeLite, starts an isolated FerretDB
 database, and defaults to WeKan specs 17 and 23. The browser cases use
-WeLite’s HTML interface with JavaScript disabled and cookies blocked.
+WeLite’s HTML interface with JavaScript disabled and Cookie request headers
+removed. Use the discovery-enabled FerretDB build described above so Mongo
+can read history collections that WeLite creates after startup.
 Set `WELITE_SHARED_BACKEND=linked` for the linked SQLite build or
 `WELITE_SHARED_BACKEND=cli` for SQLite CLI. Use `WELITE_WEKAN_API_GREP`
 to focus a run by Playwright title pattern. Set
@@ -685,8 +687,7 @@ Playwright `specs` directory to run additional upstream compatibility cases.
 For example, `WELITE_WEKAN_API_SPECS='rest-list-archive.e2e.js rest-card-sort.e2e.js'`
 selects the list archive and card sort regressions. Set `WELITE_WEKAN_API_SPECS=all` to
 run the REST suite, which includes specs 17, 23, 28, and every
-`rest-*.e2e.js` spec. This selection currently runs 114 cases across 22
-specs.
+`rest-*.e2e.js` spec. At WeKan `d2966d0624`, this selection runs 117 cases across 23 specs.
 
 ### Run the Linux Dillo and NetSurf board checks
 

@@ -1735,8 +1735,10 @@ legacy forms and broader clone lifecycle behavior are still unfinished.
 
 On Linux, the shared HTTP suite exercises the same database through WeLite and
 the FerretDB Mongo wire protocol. Both SQLite backends have verified two-way
-writes, permissions, restart and rollback. Both backends pass all 114
-upstream REST cases. Board export with both attachment modes and
+writes, permissions, restart and rollback. Both backends pass all 117
+upstream REST cases at WeLite `017c9ce`, WeKan `d2966d0624` and
+FerretDB `c33d4a9a` with external collection discovery. Board export
+with both attachment modes and
 individual browser session revocation pass on both backends, including
 Chromium with JavaScript and cookies disabled. See [the test runner](../tests/README.md#run-the-upstream-wekan-rest-specs).
 
