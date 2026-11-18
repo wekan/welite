@@ -133,9 +133,18 @@ private bin directory as `m68k-amiga-vasmm68k_std` and `m68k-amiga-vlink`.
 Use `CPU_TARGET=m68k OS_TARGET=amiga BINUTILSPREFIX=m68k-amiga-` and
 `CROSSOPT='-n -O2 -XV -Avasm'` in the serial FPC cross build and installation.
 
-A stripped Pascal probe linked as an AmigaOS loadable executable. WeLite's
-CLI-backend units compiled, but the unstripped full server failed in
-vlink's STABS reader. The full server link and Amiga runtime remain open.
+A stripped Pascal probe linked as an AmigaOS loadable executable. The older
+linker did not recognize the section flags emitted by FPC. Build
+[vlink 0.18a](https://github.com/erique/vbcc_vasm_vlink/blob/647720b/vlink.tar.gz)
+and use it with the same assembler and FPC units. The full WeLite server
+links with `-dWLDB_CLI -Xs` and is recognized as an AmigaOS executable.
+
+The resource build also links with `-dWLEMBED`. For this target, FPC uses
+external resources. Provide the ARM64 host `fpcres` as
+`m68k-amiga-fpcres` in the cross-tools directory and keep `wlhttp.fpcres`
+next to `wlhttp`. The companion resource file contains the exact public
+asset, locale, and private bootstrap SQL bytes checked on the build host.
+Runtime resource loading, networking and SQLite on Amiga remain unverified.
 
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
@@ -326,7 +335,7 @@ A `-dWLDB_CLI` binary needs the `sqlite3` command-line tool present at runtime o
 | macOS arm64    | aarch64-darwin  | needs x-bins | no aarch64-host crossbins |
 | DOS            | i386-go32v2     | needs x-bins | no aarch64-host crossbins |
 | Haiku          | x86_64-haiku    | needs x-bins | no aarch64-host crossbins |
-| Amiga m68k     | m68k-amiga      | probe linked | ARM64 host tools verified, full server link pending |
+| Amiga m68k     | m68k-amiga      | builds | CLI SQLite builds link from ARM64 Linux, runtime pending |
 | AmigaOS 4.1 PPC| powerpc-amiga   | needs x-bins | no aarch64-host crossbins |
 | MorphOS        | powerpc-morphos | needs x-bins | no aarch64-host crossbins |
 | AROS x86/amd64/arm64/m68k/ppc | *-aros | needs x-bins | no aarch64-host crossbins |
