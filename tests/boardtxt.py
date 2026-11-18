@@ -84,6 +84,24 @@ def run(request,database,administrator,member,base):
     status,headers,downloaded=request('GET',download)
     assert status==200 and downloaded==data and 'Set-Cookie' not in headers
     print('PASS: native multipart card upload scopes the action, rejects replay and downloads exact bytes')
+    forms=Forms()
+    forms.feed(body_response.decode())
+    delete_path='/board/attachment/delete?id=boardtxt&card=txtcard&file='+identity
+    delete_fields,=[values for action,values in forms.forms if action==delete_path]
+    delete_fields.pop('confirm',None)
+    def remove(path,fields):
+        return request('POST',path,urlencode(fields).encode(),
+                       content_type='application/x-www-form-urlencoded')[0]
+    assert remove(delete_path,delete_fields)==400
+    assert remove(delete_path.replace('card=txtcard','card=txtchild'),dict(delete_fields,confirm='1'))==403
+    assert request('GET',download)[2]==data
+    assert remove(delete_path,dict(delete_fields,confirm='1'))==303
+    assert request('GET',download)[0]==404
+    with sqlite3.connect(database) as con:
+        assert con.execute('SELECT count(*) FROM attachments WHERE id=?',(identity,)).fetchone()==(0,)
+        assert con.execute("SELECT count(*) FROM cards WHERE id='txtcard'").fetchone()==(1,)
+    print('PASS: native attachment deletion checks confirmation and card scope without deleting the card')
+
     minicard='/board?id=boardtxt&expand=txtlist'
     def card_page(session):
         status,_,html=request('GET',minicard+'&sessionId='+session)

@@ -104,6 +104,8 @@ function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileN
 procedure ApiAttachmentUpload(aRequest: TRequest; aResponse: TResponse);   // POST /api/attachment/upload
 procedure ApiAttachmentDownload(aRequest: TRequest; aResponse: TResponse); // GET  /api/attachment/download/:id
 procedure ApiAttachmentInfo(aRequest: TRequest; aResponse: TResponse);     // GET  /api/attachment/info/:id
+function DeleteStoredAttachment(const T:TWLTenant;const Actor,BoardId,AttachmentId:string;
+  const CardId:string=''):Boolean;
 procedure ApiAttachmentDelete(aRequest: TRequest; aResponse: TResponse);   // DELETE /api/attachment/delete/:id
 procedure ApiBoardAttachments(aRequest: TRequest; aResponse: TResponse);   // GET  /api/boards/:boardId/attachments
 procedure ApiCardAttachmentsList(aRequest: TRequest; aResponse: TResponse);// GET /api/attachment/list/:b/:s/:l/:c
@@ -5565,17 +5567,38 @@ begin
   finally O.Free; end;
 end;
 
-function SoftDeleteSharedAttachment(Db:TWLDb;const Actor,BoardId,AttachmentId:string):Boolean;
-var Scope,Permission,Bindings,Sql,BatchId:string;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;
+function DeleteStoredAttachment(const T:TWLTenant;const Actor,BoardId,AttachmentId:string;
+  const CardId:string):Boolean;
+var Db:TWLDb;Scope,Permission,Bindings,Sql,BatchId,Path:string;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;
 begin
+  Db:=T.Db;
   Selector:=TSelectionScope.Create(Db);
   try
     Scope:='id='+QuotedStr(AttachmentId)+' AND boardId='+QuotedStr(BoardId)+
       ' AND '+Selector.StringField('attachments','id')+' AND '+Selector.StringField('attachments','boardId');
+    if CardId<>'' then
+      Scope:=Scope+' AND cardId='+QuotedStr(CardId)+' AND '+Selector.StringField('attachments','cardId')+
+        ' AND (SELECT count(*) FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+        ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
+        ' AND '+Selector.StringField('cards','boardId')+')=1';
     Bindings:='';for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
   finally Selector.Free;end;
   Policy:=TFieldPolicy.Create(Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  if not SharedStore(Db) then
+  begin
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
+      ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 ELSE json(''Attachment scope changed'') END; '+
+      'DELETE FROM attachments WHERE '+Scope+'; COMMIT;';
+    Result:=Db.Exec(Sql);
+    if not Result then Db.Exec('ROLLBACK;')
+    else
+    begin
+      Path:=StoreFilePath(T.FilesDir,'attachme',AttachmentId);
+      if FileExists(Path) then DeleteFile(Path);
+    end;
+    Exit;
+  end;
   BatchId:=NewId;
   Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+
     ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 ELSE json(''Attachment scope changed'') END; '+
@@ -5588,25 +5611,15 @@ begin
 end;
 
 procedure ApiAttachmentDelete(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,Id,Path:string;Rows:TWLRows;Reply:TJSONObject;
+var T:TWLTenant;UserId,Id:string;Rows:TWLRows;Reply:TJSONObject;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   Id:=aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse,T.Db,Id,Rows) then Exit;
   if not ApiAuthBoard(T,aResponse,UserId,Rows[0][0],True) then Exit;
-  if SharedStore(T.Db) then
-  begin
-    if not SoftDeleteSharedAttachment(T.Db,UserId,Rows[0][0],Id) then
-    begin SendError(aResponse,500,'Could not delete attachment');Exit;end;
-  end
-  else
-  begin
-    if not T.Db.Exec('DELETE FROM attachments WHERE id='+QuotedStr(Id)+' AND boardId='+QuotedStr(Rows[0][0])+';') then
-    begin SendError(aResponse,500,'Could not delete attachment');Exit;end;
-    Path:=StoreFilePath(T.FilesDir,'attachme',Id);
-    if FileExists(Path) then DeleteFile(Path);
-  end;
+  if not DeleteStoredAttachment(T,UserId,Rows[0][0],Id) then
+  begin SendError(aResponse,500,'Could not delete attachment');Exit;end;
   Reply:=TJSONObject.Create(['success',True,'attachmentId',Id,'fileName',Rows[0][4]]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;

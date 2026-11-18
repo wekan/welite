@@ -12,6 +12,7 @@ procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
+procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
 uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
@@ -25,9 +26,9 @@ begin
   Result:='board:attachment-upload:'+IntToStr(Length(Board))+':'+Board+Card;
 end;
 
-function AttachmentRenameAction(const Board,Card,Id:string):string;
+function AttachmentEditAction(const Operation,Board,Card,Id:string):string;
 begin
-  Result:='board:attachment-rename:'+IntToStr(Length(Board))+':'+Board+
+  Result:='board:attachment-'+Operation+':'+IntToStr(Length(Board))+':'+Board+
     IntToStr(Length(Card))+':'+Card+Id;
 end;
 
@@ -547,10 +548,16 @@ begin
                   if Writable then
                     Body:=Body+'<form method="POST" action="'+HtmlAttr('/board/attachment/rename?id='+
                       HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]))+'">'+
-                      AuthHiddenFields(S,AttachmentRenameAction(Board,Card,Attached[0]))+
+                      AuthHiddenFields(S,AttachmentEditAction('rename',Board,Card,Attached[0]))+
                       '<label>'+HtmlEncode(Words.Text('rename','Rename'))+
                       ' <input name="name" required value="'+HtmlAttr(ChangeFileExt(Attached[1],''))+'"></label> '+
-                      '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'"></form>';
+                      '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'"></form>'+
+                      '<form method="POST" action="'+HtmlAttr('/board/attachment/delete?id='+
+                      HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]))+'">'+
+                      AuthHiddenFields(S,AttachmentEditAction('delete',Board,Card,Attached[0]))+
+                      '<label><input type="checkbox" name="confirm" value="1" required> '+
+                      HtmlEncode(Words.Text('confirm-delete-attachment','Confirm attachment deletion'))+'</label> '+
+                      '<input type="submit" value="'+HtmlAttr(Words.Text('delete','Delete'))+'"></form>';
                   Body:=Body+'</li>';
                 end;
                 Body:=Body+'</ul>';
@@ -760,7 +767,7 @@ begin
     if (Name[I]<#32) or (Name[I]=#127) then
     begin Reject(400);Exit;end;
   if not BoardCanWrite(T.Db,S.UserId,Board) or
-    not VerifyActionToken(aRequest,S,AttachmentRenameAction(Board,Card,Id)) then
+    not VerifyActionToken(aRequest,S,AttachmentEditAction('rename',Board,Card,Id)) then
   begin Reject(403);Exit;end;
   Selector:=TSelectionScope.Create(T.Db);
   Policy:=nil;
@@ -788,6 +795,38 @@ begin
   aResponse.Code:=303;
   aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
   aResponse.SendContent;
+end;
+
+procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Board,Card,Id:string;Language:TWLLanguage;Words:TWLTranslator;
+  Status:Integer;
+begin
+  T:=Default(TWLTenant);S:=Default(TWLSession);
+  Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
+  Id:=aRequest.QueryFields.Values['file'];
+  if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then Status:=404
+  else if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then Status:=403
+  else if (Board='') or (Card='') or (Id='') or (Pos(#0,Board+Card+Id)>0) then Status:=400
+  else if not BoardCanWrite(T.Db,S.UserId,Board) then Status:=403
+  else if aRequest.ContentFields.Values['confirm']<>'1' then Status:=400
+  else if not VerifyActionToken(aRequest,S,AttachmentEditAction('delete',Board,Card,Id)) then Status:=403
+  else if not DeleteStoredAttachment(T,S.UserId,Board,Id,Card) then Status:=409
+  else
+  begin
+    S.LanguageTag:=RequestLanguageTag(aRequest);
+    aResponse.Code:=303;
+    aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+    aResponse.SendContent;Exit;
+  end;
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  Words:=TWLTranslator.Create(Language);
+  try
+    aResponse.Code:=Status;
+    aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=LanguagePage(aResponse,Language,Words.Text('error','Error'),
+      '<p>'+HtmlEncode(Words.Text('error','Error'))+'</p>');
+    aResponse.SendContent;
+  finally Words.Free;end;
 end;
 
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
