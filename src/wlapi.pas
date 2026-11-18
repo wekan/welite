@@ -3554,15 +3554,42 @@ end;
 
 // DELETE board — swimlanes/lists/cards/labels/members cascade via boardId FKs (and card
 // children transitively); list/swimlane-scoped cards also go via the board cascade on cards.
-procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId: string;
+procedure ApiBoardDelete(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,Board,Permission,Sql,Guards,Collection,Registry,Physical,Scope:string;
+  Policy:TFieldPolicy;Rows:TWLRows;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  BoardId := aRequest.RouteParams['boardId'];
-  T.Db.Exec(Format('DELETE FROM boards WHERE id=%s;', [QuotedStr(BoardId)]));
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(BoardId, '"')]));
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];Board:=QuotedStr(BoardId);
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  Guards:='';Sql:='';
+  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1 then
+    for Collection in ['rules','triggers','actions','integrations'] do
+    begin
+      Registry:=' FROM _ferretdb_collections WHERE name='+QuotedStr(Collection);
+      Rows:=T.Db.Query('SELECT table_name'+Registry+';');
+      if Length(Rows)>1 then begin SendError(aResponse,500,'Ambiguous board source');Exit;end;
+      if Length(Rows)=0 then
+      begin Guards:=Guards+' AND NOT EXISTS(SELECT 1'+Registry+')';Continue;end;
+      Guards:=Guards+' AND (SELECT count(*)'+Registry+' AND table_name='+QuotedStr(Rows[0][0])+')=1';
+      Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+      Scope:='json_extract(_ferretdb_sjson,''$.boardId'')='+Board+
+        ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string''';
+      Sql:=Sql+'DELETE FROM '+Physical+' WHERE '+Scope+'; '+
+        'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+Physical+' WHERE '+Scope+
+        ') THEN 1 ELSE json(''Board workflow deletion failed'') END; ';
+    end;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+Guards+
+    ' THEN 1 ELSE json(''Board deletion permission changed'') END; '+Sql+
+    'DELETE FROM boards WHERE id='+Board+'; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM boards WHERE id='+Board+
+    ') THEN 1 ELSE json(''Board deletion failed'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete board');Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(BoardId)+'"}');
 end;
 
 // ---- attachments: metadata in `attachments`, bytes in files/attachme/<digest components> --------------

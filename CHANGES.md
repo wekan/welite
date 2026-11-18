@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Remove owned workflows on board deletion
+
+- Require board administration for REST board deletion and remove owned
+  rules, triggers, actions, and webhook rows in the same transaction.
+
 ## 2026-11-18 Copy shared board workflows and webhooks
 
 - Copy a board’s rules, triggers, actions, and webhook records with fresh

@@ -256,7 +256,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert copied_rule['triggerId']!='trigger-b' and copied_rule['actionId']!='action-b'
                 assert request('DELETE','/api/boards/'+copy_id,token=token)[0]==200
                 for collection in ['rules','triggers','actions','integrations']:
-                    client.command({'delete':collection,'deletes':[dict(q=dict(boardId=copy_id),limit=0)]})
+                    assert copied_rows(collection)==[], collection
+                assert client.find('rules','rule-b') and client.find('integrations','fixture-webhook')
                 print('PASS: shared board copy remaps workflow identities and preserves typed webhook fields')
                 rules_path='/api/boards/b/rules'
                 assert request('GET',rules_path)[0]==401
