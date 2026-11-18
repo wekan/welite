@@ -9,13 +9,23 @@
 # AROS arm64) — they are listed for completeness and will simply fail if unsupported.
 #
 # Env overrides:
-#   FPC=...       path to the fpc compiler            (default: fpc)
+#   FPC=...       compiler override (default: WeKan sandbox FPC, then fpc on PATH)
 #   FPCFLAGS=...  extra flags appended to every build (e.g. -dWLDB_CLI to use the external
 #                 sqlite3 CLI instead of linked SQLite, which avoids needing the amalgamation)
 #
 set -u
 cd "$(dirname "$0")" || exit 1
 
+# The Flatpak sandbox keeps its fpcupdeluxe installation beside the companion repos.
+SANDBOX_FPC=
+if [ -z "${FPC:-}" ] && [ "$(uname -s)" = Linux ]; then
+  sandbox_tools="$(cd ../.. && pwd -P)"
+  sandbox_compiler="$sandbox_tools/bin/fpcupdeluxe/fpc/bin/$(uname -m)-linux/fpc"
+  if [ -x "$sandbox_compiler" ] && [ -r "${sandbox_compiler%/*}/fpc.cfg" ]; then
+    SANDBOX_FPC="$sandbox_compiler"
+    FPC="$SANDBOX_FPC"
+  fi
+fi
 FPC="${FPC:-fpc}"
 SRC="src/wlhttp.lpr"
 OUTDIR="build"
@@ -65,6 +75,33 @@ PLATFORMS=(
   "AROS ppc|powerpc|aros|-dWLDB_CLI|arosppc"                         # FPC target support pending
 )
 
+# fpcupdeluxe records absolute paths from its original install location.
+# Rebase those paths for this build without modifying the installed config.
+run_sandbox_fpc() (
+  local cfg="${SANDBOX_FPC%/*}/fpc.cfg" install_root original_root line temp_dir
+  install_root="${SANDBOX_FPC%/fpc/bin/*}"
+  while IFS= read -r line; do
+    case "$line" in
+      -FM*/fpc/share/unicode/)
+        original_root="${line#-FM}"
+        original_root="${original_root%/fpc/share/unicode/}"
+        break
+        ;;
+    esac
+  done < "$cfg"
+  if [ -z "${original_root:-}" ] || [ "$original_root" = "$install_root" ]; then
+    "$FPC" -n "@$cfg" "$@"
+    return
+  fi
+  mkdir -p "$sandbox_tools/tmp" || return 1
+  temp_dir="$(mktemp -d "$sandbox_tools/tmp/welite-fpc.XXXXXX")" || return 1
+  trap 'rm -f "$temp_dir/fpc.cfg"; rmdir "$temp_dir"' EXIT
+  while IFS= read -r line || [ -n "$line" ]; do
+    printf '%s\n' "${line//"$original_root"/"$install_root"}"
+  done < "$cfg" > "$temp_dir/fpc.cfg" || return 1
+  "$FPC" -n "@$temp_dir/fpc.cfg" "$@"
+)
+
 # Build into build/arch/<code>/ then copy the executable to build/bin/w<code>.exe.
 do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
   local code="$1" label="$2"; shift 2
@@ -79,8 +116,12 @@ do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
   local cfgdir; cfgdir="$(dirname "$FPC")"
   [ -f "$cfgdir/fpc.cfg" ] && export PPC_CONFIG_PATH="$cfgdir"
   echo ">> Building $label  -> $arch/$bin"
+  local compiler="$FPC"
+  if [ "$FPC" = "$SANDBOX_FPC" ]; then
+    compiler=run_sandbox_fpc
+  fi
   # shellcheck disable=SC2086
-  if "$FPC" $BASEFLAGS $FPCFLAGS "$@" -FU"$arch" -FE"$arch" -o"$arch/$bin" "$SRC"; then
+  if "$compiler" $BASEFLAGS $FPCFLAGS "$@" -FU"$arch" -FE"$arch" -o"$arch/$bin" "$SRC"; then
     if [ -f "$arch/wlhttp.fpcres" ]; then
       cp -f "$arch/wlhttp.fpcres" "$BINDIR/$resource" || return 1
     else
