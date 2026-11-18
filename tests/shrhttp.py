@@ -701,6 +701,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 imported_attachment,=client.command({'find':'attachments','filter':{'meta.boardId':imported_id}})['cursor']['firstBatch']
                 assert imported_attachment['meta']['cardId']==imported_card['_id']
                 assert imported_card['coverId']==imported_attachment['_id']
+                status,_,raw_bytes=request('GET','/api/attachment/download/'+imported_attachment['_id']+'?raw=1',token=token)
+                assert status==200 and raw_bytes==attachment_contents,(status,raw_bytes)
                 status,_,body=request('GET','/api/attachment/download/'+imported_attachment['_id'],token=token)
                 assert status==200 and base64.b64decode(json.loads(body)['base64Data'])==attachment_contents
                 print('PASS: shared board import preserves attachment bytes and rolls back staged files on failure')
@@ -1057,6 +1059,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 client.command({'insert':'attachments','documents':[dict(_id=attachment_id,name='export.txt',
                     type='text/plain',storageBackend='filesystem',metadata_json='{}',
                     meta=dict(boardId='b',listId='l',swimlaneId='s',cardId=card['_id']))]})
+                raw_attachment='/api/attachment/download/'+attachment_id+'?raw=1'
+                assert request('GET',raw_attachment)[0]==401
+                status,raw_headers,raw_bytes=request('GET',raw_attachment,token=token)
+                assert status==200 and raw_bytes==contents and raw_headers['Content-Type']=='application/octet-stream'
+                assert raw_headers['Content-Disposition']=='attachment' and 'Set-Cookie' not in raw_headers
+                assert request('GET','/api/attachment/download/missing?raw=1',token=token)[0]==404
+                print('PASS: raw REST attachment download returns stored bytes with authorization')
                 original_card,=client.find('cards',card['_id'])
                 description='<b>Export roadmap</b><script>ignored content</script>'
                 def update_export_card(change):

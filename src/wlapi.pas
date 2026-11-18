@@ -5380,17 +5380,35 @@ begin
 end;
 
 procedure ApiAttachmentDownload(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, Id: string; R: TWLRows; Bytes: string;
+var T: TWLTenant; UserId, Id: string; R: TWLRows; Bytes,Path: string; O:TJSONObject;Stream:TFileStream;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   Id := aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse, T.Db, Id, R) then Exit;
   if not ApiAuthBoard(T, aResponse, UserId, R[0][0], False) then Exit;
-  Bytes := ReadFileBytes(StoreFilePath(T.FilesDir,'attachme',Id));
-  SendJson(aResponse, Format(
-    '{"success":true,"base64Data":%s,"fileName":%s,"fileSize":%d,"storageBackend":"filesystem"}',
-    [AnsiQuotedStr(EncodeStringBase64(Bytes), '"'), AnsiQuotedStr(R[0][4], '"'), Length(Bytes)]));
+  Path:=StoreFilePath(T.FilesDir,'attachme',Id);
+  if not FileExists(Path) then
+  begin SendJson(aResponse,'{"success":false,"message":"Attachment bytes not found"}',404);Exit;end;
+  if aRequest.QueryFields.Values['raw']='1' then
+  begin
+    try Stream:=TFileStream.Create(Path,fmOpenRead or fmShareDenyWrite);
+    except SendError(aResponse,500,'Could not open attachment');Exit;end;
+    aResponse.FreeContentStream:=True;
+    aResponse.ContentStream:=Stream;
+    aResponse.Code:=200;
+    aResponse.ContentType:='application/octet-stream';
+    aResponse.SetCustomHeader('Content-Disposition','attachment');
+    aResponse.SetCustomHeader('Cache-Control','private, no-store');
+    aResponse.SetCustomHeader('X-Content-Type-Options','nosniff');
+    aResponse.SendContent;
+    Exit;
+  end;
+  try Bytes:=ReadFileBytes(Path);
+  except SendError(aResponse,500,'Could not read attachment');Exit;end;
+  O:=TJSONObject.Create(['success',True,'base64Data',EncodeStringBase64(Bytes),
+    'fileName',R[0][4],'fileSize',Length(Bytes),'storageBackend','filesystem']);
+  try SendJson(aResponse,O.AsJSON);finally O.Free;end;
 end;
 
 procedure ApiAttachmentInfo(aRequest: TRequest; aResponse: TResponse);

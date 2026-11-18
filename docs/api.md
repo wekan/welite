@@ -142,6 +142,10 @@ is self-or-admin. Non-members get `403`.
 | `GET /api/boards/:boardId/attachments` | `listattachments` | `[{"_id","name","cardId"}]` |
 | `GET /api/attachment/list/:b/:s/:l/:cardId` | `listcardattachments` | `{"success","attachments":[...]}` |
 
+Add `?raw=1` to download the stored attachment bytes as
+`application/octet-stream`. Both formats require authorization to read the
+board. An attachment whose file is missing returns HTTP 404.
+
 ¹ api.py's `addcustomfieldtoboard` used to crash on an empty `settings` arg (`json.loads('')`);
 fixed in WeKan's api.py (empty → `{}`, sent as JSON). The server endpoint works either way.
 

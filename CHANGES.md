@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Stream raw REST attachment downloads
+
+- Serve exact attachment bytes when callers request `raw=1`. Keep the
+  base64 JSON format for existing callers. Both formats check board access
+  and return 404 if the stored file is missing.
+
 ## 2026-11-18 Show subtasks on HTML card details
 
 - Link to active subtasks on the same board. Chromium verifies that a
