@@ -162,6 +162,10 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
+  - [ ] Implement REST integration creation, scoped reads, updates, and
+    deletion. The four upstream API cases in `rest-integration-update.e2e.js`
+    return HTTP 404 during the integration creation fixture.
+
 
   Code: `wlapi.pas`.
 - **`docs/cross.md`** — cross-compiling for every target via `build.sh` option 4 (fpcupdeluxe):
