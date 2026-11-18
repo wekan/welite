@@ -60,9 +60,9 @@ PLATFORMS=(
   "MorphOS|powerpc|morphos|-dWLDB_CLI|morphos"                       # needs x-bins
   "AROS x86|i386|aros|-dWLDB_CLI|arosx86"                            # needs x-bins
   "AROS amd64|x86_64|aros|-dWLDB_CLI|arosx64"                        # needs x-bins
-  "AROS arm64|aarch64|aros|-dWLDB_CLI|arosa64"                       # needs x-bins
-  "AROS m68k|m68k|aros|-dWLDB_CLI|aros68k"                           # needs x-bins
-  "AROS ppc|powerpc|aros|-dWLDB_CLI|arosppc"                         # needs x-bins
+  "AROS arm64|aarch64|aros|-dWLDB_CLI|arosa64"                       # FPC target support pending
+  "AROS m68k|m68k|aros|-dWLDB_CLI|aros68k"                           # FPC target support pending
+  "AROS ppc|powerpc|aros|-dWLDB_CLI|arosppc"                         # FPC target support pending
 )
 
 # Build into build/arch/<code>/ then copy the executable to build/bin/w<code>.exe.

@@ -428,10 +428,18 @@ A `-dWLDB_CLI` binary needs the `sqlite3` command-line tool present at runtime o
 | Amiga m68k     | m68k-amiga      | builds | CLI SQLite builds link from ARM64 Linux, runtime pending |
 | AmigaOS 4.1 PPC| powerpc-amiga   | **links** | disk/embedded CLI ELF, runtime unverified |
 | MorphOS        | powerpc-morphos | **links** | disk/embedded CLI ELF, runtime unverified |
-| AROS x86/amd64/arm64/m68k/ppc | *-aros | needs x-bins | no aarch64-host crossbins |
+| AROS x86/amd64 | i386-aros / x86_64-aros | needs SDK | FPC target accepted, build and runtime pending |
+| AROS ARM 32-bit | arm-aros | pending | target registered in FPC source |
+| AROS arm64/m68k/ppc | *-aros | compiler support pending | pinned FPC rejects `-Taros` |
 
 `build all` on this host therefore produces 4 binaries — `wlinx64.exe`, `wlina64.exe`,
 `wwinx86.exe`, `wwinx64.exe` — and reports the rest as failures (no cross-compiler installed).
+
+The pinned FPC source registers AROS targets for i386, x86-64 and 32-bit
+ARM in `compiler/systems/t_aros.pas`. On the ARM64 Linux host, the two
+installed x86 compilers report `aros` for `-n -Taros -iTO`. The installed
+ARM64, m68k and PowerPC compilers reject `-Taros`. The latter three menu
+entries represent planned targets and still need compiler support.
 
 ### "needs x-bins" is a host limitation, not a welite bug
 
@@ -439,7 +447,7 @@ A `-dWLDB_CLI` binary needs the `sqlite3` command-line tool present at runtime o
 targeting that platform. fpcupdeluxe's cross-bins are mostly built for **x86_64 hosts**, which have
 prebuilt cross-bins for Amiga/AROS/MorphOS/Haiku/DOS/macOS/ppc. So the realistic way to cross-build
 `welite` for the exotic retro targets today is to run `build.sh` option 4 on an **x86_64 Ubuntu
-host**. The full `PLATFORMS` list is kept in `build.sh` precisely because it is correct there.
+host**. The `PLATFORMS` list in `build.sh` includes planned targets alongside verified builds.
 
 (Beyond the toolchain, `welite` is a threaded socket HTTP server; whether its server units compile
 for DOS/Amiga/etc. is a separate question this sweep did not reach.)
