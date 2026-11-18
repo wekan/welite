@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Append list history to idle coordinated heads
+
+- Verify the WeKan coordinated gate and empty pending slot, then insert the
+  list lifecycle record and advance the board head in one SQLite transaction.
+  Live FerretDB verifies the new head and its predecessor link.
+
 ## 2026-11-18 Append list lifecycle history on shared legacy boards
 
 - Write typed deletion and restore records to shared changeHistory with a

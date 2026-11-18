@@ -1782,7 +1782,8 @@ are used directly. Live registry-cache coordination remains open.
 
 
 List lifecycle changes also append to the shared `changeHistory` collection
-for boards without a WeKan writer gate or coordinated chain head. The
-append checks the unique tip within its write transaction. WeLite defers
-change-history appends on boards that already use either writer protocol.
+for legacy boards without a WeKan writer gate and for coordinated boards
+with an idle chain head. Legacy appends check the unique tip. Coordinated
+appends insert the row and advance the head in one SQLite transaction.
+Legacy writer leases and recovery of pending coordinated records remain open.
 The same FerretDB registry refresh applies if WeLite creates the collection.

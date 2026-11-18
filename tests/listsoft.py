@@ -1,5 +1,6 @@
 """Exercise list soft deletion against the live FerretDB source documents."""
 import json
+import hashlib
 import sqlite3
 from urllib.parse import parse_qs, urlencode, urlsplit
 
@@ -118,3 +119,25 @@ def run(request, client, db, token, refresh_ferret):
     finally:
         assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':'list-test-gate'},limit=1)]})['n']==1
     print('PASS: shared legacy lifecycle chain links typed records and defers to a WeKan writer gate')
+
+    def board_key(kind):
+        return hashlib.sha256(json.dumps([kind,'b'],separators=(',',':')).encode()).hexdigest()
+    gate_id=board_key('history-writer-gate')
+    head_id=board_key('history-chain')
+    client.command({'create':'historyChainHeads'})
+    assert client.command({'insert':'historyWriterGates','documents':[
+        dict(_id=gate_id,boardId='b',version=1,mode='coordinated',
+             migrationId='11111111-2222-4333-8444-555555555555',writers=[])]})['n']==1
+    assert client.command({'insert':'historyChainHeads','documents':[
+        dict(_id=head_id,boardId='b',version=1,hash=added['integrityHash'],pending=None,pendingHash=None)]})['n']==1
+    try:
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        head=client.find('historyChainHeads',head_id)[0]
+        current,=client.command({'find':'changeHistory','filter':dict(integrityHash=head['hash'])})['cursor']['firstBatch']
+        assert head['hash']!=added['integrityHash'] and head['pending'] is None and head['pendingHash'] is None, head
+        assert current['previousHash']==added['integrityHash'] and current['changeType']=='added', current
+        assert current['newContent']['deleted'] is False and isinstance(current['previousContent']['deletedAt'],DateMs), current
+    finally:
+        for collection,key in [('historyWriterGates',gate_id),('historyChainHeads',head_id)]:
+            assert client.command({'delete':collection,'deletes':[dict(q={'_id':key},limit=1)]})['n']==1
+    print('PASS: shared coordinated lifecycle append advances an idle head with the typed history row')

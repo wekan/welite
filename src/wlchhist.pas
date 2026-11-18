@@ -26,8 +26,8 @@ const GateCollections:array[0..1] of string=('historyWriterGates','historyChainH
   'CREATE INDEX IF NOT EXISTS _wl_change_board ON _wl_change_history(boardId);';
 var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   BoardSql,UserSql,Lookup,LookupSource,Previous,Stamp,Id,ChangeType,DateKey,Hash,Doc,Sql,
-    TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql:string;
-  Attempt:Integer;Shared:Boolean;
+    TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql,HeadTable,HeadScope,HeadWrite,HeadValue,GateScope:string;
+  Attempt:Integer;Shared,Coordinated:Boolean;
   function Ident(const Name:string):string;
   begin Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';end;
   function CollectionTable(const Name:string):TWLRows;
@@ -36,7 +36,7 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   end;
 begin
   Shared:=Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>0;
-  BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';
+  BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';Coordinated:=False;
   if Shared then
   begin
     if not EnsureHistoryCollection(Db,'changeHistory') then Exit;
@@ -44,6 +44,34 @@ begin
     TableName:=Rows[0][0];TableSql:=Ident(TableName);
     Guard:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''changeHistory'' AND table_name='+
       QuotedStr(TableName)+')=1 AND (SELECT count(*) FROM _ferretdb_collections WHERE table_name='+QuotedStr(TableName)+')=1';
+    Rows:=CollectionTable('historyWriterGates');
+    if Length(Rows)=1 then
+    begin
+      GateTable:=Ident(Rows[0][0]);
+      GateScope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-writer-gate',BoardId))+
+        ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
+        ' AND json_extract(_ferretdb_sjson,''$.version'')=1 AND json_extract(_ferretdb_sjson,''$.mode'')=''coordinated'''+
+        ' AND json_type(_ferretdb_sjson,''$.writers'')=''array'' AND json_array_length(_ferretdb_sjson,''$.writers'')=0';
+      Coordinated:=Length(Db.Query('SELECT 1 FROM '+GateTable+' WHERE '+GateScope+';'))=1;
+    end;
+    if Coordinated then
+    begin
+      Guard:=Guard+' AND EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name=''historyWriterGates'' AND table_name='+
+        QuotedStr(Rows[0][0])+') AND (SELECT count(*) FROM '+GateTable+' WHERE '+GateScope+')=1';
+      Rows:=CollectionTable('historyChainHeads');if Length(Rows)<>1 then Exit;
+      HeadTable:=Rows[0][0];
+      Guard:=Guard+' AND EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name=''historyChainHeads'' AND table_name='+
+        QuotedStr(HeadTable)+')';
+      HeadScope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-chain',BoardId))+
+        ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
+        ' AND json_extract(_ferretdb_sjson,''$.version'')=1'+
+        ' AND json_type(_ferretdb_sjson,''$.pending'')=''null'' AND json_type(_ferretdb_sjson,''$.pendingHash'')=''null'''+
+        ' AND json_type(_ferretdb_sjson,''$.hash'') IN (''null'',''text'')'+
+        ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7';
+      Lookup:='SELECT CASE WHEN (SELECT count(*) FROM '+Ident(HeadTable)+' WHERE '+HeadScope+
+        ')=1 THEN (SELECT coalesce(json_extract(_ferretdb_sjson,''$.hash''),'''') FROM '+Ident(HeadTable)+
+        ' WHERE '+HeadScope+') ELSE ''invalid head'' END';
+    end else
     for Gate in GateCollections do
     begin
       Rows:=CollectionTable(Gate);
@@ -59,12 +87,15 @@ begin
     end;
     BoardScope:='json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string''';
-    LookupSource:='WITH hashed(hash,previous) AS (SELECT json_extract(_ferretdb_sjson,''$.integrityHash''),'+
-      'json_extract(_ferretdb_sjson,''$.previousHash'') FROM '+TableSql+' WHERE '+BoardScope+
-      ' AND json_type(_ferretdb_sjson,''$.integrityHash'')=''text'' AND json_extract(_ferretdb_sjson,''$.integrityHash'')<>''''), '+
-      'tips AS (SELECT hash FROM hashed AS row WHERE NOT EXISTS(SELECT 1 FROM hashed WHERE previous=row.hash)) ';
-    Lookup:='SELECT CASE WHEN (SELECT count(*) FROM hashed)=0 THEN '''' '+
-      'WHEN (SELECT count(*) FROM tips)=1 THEN (SELECT hash FROM tips) ELSE ''invalid tip'' END';
+    if not Coordinated then
+    begin
+      LookupSource:='WITH hashed(hash,previous) AS (SELECT json_extract(_ferretdb_sjson,''$.integrityHash''),'+
+        'json_extract(_ferretdb_sjson,''$.previousHash'') FROM '+TableSql+' WHERE '+BoardScope+
+        ' AND json_type(_ferretdb_sjson,''$.integrityHash'')=''text'' AND json_extract(_ferretdb_sjson,''$.integrityHash'')<>''''), '+
+        'tips AS (SELECT hash FROM hashed AS row WHERE NOT EXISTS(SELECT 1 FROM hashed WHERE previous=row.hash)) ';
+      Lookup:='SELECT CASE WHEN (SELECT count(*) FROM hashed)=0 THEN '''' '+
+        'WHEN (SELECT count(*) FROM tips)=1 THEN (SELECT hash FROM tips) ELSE ''invalid tip'' END';
+    end;
     RedoSql:='UPDATE '+TableSql+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(TableName)+
       ')=''blob'' THEN jsonb(json_set(_ferretdb_sjson,''$.superseded'',json(''true''))) '+
       'ELSE json_set(_ferretdb_sjson,''$.superseded'',json(''true'')) END WHERE '+BoardScope+
@@ -121,8 +152,18 @@ begin
         ')=''blob'' THEN jsonb('+Doc+') ELSE '+Doc+' END); '
     else
       InsertSql:='INSERT INTO _wl_change_history VALUES('+QuotedStr(Id)+','+BoardSql+','+UserSql+','+QuotedStr(Hash)+','+Doc+'); ';
+    HeadWrite:='';
+    if Coordinated then
+    begin
+      HeadValue:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.hash'','+QuotedStr(Hash)+
+        '),json(_ferretdb_sjson),''{}'')';
+      HeadWrite:='UPDATE '+Ident(HeadTable)+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(HeadTable)+
+        ')=''blob'' THEN jsonb('+HeadValue+') ELSE '+HeadValue+' END WHERE '+HeadScope+
+        ' AND coalesce(json_extract(_ferretdb_sjson,''$.hash''),'''')='+QuotedStr(Previous)+
+        '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''History head changed'') END; ';
+    end;
     Sql:='BEGIN IMMEDIATE; '+LookupSource+'SELECT CASE WHEN '+Guard+' AND ('+Lookup+')='+QuotedStr(Previous)+
-      ' THEN 1 ELSE json(''History tip changed'') END; '+RedoSql+InsertSql+'COMMIT;';
+      ' THEN 1 ELSE json(''History tip changed'') END; '+RedoSql+InsertSql+HeadWrite+'COMMIT;';
     if Db.Exec(Sql) then Exit;
     Db.Exec('ROLLBACK;');
   end;
