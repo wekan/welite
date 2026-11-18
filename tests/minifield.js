@@ -40,8 +40,13 @@ const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
     assert.equal(await current.textContent(), 'Renamed <field>: Updated <choice>');
     assert.equal(await field.count(), 0);
     assert.equal(await page.getByText('Rejected field', { exact: false }).count(), 0);
+    const removed = await context.request.delete(definition.href, { headers: auth });
+    assert.equal(removed.status(), 200);
+    assert.equal((await page.reload()).status(), 200);
+    assert.equal(await current.count(), 0);
+    assert.equal(await page.getByText('Updated <choice>', { exact: false }).count(), 0);
     assert.deepEqual(await context.cookies(), []);
-    console.log('PASS: native Chromium minicard displays REST-renamed Mongo-backed field and option names');
+    console.log('PASS: native Chromium minicard reflects Mongo-backed custom-field rename and deletion');
   } finally {
     await browser.close();
   }

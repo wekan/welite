@@ -15,6 +15,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Chromium verifies a Mongo-backed option rename with JavaScript and cookies disabled.
   It also verifies a definition rename and confirms a rejected update leaves
   the accepted name and choice intact.
+  A successful definition deletion removes the field from the minicard.
 
 ## 2026-11-18 Show custom fields on native minicards
 
