@@ -30,15 +30,25 @@ def observe_board_requests(base):
             pass
 
         def do_GET(self):
+            self.forward()
+
+        def do_POST(self):
+            self.forward(self.rfile.read(int(self.headers['Content-Length'])))
+
+        def forward(self, data=None):
             connection = http.client.HTTPConnection(upstream.hostname, upstream.port, timeout=10)
             try:
-                connection.request('GET', self.path, headers={
+                connection.request(self.command, self.path, body=data, headers={
                     name: value for name, value in self.headers.items() if name.lower() != 'host'
                 })
                 response = connection.getresponse()
                 body = response.read()
                 if urlsplit(self.path).path in ('/board', '/sign-in'):
                     exchanges.append((self.path, self.headers.get('Cookie'),
+                                      response.getheader('Set-Cookie'), response.status,
+                                      response.getheader('Content-Language')))
+                if urlsplit(self.path).path == '/' and b'administrator' in body:
+                    exchanges.append(('/', self.headers.get('Cookie'),
                                       response.getheader('Set-Cookie'), response.status,
                                       response.getheader('Content-Language')))
                 self.send_response(response.status)
@@ -175,3 +185,19 @@ def assert_language_form(tools, env, observed, exchanges, browser_name):
                for route, cookie, issued, status, language in exchanges
                if urlsplit(route).path == '/sign-in')
     print(f'PASS: {browser_name} submitted the Finnish HTML sign-in language form without cookies')
+
+    if browser_name == 'NetSurf':
+        send('mousemove', '180', '184', 'click', '1')
+    else:
+        send('mousemove', '500', '220', 'click', '1')
+        send('key', 'Tab', 'Tab', 'Tab')
+    send('type', 'administrator')
+    send('key', 'Tab')
+    send('type', 'test-password')
+    send('key', 'Tab', 'Tab', 'Return')
+    wait_for('/')
+    assert any(
+        route == '/sign-in?lang=fi' and cookie is None and issued is None and status in (302, 303)
+        for route, cookie, issued, status, _ in exchanges)
+    assert ('/', None, None, 200, 'fi') in exchanges
+    print(f'PASS: {browser_name} signed in and rendered the Finnish home page without cookies')

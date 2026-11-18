@@ -696,6 +696,8 @@ environment and FFmpeg with X11 capture on `PATH`. The test creates
 virtual displays at 640×480 and 320×480 with ephemeral Dillo profiles that deny cookies.
 It checks the minimap highlight color and clicks the adjacent viewport. A
 loopback observer verifies that the board requests and responses carry no cookies.
+At 640×480, the suite also submits the Finnish language and sign-in forms
+and checks that the signed-in home page preserves the locale without cookies.
 
 Set `WELITE_NETSURF=1` to also check `usr/bin/netsurf-gtk` at both sizes.
 Extract the matching NetSurf resources under `usr/share/netsurf` in the same
