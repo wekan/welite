@@ -152,7 +152,8 @@ All eight current target/backend/resource combinations pass. x86 checks require
 i386 machine/PE32 headers; amd64 checks require AMD64/PE32+. Both require the
 console subsystem. The check now resolves real PE import-directory RVAs through
 section headers, requires kernel32.dll, and verifies sqlite3.dll is imported
-exactly by linked variants. This extends source/build coverage to 32-bit widths;
+exactly by linked variants. All variants also require the Winsock address
+resolution imports used by webhook validation. This extends source/build coverage to 32-bit widths;
 Windows runtime, resource bytes, entropy, DLL deployment and shutdown acceptance
 remain open for both targets.
 

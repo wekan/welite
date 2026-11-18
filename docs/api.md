@@ -204,7 +204,7 @@ process-restart persistence and copied-database/credential-revocation checks.
 Board administrators can create an outgoing integration with
 `POST /api/boards/:boardId/integrations` and a JSON `url`. The response contains
 `_id`. Use `PUT /api/boards/:boardId/integrations/:intId` to edit the destination,
-title, enabled flag or activity list. On Linux, destination writes require an
+title, enabled flag or activity list. On Linux and Windows, destination writes require an
 HTTP(S) URL whose resolved IPv4 and IPv6 addresses are public. Integration
 delivery requires its own address check and connection pinning.
 

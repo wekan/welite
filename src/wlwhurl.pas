@@ -6,10 +6,15 @@ interface
 function PublicWebhookUrl(const Value:string):Boolean;
 
 implementation
-uses SysUtils{$IFDEF LINUX},Sockets,cnetdb{$ENDIF};
+{$IF DEFINED(LINUX) OR DEFINED(WINDOWS)}
+{$DEFINE WL_WEBHOOK_DNS}
+{$ENDIF}
+uses SysUtils{$IFDEF WL_WEBHOOK_DNS},Sockets{$ENDIF}
+  {$IFDEF LINUX},cnetdb{$ENDIF}
+  {$IFDEF WINDOWS},JwaWS2tcpip,Winsock2{$ENDIF};
 
-{$IFDEF LINUX}
-function PublicV4(const A:in_addr):Boolean;
+{$IFDEF WL_WEBHOOK_DNS}
+function PublicV4(const A:Sockets.in_addr):Boolean;
 var B:array[0..3] of Byte;
 begin
   Move(A,B,SizeOf(B));
@@ -23,7 +28,7 @@ begin
     not ((B[0]=203) and (B[1]=0) and (B[2]=113));
 end;
 
-function PublicV6(const A:in6_addr):Boolean;
+function PublicV6(const A:Sockets.in6_addr):Boolean;
 var B:array[0..15] of Byte;
 begin
   Move(A,B,SizeOf(B));
@@ -33,14 +38,14 @@ begin
     not ((B[0]=$3f) and (B[1]=$ff));
 end;
 
-function PublicHost(const Host:string):Boolean;
+function ResolvePublicHost(const Host:string):Boolean;
 var Hints:TAddrInfo;Addresses,Current:PAddrInfo;
 begin
   Result:=False;
   FillChar(Hints,SizeOf(Hints),0);
   Hints.ai_socktype:=SOCK_STREAM;
   Addresses:=nil;
-  if getaddrinfo(PChar(Host),nil,@Hints,@Addresses)<>0 then Exit;
+  if getaddrinfo(PChar(Host),nil,@Hints,{$IFNDEF WINDOWS}@{$ENDIF}Addresses)<>0 then Exit;
   try
     if Addresses=nil then Exit;
     Current:=Addresses;
@@ -49,9 +54,9 @@ begin
       if Current^.ai_addr=nil then Exit;
       case Current^.ai_family of
         AF_INET: if (Current^.ai_addrlen<SizeOf(TInetSockAddr)) or
-          not PublicV4(PInetSockAddr(Current^.ai_addr)^.sin_addr) then Exit;
+          not PublicV4(Sockets.PInetSockAddr(Current^.ai_addr)^.sin_addr) then Exit;
         AF_INET6: if (Current^.ai_addrlen<SizeOf(TInetSockAddr6)) or
-          not PublicV6(PInetSockAddr6(Current^.ai_addr)^.sin6_addr) then Exit;
+          not PublicV6(Sockets.PInetSockAddr6(Current^.ai_addr)^.sin6_addr) then Exit;
         else Exit;
       end;
       Current:=Current^.ai_next;
@@ -59,15 +64,29 @@ begin
     Result:=True;
   finally freeaddrinfo(Addresses);end;
 end;
+function PublicHost(const Host:string):Boolean;
+{$IFDEF WINDOWS}
+var SocketData:Winsock2.TWSAData;
+{$ENDIF}
+begin
+  {$IFDEF WINDOWS}
+  if Winsock2.WSAStartup($0202,SocketData)<>0 then Exit(False);
+  try
+    Result:=ResolvePublicHost(Host);
+  finally Winsock2.WSACleanup;end;
+  {$ELSE}
+  Result:=ResolvePublicHost(Host);
+  {$ENDIF}
+end;
 {$ENDIF}
 
 function PublicWebhookUrl(const Value:string):Boolean;
-{$IFDEF LINUX}
+{$IFDEF WL_WEBHOOK_DNS}
 var Host,Authority,PortText:string;I,Start,Delim,Port:Integer;C:Char;
 {$ENDIF}
 begin
   Result:=False;
-  {$IFDEF LINUX}
+  {$IFDEF WL_WEBHOOK_DNS}
   if Length(Value)>2048 then Exit;
   for C in Value do if (Ord(C)<=$20) or (Ord(C)>=$7f) or (C='\') then Exit;
   if SameText(Copy(Value,1,8),'https://') then Start:=9

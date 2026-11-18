@@ -23,7 +23,7 @@ def run(args, cwd):
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr
 
-def imported_libraries(data, pe, magic):
+def imports(data, pe, magic):
     optional = pe + 24
     sections = optional + struct.unpack_from('<H', data, pe+20)[0]
     section_count = struct.unpack_from('<H', data, pe+6)[0]
@@ -39,14 +39,27 @@ def imported_libraries(data, pe, magic):
     rva, size = struct.unpack_from('<II', data, directory+8)
     assert rva and size
     descriptor = offset(rva)
-    libraries = set()
+    libraries = {}
+    entry = '<Q' if magic == 0x20b else '<I'
+    width = struct.calcsize(entry)
+    ordinal_flag = 1 << (width*8-1)
     for index in range(size // 20 + 1):
         fields = struct.unpack_from('<IIIII', data, descriptor+index*20)
         if not any(fields):
             return libraries
         name = offset(fields[3])
         end = data.index(b'\0', name)
-        libraries.add(data[name:end].decode('ascii').lower())
+        library = data[name:end].decode('ascii').lower()
+        thunk = offset(fields[0] or fields[4])
+        symbols = libraries.setdefault(library,set())
+        while True:
+            address, = struct.unpack_from(entry,data,thunk)
+            if not address:
+                break
+            if not address & ordinal_flag:
+                symbol = offset(address)+2
+                symbols.add(data[symbol:data.index(b'\0',symbol)].decode('ascii').lower())
+            thunk += width
     raise AssertionError('Unterminated PE import directory')
 
 with tempfile.TemporaryDirectory(prefix='wlwincross-', dir=os.environ['TMPDIR']) as temp:
@@ -75,7 +88,8 @@ with tempfile.TemporaryDirectory(prefix='wlwincross-', dir=os.environ['TMPDIR'])
                 assert struct.unpack_from('<H', data, pe+4)[0] == machine
                 assert struct.unpack_from('<H', data, pe+24)[0] == magic
                 assert struct.unpack_from('<H', data, pe+24+68)[0] == 3
-                libraries = imported_libraries(data, pe, magic)
+                libraries = imports(data, pe, magic)
                 assert 'kernel32.dll' in libraries, libraries
+                assert {'getaddrinfo','freeaddrinfo'} <= libraries.get('ws2_32.dll',set()), libraries
                 assert ('sqlite3.dll' in libraries) == (backend == 'linked'), libraries
                 print(backend + ' ' + ('embedded' if embedded else 'disk') + ': Windows ' + label + ' console verified')

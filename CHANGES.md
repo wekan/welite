@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Resolve webhook destinations through Winsock on Windows
+
+- Apply the public IPv4 and IPv6 destination policy to Winsock results.
+  Verify resolver imports in x86 and AMD64 builds for both SQLite backends.
+
 ## 2026-11-18 Store REST integrations in native SQLite
 
 - Add board-scoped integration CRUD to native stores. Existing stores
