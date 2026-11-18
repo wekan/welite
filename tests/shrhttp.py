@@ -385,6 +385,11 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     dict(_id='hex-card',title='Hex card',cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
                     dict(_id='unknown-card',title='Uncolored card',listId='invalid-list',swimlaneId='invalid-lane',color='unknown'),
                 ]
+                presentation['cards'][0]['cardDependencies']=[
+                    dict(cardId='hex-card',type='blocks',color='#123abc',icon='link'),
+                    'unknown-card','unknown-card','foreign-card',
+                ]
+                presentation['cards'][1]['cardDependencies']=['palette-card']
                 status,_,body=request('POST',import_path,dict(board=presentation),token)
                 assert status==200,(status,body)
                 imported_id=json.loads(body)['_id']
@@ -403,6 +408,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert restored_cards['Green card']['color']=='green'
                 assert restored_cards['Hex card']['color']=='#123abc'
                 assert not restored_cards['Uncolored card'].get('color')
+                green,hexa,uncolored=[restored_cards[title] for title in ['Green card','Hex card','Uncolored card']]
+                assert green['cardDependencies']==[
+                    dict(cardId=hexa['_id'],type='blocks',color='#123abc',icon='link'),
+                    dict(cardId=uncolored['_id'],type='related-to',color='#eb144c',icon='link'),
+                ]
+                assert [link['cardId'] for link in hexa['cardDependencies']]==[green['_id']]
+                print('PASS: imported card dependencies remap typed and legacy links and omit foreign targets')
                 assert [restored_cards[title]['cardNumber'] for title in
                         ['Green card','Hex card','Uncolored card']]==[47,1,2]
                 status,_,body=request('POST','/api/boards/'+imported_id+'/lists/'+restored_lists['Default width']['_id']+'/cards',

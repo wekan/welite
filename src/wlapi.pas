@@ -1518,6 +1518,32 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         ' WHERE NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId='+QuotedStr(CardKey)+' AND labelId='+LabelKey+'); ';
     end;
   end;
+  procedure ImportCardDependencies(Entry:TJSONObject;const CardKey:string);
+  var Dependencies,Item:TJSONData;Link:TJSONObject;K:Integer;Target,Kind,Color,Icon,Source:string;
+  begin
+    Dependencies:=Entry.Find('cardDependencies');
+    if (Dependencies=nil) or (Dependencies.JSONType=jtNull) then Exit;
+    if not (Dependencies is TJSONArray) then raise EConvertError.Create('Invalid imported card dependencies');
+    Source:=QuotedStr(CardKey);
+    for K:=0 to Dependencies.Count-1 do
+    begin
+      Item:=Dependencies.Items[K];
+      Kind:='related-to';Color:='#eb144c';Icon:='link';
+      if Item is TJSONString then Target:=Mapped(2,Item.AsString)
+      else if Item is TJSONObject then
+      begin
+        Link:=TJSONObject(Item);Target:=Mapped(2,Text(Link,'cardId'));
+        if Target='' then Continue;
+        Kind:=Text(Link,'type',Kind);Color:=Text(Link,'color',Color);Icon:=Text(Link,'icon',Icon);
+      end else raise EConvertError.Create('Invalid imported card dependency');
+      if Target='' then Continue;
+      Target:=QuotedStr(Target);Kind:=QuotedStr(Kind);
+      Sql:=Sql+'INSERT INTO card_dependencies(cardId,targetCardId,type,color,icon) SELECT '+
+        Source+','+Target+','+Kind+','+QuotedStr(Color)+','+QuotedStr(Icon)+
+        ' WHERE NOT EXISTS(SELECT 1 FROM card_dependencies WHERE cardId='+Source+' AND targetCardId='+Target+
+        ' AND type='+Kind+'); ';
+    end;
+  end;
   procedure ImportDefinitions;
   var Entry,Settings:TJSONObject;Id,FieldName,Kind,Dropdown,DropdownGuard:string;
     Flags:TDefinitionFlags;AlwaysOn,K,L:Integer;
@@ -1955,6 +1981,7 @@ begin
         ImportCardPeople(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
+        ImportCardDependencies(Row,CardId);
       end;
       ImportCardChildren;
       ImportAttachments;
