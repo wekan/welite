@@ -69,7 +69,10 @@ PLATFORMS=(
 do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
   local code="$1" label="$2"; shift 2
   local arch="$ARCHROOT/$code" bin="w$code.exe"
-  mkdir -p "$arch" "$BINDIR"
+  local resource="w$code.fpcres"
+  mkdir -p "$arch" "$BINDIR" || return 1
+  # The compiler names external resources after the program source.
+  rm -f "$arch/wlhttp.fpcres" || return 1
   # When $FPC is an fpcupdeluxe-style compiler, its fpc.cfg sits next to the binary but the
   # (statically linked) compiler searches ../etc and /etc, so it would use the system /etc/fpc.cfg
   # and the wrong units. Point PPC_CONFIG_PATH at that fpc.cfg so the right config/units are used.
@@ -78,7 +81,12 @@ do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
   echo ">> Building $label  -> $arch/$bin"
   # shellcheck disable=SC2086
   if "$FPC" $BASEFLAGS $FPCFLAGS "$@" -FU"$arch" -FE"$arch" -o"$arch/$bin" "$SRC"; then
-    cp -f "$arch/$bin" "$BINDIR/$bin"
+    if [ -f "$arch/wlhttp.fpcres" ]; then
+      cp -f "$arch/wlhttp.fpcres" "$BINDIR/$resource" || return 1
+    else
+      rm -f "$BINDIR/$resource" || return 1
+    fi
+    cp -f "$arch/$bin" "$BINDIR/$bin" || return 1
     echo "   copied -> $BINDIR/$bin"
   else
     return 1

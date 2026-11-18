@@ -142,7 +142,9 @@ links with `-dWLDB_CLI -Xs` and is recognized as an AmigaOS executable.
 The resource build also links with `-dWLEMBED`. For this target, FPC uses
 external resources. Provide the ARM64 host `fpcres` as
 `m68k-amiga-fpcres` in the cross-tools directory and keep `wlhttp.fpcres`
-next to `wlhttp`. The companion resource file contains the exact public
+next to `wlhttp`. The build menu collects the pair as `wami68k.exe` and
+`wami68k.fpcres` under `build/bin/`. The Amiga RTL looks up the companion
+using the executable basename. The companion resource file contains the exact public
 asset, locale, and private bootstrap SQL bytes checked on the build host.
 An m68k probe executed in [vamos](https://github.com/cnvogelg/amitools/blob/main/docs/vamos.md)
 and read the exact schema bytes from the full resource bundle with

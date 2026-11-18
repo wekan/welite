@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Package the Amiga external resource file
+
+- Collect the resource bundle under the same basename as the executable.
+  Verify the embedded pair and stale resource cleanup on a disk rebuild.
+
 ## 2026-11-18 Localize Designer missing-page responses
 
 - Use the viewer catalog for missing pages in Designer edit, export and
