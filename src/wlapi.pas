@@ -77,6 +77,7 @@ procedure ApiUpdateCustomField(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
 procedure ApiAppendDropdownItems(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
+function SaveCardFieldValue(Db:TWLDb;const CardId,FieldId,Value,GuardSql:string):Boolean;
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET list / POST create
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
@@ -3781,8 +3782,18 @@ end;
 
 // POST set a card's value for a custom field. Do not delete an existing embedded
 // row: its unknown properties and BSON type metadata belong to the source store.
+function SaveCardFieldValue(Db:TWLDb;const CardId,FieldId,Value,GuardSql:string):Boolean;
+var Scope:string;
+begin
+  Scope:='cardId='+QuotedStr(CardId)+' AND customFieldId='+QuotedStr(FieldId);
+  Result:=Db.Exec('BEGIN IMMEDIATE; '+GuardSql+'UPDATE card_custom_field_values SET value='+Value+
+    ' WHERE '+Scope+'; INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT '+
+    QuotedStr(CardId)+','+QuotedStr(FieldId)+','+Value+' WHERE NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE '+Scope+'); '+GuardSql+'COMMIT;');
+  if not Result then Db.Exec('ROLLBACK;');
+end;
+
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, CfId, Value,Scope,GuardSql: string;Reply:TJSONObject;Policy:TFieldPolicy;
+var T: TWLTenant; UserId, CardId, CfId, Value,GuardSql: string;Reply:TJSONObject;Policy:TFieldPolicy;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -3799,13 +3810,8 @@ begin
       begin SendError(aResponse,403,'Custom-field write forbidden');Exit;end;
       GuardSql:=Policy.Guard(CfId);
     except SendError(aResponse,403,'Custom-field write forbidden');Exit;end;
-    Scope:='cardId='+QuotedStr(CardId)+' AND customFieldId='+QuotedStr(CfId);
-    if not T.Db.Exec('BEGIN IMMEDIATE; '+GuardSql+'UPDATE card_custom_field_values SET value='+Value+
-      ' WHERE '+Scope+'; INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT '+
-      QuotedStr(CardId)+','+QuotedStr(CfId)+','+Value+' WHERE NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE '+Scope+'); '+GuardSql+'COMMIT;') then
-    begin
-      T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not save custom-field value');Exit;
-    end;
+    if not SaveCardFieldValue(T.Db,CardId,CfId,Value,GuardSql) then
+    begin SendError(aResponse,500,'Could not save custom-field value');Exit;end;
     Reply:=TJSONObject.Create(['_id',CardId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally Policy.Free;end;

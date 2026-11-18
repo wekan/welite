@@ -11,6 +11,7 @@ procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
+procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
 uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
@@ -100,26 +101,62 @@ begin
   end;
 end;
 
-function CardFieldsHtml(Db:TWLDb;const UserId,BoardId,CardId:string;Words:TWLTranslator;MiniCard:Boolean):string;
+function DropdownAction(const Board,Card,Field:string):string;
+begin
+  Result:='board:dropdown:'+IntToStr(Length(Board))+':'+Board+IntToStr(Length(Card))+':'+Card+Field;
+end;
+
+function DropdownForm(const S:TWLSession;const Board,Card,Field,Current:string;
+  Definition:TJSONObject;Words:TWLTranslator):string;
+var Options,Item:TJSONData;Id,Name,Selected:string;I:Integer;
+begin
+  Result:='';
+  Options:=Definition.FindPath('settings.dropdownItems');
+  if not (Options is TJSONArray) or (TJSONArray(Options).Count=0) then Exit;
+  Result:='<form method="POST" action="/board/card/dropdown?id='+
+    HtmlAttr(HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&field='+HTTPEncode(Field))+'">'+
+    AuthHiddenFields(S,DropdownAction(Board,Card,Field))+
+    '<label>'+HtmlEncode(Definition.Get('name',''))+' <select name="option">';
+  if Current='' then Result:=Result+'<option value="" selected></option>';
+  for I:=0 to TJSONArray(Options).Count-1 do
+  begin
+    Item:=TJSONArray(Options).Items[I];
+    if not (Item is TJSONObject) then Continue;
+    Id:=TJSONObject(Item).Get('_id','');Name:=TJSONObject(Item).Get('name','');
+    if Id='' then Continue;
+    Selected:='';if Id=Current then Selected:=' selected';
+    Result:=Result+'<option value="'+HtmlAttr(Id)+'"'+Selected+'>'+HtmlEncode(Name)+'</option>';
+  end;
+  Result:=Result+'</select></label> <input type="submit" value="'+
+    HtmlAttr(Words.Text('save','Save'))+'"></form>';
+end;
+
+function CardFieldsHtml(Db:TWLDb;const S:TWLSession;const BoardId,CardId:string;Words:TWLTranslator;MiniCard:Boolean):string;
 var Values:TJSONArray;Field,Definition:TJSONObject;Value,ShowLabel:TJSONData;
   Policy:TFieldPolicy;Id,Caption,Display:string;I:Integer;
 begin
   Result:='';
-  if UserId='' then Exit;
+  if S.UserId='' then Exit;
   Values:=nil;Policy:=nil;
   try
     try
       Values:=ReadCustomFields(Db,CardId);
-      Policy:=TFieldPolicy.Create(Db,UserId,BoardId,CardId);
+      Policy:=TFieldPolicy.Create(Db,S.UserId,BoardId,CardId);
       for I:=0 to Values.Count-1 do
       begin
         Field:=TJSONObject(Values.Items[I]);
         Id:=Field.Get('_id','');Value:=Field.Find('value');
-        if (Value=nil) or (Value.JSONType=jtNull) or not Policy.Allowed(Id,False) then Continue;
+        if not Policy.Allowed(Id,False) then Continue;
         Definition:=ReadDefinition(Db,Id);
         if Definition=nil then Continue;
         try
-          Display:=MiniCardFieldValue(Definition,Value,Words);
+          Display:='';
+          if (Value<>nil) and (Value.JSONType<>jtNull) then Display:=MiniCardFieldValue(Definition,Value,Words);
+          if not MiniCard and (Definition.Get('type','')='dropdown') and Policy.Allowed(Id,True) then
+          begin
+            if (Value<>nil) and (Value.JSONType=jtString) then Caption:=Value.AsString else Caption:='';
+            Result:=Result+DropdownForm(S,BoardId,CardId,Id,Caption,Definition,Words);
+          end;
           if Trim(Display)='' then Continue;
           Caption:='';
           ShowLabel:=Definition.Find('showLabelOnMiniCard');
@@ -134,11 +171,11 @@ begin
   finally Values.Free;Policy.Free;end;
 end;
 
-function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string;Words:TWLTranslator):string;
+function MiniCardFields(Db:TWLDb;const S:TWLSession;const BoardId,CardId:string;Words:TWLTranslator):string;
 begin
   Result:='';
-  if (UserId='') or not Db.BeginRead then Exit;
-  try Result:=CardFieldsHtml(Db,UserId,BoardId,CardId,Words,True);
+  if (S.UserId='') or not Db.BeginRead then Exit;
+  try Result:=CardFieldsHtml(Db,S,BoardId,CardId,Words,True);
   finally if not Db.EndRead then Result:='';end;
 end;
 
@@ -315,7 +352,7 @@ begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
           '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
-        if ShowCustomFields then Result:=Result+MiniCardFields(Db,S.UserId,BoardId,Cards[k][0],Words);
+        if ShowCustomFields then Result:=Result+MiniCardFields(Db,S,BoardId,Cards[k][0],Words);
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
           if Cards[k][5]='1' then CellText:=Words.Text('overtime-hours','Overtime (hours)')
@@ -463,7 +500,7 @@ begin
               if Rows[0][1]<>'' then Body:=Body+'<p>'+HtmlEncode(Rows[0][1])+'</p>';
               if (Rows[0][4]='1') and BoardCanWrite(T.Db,S.UserId,Board) then
               begin
-                FieldsHtml:=CardFieldsHtml(T.Db,S.UserId,Board,Card,Words,False);
+                FieldsHtml:=CardFieldsHtml(T.Db,S,Board,Card,Words,False);
                 if FieldsHtml<>'' then Body:=Body+'<div class="card-custom-fields"><h2>'+
                   HtmlEncode(Words.Text('custom-fields','Custom Fields'))+'</h2>'+FieldsHtml+'</div>';
               end;
@@ -547,6 +584,56 @@ begin
     aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,Dir,'html4');
     aResponse.SendContent;
   finally Words.Free;end;
+end;
+
+procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Board,Card,Field,Option,Condition,Guard:string;
+  Policy:TFieldPolicy;Selector:TSelectionScope;Rows:TWLRows;I:Integer;
+  procedure Reject(Status:Integer);
+  begin
+    aResponse.Code:=Status;
+    aResponse.SendContent;
+  end;
+begin
+  if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
+  begin Reject(404);Exit;end;
+  if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
+  begin Reject(403);Exit;end;
+  Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
+  Field:=aRequest.QueryFields.Values['field'];Option:=aRequest.ContentFields.Values['option'];
+  if (Board='') or (Card='') or (Field='') or (Option='') or (Pos(#0,Board+Card+Field+Option)>0) then
+  begin Reject(400);Exit;end;
+  Policy:=nil;Selector:=nil;
+  try
+    try
+      Policy:=TFieldPolicy.Create(T.Db,S.UserId,Board,Card);
+      if not Policy.Allowed(Field,True) then
+      begin Reject(403);Exit;end;
+      Selector:=TSelectionScope.Create(T.Db);
+      Condition:='EXISTS(SELECT 1 FROM boards WHERE id='+QuotedStr(Board)+
+        ' AND COALESCE(json_type(settings_json,''$.allowsCustomFields''),'''')<>''false'')'+
+        ' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Card)+' AND boardId='+QuotedStr(Board)+
+        ' AND archived=0 AND deletedAt IS NULL)'+
+        ' AND EXISTS(SELECT 1 FROM card_custom_field_values WHERE cardId='+QuotedStr(Card)+
+        ' AND customFieldId='+QuotedStr(Field)+')'+
+        ' AND EXISTS(SELECT 1 FROM custom_fields WHERE id='+QuotedStr(Field)+' AND type=''dropdown'')'+
+        ' AND (SELECT count(*) FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(Field)+
+        ' AND id='+QuotedStr(Option)+' AND '+Selector.StringField('custom_field_dropdown_items','id')+')=1';
+      Rows:=T.Db.Query('SELECT '+Condition+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin Reject(404);Exit;end;
+      if not VerifyActionToken(aRequest,S,DropdownAction(Board,Card,Field)) then
+      begin Reject(403);Exit;end;
+      Guard:=Policy.Guard(Field);
+      for I:=0 to Selector.Bindings.Count-1 do Guard:=Guard+Selector.Bindings[I];
+      Guard:=Guard+'SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Dropdown scope changed'') END; ';
+      if not SaveCardFieldValue(T.Db,Card,Field,QuotedStr(Option),Guard) then
+      begin Reject(500);Exit;end;
+    except Reject(500);Exit;end;
+  finally Selector.Free;Policy.Free;end;
+  aResponse.Code:=303;
+  aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+  aResponse.SendContent;
 end;
 
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);

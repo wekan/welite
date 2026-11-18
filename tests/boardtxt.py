@@ -105,6 +105,7 @@ def run(request,database,administrator,member,base):
                         [('native-mini-dropdown',),('native-mini-multi',)])
         con.executemany("INSERT INTO custom_field_dropdown_items(customFieldId,id,name) VALUES(?,?,?)",[
             ('native-mini-dropdown','option-key','Original option'),
+            ('native-mini-dropdown','alternate','Alternate option'),
             ('native-mini-multi','one','First option'),('native-mini-multi','two','Second option')])
         con.executemany("INSERT INTO card_custom_field_values(cardId,customFieldId,value) VALUES('txtcard',?,?)",[
             ('native-mini-dropdown','option-key'),('native-mini-multi',json.dumps(['two','one']))])
@@ -126,6 +127,16 @@ def run(request,database,administrator,member,base):
     status,_,detail=request('GET',card_path+'&sessionId='+administrator)
     assert status==200 and b'class="card-custom-fields"' in detail
     assert b'Choice: Updated &lt;option&gt;' in detail
+    assert b'<option value="option-key" selected>Updated &lt;option&gt;</option>' in detail
+    forms=Forms()
+    forms.feed(detail.decode())
+    path,fields=next((action,values) for action,values in forms.forms
+                     if action.startswith('/board/card/dropdown?'))
+    assert request('POST',path,dict(fields,option='missing'))[0]==404
+    status,headers,_=request('POST',path,dict(fields,option='alternate'))
+    assert status==303 and 'Set-Cookie' not in headers
+    assert b'<option value="alternate" selected>Alternate option</option>' in request('GET',headers['Location'])[2]
+    assert request('POST',path,dict(fields,option='option-key'))[0]==403
     with sqlite3.connect(database) as con:
         con.execute("UPDATE boards SET settings_json=json_set(settings_json,'$.allowsCustomFields',json('false')) WHERE id='boardtxt'")
     status,_,detail=request('GET',card_path+'&sessionId='+administrator)
