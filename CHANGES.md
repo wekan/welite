@@ -11,6 +11,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   field, card and option scope inside the write transaction.
   Chromium verifies that removing another option preserves the selection,
   and that choosing a replacement updates the native minicard.
+  When the selected option is removed, the form starts blank and keeps the
+  stored value until the editor explicitly chooses a replacement.
 
 ## 2026-11-18 Show custom fields on the native card page
 

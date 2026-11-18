@@ -42,6 +42,20 @@ const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
     assert.equal((await page.reload()).status(), 200);
     assert.equal(await select.locator('option[value="browser-mini-remove"]').count(), 0);
     assert.equal(await select.inputValue(), 'browser-mini-option');
+    const removedSelection = await context.request.delete(endpoint.href, {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    assert.equal(removedSelection.status(), 200);
+    assert.equal((await page.reload()).status(), 200);
+    assert.equal(await select.inputValue(), '');
+    assert.equal(await select.locator('option[value="browser-mini-option"]').count(), 0);
+    const stored = await context.request.get(new URL('/api/boards/b/lists/l/cards/brow-sort', url).href, {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    assert.equal(stored.status(), 200);
+    assert.deepEqual((await stored.json()).customFields, [
+      { _id: 'browser-mini-field', value: 'browser-mini-option' },
+    ]);
     await select.selectOption('browser-mini-alternate');
     const [saved] = await Promise.all([
       page.waitForResponse(response => response.request().method() === 'POST'),

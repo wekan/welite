@@ -108,7 +108,7 @@ end;
 
 function DropdownForm(const S:TWLSession;const Board,Card,Field,Current:string;
   Definition:TJSONObject;Words:TWLTranslator):string;
-var Options,Item:TJSONData;Id,Name,Selected:string;I:Integer;
+var Options,Item:TJSONData;Id,Name,Selected,Choices:string;I:Integer;HasCurrent:Boolean;
 begin
   Result:='';
   Options:=Definition.FindPath('settings.dropdownItems');
@@ -117,17 +117,19 @@ begin
     HtmlAttr(HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&field='+HTTPEncode(Field))+'">'+
     AuthHiddenFields(S,DropdownAction(Board,Card,Field))+
     '<label>'+HtmlEncode(Definition.Get('name',''))+' <select name="option">';
-  if Current='' then Result:=Result+'<option value="" selected></option>';
+  Choices:='';HasCurrent:=False;
   for I:=0 to TJSONArray(Options).Count-1 do
   begin
     Item:=TJSONArray(Options).Items[I];
     if not (Item is TJSONObject) then Continue;
     Id:=TJSONObject(Item).Get('_id','');Name:=TJSONObject(Item).Get('name','');
     if Id='' then Continue;
-    Selected:='';if Id=Current then Selected:=' selected';
-    Result:=Result+'<option value="'+HtmlAttr(Id)+'"'+Selected+'>'+HtmlEncode(Name)+'</option>';
+    Selected:='';
+    if Id=Current then begin Selected:=' selected';HasCurrent:=True;end;
+    Choices:=Choices+'<option value="'+HtmlAttr(Id)+'"'+Selected+'>'+HtmlEncode(Name)+'</option>';
   end;
-  Result:=Result+'</select></label> <input type="submit" value="'+
+  if not HasCurrent then Result:=Result+'<option value="" selected disabled></option>';
+  Result:=Result+Choices+'</select></label> <input type="submit" value="'+
     HtmlAttr(Words.Text('save','Save'))+'"></form>';
 end;
 
