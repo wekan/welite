@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize sign-in session creation failures
+
+- Translate the session creation error in Finnish and Arabic. Verify that
+  a forced token write failure returns the Arabic 500 response without
+  a redirect or a new token on both SQLite backends.
+
 ## 2026-11-18 Localize the Global Admin registration denial
 
 - Translate the public registration denial in Finnish and Arabic.

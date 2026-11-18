@@ -2115,5 +2115,6 @@
   "registration-first-admin": "سيكون هذا الحساب الأول هو حساب المسؤول العام للنطاق.",
   "auth-too-many-attempts": "محاولات تسجيل دخول كثيرة جدًا. حاول مجددًا لاحقًا.",
   "enrollment-setup-failed": "تعذّر بدء الإعداد",
-  "registration-global-admin-disabled": "تُنشأ حسابات المسؤولين العامّين محليًا. التسجيل العام معطّل."
+  "registration-global-admin-disabled": "تُنشأ حسابات المسؤولين العامّين محليًا. التسجيل العام معطّل.",
+  "auth-session-create-failed": "تعذّر إنشاء جلسة"
 }

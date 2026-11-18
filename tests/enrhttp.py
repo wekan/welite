@@ -168,6 +168,17 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 register('first-admin')
                 ordinary=request('POST','/register',dict(username='ordinary',password='test-password',confirm='test-password'))
                 assert ordinary[0]==302 and 'sessionId=' in ordinary[1]['Location'],ordinary
+                admins_db=out/'admins-data/local/files/db/wekan.db'
+                with sqlite3.connect(admins_db) as con:
+                    before=con.execute('SELECT hashedToken FROM login_tokens ORDER BY hashedToken').fetchall()
+                    con.execute("CREATE TRIGGER fail_session BEFORE INSERT ON login_tokens BEGIN SELECT RAISE(ABORT,'forced'); END")
+                failed=request('POST','/sign-in?lang=ar',dict(username='ordinary',password='test-password'))
+                assert failed[0]==500 and 'Location' not in failed[1]
+                check_auth_error(failed,'ar',title_key='log-in')
+                assert '<p>تعذّر إنشاء جلسة</p>'.encode() in failed[2]
+                with sqlite3.connect(admins_db) as con:
+                    assert con.execute('SELECT hashedToken FROM login_tokens ORDER BY hashedToken').fetchall()==before
+
                 print('PASS: '+backend+' required-factor registration, private HTTP setup, cookie-free confirmation, client binding, shared derived-account limits, rollback/retry, pending restart, expiry/replacement and fresh-code login')
             finally:
                 if server is not None and server.poll() is None:stop()

@@ -2115,5 +2115,6 @@
   "registration-first-admin": "Ensimmäisestä tilistä tulee verkkotunnuksen pääkäyttäjä.",
   "auth-too-many-attempts": "Liian monta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
   "enrollment-setup-failed": "Käyttöönottoa ei voitu aloittaa",
-  "registration-global-admin-disabled": "Järjestelmänvalvojien tilit luodaan paikallisesti. Julkinen rekisteröityminen on poissa käytöstä."
+  "registration-global-admin-disabled": "Järjestelmänvalvojien tilit luodaan paikallisesti. Julkinen rekisteröityminen on poissa käytöstä.",
+  "auth-session-create-failed": "Istuntoa ei voitu luoda"
 }

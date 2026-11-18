@@ -239,7 +239,7 @@ begin
     try
       S:=CreateAuthenticatedSession(T.Db,aRequest,Proof,30*24*60*60);
       if S.SessionId='' then
-      begin AuthError(aRequest,aResponse,500,'log-in','Sign in','Could not create session');Exit; end;
+      begin AuthError(aRequest,aResponse,500,'log-in','Sign in','Could not create session','auth-session-create-failed');Exit; end;
       aResponse.Code:=302;
       Location:=WithSessionId('/',S.SessionId);
       if FindLanguage(aRequest.QueryFields.Values['lang'],Language) then Location:=Location+'&lang='+Language.Tag;
