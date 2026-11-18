@@ -203,6 +203,17 @@ rejected conversion of the SQLite Hunk object to ELF with an unresolved
 section symbol. The verified C calling convention is one part of a linked
 SQLite build. The C runtime and archive link still need resolution.
 
+GNU objdump identifies the rejected `_muldi3.o` relocations in DWARF
+sections. Strip debug information from private archive copies with Amiga
+`objcopy --strip-debug` and pass the resulting libnix, libnix20, 68020/FPU
+libgcc and libamiga through vlink's `-L`/`-l` options for archive member
+selection. With a probe-only `_SysBase` initialization and `_exit` shim,
+vlink links a Hunk executable that returns SQLite `3.53.4` under
+`vamos -C 68020 -m 8192 -s 512`. Adding `sqlite3_open(':memory:')` and
+a JSON query still causes a CPU exception before a row is returned.
+The linked backend still needs C runtime initialization and SQL
+operation verification.
+
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
 prefix and probe-only startup aliases. That executable does not run to its
