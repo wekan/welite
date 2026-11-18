@@ -1744,8 +1744,9 @@ legacy forms and broader clone lifecycle behavior are still unfinished.
 
 Set `WELITE_SHARED=1` to use public tenant FerretDB stores through the HTTP
 application. A loopback request or explicit domain provisioning can initialize
-a fresh canonical shared store. The local tenant uses
-`WELITE_DATA/local/files/db/wekan.sqlite`; enabled domains use their existing
+a fresh canonical shared store. A running FerretDB build with database discovery
+(commit `2bbdc8c6` or later) finds the new file on lookup and database listing.
+The local tenant uses `WELITE_DATA/local/files/db/wekan.sqlite`. Enabled domains use their existing
 registry-derived `domains/dXXXXXXX/files/db/` directory. The adapter installs its
 owned projections on the existing physical collections. The reserved admin
 registry remains native at `admin/files/db/wekan.db`. Empty/unset or `0` retains
