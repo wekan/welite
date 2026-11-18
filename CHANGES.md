@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Render webhook validation errors in HTML
+
+- Return an HTML error and a link back to settings after invalid browser
+  submissions. Preserve the session and page language. Verify invalid
+  create and edit requests leave the stored webhooks unchanged.
+
 ## 2026-11-18 Localize browser webhook access errors
 
 - Render HTML for signed-out requests, board access denials and rejected

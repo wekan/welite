@@ -1049,6 +1049,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     parser.feed(request('GET',webhook_page)[2].decode())
                     return next(fields for path,fields in parser.forms if path=='/board/webhooks'
                                 and fields.get('operation')==operation and fields.get('integrationId')==identity)
+                wrong=dict(webhook_form('create'),url='invalid-url',lang='ar')
+                status,head,body=request('POST','/board/webhooks',urlencode(wrong))
+                assert status==400 and head['Content-Language']=='ar'
+                assert head['Content-Type'].startswith('text/html') and b'dir="rtl"' in body
+                assert b'/board/webhooks?id=b&amp;sessionId=' in body and b'lang=ar' in body
+                assert not json.loads(request('GET','/api/boards/b/integrations',token=token)[2])
                 creation=webhook_form('create')
                 creation['url']='https://1.1.1.1/browser'
                 assert request('POST','/board/webhooks',urlencode(dict(creation,boardId='other')))[0] in (403,404)
@@ -1056,6 +1062,11 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==303 and 'Set-Cookie' not in head and 'sessionId=' in head['Location'],(status,head)
                 assert request('POST','/board/webhooks',urlencode(creation))[0]==403
                 made,=json.loads(request('GET','/api/boards/b/integrations',token=token)[2])
+                stored=client.find('integrations',made['_id'])
+                wrong=dict(webhook_form('save',made['_id']),url='invalid-url',title='Rejected title')
+                status,head,body=request('POST','/board/webhooks',urlencode(wrong))
+                assert status==400 and head['Content-Type'].startswith('text/html')
+                assert client.find('integrations',made['_id'])==stored
                 edit=dict(webhook_form('save',made['_id']),title='Edited in HTML',url=creation['url'])
                 assert request('POST','/board/webhooks',urlencode(edit))[0]==303
                 edited,=client.find('integrations',made['_id'])

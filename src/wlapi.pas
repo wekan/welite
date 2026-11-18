@@ -1915,6 +1915,8 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
       if Status=401 then Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl('/sign-in',Session))+'">'+
         HtmlEncode(Words.Text(Key,Message))+'</a></p>'
       else Body:=Body+'<p>'+HtmlEncode(Words.Text(Key,Message))+'</p>';
+      if Status=400 then Body:=Body+'<p><a href="'+
+        HtmlAttr(SessionUrl('/board/webhooks?id='+HTTPEncode(BoardId),Session))+'">'+HtmlEncode(Title)+'</a></p>';
       aResponse.Code:=Status;
       aResponse.ContentType:='text/html; charset=utf-8';
       aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,'','html4');
@@ -1927,6 +1929,12 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
     if Browser and Reading then ShowIntegrations(nil)
     else if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
   end;
+  procedure RejectDestination;
+  begin
+    if Browser then BrowserError(400,'webhook-invalid-destination','Enter a valid public HTTP or HTTPS URL.')
+    else SendJson(aResponse,InvalidUrl,400);
+  end;
+
   function ValidDestination(Value:TJSONData):Boolean;
   begin
     Result:=(Value is TJSONString) and PublicWebhookUrl(Value.AsString);
@@ -2075,7 +2083,7 @@ begin
   if Browser and not Reading and not VerifyActionToken(aRequest,Session,FormAction(Operation,Id)) then
   begin BrowserError(403,'error-notAllowed','Invalid webhook action token');Exit;end;
   Shared:=Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1;
-  if Creating and not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
+  if Creating and not PrepareCreation then begin RejectDestination;Exit;end;
   StorageGuard:='';
   if Shared then
   begin
@@ -2123,7 +2131,8 @@ begin
     begin
       if not UpdateStatement then
       begin
-        if BadUrl then SendJson(aResponse,InvalidUrl,400)
+        if BadUrl then RejectDestination
+        else if Browser then BrowserError(400,'webhook-invalid-update','Invalid or unsupported webhook settings.')
         else SendJson(aResponse,'{"error":"Invalid or unsupported integration update"}',400);
         Exit;
       end;
