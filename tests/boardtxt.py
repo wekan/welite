@@ -41,6 +41,8 @@ def run(request,database,administrator,base):
                         (identity,title,author,archived))
     card_path='/board/card?id=boardtxt&card=txtcard'
     upload_path='/board/attachment/upload?id=boardtxt&card=txtcard'
+    status,_,guest_body=request('GET',card_path)
+    assert status==200 and upload_path.split('?')[0].encode() not in guest_body
     status,headers,body=request('GET',card_path+'&lang=ar&sessionId='+administrator)
     assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
     forms=Forms()
@@ -56,6 +58,9 @@ def run(request,database,administrator,base):
     body+=data+f'\r\n--{boundary}--\r\n'.encode()
     def upload(path):
         return request('POST',path,body,content_type='multipart/form-data; boundary='+boundary)
+    guest_body=body.replace(fields['sessionId'].encode(),b'invalid-session')
+    assert request('POST',upload_path,guest_body,
+                   content_type='multipart/form-data; boundary='+boundary)[0]==403
     assert upload(upload_path.replace('card=txtcard','card=txtchild'))[0]==403
     status,headers,body_response=upload(upload_path)
     assert status==303 and 'Set-Cookie' not in headers,(status,body_response)
