@@ -1741,20 +1741,39 @@ end;
 
 // POST card archive — archives by default; body isArchive=false unarchives.
 procedure ApiCardArchive(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, V: string;
+var T:TWLTenant;UserId,CardId,BoardId,LegacyValue,Scope,Predicate,Stamp,ArchivedAt:string;
+  Legacy,Archive:Boolean;Rows:TWLRows;Reply:TJSONObject;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  CardId := aRequest.RouteParams['cardId'];
-  V := BodyField(aRequest, 'isArchive');
-  if (V = '') or (BoolInt(V) = 1) then
-    T.Db.Exec(Format('UPDATE cards SET archived=1, archivedAt=%s, modifiedAt=%s WHERE id=%s;',
-      [QuotedStr(NowIso), QuotedStr(NowIso), QuotedStr(CardId)]))
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
+  CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
+  Archive:=Copy(aRequest.PathInfo,Length(aRequest.PathInfo)-9,10)<>'/unarchive';
+  LegacyValue:=BodyField(aRequest,'isArchive');Legacy:=Archive and (LegacyValue<>'');
+  if Legacy then Archive:=BoolInt(LegacyValue)=1;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND listId='+QuotedStr(aRequest.RouteParams['listId']);
+  Predicate:=Scope;
+  if not Legacy then Predicate:=Predicate+' AND archived='+IntToStr(Ord(not Archive));
+  Rows:=T.Db.Query('SELECT id FROM cards WHERE '+Predicate+';');
+  if Length(Rows)<>1 then begin SendJson(aResponse,CardNotFound,404);Exit;end;
+  Stamp:=NowIso;ArchivedAt:='NULL';
+  if Archive then ArchivedAt:=QuotedStr(Stamp);
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Predicate+
+    ')=1 THEN 1 ELSE json(''Archive scope changed'') END; UPDATE cards SET archived='+IntToStr(Ord(Archive))+
+    ',archivedAt='+ArchivedAt+',modifiedAt='+QuotedStr(Stamp)+' WHERE '+Predicate+
+    '; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+' AND archived='+IntToStr(Ord(Archive))+
+    ')=1 THEN 1 ELSE json(''Archive write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change card archive state');Exit;end;
+  if Legacy then SendCardById(aResponse,T.Db,CardId,UserId,False,BoardId)
   else
-    T.Db.Exec(Format('UPDATE cards SET archived=0, archivedAt=NULL, modifiedAt=%s WHERE id=%s;',
-      [QuotedStr(NowIso), QuotedStr(CardId)]));
-  SendCardById(aResponse,T.Db,CardId,UserId);
+  begin
+    Reply:=TJSONObject.Create(['_id',CardId,'archived',Archive]);
+    try
+      if Archive then Reply.Add('archivedAt',Stamp);
+      SendJson(aResponse,Reply.AsJSON);
+    finally Reply.Free;end;
+  end;
 end;
 
 // DELETE card — children (labels/members/comments/checklists/…) cascade via FK.

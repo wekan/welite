@@ -180,4 +180,16 @@ def run(request, db, token):
     finally:
         with sqlite3.connect(db) as con:
             con.execute("UPDATE cards SET archived=0 WHERE id='card'")
+    card_path=scoped_card+'card'
+    for action, archived in [('archive',True),('unarchive',False)]:
+        status, _, body = request('POST',card_path+'/'+action+'?token='+token)
+        assert status == 200 and json.loads(body)['archived'] is archived, (status,body)
+        with sqlite3.connect(db) as con:
+            state = con.execute("SELECT archived,archivedAt,modifiedAt FROM cards WHERE id='card'").fetchone()
+        assert state[0] == int(archived) and bool(state[1]) is archived, state
+        status, _, body = request('POST',card_path+'/'+action+'?token='+token)
+        assert status == 404 and json.loads(body) == dict(error='Card not found'), (status,body)
+        with sqlite3.connect(db) as con:
+            assert con.execute("SELECT archived,archivedAt,modifiedAt FROM cards WHERE id='card'").fetchone() == state
+    print('PASS: archive and unarchive change state once and reject repeated requests without writes')
     print('PASS: global card GET includes archived cards and checklists and requires authentication')
