@@ -12,7 +12,7 @@ procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr,wlapi;
+uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
@@ -48,9 +48,44 @@ begin
     Result:=Result+'</ul>';
   finally Words.Free;end;
 end;
+function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string):string;
+var Values:TJSONArray;Field,Definition:TJSONObject;Value,ShowLabel:TJSONData;
+  Policy:TFieldPolicy;Id,Caption,Display:string;I:Integer;Snapshot:Boolean;
+begin
+  Result:='';
+  if (UserId='') or not Db.BeginRead then Exit;
+  Values:=nil;Policy:=nil;
+  try
+    try
+      Values:=ReadCustomFields(Db,CardId);
+      Policy:=TFieldPolicy.Create(Db,UserId,BoardId,CardId);
+      for I:=0 to Values.Count-1 do
+      begin
+        Field:=TJSONObject(Values.Items[I]);
+        Id:=Field.Get('_id','');Value:=Field.Find('value');
+        if (Value=nil) or not (Value.JSONType in [jtString,jtNumber,jtBoolean]) or
+          (Trim(Value.AsString)='') or not Policy.Allowed(Id,False) then Continue;
+        Definition:=ReadDefinition(Db,Id);
+        if Definition=nil then Continue;
+        try
+          Display:=Value.AsString;
+          Caption:='';
+          ShowLabel:=Definition.Find('showLabelOnMiniCard');
+          if (ShowLabel<>nil) and (ShowLabel.JSONType=jtBoolean) and ShowLabel.AsBoolean then
+            Caption:=HtmlEncode(Definition.Get('name',''))+': ';
+          Result:=Result+'<p class="minicard-custom-field">'+Caption+HtmlEncode(Display)+'</p>';
+        finally Definition.Free;end;
+      end;
+    except Result:='';end;
+  finally
+    Values.Free;Policy.Free;Snapshot:=Db.EndRead;
+    if not Snapshot then Result:='';
+  end;
+end;
+
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard:string):string;
 var B,Lanes,Lists,Cards,MapLists,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
-  Writable,ShowSpentTime:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;
+  Writable,ShowSpentTime,ShowCustomFields:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -59,9 +94,12 @@ begin
   Result:='';
   if not BoardCanRead(Db,S.UserId,BoardId) then Exit;
   B:=Db.Query('SELECT title,color,CASE WHEN json_type(settings_json,''$.allowsSpentTimeOnMinicard'') IN (''true'',''false'') '+
-    'THEN json_extract(settings_json,''$.allowsSpentTimeOnMinicard'') ELSE COALESCE(json_extract(settings_json,''$.allowsSpentTime''),1) END '+
+    'THEN json_extract(settings_json,''$.allowsSpentTimeOnMinicard'') ELSE COALESCE(json_extract(settings_json,''$.allowsSpentTime''),1) END, '+
+    'json_type(settings_json,''$.allowsCustomFieldsOnMinicard'')=''true'' '+
     'FROM boards WHERE id='+QuotedStr(BoardId)+';');
+  if Length(B)<>1 then Exit;
   ShowSpentTime:=B[0][2]='1';
+  ShowCustomFields:=B[0][3]='1';
   Writable:=BoardCanWrite(Db,S.UserId,BoardId);
   Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
   Language:=ResolveLanguage(Tag,SessionLanguage(Db,S),'');
@@ -218,6 +256,7 @@ begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
           '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
+        if ShowCustomFields then Result:=Result+MiniCardFields(Db,S.UserId,BoardId,Cards[k][0]);
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
           if Cards[k][5]='1' then CellText:=Words.Text('overtime-hours','Overtime (hours)')

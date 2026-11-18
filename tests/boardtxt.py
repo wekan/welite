@@ -84,6 +84,37 @@ def run(request,database,administrator,member,base):
     status,headers,downloaded=request('GET',download)
     assert status==200 and downloaded==data and 'Set-Cookie' not in headers
     print('PASS: native multipart card upload scopes the action, rejects replay and downloads exact bytes')
+    minicard='/board?id=boardtxt&expand=txtlist'
+    def card_page(session):
+        status,_,html=request('GET',minicard+'&sessionId='+session)
+        assert status==200
+        return html
+    with sqlite3.connect(database) as con:
+        con.execute("UPDATE boards SET settings_json=? WHERE id='boardtxt'",(json.dumps({'allowsCustomFieldsOnMinicard':True}),))
+        con.executemany("INSERT INTO custom_fields(id,name,type,adminOnly,showLabelOnMiniCard,modifiedAt) VALUES(?,?,'text',?,1,'now')",
+                        [('native-mini-field','Original field',0),('native-mini-private','Private field',1)])
+        con.executemany("INSERT INTO custom_field_boards VALUES(?,'boardtxt')",
+                        [('native-mini-field',),('native-mini-private',)])
+        con.executemany("INSERT INTO card_custom_field_values(cardId,customFieldId,value) VALUES('txtcard',?,?)",
+                        [('native-mini-field','Visible <value>'),('native-mini-private','Hidden value')])
+        con.execute("INSERT INTO board_members(boardId,userId,isReadOnly) VALUES('boardtxt',?,1)",(reader,))
+        con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES('boardtxt',?,1)",(author,))
+    visible=card_page(member)
+    assert b'Original field: Visible &lt;value&gt;' in visible and b'Private field' not in visible and b'Hidden value' not in visible
+    assert b'Private field: Hidden value' in card_page(administrator)
+    endpoint='/api/boards/boardtxt/custom-fields/native-mini-field?token='+administrator
+    status,_,body=request('PUT',endpoint,dict(name='Updated <field>'))
+    assert status==200,(status,body)
+    visible=card_page(member)
+    assert b'Updated &lt;field&gt;: Visible &lt;value&gt;' in visible and b'Original field' not in visible
+    with sqlite3.connect(database) as con:
+        con.execute("DELETE FROM card_custom_field_values WHERE cardId='txtcard'")
+        con.execute("DELETE FROM custom_field_boards WHERE boardId='boardtxt'")
+        con.execute("DELETE FROM custom_fields WHERE id IN ('native-mini-field','native-mini-private')")
+        con.execute("DELETE FROM board_members WHERE boardId='boardtxt' AND userId=?",(reader,))
+        con.execute("DELETE FROM board_members WHERE boardId='boardtxt' AND userId=?",(author,))
+        con.execute("UPDATE boards SET settings_json='{}' WHERE id='boardtxt'")
+    print('PASS: native minicard shows the renamed field and escapes values while hiding admin-only data')
     def content_state():
         with sqlite3.connect(database) as con:
             return [con.execute('SELECT * FROM '+table+' WHERE '+condition+' ORDER BY id').fetchall()

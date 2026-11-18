@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Show custom fields on native minicards
+
+- When enabled by the board, show permitted nonblank scalar field values
+  and optional definition labels. Read the policy and values in one
+  snapshot. Verify that REST label changes appear after reload and that
+  read-only members cannot see admin-only fields.
+
 ## 2026-11-18 Add a Windows webhook resolver runtime check
 
 - Compile the resolver probe for Windows x86 and amd64 and support running
