@@ -97,6 +97,10 @@ Do not export the target library path into the host compiler or Python process.
 QEMU's `-E` applies it to the foreign process only. For all four disk/embedded
 and CLI/linked build checks, set `WELITE_CROSS_BACKENDS=cli,linked` when running
 `tests/cross64.py`; the default remains CLI-only for toolchains without SQLite.
+The 2026-11-18 rerun at `6b30a9c` passed the linked and CLI embedded HTTP
+suites under QEMU, including the new RTL HTML4 board and viewport check.
+The CLI run still uses the host SQLite process.
+
 Physical amd64 hardware, foreign CLI deployment and other platforms remain open.
 
 ## Current Windows amd64 cross-build verification (2026-11-17)
