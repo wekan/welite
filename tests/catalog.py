@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -46,3 +47,12 @@ with tempfile.TemporaryDirectory(prefix='wlcat-',dir=os.environ['TMPDIR']) as di
         assert next(row for row in installed if row['tag']==tag)['file']==file
         assert len(Path(file).stem)<=8
 print('PASS: compact/literal metadata, Unicode/escaping, unsafe/duplicate refusal, installed files, no translation writes, matching data/browser catalogs')
+
+
+arabic=json.loads((root/'i18n/data/ar.jsn').read_text())
+english=json.loads((root/'i18n/data/en.jsn').read_text())
+placeholder=re.compile(r'__[A-Za-z0-9_]+?__|%(?:\d+\$)?[A-Za-z%]')
+for key in ('act-restoredCard','activity-checklist-completed','loading','archived','no-cards-found'):
+    assert re.search(r'[؀-ۿ]',arabic[key]) and not re.search('[پچژگ]',arabic[key])
+    assert sorted(placeholder.findall(arabic[key]))==sorted(placeholder.findall(english[key]))
+print('PASS: corrected Arabic phrases retain English placeholder tokens')
