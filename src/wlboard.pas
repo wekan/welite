@@ -100,12 +100,12 @@ begin
   end;
 end;
 
-function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string;Words:TWLTranslator):string;
+function CardFieldsHtml(Db:TWLDb;const UserId,BoardId,CardId:string;Words:TWLTranslator;MiniCard:Boolean):string;
 var Values:TJSONArray;Field,Definition:TJSONObject;Value,ShowLabel:TJSONData;
-  Policy:TFieldPolicy;Id,Caption,Display:string;I:Integer;Snapshot:Boolean;
+  Policy:TFieldPolicy;Id,Caption,Display:string;I:Integer;
 begin
   Result:='';
-  if (UserId='') or not Db.BeginRead then Exit;
+  if UserId='' then Exit;
   Values:=nil;Policy:=nil;
   try
     try
@@ -123,16 +123,23 @@ begin
           if Trim(Display)='' then Continue;
           Caption:='';
           ShowLabel:=Definition.Find('showLabelOnMiniCard');
-          if (ShowLabel<>nil) and (ShowLabel.JSONType=jtBoolean) and ShowLabel.AsBoolean then
+          if not MiniCard or ((ShowLabel<>nil) and (ShowLabel.JSONType=jtBoolean) and ShowLabel.AsBoolean) then
             Caption:=HtmlEncode(Definition.Get('name',''))+': ';
-          Result:=Result+'<p class="minicard-custom-field">'+Caption+HtmlEncode(Display)+'</p>';
+          if MiniCard then
+            Result:=Result+'<p class="minicard-custom-field">'+Caption+HtmlEncode(Display)+'</p>'
+          else Result:=Result+'<p>'+Caption+HtmlEncode(Display)+'</p>';
         finally Definition.Free;end;
       end;
     except Result:='';end;
-  finally
-    Values.Free;Policy.Free;Snapshot:=Db.EndRead;
-    if not Snapshot then Result:='';
-  end;
+  finally Values.Free;Policy.Free;end;
+end;
+
+function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string;Words:TWLTranslator):string;
+begin
+  Result:='';
+  if (UserId='') or not Db.BeginRead then Exit;
+  try Result:=CardFieldsHtml(Db,UserId,BoardId,CardId,Words,True);
+  finally if not Db.EndRead then Result:='';end;
 end;
 
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard:string):string;
@@ -409,7 +416,7 @@ begin
 end;
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
-  Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel:string;
+  Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel,FieldsHtml:string;
   Rows,Subtasks,Checklists,Items,Files:TWLRows;Subtask,Checklist,Item,Attached:TWLRow;Open,Snapshot:Boolean;
   function Assignments(const TableName,Caption:string):string;
   var Names:TWLRows;Name:TWLRow;
@@ -444,7 +451,8 @@ begin
           try
             Rows:=T.Db.Query('SELECT title,description,CASE WHEN spentTime<>0 AND EXISTS(SELECT 1 FROM boards '+
               'WHERE id='+BoardKey+' AND COALESCE(json_extract(settings_json,''$.allowsSpentTime''),1)=1) '+
-              'THEN spentTime END,isOvertime FROM cards WHERE id='+CardKey+' AND boardId='+BoardKey+
+              'THEN spentTime END,isOvertime,EXISTS(SELECT 1 FROM boards WHERE id='+BoardKey+
+              ' AND COALESCE(json_type(settings_json,''$.allowsCustomFields''),'''')<>''false'') FROM cards WHERE id='+CardKey+' AND boardId='+BoardKey+
               ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
               ' AND '+Selector.StringField('cards','boardId')+';');
             if Length(Rows)=1 then
@@ -453,6 +461,12 @@ begin
               Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
                 HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>';
               if Rows[0][1]<>'' then Body:=Body+'<p>'+HtmlEncode(Rows[0][1])+'</p>';
+              if (Rows[0][4]='1') and BoardCanWrite(T.Db,S.UserId,Board) then
+              begin
+                FieldsHtml:=CardFieldsHtml(T.Db,S.UserId,Board,Card,Words,False);
+                if FieldsHtml<>'' then Body:=Body+'<div class="card-custom-fields"><h2>'+
+                  HtmlEncode(Words.Text('custom-fields','Custom Fields'))+'</h2>'+FieldsHtml+'</div>';
+              end;
               if Rows[0][2]<>'' then
               begin
                 if Rows[0][3]='1' then TimeLabel:=Words.Text('overtime-hours','Overtime (hours)')

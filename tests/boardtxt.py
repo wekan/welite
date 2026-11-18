@@ -123,6 +123,13 @@ def run(request,database,administrator,member,base):
     status,_,body=request('PUT',dropdown,dict(name='Updated <option>'))
     assert status==200,(status,body)
     assert b'Choice: Updated &lt;option&gt;' in card_page(member)
+    status,_,detail=request('GET',card_path+'&sessionId='+administrator)
+    assert status==200 and b'class="card-custom-fields"' in detail
+    assert b'Choice: Updated &lt;option&gt;' in detail
+    with sqlite3.connect(database) as con:
+        con.execute("UPDATE boards SET settings_json=json_set(settings_json,'$.allowsCustomFields',json('false')) WHERE id='boardtxt'")
+    status,_,detail=request('GET',card_path+'&sessionId='+administrator)
+    assert status==200 and b'class="card-custom-fields"' not in detail
     endpoint='/api/boards/boardtxt/custom-fields/native-mini-field?token='+administrator
     status,_,body=request('PUT',endpoint,dict(name='Updated <field>'))
     assert status==200,(status,body)
