@@ -5493,7 +5493,7 @@ begin
     ')=1 THEN 1 ELSE json(''Attachment scope changed'') END; COMMIT;';
   Result:=Db.Exec(Sql);
   if not Result then Db.Exec('ROLLBACK;')
-  else RecordSharedAttachmentRemovals(Db,Actor,BoardId,BatchId);
+  else RetrySharedAttachmentHistory(Db,BoardId,AttachmentId);
 end;
 
 procedure ApiAttachmentDelete(aRequest:TRequest;aResponse:TResponse);

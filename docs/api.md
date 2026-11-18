@@ -153,7 +153,8 @@ cover if selected, and records one deletion activity. Repeating the request
 leaves the original deletion marker intact. Single and bulk REST card deletion
 mark that card’s live attachments under one batch while retaining their files.
 After deletion, WeLite appends removal records to the board’s change history
-when the writer gate permits it.
+when the writer gate permits it. Repeating an attachment DELETE after the gate
+becomes available records any missing entries for that deletion batch.
 Native attachment deletion removes
 the file and its record.
 

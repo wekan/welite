@@ -4,6 +4,7 @@ interface
 uses wldb;
 function SharedAttachmentRemovalSQL(Db:TWLDb;const Actor,BoardId,Scope,Claim:string;ClearCardCover:Boolean):string;
 procedure RecordSharedAttachmentRemovals(Db:TWLDb;const Actor,BoardId,BatchId:string);
+procedure RetrySharedAttachmentHistory(Db:TWLDb;const BoardId,AttachmentId:string);
 implementation
 uses SysUtils,DateUtils,wlshared,wlferr,wlchhist;
 function SharedAttachmentRemovalSQL(Db:TWLDb;const Actor,BoardId,Scope,Claim:string;ClearCardCover:Boolean):string;
@@ -48,19 +49,43 @@ begin
     ') THEN 1 ELSE json(''Attachment deletion failed'') END; ';
 end;
 
+function AttachmentDocumentTable(Db:TWLDb):string;
+var Rows:TWLRows;
+begin
+  Result:='';
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
+  if Length(Rows)=1 then Result:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+end;
+
 procedure RecordSharedAttachmentRemovals(Db:TWLDb;const Actor,BoardId,BatchId:string);
 var Rows:TWLRows;Row:TWLRow;Physical:string;
 begin
   if not SharedStore(Db) then Exit;
-  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
-  if Length(Rows)<>1 then Exit;
-  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
-  Rows:=Db.Query('SELECT id,swimlaneId,listId,cardId,name FROM attachments WHERE boardId='+QuotedStr(BoardId)+
-    ' AND id IN (SELECT json_extract(_ferretdb_sjson,''$._id'') FROM '+Physical+
-    ' WHERE json_extract(_ferretdb_sjson,''$.deleteBatchId'')='+QuotedStr(BatchId)+
-    ' AND json_extract(_ferretdb_sjson,''$.deletedBy'')='+QuotedStr(Actor)+') ORDER BY id;');
+  Physical:=AttachmentDocumentTable(Db);
+  if Physical='' then Exit;
+  Rows:=Db.Query('SELECT id,swimlaneId,listId,cardId,name,'+
+    'strftime(''%Y-%m-%dT%H:%M:%fZ'',json_extract(a._ferretdb_sjson,''$.deletedAt'')/1000.0,''unixepoch'') '+
+    'FROM attachments JOIN '+Physical+' a ON json_extract(a._ferretdb_sjson,''$._id'')=attachments.id '+
+    'WHERE boardId='+QuotedStr(BoardId)+' AND json_extract(a._ferretdb_sjson,''$.deleteBatchId'')='+QuotedStr(BatchId)+
+    ' AND json_extract(a._ferretdb_sjson,''$.deletedBy'')='+QuotedStr(Actor)+
+    ' AND json_extract(a._ferretdb_sjson,''$."$s".p.deletedAt.t'')=''date'' ORDER BY id;');
   for Row in Rows do
-    try RecordAttachmentRemoval(Db,Actor,BoardId,Row[1],Row[2],Row[3],Row[0],Row[4],BatchId);except end;
+    try RecordAttachmentRemoval(Db,Actor,BoardId,Row[1],Row[2],Row[3],Row[0],Row[4],BatchId,Row[5]);except end;
+end;
+
+procedure RetrySharedAttachmentHistory(Db:TWLDb;const BoardId,AttachmentId:string);
+var Rows:TWLRows;Physical:string;
+begin
+  Physical:=AttachmentDocumentTable(Db);
+  if Physical='' then Exit;
+  Rows:=Db.Query('SELECT json_extract(_ferretdb_sjson,''$.deletedBy''),json_extract(_ferretdb_sjson,''$.deleteBatchId'') '+
+    'FROM '+Physical+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(AttachmentId)+
+    ' AND json_extract(_ferretdb_sjson,''$.meta.boardId'')='+QuotedStr(BoardId)+
+    ' AND json_extract(_ferretdb_sjson,''$."$s".p.deletedAt.t'')=''date'''+
+    ' AND json_extract(_ferretdb_sjson,''$."$s".p.deletedBy.t'')=''string'''+
+    ' AND json_extract(_ferretdb_sjson,''$."$s".p.deleteBatchId.t'')=''string'';');
+  if (Length(Rows)=1) and (Rows[0][0]<>'') and (Rows[0][1]<>'') then
+    RecordSharedAttachmentRemovals(Db,Rows[0][0],BoardId,Rows[0][1]);
 end;
 
 end.

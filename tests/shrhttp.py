@@ -1231,6 +1231,35 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     client.command({'delete':'attachments','deletes':[dict(q={'_id':item},limit=1)
                         for item in [*ids,old]]})
                 print('PASS: single and bulk REST card deletion retain attachment files and batch active records')
+                queued=attachment_for(card['_id'],'retry-history.bin')
+                queued_delete='/api/attachment/delete/'+queued
+                gate_id=hashlib.sha256(json.dumps(['history-writer-gate','b'],separators=(',',':')).encode()).hexdigest()
+                writer='22222222-3333-4444-8555-666666666666'
+                client.command({'create':'historyWriterGates'})
+                client.command({'create':'historyWriterLeases'})
+                try:
+                    client.command({'insert':'historyWriterGates','documents':[dict(_id=gate_id,boardId='b',
+                        version=1,mode='legacy',migrationId=None,writers=[writer])]})
+                    client.command({'insert':'historyWriterLeases','documents':[dict(_id=writer,boardId='b',
+                        version=1,state='active',expiresAt=DateMs(int(time.time()*1000)+360000),pending=None)]})
+                    assert request('DELETE',queued_delete,token=token)[0]==200
+                    queued_record,=client.find('attachments',queued)
+                    assert queued_record['deletedBy']=='u' and not removal_history(queued)
+                    assert request('DELETE',queued_delete,token=token)[0]==200
+                    assert client.find('attachments',queued)==[queued_record] and not removal_history(queued)
+                finally:
+                    client.command({'drop':'historyWriterGates'})
+                    client.command({'drop':'historyWriterLeases'})
+                for _ in range(2):
+                    assert request('DELETE',queued_delete,token=token)[0]==200
+                    recovered,=removal_history(queued)
+                    assert recovered['batchId']==queued_record['deleteBatchId']
+                    assert recovered['createdAt']==queued_record['deletedAt']
+                    assert recovered['userId']==queued_record['deletedBy']
+                    verify_removal_hash(recovered)
+                    assert client.find('attachments',queued)==[queued_record]
+                print('PASS: retry recovers deferred attachment history with original time, actor and batch')
+
 
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')

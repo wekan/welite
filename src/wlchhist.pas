@@ -5,7 +5,7 @@ uses wldb;
 
 procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
   Restored:Boolean);
-procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId:string);
+procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId,DeletedAt:string);
 
 implementation
 uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr;
@@ -31,7 +31,7 @@ const GateCollections:array[0..1] of string=('historyWriterGates','historyChainH
   HeadHash='json_extract(_ferretdb_sjson,''$.hash'')';
 var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   BoardSql,UserSql,Lookup,LookupSource,Previous,Stamp,Id,ChangeType,DateKey,Hash,Doc,Sql,
-    TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql,HeadTable,HeadScope,HeadWrite,HeadValue,GateScope:string;
+    TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql,HeadTable,HeadScope,HeadWrite,HeadValue,GateScope,AlreadyRecorded:string;
   Attempt:Integer;Shared,Coordinated:Boolean;
   function Ident(const Name:string):string;
   begin Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';end;
@@ -194,12 +194,21 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
 
 begin
   Shared:=Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>0;
-  BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';Coordinated:=False;
+  BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';Coordinated:=False;AlreadyRecorded:='';
   if Shared then
   begin
     if not EnsureSharedCollection(Db,'changeHistory') then Exit;
     Rows:=CollectionTable('changeHistory');if Length(Rows)<>1 then Exit;
     TableName:=Rows[0][0];TableSql:=Ident(TableName);
+    if EntityType='attachment' then
+    begin
+      AlreadyRecorded:='SELECT 1 FROM '+TableSql+' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
+        ' AND json_extract(_ferretdb_sjson,''$.entityType'')=''attachment'''+
+        ' AND json_extract(_ferretdb_sjson,''$.entityId'')='+QuotedStr(EntityId)+
+        ' AND json_extract(_ferretdb_sjson,''$.changeType'')=''removed'''+
+        ' AND json_extract(_ferretdb_sjson,''$.batchId'')='+QuotedStr(BatchId);
+      if Length(Db.Query(AlreadyRecorded+';'))>0 then Exit;
+    end;
     Guard:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''changeHistory'' AND table_name='+
       QuotedStr(TableName)+')=1 AND (SELECT count(*) FROM _ferretdb_collections WHERE table_name='+QuotedStr(TableName)+')=1';
     Rows:=CollectionTable('historyWriterGates');
@@ -297,16 +306,19 @@ begin
       ' WHERE boardId='+BoardSql+' AND userId='+UserSql+' AND json_type(document,''$.undone'')=''true'''+
       ' AND json_type(document,''$.superseded'')=''false''; ';
   end;
+  if AlreadyRecorded<>'' then Guard:=Guard+' AND NOT EXISTS('+AlreadyRecorded+')';
   Rows:=Db.Query('SELECT lower(hex(randomblob(12)));');
   if Length(Rows)<>1 then Exit;
   Id:=Rows[0][0];
   for Attempt:=1 to 5 do
   begin
+    if (AlreadyRecorded<>'') and (Length(Db.Query(AlreadyRecorded+';'))>0) then Exit;
     Rows:=Db.Query(LookupSource+Lookup+';');
     if Length(Rows)<>1 then Exit;
     Previous:=Rows[0][0];
     if (Previous<>'') and (Length(Previous)<>64) then Exit;
     Stamp:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
+    if EntityType='attachment' then Stamp:=DeletedAt;
     ChangeType:='removed';DateKey:='newContent';
     if Restored then begin ChangeType:='added';DateKey:='previousContent';end;
     Row:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'swimlaneId',LaneId,'listId',ListId,
@@ -374,9 +386,9 @@ begin
   RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,BatchId,DeletedAt,'list',ListId,'','',Restored);
 end;
 
-procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId:string);
+procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId,DeletedAt:string);
 begin
-  RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,BatchId,'','attachment',AttachmentId,CardId,Name,False);
+  RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,BatchId,DeletedAt,'attachment',AttachmentId,CardId,Name,False);
 end;
 
 end.

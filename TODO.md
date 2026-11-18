@@ -162,8 +162,7 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
-  - [ ] Verify the upstream attachment removal browser workflows and shared
-    history recovery when a board has an occupied writer gate.
+  - [ ] Verify the upstream attachment removal browser workflows.
   - [ ] Verify Windows runtime DNS validation and support other target resolvers for integration destination writes.
 
 
