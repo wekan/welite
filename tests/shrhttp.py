@@ -1386,6 +1386,14 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                                          deleteBatchId=removed['deleteBatchId'])
                     status,_,bytes_after_delete=request('GET','/api/attachment/download/'+uploaded['_id']+'?raw=1',token=token)
                     assert status==200 and bytes_after_delete==upload_bytes
+                    event,=client.command({'find':'activities','filter':dict(attachmentId=uploaded['_id'],
+                        activityType='deleteAttachment')})['cursor']['firstBatch']
+                    assert event['userId']=='u'
+                    history,=removal_history(uploaded['_id'])
+                    verify_removal_hash(history)
+                    assert history['cardId']=='brow-sort' and history['userId']=='u'
+                    assert history['batchId']==removed['deleteBatchId']
+                    assert history['previousContent']==dict(deleted=False,name=uploaded['name'])
                     print('PASS: native upload and native selection deletion retain the attachment metadata and bytes')
                     client.command({'delete':'cards','deletes':[dict(q={'_id':'brow-sort'},limit=1)]})
                     client.command({'delete':'lists','deletes':[dict(q={'_id':'brow-list'},limit=1)]})

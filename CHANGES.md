@@ -14,6 +14,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Upload a real file and delete its card via native HTML selection. Verify
   the FerretDB record retains its metadata and gains typed deletion markers,
+  with one activity and a history entry whose hash matches the stored record,
   and the original file remains downloadable through the authorized API.
 
 ## 2026-11-18 Verify card attachment upload in Chromium
