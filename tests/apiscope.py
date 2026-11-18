@@ -371,3 +371,15 @@ def run(request, db, token):
     assert delete_record['$s']['p']['createdAt']['t']=='date', delete_record
     assert delete_record['$s']['p']['newState']['$s']['p']['deletedAt']['t']=='date', delete_record
     print('PASS: native list lifecycle history records typed delete and restore state for one batch')
+
+    with sqlite3.connect(db) as con:
+        lifecycle=[json.loads(row[0]) for row in con.execute(
+            "SELECT document FROM _wl_change_history WHERE json_extract(document,'$.listId')=? ORDER BY rowid",(identity,))]
+    deleted, restored = lifecycle
+    assert [event['changeType'] for event in lifecycle]==['removed','added'], lifecycle
+    assert restored['previousHash']==deleted['integrityHash'], lifecycle
+    assert all(event['batchId']==markers[2] for event in lifecycle), lifecycle
+    assert deleted['newContent']==restored['previousContent'], lifecycle
+    assert deleted['newContent']['deleted'] is True and restored['newContent']['deleted'] is False
+    assert deleted['$s']['p']['newContent']['$s']['p']['deletedAt']['t']=='date', deleted
+    print('PASS: native list change history links delete and restore with typed lifecycle records')

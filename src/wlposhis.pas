@@ -7,7 +7,7 @@ procedure RecordListPosition(Db:TWLDb;const UserId,BoardId,ListId,BatchId,Delete
   const Position:TWLRow;Restored:Boolean);
 
 implementation
-uses SysUtils,DateUtils,fpjson,wlsjson,wlferr;
+uses SysUtils,DateUtils,fpjson,wlsjson,wlferr,wlchhist;
 
 procedure RecordListPosition(Db:TWLDb;const UserId,BoardId,ListId,BatchId,DeletedAt:string;
   const Position:TWLRow;Restored:Boolean);
@@ -18,6 +18,8 @@ begin
   if Length(Position)<2 then Exit;
   Registry:=Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'' AND type=''table'';');
   Shared:=Length(Registry)=1;
+  if not Shared then
+    RecordNativeListChange(Db,UserId,BoardId,ListId,Position[0],BatchId,DeletedAt,Restored);
   TableName:='_wl_position_history';
   if Shared then
   begin

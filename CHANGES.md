@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Chain native list deletion and restore history
+
+- Record typed lifecycle content and WeKan-compatible hashes in native
+  SQLite. Verify the board's current tip before appending and retry a
+  concurrent tip change. Shared change-history integration remains open.
+
 ## 2026-11-18 Verify WeKan list lifecycle integrity hashes
 
 - Build the canonical list lifecycle hash and compare it with WeKan's
