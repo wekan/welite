@@ -24,6 +24,8 @@ def exercise(call, board, snapshot, assign, verify, fail, clear):
 
     before = snapshot()
     missing(base + '/missing')
+    status, _, body = call('GET', base + '/missing', None)
+    assert status == 404 and json.loads(body) == dict(error='Custom field not found'), (status, body)
     assert snapshot() == before
     fail()
     try:
@@ -36,7 +38,8 @@ def exercise(call, board, snapshot, assign, verify, fail, clear):
     status, _, body = call('DELETE', route, None)
     assert status == 200 and json.loads(body) == dict(_id=identity), (status, body)
     verify(identity, sibling)
-    assert call('GET', route, None)[0] == 404
+    status, _, body = call('GET', route, None)
+    assert status == 404 and json.loads(body) == dict(error='Custom field not found'), (status, body)
     missing(route)
     print('PASS: definition DELETE removes scoped values and activities, retains siblings and rolls back on a definition write failure')
 

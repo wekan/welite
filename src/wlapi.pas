@@ -731,22 +731,22 @@ begin
   finally Items.Free;end;
 end;
 
+const CustomFieldNotFound = '{"error":"Custom field not found"}';
+
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; UserId: string; O: TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
+  if not ApiBoardGuard(T, aRequest, aResponse, UserId, CustomFieldNotFound) then Exit;
   O:=nil;
   try
     try O:=ReadDefinition(T.Db,aRequest.RouteParams['customField']);
     except SendError(aResponse,500,'Could not read custom-field definition');Exit;end;
-    if O=nil then begin SendError(aResponse,404,'Custom field not found');Exit;end;
+    if O=nil then begin SendJson(aResponse,CustomFieldNotFound,404);Exit;end;
     SendJson(aResponse,O.AsJSON);
   finally O.Free;end;
 end;
-
-const CustomFieldNotFound = '{"error":"Custom field not found"}';
 
 // Pin both the authorized boards and the exact size of the binding set.
 procedure DefinitionWriteScope(Db:TWLDb;const UserId,FieldId,RouteBoardId:string;
