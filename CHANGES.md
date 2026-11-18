@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Link attachment management from published boards
+
+- Render the attachment link in the board shared by direct and published
+  views. The signed-in link preserves the current language and session.
+  Native HTTP checks verify Finnish navigation and signed-out refusal.
+
 ## 2026-11-18 Localize the attachment preview link
 
 - Use the existing Preview translation for the raster preview action.

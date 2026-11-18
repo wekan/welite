@@ -39,6 +39,19 @@ def run(request,database,administrator,member,base):
             con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,parentId,archived,dateLastActivity,createdAt,modifiedAt) "
                         "VALUES(?,'boardtxt','txtlane','txtlist',?,?,'txtcard',?,'now','now','now')",
                         (identity,title,author,archived))
+    status,_,published=request('GET','/boardtxt?lang=fi&sessionId='+administrator)
+    assert status==200
+    attachment_links=[(attrs['href'],text) for tag,attrs,text in BoardPage(published).items
+                      if tag=='a' and urlsplit(attrs['href']).path=='/board/attachments']
+    [(attachment_link,caption)]=attachment_links
+    assert caption==json.loads((root/'i18n/data/fi.jsn').read_text())['attachments']
+    assert parse_qs(urlsplit(attachment_link).query)==dict(id=['protected'],lang=['fi'],sessionId=[administrator])
+    status,headers,_=request('GET',attachment_link)
+    assert status==200 and headers['Content-Language']=='fi' and 'Set-Cookie' not in headers
+    status,_,published=request('GET','/boardtxt?lang=fi')
+    assert status==200 and not BoardPage(published).captions('/board/attachments')
+    assert request('GET','/board/attachments?id=protected&lang=fi')[0]==404
+    print('PASS: published board attachment link preserves viewer language and requires a session')
     card_path='/board/card?id=boardtxt&card=txtcard'
     upload_path='/board/attachment/upload?id=boardtxt&card=txtcard'
     status,_,guest_body=request('GET',card_path)

@@ -256,6 +256,8 @@ begin
     HtmlAttr(SessionUrl('/',S))+'">'+HtmlEncode(Words.Text('all-boards','All boards'))+'</a></p>';
   if S.UserId<>'' then
   begin
+    Result:=Result+'<p><a href="'+HtmlAttr(BoardAttachmentsUrl(BoardId,S))+'">'+
+      HtmlEncode(Words.Text('attachments','Attachments'))+'</a></p>';
     Url:='/board/export?id='+HTTPEncode(BoardId);
     Result:=Result+'<p><a href="'+HtmlAttr(SessionUrl(Url,S))+'">'+
       HtmlEncode(Words.Text('export-board','Export board')+' (JSON)')+'</a> &middot; <a href="'+
@@ -496,8 +498,6 @@ begin
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>','','html4');
   end
   else begin
-    if S.UserId<>'' then Body:=Body+'<p><a href="'+HtmlAttr(BoardAttachmentsUrl(aRequest.QueryFields.Values['id'],S))+
-      '">'+HtmlEncode(Words.Text('attachments','Attachments'))+'</a></p>';
     aResponse.Code:=200; aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+EnhancementScripts(wbUnknown),Dir,'html4'); end;
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
   finally Words.Free;end;
