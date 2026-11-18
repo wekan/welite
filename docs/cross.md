@@ -234,6 +234,14 @@ that database and verifies its integrity and registry tables. The server
 prints its listening banner, then aborts with runtime error 232 when it
 tries to use threads. No HTTP response was verified.
 
+A second scratch build uses the synchronous HTTP server and omits the
+maintenance worker to isolate the network startup path. It passes the
+thread failure, but the FPC Amiga socket unit cannot acquire
+`bsdsocket.library` version 4 under this vamos setup. Socket creation
+then faults with a zero library base. The experiment isolates the next
+test dependency. The production server still needs a thread or serial
+maintenance design and a real Amiga TCP/IP stack for HTTP verification.
+
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
 prefix and probe-only startup aliases. That executable does not run to its

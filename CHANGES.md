@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Trace synchronous Amiga startup to the socket library
+
+- Run a scratch linked server without worker threads and trace its next
+  startup failure to the Amiga socket library call under vamos.
+
 ## 2026-11-18 Initialize the Amiga registry with linked SQLite
 
 - Cross-link the full disk server in a scratch build and verify its
