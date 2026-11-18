@@ -302,6 +302,18 @@ procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
   Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel:string;
   Rows,Checklists,Items:TWLRows;Checklist,Item:TWLRow;Open,Snapshot:Boolean;
+  function Assignments(const TableName,Caption:string):string;
+  var Names:TWLRows;Name:TWLRow;
+  begin
+    Result:='';
+    Names:=T.Db.Query('SELECT DISTINCT users.username FROM '+TableName+' JOIN users ON users.id='+TableName+
+      '.userId WHERE '+TableName+'.cardId='+CardKey+' AND '+Selector.StringField(TableName,'userId')+
+      ' AND '+Selector.StringField('users','id')+' ORDER BY users.username;');
+    if Length(Names)=0 then Exit;
+    Result:='<h2>'+HtmlEncode(Caption)+'</h2><ul>';
+    for Name in Names do Result:=Result+'<li>'+HtmlEncode(Name[0])+'</li>';
+    Result:=Result+'</ul>';
+  end;
 begin
   T:=Default(TWLTenant);S:=Default(TWLSession);
   Open:=ResolveTenant(aRequest,T) and TenantOpen(T);
@@ -338,6 +350,8 @@ begin
                 else TimeLabel:=Words.Text('spent-time-hours','Spent time (hours)');
                 Body:=Body+'<h2>'+HtmlEncode(TimeLabel)+'</h2><p>'+HtmlEncode(Rows[0][2])+'</p>';
               end;
+              Body:=Body+Assignments('card_members',Words.Text('members','Members'))+
+                Assignments('card_assignees',Words.Text('assignees','Assignees'));
               Scope:='cardId='+CardKey+' AND '+Selector.StringField('checklists','cardId')+
                 ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
                 Selector.StringField('checklists','boardId')+'))';

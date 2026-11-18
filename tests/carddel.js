@@ -85,6 +85,21 @@ const { readFileSync } = require('node:fs');
         await page.getByText('2', { exact: true }).count(), 1);
     }
     console.log('PASS: Chromium reflects JSON and form overtime edits without JavaScript or cookies');
+    for (const [field, caption] of [['members', 'Members'], ['assignees', 'Assignees']]) {
+      const list = page.getByRole('heading', { name: caption, exact: true });
+      const assignment = endpoint('l') + '/' + field + '/u';
+      assert.equal(await list.count(), 0);
+      assert.equal((await context.request.post(assignment, { headers })).status(), 200);
+      await page.reload();
+      assert.equal(await list.count(), 1);
+      assert.equal(await page.locator('li').filter({ hasText: /^user$/ }).count(), 1);
+      const removed = await context.request.delete(assignment, { headers });
+      assert.equal(removed.status(), 200);
+      assert.deepEqual((await removed.json())[field], []);
+      await page.reload();
+      assert.equal(await list.count(), 0);
+    }
+    console.log('PASS: Chromium reflects REST member and assignee changes without JavaScript or cookies');
     const englishDetails = page.url();
     const arabicDetails = new URL(englishDetails);
     arabicDetails.searchParams.set('lang', 'ar');
