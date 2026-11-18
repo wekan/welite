@@ -142,6 +142,12 @@ is self-or-admin. Non-members get `403`.
 | `GET /api/boards/:boardId/attachments` | `listattachments` | `[{"_id","name","cardId"}]` |
 | `GET /api/attachment/list/:b/:s/:l/:cardId` | `listcardattachments` | `{"success","attachments":[...]}` |
 
+Use `GET /api/attachment/list/:boardId` to list active board attachments.
+Append the swimlane, list, and card IDs to narrow the result. The response
+contains `success`, `attachments`, and `count`. Shared attachments with a
+deletion marker remain available for recovery through authorized direct
+downloads.
+
 For a binary upload, send `Content-Type: application/octet-stream` and put
 `boardId`, `swimlaneId`, `listId`, `cardId`, `fileName` and `fileType` in the
 query string. JSON uploads continue to accept base64 in `fileData`.

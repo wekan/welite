@@ -637,6 +637,9 @@ begin
   HTTPRouter.RegisterRoute('/api/attachment/info/:attachmentId', rmGet, @ApiAttachmentInfo);
   HTTPRouter.RegisterRoute('/api/attachment/delete/:attachmentId', rmDelete, @ApiAttachmentDelete);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/attachments', rmGet, @ApiBoardAttachments);
+  HTTPRouter.RegisterRoute('/api/attachment/list/:boardId', rmGet, @ApiCardAttachmentsList);
+  HTTPRouter.RegisterRoute('/api/attachment/list/:boardId/:swimlaneId', rmGet, @ApiCardAttachmentsList);
+  HTTPRouter.RegisterRoute('/api/attachment/list/:boardId/:swimlaneId/:listId', rmGet, @ApiCardAttachmentsList);
   HTTPRouter.RegisterRoute('/api/attachment/list/:boardId/:swimlaneId/:listId/:cardId', rmGet, @ApiCardAttachmentsList);
 
   // Combined no-JS move component (arrows keypad) — see docs/move.md

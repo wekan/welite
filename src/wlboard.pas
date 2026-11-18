@@ -11,24 +11,17 @@ procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlshared;
+uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
 end;
 
 function ActiveCardAttachments(Db:TWLDb;Selector:TSelectionScope;const Board,Card:string):string;
-var Rows:TWLRows;Physical:string;
 begin
   Result:='boardId='+QuotedStr(Board)+' AND cardId='+QuotedStr(Card)+
     ' AND '+Selector.StringField('attachments','id')+' AND '+Selector.StringField('attachments','boardId')+
-    ' AND '+Selector.StringField('attachments','cardId');
-  if not SharedStore(Db) then Exit;
-  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
-  if Length(Rows)<>1 then Exit('0');
-  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
-  Result:=Result+' AND EXISTS(SELECT 1 FROM '+Physical+' a WHERE json_extract(a._ferretdb_sjson,''$._id'')=attachments.id'+
-    ' AND COALESCE(json_type(a._ferretdb_sjson,''$.deletedAt''),''null'')=''null'')';
+    ' AND '+Selector.StringField('attachments','cardId')+' AND '+LiveAttachmentSQL(Db);
 end;
 
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;

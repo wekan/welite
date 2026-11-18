@@ -7,12 +7,23 @@ uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wl
 function InstallRootModels(Db:TWLDb;RequireEmpty:Boolean=False):Boolean;
 function RootModelScript(Db:TWLDb):string;
 function EnsureSharedCollection(Db:TWLDb;const Collection:string):Boolean;
+function LiveAttachmentSQL(Db:TWLDb):string;
 implementation
 const DocCol='_ferretdb_sjson';
 function Q(const Text:string):string;
 begin Result:=QuotedStr(Text);end;
 function Ident(const Text:string):string;
 begin Result:='"'+StringReplace(Text,'"','""',[rfReplaceAll])+'"';end;
+function LiveAttachmentSQL(Db:TWLDb):string;
+var Rows:TWLRows;
+begin
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE type=''table'' AND name=''_ferretdb_collections'';'))=0 then Exit('1');
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
+  if Length(Rows)<>1 then Exit('0');
+  Result:='EXISTS(SELECT 1 FROM '+Ident(Rows[0][0])+' a WHERE json_extract(a._ferretdb_sjson,''$._id'')=attachments.id'+
+    ' AND COALESCE(json_type(a._ferretdb_sjson,''$.deletedAt''),''null'')=''null'')';
+end;
+
 function JsonPath(const Path:string):string;
 var Parts:TStringArray;i:Integer;
 begin

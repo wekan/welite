@@ -5487,8 +5487,8 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   R := T.Db.Query(Format(
-    'SELECT id,name,cardId FROM attachments WHERE boardId=%s ORDER BY createdAt;',
-    [QuotedStr(aRequest.RouteParams['boardId'])]));
+    'SELECT id,name,cardId FROM attachments WHERE boardId=%s AND %s ORDER BY createdAt,id;',
+    [QuotedStr(aRequest.RouteParams['boardId']),LiveAttachmentSQL(T.Db)]));
   A := TJSONArray.Create;
   try
     for i := 0 to High(R) do
@@ -5503,29 +5503,46 @@ begin
 end;
 
 // GET /api/attachment/list/:boardId/:swimlaneId/:listId/:cardId — a card's attachments
-procedure ApiCardAttachmentsList(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId: string; R: TWLRows; A: TJSONArray; O: TJSONObject; i: Integer;
+procedure ApiCardAttachmentsList(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,Board,Lane,List,Card,Scope:string;Rows:TWLRows;Row:TWLRow;
+  Attachments:TJSONArray;Reply:TJSONObject;Selector:TSelectionScope;
+  function OptionalRouteId(const Key:string):string;
+  begin
+    Result:=aRequest.RouteParams[Key];
+    if Result='null' then Result:='';
+  end;
+  procedure AddScope(const Field,Value:string);
+  begin
+    if Value<>'' then Scope:=Scope+' AND '+Field+'='+QuotedStr(Value)+' AND '+Selector.StringField('attachments',Field);
+  end;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;   // boardId is in the route
-  R := T.Db.Query(Format(
-    'SELECT id,name,type,size,createdAt FROM attachments WHERE cardId=%s ORDER BY createdAt;',
-    [QuotedStr(aRequest.RouteParams['cardId'])]));
-  // api.py listcardattachments expects {success, attachments:[{attachmentId,fileName,...}]}
-  O := TJSONObject.Create;
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  Board:=aRequest.RouteParams['boardId'];Lane:=OptionalRouteId('swimlaneId');
+  List:=OptionalRouteId('listId');Card:=OptionalRouteId('cardId');
+  if not ApiAuthBoard(T,aResponse,UserId,Board,False) then Exit;
+  if not ApiChildrenBelong(T.Db,Board,Lane,List,Card,'','','','') then
+  begin SendJson(aResponse,'{"success":false,"message":"Attachment scope not found"}',404);Exit;end;
+  Selector:=TSelectionScope.Create(T.Db);
   try
-    O.Add('success', True);
-    A := TJSONArray.Create;
-    for i := 0 to High(R) do
-      if Length(R[i]) >= 5 then
-        A.Add(TJSONObject.Create([
-          'attachmentId', R[i][0], 'fileName', R[i][1], 'fileType', R[i][2],
-          'fileSize', StrToIntDef(R[i][3], 0), 'storageBackend', 'filesystem',
-          'createdAt', R[i][4]]));
-    O.Add('attachments', A);
-    SendJson(aResponse, O.AsJSON);
-  finally O.Free; end;
+    Scope:='boardId='+QuotedStr(Board)+' AND '+Selector.StringField('attachments','boardId')+
+      ' AND '+Selector.StringField('attachments','id')+' AND '+LiveAttachmentSQL(T.Db);
+    AddScope('swimlaneId',Lane);AddScope('listId',List);AddScope('cardId',Card);
+    Rows:=T.Db.Query('SELECT id,name,type,size,createdAt,storageBackend,boardId,swimlaneId,listId,cardId '+
+      'FROM attachments WHERE '+Scope+' ORDER BY createdAt,id;');
+  finally Selector.Free;end;
+  Reply:=TJSONObject.Create;
+  try
+    Attachments:=TJSONArray.Create;
+    Reply.Add('attachments',Attachments);
+    for Row in Rows do
+      Attachments.Add(TJSONObject.Create(['attachmentId',Row[0],'fileName',Row[1],'fileType',Row[2],
+        'fileSize',StrToInt64Def(Row[3],0),'createdAt',Row[4],'storageBackend',Row[5],
+        'boardId',Row[6],'swimlaneId',Row[7],'listId',Row[8],'cardId',Row[9],'isImage',Copy(Row[2],1,6)='image/']));
+    Reply.Add('success',True);
+    Reply.Add('count',Attachments.Count);
+    SendJson(aResponse,Reply.AsJSON);
+  finally Reply.Free;end;
 end;
 
 end.

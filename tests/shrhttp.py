@@ -1076,6 +1076,32 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     with sqlite3.connect(database) as con:
                         con.execute('DROP TRIGGER fail_attachment_insert')
                 print('PASS: attachment metadata failure rolls back and cleans up newly written bytes')
+                deleted_attachment='rest-deleted-file'
+                foreign_attachment='rest-foreign-file'
+                client.command({'insert':'attachments','documents':[
+                    dict(_id=deleted_attachment,name='deleted.txt',deletedAt=now,
+                        meta=dict(boardId='b',listId='l',swimlaneId='s',cardId=card['_id'])),
+                    dict(_id=foreign_attachment,name='foreign.txt',
+                        meta=dict(boardId='parent-private-board',listId='l',swimlaneId='s',cardId=card['_id']))]})
+                try:
+                    listing='/api/attachment/list/b'
+                    assert request('GET',listing)[0]==401
+                    assert request('GET','/api/attachment/list/parent-private-board',token=token)[0]==403
+                    for suffix in ('','/s','/s/l','/s/l/'+card['_id'],'/null/null/'+card['_id']):
+                        status,_,body=request('GET',listing+suffix,token=token)
+                        assert status==200,(status,body)
+                        envelope=json.loads(body)
+                        entries={entry['attachmentId']:entry for entry in envelope['attachments']}
+                        assert envelope['count']==len(entries)
+                        assert entries[attachment_id]['cardId']==card['_id']
+                        assert deleted_attachment not in entries and foreign_attachment not in entries
+                    assert request('GET',listing+'/s/l/missing-card',token=token)[0]==404
+                    status,_,body=request('GET','/api/boards/b/attachments',token=token)
+                    assert status==200 and deleted_attachment not in {entry['_id'] for entry in json.loads(body)}
+                finally:
+                    client.command({'delete':'attachments','deletes':[dict(q={'_id':item},limit=1)
+                        for item in (deleted_attachment,foreign_attachment)]})
+                print('PASS: REST attachment listings scope board and resources and hide soft-deleted metadata')
                 raw_attachment='/api/attachment/download/'+attachment_id+'?raw=1'
                 assert request('GET',raw_attachment)[0]==401
                 status,raw_headers,raw_bytes=request('GET',raw_attachment,token=token)
