@@ -9,6 +9,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Card editors can change assigned single-select fields without JavaScript
   or cookies. Reject missing options and replayed submissions, and verify
   field, card and option scope inside the write transaction.
+  Chromium verifies that removing another option preserves the selection,
+  and that choosing a replacement updates the native minicard.
 
 ## 2026-11-18 Show custom fields on the native card page
 

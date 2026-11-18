@@ -1374,7 +1374,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$set':{board_setting:True}})]})
                     client.command({'insert':'customFields','documents':[dict(_id='browser-mini-field',
                         boardIds=['b'],name='Browser choice',type='dropdown',showLabelOnMiniCard=True,
-                        settings=dict(dropdownItems=[dict(_id='browser-mini-option',name='Original choice')]))]})
+                        settings=dict(dropdownItems=[
+                            dict(_id='browser-mini-option',name='Original choice'),
+                            dict(_id='browser-mini-remove',name='Removable choice'),
+                            dict(_id='browser-mini-alternate',name='Alternate choice')]))]})
                     client.command({'update':'cards','updates':[dict(q={'_id':'brow-sort'},
                         u={'$set':{'customFields':[dict(_id='browser-mini-field',value='browser-mini-option')]}})]})
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/minifield.js'),
