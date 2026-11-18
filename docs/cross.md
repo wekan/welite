@@ -225,6 +225,15 @@ into a fresh file with this VFS. The integrity check passes inside vamos
 and after reopening the file on Linux. Server integration, concurrent
 access and HTTP remain open.
 
+A scratch build of the full disk server binds the GCC SQLite exports
+statically, selects `unix-dotfile`, and uses the probe's C startup
+shims. The C object uses a distinct filename from the Pascal binding's
+object. Under 68040 vamos, a named volume containing the server in a
+subdirectory allows it to initialize the global registry. Linux reopens
+that database and verifies its integrity and registry tables. The server
+prints its listening banner, then aborts with runtime error 232 when it
+tries to use threads. No HTTP response was verified.
+
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
 prefix and probe-only startup aliases. That executable does not run to its
