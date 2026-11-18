@@ -53,6 +53,7 @@ procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
 procedure ApiDeleteRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiEditRule(aRequest:TRequest;aResponse:TResponse);
+procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
@@ -1151,6 +1152,74 @@ begin
     except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete rule');Exit;end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(RuleId)+'"}');
   finally Rule.Free;end;
+end;
+
+procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"Integration not found"}';
+var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload:string;
+  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading:Boolean;
+  Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
+  procedure Missing;
+  begin
+    if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];Id:=aRequest.RouteParams['intId'];
+  Reading:=aRequest.Method='GET';
+  if not ApiAuthBoard(T,aResponse,Actor,BoardId,False) then Exit;
+  Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  Admin:=(Length(Rows)=1) and (Rows[0][0]='1');
+  if not Reading and not Admin then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then
+  begin Missing;Exit;end;
+  Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
+    'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''integrations'';');
+  if Length(Rows)<>1 then begin Missing;Exit;end;
+  Source:=Rows[0][0];TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
+  Scope:='json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
+    ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
+    ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
+  if Id<>'' then Scope:=Scope+' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id);
+  if not Reading then
+  begin
+    if (Id='') or (Length(T.Db.Query('SELECT 1 FROM '+TableName+' WHERE '+Scope+';'))<>1) then
+    begin Missing;Exit;end;
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM _ferretdb_collections '+
+      'WHERE name=''integrations'' AND table_name='+QuotedStr(Source)+')=1 AND (SELECT count(*) FROM '+TableName+
+      ' WHERE '+Scope+')=1 THEN 1 ELSE json(''Integration scope changed'') END; DELETE FROM '+TableName+' WHERE '+Scope+
+      '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
+      ') THEN 1 ELSE json(''Integration deletion failed'') END; COMMIT;';
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete integration');Exit;end;
+    SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
+  end;
+  Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
+  if (Id<>'') and (Length(Rows)<>1) then begin Missing;Exit;end;
+  Entries:=TJSONArray.Create;
+  try
+    try
+      for Row in Rows do
+      begin
+        Doc:=ExactObject(PlainDocument(Row[0]));
+        try
+          Entry:=TJSONObject.Create;Entries.Add(Entry);
+          for Key in ['_id','boardId','enabled','activities','title','type','url','userId',
+            'createdAt','modifiedAt','notificationDelivery'] do
+          begin
+            if not Admin and (Key<>'_id') and (Key<>'boardId') and (Key<>'enabled') and (Key<>'activities') then Continue;
+            Field:=Doc.Find(Key);if Field<>nil then Entry.Add(Key,Field.Clone);
+          end;
+        finally Doc.Free;end;
+      end;
+      if Id<>'' then Payload:=Entries.Items[0].AsJSON else Payload:=Entries.AsJSON;
+      SendJson(aResponse,Payload);
+    except SendError(aResponse,500,'Could not read integrations');end;
+  finally Entries.Free;end;
 end;
 
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);

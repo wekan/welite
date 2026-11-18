@@ -513,6 +513,22 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 client.command({'create':'integrations'})
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
                     userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
+                integration_path='/api/boards/b/integrations/fixture-webhook'
+                status,_,body=request('GET',integration_path,token=token)
+                assert status==200,(status,body)
+                integration=json.loads(body)
+                assert integration['_id']=='fixture-webhook' and 'token' not in integration
+                assert json.loads(request('GET','/api/boards/b/integrations',token=token)[2])==[integration]
+                assert request('DELETE',integration_path)[0]==401
+                status,_,body=request('DELETE','/api/boards/b/integrations/missing',token=token)
+                assert status==404 and json.loads(body)==dict(error='Integration not found')
+                client.command({'insert':'integrations','documents':[dict(_id='remove-webhook',boardId='b')]})
+                delete_integration='/api/boards/b/integrations/remove-webhook'
+                status,_,body=request('DELETE',delete_integration,token=token)
+                assert status==200 and json.loads(body)==dict(_id='remove-webhook')
+                assert request('GET',delete_integration,token=token)[0]==404
+                assert client.find('integrations','fixture-webhook') and not client.find('integrations','remove-webhook')
+                print('PASS: shared REST integration reads redact tokens and scoped deletion leaves siblings intact')
                 status,_,body=request('POST','/api/boards/b/copy',dict(title='Rule copy'),token)
                 assert status==200,(status,body)
                 copy_id=json.loads(body)
