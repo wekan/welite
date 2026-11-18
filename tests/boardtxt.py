@@ -33,6 +33,7 @@ def run(request,database,administrator,base):
         author=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()[0]
         con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,dateLastActivity,createdAt,modifiedAt) "
                     "VALUES('txtcard','boardtxt','txtlane','txtlist','Hidden until expanded',?,'now','now','now')",(author,))
+        con.execute("UPDATE cards SET spentTime=2.5,isOvertime=1 WHERE id='txtcard'")
         for identity,title,archived in [('txtchild','Subtask <child>',0),('txtoldchild','Archived subtask',1)]:
             con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,parentId,archived,dateLastActivity,createdAt,modifiedAt) "
                         "VALUES(?,'boardtxt','txtlane','txtlist',?,?,'txtcard',?,'now','now','now')",
@@ -137,6 +138,14 @@ def run(request,database,administrator,base):
         assert status==200 and b'Hidden until expanded' not in body
         status,_,body=request('GET','/board?id=boardtxt&x=1&y=1&lang=en&expand=txtlist')
         assert status==200 and b'Hidden until expanded' in body
+        assert b'Overtime (hours): 2.5' in body
+        with sqlite3.connect(database) as con:
+            con.execute("""UPDATE boards SET settings_json='{"allowsSpentTimeOnMinicard":false}' WHERE id='boardtxt'""")
+        status,_,body=request('GET','/board?id=boardtxt&x=1&y=1&lang=en&expand=txtlist')
+        assert status==200 and b'Overtime (hours): 2.5' not in body
+        with sqlite3.connect(database) as con:
+            con.execute("UPDATE boards SET settings_json='{}' WHERE id='boardtxt'")
+
         check('en',header='en')
         assert content_state()==before,'Viewport/map navigation changed board content'
     finally:

@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Show card spent time on the HTML board
+
+- Render recorded hours with the translated spent-time or overtime
+  label. Respect the board's minicard visibility setting.
+
 ## 2026-11-18 View subtasks on the HTML board
 
 - Open or close a card's same-board subtask list with an ordinary link.

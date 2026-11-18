@@ -30,7 +30,7 @@ begin
 end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard:string):string;
 var B,Lanes,Lists,Cards,MapLists,Subtasks:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
-  Writable:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
+  Writable,ShowSpentTime:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -38,7 +38,10 @@ var B,Lanes,Lists,Cards,MapLists,Subtasks:TWLRows; i,j,k,c,m,Child,Width,MapX,Ma
 begin
   Result:='';
   if not BoardCanRead(Db,S.UserId,BoardId) then Exit;
-  B:=Db.Query('SELECT title,color FROM boards WHERE id='+QuotedStr(BoardId)+';');
+  B:=Db.Query('SELECT title,color,CASE WHEN json_type(settings_json,''$.allowsSpentTimeOnMinicard'') IN (''true'',''false'') '+
+    'THEN json_extract(settings_json,''$.allowsSpentTimeOnMinicard'') ELSE COALESCE(json_extract(settings_json,''$.allowsSpentTime''),1) END '+
+    'FROM boards WHERE id='+QuotedStr(BoardId)+';');
+  ShowSpentTime:=B[0][2]='1';
   Writable:=BoardCanWrite(Db,S.UserId,BoardId);
   Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
   Language:=ResolveLanguage(Tag,SessionLanguage(Db,S),'');
@@ -177,7 +180,7 @@ begin
         Continue;
       end;
       Cards:=Db.Query('SELECT c.id,c.title,c.color,EXISTS(SELECT 1 FROM cards child WHERE child.parentId=c.id'+
-        ' AND child.boardId=c.boardId AND child.archived=0 AND child.deletedAt IS NULL) FROM cards c WHERE c.boardId='+
+        ' AND child.boardId=c.boardId AND child.archived=0 AND child.deletedAt IS NULL),CASE WHEN c.spentTime<>0 THEN c.spentTime END,c.isOvertime FROM cards c WHERE c.boardId='+
         QuotedStr(BoardId)+' AND c.swimlaneId='+QuotedStr(Lanes[i][0])+' AND c.listId='+QuotedStr(Lists[c][0])+
         ' AND c.archived=0 AND c.deletedAt IS NULL ORDER BY c.sort,c.id;');
       for k:=0 to High(Cards) do
@@ -185,6 +188,13 @@ begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
           HtmlEncode(Cards[k][1])+'</p>';
+        if ShowSpentTime and (Cards[k][4]<>'') then
+        begin
+          if Cards[k][5]='1' then CellText:=Words.Text('overtime-hours','Overtime (hours)')
+          else CellText:=Words.Text('spent-time-hours','Spent time (hours)');
+          Result:=Result+'<p data-card-time="'+HtmlAttr(Cards[k][0])+'">'+
+            HtmlEncode(CellText+': '+Cards[k][4])+'</p>';
+        end;
         if Cards[k][3]<>'1' then Continue;
         Url:=BoardPath;
         if ExpandedList<>'' then Url:=Url+'&expand='+HTTPEncode(ExpandedList);

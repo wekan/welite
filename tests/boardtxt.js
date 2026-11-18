@@ -82,6 +82,7 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
     assert.equal(new URL(page.url()).searchParams.get('view'),'all');
     assert.equal(new URL(page.url()).searchParams.get('sessionId'),process.argv[3]);
     assert.equal(await card.count(),1);
+    assert.equal(await page.locator('[data-card-time="txtcard"]').innerText(),'Overtime (hours): 2.5');
     const subtasks=page.getByRole('link',{name:'Subtasks',exact:true});
     const child=page.getByRole('listitem').filter({hasText:'Subtask <child>'});
     assert.equal(await child.count(),0);
