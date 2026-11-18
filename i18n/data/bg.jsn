@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Акаунтът е създаден! Вече можете да влезете.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Потврди",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Настройването не можа да започне.",
   "registration-global-admin-disabled": "Профилите на глобалните администратори се създават локално. Публичната регистрация е изключена.",
   "auth-session-create-failed": "Сесията не можа да бъде създадена.",
-  "registration-session-failed": "Профилът е създаден. Влезте, за да продължите.",
   "registration-password-unavailable": "Регистрацията с парола не е достъпна."
 }

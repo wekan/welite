@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "De configuratie kon niet worden gestart.",
   "registration-global-admin-disabled": "Accounts voor globale beheerders worden lokaal aangemaakt. Openbare registratie is uitgeschakeld.",
   "auth-session-create-failed": "De sessie kon niet worden aangemaakt.",
-  "registration-session-failed": "Het account is aangemaakt. Meld je aan om verder te gaan.",
   "registration-password-unavailable": "Registratie met een wachtwoord is niet beschikbaar."
 }

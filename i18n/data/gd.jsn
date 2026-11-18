@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Cha b’ urrainn dhuinn an rèiteachadh a thòiseachadh.",
   "registration-global-admin-disabled": "Thèid cunntasan nan rianairean uile-choitcheann a chruthachadh gu h-ionadail. Tha clàradh poblach à comas.",
   "auth-session-create-failed": "Cha b’ urrainn dhuinn an seisean a chruthachadh.",
-  "registration-session-failed": "Chaidh an cunntas a chruthachadh. Clàraich a-steach gus leantainn air adhart.",
   "registration-password-unavailable": "Chan eil clàradh le facal-faire ri fhaighinn."
 }

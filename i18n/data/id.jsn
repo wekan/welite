@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Akun dibuat! Anda sekarang dapat masuk.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Sahkan",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Penyiapan gagal dimulai.",
   "registration-global-admin-disabled": "Akun administrator global dibuat secara lokal. Pendaftaran publik dinonaktifkan.",
   "auth-session-create-failed": "Sesi gagal dibuat.",
-  "registration-session-failed": "Akun berhasil dibuat. Masuk untuk melanjutkan.",
   "registration-password-unavailable": "Pendaftaran dengan kata sandi tidak tersedia."
 }

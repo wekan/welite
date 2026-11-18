@@ -2090,7 +2090,7 @@
   "password-mismatch": "Les mots de passe ne correspondent pas",
   "username-too-short": "Le nom d'utilisateur doit comporter au moins 3 caractères",
   "user-exists": "L'utilisateur existe déjà",
-  "account-created": "Compte créé ! Vous pouvez maintenant vous connecter.",
+  "account-created": "Contul a fost creat! Acum vă puteți autentifica.",
   "account-creation-failed": "Échec de la création du compte",
   "login": "Connexion",
   "confirm": "Conferma",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Configurarea nu a putut fi pornită.",
   "registration-global-admin-disabled": "Conturile administratorilor globali sunt create local. Înregistrarea publică este dezactivată.",
   "auth-session-create-failed": "Sesiunea nu a putut fi creată.",
-  "registration-session-failed": "Contul a fost creat. Autentificați-vă pentru a continua.",
   "registration-password-unavailable": "Înregistrarea cu parolă nu este disponibilă."
 }

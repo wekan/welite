@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Ekki tókst að hefja uppsetningu.",
   "registration-global-admin-disabled": "Reikningar almennra stjórnenda eru stofnaðir á staðnum. Opinber nýskráning er óvirk.",
   "auth-session-create-failed": "Ekki tókst að stofna setu.",
-  "registration-session-failed": "Notandareikningur hefur verið stofnaður. Skráðu þig inn til að halda áfram.",
   "registration-password-unavailable": "Nýskráning með lykilorði er ekki í boði."
 }

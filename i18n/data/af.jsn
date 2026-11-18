@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Die opstelling kon nie begin nie.",
   "registration-global-admin-disabled": "Rekeninge vir globale administrateurs word plaaslik geskep. Openbare registrasie is gedeaktiveer.",
   "auth-session-create-failed": "Die sessie kon nie geskep word nie.",
-  "registration-session-failed": "Die rekening is geskep. Meld aan om voort te gaan.",
   "registration-password-unavailable": "Registrasie met ’n wagwoord is nie beskikbaar nie."
 }

@@ -2089,7 +2089,7 @@
   "password-mismatch": "密码不匹配",
   "username-too-short": "用户名必须至少 3 个字符",
   "user-exists": "用户已存在",
-  "account-created": "帐户已创建！您现在可以登录。",
+  "account-created": "账户创建好仔！侬现在好登录仔。",
   "account-creation-failed": "创建帐户失败",
   "login": "登录",
   "confirm": "确认",

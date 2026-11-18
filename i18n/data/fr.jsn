@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Impossible de lancer la configuration.",
   "registration-global-admin-disabled": "Les comptes des administrateurs globaux sont créés localement. L’inscription publique est désactivée.",
   "auth-session-create-failed": "Impossible de créer la session.",
-  "registration-session-failed": "Le compte a été créé. Connectez-vous pour continuer.",
   "registration-password-unavailable": "L’inscription avec un mot de passe est indisponible."
 }

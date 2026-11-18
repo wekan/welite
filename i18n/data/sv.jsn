@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Det gick inte att påbörja konfigureringen.",
   "registration-global-admin-disabled": "Konton för globala administratörer skapas lokalt. Offentlig registrering är inaktiverad.",
   "auth-session-create-failed": "Det gick inte att skapa sessionen.",
-  "registration-session-failed": "Kontot har skapats. Logga in för att fortsätta.",
   "registration-password-unavailable": "Registrering med lösenord är inte tillgänglig."
 }

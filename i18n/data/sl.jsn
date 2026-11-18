@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Račun ustvarjen! Zdaj se lahko prijavite.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Потврди",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Nastavitve ni bilo mogoče začeti.",
   "registration-global-admin-disabled": "Računi globalnih skrbnikov se ustvarijo lokalno. Javna registracija je onemogočena.",
   "auth-session-create-failed": "Seje ni bilo mogoče ustvariti.",
-  "registration-session-failed": "Račun je ustvarjen. Za nadaljevanje se prijavite.",
   "registration-password-unavailable": "Registracija z geslom ni na voljo."
 }

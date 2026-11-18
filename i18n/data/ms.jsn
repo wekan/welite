@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Akaun dicipta! Anda kini boleh log masuk.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Sahkan",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Persediaan gagal dimulakan.",
   "registration-global-admin-disabled": "Akaun pentadbir global dicipta secara setempat. Pendaftaran awam dinyahdayakan.",
   "auth-session-create-failed": "Sesi gagal dicipta.",
-  "registration-session-failed": "Akaun telah dicipta. Log masuk untuk meneruskan.",
   "registration-password-unavailable": "Pendaftaran dengan kata laluan tidak tersedia."
 }

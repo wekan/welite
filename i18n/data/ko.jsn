@@ -2090,7 +2090,7 @@
   "password-mismatch": "密码不符",
   "username-too-short": "用户名必须不少于3个字符",
   "user-exists": "用户账号已存在",
-  "account-created": "账号已创建！您现在可以登入了。",
+  "account-created": "계정이 생성되었습니다! 이제 로그인할 수 있습니다.",
   "account-creation-failed": "账号创建错误",
   "login": "登录",
   "confirm": "확인",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "설정을 시작하지 못했습니다.",
   "registration-global-admin-disabled": "전역 관리자 계정은 로컬에서 생성됩니다. 공개 가입은 비활성화되어 있습니다.",
   "auth-session-create-failed": "세션을 생성하지 못했습니다.",
-  "registration-session-failed": "계정이 생성되었습니다. 계속하려면 로그인하세요.",
   "registration-password-unavailable": "비밀번호를 사용한 가입은 지원되지 않습니다."
 }

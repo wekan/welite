@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Účet vytvořen! Nyní se můžete přihlásit.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Potvrdit",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Nastavení se nepodařilo zahájit.",
   "registration-global-admin-disabled": "Účty globálních správců se vytvářejí místně. Veřejná registrace je vypnuta.",
   "auth-session-create-failed": "Relaci se nepodařilo vytvořit.",
-  "registration-session-failed": "Účet byl vytvořen. Přihlaste se a pokračujte.",
   "registration-password-unavailable": "Registrace pomocí hesla není dostupná."
 }

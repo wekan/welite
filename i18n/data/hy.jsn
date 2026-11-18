@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Չհաջողվեց սկսել կարգավորումը։",
   "registration-global-admin-disabled": "Ընդհանուր ադմինիստրատորների հաշիվները ստեղծվում են տեղային եղանակով։ Հանրային գրանցումն անջատված է։",
   "auth-session-create-failed": "Չհաջողվեց ստեղծել աշխատաշրջանը։",
-  "registration-session-failed": "Հաշիվը ստեղծվեց։ Շարունակելու համար մուտք գործեք։",
   "registration-password-unavailable": "Գաղտնաբառով գրանցումը հասանելի չէ։"
 }

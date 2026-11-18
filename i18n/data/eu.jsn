@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Kontua sortuta! Orain saioa hasi dezakezu.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Confirmar",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Ezin izan da konfigurazioa hasi.",
   "registration-global-admin-disabled": "Administratzaile globalen kontuak lokalean sortzen dira. Erregistro publikoa desgaituta dago.",
   "auth-session-create-failed": "Ezin izan da saioa sortu.",
-  "registration-session-failed": "Kontua sortu da. Hasi saioa jarraitzeko.",
   "registration-password-unavailable": "Pasahitz bidezko erregistroa ez dago erabilgarri."
 }

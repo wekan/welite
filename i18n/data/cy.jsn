@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Ni fu modd dechrau’r gosodiad.",
   "registration-global-admin-disabled": "Caiff cyfrifon gweinyddwyr cyffredinol eu creu’n lleol. Mae cofrestru cyhoeddus wedi’i analluogi.",
   "auth-session-create-failed": "Ni fu modd creu’r sesiwn.",
-  "registration-session-failed": "Crëwyd y cyfrif. Mewngofnodwch i barhau.",
   "registration-password-unavailable": "Nid yw cofrestru â chyfrinair ar gael."
 }

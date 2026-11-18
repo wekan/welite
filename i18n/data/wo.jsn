@@ -2090,7 +2090,7 @@
   "password-mismatch": "Les mots de passe ne correspondent pas",
   "username-too-short": "Le nom d'utilisateur doit comporter au moins 3 caractères",
   "user-exists": "L'utilisateur existe déjà",
-  "account-created": "Compte créé ! Vous pouvez maintenant vous connecter.",
+  "account-created": "Sos nañu kont bi! Man nga dugg léegi.",
   "account-creation-failed": "Échec de la création du compte",
   "login": "Connexion",
   "confirm": "Confirmer",

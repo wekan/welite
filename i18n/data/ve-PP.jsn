@@ -2090,7 +2090,7 @@
   "password-mismatch": "Salasanat eivät täsmää",
   "username-too-short": "Käyttäjätunnuksen on oltava vähintään 3 merkkiä pitkä",
   "user-exists": "Käyttäjä on jo olemassa",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Akkaunt om tehtud! Nügüd’ sinä void tulda sistemaha.",
   "account-creation-failed": "Tilin luominen epäonnistui",
   "login": "Kirjaudu sisään",
   "confirm": "Varmista",

@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Đã tạo tài khoản! Bây giờ bạn có thể đăng nhập.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Sahkan",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Không thể bắt đầu thiết lập.",
   "registration-global-admin-disabled": "Tài khoản quản trị toàn cục được tạo cục bộ. Tính năng đăng ký công khai đã bị tắt.",
   "auth-session-create-failed": "Không thể tạo phiên.",
-  "registration-session-failed": "Đã tạo tài khoản. Hãy đăng nhập để tiếp tục.",
   "registration-password-unavailable": "Không thể đăng ký bằng mật khẩu."
 }

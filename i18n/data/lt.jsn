@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Nepavyko pradėti sąrankos.",
   "registration-global-admin-disabled": "Visuotinių administratorių paskyros kuriamos vietoje. Viešoji registracija išjungta.",
   "auth-session-create-failed": "Nepavyko sukurti seanso.",
-  "registration-session-failed": "Paskyra sukurta. Prisijunkite, kad galėtumėte tęsti.",
   "registration-password-unavailable": "Registruotis naudojant slaptažodį negalima."
 }

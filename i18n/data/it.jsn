@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Account creato! Ora puoi accedere.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Conferma",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Non è stato possibile avviare la configurazione.",
   "registration-global-admin-disabled": "Gli account degli amministratori globali vengono creati in locale. La registrazione pubblica è disattivata.",
   "auth-session-create-failed": "Non è stato possibile creare la sessione.",
-  "registration-session-failed": "Account creato. Accedi per continuare.",
   "registration-password-unavailable": "La registrazione con password non è disponibile."
 }

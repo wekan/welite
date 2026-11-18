@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "לא ניתן היה להתחיל בהגדרה.",
   "registration-global-admin-disabled": "חשבונות מנהלים כלליים נוצרים באופן מקומי. הרשמה ציבורית מושבתת.",
   "auth-session-create-failed": "לא ניתן היה ליצור הפעלה.",
-  "registration-session-failed": "החשבון נוצר. יש להיכנס כדי להמשיך.",
   "registration-password-unavailable": "הרשמה באמצעות סיסמה אינה זמינה."
 }

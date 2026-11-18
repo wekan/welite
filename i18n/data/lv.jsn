@@ -2090,7 +2090,7 @@
   "password-mismatch": "Slaptažodžiai nesutampa",
   "username-too-short": "Vartotojo vardą turi sudaryti bent 3 simboliai",
   "user-exists": "Vartotojas jau yra",
-  "account-created": "Paskyra sukurta! Dabar galite prisijungti.",
+  "account-created": "Konts ir izveidots! Tagad varat pierakstīties.",
   "account-creation-failed": "Nepavyko sukurti paskyros",
   "login": "Prisijungti",
   "confirm": "Patvirtinti",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Neizdevās sākt iestatīšanu.",
   "registration-global-admin-disabled": "Globālo administratoru konti tiek izveidoti lokāli. Publiskā reģistrācija ir atspējota.",
   "auth-session-create-failed": "Neizdevās izveidot sesiju.",
-  "registration-session-failed": "Konts ir izveidots. Pierakstieties, lai turpinātu.",
   "registration-password-unavailable": "Reģistrācija ar paroli nav pieejama."
 }

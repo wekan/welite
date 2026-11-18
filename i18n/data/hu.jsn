@@ -2089,7 +2089,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "A fiók létrejött! Most már bejelentkezhetsz.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Megerősítés",
@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Nem sikerült elindítani a beállítást.",
   "registration-global-admin-disabled": "A globális rendszergazdai fiókok helyben hozhatók létre. A nyilvános regisztráció le van tiltva.",
   "auth-session-create-failed": "Nem sikerült létrehozni a munkamenetet.",
-  "registration-session-failed": "A fiók létrejött. A folytatáshoz jelentkezzen be.",
   "registration-password-unavailable": "A jelszavas regisztráció nem érhető el."
 }

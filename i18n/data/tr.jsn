@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Hesap oluşturuldu! Artık oturum açabilirsiniz.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Onayla",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Kurulum başlatılamadı.",
   "registration-global-admin-disabled": "Genel yönetici hesapları yerel olarak oluşturulur. Herkese açık kayıt devre dışı.",
   "auth-session-create-failed": "Oturum oluşturulamadı.",
-  "registration-session-failed": "Hesap oluşturuldu. Devam etmek için oturum açın.",
   "registration-password-unavailable": "Parolayla kayıt kullanılamıyor."
 }

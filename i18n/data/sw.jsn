@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Usanidi haukuweza kuanza.",
   "registration-global-admin-disabled": "Akaunti za wasimamizi wakuu huundwa kwenye seva yenyewe. Usajili wa umma umezimwa.",
   "auth-session-create-failed": "Kipindi cha kuingia hakikuweza kuundwa.",
-  "registration-session-failed": "Akaunti imeundwa. Ingia ili kuendelea.",
   "registration-password-unavailable": "Usajili kwa kutumia nenosiri haupatikani."
 }

@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Налог је направљен! Сада се можете пријавити.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Потврди",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Подешавање није могло да почне.",
   "registration-global-admin-disabled": "Налози глобалних администратора праве се локално. Јавна регистрација је онемогућена.",
   "auth-session-create-failed": "Није било могуће направити сесију.",
-  "registration-session-failed": "Налог је направљен. Пријавите се да бисте наставили.",
   "registration-password-unavailable": "Регистрација помоћу лозинке није доступна."
 }

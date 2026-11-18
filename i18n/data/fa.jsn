@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "حساب ایجاد شد! اکنون می‌توانید وارد شوید.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "تأكيد",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "راه‌اندازی شروع نشد.",
   "registration-global-admin-disabled": "حساب‌های مدیر کل به‌صورت محلی ایجاد می‌شوند. ثبت‌نام عمومی غیرفعال است.",
   "auth-session-create-failed": "نشست ایجاد نشد.",
-  "registration-session-failed": "حساب ایجاد شد. برای ادامه وارد شوید.",
   "registration-password-unavailable": "ثبت‌نام با گذرواژه در دسترس نیست."
 }

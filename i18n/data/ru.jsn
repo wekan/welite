@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Учётная запись создана! Теперь вы можете войти.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Подтвердить",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Не удалось начать настройку.",
   "registration-global-admin-disabled": "Учётные записи глобальных администраторов создаются локально. Публичная регистрация отключена.",
   "auth-session-create-failed": "Не удалось создать сеанс.",
-  "registration-session-failed": "Учётная запись создана. Войдите, чтобы продолжить.",
   "registration-password-unavailable": "Регистрация с паролем недоступна."
 }

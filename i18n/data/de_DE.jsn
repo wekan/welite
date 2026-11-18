@@ -2090,7 +2090,7 @@
   "password-mismatch": "Die Passwörter stimmen nicht überein",
   "username-too-short": "Der Benutzername muss mindestens 3 Zeichen lang sein",
   "user-exists": "Der Benutzer existiert bereits",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Konto erstellt! Sie können sich jetzt anmelden.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Bestätigen",

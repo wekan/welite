@@ -183,7 +183,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                     password='test-password',confirm='test-password'))
                 assert failed[0]==500 and 'Location' not in failed[1]
                 check_auth_error(failed,'fi',title_key='register')
-                assert '<p>Tili luotu. Jatka kirjautumalla sisään.</p>'.encode() in failed[2]
+                assert '<p>Tili luotu! Voit nyt kirjautua sisään.</p>'.encode() in failed[2]
                 with sqlite3.connect(admins_db) as con:
                     assert con.execute('SELECT hashedToken FROM login_tokens ORDER BY hashedToken').fetchall()==before
                     assert con.execute("SELECT count(*) FROM users WHERE username='saved-account'").fetchone()==(1,)

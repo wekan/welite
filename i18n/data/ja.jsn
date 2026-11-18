@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "アカウントが作成されました! サインインできます。",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "確認",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "設定を開始できませんでした。",
   "registration-global-admin-disabled": "グローバル管理者のアカウントはローカルで作成されます。公開登録は無効です。",
   "auth-session-create-failed": "セッションを作成できませんでした。",
-  "registration-session-failed": "アカウントを作成しました。続行するにはログインしてください。",
   "registration-password-unavailable": "パスワードによる登録は利用できません。"
 }

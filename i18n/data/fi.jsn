@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Käyttöönottoa ei voitu aloittaa",
   "registration-global-admin-disabled": "Järjestelmänvalvojien tilit luodaan paikallisesti. Julkinen rekisteröityminen on poissa käytöstä.",
   "auth-session-create-failed": "Istuntoa ei voitu luoda",
-  "registration-session-failed": "Tili luotu. Jatka kirjautumalla sisään.",
   "registration-password-unavailable": "Salasanalla rekisteröityminen ei ole käytettävissä."
 }

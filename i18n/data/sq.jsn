@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Konfigurimi nuk mund të nisej.",
   "registration-global-admin-disabled": "Llogaritë e administratorëve globalë krijohen lokalisht. Regjistrimi publik është çaktivizuar.",
   "auth-session-create-failed": "Sesioni nuk mund të krijohej.",
-  "registration-session-failed": "Llogaria u krijua. Hyni për të vazhduar.",
   "registration-password-unavailable": "Regjistrimi me fjalëkalim nuk është i disponueshëm."
 }

@@ -2089,7 +2089,7 @@
   "password-mismatch": "As senhas não coincidem",
   "username-too-short": "O nome de usuário deve ter pelo menos 3 caracteres",
   "user-exists": "O usuário já existe",
-  "account-created": "Conta criada! Agora você pode entrar.",
+  "account-created": "Conta creada! Xa pode iniciar sesión.",
   "account-creation-failed": "Falha ao criar a conta",
   "login": "Conecte-se",
   "confirm": "Confirmar",
@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Non se puido iniciar a configuración.",
   "registration-global-admin-disabled": "As contas de administración global créanse localmente. O rexistro público está desactivado.",
   "auth-session-create-failed": "Non se puido crear a sesión.",
-  "registration-session-failed": "A conta foi creada. Inicia sesión para continuar.",
   "registration-password-unavailable": "O rexistro con contrasinal non está dispoñible."
 }

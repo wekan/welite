@@ -2090,7 +2090,7 @@
   "password-mismatch": "પાસવર્ડ મેળ ખાતા નથી",
   "username-too-short": "વપરાશકર્તાનામ ઓછામાં ઓછા 3 અક્ષરોનું હોવું જોઈએ",
   "user-exists": "વપરાશકર્તા પહેલેથી જ અસ્તિત્વમાં છે",
-  "account-created": "એકાઉન્ટ બનાવ્યું! તમે હવે સાઇન ઇન કરી શકો છો.",
+  "account-created": "खाता बन गया! अब आप साइन इन कर सकते हैं।",
   "account-creation-failed": "એકાઉન્ટ બનાવવામાં નિષ્ફળ",
   "login": "લૉગિન કરો",
   "confirm": "પુષ્ટિ કરો",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "सेटअप शुरू नहीं हो सका।",
   "registration-global-admin-disabled": "वैश्विक व्यवस्थापक खाते स्थानीय रूप से बनाए जाते हैं। सार्वजनिक पंजीकरण बंद है।",
   "auth-session-create-failed": "सत्र नहीं बनाया जा सका।",
-  "registration-session-failed": "खाता बन गया। आगे बढ़ने के लिए साइन इन करें।",
   "registration-password-unavailable": "पासवर्ड से पंजीकरण उपलब्ध नहीं है।"
 }

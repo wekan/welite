@@ -2090,7 +2090,7 @@
   "password-mismatch": "Не вдалось створити користувача",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "Користувач вже існує",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Обліковий запис створено! Тепер ви можете увійти.",
   "account-creation-failed": "Не вдалось створити користувача",
   "login": "Login",
   "confirm": "Підтвердити",

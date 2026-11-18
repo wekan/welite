@@ -2090,7 +2090,7 @@
   "password-mismatch": "Паролі не співпадають",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "Користувач вже існує",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Обліковий запис створено! Тепер ви можете увійти.",
   "account-creation-failed": "Не вдалось створити користувача",
   "login": "Login",
   "confirm": "Підтвердити",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Не вдалося розпочати налаштування.",
   "registration-global-admin-disabled": "Облікові записи глобальних адміністраторів створюються локально. Публічну реєстрацію вимкнено.",
   "auth-session-create-failed": "Не вдалося створити сеанс.",
-  "registration-session-failed": "Обліковий запис створено. Увійдіть, щоб продовжити.",
   "registration-password-unavailable": "Реєстрація за допомогою пароля недоступна."
 }

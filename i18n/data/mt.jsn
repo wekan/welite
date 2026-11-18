@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Is-setup ma setax jinbeda.",
   "registration-global-admin-disabled": "Il-kontijiet tal-amministraturi globali jinħolqu lokalment. Ir-reġistrazzjoni pubblika hija diżattivata.",
   "auth-session-create-failed": "Is-sessjoni ma setgħetx tinħoloq.",
-  "registration-session-failed": "Il-kont inħoloq. Illoggja biex tkompli.",
   "registration-password-unavailable": "Ir-reġistrazzjoni b’password mhix disponibbli."
 }

@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "สร้างบัญชีแล้ว! ตอนนี้คุณสามารถเข้าสู่ระบบได้",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Confirm",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "ไม่สามารถเริ่มการตั้งค่าได้",
   "registration-global-admin-disabled": "บัญชีผู้ดูแลระบบส่วนกลางจะสร้างบนเครื่องโดยตรง การลงทะเบียนสาธารณะถูกปิดใช้งาน",
   "auth-session-create-failed": "ไม่สามารถสร้างเซสชันได้",
-  "registration-session-failed": "สร้างบัญชีแล้ว โปรดลงชื่อเข้าใช้เพื่อดำเนินการต่อ",
   "registration-password-unavailable": "ไม่สามารถลงทะเบียนด้วยรหัสผ่านได้"
 }

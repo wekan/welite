@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Compte creat! Ara podeu iniciar sessió.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Confirmeu",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "No s’ha pogut iniciar la configuració.",
   "registration-global-admin-disabled": "Els comptes d’administració global es creen localment. El registre públic està desactivat.",
   "auth-session-create-failed": "No s’ha pogut crear la sessió.",
-  "registration-session-failed": "El compte s’ha creat. Inicieu la sessió per continuar.",
   "registration-password-unavailable": "El registre amb contrasenya no està disponible."
 }

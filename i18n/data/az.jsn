@@ -2116,6 +2116,5 @@
   "enrollment-setup-failed": "Quraşdırmaya başlamaq alınmadı.",
   "registration-global-admin-disabled": "Qlobal inzibatçı hesabları yerli olaraq yaradılır. İctimai qeydiyyat söndürülüb.",
   "auth-session-create-failed": "Sessiya yaratmaq alınmadı.",
-  "registration-session-failed": "Hesab yaradıldı. Davam etmək üçün daxil olun.",
   "registration-password-unavailable": "Parolla qeydiyyat mümkün deyil."
 }

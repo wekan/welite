@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Бүртгэл үүслээ! Та одоо нэвтэрч болно.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Подтвердить",

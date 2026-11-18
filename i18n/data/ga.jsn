@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Níorbh fhéidir an socrú a thosú.",
   "registration-global-admin-disabled": "Cruthaítear cuntais riarthóirí domhanda go logánta. Tá clárú poiblí díchumasaithe.",
   "auth-session-create-failed": "Níorbh fhéidir an seisiún a chruthú.",
-  "registration-session-failed": "Cruthaíodh an cuntas. Sínigh isteach chun leanúint ar aghaidh.",
   "registration-password-unavailable": "Níl clárú le pasfhocal ar fáil."
 }

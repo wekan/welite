@@ -2090,7 +2090,7 @@
   "password-mismatch": "Les mots de passe ne correspondent pas",
   "username-too-short": "Le nom d'utilisateur doit comporter au moins 3 caractères",
   "user-exists": "L'utilisateur existe déjà",
-  "account-created": "Compte créé ! Vous pouvez maintenant vous connecter.",
+  "account-created": "Konto kreita! Vi nun povas ensaluti.",
   "account-creation-failed": "Échec de la création du compte",
   "login": "Connexion",
   "confirm": "Confirmar",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Ne eblis komenci la agordon.",
   "registration-global-admin-disabled": "Kontoj de tutmondaj administrantoj estas kreataj loke. Publika registrado estas malŝaltita.",
   "auth-session-create-failed": "Ne eblis krei seancon.",
-  "registration-session-failed": "La konto estas kreita. Ensalutu por daŭrigi.",
   "registration-password-unavailable": "Registrado per pasvorto ne estas disponebla."
 }

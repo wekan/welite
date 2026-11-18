@@ -2089,7 +2089,7 @@
   "password-mismatch": "Parollar mos kelmaydi",
   "username-too-short": "Foydalanuvchi nomi kamida 3 ta belgidan iborat boʻlishi kerak",
   "user-exists": "Foydalanuvchi allaqachon mavjud",
-  "account-created": "Hisob yaratildi! Endi tizimga kirishingiz mumkin.",
+  "account-created": "حساب یرتیلدی! ایندی تیزیمگه کیریشینگیز ممکن.",
   "account-creation-failed": "Hisob yaratib bo‘lmadi",
   "login": "Tizimga kirish",
   "confirm": "Tasdiqlang",

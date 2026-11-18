@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "ანგარიში შეიქმნა! ახლა შეგიძლიათ შეხვიდეთ.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Подтвердить",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "დაყენების დაწყება ვერ მოხერხდა.",
   "registration-global-admin-disabled": "გლობალური ადმინისტრატორების ანგარიშები ადგილობრივად იქმნება. საჯარო რეგისტრაცია გამორთულია.",
   "auth-session-create-failed": "სესიის შექმნა ვერ მოხერხდა.",
-  "registration-session-failed": "ანგარიში შეიქმნა. გასაგრძელებლად შედით.",
   "registration-password-unavailable": "პაროლით რეგისტრაცია მიუწვდომელია."
 }

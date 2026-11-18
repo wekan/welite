@@ -2090,7 +2090,7 @@
   "password-mismatch": "Passwords do not match",
   "username-too-short": "Username must be at least 3 characters",
   "user-exists": "User already exists",
-  "account-created": "Account created! You can now sign in.",
+  "account-created": "Konto opprettet! Du kan nå logge inn.",
   "account-creation-failed": "Failed to create account",
   "login": "Login",
   "confirm": "Bekreft",
@@ -2117,6 +2117,5 @@
   "enrollment-setup-failed": "Oppsettet kunne ikke startes.",
   "registration-global-admin-disabled": "Kontoer for globale administratorer opprettes lokalt. Offentlig registrering er deaktivert.",
   "auth-session-create-failed": "Økten kunne ikke opprettes.",
-  "registration-session-failed": "Kontoen er opprettet. Logg inn for å fortsette.",
   "registration-password-unavailable": "Registrering med passord er ikke tilgjengelig."
 }

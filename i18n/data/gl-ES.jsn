@@ -2089,7 +2089,7 @@
   "password-mismatch": "As senhas não coincidem",
   "username-too-short": "O nome de usuário deve ter pelo menos 3 caracteres",
   "user-exists": "O usuário já existe",
-  "account-created": "Conta criada! Agora você pode entrar.",
+  "account-created": "Conta creada! Xa pode iniciar sesión.",
   "account-creation-failed": "Falha ao criar a conta",
   "login": "Conecte-se",
   "confirm": "Confirmar",
