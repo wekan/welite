@@ -3,7 +3,7 @@ const { readFileSync } = require('node:fs');
 const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
 
 (async () => {
-  const [url] = process.argv.slice(2);
+  const [url, size] = process.argv.slice(2);
   const browser = await chromium.launch({ args: ['--no-sandbox'] });
   try {
     const context = await browser.newContext({ javaScriptEnabled: false, userAgent: 'shared-http-test' });
@@ -15,7 +15,8 @@ const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
     const page = await context.newPage();
     assert.equal((await page.goto(url)).status(), 200);
     const form = page.locator('form[action^="/board/attachment/upload?"]');
-    const bytes = Buffer.from([0, 10, 255, 21]);
+    const bytes = size ? Buffer.alloc(Number(size)) : Buffer.from([0, 10, 255, 21]);
+    if (size) for (let index = 0; index < bytes.length; index++) bytes[index] = index % 256;
     const name = 'Native upload å.bin';
     await form.locator('input[type=file]').setInputFiles({
       name, mimeType: 'application/octet-stream', buffer: bytes,

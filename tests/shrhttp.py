@@ -1369,11 +1369,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         cardId='brow-card',title='Steps',sort=0)]})
                     client.command({'insert':'checklistItems','documents':[dict(_id='brow-item',boardId='b',
                         cardId='brow-card',checklistId='brow-check',title='Retained REST item',sort=0)]})
+                    upload_bytes=bytes(range(256))*1025
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/cardupload.js'),
-                                    f'http://localhost:{http_port}/board/card?id=b&card=brow-sort&sessionId='+web_session],check=True)
+                                    f'http://localhost:{http_port}/board/card?id=b&card=brow-sort&sessionId='+web_session,
+                                    str(len(upload_bytes))],check=True)
                     uploaded,=client.command({'find':'attachments',
                         'filter':{'meta.cardId':'brow-sort','name':'Native upload å.bin'}})['cursor']['firstBatch']
-                    assert uploaded['size']==4
+                    assert uploaded['size']==len(upload_bytes)
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/carddel.js'),
                                     f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
                     assert not client.find('cards','brow-card') and not client.find('checklists','brow-check')
@@ -1383,7 +1385,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert removed==dict(uploaded,deletedAt=removed['deletedAt'],deletedBy='u',
                                          deleteBatchId=removed['deleteBatchId'])
                     status,_,bytes_after_delete=request('GET','/api/attachment/download/'+uploaded['_id']+'?raw=1',token=token)
-                    assert status==200 and bytes_after_delete==bytes([0,10,255,21])
+                    assert status==200 and bytes_after_delete==upload_bytes
                     print('PASS: native upload and native selection deletion retain the attachment metadata and bytes')
                     client.command({'delete':'cards','deletes':[dict(q={'_id':'brow-sort'},limit=1)]})
                     client.command({'delete':'lists','deletes':[dict(q={'_id':'brow-list'},limit=1)]})

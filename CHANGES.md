@@ -8,6 +8,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Copy from the temporary multipart file in bounded chunks. Keep the same
   file size, metadata transaction and file cleanup on failed registration.
+  Chromium verifies a 262,400-byte file through upload, download and deletion.
 
 ## 2026-11-18 Verify native attachment upload and deletion together
 
