@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Correct Arabic board and spent-time labels
+
+- Use the Arabic values from WeKan’s current catalog. Verify both labels
+  on the right-to-left HTML card page in Chromium.
+
 ## 2026-11-18 Show spent time and overtime on HTML card details
 
 - Render the saved hours with the appropriate heading when the board permits

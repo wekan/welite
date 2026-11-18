@@ -85,6 +85,16 @@ const { readFileSync } = require('node:fs');
         await page.getByText('2', { exact: true }).count(), 1);
     }
     console.log('PASS: Chromium reflects JSON and form overtime edits without JavaScript or cookies');
+    const englishDetails = page.url();
+    const arabicDetails = new URL(englishDetails);
+    arabicDetails.searchParams.set('lang', 'ar');
+    assert.equal((await page.goto(arabicDetails.href)).status(), 200);
+    assert.equal(await page.locator('html').getAttribute('dir'), 'rtl');
+    assert.equal(await page.getByRole('link', { name: 'لوحة', exact: true }).count(), 1);
+    assert.equal(await page.getByRole('heading', { name: 'الوقت المستغرق (بالساعات)', exact: true }).count(), 1);
+    await page.goto(englishDetails);
+    console.log('PASS: Chromium renders the Arabic board link and spent-time heading');
+
     const checklistTitle = page.getByRole('heading', { name: 'Steps', exact: true });
     const checklistItem = page.getByText('Retained REST item', { exact: true });
     assert.equal(await checklistTitle.count(), 1);
