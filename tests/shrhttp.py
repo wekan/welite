@@ -207,6 +207,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert all(field not in cleared for field in dates)
                 print('PASS: shared REST card dates set as BSON Date and clear by field removal')
 
+                create_card_path='/api/boards/b/lists/l/cards'
+                status,_,body=request('POST',create_card_path,dict(linkedId=card['_id'],swimlaneId='s'),token)
+                assert status==200,(status,body)
+                linked_id=json.loads(body)['_id']
+                linked,=client.find('cards',linked_id)
+                assert linked['type']=='cardType-linkedCard' and linked['linkedId']==card['_id']
+                assert linked['title']==card['title'] and linked['userId']=='u'
+                activities=client.command({'find':'activities','filter':dict(cardId=linked_id,activityType='createCard')})
+                assert len(activities['cursor']['firstBatch'])==1
+                assert request('POST',create_card_path,dict(linkedId=linked_id,swimlaneId='s'),token)[0]==400
+                assert request('DELETE',create_card_path+'/'+linked_id,token=token)[0]==200
+                card=client.find('cards',card['_id'])[0]
+                print('PASS: linked REST cards store a reference, emit one creation activity, and refuse link chains')
+
                 bulk_path='/api/boards/b/lists/l/cards/bulk'
                 status,_,body=request('POST',bulk_path,dict(swimlaneId='s',cards=[
                     dict(title='Child',parentId=card['_id'],members=['u']),

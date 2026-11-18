@@ -1819,15 +1819,17 @@ begin
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
-function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string):string;
+function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string=''):string;
 var Stamp,Board:string;
 begin
   Stamp:=QuotedStr(NowIso);Board:=QuotedStr(BoardId);
   Result:='INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,parentId,'+
-    'dateLastActivity,createdAt,modifiedAt,sort,cardNumber) SELECT '+QuotedStr(CardId)+','+Board+','+
+    'dateLastActivity,createdAt,modifiedAt,sort,cardNumber,type,linkedId) SELECT '+QuotedStr(CardId)+','+Board+','+
     QuotedStr(ListId)+','+QuotedStr(Lane)+','+QuotedStr(Title)+','+QuotedStr(Descr)+','+
     QuotedStr(Author)+','+Parent+','+Stamp+','+Stamp+','+Stamp+','+Sort+
-    ',(SELECT max(0,coalesce(max(cardNumber),0))+1 FROM cards WHERE boardId='+Board+'); ';
+    ',(SELECT max(0,coalesce(max(cardNumber),0))+1 FROM cards WHERE boardId='+Board+'),';
+  if LinkedId='' then Result:=Result+'''cardType-card'',NULL; '
+  else Result:=Result+'''cardType-linkedCard'','+QuotedStr(LinkedId)+'; ';
 end;
 
 procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
@@ -1899,8 +1901,57 @@ begin
   finally Body.Free;Reply.Free;end;
 end;
 
+procedure CreateLinkedRestCard(Db:TWLDb;Response:TResponse;const Actor,BoardId,ListId,Lane,LinkedId:string);
+var Rows:TWLRows;Source,Title,Id,Board,ListKey,LaneKey,Scope,Placement,Permission,Stamp,Sql,Bindings:string;
+  Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;
+  function WritePermission(const BoardKey:string):string;
+  begin
+    Policy:=TFieldPolicy.Create(Db,Actor,BoardKey,'');
+    try Result:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  end;
+begin
+  if (Lane='') or (Pos(#0,LinkedId)>0) then
+  begin SendError(Response,400,'Invalid linked card placement');Exit;end;
+  Board:=QuotedStr(BoardId);ListKey:=QuotedStr(ListId);LaneKey:=QuotedStr(Lane);
+  Selector:=TSelectionScope.Create(Db);
+  try
+    Scope:='id='+QuotedStr(LinkedId)+' AND '+Selector.StringField('cards','id')+
+      ' AND '+Selector.StringField('cards','boardId');
+    Placement:='EXISTS(SELECT 1 FROM lists WHERE id='+ListKey+' AND boardId='+Board+
+      ' AND archived=0 AND deletedAt IS NULL AND (COALESCE(swimlaneId,'''')='''' OR swimlaneId='+LaneKey+') AND '+
+      Selector.StringField('lists','id')+' AND '+Selector.StringField('lists','boardId')+')'+
+      ' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+LaneKey+' AND boardId='+Board+' AND archived=0 AND '+
+      Selector.StringField('swimlanes','id')+' AND '+Selector.StringField('swimlanes','boardId')+')';
+    Bindings:='';
+    for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
+  finally Selector.Free;end;
+  Rows:=Db.Query('SELECT boardId,title FROM cards WHERE '+Scope+';');
+  if Length(Rows)<>1 then begin SendJson(Response,'{"error":"Card not found"}',404);Exit;end;
+  Source:=Rows[0][0];Title:=Rows[0][1];
+  if not BoardCanWrite(Db,Actor,Source) then
+  begin SendError(Response,403,'Source board write access required');Exit;end;
+  Scope:=Scope+' AND boardId='+QuotedStr(Source)+' AND archived=0 AND deletedAt IS NULL AND '+
+    'COALESCE(linkedId,'''')='''' AND type NOT IN (''template-card'',''cardType-linkedCard'',''cardType-linkedBoard'')';
+  Rows:=Db.Query('SELECT 1 WHERE '+Placement+' AND EXISTS(SELECT 1 FROM cards WHERE '+Scope+');');
+  if Length(Rows)<>1 then begin SendError(Response,400,'Invalid linked card');Exit;end;
+  Permission:=WritePermission(Source)+' AND '+WritePermission(BoardId);
+  Id:=NewId;Stamp:=QuotedStr(NowIso);
+  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+Placement+
+    ' AND EXISTS(SELECT 1 FROM cards WHERE '+Scope+' AND COALESCE(title,'''')='+QuotedStr(Title)+
+    ') THEN 1 ELSE json(''Linked card scope changed'') END; '+
+    CardCreateSql(BoardId,ListId,Lane,Id,Actor,Title,'','NULL',
+      '(SELECT count(*) FROM cards WHERE listId='+ListKey+' AND boardId='+Board+
+      ' AND archived=0 AND deletedAt IS NULL)',LinkedId)+InitializeSharedAssignments(Db,BoardId,Id,True,True)+
+    'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt) VALUES('+
+    QuotedStr(NewId)+',''createCard'','+QuotedStr(Actor)+','+Board+','+QuotedStr(Id)+','+
+    ListKey+','+LaneKey+','+Stamp+','+Stamp+'); COMMIT;';
+  if not Db.Exec(Sql) then
+  begin Db.Exec('ROLLBACK;');SendError(Response,500,'Could not create linked card');Exit;end;
+  SendJson(Response,'{"_id":"'+StringToJSONString(Id)+'"}');
+end;
+
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations,InitialFields:string;
+var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations,InitialFields,LinkedId:string;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1908,6 +1959,12 @@ begin
   if aRequest.Method <> 'POST' then begin SendError(aResponse, 405, 'Use POST'); Exit; end;
   BoardId  := aRequest.RouteParams['boardId'];
   ListId   := aRequest.RouteParams['listId'];
+  LinkedId:=BodyField(aRequest,'linkedId');
+  if LinkedId<>'' then
+  begin
+    CreateLinkedRestCard(T.Db,aResponse,UserId,BoardId,ListId,BodyField(aRequest,'swimlaneId'),LinkedId);
+    Exit;
+  end;
   Author   := BodyField(aRequest, 'authorId'); if Author = '' then Author := UserId;
   if not ValidAuthor(T.Db,BoardId,UserId,Author) then
   begin SendError(aResponse,403,'Invalid author attribution'); Exit; end;
