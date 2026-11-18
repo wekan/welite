@@ -27,6 +27,7 @@ def check_auth_language(request,database,otp):
     assert headers['Cache-Control']=='no-store' and headers['Referrer-Policy']=='no-referrer'
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password='wrong-private-password'))
     assert status==200 and b'href="/two-factor/setup?lang=ar"' in body and b'wrong-private-password' not in body
+    assert translated('two-factor-required-title')+b'</a>' in body
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password=password))
     assert status==200 and headers['Content-Language']==language and 'Location' not in headers and 'Set-Cookie' not in headers
     assert b'action="/two-factor/confirm?lang=ar"' in body
@@ -39,6 +40,7 @@ def check_auth_language(request,database,otp):
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code='bad'))
     assert status==200 and b'action="/two-factor/confirm?lang=ar"' in body and b'href="/two-factor/setup?lang=ar"' in body
     assert translated('twoFactorCode-invalid') in body
+    assert translated('two-factor-required-title')+b'</a>' in body
     assert b'<h1>'+translated('twoFactorCode-prompt')+b'</h1>' in body
     import time
     counter=int(time.time())//30

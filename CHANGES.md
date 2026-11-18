@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Translate enrollment restart links
+
+- Retain the selected language on the setup links after failed credentials
+  or an invalid confirmation code.
+
 ## 2026-11-18 Translate the enrollment confirmation heading
 
 - Use the translated six-digit prompt as the heading and retry page title.

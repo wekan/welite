@@ -275,7 +275,8 @@ begin
     '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
     '<label for="enrol-code">'+HtmlEncode(Words.Text('otp','One-time code'))+'</label> <input id="enrol-code" name="code" size="6" maxlength="6"><br>'+
     '<input type="submit" value="'+HtmlAttr(Words.Text('confirm','Confirm'))+'"></form>'+
-    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Start setup again</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
+    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+
+    HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
 end;
 procedure EnrollmentEndpoint(Request:TRequest;Response:TResponse);
 var T:TWLTenant;Username,Token,Secret,Body,Title:string;Proof:TWLEnrollProof;Words:TWLTranslator;
@@ -292,7 +293,7 @@ begin
     Proof:=nil;
     if not AuthenticateEnrollment(T.Db,Username,Request.ContentFields.Values['password'],Proof) then
     begin
-      SendHtml(Response,AuthPage(Request,Response,Title,'<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Try again</a></p>'));Exit;
+      SendHtml(Response,AuthPage(Request,Response,Title,'<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+HtmlEncode(Title)+'</a></p>'));Exit;
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
