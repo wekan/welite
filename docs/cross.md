@@ -163,8 +163,14 @@ The packaged executable opens `wami68k.fpcres` under vamos with
 `-C 68020 -H disable -m 131072 -s 512`. A resource-only Pascal probe
 renamed to `wami68k.exe` returns the exact schema bytes with that sidecar
 basename and fails when the companion keeps the probe's original name.
-The packaged server still stops at tenant directory initialization under
-this configuration.
+With a writable `work:` volume, the native SQLite shell beside the
+executable, precreated `data/admin/files/db` and `data/temp` directories,
+and `T:` assigned to a writable scratch directory, the packaged server
+writes and removes each registry SQL script. The trace reaches
+`dos.library Execute`, which returns the emulator's default zero.
+The tenant directory mapping exception is the resulting SQL failure.
+An Amiga runtime that can execute the SQLite child is still needed
+to complete HTTP startup verification.
 
 A newer shell experiment links SQLite 3.53.4's `shell.c` against the
 GFOpenSQLite hard-float library. The
