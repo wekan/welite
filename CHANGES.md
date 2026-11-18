@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify the board with Chromium cookies and JavaScript disabled
+
+- Block first-party cookies in a temporary Chromium profile and prove that the
+  browser rejects Set-Cookie, omits Cookie and leaves inline JavaScript dormant.
+- Exercise selection movement, the rendered HTML4 minimap highlight, viewport
+  navigation and layout at 320, 768 and 1920 pixels with native linked and CLI SQLite.
+
 ## 2026-11-18 Update single-board custom-field definitions through the API
 
 - Validate proposed fields before any write and commit the definition change
