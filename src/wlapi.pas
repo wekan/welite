@@ -1518,6 +1518,26 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         ' WHERE NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId='+QuotedStr(CardKey)+' AND labelId='+LabelKey+'); ';
     end;
   end;
+  procedure ImportAttachedCards(Entry:TJSONObject;const CardKey:string);
+  var Source:TJSONData;Targets:TJSONArray;Seen:TStringList;Target:string;K:Integer;
+  begin
+    Source:=Entry.Find('attachedCardIds');
+    if not (Source is TJSONArray) then Exit;
+    Targets:=TJSONArray.Create;Seen:=TStringList.Create;
+    try
+      Seen.CaseSensitive:=True;
+      for K:=0 to Source.Count-1 do
+      begin
+        if not (Source.Items[K] is TJSONString) then Continue;
+        Target:=Mapped(2,Source.Items[K].AsString);
+        if (Target='') or (Target=CardKey) or (Seen.IndexOf(Target)>=0) then Continue;
+        Seen.Add(Target);Targets.Add(Target);
+      end;
+      if Targets.Count>0 then
+        Sql:=Sql+'UPDATE cards SET extra_json=json_set(extra_json,''$.attachedCardIds'',json('+
+          QuotedStr(Targets.AsJSON)+')) WHERE id='+QuotedStr(CardKey)+' AND boardId='+Board+'; ';
+    finally Seen.Free;Targets.Free;end;
+  end;
   procedure ImportCardDependencies(Entry:TJSONObject;const CardKey:string);
   var Dependencies,Item:TJSONData;Link:TJSONObject;K:Integer;Target,Kind,Color,Icon,Source:string;
   begin
@@ -1982,6 +2002,7 @@ begin
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
         ImportCardDependencies(Row,CardId);
+        ImportAttachedCards(Row,CardId);
       end;
       ImportCardChildren;
       ImportAttachments;

@@ -389,6 +389,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     dict(cardId='hex-card',type='blocks',color='#123abc',icon='link'),
                     'unknown-card','unknown-card','foreign-card',
                 ]
+                presentation['cards'][0]['attachedCardIds']=[
+                    'hex-card','foreign-card','hex-card','palette-card','unknown-card']
                 presentation['cards'][1]['cardDependencies']=['palette-card']
                 status,_,body=request('POST',import_path,dict(board=presentation),token)
                 assert status==200,(status,body)
@@ -409,6 +411,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert restored_cards['Hex card']['color']=='#123abc'
                 assert not restored_cards['Uncolored card'].get('color')
                 green,hexa,uncolored=[restored_cards[title] for title in ['Green card','Hex card','Uncolored card']]
+                assert green['attachedCardIds']==[hexa['_id'],uncolored['_id']]
+                assert not hexa.get('attachedCardIds')
+                print('PASS: card attachments retain remapped order and discard duplicate, self and foreign targets')
                 assert green['cardDependencies']==[
                     dict(cardId=hexa['_id'],type='blocks',color='#123abc',icon='link'),
                     dict(cardId=uncolored['_id'],type='related-to',color='#eb144c',icon='link'),
