@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Nó cuir isteach an cód seo de láimh: ",
   "twoFactorCode-prompt": "Cuir isteach do chód fíordheimhnithe 6 dhigit",
   "twoFactorCode-invalid": "Cód fíordheimhnithe neamhbhailí. Bain triail eile as.",
-  "twoFactorAuth-enabled": "Tá fíordheimhniú dhá fhachtóir cumasaithe do do chuntas."
+  "twoFactorAuth-enabled": "Tá fíordheimhniú dhá fhachtóir cumasaithe do do chuntas.",
+  "two-factor-required-title": "Socraigh fíordheimhniú dhá fhachtóir"
 }

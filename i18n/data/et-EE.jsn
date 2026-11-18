@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Või sisestage see kood käsitsi: ",
   "twoFactorCode-prompt": "Sisestage oma 6-kohaline autentimiskood",
   "twoFactorCode-invalid": "Vigane autentimiskood. Proovige uuesti.",
-  "twoFactorAuth-enabled": "Teie konto jaoks on kaheastmeline autentimine lubatud."
+  "twoFactorAuth-enabled": "Teie konto jaoks on kaheastmeline autentimine lubatud.",
+  "two-factor-required-title": "Seadistage kaheastmeline autentimine"
 }

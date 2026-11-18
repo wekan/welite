@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Е ҫак кода алпа кӗрт: ",
   "twoFactorCode-prompt": "6 хисеплӗ ҫирӗплетӳ кодна кӗрт",
   "twoFactorCode-invalid": "Ҫирӗплетӳ коди юрӑхсӑр. Тепӗр хут тӑрӑшса пӑхӑр.",
-  "twoFactorAuth-enabled": "Санӑн аккаунт валли икӗ утӑмлӑ ҫирӗплетӳ ӗҫлет."
+  "twoFactorAuth-enabled": "Санӑн аккаунт валли икӗ утӑмлӑ ҫирӗплетӳ ӗҫлет.",
+  "two-factor-required-title": "Икӗ утӑмлӑ ҫирӗплетӳне ӗнерле"
 }

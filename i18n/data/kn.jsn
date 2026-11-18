@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "ಅಥವಾ ಈ ಕೋಡ್ ಅನ್ನು ಹಸ್ತಚಾಲಿತವಾಗಿ ನಮೂದಿಸಿ: ",
   "twoFactorCode-prompt": "ನಿಮ್ಮ 6-ಅಂಕಿಯ ದೃಢೀಕರಣ ಕೋಡ್ ನಮೂದಿಸಿ",
   "twoFactorCode-invalid": "ಅಮಾನ್ಯ ದೃಢೀಕರಣ ಕೋಡ್. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
-  "twoFactorAuth-enabled": "ನಿಮ್ಮ ಖಾತೆಗೆ ಎರಡು-ಅಂಶ ದೃಢೀಕರಣ ಸಕ್ರಿಯಗೊಂಡಿದೆ."
+  "twoFactorAuth-enabled": "ನಿಮ್ಮ ಖಾತೆಗೆ ಎರಡು-ಅಂಶ ದೃಢೀಕರಣ ಸಕ್ರಿಯಗೊಂಡಿದೆ.",
+  "two-factor-required-title": "ಎರಡು-ಅಂಶ ದೃಢೀಕರಣವನ್ನು ಹೊಂದಿಸಿ"
 }

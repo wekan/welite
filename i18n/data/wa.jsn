@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ou tapez ç' côde chal al mwin: ",
   "twoFactorCode-prompt": "Tapez vosse côde di wårantixhaedje a 6 chifes",
   "twoFactorCode-invalid": "Côde di wårantixhaedje nén corek. Sayîz on côp co.",
-  "twoFactorAuth-enabled": "Li wårantixhaedje a deus facteurs est en alaedje po vosse conte."
+  "twoFactorAuth-enabled": "Li wårantixhaedje a deus facteurs est en alaedje po vosse conte.",
+  "two-factor-required-title": "Apontyî l' wårantixhaedje a deus facteurs"
 }

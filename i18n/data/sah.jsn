@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Эбэтэр бу кодту илиинэн киллэр: ",
   "twoFactorCode-prompt": "6 сыыппаралаах бигэргэтии кодтугун киллэр",
   "twoFactorCode-invalid": "Бигэргэтии коду сыыһа. Ханныгын хат холонон көр.",
-  "twoFactorAuth-enabled": "Икки этэпнээх бигэргэтии эккаунтаргар туттуллар."
+  "twoFactorAuth-enabled": "Икки этэпнээх бигэргэтии эккаунтаргар туттуллар.",
+  "two-factor-required-title": "Икки этэпнээх бигэргэтиини туруор"
 }

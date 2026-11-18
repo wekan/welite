@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ýa-da bu kody el bilen giriziň: ",
   "twoFactorCode-prompt": "6 sanly tanamak kodyňyzy giriziň",
   "twoFactorCode-invalid": "Nädogry tanamak kody. Gaýtadan synanyşyň.",
-  "twoFactorAuth-enabled": "Hasabyňyz üçin iki faktorly tanamak işjeňleşdirildi."
+  "twoFactorAuth-enabled": "Hasabyňyz üçin iki faktorly tanamak işjeňleşdirildi.",
+  "two-factor-required-title": "Iki faktorly tanamagy sazlaň"
 }

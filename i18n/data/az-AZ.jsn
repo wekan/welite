@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "Və ya bu kodu əl ilə daxil edin: ",
   "twoFactorCode-prompt": "6 rəqəmli doğrulama kodunuzu daxil edin",
   "twoFactorCode-invalid": "Doğrulama kodu yanlışdır. Zəhmət olmasa yenidən cəhd edin.",
-  "twoFactorAuth-enabled": "Hesabınız üçün iki faktorlu doğrulama aktivdir."
+  "twoFactorAuth-enabled": "Hesabınız üçün iki faktorlu doğrulama aktivdir.",
+  "two-factor-required-title": "İki faktorlu doğrulamanı qurun"
 }

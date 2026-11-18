@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "O ilagay ang code na ito nang manual: ",
   "twoFactorCode-prompt": "Ilagay ang iyong 6-digit na authentication code",
   "twoFactorCode-invalid": "Hindi wasto ang authentication code. Pakisubukang muli.",
-  "twoFactorAuth-enabled": "Naka-enable na ang two-factor authentication para sa account mo."
+  "twoFactorAuth-enabled": "Naka-enable na ang two-factor authentication para sa account mo.",
+  "two-factor-required-title": "I-set up ang Pagpapatunay na Dalawang-Hakbang"
 }

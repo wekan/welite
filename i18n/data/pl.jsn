@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Lub wprowadź ten kod ręcznie: ",
   "twoFactorCode-prompt": "Wprowadź swój 6-cyfrowy kod uwierzytelniający",
   "twoFactorCode-invalid": "Nieprawidłowy kod uwierzytelniający. Spróbuj ponownie.",
-  "twoFactorAuth-enabled": "Uwierzytelnianie dwuskładnikowe jest włączone dla Twojego konta."
+  "twoFactorAuth-enabled": "Uwierzytelnianie dwuskładnikowe jest włączone dla Twojego konta.",
+  "two-factor-required-title": "Skonfiguruj uwierzytelnianie dwuskładnikowe"
 }

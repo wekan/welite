@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Sau introduceți manual acest cod: ",
   "twoFactorCode-prompt": "Introduceți codul de autentificare din 6 cifre",
   "twoFactorCode-invalid": "Cod de autentificare invalid. Încercați din nou.",
-  "twoFactorAuth-enabled": "Autentificarea în doi factori este activată pentru contul dumneavoastră."
+  "twoFactorAuth-enabled": "Autentificarea în doi factori este activată pentru contul dumneavoastră.",
+  "two-factor-required-title": "Configurați autentificarea în doi factori"
 }

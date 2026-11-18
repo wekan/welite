@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "Of voer hierdie kode self in: ",
   "twoFactorCode-prompt": "Voer jou 6-syfer-verifikasiekode in",
   "twoFactorCode-invalid": "Ongeldige verifikasiekode. Probeer asseblief weer.",
-  "twoFactorAuth-enabled": "Twee-faktor-verifikasie is vir jou rekening geaktiveer."
+  "twoFactorAuth-enabled": "Twee-faktor-verifikasie is vir jou rekening geaktiveer.",
+  "two-factor-required-title": "Stel twee-faktor-verifikasie op"
 }

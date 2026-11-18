@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "أو أدخل هذا الرمز يدويًا: ",
   "twoFactorCode-prompt": "أدخل رمز المصادقة المكوّن من 6 أرقام",
   "twoFactorCode-invalid": "رمز مصادقة غير صالح. يرجى المحاولة مرة أخرى.",
-  "twoFactorAuth-enabled": "المصادقة الثنائية مفعّلة لحسابك."
+  "twoFactorAuth-enabled": "المصادقة الثنائية مفعّلة لحسابك.",
+  "two-factor-required-title": "وجّد المصادقة الثنائية"
 }

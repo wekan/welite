@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Tàbí tẹ àmì yìí fúnra rẹ: ",
   "twoFactorCode-prompt": "Tẹ àmì ìjẹ́rìísí oni-nọ́mbà mẹ́fà rẹ",
   "twoFactorCode-invalid": "Àmì ìjẹ́rìísí kò tọ́. Jọ̀wọ́ tún gbìyànjú.",
-  "twoFactorAuth-enabled": "Ìjẹ́rìísí ìgbésẹ̀ méjì ti ṣiṣẹ́ fún àkántì rẹ."
+  "twoFactorAuth-enabled": "Ìjẹ́rìísí ìgbésẹ̀ méjì ti ṣiṣẹ́ fún àkántì rẹ.",
+  "two-factor-required-title": "Ṣètò ìjẹ́rìísí ìgbésẹ̀ méjì"
 }

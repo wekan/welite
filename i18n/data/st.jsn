@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Kapa o kenye khoutu ena ka letsoho: ",
   "twoFactorCode-prompt": "Kenya khoutu ya hao ya netefatso ya dinomoro tse 6",
   "twoFactorCode-invalid": "Khoutu ya netefatso ha e nepahala. Ka kopo leka hape.",
-  "twoFactorAuth-enabled": "Netefatso ya mekgwa e mmedi e kentswe tshebetsong bakeng sa akhaonto ya hao."
+  "twoFactorAuth-enabled": "Netefatso ya mekgwa e mmedi e kentswe tshebetsong bakeng sa akhaonto ya hao.",
+  "two-factor-required-title": "Hlophisa Netefatso ya Mekgwa e Mmedi"
 }

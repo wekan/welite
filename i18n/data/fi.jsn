@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Tai syötä tämä koodi manuaalisesti: ",
   "twoFactorCode-prompt": "Syötä 6-numeroinen tunnistautumiskoodisi",
   "twoFactorCode-invalid": "Virheellinen tunnistautumiskoodi. Yritä uudelleen.",
-  "twoFactorAuth-enabled": "Kaksivaiheinen tunnistautuminen on käytössä tilillesi."
+  "twoFactorAuth-enabled": "Kaksivaiheinen tunnistautuminen on käytössä tilillesi.",
+  "two-factor-required-title": "Ota kaksivaiheinen tunnistautuminen käyttöön"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Kana kuti isa kodhi iyi nemaoko: ",
   "twoFactorCode-prompt": "Isa kodhi yako yekusimbisa ine manhamba matanhatu",
   "twoFactorCode-invalid": "Kodhi yekusimbisa haisi yechokwadi. Edza zvakare.",
-  "twoFactorAuth-enabled": "Kusimbiswa kweminzvimbo miviri kwakagoneswa kuakaundi yako."
+  "twoFactorAuth-enabled": "Kusimbiswa kweminzvimbo miviri kwakagoneswa kuakaundi yako.",
+  "two-factor-required-title": "Gadzirisa Kusimbiswa Kweminzvimbo Miviri"
 }

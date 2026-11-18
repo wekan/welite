@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ama gacanta ku geli koodhkan: ",
   "twoFactorCode-prompt": "Geli koodhkaaga xaqiijinta ee 6-lambarka ah",
   "twoFactorCode-invalid": "Koodhka xaqiijinta waa khalad. Fadlan mar kale isku day.",
-  "twoFactorAuth-enabled": "Xaqiijinta laba-tallaabo waa la daaray akoonkaaga."
+  "twoFactorAuth-enabled": "Xaqiijinta laba-tallaabo waa la daaray akoonkaaga.",
+  "two-factor-required-title": "Dej Xaqiijinta Laba-Tallaabo"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ma ọ bụ tinye koodu a n'aka: ",
   "twoFactorCode-prompt": "Tinye koodu nyocha ọnụọgụ isii gị",
   "twoFactorCode-invalid": "Koodu nyocha ezighị ezi. Biko nwaa ọzọ.",
-  "twoFactorAuth-enabled": "Nyocha ihe abụọ enwere ike maka akaụntụ gị."
+  "twoFactorAuth-enabled": "Nyocha ihe abụọ enwere ike maka akaụntụ gị.",
+  "two-factor-required-title": "Hazie nyocha ihe abụọ"
 }

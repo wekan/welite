@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Vai ievadiet šo kodu manuāli: ",
   "twoFactorCode-prompt": "Ievadiet savu 6 ciparu autentifikācijas kodu",
   "twoFactorCode-invalid": "Nederīgs autentifikācijas kods. Mēģiniet vēlreiz.",
-  "twoFactorAuth-enabled": "Jūsu kontam ir iespējota divfaktoru autentifikācija."
+  "twoFactorAuth-enabled": "Jūsu kontam ir iespējota divfaktoru autentifikācija.",
+  "two-factor-required-title": "Iestatiet divfaktoru autentifikāciju"
 }

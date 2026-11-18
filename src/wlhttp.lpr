@@ -273,12 +273,13 @@ begin
     '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Start setup again</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
 end;
 procedure EnrollmentEndpoint(Request:TRequest;Response:TResponse);
-var T:TWLTenant;Username,Token,Secret,Body:string;Proof:TWLEnrollProof;Words:TWLTranslator;
+var T:TWLTenant;Username,Token,Secret,Body,Title:string;Proof:TWLEnrollProof;Words:TWLTranslator;
 begin
   EnrollmentHeaders(Response);
   if not RequireTenant(Request,Response,T) then Exit;
   Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage));
   try
+  Title:=Words.Text('two-factor-required-title','Set up two-factor authentication');
   if Request.Method='POST' then
   begin
     Username:=Trim(Request.ContentFields.Values['username']);
@@ -286,23 +287,23 @@ begin
     Proof:=nil;
     if not AuthenticateEnrollment(T.Db,Username,Request.ContentFields.Values['password'],Proof) then
     begin
-      SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes','<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Try again</a></p>'));Exit;
+      SendHtml(Response,AuthPage(Request,Response,Title,'<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Try again</a></p>'));Exit;
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
       begin AuthError(Request,Response,500,'One-time codes','Could not start setup');Exit;end;
-      Body:='<h1>Set up one-time codes</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
+      Body:='<h1>'+HtmlEncode(Title)+'</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
         '<p>'+HtmlEncode(Words.Text('twoFactorAuth-manual-entry','Or enter this code manually: '))+'<code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
         ConfirmationForm(Request,Token,Words.Text('twoFactorCode-prompt','Enter your 6-digit authentication code'),Words);
-      SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes',Body));
+      SendHtml(Response,AuthPage(Request,Response,Title,Body));
     finally
       Proof.Free;
       if Secret<>'' then begin UniqueString(Secret);FillChar(Secret[1],Length(Secret),0);end;
     end;
     Exit;
   end;
-  SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes','<h1>Set up one-time codes</h1>'+
+  SendHtml(Response,AuthPage(Request,Response,Title,'<h1>'+HtmlEncode(Title)+'</h1>'+
     '<p>Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.</p>'+
     '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'"><label for="enrol-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> <input id="enrol-username" name="username"><br>'+
     '<label for="enrol-password">'+HtmlEncode(Words.Text('password','Password'))+'</label> <input id="enrol-password" type="password" name="password"><br><input type="submit" value="'+HtmlAttr(Words.Text('start','Start setup'))+'"></form>'+

@@ -15,6 +15,7 @@ def check_auth_language(request,database,otp):
     assert status==200 and b'Account created' in body and b'href="/two-factor/setup?lang=ar"' in body
     status,headers,body=request('GET','/two-factor/setup?lang='+language)
     assert status==200 and b'action="/two-factor/setup?lang=ar"' in body
+    assert b'<h1>'+translated('two-factor-required-title')+b'</h1>' in body
     for key in ('username','password'):
         field=('enrol-'+key).encode()
         assert b'<label for="'+field+b'">'+translated(key)+b'</label>' in body

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ko shigar da wannan lambar da hannu: ",
   "twoFactorCode-prompt": "Shigar da lambar tabbatarwa ta lambobi 6",
   "twoFactorCode-invalid": "Lambar tabbatarwa ba daidai ba. Da fatan za a sake gwadawa.",
-  "twoFactorAuth-enabled": "An kunna tabbatarwa mataki biyu don asusunka."
+  "twoFactorAuth-enabled": "An kunna tabbatarwa mataki biyu don asusunka.",
+  "two-factor-required-title": "Saita tabbatarwa mataki biyu"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Nome faka lelikhodi ngesandla: ",
   "twoFactorCode-prompt": "Faka likhodi lakho lekucinisekisa lelinenombolo letisi-6",
   "twoFactorCode-invalid": "Likhodi lekucinisekisa alilungi. Sicela uzame futsi.",
-  "twoFactorAuth-enabled": "Kucinisekiswa ngetindlela letimbili kuvuliwe ku-akhawunti yakho."
+  "twoFactorAuth-enabled": "Kucinisekiswa ngetindlela letimbili kuvuliwe ku-akhawunti yakho.",
+  "two-factor-required-title": "Setha Kucinisekiswa ngeTindlela Letimbili"
 }

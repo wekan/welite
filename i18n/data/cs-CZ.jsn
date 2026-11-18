@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Nebo zadejte tento kód ručně: ",
   "twoFactorCode-prompt": "Zadejte svůj 6místný ověřovací kód",
   "twoFactorCode-invalid": "Neplatný ověřovací kód. Zkuste to znovu.",
-  "twoFactorAuth-enabled": "Dvoufaktorové ověřování je pro váš účet povoleno."
+  "twoFactorAuth-enabled": "Dvoufaktorové ověřování je pro váš účet povoleno.",
+  "two-factor-required-title": "Nastavte dvoufaktorové ověřování"
 }

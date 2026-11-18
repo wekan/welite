@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "O introduz esti códigu manualmente: ",
   "twoFactorCode-prompt": "Introduz el to códigu d'autenticación de 6 díxitos",
   "twoFactorCode-invalid": "Códigu d'autenticación non válidu. Vuelvi tentalo.",
-  "twoFactorAuth-enabled": "L'autenticación de dos factores ta activada pa la to cuenta."
+  "twoFactorAuth-enabled": "L'autenticación de dos factores ta activada pa la to cuenta.",
+  "two-factor-required-title": "Configura l'autenticación de dos factores"
 }

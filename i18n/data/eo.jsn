@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Aŭ enigu ĉi tiun kodon permane: ",
   "twoFactorCode-prompt": "Enigu vian 6-ciferan aŭtentigan kodon",
   "twoFactorCode-invalid": "Nevalida aŭtentiga kodo. Bonvolu reprovi.",
-  "twoFactorAuth-enabled": "Dufaktora aŭtentigo estas ŝaltita por via konto."
+  "twoFactorAuth-enabled": "Dufaktora aŭtentigo estas ŝaltita por via konto.",
+  "two-factor-required-title": "Agordu dufaktoran aŭtentigon"
 }

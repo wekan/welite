@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Eller indtast denne kode manuelt: ",
   "twoFactorCode-prompt": "Indtast din 6-cifrede godkendelseskode",
   "twoFactorCode-invalid": "Ugyldig godkendelseskode. Prøv igen.",
-  "twoFactorAuth-enabled": "Totrinsbekræftelse er aktiveret for din konto."
+  "twoFactorAuth-enabled": "Totrinsbekræftelse er aktiveret for din konto.",
+  "two-factor-required-title": "Opsæt totrinsbekræftelse"
 }

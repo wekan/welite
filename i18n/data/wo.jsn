@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Walla bind kod bii ci sa loxo: ",
   "twoFactorCode-prompt": "Bind sa kod wàll-wàllal bu 6 sifar",
   "twoFactorCode-invalid": "Kod wàll-wàllal du dëgg. Jéemaatal.",
-  "twoFactorAuth-enabled": "Wàll-ñaari-kaddu dafa ubbi ci sa compte."
+  "twoFactorAuth-enabled": "Wàll-ñaari-kaddu dafa ubbi ci sa compte.",
+  "two-factor-required-title": "Defal wàll-ñaari-kaddu"
 }

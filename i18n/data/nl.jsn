@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Of voer deze code handmatig in: ",
   "twoFactorCode-prompt": "Voer uw 6-cijferige verificatiecode in",
   "twoFactorCode-invalid": "Ongeldige verificatiecode. Probeer het opnieuw.",
-  "twoFactorAuth-enabled": "Tweestapsverificatie is ingeschakeld voor uw account."
+  "twoFactorAuth-enabled": "Tweestapsverificatie is ingeschakeld voor uw account.",
+  "two-factor-required-title": "Tweestapsverificatie instellen"
 }

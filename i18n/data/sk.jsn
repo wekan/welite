@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Alebo zadajte tento kód ručne: ",
   "twoFactorCode-prompt": "Zadajte svoj 6-miestny overovací kód",
   "twoFactorCode-invalid": "Neplatný overovací kód. Skúste to znova.",
-  "twoFactorAuth-enabled": "Dvojfaktorové overenie je pre váš účet povolené."
+  "twoFactorAuth-enabled": "Dvojfaktorové overenie je pre váš účet povolené.",
+  "two-factor-required-title": "Nastavte dvojfaktorové overenie"
 }

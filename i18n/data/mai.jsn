@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "वा ई कोड हाथ सँ दर्ज करू: ",
   "twoFactorCode-prompt": "अपन 6-अंकीय प्रमाणीकरण कोड दर्ज करू",
   "twoFactorCode-invalid": "अमान्य प्रमाणीकरण कोड। कृपया फेर सँ प्रयास करू।",
-  "twoFactorAuth-enabled": "अहांक खाताक लेल दू-कारक प्रमाणीकरण सक्रिय अछि।"
+  "twoFactorAuth-enabled": "अहांक खाताक लेल दू-कारक प्रमाणीकरण सक्रिय अछि।",
+  "two-factor-required-title": "दू-कारक प्रमाणीकरण सेट करू"
 }

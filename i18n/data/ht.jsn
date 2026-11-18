@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Oswa antre kòd sa a manyèlman: ",
   "twoFactorCode-prompt": "Antre kòd otantifikasyon 6-chif ou",
   "twoFactorCode-invalid": "Kòd otantifikasyon envalid. Tanpri eseye ankò.",
-  "twoFactorAuth-enabled": "Otantifikasyon de faktè aktive pou kont ou."
+  "twoFactorAuth-enabled": "Otantifikasyon de faktè aktive pou kont ou.",
+  "two-factor-required-title": "Konfigire otantifikasyon de faktè"
 }

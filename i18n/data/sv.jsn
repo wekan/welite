@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Eller ange den här koden manuellt: ",
   "twoFactorCode-prompt": "Ange din 6-siffriga autentiseringskod",
   "twoFactorCode-invalid": "Ogiltig autentiseringskod. Försök igen.",
-  "twoFactorAuth-enabled": "Tvåfaktorsautentisering är aktiverad för ditt konto."
+  "twoFactorAuth-enabled": "Tvåfaktorsautentisering är aktiverad för ditt konto.",
+  "two-factor-required-title": "Konfigurera tvåfaktorsautentisering"
 }

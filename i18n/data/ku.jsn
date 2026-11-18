@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "An jî vê kodê bi destan binivîse: ",
   "twoFactorCode-prompt": "Koda rastandinê ya 6-reqem binivîse",
   "twoFactorCode-invalid": "Koda rastandinê ne rast e. Ji kerema xwe dîsa biceribîne.",
-  "twoFactorAuth-enabled": "Rastandina du-faktorî ji bo hesabê te çalak e."
+  "twoFactorAuth-enabled": "Rastandina du-faktorî ji bo hesabê te çalak e.",
+  "two-factor-required-title": "Rastandina du-faktorî saz bike"
 }

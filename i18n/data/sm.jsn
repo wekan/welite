@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Po o le tuuina lea o le numera lea i lima: ",
   "twoFactorCode-prompt": "Tuuina lau numera faamaoni e 6-numera",
   "twoFactorCode-invalid": "Numera faamaoni e le saʻo. Faamolemole toe taumafai.",
-  "twoFactorAuth-enabled": "Ua faagaoioia le faamaoniga e lua vaega mo lau amata."
+  "twoFactorAuth-enabled": "Ua faagaoioia le faamaoniga e lua vaega mo lau amata.",
+  "two-factor-required-title": "Faatulaga le faamaoniga e lua vaega"
 }

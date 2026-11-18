@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "અથવા આ કોડ મેન્યુઅલી દાખલ કરો: ",
   "twoFactorCode-prompt": "તમારો 6-અંકનો પ્રમાણીકરણ કોડ દાખલ કરો",
   "twoFactorCode-invalid": "અમાન્ય પ્રમાણીકરણ કોડ. ફરી પ્રયાસ કરો.",
-  "twoFactorAuth-enabled": "તમારા ખાતા માટે બે-પરિબળ પ્રમાણીકરણ સક્ષમ છે."
+  "twoFactorAuth-enabled": "તમારા ખાતા માટે બે-પરિબળ પ્રમાણીકરણ સક્ષમ છે.",
+  "two-factor-required-title": "બે-પરિબળ પ્રમાણીકરણ સેટ કરો"
 }

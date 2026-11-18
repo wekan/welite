@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ё ин рамзро дастӣ ворид кунед: ",
   "twoFactorCode-prompt": "Рамзи 6-рақамаи санҷиши худро ворид кунед",
   "twoFactorCode-invalid": "Рамзи санҷиш нодуруст аст. Лутфан аз нав кӯшиш кунед.",
-  "twoFactorAuth-enabled": "Санҷиши дуфакторӣ барои ҳисоби шумо фаъол аст."
+  "twoFactorAuth-enabled": "Санҷиши дуфакторӣ барои ҳисоби шумо фаъол аст.",
+  "two-factor-required-title": "Санҷиши дуфакториро танзим кунед"
 }

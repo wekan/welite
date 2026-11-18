@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "یا یہ کوڈ دستی طور پر درج کریں: ",
   "twoFactorCode-prompt": "اپنا 6 ہندسوں کا توثیقی کوڈ درج کریں",
   "twoFactorCode-invalid": "غلط توثیقی کوڈ۔ دوبارہ کوشش کریں۔",
-  "twoFactorAuth-enabled": "آپ کے اکاؤنٹ کے لیے دو مرحلہ توثیق فعال ہے۔"
+  "twoFactorAuth-enabled": "آپ کے اکاؤنٹ کے لیے دو مرحلہ توثیق فعال ہے۔",
+  "two-factor-required-title": "دو مرحلہ توثیق ترتیب دیں"
 }

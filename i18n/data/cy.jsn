@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Neu nodwch y cod hwn â llaw: ",
   "twoFactorCode-prompt": "Nodwch eich cod dilysu 6 digid",
   "twoFactorCode-invalid": "Cod dilysu annilys. Rhowch gynnig arall arni.",
-  "twoFactorAuth-enabled": "Mae dilysiant dau ffactor wedi'i alluogi ar gyfer eich cyfrif."
+  "twoFactorAuth-enabled": "Mae dilysiant dau ffactor wedi'i alluogi ar gyfer eich cyfrif.",
+  "two-factor-required-title": "Gosod dilysiant dau ffactor"
 }

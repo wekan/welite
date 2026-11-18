@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "U endatescha quest code a maun: ",
   "twoFactorCode-prompt": "Endatescha tes code d'autentificaziun da 6 cifras",
   "twoFactorCode-invalid": "Code d'autentificaziun nunvalid. Emprova anc ina giada.",
-  "twoFactorAuth-enabled": "L'autentificaziun cun dus fatters è activada per tes cont."
+  "twoFactorAuth-enabled": "L'autentificaziun cun dus fatters è activada per tes cont.",
+  "two-factor-required-title": "Configurar l'autentificaziun cun dus fatters"
 }

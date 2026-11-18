@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Eller oppgi denne koden manuelt: ",
   "twoFactorCode-prompt": "Oppgi din 6-sifrede autentiseringskode",
   "twoFactorCode-invalid": "Ugyldig autentiseringskode. Prøv igjen.",
-  "twoFactorAuth-enabled": "Tofaktorautentisering er aktivert for kontoen din."
+  "twoFactorAuth-enabled": "Tofaktorautentisering er aktivert for kontoen din.",
+  "two-factor-required-title": "Sett opp tofaktorautentisering"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Kgotsa tsenya khoutu eno ka seatla: ",
   "twoFactorCode-prompt": "Tsenya khoutu ya gago ya dipalo tse tshela ya netefatso",
   "twoFactorCode-invalid": "Khoutu ya netefatso ga e a siama. Tswee-tswee leka gape.",
-  "twoFactorAuth-enabled": "Netefatso ya dikarolo tse pedi e diragetse mo akhaonteng ya gago."
+  "twoFactorAuth-enabled": "Netefatso ya dikarolo tse pedi e diragetse mo akhaonteng ya gago.",
+  "two-factor-required-title": "Baakanya Netefatso ya Dikarolo Tse Pedi"
 }

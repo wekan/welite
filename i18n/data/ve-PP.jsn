@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Libo kirjuta nece kod käzil: ",
   "twoFactorCode-prompt": "Kirjuta sinun 6-cifraine autentifikacijan kod",
   "twoFactorCode-invalid": "Autentifikacijan kod om vär. Ole hüvä, ladi völ kerdan.",
-  "twoFactorAuth-enabled": "Kahen faktoran autentifikacii om päl sinun akkauntal."
+  "twoFactorAuth-enabled": "Kahen faktoran autentifikacii om päl sinun akkauntal.",
+  "two-factor-required-title": "Säta kahen faktoran autentifikacii"
 }

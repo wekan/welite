@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Ella skriva hesa kotuna við hond: ",
   "twoFactorCode-prompt": "Skriva 6-siffra sanningarkotuna hjá tær",
   "twoFactorCode-invalid": "Ógildig sanningarkota. Vinarliga royn aftur.",
-  "twoFactorAuth-enabled": "Tvífaktors sanning er koyrd í gongd fyri kontu tína."
+  "twoFactorAuth-enabled": "Tvífaktors sanning er koyrd í gongd fyri kontu tína.",
+  "two-factor-required-title": "Set tvífaktors sanning upp"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "یا این کد را به‌صورت دستی وارد کنید: ",
   "twoFactorCode-prompt": "کد احراز هویت ۶ رقمی خود را وارد کنید",
   "twoFactorCode-invalid": "کد احراز هویت نامعتبر است. دوباره تلاش کنید.",
-  "twoFactorAuth-enabled": "تأیید هویت دومرحله‌ای برای حساب شما فعال است."
+  "twoFactorAuth-enabled": "تأیید هویت دومرحله‌ای برای حساب شما فعال است.",
+  "two-factor-required-title": "راه‌اندازی تأیید هویت دومرحله‌ای"
 }

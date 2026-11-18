@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Oder geben Sie diesen Code manuell ein: ",
   "twoFactorCode-prompt": "Geben Sie Ihren 6-stelligen Authentifizierungscode ein",
   "twoFactorCode-invalid": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut.",
-  "twoFactorAuth-enabled": "Die Zwei-Faktor-Authentifizierung ist für Ihr Konto aktiviert."
+  "twoFactorAuth-enabled": "Die Zwei-Faktor-Authentifizierung ist für Ihr Konto aktiviert.",
+  "two-factor-required-title": "Zwei-Faktor-Authentifizierung einrichten"
 }

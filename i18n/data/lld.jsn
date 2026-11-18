@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "O maten chësc codesc a man: ",
   "twoFactorCode-prompt": "Maten la ciafra de autenticazion de 6 cifres",
   "twoFactorCode-invalid": "Ciafra de autenticazion nia valida. Emprova endò.",
-  "twoFactorAuth-enabled": "L'autenticazion a doi fatours é atliada per tia cont."
+  "twoFactorAuth-enabled": "L'autenticazion a doi fatours é atliada per tia cont.",
+  "two-factor-required-title": "Mët ite l'autenticazion a doi fatours"
 }

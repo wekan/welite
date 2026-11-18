@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Йәки был кодты ҡулдан индерегеҙ: ",
   "twoFactorCode-prompt": "6 цифрлы раҫлау кодыгыҙҙы индерегеҙ",
   "twoFactorCode-invalid": "Раҫлау коды дөрөҫ түгел. Тағы ла һынап ҡарағыҙ.",
-  "twoFactorAuth-enabled": "Ике факторлы раҫлау иҫәбегеҙ өсөн асыҡ."
+  "twoFactorAuth-enabled": "Ике факторлы раҫлау иҫәбегеҙ өсөн асыҡ.",
+  "two-factor-required-title": "Ике факторлы раҫлауҙы көйләгеҙ"
 }

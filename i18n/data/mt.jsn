@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Jew daħħal dan il-kodiċi manwalment: ",
   "twoFactorCode-prompt": "Daħħal il-kodiċi ta' awtentikazzjoni ta' 6 numri tiegħek",
   "twoFactorCode-invalid": "Kodiċi ta' awtentikazzjoni invalidu. Erġa' pprova.",
-  "twoFactorAuth-enabled": "L-awtentikazzjoni b'żewġ fatturi hija attivata għall-kont tiegħek."
+  "twoFactorAuth-enabled": "L-awtentikazzjoni b'żewġ fatturi hija attivata għall-kont tiegħek.",
+  "two-factor-required-title": "Issettja l-awtentikazzjoni b’żewġ fatturi"
 }

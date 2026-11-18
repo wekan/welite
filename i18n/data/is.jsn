@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Eða sláðu inn þennan kóða handvirkt: ",
   "twoFactorCode-prompt": "Sláðu inn 6 stafa auðkenningarkóðann þinn",
   "twoFactorCode-invalid": "Ógildur auðkenningarkóði. Reyndu aftur.",
-  "twoFactorAuth-enabled": "Tvíþætt auðkenning er virkjuð fyrir reikninginn þinn."
+  "twoFactorAuth-enabled": "Tvíþætt auðkenning er virkjuð fyrir reikninginn þinn.",
+  "two-factor-required-title": "Settu upp tvíþætta auðkenningu"
 }

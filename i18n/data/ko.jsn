@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "또는 이 코드를 수동으로 입력하세요: ",
   "twoFactorCode-prompt": "6자리 인증 코드를 입력하세요",
   "twoFactorCode-invalid": "잘못된 인증 코드입니다. 다시 시도하세요.",
-  "twoFactorAuth-enabled": "계정에 2단계 인증이 활성화되어 있습니다."
+  "twoFactorAuth-enabled": "계정에 2단계 인증이 활성화되어 있습니다.",
+  "two-factor-required-title": "2단계 인증 설정"
 }

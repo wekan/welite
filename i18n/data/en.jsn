@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "Or enter this code manually: ",
   "twoFactorCode-prompt": "Enter your 6-digit authentication code",
   "twoFactorCode-invalid": "Invalid authentication code. Please try again.",
-  "twoFactorAuth-enabled": "Two-factor authentication is enabled for your account."
+  "twoFactorAuth-enabled": "Two-factor authentication is enabled for your account.",
+  "two-factor-required-title": "Set up two-factor authentication"
 }

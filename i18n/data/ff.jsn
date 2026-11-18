@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Walla naatnu kod ɗoo ir juuɗe maa: ",
   "twoFactorCode-prompt": "Naatnu kod seedantaagal maa 6 limoore",
   "twoFactorCode-invalid": "Kod seedantaagal moƴƴah. Tiiɗno eto kadi.",
-  "twoFactorAuth-enabled": "Seedantaagal sappooji ɗiɗi lelnaama e konte maa."
+  "twoFactorAuth-enabled": "Seedantaagal sappooji ɗiɗi lelnaama e konte maa.",
+  "two-factor-required-title": "Teeltu seedantaagal sappooji ɗiɗi"
 }

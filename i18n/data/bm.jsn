@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Walima ka nin nimɔrɔ in don aw yɛrɛ bolo la: ",
   "twoFactorCode-prompt": "Aw ka nimɔrɔ 6 dannaya nimɔrɔ don",
   "twoFactorCode-invalid": "Dannaya nimɔrɔ man ɲi. Aw ka a ɲini kokura.",
-  "twoFactorAuth-enabled": "Sɛbɛnni fila-dannaya bɛ baara la aw ka jateminɛ kan."
+  "twoFactorAuth-enabled": "Sɛbɛnni fila-dannaya bɛ baara la aw ka jateminɛ kan.",
+  "two-factor-required-title": "Sɛbɛnni Fila-Dannaya labɛn"
 }

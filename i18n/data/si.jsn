@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "නැතහොත් මෙම කේතය අතින් ඇතුළත් කරන්න: ",
   "twoFactorCode-prompt": "ඔබගේ අංක 6 සත්‍යාපන කේතය ඇතුළත් කරන්න",
   "twoFactorCode-invalid": "වැරදි සත්‍යාපන කේතයකි. කරුණාකර නැවත උත්සාහ කරන්න.",
-  "twoFactorAuth-enabled": "ඔබගේ ගිණුම සඳහා ද්වි-සාධක සත්‍යාපනය සක්‍රීයයි."
+  "twoFactorAuth-enabled": "ඔබගේ ගිණුම සඳහා ද්වි-සාධක සත්‍යාපනය සක්‍රීයයි.",
+  "two-factor-required-title": "ද්වි-සාධක සත්‍යාපනය පිහිටුවන්න"
 }

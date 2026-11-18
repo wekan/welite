@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Térã ehai ko código nde po-pe: ",
   "twoFactorCode-prompt": "Ehai ne código autenticación 6 número",
   "twoFactorCode-invalid": "Código autenticación naiporãi. Eha'ã jey.",
-  "twoFactorAuth-enabled": "Ñemoañete mokõi tekoháre oñembopyahu nde kuenta-pe."
+  "twoFactorAuth-enabled": "Ñemoañete mokõi tekoháre oñembopyahu nde kuenta-pe.",
+  "two-factor-required-title": "Emboheko ñemoañete mokõi tekoháre"
 }

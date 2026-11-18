@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "ᐅᕝᕙᓘᓐᓃᑦ ᐊᑐᖅ ᓇᐃᓴᐃᔭᐅᑎᒥᒃ ᐃᓯᖅᑑᑎᒃᑯᑦ: ",
   "twoFactorCode-prompt": "ᐊᑐᖅ 6-ᖑᔪᑦ ᖃᐅᔨᓴᖅᑕᐅᓂᐅᑉ ᓇᐃᓴᐃᔭᐅᑎᖓᑦ",
   "twoFactorCode-invalid": "ᖃᐅᔨᓴᖅᑕᐅᓂᐅᑉ ᓇᐃᓴᐃᔭᐅᑎᖓ ᓱᖏᐅᑎᓂᖅᐳᖅ. ᐋᒃᑲᓂᒃᑲᐃᒃ ᐊᑐᓕᖅᑎᑦᑏᑦ.",
-  "twoFactorAuth-enabled": "ᒪᕐᕈᖕᓂᑦ ᖃᐅᔨᓴᖅᑕᐅᓂᖅ ᐊᑐᖅᑕᐅᓕᖅᑐᖅ ᐃᓕᖕᓄᑦ ᐃᓯᕐᕕᒃᓴᖅ."
+  "twoFactorAuth-enabled": "ᒪᕐᕈᖕᓂᑦ ᖃᐅᔨᓴᖅᑕᐅᓂᖅ ᐊᑐᖅᑕᐅᓕᖅᑐᖅ ᐃᓕᖕᓄᑦ ᐃᓯᕐᕕᒃᓴᖅ.",
+  "two-factor-required-title": "ᒪᕐᕈᖕᓂᑦ ᖃᐅᔨᓴᖅᑕᐅᓂᖅ ᐋᖅᑭᑦ"
 }

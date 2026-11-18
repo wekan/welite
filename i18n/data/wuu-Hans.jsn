@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "或者手动输入该个代码： ",
   "twoFactorCode-prompt": "请输入侬个 6 位数验证代码",
   "twoFactorCode-invalid": "验证代码勿对，请重新再试。",
-  "twoFactorAuth-enabled": "侬个账户已经开启两步验证仔。"
+  "twoFactorAuth-enabled": "侬个账户已经开启两步验证仔。",
+  "two-factor-required-title": "设置两步验证"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "I bagã aestu cod cu mâna: ",
   "twoFactorCode-prompt": "Bagã codlu a tãu di aunticatsii di 6 cifri",
   "twoFactorCode-invalid": "Codlu di aunticatsii nu easti bun. Ncearcã diznou.",
-  "twoFactorAuth-enabled": "Aunticatsia cu dauã fatsi easti activã ti contul a tãu."
+  "twoFactorAuth-enabled": "Aunticatsia cu dauã fatsi easti activã ti contul a tãu.",
+  "two-factor-required-title": "Adarã aunticatsia cu dauã fatsi"
 }

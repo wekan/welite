@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "Yoki bu kodni qoʻlda kiriting: ",
   "twoFactorCode-prompt": "6 xonali tasdiqlash kodingizni kiriting",
   "twoFactorCode-invalid": "Notoʻgʻri tasdiqlash kodi. Iltimos, qayta urinib koʻring.",
-  "twoFactorAuth-enabled": "Hisobingiz uchun ikki bosqichli tasdiqlash yoqilgan."
+  "twoFactorAuth-enabled": "Hisobingiz uchun ikki bosqichli tasdiqlash yoqilgan.",
+  "two-factor-required-title": "Ikki bosqichli tasdiqlashni sozlang"
 }

@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "یا بو کودنی قۉلده کیریتینگ: ",
   "twoFactorCode-prompt": "6 خنه‌لی تصدیقلش کودینگیزنی کیریتینگ",
   "twoFactorCode-invalid": "نوتۉغری تصدیقلش کودی. التماس، قیته اورینیب کۉرینگ.",
-  "twoFactorAuth-enabled": "حسابینگیز اۉچون ایکی باسقیچلی تصدیقلش یاقیلگن."
+  "twoFactorAuth-enabled": "حسابینگیز اۉچون ایکی باسقیچلی تصدیقلش یاقیلگن.",
+  "two-factor-required-title": "ایکی باسقیچلی تصدیقلشنی سازلنگ"
 }

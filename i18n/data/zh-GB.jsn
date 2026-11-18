@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "或手動輸入此代碼：",
   "twoFactorCode-prompt": "請輸入您的 6 位數驗證代碼",
   "twoFactorCode-invalid": "驗證代碼無效，請再試一次。",
-  "twoFactorAuth-enabled": "您的帳戶已啟用雙重驗證。"
+  "twoFactorAuth-enabled": "您的帳戶已啟用雙重驗證。",
+  "two-factor-required-title": "设置双重身份验证"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "O raitim dispela koud yu yet long han: ",
   "twoFactorCode-prompt": "Raitim namba 6-digit bilong tokim tru",
   "twoFactorCode-invalid": "Namba bilong tokim tru i no stret. Traim gen.",
-  "twoFactorAuth-enabled": "Tupela-step wok bilong sekiuriti i op long akaun bilong yu."
+  "twoFactorAuth-enabled": "Tupela-step wok bilong sekiuriti i op long akaun bilong yu.",
+  "two-factor-required-title": "Redim Tupela-Step Wok bilong Sekiuriti"
 }

@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "Na ampidiro amin'ny tanana ity kaody ity: ",
   "twoFactorCode-prompt": "Ampidiro ny fangoazana fanamarinana misy isa 6",
   "twoFactorCode-invalid": "Tsy mety ny fangoazana fanamarinana. Andramo indray azafady.",
-  "twoFactorAuth-enabled": "Mihatra amin'ny kaontinao ny fanamarinana amin'ny fomba roa."
+  "twoFactorAuth-enabled": "Mihatra amin'ny kaontinao ny fanamarinana amin'ny fomba roa.",
+  "two-factor-required-title": "Ampetraho ny fanamarinana amin'ny fomba roa"
 }

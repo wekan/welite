@@ -2104,5 +2104,6 @@
   "twoFactorAuth-manual-entry": "No cuir a-steach an còd seo a làimh: ",
   "twoFactorCode-prompt": "Cuir a-steach do chòd dearbhaidh 6-àireamh",
   "twoFactorCode-invalid": "Còd dearbhaidh mì-dhligheach. Feuch ris a-rithist.",
-  "twoFactorAuth-enabled": "Tha dearbhadh dà-cheum an comas airson a' chunntais agad."
+  "twoFactorAuth-enabled": "Tha dearbhadh dà-cheum an comas airson a' chunntais agad.",
+  "two-factor-required-title": "Suidhich dearbhadh dà-cheum"
 }

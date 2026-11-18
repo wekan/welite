@@ -2103,5 +2103,6 @@
   "twoFactorAuth-manual-entry": "ਜਾਂ ਇਹ ਕੋਡ ਖੁਦ ਦਾਖਲ ਕਰੋ: ",
   "twoFactorCode-prompt": "ਆਪਣਾ 6-ਅੰਕਾਂ ਵਾਲਾ ਪ੍ਰਮਾਣੀਕਰਨ ਕੋਡ ਦਾਖਲ ਕਰੋ",
   "twoFactorCode-invalid": "ਗਲਤ ਪ੍ਰਮਾਣੀਕਰਨ ਕੋਡ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
-  "twoFactorAuth-enabled": "ਤੁਹਾਡੇ ਖਾਤੇ ਲਈ ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਚਾਲੂ ਹੈ।"
+  "twoFactorAuth-enabled": "ਤੁਹਾਡੇ ਖਾਤੇ ਲਈ ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਚਾਲੂ ਹੈ।",
+  "two-factor-required-title": "ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਸੈੱਟ ਕਰੋ"
 }
