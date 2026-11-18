@@ -1372,10 +1372,22 @@ begin
   except Result:=False;end;
 end;
 
+function ChecklistReadSql(const BoardId,CardId,ChecklistId:string):string;
+begin
+  Result:='SELECT json_object(''_id'',c.id,''cardId'',c.cardId,''title'',c.title,''sort'',c.sort,''dueAt'',c.dueAt,'+
+    '''items'',json((SELECT json_group_array(json(item)) FROM (SELECT json_object(''_id'',i.id,''title'',i.title,'+
+    '''isFinished'',json(CASE WHEN i.isFinished=1 THEN ''true'' ELSE ''false'' END),''dueAt'',i.dueAt) item '+
+    'FROM checklist_items i WHERE i.checklistId=c.id AND i.cardId=c.cardId AND (i.boardId IS NULL OR i.boardId='+
+    QuotedStr(BoardId)+') ORDER BY i.sort,i.id)))) AS payload FROM checklists c WHERE c.cardId='+QuotedStr(CardId)+
+    ' AND (c.boardId IS NULL OR c.boardId='+QuotedStr(BoardId)+')';
+  if ChecklistId<>'' then Result:=Result+' AND c.id='+QuotedStr(ChecklistId);
+  Result:=Result+' ORDER BY c.sort,c.id';
+end;
+
 // GET checklists of a card / POST create a checklist
 procedure ApiCardChecklists(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; UserId, BoardId, CardId, Title, Id, Due, Sql, Stamp, ItemTitle: string;
-  Body:TJSONObject;Value,Items,Item:TJSONData;i,Count:Integer;
+  Body:TJSONObject;Value,Items,Item:TJSONData;i,Count:Integer;Rows:TWLRows;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1429,8 +1441,9 @@ begin
     finally Body.Free;end;
     Exit;
   end;
-  SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM checklists WHERE cardId=%s ORDER BY sort;', [QuotedStr(CardId)]))));
+  Rows:=T.Db.Query('SELECT json_group_array(json(payload)) FROM ('+ChecklistReadSql(BoardId,CardId,'')+');');
+  if Length(Rows)=1 then SendJson(aResponse,Rows[0][0])
+  else SendError(aResponse,500,'Could not read checklists');
 end;
 
 function ChecklistChanges(Request:TRequest;out Changes:string;ItemUpdate:Boolean=False):Boolean;
@@ -1475,7 +1488,7 @@ end;
 // GET one checklist with its items
 procedure ApiChecklist(aRequest: TRequest; aResponse: TResponse);
 const NotFound = '{"error":"Checklist not found or does not belong to the specified card"}';
-var T: TWLTenant; UserId, ChecklistId, Predicate, Changes, Statement, FinalCheck: string; R, It: TWLRows; O, IO: TJSONObject; A: TJSONArray; i: Integer;
+var T: TWLTenant; UserId, ChecklistId, Predicate, Changes, Statement, FinalCheck: string; R: TWLRows; O: TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1504,28 +1517,9 @@ begin
     try SendJson(aResponse,O.AsJSON);finally O.Free;end;
     Exit;
   end;
-  R := T.Db.Query(Format('SELECT id,title,dueAt FROM checklists WHERE id=%s LIMIT 1;',
-    [QuotedStr(aRequest.RouteParams['checklistId'])]));
-  if Length(R) = 0 then begin SendJson(aResponse,NotFound,404); Exit; end;
-  O := TJSONObject.Create;
-  try
-    O.Add('_id', R[0][0]); O.Add('title', R[0][1]);
-    if R[0][2] = '' then O.Add('dueAt',TJSONNull.Create) else O.Add('dueAt',R[0][2]);
-    A := TJSONArray.Create;
-    It := T.Db.Query(Format(
-      'SELECT id,title,isFinished,dueAt FROM checklist_items WHERE checklistId=%s ORDER BY sort;',
-      [QuotedStr(R[0][0])]));
-    for i := 0 to High(It) do
-      if Length(It[i]) >= 4 then
-      begin
-        IO := TJSONObject.Create;
-        IO.Add('_id', It[i][0]); IO.Add('title', It[i][1]); IO.Add('isFinished', It[i][2] = '1');
-        if It[i][3] = '' then IO.Add('dueAt',TJSONNull.Create) else IO.Add('dueAt',It[i][3]);
-        A.Add(IO);
-      end;
-    O.Add('items', A);
-    SendJson(aResponse, O.AsJSON);
-  finally O.Free; end;
+  R:=T.Db.Query(ChecklistReadSql(aRequest.RouteParams['boardId'],aRequest.RouteParams['cardId'],ChecklistId)+';');
+  if Length(R)=1 then SendJson(aResponse,R[0][0])
+  else SendJson(aResponse,NotFound,404);
 end;
 
 // POST add an item to a checklist

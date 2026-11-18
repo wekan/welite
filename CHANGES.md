@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Include items and deadlines in checklist collection responses
+
+- Use the same scoped checklist representation for collection and individual
+  GET. Return ordered items, completion state and nullable deadlines.
+
 ## 2026-11-18 Verify checklist CRUD with live WeKan-shaped FerretDB documents
 
 - Resolve legacy checklists and items without a redundant board ID via their

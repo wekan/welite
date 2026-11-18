@@ -132,6 +132,8 @@ def run(request, db, token):
     checklist = json.loads(body)
     assert checklist['dueAt'] == '2026-11-18T07:30:00.123Z', checklist
     assert [item['title'] for item in checklist['items']] == ['first','second'], checklist
+    status, _, body = request('GET',base+'?token='+token)
+    assert status == 200 and checklist in json.loads(body), (status,body)
     print('PASS: checklist creation stores its deadline and ordered initial items or rolls back everything')
 
     items_path = base+'/'+checklist['_id']+'/items'
