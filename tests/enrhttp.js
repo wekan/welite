@@ -13,6 +13,10 @@ function otp(secret,counter) {
 }
 withCookieFreeChromium(async (page, context) => {
   const base=process.argv[2];
+  await page.goto(base+'/two-factor/setup?lang=de');
+  assert.equal(await page.locator('html').getAttribute('lang'),'de');
+  assert.match(await page.locator('body').innerText(),/Bestätigen Sie Ihr Passwort/);
+
   await page.goto(base+'/two-factor/setup?lang=fi');
   assert.match(await page.locator('body').innerText(),/Aloita vahvistamalla salasanasi/);
   await page.goto(base+'/two-factor/setup?lang=ar-EG');
