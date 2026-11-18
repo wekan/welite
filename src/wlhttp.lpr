@@ -643,6 +643,7 @@ begin
   HTTPRouter.RegisterRoute('/board', rmGet, @BoardEndpoint);
   HTTPRouter.RegisterRoute('/board/export', rmGet, @BrowserBoardExport);
   HTTPRouter.RegisterRoute('/board/webhooks', rmGet, @BrowserIntegrations);
+  HTTPRouter.RegisterRoute('/board/webhooks', rmPost, @BrowserIntegrations);
   HTTPRouter.RegisterRoute('/board/move', rmPost, @BoardMoveEndpoint);
   HTTPRouter.RegisterRoute('/board/restore-list', rmPost, @BoardRestoreListEndpoint);
 

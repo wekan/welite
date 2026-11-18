@@ -13,6 +13,7 @@ import tempfile
 import time
 from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long
+from layout import Forms
 from custapi import run_shared as check_custom_api
 from chkshare import run as check_shared_checklists
 from listsoft import run as check_list_soft_delete
@@ -901,6 +902,29 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('DELETE',integration_path,token=token)[0]==200
                 assert b'Refreshed' not in request('GET',webhook_page)[2]
                 print('PASS: cookie-free board webhook settings reflect REST changes on reload')
+                def webhook_form(operation, identity=''):
+                    parser=Forms()
+                    parser.feed(request('GET',webhook_page)[2].decode())
+                    return next(fields for path,fields in parser.forms if path=='/board/webhooks'
+                                and fields.get('operation')==operation and fields.get('integrationId')==identity)
+                creation=webhook_form('create')
+                creation['url']='https://1.1.1.1/browser'
+                assert request('POST','/board/webhooks',urlencode(dict(creation,boardId='other')))[0] in (403,404)
+                status,head,_=request('POST','/board/webhooks',urlencode(creation))
+                assert status==303 and 'Set-Cookie' not in head and 'sessionId=' in head['Location'],(status,head)
+                assert request('POST','/board/webhooks',urlencode(creation))[0]==403
+                made,=json.loads(request('GET','/api/boards/b/integrations',token=token)[2])
+                edit=dict(webhook_form('save',made['_id']),title='Edited in HTML',url=creation['url'])
+                assert request('POST','/board/webhooks',urlencode(edit))[0]==303
+                edited,=client.find('integrations',made['_id'])
+                assert edited['title']=='Edited in HTML' and edited['enabled'] is False
+                removal=webhook_form('delete',made['_id'])
+                assert request('POST','/board/webhooks',urlencode(removal))[0]==303
+                assert not client.find('integrations',made['_id'])
+                print('PASS: cookie-free webhook forms create, edit and delete with scoped one-use tokens')
+                if os.environ.get('WELITE_UI')=='1':
+                    subprocess.run([os.environ.get('NODE','node'),str(root/'tests/webhooks.js'),
+                                    f'http://localhost:{http_port}'+webhook_page],check=True)
                 attachment_id='shared-export-file'
                 contents=b'WeLite export regression'
                 digest=hashlib.sha256(attachment_id.encode()).hexdigest()

@@ -215,3 +215,7 @@ integrations when the board is deleted.
 Board administrators can open **Outgoing Webhooks** from the board. The HTML
 page shows current integration metadata and reflects REST edits on reload.
 It uses the board’s browser session and omits integration credentials.
+
+The same page has HTML forms to create, edit and delete webhooks. The forms
+use one-use action tokens scoped to the board and integration, and successful
+submissions redirect back to the settings page.

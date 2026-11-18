@@ -1327,11 +1327,37 @@ end;
 procedure HandleIntegrations(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);
 const InvalidUrl='{"error":"invalid-webhook-url"}';
   NotFound='{"error":"Integration not found"}';
-var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded,DocumentColumn,StorageGuard,InsertColumns,InsertValues:string;
-  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading,Creating,BadUrl,Shared:Boolean;
+var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded,DocumentColumn,StorageGuard,InsertColumns,InsertValues,Operation:string;
+  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading,Creating,BadUrl,Shared,Updating:Boolean;
   Session:TWLSession;Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
+  function FormAction(const Verb,IntegrationId:string):string;
+  begin
+    Result:='webhook:'+Verb+':'+HashText(IntToStr(Length(BoardId))+':'+BoardId+IntegrationId);
+  end;
+
+  procedure MutationComplete;
+  begin
+    if Browser then
+    begin
+      Session.LanguageTag:=RequestLanguageTag(aRequest);
+      aResponse.Code:=303;
+      aResponse.Location:=SessionUrl('/board/webhooks?id='+HTTPEncode(BoardId),Session);
+      aResponse.SetCustomHeader('Cache-Control','private, no-store');
+      aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
+      aResponse.SendContent;
+    end
+    else SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');
+  end;
+
   procedure ShowIntegrations(List:TJSONArray);
-  var Language:TWLLanguage;Words:TWLTranslator;Title,Body,Name:string;Hook:TJSONObject;I:Integer;
+  var Language:TWLLanguage;Words:TWLTranslator;Title,Body,Name,HookId,Checked:string;Hook:TJSONObject;I:Integer;
+    function FormStart(const Verb,IntegrationId:string):string;
+    begin
+      Result:='<form method="post" action="/board/webhooks">'+AuthHiddenFields(Session,FormAction(Verb,IntegrationId))+
+        '<input type="hidden" name="boardId" value="'+HtmlAttr(BoardId)+'">'+
+        '<input type="hidden" name="operation" value="'+Verb+'">'+
+        '<input type="hidden" name="integrationId" value="'+HtmlAttr(IntegrationId)+'">';
+    end;
   begin
     Session.LanguageTag:=RequestLanguageTag(aRequest);
     Language:=ViewerLanguage(T.Db,Session,aRequest);
@@ -1340,7 +1366,9 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
       Title:=Words.Text('outgoing-webhooks','Outgoing Webhooks');
       Body:='<h1>'+HtmlEncode(Title)+'</h1><p><a href="'+
         HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId),Session))+'">'+
-        HtmlEncode(Words.Text('board','Board'))+'</a></p><ul>';
+        HtmlEncode(Words.Text('board','Board'))+'</a></p>'+FormStart('create','')+
+        '<p><label>'+HtmlEncode(Words.Text('url','URL'))+' <input name="url" value=""></label> '+
+        '<input type="submit" value="'+HtmlAttr(Words.Text('new-outgoing-webhook','New Outgoing Webhook'))+'"></p></form><ul>';
       if (List=nil) or (List.Count=0) then
         Body:=Body+'<li>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</li>'
       else
@@ -1354,6 +1382,21 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
             Body:=Body+'<p>'+HtmlEncode(Hook.Get('url',''))+'</p>';
           if not Hook.Get('enabled',True) then
             Body:=Body+'<p>'+HtmlEncode(Words.Text('disabled','Disabled'))+'</p>';
+          HookId:=Hook.Get('_id','');
+          if HookId<>'' then
+          begin
+            Checked:='';if Hook.Get('enabled',True) then Checked:=' checked';
+            Body:=Body+FormStart('save',HookId)+
+              '<p><label>'+HtmlEncode(Words.Text('webhook-title','Webhook Name'))+
+              ' <input name="title" value="'+HtmlAttr(Hook.Get('title',''))+'"></label> '+
+              '<label>'+HtmlEncode(Words.Text('url','URL'))+' <input name="url" value="'+
+              HtmlAttr(Hook.Get('url',''))+'"></label> '+
+              '<label><input type="checkbox" name="enabled" value="1"'+Checked+'> '+
+              HtmlEncode(Words.Text('enabled','Enabled'))+'</label> '+
+              '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'"></p></form>'+
+              FormStart('delete',HookId)+'<p><input type="submit" value="'+
+              HtmlAttr(Words.Text('delete','Delete'))+'"></p></form>';
+          end;
           Body:=Body+'</li>';
         end;
       aResponse.Code:=200;aResponse.ContentType:='text/html; charset=utf-8';
@@ -1366,7 +1409,7 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
 
   procedure Missing;
   begin
-    if Browser then ShowIntegrations(nil)
+    if Browser and Reading then ShowIntegrations(nil)
     else if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
   end;
   function ValidDestination(Value:TJSONData):Boolean;
@@ -1393,7 +1436,8 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
     Result:=False;Input:=nil;NewDoc:=nil;
     try
       try
-        Input:=ExactObject(aRequest.Content);
+        if Browser then Input:=TJSONObject.Create(['url',aRequest.ContentFields.Values['url']])
+        else Input:=ExactObject(aRequest.Content);
         Value:=Input.Find('url');
         if not ValidDestination(Value) then Exit;
         Id:=NewId;
@@ -1423,7 +1467,15 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
     Result:=False;Update:=nil;Original:=nil;
     try
       try
-        if aRequest.Content='' then Update:=TJSONObject.Create else Update:=ExactObject(aRequest.Content);
+        Original:=ReadDocument(Raw);
+        if Browser then
+        begin
+          Update:=TJSONObject.Create(['title',aRequest.ContentFields.Values['title'],
+            'enabled',aRequest.ContentFields.Values['enabled']='1']);
+          if aRequest.ContentFields.Values['url']<>Original.Get('url','') then
+            Update.Add('url',aRequest.ContentFields.Values['url']);
+        end
+        else if aRequest.Content='' then Update:=TJSONObject.Create else Update:=ExactObject(aRequest.Content);
         for PropertyIndex:=0 to Update.Count-1 do
         begin
           Name:=Update.Names[PropertyIndex];
@@ -1443,7 +1495,6 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
         end;
         if Update.Count>0 then
         begin
-          Original:=ReadDocument(Raw);
           for PropertyIndex:=0 to Update.Count-1 do
           begin
             Name:=Update.Names[PropertyIndex];
@@ -1466,7 +1517,18 @@ begin
   begin
     if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),Session) then
     begin SendError(aResponse,401,'Sign in to view outgoing webhooks');Exit;end;
-    Actor:=Session.UserId;BoardId:=aRequest.QueryFields.Values['id'];Id:='';
+    Actor:=Session.UserId;Id:='';
+    if aRequest.Method='POST' then
+    begin
+      BoardId:=aRequest.ContentFields.Values['boardId'];
+      Id:=aRequest.ContentFields.Values['integrationId'];
+      Operation:=aRequest.ContentFields.Values['operation'];
+      if ((Operation='create') and (Id<>'')) or
+        ((Operation<>'create') and ((Id='') or ((Operation<>'save') and (Operation<>'delete')))) or
+        (Pos(#0,Id)>0) then
+      begin SendError(aResponse,400,'Invalid webhook action');Exit;end;
+    end
+    else BoardId:=aRequest.QueryFields.Values['id'];
     if (BoardId='') or (Pos(#0,BoardId)>0) then
     begin SendError(aResponse,400,'Invalid board ID');Exit;end;
   end
@@ -1475,7 +1537,10 @@ begin
     if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
     BoardId:=aRequest.RouteParams['boardId'];Id:=aRequest.RouteParams['intId'];
   end;
-  Reading:=aRequest.Method='GET';Creating:=aRequest.Method='POST';BadUrl:=False;
+  Reading:=aRequest.Method='GET';
+  Creating:=(aRequest.Method='POST') and (not Browser or (Operation='create'));
+  Updating:=(aRequest.Method='PUT') or (Browser and (Operation='save'));
+  BadUrl:=False;
   if not ApiAuthBoard(T,aResponse,Actor,BoardId,False) then Exit;
   Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
@@ -1483,6 +1548,8 @@ begin
   Admin:=(Length(Rows)=1) and (Rows[0][0]='1');
   if (Browser or not Reading) and not Admin then
   begin SendError(aResponse,403,'Board administration required');Exit;end;
+  if Browser and not Reading and not VerifyActionToken(aRequest,Session,FormAction(Operation,Id)) then
+  begin SendError(aResponse,403,'Invalid webhook action token');Exit;end;
   Shared:=Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1;
   if Creating and not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
   StorageGuard:='';
@@ -1521,14 +1588,14 @@ begin
       ' AND json('+DocumentColumn+')=json('+Encoded+'))=1 THEN 1 ELSE json(''Integration insert failed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create integration');Exit;end;
-    SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
+    MutationComplete;Exit;
   end;
   if not Reading then
   begin
     Rows:=T.Db.Query('SELECT json('+DocumentColumn+') FROM '+TableName+' WHERE '+Scope+';');
     if (Id='') or (Length(Rows)<>1) then begin Missing;Exit;end;
     Raw:=Rows[0][0];Mutation:='';
-    if aRequest.Method='PUT' then
+    if Updating then
     begin
       if not UpdateStatement then
       begin
@@ -1547,7 +1614,7 @@ begin
       Mutation+'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Integration permission changed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change integration');Exit;end;
-    SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
+    MutationComplete;Exit;
   end;
   if Browser then Scope:=Scope+' AND ('+Permission+')';
   Rows:=T.Db.Query('SELECT json('+DocumentColumn+') FROM '+TableName+' WHERE '+Scope+';');
