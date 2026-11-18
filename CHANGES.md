@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Select a SQLite backend for shared HTTP tests
+
+- Label each backend pass and allow targeted linked or CLI runs. The default
+  still exercises both backends.
+
 ## 2026-11-18 Match the WeKan custom-field GET error
 
 - Return HTTP 404 with the WeKan JSON error when a custom field is missing or

@@ -317,6 +317,10 @@ retention, optional table absence, ignored deletes and checkpoint seed/update ro
 concurrent due calls, backwards clocks, incompatible/mixed layout refusal and actual
 idle worker cleanup. No shared/history tables or missing optional auth tables are created.
 
+Set `WELITE_SHARED_BACKEND=linked` or `WELITE_SHARED_BACKEND=cli` to run one
+shared HTTP backend. With the variable unset, the suite runs both and prints
+the backend name when each pass starts.
+
 `python3 tests/shrhttp.py` requires `FERRETDB` pointing to the maintained live
 FerretDB binary and normal SQLite filename mode. It builds both HTTP backends and
 the CLI extension, checks canonical filename refusal without file creation, then

@@ -19,6 +19,12 @@ from selrels import run_shared as check_relation_scope
 from graphsnp import configure as snapshot_proxy,run_shared as check_graph_snapshot
 root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
+backends = {'linked': [], 'cli': ['-dWLDB_CLI']}
+selected_backend = os.environ.get('WELITE_SHARED_BACKEND')
+if selected_backend is not None:
+    if selected_backend not in backends:
+        raise SystemExit('WELITE_SHARED_BACKEND must be linked or cli')
+    backends = {selected_backend: backends[selected_backend]}
 with sqlite3.connect(':memory:') as con:assert con.execute("SELECT sqlite_compileoption_used('ENABLE_8_3_NAMES=2')").fetchone()==(0,)
 def port():
     with socket.socket() as sock:sock.bind(('127.0.0.1',0));return sock.getsockname()[1]
@@ -40,7 +46,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
     assert selected(cases)=='refused' and selected(cases,True)==str(cases/'wekan.sqlite')
     assert selected(cases,True,dict(WELITE_SHORT_NAMES='1'))=='refused'
     (cases/'wekan.db').touch();assert selected(cases,True)=='refused' and selected(cases)=='refused'
-    for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
+    for backend,flags in backends.items():
+        print(f'RUN: shared HTTP with {backend} SQLite', flush=True)
         out=tmp/backend;out.mkdir();build(root/'src/wlhttp.lpr',out/'build',flags)
         env=dict(os.environ,WELITE_DATA=str(out/'data'),WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_DESIGNER=str(root/'src/designer.sql'),WELITE_PUBLIC=str(root/'public'),WELITE_I18N=str(root/'i18n'),WELITE_SHARED='1')
         for key in ['WELITE_SHORT_NAMES','WELITE_SQLITE_EXT','WELITE_ENTROPY_FILE','WELITE_ARGON_SECRET_FILE','REQUIRE_2FA','LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','PASSWORD_LOGIN_ENABLED','ACCOUNTS_COMMON_LOGIN_EXPIRATION_IN_DAYS']:env.pop(key,None)
