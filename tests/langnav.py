@@ -1,5 +1,7 @@
 """Locale survives actual board/Designer/admin links, GET forms and signed mutations."""
+from html import escape
 from html.parser import HTMLParser
+from pathlib import Path
 import json
 import sqlite3
 from urllib.parse import parse_qs,urlsplit,urlencode
@@ -48,7 +50,12 @@ def check_navigation(request,database,session):
         status,_,body=request('GET',unusual)
         assert status==200 and b'URL board' in body
         home='/designer?'+urlencode(dict(sessionId=session,lang='ar'))
-        status,_,body=request('GET',home);assert status==200
+        status,headers,body=request('GET',home)
+        assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
+        arabic=json.loads((Path(__file__).resolve().parents[1]/'i18n/data/ar.jsn').read_text())
+        for key in ('page','storage-enabled','actions','yes','edit','preview','r-export'):
+            assert ('>'+escape(arabic[key],quote=False)+'<').encode() in body,key
+        assert b'dir="rtl"' in body
         for link in parsed(body):
             if urlsplit(link).path in ['/designer/page','/navtest','/designer/export','/designer/page/export']:language(link)
         forms=Forms();forms.feed(body.decode())

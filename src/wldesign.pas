@@ -1017,39 +1017,49 @@ begin
 end;
 
 procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; S: TWLSession; Rows: TWLRows; P: TPage; Body, Id, Toggle: string; i: Integer;
+var T: TWLTenant; S: TWLSession; Rows: TWLRows; P: TPage; Body, Id, Toggle, Enabled: string; i: Integer;
+  Language: TWLLanguage; Words: TWLTranslator;
 begin
   if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
-  Rows := T.Db.Query('SELECT id,url,title,enabled FROM pages ORDER BY url;');
-  Body := '<h1>Designer</h1><table border="1" cellpadding="4"><tr>' +
-    '<th>Page</th><th>URL</th><th>Enabled</th><th>Actions</th></tr>';
-  for i:=0 to High(Rows) do
-  begin
-    Id := Rows[i][0];
-    if Rows[i][3]='1' then Toggle:='disable' else Toggle:='enable';
-    Body := Body+'<tr><td>'+HtmlEncode(Rows[i][2])+'</td><td>'+HtmlEncode(Rows[i][1])+
-      '</td><td>'+HtmlEncode(Rows[i][3])+'</td><td><a href="'+
-      HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(Id),S))+'">Edit</a> '+
-      '<a href="'+HtmlAttr(SessionUrl(Rows[i][1],S))+'">Preview</a> '+
-      '<a href="'+HtmlAttr(SessionUrl('/designer/page/export?id='+HTTPEncode(Id),S))+'">Export</a> '+
-      ToolButton(S,'/designer/page/save',Toggle,'pageId',Id,'action',Toggle)+
-      ToolButton(S,'/designer/page/save','Delete','pageId',Id,'action','delete')+'</td></tr>';
-  end;
-  if Length(Rows)=0 then Body:=Body+'<tr><td colspan="4">No pages yet.</td></tr>';
-  P := Default(TPage); P.Cols:=1; P.Doctype:='html32'; P.Dir:='auto'; P.MinRole:='member';
-  Body:=Body+'</table><h2>Import/export</h2><p><a href="'+
-    HtmlAttr(SessionUrl('/designer/export',S))+'">Export all pages</a></p>'+
-    '<form method="POST" enctype="multipart/form-data" action="/designer/page/import">'+
-    AuthHiddenFields(S,'designer:/designer/page/import')+
-    '<input type="file" name="file"><input type="submit" value="Import page"></form>'+
-    '<form method="POST" enctype="multipart/form-data" action="/designer/import">'+
-    AuthHiddenFields(S,'designer:/designer/import')+
-    '<input type="file" name="file"><input type="submit" value="Import ZIP"></form>'+
-    '<h2>Add page</h2><form method="POST" action="/designer/page/save">'+
-    AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P)+
-    '<input type="submit" name="action" value="save"></form>';
-  aResponse.Content:=LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),'Designer',Body);
-  aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  Words:=TWLTranslator.Create(Language);
+  try
+    Rows := T.Db.Query('SELECT id,url,title,enabled FROM pages ORDER BY url;');
+    Body := '<h1>Designer</h1><table border="1" cellpadding="4"><tr>' +
+      '<th>'+HtmlEncode(Words.Text('page','Page'))+'</th><th>URL</th><th>'+
+      HtmlEncode(Words.Text('storage-enabled','Enabled'))+'</th><th>'+
+      HtmlEncode(Words.Text('actions','Actions'))+'</th></tr>';
+    for i:=0 to High(Rows) do
+    begin
+      Id := Rows[i][0];
+      if Rows[i][3]='1' then
+      begin Toggle:='disable';Enabled:=Words.Text('yes','Yes');end
+      else
+      begin Toggle:='enable';Enabled:=Words.Text('no','No');end;
+      Body := Body+'<tr><td>'+HtmlEncode(Rows[i][2])+'</td><td>'+HtmlEncode(Rows[i][1])+
+        '</td><td>'+HtmlEncode(Enabled)+'</td><td><a href="'+
+        HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(Id),S))+'">'+HtmlEncode(Words.Text('edit','Edit'))+'</a> '+
+        '<a href="'+HtmlAttr(SessionUrl(Rows[i][1],S))+'">'+HtmlEncode(Words.Text('preview','Preview'))+'</a> '+
+        '<a href="'+HtmlAttr(SessionUrl('/designer/page/export?id='+HTTPEncode(Id),S))+'">'+HtmlEncode(Words.Text('r-export','Export'))+'</a> '+
+        ToolButton(S,'/designer/page/save',Toggle,'pageId',Id,'action',Toggle)+
+        ToolButton(S,'/designer/page/save',Words.Text('delete','Delete'),'pageId',Id,'action','delete')+'</td></tr>';
+    end;
+    if Length(Rows)=0 then Body:=Body+'<tr><td colspan="4">'+HtmlEncode(Words.Text('no-items-message','No pages yet.'))+'</td></tr>';
+    P := Default(TPage); P.Cols:=1; P.Doctype:='html32'; P.Dir:='auto'; P.MinRole:='member';
+    Body:=Body+'</table><h2>Import/export</h2><p><a href="'+
+      HtmlAttr(SessionUrl('/designer/export',S))+'">Export all pages</a></p>'+
+      '<form method="POST" enctype="multipart/form-data" action="/designer/page/import">'+
+      AuthHiddenFields(S,'designer:/designer/page/import')+
+      '<input type="file" name="file"><input type="submit" value="Import page"></form>'+
+      '<form method="POST" enctype="multipart/form-data" action="/designer/import">'+
+      AuthHiddenFields(S,'designer:/designer/import')+
+      '<input type="file" name="file"><input type="submit" value="Import ZIP"></form>'+
+      '<h2>Add page</h2><form method="POST" action="/designer/page/save">'+
+      AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P)+
+      '<input type="submit" name="action" value="save"></form>';
+    aResponse.Content:=LanguagePage(aResponse,Language,'Designer',Body);
+    aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
+  finally Words.Free;end;
 end;
 
 function ValidPageUrl(const Url: string): Boolean;
