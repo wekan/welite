@@ -250,7 +250,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     checklistItems=[dict(_id='import-item',checklistId='import-checklist',cardId=input_card,
                                          title='Imported item',isFinished=True)])
                 client.command({'insert':'users','documents':[dict(_id='import-local-author',username='import-local-author')]})
-                mapping={'external-author':'import-local-author'}
+                mapping={'external-author':'import-local-author','external-alias':'import-local-author'}
+                imported_payload['cards']=[dict(exported['cards'][0],members=['external-author','external-alias','unmapped'],
+                    assignees=['external-alias'],requesters=['external-author'],assigners=['unmapped'])]
                 imported_payload['members']=[dict(userId='external-author',isActive=True,isAdmin=True)]
                 imported_payload['comments'][0]['userId']='external-author'
                 assert request('POST',import_path,dict(board=imported_payload,
@@ -274,6 +276,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 imported_card,=imported_rows('cards')
                 assert imported_card['listId'] in {r['_id'] for r in imported_rows('lists')}
                 assert imported_card['swimlaneId'] in {r['_id'] for r in imported_rows('swimlanes')}
+                assert imported_card['members']==imported_card['assignees']==imported_card['requesters']==['import-local-author']
+                assert imported_card['assigners']==[]
+                print('PASS: board import remaps and deduplicates card participant arrays')
                 imported_comment,=imported_rows('card_comments')
                 imported_check,=imported_rows('checklists')
                 imported_item,=imported_rows('checklistItems')

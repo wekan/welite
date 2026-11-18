@@ -1357,7 +1357,7 @@ procedure WriteFileBytes(const Path,Data:string); forward;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..9] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name:string;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId:string;
   Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..9] of TJSONObject;Arrays:array[0..9] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
@@ -1408,6 +1408,40 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       Sql:=Sql+'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+
         QuotedStr(LocalId)+',0,0); ';
     end;
+  end;
+  procedure ImportCardPeople(Entry:TJSONObject;const Id:string);
+  var Source:TJSONData;Selected:TStringList;Extra:TJSONObject;Items:TJSONArray;
+    Field,LocalId,Column:string;K:Integer;
+  begin
+    Selected:=TStringList.Create;Selected.CaseSensitive:=True;Extra:=TJSONObject.Create;
+    try
+      Sql:=Sql+InitializeSharedAssignments(T.Db,BoardId,Id,True,True);
+      for Field in ['members','assignees','requesters','assigners'] do
+      begin
+        Selected.Clear;Source:=Entry.Find(Field);
+        if (Source=nil) or (Source.JSONType=jtNull) then Continue;
+        if not (Source is TJSONArray) then raise EConvertError.Create('Invalid card participant list');
+        for K:=0 to Source.Count-1 do
+        begin
+          if not (Source.Items[K] is TJSONString) then raise EConvertError.Create('Invalid card participant');
+          LocalId:=MemberMap.Get(Source.Items[K].AsString,'');
+          if (LocalId<>'') and (Selected.IndexOf(LocalId)<0) then Selected.Add(LocalId);
+        end;
+        if (Field='members') or (Field='assignees') then
+        begin
+          if Field='members' then Column:='card_members' else Column:='card_assignees';
+          for K:=0 to Selected.Count-1 do
+            Sql:=Sql+'INSERT INTO '+Column+'(cardId,userId) VALUES('+QuotedStr(Id)+','+QuotedStr(Selected[K])+'); ';
+        end else
+        begin
+          Items:=TJSONArray.Create;Extra.Add(Field,Items);
+          for K:=0 to Selected.Count-1 do Items.Add(Selected[K]);
+        end;
+      end;
+      if Extra.Count>0 then
+        Sql:=Sql+'UPDATE cards SET extra_json=json_patch(extra_json,'+QuotedStr(Extra.AsJSON)+
+          ') WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
+    finally Extra.Free;Selected.Free;end;
   end;
   function Mapped(Index:Integer;const Id:string;Required:Boolean=False):string;
   begin
@@ -1667,13 +1701,14 @@ begin
       end;
       if Arrays[2]<>nil then for J:=0 to Arrays[2].Count-1 do
       begin
-        Row:=Arrays[2].Objects[J];
+        Row:=Arrays[2].Objects[J];CardId:=Mapped(2,Text(Row,'_id'),True);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
-          'createdAt,modifiedAt,dateLastActivity) VALUES('+QuotedStr(Mapped(2,Text(Row,'_id'),True))+','+Board+','+
+          'createdAt,modifiedAt,dateLastActivity) VALUES('+QuotedStr(CardId)+','+Board+','+
           QuotedStr(Mapped(1,Text(Row,'listId'),True))+','+QuotedStr(CardListLane(Row))+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
           QuotedStr(Text(Row,'description'))+','+QuotedStr(ImportedAuthor(Row))+','+SortValue(Row)+','+IntToStr(J+1)+
           ','+Stamp+','+Stamp+','+Stamp+'); ';
+        ImportCardPeople(Row,CardId);
       end;
       ImportCardChildren;
       ImportAttachments;
