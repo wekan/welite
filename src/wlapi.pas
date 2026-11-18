@@ -1403,7 +1403,7 @@ const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers'
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId:string;
   Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
-  Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
+  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
   begin
@@ -1629,6 +1629,35 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Width:=Field.AsFloat;
     if IsNan(Width) or (Width<100) or (Width>1000) or (Width<>Trunc(Width)) then Exit('272');
     Result:=IntToStr(Trunc(Width));
+  end;
+  procedure AllocateCardNumbers;
+  const MaxSequence=9007199254740990;
+  var Used:TStringList;Field:TJSONData;Number:Double;K:Integer;Next:Int64;Key:string;
+  begin
+    if Arrays[2]=nil then Exit;
+    SetLength(CardNumbers,Arrays[2].Count);
+    Used:=TStringList.Create;
+    try
+      Used.Sorted:=True;
+      for K:=0 to High(CardNumbers) do
+      begin
+        Field:=Arrays[2].Objects[K].Find('cardNumber');
+        if (Field=nil) or (Field.JSONType<>jtNumber) then Continue;
+        Number:=Field.AsFloat;
+        if IsNan(Number) or (Number<1) or (Number>MaxSequence) or (Number<>Trunc(Number)) then Continue;
+        Key:=IntToStr(Trunc(Number));
+        if Used.IndexOf(Key)>=0 then Continue;
+        Used.Add(Key);
+        CardNumbers[K]:=Trunc(Number);
+      end;
+      Next:=1;
+      for K:=0 to High(CardNumbers) do if CardNumbers[K]=0 then
+      begin
+        while Used.IndexOf(IntToStr(Next))>=0 do Inc(Next);
+        CardNumbers[K]:=Next;
+        Inc(Next);
+      end;
+    finally Used.Free;end;
   end;
   procedure IndexCardCreations;
   var Activities,Item,Kind,SourceId:TJSONData;Entry:TJSONObject;Id:string;K:Integer;
@@ -1856,6 +1885,7 @@ begin
           Maps[I].Add(Name,NewId);
         end;
       end;
+      AllocateCardNumbers;
       IndexCardCreations;
       BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
       Permission:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
@@ -1916,7 +1946,7 @@ begin
           QuotedStr(CardId)+','+Board+','+
           QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
-          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+IntToStr(J+1)+
+          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+IntToStr(CardNumbers[J])+
           ','+CardCreated+','+Stamp+','+Stamp+','+
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+

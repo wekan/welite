@@ -381,8 +381,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     dict(_id='invalid-lane',title='Default color',color=['green']),
                 ])
                 presentation['cards']=[
-                    dict(_id='palette-card',title='Green card',listId='invalid-list',swimlaneId='invalid-lane',color='green'),
-                    dict(_id='hex-card',title='Hex card',listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
+                    dict(_id='palette-card',title='Green card',cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='green'),
+                    dict(_id='hex-card',title='Hex card',cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
                     dict(_id='unknown-card',title='Uncolored card',listId='invalid-list',swimlaneId='invalid-lane',color='unknown'),
                 ]
                 status,_,body=request('POST',import_path,dict(board=presentation),token)
@@ -403,6 +403,14 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert restored_cards['Green card']['color']=='green'
                 assert restored_cards['Hex card']['color']=='#123abc'
                 assert not restored_cards['Uncolored card'].get('color')
+                assert [restored_cards[title]['cardNumber'] for title in
+                        ['Green card','Hex card','Uncolored card']]==[47,1,2]
+                status,_,body=request('POST','/api/boards/'+imported_id+'/lists/'+restored_lists['Default width']['_id']+'/cards',
+                    dict(title='Created after import',swimlaneId=restored_lanes['Default color']['_id']),token)
+                assert status==200,(status,body)
+                created_after=client.find('cards',json.loads(body)['_id'])[0]
+                assert created_after['cardNumber']==48
+                print('PASS: board import preserves unique card numbers and normal creation continues the sequence')
                 client.command({'update':'boards','updates':[
                     {'q':{'_id':imported_id},'u':{'$set':{'permission':'public'}}}]})
                 status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
