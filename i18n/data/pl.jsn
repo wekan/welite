@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Nieprawidłowy kod uwierzytelniający. Spróbuj ponownie.",
   "twoFactorAuth-enabled": "Uwierzytelnianie dwuskładnikowe jest włączone dla Twojego konta.",
   "two-factor-required-title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
-  "two-factor-required-text": "Ta witryna wymaga uwierzytelniania dwuskładnikowego dla Twojego konta. Skonfiguruj je, aby kontynuować."
+  "two-factor-required-text": "Ta witryna wymaga uwierzytelniania dwuskładnikowego dla Twojego konta. Skonfiguruj je, aby kontynuować.",
+  "enrollment-password-instructions": "Potwierdź hasło, aby rozpocząć konfigurację. Ten krok nie powoduje zalogowania. Nie można tutaj zastąpić aktywnego składnika uwierzytelniania.",
+  "enrollment-setup-denied": "Nie można rozpocząć konfiguracji. Sprawdź dane logowania i upewnij się, czy kody jednorazowe nie są już włączone.",
+  "enrollment-code-instructions": "Używaj kodów opartych na czasie: SHA1, sześć cyfr i okres 30 sekund. Nie udostępniaj klucza. Konfiguracja wygasa po pięciu minutach.",
+  "enrollment-confirmed-instructions": "Kod potwierdzający został już użyty. Przed zalogowaniem poczekaj, aż aplikacja uwierzytelniająca wyświetli nowy kod.",
+  "enrollment-account-created": "Konto utworzone",
+  "registration-first-admin": "Pierwsze konto otrzyma uprawnienia administratora globalnego tej domeny.",
+  "auth-too-many-attempts": "Zbyt wiele prób logowania. Spróbuj ponownie później.",
+  "enrollment-setup-failed": "Nie udało się rozpocząć konfiguracji.",
+  "registration-global-admin-disabled": "Konta administratorów globalnych są tworzone lokalnie. Rejestracja publiczna jest wyłączona.",
+  "auth-session-create-failed": "Nie udało się utworzyć sesji.",
+  "registration-session-failed": "Konto zostało utworzone. Zaloguj się, aby kontynuować.",
+  "registration-password-unavailable": "Rejestracja za pomocą hasła jest niedostępna."
 }
