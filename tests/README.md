@@ -322,9 +322,11 @@ shared HTTP backend. With the variable unset, the suite runs both and prints
 the backend name when each pass starts.
 
 `python3 tests/shrhttp.py` requires `FERRETDB` pointing to the maintained live
-FerretDB binary with live SQLite registry discovery (commit `7a8209d4` or
-later) and normal SQLite filename mode. It verifies new history collections
+FerretDB binary with live SQLite registry discovery and error reporting
+(commit `dc8f2179` or later) and normal SQLite filename mode. It verifies new history collections
 through Mongo find and listCollections while the same server process runs.
+It also checks the Mongo error for malformed registry settings and retries
+after repair.
 It builds both HTTP backends and
 the CLI extension, checks canonical filename refusal without file creation, then
 opens an existing Mongo-created store with `WELITE_SHARED=1`. It verifies both-way

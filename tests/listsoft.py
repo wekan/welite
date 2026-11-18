@@ -9,6 +9,22 @@ from layout import Forms
 from wire import Binary, DateMs, Long, ObjectId, Regex, Timestamp, encode
 
 
+def check_registry_repair(client, db):
+    name = 'registryRepairFixture'
+    with sqlite3.connect(db) as con:
+        con.execute('CREATE TABLE registry_repair_fixture (_ferretdb_sjson BLOB NOT NULL) STRICT')
+        con.execute('INSERT INTO _ferretdb_collections (name,table_name,settings) VALUES (?,?,?)',
+                    (name, 'registry_repair_fixture', '{invalid'))
+    result = client.command({'find': name}, check=False)
+    assert result['ok'] == 0 and 'settings' in result['errmsg'], result
+    with sqlite3.connect(db) as con:
+        con.execute('UPDATE _ferretdb_collections SET settings=? WHERE name=?',
+                    ('{"storage":"jsonb"}', name))
+    assert client.command({'find': name})['cursor']['firstBatch'] == []
+    client.command({'drop': name})
+    print('PASS: the running FerretDB reports registry lookup errors and sees repaired metadata')
+
+
 def run(request, client, db, token, session):
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT 1 FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone() is None
@@ -60,6 +76,7 @@ def run(request, client, db, token, session):
     listed=client.command({'listCollections':1})['cursor']['firstBatch']
     assert {'userPositionHistory','changeHistory'} <= {row['name'] for row in listed}
     print('PASS: the running FerretDB discovers new history collections through find and listCollections')
+    check_registry_repair(client, db)
     assert deleted['batchId']==retained_list['deleteBatchId'] and isinstance(deleted['createdAt'],DateMs),deleted
     assert deleted['newState']['deletedAt']==retained_list['deletedAt'] and isinstance(deleted['newState']['deletedAt'],DateMs),deleted
     assert deleted['previousState']==dict(boardId='b',swimlaneId='s',sort=original_list['sort']),deleted

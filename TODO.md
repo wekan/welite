@@ -418,7 +418,7 @@ Platform and browser claims require testing on those targets.
   graphs; collection now has a read snapshot, while later lifecycle consistency
   remains open. The heavy
   fixture retains its targeted 30-second timeout; ordinary timeouts keep defaults.
-  Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, registry error coordination and session integration, typed custom-value and legacy
+  Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
   fresh shared creation/default activation, portable shared-file/8.3 policy and full Meteor application workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.

@@ -1731,7 +1731,7 @@ legacy forms and broader clone lifecycle behavior are still unfinished.
 
 ## Remaining before the checklist can be checked
 
-- Complete Mongo-managed sparse/multikey account indexes, registry error coordination and normalized-store authentication migration policy; reconcile typed
+- Complete Mongo-managed sparse/multikey account indexes and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile broader resume-policy parity and process-signal lifecycle; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
@@ -1778,7 +1778,10 @@ When a shared store has no `userPositionHistory` collection, the first list
 deletion or restore provisions it in the SQLite registry. The history record
 is written immediately. FerretDB builds with live registry discovery
 (commit `7a8209d4`) expose the new collection to Mongo queries and collection
-listing without a restart. Older builds discover it at startup.
+listing without a restart. Older builds discover it at startup. With FerretDB
+commit `dc8f2179` or later, Mongo find also reports malformed registration
+settings as an error and can read the collection as soon as the settings are
+repaired.
 
 
 List lifecycle changes also append to the shared `changeHistory` collection
