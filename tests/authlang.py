@@ -7,6 +7,21 @@ from urllib.parse import parse_qs,urlsplit
 def check_auth_language(request,database,otp):
     words=json.loads((Path(__file__).resolve().parents[1]/'i18n/data/ar.jsn').read_text())
     def translated(key):return html.escape(words[key],quote=True).replace('&#x27;',"'").encode()
+    catalog_dir=Path(__file__).resolve().parents[1]/'i18n'/'data'
+    for regional in ('ar','ar-DZ','ar-EG','ary'):
+        captions=json.loads((catalog_dir/f'{regional}.jsn').read_text())
+        for key in ('register','password-again','password-mismatch','create-account','otp'):
+            assert re.search(r'[؀-ۿ]',captions[key]),(regional,key)
+        status,headers,body=request('POST','/register?lang='+regional,
+            dict(username='invalid-confirmation',password='first',confirm='second'))
+        assert status==200 and headers['Content-Language']==regional and 'Set-Cookie' not in headers
+        assert b'dir="rtl"' in body
+        for key in ('register','password-again','password-mismatch'):
+            assert captions[key].encode() in body,(regional,key)
+        status,headers,body=request('GET','/sign-in?lang='+regional)
+        assert status==200 and headers['Content-Language']==regional and 'Set-Cookie' not in headers
+        for key in ('create-account','otp'):
+            assert captions[key].encode() in body,(regional,key)
     language='ar';user='language-user';password='language-test-password'
     status,headers,body=request('GET','/sign-in?lang='+language)
     assert status==200 and headers['Content-Language']==language and 'Set-Cookie' not in headers
