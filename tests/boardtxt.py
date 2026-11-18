@@ -7,6 +7,7 @@ import sqlite3
 import subprocess
 from urllib.parse import urlencode,parse_qs,urlsplit
 from homelang import Page
+from layout import Forms
 root=Path(__file__).resolve().parents[1]
 catalog=json.loads((root/'i18n/locales.jsn').read_text())
 english=json.loads((root/'i18n/data/en.jsn').read_text())
@@ -38,6 +39,33 @@ def run(request,database,administrator,base):
             con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,parentId,archived,dateLastActivity,createdAt,modifiedAt) "
                         "VALUES(?,'boardtxt','txtlane','txtlist',?,?,'txtcard',?,'now','now','now')",
                         (identity,title,author,archived))
+    card_path='/board/card?id=boardtxt&card=txtcard'
+    upload_path='/board/attachment/upload?id=boardtxt&card=txtcard'
+    status,headers,body=request('GET',card_path+'&sessionId='+administrator)
+    assert status==200 and 'Set-Cookie' not in headers
+    forms=Forms()
+    forms.feed(body.decode())
+    fields,=[values for action,values in forms.forms if action==upload_path]
+    boundary='welite-card-upload-fixture'
+    data=b'\x00\x01\xff\n'
+    body=b''.join(
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'.encode()
+        for key,value in fields.items())
+    body+=f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="native.bin"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode()
+    body+=data+f'\r\n--{boundary}--\r\n'.encode()
+    def upload(path):
+        return request('POST',path,body,content_type='multipart/form-data; boundary='+boundary)
+    assert upload(upload_path.replace('card=txtcard','card=txtchild'))[0]==403
+    status,headers,body_response=upload(upload_path)
+    assert status==303 and 'Set-Cookie' not in headers,(status,body_response)
+    assert request('GET',headers['Location'])[0]==200
+    assert upload(upload_path)[0]==403
+    with sqlite3.connect(database) as con:
+        identity,=con.execute("SELECT id FROM attachments WHERE cardId='txtcard' AND name='native.bin'").fetchone()
+    download='/board/attachment?id=boardtxt&card=txtcard&file='+identity+'&sessionId='+administrator
+    status,headers,downloaded=request('GET',download)
+    assert status==200 and downloaded==data and 'Set-Cookie' not in headers
+    print('PASS: native multipart card upload scopes the action, rejects replay and downloads exact bytes')
     def content_state():
         with sqlite3.connect(database) as con:
             return [con.execute('SELECT * FROM '+table+' WHERE '+condition+' ORDER BY id').fetchall()

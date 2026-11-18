@@ -10,11 +10,17 @@ function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
+procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr;
+uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr,wlapi;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
+end;
+
+function AttachmentUploadAction(const Board,Card:string):string;
+begin
+  Result:='board:attachment-upload:'+IntToStr(Length(Board))+':'+Board+Card;
 end;
 
 function ActiveCardAttachments(Db:TWLDb;Selector:TSelectionScope;const Board,Card:string):string;
@@ -387,6 +393,13 @@ begin
                     '&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]),S))+'">'+HtmlEncode(Attached[1])+'</a></li>';
                 Body:=Body+'</ul>';
               end;
+              if (S.UserId<>'') and BoardCanWrite(T.Db,S.UserId,Board) then
+                Body:=Body+'<form method="POST" enctype="multipart/form-data" action="/board/attachment/upload?id='+
+                  HtmlAttr(HTTPEncode(Board)+'&card='+HTTPEncode(Card))+'">'+
+                  AuthHiddenFields(S,AttachmentUploadAction(Board,Card))+
+                  '<label for="attachment-file">'+HtmlEncode(Words.Text('attachment','Attachment'))+'</label> '+
+                  '<input id="attachment-file" type="file" name="file"> <input type="submit" value="'+
+                  HtmlAttr(Words.Text('upload','Upload'))+'"></form>';
               Scope:='cardId='+CardKey+' AND '+Selector.StringField('checklists','cardId')+
                 ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
                 Selector.StringField('checklists','boardId')+'))';
@@ -429,6 +442,68 @@ begin
     aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,Dir,'html4');
     aResponse.SendContent;
   finally Words.Free;end;
+end;
+
+procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Board,Card,FileType,Bytes,Id:string;
+  Rows:TWLRows;Upload:TUploadedFile;Stream:TStream;Selector:TSelectionScope;
+  procedure Reject(Status:Integer;const Key,Message:string);
+  var Language:TWLLanguage;Words:TWLTranslator;
+  begin
+    Language:=ViewerLanguage(T.Db,S,aRequest);
+    Words:=TWLTranslator.Create(Language);
+    try
+      aResponse.Code:=Status;
+      aResponse.ContentType:='text/html; charset=utf-8';
+      aResponse.Content:=LanguagePage(aResponse,Language,Words.Text(Key,Message),
+        '<p>'+HtmlEncode(Words.Text(Key,Message))+'</p>');
+      aResponse.SendContent;
+    finally Words.Free;end;
+  end;
+begin
+  T:=Default(TWLTenant);S:=Default(TWLSession);
+  if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
+  begin Reject(404,'page-not-found','Page not found.');Exit;end;
+  if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
+  begin Reject(403,'upload-failed','Upload failed');Exit;end;
+  S.LanguageTag:=RequestLanguageTag(aRequest);
+  Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
+  if (Board='') or (Card='') or (Pos(#0,Board+Card)>0) or not BoardCanWrite(T.Db,S.UserId,Board) then
+  begin Reject(403,'upload-failed','Upload failed');Exit;end;
+  Selector:=TSelectionScope.Create(T.Db);
+  try
+    Rows:=T.Db.Query('SELECT swimlaneId,listId FROM cards WHERE id='+QuotedStr(Card)+
+      ' AND boardId='+QuotedStr(Board)+' AND archived=0 AND deletedAt IS NULL AND '+
+      Selector.StringField('cards','id')+' AND '+Selector.StringField('cards','boardId')+
+      ' AND '+Selector.StringField('cards','swimlaneId')+' AND '+Selector.StringField('cards','listId')+';');
+  finally Selector.Free;end;
+  if Length(Rows)<>1 then
+  begin Reject(404,'field-link-not-found','Card not found.');Exit;end;
+  if aRequest.Files.Count<>1 then
+  begin Reject(400,'upload-failed','Upload failed');Exit;end;
+  Upload:=aRequest.Files[0];
+  if (Upload.FieldName<>'file') or (Upload.FileName='') or
+    (Pos(#0,Upload.FileName+Upload.ContentType)>0) or (Pos(#13,Upload.ContentType)>0) or
+    (Pos(#10,Upload.ContentType)>0) then
+  begin Reject(400,'upload-failed','Upload failed');Exit;end;
+  if not VerifyActionToken(aRequest,S,AttachmentUploadAction(Board,Card)) then
+  begin Reject(403,'upload-failed','Upload failed');Exit;end;
+  try
+    Stream:=Upload.Stream;
+    if Stream.Size>High(SizeInt) then
+    begin Reject(413,'upload-failed','Upload failed');Exit;end;
+    SetLength(Bytes,SizeInt(Stream.Size));
+    if Length(Bytes)>0 then Stream.ReadBuffer(Bytes[1],Length(Bytes));
+  except
+    Reject(400,'upload-failed','Upload failed');Exit;
+  end;
+  FileType:=Upload.ContentType;
+  if FileType='' then FileType:='application/octet-stream';
+  if not StoreAttachment(T,S.UserId,Board,Rows[0][0],Rows[0][1],Card,Upload.FileName,FileType,Bytes,Id,True) then
+  begin Reject(500,'upload-failed','Upload failed');Exit;end;
+  aResponse.Code:=303;
+  aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+  aResponse.SendContent;
 end;
 
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);

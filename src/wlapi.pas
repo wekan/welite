@@ -98,7 +98,7 @@ procedure ApiChecklistItem(aRequest: TRequest; aResponse: TResponse);  // GET/PU
 procedure ApiCardComments(aRequest: TRequest; aResponse: TResponse);   // GET list / POST add
 procedure ApiCardComment(aRequest: TRequest; aResponse: TResponse);    // GET one / DELETE one
 function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes:string;
-  out Id:string):Boolean;
+  out Id:string;RequireLiveCard:Boolean=False):Boolean;
 procedure ApiAttachmentUpload(aRequest: TRequest; aResponse: TResponse);   // POST /api/attachment/upload
 procedure ApiAttachmentDownload(aRequest: TRequest; aResponse: TResponse); // GET  /api/attachment/download/:id
 procedure ApiAttachmentInfo(aRequest: TRequest; aResponse: TResponse);     // GET  /api/attachment/info/:id
@@ -5391,7 +5391,7 @@ begin
 end;
 
 function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes:string;
-  out Id:string):Boolean;
+  out Id:string;RequireLiveCard:Boolean):Boolean;
 var Path,Sql,Guard:string;Policy:TFieldPolicy;OwnsPath:Boolean;
 begin
   Id:=NewId;
@@ -5406,6 +5406,8 @@ begin
     Guard:=Guard+' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Crd)+' AND boardId='+QuotedStr(BoardId)+
       ' AND deletedAt IS NULL AND ('+QuotedStr(Lst)+'='''' OR listId='+QuotedStr(Lst)+
       ') AND ('+QuotedStr(Sw)+'='''' OR swimlaneId='+QuotedStr(Sw)+'))';
+  if RequireLiveCard then Guard:=Guard+' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Crd)+
+    ' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL)';
   Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
   try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
   Sql:=Format('INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,'+
