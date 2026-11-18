@@ -51,6 +51,7 @@ procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
+procedure ApiDeleteRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiEditRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
@@ -1066,6 +1067,88 @@ begin
     end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(RuleId)+'"}');
   finally Rule.Free;Body.Free;end;
+end;
+
+procedure ApiDeleteRule(aRequest:TRequest;aResponse:TResponse);
+const Doc='_ferretdb_sjson';NotFound='{"error":"Rule not found"}';
+var T:TWLTenant;Actor,BoardId,RuleId,Permission,Scope,Source,Original,Bindings,Sql:string;
+  Rows:TWLRows;Rule:TJSONObject;Policy:TFieldPolicy;
+  function Bind(const Collection:string):string;
+  var Found:TWLRows;
+  begin
+    Result:='';
+    Found:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+';');
+    if Length(Found)>1 then raise Exception.Create('Ambiguous workflow collection');
+    if Length(Found)=0 then
+    begin Bindings:=Bindings+' AND NOT EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+')';Exit;end;
+    Result:='"'+StringReplace(Found[0][0],'"','""',[rfReplaceAll])+'"';
+    Bindings:=Bindings+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+
+      ' AND table_name='+QuotedStr(Found[0][0])+')=1';
+  end;
+  function UnusedParts(const Collection,Primary,Extra:string):string;
+  var TableName,Id,Targets,Reference,Predicate:string;Value:TJSONData;Ids:TStringList;I:Integer;
+    procedure Add(Value:TJSONData);
+    begin
+      if (Value is TJSONString) and (Value.AsString<>'') and (Pos(#0,Value.AsString)=0) then Ids.Add(Value.AsString);
+    end;
+  begin
+    Result:='';TableName:=Bind(Collection);if TableName='' then Exit;
+    Ids:=TStringList.Create;
+    try
+      Ids.CaseSensitive:=True;Ids.Sorted:=True;Ids.Duplicates:=dupIgnore;
+      Add(Rule.Find(Primary));Value:=Rule.Find(Extra);
+      if Value is TJSONArray then for I:=0 to Value.Count-1 do Add(Value.Items[I]);
+      if Ids.Count=0 then Exit;
+      Targets:='';
+      for I:=0 to Ids.Count-1 do
+      begin
+        if I>0 then Targets:=Targets+',';
+        Targets:=Targets+QuotedStr(Ids[I]);
+      end;
+      Id:='json_extract('+TableName+'.'+Doc+',''$._id'')';
+      Reference:='EXISTS(SELECT 1 FROM '+Source+' r WHERE json_extract(r.'+Doc+','+QuotedStr('$.'+Primary)+')='+Id+
+        ' OR EXISTS(SELECT 1 FROM json_each(r.'+Doc+','+QuotedStr('$.'+Extra)+') WHERE type=''text'' AND value='+Id+'))';
+      Predicate:=Id+' IN ('+Targets+') AND json_extract('+Doc+',''$.$s.p._id.t'')=''string'' AND '+
+        '(json_type('+Doc+',''$.boardId'') IS NULL OR json_extract('+Doc+',''$.boardId'')='+QuotedStr(BoardId)+
+        ') AND NOT '+Reference;
+      Result:='DELETE FROM '+TableName+' WHERE '+Predicate+'; '+
+        'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Predicate+
+        ') THEN 1 ELSE json(''Workflow part removal failed'') END; ';
+    finally Ids.Free;end;
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];RuleId:=aRequest.RouteParams['ruleId'];
+  Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then
+  begin SendJson(aResponse,NotFound,404);Exit;end;
+  Rule:=nil;Bindings:='';
+  try
+    try
+      Source:=Bind('rules');
+      if Source='' then begin SendJson(aResponse,NotFound,404);Exit;end;
+      Scope:='json_extract('+Doc+',''$._id'')='+QuotedStr(RuleId)+
+        ' AND json_extract('+Doc+',''$.boardId'')='+QuotedStr(BoardId)+
+        ' AND json_extract('+Doc+',''$.$s.p._id.t'')=''string'''+
+        ' AND json_extract('+Doc+',''$.$s.p.boardId.t'')=''string''';
+      Rows:=T.Db.Query('SELECT json('+Doc+') FROM '+Source+' WHERE '+Scope+';');
+      if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+      Original:=Rows[0][0];Rule:=ExactObject(PlainDocument(Original));
+      Sql:=UnusedParts('triggers','triggerId','extraTriggerIds')+UnusedParts('actions','actionId','extraActionIds');
+      Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+Bindings+
+        ' AND (SELECT count(*) FROM '+Source+' WHERE '+Scope+' AND json('+Doc+')='+QuotedStr(Original)+
+        ')=1 THEN 1 ELSE json(''Workflow scope changed'') END; DELETE FROM '+Source+' WHERE '+Scope+
+        '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+Source+' WHERE '+Scope+
+        ') THEN 1 ELSE json(''Workflow removal failed'') END; '+Sql+'COMMIT;';
+      if not T.Db.Exec(Sql) then raise Exception.Create('Rule removal failed');
+    except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete rule');Exit;end;
+    SendJson(aResponse,'{"_id":"'+StringToJSONString(RuleId)+'"}');
+  finally Rule.Free;end;
 end;
 
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);

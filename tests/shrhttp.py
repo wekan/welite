@@ -279,6 +279,16 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert client.find('actions',changed['actionId'])[0]['actionType']=='moveCardToBottom'
                 assert client.find('actions',ids['actionId'])[0]==action
                 print('PASS: shared REST rule edit copies a reused part and preserves the original')
+                client.command({'update':'rules','updates':[dict(q={'_id':ids['_id']},
+                    u={'$set':{'extraActionIds':[ids['actionId']]}})]})
+                assert request('DELETE',rules_path+'/rule-other',token=token)[0]==404
+                assert request('DELETE',edit_path,token=token)[0]==200
+                assert request('DELETE',edit_path,token=token)[0]==404
+                assert not client.find('rules',ids['_id'])
+                assert not client.find('triggers',ids['triggerId'])
+                assert not client.find('actions',changed['actionId'])
+                assert client.find('actions',ids['actionId'])[0]==action
+                print('PASS: shared REST rule deletion removes unused parts and retains parts used by another rule')
                 exported_user,=exported['users']
                 assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
                 assert all(key not in exported_user for key in ('services','emails','loginTokens'))

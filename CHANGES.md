@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Delete shared rules over REST
+
+- Remove a board rule and its unused primary or additional workflow parts
+  in one transaction. Retain parts referenced by other rules.
+
 ## 2026-11-18 Edit shared rules over REST
 
 - Update rule titles, enabled state, and workflow parts in one transaction.
