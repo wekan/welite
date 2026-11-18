@@ -148,6 +148,11 @@ contains `success`, `attachments`, and `count`. Shared attachments with a
 deletion marker remain available for recovery through authorized direct
 downloads.
 
+In a shared store, deleting an attachment marks it deleted, clears its card
+cover if selected, and records one deletion activity. Repeating the request
+leaves the original deletion marker intact. Native attachment deletion removes
+the file and its record.
+
 For a binary upload, send `Content-Type: application/octet-stream` and put
 `boardId`, `swimlaneId`, `listId`, `cardId`, `fileName` and `fileType` in the
 query string. JSON uploads continue to accept base64 in `fileData`.

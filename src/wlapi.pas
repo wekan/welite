@@ -5465,18 +5465,79 @@ begin
   finally O.Free; end;
 end;
 
-procedure ApiAttachmentDelete(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, Id: string; R: TWLRows;
+function SoftDeleteSharedAttachment(Db:TWLDb;const Actor,BoardId,AttachmentId:string):Boolean;
+var Scope,Live,Registry,Files,Cards,Patch,ClearCover,Permission,Bindings,Sql,Stamp,Claim:string;
+  Rows:TWLRows;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;AtTime:TDateTime;
+  function StoreExpression(const Physical,Expression:string):string;
+  begin Result:='CASE WHEN wl_storage('+QuotedStr(Physical)+')=''blob'' THEN jsonb('+Expression+') ELSE '+Expression+' END';end;
+  function PhysicalName(const Name:string):string;
+  begin Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';end;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  Id := aRequest.RouteParams['attachmentId'];
-  if not LoadAttachment(aResponse, T.Db, Id, R) then Exit;
-  if not ApiAuthBoard(T, aResponse, UserId, R[0][0], True) then Exit;
-  if FileExists(StoreFilePath(T.FilesDir,'attachme',Id)) then DeleteFile(StoreFilePath(T.FilesDir,'attachme',Id));
-  T.Db.Exec(Format('DELETE FROM attachments WHERE id=%s;', [QuotedStr(Id)]));
-  SendJson(aResponse, Format('{"success":true,"attachmentId":%s,"fileName":%s}',
-    [AnsiQuotedStr(Id, '"'), AnsiQuotedStr(R[0][4], '"')]));
+  Result:=False;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
+  if Length(Rows)<>1 then Exit;
+  Files:=Rows[0][0];
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''cards'';');
+  if Length(Rows)<>1 then Exit;
+  Cards:=Rows[0][0];
+  Registry:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''attachments'' AND table_name='+QuotedStr(Files)+')=1'+
+    ' AND (SELECT count(*) FROM _ferretdb_collections WHERE name=''cards'' AND table_name='+QuotedStr(Cards)+')=1';
+  Selector:=TSelectionScope.Create(Db);
+  try
+    Scope:='id='+QuotedStr(AttachmentId)+' AND boardId='+QuotedStr(BoardId)+
+      ' AND '+Selector.StringField('attachments','id')+' AND '+Selector.StringField('attachments','boardId');
+    Bindings:='';for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
+  finally Selector.Free;end;
+  Policy:=TFieldPolicy.Create(Db,Actor,BoardId,'');
+  try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  Live:=Scope+' AND '+LiveAttachmentSQL(Db);
+  Claim:=QuotedStr(NewId);AtTime:=Now;
+  Stamp:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(AtTime)));
+  Patch:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.deletedAt'','+
+    IntToStr(UnixMillis(AtTime))+',''$.deletedBy'','+QuotedStr(Actor)+',''$.deleteBatchId'','+Claim+
+    '),json(_ferretdb_sjson),''{"deletedAt":"date"}'')';
+  ClearCover:='wl_sjson(json_remove(wl_plain(json(_ferretdb_sjson)),''$.coverId''),json(_ferretdb_sjson),''{}'')';
+  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+Registry+
+    ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 ELSE json(''Attachment scope changed'') END; '+
+    'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+    'SELECT '+Claim+',''deleteAttachment'','+QuotedStr(Actor)+',boardId,cardId,listId,swimlaneId,'+
+    Stamp+','+Stamp+',json_object(''attachmentId'',id,''attachmentName'',name,''type'',''card'') FROM attachments WHERE '+
+    Live+' AND COALESCE(cardId,'''')<>''''; '+
+    'UPDATE '+PhysicalName(Cards)+' SET _ferretdb_sjson='+StoreExpression(Cards,ClearCover)+
+    ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
+    ' AND json_extract(_ferretdb_sjson,''$.coverId'')='+QuotedStr(AttachmentId)+
+    ' AND json_extract(_ferretdb_sjson,''$._id'') IN (SELECT cardId FROM attachments WHERE '+Live+'); '+
+    'UPDATE '+PhysicalName(Files)+' SET _ferretdb_sjson='+StoreExpression(Files,Patch)+
+    ' WHERE json_extract(_ferretdb_sjson,''$._id'') IN (SELECT id FROM attachments WHERE '+Live+'); '+
+    Bindings+'SELECT CASE WHEN '+Permission+' AND '+Registry+' AND (SELECT count(*) FROM attachments WHERE '+Scope+
+    ')=1 AND NOT EXISTS(SELECT 1 FROM attachments WHERE '+Live+
+    ') THEN 1 ELSE json(''Attachment deletion failed'') END; COMMIT;';
+  Result:=Db.Exec(Sql);
+  if not Result then Db.Exec('ROLLBACK;');
+end;
+
+procedure ApiAttachmentDelete(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,Id,Path:string;Rows:TWLRows;Reply:TJSONObject;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  Id:=aRequest.RouteParams['attachmentId'];
+  if not LoadAttachment(aResponse,T.Db,Id,Rows) then Exit;
+  if not ApiAuthBoard(T,aResponse,UserId,Rows[0][0],True) then Exit;
+  if SharedStore(T.Db) then
+  begin
+    if not SoftDeleteSharedAttachment(T.Db,UserId,Rows[0][0],Id) then
+    begin SendError(aResponse,500,'Could not delete attachment');Exit;end;
+  end
+  else
+  begin
+    if not T.Db.Exec('DELETE FROM attachments WHERE id='+QuotedStr(Id)+' AND boardId='+QuotedStr(Rows[0][0])+';') then
+    begin SendError(aResponse,500,'Could not delete attachment');Exit;end;
+    Path:=StoreFilePath(T.FilesDir,'attachme',Id);
+    if FileExists(Path) then DeleteFile(Path);
+  end;
+  Reply:=TJSONObject.Create(['success',True,'attachmentId',Id,'fileName',Rows[0][4]]);
+  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
 // GET /api/boards/:boardId/attachments — list a board's attachments

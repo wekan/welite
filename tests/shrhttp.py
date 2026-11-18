@@ -1139,6 +1139,33 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     update_export_card({'$set':{'description':original_card['description']}})
                 else:
                     update_export_card({'$unset':{'description':''}})
+                delete_attachment='/api/attachment/delete/'+attachment_id
+                client.command({'update':'cards','updates':[dict(q={'_id':card['_id']},
+                    u={'$set':{'coverId':attachment_id}})]})
+                before_delete,=client.find('attachments',attachment_id)
+                with sqlite3.connect(database) as con:
+                    physical=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='attachments'").fetchone()[0]
+                    con.execute(f'CREATE TRIGGER fail_soft_attachment BEFORE UPDATE ON "{physical}" '
+                                "BEGIN SELECT RAISE(ABORT,'fixture delete failure'); END")
+                try:
+                    assert request('DELETE',delete_attachment,token=token)[0]==500
+                    assert client.find('attachments',attachment_id)==[before_delete]
+                    assert client.find('cards',card['_id'])[0]['coverId']==attachment_id
+                finally:
+                    with sqlite3.connect(database) as con:
+                        con.execute('DROP TRIGGER fail_soft_attachment')
+                assert request('DELETE',delete_attachment,token=token)[0]==200
+                retained,=client.find('attachments',attachment_id)
+                assert isinstance(retained['deletedAt'],DateMs) and retained['deletedBy']=='u' and retained['deleteBatchId']
+                assert retained==dict(before_delete,deletedAt=retained['deletedAt'],deletedBy='u',deleteBatchId=retained['deleteBatchId'])
+                assert 'coverId' not in client.find('cards',card['_id'])[0]
+                assert request('DELETE',delete_attachment,token=token)[0]==200
+                assert client.find('attachments',attachment_id)==[retained]
+                assert request('GET',raw_attachment,token=token)[2]==contents
+                events=client.command({'find':'activities','filter':dict(attachmentId=attachment_id,
+                    activityType='deleteAttachment')})['cursor']['firstBatch']
+                assert len(events)==1 and events[0]['userId']=='u'
+                print('PASS: shared attachment delete retains bytes and typed metadata, clears cover and is idempotent')
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')
                 lane_id='delete-scope-lane'
