@@ -30,6 +30,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native sign-in and board links. Both upstream cases pass while retaining
   their REST and Mongo assertions.
 
+## 2026-11-18 Pass the upstream REST write scope spec
+
+- Native Chromium verifies a wrong-list delete leaves the card and its
+  checklist visible, and the valid delete removes both.
+
 ## 2026-11-18 Pass the upstream checklist REST spec
 
 - Native Chromium shows the real checklist and its item after an incorrectly
