@@ -7,6 +7,14 @@ Companion to the build scripts (`build.sh` / `build.bat` / `build.ami`) and `CLA
 (DOS 8.3 layout). Verified 2026-06-25 on an **aarch64 (Apple Silicon) Ubuntu** host with
 FPC 3.2.3 (the `fixes-3.2` branch) built via fpcupdeluxe.
 
+## Expanded language catalog build checks (2026-11-18)
+
+The 245-language catalog cross-build passed for disk and embedded WeLite on
+Linux amd64 and Windows x86 and amd64, using both SQLite backends. Linux armhf
+and armv7 also passed the disk and embedded CLI build checks. These checks
+inspect the executable format and platform metadata. Runtime verification
+on Windows and ARM remains open.
+
 ## Current Linux amd64 verification (2026-11-17)
 
 The matrix below records the June sweep; it is not a verification of today's source
