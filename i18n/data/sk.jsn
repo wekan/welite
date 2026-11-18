@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Neplatný overovací kód. Skúste to znova.",
   "twoFactorAuth-enabled": "Dvojfaktorové overenie je pre váš účet povolené.",
   "two-factor-required-title": "Nastavte dvojfaktorové overenie",
-  "two-factor-required-text": "Táto stránka vyžaduje pre váš účet dvojfaktorové overenie. Nastavte ho, aby ste mohli pokračovať."
+  "two-factor-required-text": "Táto stránka vyžaduje pre váš účet dvojfaktorové overenie. Nastavte ho, aby ste mohli pokračovať.",
+  "enrollment-password-instructions": "Potvrďte heslo a začnite nastavovanie. Týmto krokom sa neprihlásite. Aktívny overovací faktor tu nemožno nahradiť.",
+  "enrollment-setup-denied": "Nastavovanie nemožno začať. Skontrolujte prihlasovacie údaje a zistite, či už nie sú povolené jednorazové kódy.",
+  "enrollment-code-instructions": "Používajte časové kódy: SHA1, šesť číslic a interval 30 sekúnd. Kľúč nikomu neprezrádzajte. Platnosť nastavenia vyprší o päť minút.",
+  "enrollment-confirmed-instructions": "Potvrdzovací kód už bol použitý. Pred prihlásením počkajte, kým overovacia aplikácia zobrazí nový kód.",
+  "enrollment-account-created": "Účet bol vytvorený",
+  "registration-first-admin": "Prvý účet získa oprávnenia globálneho správcu tejto domény.",
+  "auth-too-many-attempts": "Príliš veľa pokusov o prihlásenie. Skúste to znova neskôr.",
+  "enrollment-setup-failed": "Nastavovanie sa nepodarilo začať.",
+  "registration-global-admin-disabled": "Účty globálnych správcov sa vytvárajú lokálne. Verejná registrácia je vypnutá.",
+  "auth-session-create-failed": "Reláciu sa nepodarilo vytvoriť.",
+  "registration-session-failed": "Účet bol vytvorený. Pokračujte prihlásením.",
+  "registration-password-unavailable": "Registrácia pomocou hesla nie je dostupná."
 }
