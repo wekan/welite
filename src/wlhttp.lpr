@@ -30,6 +30,7 @@ uses
   // corrupts the heap under cmem ("free(): invalid pointer"), and the default FPC memory
   // manager is already thread-safe, so cmem is unnecessary here.
   {$IFDEF UNIX} cthreads, {$ENDIF}
+  {$IFDEF AMIGA} Sockets, {$ENDIF}
   SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
   wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
@@ -612,6 +613,15 @@ begin
     Writeln(HashMeteorPassword(ParamStr(2)));
     Halt(0);
   end;
+
+  {$IFDEF AMIGA}
+  if (ParamStr(1)<>'initadmin') and
+    ((Sockets.SocketBase=nil) {$IFDEF AMIGAOS4}or (Sockets.ISocket=nil){$ENDIF}) then
+  begin
+    Writeln(StdErr,'WeKan-Lite requires bsdsocket.library version 4. Start the Amiga TCP/IP stack first.');
+    Halt(1);
+  end;
+  {$ENDIF}
 
   DataDir:=GetEnvironmentVariable('WELITE_DATA');
   if DataDir='' then DataDir:=DATA_ROOT;
