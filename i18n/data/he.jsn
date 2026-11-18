@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "קוד אימות שגוי. נסה שוב.",
   "twoFactorAuth-enabled": "האימות הדו-שלבי מופעל עבור החשבון שלך.",
   "two-factor-required-title": "הגדרת אימות דו-שלבי",
-  "two-factor-required-text": "אתר זה דורש אימות דו-שלבי עבור החשבון שלך. יש להגדיר אותו כדי להמשיך."
+  "two-factor-required-text": "אתר זה דורש אימות דו-שלבי עבור החשבון שלך. יש להגדיר אותו כדי להמשיך.",
+  "enrollment-password-instructions": "יש לאמת את הסיסמה כדי להתחיל בהגדרה. השלב הזה אינו מבצע כניסה לחשבון. לא ניתן להחליף כאן גורם אימות שכבר פעיל.",
+  "enrollment-setup-denied": "לא ניתן להתחיל בהגדרה. יש לבדוק את פרטי הכניסה ולוודא אם קודים חד־פעמיים כבר מופעלים.",
+  "enrollment-code-instructions": "יש להשתמש בקודים מבוססי זמן: SHA1, שש ספרות ומחזור של 30 שניות. יש לשמור על סודיות המפתח. תוקף ההגדרה יפוג לאחר חמש דקות.",
+  "enrollment-confirmed-instructions": "קוד האישור כבר נוצל. לפני הכניסה לחשבון יש להמתין לקוד חדש באפליקציית האימות.",
+  "enrollment-account-created": "החשבון נוצר",
+  "registration-first-admin": "לחשבון הראשון יוענקו הרשאות ניהול כלליות עבור מתחם זה.",
+  "auth-too-many-attempts": "בוצעו יותר מדי ניסיונות כניסה. יש לנסות שוב מאוחר יותר.",
+  "enrollment-setup-failed": "לא ניתן היה להתחיל בהגדרה.",
+  "registration-global-admin-disabled": "חשבונות מנהלים כלליים נוצרים באופן מקומי. הרשמה ציבורית מושבתת.",
+  "auth-session-create-failed": "לא ניתן היה ליצור הפעלה.",
+  "registration-session-failed": "החשבון נוצר. יש להיכנס כדי להמשיך.",
+  "registration-password-unavailable": "הרשמה באמצעות סיסמה אינה זמינה."
 }
