@@ -1369,6 +1369,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         cardId='brow-card',title='Steps',sort=0)]})
                     client.command({'insert':'checklistItems','documents':[dict(_id='brow-item',boardId='b',
                         cardId='brow-card',checklistId='brow-check',title='Retained REST item',sort=0)]})
+                    subprocess.run([os.environ.get('NODE','node'),str(root/'tests/cardupload.js'),
+                                    f'http://localhost:{http_port}/board/card?id=b&card=brow-card&sessionId='+web_session],check=True)
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/carddel.js'),
                                     f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
                     assert not client.find('cards','brow-card') and not client.find('checklists','brow-check')

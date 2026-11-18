@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify card attachment upload in Chromium
+
+- Upload a file with a Unicode name through the native card form, then
+  download and compare its bytes with JavaScript and cookies disabled.
+
 ## 2026-11-18 Upload attachments from the native card page
 
 - Card editors can submit a multipart file using the HTML form. Upload
