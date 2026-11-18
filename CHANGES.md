@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify REST card ordering in Chromium
+
+- A REST sort value of zero is readable through the API and moves the card
+  ahead of its sibling after reload with JavaScript disabled and cookies
+  stripped.
+
 ## 2026-11-18 Honor custom roles in REST dependency edits
 
 - Check shared custom role write and move-card capabilities during dependency

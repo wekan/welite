@@ -1157,13 +1157,17 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 if os.environ.get('WELITE_UI')=='1':
                     client.command({'insert':'lists','documents':[dict(_id='brow-list',boardId='b',
                         title='Wrong list fixture',archived=False,sort=99)]})
-                    client.command({'insert':'cards','documents':[dict(_id='brow-card',boardId='b',
-                        listId='l',swimlaneId='s',title='Keep my browser checklist',archived=False,sort=0)]})
+                    client.command({'insert':'cards','documents':[
+                        dict(_id='brow-sort',boardId='b',listId='l',swimlaneId='s',
+                            title='First card for browser sorting',archived=False,sort=10),
+                        dict(_id='brow-card',boardId='b',listId='l',swimlaneId='s',
+                            title='Keep my browser checklist',archived=False,sort=20)]})
                     client.command({'insert':'checklists','documents':[dict(_id='brow-check',boardId='b',
                         cardId='brow-card',title='Steps',sort=0)]})
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/carddel.js'),
                                     f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
                     assert not client.find('cards','brow-card') and not client.find('checklists','brow-check')
+                    client.command({'delete':'cards','deletes':[dict(q={'_id':'brow-sort'},limit=1)]})
                     client.command({'delete':'lists','deletes':[dict(q={'_id':'brow-list'},limit=1)]})
 
                 profile_response=request('GET',board_url)

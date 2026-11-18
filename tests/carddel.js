@@ -27,6 +27,23 @@ const { readFileSync } = require('node:fs');
     assert.equal(await initial.headerValue('set-cookie'), null);
     assert.equal(await card.count(), 1);
 
+    const firstTitle = 'First card for browser sorting';
+    const secondTitle = 'Keep my browser checklist';
+    const order = async (first, second) => {
+      const text = await page.locator('body').innerText();
+      assert(text.includes(first) && text.includes(second));
+      assert(text.indexOf(first) < text.indexOf(second));
+    };
+    await order(firstTitle, secondTitle);
+    const sortResponse = await context.request.put(endpoint('l'), { headers, data: { sort: 0 } });
+    assert.equal(sortResponse.status(), 200);
+    const sorted = await context.request.get(endpoint('l'), { headers });
+    assert.equal(sorted.status(), 200);
+    assert.equal((await sorted.json()).sort, 0);
+    await page.reload();
+    await order(secondTitle, firstTitle);
+    console.log('PASS: Chromium reflects a zero REST card sort with JavaScript and cookies disabled');
+
     for (const [operation, archived] of [['archive', true], ['unarchive', false]]) {
       const path = endpoint('l') + '/' + operation;
       assert.equal((await context.request.post(path)).status(), 401);
