@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Report list and card change dates through REST
+
+- Return modifiedAt and cardsModifiedAt in the list collection. Include
+  archived card changes, normalize valid timestamps to UTC and use null
+  when no usable date exists. Stamp list creation, edit and archive changes.
+
 ## 2026-11-18 Return active list metadata through REST GET
 
 - Return list color, starred state, timestamps and nested WIP settings.

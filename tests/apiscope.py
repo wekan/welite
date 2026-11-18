@@ -267,3 +267,19 @@ def run(request, db, token):
     finally:
         assert request('POST',list_path+'/unarchive?token='+token)[0]==200
     print('PASS: list GET returns edit metadata and rejects archived, missing and foreign lists')
+
+    with sqlite3.connect(db) as con:
+        card_dates=con.execute("SELECT modifiedAt,dateLastActivity,archived FROM cards WHERE id='card'").fetchone()
+        con.execute("UPDATE cards SET modifiedAt='2026-01-01T00:00:00Z',dateLastActivity='2026-01-02T09:30:00+02:00',archived=1 WHERE id='card'")
+    try:
+        status, _, body=request('GET','/api/boards/protected/lists?token='+token)
+        assert status==200, (status,body)
+        by_id={entry['_id']:entry for entry in json.loads(body)}
+        assert by_id[current_list]['cardsModifiedAt']=='2026-01-02T07:30:00.000Z', by_id[current_list]
+        assert by_id[current_list]['modifiedAt'] is not None
+        assert by_id[other_list]['cardsModifiedAt'] is None, by_id[other_list]
+        assert 'foreignlist' not in by_id
+    finally:
+        with sqlite3.connect(db) as con:
+            con.execute("UPDATE cards SET modifiedAt=?,dateLastActivity=?,archived=? WHERE id='card'",card_dates)
+    print('PASS: list collection reports list and card change dates, including archived cards')

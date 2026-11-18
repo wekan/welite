@@ -1144,25 +1144,33 @@ begin
 end;
 
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Title, Id: string;
+var T: TWLTenant; UserId, BoardId, Title, Id, BoardSql, Stamp: string;Rows:TWLRows;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  BoardId := aRequest.RouteParams['boardId'];
+  BoardId := aRequest.RouteParams['boardId'];BoardSql:=QuotedStr(BoardId);
   if aRequest.Method = 'POST' then
   begin
     Title := BodyField(aRequest, 'title');
     Id := NewId;
-    T.Db.Exec(Format(
-      'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(%s,%s,'''',%s,0,%s);',
-      [QuotedStr(Id), QuotedStr(BoardId), QuotedStr(Title), QuotedStr(NowIso)]));
+    Stamp:=QuotedStr(NowIso);
+    if not T.Db.Exec('INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt) VALUES('+
+      QuotedStr(Id)+','+BoardSql+','''','+QuotedStr(Title)+',0,'+Stamp+','+Stamp+');') then
+    begin SendError(aResponse,500,'Could not create list');Exit;end;
     SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
     Exit;
   end;
-  SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM lists WHERE boardId=%s AND archived=0 ORDER BY sort;',
-    [QuotedStr(BoardId)]))));
+  Rows:=T.Db.Query('WITH card_dates AS (SELECT listId,'+
+    'max(strftime(''%Y-%m-%dT%H:%M:%fZ'',modifiedAt)) edited,'+
+    'max(strftime(''%Y-%m-%dT%H:%M:%fZ'',dateLastActivity)) activity FROM cards WHERE boardId='+BoardSql+
+    ' GROUP BY listId) SELECT json_group_array(json(payload)) FROM (SELECT json_object(''_id'',l.id,''title'',l.title,'+
+    '''modifiedAt'',strftime(''%Y-%m-%dT%H:%M:%fZ'',l.modifiedAt),'+
+    '''cardsModifiedAt'',max(coalesce(d.edited,d.activity),coalesce(d.activity,d.edited))) payload '+
+    'FROM lists l LEFT JOIN card_dates d ON d.listId=l.id WHERE l.boardId='+BoardSql+
+    ' AND l.archived=0 ORDER BY l.sort,l.id);');
+  if Length(Rows)=1 then SendJson(aResponse,Rows[0][0])
+  else SendError(aResponse,500,'Could not read lists');
 end;
 
 procedure ApiList(aRequest:TRequest;aResponse:TResponse);
@@ -1257,6 +1265,7 @@ begin
       end;
     except SendJson(aResponse,'{"error":"Invalid list update"}',400);Exit;end;
     if Sets='' then begin SendJson(aResponse,'{"message":"Error"}',404);Exit;end;
+    SetColumn('modifiedAt',QuotedStr(NowIso));
     Rows:=T.Db.Query('SELECT '+Permission+';');
     if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
     begin SendError(aResponse,403,'Board administration required');Exit;end;
@@ -1293,7 +1302,7 @@ begin
     'UPDATE cards SET archived='+Target+',archivedAt='+CardArchivedAt+' WHERE listId='+QuotedStr(ListId)+
     ' AND boardId='+BoardId+' AND archived<> '+Target+
     ' AND EXISTS(SELECT 1 FROM lists WHERE '+Predicate+' AND type=''template-list''); '+
-    'UPDATE lists SET archived='+Target;
+    'UPDATE lists SET archived='+Target+',modifiedAt='+Stamp;
   if Archive then Sql:=Sql+',archivedAt='+Stamp;
   Sql:=Sql+' WHERE '+Predicate+'; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
     ' AND archived='+Target+')=1 THEN 1 ELSE json(''List archive failed'') END; COMMIT;';
