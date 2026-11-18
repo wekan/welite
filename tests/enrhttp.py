@@ -107,7 +107,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                     con.execute("CREATE TRIGGER framefail BEFORE INSERT ON _wl_enrol BEGIN SELECT RAISE(ABORT,'forced'); END")
                 try:
                     failed=request('POST','/two-factor/setup?lang=fi',dict(username='frame-fail',password='test-password'))
-                    assert failed[0]==500;check_auth_error(failed,'fi',private=True)
+                    assert failed[0]==500;check_auth_error(failed,'fi',private=True,title_key='two-factor-required-title')
                     assert services('frame-fail')==failure_before
                     with sqlite3.connect(db) as con:
                         assert con.execute("SELECT count(*) FROM _wl_enrol WHERE username='frame-fail'").fetchone()==(0,)
@@ -121,11 +121,11 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                     assert denied[0]==200 and b'Invalid authentication code' in denied[2]
                 denied=confirm(token2,otp(secret2,int(time.time())//30),username='another',headers={'Accept-Language':'ar'})
                 assert denied[0]==429 and denied[1]['Retry-After']=='300'
-                check_auth_error(denied,'ar',private=True)
+                check_auth_error(denied,'ar',private=True,title_key='two-factor-required-title')
                 denied=request('POST','/two-factor/setup',dict(username='limited',password='test-password',lang='fi'))
-                assert denied[0]==429;check_auth_error(denied,'fi',private=True)
+                assert denied[0]==429;check_auth_error(denied,'fi',private=True,title_key='two-factor-required-title')
                 denied=request('POST','/sign-in?lang=ar',dict(username='limited',password='test-password'))
-                assert denied[0]==429;check_auth_error(denied,'ar')
+                assert denied[0]==429;check_auth_error(denied,'ar',title_key='log-in')
                 assert services('limited')==limited_before
                 expire()
                 with sqlite3.connect(db) as con:con.execute("CREATE TRIGGER deny_enrol BEFORE UPDATE ON users BEGIN SELECT RAISE(ABORT,'forced'); END")
