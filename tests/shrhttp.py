@@ -14,6 +14,7 @@ from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long
 from custapi import run_shared as check_custom_api
 from chkshare import run as check_shared_checklists
+from listsoft import run as check_list_soft_delete
 from cfexpt import run_shared as check_export_policy
 from cfclon import run_shared as check_clone_policy
 from selrels import run_shared as check_relation_scope
@@ -109,6 +110,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 check_shared_checklists(request,client,token,card)
+                check_list_soft_delete(request,client,database,token)
                 list_path='/api/boards/b/lists/l'
                 before=client.find('lists','l')[0]
                 assert request('PUT',list_path,dict(title='Rejected',color='#abc'),token)[0]==400
