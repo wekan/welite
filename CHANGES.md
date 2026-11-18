@@ -30,6 +30,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native sign-in and board links. Both upstream cases pass while retaining
   their REST and Mongo assertions.
 
+## 2026-11-18 Pass the upstream People login-status REST spec
+
+- Native Chromium verifies enabled and disabled login states on reload and
+  confirms that a missing-user update leaves the People row unchanged.
+
 ## 2026-11-18 Pass the upstream organization and team feature specs
 
 - Native Chromium verifies both feature tables after successful and rejected
