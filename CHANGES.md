@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Update checklist titles and deadlines through REST
+
+- Add scoped checklist PUT with atomic title and deadline validation.
+  Normalize timezone offsets to UTC, leave omitted values alone and clear
+  deadlines on explicit JSON null. Checklist GET includes deadline fields.
+
 ## 2026-11-18 Store checklist and checklist-item deadlines
 
 - Add nullable deadline columns to fresh and legacy native SQLite stores.

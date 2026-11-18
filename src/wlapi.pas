@@ -1364,43 +1364,119 @@ begin
     'SELECT id,title FROM checklists WHERE cardId=%s ORDER BY sort;', [QuotedStr(CardId)]))));
 end;
 
+function ChecklistDeadlineSql(Value:TJSONData;out Literal:string):Boolean;
+const Prefix='0000-00-00T00:00:00';
+var Text,Zone:string;Stamp:TDateTime;i,Offset:Integer;
+begin
+  if Value.JSONType=jtNull then begin Literal:='NULL';Exit(True);end;
+  Result:=False;
+  if Value.JSONType<>jtString then Exit;
+  Text:=Value.AsString;
+  if Length(Text)<20 then Exit;
+  for i:=1 to Length(Prefix) do
+    if Prefix[i]='0' then begin if not (Text[i] in ['0'..'9']) then Exit;end
+    else if Text[i]<>Prefix[i] then Exit;
+  Offset:=20;
+  if Text[Offset]='.' then
+  begin
+    Inc(Offset);
+    while (Offset<=Length(Text)) and (Text[Offset] in ['0'..'9']) do Inc(Offset);
+    if (Offset<22) or (Offset>24) then Exit;
+  end;
+  Zone:=Copy(Text,Offset,MaxInt);
+  if Zone<>'Z' then
+  begin
+    if Length(Zone)<>6 then Exit;
+    if not (Zone[1] in ['+','-']) or (Zone[4]<>':') then Exit;
+    for i in [2,3,5,6] do if not (Zone[i] in ['0'..'9']) then Exit;
+    if (StrToInt(Copy(Zone,2,2))>23) or (StrToInt(Copy(Zone,5,2))>59) then Exit;
+  end;
+  try
+    if not TryISO8601ToDate(Text,Stamp,True) then Exit;
+    Literal:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Stamp));
+    Result:=True;
+  except Result:=False;end;
+end;
+
+function ChecklistChanges(Request:TRequest;out Changes:string):Boolean;
+var Body:TJSONObject;Title,Deadline:TJSONData;Literal:string;
+begin
+  Changes:='';Result:=False;Body:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(Request.ContentType))=1 then Body:=ExactObject(Request.Content)
+      else
+      begin
+        Body:=TJSONObject.Create;
+        if Request.ContentFields.IndexOfName('title')>=0 then Body.Add('title',Request.ContentFields.Values['title']);
+        if Request.ContentFields.IndexOfName('dueAt')>=0 then Body.Add('dueAt',Request.ContentFields.Values['dueAt']);
+      end;
+      Title:=Body.Find('title');Deadline:=Body.Find('dueAt');
+      if Title<>nil then
+      begin
+        if (Title.JSONType<>jtString) or (Trim(Title.AsString)='') or (Pos(#0,Title.AsString)>0) then Exit;
+        Changes:='title='+QuotedStr(Title.AsString);
+      end;
+      if Deadline<>nil then
+      begin
+        if not ChecklistDeadlineSql(Deadline,Literal) then Exit;
+        if Changes<>'' then Changes:=Changes+',';
+        Changes:=Changes+'dueAt='+Literal;
+      end;
+      Result:=Changes<>'';
+    except Result:=False;end;
+  finally Body.Free;end;
+end;
+
 // GET one checklist with its items
 procedure ApiChecklist(aRequest: TRequest; aResponse: TResponse);
 const NotFound = '{"error":"Checklist not found or does not belong to the specified card"}';
-var T: TWLTenant; UserId, ChecklistId, Predicate: string; R, It: TWLRows; O, IO: TJSONObject; A: TJSONArray; i: Integer;
+var T: TWLTenant; UserId, ChecklistId, Predicate, Changes, Statement, FinalCheck: string; R, It: TWLRows; O, IO: TJSONObject; A: TJSONArray; i: Integer;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId, NotFound) then Exit;
   ChecklistId := aRequest.RouteParams['checklistId'];
-  if aRequest.Method = 'DELETE' then
+  if aRequest.Method <> 'GET' then
   begin
     Predicate := 'id='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(aRequest.RouteParams['cardId'])+
       ' AND boardId='+QuotedStr(aRequest.RouteParams['boardId']);
+    if aRequest.Method='PUT' then
+    begin
+      if not ChecklistChanges(aRequest,Changes) then
+      begin SendJson(aResponse,'{"error":"Valid title or dueAt is required"}',400);Exit;end;
+      Statement:='UPDATE checklists SET '+Changes+' WHERE '+Predicate;
+      FinalCheck:='(SELECT count(*) FROM checklists WHERE '+Predicate+')=1';
+    end else
+    begin
+      Statement:='DELETE FROM checklists WHERE '+Predicate;
+      FinalCheck:='NOT EXISTS(SELECT 1 FROM checklists WHERE '+Predicate+')';
+    end;
     if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM checklists WHERE '+
-      Predicate+')=1 THEN 1 ELSE json(''Checklist scope changed'') END; DELETE FROM checklists WHERE '+
-      Predicate+'; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM checklists WHERE '+Predicate+
-      ') THEN 1 ELSE json(''Checklist deletion failed'') END; COMMIT;') then
-    begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not delete checklist');Exit;end;
+      Predicate+')=1 THEN 1 ELSE json(''Checklist scope changed'') END; '+Statement+
+      '; SELECT CASE WHEN '+FinalCheck+' THEN 1 ELSE json(''Checklist write failed'') END; COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not change checklist');Exit;end;
     O:=TJSONObject.Create(['_id',ChecklistId]);
     try SendJson(aResponse,O.AsJSON);finally O.Free;end;
     Exit;
   end;
-  R := T.Db.Query(Format('SELECT id,title FROM checklists WHERE id=%s LIMIT 1;',
+  R := T.Db.Query(Format('SELECT id,title,dueAt FROM checklists WHERE id=%s LIMIT 1;',
     [QuotedStr(aRequest.RouteParams['checklistId'])]));
   if Length(R) = 0 then begin SendJson(aResponse,NotFound,404); Exit; end;
   O := TJSONObject.Create;
   try
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]);
+    if R[0][2] = '' then O.Add('dueAt',TJSONNull.Create) else O.Add('dueAt',R[0][2]);
     A := TJSONArray.Create;
     It := T.Db.Query(Format(
-      'SELECT id,title,isFinished FROM checklist_items WHERE checklistId=%s ORDER BY sort;',
+      'SELECT id,title,isFinished,dueAt FROM checklist_items WHERE checklistId=%s ORDER BY sort;',
       [QuotedStr(R[0][0])]));
     for i := 0 to High(It) do
-      if Length(It[i]) >= 3 then
+      if Length(It[i]) >= 4 then
       begin
         IO := TJSONObject.Create;
         IO.Add('_id', It[i][0]); IO.Add('title', It[i][1]); IO.Add('isFinished', It[i][2] = '1');
+        if It[i][3] = '' then IO.Add('dueAt',TJSONNull.Create) else IO.Add('dueAt',It[i][3]);
         A.Add(IO);
       end;
     O.Add('items', A);

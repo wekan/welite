@@ -79,6 +79,24 @@ def run(request, db, token):
         con.execute("INSERT INTO checklist_items(id,checklistId,cardId,boardId,title,sort,modifiedAt) VALUES('deleteitem','check','card','protected','Item',0,'now')")
         con.execute("CREATE TRIGGER reject_check_delete AFTER DELETE ON checklists BEGIN SELECT RAISE(FAIL,'test'); END")
     path = '/api/boards/protected/cards/card/checklists/check?token='+token
+    def read():
+        status, _, body = request('GET',path)
+        assert status == 200, (status,body)
+        return json.loads(body)
+    def update(data):
+        return request('PUT',path,json.dumps(data).encode())[0]
+    assert read()['dueAt'] is None
+    for change in [{}, {'title':' '}, {'title':'Rejected','dueAt':'2026-02-30T00:00:00Z'},
+                   {'dueAt':42}, {'dueAt':'2026-11-18T09:30:00'}]:
+        assert update(change) == 400, change
+    assert read()['title'] == 'Checklist' and read()['dueAt'] is None
+    assert update({'title':'Renamed','dueAt':'2026-11-18T09:30:00+02:00'}) == 200
+    assert (read()['title'],read()['dueAt']) == ('Renamed','2026-11-18T07:30:00.000Z')
+    assert request('PUT',path,{'title':'Kept deadline'})[0] == 200
+    assert read()['dueAt'] == '2026-11-18T07:30:00.000Z'
+    assert update({'dueAt':None}) == 200
+    assert (read()['title'],read()['dueAt']) == ('Kept deadline',None)
+    print('PASS: checklist PUT validates deadline and title atomically and preserves omitted properties')
     assert request('DELETE',path)[0] == 500
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT id FROM checklist_items WHERE id='deleteitem'").fetchone() == ('deleteitem',)
