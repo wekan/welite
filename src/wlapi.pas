@@ -97,7 +97,7 @@ procedure ApiChecklistItems(aRequest: TRequest; aResponse: TResponse); // POST a
 procedure ApiChecklistItem(aRequest: TRequest; aResponse: TResponse);  // GET/PUT(toggle)/DELETE item
 procedure ApiCardComments(aRequest: TRequest; aResponse: TResponse);   // GET list / POST add
 procedure ApiCardComment(aRequest: TRequest; aResponse: TResponse);    // GET one / DELETE one
-function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes:string;
+function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType:string; Content:TStream;
   out Id:string;RequireLiveCard:Boolean=False):Boolean;
 procedure ApiAttachmentUpload(aRequest: TRequest; aResponse: TResponse);   // POST /api/attachment/upload
 procedure ApiAttachmentDownload(aRequest: TRequest; aResponse: TResponse); // GET  /api/attachment/download/:id
@@ -5390,9 +5390,9 @@ begin
   finally fs.Free; end;
 end;
 
-function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes:string;
+function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType:string; Content:TStream;
   out Id:string;RequireLiveCard:Boolean):Boolean;
-var Path,Sql,Guard:string;Policy:TFieldPolicy;OwnsPath:Boolean;
+var Path,Sql,Guard:string;Policy:TFieldPolicy;OwnsPath:Boolean;FileSize:Int64;Destination:TFileStream;
 begin
   Id:=NewId;
   Path:=StoreFilePath(T.FilesDir,'attachme',Id);
@@ -5410,16 +5410,21 @@ begin
     ' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL)';
   Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
   try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  FileSize:=Content.Size;
   Sql:=Format('INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,'+
     'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
     [QuotedStr(Id),QuotedStr(BoardId),QuotedStr(Sw),QuotedStr(Lst),QuotedStr(Crd),
-     QuotedStr(FileName),QuotedStr(FileType),Length(Bytes),QuotedStr(UserId),QuotedStr(NowIso)]);
+     QuotedStr(FileName),QuotedStr(FileType),FileSize,QuotedStr(UserId),QuotedStr(NowIso)]);
   OwnsPath:=False;
   try
     if FileExists(Path) then raise EInOutError.Create('Attachment path already exists');
     if not ForceDirectories(ExtractFileDir(Path)) then raise EInOutError.Create('Attachment directory unavailable');
     OwnsPath:=True;
-    WriteFileBytes(Path,Bytes);
+    Destination:=TFileStream.Create(Path,fmCreate);
+    try
+      Content.Position:=0;
+      if FileSize>0 then Destination.CopyFrom(Content,FileSize);
+    finally Destination.Free;end;
     if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+
       ' THEN 1 ELSE json(''Attachment scope changed'') END; '+Sql+
       'SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+
@@ -5435,7 +5440,7 @@ end;
 
 procedure ApiAttachmentUpload(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Id,Bytes,ContentType:string;
-  Input,Reply:TJSONObject;Separator:Integer;
+  Input,Reply:TJSONObject;Separator:Integer;Content:TStringStream;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -5469,8 +5474,11 @@ begin
   if not ApiChildrenBelong(T.Db,BoardId,Sw,Lst,Crd,'','','','') then
   begin SendError(aResponse,400,'Invalid attachment parent');Exit;end;
 
-  if not StoreAttachment(T,UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes,Id) then
-  begin SendError(aResponse,500,'Could not store attachment');Exit;end;
+  Content:=TStringStream.Create(Bytes);
+  try
+    if not StoreAttachment(T,UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Content,Id) then
+    begin SendError(aResponse,500,'Could not store attachment');Exit;end;
+  finally Content.Free;end;
   Reply:=TJSONObject.Create(['success',True,'attachmentId',Id,'fileName',FileName,
     'fileSize',Length(Bytes),'storageBackend','filesystem']);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;

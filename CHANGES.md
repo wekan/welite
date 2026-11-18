@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Stream native multipart attachments into storage
+
+- Copy from the temporary multipart file in bounded chunks. Keep the same
+  file size, metadata transaction and file cleanup on failed registration.
+
 ## 2026-11-18 Verify native attachment upload and deletion together
 
 - Upload a real file and delete its card via native HTML selection. Verify

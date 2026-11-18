@@ -445,7 +445,7 @@ begin
 end;
 
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;S:TWLSession;Board,Card,FileType,Bytes,Id:string;
+var T:TWLTenant;S:TWLSession;Board,Card,FileType,Id:string;
   Rows:TWLRows;Upload:TUploadedFile;Stream:TStream;Selector:TSelectionScope;
   procedure Reject(Status:Integer;const Key,Message:string);
   var Language:TWLLanguage;Words:TWLTranslator;
@@ -490,16 +490,12 @@ begin
   begin Reject(403,'upload-failed','Upload failed');Exit;end;
   try
     Stream:=Upload.Stream;
-    if Stream.Size>High(SizeInt) then
-    begin Reject(413,'upload-failed','Upload failed');Exit;end;
-    SetLength(Bytes,SizeInt(Stream.Size));
-    if Length(Bytes)>0 then Stream.ReadBuffer(Bytes[1],Length(Bytes));
   except
     Reject(400,'upload-failed','Upload failed');Exit;
   end;
   FileType:=Upload.ContentType;
   if FileType='' then FileType:='application/octet-stream';
-  if not StoreAttachment(T,S.UserId,Board,Rows[0][0],Rows[0][1],Card,Upload.FileName,FileType,Bytes,Id,True) then
+  if not StoreAttachment(T,S.UserId,Board,Rows[0][0],Rows[0][1],Card,Upload.FileName,FileType,Stream,Id,True) then
   begin Reject(500,'upload-failed','Upload failed');Exit;end;
   aResponse.Code:=303;
   aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
