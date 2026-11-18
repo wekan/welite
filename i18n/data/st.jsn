@@ -2100,5 +2100,7 @@
   "logout": "Tswa",
   "server": "Seva",
   "protocol": "Prothokhole",
-  "field-link-not-found": "Karete ha e a fumanwa."
+  "field-link-not-found": "Karete ha e a fumanwa.",
+  "twoFactorAuth-manual-entry": "Kapa o kenye khoutu ena ka letsoho: ",
+  "twoFactorCode-prompt": "Kenya khoutu ya hao ya netefatso ya dinomoro tse 6"
 }

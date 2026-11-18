@@ -2100,5 +2100,7 @@
   "logout": "Buda",
   "server": "sevha",
   "protocol": "Mitemo yekutaurirana",
-  "field-link-not-found": "Kadhi harina kuwanikwa."
+  "field-link-not-found": "Kadhi harina kuwanikwa.",
+  "twoFactorAuth-manual-entry": "Kana kuti isa kodhi iyi nemaoko: ",
+  "twoFactorCode-prompt": "Isa kodhi yako yekusimbisa ine manhamba matanhatu"
 }

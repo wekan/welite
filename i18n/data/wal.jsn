@@ -2100,5 +2100,7 @@
   "logout": "Kiya",
   "server": "Serveriyaa",
   "protocol": "Protokoliyaa",
-  "field-link-not-found": "Kaardiyay demettibeenna."
+  "field-link-not-found": "Kaardiyay demettibeenna.",
+  "twoFactorAuth-manual-entry": "Woykko ha koodiya ne kushen gelissa: ",
+  "twoFactorCode-prompt": "Ne 6-tayboo tuma ero koodiya gelissa"
 }

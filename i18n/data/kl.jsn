@@ -2100,5 +2100,7 @@
   "logout": "Anigit",
   "server": "Serveri",
   "protocol": "Protokoli",
-  "field-link-not-found": "Kortsi nassaarineqanngilaq."
+  "field-link-not-found": "Kortsi nassaarineqanngilaq.",
+  "twoFactorAuth-manual-entry": "Imaluunniit kodeq una assamik allattarigit: ",
+  "twoFactorCode-prompt": "Uppernarsaanermut kodeq 6-inik allattarigit"
 }

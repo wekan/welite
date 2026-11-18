@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "No s’ha trobat la fitxa."
+  "field-link-not-found": "No s’ha trobat la fitxa.",
+  "twoFactorAuth-manual-entry": "O introduïu aquest codi manualment: ",
+  "twoFactorCode-prompt": "Introduïu el vostre codi d'autenticació de 6 dígits"
 }

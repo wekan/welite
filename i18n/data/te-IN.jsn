@@ -2099,5 +2099,7 @@
   "logout": "లాగ్అవుట్",
   "server": "సర్వర్",
   "protocol": "ప్రోటోకాల్",
-  "field-link-not-found": "కార్డ్ కనబడలేదు."
+  "field-link-not-found": "కార్డ్ కనబడలేదు.",
+  "twoFactorAuth-manual-entry": "లేదా ఈ కోడ్‌ను మాన్యువల్‌గా నమోదు చేయండి: ",
+  "twoFactorCode-prompt": "మీ 6-అంకెల ప్రమాణీకరణ కోడ్‌ను నమోదు చేయండి"
 }

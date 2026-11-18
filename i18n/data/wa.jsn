@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protocole",
-  "field-link-not-found": "Cåte nén trovêye."
+  "field-link-not-found": "Cåte nén trovêye.",
+  "twoFactorAuth-manual-entry": "Ou tapez ç' côde chal al mwin: ",
+  "twoFactorCode-prompt": "Tapez vosse côde di wårantixhaedje a 6 chifes"
 }

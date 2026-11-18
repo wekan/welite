@@ -2099,5 +2099,7 @@
   "logout": "Ondoka",
   "server": "Seva",
   "protocol": "Itifaki",
-  "field-link-not-found": "Kadi haikupatikana."
+  "field-link-not-found": "Kadi haikupatikana.",
+  "twoFactorAuth-manual-entry": "Au ingiza msimbo huu kwa mkono: ",
+  "twoFactorCode-prompt": "Ingiza msimbo wako wa uthibitishaji wa tarakimu 6"
 }

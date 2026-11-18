@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Không tìm thấy thẻ."
+  "field-link-not-found": "Không tìm thấy thẻ.",
+  "twoFactorAuth-manual-entry": "Hoặc nhập mã này theo cách thủ công: ",
+  "twoFactorCode-prompt": "Nhập mã xác thực 6 chữ số của bạn"
 }

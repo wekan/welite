@@ -2100,5 +2100,7 @@
   "logout": "Digelmi",
   "server": "Servyer",
   "protocol": "Reolen",
-  "field-link-not-found": "Ny veu kevys an karten."
+  "field-link-not-found": "Ny veu kevys an karten.",
+  "twoFactorAuth-manual-entry": "Po scryfewgh an cod ma gans agas leuv: ",
+  "twoFactorCode-prompt": "Scryfewgh agas cod dowbrovyans a 6 nomber"
 }

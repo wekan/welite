@@ -2100,5 +2100,7 @@
   "logout": "Clàraich a-mach",
   "server": "Frithealaiche",
   "protocol": "Pròtacal",
-  "field-link-not-found": "Cha deach a’ chairt a lorg."
+  "field-link-not-found": "Cha deach a’ chairt a lorg.",
+  "twoFactorAuth-manual-entry": "No cuir a-steach an còd seo a làimh: ",
+  "twoFactorCode-prompt": "Cuir a-steach do chòd dearbhaidh 6-àireamh"
 }

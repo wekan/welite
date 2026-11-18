@@ -2100,5 +2100,7 @@
   "logout": "Wepụ",
   "server": "Ihe nkesa",
   "protocol": "Protocol",
-  "field-link-not-found": "Achọtaghị kaadị."
+  "field-link-not-found": "Achọtaghị kaadị.",
+  "twoFactorAuth-manual-entry": "Ma ọ bụ tinye koodu a n'aka: ",
+  "twoFactorCode-prompt": "Tinye koodu nyocha ọnụọgụ isii gị"
 }

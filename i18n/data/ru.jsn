@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Карточка не найдена."
+  "field-link-not-found": "Карточка не найдена.",
+  "twoFactorAuth-manual-entry": "Или введите этот код вручную: ",
+  "twoFactorCode-prompt": "Введите ваш 6-значный код аутентификации"
 }

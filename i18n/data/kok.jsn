@@ -2100,5 +2100,7 @@
   "logout": "भायर सरात",
   "server": "सर्व्हर",
   "protocol": "शिष्टाचार",
-  "field-link-not-found": "कार्ड मेळ्ळें ना."
+  "field-link-not-found": "कार्ड मेळ्ळें ना.",
+  "twoFactorAuth-manual-entry": "वा हो कोड मॅन्युअली घालात: ",
+  "twoFactorCode-prompt": "तुमचो 6-अंकी प्रमाणीकरण कोड घालात"
 }

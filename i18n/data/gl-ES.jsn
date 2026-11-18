@@ -2099,5 +2099,7 @@
   "logout": "Sair",
   "server": "Servidor",
   "protocol": "Protocolo",
-  "field-link-not-found": "Non se atopou a tarxeta."
+  "field-link-not-found": "Non se atopou a tarxeta.",
+  "twoFactorAuth-manual-entry": "Ou introduza este código manualmente: ",
+  "twoFactorCode-prompt": "Introduza o seu código de autenticación de 6 díxitos"
 }

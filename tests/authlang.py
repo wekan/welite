@@ -27,6 +27,8 @@ def check_auth_language(request,database,otp):
     assert b'action="/two-factor/confirm?lang=ar"' in body
     assert b'<label for="enrol-code">'+translated('otp')+b'</label>' in body
     assert b'<input id="enrol-code" name="code"' in body and translated('confirm') in body
+    assert translated('twoFactorAuth-manual-entry') in body
+    assert translated('twoFactorCode-prompt') in body
     secret=re.search(rb'<code id="otp-secret">([A-Z2-7]{32})</code>',body).group(1).decode()
     token=re.search(rb'name="setupToken" value="([a-f0-9]{64})"',body).group(1).decode()
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code='bad'))

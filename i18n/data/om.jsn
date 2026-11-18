@@ -2100,5 +2100,7 @@
   "logout": "Ba’i",
   "server": "Sarvara",
   "protocol": "Pirootokoolii",
-  "field-link-not-found": "Kaardiin hin argamne."
+  "field-link-not-found": "Kaardiin hin argamne.",
+  "twoFactorAuth-manual-entry": "Ykn kodii kana harka galchi: ",
+  "twoFactorCode-prompt": "Kodii mirkaneessaa lakkoofsa 6 galchi"
 }

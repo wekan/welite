@@ -2100,5 +2100,7 @@
   "logout": "Sortir",
   "server": "Servidur",
   "protocol": "Protocol da communicaziun",
-  "field-link-not-found": "Carta betg chattada."
+  "field-link-not-found": "Carta betg chattada.",
+  "twoFactorAuth-manual-entry": "U endatescha quest code a maun: ",
+  "twoFactorCode-prompt": "Endatescha tes code d'autentificaziun da 6 cifras"
 }

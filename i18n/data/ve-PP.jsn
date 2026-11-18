@@ -2100,5 +2100,7 @@
   "logout": "Kirjaudu ulos",
   "server": "Palvelin",
   "protocol": "Protokolla",
-  "field-link-not-found": "Karttad ei löudand."
+  "field-link-not-found": "Karttad ei löudand.",
+  "twoFactorAuth-manual-entry": "Libo kirjuta nece kod käzil: ",
+  "twoFactorCode-prompt": "Kirjuta sinun 6-cifraine autentifikacijan kod"
 }

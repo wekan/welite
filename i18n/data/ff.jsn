@@ -2100,5 +2100,7 @@
   "logout": "Yaltu",
   "server": "Sarworde",
   "protocol": "Jaŋde",
-  "field-link-not-found": "Kartal yiytaaka."
+  "field-link-not-found": "Kartal yiytaaka.",
+  "twoFactorAuth-manual-entry": "Walla naatnu kod ɗoo ir juuɗe maa: ",
+  "twoFactorCode-prompt": "Naatnu kod seedantaagal maa 6 limoore"
 }

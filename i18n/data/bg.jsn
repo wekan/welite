@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Картата не е намерена."
+  "field-link-not-found": "Картата не е намерена.",
+  "twoFactorAuth-manual-entry": "Или въведете този код ръчно: ",
+  "twoFactorCode-prompt": "Въведете вашия 6-цифрен код за удостоверяване"
 }

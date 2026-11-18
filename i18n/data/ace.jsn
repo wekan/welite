@@ -2100,5 +2100,7 @@
   "logout": "Teubiet",
   "server": "Peuladèn",
   "protocol": "Protokol",
-  "field-link-not-found": "Kad h'an meuteumee."
+  "field-link-not-found": "Kad h'an meuteumee.",
+  "twoFactorAuth-manual-entry": "Atawa tuléh kode nyoe ngon manual: ",
+  "twoFactorCode-prompt": "Tuléh kode otentikasi 6 angka droe neuh"
 }

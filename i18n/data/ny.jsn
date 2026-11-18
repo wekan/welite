@@ -2100,5 +2100,7 @@
   "logout": "Tulukani",
   "server": "Seva",
   "protocol": "Pulotokolo",
-  "field-link-not-found": "Khadi silinapezeke."
+  "field-link-not-found": "Khadi silinapezeke.",
+  "twoFactorAuth-manual-entry": "Kapena lowetsani khodi iyi pamanja: ",
+  "twoFactorCode-prompt": "Lowetsani nambala yanu ya 6-digit yotsimikizira"
 }

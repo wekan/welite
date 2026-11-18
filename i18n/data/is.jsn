@@ -2100,5 +2100,7 @@
   "logout": "Skrá út",
   "server": "Þjónn",
   "protocol": "Samskiptareglur",
-  "field-link-not-found": "Spjald fannst ekki."
+  "field-link-not-found": "Spjald fannst ekki.",
+  "twoFactorAuth-manual-entry": "Eða sláðu inn þennan kóða handvirkt: ",
+  "twoFactorCode-prompt": "Sláðu inn 6 stafa auðkenningarkóðann þinn"
 }

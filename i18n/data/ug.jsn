@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "مۇلازىمېتىر",
   "protocol": "كېلىشىم",
-  "field-link-not-found": "كارتا تېپىلمىدى."
+  "field-link-not-found": "كارتا تېپىلمىدى.",
+  "twoFactorAuth-manual-entry": "ياكى بۇ كودنى قولدا كىرگۈزۈڭ: ",
+  "twoFactorCode-prompt": "6 خانىلىق دەلىللەش كودىڭىزنى كىرگۈزۈڭ"
 }

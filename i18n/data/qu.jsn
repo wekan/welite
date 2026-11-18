@@ -2100,5 +2100,7 @@
   "logout": "Lluqsiy",
   "server": "Servidor",
   "protocol": "Protocolo",
-  "field-link-not-found": "Manam kartata tarikunchu."
+  "field-link-not-found": "Manam kartata tarikunchu.",
+  "twoFactorAuth-manual-entry": "Utaq kay códigota makillawan churay: ",
+  "twoFactorCode-prompt": "Qampa 6 número cheqaqchay códigoykita churay"
 }

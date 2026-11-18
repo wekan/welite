@@ -2099,5 +2099,7 @@
   "logout": "Çıxın",
   "server": "Server",
   "protocol": "Protokol",
-  "field-link-not-found": "Kart tapılmadı."
+  "field-link-not-found": "Kart tapılmadı.",
+  "twoFactorAuth-manual-entry": "Və ya bu kodu əl ilə daxil edin: ",
+  "twoFactorCode-prompt": "6 rəqəmli doğrulama kodunuzu daxil edin"
 }

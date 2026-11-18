@@ -2100,5 +2100,7 @@
   "logout": "Чыгуу",
   "server": "Сервер",
   "protocol": "Протокол",
-  "field-link-not-found": "Карточка табылган жок."
+  "field-link-not-found": "Карточка табылган жок.",
+  "twoFactorAuth-manual-entry": "Же бул кодду кол менен киргизиңиз: ",
+  "twoFactorCode-prompt": "6 орундуу аутентификация кодун киргизиңиз"
 }

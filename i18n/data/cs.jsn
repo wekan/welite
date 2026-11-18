@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Karta nenalezena."
+  "field-link-not-found": "Karta nenalezena.",
+  "twoFactorAuth-manual-entry": "Nebo zadejte tento kód ručně: ",
+  "twoFactorCode-prompt": "Zadejte svůj 6místný ověřovací kód"
 }

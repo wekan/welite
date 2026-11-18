@@ -2100,5 +2100,7 @@
   "logout": "huma",
   "server": "Sevha",
   "protocol": "Phurothokholo",
-  "field-link-not-found": "Khadi a ri kumekanga."
+  "field-link-not-found": "Khadi a ri kumekanga.",
+  "twoFactorAuth-manual-entry": "Kumbe nghenisa khodi leyi hi voko: ",
+  "twoFactorCode-prompt": "Nghenisa khodi ya wena ya tinhlayo ta 6"
 }

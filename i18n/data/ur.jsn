@@ -2100,5 +2100,7 @@
   "logout": "لاگ آؤٹ",
   "server": "سرور",
   "protocol": "پروٹوکول",
-  "field-link-not-found": "کارڈ نہیں ملا۔"
+  "field-link-not-found": "کارڈ نہیں ملا۔",
+  "twoFactorAuth-manual-entry": "یا یہ کوڈ دستی طور پر درج کریں: ",
+  "twoFactorCode-prompt": "اپنا 6 ہندسوں کا توثیقی کوڈ درج کریں"
 }

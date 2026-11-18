@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protocole",
-  "field-link-not-found": "Η κάρτα δεν βρέθηκε."
+  "field-link-not-found": "Η κάρτα δεν βρέθηκε.",
+  "twoFactorAuth-manual-entry": "Ή εισαγάγετε αυτόν τον κωδικό χειροκίνητα: ",
+  "twoFactorCode-prompt": "Εισαγάγετε τον 6ψήφιο κωδικό ελέγχου ταυτότητας"
 }

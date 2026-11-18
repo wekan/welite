@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protocole",
-  "field-link-not-found": "Karto ne trovita."
+  "field-link-not-found": "Karto ne trovita.",
+  "twoFactorAuth-manual-entry": "Aŭ enigu ĉi tiun kodon permane: ",
+  "twoFactorCode-prompt": "Enigu vian 6-ciferan aŭtentigan kodon"
 }

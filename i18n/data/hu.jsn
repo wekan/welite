@@ -2099,5 +2099,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "A kártya nem található."
+  "field-link-not-found": "A kártya nem található.",
+  "twoFactorAuth-manual-entry": "Vagy adja meg ezt a kódot manuálisan: ",
+  "twoFactorCode-prompt": "Adja meg a 6 jegyű hitelesítési kódját"
 }

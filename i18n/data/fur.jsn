@@ -2100,5 +2100,7 @@
   "logout": "Jes",
   "server": "Elaboristoris server",
   "protocol": "Protocol",
-  "field-link-not-found": "Cjarte no cjatade."
+  "field-link-not-found": "Cjarte no cjatade.",
+  "twoFactorAuth-manual-entry": "O ben scrîf chest codiç a man: ",
+  "twoFactorCode-prompt": "Scrîf il to codiç di autenticazion di 6 numars"
 }

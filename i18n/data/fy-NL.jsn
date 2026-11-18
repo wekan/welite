@@ -2099,5 +2099,7 @@
   "logout": "Ofmelde",
   "server": "Tsjinner",
   "protocol": "Protokol",
-  "field-link-not-found": "Kaart net fûn."
+  "field-link-not-found": "Kaart net fûn.",
+  "twoFactorAuth-manual-entry": "Of fier dizze koade mei de hân yn: ",
+  "twoFactorCode-prompt": "Fier jo 6-sifferige ferifikaasjekoade yn"
 }

@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protocole",
-  "field-link-not-found": "ⵓⵔ ⵜⵜⵢⴰⴼⴰ ⵜⴽⴰⵕⴹⴰ."
+  "field-link-not-found": "ⵓⵔ ⵜⵜⵢⴰⴼⴰ ⵜⴽⴰⵕⴹⴰ.",
+  "twoFactorAuth-manual-entry": "ⵏⵖ ⵙⴽⵛⵎ ⵜⴰⵏⴳⴰⵍⵜ ⴰⴷ ⵙ ⵓⴼⵓⵙ: ",
+  "twoFactorCode-prompt": "ⵙⴽⵛⵎ ⵜⴰⵏⴳⴰⵍⵜ ⵏⵏⴽ ⵏ ⵓⵙⵖⵣⵏ ⵏ 6 ⵉⵎⴹⴰⵏⵏ"
 }

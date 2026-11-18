@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "البطاقة ما تلقاتش."
+  "field-link-not-found": "البطاقة ما تلقاتش.",
+  "twoFactorAuth-manual-entry": "أو أدخل هذا الرمز يدويًا: ",
+  "twoFactorCode-prompt": "أدخل رمز المصادقة المكوّن من 6 أرقام"
 }

@@ -2099,5 +2099,7 @@
   "logout": "Logout",
   "server": "סערווירער",
   "protocol": "פּראָטאָקאָל",
-  "field-link-not-found": "קאָרט נישט געפֿונען."
+  "field-link-not-found": "קאָרט נישט געפֿונען.",
+  "twoFactorAuth-manual-entry": "אָדער אַרײַנשרײַבט דעם קאָד מיט דער האַנט: ",
+  "twoFactorCode-prompt": "אַרײַנשרײַבט אײער 6-ציפֿער באַשטעטיקונג-קאָד"
 }

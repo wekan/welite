@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Предмет није пронађен."
+  "field-link-not-found": "Предмет није пронађен.",
+  "twoFactorAuth-manual-entry": "Или ручно унесите овај код: ",
+  "twoFactorCode-prompt": "Унесите свој шестоцифрени код за аутентификацију"
 }

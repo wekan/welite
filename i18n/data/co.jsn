@@ -2100,5 +2100,7 @@
   "logout": "Scunnettà si",
   "server": "Servitore",
   "protocol": "Prutucollu",
-  "field-link-not-found": "Carta micca truvata."
+  "field-link-not-found": "Carta micca truvata.",
+  "twoFactorAuth-manual-entry": "O entrate stu codice manualmente: ",
+  "twoFactorCode-prompt": "Entrate u vostru codice d'autentificazione à 6 cifre"
 }

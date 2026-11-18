@@ -2100,5 +2100,7 @@
   "logout": "Phuma",
   "server": "Iseva",
   "protocol": "Umtsetfomgomo",
-  "field-link-not-found": "Likhadi alitfolakalanga."
+  "field-link-not-found": "Likhadi alitfolakalanga.",
+  "twoFactorAuth-manual-entry": "Nome faka lelikhodi ngesandla: ",
+  "twoFactorCode-prompt": "Faka likhodi lakho lekucinisekisa lelinenombolo letisi-6"
 }

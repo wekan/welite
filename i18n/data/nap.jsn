@@ -2100,5 +2100,7 @@
   "logout": "Esci",
   "server": "Elaboratore server",
   "protocol": "Protocollo",
-  "field-link-not-found": "Carta nun truvata."
+  "field-link-not-found": "Carta nun truvata.",
+  "twoFactorAuth-manual-entry": "O metti stu codice a mano: ",
+  "twoFactorCode-prompt": "Metti 'o codice 'e autenticazione 'e 6 cifre tuoio"
 }

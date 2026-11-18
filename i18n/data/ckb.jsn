@@ -2100,5 +2100,7 @@
   "logout": "چوونەدەرەوە",
   "server": "ڕاژەکار",
   "protocol": "پرۆتۆکۆل",
-  "field-link-not-found": "کارت نەدۆزرایەوە."
+  "field-link-not-found": "کارت نەدۆزرایەوە.",
+  "twoFactorAuth-manual-entry": "یان ئەم کۆدە بە دەست بنووسە: ",
+  "twoFactorCode-prompt": "کۆدی پشتڕاستکردنەوەی 6 ژمارەییت بنووسە"
 }

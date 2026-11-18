@@ -2100,5 +2100,7 @@
   "logout": "Bɔ",
   "server": "Jɔyɔrɔ-masina",
   "protocol": "Sariya",
-  "field-link-not-found": "Karti ma sɔrɔ."
+  "field-link-not-found": "Karti ma sɔrɔ.",
+  "twoFactorAuth-manual-entry": "Walima ka nin nimɔrɔ in don aw yɛrɛ bolo la: ",
+  "twoFactorCode-prompt": "Aw ka nimɔrɔ 6 dannaya nimɔrɔ don"
 }

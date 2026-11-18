@@ -2100,5 +2100,7 @@
   "logout": "Essi",
   "server": "Serbidore",
   "protocol": "Protocollu",
-  "field-link-not-found": "Carta no agatada."
+  "field-link-not-found": "Carta no agatada.",
+  "twoFactorAuth-manual-entry": "O intra custu còdighe a manu: ",
+  "twoFactorCode-prompt": "Intra su còdighe de autenticatzione de 6 tzifras tuo"
 }

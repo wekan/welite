@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protocole",
-  "field-link-not-found": "Gisuñu karta bi."
+  "field-link-not-found": "Gisuñu karta bi.",
+  "twoFactorAuth-manual-entry": "Walla bind kod bii ci sa loxo: ",
+  "twoFactorCode-prompt": "Bind sa kod wàll-wàllal bu 6 sifar"
 }

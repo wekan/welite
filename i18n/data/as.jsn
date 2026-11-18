@@ -2100,5 +2100,7 @@
   "logout": "লগআউট",
   "server": "ছাৰ্ভাৰ",
   "protocol": "প্ৰট'কল",
-  "field-link-not-found": "কাৰ্ড পোৱা নগ'ল।"
+  "field-link-not-found": "কাৰ্ড পোৱা নগ'ল।",
+  "twoFactorAuth-manual-entry": "নাইবা এই ক'ডটো হাতেৰে দিয়ক: ",
+  "twoFactorCode-prompt": "আপোনাৰ 6-অংকীয় প্ৰমাণীকৰণ ক'ড দিয়ক"
 }

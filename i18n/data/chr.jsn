@@ -2100,5 +2100,7 @@
   "logout": "ᎠᏄᎪᏨ",
   "server": "ᎠᏯᏙᎯᎯ",
   "protocol": "ᎠᏚᏓᎸᏗ ᏗᎧᎿᏩᏛᏍᏗ",
-  "field-link-not-found": "ᎪᏪᎵ Ꮭ ᏱᎩᏩᏛ."
+  "field-link-not-found": "ᎪᏪᎵ Ꮭ ᏱᎩᏩᏛ.",
+  "twoFactorAuth-manual-entry": "ᎠᎴ ᎯᎦᏘᏯ ᏙᎯᏗ ᎠᏗᏢᏗᏍᏗ: ",
+  "twoFactorCode-prompt": "ᎯᏯᏙᎯᏎᎮᏍᏗ 6-ᎠᏰᎵ ᎦᏙᎬ"
 }

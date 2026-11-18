@@ -2100,5 +2100,7 @@
   "logout": "Okufuluma",
   "server": "Seva",
   "protocol": "Enkola y'empuliziganya",
-  "field-link-not-found": "Kaadi tezuuliddwa."
+  "field-link-not-found": "Kaadi tezuuliddwa.",
+  "twoFactorAuth-manual-entry": "Oba yingiza akabonero kano n'emikono: ",
+  "twoFactorCode-prompt": "Yingiza akabonero k'okukakasa ak'emiwendo mukaaga"
 }

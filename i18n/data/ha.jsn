@@ -2100,5 +2100,7 @@
   "logout": "Fita",
   "server": "Saba",
   "protocol": "Yarjejeniya",
-  "field-link-not-found": "Ba a sami kati ba."
+  "field-link-not-found": "Ba a sami kati ba.",
+  "twoFactorAuth-manual-entry": "Ko shigar da wannan lambar da hannu: ",
+  "twoFactorCode-prompt": "Shigar da lambar tabbatarwa ta lambobi 6"
 }

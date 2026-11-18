@@ -2100,5 +2100,7 @@
   "logout": "লগআউট",
   "server": "সার্ভার",
   "protocol": "প্রোটোকল",
-  "field-link-not-found": "কার্ড পাওয়া যায়নি।"
+  "field-link-not-found": "কার্ড পাওয়া যায়নি।",
+  "twoFactorAuth-manual-entry": "অথবা এই কোডটি ম্যানুয়ালি লিখুন: ",
+  "twoFactorCode-prompt": "আপনার ৬-সংখ্যার প্রমাণীকরণ কোড লিখুন"
 }

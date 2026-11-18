@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protokoll",
-  "field-link-not-found": "Karte nicht gefunden."
+  "field-link-not-found": "Karte nicht gefunden.",
+  "twoFactorAuth-manual-entry": "Oder geben Sie diesen Code manuell ein: ",
+  "twoFactorCode-prompt": "Geben Sie Ihren 6-stelligen Authentifizierungscode ein"
 }

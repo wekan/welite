@@ -2100,5 +2100,7 @@
   "logout": "Hū ki tuʻa",
   "server": "Sēvea",
   "protocol": "Polotokolo",
-  "field-link-not-found": "ʻOku ʻikai maʻu ʻa e kaati."
+  "field-link-not-found": "ʻOku ʻikai maʻu ʻa e kaati.",
+  "twoFactorAuth-manual-entry": "Pe hū ʻa e koodi ni ʻaki ho nima: ",
+  "twoFactorCode-prompt": "Hū hoʻo koodi fakamoʻoni 6-fika"
 }

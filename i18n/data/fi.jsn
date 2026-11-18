@@ -2100,5 +2100,7 @@
   "logout": "Kirjaudu ulos",
   "server": "Palvelin",
   "protocol": "Protokolla",
-  "field-link-not-found": "Korttia ei löytynyt."
+  "field-link-not-found": "Korttia ei löytynyt.",
+  "twoFactorAuth-manual-entry": "Tai syötä tämä koodi manuaalisesti: ",
+  "twoFactorCode-prompt": "Syötä 6-numeroinen tunnistautumiskoodisi"
 }

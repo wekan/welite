@@ -2099,5 +2099,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Card not found."
+  "field-link-not-found": "Card not found.",
+  "twoFactorAuth-manual-entry": "Or enter this code manually: ",
+  "twoFactorCode-prompt": "Enter your 6-digit authentication code"
 }

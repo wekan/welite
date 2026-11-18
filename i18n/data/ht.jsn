@@ -2100,5 +2100,7 @@
   "logout": "Dekonekte",
   "server": "Sèvè",
   "protocol": "Pwotokòl",
-  "field-link-not-found": "Kat la pa jwenn."
+  "field-link-not-found": "Kat la pa jwenn.",
+  "twoFactorAuth-manual-entry": "Oswa antre kòd sa a manyèlman: ",
+  "twoFactorCode-prompt": "Antre kòd otantifikasyon 6-chif ou"
 }

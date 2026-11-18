@@ -2099,5 +2099,7 @@
   "logout": "ਲਾਗਆਉਟ",
   "server": "ਸਰਵਰ",
   "protocol": "ਪ੍ਰੋਟੋਕੋਲ",
-  "field-link-not-found": "ਕਾਰਡ ਨਹੀਂ ਮਿਲਿਆ।"
+  "field-link-not-found": "ਕਾਰਡ ਨਹੀਂ ਮਿਲਿਆ।",
+  "twoFactorAuth-manual-entry": "ਜਾਂ ਇਹ ਕੋਡ ਖੁਦ ਦਾਖਲ ਕਰੋ: ",
+  "twoFactorCode-prompt": "ਆਪਣਾ 6-ਅੰਕਾਂ ਵਾਲਾ ਪ੍ਰਮਾਣੀਕਰਨ ਕੋਡ ਦਾਖਲ ਕਰੋ"
 }

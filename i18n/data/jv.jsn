@@ -2100,5 +2100,7 @@
   "logout": "Metu",
   "server": "Peladen",
   "protocol": "Protokol",
-  "field-link-not-found": "Kertu ora ketemu."
+  "field-link-not-found": "Kertu ora ketemu.",
+  "twoFactorAuth-manual-entry": "Utawa ketik kode iki kanthi manual: ",
+  "twoFactorCode-prompt": "Ketik kode otentikasi 6-digit sampeyan"
 }

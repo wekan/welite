@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "ไม่พบการ์ด"
+  "field-link-not-found": "ไม่พบการ์ด",
+  "twoFactorAuth-manual-entry": "หรือป้อนรหัสนี้ด้วยตนเอง: ",
+  "twoFactorCode-prompt": "ป้อนรหัสยืนยันตัวตน 6 หลักของคุณ"
 }

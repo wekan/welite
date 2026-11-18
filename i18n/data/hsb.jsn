@@ -2100,5 +2100,7 @@
   "logout": "Wotzjewić so",
   "server": "Serwer",
   "protocol": "Protokol",
-  "field-link-not-found": "Karta njebu namakana."
+  "field-link-not-found": "Karta njebu namakana.",
+  "twoFactorAuth-manual-entry": "Abo zapodaj tutón kod manuelnje: ",
+  "twoFactorCode-prompt": "Zapodaj swój 6-městnowy awtentifikaciski kod"
 }

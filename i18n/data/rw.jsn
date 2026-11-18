@@ -2100,5 +2100,7 @@
   "logout": "Sohoka",
   "server": "Seriveri",
   "protocol": "Porotokole",
-  "field-link-not-found": "Ikarita ntiyabonetse."
+  "field-link-not-found": "Ikarita ntiyabonetse.",
+  "twoFactorAuth-manual-entry": "Cyangwa winjize iyi kode wenyine: ",
+  "twoFactorCode-prompt": "Injiza kode yawe y'imibare 6 yo kwemeza"
 }

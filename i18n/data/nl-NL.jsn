@@ -2100,5 +2100,7 @@
   "logout": "Afmelden",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Kaart niet gevonden."
+  "field-link-not-found": "Kaart niet gevonden.",
+  "twoFactorAuth-manual-entry": "Of voer deze code handmatig in: ",
+  "twoFactorCode-prompt": "Voer uw 6-cijferige verificatiecode in"
 }

@@ -2100,5 +2100,7 @@
   "logout": "Logga ut",
   "server": "Server",
   "protocol": "Protokoll",
-  "field-link-not-found": "Kortet blev ikke fundet."
+  "field-link-not-found": "Kortet blev ikke fundet.",
+  "twoFactorAuth-manual-entry": "Eller indtast denne kode manuelt: ",
+  "twoFactorCode-prompt": "Indtast din 6-cifrede godkendelseskode"
 }

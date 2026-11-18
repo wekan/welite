@@ -2100,5 +2100,7 @@
   "logout": "ඉවත් වන්න",
   "server": "සේවාදායකය",
   "protocol": "ප්‍රොටෝකෝලය",
-  "field-link-not-found": "කාඩ්පත හමු නොවීය."
+  "field-link-not-found": "කාඩ්පත හමු නොවීය.",
+  "twoFactorAuth-manual-entry": "නැතහොත් මෙම කේතය අතින් ඇතුළත් කරන්න: ",
+  "twoFactorCode-prompt": "ඔබගේ අංක 6 සත්‍යාපන කේතය ඇතුළත් කරන්න"
 }

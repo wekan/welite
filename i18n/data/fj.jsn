@@ -2100,5 +2100,7 @@
   "logout": "Curu tani",
   "server": "Seva",
   "protocol": "iTuvatuva ni veitaratara",
-  "field-link-not-found": "E sega ni kunei na kadi."
+  "field-link-not-found": "E sega ni kunei na kadi.",
+  "twoFactorAuth-manual-entry": "Se vakacurumi na kodi qo ena ligamu: ",
+  "twoFactorCode-prompt": "Vakacurumi na nomu kodi ni vakadinadinataki e 6 na tikini"
 }

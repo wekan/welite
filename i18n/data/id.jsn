@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Kartu tidak ditemukan."
+  "field-link-not-found": "Kartu tidak ditemukan.",
+  "twoFactorAuth-manual-entry": "Atau masukkan kode ini secara manual: ",
+  "twoFactorCode-prompt": "Masukkan kode autentikasi 6 digit Anda"
 }

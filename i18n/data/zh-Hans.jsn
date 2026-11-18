@@ -2099,5 +2099,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "未找到卡片。"
+  "field-link-not-found": "未找到卡片。",
+  "twoFactorAuth-manual-entry": "或手动输入此代码：",
+  "twoFactorCode-prompt": "请输入您的6位身份验证代码"
 }

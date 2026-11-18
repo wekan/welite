@@ -2100,5 +2100,7 @@
   "logout": "Çykmak",
   "server": "Serwer",
   "protocol": "Protokol",
-  "field-link-not-found": "Kart tapylmady."
+  "field-link-not-found": "Kart tapylmady.",
+  "twoFactorAuth-manual-entry": "Ýa-da bu kody el bilen giriziň: ",
+  "twoFactorCode-prompt": "6 sanly tanamak kodyňyzy giriziň"
 }

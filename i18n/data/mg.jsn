@@ -2100,5 +2100,7 @@
   "logout": "Mivoaha",
   "server": "Lohamilina",
   "protocol": "Protokola",
-  "field-link-not-found": "Tsy hita ny karatra."
+  "field-link-not-found": "Tsy hita ny karatra.",
+  "twoFactorAuth-manual-entry": "Na ampidiro amin'ny tanana ity kaody ity: ",
+  "twoFactorCode-prompt": "Ampidiro ny fangoazana fanamarinana misy isa 6"
 }

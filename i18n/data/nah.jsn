@@ -2100,5 +2100,7 @@
   "logout": "Xiquiza",
   "server": "Teposcalli",
   "protocol": "Tlanahuatilli",
-  "field-link-not-found": "Amatlapalli amo monextih."
+  "field-link-not-found": "Amatlapalli amo monextih.",
+  "twoFactorAuth-manual-entry": "Ahnozo xictlali inin tlapohualli ika momah: ",
+  "twoFactorCode-prompt": "Xictlali motlapohual tlaixyeyecoliztli tlen chicuace tlapohualli"
 }

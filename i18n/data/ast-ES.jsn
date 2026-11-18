@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Nun s'atopó la tarxeta."
+  "field-link-not-found": "Nun s'atopó la tarxeta.",
+  "twoFactorAuth-manual-entry": "O introduz esti códigu manualmente: ",
+  "twoFactorCode-prompt": "Introduz el to códigu d'autenticación de 6 díxitos"
 }

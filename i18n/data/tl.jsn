@@ -2100,5 +2100,7 @@
   "logout": "Mag-logout",
   "server": "Tagapaghain",
   "protocol": "Pamamaraan",
-  "field-link-not-found": "Hindi nakita ang kard."
+  "field-link-not-found": "Hindi nakita ang kard.",
+  "twoFactorAuth-manual-entry": "O ilagay ang code na ito nang manual: ",
+  "twoFactorCode-prompt": "Ilagay ang iyong 6-digit na authentication code"
 }

@@ -2099,5 +2099,7 @@
   "logout": "Atsijungti",
   "server": "Serveris",
   "protocol": "protokolas",
-  "field-link-not-found": "Kortelė nerasta."
+  "field-link-not-found": "Kortelė nerasta.",
+  "twoFactorAuth-manual-entry": "Arba įveskite šį kodą rankiniu būdu: ",
+  "twoFactorCode-prompt": "Įveskite savo 6 skaitmenų autentifikavimo kodą"
 }

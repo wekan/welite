@@ -2100,5 +2100,7 @@
   "logout": "ཕྱིར་འཐོན།",
   "server": "ཞབས་ཞུ་ཆས།",
   "protocol": "གྲོས་མཐུན།",
-  "field-link-not-found": "ཤོག་བྱང་མ་འཐོབ།"
+  "field-link-not-found": "ཤོག་བྱང་མ་འཐོབ།",
+  "twoFactorAuth-manual-entry": "ཡང་ན་ཨང་ཡིག་འདི་ལག་གིས་བཙུགས：",
+  "twoFactorCode-prompt": "ཁྱོད་རའི་6-ཨང་བདེན་དཔྱད་ཨང་ཡིག་བཙུགས།"
 }

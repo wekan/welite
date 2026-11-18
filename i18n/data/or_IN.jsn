@@ -2100,5 +2100,7 @@
   "logout": "ଲଗଆଉଟ୍ |",
   "server": "ସର୍ଭର |",
   "protocol": "ପ୍ରୋଟୋକଲ୍",
-  "field-link-not-found": "କାର୍ଡ ମିଳିଲା ନାହିଁ।"
+  "field-link-not-found": "କାର୍ଡ ମିଳିଲା ନାହିଁ।",
+  "twoFactorAuth-manual-entry": "କିମ୍ବା ଏହି କୋଡକୁ ହସ୍ତକୃତ ଭାବରେ ପ୍ରବେଶ କରନ୍ତୁ: ",
+  "twoFactorCode-prompt": "ଆପଣଙ୍କ 6-ଅଙ୍କ ପ୍ରମାଣୀକରଣ କୋଡ ପ୍ରବେଶ କରନ୍ତୁ"
 }

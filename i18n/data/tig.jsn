@@ -2100,5 +2100,7 @@
   "logout": "ፈጊር",
   "server": "ኣገልጋሊ",
   "protocol": "ፕሮቶኮል",
-  "field-link-not-found": "ወረቀት ካርድ ኣይተረኽበትን።"
+  "field-link-not-found": "ወረቀት ካርድ ኣይተረኽበትን።",
+  "twoFactorAuth-manual-entry": "ወይ እዚ ኮድ ብኢድ ኣእቱ: ",
+  "twoFactorCode-prompt": "ናትካ ናይ 6-ቁጽሪ ናይ ምርግጋጽ ኮድ ኣእቱ"
 }

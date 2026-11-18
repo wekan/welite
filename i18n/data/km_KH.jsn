@@ -2099,5 +2099,7 @@
   "logout": "ចេញ",
   "server": "ម៉ាស៊ីនមេ",
   "protocol": "ពិធីការ",
-  "field-link-not-found": "រកមិនឃើញកាត។"
+  "field-link-not-found": "រកមិនឃើញកាត។",
+  "twoFactorAuth-manual-entry": "ឬបញ្ចូលកូដនេះដោយដៃ៖ ",
+  "twoFactorCode-prompt": "បញ្ចូលកូដផ្ទៀងផ្ទាត់៦ខ្ទង់របស់អ្នក"
 }

@@ -2100,5 +2100,7 @@
   "logout": "Jì ora",
   "server": "Server de lëur",
   "protocol": "Protocul",
-  "field-link-not-found": "Ciarta nia abinada."
+  "field-link-not-found": "Ciarta nia abinada.",
+  "twoFactorAuth-manual-entry": "O maten chësc codesc a man: ",
+  "twoFactorCode-prompt": "Maten la ciafra de autenticazion de 6 cifres"
 }

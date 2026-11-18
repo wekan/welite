@@ -2100,5 +2100,7 @@
   "logout": "Derkeve",
   "server": "Pêşkêşker",
   "protocol": "Protokol",
-  "field-link-not-found": "Kart nehat dîtin."
+  "field-link-not-found": "Kart nehat dîtin.",
+  "twoFactorAuth-manual-entry": "An jî vê kodê bi destan binivîse: ",
+  "twoFactorCode-prompt": "Koda rastandinê ya 6-reqem binivîse"
 }

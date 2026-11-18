@@ -2100,5 +2100,7 @@
   "logout": "लगआउट",
   "server": "सर्भर",
   "protocol": "प्रोटोकल",
-  "field-link-not-found": "कार्ड भेटिएन।"
+  "field-link-not-found": "कार्ड भेटिएन।",
+  "twoFactorAuth-manual-entry": "वा यो कोड म्यानुअल रूपमा प्रविष्ट गर्नुहोस्: ",
+  "twoFactorCode-prompt": "तपाईंको ६-अंकको प्रमाणीकरण कोड प्रविष्ट गर्नुहोस्"
 }

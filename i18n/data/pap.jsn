@@ -2100,5 +2100,7 @@
   "logout": "Sali",
   "server": "Sirbidó",
   "protocol": "Protocolo",
-  "field-link-not-found": "No a haña e karchi."
+  "field-link-not-found": "No a haña e karchi.",
+  "twoFactorAuth-manual-entry": "Òf introdusí e kódigo akí manualmente: ",
+  "twoFactorCode-prompt": "Introdusí bo kódigo di autentikashon di 6 dígito"
 }

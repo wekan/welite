@@ -2100,5 +2100,7 @@
   "logout": "Шығу",
   "server": "Сервер",
   "protocol": "Хаттама",
-  "field-link-not-found": "Карточка табылмады."
+  "field-link-not-found": "Карточка табылмады.",
+  "twoFactorAuth-manual-entry": "Немесе бұл кодты қолмен енгізіңіз: ",
+  "twoFactorCode-prompt": "6 таңбалы аутентификация кодын енгізіңіз"
 }

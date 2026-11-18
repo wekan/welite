@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Kartica nije pronađena."
+  "field-link-not-found": "Kartica nije pronađena.",
+  "twoFactorAuth-manual-entry": "Ili ručno unesite ovaj kod: ",
+  "twoFactorCode-prompt": "Unesite svoj šestocifreni kod za autentifikaciju"
 }

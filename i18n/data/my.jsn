@@ -2100,5 +2100,7 @@
   "logout": "ထွက်ရန်",
   "server": "ဆာဗာ",
   "protocol": "ပရိုတိုကော",
-  "field-link-not-found": "ကတ် မတွေ့ပါ။"
+  "field-link-not-found": "ကတ် မတွေ့ပါ။",
+  "twoFactorAuth-manual-entry": "သို့မဟုတ် ဤကုဒ်ကို ကိုယ်တိုင်ထည့်ပါ: ",
+  "twoFactorCode-prompt": "သင်၏ 6 လုံးအထောက်အထားစိစစ်ကုဒ်ကို ထည့်ပါ"
 }

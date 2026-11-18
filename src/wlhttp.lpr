@@ -292,9 +292,9 @@ begin
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
       begin AuthError(Request,Response,500,'One-time codes','Could not start setup');Exit;end;
       Body:='<h1>Set up one-time codes</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
-        '<p>Enter this secret in your authenticator: <code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
+        '<p>'+HtmlEncode(Words.Text('twoFactorAuth-manual-entry','Or enter this code manually: '))+'<code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
-        ConfirmationForm(Request,Token,'Enter a code from your authenticator to enable one-time codes.',Words);
+        ConfirmationForm(Request,Token,Words.Text('twoFactorCode-prompt','Enter your 6-digit authentication code'),Words);
       SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes',Body));
     finally
       Proof.Free;

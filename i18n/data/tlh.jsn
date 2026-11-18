@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protokoll",
-  "field-link-not-found": "'echletHom tu'lu'be'."
+  "field-link-not-found": "'echletHom tu'lu'be'.",
+  "twoFactorAuth-manual-entry": "pagh mI' vam yIngIH: ",
+  "twoFactorCode-prompt": "wa'maH loS mI' authentication yIngIH"
 }

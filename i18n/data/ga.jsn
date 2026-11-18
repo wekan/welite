@@ -2100,5 +2100,7 @@
   "logout": "Logáil amach",
   "server": "Freastalaí",
   "protocol": "Prótacal",
-  "field-link-not-found": "Níor aimsíodh an cárta."
+  "field-link-not-found": "Níor aimsíodh an cárta.",
+  "twoFactorAuth-manual-entry": "Nó cuir isteach an cód seo de láimh: ",
+  "twoFactorCode-prompt": "Cuir isteach do chód fíordheimhnithe 6 dhigit"
 }

@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "ბარათი ვერ მოიძებნა."
+  "field-link-not-found": "ბარათი ვერ მოიძებნა.",
+  "twoFactorAuth-manual-entry": "ან შეიყვანეთ ეს კოდი ხელით: ",
+  "twoFactorCode-prompt": "შეიყვანეთ თქვენი 6-ნიშნა ავთენტიფიკაციის კოდი"
 }

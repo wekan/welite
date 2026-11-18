@@ -2100,5 +2100,7 @@
   "logout": "注销",
   "server": "服务器",
   "protocol": "协议",
-  "field-link-not-found": "未找到卡片。"
+  "field-link-not-found": "未找到卡片。",
+  "twoFactorAuth-manual-entry": "或手動輸入此代碼：",
+  "twoFactorCode-prompt": "請輸入您的 6 位數驗證代碼"
 }

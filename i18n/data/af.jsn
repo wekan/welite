@@ -2099,5 +2099,7 @@
   "logout": "Teken uit",
   "server": "Bediener",
   "protocol": "Protokol",
-  "field-link-not-found": "Kaart nie gevind nie."
+  "field-link-not-found": "Kaart nie gevind nie.",
+  "twoFactorAuth-manual-entry": "Of voer hierdie kode self in: ",
+  "twoFactorCode-prompt": "Voer jou 6-syfer-verifikasiekode in"
 }

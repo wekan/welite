@@ -2099,5 +2099,7 @@
   "logout": "Phuma",
   "server": "Iseva",
   "protocol": "Iphrothokholi",
-  "field-link-not-found": "Khadi a yo ngo wanala."
+  "field-link-not-found": "Khadi a yo ngo wanala.",
+  "twoFactorAuth-manual-entry": "Kana ni ḓivhadze khodo heyi nga tshanḓa: ",
+  "twoFactorCode-prompt": "Ḓivhadzani khodo yaṋu ya tshinomboni tsha rathi"
 }

@@ -2100,5 +2100,7 @@
   "logout": "ውጻእ",
   "server": "ሰርቨር",
   "protocol": "ፕሮቶኮል",
-  "field-link-not-found": "ካርድ ኣይተረኽበን።"
+  "field-link-not-found": "ካርድ ኣይተረኽበን።",
+  "twoFactorAuth-manual-entry": "ወይ እዚ ኮድ ብኢድ ኣእትዎ: ",
+  "twoFactorCode-prompt": "ናትካ ናይ 6-ኣሃዝ ናይ ምርግጋጽ ኮድ ኣእትዉ"
 }

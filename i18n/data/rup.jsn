@@ -2100,5 +2100,7 @@
   "logout": "Ishiri",
   "server": "Serveur",
   "protocol": "Protocolu",
-  "field-link-not-found": "Cartea nu s-aflã."
+  "field-link-not-found": "Cartea nu s-aflã.",
+  "twoFactorAuth-manual-entry": "I bagã aestu cod cu mâna: ",
+  "twoFactorCode-prompt": "Bagã codlu a tãu di aunticatsii di 6 cifri"
 }

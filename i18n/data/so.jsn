@@ -2100,5 +2100,7 @@
   "logout": "Ka bax",
   "server": "Adeege",
   "protocol": "Hab-maamuus",
-  "field-link-not-found": "Kaarka lama helin."
+  "field-link-not-found": "Kaarka lama helin.",
+  "twoFactorAuth-manual-entry": "Ama gacanta ku geli koodhkan: ",
+  "twoFactorCode-prompt": "Geli koodhkaaga xaqiijinta ee 6-lambarka ah"
 }

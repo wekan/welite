@@ -2100,5 +2100,7 @@
   "logout": "Вийти",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Картку не знайдено."
+  "field-link-not-found": "Картку не знайдено.",
+  "twoFactorAuth-manual-entry": "Або введіть цей код вручну: ",
+  "twoFactorCode-prompt": "Введіть свій 6-значний код автентифікації"
 }

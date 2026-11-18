@@ -2100,5 +2100,7 @@
   "logout": "Zarrar sesión",
   "server": "Servidor",
   "protocol": "Protocolo",
-  "field-link-not-found": "No s'ha trobau a tarcheta."
+  "field-link-not-found": "No s'ha trobau a tarcheta.",
+  "twoFactorAuth-manual-entry": "U introduzca iste codigo manualment: ",
+  "twoFactorCode-prompt": "Introduzca lo suyo codigo d'autenticación de 6 digitos"
 }

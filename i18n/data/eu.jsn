@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Ez da txartela aurkitu."
+  "field-link-not-found": "Ez da txartela aurkitu.",
+  "twoFactorAuth-manual-entry": "Edo sartu kode hau eskuz: ",
+  "twoFactorCode-prompt": "Sartu zure 6 digituko autentifikazio-kodea"
 }

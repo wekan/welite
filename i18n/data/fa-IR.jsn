@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "کارت پیدا نشد."
+  "field-link-not-found": "کارت پیدا نشد.",
+  "twoFactorAuth-manual-entry": "یا این کد را به‌صورت دستی وارد کنید: ",
+  "twoFactorCode-prompt": "کد احراز هویت ۶ رقمی خود را وارد کنید"
 }

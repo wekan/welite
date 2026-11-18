@@ -2100,5 +2100,7 @@
   "logout": "Déconnexion",
   "server": "Serveur",
   "protocol": "Protocole",
-  "field-link-not-found": "N'eo ket bet kavet ar gartenn."
+  "field-link-not-found": "N'eo ket bet kavet ar gartenn.",
+  "twoFactorAuth-manual-entry": "Pe enankit ar c'hod-mañ gant an dorn: ",
+  "twoFactorCode-prompt": "Enankit ho kod gwiriañ 6 sifr"
 }

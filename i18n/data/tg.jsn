@@ -2100,5 +2100,7 @@
   "logout": "Баромадан",
   "server": "Сервер",
   "protocol": "Протокол",
-  "field-link-not-found": "Корт ёфт нашуд."
+  "field-link-not-found": "Корт ёфт нашуд.",
+  "twoFactorAuth-manual-entry": "Ё ин рамзро дастӣ ворид кунед: ",
+  "twoFactorCode-prompt": "Рамзи 6-рақамаи санҷиши худро ворид кунед"
 }

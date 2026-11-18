@@ -2100,5 +2100,7 @@
   "logout": "Гараха",
   "server": "Сервер",
   "protocol": "Протокол",
-  "field-link-not-found": "Карточка олдообгүй."
+  "field-link-not-found": "Карточка олдообгүй.",
+  "twoFactorAuth-manual-entry": "Али болбол энэ кодые гараараа оруулагты: ",
+  "twoFactorCode-prompt": "6 тооной баталгаажуулгын кодоо оруулагты"
 }

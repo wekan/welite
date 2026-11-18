@@ -2100,5 +2100,7 @@
   "logout": "Таҕыс",
   "server": "Сиэрбэр",
   "protocol": "Бородукуол",
-  "field-link-not-found": "Карточка көстүбэтэ."
+  "field-link-not-found": "Карточка көстүбэтэ.",
+  "twoFactorAuth-manual-entry": "Эбэтэр бу кодту илиинэн киллэр: ",
+  "twoFactorCode-prompt": "6 сыыппаралаах бигэргэтии кодтугун киллэр"
 }

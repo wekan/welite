@@ -2100,5 +2100,7 @@
   "logout": "Oħroġ",
   "server": "Servitur",
   "protocol": "Protokoll",
-  "field-link-not-found": "Il-karta ma nstabitx."
+  "field-link-not-found": "Il-karta ma nstabitx.",
+  "twoFactorAuth-manual-entry": "Jew daħħal dan il-kodiċi manwalment: ",
+  "twoFactorCode-prompt": "Daħħal il-kodiċi ta' awtentikazzjoni ta' 6 numri tiegħek"
 }

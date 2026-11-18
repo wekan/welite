@@ -2100,5 +2100,7 @@
   "logout": "Takiputa",
   "server": "Tūmau",
   "protocol": "Kawa",
-  "field-link-not-found": "Kāore i kitea te kāri."
+  "field-link-not-found": "Kāore i kitea te kāri.",
+  "twoFactorAuth-manual-entry": "Tāurutia rānei tēnei waehere ā-ringa: ",
+  "twoFactorCode-prompt": "Tāurutia tō waehere whakamotuhēhē 6-mati"
 }

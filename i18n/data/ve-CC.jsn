@@ -2100,5 +2100,7 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Scheda mìa catà."
+  "field-link-not-found": "Scheda mìa catà.",
+  "twoFactorAuth-manual-entry": "O meti sto còdice a man: ",
+  "twoFactorCode-prompt": "Meti el to còdice de autenticasion de 6 cifre"
 }

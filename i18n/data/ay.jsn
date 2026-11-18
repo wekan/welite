@@ -2100,5 +2100,7 @@
   "logout": "Aymar aruna: Logout",
   "server": "Aymar aruna: Server",
   "protocol": "Aymar aruna: Protocol",
-  "field-link-not-found": "Tarjetax janiw jikxataskiti."
+  "field-link-not-found": "Tarjetax janiw jikxataskiti.",
+  "twoFactorAuth-manual-entry": "Jan ukax aka código amparampi qillqam: ",
+  "twoFactorCode-prompt": "Jumana 6 jakhu chiqapachäwi código qillqam"
 }

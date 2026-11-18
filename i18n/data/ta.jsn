@@ -2100,5 +2100,7 @@
   "logout": "లాగ్అవుట్",
   "server": "సర్వర్",
   "protocol": "ప్రోటోకాల్",
-  "field-link-not-found": "அட்டை கிடைக்கவில்லை."
+  "field-link-not-found": "அட்டை கிடைக்கவில்லை.",
+  "twoFactorAuth-manual-entry": "அல்லது இந்த குறியீட்டை கைமுறையாக உள்ளிடவும்: ",
+  "twoFactorCode-prompt": "உங்கள் 6-இலக்க அங்கீகார குறியீட்டை உள்ளிடவும்"
 }
