@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify list restore in Chromium without JavaScript or cookies
+
+- Exercise the actual HTML form, confirm the deleted list stays off the
+  board until restored, and verify its card returns with the list.
+
 ## 2026-11-18 Bind list restore to the displayed deletion batch
 
 - Reject stale restore forms when the list has a different deletion batch.

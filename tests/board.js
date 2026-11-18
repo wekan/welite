@@ -66,6 +66,20 @@ async function verifyCookieBlocking(page, context) {
     await page.locator('a[href*="view=all"]').click();
     assert.equal(await page.locator('td[data-list=todo]').count(), 1);
     assert.equal(await page.locator('td[data-list=doing]').count(), 1);
+    const lists = `${process.argv[2]}/api/boards/protected/lists`;
+    const deleted = await context.request.delete(`${lists}/doing`, {
+      headers: { Authorization: `Bearer ${process.argv[3]}`, 'User-Agent': 'Welite-test' },
+    });
+    assert.equal(deleted.status(), 200, await deleted.text());
+    await page.reload();
+    assert.equal(await page.locator('td[data-list=doing]').count(), 0);
+    const restore = page.locator('form[action="/board/restore-list"]')
+      .filter({ has: page.locator('input[name=listId][value=doing]') });
+    await restore.locator('input[type=submit]').click();
+    await page.locator('a[href*="view=all"]').click();
+    assert.equal(await page.locator('td[data-list=doing]').getByText('Card <test>').count(), 1);
+    assert.equal(await restore.count(), 0);
+    console.log('PASS: Chromium restores a deleted list and its cards with JavaScript and cookies disabled');
     assert.equal((await context.cookies()).length, 0);
     console.log('PASS: Chromium card movement, minimap and viewport navigation with JavaScript and cookies disabled');
   } finally {
