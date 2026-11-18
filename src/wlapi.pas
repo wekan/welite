@@ -57,6 +57,7 @@ procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
+procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -1347,6 +1348,200 @@ begin
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create board');Exit;end;
   Reply:=TJSONObject.Create(['_id',BoardId,'defaultSwimlaneId',LaneId]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+end;
+
+procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
+const Collections:array[0..5] of string=('swimlanes','lists','cards','triggers','actions','rules');
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name:string;
+  Body,Input,Row,Reply:TJSONObject;Maps:array[0..5] of TJSONObject;Arrays:array[0..5] of TJSONArray;
+  Value:TJSONData;Rows:TWLRows;I,J:Integer;
+  function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
+  var Field:TJSONData;
+  begin
+    Field:=Obj.Find(Key);
+    if (Field=nil) or (Field.JSONType=jtNull) then Exit(Fallback);
+    if not (Field is TJSONString) or (Pos(#0,Field.AsString)>0) then
+      raise EConvertError.Create('Invalid import text field');
+    Result:=Field.AsString;
+  end;
+  function Mapped(Index:Integer;const Id:string;Required:Boolean=False):string;
+  begin
+    Result:=Maps[Index].Get(Id,'');
+    if Required and (Result='') then raise EConvertError.Create('Invalid import reference');
+  end;
+  function Optional(const TextValue:string):string;
+  begin
+    if TextValue='' then Result:='NULL' else Result:=QuotedStr(TextValue);
+  end;
+  function CardListLane(Obj:TJSONObject):string;
+  begin
+    Result:=Mapped(0,Text(Obj,'swimlaneId'));
+    if (Text(Obj,'swimlaneId')<>'') and (Result='') then
+      raise EConvertError.Create('Invalid swimlane reference');
+  end;
+  function SortValue(Obj:TJSONObject):string;
+  var Field:TJSONData;
+  begin
+    Result:='0';Field:=Obj.Find('sort');
+    if (Field<>nil) and (Field.JSONType=jtNumber) and not IsNan(Field.AsFloat) and not IsInfinite(Field.AsFloat) then
+      Result:=Field.AsJSON;
+  end;
+  procedure PutString(Obj:TJSONObject;const Key,Content:string);
+  begin Obj.Delete(Key);Obj.Add(Key,Content);end;
+  procedure RemapExtras(Obj:TJSONObject;const Key:string;Index:Integer);
+  var Items:TJSONArray;Parts:TJSONData;K:Integer;
+  begin
+    Parts:=Obj.Find(Key);if Parts=nil then Exit;
+    if not (Parts is TJSONArray) then raise EConvertError.Create('Invalid workflow extras');
+    Items:=TJSONArray.Create;
+    try
+      for K:=0 to Parts.Count-1 do
+      begin
+        if not (Parts.Items[K] is TJSONString) then raise EConvertError.Create('Invalid workflow extra');
+        Items.Add(Mapped(Index,Parts.Items[K].AsString,True));
+      end;
+      Obj.Delete(Key);Obj.Add(Key,Items);Items:=nil;
+    finally Items.Free;end;
+  end;
+  procedure ImportWorkflow(Index:Integer);
+  var Source,TableName,Payload,Id,Key:string;Found:TWLRows;K:Integer;Part:TJSONObject;
+  begin
+    if (Arrays[Index]=nil) or (Arrays[Index].Count=0) then Exit;
+    Name:=Collections[Index];
+    if not EnsureSharedCollection(T.Db,Name) then raise Exception.Create('Workflow collection unavailable');
+    Found:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+';');
+    if Length(Found)<>1 then raise Exception.Create('Ambiguous workflow collection');
+    Source:=Found[0][0];TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
+    Guard:=Guard+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+
+      ' AND table_name='+QuotedStr(Source)+')=1';
+    for K:=0 to Arrays[Index].Count-1 do
+    begin
+      Part:=TJSONObject(Arrays[Index].Objects[K].Clone);
+      try
+        Id:=Mapped(Index,Text(Part,'_id'),True);
+        for Key in ['createdAt','modifiedAt','updatedAt'] do Part.Delete(Key);
+        PutString(Part,'_id',Id);PutString(Part,'boardId',BoardId);
+        case Index of
+          3: begin
+            if Text(Part,'activityType')='' then raise EConvertError.Create('Invalid imported trigger');
+            NormalizeRuleTrigger(Part);
+          end;
+          4: if Text(Part,'actionType')='' then raise EConvertError.Create('Invalid imported action');
+          5: begin
+            PutString(Part,'triggerId',Mapped(3,Text(Part,'triggerId'),True));
+            PutString(Part,'actionId',Mapped(4,Text(Part,'actionId'),True));
+            RemapExtras(Part,'extraTriggerIds',3);RemapExtras(Part,'extraActionIds',4);
+          end;
+        end;
+        Payload:=QuotedStr(TypedDocument(Part.AsJSON,'','{}'));
+        Sql:=Sql+'INSERT INTO '+TableName+'(_ferretdb_sjson) VALUES(CASE WHEN wl_storage('+QuotedStr(Source)+
+          ')=''blob'' THEN jsonb('+Payload+') ELSE '+Payload+' END); ';
+      finally Part.Free;end;
+    end;
+  end;
+  procedure ReadImportPolicy;
+  var Found:TWLRows;Physical,Registry:string;
+  begin
+    if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>1 then Exit;
+    Registry:=' FROM _ferretdb_collections WHERE name=''settings''';
+    Found:=T.Db.Query('SELECT table_name'+Registry+';');
+    if Length(Found)=0 then
+    begin Guard:=Guard+' AND NOT EXISTS(SELECT 1'+Registry+')';Exit;end;
+    if Length(Found)<>1 then raise Exception.Create('Ambiguous import settings');
+    Physical:='"'+StringReplace(Found[0][0],'"','""',[rfReplaceAll])+'"';
+    Guard:=Guard+' AND (SELECT count(*)'+Registry+' AND table_name='+QuotedStr(Found[0][0])+')=1';
+    Permission:=Permission+' AND NOT EXISTS(SELECT 1 FROM '+Physical+
+      ' WHERE json_type(_ferretdb_sjson,''$.disableAllImport'')=''true'')';
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  Body:=nil;Guard:='1';
+  for I:=0 to High(Maps) do Maps[I]:=nil;
+  try
+    try
+      try Body:=ExactObject(aRequest.Content);
+      except raise EConvertError.Create('Invalid board export JSON');end;
+      Value:=Body.Find('board');
+      if not (Value is TJSONObject) then raise EConvertError.Create('Missing board export');
+      Input:=TJSONObject(Value);
+      Name:=Text(Input,'_format');
+      if (Name<>'') and (Name<>'wekan-board-1.0.0') then raise EConvertError.Create('Invalid board export format');
+      for Name in ['attachments','comments','checklists','checklistItems','customFields'] do
+      begin
+        Value:=Input.Find(Name);
+        if (Value<>nil) and ((not (Value is TJSONArray)) or (Value.Count<>0)) then
+        begin SendError(aResponse,400,'Board export contains unsupported child records');Exit;end;
+      end;
+      Title:=Text(Input,'title');
+      if Trim(Title)='' then raise EConvertError.Create('Missing board title');
+      for I:=0 to High(Maps) do
+      begin
+        Maps[I]:=TJSONObject.Create;Arrays[I]:=nil;
+        Value:=Input.Find(Collections[I]);if Value=nil then Continue;
+        if not (Value is TJSONArray) then raise EConvertError.Create('Invalid board export array');
+        Arrays[I]:=TJSONArray(Value);
+        for J:=0 to Arrays[I].Count-1 do
+        begin
+          if not (Arrays[I].Items[J] is TJSONObject) then raise EConvertError.Create('Invalid board export row');
+          Name:=Text(Arrays[I].Objects[J],'_id');
+          if (Name='') or (Maps[I].Find(Name)<>nil) then raise EConvertError.Create('Invalid export identity');
+          Maps[I].Add(Name,NewId);
+        end;
+      end;
+      BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
+      Permission:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
+        ' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+AdminOnly+'))';
+      ReadImportPolicy;
+      Rows:=T.Db.Query('SELECT '+Permission+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin SendError(aResponse,403,'Board import is restricted');Exit;end;
+      BoardId:=NewId;Board:=QuotedStr(BoardId);Stamp:=QuotedStr(NowIso);
+      Name:=Text(Input,'color','belize');if Name='' then Name:='belize';
+      Sql:='INSERT INTO boards(id,title,slug,description,permission,color,createdAt,modifiedAt) VALUES('+
+        Board+','+QuotedStr(Title)+','+QuotedStr(Slugify(Title))+','+QuotedStr(Text(Input,'description'))+
+        ',''private'','+QuotedStr(Name)+','+Stamp+','+Stamp+'); '+
+        'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
+      if Arrays[0]<>nil then for J:=0 to Arrays[0].Count-1 do
+      begin
+        Row:=Arrays[0].Objects[J];
+        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(Mapped(0,Text(Row,'_id'),True))+
+          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortValue(Row)+','+Stamp+'); ';
+      end;
+      if (Arrays[0]=nil) or (Arrays[0].Count=0) then
+        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(NewId)+
+          ','+Board+',''Default'',0,'+Stamp+'); ';
+      if Arrays[1]<>nil then for J:=0 to Arrays[1].Count-1 do
+      begin
+        Row:=Arrays[1].Objects[J];
+        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES('+
+          QuotedStr(Mapped(1,Text(Row,'_id'),True))+','+Board+','+QuotedStr(CardListLane(Row))+','+
+          QuotedStr(Text(Row,'title'))+','+SortValue(Row)+','+Stamp+'); ';
+      end;
+      if Arrays[2]<>nil then for J:=0 to Arrays[2].Count-1 do
+      begin
+        Row:=Arrays[2].Objects[J];
+        Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
+          'createdAt,modifiedAt,dateLastActivity) VALUES('+QuotedStr(Mapped(2,Text(Row,'_id'),True))+','+Board+','+
+          QuotedStr(Mapped(1,Text(Row,'listId'),True))+','+QuotedStr(CardListLane(Row))+','+
+          Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
+          QuotedStr(Text(Row,'description'))+','+QuotedStr(Actor)+','+SortValue(Row)+','+IntToStr(J+1)+
+          ','+Stamp+','+Stamp+','+Stamp+'); ';
+      end;
+      for I:=3 to High(Maps) do ImportWorkflow(I);
+      if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+
+        ' AND '+Guard+' AND '+Permission+' THEN 1 ELSE json(''Board import policy changed'') END; '+Sql+'COMMIT;') then
+        raise Exception.Create('Board import failed');
+    except
+      on E:EConvertError do begin SendError(aResponse,400,'Invalid board export');Exit;end;
+      on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not import board');Exit;end;
+    end;
+    Reply:=TJSONObject.Create(['_id',BoardId]);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  finally
+    for I:=0 to High(Maps) do Maps[I].Free;
+    Body.Free;
+  end;
 end;
 
 function CopyBoardWorkflows(Db:TWLDb;const Source,Destination,Actor:string):string;

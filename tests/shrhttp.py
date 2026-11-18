@@ -240,6 +240,23 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert [r['_id'] for r in exported['rules']]==['rule-b']
                 assert [r['_id'] for r in exported['triggers']]==['trigger-b','trigger-extra']
                 assert [r['_id'] for r in exported['actions']]==['action-b','action-extra']
+                import_path='/api/boards/import'
+                invalid_export=dict(exported,rules=[dict(exported['rules'][0],triggerId='missing')])
+                assert request('POST',import_path,dict(board=invalid_export),token)[0]==400
+                status,_,body=request('POST',import_path,dict(board=exported),token)
+                assert status==200,(status,body)
+                imported_id=json.loads(body)['_id']
+                assert imported_id!='b'
+                def imported_rows(collection):
+                    return client.command({'find':collection,'filter':dict(boardId=imported_id)})['cursor']['firstBatch']
+                imported_rule,=imported_rows('rules')
+                assert imported_rule['triggerId']!='trigger-b' and imported_rule['actionId']!='action-b'
+                assert set(imported_rule['extraTriggerIds'])<={r['_id'] for r in imported_rows('triggers')}
+                imported_card,=imported_rows('cards')
+                assert imported_card['listId'] in {r['_id'] for r in imported_rows('lists')}
+                assert imported_card['swimlaneId'] in {r['_id'] for r in imported_rows('swimlanes')}
+                assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
+                print('PASS: shared board import remaps structure and workflows and rejects dangling workflow references')
                 client.command({'create':'integrations'})
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
                     userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
