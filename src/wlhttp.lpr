@@ -201,7 +201,7 @@ begin
 end;
 
 procedure AuthError(Request:TRequest;Response:TResponse;Code:Integer;
-  const TitleKey,Title,Message:string);
+  const TitleKey,Title,Message:string;const MessageKey:string='');
 var Language:TWLLanguage;Words:TWLTranslator;
 begin
   Language:=ViewerLanguage(nil,Default(TWLSession),Request);
@@ -209,7 +209,7 @@ begin
   try
     Response.Code:=Code;Response.ContentType:='text/html; charset=utf-8';
     Response.Content:=LanguagePage(Response,Language,Words.Text(TitleKey,Title),
-      '<p>'+HtmlEncode(Message)+'</p>');
+      '<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>');
   finally Words.Free;end;
   Response.SendContent;
 end;
@@ -232,7 +232,7 @@ begin
     if not ReserveLoginAttempt(T.Db,Username,aRequest.RemoteAddress,DateTimeToUnix(Now,False)) then
     begin
       aResponse.Code:=429;aResponse.SetCustomHeader('Retry-After','300');
-      AuthError(aRequest,aResponse,429,'log-in','Sign in','Too many login attempts. Try again later.');Exit;
+      AuthError(aRequest,aResponse,429,'log-in','Sign in','Too many login attempts. Try again later.','auth-too-many-attempts');Exit;
     end;
     Proof:=nil;
     if AuthenticateAccount(T.Db,Username,Password,aRequest.ContentFields.Values['code'],Proof) then
@@ -268,7 +268,7 @@ begin
   if not Result then
   begin
     Response.Code:=429;Response.SetCustomHeader('Retry-After','300');
-    AuthError(Request,Response,429,'two-factor-required-title','One-time codes','Too many login attempts. Try again later.');
+    AuthError(Request,Response,429,'two-factor-required-title','One-time codes','Too many login attempts. Try again later.','auth-too-many-attempts');
   end;
 end;
 function ConfirmationForm(Request:TRequest;const Token,Message:string;Words:TWLTranslator):string;

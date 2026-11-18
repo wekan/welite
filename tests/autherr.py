@@ -21,7 +21,11 @@ def check(result,tag,private=False,title_key=None):
     assert (doc.body.get('dir')=='rtl')==(tag in ['ar','he'])
     assert 'Set-Cookie' not in headers
     assert b'test-password' not in body and b'otp-secret' not in body
-    if status==429:assert headers['Retry-After']=='300'
+    if status==429:
+        assert headers['Retry-After']=='300'
+        catalog=Path(__file__).resolve().parents[1]/'i18n'/'data'/f'{tag}.jsn'
+        message=json.loads(catalog.read_text())['auth-too-many-attempts']
+        assert f'<p>{html.escape(message)}</p>'.encode() in body
     if private:
         assert headers['Cache-Control']=='no-store'
         assert headers['Referrer-Policy']=='no-referrer'

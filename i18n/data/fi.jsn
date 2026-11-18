@@ -2112,5 +2112,6 @@
   "enrollment-code-instructions": "Käytä aikapohjaisia koodeja: SHA1, kuusi numeroa, 30 sekuntia. Pidä salainen avain omana tietonasi. Käyttöönotto vanhenee viidessä minuutissa.",
   "enrollment-confirmed-instructions": "Vahvistuskoodi on käytetty. Odota todennussovelluksen uutta koodia ennen kirjautumista.",
   "enrollment-account-created": "Tili luotu",
-  "registration-first-admin": "Ensimmäisestä tilistä tulee verkkotunnuksen pääkäyttäjä."
+  "registration-first-admin": "Ensimmäisestä tilistä tulee verkkotunnuksen pääkäyttäjä.",
+  "auth-too-many-attempts": "Liian monta kirjautumisyritystä. Yritä myöhemmin uudelleen."
 }
