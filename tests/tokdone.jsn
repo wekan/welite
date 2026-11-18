@@ -38,7 +38,9 @@
       "email-invite-text"
     ],
     "ast-ES.jsn": [
-      "operator-number-expected"
+      "operator-number-expected",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "bg.jsn": [
       "act-removeChecklistItem",
@@ -98,7 +100,9 @@
       "custom-field-stringtemplate-format"
     ],
     "eo.jsn": [
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "es-AR.jsn": [
       "act-removeChecklistItem"
@@ -171,11 +175,15 @@
     ],
     "hi-IN.jsn": [
       "act-addSubtask",
-      "avatar-too-big"
+      "avatar-too-big",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "hi.jsn": [
       "act-addSubtask",
-      "avatar-too-big"
+      "avatar-too-big",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "hr.jsn": [
       "act-removeChecklistItem",
@@ -210,10 +218,14 @@
       "act-withCardTitle"
     ],
     "ko-KR.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "ko.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "lv.jsn": [
       "act-withBoardTitle"
@@ -320,7 +332,9 @@
       "custom-field-stringtemplate-format"
     ],
     "sr.jsn": [
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "sv.jsn": [
       "act-removeChecklistItem",
@@ -330,7 +344,9 @@
     ],
     "ta.jsn": [
       "act-addSubtask",
-      "avatar-too-big"
+      "avatar-too-big",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "tlh.jsn": [
       "act-addChecklistItem"
@@ -400,43 +416,60 @@
       "custom-field-stringtemplate-format"
     ],
     "zh-CN.jsn": [
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "zh-GB.jsn": [
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "zh-HK.jsn": [
       "act-removeChecklistItem",
       "board-open-and-move-between-remaining-and-workspaces",
       "drag-board-to-workspace",
-      "act-deleteAttachment"
+      "act-deleteAttachment",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "zh-Hant.jsn": [
       "act-removeChecklistItem",
       "board-open-and-move-between-remaining-and-workspaces",
       "drag-board-to-workspace",
-      "act-deleteAttachment"
+      "act-deleteAttachment",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "zh-TW.jsn": [
       "act-removeChecklistItem",
       "board-open-and-move-between-remaining-and-workspaces",
       "drag-board-to-workspace",
-      "act-deleteAttachment"
+      "act-deleteAttachment",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "zh.jsn": [
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "zh_SG.jsn": [
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-editComment",
+      "activity-deleteComment"
     ],
     "th.jsn": [
-      "act-withCardTitle"
+      "act-withCardTitle",
+      "activity-editComment"
     ],
     "vi-VN.jsn": [
-      "act-withCardTitle"
+      "act-withCardTitle",
+      "activity-editComment"
     ],
     "vi.jsn": [
-      "act-withCardTitle"
+      "act-withCardTitle",
+      "activity-editComment"
     ],
     "cy-GB.jsn": [
       "act-moveCardToOtherBoard",
@@ -953,6 +986,30 @@
       "email-enrollAccount-subject",
       "act-a-dueAt",
       "globalSearch-instructions-operator-assignee"
+    ],
+    "es-CL.jsn": [
+      "activity-editComment",
+      "activity-deleteComment"
+    ],
+    "es-LA.jsn": [
+      "activity-editComment",
+      "activity-deleteComment"
+    ],
+    "es-PE.jsn": [
+      "activity-editComment",
+      "activity-deleteComment"
+    ],
+    "es-PY.jsn": [
+      "activity-editComment",
+      "activity-deleteComment"
+    ],
+    "es.jsn": [
+      "activity-editComment",
+      "activity-deleteComment"
+    ],
+    "es_CO.jsn": [
+      "activity-editComment",
+      "activity-deleteComment"
     ]
   }
 }

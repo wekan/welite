@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Restore comment arguments in translated activities
+
+- Restore the missing comment argument in 45 edit and delete activity
+  strings across 24 catalogs.
+
 ## 2026-11-18 Restore numbered translation placeholders
 
 - Restore protected tokens in 515 entries across eight catalogs. Preserve
