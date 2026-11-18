@@ -1369,6 +1369,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         cardId='brow-card',title='Steps',sort=0)]})
                     client.command({'insert':'checklistItems','documents':[dict(_id='brow-item',boardId='b',
                         cardId='brow-card',checklistId='brow-check',title='Retained REST item',sort=0)]})
+                    board_setting='allowsCustomFieldsOnMinicard'
+                    before_setting=client.find('boards','b')[0].get(board_setting)
+                    client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$set':{board_setting:True}})]})
+                    client.command({'insert':'customFields','documents':[dict(_id='browser-mini-field',
+                        boardIds=['b'],name='Browser choice',type='dropdown',showLabelOnMiniCard=True,
+                        settings=dict(dropdownItems=[dict(_id='browser-mini-option',name='Original choice')]))]})
+                    client.command({'update':'cards','updates':[dict(q={'_id':'brow-sort'},
+                        u={'$set':{'customFields':[dict(_id='browser-mini-field',value='browser-mini-option')]}})]})
+                    subprocess.run([os.environ.get('NODE','node'),str(root/'tests/minifield.js'),
+                                    f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
+                    board_restore={'$unset':{board_setting:''}} if before_setting is None else {'$set':{board_setting:before_setting}}
+                    client.command({'update':'boards','updates':[dict(q={'_id':'b'},u=board_restore)]})
+                    client.command({'update':'cards','updates':[dict(q={'_id':'brow-sort'},u={'$unset':{'customFields':''}})]})
+                    client.command({'delete':'customFields','deletes':[dict(q={'_id':'browser-mini-field'},limit=1)]})
                     upload_bytes=bytes(range(256))*1025
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/cardupload.js'),
                                     f'http://localhost:{http_port}/board/card?id=b&card=brow-sort&sessionId='+web_session,
