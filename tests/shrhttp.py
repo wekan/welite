@@ -1183,7 +1183,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         dict(_id='brow-sort',boardId='b',listId='l',swimlaneId='s',
                             title='First card for browser sorting',archived=False,sort=10),
                         dict(_id='brow-card',boardId='b',listId='l',swimlaneId='s',
-                            title='Keep my browser checklist',archived=False,sort=20)]})
+                            title='Keep my browser checklist',archived=False,sort=20,spentTime=2,isOvertime=False)]})
                     client.command({'insert':'checklists','documents':[dict(_id='brow-check',boardId='b',
                         cardId='brow-card',title='Steps',sort=0)]})
                     client.command({'insert':'checklistItems','documents':[dict(_id='brow-item',boardId='b',

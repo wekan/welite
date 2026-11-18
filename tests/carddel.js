@@ -4,6 +4,7 @@ const { readFileSync } = require('node:fs');
 
 (async () => {
   const boardUrl = new URL(process.argv[2]);
+  boardUrl.searchParams.set('lang', 'en');
   const token = readFileSync(0, 'utf8').trim();
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
   try {
@@ -66,6 +67,24 @@ const { readFileSync } = require('node:fs');
     ]);
     assert.equal(details.status(), 200);
     assert.equal(await details.headerValue('set-cookie'), null);
+    const spent = page.getByRole('heading', { name: 'Spent time (hours)', exact: true });
+    const overtime = page.getByRole('heading', { name: 'Overtime (hours)', exact: true });
+    assert.equal(await spent.count(), 1, await page.locator('body').innerText());
+    for (const [isOverTime, content] of [
+      [true, { data: { isOverTime: true } }],
+      [false, { form: { isOverTime: 'false' } }],
+    ]) {
+      const edited = await context.request.put(endpoint('l'), { headers, ...content });
+      assert.equal(edited.status(), 200);
+      const read = await context.request.get(endpoint('l'), { headers });
+      assert.equal((await read.json()).isOvertime, isOverTime);
+      await page.reload();
+      assert.equal(await overtime.count(), isOverTime ? 1 : 0);
+      assert.equal(await spent.count(), isOverTime ? 0 : 1);
+      assert.equal(await page.getByText('2.0', { exact: true }).count() +
+        await page.getByText('2', { exact: true }).count(), 1);
+    }
+    console.log('PASS: Chromium reflects JSON and form overtime edits without JavaScript or cookies');
     const checklistTitle = page.getByRole('heading', { name: 'Steps', exact: true });
     const checklistItem = page.getByText('Retained REST item', { exact: true });
     assert.equal(await checklistTitle.count(), 1);

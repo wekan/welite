@@ -300,7 +300,7 @@ begin
 end;
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
-  Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir:string;
+  Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel:string;
   Rows,Checklists,Items:TWLRows;Checklist,Item:TWLRow;Open,Snapshot:Boolean;
 begin
   T:=Default(TWLTenant);S:=Default(TWLSession);
@@ -321,7 +321,9 @@ begin
           BoardKey:=QuotedStr(Board);CardKey:=QuotedStr(Card);
           Selector:=TSelectionScope.Create(T.Db);
           try
-            Rows:=T.Db.Query('SELECT title,description FROM cards WHERE id='+CardKey+' AND boardId='+BoardKey+
+            Rows:=T.Db.Query('SELECT title,description,CASE WHEN spentTime<>0 AND EXISTS(SELECT 1 FROM boards '+
+              'WHERE id='+BoardKey+' AND COALESCE(json_extract(settings_json,''$.allowsSpentTime''),1)=1) '+
+              'THEN spentTime END,isOvertime FROM cards WHERE id='+CardKey+' AND boardId='+BoardKey+
               ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
               ' AND '+Selector.StringField('cards','boardId')+';');
             if Length(Rows)=1 then
@@ -330,6 +332,12 @@ begin
               Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
                 HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>';
               if Rows[0][1]<>'' then Body:=Body+'<p>'+HtmlEncode(Rows[0][1])+'</p>';
+              if Rows[0][2]<>'' then
+              begin
+                if Rows[0][3]='1' then TimeLabel:=Words.Text('overtime-hours','Overtime (hours)')
+                else TimeLabel:=Words.Text('spent-time-hours','Spent time (hours)');
+                Body:=Body+'<h2>'+HtmlEncode(TimeLabel)+'</h2><p>'+HtmlEncode(Rows[0][2])+'</p>';
+              end;
               Scope:='cardId='+CardKey+' AND '+Selector.StringField('checklists','cardId')+
                 ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
                 Selector.StringField('checklists','boardId')+'))';
