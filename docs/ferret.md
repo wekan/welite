@@ -1785,5 +1785,10 @@ List lifecycle changes also append to the shared `changeHistory` collection
 for legacy boards without a WeKan writer gate and for coordinated boards
 with an idle chain head. Legacy appends check the unique tip. Coordinated
 appends insert the row and advance the head in one SQLite transaction.
-Legacy writer leases and recovery of pending coordinated records remain open.
+WeLite retires eligible expired legacy writer leases and fences their claimed
+rows. It verifies both hashes before recovering a coordinated reservation and
+preserves the recorded BSON values. BSON regular expressions remain pending:
+WeKan’s EJSON copy hashes the pattern and options, while its default Mongo read
+omits both from the hash input. WeLite leaves the stored reservation and chain
+head intact in that case.
 The same FerretDB registry refresh applies if WeLite creates the collection.

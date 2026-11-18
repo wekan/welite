@@ -405,6 +405,10 @@ begin
         Result:=Result+'}';
       end;
     'binData':Result:=CanonicalBinary(Value.AsString,TJSONObject(Schema).Get('s',0));
+    // WeKan's EJSON copy hashes the pattern and options, but the default
+    // Mongo read exposes a RegExp with no enumerable properties. A digest
+    // of that read cannot verify either the stored pattern or its options.
+    'regex':raise Exception.Create('Cannot verify history reservation regular expression');
     'object':
       Result:=ReservationObject(TJSONObject(Value),TJSONObject(TJSONObject(Schema).Objects['$s'].Find('p')));
     'array':

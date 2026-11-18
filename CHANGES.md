@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Keep unverifiable regular expressions pending
+
+- Preserve the pending row and chain head when BSON regex patterns and
+  options are absent from both hashes after WeKan’s default Mongo read.
+
 ## 2026-11-18 Recover coordinated history with additional BSON types
 
 - Hash Long, Timestamp, ObjectId and Binary as WeKan’s Mongo driver

@@ -96,8 +96,16 @@ payload = ''.join(json.dumps(row, ensure_ascii=False)+'\n' for row in rows)
 node = r"""
 const { hashHistoryRow, rowHashIsValid, canonical, sha256 } = require(process.argv[1]);
 const fs = require('node:fs');
-const { Binary, Long, ObjectId, Timestamp, serialize, deserialize } =
+const assert = require('node:assert/strict');
+const { Binary, BSONRegExp, EJSON, Long, ObjectId, Timestamp, serialize, deserialize } =
   require(require.resolve('bson', { paths: [require('node:path').dirname(process.argv[1])] }));
+const expression = { value: new BSONRegExp('checked', 'im') };
+const copied = EJSON.parse(EJSON.stringify(expression), { relaxed: true });
+const stored = deserialize(serialize(expression));
+const changed = deserialize(serialize({ value: new BSONRegExp('changed', 'i') }));
+assert.equal(canonical(copied.value), '{"options":"im","pattern":"checked"}');
+assert.equal(canonical(stored.value), '{}');
+assert.equal(canonical(stored.value), canonical(changed.value));
 for (const line of fs.readFileSync(0, 'utf8').trimEnd().split('\n')) {
   function decode(value, schema) {
     switch (schema.t) {

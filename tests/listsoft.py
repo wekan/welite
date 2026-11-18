@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 
 from layout import Forms
 
-from wire import Binary, DateMs, Long, ObjectId, Timestamp, encode
+from wire import Binary, DateMs, Long, ObjectId, Regex, Timestamp, encode
 
 
 def run(request, client, db, token, refresh_ferret, session):
@@ -235,6 +235,8 @@ def run(request, client, db, token, refresh_ferret, session):
                         'unsigned': isinstance(value, Timestamp)}
             if isinstance(value, ObjectId):
                 return {f'i{i}': int.from_bytes(value[i*3:i*3+3], 'big') for i in range(4)}
+            if isinstance(value, Regex):
+                return {}
             if isinstance(value, Binary):
                 return {'buffer': {str(i): byte for i, byte in enumerate(value)},
                         'position': len(value), 'sub_type': value.subtype}
@@ -283,20 +285,30 @@ def run(request, client, db, token, refresh_ferret, session):
             assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
             head=client.find('historyChainHeads',head_id)[0]
         print('PASS: coordinated lifecycle finalizes saved and unsaved list, card and legacy reservations before appending')
-        # The pending digest can still match after contents were changed. Its
-        # row digest must independently verify before the chain may advance.
-        pending = dict(saved, _id='wekan-pending-history', previousHash=head['hash'])
-        original['previousHash']=head['hash']
-        pending['integrityHash']=digest(original)
-        pending['newContent']={'after': 3}
-        result = client.command({'update':'historyChainHeads','updates':[
-            dict(q={'_id':head_id},u={'$set':dict(pending=pending,pendingHash=digest(pending))})]})
-        assert result['n']==1, result
-        reserved,=client.find('historyChainHeads',head_id)
+        # A matching pending digest cannot validate changed content or a
+        # regex whose pattern and options were omitted by the Mongo decoder.
         before=changes()
-        assert request('DELETE',path,token=token)[0]==200
-        assert changes()==before
-        assert encode(client.find('historyChainHeads',head_id)[0])==encode(reserved)
+        for scenario in ('tampered','regex'):
+            pending = dict(saved, _id='wekan-'+scenario+'-pending-history', previousHash=head['hash'])
+            if scenario=='tampered':
+                original['previousHash']=head['hash']
+                pending['integrityHash']=digest(original)
+                pending['newContent']={'after': 3}
+            else:
+                pending['newContent']={'match': Regex('checked', 'im')}
+                pending['integrityHash']=digest({key:pending[key] for key in protected})
+            result = client.command({'update':'historyChainHeads','updates':[
+                dict(q={'_id':head_id},u={'$set':dict(pending=pending,pendingHash=digest(pending))})]})
+            assert result['n']==1, result
+            reserved,=client.find('historyChainHeads',head_id)
+            assert request('DELETE',path,token=token)[0]==200
+            assert changes()==before
+            assert not client.find('changeHistory',pending['_id'])
+            assert encode(client.find('historyChainHeads',head_id)[0])==encode(reserved)
+            if scenario=='tampered':
+                assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+                assert changes()==before
+        print('PASS: coordinated history refuses a regex even when both read-side digests match')
         invalid_hash='g'*64
         result=client.command({'update':'historyChainHeads','updates':[
             dict(q={'_id':head_id},u={'$set':dict(hash=invalid_hash,pending=None,pendingHash=None)})]})
