@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Retain shared attachments after HTML selection deletion
+
+- Mark attachments from selected cards, lists and lanes in the same
+  transaction as selection deletion. Preserve their bytes for recovery and
+  omit them from live listings.
+
 ## 2026-11-18 Retain shared attachments after REST card deletion
 
 - Single and bulk card deletion mark the card’s active attachments under one

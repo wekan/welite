@@ -198,6 +198,27 @@ const { readFileSync } = require('node:fs');
     assert.equal(await card.count(), 0);
     assert.equal((await context.request.delete(endpoint('l'), { headers })).status(), 404);
     console.log('PASS: Chromium wrong-list REST deletion preserves the card and checklist with JavaScript and cookies disabled');
+    metadata.set('cardId', 'brow-sort');
+    metadata.set('fileName', 'selection-attachment.bin');
+    const selectionUpload = await context.request.post(boardUrl.origin + '/api/attachment/upload?' + metadata, {
+      headers: { ...headers, 'Content-Type': 'application/octet-stream' }, data: attachment,
+    });
+    assert.equal(selectionUpload.status(), 200);
+    const { attachmentId: selectedFile } = await selectionUpload.json();
+    await page.locator('input[name=sel_card][value=brow-sort]').check();
+    await page.locator('input[name=action_delete]').click();
+    assert.equal(await page.locator('[data-delete-confirm]').count(), 1);
+    await page.locator('input[name=action_confirm-delete]').click();
+    assert.equal(await page.getByText(firstTitle, { exact: true }).count(), 0);
+    const listing = await context.request.get(boardUrl.origin + '/api/attachment/list/b', { headers });
+    assert.equal(listing.status(), 200);
+    assert(!(await listing.json()).attachments.some(entry => entry.attachmentId === selectedFile));
+    const retained = await context.request.get(boardUrl.origin + '/api/attachment/download/' +
+      encodeURIComponent(selectedFile) + '?raw=1', { headers });
+    assert.equal(retained.status(), 200);
+    assert.deepEqual(await retained.body(), attachment);
+    console.log('PASS: Chromium selection deletion hides the card and retains its shared attachment bytes');
+
   } finally {
     await browser.close();
   }

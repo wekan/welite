@@ -12,7 +12,7 @@ procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
 function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
   Position:Int64;out NewId:string):Boolean;
 implementation
-uses wlcfjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp;
+uses wlcfjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp,wlshared,wlattdel,wlpasswd;
 type EInvalidSelection=class(Exception);
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
@@ -531,26 +531,47 @@ begin
   finally UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
 end;
 
-function DeleteSelection(const T:TWLTenant; Graph:TJSONObject; const BoardId:string):Boolean;
-var Data:TJSONObject; CardIds,ListIds,LaneIds,AttachmentIds,ActivityIds,Sql:string;
-  A:TJSONArray; i:Integer;
+function DeleteSelection(const T:TWLTenant;Graph:TJSONObject;const BoardId,UserId:string):Boolean;
+var Data:TJSONObject;CardIds,ListIds,LaneIds,AttachmentIds,ActivityIds,Sql,AttachmentSql,
+  Board,Scope,Bindings,Permission:string;
+  A:TJSONArray;I:Integer;Shared:Boolean;Selector:TSelectionScope;Policy:TFieldPolicy;
 begin
-  Data:=TJSONObject(Graph.Find('data')); CardIds:=ArrayIds(Data,'cards'); ListIds:=ArrayIds(Data,'lists');
-  LaneIds:=ArrayIds(Data,'swimlanes'); AttachmentIds:=ArrayIds(Data,'attachments'); ActivityIds:=ArrayIds(Data,'activities');
-  Sql:='BEGIN IMMEDIATE; DELETE FROM card_dependencies WHERE targetCardId IN ('+CardIds+
-    ') AND cardId IN (SELECT id FROM cards WHERE boardId='+q(BoardId)+'); '+
-    'DELETE FROM cards WHERE boardId='+q(BoardId)+' AND id IN ('+CardIds+'); '+
-    'DELETE FROM lists WHERE boardId='+q(BoardId)+' AND id IN ('+ListIds+'); '+
-    'DELETE FROM swimlanes WHERE boardId='+q(BoardId)+' AND id IN ('+LaneIds+'); '+
-    'DELETE FROM attachments WHERE boardId='+q(BoardId)+' AND id IN ('+AttachmentIds+'); '+
-    'DELETE FROM activities WHERE boardId='+q(BoardId)+' AND id IN ('+ActivityIds+'); COMMIT;';
+  Data:=TJSONObject(Graph.Find('data'));CardIds:=ArrayIds(Data,'cards');ListIds:=ArrayIds(Data,'lists');
+  LaneIds:=ArrayIds(Data,'swimlanes');AttachmentIds:=ArrayIds(Data,'attachments');ActivityIds:=ArrayIds(Data,'activities');
+  Board:=q(BoardId);Shared:=SharedStore(T.Db);
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  Bindings:='';
+  if Shared then
+  begin
+    Selector:=TSelectionScope.Create(T.Db);
+    try
+      Scope:='boardId='+Board+' AND '+Selector.StringField('attachments','boardId')+' AND '+
+        Selector.StringField('attachments','id')+' AND ('+
+        '(cardId IN ('+CardIds+') AND '+Selector.StringField('attachments','cardId')+') OR '+
+        '(listId IN ('+ListIds+') AND '+Selector.StringField('attachments','listId')+') OR '+
+        '(swimlaneId IN ('+LaneIds+') AND '+Selector.StringField('attachments','swimlaneId')+'))';
+      for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
+      AttachmentSql:=SharedAttachmentRemovalSQL(T.Db,UserId,BoardId,Scope,q(NewAuthToken),False);
+    finally Selector.Free;end;
+  end
+  else AttachmentSql:='DELETE FROM attachments WHERE boardId='+Board+' AND id IN ('+AttachmentIds+'); ';
+  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+
+    ' THEN 1 ELSE json(''Selection deletion permission changed'') END; '+AttachmentSql+
+    'DELETE FROM card_dependencies WHERE targetCardId IN ('+CardIds+
+    ') AND cardId IN (SELECT id FROM cards WHERE boardId='+Board+'); '+
+    'DELETE FROM cards WHERE boardId='+Board+' AND id IN ('+CardIds+'); '+
+    'DELETE FROM lists WHERE boardId='+Board+' AND id IN ('+ListIds+'); '+
+    'DELETE FROM swimlanes WHERE boardId='+Board+' AND id IN ('+LaneIds+'); '+
+    'DELETE FROM activities WHERE boardId='+Board+' AND id IN ('+ActivityIds+'); '+
+    Bindings+'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Selection deletion permission changed'') END; COMMIT;';
   Result:=T.Db.Exec(Sql);
-  if not Result then begin T.Db.Exec('ROLLBACK;'); Exit; end;
-  // Metadata commits first: failed unlinks leave only unreachable files, never live rows
-  // whose bytes were removed by a transaction that later rolled back.
+  if not Result then begin T.Db.Exec('ROLLBACK;');Exit;end;
+  if Shared then Exit;
+  // Native metadata commits before file unlinking.
   A:=TJSONArray(Data.Find('attachments'));
-  for i:=0 to A.Count-1 do if A.Objects[i].Get('storageBackend','filesystem')='filesystem' then
-    try DeleteFile(AttachmentPath(T,A.Objects[i].Get('id',''))); except end;
+  for I:=0 to A.Count-1 do if A.Objects[I].Get('storageBackend','filesystem')='filesystem' then
+    try DeleteFile(AttachmentPath(T,A.Objects[I].Get('id','')));except end;
 end;
 function NewCloneId(Db:TWLDb; const T:TWLTenant; const TableName:string; Used:TStrings):string;
 const Alphabet='23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz';
@@ -989,7 +1010,7 @@ begin
     end;
     if Action='confirm-delete' then
     begin
-      if not DeleteSelection(T,Graph,Request.ContentFields.Values['boardId']) then Error(T,S,Request,Response,500,'Delete failed; selection is unchanged')
+      if not DeleteSelection(T,Graph,Request.ContentFields.Values['boardId'],S.UserId) then Error(T,S,Request,Response,500,'Delete failed; selection is unchanged')
       else Redirect(Response,S,Request.ContentFields);
       Exit;
     end;

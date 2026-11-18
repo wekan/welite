@@ -162,8 +162,8 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
-  - [ ] Complete attachment cascades for HTML selection deletion and integrate
-    attachment removal with change history. Verify the corresponding upstream workflows.
+  - [ ] Integrate attachment removal with change history and verify the
+    corresponding upstream workflows.
   - [ ] Verify Windows runtime DNS validation and support other target resolvers for integration destination writes.
 
 
