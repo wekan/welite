@@ -165,6 +165,15 @@ resolution imports used by webhook validation. This extends source/build coverag
 Windows runtime, resource bytes, entropy, DLL deployment and shutdown acceptance
 remain open for both targets.
 
+### Windows webhook resolver probe
+
+The Windows cross-build check compiles a resolver probe for every selected
+architecture. Set `WELITE_WIN_RUNNER` to a command that can run the resulting
+Windows executables. The probe checks public IPv4 and IPv6 literals and rejects
+loopback destinations. When running the probe directly, pass a public webhook
+URL as its sole argument to check DNS resolution through the platform resolver.
+Windows runtime results remain open.
+
 ## Current Linux ARM hard-float build checks (2026-11-17)
 
 Both advertised `armhf` and `armv7` CLI variants now compile in disk and full

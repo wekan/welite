@@ -1,6 +1,7 @@
 """Compile current Windows disk/embedded servers and inspect target PE headers."""
 import os
 from pathlib import Path
+import shlex
 import shutil
 import struct
 import subprocess
@@ -17,6 +18,7 @@ for variable, cpu, system, compiler, machine, magic, label in (
                         compiler, machine, magic, label))
 assert targets, 'Set WELITE_WIN32 and/or WELITE_WIN64 to an installed target prefix'
 resource = os.environ['FPCRES']
+runner = shlex.split(os.environ.get('WELITE_WIN_RUNNER', ''))
 
 def run(args, cwd):
     result = subprocess.run([str(arg) for arg in args], cwd=cwd,
@@ -65,6 +67,18 @@ def imports(data, pe, magic):
 with tempfile.TemporaryDirectory(prefix='wlwincross-', dir=os.environ['TMPDIR']) as temp:
     for prefix, cpu, system, compiler, machine, magic, label in targets:
         fpc = prefix / 'lib/fpc/3.2.3' / compiler
+        flags = [fpc, '-n', '-B', '-P' + cpu, '-T' + system, '-FR' + resource,
+                 '-Fu' + str(root / 'src'),
+                 '-Fu' + str(prefix / ('lib/fpc/3.2.3/units/' + cpu + '-' + system + '/*'))]
+        probe = Path(temp) / (system + '-resolver')
+        probe.mkdir()
+        binary = probe / 'webhookdns.exe'
+        run([*flags, '-FU' + str(probe), '-o' + str(binary), root / 'tests/webhookdns.lpr'], probe)
+        if runner:
+            run([*runner, binary], probe)
+            print('Windows ' + label + ' webhook resolver probe passed')
+        else:
+            print('Windows ' + label + ' webhook resolver probe compiled')
         for backend in ('linked', 'cli'):
             for embedded in (False, True):
                 out = Path(temp) / (system + backend + ('embed' if embedded else 'disk'))
@@ -75,11 +89,9 @@ with tempfile.TemporaryDirectory(prefix='wlwincross-', dir=os.environ['TMPDIR'])
                          out / 'wlpublic.rc'], root)
                     run([resource, 'wlpublic.rc', '-o', 'wlpublic.res', '-of', 'res'], out)
                 binary = out / 'welite.exe'
-                run([fpc, '-n', '-B', '-P' + cpu, '-T' + system, '-FR' + resource,
+                run([*flags,
                      *(['-dWLDB_CLI'] if backend == 'cli' else []),
                      *(['-dWLEMBED'] if embedded else []), '-O3', '-Xs',
-                     '-Fu' + str(root / 'src'),
-                     '-Fu' + str(prefix / ('lib/fpc/3.2.3/units/' + cpu + '-' + system + '/*')),
                      '-FU' + str(out), '-FE' + str(out), '-o' + str(binary), out / 'wlhttp.lpr'], out)
                 data = binary.read_bytes()
                 assert data[:2] == b'MZ'
