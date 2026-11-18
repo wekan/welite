@@ -76,7 +76,8 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 response=request('GET','/two-factor/setup');assert b'otp-secret' not in response[2] and response[1].get('Cache-Control')=='no-store'
                 for lang, source, direction in [('fi','fi','ltr'), ('ar','ar','rtl'),
                                                 ('ar-DZ','ar','rtl'), ('ar-EG','ar','rtl'),
-                                                ('de','de','ltr'), ('fr-CA','en','ltr')]:
+                                                ('de','de','ltr'), ('fr','fr','ltr'),
+                                                ('fr-CA','fr','ltr'), ('es','en','ltr')]:
                     catalog = json.loads((root/'i18n'/'data'/f'{source}.jsn').read_text())
                     expected = catalog['enrollment-password-instructions']
                     status, headers, body = request('GET', '/two-factor/setup?lang='+lang)
