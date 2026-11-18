@@ -3507,7 +3507,7 @@ begin
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
   HasArchive:=BodyHasField(aRequest,'archive');
-  HasEdits:=BodyHasField(aRequest,'title') or BodyHasField(aRequest,'description') or
+  HasEdits:=BodyHasField(aRequest,'title') or
     BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
     BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
   FieldSets:='';HasDate:=False;Body:=nil;Decorations:=nil;
@@ -3518,7 +3518,7 @@ begin
       else
       begin
         Body:=TJSONObject.Create;
-        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','sort'] do
+        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','sort','description'] do
           if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
             Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
       end;
@@ -3546,6 +3546,19 @@ begin
           ((Input.AsString<>'true') and (Input.AsString<>'false')) then
         begin SendJson(aResponse,'{"error":"Invalid isOverTime"}',400);Exit;end;
         FieldSets:=FieldSets+',isOvertime='+IntToStr(Ord(Input.AsString='true'));
+      end;
+      Input:=Body.Find('description');
+      if Input<>nil then
+      begin
+        Value:='';
+        case Input.JSONType of
+          jtNull: ;
+          jtString: Value:=Input.AsString;
+        else SendJson(aResponse,'{"error":"Invalid description"}',400);Exit;
+        end;
+        if Pos(#0,Value)>0 then
+        begin SendJson(aResponse,'{"error":"Invalid description"}',400);Exit;end;
+        FieldSets:=FieldSets+',description='+QuotedStr(Value);
       end;
       Input:=Body.Find('dueComplete');
       if Input<>nil then
@@ -3603,7 +3616,6 @@ begin
   begin
     Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp+FieldSets;
     if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
-    if BodyHasField(aRequest,'description') then Sets:=Sets+',description='+QuotedStr(BodyField(aRequest,'description'));
     if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;

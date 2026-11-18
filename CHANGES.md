@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Match REST card description validation
+
+- Clear card descriptions with a null or empty value. Reject invalid
+  description types before applying any part of the card update.
+
 ## 2026-11-18 Record REST card assignment additions
 
 - Store member and assignee addition activity with the target username

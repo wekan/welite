@@ -264,6 +264,19 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert (event['username'],event['boardId'],event['listId'])==('user','b','l')
                 print('PASS: dedicated REST assignments record one activity for each actual addition or removal')
 
+                for payload,description in [(dict(description="O'Brien"),"O'Brien"),
+                                            (dict(description=None),''),('description=From+form','From form'),
+                                            ('description=','')]:
+                    status,_,body=request('PUT',card_path,payload,token)
+                    assert status==200 and json.loads(body)['description']==description,(status,body)
+                    stored=client.find('cards',card['_id'])[0]
+                    assert stored['description']==description
+                for invalid in [0,False,[],{}]:
+                    status,_,body=request('PUT',card_path,dict(description=invalid,title='Do not write'),token)
+                    assert status==400 and json.loads(body)==dict(error='Invalid description')
+                    assert client.find('cards',card['_id'])[0]==stored
+                print('PASS: REST card description clears with null or empty form values and rejects invalid edits atomically')
+
                 export_path='/api/boards/b/export'
                 assert request('GET',export_path+'?listId=l',token=token)[0]==400
                 for collection in ['rules','triggers','actions']:
