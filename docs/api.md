@@ -187,9 +187,13 @@ fields as null. Enabling always-on backfills missing values on existing cards.
 - Bodies are accepted as JSON **or** form-encoded (`BodyField` tries both), matching `api.py`'s
   mix of `json=` (login) and `data=` (other calls).
 - The card object includes `labelIds`, `members`, `assignees`, and `customFields` (`[{_id,value}]`).
-- **Attachments**: metadata in `schema.sql` `attachments`; bytes on disk in
-  `data/domains/<domain>/files/attachments/<id>` (`storageBackend: filesystem`). Upload/download
-  carry the file as base64 in JSON, matching api.py's `/api/attachment/*` surface.
+- Attachment metadata lives in SQLite and file bytes live under the tenant's
+  `files/attachme/` directory. REST supports JSON/base64 and binary transfers.
+- The HTML card page shows signed-in editors a multipart upload form. It posts
+  to `/board/attachment/upload?id=<board>&card=<card>` with a one-use action
+  token scoped to that card. The server checks edit access, writes the file and
+  registers its metadata, then redirects to the card with the selected language.
+  The card lists the file for download without JavaScript or cookies.
 - Still TODO (remaining `wekan.yml` endpoints): rules/webhooks, org/teams, settings,
   import/export, label edit/delete, card move, attachment
   copy/move + board backgrounds + S3/MinIO storage backend. Real password hashing and per-board

@@ -163,6 +163,7 @@ end;
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
   - [ ] Verify the upstream attachment removal browser workflows.
+    The native upload, download, and deletion results are recorded in CHANGES.md.
   - [ ] Verify Windows runtime DNS validation and support other target resolvers for integration destination writes.
 
 
