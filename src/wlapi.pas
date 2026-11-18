@@ -1350,10 +1350,13 @@ begin
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
+function CardDateSql(Value:TJSONData;out Literal:string):Boolean; forward;
+
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
-const Collections:array[0..5] of string=('swimlanes','lists','cards','triggers','actions','rules');
+const Collections:array[0..8] of string=('swimlanes','lists','cards','triggers','actions','rules',
+  'comments','checklists','checklistItems');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name:string;
-  Body,Input,Row,Reply:TJSONObject;Maps:array[0..5] of TJSONObject;Arrays:array[0..5] of TJSONArray;
+  Body,Input,Row,Reply:TJSONObject;Maps:array[0..8] of TJSONObject;Arrays:array[0..8] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;I,J:Integer;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -1385,6 +1388,65 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Result:='0';Field:=Obj.Find('sort');
     if (Field<>nil) and (Field.JSONType=jtNumber) and not IsNan(Field.AsFloat) and not IsInfinite(Field.AsFloat) then
       Result:=Field.AsJSON;
+  end;
+  function ImportedDate(Obj:TJSONObject;const Key,Fallback:string):string;
+  var Field:TJSONData;
+  begin
+    Result:=Fallback;Field:=Obj.Find(Key);
+    if (Field=nil) or (Field.JSONType=jtNull) then Exit;
+    if not CardDateSql(Field,Result) then raise EConvertError.Create('Invalid imported date');
+    if Result='NULL' then Result:=Fallback;
+  end;
+  function BooleanValue(Obj:TJSONObject;const Key:string):string;
+  var Field:TJSONData;
+  begin
+    Field:=Obj.Find(Key);
+    Result:=IntToStr(Ord((Field is TJSONBoolean) and Field.AsBoolean));
+  end;
+  procedure ImportCardChildren;
+  var K,L:Integer;Entry,Checklist:TJSONObject;Id,CardKey,CheckKey,OriginalCheck,Parent:string;
+  begin
+    if Arrays[6]<>nil then for K:=0 to Arrays[6].Count-1 do
+    begin
+      Entry:=Arrays[6].Objects[K];
+      Id:=QuotedStr(Mapped(6,Text(Entry,'_id'),True));
+      CardKey:=QuotedStr(Mapped(2,Text(Entry,'cardId'),True));
+      Parent:=Mapped(6,Text(Entry,'parentId'));
+      Sql:=Sql+'INSERT INTO card_comments(id,boardId,cardId,userId,text,parentId,createdAt,modifiedAt) VALUES('+
+        Id+','+Board+','+CardKey+','+QuotedStr(Actor)+','+QuotedStr(Text(Entry,'text'))+','+QuotedStr(Parent)+','+
+        ImportedDate(Entry,'createdAt',Stamp)+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
+    end;
+    if Arrays[7]<>nil then for K:=0 to Arrays[7].Count-1 do
+    begin
+      Entry:=Arrays[7].Objects[K];
+      Id:=QuotedStr(Mapped(7,Text(Entry,'_id'),True));
+      CardKey:=QuotedStr(Mapped(2,Text(Entry,'cardId'),True));
+      Sql:=Sql+'INSERT INTO checklists(id,boardId,cardId,title,sort,finishedAt,dueAt,hideCheckedChecklistItems,'+
+        'hideAllChecklistItems,showChecklistAtMinicard,createdAt,modifiedAt) VALUES('+
+        Id+','+Board+','+CardKey+','+QuotedStr(Text(Entry,'title','Checklist'))+','+SortValue(Entry)+','+
+        ImportedDate(Entry,'finishedAt','NULL')+','+ImportedDate(Entry,'dueAt','NULL')+','+
+        BooleanValue(Entry,'hideCheckedChecklistItems')+','+BooleanValue(Entry,'hideAllChecklistItems')+','+
+        BooleanValue(Entry,'showChecklistAtMinicard')+','+ImportedDate(Entry,'createdAt',Stamp)+','+
+        ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
+    end;
+    if Arrays[8]<>nil then for K:=0 to Arrays[8].Count-1 do
+    begin
+      Entry:=Arrays[8].Objects[K];
+      Id:=QuotedStr(Mapped(8,Text(Entry,'_id'),True));
+      OriginalCheck:=Text(Entry,'checklistId');
+      CheckKey:=QuotedStr(Mapped(7,OriginalCheck,True));
+      Checklist:=nil;
+      for L:=0 to Arrays[7].Count-1 do
+        if Text(Arrays[7].Objects[L],'_id')=OriginalCheck then begin Checklist:=Arrays[7].Objects[L];Break;end;
+      if Checklist=nil then raise EConvertError.Create('Invalid imported checklist');
+      CardKey:=Text(Checklist,'cardId');
+      if Text(Entry,'cardId',CardKey)<>CardKey then raise EConvertError.Create('Invalid checklist item card');
+      CardKey:=QuotedStr(Mapped(2,CardKey,True));
+      Sql:=Sql+'INSERT INTO checklist_items(id,boardId,checklistId,cardId,title,sort,isFinished,createdAt,dueAt,'+
+        'modifiedAt) VALUES('+Id+','+Board+','+CheckKey+','+CardKey+','+QuotedStr(Text(Entry,'title'))+','+
+        SortValue(Entry)+','+BooleanValue(Entry,'isFinished')+','+ImportedDate(Entry,'createdAt','NULL')+','+
+        ImportedDate(Entry,'dueAt','NULL')+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
+    end;
   end;
   procedure PutString(Obj:TJSONObject;const Key,Content:string);
   begin Obj.Delete(Key);Obj.Add(Key,Content);end;
@@ -1467,7 +1529,7 @@ begin
       Input:=TJSONObject(Value);
       Name:=Text(Input,'_format');
       if (Name<>'') and (Name<>'wekan-board-1.0.0') then raise EConvertError.Create('Invalid board export format');
-      for Name in ['attachments','comments','checklists','checklistItems','customFields'] do
+      for Name in ['attachments','customFields'] do
       begin
         Value:=Input.Find(Name);
         if (Value<>nil) and ((not (Value is TJSONArray)) or (Value.Count<>0)) then
@@ -1528,7 +1590,8 @@ begin
           QuotedStr(Text(Row,'description'))+','+QuotedStr(Actor)+','+SortValue(Row)+','+IntToStr(J+1)+
           ','+Stamp+','+Stamp+','+Stamp+'); ';
       end;
-      for I:=3 to High(Maps) do ImportWorkflow(I);
+      ImportCardChildren;
+      for I:=3 to 5 do ImportWorkflow(I);
       if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+
         ' AND '+Guard+' AND '+Permission+' THEN 1 ELSE json(''Board import policy changed'') END; '+Sql+'COMMIT;') then
         raise Exception.Create('Board import failed');

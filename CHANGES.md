@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Import board comments and checklists
+
+- Import comments, checklists, and checklist items with mapped card and
+  checklist IDs. Preserve checklist dates and completion. Attribute
+  imported comments to the caller until member mapping is available.
+
 ## 2026-11-18 Import board structure and workflows over REST
 
 - Import boards, lanes, lists, cards, and shared workflows in one transaction

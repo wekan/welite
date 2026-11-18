@@ -243,7 +243,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 import_path='/api/boards/import'
                 invalid_export=dict(exported,rules=[dict(exported['rules'][0],triggerId='missing')])
                 assert request('POST',import_path,dict(board=invalid_export),token)[0]==400
-                status,_,body=request('POST',import_path,dict(board=exported),token)
+                input_card=exported['cards'][0]['_id']
+                imported_payload=dict(exported,comments=[dict(_id='import-comment',cardId=input_card,text='Imported comment')],
+                    checklists=[dict(_id='import-checklist',cardId=input_card,title='Imported checklist',
+                                     dueAt='2026-06-07T12:00:00.000Z')],
+                    checklistItems=[dict(_id='import-item',checklistId='import-checklist',cardId=input_card,
+                                         title='Imported item',isFinished=True)])
+                status,_,body=request('POST',import_path,dict(board=imported_payload),token)
                 assert status==200,(status,body)
                 imported_id=json.loads(body)['_id']
                 assert imported_id!='b'
@@ -255,6 +261,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 imported_card,=imported_rows('cards')
                 assert imported_card['listId'] in {r['_id'] for r in imported_rows('lists')}
                 assert imported_card['swimlaneId'] in {r['_id'] for r in imported_rows('swimlanes')}
+                imported_comment,=imported_rows('card_comments')
+                imported_check,=imported_rows('checklists')
+                imported_item,=imported_rows('checklistItems')
+                assert imported_comment['cardId']==imported_check['cardId']==imported_item['cardId']==imported_card['_id']
+                assert imported_item['checklistId']==imported_check['_id'] and imported_item['isFinished'] is True
+                assert isinstance(imported_check['dueAt'],DateMs)
+                assert imported_comment['text']=='Imported comment' and imported_comment['userId']=='u'
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: shared board import remaps structure and workflows and rejects dangling workflow references')
                 client.command({'create':'integrations'})
