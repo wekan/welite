@@ -3,11 +3,11 @@ unit wlchhist;
 interface
 uses wldb;
 
-procedure RecordNativeListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
+procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
   Restored:Boolean);
 
 implementation
-uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson;
+uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr;
 
 function Milliseconds(const Text:string):Int64;
 var Date:TDateTime;Stamp,Epoch:TTimeStamp;
@@ -17,26 +17,79 @@ begin
   Result:=Int64(Stamp.Date-Epoch.Date)*86400000+Stamp.Time;
 end;
 
-procedure RecordNativeListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
+procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
   Restored:Boolean);
-const Schema='CREATE TABLE IF NOT EXISTS _wl_change_history('+
+const GateCollections:array[0..1] of string=('historyWriterGates','historyChainHeads');
+  Schema='CREATE TABLE IF NOT EXISTS _wl_change_history('+
   'id TEXT PRIMARY KEY,boardId TEXT NOT NULL,userId TEXT NOT NULL,integrityHash TEXT NOT NULL,'+
   'document TEXT NOT NULL CHECK(json_valid(document))); '+
   'CREATE INDEX IF NOT EXISTS _wl_change_board ON _wl_change_history(boardId);';
 var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
-  BoardSql,UserSql,Lookup,Previous,Stamp,Id,ChangeType,DateKey,Hash,Doc,Sql:string;Attempt:Integer;
+  BoardSql,UserSql,Lookup,LookupSource,Previous,Stamp,Id,ChangeType,DateKey,Hash,Doc,Sql,
+    TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql:string;
+  Attempt:Integer;Shared:Boolean;
+  function Ident(const Name:string):string;
+  begin Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';end;
+  function CollectionTable(const Name:string):TWLRows;
+  begin
+    Result:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+';');
+  end;
 begin
-  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>0 then Exit;
-  if not Db.Exec(Schema) then Exit;
-  BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);
-  Lookup:='SELECT integrityHash FROM _wl_change_history WHERE boardId='+BoardSql+' ORDER BY rowid DESC LIMIT 1';
+  Shared:=Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>0;
+  BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';
+  if Shared then
+  begin
+    if not EnsureHistoryCollection(Db,'changeHistory') then Exit;
+    Rows:=CollectionTable('changeHistory');if Length(Rows)<>1 then Exit;
+    TableName:=Rows[0][0];TableSql:=Ident(TableName);
+    Guard:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''changeHistory'' AND table_name='+
+      QuotedStr(TableName)+')=1 AND (SELECT count(*) FROM _ferretdb_collections WHERE table_name='+QuotedStr(TableName)+')=1';
+    for Gate in GateCollections do
+    begin
+      Rows:=CollectionTable(Gate);
+      if Length(Rows)=0 then
+        Guard:=Guard+' AND NOT EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name='+QuotedStr(Gate)+')'
+      else if Length(Rows)=1 then
+      begin
+        GateTable:=Rows[0][0];
+        Guard:=Guard+' AND EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name='+QuotedStr(Gate)+
+          ' AND table_name='+QuotedStr(GateTable)+') AND NOT EXISTS(SELECT 1 FROM '+Ident(GateTable)+
+          ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+')';
+      end else Exit;
+    end;
+    BoardScope:='json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string''';
+    LookupSource:='WITH hashed(hash,previous) AS (SELECT json_extract(_ferretdb_sjson,''$.integrityHash''),'+
+      'json_extract(_ferretdb_sjson,''$.previousHash'') FROM '+TableSql+' WHERE '+BoardScope+
+      ' AND json_type(_ferretdb_sjson,''$.integrityHash'')=''text'' AND json_extract(_ferretdb_sjson,''$.integrityHash'')<>''''), '+
+      'tips AS (SELECT hash FROM hashed AS row WHERE NOT EXISTS(SELECT 1 FROM hashed WHERE previous=row.hash)) ';
+    Lookup:='SELECT CASE WHEN (SELECT count(*) FROM hashed)=0 THEN '''' '+
+      'WHEN (SELECT count(*) FROM tips)=1 THEN (SELECT hash FROM tips) ELSE ''invalid tip'' END';
+    RedoSql:='UPDATE '+TableSql+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(TableName)+
+      ')=''blob'' THEN jsonb(json_set(_ferretdb_sjson,''$.superseded'',json(''true''))) '+
+      'ELSE json_set(_ferretdb_sjson,''$.superseded'',json(''true'')) END WHERE '+BoardScope+
+      ' AND json_extract(_ferretdb_sjson,''$.userId'')='+UserSql+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p.userId.t'')=''string'''+
+      ' AND json_type(_ferretdb_sjson,''$.undone'')=''true'''+
+      ' AND json_type(_ferretdb_sjson,''$.superseded'')=''false''; ';
+  end else
+  begin
+    if not Db.Exec(Schema) then Exit;
+    Lookup:='SELECT coalesce((SELECT integrityHash FROM _wl_change_history WHERE boardId='+BoardSql+
+      ' ORDER BY rowid DESC LIMIT 1),'''')';
+    RedoSql:='UPDATE _wl_change_history SET document=json_set(document,''$.superseded'',json(''true''))'+
+      ' WHERE boardId='+BoardSql+' AND userId='+UserSql+' AND json_type(document,''$.undone'')=''true'''+
+      ' AND json_type(document,''$.superseded'')=''false''; ';
+  end;
   Rows:=Db.Query('SELECT lower(hex(randomblob(12)));');
   if Length(Rows)<>1 then Exit;
   Id:=Rows[0][0];
   for Attempt:=1 to 5 do
   begin
-    Rows:=Db.Query(Lookup+';');Previous:='';
-    if Length(Rows)=1 then Previous:=Rows[0][0];
+    Rows:=Db.Query(LookupSource+Lookup+';');
+    if Length(Rows)<>1 then Exit;
+    Previous:=Rows[0][0];
+    if (Previous<>'') and (Length(Previous)<>64) then Exit;
     Stamp:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(Now));
     ChangeType:='removed';DateKey:='newContent';
     if Restored then begin ChangeType:='added';DateKey:='previousContent';end;
@@ -63,12 +116,13 @@ begin
       Hints.Add(DateKey,TJSONObject.Create(['deletedAt','date']));
       Doc:=QuotedStr(TypedDocument(Row.AsJSON,'',Hints.AsJSON));
     finally Hints.Free;Row.Free;end;
-    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN coalesce(('+Lookup+'),'''')='+QuotedStr(Previous)+
-      ' THEN 1 ELSE json(''History tip changed'') END; '+
-      'UPDATE _wl_change_history SET document=json_set(document,''$.superseded'',json(''true''))'+
-      ' WHERE boardId='+BoardSql+' AND userId='+UserSql+' AND json_type(document,''$.undone'')=''true'''+
-      ' AND json_type(document,''$.superseded'')=''false''; '+
-      'INSERT INTO _wl_change_history VALUES('+QuotedStr(Id)+','+BoardSql+','+UserSql+','+QuotedStr(Hash)+','+Doc+'); COMMIT;';
+    if Shared then
+      InsertSql:='INSERT INTO '+TableSql+'(_ferretdb_sjson) VALUES(CASE WHEN wl_storage('+QuotedStr(TableName)+
+        ')=''blob'' THEN jsonb('+Doc+') ELSE '+Doc+' END); '
+    else
+      InsertSql:='INSERT INTO _wl_change_history VALUES('+QuotedStr(Id)+','+BoardSql+','+UserSql+','+QuotedStr(Hash)+','+Doc+'); ';
+    Sql:='BEGIN IMMEDIATE; '+LookupSource+'SELECT CASE WHEN '+Guard+' AND ('+Lookup+')='+QuotedStr(Previous)+
+      ' THEN 1 ELSE json(''History tip changed'') END; '+RedoSql+InsertSql+'COMMIT;';
     if Db.Exec(Sql) then Exit;
     Db.Exec('ROLLBACK;');
   end;

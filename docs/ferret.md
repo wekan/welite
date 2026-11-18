@@ -1779,3 +1779,10 @@ deletion or restore provisions it in the SQLite registry. The history record
 is written immediately. Restart a running FerretDB process before reading
 the newly created collection over Mongo wire. Existing history collections
 are used directly. Live registry-cache coordination remains open.
+
+
+List lifecycle changes also append to the shared `changeHistory` collection
+for boards without a WeKan writer gate or coordinated chain head. The
+append checks the unique tip within its write transaction. WeLite defers
+change-history appends on boards that already use either writer protocol.
+The same FerretDB registry refresh applies if WeLite creates the collection.

@@ -101,3 +101,20 @@ def run(request, client, db, token, refresh_ferret):
     assert restored['previousState']==deleted['newState'] and isinstance(restored['previousState']['deletedAt'],DateMs),restored
     print('PASS: live shared delete and restore write typed WeKan position history')
     print('PASS: live shared HTML restore unsets the batch, preserves BSON, and rolls back both rows on failure')
+    def changes():
+        result=client.command({'find':'changeHistory','filter':dict(entityId=list_id)})
+        return {entry['changeType']:entry for entry in result['cursor']['firstBatch']}
+    lifecycle=changes()
+    assert set(lifecycle)=={'removed','added'}, lifecycle
+    removed, added=lifecycle['removed'], lifecycle['added']
+    assert removed['previousHash'] is None and added['previousHash']==removed['integrityHash'], lifecycle
+    assert removed['newContent']==added['previousContent'] and isinstance(removed['newContent']['deletedAt'],DateMs), lifecycle
+    client.command({'create':'historyWriterGates'})
+    assert client.command({'insert':'historyWriterGates','documents':[
+        dict(_id='list-test-gate',boardId='b',mode='coordinated') ]})['n']==1
+    try:
+        assert request('DELETE',path,token=token)[0]==200
+        assert changes()==lifecycle
+    finally:
+        assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':'list-test-gate'},limit=1)]})['n']==1
+    print('PASS: shared legacy lifecycle chain links typed records and defers to a WeKan writer gate')

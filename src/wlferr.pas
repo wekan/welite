@@ -6,7 +6,7 @@ uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wl
 // compatibility remain separate gates before this is a finished store adapter.
 function InstallRootModels(Db:TWLDb):Boolean;
 function RootModelScript(Db:TWLDb):string;
-function EnsurePositionHistoryCollection(Db:TWLDb):Boolean;
+function EnsureHistoryCollection(Db:TWLDb;const Collection:string):Boolean;
 implementation
 const DocCol='_ferretdb_sjson';
 function Q(const Text:string):string;
@@ -77,8 +77,7 @@ begin
   finally Settings.Free;end;
 end;
 
-function EnsurePositionHistoryCollection(Db:TWLDb):Boolean;
-const Collection='userPositionHistory';
+function EnsureHistoryCollection(Db:TWLDb;const Collection:string):Boolean;
 var Hash:LongWord;TableName:string;Rows:TWLRows;
   function Exists:Boolean;
   begin

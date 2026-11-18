@@ -18,12 +18,11 @@ begin
   if Length(Position)<2 then Exit;
   Registry:=Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'' AND type=''table'';');
   Shared:=Length(Registry)=1;
-  if not Shared then
-    RecordNativeListChange(Db,UserId,BoardId,ListId,Position[0],BatchId,DeletedAt,Restored);
+  try RecordListChange(Db,UserId,BoardId,ListId,Position[0],BatchId,DeletedAt,Restored);except end;
   TableName:='_wl_position_history';
   if Shared then
   begin
-    if not EnsurePositionHistoryCollection(Db) then Exit;
+    if not EnsureHistoryCollection(Db,'userPositionHistory') then Exit;
     Registry:=Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
       'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''userPositionHistory'';');
     if Length(Registry)<>1 then Exit;
