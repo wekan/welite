@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Honor custom roles in REST dependency edits
+
+- Check shared custom role write and move-card capabilities during dependency
+  edits. Respect assignment scope and retain saved membership flags when the
+  role definition is removed.
+
 ## 2026-11-18 Support legacy dependency targets in REST
 
 - Read bare BSON string targets with default styling. Edit or delete the

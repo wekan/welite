@@ -240,7 +240,9 @@ POST takes a target `cardId` and optional `type`, `color` and `icon`. Reposting
 the same source and target updates the existing entry. Append `/:targetId` for
 PUT or DELETE. Writes check board and card scope within the transaction.
 Shared stores can contain legacy string targets. Reads supply default styling.
-Editing converts only the selected string to a structured entry.
+Editing converts only the selected string to a structured entry. Shared custom
+roles with write or move-card capability can edit dependencies within the
+member’s card scope. Deleted definitions fall back to the stored role flags.
 
 
 ## Board domains

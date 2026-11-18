@@ -443,6 +443,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert isinstance(retained,Regex) and (retained.pattern,retained.options)==(dep_target,'')
                     set_dependencies(None)
                     assert request('POST',dep_path,dep_input,token)[0]==200
+                    client.command({'insert':'customBoardRoles','documents':[dict(_id='dep-role',
+                        name='Dependency role',capabilities=dict(moveCard=True))]})
+                    assigned_role=dict(userId='u',isActive=True,isReadOnly=True,customRoleId='dep-role')
+                    set_card_membership([assigned_role])
+                    assert request('PUT',dep_item,dict(type='fixes'),token)[0]==200
+                    client.command({'update':'customBoardRoles','updates':[dict(q={'_id':'dep-role'},
+                        u={'$set':{'capabilities.moveCard':False}})]})
+                    set_card_membership([dict(assigned_role,isReadOnly=False)])
+                    assert request('DELETE',dep_item,token=token)[0]==403
+                    client.command({'delete':'customBoardRoles','deletes':[dict(q={'_id':'dep-role'},limit=1)]})
+                    assert request('DELETE',dep_item,token=token)[0]==200
+
 
                 finally:
                     set_card_membership(board_members)

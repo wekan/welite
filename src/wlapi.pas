@@ -713,7 +713,7 @@ const Fields:array[0..2] of string=('type','color','icon');
   Defaults:array[0..2] of string=('related-to','#eb144c','link');
   Types='|related-to|blocks|is-blocked-by|fixes|is-fixed-by|duplicates|is-duplicated-by|';
 var T:TWLTenant;UserId,Actor,Board,Source,Target,Method,Member,Allowed,SourceScope,TargetScope,
-  Dependency,Scope,Columns,Values,Patch,Mutation,Guard,AfterWrite,Bindings,CardFilter:string;
+  Dependency,Scope,Columns,Values,Patch,Mutation,Guard,AfterWrite,Bindings,CardFilter,RoleBinding,RoleDecision:string;
   Rows:TWLRows;Row:TWLRow;Input,Item,Reply:TJSONObject;Items:TJSONArray;
   Selector:TSelectionScope;Field:TJSONData;I:Integer;Props:array[0..2] of string;
   function TypeValid(const Value:string):Boolean;
@@ -723,18 +723,51 @@ var T:TWLTenant;UserId,Actor,Board,Source,Target,Method,Member,Allowed,SourceSco
     Result:='id='+QuotedStr(Card)+' AND boardId='+Board+' AND '+
       Selector.StringField('cards','id')+' AND '+Selector.StringField('cards','boardId');
   end;
+  procedure ResolveRoleSource;
+  var Registry:TWLRows;BoardTable,RoleTable,Lookup,MemberJson:string;
+    function Physical(const Name:string):string;
+    begin Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';end;
+  begin
+    RoleBinding:='1';RoleDecision:='NULL';
+    if not SharedStore(T.Db) then Exit;
+    Registry:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''customBoardRoles'';');
+    if Length(Registry)=0 then
+    begin
+      RoleBinding:='NOT EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name=''customBoardRoles'')';
+      Exit;
+    end;
+    if Length(Registry)<>1 then raise Exception.Create('Ambiguous custom role collection');
+    RoleTable:=Physical(Registry[0][0]);
+    RoleBinding:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''customBoardRoles'' AND table_name='+
+      QuotedStr(Registry[0][0])+')=1';
+    Registry:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''boards'';');
+    if Length(Registry)<>1 then raise Exception.Create('Missing board collection');
+    BoardTable:=Physical(Registry[0][0]);
+    MemberJson:='CASE WHEN m.type=''object'' THEN m.value ELSE ''{}'' END';
+    Lookup:=' FROM '+BoardTable+' b JOIN json_each(b._ferretdb_sjson,''$.members'') m '+
+      'JOIN '+RoleTable+' r ON json_extract(r._ferretdb_sjson,''$._id'')=json_extract('+MemberJson+',''$.customRoleId'') '+
+      'WHERE json_extract(b._ferretdb_sjson,''$._id'')='+Board+' AND m.type=''object'' '+
+      'AND json_extract('+MemberJson+',''$.userId'')='+Actor+' AND json_type('+MemberJson+',''$.isActive'')=''true'' '+
+      'AND json_extract(b._ferretdb_sjson,''$."$s".p.members.i[''||m.key||'']."$s".p.customRoleId.t'')=''string'' '+
+      'AND json_extract(r._ferretdb_sjson,''$."$s".p._id.t'')=''string''';
+    RoleDecision:='(SELECT CASE count(*) WHEN 0 THEN NULL WHEN 1 THEN MAX(CASE WHEN '+
+      'json_type(r._ferretdb_sjson,''$.capabilities.write'')=''true'' OR '+
+      'json_type(r._ferretdb_sjson,''$.capabilities.moveCard'')=''true'' THEN 1 ELSE 0 END) ELSE 0 END'+Lookup+')';
+  end;
   function CanEdit(const Card:string):string;
   var Assignee:string;
   begin
     Assignee:='';
     if Card<>'' then
-      Assignee:=' AND (COALESCE(board_members.isNormalAssignedOnly,0)=0 OR EXISTS(SELECT 1 FROM card_assignees '+
+      Assignee:=' AND ((COALESCE(board_members.isNormalAssignedOnly,0)=0 AND COALESCE(board_members.isReadAssignedOnly,0)=0 '+
+        'AND COALESCE(board_members.isCommentAssignedOnly,0)=0) OR EXISTS(SELECT 1 FROM card_assignees '+
         'WHERE cardId='+QuotedStr(Card)+' AND userId='+Actor+' AND '+Selector.StringField('card_assignees','userId')+'))';
-    Result:='EXISTS(SELECT 1 FROM boards WHERE id='+Board+' AND archived=0 AND '+Selector.StringField('boards','id')+')'+
+    Result:=RoleBinding+' AND EXISTS(SELECT 1 FROM boards WHERE id='+Board+' AND archived=0 AND '+Selector.StringField('boards','id')+')'+
       ' AND EXISTS(SELECT 1 FROM users WHERE id='+Actor+' AND COALESCE(loginDisabled,0)=0 AND '+
       Selector.StringField('users','id')+' AND (isAdmin=1 OR EXISTS(SELECT 1 FROM board_members WHERE '+Member+
-      ' AND (board_members.isAdmin=1 OR (COALESCE(board_members.isReadOnly,0)=0 AND COALESCE(board_members.isCommentOnly,0)=0 '+
-      'AND COALESCE(board_members.isReadAssignedOnly,0)=0 AND COALESCE(board_members.isCommentAssignedOnly,0)=0'+Assignee+')))))';
+      ' AND ((board_members.isAdmin=1 OR COALESCE('+RoleDecision+',COALESCE(board_members.isReadOnly,0)=0 '+
+      'AND COALESCE(board_members.isCommentOnly,0)=0 AND COALESCE(board_members.isReadAssignedOnly,0)=0 '+
+      'AND COALESCE(board_members.isCommentAssignedOnly,0)=0))'+Assignee+'))))';
   end;
   procedure AddNumber(Entry:TJSONObject;const Key,Value:string);
   var Number:Int64;
@@ -784,6 +817,7 @@ begin
       finally Items.Free;end;
       Exit;
     end;
+    ResolveRoleSource;
     Member:=Member+' AND '+Selector.StringField('board_members','userId');
     Allowed:=CanEdit('');
     if Length(T.Db.Query('SELECT 1 WHERE '+Allowed+';'))<>1 then
