@@ -221,6 +221,24 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert updated['wipLimit']['value']==4 and updated['wipLimit']['enabled'] is True and updated['wipLimit']['soft'] is False,updated
                 print('PASS: live shared list PUT stores typed WIP values and rejects unauthorized or invalid edits atomically')
 
+                settings_path='/api/boards/b/cardSettings'
+                client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$set':{'legacySetting':now}})]})
+                status,_,body=request('GET',settings_path,token=token)
+                assert status==200 and json.loads(body)['allowsDueDate'] is True
+                assert 'legacySetting' not in json.loads(body)
+                assert request('PUT',settings_path,dict(unknownSetting=True),token)[0]==400
+                set_list_admin(False)
+                try:
+                    assert request('PUT',settings_path,dict(allowsDueDate=False),token)[0]==403
+                finally:
+                    set_list_admin(True)
+                status,_,body=request('PUT',settings_path,dict(allowsDueDate=False,cardAgingDays1=14),token)
+                assert status==200 and json.loads(body)['allowsDueDate'] is False and json.loads(body)['cardAgingDays1']==14
+                settings_board=client.find('boards','b')[0]
+                assert settings_board['allowsDueDate'] is False and settings_board['cardAgingDays1']==14
+                assert settings_board['legacySetting']==now
+                print('PASS: shared REST card settings return defaults, enforce admin access and preserve unrelated BSON')
+
                 label_path='/api/boards/b/labels'
                 assert request('PUT',label_path,dict(label=dict(name='Bad',color='invalid')),token)[0]==400
                 status,_,body=request('PUT',label_path,dict(label=' Bug '),token)

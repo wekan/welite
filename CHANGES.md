@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Read and update board card settings over REST
+
+- Expose board card display flags and aging thresholds. Use board defaults
+  for absent settings and require board administration for partial writes.
+
 ## 2026-11-18 Merge card labels in REST batches
 
 - Add the board-scoped bulk label route. Validate additions against the board,

@@ -45,6 +45,7 @@ procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
 procedure ApiPublicBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUserBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoard(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -549,6 +550,115 @@ begin
     O.Add('permission', R[0][3]); O.Add('color', R[0][4]);
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
+end;
+
+procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"Board not found"}';
+  DefaultsJson=
+    '{"allowsSwimlaneDragging":true,"allowsListDragging":true,"allowsCardDragging":true,'+
+    '"allowsChecklistDragging":true,"allowsChecklistItemDragging":true,"allowsSubtaskDragging":true,'+
+    '"allowsMinicardCollapse":true,"labelsAboveTitleOnMinicard":false,"allowsChecklistDueDate":true,'+
+    '"allowsChecklistTitle":true,"allowsCardCounterList":false,"cardAging":false,'+
+    '"askForMoveReason":false,"allowsBoardMemberList":false,"allowsShowLists":true,'+
+    '"allowsAttachments":true,"allowsChecklists":true,"allowsComments":true,'+
+    '"allowsCommentsOnMinicard":false,"allowsDescriptionTitle":true,"allowsDescriptionText":true,'+
+    '"allowsActivities":true,"allowsLabels":true,"allowsCreator":true,"allowsAssignee":true,'+
+    '"allowsMembers":true,"allowsRequestedBy":true,"allowsCardSortingByNumber":true,'+
+    '"allowsCardNumber":false,"allowsAssignedBy":true,"allowsReceivedDate":true,"allowsSpentTime":true,'+
+    '"allowsStartDate":true,"allowsEndDate":true,"allowsDueDate":true,"allowsSubtasks":true,'+
+    '"allowsCreatorOnMinicard":false,"allowsAttachmentsOnMinicard":true,'+
+    '"allowsChecklistsOnMinicard":true,"allowsChecklistAtMinicard":false,'+
+    '"allowsCoverAttachmentOnMinicard":true,"allowsBadgeAttachmentOnMinicard":false,'+
+    '"allowsCardSortingByNumberOnMinicard":false,"allowsCardNumberOnMinicard":false,'+
+    '"allowsDescriptionTitleOnMinicard":true,"allowsDescriptionTextOnMinicard":false,'+
+    '"allowsLabelsOnMinicard":true,"allowsAssigneeOnMinicard":true,"allowsMembersOnMinicard":true,'+
+    '"allowsRequestedByOnMinicard":true,"allowsAssignedByOnMinicard":true,'+
+    '"allowsReceivedDateOnMinicard":true,"allowsSpentTimeOnMinicard":true,'+
+    '"allowsStartDateOnMinicard":true,"allowsEndDateOnMinicard":true,"allowsDueDateOnMinicard":true,'+
+    '"allowsSubtasksOnMinicard":true,"allowsShowListsOnMinicard":false,'+
+    '"allowsSwimlaneNameOnMinicard":false,"showLabelText":true,"allowsStickers":true,'+
+    '"allowsStickersOnMinicard":true,"allowsLocation":true,"allowsDependencies":true,'+
+    '"allowsDependenciesOnMinicard":true,"allowsFlowtime":true,"allowsPomodoro":true,"allowsVote":true,'+
+    '"allowsVoteOnMinicard":true,"allowsPoker":true,"allowsPokerOnMinicard":true,"allowsTextNotes":true,'+
+    '"allowsCommentCountOnMinicard":true,"allowsIssueTypeOnMinicard":true,"allowsCardColorOnCard":true,'+
+    '"allowsCardColorOnMinicard":true,"allowsParentCardOnCard":true,"allowsParentCardOnMinicard":true,'+
+    '"allowsLinkedCardOnCard":true,"allowsLinkedCardOnMinicard":true,"allowsCardButtonsOnCard":true,'+
+    '"allowsDescriptionBadgeOnMinicard":true,"allowsUnreadCommentsOnMinicard":true,'+
+    '"allowsCardButtonsOnMinicard":null,"allowsDescriptionBadgeOnCard":null,'+
+    '"allowsUnreadCommentsOnCard":null,"allowsDueFromTitleOnCard":null,'+
+    '"allowsDueFromTitleOnMinicard":null,"allowsSimilarCardsOnCard":null,'+
+    '"allowsSimilarCardsOnMinicard":null,"allowsAtRiskOnCard":null,"allowsAtRiskOnMinicard":null,'+
+    '"allowsSuggestedMembersOnCard":null,"allowsForecastOnCard":null,"allowsForecastOnMinicard":null,'+
+    '"allowsChecklistFromDescriptionOnCard":null,"allowsActionItemsOnCard":null,'+
+    '"allowsWhiteboardOnCard":null,"allowsAttachmentPreviewsOnCard":null,'+
+    '"allowsAttachmentDetailsOnCard":null,"allowsCardCollapse":true,'+
+    '"allowsChecklistTitleOnMinicard":true,"allowsLabelTextOnCard":true,"labelsAboveTitleOnCard":null,'+
+    '"allowsChecklistDueDateOnMinicard":null,"allowsLocationOnMinicard":null,'+
+    '"allowsSwimlaneNameOnCard":null,"allowsFlowtimeOnMinicard":null,"allowsPomodoroOnMinicard":null,'+
+    '"allowsAttachmentListOnMinicard":null,"allowsTextNotesOnMinicard":null,'+
+    '"allowsCommentCountOnCard":null,"allowsActivitiesOnMinicard":null,"cardAgingDays1":7,'+
+    '"cardAgingDays2":14,"cardAgingDays3":28}';
+var T:TWLTenant;UserId,BoardId,Scope,Permission,Key,Sql,Raw:string;Rows:TWLRows;
+  Defaults,Stored,Body,Patch,Reply:TJSONObject;Value,Fallback:TJSONData;Policy:TFieldPolicy;
+  I:Integer;Days:Int64;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];Scope:='id='+QuotedStr(BoardId);
+  if Length(T.Db.Query('SELECT id FROM boards WHERE '+Scope+';'))<>1 then
+  begin SendJson(aResponse,NotFound,404);Exit;end;
+  Defaults:=ExactObject(DefaultsJson);Stored:=nil;Body:=nil;Patch:=nil;Reply:=nil;
+  try
+    if aRequest.Method='PUT' then
+    begin
+      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+      try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+      Rows:=T.Db.Query('SELECT '+Permission+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin SendError(aResponse,403,'Board administration required');Exit;end;
+      try
+        if Pos('application/json',LowerCase(aRequest.ContentType))=1 then Body:=ExactObject(aRequest.Content)
+        else
+        begin
+          Body:=TJSONObject.Create;
+          for I:=0 to aRequest.ContentFields.Count-1 do
+            Body.Add(aRequest.ContentFields.Names[I],aRequest.ContentFields.ValueFromIndex[I]);
+        end;
+        Patch:=TJSONObject.Create;
+        for I:=0 to Defaults.Count-1 do
+        begin
+          Key:=Defaults.Names[I];Value:=Body.Find(Key);
+          if Value=nil then Continue;
+          if Defaults.Items[I].JSONType=jtNumber then
+          begin
+            if (Value.JSONType in [jtNumber,jtString]) and TryStrToInt64(Trim(Value.AsString),Days) and (Days>=0) then
+              Patch.Add(Key,Days);
+          end else
+          begin
+            Raw:='';
+            if Value.JSONType in [jtBoolean,jtString] then Raw:=Value.AsString;
+            Patch.Add(Key,SameText(Raw,'true'));
+          end;
+        end;
+      except SendError(aResponse,400,'Invalid card settings');Exit;end;
+      if Patch.Count=0 then begin SendError(aResponse,400,'No recognized card settings in body');Exit;end;
+      Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
+        ' THEN 1 ELSE json(''Board card settings permission changed'') END; UPDATE boards SET settings_json='+
+        'json_patch(settings_json,'+QuotedStr(Patch.AsJSON)+') WHERE '+Scope+'; COMMIT;';
+      if not T.Db.Exec(Sql) then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not write board card settings');Exit;end;
+    end else if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
+    Rows:=T.Db.Query('SELECT settings_json FROM boards WHERE '+Scope+';');
+    if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+    Stored:=ExactObject(Rows[0][0]);Reply:=TJSONObject.Create;
+    for I:=0 to Defaults.Count-1 do
+    begin
+      Key:=Defaults.Names[I];Fallback:=Defaults.Items[I];Value:=Stored.Find(Key);
+      if Value=nil then Value:=Fallback;
+      if Value.JSONType<>jtNull then Reply.Add(Key,Value.Clone);
+    end;
+    SendJson(aResponse,Reply.AsJSON);
+  finally Reply.Free;Patch.Free;Body.Free;Stored.Free;Defaults.Free;end;
 end;
 
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);
