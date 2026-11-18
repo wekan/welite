@@ -1326,8 +1326,8 @@ end;
 procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
 const InvalidUrl='{"error":"invalid-webhook-url"}';
   NotFound='{"error":"Integration not found"}';
-var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded:string;
-  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading,Creating,BadUrl:Boolean;
+var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded,DocumentColumn,StorageGuard,InsertColumns,InsertValues:string;
+  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading,Creating,BadUrl,Shared:Boolean;
   Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
   procedure Missing;
   begin
@@ -1337,6 +1337,18 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
   begin
     Result:=(Value is TJSONString) and PublicWebhookUrl(Value.AsString);
     BadUrl:=not Result;
+  end;
+
+  function StoredDocument:string;
+  begin
+    if Shared then
+      Result:='CASE WHEN wl_storage('+QuotedStr(Source)+')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END'
+    else Result:=Encoded;
+  end;
+
+  function ReadDocument(const Json:string):TJSONObject;
+  begin
+    if Shared then Result:=ExactObject(PlainDocument(Json)) else Result:=ExactObject(Json);
   end;
 
   function PrepareCreation:Boolean;
@@ -1352,10 +1364,18 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
         Stamp:=LocalTimeToUniversal(Now);
         AtMs:=DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp);
         NewDoc:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'userId',Actor,
-          'url',Value.AsString,'enabled',True,'type','outgoing-webhooks',
-          'createdAt',AtMs,'modifiedAt',AtMs]);
+          'url',Value.AsString,'enabled',True,'type','outgoing-webhooks']);
         NewDoc.Add('activities',TJSONArray.Create(['all']));
-        Encoded:=QuotedStr(TypedDocument(NewDoc.AsJSON,'','{"createdAt":"date","modifiedAt":"date"}'));
+        if Shared then
+        begin
+          NewDoc.Add('createdAt',AtMs);NewDoc.Add('modifiedAt',AtMs);
+          Encoded:=QuotedStr(TypedDocument(NewDoc.AsJSON,'','{"createdAt":"date","modifiedAt":"date"}'));
+        end
+        else
+        begin
+          NewDoc.Add('createdAt',NowIso);NewDoc.Add('modifiedAt',NewDoc.Get('createdAt',''));
+          Encoded:=QuotedStr(NewDoc.AsJSON);
+        end;
         Result:=True;
       except Result:=False;end;
     finally Input.Free;NewDoc.Free;end;
@@ -1387,17 +1407,17 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
         end;
         if Update.Count>0 then
         begin
-          Original:=ExactObject(PlainDocument(Raw));
+          Original:=ReadDocument(Raw);
           for PropertyIndex:=0 to Update.Count-1 do
           begin
             Name:=Update.Names[PropertyIndex];
             Original.Delete(Name);Original.Add(Name,Update.Find(Name).Clone);
           end;
-          Encoded:=QuotedStr(TypedDocument(Original.AsJSON,Raw,'{}'));
-          Mutation:='UPDATE '+TableName+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(Source)+
-            ')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END WHERE '+Scope+'; '+
+          if Shared then Encoded:=QuotedStr(TypedDocument(Original.AsJSON,Raw,'{}'))
+          else Encoded:=QuotedStr(Original.AsJSON);
+          Mutation:='UPDATE '+TableName+' SET '+DocumentColumn+'='+StoredDocument+' WHERE '+Scope+'; '+
             'SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
-            ' AND json(_ferretdb_sjson)=json('+Encoded+')) THEN 1 ELSE json(''Integration update failed'') END; ';
+            ' AND json('+DocumentColumn+')=json('+Encoded+')) THEN 1 ELSE json(''Integration update failed'') END; ';
         end;
         Result:=True;
       except Result:=False;end;
@@ -1416,42 +1436,49 @@ begin
   Admin:=(Length(Rows)=1) and (Rows[0][0]='1');
   if not Reading and not Admin then
   begin SendError(aResponse,403,'Board administration required');Exit;end;
-  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then
+  Shared:=Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1;
+  if Creating and not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
+  StorageGuard:='';
+  if Shared then
   begin
-    if Creating then SendError(aResponse,501,'Integration creation requires shared workflow storage')
-    else Missing;
-    Exit;
-  end;
-  if Creating then
-  begin
-    if not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
-    if not EnsureSharedCollection(T.Db,'integrations') then
+    if Creating and not EnsureSharedCollection(T.Db,'integrations') then
     begin SendError(aResponse,500,'Could not prepare integration storage');Exit;end;
+    Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
+      'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''integrations'';');
+    if Length(Rows)<>1 then begin Missing;Exit;end;
+    Source:=Rows[0][0];TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
+    DocumentColumn:='_ferretdb_sjson';
+    Scope:='json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
+    if Id<>'' then Scope:=Scope+' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id);
+    StorageGuard:=' AND (SELECT count(*) FROM _ferretdb_collections WHERE name=''integrations'''+
+      ' AND table_name='+QuotedStr(Source)+')=1';
+    InsertColumns:=DocumentColumn;
+    if Creating then InsertValues:=StoredDocument;
+  end
+  else
+  begin
+    TableName:='integrations';DocumentColumn:='document';
+    Scope:='boardId='+QuotedStr(BoardId);
+    if Id<>'' then Scope:=Scope+' AND id='+QuotedStr(Id);
+    InsertColumns:='id,boardId,document';
+    if Creating then InsertValues:=QuotedStr(Id)+','+QuotedStr(BoardId)+','+StoredDocument;
   end;
-  Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
-    'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''integrations'';');
-  if Length(Rows)<>1 then begin Missing;Exit;end;
-  Source:=Rows[0][0];TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
-  Scope:='json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
-    ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
-    ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
-  if Id<>'' then Scope:=Scope+' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id);
   if Creating then
   begin
-    Guard:=Permission+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name=''integrations'''+
-      ' AND table_name='+QuotedStr(Source)+')=1';
+    Guard:=Permission+StorageGuard;
     Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Integration scope changed'') END; '+
-      'INSERT INTO '+TableName+'(_ferretdb_sjson) VALUES (CASE WHEN wl_storage('+QuotedStr(Source)+
-      ')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END); '+
+      'INSERT INTO '+TableName+'('+InsertColumns+') VALUES ('+InsertValues+'); '+
       'SELECT CASE WHEN '+Guard+' AND (SELECT count(*) FROM '+TableName+' WHERE '+Scope+
-      ' AND json(_ferretdb_sjson)=json('+Encoded+'))=1 THEN 1 ELSE json(''Integration insert failed'') END; COMMIT;';
+      ' AND json('+DocumentColumn+')=json('+Encoded+'))=1 THEN 1 ELSE json(''Integration insert failed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create integration');Exit;end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
   end;
   if not Reading then
   begin
-    Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
+    Rows:=T.Db.Query('SELECT json('+DocumentColumn+') FROM '+TableName+' WHERE '+Scope+';');
     if (Id='') or (Length(Rows)<>1) then begin Missing;Exit;end;
     Raw:=Rows[0][0];Mutation:='';
     if aRequest.Method='PUT' then
@@ -1467,23 +1494,22 @@ begin
       Mutation:='DELETE FROM '+TableName+' WHERE '+Scope+
         '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
         ') THEN 1 ELSE json(''Integration deletion failed'') END; ';
-    Guard:=Permission+' AND (SELECT count(*) FROM _ferretdb_collections '+
-      'WHERE name=''integrations'' AND table_name='+QuotedStr(Source)+')=1 AND (SELECT count(*) FROM '+TableName+
-      ' WHERE '+Scope+' AND json(_ferretdb_sjson)='+QuotedStr(Raw)+')=1';
+    Guard:=Permission+StorageGuard+' AND (SELECT count(*) FROM '+TableName+
+      ' WHERE '+Scope+' AND json('+DocumentColumn+')='+QuotedStr(Raw)+')=1';
     Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Integration scope changed'') END; '+
       Mutation+'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Integration permission changed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change integration');Exit;end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
   end;
-  Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
+  Rows:=T.Db.Query('SELECT json('+DocumentColumn+') FROM '+TableName+' WHERE '+Scope+';');
   if (Id<>'') and (Length(Rows)<>1) then begin Missing;Exit;end;
   Entries:=TJSONArray.Create;
   try
     try
       for Row in Rows do
       begin
-        Doc:=ExactObject(PlainDocument(Row[0]));
+        Doc:=ReadDocument(Row[0]);
         try
           Entry:=TJSONObject.Create;Entries.Add(Entry);
           for Key in ['_id','boardId','enabled','activities','title','type','url','userId',

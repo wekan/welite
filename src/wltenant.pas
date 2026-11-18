@@ -321,7 +321,8 @@ begin
       begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
       if not EnsureSettingsColumn(Tenant.Db) or not EnsureFieldPolicyColumns(Tenant.Db) or
         not EnsureDropdownColumn(Tenant.Db) or not EnsureChecklistDeadlineColumns(Tenant.Db) or
-        not EnsureDeleteMarkers(Tenant.Db) or not EnsureListCollapseColumn(Tenant.Db) then
+        not EnsureDeleteMarkers(Tenant.Db) or not EnsureListCollapseColumn(Tenant.Db) or
+        (not Tenant.IsAdmin and not EnsureNativeIntegrations(Tenant.Db)) then
       begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;
     end;
     HandleCache.AddObject(Tenant.Host, TObject(Tenant.Db));

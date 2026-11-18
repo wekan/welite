@@ -162,8 +162,8 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
-  - [ ] Implement native integration storage and portable DNS validation for
-    destination writes. Verify the upstream browser webhook settings workflows.
+  - [ ] Implement portable DNS validation for integration destination writes.
+    Verify the upstream browser webhook settings workflows.
 
 
   Code: `wlapi.pas`.

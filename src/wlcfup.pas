@@ -8,6 +8,7 @@ function EnsureDropdownColumn(Db:TWLDb):Boolean;
 function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
 function EnsureDeleteMarkers(Db:TWLDb):Boolean;
 function EnsureListCollapseColumn(Db:TWLDb):Boolean;
+function EnsureNativeIntegrations(Db:TWLDb):Boolean;
 implementation
 const ValidSettings='CASE WHEN json_valid(settings_json) THEN json_type(settings_json)=''object'' AND '+
   'json_type(settings_json,''$.currencyCode'') IS NULL AND json_type(settings_json,''$.stringtemplateFormat'') IS NULL AND '+
@@ -168,4 +169,15 @@ begin
     'CHECK(collapsed IN (0,1)); COMMIT;') then Db.Exec('ROLLBACK;');
   Result:=Inspect and Found;
 end;
+function EnsureNativeIntegrations(Db:TWLDb):Boolean;
+begin
+  Result:=Db.Exec('BEGIN IMMEDIATE; CREATE TABLE IF NOT EXISTS integrations ('+
+    'id TEXT NOT NULL PRIMARY KEY, boardId TEXT NOT NULL REFERENCES boards(id) ON DELETE CASCADE, '+
+    'document TEXT NOT NULL CHECK(json_valid(document) AND '+
+    'json_type(document,''$._id'') IS ''text'' AND json_extract(document,''$._id'')=id AND '+
+    'json_type(document,''$.boardId'') IS ''text'' AND json_extract(document,''$.boardId'')=boardId)); '+
+    'CREATE INDEX IF NOT EXISTS integrations_board ON integrations(boardId); COMMIT;');
+  if not Result then Db.Exec('ROLLBACK;');
+end;
+
 end.

@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Store REST integrations in native SQLite
+
+- Add board-scoped integration CRUD to native stores. Existing stores
+  gain the table on open, and board deletion removes its integrations.
+
 ## 2026-11-18 Create and update shared webhook integrations over REST
 
 - Board admins can create integrations and update their destination on

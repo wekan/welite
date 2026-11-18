@@ -38,6 +38,15 @@ CREATE TABLE boards (
   settings_json           TEXT NOT NULL DEFAULT '{}'
 );
 
+CREATE TABLE integrations (
+  id TEXT NOT NULL PRIMARY KEY,
+  boardId TEXT NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+  document TEXT NOT NULL CHECK(json_valid(document) AND
+    json_type(document, '$._id') IS 'text' AND json_extract(document, '$._id') = id AND
+    json_type(document, '$.boardId') IS 'text' AND json_extract(document, '$.boardId') = boardId)
+);
+CREATE INDEX integrations_board ON integrations(boardId);
+
 CREATE TABLE board_labels (
   boardId  TEXT NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
   id       TEXT NOT NULL,                 -- 6-char label id, unique within board

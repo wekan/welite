@@ -199,7 +199,7 @@ checks. Dedicated API credentials are issued by `/users/login`. Earlier weak dig
 no compatibility acceptance path. See `tests/crypto.py` for independent digest/MAC vectors,
 process-restart persistence and copied-database/credential-revocation checks.
 
-### Shared integrations
+### Integrations
 
 Board administrators can create an outgoing integration with
 `POST /api/boards/:boardId/integrations` and a JSON `url`. The response contains
@@ -207,3 +207,7 @@ Board administrators can create an outgoing integration with
 title, enabled flag or activity list. On Linux, destination writes require an
 HTTP(S) URL whose resolved IPv4 and IPv6 addresses are public. Integration
 delivery requires its own address check and connection pinning.
+
+Both native and shared SQLite support integration reads and writes. Native
+stores add the integrations table when opened and remove a board’s
+integrations when the board is deleted.

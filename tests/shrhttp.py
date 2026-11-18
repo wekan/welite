@@ -240,8 +240,50 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 stop()
                 native_data=native_fresh/'local/files/db'
                 assert (native_data/'wekan.db').is_file() and not (native_data/'wekan.sqlite').exists()
+                native_file=native_data/'wekan.db'
+                with sqlite3.connect(native_file) as con:
+                    assert con.execute("SELECT type FROM sqlite_master WHERE name='integrations'").fetchone()==('table',)
+                    con.execute('DROP TABLE integrations')
                 app=start('',native_fresh)
                 assert request('GET','/sign-in')[0]==200
+                with sqlite3.connect(native_file) as con:
+                    assert con.execute("SELECT type FROM sqlite_master WHERE name='integrations'").fetchone()==('table',)
+                form=urlencode(dict(username='native-user',password='test-password',confirm='test-password'))
+                assert request('POST','/register',form)[0]==302
+                status,_,body=request('POST','/users/login',dict(username='native-user',password='test-password'))
+                assert status==200,(status,body)
+                native_token=json.loads(body)['token']
+                native_boards=[]
+                for title in ('Integration board','Other board'):
+                    status,_,body=request('POST','/api/boards',dict(title=title,permission='private'),native_token)
+                    assert status==200,(status,body)
+                    native_boards.append(json.loads(body)['_id'])
+                integration_base='/api/boards/'+native_boards[0]+'/integrations'
+                assert request('POST',integration_base,dict(url='https://1.1.1.1/hook'))[0]==401
+                assert request('POST',integration_base,dict(url='https://127.0.0.1/hook'),native_token)[0]==400
+                status,_,body=request('POST',integration_base,dict(url='https://1.1.1.1/hook'),native_token)
+                assert status==200,(status,body)
+                integration_id=json.loads(body)['_id']
+                integration=integration_base+'/'+integration_id
+                status,_,body=request('GET',integration,token=native_token)
+                assert status==200,(status,body)
+                document=json.loads(body)
+                assert document['activities']==['all'] and document['boardId']==native_boards[0]
+                assert document['enabled'] is True and document['createdAt'].endswith('Z')
+                wrong='/api/boards/'+native_boards[1]+'/integrations/'+integration_id
+                assert request('DELETE',wrong,token=native_token)[0]==404
+                assert request('PUT',integration,dict(url='https://[::1]/',title='invalid'),native_token)[0]==400
+                assert json.loads(request('GET',integration,token=native_token)[2])==document
+                changes=dict(url='https://1.0.0.1/updated',title='Updated',enabled=False,activities=[])
+                assert request('PUT',integration,changes,native_token)[0]==200
+                assert json.loads(request('GET',integration_base,token=native_token)[2])==[dict(document,**changes)]
+                assert request('DELETE',integration,token=native_token)[0]==200
+                assert request('GET',integration,token=native_token)[0]==404
+                assert request('POST',integration_base,dict(url='https://1.1.1.1/cleanup'),native_token)[0]==200
+                assert request('DELETE','/api/boards/'+native_boards[0],token=native_token)[0]==200
+                with sqlite3.connect(native_file) as con:
+                    assert con.execute('SELECT count(*) FROM integrations').fetchone()==(0,)
+                print('PASS: native REST integrations support legacy upgrade, scoped CRUD and board cascade')
                 stop()
                 assert not (native_data/'wekan.sqlite').exists()
 
