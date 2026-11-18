@@ -21,7 +21,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Card editors can submit a multipart file using the HTML form. Upload
   uses a one-use action token bound to the card and redirects back to the
-  card without setting a cookie. Verify guest refusal, cross-card refusal, replay refusal
+  card without setting a cookie. Verify guest and read-only refusal, cross-card refusal, replay refusal
   exact downloaded bytes, and preservation of Arabic through the redirect.
 
 ## 2026-11-18 Share attachment persistence with the card upload work

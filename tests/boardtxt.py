@@ -19,7 +19,7 @@ class BoardPage(Page):
         if tag=='input' and dict(attrs).get('type')=='submit':self.submits.append(dict(attrs))
         super().handle_starttag(tag,attrs)
 
-def run(request,database,administrator,base):
+def run(request,database,administrator,member,base):
     with sqlite3.connect(database) as con:
         profile=con.execute("SELECT profile_json FROM users WHERE username='administrator'").fetchone()[0]
         for bid,title in [('boardtxt','Board <user>'),('boardnone','No lanes <user>')]:
@@ -43,6 +43,11 @@ def run(request,database,administrator,base):
     upload_path='/board/attachment/upload?id=boardtxt&card=txtcard'
     status,_,guest_body=request('GET',card_path)
     assert status==200 and upload_path.split('?')[0].encode() not in guest_body
+    with sqlite3.connect(database) as con:
+        reader,=con.execute("SELECT id FROM users WHERE username='member'").fetchone()
+        con.execute("INSERT INTO board_members(boardId,userId,isReadOnly) VALUES('boardtxt',?,1)",(reader,))
+    status,_,reader_body=request('GET',card_path+'&sessionId='+member)
+    assert status==200 and upload_path.split('?')[0].encode() not in reader_body
     status,headers,body=request('GET',card_path+'&lang=ar&sessionId='+administrator)
     assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
     forms=Forms()
@@ -61,6 +66,11 @@ def run(request,database,administrator,base):
     guest_body=body.replace(fields['sessionId'].encode(),b'invalid-session')
     assert request('POST',upload_path,guest_body,
                    content_type='multipart/form-data; boundary='+boundary)[0]==403
+    reader_body=body.replace(fields['sessionId'].encode(),member.encode())
+    assert request('POST',upload_path,reader_body,
+                   content_type='multipart/form-data; boundary='+boundary)[0]==403
+    with sqlite3.connect(database) as con:
+        con.execute("DELETE FROM board_members WHERE boardId='boardtxt' AND userId=?",(reader,))
     assert upload(upload_path.replace('card=txtcard','card=txtchild'))[0]==403
     status,headers,body_response=upload(upload_path)
     assert status==303 and 'Set-Cookie' not in headers,(status,body_response)
