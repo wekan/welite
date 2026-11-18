@@ -50,6 +50,7 @@ procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);    // PUT board label
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);   // GET list / POST create
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);    // GET one
+procedure ApiAppendDropdownItems(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET list / POST create
@@ -767,6 +768,72 @@ begin
       Result:=True;
     except Result:=False;end;
   finally Doc.Free;end;
+end;
+
+procedure ApiAppendDropdownItems(aRequest:TRequest;aResponse:TResponse);
+const FieldNotFound = '{"error":"Custom field not found"}';
+var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Guards,Mutation,Name,CheckSql:string;
+  Doc,Settings,Reply:TJSONObject;Value,Entry:TJSONData;Items:TJSONArray;
+  Policy:TFieldPolicy;Scope:TSelectionScope;Rows:TWLRows;i:Integer;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,FieldNotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];
+  Doc:=nil;Settings:=nil;Policy:=nil;Scope:=nil;
+  try
+    try
+      if aRequest.Content<>'' then
+        if Pos('application/json',LowerCase(aRequest.ContentType))=1 then Doc:=ExactObject(aRequest.Content)
+        else if aRequest.ContentFields.IndexOfName('items')>=0 then
+          Doc:=ExactObject('{"items":'+aRequest.ContentFields.Values['items']+'}');
+      Settings:=TJSONObject.Create;
+      Items:=TJSONArray.Create;Settings.Add('dropdownItems',Items);
+      if Doc<>nil then
+      begin
+        Value:=Doc.Find('items');
+        if Value is TJSONArray then
+          for i:=0 to Value.Count-1 do
+          begin
+            Entry:=Value.Items[i];
+            if Entry is TJSONString then
+            begin
+              Name:=Entry.AsString;CheckUtf8(Name);
+              if (Trim(Name)='') or (Pos(#0,Name)>0) then raise Exception.Create('Invalid dropdown option name');
+              Items.Add(TJSONObject.Create(['_id',NewId,'name',Name]));
+            end;
+          end;
+      end;
+    except SendError(aResponse,400,'Invalid dropdown options');Exit;end;
+    try
+      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+      Permission:=Policy.ScopeWriteExpression(FieldId);
+      Rows:=T.Db.Query('SELECT '+Permission+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin SendError(aResponse,403,'Dropdown mutation forbidden');Exit;end;
+      if Items.Count>0 then
+      begin
+        Mutation:=DropdownScript(T.Db,FieldId,Settings,Guards,True);
+        Scope:=TSelectionScope.Create(T.Db);
+        CheckSql:='';
+        for i:=0 to Items.Count-1 do
+        begin
+          Entry:=Items.Items[i];
+          CheckSql:=CheckSql+' AND (SELECT count(*) FROM custom_field_dropdown_items WHERE customFieldId='+
+            QuotedStr(FieldId)+' AND id='+QuotedStr(TJSONObject(Entry).Get('_id',''))+' AND name='+
+            QuotedStr(TJSONObject(Entry).Get('name',''))+' AND '+Scope.StringField('custom_field_dropdown_items','id')+')=1';
+        end;
+        Sql:='BEGIN IMMEDIATE; '+Guards+
+          'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Dropdown append forbidden'') END; '+
+          'UPDATE custom_fields SET modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(FieldId)+'; '+Mutation+Guards+
+          'SELECT CASE WHEN '+Permission+CheckSql+' THEN 1 ELSE json(''Dropdown append failed'') END; COMMIT;';
+        if not T.Db.Exec(Sql) then
+        begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not append dropdown options');Exit;end;
+      end;
+      Reply:=TJSONObject.Create(['_id',FieldId]);
+      try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+    except SendError(aResponse,500,'Could not append dropdown options');end;
+  finally Scope.Free;Policy.Free;Settings.Free;Doc.Free;end;
 end;
 
 procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);

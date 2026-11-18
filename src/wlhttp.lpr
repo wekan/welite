@@ -638,6 +638,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/custom-fields', rmGet, @ApiCustomFields);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/custom-fields', rmPost, @ApiCustomFields);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/custom-fields/:customField', rmGet, @ApiCustomField);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/custom-fields/:customField/dropdown-items', rmPost, @ApiAppendDropdownItems);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem', rmDelete, @ApiDropdownItem);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem', rmPut, @ApiDropdownItem);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/customFields/:customField', rmPost, @ApiCardCustomField);

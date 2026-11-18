@@ -5,7 +5,7 @@ uses SysUtils,Classes,fpjson,wlsjson,wldb,wlcfjson;
 function SettingsInput(Value:TJSONData;out Settings:TJSONObject):Boolean;
 function SettingsLiteral(Settings:TJSONObject;const Name:string):string;
 function SettingsRemainder(Settings:TJSONObject):string;
-function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
+function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string;AppendExisting:Boolean=False):string;
 function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
 function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
@@ -89,7 +89,7 @@ begin
     Result:=QuotedStr(CopyValue.AsJSON);
   finally CopyValue.Free;end;
 end;
-function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
+function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string;AppendExisting:Boolean):string;
 var Items:TJSONData;Rows:TWLRows;Scope:TSelectionScope;Specs:TJSONArray;Spec:TJSONObject;
   TableName,Doc,Match,Expression,SpecText:string;i:Integer;Shared:Boolean;Command:TJSONObject;
   function Q(const Text:string):string;
@@ -116,7 +116,7 @@ begin
       Match:='json_type('+Doc+',''$._id'')=''text'' AND json_extract('+Doc+',''$._id'')='+Q(Identity)+
         ' AND json_extract('+Doc+',''$.$s.p._id.t'')=''string''';
       Expression:='wl_relation(json('+Doc+'),''{"op":"init","old":{},"values":{}}'','+Q(Spec.AsJSON)+')';
-      Result:=Guards+'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE json_extract('+Doc+',''$._id'')='+Q(Identity)+')=1 AND '+
+      if not AppendExisting then Result:=Guards+'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE json_extract('+Doc+',''$._id'')='+Q(Identity)+')=1 AND '+
         '(SELECT count(*) FROM '+TableName+' WHERE '+Match+')=1 '+
         'THEN 1 ELSE json(''Ambiguous dropdown parent'') END; UPDATE '+TableName+' SET '+Doc+'=CASE WHEN wl_storage('+Q(Rows[0][0])+')=''blob'' '+
         'THEN jsonb('+Expression+') ELSE '+Expression+' END WHERE '+Match+'; ';
@@ -131,8 +131,13 @@ begin
       Result:=Result+'UPDATE '+TableName+' SET '+Doc+'=CASE WHEN wl_storage('+Q(Rows[0][0])+')=''blob'' '+
         'THEN jsonb('+Expression+') ELSE '+Expression+' END WHERE '+Match+'; ';
     end
-    else Result:=Result+'INSERT INTO custom_field_dropdown_items(customFieldId,id,name,sort) VALUES('+
-      Q(Identity)+','+Q(TJSONObject(Items.Items[i]).Get('_id',''))+','+Q(TJSONObject(Items.Items[i]).Get('name',''))+','+IntToStr(i)+'); ';
+    else
+    begin
+      Expression:=IntToStr(i);
+      if AppendExisting then Expression:='(SELECT COALESCE(MAX(sort),-1)+1 FROM custom_field_dropdown_items WHERE customFieldId='+Q(Identity)+')';
+      Result:=Result+'INSERT INTO custom_field_dropdown_items(customFieldId,id,name,sort) VALUES('+
+        Q(Identity)+','+Q(TJSONObject(Items.Items[i]).Get('_id',''))+','+Q(TJSONObject(Items.Items[i]).Get('name',''))+','+Expression+'); ';
+    end;
 end;
 // The caller pins typed parent/item scope and model bindings around this write.
 function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
