@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize Designer widget sorting controls
+
+- Use the viewer's Sort caption and ASCII direction markers. Keep
+  widget sort commands independent of the displayed text.
+
 ## 2026-11-18 Verify standalone SQLite build and startup instructions
 
 - Build both native variants and launch each against a fresh standalone

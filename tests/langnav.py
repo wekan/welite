@@ -70,6 +70,8 @@ def check_navigation(request,database,session):
             assert ('type="submit" value="'+escape(arabic[key])+'"').encode() in editor,key
         for field,key in (('type','type'),('label','r-label'),('name','name'),('sort','sort')):
             assert ('for="widget-'+field+'">'+escape(arabic[key],quote=False)+'<').encode() in editor,key
+        for arrow in ('^','v'):
+            assert ('type="submit" value="'+escape(arabic['sort']+' '+arrow)+'"').encode() in editor
         for form in (body,editor):
             assert ('for="page-title">'+escape(arabic['title'],quote=False)+'<').encode() in form
             assert ('type="submit" value="'+escape(arabic['save'])+'"').encode() in form

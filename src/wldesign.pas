@@ -1224,8 +1224,8 @@ begin
               ToolButton(S, '/designer/widget/move', 'v', 'widgetId', W[i].Id, 'dir', 'down') +
               ToolButton(S, '/designer/widget/move', '<', 'widgetId', W[i].Id, 'dir', 'left') +
               ToolButton(S, '/designer/widget/move', '>', 'widgetId', W[i].Id, 'dir', 'right') +
-              ToolButton(S,'/designer/widget/sort','Sort up','widgetId',W[i].Id,'dir','up')+
-              ToolButton(S,'/designer/widget/sort','Sort down','widgetId',W[i].Id,'dir','down')+
+              ToolButton(S,'/designer/widget/sort',Words.Text('sort','Sort')+' ^','widgetId',W[i].Id,'dir','up')+
+              ToolButton(S,'/designer/widget/sort',Words.Text('sort','Sort')+' v','widgetId',W[i].Id,'dir','down')+
               '<a href="'+HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(P.Id)+
                 '&widgetId='+HTTPEncode(W[i].Id),S))+'">'+HtmlEncode(Words.Text('edit','Edit'))+'</a> ' +
               ToolButton(S, '/designer/widget/delete', Words.Text('delete','Delete'), 'widgetId', W[i].Id, '', '') +
