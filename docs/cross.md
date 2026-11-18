@@ -150,7 +150,12 @@ and read the exact schema bytes from the full resource bundle with
 initialization in the same emulator but stopped there. The tested
 [GFOpenSQLite package](https://github.com/DalsinAI/gfopensqlite/releases/tag/v3.53.4-1)
 supplies static libraries. The CLI build still needs an Amiga `sqlite3`
-executable. Full server startup, networking and SQLite runtime remain open.
+executable. The CLI from the
+[Amiga SQLite 3.34 port](https://aminet.net/package/biz/dbase/sqlite-3.34.0.a-amiga)
+executes under vamos and can create, write and read a native SQLite file.
+This build lacks `json()`, which WeLite uses, and its `-init` script test
+stopped in the emulator's DOS file-handle implementation. Full server
+startup, networking and a compatible SQLite CLI remain open.
 
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
