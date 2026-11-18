@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string=''):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
@@ -28,9 +28,9 @@ begin
     Result:=Result+'</ul>';
   finally Words.Free;end;
 end;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag:string):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList:string):string;
 var B,Lanes,Lists,Cards,MapLists:TWLRows; i,j,k,c,m,Width,MapX,MapY:Integer;
-  Writable:Boolean; Back,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
+  Writable:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -128,6 +128,7 @@ begin
   Back:='/board?id='+HTTPEncode(BoardId);
   if AllItems then Back:=Back+'&view=all'
   else Back:=Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y);
+  BoardPath:=Back;
   if OriginWidget<>'' then Back:=SafeReturnPath(OriginPath);
   if Writable then Result:=Result+MoveFormBegin(S,'/board/move')+
     '<input type="hidden" name="boardWidget" value="'+HtmlAttr(OriginWidget)+'">'+
@@ -140,7 +141,7 @@ begin
     if not AllItems and (i<>Y-1) then Continue;
     Result:=Result+'<h2'+BgColorAttr(Lanes[i][2])+'>'+Selection('swimlane',Lanes[i][0])+
       HtmlEncode(Lanes[i][1])+'</h2>';
-    Lists:=Db.Query('SELECT id,title,color FROM lists WHERE boardId='+QuotedStr(BoardId)+
+    Lists:=Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId='+QuotedStr(BoardId)+
       ' AND (swimlaneId='+QuotedStr(Lanes[i][0])+' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
     if Length(Lists)=0 then begin Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>'; Continue; end;
     Result:=Result+'<table dir="ltr" width="100%" border="1" cellpadding="5" cellspacing="0"><tr>';
@@ -149,7 +150,20 @@ begin
       if Align='right' then c:=High(Lists)-j else c:=j;
       if not AllItems and (c<>X-1) then Continue;
       Result:=Result+'<th dir="'+CellDir+'" align="'+Align+'"'+BgColorAttr(Lists[c][2])+'>'+
-        Selection('list',Lists[c][0])+HtmlEncode(Lists[c][1])+'</th>';
+        Selection('list',Lists[c][0])+HtmlEncode(Lists[c][1]);
+      if Lists[c][3]='1' then
+      begin
+        Url:=BoardPath;
+        if ExpandedList=Lists[c][0] then CellText:=Words.Text('collapse','Collapse')
+        else
+        begin
+          CellText:=Words.Text('uncollapse','Expand');
+          Url:=Url+'&expand='+HTTPEncode(Lists[c][0]);
+        end;
+        Result:=Result+' <a data-list-toggle="'+HtmlAttr(Lists[c][0])+'" href="'+
+          HtmlAttr(SessionUrl(Url,S))+'">'+HtmlEncode(CellText)+'</a>';
+      end;
+      Result:=Result+'</th>';
     end;
     Result:=Result+'</tr><tr>';
     for j:=0 to High(Lists) do
@@ -157,6 +171,11 @@ begin
       if Align='right' then c:=High(Lists)-j else c:=j;
       if not AllItems and (c<>X-1) then Continue;
       Result:=Result+'<td dir="'+CellDir+'" valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'" data-lane="'+HtmlAttr(Lanes[i][0])+'">';
+      if (Lists[c][3]='1') and (ExpandedList<>Lists[c][0]) then
+      begin
+        Result:=Result+'</td>';
+        Continue;
+      end;
       Cards:=Db.Query('SELECT id,title,color,description FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[i][0])+' AND listId='+QuotedStr(Lists[c][0])+
         ' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
@@ -231,7 +250,7 @@ begin
   Title:=Words.Text('board','Board');
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
-    aRequest.QueryFields.Values['view']='all','','',Language.Tag);
+    aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand']);
   if Body='' then begin
     aResponse.Code:=404;
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>');

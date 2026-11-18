@@ -29,6 +29,10 @@ def run(request,database,administrator,base):
         con.execute("INSERT INTO page_widgets(id,pageId,type,binding,options_json,createdAt,modifiedAt) VALUES('boardtxt','boardtxt','dataview','board',?,'now','now')",(json.dumps({'boardId':'protected'}),))
         for lid,lane,order in [('txtlist','txtlane',0),('txtlist2','txtlane',1),('txtlist3','txtlane2',0),('txtlist4','txtlane2',1)]:
             con.execute("INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(?,'boardtxt',?,'List <user>',?,'now')",(lid,lane,order))
+        con.execute("UPDATE lists SET collapsed=1 WHERE id='txtlist'")
+        author=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()[0]
+        con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,dateLastActivity,createdAt,modifiedAt) "
+                    "VALUES('txtcard','boardtxt','txtlane','txtlist','Hidden until expanded',?,'now','now','now')",(author,))
     def content_state():
         with sqlite3.connect(database) as con:
             return [con.execute('SELECT * FROM '+table+' WHERE '+condition+' ORDER BY id').fetchall()
@@ -62,7 +66,7 @@ def run(request,database,administrator,base):
         for attrs,text in native:
             assert attrs['dir']=='ltr' and text==words['view']+' '+arrows[attrs['data-view-dir']],(tag,attrs,text)
 
-        all_captions=[text for name,attrs,text in page.items if name=='a' and parse_qs(urlsplit(attrs['href']).query).get('view')==['all']]
+        all_captions=[text for name,attrs,text in page.items if name=='a' and 'data-list-toggle' not in attrs and parse_qs(urlsplit(attrs['href']).query).get('view')==['all']]
         assert all_captions==[words['view-all']],(tag,'view-all')
         assert html.escape(words['no-items-message'],quote=False).encode() in body,(tag,'empty')
         assert b'Board <user>' not in body and b'List <user>' not in body
@@ -125,12 +129,17 @@ def run(request,database,administrator,base):
         check('fi','invalid',header='fi')
         if os.environ.get('WELITE_UI')=='1':
             subprocess.run([os.environ.get('NODE','node'),str(root/'tests/boardtxt.js'),base,administrator],check=True)
+        status,_,body=request('GET','/board?id=boardtxt&x=1&y=1&lang=en')
+        assert status==200 and b'Hidden until expanded' not in body
+        status,_,body=request('GET','/board?id=boardtxt&x=1&y=1&lang=en&expand=txtlist')
+        assert status==200 and b'Hidden until expanded' in body
         check('en',header='en')
         assert content_state()==before,'Viewport/map navigation changed board content'
     finally:
         with sqlite3.connect(database) as con:
             con.execute("DELETE FROM page_widgets WHERE pageId='boardtxt'")
             con.execute("DELETE FROM pages WHERE id='boardtxt'")
+            con.execute("DELETE FROM cards WHERE boardId='boardtxt'")
             con.execute("DELETE FROM lists WHERE boardId='boardtxt'")
             con.execute("DELETE FROM swimlanes WHERE boardId='boardtxt'")
             con.execute("DELETE FROM boards WHERE id IN ('boardtxt','boardnone')")

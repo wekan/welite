@@ -2,9 +2,14 @@ const {chromium}=require(process.env.WELITE_PLAYWRIGHT||'playwright');
 const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');
 const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',tag+'.jsn'),'utf8'));
 (async()=>{
-  const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+  const profile=fs.mkdtempSync(path.join(process.env.TMPDIR,'wlboard-chromium-'));
+  let context;
   try {
-    const context=await browser.newContext({javaScriptEnabled:false,userAgent:'Welite-test',extraHTTPHeaders:{'Accept-Language':'fi'}});
+    fs.mkdirSync(path.join(profile,'Default'));
+    fs.writeFileSync(path.join(profile,'Default','Preferences'),
+      JSON.stringify({profile:{default_content_setting_values:{cookies:2}}}));
+    context=await chromium.launchPersistentContext(profile,{headless:true,args:['--no-sandbox'],
+      javaScriptEnabled:false,userAgent:'Welite-test',extraHTTPHeaders:{'Accept-Language':'fi'}});
     await context.route('**/*',async route=>{
       const headers={...route.request().headers()};delete headers.cookie;await route.continue({headers});
     });
@@ -68,11 +73,26 @@ const words=tag=>JSON.parse(fs.readFileSync(path.join(__dirname,'../i18n/data',t
       assert.equal(new URL(page.url()).searchParams.get('lang'),tag);
       assert.equal(await page.locator('input[name=action_edit]').inputValue(),local.edit);
     }
+    await page.goto(base+'/board?id=boardtxt&view=all&lang=en&sessionId='+process.argv[3]);
+    const toggle=page.locator('a[data-list-toggle="txtlist"]');
+    const card=page.getByText('Hidden until expanded',{exact:true});
+    assert.equal(await card.count(),0);
+    await toggle.click();
+    assert.equal(new URL(page.url()).searchParams.get('expand'),'txtlist');
+    assert.equal(new URL(page.url()).searchParams.get('view'),'all');
+    assert.equal(new URL(page.url()).searchParams.get('sessionId'),process.argv[3]);
+    assert.equal(await card.count(),1);
+    await toggle.click();
+    assert.equal(await card.count(),0);
+    assert.equal(new URL(page.url()).searchParams.get('expand'),null);
+    console.log('PASS: HTML list expansion and collapse with JavaScript disabled and no cookies');
     await page.goto(base+'/board?id=boardtxt');
     assert.equal(await page.title(),words('fi').board);
     assert.equal(await page.getByRole('link',{name:words('fi')['view-all'],exact:true}).count(),1);
     assert.equal((await context.cookies()).length,0);
     console.log('PASS: Chromium native board titles/overview links, empty states, private not-found text and header-only language without JavaScript/cookies');
-    await context.close();
-  } finally {await browser.close();}
+  } finally {
+    if(context) await context.close();
+    fs.rmSync(profile,{recursive:true,force:true});
+  }
 })().catch(error=>{console.error(error);process.exit(1);});
