@@ -1338,32 +1338,6 @@ begin
     [QuotedStr(aRequest.RouteParams['swimlaneId']),QuotedStr(aRequest.RouteParams['boardId'])]))));
 end;
 
-// GET checklists of a card / POST create a checklist
-procedure ApiCardChecklists(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, CardId, Title, Id: string;
-begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  BoardId := aRequest.RouteParams['boardId'];
-  CardId  := aRequest.RouteParams['cardId'];
-  if aRequest.Method = 'POST' then
-  begin
-    Title := BodyField(aRequest, 'title');
-    if Title = '' then Title := 'Checklist';
-    Id := NewId;
-    T.Db.Exec(Format(
-      'INSERT INTO checklists(id,cardId,boardId,title,sort,createdAt,modifiedAt) ' +
-      'VALUES(%s,%s,%s,%s,0,%s,%s);',
-      [QuotedStr(Id), QuotedStr(CardId), QuotedStr(BoardId), QuotedStr(Title),
-       QuotedStr(NowIso), QuotedStr(NowIso)]));
-    SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
-    Exit;
-  end;
-  SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM checklists WHERE cardId=%s ORDER BY sort;', [QuotedStr(CardId)]))));
-end;
-
 function ChecklistDeadlineSql(Value:TJSONData;out Literal:string):Boolean;
 const Prefix='0000-00-00T00:00:00';
 var Text,Zone:string;Stamp:TDateTime;i,Offset:Integer;
@@ -1396,6 +1370,67 @@ begin
     Literal:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Stamp));
     Result:=True;
   except Result:=False;end;
+end;
+
+// GET checklists of a card / POST create a checklist
+procedure ApiCardChecklists(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; UserId, BoardId, CardId, Title, Id, Due, Sql, Stamp, ItemTitle: string;
+  Body:TJSONObject;Value,Items,Item:TJSONData;i,Count:Integer;
+begin
+  if not ApiTenant(aRequest, aResponse, T) then Exit;
+  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
+  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
+  BoardId := aRequest.RouteParams['boardId'];
+  CardId  := aRequest.RouteParams['cardId'];
+  if aRequest.Method = 'POST' then
+  begin
+    Body:=nil;
+    try
+      try
+        if Pos('application/json',LowerCase(aRequest.ContentType))=1 then Body:=ExactObject(aRequest.Content)
+        else
+        begin
+          Body:=TJSONObject.Create;
+          for i:=0 to aRequest.ContentFields.Count-1 do
+            Body.Add(aRequest.ContentFields.Names[i],aRequest.ContentFields.ValueFromIndex[i]);
+        end;
+        Title:='Checklist';Value:=Body.Find('title');
+        if Value<>nil then
+        begin
+          if (Value.JSONType<>jtString) or (Trim(Value.AsString)='') or (Pos(#0,Value.AsString)>0) then
+            raise Exception.Create('Invalid checklist title');
+          Title:=Value.AsString;
+        end;
+        Due:='NULL';Value:=Body.Find('dueAt');
+        if (Value<>nil) and not ChecklistDeadlineSql(Value,Due) then raise Exception.Create('Invalid deadline');
+        Items:=Body.Find('items');Count:=0;
+        if (Items<>nil) and (Items.JSONType<>jtNull) then
+          case Items.JSONType of
+            jtArray: Count:=Items.Count;
+            jtString: if Items.AsString<>'' then Count:=1;
+            else raise Exception.Create('Invalid checklist items');
+          end;
+        Id:=NewId;Stamp:=QuotedStr(NowIso);
+        Sql:='BEGIN IMMEDIATE; INSERT INTO checklists(id,cardId,boardId,title,sort,createdAt,modifiedAt,dueAt) VALUES('+
+          QuotedStr(Id)+','+QuotedStr(CardId)+','+QuotedStr(BoardId)+','+QuotedStr(Title)+',0,'+Stamp+','+Stamp+','+Due+'); ';
+        for i:=0 to Count-1 do
+        begin
+          Item:=Items;if Items.JSONType=jtArray then Item:=Items.Items[i];
+          if (Item.JSONType<>jtString) or (Pos(#0,Item.AsString)>0) then raise Exception.Create('Invalid checklist item');
+          ItemTitle:=Item.AsString;
+          Sql:=Sql+'INSERT INTO checklist_items(id,checklistId,cardId,boardId,title,sort,createdAt,modifiedAt) VALUES('+
+            QuotedStr(NewId)+','+QuotedStr(Id)+','+QuotedStr(CardId)+','+QuotedStr(BoardId)+','+
+            QuotedStr(ItemTitle)+','+IntToStr(i)+','+Stamp+','+Stamp+'); ';
+        end;
+      except SendJson(aResponse,'{"error":"Invalid checklist title, items or dueAt"}',400);Exit;end;
+      if not T.Db.Exec(Sql+'COMMIT;') then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create checklist');Exit;end;
+      SendJson(aResponse,Format('{"_id":%s}',[AnsiQuotedStr(Id,'"')]));
+    finally Body.Free;end;
+    Exit;
+  end;
+  SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
+    'SELECT id,title FROM checklists WHERE cardId=%s ORDER BY sort;', [QuotedStr(CardId)]))));
 end;
 
 function ChecklistChanges(Request:TRequest;out Changes:string):Boolean;

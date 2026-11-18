@@ -108,3 +108,28 @@ def run(request, db, token):
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT id FROM checklist_items WHERE id IN ('deleteitem','foreignitem')").fetchall() == [('foreignitem',)]
     print('PASS: checklist DELETE cascades to its items and rolls back on failure')
+
+    base = '/api/boards/protected/cards/card/checklists'
+    def create(data):
+        return request('POST',base+'?token='+token,json.dumps(data).encode())
+
+    with sqlite3.connect(db) as con:
+        before = '\n'.join(con.iterdump())
+    for payload in [{'items':['first',20]}, {'dueAt':'tomorrow'}, {'title':None}]:
+        assert create(payload)[0] == 400, payload
+    with sqlite3.connect(db) as con:
+        assert '\n'.join(con.iterdump()) == before
+        con.execute("CREATE TRIGGER reject_initial_item AFTER INSERT ON checklist_items WHEN NEW.title='second' BEGIN SELECT RAISE(FAIL,'test'); END")
+    payload = dict(title='Initial items',dueAt='2026-11-18T09:30:00.123+02:00',items=['first','second'])
+    assert create(payload)[0] == 500
+    with sqlite3.connect(db) as con:
+        con.execute('DROP TRIGGER reject_initial_item')
+        assert '\n'.join(con.iterdump()) == before
+    status, _, body = create(payload)
+    assert status == 200, (status,body)
+    status, _, body = request('GET',base+'/'+json.loads(body)['_id']+'?token='+token)
+    assert status == 200, (status,body)
+    checklist = json.loads(body)
+    assert checklist['dueAt'] == '2026-11-18T07:30:00.123Z', checklist
+    assert [item['title'] for item in checklist['items']] == ['first','second'], checklist
+    print('PASS: checklist creation stores its deadline and ordered initial items or rolls back everything')
