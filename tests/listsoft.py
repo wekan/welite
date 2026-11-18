@@ -168,6 +168,21 @@ def run(request, client, db, token, refresh_ferret, session):
     finally:
         assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
     print('PASS: expired legacy recovery preserves other live writer leases and tokens')
+    draining=dict(idle_gate,mode='draining',migrationId='11111111-2222-4333-8444-555555555555')
+    assert client.command({'insert':'historyWriterGates','documents':[dict(draining,writers=[writer])]})['n']==1
+    assert client.command({'insert':'historyWriterLeases','documents':[dict(lease,pending='draining-claim')]})['n']==1
+    try:
+        assert request('DELETE',path,token=token)[0]==200
+        assert client.find('historyWriterGates',gate_id)==[draining]
+        assert not client.find('historyWriterLeases',writer)
+        assert client.find('changeHistory','draining-claim')==[
+            dict(_id='draining-claim',boardId='#history-writer-fence',fencedWriter=writer)]
+        assert changes()==lifecycle
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        assert changes()==lifecycle and client.find('historyWriterGates',gate_id)==[draining]
+    finally:
+        assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
+    print('PASS: draining gate retires expired writers without allowing a lifecycle append')
     assert client.command({'insert':'historyWriterGates','documents':[
         dict(_id='list-test-gate',boardId='b',mode='coordinated') ]})['n']==1
     try:

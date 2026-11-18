@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Retire expired history writers during gate draining
+
+- Recover expired leases and fence their claimed rows in a valid
+  draining gate. Preserve the migration ID and keep appends paused.
+
 ## 2026-11-18 Recover expired leases in multi-writer legacy gates
 
 - Retire each eligible writer and keep sibling tokens in their

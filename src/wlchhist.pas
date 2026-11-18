@@ -108,9 +108,11 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
       ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
-      ' AND '+VersionOne+' AND json_extract(_ferretdb_sjson,''$.mode'')=''legacy'''+
-      ' AND json_extract(_ferretdb_sjson,''$.$s.p.mode.t'')=''string'''+
-      ' AND json_type(_ferretdb_sjson,''$.migrationId'')=''null'''+
+      ' AND '+VersionOne+' AND json_extract(_ferretdb_sjson,''$.$s.p.mode.t'')=''string'''+
+      ' AND ((json_extract(_ferretdb_sjson,''$.mode'')=''legacy'' AND json_type(_ferretdb_sjson,''$.migrationId'')=''null'') OR '+
+      '(json_extract(_ferretdb_sjson,''$.mode'')=''draining'' AND json_extract(_ferretdb_sjson,''$.$s.p.migrationId.t'')=''string'''+
+      ' AND '+MigrationId+' GLOB '+QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+        'x','[0-9a-f]',[rfReplaceAll]))+'))'+
       ' AND json_type(_ferretdb_sjson,''$.writers'')=''array'' AND json_array_length(_ferretdb_sjson,''$.writers'') BETWEEN 1 AND 1000'+
       ' AND NOT EXISTS(SELECT 1 FROM json_each(_ferretdb_sjson,''$.writers'') WHERE type<>''text'' OR value NOT GLOB '+
       QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx','x','[0-9a-f]',[rfReplaceAll]))+

@@ -216,7 +216,7 @@ Complete these steps sequentially, with regression tests and a local commit for 
 The design above remains the acceptance criteria. Move verified items to [CHANGES.md](CHANGES.md).
 Platform and browser claims require testing on those targets.
 
-- [ ] Finish WeKan writer lease recovery for draining gates and orphan leases, and support coordinated pending payloads beyond list lifecycle changes.
+- [ ] Finish WeKan writer lease recovery for orphan leases, and support coordinated pending payloads beyond list lifecycle changes.
   Valid list lifecycle reservations recover whether their row was saved or unsaved. Expired leases retire atomically in legacy gates with one or more writers, fencing claimed rows where needed.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
