@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Record shared list deletion and restore in position history
+
+- Append WeKan position-history records when the shared collection exists.
+  Preserve the list position, typed dates and deletion batch. Clear redo
+  entries for the same actor and board in the history write transaction.
+
 ## 2026-11-18 Verify list restore in Chromium without JavaScript or cookies
 
 - Exercise the actual HTML form, confirm the deleted list stays off the

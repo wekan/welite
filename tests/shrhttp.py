@@ -84,7 +84,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     try:client.command({'ping':1});break
                     except OSError:time.sleep(.05)
                 else:raise AssertionError('FerretDB startup timed out')
-                for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
+                for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments','userPositionHistory']:client.command({'create':collection})
                 now=DateMs(int(time.time()*1000))
                 password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
                 client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password=password),profile=dict(language='ar',retained=Long(9007199254740993)),extra=Long(9007199254740993))]})

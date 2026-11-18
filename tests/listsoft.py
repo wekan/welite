@@ -46,6 +46,13 @@ def run(request, client, db, token):
     assert request('GET', path, token=token)[0] == 404
     assert request('GET', '/api/cards/' + card_id, token=token)[0] == 404
     assert request('DELETE', path, token=token)[0] == 404
+    def history(action):
+        result=client.command({'find':'userPositionHistory','filter':dict(entityId=list_id,actionType=action)})
+        return result['cursor']['firstBatch']
+    deleted,=history('delete')
+    assert deleted['batchId']==retained_list['deleteBatchId'] and isinstance(deleted['createdAt'],DateMs),deleted
+    assert deleted['newState']['deletedAt']==retained_list['deletedAt'] and isinstance(deleted['newState']['deletedAt'],DateMs),deleted
+    assert deleted['previousState']==dict(boardId='b',swimlaneId='s',sort=original_list['sort']),deleted
     print('PASS: live shared list DELETE retains typed batch markers and restores both source documents on failure')
 
     status, headers, _ = request('POST', '/sign-in', urlencode(dict(username='user', password='test-password')))
@@ -82,4 +89,8 @@ def run(request, client, db, token):
     assert encode(client.find('cards',card_id)[0]) == encode(original_card)
     assert request('GET', path, token=token)[0] == 200
     assert request('GET', '/api/cards/' + card_id, token=token)[0] == 200
+    restored,=history('restore')
+    assert restored['batchId']==deleted['batchId'] and restored['newState']==dict(deletedAt=None),restored
+    assert restored['previousState']==deleted['newState'] and isinstance(restored['previousState']['deletedAt'],DateMs),restored
+    print('PASS: live shared delete and restore write typed WeKan position history')
     print('PASS: live shared HTML restore unsets the batch, preserves BSON, and rolls back both rows on failure')

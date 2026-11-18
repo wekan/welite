@@ -60,12 +60,12 @@ function ApplyCardDrop(Db:TWLDb; Params:TStrings):Boolean;
 function ApplyMove(Db: TWLDb; Params: TStrings; RightToLeft:Boolean=False): Boolean;
 
 function RestoreListAction(const BoardId,ListId,BatchId:string):string;
-function RestoreDeletedList(Db:TWLDb;const BoardId,ListId,BatchId:string):Boolean;
+function RestoreDeletedList(Db:TWLDb;const UserId,BoardId,ListId,BatchId:string):Boolean;
 
 implementation
 
 uses
-  StrUtils,wli18n;
+  StrUtils,wli18n,wlposhis;
 
 function q(const V: string): string;
 begin
@@ -312,12 +312,13 @@ begin
     IntToStr(Length(ListId))+':'+ListId+BatchId;
 end;
 
-function RestoreDeletedList(Db:TWLDb;const BoardId,ListId,BatchId:string):Boolean;
+function RestoreDeletedList(Db:TWLDb;const UserId,BoardId,ListId,BatchId:string):Boolean;
 const ClearMarkers='deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL';
-var Scope,Deleted,Sql:string;
+var Scope,Deleted,Sql:string;Position:TWLRows;
 begin
   Scope:='id='+q(ListId)+' AND boardId='+q(BoardId);
   Deleted:=Scope+' AND deletedAt IS NOT NULL AND COALESCE(deleteBatchId,'''')='+q(BatchId);
+  Position:=Db.Query('SELECT swimlaneId,sort,deletedAt FROM lists WHERE '+Deleted+';');
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Deleted+
     ')=1 THEN 1 ELSE json(''List is no longer deleted'') END; '+
     'UPDATE cards SET '+ClearMarkers+' WHERE boardId='+q(BoardId)+' AND listId='+q(ListId)+
@@ -326,6 +327,8 @@ begin
     '; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
     ' AND deletedAt IS NULL)=1 THEN 1 ELSE json(''Could not restore list'') END; COMMIT;';
   Result:=Db.Exec(Sql);
-  if not Result then Db.Exec('ROLLBACK;');
+  if not Result then Db.Exec('ROLLBACK;')
+  else if Length(Position)=1 then
+    try RecordListPosition(Db,UserId,BoardId,ListId,BatchId,Position[0][2],Position[0],True);except end;
 end;
 end.

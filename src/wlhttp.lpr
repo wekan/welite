@@ -450,7 +450,7 @@ begin
     not BoardCanWrite(T.Db,S.UserId,BoardId) or
     not VerifyActionToken(aRequest,S,RestoreListAction(BoardId,ListId,BatchId),True) then
   begin aResponse.Code:=403;aResponse.SendContent;Exit;end;
-  if not RestoreDeletedList(T.Db,BoardId,ListId,BatchId) then
+  if not RestoreDeletedList(T.Db,S.UserId,BoardId,ListId,BatchId) then
   begin aResponse.Code:=409;aResponse.SendContent;Exit;end;
   S.LanguageTag:=RequestLanguageTag(aRequest);
   aResponse.Code:=302;

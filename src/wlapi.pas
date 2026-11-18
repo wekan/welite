@@ -87,7 +87,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -1977,15 +1977,16 @@ end;
 // DELETE list — its cards have no FK on listId, so remove them first (their children cascade).
 procedure ApiListDelete(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
-var T:TWLTenant;UserId,ListId,BoardId,Scope,CardScope,Markers,Batch,Sql:string;Reply:TJSONObject;
+var T:TWLTenant;UserId,ListId,BoardId,Scope,CardScope,Markers,Batch,BatchId,Sql,Stamp:string;Reply:TJSONObject;Position:TWLRows;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   ListId:=aRequest.RouteParams['listId'];BoardId:=QuotedStr(aRequest.RouteParams['boardId']);
-  Batch:=QuotedStr(NewId);
-  Markers:='deletedAt='+QuotedStr(NowIso)+',deletedBy='+QuotedStr(UserId)+',deleteBatchId='+Batch;
+  BatchId:=NewId;Batch:=QuotedStr(BatchId);Stamp:=NowIso;
+  Markers:='deletedAt='+QuotedStr(Stamp)+',deletedBy='+QuotedStr(UserId)+',deleteBatchId='+Batch;
   Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId;
+  Position:=T.Db.Query('SELECT swimlaneId,sort FROM lists WHERE '+Scope+' AND deletedAt IS NULL;');
   CardScope:='listId='+QuotedStr(ListId)+' AND boardId='+BoardId+' AND deletedAt IS NULL';
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
     ' AND deletedAt IS NULL)=1 THEN 1 ELSE json(''List delete scope changed'') END; '+
@@ -1995,6 +1996,9 @@ begin
     ') THEN 1 ELSE json(''Could not mark list and cards deleted'') END; COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete list');Exit;end;
+  if Length(Position)=1 then
+    try RecordListPosition(T.Db,UserId,aRequest.RouteParams['boardId'],ListId,BatchId,
+      Stamp,Position[0],False);except end;
   Reply:=TJSONObject.Create(['_id',ListId]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
