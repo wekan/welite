@@ -127,9 +127,10 @@ const { readFileSync } = require('node:fs');
     }
     console.log('PASS: Chromium shows REST-created subtasks and hides archived subtasks without JavaScript or cookies');
     const attachment = Buffer.from([0, 1, 10, 255]);
-    const upload = await context.request.post(boardUrl.origin + '/api/attachment/upload', {
-      headers, data: { boardId: 'b', listId: 'l', swimlaneId: 's', cardId: 'brow-card',
-        fileName: 'browser-attachment.bin', fileData: attachment.toString('base64') },
+    const metadata = new URLSearchParams({ boardId: 'b', listId: 'l', swimlaneId: 's',
+      cardId: 'brow-card', fileName: 'browser-attachment.bin' });
+    const upload = await context.request.post(boardUrl.origin + '/api/attachment/upload?' + metadata, {
+      headers: { ...headers, 'Content-Type': 'application/octet-stream' }, data: attachment,
     });
     assert.equal(upload.status(), 200);
     const { attachmentId } = await upload.json();

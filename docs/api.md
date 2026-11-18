@@ -135,12 +135,16 @@ is self-or-admin. Non-members get `403`.
 | `POST /api/boards/:boardId/custom-fields/:customField/dropdown-items` | append names from `items` | definition `{"_id"}` |
 | `PUT`/`DELETE /api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem` | rename or delete one option | option `{"_id"}` for rename, definition `{"_id"}` for delete |
 | `POST …/cards/:cardId/customFields/:customField` | `editcustomfield` | `{"_id"}` (sets card value) |
-| `POST /api/attachment/upload` | `uploadattachment` | `{"success","attachmentId","fileName","fileSize"}` (JSON+base64) |
+| `POST /api/attachment/upload` | `uploadattachment` | `{"success","attachmentId","fileName","fileSize"}` (JSON/base64 or octet-stream) |
 | `GET /api/attachment/download/:attachmentId` | `downloadattachment` | `{"success","base64Data","fileName","fileSize"}` |
 | `GET /api/attachment/info/:attachmentId` | `attachmentinfo` | metadata `{...}` |
 | `DELETE /api/attachment/delete/:attachmentId` | `deleteattachment` | `{"success","attachmentId"}` |
 | `GET /api/boards/:boardId/attachments` | `listattachments` | `[{"_id","name","cardId"}]` |
 | `GET /api/attachment/list/:b/:s/:l/:cardId` | `listcardattachments` | `{"success","attachments":[...]}` |
+
+For a binary upload, send `Content-Type: application/octet-stream` and put
+`boardId`, `swimlaneId`, `listId`, `cardId`, `fileName` and `fileType` in the
+query string. JSON uploads continue to accept base64 in `fileData`.
 
 Add `?raw=1` to download the stored attachment bytes as
 `application/octet-stream`. Both formats require authorization to read the

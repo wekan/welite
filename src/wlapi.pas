@@ -5334,39 +5334,79 @@ begin
   finally fs.Free; end;
 end;
 
-// POST /api/attachment/upload — JSON {boardId,swimlaneId,listId,cardId,fileData(b64),fileName,fileType}
-procedure ApiAttachmentUpload(aRequest: TRequest; aResponse: TResponse);
-var
-  T: TWLTenant; UserId: string;
-  D: TJSONData; O: TJSONObject;
-  BoardId, Sw, Lst, Crd, FileName, FileType, Id, Bytes: string;
+procedure ApiAttachmentUpload(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Id,Bytes,Path,Sql,Guard,ContentType:string;
+  Input,Reply:TJSONObject;Policy:TFieldPolicy;Separator:Integer;OwnsPath:Boolean;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  try D := GetJSON(aRequest.Content); except SendError(aResponse, 400, 'Bad JSON'); Exit; end;
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  Input:=nil;
   try
-    if not (D is TJSONObject) then begin SendError(aResponse, 400, 'Bad body'); Exit; end;
-    O := TJSONObject(D);
-    BoardId  := O.Get('boardId', '');  Sw  := O.Get('swimlaneId', '');
-    Lst      := O.Get('listId', '');   Crd := O.Get('cardId', '');
-    FileName := O.Get('fileName', 'file');
-    FileType := O.Get('fileType', 'application/octet-stream');
-    if not ApiAuthBoard(T, aResponse, UserId, BoardId, True) then Exit;
-    if not ApiChildrenBelong(T.Db,BoardId,Sw,Lst,Crd,'','','','') then
-    begin SendError(aResponse,400,'Invalid attachment parent'); Exit; end;
-    Bytes := DecodeStringBase64(O.Get('fileData', ''));
-    Id := NewId;
-    ForceDirectories(ExtractFileDir(StoreFilePath(T.FilesDir,'attachme',Id)));
-    WriteFileBytes(StoreFilePath(T.FilesDir,'attachme',Id), Bytes);
-    T.Db.Exec(Format(
-      'INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,' +
-      'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
-      [QuotedStr(Id), QuotedStr(BoardId), QuotedStr(Sw), QuotedStr(Lst), QuotedStr(Crd),
-       QuotedStr(FileName), QuotedStr(FileType), Length(Bytes), QuotedStr(UserId), QuotedStr(NowIso)]));
-    SendJson(aResponse, Format(
-      '{"success":true,"attachmentId":%s,"fileName":%s,"fileSize":%d,"storageBackend":"filesystem"}',
-      [AnsiQuotedStr(Id, '"'), AnsiQuotedStr(FileName, '"'), Length(Bytes)]));
-  finally D.Free; end;
+    try
+      ContentType:=LowerCase(aRequest.ContentType);
+      Separator:=Pos(';',ContentType);
+      if Separator>0 then SetLength(ContentType,Separator-1);
+      if Trim(ContentType)='application/octet-stream' then
+      begin
+        BoardId:=aRequest.QueryFields.Values['boardId'];Sw:=aRequest.QueryFields.Values['swimlaneId'];
+        Lst:=aRequest.QueryFields.Values['listId'];Crd:=aRequest.QueryFields.Values['cardId'];
+        FileName:=aRequest.QueryFields.Values['fileName'];FileType:=aRequest.QueryFields.Values['fileType'];
+        Bytes:=aRequest.Content;
+      end
+      else
+      begin
+        Input:=ExactObject(aRequest.Content);
+        BoardId:=Input.Get('boardId','');Sw:=Input.Get('swimlaneId','');
+        Lst:=Input.Get('listId','');Crd:=Input.Get('cardId','');
+        FileName:=Input.Get('fileName','');FileType:=Input.Get('fileType','');
+        Bytes:=DecodeStringBase64(Input.Get('fileData',''));
+      end;
+      if Pos(#0,BoardId+Sw+Lst+Crd+FileName+FileType)>0 then raise EConvertError.Create('Invalid attachment metadata');
+    except SendError(aResponse,400,'Invalid attachment upload');Exit;end;
+  finally Input.Free;end;
+  if FileName='' then FileName:='file';
+  if FileType='' then FileType:='application/octet-stream';
+  if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
+  if not ApiChildrenBelong(T.Db,BoardId,Sw,Lst,Crd,'','','','') then
+  begin SendError(aResponse,400,'Invalid attachment parent');Exit;end;
+
+  Id:=NewId;
+  Path:=StoreFilePath(T.FilesDir,'attachme',Id);
+  Guard:='1';
+  if Sw<>'' then Guard:=Guard+' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+QuotedStr(Sw)+
+    ' AND boardId='+QuotedStr(BoardId)+')';
+  if Lst<>'' then Guard:=Guard+' AND EXISTS(SELECT 1 FROM lists WHERE id='+QuotedStr(Lst)+
+    ' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL AND ('+QuotedStr(Sw)+
+    '='''' OR swimlaneId='''' OR swimlaneId='+QuotedStr(Sw)+'))';
+  if Crd<>'' then
+    Guard:=Guard+' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Crd)+' AND boardId='+QuotedStr(BoardId)+
+      ' AND deletedAt IS NULL AND ('+QuotedStr(Lst)+'='''' OR listId='+QuotedStr(Lst)+
+      ') AND ('+QuotedStr(Sw)+'='''' OR swimlaneId='+QuotedStr(Sw)+'))';
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  Sql:=Format('INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,'+
+    'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
+    [QuotedStr(Id),QuotedStr(BoardId),QuotedStr(Sw),QuotedStr(Lst),QuotedStr(Crd),
+     QuotedStr(FileName),QuotedStr(FileType),Length(Bytes),QuotedStr(UserId),QuotedStr(NowIso)]);
+  OwnsPath:=False;
+  try
+    if FileExists(Path) then raise EInOutError.Create('Attachment path already exists');
+    if not ForceDirectories(ExtractFileDir(Path)) then raise EInOutError.Create('Attachment directory unavailable');
+    OwnsPath:=True;
+    WriteFileBytes(Path,Bytes);
+    if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+
+      ' THEN 1 ELSE json(''Attachment scope changed'') END; '+Sql+
+      'SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+
+      ') THEN 1 ELSE json(''Attachment insertion failed'') END; COMMIT;') then
+      raise EInOutError.Create('Attachment registration failed');
+  except
+    T.Db.Exec('ROLLBACK;');
+    if OwnsPath and FileExists(Path) then DeleteFile(Path);
+    SendError(aResponse,500,'Could not store attachment');Exit;
+  end;
+  Reply:=TJSONObject.Create(['success',True,'attachmentId',Id,'fileName',FileName,
+    'fileSize',Length(Bytes),'storageBackend','filesystem']);
+  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
 // look up an attachment row; returns False (and 404 json) if missing

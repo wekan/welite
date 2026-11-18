@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Accept binary REST attachment uploads
+
+- Accept octet-stream uploads with query-string metadata alongside JSON
+  base64 uploads. Recheck board and resource scope when recording the
+  attachment, and clean up the staged file if registration fails.
+
 ## 2026-11-18 Download attachments from HTML card details
 
 - Show active attachments for signed-in viewers. Downloads use the browser

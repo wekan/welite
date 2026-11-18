@@ -105,11 +105,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     except OSError:
                         time.sleep(.05)
                 raise AssertionError('FerretDB startup timed out')
-            def request(method,path,body=None,token=None,timeout=10):
+            def request(method,path,body=None,token=None,timeout=10,content_type=None):
                 con=http.client.HTTPConnection('127.0.0.1',http_port,timeout=timeout)
                 headers={'Host':'localhost','User-Agent':'shared-http-test'}
                 if token:headers['Authorization']='Bearer '+token
                 if body is not None:headers['Content-Type']='application/json' if isinstance(body,(dict,bytes)) else 'application/x-www-form-urlencoded'
+                if content_type:headers['Content-Type']=content_type
                 con.request(method,path,json.dumps(body) if isinstance(body,dict) else body,headers)
                 response=con.getresponse();result=response.status,dict(response.getheaders()),response.read();con.close();return result
             def stop():
@@ -1059,6 +1060,22 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 client.command({'insert':'attachments','documents':[dict(_id=attachment_id,name='export.txt',
                     type='text/plain',storageBackend='filesystem',metadata_json='{}',
                     meta=dict(boardId='b',listId='l',swimlaneId='s',cardId=card['_id']))]})
+                upload_path='/api/attachment/upload?'+urlencode(dict(boardId='b',swimlaneId='s',
+                    listId='l',cardId=card['_id'],fileName='rollback.bin'))
+                file_store=data.parent/'attachme'
+                before_files=set(file_store.rglob('*.bin'))
+                with sqlite3.connect(database) as con:
+                    con.execute("CREATE TRIGGER fail_attachment_insert INSTEAD OF INSERT ON attachments "
+                                "BEGIN SELECT RAISE(ABORT,'fixture metadata write'); END")
+                try:
+                    status,_,_=request('POST',upload_path,b'\x00failed\xff',token,
+                        content_type='application/octet-stream')
+                    assert status==500 and set(file_store.rglob('*.bin'))==before_files
+                    assert not client.command({'find':'attachments','filter':dict(name='rollback.bin')})['cursor']['firstBatch']
+                finally:
+                    with sqlite3.connect(database) as con:
+                        con.execute('DROP TRIGGER fail_attachment_insert')
+                print('PASS: attachment metadata failure rolls back and cleans up newly written bytes')
                 raw_attachment='/api/attachment/download/'+attachment_id+'?raw=1'
                 assert request('GET',raw_attachment)[0]==401
                 status,raw_headers,raw_bytes=request('GET',raw_attachment,token=token)
