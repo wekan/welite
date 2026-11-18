@@ -179,6 +179,15 @@ executable finds `sqlite3` and writes its query scripts. The emulator does
 not implement the `dos.library Execute` call used by FPC's process runner,
 so WeLite's child process and HTTP startup still require verification.
 
+A FreePascal m68k probe linked a GCC-produced Amiga object and called its
+`cdecl` function under vamos, receiving the expected value. Linking the
+SQLite objects and their libnix/GCC dependencies stopped earlier than
+execution. vlink 0.18a rejects the relocation in the GCC archive's
+`_muldi3.o`, including in the 68020+FPU multilib. GNU objcopy also
+rejected conversion of the SQLite Hunk object to ELF with an unresolved
+section symbol. The verified C calling convention is one part of a linked
+SQLite build. The C runtime and archive link still need resolution.
+
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
 The same pinned FPC source builds a separate Windows compiler/unit prefix with
