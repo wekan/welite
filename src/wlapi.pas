@@ -1399,10 +1399,10 @@ begin
 end;
 
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
-const Collections:array[0..10] of string=('swimlanes','lists','cards','triggers','actions','rules',
-  'comments','checklists','checklistItems','attachments','customFields');
+const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
+  'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId:string;
-  Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..10] of TJSONObject;Arrays:array[0..10] of TJSONArray;
+  Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -1491,6 +1491,32 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   begin
     Result:=Maps[Index].Get(Id,'');
     if Required and (Result='') then raise EConvertError.Create('Invalid import reference');
+  end;
+  procedure ImportLabels;
+  var Entry:TJSONObject;K:Integer;
+  begin
+    if Arrays[11]=nil then Exit;
+    for K:=0 to Arrays[11].Count-1 do
+    begin
+      Entry:=Arrays[11].Objects[K];
+      Sql:=Sql+'INSERT INTO board_labels(boardId,id,name,color) VALUES('+Board+','+
+        QuotedStr(Mapped(11,Text(Entry,'_id'),True))+','+QuotedStr(Text(Entry,'name'))+','+
+        QuotedStr(Text(Entry,'color','green'))+'); ';
+    end;
+  end;
+  procedure ImportCardLabels(Entry:TJSONObject;const CardKey:string);
+  var Labels:TJSONData;LabelKey:string;K:Integer;
+  begin
+    Labels:=Entry.Find('labelIds');
+    if (Labels=nil) or (Labels.JSONType=jtNull) then Exit;
+    if not (Labels is TJSONArray) then raise EConvertError.Create('Invalid imported card labels');
+    for K:=0 to Labels.Count-1 do
+    begin
+      if not (Labels.Items[K] is TJSONString) then raise EConvertError.Create('Invalid imported card label');
+      LabelKey:=QuotedStr(Mapped(11,Labels.Items[K].AsString,True));
+      Sql:=Sql+'INSERT INTO card_labels(cardId,labelId) SELECT '+QuotedStr(CardKey)+','+LabelKey+
+        ' WHERE NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId='+QuotedStr(CardKey)+' AND labelId='+LabelKey+'); ';
+    end;
   end;
   procedure ImportDefinitions;
   var Entry,Settings:TJSONObject;Id,FieldName,Kind,Dropdown,DropdownGuard:string;
@@ -1697,6 +1723,8 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         Id:=Mapped(Index,Text(Part,'_id'),True);
         for Key in ['createdAt','modifiedAt','updatedAt'] do Part.Delete(Key);
         PutString(Part,'_id',Id);PutString(Part,'boardId',BoardId);
+        if (Index in [3,4]) and (Text(Part,'labelId')<>'') then
+          PutString(Part,'labelId',Mapped(11,Text(Part,'labelId'),True));
         case Index of
           3: begin
             if Text(Part,'activityType')='' then raise EConvertError.Create('Invalid imported trigger');
@@ -1776,6 +1804,7 @@ begin
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
       ImportInactiveMembers;
       ImportDefinitions;
+      ImportLabels;
       if Arrays[0]<>nil then for J:=0 to Arrays[0].Count-1 do
       begin
         Row:=Arrays[0].Objects[J];
@@ -1803,6 +1832,7 @@ begin
           ','+Stamp+','+Stamp+','+Stamp+'); ';
         ImportCardPeople(Row,CardId);
         ImportCardFields(Row,CardId);
+        ImportCardLabels(Row,CardId);
       end;
       ImportCardChildren;
       ImportAttachments;

@@ -262,6 +262,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 unknown_field=dict(imported_payload,cards=[dict(imported_payload['cards'][0],
                     customFields=[dict(_id='missing',value='unknown')])])
                 assert request('POST',import_path,dict(board=unknown_field),token)[0]==400
+                imported_payload['labels']=[dict(_id='source-label',name='Imported label',color='green')]
+                imported_payload['cards'][0]['labelIds']=['source-label','source-label']
+                for collection in ['triggers','actions']:
+                    imported_payload[collection]=[dict(row,labelId='source-label') for row in exported[collection]]
+                unknown_label=dict(imported_payload,cards=[dict(imported_payload['cards'][0],labelIds=['missing'])])
+                assert request('POST',import_path,dict(board=unknown_label),token)[0]==400
                 imported_payload['members']=[dict(userId='external-author',isActive=True,isAdmin=True)]
                 imported_payload['comments'][0]['userId']='external-author'
                 assert request('POST',import_path,dict(board=imported_payload,
@@ -287,6 +293,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert imported_card['swimlaneId'] in {r['_id'] for r in imported_rows('swimlanes')}
                 assert imported_card['members']==imported_card['assignees']==imported_card['requesters']==['import-local-author']
                 assert imported_card['assigners']==[]
+                imported_label,=client.find('boards',imported_id)[0]['labels']
+                assert imported_label['_id']!='source-label'
+                assert imported_label['name']=='Imported label' and imported_label['color']=='green'
+                assert imported_card['labelIds']==[imported_label['_id']]
+                for collection in ['triggers','actions']:
+                    assert {row['labelId'] for row in imported_rows(collection)}=={imported_label['_id']}
+                print('PASS: board import remaps label references on cards and workflow actions and triggers')
                 imported_fields=client.command({'find':'customFields','filter':{'boardIds':imported_id}})['cursor']['firstBatch']
                 by_name={field['name']:field for field in imported_fields}
                 dropdown=by_name['Imported field']
