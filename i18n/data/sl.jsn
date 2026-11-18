@@ -958,7 +958,7 @@
   "delete-all-notifications-confirm": "Да ли сте сигурни да желите да избришете сва обавештења? Опозив ове радње неће бити могућ.",
   "delete-duplicate-lists": "Уклоните истоимене делове поступка",
   "delete-duplicate-lists-confirm": "Да ли сте сигурни? Овом радњом ће бити избрисани сви истоимени делови поступка где нема предмета.",
-  "default-subtasks-board": "Podopravila za tablo",
+  "default-subtasks-board": "Podopravila za tablo __board__",
   "default": "Privzeto",
   "defaultdefault": "Privzeto",
   "queue": "Čakalna vrsta",

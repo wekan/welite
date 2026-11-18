@@ -1437,7 +1437,7 @@
   "globalSearch-instructions-operator-limit": "`__operator_limit__:<n>` - hvor*<n>* er et positivt heltall som angir antall kort som skal vises på siden.",
   "globalSearch-instructions-notes-1": "Flere operatorer kan angis.",
   "globalSearch-instructions-notes-2": "Like operatorer er knyttet sammen med \"ELLER\".  Kort som samsvarer med noen av de angitte kriteriene vil returneres.\n`__operator_list__:Tilgjengelig __operator_list__:Blokkert` vil returnere Kort som inneholder lister med navnet \"Blokkert\" eller \"Tilgjengelig\".",
-  "globalSearch-instructions-notes-3": "Forskjellige operatorer er knyttet sammen med *OG*. Bare kort som samsvarer med alle de angitte kriteriene vil returneres. `__operator_list__:Tilgjengelig __operator_list__:rød` vil kun returnere kort i listen *Tilgjengelig* og som er markert med et *rødt* merke.",
+  "globalSearch-instructions-notes-3": "Forskjellige operatorer er knyttet sammen med *OG*. Bare kort som samsvarer med alle kriteriene returneres. `__operator_list__:Tilgjengelig __operator_label__:rød` returnerer bare kort i listen *Tilgjengelig* med en *rød* etikett.",
   "globalSearch-instructions-notes-3-2": "Dager kan angis som et positivt eller negativt heltall, eller ved bruk av  `__predicate_week__`, `__predicate_month__`, `__predicate_quarter__` eller `__predicate_year__` for den aktuelle perioden.",
   "globalSearch-instructions-notes-4": "Tekstsøk er ikke \"case\"-sensitive.",
   "globalSearch-instructions-notes-5": "Som standard er arkiverte kort ikke søkbare,",

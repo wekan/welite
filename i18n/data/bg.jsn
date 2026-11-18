@@ -21,7 +21,7 @@
   "act-removeLabel": "Премахнато е име __label__ от карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",
   "act-removedLabel": "Премахнато е име __label__ от карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",
   "act-addChecklist": "добавен списък със задачи __checklist__ към карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",
-  "act-addChecklistItem": "добавен елемент от списък със задачи __checklist__ към карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",
+  "act-addChecklistItem": "добави елемент __checklistItem__ към списъка със задачи __checklist__ на карта __card__ в списък __list__ в лента __swimlane__ на дъска __board__",
   "act-removeChecklist": "премахнат елемент от списък със задачи __checklist__ към карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",
   "act-removeChecklistItem": "премахнат елемент __checklistItem__ от списък със задачи __checkList__ към карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",
   "act-checkedItem": "отметнат елемент __checklistItem__ от списък със задачи __checklist__ към карта __card__ в списък __list__ в лента __swimlane__ към дъска __board__",

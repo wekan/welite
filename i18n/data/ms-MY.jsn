@@ -491,7 +491,7 @@
   "email-invalid": "Emel tidak sah",
   "email-invite": "Jemput menerusi Emel",
   "email-invite-subject": "__inviter__ menhantar jemputan untuk anda",
-  "email-invite-text": "Kehadapan __user__.\n\n__inviter__ telah menhantar jemputan kepada anda untuk mengikuti papan \"_papan_\" bagi tujuan kolaborasi.\n\nSila ikuti pautan di bawah.\n\n__url__\n\nTerima kasih.",
+  "email-invite-text": "Kehadapan __user__.\n\n__inviter__ telah menghantar jemputan kepada anda untuk mengikuti papan \"__board__\" bagi tujuan kolaborasi.\n\nSila ikuti pautan di bawah.\n\n__url__\n\nTerima kasih.",
   "email-resetPassword-subject": "Set semula kata laluan pada __siteName__",
   "email-resetPassword-text": "Selamat sejahtera __user__,\n\nUntuk set semula kata laluan, hanya klik pautan di bawah.\n\n__url__\n\nTerima kasih.",
   "email-sent": "Emel dihantar",

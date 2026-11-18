@@ -491,7 +491,7 @@
   "email-invalid": "Surel tidak sah",
   "email-invite": "Undang via Email",
   "email-invite-subject": "__inviter__ menhantar jemputan untuk anda",
-  "email-invite-text": "Kehadapan __user__.\n\n__inviter__ telah menhantar jemputan kepada anda untuk mengikuti papan \"_papan_\" bagi tujuan kolaborasi.\n\nSila ikuti pautan di bawah.\n\n__url__\n\nTerima kasih.",
+  "email-invite-text": "Yth. __user__,\n\n__inviter__ mengundang Anda untuk bergabung dengan papan \"__board__\" untuk berkolaborasi.\n\nSilakan ikuti tautan berikut:\n\n__url__\n\nTerima kasih.",
   "email-resetPassword-subject": "Pulihkan kata sandi Anda pada __siteName__",
   "email-resetPassword-text": "Halo __user__,\n\nUntuk memulihkan kata sandi Anda, silakan klik tautan berikut.\n\n__url__\n\nTerima kasih.",
   "email-sent": "Email terkirim",

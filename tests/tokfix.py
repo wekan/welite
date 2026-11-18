@@ -78,4 +78,6 @@ with tempfile.TemporaryDirectory(prefix='wltok-',dir=os.environ['TMPDIR']) as di
         for filename,keys in json.loads(manifest.read_text())['keys'].items():
             values=module.load(root/'i18n/data'/filename)
             for key in keys:assert module.tokens(values[key])==module.tokens(english[key]),(filename,key)
+_, pending, deferred=module.plan(root/'i18n/data')
+assert not pending and deferred==0,(len(pending),deferred)
 print('PASS: Unicode/case/printf/named tokens, prose preservation, URL octets, ambiguous/repeated refusal, dry run, human text/key order, idempotence and recorded inventories')

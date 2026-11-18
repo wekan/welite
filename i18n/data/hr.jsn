@@ -66,7 +66,7 @@
   "activity-excluded": "izdvojio/la je %s iz %s",
   "activity-imported": "uvezeno %s u %s iz %s",
   "activity-imported-board": "uvezeno %s iz %s",
-  "activity-joined": "spojen",
+  "activity-joined": "pridružio/la se %s",
   "activity-moved": "је преместио %s из %s у %s",
   "activity-on": "na %s",
   "activity-removed": "uklonjen %s iz %s",

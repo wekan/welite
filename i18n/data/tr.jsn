@@ -88,7 +88,7 @@
   "activity-checklist-uncompleted-card": "kontrol listesi tamamlanmadı%s",
   "activity-editComment": "%s yorum düzenlendi",
   "activity-deleteComment": "%s yorum silindi",
-  "activity-receivedDate": "alma tarihi için düzenlendi%s",
+  "activity-receivedDate": "alma tarihi %s olarak %s içinde düzenlendi",
   "activity-startDate": "başlangıç tarihi %s, %s olarak düzenlendi",
   "allboards.starred": "Starred",
   "allboards.templates": "Şablonlar",
