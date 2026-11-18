@@ -75,6 +75,18 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 assert request('POST','/designer/page/save',fields)[0]==302
                 status,headers,body=request('GET','/embedded?sessionId='+session+'&lang=ar')
                 assert status==200 and headers['Content-Language']=='ar' and b'dir="rtl"' in body
+                with sqlite3.connect(work/'data/local/files/db/wekan.db') as con:
+                    con.execute("INSERT INTO boards(id,title,slug,permission,createdAt) "
+                                "VALUES('embedded-board','Embedded board','embedded-board','public','now')")
+                    con.execute("INSERT INTO swimlanes(id,boardId,title,createdAt) "
+                                "VALUES('embedded-lane','embedded-board','Lane','now')")
+                    con.execute("INSERT INTO lists(id,boardId,title,createdAt) "
+                                "VALUES('embedded-list','embedded-board','List','now')")
+                status,headers,body=request('GET','/board?id=embedded-board&lang=ar')
+                assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
+                assert body.startswith(b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"')
+                assert b'<meta name="viewport" content="width=device-width, initial-scale=1">' in body
+                assert b'dir="rtl"' in body and b'<h1>Embedded board</h1>' in body
                 for path in ['/schema.sql','/designer.sql','/src/schema.sql','/_seed/schema.sql']:
                     status,_,body=request('GET',path);assert status==404 and b'CREATE TABLE' not in body,path
                 login=request('POST','/sign-in?lang=ar',dict(username='embedded-admin',password='test-password'),host='admin')
@@ -89,4 +101,4 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 try:server.wait(timeout=30)
                 except subprocess.TimeoutExpired:server.kill();server.wait();raise
                 if server.returncode:log.seek(0);raise AssertionError(log.read())
-        print('PASS: '+backend+' fresh directory-free embedded admin/tenant/Designer bootstrap, exact static/catalog/locale bytes, translated auth, private SQL and clean shutdown')
+        print('PASS: '+backend+' fresh directory-free embedded admin/tenant/Designer bootstrap, exact static/catalog/locale bytes, translated auth, HTML4 board, private SQL and clean shutdown')
