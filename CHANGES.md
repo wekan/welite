@@ -9,6 +9,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Render the organization and team feature flags on the native People page
   using the same public projection as the administrator REST list routes.
   Verify that REST updates appear after a cookie-free reload.
+  Chromium checks both tables with JavaScript and cookies disabled and
+  confirms that a missing-record update leaves the flag unchanged.
 
 ## 2026-11-18 Preserve language on dropdown form errors
 

@@ -1559,6 +1559,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         other=client.find(group,'other')[0]
                         assert other[flag] is enabled and isinstance(other['counter'],Long)
                         check_people_flag(group,enabled)
+                if os.environ.get('WELITE_UI')=='1':
+                    subprocess.run([os.environ.get('NODE','node'),str(root/'tests/people.js'),
+                                    f'http://localhost:{http_port}'+people_url],input=admin_token,text=True,check=True)
                 print('PASS: shared bulk feature updates are admin-gated and preserve unrelated BSON')
                 print('PASS: shared People list routes project names and boolean flags only for site administrators')
                 member_path='/api/boards/b/members/fixture-admin'
