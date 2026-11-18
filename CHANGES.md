@@ -87,7 +87,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - After a bulk REST delete, both cards disappear on reload and their files
   disappear from the active attachment list. A sibling attachment remains
   downloadable with its original bytes. Deleting its card individually then removes
-  the sibling attachment from the active list.
+  the sibling attachment from the active list. The linked and CLI shared
+  HTTP suites both passed these Chromium checks.
 
 ## 2026-11-18 Verify board ownership transfer in Chromium
 
