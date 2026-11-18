@@ -102,6 +102,25 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             for value in passwords+[bootstrap_password]:
                 assert isinstance(value,dict) and value['bcrypt'].startswith('$2b$10$'),value
             assert passwords[0]!=passwords[1],'New accounts must receive independent salts'
+            register('people-rest-target')
+            with sqlite3.connect(db) as con:
+                target,=con.execute("SELECT id FROM users WHERE username='people-rest-target'").fetchone()
+            def check_login_status(disabled):
+                status,headers,body=request('GET','/admin/people?sessionId='+admin)
+                assert status==200 and 'Set-Cookie' not in headers
+                label=b'disabled' if disabled else b'enabled'
+                assert b'<tr><td>people-rest-target</td><td>Normal</td><td>'+label+b'</td>' in body
+                with sqlite3.connect(db) as con:
+                    assert con.execute('SELECT loginDisabled FROM users WHERE id=?',(target,)).fetchone()==(int(disabled),)
+            check_login_status(False)
+            status,_,body=request('PUT','/api/users/missing-people-rest-target?token='+admin,dict(action='disableLogin'))
+            assert status==404 and json.loads(body)==dict(error='User not found')
+            check_login_status(False)
+            for action,disabled in [('disableLogin',True),('enableLogin',False)]:
+                status,_,body=request('PUT','/api/users/'+target+'?token='+admin,dict(action=action))
+                assert status==200 and json.loads(body)['loginDisabled'] is disabled
+                check_login_status(disabled)
+            print('PASS: native People shows REST login changes and preserves its row after a missing update')
             # Long UTF-8 plaintext works through registration and the CLI seed contract.
             seeded_password='日本語 🔑 '+('long-password-'*8)
             response=request('POST','/register',dict(username='credential-format',password=seeded_password,confirm=seeded_password))

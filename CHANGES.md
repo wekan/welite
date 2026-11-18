@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify REST login changes in the native People panel
+
+- The server-rendered People row reflects REST disable and enable requests
+  after reload, and a missing-user update leaves the row unchanged. Check
+  the stored flag and cookie-free response on both SQLite backends.
+
 ## 2026-11-18 Verify shared HTTP on CLI SQLite
 
 - The full shared storage HTTP suite at `a9d7254` passed using CLI SQLite
