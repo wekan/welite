@@ -73,6 +73,7 @@ procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET li
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 procedure ApiListArchive(aRequest: TRequest; aResponse: TResponse);
+procedure ApiCopyCard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST add card
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -2387,6 +2388,40 @@ begin
   if not Db.Exec(Sql) then
   begin Db.Exec('ROLLBACK;');SendError(Response,500,'Could not create linked card');Exit;end;
   SendJson(Response,'{"_id":"'+StringToJSONString(Id)+'"}');
+end;
+
+procedure ApiCopyCard(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;Actor,BoardId,ListId,CardId,DestBoard,DestList,DestLane,Raw,NewCard:string;
+  Position:Int64;Body:TJSONObject;Value:TJSONData;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,Actor,'{"error":"Card not found"}') then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];CardId:=aRequest.RouteParams['cardId'];
+  DestBoard:=BodyField(aRequest,'toBoardId');if DestBoard='' then DestBoard:=BoardId;
+  DestList:=BodyField(aRequest,'toListId');if DestList='' then DestList:=ListId;
+  DestLane:=BodyField(aRequest,'toSwimlaneId');
+  if (DestLane='') or (Pos(#0,DestBoard+DestList+DestLane)>0) then
+  begin SendError(aResponse,400,'Invalid card copy destination');Exit;end;
+  if not ApiAuthBoard(T,aResponse,Actor,DestBoard,True) then Exit;
+  if not ApiChildrenBelong(T.Db,DestBoard,DestLane,DestList,'','','','','') then
+  begin SendError(aResponse,400,'Invalid card copy destination');Exit;end;
+  Raw:=aRequest.ContentFields.Values['position'];Position:=-1;
+  if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+  begin
+    Body:=ExactObject(aRequest.Content);
+    try
+      Value:=Body.Find('position');
+      if (Value<>nil) and (Value.JSONType in [jtNumber,jtString]) then Raw:=Value.AsString;
+    finally Body.Free;end;
+  end;
+  if TryStrToInt64(Raw,Position) then
+  begin if Position<0 then Position:=0;end else Position:=-1;
+  try
+    if not CopyRestCard(T,Actor,BoardId,ListId,CardId,DestBoard,DestList,DestLane,Position,NewCard) then
+      raise Exception.Create('Card copy failed');
+  except SendError(aResponse,500,'Could not copy card');Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(NewCard)+'"}');
 end;
 
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);

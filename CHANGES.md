@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Copy cards over REST
+
+- Reuse the typed clone transaction for card copies, including subtasks,
+  checklists, and comments. Validate destination write access, preserve
+  comment attribution and creation time, and support zero-based placement.
+
 ## 2026-11-18 Delete shared rules over REST
 
 - Remove a board rule and its unused primary or additional workflow parts

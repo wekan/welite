@@ -703,6 +703,7 @@ begin
   HTTPRouter.RegisterRoute('/api/cards/:cardId', rmGet, @ApiCard);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId', rmPut, @ApiCardEdit);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId', rmDelete, @ApiCardDelete);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/copy', rmPost, @ApiCopyCard);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/archive', rmPost, @ApiCardArchive);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/unarchive', rmPost, @ApiCardArchive);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/members/:member', rmPost, @ApiCardMember);

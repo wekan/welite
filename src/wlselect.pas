@@ -9,6 +9,8 @@ function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
 procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
+function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
+  Position:Int64;out NewId:string):Boolean;
 implementation
 uses wlcfjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp;
 type EInvalidSelection=class(Exception);
@@ -176,7 +178,7 @@ begin
   finally ActionIds.Free;TriggerIds.Free;end;
 end;
 
-function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
+function SelectionGraph(const T:TWLTenant; Params:TStrings;WholeBoard:Boolean=False):TJSONObject;
 var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
   Data,AuditData:TJSONObject;Bindings:TJSONArray;ReadHeld:Boolean;
   function Link(const Name,Column:string):string;
@@ -240,7 +242,7 @@ begin
     Result.Add('welite_selection',1); Result.Add('boardId',BoardId);
     Collect(Params,'sel_swimlane',Lanes); Collect(Params,'sel_list',Lists); Collect(Params,'sel_card',Cards);
     Resolve('swimlanes',Lanes);Resolve('lists',Lists);Resolve('cards',Cards);
-    if Params.Values['wholeBoard']='1' then
+    if WholeBoard then
     begin
       AddQuery(T.Db,'SELECT id FROM swimlanes WHERE '+BoardScope('swimlanes')+';',Lanes);
       AddQuery(T.Db,'SELECT id FROM lists WHERE '+BoardScope('lists')+';',Lists);
@@ -256,8 +258,8 @@ begin
     CardScope:='cardId IN (SELECT id FROM cards WHERE '+BoardScope('cards')+' AND id IN ('+IdSet(Cards)+'))';
     AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardOwner('checklists')+' AND '+Link('checklists','id')+';',Checks);
     Table('boards','id='+q(BoardId));
-    if Params.Values['wholeBoard']='1' then Table('board_members',Scope);
-    if Params.Values['wholeBoard']='1' then ReadExportWorkflows(T.Db,BoardId,Result);
+    if WholeBoard then Table('board_members',Scope);
+    if WholeBoard then ReadExportWorkflows(T.Db,BoardId,Result);
     if (TJSONArray(Data.Find('boards')).Count<>1) or (TJSONArray(Data.Find('boards')).Objects[0].Get('id','')<>BoardId) then
       raise EInvalidSelection.Create('Invalid selection board');
     Table('swimlanes',BoardScope('swimlanes')+' AND id IN ('+IdSet(Lanes)+')');
@@ -455,8 +457,8 @@ begin
   Params:=TStringList.Create;
   UserIds:=TStringList.Create;UserIds.CaseSensitive:=True;UserIds.Sorted:=True;UserIds.Duplicates:=dupIgnore;
   try
-    Params.Values['boardId']:=BoardId;Params.Values['action']:='export';Params.Values['wholeBoard']:='1';
-    Graph:=SelectionGraph(T,Params);
+    Params.Values['boardId']:=BoardId;Params.Values['action']:='export';
+    Graph:=SelectionGraph(T,Params,True);
     Data:=TJSONObject(Graph.Find('data'));Audit:=TJSONObject(Graph.Find('_export_audit'));
     if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId) or
       not ExportPayloadAllowed(T.Db,UserId,BoardId,Audit) or
@@ -662,11 +664,12 @@ begin
     except Result:=False;end;
   finally Policy.Free;end;
 end;
-function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings;const Guards:string):Boolean;
+function CloneSelection(const T:TWLTenant; const S:TWLSession; Graph:TJSONObject; Params:TStrings;const Guards:string;RestCopy:Boolean=False):Boolean;
 var Data,Maps,Map,Original,Row,Activity,Seed:TJSONObject; A:TJSONArray;
   Used,Copied,Models:TStringList; i,j,k:Integer;
   TableName,Id,Sql,Scope,Expr,Stamp,SourcePath,DestPath,Backend,DestGuards,RelationSql,Physical,Expression:string;Policy:TFieldPolicy;
   Source,Dest:TFileStream;
+  DestinationBoard,DestinationList,DestinationLane,SelectedCard,Position,CardSort,RootCopyId:string;
   function CardSource(const OldId:string):TJSONObject;
   var Sources:TJSONArray;n:Integer;
   begin
@@ -724,6 +727,13 @@ var Data,Maps,Map,Original,Row,Activity,Seed:TJSONObject; A:TJSONArray;
     finally Patch.Free;end;
   end;
 begin
+  DestinationBoard:=Graph.Get('boardId','');
+  if RestCopy then
+  begin
+    DestinationBoard:=Params.Values['toBoardId'];DestinationList:=Params.Values['toListId'];
+    DestinationLane:=Params.Values['toSwimlaneId'];SelectedCard:=Params.Values['sel_card'];
+    Position:=Params.Values['position'];
+  end;
   Result:=False; Data:=TJSONObject(Graph.Find('data')); Maps:=TJSONObject.Create;
   Used:=TStringList.Create; Copied:=TStringList.Create;Models:=TStringList.Create;
   try
@@ -736,10 +746,15 @@ begin
         for j:=0 to A.Count-1 do if A.Objects[j].Find('id')<>nil then
           Map.Add(A.Objects[j].Get('id',''),NewCloneId(T.Db,T,TableName,Used));
       end;
+      if RestCopy then
+      begin
+        Maps.Add('boards',TJSONObject.Create([Graph.Get('boardId',''),DestinationBoard]));
+        RootCopyId:=CloneRef(Maps,'cards',SelectedCard);
+      end;
       DestGuards:='';A:=TJSONArray(Data.Find('cards'));
       for j:=0 to A.Count-1 do
       begin
-        Policy:=TFieldPolicy.Create(T.Db,S.UserId,Graph.Get('boardId',''),CloneRef(Maps,'cards',A.Objects[j].Get('id','')));
+        Policy:=TFieldPolicy.Create(T.Db,S.UserId,DestinationBoard,CloneRef(Maps,'cards',A.Objects[j].Get('id','')));
         try DestGuards:=DestGuards+Policy.CloneCardGuard;finally Policy.Free;end;
       end;
       RelationSql:='';A:=TJSONArray(Data.Find('cards'));
@@ -792,12 +807,19 @@ begin
             Id:=Original.Get('id','');
             if Row.Find('id')<>nil then PutString(Row,'id',CloneRef(Maps,TableName,Id));
             RemapJson(Row,Maps,TableName);
-            if Row.Find('createdAt')<>nil then PutString(Row,'createdAt',Stamp);
+            if RestCopy then
+            begin
+              if Row.Find('boardId')<>nil then PutString(Row,'boardId',DestinationBoard);
+              if Row.Find('listId')<>nil then PutString(Row,'listId',DestinationList);
+              if Row.Find('swimlaneId')<>nil then PutString(Row,'swimlaneId',DestinationLane);
+            end;
+            if (Row.Find('createdAt')<>nil) and not (RestCopy and (TableName='card_comments')) then
+              PutString(Row,'createdAt',Stamp);
             if Row.Find('modifiedAt')<>nil then PutString(Row,'modifiedAt',Stamp);
             if Row.Find('dateLastActivity')<>nil then PutString(Row,'dateLastActivity',Stamp);
-            if ((TableName='cards') and IsRoot('card',Id)) or
+            if not RestCopy and (((TableName='cards') and IsRoot('card',Id)) or
               ((TableName='lists') and IsRoot('list',Id)) or
-              ((TableName='swimlanes') and IsRoot('swimlane',Id)) then
+              ((TableName='swimlanes') and IsRoot('swimlane',Id))) then
               PutString(Row,'title',Original.Get('title','')+' Copy');
             Scope:='';
             if (TableName='swimlanes') or (TableName='lists') or (TableName='cards') then Scope:=EqualField(Row,'boardId');
@@ -808,6 +830,15 @@ begin
             Expr:='';
             if (Scope<>'') and (Row.Find('sort')<>nil) then
               Expr:='(SELECT COALESCE(MAX(sort),-1)+1 FROM '+TableName+' WHERE '+Scope+')';
+            if RestCopy and (TableName='cards') and (Id=SelectedCard) and (Position<>'') then
+            begin
+              CardSort:=' FROM cards WHERE boardId='+q(DestinationBoard)+' AND listId='+q(DestinationList)+
+                ' AND archived=0 AND deletedAt IS NULL';
+              if Position='0' then Expr:='(SELECT COALESCE(MIN(COALESCE(sort,0))-1,0)'+CardSort+')'
+              else Expr:='(SELECT COALESCE((SELECT (COALESCE(sort,0)+(SELECT COALESCE(sort,0)'+CardSort+
+                ' ORDER BY sort,id LIMIT 1 OFFSET ('+Position+'-1)))/2'+CardSort+
+                ' ORDER BY sort,id LIMIT 1 OFFSET '+Position+'),MAX(COALESCE(sort,0))+1,0)'+CardSort+')';
+            end;
             Sql:=Sql+InsertRow(TableName,Row,Expr,Original);
             if (TableName='cards') or (TableName='lists') or (TableName='swimlanes') then
             begin
@@ -815,7 +846,7 @@ begin
               try
                 Activity.Add('id',NewCloneId(T.Db,T,'activities',Used));
                 Activity.Add('activityType','clone'); Activity.Add('userId',S.UserId);
-                Activity.Add('boardId',Graph.Get('boardId','')); Activity.Add('createdAt',Stamp);
+                Activity.Add('boardId',DestinationBoard); Activity.Add('createdAt',Stamp);
                 if TableName='cards' then Activity.Add('cardId',Row.Get('id',''));
                 if TableName='lists' then Activity.Add('listId',Row.Get('id',''));
                 if TableName='swimlanes' then Activity.Add('swimlaneId',Row.Get('id',''));
@@ -830,12 +861,42 @@ begin
         end;
       end;
       Result:=T.Db.Exec(Sql+Guards+DestGuards+RelationSql+Guards+DestGuards+'COMMIT;');
-      if not Result then T.Db.Exec('ROLLBACK;');
+      if not Result then T.Db.Exec('ROLLBACK;')
+      else if RestCopy then Params.Values['clonedCardId']:=RootCopyId;
     except Result:=False; end;
   finally
     if not Result then for k:=0 to Copied.Count-1 do DeleteFile(Copied[k]);
     Models.Free;Copied.Free; Used.Free; Maps.Free;
   end;
+end;
+
+function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
+  Position:Int64;out NewId:string):Boolean;
+var Graph:TJSONObject;Params:TStringList;Session:TWLSession;Policy:TFieldPolicy;
+  Guard,Permission,Placement,SourceId:string;Rows:TWLRows;
+begin
+  Result:=False;NewId:='';Graph:=nil;Params:=TStringList.Create;
+  try
+    Session:=Default(TWLSession);Session.UserId:=UserId;
+    Params.Values['action']:='clone';Params.Values['boardId']:=BoardId;Params.Values['sel_card']:=CardId;
+    Params.Values['toBoardId']:=DestBoard;Params.Values['toListId']:=DestList;
+    Params.Values['toSwimlaneId']:=DestLane;if Position>=0 then Params.Values['position']:=IntToStr(Position);
+    Graph:=SelectionGraph(T,Params);
+    if not ClonePermissionGuards(T,Session,Graph,Guard) then Exit;
+    Policy:=TFieldPolicy.Create(T.Db,UserId,DestBoard,'');
+    try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+    Placement:='EXISTS(SELECT 1 FROM swimlanes WHERE id='+q(DestLane)+' AND boardId='+q(DestBoard)+' AND archived=0)'+
+      ' AND EXISTS(SELECT 1 FROM lists WHERE id='+q(DestList)+' AND boardId='+q(DestBoard)+
+      ' AND archived=0 AND deletedAt IS NULL AND (COALESCE(swimlaneId,'''')='''' OR swimlaneId='+q(DestLane)+'))';
+    SourceId:='EXISTS(SELECT 1 FROM cards WHERE id='+q(CardId)+' AND boardId='+q(BoardId)+
+      ' AND listId='+q(ListId)+' AND archived=0 AND deletedAt IS NULL)';
+    Rows:=T.Db.Query('SELECT '+Permission+' AND '+Placement+' AND '+SourceId+';');
+    if (Length(Rows)<>1) or (Rows[0][0]<>'1') then Exit;
+    Guard:=Guard+'SELECT CASE WHEN '+Permission+' AND '+Placement+' AND '+SourceId+
+      ' THEN 1 ELSE json(''Card copy scope changed'') END; ';
+    Result:=CloneSelection(T,Session,Graph,Params,Guard,True);
+    if Result then NewId:=Params.Values['clonedCardId'];
+  finally Graph.Free;Params.Free;end;
 end;
 
 function DeletionDetails(Db:TWLDb;Data:TJSONObject;const BoardId:string;

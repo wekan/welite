@@ -22,7 +22,7 @@ end;
 function CloneCardRelations(const Target,Source,MapJson:string):string;
 const Paths:array[0..4] of string=('members','assignees','labelIds','customFields','cardDependencies');
 var Doc,Original,Typed,DestTyped,Maps,CardMap,Hints:TJSONObject;
-  Values,Schema,Items,Row,RowSchema,Key,KeySchema,Kind:TJSONData;
+  Values,Schema,Items,Row,RowSchema,Key,KeySchema,Kind,BoardMap:TJSONData;
   Keys:TStringList;Name,Identity,Signature,OldId,NewId:string;i,j:Integer;
 begin
   Doc:=nil;Original:=nil;Typed:=nil;DestTyped:=nil;Maps:=nil;Hints:=nil;Keys:=nil;
@@ -37,8 +37,13 @@ begin
     if (NewId='') or (NewId=OldId) or (Doc.Get('_id','')<>NewId) then Invalid;
     if not CanonicalString(Doc.Find('_id'),TJSONObject(DestTyped.Find('$s')).Find('p').FindPath('_id')) then Invalid;
     if not CanonicalString(Original.Find('boardId'),TJSONObject(Typed.Find('$s')).Find('p').FindPath('boardId')) or
-      not CanonicalString(Doc.Find('boardId'),TJSONObject(DestTyped.Find('$s')).Find('p').FindPath('boardId')) or
-      (Original.Get('boardId','')<>Doc.Get('boardId','')) then Invalid;
+      not CanonicalString(Doc.Find('boardId'),TJSONObject(DestTyped.Find('$s')).Find('p').FindPath('boardId')) then Invalid;
+    if Original.Get('boardId','')<>Doc.Get('boardId','') then
+    begin
+      BoardMap:=Maps.Find('boards');
+      if not (BoardMap is TJSONObject) or
+        (TJSONObject(BoardMap).Get(Original.Get('boardId',''),'')<>Doc.Get('boardId','')) then Invalid;
+    end;
     Hints:=TJSONObject.Create;Keys:=TStringList.Create;Keys.CaseSensitive:=True;Keys.Sorted:=True;
     for i:=0 to High(Paths) do
     begin

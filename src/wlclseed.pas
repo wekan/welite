@@ -11,6 +11,7 @@ function CloneReferenceTable(const Name,TableName:string):string;
 begin
   Result:='';
   case Name of
+    'boardId':Result:='boards';
     'swimlaneId':Result:='swimlanes';
     'listId':Result:='lists';
     'cardId','targetCardId','linkedId':Result:='cards';
