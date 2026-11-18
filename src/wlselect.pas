@@ -131,7 +131,10 @@ var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previo
     Result:=TypedScope.StringField(Name,Column);
   end;
   function BoardScope(const Name:string):string;
-  begin Result:='boardId='+q(BoardId)+' AND '+Link(Name,'boardId')+' AND '+Link(Name,'id');end;
+  begin
+    Result:='boardId='+q(BoardId)+' AND '+Link(Name,'boardId')+' AND '+Link(Name,'id');
+    if (Name='lists') or (Name='cards') then Result:=Result+' AND deletedAt IS NULL';
+  end;
   function CardOwner(const Name:string):string;
   begin Result:='cardId IN ('+IdSet(Cards)+') AND '+Link(Name,'cardId');end;
   procedure Resolve(const Name:string;Ids:TStringList);

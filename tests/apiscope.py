@@ -304,3 +304,29 @@ def run(request, db, token):
         with sqlite3.connect(db) as con:
             assert con.execute('SELECT swimlaneId,sort FROM lists WHERE id=?',(identity,)).fetchone()==(lane,count+index)
     print('PASS: list POST honors explicit and default swimlanes and appends in board order')
+
+    delete_path='/api/boards/protected/lists/'+identity+'?token='+token
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO cards(id,boardId,listId,swimlaneId,title,userId,createdAt,modifiedAt,dateLastActivity) "
+                    "SELECT 'soft-delete-card',boardId,?,swimlaneId,'Soft deletion fixture',userId,createdAt,modifiedAt,dateLastActivity "
+                    "FROM cards WHERE id='card'",(identity,))
+        con.execute("CREATE TRIGGER fail_soft_delete AFTER UPDATE OF deletedAt ON lists BEGIN SELECT RAISE(FAIL,'test'); END")
+        before='\n'.join(con.iterdump())
+    assert request('DELETE',delete_path)[0]==500
+    with sqlite3.connect(db) as con:
+        assert '\n'.join(con.iterdump())==before
+        con.execute('DROP TRIGGER fail_soft_delete')
+    status, _, body=request('DELETE',delete_path)
+    assert status==200 and json.loads(body)==dict(_id=identity),(status,body)
+    with sqlite3.connect(db) as con:
+        markers=con.execute('SELECT deletedAt,deletedBy,deleteBatchId FROM lists WHERE id=?',(identity,)).fetchone()
+        assert all(markers)
+        assert con.execute("SELECT deletedAt,deletedBy,deleteBatchId FROM cards WHERE id='soft-delete-card'").fetchone()==markers
+    assert request('DELETE',delete_path)[0]==404
+    assert request('GET',delete_path)[0]==404
+    assert request('GET','/api/cards/soft-delete-card?token='+token)[0]==404
+    status, _, body=request('GET',lists_path)
+    assert status==200 and identity not in {row['_id'] for row in json.loads(body)},(status,body)
+    status, _, body=request('GET','/board?id=protected&view=all&sessionId='+token)
+    assert status==200 and b'Soft deletion fixture' not in body and ('data-list="'+identity+'"').encode() not in body,(status,body)
+    print('PASS: list DELETE marks list and cards together and hides retained rows from REST and board HTML')

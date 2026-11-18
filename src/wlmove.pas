@@ -173,6 +173,7 @@ begin
   if (Length(Me) = 0) or (Length(Me[0]) < 2) then Exit;
   Scope := Me[0][0]; MySort := Me[0][1];
   ScopeExtra:=' AND boardId='+q(Me[0][2])+' AND archived=0';
+  if (Table='cards') or (Table='lists') then ScopeExtra:=ScopeExtra+' AND deletedAt IS NULL';
   if Table='cards' then ScopeExtra:=ScopeExtra+' AND swimlaneId='+q(Me[0][3]);
   if GoSmaller then begin Cmp := '<'; Ord := 'DESC'; end
                else begin Cmp := '>'; Ord := 'ASC';  end;
@@ -192,10 +193,10 @@ var
   Sw, CurList, Target, BoardId: string;
   i, idx: Integer;
 begin
-  C := Db.Query(Format('SELECT swimlaneId,listId,boardId FROM cards WHERE id=%s LIMIT 1;', [q(CardId)]));
+  C := Db.Query(Format('SELECT swimlaneId,listId,boardId FROM cards WHERE id=%s AND deletedAt IS NULL LIMIT 1;', [q(CardId)]));
   if (Length(C) = 0) or (Length(C[0]) < 2) then Exit;
   Sw := C[0][0]; CurList := C[0][1]; BoardId:=C[0][2];
-  L := Db.Query(Format('SELECT id FROM lists WHERE boardId=%s AND (swimlaneId=%s OR swimlaneId='''') AND archived=0 ORDER BY sort,id;', [q(BoardId),q(Sw)]));
+  L := Db.Query(Format('SELECT id FROM lists WHERE boardId=%s AND (swimlaneId=%s OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;', [q(BoardId),q(Sw)]));
   idx := -1;
   for i := 0 to High(L) do
     if (Length(L[i]) > 0) and (L[i][0] = CurList) then begin idx := i; Break; end;
@@ -217,7 +218,7 @@ var
 begin
   L := Db.Query('SELECT l.boardId,s.sort,s.id FROM lists l JOIN swimlanes s ' +
     'ON s.id=l.swimlaneId AND s.boardId=l.boardId ' +
-    'WHERE l.archived=0 AND s.archived=0 AND l.id=' + q(ListId) + ';');
+    'WHERE l.archived=0 AND l.deletedAt IS NULL AND s.archived=0 AND l.id=' + q(ListId) + ';');
   if Length(L) = 0 then Exit;
   BoardId := L[0][0];
   if Next then begin Cmp := '>'; Ord := 'ASC'; end
@@ -229,7 +230,7 @@ begin
   if Length(Neighbors) = 0 then Exit;
   Target := Neighbors[0][0];
   MaxR := Db.Query('SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId=' +
-    q(BoardId) + ' AND swimlaneId=' + q(Target) + ' AND archived=0;');
+    q(BoardId) + ' AND swimlaneId=' + q(Target) + ' AND archived=0 AND deletedAt IS NULL;');
   // One Exec also works with the CLI backend, which opens one connection per call.
   if not Db.Exec('BEGIN IMMEDIATE; UPDATE lists SET swimlaneId=' + q(Target) +
     ',sort=' + q(MaxR[0][0]) + ' WHERE id=' + q(ListId) + ' AND boardId=' +
@@ -246,7 +247,7 @@ begin
   try
     if Cards.Count=0 then Exit;
     R:=Db.Query('SELECT id FROM lists WHERE id='+QuotedStr(L)+' AND boardId='+QuotedStr(B)+
-      ' AND archived=0 AND (swimlaneId='+QuotedStr(S)+' OR swimlaneId='''');');
+      ' AND archived=0 AND deletedAt IS NULL AND (swimlaneId='+QuotedStr(S)+' OR swimlaneId='''');');
     if Length(R)=0 then Exit;
     R:=Db.Query('SELECT id FROM swimlanes WHERE id='+QuotedStr(S)+' AND boardId='+QuotedStr(B)+' AND archived=0;');
     if Length(R)=0 then Exit;
@@ -255,7 +256,7 @@ begin
       Sql:=Sql+'UPDATE cards SET listId='+QuotedStr(L)+',swimlaneId='+QuotedStr(S)+
         ',sort=(SELECT COALESCE(MAX(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(B)+
         ' AND listId='+QuotedStr(L)+' AND swimlaneId='+QuotedStr(S)+') WHERE id='+QuotedStr(Cards[i])+
-        ' AND boardId='+QuotedStr(B)+' AND archived=0; ';
+        ' AND boardId='+QuotedStr(B)+' AND archived=0 AND deletedAt IS NULL; ';
     Result:=Db.Exec(Sql+'COMMIT;');
     if not Result then Db.Exec('ROLLBACK;');
   finally Cards.Free;end;

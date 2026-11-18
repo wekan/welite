@@ -189,12 +189,12 @@ begin
   Scope:='';
   if LaneId<>'' then Scope:=' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(LaneId)+')';
   if (ListId<>'') and not Exists('SELECT id FROM lists WHERE id='+QuotedStr(ListId)+
-    ' AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
+    ' AND deletedAt IS NULL AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
   Scope:='';
   if ListId<>'' then Scope:=Scope+' AND listId='+QuotedStr(ListId);
   if LaneId<>'' then Scope:=Scope+' AND swimlaneId='+QuotedStr(LaneId);
   if (CardId<>'') and not Exists('SELECT id FROM cards WHERE id='+QuotedStr(CardId)+
-    ' AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
+    ' AND deletedAt IS NULL AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
   if (ChecklistId<>'') and not Exists('SELECT id FROM checklists WHERE id='+QuotedStr(ChecklistId)+
     ' AND cardId='+QuotedStr(CardId)+' AND (boardId IS NULL OR boardId='+QuotedStr(BoardId)+');') then Exit;
   if (ItemId<>'') and not Exists('SELECT id FROM checklist_items WHERE id='+QuotedStr(ItemId)+
@@ -526,7 +526,7 @@ begin
           [QuotedStr(newSw), QuotedStr(NewBoard), QuotedStr(Rows[i][1]), QuotedStr(Rows[i][2]), QuotedStr(NowIso)]));
       end;
     // lists
-    Rows := T.Db.Query(Format('SELECT id,title,sort,swimlaneId FROM lists WHERE boardId=%s;', [QuotedStr(SrcId)]));
+    Rows := T.Db.Query(Format('SELECT id,title,sort,swimlaneId FROM lists WHERE boardId=%s AND deletedAt IS NULL;', [QuotedStr(SrcId)]));
     for i := 0 to High(Rows) do
       if Length(Rows[i]) >= 4 then
       begin
@@ -537,7 +537,7 @@ begin
       end;
     // cards
     Rows := T.Db.Query(Format(
-      'SELECT id,title,description,listId,swimlaneId,userId,color,sort FROM cards WHERE boardId=%s;',
+      'SELECT id,title,description,listId,swimlaneId,userId,color,sort FROM cards WHERE boardId=%s AND deletedAt IS NULL;',
       [QuotedStr(SrcId)]));
     for i := 0 to High(Rows) do
       if Length(Rows[i]) >= 8 then
@@ -1170,7 +1170,7 @@ begin
     if not T.Db.Exec('BEGIN IMMEDIATE; '+Guard+
       'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt) VALUES('+
       QuotedStr(Id)+','+BoardSql+','+LaneSql+','+QuotedStr(Title)+
-      ',(SELECT count(*) FROM lists WHERE boardId='+BoardSql+' AND archived=0),'+Stamp+','+Stamp+'); COMMIT;') then
+      ',(SELECT count(*) FROM lists WHERE boardId='+BoardSql+' AND archived=0 AND deletedAt IS NULL),'+Stamp+','+Stamp+'); COMMIT;') then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create list');Exit;end;
     SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
     Exit;
@@ -1182,7 +1182,7 @@ begin
     '''modifiedAt'',strftime(''%Y-%m-%dT%H:%M:%fZ'',l.modifiedAt),'+
     '''cardsModifiedAt'',max(coalesce(d.edited,d.activity),coalesce(d.activity,d.edited))) payload '+
     'FROM lists l LEFT JOIN card_dates d ON d.listId=l.id WHERE l.boardId='+BoardSql+
-    ' AND l.archived=0 ORDER BY l.sort,l.id);');
+    ' AND l.archived=0 AND l.deletedAt IS NULL ORDER BY l.sort,l.id);');
   if Length(Rows)=1 then SendJson(aResponse,Rows[0][0])
   else SendError(aResponse,500,'Could not read lists');
 end;
@@ -1201,7 +1201,7 @@ begin
     '''archivedAt'',archivedAt,''createdAt'',createdAt,''modifiedAt'',modifiedAt,''updatedAt'',updatedAt,'+
     '''wipLimit'',json_object(''value'',wip_value,''enabled'',json(CASE WHEN wip_enabled=1 THEN ''true'' ELSE ''false'' END),'+
     '''soft'',json(CASE WHEN wip_soft=1 THEN ''true'' ELSE ''false'' END))) FROM lists WHERE id='+
-    QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0;');
+    QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL;');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
   SendJson(aResponse,Rows[0][0]);
 end;
@@ -1221,7 +1221,7 @@ begin
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
-  Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0';
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
   Rows:=T.Db.Query('SELECT id FROM lists WHERE '+Scope+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
   Body:=nil;Policy:=nil;Sets:='';Permission:='1';
@@ -1305,7 +1305,7 @@ begin
   BoardId:=QuotedStr(aRequest.RouteParams['boardId']);ListId:=aRequest.RouteParams['listId'];
   Archive:=Copy(aRequest.PathInfo,Length(aRequest.PathInfo)-9,10)<>'/unarchive';
   Target:=IntToStr(Ord(Archive));
-  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId;
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId+' AND deletedAt IS NULL';
   Predicate:=Scope+' AND archived='+IntToStr(Ord(not Archive));
   Rows:=T.Db.Query('SELECT id FROM lists WHERE '+Predicate+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
@@ -1314,7 +1314,7 @@ begin
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Predicate+
     ')=1 THEN 1 ELSE json(''List archive scope changed'') END; '+
     'UPDATE cards SET archived='+Target+',archivedAt='+CardArchivedAt+' WHERE listId='+QuotedStr(ListId)+
-    ' AND boardId='+BoardId+' AND archived<> '+Target+
+    ' AND boardId='+BoardId+' AND deletedAt IS NULL AND archived<> '+Target+
     ' AND EXISTS(SELECT 1 FROM lists WHERE '+Predicate+' AND type=''template-list''); '+
     'UPDATE lists SET archived='+Target+',modifiedAt='+Stamp;
   if Archive then Sql:=Sql+',archivedAt='+Stamp;
@@ -1385,7 +1385,7 @@ function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: stri
 var ReadSql:string; R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
 begin
   Result := False;
-  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color FROM cards WHERE id='+QuotedStr(CardId);
+  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color FROM cards WHERE deletedAt IS NULL AND id='+QuotedStr(CardId);
   if RequiredBoardId<>'' then ReadSql:=ReadSql+' AND boardId='+QuotedStr(RequiredBoardId);
   if ActiveListId<>'' then ReadSql:=ReadSql+' AND listId='+QuotedStr(ActiveListId)+' AND archived=0';
   R:=Db.Query(ReadSql+' LIMIT 1;');
@@ -1445,7 +1445,7 @@ begin
     if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
   end else
   begin
-    Rows:=T.Db.Query('SELECT boardId FROM cards WHERE id='+QuotedStr(CardId)+';');
+    Rows:=T.Db.Query('SELECT boardId FROM cards WHERE id='+QuotedStr(CardId)+' AND deletedAt IS NULL;');
     if Length(Rows)=0 then begin SendJson(aResponse,CardNotFound,404);Exit;end;
     if (Length(Rows)<>1) or (Rows[0][0]='') then begin SendError(aResponse,403,'Board access forbidden');Exit;end;
     BoardId:=Rows[0][0];
@@ -1466,7 +1466,7 @@ begin
   HasEdits:=BodyHasField(aRequest,'title') or BodyHasField(aRequest,'description') or
     BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
     BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
-  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId);
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   if HasArchive and not HasEdits then
   begin
     if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
@@ -1519,14 +1519,14 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM cards WHERE listId=%s AND boardId=%s AND archived=0 ORDER BY sort;',
+    'SELECT id,title FROM cards WHERE listId=%s AND boardId=%s AND archived=0 AND deletedAt IS NULL ORDER BY sort;',
     [QuotedStr(aRequest.RouteParams['listId']),QuotedStr(aRequest.RouteParams['boardId'])]))));
 end;
 
 function CountOf(Db: TWLDb; const WhereCol, Id, BoardId: string): Integer;
 var R: TWLRows;
 begin
-  R := Db.Query(Format('SELECT COUNT(*) FROM cards WHERE %s=%s AND boardId=%s AND archived=0;',
+  R := Db.Query(Format('SELECT COUNT(*) FROM cards WHERE %s=%s AND boardId=%s AND archived=0 AND deletedAt IS NULL;',
     [WhereCol, QuotedStr(Id),QuotedStr(BoardId)]));
   if (Length(R) > 0) and (Length(R[0]) > 0) then Result := StrToIntDef(R[0][0], 0) else Result := 0;
 end;
@@ -1558,7 +1558,7 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
   SendJson(aResponse, RowsAsIdTitle(T.Db.Query(Format(
-    'SELECT id,title FROM cards WHERE swimlaneId=%s AND boardId=%s AND archived=0 ORDER BY sort;',
+    'SELECT id,title FROM cards WHERE swimlaneId=%s AND boardId=%s AND archived=0 AND deletedAt IS NULL ORDER BY sort;',
     [QuotedStr(aRequest.RouteParams['swimlaneId']),QuotedStr(aRequest.RouteParams['boardId'])]))));
 end;
 
@@ -1975,16 +1975,28 @@ begin
 end;
 
 // DELETE list — its cards have no FK on listId, so remove them first (their children cascade).
-procedure ApiListDelete(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, ListId: string;
+procedure ApiListDelete(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"List not found"}';
+var T:TWLTenant;UserId,ListId,BoardId,Scope,CardScope,Markers,Batch,Sql:string;Reply:TJSONObject;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  ListId := aRequest.RouteParams['listId'];
-  T.Db.Exec(Format('DELETE FROM cards WHERE listId=%s AND boardId=%s;', [QuotedStr(ListId),QuotedStr(aRequest.RouteParams['boardId'])]));
-  T.Db.Exec(Format('DELETE FROM lists WHERE id=%s;', [QuotedStr(ListId)]));
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(ListId, '"')]));
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
+  ListId:=aRequest.RouteParams['listId'];BoardId:=QuotedStr(aRequest.RouteParams['boardId']);
+  Batch:=QuotedStr(NewId);
+  Markers:='deletedAt='+QuotedStr(NowIso)+',deletedBy='+QuotedStr(UserId)+',deleteBatchId='+Batch;
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId;
+  CardScope:='listId='+QuotedStr(ListId)+' AND boardId='+BoardId+' AND deletedAt IS NULL';
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
+    ' AND deletedAt IS NULL)=1 THEN 1 ELSE json(''List delete scope changed'') END; '+
+    'UPDATE cards SET '+Markers+' WHERE '+CardScope+'; UPDATE lists SET '+Markers+
+    ' WHERE '+Scope+' AND deletedAt IS NULL; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+
+    Scope+' AND deleteBatchId='+Batch+')=1 AND NOT EXISTS(SELECT 1 FROM cards WHERE '+CardScope+
+    ') THEN 1 ELSE json(''Could not mark list and cards deleted'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete list');Exit;end;
+  Reply:=TJSONObject.Create(['_id',ListId]);
+  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
 // DELETE swimlane — its cards have no FK on swimlaneId, so remove them first.

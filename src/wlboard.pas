@@ -61,7 +61,7 @@ begin
   for MapY:=0 to High(Lanes) do
   begin
     MapLists:=Db.Query('SELECT id,title FROM lists WHERE boardId='+QuotedStr(BoardId)+
-      ' AND (swimlaneId='+QuotedStr(Lanes[MapY][0])+' OR swimlaneId='''') AND archived=0 ORDER BY sort,id;');
+      ' AND (swimlaneId='+QuotedStr(Lanes[MapY][0])+' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
     if MapY=Y-1 then
     begin
       Width:=Length(MapLists);
@@ -73,7 +73,7 @@ begin
       if Align='right' then MapX:=High(MapLists)-j else MapX:=j;
       Occupied:=Db.Query('SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[MapY][0])+' AND listId='+QuotedStr(MapLists[MapX][0])+
-        ' AND archived=0 LIMIT 1;');
+        ' AND archived=0 AND deletedAt IS NULL LIMIT 1;');
       if Length(Occupied)>0 then begin Color:='#cccccc'; CellText:='*'; end
       else begin Color:='#ffffff'; CellText:='-'; end;
       if (MapX=X-1) and (MapY=Y-1) then Color:='#ffff66';
@@ -132,7 +132,7 @@ begin
     Result:=Result+'<h2'+BgColorAttr(Lanes[i][2])+'>'+Selection('swimlane',Lanes[i][0])+
       HtmlEncode(Lanes[i][1])+'</h2>';
     Lists:=Db.Query('SELECT id,title,color FROM lists WHERE boardId='+QuotedStr(BoardId)+
-      ' AND (swimlaneId='+QuotedStr(Lanes[i][0])+' OR swimlaneId='''') AND archived=0 ORDER BY sort,id;');
+      ' AND (swimlaneId='+QuotedStr(Lanes[i][0])+' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
     if Length(Lists)=0 then begin Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>'; Continue; end;
     Result:=Result+'<table dir="ltr" width="100%" border="1" cellpadding="5" cellspacing="0"><tr>';
     for j:=0 to High(Lists) do
@@ -150,7 +150,7 @@ begin
       Result:=Result+'<td dir="'+CellDir+'" valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'" data-lane="'+HtmlAttr(Lanes[i][0])+'">';
       Cards:=Db.Query('SELECT id,title,color,description FROM cards WHERE boardId='+QuotedStr(BoardId)+
         ' AND swimlaneId='+QuotedStr(Lanes[i][0])+' AND listId='+QuotedStr(Lists[c][0])+
-        ' AND archived=0 ORDER BY sort,id;');
+        ' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
       for k:=0 to High(Cards) do
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
