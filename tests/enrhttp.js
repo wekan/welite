@@ -150,6 +150,9 @@ withCookieFreeChromium(async (page, context) => {
   await page.goto(base+'/two-factor/setup?lang=mt');
   assert.equal(await page.locator('html').getAttribute('lang'),'mt');
   assert.match(await page.locator('body').innerText(),/Ikkonferma l-password tiegħek/);
+  await page.goto(base+'/two-factor/setup?lang=sq');
+  assert.equal(await page.locator('html').getAttribute('lang'),'sq');
+  assert.match(await page.locator('body').innerText(),/Konfirmoni fjalëkalimin/);
 
   await page.goto(base+'/two-factor/setup?lang=fi');
   assert.match(await page.locator('body').innerText(),/Aloita vahvistamalla salasanasi/);
