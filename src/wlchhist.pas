@@ -39,14 +39,14 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
     Result:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+';');
   end;
   procedure RecoverLegacyLease(const GateName:string);
-  var LeaseRows,WriterRows:TWLRows;WriterRow:TWLRow;LeaseName,LeaseTable,GateIdentity,Grace:string;GraceMs:Int64;
-    procedure RetireWriter(const WriterId:string);
+  var LeaseRows,WriterRows:TWLRows;WriterRow:TWLRow;LeaseName,LeaseTable,GateIdentity,Grace,UuidPattern:string;GraceMs:Int64;
+    procedure RetireWriter(const WriterId:string;Joined:Boolean);
     var WriterToken,WriterGateScope,LeaseIdentity,Registry,RecoverySql,Replacement,Claim,ClaimSql,
-      FenceSql,FenceDoc,HistoryIdentity:string;Tombstone:TJSONObject;
+      FenceSql,FenceDoc,HistoryIdentity,GateWrite:string;Tombstone:TJSONObject;
     begin
       WriterToken:=QuotedStr(WriterId);
       WriterGateScope:=GateIdentity+' AND (SELECT count(*) FROM json_each(_ferretdb_sjson,''$.writers'') WHERE value='+
-        WriterToken+')=1';
+        WriterToken+')='+IntToStr(Ord(Joined));
       LeaseIdentity:='json_extract(_ferretdb_sjson,''$._id'')='+WriterToken+
         ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
         ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
@@ -85,16 +85,18 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
       Replacement:='wl_sjson(json_remove(wl_plain(json(_ferretdb_sjson)),''$.writers[''||'+
         '(SELECT key FROM json_each(_ferretdb_sjson,''$.writers'') WHERE value='+WriterToken+')||'']''),'+
         'json(_ferretdb_sjson),''{}'')';
+      GateWrite:='';
+      if Joined then
+        GateWrite:='UPDATE '+Ident(GateName)+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(GateName)+
+          ')=''blob'' THEN jsonb('+Replacement+') ELSE '+Replacement+' END WHERE '+WriterGateScope+
+          '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''Legacy gate changed'') END; ';
       // Fence the checked claim before retiring the lease and removing the gate
       // token. A late insert cannot reuse the claimed ID after this commits.
       RecoverySql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' AND '+Registry+' AND (SELECT count(*) FROM '+
         Ident(GateName)+' WHERE '+WriterGateScope+')=1 AND (SELECT count(*) FROM '+LeaseTable+' WHERE '+LeaseIdentity+
         ')=1 THEN 1 ELSE json(''Legacy lease is not recoverable'') END; '+FenceSql+
         'DELETE FROM '+LeaseTable+' WHERE '+LeaseIdentity+
-        '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''Legacy lease changed'') END; UPDATE '+
-        Ident(GateName)+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(GateName)+')=''blob'' THEN jsonb('+
-        Replacement+') ELSE '+Replacement+' END WHERE '+WriterGateScope+
-        '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''Legacy gate changed'') END; COMMIT;';
+        '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''Legacy lease changed'') END; '+GateWrite+'COMMIT;';
       if not Db.Exec(RecoverySql) then Db.Exec('ROLLBACK;');
     end;
   begin
@@ -104,6 +106,7 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
     LeaseRows:=CollectionTable('historyWriterLeases');
     if Length(LeaseRows)<>1 then Exit;
     LeaseName:=LeaseRows[0][0];LeaseTable:=Ident(LeaseName);
+    UuidPattern:=QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx','x','[0-9a-f]',[rfReplaceAll]));
     GateIdentity:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-writer-gate',BoardId))+
       ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
@@ -111,17 +114,24 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
       ' AND '+VersionOne+' AND json_extract(_ferretdb_sjson,''$.$s.p.mode.t'')=''string'''+
       ' AND ((json_extract(_ferretdb_sjson,''$.mode'')=''legacy'' AND json_type(_ferretdb_sjson,''$.migrationId'')=''null'') OR '+
       '(json_extract(_ferretdb_sjson,''$.mode'')=''draining'' AND json_extract(_ferretdb_sjson,''$.$s.p.migrationId.t'')=''string'''+
-      ' AND '+MigrationId+' GLOB '+QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-        'x','[0-9a-f]',[rfReplaceAll]))+'))'+
-      ' AND json_type(_ferretdb_sjson,''$.writers'')=''array'' AND json_array_length(_ferretdb_sjson,''$.writers'') BETWEEN 1 AND 1000'+
+      ' AND '+MigrationId+' GLOB '+UuidPattern+'))'+
+      ' AND json_type(_ferretdb_sjson,''$.writers'')=''array'' AND json_array_length(_ferretdb_sjson,''$.writers'') BETWEEN 0 AND 1000'+
       ' AND NOT EXISTS(SELECT 1 FROM json_each(_ferretdb_sjson,''$.writers'') WHERE type<>''text'' OR value NOT GLOB '+
-      QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx','x','[0-9a-f]',[rfReplaceAll]))+
+      UuidPattern+
       ' OR COALESCE(json_extract(_ferretdb_sjson,''$.$s.p.writers.i[''||key||''].t''),'''')<>''string'')'+
       ' AND (SELECT count(DISTINCT value) FROM json_each(_ferretdb_sjson,''$.writers''))=json_array_length(_ferretdb_sjson,''$.writers'')'+
       ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7';
     WriterRows:=Db.Query('SELECT w.value FROM '+Ident(GateName)+
       ' CROSS JOIN json_each(_ferretdb_sjson,''$.writers'') w WHERE '+GateIdentity+';');
-    for WriterRow in WriterRows do RetireWriter(WriterRow[0]);
+    for WriterRow in WriterRows do RetireWriter(WriterRow[0],True);
+    if Length(Db.Query('SELECT 1 FROM '+Ident(GateName)+' WHERE '+GateIdentity+';'))<>1 then Exit;
+    WriterRows:=Db.Query('SELECT json_extract(lease._ferretdb_sjson,''$._id'') FROM '+LeaseTable+' lease'+
+      ' WHERE json_extract(lease._ferretdb_sjson,''$.boardId'')='+BoardSql+
+      ' AND json_extract(lease._ferretdb_sjson,''$._id'') GLOB '+UuidPattern+
+      ' AND NOT EXISTS(SELECT 1 FROM '+Ident(GateName)+' g CROSS JOIN json_each(g._ferretdb_sjson,''$.writers'') w'+
+      ' WHERE json_extract(g._ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-writer-gate',BoardId))+
+      ' AND w.value=json_extract(lease._ferretdb_sjson,''$._id'')) LIMIT 1000;');
+    for WriterRow in WriterRows do RetireWriter(WriterRow[0],False);
   end;
 
   procedure RecoverPending(const IdentityScope:string);

@@ -168,6 +168,24 @@ def run(request, client, db, token, refresh_ferret, session):
     finally:
         assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
     print('PASS: expired legacy recovery preserves other live writer leases and tokens')
+    orphan=dict(lease,pending='orphan-claim')
+    assert client.command({'insert':'historyWriterGates','documents':[idle_gate]})['n']==1
+    assert client.command({'insert':'historyWriterLeases','documents':[orphan,live_lease]})['n']==2
+    try:
+        assert request('DELETE',path,token=token)[0]==200
+        assert not client.find('historyWriterLeases',writer)
+        assert client.find('historyWriterLeases',live_writer)==[live_lease]
+        assert client.find('historyWriterGates',gate_id)==[idle_gate]
+        assert client.find('changeHistory','orphan-claim')==[
+            dict(_id='orphan-claim',boardId='#history-writer-fence',fencedWriter=writer)]
+        assert changes()['removed']['previousHash']==added['integrityHash']
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        lifecycle=changes()
+        removed,added=lifecycle['removed'],lifecycle['added']
+    finally:
+        assert client.command({'delete':'historyWriterLeases','deletes':[dict(q={'_id':live_writer},limit=1)]})['n']==1
+        assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
+    print('PASS: legacy history fences expired orphan claims and leaves live orphan leases alone')
     draining=dict(idle_gate,mode='draining',migrationId='11111111-2222-4333-8444-555555555555')
     assert client.command({'insert':'historyWriterGates','documents':[dict(draining,writers=[writer])]})['n']==1
     assert client.command({'insert':'historyWriterLeases','documents':[dict(lease,pending='draining-claim')]})['n']==1
