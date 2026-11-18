@@ -61,6 +61,7 @@ function RequestUserAgent(ARequest: TRequest): string;
 function WithSessionId(const TargetPath, SessionId: string): string;
 function RequestLanguageTag(Request:TRequest):string;
 function LanguageHiddenField(const S:TWLSession):string;
+function NavigationButton(const TargetPath,Caption:string;const S:TWLSession):string;
 function SessionUrl(const TargetPath:string;const S:TWLSession):string;
 
 // --- token machinery ----------------------------------------------------------------------
@@ -255,6 +256,16 @@ begin
   Result:='';if FindLanguage(S.LanguageTag,Language) then
     Result:='<input type="hidden" name="lang" value="'+Language.Tag+'">';
 end;
+function HtmlAttr(const V:string):string; forward;
+
+function NavigationButton(const TargetPath,Caption:string;const S:TWLSession):string;
+begin
+  Result:='<form method="POST" action="'+HtmlAttr(TargetPath)+'">'+LanguageHiddenField(S);
+  if S.SessionId<>'' then
+    Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(S.SessionId)+'">';
+  Result:=Result+'<input type="submit" value="'+HtmlAttr(Caption)+'"></form>';
+end;
+
 function SessionUrl(const TargetPath:string;const S:TWLSession):string;
 var Core,Fragment,Separator:string;At:Integer;Language:TWLLanguage;
 begin

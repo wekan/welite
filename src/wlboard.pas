@@ -84,7 +84,7 @@ begin
 end;
 
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;
-var R:TWLRows; i,Count:Integer;Words:TWLTranslator;Tag:string;
+var R:TWLRows; i,Count:Integer;Words:TWLTranslator;Tag:string;Navigation:TWLSession;
 begin
   Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
   Words:=TWLTranslator.Create(ResolveLanguage(Tag,SessionLanguage(Db,S),''));
@@ -94,8 +94,9 @@ begin
     for i:=0 to High(R) do if BoardCanRead(Db,S.UserId,R[i][0]) then
     begin
       Inc(Count);
-      Result:=Result+'<li><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(R[i][0]),S))+
-        '">'+HtmlEncode(R[i][1])+'</a></li>';
+      Navigation:=S;
+      Navigation.LanguageTag:=Tag;
+      Result:=Result+'<li>'+NavigationButton('/board?id='+HTTPEncode(R[i][0]),R[i][1],Navigation)+'</li>';
     end;
     if Count=0 then Result:=Result+'<li>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</li>';
     Result:=Result+'</ul>';

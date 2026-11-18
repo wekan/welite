@@ -96,10 +96,11 @@ begin
   Result := (Length(Rows) > 0) and (Length(Rows[0]) > 0) and (Rows[0][0] = '0');
 end;
 
-function LanguageUrl(Request:TRequest;const Url:string):string;forward;
+function AuthNavigation(Request:TRequest;const Path,Caption:string):string;forward;
+function SignInForm(Request:TRequest;Response:TResponse;const Message:string=''):string;forward;
 
 // GET / — board list for the resolved tenant (HTML 3.2 baseline; enhance later).
-procedure HomeEndpoint(aRequest: TRequest; aResponse: TResponse);
+procedure ShowHome(aRequest:TRequest; aResponse:TResponse; const Session:TWLSession);
 var
   T: TWLTenant;
   S: TWLSession;
@@ -114,18 +115,22 @@ begin
   // person to register becomes the Global Admin; everyone after is a Normal user.
   if NoUsersYet(T) then
   begin
-    aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location',LanguageUrl(aRequest,'/sign-in'));
-    aResponse.SendContent;
+    SendHtml(aResponse,SignInForm(aRequest,aResponse));
     Exit;
   end;
 
   // Greet the signed-in user and flag the Global Admin (users.isAdmin = 1).
   IsGAdmin := False;
-  if ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
+  S:=Session;
+  if (S.SessionId<>'') or ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), S) then
     IsGAdmin := IsTenantAdmin(T.Db, S)
   else S:=Default(TWLSession);
   S.LanguageTag:=RequestLanguageTag(aRequest);
+  if S.SessionId<>'' then
+  begin
+    aResponse.SetCustomHeader('Cache-Control','no-store');
+    aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
+  end;
 
   Language:=ViewerLanguage(T.Db,S,aRequest);
   Words:=TWLTranslator.Create(Language);
@@ -133,27 +138,39 @@ begin
     Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
     if IsGAdmin then
       Body := Body + '<p><b>'+HtmlEncode(Words.Text('admin','Admin'))+'</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
-              '<a href="' + HtmlAttr(SessionUrl('/admin',S)) + '">'+HtmlEncode(Words.Text('admin-panel','Admin Panel'))+'</a></p>' + LineEnding
+              '</p>'+NavigationButton('/admin',Words.Text('admin-panel','Admin Panel'),S)+LineEnding
     else if S.Username <> '' then
       Body := Body + '<p>'+HtmlEncode(Words.Text('username','Username'))+': ' + HtmlEncode(S.Username) + '</p>' + LineEnding;
 
-    Body:=Body+BoardListHtml(T.Db,S,Language.Tag)+'<p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/sign-in'))+'">'+
-      HtmlEncode(Words.Text('log-in','Sign in'))+'</a> | <a href="'+HtmlAttr(LanguageUrl(aRequest,'/register'))+'">'+
-      HtmlEncode(Words.Text('register','Register'))+'</a></p>';
+    Body:=Body+BoardListHtml(T.Db,S,Language.Tag)+
+      AuthNavigation(aRequest,'/sign-in',Words.Text('log-in','Sign in'))+
+      AuthNavigation(aRequest,'/register',Words.Text('register','Register'));
     // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
     Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
     SendHtml(aResponse,LanguagePage(aResponse,Language,'WeKan-Lite',Body));
   finally Words.Free;end;
 end;
 
-function LanguageUrl(Request:TRequest;const Url:string):string;
-var Language:TWLLanguage;Separator:string;
+procedure HomeEndpoint(aRequest:TRequest; aResponse:TResponse);
 begin
-  Result:=Url;
-  if not FindLanguage(Request.QueryFields.Values['lang'],Language) then Exit;
-  if Pos('?',Url)>0 then Separator:='&' else Separator:='?';
-  Result:=Url+Separator+'lang='+Language.Tag;
+  ShowHome(aRequest,aResponse,Default(TWLSession));
 end;
+
+function AuthLanguageField(Request:TRequest):string;
+var S:TWLSession;
+begin
+  S:=Default(TWLSession);
+  S.LanguageTag:=ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage).Tag;
+  Result:=LanguageHiddenField(S);
+end;
+
+function AuthNavigation(Request:TRequest;const Path,Caption:string):string;
+begin
+  Result:='<form method="POST" action="'+HtmlAttr(Path)+'">'+AuthLanguageField(Request)+
+    '<input type="hidden" name="auth_view" value="1">'+
+    '<input type="submit" value="'+HtmlAttr(Caption)+'"></form>';
+end;
+
 function AuthPage(Request:TRequest;Response:TResponse;const Title,Body:string):string;
 var S:TWLSession;Language:TWLLanguage;
 begin
@@ -164,7 +181,7 @@ end;
 function LanguagePicker(const Selected:TWLLanguage;Words:TWLTranslator;const Path:string='/sign-in'):string;
 var i:Integer;Language:TWLLanguage;
 begin
-  Result:='<form method="GET" action="'+HtmlAttr(Path)+'"><label>'+HtmlEncode(Words.Text('language','Language'))+
+  Result:='<form method="POST" action="'+HtmlAttr(Path)+'"><input type="hidden" name="auth_view" value="1"><label>'+HtmlEncode(Words.Text('language','Language'))+
     ' <select name="lang">';
   for i:=0 to LanguageCount-1 do
   begin
@@ -176,7 +193,7 @@ begin
   Result:=Result+'</select></label> <input type="submit" value="'+HtmlAttr(Words.Text('apply','Apply'))+'"></form>';
 end;
 
-function SignInForm(Request:TRequest;Response:TResponse;const Message:string=''):string;
+function SignInForm(Request:TRequest;Response:TResponse;const Message:string):string;
 var Language:TWLLanguage;Words:TWLTranslator;Title,Dir,Tag,Notice:string;
 begin
   Language:=ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage);
@@ -189,14 +206,13 @@ begin
     Notice:='';if Message<>'' then Notice:='<p>'+HtmlEncode(Words.Text('invalid-credentials',Message))+'</p>';
     Result:=PageDir(Title,LanguagePicker(Language,Words)+'<h1>'+HtmlEncode(Title)+'</h1>'+LineEnding+
       Notice+LineEnding+
-      '<form method="POST" action="/sign-in?lang='+HtmlAttr(Tag)+'">'+LineEnding+
+      '<form method="POST" action="/sign-in">'+AuthLanguageField(Request)+LineEnding+
       '  '+HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+LineEnding+
       '  '+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+LineEnding+
       '  '+HtmlEncode(Words.Text('otp','One-time code (if enabled)'))+' <input name="code" size="6" maxlength="6"><br>'+LineEnding+
       '  <input type="submit" value="'+HtmlAttr(Title)+'">'+LineEnding+'</form>'+LineEnding+
-      '<p><a href="/two-factor/setup?lang='+HtmlAttr(Tag)+'">'+HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+
-      '</a> | <a href="/register?lang='+HtmlAttr(Tag)+'">'+
-      HtmlEncode(Words.Text('create-account','Create an account (Register)'))+'</a></p>',Dir,Tag);
+      AuthNavigation(Request,'/two-factor/setup',Words.Text('two-factor-required-title','Set up two-factor authentication'))+
+      AuthNavigation(Request,'/register',Words.Text('create-account','Create an account (Register)')),Dir,Tag);
   finally Words.Free;end;
 end;
 
@@ -221,11 +237,11 @@ var
   Username, Password: string;
   Proof: TWLLoginProof;
   S: TWLSession;
-  Language:TWLLanguage;Location:string;
+
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
 
-  if aRequest.Method = 'POST' then
+  if (aRequest.Method = 'POST') and (aRequest.ContentFields.Values['auth_view']<>'1') then
   begin
     Username := Trim(aRequest.ContentFields.Values['username']);
     Password := aRequest.ContentFields.Values['password'];
@@ -240,17 +256,13 @@ begin
       S:=CreateAuthenticatedSession(T.Db,aRequest,Proof,30*24*60*60);
       if S.SessionId='' then
       begin AuthError(aRequest,aResponse,500,'log-in','Sign in','Could not create session','auth-session-create-failed');Exit; end;
-      aResponse.Code:=302;
-      Location:=WithSessionId('/',S.SessionId);
-      if FindLanguage(aRequest.QueryFields.Values['lang'],Language) then Location:=Location+'&lang='+Language.Tag;
-      aResponse.SetCustomHeader('Location',Location);
-      aResponse.SendContent;Exit;
+      ShowHome(aRequest,aResponse,S);Exit;
     finally Proof.Free;end;
     SendHtml(aResponse,SignInForm(aRequest,aResponse,'Invalid login.'));
     Exit;
   end;
 
-  // GET — translated form, no JS/cookies; query retains the selected language on POST.
+  // GET — translated form with the selected language in the POST body.
   SendHtml(aResponse,SignInForm(aRequest,aResponse));
 end;
 
@@ -278,12 +290,12 @@ begin
   if Message<>'' then Notice:='<p>'+HtmlEncode(Message)+'</p>';
   Result:='<h1>'+HtmlEncode(Words.Text('twoFactorCode-prompt','Enter your 6-digit authentication code'))+'</h1>'+LineEnding+
     Notice+
-    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/confirm'))+'">'+
+    '<form method="POST" action="/two-factor/confirm">'+AuthLanguageField(Request)+
     '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
     '<label for="enrol-code">'+HtmlEncode(Words.Text('otp','One-time code'))+'</label> <input id="enrol-code" name="code" size="6" maxlength="6"><br>'+
     '<input type="submit" value="'+HtmlAttr(Words.Text('confirm','Confirm'))+'"></form>'+
-    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+
-    HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
+    AuthNavigation(Request,'/two-factor/setup',Words.Text('two-factor-required-title','Set up two-factor authentication'))+
+    AuthNavigation(Request,'/sign-in',Words.Text('log-in','Sign in'));
 end;
 procedure EnrollmentEndpoint(Request:TRequest;Response:TResponse);
 var T:TWLTenant;Username,Token,Secret,Body,Title:string;Proof:TWLEnrollProof;Words:TWLTranslator;
@@ -293,14 +305,14 @@ begin
   Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(Request),'',Request.AcceptLanguage));
   try
   Title:=Words.Text('two-factor-required-title','Set up two-factor authentication');
-  if Request.Method='POST' then
+  if (Request.Method='POST') and (Request.ContentFields.Values['auth_view']<>'1') then
   begin
     Username:=Trim(Request.ContentFields.Values['username']);
     if not EnrollmentAdmission(T.Db,Request,Response,Username) then Exit;
     Proof:=nil;
     if not AuthenticateEnrollment(T.Db,Username,Request.ContentFields.Values['password'],Proof) then
     begin
-      SendHtml(Response,AuthPage(Request,Response,Title,'<p>'+HtmlEncode(Words.Text('enrollment-setup-denied','Cannot start setup. Check your credentials and whether one-time codes are already enabled.'))+'</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+HtmlEncode(Title)+'</a></p>'));Exit;
+      SendHtml(Response,AuthPage(Request,Response,Title,'<p>'+HtmlEncode(Words.Text('enrollment-setup-denied','Cannot start setup. Check your credentials and whether one-time codes are already enabled.'))+'</p>'+AuthNavigation(Request,'/two-factor/setup',Title)));Exit;
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
@@ -319,9 +331,9 @@ begin
   end;
   SendHtml(Response,AuthPage(Request,Response,Title,'<h1>'+HtmlEncode(Title)+'</h1>'+
     '<p>'+HtmlEncode(Words.Text('enrollment-password-instructions','Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.'))+'</p>'+
-    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'"><label for="enrol-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> <input id="enrol-username" name="username"><br>'+
+    '<form method="POST" action="/two-factor/setup">'+AuthLanguageField(Request)+'<label for="enrol-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> <input id="enrol-username" name="username"><br>'+
     '<label for="enrol-password">'+HtmlEncode(Words.Text('password','Password'))+'</label> <input id="enrol-password" type="password" name="password"><br><input type="submit" value="'+HtmlAttr(Words.Text('start','Start setup'))+'"></form>'+
-    '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>'));
+    AuthNavigation(Request,'/sign-in',Words.Text('log-in','Sign in'))));
   finally Words.Free;end;
 end;
 procedure EnrollmentConfirmEndpoint(Request:TRequest;Response:TResponse);
@@ -348,8 +360,7 @@ begin
     SendHtml(Response,AuthPage(Request,Response,Title,'<h1>'+HtmlEncode(Title)+'</h1>'+
       '<p>'+HtmlEncode(Words.Text('enrollment-confirmed-instructions',
       'The confirmation code has been used. Wait for a new code in your authenticator before signing in.'))+
-      '</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+
-      HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>'));
+      '</p>'+AuthNavigation(Request,'/sign-in',Words.Text('log-in','Sign in'))));
   end
   else
   begin
@@ -373,7 +384,7 @@ begin
     if Message<>'' then Body:=Body+'<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>';
     if First then Body:=Body+'<p>'+HtmlEncode(Words.Text('registration-first-admin',
       'This first account will be the Domain Global Admin.'))+'</p>';
-    Body:=Body+'<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/register'))+'">'+
+    Body:=Body+'<form method="POST" action="/register">'+AuthLanguageField(Request)+
       '<label for="register-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> '+
       '<input id="register-username" name="username"><br>'+
       '<label for="register-password">'+HtmlEncode(Words.Text('password','Password'))+'</label> '+
@@ -381,7 +392,7 @@ begin
       '<label for="register-confirm">'+HtmlEncode(Words.Text('password-again','Confirm'))+'</label> '+
       '<input id="register-confirm" type="password" name="confirm"><br>'+
       '<input type="submit" value="'+HtmlAttr(Title)+'"></form>'+
-      '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
+      AuthNavigation(Request,'/sign-in',Words.Text('log-in','Sign in'));
     Result:=AuthPage(Request,Response,Title,Body);
   finally Words.Free;end;
 end;
@@ -404,7 +415,7 @@ begin
   end;
 
 
-  if aRequest.Method = 'POST' then
+  if (aRequest.Method = 'POST') and (aRequest.ContentFields.Values['auth_view']<>'1') then
   begin
     Username := Trim(aRequest.ContentFields.Values['username']);
     Password := aRequest.ContentFields.Values['password'];
@@ -456,21 +467,18 @@ begin
         Title:=Words.Text('enrollment-account-created','Account created');
         SendHtml(aResponse,AuthPage(aRequest,aResponse,Title,'<h1>'+HtmlEncode(Title)+'</h1><p>'+
           HtmlEncode(Words.Text('two-factor-required-text','This site requires two-factor authentication for your account. Set it up to continue.'))+
-          '</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">'+
-          HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a></p>'));
+          '</p>'+AuthNavigation(aRequest,'/two-factor/setup',Words.Text('two-factor-required-title','Set up two-factor authentication'))));
       finally
         Words.Free;
       end;
       Exit;
     end;
 
-    // Log the new user straight in (cookie-free session via URL), then go to the board list.
+    // Log the new user in and render the board list without a redirect.
     S := CreateSession(T.Db, aRequest, Uid,Username,HashText(Hash),30*24*60*60);
     if S.SessionId='' then
     begin AuthError(aRequest,aResponse,500,'register','Register','Account created! You can now sign in.','account-created');Exit; end;
-    aResponse.Code := 302;
-    aResponse.SetCustomHeader('Location', LanguageUrl(aRequest,WithSessionId('/',S.SessionId)));
-    aResponse.SendContent;
+    ShowHome(aRequest,aResponse,S);
     Exit;
   end;
 
@@ -672,6 +680,7 @@ begin
 
   // Global Admin Panel (Domains / Designer / People) — see wladmin; Designer lives at /designer
   HTTPRouter.RegisterRoute('/admin', rmGet, @AdminIndex);
+  HTTPRouter.RegisterRoute('/admin', rmPost, @AdminIndex);
   HTTPRouter.RegisterRoute('/admin/domains', rmGet, @AdminDomains);
   HTTPRouter.RegisterRoute('/admin/domains', rmPost, @AdminDomains);
   HTTPRouter.RegisterRoute('/admin/people', rmGet, @AdminPeople);
@@ -703,6 +712,7 @@ begin
 
   // Combined no-JS move component (arrows keypad) — see docs/move.md
   HTTPRouter.RegisterRoute('/board', rmGet, @BoardEndpoint);
+  HTTPRouter.RegisterRoute('/board', rmPost, @BoardEndpoint);
   HTTPRouter.RegisterRoute('/board/card', rmGet, @BoardCardEndpoint);
   HTTPRouter.RegisterRoute('/board/card/dropdown', rmPost, @BoardDropdownEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment/upload', rmPost, @BoardAttachmentUploadEndpoint);
