@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Initialize automatic fields on new API cards
+
+- Add explicit null values for board-scoped automatic and always-on definitions.
+  Native and shared storage commit those values together with the card.
+- Exercise untouched manual fields and complete card rollback when initial field
+  insertion fails. Backfilling existing cards remains open.
+
 ## 2026-11-18 Verify the board with Chromium cookies and JavaScript disabled
 
 - Block first-party cookies in a temporary Chromium profile and prove that the

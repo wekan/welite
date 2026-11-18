@@ -1139,7 +1139,7 @@ begin
 end;
 
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations:string;
+var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations,InitialFields:string;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1160,13 +1160,15 @@ begin
   begin SendError(aResponse,400,'List is in another swimlane'); Exit; end;
   Id := NewId;
   if not CardRelationSql(T,aRequest,aResponse,BoardId,Id,Relations) then Exit;
+  try InitialFields:=InitializeCardFields(T.Db,BoardId,Id);
+  except SendError(aResponse,500,'Could not initialize custom fields');Exit;end;
   if not T.Db.Exec('BEGIN IMMEDIATE; '+Format(
     'INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,' +
     'dateLastActivity,createdAt,modifiedAt,sort) ' +
     'VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,0);',
     [QuotedStr(Id), QuotedStr(BoardId), QuotedStr(ListId), QuotedStr(Swimlane),
      QuotedStr(Title), QuotedStr(Descr), QuotedStr(Author),
-     QuotedStr(NowIso),QuotedStr(NowIso),QuotedStr(NowIso)])+Relations+' COMMIT;') then
+     QuotedStr(NowIso),QuotedStr(NowIso),QuotedStr(NowIso)])+Relations+InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
 end;

@@ -9,6 +9,7 @@ function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out 
 function ReplaceDefinitionSettings(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
 function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
+function InitializeCardFields(Db:TWLDb;const BoardId,CardId:string):string;
 function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
 implementation
 uses jsonparser,wlmodels,wlselscp;
@@ -140,6 +141,31 @@ begin
         Q(Identity)+','+Q(TJSONObject(Items.Items[i]).Get('_id',''))+','+Q(TJSONObject(Items.Items[i]).Get('name',''))+','+Expression+'); ';
     end;
 end;
+function InitializeCardFields(Db:TWLDb;const BoardId,CardId:string):string;
+var Scope:TSelectionScope;Rows:TWLRows;Flags,Source:string;i:Integer;
+begin
+  Scope:=TSelectionScope.Create(Db);
+  try
+    Flags:='(automaticallyOnCard=1 OR alwaysOnCard=1)';
+    Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+    if Length(Rows)<>1 then raise Exception.Create('Missing definition source');
+    if Rows[0][0]='view' then
+    begin
+      Rows:=Db.Query('SELECT table_name FROM _wl_models WHERE name=''custom_fields'';');
+      if Length(Rows)<>1 then raise Exception.Create('Ambiguous definition source');
+      Source:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+      Flags:='EXISTS(SELECT 1 FROM '+Source+' f WHERE json_extract(f._ferretdb_sjson,''$._id'')=custom_fields.id AND '+
+        '(json_type(f._ferretdb_sjson,''$.automaticallyOnCard'')=''true'' OR json_type(f._ferretdb_sjson,''$.alwaysOnCard'')=''true''))';
+    end
+    else if Rows[0][0]<>'table' then raise Exception.Create('Invalid definition source');
+    Result:='INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT '+QuotedStr(CardId)+',id,NULL '+
+      'FROM custom_fields WHERE '+Flags+' AND '+Scope.StringField('custom_fields','id')+
+      ' AND EXISTS(SELECT 1 FROM custom_field_boards WHERE customFieldId=custom_fields.id AND boardId='+QuotedStr(BoardId)+
+      ' AND '+Scope.StringField('custom_field_boards','boardId')+') ORDER BY id COLLATE BINARY; ';
+    for i:=0 to Scope.Bindings.Count-1 do Result:=Scope.Bindings[i]+Result;
+  finally Scope.Free;end;
+end;
+
 function ReplaceDefinitionSettings(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
 var Rows:TWLRows;Scope:TSelectionScope;TableName,Doc,Expression,Init:string;i:Integer;
 begin

@@ -5,6 +5,7 @@ from urllib.parse import quote, urlencode
 from setapi import exercise as check_settings
 from optadd import run as check_append
 from defedit import run as check_edit
+from cfauto import native as check_native_auto, shared as check_shared_auto
 from defdel import native as check_native_delete, shared as check_shared_delete
 
 
@@ -112,13 +113,14 @@ def run_native(call, db, board, uid):
     from optrenm import run_native as check_option_rename
     check_option_rename(call,db,board,uid)
     check_native_delete(call,db,board,snapshot)
+    check_native_auto(call,db,board,snapshot)
 
 
 
 def run_shared(call, client, db, board, uid):
     def snapshot():
         with sqlite3.connect(db) as con:
-            names=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name IN ('customFields','activities') ORDER BY name").fetchall()
+            names=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name IN ('customFields','activities','cards') ORDER BY name").fetchall()
             return [con.execute('SELECT _ferretdb_sjson FROM "'+name.replace('"','""')+'" ORDER BY json_extract(_ferretdb_sjson,\'$._id\')').fetchall() for name, in names]
     def verify(identity,name,kind,flags,actor):
         row=client.find('customFields',identity)[0]
@@ -155,3 +157,4 @@ def run_shared(call, client, db, board, uid):
     from optrenm import run_shared as check_option_rename
     check_option_rename(call,client,db,board,uid)
     check_shared_delete(call,client,db,board,snapshot)
+    check_shared_auto(call,client,db,board,snapshot)
