@@ -8,7 +8,9 @@ from layout import Forms
 from wire import DateMs, encode
 
 
-def run(request, client, db, token):
+def run(request, client, db, token, refresh_ferret):
+    with sqlite3.connect(db) as con:
+        assert con.execute("SELECT 1 FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone() is None
     lists_path = '/api/boards/b/lists'
     status, _, body = request('POST', lists_path, {'title': 'Soft delete'}, token)
     assert status == 200, (status, body)
@@ -49,6 +51,11 @@ def run(request, client, db, token):
     def history(action):
         result=client.command({'find':'userPositionHistory','filter':dict(entityId=list_id,actionType=action)})
         return result['cursor']['firstBatch']
+    with sqlite3.connect(db) as con:
+        name,=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone()
+        history_table='"'+name.replace('"','""')+'"'
+        assert con.execute('SELECT count(*) FROM '+history_table).fetchone()==(1,)
+    refresh_ferret()
     deleted,=history('delete')
     assert deleted['batchId']==retained_list['deleteBatchId'] and isinstance(deleted['createdAt'],DateMs),deleted
     assert deleted['newState']['deletedAt']==retained_list['deletedAt'] and isinstance(deleted['newState']['deletedAt'],DateMs),deleted

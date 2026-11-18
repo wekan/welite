@@ -60,8 +60,24 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
         mongo_port=port();http_port=port();env['WELITE_PORT']=str(http_port)
         database=data/'wekan.sqlite';shadow=data/'wekan.db';app=None
         with (out/'ferret.log').open('w+') as mongo_log,(out/'http.log').open('w+') as app_log:
-            server=subprocess.Popen([str(ferret),'--handler=sqlite','--sqlite-url='+data.as_uri()+'/','--state-dir='+str(state),'--listen-addr=127.0.0.1:'+str(mongo_port),'--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable'],env=env,stdout=mongo_log,stderr=mongo_log)
+            mongo_command=[str(ferret),'--handler=sqlite','--sqlite-url='+data.as_uri()+'/','--state-dir='+str(state),'--listen-addr=127.0.0.1:'+str(mongo_port),'--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable']
             client=Client(mongo_port)
+            def start_ferret():
+                return subprocess.Popen(mongo_command,env=env,stdout=mongo_log,stderr=mongo_log)
+            server=[start_ferret()]
+            def refresh_ferret():
+                server[0].terminate()
+                server[0].wait(timeout=10)
+                server[0]=start_ferret()
+                wait_for_ferret()
+            def wait_for_ferret():
+                for _ in range(100):
+                    try:
+                        client.command({'ping':1})
+                        return
+                    except OSError:
+                        time.sleep(.05)
+                raise AssertionError('FerretDB startup timed out')
             def request(method,path,body=None,token=None,timeout=10):
                 con=http.client.HTTPConnection('127.0.0.1',http_port,timeout=timeout)
                 headers={'Host':'localhost','User-Agent':'shared-http-test'}
@@ -80,11 +96,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert proc.poll() is None;time.sleep(.05)
                 proc.kill();proc.wait();raise AssertionError('HTTP startup timed out')
             try:
-                for _ in range(100):
-                    try:client.command({'ping':1});break
-                    except OSError:time.sleep(.05)
-                else:raise AssertionError('FerretDB startup timed out')
-                for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments','userPositionHistory']:client.command({'create':collection})
+                wait_for_ferret()
+                for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
                 now=DateMs(int(time.time()*1000))
                 password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
                 client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password=password),profile=dict(language='ar',retained=Long(9007199254740993)),extra=Long(9007199254740993))]})
@@ -110,7 +123,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 check_shared_checklists(request,client,token,card)
-                check_list_soft_delete(request,client,database,token)
+                check_list_soft_delete(request,client,database,token,refresh_ferret)
                 list_path='/api/boards/b/lists/l'
                 before=client.find('lists','l')[0]
                 assert request('PUT',list_path,dict(title='Rejected',color='#abc'),token)[0]==400
@@ -174,4 +187,4 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert con.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()==[('users',)]
                 print('PASS:',backend,'canonical existing shared HTTP activation, no shadow, Mongo/HTTP changes, BSON, private web session, API restart and shared revocation')
             finally:
-                stop();server.terminate();server.wait(timeout=10)
+                stop();server[0].terminate();server[0].wait(timeout=10)

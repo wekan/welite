@@ -1770,3 +1770,12 @@ checks canonical selection/refusal, HTTP API login and card creation, Mongo titl
 updates visible through HTTP, preserved BSON Long/Date values, private browser
 sessions, restart persistence and revocation by removing the shared resume record.
 It also proves ordinary mode does not create `wekan.db` beside `wekan.sqlite`.
+
+
+### List position-history collection
+
+When a shared store has no `userPositionHistory` collection, the first list
+deletion or restore provisions it in the SQLite registry. The history record
+is written immediately. Restart a running FerretDB process before reading
+the newly created collection over Mongo wire. Existing history collections
+are used directly. Live registry-cache coordination remains open.

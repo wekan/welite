@@ -6,6 +6,7 @@ uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wl
 // compatibility remain separate gates before this is a finished store adapter.
 function InstallRootModels(Db:TWLDb):Boolean;
 function RootModelScript(Db:TWLDb):string;
+function EnsurePositionHistoryCollection(Db:TWLDb):Boolean;
 implementation
 const DocCol='_ferretdb_sjson';
 function Q(const Text:string):string;
@@ -56,8 +57,50 @@ begin
       raise Exception.Create('Additional required physical columns need an adapter');
   if not Found then raise Exception.Create('Missing FerretDB document column');
 end;
+function CreateCollectionSql(const Collection,TableName,Storage:string;ReuseTable:Boolean):string;
+var Settings,IndexDef:TJSONObject;Indexes,Keys:TJSONArray;Reuse:string;
+begin
+  Reuse:='';if ReuseTable then Reuse:='IF NOT EXISTS ';
+  Settings:=TJSONObject.Create;
+  try
+    Settings.Add('uuid',Uuid);Settings.Add('cappedSize',0);Settings.Add('cappedDocuments',0);
+    Settings.Add('indexFormat',3);if Storage='blob' then Settings.Add('storage','jsonb');
+    Indexes:=TJSONArray.Create;Settings.Add('indexes',Indexes);
+    IndexDef:=TJSONObject.Create;Indexes.Add(IndexDef);
+    IndexDef.Add('name','_id_');IndexDef.Add('unique',True);
+    Keys:=TJSONArray.Create;IndexDef.Add('key',Keys);
+    Keys.Add(TJSONObject.Create(['field','_id','descending',False]));
+    Result:='CREATE TABLE '+Reuse+Ident(TableName)+'('+Ident(DocCol)+' '+UpperCase(Storage)+' NOT NULL) STRICT; '+
+      'CREATE UNIQUE INDEX '+Reuse+Ident(TableName+'__id_')+' ON '+Ident(TableName)+'('+Ident(DocCol)+'->'+Q('_id')+'); '+
+      'INSERT INTO _ferretdb_collections(name,table_name,settings) VALUES('+Q(Collection)+','+
+      Q(TableName)+','+Q(Settings.AsJSON)+'); ';
+  finally Settings.Free;end;
+end;
+
+function EnsurePositionHistoryCollection(Db:TWLDb):Boolean;
+const Collection='userPositionHistory';
+var Hash:LongWord;TableName:string;Rows:TWLRows;
+  function Exists:Boolean;
+  begin
+    Result:=Length(Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
+      'ON m.name=r.table_name AND m.type=''table'' WHERE r.name='+Q(Collection)+';'))=1;
+  end;
+begin
+  if Exists then Exit(True);
+  Hash:=NameHash(Collection);
+  repeat
+    TableName:=Candidate(Collection,Hash);
+    Rows:=Db.Query('SELECT name FROM sqlite_master WHERE name IN ('+Q(TableName)+','+
+      Q(TableName+'__id_')+') UNION ALL SELECT table_name FROM _ferretdb_collections WHERE table_name='+Q(TableName)+';');
+    Inc(Hash);
+  until Length(Rows)=0;
+  if not Db.Exec('BEGIN IMMEDIATE; '+CreateCollectionSql(Collection,TableName,'blob',False)+'COMMIT;') then
+    Db.Exec('ROLLBACK;');
+  Result:=Exists;
+end;
+
 function RootModelScript(Db:TWLDb):string;
-var Models:TJSONArray;Model,Field,Settings,IndexDef:TJSONObject;Fields,Managed,Indexes,Keys:TJSONArray;
+var Models:TJSONArray;Model,Field,Settings:TJSONObject;Fields,Managed:TJSONArray;
   Registry,Rows,Owner,Objects,Custom:TWLRows;Used,Roots,Tables:TStringList;
   Sql,TableName,ViewName,Collection,Storage,Existing,ReadExpr,Columns,Spec,SettingsText,Body,Root,Incoming,DeferredCustom:string;
   Hash:LongWord;i,j,k:Integer;Fresh,MetadataExists,OwnerExists,Found:Boolean;
@@ -110,17 +153,7 @@ begin
         if HasObject(TableName) then
         begin Storage:=ColumnStorage(Db,TableName);ValidateUnique(Db,Model,TableName);end
         else Storage:='blob';
-        Settings:=TJSONObject.Create;
-        try
-          Settings.Add('uuid',Uuid);Settings.Add('cappedSize',0);Settings.Add('cappedDocuments',0);
-          Settings.Add('indexFormat',3);if Storage='blob' then Settings.Add('storage','jsonb');
-          Indexes:=TJSONArray.Create;Settings.Add('indexes',Indexes);IndexDef:=TJSONObject.Create;Indexes.Add(IndexDef);
-          IndexDef.Add('name','_id_');IndexDef.Add('unique',True);Keys:=TJSONArray.Create;IndexDef.Add('key',Keys);
-          Keys.Add(TJSONObject.Create(['field','_id','descending',False]));SettingsText:=Settings.AsJSON;
-        finally Settings.Free;end;
-        Sql:=Sql+'CREATE TABLE IF NOT EXISTS '+Ident(TableName)+'('+Ident(DocCol)+' '+UpperCase(Storage)+' NOT NULL) STRICT; '+
-          'CREATE UNIQUE INDEX IF NOT EXISTS '+Ident(TableName+'__id_')+' ON '+Ident(TableName)+'('+Ident(DocCol)+'->'+Q('_id')+'); '+
-          'INSERT INTO _ferretdb_collections(name,table_name,settings) VALUES('+Q(Collection)+','+Q(TableName)+','+Q(SettingsText)+'); ';
+        Sql:=Sql+CreateCollectionSql(Collection,TableName,Storage,True);
       end
       else
       begin
