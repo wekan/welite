@@ -248,6 +248,15 @@ begin
           if not (InsertMode or CloneMode) and ((OldValue=nil) or (OldValue.AsString<>Converted.AsString)) then Invalid;
         end;
         if InsertMode and (Converted.JSONType=jtNull) and (OldValue=nil) then Continue;
+        // WeKan restores lifecycle markers with $unset. Keep absent BSON
+        // fields absent when the native restore writes SQL NULL.
+        if (Converted.JSONType=jtNull) and
+          ((Spec.Get('table','')='lists') or (Spec.Get('table','')='cards')) and
+          ((Name='deletedAt') or (Name='deletedBy') or (Name='deleteBatchId')) then
+        begin
+          RemovePath(Doc,Path);
+          Continue;
+        end;
         PutPath(Doc,Path,Converted);Converted:=nil;
         if Kind='date' then PutPath(Hints,Path,TJSONString.Create('date'));
         // An explicit SQL write to a declared string reference establishes that

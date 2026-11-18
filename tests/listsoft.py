@@ -1,6 +1,9 @@
 """Exercise list soft deletion against the live FerretDB source documents."""
 import json
 import sqlite3
+from urllib.parse import parse_qs, urlencode, urlsplit
+
+from layout import Forms
 
 from wire import DateMs, encode
 
@@ -44,3 +47,39 @@ def run(request, client, db, token):
     assert request('GET', '/api/cards/' + card_id, token=token)[0] == 404
     assert request('DELETE', path, token=token)[0] == 404
     print('PASS: live shared list DELETE retains typed batch markers and restores both source documents on failure')
+
+    status, headers, _ = request('POST', '/sign-in', urlencode(dict(username='user', password='test-password')))
+    assert status in (302,303) and 'Set-Cookie' not in headers, (status,headers)
+    session = parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    board_path = '/board?id=b&view=all&sessionId=' + session
+
+    def restore_fields():
+        status, _, body = request('GET', board_path)
+        assert status == 200, (status,body)
+        forms = Forms()
+        forms.feed(body.decode())
+        fields, = [fields for action,fields in forms.forms
+                   if action == '/board/restore-list' and fields.get('listId') == list_id]
+        return fields
+
+    with sqlite3.connect(db) as con:
+        con.execute(f'CREATE TRIGGER reject_list_restore AFTER UPDATE ON {quoted} '
+                    "BEGIN SELECT RAISE(FAIL,'test list restore failure'); END")
+    try:
+        assert request('POST', '/board/restore-list', urlencode(restore_fields()))[0] == 409
+        assert encode(client.find('lists',list_id)[0]) == encode(retained_list)
+        assert encode(client.find('cards',card_id)[0]) == encode(retained_card)
+    finally:
+        with sqlite3.connect(db) as con:
+            con.execute('DROP TRIGGER reject_list_restore')
+
+    fields = restore_fields()
+    status, headers, _ = request('POST', '/board/restore-list', urlencode(fields))
+    assert status == 302 and 'Set-Cookie' not in headers, (status,headers)
+    assert request('GET', headers['Location'])[0] == 200
+    assert request('POST', '/board/restore-list', urlencode(fields))[0] == 403
+    assert encode(client.find('lists',list_id)[0]) == encode(original_list)
+    assert encode(client.find('cards',card_id)[0]) == encode(original_card)
+    assert request('GET', path, token=token)[0] == 200
+    assert request('GET', '/api/cards/' + card_id, token=token)[0] == 200
+    print('PASS: live shared HTML restore unsets the batch, preserves BSON, and rolls back both rows on failure')

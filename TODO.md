@@ -211,7 +211,7 @@ Complete these steps sequentially, with regression tests and a local commit for 
 The design above remains the acceptance criteria. Move verified items to [CHANGES.md](CHANGES.md).
 Platform and browser claims require testing on those targets.
 
-- [ ] Integrate WeKan-compatible list deletion and restore history, and verify the HTML restore workflow against live FerretDB.
+- [ ] Integrate WeKan-compatible list deletion and restore history, and verify the HTML restore workflow against live FerretDB using CLI SQLite.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
   Large CLI adapter scripts now use private short scratch files without argument-size limits.
