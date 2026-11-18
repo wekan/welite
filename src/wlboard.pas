@@ -422,7 +422,7 @@ begin
     if Body='' then
     begin
       Title:=Words.Text('card','Card');
-      Body:='<p>'+HtmlEncode(Words.Text('card-not-found','Card not found'))+'</p>';
+      Body:='<p>'+HtmlEncode(Words.Text('field-link-not-found','Card not found.'))+'</p>';
     end
     else aResponse.Code:=200;
     aResponse.ContentType:='text/html; charset=utf-8';
@@ -433,13 +433,14 @@ end;
 
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Board,Card,Id,Scope:string;
-  Selector:TSelectionScope;Rows:TWLRows;Readable,Snapshot:Boolean;
+  Selector:TSelectionScope;Rows:TWLRows;Readable,Snapshot,Open:Boolean;Language:TWLLanguage;Words:TWLTranslator;
 begin
   Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];Id:=aRequest.QueryFields.Values['file'];
+  T:=Default(TWLTenant);S:=Default(TWLSession);
+  Open:=ResolveTenant(aRequest,T) and TenantOpen(T);
+  if Open and not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
   Readable:=False;
-  if (Board<>'') and (Card<>'') and (Id<>'') and (Pos(#0,Board+Card+Id)=0) and
-    ResolveTenant(aRequest,T) and TenantOpen(T) and
-    ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) and T.Db.BeginRead then
+  if Open and (S.UserId<>'') and (Board<>'') and (Card<>'') and (Id<>'') and (Pos(#0,Board+Card+Id)=0) and T.Db.BeginRead then
   begin
     try
       if BoardCanRead(T.Db,S.UserId,Board) then
@@ -460,9 +461,14 @@ begin
     if Snapshot and Readable and SendStoredDownload(aResponse,StoreFilePath(T.FilesDir,'attachme',Id),Rows[0][1]) then Exit;
   end;
   aResponse.Code:=404;
-  aResponse.ContentType:='text/plain; charset=utf-8';
-  aResponse.Content:='Attachment not found';
-  aResponse.SendContent;
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  Words:=TWLTranslator.Create(Language);
+  try
+    aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=LanguagePage(aResponse,Language,Words.Text('attachments','Attachments'),
+      '<p>'+HtmlEncode(Words.Text('attachment-repair-broken','Not found'))+'</p>','','html4');
+    aResponse.SendContent;
+  finally Words.Free;end;
 end;
 
 function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;

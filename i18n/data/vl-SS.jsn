@@ -2099,5 +2099,6 @@
   "log": "Log",
   "logout": "Afmelden",
   "server": "Server",
-  "protocol": "Protocol"
+  "protocol": "Protocol",
+  "field-link-not-found": "Kaart niet gevonden."
 }

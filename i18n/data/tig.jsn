@@ -2099,5 +2099,6 @@
   "log": "ደብተር",
   "logout": "ፈጊር",
   "server": "ኣገልጋሊ",
-  "protocol": "ፕሮቶኮል"
+  "protocol": "ፕሮቶኮል",
+  "field-link-not-found": "ወረቀት ካርድ ኣይተረኽበትን።"
 }

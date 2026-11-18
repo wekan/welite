@@ -2099,5 +2099,6 @@
   "log": "Rhekhodo",
   "logout": "huma",
   "server": "Sevha",
-  "protocol": "Phurothokholo"
+  "protocol": "Phurothokholo",
+  "field-link-not-found": "Khadi a ri kumekanga."
 }

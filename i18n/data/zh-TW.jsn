@@ -2099,5 +2099,6 @@
   "log": "紀錄檔",
   "logout": "登出",
   "server": "伺服器",
-  "protocol": "協定"
+  "protocol": "協定",
+  "field-link-not-found": "找不到卡片。"
 }

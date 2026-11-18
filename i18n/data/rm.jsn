@@ -2099,5 +2099,6 @@
   "log": "Protocol",
   "logout": "Sortir",
   "server": "Servidur",
-  "protocol": "Protocol da communicaziun"
+  "protocol": "Protocol da communicaziun",
+  "field-link-not-found": "Carta betg chattada."
 }

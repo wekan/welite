@@ -2099,5 +2099,6 @@
   "log": "Reġistru",
   "logout": "Oħroġ",
   "server": "Servitur",
-  "protocol": "Protokoll"
+  "protocol": "Protokoll",
+  "field-link-not-found": "Il-karta ma nstabitx."
 }

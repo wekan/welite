@@ -2099,5 +2099,6 @@
   "log": "Annáll",
   "logout": "Skrá út",
   "server": "Þjónn",
-  "protocol": "Samskiptareglur"
+  "protocol": "Samskiptareglur",
+  "field-link-not-found": "Spjald fannst ekki."
 }

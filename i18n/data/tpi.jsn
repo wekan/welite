@@ -2099,5 +2099,6 @@
   "log": "Rekot",
   "logout": "Go ausait",
   "server": "Seva",
-  "protocol": "Ol rul bilong toktok namel long ol sistem"
+  "protocol": "Ol rul bilong toktok namel long ol sistem",
+  "field-link-not-found": "I no painim kat."
 }

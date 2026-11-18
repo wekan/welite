@@ -2099,5 +2099,6 @@
   "log": "Kyerɛwtohɔ",
   "logout": "Fi mu",
   "server": "Som afiri",
-  "protocol": "Nkitahodi mmara"
+  "protocol": "Nkitahodi mmara",
+  "field-link-not-found": "Wɔanhunu kaad no."
 }

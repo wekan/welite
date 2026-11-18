@@ -2099,5 +2099,6 @@
   "log": "Ilogi",
   "logout": "Phuma",
   "server": "Iseva",
-  "protocol": "Umtsetfomgomo"
+  "protocol": "Umtsetfomgomo",
+  "field-link-not-found": "Likhadi alitfolakalanga."
 }

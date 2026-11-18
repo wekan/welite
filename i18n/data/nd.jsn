@@ -2099,5 +2099,6 @@
   "log": "Ilogi",
   "logout": "Phuma",
   "server": "Iseva",
-  "protocol": "Iphrothokholi"
+  "protocol": "Iphrothokholi",
+  "field-link-not-found": "Ikhadi kalitholakalanga."
 }

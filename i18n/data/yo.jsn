@@ -2099,5 +2099,6 @@
   "log": "Wọle",
   "logout": "Jade jade",
   "server": "Olupin",
-  "protocol": "Ilana"
+  "protocol": "Ilana",
+  "field-link-not-found": "A ko ri kaadi."
 }

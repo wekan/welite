@@ -2099,5 +2099,6 @@
   "log": "loka",
   "logout": "haʻalele",
   "server": "kikowaena",
-  "protocol": "palokokola"
+  "protocol": "palokokola",
+  "field-link-not-found": "ʻAʻole i loaʻa ke kāleka."
 }

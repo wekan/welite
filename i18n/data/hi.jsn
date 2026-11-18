@@ -2099,5 +2099,6 @@
   "log": "લોગ",
   "logout": "લોગઆઉટ",
   "server": "સર્વર",
-  "protocol": "પ્રોટોકોલ"
+  "protocol": "પ્રોટોકોલ",
+  "field-link-not-found": "कार्ड नहीं मिला।"
 }

@@ -2099,5 +2099,6 @@
   "log": "Registro",
   "logout": "Esci",
   "server": "Elaboratore server",
-  "protocol": "Protocollo"
+  "protocol": "Protocollo",
+  "field-link-not-found": "Carta nun truvata."
 }

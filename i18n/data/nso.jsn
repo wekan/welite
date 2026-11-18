@@ -2099,5 +2099,6 @@
   "log": "Kgatišo",
   "logout": "Tšwa",
   "server": "Sebara",
-  "protocol": "Mokgwatshepetšo"
+  "protocol": "Mokgwatshepetšo",
+  "field-link-not-found": "Karata ga e a hwetšwa."
 }

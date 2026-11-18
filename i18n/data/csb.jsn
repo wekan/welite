@@ -2099,5 +2099,6 @@
   "log": "Dniownik",
   "logout": "Wëlogùjë sã",
   "server": "Serwer",
-  "protocol": "Protokòł"
+  "protocol": "Protokòł",
+  "field-link-not-found": "Nie nalazłé kôrtë."
 }

@@ -2099,5 +2099,6 @@
   "log": "יומן",
   "logout": "יציאה",
   "server": "שרת",
-  "protocol": "פרוטוקול"
+  "protocol": "פרוטוקול",
+  "field-link-not-found": "הכרטיס לא נמצא."
 }

@@ -2099,5 +2099,6 @@
   "log": "Diiwaan",
   "logout": "Ka bax",
   "server": "Adeege",
-  "protocol": "Hab-maamuus"
+  "protocol": "Hab-maamuus",
+  "field-link-not-found": "Kaarka lama helin."
 }

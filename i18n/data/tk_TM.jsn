@@ -2099,5 +2099,6 @@
   "log": "Hasaba gir",
   "logout": "Çykmak",
   "server": "Serwer",
-  "protocol": "Protokol"
+  "protocol": "Protokol",
+  "field-link-not-found": "Kart tapylmady."
 }

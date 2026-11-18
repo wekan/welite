@@ -2099,5 +2099,6 @@
   "log": "Rajista",
   "logout": "Fita",
   "server": "Saba",
-  "protocol": "Yarjejeniya"
+  "protocol": "Yarjejeniya",
+  "field-link-not-found": "Ba a sami kati ba."
 }

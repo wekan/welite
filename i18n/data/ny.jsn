@@ -2099,5 +2099,6 @@
   "log": "Chipika",
   "logout": "Tulukani",
   "server": "Seva",
-  "protocol": "Pulotokolo"
+  "protocol": "Pulotokolo",
+  "field-link-not-found": "Khadi silinapezeke."
 }

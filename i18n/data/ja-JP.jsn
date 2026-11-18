@@ -2099,5 +2099,6 @@
   "log": "ログ",
   "logout": "ログアウト",
   "server": "サーバー",
-  "protocol": "プロトコル"
+  "protocol": "プロトコル",
+  "field-link-not-found": "カードが見つかりません。"
 }

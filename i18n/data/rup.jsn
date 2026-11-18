@@ -2099,5 +2099,6 @@
   "log": "Jurnal",
   "logout": "Ishiri",
   "server": "Serveur",
-  "protocol": "Protocolu"
+  "protocol": "Protocolu",
+  "field-link-not-found": "Cartea nu s-aflã."
 }

@@ -2099,5 +2099,6 @@
   "log": "Loga",
   "logout": "Logáil amach",
   "server": "Freastalaí",
-  "protocol": "Prótacal"
+  "protocol": "Prótacal",
+  "field-link-not-found": "Níor aimsíodh an cárta."
 }

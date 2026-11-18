@@ -2099,5 +2099,6 @@
   "log": "Skrá",
   "logout": "Rita út",
   "server": "Ambætari",
-  "protocol": "Protokoll"
+  "protocol": "Protokoll",
+  "field-link-not-found": "Kortið varð ikki funnið."
 }

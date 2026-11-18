@@ -2099,5 +2099,6 @@
   "log": "Galmee",
   "logout": "Ba’i",
   "server": "Sarvara",
-  "protocol": "Pirootokoolii"
+  "protocol": "Pirootokoolii",
+  "field-link-not-found": "Kaardiin hin argamne."
 }

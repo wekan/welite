@@ -2099,5 +2099,6 @@
   "log": "ᎪᏪᎵ",
   "logout": "ᎠᏄᎪᏨ",
   "server": "ᎠᏯᏙᎯᎯ",
-  "protocol": "ᎠᏚᏓᎸᏗ ᏗᎧᎿᏩᏛᏍᏗ"
+  "protocol": "ᎠᏚᏓᎸᏗ ᏗᎧᎿᏩᏛᏍᏗ",
+  "field-link-not-found": "ᎪᏪᎵ Ꮭ ᏱᎩᏩᏛ."
 }

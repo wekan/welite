@@ -2099,5 +2099,6 @@
   "log": "Log",
   "logout": "Allgofnodi",
   "server": "Gweinydd",
-  "protocol": "Protocol"
+  "protocol": "Protocol",
+  "field-link-not-found": "Heb ddod o hyd i'r cerdyn."
 }

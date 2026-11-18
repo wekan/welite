@@ -2099,5 +2099,6 @@
   "log": "Logg",
   "logout": "Logga ut",
   "server": "Server",
-  "protocol": "Protokoll"
+  "protocol": "Protokoll",
+  "field-link-not-found": "Kortet hittades inte."
 }

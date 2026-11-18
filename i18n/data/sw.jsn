@@ -2098,5 +2098,6 @@
   "log": "Kumbukumbu",
   "logout": "Ondoka",
   "server": "Seva",
-  "protocol": "Itifaki"
+  "protocol": "Itifaki",
+  "field-link-not-found": "Kadi haikupatikana."
 }

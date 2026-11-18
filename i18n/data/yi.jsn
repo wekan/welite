@@ -2098,5 +2098,6 @@
   "log": "קלאָץ",
   "logout": "Logout",
   "server": "סערווירער",
-  "protocol": "פּראָטאָקאָל"
+  "protocol": "פּראָטאָקאָל",
+  "field-link-not-found": "קאָרט נישט געפֿונען."
 }

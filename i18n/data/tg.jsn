@@ -2099,5 +2099,6 @@
   "log": "Сабт",
   "logout": "Баромадан",
   "server": "Сервер",
-  "protocol": "Протокол"
+  "protocol": "Протокол",
+  "field-link-not-found": "Корт ёфт нашуд."
 }

@@ -2099,5 +2099,6 @@
   "log": "লগ",
   "logout": "লগআউট",
   "server": "ছাৰ্ভাৰ",
-  "protocol": "প্ৰট'কল"
+  "protocol": "প্ৰট'কল",
+  "field-link-not-found": "কাৰ্ড পোৱা নগ'ল।"
 }

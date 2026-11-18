@@ -2098,5 +2098,6 @@
   "log": "Log",
   "logout": "Sair",
   "server": "Servidor",
-  "protocol": "Protocolo"
+  "protocol": "Protocolo",
+  "field-link-not-found": "Non se atopou a tarxeta."
 }

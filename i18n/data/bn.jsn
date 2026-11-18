@@ -2099,5 +2099,6 @@
   "log": "লগ",
   "logout": "লগআউট",
   "server": "সার্ভার",
-  "protocol": "প্রোটোকল"
+  "protocol": "প্রোটোকল",
+  "field-link-not-found": "কার্ড পাওয়া যায়নি।"
 }

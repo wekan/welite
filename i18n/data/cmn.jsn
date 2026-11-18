@@ -2098,5 +2098,6 @@
   "log": "日志",
   "logout": "退出",
   "server": "服务器",
-  "protocol": "协议"
+  "protocol": "协议",
+  "field-link-not-found": "未找到卡片。"
 }

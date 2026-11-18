@@ -2099,5 +2099,6 @@
   "log": "Rekodhi",
   "logout": "Buda",
   "server": "sevha",
-  "protocol": "Mitemo yekutaurirana"
+  "protocol": "Mitemo yekutaurirana",
+  "field-link-not-found": "Kadhi harina kuwanikwa."
 }

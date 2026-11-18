@@ -2099,5 +2099,6 @@
   "log": "Rekoto",
   "logout": "Tshedimosetso: Logout",
   "server": "Seabi",
-  "protocol": "Tshedimosetso: Protocol"
+  "protocol": "Tshedimosetso: Protocol",
+  "field-link-not-found": "Karata ga e a bonwa."
 }

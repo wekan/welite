@@ -2099,5 +2099,6 @@
   "log": "Lēkooti",
   "logout": "Hū ki tuʻa",
   "server": "Sēvea",
-  "protocol": "Polotokolo"
+  "protocol": "Polotokolo",
+  "field-link-not-found": "ʻOku ʻikai maʻu ʻa e kaati."
 }

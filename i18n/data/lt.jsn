@@ -2098,5 +2098,6 @@
   "log": "Žurnalas",
   "logout": "Atsijungti",
   "server": "Serveris",
-  "protocol": "protokolas"
+  "protocol": "protokolas",
+  "field-link-not-found": "Kortelė nerasta."
 }

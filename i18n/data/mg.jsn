@@ -2099,5 +2099,6 @@
   "log": "Diary",
   "logout": "Mivoaha",
   "server": "Lohamilina",
-  "protocol": "Protokola"
+  "protocol": "Protokola",
+  "field-link-not-found": "Tsy hita ny karatra."
 }

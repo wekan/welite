@@ -2098,5 +2098,6 @@
   "log": "កំណត់ហេតុ",
   "logout": "ចេញ",
   "server": "ម៉ាស៊ីនមេ",
-  "protocol": "ពិធីការ"
+  "protocol": "ពិធីការ",
+  "field-link-not-found": "រកមិនឃើញកាត។"
 }

@@ -2099,5 +2099,6 @@
   "log": "Loga",
   "logout": "Clàraich a-mach",
   "server": "Frithealaiche",
-  "protocol": "Pròtacal"
+  "protocol": "Pròtacal",
+  "field-link-not-found": "Cha deach a’ chairt a lorg."
 }

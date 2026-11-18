@@ -2099,5 +2099,6 @@
   "log": "Deftere",
   "logout": "Yaltu",
   "server": "Sarworde",
-  "protocol": "Jaŋde"
+  "protocol": "Jaŋde",
+  "field-link-not-found": "Kartal yiytaaka."
 }

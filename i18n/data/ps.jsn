@@ -2099,5 +2099,6 @@
   "log": "يادښت",
   "logout": "وتل",
   "server": "پالنګر",
-  "protocol": "پروتوکول"
+  "protocol": "پروتوکول",
+  "field-link-not-found": "کارت ونه موندل شو."
 }

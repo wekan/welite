@@ -2098,5 +2098,6 @@
   "log": "Log",
   "logout": "Logout",
   "server": "Server",
-  "protocol": "Protocol"
+  "protocol": "Protocol",
+  "field-link-not-found": "Card not found."
 }

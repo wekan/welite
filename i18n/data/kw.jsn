@@ -2099,5 +2099,6 @@
   "log": "Kovskrif",
   "logout": "Digelmi",
   "server": "Servyer",
-  "protocol": "Reolen"
+  "protocol": "Reolen",
+  "field-link-not-found": "Ny veu kevys an karten."
 }

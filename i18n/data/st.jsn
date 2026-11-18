@@ -2099,5 +2099,6 @@
   "log": "Loko",
   "logout": "Tswa",
   "server": "Seva",
-  "protocol": "Prothokhole"
+  "protocol": "Prothokhole",
+  "field-link-not-found": "Karete ha e a fumanwa."
 }

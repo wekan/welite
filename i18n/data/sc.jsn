@@ -2099,5 +2099,6 @@
   "log": "Registru",
   "logout": "Essi",
   "server": "Serbidore",
-  "protocol": "Protocollu"
+  "protocol": "Protocollu",
+  "field-link-not-found": "Carta no agatada."
 }

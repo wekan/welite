@@ -2099,5 +2099,6 @@
   "log": "መዝገብ",
   "logout": "ውጣ",
   "server": "አገልጋይ",
-  "protocol": "ፕሮቶኮል"
+  "protocol": "ፕሮቶኮል",
+  "field-link-not-found": "ካርዱ አልተገኘም።"
 }

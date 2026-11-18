@@ -2098,5 +2098,6 @@
   "log": "ਲਾਗ",
   "logout": "ਲਾਗਆਉਟ",
   "server": "ਸਰਵਰ",
-  "protocol": "ਪ੍ਰੋਟੋਕੋਲ"
+  "protocol": "ਪ੍ਰੋਟੋਕੋਲ",
+  "field-link-not-found": "ਕਾਰਡ ਨਹੀਂ ਮਿਲਿਆ।"
 }

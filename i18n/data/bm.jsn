@@ -2099,5 +2099,6 @@
   "log": "Sɛbɛnnikɛ",
   "logout": "Bɔ",
   "server": "Jɔyɔrɔ-masina",
-  "protocol": "Sariya"
+  "protocol": "Sariya",
+  "field-link-not-found": "Karti ma sɔrɔ."
 }

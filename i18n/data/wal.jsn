@@ -2099,5 +2099,6 @@
   "log": "Xaafuwaa",
   "logout": "Kiya",
   "server": "Serveriyaa",
-  "protocol": "Protokoliyaa"
+  "protocol": "Protokoliyaa",
+  "field-link-not-found": "Kaardiyay demettibeenna."
 }

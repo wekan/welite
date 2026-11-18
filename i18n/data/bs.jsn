@@ -2099,5 +2099,6 @@
   "log": "Zapisnik",
   "logout": "Odjava",
   "server": "Server",
-  "protocol": "Protokol"
+  "protocol": "Protokol",
+  "field-link-not-found": "Kartica nije pronađena."
 }

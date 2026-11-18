@@ -2099,5 +2099,6 @@
   "log": "Catatan",
   "logout": "Teubiet",
   "server": "Peuladèn",
-  "protocol": "Protokol"
+  "protocol": "Protokol",
+  "field-link-not-found": "Kad h'an meuteumee."
 }

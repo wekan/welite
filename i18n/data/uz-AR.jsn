@@ -2098,5 +2098,6 @@
   "log": "Jurnal",
   "logout": "Chiqish",
   "server": "Server",
-  "protocol": "Protokol"
+  "protocol": "Protokol",
+  "field-link-not-found": "کارت تاپیلمدی."
 }

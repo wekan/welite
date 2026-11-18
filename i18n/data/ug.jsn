@@ -2099,5 +2099,6 @@
   "log": "Log",
   "logout": "Logout",
   "server": "مۇلازىمېتىر",
-  "protocol": "كېلىشىم"
+  "protocol": "كېلىشىم",
+  "field-link-not-found": "كارتا تېپىلمىدى."
 }

@@ -2099,5 +2099,6 @@
   "log": "رڪارڊ",
   "logout": "لاگ آئوٽ",
   "server": "سرور",
-  "protocol": "پروٽوڪول"
+  "protocol": "پروٽوڪول",
+  "field-link-not-found": "ڪارڊ نه مليو."
 }

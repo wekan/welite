@@ -2099,5 +2099,6 @@
   "log": "Journal",
   "logout": "Déconnexion",
   "server": "Serveur",
-  "protocol": "Protokoll"
+  "protocol": "Protokoll",
+  "field-link-not-found": "'echletHom tu'lu'be'."
 }

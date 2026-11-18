@@ -2099,5 +2099,6 @@
   "log": "Logga",
   "logout": "Čále olggos",
   "server": "Bálvá",
-  "protocol": "Protokolla"
+  "protocol": "Protokolla",
+  "field-link-not-found": "Goarta ii gávdnon."
 }

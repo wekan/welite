@@ -2099,5 +2099,6 @@
   "log": "Loki",
   "logout": "Kirjaudu ulos",
   "server": "Palvelin",
-  "protocol": "Protokolla"
+  "protocol": "Protokolla",
+  "field-link-not-found": "Korttia ei löytynyt."
 }

@@ -2099,5 +2099,6 @@
   "log": "Rangitaki",
   "logout": "Takiputa",
   "server": "Tūmau",
-  "protocol": "Kawa"
+  "protocol": "Kawa",
+  "field-link-not-found": "Kāore i kitea te kāri."
 }

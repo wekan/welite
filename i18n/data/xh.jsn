@@ -2099,5 +2099,6 @@
   "log": "Ngena",
   "logout": "Phuma",
   "server": "Iseva",
-  "protocol": "Umgaqo-nkqubo"
+  "protocol": "Umgaqo-nkqubo",
+  "field-link-not-found": "Ikhadi alifunyenwanga."
 }

@@ -2099,5 +2099,6 @@
   "log": "Recortys",
   "logout": "Goll magh",
   "server": "Çhivyr",
-  "protocol": "Prototal"
+  "protocol": "Prototal",
+  "field-link-not-found": "Cha row y kaart feddynit."
 }

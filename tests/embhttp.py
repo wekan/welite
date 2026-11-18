@@ -71,6 +71,13 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                     assert (b'dir="rtl"' in body)==(direction=='rtl'),tag
                     label=json.loads(locale_file.read_text())['username']
                     assert label!='Username' and label.encode() in body,(tag,label)
+                    words=json.loads(locale_file.read_text())
+                    for path,key in [('/board/card?id=missing&card=missing','field-link-not-found'),
+                                     ('/board/attachment?id=missing&card=missing&file=missing','attachment-repair-broken')]:
+                        status,headers,body=request('GET',f'{path}&lang={tag}')
+                        assert status==404 and headers['Content-Language']==tag and 'Set-Cookie' not in headers
+                        assert (b'dir="rtl"' in body)==(direction=='rtl'),tag
+                        assert words[key].encode() in body,(tag,key)
                 status,headers,body=request('GET','/sign-in?lang=fi')
                 assert status==200 and headers['Content-Language']=='fi'
                 assert json.loads((root/'i18n/data/fi.jsn').read_text())['username'].encode() in body

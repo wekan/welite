@@ -2099,5 +2099,6 @@
   "log": "Log",
   "logout": "Sair",
   "server": "Servidor",
-  "protocol": "Protocolo"
+  "protocol": "Protocolo",
+  "field-link-not-found": "Cartão não encontrado."
 }

@@ -2099,5 +2099,6 @@
   "log": "Aymar aruna: Log",
   "logout": "Aymar aruna: Logout",
   "server": "Aymar aruna: Server",
-  "protocol": "Aymar aruna: Protocol"
+  "protocol": "Aymar aruna: Protocol",
+  "field-link-not-found": "Tarjetax janiw jikxataskiti."
 }

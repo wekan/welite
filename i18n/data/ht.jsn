@@ -2099,5 +2099,6 @@
   "log": "Jounal",
   "logout": "Dekonekte",
   "server": "Sèvè",
-  "protocol": "Pwotokòl"
+  "protocol": "Pwotokòl",
+  "field-link-not-found": "Kat la pa jwenn."
 }

@@ -2099,5 +2099,6 @@
   "log": "መዝገብ",
   "logout": "ውጻእ",
   "server": "ሰርቨር",
-  "protocol": "ፕሮቶኮል"
+  "protocol": "ፕሮቶኮል",
+  "field-link-not-found": "ካርድ ኣይተረኽበን።"
 }

@@ -2099,5 +2099,6 @@
   "log": "Regjistri",
   "logout": "Jes",
   "server": "Elaboristoris server",
-  "protocol": "Protocol"
+  "protocol": "Protocol",
+  "field-link-not-found": "Cjarte no cjatade."
 }

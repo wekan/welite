@@ -2099,5 +2099,6 @@
   "log": "Dziennik",
   "logout": "Wyloguj",
   "server": "Serwer",
-  "protocol": "Protokół"
+  "protocol": "Protokół",
+  "field-link-not-found": "Niy znŏdziōno karty."
 }

@@ -2099,5 +2099,6 @@
   "log": "Ebiwandiikiddwa",
   "logout": "Okufuluma",
   "server": "Seva",
-  "protocol": "Enkola y'empuliziganya"
+  "protocol": "Enkola y'empuliziganya",
+  "field-link-not-found": "Kaadi tezuuliddwa."
 }

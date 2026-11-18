@@ -2099,5 +2099,6 @@
   "log": "日志",
   "logout": "注销",
   "server": "服务器",
-  "protocol": "协议"
+  "protocol": "协议",
+  "field-link-not-found": "카드를 찾지 못했습니다."
 }

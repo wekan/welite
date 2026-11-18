@@ -2099,5 +2099,6 @@
   "log": "Faamaumauga",
   "logout": "Alu Ese",
   "server": "Sapalai",
-  "protocol": "Maliega"
+  "protocol": "Maliega",
+  "field-link-not-found": "E le maua le pepa."
 }

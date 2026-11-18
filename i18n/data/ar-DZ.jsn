@@ -2099,5 +2099,6 @@
   "log": "Journal",
   "logout": "Déconnexion",
   "server": "Serveur",
-  "protocol": "Protocole"
+  "protocol": "Protocole",
+  "field-link-not-found": "لم يُعثر على البطاقة."
 }

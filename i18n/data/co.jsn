@@ -2099,5 +2099,6 @@
   "log": "Registru",
   "logout": "Scunnettà si",
   "server": "Servitore",
-  "protocol": "Prutucollu"
+  "protocol": "Prutucollu",
+  "field-link-not-found": "Carta micca truvata."
 }

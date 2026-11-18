@@ -2099,5 +2099,6 @@
   "log": "Protokoll",
   "logout": "Ofmellen",
   "server": "Dienstrechner",
-  "protocol": "Protokoll"
+  "protocol": "Protokoll",
+  "field-link-not-found": "Kaart net fonnt."
 }

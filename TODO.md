@@ -431,7 +431,7 @@ Platform and browser claims require testing on those targets.
   found by comparing Persian vocabulary and catalogs. All replacements use
   current WeKan Arabic translations and retain English placeholders.
   Restored numbered protected markers in 515 entries across eight catalogs without replacing the surrounding prose.
-  The installed catalogs pass the placeholder and protected-marker audit.
+  The installed catalogs pass the placeholder and protected-marker audit. HTML card and attachment 404 pages now render the viewer’s locale and direction.
   Remaining: review other wrong/mixed-language data, translate remaining pages/errors/enrollment instructions, verify other error-route coverage and audit remaining physical RTL controls with responsive/retro acceptance.
 - [ ] Verify responsive HTML4 colors and workflows on retro browser targets.
   Published Designer pages now honor saved HTML4 versus HTML3.2 doctypes, with both-backend round trips, invalid-input refusal and Chromium standards-mode checks. Linux Dillo 3.0.5 at 640×480 and 320×480 passed minimap color and viewport navigation. Linux NetSurf 3.11 at 640×480 passed the same minimap check with JavaScript disabled. Other retro targets and workflows still need responsive and color acceptance.

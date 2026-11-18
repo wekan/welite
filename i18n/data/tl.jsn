@@ -2099,5 +2099,6 @@
   "log": "Talaan",
   "logout": "Mag-logout",
   "server": "Tagapaghain",
-  "protocol": "Pamamaraan"
+  "protocol": "Pamamaraan",
+  "field-link-not-found": "Hindi nakita ang kard."
 }

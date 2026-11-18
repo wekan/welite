@@ -2099,5 +2099,6 @@
   "log": "Log",
   "logout": "Вийти",
   "server": "Server",
-  "protocol": "Protocol"
+  "protocol": "Protocol",
+  "field-link-not-found": "Картку не знайдено."
 }

@@ -2099,5 +2099,6 @@
   "log": "Jurnal",
   "logout": "Jì ora",
   "server": "Server de lëur",
-  "protocol": "Protocul"
+  "protocol": "Protocul",
+  "field-link-not-found": "Ciarta nia abinada."
 }

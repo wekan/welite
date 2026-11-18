@@ -2099,5 +2099,6 @@
   "log": "မှတ်တမ်း",
   "logout": "ထွက်ရန်",
   "server": "ဆာဗာ",
-  "protocol": "ပရိုတိုကော"
+  "protocol": "ပရိုတိုကော",
+  "field-link-not-found": "ကတ် မတွေ့ပါ။"
 }
