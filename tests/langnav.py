@@ -60,6 +60,10 @@ def check_navigation(request,database,session):
                   and parse_qs(urlsplit(link).query).get('id')==['navpage'])
         status,_,editor=request('GET',edit)
         assert status==200
+        for key in ('edit','preview'):
+            assert ('>'+escape(arabic[key],quote=False)+'<').encode() in editor,key
+        for key in ('add','delete'):
+            assert ('type="submit" value="'+escape(arabic[key])+'"').encode() in editor,key
         for form in (body,editor):
             assert ('for="page-title">'+escape(arabic['title'],quote=False)+'<').encode() in form
             assert ('type="submit" value="'+escape(arabic['save'])+'"').encode() in form

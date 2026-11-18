@@ -1195,48 +1195,48 @@ begin
       '<form method="POST" action="/designer/page/save">'+
       AuthHiddenFields(S,'designer:/designer/page/save')+
       '<input type="hidden" name="pageId" value="'+HtmlAttr(P.Id)+'">'+PageFields(P,Words)+'</form>';
-  finally Words.Free;end;
-  Body := Body + LineEnding +
-    '<table dir="ltr" border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
-  for r := 0 to MaxRow do
-  begin
-    Body := Body + '<tr>' + LineEnding;
-    for ViewCol := 0 to P.Cols - 1 do
+    Body := Body + LineEnding +
+      '<table dir="ltr" border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
+    for r := 0 to MaxRow do
     begin
-      if Rtl then c := P.Cols - 1 - ViewCol else c := ViewCol;
-      if not GridCell(W,r,c,P.Cols,Rtl,AnchorRow,AnchorCol,RowSpan,ColSpan) then Continue;
-      Cell := '';
-      for i := 0 to High(W) do
-        if (W[i].Row=AnchorRow) and (W[i].Col=AnchorCol) then
-        begin
-          Cell := Cell +
-            '<b>[' + HtmlEncode(W[i].Typ) + ']</b> ' + HtmlEncode(W[i].Lbl) + '<br>' +
-            ToolButton(S, '/designer/widget/move', '^', 'widgetId', W[i].Id, 'dir', 'up') +
-            ToolButton(S, '/designer/widget/move', 'v', 'widgetId', W[i].Id, 'dir', 'down') +
-            ToolButton(S, '/designer/widget/move', '<', 'widgetId', W[i].Id, 'dir', 'left') +
-            ToolButton(S, '/designer/widget/move', '>', 'widgetId', W[i].Id, 'dir', 'right') +
-            ToolButton(S,'/designer/widget/sort','Sort up','widgetId',W[i].Id,'dir','up')+
-            ToolButton(S,'/designer/widget/sort','Sort down','widgetId',W[i].Id,'dir','down')+
-            '<a href="'+HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(P.Id)+
-              '&widgetId='+HTTPEncode(W[i].Id),S))+'">Edit widget</a> ' +
-            ToolButton(S, '/designer/widget/delete', 'Del', 'widgetId', W[i].Id, '', '') +
-            '<hr>';
-        end;
-      Body := Body + '  <td dir="'+Dir+'" valign="top" rowspan="'+IntToStr(RowSpan)+'" colspan="'+IntToStr(ColSpan)+'">'+Cell + '</td>' + LineEnding;
+      Body := Body + '<tr>' + LineEnding;
+      for ViewCol := 0 to P.Cols - 1 do
+      begin
+        if Rtl then c := P.Cols - 1 - ViewCol else c := ViewCol;
+        if not GridCell(W,r,c,P.Cols,Rtl,AnchorRow,AnchorCol,RowSpan,ColSpan) then Continue;
+        Cell := '';
+        for i := 0 to High(W) do
+          if (W[i].Row=AnchorRow) and (W[i].Col=AnchorCol) then
+          begin
+            Cell := Cell +
+              '<b>[' + HtmlEncode(W[i].Typ) + ']</b> ' + HtmlEncode(W[i].Lbl) + '<br>' +
+              ToolButton(S, '/designer/widget/move', '^', 'widgetId', W[i].Id, 'dir', 'up') +
+              ToolButton(S, '/designer/widget/move', 'v', 'widgetId', W[i].Id, 'dir', 'down') +
+              ToolButton(S, '/designer/widget/move', '<', 'widgetId', W[i].Id, 'dir', 'left') +
+              ToolButton(S, '/designer/widget/move', '>', 'widgetId', W[i].Id, 'dir', 'right') +
+              ToolButton(S,'/designer/widget/sort','Sort up','widgetId',W[i].Id,'dir','up')+
+              ToolButton(S,'/designer/widget/sort','Sort down','widgetId',W[i].Id,'dir','down')+
+              '<a href="'+HtmlAttr(SessionUrl('/designer/page?id='+HTTPEncode(P.Id)+
+                '&widgetId='+HTTPEncode(W[i].Id),S))+'">'+HtmlEncode(Words.Text('edit','Edit'))+'</a> ' +
+              ToolButton(S, '/designer/widget/delete', Words.Text('delete','Delete'), 'widgetId', W[i].Id, '', '') +
+              '<hr>';
+          end;
+        Body := Body + '  <td dir="'+Dir+'" valign="top" rowspan="'+IntToStr(RowSpan)+'" colspan="'+IntToStr(ColSpan)+'">'+Cell + '</td>' + LineEnding;
+      end;
+      Body := Body + '</tr>' + LineEnding;
     end;
-    Body := Body + '</tr>' + LineEnding;
-  end;
-  Body:=Body+'</table>'+LineEnding;
-  EditWidget:=Default(TWidget); EditWidget.Typ:='label';
-  EditWidget.RowSpan:=1; EditWidget.ColSpan:=1; EditWidget.OptionsJson:='{}';
-  for i:=0 to High(W) do
-    if W[i].Id=aRequest.QueryFields.Values['widgetId'] then
-    begin EditWidget:=W[i]; Break; end;
-  if EditWidget.Id='' then
-    Body:=Body+WidgetForm(S,P.Id,EditWidget,'Add widget')
-  else
-    Body:=Body+WidgetForm(S,P.Id,EditWidget,'Save widget');
-  Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl(P.Url,S))+'">Preview</a></p>';
+    Body:=Body+'</table>'+LineEnding;
+    EditWidget:=Default(TWidget); EditWidget.Typ:='label';
+    EditWidget.RowSpan:=1; EditWidget.ColSpan:=1; EditWidget.OptionsJson:='{}';
+    for i:=0 to High(W) do
+      if W[i].Id=aRequest.QueryFields.Values['widgetId'] then
+      begin EditWidget:=W[i]; Break; end;
+    if EditWidget.Id='' then
+      Body:=Body+WidgetForm(S,P.Id,EditWidget,Words.Text('add','Add'))
+    else
+      Body:=Body+WidgetForm(S,P.Id,EditWidget,Words.Text('save','Save'));
+    Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl(P.Url,S))+'">'+HtmlEncode(Words.Text('preview','Preview'))+'</a></p>';
+  finally Words.Free;end;
 
   aResponse.Content := LanguagePage(aResponse,Language,'Designer — '+P.Title,Body,Dir);
   aResponse.ContentType := 'text/html; charset=utf-8';
