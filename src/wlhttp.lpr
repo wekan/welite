@@ -294,7 +294,7 @@ begin
     Proof:=nil;
     if not AuthenticateEnrollment(T.Db,Username,Request.ContentFields.Values['password'],Proof) then
     begin
-      SendHtml(Response,AuthPage(Request,Response,Title,'<p>Cannot start setup. Check your credentials and whether one-time codes are already enabled.</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+HtmlEncode(Title)+'</a></p>'));Exit;
+      SendHtml(Response,AuthPage(Request,Response,Title,'<p>'+HtmlEncode(Words.Text('enrollment-setup-denied','Cannot start setup. Check your credentials and whether one-time codes are already enabled.'))+'</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+HtmlEncode(Title)+'</a></p>'));Exit;
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
@@ -302,7 +302,7 @@ begin
       Body:='<h1>'+HtmlEncode(Title)+'</h1><p>'+HtmlEncode(Words.Text('username','Username'))+
         ': '+HtmlEncode(Username)+'</p>'+
         '<p>'+HtmlEncode(Words.Text('twoFactorAuth-manual-entry','Or enter this code manually: '))+'<code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
-        '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
+        '<p>'+HtmlEncode(Words.Text('enrollment-code-instructions','Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.'))+'</p>'+
         ConfirmationForm(Request,Token,'',Words);
       SendHtml(Response,AuthPage(Request,Response,Title,Body));
     finally
@@ -340,8 +340,10 @@ begin
   begin
     Title:=Words.Text('twoFactorAuth-enabled','Two-factor authentication is enabled for your account.');
     SendHtml(Response,AuthPage(Request,Response,Title,'<h1>'+HtmlEncode(Title)+'</h1>'+
-      '<p>Wait for a new code in your authenticator, then <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+
-      '">'+HtmlEncode(Words.Text('log-in','sign in'))+'</a>. The confirmation code has been used.</p>'));
+      '<p>'+HtmlEncode(Words.Text('enrollment-confirmed-instructions',
+      'The confirmation code has been used. Wait for a new code in your authenticator before signing in.'))+
+      '</p><p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+
+      HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>'));
   end
   else
   begin

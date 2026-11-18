@@ -2106,5 +2106,8 @@
   "twoFactorAuth-enabled": "Two-factor authentication is enabled for your account.",
   "two-factor-required-title": "Set up two-factor authentication",
   "two-factor-required-text": "This site requires two-factor authentication for your account. Set it up to continue.",
-  "enrollment-password-instructions": "Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here."
+  "enrollment-password-instructions": "Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.",
+  "enrollment-setup-denied": "Cannot start setup. Check your credentials and whether one-time codes are already enabled.",
+  "enrollment-code-instructions": "Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.",
+  "enrollment-confirmed-instructions": "The confirmation code has been used. Wait for a new code in your authenticator before signing in."
 }

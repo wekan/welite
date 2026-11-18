@@ -25,6 +25,11 @@ function otp(secret,counter) {
     await page.goto(base+'/two-factor/setup?lang=ar');
     assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
     assert.match(await page.locator('body').innerText(),/كلمة مرورك للبدء/);
+    await page.locator('input[name=username]').fill('browser-enroll');
+    await page.locator('input[name=password]').fill('wrong-password');
+    await page.locator('input[type=submit]').click();
+    assert.match(await page.locator('body').innerText(),/تعذّر بدء الإعداد/);
+    assert.equal(await page.locator('#otp-secret').count(),0);
     await page.goto(base+'/sign-in');
     const languages=page.locator('select[name=lang]');
     if (await languages.locator('option[value=fi]').count()) {
@@ -53,6 +58,16 @@ function otp(secret,counter) {
     assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
     assert.equal(await page.locator('html').getAttribute('lang'),'fi');
     assert.equal(await page.locator('a[href="/two-factor/setup?lang=fi"]').count(), 1);
+    await page.locator('a[href="/two-factor/setup?lang=fi"]').click();
+    await page.locator('input[name=username]').fill('browser-registration');
+    await page.locator('input[name=password]').fill('private-registration-password');
+    await page.locator('input[type=submit]').click();
+    assert.match(await page.locator('body').innerText(),/Käytä aikapohjaisia koodeja/);
+    const finnishSecret=await page.locator('#otp-secret').innerText();
+    await page.locator('input[name=code]').fill(otp(finnishSecret,Math.floor(Date.now()/30000)));
+    await page.locator('input[type=submit]').click();
+    assert.match(await page.locator('body').innerText(),/Vahvistuskoodi on käytetty/);
+    assert.equal(await page.locator('a[href="/sign-in?lang=fi"]').count(),1);
     await page.goto(base+'/sign-in');
     const flowLanguage=await page.locator('select[name=lang]').inputValue();
     await page.getByRole('link',{name:'Set up two-factor authentication'}).click();
@@ -68,7 +83,7 @@ function otp(secret,counter) {
     assert.match(await page.locator('body').innerText(),/Two-factor authentication is enabled/);
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
     assert.equal(new URL(page.url()).searchParams.get('lang'),flowLanguage);
-    await page.getByRole('link',{name:/^(sign in|Log In)$/,exact:true}).click();
+    await page.getByRole('link',{name:/^(Sign in|Log In)$/i,exact:true}).click();
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
     await page.locator('input[name=code]').fill(otp(secret,counter+1));

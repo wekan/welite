@@ -2107,5 +2107,8 @@
   "twoFactorAuth-enabled": "Kaksivaiheinen tunnistautuminen on käytössä tilillesi.",
   "two-factor-required-title": "Ota kaksivaiheinen tunnistautuminen käyttöön",
   "two-factor-required-text": "Tämä sivusto vaatii tilillesi kaksivaiheisen tunnistautumisen. Ota se käyttöön jatkaaksesi.",
-  "enrollment-password-instructions": "Aloita vahvistamalla salasanasi. Tämä ei kirjaa sinua sisään. Käytössä olevaa todennustapaa ei voi vaihtaa täällä."
+  "enrollment-password-instructions": "Aloita vahvistamalla salasanasi. Tämä ei kirjaa sinua sisään. Käytössä olevaa todennustapaa ei voi vaihtaa täällä.",
+  "enrollment-setup-denied": "Käyttöönottoa ei voi aloittaa. Tarkista kirjautumistietosi ja se, ovatko kertakäyttökoodit jo käytössä.",
+  "enrollment-code-instructions": "Käytä aikapohjaisia koodeja: SHA1, kuusi numeroa, 30 sekuntia. Pidä salainen avain omana tietonasi. Käyttöönotto vanhenee viidessä minuutissa.",
+  "enrollment-confirmed-instructions": "Vahvistuskoodi on käytetty. Odota todennussovelluksen uutta koodia ennen kirjautumista."
 }
