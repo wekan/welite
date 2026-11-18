@@ -7,7 +7,7 @@ procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,D
   Restored:Boolean);
 
 implementation
-uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr,wlcfjson;
+uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr;
 
 function Milliseconds(const Text:string):Int64;
 var Date:TDateTime;Stamp,Epoch:TTimeStamp;
@@ -136,7 +136,7 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
 
   procedure RecoverPending(const IdentityScope:string);
   var PendingRows:TWLRows;Pending:TJSONObject;Head,PendingDoc,PendingId,PendingHash,
-    RowHash,OldHash,RowIdentity,Match,Replacement,RecoverySql,Encoded,HeadMatch:string;
+    RowHash,OldHash,RowIdentity,Match,Replacement,RecoverySql,Encoded,HeadMatch,ExpectedRowHash,ExpectedPendingHash:string;
     function ValidHash(const Value:string):Boolean;
     var C:Char;
     begin
@@ -151,10 +151,6 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
       ' AND json_type(_ferretdb_sjson,''$.pending'')=''object'''+
       ' AND json_type(_ferretdb_sjson,''$.hash'') IN (''null'',''text'')'+
       ' AND json_type(_ferretdb_sjson,''$.pending.previousHash'')=json_type(_ferretdb_sjson,''$.hash'')'+
-      ' AND (json_type(_ferretdb_sjson,''$.pending.previousContent.deletedAt'') IS NULL OR '+
-      'json_extract(_ferretdb_sjson,''$.$s.p.pending.$s.p.previousContent.$s.p.deletedAt.t'') IN (''null'',''date''))'+
-      ' AND (json_type(_ferretdb_sjson,''$.pending.newContent.deletedAt'') IS NULL OR '+
-      'json_extract(_ferretdb_sjson,''$.$s.p.pending.$s.p.newContent.$s.p.deletedAt.t'') IN (''null'',''date''))'+
       ' AND json_extract(_ferretdb_sjson,''$.$s.p.pending.$s.p.createdAt.t'')=''date'''+
       ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7;');
     if Length(PendingRows)<>1 then Exit;
@@ -165,12 +161,12 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
     Pending:=nil;
     try
       try
-        Pending:=DocumentJson(PendingDoc);
+        Pending:=ExactObject(PendingDoc);
         PendingId:=Pending.Get('_id','');RowHash:=Pending.Get('integrityHash','');
         if (PendingId='') or (Pos(#0,PendingId)>0) or (Pending.Get('boardId','')<>BoardId) or
-          (Pending.Get('entityType','')<>'list') or (Pending.Get('group','')<>'lifecycle') or
-          not ValidHash(RowHash) or (Pending.Get('previousHash','')<>OldHash) or
-          (ListLifecycleHash(Pending)<>RowHash) or (ListReservationHash(Pending)<>PendingHash) then Exit;
+          not ValidHash(RowHash) or (Pending.Get('previousHash','')<>OldHash) then Exit;
+        ReservationHashes(PendingDoc,ExpectedRowHash,ExpectedPendingHash);
+        if (ExpectedRowHash<>RowHash) or (ExpectedPendingHash<>PendingHash) then Exit;
       except Exit;end;
     finally Pending.Free;end;
     RowIdentity:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(PendingId);

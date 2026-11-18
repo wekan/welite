@@ -231,13 +231,19 @@ def run(request, client, db, token, refresh_ferret, session):
                 return {'$date':value.isoformat(timespec='milliseconds').replace('+00:00','Z')}
             if isinstance(value,dict):
                 return {key:canonical_dates(item) for key,item in value.items()}
+            if isinstance(value,list):
+                return [canonical_dates(item) for item in value]
             return value
         def digest(value):
             return hashlib.sha256(json.dumps(canonical_dates(value),sort_keys=True,
                 ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
-        for scenario in ('saved','unsaved'):
+        for scenario in ('saved','unsaved','card'):
             saved=dict(current,_id='wekan-'+scenario+'-reservation',entityId='other-list',listId='other-list',
                        previousHash=head['hash'])
+            if scenario=='card':
+                saved.update(entityType='card', entityId='card-a', cardId='card-a', group='position',
+                             previousContent={'position': 0, 'values': []},
+                             newContent={'position': 2, 'values': [True, None, DateMs(123), {'deletedAt': 'literal'}]})
             protected=('batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
                        'group','listId','newContent','previousContent','previousHash','restoredByUserId',
                        'restoredFromId','swimlaneId','userId')
@@ -254,7 +260,7 @@ def run(request, client, db, token, refresh_ferret, session):
             assert client.find('changeHistory',saved['_id'])==[saved]
             assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
             head=client.find('historyChainHeads',head_id)[0]
-        print('PASS: coordinated lifecycle finalizes saved and unsaved reservations before appending')
+        print('PASS: coordinated lifecycle finalizes saved and unsaved list and card reservations before appending')
         # A reservation owned by WeKan must survive a concurrent list mutation.
         pending = dict(_id='wekan-pending-history', boardId='b', previousHash=head['hash'])
         result = client.command({'update':'historyChainHeads','updates':[

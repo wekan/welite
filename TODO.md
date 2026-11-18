@@ -216,8 +216,8 @@ Complete these steps sequentially, with regression tests and a local commit for 
 The design above remains the acceptance criteria. Move verified items to [CHANGES.md](CHANGES.md).
 Platform and browser claims require testing on those targets.
 
-- [ ] Support coordinated pending payloads beyond list lifecycle changes.
-  Valid list lifecycle reservations recover whether their row was saved or unsaved. Expired leases retire atomically in legacy gates with one or more writers, fencing claimed rows where needed.
+- [ ] Extend coordinated history recovery to fractional numbers and verify the remaining BSON representations against WeKan.
+  List and card reservations with strings, dates, arrays, objects, booleans, nulls and safe integers now recover. Verify older row-hash formats separately.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
   Large CLI adapter scripts now use private short scratch files without argument-size limits.

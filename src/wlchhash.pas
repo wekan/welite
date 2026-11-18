@@ -7,9 +7,15 @@ uses fpjson;
 function ListLifecycleHash(Row:TJSONObject):string;
 function HistoryBoardKey(const Prefix,BoardId:string):string;
 function ListReservationHash(Row:TJSONObject):string;
+procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string);
 
 implementation
-uses SysUtils,Classes,wlcrypt;
+uses SysUtils,Classes,wlcrypt,wlcfjson,wlsjson;
+
+const ProtectedKeys:array[0..15] of string=(
+  'batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
+  'group','listId','newContent','previousContent','previousHash','restoredByUserId',
+  'restoredFromId','swimlaneId','userId');
 
 function JsonString(const Value:string):string;
 var i:Integer;C:Char;
@@ -63,10 +69,6 @@ begin
 end;
 
 function ListLifecycleHash(Row:TJSONObject):string;
-const ProtectedKeys:array[0..15] of string=(
-  'batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
-  'group','listId','newContent','previousContent','previousHash','restoredByUserId',
-  'restoredFromId','swimlaneId','userId');
 var I:Integer;Body:string;
 begin
   Body:='{';
@@ -81,6 +83,99 @@ end;
 function ListReservationHash(Row:TJSONObject):string;
 begin
   Result:=Sha256Hex(LifecycleValue(Row,''));
+end;
+
+function CompareJsonKeys(Keys:TStringList;Left,Right:Integer):Integer;
+var A,B:UnicodeString;I:Integer;
+begin
+  A:=UTF8Decode(Keys[Left]);B:=UTF8Decode(Keys[Right]);
+  for I:=1 to Length(A) do
+  begin
+    if I>Length(B) then Exit(1);
+    if A[I]<>B[I] then Exit(Ord(A[I])-Ord(B[I]));
+  end;
+  Result:=Length(A)-Length(B);
+end;
+
+function ReservationValue(Value,Schema:TJSONData):string;forward;
+
+function ReservationObject(Obj,Props:TJSONObject;ProtectedOnly:Boolean):string;
+var Keys:TStringList;I:Integer;Key:string;
+begin
+  Keys:=TStringList.Create;
+  try
+    if ProtectedOnly then
+      for Key in ProtectedKeys do Keys.Add(Key)
+    else
+    begin
+      if Props<>nil then
+        for I:=0 to Props.Count-1 do Keys.Add(Props.Names[I]);
+      Keys.CustomSort(@CompareJsonKeys);
+    end;
+    Result:='{';
+    for I:=0 to Keys.Count-1 do
+    begin
+      if I<>0 then Result:=Result+',';
+      Key:=Keys[I];
+      Result:=Result+JsonString(Key)+':'+ReservationValue(Obj.Find(Key),Props.Find(Key));
+    end;
+    Result:=Result+'}';
+  finally Keys.Free;end;
+end;
+
+function ReservationValue(Value,Schema:TJSONData):string;
+var Kind:string;Items,Date:TJSONData;Number:Double;I:Integer;
+begin
+  if Value=nil then Exit('{"$undefined":true}');
+  Kind:=TJSONObject(Schema).Get('t','');
+  case Kind of
+    'null','bool':Result:=Value.AsJSON;
+    'string':Result:=JsonString(Value.AsString);
+    'date':
+      begin
+        Date:=JsonDate(Value.AsInt64);
+        try
+          if Date.JSONType<>jtString then raise Exception.Create('Invalid history reservation date');
+          Result:='{"$date":'+JsonString(Date.AsString)+'}';
+        finally Date.Free;end;
+      end;
+    'int','long','double':
+      begin
+        // Exact safe integers have the same decimal spelling in Pascal and JavaScript.
+        if Value.JSONType<>jtNumber then raise Exception.Create('Invalid history reservation number');
+        Number:=Value.AsFloat;
+        if (Abs(Number)>9007199254740991.0) or (Number<>Trunc(Number)) then
+          raise Exception.Create('Unsupported history reservation number');
+        Result:=IntToStr(Trunc(Number));
+      end;
+    'object':
+      Result:=ReservationObject(TJSONObject(Value),TJSONObject(TJSONObject(Schema).Objects['$s'].Find('p')),False);
+    'array':
+      begin
+        Items:=TJSONObject(Schema).Arrays['i'];
+        Result:='[';
+        for I:=0 to Value.Count-1 do
+        begin
+          if I<>0 then Result:=Result+',';
+          Result:=Result+ReservationValue(Value.Items[I],Items.Items[I]);
+        end;
+        Result:=Result+']';
+      end;
+    else raise Exception.Create('Unsupported history reservation value');
+  end;
+end;
+
+procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string);
+var Row,Props:TJSONObject;
+begin
+  // Validate the complete FerretDB value and its corresponding BSON metadata.
+  PlainDocument(Document);
+  Row:=ExactObject(Document);
+  try
+    Props:=Row.Objects['$s'].Objects['p'];
+    RowHash:=Sha256Hex(ReservationObject(Row,Props,True));
+    PendingHash:=Sha256Hex(ReservationObject(Row,Props,False));
+  finally Row.Free;end;
 end;
 
 function HistoryBoardKey(const Prefix,BoardId:string):string;
