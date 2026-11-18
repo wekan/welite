@@ -193,3 +193,16 @@ def run(request, db, token):
             assert con.execute("SELECT archived,archivedAt,modifiedAt FROM cards WHERE id='card'").fetchone() == state
     print('PASS: archive and unarchive change state once and reject repeated requests without writes')
     print('PASS: global card GET includes archived cards and checklists and requires authentication')
+
+    wrong_list_path='/api/boards/protected/lists/'+other_list+'/cards/card?token='+token
+    for archived in [True,False]:
+        status, _, body = request('PUT',wrong_list_path,json.dumps(dict(archive=archived)).encode())
+        assert status == 200, (status,body)
+        with sqlite3.connect(db) as con:
+            assert con.execute("SELECT archived FROM cards WHERE id='card'").fetchone() == (int(archived),)
+            before = '\n'.join(con.iterdump())
+        assert request('PUT',wrong_list_path,json.dumps(dict(archive=archived)).encode())[0] == 200
+        with sqlite3.connect(db) as con:
+            assert '\n'.join(con.iterdump()) == before
+    assert request('PUT',wrong_list_path,json.dumps(dict(archive=True,title='Rejected')).encode())[0] == 404
+    print('PASS: archive-only PUT works without the current list and preserves state on repeated requests')

@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Change card archive state through REST PUT
+
+- Authorize archive-only PUT by board and card so callers can restore cards
+  without the current list ID. Repeated requests preserve the stored row.
+- Keep list scope for requests that also change card fields or relations.
+
 ## 2026-11-18 Archive and restore cards through separate REST routes
 
 - Add unarchive and make the archive transitions check the current state,

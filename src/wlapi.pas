@@ -1309,21 +1309,60 @@ end;
 
 // PUT card — update any of title/description/color and replace labelIds if given.
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
-var T:TWLTenant; UserId,CardId,Sets,Relations:string;
+var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
+  HasArchive,Archive,HasEdits:Boolean;Body:TJSONObject;Input:TJSONData;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
-  if not ApiBoardGuard(T,aRequest,aResponse,UserId) then Exit;
-  CardId:=aRequest.RouteParams['cardId'];
-  if not CardRelationSql(T,aRequest,aResponse,aRequest.RouteParams['boardId'],CardId,Relations) then Exit;
-  Sets:='modifiedAt='+QuotedStr(NowIso)+',dateLastActivity='+QuotedStr(NowIso);
-  if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
-  if BodyHasField(aRequest,'description') then Sets:=Sets+',description='+QuotedStr(BodyField(aRequest,'description'));
-  if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET '+Sets+' WHERE id='+QuotedStr(CardId)+'; '+
-    Relations+' COMMIT;') then
-  begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not edit card'); Exit; end;
-  SendCardById(aResponse,T.Db,CardId,UserId);
+  CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
+  HasArchive:=BodyHasField(aRequest,'archive');
+  HasEdits:=BodyHasField(aRequest,'title') or BodyHasField(aRequest,'description') or
+    BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
+    BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId);
+  if HasArchive and not HasEdits then
+  begin
+    if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
+    if Length(T.Db.Query('SELECT id FROM cards WHERE '+Scope+';'))<>1 then
+    begin SendJson(aResponse,CardNotFound,404);Exit;end;
+  end else
+  begin
+    if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
+    Scope:=Scope+' AND listId='+QuotedStr(aRequest.RouteParams['listId']);
+  end;
+  if not CardRelationSql(T,aRequest,aResponse,BoardId,CardId,Relations) then Exit;
+  Stamp:=QuotedStr(NowIso);
+  ArchiveSql:='';
+  if HasArchive then
+  begin
+    Value:=aRequest.ContentFields.Values['archive'];
+    if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+    begin
+      Body:=nil;
+      try
+        try
+          Body:=ExactObject(aRequest.Content);Input:=Body.Find('archive');
+          if (Input<>nil) and (Input.JSONType in [jtString,jtBoolean]) then Value:=Input.AsString;
+        except SendError(aResponse,400,'Invalid card update');Exit;end;
+      finally Body.Free;end;
+    end;
+    Archive:=SameText(Value,'true');
+    ArchiveSql:='UPDATE cards SET archived='+IntToStr(Ord(Archive))+' WHERE '+Scope+
+      ' AND archived='+IntToStr(Ord(not Archive))+'; ';
+  end;
+  Sets:='';
+  if not HasArchive or HasEdits then
+  begin
+    Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp;
+    if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
+    if BodyHasField(aRequest,'description') then Sets:=Sets+',description='+QuotedStr(BodyField(aRequest,'description'));
+    if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
+    Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
+  end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+    ')=1 THEN 1 ELSE json(''Card edit scope changed'') END; '+Sets+ArchiveSql+Relations+' COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit card');Exit;end;
+  SendCardById(aResponse,T.Db,CardId,UserId,False,BoardId);
 end;
 
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);
