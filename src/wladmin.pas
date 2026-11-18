@@ -41,7 +41,7 @@ procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST 
 implementation
 
 uses
-  StrUtils, DateUtils, wlregist, wllocale;
+  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi;
 
 function NowIso: string;
 begin
@@ -238,6 +238,39 @@ begin
   SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'domains', 'Domains', Body));
 end;
 
+function GroupFeatureTable(Db:TWLDb;const Kind,Title:string;Words:TWLTranslator):string;
+const Suffixes:array[0..2] of string=('SharedTemplates','PropagateMembersToBoards','SyncMembersFromAuth');
+var Groups:TJSONArray;Entry:TJSONObject;I,J:Integer;Flag,Checked:string;
+begin
+  Result:='';
+  Groups:=ReadGroupFeatures(Db,Kind);
+  try
+    if Groups.Count=0 then Exit;
+    Result:='<h2>'+HtmlEncode(Title)+'</h2><table border="1" cellpadding="4" cellspacing="0">'+
+      '<tr><th>'+HtmlEncode(Words.Text('name','Name'))+'</th><th>'+
+      HtmlEncode(Words.Text('short-name','Short name'))+'</th><th>'+
+      HtmlEncode(Words.Text('shared-templates','Shared templates'))+'</th><th>'+
+      HtmlEncode(Words.Text(Kind+'-propagate-members-to-boards','Propagate members to boards'))+'</th><th>'+
+      HtmlEncode(Words.Text(Kind+'-sync-members-from-auth','Sync members from auth provider'))+'</th></tr>';
+    for I:=0 to Groups.Count-1 do
+    begin
+      Entry:=Groups.Objects[I];
+      Result:=Result+'<tr data-group-id="'+HtmlAttr(Entry.Get('_id',''))+'"><td>'+
+        HtmlEncode(Entry.Get(Kind+'DisplayName',''))+'</td><td>'+
+        HtmlEncode(Entry.Get(Kind+'ShortName',''))+'</td>';
+      for J:=Low(Suffixes) to High(Suffixes) do
+      begin
+        Flag:=Kind+Suffixes[J];
+        Checked:='';
+        if Entry.Get(Flag,False) then Checked:=' checked';
+        Result:=Result+'<td><input type="checkbox" data-feature="'+HtmlAttr(Flag)+'" disabled'+Checked+'></td>';
+      end;
+      Result:=Result+'</tr>';
+    end;
+    Result:=Result+'</table>';
+  finally Groups.Free;end;
+end;
+
 // ------------------------------------------------------------------ /admin/people
 procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);
 var
@@ -246,6 +279,7 @@ var
   Body, Action, Uid, Uname, IsAdm, Disabled, SetClause: string;
   i: Integer;
   SelfTarget: Boolean;
+  Words:TWLTranslator;
 begin
   if not RequireTenantAdmin(aRequest, aResponse, T, S) then Exit;
 
@@ -314,6 +348,15 @@ begin
   Body := Body + '</table>' + LineEnding +
     '<p><small>New sign-ups are Normal users after the first tenant administrator. ' +
     'You cannot demote or disable your own account.</small></p>';
+  Words:=TWLTranslator.Create(ViewerLanguage(T.Db,S,aRequest));
+  try
+    try
+      Body:=Body+GroupFeatureTable(T.Db,'org',Words.Text('organizations','Organizations'),Words)+
+        GroupFeatureTable(T.Db,'team',Words.Text('teams','Teams'),Words);
+    except
+      Body:=Body+'<p>'+HtmlEncode(Words.Text('error','Error'))+'</p>';
+    end;
+  finally Words.Free;end;
   SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'people', 'People', Body));
 end;
 

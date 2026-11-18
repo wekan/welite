@@ -46,6 +46,7 @@ procedure ApiDependencies(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
+function ReadGroupFeatures(Db:TWLDb;const Kind:string):TJSONArray;
 procedure ApiOrgFeatures(aRequest:TRequest;aResponse:TResponse);
 procedure ApiTeamFeatures(aRequest:TRequest;aResponse:TResponse);
 procedure ApiChangeUser(aRequest:TRequest;aResponse:TResponse);
@@ -926,31 +927,62 @@ begin
   finally O.Free; end;
 end;
 
+function ProjectGroup(const Kind:string;SourceDoc:TJSONObject;NormalizeFlags:Boolean):TJSONObject;
+var Suffix,Name:string;PropertyValue:TJSONData;
+begin
+  Result:=TJSONObject.Create(['_id',SourceDoc.Get('_id','')]);
+  for Suffix in ['DisplayName','ShortName'] do
+  begin
+    Name:=Kind+Suffix;PropertyValue:=SourceDoc.Find(Name);
+    if PropertyValue is TJSONString then Result.Add(Name,PropertyValue.Clone);
+  end;
+  for Suffix in ['SharedTemplates','PropagateMembersToBoards','SyncMembersFromAuth'] do
+  begin
+    Name:=Kind+Suffix;PropertyValue:=SourceDoc.Find(Name);
+    if NormalizeFlags then Result.Add(Name,(PropertyValue is TJSONBoolean) and PropertyValue.AsBoolean)
+    else if PropertyValue is TJSONBoolean then Result.Add(Name,PropertyValue.Clone);
+  end;
+end;
+
+function GroupStorage(Db:TWLDb;const Kind:string):string;
+var Rows:TWLRows;
+begin
+  Result:='';
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then Exit;
+  Rows:=Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
+    'ON m.name=r.table_name AND m.type=''table'' WHERE r.name='+QuotedStr(Kind)+';');
+  if Length(Rows)=1 then Result:=Rows[0][0];
+end;
+
+function ReadGroupFeatures(Db:TWLDb;const Kind:string):TJSONArray;
+var Source,TableName:string;Rows:TWLRows;Row:TWLRow;Doc:TJSONObject;
+begin
+  Result:=TJSONArray.Create;
+  try
+    Source:=GroupStorage(Db,Kind);
+    if Source='' then Exit;
+    TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
+    Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+
+      ' WHERE json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
+      ' ORDER BY json_extract(_ferretdb_sjson,''$._id'');');
+    for Row in Rows do
+    begin
+      Doc:=ExactObject(PlainDocument(Row[0]));
+      try Result.Add(ProjectGroup(Kind,Doc,True));finally Doc.Free;end;
+    end;
+  except FreeAndNil(Result);raise;end;
+end;
+
 procedure GroupFeatures(aRequest:TRequest;aResponse:TResponse;const Kind,LabelText:string);
 var T:TWLTenant;Actor,Id,Source,TableName,Scope,Raw,Encoded,Sql,Key,Flag,Guard,Count,Expression:string;
-  Rows:TWLRows;Body,Doc,Reply:TJSONObject;Value:TJSONData;Edited,Listing,Bulk:Boolean;Entries:TJSONArray;Row:TWLRow;
+  Rows:TWLRows;Body,Doc,Reply:TJSONObject;Value:TJSONData;Edited,Listing,Bulk:Boolean;Entries:TJSONArray;
   procedure Missing;
   begin
     if Listing then SendJson(aResponse,'[]')
     else if Bulk then SendJson(aResponse,'{"updated":0}')
     else SendJson(aResponse,'{"error":"'+LabelText+' not found"}',404);
   end;
-  function Project(SourceDoc:TJSONObject;NormalizeFlags:Boolean):TJSONObject;
-  var Suffix,Name:string;PropertyValue:TJSONData;
-  begin
-    Result:=TJSONObject.Create(['_id',SourceDoc.Get('_id','')]);
-    for Suffix in ['DisplayName','ShortName'] do
-    begin
-      Name:=Kind+Suffix;PropertyValue:=SourceDoc.Find(Name);
-      if PropertyValue is TJSONString then Result.Add(Name,PropertyValue.Clone);
-    end;
-    for Suffix in ['SharedTemplates','PropagateMembersToBoards','SyncMembersFromAuth'] do
-    begin
-      Name:=Kind+Suffix;PropertyValue:=SourceDoc.Find(Name);
-      if NormalizeFlags then Result.Add(Name,(PropertyValue is TJSONBoolean) and PropertyValue.AsBoolean)
-      else if PropertyValue is TJSONBoolean then Result.Add(Name,PropertyValue.Clone);
-    end;
-  end;
+
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -958,6 +990,14 @@ begin
   begin SendError(aResponse,403,'Site administration required');Exit;end;
   Id:=aRequest.RouteParams[Kind+'Id'];Listing:=aRequest.Method='GET';
   Bulk:=(Id='') and not Listing;
+  if Listing then
+  begin
+    try
+      Entries:=ReadGroupFeatures(T.Db,Kind);
+      try SendJson(aResponse,Entries.AsJSON);finally Entries.Free;end;
+    except SendError(aResponse,500,'Could not read group features');end;
+    Exit;
+  end;
   if Bulk then
   begin
     Body:=nil;
@@ -975,30 +1015,9 @@ begin
       except SendJson(aResponse,'{"error":"Invalid feature update"}',400);Exit;end;
     finally Body.Free;end;
   end;
-  if (Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0) then
-  begin Missing;Exit;end;
-  Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
-    'ON m.name=r.table_name AND m.type=''table'' WHERE r.name='+QuotedStr(Kind)+';');
-  if Length(Rows)<>1 then begin Missing;Exit;end;
-  Source:=Rows[0][0];TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
-  if Listing then
-  begin
-    Entries:=TJSONArray.Create;
-    try
-      try
-        Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+
-          ' WHERE json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
-          ' ORDER BY json_extract(_ferretdb_sjson,''$._id'');');
-        for Row in Rows do
-        begin
-          Doc:=ExactObject(PlainDocument(Row[0]));
-          try Entries.Add(Project(Doc,True));finally Doc.Free;end;
-        end;
-        SendJson(aResponse,Entries.AsJSON);
-      except SendError(aResponse,500,'Could not read group features');end;
-    finally Entries.Free;end;
-    Exit;
-  end;
+  Source:=GroupStorage(T.Db,Kind);
+  if Source='' then begin Missing;Exit;end;
+  TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
   Scope:='json_type(_ferretdb_sjson,''$._id'')=''text'''+
     ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
   Guard:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+' AND isAdmin=1 AND loginDisabled=0)'+
@@ -1057,7 +1076,7 @@ begin
           ' WHERE '+Scope+' AND json(_ferretdb_sjson)=json('+Encoded+')) THEN 1 ELSE json(''Feature update failed'') END; COMMIT;';
         if not T.Db.Exec(Sql) then raise Exception.Create('Feature update failed');
       end;
-      Reply:=Project(Doc,False);
+      Reply:=ProjectGroup(Kind,Doc,False);
       SendJson(aResponse,Reply.AsJSON);
     except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update group features');end;
   finally Reply.Free;Doc.Free;Body.Free;end;

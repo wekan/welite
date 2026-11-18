@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Show organization and team features in People
+
+- Render the organization and team feature flags on the native People page
+  using the same public projection as the administrator REST list routes.
+  Verify that REST updates appear after a cookie-free reload.
+
 ## 2026-11-18 Preserve language on dropdown form errors
 
 - Show a localized HTML error and a return link to the card for rejected

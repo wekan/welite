@@ -1455,7 +1455,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 admin_token='fixture-site-admin-token'
                 admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
                 client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
-                    services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                    services=dict(password=password,resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
                 client.command({'insert':'users','documents':[dict(_id='ownership-target',username='ownership-target')]})
                 owned_member=dict(userId='ownership-target',isAdmin=True,isActive=True)
                 ordinary_members=[dict(userId='ownership-target',isAdmin=False,isActive=True),
@@ -1517,6 +1517,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('GET','/api/user',token=revoked_token)[0]==401
                 assert request('GET','/api/user',token=target_token)[0]==200
                 print('PASS: admin revokes a specific stored hash and preserves other sessions')
+                status,headers,_=request('POST','/sign-in',urlencode(dict(username='fixture-admin',password='test-password')))
+                assert status==302 and 'Set-Cookie' not in headers
+                people_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                people_url='/admin/people?sessionId='+people_session
+                def check_people_flag(kind,expected):
+                    status,headers,page=request('GET',people_url)
+                    assert status==200 and 'Set-Cookie' not in headers
+                    assert b'unknown private fixture field' not in page
+                    flag=(kind+'SyncMembersFromAuth').encode()
+                    marker=b'data-feature="'+flag+b'" disabled'
+                    assert marker+(b' checked' if expected else b'')+b'>' in page
+                assert request('GET','/admin/people')[0]==302
                 for group in ['org','team']:
                     endpoint='/api/admin/'+group+'s'
                     assert request('GET',endpoint)[0]==401
@@ -1524,7 +1536,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert json.loads(request('GET',endpoint,token=admin_token)[2])==[]
                     client.command({'create':group})
                     row={'_id':'group',group+'DisplayName':'Example',group+'ShortName':'example',
-                         group+'SharedTemplates':True,'unknown':'private fixture field'}
+                         group+'SharedTemplates':True,'unknown':'unknown private fixture field'}
                     client.command({'insert':group,'documents':[row]})
                     status,_,body=request('GET',endpoint,token=admin_token)
                     assert status==200 and json.loads(body)==[{
@@ -1532,6 +1544,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         group+'SharedTemplates':True,group+'PropagateMembersToBoards':False,
                         group+'SyncMembersFromAuth':False}],(status,body)
                     assert client.find(group,'group')[0]==row
+                    check_people_flag(group,False)
                     bulk_features=endpoint+'/features'
                     flag=group+'SyncMembersFromAuth'
                     assert request('PUT',bulk_features,dict(field=flag,value=True),target_token)[0]==403
@@ -1545,6 +1558,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert client.find(group,'group')[0]==dict(row,**{flag:enabled})
                         other=client.find(group,'other')[0]
                         assert other[flag] is enabled and isinstance(other['counter'],Long)
+                        check_people_flag(group,enabled)
                 print('PASS: shared bulk feature updates are admin-gated and preserve unrelated BSON')
                 print('PASS: shared People list routes project names and boolean flags only for site administrators')
                 member_path='/api/boards/b/members/fixture-admin'
