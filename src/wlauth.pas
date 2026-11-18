@@ -260,7 +260,8 @@ function HtmlAttr(const V:string):string; forward;
 
 function NavigationButton(const TargetPath,Caption:string;const S:TWLSession):string;
 begin
-  Result:='<form method="POST" action="'+HtmlAttr(TargetPath)+'">'+LanguageHiddenField(S);
+  Result:='<form method="POST" action="'+HtmlAttr(TargetPath)+'">'+LanguageHiddenField(S)+
+    '<input type="hidden" name="nav_view" value="1">';
   if S.SessionId<>'' then
     Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(S.SessionId)+'">';
   Result:=Result+'<input type="submit" value="'+HtmlAttr(Caption)+'"></form>';

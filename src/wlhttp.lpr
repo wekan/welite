@@ -135,12 +135,12 @@ begin
   Language:=ViewerLanguage(T.Db,S,aRequest);
   Words:=TWLTranslator.Create(Language);
   try
-    Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding;
+    Body := '<h1>' + HtmlEncode(T.Host) + '</h1>' + LineEnding+
+      MainNavigation(T.Db,S,Language.Tag,T.IsAdmin);
     if IsGAdmin then
-      Body := Body + '<p><b>'+HtmlEncode(Words.Text('admin','Admin'))+'</b> &mdash; ' + HtmlEncode(S.Username) + ' &mdash; ' +
-              '</p>'+NavigationButton('/admin',Words.Text('admin-panel','Admin Panel'),S)+LineEnding
-    else if S.Username <> '' then
-      Body := Body + '<p>'+HtmlEncode(Words.Text('username','Username'))+': ' + HtmlEncode(S.Username) + '</p>' + LineEnding;
+      Body:=Body+'<p><b>'+HtmlEncode(Words.Text('admin','Admin'))+'</b> &mdash; '+HtmlEncode(S.Username)+'</p>'
+    else if S.Username<>'' then
+      Body:=Body+'<p>'+HtmlEncode(Words.Text('username','Username'))+': '+HtmlEncode(S.Username)+'</p>';
 
     Body:=Body+BoardListHtml(T.Db,S,Language.Tag)+
       AuthNavigation(aRequest,'/sign-in',Words.Text('log-in','Sign in'))+
@@ -670,6 +670,7 @@ begin
   InitLanguages;
 
   HTTPRouter.RegisterRoute('/', rmGet, @HomeEndpoint);
+  HTTPRouter.RegisterRoute('/', rmPost, @HomeEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmGet, @SignInEndpoint);
   HTTPRouter.RegisterRoute('/sign-in', rmPost, @SignInEndpoint);
   HTTPRouter.RegisterRoute('/two-factor/setup', rmGet, @EnrollmentEndpoint);
@@ -688,6 +689,7 @@ begin
 
   // Designer (Domain Global Admin; no-JS/no-cookie) — see docs/designer.md
   HTTPRouter.RegisterRoute('/designer', rmGet, @DesignerIndex);
+  HTTPRouter.RegisterRoute('/designer', rmPost, @DesignerIndex);
   HTTPRouter.RegisterRoute('/designer/page', rmGet, @DesignerEditPage);
   HTTPRouter.RegisterRoute('/designer/page/save', rmPost, @DesignerPageSave);
   HTTPRouter.RegisterRoute('/designer/widget/move', rmPost, @DesignerWidgetMove);

@@ -34,6 +34,8 @@ function RequireTenantAdmin(aRequest: TRequest; aResponse: TResponse;
 function RequireGlobalAdmin(aRequest: TRequest; aResponse: TResponse;
   out T: TWLTenant; out S: TWLSession): Boolean;
 
+function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;GlobalTenant:Boolean=False):string;
+
 procedure AdminIndex(aRequest: TRequest; aResponse: TResponse);     // GET  /admin
 procedure AdminDomains(aRequest: TRequest; aResponse: TResponse);   // GET/POST /admin/domains
 procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST /admin/people
@@ -124,28 +126,38 @@ begin
   if T.IsAdmin then Result:='Global Admin' else Result:='Domain Global Admin';
 end;
 
-// ------------------------------------------------------------------ shared chrome
-function NavLink(const Href,Caption:string;const S:TWLSession;Active:Boolean):string;
+function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;GlobalTenant:Boolean):string;
+var State:TWLSession;Words:TWLTranslator;
+  function Item(const Path,Key,Caption:string):string;
+  begin
+    Result:='<td valign="middle">'+NavigationButton(Path,Words.Text(Key,Caption),State)+'</td>';
+  end;
 begin
-  if Active then
-    Result := '<b>' + HtmlEncode(Caption) + '</b>'
-  else
-    Result := '<a href="' + HtmlAttr(SessionUrl(Href,S)) + '">' +
-              HtmlEncode(Caption) + '</a>';
+  Result:='';
+  if S.SessionId='' then Exit;
+  State:=S;
+  State.LanguageTag:=LanguageTag;
+  Words:=TWLTranslator.Create(ResolveLanguage(LanguageTag,'',''));
+  try
+    Result:='<table border="0" cellpadding="2" cellspacing="0"><tr>'+
+      Item('/','all-boards','All Boards');
+    if IsTenantAdmin(Db,S) then
+    begin
+      Result:=Result+Item('/admin','admin-panel','Admin Panel')+
+        Item('/designer','','Designer')+Item('/admin/people','people','People');
+      if GlobalTenant then Result:=Result+Item('/admin/domains','domains','Domains');
+    end;
+    Result:=Result+'</tr></table>';
+  finally Words.Free;end;
 end;
 
-// Wrap a section body in the panel page with the Domains | Designer | People nav.
-function AdminLayout(const T:TWLTenant;const S:TWLSession;Request:TRequest;Response:TResponse;const Active,Title,Body:string):string;
-var Nav: string;
+// ------------------------------------------------------------------ shared chrome
+function AdminLayout(const T:TWLTenant;const S:TWLSession;Request:TRequest;Response:TResponse;const Title,Body:string):string;
+var Language:TWLLanguage;
 begin
-  Nav := '<p>[ ';
-  if T.IsAdmin then Nav:=Nav+NavLink('/admin/domains','Domains',S,SameText(Active,'domains'))+' | ';
-  Nav := Nav +
-    NavLink('/designer',      'Designer', S, SameText(Active, 'designer')) + ' | ' +
-    NavLink('/admin/people',  'People',   S, SameText(Active, 'people')) +
-    ' ]</p><hr>';
-  Result := LanguagePage(Response,ViewerLanguage(T.Db,S,Request),AdminRole(T)+' — '+Title,
-    '<h1>'+AdminRole(T)+' Panel</h1>'+Nav+Body);
+  Language:=ViewerLanguage(T.Db,S,Request);
+  Result:=LanguagePage(Response,Language,AdminRole(T)+' — '+Title,
+    '<h1>'+AdminRole(T)+' Panel</h1>'+MainNavigation(T.Db,S,Language.Tag,T.IsAdmin)+Body);
 end;
 
 // A one-button POST form (action + a single id field) carrying the section's action-token.
@@ -165,12 +177,12 @@ var T: TWLTenant; S: TWLSession; Body: string;
 begin
   if not RequireTenantAdmin(aRequest,aResponse,T,S) then Exit;
   Body:='<p>Welcome, '+HtmlEncode(S.Username)+'. Choose a section:</p><ul>';
-  if T.IsAdmin then Body:=Body+'<li>'+NavLink('/admin/domains','Domains',S,False)+
+  if T.IsAdmin then Body:=Body+'<li>'+NavigationButton('/admin/domains','Domains',S)+
     ' &mdash; register and enable/disable served domains.</li>';
-  Body:=Body+'<li>'+NavLink('/designer','Designer',S,False)+
-    ' &mdash; edit this tenant''s pages.</li><li>'+NavLink('/admin/people','People',S,False)+
+  Body:=Body+'<li>'+NavigationButton('/designer','Designer',S)+
+    ' &mdash; edit this tenant''s pages.</li><li>'+NavigationButton('/admin/people','People',S)+
     ' &mdash; manage this tenant''s users and roles.</li></ul>';
-  SendHtml(aResponse,AdminLayout(T,S,aRequest,aResponse,'','Home',Body));
+  SendHtml(aResponse,AdminLayout(T,S,aRequest,aResponse,'Home',Body));
 end;
 
 // ------------------------------------------------------------------ /admin/domains
@@ -183,7 +195,8 @@ var
 begin
   if not RequireGlobalAdmin(aRequest, aResponse, T, S) then Exit;
 
-  if aRequest.Method = 'POST' then
+  if (aRequest.Method = 'POST') and ((aRequest.ContentFields.Values['nav_view']<>'1') or
+    (aRequest.ContentFields.Values['action']<>'')) then
   begin
     if not VerifyActionToken(aRequest, S, 'admin:domains') then
     begin
@@ -235,7 +248,7 @@ begin
     ' Host <input name="host"> <input type="submit" value="Add"></form>' + LineEnding +
     '<p><small>localhost is always served as the built-in <b>local</b> tenant and ' +
     'need not be registered.</small></p>';
-  SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'domains', 'Domains', Body));
+  SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'Domains', Body));
 end;
 
 function GroupFeatureTable(Db:TWLDb;const Kind,Title:string;Words:TWLTranslator):string;
@@ -283,7 +296,8 @@ var
 begin
   if not RequireTenantAdmin(aRequest, aResponse, T, S) then Exit;
 
-  if aRequest.Method = 'POST' then
+  if (aRequest.Method = 'POST') and ((aRequest.ContentFields.Values['nav_view']<>'1') or
+    (aRequest.ContentFields.Values['action']<>'')) then
   begin
     if not VerifyActionToken(aRequest, S, 'admin:people') then
     begin
@@ -357,7 +371,7 @@ begin
       Body:=Body+'<p>'+HtmlEncode(Words.Text('error','Error'))+'</p>';
     end;
   finally Words.Free;end;
-  SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'people', 'People', Body));
+  SendHtml(aResponse, AdminLayout(T,S,aRequest,aResponse, 'People', Body));
 end;
 
 end.

@@ -1043,7 +1043,7 @@ begin
   Words:=TWLTranslator.Create(Language);
   try
     Rows := T.Db.Query('SELECT id,url,title,enabled FROM pages ORDER BY url;');
-    Body := '<h1>Designer</h1><table border="1" cellpadding="4"><tr>' +
+    Body := '<h1>Designer</h1>'+MainNavigation(T.Db,S,Language.Tag,T.IsAdmin)+'<table border="1" cellpadding="4"><tr>' +
       '<th>'+HtmlEncode(Words.Text('page','Page'))+'</th><th>URL</th><th>'+
       HtmlEncode(Words.Text('storage-enabled','Enabled'))+'</th><th>'+
       HtmlEncode(Words.Text('actions','Actions'))+'</th></tr>';
@@ -1209,6 +1209,7 @@ begin
   Words:=TWLTranslator.Create(Language);
   try
     Body := '<h1>'+HtmlEncode(Words.Text('edit','Edit'))+': '+HtmlEncode(P.Title)+'</h1>'+
+      MainNavigation(T.Db,S,Language.Tag,T.IsAdmin)+
       '<form method="POST" action="/designer/page/save">'+
       AuthHiddenFields(S,'designer:/designer/page/save')+
       '<input type="hidden" name="pageId" value="'+HtmlAttr(P.Id)+'">'+PageFields(P,Words)+'</form>';
