@@ -1401,8 +1401,8 @@ end;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId:string;
-  Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated:string;
+  Body,Input,Row,Reply,MemberMap,CardCreations:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -1603,6 +1603,38 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Field:=Obj.Find(Key);
     Result:=IntToStr(Ord((Field is TJSONBoolean) and Field.AsBoolean));
   end;
+  procedure IndexCardCreations;
+  var Activities,Item,Kind,SourceId:TJSONData;Entry:TJSONObject;Id:string;K:Integer;
+  begin
+    Activities:=Input.Find('activities');
+    if (Activities=nil) or (Activities.JSONType=jtNull) then Exit;
+    if not (Activities is TJSONArray) then raise EConvertError.Create('Invalid imported activities');
+    for K:=0 to Activities.Count-1 do
+    begin
+      Item:=Activities.Items[K];
+      if not (Item is TJSONObject) then Continue;
+      Entry:=TJSONObject(Item);Kind:=Entry.Find('activityType');SourceId:=Entry.Find('cardId');
+      if not (Kind is TJSONString) or (Kind.AsString<>'createCard') or not (SourceId is TJSONString) then Continue;
+      Id:=Mapped(2,SourceId.AsString);
+      if Id='' then Continue;
+      CardCreations.Delete(Id);CardCreations.Add(Id,K);
+    end;
+  end;
+  procedure CardCreation(Entry:TJSONObject;const Id:string;out Author,Created:string);
+  var Activities:TJSONArray;Event:TJSONObject;Field,Index:TJSONData;Literal:string;
+  begin
+    Author:=ImportedAuthor(Entry);Created:='';
+    Index:=CardCreations.Find(Id);
+    if Index<>nil then
+    begin
+      Activities:=TJSONArray(Input.Find('activities'));Event:=Activities.Objects[Index.AsInteger];
+      Field:=Event.Find('userId');
+      if (Field is TJSONString) and (Field.AsString<>'') then Author:=MemberMap.Get(Field.AsString,Actor);
+      Field:=Event.Find('createdAt');
+      if (Field<>nil) and CardDateSql(Field,Literal) and (Literal<>'NULL') then Created:=Literal;
+    end;
+    if Created='' then Created:=ImportedDate(Entry,'createdAt',Stamp);
+  end;
   function ImportedSpentTime(Entry:TJSONObject):string;
   var Field:TJSONData;
   begin
@@ -1770,7 +1802,7 @@ begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
-  MemberMap:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
+  MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
@@ -1797,6 +1829,7 @@ begin
           Maps[I].Add(Name,NewId);
         end;
       end;
+      IndexCardCreations;
       BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
       Permission:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
         ' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+AdminOnly+'))';
@@ -1833,13 +1866,14 @@ begin
       if Arrays[2]<>nil then for J:=0 to Arrays[2].Count-1 do
       begin
         Row:=Arrays[2].Objects[J];CardId:=Mapped(2,Text(Row,'_id'),True);
+        CardCreation(Row,CardId,CardAuthor,CardCreated);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
           'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived) VALUES('+
           QuotedStr(CardId)+','+Board+','+
           QuotedStr(Mapped(1,Text(Row,'listId'),True))+','+QuotedStr(CardListLane(Row))+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
-          QuotedStr(Text(Row,'description'))+','+QuotedStr(ImportedAuthor(Row))+','+SortValue(Row)+','+IntToStr(J+1)+
-          ','+ImportedDate(Row,'createdAt',Stamp)+','+Stamp+','+Stamp+','+
+          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+IntToStr(J+1)+
+          ','+CardCreated+','+Stamp+','+Stamp+','+
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+
           ImportedSpentTime(Row)+','+BooleanValue(Row,'isOvertime')+','+QuotedStr(Text(Row,'requestedBy'))+','+
@@ -1863,7 +1897,7 @@ begin
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally
     if not Committed then for I:=0 to Files.Count-1 do DeleteFile(Files[I]);
-    ImportedMembers.Free;MemberMap.Free;Files.Free;
+    ImportedMembers.Free;CardCreations.Free;MemberMap.Free;Files.Free;
     for I:=0 to High(Maps) do Maps[I].Free;
     Body.Free;
   end;

@@ -267,6 +267,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     receivedAt='2026-02-01T00:00:00.000Z',startAt='2026-02-02T00:00:00.000Z',
                     dueAt='2026-02-03T00:00:00.000Z',endAt='2026-02-04T00:00:00.000Z',
                     spentTime=1.25,isOvertime=True,requestedBy="O'Brien",assignedBy='Scheduler',archived=True)
+                created_in_history='2025-01-02T03:04:05.000Z'
+                imported_payload['activities']=[
+                    dict(activityType='createCard',cardId=input_card,createdAt=created_in_history,userId='external-author'),
+                    dict(activityType='createCard',cardId='unrelated',createdAt='invalid',userId='unknown')]
                 broken_dates=dict(imported_payload,cards=[dict(imported_payload['cards'][0],startAt='invalid')])
                 assert request('POST',import_path,dict(board=broken_dates),token)[0]==400
                 imported_payload['labels']=[dict(_id='source-label',name='Imported label',color='green')]
@@ -301,10 +305,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert imported_card['members']==imported_card['assignees']==imported_card['requesters']==['import-local-author']
                 assert imported_card['assigners']==[]
                 for field in ['createdAt','receivedAt','startAt','dueAt','endAt']:
-                    instant=datetime.datetime.fromisoformat(imported_payload['cards'][0][field].replace('Z','+00:00'))
+                    original=created_in_history if field=='createdAt' else imported_payload['cards'][0][field]
+                    instant=datetime.datetime.fromisoformat(original.replace('Z','+00:00'))
                     assert imported_card[field]==DateMs(int(instant.timestamp()*1000)),(field,imported_card[field])
                 for field in ['spentTime','isOvertime','requestedBy','assignedBy','archived']:
                     assert imported_card[field]==imported_payload['cards'][0][field],(field,imported_card[field])
+                assert imported_card['userId']=='import-local-author'
+                print('PASS: matching card creation activity supplies the original date and mapped author')
                 print('PASS: board import preserves card scheduling dates, elapsed time, bylines and archive status')
                 imported_label,=client.find('boards',imported_id)[0]['labels']
                 assert imported_label['_id']!='source-label'
