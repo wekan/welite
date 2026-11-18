@@ -112,6 +112,16 @@ must be supplied. Three ways, in order of fit with the single-binary goal:
 3. **CLI backend (`-dWLDB_CLI`)** — shell out to an Amiga `sqlite3` executable (also on
    Aminet). The bootstrap path; needs that binary present.
 
+The pinned Amiga-family Free Pascal `TProcess` implementation runs
+`dos.library Execute` synchronously and exposes a temporary output file.
+Its call to `CreateStreams(0, THandle(cos), 0)` supplies neither a child
+input nor a separate error stream. The CLI backend needs stderr and the
+child exit status for one-shot queries. Its snapshot protocol additionally
+needs a live child with writable stdin. A successful SQLite shell run by
+itself therefore covers only the executable and SQL dialect. The remaining
+choices are to verify a linked SQLite build or to provide an Amiga process
+transport with those semantics.
+
 ### Build notes for the amalgamation on retro targets
 - **No WAL.** WAL needs shared-memory/mmap, which classic Amiga filesystems don't provide.
   `wldb.pas` already switches `journal_mode` to `DELETE` under `{$IF DEFINED(AMIGA) or
