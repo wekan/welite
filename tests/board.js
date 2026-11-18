@@ -43,6 +43,18 @@ async function verifyCookieBlocking(page, context) {
     const page = await context.newPage();
     await verifyCookieBlocking(page, context);
     await page.goto(`${process.argv[2]}/board?id=protected&sessionId=${process.argv[3]}`);
+    const exportLinks = page.locator('a[href^="/board/export?"]');
+    assert.equal(await exportLinks.count(), 2);
+    for (const link of await exportLinks.all()) {
+      const [download] = await Promise.all([page.waitForEvent('download'), link.click()]);
+      assert.equal(await download.failure(), null);
+      const chunks = [];
+      for await (const chunk of await download.createReadStream()) chunks.push(chunk);
+      const payload = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      assert.equal(payload._format, 'wekan-board-1.0.0');
+      assert(payload.cards.some(card => card._id === 'card'));
+    }
+    console.log('PASS: Chromium downloads both board JSON modes with JavaScript and first-party cookies disabled');
     assert.equal(await page.locator('td[data-list=todo]').getByText('Card <test>').count(), 1);
     await page.locator('input[name=sel_card][value=card]').check();
     await page.locator('input[type=submit][name=move_right]').click();

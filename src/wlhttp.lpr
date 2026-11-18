@@ -641,6 +641,7 @@ begin
 
   // Combined no-JS move component (arrows keypad) — see docs/move.md
   HTTPRouter.RegisterRoute('/board', rmGet, @BoardEndpoint);
+  HTTPRouter.RegisterRoute('/board/export', rmGet, @BrowserBoardExport);
   HTTPRouter.RegisterRoute('/board/move', rmPost, @BoardMoveEndpoint);
   HTTPRouter.RegisterRoute('/board/restore-list', rmPost, @BoardRestoreListEndpoint);
 

@@ -52,6 +52,7 @@ procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
+procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -832,12 +833,22 @@ begin
   if Result = '' then Result := 'board';
 end;
 
-procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,BoardId,Key,TableName:string;Payload:TJSONObject;Rows:TWLRows;
+procedure BoardExport(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);
+var T:TWLTenant;UserId,BoardId,Key,TableName:string;Payload:TJSONObject;Rows:TWLRows;Session:TWLSession;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
-  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
-  BoardId:=aRequest.RouteParams['boardId'];
+  if Browser then
+  begin
+    if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),Session) then
+    begin SendError(aResponse,401,'Sign in to download a board');Exit;end;
+    UserId:=Session.UserId;BoardId:=aRequest.QueryFields.Values['id'];
+    if (BoardId='') or (Pos(#0,BoardId)>0) then
+    begin SendError(aResponse,400,'Invalid board ID');Exit;end;
+  end else
+  begin
+    if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+    BoardId:=aRequest.RouteParams['boardId'];
+  end;
   if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
   for Key in ['swimlaneId','listId','cardId','checklistId','fields'] do
     if aRequest.QueryFields.IndexOfName(Key)>=0 then
@@ -859,8 +870,22 @@ begin
     Payload:=ReadRestBoardExport(T,UserId,BoardId,aRequest.QueryFields.Values['attachments']<>'false');
   except SendError(aResponse,500,'Could not export board');Exit;end;
   if Payload=nil then begin SendError(aResponse,403,'Board export forbidden');Exit;end;
-  try SendJson(aResponse,Payload.AsJSON);finally Payload.Free;end;
+  try
+    if Browser then
+    begin
+      aResponse.SetCustomHeader('Content-Disposition','attachment; filename="board.json"');
+      aResponse.SetCustomHeader('Cache-Control','private, no-store');
+      aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
+    end;
+    SendJson(aResponse,Payload.AsJSON);
+  finally Payload.Free;end;
 end;
+
+procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
+begin BoardExport(aRequest,aResponse,False);end;
+
+procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
+begin BoardExport(aRequest,aResponse,True);end;
 
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 const Colors='|belize|nephritis|pomegranate|pumpkin|wisteria|moderatepink|strongcyan|limegreen|midnight|dark|'+
@@ -1020,7 +1045,7 @@ begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];LaneId:=aRequest.RouteParams['swimlaneId'];
-  if not ApiAuthBoard(T,aResponse,UserId,BoardId,aRequest.Method='PUT') then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   Scope:='id='+QuotedStr(LaneId)+' AND boardId='+QuotedStr(BoardId);
   if aRequest.Method='GET' then
   begin

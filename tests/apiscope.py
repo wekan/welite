@@ -57,6 +57,9 @@ def run(request, db, token):
             continue
         if name.group(1) in {'ApiBoardCopy', 'ApiUserBoards'}:
             continue  # Copy only reads its source board; UserBoards uses a user route.
+        if name.group(1) == 'ApiBulkCards':
+            assert 'if not ApiAuthBoard(' in handler and "FROM lists WHERE '+Guard" in handler
+            continue  # The static bulk route has no card ID and checks the list directly.
         if any("RouteParams['"+key+"']" in handler for key in ['cardId','listId','swimlaneId','customField','checklistId','commentId','item']):
             assert 'if not ApiBoardGuard(' in handler, name.group(1) if name else handler[:60]
             checked += 1
@@ -68,6 +71,8 @@ def run(request, db, token):
         status, _, body = request(method, '/api/boards/protected'+suffix+'?token='+token, data)
         assert status == 404, (method, suffix, status, body)
     assert request('POST', '/api/boards/protected/lists/todo/cards?token='+token, {'title':'attack','swimlaneId':'foreignlane'})[0] == 400
+    assert request('POST','/api/boards/protected/lists/foreignlist/cards/bulk?token='+token,
+                   {'cards':[{'title':'Cross-board bulk card'}]})[0]==400
     status, _, body = request('POST', '/api/attachment/upload?token='+token, json.dumps(dict(boardId='protected', swimlaneId='foreignlane', listId='foreignlist', cardId='foreigncard', fileData='eA==')).encode())
     assert status == 400, (status,body)
     with sqlite3.connect(db) as con:
@@ -297,11 +302,13 @@ def run(request, db, token):
     assert create_list(title=' ')[0]==400
     with sqlite3.connect(db) as con:
         assert '\n'.join(con.iterdump())==before
+    created_lists=[]
     for index,(data,lane) in enumerate([(dict(title='Explicit lane',swimlaneId='api-lane'),'api-lane'),
                                        (dict(title='Default lane'),first_lane)]):
         status, _, body=create_list(**data)
         assert status==200, (status,body)
         identity=json.loads(body)['_id']
+        created_lists.append(identity)
         with sqlite3.connect(db) as con:
             assert con.execute('SELECT swimlaneId,sort FROM lists WHERE id=?',(identity,)).fetchone()==(lane,count+index)
     print('PASS: list POST honors explicit and default swimlanes and appends in board order')
@@ -383,3 +390,7 @@ def run(request, db, token):
     assert deleted['newContent']['deleted'] is True and restored['newContent']['deleted'] is False
     assert deleted['$s']['p']['newContent']['$s']['p']['deletedAt']['t']=='date', deleted
     print('PASS: native list change history links delete and restore with typed lifecycle records')
+    with sqlite3.connect(db) as con:
+        con.execute("DELETE FROM cards WHERE id='soft-delete-card'")
+        con.executemany('DELETE FROM lists WHERE id=?',[(key,) for key in created_lists])
+        con.execute("DELETE FROM swimlanes WHERE id='api-lane'")

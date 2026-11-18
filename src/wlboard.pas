@@ -49,6 +49,15 @@ begin
   Back:='/board?id='+HTTPEncode(BoardId);
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><p><a href="'+
     HtmlAttr(SessionUrl('/',S))+'">'+HtmlEncode(Words.Text('all-boards','All boards'))+'</a></p>';
+  if S.UserId<>'' then
+  begin
+    Url:='/board/export?id='+HTTPEncode(BoardId);
+    Result:=Result+'<p><a href="'+HtmlAttr(SessionUrl(Url,S))+'">'+
+      HtmlEncode(Words.Text('export-board','Export board')+' (JSON)')+'</a> &middot; <a href="'+
+      HtmlAttr(SessionUrl(Url+'&attachments=false',S))+'">'+
+      HtmlEncode(Words.Text('export-board','Export board')+' (JSON, '+
+        Words.Text('export-board-without-attachments','without attachments')+')')+'</a></p>';
+  end;
   Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
     ' AND archived=0 ORDER BY sort,id;');
   if X<1 then X:=1;

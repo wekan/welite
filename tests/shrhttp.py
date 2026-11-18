@@ -278,6 +278,29 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
                 assert request('GET',headers['Location'])[0]==200
                 web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                attachment_id='shared-export-file'
+                contents=b'WeLite export regression'
+                digest=hashlib.sha256(attachment_id.encode()).hexdigest()
+                chunks=[digest[i:i+8] for i in range(0,len(digest),8)]
+                attachment_path=data.parent.joinpath('attachme',*chunks[:-1],chunks[-1]+'.bin')
+                attachment_path.parent.mkdir(parents=True)
+                attachment_path.write_bytes(contents)
+                client.command({'insert':'attachments','documents':[dict(_id=attachment_id,name='export.txt',
+                    type='text/plain',storageBackend='filesystem',metadata_json='{}',
+                    meta=dict(boardId='b',listId='l',swimlaneId='s',cardId=card['_id']))]})
+                download='/board/export?id=b&sessionId='+web_session
+                assert request('GET','/board/export?id=b')[0]==401
+                board_page=request('GET','/board?id=b&sessionId='+web_session)
+                assert board_page[0]==200 and b'/board/export?id=b' in board_page[2]
+                for suffix in ('','&attachments=false'):
+                    status,download_headers,body=request('GET',download+suffix)
+                    assert status==200 and 'Set-Cookie' not in download_headers,(status,body)
+                    assert download_headers['Content-Disposition']=='attachment; filename="board.json"'
+                    exported=next(row for row in json.loads(body)['attachments'] if row['_id']==attachment_id)
+                    if suffix:assert 'file' not in exported
+                    else:assert base64.b64decode(exported['file'])==contents
+                client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
+                print('PASS: cookie-free board download includes real attachment bytes only when requested')
                 check_list_soft_delete(request,client,database,token,refresh_ferret,web_session)
                 list_path='/api/boards/b/lists/l'
                 before=client.find('lists','l')[0]
