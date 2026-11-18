@@ -219,3 +219,8 @@ It uses the board’s browser session and omits integration credentials.
 The same page has HTML forms to create, edit and delete webhooks. The forms
 use one-use action tokens scoped to the board and integration, and successful
 submissions redirect back to the settings page.
+
+Site administrators can post `userId` to `/api/deletetoken` to revoke all of
+that user's login sessions. To revoke one shared Meteor bearer, also supply
+its stored SHA-256 base64 digest in `token`. An unknown digest or a raw bearer
+leaves sessions unchanged. A missing target account returns JSON 404.

@@ -7,11 +7,12 @@ uses SysUtils,StrUtils,fpjson,wldb,wlautsrc,wlenmeta,wlcrypt,wlresume;
 function RevokeLoginSessionsSQL(Db:TWLDb;const UserId:string):string;
 function RevokeUserTokensSQL(Db:TWLDb;const UserId:string):string;
 function RevokeTokenSQL(Db:TWLDb;const UserId,Token:string):string;
+function RevokeStoredTokenSQL(Db:TWLDb;const UserId,Hash:string):string;
 implementation
 function Id(const S:string):string;
 begin Result:='"'+StringReplace(S,'"','""',[rfReplaceAll])+'"';end;
-function SharedTokenEdit(Db:TWLDb;const UserId,Token:string;All:Boolean):string;
-var Rows:TWLRows;TableName,Doc,UserScope,Condition,TokenType,Empty,Value,Command,Hash,Matches:string;Cmd:TJSONObject;
+function SharedTokenEdit(Db:TWLDb;const UserId,Token:string;All:Boolean;StoredHash:Boolean=False):string;
+var Rows:TWLRows;TableName,Doc,UserScope,Condition,TokenType,Empty,Value,Command,Hash,Matches,WriteScope:string;Cmd:TJSONObject;
 begin
   Result:='';Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''users'';');
   if Length(Rows)<>1 then raise Exception.Create('Missing revocation source');
@@ -24,25 +25,30 @@ begin
   Cmd:=TJSONObject.Create;
   try
     if All then Cmd.Add('op','clear')
+    else if StoredHash then begin Cmd.Add('op','remove');Cmd.Add('hashedToken',Token);end
     else begin Cmd.Add('op','revoke');Cmd.Add('token',Token);end;
     Command:=QuotedStr(Cmd.AsJSON);
   finally Cmd.Free;end;
-  Value:='wl_resume(json('+Doc+'),'+Command+')';
-  Result:='UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') THEN userUUID ELSE NULL END WHERE id=1; '+
-    'UPDATE '+Id(TableName)+' SET '+Doc+'=CASE WHEN wl_storage('+QuotedStr(TableName)+')=''blob'' THEN jsonb('+Value+') ELSE '+Value+' END '+
-    'WHERE '+UserScope+' AND '+TokenType+IfThen(All,' IS NOT NULL','=''array''')+'; ';
   if All then
     Empty:='NOT EXISTS(SELECT 1 FROM '+Id(TableName)+' WHERE '+UserScope+') OR EXISTS(SELECT 1 FROM '+Id(TableName)+
       ' WHERE '+UserScope+' AND ('+TokenType+' IS NULL OR ('+TokenType+'=''array'' AND json_array_length('+Doc+',''$.services.resume.loginTokens'')=0)))'
   else
   begin
-    Hash:=MeteorTokenHash(Token);
+    if StoredHash then Hash:=Token else Hash:=MeteorTokenHash(Token);
     // The raw form is extracted from escaped JSON, so NUL/control bytes never
     // enter the SQL text. CASE avoids parsing scalar array entries as JSON.
-    Matches:='CASE WHEN j.type=''object'' THEN (json_extract(j.value,''$.hashedToken'')='+QuotedStr(Hash)+
-      ' OR json_extract(j.value,''$.token'')=json_extract('+Command+',''$.token'')) ELSE 0 END';
+    Matches:='CASE WHEN j.type=''object'' THEN (json_extract(j.value,''$.hashedToken'')='+QuotedStr(Hash);
+    if not StoredHash then Matches:=Matches+' OR json_extract(j.value,''$.token'')=json_extract('+Command+',''$.token'')';
+    Matches:=Matches+') ELSE 0 END';
     Empty:='NOT EXISTS(SELECT 1 FROM '+Id(TableName)+' p,json_each(p.'+Doc+',''$.services.resume.loginTokens'') j WHERE json_extract(p.'+Doc+',''$."_id"'')='+QuotedStr(UserId)+' AND ('+Matches+'))';
   end;
+  WriteScope:=UserScope;
+  if StoredHash then WriteScope:=WriteScope+
+    ' AND EXISTS(SELECT 1 FROM json_each('+Doc+',''$.services.resume.loginTokens'') j WHERE '+Matches+')';
+  Value:='wl_resume(json('+Doc+'),'+Command+')';
+  Result:='UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') THEN userUUID ELSE NULL END WHERE id=1; '+
+    'UPDATE '+Id(TableName)+' SET '+Doc+'=CASE WHEN wl_storage('+QuotedStr(TableName)+')=''blob'' THEN jsonb('+Value+') ELSE '+Value+' END '+
+    'WHERE '+WriteScope+' AND '+TokenType+IfThen(All,' IS NOT NULL','=''array''')+'; ';
   // Reject ignored updates; never drop local state while a shared match survives.
   Result:=Result+'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND ('+Empty+') THEN userUUID ELSE NULL END WHERE id=1; ';
 end;
@@ -74,4 +80,12 @@ begin
     'DELETE FROM authmeta WHERE hashedToken IN (SELECT hashedToken FROM login_tokens WHERE '+Scope+'); '+
     'DELETE FROM login_tokens WHERE '+Scope+'; ';
 end;
+function RevokeStoredTokenSQL(Db:TWLDb;const UserId,Hash:string):string;
+begin
+  Result:='';
+  if not ValidMeteorTokenHash(Hash) then Exit;
+  if not AuthSourceCurrent(Db) then raise Exception.Create('Authentication source changed');
+  Result:=SharedTokenEdit(Db,UserId,Hash,False,True);
+end;
+
 end.

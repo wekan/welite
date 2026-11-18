@@ -40,6 +40,7 @@ uses
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
+procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
 procedure ApiOrgFeatures(aRequest:TRequest;aResponse:TResponse);
@@ -495,6 +496,56 @@ begin
   end;
   if AllSessions then SendJson(aResponse,'{"message":"All login tokens have been invalidated."}')
   else SendJson(aResponse,'{"message":"You''ve been logged out!"}');
+end;
+
+procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;Actor,Target,Hash,Scope,Guard,Mutation,Message:string;
+  Input:TJSONObject;Value:TJSONData;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  if not IsSiteAdmin(T.Db,Actor) then
+  begin SendError(aResponse,403,'Site administration required');Exit;end;
+  Target:='';Hash:='';
+  Input:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+      begin
+        Input:=ExactObject(aRequest.Content);
+        Value:=Input.Find('userId');
+        if (Value<>nil) and not (Value is TJSONString) then raise Exception.Create('Invalid user ID');
+        if Value<>nil then Target:=Value.AsString;
+        Value:=Input.Find('token');
+        if (Value<>nil) and not (Value is TJSONString) then raise Exception.Create('Invalid token hash');
+        if Value<>nil then Hash:=Value.AsString;
+      end
+      else
+      begin
+        Target:=aRequest.ContentFields.Values['userId'];
+        Hash:=aRequest.ContentFields.Values['token'];
+      end;
+      if Pos(#0,Target)>0 then raise Exception.Create('Invalid user ID');
+    except SendError(aResponse,400,'Invalid token deletion request');Exit;end;
+  finally Input.Free;end;
+  if Target='' then
+  begin SendJson(aResponse,'{"message":"Expected a userId to be set but received none."}');Exit;end;
+  Scope:='id='+QuotedStr(Target);
+  if Length(T.Db.Query('SELECT 1 FROM users WHERE '+Scope+';'))<>1 then
+  begin SendJson(aResponse,'{"error":"User not found"}',404);Exit;end;
+  Guard:='(SELECT count(*) FROM users WHERE '+Scope+')=1 AND EXISTS(SELECT 1 FROM users WHERE id='+
+    QuotedStr(Actor)+' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0)';
+  try
+    if Hash='' then
+    begin Mutation:=RevokeLoginSessionsSQL(T.Db,Target);Message:='All login tokens have been invalidated.';end
+    else
+    begin Mutation:=RevokeStoredTokenSQL(T.Db,Target,Hash);Message:='Token deletion processed.';end;
+    if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+
+      ' THEN 1 ELSE json(''Token deletion scope changed'') END; '+Mutation+
+      'SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Token deletion scope changed'') END; COMMIT;') then
+      raise Exception.Create('Token deletion failed');
+  except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not revoke tokens');Exit;end;
+  SendJson(aResponse,'{"message":"'+StringToJSONString(Message)+'"}');
 end;
 
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);

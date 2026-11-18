@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Add administrative REST token revocation
+
+- Return a JSON 404 for missing users. Revoke all sessions or one shared
+  stored hash with a transactional site-admin check and secret-free responses.
+
 ## 2026-11-18 Require administrators for REST board renames
 
 - Require active board administration or site administration. Recheck

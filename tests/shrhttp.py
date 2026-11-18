@@ -1102,6 +1102,22 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
                 client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
                     services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                revoked_token='fixture-revoke-one'
+                revoked_hash=base64.b64encode(hashlib.sha256(revoked_token.encode()).digest()).decode()
+                client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$push':{
+                    'services.resume.loginTokens':dict(hashedToken=revoked_hash,when=now)}})]})
+                assert request('GET','/api/user',token=revoked_token)[0]==200
+                revoke='/api/deletetoken'
+                assert request('POST',revoke,dict(userId='u',token=revoked_hash),target_token)[0]==403
+                assert request('POST',revoke,dict(userId='u',token=revoked_token),admin_token)[0]==200
+                assert request('GET','/api/user',token=revoked_token)[0]==200
+                status,_,body=request('POST',revoke,dict(userId='missing'),admin_token)
+                assert status==404 and json.loads(body)=={'error':'User not found'}
+                status,_,body=request('POST',revoke,dict(userId='u',token=revoked_hash),admin_token)
+                assert status==200 and revoked_hash.encode() not in body
+                assert request('GET','/api/user',token=revoked_token)[0]==401
+                assert request('GET','/api/user',token=target_token)[0]==200
+                print('PASS: admin revokes a specific stored hash and preserves other sessions')
                 for group in ['org','team']:
                     endpoint='/api/admin/'+group+'s'
                     assert request('GET',endpoint)[0]==401

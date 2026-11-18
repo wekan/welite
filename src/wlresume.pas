@@ -5,6 +5,7 @@ uses SysUtils,Classes,Math,fpjson,base64,wlcrypt,wlsjson,wllife;
 // Meteor's shared token digest is SHA256(raw UTF-8 bytes), standard padded base64.
 // It is deliberately distinct from WeLite's tenant-scoped private token digest.
 function MeteorTokenHash(const Token:string):string;
+function ValidMeteorTokenHash(const Hash:string):Boolean;
 // Pure SJSON edit: append {hashedToken,when:BSON Date}, remove matching hashes,
 // clear/expire records, revoke both forms, or convert a legacy raw bearer.
 // This function does not authorize the caller.
@@ -38,13 +39,22 @@ begin
     Result:=EncodeStringBase64(Bytes);
   finally UniqueString(Bytes);FillChar(Bytes[1],Length(Bytes),0);end;
 end;
-procedure ValidateHash(const Hash:string);
+function ValidMeteorTokenHash(const Hash:string):Boolean;
 var Bytes:RawByteString;
 begin
-  if Length(Hash)<>44 then Invalid;
-  Bytes:=DecodeStringBase64(Hash);
-  if (Length(Bytes)<>32) or (EncodeStringBase64(Bytes)<>Hash) then Invalid;
+  Result:=False;
+  if Length(Hash)<>44 then Exit;
+  try
+    Bytes:=DecodeStringBase64(Hash);
+    Result:=(Length(Bytes)=32) and (EncodeStringBase64(Bytes)=Hash);
+  except Result:=False;end;
 end;
+
+procedure ValidateHash(const Hash:string);
+begin
+  if not ValidMeteorTokenHash(Hash) then Invalid;
+end;
+
 function TokenSchemas(Raw:TJSONData):TJSONData;
 begin
   Result:=Child(Child(Child(Raw,'$s'),'p'),'services');
