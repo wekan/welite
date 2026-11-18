@@ -946,6 +946,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     exported=next(row for row in json.loads(body)['attachments'] if row['_id']==attachment_id)
                     if suffix:assert 'file' not in exported
                     else:assert base64.b64decode(exported['file'])==contents
+                if os.environ.get('WELITE_UI')=='1':
+                    subprocess.run([os.environ.get('NODE','node'),str(root/'tests/boardexp.js'),
+                                    f'http://localhost:{http_port}/board?id=b&sessionId='+web_session,
+                                    card['_id'],attachment_id,base64.b64encode(contents).decode('ascii')],check=True)
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')
                 check_list_soft_delete(request,client,database,token,web_session)
