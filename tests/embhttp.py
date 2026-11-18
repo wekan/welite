@@ -80,6 +80,12 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                         assert status==404 and headers['Content-Language']==tag and 'Set-Cookie' not in headers
                         assert (b'dir="rtl"' in body)==(direction=='rtl'),tag
                         assert words[key].encode() in body,(tag,key)
+                for tag in ('fi', 'ar'):
+                    status,headers,body=request('GET',f'/two-factor/setup?lang={tag}')
+                    words=json.loads((root/f'i18n/data/{tag}.jsn').read_text())
+                    assert status==200 and headers['Content-Language']==tag
+                    assert headers['Cache-Control']=='no-store' and 'Set-Cookie' not in headers
+                    assert words['enrollment-password-instructions'].encode() in body
                 status,headers,body=request('GET','/sign-in?lang=fi')
                 assert status==200 and headers['Content-Language']=='fi'
                 assert json.loads((root/'i18n/data/fi.jsn').read_text())['username'].encode() in body
