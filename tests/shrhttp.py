@@ -348,6 +348,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 stop()
                 app=start('')
                 assert request('GET','/sign-in')[0]==200 and not shadow.exists()
+                client.command({'create':'settings'})
+                client.command({'insert':'settings','documents':[
+                    dict(_id='registration-policy',loginOptions=dict(passwordLoginEnabled=False))]})
+                try:
+                    status,headers,body=request('POST','/register?lang=ar',
+                        'username=policy-refused&password=test-password&confirm=test-password')
+                    assert status==200 and headers['Content-Language']=='ar'
+                    assert '<p>التسجيل باستخدام كلمة مرور غير متاح.</p>'.encode() in body
+                    assert 'Location' not in headers and 'Set-Cookie' not in headers
+                    assert not client.command({'find':'users','filter':{'username':'policy-refused'}})['cursor']['firstBatch']
+                finally:
+                    client.command({'delete':'settings','deletes':[dict(q={'_id':'registration-policy'},limit=1)]})
+                print('PASS: disabled password registration returns localized policy denial without creating an account')
+
                 with sqlite3.connect(database) as con:
                     assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
                 status,_,body=request('POST','/users/login',dict(username='user',password='test-password'))
@@ -941,7 +955,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 exported_user,=exported['users']
                 assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
                 assert all(key not in exported_user for key in ('services','emails','loginTokens'))
-                client.command({'create':'settings'})
+
                 client.command({'insert':'settings','documents':[dict(_id='export-settings',disableAllExport=True)]})
                 assert request('GET',export_path,token=token)[0]==403
                 client.command({'delete':'settings','deletes':[dict(q={'_id':'export-settings'},limit=1)]})

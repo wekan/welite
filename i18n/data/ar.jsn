@@ -2117,5 +2117,6 @@
   "enrollment-setup-failed": "تعذّر بدء الإعداد",
   "registration-global-admin-disabled": "تُنشأ حسابات المسؤولين العامّين محليًا. التسجيل العام معطّل.",
   "auth-session-create-failed": "تعذّر إنشاء جلسة",
-  "registration-session-failed": "تم إنشاء الحساب. سجّل الدخول للمتابعة."
+  "registration-session-failed": "تم إنشاء الحساب. سجّل الدخول للمتابعة.",
+  "registration-password-unavailable": "التسجيل باستخدام كلمة مرور غير متاح."
 }

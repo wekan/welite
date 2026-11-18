@@ -432,7 +432,11 @@ begin
     Hash  := HashMeteorPassword(Password); // JSON object stored at services.password
     RegistrationPolicy:=ResolvedFactorPolicy(T.Db,'password','{"password":'+Hash+'}',First,PolicySecret,PolicyCondition);
     if not (RegistrationPolicy in [fpNone,fpRequired]) then
-    begin SendHtml(aResponse,AuthPage(aRequest,aResponse,'Register','<p>Registration with a password is unavailable.</p>'));Exit;end;
+    begin
+      AuthError(aRequest,aResponse,200,'register','Register',
+        'Registration with a password is unavailable.','registration-password-unavailable');
+      Exit;
+    end;
     Iso   := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', Now);
     if not T.Db.Exec(Format(
       'INSERT INTO users(id,username,isAdmin,authenticationMethod,createdAt,modifiedAt,' +
