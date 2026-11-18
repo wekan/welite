@@ -219,6 +219,9 @@ containers. Values containing prose remain for contextual review. `--apply` writ
 to the parent checkout's existing `.tools/tmp` on the same filesystem. Files are
 staged there before individual atomic replacements; a changed input is refused.
 Repair records must stay outside the locale data directory. Symlinks are skipped.
+Numbered Transifex-style protected markers use the matching English source
+order, including protected HTML and inline-code spans. Repairs are accepted
+only when the final application placeholder inventory matches English.
 
 The tool preserves prose outside token spans and every other value/key order.
 HTTP(S) URL percent octets remain data; named and printf tokens preserve their

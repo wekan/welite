@@ -15,6 +15,9 @@ import re
 URL=re.compile(r'''https?://[^\s<>"']+''')
 OCTET=re.compile(r'%[0-9a-f]{2}',re.I)
 CODE_TITLES={'act-withBoardTitle','act-withCardTitle'}
+# Match the maintained WeKan protected-marker format and source numbering.
+INDEXED_MARKER=re.compile(r'(?:@\s*){1,2}PH(\d+)(?:\s*@){1,2}')
+PROTECTED_SOURCE=re.compile(r'`[^`]+`|<[^>]+>|__[^\s]+?__|%(?:\d+\$)?[A-Za-z]')
 TOKEN=re.compile(r'__[^\s]+?__|%\{[^}]+\}|%%|%(?:\d+\$)?[-+#0]*(?:\d+|\*)?(?:\.(?:\d+|\*))?[A-Za-z]|%\d+')
 def spans(value):
     octets=[]
@@ -41,6 +44,13 @@ def code_only(value):
     remainder=re.sub(r'_+[^_]+?_+','',remainder)
     return re.search(r'[^\W_]',remainder,flags=re.UNICODE) is None
 def repair(source,value,key=''):
+    markers=list(INDEXED_MARKER.finditer(value))
+    if markers:
+        protected=PROTECTED_SOURCE.findall(source)
+        indexes=[int(match[1]) for match in markers]
+        if len(indexes)!=len(set(indexes)) or any(index>=len(protected) for index in indexes):return None
+        changed=INDEXED_MARKER.sub(lambda match:protected[int(match[1])],value)
+        return changed if tokens(changed)==tokens(source) else None
     if key in CODE_TITLES and tokens(source)!=tokens(value) and code_only(source) and code_only(value):return source
     # Broken/unclosed markers or stacked fences need a separate contextual review.
     if '__' in prose(source) or '__' in prose(value) or '___' in source or '___' in value:return None
@@ -88,7 +98,7 @@ def plan(directory):
         for key,source in english.items():
             if key not in original:continue
             value=original[key]
-            if tokens(value)==tokens(source):continue
+            if tokens(value)==tokens(source) and not INDEXED_MARKER.search(value):continue
             changed=repair(source,value,key)
             if changed is None:deferred+=1;continue
             updated[key]=changed;keys.append(key)

@@ -36,6 +36,13 @@ assert module.tokens('https://x/%s/%1$s/__name__')==Counter({'%s':1,'%1$s':1,'__
 assert module.tokens('https://x/%%20f')==Counter()
 assert module.tokens('https://x/__foo%20bar__/%{foo%20bar}')==Counter({'__foo%20bar__':1,'%{foo%20bar}':1})
 assert module.tokens('100% of text')==Counter()
+# Protected HTML and inline code share the same numbering as arguments.
+assert module.repair('<b>__user__</b> `name`','@@ PH3 @@: @@ PH0 @@@@ PH1 @@@@ PH2 @@')==(
+    '`name`: <b>__user__</b>')
+assert module.repair('__card__ on __board__','@@ PH1 @@: @@ PH0 @@')=='__board__: __card__'
+assert module.repair('__card__ on __board__','@@ PH0 @@: @@ PH0 @@') is None
+assert module.repair('__card__','@@ PH7 @@') is None
+assert module.repair('__card__ on __board__','@@ PH0 @@') is None
 with tempfile.TemporaryDirectory(prefix='wltok-',dir=os.environ['TMPDIR']) as directory:
     out=Path(directory);data=out/'data';data.mkdir()
     source=dict(rename='Hello __user__',missing='%s %s',human='Keep')
