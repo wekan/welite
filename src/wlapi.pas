@@ -39,6 +39,7 @@ uses
   wldb, wltenant, wlauth, wlpasswd, wlaccess, wlattemp;
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
+procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
 procedure ApiPublicBoards(aRequest: TRequest; aResponse: TResponse);
@@ -87,7 +88,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -140,17 +141,26 @@ begin
   begin Result:=False; SendError(aResponse,400,'Expected a valid JSON object'); end;
 end;
 
+function BearerToken(Request:TRequest):string;
+var Header:string;
+begin
+  Header:=Request.Authorization;
+  if Header='' then Header:=Request.CustomHeaders.Values['Authorization'];
+  Result:='';
+  if Pos('Bearer ',Header)=1 then Result:=Trim(Copy(Header,8,Length(Header)));
+end;
+
 // Bearer token -> userId via login_tokens; sends 401 JSON if missing/invalid.
 function ApiAuth(const T: TWLTenant; aRequest: TRequest; aResponse: TResponse;
   out UserId: string): Boolean;
 var
-  Hdr,Token:string;
+  Token:string;
 begin
-  Result := False; UserId := '';
-  Hdr := aRequest.Authorization;
-  if Hdr = '' then Hdr := aRequest.CustomHeaders.Values['Authorization'];
-  if Pos('Bearer ', Hdr) = 1 then Token := Trim(Copy(Hdr, 8, Length(Hdr)))
-  else Token := Trim(aRequest.QueryFields.Values['token']);   // ?token= fallback
+  Result:=False;UserId:='';
+  Token:=BearerToken(aRequest);
+  if (Token='') and (Pos('Bearer ',aRequest.Authorization)<>1) and
+    (Pos('Bearer ',aRequest.CustomHeaders.Values['Authorization'])<>1) then
+    Token:=Trim(aRequest.QueryFields.Values['token']);
   if Token = '' then begin SendError(aResponse, 401, 'No token'); Exit; end;
 
   Result:=ValidateLoginToken(T.Db,aRequest,Token,UserId);
@@ -376,6 +386,41 @@ begin
       SendJson(aResponse,O.AsJSON);
     finally O.Free;end;
   finally Proof.Free;end;
+end;
+
+procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;Token,UserId,Flag,Sql:string;Body,Value:TJSONData;AllSessions:Boolean;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  Token:=BearerToken(aRequest);
+  if (Token='') or not ValidateLoginToken(T.Db,aRequest,Token,UserId) then
+  begin SendError(aResponse,401,'Invalid bearer token');Exit;end;
+  Flag:=aRequest.ContentFields.Values['all'];
+  if (Pos('application/json',LowerCase(aRequest.ContentType))=1) and (aRequest.Content<>'') then
+  begin
+    Body:=GetJSON(aRequest.Content);
+    try
+      Flag:='';Value:=TJSONObject(Body).Find('all');
+      if Value<>nil then
+        case Value.JSONType of
+          jtString: Flag:=Value.AsString;
+          jtBoolean: if Value.AsBoolean then Flag:='true';
+          jtNumber: if Value.AsFloat=1 then Flag:='1';
+        end;
+    finally Body.Free;end;
+  end;
+  Flag:=LowerCase(Trim(Flag));
+  AllSessions:=(Flag='true') or (Flag='1') or (Flag='yes');
+  try
+    if AllSessions then Sql:=RevokeLoginSessionsSQL(T.Db,UserId)
+    else Sql:=RevokeTokenSQL(T.Db,UserId,Token);
+    if not T.Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then
+      raise Exception.Create('Logout transaction failed');
+  except
+    T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Logout failed');Exit;
+  end;
+  if AllSessions then SendJson(aResponse,'{"message":"All login tokens have been invalidated."}')
+  else SendJson(aResponse,'{"message":"You''ve been logged out!"}');
 end;
 
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);

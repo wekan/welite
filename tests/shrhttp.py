@@ -202,10 +202,29 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert b'dir="rtl"' not in profile_response[2] and profile_response[1]['Content-Language']=='fi'
                 assert client.find('users','u')[0]['profile']==dict(language='fi',retained=Long(9007199254740993))
                 assert len(client.find('users','u')[0]['services']['resume']['loginTokens'])==1,'Private browser session became a Meteor bearer'
+                tokens=['fixture-first-rest-token','fixture-second-rest-token','fixture-third-rest-token']
+                records=[dict(hashedToken=base64.b64encode(hashlib.sha256(raw.encode()).digest()).decode(),when=now)
+                         for raw in tokens]
+                client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'services.resume.loginTokens':records}})]})
+                assert request('POST','/users/logout',{},tokens[0])[0]==200
+                assert request('GET','/api/user',token=tokens[0])[0]==401
+                assert client.find('users','u')[0]['services']['resume']['loginTokens']==records[1:]
+                assert request('GET','/api/user',token=tokens[1])[0]==200
+                assert request('GET',board_url)[0]==200
+                assert request('POST','/users/logout',dict(all=True),tokens[1])[0]==200
+                assert client.find('users','u')[0]['services']['resume']['loginTokens']==[]
+                for raw in tokens[1:]:
+                    assert request('GET','/api/user',token=raw)[0]==401
+                assert request('GET',board_url)[0]==404
+                print('PASS: shared REST logout preserves other sessions by default and revokes all on request')
+                restart_token='fixture-restart-token'
+                restart_record=dict(hashedToken=base64.b64encode(hashlib.sha256(restart_token.encode()).digest()).decode(),when=now)
+                client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'services.resume.loginTokens':[restart_record]}})]})
+                assert request('GET','/api/user',token=restart_token)[0]==200
                 stop();app=start('1')
-                assert request('GET','/api/user',token=token)[0]==200,'API token did not survive adapter restart'
+                assert request('GET','/api/user',token=restart_token)[0]==200,'API token did not survive adapter restart'
                 client.command({'update':'users','updates':[dict(q=dict(_id='u'),u={'$set':{'services.resume.loginTokens':[]}})]})
-                assert request('GET','/api/user',token=token)[0]==401
+                assert request('GET','/api/user',token=restart_token)[0]==401
                 assert not shadow.exists(),'A normalized public database shadowed the shared file'
                 with sqlite3.connect(database) as con:assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
                 stop()

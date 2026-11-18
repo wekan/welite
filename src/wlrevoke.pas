@@ -4,6 +4,7 @@ interface
 uses SysUtils,StrUtils,fpjson,wldb,wlautsrc,wlenmeta,wlcrypt,wlresume;
 // Append inside the caller's transaction; rollback the owning action on failure.
 // These fragments do not authorize the caller.
+function RevokeLoginSessionsSQL(Db:TWLDb;const UserId:string):string;
 function RevokeUserTokensSQL(Db:TWLDb;const UserId:string):string;
 function RevokeTokenSQL(Db:TWLDb;const UserId,Token:string):string;
 implementation
@@ -45,18 +46,23 @@ begin
   // Reject ignored updates; never drop local state while a shared match survives.
   Result:=Result+'UPDATE _wl_authsrc SET userUUID=CASE WHEN ('+Condition+') AND ('+Empty+') THEN userUUID ELSE NULL END WHERE id=1; ';
 end;
-function RevokeUserTokensSQL(Db:TWLDb;const UserId:string):string;
-var Rows:TWLRows;
+function RevokeLoginSessionsSQL(Db:TWLDb;const UserId:string):string;
 begin
   if UserId='' then raise Exception.Create('Missing revocation user');
   if not AuthSourceCurrent(Db) then raise Exception.Create('Authentication source changed');
+  Result:=SharedTokenEdit(Db,UserId,'',True)+
+    'DELETE FROM authmeta WHERE hashedToken IN (SELECT hashedToken FROM login_tokens WHERE userId='+QuotedStr(UserId)+'); '+
+    'DELETE FROM login_tokens WHERE userId='+QuotedStr(UserId)+'; ';
+end;
+function RevokeUserTokensSQL(Db:TWLDb;const UserId:string):string;
+var Rows:TWLRows;
+begin
   Rows:=Db.Query('SELECT type,sql FROM sqlite_master WHERE name=''_wl_enrol'';');
   if (Length(Rows)>0) and ((Length(Rows)<>1) or (Rows[0][0]<>'table') or (Rows[0][1]<>EnrollDDL)) then
     raise Exception.Create('Incompatible pending enrollment store');
-  Result:=StringReplace(EnrollDDL,'CREATE TABLE ','CREATE TABLE IF NOT EXISTS ',[])+'; '+SharedTokenEdit(Db,UserId,'',True)+
-    'DELETE FROM _wl_enrol WHERE userId='+QuotedStr(UserId)+'; '+
-    'DELETE FROM authmeta WHERE hashedToken IN (SELECT hashedToken FROM login_tokens WHERE userId='+QuotedStr(UserId)+'); '+
-    'DELETE FROM login_tokens WHERE userId='+QuotedStr(UserId)+'; ';
+  Result:=RevokeLoginSessionsSQL(Db,UserId)+
+    StringReplace(EnrollDDL,'CREATE TABLE ','CREATE TABLE IF NOT EXISTS ',[])+'; '+
+    'DELETE FROM _wl_enrol WHERE userId='+QuotedStr(UserId)+'; ';
 end;
 function RevokeTokenSQL(Db:TWLDb;const UserId,Token:string):string;
 var Scope:string;

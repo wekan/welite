@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Revoke REST bearer tokens on logout
+
+- Add `POST /users/logout` with single-token and logout-everywhere modes.
+  Shared resume tokens and local credentials are revoked in one transaction.
+  Default logout preserves other sessions.
+
 ## 2026-11-18 Require board administration for REST label creation
 
 - Allow board and site admins to create labels and recheck authorization in
