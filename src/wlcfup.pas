@@ -6,6 +6,7 @@ function EnsureSettingsColumn(Db:TWLDb):Boolean;
 function EnsureFieldPolicyColumns(Db:TWLDb):Boolean;
 function EnsureDropdownColumn(Db:TWLDb):Boolean;
 function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
+function EnsureDeleteMarkers(Db:TWLDb):Boolean;
 implementation
 const ValidSettings='CASE WHEN json_valid(settings_json) THEN json_type(settings_json)=''object'' AND '+
   'json_type(settings_json,''$.currencyCode'') IS NULL AND json_type(settings_json,''$.stringtemplateFormat'') IS NULL AND '+
@@ -101,11 +102,10 @@ begin
   Result:=Inspect and Found;
 end;
 
-function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
-const Tables:array[0..1] of string=('checklists','checklist_items');
+function EnsureNullableTextColumns(Db:TWLDb;const Tables,Columns:array of string):Boolean;
 var Sql:string;
   function Inspect(out AlterSql:string):Boolean;
-  var TableName:string;Rows:TWLRows;Row:TWLRow;Found:Boolean;
+  var TableName,ColumnName:string;Rows:TWLRows;Row:TWLRow;Found:Boolean;
   begin
     AlterSql:='';
     for TableName in Tables do
@@ -113,14 +113,18 @@ var Sql:string;
       Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name='+QuotedStr(TableName)+';');
       if Length(Rows)=0 then Continue;
       if (Length(Rows)<>1) or (Rows[0][0]<>'table') then Exit(False);
-      Rows:=Db.Query('PRAGMA table_info('+TableName+');');Found:=False;
+      Rows:=Db.Query('PRAGMA table_info('+TableName+');');
       if Length(Rows)=0 then Exit(False);
-      for Row in Rows do if SameText(Row[1],'dueAt') then
+      for ColumnName in Columns do
       begin
-        if (UpperCase(Row[2])<>'TEXT') or (Row[3]<>'0') or (Row[4]<>'') or (Row[5]<>'0') then Exit(False);
-        Found:=True;
+        Found:=False;
+        for Row in Rows do if SameText(Row[1],ColumnName) then
+        begin
+          if (UpperCase(Row[2])<>'TEXT') or (Row[3]<>'0') or (Row[4]<>'') or (Row[5]<>'0') then Exit(False);
+          Found:=True;
+        end;
+        if not Found then AlterSql:=AlterSql+'ALTER TABLE '+TableName+' ADD COLUMN '+ColumnName+' TEXT; ';
       end;
-      if not Found then AlterSql:=AlterSql+'ALTER TABLE '+TableName+' ADD COLUMN dueAt TEXT; ';
     end;
     Result:=True;
   end;
@@ -129,5 +133,14 @@ begin
   if Sql='' then Exit(True);
   if not Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then Db.Exec('ROLLBACK;');
   Result:=Inspect(Sql) and (Sql='');
+end;
+function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
+begin
+  Result:=EnsureNullableTextColumns(Db,['checklists','checklist_items'],['dueAt']);
+end;
+
+function EnsureDeleteMarkers(Db:TWLDb):Boolean;
+begin
+  Result:=EnsureNullableTextColumns(Db,['lists','cards'],['deletedAt','deletedBy','deleteBatchId']);
 end;
 end.

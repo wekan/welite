@@ -31,6 +31,21 @@ with tempfile.TemporaryDirectory(prefix='wlcfup-',dir=os.environ['TMPDIR']) as d
         assert run(conflict,'deadline')=='no'
         with sqlite3.connect(conflict) as con:
             assert [row[1] for row in con.execute('PRAGMA table_info(checklists)')]==['id']
+        markers=out/'markers.db'
+        with sqlite3.connect(markers) as con:
+            con.executescript("CREATE TABLE lists(id TEXT); CREATE TABLE cards(id TEXT); INSERT INTO cards VALUES('old');")
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            assert list(pool.map(lambda _:run(markers,'delete'),range(4)))==['yes']*4
+        with sqlite3.connect(markers) as con:
+            assert con.execute('SELECT id,deletedAt,deletedBy,deleteBatchId FROM cards').fetchall()==[('old',None,None,None)]
+            assert con.execute('SELECT deletedAt,deletedBy,deleteBatchId FROM lists').fetchall()==[]
+        bad_markers=out/'badmarkers.db'
+        with sqlite3.connect(bad_markers) as con:
+            con.executescript("CREATE TABLE lists(id TEXT); CREATE TABLE cards(deleteBatchId INTEGER);")
+        assert run(bad_markers,'delete')=='no'
+        with sqlite3.connect(bad_markers) as con:
+            assert [row[1] for row in con.execute('PRAGMA table_info(lists)')]==['id']
+        print(f'PASS: {backend} additive deadline and soft-delete metadata upgrades preserve legacy rows')
         def legacy(db):
             with sqlite3.connect(db) as con:
                 con.executescript("CREATE TABLE custom_fields(id TEXT PRIMARY KEY,name TEXT,currencyCode TEXT,legacy INTEGER); INSERT INTO custom_fields VALUES('field','漢','EUR',7); CREATE TABLE related(field TEXT REFERENCES custom_fields(id)); INSERT INTO related VALUES('field');")

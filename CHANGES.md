@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Store reversible deletion metadata for lists and cards
+
+- Map the WeKan deletion date, actor and batch IDs in fresh native SQLite
+  and shared FerretDB models. Upgrade existing native stores concurrently
+  without dropping rows. REST soft deletion and undo handling remain open.
+
 ## 2026-11-18 Place new REST lists in the requested or default swimlane
 
 - Honor a same-board swimlane and prefer the first active swimlane for
