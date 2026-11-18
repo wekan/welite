@@ -148,6 +148,26 @@ def run(request, client, db, token, refresh_ferret, session):
         finally:
             assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
     print('PASS: shared lifecycle fences expired legacy claims and preserves landed history rows')
+    live_writer='33333333-4444-4555-8666-777777777777'
+    live_lease=dict(lease,_id=live_writer,expiresAt=DateMs(4102444800000),pending=None)
+    assert client.command({'insert':'historyWriterGates','documents':[dict(idle_gate,writers=[live_writer,writer])]})['n']==1
+    assert client.command({'insert':'historyWriterLeases','documents':[dict(lease,pending=None),live_lease]})['n']==2
+    try:
+        assert request('DELETE',path,token=token)[0]==200
+        assert not client.find('historyWriterLeases',writer)
+        assert client.find('historyWriterLeases',live_writer)==[live_lease]
+        assert client.find('historyWriterGates',gate_id)==[dict(idle_gate,writers=[live_writer])]
+        assert changes()==lifecycle
+        assert client.command({'update':'historyWriterLeases','updates':[
+            dict(q={'_id':live_writer},u={'$set':dict(expiresAt=DateMs(1000))})]})['n']==1
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        assert not client.find('historyWriterLeases',live_writer)
+        assert client.find('historyWriterGates',gate_id)==[idle_gate]
+        lifecycle=changes()
+        removed,added=lifecycle['removed'],lifecycle['added']
+    finally:
+        assert client.command({'delete':'historyWriterGates','deletes':[dict(q={'_id':gate_id},limit=1)]})['n']==1
+    print('PASS: expired legacy recovery preserves other live writer leases and tokens')
     assert client.command({'insert':'historyWriterGates','documents':[
         dict(_id='list-test-gate',boardId='b',mode='coordinated') ]})['n']==1
     try:
