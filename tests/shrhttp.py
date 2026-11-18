@@ -249,6 +249,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                                      dueAt='2026-06-07T12:00:00.000Z')],
                     checklistItems=[dict(_id='import-item',checklistId='import-checklist',cardId=input_card,
                                          title='Imported item',isFinished=True)])
+                client.command({'insert':'users','documents':[dict(_id='import-local-author',username='import-local-author')]})
+                mapping={'external-author':'import-local-author'}
+                imported_payload['members']=[dict(userId='external-author',isActive=True,isAdmin=True)]
+                imported_payload['comments'][0]['userId']='external-author'
+                assert request('POST',import_path,dict(board=imported_payload,
+                    membersMapping={'external-author':'unknown-user'}),token)[0]==400
                 attachment_contents=b'Board import binary fixture\x00'
                 imported_payload['attachments']=[dict(_id='import-attachment',cardId=input_card,name='Imported file.bin',
                     type='application/octet-stream',file=base64.b64encode(attachment_contents).decode())]
@@ -256,7 +262,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 stored_before=set(data.parent.glob('attachme/**/*.bin'))
                 assert request('POST',import_path,dict(board=bad_payload),token)[0]==400
                 assert set(data.parent.glob('attachme/**/*.bin'))==stored_before
-                status,_,body=request('POST',import_path,dict(board=imported_payload),token)
+                status,_,body=request('POST',import_path,dict(board=imported_payload,membersMapping=mapping),token)
                 assert status==200,(status,body)
                 imported_id=json.loads(body)['_id']
                 assert imported_id!='b'
@@ -274,7 +280,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert imported_comment['cardId']==imported_check['cardId']==imported_item['cardId']==imported_card['_id']
                 assert imported_item['checklistId']==imported_check['_id'] and imported_item['isFinished'] is True
                 assert isinstance(imported_check['dueAt'],DateMs)
-                assert imported_comment['text']=='Imported comment' and imported_comment['userId']=='u'
+                assert imported_comment['text']=='Imported comment' and imported_comment['userId']=='import-local-author'
+                imported_members={row['userId']:row for row in client.find('boards',imported_id)[0]['members']}
+                assert imported_members['u']['isAdmin'] is True
+                assert imported_members['import-local-author']['isActive'] is False
+                assert imported_members['import-local-author']['isAdmin'] is False
+                print('PASS: board import maps authors to existing local users without granting board access')
                 imported_attachment,=client.command({'find':'attachments','filter':{'meta.boardId':imported_id}})['cursor']['firstBatch']
                 assert imported_attachment['meta']['cardId']==imported_card['_id']
                 status,_,body=request('GET','/api/attachment/download/'+imported_attachment['_id'],token=token)

@@ -1358,8 +1358,8 @@ procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..9] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name:string;
-  Body,Input,Row,Reply:TJSONObject;Maps:array[0..9] of TJSONObject;Arrays:array[0..9] of TJSONArray;
-  Value:TJSONData;Rows:TWLRows;I,J:Integer;Files:TStringList;Committed:Boolean;
+  Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..9] of TJSONObject;Arrays:array[0..9] of TJSONArray;
+  Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
   begin
@@ -1368,6 +1368,46 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     if not (Field is TJSONString) or (Pos(#0,Field.AsString)>0) then
       raise EConvertError.Create('Invalid import text field');
     Result:=Field.AsString;
+  end;
+  function ImportedAuthor(Obj:TJSONObject):string;
+  begin Result:=MemberMap.Get(Text(Obj,'userId'),Actor);end;
+  procedure ReadMemberMapping;
+  var Mapping,Target:TJSONData;Source:TSelectionScope;FindUser,Identity,SourceId:string;Found:TWLRows;K:Integer;
+  begin
+    Mapping:=Body.Find('membersMapping');
+    if Mapping=nil then Exit;
+    if not (Mapping is TJSONObject) then raise EConvertError.Create('Invalid member mapping');
+    Source:=TSelectionScope.Create(T.Db);
+    try
+      FindUser:=Source.StringField('users','id');
+      for K:=0 to Mapping.Count-1 do
+      begin
+        Target:=Mapping.Items[K];SourceId:=TJSONObject(Mapping).Names[K];
+        if not (Target is TJSONString) or (Target.AsString='') or (Pos(#0,Target.AsString)>0) or
+          (SourceId='') or (Pos(#0,SourceId)>0) then raise EConvertError.Create('Invalid member identity');
+        Identity:='(SELECT count(*) FROM users WHERE id='+QuotedStr(Target.AsString)+
+          ' AND COALESCE(loginDisabled,0)=0 AND '+FindUser+')=1';
+        Found:=T.Db.Query('SELECT '+Identity+';');
+        if (Length(Found)<>1) or (Found[0][0]<>'1') then raise EConvertError.Create('Invalid mapped account');
+        Guard:=Guard+' AND '+Identity;
+        MemberMap.Add(SourceId,Target.AsString);
+      end;
+    finally Source.Free;end;
+  end;
+  procedure ImportInactiveMembers;
+  var Members,Entry:TJSONData;LocalId:string;K:Integer;
+  begin
+    Members:=Input.Find('members');
+    if not (Members is TJSONArray) then Exit;
+    for K:=0 to Members.Count-1 do
+    begin
+      Entry:=Members.Items[K];if not (Entry is TJSONObject) then Continue;
+      LocalId:=MemberMap.Get(Text(TJSONObject(Entry),'userId',Text(TJSONObject(Entry),'id')),'');
+      if (LocalId='') or (LocalId=Actor) or (ImportedMembers.IndexOf(LocalId)>=0) then Continue;
+      ImportedMembers.Add(LocalId);
+      Sql:=Sql+'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+
+        QuotedStr(LocalId)+',0,0); ';
+    end;
   end;
   function Mapped(Index:Integer;const Id:string;Required:Boolean=False):string;
   begin
@@ -1415,7 +1455,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       CardKey:=QuotedStr(Mapped(2,Text(Entry,'cardId'),True));
       Parent:=Mapped(6,Text(Entry,'parentId'));
       Sql:=Sql+'INSERT INTO card_comments(id,boardId,cardId,userId,text,parentId,createdAt,modifiedAt) VALUES('+
-        Id+','+Board+','+CardKey+','+QuotedStr(Actor)+','+QuotedStr(Text(Entry,'text'))+','+QuotedStr(Parent)+','+
+        Id+','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+QuotedStr(Text(Entry,'text'))+','+QuotedStr(Parent)+','+
         ImportedDate(Entry,'createdAt',Stamp)+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
     end;
     if Arrays[7]<>nil then for K:=0 to Arrays[7].Count-1 do
@@ -1485,7 +1525,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       Files.Add(Path);WriteFileBytes(Path,Bytes);
       Sql:=Sql+'INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,storageBackend,userId,createdAt) VALUES('+
         QuotedStr(Id)+','+Board+','+LaneKey+','+ListKey+','+CardKey+','+QuotedStr(Filename)+','+QuotedStr(Mime)+
-        ','+IntToStr(Length(Bytes))+',''filesystem'','+QuotedStr(Actor)+','+Stamp+'); ';
+        ','+IntToStr(Length(Bytes))+',''filesystem'','+QuotedStr(ImportedAuthor(Entry))+','+Stamp+'); ';
       Sql:=Sql+'SELECT CASE WHEN EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+' AND boardId='+Board+
         ' AND size='+IntToStr(Length(Bytes))+') THEN 1 ELSE json(''Attachment import failed'') END; ';
     end;
@@ -1561,6 +1601,7 @@ begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
+  MemberMap:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
@@ -1600,12 +1641,14 @@ begin
       Rows:=T.Db.Query('SELECT '+Permission+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
       begin SendError(aResponse,403,'Board import is restricted');Exit;end;
+      ReadMemberMapping;
       BoardId:=NewId;Board:=QuotedStr(BoardId);Stamp:=QuotedStr(NowIso);
       Name:=Text(Input,'color','belize');if Name='' then Name:='belize';
       Sql:='INSERT INTO boards(id,title,slug,description,permission,color,createdAt,modifiedAt) VALUES('+
         Board+','+QuotedStr(Title)+','+QuotedStr(Slugify(Title))+','+QuotedStr(Text(Input,'description'))+
         ',''private'','+QuotedStr(Name)+','+Stamp+','+Stamp+'); '+
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
+      ImportInactiveMembers;
       if Arrays[0]<>nil then for J:=0 to Arrays[0].Count-1 do
       begin
         Row:=Arrays[0].Objects[J];
@@ -1629,7 +1672,7 @@ begin
           'createdAt,modifiedAt,dateLastActivity) VALUES('+QuotedStr(Mapped(2,Text(Row,'_id'),True))+','+Board+','+
           QuotedStr(Mapped(1,Text(Row,'listId'),True))+','+QuotedStr(CardListLane(Row))+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
-          QuotedStr(Text(Row,'description'))+','+QuotedStr(Actor)+','+SortValue(Row)+','+IntToStr(J+1)+
+          QuotedStr(Text(Row,'description'))+','+QuotedStr(ImportedAuthor(Row))+','+SortValue(Row)+','+IntToStr(J+1)+
           ','+Stamp+','+Stamp+','+Stamp+'); ';
       end;
       ImportCardChildren;
@@ -1647,7 +1690,7 @@ begin
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally
     if not Committed then for I:=0 to Files.Count-1 do DeleteFile(Files[I]);
-    Files.Free;
+    ImportedMembers.Free;MemberMap.Free;Files.Free;
     for I:=0 to High(Maps) do Maps[I].Free;
     Body.Free;
   end;
