@@ -414,8 +414,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     dict(_id='invalid-lane',title='Default color',color=['green']),
                 ])
                 presentation['cards']=[
-                    dict(_id='palette-card',title='Green card',cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='green'),
-                    dict(_id='hex-card',title='Hex card',cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
+                    dict(_id='palette-card',title='Green card',sort=100,cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='green'),
+                    dict(_id='hex-card',title='Hex card',sort=200,cardNumber=47,listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
                     dict(_id='unknown-card',title='Uncolored card',listId='invalid-list',swimlaneId='invalid-lane',color='unknown'),
                 ]
                 presentation['cards'][0]['cardDependencies']=[
@@ -467,6 +467,14 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200 and 'Set-Cookie' not in headers
                 assert b'bgcolor="#3cb500">Green card' in body and b'bgcolor="#123abc">Hex card' in body
                 assert b'>Uncolored card</p>' in body
+                assert body.index(b'>Green card</p>')<body.index(b'>Hex card</p>')
+                hex_path='/api/boards/'+imported_id+'/lists/'+hexa['listId']+'/cards/'+hexa['_id']
+                assert request('PUT',hex_path,dict(sort=0),token)[0]==200
+                for _ in range(2):
+                    status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
+                    assert status==200 and 'Set-Cookie' not in headers
+                    assert body.index(b'>Hex card</p>')<body.index(b'>Green card</p>')
+                print('PASS: cookie-free board HTML renders REST sort zero ahead of the prior first card')
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: board import preserves list width, card/list/swimlane colors and archived state')
                 client.command({'create':'integrations'})

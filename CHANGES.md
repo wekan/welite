@@ -7,7 +7,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 ## 2026-11-18 Preserve zero and fractional REST card sort values
 
 - Store and return numeric sort values for JSON and form edits, including
-  zero. Reject invalid sort values before applying any card edits.
+  zero. Reject invalid sort values before applying any card edits. A regression checks the new order in cookie-free HTML
+  after loading and reloading the board.
 
 ## 2026-11-18 Match checklist read scope errors
 
