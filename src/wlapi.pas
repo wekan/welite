@@ -5068,26 +5068,36 @@ end;
 
 // DELETE card — children (labels/members/comments/checklists/…) cascade via FK.
 // The activity records the claimed delete in the same transaction as the cascade.
+function SharedAttachmentRemovalSQL(Db:TWLDb;const Actor,BoardId,Scope,Claim:string;ClearCardCover:Boolean):string; forward;
+
 function DeleteRestCard(Db:TWLDb;const UserId,BoardId,ListId,CardId:string;out Removed:Boolean):Boolean;
-var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
+var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings,Attachments,AttachmentScope:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
 begin
   Result:=False;Removed:=False;Claim:=QuotedStr(NewId);Actor:=QuotedStr(UserId);Stamp:=QuotedStr(NowIso);
   try
     Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
     try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+    Attachments:='';
     Source:=TSelectionScope.Create(Db);
     try
       Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
         ' AND '+Source.StringField('cards','id')+' AND '+Source.StringField('cards','boardId');
+      if ListId<>'' then Scope:=Scope+' AND listId='+QuotedStr(ListId);
+      if SharedStore(Db) then
+      begin
+        AttachmentScope:='boardId='+QuotedStr(BoardId)+' AND cardId='+QuotedStr(CardId)+
+          ' AND '+Source.StringField('attachments','id')+' AND '+Source.StringField('attachments','boardId')+
+          ' AND '+Source.StringField('attachments','cardId')+' AND EXISTS(SELECT 1 FROM cards WHERE '+Scope+')';
+        Attachments:=SharedAttachmentRemovalSQL(Db,UserId,BoardId,AttachmentScope,Claim,False);
+      end;
       Bindings:='';
       for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
     finally Source.Free;end;
-    if ListId<>'' then Scope:=Scope+' AND listId='+QuotedStr(ListId);
     Sql:='BEGIN IMMEDIATE; '+Bindings+
       'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Card deletion permission changed'') END; '+
       'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
       'SELECT '+Claim+',''deleteCard'','+Actor+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
-      ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; '+
+      ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; '+Attachments+
       'DELETE FROM cards WHERE '+Scope+' AND EXISTS(SELECT 1 FROM activities WHERE id='+Claim+'); '+
       'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM cards WHERE '+Scope+
       ') THEN 1 ELSE json(''Card deletion failed'') END; COMMIT;';
@@ -5465,23 +5475,51 @@ begin
   finally O.Free; end;
 end;
 
-function SoftDeleteSharedAttachment(Db:TWLDb;const Actor,BoardId,AttachmentId:string):Boolean;
-var Scope,Live,Registry,Files,Cards,Patch,ClearCover,Permission,Bindings,Sql,Stamp,Claim:string;
-  Rows:TWLRows;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;AtTime:TDateTime;
+function SharedAttachmentRemovalSQL(Db:TWLDb;const Actor,BoardId,Scope,Claim:string;ClearCardCover:Boolean):string;
+var Live,Registry,Files,Cards,Patch,ClearCover,Stamp:string;Rows:TWLRows;AtTime:TDateTime;
   function StoreExpression(const Physical,Expression:string):string;
   begin Result:='CASE WHEN wl_storage('+QuotedStr(Physical)+')=''blob'' THEN jsonb('+Expression+') ELSE '+Expression+' END';end;
   function PhysicalName(const Name:string):string;
   begin Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';end;
 begin
-  Result:=False;
+  Result:='';
+  if not SharedStore(Db) then Exit;
   Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
-  if Length(Rows)<>1 then Exit;
+  if Length(Rows)<>1 then raise Exception.Create('Missing attachment collection');
   Files:=Rows[0][0];
-  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''cards'';');
-  if Length(Rows)<>1 then Exit;
-  Cards:=Rows[0][0];
-  Registry:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''attachments'' AND table_name='+QuotedStr(Files)+')=1'+
-    ' AND (SELECT count(*) FROM _ferretdb_collections WHERE name=''cards'' AND table_name='+QuotedStr(Cards)+')=1';
+  Registry:='(SELECT count(*) FROM _ferretdb_collections WHERE name=''attachments'' AND table_name='+QuotedStr(Files)+')=1';
+  Live:=Scope+' AND '+LiveAttachmentSQL(Db);
+  AtTime:=Now;
+  Stamp:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(AtTime)));
+  Patch:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.deletedAt'','+
+    IntToStr(UnixMillis(AtTime))+',''$.deletedBy'','+QuotedStr(Actor)+',''$.deleteBatchId'','+Claim+
+    '),json(_ferretdb_sjson),''{"deletedAt":"date"}'')';
+  if ClearCardCover then
+  begin
+    Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''cards'';');
+    if Length(Rows)<>1 then raise Exception.Create('Missing card collection');
+    Cards:=Rows[0][0];
+    Registry:=Registry+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name=''cards'' AND table_name='+QuotedStr(Cards)+')=1';
+    ClearCover:='wl_sjson(json_remove(wl_plain(json(_ferretdb_sjson)),''$.coverId''),json(_ferretdb_sjson),''{}'')';
+    Result:='UPDATE '+PhysicalName(Cards)+' SET _ferretdb_sjson='+StoreExpression(Cards,ClearCover)+
+      ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
+      ' AND EXISTS(SELECT 1 FROM attachments WHERE '+Live+' AND cardId=json_extract('+PhysicalName(Cards)+
+      '._ferretdb_sjson,''$._id'') AND id=json_extract('+PhysicalName(Cards)+'._ferretdb_sjson,''$.coverId'')); ';
+  end;
+  Result:='SELECT CASE WHEN '+Registry+' THEN 1 ELSE json(''Attachment collection changed'') END; '+
+    'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+    'SELECT '+Claim+'||'':''||id,''deleteAttachment'','+QuotedStr(Actor)+',boardId,cardId,listId,swimlaneId,'+
+    Stamp+','+Stamp+',json_object(''attachmentId'',id,''attachmentName'',name,''type'',''card'') FROM attachments WHERE '+
+    Live+' AND COALESCE(cardId,'''')<>''''; '+Result+
+    'UPDATE '+PhysicalName(Files)+' SET _ferretdb_sjson='+StoreExpression(Files,Patch)+
+    ' WHERE json_extract(_ferretdb_sjson,''$._id'') IN (SELECT id FROM attachments WHERE '+Live+'); '+
+    'SELECT CASE WHEN '+Registry+' AND NOT EXISTS(SELECT 1 FROM attachments WHERE '+Live+
+    ') THEN 1 ELSE json(''Attachment deletion failed'') END; ';
+end;
+
+function SoftDeleteSharedAttachment(Db:TWLDb;const Actor,BoardId,AttachmentId:string):Boolean;
+var Scope,Permission,Bindings,Sql:string;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;
+begin
   Selector:=TSelectionScope.Create(Db);
   try
     Scope:='id='+QuotedStr(AttachmentId)+' AND boardId='+QuotedStr(BoardId)+
@@ -5490,28 +5528,11 @@ begin
   finally Selector.Free;end;
   Policy:=TFieldPolicy.Create(Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
-  Live:=Scope+' AND '+LiveAttachmentSQL(Db);
-  Claim:=QuotedStr(NewId);AtTime:=Now;
-  Stamp:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',LocalTimeToUniversal(AtTime)));
-  Patch:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.deletedAt'','+
-    IntToStr(UnixMillis(AtTime))+',''$.deletedBy'','+QuotedStr(Actor)+',''$.deleteBatchId'','+Claim+
-    '),json(_ferretdb_sjson),''{"deletedAt":"date"}'')';
-  ClearCover:='wl_sjson(json_remove(wl_plain(json(_ferretdb_sjson)),''$.coverId''),json(_ferretdb_sjson),''{}'')';
-  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+Registry+
+  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+
     ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 ELSE json(''Attachment scope changed'') END; '+
-    'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
-    'SELECT '+Claim+',''deleteAttachment'','+QuotedStr(Actor)+',boardId,cardId,listId,swimlaneId,'+
-    Stamp+','+Stamp+',json_object(''attachmentId'',id,''attachmentName'',name,''type'',''card'') FROM attachments WHERE '+
-    Live+' AND COALESCE(cardId,'''')<>''''; '+
-    'UPDATE '+PhysicalName(Cards)+' SET _ferretdb_sjson='+StoreExpression(Cards,ClearCover)+
-    ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
-    ' AND json_extract(_ferretdb_sjson,''$.coverId'')='+QuotedStr(AttachmentId)+
-    ' AND json_extract(_ferretdb_sjson,''$._id'') IN (SELECT cardId FROM attachments WHERE '+Live+'); '+
-    'UPDATE '+PhysicalName(Files)+' SET _ferretdb_sjson='+StoreExpression(Files,Patch)+
-    ' WHERE json_extract(_ferretdb_sjson,''$._id'') IN (SELECT id FROM attachments WHERE '+Live+'); '+
-    Bindings+'SELECT CASE WHEN '+Permission+' AND '+Registry+' AND (SELECT count(*) FROM attachments WHERE '+Scope+
-    ')=1 AND NOT EXISTS(SELECT 1 FROM attachments WHERE '+Live+
-    ') THEN 1 ELSE json(''Attachment deletion failed'') END; COMMIT;';
+    SharedAttachmentRemovalSQL(Db,Actor,BoardId,Scope,QuotedStr(NewId),True)+
+    Bindings+'SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM attachments WHERE '+Scope+
+    ')=1 THEN 1 ELSE json(''Attachment scope changed'') END; COMMIT;';
   Result:=Db.Exec(Sql);
   if not Result then Db.Exec('ROLLBACK;');
 end;

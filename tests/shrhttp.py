@@ -1166,6 +1166,48 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     activityType='deleteAttachment')})['cursor']['firstBatch']
                 assert len(events)==1 and events[0]['userId']=='u'
                 print('PASS: shared attachment delete retains bytes and typed metadata, clears cover and is idempotent')
+                def attachment_for(card_id,name):
+                    query=urlencode(dict(boardId='b',swimlaneId='s',listId='l',cardId=card_id,fileName=name))
+                    status,_,body=request('POST','/api/attachment/upload?'+query,contents,token,
+                        content_type='application/octet-stream')
+                    assert status==200,(status,body)
+                    return json.loads(body)['attachmentId']
+
+                for mode in ('single','bulk'):
+                    target=f'attachment-cascade-{mode}'
+                    client.command({'insert':'cards','documents':[dict(_id=target,boardId='b',listId='l',
+                        swimlaneId='s',title='Attachment cascade fixture',archived=False)]})
+                    ids=[attachment_for(target,mode+'-first.bin'),attachment_for(target,mode+'-second.bin')]
+                    old=attachment_for(target,mode+'-old.bin')
+                    assert request('DELETE','/api/attachment/delete/'+old,token=token)[0]==200
+                    earlier=client.find('attachments',old)
+                    snapshots=[client.find('attachments',attachment)[0] for attachment in ids]
+                    assert request('DELETE','/api/boards/b/lists/missing/cards/'+target,token=token)[0]==404
+                    assert all(client.find('attachments',attachment)==[before]
+                               for attachment,before in zip(ids,snapshots))
+                    if mode=='bulk':
+                        status,_,body=request('DELETE','/api/boards/b/cards/bulk',dict(cardIds=[target]),token)
+                        assert status==200 and json.loads(body)['deleted']==[target]
+                    else:
+                        assert request('DELETE','/api/boards/b/lists/l/cards/'+target,token=token)[0]==200
+                    assert not client.find('cards',target)
+                    assert client.find('attachments',old)==earlier
+                    batches=[]
+                    for attachment,before in zip(ids,snapshots):
+                        saved,=client.find('attachments',attachment)
+                        assert saved==dict(before,deletedAt=saved['deletedAt'],deletedBy='u',deleteBatchId=saved['deleteBatchId'])
+                        assert isinstance(saved['deletedAt'],DateMs)
+                        batches.append(saved['deleteBatchId'])
+                        status,_,body=request('GET','/api/attachment/download/'+attachment+'?raw=1',token=token)
+                        assert status==200 and body==contents
+                        events=client.command({'find':'activities','filter':dict(attachmentId=attachment,
+                            activityType='deleteAttachment')})['cursor']['firstBatch']
+                        assert len(events)==1 and events[0]['userId']=='u'
+                    assert batches[0] and batches[0]==batches[1]
+                    client.command({'delete':'attachments','deletes':[dict(q={'_id':item},limit=1)
+                        for item in [*ids,old]]})
+                print('PASS: single and bulk REST card deletion retain attachment files and batch active records')
+
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')
                 lane_id='delete-scope-lane'

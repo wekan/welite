@@ -150,7 +150,9 @@ downloads.
 
 In a shared store, deleting an attachment marks it deleted, clears its card
 cover if selected, and records one deletion activity. Repeating the request
-leaves the original deletion marker intact. Native attachment deletion removes
+leaves the original deletion marker intact. Single and bulk REST card deletion
+mark that card’s live attachments under one batch while retaining their files.
+Native attachment deletion removes
 the file and its record.
 
 For a binary upload, send `Content-Type: application/octet-stream` and put
