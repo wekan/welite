@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Install 91 more language catalogs
+
+- Add the remaining WeKan language identities with portable filenames,
+  native names and direction metadata. Import the WeLite English key
+  inventory and use English when a source value is missing or has
+  incompatible placeholders.
+
 ## 2026-11-18 Correct another 80 Persian phrases in the Arabic catalog
 
 - Match Persian vocabulary and the Persian catalog to find wrong-language

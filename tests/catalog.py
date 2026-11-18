@@ -43,6 +43,10 @@ with tempfile.TemporaryDirectory(prefix='wlcat-',dir=os.environ['TMPDIR']) as di
     assert any(row['tag']=='en' for row in installed)
     assert any(row['tag']=='fi' and row['name']=='Suomi' for row in installed)
     assert any(row['tag']=='he' and row['rtl'] for row in installed)
+    assert all(re.fullmatch(r'[A-Za-z0-9_-]{1,8}\.jsn',row['file']) for row in installed)
+    assert len({row['file'].casefold() for row in installed})==len({row['file'] for row in installed})
+    for tag in ('ckb','ks','ps','sd','ur'):
+        assert any(row['tag']==tag and row['rtl'] for row in installed)
     for tag,file in [('km_KH','km_KH.jsn'),('ru_RU','ru_RU.jsn'),('pt-PT','pt_PT.jsn'),('pt_PT','pt_PT.jsn')]:
         assert next(row for row in installed if row['tag']==tag)['file']==file
         assert len(Path(file).stem)<=8

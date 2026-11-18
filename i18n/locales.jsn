@@ -24,12 +24,164 @@
     "file": "af_ZA.jsn"
   },
   {
+    "key": "ak",
+    "code": "ak",
+    "tag": "ak",
+    "name": "Akan",
+    "rtl": false,
+    "file": "ak.jsn"
+  },
+  {
+    "key": "am",
+    "code": "am",
+    "tag": "am",
+    "name": "አማርኛ",
+    "rtl": false,
+    "file": "am.jsn"
+  },
+  {
+    "key": "an",
+    "code": "an",
+    "tag": "an",
+    "name": "Aragonés",
+    "rtl": false,
+    "file": "an.jsn"
+  },
+  {
+    "key": "as",
+    "code": "as",
+    "tag": "as",
+    "name": "অসমীয়া",
+    "rtl": false,
+    "file": "as.jsn"
+  },
+  {
+    "key": "ay",
+    "code": "ay",
+    "tag": "ay",
+    "name": "Aymar aru",
+    "rtl": false,
+    "file": "ay.jsn"
+  },
+  {
+    "key": "ba",
+    "code": "ba",
+    "tag": "ba",
+    "name": "Башҡортса",
+    "rtl": false,
+    "file": "ba.jsn"
+  },
+  {
+    "key": "bho",
+    "code": "bho",
+    "tag": "bho",
+    "name": "भोजपुरी",
+    "rtl": false,
+    "file": "bho.jsn"
+  },
+  {
+    "key": "bi",
+    "code": "bi",
+    "tag": "bi",
+    "name": "Bislama",
+    "rtl": false,
+    "file": "bi.jsn"
+  },
+  {
+    "key": "bm",
+    "code": "bm",
+    "tag": "bm",
+    "name": "Bamanankan",
+    "rtl": false,
+    "file": "bm.jsn"
+  },
+  {
+    "key": "bn",
+    "code": "bn",
+    "tag": "bn",
+    "name": "বাংলা",
+    "rtl": false,
+    "file": "bn.jsn"
+  },
+  {
+    "key": "bo",
+    "code": "bo",
+    "tag": "bo",
+    "name": "བོད་སྐད་",
+    "rtl": false,
+    "file": "bo.jsn"
+  },
+  {
     "key": "bs",
     "code": "bs",
     "tag": "bs",
     "name": "Bosanski",
     "rtl": false,
     "file": "bs.jsn"
+  },
+  {
+    "key": "bua",
+    "code": "bua",
+    "tag": "bua",
+    "name": "Буряад хэлэн",
+    "rtl": false,
+    "file": "bua.jsn"
+  },
+  {
+    "key": "chr",
+    "code": "chr",
+    "tag": "chr",
+    "name": "ᏣᎳᎩ",
+    "rtl": false,
+    "file": "chr.jsn"
+  },
+  {
+    "key": "ckb",
+    "code": "ckb",
+    "tag": "ckb",
+    "name": "کوردیی ناوەندی",
+    "rtl": true,
+    "file": "ckb.jsn"
+  },
+  {
+    "key": "co",
+    "code": "co",
+    "tag": "co",
+    "name": "Corsu",
+    "rtl": false,
+    "file": "co.jsn"
+  },
+  {
+    "key": "csb",
+    "code": "csb",
+    "tag": "csb",
+    "name": "Kaszëbsczi",
+    "rtl": false,
+    "file": "csb.jsn"
+  },
+  {
+    "key": "cv",
+    "code": "cv",
+    "tag": "cv",
+    "name": "Чӑвашла",
+    "rtl": false,
+    "file": "cv.jsn"
+  },
+  {
+    "key": "dz",
+    "code": "dz",
+    "tag": "dz",
+    "name": "རྫོང་ཁ",
+    "rtl": false,
+    "file": "dz.jsn"
+  },
+  {
+    "key": "ee",
+    "code": "ee",
+    "tag": "ee",
+    "name": "Eʋegbe",
+    "rtl": false,
+    "file": "ee.jsn"
   },
   {
     "key": "en_AU",
@@ -416,12 +568,36 @@
     "file": "fa.jsn"
   },
   {
+    "key": "ff",
+    "code": "ff",
+    "tag": "ff",
+    "name": "Pulaar",
+    "rtl": false,
+    "file": "ff.jsn"
+  },
+  {
     "key": "fi",
     "code": "fi",
     "tag": "fi",
     "name": "Suomi",
     "rtl": false,
     "file": "fi.jsn"
+  },
+  {
+    "key": "fj",
+    "code": "fj",
+    "tag": "fj",
+    "name": "Na Vosa Vakaviti",
+    "rtl": false,
+    "file": "fj.jsn"
+  },
+  {
+    "key": "fo",
+    "code": "fo",
+    "tag": "fo",
+    "name": "Føroyskt",
+    "rtl": false,
+    "file": "fo.jsn"
   },
   {
     "key": "fr-BE",
@@ -456,6 +632,14 @@
     "file": "fr.jsn"
   },
   {
+    "key": "fur",
+    "code": "fur",
+    "tag": "fur",
+    "name": "Furlan",
+    "rtl": false,
+    "file": "fur.jsn"
+  },
+  {
     "key": "fy-NL",
     "code": "fy",
     "tag": "fy-NL",
@@ -470,6 +654,22 @@
     "name": "Westerlauwersk Frysk",
     "rtl": false,
     "file": "fy.jsn"
+  },
+  {
+    "key": "ga",
+    "code": "ga",
+    "tag": "ga",
+    "name": "Gaeilge",
+    "rtl": false,
+    "file": "ga.jsn"
+  },
+  {
+    "key": "gd",
+    "code": "gd",
+    "tag": "gd",
+    "name": "Gàidhlig",
+    "rtl": false,
+    "file": "gd.jsn"
   },
   {
     "key": "gl-ES",
@@ -488,12 +688,44 @@
     "file": "gl.jsn"
   },
   {
+    "key": "gn",
+    "code": "gn",
+    "tag": "gn",
+    "name": "Avañe'ẽ",
+    "rtl": false,
+    "file": "gn.jsn"
+  },
+  {
     "key": "gu-IN",
     "code": "gu",
     "tag": "gu-IN",
     "name": "ગુજરાતી",
     "rtl": false,
     "file": "gu-IN.jsn"
+  },
+  {
+    "key": "gv",
+    "code": "gv",
+    "tag": "gv",
+    "name": "Gaelg",
+    "rtl": false,
+    "file": "gv.jsn"
+  },
+  {
+    "key": "ha",
+    "code": "ha",
+    "tag": "ha",
+    "name": "Hausa",
+    "rtl": false,
+    "file": "ha.jsn"
+  },
+  {
+    "key": "haw",
+    "code": "haw",
+    "tag": "haw",
+    "name": "ʻŌlelo Hawaiʻi",
+    "rtl": false,
+    "file": "haw.jsn"
   },
   {
     "key": "he-IL",
@@ -536,6 +768,22 @@
     "file": "hr.jsn"
   },
   {
+    "key": "hsb",
+    "code": "hsb",
+    "tag": "hsb",
+    "name": "Hornjoserbsce",
+    "rtl": false,
+    "file": "hsb.jsn"
+  },
+  {
+    "key": "ht",
+    "code": "ht",
+    "tag": "ht",
+    "name": "Kreyòl ayisyen",
+    "rtl": false,
+    "file": "ht.jsn"
+  },
+  {
     "key": "hu",
     "code": "hu",
     "tag": "hu",
@@ -568,12 +816,28 @@
     "file": "ig.jsn"
   },
   {
+    "key": "is",
+    "code": "is",
+    "tag": "is",
+    "name": "Íslenska",
+    "rtl": false,
+    "file": "is.jsn"
+  },
+  {
     "key": "it",
     "code": "it",
     "tag": "it",
     "name": "Italiano",
     "rtl": false,
     "file": "it.jsn"
+  },
+  {
+    "key": "iu",
+    "code": "iu",
+    "tag": "iu",
+    "name": "ᐃᓄᒃᑎᑐᑦ",
+    "rtl": false,
+    "file": "iu.jsn"
   },
   {
     "key": "ja",
@@ -600,12 +864,36 @@
     "file": "ja-JP.jsn"
   },
   {
+    "key": "jv",
+    "code": "jv",
+    "tag": "jv",
+    "name": "Basa Jawa",
+    "rtl": false,
+    "file": "jv.jsn"
+  },
+  {
     "key": "ka",
     "code": "ka",
     "tag": "ka",
     "name": "ქართული",
     "rtl": false,
     "file": "ka.jsn"
+  },
+  {
+    "key": "kk",
+    "code": "kk",
+    "tag": "kk",
+    "name": "Қазақша",
+    "rtl": false,
+    "file": "kk.jsn"
+  },
+  {
+    "key": "kl",
+    "code": "kl",
+    "tag": "kl",
+    "name": "Kalaallisut",
+    "rtl": false,
+    "file": "kl.jsn"
   },
   {
     "key": "km",
@@ -624,6 +912,14 @@
     "file": "km_KH.jsn"
   },
   {
+    "key": "kn",
+    "code": "kn",
+    "tag": "kn",
+    "name": "ಕನ್ನಡ",
+    "rtl": false,
+    "file": "kn.jsn"
+  },
+  {
     "key": "ko-KR",
     "code": "ko",
     "tag": "ko-KR",
@@ -638,6 +934,78 @@
     "name": "한국어",
     "rtl": false,
     "file": "ko.jsn"
+  },
+  {
+    "key": "kok",
+    "code": "kok",
+    "tag": "kok",
+    "name": "कोंकणी",
+    "rtl": false,
+    "file": "kok.jsn"
+  },
+  {
+    "key": "ks",
+    "code": "ks",
+    "tag": "ks",
+    "name": "کٲشُر",
+    "rtl": true,
+    "file": "ks.jsn"
+  },
+  {
+    "key": "ku",
+    "code": "ku",
+    "tag": "ku",
+    "name": "Kurdî",
+    "rtl": false,
+    "file": "ku.jsn"
+  },
+  {
+    "key": "kw",
+    "code": "kw",
+    "tag": "kw",
+    "name": "Kernewek",
+    "rtl": false,
+    "file": "kw.jsn"
+  },
+  {
+    "key": "ky",
+    "code": "ky",
+    "tag": "ky",
+    "name": "Кыргызча",
+    "rtl": false,
+    "file": "ky.jsn"
+  },
+  {
+    "key": "la",
+    "code": "la",
+    "tag": "la",
+    "name": "Latina",
+    "rtl": false,
+    "file": "la.jsn"
+  },
+  {
+    "key": "lb",
+    "code": "lb",
+    "tag": "lb",
+    "name": "Lëtzebuergesch",
+    "rtl": false,
+    "file": "lb.jsn"
+  },
+  {
+    "key": "lg",
+    "code": "lg",
+    "tag": "lg",
+    "name": "Luganda",
+    "rtl": false,
+    "file": "lg.jsn"
+  },
+  {
+    "key": "lld",
+    "code": "lld",
+    "tag": "lld",
+    "name": "Ladin",
+    "rtl": false,
+    "file": "lld.jsn"
   },
   {
     "key": "lt",
@@ -656,6 +1024,30 @@
     "file": "lv.jsn"
   },
   {
+    "key": "mai",
+    "code": "mai",
+    "tag": "mai",
+    "name": "मैथिली",
+    "rtl": false,
+    "file": "mai.jsn"
+  },
+  {
+    "key": "mg",
+    "code": "mg",
+    "tag": "mg",
+    "name": "Malagasy",
+    "rtl": false,
+    "file": "mg.jsn"
+  },
+  {
+    "key": "mi",
+    "code": "mi",
+    "tag": "mi",
+    "name": "Māori",
+    "rtl": false,
+    "file": "mi.jsn"
+  },
+  {
     "key": "mk",
     "code": "mk",
     "tag": "mk",
@@ -664,12 +1056,28 @@
     "file": "mk.jsn"
   },
   {
+    "key": "ml",
+    "code": "ml",
+    "tag": "ml",
+    "name": "മലയാളം",
+    "rtl": false,
+    "file": "ml.jsn"
+  },
+  {
     "key": "mn",
     "code": "mn",
     "tag": "mn",
     "name": "Монгол",
     "rtl": false,
     "file": "mn.jsn"
+  },
+  {
+    "key": "mr",
+    "code": "mr",
+    "tag": "mr",
+    "name": "मराठी",
+    "rtl": false,
+    "file": "mr.jsn"
   },
   {
     "key": "ms",
@@ -688,12 +1096,60 @@
     "file": "ms-MY.jsn"
   },
   {
+    "key": "mt",
+    "code": "mt",
+    "tag": "mt",
+    "name": "Malti",
+    "rtl": false,
+    "file": "mt.jsn"
+  },
+  {
+    "key": "my",
+    "code": "my",
+    "tag": "my",
+    "name": "မြန်မာ",
+    "rtl": false,
+    "file": "my.jsn"
+  },
+  {
+    "key": "nah",
+    "code": "nah",
+    "tag": "nah",
+    "name": "Nāhuatl",
+    "rtl": false,
+    "file": "nah.jsn"
+  },
+  {
+    "key": "nap",
+    "code": "nap",
+    "tag": "nap",
+    "name": "Napulitano",
+    "rtl": false,
+    "file": "nap.jsn"
+  },
+  {
     "key": "nb",
     "code": "nb",
     "tag": "nb",
     "name": "Norsk bokmål",
     "rtl": false,
     "file": "nb.jsn"
+  },
+  {
+    "key": "nd",
+    "code": "nd",
+    "tag": "nd",
+    "name": "isiNdebele",
+    "rtl": false,
+    "file": "nd.jsn"
+  },
+  {
+    "key": "ne",
+    "code": "ne",
+    "tag": "ne",
+    "name": "नेपाली",
+    "rtl": false,
+    "file": "ne.jsn"
   },
   {
     "key": "nl-NL",
@@ -712,12 +1168,36 @@
     "file": "nl.jsn"
   },
   {
+    "key": "nso",
+    "code": "nso",
+    "tag": "nso",
+    "name": "Sesotho sa Leboa",
+    "rtl": false,
+    "file": "nso.jsn"
+  },
+  {
+    "key": "ny",
+    "code": "ny",
+    "tag": "ny",
+    "name": "Chichewa",
+    "rtl": false,
+    "file": "ny.jsn"
+  },
+  {
     "key": "oc",
     "code": "oc",
     "tag": "oc",
     "name": "Occitan",
     "rtl": false,
     "file": "oc.jsn"
+  },
+  {
+    "key": "om",
+    "code": "om",
+    "tag": "om",
+    "name": "Afaan Oromoo",
+    "rtl": false,
+    "file": "om.jsn"
   },
   {
     "key": "or-IN",
@@ -736,6 +1216,14 @@
     "file": "pa.jsn"
   },
   {
+    "key": "pap",
+    "code": "pap",
+    "tag": "pap",
+    "name": "Papiamentu",
+    "rtl": false,
+    "file": "pap.jsn"
+  },
+  {
     "key": "pl-PL",
     "code": "pl",
     "tag": "pl-PL",
@@ -750,6 +1238,14 @@
     "name": "Polski",
     "rtl": false,
     "file": "pl.jsn"
+  },
+  {
+    "key": "ps",
+    "code": "ps",
+    "tag": "ps",
+    "name": "پښتو",
+    "rtl": true,
+    "file": "ps.jsn"
   },
   {
     "key": "pt-BR",
@@ -774,6 +1270,30 @@
     "name": "Português de Portugal",
     "rtl": false,
     "file": "pt_PT.jsn"
+  },
+  {
+    "key": "qu",
+    "code": "qu",
+    "tag": "qu",
+    "name": "Runasimi",
+    "rtl": false,
+    "file": "qu.jsn"
+  },
+  {
+    "key": "rm",
+    "code": "rm",
+    "tag": "rm",
+    "name": "Rumantsch",
+    "rtl": false,
+    "file": "rm.jsn"
+  },
+  {
+    "key": "rn",
+    "code": "rn",
+    "tag": "rn",
+    "name": "Ikirundi",
+    "rtl": false,
+    "file": "rn.jsn"
   },
   {
     "key": "ro",
@@ -808,6 +1328,70 @@
     "file": "ru_RU.jsn"
   },
   {
+    "key": "rup",
+    "code": "rup",
+    "tag": "rup",
+    "name": "Armãneashti",
+    "rtl": false,
+    "file": "rup.jsn"
+  },
+  {
+    "key": "rw",
+    "code": "rw",
+    "tag": "rw",
+    "name": "Ikinyarwanda",
+    "rtl": false,
+    "file": "rw.jsn"
+  },
+  {
+    "key": "sah",
+    "code": "sah",
+    "tag": "sah",
+    "name": "Саха тыла",
+    "rtl": false,
+    "file": "sah.jsn"
+  },
+  {
+    "key": "sc",
+    "code": "sc",
+    "tag": "sc",
+    "name": "Sardu",
+    "rtl": false,
+    "file": "sc.jsn"
+  },
+  {
+    "key": "scn",
+    "code": "scn",
+    "tag": "scn",
+    "name": "Sicilianu",
+    "rtl": false,
+    "file": "scn.jsn"
+  },
+  {
+    "key": "sd",
+    "code": "sd",
+    "tag": "sd",
+    "name": "سنڌي",
+    "rtl": true,
+    "file": "sd.jsn"
+  },
+  {
+    "key": "se",
+    "code": "se",
+    "tag": "se",
+    "name": "Davvisámegiella",
+    "rtl": false,
+    "file": "se.jsn"
+  },
+  {
+    "key": "si",
+    "code": "si",
+    "tag": "si",
+    "name": "සිංහල",
+    "rtl": false,
+    "file": "si.jsn"
+  },
+  {
     "key": "sk",
     "code": "sk",
     "tag": "sk",
@@ -832,12 +1416,60 @@
     "file": "sl_SI.jsn"
   },
   {
+    "key": "sm",
+    "code": "sm",
+    "tag": "sm",
+    "name": "Gagana Sāmoa",
+    "rtl": false,
+    "file": "sm.jsn"
+  },
+  {
+    "key": "sn",
+    "code": "sn",
+    "tag": "sn",
+    "name": "chiShona",
+    "rtl": false,
+    "file": "sn.jsn"
+  },
+  {
+    "key": "so",
+    "code": "so",
+    "tag": "so",
+    "name": "Soomaali",
+    "rtl": false,
+    "file": "so.jsn"
+  },
+  {
+    "key": "sq",
+    "code": "sq",
+    "tag": "sq",
+    "name": "Shqip",
+    "rtl": false,
+    "file": "sq.jsn"
+  },
+  {
     "key": "sr",
     "code": "sr",
     "tag": "sr",
     "name": "Српски језик",
     "rtl": false,
     "file": "sr.jsn"
+  },
+  {
+    "key": "ss",
+    "code": "ss",
+    "tag": "ss",
+    "name": "siSwati",
+    "rtl": false,
+    "file": "ss.jsn"
+  },
+  {
+    "key": "st",
+    "code": "st",
+    "tag": "st",
+    "name": "Sesotho",
+    "rtl": false,
+    "file": "st.jsn"
   },
   {
     "key": "sv",
@@ -856,6 +1488,14 @@
     "file": "sw.jsn"
   },
   {
+    "key": "szl",
+    "code": "szl",
+    "tag": "szl",
+    "name": "Ślōnskŏ gŏdka",
+    "rtl": false,
+    "file": "szl.jsn"
+  },
+  {
     "key": "ta",
     "code": "ta",
     "tag": "ta",
@@ -872,12 +1512,44 @@
     "file": "te-IN.jsn"
   },
   {
+    "key": "tg",
+    "code": "tg",
+    "tag": "tg",
+    "name": "Тоҷикӣ",
+    "rtl": false,
+    "file": "tg.jsn"
+  },
+  {
     "key": "th",
     "code": "th",
     "tag": "th",
     "name": "ไทย",
     "rtl": false,
     "file": "th.jsn"
+  },
+  {
+    "key": "ti",
+    "code": "ti",
+    "tag": "ti",
+    "name": "ትግርኛ",
+    "rtl": false,
+    "file": "ti.jsn"
+  },
+  {
+    "key": "tig",
+    "code": "tig",
+    "tag": "tig",
+    "name": "ትግረ",
+    "rtl": false,
+    "file": "tig.jsn"
+  },
+  {
+    "key": "tl",
+    "code": "tl",
+    "tag": "tl",
+    "name": "Filipino",
+    "rtl": false,
+    "file": "tl.jsn"
   },
   {
     "key": "tlh",
@@ -888,12 +1560,52 @@
     "file": "tlh.jsn"
   },
   {
+    "key": "tn",
+    "code": "tn",
+    "tag": "tn",
+    "name": "Setswana",
+    "rtl": false,
+    "file": "tn.jsn"
+  },
+  {
+    "key": "to",
+    "code": "to",
+    "tag": "to",
+    "name": "Lea faka-Tonga",
+    "rtl": false,
+    "file": "to.jsn"
+  },
+  {
+    "key": "tpi",
+    "code": "tpi",
+    "tag": "tpi",
+    "name": "Tok Pisin",
+    "rtl": false,
+    "file": "tpi.jsn"
+  },
+  {
     "key": "tr",
     "code": "tr",
     "tag": "tr",
     "name": "Türkçe",
     "rtl": false,
     "file": "tr.jsn"
+  },
+  {
+    "key": "ts",
+    "code": "ts",
+    "tag": "ts",
+    "name": "Xitsonga",
+    "rtl": false,
+    "file": "ts.jsn"
+  },
+  {
+    "key": "tt",
+    "code": "tt",
+    "tag": "tt",
+    "name": "Татарча",
+    "rtl": false,
+    "file": "tt.jsn"
   },
   {
     "key": "ug",
@@ -918,6 +1630,14 @@
     "name": "Українська (Україна)",
     "rtl": false,
     "file": "uk-UA.jsn"
+  },
+  {
+    "key": "ur",
+    "code": "ur",
+    "tag": "ur",
+    "name": "اردو",
+    "rtl": true,
+    "file": "ur.jsn"
   },
   {
     "key": "uz-AR",
@@ -1022,6 +1742,14 @@
     "name": "Walon",
     "rtl": false,
     "file": "wa.jsn"
+  },
+  {
+    "key": "wal",
+    "code": "wal",
+    "tag": "wal",
+    "name": "Wolaytta",
+    "rtl": false,
+    "file": "wal.jsn"
   },
   {
     "key": "wo",

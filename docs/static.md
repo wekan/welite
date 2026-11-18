@@ -32,7 +32,7 @@ Assets are **global** (identical for every tenant) and are served *before* tenan
 Path traversal is rejected (`..`, absolute, NUL); MIME type is by extension (`MimeForName`).
 
 ### Why not embed as Pascal `const` byte arrays?
-The asset trees are ~24 MB; byte-array literals would balloon the source past what FPC can
+The asset trees are ~37 MB; byte-array literals would balloon the source past what FPC can
 compile. FPC **resources** bundle the real bytes with no source bloat, so embedding uses those.
 
 ## Configuration
@@ -74,7 +74,7 @@ runs from `src/`. Verified on FPC 3.2.3 (aarch64): with `public/` and `i18n/` de
 from the executable.
 
 ### Size note (retro targets)
-Embedding `public/` + `i18n/` adds ~24 MB to the binary, most of it `i18n/`. For an Amiga 68k or
+Embedding `public/` + `i18n/` adds ~37 MB to the binary, most of it `i18n/`. For an Amiga 68k or
 other small target, either keep disk mode (binary + `public/` + `i18n/` folders) or run
 `genasset.py` against a trimmed `i18n/` (e.g. only the needed languages).
 
@@ -96,9 +96,10 @@ separate identities. Unsafe paths, duplicate identities, invalid metadata and a
 missing English fallback are refused before writing output. Translation contents
 are never modified by this command.
 
-The current snapshot lists 154 installed language identities; 91 more source languages
-still need local translation assets and portable filename decisions. Missing or
-broken legacy alias files are excluded rather than offered as failed imports.
+The current snapshot lists 245 installed language identities, including the 91
+new catalogs with portable 8.3 filenames. Those catalogs use the WeLite English
+key inventory. Keys with missing source translations or mismatched placeholder
+inventories use the English value. Missing or broken legacy alias files are excluded.
 Server negotiation and board/Designer direction now use the strict catalog.
 Sign-in GET labels now use per-page translation readers; other pages and complete
 RTL integration remain in `TODO.md`. `tests/catalog.py` verifies conversion and matching

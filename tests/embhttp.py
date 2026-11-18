@@ -62,6 +62,15 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 else:raise AssertionError('Embedded HTTP startup timed out')
                 for url,file in [('/robots.txt',root/'public/robots.txt'),('/i18n/locales.jsn',root/'i18n/locales.jsn'),('/i18n/data/bs.jsn',root/'i18n/data/bs.jsn')]:
                     status,_,body=request('GET',url);assert status==200 and body==file.read_bytes(),url
+                for tag, direction in [('am','ltr'),('ckb','rtl'),('ur','rtl')]:
+                    locale_file=root/f'i18n/data/{tag}.jsn'
+                    status,_,body=request('GET',f'/i18n/data/{tag}.jsn')
+                    assert status==200 and body==locale_file.read_bytes(),tag
+                    status,headers,body=request('GET',f'/sign-in?lang={tag}')
+                    assert status==200 and headers['Content-Language']==tag and 'Set-Cookie' not in headers
+                    assert (b'dir="rtl"' in body)==(direction=='rtl'),tag
+                    label=json.loads(locale_file.read_text())['username']
+                    assert label!='Username' and label.encode() in body,(tag,label)
                 status,headers,body=request('GET','/sign-in?lang=fi')
                 assert status==200 and headers['Content-Language']=='fi'
                 assert json.loads((root/'i18n/data/fi.jsn').read_text())['username'].encode() in body
