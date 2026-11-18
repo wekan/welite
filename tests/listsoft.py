@@ -243,7 +243,7 @@ def run(request, client, db, token, refresh_ferret, session):
             if scenario=='card':
                 saved.update(entityType='card', entityId='card-a', cardId='card-a', group='position',
                              previousContent={'position': 0, 'values': []},
-                             newContent={'position': 2, 'values': [True, None, DateMs(123), {'deletedAt': 'literal'}]})
+                             newContent={'position': 2.125, 'values': [True, None, DateMs(123), {'deletedAt': 'literal'}]})
             protected=('batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
                        'group','listId','newContent','previousContent','previousHash','restoredByUserId',
                        'restoredFromId','swimlaneId','userId')

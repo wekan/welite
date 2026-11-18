@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Recover coordinated history containing fractional positions
+
+- Match WeKan’s finite double serialization, including shortest decimal
+  rounding, exponent cutoffs, subnormal values and negative zero.
+- Verify and finalize a pending card position change containing a fraction.
+
 ## 2026-11-18 Recover typed coordinated card history reservations
 
 - Validate both WeKan hashes from the stored BSON types and recover

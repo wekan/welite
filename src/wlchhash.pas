@@ -10,7 +10,7 @@ function ListReservationHash(Row:TJSONObject):string;
 procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string);
 
 implementation
-uses SysUtils,Classes,wlcrypt,wlcfjson,wlsjson;
+uses SysUtils,Classes,Math,StrUtils,wlcrypt,wlcfjson,wlsjson;
 
 const ProtectedKeys:array[0..15] of string=(
   'batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
@@ -97,6 +97,193 @@ begin
   Result:=Length(A)-Length(B);
 end;
 
+type TDecimal=record
+  Digits:string;
+  Exponent:Integer;
+end;
+
+function Decimal(Coefficient:QWord;Power:Integer):TDecimal;
+const Base=1000000000;
+// A binary64 midpoint has fewer than 810 decimal digits.
+var Limbs:array[0..89] of LongWord;
+  Exponent,DigitCount,Step,Chunk,Index:Integer;
+  Factor,Multiplier,Carry:QWord;
+  Digits:string;
+begin
+  Result.Exponent:=0;
+  Factor:=2;
+  Chunk:=29;
+  if Power<0 then
+  begin
+    Result.Exponent:=Power;
+    Factor:=5;
+    Chunk:=12;
+  end;
+  DigitCount:=0;
+  repeat
+    Limbs[DigitCount]:=Coefficient mod Base;
+    Inc(DigitCount);
+    Coefficient:=Coefficient div Base;
+  until Coefficient=0;
+  Exponent:=Abs(Power);
+  while Exponent>0 do
+  begin
+    Step:=Min(Exponent,Chunk);
+    Dec(Exponent,Step);
+    Multiplier:=1;
+    for Index:=1 to Step do Multiplier:=Multiplier*Factor;
+    Carry:=0;
+    for Index:=0 to DigitCount-1 do
+    begin
+      Inc(Carry,QWord(Limbs[Index])*Multiplier);
+      Limbs[Index]:=Carry mod Base;
+      Carry:=Carry div Base;
+    end;
+    if Carry<>0 then
+    begin
+      Limbs[DigitCount]:=Carry;
+      Inc(DigitCount);
+    end;
+  end;
+  Result.Digits:=UIntToStr(Limbs[DigitCount-1]);
+  for Index:=DigitCount-2 downto 0 do
+  begin
+    Digits:=UIntToStr(Limbs[Index]);
+    Result.Digits:=Result.Digits+StringOfChar('0',9-Length(Digits))+Digits;
+  end;
+end;
+
+function Compare(const A,B:TDecimal):Integer;
+var Index:Integer;Left,Right:Char;
+begin
+  Result:=Length(A.Digits)+A.Exponent-Length(B.Digits)-B.Exponent;
+  if Result<>0 then Exit;
+  for Index:=1 to Max(Length(A.Digits),Length(B.Digits)) do
+  begin
+    Left:='0';Right:='0';
+    if Index<=Length(A.Digits) then Left:=A.Digits[Index];
+    if Index<=Length(B.Digits) then Right:=B.Digits[Index];
+    if Left<>Right then Exit(Ord(Left)-Ord(Right));
+  end;
+end;
+
+// Render the correctly rounded binary64 from its SJSON decimal token.
+function CanonicalDouble(Value:Double;Literal:string):string;
+var Bits,Significand,Prefix:QWord;BinaryExponent,StoredExponent,LengthLimit,I,Position,Attempts:Integer;
+  Exact,Lower,Upper,Candidate,Input:TDecimal;Even,Negative,RoundUp:Boolean;Digits:string;
+
+  procedure ReadLiteral;
+  var Index,Point:Integer;
+  begin
+    if Literal[1]='-' then Delete(Literal,1,1);
+    Index:=Pos('e',LowerCase(Literal));
+    Input.Exponent:=0;
+    if Index>0 then
+    begin
+      Input.Exponent:=StrToInt(Copy(Literal,Index+1,MaxInt));
+      SetLength(Literal,Index-1);
+    end;
+    Point:=Pos('.',Literal);
+    if Point>0 then
+    begin
+      Dec(Input.Exponent,Length(Literal)-Point);
+      Delete(Literal,Point,1);
+    end;
+    Index:=1;
+    while (Index<Length(Literal)) and (Literal[Index]='0') do Inc(Index);
+    Input.Digits:=Copy(Literal,Index,MaxInt);
+  end;
+
+  procedure DecodeBounds;
+  begin
+    StoredExponent:=(Bits shr 52) and $7ff;
+    Significand:=Bits and QWord($fffffffffffff);
+    if StoredExponent=$7ff then raise Exception.Create('Invalid history reservation number');
+    if StoredExponent=0 then BinaryExponent:=-1074
+    else
+    begin
+      Significand:=Significand or QWord($10000000000000);
+      BinaryExponent:=StoredExponent-1075;
+    end;
+    Even:=not Odd(Significand);
+    Upper:=Decimal(2*Significand+1,BinaryExponent-1);
+    if Significand=0 then Lower:=Upper
+    else if (StoredExponent>1) and (Significand=QWord($10000000000000)) then
+      Lower:=Decimal(4*Significand-1,BinaryExponent-2)
+    else Lower:=Decimal(2*Significand-1,BinaryExponent-1);
+  end;
+
+  function Fits(Coefficient:QWord;Exponent:Integer):Boolean;
+  var LowSide,HighSide:Integer;
+  begin
+    Candidate.Digits:=UIntToStr(Coefficient);
+    Candidate.Exponent:=Exponent;
+    LowSide:=Compare(Candidate,Lower);
+    HighSide:=Compare(Candidate,Upper);
+    Result:=((LowSide>0) or ((LowSide=0) and Even)) and
+      ((HighSide<0) or ((HighSide=0) and Even));
+  end;
+
+begin
+  Negative:=Literal[1]='-';
+  ReadLiteral;
+  if Input.Digits='0' then Exit('0');
+  Move(Value,Bits,SizeOf(Bits));
+  Bits:=Bits and QWord($7fffffffffffffff);
+  // Some FPC targets parse decimal JSON through an intermediate rounding.
+  // Check the original token against exact midpoints before formatting.
+  for Attempts:=0 to 16 do
+  begin
+    DecodeBounds;
+    Position:=Compare(Input,Upper);
+    if (Position>0) or ((Position=0) and not Even) then Inc(Bits)
+    else
+    begin
+      if Significand=0 then Exit('0');
+      Position:=Compare(Input,Lower);
+      if (Position<0) or ((Position=0) and not Even) then Dec(Bits)
+      else Break;
+    end;
+    if Attempts=16 then raise Exception.Create('Cannot round history reservation number');
+  end;
+  Exact:=Decimal(Significand,BinaryExponent);
+  LengthLimit:=Min(17,Length(Exact.Digits));
+  Prefix:=0;
+  for I:=1 to LengthLimit do
+  begin
+    Prefix:=Prefix*10+Ord(Exact.Digits[I])-Ord('0');
+    Position:=Length(Exact.Digits)-I;
+    if Position=0 then
+    begin
+      Fits(Prefix,Exact.Exponent);
+      Break;
+    end;
+    RoundUp:=(Exact.Digits[I+1]>'5') or ((Exact.Digits[I+1]='5') and
+      (Odd(Prefix) or (TrimRightSet(Copy(Exact.Digits,I+2,MaxInt),['0'])<>'')));
+    if Fits(Prefix+Ord(RoundUp),Exact.Exponent+Position) or
+      Fits(Prefix+Ord(not RoundUp),Exact.Exponent+Position) then Break;
+    if I=LengthLimit then raise Exception.Create('Cannot format history reservation number');
+  end;
+  Digits:=TrimRightSet(Candidate.Digits,['0']);
+  Position:=Length(Candidate.Digits)+Candidate.Exponent;
+  if (Position>0) and (Position<=21) then
+  begin
+    if Position>=Length(Digits) then Result:=Digits+StringOfChar('0',Position-Length(Digits))
+    else Result:=Copy(Digits,1,Position)+'.'+Copy(Digits,Position+1,MaxInt);
+  end
+  else if (Position<=0) and (Position> -6) then
+    Result:='0.'+StringOfChar('0',-Position)+Digits
+  else
+  begin
+    Result:=Digits[1];
+    if Length(Digits)>1 then Result:=Result+'.'+Copy(Digits,2,MaxInt);
+    Result:=Result+'e';
+    if Position>0 then Result:=Result+'+';
+    Result:=Result+IntToStr(Position-1);
+  end;
+  if Negative then Result:='-'+Result;
+end;
+
 function ReservationValue(Value,Schema:TJSONData):string;forward;
 
 function ReservationObject(Obj,Props:TJSONObject;ProtectedOnly:Boolean):string;
@@ -139,7 +326,12 @@ begin
           Result:='{"$date":'+JsonString(Date.AsString)+'}';
         finally Date.Free;end;
       end;
-    'int','long','double':
+    'double':
+      begin
+        if Value.JSONType<>jtNumber then raise Exception.Create('Invalid history reservation number');
+        Result:=CanonicalDouble(Value.AsFloat,Value.AsJSON);
+      end;
+    'int','long':
       begin
         // Exact safe integers have the same decimal spelling in Pascal and JavaScript.
         if Value.JSONType<>jtNumber then raise Exception.Create('Invalid history reservation number');

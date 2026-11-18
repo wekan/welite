@@ -1,6 +1,9 @@
 """Compare the Pascal list lifecycle digest with the actual WeKan hash."""
 import json
 import os
+import random
+import struct
+import math
 from pathlib import Path
 import subprocess
 import tempfile
@@ -23,6 +26,8 @@ def typed(value):
         return {'t': 'null'}
     if isinstance(value, bool):
         return {'t': 'bool'}
+    if isinstance(value, float):
+        return {'t': 'double'}
     if isinstance(value, int):
         return {'t': 'int'}
     if isinstance(value, str):
@@ -37,6 +42,22 @@ schema = typed(card)['$s']
 schema['p']['createdAt']['t'] = 'date'
 schema['p']['newContent']['$s']['p']['timestamp']['t'] = 'date'
 rows.append(dict(card, **{'$s': schema}))
+
+rng = random.Random(137)
+numbers = [0.0, -0.0, 0.1, -0.125, 0.000001, 0.0000001, 1e20, 1e21, 5e-324,
+           2.2250738585072014e-308, 1.7976931348623157e308, 1000000000000000100.0]
+for exponent in (-1074, -1022, -53, -1, 0, 52, 53, 1023):
+    number = math.ldexp(1.0, exponent)
+    numbers.extend((math.nextafter(number, 0.0), number, math.nextafter(number, math.inf)))
+for _ in range(2048):
+    number, = struct.unpack('>d', rng.getrandbits(64).to_bytes(8, 'big'))
+    if math.isfinite(number):
+        numbers.append(number)
+for number in numbers:
+    row = dict(card, newContent=number)
+    schema = typed(row)['$s']
+    schema['p']['createdAt']['t'] = 'date'
+    rows.append(dict(row, **{'$s': schema}))
 
 payload = ''.join(json.dumps(row, ensure_ascii=False)+'\n' for row in rows)
 node = r"""
@@ -64,5 +85,6 @@ with tempfile.TemporaryDirectory(prefix='wlchhash-',dir=os.environ['TMPDIR']) as
     subprocess.run([os.environ.get('FPC','fpc'),'-B','-Fu'+str(root/'src'),'-FU'+directory,
                     '-FE'+directory,str(root/'tests/chhash.lpr')],check=True,capture_output=True)
     actual = subprocess.check_output([str(Path(directory)/'chhash')],input=payload,text=True)
-assert actual == expected, (actual,expected)
+for row, got, want in zip(rows, actual.splitlines(), expected.splitlines(), strict=True):
+    assert got == want, (row, got, want)
 print('PASS: list lifecycle and typed reservation hashes match the WeKan implementation')
