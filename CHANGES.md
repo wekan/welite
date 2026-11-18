@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify list edits against live FerretDB
+
+- Verify list PUT preserves nested BSON WIP values and explicit booleans.
+  Invalid color and non-admin WIP edits leave the list unchanged.
+
 ## 2026-11-18 Edit list metadata and WIP limits through REST
 
 - Add scoped list PUT for title, color, starred state and WIP limits.

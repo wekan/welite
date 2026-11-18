@@ -109,6 +109,30 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 check_shared_checklists(request,client,token,card)
+                list_path='/api/boards/b/lists/l'
+                before=client.find('lists','l')[0]
+                assert request('PUT',list_path,dict(title='Rejected',color='#abc'),token)[0]==400
+                assert client.find('lists','l')[0]==before
+                members=client.find('boards','b')[0]['members']
+                def set_list_admin(enabled):
+                    result=client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$set':{
+                        'members':[dict(member,isAdmin=enabled) if member['userId']=='u' else member for member in members]
+                    }})]})
+                    assert result['n']==1,result
+                wip=dict(value=4,enabled=True,soft=False)
+                set_list_admin(False)
+                try:
+                    assert request('PUT',list_path,dict(title='Rejected',wipLimit=wip),token)[0]==403
+                    assert client.find('lists','l')[0]==before
+                finally:
+                    set_list_admin(True)
+                status,_,body=request('PUT',list_path,dict(title='Edited list',color='#Aa01fF',starred=True,wipLimit=wip),token)
+                assert status==200 and json.loads(body)=={'_id':'l'},(status,body)
+                updated=client.find('lists','l')[0]
+                assert (updated['title'],updated['color'],updated['starred'])==('Edited list','#Aa01fF',True),updated
+                assert updated['wipLimit']['value']==4 and updated['wipLimit']['enabled'] is True and updated['wipLimit']['soft'] is False,updated
+                print('PASS: live shared list PUT stores typed WIP values and rejects unauthorized or invalid edits atomically')
+
                 check_custom_api(request,client,database,token)
                 check_export_policy(request,client,database)
                 check_relation_scope(request,client,database)
