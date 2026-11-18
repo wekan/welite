@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify m68k resource loading under vamos
+
+- Execute a FreePascal m68k probe and compare the schema bytes read from the
+  full resource sidecar with the source file. The server reaches tenant
+  registry initialization. SQLite CLI and complete HTTP runtime remain open.
+
 ## 2026-11-18 Link the Amiga m68k server
 
 - Link both CLI SQLite server variants with vlink 0.18a. Verify AmigaOS

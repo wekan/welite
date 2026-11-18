@@ -144,7 +144,13 @@ external resources. Provide the ARM64 host `fpcres` as
 `m68k-amiga-fpcres` in the cross-tools directory and keep `wlhttp.fpcres`
 next to `wlhttp`. The companion resource file contains the exact public
 asset, locale, and private bootstrap SQL bytes checked on the build host.
-Runtime resource loading, networking and SQLite on Amiga remain unverified.
+An m68k probe executed in [vamos](https://github.com/cnvogelg/amitools/blob/main/docs/vamos.md)
+and read the exact schema bytes from the full resource bundle with
+`TResourceStream`. The server executable reached tenant registry
+initialization in the same emulator but stopped there. The tested
+[GFOpenSQLite package](https://github.com/DalsinAI/gfopensqlite/releases/tag/v3.53.4-1)
+supplies static libraries. The CLI build still needs an Amiga `sqlite3`
+executable. Full server startup, networking and SQLite runtime remain open.
 
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
