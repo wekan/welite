@@ -138,7 +138,8 @@ is `cardDependencies`, with target `cardId`; labels and dropdown IDs use `_id`.
 Live tests cover every child view, Mongo edits visible to SQL, SQL edits decoded by Mongo,
 unknown typed child properties, multi-column key edits, duplicates, missing parents and
 ownership refusal. Declared root cascades and references are implemented as described below. Typed custom-field
-value conversion and legacy bare-string dependency normalization remain open.
+value conversion remains open. Dependency REST reads recognize bare-string targets,
+and mutation converts only the edited entry while preserving legacy siblings.
 SQL `INSERT OR REPLACE` conflict behavior also needs application-level reconciliation
 before these views replace normalized tables.
 

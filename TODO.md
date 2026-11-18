@@ -162,7 +162,7 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
-  - [ ] Verify dependency REST behavior for legacy bare-string entries and custom board roles.
+  - [ ] Verify dependency REST behavior for custom board roles.
   - [ ] Verify Windows runtime DNS validation and support other target resolvers for integration destination writes.
 
 

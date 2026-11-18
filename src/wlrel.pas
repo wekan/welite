@@ -62,6 +62,13 @@ begin
       begin
         Field:=Fields.Objects[j];ColumnName:=Field.Get('name','');FieldPath:=Field.Get('path','');
         if Spec.Get('scalar',False) then ReadExpr:='e.value'
+        else if Name='card_dependencies' then
+        begin
+          ReadExpr:='CASE WHEN e.type=''object'' THEN json_extract(e.value,'+Q(Path(FieldPath))+')';
+          if FieldPath='cardId' then ReadExpr:=ReadExpr+' WHEN e.type=''text'' AND json_extract(p.'+Doc+
+            ',''$."$s".p.cardDependencies.i[''||e.key||''].t'')=''string'' THEN e.value';
+          ReadExpr:=ReadExpr+' END';
+        end
         else ReadExpr:='json_extract(e.value,'+Q(Path(FieldPath))+')';
         Seed:='NEW.'+Id(ColumnName);
         if Field.Find('default').JSONType<>jtNull then

@@ -239,6 +239,8 @@ add a card's dependencies at `/api/boards/:boardId/cards/:cardId/dependencies`.
 POST takes a target `cardId` and optional `type`, `color` and `icon`. Reposting
 the same source and target updates the existing entry. Append `/:targetId` for
 PUT or DELETE. Writes check board and card scope within the transaction.
+Shared stores can contain legacy string targets. Reads supply default styling.
+Editing converts only the selected string to a structured entry.
 
 
 ## Board domains

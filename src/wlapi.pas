@@ -761,7 +761,8 @@ begin
       end;
       Rows:=T.Db.Query('SELECT cards.id,cards.title,cards.cardNumber,d.targetCardId,d.type,d.color,d.icon,'+
         'target.id,target.title,target.cardNumber FROM card_dependencies d JOIN cards ON cards.id=d.cardId '+
-        'LEFT JOIN cards target ON target.id=d.targetCardId AND target.boardId=cards.boardId WHERE '+CardFilter+';');
+        'LEFT JOIN cards target ON target.id=d.targetCardId AND target.boardId=cards.boardId WHERE '+CardFilter+
+        ' AND d.targetCardId IS NOT NULL AND d.targetCardId<>'''';');
       Items:=TJSONArray.Create;
       try
         for Row in Rows do

@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Support legacy dependency targets in REST
+
+- Read bare BSON string targets with default styling. Edit or delete the
+  selected row while retaining untouched siblings. Reject ambiguous duplicates
+  and preserve BSON lookalikes. Allow a first dependency in a null array.
+
 ## 2026-11-18 Verify REST card archive and restore in Chromium
 
 - With JavaScript disabled and cookies stripped, the board hides archived

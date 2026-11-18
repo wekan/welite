@@ -279,13 +279,18 @@ end;
 function RelationDocument(const Previous,Command,Model:string):string;
 var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed,Hints:TJSONObject;Fields,Keys,Rows:TJSONArray;
   Item,Value,Converted,Container,Schema:TJSONData;Path,Op,Name,Signature:string;
-  i,j,Found,DateRow:Integer;Scalar,Match,AppendMode,ForceName:Boolean;
+  i,j,Found,DateRow:Integer;Scalar,Match,AppendMode,ForceName,LegacyDependency:Boolean;
   function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
   var n:Integer;
   begin
     if Scalar then Exit(Entry);
-    if not (Entry is TJSONObject) then Invalid;
-    Result:=AtPath(TJSONObject(Entry),Key);
+    if LegacyDependency and (Entry is TJSONString) then
+    begin
+      if Key='cardId' then Exit(Entry);
+      Entry:=nil;
+    end
+    else if not (Entry is TJSONObject) then Invalid;
+    Result:=nil;if Entry<>nil then Result:=AtPath(TJSONObject(Entry),Key);
     if Result=nil then
       for n:=0 to Fields.Count-1 do
         if Fields.Objects[n].Get('path',Fields.Objects[n].Get('name',''))=Key then
@@ -307,6 +312,7 @@ begin
   try
     Doc:=ExactObject(PlainDocument(Previous));Cmd:=ExactObject(Command);Spec:=ExactObject(Model);
     Path:=Spec.Get('path','');Scalar:=Spec.Get('scalar',False);
+    LegacyDependency:=(Path='cardDependencies') and (Spec.Get('table','')='card_dependencies');
     if (Path='') or (RootOf(Path)='$s') then Invalid;
     if not (Spec.Find('fields') is TJSONArray) or not (Spec.Find('keys') is TJSONArray) then Invalid;
     Fields:=TJSONArray(Spec.Find('fields'));Keys:=TJSONArray(Spec.Find('keys'));
@@ -327,12 +333,23 @@ begin
       Result:=TypedDocument(Doc.AsJSON,Previous,'{}');Exit;
     end;
     Container:=AtPath(Doc,Path);
-    if Container=nil then begin PutPath(Doc,Path,TJSONArray.Create);Container:=AtPath(Doc,Path);end;
+    if (Container=nil) or (LegacyDependency and (Op='insert') and (Container.JSONType=jtNull)) then
+    begin PutPath(Doc,Path,TJSONArray.Create);Container:=AtPath(Doc,Path);end;
     if not (Container is TJSONArray) then Invalid;Rows:=TJSONArray(Container);
     Found:=-1;
     for i:=0 to Rows.Count-1 do
     begin
       Item:=Rows.Items[i];Match:=True;
+      if LegacyDependency and (Item is TJSONString) then
+      begin
+        if Typed=nil then Typed:=ExactObject(Previous);
+        Schema:=AtPath(Typed,'$s.p.cardDependencies');
+        if not (Schema is TJSONObject) then Invalid;
+        Schema:=TJSONObject(Schema).Find('i');
+        if not (Schema is TJSONArray) or (i>=Schema.Count) then Invalid;
+        Schema:=Schema.Items[i];
+        if not (Schema is TJSONObject) or (TJSONObject(Schema).Get('t','')<>'string') then Invalid;
+      end;
       for j:=0 to Keys.Count-1 do
       begin
         Name:=Keys.Strings[j];Value:=Old.Find(Name);
@@ -348,6 +365,8 @@ begin
       if Found<0 then Invalid;
       if Scalar then begin Row:=TJSONObject.Create;Row.Add(Keys.Strings[0],Rows.Items[Found].Clone);end
       else if Rows.Items[Found] is TJSONObject then Row:=TJSONObject(Rows.Items[Found].Clone)
+      else if LegacyDependency and (Rows.Items[Found] is TJSONString) then
+        Row:=TJSONObject.Create(['cardId',Rows.Items[Found].AsString,'type','related-to','color','#eb144c','icon','link'])
       else Invalid;
     end;
     if Op='delete' then Rows.Delete(Found)

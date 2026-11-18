@@ -142,18 +142,18 @@ end;
 function TSelectionScope.RelationStringField(const Name,Column:string):string;
 var Info,Spec,Parent,Field:TJSONObject;Fields,Keys:TJSONArray;
   Owner,Match,Items,ArrayPath,ArraySchema,SchemaExpr,KeyPath,Value,ValueType,Kind,Canonical,KeyMatch,KeyCanonical,DefaultValue,Missing,Projected:string;
-  i,j:Integer;Scalar,FoundColumn:Boolean;
+  i,j:Integer;Scalar,FoundColumn,LegacyDependency:Boolean;
 begin
   Info:=RelationRoot(Name);Result:='1';if Info.Get('native',False) then Exit;
   Spec:=Relation(Name);Parent:=Root(Info.Get('parent',''));Fields:=TJSONArray(Spec.Find('fields'));Keys:=TJSONArray(Spec.Find('keys'));
-  Scalar:=Spec.Get('scalar',False);Owner:=Id(Name)+'.'+Id(Spec.Get('parentKey',''));FoundColumn:=Column=Spec.Get('parentKey','');
+  Scalar:=Spec.Get('scalar',False);LegacyDependency:=Name='card_dependencies';Owner:=Id(Name)+'.'+Id(Spec.Get('parentKey',''));FoundColumn:=Column=Spec.Get('parentKey','');
   ArrayPath:=Path(Spec.Get('path',''),False);ArraySchema:=Path(Spec.Get('path',''),True);SetLength(ArraySchema,Length(ArraySchema)-2);
   Items:='json_each(CASE WHEN json_type(rs._ferretdb_sjson,'+Q(ArrayPath)+')=''array'' THEN json_extract(rs._ferretdb_sjson,'+Q(ArrayPath)+') ELSE ''[]'' END) re';
   Canonical:='typeof('+Owner+')=''text'' AND json_type(rs._ferretdb_sjson,''$."_id"'')=''text'' '+
     'AND json_extract(rs._ferretdb_sjson,''$."$s".p."_id".t'')=''string'' AND '+Owner+'<>'''' '+
     'AND json_extract(rs._ferretdb_sjson,'+Q(ArraySchema+'.t')+')=''array''';
   Match:='json_extract(rs._ferretdb_sjson,''$."_id"'')='+Owner;KeyMatch:='1';KeyCanonical:='1';
-  if not Scalar then KeyCanonical:=KeyCanonical+' AND re.type=''object'' AND json_extract(rs._ferretdb_sjson,'+
+  if not Scalar and not LegacyDependency then KeyCanonical:=KeyCanonical+' AND re.type=''object'' AND json_extract(rs._ferretdb_sjson,'+
     Q(ArraySchema+'.i[')+'||re.key||'+Q('].t')+')=''object''';
   for i:=0 to Keys.Count-1 do
   begin
@@ -171,6 +171,15 @@ begin
       Value:='json_extract(CASE WHEN re.type=''object'' THEN re.value ELSE ''{}'' END,'+Q(Path(KeyPath,False))+')';
       ValueType:='json_type(CASE WHEN re.type=''object'' THEN re.value ELSE ''{}'' END,'+Q(Path(KeyPath,False))+')';
       SchemaExpr:=Q(ArraySchema+'.i[')+'||re.key||'+Q(']'+Copy(Path(KeyPath,True),2,MaxInt));
+      if LegacyDependency then
+      begin
+        if KeyPath='cardId' then
+        begin
+          Value:='CASE WHEN re.type=''text'' THEN re.value ELSE '+Value+' END';
+          ValueType:='CASE WHEN re.type=''text'' THEN re.type ELSE '+ValueType+' END';
+          SchemaExpr:='CASE WHEN re.type=''text'' THEN '+Q(ArraySchema+'.i[')+'||re.key||'+Q('].t')+' ELSE '+SchemaExpr+' END';
+        end;
+      end;
     end;
     Kind:='json_extract(rs._ferretdb_sjson,'+SchemaExpr+')';
     Missing:='';DefaultValue:='';

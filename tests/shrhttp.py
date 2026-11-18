@@ -12,7 +12,7 @@ import subprocess
 import tempfile
 import time
 from urllib.parse import urlencode,urlsplit,parse_qs
-from wire import Client,DateMs,Long
+from wire import Client,DateMs,Long,Regex
 from layout import Forms
 from custapi import run_shared as check_custom_api
 from chkshare import run as check_shared_checklists
@@ -416,6 +416,34 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert request('DELETE',dep_item,token=token)[0]==200
                     status,_,body=request('DELETE',dep_item,token=token)
                     assert status==404 and json.loads(body)=={'error':'Dependency not found'}
+                    def set_dependencies(entries):
+                        result=client.command({'update':'cards','updates':[dict(q={'_id':dep_source},
+                            u={'$set':{'cardDependencies':entries}})]})
+                        assert result['n']==1 and not result.get('writeErrors'),result
+                    set_card_membership(board_members)
+                    set_dependencies([dep_target,'retained-legacy'])
+                    status,_,body=request('GET',dep_path,token=token)
+                    assert status==200 and json.loads(body)[0]==dict(cardId=dep_target,
+                        type='related-to',color='#eb144c',icon='link'),(status,body)
+                    assert request('PUT',dep_item,dict(type='fixes'),token)[0]==200
+                    assert client.find('cards',dep_source)[0]['cardDependencies']==[
+                        dict(cardId=dep_target,type='fixes',color='#eb144c',icon='link'),'retained-legacy']
+                    set_dependencies([dep_target,'retained-legacy'])
+                    assert request('DELETE',dep_item,token=token)[0]==200
+                    assert client.find('cards',dep_source)[0]['cardDependencies']==['retained-legacy']
+                    set_dependencies([dep_target,dict(cardId=dep_target,type='related-to')])
+                    assert request('DELETE',dep_item,token=token)[0]==409
+                    assert client.find('cards',dep_source)[0]['cardDependencies']==[
+                        dep_target,dict(cardId=dep_target,type='related-to')]
+                    set_dependencies([Regex(dep_target,'')])
+                    status,_,body=request('GET',dep_path,token=token)
+                    assert status==200 and json.loads(body)==[]
+                    assert request('POST',dep_path,dep_input,token)[0]==409
+                    retained,=client.find('cards',dep_source)[0]['cardDependencies']
+                    assert isinstance(retained,Regex) and (retained.pattern,retained.options)==(dep_target,'')
+                    set_dependencies(None)
+                    assert request('POST',dep_path,dep_input,token)[0]==200
+
                 finally:
                     set_card_membership(board_members)
                     client.command({'delete':'cards','deletes':[dict(q={'_id':card_id},limit=1)
