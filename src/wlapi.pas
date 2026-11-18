@@ -510,23 +510,60 @@ begin
   finally O.Free; end;
 end;
 
-procedure ChangeGroupFeatures(aRequest:TRequest;aResponse:TResponse;const Kind,LabelText:string);
+procedure GroupFeatures(aRequest:TRequest;aResponse:TResponse;const Kind,LabelText:string);
 var T:TWLTenant;Actor,Id,Source,TableName,Scope,Raw,Encoded,Sql,Key,Flag,Guard:string;
-  Rows:TWLRows;Body,Doc,Reply:TJSONObject;Value:TJSONData;Edited:Boolean;
+  Rows:TWLRows;Body,Doc,Reply:TJSONObject;Value:TJSONData;Edited,Listing:Boolean;Entries:TJSONArray;Row:TWLRow;
   procedure Missing;
-  begin SendJson(aResponse,'{"error":"'+LabelText+' not found"}',404);end;
+  begin
+    if Listing then SendJson(aResponse,'[]')
+    else SendJson(aResponse,'{"error":"'+LabelText+' not found"}',404);
+  end;
+  function Project(SourceDoc:TJSONObject;NormalizeFlags:Boolean):TJSONObject;
+  var Suffix,Name:string;PropertyValue:TJSONData;
+  begin
+    Result:=TJSONObject.Create(['_id',SourceDoc.Get('_id','')]);
+    for Suffix in ['DisplayName','ShortName'] do
+    begin
+      Name:=Kind+Suffix;PropertyValue:=SourceDoc.Find(Name);
+      if PropertyValue is TJSONString then Result.Add(Name,PropertyValue.Clone);
+    end;
+    for Suffix in ['SharedTemplates','PropagateMembersToBoards','SyncMembersFromAuth'] do
+    begin
+      Name:=Kind+Suffix;PropertyValue:=SourceDoc.Find(Name);
+      if NormalizeFlags then Result.Add(Name,(PropertyValue is TJSONBoolean) and PropertyValue.AsBoolean)
+      else if PropertyValue is TJSONBoolean then Result.Add(Name,PropertyValue.Clone);
+    end;
+  end;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   if not IsSiteAdmin(T.Db,Actor) then
   begin SendError(aResponse,403,'Site administration required');Exit;end;
-  Id:=aRequest.RouteParams[Kind+'Id'];
-  if (Id='') or (Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0) then
+  Id:=aRequest.RouteParams[Kind+'Id'];Listing:=aRequest.Method='GET';
+  if ((Id='') and not Listing) or (Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0) then
   begin Missing;Exit;end;
   Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
     'ON m.name=r.table_name AND m.type=''table'' WHERE r.name='+QuotedStr(Kind)+';');
   if Length(Rows)<>1 then begin Missing;Exit;end;
   Source:=Rows[0][0];TableName:='"'+StringReplace(Source,'"','""',[rfReplaceAll])+'"';
+  if Listing then
+  begin
+    Entries:=TJSONArray.Create;
+    try
+      try
+        Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+
+          ' WHERE json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
+          ' ORDER BY json_extract(_ferretdb_sjson,''$._id'');');
+        for Row in Rows do
+        begin
+          Doc:=ExactObject(PlainDocument(Row[0]));
+          try Entries.Add(Project(Doc,True));finally Doc.Free;end;
+        end;
+        SendJson(aResponse,Entries.AsJSON);
+      except SendError(aResponse,500,'Could not read group features');end;
+    finally Entries.Free;end;
+    Exit;
+  end;
   Scope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id)+
     ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
   Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
@@ -564,22 +601,17 @@ begin
           ' WHERE '+Scope+' AND json(_ferretdb_sjson)=json('+Encoded+')) THEN 1 ELSE json(''Feature update failed'') END; COMMIT;';
         if not T.Db.Exec(Sql) then raise Exception.Create('Feature update failed');
       end;
-      Reply:=TJSONObject.Create(['_id',Id]);
-      for Flag in ['DisplayName','ShortName','SharedTemplates','PropagateMembersToBoards','SyncMembersFromAuth'] do
-      begin
-        Key:=Kind+Flag;Value:=Doc.Find(Key);
-        if Value<>nil then Reply.Add(Key,Value.Clone);
-      end;
+      Reply:=Project(Doc,False);
       SendJson(aResponse,Reply.AsJSON);
     except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update group features');end;
   finally Reply.Free;Doc.Free;Body.Free;end;
 end;
 
 procedure ApiOrgFeatures(aRequest:TRequest;aResponse:TResponse);
-begin ChangeGroupFeatures(aRequest,aResponse,'org','Organization');end;
+begin GroupFeatures(aRequest,aResponse,'org','Organization');end;
 
 procedure ApiTeamFeatures(aRequest:TRequest;aResponse:TResponse);
-begin ChangeGroupFeatures(aRequest,aResponse,'team','Team');end;
+begin GroupFeatures(aRequest,aResponse,'team','Team');end;
 
 procedure ApiChangeUser(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"User not found"}';

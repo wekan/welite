@@ -810,6 +810,22 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
                 client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
                     services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                for group in ['org','team']:
+                    endpoint='/api/admin/'+group+'s'
+                    assert request('GET',endpoint)[0]==401
+                    assert request('GET',endpoint,token=target_token)[0]==403
+                    assert json.loads(request('GET',endpoint,token=admin_token)[2])==[]
+                    client.command({'create':group})
+                    row={'_id':'group',group+'DisplayName':'Example',group+'ShortName':'example',
+                         group+'SharedTemplates':True,'unknown':'private fixture field'}
+                    client.command({'insert':group,'documents':[row]})
+                    status,_,body=request('GET',endpoint,token=admin_token)
+                    assert status==200 and json.loads(body)==[{
+                        '_id':'group',group+'DisplayName':'Example',group+'ShortName':'example',
+                        group+'SharedTemplates':True,group+'PropagateMembersToBoards':False,
+                        group+'SyncMembersFromAuth':False}],(status,body)
+                    assert client.find(group,'group')[0]==row
+                print('PASS: shared People list routes project names and boolean flags only for site administrators')
                 member_path='/api/boards/b/members/fixture-admin'
                 assert request('POST','/api/boards/b/members/u/remove',dict(action='remove'),target_token)[0]==409
                 assert request('POST',member_path+'/add',dict(action='add',role='readOnly'),target_token)[0]==200
