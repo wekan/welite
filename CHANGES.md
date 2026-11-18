@@ -30,6 +30,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native sign-in and board links. Both upstream cases pass while retaining
   their REST and Mongo assertions.
 
+## 2026-11-18 Pass the upstream card assignment REST spec
+
+- Native Chromium checks that member and assignee changes appear after
+  reload. All seven REST cases pass, including stale assignments and activity.
+
 ## 2026-11-18 Pass the upstream REST write scope spec
 
 - Native Chromium verifies a wrong-list delete leaves the card and its
