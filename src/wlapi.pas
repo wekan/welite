@@ -1799,10 +1799,10 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     for K:=0 to Arrays[9].Count-1 do
     begin
       Entry:=Arrays[9].Objects[K];Id:=Mapped(9,Text(Entry,'_id'),True);
-      CardId:=Text(Entry,'cardId');CardKey:='NULL';ListKey:='NULL';LaneKey:='NULL';
+      Card:=nil;CardId:=Text(Entry,'cardId');CardKey:='NULL';ListKey:='NULL';LaneKey:='NULL';
       if CardId<>'' then
       begin
-        CardKey:=QuotedStr(Mapped(2,CardId,True));Card:=nil;
+        CardKey:=QuotedStr(Mapped(2,CardId,True));
         for L:=0 to Arrays[2].Count-1 do
           if Text(Arrays[2].Objects[L],'_id')=CardId then begin Card:=Arrays[2].Objects[L];Break;end;
         if Card=nil then raise EConvertError.Create('Invalid attachment card');
@@ -1829,6 +1829,8 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         ','+IntToStr(Length(Bytes))+',''filesystem'','+QuotedStr(ImportedAuthor(Entry))+','+Stamp+'); ';
       Sql:=Sql+'SELECT CASE WHEN EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+' AND boardId='+Board+
         ' AND size='+IntToStr(Length(Bytes))+') THEN 1 ELSE json(''Attachment import failed'') END; ';
+      if (Card<>nil) and (Text(Card,'coverId')=Text(Entry,'_id')) then
+        Sql:=Sql+'UPDATE cards SET coverId='+QuotedStr(Id)+' WHERE id='+CardKey+' AND boardId='+Board+'; ';
     end;
   end;
   procedure PutString(Obj:TJSONObject;const Key,Content:string);

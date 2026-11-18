@@ -286,6 +286,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 attachment_contents=b'Board import binary fixture\x00'
                 imported_payload['attachments']=[dict(_id='import-attachment',cardId=input_card,name='Imported file.bin',
                     type='application/octet-stream',file=base64.b64encode(attachment_contents).decode())]
+                imported_payload['cards'][0]['coverId']='import-attachment'
                 bad_payload=dict(imported_payload,rules=invalid_export['rules'])
                 stored_before=set(data.parent.glob('attachme/**/*.bin'))
                 assert request('POST',import_path,dict(board=bad_payload),token)[0]==400
@@ -344,6 +345,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: board import maps authors to existing local users without granting board access')
                 imported_attachment,=client.command({'find':'attachments','filter':{'meta.boardId':imported_id}})['cursor']['firstBatch']
                 assert imported_attachment['meta']['cardId']==imported_card['_id']
+                assert imported_card['coverId']==imported_attachment['_id']
                 status,_,body=request('GET','/api/attachment/download/'+imported_attachment['_id'],token=token)
                 assert status==200 and base64.b64decode(json.loads(body)['base64Data'])==attachment_contents
                 print('PASS: shared board import preserves attachment bytes and rolls back staged files on failure')
@@ -355,7 +357,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     ([],[]),
                 ]:
                     legacy=dict(title='Legacy placements',lists=lists,swimlanes=lanes,
-                        cards=[dict(_id='old-card',title='Recover me',listId='dangling-list',swimlaneId='dangling-lane')],
+                        cards=[dict(_id='old-card',title='Recover me',listId='dangling-list',swimlaneId='dangling-lane',coverId='missing-file')],
                         attachments=[dict(_id='old-file',cardId='old-card',name='Legacy file',
                                           file=base64.b64encode(attachment_contents).decode())])
                     status,_,body=request('POST',import_path,dict(board=legacy),token)
@@ -364,6 +366,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     restored,=imported_rows('cards')
                     restored_list,=imported_rows('lists')
                     restored_lane=client.find('swimlanes',restored['swimlaneId'])[0]
+                    assert not restored.get('coverId')
                     assert restored['listId']==restored_list['_id']
                     assert restored_list['title']==('First' if lists else 'Default')
                     assert restored_lane['title']==('Second lane' if lanes else 'Default')
