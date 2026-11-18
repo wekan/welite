@@ -41,6 +41,7 @@ uses
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateToken(aRequest:TRequest;aResponse:TResponse);
+procedure ApiBoardDomains(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDependencies(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
@@ -621,6 +622,92 @@ begin
   SendJson(aResponse,'{"message":"'+StringToJSONString(Message)+'"}');
 end;
 
+function BoardDomains(Db:TWLDb;const Scope:string):TJSONArray;
+var Row:TWLRow;
+begin
+  Result:=TJSONArray.Create;
+  try
+    for Row in Db.Query('SELECT domain,isActive FROM board_domains WHERE '+Scope+';') do
+      Result.Add(TJSONObject.Create(['domain',Row[0],'isActive',Row[1]='1']));
+  except Result.Free;raise;end;
+end;
+
+procedure ApiBoardDomains(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"Board not found"}';
+  Forbidden='{"error":"Only a board admin can change board domains"}';
+var T:TWLTenant;Actor,BoardId,Board,Domain,Scope,KeyScope,Permission,Bindings,Mutation,Guard,Method,AfterWrite:string;
+  Policy:TFieldPolicy;Selector:TSelectionScope;Rows:TWLRows;I:Integer;
+  Reply:TJSONArray;Input:TJSONObject;Value:TJSONData;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];Board:=QuotedStr(BoardId);Method:=aRequest.Method;
+  if (Method='GET') and not IsSiteAdmin(T.Db,Actor) then
+  begin SendError(aResponse,403,'Site administration required');Exit;end;
+  Selector:=TSelectionScope.Create(T.Db);
+  try
+    if Length(T.Db.Query('SELECT id FROM boards WHERE id='+Board+' AND '+Selector.StringField('boards','id')+';'))<>1 then
+    begin SendJson(aResponse,NotFound,404);Exit;end;
+    Scope:='boardId='+Board;
+    KeyScope:=Scope+' AND '+Selector.StringField('board_domains','domain');
+    if Method<>'GET' then
+    begin
+      Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
+      try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+      if Length(T.Db.Query('SELECT 1 WHERE '+Permission+';'))<>1 then
+      begin SendJson(aResponse,Forbidden,403);Exit;end;
+      Domain:=aRequest.RouteParams['domain'];
+      if Method='POST' then
+      begin
+        try
+          Input:=ExactObject(aRequest.Content);
+          try
+            Value:=Input.Find('domain');
+            if not (Value is TJSONString) then raise EConvertError.Create('Missing domain');
+            Domain:=Value.AsString;
+          finally Input.Free;end;
+        except SendError(aResponse,400,'Missing domain');Exit;end;
+      end;
+      Domain:=LowerCase(Trim(Domain));
+      if Pos(#0,Domain)>0 then begin SendError(aResponse,400,'Invalid domain');Exit;end;
+      if Method='POST' then
+      begin
+        if (Pos('.',Domain)=0) or (Pos('@',Domain)>0) then
+        begin SendError(aResponse,400,'Invalid domain');Exit;end;
+        for I:=1 to Length(Domain) do
+          if Domain[I]<=' ' then begin SendError(aResponse,400,'Invalid domain');Exit;end;
+      end;
+      Guard:=Scope+' AND domain='+QuotedStr(Domain);
+      Rows:=T.Db.Query('SELECT domain FROM board_domains WHERE '+Guard+';');
+      if (Length(Rows)>1) or ((Length(Rows)=1) and
+        (Length(T.Db.Query('SELECT 1 FROM board_domains WHERE '+KeyScope+' AND domain='+QuotedStr(Domain)+';'))<>1)) then
+      begin SendError(aResponse,409,'Ambiguous domain');Exit;end;
+      if (Method='DELETE') and (Length(Rows)=0) then
+      begin SendJson(aResponse,'{"error":"Domain not found"}',404);Exit;end;
+      Bindings:='';for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
+      if Method='DELETE' then
+      begin
+        Mutation:='DELETE FROM board_domains WHERE '+Guard+'; ';
+        AfterWrite:='NOT EXISTS(SELECT 1 FROM board_domains WHERE '+Guard+')';
+      end
+      else
+      begin
+        Mutation:='INSERT INTO board_domains(boardId,domain,isActive) SELECT '+Board+','+QuotedStr(Domain)+
+          ',1 WHERE NOT EXISTS(SELECT 1 FROM board_domains WHERE '+Guard+'); ';
+        AfterWrite:='(SELECT count(*) FROM board_domains WHERE '+KeyScope+' AND domain='+QuotedStr(Domain)+')=1';
+      end;
+      if not T.Db.Exec('BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+
+        ' AND (SELECT count(*) FROM board_domains WHERE '+Guard+')='+IntToStr(Length(Rows))+
+        ' AND (SELECT count(*) FROM board_domains WHERE '+KeyScope+' AND domain='+QuotedStr(Domain)+')='+IntToStr(Length(Rows))+
+        ' THEN 1 ELSE json(''Domain scope changed'') END; '+Mutation+Bindings+
+        'SELECT CASE WHEN '+Permission+' AND '+AfterWrite+' THEN 1 ELSE json(''Domain write changed scope'') END; COMMIT;') then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,409,'Could not save domains');Exit;end;
+    end;
+    Reply:=BoardDomains(T.Db,KeyScope);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  finally Selector.Free;end;
+end;
+
 procedure ApiDependencies(aRequest:TRequest;aResponse:TResponse);
 const Fields:array[0..2] of string=('type','color','icon');
   Defaults:array[0..2] of string=('related-to','#eb144c','link');
@@ -1040,7 +1127,7 @@ begin
 end;
 
 procedure ApiBoard(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId: string; R: TWLRows; O: TJSONObject;
+var T: TWLTenant; UserId,Scope: string; R: TWLRows; O: TJSONObject; Selector:TSelectionScope;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1052,6 +1139,9 @@ begin
   try
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]); O.Add('slug', R[0][2]);
     O.Add('permission', R[0][3]); O.Add('color', R[0][4]);
+    Selector:=TSelectionScope.Create(T.Db);
+    try Scope:=Selector.StringField('board_domains','domain');finally Selector.Free;end;
+    O.Add('domains',BoardDomains(T.Db,'boardId='+QuotedStr(R[0][0])+' AND '+Scope));
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
 end;

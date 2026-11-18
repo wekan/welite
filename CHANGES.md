@@ -4,6 +4,14 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Add REST board domain routes
+
+- Site administrators can read the dedicated domains endpoint. Authorized
+  board reads include their domains. Board or site administrators can add and
+  remove domains within a guarded transaction.
+- Normalize encoded domain names on deletion, preserve sibling domains, and
+  return the upstream JSON 404 for missing entries.
+
 ## 2026-11-18 Add REST card dependency routes
 
 - Read card dependencies and board dependency lines. Create, update and delete

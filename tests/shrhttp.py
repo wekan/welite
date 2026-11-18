@@ -421,6 +421,23 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     client.command({'delete':'cards','deletes':[dict(q={'_id':card_id},limit=1)
                         for card_id in (dep_source,dep_target)]})
                 print('PASS: REST dependencies enforce role and assignment scope and roll back permission changes')
+                domain_path='/api/boards/b/domains'
+                assert request('GET',domain_path,token=token)[0]==403
+                assert request('POST',domain_path,dict(domain='user@example.com'),token)[0]==400
+                for domain in ('  PARTNER.EXAMPLE  ', 'partner.example'):
+                    status,_,body=request('POST',domain_path,dict(domain=domain),token)
+                    assert status==200 and json.loads(body)==[dict(domain='partner.example',isActive=True)]
+                status,_,body=request('POST',domain_path,dict(domain='second.example'),token)
+                assert status==200 and len(json.loads(body))==2
+                normalized_delete=domain_path+'/%20PARTNER.EXAMPLE%20'
+                status,_,body=request('DELETE',normalized_delete,token=token)
+                assert status==200 and json.loads(body)==[dict(domain='second.example',isActive=True)],(status,body)
+                assert client.find('boards','b')[0]['domains']==[dict(domain='second.example',isActive=True)]
+                status,_,body=request('DELETE',normalized_delete,token=token)
+                assert status==404 and json.loads(body)=={'error':'Domain not found'}
+                assert request('DELETE',domain_path+'/second.example',token=token)[0]==200
+                client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$unset':{'domains':''}})]})
+                print('PASS: board domain writes normalize names and preserve siblings on deletion')
                 assert request('PUT',card_path,dict(dueAt='invalid'),token)[0]==404
                 assert client.find('cards',card['_id'])[0]==stored
                 assert request('PUT',card_path,dict(receivedAt=None,startAt='null',dueAt='',endAt=''),token)[0]==200

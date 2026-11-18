@@ -239,3 +239,12 @@ add a card's dependencies at `/api/boards/:boardId/cards/:cardId/dependencies`.
 POST takes a target `cardId` and optional `type`, `color` and `icon`. Reposting
 the same source and target updates the existing entry. Append `/:targetId` for
 PUT or DELETE. Writes check board and card scope within the transaction.
+
+
+## Board domains
+
+Site administrators can read `GET /api/boards/:boardId/domains`. A caller
+with board access also receives the domain list with the board response.
+Board and site administrators can POST a `domain` to the same path or
+DELETE `/api/boards/:boardId/domains/:domain`. Names are trimmed and lowercased.
+Deletion returns the remaining domains or JSON 404 for a missing entry.
