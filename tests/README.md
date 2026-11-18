@@ -650,3 +650,12 @@ invalid/missing refusal, retained legacy presence/order/card values, exact typed
 BSON and rollback after failure, account revocation or type substitution. The
 normal/checked `relinit.py` kernel cases include same-text Regex-to-string repair
 without changing Long sibling metadata.
+
+### Run the upstream WeKan REST specs
+
+Set `WELITE_WEKAN_PLAYWRIGHT` to WeKan's `tests/playwright` directory with its
+dependencies installed, then run `python3 tests/shrhttp.py` with the usual shared
+HTTP test environment. The runner builds WeLite, starts an isolated FerretDB
+database, and runs WeKan specs 17 and 23 unchanged against both services.
+Set `WELITE_SHARED_BACKEND=linked` to use only the linked SQLite build, or
+`WELITE_WEKAN_API_GREP` to focus a run by Playwright title pattern.

@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Run upstream REST API specs against WeLite
+
+- Add an opt-in runner that points WeKan’s unchanged REST specs and MongoDB
+  fixtures at an isolated WeLite and FerretDB instance. Allow filtering by
+  test title when working through parity failures.
+
 ## 2026-11-18 Validate coordinated history gates and idle heads
 
 - Check the gate shape and migration UUID and require a numeric version and

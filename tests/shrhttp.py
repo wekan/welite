@@ -22,6 +22,13 @@ from graphsnp import configure as snapshot_proxy,run_shared as check_graph_snaps
 root=Path(__file__).resolve().parents[1]
 ferret=Path(os.environ['FERRETDB'])
 backends = {'linked': [], 'cli': ['-dWLDB_CLI']}
+upstream = os.environ.get('WELITE_WEKAN_PLAYWRIGHT')
+if upstream:
+    upstream = Path(upstream).resolve()
+    playwright = upstream / 'node_modules/playwright/cli.js'
+    if not playwright.is_file():
+        raise SystemExit('WELITE_WEKAN_PLAYWRIGHT must point to WeKan tests/playwright with dependencies installed')
+upstream_filter = os.environ.get('WELITE_WEKAN_API_GREP')
 selected_backend = os.environ.get('WELITE_SHARED_BACKEND')
 if selected_backend is not None:
     if selected_backend not in backends:
@@ -98,6 +105,22 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
             try:
                 wait_for_ferret()
                 for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
+                if upstream:
+                    for collection in ['rules','triggers','actions','savedCardFilters','scrumSnapshotRows']:
+                        client.command({'create':collection})
+                    app=start('1')
+                    subprocess.run([
+                        os.environ.get('NODE','node'),str(playwright),'test',
+                        '17-rest-api.e2e.js','23-rest-api-more.e2e.js',
+                        '--reporter=list','--output',str(out/'playwright-results'),
+                        *(['--grep', upstream_filter] if upstream_filter else []),
+                    ],cwd=upstream,env=dict(env,
+                        WEKAN_BASE_URL=f'http://127.0.0.1:{http_port}',
+                        WEKAN_MONGO_URL=f'mongodb://127.0.0.1:{mongo_port}/wekan',
+                        WEKAN_PLAYWRIGHT_PROJECT='chromium',WEKAN_PLAYWRIGHT_PROBE='0',
+                        WEKAN_PLAYWRIGHT_ALL='0',WEKAN_PLAYWRIGHT_WORKERS='1'),
+                        check=True)
+                    continue
                 now=DateMs(int(time.time()*1000))
                 password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
                 client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password=password),profile=dict(language='ar',retained=Long(9007199254740993)),extra=Long(9007199254740993))]})
