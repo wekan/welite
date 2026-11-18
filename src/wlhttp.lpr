@@ -439,6 +439,24 @@ end;
 // then 404. This is what makes custom Designer pages and remapped builtin URLs resolve.
 // POST /board/move — the no-JS combined move component (wlmove). Reads dir + sel_* selections,
 // reorders/relocates, then PRG-redirects back to the page the move came from.
+procedure BoardRestoreListEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;BoardId,ListId:string;
+begin
+  if not RequireTenant(aRequest,aResponse,T) then Exit;
+  BoardId:=aRequest.ContentFields.Values['boardId'];
+  ListId:=aRequest.ContentFields.Values['listId'];
+  if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) or
+    not BoardCanWrite(T.Db,S.UserId,BoardId) or
+    not VerifyActionToken(aRequest,S,RestoreListAction(BoardId,ListId),True) then
+  begin aResponse.Code:=403;aResponse.SendContent;Exit;end;
+  if not RestoreDeletedList(T.Db,BoardId,ListId) then
+  begin aResponse.Code:=409;aResponse.SendContent;Exit;end;
+  S.LanguageTag:=RequestLanguageTag(aRequest);
+  aResponse.Code:=302;
+  aResponse.SetCustomHeader('Location',SessionUrl('/board?id='+HTTPEncode(BoardId),S));
+  aResponse.SendContent;
+end;
+
 procedure BoardMoveEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
@@ -623,6 +641,7 @@ begin
   // Combined no-JS move component (arrows keypad) — see docs/move.md
   HTTPRouter.RegisterRoute('/board', rmGet, @BoardEndpoint);
   HTTPRouter.RegisterRoute('/board/move', rmPost, @BoardMoveEndpoint);
+  HTTPRouter.RegisterRoute('/board/restore-list', rmPost, @BoardRestoreListEndpoint);
 
   // REST API (subset of public/api/wekan.yml) so the WeKan Python CLI api.py works — see wlapi
   HTTPRouter.RegisterRoute('/users/login', rmPost, @ApiLogin);

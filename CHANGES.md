@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Restore deleted list batches from the HTML board
+
+- Render a restore form for board writers. Bind the action token to the
+  board and list, then clear deletion markers for the list and its matching
+  card batch in one transaction. The form needs no JavaScript or cookies.
+
 ## 2026-11-18 Verify list deletion markers on live FerretDB
 
 - Verify matching BSON date, actor and batch markers on retained lists and

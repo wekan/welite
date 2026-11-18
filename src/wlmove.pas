@@ -59,6 +59,9 @@ function NormalizeMoveSubmit(Params:TStrings):Boolean;
 function ApplyCardDrop(Db:TWLDb; Params:TStrings):Boolean;
 function ApplyMove(Db: TWLDb; Params: TStrings; RightToLeft:Boolean=False): Boolean;
 
+function RestoreListAction(const BoardId,ListId:string):string;
+function RestoreDeletedList(Db:TWLDb;const BoardId,ListId:string):Boolean;
+
 implementation
 
 uses
@@ -303,4 +306,25 @@ begin
   end;
 end;
 
+function RestoreListAction(const BoardId,ListId:string):string;
+begin
+  Result:='board:restore-list:'+IntToStr(Length(BoardId))+':'+BoardId+ListId;
+end;
+
+function RestoreDeletedList(Db:TWLDb;const BoardId,ListId:string):Boolean;
+const ClearMarkers='deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL';
+var Scope,Deleted,Sql:string;
+begin
+  Scope:='id='+q(ListId)+' AND boardId='+q(BoardId);
+  Deleted:=Scope+' AND deletedAt IS NOT NULL';
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Deleted+
+    ')=1 THEN 1 ELSE json(''List is no longer deleted'') END; '+
+    'UPDATE cards SET '+ClearMarkers+' WHERE boardId='+q(BoardId)+' AND listId='+q(ListId)+
+    ' AND deletedAt IS NOT NULL AND deleteBatchId=(SELECT deleteBatchId FROM lists WHERE '+Deleted+'); '+
+    'UPDATE lists SET '+ClearMarkers+' WHERE '+Deleted+
+    '; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
+    ' AND deletedAt IS NULL)=1 THEN 1 ELSE json(''Could not restore list'') END; COMMIT;';
+  Result:=Db.Exec(Sql);
+  if not Result then Db.Exec('ROLLBACK;');
+end;
 end.

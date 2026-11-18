@@ -3,6 +3,7 @@ import json
 import re
 from pathlib import Path
 import sqlite3
+from layout import Forms
 
 def run(request, db, token):
     with sqlite3.connect(db) as con:
@@ -330,3 +331,16 @@ def run(request, db, token):
     status, _, body=request('GET','/board?id=protected&view=all&sessionId='+token)
     assert status==200 and b'Soft deletion fixture' not in body and ('data-list="'+identity+'"').encode() not in body,(status,body)
     print('PASS: list DELETE marks list and cards together and hides retained rows from REST and board HTML')
+
+    forms=Forms()
+    forms.feed(body.decode())
+    restore, = [fields for action,fields in forms.forms if action=='/board/restore-list' and fields.get('listId')==identity]
+    assert request('POST','/board/restore-list',dict(restore,listId='foreignlist'))[0]==403
+    assert request('POST','/board/restore-list',restore)[0]==302
+    assert request('POST','/board/restore-list',restore)[0]==403
+    assert request('GET',delete_path)[0]==200
+    assert request('GET','/api/cards/soft-delete-card?token='+token)[0]==200
+    with sqlite3.connect(db) as con:
+        assert con.execute('SELECT deletedAt,deletedBy,deleteBatchId FROM lists WHERE id=?',(identity,)).fetchone()==(None,None,None)
+        assert con.execute("SELECT deletedAt,deletedBy,deleteBatchId FROM cards WHERE id='soft-delete-card'").fetchone()==(None,None,None)
+    print('PASS: HTML list restore clears matching batch markers without JavaScript or cookies')
