@@ -102,13 +102,20 @@ def run(request,database,administrator,member,base):
     delete_path='/board/attachment/delete?id=boardtxt&card=txtcard&file='+identity
     delete_fields,=[values for action,values in forms.forms if action==delete_path]
     delete_fields.pop('confirm',None)
-    def remove(path,fields):
+    rename_path='/board/attachment/rename?id=boardtxt&card=txtcard&file='+identity
+    rename_fields,=[values for action,values in forms.forms if action==rename_path]
+    def submit(path,fields):
         return request('POST',path,urlencode(fields).encode(),
-                       content_type='application/x-www-form-urlencoded')[0]
-    assert remove(delete_path,delete_fields)==400
-    assert remove(delete_path.replace('card=txtcard','card=txtchild'),dict(delete_fields,confirm='1'))==403
+                       content_type='application/x-www-form-urlencoded')
+    arabic=json.loads((root/'i18n/data/ar.jsn').read_text())
+    for path,fields,key in ((delete_path,delete_fields,'attachmentDeletePopup-title'),
+                            (rename_path,dict(rename_fields,name='bad/name'),'invalid-file')):
+        status,headers,rejected=submit(path,fields)
+        assert status==400 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
+        assert b'dir="rtl"' in rejected and html.escape(arabic[key],quote=False).encode() in rejected
+    assert submit(delete_path.replace('card=txtcard','card=txtchild'),dict(delete_fields,confirm='1'))[0]==403
     assert request('GET',download)[2]==data
-    assert remove(delete_path,dict(delete_fields,confirm='1'))==303
+    assert submit(delete_path,dict(delete_fields,confirm='1'))[0]==303
     assert request('GET',download)[0]==404
     with sqlite3.connect(database) as con:
         assert con.execute('SELECT count(*) FROM attachments WHERE id=?',(identity,)).fetchone()==(0,)

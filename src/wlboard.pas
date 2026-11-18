@@ -766,7 +766,7 @@ end;
 procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Board,Card,Id,Name,Scope,CardScope,Guard,Sql:string;
   Rows:TWLRows;Selector:TSelectionScope;Policy:TFieldPolicy;I:Integer;
-  procedure Reject(Status:Integer);
+  procedure Reject(Status:Integer;const Key:string='error';const Message:string='Error');
   var Language:TWLLanguage;Words:TWLTranslator;
   begin
     Language:=ViewerLanguage(T.Db,S,aRequest);
@@ -775,7 +775,7 @@ var T:TWLTenant;S:TWLSession;Board,Card,Id,Name,Scope,CardScope,Guard,Sql:string
       aResponse.Code:=Status;
       aResponse.ContentType:='text/html; charset=utf-8';
       aResponse.Content:=LanguagePage(aResponse,Language,Words.Text('error','Error'),
-        '<p>'+HtmlEncode(Words.Text('error','Error'))+'</p>');
+        '<p>'+HtmlEncode(Words.Text(Key,Message))+'</p>');
       aResponse.SendContent;
     finally Words.Free;end;
   end;
@@ -788,12 +788,13 @@ begin
   S.LanguageTag:=RequestLanguageTag(aRequest);
   Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
   Id:=aRequest.QueryFields.Values['file'];Name:=Trim(aRequest.ContentFields.Values['name']);
-  if (Board='') or (Card='') or (Id='') or (Name='') or (Name='.') or (Name='..') or
-    (Pos(#0,Board+Card+Id)>0) or (Pos('/',Name)>0) or (Pos(#92,Name)>0) then
+  if (Board='') or (Card='') or (Id='') or (Pos(#0,Board+Card+Id)>0) then
   begin Reject(400);Exit;end;
+  if (Name='') or (Name='.') or (Name='..') or (Pos('/',Name)>0) or (Pos(#92,Name)>0) then
+  begin Reject(400,'invalid-file','If filename is invalid, upload or rename is cancelled.');Exit;end;
   for I:=1 to Length(Name) do
     if (Name[I]<#32) or (Name[I]=#127) then
-    begin Reject(400);Exit;end;
+    begin Reject(400,'invalid-file','If filename is invalid, upload or rename is cancelled.');Exit;end;
   if not BoardCanWrite(T.Db,S.UserId,Board) or
     not VerifyActionToken(aRequest,S,AttachmentEditAction('rename',Board,Card,Id)) then
   begin Reject(403);Exit;end;
@@ -827,16 +828,21 @@ end;
 
 procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Board,Card,Id:string;Language:TWLLanguage;Words:TWLTranslator;
-  Status:Integer;
+  Status:Integer;MessageKey,Message:string;
 begin
   T:=Default(TWLTenant);S:=Default(TWLSession);
   Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
   Id:=aRequest.QueryFields.Values['file'];
+  MessageKey:='error';Message:='Error';
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then Status:=404
   else if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then Status:=403
   else if (Board='') or (Card='') or (Id='') or (Pos(#0,Board+Card+Id)>0) then Status:=400
   else if not BoardCanWrite(T.Db,S.UserId,Board) then Status:=403
-  else if aRequest.ContentFields.Values['confirm']<>'1' then Status:=400
+  else if aRequest.ContentFields.Values['confirm']<>'1' then
+  begin
+    Status:=400;
+    MessageKey:='attachmentDeletePopup-title';Message:='Delete attachment?';
+  end
   else if not VerifyActionToken(aRequest,S,AttachmentEditAction('delete',Board,Card,Id)) then Status:=403
   else if not DeleteStoredAttachment(T,S.UserId,Board,Id,Card) then Status:=409
   else
@@ -852,7 +858,7 @@ begin
     aResponse.Code:=Status;
     aResponse.ContentType:='text/html; charset=utf-8';
     aResponse.Content:=LanguagePage(aResponse,Language,Words.Text('error','Error'),
-      '<p>'+HtmlEncode(Words.Text('error','Error'))+'</p>');
+      '<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>');
     aResponse.SendContent;
   finally Words.Free;end;
 end;
