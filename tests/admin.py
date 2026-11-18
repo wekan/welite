@@ -130,6 +130,15 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                     ('owned-late',actor,0),('ordinary',actor,1)])
             endpoint='/api/users/'+target
             assert request('PUT',endpoint+'?token='+member,dict(action='takeOwnership'))[0]==403
+            with sqlite3.connect(db) as con:
+                before=con.execute('SELECT * FROM board_members ORDER BY boardId,userId').fetchall()
+                con.execute("CREATE TRIGGER refuse_ownership BEFORE UPDATE OF userId ON board_members "
+                            "WHEN OLD.boardId='owned-late' BEGIN SELECT RAISE(ABORT,'fixture refusal'); END")
+            status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
+            assert status==500,(status,body)
+            with sqlite3.connect(db) as con:
+                assert con.execute('SELECT * FROM board_members ORDER BY boardId,userId').fetchall()==before
+                con.execute('DROP TRIGGER refuse_ownership')
             status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
             assert status==200 and json.loads(body)==[dict(_id='owned-early',title='Earlier'),dict(_id='owned-late',title='Later')],(status,body)
             status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))

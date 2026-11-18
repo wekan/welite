@@ -9,7 +9,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Implement the site-admin `takeOwnership` action. Transfer the target's
   board-admin memberships in one transaction and return board IDs and
   titles in board order. Ordinary memberships remain intact and a repeat
-  returns an empty array.
+  returns an empty array. An interrupted transfer leaves both boards unchanged.
 
 ## 2026-11-18 Verify REST login changes in the native People panel
 
