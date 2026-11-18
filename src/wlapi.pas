@@ -1165,20 +1165,23 @@ begin
     [QuotedStr(BoardId)]))));
 end;
 
-procedure ApiList(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId: string; R: TWLRows; O: TJSONObject;
+procedure ApiList(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"List not found"}';
+var T:TWLTenant;UserId,BoardId,ListId:string;Rows:TWLRows;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  R := T.Db.Query(Format('SELECT id,title FROM lists WHERE id=%s LIMIT 1;',
-    [QuotedStr(aRequest.RouteParams['listId'])]));
-  if Length(R) = 0 then begin SendError(aResponse, 404, 'List not found'); Exit; end;
-  O := TJSONObject.Create;
-  try
-    O.Add('_id', R[0][0]); O.Add('title', R[0][1]);
-    SendJson(aResponse, O.AsJSON);
-  finally O.Free; end;
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
+  Rows:=T.Db.Query('SELECT json_object(''_id'',id,''boardId'',boardId,''swimlaneId'',swimlaneId,'+
+    '''title'',title,''type'',type,''color'',color,''sort'',sort,''width'',width,'+
+    '''starred'',json(CASE WHEN starred=1 THEN ''true'' ELSE ''false'' END),''archived'',json(''false''),'+
+    '''archivedAt'',archivedAt,''createdAt'',createdAt,''modifiedAt'',modifiedAt,''updatedAt'',updatedAt,'+
+    '''wipLimit'',json_object(''value'',wip_value,''enabled'',json(CASE WHEN wip_enabled=1 THEN ''true'' ELSE ''false'' END),'+
+    '''soft'',json(CASE WHEN wip_soft=1 THEN ''true'' ELSE ''false'' END))) FROM lists WHERE id='+
+    QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0;');
+  if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+  SendJson(aResponse,Rows[0][0]);
 end;
 
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);

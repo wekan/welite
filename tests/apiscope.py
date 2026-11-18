@@ -251,3 +251,19 @@ def run(request, db, token):
     with sqlite3.connect(db) as con:
         assert con.execute('SELECT wip_value,wip_enabled,wip_soft FROM lists WHERE id=?',(current_list,)).fetchone() == (3,1,0)
     print('PASS: list PUT validates color atomically and restricts WIP edits to board administrators')
+
+    def read_list(path=list_path):
+        return request('GET',path+'?token='+token)
+    status, _, body=read_list()
+    assert status == 200, (status,body)
+    result=json.loads(body)
+    assert result['title']=='Renamed list' and result['color']=='#Aa01fF' and result['starred'] is True
+    assert result['wipLimit']==wip and result['boardId']=='protected', result
+    assert request('POST',list_path+'/archive?token='+token)[0]==200
+    try:
+        for absent in [list_path,'/api/boards/protected/lists/foreignlist','/api/boards/protected/lists/missing']:
+            status, _, body=read_list(absent)
+            assert status==404 and json.loads(body)==dict(error='List not found'), (status,body)
+    finally:
+        assert request('POST',list_path+'/unarchive?token='+token)[0]==200
+    print('PASS: list GET returns edit metadata and rejects archived, missing and foreign lists')
