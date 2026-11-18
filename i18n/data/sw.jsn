@@ -2105,5 +2105,17 @@
   "twoFactorCode-invalid": "Msimbo wa uthibitishaji si sahihi. Tafadhali jaribu tena.",
   "twoFactorAuth-enabled": "Uthibitishaji wa hatua mbili umewashwa kwa akaunti yako.",
   "two-factor-required-title": "Weka uthibitishaji wa hatua mbili",
-  "two-factor-required-text": "Tovuti hii inahitaji uthibitishaji wa hatua mbili kwa akaunti yako. Uweke ili kuendelea."
+  "two-factor-required-text": "Tovuti hii inahitaji uthibitishaji wa hatua mbili kwa akaunti yako. Uweke ili kuendelea.",
+  "enrollment-password-instructions": "Thibitisha nenosiri lako ili kuanza usanidi. Hatua hii haitakuingiza kwenye akaunti. Huwezi kubadilisha hapa njia ya uthibitishaji ambayo tayari inatumika.",
+  "enrollment-setup-denied": "Usanidi hauwezi kuanza. Kagua taarifa zako za kuingia na kama misimbo ya matumizi ya mara moja tayari imewashwa.",
+  "enrollment-code-instructions": "Tumia misimbo inayotegemea muda: SHA1, tarakimu sita na kipindi cha sekunde 30. Weka ufunguo kuwa siri. Usanidi utaisha baada ya dakika tano.",
+  "enrollment-confirmed-instructions": "Msimbo wa uthibitisho tayari umetumiwa. Subiri programu ya uthibitishaji ionyeshe msimbo mpya kabla ya kuingia.",
+  "enrollment-account-created": "Akaunti imeundwa",
+  "registration-first-admin": "Akaunti ya kwanza itapewa ruhusa za msimamizi mkuu wa kikoa hiki.",
+  "auth-too-many-attempts": "Majaribio mengi mno ya kuingia. Jaribu tena baadaye.",
+  "enrollment-setup-failed": "Usanidi haukuweza kuanza.",
+  "registration-global-admin-disabled": "Akaunti za wasimamizi wakuu huundwa kwenye seva yenyewe. Usajili wa umma umezimwa.",
+  "auth-session-create-failed": "Kipindi cha kuingia hakikuweza kuundwa.",
+  "registration-session-failed": "Akaunti imeundwa. Ingia ili kuendelea.",
+  "registration-password-unavailable": "Usajili kwa kutumia nenosiri haupatikani."
 }
