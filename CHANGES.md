@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Place new REST lists in the requested or default swimlane
+
+- Honor a same-board swimlane and prefer the first active swimlane for
+  omitted values. Assign the initial sort from the active list count and
+  reject invalid placement without creating a list.
+
 ## 2026-11-18 Report list and card change dates through REST
 
 - Return modifiedAt and cardsModifiedAt in the list collection. Include

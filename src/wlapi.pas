@@ -1144,7 +1144,7 @@ begin
 end;
 
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Title, Id, BoardSql, Stamp: string;Rows:TWLRows;
+var T: TWLTenant; UserId, BoardId, Title, Id, BoardSql, Stamp, LaneId, LaneSql, Guard: string;Rows:TWLRows;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1152,12 +1152,26 @@ begin
   BoardId := aRequest.RouteParams['boardId'];BoardSql:=QuotedStr(BoardId);
   if aRequest.Method = 'POST' then
   begin
-    Title := BodyField(aRequest, 'title');
-    Id := NewId;
-    Stamp:=QuotedStr(NowIso);
-    if not T.Db.Exec('INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt) VALUES('+
-      QuotedStr(Id)+','+BoardSql+','''','+QuotedStr(Title)+',0,'+Stamp+','+Stamp+');') then
-    begin SendError(aResponse,500,'Could not create list');Exit;end;
+    Title:=BodyField(aRequest,'title');LaneId:=BodyField(aRequest,'swimlaneId');
+    if (Trim(Title)='') or (Pos(#0,Title)>0) or (Pos(#0,LaneId)>0) then
+    begin SendError(aResponse,400,'Invalid list title or swimlane');Exit;end;
+    Guard:='';
+    if LaneId<>'' then
+    begin
+      LaneSql:=QuotedStr(LaneId);
+      Guard:='SELECT CASE WHEN (SELECT count(*) FROM swimlanes WHERE id='+LaneSql+
+        ' AND boardId='+BoardSql+')=1 THEN 1 ELSE json(''List swimlane changed'') END; ';
+      Rows:=T.Db.Query('SELECT id FROM swimlanes WHERE id='+LaneSql+' AND boardId='+BoardSql+';');
+      if Length(Rows)<>1 then begin SendError(aResponse,400,'Swimlane does not belong to this board');Exit;end;
+    end else
+      LaneSql:='COALESCE((SELECT id FROM swimlanes WHERE boardId='+BoardSql+
+        ' ORDER BY archived,sort,id LIMIT 1),'''')';
+    Id:=NewId;Stamp:=QuotedStr(NowIso);
+    if not T.Db.Exec('BEGIN IMMEDIATE; '+Guard+
+      'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt) VALUES('+
+      QuotedStr(Id)+','+BoardSql+','+LaneSql+','+QuotedStr(Title)+
+      ',(SELECT count(*) FROM lists WHERE boardId='+BoardSql+' AND archived=0),'+Stamp+','+Stamp+'); COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create list');Exit;end;
     SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
     Exit;
   end;

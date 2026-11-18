@@ -283,3 +283,24 @@ def run(request, db, token):
         with sqlite3.connect(db) as con:
             con.execute("UPDATE cards SET modifiedAt=?,dateLastActivity=?,archived=? WHERE id='card'",card_dates)
     print('PASS: list collection reports list and card change dates, including archived cards')
+
+    lists_path='/api/boards/protected/lists?token='+token
+    def create_list(**data):
+        return request('POST',lists_path,json.dumps(data).encode())
+    with sqlite3.connect(db) as con:
+        count,=con.execute("SELECT count(*) FROM lists WHERE boardId='protected' AND archived=0").fetchone()
+        first_lane,=con.execute("SELECT id FROM swimlanes WHERE boardId='protected' ORDER BY archived,sort,id LIMIT 1").fetchone()
+        con.execute("INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('api-lane','protected','API lane',99,'now')")
+        before='\n'.join(con.iterdump())
+    assert create_list(title='Foreign swimlane',swimlaneId='foreignlane')[0]==400
+    assert create_list(title=' ')[0]==400
+    with sqlite3.connect(db) as con:
+        assert '\n'.join(con.iterdump())==before
+    for index,(data,lane) in enumerate([(dict(title='Explicit lane',swimlaneId='api-lane'),'api-lane'),
+                                       (dict(title='Default lane'),first_lane)]):
+        status, _, body=create_list(**data)
+        assert status==200, (status,body)
+        identity=json.loads(body)['_id']
+        with sqlite3.connect(db) as con:
+            assert con.execute('SELECT swimlaneId,sort FROM lists WHERE id=?',(identity,)).fetchone()==(lane,count+index)
+    print('PASS: list POST honors explicit and default swimlanes and appends in board order')
