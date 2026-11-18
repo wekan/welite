@@ -1215,7 +1215,24 @@ begin
 end;
 
 // Send one card as JSON (incl. its labelIds). Returns False (and sends 404) if missing.
-function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: string): Boolean;
+function ChecklistReadSql(const BoardId,CardId,ChecklistId:string):string;
+begin
+  Result:='SELECT json_object(''_id'',c.id,''cardId'',c.cardId,''title'',c.title,''sort'',c.sort,''dueAt'',c.dueAt,'+
+    '''items'',json((SELECT json_group_array(json(item)) FROM (SELECT json_object(''_id'',i.id,''title'',i.title,'+
+    '''isFinished'',json(CASE WHEN i.isFinished=1 THEN ''true'' ELSE ''false'' END),''dueAt'',i.dueAt) item '+
+    'FROM checklist_items i WHERE i.checklistId=c.id AND i.cardId=c.cardId AND (i.boardId IS NULL OR i.boardId='+
+    QuotedStr(BoardId)+') ORDER BY i.sort,i.id)))) AS payload FROM checklists c WHERE c.cardId='+QuotedStr(CardId)+
+    ' AND (c.boardId IS NULL OR c.boardId='+QuotedStr(BoardId)+')';
+  if ChecklistId<>'' then Result:=Result+' AND c.id='+QuotedStr(ChecklistId);
+  Result:=Result+' ORDER BY c.sort,c.id';
+end;
+
+function ChecklistCollectionSql(const BoardId,CardId:string):string;
+begin
+  Result:='SELECT json_group_array(json(payload)) FROM ('+ChecklistReadSql(BoardId,CardId,'')+');';
+end;
+
+function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: string; IncludeChecklists:Boolean=False): Boolean;
 var R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
 begin
   Result := False;
@@ -1255,6 +1272,12 @@ begin
       end;
     finally Policy.Free;end;
     O.Add('customFields', A);
+    if IncludeChecklists then
+    begin
+      L:=Db.Query(ChecklistCollectionSql(R[0][5],CardId));
+      if Length(L)<>1 then begin SendError(aResponse,500,'Could not read card checklists');Exit;end;
+      O.Add('checklists',GetJSON(L[0][0]));
+    end;
     SendJson(aResponse, O.AsJSON);
     Result := True;
   finally O.Free; end;
@@ -1266,7 +1289,7 @@ begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  SendCardById(aResponse,T.Db,aRequest.RouteParams['cardId'],UserId);
+  SendCardById(aResponse,T.Db,aRequest.RouteParams['cardId'],UserId,True);
 end;
 
 // PUT card — update any of title/description/color and replace labelIds if given.
@@ -1372,18 +1395,6 @@ begin
   except Result:=False;end;
 end;
 
-function ChecklistReadSql(const BoardId,CardId,ChecklistId:string):string;
-begin
-  Result:='SELECT json_object(''_id'',c.id,''cardId'',c.cardId,''title'',c.title,''sort'',c.sort,''dueAt'',c.dueAt,'+
-    '''items'',json((SELECT json_group_array(json(item)) FROM (SELECT json_object(''_id'',i.id,''title'',i.title,'+
-    '''isFinished'',json(CASE WHEN i.isFinished=1 THEN ''true'' ELSE ''false'' END),''dueAt'',i.dueAt) item '+
-    'FROM checklist_items i WHERE i.checklistId=c.id AND i.cardId=c.cardId AND (i.boardId IS NULL OR i.boardId='+
-    QuotedStr(BoardId)+') ORDER BY i.sort,i.id)))) AS payload FROM checklists c WHERE c.cardId='+QuotedStr(CardId)+
-    ' AND (c.boardId IS NULL OR c.boardId='+QuotedStr(BoardId)+')';
-  if ChecklistId<>'' then Result:=Result+' AND c.id='+QuotedStr(ChecklistId);
-  Result:=Result+' ORDER BY c.sort,c.id';
-end;
-
 // GET checklists of a card / POST create a checklist
 procedure ApiCardChecklists(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; UserId, BoardId, CardId, Title, Id, Due, Sql, Stamp, ItemTitle: string;
@@ -1441,7 +1452,7 @@ begin
     finally Body.Free;end;
     Exit;
   end;
-  Rows:=T.Db.Query('SELECT json_group_array(json(payload)) FROM ('+ChecklistReadSql(BoardId,CardId,'')+');');
+  Rows:=T.Db.Query(ChecklistCollectionSql(BoardId,CardId));
   if Length(Rows)=1 then SendJson(aResponse,Rows[0][0])
   else SendError(aResponse,500,'Could not read checklists');
 end;

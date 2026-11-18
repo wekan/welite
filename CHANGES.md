@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Include checklists in scoped card GET
+
+- Return the card's checklists with ordered items, completion state and
+  deadlines. Reuse the checklist collection response builder.
+
 ## 2026-11-18 Include items and deadlines in checklist collection responses
 
 - Use the same scoped checklist representation for collection and individual

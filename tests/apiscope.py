@@ -134,6 +134,8 @@ def run(request, db, token):
     assert [item['title'] for item in checklist['items']] == ['first','second'], checklist
     status, _, body = request('GET',base+'?token='+token)
     assert status == 200 and checklist in json.loads(body), (status,body)
+    status, _, body = request('GET','/api/boards/protected/lists/'+current_list+'/cards/card?token='+token)
+    assert status == 200 and checklist in json.loads(body)['checklists'], (status,body)
     print('PASS: checklist creation stores its deadline and ordered initial items or rolls back everything')
 
     items_path = base+'/'+checklist['_id']+'/items'

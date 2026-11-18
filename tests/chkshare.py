@@ -34,6 +34,9 @@ def run(request, client, token, card):
     assert isinstance(stored['dueAt'], DateMs)
     checklist = call('GET', path)
     assert checklist['dueAt'] == due and [item['title'] for item in checklist['items']] == ['first','second']
+    assert checklist in call('GET', base)
+    card_path = '/api/boards/b/lists/' + card['listId'] + '/cards/' + card_id
+    assert checklist in call('GET', card_path)['checklists']
     item_id = call('POST', path + '/items', dict(title='Deadline', dueAt=due))['_id']
     assert client.find('checklistItems', item_id)[0]['dueAt'] == stored['dueAt']
     assert isinstance(client.find('checklistItems', item_id)[0]['dueAt'], DateMs)
