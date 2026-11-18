@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Neplatný ověřovací kód. Zkuste to znovu.",
   "twoFactorAuth-enabled": "Dvoufaktorové ověřování je pro váš účet povoleno.",
   "two-factor-required-title": "Nastavte dvoufaktorové ověřování",
-  "two-factor-required-text": "Tento web vyžaduje pro váš účet dvoufaktorové ověřování. Pro pokračování jej nastavte."
+  "two-factor-required-text": "Tento web vyžaduje pro váš účet dvoufaktorové ověřování. Pro pokračování jej nastavte.",
+  "enrollment-password-instructions": "Potvrďte heslo a zahajte nastavení. Tímto krokem se nepřihlásíte. Aktivní ověřovací faktor zde nelze nahradit.",
+  "enrollment-setup-denied": "Nastavení nelze zahájit. Zkontrolujte přihlašovací údaje a ověřte, zda již nejsou jednorázové kódy aktivní.",
+  "enrollment-code-instructions": "Používejte časové kódy: SHA1, šest číslic a interval 30 sekund. Klíč nikomu nesdělujte. Platnost nastavení vyprší za pět minut.",
+  "enrollment-confirmed-instructions": "Potvrzovací kód již byl použit. Před přihlášením počkejte, až ověřovací aplikace zobrazí nový kód.",
+  "enrollment-account-created": "Účet byl vytvořen",
+  "registration-first-admin": "První účet získá oprávnění globálního správce této domény.",
+  "auth-too-many-attempts": "Příliš mnoho pokusů o přihlášení. Zkuste to znovu později.",
+  "enrollment-setup-failed": "Nastavení se nepodařilo zahájit.",
+  "registration-global-admin-disabled": "Účty globálních správců se vytvářejí místně. Veřejná registrace je vypnuta.",
+  "auth-session-create-failed": "Relaci se nepodařilo vytvořit.",
+  "registration-session-failed": "Účet byl vytvořen. Přihlaste se a pokračujte.",
+  "registration-password-unavailable": "Registrace pomocí hesla není dostupná."
 }
