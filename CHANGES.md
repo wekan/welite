@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Store empty card assignment arrays over REST
+
+- Initialize members and assignees on single-card creation. Explicit clears
+  normalize missing or null shared fields to typed empty arrays without
+  changing unrelated BSON fields.
+
 ## 2026-11-18 Set and clear card dates over REST
 
 - Persist received, start, due and end dates as typed BSON dates in shared

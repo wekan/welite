@@ -269,7 +269,7 @@ begin
   if Actor=Author then Exit(True);
   Result:=IsSiteAdmin(Db,Actor) and EnabledBoardMember(Db,BoardId,Author);
 end;
-function ReadBodyIds(Request:TRequest; const Name:string; Ids:TStrings):Boolean;
+function ReadBodyIds(Request:TRequest; const Name:string; Ids:TStrings; AllowNull:Boolean=False):Boolean;
 var D,V:TJSONData; A:TJSONArray; i:Integer; Text,Id:string; Parts:TStringArray;
 begin
   Result:=False; D:=nil; Text:='';
@@ -281,6 +281,7 @@ begin
         D:=GetJSON(Request.Content);
         if not (D is TJSONObject) then Exit;
         V:=TJSONObject(D).Find(Name); if V=nil then Exit;
+        if AllowNull and (V.JSONType=jtNull) then Exit(True);
         if V is TJSONArray then
         begin
           A:=TJSONArray(V);
@@ -306,10 +307,44 @@ begin
     except Result:=False; end;
   finally D.Free; end;
 end;
+function InitializeSharedAssignments(Db:TWLDb;const BoardId,CardId:string;Members,Assignees:Boolean):string;
+const Doc='_ferretdb_sjson';
+var Rows:TWLRows;Scope:TSelectionScope;I:Integer;Name,TableName,Match,Path,Value:string;
+begin
+  Result:='';
+  if not (Members or Assignees) then Exit;
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''cards'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing card source');
+  if Rows[0][0]='table' then Exit;
+  Scope:=TSelectionScope.Create(Db);
+  try
+    Scope.StringField('cards','id');
+    for I:=0 to Scope.Bindings.Count-1 do Result:=Result+Scope.Bindings[I];
+  finally Scope.Free;end;
+  Rows:=Db.Query('SELECT m.table_name FROM _wl_models m JOIN _ferretdb_collections c ON m.table_name=c.table_name '+
+    'WHERE m.name=''cards'' AND c.name=''cards'';');
+  if Length(Rows)<>1 then raise Exception.Create('Ambiguous card source');
+  TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Match:='json_extract('+Doc+',''$._id'')='+QuotedStr(CardId)+
+    ' AND json_extract('+Doc+',''$.boardId'')='+QuotedStr(BoardId)+
+    ' AND json_extract('+Doc+',''$.$s.p._id.t'')=''string'' AND json_extract('+Doc+',''$.$s.p.boardId.t'')=''string''';
+  for Name in ['members','assignees'] do
+  begin
+    if ((Name='members') and not Members) or ((Name='assignees') and not Assignees) then Continue;
+    Path:=QuotedStr('$.'+Name);
+    Value:='wl_sjson(json_set(wl_plain(json('+Doc+')),'+Path+',json(''[]'')),json('+Doc+'),''{}'')';
+    Result:=Result+'UPDATE '+TableName+' SET '+Doc+'=CASE WHEN wl_storage('+QuotedStr(Rows[0][0])+')=''blob'' '+
+      'THEN jsonb('+Value+') ELSE '+Value+' END WHERE '+Match+' AND COALESCE(json_type('+Doc+','+Path+
+      '),''null'')=''null''; ';
+    Result:=Result+'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE '+Match+
+      ' AND json_type('+Doc+','+Path+')=''array'')=1 THEN 1 ELSE json(''Invalid card assignment source'') END; ';
+  end;
+end;
+
 // Build relation changes only after validating all identifiers. The caller executes these
 // changes with the card write in one transaction, so invalid data cannot partially edit it.
 function CardRelationSql(const T:TWLTenant; Request:TRequest; Response:TResponse;
-  const BoardId,CardId:string; out Sql:string):Boolean;
+  const BoardId,CardId:string; out Sql:string; Creating:Boolean=False):Boolean;
 const Fields:array[0..2] of string=('labelIds','members','assignees');
   Tables:array[0..2] of string=('card_labels','card_members','card_assignees');
 var Ids:TStringList; i,j:Integer; Column:string;
@@ -319,7 +354,7 @@ begin
     for i:=0 to High(Fields) do if BodyHasField(Request,Fields[i]) then
     begin
       Ids.Clear;
-      if not ReadBodyIds(Request,Fields[i],Ids) then
+      if not ReadBodyIds(Request,Fields[i],Ids,i>0) then
       begin SendError(Response,400,'Expected an ID array or comma-separated string'); Exit; end;
       if i=0 then Column:='labelId' else Column:='userId';
       for j:=0 to Ids.Count-1 do
@@ -331,6 +366,10 @@ begin
       for j:=0 to Ids.Count-1 do Sql:=Sql+'INSERT INTO '+Tables[i]+'(cardId,'+Column+') VALUES('+
         QuotedStr(CardId)+','+QuotedStr(Ids[j])+'); ';
     end;
+    try
+      Sql:=InitializeSharedAssignments(T.Db,BoardId,CardId,Creating or BodyHasField(Request,'members'),
+        Creating or BodyHasField(Request,'assignees'))+Sql;
+    except SendError(Response,500,'Could not initialize card assignments');Exit;end;
     Result:=True;
   finally Ids.Free; end;
 end;
@@ -1416,7 +1455,7 @@ begin
     ' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(Swimlane)+');'))=0) then
   begin SendError(aResponse,400,'List is in another swimlane'); Exit; end;
   Id := NewId;
-  if not CardRelationSql(T,aRequest,aResponse,BoardId,Id,Relations) then Exit;
+  if not CardRelationSql(T,aRequest,aResponse,BoardId,Id,Relations,True) then Exit;
   try InitialFields:=InitializeCardFields(T.Db,BoardId,Id);
   except SendError(aResponse,500,'Could not initialize custom fields');Exit;end;
   if not T.Db.Exec('BEGIN IMMEDIATE; '+Format(

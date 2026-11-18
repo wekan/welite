@@ -146,6 +146,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 card_path='/api/boards/b/lists/l/cards/'+card['_id']
+                assert card['members']==[] and card['assignees']==[]
+                client.command({'update':'cards','updates':[
+                    dict(q=dict(_id=card['_id']),u={'$set':{'members':None},'$unset':{'assignees':''}})]})
+                assert request('PUT',card_path,dict(members=None,assignees=''),token)[0]==200
+                assignments=client.find('cards',card['_id'])[0]
+                assert assignments['members']==[] and assignments['assignees']==[]
+                print('PASS: shared REST card assignments normalize missing and null BSON arrays')
                 dates=dict(receivedAt=0,startAt='-1',dueAt='2026-06-07T14:00:00.000+02:00',endAt='2026-06-08')
                 assert request('PUT',card_path,dates,token)[0]==200
                 stored=client.find('cards',card['_id'])[0]
