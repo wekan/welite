@@ -181,13 +181,19 @@ begin
     ['src'+PathDelim+'schema.sql','schema.sql'],Result) then Result:='';
 end;
 
+function TenantUsesSharedStore(const Tenant:TWLTenant):Boolean;
+begin
+  Result:=not Tenant.IsAdmin and (SharedStoresRequested or
+    (AutoSharedStores and (ExtractFileName(Tenant.DbPath)='wekan.sqlite')));
+end;
+
 // Create files/db/, files/attachme/ and files/avatars/ and, the first
 // time, its SQLite db with the schema applied. Idempotent; safe to call on every request.
 function EnsureTenantStore(const Tenant: TWLTenant): Boolean;
 var Db: TWLDb; Sql: string; R: TWLRows;
 begin
   Result:=False;
-  if SharedStoresRequested and not Tenant.IsAdmin then
+  if TenantUsesSharedStore(Tenant) then
   begin
     if ExtractFileName(Tenant.DbPath)='wekan.sqlite' then
       ForceDirectories(Tenant.FilesDir+'db')
@@ -198,7 +204,7 @@ begin
       R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''_ferretdb_collections'';');
       if Length(R)=0 then
       begin
-        if ExtractFileName(Tenant.DbPath)<>'wekan.sqlite' then Exit;
+        if not SharedStoresRequested or (ExtractFileName(Tenant.DbPath)<>'wekan.sqlite') then Exit;
         if (Length(Db.Query('SELECT 1 FROM sqlite_master LIMIT 1;'))=0) and
           InstallRootModels(Db,True) then Exit(True);
         // A concurrent provisioner may have installed the complete schema.
@@ -237,7 +243,7 @@ begin
   T:=Default(TWLTenant);
   T.Host:=Key; T.Dir:=TenantDir(Key); T.FilesDir:=T.Dir+'files'+PathDelim;
   T.IsAdmin:=Key=ADMIN_TENANT;
-  if not SelectStoreFile(T.FilesDir+'db',SharedStoresRequested and not T.IsAdmin,T.DbPath,True) then Exit;
+  if not SelectStoreFile(T.FilesDir+'db',SharedStoresRequested and not T.IsAdmin,T.DbPath,True,not T.IsAdmin) then Exit;
   Result:=EnsureTenantStore(T);
 end;
 
@@ -277,7 +283,7 @@ begin
   Tenant.IsAdmin  := SameText(Key, ADMIN_TENANT);
   Tenant.Dir      := TenantDir(Key);
   Tenant.FilesDir := Tenant.Dir + 'files' + PathDelim;
-  if not SelectStoreFile(Tenant.FilesDir+'db',SharedStoresRequested and not Tenant.IsAdmin,Tenant.DbPath,AutoProvision) then Exit;
+  if not SelectStoreFile(Tenant.FilesDir+'db',SharedStoresRequested and not Tenant.IsAdmin,Tenant.DbPath,AutoProvision,not Tenant.IsAdmin) then Exit;
 
   if AutoProvision and not EnsureTenantStore(Tenant) then Exit;
 
@@ -302,7 +308,7 @@ begin
   Result := Assigned(Tenant.Db);
   if Result then
   begin
-    if SharedStoresRequested and not Tenant.IsAdmin then
+    if TenantUsesSharedStore(Tenant) then
     begin
       if not EnsureTenantStore(Tenant) or not InstallRootModels(Tenant.Db) then
       begin Tenant.Db.Free;Tenant.Db:=nil;Exit(False);end;

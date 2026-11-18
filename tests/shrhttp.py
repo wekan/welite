@@ -183,9 +183,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 with sqlite3.connect(occupied_file) as con:
                     con.execute('CREATE TABLE users (id TEXT PRIMARY KEY)')
                     con.execute("INSERT INTO users VALUES ('retained')")
-                app=start('1',occupied)
-                assert request('GET','/sign-in')[0]==404
-                stop()
+                for mode in ('','1'):
+                    app=start(mode,occupied)
+                    assert request('GET','/sign-in')[0]==404
+                    stop()
                 with sqlite3.connect(occupied_file) as con:
                     assert con.execute('SELECT id FROM users').fetchall()==[('retained',)]
                     assert con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchone() is None
@@ -201,7 +202,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 refused=request('GET','/')
                 assert refused[0]==404 and not shadow.exists(),(backend,refused[0],shadow.exists(),refused[2])
                 stop()
-                app=start('1')
+                app=start('')
+                assert request('GET','/sign-in')[0]==200 and not shadow.exists()
+                with sqlite3.connect(database) as con:
+                    assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
                 status,_,body=request('POST','/users/login',dict(username='user',password='test-password'))
                 assert status==200,(backend,status,body)
                 login=json.loads(body);token=login['token']

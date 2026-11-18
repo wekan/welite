@@ -327,7 +327,7 @@ FerretDB binary with live SQLite database and collection discovery
 history collections through Mongo find and listCollections in one server process.
 It also checks the Mongo error for malformed registry settings and retries
 after repair. It builds both HTTP backends and the CLI extension, checks canonical filename refusal without file creation, then
-opens an existing Mongo-created store with `WELITE_SHARED=1`. It verifies both-way
+opens an existing Mongo-created store with `WELITE_SHARED` unset. It verifies both-way
 HTTP/Mongo changes, BSON preservation, private browser sessions, API restart and
 shared revocation, with no normalized shadow database. It also provisions a fresh
 shared database through HTTP, discovers it from the already running Mongo server,

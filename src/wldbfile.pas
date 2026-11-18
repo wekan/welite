@@ -3,17 +3,20 @@ unit wldbfile;
 interface
 uses SysUtils;
 function SharedStoresRequested:Boolean;
+function AutoSharedStores:Boolean;
 function ValidStoreMode:Boolean;
 // Select one canonical file. Never copy/link/rename or create a database here.
-// Shared creation selects the canonical .sqlite path; ordinary mode never shadows it.
-function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation:Boolean=False):Boolean;
+// Shared creation selects the canonical .sqlite path. Native mode never shadows it.
+function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation:Boolean=False;AllowAuto:Boolean=True):Boolean;
 implementation
 function SharedStoresRequested:Boolean;
 begin Result:=GetEnvironmentVariable('WELITE_SHARED')='1';end;
+function AutoSharedStores:Boolean;
+begin Result:=GetEnvironmentVariable('WELITE_SHARED')='';end;
 function ValidStoreMode:Boolean;
 var Value:string;
 begin Value:=GetEnvironmentVariable('WELITE_SHARED');Result:=(Value='') or (Value='0') or (Value='1');end;
-function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation:Boolean):Boolean;
+function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation,AllowAuto:Boolean):Boolean;
 var Dir,ShortFile,SourceFile:string;HasShort,HasSource:Boolean;Search:TSearchRec;Code:Integer;
 begin
   Result:=False;Path:='';if not ValidStoreMode then Exit;
@@ -26,7 +29,7 @@ begin
 
   if HasSource then
   begin
-    if not SharedOnly or (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1') then Exit;
+    if not (SharedOnly or (AllowAuto and AutoSharedStores)) or (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1') then Exit;
     Path:=SourceFile;Exit(True);
   end;
   if HasShort then begin Path:=ShortFile;Exit(True);end;

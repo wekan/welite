@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Detect existing canonical shared stores by default
+
+- Activate a registered `wekan.sqlite` when `WELITE_SHARED` is unset.
+  Keep native provisioning for empty paths and preserve explicit
+  mode selection, the admin registry and ambiguous-file checks.
+
 ## 2026-11-18 Verify live discovery of freshly provisioned shared databases
 
 - Verify that a running FerretDB server discovers a new WeLite store
