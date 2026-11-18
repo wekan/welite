@@ -15,13 +15,18 @@ def check_auth_language(request,database,otp):
     assert status==200 and b'Account created' in body and b'href="/two-factor/setup?lang=ar"' in body
     status,headers,body=request('GET','/two-factor/setup?lang='+language)
     assert status==200 and b'action="/two-factor/setup?lang=ar"' in body
+    for key in ('username','password'):
+        field=('enrol-'+key).encode()
+        assert b'<label for="'+field+b'">'+translated(key)+b'</label>' in body
+        assert b'<input id="'+field+b'"' in body
     assert headers['Cache-Control']=='no-store' and headers['Referrer-Policy']=='no-referrer'
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password='wrong-private-password'))
     assert status==200 and b'href="/two-factor/setup?lang=ar"' in body and b'wrong-private-password' not in body
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password=password))
     assert status==200 and headers['Content-Language']==language and 'Location' not in headers and 'Set-Cookie' not in headers
     assert b'action="/two-factor/confirm?lang=ar"' in body
-    assert translated('otp') in body and translated('confirm') in body
+    assert b'<label for="enrol-code">'+translated('otp')+b'</label>' in body
+    assert b'<input id="enrol-code" name="code"' in body and translated('confirm') in body
     secret=re.search(rb'<code id="otp-secret">([A-Z2-7]{32})</code>',body).group(1).decode()
     token=re.search(rb'name="setupToken" value="([a-f0-9]{64})"',body).group(1).decode()
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code='bad'))

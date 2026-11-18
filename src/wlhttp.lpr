@@ -268,7 +268,7 @@ begin
   Result:='<h1>Confirm one-time codes</h1><p>'+HtmlEncode(Message)+'</p>'+
     '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/confirm'))+'">'+
     '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
-    HtmlEncode(Words.Text('otp','One-time code'))+' <input name="code" size="6" maxlength="6"><br>'+
+    '<label for="enrol-code">'+HtmlEncode(Words.Text('otp','One-time code'))+'</label> <input id="enrol-code" name="code" size="6" maxlength="6"><br>'+
     '<input type="submit" value="'+HtmlAttr(Words.Text('confirm','Confirm'))+'"></form>'+
     '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">Start setup again</a> | <a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
 end;
@@ -304,8 +304,8 @@ begin
   end;
   SendHtml(Response,AuthPage(Request,Response,'Set up one-time codes','<h1>Set up one-time codes</h1>'+
     '<p>Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.</p>'+
-    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'">'+HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+
-    HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br><input type="submit" value="'+HtmlAttr(Words.Text('start','Start setup'))+'"></form>'+
+    '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'"><label for="enrol-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> <input id="enrol-username" name="username"><br>'+
+    '<label for="enrol-password">'+HtmlEncode(Words.Text('password','Password'))+'</label> <input id="enrol-password" type="password" name="password"><br><input type="submit" value="'+HtmlAttr(Words.Text('start','Start setup'))+'"></form>'+
     '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>'));
   finally Words.Free;end;
 end;
