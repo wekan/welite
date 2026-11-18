@@ -67,3 +67,12 @@ for key in ('act-moveCardToOtherBoard','email-enrollAccount-subject','email-invi
     assert arabic[key]!=persian[key]
     assert sorted(placeholder.findall(arabic[key]))==sorted(placeholder.findall(english[key]))
 print('PASS: Arabic activity and invitation phrases differ from the Persian catalog and preserve tokens')
+
+# Arabic regional catalogs previously defaulted to English or French for these
+# shared labels. Keep both the declared script and the positional arguments.
+for tag in ('ar','ar-DZ','ar-EG','ary'):
+    words=json.loads((root/'i18n'/'data'/f'{tag}.jsn').read_text())
+    for key in ('activity-changedTitle','act-deleteCard','act-removeBoard','act-removeList','act-removeSwimlane'):
+        assert re.search(r'[ء-ي]',words[key]),(tag,key)
+        assert sorted(placeholder.findall(words[key]))==sorted(placeholder.findall(english[key])),(tag,key)
+print('PASS: Arabic regional activity captions use Arabic and retain WeLite placeholders')
