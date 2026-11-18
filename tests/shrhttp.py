@@ -227,6 +227,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200,(status,body)
                 exported=json.loads(body)
                 assert exported['_format']=='wekan-board-1.0.0' and exported['cards'][0]['_id']==card['_id']
+                exported_user,=exported['users']
+                assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
+                assert all(key not in exported_user for key in ('services','emails','loginTokens'))
                 client.command({'create':'settings'})
                 client.command({'insert':'settings','documents':[dict(_id='export-settings',disableAllExport=True)]})
                 assert request('GET',export_path,token=token)[0]==403

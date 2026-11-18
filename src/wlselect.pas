@@ -200,6 +200,7 @@ begin
     CardScope:='cardId IN (SELECT id FROM cards WHERE '+BoardScope('cards')+' AND id IN ('+IdSet(Cards)+'))';
     AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardOwner('checklists')+' AND '+Link('checklists','id')+';',Checks);
     Table('boards','id='+q(BoardId));
+    if Params.Values['wholeBoard']='1' then Table('board_members',Scope);
     if (TJSONArray(Data.Find('boards')).Count<>1) or (TJSONArray(Data.Find('boards')).Objects[0].Get('id','')<>BoardId) then
       raise EInvalidSelection.Create('Invalid selection board');
     Table('swimlanes',BoardScope('swimlanes')+' AND id IN ('+IdSet(Lanes)+')');
@@ -367,10 +368,10 @@ begin
 end;
 
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
-const Roots:array[0..7] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments');
-  ExportKeys:array[0..7] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments');
-var Params:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
-  I,J,Index:Integer;Name,FileData:string;Value:TJSONData;
+const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments','activities');
+  ExportKeys:array[0..8] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments','activities');
+var Params,UserIds:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
+  I,J,Index:Integer;Name,FileData:string;Value:TJSONData;Rows:TWLRows;
   function ExportRow(const TableName:string;Index:Integer):TJSONObject;
   var Original:TJSONObject;Typed:string;Id:TJSONData;
   begin
@@ -381,10 +382,21 @@ var Params:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,
     Id:=Result.Find('id');
     if Id<>nil then begin Result.Add('_id',Id.Clone);Result.Delete('id');end;
   end;
+  procedure Remember(Value:TJSONData);
+  var K:Integer;
+  begin
+    if Value is TJSONArray then
+    begin
+      for K:=0 to Value.Count-1 do Remember(Value.Items[K]);
+    end else if Value is TJSONObject then Remember(TJSONObject(Value).Find('userId'))
+    else if (Value is TJSONString) and (Value.AsString<>'') and (Pos(#0,Value.AsString)=0) then
+      UserIds.Add(Value.AsString);
+  end;
 begin
   Result:=nil;Graph:=nil;Files:=nil;
   if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId) then Exit;
   Params:=TStringList.Create;
+  UserIds:=TStringList.Create;UserIds.CaseSensitive:=True;UserIds.Sorted:=True;UserIds.Duplicates:=dupIgnore;
   try
     Params.Values['boardId']:=BoardId;Params.Values['action']:='export';Params.Values['wholeBoard']:='1';
     Graph:=SelectionGraph(T,Params);
@@ -406,6 +418,8 @@ begin
     Result:=ExportRow('boards',0);
     try
       Result.Delete('stars');Result.Delete('_format');Result.Add('_format','wekan-board-1.0.0');
+      if Result.Find('members')=nil then Result.Add('members',Data.Find('board_members').Clone);
+      Remember(Result.Find('members'));
       for I:=0 to High(Roots) do
       begin
         Name:=Roots[I];Source:=TJSONArray(Data.Find(Name));Target:=TJSONArray.Create;
@@ -422,6 +436,9 @@ begin
             Row.Free;Row:=Attachment;
           end;
           Target.Add(Row);
+          if Name<>'attachments' then Remember(Row.Find('userId'));
+          if Name='cards' then
+            for FileData in ['members','assignees','requesters','assigners'] do Remember(Row.Find(FileData));
           if Name='cards' then
           begin
             Index:=Row.IndexOfName('description');
@@ -438,9 +455,17 @@ begin
           end else if Name='attachments' then Row.Delete('file');
         end;
       end;
-      Result.Delete('users');Result.Add('users',TJSONArray.Create);
+      Result.Delete('users');Target:=TJSONArray.Create;Result.Add('users',Target);
+      if UserIds.Count>0 then
+      begin
+        Rows:=T.Db.Query('SELECT json_object(''_id'',id,''username'',username,''profile'',json_patch(''{}'',json_object('+
+          '''fullname'',CASE WHEN json_type(profile_json,''$.fullname'')=''text'' THEN json_extract(profile_json,''$.fullname'') END,'+
+          '''initials'',CASE WHEN json_type(profile_json,''$.initials'')=''text'' THEN json_extract(profile_json,''$.initials'') END))) '+
+          'FROM users WHERE id IN ('+IdSet(UserIds)+') ORDER BY id;');
+        for I:=0 to High(Rows) do Target.Add(GetJSON(Rows[I][0]));
+      end;
     except FreeAndNil(Result);raise;end;
-  finally Files.Free;Graph.Free;Params.Free;end;
+  finally UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
 end;
 
 function DeleteSelection(const T:TWLTenant; Graph:TJSONObject; const BoardId:string):Boolean;
