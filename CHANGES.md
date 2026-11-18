@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify live FerretDB discovery of shared history collections
+
+- Read and list history collections created by WeLite while the same
+  FerretDB process runs. The shared HTTP suite requires a build with
+  live SQLite registry discovery.
+
 ## 2026-11-18 Keep unverifiable regular expressions pending
 
 - Preserve the pending row and chain head when BSON regex patterns and

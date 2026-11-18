@@ -9,7 +9,7 @@ from layout import Forms
 from wire import Binary, DateMs, Long, ObjectId, Regex, Timestamp, encode
 
 
-def run(request, client, db, token, refresh_ferret, session):
+def run(request, client, db, token, session):
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT 1 FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone() is None
     lists_path = '/api/boards/b/lists'
@@ -56,8 +56,10 @@ def run(request, client, db, token, refresh_ferret, session):
         name,=con.execute("SELECT table_name FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone()
         history_table='"'+name.replace('"','""')+'"'
         assert con.execute('SELECT count(*) FROM '+history_table).fetchone()==(1,)
-    refresh_ferret()
     deleted,=history('delete')
+    listed=client.command({'listCollections':1})['cursor']['firstBatch']
+    assert {'userPositionHistory','changeHistory'} <= {row['name'] for row in listed}
+    print('PASS: the running FerretDB discovers new history collections through find and listCollections')
     assert deleted['batchId']==retained_list['deleteBatchId'] and isinstance(deleted['createdAt'],DateMs),deleted
     assert deleted['newState']['deletedAt']==retained_list['deletedAt'] and isinstance(deleted['newState']['deletedAt'],DateMs),deleted
     assert deleted['previousState']==dict(boardId='b',swimlaneId='s',sort=original_list['sort']),deleted

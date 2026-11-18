@@ -1731,7 +1731,7 @@ legacy forms and broader clone lifecycle behavior are still unfinished.
 
 ## Remaining before the checklist can be checked
 
-- Complete Mongo-managed sparse/multikey account indexes, registry-cache/error coordination and normalized-store authentication migration policy; reconcile typed
+- Complete Mongo-managed sparse/multikey account indexes, registry error coordination and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile broader resume-policy parity and process-signal lifecycle; reconcile file-store metadata/bytes.
 - Activate the adapter for fresh and existing stores without silently creating a separate
@@ -1776,9 +1776,9 @@ It also proves ordinary mode does not create `wekan.db` beside `wekan.sqlite`.
 
 When a shared store has no `userPositionHistory` collection, the first list
 deletion or restore provisions it in the SQLite registry. The history record
-is written immediately. Restart a running FerretDB process before reading
-the newly created collection over Mongo wire. Existing history collections
-are used directly. Live registry-cache coordination remains open.
+is written immediately. FerretDB builds with live registry discovery
+(commit `7a8209d4`) expose the new collection to Mongo queries and collection
+listing without a restart. Older builds discover it at startup.
 
 
 List lifecycle changes also append to the shared `changeHistory` collection
@@ -1791,4 +1791,4 @@ preserves the recorded BSON values. BSON regular expressions remain pending:
 WeKan’s EJSON copy hashes the pattern and options, while its default Mongo read
 omits both from the hash input. WeLite leaves the stored reservation and chain
 head intact in that case.
-The same FerretDB registry refresh applies if WeLite creates the collection.
+The same live discovery applies if WeLite creates `changeHistory`.

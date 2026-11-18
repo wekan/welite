@@ -76,14 +76,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
         with (out/'ferret.log').open('w+') as mongo_log,(out/'http.log').open('w+') as app_log:
             mongo_command=[str(ferret),'--handler=sqlite','--sqlite-url='+data.as_uri()+'/','--state-dir='+str(state),'--listen-addr=127.0.0.1:'+str(mongo_port),'--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable']
             client=Client(mongo_port)
-            def start_ferret():
-                return subprocess.Popen(mongo_command,env=env,stdout=mongo_log,stderr=mongo_log)
-            server=[start_ferret()]
-            def refresh_ferret():
-                server[0].terminate()
-                server[0].wait(timeout=10)
-                server[0]=start_ferret()
-                wait_for_ferret()
+            server=subprocess.Popen(mongo_command,env=env,stdout=mongo_log,stderr=mongo_log)
             def wait_for_ferret():
                 for _ in range(100):
                     try:
@@ -702,7 +695,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     else:assert base64.b64decode(exported['file'])==contents
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')
-                check_list_soft_delete(request,client,database,token,refresh_ferret,web_session)
+                check_list_soft_delete(request,client,database,token,web_session)
                 list_path='/api/boards/b/lists/l'
                 before=client.find('lists','l')[0]
                 assert request('PUT',list_path,dict(title='Rejected',color='#abc'),token)[0]==400
@@ -881,4 +874,4 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert con.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()==[('users',)]
                 print('PASS:',backend,'canonical existing shared HTTP activation, no shadow, Mongo/HTTP changes, BSON, private web session, API restart and shared revocation')
             finally:
-                stop();server[0].terminate();server[0].wait(timeout=10)
+                stop();server.terminate();server.wait(timeout=10)
