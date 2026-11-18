@@ -124,7 +124,7 @@ def run(request,database,administrator,member,base):
     status,_,body=request('PUT',dropdown,dict(name='Updated <option>'))
     assert status==200,(status,body)
     assert b'Choice: Updated &lt;option&gt;' in card_page(member)
-    status,_,detail=request('GET',card_path+'&sessionId='+administrator)
+    status,_,detail=request('GET',card_path+'&lang=ar&sessionId='+administrator)
     assert status==200 and b'class="card-custom-fields"' in detail
     assert b'Choice: Updated &lt;option&gt;' in detail
     assert b'<option value="option-key" selected>Updated &lt;option&gt;</option>' in detail
@@ -132,7 +132,9 @@ def run(request,database,administrator,member,base):
     forms.feed(detail.decode())
     path,fields=next((action,values) for action,values in forms.forms
                      if action.startswith('/board/card/dropdown?'))
-    assert request('POST',path,dict(fields,option='missing'))[0]==404
+    status,headers,rejected=request('POST',path,dict(fields,option='missing'))
+    assert status==404 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
+    assert b'dir="rtl"' in rejected and b'lang=ar' in rejected and b'/board/card?' in rejected
     status,headers,_=request('POST',path,dict(fields,option='alternate'))
     assert status==303 and 'Set-Cookie' not in headers
     assert b'<option value="alternate" selected>Alternate option</option>' in request('GET',headers['Location'])[2]

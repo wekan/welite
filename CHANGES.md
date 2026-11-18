@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Preserve language on dropdown form errors
+
+- Show a localized HTML error and a return link to the card for rejected
+  submissions. Verify Arabic direction and language without cookies.
+
 ## 2026-11-18 Edit dropdown values with native card forms
 
 - Card editors can change assigned single-select fields without JavaScript

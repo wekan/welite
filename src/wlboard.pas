@@ -592,15 +592,29 @@ procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Board,Card,Field,Option,Condition,Guard:string;
   Policy:TFieldPolicy;Selector:TSelectionScope;Rows:TWLRows;I:Integer;
   procedure Reject(Status:Integer);
+  var Language:TWLLanguage;Words:TWLTranslator;Title,Body:string;
   begin
-    aResponse.Code:=Status;
-    aResponse.SendContent;
+    Language:=ViewerLanguage(T.Db,S,aRequest);
+    Words:=TWLTranslator.Create(Language);
+    try
+      Title:=Words.Text('error','Error');
+      Body:='<h1>'+HtmlEncode(Title)+'</h1>';
+      if (S.UserId<>'') and (Board<>'') and (Card<>'') and (Pos(#0,Board+Card)=0) then
+        Body:=Body+'<p><a href="'+HtmlAttr(CardUrl(Board,Card,S))+'">'+
+          HtmlEncode(Words.Text('card','Card'))+'</a></p>';
+      aResponse.Code:=Status;
+      aResponse.ContentType:='text/html; charset=utf-8';
+      aResponse.Content:=LanguagePage(aResponse,Language,Title,Body);
+      aResponse.SendContent;
+    finally Words.Free;end;
   end;
 begin
+  T:=Default(TWLTenant);S:=Default(TWLSession);
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin Reject(404);Exit;end;
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
   begin Reject(403);Exit;end;
+  S.LanguageTag:=RequestLanguageTag(aRequest);
   Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
   Field:=aRequest.QueryFields.Values['field'];Option:=aRequest.ContentFields.Values['option'];
   if (Board='') or (Card='') or (Field='') or (Option='') or (Pos(#0,Board+Card+Field+Option)>0) then
