@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify cookie-free retro browser navigation on the wire
+
+- Confirm Dillo and NetSurf exchange no cookies on the HTML4 board load
+  and viewport change at 640×480 and 320×480. Retain the minimap color
+  and navigation checks.
+
 ## 2026-11-18 Correct Arabic labels in browser controls
 
 - Restore the webhook name, value defaults, attachment preview and upload

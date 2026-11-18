@@ -1,10 +1,15 @@
 """Optional Dillo and NetSurf HTML4 board checks on isolated Xvfb displays."""
+from contextlib import contextmanager
+import http.client
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import os
 from pathlib import Path
 import select
 import subprocess
 import tempfile
+from threading import Thread
 import time
+from urllib.parse import urlsplit
 
 
 def run(base):
@@ -15,10 +20,52 @@ def run(base):
         check_viewport(base, 320, 480, "NetSurf")
 
 
+@contextmanager
+def observe_board_requests(base):
+    upstream = urlsplit(base)
+    exchanges = []
+
+    class Observer(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            pass
+
+        def do_GET(self):
+            connection = http.client.HTTPConnection(upstream.hostname, upstream.port, timeout=10)
+            try:
+                connection.request('GET', self.path, headers={
+                    name: value for name, value in self.headers.items() if name.lower() != 'host'
+                })
+                response = connection.getresponse()
+                body = response.read()
+                if urlsplit(self.path).path == '/board':
+                    exchanges.append((self.path, self.headers.get('Cookie'),
+                                      response.getheader('Set-Cookie'), response.status))
+                self.send_response(response.status)
+                for name, value in response.getheaders():
+                    if name.lower() not in ('connection', 'content-length', 'transfer-encoding', 'date', 'server'):
+                        self.send_header(name, value)
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            finally:
+                connection.close()
+
+    with ThreadingHTTPServer(('127.0.0.1', 0), Observer) as server:
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            yield f'http://127.0.0.1:{server.server_port}', exchanges
+        finally:
+            server.shutdown()
+            thread.join()
+
+
+
 def check_viewport(base, width, height, browser_name):
     size = f'{width}x{height}'
     tools = Path(os.environ['WELITE_DILLO_TOOLS']).resolve()
-    with tempfile.TemporaryDirectory(prefix='wldillo-', dir=os.environ['TMPDIR']) as directory:
+    with (observe_board_requests(base) as (observed, exchanges),
+          tempfile.TemporaryDirectory(prefix='wldillo-', dir=os.environ['TMPDIR']) as directory):
         profile = Path(directory) / '.dillo'
         profile.mkdir()
         (profile / 'cookiesrc').write_text('DEFAULT DENY\n')
@@ -39,7 +86,7 @@ def check_viewport(base, width, height, browser_name):
                 log.seek(0)
                 assert number.isdecimal(), log.read()
                 env['DISPLAY'] = ':' + number
-                url = base.replace('://localhost:', '://127.0.0.1:') + '/board?id=boardtxt&lang=en'
+                url = observed + '/board?id=boardtxt&lang=en'
                 if browser_name == 'NetSurf':
                     env.update(GDK_BACKEND='x11', GDK_SCALE='1', GDK_DPI_SCALE='1', GTK_IM_MODULE='xim',
                                NETSURFRES=str(tools / 'usr/share/netsurf'),
@@ -83,10 +130,13 @@ def check_viewport(base, width, height, browser_name):
                     time.sleep(.5)
                 else:
                     raise AssertionError(f'{browser_name} minimap click did not move the viewport highlight')
+                assert len(exchanges) >= 2 and len({path for path, _, _, _ in exchanges}) >= 2, exchanges
+                assert all(cookie is None and issued is None and status == 200
+                           for _, cookie, issued, status in exchanges), exchanges
             finally:
                 if browser is not None and browser.poll() is None:
                     browser.terminate()
                     browser.wait(timeout=10)
                 display.terminate()
                 display.wait(timeout=10)
-    print(f'PASS: {browser_name} at {size} rendered the HTML4 minimap and followed a viewport link')
+    print(f'PASS: {browser_name} at {size} rendered the HTML4 minimap and followed a viewport link without cookies')

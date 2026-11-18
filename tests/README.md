@@ -692,10 +692,11 @@ specs.
 Set `WELITE_DILLO_TOOLS` to an extracted Debian arm64 tool directory
 containing `usr/bin/dillo`, `usr/bin/Xvfb`, `usr/bin/xdotool`, and their
 runtime libraries. Run `python3 tests/admin.py` with the usual native HTTP
-environment and FFmpeg with X11 capture on `PATH`. The test creates a
+environment and FFmpeg with X11 capture on `PATH`. The test creates
 virtual displays at 640×480 and 320×480 with ephemeral Dillo profiles that deny cookies.
-It checks the minimap highlight color and clicks the adjacent viewport.
+It checks the minimap highlight color and clicks the adjacent viewport. A
+loopback observer verifies that the board requests and responses carry no cookies.
 
-Set `WELITE_NETSURF=1` to also check `usr/bin/netsurf-gtk` at 640×480.
+Set `WELITE_NETSURF=1` to also check `usr/bin/netsurf-gtk` at both sizes.
 Extract the matching NetSurf resources under `usr/share/netsurf` in the same
 tool directory. NetSurf uses a fresh profile and has JavaScript disabled.
