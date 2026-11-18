@@ -1401,8 +1401,8 @@ end;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated:string;
-  Body,Input,Row,Reply,MemberMap,CardCreations:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId:string;
+  Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -1576,11 +1576,13 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   begin
     if TextValue='' then Result:='NULL' else Result:=QuotedStr(TextValue);
   end;
-  function CardListLane(Obj:TJSONObject):string;
+  procedure CardPlacement(Obj:TJSONObject;out ListKey,LaneKey:string);
   begin
-    Result:=Mapped(0,Text(Obj,'swimlaneId'));
-    if (Text(Obj,'swimlaneId')<>'') and (Result='') then
-      raise EConvertError.Create('Invalid swimlane reference');
+    ListKey:=Mapped(1,Text(Obj,'listId'));
+    if ListKey='' then ListKey:=DefaultList;
+    LaneKey:=ImportedListLanes.Get(ListKey,'');
+    if LaneKey='' then LaneKey:=Mapped(0,Text(Obj,'swimlaneId'));
+    if LaneKey='' then LaneKey:=DefaultLane;
   end;
   function SortValue(Obj:TJSONObject):string;
   var Field:TJSONData;
@@ -1704,8 +1706,8 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         for L:=0 to Arrays[2].Count-1 do
           if Text(Arrays[2].Objects[L],'_id')=CardId then begin Card:=Arrays[2].Objects[L];Break;end;
         if Card=nil then raise EConvertError.Create('Invalid attachment card');
-        ListKey:=QuotedStr(Mapped(1,Text(Card,'listId'),True));
-        LaneKey:=Optional(CardListLane(Card));
+        CardPlacement(Card,ListKey,LaneKey);
+        ListKey:=QuotedStr(ListKey);LaneKey:=QuotedStr(LaneKey);
       end;
       Filename:=Text(Entry,'name','file');Mime:=Text(Entry,'type','application/octet-stream');
       if Filename='' then Filename:='file';
@@ -1802,7 +1804,7 @@ begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
-  MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
+  MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedListLanes:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
@@ -1847,30 +1849,45 @@ begin
       ImportInactiveMembers;
       ImportDefinitions;
       ImportLabels;
+      DefaultLane:='';DefaultList:='';
       if Arrays[0]<>nil then for J:=0 to Arrays[0].Count-1 do
       begin
-        Row:=Arrays[0].Objects[J];
-        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(Mapped(0,Text(Row,'_id'),True))+
+        Row:=Arrays[0].Objects[J];LaneId:=Mapped(0,Text(Row,'_id'),True);
+        if DefaultLane='' then DefaultLane:=LaneId;
+        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(LaneId)+
           ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortValue(Row)+','+Stamp+'); ';
       end;
-      if (Arrays[0]=nil) or (Arrays[0].Count=0) then
-        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(NewId)+
+      if DefaultLane='' then
+      begin
+        DefaultLane:=NewId;
+        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+QuotedStr(DefaultLane)+
           ','+Board+',''Default'',0,'+Stamp+'); ';
+      end;
       if Arrays[1]<>nil then for J:=0 to Arrays[1].Count-1 do
       begin
-        Row:=Arrays[1].Objects[J];
+        Row:=Arrays[1].Objects[J];ListId:=Mapped(1,Text(Row,'_id'),True);
+        LaneId:=Mapped(0,Text(Row,'swimlaneId'));
+        if DefaultList='' then DefaultList:=ListId;
+        ImportedListLanes.Add(ListId,LaneId);
         Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES('+
-          QuotedStr(Mapped(1,Text(Row,'_id'),True))+','+Board+','+QuotedStr(CardListLane(Row))+','+
+          QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
           QuotedStr(Text(Row,'title'))+','+SortValue(Row)+','+Stamp+'); ';
+      end;
+      if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
+      begin
+        DefaultList:=NewId;
+        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES('+QuotedStr(DefaultList)+
+          ','+Board+','''',''Default'',0,'+Stamp+'); ';
       end;
       if Arrays[2]<>nil then for J:=0 to Arrays[2].Count-1 do
       begin
         Row:=Arrays[2].Objects[J];CardId:=Mapped(2,Text(Row,'_id'),True);
         CardCreation(Row,CardId,CardAuthor,CardCreated);
+        CardPlacement(Row,ListId,LaneId);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
           'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived) VALUES('+
           QuotedStr(CardId)+','+Board+','+
-          QuotedStr(Mapped(1,Text(Row,'listId'),True))+','+QuotedStr(CardListLane(Row))+','+
+          QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
           QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+IntToStr(J+1)+
           ','+CardCreated+','+Stamp+','+Stamp+','+
@@ -1897,7 +1914,7 @@ begin
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally
     if not Committed then for I:=0 to Files.Count-1 do DeleteFile(Files[I]);
-    ImportedMembers.Free;CardCreations.Free;MemberMap.Free;Files.Free;
+    ImportedMembers.Free;ImportedListLanes.Free;CardCreations.Free;MemberMap.Free;Files.Free;
     for I:=0 to High(Maps) do Maps[I].Free;
     Body.Free;
   end;

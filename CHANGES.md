@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Restore card placement in older board exports
+
+- Recover cards with missing lists or swimlanes using the first imported
+  list and a compatible swimlane. Create default containers when needed,
+  and store attachment locations with their restored cards.
+
 ## 2026-11-18 Recover card creation data from board exports
 
 - Prefer matching card creation events for creation dates and mapped

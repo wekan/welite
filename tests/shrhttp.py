@@ -349,6 +349,29 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: shared board import preserves attachment bytes and rolls back staged files on failure')
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: shared board import remaps structure and workflows and rejects dangling workflow references')
+                for lists,lanes in [
+                    ([dict(_id='first',title='First',swimlaneId='second-lane')],
+                     [dict(_id='first-lane',title='First lane'),dict(_id='second-lane',title='Second lane')]),
+                    ([],[]),
+                ]:
+                    legacy=dict(title='Legacy placements',lists=lists,swimlanes=lanes,
+                        cards=[dict(_id='old-card',title='Recover me',listId='dangling-list',swimlaneId='dangling-lane')],
+                        attachments=[dict(_id='old-file',cardId='old-card',name='Legacy file',
+                                          file=base64.b64encode(attachment_contents).decode())])
+                    status,_,body=request('POST',import_path,dict(board=legacy),token)
+                    assert status==200,(status,body)
+                    imported_id=json.loads(body)['_id']
+                    restored,=imported_rows('cards')
+                    restored_list,=imported_rows('lists')
+                    restored_lane=client.find('swimlanes',restored['swimlaneId'])[0]
+                    assert restored['listId']==restored_list['_id']
+                    assert restored_list['title']==('First' if lists else 'Default')
+                    assert restored_lane['title']==('Second lane' if lanes else 'Default')
+                    restored_file,=client.command({'find':'attachments','filter':{'meta.boardId':imported_id}})['cursor']['firstBatch']
+                    for key in ['listId','swimlaneId']:
+                        assert restored_file['meta'][key]==restored[key]
+                    assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
+                print('PASS: legacy board import assigns cards and attachments to usable fallback lists and swimlanes')
                 client.command({'create':'integrations'})
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
                     userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
