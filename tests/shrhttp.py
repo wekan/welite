@@ -253,6 +253,15 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 mapping={'external-author':'import-local-author','external-alias':'import-local-author'}
                 imported_payload['cards']=[dict(exported['cards'][0],members=['external-author','external-alias','unmapped'],
                     assignees=['external-alias'],requesters=['external-author'],assigners=['unmapped'])]
+                imported_payload['customFields']=[
+                    dict(_id='import-field',name='Imported field',type='dropdownMultiSelect',alwaysOnCard=True,
+                         settings=dict(dropdownItems=[dict(_id='keep-option',name='Choice')])),
+                    dict(_id='import-empty',name='Empty field',type='text')]
+                imported_payload['cards'][0]['customFields']=[
+                    dict(_id='import-field',value=['keep-option']),dict(_id='import-empty',value=None)]
+                unknown_field=dict(imported_payload,cards=[dict(imported_payload['cards'][0],
+                    customFields=[dict(_id='missing',value='unknown')])])
+                assert request('POST',import_path,dict(board=unknown_field),token)[0]==400
                 imported_payload['members']=[dict(userId='external-author',isActive=True,isAdmin=True)]
                 imported_payload['comments'][0]['userId']='external-author'
                 assert request('POST',import_path,dict(board=imported_payload,
@@ -278,6 +287,15 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert imported_card['swimlaneId'] in {r['_id'] for r in imported_rows('swimlanes')}
                 assert imported_card['members']==imported_card['assignees']==imported_card['requesters']==['import-local-author']
                 assert imported_card['assigners']==[]
+                imported_fields=client.command({'find':'customFields','filter':{'boardIds':imported_id}})['cursor']['firstBatch']
+                by_name={field['name']:field for field in imported_fields}
+                dropdown=by_name['Imported field']
+                assert dropdown['_id']!='import-field' and dropdown['alwaysOnCard'] is True
+                assert dropdown['settings']['dropdownItems']==[dict(_id='keep-option',name='Choice')]
+                assert imported_card['customFields']==[
+                    dict(_id=dropdown['_id'],value=['keep-option']),
+                    dict(_id=by_name['Empty field']['_id'],value=None)],imported_card['customFields']
+                print('PASS: board import remaps field definitions, preserves dropdown choices and stores mapped card values')
                 print('PASS: board import remaps and deduplicates card participant arrays')
                 imported_comment,=imported_rows('card_comments')
                 imported_check,=imported_rows('checklists')

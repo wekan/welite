@@ -1354,11 +1354,55 @@ function CardDateSql(Value:TJSONData;out Literal:string):Boolean; forward;
 
 procedure WriteFileBytes(const Path,Data:string); forward;
 
+type TDefinitionFlags=array[0..5] of Integer;
+const DefinitionFlagNames:array[0..5] of string=('showOnCard','automaticallyOnCard',
+  'showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly');
+function ValidDefinitionType(const Kind:string):Boolean;
+begin
+  case Kind of 'text','number','currency','date','checkbox','dropdown','dropdownMultiSelect','stringtemplate': Result:=True;
+  else Result:=False;end;
+end;
+function DefinitionFlag(Data:TJSONData;out Number:Integer):Boolean;
+  var Text:string;
+  begin
+    Number:=0;if Data=nil then Exit(True);
+    if Data.JSONType=jtBoolean then begin Number:=Ord(Data.AsBoolean);Exit(True);end;
+    if Data.JSONType=jtString then Text:=LowerCase(Trim(Data.AsString))
+    else if Data.JSONType=jtNumber then Text:=Data.AsJSON else Exit(False);
+    Result:=True;
+    if (Text='true') or (Text='1') then Number:=1
+    else if (Text<>'false') and (Text<>'0') and (Text<>'') then Result:=False;
+  end;
+function CustomValueLiteral(Data:TJSONData;out Value:string):Boolean;
+var i:Integer;
+begin
+  Result:=False;Value:='';
+  if Data=nil then Exit;
+  case Data.JSONType of
+    jtString:begin
+      if Pos(#0,Data.AsString)>0 then Exit;
+      Value:=QuotedStr(Data.AsString);
+    end;
+    jtNumber:begin
+      if IsNan(Data.AsFloat) or IsInfinite(Data.AsFloat) then Exit;
+      Value:=Data.AsJSON;
+    end;
+    jtBoolean:if Data.AsBoolean then Value:='1' else Value:='0';
+    jtArray:begin
+      for i:=0 to Data.Count-1 do
+        if (Data.Items[i].JSONType<>jtString) or (Pos(#0,Data.Items[i].AsString)>0) then Exit;
+      Value:=QuotedStr(Data.AsJSON);
+    end;
+  else Exit;
+  end;
+  Result:=True;
+end;
+
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
-const Collections:array[0..9] of string=('swimlanes','lists','cards','triggers','actions','rules',
-  'comments','checklists','checklistItems','attachments');
+const Collections:array[0..10] of string=('swimlanes','lists','cards','triggers','actions','rules',
+  'comments','checklists','checklistItems','attachments','customFields');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId:string;
-  Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..9] of TJSONObject;Arrays:array[0..9] of TJSONArray;
+  Body,Input,Row,Reply,MemberMap:TJSONObject;Maps:array[0..10] of TJSONObject;Arrays:array[0..10] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -1447,6 +1491,60 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   begin
     Result:=Maps[Index].Get(Id,'');
     if Required and (Result='') then raise EConvertError.Create('Invalid import reference');
+  end;
+  procedure ImportDefinitions;
+  var Entry,Settings:TJSONObject;Id,FieldName,Kind,Dropdown,DropdownGuard:string;
+    Flags:TDefinitionFlags;AlwaysOn,K,L:Integer;
+  begin
+    if Arrays[10]=nil then Exit;
+    for K:=0 to Arrays[10].Count-1 do
+    begin
+      Entry:=Arrays[10].Objects[K];
+      Id:=QuotedStr(Mapped(10,Text(Entry,'_id'),True));
+      FieldName:=Text(Entry,'name');Kind:=Text(Entry,'type','text');
+      if (Trim(FieldName)='') or not ValidDefinitionType(Kind) then
+        raise EConvertError.Create('Invalid imported custom-field definition');
+      for L:=0 to High(Flags) do
+        if not DefinitionFlag(Entry.Find(DefinitionFlagNames[L]),Flags[L]) then
+          raise EConvertError.Create('Invalid imported custom-field flag');
+      if not DefinitionFlag(Entry.Find('alwaysOnCard'),AlwaysOn) then
+        raise EConvertError.Create('Invalid imported custom-field flag');
+      if not SettingsInput(Entry.Find('settings'),Settings) then
+        raise EConvertError.Create('Invalid imported custom-field settings');
+      try
+        Dropdown:=DropdownScript(T.Db,Mapped(10,Text(Entry,'_id'),True),Settings,DropdownGuard);
+        Sql:=Sql+Format('INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
+          'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,alwaysOnCard,createdAt,modifiedAt,'+
+          'currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) '+
+          'VALUES(%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s); ',
+          [Id,QuotedStr(FieldName),QuotedStr(Kind),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],
+           AlwaysOn,Stamp,Stamp,SettingsLiteral(Settings,'currencyCode'),SettingsLiteral(Settings,'stringtemplateFormat'),
+           SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
+          'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+Id+','+Board+'); '+Dropdown+DropdownGuard;
+      finally Settings.Free;end;
+    end;
+  end;
+  procedure ImportCardFields(Entry:TJSONObject;const Id:string);
+  var Fields,Data:TJSONData;Field:TJSONObject;Seen:TStringList;FieldId,Literal:string;K:Integer;
+  begin
+    Fields:=Entry.Find('customFields');
+    if (Fields=nil) or (Fields.JSONType=jtNull) then Exit;
+    if not (Fields is TJSONArray) then raise EConvertError.Create('Invalid imported custom-field values');
+    Seen:=TStringList.Create;
+    try
+      Seen.CaseSensitive:=True;
+      for K:=0 to Fields.Count-1 do
+      begin
+        if not (Fields.Items[K] is TJSONObject) then raise EConvertError.Create('Invalid imported custom-field value');
+        Field:=TJSONObject(Fields.Items[K]);FieldId:=Mapped(10,Text(Field,'_id'),True);
+        if Seen.IndexOf(FieldId)>=0 then raise EConvertError.Create('Duplicate imported custom-field value');
+        Seen.Add(FieldId);Data:=Field.Find('value');
+        if (Data=nil) or (Data.JSONType=jtNull) then Literal:='NULL'
+        else if not CustomValueLiteral(Data,Literal) then raise EConvertError.Create('Invalid imported custom-field value');
+        Sql:=Sql+'INSERT INTO card_custom_field_values(cardId,customFieldId,value) VALUES('+
+          QuotedStr(Id)+','+QuotedStr(FieldId)+','+Literal+'); ';
+      end;
+    finally Seen.Free;end;
   end;
   function Optional(const TextValue:string):string;
   begin
@@ -1646,12 +1744,6 @@ begin
       Input:=TJSONObject(Value);
       Name:=Text(Input,'_format');
       if (Name<>'') and (Name<>'wekan-board-1.0.0') then raise EConvertError.Create('Invalid board export format');
-      for Name in ['customFields'] do
-      begin
-        Value:=Input.Find(Name);
-        if (Value<>nil) and ((not (Value is TJSONArray)) or (Value.Count<>0)) then
-        begin SendError(aResponse,400,'Board export contains unsupported child records');Exit;end;
-      end;
       Title:=Text(Input,'title');
       if Trim(Title)='' then raise EConvertError.Create('Missing board title');
       for I:=0 to High(Maps) do
@@ -1683,6 +1775,7 @@ begin
         ',''private'','+QuotedStr(Name)+','+Stamp+','+Stamp+'); '+
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
       ImportInactiveMembers;
+      ImportDefinitions;
       if Arrays[0]<>nil then for J:=0 to Arrays[0].Count-1 do
       begin
         Row:=Arrays[0].Objects[J];
@@ -1709,6 +1802,7 @@ begin
           QuotedStr(Text(Row,'description'))+','+QuotedStr(ImportedAuthor(Row))+','+SortValue(Row)+','+IntToStr(J+1)+
           ','+Stamp+','+Stamp+','+Stamp+'); ';
         ImportCardPeople(Row,CardId);
+        ImportCardFields(Row,CardId);
       end;
       ImportCardChildren;
       ImportAttachments;
@@ -2059,25 +2153,6 @@ begin
   if (LowerCase(Trim(S)) = 'true') or (Trim(S) = '1') then Result := 1 else Result := 0;
 end;
 
-type TDefinitionFlags=array[0..5] of Integer;
-const DefinitionFlagNames:array[0..5] of string=('showOnCard','automaticallyOnCard',
-  'showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly');
-function ValidDefinitionType(const Kind:string):Boolean;
-begin
-  case Kind of 'text','number','currency','date','checkbox','dropdown','dropdownMultiSelect','stringtemplate': Result:=True;
-  else Result:=False;end;
-end;
-function DefinitionFlag(Data:TJSONData;out Number:Integer):Boolean;
-  var Text:string;
-  begin
-    Number:=0;if Data=nil then Exit(True);
-    if Data.JSONType=jtBoolean then begin Number:=Ord(Data.AsBoolean);Exit(True);end;
-    if Data.JSONType=jtString then Text:=LowerCase(Trim(Data.AsString))
-    else if Data.JSONType=jtNumber then Text:=Data.AsJSON else Exit(False);
-    Result:=True;
-    if (Text='true') or (Text='1') then Number:=1
-    else if (Text<>'false') and (Text<>'0') and (Text<>'') then Result:=False;
-  end;
 function DefinitionInput(Request:TRequest;out Name,Kind:string;out Flags:TDefinitionFlags;out Settings:TJSONObject):Boolean;
 var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
 begin
@@ -2514,23 +2589,7 @@ begin
       begin
         Doc:=ExactObject(Request.Content);Data:=Doc.Find('value');
         if Data=nil then Exit;
-        case Data.JSONType of
-          jtString:begin
-            if Pos(#0,Data.AsString)>0 then Exit;
-            Value:=QuotedStr(Data.AsString);
-          end;
-          jtNumber:begin
-            if IsNan(Data.AsFloat) or IsInfinite(Data.AsFloat) then Exit;
-            Value:=Data.AsJSON;
-          end;
-          jtBoolean:if Data.AsBoolean then Value:='1' else Value:='0';
-          jtArray:begin
-            for i:=0 to Data.Count-1 do
-              if (Data.Items[i].JSONType<>jtString) or (Pos(#0,Data.Items[i].AsString)>0) then Exit;
-            Value:=QuotedStr(Data.AsJSON);
-          end;
-        else Exit;
-        end;
+        if not CustomValueLiteral(Data,Value) then Exit;
       end
       else
       begin
