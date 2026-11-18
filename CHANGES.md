@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize browser webhook access errors
+
+- Render HTML for signed-out requests, board access denials and rejected
+  form tokens. Keep the status codes and REST error responses. Verify a
+  Finnish sign-in link and Arabic RTL denial without cookies.
+
 ## 2026-11-18 Pass the full upstream REST suite on CLI SQLite
 
 - Pass all 114 cases across 22 specs with the regular SQLite CLI. Chromium

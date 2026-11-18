@@ -1903,6 +1903,25 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
     finally Words.Free;end;
   end;
 
+  procedure BrowserError(Status:Integer;const Key,Message:string);
+  var Language:TWLLanguage;Words:TWLTranslator;Title,Body:string;
+  begin
+    Session.LanguageTag:=RequestLanguageTag(aRequest);
+    Language:=ViewerLanguage(T.Db,Session,aRequest);
+    Words:=TWLTranslator.Create(Language);
+    try
+      Title:=Words.Text('outgoing-webhooks','Outgoing Webhooks');
+      Body:='<h1>'+HtmlEncode(Title)+'</h1>';
+      if Status=401 then Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl('/sign-in',Session))+'">'+
+        HtmlEncode(Words.Text(Key,Message))+'</a></p>'
+      else Body:=Body+'<p>'+HtmlEncode(Words.Text(Key,Message))+'</p>';
+      aResponse.Code:=Status;
+      aResponse.ContentType:='text/html; charset=utf-8';
+      aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,'','html4');
+      aResponse.SendContent;
+    finally Words.Free;end;
+  end;
+
   procedure Missing;
   begin
     if Browser and Reading then ShowIntegrations(nil)
@@ -2012,7 +2031,7 @@ begin
   if Browser then
   begin
     if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),Session) then
-    begin SendError(aResponse,401,'Sign in to view outgoing webhooks');Exit;end;
+    begin BrowserError(401,'log-in','Sign in');Exit;end;
     Actor:=Session.UserId;Id:='';
     if aRequest.Method='POST' then
     begin
@@ -2037,15 +2056,24 @@ begin
   Creating:=(aRequest.Method='POST') and (not Browser or (Operation='create'));
   Updating:=(aRequest.Method='PUT') or (Browser and (Operation='save'));
   BadUrl:=False;
-  if not ApiAuthBoard(T,aResponse,Actor,BoardId,False) then Exit;
+  if Browser then
+  begin
+    if not BoardCanRead(T.Db,Actor,BoardId) then
+    begin BrowserError(403,'error-notAllowed','Board access forbidden');Exit;end;
+  end
+  else if not ApiAuthBoard(T,aResponse,Actor,BoardId,False) then Exit;
   Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
   Rows:=T.Db.Query('SELECT '+Permission+';');
   Admin:=(Length(Rows)=1) and (Rows[0][0]='1');
   if (Browser or not Reading) and not Admin then
-  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  begin
+    if Browser then BrowserError(403,'error-notAllowed','Board administration required')
+    else SendError(aResponse,403,'Board administration required');
+    Exit;
+  end;
   if Browser and not Reading and not VerifyActionToken(aRequest,Session,FormAction(Operation,Id)) then
-  begin SendError(aResponse,403,'Invalid webhook action token');Exit;end;
+  begin BrowserError(403,'error-notAllowed','Invalid webhook action token');Exit;end;
   Shared:=Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1;
   if Creating and not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
   StorageGuard:='';

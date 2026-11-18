@@ -1034,6 +1034,16 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('DELETE',integration_path,token=token)[0]==200
                 assert b'Refreshed' not in request('GET',webhook_page)[2]
                 print('PASS: cookie-free board webhook settings reflect REST changes on reload')
+                status,head,body=request('GET','/board/webhooks?id=b&lang=fi')
+                assert status==401 and head['Content-Language']=='fi'
+                assert head['Content-Type'].startswith('text/html') and 'Set-Cookie' not in head
+                assert b'/sign-in?lang=fi' in body
+                status,head,body=request('GET','/board/webhooks?'+urlencode(dict(id='missing',lang='ar',
+                    sessionId=parse_qs(urlsplit(webhook_page).query)['sessionId'][0])))
+                assert status==403 and head['Content-Language']=='ar'
+                assert head['Content-Type'].startswith('text/html') and b'dir="rtl"' in body
+                print('PASS: webhook sign-in and board denial render localized cookie-free HTML')
+
                 def webhook_form(operation, identity=''):
                     parser=Forms()
                     parser.feed(request('GET',webhook_page)[2].decode())
