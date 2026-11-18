@@ -215,7 +215,12 @@ with `-C 68040`. The 68020 emulator setting raises a CPU exception.
 The file-backed probe receives a libnix descriptor below three and
 fails when SQLite tries to reserve it using `/dev/null`. A diagnostic
 rebuild with `SQLITE_MINIMUM_FILE_DESCRIPTOR=0` opens the file but returns
-`disk I/O error` on the write test. Persistent SQL and HTTP remain open.
+`SQLITE_IOERR_LOCK` (3850) on the write test with the default Unix VFS.
+The same probe using `sqlite3_open_v2` with `unix-dotfile` creates a table,
+writes a JSONB value and reads it back. The Linux shell reopens the file,
+reports `integrity_check=ok` and recovers the value. The probe uses
+single-threaded SQLite, and vamos reports orphan allocations at exit.
+Server integration, concurrent access and HTTP remain open.
 
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
