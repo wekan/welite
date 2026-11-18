@@ -60,6 +60,31 @@ const { readFileSync } = require('node:fs');
     }
     console.log('PASS: Chromium reflects REST archive and restore with JavaScript and cookies disabled');
 
+    const [details] = await Promise.all([
+      page.waitForNavigation(),
+      page.getByRole('link', { name: secondTitle, exact: true }).click(),
+    ]);
+    assert.equal(details.status(), 200);
+    assert.equal(await details.headerValue('set-cookie'), null);
+    const checklistTitle = page.getByRole('heading', { name: 'Steps', exact: true });
+    const checklistItem = page.getByText('Retained REST item', { exact: true });
+    assert.equal(await checklistTitle.count(), 1);
+    assert.equal(await checklistItem.count(), 1);
+    assert.equal((await context.request.get(checklist + '/missing-checklist', { headers })).status(), 404);
+    await page.reload();
+    assert.equal(await checklistTitle.count(), 1);
+    assert.equal(await checklistItem.count(), 1);
+    const anonymous = new URL(page.url());
+    anonymous.searchParams.delete('sessionId');
+    const foreign = new URL(page.url());
+    foreign.searchParams.set('id', 'missing-board');
+    assert.equal((await page.goto(foreign.href)).status(), 404);
+    assert.equal(await checklistTitle.count(), 0);
+    assert.equal((await page.goto(anonymous.href)).status(), 404);
+    assert.equal(await checklistItem.count(), 0);
+    await page.goto(boardUrl.href);
+    console.log('PASS: Chromium opens card checklists and items without JavaScript or cookies');
+
     const wrong = await context.request.delete(endpoint('brow-list'), { headers });
     assert.equal(wrong.status(), 404);
     assert.deepEqual(await wrong.json(), { error: 'Card not found' });

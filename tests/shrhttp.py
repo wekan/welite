@@ -5,6 +5,7 @@ import hashlib
 import http.client
 import json
 import os
+import re
 from pathlib import Path
 import socket
 import sqlite3
@@ -261,6 +262,26 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     status,_,body=request('POST','/api/boards',dict(title=title,permission='private'),native_token)
                     assert status==200,(status,body)
                     native_boards.append(json.loads(body)['_id'])
+                native_board_path='/api/boards/'+native_boards[0]
+                native_lanes=json.loads(request('GET',native_board_path+'/swimlanes',token=native_token)[2])
+                status,_,body=request('POST',native_board_path+'/lists',dict(title='Checklist list'),native_token)
+                assert status==200,(status,body)
+                native_list=json.loads(body)['_id']
+                status,_,body=request('POST',native_board_path+'/lists/'+native_list+'/cards',
+                    dict(title='Native checklist card',swimlaneId=native_lanes[0]['_id']),native_token)
+                assert status==200,(status,body)
+                native_card=json.loads(body)['_id']
+                checks_path=native_board_path+'/cards/'+native_card+'/checklists'
+                status,_,body=request('POST',checks_path,dict(title='Native <steps>'),native_token)
+                assert status==200,(status,body)
+                check_id=json.loads(body)['_id']
+                assert request('POST',checks_path+'/'+check_id+'/items',dict(title='Native & item'),native_token)[0]==200
+                details_path='/board/card?id='+native_boards[0]+'&card='+native_card
+                status,head,body=request('GET',details_path+'&sessionId='+native_session)
+                assert status==200 and 'Set-Cookie' not in head,(status,head)
+                assert b'Native &lt;steps&gt;' in body and b'Native &amp; item' in body
+                assert request('GET',details_path)[0]==404
+                print('PASS: native HTML card details show escaped checklist content without cookies')
                 integration_base='/api/boards/'+native_boards[0]+'/integrations'
                 assert request('POST',integration_base,dict(url='https://1.1.1.1/hook'))[0]==401
                 assert request('POST',integration_base,dict(url='https://127.0.0.1/hook'),native_token)[0]==400
@@ -769,19 +790,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     {'q':{'_id':imported_id},'u':{'$set':{'permission':'public'}}}]})
                 status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
                 assert status==200 and 'Set-Cookie' not in headers
-                assert b'bgcolor="#3cb500">Green card' in body and b'bgcolor="#123abc">Hex card' in body
-                assert b'>Uncolored card</p>' in body
+                assert re.search(rb'bgcolor="#3cb500"><a [^>]+>Green card</a>',body)
+                assert re.search(rb'bgcolor="#123abc"><a [^>]+>Hex card</a>',body)
+                assert b'>Uncolored card</a></p>' in body
                 assert b'<li>Uncolored card</li>' not in body
                 status,headers,body=request('GET','/board?id='+imported_id+'&view=all&subtasks='+green['_id'])
                 assert status==200 and 'Set-Cookie' not in headers and b'<li>Uncolored card</li>' in body
                 print('PASS: cookie-free board HTML reveals a card’s same-board subtasks on request')
-                assert body.index(b'>Green card</p>')<body.index(b'>Hex card</p>')
+                assert body.index(b'>Green card</a></p>')<body.index(b'>Hex card</a></p>')
                 hex_path='/api/boards/'+imported_id+'/lists/'+hexa['listId']+'/cards/'+hexa['_id']
                 assert request('PUT',hex_path,dict(sort=0),token)[0]==200
                 for _ in range(2):
                     status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
                     assert status==200 and 'Set-Cookie' not in headers
-                    assert body.index(b'>Hex card</p>')<body.index(b'>Green card</p>')
+                    assert body.index(b'>Hex card</a></p>')<body.index(b'>Green card</a></p>')
                 print('PASS: cookie-free board HTML renders REST sort zero ahead of the prior first card')
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: board import preserves list width, card/list/swimlane colors and archived state')
@@ -1164,9 +1186,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                             title='Keep my browser checklist',archived=False,sort=20)]})
                     client.command({'insert':'checklists','documents':[dict(_id='brow-check',boardId='b',
                         cardId='brow-card',title='Steps',sort=0)]})
+                    client.command({'insert':'checklistItems','documents':[dict(_id='brow-item',boardId='b',
+                        cardId='brow-card',checklistId='brow-check',title='Retained REST item',sort=0)]})
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/carddel.js'),
                                     f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
                     assert not client.find('cards','brow-card') and not client.find('checklists','brow-check')
+                    assert not client.find('checklistItems','brow-item')
                     client.command({'delete':'cards','deletes':[dict(q={'_id':'brow-sort'},limit=1)]})
                     client.command({'delete':'lists','deletes':[dict(q={'_id':'brow-list'},limit=1)]})
 

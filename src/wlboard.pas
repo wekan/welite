@@ -8,8 +8,9 @@ function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
+procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
-uses wli18n,wllocale,wlcfpol;
+uses wli18n,wllocale,wlcfpol,wlselscp;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;
 var R:TWLRows; i,Count:Integer;Words:TWLTranslator;Tag:string;
 begin
@@ -197,7 +198,8 @@ begin
       begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
-          HtmlEncode(Cards[k][1])+'</p>';
+          '<a href="'+HtmlAttr(SessionUrl('/board/card?id='+HTTPEncode(BoardId)+
+          '&card='+HTTPEncode(Cards[k][0]),S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
           if Cards[k][5]='1' then CellText:=Words.Text('overtime-hours','Overtime (hours)')
@@ -296,6 +298,82 @@ begin
   aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
   finally Words.Free;end;
 end;
+procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
+  Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir:string;
+  Rows,Checklists,Items:TWLRows;Checklist,Item:TWLRow;Open,Snapshot:Boolean;
+begin
+  T:=Default(TWLTenant);S:=Default(TWLSession);
+  Open:=ResolveTenant(aRequest,T) and TenantOpen(T);
+  if Open and not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then S:=Default(TWLSession);
+  S.LanguageTag:=RequestLanguageTag(aRequest);
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  if Language.Rtl then Dir:='rtl' else Dir:='ltr';
+  Words:=TWLTranslator.Create(Language);
+  try
+    Title:=Words.Text('card','Card');Body:='';aResponse.Code:=404;
+    Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
+    if Open and (Board<>'') and (Card<>'') and (Pos(#0,Board+Card)=0) and T.Db.BeginRead then
+    begin
+      try
+        if BoardCanRead(T.Db,S.UserId,Board) then
+        begin
+          BoardKey:=QuotedStr(Board);CardKey:=QuotedStr(Card);
+          Selector:=TSelectionScope.Create(T.Db);
+          try
+            Rows:=T.Db.Query('SELECT title,description FROM cards WHERE id='+CardKey+' AND boardId='+BoardKey+
+              ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
+              ' AND '+Selector.StringField('cards','boardId')+';');
+            if Length(Rows)=1 then
+            begin
+              Title:=Rows[0][0];
+              Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
+                HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>';
+              if Rows[0][1]<>'' then Body:=Body+'<p>'+HtmlEncode(Rows[0][1])+'</p>';
+              Scope:='cardId='+CardKey+' AND '+Selector.StringField('checklists','cardId')+
+                ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
+                Selector.StringField('checklists','boardId')+'))';
+              Checklists:=T.Db.Query('SELECT id,title FROM checklists WHERE '+Scope+' AND '+
+                Selector.StringField('checklists','id')+' ORDER BY sort,id;');
+              if Length(Checklists)>0 then
+                Body:=Body+'<h2>'+HtmlEncode(Words.Text('checklists','Checklists'))+'</h2>';
+              for Checklist in Checklists do
+              begin
+                ChecklistKey:=QuotedStr(Checklist[0]);
+                Items:=T.Db.Query('SELECT title,isFinished FROM checklist_items WHERE checklistId='+ChecklistKey+
+                  ' AND '+Selector.StringField('checklist_items','checklistId')+
+                  ' AND cardId='+CardKey+' AND '+Selector.StringField('checklist_items','cardId')+
+                  ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
+                  Selector.StringField('checklist_items','boardId')+')) ORDER BY sort,id;');
+                Body:=Body+'<h3>'+HtmlEncode(Checklist[1])+'</h3>';
+                if Length(Items)>0 then Body:=Body+'<ul>';
+                for Item in Items do
+                begin
+                  Body:=Body+'<li>';
+                  if Item[1]='1' then Body:=Body+'<s>'+HtmlEncode(Item[0])+'</s>'
+                  else Body:=Body+HtmlEncode(Item[0]);
+                  Body:=Body+'</li>';
+                end;
+                if Length(Items)>0 then Body:=Body+'</ul>';
+              end;
+            end;
+          finally Selector.Free;end;
+        end;
+      finally Snapshot:=T.Db.EndRead;end;
+      if not Snapshot then Body:='';
+    end;
+    if Body='' then
+    begin
+      Title:=Words.Text('card','Card');
+      Body:='<p>'+HtmlEncode(Words.Text('card-not-found','Card not found'))+'</p>';
+    end
+    else aResponse.Code:=200;
+    aResponse.ContentType:='text/html; charset=utf-8';
+    aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,Dir,'html4');
+    aResponse.SendContent;
+  finally Words.Free;end;
+end;
+
 function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;
 begin Result:=BoardListHtml(Db,S); end;
 function BoardView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;

@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Open card checklists from the HTML board
+
+- Click a card title to read its description, checklists and items without
+  JavaScript or cookies. Check board and card scope before rendering.
+- Verify that a failed REST checklist lookup leaves the real checklist and
+  items visible after reload.
+
 ## 2026-11-18 Verify REST card ordering in Chromium
 
 - A REST sort value of zero is readable through the API and moves the card
