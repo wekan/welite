@@ -9,7 +9,8 @@ import subprocess
 import tempfile
 from threading import Thread
 import time
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urljoin, urlsplit
+from homelang import Page
 
 
 def run(base):
@@ -24,6 +25,7 @@ def run(base):
 def observe_board_requests(base):
     upstream = urlsplit(base)
     exchanges = []
+    links = {}
 
     class Observer(BaseHTTPRequestHandler):
         def log_message(self, format, *args):
@@ -43,12 +45,25 @@ def observe_board_requests(base):
                 })
                 response = connection.getresponse()
                 body = response.read()
-                if urlsplit(self.path).path in ('/board', '/sign-in'):
-                    exchanges.append((self.path, self.headers.get('Cookie'),
-                                      response.getheader('Set-Cookie'), response.status,
-                                      response.getheader('Content-Language')))
-                if urlsplit(self.path).path == '/' and b'administrator' in body:
-                    exchanges.append(('/', self.headers.get('Cookie'),
+                route = urlsplit(self.path)
+                query = parse_qs(route.query)
+                observed_path = self.path if route.path in ('/board', '/sign-in') else ''
+                if route.path == '/' and query.get('sessionId') and b'administrator' in body:
+                    observed_path = '/'
+                    for tag, attributes, _ in Page(body).items:
+                        if tag != 'a':
+                            continue
+                        link = urlsplit(attributes['href'])
+                        if link.path == '/board' and parse_qs(link.query).get('id') == ['boardtxt']:
+                            links['board'] = attributes['href']
+                            break
+                elif route.path == '/board' and query.get('sessionId'):
+                    if Page(body).captions('/board/attachments'):
+                        observed_path = '/signed-in-board'
+                    else:
+                        observed_path = '/board'
+                if observed_path:
+                    exchanges.append((observed_path, self.headers.get('Cookie'),
                                       response.getheader('Set-Cookie'), response.status,
                                       response.getheader('Content-Language')))
                 self.send_response(response.status)
@@ -65,7 +80,7 @@ def observe_board_requests(base):
         thread = Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
-            yield f'http://127.0.0.1:{server.server_port}', exchanges
+            yield f'http://127.0.0.1:{server.server_port}', exchanges, links
         finally:
             server.shutdown()
             thread.join()
@@ -75,7 +90,7 @@ def observe_board_requests(base):
 def check_viewport(base, width, height, browser_name):
     size = f'{width}x{height}'
     tools = Path(os.environ['WELITE_DILLO_TOOLS']).resolve()
-    with (observe_board_requests(base) as (observed, exchanges),
+    with (observe_board_requests(base) as (observed, exchanges, links),
           tempfile.TemporaryDirectory(prefix='wldillo-', dir=os.environ['TMPDIR']) as directory):
         profile = Path(directory) / '.dillo'
         profile.mkdir()
@@ -145,7 +160,7 @@ def check_viewport(base, width, height, browser_name):
                 assert all(cookie is None and issued is None and status == 200
                            for _, cookie, issued, status, _ in exchanges), exchanges
                 if width == 640:
-                    assert_language_form(tools, env, observed, exchanges, browser_name)
+                    assert_language_form(tools, env, observed, exchanges, links, browser_name)
 
             finally:
                 if browser is not None and browser.poll() is None:
@@ -156,7 +171,7 @@ def check_viewport(base, width, height, browser_name):
     print(f'PASS: {browser_name} at {size} rendered the HTML4 minimap and followed a viewport link without cookies')
 
 
-def assert_language_form(tools, env, observed, exchanges, browser_name):
+def assert_language_form(tools, env, observed, exchanges, links, browser_name):
     xdotool = str(tools / 'usr/bin/xdotool')
 
     def send(*args):
@@ -201,3 +216,12 @@ def assert_language_form(tools, env, observed, exchanges, browser_name):
         for route, cookie, issued, status, _ in exchanges)
     assert ('/', None, None, 200, 'fi') in exchanges
     print(f'PASS: {browser_name} signed in and rendered the Finnish home page without cookies')
+
+    assert 'board' in links
+    send('key', 'ctrl+l')
+    subprocess.run([xdotool, 'type', '--file', '-'], input=urljoin(observed, links['board']),
+                   text=True, env=env, check=True)
+    send('key', 'Return')
+    wait_for('/signed-in-board')
+    assert ('/signed-in-board', None, None, 200, 'fi') in exchanges
+    print(f'PASS: {browser_name} opened the Finnish board from its signed-in home link without cookies')
