@@ -7,7 +7,7 @@ procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,D
   Restored:Boolean);
 
 implementation
-uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr;
+uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr,wlcfjson;
 
 function Milliseconds(const Text:string):Int64;
 var Date:TDateTime;Stamp,Epoch:TTimeStamp;
@@ -38,6 +38,59 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   begin
     Result:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+';');
   end;
+  procedure RecoverSavedPending(const IdentityScope:string);
+  var PendingRows:TWLRows;Pending:TJSONObject;Head,PendingDoc,PendingId,PendingHash,
+    RowHash,OldHash,Match,Replacement,RecoverySql:string;
+    function ValidHash(const Value:string):Boolean;
+    var C:Char;
+    begin
+      if Length(Value)<>64 then Exit(False);
+      for C in Value do if not (C in ['0'..'9','a'..'f']) then Exit(False);
+      Result:=True;
+    end;
+  begin
+    PendingRows:=Db.Query('SELECT json(_ferretdb_sjson),json_set(json_extract(_ferretdb_sjson,''$.pending''),'+
+      '''$.$s'',json_extract(_ferretdb_sjson,''$.$s.p.pending.$s'')),coalesce('+HeadHash+',''''),'+
+      'json_extract(_ferretdb_sjson,''$.pendingHash'') FROM '+Ident(HeadTable)+' WHERE '+IdentityScope+
+      ' AND json_type(_ferretdb_sjson,''$.pending'')=''object'''+
+      ' AND json_type(_ferretdb_sjson,''$.hash'') IN (''null'',''text'')'+
+      ' AND json_type(_ferretdb_sjson,''$.pending.previousHash'')=json_type(_ferretdb_sjson,''$.hash'')'+
+      ' AND (json_type(_ferretdb_sjson,''$.pending.previousContent.deletedAt'') IS NULL OR '+
+      'json_extract(_ferretdb_sjson,''$.$s.p.pending.$s.p.previousContent.$s.p.deletedAt.t'') IN (''null'',''date''))'+
+      ' AND (json_type(_ferretdb_sjson,''$.pending.newContent.deletedAt'') IS NULL OR '+
+      'json_extract(_ferretdb_sjson,''$.$s.p.pending.$s.p.newContent.$s.p.deletedAt.t'') IN (''null'',''date''))'+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p.pending.$s.p.createdAt.t'')=''date'''+
+      ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7;');
+    if Length(PendingRows)<>1 then Exit;
+    Head:=PendingRows[0][0];PendingDoc:=PendingRows[0][1];
+    OldHash:=PendingRows[0][2];PendingHash:=PendingRows[0][3];
+    if (Length(PendingDoc)>1024*1024) or not ValidHash(PendingHash) or
+      ((OldHash<>'') and not ValidHash(OldHash)) then Exit;
+    Pending:=nil;
+    try
+      try
+        Pending:=DocumentJson(PendingDoc);
+        PendingId:=Pending.Get('_id','');RowHash:=Pending.Get('integrityHash','');
+        if (PendingId='') or (Pos(#0,PendingId)>0) or (Pending.Get('boardId','')<>BoardId) or
+          (Pending.Get('entityType','')<>'list') or (Pending.Get('group','')<>'lifecycle') or
+          not ValidHash(RowHash) or (Pending.Get('previousHash','')<>OldHash) or
+          (ListLifecycleHash(Pending)<>RowHash) or (ListReservationHash(Pending)<>PendingHash) then Exit;
+      except Exit;end;
+    finally Pending.Free;end;
+    // Require the exact reserved typed document to have landed before clearing
+    // the head. Compare its data and its schema independently of root key order.
+    Match:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(PendingId)+
+      ' AND json_remove(_ferretdb_sjson,''$.$s'')=json_remove('+QuotedStr(PendingDoc)+',''$.$s'')'+
+      ' AND json_extract(_ferretdb_sjson,''$.$s'')=json_extract('+QuotedStr(PendingDoc)+',''$.$s'')';
+    Replacement:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.hash'','+QuotedStr(RowHash)+
+      ',''$.pending'',NULL,''$.pendingHash'',NULL),json(_ferretdb_sjson),''{}'')';
+    RecoverySql:='BEGIN IMMEDIATE; UPDATE '+Ident(HeadTable)+
+      ' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(HeadTable)+')=''blob'' THEN jsonb('+Replacement+
+      ') ELSE '+Replacement+' END WHERE '+IdentityScope+' AND json(_ferretdb_sjson)='+QuotedStr(Head)+
+      ' AND '+Guard+' AND (SELECT count(*) FROM '+TableSql+' WHERE '+Match+')=1; COMMIT;';
+    if not Db.Exec(RecoverySql) then Db.Exec('ROLLBACK;');
+  end;
+
 begin
   Shared:=Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>0;
   BoardSql:=QuotedStr(BoardId);UserSql:=QuotedStr(UserId);Guard:='1';LookupSource:='';Coordinated:=False;
@@ -73,7 +126,10 @@ begin
       HeadScope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-chain',BoardId))+
         ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
         ' AND '+VersionOne+
-        ' AND json_type(_ferretdb_sjson,''$.pending'')=''null'' AND json_type(_ferretdb_sjson,''$.pendingHash'')=''null'''+
+        ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
+        ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string''';
+      RecoverSavedPending(HeadScope);
+      HeadScope:=HeadScope+' AND json_type(_ferretdb_sjson,''$.pending'')=''null'' AND json_type(_ferretdb_sjson,''$.pendingHash'')=''null'''+
         ' AND (json_type(_ferretdb_sjson,''$.hash'')=''null'' OR '+
         '(json_type(_ferretdb_sjson,''$.hash'')=''text'' AND length('+HeadHash+')=64'+
         ' AND '+HeadHash+' NOT GLOB ''*[^0-9a-f]*''))'+

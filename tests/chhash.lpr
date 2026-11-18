@@ -8,6 +8,6 @@ begin
   begin
     ReadLn(Line);
     Row:=ExactObject(Line);
-    try WriteLn(ListLifecycleHash(Row));finally Row.Free;end;
+    try WriteLn(ListLifecycleHash(Row),' ',ListReservationHash(Row));finally Row.Free;end;
   end;
 end.

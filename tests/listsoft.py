@@ -147,6 +147,35 @@ def run(request, client, db, token, refresh_ferret, session):
         assert head['hash']!=added['integrityHash'] and head['pending'] is None and head['pendingHash'] is None, head
         assert current['previousHash']==added['integrityHash'] and current['changeType']=='added', current
         assert current['newContent']['deleted'] is False and isinstance(current['previousContent']['deletedAt'],DateMs), current
+        from datetime import datetime, timezone
+        def canonical_dates(value):
+            if isinstance(value, DateMs):
+                value=datetime.fromtimestamp(int(value)/1000,timezone.utc)
+                return {'$date':value.isoformat(timespec='milliseconds').replace('+00:00','Z')}
+            if isinstance(value,dict):
+                return {key:canonical_dates(item) for key,item in value.items()}
+            return value
+        def digest(value):
+            return hashlib.sha256(json.dumps(canonical_dates(value),sort_keys=True,
+                ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+        saved=dict(current,_id='wekan-saved-reservation',entityId='other-list',listId='other-list',
+                   previousHash=head['hash'])
+        protected=('batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
+                   'group','listId','newContent','previousContent','previousHash','restoredByUserId',
+                   'restoredFromId','swimlaneId','userId')
+        saved['integrityHash']=digest({key:saved[key] for key in protected})
+        assert client.command({'insert':'changeHistory','documents':[saved]})['n']==1
+        assert client.command({'update':'historyChainHeads','updates':[
+            dict(q={'_id':head_id},u={'$set':dict(pending=saved,pendingHash=digest(saved))})]})['n']==1
+        assert request('DELETE',path,token=token)[0]==200
+        recovered=client.find('historyChainHeads',head_id)[0]
+        assert recovered['pending'] is None and recovered['pendingHash'] is None,recovered
+        new,=client.command({'find':'changeHistory','filter':dict(integrityHash=recovered['hash'])})['cursor']['firstBatch']
+        assert new['previousHash']==saved['integrityHash'] and new['changeType']=='removed'
+        assert client.find('changeHistory',saved['_id'])==[saved]
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        head=client.find('historyChainHeads',head_id)[0]
+        print('PASS: coordinated lifecycle finalizes an already saved reservation before appending')
         # A reservation owned by WeKan must survive a concurrent list mutation.
         pending = dict(_id='wekan-pending-history', boardId='b', previousHash=head['hash'])
         result = client.command({'update':'historyChainHeads','updates':[

@@ -6,6 +6,7 @@ uses fpjson;
 // Hash a list lifecycle record after dates have been rendered as UTC ISO strings.
 function ListLifecycleHash(Row:TJSONObject):string;
 function HistoryBoardKey(const Prefix,BoardId:string):string;
+function ListReservationHash(Row:TJSONObject):string;
 
 implementation
 uses SysUtils,Classes,wlcrypt;
@@ -75,6 +76,11 @@ begin
     Body:=Body+JsonString(ProtectedKeys[I])+':'+LifecycleValue(Row.Find(ProtectedKeys[I]),ProtectedKeys[I]);
   end;
   Result:=Sha256Hex(Body+'}');
+end;
+
+function ListReservationHash(Row:TJSONObject):string;
+begin
+  Result:=Sha256Hex(LifecycleValue(Row,''));
 end;
 
 function HistoryBoardKey(const Prefix,BoardId:string):string;

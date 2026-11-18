@@ -20,12 +20,12 @@ for restoring in (False, True):
 rows.append(dict(rows[0], undone=True, superseded=True))
 payload = ''.join(json.dumps(row, ensure_ascii=False)+'\n' for row in rows)
 node = r"""
-const { hashHistoryRow } = require(process.argv[1]);
+const { hashHistoryRow, canonical, sha256 } = require(process.argv[1]);
 const fs = require('node:fs');
 for (const line of fs.readFileSync(0, 'utf8').trimEnd().split('\n')) {
   const row = JSON.parse(line, (key, value) =>
     (key === 'createdAt' || key === 'deletedAt') && typeof value === 'string' ? new Date(value) : value);
-  console.log(hashHistoryRow(row));
+  console.log(hashHistoryRow(row), sha256(canonical(row)));
 }
 """
 expected = subprocess.check_output([os.environ.get('NODE','node'), '-e', node, str(oracle)], input=payload, text=True)
@@ -34,4 +34,4 @@ with tempfile.TemporaryDirectory(prefix='wlchhash-',dir=os.environ['TMPDIR']) as
                     '-FE'+directory,str(root/'tests/chhash.lpr')],check=True,capture_output=True)
     actual = subprocess.check_output([str(Path(directory)/'chhash')],input=payload,text=True)
 assert actual == expected, (actual,expected)
-print('PASS: list lifecycle hashes match the WeKan implementation')
+print('PASS: list lifecycle and reservation hashes match the WeKan implementation')
