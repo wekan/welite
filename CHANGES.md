@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Honor parent IDs on REST card creation
+
+- Store visible parent card references, validate parent input, and
+  refuse missing or inaccessible parents before inserting a card.
+
 ## 2026-11-18 Match REST card description validation
 
 - Clear card descriptions with a null or empty value. Reject invalid

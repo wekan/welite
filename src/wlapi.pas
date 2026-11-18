@@ -3227,7 +3227,8 @@ begin
 end;
 
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations,InitialFields,LinkedId:string;
+var T: TWLTenant; UserId,BoardId,ListId,Id,Author,Title,Descr,Swimlane,Relations,InitialFields,LinkedId,
+  ParentId,ParentSql,ParentScope,ParentGuard:string;Body:TJSONObject;Field:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -3240,6 +3241,41 @@ begin
   begin
     CreateLinkedRestCard(T.Db,aResponse,UserId,BoardId,ListId,BodyField(aRequest,'swimlaneId'),LinkedId);
     Exit;
+  end;
+  ParentId:='';ParentGuard:='';
+  if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+  begin
+    Body:=nil;
+    try
+      try Body:=ExactObject(aRequest.Content);
+      except SendError(aResponse,400,'Invalid card creation');Exit;end;
+      Field:=Body.Find('parentId');
+      if (Field<>nil) and (Field.JSONType<>jtNull) then
+      begin
+        if not (Field is TJSONString) then
+        begin SendJson(aResponse,'{"error":"Invalid parentId"}',400);Exit;end;
+        ParentId:=Field.AsString;
+      end;
+    finally Body.Free;end;
+  end
+  else ParentId:=aRequest.ContentFields.Values['parentId'];
+  if Pos(#0,ParentId)>0 then
+  begin SendJson(aResponse,'{"error":"Invalid parentId"}',400);Exit;end;
+  ParentSql:=QuotedStr(ParentId);
+  if ParentId<>'' then
+  begin
+    ParentScope:='id='+ParentSql+' AND deletedAt IS NULL';
+    Rows:=T.Db.Query('SELECT boardId FROM cards WHERE '+ParentScope+';');
+    if Length(Rows)<>1 then
+    begin SendJson(aResponse,'{"error":"Card not found"}',404);Exit;end;
+    if not BoardCanRead(T.Db,UserId,Rows[0][0]) then
+    begin RecordParentDenial(T.Db,UserId);SendError(aResponse,403,'Board access forbidden');Exit;end;
+    Policy:=TFieldPolicy.Create(T.Db,UserId,Rows[0][0],'');
+    try
+      ParentGuard:='SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+ParentScope+' AND boardId='+
+        QuotedStr(Rows[0][0])+') AND '+Policy.ScopeBoardExpression(False)+
+        ' THEN 1 ELSE json(''Card parent scope changed'') END; ';
+    finally Policy.Free;end;
   end;
   Author   := BodyField(aRequest, 'authorId'); if Author = '' then Author := UserId;
   if not ValidAuthor(T.Db,BoardId,UserId,Author) then
@@ -3256,7 +3292,7 @@ begin
   if not CardRelationSql(T,aRequest,aResponse,BoardId,Id,Relations,True) then Exit;
   try InitialFields:=InitializeCardFields(T.Db,BoardId,Id);
   except SendError(aResponse,500,'Could not initialize custom fields');Exit;end;
-  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardCreateSql(BoardId,ListId,Swimlane,Id,Author,Title,Descr,'NULL','0')+
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+ParentGuard+CardCreateSql(BoardId,ListId,Swimlane,Id,Author,Title,Descr,ParentSql,'0')+
     Relations+InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));

@@ -277,6 +277,14 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert client.find('cards',card['_id'])[0]==stored
                 print('PASS: REST card description clears with null or empty form values and rejects invalid edits atomically')
 
+                status,_,body=request('POST','/api/boards/b/lists/l/cards',
+                    dict(title='Single subtask',swimlaneId='s',parentId=card['_id']),token)
+                assert status==200,(status,body)
+                subtask_id=json.loads(body)['_id']
+                assert client.find('cards',subtask_id)[0]['parentId']==card['_id']
+                assert request('DELETE','/api/boards/b/lists/l/cards/'+subtask_id,token=token)[0]==200
+                print('PASS: single REST card creation persists its visible parent')
+
                 export_path='/api/boards/b/export'
                 assert request('GET',export_path+'?listId=l',token=token)[0]==400
                 for collection in ['rules','triggers','actions']:
