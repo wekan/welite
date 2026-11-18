@@ -6,7 +6,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## 2026-11-18 Verify HTML4 board navigation in Linux Dillo
 
-- Run Dillo 3.0.5 at 640×480 with cookies denied. Verify that the
+- Run Dillo 3.0.5 at 640×480 and 320×480 with cookies denied. Verify that the
   minimap renders the current color and that clicking the next cell
   moves the viewport and the highlight.
 

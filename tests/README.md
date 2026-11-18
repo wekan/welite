@@ -671,5 +671,5 @@ Set `WELITE_DILLO_TOOLS` to an extracted Debian arm64 tool directory
 containing `usr/bin/dillo`, `usr/bin/Xvfb`, `usr/bin/xdotool`, and their
 runtime libraries. Run `python3 tests/admin.py` with the usual native HTTP
 environment and FFmpeg with X11 capture on `PATH`. The test creates a
-640×480 virtual display and an ephemeral Dillo profile that denies cookies.
+virtual displays at 640×480 and 320×480 with ephemeral Dillo profiles that deny cookies.
 It checks the minimap highlight color and clicks the adjacent viewport.
