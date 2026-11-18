@@ -298,7 +298,8 @@ begin
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
       begin AuthError(Request,Response,500,'One-time codes','Could not start setup');Exit;end;
-      Body:='<h1>'+HtmlEncode(Title)+'</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
+      Body:='<h1>'+HtmlEncode(Title)+'</h1><p>'+HtmlEncode(Words.Text('username','Username'))+
+        ': '+HtmlEncode(Username)+'</p>'+
         '<p>'+HtmlEncode(Words.Text('twoFactorAuth-manual-entry','Or enter this code manually: '))+'<code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
         ConfirmationForm(Request,Token,'',Words);
