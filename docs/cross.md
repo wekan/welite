@@ -220,7 +220,10 @@ The same probe using `sqlite3_open_v2` with `unix-dotfile` creates a table,
 writes a JSONB value and reads it back. The Linux shell reopens the file,
 reports `integrity_check=ok` and recovers the value. The probe uses
 single-threaded SQLite, and vamos reports orphan allocations at exit.
-Server integration, concurrent access and HTTP remain open.
+The linked Pascal probe also loads the full tenant `src/schema.sql`
+into a fresh file with this VFS. The integrity check passes inside vamos
+and after reopening the file on Linux. Server integration, concurrent
+access and HTTP remain open.
 
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
