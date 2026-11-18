@@ -1057,15 +1057,19 @@ begin
     end;
     if Length(Rows)=0 then Body:=Body+'<tr><td colspan="4">'+HtmlEncode(Words.Text('no-items-message','No pages yet.'))+'</td></tr>';
     P := Default(TPage); P.Cols:=1; P.Doctype:='html32'; P.Dir:='auto'; P.MinRole:='member';
-    Body:=Body+'</table><h2>Import/export</h2><p><a href="'+
-      HtmlAttr(SessionUrl('/designer/export',S))+'">Export all pages</a></p>'+
+    Body:=Body+'</table><h2>'+HtmlEncode(Words.Text('import','Import'))+' / '+
+      HtmlEncode(Words.Text('r-export','Export'))+'</h2><p><a href="'+
+      HtmlAttr(SessionUrl('/designer/export',S))+'">'+HtmlEncode(Words.Text('r-export','Export'))+
+      ' ZIP</a></p>'+
       '<form method="POST" enctype="multipart/form-data" action="/designer/page/import">'+
       AuthHiddenFields(S,'designer:/designer/page/import')+
-      '<input type="file" name="file"><input type="submit" value="Import page"></form>'+
+      '<label for="page-import-json">JSON</label> <input id="page-import-json" type="file" name="file">'+
+      '<input type="submit" value="'+HtmlAttr(Words.Text('import','Import')+' JSON')+'"></form>'+
       '<form method="POST" enctype="multipart/form-data" action="/designer/import">'+
       AuthHiddenFields(S,'designer:/designer/import')+
-      '<input type="file" name="file"><input type="submit" value="Import ZIP"></form>'+
-      '<h2>Add page</h2><form method="POST" action="/designer/page/save">'+
+      '<label for="page-import-zip">ZIP</label> <input id="page-import-zip" type="file" name="file">'+
+      '<input type="submit" value="'+HtmlAttr(Words.Text('import','Import')+' ZIP')+'"></form>'+
+      '<h2>'+HtmlEncode(Words.Text('add','Add'))+'</h2><form method="POST" action="/designer/page/save">'+
       AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P,Words)+'</form>';
     aResponse.Content:=LanguagePage(aResponse,Language,'Designer',Body);
     aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;

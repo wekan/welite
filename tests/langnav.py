@@ -56,6 +56,10 @@ def check_navigation(request,database,session):
         for key in ('page','storage-enabled','actions','yes','edit','preview','r-export'):
             assert ('>'+escape(arabic[key],quote=False)+'<').encode() in body,key
         assert b'dir="rtl"' in body
+        status,headers,finnish=request('GET',home.replace('lang=ar','lang=fi'))
+        assert status==200 and headers['Content-Language']=='fi'
+        for caption in ('Tuo JSON','Tuo ZIP','Vie ZIP'):
+            assert caption.encode() in finnish,caption
         edit=next(link for link in parsed(body) if urlsplit(link).path=='/designer/page'
                   and parse_qs(urlsplit(link).query).get('id')==['navpage'])
         status,_,editor=request('GET',edit)
