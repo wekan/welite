@@ -1366,14 +1366,29 @@ end;
 
 // GET one checklist with its items
 procedure ApiChecklist(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId: string; R, It: TWLRows; O, IO: TJSONObject; A: TJSONArray; i: Integer;
+const NotFound = '{"error":"Checklist not found or does not belong to the specified card"}';
+var T: TWLTenant; UserId, ChecklistId, Predicate: string; R, It: TWLRows; O, IO: TJSONObject; A: TJSONArray; i: Integer;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
+  if not ApiBoardGuard(T, aRequest, aResponse, UserId, NotFound) then Exit;
+  ChecklistId := aRequest.RouteParams['checklistId'];
+  if aRequest.Method = 'DELETE' then
+  begin
+    Predicate := 'id='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(aRequest.RouteParams['cardId'])+
+      ' AND boardId='+QuotedStr(aRequest.RouteParams['boardId']);
+    if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM checklists WHERE '+
+      Predicate+')=1 THEN 1 ELSE json(''Checklist scope changed'') END; DELETE FROM checklists WHERE '+
+      Predicate+'; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM checklists WHERE '+Predicate+
+      ') THEN 1 ELSE json(''Checklist deletion failed'') END; COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not delete checklist');Exit;end;
+    O:=TJSONObject.Create(['_id',ChecklistId]);
+    try SendJson(aResponse,O.AsJSON);finally O.Free;end;
+    Exit;
+  end;
   R := T.Db.Query(Format('SELECT id,title FROM checklists WHERE id=%s LIMIT 1;',
     [QuotedStr(aRequest.RouteParams['checklistId'])]));
-  if Length(R) = 0 then begin SendError(aResponse, 404, 'Checklist not found'); Exit; end;
+  if Length(R) = 0 then begin SendJson(aResponse,NotFound,404); Exit; end;
   O := TJSONObject.Create;
   try
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]);

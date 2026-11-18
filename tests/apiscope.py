@@ -34,6 +34,7 @@ def run(request, db, token):
         ('GET','/cards/foreigncard/checklists'),
         ('POST','/cards/foreigncard/checklists'),
         ('GET','/cards/card/checklists/foreigncheck'),
+        ('DELETE','/cards/card/checklists/foreigncheck'),
         ('POST','/cards/card/checklists/foreigncheck/items'),
         ('GET','/cards/card/checklists/check/items/foreignitem'),
         ('PUT','/cards/card/checklists/check/items/foreignitem'),
@@ -73,4 +74,19 @@ def run(request, db, token):
     with sqlite3.connect(db) as con:
         current_list = con.execute("SELECT listId FROM cards WHERE id='card'").fetchone()[0]
     assert request('GET', '/api/boards/protected/lists/'+current_list+'/cards/card?token='+token)[0] == 200
-    print('PASS: 29 API cross-board/parent attempts rejected without database changes; valid card still readable')
+    print('PASS: 30 API cross-board/parent attempts rejected without database changes; valid card still readable')
+    with sqlite3.connect(db) as con:
+        con.execute("INSERT INTO checklist_items(id,checklistId,cardId,boardId,title,sort,modifiedAt) VALUES('deleteitem','check','card','protected','Item',0,'now')")
+        con.execute("CREATE TRIGGER reject_check_delete AFTER DELETE ON checklists BEGIN SELECT RAISE(FAIL,'test'); END")
+    path = '/api/boards/protected/cards/card/checklists/check?token='+token
+    assert request('DELETE',path)[0] == 500
+    with sqlite3.connect(db) as con:
+        assert con.execute("SELECT id FROM checklist_items WHERE id='deleteitem'").fetchone() == ('deleteitem',)
+        con.execute('DROP TRIGGER reject_check_delete')
+    status, _, body = request('DELETE',path)
+    assert status == 200 and json.loads(body) == dict(_id='check'), (status,body)
+    status, _, body = request('DELETE',path)
+    assert status == 404 and json.loads(body) == dict(error='Checklist not found or does not belong to the specified card'), (status,body)
+    with sqlite3.connect(db) as con:
+        assert con.execute("SELECT id FROM checklist_items WHERE id IN ('deleteitem','foreignitem')").fetchall() == [('foreignitem',)]
+    print('PASS: checklist DELETE cascades to its items and rolls back on failure')
