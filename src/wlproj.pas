@@ -268,7 +268,7 @@ end;
 function RelationDocument(const Previous,Command,Model:string):string;
 var Doc,Cmd,Spec,Old,Values,Row,Field,Seen,Typed,Hints:TJSONObject;Fields,Keys,Rows:TJSONArray;
   Item,Value,Converted,Container,Schema:TJSONData;Path,Op,Name,Signature:string;
-  i,j,Found,DateRow:Integer;Scalar,Match,AppendMode:Boolean;
+  i,j,Found,DateRow:Integer;Scalar,Match,AppendMode,ForceName:Boolean;
   function KeyValue(Entry:TJSONData;const Key:string):TJSONData;
   var n:Integer;
   begin
@@ -305,6 +305,7 @@ begin
     Old:=TJSONObject(Cmd.Find('old'));Values:=TJSONObject(Cmd.Find('values'));
     // API append preserves missing optional fields; ordinary SQL inserts retain
     // their existing default/null projection semantics.
+    ForceName:=(Op='update') and (Spec.Get('table','')='custom_field_dropdown_items') and (Values.Find('name') is TJSONString);
     AppendMode:=Op='append';
     if AppendMode then begin if (Cmd.Count<>3) or (Old.Count<>0) then Invalid;Op:='insert';end;
     // Initialization cannot reset an existing array or replace a null/scalar.
@@ -390,6 +391,19 @@ begin
       Seen.Add(Signature,True);
     end;
     Result:=TypedDocument(Doc.AsJSON,Previous,'{}');
+    if ForceName then
+    begin
+      // An explicit option-name write establishes a BSON string even when a
+      // legacy Regex has exactly the same plain-text rendering.
+      Typed:=ExactObject(Result);Schema:=AtPath(Typed,'$s.p.settings.$s.p.dropdownItems');
+      if not (Schema is TJSONObject) then Invalid;
+      Container:=TJSONObject(Schema).Find('i');
+      if not (Container is TJSONArray) or (Found<0) or (Found>=Container.Count) then Invalid;
+      Item:=Container.Items[Found];if not (Item is TJSONObject) then Invalid;
+      PutPath(TJSONObject(Item),'$s.p.name',TJSONObject.Create(['t','string']));
+      Hints:=TJSONObject.Create;PutPath(Hints,'settings.dropdownItems',Schema.Clone);
+      Result:=TypedDocument(Doc.AsJSON,Previous,Hints.AsJSON);FreeAndNil(Hints);
+    end;
     if DateRow>=0 then
     begin
       // Supply the complete validated array schema as a hint so the

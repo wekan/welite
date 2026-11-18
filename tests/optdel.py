@@ -40,7 +40,7 @@ def exercise(call,board,snapshot,stored,assign,install,clear):
         before=snapshot();assert remove(option['_id'])[0]==404 and snapshot()==before
     print('PASS: dropdown deletion exact Unicode/plus/percent IDs, missing/malformed refusal, retained empty arrays/assigned values, typed siblings and transaction-time failure/revocation rollback')
 
-def run_native(call,db,board,uid):
+def run_native(call,db,board,uid,exercise_case=exercise,operation='delete'):
     card=None;value_before=None
     def snapshot():
         with connect(db) as con:return list(con.iterdump())
@@ -55,17 +55,19 @@ def run_native(call,db,board,uid):
     def stored(identity,options):
         with connect(db) as con:
             assert con.execute('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId=? ORDER BY sort,id',(identity,)).fetchall()==[(item['_id'],item['name']) for item in options]
-            assert con.execute('SELECT dropdownItemsPresent FROM custom_fields WHERE id=?',(identity,)).fetchone()==(1,)
+            assert con.execute('SELECT dropdownItemsPresent FROM custom_fields WHERE id=?',(identity,)).fetchone()==(0 if operation=='rename' else 1,)
             assert con.execute('SELECT * FROM card_custom_field_values WHERE cardId=? AND customFieldId=?',(card,identity)).fetchall()==value_before
     def install(identity,kind):
         with connect(db) as con:
             body="SELECT RAISE(FAIL,'option failure');" if kind=='fail' else "UPDATE users SET loginDisabled=1 WHERE id='"+uid.replace("'","''")+"';"
-            con.execute("CREATE TRIGGER opt_fail AFTER DELETE ON custom_field_dropdown_items WHEN OLD.customFieldId='"+identity+"' BEGIN "+body+' END')
+            event='UPDATE OF name' if operation=='rename' else 'DELETE'
+            condition="NEW.name='Rollback' AND NEW.customFieldId=" if operation=='rename' else 'OLD.customFieldId='
+            con.execute("CREATE TRIGGER opt_fail AFTER "+event+" ON custom_field_dropdown_items WHEN "+condition+"'"+identity+"' BEGIN "+body+' END')
     def clear():
         with connect(db) as con:con.execute('DROP TRIGGER opt_fail')
-    exercise(call,board,snapshot,stored,assign,install,clear)
+    exercise_case(call,board,snapshot,stored,assign,install,clear)
 
-def run_shared(call,client,db,board,uid):
+def run_shared(call,client,db,board,uid,exercise_case=exercise,operation='delete'):
     card=None;card_before=None;original=None
     def snapshot():
         with connect(db) as con:
@@ -76,6 +78,7 @@ def run_shared(call,client,db,board,uid):
         doc=client.find('customFields',identity)[0]
         # Unknown typed data on the definition and surviving option must remain exact.
         items=doc['settings']['dropdownItems'];items[-1]['extra']=Long(9007199254740993)
+        if operation=='rename':items[0]['name']=Regex(items[0]['name'],'i')
         assert client.command({'update':'customFields','updates':[dict(q=dict(_id=identity),u={'$set':{'settings.dropdownItems':items,'unknown':DateMs(-7)}})]})['n']==1
         original=client.find('customFields',identity)[0]
         card=client.command({'find':'cards','filter':dict(boardId=board),'limit':1})['cursor']['firstBatch'][0]['_id']
@@ -85,18 +88,23 @@ def run_shared(call,client,db,board,uid):
         doc=client.find('customFields',identity)[0];expected=dict(original)
         expected['modifiedAt']=doc['modifiedAt'];expected['settings']=dict(original['settings'])
         ids={item['_id'] for item in options}
-        expected['settings']['dropdownItems']=[item for item in original['settings']['dropdownItems'] if item['_id'] in ids]
+        names={item['_id']:item['name'] for item in options}
+        expected['settings']['dropdownItems']=[dict(item,name=names[item['_id']]) for item in original['settings']['dropdownItems'] if item['_id'] in ids]
         assert encode(doc)==encode(expected),(doc,expected)
         assert encode(client.find('cards',card)[0])==card_before
     def install(identity,kind):
         with connect(db) as con:
             table=con.execute("SELECT table_name FROM _wl_models WHERE name='custom_fields'").fetchone()[0]
             body="SELECT RAISE(FAIL,'option failure');" if kind=='fail' else "UPDATE users SET loginDisabled=1 WHERE id='"+uid.replace("'","''")+"';"
-            con.execute('CREATE TRIGGER opt_fail AFTER UPDATE ON "'+table.replace('"','""')+'" WHEN json_extract(NEW._ferretdb_sjson,\'$._id\')=\''+identity+"' AND json_array_length(NEW._ferretdb_sjson,'$.settings.dropdownItems')=2 AND json_array_length(OLD._ferretdb_sjson,'$.settings.dropdownItems')=3 BEGIN "+body+' END')
+            if kind=='type':
+                quoted='"'+table.replace('"','""')+'"'
+                body='UPDATE '+quoted+" SET _ferretdb_sjson=json_set(_ferretdb_sjson,'$.$s.p.settings.$s.p.dropdownItems.i[0].$s.p.name.t','regex','$.$s.p.settings.$s.p.dropdownItems.i[0].$s.p.name.o','i') WHERE json_extract(_ferretdb_sjson,'$._id')='"+identity+"';"
+            condition="json_extract(NEW._ferretdb_sjson,'$.settings.dropdownItems[0].name')='Rollback'" if operation=='rename' else "json_array_length(NEW._ferretdb_sjson,'$.settings.dropdownItems')=2 AND json_array_length(OLD._ferretdb_sjson,'$.settings.dropdownItems')=3"
+            con.execute('CREATE TRIGGER opt_fail AFTER UPDATE ON \"'+table.replace('\"','\"\"')+'\" WHEN json_extract(NEW._ferretdb_sjson,\'$._id\')=\''+identity+"' AND "+condition+' BEGIN '+body+' END')
     def clear():
         with connect(db) as con:con.execute('DROP TRIGGER opt_fail')
-    exercise(call,board,snapshot,stored,assign,install,clear)
-    identity='option-typed-scope';base='/api/boards/'+quote(board,safe='')+'/custom-fields/'+identity+'/dropdown-items/target'
+    exercise_case(call,board,snapshot,stored,assign,install,clear)
+    identity='option-typed-scope-'+operation;base='/api/boards/'+quote(board,safe='')+'/custom-fields/'+identity+'/dropdown-items/target'
     doc=dict(_id=identity,name='Typed options',type='dropdown',boardIds=[board],modifiedAt=DateMs(0),settings=dict(dropdownItems=[]))
     assert client.command({'insert':'customFields','documents':[doc]})['n']==1
     for items,boards,expected in [
@@ -106,7 +114,7 @@ def run_shared(call,client,db,board,uid):
         ([dict(_id='target',name='Foreign')],['unrelated-board'],404),
     ]:
         assert client.command({'update':'customFields','updates':[dict(q=dict(_id=identity),u={'$set':dict(settings=dict(dropdownItems=items),boardIds=boards)})]})['n']==1
-        before=snapshot();status,_,body=call('DELETE',base,None)
+        before=snapshot();status,_,body=call('PUT' if operation=='rename' else 'DELETE',base,dict(name='safe') if operation=='rename' else None)
         assert status==expected,(expected,status,body)
         assert snapshot()==before
     print('PASS: dropdown deletion excludes typed key/board lookalikes and refuses mixed duplicate shadows without mutation')

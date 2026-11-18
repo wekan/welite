@@ -4,6 +4,26 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Rename dropdown options without losing typed data
+
+- Add PUT on the scoped dropdown-option route. Resolve the exact option ID,
+  validate JSON/form string names and reject invalid/duplicate input. A missing
+  name is a successful no-op without timestamp or source changes; replies name
+  the option, matching the maintained API.
+- Share typed parent/board/item and transaction-time permission/binding guards
+  with deletion. Rename the exact current key rather than a remembered array
+  index; update modifiedAt atomically and preserve option order, unknown typed
+  siblings and existing card assignments.
+- Shared explicit name writes establish a BSON string even when a legacy Regex
+  has the same plain rendering. Keep the complete sibling schemas and verify the
+  final stored name/type before commit; post-write type injection rolls back.
+- Normal/checked kernel tests cover same-text type repair with retained Long
+  metadata. HTTP regressions cover JSON/form Unicode/newlines, reserved IDs,
+  absent-name no-op, invalid/missing refusal, exact BSON and failure/revocation/
+  type-injection rollback, alongside existing option-delete cases.
+- Option append and full definition edit/delete/automatic-card lifecycle remain
+  unfinished.
+
 ## 2026-11-18 Delete dropdown options through the scoped API
 
 - Add DELETE `/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem`.

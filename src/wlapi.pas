@@ -50,7 +50,7 @@ procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);    // PUT board label
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);   // GET list / POST create
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);    // GET one
-procedure ApiDeleteDropdownItem(aRequest:TRequest;aResponse:TResponse);
+procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET list / POST create
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
@@ -737,19 +737,47 @@ begin
   finally O.Free;end;
 end;
 
-procedure ApiDeleteDropdownItem(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,BoardId,FieldId,ItemId,Parent,Item,Bindings,Permission,BeforeSql,AfterSql,Sql:string;
+function OptionNameInput(Request:TRequest;out Name:string;out Present:Boolean):Boolean;
+var Doc:TJSONObject;Value:TJSONData;i:Integer;
+begin
+  Result:=False;Name:='';Present:=False;Doc:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(Request.ContentType))=1 then Doc:=ExactObject(Request.Content)
+      else
+      begin
+        Doc:=TJSONObject.Create;
+        for i:=0 to Request.ContentFields.Count-1 do
+        begin
+          if Doc.Find(Request.ContentFields.Names[i])<>nil then Exit;
+          Doc.Add(Request.ContentFields.Names[i],Request.ContentFields.ValueFromIndex[i]);
+        end;
+      end;
+      Value:=Doc.Find('name');Present:=Value<>nil;
+      if Present then
+      begin
+        if Value.JSONType<>jtString then Exit;
+        Name:=Value.AsString;CheckUtf8(Name);
+        if (Trim(Name)='') or (Pos(#0,Name)>0) then Exit;
+      end;
+      Result:=True;
+    except Result:=False;end;
+  finally Doc.Free;end;
+end;
+
+procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,FieldId,ItemId,Parent,Item,Bindings,Permission,BeforeSql,AfterSql,Sql,Name,Mutation,ReplyId:string;Rename,Present:Boolean;
   Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;i:Integer;Reply:TJSONObject;
   function Q(const Text:string):string;
   begin Result:=QuotedStr(Text);end;
   function Guard(const Condition:string):string;
-  begin Result:='SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Dropdown deletion guard failed'') END; ';end;
+  begin Result:='SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Dropdown mutation guard failed'') END; ';end;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];ItemId:=aRequest.RouteParams['dropdownItem'];
-  Scope:=nil;Policy:=nil;
+  Scope:=nil;Policy:=nil;Rename:=aRequest.Method='PUT';
   try
     try
       Scope:=TSelectionScope.Create(T.Db);Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
@@ -762,20 +790,38 @@ begin
       if Rows[0][0]<>'1' then begin SendError(aResponse,500,'Ambiguous dropdown item');Exit;end;
       Permission:=Policy.DefinitionExpression('',False);
       Rows:=T.Db.Query('SELECT '+Permission+';');
-      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then begin SendError(aResponse,403,'Dropdown deletion forbidden');Exit;end;
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then begin SendError(aResponse,403,'Dropdown mutation forbidden');Exit;end;
+      if Rename then
+      begin
+        if not OptionNameInput(aRequest,Name,Present) then begin SendError(aResponse,400,'Invalid dropdown option name');Exit;end;
+        if not Present then
+        begin
+          Reply:=TJSONObject.Create(['_id',ItemId]);
+          try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;Exit;
+        end;
+      end;
       Bindings:='';for i:=0 to Scope.Bindings.Count-1 do Bindings:=Bindings+Scope.Bindings[i];
       BeforeSql:=Bindings+Guard(Permission+' AND '+Parent+' AND (SELECT count(*)'+Item+' AND '+Scope.StringField('custom_field_dropdown_items','id')+')=1');
-      AfterSql:=Bindings+Guard(Permission+' AND '+Parent+' AND NOT EXISTS(SELECT 1'+Item+')');
-      Sql:='BEGIN IMMEDIATE; '+BeforeSql;
-      Rows:=T.Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
-      if (Length(Rows)=1) and (Rows[0][0]='table') then
-        Sql:=Sql+'UPDATE custom_fields SET dropdownItemsPresent=1 WHERE id='+Q(FieldId)+'; ';
-      Sql:=Sql+'UPDATE custom_fields SET modifiedAt='+Q(NowIso)+' WHERE id='+Q(FieldId)+'; DELETE'+Item+'; '+AfterSql+'COMMIT;';
+      Sql:='BEGIN IMMEDIATE; '+BeforeSql;ReplyId:=FieldId;
+      if Rename then
+      begin
+        Mutation:=DropdownRenameScript(T.Db,FieldId,ItemId,Name);ReplyId:=ItemId;
+        AfterSql:=Bindings+Guard(Permission+' AND '+Parent+' AND (SELECT count(*)'+Item+' AND name='+Q(Name)+' AND '+Scope.StringField('custom_field_dropdown_items','id')+')=1');
+      end
+      else
+      begin
+        AfterSql:=Bindings+Guard(Permission+' AND '+Parent+' AND NOT EXISTS(SELECT 1'+Item+')');
+        Rows:=T.Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+        if (Length(Rows)=1) and (Rows[0][0]='table') then
+          Sql:=Sql+'UPDATE custom_fields SET dropdownItemsPresent=1 WHERE id='+Q(FieldId)+'; ';
+        Mutation:='DELETE'+Item+'; ';
+      end;
+      Sql:=Sql+'UPDATE custom_fields SET modifiedAt='+Q(NowIso)+' WHERE id='+Q(FieldId)+'; '+Mutation+AfterSql+'COMMIT;';
       if not T.Db.Exec(Sql) then
-      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete dropdown item');Exit;end;
-      Reply:=TJSONObject.Create(['_id',FieldId]);
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change dropdown item');Exit;end;
+      Reply:=TJSONObject.Create(['_id',ReplyId]);
       try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
-    except SendError(aResponse,500,'Could not delete dropdown item');end;
+    except SendError(aResponse,500,'Could not change dropdown item');end;
   finally Policy.Free;Scope.Free;end;
 end;
 

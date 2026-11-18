@@ -11,7 +11,7 @@ def typed(value):
         if isinstance(item,list):return dict(t='array',i=[schema(v) for v in item])
         return dict(t='null' if item is None else 'string' if isinstance(item,str) else 'long')
     return dict(value,**{'$s':schema(value)['$s']})
-model=dict(path='settings.dropdownItems',scalar=False,fields=[dict(name='id',path='_id',kind='scalar',required=True,default=None),dict(name='name',path='name',kind='scalar',required=True,default=None),dict(name='sort',path='sort',kind='scalar',required=False,default=None)],keys=['_id'])
+model=dict(table='custom_field_dropdown_items',path='settings.dropdownItems',scalar=False,fields=[dict(name='id',path='_id',kind='scalar',required=True,default=None),dict(name='name',path='name',kind='scalar',required=True,default=None),dict(name='sort',path='sort',kind='scalar',required=False,default=None)],keys=['_id'])
 with tempfile.TemporaryDirectory(prefix='wlrelin-',dir=os.environ['TMPDIR']) as directory:
     for mode,flags in [('normal',[]),('checked',['-Cr','-Co','-Ci','-Sa'])]:
         out=Path(directory)/mode;out.mkdir()
@@ -29,6 +29,9 @@ with tempfile.TemporaryDirectory(prefix='wlrelin-',dir=os.environ['TMPDIR']) as 
             cases.append(dict(source=json.dumps(sources[1]),command=json.dumps(command),model=json.dumps(model)))
         appended=typed(dict(_id='field',unknown=9007199254740993,settings=dict(dropdownItems=[])))
         cases.append(dict(source=json.dumps(appended),command=json.dumps(dict(op='append',old={},values=dict(id='one',name='One'))),model=json.dumps(model)))
+        legacy=typed(dict(_id='field',settings=dict(dropdownItems=[dict(_id='one',name='Legacy',extra=9007199254740993)])))
+        legacy['$s']['p']['settings']['$s']['p']['dropdownItems']['i'][0]['$s']['p']['name']=dict(t='regex',o='i')
+        cases.append(dict(source=json.dumps(legacy),command=json.dumps(dict(op='update',old=dict(_id='one'),values=dict(name='Legacy'))),model=json.dumps(model)))
         result=subprocess.run([str(out/'relinit')],input=''.join(json.dumps(case)+'\n' for case in cases),capture_output=True,text=True)
         assert result.returncode==0,result.stderr
         rows=[json.loads(line) for line in result.stdout.splitlines()];assert len(rows)==len(cases)
@@ -37,7 +40,9 @@ with tempfile.TemporaryDirectory(prefix='wlrelin-',dir=os.environ['TMPDIR']) as 
             assert row['$s']['p']['unknown']==source['$s']['p']['unknown']
             assert row['$s']['p']['settings']['$s']['p']['dropdownItems']==dict(t='array',i=[])
             for key,value in source.get('settings',{}).items():assert row['settings'][key]==value
-        assert all(row==dict(error='invalid') for row in rows[3:-1]),rows
-        assert rows[-1]['settings']['dropdownItems']==[dict(_id='one',name='One')],rows[-1]
-        assert rows[-1]['$s']['p']['unknown']==appended['$s']['p']['unknown']
+        assert all(row==dict(error='invalid') for row in rows[3:-2]),rows
+        assert rows[-2]['settings']['dropdownItems']==[dict(_id='one',name='One')],rows[-2]
+        assert rows[-2]['$s']['p']['unknown']==appended['$s']['p']['unknown']
+        props=rows[-1]['$s']['p']['settings']['$s']['p']['dropdownItems']['i'][0]['$s']['p']
+        assert props['name']==dict(t='string') and props['extra']==dict(t='long'),rows[-1]
         print('PASS:',mode,'missing-only managed array initialization, typed sibling retention and existing/null/invalid-command refusal')

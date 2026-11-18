@@ -6,6 +6,7 @@ function SettingsInput(Value:TJSONData;out Settings:TJSONObject):Boolean;
 function SettingsLiteral(Settings:TJSONObject;const Name:string):string;
 function SettingsRemainder(Settings:TJSONObject):string;
 function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
+function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
 function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
 implementation
@@ -132,6 +133,34 @@ begin
     end
     else Result:=Result+'INSERT INTO custom_field_dropdown_items(customFieldId,id,name,sort) VALUES('+
       Q(Identity)+','+Q(TJSONObject(Items.Items[i]).Get('_id',''))+','+Q(TJSONObject(Items.Items[i]).Get('name',''))+','+IntToStr(i)+'); ';
+end;
+// The caller pins typed parent/item scope and model bindings around this write.
+function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
+var Rows:TWLRows;Specs:TJSONArray;Command:TJSONObject;i:Integer;Expression,TableName,SpecText:string;
+begin
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing definition source');
+  if Rows[0][0]='table' then Exit('UPDATE custom_field_dropdown_items SET name='+QuotedStr(Name)+
+    ' WHERE customFieldId='+QuotedStr(Identity)+' AND id='+QuotedStr(ItemId)+'; ');
+  if Rows[0][0]<>'view' then raise Exception.Create('Invalid definition source');
+  Rows:=Db.Query('SELECT table_name FROM _wl_models WHERE name=''custom_fields'';');
+  if Length(Rows)<>1 then raise Exception.Create('Ambiguous definition source');
+  TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Specs:=TJSONArray(GetJSON(RelationJson));SpecText:='';
+  try
+    for i:=0 to Specs.Count-1 do if Specs.Objects[i].Get('table','')='custom_field_dropdown_items' then SpecText:=Specs.Objects[i].AsJSON;
+  finally Specs.Free;end;
+  if SpecText='' then raise Exception.Create('Missing dropdown descriptor');
+  Command:=TJSONObject.Create(['op','update','old',TJSONObject.Create(['_id',ItemId]),'values',TJSONObject.Create(['name',Name])]);
+  try Expression:='wl_relation(json(_ferretdb_sjson),'+QuotedStr(Command.AsJSON)+','+QuotedStr(SpecText)+')';finally Command.Free;end;
+  Result:='UPDATE '+TableName+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(Rows[0][0])+')=''blob'' THEN jsonb('+Expression+') ELSE '+Expression+
+    ' END WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Identity)+'; '+
+    'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' p,json_each(json_extract(p._ferretdb_sjson,''$.settings.dropdownItems'')) e '+
+    'WHERE json_extract(p._ferretdb_sjson,''$._id'')='+QuotedStr(Identity)+
+    ' AND json_extract(e.value,''$._id'')='+QuotedStr(ItemId)+' AND json_type(e.value,''$.name'')=''text'' '+
+    'AND json_extract(e.value,''$.name'')='+QuotedStr(Name)+
+    ' AND json_extract(p._ferretdb_sjson,''$.$s.p.settings.$s.p.dropdownItems.i[''||e.key||''].$s.p.name.t'')=''string'')=1 '+
+    'THEN 1 ELSE json(''Dropdown name type changed'') END; ';
 end;
 function DefinitionSettings(const Stored:string;const Columns,Nulls:array of string):TJSONObject;
 const Keys:array[0..2] of string=('currencyCode','stringtemplateFormat','stringtemplateSeparator');

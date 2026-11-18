@@ -1287,6 +1287,28 @@ and at later activity creation, then compare complete stored definitions/history
 Definition edit/delete, full adminOnly/readOnly field-policy parity,
 automatic-card policies and normalized typed migration remain open.
 
+## Dropdown option rename
+
+PUT `/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem`
+renames an option by its exact once-decoded identity. JSON/form `name` must be a
+nonblank UTF-8 string without NUL. Duplicate body keys and invalid values return
+400; a missing option or foreign field/board link returns 404. Omitting `name`
+returns the option ID without changing source data or modifiedAt.
+
+A real rename shares deletion's typed scope and current board-write/binding
+guards, and writes name/modifiedAt in one transaction. It targets the current
+unique key, so an earlier array position cannot redirect the write after reorder.
+The response names the option. Array order, unknown typed data and card values
+remain intact, and native legacy presence bits are left unchanged.
+
+Shared writes explicitly establish string metadata for the name, including a
+legacy Regex with the same rendered text. The type hint carries the full existing
+array schema, preserving siblings such as Long/Date values. A final stored
+name/type check rejects a post-write type substitution before commit. Storage
+failure, account revocation and type-injection tests require complete rollback.
+`tests/optrenm.py` runs through native/shared definition HTTP tests;
+`tests/relinit.py` also checks normal/checked same-text type repair.
+
 ## Dropdown option deletion
 
 DELETE `/api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem`

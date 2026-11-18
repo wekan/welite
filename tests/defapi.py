@@ -101,6 +101,8 @@ def run_native(call, db, board, uid):
     check_settings(call,board,snapshot,stored,fail,clear)
     from optdel import run_native as check_option_delete
     check_option_delete(call,db,board,uid)
+    from optrenm import run_native as check_option_rename
+    check_option_rename(call,db,board,uid)
 
 
 
@@ -136,3 +138,5 @@ def run_shared(call, client, db, board, uid):
     check_dropdown_guards(call,db,snapshot,board)
     from optdel import run_shared as check_option_delete
     check_option_delete(call,client,db,board,uid)
+    from optrenm import run_shared as check_option_rename
+    check_option_rename(call,client,db,board,uid)

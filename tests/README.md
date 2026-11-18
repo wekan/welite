@@ -636,3 +636,10 @@ missing/malformed/repeated requests, retained card assignments, exact typed
 siblings and final-item empty arrays. Post-delete failures and account revocation
 must roll back every source change. Shared tests exclude typed key/board
 lookalikes and refuse mixed duplicate keys.
+
+`tests/optrenm.py` reuses the native/shared option fixtures for scoped PUT names:
+JSON/form Unicode/newlines, exact reserved IDs, no-op omitted names, duplicate/
+invalid/missing refusal, retained legacy presence/order/card values, exact typed
+BSON and rollback after failure, account revocation or type substitution. The
+normal/checked `relinit.py` kernel cases include same-text Regex-to-string repair
+without changing Long sibling metadata.
