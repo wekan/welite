@@ -883,7 +883,7 @@
   "email-smtp-test-text": "لقد أرسلت رسالة بريد إلكتروني بنجاح",
   "error-invitation-code-not-exist": "رمز الدعوة غير موجود",
   "error-notAuthorized": "أنتَ لا تملك الصلاحيات لرؤية هذه الصفحة.",
-  "webhook-title": "نام وب‌هوک",
+  "webhook-title": "اسم خطاف الويب",
   "webhook-token": "توکن (انتخابی برای اعتبارسنجی)",
   "outgoing-webhooks": "الويبهوك الصادرة",
   "bidirectional-webhooks": "وب‌هوک two-way",
