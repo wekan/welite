@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Pass upstream custom-field update and deletion specs
+
+- Pass all seven REST cases on shared linked SQLite. Verify accepted names
+  and scoped deletion on the HTML board with JavaScript and cookies disabled.
+  The board retains sibling fields and their values.
+
 ## 2026-11-18 Verify the upstream Version Control Attachments workflow
 
 - Open the board's HTML attachment list to preview raster images, download
