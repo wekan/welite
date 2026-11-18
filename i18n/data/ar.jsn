@@ -2113,5 +2113,6 @@
   "enrollment-confirmed-instructions": "تم استخدام رمز التأكيد. انتظر رمزًا جديدًا في تطبيق المصادقة قبل تسجيل الدخول.",
   "enrollment-account-created": "تم إنشاء الحساب",
   "registration-first-admin": "سيكون هذا الحساب الأول هو حساب المسؤول العام للنطاق.",
-  "auth-too-many-attempts": "محاولات تسجيل دخول كثيرة جدًا. حاول مجددًا لاحقًا."
+  "auth-too-many-attempts": "محاولات تسجيل دخول كثيرة جدًا. حاول مجددًا لاحقًا.",
+  "enrollment-setup-failed": "تعذّر بدء الإعداد"
 }

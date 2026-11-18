@@ -2112,5 +2112,6 @@
   "enrollment-confirmed-instructions": "The confirmation code has been used. Wait for a new code in your authenticator before signing in.",
   "enrollment-account-created": "Account created",
   "registration-first-admin": "This first account will be the Domain Global Admin.",
-  "auth-too-many-attempts": "Too many login attempts. Try again later."
+  "auth-too-many-attempts": "Too many login attempts. Try again later.",
+  "enrollment-setup-failed": "Could not start setup"
 }

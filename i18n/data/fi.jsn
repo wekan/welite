@@ -2113,5 +2113,6 @@
   "enrollment-confirmed-instructions": "Vahvistuskoodi on käytetty. Odota todennussovelluksen uutta koodia ennen kirjautumista.",
   "enrollment-account-created": "Tili luotu",
   "registration-first-admin": "Ensimmäisestä tilistä tulee verkkotunnuksen pääkäyttäjä.",
-  "auth-too-many-attempts": "Liian monta kirjautumisyritystä. Yritä myöhemmin uudelleen."
+  "auth-too-many-attempts": "Liian monta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
+  "enrollment-setup-failed": "Käyttöönottoa ei voitu aloittaa"
 }

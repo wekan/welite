@@ -304,7 +304,7 @@ begin
     end;
     try
       if not StartOTPEnrollment(T.Db,Proof,EnrollmentBinding(Request),Token,Secret) then
-      begin AuthError(Request,Response,500,'two-factor-required-title','One-time codes','Could not start setup');Exit;end;
+      begin AuthError(Request,Response,500,'two-factor-required-title','One-time codes','Could not start setup','enrollment-setup-failed');Exit;end;
       Body:='<h1>'+HtmlEncode(Title)+'</h1><p>'+HtmlEncode(Words.Text('username','Username'))+
         ': '+HtmlEncode(Username)+'</p>'+
         '<p>'+HtmlEncode(Words.Text('twoFactorAuth-manual-entry','Or enter this code manually: '))+'<code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+

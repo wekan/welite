@@ -121,6 +121,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 try:
                     failed=request('POST','/two-factor/setup?lang=fi',dict(username='frame-fail',password='test-password'))
                     assert failed[0]==500;check_auth_error(failed,'fi',private=True,title_key='two-factor-required-title')
+                    assert '<p>Käyttöönottoa ei voitu aloittaa</p>'.encode() in failed[2]
                     assert services('frame-fail')==failure_before
                     with sqlite3.connect(db) as con:
                         assert con.execute("SELECT count(*) FROM _wl_enrol WHERE username='frame-fail'").fetchone()==(0,)
