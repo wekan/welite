@@ -351,6 +351,30 @@ Verbose output goes to `build/log/xtools.log`.
 
 ---
 
+## AmigaOS 4 PowerPC builds on ARM64 Linux
+
+Build vasm with `CPU=ppc SYNTAX=std`. Put it, vlink 0.18a and the host
+resource compiler in a private directory as `powerpc-amiga-vasmppc_std`,
+`powerpc-amiga-vlink` and `powerpc-amiga-fpcres`. Build and install the FPC
+cross compiler and packages as for m68k, using `CPU_TARGET=powerpc` and
+`BINUTILSPREFIX=powerpc-amiga-`.
+
+Compile each variant in its own output directory with the corresponding
+target units and `-n -Tamiga -O2 -XV -Avasm -dWLDB_CLI -Cn -Xs`. For the
+embedded variant generate the resources, compile the RC file to
+`wlpublic.res` with host `fpcres`, and add `-dWLEMBED`. In the generated
+response file named by `ppas.sh`, change `*(.fpc)` to
+`*(.fpc .fpc.*)` to recognize the version section. For the embedded build
+also add `.note.GNU-stack : { *(.note.GNU-stack) }` inside `SECTIONS` to
+handle the note in the resource object. Run the generated `ppas.sh` to
+link with the `elf32amigaos` target.
+
+Both variants link to 32-bit big-endian PowerPC ELF executables. The
+embedded executable contains exact copies of the public robots file,
+Arabic catalog and both private SQL scripts. These checks cover build
+output. Resource loading, a target SQLite CLI, server startup and HTTP
+remain to be verified on AmigaOS 4.
+
 ## SQLite: why cross builds use `-dWLDB_CLI`
 
 `welite`'s default build links `libsqlite3` (`uses sqlite3`). That can't be **cross-linked** — the
@@ -387,7 +411,7 @@ A `-dWLDB_CLI` binary needs the `sqlite3` command-line tool present at runtime o
 | DOS            | i386-go32v2     | needs x-bins | no aarch64-host crossbins |
 | Haiku          | x86_64-haiku    | needs x-bins | no aarch64-host crossbins |
 | Amiga m68k     | m68k-amiga      | builds | CLI SQLite builds link from ARM64 Linux, runtime pending |
-| AmigaOS 4.1 PPC| powerpc-amiga   | needs x-bins | no aarch64-host crossbins |
+| AmigaOS 4.1 PPC| powerpc-amiga   | **links** | disk/embedded CLI ELF, runtime unverified |
 | MorphOS        | powerpc-morphos | needs x-bins | no aarch64-host crossbins |
 | AROS x86/amd64/arm64/m68k/ppc | *-aros | needs x-bins | no aarch64-host crossbins |
 
