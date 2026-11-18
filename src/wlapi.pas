@@ -1156,13 +1156,55 @@ end;
 
 procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"Integration not found"}';
-var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload:string;
+var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded:string;
   Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading:Boolean;
   Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
   procedure Missing;
   begin
     if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
   end;
+  function UpdateStatement:Boolean;
+  var Update,Original:TJSONObject;Value:TJSONData;Index,PropertyIndex:Integer;Name:string;
+  begin
+    Result:=False;Update:=nil;Original:=nil;
+    try
+      try
+        if aRequest.Content='' then Update:=TJSONObject.Create else Update:=ExactObject(aRequest.Content);
+        for PropertyIndex:=0 to Update.Count-1 do
+        begin
+          Name:=Update.Names[PropertyIndex];
+          Value:=Update.Find(Name);
+          case Name of
+            'title': if (not (Value is TJSONString)) or (Pos(#0,Value.AsString)>0) then Exit;
+            'enabled': if not (Value is TJSONBoolean) then Exit;
+            'activities':
+              begin
+                if not (Value is TJSONArray) then Exit;
+                for Index:=0 to Value.Count-1 do
+                  if not (Value.Items[Index] is TJSONString) or (Pos(#0,Value.Items[Index].AsString)>0) then Exit;
+              end;
+          else Exit;
+          end;
+        end;
+        if Update.Count>0 then
+        begin
+          Original:=ExactObject(PlainDocument(Raw));
+          for PropertyIndex:=0 to Update.Count-1 do
+          begin
+            Name:=Update.Names[PropertyIndex];
+            Original.Delete(Name);Original.Add(Name,Update.Find(Name).Clone);
+          end;
+          Encoded:=QuotedStr(TypedDocument(Original.AsJSON,Raw,'{}'));
+          Mutation:='UPDATE '+TableName+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(Source)+
+            ')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END WHERE '+Scope+'; '+
+            'SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
+            ' AND json(_ferretdb_sjson)=json('+Encoded+')) THEN 1 ELSE json(''Integration update failed'') END; ';
+        end;
+        Result:=True;
+      except Result:=False;end;
+    finally Original.Free;Update.Free;end;
+  end;
+
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -1187,15 +1229,25 @@ begin
   if Id<>'' then Scope:=Scope+' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id);
   if not Reading then
   begin
-    if (Id='') or (Length(T.Db.Query('SELECT 1 FROM '+TableName+' WHERE '+Scope+';'))<>1) then
-    begin Missing;Exit;end;
-    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM _ferretdb_collections '+
+    Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
+    if (Id='') or (Length(Rows)<>1) then begin Missing;Exit;end;
+    Raw:=Rows[0][0];Mutation:='';
+    if aRequest.Method='PUT' then
+    begin
+      if not UpdateStatement then
+      begin SendJson(aResponse,'{"error":"Invalid or unsupported integration update"}',400);Exit;end;
+    end
+    else
+      Mutation:='DELETE FROM '+TableName+' WHERE '+Scope+
+        '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
+        ') THEN 1 ELSE json(''Integration deletion failed'') END; ';
+    Guard:=Permission+' AND (SELECT count(*) FROM _ferretdb_collections '+
       'WHERE name=''integrations'' AND table_name='+QuotedStr(Source)+')=1 AND (SELECT count(*) FROM '+TableName+
-      ' WHERE '+Scope+')=1 THEN 1 ELSE json(''Integration scope changed'') END; DELETE FROM '+TableName+' WHERE '+Scope+
-      '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
-      ') THEN 1 ELSE json(''Integration deletion failed'') END; COMMIT;';
+      ' WHERE '+Scope+' AND json(_ferretdb_sjson)='+QuotedStr(Raw)+')=1';
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Integration scope changed'') END; '+
+      Mutation+'COMMIT;';
     if not T.Db.Exec(Sql) then
-    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete integration');Exit;end;
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change integration');Exit;end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
   end;
   Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');

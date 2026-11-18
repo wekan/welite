@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Update shared integration settings through REST
+
+- Let board administrators edit integration titles, enabled flags, and
+  activity selections atomically while preserving unrelated fields.
+
 ## 2026-11-18 Read and delete shared integrations through REST
 
 - Scope integration reads and deletes to the requested board. Hide tokens

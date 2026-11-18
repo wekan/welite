@@ -162,7 +162,7 @@ end;
   translations tree (`i18n/langs.jsn` + `i18n/data/`) from disk or embedded in the binary.
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
-  - [ ] Implement REST integration creation and updates, including safe
+  - [ ] Implement REST integration creation and destination updates, including safe
     destination validation. Run all four upstream API integration cases once
     their creation fixture works. Native integration storage remains open.
 

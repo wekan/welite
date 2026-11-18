@@ -519,6 +519,17 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 integration=json.loads(body)
                 assert integration['_id']=='fixture-webhook' and 'token' not in integration
                 assert json.loads(request('GET','/api/boards/b/integrations',token=token)[2])==[integration]
+                before_integration=client.find('integrations','fixture-webhook')[0]
+                settings=dict(title='Updated webhook',enabled=False,activities=[])
+                status,_,body=request('PUT',integration_path,settings,token)
+                assert status==200 and json.loads(body)==dict(_id='fixture-webhook')
+                updated=client.find('integrations','fixture-webhook')[0]
+                assert updated==dict(before_integration,**settings)
+                status,_,body=request('PUT',integration_path,dict(title='Invalid',activities=[False]),token)
+                assert status==400 and client.find('integrations','fixture-webhook')[0]==updated
+                assert request('PUT',integration_path,{},token)[0]==200
+                assert client.find('integrations','fixture-webhook')[0]==updated
+                print('PASS: shared integration metadata updates preserve credentials and reject invalid edits atomically')
                 assert request('DELETE',integration_path)[0]==401
                 status,_,body=request('DELETE','/api/boards/b/integrations/missing',token=token)
                 assert status==404 and json.loads(body)==dict(error='Integration not found')
@@ -529,6 +540,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('GET',delete_integration,token=token)[0]==404
                 assert client.find('integrations','fixture-webhook') and not client.find('integrations','remove-webhook')
                 print('PASS: shared REST integration reads redact tokens and scoped deletion leaves siblings intact')
+                assert request('PUT',integration_path,dict(enabled=True),token)[0]==200
                 status,_,body=request('POST','/api/boards/b/copy',dict(title='Rule copy'),token)
                 assert status==200,(status,body)
                 copy_id=json.loads(body)
