@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Backfill always-on custom fields on existing cards
+
+- Enabling always-on for a single-board definition fills missing values with
+  null on existing board cards. Assigned values and cards on other boards are
+  left in place. The definition update and backfill roll back together.
+
 ## 2026-11-18 Reconcile implementation and platform documentation
 
 - Document the current tenant layout, authentication, SQLite modes and build entry

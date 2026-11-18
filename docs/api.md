@@ -153,8 +153,8 @@ SQLite DB.
 Definition PUT and DELETE support definitions owned by a single board. Deleting a
 definition removes its card values on that board. Deleting a dropdown option keeps
 existing card selections. New API cards initialize automatic and always-on
-fields as null. Existing-card backfill and multi-board definition mutations are
-still tracked in [TODO.md](../TODO.md).
+fields as null. Enabling always-on backfills missing values on existing cards.
+Multi-board definition mutations are tracked in [TODO.md](../TODO.md).
 
 ## Notes & TODO
 

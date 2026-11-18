@@ -751,7 +751,7 @@ const CustomFieldNotFound = '{"error":"Custom field not found"}';
 procedure ApiUpdateCustomField(aRequest:TRequest;aResponse:TResponse);
 const Keys:array[0..6] of string=('name','type','showOnCard','automaticallyOnCard','alwaysOnCard',
   'showLabelOnMiniCard','showSumAtTopOfList');
-var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Changes,SettingsSql,Guards,ValueSql,TextValue:string;
+var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Changes,SettingsSql,Guards,ValueSql,TextValue,BackfillSql:string;
   Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;Doc,Settings,Reply:TJSONObject;
   Value:TJSONData;i,FlagValue:Integer;
   function Guard(const Condition:string):string;
@@ -784,7 +784,7 @@ begin
         for i:=0 to aRequest.ContentFields.Count-1 do
           Doc.Add(aRequest.ContentFields.Names[i],aRequest.ContentFields.ValueFromIndex[i]);
       end;
-      Changes:='';
+      Changes:='';BackfillSql:='';
       for i:=0 to High(Keys) do
       begin
         Value:=Doc.Find(Keys[i]);if Value=nil then Continue;
@@ -798,6 +798,12 @@ begin
         end else begin
           if not DefinitionFlag(Value,FlagValue) then raise Exception.Create('Invalid definition flag');
           ValueSql:=IntToStr(FlagValue);
+          if (Keys[i]='alwaysOnCard') and (FlagValue=1) then
+            BackfillSql:='INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT id,'+
+              QuotedStr(FieldId)+',NULL FROM cards WHERE boardId='+QuotedStr(BoardId)+
+              ' AND '+Scope.StringField('cards','boardId')+
+              ' AND NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE cardId=cards.id AND customFieldId='+
+              QuotedStr(FieldId)+'); ';
         end;
         Changes:=Changes+Keys[i]+'='+ValueSql+',';
       end;
@@ -812,7 +818,7 @@ begin
       if (Changes<>'') or (SettingsSql<>'') then
       begin
         Sql:='BEGIN IMMEDIATE; '+Guards+Guard(Permission)+'UPDATE custom_fields SET '+Changes+
-          'modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(FieldId)+'; '+SettingsSql+Guards+Guard(Permission)+'COMMIT;';
+          'modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(FieldId)+'; '+SettingsSql+BackfillSql+Guards+Guard(Permission)+'COMMIT;';
         if not T.Db.Exec(Sql) then
         begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update custom field');Exit;end;
       end;
