@@ -27,6 +27,22 @@ const { readFileSync } = require('node:fs');
     assert.equal(await initial.headerValue('set-cookie'), null);
     assert.equal(await card.count(), 1);
 
+    for (const [operation, archived] of [['archive', true], ['unarchive', false]]) {
+      const path = endpoint('l') + '/' + operation;
+      assert.equal((await context.request.post(path)).status(), 401);
+      const response = await context.request.post(path, { headers });
+      assert.equal(response.status(), 200);
+      const saved = await response.json();
+      assert.equal(saved._id, 'brow-card');
+      assert.equal(saved.archived, archived);
+      await page.reload();
+      assert.equal(await card.count(), archived ? 0 : 1);
+      const repeated = await context.request.post(path, { headers });
+      assert.equal(repeated.status(), 404);
+      assert.deepEqual(await repeated.json(), { error: 'Card not found' });
+    }
+    console.log('PASS: Chromium reflects REST archive and restore with JavaScript and cookies disabled');
+
     const wrong = await context.request.delete(endpoint('brow-list'), { headers });
     assert.equal(wrong.status(), 404);
     assert.deepEqual(await wrong.json(), { error: 'Card not found' });
