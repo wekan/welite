@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 
 from layout import Forms
 
-from wire import DateMs, encode
+from wire import Binary, DateMs, Long, ObjectId, Timestamp, encode
 
 
 def run(request, client, db, token, refresh_ferret, session):
@@ -229,6 +229,15 @@ def run(request, client, db, token, refresh_ferret, session):
             if isinstance(value, DateMs):
                 value=datetime.fromtimestamp(int(value)/1000,timezone.utc)
                 return {'$date':value.isoformat(timespec='milliseconds').replace('+00:00','Z')}
+            if isinstance(value, Timestamp) or (isinstance(value, Long) and abs(value) > 2**53):
+                signed = lambda part: part if part < 2**31 else part - 2**32
+                return {'high': signed(value >> 32 & 0xffffffff), 'low': signed(value & 0xffffffff),
+                        'unsigned': isinstance(value, Timestamp)}
+            if isinstance(value, ObjectId):
+                return {f'i{i}': int.from_bytes(value[i*3:i*3+3], 'big') for i in range(4)}
+            if isinstance(value, Binary):
+                return {'buffer': {str(i): byte for i, byte in enumerate(value)},
+                        'position': len(value), 'sub_type': value.subtype}
             if isinstance(value,dict):
                 return {key:canonical_dates(item) for key,item in value.items()}
             if isinstance(value,list):
@@ -237,13 +246,18 @@ def run(request, client, db, token, refresh_ferret, session):
         def digest(value):
             return hashlib.sha256(json.dumps(canonical_dates(value),sort_keys=True,
                 ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
-        for scenario in ('saved','unsaved','card','undefined','cleaned','combined'):
+        for scenario in ('saved','unsaved','card','bson','undefined','cleaned','combined'):
             saved=dict(current,_id='wekan-'+scenario+'-reservation',entityId='other-list',listId='other-list',
                        previousHash=head['hash'])
             if scenario=='card':
                 saved.update(entityType='card', entityId='card-a', cardId='card-a', group='position',
                              previousContent={'position': 0, 'values': []},
                              newContent={'position': 2.125, 'values': [True, None, DateMs(123), {'deletedAt': 'literal'}]})
+            if scenario=='bson':
+                saved['newContent']={'long': Long(9223372036854775807),
+                                     'timestamp': Timestamp(0xfffffffffffffffe),
+                                     'objectId': ObjectId(bytes.fromhex('00112233445566778899aabb')),
+                                     'binary': Binary(bytes(range(16)), 4)}
             protected=('batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
                        'group','listId','newContent','previousContent','previousHash','restoredByUserId',
                        'restoredFromId','swimlaneId','userId')
@@ -265,7 +279,7 @@ def run(request, client, db, token, refresh_ferret, session):
             assert recovered['pending'] is None and recovered['pendingHash'] is None,recovered
             new,=client.command({'find':'changeHistory','filter':dict(integrityHash=recovered['hash'])})['cursor']['firstBatch']
             assert new['previousHash']==saved['integrityHash'] and new['changeType']=='removed'
-            assert client.find('changeHistory',saved['_id'])==[saved]
+            assert encode(client.find('changeHistory',saved['_id'])[0])==encode(saved)
             assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
             head=client.find('historyChainHeads',head_id)[0]
         print('PASS: coordinated lifecycle finalizes saved and unsaved list, card and legacy reservations before appending')

@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Recover coordinated history with additional BSON types
+
+- Hash Long, Timestamp, ObjectId and Binary as WeKan’s Mongo driver
+  reads them, then preserve their exact BSON values during recovery.
+
 ## 2026-11-18 Recover coordinated reservations with legacy row hashes
 
 - Accept the legacy digest forms WeKan verifies for omitted undefined

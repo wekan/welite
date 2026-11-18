@@ -77,10 +77,27 @@ for variant in ('undefined', 'cleaned', 'combined', 'tampered'):
         row['newContent']['added'] = 3
     rows.append(dict(row, **{'$s': typed(row)['$s']}))
 
+bson_fields = {
+    'long': (9223372036854775807, {'t': 'long'}),
+    'negativeLong': (-9223372036854775808, {'t': 'long'}),
+    'promotedLong': (9007199254740992, {'t': 'long'}),
+    'timestamp': (18446744073709551614, {'t': 'timestamp'}),
+    'objectId': ('00112233445566778899aabb', {'t': 'objectId'}),
+    'binary': ('ABEiM0RVZneImaq7zN3u/w==', {'t': 'binData', 's': 4}),
+    'emptyBinary': ('', {'t': 'binData', 's': 0}),
+}
+row = dict(card, newContent={key: value for key, (value, _) in bson_fields.items()})
+schema = typed(row)['$s']
+schema['p']['createdAt']['t'] = 'date'
+schema['p']['newContent']['$s']['p'] = {key: field for key, (_, field) in bson_fields.items()}
+rows.append(dict(row, **{'$s': schema}))
+
 payload = ''.join(json.dumps(row, ensure_ascii=False)+'\n' for row in rows)
 node = r"""
 const { hashHistoryRow, rowHashIsValid, canonical, sha256 } = require(process.argv[1]);
 const fs = require('node:fs');
+const { Binary, Long, ObjectId, Timestamp, serialize, deserialize } =
+  require(require.resolve('bson', { paths: [require('node:path').dirname(process.argv[1])] }));
 for (const line of fs.readFileSync(0, 'utf8').trimEnd().split('\n')) {
   function decode(value, schema) {
     switch (schema.t) {
@@ -88,11 +105,18 @@ for (const line of fs.readFileSync(0, 'utf8').trimEnd().split('\n')) {
         ([key, item]) => [key, decode(value[key], item)]));
       case 'array': return value.map((item, index) => decode(item, schema.i[index]));
       case 'date': return new Date(value);
+      case 'long': return Long.fromBigInt(BigInt(value));
+      case 'timestamp': return new Timestamp({ t: Number(BigInt(value) >> 32n),
+                                                i: Number(BigInt(value) & 0xffffffffn) });
+      case 'objectId': return new ObjectId(value);
+      case 'binData': return new Binary(Buffer.from(value, 'base64'), schema.s);
       default: return value;
     }
   }
-  const input = JSON.parse(line);
-  const row = input.$s ? decode(input, { t: 'object', $s: input.$s }) :
+  const input = JSON.parse(line, (_key, value, context) =>
+    typeof value === 'number' && !Number.isSafeInteger(value) && /^-?\d+$/.test(context.source)
+      ? BigInt(context.source) : value);
+  const row = input.$s ? deserialize(serialize(decode(input, { t: 'object', $s: input.$s }))) :
     JSON.parse(line, (key, value) =>
       (key === 'createdAt' || key === 'deletedAt') && typeof value === 'string' ? new Date(value) : value);
   console.log(rowHashIsValid(row) ? row.integrityHash : hashHistoryRow(row), sha256(canonical(row)));

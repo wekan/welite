@@ -11,7 +11,7 @@ procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string
   const LegacyHash:string='';const ExpectedPendingHash:string='');
 
 implementation
-uses SysUtils,Classes,Math,StrUtils,wlcrypt,wlcfjson,wlsjson;
+uses SysUtils,Classes,Math,StrUtils,base64,wlcrypt,wlcfjson,wlsjson;
 
 const ProtectedKeys:array[0..15] of string=(
   'batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
@@ -318,8 +318,51 @@ begin
   finally Keys.Free;end;
 end;
 
+// These are the enumerable properties of the BSON values returned by
+// WeKan's Mongo driver with default promotions (bson 7.3.3).
+function CanonicalBsonInteger(Bits:QWord;Unsigned:Boolean):string;
+var LowBits,HighBits:LongWord;LowValue,HighValue:LongInt;
+begin
+  LowBits:=LongWord(Bits and $ffffffff);
+  HighBits:=LongWord(Bits shr 32);
+  Move(LowBits,LowValue,SizeOf(LowValue));
+  Move(HighBits,HighValue,SizeOf(HighValue));
+  Result:='{"high":'+IntToStr(HighValue)+',"low":'+IntToStr(LowValue)+',"unsigned":';
+  if Unsigned then Result:=Result+'true}' else Result:=Result+'false}';
+end;
+
+function CanonicalBinary(const Encoded:string;Subtype:Integer):string;
+var Bytes:string;Output:TStringStream;
+
+  procedure WriteByte(Index:Integer);
+  begin
+    if Index<>0 then Output.WriteString(',');
+    Output.WriteString('"'+IntToStr(Index)+'":'+IntToStr(Ord(Bytes[Index+1])));
+  end;
+
+  procedure WritePrefix(Index:Integer);
+  var Digit:Integer;
+  begin
+    if Index>=Length(Bytes) then Exit;
+    WriteByte(Index);
+    for Digit:=0 to 9 do WritePrefix(Index*10+Digit);
+  end;
+
+var Digit:Integer;
+begin
+  Bytes:=DecodeStringBase64(Encoded,True);
+  Output:=TStringStream.Create('{"buffer":{');
+  try
+    Output.Position:=Output.Size;
+    if Length(Bytes)>0 then WriteByte(0);
+    for Digit:=1 to 9 do WritePrefix(Digit);
+    Output.WriteString('},"position":'+IntToStr(Length(Bytes))+',"sub_type":'+IntToStr(Subtype)+'}');
+    Result:=Output.DataString;
+  finally Output.Free;end;
+end;
+
 function ReservationValue(Value,Schema:TJSONData):string;
-var Kind:string;Items,Date:TJSONData;Number:Double;I:Integer;
+var Kind:string;Items,Date:TJSONData;Number:Int64;Bits:QWord;I:Integer;
 begin
   if Value=nil then Exit('{"$undefined":true}');
   Kind:=TJSONObject(Schema).Get('t','');
@@ -341,13 +384,27 @@ begin
       end;
     'int','long':
       begin
-        // Exact safe integers have the same decimal spelling in Pascal and JavaScript.
-        if Value.JSONType<>jtNumber then raise Exception.Create('Invalid history reservation number');
-        Number:=Value.AsFloat;
-        if (Abs(Number)>9007199254740991.0) or (Number<>Trunc(Number)) then
-          raise Exception.Create('Unsupported history reservation number');
-        Result:=IntToStr(Trunc(Number));
+        Number:=StrToInt64(Value.AsJSON);
+        if (Number>= -9007199254740992) and (Number<=9007199254740992) then
+          Result:=IntToStr(Number)
+        else
+        begin
+          Move(Number,Bits,SizeOf(Bits));
+          Result:=CanonicalBsonInteger(Bits,False);
+        end;
       end;
+    'timestamp':Result:=CanonicalBsonInteger(StrToQWord(Value.AsJSON),True);
+    'objectId':
+      begin
+        Result:='{';
+        for I:=0 to 3 do
+        begin
+          if I<>0 then Result:=Result+',';
+          Result:=Result+'"i'+IntToStr(I)+'":'+IntToStr(StrToInt('$'+Copy(Value.AsString,1+I*6,6)));
+        end;
+        Result:=Result+'}';
+      end;
+    'binData':Result:=CanonicalBinary(Value.AsString,TJSONObject(Schema).Get('s',0));
     'object':
       Result:=ReservationObject(TJSONObject(Value),TJSONObject(TJSONObject(Schema).Objects['$s'].Find('p')));
     'array':
