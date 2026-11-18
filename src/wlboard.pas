@@ -11,6 +11,7 @@ procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
+procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
 uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
@@ -22,6 +23,12 @@ end;
 function AttachmentUploadAction(const Board,Card:string):string;
 begin
   Result:='board:attachment-upload:'+IntToStr(Length(Board))+':'+Board+Card;
+end;
+
+function AttachmentRenameAction(const Board,Card,Id:string):string;
+begin
+  Result:='board:attachment-rename:'+IntToStr(Length(Board))+':'+Board+
+    IntToStr(Length(Card))+':'+Card+Id;
 end;
 
 function ActiveCardAttachments(Db:TWLDb;Selector:TSelectionScope;const Board,Card:string):string;
@@ -456,7 +463,7 @@ end;
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
   Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel,FieldsHtml:string;
-  Rows,Subtasks,Checklists,Items,Files:TWLRows;Subtask,Checklist,Item,Attached:TWLRow;Open,Snapshot:Boolean;
+  Rows,Subtasks,Checklists,Items,Files:TWLRows;Subtask,Checklist,Item,Attached:TWLRow;Open,Snapshot,Writable:Boolean;
   function Assignments(const TableName,Caption:string):string;
   var Names:TWLRows;Name:TWLRow;
   begin
@@ -527,17 +534,28 @@ begin
                 Body:=Body+'</ul>';
               end;
               Files:=nil;
+              Writable:=(S.UserId<>'') and BoardCanWrite(T.Db,S.UserId,Board);
               if S.UserId<>'' then Files:=T.Db.Query('SELECT id,name FROM attachments WHERE '+ActiveCardAttachments(T.Db,Selector,Board,Card)+
                 ' ORDER BY createdAt,id;');
               if Length(Files)>0 then
               begin
                 Body:=Body+'<h2>'+HtmlEncode(Words.Text('attachments','Attachments'))+'</h2><ul>';
                 for Attached in Files do
+                begin
                   Body:=Body+'<li><a href="'+HtmlAttr(SessionUrl('/board/attachment?id='+HTTPEncode(Board)+
-                    '&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]),S))+'">'+HtmlEncode(Attached[1])+'</a></li>';
+                    '&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]),S))+'">'+HtmlEncode(Attached[1])+'</a>';
+                  if Writable then
+                    Body:=Body+'<form method="POST" action="'+HtmlAttr('/board/attachment/rename?id='+
+                      HTTPEncode(Board)+'&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]))+'">'+
+                      AuthHiddenFields(S,AttachmentRenameAction(Board,Card,Attached[0]))+
+                      '<label>'+HtmlEncode(Words.Text('rename','Rename'))+
+                      ' <input name="name" required value="'+HtmlAttr(ChangeFileExt(Attached[1],''))+'"></label> '+
+                      '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'"></form>';
+                  Body:=Body+'</li>';
+                end;
                 Body:=Body+'</ul>';
               end;
-              if (S.UserId<>'') and BoardCanWrite(T.Db,S.UserId,Board) then
+              if Writable then
                 Body:=Body+'<form method="POST" enctype="multipart/form-data" action="/board/attachment/upload?id='+
                   HtmlAttr(HTTPEncode(Board)+'&card='+HTTPEncode(Card))+'">'+
                   AuthHiddenFields(S,AttachmentUploadAction(Board,Card))+
@@ -705,6 +723,68 @@ begin
   if FileType='' then FileType:='application/octet-stream';
   if not StoreAttachment(T,S.UserId,Board,Rows[0][0],Rows[0][1],Card,Upload.FileName,FileType,Stream,Id,True) then
   begin Reject(500,'upload-failed','Upload failed');Exit;end;
+  aResponse.Code:=303;
+  aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+  aResponse.SendContent;
+end;
+
+procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Board,Card,Id,Name,Scope,CardScope,Guard,Sql:string;
+  Rows:TWLRows;Selector:TSelectionScope;Policy:TFieldPolicy;I:Integer;
+  procedure Reject(Status:Integer);
+  var Language:TWLLanguage;Words:TWLTranslator;
+  begin
+    Language:=ViewerLanguage(T.Db,S,aRequest);
+    Words:=TWLTranslator.Create(Language);
+    try
+      aResponse.Code:=Status;
+      aResponse.ContentType:='text/html; charset=utf-8';
+      aResponse.Content:=LanguagePage(aResponse,Language,Words.Text('error','Error'),
+        '<p>'+HtmlEncode(Words.Text('error','Error'))+'</p>');
+      aResponse.SendContent;
+    finally Words.Free;end;
+  end;
+begin
+  T:=Default(TWLTenant);S:=Default(TWLSession);
+  if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
+  begin Reject(404);Exit;end;
+  if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) then
+  begin Reject(403);Exit;end;
+  S.LanguageTag:=RequestLanguageTag(aRequest);
+  Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];
+  Id:=aRequest.QueryFields.Values['file'];Name:=Trim(aRequest.ContentFields.Values['name']);
+  if (Board='') or (Card='') or (Id='') or (Name='') or (Name='.') or (Name='..') or
+    (Pos(#0,Board+Card+Id)>0) or (Pos('/',Name)>0) or (Pos(#92,Name)>0) then
+  begin Reject(400);Exit;end;
+  for I:=1 to Length(Name) do
+    if (Name[I]<#32) or (Name[I]=#127) then
+    begin Reject(400);Exit;end;
+  if not BoardCanWrite(T.Db,S.UserId,Board) or
+    not VerifyActionToken(aRequest,S,AttachmentRenameAction(Board,Card,Id)) then
+  begin Reject(403);Exit;end;
+  Selector:=TSelectionScope.Create(T.Db);
+  Policy:=nil;
+  try
+    Policy:=TFieldPolicy.Create(T.Db,S.UserId,Board,'');
+    CardScope:='id='+QuotedStr(Card)+' AND boardId='+QuotedStr(Board)+
+      ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
+      ' AND '+Selector.StringField('cards','boardId');
+    Scope:='id='+QuotedStr(Id)+' AND '+ActiveCardAttachments(T.Db,Selector,Board,Card)+
+      ' AND (SELECT count(*) FROM cards WHERE '+CardScope+')=1';
+    Rows:=T.Db.Query('SELECT name FROM attachments WHERE '+Scope+';');
+    if Length(Rows)<>1 then
+    begin Reject(404);Exit;end;
+    Name:=Name+ExtractFileExt(Rows[0][0]);
+    Scope:=Scope+' AND name='+QuotedStr(Rows[0][0]);
+    Guard:='';
+    for I:=0 to Selector.Bindings.Count-1 do Guard:=Guard+Selector.Bindings[I];
+    Sql:='BEGIN IMMEDIATE; '+Guard+'SELECT CASE WHEN '+Policy.ScopeBoardExpression(True)+
+      ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 '+
+      'ELSE json(''Attachment scope changed'') END; UPDATE attachments SET name='+QuotedStr(Name)+
+      ' WHERE '+Scope+'; COMMIT;';
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');Reject(500);Exit;end;
+  finally Policy.Free;Selector.Free;end;
   aResponse.Code:=303;
   aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
   aResponse.SendContent;

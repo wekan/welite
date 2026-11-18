@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Rename card attachments from HTML
+
+- Board writers can rename a card attachment from a form. Keep its extension,
+  storage identifier, and bytes. Verify the rename and rejection of a missing
+  form token with JavaScript and cookies disabled on linked and CLI SQLite.
+
 ## 2026-11-18 Pass the upstream card attachment cascade spec
 
 - Verify single and bulk REST card deletion and HTML selection deletion on

@@ -678,6 +678,7 @@ begin
   HTTPRouter.RegisterRoute('/board/card', rmGet, @BoardCardEndpoint);
   HTTPRouter.RegisterRoute('/board/card/dropdown', rmPost, @BoardDropdownEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment/upload', rmPost, @BoardAttachmentUploadEndpoint);
+  HTTPRouter.RegisterRoute('/board/attachment/rename', rmPost, @BoardAttachmentRenameEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment', rmGet, @BoardAttachmentEndpoint);
   HTTPRouter.RegisterRoute('/board/export', rmGet, @BrowserBoardExport);
   HTTPRouter.RegisterRoute('/board/webhooks', rmGet, @BrowserIntegrations);
