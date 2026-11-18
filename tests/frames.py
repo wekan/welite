@@ -1,5 +1,7 @@
 """Consistent viewer metadata on normal page frames and posted selection forms."""
+from html import escape
 from html.parser import HTMLParser
+from pathlib import Path
 import json
 import sqlite3
 from layout import Forms
@@ -50,14 +52,16 @@ def check_frames(request,database,session,editor,member):
             assert document.html['lang']==tag
             assert (document.html.get('dir')=='rtl')==(tag=='ar')
             assert (document.body.get('dir')=='rtl')==(tag=='ar')
+            return body
         missing='/designer/page?id=missing-frame&sessionId='+session
         error('POST','/admin/people',dict(sessionId=session),403)
         error('POST','/admin/people',dict(sessionId=session,lang='fi'),403,'fi')
-        error('GET',missing,None,404)
-        error('GET',missing+'&lang=fi',None,404,'fi')
         export='/designer/page/export?id=missing-frame&sessionId='+session
-        error('GET',export,None,404)
-        error('GET',export+'&lang=fi',None,404,'fi')
+        for tag in ('ar','fi'):
+            catalog=Path(__file__).resolve().parents[1]/'i18n/data'/f'{tag}.jsn'
+            caption=escape(json.loads(catalog.read_text())['page-not-found'],quote=False).encode()
+            for url in (missing,export):
+                assert caption in error('GET',url if tag=='ar' else url+'&lang='+tag,None,404,tag)
         for path in ['/designer/page/import','/designer/import']:
             error('POST',path,dict(sessionId=session),403)
             error('POST',path,dict(sessionId=session,lang='fi'),403,'fi')

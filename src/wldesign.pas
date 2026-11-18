@@ -985,12 +985,19 @@ end;
 // Mutations additionally consume their action token before writing.
 
 procedure DesignerError(aRequest:TRequest; aResponse:TResponse; Db:TWLDb;
-  const S:TWLSession; Code:Integer; const Msg:string);
+  const S:TWLSession; Code:Integer; const Msg:string; const Key:string='');
+var Language:TWLLanguage; Words:TWLTranslator; Caption:string;
 begin
+  Language:=ViewerLanguage(Db,S,aRequest);
+  Caption:=Msg;
+  if Key<>'' then
+  begin
+    Words:=TWLTranslator.Create(Language);
+    try Caption:=Words.Text(Key,Msg); finally Words.Free; end;
+  end;
   aResponse.Code := Code;
   aResponse.ContentType := 'text/html; charset=utf-8';
-  aResponse.Content := LanguagePage(aResponse,ViewerLanguage(Db,S,aRequest),
-    'Designer','<p>'+HtmlEncode(Msg)+'</p>');
+  aResponse.Content := LanguagePage(aResponse,Language,'Designer','<p>'+HtmlEncode(Caption)+'</p>');
   aResponse.SendContent;
 end;
 
@@ -1100,7 +1107,7 @@ begin
   F:=aRequest.ContentFields; Id:=F.Values['pageId']; Action:=F.Values['action'];
   P:=Default(TPage); P.Kind:='custom';
   if (Id<>'') and not LoadPageById(T.Db,Id,P) then
-  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found.','page-not-found'); Exit; end;
   if Action='delete' then
     Sql:='DELETE FROM pages WHERE id='+QuotedStr(Id)+';'
   else if (Action='enable') or (Action='disable') then
@@ -1187,7 +1194,7 @@ begin
   if not ((PageId<> '') and LoadPageById(T.Db,PageId,P)) and
     not LoadPageByUrl(T.Db,aRequest.QueryFields.Values['url'],P) then
   begin
-    DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found.'); Exit;
+    DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found.','page-not-found'); Exit;
   end;
 
   W := LoadWidgets(T.Db, P.Id);
@@ -1372,7 +1379,7 @@ begin
   F:=aRequest.ContentFields; PageId:=F.Values['pageId']; W:=Default(TWidget);
   W.Id:=F.Values['widgetId'];
   if not LoadPageById(T.Db,PageId,P) then
-  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found'); Exit; end;
+  begin DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found.','page-not-found'); Exit; end;
   if W.Id<>'' then
     if not LoadWidgetPage(T.Db,W.Id,ExistingPage) or (ExistingPage<>PageId) then
     begin DesignerError(aRequest,aResponse,T.Db,S,404,'Widget not found on page'); Exit; end;
@@ -1419,7 +1426,7 @@ begin
     LoadPageById(T.Db,aRequest.QueryFields.Values['id'],P)) and
     not LoadPageByUrl(T.Db,aRequest.QueryFields.Values['url'],P) then
   begin
-    DesignerError(aRequest,aResponse,T.Db,S,404,'No such page');Exit;
+    DesignerError(aRequest,aResponse,T.Db,S,404,'Page not found.','page-not-found');Exit;
   end;
   aResponse.Code := 200;
   aResponse.ContentType := 'application/json';
