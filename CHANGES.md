@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Update shared organization and team features through REST
+
+- Let site administrators update shared template, membership propagation,
+  and authentication sync flags on existing shared organizations and teams.
+  Reject missing records and preserve unrelated stored settings.
+
 ## 2026-11-18 Manage account login through REST
 
 - Let site administrators enable or disable a user's login. Disabling

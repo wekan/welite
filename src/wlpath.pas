@@ -2,8 +2,8 @@ unit wlpath;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
 uses SysUtils,HTTPDefs,wlsjson;
-const ApiPathKeys:array[0..14] of string=('boardId','cardId','listId','swimlaneId',
-  'checklistId','commentId','customField','item','member','assignee','attachmentId','userId','dropdownItem','ruleId','intId');
+const ApiPathKeys:array[0..16] of string=('boardId','cardId','listId','swimlaneId',
+  'checklistId','commentId','customField','item','member','assignee','attachmentId','userId','dropdownItem','ruleId','intId','orgId','teamId');
 function DecodePathId(const Encoded:string;out Decoded:string):Boolean;
 function DecodeApiPath(Request:TRequest):Boolean;
 implementation

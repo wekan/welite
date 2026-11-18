@@ -113,7 +113,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 wait_for_ferret()
                 for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
                 if upstream:
-                    for collection in ['rules','triggers','actions','integrations','eventlog','savedCardFilters','scrumSnapshotRows']:
+                    for collection in ['rules','triggers','actions','integrations','eventlog','savedCardFilters','scrumSnapshotRows','org','team']:
                         client.command({'create':collection})
                     app=start('1')
                     subprocess.run([
