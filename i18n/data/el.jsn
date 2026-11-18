@@ -78,7 +78,7 @@
   "activity-checklist-added": "ha aggiunto una checklist a %s",
   "activity-checklist-removed": "È stata rimossa una checklist da%s",
   "activity-checklist-completed": "%s di %s checklists completate",
-  "activity-checklist-uncompleted": "La checklist non è stata completata",
+  "activity-checklist-uncompleted": "όρισε τη λίστα ελέγχου %s του %s ως μη ολοκληρωμένη",
   "activity-checklist-item-added": "προστέθηκε ένα στοιχείο λίστας ελέγου στη '%s' στο %s",
   "activity-checklist-item-removed": "è stato rimosso un elemento della checklist da '%s' in %s",
   "add": "Προσθήκη",

@@ -77,7 +77,7 @@
   "activity-unchecked-item": "hat %s in Checkliste %s von %s abgewählt",
   "activity-checklist-added": "hat eine Checkliste zu %s hinzugefügt",
   "activity-checklist-removed": "entfernte eine Checkliste von %s",
-  "activity-checklist-completed": "Abgeschlossene Checkliste",
+  "activity-checklist-completed": "hat die Checkliste %s von %s abgeschlossen",
   "activity-checklist-uncompleted": "unvervollständigte die Checkliste %s von %s",
   "activity-checklist-item-added": "hat einen Checklisteneintrag zu '%s' in %s hinzugefügt",
   "activity-checklist-item-removed": "hat einen Checklisteneintrag von '%s' in %s entfernt",

@@ -78,7 +78,7 @@
   "activity-checklist-added": "%s ga nazorat roʻyxati qoʻshildi",
   "activity-checklist-removed": "%s dan nazorat roʻyxati olib tashlandi",
   "activity-checklist-completed": "Toʻldirilgan nazorat roʻyxati %s / %s",
-  "activity-checklist-uncompleted": "%s nazorat roʻyxati toʻldirilmagan.",
+  "activity-checklist-uncompleted": "%s نینگ %s تیکشیرو رۉیختی توگاللنمدی.",
   "activity-checklist-item-added": "nazorat roʻyxati elementi %s dagi “%s” ga qoʻshildi",
   "activity-checklist-item-removed": "%s ichidagi \"%s\" dan nazorat roʻyxati elementi olib tashlandi",
   "add": "Qo'shish",

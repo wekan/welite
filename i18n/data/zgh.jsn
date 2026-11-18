@@ -84,7 +84,7 @@
   "add": "أضف",
   "activity-checked-item-card": "a coché %s dans la checklist %s",
   "activity-unchecked-item-card": "a décoché %s dans la checklist %s",
-  "activity-checklist-completed-card": "قائمة تأكد مكتملة__عنصر قائمة التأكد__لقائمة التأكد__قائمة التأكد__ لكرت__الكرت__في قائمة__القائمة__في المنطقة العائمة__المنطقة العائمة__في اللوح__اللوح__",
+  "activity-checklist-completed-card": "ⵉⵙⵎⴷ ⵜⴰⵍⴳⴰⵎⵜ ⵏ ⵜⵎⵏⵥⵉⵜ __checklist__ ⴳ ⵜⴽⴰⵔⴹⴰ __card__ ⴳ ⵜⵍⴳⴰⵎⵜ __list__ ⴳ ⵓⴱⵔⵉⴷ __swimlane__ ⴳ ⵜⴼⵍⵡⵉⵜ __board__",
   "activity-checklist-uncompleted-card": "a décoché la checklist %s",
   "activity-editComment": "commentaire modifié %s",
   "activity-deleteComment": "تعليق محذوف %s",

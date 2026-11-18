@@ -84,7 +84,7 @@
   "add": "أضف",
   "activity-checked-item-card": "%s در چک‌لیست %s انتخاب‌شده",
   "activity-unchecked-item-card": "%s در چک‌لیست %s از حالت انتخاب خارج شده",
-  "activity-checklist-completed-card": "قائمة تأكد مكتملة__عنصر قائمة التأكد__لقائمة التأكد__قائمة التأكد__ لكرت__الكرت__في قائمة__القائمة__في المنطقة العائمة__المنطقة العائمة__في اللوح__اللوح__",
+  "activity-checklist-completed-card": "أكمل قائمة التحقق __checklist__ في البطاقة __card__ والقائمة __list__ والمسار __swimlane__ واللوحة __board__",
   "activity-checklist-uncompleted-card": "چک‌لیست %s تمام نشده",
   "activity-editComment": "%s نظر ویرایش شد",
   "activity-deleteComment": "تعليق محذوف %s",

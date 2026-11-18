@@ -14,28 +14,32 @@
       "act-importBoard",
       "act-withBoardTitle",
       "email-invite-text",
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-checklist-completed-card"
     ],
     "ar-EG.jsn": [
       "act-createBoard",
       "act-archivedBoard",
       "act-importBoard",
       "act-withBoardTitle",
-      "email-invite-text"
+      "email-invite-text",
+      "activity-checklist-completed-card"
     ],
     "ar.jsn": [
       "act-createBoard",
       "act-archivedBoard",
       "act-importBoard",
       "act-withBoardTitle",
-      "email-invite-text"
+      "email-invite-text",
+      "activity-checklist-completed-card"
     ],
     "ary.jsn": [
       "act-createBoard",
       "act-archivedBoard",
       "act-importBoard",
       "act-withBoardTitle",
-      "email-invite-text"
+      "email-invite-text",
+      "activity-checklist-completed-card"
     ],
     "ast-ES.jsn": [
       "operator-number-expected",
@@ -80,24 +84,30 @@
       "globalSearch-instructions-operator-creator"
     ],
     "de-AT.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-checklist-completed"
     ],
     "de-CH.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-checklist-completed"
     ],
     "de.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-checklist-completed"
     ],
     "de_DE.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-checklist-completed"
     ],
     "el-GR.jsn": [
       "act-removeChecklistItem",
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-checklist-uncompleted"
     ],
     "el.jsn": [
       "act-removeChecklistItem",
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-checklist-uncompleted"
     ],
     "eo.jsn": [
       "custom-field-stringtemplate-format",
@@ -128,7 +138,10 @@
       "act-withDue",
       "act-almostdue",
       "act-pastdue",
-      "act-duenow"
+      "act-duenow",
+      "activity-checklist-completed-card",
+      "activity-unchecked-item",
+      "activity-checked-item"
     ],
     "eu.jsn": [
       "avatar-too-big",
@@ -199,7 +212,8 @@
     ],
     "it.jsn": [
       "act-addChecklist",
-      "activity-changedListTitle"
+      "activity-changedListTitle",
+      "activity-checklist-uncompleted"
     ],
     "ja-HI.jsn": [
       "act-addChecklistItem"
@@ -228,7 +242,8 @@
       "activity-deleteComment"
     ],
     "lv.jsn": [
-      "act-withBoardTitle"
+      "act-withBoardTitle",
+      "activity-checklist-completed-card"
     ],
     "mk.jsn": [
       "act-removeChecklistItem",
@@ -288,10 +303,12 @@
       "custom-field-stringtemplate-format"
     ],
     "ro-RO.jsn": [
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-checklist-uncompleted"
     ],
     "ro.jsn": [
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-checklist-uncompleted"
     ],
     "ru-UA.jsn": [
       "email-enrollAccount-subject",
@@ -349,20 +366,32 @@
       "activity-deleteComment"
     ],
     "tlh.jsn": [
-      "act-addChecklistItem"
+      "act-addChecklistItem",
+      "activity-checklist-completed"
     ],
     "tr.jsn": [
       "act-addChecklistItem",
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-checklist-uncompleted",
+      "activity-unchecked-item",
+      "activity-checklist-completed",
+      "activity-checked-item"
     ],
     "uk-UA.jsn": [
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-checklist-completed-card",
+      "activity-unchecked-item",
+      "activity-checked-item"
     ],
     "uk.jsn": [
-      "act-removeChecklistItem"
+      "act-removeChecklistItem",
+      "activity-checklist-completed-card",
+      "activity-unchecked-item",
+      "activity-checked-item"
     ],
     "ve-CC.jsn": [
-      "act-addChecklist"
+      "act-addChecklist",
+      "activity-checklist-uncompleted"
     ],
     "ve-PP.jsn": [
       "act-removeChecklistItem",
@@ -413,7 +442,8 @@
       "act-archivedBoard",
       "act-importBoard",
       "act-withBoardTitle",
-      "custom-field-stringtemplate-format"
+      "custom-field-stringtemplate-format",
+      "activity-checklist-completed-card"
     ],
     "zh-CN.jsn": [
       "act-removeChecklistItem",
@@ -461,15 +491,18 @@
     ],
     "th.jsn": [
       "act-withCardTitle",
-      "activity-editComment"
+      "activity-editComment",
+      "activity-checklist-uncompleted-card"
     ],
     "vi-VN.jsn": [
       "act-withCardTitle",
-      "activity-editComment"
+      "activity-editComment",
+      "activity-checklist-uncompleted-card"
     ],
     "vi.jsn": [
       "act-withCardTitle",
-      "activity-editComment"
+      "activity-editComment",
+      "activity-checklist-uncompleted-card"
     ],
     "cy-GB.jsn": [
       "act-moveCardToOtherBoard",
@@ -668,7 +701,9 @@
       "globalSearch-instructions-notes-3",
       "globalSearch-instructions-notes-3-2",
       "server-error-troubleshooting",
-      "drag-board-to-workspace"
+      "drag-board-to-workspace",
+      "activity-unchecked-item",
+      "activity-checked-item"
     ],
     "tk_TM.jsn": [
       "act-addAttachment",
@@ -831,7 +866,9 @@
       "globalSearch-instructions-notes-3",
       "globalSearch-instructions-notes-3-2",
       "server-error-troubleshooting",
-      "drag-board-to-workspace"
+      "drag-board-to-workspace",
+      "activity-checklist-completed",
+      "activity-checked-item"
     ],
     "ug.jsn": [
       "act-addAttachment",
@@ -979,7 +1016,9 @@
       "globalSearch-instructions-notes-3",
       "globalSearch-instructions-notes-3-2",
       "server-error-troubleshooting",
-      "drag-board-to-workspace"
+      "drag-board-to-workspace",
+      "activity-checklist-uncompleted",
+      "activity-checked-item"
     ],
     "xh.jsn": [
       "act-deleteCustomField",
@@ -1010,6 +1049,33 @@
     "es_CO.jsn": [
       "activity-editComment",
       "activity-deleteComment"
+    ],
+    "az-AZ.jsn": [
+      "activity-checklist-uncompleted",
+      "activity-unchecked-item"
+    ],
+    "az-LA.jsn": [
+      "activity-checklist-uncompleted",
+      "activity-unchecked-item"
+    ],
+    "az.jsn": [
+      "activity-checklist-uncompleted",
+      "activity-unchecked-item"
+    ],
+    "hu.jsn": [
+      "activity-checklist-uncompleted-card"
+    ],
+    "uz-AR.jsn": [
+      "activity-checklist-uncompleted"
+    ],
+    "uz-LA.jsn": [
+      "activity-checklist-uncompleted"
+    ],
+    "uz-UZ.jsn": [
+      "activity-checklist-uncompleted"
+    ],
+    "uz.jsn": [
+      "activity-checklist-uncompleted"
     ]
   }
 }

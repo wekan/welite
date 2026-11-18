@@ -85,7 +85,7 @@
   "activity-checked-item-card": "đã hoàn thành %s trong checklist %s",
   "activity-unchecked-item-card": "đã bỏ đánh dấu hoàn thành %s trong checklist %s",
   "activity-checklist-completed-card": "đã hoàn thành checklist __checklist__ tại thẻ __card__ tại danh sách __list__ tại làn ngang __swimlane__ tại bảng __board__",
-  "activity-checklist-uncompleted-card": "chưa hoàn thành checklist",
+  "activity-checklist-uncompleted-card": "chưa hoàn thành danh sách kiểm tra %s",
   "activity-editComment": "lời bình đã sửa %s",
   "activity-deleteComment": "đã xoá lời bình %s",
   "activity-receivedDate": "đã sửa ngày nhận đến %s của %s",

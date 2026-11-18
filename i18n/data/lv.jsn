@@ -84,7 +84,7 @@
   "add": "Pievienot",
   "activity-checked-item-card": "atzīmēja %s kontrolsarakstā %s",
   "activity-unchecked-item-card": "izņēma atzīmi %s kontrolsarakstā %s",
-  "activity-checklist-completed-card": "pabeidza kontrolsarakstu _checklist_ kartiņai __card__ sarakstā __list__ joslā __swimlane__ dēlī __board__",
+  "activity-checklist-completed-card": "pabeidza kontrolsarakstu __checklist__ kartiņai __card__ sarakstā __list__ joslā __swimlane__ dēlī __board__",
   "activity-checklist-uncompleted-card": "atsāka kontrolsarakstu %s",
   "activity-editComment": "laboja komentāru %s",
   "activity-deleteComment": "dzēsa komentāru %s",

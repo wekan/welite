@@ -84,7 +84,7 @@
   "add": "أضف",
   "activity-checked-item-card": "حدد %s في قائمة التحقق %s",
   "activity-unchecked-item-card": "ألغى تحديد %s في قائمة التحقق %s",
-  "activity-checklist-completed-card": "قائمة تأكد مكتملة__عنصر قائمة التأكد__لقائمة التأكد__قائمة التأكد__ لكرت__الكرت__في قائمة__القائمة__في المنطقة العائمة__المنطقة العائمة__في اللوح__اللوح__",
+  "activity-checklist-completed-card": "أكمل قائمة التحقق __checklist__ في البطاقة __card__ والقائمة __list__ والمسار __swimlane__ واللوحة __board__",
   "activity-checklist-uncompleted-card": "جعل قائمة التحقق %s غير مكتملة",
   "activity-editComment": "%s نظر ویرایش شد",
   "activity-deleteComment": "تعليق محذوف %s",
