@@ -336,6 +336,19 @@ def run(request, db, token):
     forms.feed(body.decode())
     restore, = [fields for action,fields in forms.forms if action=='/board/restore-list' and fields.get('listId')==identity]
     assert request('POST','/board/restore-list',dict(restore,listId='foreignlist'))[0]==403
+    assert request('POST','/board/restore-list',dict(restore,deleteBatchId='wrong'))[0]==403
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE lists SET deleteBatchId='later-delete' WHERE id=?",(identity,))
+    assert request('POST','/board/restore-list',restore)[0]==409
+    with sqlite3.connect(db) as con:
+        assert con.execute('SELECT deleteBatchId FROM lists WHERE id=?',(identity,)).fetchone()==('later-delete',)
+        assert con.execute("SELECT deleteBatchId FROM cards WHERE id='soft-delete-card'").fetchone()==(markers[2],)
+        con.execute("UPDATE lists SET deleteBatchId=? WHERE id=?",(markers[2],identity))
+    status, _, body=request('GET','/board?id=protected&view=all&sessionId='+token)
+    assert status==200, (status,body)
+    forms=Forms()
+    forms.feed(body.decode())
+    restore, = [fields for action,fields in forms.forms if action=='/board/restore-list' and fields.get('listId')==identity]
     assert request('POST','/board/restore-list',restore)[0]==302
     assert request('POST','/board/restore-list',restore)[0]==403
     assert request('GET',delete_path)[0]==200

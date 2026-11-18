@@ -59,8 +59,8 @@ function NormalizeMoveSubmit(Params:TStrings):Boolean;
 function ApplyCardDrop(Db:TWLDb; Params:TStrings):Boolean;
 function ApplyMove(Db: TWLDb; Params: TStrings; RightToLeft:Boolean=False): Boolean;
 
-function RestoreListAction(const BoardId,ListId:string):string;
-function RestoreDeletedList(Db:TWLDb;const BoardId,ListId:string):Boolean;
+function RestoreListAction(const BoardId,ListId,BatchId:string):string;
+function RestoreDeletedList(Db:TWLDb;const BoardId,ListId,BatchId:string):Boolean;
 
 implementation
 
@@ -306,17 +306,18 @@ begin
   end;
 end;
 
-function RestoreListAction(const BoardId,ListId:string):string;
+function RestoreListAction(const BoardId,ListId,BatchId:string):string;
 begin
-  Result:='board:restore-list:'+IntToStr(Length(BoardId))+':'+BoardId+ListId;
+  Result:='board:restore-list:'+IntToStr(Length(BoardId))+':'+BoardId+
+    IntToStr(Length(ListId))+':'+ListId+BatchId;
 end;
 
-function RestoreDeletedList(Db:TWLDb;const BoardId,ListId:string):Boolean;
+function RestoreDeletedList(Db:TWLDb;const BoardId,ListId,BatchId:string):Boolean;
 const ClearMarkers='deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL';
 var Scope,Deleted,Sql:string;
 begin
   Scope:='id='+q(ListId)+' AND boardId='+q(BoardId);
-  Deleted:=Scope+' AND deletedAt IS NOT NULL';
+  Deleted:=Scope+' AND deletedAt IS NOT NULL AND COALESCE(deleteBatchId,'''')='+q(BatchId);
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Deleted+
     ')=1 THEN 1 ELSE json(''List is no longer deleted'') END; '+
     'UPDATE cards SET '+ClearMarkers+' WHERE boardId='+q(BoardId)+' AND listId='+q(ListId)+

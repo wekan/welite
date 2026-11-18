@@ -440,16 +440,17 @@ end;
 // POST /board/move — the no-JS combined move component (wlmove). Reads dir + sel_* selections,
 // reorders/relocates, then PRG-redirects back to the page the move came from.
 procedure BoardRestoreListEndpoint(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;S:TWLSession;BoardId,ListId:string;
+var T:TWLTenant;S:TWLSession;BoardId,ListId,BatchId:string;
 begin
   if not RequireTenant(aRequest,aResponse,T) then Exit;
   BoardId:=aRequest.ContentFields.Values['boardId'];
   ListId:=aRequest.ContentFields.Values['listId'];
+  BatchId:=aRequest.ContentFields.Values['deleteBatchId'];
   if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) or
     not BoardCanWrite(T.Db,S.UserId,BoardId) or
-    not VerifyActionToken(aRequest,S,RestoreListAction(BoardId,ListId),True) then
+    not VerifyActionToken(aRequest,S,RestoreListAction(BoardId,ListId,BatchId),True) then
   begin aResponse.Code:=403;aResponse.SendContent;Exit;end;
-  if not RestoreDeletedList(T.Db,BoardId,ListId) then
+  if not RestoreDeletedList(T.Db,BoardId,ListId,BatchId) then
   begin aResponse.Code:=409;aResponse.SendContent;Exit;end;
   S.LanguageTag:=RequestLanguageTag(aRequest);
   aResponse.Code:=302;

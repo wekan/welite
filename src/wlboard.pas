@@ -163,14 +163,15 @@ begin
   if Writable then
   begin
     Result:=Result+MoveKeypad(S,0,0,0,True,True,Language.Tag)+MoveFormEnd;
-    Lists:=Db.Query('SELECT id,title FROM lists WHERE boardId='+QuotedStr(BoardId)+
+    Lists:=Db.Query('SELECT id,title,deleteBatchId FROM lists WHERE boardId='+QuotedStr(BoardId)+
       ' AND deletedAt IS NOT NULL ORDER BY deletedAt DESC,id;');
     for i:=0 to High(Lists) do
       Result:=Result+'<form method="POST" action="/board/restore-list">'+
-        AuthHiddenFields(S,RestoreListAction(BoardId,Lists[i][0]))+
+        AuthHiddenFields(S,RestoreListAction(BoardId,Lists[i][0],Lists[i][2]))+
         '<input type="hidden" name="sessionId" value="'+HtmlAttr(S.SessionId)+'">'+
         '<input type="hidden" name="boardId" value="'+HtmlAttr(BoardId)+'">'+
         '<input type="hidden" name="listId" value="'+HtmlAttr(Lists[i][0])+'">'+
+        '<input type="hidden" name="deleteBatchId" value="'+HtmlAttr(Lists[i][2])+'">'+
         '<input type="submit" value="'+HtmlAttr(Words.Text('restore','Restore')+' '+Lists[i][1])+'"></form>';
   end;
   finally Words.Free;end;
