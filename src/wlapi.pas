@@ -2173,10 +2173,59 @@ begin
   SendJson(aResponse,Rows[0][0]);
 end;
 
+function CardDecorations(Value:TJSONData;const Key:string):TJSONArray;
+var Parsed:TJSONObject;Entry,Item:TJSONObject;Field:TJSONData;I:Integer;
+  Name,Text:string;Number:Double;Format:TFormatSettings;
+begin
+  Result:=TJSONArray.Create;Parsed:=nil;
+  try
+    try
+      if Value.JSONType=jtString then
+      begin
+        Parsed:=ExactObject('{"array":'+Value.AsString+'}');
+        Value:=Parsed.Find('array');
+      end;
+      if not (Value is TJSONArray) then raise Exception.Create('Invalid card decoration array');
+      Format:=DefaultFormatSettings;Format.DecimalSeparator:='.';
+      for I:=0 to Value.Count-1 do
+      begin
+        if not (Value.Items[I] is TJSONObject) then raise Exception.Create('Invalid card decoration entry');
+        Entry:=TJSONObject(Value.Items[I]);Item:=TJSONObject.Create;Result.Add(Item);
+        if Key='stickers' then
+        begin
+          for Name in ['icon','name','highlight'] do
+          begin
+            Field:=Entry.Find(Name);
+            if Field=nil then Continue;
+            if Field.JSONType<>jtString then raise Exception.Create('Invalid sticker field');
+            Text:=Field.AsString;
+            if (Name='highlight') and (Text<>'underline') and (Text<>'round') then
+              raise Exception.Create('Invalid sticker highlight');
+            Item.Add(Name,Text);
+          end;
+        end else
+        begin
+          Text:=Entry.Get('_id','');if Text='' then Text:=NewId;Item.Add('_id',Text);
+          Item.Add('name',Entry.Get('name',''));Item.Add('address',Entry.Get('address',''));
+          for Name in ['latitude','longitude'] do
+          begin
+            Field:=Entry.Find(Name);
+            if (Field=nil) or ((Field.JSONType=jtString) and (Field.AsString='')) then Continue;
+            if not (Field.JSONType in [jtNumber,jtString]) or
+              not TryStrToFloat(Field.AsString,Number,Format) or IsNan(Number) or IsInfinite(Number) then
+              raise Exception.Create('Invalid location coordinate');
+            Item.Add(Name,Number);
+          end;
+        end;
+      end;
+    except FreeAndNil(Result);raise;end;
+  finally Parsed.Free;end;
+end;
+
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
-  HasArchive,Archive,HasEdits:Boolean;Body:TJSONObject;Input:TJSONData;
-  DateField,DateSets,Literal:string;HasDate:Boolean;
+  HasArchive,Archive,HasEdits:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
+  FieldName,FieldSets,Literal:string;HasDate:Boolean;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -2185,7 +2234,7 @@ begin
   HasEdits:=BodyHasField(aRequest,'title') or BodyHasField(aRequest,'description') or
     BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
     BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
-  DateSets:='';HasDate:=False;Body:=nil;
+  FieldSets:='';HasDate:=False;Body:=nil;Decorations:=nil;
   try
     try
       if (Pos('application/json',LowerCase(aRequest.ContentType))=1) and (aRequest.Content<>'') then
@@ -2193,20 +2242,35 @@ begin
       else
       begin
         Body:=TJSONObject.Create;
-        for DateField in ['receivedAt','startAt','dueAt','endAt'] do
-          if aRequest.ContentFields.IndexOfName(DateField)>=0 then
-            Body.Add(DateField,aRequest.ContentFields.Values[DateField]);
+        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations'] do
+          if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
+            Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
       end;
-      for DateField in ['receivedAt','startAt','dueAt','endAt'] do
+      for FieldName in ['receivedAt','startAt','dueAt','endAt'] do
       begin
-        Input:=Body.Find(DateField);
+        Input:=Body.Find(FieldName);
         if Input=nil then Continue;
         HasDate:=True;
-        if CardDateSql(Input,Literal) then DateSets:=DateSets+','+DateField+'='+Literal;
+        if CardDateSql(Input,Literal) then FieldSets:=FieldSets+','+FieldName+'='+Literal;
       end;
+      Input:=Body.Find('dueComplete');
+      if Input<>nil then
+      begin
+        Value:='';
+        if Input.JSONType in [jtBoolean,jtString] then Value:=Input.AsString;
+        FieldSets:=FieldSets+',dueComplete='+IntToStr(Ord(SameText(Value,'true')));
+      end;
+      Decorations:=TJSONObject.Create;
+      for FieldName in ['stickers','locations'] do
+      begin
+        Input:=Body.Find(FieldName);
+        if Input<>nil then Decorations.Add(FieldName,CardDecorations(Input,FieldName));
+      end;
+      if Decorations.Count>0 then
+        FieldSets:=FieldSets+',extra_json=json_patch(extra_json,'+QuotedStr(Decorations.AsJSON)+')';
     except SendError(aResponse,400,'Invalid card update');Exit;end;
-  finally Body.Free;end;
-  HasEdits:=HasEdits or (DateSets<>'');
+  finally Decorations.Free;Body.Free;end;
+  HasEdits:=HasEdits or (FieldSets<>'');
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   if HasArchive and not HasEdits then
   begin
@@ -2218,7 +2282,7 @@ begin
     if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
     Scope:=Scope+' AND listId='+QuotedStr(aRequest.RouteParams['listId']);
   end;
-  if HasDate and (DateSets='') and not (HasArchive or HasEdits) then
+  if HasDate and (FieldSets='') and not (HasArchive or HasEdits) then
   begin SendJson(aResponse,'{"message":"Error"}',404);Exit;end;
   if not CardRelationSql(T,aRequest,aResponse,BoardId,CardId,Relations) then Exit;
   Stamp:=QuotedStr(NowIso);
@@ -2243,7 +2307,7 @@ begin
   Sets:='';
   if not HasArchive or HasEdits then
   begin
-    Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp+DateSets;
+    Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp+FieldSets;
     if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
     if BodyHasField(aRequest,'description') then Sets:=Sets+',description='+QuotedStr(BodyField(aRequest,'description'));
     if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));

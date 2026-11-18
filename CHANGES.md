@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Edit card completion, stickers and locations over REST
+
+- Persist the due-complete checkbox and replace sticker and location arrays
+  through card PUT. Validate decorations before writing, generate location
+  IDs when absent, and store coordinates as numbers.
+
 ## 2026-11-18 Create linked cards over REST
 
 - Create a linked card from an eligible source when `linkedId` is supplied.

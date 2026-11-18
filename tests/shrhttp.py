@@ -207,6 +207,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert all(field not in cleared for field in dates)
                 print('PASS: shared REST card dates set as BSON Date and clear by field removal')
 
+                update=dict(dueComplete=True,stickers=[dict(icon='star',highlight='round')],
+                            locations=[dict(name='HQ',latitude='60.17',longitude=24.94)])
+                assert request('PUT',card_path,update,token)[0]==200
+                decorated,=client.find('cards',card['_id'])
+                assert decorated['dueComplete'] is True and decorated['stickers']==update['stickers']
+                location,=decorated['locations']
+                assert location['_id'] and location['name']=='HQ' and location['latitude']==60.17 and location['longitude']==24.94
+                assert request('PUT',card_path,dict(dueComplete=False,locations=[dict(latitude='bad')]),token)[0]==400
+                assert client.find('cards',card['_id'])[0]==decorated
+                assert request('PUT',card_path,dict(dueComplete=False,stickers=[],locations=[]),token)[0]==200
+                undecorated,=client.find('cards',card['_id'])
+                assert undecorated['dueComplete'] is False and undecorated['stickers']==[] and undecorated['locations']==[]
+                print('PASS: REST card decorations normalize coordinates and reject invalid updates atomically')
+
                 create_card_path='/api/boards/b/lists/l/cards'
                 status,_,body=request('POST',create_card_path,dict(linkedId=card['_id'],swimlaneId='s'),token)
                 assert status==200,(status,body)
