@@ -115,6 +115,38 @@ def shared(call, client, db, board, snapshot):
     exercise(call, board, snapshot, assign, verify,
              lambda: install_failure(db, table), lambda: clear_failure(db))
 
+    second_board = 'def-shared-other'
+    second_card = 'def-shared-card'
+    original_board = client.find('boards', board)[0]
+    assert client.command({'insert': 'boards', 'documents': [
+        dict(original_board, _id=second_board, archived=True, slug=second_board)]})['n'] == 1
+    assert client.command({'insert': 'cards', 'documents': [
+        dict(card, _id=second_card, boardId=second_board, customFields=[])]})['n'] == 1
+    base = '/api/boards/' + quote(board, safe='') + '/custom-fields'
+    status, _, body = call('POST', base, dict(name='Shared multi-board definition', type='text'))
+    assert status == 200, (status, body)
+    identity = json.loads(body)['_id']
+    route = base + '/' + quote(identity, safe='')
+
+    def set_fields(collection, key, **fields):
+        assert client.command({'update': collection, 'updates': [
+            dict(q=dict(_id=key), u={'$set': fields})]})['n'] == 1
+
+    set_fields('customFields', identity, boardIds=[board, second_board])
+    before = snapshot()
+    assert call('PUT', route, dict(name='Denied'))[0] == 403
+    assert call('DELETE', route, None)[0] == 403
+    assert snapshot() == before
+    set_fields('boards', second_board, archived=False)
+    status, _, body = call('PUT', route, dict(name='Shared update', alwaysOnCard=True))
+    assert status == 200, (status, body)
+    assert client.find('cards', second_card)[0]['customFields'] == [dict(_id=identity, value=None)]
+    status, _, body = call('DELETE', route, None)
+    assert status == 200, (status, body)
+    assert client.find('cards', second_card)[0]['customFields'] == []
+    assert client.find('customFields', identity) == []
+    print('PASS: shared multi-board definition mutations enforce every board and update associated cards')
+
 
 def install_failure(db, table):
     with connect(db) as con:

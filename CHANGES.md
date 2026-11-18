@@ -8,8 +8,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Require field write access on all bound boards and recheck the binding set
   during the transaction. Backfill and deletion cover the authorized boards.
-- Native HTTP coverage verifies refusal without data changes when one board
-  is archived and verifies cleanup across both boards after authorization.
+- Native and live shared HTTP coverage verify refusal without data changes when
+  one board is archived and verify cleanup across both boards after authorization.
 
 ## 2026-11-18 Remove scoped activity when deleting a custom field
 
