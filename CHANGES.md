@@ -7,7 +7,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 ## 2026-11-18 Verify card attachment upload in Chromium
 
 - Upload a file with a Unicode name through the native card form, then
-  download and compare its bytes with JavaScript and cookies disabled.
+  download and compare its bytes with JavaScript and cookies disabled. The
+  linked and CLI shared-storage checks also verify the attachment metadata
+  through FerretDB.
 
 ## 2026-11-18 Upload attachments from the native card page
 

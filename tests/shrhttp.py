@@ -1371,6 +1371,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         cardId='brow-card',checklistId='brow-check',title='Retained REST item',sort=0)]})
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/cardupload.js'),
                                     f'http://localhost:{http_port}/board/card?id=b&card=brow-card&sessionId='+web_session],check=True)
+                    uploaded,=client.command({'find':'attachments',
+                        'filter':{'meta.cardId':'brow-card','name':'Native upload å.bin'}})['cursor']['firstBatch']
+                    assert uploaded['size']==4
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/carddel.js'),
                                     f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
                     assert not client.find('cards','brow-card') and not client.find('checklists','brow-check')
