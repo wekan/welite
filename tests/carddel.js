@@ -100,6 +100,32 @@ const { readFileSync } = require('node:fs');
       assert.equal(await list.count(), 0);
     }
     console.log('PASS: Chromium reflects REST member and assignee changes without JavaScript or cookies');
+    const cardsApi = boardUrl.origin + '/api/boards/b/lists/l/cards';
+    const childTitle = 'REST-created browser subtask';
+    const add = await context.request.post(cardsApi, {
+      headers, data: { title: childTitle, parentId: 'brow-card', swimlaneId: 's' },
+    });
+    assert.equal(add.status(), 200);
+    const { _id: childId } = await add.json();
+    const childApi = cardsApi + '/' + encodeURIComponent(childId);
+    const parentUrl = page.url();
+    try {
+      const saved = await context.request.get(childApi, { headers });
+      assert.equal((await saved.json()).parentId, 'brow-card');
+      await page.reload();
+      const child = page.getByRole('link', { name: childTitle, exact: true });
+      assert.equal(await child.count(), 1);
+      await child.click();
+      assert.equal(await page.getByRole('heading', { name: childTitle, exact: true }).count(), 1);
+      await page.goto(parentUrl);
+      assert.equal(await child.count(), 1);
+      assert.equal((await context.request.post(childApi + '/archive', { headers })).status(), 200);
+      await page.reload();
+      assert.equal(await child.count(), 0);
+    } finally {
+      assert.equal((await context.request.delete(childApi, { headers })).status(), 200);
+    }
+    console.log('PASS: Chromium shows REST-created subtasks and hides archived subtasks without JavaScript or cookies');
     const englishDetails = page.url();
     const arabicDetails = new URL(englishDetails);
     arabicDetails.searchParams.set('lang', 'ar');

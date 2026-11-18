@@ -11,6 +11,11 @@ procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
 uses wli18n,wllocale,wlcfpol,wlselscp;
+function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
+begin
+  Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
+end;
+
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;
 var R:TWLRows; i,Count:Integer;Words:TWLTranslator;Tag:string;
 begin
@@ -198,8 +203,7 @@ begin
       begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
-          '<a href="'+HtmlAttr(SessionUrl('/board/card?id='+HTTPEncode(BoardId)+
-          '&card='+HTTPEncode(Cards[k][0]),S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
+          '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
           if Cards[k][5]='1' then CellText:=Words.Text('overtime-hours','Overtime (hours)')
@@ -301,7 +305,7 @@ end;
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
   Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel:string;
-  Rows,Checklists,Items:TWLRows;Checklist,Item:TWLRow;Open,Snapshot:Boolean;
+  Rows,Subtasks,Checklists,Items:TWLRows;Subtask,Checklist,Item:TWLRow;Open,Snapshot:Boolean;
   function Assignments(const TableName,Caption:string):string;
   var Names:TWLRows;Name:TWLRow;
   begin
@@ -352,6 +356,18 @@ begin
               end;
               Body:=Body+Assignments('card_members',Words.Text('members','Members'))+
                 Assignments('card_assignees',Words.Text('assignees','Assignees'));
+              Subtasks:=T.Db.Query('SELECT id,title FROM cards WHERE boardId='+BoardKey+
+                ' AND parentId='+CardKey+' AND id<>'+CardKey+' AND archived=0 AND deletedAt IS NULL AND '+
+                Selector.StringField('cards','id')+' AND '+Selector.StringField('cards','boardId')+
+                ' AND '+Selector.StringField('cards','parentId')+' ORDER BY sort,id;');
+              if Length(Subtasks)>0 then
+              begin
+                Body:=Body+'<h2>'+HtmlEncode(Words.Text('subtasks','Subtasks'))+'</h2><ul>';
+                for Subtask in Subtasks do
+                  Body:=Body+'<li><a href="'+HtmlAttr(CardUrl(Board,Subtask[0],S))+'">'+
+                    HtmlEncode(Subtask[1])+'</a></li>';
+                Body:=Body+'</ul>';
+              end;
               Scope:='cardId='+CardKey+' AND '+Selector.StringField('checklists','cardId')+
                 ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
                 Selector.StringField('checklists','boardId')+'))';

@@ -4244,10 +4244,10 @@ end;
 const CardNotFound = '{"error":"Card not found"}';
 
 function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: string; IncludeChecklists:Boolean=False; const RequiredBoardId:string=''; const ActiveListId:string=''): Boolean;
-var ReadSql:string; R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
+var ReadSql,ParentId:string; R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
 begin
   Result := False;
-  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color,isOvertime,json_quote(sort) FROM cards WHERE deletedAt IS NULL AND id='+QuotedStr(CardId);
+  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color,isOvertime,json_quote(sort),parentId FROM cards WHERE deletedAt IS NULL AND id='+QuotedStr(CardId);
   if RequiredBoardId<>'' then ReadSql:=ReadSql+' AND boardId='+QuotedStr(RequiredBoardId);
   if ActiveListId<>'' then ReadSql:=ReadSql+' AND listId='+QuotedStr(ActiveListId)+' AND archived=0';
   R:=Db.Query(ReadSql+' LIMIT 1;');
@@ -4257,6 +4257,12 @@ begin
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]); O.Add('description', R[0][2]);
     O.Add('listId', R[0][3]); O.Add('swimlaneId', R[0][4]); O.Add('boardId', R[0][5]);
     O.Add('color', R[0][6]); O.Add('isOvertime', R[0][7]='1'); O.Add('sort',GetJSON(R[0][8]));
+    ParentId:=R[0][9];
+    if (ParentId<>'') and (Pos(#0,ParentId)=0) then
+    begin
+      L:=Db.Query('SELECT boardId FROM cards WHERE id='+QuotedStr(ParentId)+' AND deletedAt IS NULL;');
+      if (Length(L)=1) and BoardCanRead(Db,UserId,L[0][0]) then O.Add('parentId',ParentId);
+    end;
     A := TJSONArray.Create;
     L := Db.Query(Format('SELECT labelId FROM card_labels WHERE cardId=%s;', [QuotedStr(CardId)]));
     for i := 0 to High(L) do if Length(L[i]) > 0 then A.Add(L[i][0]);

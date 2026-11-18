@@ -963,6 +963,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     else:assert event['firstAt']==first_seen
                     assert 'parent-private-card' not in str(event) and 'parent-private-board' not in str(event)
                 print('PASS: shared parent denials fold into one typed event without private identifiers')
+                client.command({'insert':'cards','documents':[dict(_id='private-link-child',boardId='b',listId='l',
+                    swimlaneId='s',title='Child with private parent',parentId='parent-private-card',archived=False)]})
+                child_path=create_card_path+'/private-link-child'
+                status,_,body=request('GET',child_path,token=token)
+                assert status==200 and 'parentId' not in json.loads(body)
+                assert request('DELETE',child_path,token=token)[0]==200
+                print('PASS: REST card reads omit a parent on an inaccessible board')
                 status,_,body=request('POST',bulk_path,dict(swimlaneId='s',cards=[
                     dict(title='Child',parentId=card['_id'],members=['u']),
                     dict(title='Invalid placement',swimlaneId='missing'),

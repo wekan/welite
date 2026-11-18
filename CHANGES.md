@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Show subtasks on HTML card details
+
+- Link to active subtasks on the same board. Chromium verifies that a
+  REST-created subtask appears after reload and disappears when archived,
+  with JavaScript disabled and cookies stripped.
+- Card GET returns the saved parent ID when its board is readable.
+
 ## 2026-11-18 Show members and assignees on HTML card details
 
 - Show the usernames assigned to the card in separate lists. Chromium
