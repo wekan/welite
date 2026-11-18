@@ -43,9 +43,9 @@ withCookieFreeChromium(async (page, context) => {
   await page.locator('select[name=lang]').selectOption('fi');
   await page.locator('form[method=GET] input[type=submit]').click();
   assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
-  await page.locator('input[name=username]').fill('browser-registration');
-  await page.locator('input[name=password]').fill('private-registration-password');
-  await page.locator('input[name=confirm]').fill('private-registration-password');
+  await page.getByLabel('Käyttäjätunnus', { exact: true }).fill('browser-registration');
+  await page.getByLabel('Salasana', { exact: true }).fill('private-registration-password');
+  await page.getByLabel('Salasana (uudelleen)', { exact: true }).fill('private-registration-password');
   await page.locator('form[method=POST] input[type=submit]').click();
   assert.match(await page.locator('body').innerText(),/Account created/);
   assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);

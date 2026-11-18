@@ -373,9 +373,12 @@ begin
     if Message<>'' then Body:=Body+'<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>';
     if First then Body:=Body+'<p>This first account will be the <b>Domain Global Admin</b>.</p>';
     Body:=Body+'<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/register'))+'">'+
-      HtmlEncode(Words.Text('username','Username'))+' <input name="username"><br>'+
-      HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+
-      HtmlEncode(Words.Text('password-again','Confirm'))+' <input type="password" name="confirm"><br>'+
+      '<label for="register-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> '+
+      '<input id="register-username" name="username"><br>'+
+      '<label for="register-password">'+HtmlEncode(Words.Text('password','Password'))+'</label> '+
+      '<input id="register-password" type="password" name="password"><br>'+
+      '<label for="register-confirm">'+HtmlEncode(Words.Text('password-again','Confirm'))+'</label> '+
+      '<input id="register-confirm" type="password" name="confirm"><br>'+
       '<input type="submit" value="'+HtmlAttr(Title)+'"></form>'+
       '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>';
     Result:=AuthPage(Request,Response,Title,Body);
