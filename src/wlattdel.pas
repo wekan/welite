@@ -3,8 +3,9 @@ unit wlattdel;
 interface
 uses wldb;
 function SharedAttachmentRemovalSQL(Db:TWLDb;const Actor,BoardId,Scope,Claim:string;ClearCardCover:Boolean):string;
+procedure RecordSharedAttachmentRemovals(Db:TWLDb;const Actor,BoardId,BatchId:string);
 implementation
-uses SysUtils,DateUtils,wlshared,wlferr;
+uses SysUtils,DateUtils,wlshared,wlferr,wlchhist;
 function SharedAttachmentRemovalSQL(Db:TWLDb;const Actor,BoardId,Scope,Claim:string;ClearCardCover:Boolean):string;
 var Live,Registry,Files,Cards,Patch,ClearCover,Stamp:string;Rows:TWLRows;AtTime:TDateTime;
   function StoreExpression(const Physical,Expression:string):string;
@@ -45,6 +46,21 @@ begin
     ' WHERE json_extract(_ferretdb_sjson,''$._id'') IN (SELECT id FROM attachments WHERE '+Live+'); '+
     'SELECT CASE WHEN '+Registry+' AND NOT EXISTS(SELECT 1 FROM attachments WHERE '+Live+
     ') THEN 1 ELSE json(''Attachment deletion failed'') END; ';
+end;
+
+procedure RecordSharedAttachmentRemovals(Db:TWLDb;const Actor,BoardId,BatchId:string);
+var Rows:TWLRows;Row:TWLRow;Physical:string;
+begin
+  if not SharedStore(Db) then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
+  if Length(Rows)<>1 then Exit;
+  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Rows:=Db.Query('SELECT id,swimlaneId,listId,cardId,name FROM attachments WHERE boardId='+QuotedStr(BoardId)+
+    ' AND id IN (SELECT json_extract(_ferretdb_sjson,''$._id'') FROM '+Physical+
+    ' WHERE json_extract(_ferretdb_sjson,''$.deleteBatchId'')='+QuotedStr(BatchId)+
+    ' AND json_extract(_ferretdb_sjson,''$.deletedBy'')='+QuotedStr(Actor)+') ORDER BY id;');
+  for Row in Rows do
+    try RecordAttachmentRemoval(Db,Actor,BoardId,Row[1],Row[2],Row[3],Row[0],Row[4],BatchId);except end;
 end;
 
 end.

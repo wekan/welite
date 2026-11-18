@@ -152,6 +152,8 @@ In a shared store, deleting an attachment marks it deleted, clears its card
 cover if selected, and records one deletion activity. Repeating the request
 leaves the original deletion marker intact. Single and bulk REST card deletion
 mark that card’s live attachments under one batch while retaining their files.
+After deletion, WeLite appends removal records to the board’s change history
+when the writer gate permits it.
 Native attachment deletion removes
 the file and its record.
 

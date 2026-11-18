@@ -5,6 +5,7 @@ uses wldb;
 
 procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
   Restored:Boolean);
+procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId:string);
 
 implementation
 uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr;
@@ -17,8 +18,8 @@ begin
   Result:=Int64(Stamp.Date-Epoch.Date)*86400000+Stamp.Time;
 end;
 
-procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
-  Restored:Boolean);
+procedure RecordLifecycleChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt,
+  EntityType,EntityId,CardId,Name:string;Restored:Boolean);
 const GateCollections:array[0..1] of string=('historyWriterGates','historyChainHeads');
   Schema='CREATE TABLE IF NOT EXISTS _wl_change_history('+
   'id TEXT PRIMARY KEY,boardId TEXT NOT NULL,userId TEXT NOT NULL,integrityHash TEXT NOT NULL,'+
@@ -309,26 +310,40 @@ begin
     ChangeType:='removed';DateKey:='newContent';
     if Restored then begin ChangeType:='added';DateKey:='previousContent';end;
     Row:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'swimlaneId',LaneId,'listId',ListId,
-      'entityType','list','entityId',ListId,'group','lifecycle','changeType',ChangeType,
+      'entityType',EntityType,'entityId',EntityId,'group','lifecycle','changeType',ChangeType,
       'userId',UserId,'createdAt',Stamp,'undone',False,'superseded',False,'isCheckpoint',False]);
     Hints:=TJSONObject.Create(['createdAt','date']);
     try
-      Row.Add('cardId',TJSONNull.Create);
+      if CardId='' then Row.Add('cardId',TJSONNull.Create) else Row.Add('cardId',CardId);
+      if (EntityType='attachment') and (ListId='') then begin Row.Delete('listId');Row.Add('listId',TJSONNull.Create);end;
+      if (EntityType='attachment') and (LaneId='') then begin Row.Delete('swimlaneId');Row.Add('swimlaneId',TJSONNull.Create);end;
       Row.Add('restoredFromId',TJSONNull.Create);
       Row.Add('restoredByUserId',TJSONNull.Create);
       Row.Add('undoneAt',TJSONNull.Create);
       if BatchId='' then Row.Add('batchId',TJSONNull.Create) else Row.Add('batchId',BatchId);
       if Previous='' then Row.Add('previousHash',TJSONNull.Create) else Row.Add('previousHash',Previous);
       BeforeState:=TJSONObject.Create(['deleted',Restored]);Row.Add('previousContent',BeforeState);
-      AfterState:=TJSONObject.Create(['deleted',not Restored]);Row.Add('newContent',AfterState);
-      BeforeState.Add('deleteBatchId',Row.Find('batchId').Clone);
-      AfterState.Add('deleteBatchId',Row.Find('batchId').Clone);
-      DateState:=Row.Objects[DateKey];DateState.Add('deletedAt',DeletedAt);
+      DateState:=nil;
+      if EntityType='attachment' then
+      begin
+        BeforeState.Add('name',Name);
+        Row.Add('newContent',TJSONNull.Create);
+      end
+      else
+      begin
+        AfterState:=TJSONObject.Create(['deleted',not Restored]);Row.Add('newContent',AfterState);
+        BeforeState.Add('deleteBatchId',Row.Find('batchId').Clone);
+        AfterState.Add('deleteBatchId',Row.Find('batchId').Clone);
+        DateState:=Row.Objects[DateKey];DateState.Add('deletedAt',DeletedAt);
+      end;
       Hash:=ListLifecycleHash(Row);
       Row.Add('integrityHash',Hash);
       Row.Delete('createdAt');Row.Add('createdAt',Milliseconds(Stamp));
-      DateState.Delete('deletedAt');DateState.Add('deletedAt',Milliseconds(DeletedAt));
-      Hints.Add(DateKey,TJSONObject.Create(['deletedAt','date']));
+      if DateState<>nil then
+      begin
+        DateState.Delete('deletedAt');DateState.Add('deletedAt',Milliseconds(DeletedAt));
+        Hints.Add(DateKey,TJSONObject.Create(['deletedAt','date']));
+      end;
       Doc:=QuotedStr(TypedDocument(Row.AsJSON,'',Hints.AsJSON));
     finally Hints.Free;Row.Free;end;
     if Shared then
@@ -351,6 +366,17 @@ begin
     if Db.Exec(Sql) then Exit;
     Db.Exec('ROLLBACK;');
   end;
+end;
+
+procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
+  Restored:Boolean);
+begin
+  RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,BatchId,DeletedAt,'list',ListId,'','',Restored);
+end;
+
+procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId:string);
+begin
+  RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,BatchId,'','attachment',AttachmentId,CardId,Name,False);
 end;
 
 end.

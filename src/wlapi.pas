@@ -5069,9 +5069,9 @@ end;
 // DELETE card — children (labels/members/comments/checklists/…) cascade via FK.
 // The activity records the claimed delete in the same transaction as the cascade.
 function DeleteRestCard(Db:TWLDb;const UserId,BoardId,ListId,CardId:string;out Removed:Boolean):Boolean;
-var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings,Attachments,AttachmentScope:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
+var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings,Attachments,AttachmentScope,BatchId:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
 begin
-  Result:=False;Removed:=False;Claim:=QuotedStr(NewId);Actor:=QuotedStr(UserId);Stamp:=QuotedStr(NowIso);
+  Result:=False;Removed:=False;BatchId:=NewId;Claim:=QuotedStr(BatchId);Actor:=QuotedStr(UserId);Stamp:=QuotedStr(NowIso);
   try
     Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
     try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
@@ -5102,6 +5102,7 @@ begin
     if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
     Removed:=Length(Db.Query('SELECT id FROM activities WHERE id='+Claim+';'))=1;
     Result:=True;
+    if Removed and (Attachments<>'') then RecordSharedAttachmentRemovals(Db,UserId,BoardId,BatchId);
   except Db.Exec('ROLLBACK;');end;
 end;
 
@@ -5474,7 +5475,7 @@ begin
 end;
 
 function SoftDeleteSharedAttachment(Db:TWLDb;const Actor,BoardId,AttachmentId:string):Boolean;
-var Scope,Permission,Bindings,Sql:string;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;
+var Scope,Permission,Bindings,Sql,BatchId:string;Policy:TFieldPolicy;Selector:TSelectionScope;I:Integer;
 begin
   Selector:=TSelectionScope.Create(Db);
   try
@@ -5484,13 +5485,15 @@ begin
   finally Selector.Free;end;
   Policy:=TFieldPolicy.Create(Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  BatchId:=NewId;
   Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+
     ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 ELSE json(''Attachment scope changed'') END; '+
-    SharedAttachmentRemovalSQL(Db,Actor,BoardId,Scope,QuotedStr(NewId),True)+
+    SharedAttachmentRemovalSQL(Db,Actor,BoardId,Scope,QuotedStr(BatchId),True)+
     Bindings+'SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM attachments WHERE '+Scope+
     ')=1 THEN 1 ELSE json(''Attachment scope changed'') END; COMMIT;';
   Result:=Db.Exec(Sql);
-  if not Result then Db.Exec('ROLLBACK;');
+  if not Result then Db.Exec('ROLLBACK;')
+  else RecordSharedAttachmentRemovals(Db,Actor,BoardId,BatchId);
 end;
 
 procedure ApiAttachmentDelete(aRequest:TRequest;aResponse:TResponse);

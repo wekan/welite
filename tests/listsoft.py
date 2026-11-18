@@ -28,6 +28,11 @@ def check_registry_repair(client, db):
 def run(request, client, db, token, session):
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT 1 FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone() is None
+    existing=client.command({'find':'changeHistory','filter':dict(boardId='b')})['cursor']['firstBatch']
+    hashes={row['integrityHash'] for row in existing if row.get('integrityHash')}
+    tips=hashes-{row.get('previousHash') for row in existing}
+    assert len(tips)<=1,tips
+    prior_tip=next(iter(tips),None)
     lists_path = '/api/boards/b/lists'
     status, _, body = request('POST', lists_path, {'title': 'Soft delete'}, token)
     assert status == 200, (status, body)
@@ -124,7 +129,7 @@ def run(request, client, db, token, session):
     lifecycle=changes()
     assert set(lifecycle)=={'removed','added'}, lifecycle
     removed, added=lifecycle['removed'], lifecycle['added']
-    assert removed['previousHash'] is None and added['previousHash']==removed['integrityHash'], lifecycle
+    assert removed['previousHash']==prior_tip and added['previousHash']==removed['integrityHash'], lifecycle
     assert removed['newContent']==added['previousContent'] and isinstance(removed['newContent']['deletedAt'],DateMs), lifecycle
     client.command({'create':'historyWriterGates'})
     def board_key(kind):

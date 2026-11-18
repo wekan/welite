@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Append attachment removals to shared change history
+
+- Record direct and cascaded removals with their batch, actor and original
+  filename in the existing board hash chain when its writer gate permits.
+
 ## 2026-11-18 Retain shared attachments after HTML selection deletion
 
 - Mark attachments from selected cards, lists and lanes in the same

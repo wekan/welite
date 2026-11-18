@@ -533,7 +533,7 @@ end;
 
 function DeleteSelection(const T:TWLTenant;Graph:TJSONObject;const BoardId,UserId:string):Boolean;
 var Data:TJSONObject;CardIds,ListIds,LaneIds,AttachmentIds,ActivityIds,Sql,AttachmentSql,
-  Board,Scope,Bindings,Permission:string;
+  Board,Scope,Bindings,Permission,BatchId:string;
   A:TJSONArray;I:Integer;Shared:Boolean;Selector:TSelectionScope;Policy:TFieldPolicy;
 begin
   Data:=TJSONObject(Graph.Find('data'));CardIds:=ArrayIds(Data,'cards');ListIds:=ArrayIds(Data,'lists');
@@ -552,7 +552,8 @@ begin
         '(listId IN ('+ListIds+') AND '+Selector.StringField('attachments','listId')+') OR '+
         '(swimlaneId IN ('+LaneIds+') AND '+Selector.StringField('attachments','swimlaneId')+'))';
       for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
-      AttachmentSql:=SharedAttachmentRemovalSQL(T.Db,UserId,BoardId,Scope,q(NewAuthToken),False);
+      BatchId:=NewAuthToken;
+      AttachmentSql:=SharedAttachmentRemovalSQL(T.Db,UserId,BoardId,Scope,q(BatchId),False);
     finally Selector.Free;end;
   end
   else AttachmentSql:='DELETE FROM attachments WHERE boardId='+Board+' AND id IN ('+AttachmentIds+'); ';
@@ -567,7 +568,8 @@ begin
     Bindings+'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Selection deletion permission changed'') END; COMMIT;';
   Result:=T.Db.Exec(Sql);
   if not Result then begin T.Db.Exec('ROLLBACK;');Exit;end;
-  if Shared then Exit;
+  if Shared then
+  begin RecordSharedAttachmentRemovals(T.Db,UserId,BoardId,BatchId);Exit;end;
   // Native metadata commits before file unlinking.
   A:=TJSONArray(Data.Find('attachments'));
   for I:=0 to A.Count-1 do if A.Objects[I].Get('storageBackend','filesystem')='filesystem' then

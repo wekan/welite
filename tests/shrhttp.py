@@ -1165,6 +1165,25 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 events=client.command({'find':'activities','filter':dict(attachmentId=attachment_id,
                     activityType='deleteAttachment')})['cursor']['firstBatch']
                 assert len(events)==1 and events[0]['userId']=='u'
+                def removal_history(attachment):
+                    return client.command({'find':'changeHistory','filter':dict(entityType='attachment',
+                        entityId=attachment,changeType='removed')})['cursor']['firstBatch']
+                def verify_removal_hash(row):
+                    keys=('batchId','boardId','cardId','changeType','createdAt','entityId','entityType',
+                        'group','listId','newContent','previousContent','previousHash','restoredByUserId',
+                        'restoredFromId','swimlaneId','userId')
+                    value={key:row[key] for key in keys}
+                    epoch=datetime.datetime(1970,1,1,tzinfo=datetime.timezone.utc)
+                    stamp=epoch+datetime.timedelta(milliseconds=row['createdAt'])
+                    value['createdAt']={'$date':stamp.isoformat(timespec='milliseconds').replace('+00:00','Z')}
+                    wire=json.dumps(value,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()
+                    assert hashlib.sha256(wire).hexdigest()==row['integrityHash']
+                direct_history,=removal_history(attachment_id)
+                verify_removal_hash(direct_history)
+                assert direct_history['previousContent']==dict(deleted=False,name='export.txt')
+                assert direct_history['newContent'] is None and direct_history['userId']=='u'
+                assert direct_history['batchId']==retained['deleteBatchId']
+                assert isinstance(direct_history['createdAt'],DateMs) and len(direct_history['integrityHash'])==64
                 print('PASS: shared attachment delete retains bytes and typed metadata, clears cover and is idempotent')
                 def attachment_for(card_id,name):
                     query=urlencode(dict(boardId='b',swimlaneId='s',listId='l',cardId=card_id,fileName=name))
@@ -1203,6 +1222,11 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         events=client.command({'find':'activities','filter':dict(attachmentId=attachment,
                             activityType='deleteAttachment')})['cursor']['firstBatch']
                         assert len(events)==1 and events[0]['userId']=='u'
+                        history,=removal_history(attachment)
+                        verify_removal_hash(history)
+                        assert history['boardId']=='b' and history['cardId']==target and history['userId']=='u'
+                        assert history['batchId']==saved['deleteBatchId'] and history['newContent'] is None
+                        assert history['previousContent']==dict(deleted=False,name=before['name'])
                     assert batches[0] and batches[0]==batches[1]
                     client.command({'delete':'attachments','deletes':[dict(q={'_id':item},limit=1)
                         for item in [*ids,old]]})
