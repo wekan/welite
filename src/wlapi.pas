@@ -51,6 +51,7 @@ procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
+procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
@@ -98,7 +99,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -829,6 +830,36 @@ begin
     else if (Result <> '') and (Result[Length(Result)] <> '-') then Result := Result + '-';
   end;
   if Result = '' then Result := 'board';
+end;
+
+procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,Key,TableName:string;Payload:TJSONObject;Rows:TWLRows;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];
+  if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
+  for Key in ['swimlaneId','listId','cardId','checklistId','fields'] do
+    if aRequest.QueryFields.IndexOfName(Key)>=0 then
+    begin SendError(aResponse,400,'Scoped export is unavailable');Exit;end;
+  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1 then
+  begin
+    Rows:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''settings'';');
+    if Length(Rows)=1 then
+    begin
+      TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+      Rows:=T.Db.Query('SELECT count(*) FROM '+TableName+' WHERE json_type(_ferretdb_sjson,''$.disableAllExport'')=''true'''+
+        ' OR json_type(_ferretdb_sjson,''$.anonymizeExportUsers'')=''true'';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'0') then
+      begin SendError(aResponse,403,'Board export restricted by instance settings');Exit;end;
+    end else if Length(Rows)>1 then
+    begin SendError(aResponse,500,'Ambiguous export settings source');Exit;end;
+  end;
+  try
+    Payload:=ReadRestBoardExport(T,UserId,BoardId,aRequest.QueryFields.Values['attachments']<>'false');
+  except SendError(aResponse,500,'Could not export board');Exit;end;
+  if Payload=nil then begin SendError(aResponse,403,'Board export forbidden');Exit;end;
+  try SendJson(aResponse,Payload.AsJSON);finally Payload.Free;end;
 end;
 
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);

@@ -7,8 +7,9 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 // Returns true when it sent the action response; false for an ordinary arrow move.
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
+function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
 implementation
-uses wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp;
+uses wlcfjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp;
 type EInvalidSelection=class(Exception);
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
@@ -183,6 +184,12 @@ begin
     Result.Add('welite_selection',1); Result.Add('boardId',BoardId);
     Collect(Params,'sel_swimlane',Lanes); Collect(Params,'sel_list',Lists); Collect(Params,'sel_card',Cards);
     Resolve('swimlanes',Lanes);Resolve('lists',Lists);Resolve('cards',Cards);
+    if Params.Values['wholeBoard']='1' then
+    begin
+      AddQuery(T.Db,'SELECT id FROM swimlanes WHERE '+BoardScope('swimlanes')+';',Lanes);
+      AddQuery(T.Db,'SELECT id FROM lists WHERE '+BoardScope('lists')+';',Lists);
+      AddQuery(T.Db,'SELECT id FROM cards WHERE '+BoardScope('cards')+';',Cards);
+    end;
     AddQuery(T.Db,'SELECT id FROM lists WHERE '+BoardScope('lists')+' AND swimlaneId IN ('+IdSet(Lanes)+') AND '+Link('lists','swimlaneId')+';',Lists);
     AddQuery(T.Db,'SELECT id FROM cards WHERE '+BoardScope('cards')+' AND ((listId IN ('+IdSet(Lists)+') AND '+Link('cards','listId')+
       ') OR (swimlaneId IN ('+IdSet(Lanes)+') AND '+Link('cards','swimlaneId')+'));',Cards);
@@ -327,6 +334,115 @@ begin
     end;
   end;
 end;
+function ExportPlainDescription(const Text:string):string;
+var I,J,Opening:Integer;Tag,Skip,Lower:string;Quote:Char;
+begin
+  Result:='';I:=1;Lower:=LowerCase(Text);Skip:='';
+  while I<=Length(Text) do
+  begin
+    if Text[I]<>'<' then
+    begin
+      if Skip='' then Result:=Result+Text[I];
+      Inc(I);Continue;
+    end;
+    Opening:=I;Inc(I);J:=I;
+    if (J<=Length(Text)) and (Text[J]='/') then Inc(J);
+    if (J>Length(Text)) or not (Text[J] in ['A'..'Z','a'..'z','!','?']) then
+    begin if Skip='' then Result:=Result+'<';Continue;end;
+    while (J<=Length(Text)) and (Text[J] in ['A'..'Z','a'..'z','0'..'9','/']) do Inc(J);
+    Tag:=Copy(Lower,I,J-I);Quote:=#0;
+    while J<=Length(Text) do
+    begin
+      if Quote<>#0 then begin if Text[J]=Quote then Quote:=#0;end
+      else if (Text[J]=Chr(39)) or (Text[J]='"') then Quote:=Text[J]
+      else if Text[J]='>' then Break;
+      Inc(J);
+    end;
+    if J>Length(Text) then
+    begin if Skip='' then Result:=Result+Copy(Text,Opening,MaxInt);Break;end;
+    if (Skip='') and ((Tag='script') or (Tag='style')) then Skip:=Tag
+    else if (Skip<>'') and (Tag='/'+Skip) then Skip:='';
+    I:=J+1;
+  end;
+end;
+
+function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
+const Roots:array[0..7] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments');
+  ExportKeys:array[0..7] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments');
+var Params:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
+  I,J,Index:Integer;Name,FileData:string;Value:TJSONData;
+  function ExportRow(const TableName:string;Index:Integer):TJSONObject;
+  var Original:TJSONObject;Typed:string;Id:TJSONData;
+  begin
+    Original:=TJSONArray(Audit.Find(TableName)).Objects[Index];
+    Typed:=Original.Get('_wl_source','');
+    if Typed<>'' then Exit(DocumentJson(Typed));
+    Result:=TJSONObject(TJSONArray(Data.Find(TableName)).Objects[Index].Clone);
+    Id:=Result.Find('id');
+    if Id<>nil then begin Result.Add('_id',Id.Clone);Result.Delete('id');end;
+  end;
+begin
+  Result:=nil;Graph:=nil;Files:=nil;
+  if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId) then Exit;
+  Params:=TStringList.Create;
+  try
+    Params.Values['boardId']:=BoardId;Params.Values['action']:='export';Params.Values['wholeBoard']:='1';
+    Graph:=SelectionGraph(T,Params);
+    Data:=TJSONObject(Graph.Find('data'));Audit:=TJSONObject(Graph.Find('_export_audit'));
+    if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId) or
+      not ExportPayloadAllowed(T.Db,UserId,BoardId,Audit) or
+      not FieldExportRowsAllowed(T.Db,UserId,BoardId,TJSONArray(Data.Find('card_custom_field_values'))) then Exit;
+    if not SelectionBindingsValid(T.Db,TJSONArray(Graph.Find('_export_bindings'))) then
+      raise Exception.Create('Board export source changed');
+    if IncludeFiles then
+    begin
+      ExportSelection(T,Graph);Source:=TJSONArray(Graph.Find('files'));Files:=TJSONObject.Create;
+      for I:=0 to Source.Count-1 do
+      begin
+        Row:=Source.Objects[I];
+        if Row.Find('base64Data')<>nil then Files.Add(Row.Get('id',''),Row.Get('base64Data',''));
+      end;
+    end;
+    Result:=ExportRow('boards',0);
+    try
+      Result.Delete('stars');Result.Delete('_format');Result.Add('_format','wekan-board-1.0.0');
+      for I:=0 to High(Roots) do
+      begin
+        Name:=Roots[I];Source:=TJSONArray(Data.Find(Name));Target:=TJSONArray.Create;
+        Result.Delete(ExportKeys[I]);Result.Add(ExportKeys[I],Target);
+        for J:=0 to Source.Count-1 do
+        begin
+          Row:=ExportRow(Name,J);
+          if Name='attachments' then
+          begin
+            Attachment:=TJSONObject.Create(['_id',Row.Get('_id',''),'name',Row.Get('name',''),'type',Row.Get('type','')]);
+            Value:=Row.FindPath('meta.cardId');if Value=nil then Value:=Row.Find('cardId');
+            if Value<>nil then Attachment.Add('cardId',Value.Clone);
+            Value:=Row.FindPath('meta.source');if Value<>nil then Attachment.Add('source',Value.Clone);
+            Row.Free;Row:=Attachment;
+          end;
+          Target.Add(Row);
+          if Name='cards' then
+          begin
+            Index:=Row.IndexOfName('description');
+            if Index>=0 then
+            begin
+              Value:=Row.Items[Index];
+              if Value.JSONType=jtString then Row.Strings['description']:=ExportPlainDescription(Value.AsString);
+            end;
+          end;
+          if (Name='attachments') and (Files<>nil) then
+          begin
+            FileData:=Row.Get('_id','');Row.Delete('file');
+            if Files.Find(FileData)<>nil then Row.Add('file',Files.Strings[FileData]);
+          end else if Name='attachments' then Row.Delete('file');
+        end;
+      end;
+      Result.Delete('users');Result.Add('users',TJSONArray.Create);
+    except FreeAndNil(Result);raise;end;
+  finally Files.Free;Graph.Free;Params.Free;end;
+end;
+
 function DeleteSelection(const T:TWLTenant; Graph:TJSONObject; const BoardId:string):Boolean;
 var Data:TJSONObject; CardIds,ListIds,LaneIds,AttachmentIds,ActivityIds,Sql:string;
   A:TJSONArray; i:Integer;

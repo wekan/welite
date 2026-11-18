@@ -221,6 +221,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert undecorated['dueComplete'] is False and undecorated['stickers']==[] and undecorated['locations']==[]
                 print('PASS: REST card decorations normalize coordinates and reject invalid updates atomically')
 
+                export_path='/api/boards/b/export'
+                assert request('GET',export_path+'?listId=l',token=token)[0]==400
+                status,_,body=request('GET',export_path+'?attachments=false',token=token)
+                assert status==200,(status,body)
+                exported=json.loads(body)
+                assert exported['_format']=='wekan-board-1.0.0' and exported['cards'][0]['_id']==card['_id']
+                client.command({'create':'settings'})
+                client.command({'insert':'settings','documents':[dict(_id='export-settings',disableAllExport=True)]})
+                assert request('GET',export_path,token=token)[0]==403
+                client.command({'delete':'settings','deletes':[dict(q={'_id':'export-settings'},limit=1)]})
+                print('PASS: REST whole-board export uses typed data and honors the shared export guard')
+
                 create_card_path='/api/boards/b/lists/l/cards'
                 status,_,body=request('POST',create_card_path,dict(linkedId=card['_id'],swimlaneId='s'),token)
                 assert status==200,(status,body)
