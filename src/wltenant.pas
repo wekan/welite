@@ -190,12 +190,14 @@ end;
 // Create files/db/, files/attachme/ and files/avatars/ and, the first
 // time, its SQLite db with the schema applied. Idempotent; safe to call on every request.
 function EnsureTenantStore(const Tenant: TWLTenant): Boolean;
-var Db: TWLDb; Sql: string; R: TWLRows;
+var Db: TWLDb; Sql: string; R: TWLRows; MayInitialize: Boolean;
 begin
   Result:=False;
   if TenantUsesSharedStore(Tenant) then
   begin
-    if ExtractFileName(Tenant.DbPath)='wekan.sqlite' then
+    MayInitialize:=(ExtractFileName(Tenant.DbPath)='wekan.sqlite') or
+      (SharedStoresRequested and (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1'));
+    if MayInitialize then
       ForceDirectories(Tenant.FilesDir+'db')
     else if not FileExists(Tenant.DbPath) then Exit;
     if not DirectoryExists(Tenant.FilesDir+'db') then Exit;
@@ -204,7 +206,7 @@ begin
       R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''_ferretdb_collections'';');
       if Length(R)=0 then
       begin
-        if ExtractFileName(Tenant.DbPath)<>'wekan.sqlite' then Exit;
+        if not MayInitialize then Exit;
         if (Length(Db.Query('SELECT 1 FROM sqlite_master LIMIT 1;'))=0) and
           InstallRootModels(Db,True) then Exit(True);
         // A concurrent provisioner may have installed the complete schema.

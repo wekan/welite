@@ -1770,12 +1770,12 @@ Explicit native mode refuses the canonical shared filename and FerretDB metadata
 in the short filename. Resolve ambiguous files and recovery state offline first.
 
 `WELITE_SHORT_NAMES=1` refuses `wekan.sqlite` and long sidecars beside
-`wekan.db`. In strict mode, provision the file through FerretDB using
-`dbext=db&shortnames=1` and the optional CGo driver (commit `9bcda076` or later).
-Open that file with `WELITE_SHARED=1 WELITE_SHORT_NAMES=1` and the linked SQLite
-library or CLI built with `SQLITE_ENABLE_8_3_NAMES=2`. Both clients use the same
-short sidecars. Fresh strict provisioning directly from WeLite and non-Linux
-targets remain to be verified. Do not
+`wekan.db`. Set `WELITE_SHARED=1 WELITE_SHORT_NAMES=1` to create or open a strict
+shared `wekan.db` using a linked SQLite library or CLI built with
+`SQLITE_ENABLE_8_3_NAMES=2`. FerretDB uses `dbext=db&shortnames=1` and the optional
+CGo driver (commit `9bcda076` or later). A running FerretDB discovers the new
+file. Both clients use the same short sidecars. Non-Linux targets remain to be
+verified. Do not
 rename or alias an open database to work around these checks. Full Meteor application
 observer/index/cache and file-byte compatibility remain separate acceptance gates.
 

@@ -61,7 +61,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
     cases=tmp/'paths';cases.mkdir()
     assert selected(cases)==str(cases/'wekan.db') and selected(cases,True)=='refused'
     assert selected(cases,fresh=True)==str(cases/'wekan.sqlite')
-    assert selected(cases,extra={'WELITE_SHORT_NAMES':'1'},fresh=True)=='refused'
+    assert selected(cases,extra={'WELITE_SHORT_NAMES':'1'},fresh=True)==str(cases/'wekan.db')
     strict_auto=subprocess.check_output([str(tmp/'select/dbfile'),str(cases),'auto-fresh'],
         env=dict(os.environ,WELITE_SHARED='',WELITE_SHORT_NAMES='1'),text=True).strip()
     assert strict_auto==str(cases/'wekan.db')
@@ -170,7 +170,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert not fresh_file.exists()
                         databases=fresh_client.command({'listDatabases':1,'nameOnly':True},database='admin')
                         assert 'wekan' not in {row['name'] for row in databases['databases']}
-                        if extension=='db':
+                        if extension=='db' and not strict_shared:
                             fresh_client.command({'create':'users'})
                         app=start('1' if extension=='db' else '',fresh,WELITE_SHORT_NAMES='1' if strict_shared else '')
                         assert request('GET','/sign-in')[0]==200
@@ -209,30 +209,30 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         fresh_server.wait(timeout=10)
                         stop()
                     if strict_shared:
-                        print('PASS: FerretDB and WeLite share live 8.3 SQLite sidecars across an HTTP restart')
+                        print('PASS: running FerretDB discovers fresh strict shared storage and retains API login across HTTP restart')
                     elif extension=='db':
                         print('PASS: FerretDB and WeLite share one wekan.db with standard sidecars')
                     else:
                         print('PASS: running FerretDB discovers the fresh database provisioned through HTTP')
 
-                if strict_shared:
-                    continue
-
                 occupied=out/'occupied'
                 occupied_data=occupied/'local/files/db'
                 occupied_data.mkdir(parents=True)
-                occupied_file=occupied_data/'wekan.sqlite'
+                occupied_file=occupied_data/('wekan.db' if strict_shared else 'wekan.sqlite')
                 with sqlite3.connect(occupied_file) as con:
                     con.execute('CREATE TABLE users (id TEXT PRIMARY KEY)')
                     con.execute("INSERT INTO users VALUES ('retained')")
-                for mode in ('','1'):
-                    app=start(mode,occupied)
+                for mode in (('1',) if strict_shared else ('','1')):
+                    app=start(mode,occupied,WELITE_SHORT_NAMES='1' if strict_shared else '')
                     assert request('GET','/sign-in')[0]==404
                     stop()
                 with sqlite3.connect(occupied_file) as con:
                     assert con.execute('SELECT id FROM users').fetchall()==[('retained',)]
                     assert con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchone() is None
-                assert not (occupied_data/'wekan.db').exists()
+                assert not (occupied_data/('wekan.sqlite' if strict_shared else 'wekan.db')).exists()
+                if strict_shared:
+                    print('PASS: strict shared provisioning preserves an existing native database')
+                    continue
 
                 native_fresh=out/'native-fresh'
                 app=start('0',native_fresh)

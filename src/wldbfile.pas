@@ -50,7 +50,7 @@ begin
     if (StrictNames and LongSidecars) or (not StrictNames and ShortSidecars) then Exit;
     Path:=ShortFile;Exit(True);
   end;
-  if SharedOnly and (not AllowSharedCreation or (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1')) then Exit;
+  if SharedOnly and not AllowSharedCreation then Exit;
   // A differently named FerretDB file or orphan sidecars require explicit repair,
   // not a new normalized database beside possibly recoverable source data.
   Code:=FindFirst(Dir+'*.sqlite',faAnyFile,Search);
@@ -66,7 +66,8 @@ begin
   if FileExists(ShortFile+'-wal') or FileExists(ShortFile+'-shm') or FileExists(ShortFile+'-journal') or
     FileExists(SourceFile+'-wal') or FileExists(SourceFile+'-shm') or FileExists(SourceFile+'-journal') or
     FileExists(Dir+'wekan.wal') or FileExists(Dir+'wekan.shm') or FileExists(Dir+'wekan.nal') then Exit;
-  if SharedOnly or (AllowSharedCreation and AllowAuto and AutoSharedStores and SharedCreationAvailable) then
+  if (SharedOnly and not StrictNames) or
+    (AllowSharedCreation and AllowAuto and AutoSharedStores and SharedCreationAvailable) then
     Path:=SourceFile else Path:=ShortFile;
   Result:=True;
 end;

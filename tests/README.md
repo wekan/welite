@@ -338,9 +338,10 @@ application workflows remain to be verified.
 
 Set `WELITE_SHARED_SHORT_TEST=1` to run only the strict shared-file workflow.
 Use FerretDB with its strict CGo driver (commit `9bcda076` or later) and a
-short-name SQLite library/CLI for WeLite and Python. The strict test verifies
-cookie-free form sign-in, API bearer persistence across HTTP restart, and
-live short WAL/SHM with FerretDB still running.
+short-name SQLite library/CLI for WeLite and Python. The strict test provisions the
+file from WeLite, checks that FerretDB discovers it while running, and verifies
+cookie-free sign-in, API bearer persistence across HTTP restart, live short
+WAL/SHM and refusal to overwrite a native database.
 
 `python3 tests/stop.py` verifies Unix SIGTERM/SIGINT on both HTTP backends: idle
 accept, sustained request traffic, an incomplete request, repeated stop signals,
