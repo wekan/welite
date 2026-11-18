@@ -225,6 +225,14 @@ into a fresh file with this VFS. The integrity check passes inside vamos
 and after reopening the file on Linux. Server integration, concurrent
 access and HTTP remain open.
 
+HTTP startup on AmigaOS requires `bsdsocket.library` version 4. The
+server exits with status 1 before opening the tenant registry when the
+library is unavailable, or when the AmigaOS 4 socket interface cannot
+be acquired. The offline `initadmin` command bypasses the socket check.
+The current disk CLI builds link for m68k, AmigaOS 4 and MorphOS. The
+fresh m68k executable reproduces the diagnostic under 68020 vamos with
+8 MiB of emulated RAM. Native HTTP and SQLite acceptance remain open.
+
 A scratch build of the full disk server binds the GCC SQLite exports
 statically, selects `unix-dotfile`, and uses the probe's C startup
 shims. The C object uses a distinct filename from the Pascal binding's
