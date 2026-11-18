@@ -420,7 +420,7 @@ Platform and browser claims require testing on those targets.
   fixture retains its targeted 30-second timeout; ordinary timeouts keep defaults.
   Remaining: broader resume-policy parity; Mongo-managed sparse/multikey account indexes, session integration, typed custom-value and legacy
   relation conversion, existing-account/file compatibility,
-  strict shared SQLite sidecars and portable 8.3 verification and full Meteor application workflows (docs/ferret.md).
+  fresh strict shared provisioning from WeLite, portable 8.3 target verification and full Meteor application workflows (docs/ferret.md).
 - [ ] Complete language selection, translation rendering and RTL behavior.
   Catalog conversion publishes matching browser/strict-JSON catalogs for 154 installed language identities, with native names/direction, portable asset mappings and distinct source aliases. It excludes the 91 missing source assets without executing JavaScript or overwriting local prose.
   Server negotiation validates disk/embedded catalogs and honors explicit/profile/weighted-header precedence, aliases and parent fallback. Per-page UTF-8 translation readers preserve literal tokens and use safe English/explicit fallback; live Mongo profile changes and all installed identities are covered.

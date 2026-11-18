@@ -333,8 +333,14 @@ HTTP/Mongo changes, BSON preservation, private browser sessions, API restart and
 shared revocation, with no normalized shadow database. It also provisions a fresh
 shared database through HTTP in default mode, discovers it from the already running Mongo server,
 and logs in with a Mongo-created account. With `dbext=db`, it also verifies
-that both processes share one `wekan.db` with normal sidecars. Strict 8.3 sharing and full Meteor
-application workflows are not covered.
+that both processes share one `wekan.db` with normal sidecars. Full Meteor
+application workflows remain to be verified.
+
+Set `WELITE_SHARED_SHORT_TEST=1` to run only the strict shared-file workflow.
+Use FerretDB with its strict CGo driver (commit `9bcda076` or later) and a
+short-name SQLite library/CLI for WeLite and Python. The strict test verifies
+cookie-free form sign-in, API bearer persistence across HTTP restart, and
+live short WAL/SHM with FerretDB still running.
 
 `python3 tests/stop.py` verifies Unix SIGTERM/SIGINT on both HTTP backends: idle
 accept, sustained request traffic, an incomplete request, repeated stop signals,

@@ -41,7 +41,12 @@ if selected_backend is not None:
     if selected_backend not in backends:
         raise SystemExit('WELITE_SHARED_BACKEND must be linked or cli')
     backends = {selected_backend: backends[selected_backend]}
-with sqlite3.connect(':memory:') as con:assert con.execute("SELECT sqlite_compileoption_used('ENABLE_8_3_NAMES=2')").fetchone()==(0,)
+strict_shared = os.environ.get('WELITE_SHARED_SHORT_TEST') == '1'
+if strict_shared and upstream:
+    raise SystemExit('Run upstream API tests separately from WELITE_SHARED_SHORT_TEST')
+with sqlite3.connect(':memory:') as con:
+    compiled_short = bool(con.execute("SELECT sqlite_compileoption_used('ENABLE_8_3_NAMES=2')").fetchone()[0])
+    assert compiled_short == strict_shared, 'Python SQLite must use the selected sidecar mode'
 def port():
     with socket.socket() as sock:sock.bind(('127.0.0.1',0));return sock.getsockname()[1]
 with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as directory:
@@ -117,7 +122,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 proc.kill();proc.wait();raise AssertionError('HTTP startup timed out')
             try:
                 wait_for_ferret()
-                for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
+                if not strict_shared:
+                    for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:
+                        client.command({'create':collection})
                 if upstream:
                     for collection in ['rules','triggers','actions','integrations','eventlog','savedCardFilters','scrumSnapshotRows','org','team']:
                         client.command({'create':collection})
@@ -134,7 +141,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         WEKAN_PLAYWRIGHT_ALL='0',WEKAN_PLAYWRIGHT_WORKERS='1'),
                         check=True)
                     continue
-                for extension in ('sqlite','db'):
+                for extension in (('db',) if strict_shared else ('sqlite','db')):
                     fresh=out/('fresh-'+extension)
                     fresh_data=fresh/'local/files/db'
                     fresh_data.mkdir(parents=True)
@@ -142,7 +149,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     alternate=fresh_data/('wekan.sqlite' if extension=='db' else 'wekan.db')
                     fresh_port=port()
                     fresh_client=Client(fresh_port)
-                    fresh_command=[str(ferret),'--handler=sqlite','--sqlite-url='+fresh_data.as_uri()+'/?dbext='+extension,
+                    fresh_url=fresh_data.as_uri()+'/?dbext='+extension
+                    if strict_shared:
+                        fresh_url+='&shortnames=1'
+                    fresh_command=[str(ferret),'--handler=sqlite','--sqlite-url='+fresh_url,
                         '--state-dir='+str(out/('fresh-state-'+extension)),'--listen-addr=127.0.0.1:'+str(fresh_port),
                         '--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable']
                     fresh_server=subprocess.Popen(fresh_command,env=env,stdout=mongo_log,stderr=mongo_log)
@@ -162,7 +172,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert 'wekan' not in {row['name'] for row in databases['databases']}
                         if extension=='db':
                             fresh_client.command({'create':'users'})
-                        app=start('1' if extension=='db' else '',fresh)
+                        app=start('1' if extension=='db' else '',fresh,WELITE_SHORT_NAMES='1' if strict_shared else '')
                         assert request('GET','/sign-in')[0]==200
                         assert fresh_file.is_file() and not alternate.exists()
                         with sqlite3.connect(fresh_file) as con:
@@ -185,14 +195,28 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         assert request('GET',headers['Location'])[0]==200
                         published=fresh_client.find('users','first-user')[0]['services']['resume']['loginTokens']
                         assert len(published)==1,published
+                        if strict_shared:
+                            assert (fresh_data/'wekan.wal').is_file()
+                            assert (fresh_data/'wekan.shm').is_file()
+                            assert not (fresh_data/'wekan.db-wal').exists()
+                            assert not (fresh_data/'wekan.db-shm').exists()
+                            token=json.loads(body)['token']
+                            stop()
+                            app=start('1',fresh,WELITE_SHORT_NAMES='1')
+                            assert request('GET','/api/user',token=token)[0]==200
                     finally:
                         fresh_server.terminate()
                         fresh_server.wait(timeout=10)
                         stop()
-                    if extension=='db':
+                    if strict_shared:
+                        print('PASS: FerretDB and WeLite share live 8.3 SQLite sidecars across an HTTP restart')
+                    elif extension=='db':
                         print('PASS: FerretDB and WeLite share one wekan.db with standard sidecars')
                     else:
                         print('PASS: running FerretDB discovers the fresh database provisioned through HTTP')
+
+                if strict_shared:
+                    continue
 
                 occupied=out/'occupied'
                 occupied_data=occupied/'local/files/db'

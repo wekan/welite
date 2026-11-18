@@ -54,7 +54,8 @@ mode off while using the same tenant/file layout.
 See [shared activation and provisioning](ferret.md#shared-http-activation-and-provisioning)
 for normal-filename shared stores. FerretDB's strict sidecar mode requires
 `dbext=db&shortnames=1` and its own SQLite build with
-`SQLITE_ENABLE_8_3_NAMES=2`. The shared strict round trip remains to be verified.
+`SQLITE_ENABLE_8_3_NAMES=2`. Both WeLite backends share the resulting
+`wekan.db` with FerretDB on Linux using live `wekan.wal` and `wekan.shm`.
 Never alias a shared database to obtain a different filename.
 
 **Every program accessing the database must use the same naming policy**, including

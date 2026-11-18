@@ -1769,10 +1769,13 @@ refuses a foreign `.sqlite` file rather than silently creating a shadow database
 Explicit native mode refuses the canonical shared filename and FerretDB metadata
 in the short filename. Resolve ambiguous files and recovery state offline first.
 
-`WELITE_SHORT_NAMES=1` refuses `wekan.sqlite`. It also refuses long sidecars
-beside `wekan.db`, and normal mode refuses short sidecars. The bundled FerretDB
-SQLite currently uses normal sidecar names even with `dbext=db`, so strict shared
-8.3 support remains open. This option does not migrate normalized data. Do not
+`WELITE_SHORT_NAMES=1` refuses `wekan.sqlite` and long sidecars beside
+`wekan.db`. In strict mode, provision the file through FerretDB using
+`dbext=db&shortnames=1` and the optional CGo driver (commit `9bcda076` or later).
+Open that file with `WELITE_SHARED=1 WELITE_SHORT_NAMES=1` and the linked SQLite
+library or CLI built with `SQLITE_ENABLE_8_3_NAMES=2`. Both clients use the same
+short sidecars. Fresh strict provisioning directly from WeLite and non-Linux
+targets remain to be verified. Do not
 rename or alias an open database to work around these checks. Full Meteor application
 observer/index/cache and file-byte compatibility remain separate acceptance gates.
 
