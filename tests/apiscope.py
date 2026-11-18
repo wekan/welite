@@ -226,3 +226,28 @@ def run(request, db, token):
     with sqlite3.connect(db) as con:
         con.execute("UPDATE lists SET type='list' WHERE id=?",(current_list,))
     print('PASS: list archive and restore reject repeated writes and cascade for template lists')
+
+    def edit_list(data):
+        return request('PUT',list_path+'?token='+token,json.dumps(data).encode())
+    with sqlite3.connect(db) as con:
+        before=con.execute('SELECT title,color,starred FROM lists WHERE id=?',(current_list,)).fetchone()
+    assert edit_list(dict(title='Rejected',color='#abc'))[0] == 400
+    with sqlite3.connect(db) as con:
+        assert con.execute('SELECT title,color,starred FROM lists WHERE id=?',(current_list,)).fetchone() == before
+    status, _, body=edit_list(dict(title='Renamed list',color='#Aa01fF',starred=True))
+    assert status == 200 and json.loads(body) == dict(_id=current_list), (status,body)
+    with sqlite3.connect(db) as con:
+        assert con.execute('SELECT title,color,starred FROM lists WHERE id=?',(current_list,)).fetchone() == ('Renamed list','#Aa01fF',1)
+        admin_id,=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()
+        con.execute("INSERT OR IGNORE INTO board_members(boardId,userId,isAdmin) VALUES('protected',?,0)",(admin_id,))
+        con.execute("UPDATE board_members SET isAdmin=0 WHERE boardId='protected' AND userId=?",(admin_id,))
+    wip=dict(value=3,enabled=True,soft=False)
+    assert edit_list(dict(title='Rejected',wipLimit=wip))[0] == 403
+    with sqlite3.connect(db) as con:
+        assert con.execute('SELECT title FROM lists WHERE id=?',(current_list,)).fetchone() == ('Renamed list',)
+        con.execute("UPDATE board_members SET isAdmin=1 WHERE boardId='protected' AND userId=?",(admin_id,))
+    status, _, body=edit_list(dict(wipLimit=wip))
+    assert status == 200, (status,body)
+    with sqlite3.connect(db) as con:
+        assert con.execute('SELECT wip_value,wip_enabled,wip_soft FROM lists WHERE id=?',(current_list,)).fetchone() == (3,1,0)
+    print('PASS: list PUT validates color atomically and restricts WIP edits to board administrators')

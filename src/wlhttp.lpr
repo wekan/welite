@@ -653,6 +653,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists', rmGet, @ApiLists);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists', rmPost, @ApiLists);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId', rmGet, @ApiList);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId', rmPut, @ApiListEdit);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId', rmDelete, @ApiListDelete);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards', rmGet, @ApiListCards);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards', rmPost, @ApiCards);

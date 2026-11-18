@@ -57,6 +57,7 @@ procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET list / POST create
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
+procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 procedure ApiListArchive(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST add card
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -86,7 +87,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -1178,6 +1179,93 @@ begin
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]);
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
+end;
+
+procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"List not found"}';
+var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql:string;
+  Body,Reply:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
+  Flag,i:Integer;Limit:Int64;Wide:UnicodeString;
+  procedure SetColumn(const Column,Literal:string);
+  begin
+    if Sets<>'' then Sets:=Sets+',';
+    Sets:=Sets+Column+'='+Literal;
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0';
+  Rows:=T.Db.Query('SELECT id FROM lists WHERE '+Scope+';');
+  if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+  Body:=nil;Policy:=nil;Sets:='';Permission:='1';
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then Body:=ExactObject(aRequest.Content)
+      else
+      begin
+        Body:=TJSONObject.Create;
+        for i:=0 to aRequest.ContentFields.Count-1 do
+          Body.Add(aRequest.ContentFields.Names[i],aRequest.ContentFields.ValueFromIndex[i]);
+      end;
+      Field:=Body.Find('title');
+      if (Field<>nil) and (Field.JSONType<>jtNull) and (Field.AsString<>'') then
+      begin
+        Value:=Field.AsString;CheckUtf8(Value);
+        if Pos(#0,Value)>0 then raise Exception.Create('Invalid title');
+        Wide:=UTF8Decode(Value);
+        if Length(Wide)>1000 then
+        begin
+          i:=1000;if Ord(Wide[i]) in [$D800..$DBFF] then Dec(i);
+          Value:=UTF8Encode(Copy(Wide,1,i));
+        end;
+        SetColumn('title',QuotedStr(Value));
+      end;
+      Field:=Body.Find('color');
+      if (Field<>nil) and (Field.JSONType<>jtNull) and (Field.AsString<>'') then
+      begin
+        Value:=Field.AsString;
+        if (ResolveColor(Value)='') or ((Value[1]='#') and (Length(Value)<>7)) or
+          ((Value[1]<>'#') and (NormalizeHex(Value)<>'')) then
+        begin SendJson(aResponse,'{"error":"Invalid list color. Use a named palette color or a #rrggbb hex value."}',400);Exit;end;
+        SetColumn('color',QuotedStr(Value));
+      end;
+      Field:=Body.Find('starred');
+      if Field<>nil then
+      begin
+        if not DefinitionFlag(Field,Flag) then raise Exception.Create('Invalid starred value');
+        SetColumn('starred',IntToStr(Flag));
+      end;
+      Wip:=Body.Find('wipLimit');
+      if (Wip<>nil) and (Wip.JSONType<>jtNull) then
+      begin
+        if not (Wip is TJSONObject) then raise Exception.Create('Invalid WIP value');
+        Field:=TJSONObject(Wip).Find('value');Limit:=1;
+        if Field<>nil then
+          if not TryStrToInt64(Field.AsJSON,Limit) then raise Exception.Create('Invalid WIP limit');
+        SetColumn('wip_value',IntToStr(Limit));
+        if not DefinitionFlag(TJSONObject(Wip).Find('enabled'),Flag) then raise Exception.Create('Invalid WIP enabled flag');
+        SetColumn('wip_enabled',IntToStr(Flag));
+        if not DefinitionFlag(TJSONObject(Wip).Find('soft'),Flag) then raise Exception.Create('Invalid WIP soft flag');
+        SetColumn('wip_soft',IntToStr(Flag));
+        Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+        Permission:=Policy.ScopeAdminExpression;
+      end;
+    except SendJson(aResponse,'{"error":"Invalid list update"}',400);Exit;end;
+    if Sets='' then begin SendJson(aResponse,'{"message":"Error"}',404);Exit;end;
+    Rows:=T.Db.Query('SELECT '+Permission+';');
+    if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+    begin SendError(aResponse,403,'Board administration required');Exit;end;
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM lists WHERE '+
+      Scope+')=1 THEN 1 ELSE json(''List edit scope changed'') END; UPDATE lists SET '+Sets+' WHERE '+Scope+
+      '; SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM lists WHERE '+Scope+
+      ')=1 THEN 1 ELSE json(''List edit scope changed'') END; COMMIT;';
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit list');Exit;end;
+    Reply:=TJSONObject.Create(['_id',ListId]);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  finally Policy.Free;Body.Free;end;
 end;
 
 procedure ApiListArchive(aRequest:TRequest;aResponse:TResponse);
