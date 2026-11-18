@@ -30,6 +30,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native sign-in and board links. Both upstream cases pass while retaining
   their REST and Mongo assertions.
 
+## 2026-11-18 Pass the upstream dropdown rename REST spec
+
+- Native Chromium checks updated option labels and verifies the selected
+  option ID is preserved after reload. All upstream cases pass.
+
 ## 2026-11-18 Pass the upstream card assignment REST spec
 
 - Native Chromium checks that member and assignee changes appear after
