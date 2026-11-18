@@ -30,6 +30,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native sign-in and board links. Both upstream cases pass while retaining
   their REST and Mongo assertions.
 
+## 2026-11-18 Pass the upstream organization and team feature specs
+
+- Native Chromium verifies both feature tables after successful and rejected
+  REST updates. All eight People cases pass against linked shared storage.
+
 ## 2026-11-18 Show organization and team features in People
 
 - Render the organization and team feature flags on the native People page
