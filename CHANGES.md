@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Preserve card colors on board import
+
+- Keep palette and custom card colors. Use the default appearance for
+  unknown colors.
+
 ## 2026-11-18 Open collapsed lists from the HTML board
 
 - Respect stored collapse defaults. Expand and close a list using links

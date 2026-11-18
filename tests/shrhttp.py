@@ -380,6 +380,11 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     dict(_id='valid-lane',title='Colored lane',color='green',archived=True),
                     dict(_id='invalid-lane',title='Default color',color=['green']),
                 ])
+                presentation['cards']=[
+                    dict(_id='palette-card',title='Green card',listId='invalid-list',swimlaneId='invalid-lane',color='green'),
+                    dict(_id='hex-card',title='Hex card',listId='invalid-list',swimlaneId='invalid-lane',color='#123abc'),
+                    dict(_id='unknown-card',title='Uncolored card',listId='invalid-list',swimlaneId='invalid-lane',color='unknown'),
+                ]
                 status,_,body=request('POST',import_path,dict(board=presentation),token)
                 assert status==200,(status,body)
                 imported_id=json.loads(body)['_id']
@@ -394,8 +399,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 colored=restored_lanes['Colored lane']
                 assert colored['color']=='green' and colored['archived'] is True
                 assert not restored_lanes['Default color'].get('color')
+                restored_cards={row['title']:row for row in imported_rows('cards')}
+                assert restored_cards['Green card']['color']=='green'
+                assert restored_cards['Hex card']['color']=='#123abc'
+                assert not restored_cards['Uncolored card'].get('color')
+                client.command({'update':'boards','updates':[
+                    {'q':{'_id':imported_id},'u':{'$set':{'permission':'public'}}}]})
+                status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
+                assert status==200 and 'Set-Cookie' not in headers
+                assert b'bgcolor="#3cb500">Green card' in body and b'bgcolor="#123abc">Hex card' in body
+                assert b'>Uncolored card</p>' in body
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
-                print('PASS: board import preserves list width, list and swimlane colors and archived state')
+                print('PASS: board import preserves list width, card/list/swimlane colors and archived state')
                 client.command({'create':'integrations'})
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
                     userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})

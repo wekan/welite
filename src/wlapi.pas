@@ -1912,7 +1912,7 @@ begin
         CardCreation(Row,CardId,CardAuthor,CardCreated);
         CardPlacement(Row,ListId,LaneId);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
-          'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived) VALUES('+
+          'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived,color) VALUES('+
           QuotedStr(CardId)+','+Board+','+
           QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
@@ -1921,7 +1921,7 @@ begin
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+
           ImportedSpentTime(Row)+','+BooleanValue(Row,'isOvertime')+','+QuotedStr(Text(Row,'requestedBy'))+','+
-          QuotedStr(Text(Row,'assignedBy'))+','+BooleanValue(Row,'archived')+'); ';
+          QuotedStr(Text(Row,'assignedBy'))+','+BooleanValue(Row,'archived')+','+ImportedColor(Row)+'); ';
         ImportCardPeople(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
