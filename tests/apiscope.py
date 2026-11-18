@@ -160,9 +160,18 @@ def run(request, db, token):
     assert read_item() == dict(before_item,isFinished=True,dueAt=None)
     print('PASS: checklist item API stores, preserves and clears deadlines with atomic validation')
 
+    scoped_card = '/api/boards/protected/lists/'+current_list+'/cards/'
+    status, _, body = request('GET',scoped_card+'missing?token='+token)
+    assert status == 404 and json.loads(body) == dict(error='Card not found'), (status,body)
+    with sqlite3.connect(db) as con:
+        other_list, = con.execute("SELECT id FROM lists WHERE boardId='protected' AND id<>? LIMIT 1",(current_list,)).fetchone()
+    status, _, body = request('GET','/api/boards/protected/lists/'+other_list+'/cards/card?token='+token)
+    assert status == 404 and json.loads(body) == dict(error='Card not found'), (status,body)
     with sqlite3.connect(db) as con:
         con.execute("UPDATE cards SET archived=1 WHERE id='card'")
     try:
+        status, _, body = request('GET',scoped_card+'card?token='+token)
+        assert status == 404 and json.loads(body) == dict(error='Card not found'), (status,body)
         status, _, body = request('GET','/api/cards/card?token='+token)
         assert status == 200 and checklist['_id'] in {entry['_id'] for entry in json.loads(body)['checklists']}, (status,body)
         status, _, body = request('GET','/api/cards/missing?token='+token)

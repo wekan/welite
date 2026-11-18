@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Match WeKan scoped card GET behavior
+
+- Read an active card from the authorized board and requested list. Return
+  the same JSON 404 for missing, wrong-list and archived cards. Global card
+  GET continues to return authorized archived cards.
+
 ## 2026-11-18 Read a card by ID through the global REST route
 
 - Add authenticated card GET by ID, including archived cards and embedded

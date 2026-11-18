@@ -43,7 +43,7 @@ def exercise(call,base,uid,role,site_admin,field,snapshot,fail,clear,shared):
                                ('DELETE','/members/'+quote(uid,safe=''),None),
                                ('POST','/assignees/'+quote(uid,safe=''),None),
                                ('DELETE','/assignees/'+quote(uid,safe=''),None),
-                               ('POST','/archive',dict(archive=False))]:
+                               ('POST','/archive',dict(isArchive='false'))]:
         result=values(read(method,suffix,data))
         assert result['policy-private'] is None and result['policy-both'] is None,result
     for name in ['policy-private','policy-locked','policy-both']:write(name,403)
