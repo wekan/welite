@@ -4,6 +4,34 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Archive completed implementation checklist items
+
+- Audit the current implementation and record the remaining work (2026-11-16).
+- Move lists up/down across swimlanes, preserving their cards and board boundaries.
+- Enforce tenant-local administrator permissions on every Designer endpoint.
+- Separate reserved-host Global Admin domain management from tenant administrators.
+- Finish Designer page listing, creation, editing, disabling and deletion.
+- Finish Designer widget add/edit/delete, options and bounded layout controls.
+- Honor widget row/column spans and required inputs in published pages; add cell sort arrows.
+- Make Designer imports validate atomically against the same page/widget rules.
+- Report CLI SQLite failures and preserve UTF-8 text, delimiters, quotes and line endings.
+- Render authorized board/list/swimlane/card data with the shared selection form.
+- Implement selected-item Edit/Save, confirmed Delete, Clear and Export actions.
+- Implement deep selected-item Clone with remapped child IDs and attachment copies.
+- Add shared board read/write checks, validate move selections and safe return URLs.
+- Validate API child routes against their board/parent chain and block unrestricted assignment roles.
+- Validate API body label/member/assignee/author IDs before atomic writes.
+- Enforce disabled-account denial/revocation, session identity/credential binding, idle expiry and atomic action counters.
+- Use cryptographic token hashes/MACs, durable API credential/tenant binding and trusted-proxy client-IP handling.
+- Remove weak entropy fallback; verify native Linux and portable one-use SQLite stocks (both backends).
+  Windows APIs and retro hardware remain part of the cross-platform verification below.
+- Add the board minimap, coordinates and occupied/current-position indicators.
+  Empty lanes now have clickable/highlighted X 1 map positions and vertical neighbors; no-swimlane boards normalize to X 1/Y 1. Linked/CLI HTTP and no-JS/no-cookie Chromium cover middle/last empty-lane round trips, LTR/RTL bounds, locale continuity and unchanged board content.
+- Add optional card drag/drop, checked-card groups and simultaneous pointers through the shared move endpoint.
+- Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars, framework upload scratch and offline legacy migration.
+- Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.
+  Common response initialization now advertises the pinned FPC server's one-request connection closure. Both backends pass mixed-status/EOF/pooled-client checks and shutdown/restart/integrity tests; an isolated committed-source transport patch also passes all eight Windows build variants. Windows/retro runtime acceptance remains in the cross-platform checklist.
+
 ## 2026-11-18 Initialize automatic fields on new API cards
 
 - Add explicit null values for board-scoped automatic and always-on definitions.

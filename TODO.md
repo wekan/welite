@@ -208,32 +208,9 @@ Run plaintext HTTP; terminate TLS at a proxy or load AmiSSL/OpenSSL dynamically
 ## Implementation checklist
 
 Complete these steps sequentially, with regression tests and a local commit for each.
-The design above remains the acceptance criteria; a checked item means verified code,
-not merely a design document. Platform/browser claims require testing on those targets.
+The design above remains the acceptance criteria. Move verified items to [CHANGES.md](CHANGES.md).
+Platform and browser claims require testing on those targets.
 
-- [x] Audit the current implementation and record the remaining work (2026-11-16).
-- [x] Move lists up/down across swimlanes, preserving their cards and board boundaries.
-- [x] Enforce tenant-local administrator permissions on every Designer endpoint.
-- [x] Separate reserved-host Global Admin domain management from tenant administrators.
-- [x] Finish Designer page listing, creation, editing, disabling and deletion.
-- [x] Finish Designer widget add/edit/delete, options and bounded layout controls.
-- [x] Honor widget row/column spans and required inputs in published pages; add cell sort arrows.
-- [x] Make Designer imports validate atomically against the same page/widget rules.
-- [x] Report CLI SQLite failures and preserve UTF-8 text, delimiters, quotes and line endings.
-- [x] Render authorized board/list/swimlane/card data with the shared selection form.
-- [x] Implement selected-item Edit/Save, confirmed Delete, Clear and Export actions.
-- [x] Implement deep selected-item Clone with remapped child IDs and attachment copies.
-- [x] Add shared board read/write checks, validate move selections and safe return URLs.
-- [x] Validate API child routes against their board/parent chain and block unrestricted assignment roles.
-- [x] Validate API body label/member/assignee/author IDs before atomic writes.
-- [x] Enforce disabled-account denial/revocation, session identity/credential binding, idle expiry and atomic action counters.
-- [x] Use cryptographic token hashes/MACs, durable API credential/tenant binding and trusted-proxy client-IP handling.
-- [x] Remove weak entropy fallback; verify native Linux and portable one-use SQLite stocks (both backends).
-  Windows APIs and retro hardware remain part of the cross-platform verification below.
-- [x] Add the board minimap, coordinates and occupied/current-position indicators.
-  Empty lanes now have clickable/highlighted X 1 map positions and vertical neighbors; no-swimlane boards normalize to X 1/Y 1. Linked/CLI HTTP and no-JS/no-cookie Chromium cover middle/last empty-lane round trips, LTR/RTL bounds, locale continuity and unchanged board content.
-- [x] Add optional card drag/drop, checked-card groups and simultaneous pointers through the shared move endpoint.
-- [x] Align tenant/file/temp paths with DOS 8.3 and Weddy files/db layout; verify strict SQLite sidecars, framework upload scratch and offline legacy migration.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
   Large CLI adapter scripts now use private short scratch files without argument-size limits.
@@ -450,8 +427,6 @@ not merely a design document. Platform/browser claims require testing on those t
   Remaining: review 1,143 ambiguous token differences and other wrong/mixed-language data, import the 91 additional source languages with portable filenames, translate remaining pages/errors/enrollment instructions, verify other error-route coverage and audit remaining physical RTL controls with responsive/retro acceptance.
 - [ ] Verify responsive HTML4 colors and workflows on retro browser targets.
   Published Designer pages now honor saved HTML4 versus HTML3.2 doctypes, with both-backend round trips, invalid-input refusal and Chromium standards-mode checks. Remaining retro-target responsive and color acceptance stays open.
-- [x] Verify fresh native linked/CLI SQLite installs with HTTP and no-JS/no-cookie Chromium workflows.
-  Common response initialization now advertises the pinned FPC server's one-request connection closure. Both backends pass mixed-status/EOF/pooled-client checks and shutdown/restart/integrity tests; an isolated committed-source transport patch also passes all eight Windows build variants. Windows/retro runtime acceptance remains in the cross-platform checklist.
 - [ ] Verify embedded assets and supported cross-platform builds.
   Embedded generation skips dangling/non-file aliases, with native exact UTF-8/binary/valid-alias lookup, all installed locale files and full resource compilation. Private tenant/Designer SQL resources now enable fresh admin/tenant/Designer initialization from a copied executable without source/asset/schema directories on linked/CLI backends. UTF-8/BOM/override/refusal boundaries, SQL-only bundles, exact HTTP catalog/locale bytes, non-public SQL and clean shutdown are verified. Current disk and full embedded CLI servers now cross-link as verified Linux x86-64 ELF on the aarch64 SDK host; `tests/cross64.py` reproduces both builds with an isolated compiler/binutils/libc sysroot. The copied-executable embedded CLI HTTP suite also passes under amd64 QEMU with target libc/libgcc, including registration/Designer/locale bytes and clean shutdown; SQLite child processes use the native host CLI. The linked amd64 embedded HTTP suite also passes with target SQLite 3.46.1 under QEMU, and all four disk/embedded CLI/linked cross-builds pass. Windows x86 and amd64 disk/embedded linked/CLI builds now pass PE32/PE32+ architecture/console checks after fixing the generated Windows resource-type import; actual import-table checks confirm the linked-only SQLite DLL dependency. Linux armhf/armv7 disk/embedded CLI builds also pass with matching hard-float compiler/RTL, EABI5 headers and the correct loader. FPC still emits known soft-float metadata (issue 40374); runtime libc/libm/HTTP checks fail inside QEMU on this 16 KiB-page host (Debian 1114725), so actual ARM calling conventions/resources remain unverified. Remaining: ARM runtime/metadata acceptance, Windows runtime/DLL/entropy/shutdown acceptance, physical amd64 hardware/foreign CLI deployment, other supported cross-target builds and platform-specific acceptance.
 - [ ] Reconcile README/design status against completed code and document platform limits.
