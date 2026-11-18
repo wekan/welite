@@ -404,8 +404,8 @@ Platform and browser claims require testing on those targets.
   graphs; collection now has a read snapshot, while later lifecycle consistency
   remains open. The heavy
   fixture retains its targeted 30-second timeout; ordinary timeouts keep defaults.
-  Remaining: resume-policy parity, Mongo-managed sparse and multikey account
-  indexes, existing-account migration, typed custom values and legacy
+  Remaining: resume-policy parity, Mongo-managed sparse and nested multikey account
+  index parity, existing-account migration, typed custom values and legacy
   relations, file-store compatibility, portable 8.3 verification, and full
   Meteor application workflows. See [the remaining interoperability work](docs/ferret.md#verified-workflows-and-remaining-interoperability-work).
 - [ ] Complete language selection, translation rendering and RTL behavior.

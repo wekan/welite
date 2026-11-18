@@ -1745,8 +1745,15 @@ The optional strict shared filename mode has live Linux coverage for short
 SQLite sidecars on both backends. WeLite can use native SQLite directly with
 `WELITE_SHARED=0` for standalone installations.
 
-- Verify Mongo-managed sparse and multikey account indexes, migration from
-  existing native accounts, and remaining resume-policy behavior.
+- Account index parity still requires FerretDB support for sparse index
+  metadata and nested multikey paths. A Mongo-wire probe on FerretDB
+  `c33d4a9a` creates `sqrl.idk`, `passkeys.id` and
+  `services.resume.loginTokens.hashedToken` indexes. The first two get
+  the two-segment SQLite side tables, while the nested token path gets
+  none. The nested query still finds the matching token. The server
+  drops the requested `sparse` flag from both index definitions.
+- Verify migration from existing native accounts and remaining resume-policy
+  behavior.
 - Reconcile remaining typed custom-field values, legacy relation forms,
   SQL conflict behavior, and compatibility with files written by other
   WeKan storage backends.

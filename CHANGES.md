@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify FerretDB account index boundaries
+
+- Check real Mongo-wire account index creation and nested resume-token
+  lookup against FerretDB. Document sparse metadata and nested multikey
+  limitations in the interoperability notes.
+
 ## 2026-11-18 Verify the current Amiga-family disk builds
 
 - Cross-link SQLite CLI builds for m68k AmigaOS, PowerPC AmigaOS 4 and
