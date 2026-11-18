@@ -4578,15 +4578,14 @@ end;
 
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
-  HasArchive,Archive,HasEdits,HasOvertime,HasSort:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
+  HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
   HasArchive:=BodyHasField(aRequest,'archive');
-  HasEdits:=BodyHasField(aRequest,'title') or
-    BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
+  HasEdits:=BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
     BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
   FieldSets:='';HasDate:=False;Body:=nil;Decorations:=nil;
   try
@@ -4596,9 +4595,16 @@ begin
       else
       begin
         Body:=TJSONObject.Create;
-        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','sort','description'] do
+        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','sort','description','title'] do
           if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
             Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
+      end;
+      Input:=Body.Find('title');HasTitle:=Input<>nil;
+      if HasTitle then
+      begin
+        if (Input.JSONType<>jtString) or (Pos(#0,Input.AsString)>0) then
+        begin SendJson(aResponse,'{"error":"Invalid title"}',400);Exit;end;
+        FieldSets:=',title='+QuotedStr(Input.AsString);
       end;
       for FieldName in ['receivedAt','startAt','dueAt','endAt'] do
       begin
@@ -4667,6 +4673,12 @@ begin
     if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
     Scope:=Scope+' AND listId='+QuotedStr(aRequest.RouteParams['listId']);
   end;
+  if HasTitle then
+  begin
+    Scope:=Scope+' AND archived=0';
+    if Length(T.Db.Query('SELECT id FROM cards WHERE '+Scope+';'))<>1 then
+    begin SendJson(aResponse,CardNotFound,404);Exit;end;
+  end;
   if HasDate and (FieldSets='') and not (HasArchive or HasEdits) then
   begin SendJson(aResponse,'{"message":"Error"}',404);Exit;end;
   if not CardRelationSql(T,aRequest,aResponse,BoardId,CardId,Relations) then Exit;
@@ -4693,14 +4705,19 @@ begin
   if not HasArchive or HasEdits then
   begin
     Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp+FieldSets;
-    if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
     if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ')=1 THEN 1 ELSE json(''Card edit scope changed'') END; '+Sets+ArchiveSql+Relations+' COMMIT;') then
-  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit card');Exit;end;
-  if HasSort or HasOvertime then SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}')
+  begin
+    T.Db.Exec('ROLLBACK;');
+    if HasTitle and (Length(T.Db.Query('SELECT id FROM cards WHERE '+Scope+';'))<>1) then
+      SendJson(aResponse,CardNotFound,404)
+    else SendError(aResponse,500,'Could not edit card');
+    Exit;
+  end;
+  if HasSort or HasOvertime or HasTitle then SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}')
   else SendCardById(aResponse,T.Db,CardId,UserId,False,BoardId);
 end;
 

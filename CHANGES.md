@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Match WeKan REST card title updates
+
+- Clear card titles with an explicit empty string in JSON and form PUT requests.
+  Reject invalid title types before writing other fields, preserve omitted titles
+  and return 404 for archived cards. Verify persistence and board rendering on
+  both SQLite backends with the upstream card-title spec.
+
 ## 2026-11-18 Localize the two-factor setup password instructions
 
 - Render the password setup instructions from the language catalog. Verify Finnish
