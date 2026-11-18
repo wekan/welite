@@ -329,6 +329,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
                 client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
                     services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                member_path='/api/boards/b/members/fixture-admin'
+                assert request('POST','/api/boards/b/members/u/remove',dict(action='remove'),target_token)[0]==409
+                assert request('POST',member_path+'/add',dict(action='add',role='readOnly'),target_token)[0]==200
+                def fixture_member():
+                    return next(m for m in client.find('boards','b')[0]['members'] if m['userId']=='fixture-admin')
+                assert fixture_member()['isActive'] is True and fixture_member()['isReadOnly'] is True
+                assert request('POST',member_path+'/remove',dict(action='remove'),target_token)[0]==200
+                assert fixture_member()['isActive'] is False and fixture_member()['isAdmin'] is False
+                assert request('POST',member_path+'/remove',dict(action='remove'),target_token)[0]==404
+                assert request('POST',member_path+'/add',dict(action='add',role='normal'),target_token)[0]==200
+                assert fixture_member()['isActive'] is True and fixture_member()['isReadOnly'] is False
+                print('PASS: shared REST membership guards the last admin and reactivates inactive members with new roles')
                 response=request('DELETE','/api/users/u',token=target_token)
                 assert response[0]==403 and client.find('users','u')
                 response=request('DELETE','/api/users/u',token=admin_token)

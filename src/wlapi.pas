@@ -47,6 +47,8 @@ procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
 procedure ApiPublicBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUserBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoard(aRequest: TRequest; aResponse: TResponse);
+procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
+procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
@@ -583,6 +585,113 @@ begin
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
 end;
+
+procedure ApiBoardMembership(aRequest:TRequest;aResponse:TResponse;Add:Boolean);
+const Flags:array[0..7] of string=('isAdmin','isNoComments','isCommentOnly','isWorker',
+  'isNormalAssignedOnly','isCommentAssignedOnly','isReadOnly','isReadAssignedOnly');
+  Roles:array[0..7] of string=('admin','nocomments','commentonly','worker',
+  'normalassignedonly','commentassignedonly','readonly','readassignedonly');
+var T:TWLTenant;Actor,BoardId,Board,Target,Scope,UserScope,Permission,Action,Role,Columns,Values,Sets,
+  Bindings,Sql,AdminCheck,MemberKey:string;Policy:TFieldPolicy;Source:TSelectionScope;
+  Body:TJSONObject;Value:TJSONData;Rows:TWLRows;I,RoleIndex:Integer;Enabled:Boolean;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];Board:=QuotedStr(BoardId);
+  Rows:=T.Db.Query('SELECT id FROM boards WHERE id='+Board+';');
+  if Length(Rows)<>1 then begin SendJson(aResponse,'{"error":"Board not found"}',404);Exit;end;
+  Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  if Add then Action:='add' else Action:='remove';
+  if BodyField(aRequest,'action')<>Action then
+  begin SendError(aResponse,400,'Invalid membership action');Exit;end;
+  Body:=nil;Columns:='';Values:='';Sets:='';
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then Body:=ExactObject(aRequest.Content)
+      else
+      begin
+        Body:=TJSONObject.Create;
+        for I:=0 to aRequest.ContentFields.Count-1 do
+          Body.Add(aRequest.ContentFields.Names[I],aRequest.ContentFields.ValueFromIndex[I]);
+      end;
+      if Add then
+      begin
+        RoleIndex:=-2;Value:=Body.Find('role');
+        if Value<>nil then
+        begin
+          if not (Value is TJSONString) then raise Exception.Create('Invalid role');
+          Role:=LowerCase(Trim(Value.AsString));if Role='comment' then Role:='commentonly';
+          RoleIndex:=-1;
+          for I:=0 to High(Roles) do if Role=Roles[I] then RoleIndex:=I;
+          if (RoleIndex<0) and (Role<>'normal') and (Role<>'member') then raise Exception.Create('Invalid role');
+        end;
+        for I:=0 to High(Flags) do
+        begin
+          Enabled:=RoleIndex=I;
+          if RoleIndex=-2 then
+          begin
+            Value:=Body.Find(Flags[I]);
+            Enabled:=(Value<>nil) and (Value.JSONType in [jtString,jtBoolean]) and SameText(Value.AsString,'true');
+          end;
+          Columns:=Columns+','+Flags[I];Values:=Values+','+IntToStr(Ord(Enabled));
+          Sets:=Sets+','+Flags[I]+'='+IntToStr(Ord(Enabled));
+        end;
+      end;
+    except SendError(aResponse,400,'Invalid membership role');Exit;end;
+  finally Body.Free;end;
+  Target:=QuotedStr(aRequest.RouteParams['userId']);
+  Source:=TSelectionScope.Create(T.Db);
+  try
+    UserScope:='id='+Target+' AND '+Source.StringField('users','id');
+    MemberKey:=Source.StringField('board_members','userId');
+    Scope:='boardId='+Board+' AND userId='+Target;
+    Bindings:='';
+    for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
+  finally Source.Free;end;
+  Rows:=T.Db.Query('SELECT COALESCE(loginDisabled,0) FROM users WHERE '+UserScope+';');
+  if Length(Rows)<>1 then begin SendJson(aResponse,'{"error":"User not found"}',404);Exit;end;
+  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+
+    '(SELECT count(*) FROM users WHERE '+UserScope;
+  if Add then
+  begin
+    if Rows[0][0]<>'0' then begin SendError(aResponse,400,'User is disabled');Exit;end;
+    Sql:=Sql+' AND COALESCE(loginDisabled,0)=0)=1 AND NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+
+      ' AND NOT '+MemberKey+') THEN 1 ELSE json(''Board membership scope changed'') END; '+
+      'UPDATE board_members SET isActive=1'+Sets+' WHERE '+Scope+' AND COALESCE(isActive,0)=0; '+
+      'INSERT INTO board_members(boardId,userId,isActive'+Columns+') SELECT '+Board+','+Target+',1'+Values+
+      ' WHERE NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+'); '+
+      'SELECT CASE WHEN (SELECT count(*) FROM board_members WHERE '+Scope+
+      ' AND isActive=1 AND '+MemberKey+')=1 THEN 1 ELSE json(''Board member add failed'') END; COMMIT;';
+  end else
+  begin
+    Rows:=T.Db.Query('SELECT isAdmin FROM board_members WHERE '+Scope+' AND isActive=1 AND '+MemberKey+';');
+    if Length(Rows)<>1 then begin SendJson(aResponse,'{"error":"Member not found"}',404);Exit;end;
+    AdminCheck:='(isAdmin=0 OR (SELECT count(*) FROM board_members WHERE boardId='+Board+
+      ' AND isActive=1 AND isAdmin=1 AND '+MemberKey+')>1)';
+    if Length(T.Db.Query('SELECT 1 FROM board_members WHERE '+Scope+' AND '+AdminCheck+';'))<>1 then
+    begin SendError(aResponse,409,'The last board admin cannot be removed');Exit;end;
+    Sql:=Sql+')=1 AND (SELECT count(*) FROM board_members WHERE '+Scope+' AND isActive=1 AND '+MemberKey+' AND '+
+      AdminCheck+')=1 THEN 1 ELSE json(''Board membership scope changed'') END; '+
+      'UPDATE board_members SET isActive=0,isAdmin=0 WHERE '+Scope+'; SELECT CASE WHEN '+
+      '(SELECT count(*) FROM board_members WHERE '+Scope+' AND isActive=0 AND isAdmin=0)=1 '+
+      'THEN 1 ELSE json(''Board member removal failed'') END; COMMIT;';
+  end;
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change board membership');Exit;end;
+  Rows:=T.Db.Query('SELECT json_array(json_object(''_id'',id,''title'',title)) FROM boards WHERE id='+Board+';');
+  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not read board');Exit;end;
+  SendJson(aResponse,Rows[0][0]);
+end;
+
+procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
+begin ApiBoardMembership(aRequest,aResponse,True);end;
+
+procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
+begin ApiBoardMembership(aRequest,aResponse,False);end;
 
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"Board not found"}';
