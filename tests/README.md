@@ -191,7 +191,8 @@ secret, no-store/referrer headers, hidden POST tokens, client binding, shared ac
 peer allowances, spoofed posted usernames/forwarded headers, rollback/retry, pending
 restart, expiry/replacement and fresh-code sign-in. `WELITE_UI=1` runs `enrhttp.js` with
 the same Playwright/Node settings as `otphttp.py`, completing setup, confirmation and
-sign-in with JavaScript disabled and Cookie headers removed.
+sign-in in a Chromium profile that disables JavaScript and blocks first-party cookies.
+A loopback probe checks that the browser rejects a cookie and leaves a script inert.
 
 `ferroot.py` also verifies private auth source identity against actual users collection
 UUID/table metadata: normal reinstall retains state; Mongo drop/recreate with reused IDs
