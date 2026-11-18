@@ -1603,6 +1603,15 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Field:=Obj.Find(Key);
     Result:=IntToStr(Ord((Field is TJSONBoolean) and Field.AsBoolean));
   end;
+  function ImportedSpentTime(Entry:TJSONObject):string;
+  var Field:TJSONData;
+  begin
+    Field:=Entry.Find('spentTime');
+    if (Field=nil) or (Field.JSONType=jtNull) then Exit('NULL');
+    if (Field.JSONType<>jtNumber) or IsNan(Field.AsFloat) or IsInfinite(Field.AsFloat) then
+      raise EConvertError.Create('Invalid imported spent time');
+    Result:=Field.AsJSON;
+  end;
   procedure ImportCardChildren;
   var K,L:Integer;Entry,Checklist:TJSONObject;Id,CardKey,CheckKey,OriginalCheck,Parent:string;
   begin
@@ -1825,11 +1834,16 @@ begin
       begin
         Row:=Arrays[2].Objects[J];CardId:=Mapped(2,Text(Row,'_id'),True);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
-          'createdAt,modifiedAt,dateLastActivity) VALUES('+QuotedStr(CardId)+','+Board+','+
+          'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived) VALUES('+
+          QuotedStr(CardId)+','+Board+','+
           QuotedStr(Mapped(1,Text(Row,'listId'),True))+','+QuotedStr(CardListLane(Row))+','+
           Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
           QuotedStr(Text(Row,'description'))+','+QuotedStr(ImportedAuthor(Row))+','+SortValue(Row)+','+IntToStr(J+1)+
-          ','+Stamp+','+Stamp+','+Stamp+'); ';
+          ','+ImportedDate(Row,'createdAt',Stamp)+','+Stamp+','+Stamp+','+
+          ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
+          ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+
+          ImportedSpentTime(Row)+','+BooleanValue(Row,'isOvertime')+','+QuotedStr(Text(Row,'requestedBy'))+','+
+          QuotedStr(Text(Row,'assignedBy'))+','+BooleanValue(Row,'archived')+'); ';
         ImportCardPeople(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);

@@ -1,5 +1,6 @@
 """Opt-in HTTP on the same canonical live FerretDB file, no filename aliases."""
 import base64
+import datetime
 import hashlib
 import http.client
 import json
@@ -262,6 +263,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 unknown_field=dict(imported_payload,cards=[dict(imported_payload['cards'][0],
                     customFields=[dict(_id='missing',value='unknown')])])
                 assert request('POST',import_path,dict(board=unknown_field),token)[0]==400
+                imported_payload['cards'][0].update(createdAt='2026-01-02T03:04:05.000Z',
+                    receivedAt='2026-02-01T00:00:00.000Z',startAt='2026-02-02T00:00:00.000Z',
+                    dueAt='2026-02-03T00:00:00.000Z',endAt='2026-02-04T00:00:00.000Z',
+                    spentTime=1.25,isOvertime=True,requestedBy="O'Brien",assignedBy='Scheduler',archived=True)
+                broken_dates=dict(imported_payload,cards=[dict(imported_payload['cards'][0],startAt='invalid')])
+                assert request('POST',import_path,dict(board=broken_dates),token)[0]==400
                 imported_payload['labels']=[dict(_id='source-label',name='Imported label',color='green')]
                 imported_payload['cards'][0]['labelIds']=['source-label','source-label']
                 for collection in ['triggers','actions']:
@@ -293,6 +300,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert imported_card['swimlaneId'] in {r['_id'] for r in imported_rows('swimlanes')}
                 assert imported_card['members']==imported_card['assignees']==imported_card['requesters']==['import-local-author']
                 assert imported_card['assigners']==[]
+                for field in ['createdAt','receivedAt','startAt','dueAt','endAt']:
+                    instant=datetime.datetime.fromisoformat(imported_payload['cards'][0][field].replace('Z','+00:00'))
+                    assert imported_card[field]==DateMs(int(instant.timestamp()*1000)),(field,imported_card[field])
+                for field in ['spentTime','isOvertime','requestedBy','assignedBy','archived']:
+                    assert imported_card[field]==imported_payload['cards'][0][field],(field,imported_card[field])
+                print('PASS: board import preserves card scheduling dates, elapsed time, bylines and archive status')
                 imported_label,=client.find('boards',imported_id)[0]['labels']
                 assert imported_label['_id']!='source-label'
                 assert imported_label['name']=='Imported label' and imported_label['color']=='green'
