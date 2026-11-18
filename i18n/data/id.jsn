@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Kode autentikasi tidak valid. Silakan coba lagi.",
   "twoFactorAuth-enabled": "Autentikasi dua faktor diaktifkan untuk akun Anda.",
   "two-factor-required-title": "Siapkan autentikasi dua faktor",
-  "two-factor-required-text": "Situs ini mewajibkan autentikasi dua faktor untuk akun Anda. Siapkan untuk melanjutkan."
+  "two-factor-required-text": "Situs ini mewajibkan autentikasi dua faktor untuk akun Anda. Siapkan untuk melanjutkan.",
+  "enrollment-password-instructions": "Konfirmasikan kata sandi Anda untuk memulai penyiapan. Langkah ini tidak membuat Anda masuk. Faktor autentikasi yang aktif tidak dapat diganti di sini.",
+  "enrollment-setup-denied": "Penyiapan tidak dapat dimulai. Periksa kredensial Anda dan pastikan apakah kode sekali pakai sudah diaktifkan.",
+  "enrollment-code-instructions": "Gunakan kode berbasis waktu: SHA1, enam digit, dan interval 30 detik. Jaga kerahasiaan kunci. Penyiapan ini kedaluwarsa setelah lima menit.",
+  "enrollment-confirmed-instructions": "Kode konfirmasi sudah digunakan. Tunggu hingga aplikasi autentikasi menampilkan kode baru sebelum masuk.",
+  "enrollment-account-created": "Akun berhasil dibuat",
+  "registration-first-admin": "Akun pertama akan mendapat hak administrator global untuk domain ini.",
+  "auth-too-many-attempts": "Terlalu banyak percobaan masuk. Coba lagi nanti.",
+  "enrollment-setup-failed": "Penyiapan gagal dimulai.",
+  "registration-global-admin-disabled": "Akun administrator global dibuat secara lokal. Pendaftaran publik dinonaktifkan.",
+  "auth-session-create-failed": "Sesi gagal dibuat.",
+  "registration-session-failed": "Akun berhasil dibuat. Masuk untuk melanjutkan.",
+  "registration-password-unavailable": "Pendaftaran dengan kata sandi tidak tersedia."
 }
