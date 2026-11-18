@@ -33,6 +33,10 @@ def run(request,database,administrator,base):
         author=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()[0]
         con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,dateLastActivity,createdAt,modifiedAt) "
                     "VALUES('txtcard','boardtxt','txtlane','txtlist','Hidden until expanded',?,'now','now','now')",(author,))
+        for identity,title,archived in [('txtchild','Subtask <child>',0),('txtoldchild','Archived subtask',1)]:
+            con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,parentId,archived,dateLastActivity,createdAt,modifiedAt) "
+                        "VALUES(?,'boardtxt','txtlane','txtlist',?,?,'txtcard',?,'now','now','now')",
+                        (identity,title,author,archived))
     def content_state():
         with sqlite3.connect(database) as con:
             return [con.execute('SELECT * FROM '+table+' WHERE '+condition+' ORDER BY id').fetchall()

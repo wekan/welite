@@ -8,6 +8,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Open or close a card's same-board subtask list with an ordinary link.
   Preserve the board view and session without JavaScript or cookies.
+  Verified opening and closing in Chromium with both disabled.
 
 ## 2026-11-18 Update shared organization and team flags in bulk
 
