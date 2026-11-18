@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Reverify the upstream REST suite
+
+- Pass all 114 cases across 22 specs from WeKan `7f7389a217` against
+  WeLite `8a7dd5c` on both Linux SQLite backends in shared mode.
+  The REST browser cases use JavaScript and cookies disabled.
+
 ## 2026-11-18 Label Designer widget fields
 
 - Associate widget settings with their controls and use the viewer

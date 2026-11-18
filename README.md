@@ -34,8 +34,9 @@ and [SQL bootstrap](docs/static.md#private-bootstrap-sql); cross-target acceptan
   cookies blocked. Card titles open an HTML page with their descriptions and
   checklists, subtasks and attachment downloads. Board movement, selection actions and Designer use HTML forms.
 - The [REST API](docs/api.md) supports bearer-token login and board-scoped
-  custom-field operations. The complete WeKan API and browser suite require
-  additional compatibility work.
+  custom-field operations. On Linux, all 114 upstream REST cases pass on linked
+  and CLI SQLite in shared mode. The REST browser cases run without JavaScript
+  or cookies. See the [upstream REST test runner](tests/README.md#run-the-upstream-wekan-rest-specs).
 - The [FerretDB adapter](docs/ferret.md) opens existing shared SQLite stores and
   provisions new tenants in shared format when the SQLite backend supports it.
   Consult [TODO.md](TODO.md) for remaining interoperability gaps.
