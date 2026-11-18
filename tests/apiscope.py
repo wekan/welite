@@ -133,3 +133,25 @@ def run(request, db, token):
     assert checklist['dueAt'] == '2026-11-18T07:30:00.123Z', checklist
     assert [item['title'] for item in checklist['items']] == ['first','second'], checklist
     print('PASS: checklist creation stores its deadline and ordered initial items or rolls back everything')
+
+    items_path = base+'/'+checklist['_id']+'/items'
+    def item_request(method,path,data=None):
+        return request(method,path+'?token='+token,json.dumps(data).encode() if data is not None else None)
+    status, _, body = item_request('POST',items_path,dict(title='Deadline item',dueAt='2026-11-18T09:30:00+02:00'))
+    assert status == 200, (status,body)
+    item_id = json.loads(body)['_id']
+    item_path = items_path+'/'+item_id
+    def read_item():
+        status, _, body = item_request('GET',item_path)
+        assert status == 200, (status,body)
+        return json.loads(body)
+    before_item = read_item()
+    assert before_item['dueAt'] == '2026-11-18T07:30:00.000Z'
+    assert item_request('PUT',item_path,dict(title='Rejected',dueAt='tomorrow'))[0] == 400
+    assert read_item() == before_item
+    status, _, body = item_request('PUT',item_path,dict(isFinished=True))
+    assert status == 200 and json.loads(body) == dict(_id=item_id), (status,body)
+    assert read_item() == dict(before_item,isFinished=True)
+    assert item_request('PUT',item_path,dict(dueAt=None))[0] == 200
+    assert read_item() == dict(before_item,isFinished=True,dueAt=None)
+    print('PASS: checklist item API stores, preserves and clears deadlines with atomic validation')

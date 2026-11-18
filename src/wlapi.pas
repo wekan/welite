@@ -1433,8 +1433,8 @@ begin
     'SELECT id,title FROM checklists WHERE cardId=%s ORDER BY sort;', [QuotedStr(CardId)]))));
 end;
 
-function ChecklistChanges(Request:TRequest;out Changes:string):Boolean;
-var Body:TJSONObject;Title,Deadline:TJSONData;Literal:string;
+function ChecklistChanges(Request:TRequest;out Changes:string;ItemUpdate:Boolean=False):Boolean;
+var Body:TJSONObject;Title,Deadline,Finished:TJSONData;Literal:string;
 begin
   Changes:='';Result:=False;Body:=nil;
   try
@@ -1444,6 +1444,7 @@ begin
       begin
         Body:=TJSONObject.Create;
         if Request.ContentFields.IndexOfName('title')>=0 then Body.Add('title',Request.ContentFields.Values['title']);
+        if Request.ContentFields.IndexOfName('isFinished')>=0 then Body.Add('isFinished',Request.ContentFields.Values['isFinished']);
         if Request.ContentFields.IndexOfName('dueAt')>=0 then Body.Add('dueAt',Request.ContentFields.Values['dueAt']);
       end;
       Title:=Body.Find('title');Deadline:=Body.Find('dueAt');
@@ -1458,7 +1459,15 @@ begin
         if Changes<>'' then Changes:=Changes+',';
         Changes:=Changes+'dueAt='+Literal;
       end;
-      Result:=Changes<>'';
+      Finished:=Body.Find('isFinished');
+      if ItemUpdate and (Finished<>nil) then
+      begin
+        if not (LowerCase(Finished.AsString)='true') and not (LowerCase(Finished.AsString)='false') and
+          not (Finished.AsString='0') and not (Finished.AsString='1') then Exit;
+        if Changes<>'' then Changes:=Changes+',';
+        Changes:=Changes+'isFinished='+IntToStr(BoolInt(Finished.AsString));
+      end;
+      Result:=ItemUpdate or (Changes<>'');
     except Result:=False;end;
   finally Body.Free;end;
 end;
@@ -1521,7 +1530,8 @@ end;
 
 // POST add an item to a checklist
 procedure ApiChecklistItems(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, CardId, ChecklistId, Title, Id: string;
+var T: TWLTenant; UserId, BoardId, CardId, ChecklistId, Title, Id, Due: string;
+  Body:TJSONObject;Value:TJSONData;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1529,19 +1539,40 @@ begin
   BoardId     := aRequest.RouteParams['boardId'];
   CardId      := aRequest.RouteParams['cardId'];
   ChecklistId := aRequest.RouteParams['checklistId'];
-  Title := BodyField(aRequest, 'title');
+  Title:=BodyField(aRequest,'title');Due:='NULL';Body:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+      begin
+        Body:=ExactObject(aRequest.Content);
+        Value:=Body.Find('title');
+        if (Value=nil) or (Value.JSONType<>jtString) then raise Exception.Create('Invalid item title');
+        Title:=Value.AsString;
+        Value:=Body.Find('dueAt');
+        if (Value<>nil) and not ChecklistDeadlineSql(Value,Due) then raise Exception.Create('Invalid deadline');
+      end else if aRequest.ContentFields.IndexOfName('dueAt')>=0 then
+      begin
+        Value:=TJSONString.Create(aRequest.ContentFields.Values['dueAt']);
+        try
+          if not ChecklistDeadlineSql(Value,Due) then raise Exception.Create('Invalid deadline');
+        finally Value.Free;end;
+      end;
+      if (Trim(Title)='') or (Pos(#0,Title)>0) then raise Exception.Create('Invalid item title');
+    except SendJson(aResponse,'{"error":"Invalid item title or dueAt"}',400);Exit;end;
+  finally Body.Free;end;
   Id := NewId;
-  T.Db.Exec(Format(
-    'INSERT INTO checklist_items(id,checklistId,cardId,boardId,title,sort,createdAt,modifiedAt) ' +
-    'VALUES(%s,%s,%s,%s,%s,0,%s,%s);',
+  if not T.Db.Exec(Format(
+    'BEGIN IMMEDIATE; INSERT INTO checklist_items(id,checklistId,cardId,boardId,title,sort,createdAt,modifiedAt,dueAt) ' +
+    'VALUES(%s,%s,%s,%s,%s,0,%s,%s,%s); COMMIT;',
     [QuotedStr(Id), QuotedStr(ChecklistId), QuotedStr(CardId), QuotedStr(BoardId),
-     QuotedStr(Title), QuotedStr(NowIso), QuotedStr(NowIso)]));
+     QuotedStr(Title), QuotedStr(NowIso), QuotedStr(NowIso),Due])) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create checklist item');Exit;end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
 end;
 
 // GET item / PUT toggle-or-edit (isFinished/title) / DELETE a checklist item
 procedure ApiChecklistItem(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, ItemId, Sets, V: string; R: TWLRows; O: TJSONObject;
+var T: TWLTenant; UserId, ItemId, Changes, Predicate: string; R: TWLRows; O: TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -1555,17 +1586,28 @@ begin
   end;
   if aRequest.Method = 'PUT' then
   begin
-    Sets := 'modifiedAt=' + QuotedStr(NowIso);
-    V := BodyField(aRequest, 'title');      if V <> '' then Sets := Sets + ', title=' + QuotedStr(V);
-    V := BodyField(aRequest, 'isFinished'); if V <> '' then Sets := Sets + Format(', isFinished=%d', [BoolInt(V)]);
-    T.Db.Exec(Format('UPDATE checklist_items SET %s WHERE id=%s;', [Sets, QuotedStr(ItemId)]));
+    if not ChecklistChanges(aRequest,Changes,True) then
+    begin SendJson(aResponse,'{"error":"Invalid checklist item update"}',400);Exit;end;
+    if Changes<>'' then
+    begin
+      Predicate:='id='+QuotedStr(ItemId)+' AND checklistId='+QuotedStr(aRequest.RouteParams['checklistId'])+
+        ' AND cardId='+QuotedStr(aRequest.RouteParams['cardId'])+' AND boardId='+QuotedStr(aRequest.RouteParams['boardId']);
+      if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM checklist_items WHERE '+
+        Predicate+')=1 THEN 1 ELSE json(''Checklist item scope changed'') END; UPDATE checklist_items SET '+
+        Changes+',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Predicate+'; COMMIT;') then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update checklist item');Exit;end;
+    end;
+    O:=TJSONObject.Create(['_id',ItemId]);
+    try SendJson(aResponse,O.AsJSON);finally O.Free;end;
+    Exit;
   end;
-  R := T.Db.Query(Format('SELECT id,title,isFinished FROM checklist_items WHERE id=%s LIMIT 1;',
+  R := T.Db.Query(Format('SELECT id,title,isFinished,dueAt FROM checklist_items WHERE id=%s LIMIT 1;',
     [QuotedStr(ItemId)]));
   if Length(R) = 0 then begin SendError(aResponse, 404, 'Item not found'); Exit; end;
   O := TJSONObject.Create;
   try
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]); O.Add('isFinished', R[0][2] = '1');
+    if R[0][3]='' then O.Add('dueAt',TJSONNull.Create) else O.Add('dueAt',R[0][3]);
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
 end;
