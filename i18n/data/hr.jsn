@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Nevažeći kod za autentifikaciju. Pokušajte ponovo.",
   "twoFactorAuth-enabled": "Dvofaktorska autentifikacija je omogućena za vaš nalog.",
   "two-factor-required-title": "Postavite dvofaktorsku autentifikaciju",
-  "two-factor-required-text": "Ova stranica zahtijeva dvofaktorsku autentifikaciju za vaš račun. Postavite je za nastavak."
+  "two-factor-required-text": "Ova stranica zahtijeva dvofaktorsku autentifikaciju za vaš račun. Postavite je za nastavak.",
+  "enrollment-password-instructions": "Potvrdite lozinku za početak postavljanja. Ovaj vas korak neće prijaviti. Aktivni faktor provjere autentičnosti ovdje se ne može zamijeniti.",
+  "enrollment-setup-denied": "Postavljanje se ne može pokrenuti. Provjerite podatke za prijavu i jesu li jednokratni kodovi već uključeni.",
+  "enrollment-code-instructions": "Upotrebljavajte vremenski utemeljene kodove: SHA1, šest znamenki i interval od 30 sekundi. Čuvajte ključ u tajnosti. Postavljanje istječe nakon pet minuta.",
+  "enrollment-confirmed-instructions": "Potvrdni kôd već je iskorišten. Prije prijave pričekajte da aplikacija za provjeru autentičnosti prikaže novi kôd.",
+  "enrollment-account-created": "Račun je izrađen",
+  "registration-first-admin": "Prvi račun dobit će ovlasti globalnog administratora za ovu domenu.",
+  "auth-too-many-attempts": "Previše pokušaja prijave. Pokušajte ponovno kasnije.",
+  "enrollment-setup-failed": "Postavljanje nije bilo moguće pokrenuti.",
+  "registration-global-admin-disabled": "Računi globalnih administratora izrađuju se lokalno. Javna registracija je isključena.",
+  "auth-session-create-failed": "Sesiju nije bilo moguće stvoriti.",
+  "registration-session-failed": "Račun je izrađen. Prijavite se za nastavak.",
+  "registration-password-unavailable": "Registracija lozinkom nije dostupna."
 }
