@@ -3792,12 +3792,20 @@ end;
 
 // GET one checklist with its items
 procedure ApiChecklist(aRequest: TRequest; aResponse: TResponse);
-const NotFound = '{"error":"Checklist not found or does not belong to the specified card"}';
-var T: TWLTenant; UserId, ChecklistId, Predicate, Changes, Statement, FinalCheck: string; R: TWLRows; O: TJSONObject;
+const CardScopeError = '{"error":"Card not found or does not belong to the specified board"}';
+  NotFound = '{"error":"Checklist not found or does not belong to the specified card"}';
+var T: TWLTenant; UserId, BoardId, CardId, ChecklistId, Predicate, Changes, Statement, FinalCheck: string; R: TWLRows; O: TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId, NotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];CardId:=aRequest.RouteParams['cardId'];
+  if aRequest.Method='GET' then
+  begin
+    if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
+    if (CardId='') or not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then
+    begin SendJson(aResponse,CardScopeError,404);Exit;end;
+  end
+  else if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   ChecklistId := aRequest.RouteParams['checklistId'];
   if aRequest.Method <> 'GET' then
   begin
@@ -3822,7 +3830,7 @@ begin
     try SendJson(aResponse,O.AsJSON);finally O.Free;end;
     Exit;
   end;
-  R:=T.Db.Query(ChecklistReadSql(aRequest.RouteParams['boardId'],aRequest.RouteParams['cardId'],ChecklistId)+';');
+  R:=T.Db.Query(ChecklistReadSql(BoardId,CardId,ChecklistId)+';');
   if Length(R)=1 then SendJson(aResponse,R[0][0])
   else SendJson(aResponse,NotFound,404);
 end;
