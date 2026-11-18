@@ -1232,14 +1232,14 @@ begin
   Result:='SELECT json_group_array(json(payload)) FROM ('+ChecklistReadSql(BoardId,CardId,'')+');';
 end;
 
-function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: string; IncludeChecklists:Boolean=False): Boolean;
-var R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
+function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: string; IncludeChecklists:Boolean=False; const RequiredBoardId:string=''): Boolean;
+var ReadSql:string; R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
 begin
   Result := False;
-  R := Db.Query(Format(
-    'SELECT id,title,description,listId,swimlaneId,boardId,color FROM cards WHERE id=%s LIMIT 1;',
-    [QuotedStr(CardId)]));
-  if Length(R) = 0 then begin SendError(aResponse, 404, 'Card not found'); Exit; end;
+  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color FROM cards WHERE id='+QuotedStr(CardId);
+  if RequiredBoardId<>'' then ReadSql:=ReadSql+' AND boardId='+QuotedStr(RequiredBoardId);
+  R:=Db.Query(ReadSql+' LIMIT 1;');
+  if Length(R)=0 then begin SendJson(aResponse,'{"error":"Card not found"}',404);Exit;end;
   O := TJSONObject.Create;
   try
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]); O.Add('description', R[0][2]);
@@ -1284,12 +1284,23 @@ begin
 end;
 
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId: string;
+var T: TWLTenant; UserId,BoardId,CardId: string; Rows:TWLRows;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  SendCardById(aResponse,T.Db,aRequest.RouteParams['cardId'],UserId,True);
+  BoardId:=aRequest.RouteParams['boardId'];CardId:=aRequest.RouteParams['cardId'];
+  if BoardId<>'' then
+  begin
+    if not ApiBoardGuard(T,aRequest,aResponse,UserId) then Exit;
+  end else
+  begin
+    Rows:=T.Db.Query('SELECT boardId FROM cards WHERE id='+QuotedStr(CardId)+';');
+    if Length(Rows)=0 then begin SendJson(aResponse,'{"error":"Card not found"}',404);Exit;end;
+    if (Length(Rows)<>1) or (Rows[0][0]='') then begin SendError(aResponse,403,'Board access forbidden');Exit;end;
+    BoardId:=Rows[0][0];
+    if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
+  end;
+  SendCardById(aResponse,T.Db,CardId,UserId,True,BoardId);
 end;
 
 // PUT card — update any of title/description/color and replace labelIds if given.

@@ -159,3 +159,16 @@ def run(request, db, token):
     assert item_request('PUT',item_path,dict(dueAt=None))[0] == 200
     assert read_item() == dict(before_item,isFinished=True,dueAt=None)
     print('PASS: checklist item API stores, preserves and clears deadlines with atomic validation')
+
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE cards SET archived=1 WHERE id='card'")
+    try:
+        status, _, body = request('GET','/api/cards/card?token='+token)
+        assert status == 200 and checklist['_id'] in {entry['_id'] for entry in json.loads(body)['checklists']}, (status,body)
+        status, _, body = request('GET','/api/cards/missing?token='+token)
+        assert status == 404 and json.loads(body) == dict(error='Card not found'), (status,body)
+        assert request('GET','/api/cards/card')[0] == 401
+    finally:
+        with sqlite3.connect(db) as con:
+            con.execute("UPDATE cards SET archived=0 WHERE id='card'")
+    print('PASS: global card GET includes archived cards and checklists and requires authentication')

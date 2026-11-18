@@ -183,6 +183,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             assert status == 200 and b'X 2 Y 1' in body and b'data-list="doing"' in body
             assert b'data-list="todo"' not in body
             check_api_scope(request, db, admin)
+            assert request('GET','/api/cards/foreigncard?token='+member)[0]==403
             check_custom_api(request, db)
             from langhttp import check_language
             check_language(request,db,admin)
