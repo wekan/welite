@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Update single-board custom-field definitions through the API
+
+- Validate proposed fields before any write and commit the definition change
+  together with settings replacement. Explicit false values persist and
+  omitted or unsupported keys leave their fields unchanged.
+- Preserve the distinction between omitted, empty and populated dropdown
+  arrays. Exercise all three states and failure rollback in native and shared
+  live HTTP tests.
+- Follow the current WeKan wrong-board 404 contract. Multi-board definition
+  edits and automatic card updates remain open.
+
 ## 2026-11-18 Delete single-board custom-field definitions through the API
 
 - Return the WeKan JSON error for missing and out-of-scope fields.

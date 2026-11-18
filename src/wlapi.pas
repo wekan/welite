@@ -50,6 +50,7 @@ procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);    // PUT board label
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);   // GET list / POST create
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);    // GET one
+procedure ApiUpdateCustomField(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
 procedure ApiAppendDropdownItems(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
@@ -624,9 +625,12 @@ end;
 type TDefinitionFlags=array[0..5] of Integer;
 const DefinitionFlagNames:array[0..5] of string=('showOnCard','automaticallyOnCard',
   'showLabelOnMiniCard','showSumAtTopOfList','readOnly','adminOnly');
-function DefinitionInput(Request:TRequest;out Name,Kind:string;out Flags:TDefinitionFlags;out Settings:TJSONObject):Boolean;
-var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
-  function Flag(Data:TJSONData;out Number:Integer):Boolean;
+function ValidDefinitionType(const Kind:string):Boolean;
+begin
+  case Kind of 'text','number','currency','date','checkbox','dropdown','dropdownMultiSelect','stringtemplate': Result:=True;
+  else Result:=False;end;
+end;
+function DefinitionFlag(Data:TJSONData;out Number:Integer):Boolean;
   var Text:string;
   begin
     Number:=0;if Data=nil then Exit(True);
@@ -637,6 +641,8 @@ var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
     if (Text='true') or (Text='1') then Number:=1
     else if (Text<>'false') and (Text<>'0') and (Text<>'') then Result:=False;
   end;
+function DefinitionInput(Request:TRequest;out Name,Kind:string;out Flags:TDefinitionFlags;out Settings:TJSONObject):Boolean;
+var Doc:TJSONObject;Value,Legacy:TJSONData;i,Other:Integer;Key:string;
 begin
   Result:=False;Name:='';Kind:='';Doc:=nil;Settings:=nil;
   try
@@ -656,16 +662,15 @@ begin
       Kind:='text';Value:=Doc.Find('type');
       if Value<>nil then begin if Value.JSONType<>jtString then Exit;Kind:=Value.AsString;end;
       if Kind='' then Kind:='text';
-      case Kind of 'text','number','currency','date','checkbox','dropdown','dropdownMultiSelect','stringtemplate':;
-      else Exit;end;
+      if not ValidDefinitionType(Kind) then Exit;
       if not SettingsInput(Doc.Find('settings'),Settings) then Exit;
       for i:=0 to High(Flags) do
       begin
         Value:=Doc.Find(DefinitionFlagNames[i]);Legacy:=Doc.Find(LowerCase(DefinitionFlagNames[i]));
         if Value=nil then Value:=Legacy;
-        if not Flag(Value,Flags[i]) then Exit;
+        if not DefinitionFlag(Value,Flags[i]) then Exit;
         if (Value<>Legacy) and (Legacy<>nil) then
-        begin if not Flag(Legacy,Other) or (Other<>Flags[i]) then Exit;end;
+        begin if not DefinitionFlag(Legacy,Other) or (Other<>Flags[i]) then Exit;end;
       end;
       Result:=True;
     except Result:=False;end;
@@ -742,6 +747,80 @@ begin
 end;
 
 const CustomFieldNotFound = '{"error":"Custom field not found"}';
+
+procedure ApiUpdateCustomField(aRequest:TRequest;aResponse:TResponse);
+const Keys:array[0..6] of string=('name','type','showOnCard','automaticallyOnCard','alwaysOnCard',
+  'showLabelOnMiniCard','showSumAtTopOfList');
+var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Changes,SettingsSql,Guards,ValueSql,TextValue:string;
+  Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;Doc,Settings,Reply:TJSONObject;
+  Value:TJSONData;i,FlagValue:Integer;
+  function Guard(const Condition:string):string;
+  begin Result:='SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Custom field update guard failed'') END; ';end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,CustomFieldNotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];
+  Doc:=nil;Settings:=nil;Scope:=nil;Policy:=nil;
+  try
+    try
+      Scope:=TSelectionScope.Create(T.Db);
+      Rows:=T.Db.Query('SELECT count(*) FROM custom_fields WHERE id='+QuotedStr(FieldId)+
+        ' AND '+Scope.StringField('custom_fields','id')+' AND EXISTS(SELECT 1 FROM custom_field_boards WHERE customFieldId='+
+        QuotedStr(FieldId)+' AND boardId='+QuotedStr(BoardId)+' AND '+Scope.StringField('custom_field_boards','boardId')+');');
+      if Length(Rows)<>1 then raise Exception.Create('Could not validate scope');
+      if Rows[0][0]='0' then begin SendJson(aResponse,CustomFieldNotFound,404);Exit;end;
+      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+      Permission:=Policy.ScopeWriteExpression(FieldId)+
+        ' AND (SELECT count(*) FROM custom_field_boards WHERE customFieldId='+QuotedStr(FieldId)+')=1';
+      Rows:=T.Db.Query('SELECT '+Permission+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin SendError(aResponse,403,'Custom field update forbidden');Exit;end;
+      if (aRequest.Content<>'') and (Pos('application/json',LowerCase(aRequest.ContentType))=1) then
+        Doc:=ExactObject(aRequest.Content)
+      else
+      begin
+        Doc:=TJSONObject.Create;
+        for i:=0 to aRequest.ContentFields.Count-1 do
+          Doc.Add(aRequest.ContentFields.Names[i],aRequest.ContentFields.ValueFromIndex[i]);
+      end;
+      Changes:='';
+      for i:=0 to High(Keys) do
+      begin
+        Value:=Doc.Find(Keys[i]);if Value=nil then Continue;
+        if i<2 then
+        begin
+          if not (Value is TJSONString) then raise Exception.Create('Invalid definition text');
+          TextValue:=Value.AsString;CheckUtf8(TextValue);
+          if (Trim(TextValue)='') or (Pos(#0,TextValue)>0) or ((i=1) and not ValidDefinitionType(TextValue)) then
+            raise Exception.Create('Invalid definition text');
+          ValueSql:=QuotedStr(TextValue);
+        end else begin
+          if not DefinitionFlag(Value,FlagValue) then raise Exception.Create('Invalid definition flag');
+          ValueSql:=IntToStr(FlagValue);
+        end;
+        Changes:=Changes+Keys[i]+'='+ValueSql+',';
+      end;
+      SettingsSql:='';Guards:='';Value:=Doc.Find('settings');
+      if Value<>nil then
+      begin
+        if ((Value is TJSONString) and (Pos('application/json',LowerCase(aRequest.ContentType))=1)) or
+          not SettingsInput(Value,Settings) then raise Exception.Create('Invalid definition settings');
+        SettingsSql:=ReplaceDefinitionSettings(T.Db,FieldId,Settings,Guards);
+      end;
+      for i:=0 to Scope.Bindings.Count-1 do Guards:=Guards+Scope.Bindings[i];
+      if (Changes<>'') or (SettingsSql<>'') then
+      begin
+        Sql:='BEGIN IMMEDIATE; '+Guards+Guard(Permission)+'UPDATE custom_fields SET '+Changes+
+          'modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(FieldId)+'; '+SettingsSql+Guards+Guard(Permission)+'COMMIT;';
+        if not T.Db.Exec(Sql) then
+        begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update custom field');Exit;end;
+      end;
+      Reply:=TJSONObject.Create(['_id',FieldId]);
+      try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+    except SendError(aResponse,500,'Could not update custom field');end;
+  finally Scope.Free;Policy.Free;Settings.Free;Doc.Free;end;
+end;
 
 procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;UserId,BoardId,FieldId,DefinitionRows,ValuesRows,Bindings,Permission,Sql:string;

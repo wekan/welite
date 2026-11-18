@@ -4,6 +4,7 @@ import sqlite3
 from urllib.parse import quote, urlencode
 from setapi import exercise as check_settings
 from optadd import run as check_append
+from defedit import run as check_edit
 from defdel import native as check_native_delete, shared as check_shared_delete
 
 
@@ -86,12 +87,12 @@ def run_native(call, db, board, uid):
             activities=con.execute("SELECT userId,boardId,data_json FROM activities WHERE activityType='createCustomField' AND json_extract(data_json,'$.customFieldId')=?",(identity,)).fetchall()
             assert len(activities)==1 and activities[0][:2]==(actor,board),activities
     def fail(stage):
-        table=dict(board='custom_field_boards',activity='activities',definition='custom_fields',dropdown='custom_field_dropdown_items',append='custom_field_dropdown_items')[stage]
+        table=dict(board='custom_field_boards',activity='activities',definition='custom_fields',dropdown='custom_field_dropdown_items',append='custom_field_dropdown_items',edit='custom_field_dropdown_items')[stage]
         with sqlite3.connect(db) as con:
             if stage=='append':
                 con.execute("CREATE TRIGGER def_fail AFTER INSERT ON "+table+" WHEN NEW.name='Fail append' BEGIN SELECT RAISE(FAIL,'test append failure'); END")
                 return
-            con.execute('CREATE TRIGGER def_fail AFTER INSERT ON '+table+(" WHEN NEW.id='second'" if stage=='dropdown' else '')+" BEGIN SELECT RAISE(FAIL,'test definition failure'); END")
+            con.execute('CREATE TRIGGER def_fail AFTER INSERT ON '+table+(" WHEN NEW.id='second'" if stage in ['dropdown','edit'] else '')+" BEGIN SELECT RAISE(FAIL,'test definition failure'); END")
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER def_fail')
     exercise(call,board,uid,snapshot,verify,fail,clear)
@@ -105,6 +106,7 @@ def run_native(call, db, board, uid):
             assert con.execute('SELECT dropdownItemsPresent FROM custom_fields WHERE id=?',(identity,)).fetchone()==(int('dropdownItems' in settings),)
     check_settings(call,board,snapshot,stored,fail,clear)
     check_append(call,board,snapshot,stored,fail,clear)
+    check_edit(call,board,snapshot,stored,fail,clear)
     from optdel import run_native as check_option_delete
     check_option_delete(call,db,board,uid)
     from optrenm import run_native as check_option_rename
@@ -129,13 +131,13 @@ def run_shared(call, client, db, board, uid):
         assert len(activities)==1 and (activities[0]['userId'],activities[0]['boardId'])==(actor,board),activities
     def fail(stage):
         collection='activities' if stage=='activity' else 'customFields'
-        event='UPDATE' if stage in ['board','dropdown','append'] else 'INSERT'
+        event='UPDATE' if stage in ['board','dropdown','append','edit'] else 'INSERT'
         with sqlite3.connect(db) as con:
             name=con.execute('SELECT table_name FROM _ferretdb_collections WHERE name=?',(collection,)).fetchone()[0]
             if stage=='append':
                 con.execute("CREATE TRIGGER def_fail AFTER UPDATE ON \""+name.replace('"','""')+"\" WHEN EXISTS(SELECT 1 FROM json_each(NEW._ferretdb_sjson,'$.settings.dropdownItems') WHERE json_extract(value,'$.name')='Fail append') BEGIN SELECT RAISE(FAIL,'test append failure'); END")
                 return
-            con.execute('CREATE TRIGGER def_fail AFTER '+event+' ON "'+name.replace('"','""')+'"'+(" WHEN json_array_length(NEW._ferretdb_sjson,'$.settings.dropdownItems')=2" if stage=='dropdown' else '')+' BEGIN SELECT RAISE(FAIL,\'test definition failure\'); END')
+            con.execute('CREATE TRIGGER def_fail AFTER '+event+' ON "'+name.replace('"','""')+'"'+(" WHEN json_array_length(NEW._ferretdb_sjson,'$.settings.dropdownItems')=2" if stage in ['dropdown','edit'] else '')+' BEGIN SELECT RAISE(FAIL,\'test definition failure\'); END')
     def clear():
         with sqlite3.connect(db) as con:con.execute('DROP TRIGGER def_fail')
     exercise(call,board,uid,snapshot,verify,fail,clear)
@@ -145,6 +147,7 @@ def run_shared(call, client, db, board, uid):
         assert all(key not in document for key in ['currencyCode','stringtemplateFormat','stringtemplateSeparator','settings_json']),document
     check_settings(call,board,snapshot,stored,fail,clear)
     check_append(call,board,snapshot,stored,fail,clear)
+    check_edit(call,board,snapshot,stored,fail,clear)
     from dropapi import run_shared as check_dropdown_guards
     check_dropdown_guards(call,db,snapshot,board)
     from optdel import run_shared as check_option_delete

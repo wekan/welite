@@ -6,6 +6,7 @@ function SettingsInput(Value:TJSONData;out Settings:TJSONObject):Boolean;
 function SettingsLiteral(Settings:TJSONObject;const Name:string):string;
 function SettingsRemainder(Settings:TJSONObject):string;
 function DropdownScript(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string;AppendExisting:Boolean=False):string;
+function ReplaceDefinitionSettings(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
 function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
 function ReadDefinition(Db:TWLDb;const Identity:string):TJSONObject;
 function BoardDefinitionAdminRequired(Db:TWLDb;const BoardId:string):Boolean;
@@ -139,6 +140,36 @@ begin
         Q(Identity)+','+Q(TJSONObject(Items.Items[i]).Get('_id',''))+','+Q(TJSONObject(Items.Items[i]).Get('name',''))+','+Expression+'); ';
     end;
 end;
+function ReplaceDefinitionSettings(Db:TWLDb;const Identity:string;Settings:TJSONObject;out Guards:string):string;
+var Rows:TWLRows;Scope:TSelectionScope;TableName,Doc,Expression,Init:string;i:Integer;
+begin
+  Guards:='';
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
+  if Length(Rows)<>1 then raise Exception.Create('Missing definition source');
+  if Rows[0][0]='table' then
+  begin
+    Result:='UPDATE custom_fields SET currencyCode='+SettingsLiteral(Settings,'currencyCode')+
+      ',stringtemplateFormat='+SettingsLiteral(Settings,'stringtemplateFormat')+
+      ',stringtemplateSeparator='+SettingsLiteral(Settings,'stringtemplateSeparator')+
+      ',settings_json='+SettingsRemainder(Settings)+',dropdownItemsPresent=0 WHERE id='+QuotedStr(Identity)+'; '+
+      'DELETE FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(Identity)+'; ';
+    Exit(Result+DropdownScript(Db,Identity,Settings,Init));
+  end;
+  if Rows[0][0]<>'view' then raise Exception.Create('Invalid definition source');
+  Scope:=TSelectionScope.Create(Db);
+  try
+    Scope.StringField('custom_fields','id');
+    for i:=0 to Scope.Bindings.Count-1 do Guards:=Guards+Scope.Bindings[i];
+    Rows:=Db.Query('SELECT table_name FROM _wl_models WHERE name=''custom_fields'';');
+    if Length(Rows)<>1 then raise Exception.Create('Ambiguous definition source');
+    TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+    Doc:='json(_ferretdb_sjson)';
+    Expression:='wl_sjson(json_set(wl_plain('+Doc+'),''$.settings'',json('+QuotedStr(Settings.AsJSON)+')),'+Doc+',''{}'')';
+    Result:='UPDATE '+TableName+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(Rows[0][0])+')=''blob'' THEN jsonb('+Expression+
+      ') ELSE '+Expression+' END WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Identity)+'; ';
+  finally Scope.Free;end;
+end;
+
 // The caller pins typed parent/item scope and model bindings around this write.
 function DropdownRenameScript(Db:TWLDb;const Identity,ItemId,Name:string):string;
 var Rows:TWLRows;Specs:TJSONArray;Command:TJSONObject;i:Integer;Expression,TableName,SpecText:string;
