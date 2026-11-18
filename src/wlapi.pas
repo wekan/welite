@@ -47,6 +47,7 @@ procedure ApiUserBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
+procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
 procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);    // PUT board label
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);   // GET list / POST create
@@ -655,6 +656,52 @@ begin
     swMap.Free; listMap.Free;
   end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(NewBoard, '"')]));
+end;
+
+procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"Swimlane not found"}';
+var T:TWLTenant;UserId,BoardId,LaneId,Scope,Title,Permission,Sql:string;
+  Rows:TWLRows;Body:TJSONObject;Value:TJSONData;Policy:TFieldPolicy;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];LaneId:=aRequest.RouteParams['swimlaneId'];
+  if not ApiAuthBoard(T,aResponse,UserId,BoardId,aRequest.Method='PUT') then Exit;
+  Scope:='id='+QuotedStr(LaneId)+' AND boardId='+QuotedStr(BoardId);
+  if aRequest.Method='GET' then
+  begin
+    Rows:=T.Db.Query('SELECT json_object(''_id'',id,''boardId'',boardId,''title'',title,''type'',type,'+
+      '''color'',color,''sort'',sort,''height'',height,''archived'',json(''false''),''createdAt'',createdAt,'+
+      '''modifiedAt'',modifiedAt,''updatedAt'',updatedAt) FROM swimlanes WHERE '+Scope+' AND archived=0;');
+    if Length(Rows)<>1 then SendJson(aResponse,NotFound,404)
+    else SendJson(aResponse,Rows[0][0]);
+    Exit;
+  end;
+  if Length(T.Db.Query('SELECT id FROM swimlanes WHERE '+Scope+';'))<>1 then
+  begin SendJson(aResponse,NotFound,404);Exit;end;
+  Body:=nil;
+  try
+    try
+      Title:=aRequest.ContentFields.Values['title'];
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+      begin
+        Body:=ExactObject(aRequest.Content);Value:=Body.Find('title');
+        if not (Value is TJSONString) then raise Exception.Create('Invalid title');
+        Title:=Value.AsString;
+      end;
+      CheckUtf8(Title);
+      if (Trim(Title)='') or (Pos(#0,Title)>0) then raise Exception.Create('Invalid title');
+    except SendError(aResponse,400,'Invalid swimlane title');Exit;end;
+  finally Body.Free;end;
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM swimlanes WHERE '+Scope+
+    ')=1 THEN 1 ELSE json(''Swimlane scope changed'') END; UPDATE swimlanes SET title='+QuotedStr(Title)+
+    ' WHERE '+Scope+'; SELECT CASE WHEN EXISTS(SELECT 1 FROM swimlanes WHERE '+Scope+
+    ' AND title='+QuotedStr(Title)+') THEN 1 ELSE json(''Swimlane update failed'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit swimlane');Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(LaneId)+'"}');
 end;
 
 procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);

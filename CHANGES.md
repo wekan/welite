@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Read and edit swimlanes over REST
+
+- Add board-scoped GET and PUT for individual swimlanes. Return the active
+  swimlane on GET and validate the title and current write permission on PUT.
+
 ## 2026-11-18 Delete REST cards in batches
 
 - Add the board-scoped bulk-delete route with deleted and missing ID lists.

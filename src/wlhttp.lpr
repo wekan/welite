@@ -669,6 +669,8 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/customFields/:customField', rmPost, @ApiCardCustomField);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/swimlanes', rmGet, @ApiSwimlanes);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/swimlanes', rmPost, @ApiSwimlanes);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/swimlanes/:swimlaneId', rmGet, @ApiSwimlane);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/swimlanes/:swimlaneId', rmPut, @ApiSwimlane);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/swimlanes/:swimlaneId', rmDelete, @ApiSwimlaneDelete);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/swimlanes/:swimlaneId/cards', rmGet, @ApiSwimlaneCards);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists', rmGet, @ApiLists);
