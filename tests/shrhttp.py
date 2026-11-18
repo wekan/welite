@@ -57,6 +57,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
     assert selected(cases)==str(cases/'wekan.db') and selected(cases,True)=='refused'
     assert selected(cases,fresh=True)==str(cases/'wekan.sqlite')
     assert selected(cases,extra={'WELITE_SHORT_NAMES':'1'},fresh=True)=='refused'
+    strict_auto=subprocess.check_output([str(tmp/'select/dbfile'),str(cases),'auto-fresh'],
+        env=dict(os.environ,WELITE_SHARED='',WELITE_SHORT_NAMES='1'),text=True).strip()
+    assert strict_auto==str(cases/'wekan.db')
     assert list(cases.iterdir())==[]
     for orphan in ['wekan.sqlite-wal','wekan.db-shm','wekan.wal','other.sqlite']:
         (cases/orphan).touch()
@@ -98,8 +101,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 response=con.getresponse();result=response.status,dict(response.getheaders()),response.read();con.close();return result
             def stop():
                 if app is not None and app.poll() is None:app.terminate();app.wait(timeout=10)
-            def start(mode,store=None):
-                proc=subprocess.Popen([str(out/'build/wlhttp')],env=dict(env,WELITE_SHARED=mode,WELITE_DATA=str(store or out/'data')),cwd=out,stdout=app_log,stderr=app_log)
+            def start(mode,store=None,**settings):
+                proc=subprocess.Popen([str(out/'build/wlhttp')],env={**env,'WELITE_SHARED':mode,'WELITE_DATA':str(store or out/'data'),**settings},cwd=out,stdout=app_log,stderr=app_log)
                 for _ in range(100):
                     try:
                         request('GET','/sign-in');return proc
@@ -149,7 +152,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert not fresh_file.exists()
                     databases=fresh_client.command({'listDatabases':1,'nameOnly':True},database='admin')
                     assert 'wekan' not in {row['name'] for row in databases['databases']}
-                    app=start('1',fresh)
+                    app=start('',fresh)
                     assert request('GET','/sign-in')[0]==200
                     assert fresh_file.is_file() and not (fresh_data/'wekan.db').exists()
                     with sqlite3.connect(fresh_file) as con:
@@ -191,6 +194,27 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert con.execute('SELECT id FROM users').fetchall()==[('retained',)]
                     assert con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchone() is None
                 assert not (occupied_data/'wekan.db').exists()
+
+                native_fresh=out/'native-fresh'
+                app=start('0',native_fresh)
+                assert request('GET','/sign-in')[0]==200
+                stop()
+                native_data=native_fresh/'local/files/db'
+                assert (native_data/'wekan.db').is_file() and not (native_data/'wekan.sqlite').exists()
+                app=start('',native_fresh)
+                assert request('GET','/sign-in')[0]==200
+                stop()
+                assert not (native_data/'wekan.sqlite').exists()
+
+                if backend=='cli':
+                    fallback=out/'no-extension'
+                    app=start('',fallback,WELITE_SQLITE_EXT='')
+                    assert request('GET','/sign-in')[0]==200
+                    stop()
+                    fallback_data=fallback/'local/files/db'
+                    assert (fallback_data/'wekan.db').is_file()
+                    assert not (fallback_data/'wekan.sqlite').exists()
+                print('PASS: native provisioning and reuse preserve the native store')
 
                 now=DateMs(int(time.time()*1000))
                 password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}

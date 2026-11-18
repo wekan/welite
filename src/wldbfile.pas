@@ -9,6 +9,7 @@ function ValidStoreMode:Boolean;
 // Shared creation selects the canonical .sqlite path. Native mode never shadows it.
 function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation:Boolean=False;AllowAuto:Boolean=True):Boolean;
 implementation
+{$IFNDEF WLDB_CLI}uses sqlite3;{$ENDIF}
 function SharedStoresRequested:Boolean;
 begin Result:=GetEnvironmentVariable('WELITE_SHARED')='1';end;
 function AutoSharedStores:Boolean;
@@ -16,6 +17,16 @@ begin Result:=GetEnvironmentVariable('WELITE_SHARED')='';end;
 function ValidStoreMode:Boolean;
 var Value:string;
 begin Value:=GetEnvironmentVariable('WELITE_SHARED');Result:=(Value='') or (Value='0') or (Value='1');end;
+function SharedCreationAvailable:Boolean;
+begin
+  if GetEnvironmentVariable('WELITE_SHORT_NAMES')='1' then Exit(False);
+  {$IFDEF WLDB_CLI}
+  Result:=FileExists(GetEnvironmentVariable('WELITE_SQLITE_EXT'));
+  {$ELSE}
+  Result:=sqlite3_libversion_number()>=3045000;
+  {$ENDIF}
+end;
+
 function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation,AllowAuto:Boolean):Boolean;
 var Dir,ShortFile,SourceFile:string;HasShort,HasSource:Boolean;Search:TSearchRec;Code:Integer;
 begin
@@ -49,7 +60,8 @@ begin
   if FileExists(ShortFile+'-wal') or FileExists(ShortFile+'-shm') or FileExists(ShortFile+'-journal') or
     FileExists(SourceFile+'-wal') or FileExists(SourceFile+'-shm') or FileExists(SourceFile+'-journal') or
     FileExists(Dir+'wekan.wal') or FileExists(Dir+'wekan.shm') or FileExists(Dir+'wekan.nal') then Exit;
-  if SharedOnly then Path:=SourceFile else Path:=ShortFile;
+  if SharedOnly or (AllowSharedCreation and AllowAuto and AutoSharedStores and SharedCreationAvailable) then
+    Path:=SourceFile else Path:=ShortFile;
   Result:=True;
 end;
 end.

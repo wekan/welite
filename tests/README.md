@@ -330,7 +330,7 @@ after repair. It builds both HTTP backends and the CLI extension, checks canonic
 opens an existing Mongo-created store with `WELITE_SHARED` unset. It verifies both-way
 HTTP/Mongo changes, BSON preservation, private browser sessions, API restart and
 shared revocation, with no normalized shadow database. It also provisions a fresh
-shared database through HTTP, discovers it from the already running Mongo server,
+shared database through HTTP in default mode, discovers it from the already running Mongo server,
 and logs in with a Mongo-created account. Strict 8.3 sharing and full Meteor
 application workflows are not covered.
 

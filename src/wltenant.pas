@@ -204,7 +204,7 @@ begin
       R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''_ferretdb_collections'';');
       if Length(R)=0 then
       begin
-        if not SharedStoresRequested or (ExtractFileName(Tenant.DbPath)<>'wekan.sqlite') then Exit;
+        if ExtractFileName(Tenant.DbPath)<>'wekan.sqlite' then Exit;
         if (Length(Db.Query('SELECT 1 FROM sqlite_master LIMIT 1;'))=0) and
           InstallRootModels(Db,True) then Exit(True);
         // A concurrent provisioner may have installed the complete schema.

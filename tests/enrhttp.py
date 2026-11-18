@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
         built=subprocess.run([os.environ.get('FPC','fpc'),*flags,'-B','-Fu'+str(root/'src'),'-FU'+str(build),'-FE'+str(build),str(root/'src/wlhttp.lpr')],capture_output=True,text=True)
         assert built.returncode==0,built.stdout+built.stderr
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
-        env=dict(os.environ,WELITE_PORT=str(port),WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_DESIGNER=str(root/'src/designer.sql'),WELITE_DATA=str(out/'data'),WELITE_I18N=str(root/'i18n'),REQUIRE_2FA='all')
+        env=dict(os.environ,WELITE_SHARED='0',WELITE_PORT=str(port),WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_DESIGNER=str(root/'src/designer.sql'),WELITE_DATA=str(out/'data'),WELITE_I18N=str(root/'i18n'),REQUIRE_2FA='all')
         for name in ['LDAP_ENABLE','LDAP_LOGIN_FALLBACK','LDAP_MIGRATION_ALLOW_PASSWORD_LOGIN','WELITE_ARGON_SECRET_FILE','WELITE_ENTROPY_FILE','WELITE_TRUSTED_PROXIES']:env.pop(name,None)
         db=out/'data/local/files/db/wekan.db'
         with (out/'server.log').open('w+') as log:

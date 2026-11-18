@@ -35,9 +35,9 @@ and [SQL bootstrap](docs/static.md#private-bootstrap-sql); cross-target acceptan
 - The [REST API](docs/api.md) supports bearer-token login and board-scoped
   custom-field operations. The complete WeKan API and browser suite require
   additional compatibility work.
-- The [FerretDB adapter](docs/ferret.md) supports verified existing-store workflows
-  on shared SQLite. Consult [TODO.md](TODO.md) for remaining lifecycle and
-  interoperability gaps.
+- The [FerretDB adapter](docs/ferret.md) opens existing shared SQLite stores and
+  provisions new tenants in shared format when the SQLite backend supports it.
+  Consult [TODO.md](TODO.md) for remaining interoperability gaps.
 - The [cross-build record](docs/cross.md) distinguishes successful builds, emulated
   runtime checks and platform acceptance still to be tested. Chromium results
   cover Chromium. Amiga, MorphOS, and FreeDOS browser acceptance remains open.

@@ -942,7 +942,8 @@ worker does not resolve the shared filename/sidecar policy or activate the adapt
 ## Startup and refreshed tenant discovery
 
 The HTTP worker receives the configured `WELITE_DATA` root. `wldisc.pas` finds existing
-`local/files/db/wekan.db`, `admin/files/db/wekan.db` and enabled canonical-domain files.
+the local and enabled domain files selected by storage mode, plus
+`admin/files/db/wekan.db`.
 It reads the admin registry using its own connection and joins `domains` to `tenantdirs`.
 Only valid canonical hosts and numeric keys 1–268435455 qualify; domain paths use the
 same `d` plus seven hexadecimal digits as tenant routing. Host strings never become
@@ -1734,7 +1735,7 @@ legacy forms and broader clone lifecycle behavior are still unfinished.
 - Complete Mongo-managed sparse/multikey account indexes and normalized-store authentication migration policy; reconcile typed
   custom-field values, legacy dependency forms and SQL conflict behavior.
 - Reconcile broader resume-policy parity and process-signal lifecycle; reconcile file-store metadata/bytes.
-- Resolve the default format for new stores; adapt cloning/export and finish authentication integration.
+- Adapt cloning/export and finish authentication integration.
 - Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
   rollback with both Welite SQLite backends.
 - Resolve shared database filename/8.3 policy and document target-specific limitations
@@ -1750,9 +1751,12 @@ The local tenant uses `WELITE_DATA/local/files/db/wekan.sqlite`. Enabled domains
 registry-derived `domains/dXXXXXXX/files/db/` directory. The adapter installs its
 owned projections on the existing physical collections. The reserved admin
 registry remains native at `admin/files/db/wekan.db`. With the setting unset or
-empty, an existing canonical `wekan.sqlite` selects shared mode, and an existing
-native `wekan.db` or new tenant uses native storage. `WELITE_SHARED=0` explicitly
-selects native mode. Other mode values fail initialization.
+empty, an existing canonical `wekan.sqlite` selects shared mode and an existing
+native `wekan.db` stays native. New public tenants use `wekan.sqlite` by default
+with linked SQLite 3.45+ or CLI SQLite configured with `WELITE_SQLITE_EXT` and
+JSONB support. Strict short-name mode and CLI builds without a configured
+extension provision native storage. `WELITE_SHARED=0` explicitly selects native
+mode. Other mode values fail initialization.
 
 Selection never copies, renames or links database files. Shared provisioning
 initializes only an empty canonical SQLite file inside a write transaction, and

@@ -1,7 +1,8 @@
 # Runtime files and DOS 8.3 names
 
 `WELITE_DATA` selects the data root (default `data`). Generated components beneath
-it use eight-character names and extensions of at most three characters:
+it use eight-character names and extensions of at most three characters in
+strict short-name mode. The native layout is:
 
 ```
 data/admin/files/db/wekan.db
@@ -12,6 +13,10 @@ data/domains/d0000001/files/avatars/...
 data/certs/d0000001/...
 data/temp/t0000001/
 ```
+
+With normal filenames and a compatible SQLite backend, new public tenants
+use `files/db/wekan.sqlite` for shared FerretDB storage. The admin registry
+uses `wekan.db`. See [shared storage setup](ferret.md).
 
 This follows Weddy's per-domain `files/db`, attachment and avatar layout, adapted
 to short names. The reserved Global Admin database stores full domain names,
