@@ -2116,5 +2116,6 @@
   "auth-too-many-attempts": "Liian monta kirjautumisyritystä. Yritä myöhemmin uudelleen.",
   "enrollment-setup-failed": "Käyttöönottoa ei voitu aloittaa",
   "registration-global-admin-disabled": "Järjestelmänvalvojien tilit luodaan paikallisesti. Julkinen rekisteröityminen on poissa käytöstä.",
-  "auth-session-create-failed": "Istuntoa ei voitu luoda"
+  "auth-session-create-failed": "Istuntoa ei voitu luoda",
+  "registration-session-failed": "Tili luotu. Jatka kirjautumalla sisään."
 }

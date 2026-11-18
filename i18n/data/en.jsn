@@ -2115,5 +2115,6 @@
   "auth-too-many-attempts": "Too many login attempts. Try again later.",
   "enrollment-setup-failed": "Could not start setup",
   "registration-global-admin-disabled": "Global Admin accounts are initialized locally. Public registration is disabled.",
-  "auth-session-create-failed": "Could not create session"
+  "auth-session-create-failed": "Could not create session",
+  "registration-session-failed": "Account created. Sign in to continue."
 }

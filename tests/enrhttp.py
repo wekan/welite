@@ -178,6 +178,18 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 assert '<p>تعذّر إنشاء جلسة</p>'.encode() in failed[2]
                 with sqlite3.connect(admins_db) as con:
                     assert con.execute('SELECT hashedToken FROM login_tokens ORDER BY hashedToken').fetchall()==before
+                failed=request('POST','/register?lang=fi',dict(username='saved-account',
+                    password='test-password',confirm='test-password'))
+                assert failed[0]==500 and 'Location' not in failed[1]
+                check_auth_error(failed,'fi',title_key='register')
+                assert '<p>Tili luotu. Jatka kirjautumalla sisään.</p>'.encode() in failed[2]
+                with sqlite3.connect(admins_db) as con:
+                    assert con.execute('SELECT hashedToken FROM login_tokens ORDER BY hashedToken').fetchall()==before
+                    assert con.execute("SELECT count(*) FROM users WHERE username='saved-account'").fetchone()==(1,)
+                    con.execute('DROP TRIGGER fail_session')
+                recovered=request('POST','/sign-in?lang=fi',dict(username='saved-account',password='test-password'))
+                assert recovered[0]==302 and 'sessionId=' in recovered[1]['Location']
+
 
                 print('PASS: '+backend+' required-factor registration, private HTTP setup, cookie-free confirmation, client binding, shared derived-account limits, rollback/retry, pending restart, expiry/replacement and fresh-code login')
             finally:

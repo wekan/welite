@@ -463,7 +463,7 @@ begin
     // Log the new user straight in (cookie-free session via URL), then go to the board list.
     S := CreateSession(T.Db, aRequest, Uid,Username,HashText(Hash),30*24*60*60);
     if S.SessionId='' then
-    begin AuthError(aRequest,aResponse,500,'register','Register','Account created; sign in to continue');Exit; end;
+    begin AuthError(aRequest,aResponse,500,'register','Register','Account created. Sign in to continue.','registration-session-failed');Exit; end;
     aResponse.Code := 302;
     aResponse.SetCustomHeader('Location', LanguageUrl(aRequest,WithSessionId('/',S.SessionId)));
     aResponse.SendContent;
