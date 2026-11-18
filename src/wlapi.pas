@@ -50,6 +50,7 @@ procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);    // PUT board label
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);   // GET list / POST create
 procedure ApiCustomField(aRequest: TRequest; aResponse: TResponse);    // GET one
+procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
 procedure ApiAppendDropdownItems(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
@@ -740,6 +741,55 @@ begin
   finally O.Free;end;
 end;
 
+const CustomFieldNotFound = '{"error":"Custom field not found"}';
+
+procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,FieldId,DefinitionRows,ValuesRows,Bindings,Permission,Sql:string;
+  Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;Reply:TJSONObject;i:Integer;
+  function Q(const Value:string):string;
+  begin Result:=QuotedStr(Value);end;
+  function Guard(const Condition:string):string;
+  begin Result:='SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Custom field deletion guard failed'') END; ';end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,CustomFieldNotFound) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];
+  Scope:=nil;Policy:=nil;
+  try
+    try
+      Scope:=TSelectionScope.Create(T.Db);
+      DefinitionRows:=' FROM custom_fields WHERE id='+Q(FieldId);
+      Rows:=T.Db.Query('SELECT count(*)'+DefinitionRows+' AND '+Scope.StringField('custom_fields','id')+
+        ' AND EXISTS(SELECT 1 FROM custom_field_boards WHERE customFieldId='+Q(FieldId)+
+        ' AND boardId='+Q(BoardId)+' AND '+Scope.StringField('custom_field_boards','boardId')+');');
+      if (Length(Rows)<>1) or (Length(Rows[0])<>1) then
+      begin SendError(aResponse,500,'Could not validate custom field');Exit;end;
+      if Rows[0][0]='0' then begin SendJson(aResponse,CustomFieldNotFound,404);Exit;end;
+      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+      // Deleting a definition affects every board that uses it. Limit this
+      // scoped operation to a definition owned exclusively by this board.
+      Permission:=Policy.ScopeWriteExpression(FieldId)+
+        ' AND (SELECT count(*) FROM custom_field_boards WHERE customFieldId='+Q(FieldId)+')=1';
+      Rows:=T.Db.Query('SELECT '+Permission+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin SendError(aResponse,403,'Custom field deletion forbidden');Exit;end;
+      ValuesRows:=' FROM card_custom_field_values WHERE customFieldId='+Q(FieldId)+
+        ' AND EXISTS(SELECT 1 FROM cards WHERE id=card_custom_field_values.cardId AND boardId='+Q(BoardId)+
+        ' AND '+Scope.StringField('cards','boardId')+') AND '+Scope.StringField('card_custom_field_values','customFieldId');
+      Bindings:='';for i:=0 to Scope.Bindings.Count-1 do Bindings:=Bindings+Scope.Bindings[i];
+      Sql:='BEGIN IMMEDIATE; '+Bindings+Guard(Permission)+
+        'DELETE'+ValuesRows+'; '+Bindings+Guard(Permission+' AND NOT EXISTS(SELECT 1'+ValuesRows+')')+
+        'DELETE'+DefinitionRows+'; '+Bindings+Guard('NOT EXISTS(SELECT 1'+DefinitionRows+
+        ') AND NOT EXISTS(SELECT 1'+ValuesRows+') AND '+Policy.DefinitionExpression('',False))+'COMMIT;';
+      if not T.Db.Exec(Sql) then
+      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete custom field');Exit;end;
+      Reply:=TJSONObject.Create(['_id',FieldId]);
+      try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+    except SendError(aResponse,500,'Could not delete custom field');end;
+  finally Policy.Free;Scope.Free;end;
+end;
+
 const DropdownNotFound = '{"error":"Dropdown item not found"}';
 
 function OptionNameInput(Request:TRequest;out Name:string;out Present:Boolean):Boolean;
@@ -771,14 +821,13 @@ begin
 end;
 
 procedure ApiAppendDropdownItems(aRequest:TRequest;aResponse:TResponse);
-const FieldNotFound = '{"error":"Custom field not found"}';
 var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Guards,Mutation,Name,CheckSql:string;
   Doc,Settings,Reply:TJSONObject;Value,Entry:TJSONData;Items:TJSONArray;
   Policy:TFieldPolicy;Scope:TSelectionScope;Rows:TWLRows;i:Integer;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
-  if not ApiBoardGuard(T,aRequest,aResponse,UserId,FieldNotFound) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,CustomFieldNotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];
   Doc:=nil;Settings:=nil;Policy:=nil;Scope:=nil;
   try

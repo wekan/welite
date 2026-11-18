@@ -4,6 +4,7 @@ import sqlite3
 from urllib.parse import quote, urlencode
 from setapi import exercise as check_settings
 from optadd import run as check_append
+from defdel import native as check_native_delete, shared as check_shared_delete
 
 
 def exercise(call, board, uid, snapshot, verify, fail, clear):
@@ -108,6 +109,7 @@ def run_native(call, db, board, uid):
     check_option_delete(call,db,board,uid)
     from optrenm import run_native as check_option_rename
     check_option_rename(call,db,board,uid)
+    check_native_delete(call,db,board,snapshot)
 
 
 
@@ -149,3 +151,4 @@ def run_shared(call, client, db, board, uid):
     check_option_delete(call,client,db,board,uid)
     from optrenm import run_shared as check_option_rename
     check_option_rename(call,client,db,board,uid)
+    check_shared_delete(call,client,db,board,snapshot)

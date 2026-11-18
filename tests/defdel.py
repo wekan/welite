@@ -1,0 +1,95 @@
+"""Definition DELETE removes its own card values in the same transaction."""
+import json
+from urllib.parse import quote
+
+from optdel import connect
+from wire import encode
+
+
+def exercise(call, board, snapshot, assign, verify, fail, clear):
+    base = '/api/boards/' + quote(board, safe='') + '/custom-fields'
+
+    def create(name):
+        status, _, body = call('POST', base, dict(name=name, type='text'))
+        assert status == 200, (status, body)
+        return json.loads(body)['_id']
+
+    identity, sibling = create('Delete definition'), create('Keep definition')
+    assign(identity, sibling)
+    route = base + '/' + quote(identity, safe='')
+
+    def missing(path):
+        status, _, body = call('DELETE', path, None)
+        assert status == 404 and json.loads(body) == dict(error='Custom field not found'), (status, body)
+
+    before = snapshot()
+    missing(base + '/missing')
+    assert snapshot() == before
+    fail()
+    try:
+        status, _, body = call('DELETE', route, None)
+        assert status == 500, (status, body)
+        assert snapshot() == before
+    finally:
+        clear()
+
+    status, _, body = call('DELETE', route, None)
+    assert status == 200 and json.loads(body) == dict(_id=identity), (status, body)
+    verify(identity, sibling)
+    assert call('GET', route, None)[0] == 404
+    missing(route)
+    print('PASS: definition DELETE removes scoped card values, retains siblings and rolls back on a definition write failure')
+
+
+def native(call, db, board, snapshot):
+    with connect(db) as con:
+        card, = con.execute('SELECT id FROM cards WHERE boardId=? ORDER BY id LIMIT 1', (board,)).fetchone()
+
+    def assign(identity, sibling):
+        with connect(db) as con:
+            con.executemany('INSERT INTO card_custom_field_values VALUES(?,?,?)',
+                            [(card, identity, 'Remove'), (card, sibling, 'Keep')])
+
+    def verify(identity, sibling):
+        with connect(db) as con:
+            assert con.execute('SELECT id FROM custom_fields WHERE id IN (?,?)', (identity, sibling)).fetchall() == [(sibling,)]
+            assert con.execute('SELECT customFieldId,value FROM card_custom_field_values WHERE cardId=? AND customFieldId IN (?,?)',
+                               (card, identity, sibling)).fetchall() == [(sibling, 'Keep')]
+
+    exercise(call, board, snapshot, assign, verify,
+             lambda: install_failure(db, 'custom_fields'), lambda: clear_failure(db))
+
+
+def shared(call, client, db, board, snapshot):
+    card = client.command({'find':'cards','filter':dict(boardId=board),'limit':1})['cursor']['firstBatch'][0]
+    card_id = card['_id']
+    expected = None
+
+    def assign(identity, sibling):
+        nonlocal expected
+        keep = dict(_id=sibling, value='Keep', extra=dict(preserved=True))
+        expect_doc = dict(card, customFields=[*card.get('customFields', []), keep])
+        expected = encode(expect_doc)
+        fields = [*expect_doc['customFields'], dict(_id=identity, value='Remove')]
+        assert client.command({'update':'cards','updates':[dict(q=dict(_id=card_id),u={'$set':dict(customFields=fields)})]})['n'] == 1
+
+    def verify(identity, sibling):
+        assert client.find('customFields', identity) == []
+        assert len(client.find('customFields', sibling)) == 1
+        assert encode(client.find('cards', card_id)[0]) == expected
+
+    with connect(db) as con:
+        table, = con.execute("SELECT table_name FROM _wl_models WHERE name='custom_fields'").fetchone()
+    exercise(call, board, snapshot, assign, verify,
+             lambda: install_failure(db, table), lambda: clear_failure(db))
+
+
+def install_failure(db, table):
+    with connect(db) as con:
+        con.execute(f'CREATE TRIGGER def_del_fail AFTER DELETE ON "{table.replace(chr(34), chr(34)*2)}" '
+                    "BEGIN SELECT RAISE(FAIL,'test delete failure'); END")
+
+
+def clear_failure(db):
+    with connect(db) as con:
+        con.execute('DROP TRIGGER def_del_fail')
