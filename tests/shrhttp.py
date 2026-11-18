@@ -108,8 +108,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         client.command({'ping':1})
                         return
                     except OSError:
+                        if server.poll() is not None:
+                            mongo_log.seek(0)
+                            raise AssertionError(f'FerretDB exited with status {server.returncode}:\n{mongo_log.read()}')
                         time.sleep(.05)
-                raise AssertionError('FerretDB startup timed out')
+                mongo_log.seek(0)
+                raise AssertionError(f'FerretDB startup timed out:\n{mongo_log.read()}')
             def request(method,path,body=None,token=None,timeout=10,content_type=None):
                 con=http.client.HTTPConnection('127.0.0.1',http_port,timeout=timeout)
                 headers={'Host':'localhost','User-Agent':'shared-http-test'}
