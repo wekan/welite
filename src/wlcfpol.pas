@@ -170,7 +170,7 @@ end;
 function TFieldPolicy.ScopeBoardExpression(WriteAccess:Boolean):string;
 begin Result:=Build('',WriteAccess,True,False);end;
 function TFieldPolicy.ScopeAdminExpression(AllowSiteAdmin:Boolean):string;
-begin Result:=Build('',False,True,True,True);end;
+begin Result:=Build('',False,True,True,True,False,False,False,AllowSiteAdmin);end;
 function TFieldPolicy.Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
 var Rows:TWLRows;
 begin

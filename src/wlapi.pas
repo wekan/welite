@@ -84,6 +84,7 @@ procedure ApiCardAttachmentsList(aRequest: TRequest; aResponse: TResponse);// GE
 procedure ApiCardMember(aRequest: TRequest; aResponse: TResponse);     // POST/DELETE card member
 procedure ApiCardAssignee(aRequest: TRequest; aResponse: TResponse);   // POST/DELETE card assignee
 procedure ApiCardArchive(aRequest: TRequest; aResponse: TResponse);    // POST archive/unarchive
+procedure ApiBulkCardLabels(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBulkCardDelete(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardDelete(aRequest: TRequest; aResponse: TResponse);     // DELETE card
 procedure ApiListDelete(aRequest: TRequest; aResponse: TResponse);     // DELETE list (+ its cards)
@@ -2312,6 +2313,76 @@ begin
   begin SendError(aResponse,500,'Could not delete card');Exit;end;
   if not Removed then begin SendJson(aResponse,CardNotFound,404);Exit;end;
   SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}');
+end;
+
+procedure ApiBulkCardLabels(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,Cards,AddIds,RemoveIds,CardScope,LabelCheck,Permission,Bindings,Sql,CardId:string;
+  Body,Reply,Item:TJSONObject;Input:TJSONData;Updated,NotFound,Labels:TJSONArray;
+  Source:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;I,J:Integer;
+  function ReadIds(const Name:string;Required:Boolean):string;
+  var Value:TJSONData;K:Integer;
+  begin
+    Result:='[]';Value:=Body.Find(Name);
+    if (Value=nil) and not Required then Exit;
+    if not (Value is TJSONArray) or (Value.Count>500) or (Required and (Value.Count=0)) then
+      raise Exception.Create('Invalid ID list');
+    for K:=0 to Value.Count-1 do
+      if (Value.Items[K].JSONType<>jtString) or (Value.Items[K].AsString='') or
+        (Pos(#0,Value.Items[K].AsString)>0) then raise Exception.Create('Invalid ID');
+    if Value.Count<>0 then Result:=Value.AsJSON;
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];
+  if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
+  Body:=nil;Reply:=nil;
+  try
+    try
+      Body:=ExactObject(aRequest.Content);
+      Cards:=ReadIds('cardIds',True);AddIds:=ReadIds('addLabelIds',False);RemoveIds:=ReadIds('removeLabelIds',False);
+      if (AddIds='[]') and (RemoveIds='[]') then raise Exception.Create('Missing label changes');
+    except SendError(aResponse,400,'Invalid card or label IDs');Exit;end;
+    Cards:=QuotedStr(Cards);AddIds:=QuotedStr(AddIds);RemoveIds:=QuotedStr(RemoveIds);
+    Source:=TSelectionScope.Create(T.Db);
+    try
+      CardScope:='boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL AND '+
+        Source.StringField('cards','id')+' AND '+Source.StringField('cards','boardId');
+      LabelCheck:='NOT EXISTS(SELECT 1 FROM json_each('+AddIds+') wanted WHERE NOT EXISTS(SELECT 1 FROM board_labels'+
+        ' WHERE boardId='+QuotedStr(BoardId)+' AND id=wanted.value AND '+Source.StringField('board_labels','id')+'))';
+      Bindings:='';
+      for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
+    finally Source.Free;end;
+    Rows:=T.Db.Query('SELECT '+LabelCheck+';');
+    if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+    begin SendError(aResponse,400,'addLabelIds contains labels not on this board');Exit;end;
+    Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+    try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+    CardScope:=CardScope+' AND id IN (SELECT value FROM json_each('+Cards+'))';
+    Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+LabelCheck+
+      ' THEN 1 ELSE json(''Card label scope changed'') END; '+
+      'DELETE FROM card_labels WHERE cardId IN (SELECT id FROM cards WHERE '+CardScope+
+      ') AND labelId IN (SELECT value FROM json_each('+RemoveIds+')); '+
+      'INSERT INTO card_labels(cardId,labelId) SELECT c.id,l.value FROM (SELECT id FROM cards WHERE '+CardScope+
+      ') c CROSS JOIN (SELECT value,min(key) position FROM json_each('+AddIds+') GROUP BY value) l '+
+      'WHERE NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId=c.id AND labelId=l.value) ORDER BY c.id,l.position; COMMIT;';
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update card labels');Exit;end;
+    Reply:=TJSONObject.Create;Updated:=TJSONArray.Create;Reply.Add('updated',Updated);
+    NotFound:=TJSONArray.Create;Reply.Add('notFound',NotFound);
+    Input:=Body.Find('cardIds');
+    for I:=0 to Input.Count-1 do
+    begin
+      CardId:=Input.Items[I].AsString;
+      if Length(T.Db.Query('SELECT id FROM cards WHERE '+CardScope+' AND id='+QuotedStr(CardId)+';'))=0 then
+      begin NotFound.Add(CardId);Continue;end;
+      Item:=TJSONObject.Create(['_id',CardId]);Updated.Add(Item);
+      Labels:=TJSONArray.Create;Item.Add('labelIds',Labels);
+      Rows:=T.Db.Query('SELECT labelId FROM card_labels WHERE cardId='+QuotedStr(CardId)+';');
+      for J:=0 to High(Rows) do Labels.Add(Rows[J][0]);
+    end;
+    SendJson(aResponse,Reply.AsJSON);
+  finally Reply.Free;Body.Free;end;
 end;
 
 procedure ApiBulkCardDelete(aRequest:TRequest;aResponse:TResponse);

@@ -232,6 +232,16 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert repeat[0]==200 and json.loads(repeat[2])==label_id
                 assert len(client.find('boards','b')[0]['labels'])==1
                 print('PASS: shared board label creation returns a bare ID and deduplicates trimmed names')
+                labels_path='/api/boards/b/cards/labels'
+                assert request('POST',labels_path,dict(cardIds=[card['_id']],addLabelIds=[],removeLabelIds=[]),token)[0]==400
+                status,_,body=request('POST',labels_path,dict(cardIds=[card['_id'],'missing'],addLabelIds=[label_id,label_id]),token)
+                assert (status,json.loads(body))==(200,dict(updated=[{'_id':card['_id'],'labelIds':[label_id]}],notFound=['missing']))
+                assert client.find('cards',card['_id'])[0]['labelIds']==[label_id]
+                status,_,body=request('POST',labels_path,dict(cardIds=[card['_id']],removeLabelIds=[label_id]),token)
+                assert status==200 and json.loads(body)['updated'][0]['labelIds']==[]
+                assert client.find('cards',card['_id'])[0]['labelIds']==[]
+                print('PASS: shared bulk labels preserve request order, report missing cards and clear the last label')
+
 
                 check_custom_api(request,client,database,token)
                 check_export_policy(request,client,database)
