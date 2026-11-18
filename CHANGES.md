@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify Finnish form submission in retro browsers
+
+- Check that Dillo and NetSurf submit the selected Finnish locale and
+  receive the matching Content-Language header without cookies.
+
 ## 2026-11-18 Verify the sign-in language form in retro browsers
 
 - At 640×480, submit the sign-in language form in Dillo and NetSurf and

@@ -39,7 +39,8 @@ def observe_board_requests(base):
                 body = response.read()
                 if urlsplit(self.path).path in ('/board', '/sign-in'):
                     exchanges.append((self.path, self.headers.get('Cookie'),
-                                      response.getheader('Set-Cookie'), response.status))
+                                      response.getheader('Set-Cookie'), response.status,
+                                      response.getheader('Content-Language')))
                 self.send_response(response.status)
                 for name, value in response.getheaders():
                     if name.lower() not in ('connection', 'content-length', 'transfer-encoding', 'date', 'server'):
@@ -130,9 +131,9 @@ def check_viewport(base, width, height, browser_name):
                     time.sleep(.5)
                 else:
                     raise AssertionError(f'{browser_name} minimap click did not move the viewport highlight')
-                assert len(exchanges) >= 2 and len({path for path, _, _, _ in exchanges}) >= 2, exchanges
+                assert len(exchanges) >= 2 and len({path for path, _, _, _, _ in exchanges}) >= 2, exchanges
                 assert all(cookie is None and issued is None and status == 200
-                           for _, cookie, issued, status in exchanges), exchanges
+                           for _, cookie, issued, status, _ in exchanges), exchanges
                 if width == 640:
                     assert_language_form(tools, env, observed, exchanges, browser_name)
 
@@ -153,24 +154,24 @@ def assert_language_form(tools, env, observed, exchanges, browser_name):
 
     def wait_for(path):
         for _ in range(40):
-            if any(route == path for route, _, _, _ in exchanges):
+            if any(route == path for route, _, _, _, _ in exchanges):
                 return
             time.sleep(.1)
         raise AssertionError(f'No browser request for {path}: {exchanges}')
 
     send('key', 'ctrl+l')
-    send('type', observed + '/sign-in')
+    send('type', observed + '/sign-in?lang=fi&source=test')
     send('key', 'Return')
-    wait_for('/sign-in')
+    wait_for('/sign-in?lang=fi&source=test')
     time.sleep(.4)
     if browser_name == 'NetSurf':
         # At the fixed 640-pixel viewport and GTK scale, Apply is beside the picker.
-        send('mousemove', '435', '65', 'click', '1')
+        send('mousemove', '390', '65', 'click', '1')
     else:
         send('mousemove', '500', '220', 'click', '1')
         send('key', 'Tab', 'Tab', 'Return')
-    wait_for('/sign-in?lang=en')
-    assert all(cookie is None and issued is None and status == 200
-               for route, cookie, issued, status in exchanges
+    wait_for('/sign-in?lang=fi')
+    assert all(cookie is None and issued is None and status == 200 and language == 'fi'
+               for route, cookie, issued, status, language in exchanges
                if urlsplit(route).path == '/sign-in')
-    print(f'PASS: {browser_name} submitted the HTML sign-in language form without cookies')
+    print(f'PASS: {browser_name} submitted the Finnish HTML sign-in language form without cookies')
