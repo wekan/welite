@@ -374,7 +374,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 board_members=client.find('boards','b')[0]['members']
                 def set_card_membership(members):
                     result=client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$set':{'members':members}})]})
-                    assert result['n']==1,result
+                    assert result['n']==1 and not result.get('writeErrors'),result
+                    assert client.find('boards','b')[0]['members']==members,(result,client.find('boards','b')[0]['members'],members)
                 try:
                     set_card_membership([dict(board_members[0],isReadAssignedOnly=True)])
                     assert card['_id'] not in my_cards()
@@ -385,6 +386,41 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('PUT',card_path,dict(members=[]),token)[0]==200
                 stored=client.find('cards',card['_id'])[0]
                 print('PASS: shared My Cards requires active board membership and applies due date bounds')
+                dep_source='dep-source';dep_target='dep-target'
+                client.command({'insert':'cards','documents':[dict(_id=card_id,boardId='b',
+                    swimlaneId='s',listId='l',title='Dependency fixture',archived=False)
+                    for card_id in (dep_source,dep_target)]})
+                dep_path=f"/api/boards/b/cards/{dep_source}/dependencies"
+                dep_item=dep_path+'/'+dep_target
+                dep_input=dict(cardId=dep_target,type='blocks')
+                try:
+                    set_card_membership([dict(userId='u',isActive=True,isReadOnly=True,isNormalAssignedOnly=False,isWorker=False)])
+                    assert request('POST',dep_path,dep_input,token)[0]==403
+                    set_card_membership([dict(userId='u',isActive=True,isReadOnly=False,isNormalAssignedOnly=True,isWorker=False)])
+                    assert request('POST',dep_path,dep_input,token)[0]==403
+                    set_card_membership([dict(userId='u',isActive=True,isReadOnly=False,isNormalAssignedOnly=False,isWorker=True)])
+                    dependency_response=request('POST',dep_path,dep_input,token)
+                    assert dependency_response[0]==200,dependency_response
+                    assert request('PUT',dep_item,dict(type='fixes'),token)[0]==200
+                    before=client.find('cards',dep_source)[0]['cardDependencies']
+                    with sqlite3.connect(database) as con:
+                        con.execute("CREATE TRIGGER dependency_revoke INSTEAD OF UPDATE ON card_dependencies "
+                                    "BEGIN DELETE FROM board_members WHERE boardId='b' AND userId='u'; END")
+                    try:
+                        assert request('PUT',dep_item,dict(type='blocks'),token)[0]==409
+                        assert client.find('cards',dep_source)[0]['cardDependencies']==before
+                        assert client.find('boards','b')[0]['members'][0]['isWorker'] is True
+                    finally:
+                        with sqlite3.connect(database) as con:
+                            con.execute('DROP TRIGGER dependency_revoke')
+                    assert request('DELETE',dep_item,token=token)[0]==200
+                    status,_,body=request('DELETE',dep_item,token=token)
+                    assert status==404 and json.loads(body)=={'error':'Dependency not found'}
+                finally:
+                    set_card_membership(board_members)
+                    client.command({'delete':'cards','deletes':[dict(q={'_id':card_id},limit=1)
+                        for card_id in (dep_source,dep_target)]})
+                print('PASS: REST dependencies enforce role and assignment scope and roll back permission changes')
                 assert request('PUT',card_path,dict(dueAt='invalid'),token)[0]==404
                 assert client.find('cards',card['_id'])[0]==stored
                 assert request('PUT',card_path,dict(receivedAt=None,startAt='null',dueAt='',endAt=''),token)[0]==200

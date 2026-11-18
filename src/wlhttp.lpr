@@ -727,6 +727,11 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/members/:member', rmDelete, @ApiCardMember);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/assignees/:assignee', rmPost, @ApiCardAssignee);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/assignees/:assignee', rmDelete, @ApiCardAssignee);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/dependencies', rmGet, @ApiDependencies);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/dependencies', rmGet, @ApiDependencies);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/dependencies', rmPost, @ApiDependencies);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/dependencies/:targetId', rmPut, @ApiDependencies);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/dependencies/:targetId', rmDelete, @ApiDependencies);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/checklists', rmGet, @ApiCardChecklists);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/checklists', rmPost, @ApiCardChecklists);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/cards/:cardId/checklists/:checklistId', rmGet, @ApiChecklist);

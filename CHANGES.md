@@ -4,6 +4,14 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Add REST card dependency routes
+
+- Read card dependencies and board dependency lines. Create, update and delete
+  structured entries with board and card scope checks. Re-adding a target
+  updates its existing entry.
+- Pass upstream dependency CRUD and unauthenticated-request cases on both
+  linked and CLI SQLite.
+
 ## 2026-11-18 Add audited administrative REST token issuance
 
 - Issue a bearer for an active account through `POST /api/createtoken/:userId`

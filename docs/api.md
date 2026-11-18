@@ -230,3 +230,12 @@ Site administrators can post `userId` to `/api/deletetoken` to revoke all of
 that user's login sessions. To revoke one shared Meteor bearer, also supply
 its stored SHA-256 base64 digest in `token`. An unknown digest or a raw bearer
 leaves sessions unchanged. A missing target account returns JSON 404.
+
+
+## Card dependencies
+
+Read dependency lines with `GET /api/boards/:boardId/dependencies`. Read or
+add a card's dependencies at `/api/boards/:boardId/cards/:cardId/dependencies`.
+POST takes a target `cardId` and optional `type`, `color` and `icon`. Reposting
+the same source and target updates the existing entry. Append `/:targetId` for
+PUT or DELETE. Writes check board and card scope within the transaction.

@@ -41,6 +41,7 @@ uses
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateToken(aRequest:TRequest;aResponse:TResponse);
+procedure ApiDependencies(aRequest:TRequest;aResponse:TResponse);
 procedure ApiDeleteToken(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
@@ -618,6 +619,172 @@ begin
       raise Exception.Create('Token deletion failed');
   except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not revoke tokens');Exit;end;
   SendJson(aResponse,'{"message":"'+StringToJSONString(Message)+'"}');
+end;
+
+procedure ApiDependencies(aRequest:TRequest;aResponse:TResponse);
+const Fields:array[0..2] of string=('type','color','icon');
+  Defaults:array[0..2] of string=('related-to','#eb144c','link');
+  Types='|related-to|blocks|is-blocked-by|fixes|is-fixed-by|duplicates|is-duplicated-by|';
+var T:TWLTenant;UserId,Actor,Board,Source,Target,Method,Member,Allowed,SourceScope,TargetScope,
+  Dependency,Scope,Columns,Values,Patch,Mutation,Guard,AfterWrite,Bindings,CardFilter:string;
+  Rows:TWLRows;Row:TWLRow;Input,Item,Reply:TJSONObject;Items:TJSONArray;
+  Selector:TSelectionScope;Field:TJSONData;I:Integer;Props:array[0..2] of string;
+  function TypeValid(const Value:string):Boolean;
+  begin Result:=(Value<>'') and (Pos('|',Value)=0) and (Pos('|'+Value+'|',Types)>0);end;
+  function CardScope(const Card:string):string;
+  begin
+    Result:='id='+QuotedStr(Card)+' AND boardId='+Board+' AND '+
+      Selector.StringField('cards','id')+' AND '+Selector.StringField('cards','boardId');
+  end;
+  function CanEdit(const Card:string):string;
+  var Assignee:string;
+  begin
+    Assignee:='';
+    if Card<>'' then
+      Assignee:=' AND (COALESCE(board_members.isNormalAssignedOnly,0)=0 OR EXISTS(SELECT 1 FROM card_assignees '+
+        'WHERE cardId='+QuotedStr(Card)+' AND userId='+Actor+' AND '+Selector.StringField('card_assignees','userId')+'))';
+    Result:='EXISTS(SELECT 1 FROM boards WHERE id='+Board+' AND archived=0 AND '+Selector.StringField('boards','id')+')'+
+      ' AND EXISTS(SELECT 1 FROM users WHERE id='+Actor+' AND COALESCE(loginDisabled,0)=0 AND '+
+      Selector.StringField('users','id')+' AND (isAdmin=1 OR EXISTS(SELECT 1 FROM board_members WHERE '+Member+
+      ' AND (board_members.isAdmin=1 OR (COALESCE(board_members.isReadOnly,0)=0 AND COALESCE(board_members.isCommentOnly,0)=0 '+
+      'AND COALESCE(board_members.isReadAssignedOnly,0)=0 AND COALESCE(board_members.isCommentAssignedOnly,0)=0'+Assignee+')))))';
+  end;
+  procedure AddNumber(Entry:TJSONObject;const Key,Value:string);
+  var Number:Int64;
+  begin if TryStrToInt64(Value,Number) then Entry.Add(Key,Number) else Entry.Add(Key,TJSONNull.Create);end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  Actor:=QuotedStr(UserId);Board:=QuotedStr(aRequest.RouteParams['boardId']);
+  Source:=aRequest.RouteParams['cardId'];Target:=aRequest.RouteParams['targetId'];Method:=aRequest.Method;
+  Member:='boardId='+Board+' AND userId='+Actor+' AND isActive=1';
+  Selector:=TSelectionScope.Create(T.Db);
+  Input:=nil;
+  try
+    SourceScope:=CardScope(Source);
+    if Method='GET' then
+    begin
+      if not ApiAuthBoard(T,aResponse,UserId,aRequest.RouteParams['boardId'],False) then Exit;
+      CardFilter:='cards.boardId='+Board+' AND cards.archived=0';
+      if Source<>'' then
+      begin
+        if Length(T.Db.Query('SELECT id FROM cards WHERE '+SourceScope+';'))<>1 then
+        begin SendJson(aResponse,'{"error":"Card not found"}',404);Exit;end;
+        CardFilter:='cards.boardId='+Board+' AND cards.id='+QuotedStr(Source);
+      end;
+      Rows:=T.Db.Query('SELECT cards.id,cards.title,cards.cardNumber,d.targetCardId,d.type,d.color,d.icon,'+
+        'target.id,target.title,target.cardNumber FROM card_dependencies d JOIN cards ON cards.id=d.cardId '+
+        'LEFT JOIN cards target ON target.id=d.targetCardId AND target.boardId=cards.boardId WHERE '+CardFilter+';');
+      Items:=TJSONArray.Create;
+      try
+        for Row in Rows do
+        begin
+          Item:=TJSONObject.Create;Items.Add(Item);
+          if Source<>'' then Item.Add('cardId',Row[3])
+          else
+          begin
+            Item.Add('from',Row[0]);Item.Add('fromTitle',Row[1]);AddNumber(Item,'fromCardNumber',Row[2]);
+            Item.Add('to',Row[3]);
+            if Row[7]='' then Item.Add('toTitle',TJSONNull.Create) else Item.Add('toTitle',Row[8]);
+            AddNumber(Item,'toCardNumber',Row[9]);
+          end;
+          for I:=0 to 2 do
+            if (Row[I+4]='') or ((I=0) and not TypeValid(Row[I+4])) then Item.Add(Fields[I],Defaults[I])
+            else Item.Add(Fields[I],Row[I+4]);
+        end;
+        SendJson(aResponse,Items.AsJSON);
+      finally Items.Free;end;
+      Exit;
+    end;
+    Member:=Member+' AND '+Selector.StringField('board_members','userId');
+    Allowed:=CanEdit('');
+    if Length(T.Db.Query('SELECT 1 WHERE '+Allowed+';'))<>1 then
+    begin SendError(aResponse,403,'Board access forbidden');Exit;end;
+    if Length(T.Db.Query('SELECT id FROM cards WHERE '+SourceScope+';'))<>1 then
+    begin SendJson(aResponse,'{"error":"Card not found"}',404);Exit;end;
+    Guard:=CanEdit(Source)+' AND EXISTS(SELECT 1 FROM cards WHERE '+SourceScope+' AND archived=0)';
+    if Method<>'DELETE' then
+    begin
+      try
+        Input:=ExactObject(aRequest.Content);
+        Patch:='';
+        for I:=0 to 2 do
+        begin
+          Field:=Input.Find(Fields[I]);
+          if Field=nil then Continue;
+          if not (Field is TJSONString) then raise EConvertError.Create('Invalid dependency field');
+          Props[I]:=Field.AsString;
+          if (Pos(#0,Props[I])>0) or ((I=0) and (Props[I]<>'') and not TypeValid(Props[I])) then
+            raise EConvertError.Create('Invalid dependency field');
+          if Patch<>'' then Patch:=Patch+',';
+          Patch:=Patch+Fields[I]+'='+QuotedStr(Props[I]);
+        end;
+        if Method='POST' then
+        begin
+          Target:=Input.Get('cardId','');if Target='' then Target:=Input.Get('dependsOn','');
+          if (Target='') or (Target=Source) or (Pos(#0,Target)>0) then
+            raise EConvertError.Create('Invalid target card');
+        end
+        else if Patch='' then raise EConvertError.Create('Provide at least one of type, color, icon');
+      except SendError(aResponse,400,'Invalid dependency request');Exit;end;
+    end;
+    if Method='POST' then
+    begin
+      TargetScope:=CardScope(Target);
+      if Length(T.Db.Query('SELECT 1 FROM cards WHERE '+TargetScope+';'))<>1 then
+      begin SendError(aResponse,400,'Target card is not on this board');Exit;end;
+      Guard:=Guard+' AND '+CanEdit(Target)+' AND EXISTS(SELECT 1 FROM cards WHERE '+TargetScope+' AND archived=0)';
+    end;
+    if Length(T.Db.Query('SELECT 1 WHERE '+Guard+';'))<>1 then
+    begin SendError(aResponse,403,'Card access forbidden');Exit;end;
+    Scope:='cardId='+QuotedStr(Source)+' AND targetCardId='+QuotedStr(Target);
+    Dependency:=Scope+' AND '+Selector.StringField('card_dependencies','targetCardId');
+    Rows:=T.Db.Query('SELECT type,color,icon FROM card_dependencies WHERE '+Scope+';');
+    if (Length(Rows)>1) or ((Length(Rows)=1) and
+      (Length(T.Db.Query('SELECT 1 FROM card_dependencies WHERE '+Dependency+';'))<>1)) then
+    begin SendError(aResponse,409,'Ambiguous dependency');Exit;end;
+    if (Length(Rows)=0) and (Method<>'POST') then
+    begin SendJson(aResponse,'{"error":"Dependency not found"}',404);Exit;end;
+    if Method='POST' then
+    begin
+      Columns:='cardId,targetCardId';Values:=QuotedStr(Source)+','+QuotedStr(Target);Patch:='';
+      for I:=0 to 2 do
+      begin
+        if (Props[I]='') and (Length(Rows)=1) then Props[I]:=Rows[0][I];
+        if (Props[I]='') or ((I=0) and not TypeValid(Props[I])) then Props[I]:=Defaults[I];
+        Columns:=Columns+','+Fields[I];Values:=Values+','+QuotedStr(Props[I]);
+        if Patch<>'' then Patch:=Patch+',';
+        Patch:=Patch+Fields[I]+'='+QuotedStr(Props[I]);
+      end;
+    end;
+    AfterWrite:=Guard+' AND (SELECT count(*) FROM card_dependencies WHERE '+Scope+')=';
+    if Method='DELETE' then AfterWrite:=AfterWrite+'0'
+    else AfterWrite:=AfterWrite+'1 AND EXISTS(SELECT 1 FROM card_dependencies WHERE '+Dependency+')';
+    Guard:=Guard+' AND (SELECT count(*) FROM card_dependencies WHERE '+Scope+')='+IntToStr(Length(Rows));
+    if Length(Rows)=1 then
+    begin
+      for I:=0 to 2 do
+        Dependency:=Dependency+' AND COALESCE('+Fields[I]+','''')='+QuotedStr(Rows[0][I]);
+      Guard:=Guard+' AND EXISTS(SELECT 1 FROM card_dependencies WHERE '+Dependency+')';
+    end;
+    if Method='DELETE' then Mutation:='DELETE FROM card_dependencies WHERE '+Scope+'; '
+    else if Length(Rows)=0 then Mutation:='INSERT INTO card_dependencies('+Columns+') VALUES('+Values+'); '
+    else Mutation:='UPDATE card_dependencies SET '+Patch+' WHERE '+Scope+'; ';
+    Bindings:='';for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
+    if not T.Db.Exec('BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Guard+
+      ' THEN 1 ELSE json(''Dependency scope changed'') END; '+Mutation+Bindings+
+      'SELECT CASE WHEN '+AfterWrite+' THEN 1 ELSE json(''Dependency write changed scope'') END; COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,409,'Could not save dependency');Exit;end;
+    Reply:=TJSONObject.Create(['_id',Source]);
+    try
+      if Method='POST' then
+      begin
+        Reply.Add('cardId',Target);
+        for I:=0 to 2 do Reply.Add(Fields[I],Props[I]);
+      end;
+      SendJson(aResponse,Reply.AsJSON);
+    finally Reply.Free;end;
+  finally Input.Free;Selector.Free;end;
 end;
 
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
