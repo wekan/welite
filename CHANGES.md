@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Reuse the shared HTTP browser session
+
+- Use the same cookie-free browser session for list restore and the profile
+  checks so the fixture stays within the sign-in limit. The linked SQLite
+  shared HTTP suite passes end to end.
+
 ## 2026-11-18 Verify preservation of occupied history heads
 
 - Exercise a shared list deletion while WeKan owns a pending reservation.

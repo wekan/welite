@@ -123,7 +123,11 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
                 check_shared_checklists(request,client,token,card)
-                check_list_soft_delete(request,client,database,token,refresh_ferret)
+                status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
+                assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
+                assert request('GET',headers['Location'])[0]==200
+                web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                check_list_soft_delete(request,client,database,token,refresh_ferret,web_session)
                 list_path='/api/boards/b/lists/l'
                 before=client.find('lists','l')[0]
                 assert request('PUT',list_path,dict(title='Rejected',color='#abc'),token)[0]==400
@@ -153,10 +157,6 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 check_relation_scope(request,client,database)
                 check_graph_snapshot(request,client,database,snapshot_control)
                 check_clone_policy(request,client,database,token)
-                status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
-                assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
-                assert request('GET',headers['Location'])[0]==200
-                web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
                 board_url='/board?id=b&sessionId='+web_session
                 profile_response=request('GET',board_url)
                 assert b'dir="rtl"' in profile_response[2] and b'lang="ar"' in profile_response[2]

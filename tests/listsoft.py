@@ -2,14 +2,14 @@
 import json
 import hashlib
 import sqlite3
-from urllib.parse import parse_qs, urlencode, urlsplit
+from urllib.parse import urlencode
 
 from layout import Forms
 
 from wire import DateMs, encode
 
 
-def run(request, client, db, token, refresh_ferret):
+def run(request, client, db, token, refresh_ferret, session):
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT 1 FROM _ferretdb_collections WHERE name='userPositionHistory'").fetchone() is None
     lists_path = '/api/boards/b/lists'
@@ -63,9 +63,6 @@ def run(request, client, db, token, refresh_ferret):
     assert deleted['previousState']==dict(boardId='b',swimlaneId='s',sort=original_list['sort']),deleted
     print('PASS: live shared list DELETE retains typed batch markers and restores both source documents on failure')
 
-    status, headers, _ = request('POST', '/sign-in', urlencode(dict(username='user', password='test-password')))
-    assert status in (302,303) and 'Set-Cookie' not in headers, (status,headers)
-    session = parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
     board_path = '/board?id=b&view=all&sessionId=' + session
 
     def restore_fields():
