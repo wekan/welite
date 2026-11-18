@@ -25,8 +25,23 @@ const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
     assert.equal(response.status(), 200);
     assert.equal((await page.reload()).status(), 200);
     assert.equal(await field.textContent(), 'Browser choice: Updated <choice>');
+    const definition = new URL('/api/boards/b/custom-fields/browser-mini-field', url);
+    const auth = { Authorization: 'Bearer ' + token };
+    const renamed = await context.request.put(definition.href, {
+      headers: auth, data: { name: 'Renamed <field>' },
+    });
+    assert.equal(renamed.status(), 200);
+    const rejected = await context.request.put(definition.href, {
+      headers: auth, data: { name: 'Rejected field', settings: 'invalid' },
+    });
+    assert.equal(rejected.status(), 500);
+    assert.equal((await page.reload()).status(), 200);
+    const current = page.locator('.minicard-custom-field').filter({ hasText: 'Renamed <field>:' });
+    assert.equal(await current.textContent(), 'Renamed <field>: Updated <choice>');
+    assert.equal(await field.count(), 0);
+    assert.equal(await page.getByText('Rejected field', { exact: false }).count(), 0);
     assert.deepEqual(await context.cookies(), []);
-    console.log('PASS: native Chromium minicard displays the renamed Mongo-backed dropdown option');
+    console.log('PASS: native Chromium minicard displays REST-renamed Mongo-backed field and option names');
   } finally {
     await browser.close();
   }

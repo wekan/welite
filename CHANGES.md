@@ -13,6 +13,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Resolve current option names for single and multiple selections in stored
   order. A renamed option appears after reload and its text is HTML-escaped.
   Chromium verifies a Mongo-backed option rename with JavaScript and cookies disabled.
+  It also verifies a definition rename and confirms a rejected update leaves
+  the accepted name and choice intact.
 
 ## 2026-11-18 Show custom fields on native minicards
 
