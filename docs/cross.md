@@ -188,6 +188,15 @@ rejected conversion of the SQLite Hunk object to ELF with an unresolved
 section symbol. The verified C calling convention is one part of a linked
 SQLite build. The C runtime and archive link still need resolution.
 
+Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
+Hunk executable. A minimal SQLite version probe links with the C symbol
+prefix and probe-only startup aliases. That executable does not run to its
+query in vamos. A smaller control using the same Pascal and C sources
+returns `42` when linked by vlink, but exits with code 62 during startup
+when linked by GNU ld, even after ordering the Pascal entry section first.
+The GNU linker also reports that section collection is unsupported for ELF
+inputs on this link path. This does not establish a runnable linked backend.
+
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
 The same pinned FPC source builds a separate Windows compiler/unit prefix with
