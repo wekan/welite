@@ -510,7 +510,8 @@ end;
 procedure CatchAll(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  S: TWLSession;Language:TWLLanguage;Dir:string;
+  S: TWLSession;Language:TWLLanguage;Dir,Message:string;
+  Words:TWLTranslator;
 begin
   // Static assets (global, tenant-independent): public/robots.txt -> /robots.txt,
   // public/js/interact.js -> /js/interact.js, i18n/langs.jsn -> /i18n/langs.jsn,
@@ -529,7 +530,13 @@ begin
       Exit;
     aResponse.Code := 404;
     aResponse.ContentType := 'text/html; charset=utf-8';
-    aResponse.Content := LanguagePage(aResponse,Language,'Not found','<p>Not found</p>');
+    Words:=TWLTranslator.Create(Language);
+    try
+      Message:=Words.Text('page-not-found','Page not found.');
+    finally
+      Words.Free;
+    end;
+    aResponse.Content := LanguagePage(aResponse,Language,Message,'<p>'+HtmlEncode(Message)+'</p>');
     aResponse.SendContent;
   end;
 end;

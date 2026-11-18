@@ -72,7 +72,8 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                     label=json.loads(locale_file.read_text())['username']
                     assert label!='Username' and label.encode() in body,(tag,label)
                     words=json.loads(locale_file.read_text())
-                    for path,key in [('/board/card?id=missing&card=missing','field-link-not-found'),
+                    for path,key in [('/missing-route?unused=1','page-not-found'),
+                                     ('/board/card?id=missing&card=missing','field-link-not-found'),
                                      ('/board/attachment?id=missing&card=missing&file=missing','attachment-repair-broken')]:
                         status,headers,body=request('GET',f'{path}&lang={tag}')
                         assert status==404 and headers['Content-Language']==tag and 'Set-Cookie' not in headers

@@ -34,7 +34,7 @@ def run(request,data,session):
     for path in ['/board?id=protected','/board?id=missing-frame','/board?id=protected&sessionId=invalid']:
         body=check('GET',path,'ar','fi','ar',host='localhost',message=html.escape(json.loads((Path(__file__).resolve().parents[1]/'i18n/data/ar.jsn').read_text())['board-not-found'],quote=False).encode())
         assert b'Private title' not in body and b'Card &lt;test&gt;' not in body
-    check('GET','/missing-route?sessionId='+session,'fi','ar','fi',host='localhost',message=b'Not found')
+    check('GET','/missing-route?sessionId='+session,'fi','ar','fi',host='localhost',message=html.escape(json.loads((Path(__file__).resolve().parents[1]/'i18n/data/fi.jsn').read_text())['page-not-found'],quote=False).encode())
     # API tenant failures continue to use their own JSON handler.
     status,headers,body=request('GET','/api/boards',host='lost.example')
     assert status==404 and headers['Content-Type'].startswith('application/json')

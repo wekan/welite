@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize missing page responses
+
+- Use the existing page-not-found translation for the HTML title and body.
+  Embedded HTTP tests check locale direction, 404 status and cookie-free
+  responses on both SQLite backends.
+
 ## 2026-11-18 Cross-build the expanded language catalog
 
 - The 245-language catalog cross-build passed for disk and embedded WeLite on
