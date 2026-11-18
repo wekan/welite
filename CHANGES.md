@@ -30,6 +30,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native sign-in and board links. Both upstream cases pass while retaining
   their REST and Mongo assertions.
 
+## 2026-11-18 Pass the upstream checklist REST spec
+
+- Native Chromium shows the real checklist and its item after an incorrectly
+  scoped REST read returns 404 and the card is reloaded.
+
 ## 2026-11-18 Pass the upstream People login-status REST spec
 
 - Native Chromium verifies enabled and disabled login states on reload and
