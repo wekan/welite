@@ -265,6 +265,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert trigger['boardId']=='b' and action['boardId']=='b'
                 assert trigger['listName']==trigger['userId']==trigger['swimlaneName']==trigger['cardTitle']=='*'
                 print('PASS: shared REST rule creation saves typed linked parts and defaults missing trigger fields')
+                client.command({'update':'rules','updates':[dict(q={'_id':'rule-other'},
+                    u={'$set':{'extraActionIds':[ids['actionId']]}})]})
+                edit_path=rules_path+'/'+ids['_id']
+                assert request('PUT',edit_path,dict(title='Must not persist',action={}),token)[0]==400
+                assert client.find('rules',ids['_id'])[0]==saved
+                status,_,body=request('PUT',edit_path,dict(title='Changed rule',enabled=False,
+                    action=dict(actionType='moveCardToBottom')),token)
+                assert status==200,(status,body)
+                changed,=client.find('rules',ids['_id'])
+                assert changed['title']=='Changed rule' and changed['enabled'] is False
+                assert changed['actionId']!=ids['actionId'] and changed['triggerId']==ids['triggerId']
+                assert client.find('actions',changed['actionId'])[0]['actionType']=='moveCardToBottom'
+                assert client.find('actions',ids['actionId'])[0]==action
+                print('PASS: shared REST rule edit copies a reused part and preserves the original')
                 exported_user,=exported['users']
                 assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
                 assert all(key not in exported_user for key in ('services','emails','loginTokens'))

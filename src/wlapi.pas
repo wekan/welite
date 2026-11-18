@@ -51,6 +51,7 @@ procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
+procedure ApiEditRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
@@ -835,7 +836,7 @@ begin
   if Result = '' then Result := 'board';
 end;
 
-procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
+procedure NormalizeRuleTrigger(Trigger:TJSONObject);
 const
   TriggerFields=
     '"createCard":["boardId","listName","userId","swimlaneName","cardTitle"],'+
@@ -863,9 +864,25 @@ const
     '"a-startAt":["boardId","userId"],'+
     '"a-dueAt":["boardId","userId"],'+
     '"a-endAt":["boardId","userId"]';
+var Fields:TJSONObject;MatchFields,Value:TJSONData;I:Integer;Name:string;
+begin
+  Fields:=ExactObject('{'+TriggerFields+'}');
+  try
+    MatchFields:=Fields.Find(Trigger.Get('activityType',''));
+    if MatchFields is TJSONArray then
+      for I:=0 to MatchFields.Count-1 do
+      begin
+        Name:=MatchFields.Items[I].AsString;Value:=Trigger.Find(Name);
+        if (Value=nil) or (Value.JSONType=jtNull) or ((Value is TJSONString) and (Value.AsString='')) then
+        begin Trigger.Delete(Name);Trigger.Add(Name,'*');end;
+      end;
+  finally Fields.Free;end;
+end;
+
+procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;UserId,BoardId,Permission,RuleId,TriggerId,ActionId,Title,Sql,Guards:string;
-  Body,Rule,Trigger,Action,Fields,Reply:TJSONObject;Value,MatchFields:TJSONData;Rows:TWLRows;
-  Policy:TFieldPolicy;I:Integer;Name:string;
+  Body,Rule,Trigger,Action,Reply:TJSONObject;Rows:TWLRows;
+  Policy:TFieldPolicy;
   function WorkflowInsert(const Collection:string;Doc:TJSONObject):string;
   var Found:TWLRows;TableName,QuotedTable,Payload:string;
   begin
@@ -903,22 +920,14 @@ begin
   begin SendError(aResponse,403,'Board administration required');Exit;end;
   if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>1 then
   begin SendError(aResponse,501,'Rule creation requires shared workflow storage');Exit;end;
-  Body:=nil;Fields:=nil;Rule:=nil;
+  Body:=nil;Rule:=nil;
   try
     RuleId:=NewId;TriggerId:=NewId;ActionId:=NewId;
     try
       Body:=ExactObject(aRequest.Content);
       Trigger:=PreparePart('trigger','activityType',TriggerId);
       Action:=PreparePart('action','actionType',ActionId);
-      Fields:=ExactObject('{'+TriggerFields+'}');
-      MatchFields:=Fields.Find(Trigger.Get('activityType',''));
-      if MatchFields is TJSONArray then
-        for I:=0 to MatchFields.Count-1 do
-        begin
-          Name:=MatchFields.Items[I].AsString;Value:=Trigger.Find(Name);
-          if (Value=nil) or (Value.JSONType=jtNull) or ((Value is TJSONString) and (Value.AsString='')) then
-          begin Trigger.Delete(Name);Trigger.Add(Name,'*');end;
-        end;
+      NormalizeRuleTrigger(Trigger);
       Title:=Body.Get('title','');if Title='' then Title:='API rule';
       Rule:=TJSONObject.Create(['_id',RuleId,'title',Title,'triggerId',TriggerId,
         'actionId',ActionId,'boardId',BoardId,'enabled',True]);
@@ -936,7 +945,127 @@ begin
     except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create rule');Exit;end;
     Reply:=TJSONObject.Create(['_id',RuleId,'triggerId',TriggerId,'actionId',ActionId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
-  finally Rule.Free;Fields.Free;Body.Free;end;
+  finally Rule.Free;Body.Free;end;
+end;
+
+procedure ApiEditRule(aRequest:TRequest;aResponse:TResponse);
+const Doc='_ferretdb_sjson';
+var T:TWLTenant;UserId,BoardId,RuleId,Permission,Guard,RuleTable,RuleScope,RuleRaw,Sql,Bindings:string;
+  Rows:TWLRows;Body,Rule:TJSONObject;Value:TJSONData;Policy:TFieldPolicy;
+  function Bind(const Collection:string;out Storage:string):string;
+  var Found:TWLRows;
+  begin
+    Found:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+';');
+    if Length(Found)<>1 then raise Exception.Create('Missing workflow collection');
+    Storage:=Found[0][0];Result:='"'+StringReplace(Storage,'"','""',[rfReplaceAll])+'"';
+    Bindings:=Bindings+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+
+      ' AND table_name='+QuotedStr(Storage)+')=1';
+  end;
+  function KeyMatch(const Id:string):string;
+  begin
+    Result:='json_extract('+Doc+',''$._id'')='+QuotedStr(Id)+
+      ' AND json_extract('+Doc+',''$.$s.p._id.t'')=''string''';
+  end;
+  procedure SetValue(Obj:TJSONObject;const Name:string;Item:TJSONData);
+  begin Obj.Delete(Name);Obj.Add(Name,Item);end;
+  procedure EditPart(const Part,Collection,Kind,Extra:string);
+  var Patch,Stored:TJSONObject;Item:TJSONData;CurrentId,NewPartId,IdKey,TableName,Storage,Scope,Previous,
+    Reference,ReferenceCheck,Encoded,Literal,Key:string;Found:TWLRows;I:Integer;SharedPart:Boolean;
+  begin
+    Item:=Body.Find(Part);if Item=nil then Exit;
+    if not (Item is TJSONObject) then raise EConvertError.Create('Invalid workflow part');
+    Patch:=TJSONObject(Item);Item:=Patch.Find(Kind);
+    if not (Item is TJSONString) or (Trim(Item.AsString)='') then raise EConvertError.Create('Invalid workflow type');
+    for Key in ['_id','boardId','createdAt','modifiedAt','updatedAt'] do Patch.Delete(Key);
+    if Part='trigger' then NormalizeRuleTrigger(Patch);
+    TableName:=Bind(Collection,Storage);IdKey:=Part+'Id';CurrentId:=Rule.Get(IdKey,'');
+    Scope:=KeyMatch(CurrentId)+' AND (json_type('+Doc+',''$.boardId'') IS NULL OR '+
+      'json_extract('+Doc+',''$.boardId'')='+QuotedStr(BoardId)+')';
+    Found:=T.Db.Query('SELECT json('+Doc+') FROM '+TableName+' WHERE '+Scope+';');
+    if Length(Found)>1 then raise Exception.Create('Ambiguous workflow part');
+    Previous:='';if Length(Found)=1 then Previous:=Found[0][0];
+    Reference:='EXISTS(SELECT 1 FROM '+RuleTable+' WHERE NOT ('+RuleScope+') AND ('+
+      'json_extract('+Doc+','+QuotedStr('$.'+IdKey)+')='+QuotedStr(CurrentId)+
+      ' OR EXISTS(SELECT 1 FROM json_each('+Doc+','+QuotedStr('$.'+Extra)+') WHERE type=''text'' AND value='+
+      QuotedStr(CurrentId)+')))';
+    Found:=T.Db.Query('SELECT '+Reference+';');
+    if Length(Found)<>1 then raise Exception.Create('Could not read workflow references');
+    SharedPart:=Found[0][0]='1';ReferenceCheck:=Reference;
+    if not SharedPart then ReferenceCheck:='NOT '+Reference;
+    Stored:=nil;
+    try
+      if Previous='' then Stored:=TJSONObject.Create else Stored:=ExactObject(PlainDocument(Previous));
+      NewPartId:=CurrentId;
+      if SharedPart or (Previous='') then NewPartId:=NewId;
+      for I:=0 to Patch.Count-1 do SetValue(Stored,Patch.Names[I],Patch.Items[I].Clone);
+      SetValue(Stored,'_id',TJSONString.Create(NewPartId));
+      SetValue(Stored,'boardId',TJSONString.Create(BoardId));
+      Encoded:=QuotedStr(TypedDocument(Stored.AsJSON,Previous,'{}'));
+      Literal:='CASE WHEN wl_storage('+QuotedStr(Storage)+')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END';
+      if Previous<>'' then
+        Guard:=Guard+' AND '+ReferenceCheck+' AND (SELECT count(*) FROM '+TableName+' WHERE '+Scope+
+          ' AND json('+Doc+')='+QuotedStr(Previous)+')=1'
+      else Guard:=Guard+' AND NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+')';
+      if NewPartId=CurrentId then
+        Sql:=Sql+'UPDATE '+TableName+' SET '+Doc+'='+Literal+' WHERE '+Scope+'; '
+      else
+        Sql:=Sql+'INSERT INTO '+TableName+'('+Doc+') VALUES('+Literal+'); ';
+      Sql:=Sql+'SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+KeyMatch(NewPartId)+
+        ' AND json('+Doc+')=json('+Encoded+')) THEN 1 ELSE json(''Workflow part edit failed'') END; ';
+      SetValue(Rule,IdKey,TJSONString.Create(NewPartId));
+      if Part='trigger' then
+      begin
+        Rule.Delete('buttonType');Rule.Delete('buttonLabel');
+        if Stored.Get('activityType','')='button' then
+        begin
+          Rule.Add('buttonType',Stored.Get('buttonType','card'));
+          Rule.Add('buttonLabel',Stored.Get('buttonLabel',Rule.Get('title','Rule')));
+        end;
+      end;
+    finally Stored.Free;end;
+  end;
+var RuleStorage,Encoded:string;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];RuleId:=aRequest.RouteParams['ruleId'];
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  Body:=nil;Rule:=nil;Bindings:='';Guard:='';Sql:='';
+  try
+    try
+      try Body:=ExactObject(aRequest.Content);
+      except raise EConvertError.Create('Invalid workflow update');end;
+      RuleTable:=Bind('rules',RuleStorage);
+      RuleScope:=KeyMatch(RuleId)+' AND json_extract('+Doc+',''$.boardId'')='+QuotedStr(BoardId)+
+        ' AND json_extract('+Doc+',''$.$s.p.boardId.t'')=''string''';
+      Rows:=T.Db.Query('SELECT json('+Doc+') FROM '+RuleTable+' WHERE '+RuleScope+';');
+      if Length(Rows)<>1 then begin SendJson(aResponse,'{"error":"Rule not found"}',404);Exit;end;
+      RuleRaw:=Rows[0][0];Rule:=ExactObject(PlainDocument(RuleRaw));
+      Value:=Body.Find('title');if Value is TJSONString then SetValue(Rule,'title',Value.Clone);
+      Value:=Body.Find('enabled');
+      if Value<>nil then SetValue(Rule,'enabled',TJSONBoolean.Create(
+        ((Value is TJSONBoolean) and Value.AsBoolean) or ((Value is TJSONString) and (Value.AsString='true'))));
+      EditPart('trigger','triggers','activityType','extraTriggerIds');
+      EditPart('action','actions','actionType','extraActionIds');
+      Encoded:=QuotedStr(TypedDocument(Rule.AsJSON,RuleRaw,'{}'));
+      Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+Bindings+Guard+
+        ' AND (SELECT count(*) FROM '+RuleTable+' WHERE '+RuleScope+' AND json('+Doc+')='+QuotedStr(RuleRaw)+
+        ')=1 THEN 1 ELSE json(''Workflow scope changed'') END; '+Sql+
+        'UPDATE '+RuleTable+' SET '+Doc+'=CASE WHEN wl_storage('+QuotedStr(RuleStorage)+')=''blob'' THEN jsonb('+
+        Encoded+') ELSE '+Encoded+' END WHERE '+RuleScope+'; '+
+        'SELECT CASE WHEN EXISTS(SELECT 1 FROM '+RuleTable+' WHERE '+RuleScope+' AND json('+Doc+')=json('+Encoded+
+        ')) THEN 1 ELSE json(''Workflow edit failed'') END; COMMIT;';
+      if not T.Db.Exec(Sql) then raise Exception.Create('Workflow edit failed');
+    except
+      on E:EConvertError do begin SendError(aResponse,400,'Invalid workflow update');Exit;end;
+      on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit rule');Exit;end;
+    end;
+    SendJson(aResponse,'{"_id":"'+StringToJSONString(RuleId)+'"}');
+  finally Rule.Free;Body.Free;end;
 end;
 
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
