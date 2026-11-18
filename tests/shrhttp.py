@@ -825,6 +825,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         group+'SharedTemplates':True,group+'PropagateMembersToBoards':False,
                         group+'SyncMembersFromAuth':False}],(status,body)
                     assert client.find(group,'group')[0]==row
+                    bulk_features=endpoint+'/features'
+                    flag=group+'SyncMembersFromAuth'
+                    assert request('PUT',bulk_features,dict(field=flag,value=True),target_token)[0]==403
+                    assert json.loads(request('PUT',bulk_features,dict(field='unknown',value=True),admin_token)[2])==dict(error='invalid-field')
+                    assert request('PUT',bulk_features,dict(field=flag,value='false'),admin_token)[0]==400
+                    assert client.find(group,'group')[0]==row
+                    client.command({'insert':group,'documents':[dict(_id='other',counter=Long(9007199254740993))]})
+                    for enabled in [True,False]:
+                        status,_,body=request('PUT',bulk_features,dict(field=flag,value=enabled),admin_token)
+                        assert status==200 and json.loads(body)==dict(updated=2),(status,body)
+                        assert client.find(group,'group')[0]==dict(row,**{flag:enabled})
+                        other=client.find(group,'other')[0]
+                        assert other[flag] is enabled and isinstance(other['counter'],Long)
+                print('PASS: shared bulk feature updates are admin-gated and preserve unrelated BSON')
                 print('PASS: shared People list routes project names and boolean flags only for site administrators')
                 member_path='/api/boards/b/members/fixture-admin'
                 assert request('POST','/api/boards/b/members/u/remove',dict(action='remove'),target_token)[0]==409

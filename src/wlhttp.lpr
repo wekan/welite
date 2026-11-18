@@ -653,6 +653,8 @@ begin
   HTTPRouter.RegisterRoute('/api/users', rmGet, @ApiUsers);
   HTTPRouter.RegisterRoute('/api/admin/orgs', rmGet, @ApiOrgFeatures);
   HTTPRouter.RegisterRoute('/api/admin/teams', rmGet, @ApiTeamFeatures);
+  HTTPRouter.RegisterRoute('/api/admin/orgs/features', rmPut, @ApiOrgFeatures);
+  HTTPRouter.RegisterRoute('/api/admin/teams/features', rmPut, @ApiTeamFeatures);
   HTTPRouter.RegisterRoute('/api/admin/orgs/:orgId/features', rmPut, @ApiOrgFeatures);
   HTTPRouter.RegisterRoute('/api/admin/teams/:teamId/features', rmPut, @ApiTeamFeatures);
   HTTPRouter.RegisterRoute('/api/users/:userId', rmDelete, @ApiChangeUser);

@@ -511,11 +511,12 @@ begin
 end;
 
 procedure GroupFeatures(aRequest:TRequest;aResponse:TResponse;const Kind,LabelText:string);
-var T:TWLTenant;Actor,Id,Source,TableName,Scope,Raw,Encoded,Sql,Key,Flag,Guard:string;
-  Rows:TWLRows;Body,Doc,Reply:TJSONObject;Value:TJSONData;Edited,Listing:Boolean;Entries:TJSONArray;Row:TWLRow;
+var T:TWLTenant;Actor,Id,Source,TableName,Scope,Raw,Encoded,Sql,Key,Flag,Guard,Count,Expression:string;
+  Rows:TWLRows;Body,Doc,Reply:TJSONObject;Value:TJSONData;Edited,Listing,Bulk:Boolean;Entries:TJSONArray;Row:TWLRow;
   procedure Missing;
   begin
     if Listing then SendJson(aResponse,'[]')
+    else if Bulk then SendJson(aResponse,'{"updated":0}')
     else SendJson(aResponse,'{"error":"'+LabelText+' not found"}',404);
   end;
   function Project(SourceDoc:TJSONObject;NormalizeFlags:Boolean):TJSONObject;
@@ -540,7 +541,25 @@ begin
   if not IsSiteAdmin(T.Db,Actor) then
   begin SendError(aResponse,403,'Site administration required');Exit;end;
   Id:=aRequest.RouteParams[Kind+'Id'];Listing:=aRequest.Method='GET';
-  if ((Id='') and not Listing) or (Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0) then
+  Bulk:=(Id='') and not Listing;
+  if Bulk then
+  begin
+    Body:=nil;
+    try
+      try
+        if aRequest.Content='' then Body:=TJSONObject.Create else Body:=ExactObject(aRequest.Content);
+        Key:=Body.Get('field','');
+        if (Key<>Kind+'SharedTemplates') and (Key<>Kind+'PropagateMembersToBoards') and
+          (Key<>Kind+'SyncMembersFromAuth') then
+        begin SendJson(aResponse,'{"error":"invalid-field"}');Exit;end;
+        Value:=Body.Find('value');
+        if not (Value is TJSONBoolean) then
+        begin SendJson(aResponse,'{"error":"Invalid feature value"}',400);Exit;end;
+        Flag:=Value.AsJSON;
+      except SendJson(aResponse,'{"error":"Invalid feature update"}',400);Exit;end;
+    finally Body.Free;end;
+  end;
+  if (Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0) then
   begin Missing;Exit;end;
   Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
     'ON m.name=r.table_name AND m.type=''table'' WHERE r.name='+QuotedStr(Kind)+';');
@@ -564,8 +583,31 @@ begin
     finally Entries.Free;end;
     Exit;
   end;
-  Scope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id)+
+  Scope:='json_type(_ferretdb_sjson,''$._id'')=''text'''+
     ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
+  Guard:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+' AND isAdmin=1 AND loginDisabled=0)'+
+    ' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(Kind)+
+    ' AND table_name='+QuotedStr(Source)+')=1';
+  if Bulk then
+  begin
+    Rows:=T.Db.Query('SELECT count(*) FROM '+TableName+' WHERE '+Scope+';');
+    if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not count groups');Exit;end;
+    Count:=IntToStr(StrToInt64(Rows[0][0]));
+    Expression:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),'+
+      QuotedStr('$.'+Key)+',json('+QuotedStr(Flag)+')),json(_ferretdb_sjson),''{}'')';
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+Guard+
+      ' AND (SELECT count(*) FROM '+TableName+' WHERE '+Scope+')='+Count+
+      ' THEN 1 ELSE json(''Feature scope changed'') END; UPDATE '+TableName+
+      ' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(Source)+')=''blob'' THEN jsonb('+Expression+
+      ') ELSE '+Expression+' END WHERE '+Scope+
+      '; SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE '+Scope+
+      ' AND json_type(_ferretdb_sjson,'+QuotedStr('$.'+Key)+')='+QuotedStr(Flag)+')='+Count+
+      ' THEN 1 ELSE json(''Feature update failed'') END; COMMIT;';
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update group features');Exit;end;
+    SendJson(aResponse,'{"updated":'+Count+'}');Exit;
+  end;
+  Scope:=Scope+' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id);
   Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
   if Length(Rows)<>1 then begin Missing;Exit;end;
   Raw:=Rows[0][0];Body:=nil;Doc:=nil;Reply:=nil;
@@ -590,9 +632,7 @@ begin
       if Edited then
       begin
         Encoded:=QuotedStr(TypedDocument(Doc.AsJSON,Raw,'{}'));
-        Guard:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+' AND isAdmin=1 AND loginDisabled=0)'+
-          ' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(Kind)+
-          ' AND table_name='+QuotedStr(Source)+')=1 AND (SELECT count(*) FROM '+TableName+
+        Guard:=Guard+' AND (SELECT count(*) FROM '+TableName+
           ' WHERE '+Scope+' AND json(_ferretdb_sjson)='+QuotedStr(Raw)+')=1';
         Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+Guard+
           ' THEN 1 ELSE json(''Feature scope changed'') END; UPDATE '+TableName+
