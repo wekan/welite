@@ -38,7 +38,7 @@ FPCFLAGS="${FPCFLAGS:-}"
 # .o/.ppu/link intermediates), then the finished executable is copied to build/bin/w<code>.exe.
 # <code> is a <=7-char platform name so the binary base "w"+<code> stays <=8 chars; every path
 # component is <=8 chars and the extension is .exe, so the whole tree is DOS 8.3 / Amiga safe.
-# Cross-compiling needs the per-target FPC cross compiler installed first (menu option 4 /
+# Cross-compiling needs the per-target FPC cross compiler installed first (menu option 5 /
 # fpcupdeluxe). Every NON-Windows target carries -dWLDB_CLI because welite's default build links
 # libsqlite3, which can't be cross-linked (no target lib); -dWLDB_CLI uses the external sqlite3
 # binary instead and links nothing. Windows links sqlite3.dll at runtime, so it keeps the default.
@@ -136,6 +136,15 @@ do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
 
 build_current() {
   do_build current "current platform"
+}
+
+run_current() {
+  local bin="$BINDIR/wcurrent.exe"
+  if [ ! -x "$bin" ]; then
+    echo "  Build for current platform (option 1) first."
+    return 1
+  fi
+  "$bin"
 }
 
 build_platform() {  # $1 = a PLATFORMS entry
@@ -359,19 +368,21 @@ while true; do
 
   WeKan-Lite build  (fpc: $FPC)
   1) Build for current platform
-  2) Build for all platforms
-  3) Select platform and build for it
-  4) Install FPC cross-compilers via fpcupdeluxe (Ubuntu amd64/arm64)
-  5) Quit
+  2) Run at current platform
+  3) Build for all platforms
+  4) Select platform and build for it
+  5) Install FPC cross-compilers via fpcupdeluxe (Ubuntu amd64/arm64)
+  6) Quit
 MENU
   printf "  Choice: "
   read -r c || exit 0
   case "$c" in
     1) build_current ;;
-    2) build_all ;;
-    3) select_platform ;;
-    4) install_toolchains ;;
-    5) exit 0 ;;
-    *) echo "  Pick 1-5." ;;
+    2) run_current ;;
+    3) build_all ;;
+    4) select_platform ;;
+    5) install_toolchains ;;
+    6) exit 0 ;;
+    *) echo "  Pick 1-6." ;;
   esac
 done
