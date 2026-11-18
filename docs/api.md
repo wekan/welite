@@ -99,6 +99,7 @@ is self-or-admin. Non-members get `403`.
 | `GET /api/user` | `user` | `{"_id","username"}` |
 | `GET /api/users` | `users` | `[{"_id","username"}]` |
 | `GET /api/boards` | `boards` | public boards `[{"_id","title"}]` |
+| `PUT /api/users/:userId` with `action=takeOwnership` | — | Site-admin transfer of administered boards, returning board IDs and titles in sort order |
 | `GET /api/users/:userId/boards` | `boards USERID` | that user's boards |
 | `GET /api/boards/:boardId` | `board BOARDID` | `{"_id","title","slug","permission","color"}` |
 | `PUT /api/boards/:boardId/title` | `editboardtitle` | `{"_id","title"}` |

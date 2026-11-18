@@ -1417,6 +1417,24 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 admin_hash=base64.b64encode(hashlib.sha256(admin_token.encode()).digest()).decode()
                 client.command({'insert':'users','documents':[dict(_id='fixture-admin',username='fixture-admin',isAdmin=True,
                     services=dict(resume=dict(loginTokens=[dict(hashedToken=admin_hash,when=now)])))]})
+                client.command({'insert':'users','documents':[dict(_id='ownership-target',username='ownership-target')]})
+                owned_member=dict(userId='ownership-target',isAdmin=True,isActive=True)
+                ordinary_members=[dict(userId='ownership-target',isAdmin=False,isActive=True),
+                                  dict(userId='fixture-admin',isAdmin=True,isActive=True)]
+                client.command({'insert':'boards','documents':[
+                    dict(_id='ownership-owned',title='Owned',members=[owned_member]),
+                    dict(_id='ownership-ordinary',title='Ordinary',members=ordinary_members)]})
+                ownership=dict(action='takeOwnership')
+                assert request('PUT','/api/users/ownership-target',ownership,target_token)[0]==403
+                status,_,body=request('PUT','/api/users/ownership-target',ownership,admin_token)
+                assert status==200 and json.loads(body)==[dict(_id='ownership-owned',title='Owned')],(status,body)
+                assert client.find('boards','ownership-owned')[0]['members']==[dict(owned_member,userId='fixture-admin')]
+                assert client.find('boards','ownership-ordinary')[0]['members']==ordinary_members
+                status,_,body=request('PUT','/api/users/ownership-target',ownership,admin_token)
+                assert status==200 and json.loads(body)==[]
+                client.command({'delete':'boards','deletes':[dict(q={'_id':{'$in':['ownership-owned','ownership-ordinary']}},limit=0)]})
+                client.command({'delete':'users','deletes':[dict(q={'_id':'ownership-target'},limit=1)]})
+                print('PASS: shared REST ownership transfer preserves ordinary memberships')
                 issue='/api/createtoken/u'
                 assert request('POST',issue,dict(reason='test'))[0]==401
                 assert request('POST',issue,dict(reason='test'),target_token)[0]==403

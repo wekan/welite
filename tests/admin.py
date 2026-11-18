@@ -121,6 +121,25 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 assert status==200 and json.loads(body)['loginDisabled'] is disabled
                 check_login_status(disabled)
             print('PASS: native People shows REST login changes and preserves its row after a missing update')
+            with sqlite3.connect(db) as con:
+                actor,=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()
+                target_boards=[('owned-late','Later',2),('owned-early','Earlier',1),('ordinary','Ordinary',0)]
+                con.executemany("INSERT INTO boards(id,title,sort,slug,createdAt) VALUES(?,?,?,'ownership','now')",target_boards)
+                con.executemany("INSERT INTO board_members(boardId,userId,isAdmin) VALUES(?,?,?)",[
+                    ('owned-late',target,1),('owned-early',target,1),('ordinary',target,0),
+                    ('owned-late',actor,0),('ordinary',actor,1)])
+            endpoint='/api/users/'+target
+            assert request('PUT',endpoint+'?token='+member,dict(action='takeOwnership'))[0]==403
+            status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
+            assert status==200 and json.loads(body)==[dict(_id='owned-early',title='Earlier'),dict(_id='owned-late',title='Later')],(status,body)
+            status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
+            assert status==200 and json.loads(body)==[]
+            with sqlite3.connect(db) as con:
+                members=con.execute("SELECT boardId,userId,isAdmin FROM board_members WHERE boardId IN ('owned-early','owned-late','ordinary')").fetchall()
+                assert set(members)=={('owned-early',actor,1),('owned-late',actor,1),('ordinary',target,0),('ordinary',actor,1)}
+                con.execute("DELETE FROM board_members WHERE boardId IN ('owned-early','owned-late','ordinary')")
+                con.execute("DELETE FROM boards WHERE id IN ('owned-early','owned-late','ordinary')")
+            print('PASS: REST ownership transfer returns ordered administered boards and preserves ordinary memberships')
             # Long UTF-8 plaintext works through registration and the CLI seed contract.
             seeded_password='日本語 🔑 '+('long-password-'*8)
             response=request('POST','/register',dict(username='credential-format',password=seeded_password,confirm=seeded_password))

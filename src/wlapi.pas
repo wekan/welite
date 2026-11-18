@@ -1066,6 +1066,46 @@ begin GroupFeatures(aRequest,aResponse,'org','Organization');end;
 procedure ApiTeamFeatures(aRequest:TRequest;aResponse:TResponse);
 begin GroupFeatures(aRequest,aResponse,'team','Team');end;
 
+procedure TransferAdministeredBoards(Db:TWLDb; Response:TResponse;
+  const Actor,Target,Authorization:string);
+var Source:TSelectionScope; MemberKey,BoardKey,Selection,Sql,Scope,ActorScope:string;
+  Rows:TWLRows; I:Integer;
+begin
+  Source:=TSelectionScope.Create(Db);
+  try
+    MemberKey:=Source.StringField('board_members','userId');
+    BoardKey:=Source.StringField('boards','id');
+    Selection:=' FROM boards WHERE '+BoardKey+' AND EXISTS(SELECT 1 FROM board_members'+
+      ' WHERE boardId=boards.id AND userId='+QuotedStr(Target)+' AND isAdmin=1 AND '+MemberKey+')';
+    Rows:=Db.Query('SELECT id,title'+Selection+' ORDER BY sort,id;');
+    Sql:='BEGIN IMMEDIATE; ';
+    for I:=0 to Source.Bindings.Count-1 do Sql:=Sql+Source.Bindings[I];
+    Sql:=Sql+'SELECT CASE WHEN '+Authorization+' AND (SELECT count(*)'+Selection+')='+
+      IntToStr(Length(Rows))+' THEN 1 ELSE json(''Ownership scope changed'') END; ';
+    for I:=0 to High(Rows) do
+    begin
+      Scope:='boardId='+QuotedStr(Rows[I][0]);
+      ActorScope:=Scope+' AND userId='+QuotedStr(Actor);
+      Scope:=Scope+' AND userId='+QuotedStr(Target);
+      Sql:=Sql+'SELECT CASE WHEN EXISTS(SELECT 1 FROM boards WHERE id='+QuotedStr(Rows[I][0])+
+        ' AND '+BoardKey+') AND (SELECT count(*) FROM board_members WHERE '+Scope+')=1'+
+        ' AND EXISTS(SELECT 1 FROM board_members WHERE '+Scope+' AND isAdmin=1 AND '+MemberKey+')'+
+        ' AND (SELECT count(*) FROM board_members WHERE '+ActorScope+')<=1'+
+        ' AND NOT EXISTS(SELECT 1 FROM board_members WHERE '+ActorScope+' AND NOT '+MemberKey+
+        ') THEN 1 ELSE json(''Ownership membership changed'') END; ';
+      if Actor<>Target then
+        Sql:=Sql+'DELETE FROM board_members WHERE '+ActorScope+'; '+
+          'UPDATE board_members SET userId='+QuotedStr(Actor)+' WHERE '+Scope+'; '+
+          'SELECT CASE WHEN '+Authorization+' AND NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+
+          ') AND (SELECT count(*) FROM board_members WHERE '+ActorScope+')=1'+
+          ' AND EXISTS(SELECT 1 FROM board_members WHERE '+ActorScope+' AND isAdmin=1 AND '+MemberKey+
+          ') THEN 1 ELSE json(''Ownership transfer failed'') END; ';
+    end;
+    if not Db.Exec(Sql+'COMMIT;') then raise Exception.Create('Ownership transfer failed');
+    SendJson(Response,RowsAsIdTitle(Rows));
+  finally Source.Free;end;
+end;
+
 procedure ApiChangeUser(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"User not found"}';
 var T:TWLTenant;Actor,Target,Scope,Admin,Bindings,Sql,Mutation,Action,Flag:string;Source:TSelectionScope;I:Integer;
@@ -1099,7 +1139,12 @@ begin
       begin Flag:='1';Mutation:=RevokeUserTokensSQL(T.Db,Target);end
       else if Action='enableLogin' then Flag:='0'
       else if Action='takeOwnership' then
-      begin SendError(aResponse,400,'Unsupported account action');Exit;end;
+      begin
+        TransferAdministeredBoards(T.Db,aResponse,Actor,Target,
+          AuthSourceCondition(T.Db)+' AND '+Admin+
+          ' AND (SELECT count(*) FROM users WHERE '+Scope+')=1');
+        Exit;
+      end;
       if Flag<>'' then Mutation:=Mutation+'UPDATE users SET loginDisabled='+Flag+' WHERE '+Scope+'; '+
         'SELECT CASE WHEN EXISTS(SELECT 1 FROM users WHERE '+Scope+' AND loginDisabled='+Flag+
         ') THEN 1 ELSE json(''User update failed'') END; ';

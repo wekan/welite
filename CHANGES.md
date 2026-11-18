@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Transfer administered boards through the user API
+
+- Implement the site-admin `takeOwnership` action. Transfer the target's
+  board-admin memberships in one transaction and return board IDs and
+  titles in board order. Ordinary memberships remain intact and a repeat
+  returns an empty array.
+
 ## 2026-11-18 Verify REST login changes in the native People panel
 
 - The server-rendered People row reflects REST disable and enable requests
