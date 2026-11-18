@@ -666,6 +666,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId', rmGet, @ApiBoard);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export', rmGet, @ApiBoardExport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/integrations', rmGet, @ApiIntegration);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/integrations', rmPost, @ApiIntegration);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/integrations/:intId', rmGet, @ApiIntegration);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/integrations/:intId', rmDelete, @ApiIntegration);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/integrations/:intId', rmPut, @ApiIntegration);

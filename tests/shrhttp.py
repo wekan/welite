@@ -644,7 +644,28 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: cookie-free board HTML renders REST sort zero ahead of the prior first card')
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: board import preserves list width, card/list/swimlane colors and archived state')
-                client.command({'create':'integrations'})
+                integrations='/api/boards/b/integrations'
+                assert request('POST',integrations,{'url':'https://1.1.1.1/hook'})[0]==401
+                for invalid_url in ('file:///tmp/hook','https://localhost/','https://127.0.0.1/',
+                                    'https://[::1]/','https://169.254.169.254/',
+                                    'https://[::ffff:127.0.0.1]/','https://example.invalid/'):
+                    status,_,body=request('POST',integrations,{'url':invalid_url},token)
+                    assert status==400 and json.loads(body)['error']=='invalid-webhook-url',(status,body)
+                status,_,body=request('POST',integrations,{'url':'https://1.1.1.1/hook'},token)
+                assert status==200,(status,body)
+                new_integration=json.loads(body)['_id']
+                stored,=client.find('integrations',new_integration)
+                assert stored['boardId']=='b' and stored['userId']=='u' and stored['enabled'] is True
+                assert stored['activities']==['all'] and stored['type']=='outgoing-webhooks'
+                assert isinstance(stored['createdAt'],DateMs) and isinstance(stored['modifiedAt'],DateMs)
+                new_path=integrations+'/'+new_integration
+                assert request('PUT',new_path,{'url':'https://[::1]/','title':'invalid'},token)[0]==400
+                assert client.find('integrations',new_integration)==[stored]
+                destination='https://[2606:4700:4700::1111]/new'
+                assert request('PUT',new_path,{'url':destination},token)[0]==200
+                assert client.find('integrations',new_integration)==[dict(stored,url=destination)]
+                assert request('DELETE',new_path,token=token)[0]==200
+                print('PASS: integration creation and destination edits validate public IPv4 and IPv6 and retain typed defaults')
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
                     userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
                 integration_path='/api/boards/b/integrations/fixture-webhook'

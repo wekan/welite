@@ -198,3 +198,12 @@ A web session ID used with an API route retains its client, idle and in-memory s
 checks. Dedicated API credentials are issued by `/users/login`. Earlier weak digests have
 no compatibility acceptance path. See `tests/crypto.py` for independent digest/MAC vectors,
 process-restart persistence and copied-database/credential-revocation checks.
+
+### Shared integrations
+
+Board administrators can create an outgoing integration with
+`POST /api/boards/:boardId/integrations` and a JSON `url`. The response contains
+`_id`. Use `PUT /api/boards/:boardId/integrations/:intId` to edit the destination,
+title, enabled flag or activity list. On Linux, destination writes require an
+HTTP(S) URL whose resolved IPv4 and IPv6 addresses are public. Integration
+delivery requires its own address check and connection pinning.

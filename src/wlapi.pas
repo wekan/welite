@@ -109,7 +109,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -1324,14 +1324,43 @@ begin
 end;
 
 procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
-const NotFound='{"error":"Integration not found"}';
+const InvalidUrl='{"error":"invalid-webhook-url"}';
+  NotFound='{"error":"Integration not found"}';
 var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded:string;
-  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading:Boolean;
+  Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading,Creating,BadUrl:Boolean;
   Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
   procedure Missing;
   begin
     if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
   end;
+  function ValidDestination(Value:TJSONData):Boolean;
+  begin
+    Result:=(Value is TJSONString) and PublicWebhookUrl(Value.AsString);
+    BadUrl:=not Result;
+  end;
+
+  function PrepareCreation:Boolean;
+  var Input,NewDoc:TJSONObject;Value:TJSONData;Stamp:TDateTime;AtMs:Int64;
+  begin
+    Result:=False;Input:=nil;NewDoc:=nil;
+    try
+      try
+        Input:=ExactObject(aRequest.Content);
+        Value:=Input.Find('url');
+        if not ValidDestination(Value) then Exit;
+        Id:=NewId;
+        Stamp:=LocalTimeToUniversal(Now);
+        AtMs:=DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp);
+        NewDoc:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'userId',Actor,
+          'url',Value.AsString,'enabled',True,'type','outgoing-webhooks',
+          'createdAt',AtMs,'modifiedAt',AtMs]);
+        NewDoc.Add('activities',TJSONArray.Create(['all']));
+        Encoded:=QuotedStr(TypedDocument(NewDoc.AsJSON,'','{"createdAt":"date","modifiedAt":"date"}'));
+        Result:=True;
+      except Result:=False;end;
+    finally Input.Free;NewDoc.Free;end;
+  end;
+
   function UpdateStatement:Boolean;
   var Update,Original:TJSONObject;Value:TJSONData;Index,PropertyIndex:Integer;Name:string;
   begin
@@ -1344,6 +1373,7 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
           Name:=Update.Names[PropertyIndex];
           Value:=Update.Find(Name);
           case Name of
+            'url': if not ValidDestination(Value) then Exit;
             'title': if (not (Value is TJSONString)) or (Pos(#0,Value.AsString)>0) then Exit;
             'enabled': if not (Value is TJSONBoolean) then Exit;
             'activities':
@@ -1378,7 +1408,7 @@ begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];Id:=aRequest.RouteParams['intId'];
-  Reading:=aRequest.Method='GET';
+  Reading:=aRequest.Method='GET';Creating:=aRequest.Method='POST';BadUrl:=False;
   if not ApiAuthBoard(T,aResponse,Actor,BoardId,False) then Exit;
   Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
@@ -1387,7 +1417,17 @@ begin
   if not Reading and not Admin then
   begin SendError(aResponse,403,'Board administration required');Exit;end;
   if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then
-  begin Missing;Exit;end;
+  begin
+    if Creating then SendError(aResponse,501,'Integration creation requires shared workflow storage')
+    else Missing;
+    Exit;
+  end;
+  if Creating then
+  begin
+    if not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
+    if not EnsureSharedCollection(T.Db,'integrations') then
+    begin SendError(aResponse,500,'Could not prepare integration storage');Exit;end;
+  end;
   Rows:=T.Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
     'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''integrations'';');
   if Length(Rows)<>1 then begin Missing;Exit;end;
@@ -1396,6 +1436,19 @@ begin
     ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
     ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string''';
   if Id<>'' then Scope:=Scope+' AND json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id);
+  if Creating then
+  begin
+    Guard:=Permission+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name=''integrations'''+
+      ' AND table_name='+QuotedStr(Source)+')=1';
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Integration scope changed'') END; '+
+      'INSERT INTO '+TableName+'(_ferretdb_sjson) VALUES (CASE WHEN wl_storage('+QuotedStr(Source)+
+      ')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END); '+
+      'SELECT CASE WHEN '+Guard+' AND (SELECT count(*) FROM '+TableName+' WHERE '+Scope+
+      ' AND json(_ferretdb_sjson)=json('+Encoded+'))=1 THEN 1 ELSE json(''Integration insert failed'') END; COMMIT;';
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create integration');Exit;end;
+    SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
+  end;
   if not Reading then
   begin
     Rows:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+' WHERE '+Scope+';');
@@ -1404,7 +1457,11 @@ begin
     if aRequest.Method='PUT' then
     begin
       if not UpdateStatement then
-      begin SendJson(aResponse,'{"error":"Invalid or unsupported integration update"}',400);Exit;end;
+      begin
+        if BadUrl then SendJson(aResponse,InvalidUrl,400)
+        else SendJson(aResponse,'{"error":"Invalid or unsupported integration update"}',400);
+        Exit;
+      end;
     end
     else
       Mutation:='DELETE FROM '+TableName+' WHERE '+Scope+
@@ -1414,7 +1471,7 @@ begin
       'WHERE name=''integrations'' AND table_name='+QuotedStr(Source)+')=1 AND (SELECT count(*) FROM '+TableName+
       ' WHERE '+Scope+' AND json(_ferretdb_sjson)='+QuotedStr(Raw)+')=1';
     Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Integration scope changed'') END; '+
-      Mutation+'COMMIT;';
+      Mutation+'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Integration permission changed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change integration');Exit;end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
