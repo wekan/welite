@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Create the WeLite schema with the Amiga SQLite shell
+
+- Run the real CLI startup options and load the schema under vamos with a
+  512 KiB stack. Verify the resulting database passes the integrity check.
+  WeLite writes query scripts, but vamos does not execute its SQLite child.
+
 ## 2026-11-18 Execute JSON queries in the Amiga SQLite shell
 
 - Build SQLite 3.53.4 in single-threaded mode with the existing Amiga

@@ -170,10 +170,14 @@ execution or been tested on AmigaOS.
 With the same VFS patches and `SQLITE_THREADSAFE=0`, the shell avoids the
 pthread path and completes JSON and JSONB queries in vamos. An inline SQL
 probe writes and reads a persistent table. Host SQLite reads back the
-same value and reports `integrity_check = ok`. The emulator reports an
-error during cleanup after the write, and the `-init` startup script
-still fails before schema creation. This is partial emulation evidence
-for standalone SQLite. The WeLite CLI subprocess and HTTP runtime remain open.
+same value and reports `integrity_check = ok`. The emulator reported an
+error during cleanup with its default stack. With a 512 KiB stack
+(`vamos -s 512`), the shell accepts WeLite's `-init` options, reads its schema,
+and exits cleanly after creating the SQLite file. A host integrity check
+passes. With the tenant and scratch directories provisioned, the WeLite
+executable finds `sqlite3` and writes its query scripts. The emulator does
+not implement the `dos.library Execute` call used by FPC's process runner,
+so WeLite's child process and HTTP startup still require verification.
 
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
