@@ -249,6 +249,13 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                                      dueAt='2026-06-07T12:00:00.000Z')],
                     checklistItems=[dict(_id='import-item',checklistId='import-checklist',cardId=input_card,
                                          title='Imported item',isFinished=True)])
+                attachment_contents=b'Board import binary fixture\x00'
+                imported_payload['attachments']=[dict(_id='import-attachment',cardId=input_card,name='Imported file.bin',
+                    type='application/octet-stream',file=base64.b64encode(attachment_contents).decode())]
+                bad_payload=dict(imported_payload,rules=invalid_export['rules'])
+                stored_before=set(data.parent.glob('attachme/**/*.bin'))
+                assert request('POST',import_path,dict(board=bad_payload),token)[0]==400
+                assert set(data.parent.glob('attachme/**/*.bin'))==stored_before
                 status,_,body=request('POST',import_path,dict(board=imported_payload),token)
                 assert status==200,(status,body)
                 imported_id=json.loads(body)['_id']
@@ -268,6 +275,11 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert imported_item['checklistId']==imported_check['_id'] and imported_item['isFinished'] is True
                 assert isinstance(imported_check['dueAt'],DateMs)
                 assert imported_comment['text']=='Imported comment' and imported_comment['userId']=='u'
+                imported_attachment,=client.command({'find':'attachments','filter':{'meta.boardId':imported_id}})['cursor']['firstBatch']
+                assert imported_attachment['meta']['cardId']==imported_card['_id']
+                status,_,body=request('GET','/api/attachment/download/'+imported_attachment['_id'],token=token)
+                assert status==200 and base64.b64decode(json.loads(body)['base64Data'])==attachment_contents
+                print('PASS: shared board import preserves attachment bytes and rolls back staged files on failure')
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: shared board import remaps structure and workflows and rejects dangling workflow references')
                 client.command({'create':'integrations'})

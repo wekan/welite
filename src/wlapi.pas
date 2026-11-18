@@ -1352,12 +1352,14 @@ end;
 
 function CardDateSql(Value:TJSONData;out Literal:string):Boolean; forward;
 
+procedure WriteFileBytes(const Path,Data:string); forward;
+
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
-const Collections:array[0..8] of string=('swimlanes','lists','cards','triggers','actions','rules',
-  'comments','checklists','checklistItems');
+const Collections:array[0..9] of string=('swimlanes','lists','cards','triggers','actions','rules',
+  'comments','checklists','checklistItems','attachments');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name:string;
-  Body,Input,Row,Reply:TJSONObject;Maps:array[0..8] of TJSONObject;Arrays:array[0..8] of TJSONArray;
-  Value:TJSONData;Rows:TWLRows;I,J:Integer;
+  Body,Input,Row,Reply:TJSONObject;Maps:array[0..9] of TJSONObject;Arrays:array[0..9] of TJSONArray;
+  Value:TJSONData;Rows:TWLRows;I,J:Integer;Files:TStringList;Committed:Boolean;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
   begin
@@ -1448,6 +1450,46 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         ImportedDate(Entry,'dueAt','NULL')+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
     end;
   end;
+  procedure ImportAttachments;
+  var K,L:Integer;Entry,Card:TJSONObject;FileField:TJSONData;Id,CardId,CardKey,ListKey,LaneKey,Filename,
+    Mime,Encoded,Bytes,Path:string;
+  begin
+    if Arrays[9]=nil then Exit;
+    for K:=0 to Arrays[9].Count-1 do
+    begin
+      Entry:=Arrays[9].Objects[K];Id:=Mapped(9,Text(Entry,'_id'),True);
+      CardId:=Text(Entry,'cardId');CardKey:='NULL';ListKey:='NULL';LaneKey:='NULL';
+      if CardId<>'' then
+      begin
+        CardKey:=QuotedStr(Mapped(2,CardId,True));Card:=nil;
+        for L:=0 to Arrays[2].Count-1 do
+          if Text(Arrays[2].Objects[L],'_id')=CardId then begin Card:=Arrays[2].Objects[L];Break;end;
+        if Card=nil then raise EConvertError.Create('Invalid attachment card');
+        ListKey:=QuotedStr(Mapped(1,Text(Card,'listId'),True));
+        LaneKey:=Optional(CardListLane(Card));
+      end;
+      Filename:=Text(Entry,'name','file');Mime:=Text(Entry,'type','application/octet-stream');
+      if Filename='' then Filename:='file';
+      if Mime='' then Mime:='application/octet-stream';
+      if (Pos(#13,Filename+Mime)>0) or (Pos(#10,Filename+Mime)>0) then
+        raise EConvertError.Create('Invalid attachment name or type');
+      FileField:=Entry.Find('file');
+      if not (FileField is TJSONString) then raise EConvertError.Create('Attachment bytes missing');
+      Encoded:=FileField.AsString;
+      try Bytes:=DecodeStringBase64(Encoded,True);
+      except raise EConvertError.Create('Invalid attachment encoding');end;
+      if EncodeStringBase64(Bytes)<>Encoded then raise EConvertError.Create('Invalid attachment encoding');
+      Path:=StoreFilePath(T.FilesDir,'attachme',Id);
+      if FileExists(Path) or not ForceDirectories(ExtractFileDir(Path)) then
+        raise Exception.Create('Attachment destination unavailable');
+      Files.Add(Path);WriteFileBytes(Path,Bytes);
+      Sql:=Sql+'INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,storageBackend,userId,createdAt) VALUES('+
+        QuotedStr(Id)+','+Board+','+LaneKey+','+ListKey+','+CardKey+','+QuotedStr(Filename)+','+QuotedStr(Mime)+
+        ','+IntToStr(Length(Bytes))+',''filesystem'','+QuotedStr(Actor)+','+Stamp+'); ';
+      Sql:=Sql+'SELECT CASE WHEN EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+' AND boardId='+Board+
+        ' AND size='+IntToStr(Length(Bytes))+') THEN 1 ELSE json(''Attachment import failed'') END; ';
+    end;
+  end;
   procedure PutString(Obj:TJSONObject;const Key,Content:string);
   begin Obj.Delete(Key);Obj.Add(Key,Content);end;
   procedure RemapExtras(Obj:TJSONObject;const Key:string;Index:Integer);
@@ -1518,7 +1560,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
-  Body:=nil;Guard:='1';
+  Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
@@ -1529,7 +1571,7 @@ begin
       Input:=TJSONObject(Value);
       Name:=Text(Input,'_format');
       if (Name<>'') and (Name<>'wekan-board-1.0.0') then raise EConvertError.Create('Invalid board export format');
-      for Name in ['attachments','customFields'] do
+      for Name in ['customFields'] do
       begin
         Value:=Input.Find(Name);
         if (Value<>nil) and ((not (Value is TJSONArray)) or (Value.Count<>0)) then
@@ -1591,10 +1633,12 @@ begin
           ','+Stamp+','+Stamp+','+Stamp+'); ';
       end;
       ImportCardChildren;
+      ImportAttachments;
       for I:=3 to 5 do ImportWorkflow(I);
       if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+
         ' AND '+Guard+' AND '+Permission+' THEN 1 ELSE json(''Board import policy changed'') END; '+Sql+'COMMIT;') then
         raise Exception.Create('Board import failed');
+      Committed:=True;
     except
       on E:EConvertError do begin SendError(aResponse,400,'Invalid board export');Exit;end;
       on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not import board');Exit;end;
@@ -1602,6 +1646,8 @@ begin
     Reply:=TJSONObject.Create(['_id',BoardId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally
+    if not Committed then for I:=0 to Files.Count-1 do DeleteFile(Files[I]);
+    Files.Free;
     for I:=0 to High(Maps) do Maps[I].Free;
     Body.Free;
   end;

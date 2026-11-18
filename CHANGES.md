@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Import board attachment bytes
+
+- Import embedded Base64 files with new attachment IDs and remapped card
+  references. Remove staged files if the board import fails.
+
 ## 2026-11-18 Import board comments and checklists
 
 - Import comments, checklists, and checklist items with mapped card and
