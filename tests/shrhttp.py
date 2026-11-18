@@ -240,6 +240,17 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert [r['_id'] for r in exported['rules']]==['rule-b']
                 assert [r['_id'] for r in exported['triggers']]==['trigger-b','trigger-extra']
                 assert [r['_id'] for r in exported['actions']]==['action-b','action-extra']
+                rules_path='/api/boards/b/rules'
+                assert request('GET',rules_path)[0]==401
+                status,_,body=request('GET',rules_path,token=token)
+                assert status==200,(status,body)
+                rule,=json.loads(body)
+                assert rule['_id']=='rule-b' and rule['trigger']=={'activityType':'createCard'}
+                assert rule['action']=={'actionType':'moveCardToTop'}
+                assert len(rule['extraTriggers'])==2 and len(rule['extraActions'])==1
+                status,_,body=request('GET',rules_path+'/rule-b',token=token)
+                assert status==200 and json.loads(body)==rule
+                assert request('GET',rules_path+'/rule-other',token=token)[0]==404
                 exported_user,=exported['users']
                 assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
                 assert all(key not in exported_user for key in ('services','emails','loginTokens'))

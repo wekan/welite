@@ -8,6 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
+procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
 implementation
 uses wlcfjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp;
 type EInvalidSelection=class(Exception);

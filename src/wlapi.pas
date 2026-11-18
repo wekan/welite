@@ -51,6 +51,7 @@ procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
+procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
@@ -831,6 +832,71 @@ begin
     else if (Result <> '') and (Result[Length(Result)] <> '-') then Result := Result + '-';
   end;
   if Result = '' then Result := 'board';
+end;
+
+procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,RuleId,Id:string;Graph,Rule,Item:TJSONObject;
+  Rules,Reply,Triggers,Actions:TJSONArray;Flag:TJSONData;I:Integer;
+  function Part(Parts:TJSONArray;const Key:string):TJSONData;
+  var J:Integer;Entry:TJSONObject;
+  begin
+    Result:=nil;if Key='' then Exit;
+    for J:=0 to Parts.Count-1 do
+      if Parts.Objects[J].Get('_id','')=Key then
+      begin
+        Entry:=TJSONObject(Parts.Objects[J].Clone);
+        Entry.Delete('_id');Entry.Delete('boardId');Entry.Delete('createdAt');Entry.Delete('modifiedAt');Entry.Delete('updatedAt');
+        Result:=Entry;Exit;
+      end;
+  end;
+  procedure Embed(const Name,Primary,Extra:string;Parts:TJSONArray);
+  var Value,Entry:TJSONData;Items:TJSONArray;J:Integer;
+  begin
+    Value:=Part(Parts,Rule.Get(Primary,''));
+    if Value=nil then Value:=TJSONNull.Create;
+    Item.Add(Name,Value);
+    Value:=Rule.Find(Extra);
+    if not (Value is TJSONArray) or (Value.Count=0) then Exit;
+    Items:=TJSONArray.Create;
+    if Name='trigger' then Item.Add('extraTriggers',Items) else Item.Add('extraActions',Items);
+    for J:=0 to Value.Count-1 do
+      if Value.Items[J] is TJSONString then
+      begin
+        Entry:=Part(Parts,Value.Items[J].AsString);
+        if Entry<>nil then Items.Add(Entry);
+      end;
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];RuleId:=aRequest.RouteParams['ruleId'];
+  Graph:=TJSONObject.Create;Reply:=TJSONArray.Create;
+  try
+    try
+      if not T.Db.BeginRead then raise Exception.Create('Could not pin board rule snapshot');
+      try
+        if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
+        ReadExportWorkflows(T.Db,BoardId,Graph);
+      finally
+        if not T.Db.EndRead then raise Exception.Create('Could not close board rule snapshot');
+      end;
+      Rules:=TJSONArray(Graph.Find('rules'));Triggers:=TJSONArray(Graph.Find('triggers'));Actions:=TJSONArray(Graph.Find('actions'));
+      for I:=0 to Rules.Count-1 do
+      begin
+        Rule:=Rules.Objects[I];Id:=Rule.Get('_id','');
+        if (RuleId<>'') and (Id<>RuleId) then Continue;
+        Flag:=Rule.Find('enabled');
+        Item:=TJSONObject.Create(['_id',Id,'title',Rule.Get('title',''),
+          'enabled',not ((Flag is TJSONBoolean) and not Flag.AsBoolean)]);
+        Reply.Add(Item);
+        Embed('trigger','triggerId','extraTriggerIds',Triggers);
+        Embed('action','actionId','extraActionIds',Actions);
+      end;
+    except SendError(aResponse,500,'Could not read board rules');Exit;end;
+    if RuleId='' then SendJson(aResponse,Reply.AsJSON)
+    else if Reply.Count=1 then SendJson(aResponse,Reply.Items[0].AsJSON)
+    else SendJson(aResponse,'{"error":"Rule not found"}',404);
+  finally Reply.Free;Graph.Free;end;
 end;
 
 procedure BoardExport(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);
