@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Fall back to the parent catalog for missing regional strings
+
+- Prefer the installed regional catalog, then its installed parent for
+  missing or empty values, then English. Preserve the selected language
+  and direction. Verify Arabic Algeria and Egypt over HTTP and Chromium
+  on both SQLite backends.
+- Catalog conversion publishes matching browser and strict-JSON catalogs
+  for 245 installed identities with names, direction and portable assets.
+  Negotiation validates disk and embedded catalogs and handles explicit,
+  profile and weighted-header precedence with aliases and parent fallback.
+
 ## 2026-11-18 Localize authentication error page titles
 
 - Render the sign-in, two-factor setup and registration error page titles

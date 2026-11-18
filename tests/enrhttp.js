@@ -22,7 +22,8 @@ function otp(secret,counter) {
     const page=await context.newPage(); const base=process.argv[2];
     await page.goto(base+'/two-factor/setup?lang=fi');
     assert.match(await page.locator('body').innerText(),/Aloita vahvistamalla salasanasi/);
-    await page.goto(base+'/two-factor/setup?lang=ar');
+    await page.goto(base+'/two-factor/setup?lang=ar-EG');
+    assert.equal(await page.locator('html').getAttribute('lang'),'ar-EG');
     assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
     assert.match(await page.locator('body').innerText(),/كلمة مرورك للبدء/);
     await page.locator('input[name=username]').fill('browser-enroll');

@@ -6,7 +6,8 @@ type
   TWLLanguage=record Key,Code,Tag,Name,FileName:string;Rtl:Boolean;end;
   TWLTranslator=class
   private
-    FLocal,FEnglish:TJSONObject;
+    FLocal,FParent,FEnglish:TJSONObject;
+    FParentFile:string;
   public
     constructor Create(const Language:TWLLanguage);
     destructor Destroy;override;
@@ -158,21 +159,33 @@ begin
   finally Root.Free;end;
 end;
 constructor TWLTranslator.Create(const Language:TWLLanguage);
-var Selected,Fallback:TWLLanguage;
+var Selected,Parent,Fallback:TWLLanguage;Tag:string;At:Integer;
 begin
   inherited Create;
   if not FindLanguage('en',Fallback) then Fallback:=English;
   FEnglish:=LoadTranslation(Fallback.FileName);
-  if FindLanguage(Language.Tag,Selected) and (Selected.FileName<>Fallback.FileName) then
-    FLocal:=LoadTranslation(Selected.FileName);
+  if not FindLanguage(Language.Tag,Selected) or (Selected.FileName=Fallback.FileName) then Exit;
+  FLocal:=LoadTranslation(Selected.FileName);
+  Tag:=Canonical(Selected.Tag);
+  At:=LastDelimiter('-',Tag);
+  if (At>0) and FindLanguage(Copy(Tag,1,At-1),Parent) and
+    (Parent.FileName<>Selected.FileName) and (Parent.FileName<>Fallback.FileName) then
+    FParentFile:=Parent.FileName;
 end;
 destructor TWLTranslator.Destroy;
-begin FLocal.Free;FEnglish.Free;inherited Destroy;end;
+begin FLocal.Free;FParent.Free;FEnglish.Free;inherited Destroy;end;
 function TWLTranslator.Text(const Key,Fallback:string):string;
 var Value:TJSONData;
 begin
   Result:=Fallback;Value:=nil;
   if FLocal<>nil then Value:=FLocal.Find(Key);
+  if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString<>'') then Exit(Value.AsString);
+  if FParentFile<>'' then
+  begin
+    FParent:=LoadTranslation(FParentFile);
+    FParentFile:='';
+  end;
+  Value:=nil;if FParent<>nil then Value:=FParent.Find(Key);
   if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString<>'') then Exit(Value.AsString);
   Value:=nil;if FEnglish<>nil then Value:=FEnglish.Find(Key);
   if (Value<>nil) and (Value.JSONType=jtString) and (Value.AsString<>'') then Result:=Value.AsString;
