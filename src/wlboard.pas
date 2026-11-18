@@ -22,6 +22,12 @@ begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
 end;
 
+function CardCaption(const Title:string;Words:TWLTranslator):string;
+begin
+  if Trim(Title)='' then Result:=Words.Text('card','Card')
+  else Result:=Title;
+end;
+
 function BoardAttachmentsUrl(const Board:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/attachments?id='+HTTPEncode(Board),S);
@@ -401,7 +407,7 @@ begin
       begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
-          '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(Cards[k][1])+'</a></p>';
+          '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(CardCaption(Cards[k][1],Words))+'</a></p>';
         if ShowCustomFields then Result:=Result+MiniCardFields(Db,S,BoardId,Cards[k][0],Words);
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
@@ -545,7 +551,7 @@ begin
               ' AND '+Selector.StringField('cards','boardId')+';');
             if Length(Rows)=1 then
             begin
-              Title:=Rows[0][0];
+              Title:=CardCaption(Rows[0][0],Words);
               Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
                 HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>';
               if Rows[0][1]<>'' then Body:=Body+'<p>'+HtmlEncode(Rows[0][1])+'</p>';
@@ -572,7 +578,7 @@ begin
                 Body:=Body+'<h2>'+HtmlEncode(Words.Text('subtasks','Subtasks'))+'</h2><ul>';
                 for Subtask in Subtasks do
                   Body:=Body+'<li><a href="'+HtmlAttr(CardUrl(Board,Subtask[0],S))+'">'+
-                    HtmlEncode(Subtask[1])+'</a></li>';
+                    HtmlEncode(CardCaption(Subtask[1],Words))+'</a></li>';
                 Body:=Body+'</ul>';
               end;
               Files:=nil;

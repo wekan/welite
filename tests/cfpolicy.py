@@ -38,8 +38,10 @@ def exercise(call,base,uid,role,site_admin,field,snapshot,fail,clear,shared):
             result=json.loads(call('GET',definition_path+'/'+json.loads(body)['_id'],None)[2])
             assert result['readOnly'] is True and result['adminOnly'] is private,result
     create(False,200);create(True,403)
-    for method,suffix,data in [('PUT','',dict(title='Policy card')),
-                               ('POST','/members/'+quote(uid,safe=''),None),
+    status,_,body=call('PUT',base,dict(title='Policy card'))
+    assert status==200 and json.loads(body)=={'_id':base.rsplit('/',1)[1]},(status,body)
+    expect()
+    for method,suffix,data in [('POST','/members/'+quote(uid,safe=''),None),
                                ('DELETE','/members/'+quote(uid,safe=''),None),
                                ('POST','/assignees/'+quote(uid,safe=''),None),
                                ('DELETE','/assignees/'+quote(uid,safe=''),None),
