@@ -189,10 +189,21 @@ begin
   Result:=False;
   if SharedStoresRequested and not Tenant.IsAdmin then
   begin
-    if not FileExists(Tenant.DbPath) then Exit;
+    if ExtractFileName(Tenant.DbPath)='wekan.sqlite' then
+      ForceDirectories(Tenant.FilesDir+'db')
+    else if not FileExists(Tenant.DbPath) then Exit;
+    if not DirectoryExists(Tenant.FilesDir+'db') then Exit;
     Db:=WLDbOpen(Tenant.DbPath);if Db=nil then Exit;
     try
       R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''_ferretdb_collections'';');
+      if Length(R)=0 then
+      begin
+        if ExtractFileName(Tenant.DbPath)<>'wekan.sqlite' then Exit;
+        if (Length(Db.Query('SELECT 1 FROM sqlite_master LIMIT 1;'))=0) and
+          InstallRootModels(Db,True) then Exit(True);
+        // A concurrent provisioner may have installed the complete schema.
+        R:=Db.Query('SELECT type FROM sqlite_master WHERE name=''_ferretdb_collections'';');
+      end;
       Result:=(Length(R)=1) and (R[0][0]='table');
     finally Db.Free;end;
     Exit;
@@ -226,7 +237,7 @@ begin
   T:=Default(TWLTenant);
   T.Host:=Key; T.Dir:=TenantDir(Key); T.FilesDir:=T.Dir+'files'+PathDelim;
   T.IsAdmin:=Key=ADMIN_TENANT;
-  if not SelectStoreFile(T.FilesDir+'db',SharedStoresRequested and not T.IsAdmin,T.DbPath) then Exit;
+  if not SelectStoreFile(T.FilesDir+'db',SharedStoresRequested and not T.IsAdmin,T.DbPath,True) then Exit;
   Result:=EnsureTenantStore(T);
 end;
 
@@ -266,7 +277,7 @@ begin
   Tenant.IsAdmin  := SameText(Key, ADMIN_TENANT);
   Tenant.Dir      := TenantDir(Key);
   Tenant.FilesDir := Tenant.Dir + 'files' + PathDelim;
-  if not SelectStoreFile(Tenant.FilesDir+'db',SharedStoresRequested and not Tenant.IsAdmin,Tenant.DbPath) then Exit;
+  if not SelectStoreFile(Tenant.FilesDir+'db',SharedStoresRequested and not Tenant.IsAdmin,Tenant.DbPath,AutoProvision) then Exit;
 
   if AutoProvision and not EnsureTenantStore(Tenant) then Exit;
 

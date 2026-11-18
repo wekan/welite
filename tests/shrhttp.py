@@ -51,13 +51,17 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
         result=subprocess.run([os.environ.get('FPC','fpc'),'-B',*flags,'-Fu'+str(root/'src'),'-FU'+str(dest),'-FE'+str(dest),*(['-o'+str(dest/name)] if name else []),str(source)],capture_output=True,text=True)
         assert result.returncode==0,result.stdout+result.stderr
     build(root/'tests/dbfile.lpr',tmp/'select')
-    def selected(path,shared=False,extra=None):
-        return subprocess.check_output([str(tmp/'select/dbfile'),str(path),'shared' if shared else 'native'],env=dict(os.environ,WELITE_SHARED='0',**(extra or {})),text=True).strip()
+    def selected(path,shared=False,extra=None,fresh=False):
+        return subprocess.check_output([str(tmp/'select/dbfile'),str(path),'fresh-shared' if fresh else 'shared' if shared else 'native'],env=dict(os.environ,WELITE_SHARED='0',**(extra or {})),text=True).strip()
     cases=tmp/'paths';cases.mkdir()
     assert selected(cases)==str(cases/'wekan.db') and selected(cases,True)=='refused'
+    assert selected(cases,fresh=True)==str(cases/'wekan.sqlite')
+    assert selected(cases,extra={'WELITE_SHORT_NAMES':'1'},fresh=True)=='refused'
     assert list(cases.iterdir())==[]
     for orphan in ['wekan.sqlite-wal','wekan.db-shm','wekan.wal','other.sqlite']:
-        (cases/orphan).touch();assert selected(cases)=='refused';(cases/orphan).unlink()
+        (cases/orphan).touch()
+        assert selected(cases)=='refused' and selected(cases,fresh=True)=='refused'
+        (cases/orphan).unlink()
     (cases/'wekan.sqlite').touch()
     assert selected(cases)=='refused' and selected(cases,True)==str(cases/'wekan.sqlite')
     assert selected(cases,True,dict(WELITE_SHORT_NAMES='1'))=='refused'
@@ -121,6 +125,64 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         WEKAN_PLAYWRIGHT_ALL='0',WEKAN_PLAYWRIGHT_WORKERS='1'),
                         check=True)
                     continue
+                fresh=out/'fresh'
+                app=start('1',fresh)
+                fresh_data=fresh/'local/files/db'
+                fresh_file=fresh_data/'wekan.sqlite'
+                assert request('GET','/sign-in')[0]==200
+                assert fresh_file.is_file() and not (fresh_data/'wekan.db').exists()
+                with sqlite3.connect(fresh_file) as con:
+                    names={row[0] for row in con.execute('SELECT name FROM _ferretdb_collections')}
+                    assert {'users','boards','swimlanes','lists','cards'} <= names
+                    assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
+                fresh_port=port()
+                fresh_client=Client(fresh_port)
+                fresh_command=[str(ferret),'--handler=sqlite','--sqlite-url='+fresh_data.as_uri()+'/',
+                    '--state-dir='+str(out/'fresh-state'),'--listen-addr=127.0.0.1:'+str(fresh_port),
+                    '--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable']
+                fresh_server=subprocess.Popen(fresh_command,env=env,stdout=mongo_log,stderr=mongo_log)
+                try:
+                    for _ in range(100):
+                        try:
+                            fresh_client.command({'ping':1})
+                            break
+                        except OSError:
+                            assert fresh_server.poll() is None
+                            time.sleep(.05)
+                    else:
+                        raise AssertionError('FerretDB did not open the new shared store')
+                    assert {'users','boards'} <= {row['name'] for row in
+                        fresh_client.command({'listCollections':1})['cursor']['firstBatch']}
+                    fresh_password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
+                    assert fresh_client.command({'insert':'users','documents':[
+                        dict(_id='first-user',username='first-user',services=dict(password=fresh_password))]})['n']==1
+                    status,_,body=request('POST','/users/login',dict(username='first-user',password='test-password'))
+                    assert status==200 and json.loads(body)['id']=='first-user',(status,body)
+                    status,headers,_=request('POST','/sign-in',urlencode(
+                        dict(username='first-user',password='test-password')))
+                    assert status==302 and 'Set-Cookie' not in headers,(status,headers)
+                    assert request('GET',headers['Location'])[0]==200
+                finally:
+                    fresh_server.terminate()
+                    fresh_server.wait(timeout=10)
+                    stop()
+                print('PASS: fresh shared HTTP provisioning creates one FerretDB store readable by Mongo')
+
+                occupied=out/'occupied'
+                occupied_data=occupied/'local/files/db'
+                occupied_data.mkdir(parents=True)
+                occupied_file=occupied_data/'wekan.sqlite'
+                with sqlite3.connect(occupied_file) as con:
+                    con.execute('CREATE TABLE users (id TEXT PRIMARY KEY)')
+                    con.execute("INSERT INTO users VALUES ('retained')")
+                app=start('1',occupied)
+                assert request('GET','/sign-in')[0]==404
+                stop()
+                with sqlite3.connect(occupied_file) as con:
+                    assert con.execute('SELECT id FROM users').fetchall()==[('retained',)]
+                    assert con.execute("SELECT name FROM sqlite_master WHERE name='_ferretdb_collections'").fetchone() is None
+                assert not (occupied_data/'wekan.db').exists()
+
                 now=DateMs(int(time.time()*1000))
                 password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
                 client.command({'insert':'users','documents':[dict(_id='u',username='user',services=dict(password=password),profile=dict(language='ar',retained=Long(9007199254740993)),extra=Long(9007199254740993))]})
@@ -860,11 +922,6 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: REST user deletion requires site administration and invalidates the deleted account bearer')
                 assert not shadow.exists(),'A normalized public database shadowed the shared file'
                 with sqlite3.connect(database) as con:assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
-                stop()
-                empty=out/'empty'
-                app=start('1',empty)
-                assert request('GET','/')[0]==404
-                assert not (empty/'local/files/db/wekan.db').exists() and not (empty/'local/files/db/wekan.sqlite').exists()
                 stop()
                 native=out/'native';native_file=native/'local/files/db/wekan.db';native_file.parent.mkdir(parents=True)
                 with sqlite3.connect(native_file) as con:con.execute('CREATE TABLE users(id TEXT PRIMARY KEY)')

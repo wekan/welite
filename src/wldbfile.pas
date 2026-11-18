@@ -5,15 +5,15 @@ uses SysUtils;
 function SharedStoresRequested:Boolean;
 function ValidStoreMode:Boolean;
 // Select one canonical file. Never copy/link/rename or create a database here.
-// Shared-only mode requires an existing file; ordinary mode never shadows .sqlite.
-function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string):Boolean;
+// Shared creation selects the canonical .sqlite path; ordinary mode never shadows it.
+function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation:Boolean=False):Boolean;
 implementation
 function SharedStoresRequested:Boolean;
 begin Result:=GetEnvironmentVariable('WELITE_SHARED')='1';end;
 function ValidStoreMode:Boolean;
 var Value:string;
 begin Value:=GetEnvironmentVariable('WELITE_SHARED');Result:=(Value='') or (Value='0') or (Value='1');end;
-function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string):Boolean;
+function SelectStoreFile(const Directory:string;SharedOnly:Boolean;out Path:string;AllowSharedCreation:Boolean):Boolean;
 var Dir,ShortFile,SourceFile:string;HasShort,HasSource:Boolean;Search:TSearchRec;Code:Integer;
 begin
   Result:=False;Path:='';if not ValidStoreMode then Exit;
@@ -30,7 +30,7 @@ begin
     Path:=SourceFile;Exit(True);
   end;
   if HasShort then begin Path:=ShortFile;Exit(True);end;
-  if SharedOnly then Exit;
+  if SharedOnly and (not AllowSharedCreation or (GetEnvironmentVariable('WELITE_SHORT_NAMES')='1')) then Exit;
   // A differently named FerretDB file or orphan sidecars require explicit repair,
   // not a new normalized database beside possibly recoverable source data.
   Code:=FindFirst(Dir+'*.sqlite',faAnyFile,Search);
@@ -46,6 +46,7 @@ begin
   if FileExists(ShortFile+'-wal') or FileExists(ShortFile+'-shm') or FileExists(ShortFile+'-journal') or
     FileExists(SourceFile+'-wal') or FileExists(SourceFile+'-shm') or FileExists(SourceFile+'-journal') or
     FileExists(Dir+'wekan.wal') or FileExists(Dir+'wekan.shm') or FileExists(Dir+'wekan.nal') then Exit;
-  Path:=ShortFile;Result:=True;
+  if SharedOnly then Path:=SourceFile else Path:=ShortFile;
+  Result:=True;
 end;
 end.

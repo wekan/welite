@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Provision fresh canonical shared stores through HTTP
+
+- In explicit shared mode, initialize an empty public tenant store at
+  `wekan.sqlite` and open it with FerretDB. Preserve existing normalized
+  files and refuse ambiguous paths and orphan sidecars.
+
 ## 2026-11-18 Verify shared registry errors and repair without restarting
 
 - Verify that Mongo find reports malformed SQLite registration settings

@@ -4,7 +4,7 @@ interface
 uses SysUtils,Classes,StrUtils,fpjson,jsonparser,wldb,wlmodels,wlpasswd,wlrel,wlrefs,wlpriv,wluniq;
 // Installs root and child projections. Application activation and shared-account
 // compatibility remain separate gates before this is a finished store adapter.
-function InstallRootModels(Db:TWLDb):Boolean;
+function InstallRootModels(Db:TWLDb;RequireEmpty:Boolean=False):Boolean;
 function RootModelScript(Db:TWLDb):string;
 function EnsureSharedCollection(Db:TWLDb;const Collection:string):Boolean;
 implementation
@@ -254,12 +254,16 @@ begin
     Result:=Sql+DeferredCustom+RelationScript(Db,Tables)+PrivateScript(Db,Tables)+'COMMIT;';
   finally Tables.Free;Roots.Free;Used.Free;Models.Free;end;
 end;
-function InstallRootModels(Db:TWLDb):Boolean;
+function InstallRootModels(Db:TWLDb;RequireEmpty:Boolean):Boolean;
 var Sql:string;
 begin
   Result:=False;
   try
-    Sql:=RootModelScript(Db);Result:=Db.Exec(Sql);
+    Sql:=RootModelScript(Db);
+    if RequireEmpty then
+      Insert(' SELECT CASE WHEN EXISTS (SELECT 1 FROM sqlite_master)'+
+        ' THEN json(''Shared database is no longer empty'') ELSE 1 END;',Sql,Length('BEGIN IMMEDIATE;')+1);
+    Result:=Db.Exec(Sql);
     if not Result then Db.Exec('ROLLBACK;');
   except Result:=False;end;
 end;
