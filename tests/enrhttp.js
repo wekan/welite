@@ -73,6 +73,9 @@ withCookieFreeChromium(async (page, context) => {
   await page.goto(base+'/two-factor/setup?lang=ko');
   assert.equal(await page.locator('html').getAttribute('lang'),'ko');
   assert.match(await page.locator('body').innerText(),/설정을 시작하려면 비밀번호를 확인하세요/);
+  await page.goto(base+'/two-factor/setup?lang=ru');
+  assert.equal(await page.locator('html').getAttribute('lang'),'ru');
+  assert.match(await page.locator('body').innerText(),/Подтвердите пароль/);
 
   await page.goto(base+'/two-factor/setup?lang=fi');
   assert.match(await page.locator('body').innerText(),/Aloita vahvistamalla salasanasi/);
