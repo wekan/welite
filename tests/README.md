@@ -664,3 +664,12 @@ to focus a run by Playwright title pattern. Set
 Playwright `specs` directory to run additional upstream compatibility cases.
 For example, `WELITE_WEKAN_API_SPECS='rest-list-archive.e2e.js rest-card-sort.e2e.js'`
 selects the list archive and card sort regressions.
+
+### Run the Linux Dillo board check
+
+Set `WELITE_DILLO_TOOLS` to an extracted Debian arm64 tool directory
+containing `usr/bin/dillo`, `usr/bin/Xvfb`, `usr/bin/xdotool`, and their
+runtime libraries. Run `python3 tests/admin.py` with the usual native HTTP
+environment and FFmpeg with X11 capture on `PATH`. The test creates a
+640×480 virtual display and an ephemeral Dillo profile that denies cookies.
+It checks the minimap highlight color and clicks the adjacent viewport.

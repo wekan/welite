@@ -146,6 +146,9 @@ def run(request,database,administrator,base):
         with sqlite3.connect(database) as con:
             con.execute("UPDATE boards SET settings_json='{}' WHERE id='boardtxt'")
 
+        if os.environ.get('WELITE_DILLO_TOOLS'):
+            from dillo import run as check_dillo
+            check_dillo(base)
         check('en',header='en')
         assert content_state()==before,'Viewport/map navigation changed board content'
     finally:
