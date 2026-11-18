@@ -1731,16 +1731,28 @@ extras, parent-child dependencies, malformed/duplicate keys, hidden metadata and
 triggered permission rollback. These paths run on both SQL backends; remaining
 legacy forms and broader clone lifecycle behavior are still unfinished.
 
-## Remaining before the checklist can be checked
+## Verified workflows and remaining interoperability work
 
-- Complete Mongo-managed sparse/multikey account indexes and normalized-store authentication migration policy; reconcile typed
-  custom-field values, legacy dependency forms and SQL conflict behavior.
-- Reconcile broader resume-policy parity and process-signal lifecycle; reconcile file-store metadata/bytes.
-- Adapt cloning/export and finish authentication integration.
-- Verify shared-database HTTP/Mongo-wire workflows, including permissions, restart and
-  rollback with both Welite SQLite backends.
-- Resolve shared database filename/8.3 policy and document target-specific limitations
-  from actual tests. Never share a file through aliases with different WAL names.
+On Linux, the shared HTTP suite exercises the same database through WeLite and
+the FerretDB Mongo wire protocol. Both SQLite backends have verified two-way
+writes, permissions, restart and rollback. The linked backend also passes all
+114 upstream REST cases. Board export with both attachment modes and
+individual browser session revocation pass on both backends, including
+Chromium with JavaScript and cookies disabled. See [the test runner](../tests/README.md#run-the-upstream-wekan-rest-specs).
+
+Cloning and export use the shared model and retain typed data on tested paths.
+The optional strict shared filename mode has live Linux coverage for short
+SQLite sidecars on both backends. WeLite can use native SQLite directly with
+`WELITE_SHARED=0` for standalone installations.
+
+- Verify Mongo-managed sparse and multikey account indexes, migration from
+  existing native accounts, and remaining resume-policy behavior.
+- Reconcile remaining typed custom-field values, legacy relation forms,
+  SQL conflict behavior, and compatibility with files written by other
+  WeKan storage backends.
+- Verify full Meteor application workflows and strict shared filenames on
+  additional target platforms. Use one canonical path for each database
+  and its SQLite sidecars.
 
 ### Shared HTTP activation and provisioning
 

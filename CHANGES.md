@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Record verified shared database workflows
+
+- Record the Linux shared-database coverage for permissions, restart,
+  rollback, clone and export, and short SQLite sidecars. The current
+  linked run passes 114 upstream REST cases and 112 shared HTTP checks.
+
 ## 2026-11-18 Link attachment management from published boards
 
 - Render the attachment link in the board shared by direct and published
