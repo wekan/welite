@@ -77,7 +77,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 for lang, source, direction in [('fi','fi','ltr'), ('ar','ar','rtl'),
                                                 ('ar-DZ','ar','rtl'), ('ar-EG','ar','rtl'),
                                                 ('de','de','ltr'), ('fr','fr','ltr'),
-                                                ('fr-CA','fr','ltr'), ('es','es','ltr'), ('it','it','ltr'), ('sv','sv','ltr'), ('nl','nl','ltr'), ('pl','pl','ltr'), ('cs','cs','ltr'), ('sk','sk','ltr'), ('hu','hu','ltr'), ('ro','ro','ltr'), ('da','da','ltr'), ('pt','pt','ltr'), ('el','el','ltr'), ('tr','tr','ltr'), ('id','id','ltr'), ('vi','vi','ltr'), ('uk','uk','ltr'), ('ja','ja','ltr'), ('ko','ko','ltr'), ('ru','ru','ltr'), ('he','he','rtl'), ('fa','fa','rtl'), ('th','th','ltr'), ('hi','hi','ltr'), ('bn','bn','ltr'), ('ta','ta','ltr'), ('nb','en','ltr')]:
+                                                ('fr-CA','fr','ltr'), ('es','es','ltr'), ('it','it','ltr'), ('sv','sv','ltr'), ('nl','nl','ltr'), ('pl','pl','ltr'), ('cs','cs','ltr'), ('sk','sk','ltr'), ('hu','hu','ltr'), ('ro','ro','ltr'), ('da','da','ltr'), ('pt','pt','ltr'), ('el','el','ltr'), ('tr','tr','ltr'), ('id','id','ltr'), ('vi','vi','ltr'), ('uk','uk','ltr'), ('ja','ja','ltr'), ('ko','ko','ltr'), ('ru','ru','ltr'), ('he','he','rtl'), ('fa','fa','rtl'), ('th','th','ltr'), ('hi','hi','ltr'), ('bn','bn','ltr'), ('ta','ta','ltr'), ('nb','nb','ltr'), ('is','en','ltr')]:
                     catalog = json.loads((root/'i18n'/'data'/f'{source}.jsn').read_text())
                     expected = catalog['enrollment-password-instructions']
                     status, headers, body = request('GET', '/two-factor/setup?lang='+lang)
