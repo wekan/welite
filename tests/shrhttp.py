@@ -32,11 +32,16 @@ if upstream:
     playwright = upstream / 'node_modules/playwright/cli.js'
     if not playwright.is_file():
         raise SystemExit('WELITE_WEKAN_PLAYWRIGHT must point to WeKan tests/playwright with dependencies installed')
+    if upstream_specs == ['all']:
+        upstream_specs = [
+            '17-rest-api.e2e.js', '23-rest-api-more.e2e.js', '28-dependencies-rest.e2e.js',
+            *sorted(spec.name for spec in (upstream / 'specs').glob('rest-*.e2e.js')),
+        ]
     if not upstream_specs or any(
         Path(name).name != name or name.startswith('-') or not name.endswith('.e2e.js')
         or not (upstream / 'specs' / name).is_file() for name in upstream_specs
     ):
-        raise SystemExit('WELITE_WEKAN_API_SPECS must name existing spec files in WeKan tests/playwright/specs')
+        raise SystemExit('WELITE_WEKAN_API_SPECS must be all or name existing spec files in WeKan tests/playwright/specs')
 upstream_filter = os.environ.get('WELITE_WEKAN_API_GREP')
 selected_backend = os.environ.get('WELITE_SHARED_BACKEND')
 if selected_backend is not None:
