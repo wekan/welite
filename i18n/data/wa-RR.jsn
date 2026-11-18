@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Isulod an imo 6 ka digit nga kodigo han pagpamatuod han identidad",
   "twoFactorCode-invalid": "Diri balido an kodigo han pagpamatuod han identidad. Alayon sulayi utro.",
   "twoFactorAuth-enabled": "Aktibo an duha ka paagi han pagpamatuod han identidad para ha imo account.",
-  "two-factor-required-title": "Igpahimutang an duha ka paagi han pagpamatuod han identidad"
+  "two-factor-required-title": "Igpahimutang an duha ka paagi han pagpamatuod han identidad",
+  "two-factor-required-text": "Ini nga site nagkikinahanglan hin duha ka paagi han pagpamatuod han identidad para ha imo account. Igpahimutang ini para magpadayon."
 }

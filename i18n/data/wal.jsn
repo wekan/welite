@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Ne 6-tayboo tuma ero koodiya gelissa",
   "twoFactorCode-invalid": "Tuma ero koodiyaa bawa. Zaari baaya.",
   "twoFactorAuth-enabled": "Naa77u baggaa tuma erssoy ne akkawuntiyaw dooyettis.",
-  "two-factor-required-title": "Naa77u baggaa tuma erssuwaa giigissa"
+  "two-factor-required-title": "Naa77u baggaa tuma erssuwaa giigissa",
+  "two-factor-required-text": "Ha saytiyay ne akkawuntiyaw naa77u baggaa tuma erssuwaa oychees. Sinttaa baanaw giigissa."
 }

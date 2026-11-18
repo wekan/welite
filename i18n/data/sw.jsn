@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Ingiza msimbo wako wa uthibitishaji wa tarakimu 6",
   "twoFactorCode-invalid": "Msimbo wa uthibitishaji si sahihi. Tafadhali jaribu tena.",
   "twoFactorAuth-enabled": "Uthibitishaji wa hatua mbili umewashwa kwa akaunti yako.",
-  "two-factor-required-title": "Weka uthibitishaji wa hatua mbili"
+  "two-factor-required-title": "Weka uthibitishaji wa hatua mbili",
+  "two-factor-required-text": "Tovuti hii inahitaji uthibitishaji wa hatua mbili kwa akaunti yako. Uweke ili kuendelea."
 }

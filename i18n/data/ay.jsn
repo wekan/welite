@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Jumana 6 jakhu chiqapachäwi código qillqam",
   "twoFactorCode-invalid": "Chiqapachäwi código janiw walikïti. Wasitat yant'am.",
   "twoFactorAuth-enabled": "Pä kunayman chaqañ chiqapachäwix jumanakan kuentanakaru apnaqäski.",
-  "two-factor-required-title": "Pä Kunayman Chaqañ Chiqapachäwi wakicht'aña"
+  "two-factor-required-title": "Pä Kunayman Chaqañ Chiqapachäwi wakicht'aña",
+  "two-factor-required-text": "Aka sitiox cuentamatakix Pä Kunayman Chaqañ Chiqapachäwi mayi. Sarantañatakix wakicht'am."
 }

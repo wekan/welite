@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "请输入您的6位身份验证代码",
   "twoFactorCode-invalid": "身份验证代码无效，请重试。",
   "twoFactorAuth-enabled": "您的账户已启用双重身份验证。",
-  "two-factor-required-title": "设置双重身份验证"
+  "two-factor-required-title": "设置双重身份验证",
+  "two-factor-required-text": "本站要求您的账户启用双重身份验证。请设置后继续。"
 }

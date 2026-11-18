@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "ናትካ ናይ 6-ኣሃዝ ናይ ምርግጋጽ ኮድ ኣእትዉ",
   "twoFactorCode-invalid": "ናይ ምርግጋጽ ኮድ ልክዕ ኣይኮነን። በጃኻ ደጊምካ ፈትን።",
   "twoFactorAuth-enabled": "ንሕሳብካ ኽልተ-ረቛሒ ምርግጋጽ ነቒሑ ኣሎ።",
-  "two-factor-required-title": "ኽልተ-ረቛሒ ምርግጋጽ ኣዳልው"
+  "two-factor-required-title": "ኽልተ-ረቛሒ ምርግጋጽ ኣዳልው",
+  "two-factor-required-text": "እዚ ሳይት ንሕሳብካ ኽልተ-ረቛሒ ምርግጋጽ ይሓትት። ንምቕጻል ኣዳልዎ።"
 }

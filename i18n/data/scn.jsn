@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Metti lu to còdici di autinticazzioni di 6 numeri",
   "twoFactorCode-invalid": "Còdici di autinticazzioni non vàlidu. Pruva arrè.",
   "twoFactorAuth-enabled": "L'autinticazzioni a dui fatturi è attivata pû to account.",
-  "two-factor-required-title": "Cunfigura l'autinticazzioni a dui fatturi"
+  "two-factor-required-title": "Cunfigura l'autinticazzioni a dui fatturi",
+  "two-factor-required-text": "Stu situ richiedi l'autinticazzioni a dui fatturi pû to account. Cunfiguràla pi cuntinuari."
 }

@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Faka ikhodi yakho yokuqinisekisa elamanani ayisithupha",
   "twoFactorCode-invalid": "Ikhodi yokuqinisekisa kayilungiswanga. Zama futhi.",
   "twoFactorAuth-enabled": "Ukuqinisekiswa ngendlela ezimbili kuvuliwe ku-akhawunti yakho.",
-  "two-factor-required-title": "Misa ukuqinisekiswa ngendlela ezimbili"
+  "two-factor-required-title": "Misa ukuqinisekiswa ngendlela ezimbili",
+  "two-factor-required-text": "Lesi sizinda sidinga ukuqinisekiswa ngendlela ezimbili ku-akhawunti yakho. Kumise ukuze uqhubeke."
 }

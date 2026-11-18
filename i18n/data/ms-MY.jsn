@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Masukkan kod pengesahan 6 digit anda",
   "twoFactorCode-invalid": "Kod pengesahan tidak sah. Sila cuba lagi.",
   "twoFactorAuth-enabled": "Pengesahan dua faktor diaktifkan untuk akaun anda.",
-  "two-factor-required-title": "Sediakan pengesahan dua faktor"
+  "two-factor-required-title": "Sediakan pengesahan dua faktor",
+  "two-factor-required-text": "Laman ini memerlukan pengesahan dua faktor untuk akaun anda. Sediakannya untuk meneruskan."
 }

@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Wpisz twōj 6-cyfrowy kod autoryzacyjny",
   "twoFactorCode-invalid": "Niywłŏściwy kod autoryzacyjny. Sprōbuj jeszcze rŏz.",
   "twoFactorAuth-enabled": "Dwuskłŏdnikowŏ weryfikacyjŏ je włōnczōnŏ dlŏ twojigo kōnta.",
-  "two-factor-required-title": "Nastŏw dwuskłŏdnikowõ weryfikacyjõ"
+  "two-factor-required-title": "Nastŏw dwuskłŏdnikowõ weryfikacyjõ",
+  "two-factor-required-text": "Ta strōna wymŏgŏ dwuskłŏdnikowyj weryfikacyje dlŏ twojigo kōnta. Nastŏw jõ, coby kōntynuować."
 }

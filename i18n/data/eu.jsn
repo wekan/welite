@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Sartu zure 6 digituko autentifikazio-kodea",
   "twoFactorCode-invalid": "Autentifikazio-kode baliogabea. Saiatu berriro.",
   "twoFactorAuth-enabled": "Bi faktoreko autentifikazioa gaituta dago zure konturako.",
-  "two-factor-required-title": "Konfiguratu bi faktoreko autentifikazioa"
+  "two-factor-required-title": "Konfiguratu bi faktoreko autentifikazioa",
+  "two-factor-required-text": "Gune honek bi faktoreko autentifikazioa eskatzen du zure konturako. Konfiguratu jarraitzeko."
 }

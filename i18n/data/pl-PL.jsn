@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Wprowadź swój 6-cyfrowy kod uwierzytelniający",
   "twoFactorCode-invalid": "Nieprawidłowy kod uwierzytelniający. Spróbuj ponownie.",
   "twoFactorAuth-enabled": "Uwierzytelnianie dwuskładnikowe jest włączone dla Twojego konta.",
-  "two-factor-required-title": "Skonfiguruj uwierzytelnianie dwuskładnikowe"
+  "two-factor-required-title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
+  "two-factor-required-text": "Ta witryna wymaga uwierzytelniania dwuskładnikowego dla Twojego konta. Skonfiguruj je, aby kontynuować."
 }

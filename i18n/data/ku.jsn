@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Koda rastandinê ya 6-reqem binivîse",
   "twoFactorCode-invalid": "Koda rastandinê ne rast e. Ji kerema xwe dîsa biceribîne.",
   "twoFactorAuth-enabled": "Rastandina du-faktorî ji bo hesabê te çalak e.",
-  "two-factor-required-title": "Rastandina du-faktorî saz bike"
+  "two-factor-required-title": "Rastandina du-faktorî saz bike",
+  "two-factor-required-text": "Ev malper ji bo hesabê te rastandina du-faktorî dixwaze. Ji bo berdewamkirinê wê saz bike."
 }

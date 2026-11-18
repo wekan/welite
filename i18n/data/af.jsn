@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Voer jou 6-syfer-verifikasiekode in",
   "twoFactorCode-invalid": "Ongeldige verifikasiekode. Probeer asseblief weer.",
   "twoFactorAuth-enabled": "Twee-faktor-verifikasie is vir jou rekening geaktiveer.",
-  "two-factor-required-title": "Stel twee-faktor-verifikasie op"
+  "two-factor-required-title": "Stel twee-faktor-verifikasie op",
+  "two-factor-required-text": "Hierdie werf vereis twee-faktor-verifikasie vir jou rekening. Stel dit op om voort te gaan."
 }

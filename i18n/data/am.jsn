@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "የ6-አሃዝ ማረጋገጫ ኮድዎን ያስገቡ",
   "twoFactorCode-invalid": "ልክ ያልሆነ ማረጋገጫ ኮድ። እባክዎ እንደገና ይሞክሩ።",
   "twoFactorAuth-enabled": "ባለ ሁለት-ደረጃ ማረጋገጫ ለመለያዎ ነቅቷል።",
-  "two-factor-required-title": "ባለ ሁለት-ደረጃ ማረጋገጫን ያዋቅሩ"
+  "two-factor-required-title": "ባለ ሁለት-ደረጃ ማረጋገጫን ያዋቅሩ",
+  "two-factor-required-text": "ይህ ጣቢያ ለመለያዎ ባለ ሁለት-ደረጃ ማረጋገጫ ይፈልጋል። ለመቀጠል ያዋቅሩት።"
 }

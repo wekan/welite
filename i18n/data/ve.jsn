@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Ḓivhadzani khodo yaṋu ya tshinomboni tsha rathi",
   "twoFactorCode-invalid": "Khodo ya u khwaṱhisedza a yo teisi. Ni ṱoḓea u lingedza hafhu.",
   "twoFactorAuth-enabled": "U ṱhogomela nga zwibveledzwa zwivhili zwo vulwa kha akhaunthi yaṋu.",
-  "two-factor-required-title": "Dzudzanyani u ṱhogomela nga zwibveledzwa zwivhili"
+  "two-factor-required-title": "Dzudzanyani u ṱhogomela nga zwibveledzwa zwivhili",
+  "two-factor-required-text": "Iyi saithi i ṱoḓa u ṱhogomela nga zwibveledzwa zwivhili kha akhaunthi yaṋu. Zwi dzudzanyeni uri ni bvele phanḓa."
 }

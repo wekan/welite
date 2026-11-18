@@ -16,6 +16,7 @@ def check_auth_language(request,database,otp):
     assert b'action="/register?lang=ar"' in body and b'href="/sign-in?lang=ar"' in body
     status,headers,body=request('POST','/register?lang='+language,dict(username=user,password=password,confirm=password))
     assert status==200 and b'Account created' in body and b'href="/two-factor/setup?lang=ar"' in body
+    assert translated('two-factor-required-text') in body
     assert translated('two-factor-required-title')+b'</a>' in body
     status,headers,body=request('GET','/two-factor/setup?lang='+language)
     assert status==200 and b'action="/two-factor/setup?lang=ar"' in body

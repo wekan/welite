@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Wpiszë swój 6-cyfrowi kòd aùtentikacëji",
   "twoFactorCode-invalid": "Zle kòd aùtentikacëji. Proszã spróbùjë jesz rôz.",
   "twoFactorAuth-enabled": "Dwuskładnikòwô aùtentikacëjô je włączonô dlô twòjégò kònta.",
-  "two-factor-required-title": "Ùstawi dwuskładnikòwą aùtentikacëjã"
+  "two-factor-required-title": "Ùstawi dwuskładnikòwą aùtentikacëjã",
+  "two-factor-required-text": "Na starna wëmôgô dwuskładnikòwi aùtentikacëji dlô twòjégò kònta. Ùstawi jã, żebë jic dali."
 }

@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Masukkan kode autentikasi 6 digit Anda",
   "twoFactorCode-invalid": "Kode autentikasi tidak valid. Silakan coba lagi.",
   "twoFactorAuth-enabled": "Autentikasi dua faktor diaktifkan untuk akun Anda.",
-  "two-factor-required-title": "Siapkan autentikasi dua faktor"
+  "two-factor-required-title": "Siapkan autentikasi dua faktor",
+  "two-factor-required-text": "Situs ini mewajibkan autentikasi dua faktor untuk akun Anda. Siapkan untuk melanjutkan."
 }

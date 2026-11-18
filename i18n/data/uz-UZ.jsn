@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "6 xonali tasdiqlash kodingizni kiriting",
   "twoFactorCode-invalid": "Notoʻgʻri tasdiqlash kodi. Iltimos, qayta urinib koʻring.",
   "twoFactorAuth-enabled": "Hisobingiz uchun ikki bosqichli tasdiqlash yoqilgan.",
-  "two-factor-required-title": "Ikki bosqichli tasdiqlashni sozlang"
+  "two-factor-required-title": "Ikki bosqichli tasdiqlashni sozlang",
+  "two-factor-required-text": "Bu sayt hisobingiz uchun ikki bosqichli tasdiqlashni talab qiladi. Davom etish uchun uni sozlang."
 }

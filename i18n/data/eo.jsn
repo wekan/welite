@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Enigu vian 6-ciferan aŭtentigan kodon",
   "twoFactorCode-invalid": "Nevalida aŭtentiga kodo. Bonvolu reprovi.",
   "twoFactorAuth-enabled": "Dufaktora aŭtentigo estas ŝaltita por via konto.",
-  "two-factor-required-title": "Agordu dufaktoran aŭtentigon"
+  "two-factor-required-title": "Agordu dufaktoran aŭtentigon",
+  "two-factor-required-text": "Ĉi tiu retejo postulas dufaktoran aŭtentigon por via konto. Agordu ĝin por daŭrigi."
 }

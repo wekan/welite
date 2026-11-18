@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "6桁の認証コードを入力してください",
   "twoFactorCode-invalid": "認証コードが無効です。もう一度お試しください。",
   "twoFactorAuth-enabled": "アカウントで二要素認証が有効になっています。",
-  "two-factor-required-title": "二要素認証の設定"
+  "two-factor-required-title": "二要素認証の設定",
+  "two-factor-required-text": "このサイトではアカウントに二要素認証が必要です。続行するには設定してください。"
 }

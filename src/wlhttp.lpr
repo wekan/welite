@@ -434,9 +434,10 @@ begin
     begin
       Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(aRequest),'',aRequest.AcceptLanguage));
       try
-        SendHtml(aResponse,AuthPage(aRequest,aResponse,'Account created','<h1>Account created</h1><p><a href="'+
-          HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">'+
-          HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a> before signing in.</p>'));
+        SendHtml(aResponse,AuthPage(aRequest,aResponse,'Account created','<h1>Account created</h1><p>'+
+          HtmlEncode(Words.Text('two-factor-required-text','This site requires two-factor authentication for your account. Set it up to continue.'))+
+          '</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">'+
+          HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a></p>'));
       finally
         Words.Free;
       end;

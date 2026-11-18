@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "wa'maH loS mI' authentication yIngIH",
   "twoFactorCode-invalid": "mI' authentication ghobe'. yIqIm.",
   "twoFactorAuth-enabled": "lIj account choq cha' Ser wa'Dich.",
-  "two-factor-required-title": "cha'Ser wa'Dich yIcher"
+  "two-factor-required-title": "cha'Ser wa'Dich yIcher",
+  "two-factor-required-text": "lo'wI' Daqlij vaD cha'Ser wa'Dich poQ Daqvam. yItaHmeH yIcher."
 }

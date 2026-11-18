@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Kirjuta sinun 6-cifraine autentifikacijan kod",
   "twoFactorCode-invalid": "Autentifikacijan kod om vär. Ole hüvä, ladi völ kerdan.",
   "twoFactorAuth-enabled": "Kahen faktoran autentifikacii om päl sinun akkauntal.",
-  "two-factor-required-title": "Säta kahen faktoran autentifikacii"
+  "two-factor-required-title": "Säta kahen faktoran autentifikacii",
+  "two-factor-required-text": "Nece sait pakičeb kahen faktoran autentifikacijad sinun akkauntale. Säta se, miše jatkta."
 }

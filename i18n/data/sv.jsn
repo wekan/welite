@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Ange din 6-siffriga autentiseringskod",
   "twoFactorCode-invalid": "Ogiltig autentiseringskod. Försök igen.",
   "twoFactorAuth-enabled": "Tvåfaktorsautentisering är aktiverad för ditt konto.",
-  "two-factor-required-title": "Konfigurera tvåfaktorsautentisering"
+  "two-factor-required-title": "Konfigurera tvåfaktorsautentisering",
+  "two-factor-required-text": "Den här webbplatsen kräver tvåfaktorsautentisering för ditt konto. Konfigurera det för att fortsätta."
 }

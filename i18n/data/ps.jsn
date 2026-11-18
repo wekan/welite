@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "خپل 6 عددي تصدیق کوډ دننه کړئ",
   "twoFactorCode-invalid": "ناسم تصدیق کوډ. مهرباني وکړئ بیا هڅه وکړئ.",
   "twoFactorAuth-enabled": "ستاسو حساب لپاره دوه‌مرحلوي تصدیق فعال دی.",
-  "two-factor-required-title": "دوه‌مرحلوي تصدیق تنظیم کړئ"
+  "two-factor-required-title": "دوه‌مرحلوي تصدیق تنظیم کړئ",
+  "two-factor-required-text": "دا ویبپاڼه ستاسو د حساب لپاره دوه‌مرحلوي تصدیق غواړي. د دوام لپاره یې تنظیم کړئ."
 }

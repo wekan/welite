@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Nghenisa khodi ya wena ya tinhlayo ta 6",
   "twoFactorCode-invalid": "Khodi ya ntiyiso a yi lulamanga. Ringeta nakambe.",
   "twoFactorAuth-enabled": "Ntiyiso wa magondzo mambirhi wu pfulekile eka akhawunti ya wena.",
-  "two-factor-required-title": "Lulamisa Ntiyiso wa Magondzo Mambirhi"
+  "two-factor-required-title": "Lulamisa Ntiyiso wa Magondzo Mambirhi",
+  "two-factor-required-text": "Sayiti leyi yi lava ntiyiso wa magondzo mambirhi eka akhawunti ya wena. Wu lulamise leswaku u ya emahlweni."
 }

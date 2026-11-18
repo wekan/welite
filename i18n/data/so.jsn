@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Geli koodhkaaga xaqiijinta ee 6-lambarka ah",
   "twoFactorCode-invalid": "Koodhka xaqiijinta waa khalad. Fadlan mar kale isku day.",
   "twoFactorAuth-enabled": "Xaqiijinta laba-tallaabo waa la daaray akoonkaaga.",
-  "two-factor-required-title": "Dej Xaqiijinta Laba-Tallaabo"
+  "two-factor-required-title": "Dej Xaqiijinta Laba-Tallaabo",
+  "two-factor-required-text": "Goobtan waxay u baahan tahay xaqiijinta laba-tallaabo ee akoonkaaga. Dej si aad u sii wadato."
 }

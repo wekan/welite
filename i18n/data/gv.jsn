@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Cur stiagh dty chode firrinee shey-earroo",
   "twoFactorCode-invalid": "Code firrinee neuchiart. Prow reesht my sailt.",
   "twoFactorAuth-enabled": "Ta'n firrinaghey daa-ymmyd bio er dty coontys.",
-  "two-factor-required-title": "Soie seose firrinaghey daa-ymmyd"
+  "two-factor-required-title": "Soie seose firrinaghey daa-ymmyd",
+  "two-factor-required-text": "Ta'n ynnyd shoh feme er firrinaghey daa-ymmyd son dty choontys. Soie seose eh dy gholl er oaie."
 }

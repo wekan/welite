@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Zapodaj swój 6-městnowy awtentifikaciski kod",
   "twoFactorCode-invalid": "Njepłaćiwy awtentifikaciski kod. Prošu spytaj hišće raz.",
   "twoFactorAuth-enabled": "Dwustopnjowa awtentifikacija je za twoje konto zmóžnjena.",
-  "two-factor-required-title": "Dwustopnjowu awtentifikaciju zarjadować"
+  "two-factor-required-title": "Dwustopnjowu awtentifikaciju zarjadować",
+  "two-factor-required-text": "Tute sydło žada sej dwustopnjowu awtentifikaciju za waše konto. Zarjadujće ju, zo byšće pokročowali."
 }

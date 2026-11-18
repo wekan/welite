@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "הזן את קוד האימות בן 6 הספרות שלך",
   "twoFactorCode-invalid": "קוד אימות שגוי. נסה שוב.",
   "twoFactorAuth-enabled": "האימות הדו-שלבי מופעל עבור החשבון שלך.",
-  "two-factor-required-title": "הגדרת אימות דו-שלבי"
+  "two-factor-required-title": "הגדרת אימות דו-שלבי",
+  "two-factor-required-text": "אתר זה דורש אימות דו-שלבי עבור החשבון שלך. יש להגדיר אותו כדי להמשיך."
 }

@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Lowetsani nambala yanu ya 6-digit yotsimikizira",
   "twoFactorCode-invalid": "Nambala yotsimikizira si yoyenera. Chonde yesaninso.",
   "twoFactorAuth-enabled": "Kutsimikizira kwa njira ziwiri kwayambitsidwa pa akaunti yanu.",
-  "two-factor-required-title": "Khazikitsani kutsimikizira kwa njira ziwiri"
+  "two-factor-required-title": "Khazikitsani kutsimikizira kwa njira ziwiri",
+  "two-factor-required-text": "Tsambali limafuna kutsimikizira kwa njira ziwiri pa akaunti yanu. Khazikitsani kuti mupitirize."
 }

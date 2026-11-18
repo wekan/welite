@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Yingiza akabonero k'okukakasa ak'emiwendo mukaaga",
   "twoFactorCode-invalid": "Akabonero k'okukakasa si ka mazima. Ddamu ogezeeko.",
   "twoFactorAuth-enabled": "Okukakasa mu ngeri bbiri kukoledde ku akawunti yo.",
-  "two-factor-required-title": "Teekateeka Okukakasa mu Ngeri Bbiri"
+  "two-factor-required-title": "Teekateeka Okukakasa mu Ngeri Bbiri",
+  "two-factor-required-text": "Omukutu guno gwetaaga okukakasa mu ngeri bbiri ku akawunti yo. Kiteekateeke okusobola okugenda mu maaso."
 }

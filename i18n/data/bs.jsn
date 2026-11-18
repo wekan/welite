@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Unesite svoj šestocifreni kod za autentifikaciju",
   "twoFactorCode-invalid": "Nevažeći kod za autentifikaciju. Pokušajte ponovo.",
   "twoFactorAuth-enabled": "Dvofaktorska autentifikacija je omogućena za vaš nalog.",
-  "two-factor-required-title": "Postavite dvofaktorsku autentifikaciju"
+  "two-factor-required-title": "Postavite dvofaktorsku autentifikaciju",
+  "two-factor-required-text": "Ova stranica zahtijeva dvofaktorsku autentifikaciju za vaš račun. Postavite je da biste nastavili."
 }

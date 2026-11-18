@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Entrate u vostru codice d'autentificazione à 6 cifre",
   "twoFactorCode-invalid": "Codice d’autentificazione micca validu. Pruvate torna.",
   "twoFactorAuth-enabled": "L'autentificazione à dui fattori hè attivata per u vostru contu.",
-  "two-factor-required-title": "Cunfigurate l'autentificazione à dui fattori"
+  "two-factor-required-title": "Cunfigurate l'autentificazione à dui fattori",
+  "two-factor-required-text": "Stu situ richiede l'autentificazione à dui fattori per u vostru contu. Cunfiguratela per cuntinuà."
 }

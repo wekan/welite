@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "E komo i kāu helu hōʻoia 6-huahelu",
   "twoFactorCode-invalid": "Helu hōʻoia hewa. E ʻoluʻolu e hoʻāʻo hou.",
   "twoFactorAuth-enabled": "Ua hoʻāla ʻia ka hōʻoia ʻelua mea no kāu moʻokāki.",
-  "two-factor-required-title": "Hoʻonohonoho i ka hōʻoia ʻelua mea"
+  "two-factor-required-title": "Hoʻonohonoho i ka hōʻoia ʻelua mea",
+  "two-factor-required-text": "Koi kēia pūnaewele i ka hōʻoia ʻelua mea no kāu moʻokāki. E hoʻonohonoho iā ia e hoʻomau ai."
 }

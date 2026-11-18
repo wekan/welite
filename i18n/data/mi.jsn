@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Tāurutia tō waehere whakamotuhēhē 6-mati",
   "twoFactorCode-invalid": "Waehere whakamotuhēhē muhu. Tēnā whakamātauria anō.",
   "twoFactorAuth-enabled": "Kua whakahohea te whakamotuhēhēnga e rua ngā take mō tō pūkete.",
-  "two-factor-required-title": "Whakaritea te whakamotuhēhēnga e rua ngā take"
+  "two-factor-required-title": "Whakaritea te whakamotuhēhēnga e rua ngā take",
+  "two-factor-required-text": "E hiahia ana tēnei pae ki te whakamotuhēhēnga e rua ngā take mō tō pūkete. Whakaritea kia haere tonu ai."
 }

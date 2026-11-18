@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "ናትካ ናይ 6-ቁጽሪ ናይ ምርግጋጽ ኮድ ኣእቱ",
   "twoFactorCode-invalid": "ኮድ መረጋገጺ ቀለጥ ሀለ። ዐይብከ፡ ካልእ ዶል ፈትን።",
   "twoFactorAuth-enabled": "ን ሕሳብካ ክልተ-ረቛሒ ምርግጋጽ ተኸፊቱ ኣሎ።",
-  "two-factor-required-title": "ክልተ-ረቛሒ ምርግጋጽ ኣዳሉ"
+  "two-factor-required-title": "ክልተ-ረቛሒ ምርግጋጽ ኣዳሉ",
+  "two-factor-required-text": "ሌጠ ሳይት ለሕሳብካ ክልተ-ረቛሒ ምርግጋጽ ትሐትት። ትቀጽል ምን ገብእ ኣዳልዩ።"
 }

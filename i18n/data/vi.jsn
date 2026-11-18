@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Nhập mã xác thực 6 chữ số của bạn",
   "twoFactorCode-invalid": "Mã xác thực không hợp lệ. Vui lòng thử lại.",
   "twoFactorAuth-enabled": "Xác thực hai yếu tố đang được bật cho tài khoản của bạn.",
-  "two-factor-required-title": "Thiết lập xác thực hai yếu tố"
+  "two-factor-required-title": "Thiết lập xác thực hai yếu tố",
+  "two-factor-required-text": "Trang này yêu cầu xác thực hai yếu tố cho tài khoản của bạn. Hãy thiết lập để tiếp tục."
 }

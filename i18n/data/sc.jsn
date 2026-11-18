@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Intra su còdighe de autenticatzione de 6 tzifras tuo",
   "twoFactorCode-invalid": "Còdighe de autenticatzione non vàlidu. Torra a proare.",
   "twoFactorAuth-enabled": "S'autenticatzione a duos fatores est ativada pro su contu tuo.",
-  "two-factor-required-title": "Cunfigura s'autenticatzione a duos fatores"
+  "two-factor-required-title": "Cunfigura s'autenticatzione a duos fatores",
+  "two-factor-required-text": "Custu situ rechedet s'autenticatzione a duos fatores pro su contu tuo. Cunfigura·la pro sighire."
 }

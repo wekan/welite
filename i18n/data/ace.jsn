@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Tuléh kode otentikasi 6 angka droe neuh",
   "twoFactorCode-invalid": "Kode otentikasi hana sah. Neu-cuba lom.",
   "twoFactorAuth-enabled": "Otentikasi dua faktor ka hudép keu akun droe neuh.",
-  "two-factor-required-title": "Atô Otentikasi Dua Faktor"
+  "two-factor-required-title": "Atô Otentikasi Dua Faktor",
+  "two-factor-required-text": "Situs nyoe meuphôm otentikasi dua faktor keu akun droeneuh. Atô dilèe mangat jeut neulanjut."
 }

@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Enter your 6-digit authentication code",
   "twoFactorCode-invalid": "Invalid authentication code. Please try again.",
   "twoFactorAuth-enabled": "Two-factor authentication is enabled for your account.",
-  "two-factor-required-title": "Set up two-factor authentication"
+  "two-factor-required-title": "Set up two-factor authentication",
+  "two-factor-required-text": "This site requires two-factor authentication for your account. Set it up to continue."
 }

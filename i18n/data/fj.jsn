@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Vakacurumi na nomu kodi ni vakadinadinataki e 6 na tikini",
   "twoFactorCode-invalid": "Sega ni dodonu na kodi ni vakadinadinataki. Yalorerevaki o vakatovolea tale.",
   "twoFactorAuth-enabled": "Sa vakayagataki na vakadinadinataki e rua na iVakarau ni nomu akaunti.",
-  "two-factor-required-title": "Vakarautaka na vakadinadinataki e rua na iVakarau"
+  "two-factor-required-title": "Vakarautaka na vakadinadinataki e rua na iVakarau",
+  "two-factor-required-text": "Na site oqo e gadreva na vakadinadinataki e rua na iVakarau ena nomu akaunti. Vakarautaka mo tomana."
 }

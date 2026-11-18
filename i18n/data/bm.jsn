@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Aw ka nimɔrɔ 6 dannaya nimɔrɔ don",
   "twoFactorCode-invalid": "Dannaya nimɔrɔ man ɲi. Aw ka a ɲini kokura.",
   "twoFactorAuth-enabled": "Sɛbɛnni fila-dannaya bɛ baara la aw ka jateminɛ kan.",
-  "two-factor-required-title": "Sɛbɛnni Fila-Dannaya labɛn"
+  "two-factor-required-title": "Sɛbɛnni Fila-Dannaya labɛn",
+  "two-factor-required-text": "Siti nin bɛ Sɛbɛnni Fila-Dannaya ɲini i ka jatebɔsɛbɛn kama. A labɛn walasa ka taa a fɛ."
 }

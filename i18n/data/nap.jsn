@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Metti 'o codice 'e autenticazione 'e 6 cifre tuoio",
   "twoFactorCode-invalid": "Codice 'e autenticazione nun è valido. Prova n'ata vota.",
   "twoFactorAuth-enabled": "L'autenticazione a doje fasce è attivata pe' 'o cunto tuoio.",
-  "two-factor-required-title": "Mpustate ll'autenticazione a doje fasce"
+  "two-factor-required-title": "Mpustate ll'autenticazione a doje fasce",
+  "two-factor-required-text": "Stu sito vo' ll'autenticazione a doje fasce p''o cunto vuosto. Mpustatela pe ghì nnanze."
 }

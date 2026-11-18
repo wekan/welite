@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Scrîf il to codiç di autenticazion di 6 numars",
   "twoFactorCode-invalid": "Codiç di autenticazion no valit. Torne prove pardabon.",
   "twoFactorAuth-enabled": "L'autenticazion a doi fatôrs e je ativade pal to account.",
-  "two-factor-required-title": "Configure la autenticazion a doi fatôrs"
+  "two-factor-required-title": "Configure la autenticazion a doi fatôrs",
+  "two-factor-required-text": "Chest sît al domande la autenticazion a doi fatôrs pal to account. Configurile par continuâ."
 }

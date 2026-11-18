@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Hyɛ wo nokwaredi nɔma 6 no",
   "twoFactorCode-invalid": "Nokwaredi koodu no nteɛ. Yɛ sɔhwɛ bio.",
   "twoFactorAuth-enabled": "Wɔama nneɛma abien nokwaredi so wɔ wo akontabuo no ho.",
-  "two-factor-required-title": "Hyehyɛ nneɛma abien nokwaredi"
+  "two-factor-required-title": "Hyehyɛ nneɛma abien nokwaredi",
+  "two-factor-required-text": "Saa site yi hwehwɛ nneɛma abien nokwaredi ma wo akawnt. Hyehyɛ no na woakɔ so."
 }

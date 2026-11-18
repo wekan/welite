@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Xictlali motlapohual tlaixyeyecoliztli tlen chicuace tlapohualli",
   "twoFactorCode-invalid": "Tlapohualli tlaixyeyecoliztli ahmo melahuac. Xicyeyeco occepa.",
   "twoFactorAuth-enabled": "Ome tlaixyeyecoliztli oquichiuh para mocuenta.",
-  "two-factor-required-title": "Xicchihua ome tlaixyeyecoliztli"
+  "two-factor-required-title": "Xicchihua ome tlaixyeyecoliztli",
+  "two-factor-required-text": "Inin tlatlaliliztli quinequi ome tlaixyeyecoliztli ic mocuenta. Xicchihua ic tictocaz."
 }

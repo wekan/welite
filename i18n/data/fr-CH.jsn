@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Saisissez votre code d'authentification à 6 chiffres",
   "twoFactorCode-invalid": "Code d'authentification invalide. Veuillez réessayer.",
   "twoFactorAuth-enabled": "L'authentification à deux facteurs est activée pour votre compte.",
-  "two-factor-required-title": "Configurer l'authentification à deux facteurs"
+  "two-factor-required-title": "Configurer l'authentification à deux facteurs",
+  "two-factor-required-text": "Ce site exige l'authentification à deux facteurs pour votre compte. Configurez-la pour continuer."
 }

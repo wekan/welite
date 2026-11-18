@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Qampa 6 número cheqaqchay códigoykita churay",
   "twoFactorCode-invalid": "Cheqaqchay código mana allinchu. Watuq kutiy.",
   "twoFactorAuth-enabled": "Iskay kallpa cheqaqchay qampa cuentaykipaq kachkan.",
-  "two-factor-required-title": "Iskay kallpa cheqaqchayta allichay"
+  "two-factor-required-title": "Iskay kallpa cheqaqchayta allichay",
+  "two-factor-required-text": "Kay sitioqa cuentaykipaq iskay kallpa cheqaqchayta mañan. Allichay qatipanaykipaq."
 }

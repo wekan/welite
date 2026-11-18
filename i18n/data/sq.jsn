@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Vendosni kodin tuaj 6-shifror të vërtetimit",
   "twoFactorCode-invalid": "Kod vërtetimi i pavlefshëm. Provoni përsëri.",
   "twoFactorAuth-enabled": "Vërtetimi me dy faktorë është aktivizuar për llogarinë tuaj.",
-  "two-factor-required-title": "Konfiguroni vërtetimin me dy faktorë"
+  "two-factor-required-title": "Konfiguroni vërtetimin me dy faktorë",
+  "two-factor-required-text": "Ky sajt kërkon vërtetim me dy faktorë për llogarinë tuaj. Konfigurojeni për të vazhduar."
 }

@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Penolös kodi fümükama olik numatas 6",
   "twoFactorCode-invalid": "Kod fümükama no lonöfon. Begö! steifülolös dönu.",
   "twoFactorAuth-enabled": "Fümükam me düfs tel pejäfükon pro kal olik.",
-  "two-factor-required-title": "Leodükolös fümükami me düfs tel"
+  "two-factor-required-title": "Leodükolös fümükami me düfs tel",
+  "two-factor-required-text": "Topäd at flagon fümükami me düfs tel pro kal olik. Leodükolös oni ad fovön."
 }

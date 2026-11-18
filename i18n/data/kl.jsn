@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Uppernarsaanermut kodeq 6-inik allattarigit",
   "twoFactorCode-invalid": "Uppernarsaanermut kodeq eqqunngilaq. Uteqqiullugu misilikkit.",
   "twoFactorAuth-enabled": "Uppernarsaaneq marlunnik atorlugu atugarilerpat konteqarfimmi.",
-  "two-factor-required-title": "Uppernarsaaneq marlunnik atorlugu aaqqissoruk"
+  "two-factor-required-title": "Uppernarsaaneq marlunnik atorlugu aaqqissoruk",
+  "two-factor-required-text": "Quppernerup matuma kontunnut uppernarsaaneq marlunnik atorlugu piumasarivaa. Ingerlaqqinniarlutit aaqqissoruk."
 }

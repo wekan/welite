@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Indtast din 6-cifrede godkendelseskode",
   "twoFactorCode-invalid": "Ugyldig godkendelseskode. Prøv igen.",
   "twoFactorAuth-enabled": "Totrinsbekræftelse er aktiveret for din konto.",
-  "two-factor-required-title": "Opsæt totrinsbekræftelse"
+  "two-factor-required-title": "Opsæt totrinsbekræftelse",
+  "two-factor-required-text": "Dette websted kræver totrinsbekræftelse for din konto. Opsæt den for at fortsætte."
 }

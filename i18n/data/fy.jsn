@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Fier jo 6-sifferige ferifikaasjekoade yn",
   "twoFactorCode-invalid": "Unjildige ferifikaasjekoade. Besykje it nochris.",
   "twoFactorAuth-enabled": "Tweestapsferifikaasje is ynskeakele foar jo akkount.",
-  "two-factor-required-title": "Tweestapsferifikaasje ynstelle"
+  "two-factor-required-title": "Tweestapsferifikaasje ynstelle",
+  "two-factor-required-text": "Dizze side fereasket tweestapsferifikaasje foar jo akkount. Stel it yn om troch te gean."
 }

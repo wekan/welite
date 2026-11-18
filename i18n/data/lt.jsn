@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Įveskite savo 6 skaitmenų autentifikavimo kodą",
   "twoFactorCode-invalid": "Neteisingas autentifikavimo kodas. Bandykite dar kartą.",
   "twoFactorAuth-enabled": "Jūsų paskyrai įjungtas dviejų faktorių autentifikavimas.",
-  "two-factor-required-title": "Nustatykite dviejų faktorių autentifikavimą"
+  "two-factor-required-title": "Nustatykite dviejų faktorių autentifikavimą",
+  "two-factor-required-text": "Ši svetainė reikalauja jūsų paskyrai dviejų faktorių autentifikavimo. Nustatykite jį, kad galėtumėte tęsti."
 }

@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "6 xonali autentifikatsiya kodingizni kiriting",
   "twoFactorCode-invalid": "Autentifikatsiya kodi noto'g'ri. Qaytadan urinib ko'ring.",
   "twoFactorAuth-enabled": "Hisobingiz uchun ikki bosqichli autentifikatsiya yoqilgan.",
-  "two-factor-required-title": "Ikki bosqichli autentifikatsiyani sozlang"
+  "two-factor-required-title": "Ikki bosqichli autentifikatsiyani sozlang",
+  "two-factor-required-text": "Bu sayt hisobingiz uchun ikki bosqichli autentifikatsiyani talab qiladi. Davom etish uchun uni sozlang."
 }

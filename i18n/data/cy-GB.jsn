@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Nodwch eich cod dilysu 6 digid",
   "twoFactorCode-invalid": "Cod dilysu annilys. Rhowch gynnig arall arni.",
   "twoFactorAuth-enabled": "Mae dilysiant dau ffactor wedi'i alluogi ar gyfer eich cyfrif.",
-  "two-factor-required-title": "Gosod dilysiant dau ffactor"
+  "two-factor-required-title": "Gosod dilysiant dau ffactor",
+  "two-factor-required-text": "Mae'r wefan hon yn gofyn am ddilysiant dau ffactor ar gyfer eich cyfrif. Gosodwch ef i barhau."
 }

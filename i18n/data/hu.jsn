@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Adja meg a 6 jegyű hitelesítési kódját",
   "twoFactorCode-invalid": "Érvénytelen hitelesítési kód. Próbálja újra.",
   "twoFactorAuth-enabled": "A kétfaktoros hitelesítés engedélyezve van a fiókjához.",
-  "two-factor-required-title": "Kétfaktoros hitelesítés beállítása"
+  "two-factor-required-title": "Kétfaktoros hitelesítés beállítása",
+  "two-factor-required-text": "Ez a webhely kétfaktoros hitelesítést követel meg a fiókjához. A folytatáshoz állítsa be."
 }

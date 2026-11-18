@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Introduc codicem auctenticationis sex numerorum",
   "twoFactorCode-invalid": "Codex auctenticationis non validus. Iterum tempta.",
   "twoFactorAuth-enabled": "Auctenticatio duorum factorum pro tuo censu activa est.",
-  "two-factor-required-title": "Auctenticationem duorum factorum constitue"
+  "two-factor-required-title": "Auctenticationem duorum factorum constitue",
+  "two-factor-required-text": "Hic situs auctenticationem duorum factorum pro tua ratione requirit. Eam constitue ut pergas."
 }

@@ -2104,5 +2104,6 @@
   "twoFactorCode-prompt": "Introduza o seu código de autenticación de 6 díxitos",
   "twoFactorCode-invalid": "Código de autenticación non válido. Ténteo de novo.",
   "twoFactorAuth-enabled": "A autenticación de dous factores está activada para a súa conta.",
-  "two-factor-required-title": "Configurar a autenticación de dous factores"
+  "two-factor-required-title": "Configurar a autenticación de dous factores",
+  "two-factor-required-text": "Este sitio require autenticación de dous factores para a súa conta. Configúrea para continuar."
 }

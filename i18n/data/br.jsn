@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Enankit ho kod gwiriañ 6 sifr",
   "twoFactorCode-invalid": "C'hod gwiriañ direizh. Klaskit en-dro mar plij.",
   "twoFactorAuth-enabled": "Gweredekaet eo ar wiriekadur daou-fakton evit ho kont.",
-  "two-factor-required-title": "Kefluniañ ar wiriekadur daou-fakter"
+  "two-factor-required-title": "Kefluniañ ar wiriekadur daou-fakter",
+  "two-factor-required-text": "Al lec'hienn-mañ a c'houlenn ar wiriekadur daou-fakter evit ho kont. Kefluniit anezhañ evit kenderc'hel."
 }

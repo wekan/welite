@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Tsɔ wò mɔɖeɖe si nye nɔmba 6 de eme",
   "twoFactorCode-invalid": "Mɔɖeɖe si mesɔ o. Taflatse gadze agbagba.",
   "twoFactorAuth-enabled": "Kpeɖodzi eveliawo le dɔ wɔm na wò akɔnt.",
-  "two-factor-required-title": "Ɖo Kpeɖodzi Eveliawo"
+  "two-factor-required-title": "Ɖo Kpeɖodzi Eveliawo",
+  "two-factor-required-text": "Nyatakakaɖoƒe sia bia Kpeɖodzi Eveliawo na wò akɔnt. Ɖoe be nàyi edzi."
 }

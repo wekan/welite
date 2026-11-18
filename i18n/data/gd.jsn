@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Cuir a-steach do chòd dearbhaidh 6-àireamh",
   "twoFactorCode-invalid": "Còd dearbhaidh mì-dhligheach. Feuch ris a-rithist.",
   "twoFactorAuth-enabled": "Tha dearbhadh dà-cheum an comas airson a' chunntais agad.",
-  "two-factor-required-title": "Suidhich dearbhadh dà-cheum"
+  "two-factor-required-title": "Suidhich dearbhadh dà-cheum",
+  "two-factor-required-text": "Tha an làrach seo ag iarraidh dearbhadh dà-cheum airson a' chunntais agad. Suidhich e gus leantainn air adhart."
 }

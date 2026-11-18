@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Hū hoʻo koodi fakamoʻoni 6-fika",
   "twoFactorCode-invalid": "ʻOku hala ʻa e koodi fakamoʻoní. Kātaki ʻo toe feinga.",
   "twoFactorAuth-enabled": "Kuo faʻa ngāue ʻa e fakamoʻoni ua-vahe ki hoʻo ʻakauni.",
-  "two-factor-required-title": "Fokotuʻu ʻa e fakamoʻoni ua-vahe"
+  "two-factor-required-title": "Fokotuʻu ʻa e fakamoʻoni ua-vahe",
+  "two-factor-required-text": "ʻOku fiemaʻu ʻe he uepisaiti ni ʻa e fakamoʻoni ua-vahe ki hoʻo ʻakauni. Fokotuʻu ia ke hoko atu."
 }

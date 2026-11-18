@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "6 haneli kimlik doğrulama kodunuzu girin",
   "twoFactorCode-invalid": "Geçersiz kimlik doğrulama kodu. Lütfen tekrar deneyin.",
   "twoFactorAuth-enabled": "Hesabınız için iki faktörlü kimlik doğrulama etkin.",
-  "two-factor-required-title": "İki faktörlü kimlik doğrulamayı ayarlayın"
+  "two-factor-required-title": "İki faktörlü kimlik doğrulamayı ayarlayın",
+  "two-factor-required-text": "Bu site hesabınız için iki faktörlü kimlik doğrulama gerektiriyor. Devam etmek için ayarlayın."
 }

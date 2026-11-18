@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Injiza kode yawe yo kwemeza y'imibare 6",
   "twoFactorCode-invalid": "Kode yo kwemeza sivyo. Ongera ugerageze.",
   "twoFactorAuth-enabled": "Kwemeza ibintu bibiri birakoreshwa kuri konte yawe.",
-  "two-factor-required-title": "Tunganya kwemeza ibintu bibiri"
+  "two-factor-required-title": "Tunganya kwemeza ibintu bibiri",
+  "two-factor-required-text": "Uru rubuga rusaba kwemeza ibintu bibiri kuri konte yawe. Bitunganye kugira ubandanye."
 }

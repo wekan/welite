@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Faka ikhowudi yakho yoqinisekiso yamanani ali-6",
   "twoFactorCode-invalid": "Ikhowudi yoqinisekiso ayisebenzi. Nceda uphinde uzame.",
   "twoFactorAuth-enabled": "Uqinisekiso lweemvo ezimbini luvuliwe kwi-akhawunti yakho.",
-  "two-factor-required-title": "Seta uqinisekiso lweemvo ezimbini"
+  "two-factor-required-title": "Seta uqinisekiso lweemvo ezimbini",
+  "two-factor-required-text": "Le sayithi ifuna uqinisekiso lweemvo ezimbini kwi-akhawunti yakho. Lisete ukuze uqhubeke."
 }

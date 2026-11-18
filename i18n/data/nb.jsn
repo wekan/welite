@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Oppgi din 6-sifrede autentiseringskode",
   "twoFactorCode-invalid": "Ugyldig autentiseringskode. Prøv igjen.",
   "twoFactorAuth-enabled": "Tofaktorautentisering er aktivert for kontoen din.",
-  "two-factor-required-title": "Sett opp tofaktorautentisering"
+  "two-factor-required-title": "Sett opp tofaktorautentisering",
+  "two-factor-required-text": "Dette nettstedet krever tofaktorautentisering for kontoen din. Sett det opp for å fortsette."
 }

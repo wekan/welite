@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Introdusí bo kódigo di autentikashon di 6 dígito",
   "twoFactorCode-invalid": "Kódigo di autentikashon inválido. Purba di nobo.",
   "twoFactorAuth-enabled": "Autentikashon di dos factor ta activá pa bo kuenta.",
-  "two-factor-required-title": "Konfigurá autentikashon di dos factor"
+  "two-factor-required-title": "Konfigurá autentikashon di dos factor",
+  "two-factor-required-text": "E sitio aki ta eksigí autentikashon di dos factor pa bo kuenta. Konfigur'é pa sigui."
 }

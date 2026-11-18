@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Sláðu inn 6 stafa auðkenningarkóðann þinn",
   "twoFactorCode-invalid": "Ógildur auðkenningarkóði. Reyndu aftur.",
   "twoFactorAuth-enabled": "Tvíþætt auðkenning er virkjuð fyrir reikninginn þinn.",
-  "two-factor-required-title": "Settu upp tvíþætta auðkenningu"
+  "two-factor-required-title": "Settu upp tvíþætta auðkenningu",
+  "two-factor-required-text": "Þessi vefur krefst tvíþættrar auðkenningar fyrir aðganginn þinn. Settu hana upp til að halda áfram."
 }

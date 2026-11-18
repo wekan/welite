@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "پنهنجو 6-عدد وارو تصديقي ڪوڊ داخل ڪريو",
   "twoFactorCode-invalid": "غلط تصديقي ڪوڊ. مهرباني ڪري ٻيهر ڪوشش ڪريو.",
   "twoFactorAuth-enabled": "توهان جي اڪائونٽ لاءِ ٻه-عنصر تصديق فعال آهي.",
-  "two-factor-required-title": "ٻه-عنصر تصديق سيٽ اپ ڪريو"
+  "two-factor-required-title": "ٻه-عنصر تصديق سيٽ اپ ڪريو",
+  "two-factor-required-text": "هيءَ سائيٽ توهان جي اڪائونٽ لاءِ ٻه-عنصر تصديق گهري ٿي. جاري رکڻ لاءِ ان کي سيٽ اپ ڪريو."
 }

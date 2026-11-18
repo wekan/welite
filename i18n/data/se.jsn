@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Čále iežat 6-siffáraš dárkkistankoda",
   "twoFactorCode-invalid": "Dárkkistankoda ii leat rivttes. Geahččal fas.",
   "twoFactorAuth-enabled": "Guovtti-fáktora dárkkisteapmi lea aktiivvalaš du kontos.",
-  "two-factor-required-title": "Ásat guovtti-fáktora dárkkisteami"
+  "two-factor-required-title": "Ásat guovtti-fáktora dárkkisteami",
+  "two-factor-required-text": "Dát neahttabáiki gáibida guovtti-fáktora dárkkisteami du kontui. Ásat dan joatkin dihtii."
 }

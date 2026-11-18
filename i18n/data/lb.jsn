@@ -2105,5 +2105,6 @@
   "twoFactorCode-prompt": "Gëff däin 6-stellege Authentifikatiounscode an",
   "twoFactorCode-invalid": "Ongülege Authentifikatiounscode. Probéier w.e.g. nach eng Kéier.",
   "twoFactorAuth-enabled": "D'Zwee-Faktor-Authentifikatioun ass fir däi Konto aktivéiert.",
-  "two-factor-required-title": "Zwee-Faktor-Authentifikatioun aliichten"
+  "two-factor-required-title": "Zwee-Faktor-Authentifikatioun aliichten",
+  "two-factor-required-text": "Dëse Site verlaangt Zwee-Faktor-Authentifikatioun fir Äre Kont. Riicht se an, fir weiderzemaachen."
 }
