@@ -50,7 +50,7 @@ function otp(secret,counter) {
     assert.equal(await page.locator('a[href="/two-factor/setup?lang=fi"]').count(), 1);
     await page.goto(base+'/sign-in');
     const flowLanguage=await page.locator('select[name=lang]').inputValue();
-    await page.getByRole('link',{name:'Set up one-time codes'}).click();
+    await page.getByRole('link',{name:'Set up two-factor authentication'}).click();
     await page.locator('input[name=username]').fill('browser-enroll');
     await page.locator('input[name=password]').fill('test-password');
     await page.getByRole('button',{name:/^(Start setup|Start)$/}).click();

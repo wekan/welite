@@ -193,7 +193,8 @@ begin
       '  '+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"><br>'+LineEnding+
       '  '+HtmlEncode(Words.Text('otp','One-time code (if enabled)'))+' <input name="code" size="6" maxlength="6"><br>'+LineEnding+
       '  <input type="submit" value="'+HtmlAttr(Title)+'">'+LineEnding+'</form>'+LineEnding+
-      '<p><a href="/two-factor/setup?lang='+HtmlAttr(Tag)+'">Set up one-time codes</a> | <a href="/register?lang='+HtmlAttr(Tag)+'">'+
+      '<p><a href="/two-factor/setup?lang='+HtmlAttr(Tag)+'">'+HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+
+      '</a> | <a href="/register?lang='+HtmlAttr(Tag)+'">'+
       HtmlEncode(Words.Text('create-account','Create an account (Register)'))+'</a></p>',Dir,Tag);
   finally Words.Free;end;
 end;

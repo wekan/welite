@@ -8,6 +8,9 @@ def check_auth_language(request,database,otp):
     words=json.loads((Path(__file__).resolve().parents[1]/'i18n/data/ar.jsn').read_text())
     def translated(key):return html.escape(words[key],quote=True).replace('&#x27;',"'").encode()
     language='ar';user='language-user';password='language-test-password'
+    status,headers,body=request('GET','/sign-in?lang='+language)
+    assert status==200 and headers['Content-Language']==language and 'Set-Cookie' not in headers
+    assert b'href="/two-factor/setup?lang=ar">'+translated('two-factor-required-title')+b'</a>' in body
     status,headers,body=request('GET','/register?lang='+language)
     assert status==200 and headers['Content-Language']==language and b'dir="rtl"' in body
     assert b'action="/register?lang=ar"' in body and b'href="/sign-in?lang=ar"' in body
