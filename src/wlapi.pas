@@ -829,7 +829,7 @@ begin
 end;
 
 procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,BoardId,FieldId,DefinitionRows,ValuesRows,Bindings,Permission,Sql:string;
+var T:TWLTenant;UserId,BoardId,FieldId,DefinitionRows,ValuesRows,ActivityRows,ActivitySource,Bindings,Permission,Sql:string;
   Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;Reply:TJSONObject;i:Integer;
   function Q(const Value:string):string;
   begin Result:=QuotedStr(Value);end;
@@ -862,11 +862,26 @@ begin
       ValuesRows:=' FROM card_custom_field_values WHERE customFieldId='+Q(FieldId)+
         ' AND EXISTS(SELECT 1 FROM cards WHERE id=card_custom_field_values.cardId AND boardId='+Q(BoardId)+
         ' AND '+Scope.StringField('cards','boardId')+') AND '+Scope.StringField('card_custom_field_values','customFieldId');
+      ActivityRows:=' FROM activities WHERE boardId='+Q(BoardId)+' AND '+
+        'json_type(data_json,''$.customFieldId'')=''text'' AND json_extract(data_json,''$.customFieldId'')='+Q(FieldId)+
+        ' AND '+Scope.StringField('activities','boardId');
+      Rows:=T.Db.Query('SELECT type FROM sqlite_master WHERE name=''activities'';');
+      if Length(Rows)<>1 then raise Exception.Create('Missing activity source');
+      if Rows[0][0]='view' then
+      begin
+        Rows:=T.Db.Query('SELECT table_name FROM _wl_models WHERE name=''activities'';');
+        if Length(Rows)<>1 then raise Exception.Create('Ambiguous activity source');
+        ActivitySource:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+        ActivityRows:=ActivityRows+' AND EXISTS(SELECT 1 FROM '+ActivitySource+' a WHERE '+
+          'json_extract(a._ferretdb_sjson,''$._id'')=activities.id AND '+
+          'json_extract(a._ferretdb_sjson,''$.$s.p.customFieldId.t'')=''string'')';
+      end
+      else if Rows[0][0]<>'table' then raise Exception.Create('Invalid activity source');
       Bindings:='';for i:=0 to Scope.Bindings.Count-1 do Bindings:=Bindings+Scope.Bindings[i];
       Sql:='BEGIN IMMEDIATE; '+Bindings+Guard(Permission)+
-        'DELETE'+ValuesRows+'; '+Bindings+Guard(Permission+' AND NOT EXISTS(SELECT 1'+ValuesRows+')')+
+        'DELETE'+ValuesRows+'; DELETE'+ActivityRows+'; '+Bindings+Guard(Permission+' AND NOT EXISTS(SELECT 1'+ValuesRows+')')+
         'DELETE'+DefinitionRows+'; '+Bindings+Guard('NOT EXISTS(SELECT 1'+DefinitionRows+
-        ') AND NOT EXISTS(SELECT 1'+ValuesRows+') AND '+Policy.DefinitionExpression('',False))+'COMMIT;';
+        ') AND NOT EXISTS(SELECT 1'+ValuesRows+') AND NOT EXISTS(SELECT 1'+ActivityRows+') AND '+Policy.DefinitionExpression('',False))+'COMMIT;';
       if not T.Db.Exec(Sql) then
       begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete custom field');Exit;end;
       Reply:=TJSONObject.Create(['_id',FieldId]);

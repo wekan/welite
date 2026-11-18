@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Remove scoped activity when deleting a custom field
+
+- Delete activity records for the field on the authorized board in the same
+  transaction as the definition and card values. Preserve sibling activity and
+  roll back all three on a failed definition write.
+
 ## 2026-11-18 Backfill always-on custom fields on existing cards
 
 - Enabling always-on for a single-board definition fills missing values with

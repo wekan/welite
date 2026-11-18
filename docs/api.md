@@ -151,7 +151,7 @@ copyboard → createlabel → addchecklist/checklistid, with rows persisting to 
 SQLite DB.
 
 Definition PUT and DELETE support definitions owned by a single board. Deleting a
-definition removes its card values on that board. Deleting a dropdown option keeps
+definition removes its card values and related activity on that board. Deleting a dropdown option keeps
 existing card selections. New API cards initialize automatic and always-on
 fields as null. Enabling always-on backfills missing values on existing cards.
 Multi-board definition mutations are tracked in [TODO.md](../TODO.md).

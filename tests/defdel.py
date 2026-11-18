@@ -38,7 +38,7 @@ def exercise(call, board, snapshot, assign, verify, fail, clear):
     verify(identity, sibling)
     assert call('GET', route, None)[0] == 404
     missing(route)
-    print('PASS: definition DELETE removes scoped card values, retains siblings and rolls back on a definition write failure')
+    print('PASS: definition DELETE removes scoped values and activities, retains siblings and rolls back on a definition write failure')
 
 
 def native(call, db, board, snapshot):
@@ -53,6 +53,8 @@ def native(call, db, board, snapshot):
     def verify(identity, sibling):
         with connect(db) as con:
             assert con.execute('SELECT id FROM custom_fields WHERE id IN (?,?)', (identity, sibling)).fetchall() == [(sibling,)]
+            assert con.execute("SELECT json_extract(data_json,'$.customFieldId') FROM activities WHERE "
+                               "json_extract(data_json,'$.customFieldId') IN (?,?)", (identity, sibling)).fetchall() == [(sibling,)]
             assert con.execute('SELECT customFieldId,value FROM card_custom_field_values WHERE cardId=? AND customFieldId IN (?,?)',
                                (card, identity, sibling)).fetchall() == [(sibling, 'Keep')]
 
@@ -76,6 +78,9 @@ def shared(call, client, db, board, snapshot):
     def verify(identity, sibling):
         assert client.find('customFields', identity) == []
         assert len(client.find('customFields', sibling)) == 1
+        activities = client.command({'find':'activities','filter':{
+            'customFieldId':{'$in':[identity, sibling]}}})['cursor']['firstBatch']
+        assert [entry['customFieldId'] for entry in activities] == [sibling], activities
         assert encode(client.find('cards', card_id)[0]) == expected
 
     with connect(db) as con:
