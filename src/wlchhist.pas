@@ -24,6 +24,10 @@ const GateCollections:array[0..1] of string=('historyWriterGates','historyChainH
   'id TEXT PRIMARY KEY,boardId TEXT NOT NULL,userId TEXT NOT NULL,integrityHash TEXT NOT NULL,'+
   'document TEXT NOT NULL CHECK(json_valid(document))); '+
   'CREATE INDEX IF NOT EXISTS _wl_change_board ON _wl_change_history(boardId);';
+  VersionOne='json_type(_ferretdb_sjson,''$.version'') IN (''integer'',''real'')'+
+    ' AND json_extract(_ferretdb_sjson,''$.version'')=1';
+  MigrationId='json_extract(_ferretdb_sjson,''$.migrationId'')';
+  HeadHash='json_extract(_ferretdb_sjson,''$.hash'')';
 var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   BoardSql,UserSql,Lookup,LookupSource,Previous,Stamp,Id,ChangeType,DateKey,Hash,Doc,Sql,
     TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql,HeadTable,HeadScope,HeadWrite,HeadValue,GateScope:string;
@@ -50,7 +54,11 @@ begin
       GateTable:=Ident(Rows[0][0]);
       GateScope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-writer-gate',BoardId))+
         ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
-        ' AND json_extract(_ferretdb_sjson,''$.version'')=1 AND json_extract(_ferretdb_sjson,''$.mode'')=''coordinated'''+
+        ' AND '+VersionOne+' AND json_extract(_ferretdb_sjson,''$.mode'')=''coordinated'''+
+        ' AND json_type(_ferretdb_sjson,''$.migrationId'')=''text'''+
+        ' AND '+MigrationId+' GLOB '+QuotedStr(StringReplace('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+          'x','[0-9a-f]',[rfReplaceAll]))+
+        ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7'+
         ' AND json_type(_ferretdb_sjson,''$.writers'')=''array'' AND json_array_length(_ferretdb_sjson,''$.writers'')=0';
       Coordinated:=Length(Db.Query('SELECT 1 FROM '+GateTable+' WHERE '+GateScope+';'))=1;
     end;
@@ -64,9 +72,11 @@ begin
         QuotedStr(HeadTable)+')';
       HeadScope:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(HistoryBoardKey('history-chain',BoardId))+
         ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+BoardSql+
-        ' AND json_extract(_ferretdb_sjson,''$.version'')=1'+
+        ' AND '+VersionOne+
         ' AND json_type(_ferretdb_sjson,''$.pending'')=''null'' AND json_type(_ferretdb_sjson,''$.pendingHash'')=''null'''+
-        ' AND json_type(_ferretdb_sjson,''$.hash'') IN (''null'',''text'')'+
+        ' AND (json_type(_ferretdb_sjson,''$.hash'')=''null'' OR '+
+        '(json_type(_ferretdb_sjson,''$.hash'')=''text'' AND length('+HeadHash+')=64'+
+        ' AND '+HeadHash+' NOT GLOB ''*[^0-9a-f]*''))'+
         ' AND (SELECT count(*) FROM json_each(_ferretdb_sjson))=7';
       Lookup:='SELECT CASE WHEN (SELECT count(*) FROM '+Ident(HeadTable)+' WHERE '+HeadScope+
         ')=1 THEN (SELECT coalesce(json_extract(_ferretdb_sjson,''$.hash''),'''') FROM '+Ident(HeadTable)+

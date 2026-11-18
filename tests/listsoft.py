@@ -144,8 +144,23 @@ def run(request, client, db, token, refresh_ferret, session):
         assert request('DELETE',path,token=token)[0]==200
         assert changes()==before
         assert encode(client.find('historyChainHeads',head_id)[0])==encode(reserved)
+        invalid_hash='g'*64
+        result=client.command({'update':'historyChainHeads','updates':[
+            dict(q={'_id':head_id},u={'$set':dict(hash=invalid_hash,pending=None,pendingHash=None)})]})
+        assert result['n']==1, result
+        assert request('POST','/board/restore-list',urlencode(restore_fields()))[0]==302
+        assert changes()==before and client.find('historyChainHeads',head_id)[0]['hash']==invalid_hash
+        result=client.command({'update':'historyChainHeads','updates':[
+            dict(q={'_id':head_id},u={'$set':dict(hash=head['hash'])})]})
+        assert result['n']==1, result
+        result=client.command({'update':'historyWriterGates','updates':[
+            dict(q={'_id':gate_id},u={'$set':dict(migrationId='invalid')})]})
+        assert result['n']==1, result
+        assert request('DELETE',path,token=token)[0]==200
+        assert changes()==before and client.find('historyChainHeads',head_id)[0]['hash']==head['hash']
     finally:
         for collection,key in [('historyWriterGates',gate_id),('historyChainHeads',head_id)]:
             assert client.command({'delete':collection,'deletes':[dict(q={'_id':key},limit=1)]})['n']==1
     print('PASS: shared coordinated lifecycle append advances an idle head with the typed history row')
     print('PASS: shared coordinated list deletion leaves an occupied reservation intact')
+    print('PASS: malformed coordinated history gate and head cannot advance the chain')

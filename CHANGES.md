@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Validate coordinated history gates and idle heads
+
+- Check the gate shape and migration UUID and require a numeric version and
+  a valid predecessor hash before appending. Live FerretDB coverage checks
+  that malformed gate and head data leave the chain unchanged.
+
 ## 2026-11-18 Reuse the shared HTTP browser session
 
 - Use the same cookie-free browser session for list restore and the profile
