@@ -56,3 +56,10 @@ for key in ('act-restoredCard','activity-checklist-completed','loading','archive
     assert re.search(r'[؀-ۿ]',arabic[key]) and not re.search('[پچژگ]',arabic[key])
     assert sorted(placeholder.findall(arabic[key]))==sorted(placeholder.findall(english[key]))
 print('PASS: corrected Arabic phrases retain English placeholder tokens')
+
+
+persian=json.loads((root/'i18n/data/fa.jsn').read_text())
+for key in ('act-moveCardToOtherBoard','email-enrollAccount-subject','email-invite-text','activity-delete-attach'):
+    assert arabic[key]!=persian[key]
+    assert sorted(placeholder.findall(arabic[key]))==sorted(placeholder.findall(english[key]))
+print('PASS: Arabic activity and invitation phrases differ from the Persian catalog and preserve tokens')

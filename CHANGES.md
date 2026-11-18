@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Correct another 80 Persian phrases in the Arabic catalog
+
+- Match Persian vocabulary and the Persian catalog to find wrong-language
+  entries that use shared letters. Use current WeKan Arabic translations
+  and verify their placeholder inventories.
+
 ## 2026-11-18 Correct Persian entries in the Arabic catalog
 
 - Replace 117 wrong-language entries with current WeKan Arabic translations.
