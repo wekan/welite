@@ -375,6 +375,21 @@ Arabic catalog and both private SQL scripts. These checks cover build
 output. Resource loading, a target SQLite CLI, server startup and HTTP
 remain to be verified on AmigaOS 4.
 
+## MorphOS PowerPC builds on ARM64 Linux
+
+Reuse the PowerPC vasm and vlink 0.18a tools under the
+`powerpc-morphos-` prefix. Build and install the FPC compiler and packages
+with `CPU_TARGET=powerpc`, `OS_TARGET=morphos` and
+`CROSSOPT='-n -O2 -XV -Avasm'`. Use the host resource compiler as
+`powerpc-morphos-fpcres`. Build each variant with the target units and
+`-n -Tmorphos -O2 -XV -Avasm -dWLDB_CLI -Xs`. For the embedded variant,
+generate `wlpublic.res` and add `-dWLEMBED` as for AmigaOS 4.
+
+The two builds link through vlink's `elf32amiga` target to big-endian
+32-bit PowerPC ELF files of type `ET_REL`. The embedded build exports the
+MorphOS `__abox__` symbol and contains exact public, Arabic locale and
+private SQL bytes. Target loading, SQLite and HTTP remain to be verified.
+
 ## SQLite: why cross builds use `-dWLDB_CLI`
 
 `welite`'s default build links `libsqlite3` (`uses sqlite3`). That can't be **cross-linked** — the
@@ -412,7 +427,7 @@ A `-dWLDB_CLI` binary needs the `sqlite3` command-line tool present at runtime o
 | Haiku          | x86_64-haiku    | needs x-bins | no aarch64-host crossbins |
 | Amiga m68k     | m68k-amiga      | builds | CLI SQLite builds link from ARM64 Linux, runtime pending |
 | AmigaOS 4.1 PPC| powerpc-amiga   | **links** | disk/embedded CLI ELF, runtime unverified |
-| MorphOS        | powerpc-morphos | needs x-bins | no aarch64-host crossbins |
+| MorphOS        | powerpc-morphos | **links** | disk/embedded CLI ELF, runtime unverified |
 | AROS x86/amd64/arm64/m68k/ppc | *-aros | needs x-bins | no aarch64-host crossbins |
 
 `build all` on this host therefore produces 4 binaries — `wlinx64.exe`, `wlina64.exe`,

@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Cross-link the MorphOS PowerPC server
+
+- Build disk and embedded CLI variants on ARM64 Linux. Verify the ELF
+  architecture and exact public, locale and private SQL bytes in the
+  embedded output. Reverify all Windows x86 and AMD64 build variants.
+
 ## 2026-11-18 Localize Designer import and export controls
 
 - Translate the Designer import and export actions. Identify the JSON and
