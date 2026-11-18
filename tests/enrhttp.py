@@ -74,6 +74,13 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 start()
                 assert b'/two-factor/setup' in request('GET','/sign-in')[2]
                 response=request('GET','/two-factor/setup');assert b'otp-secret' not in response[2] and response[1].get('Cache-Control')=='no-store'
+                for lang, direction in [('fi', 'ltr'), ('ar', 'rtl')]:
+                    catalog = json.loads((root/'i18n'/'data'/f'{lang}.jsn').read_text())
+                    expected = catalog['enrollment-password-instructions']
+                    status, headers, body = request('GET', '/two-factor/setup?lang='+lang)
+                    assert status == 200 and headers.get('Cache-Control') == 'no-store'
+                    assert expected.encode() in body and f'lang="{lang}"'.encode() in body
+                    assert (b'dir="rtl"' in body) == (direction == 'rtl')
                 register('required');before=services('required')
                 assert request('POST','/users/login',dict(username='required',password='test-password'))[0]==401
                 assert setup('required',password='wrong') is None

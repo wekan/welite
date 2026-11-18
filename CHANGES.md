@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize the two-factor setup password instructions
+
+- Render the password setup instructions from the language catalog. Verify Finnish
+  and Arabic on both SQLite backends over HTTP and in Chromium with JavaScript
+  disabled and Cookie request headers removed. Other locales use the English fallback.
+
 ## 2026-11-18 Diagnose a missing Amiga TCP/IP stack
 
 - Stop HTTP startup before socket calls when bsdsocket.library is unavailable.

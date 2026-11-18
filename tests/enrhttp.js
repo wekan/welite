@@ -20,6 +20,11 @@ function otp(secret,counter) {
       await route.continue({headers});
     });
     const page=await context.newPage(); const base=process.argv[2];
+    await page.goto(base+'/two-factor/setup?lang=fi');
+    assert.match(await page.locator('body').innerText(),/Aloita vahvistamalla salasanasi/);
+    await page.goto(base+'/two-factor/setup?lang=ar');
+    assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
+    assert.match(await page.locator('body').innerText(),/كلمة مرورك للبدء/);
     await page.goto(base+'/sign-in');
     const languages=page.locator('select[name=lang]');
     if (await languages.locator('option[value=fi]').count()) {

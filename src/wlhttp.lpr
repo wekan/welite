@@ -312,7 +312,7 @@ begin
     Exit;
   end;
   SendHtml(Response,AuthPage(Request,Response,Title,'<h1>'+HtmlEncode(Title)+'</h1>'+
-    '<p>Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.</p>'+
+    '<p>'+HtmlEncode(Words.Text('enrollment-password-instructions','Confirm your password to start. This does not sign you in. An existing active factor cannot be replaced here.'))+'</p>'+
     '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/setup'))+'"><label for="enrol-username">'+HtmlEncode(Words.Text('username','Username'))+'</label> <input id="enrol-username" name="username"><br>'+
     '<label for="enrol-password">'+HtmlEncode(Words.Text('password','Password'))+'</label> <input id="enrol-password" type="password" name="password"><br><input type="submit" value="'+HtmlAttr(Words.Text('start','Start setup'))+'"></form>'+
     '<p><a href="'+HtmlAttr(LanguageUrl(Request,'/sign-in'))+'">'+HtmlEncode(Words.Text('log-in','Sign in'))+'</a></p>'));
