@@ -7,6 +7,8 @@ begin
   try
     if ParamStr(2)='delete' then
     begin if EnsureDeleteMarkers(Db) then Writeln('yes') else Writeln('no');end
+    else if ParamStr(2)='collapse' then
+    begin if EnsureListCollapseColumn(Db) then Writeln('yes') else Writeln('no');end
     else if ParamStr(2)='deadline' then
     begin if EnsureChecklistDeadlineColumns(Db) then Writeln('yes') else Writeln('no');end
     else if ParamStr(2)='policy' then

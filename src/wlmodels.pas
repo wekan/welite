@@ -32,7 +32,7 @@ const ModelJson=
   'laneId","kind":"scalar","type":"TEXT","required":false,"default":""},{"name":"title","path":"title","kind":"scalar","type":"TEXT","required":true,"default":null},{"name":"type","pa'+
   'th":"type","kind":"scalar","type":"TEXT","required":true,"default":"list"},{"name":"color","path":"color","kind":"scalar","type":"TEXT","required":false,"default":null},{"name":"so'+
   'rt","path":"sort","kind":"scalar","type":"REAL","required":false,"default":null},{"name":"width","path":"width","kind":"scalar","type":"INTEGER","required":false,"default":272},{"n'+
-  'ame":"starred","path":"starred","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"wip_enabled","path":"wipLimit.enabled","kind":"bool","type":"INTEGER","require'+
+  'ame":"starred","path":"starred","kind":"bool","type":"INTEGER","required":false,"default":0},{"name":"collapsed","path":"collapsed","kind":"bool","type":"INTEGER","required":false,"default":null},{"name":"wip_enabled","path":"wipLimit.enabled","kind":"bool","type":"INTEGER","require'+
   'd":false,"default":0},{"name":"wip_value","path":"wipLimit.value","kind":"scalar","type":"INTEGER","required":false,"default":1},{"name":"wip_soft","path":"wipLimit.soft","kind":"b'+
   'ool","type":"INTEGER","required":false,"default":0},{"name":"archived","path":"archived","kind":"bool","type":"INTEGER","required":true,"default":0},{"name":"archivedAt","path":"ar'+
   'chivedAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"deletedAt","path":"deletedAt","kind":"date","type":"TEXT","required":false,"default":null},{"name":"'+

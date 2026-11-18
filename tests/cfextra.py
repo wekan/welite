@@ -46,6 +46,22 @@ with tempfile.TemporaryDirectory(prefix='wlcfup-',dir=os.environ['TMPDIR']) as d
         with sqlite3.connect(bad_markers) as con:
             assert [row[1] for row in con.execute('PRAGMA table_info(lists)')]==['id']
         print(f'PASS: {backend} additive deadline and soft-delete metadata upgrades preserve legacy rows')
+        collapse=out/'collapse.db'
+        with sqlite3.connect(collapse) as con:
+            con.executescript("CREATE TABLE lists(id TEXT); INSERT INTO lists VALUES('old');")
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            assert list(pool.map(lambda _:run(collapse,'collapse'),range(4)))==['yes']*4
+        with sqlite3.connect(collapse) as con:
+            assert con.execute('SELECT id,collapsed FROM lists').fetchall()==[('old',None)]
+            con.execute('UPDATE lists SET collapsed=1')
+            try:
+                con.execute('UPDATE lists SET collapsed=2')
+            except sqlite3.IntegrityError:
+                pass
+            else:
+                raise AssertionError('Collapse upgrade lacks a boolean constraint')
+        assert run(collapse,'collapse')=='yes'
+        print(f'PASS: {backend} concurrent list collapse upgrade keeps legacy state unset')
         def legacy(db):
             with sqlite3.connect(db) as con:
                 con.executescript("CREATE TABLE custom_fields(id TEXT PRIMARY KEY,name TEXT,currencyCode TEXT,legacy INTEGER); INSERT INTO custom_fields VALUES('field','漢','EUR',7); CREATE TABLE related(field TEXT REFERENCES custom_fields(id)); INSERT INTO related VALUES('field');")

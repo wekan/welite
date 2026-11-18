@@ -7,6 +7,7 @@ function EnsureFieldPolicyColumns(Db:TWLDb):Boolean;
 function EnsureDropdownColumn(Db:TWLDb):Boolean;
 function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
 function EnsureDeleteMarkers(Db:TWLDb):Boolean;
+function EnsureListCollapseColumn(Db:TWLDb):Boolean;
 implementation
 const ValidSettings='CASE WHEN json_valid(settings_json) THEN json_type(settings_json)=''object'' AND '+
   'json_type(settings_json,''$.currencyCode'') IS NULL AND json_type(settings_json,''$.stringtemplateFormat'') IS NULL AND '+
@@ -142,5 +143,29 @@ end;
 function EnsureDeleteMarkers(Db:TWLDb):Boolean;
 begin
   Result:=EnsureNullableTextColumns(Db,['lists','cards'],['deletedAt','deletedBy','deleteBatchId']);
+end;
+function EnsureListCollapseColumn(Db:TWLDb):Boolean;
+var Rows:TWLRows;Row:TWLRow;Found:Boolean;
+  function Inspect:Boolean;
+  begin
+    Found:=False;
+    Rows:=Db.Query('PRAGMA table_info(lists);');
+    if Length(Rows)=0 then Exit(False);
+    for Row in Rows do if SameText(Row[1],'collapsed') then
+    begin
+      Found:=True;
+      Exit((UpperCase(Row[2])='INTEGER') and (Row[3]='0') and (Row[4]='') and (Row[5]='0'));
+    end;
+    Result:=True;
+  end;
+begin
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))>0 then Exit(False);
+  Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''lists'';');
+  if Length(Rows)=0 then Exit(True);
+  if (Length(Rows)<>1) or (Rows[0][0]<>'table') or not Inspect then Exit(False);
+  if Found then Exit(True);
+  if not Db.Exec('BEGIN IMMEDIATE; ALTER TABLE lists ADD COLUMN collapsed INTEGER '+
+    'CHECK(collapsed IN (0,1)); COMMIT;') then Db.Exec('ROLLBACK;');
+  Result:=Inspect and Found;
 end;
 end.

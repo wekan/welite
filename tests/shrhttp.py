@@ -373,8 +373,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: legacy board import assigns cards and attachments to usable fallback lists and swimlanes')
                 presentation=dict(title='List and swimlane display',lists=[
-                    dict(_id='valid-list',title='Wide list',color='#336699',width=486,archived=True),
-                    dict(_id='invalid-list',title='Default width',color='invalid color',width=2000),
+                    dict(_id='valid-list',title='Wide list',color='#336699',width=486,archived=True,collapsed=True),
+                    dict(_id='invalid-list',title='Default width',color='invalid color',width=2000,collapsed=False),
+                    dict(_id='legacy-list',title='Legacy collapse'),
                 ],swimlanes=[
                     dict(_id='valid-lane',title='Colored lane',color='green',archived=True),
                     dict(_id='invalid-lane',title='Default color',color=['green']),
@@ -387,6 +388,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 wide=restored_lists['Wide list']
                 assert wide['width']==486 and wide['color']=='#336699' and wide['archived'] is True
                 assert restored_lists['Default width']['width']==272 and not restored_lists['Default width'].get('color')
+                assert wide['collapsed'] is True
+                assert restored_lists['Default width']['collapsed'] is False
+                assert restored_lists['Legacy collapse'].get('collapsed') is None
                 colored=restored_lanes['Colored lane']
                 assert colored['color']=='green' and colored['archived'] is True
                 assert not restored_lanes['Default color'].get('color')

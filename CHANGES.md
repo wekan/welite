@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Preserve shared list collapse on board import
+
+- Store explicitly collapsed or expanded lists and leave the flag unset
+  for older exports. Upgrade existing native tenant databases in place.
+
 ## 2026-11-18 Preserve list and swimlane settings on board import
 
 - Import list widths, list and swimlane colors, and archived status.

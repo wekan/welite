@@ -1605,6 +1605,13 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Field:=Obj.Find(Key);
     Result:=IntToStr(Ord((Field is TJSONBoolean) and Field.AsBoolean));
   end;
+  function ImportedCollapse(Entry:TJSONObject):string;
+  var Field:TJSONData;
+  begin
+    Field:=Entry.Find('collapsed');
+    if not (Field is TJSONBoolean) then Exit('NULL');
+    Result:=BooleanValue(Entry,'collapsed');
+  end;
   function ImportedColor(Entry:TJSONObject):string;
   var Field:TJSONData;Color:string;
   begin
@@ -1888,10 +1895,10 @@ begin
         LaneId:=Mapped(0,Text(Row,'swimlaneId'));
         if DefaultList='' then DefaultList:=ListId;
         ImportedListLanes.Add(ListId,LaneId);
-        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived) VALUES('+
+        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived,collapsed) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
           QuotedStr(Text(Row,'title'))+','+SortValue(Row)+','+Stamp+','+ImportedColor(Row)+','+
-          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+'); ';
+          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+ImportedCollapse(Row)+'); ';
       end;
       if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
       begin

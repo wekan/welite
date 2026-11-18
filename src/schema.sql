@@ -105,6 +105,7 @@ CREATE TABLE lists (
   sort        REAL,
   width       INTEGER DEFAULT 272,
   starred     INTEGER DEFAULT 0,
+  collapsed   INTEGER CHECK(collapsed IN (0,1)),
   wip_enabled INTEGER DEFAULT 0,
   wip_value   INTEGER DEFAULT 1,
   wip_soft    INTEGER DEFAULT 0,
