@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Pass the upstream card overtime REST spec
+
+- Native Chromium shows the spent-time or overtime heading after JSON and
+  form REST edits. Both upstream cases pass, including validation and scope.
+
 ## 2026-11-18 Pass the upstream subtask REST spec
 
 - The original parent, validation and permission assertions pass. Native
