@@ -57,6 +57,7 @@ procedure ApiDropdownItem(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCardCustomField(aRequest: TRequest; aResponse: TResponse);// POST set card value
 procedure ApiLists(aRequest: TRequest; aResponse: TResponse);          // GET list / POST create
 procedure ApiList(aRequest: TRequest; aResponse: TResponse);
+procedure ApiListArchive(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST add card
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
@@ -1177,6 +1178,38 @@ begin
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]);
     SendJson(aResponse, O.AsJSON);
   finally O.Free; end;
+end;
+
+procedure ApiListArchive(aRequest:TRequest;aResponse:TResponse);
+const NotFound='{"error":"List not found"}';
+var T:TWLTenant;UserId,BoardId,ListId,Scope,Predicate,Stamp,CardArchivedAt,Sql:string;
+  Archive:Boolean;Target:string;Rows:TWLRows;Reply:TJSONObject;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
+  BoardId:=QuotedStr(aRequest.RouteParams['boardId']);ListId:=aRequest.RouteParams['listId'];
+  Archive:=Copy(aRequest.PathInfo,Length(aRequest.PathInfo)-9,10)<>'/unarchive';
+  Target:=IntToStr(Ord(Archive));
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId;
+  Predicate:=Scope+' AND archived='+IntToStr(Ord(not Archive));
+  Rows:=T.Db.Query('SELECT id FROM lists WHERE '+Predicate+';');
+  if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+  Stamp:=QuotedStr(NowIso);CardArchivedAt:='NULL';
+  if Archive then CardArchivedAt:=Stamp;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Predicate+
+    ')=1 THEN 1 ELSE json(''List archive scope changed'') END; '+
+    'UPDATE cards SET archived='+Target+',archivedAt='+CardArchivedAt+' WHERE listId='+QuotedStr(ListId)+
+    ' AND boardId='+BoardId+' AND archived<> '+Target+
+    ' AND EXISTS(SELECT 1 FROM lists WHERE '+Predicate+' AND type=''template-list''); '+
+    'UPDATE lists SET archived='+Target;
+  if Archive then Sql:=Sql+',archivedAt='+Stamp;
+  Sql:=Sql+' WHERE '+Predicate+'; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
+    ' AND archived='+Target+')=1 THEN 1 ELSE json(''List archive failed'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change list archive state');Exit;end;
+  Reply:=TJSONObject.Create(['_id',ListId,'archived',Archive]);
+  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);

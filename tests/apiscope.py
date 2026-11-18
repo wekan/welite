@@ -206,3 +206,23 @@ def run(request, db, token):
             assert '\n'.join(con.iterdump()) == before
     assert request('PUT',wrong_list_path,json.dumps(dict(archive=True,title='Rejected')).encode())[0] == 404
     print('PASS: archive-only PUT works without the current list and preserves state on repeated requests')
+
+    list_path='/api/boards/protected/lists/'+current_list
+    for list_type in ['list','template-list']:
+        with sqlite3.connect(db) as con:
+            con.execute("UPDATE lists SET type=? WHERE id=?",(list_type,current_list))
+        for action, archived in [('archive',True),('unarchive',False)]:
+            url=list_path+'/'+action+'?token='+token
+            status, _, body = request('POST',url)
+            assert status == 200 and json.loads(body) == dict(_id=current_list,archived=archived), (status,body)
+            with sqlite3.connect(db) as con:
+                assert con.execute('SELECT archived FROM lists WHERE id=?',(current_list,)).fetchone() == (int(archived),)
+                assert con.execute("SELECT archived FROM cards WHERE id='card'").fetchone() == (int(archived and list_type=='template-list'),)
+                before='\n'.join(con.iterdump())
+            status, _, body = request('POST',url)
+            assert status == 404 and json.loads(body) == dict(error='List not found'), (status,body)
+            with sqlite3.connect(db) as con:
+                assert '\n'.join(con.iterdump()) == before
+    with sqlite3.connect(db) as con:
+        con.execute("UPDATE lists SET type='list' WHERE id=?",(current_list,))
+    print('PASS: list archive and restore reject repeated writes and cascade for template lists')
