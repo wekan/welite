@@ -1114,6 +1114,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 check_graph_snapshot(request,client,database,snapshot_control)
                 check_clone_policy(request,client,database,token)
                 board_url='/board?id=b&sessionId='+web_session
+                if os.environ.get('WELITE_UI')=='1':
+                    client.command({'insert':'lists','documents':[dict(_id='brow-list',boardId='b',
+                        title='Wrong list fixture',archived=False,sort=99)]})
+                    client.command({'insert':'cards','documents':[dict(_id='brow-card',boardId='b',
+                        listId='l',swimlaneId='s',title='Keep my browser checklist',archived=False,sort=0)]})
+                    client.command({'insert':'checklists','documents':[dict(_id='brow-check',boardId='b',
+                        cardId='brow-card',title='Steps',sort=0)]})
+                    subprocess.run([os.environ.get('NODE','node'),str(root/'tests/carddel.js'),
+                                    f'http://localhost:{http_port}'+board_url],input=token,text=True,check=True)
+                    assert not client.find('cards','brow-card') and not client.find('checklists','brow-check')
+                    client.command({'delete':'lists','deletes':[dict(q={'_id':'brow-list'},limit=1)]})
+
                 profile_response=request('GET',board_url)
                 assert b'dir="rtl"' in profile_response[2] and b'lang="ar"' in profile_response[2]
                 assert profile_response[1]['Content-Language']=='ar'

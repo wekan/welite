@@ -163,7 +163,6 @@ end;
   Code: `wlstatic.pas`; tools `releases/genasset.py`, `releases/convlang.py`.
 - **`docs/api.md`** — REST API subset (Bearer auth) so WeKan's `api.py` works unchanged.
   - [ ] Verify dependency REST behavior for legacy bare-string entries and custom board roles.
-  - [ ] Verify the wrong-list card delete browser workflow in WeLite.
   - [ ] Verify Windows runtime DNS validation and support other target resolvers for integration destination writes.
 
 

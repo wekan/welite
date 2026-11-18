@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify wrong-list card deletion in Chromium
+
+- With JavaScript disabled and cookie headers stripped, a wrong-list REST
+  delete keeps the card visible and its checklist readable. Deletion through
+  the correct list removes both records. A repeated delete returns 404.
+
 ## 2026-11-18 Add REST board domain routes
 
 - Site administrators can read the dedicated domains endpoint. Authorized
