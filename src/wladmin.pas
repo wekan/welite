@@ -248,7 +248,7 @@ begin
     if Groups.Count=0 then Exit;
     Result:='<h2>'+HtmlEncode(Title)+'</h2><table border="1" cellpadding="4" cellspacing="0">'+
       '<tr><th>'+HtmlEncode(Words.Text('name','Name'))+'</th><th>'+
-      HtmlEncode(Words.Text('short-name','Short name'))+'</th><th>'+
+      HtmlEncode(Words.Text('shortName','Short Name'))+'</th><th>'+
       HtmlEncode(Words.Text('shared-templates','Shared templates'))+'</th><th>'+
       HtmlEncode(Words.Text(Kind+'-propagate-members-to-boards','Propagate members to boards'))+'</th><th>'+
       HtmlEncode(Words.Text(Kind+'-sync-members-from-auth','Sync members from auth provider'))+'</th></tr>';
