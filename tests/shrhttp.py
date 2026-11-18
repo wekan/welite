@@ -240,6 +240,18 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert client.find('cards',card['_id'])[0]==stored
                 print('PASS: REST overtime uses the canonical boolean and rejects invalid edits atomically')
 
+                for payload,sort in [(dict(sort=0),0),(dict(sort=-1.25),-1.25),('sort=0',0)]:
+                    status,_,body=request('PUT',card_path,payload,token)
+                    assert status==200 and json.loads(body)==dict(_id=card['_id'])
+                    stored=client.find('cards',card['_id'])[0]
+                    assert stored['sort']==sort
+                    status,_,body=request('GET',card_path,token=token)
+                    assert status==200 and json.loads(body)['sort']==sort
+                status,_,body=request('PUT',card_path,dict(sort=' ',title='Do not write'),token)
+                assert status==400 and json.loads(body)==dict(error='Invalid sort')
+                assert client.find('cards',card['_id'])[0]==stored
+                print('PASS: REST card sort persists zero and fractional values and rejects invalid edits atomically')
+
                 export_path='/api/boards/b/export'
                 assert request('GET',export_path+'?listId=l',token=token)[0]==400
                 for collection in ['rules','triggers','actions']:

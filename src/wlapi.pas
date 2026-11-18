@@ -3286,7 +3286,7 @@ function SendCardById(aResponse: TResponse; Db: TWLDb; const CardId,UserId: stri
 var ReadSql:string; R, L: TWLRows; O: TJSONObject; A: TJSONArray; i: Integer;Policy:TFieldPolicy;
 begin
   Result := False;
-  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color,isOvertime FROM cards WHERE deletedAt IS NULL AND id='+QuotedStr(CardId);
+  ReadSql:='SELECT id,title,description,listId,swimlaneId,boardId,color,isOvertime,json_quote(sort) FROM cards WHERE deletedAt IS NULL AND id='+QuotedStr(CardId);
   if RequiredBoardId<>'' then ReadSql:=ReadSql+' AND boardId='+QuotedStr(RequiredBoardId);
   if ActiveListId<>'' then ReadSql:=ReadSql+' AND listId='+QuotedStr(ActiveListId)+' AND archived=0';
   R:=Db.Query(ReadSql+' LIMIT 1;');
@@ -3295,7 +3295,7 @@ begin
   try
     O.Add('_id', R[0][0]); O.Add('title', R[0][1]); O.Add('description', R[0][2]);
     O.Add('listId', R[0][3]); O.Add('swimlaneId', R[0][4]); O.Add('boardId', R[0][5]);
-    O.Add('color', R[0][6]); O.Add('isOvertime', R[0][7]='1');
+    O.Add('color', R[0][6]); O.Add('isOvertime', R[0][7]='1'); O.Add('sort',GetJSON(R[0][8]));
     A := TJSONArray.Create;
     L := Db.Query(Format('SELECT labelId FROM card_labels WHERE cardId=%s;', [QuotedStr(CardId)]));
     for i := 0 to High(L) do if Length(L[i]) > 0 then A.Add(L[i][0]);
@@ -3500,8 +3500,8 @@ end;
 
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
-  HasArchive,Archive,HasEdits,HasOvertime:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
-  FieldName,FieldSets,Literal:string;HasDate:Boolean;
+  HasArchive,Archive,HasEdits,HasOvertime,HasSort:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
+  FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -3518,7 +3518,7 @@ begin
       else
       begin
         Body:=TJSONObject.Create;
-        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime'] do
+        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','sort'] do
           if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
             Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
       end;
@@ -3528,6 +3528,15 @@ begin
         if Input=nil then Continue;
         HasDate:=True;
         if CardDateSql(Input,Literal) then FieldSets:=FieldSets+','+FieldName+'='+Literal;
+      end;
+      Input:=Body.Find('sort');HasSort:=Input<>nil;
+      if HasSort then
+      begin
+        NumberFormat:=DefaultFormatSettings;NumberFormat.DecimalSeparator:='.';NumberFormat.ThousandSeparator:=#0;
+        if not (Input.JSONType in [jtNumber,jtString]) or (Trim(Input.AsString)='') or
+          not TryStrToFloat(Trim(Input.AsString),SortNumber,NumberFormat) or IsNan(SortNumber) or IsInfinite(SortNumber) then
+        begin SendJson(aResponse,'{"error":"Invalid sort"}',400);Exit;end;
+        FieldSets:=FieldSets+',sort='+FloatToStrF(SortNumber,ffGeneral,17,0,NumberFormat);
       end;
       Input:=Body.Find('isOverTime');
       HasOvertime:=Input<>nil;
@@ -3601,7 +3610,7 @@ begin
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ')=1 THEN 1 ELSE json(''Card edit scope changed'') END; '+Sets+ArchiveSql+Relations+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit card');Exit;end;
-  if HasOvertime then SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}')
+  if HasSort or HasOvertime then SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}')
   else SendCardById(aResponse,T.Db,CardId,UserId,False,BoardId);
 end;
 
