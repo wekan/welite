@@ -47,6 +47,7 @@ function otp(secret,counter) {
     assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
     assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
     assert.equal(await page.locator('html').getAttribute('lang'),'fi');
+    assert.equal(await page.locator('a[href="/two-factor/setup?lang=fi"]').count(), 1);
     await page.goto(base+'/sign-in');
     const flowLanguage=await page.locator('select[name=lang]').inputValue();
     await page.getByRole('link',{name:'Set up one-time codes'}).click();

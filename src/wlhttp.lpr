@@ -371,7 +371,7 @@ var
   T: TWLTenant;
   S: TWLSession;
   Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition: string;
-  First: Boolean;RegistrationPolicy:TFactorPolicy;
+  First: Boolean;RegistrationPolicy:TFactorPolicy;Words:TWLTranslator;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if T.IsAdmin then
@@ -424,7 +424,15 @@ begin
 
     if RegistrationPolicy=fpRequired then
     begin
-      SendHtml(aResponse,AuthPage(aRequest,aResponse,'Account created','<h1>Account created</h1><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">Set up one-time codes</a> before signing in.</p>'));Exit;
+      Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(aRequest),'',aRequest.AcceptLanguage));
+      try
+        SendHtml(aResponse,AuthPage(aRequest,aResponse,'Account created','<h1>Account created</h1><p><a href="'+
+          HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">'+
+          HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a> before signing in.</p>'));
+      finally
+        Words.Free;
+      end;
+      Exit;
     end;
 
     // Log the new user straight in (cookie-free session via URL), then go to the board list.
