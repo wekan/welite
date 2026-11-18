@@ -209,10 +209,13 @@ sections. Strip debug information from private archive copies with Amiga
 libgcc and libamiga through vlink's `-L`/`-l` options for archive member
 selection. With a probe-only `_SysBase` initialization and `_exit` shim,
 vlink links a Hunk executable that returns SQLite `3.53.4` under
-`vamos -C 68020 -m 8192 -s 512`. Adding `sqlite3_open(':memory:')` and
-a JSON query still causes a CPU exception before a row is returned.
-The linked backend still needs C runtime initialization and SQL
-operation verification.
+`vamos -C 68020 -m 8192 -s 512`. The same probe opens an in-memory database, executes
+`SELECT json(42)` through a Pascal callback, and closes it successfully
+with `-C 68040`. The 68020 emulator setting raises a CPU exception.
+The file-backed probe receives a libnix descriptor below three and
+fails when SQLite tries to reserve it using `/dev/null`. A diagnostic
+rebuild with `SQLITE_MINIMUM_FILE_DESCRIPTOR=0` opens the file but returns
+`disk I/O error` on the write test. Persistent SQL and HTTP remain open.
 
 Amiga GNU ld can read the mixed FPC ELF and GCC Hunk objects and produce a
 Hunk executable. A minimal SQLite version probe links with the C symbol
