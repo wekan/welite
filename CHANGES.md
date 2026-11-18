@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Update and delete multi-board custom fields
+
+- Require field write access on all bound boards and recheck the binding set
+  during the transaction. Backfill and deletion cover the authorized boards.
+- Native HTTP coverage verifies refusal without data changes when one board
+  is archived and verifies cleanup across both boards after authorization.
+
 ## 2026-11-18 Remove scoped activity when deleting a custom field
 
 - Delete activity records for the field on the authorized board in the same

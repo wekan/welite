@@ -748,11 +748,37 @@ end;
 
 const CustomFieldNotFound = '{"error":"Custom field not found"}';
 
+// Pin both the authorized boards and the exact size of the binding set.
+procedure DefinitionWriteScope(Db:TWLDb;const UserId,FieldId,RouteBoardId:string;
+  out BoardIds,Permission,AfterDelete:string);
+var Rows:TWLRows;Row:TWLRow;Policy:TFieldPolicy;Previous:string;RouteFound:Boolean;
+begin
+  Rows:=Db.Query('SELECT boardId FROM custom_field_boards WHERE customFieldId='+QuotedStr(FieldId)+' ORDER BY boardId;');
+  if Length(Rows)=0 then raise Exception.Create('Missing definition bindings');
+  BoardIds:='';AfterDelete:='1';Previous:='';RouteFound:=False;
+  Permission:='(SELECT count(*) FROM custom_field_boards WHERE customFieldId='+QuotedStr(FieldId)+')='+IntToStr(Length(Rows));
+  for Row in Rows do
+  begin
+    if (Length(Row)<>1) or (Row[0]='') then raise Exception.Create('Invalid definition binding');
+    if Row[0]=Previous then raise Exception.Create('Duplicate definition binding');
+    Previous:=Row[0];RouteFound:=RouteFound or (Row[0]=RouteBoardId);
+    if BoardIds<>'' then BoardIds:=BoardIds+',';
+    BoardIds:=BoardIds+QuotedStr(Row[0]);
+    Policy:=TFieldPolicy.Create(Db,UserId,Row[0],'');
+    try
+      Permission:=Permission+' AND '+Policy.ScopeWriteExpression(FieldId);
+      AfterDelete:=AfterDelete+' AND '+Policy.DefinitionExpression('',False);
+    finally Policy.Free;end;
+  end;
+  if not RouteFound then raise Exception.Create('Definition bindings changed');
+  BoardIds:='('+BoardIds+')';
+end;
+
 procedure ApiUpdateCustomField(aRequest:TRequest;aResponse:TResponse);
 const Keys:array[0..6] of string=('name','type','showOnCard','automaticallyOnCard','alwaysOnCard',
   'showLabelOnMiniCard','showSumAtTopOfList');
-var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Changes,SettingsSql,Guards,ValueSql,TextValue,BackfillSql:string;
-  Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;Doc,Settings,Reply:TJSONObject;
+var T:TWLTenant;UserId,BoardId,FieldId,Permission,Sql,Changes,SettingsSql,Guards,ValueSql,TextValue,BackfillSql,BoardIds,AfterDelete:string;
+  Scope:TSelectionScope;Rows:TWLRows;Doc,Settings,Reply:TJSONObject;
   Value:TJSONData;i,FlagValue:Integer;
   function Guard(const Condition:string):string;
   begin Result:='SELECT CASE WHEN '+Condition+' THEN 1 ELSE json(''Custom field update guard failed'') END; ';end;
@@ -761,7 +787,7 @@ begin
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,CustomFieldNotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];
-  Doc:=nil;Settings:=nil;Scope:=nil;Policy:=nil;
+  Doc:=nil;Settings:=nil;Scope:=nil;
   try
     try
       Scope:=TSelectionScope.Create(T.Db);
@@ -770,9 +796,7 @@ begin
         QuotedStr(FieldId)+' AND boardId='+QuotedStr(BoardId)+' AND '+Scope.StringField('custom_field_boards','boardId')+');');
       if Length(Rows)<>1 then raise Exception.Create('Could not validate scope');
       if Rows[0][0]='0' then begin SendJson(aResponse,CustomFieldNotFound,404);Exit;end;
-      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
-      Permission:=Policy.ScopeWriteExpression(FieldId)+
-        ' AND (SELECT count(*) FROM custom_field_boards WHERE customFieldId='+QuotedStr(FieldId)+')=1';
+      DefinitionWriteScope(T.Db,UserId,FieldId,BoardId,BoardIds,Permission,AfterDelete);
       Rows:=T.Db.Query('SELECT '+Permission+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
       begin SendError(aResponse,403,'Custom field update forbidden');Exit;end;
@@ -800,7 +824,7 @@ begin
           ValueSql:=IntToStr(FlagValue);
           if (Keys[i]='alwaysOnCard') and (FlagValue=1) then
             BackfillSql:='INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT id,'+
-              QuotedStr(FieldId)+',NULL FROM cards WHERE boardId='+QuotedStr(BoardId)+
+              QuotedStr(FieldId)+',NULL FROM cards WHERE boardId IN '+BoardIds+
               ' AND '+Scope.StringField('cards','boardId')+
               ' AND NOT EXISTS(SELECT 1 FROM card_custom_field_values WHERE cardId=cards.id AND customFieldId='+
               QuotedStr(FieldId)+'); ';
@@ -825,12 +849,12 @@ begin
       Reply:=TJSONObject.Create(['_id',FieldId]);
       try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
     except SendError(aResponse,500,'Could not update custom field');end;
-  finally Scope.Free;Policy.Free;Settings.Free;Doc.Free;end;
+  finally Scope.Free;Settings.Free;Doc.Free;end;
 end;
 
 procedure ApiDeleteCustomField(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,BoardId,FieldId,DefinitionRows,ValuesRows,ActivityRows,ActivitySource,Bindings,Permission,Sql:string;
-  Scope:TSelectionScope;Policy:TFieldPolicy;Rows:TWLRows;Reply:TJSONObject;i:Integer;
+var T:TWLTenant;UserId,BoardId,FieldId,DefinitionRows,ValuesRows,ActivityRows,ActivitySource,Bindings,Permission,Sql,BoardIds,AfterDelete:string;
+  Scope:TSelectionScope;Rows:TWLRows;Reply:TJSONObject;i:Integer;
   function Q(const Value:string):string;
   begin Result:=QuotedStr(Value);end;
   function Guard(const Condition:string):string;
@@ -840,7 +864,7 @@ begin
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,CustomFieldNotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];
-  Scope:=nil;Policy:=nil;
+  Scope:=nil;
   try
     try
       Scope:=TSelectionScope.Create(T.Db);
@@ -851,18 +875,14 @@ begin
       if (Length(Rows)<>1) or (Length(Rows[0])<>1) then
       begin SendError(aResponse,500,'Could not validate custom field');Exit;end;
       if Rows[0][0]='0' then begin SendJson(aResponse,CustomFieldNotFound,404);Exit;end;
-      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
-      // Deleting a definition affects every board that uses it. Limit this
-      // scoped operation to a definition owned exclusively by this board.
-      Permission:=Policy.ScopeWriteExpression(FieldId)+
-        ' AND (SELECT count(*) FROM custom_field_boards WHERE customFieldId='+Q(FieldId)+')=1';
+      DefinitionWriteScope(T.Db,UserId,FieldId,BoardId,BoardIds,Permission,AfterDelete);
       Rows:=T.Db.Query('SELECT '+Permission+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
       begin SendError(aResponse,403,'Custom field deletion forbidden');Exit;end;
       ValuesRows:=' FROM card_custom_field_values WHERE customFieldId='+Q(FieldId)+
-        ' AND EXISTS(SELECT 1 FROM cards WHERE id=card_custom_field_values.cardId AND boardId='+Q(BoardId)+
+        ' AND EXISTS(SELECT 1 FROM cards WHERE id=card_custom_field_values.cardId AND boardId IN '+BoardIds+
         ' AND '+Scope.StringField('cards','boardId')+') AND '+Scope.StringField('card_custom_field_values','customFieldId');
-      ActivityRows:=' FROM activities WHERE boardId='+Q(BoardId)+' AND '+
+      ActivityRows:=' FROM activities WHERE boardId IN '+BoardIds+' AND '+
         'json_type(data_json,''$.customFieldId'')=''text'' AND json_extract(data_json,''$.customFieldId'')='+Q(FieldId)+
         ' AND '+Scope.StringField('activities','boardId');
       Rows:=T.Db.Query('SELECT type FROM sqlite_master WHERE name=''activities'';');
@@ -881,13 +901,13 @@ begin
       Sql:='BEGIN IMMEDIATE; '+Bindings+Guard(Permission)+
         'DELETE'+ValuesRows+'; DELETE'+ActivityRows+'; '+Bindings+Guard(Permission+' AND NOT EXISTS(SELECT 1'+ValuesRows+')')+
         'DELETE'+DefinitionRows+'; '+Bindings+Guard('NOT EXISTS(SELECT 1'+DefinitionRows+
-        ') AND NOT EXISTS(SELECT 1'+ValuesRows+') AND NOT EXISTS(SELECT 1'+ActivityRows+') AND '+Policy.DefinitionExpression('',False))+'COMMIT;';
+        ') AND NOT EXISTS(SELECT 1'+ValuesRows+') AND NOT EXISTS(SELECT 1'+ActivityRows+') AND '+AfterDelete)+'COMMIT;';
       if not T.Db.Exec(Sql) then
       begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete custom field');Exit;end;
       Reply:=TJSONObject.Create(['_id',FieldId]);
       try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
     except SendError(aResponse,500,'Could not delete custom field');end;
-  finally Policy.Free;Scope.Free;end;
+  finally Scope.Free;end;
 end;
 
 const DropdownNotFound = '{"error":"Dropdown item not found"}';

@@ -61,6 +61,33 @@ def native(call, db, board, snapshot):
     exercise(call, board, snapshot, assign, verify,
              lambda: install_failure(db, 'custom_fields'), lambda: clear_failure(db))
 
+    base = '/api/boards/' + quote(board, safe='') + '/custom-fields'
+    status, _, body = call('POST', base, dict(name='Shared definition', type='text'))
+    assert status == 200, (status, body)
+    identity = json.loads(body)['_id']
+    route = base + '/' + quote(identity, safe='')
+    with connect(db) as con:
+        con.execute("INSERT INTO boards(id,title,slug,createdAt,archived) VALUES('def-other','Other','other','now',1)")
+        con.execute("INSERT INTO lists(id,boardId,title,createdAt) VALUES('def-list','def-other','Other','now')")
+        con.execute("INSERT INTO cards(id,boardId,listId,title,createdAt,userId,dateLastActivity,modifiedAt) SELECT 'def-card','def-other','def-list','Other','now',userId,'now','now' FROM cards WHERE id=?", (card,))
+        con.execute("INSERT INTO custom_field_boards VALUES(?,'def-other')", (identity,))
+    before = snapshot()
+    assert call('PUT', route, dict(name='Denied'))[0] == 403
+    assert call('DELETE', route, None)[0] == 403
+    assert snapshot() == before
+    with connect(db) as con:
+        con.execute("UPDATE boards SET archived=0 WHERE id='def-other'")
+        actor, = con.execute("SELECT userId FROM activities WHERE json_extract(data_json,'$.customFieldId')=?", (identity,)).fetchone()
+        con.execute("INSERT INTO board_members(boardId,userId,isAdmin) VALUES('def-other',?,1)", (actor,))
+    status, _, body = call('PUT', route, dict(name='Shared update', alwaysOnCard=True))
+    assert status == 200, (status, body)
+    with connect(db) as con:
+        assert con.execute("SELECT value FROM card_custom_field_values WHERE cardId='def-card' AND customFieldId=?", (identity,)).fetchall() == [(None,)]
+    assert call('DELETE', route, None)[0] == 200
+    with connect(db) as con:
+        assert con.execute('SELECT count(*) FROM card_custom_field_values WHERE customFieldId=?', (identity,)).fetchone() == (0,)
+    print('PASS: multi-board field mutations require every board and cover card values on every bound board')
+
 
 def shared(call, client, db, board, snapshot):
     card = client.command({'find':'cards','filter':dict(boardId=board),'limit':1})['cursor']['firstBatch'][0]
