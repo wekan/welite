@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Include shared board workflows in JSON export
+
+- Read board rules and their referenced triggers and actions in the same
+  snapshot as the board, including additional rule parts.
+
 ## 2026-11-18 Include participant identities in board JSON
 
 - Export board participants and activities with an explicit user field

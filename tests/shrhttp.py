@@ -223,10 +223,23 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
 
                 export_path='/api/boards/b/export'
                 assert request('GET',export_path+'?listId=l',token=token)[0]==400
+                for collection in ['rules','triggers','actions']:
+                    client.command({'create':collection})
+                client.command({'insert':'rules','documents':[
+                    dict(_id='rule-b',boardId='b',triggerId='trigger-b',actionId='action-b',
+                         extraTriggerIds=['trigger-extra','trigger-extra'],extraActionIds=['action-extra']),
+                    dict(_id='rule-other',boardId='other',triggerId='trigger-other',actionId='action-other')]})
+                client.command({'insert':'triggers','documents':[
+                    dict(_id=key,activityType='createCard') for key in ['trigger-b','trigger-extra','trigger-other']]})
+                client.command({'insert':'actions','documents':[
+                    dict(_id=key,actionType='moveCardToTop') for key in ['action-b','action-extra','action-other']]})
                 status,_,body=request('GET',export_path+'?attachments=false',token=token)
                 assert status==200,(status,body)
                 exported=json.loads(body)
                 assert exported['_format']=='wekan-board-1.0.0' and exported['cards'][0]['_id']==card['_id']
+                assert [r['_id'] for r in exported['rules']]==['rule-b']
+                assert [r['_id'] for r in exported['triggers']]==['trigger-b','trigger-extra']
+                assert [r['_id'] for r in exported['actions']]==['action-b','action-extra']
                 exported_user,=exported['users']
                 assert exported_user=={'_id':'u','username':'user','profile':{}},exported_user
                 assert all(key not in exported_user for key in ('services','emails','loginTokens'))

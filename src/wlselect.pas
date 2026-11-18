@@ -120,6 +120,61 @@ begin
   end;
   Result:=True;
 end;
+procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
+var Rules,Triggers,Actions:TJSONArray;TriggerIds,ActionIds:TStringList;TableName:string;
+  Rows:TWLRows;I:Integer;
+  function Physical(const Collection:string):string;
+  var Found:TWLRows;
+  begin
+    Result:='';Found:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+q(Collection)+';');
+    if Length(Found)>1 then raise Exception.Create('Ambiguous workflow source');
+    if Length(Found)=1 then Result:='"'+StringReplace(Found[0][0],'"','""',[rfReplaceAll])+'"';
+  end;
+  procedure CollectParts(Rule:TJSONObject;const Primary,Extra:string;Ids:TStrings);
+  var Part:TJSONData;J:Integer;
+  begin
+    Part:=Rule.Find(Primary);
+    if (Part is TJSONString) and (Pos(#0,Part.AsString)=0) then AddId(Ids,Part.AsString);
+    Part:=Rule.Find(Extra);
+    if Part is TJSONArray then
+      for J:=0 to Part.Count-1 do
+        if (Part.Items[J] is TJSONString) and (Pos(#0,Part.Items[J].AsString)=0) then AddId(Ids,Part.Items[J].AsString);
+  end;
+  procedure ReadParts(const Collection:string;Ids:TStrings;Output:TJSONArray);
+  var Source:string;Data:TWLRows;J:Integer;
+  begin
+    if Ids.Count=0 then Exit;
+    Source:=Physical(Collection);if Source='' then Exit;
+    Data:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Source+
+      ' WHERE json_extract(_ferretdb_sjson,''$._id'') IN ('+IdSet(Ids)+')'+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
+      ' AND (json_type(_ferretdb_sjson,''$.boardId'') IS NULL OR json_extract(_ferretdb_sjson,''$.boardId'')='+q(BoardId)+
+      ') ORDER BY json_extract(_ferretdb_sjson,''$._id'');');
+    for J:=0 to High(Data) do Output.Add(DocumentJson(Data[J][0]));
+  end;
+begin
+  Rules:=TJSONArray.Create;Graph.Add('rules',Rules);
+  Triggers:=TJSONArray.Create;Graph.Add('triggers',Triggers);
+  Actions:=TJSONArray.Create;Graph.Add('actions',Actions);
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then Exit;
+  TableName:=Physical('rules');if TableName='' then Exit;
+  TriggerIds:=TStringList.Create;ActionIds:=TStringList.Create;
+  try
+    Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+TableName+
+      ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+q(BoardId)+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
+      ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'' ORDER BY json_extract(_ferretdb_sjson,''$._id'');');
+    for I:=0 to High(Rows) do
+    begin
+      Rules.Add(DocumentJson(Rows[I][0]));
+      CollectParts(Rules.Objects[I],'triggerId','extraTriggerIds',TriggerIds);
+      CollectParts(Rules.Objects[I],'actionId','extraActionIds',ActionIds);
+    end;
+    ReadParts('triggers',TriggerIds,Triggers);
+    ReadParts('actions',ActionIds,Actions);
+  finally ActionIds.Free;TriggerIds.Free;end;
+end;
+
 function SelectionGraph(const T:TWLTenant; Params:TStrings):TJSONObject;
 var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
   Data,AuditData:TJSONObject;Bindings:TJSONArray;ReadHeld:Boolean;
@@ -201,6 +256,7 @@ begin
     AddQuery(T.Db,'SELECT id FROM checklists WHERE '+CardOwner('checklists')+' AND '+Link('checklists','id')+';',Checks);
     Table('boards','id='+q(BoardId));
     if Params.Values['wholeBoard']='1' then Table('board_members',Scope);
+    if Params.Values['wholeBoard']='1' then ReadExportWorkflows(T.Db,BoardId,Result);
     if (TJSONArray(Data.Find('boards')).Count<>1) or (TJSONArray(Data.Find('boards')).Objects[0].Get('id','')<>BoardId) then
       raise EInvalidSelection.Create('Invalid selection board');
     Table('swimlanes',BoardScope('swimlanes')+' AND id IN ('+IdSet(Lanes)+')');
@@ -454,6 +510,10 @@ begin
             if Files.Find(FileData)<>nil then Row.Add('file',Files.Strings[FileData]);
           end else if Name='attachments' then Row.Delete('file');
         end;
+      end;
+      for Name in ['rules','triggers','actions'] do
+      begin
+        Result.Delete(Name);Result.Add(Name,Graph.Find(Name).Clone);
       end;
       Result.Delete('users');Target:=TJSONArray.Create;Result.Add('users',Target);
       if UserIds.Count>0 then
