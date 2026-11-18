@@ -2110,5 +2110,6 @@
   "enrollment-password-instructions": "Aloita vahvistamalla salasanasi. Tämä ei kirjaa sinua sisään. Käytössä olevaa todennustapaa ei voi vaihtaa täällä.",
   "enrollment-setup-denied": "Käyttöönottoa ei voi aloittaa. Tarkista kirjautumistietosi ja se, ovatko kertakäyttökoodit jo käytössä.",
   "enrollment-code-instructions": "Käytä aikapohjaisia koodeja: SHA1, kuusi numeroa, 30 sekuntia. Pidä salainen avain omana tietonasi. Käyttöönotto vanhenee viidessä minuutissa.",
-  "enrollment-confirmed-instructions": "Vahvistuskoodi on käytetty. Odota todennussovelluksen uutta koodia ennen kirjautumista."
+  "enrollment-confirmed-instructions": "Vahvistuskoodi on käytetty. Odota todennussovelluksen uutta koodia ennen kirjautumista.",
+  "enrollment-account-created": "Tili luotu"
 }

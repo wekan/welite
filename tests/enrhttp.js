@@ -47,7 +47,8 @@ withCookieFreeChromium(async (page, context) => {
   await page.getByLabel('Salasana', { exact: true }).fill('private-registration-password');
   await page.getByLabel('Salasana (uudelleen)', { exact: true }).fill('private-registration-password');
   await page.locator('form[method=POST] input[type=submit]').click();
-  assert.match(await page.locator('body').innerText(),/Account created/);
+  assert.equal(await page.title(),'Tili luotu');
+  assert.equal(await page.getByRole('heading', { name: 'Tili luotu', exact: true }).count(),1);
   assert.deepEqual([...new URL(page.url()).searchParams.keys()],['lang']);
   assert.equal(new URL(page.url()).searchParams.get('lang'),'fi');
   assert.equal(await page.locator('html').getAttribute('lang'),'fi');

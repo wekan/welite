@@ -391,7 +391,7 @@ procedure RegisterEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition: string;
+  Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition, Title: string;
   First: Boolean;RegistrationPolicy:TFactorPolicy;Words:TWLTranslator;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
@@ -447,7 +447,8 @@ begin
     begin
       Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(aRequest),'',aRequest.AcceptLanguage));
       try
-        SendHtml(aResponse,AuthPage(aRequest,aResponse,'Account created','<h1>Account created</h1><p>'+
+        Title:=Words.Text('enrollment-account-created','Account created');
+        SendHtml(aResponse,AuthPage(aRequest,aResponse,Title,'<h1>'+HtmlEncode(Title)+'</h1><p>'+
           HtmlEncode(Words.Text('two-factor-required-text','This site requires two-factor authentication for your account. Set it up to continue.'))+
           '</p><p><a href="'+HtmlAttr(LanguageUrl(aRequest,'/two-factor/setup'))+'">'+
           HtmlEncode(Words.Text('two-factor-required-title','Set up two-factor authentication'))+'</a></p>'));
