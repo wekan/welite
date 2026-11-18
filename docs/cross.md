@@ -159,6 +159,13 @@ This build lacks `json()`, which WeLite uses, and its `-init` script test
 stopped in the emulator's DOS file-handle implementation. Full server
 startup, networking and a compatible SQLite CLI remain open.
 
+The packaged executable opens `wami68k.fpcres` under vamos with
+`-C 68020 -H disable -m 131072 -s 512`. A resource-only Pascal probe
+renamed to `wami68k.exe` returns the exact schema bytes with that sidecar
+basename and fails when the companion keeps the probe's original name.
+The packaged server still stops at tenant directory initialization under
+this configuration.
+
 A newer shell experiment links SQLite 3.53.4's `shell.c` against the
 GFOpenSQLite hard-float library. The
 [Amiga GCC release](https://github.com/AmigaPorts/m68k-amigaos-gcc/releases/tag/v16.2-rc25)
