@@ -357,3 +357,17 @@ def run(request, db, token):
         assert con.execute('SELECT deletedAt,deletedBy,deleteBatchId FROM lists WHERE id=?',(identity,)).fetchone()==(None,None,None)
         assert con.execute("SELECT deletedAt,deletedBy,deleteBatchId FROM cards WHERE id='soft-delete-card'").fetchone()==(None,None,None)
     print('PASS: HTML list restore clears matching batch markers without JavaScript or cookies')
+
+    with sqlite3.connect(db) as con:
+        records=[json.loads(row[0]) for row in con.execute(
+            "SELECT _ferretdb_sjson FROM _wl_position_history "
+            "WHERE json_extract(_ferretdb_sjson,'$.entityId')=? ORDER BY rowid",(identity,))]
+    delete_record, restore_record = records
+    assert [entry['actionType'] for entry in records] == ['delete','restore'], records
+    assert all(entry['boardId']=='protected' and entry['userId']==markers[1] and
+               entry['batchId']==markers[2] for entry in records), records
+    assert restore_record['previousState']==delete_record['newState'], records
+    assert restore_record['newState']==dict(deletedAt=None), records
+    assert delete_record['$s']['p']['createdAt']['t']=='date', delete_record
+    assert delete_record['$s']['p']['newState']['$s']['p']['deletedAt']['t']=='date', delete_record
+    print('PASS: native list lifecycle history records typed delete and restore state for one batch')

@@ -13,15 +13,19 @@ procedure RecordListPosition(Db:TWLDb;const UserId,BoardId,ListId,BatchId,Delete
   const Position:TWLRow;Restored:Boolean);
 var Registry,Ids:TWLRows;TableName,TableSql,Owner,DocSql,Action,Sql:string;
   Doc,Previous,Next,Hints,DateHint:TJSONObject;Date:TDateTime;Stamp,Epoch:TTimeStamp;
-  Millis:Int64;Sort:Double;NumberFormat:TFormatSettings;
+  Millis:Int64;Sort:Double;NumberFormat:TFormatSettings;Shared:Boolean;
 begin
   if Length(Position)<2 then Exit;
   Registry:=Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'' AND type=''table'';');
-  if Length(Registry)<>1 then Exit;
-  Registry:=Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
-    'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''userPositionHistory'';');
-  if Length(Registry)<>1 then Exit;
-  TableName:=Registry[0][0];
+  Shared:=Length(Registry)=1;
+  TableName:='_wl_position_history';
+  if Shared then
+  begin
+    Registry:=Db.Query('SELECT r.table_name FROM _ferretdb_collections r JOIN sqlite_master m '+
+      'ON m.name=r.table_name AND m.type=''table'' WHERE r.name=''userPositionHistory'';');
+    if Length(Registry)<>1 then Exit;
+    TableName:=Registry[0][0];
+  end;
   TableSql:='"'+StringReplace(TableName,'"','""',[rfReplaceAll])+'"';
   Ids:=Db.Query('SELECT lower(hex(randomblob(12)));');
   if Length(Ids)<>1 then Exit;
@@ -57,17 +61,25 @@ begin
     Doc.Add('createdAt',Int64(Stamp.Date-Epoch.Date)*86400000+Stamp.Time);
     DocSql:=QuotedStr(TypedDocument(Doc.AsJSON,'',Hints.AsJSON));
   finally Hints.Free;Doc.Free;end;
-  Owner:='EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name=''userPositionHistory'' AND table_name='+
+  Sql:='BEGIN IMMEDIATE; ';
+  Owner:='1';
+  if Shared then Owner:='EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name=''userPositionHistory'' AND table_name='+
     QuotedStr(TableName)+') AND (SELECT count(*) FROM _ferretdb_collections WHERE table_name='+QuotedStr(TableName)+')=1';
-  Sql:='BEGIN IMMEDIATE; DELETE FROM '+TableSql+' WHERE '+Owner+
+  if not Shared then
+    Sql:=Sql+'CREATE TABLE IF NOT EXISTS '+TableSql+
+      '(_ferretdb_sjson TEXT NOT NULL CHECK(json_valid(_ferretdb_sjson))); '+
+      'CREATE INDEX IF NOT EXISTS _wl_position_actor_board ON '+TableSql+
+      '(json_extract(_ferretdb_sjson,''$.userId''),json_extract(_ferretdb_sjson,''$.boardId'')); ';
+  Sql:=Sql+'DELETE FROM '+TableSql+' WHERE '+Owner+
     ' AND json_extract(_ferretdb_sjson,''$.userId'')='+QuotedStr(UserId)+
     ' AND json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(BoardId)+
     ' AND json_extract(_ferretdb_sjson,''$.$s.p.userId.t'')=''string'''+
     ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
     ' AND json_type(_ferretdb_sjson,''$.undone'')=''true'' AND '+
-    'coalesce(json_type(_ferretdb_sjson,''$.isCheckpoint''),'''')<>''true''; '+
-    'INSERT INTO '+TableSql+'(_ferretdb_sjson) SELECT CASE WHEN wl_storage('+QuotedStr(TableName)+
-    ')=''blob'' THEN jsonb('+DocSql+') ELSE '+DocSql+' END WHERE '+Owner+'; COMMIT;';
+    'coalesce(json_type(_ferretdb_sjson,''$.isCheckpoint''),'''')<>''true''; ';
+  if Shared then DocSql:='CASE WHEN wl_storage('+QuotedStr(TableName)+
+    ')=''blob'' THEN jsonb('+DocSql+') ELSE '+DocSql+' END';
+  Sql:=Sql+'INSERT INTO '+TableSql+'(_ferretdb_sjson) SELECT '+DocSql+' WHERE '+Owner+'; COMMIT;';
   if not Db.Exec(Sql) then Db.Exec('ROLLBACK;');
 end;
 
