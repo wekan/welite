@@ -51,6 +51,7 @@ procedure ApiAddBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiRemoveBoardMember(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCardSettings(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT board title
+procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);     // POST copy board
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
 procedure ApiSwimlanes(aRequest: TRequest; aResponse: TResponse);
@@ -97,7 +98,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -828,6 +829,76 @@ begin
     else if (Result <> '') and (Result[Length(Result)] <> '-') then Result := Result + '-';
   end;
   if Result = '' then Result := 'board';
+end;
+
+procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
+const Colors='|belize|nephritis|pomegranate|pumpkin|wisteria|moderatepink|strongcyan|limegreen|midnight|dark|'+
+  'relax|corteza|appleglasspastel|clearblue|cleargreen|clearorange|clearpink|clearpurple|clearred|natural|modern|moderndark|exodark|cleandark|cleanlight|';
+var T:TWLTenant;Actor,Title,Visibility,Color,Board,Lane,ActorScope,AdminOnly,PrivateOnly,RegistryGuard,
+  Registry,TableName,Stamp,Sql,Permission,DefaultTitle,BoardId,LaneId:string;Rows:TWLRows;Reply:TJSONObject;
+  Words:TWLTranslator;Body:TJSONObject;Value:TJSONData;
+  function Setting(const Name:string):string;
+  begin
+    Result:='EXISTS(SELECT 1 FROM '+TableName+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+
+      QuotedStr('tableVisibilityMode-'+Name)+' AND json_type(_ferretdb_sjson,''$.booleanValue'')=''true'')';
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  Title:=BodyField(aRequest,'title');Visibility:=BodyField(aRequest,'permission');Color:=BodyField(aRequest,'color');
+  Body:=nil;
+  try
+    try
+      if Pos('application/json',LowerCase(aRequest.ContentType))=1 then
+      begin
+        Body:=ExactObject(aRequest.Content);Value:=Body.Find('title');
+        if not (Value is TJSONString) then raise Exception.Create('Missing board title');
+        Title:=Value.AsString;
+      end;
+      CheckUtf8(Title);
+      if (Trim(Title)='') or (Pos(#0,Title)>0) then raise Exception.Create('Invalid board title');
+      if Visibility='' then Visibility:='private';
+      if (Visibility<>'private') and (Visibility<>'public') then raise Exception.Create('Invalid board permission');
+      if Color='' then Color:='belize';
+      if (Pos('|',Color)>0) or (Pos('|'+Color+'|',Colors)=0) then raise Exception.Create('Invalid board color');
+    except SendError(aResponse,400,'Invalid board settings');Exit;end;
+  finally Body.Free;end;
+  AdminOnly:='0';PrivateOnly:='0';RegistryGuard:='1';
+  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1 then
+  begin
+    Registry:=' FROM _ferretdb_collections WHERE name=''tableVisibilityModeSettings''';
+    Rows:=T.Db.Query('SELECT table_name'+Registry+';');
+    if Length(Rows)=1 then
+    begin
+      TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+      AdminOnly:=Setting('boardCreationAdminOnly');PrivateOnly:=Setting('allowPrivateOnly');
+      RegistryGuard:='(SELECT count(*)'+Registry+' AND table_name='+QuotedStr(Rows[0][0])+')=1';
+    end else if Length(Rows)=0 then RegistryGuard:='NOT EXISTS(SELECT 1'+Registry+')'
+    else begin SendError(aResponse,500,'Ambiguous board creation policy');Exit;end;
+  end;
+  Actor:=QuotedStr(Actor);ActorScope:='id='+Actor+' AND COALESCE(loginDisabled,0)=0';
+  Permission:='EXISTS(SELECT 1 FROM users WHERE '+ActorScope+' AND (isAdmin=1 OR NOT '+AdminOnly+'))';
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board creation is restricted to admins');Exit;end;
+  BoardId:=NewId;LaneId:=NewId;Board:=QuotedStr(BoardId);Lane:=QuotedStr(LaneId);Stamp:=QuotedStr(NowIso);
+  Words:=TWLTranslator.Create(ViewerLanguage(T.Db,Default(TWLSession),aRequest));
+  try DefaultTitle:=QuotedStr(Words.Text('default','Default'));finally Words.Free;end;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+' AND '+Permission+
+    ' THEN 1 ELSE json(''Board creation policy changed'') END; '+
+    'INSERT INTO boards(id,title,slug,permission,color,createdAt,modifiedAt) VALUES('+Board+','+
+    QuotedStr(Title)+','+QuotedStr(Slugify(Title))+',CASE WHEN '+PrivateOnly+' THEN ''private'' ELSE '+QuotedStr(Visibility)+
+    ' END,'+QuotedStr(Color)+','+Stamp+','+Stamp+'); '+
+    'INSERT INTO board_members(boardId,userId,isAdmin,isActive,isNoComments,isCommentOnly,isWorker) VALUES('+
+    Board+','+Actor+',1,1,0,0,0); '+
+    'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+Lane+','+Board+','+DefaultTitle+',0,'+Stamp+'); '+
+    'SELECT CASE WHEN EXISTS(SELECT 1 FROM board_members WHERE boardId='+Board+' AND userId='+Actor+
+    ' AND isAdmin=1 AND isActive=1) AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+Lane+
+    ' AND boardId='+Board+') THEN 1 ELSE json(''Board creation incomplete'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create board');Exit;end;
+  Reply:=TJSONObject.Create(['_id',BoardId,'defaultSwimlaneId',LaneId]);
+  try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
 // POST copy board — structural deep copy: board + members + swimlanes + lists + cards, with

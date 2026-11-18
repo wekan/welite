@@ -136,6 +136,27 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200,(backend,status,body)
                 login=json.loads(body);token=login['token']
                 assert login['id']=='u' and request('GET','/api/boards/b',token=token)[0]==200
+                policy_collection='tableVisibilityModeSettings'
+                client.command({'create':policy_collection})
+                client.command({'insert':policy_collection,'documents':[
+                    dict(_id='tableVisibilityMode-boardCreationAdminOnly',booleanValue=True),
+                    dict(_id='tableVisibilityMode-allowPrivateOnly',booleanValue=True),
+                ]})
+                board_body=dict(title='Created board',permission='public',owner='foreign-user')
+                assert request('POST','/api/boards',board_body,token)[0]==403
+                client.command({'update':policy_collection,'updates':[
+                    dict(q={'_id':'tableVisibilityMode-boardCreationAdminOnly'},u={'$set':{'booleanValue':False}})]})
+                status,_,body=request('POST','/api/boards',board_body,token)
+                assert status==200,(status,body)
+                created_board=json.loads(body)
+                saved_board,=client.find('boards',created_board['_id'])
+                owner,=saved_board['members']
+                assert owner['userId']=='u' and owner['isAdmin'] is True and owner['isActive'] is True
+                assert saved_board['permission']=='private'
+                default_lane,=client.find('swimlanes',created_board['defaultSwimlaneId'])
+                assert default_lane['boardId']==created_board['_id']
+                assert request('DELETE','/api/boards/'+created_board['_id'],token=token)[0]==200
+                print('PASS: REST board creation obeys shared settings and creates the caller owner and default swimlane')
                 user=client.find('users','u')[0];assert user['extra']==Long(9007199254740993)
                 shared=user['services']['resume']['loginTokens'];assert len(shared)==1 and isinstance(shared[0]['when'],DateMs)
                 assert shared[0]['hashedToken']==base64.b64encode(hashlib.sha256(token.encode()).digest()).decode()
