@@ -106,7 +106,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 wait_for_ferret()
                 for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
                 if upstream:
-                    for collection in ['rules','triggers','actions','savedCardFilters','scrumSnapshotRows']:
+                    for collection in ['rules','triggers','actions','integrations','savedCardFilters','scrumSnapshotRows']:
                         client.command({'create':collection})
                     app=start('1')
                     subprocess.run([
@@ -240,6 +240,24 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert [r['_id'] for r in exported['rules']]==['rule-b']
                 assert [r['_id'] for r in exported['triggers']]==['trigger-b','trigger-extra']
                 assert [r['_id'] for r in exported['actions']]==['action-b','action-extra']
+                client.command({'create':'integrations'})
+                client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
+                    userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
+                status,_,body=request('POST','/api/boards/b/copy',dict(title='Rule copy'),token)
+                assert status==200,(status,body)
+                copy_id=json.loads(body)
+                def copied_rows(collection):
+                    return client.command({'find':collection,'filter':dict(boardId=copy_id)})['cursor']['firstBatch']
+                copied_rule,=copied_rows('rules')
+                copied_hook,=copied_rows('integrations')
+                assert copied_hook['url']=='https://example.invalid/hook' and copied_hook['createdAt']==now
+                assert {r['_id'] for r in copied_rows('triggers')}=={copied_rule['triggerId'],*copied_rule['extraTriggerIds']}
+                assert {r['_id'] for r in copied_rows('actions')}=={copied_rule['actionId'],*copied_rule['extraActionIds']}
+                assert copied_rule['triggerId']!='trigger-b' and copied_rule['actionId']!='action-b'
+                assert request('DELETE','/api/boards/'+copy_id,token=token)[0]==200
+                for collection in ['rules','triggers','actions','integrations']:
+                    client.command({'delete':collection,'deletes':[dict(q=dict(boardId=copy_id),limit=0)]})
+                print('PASS: shared board copy remaps workflow identities and preserves typed webhook fields')
                 rules_path='/api/boards/b/rules'
                 assert request('GET',rules_path)[0]==401
                 status,_,body=request('GET',rules_path,token=token)

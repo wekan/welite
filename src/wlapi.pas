@@ -1271,17 +1271,36 @@ begin BoardExport(aRequest,aResponse,False);end;
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 begin BoardExport(aRequest,aResponse,True);end;
 
-procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
-const Colors='|belize|nephritis|pomegranate|pumpkin|wisteria|moderatepink|strongcyan|limegreen|midnight|dark|'+
-  'relax|corteza|appleglasspastel|clearblue|cleargreen|clearorange|clearpink|clearpurple|clearred|natural|modern|moderndark|exodark|cleandark|cleanlight|';
-var T:TWLTenant;Actor,Title,Visibility,Color,Board,Lane,ActorScope,AdminOnly,PrivateOnly,RegistryGuard,
-  Registry,TableName,Stamp,Sql,Permission,DefaultTitle,BoardId,LaneId:string;Rows:TWLRows;Reply:TJSONObject;
-  Words:TWLTranslator;Body:TJSONObject;Value:TJSONData;
+procedure BoardCreationSettings(Db:TWLDb;out AdminOnly,PrivateOnly,RegistryGuard:string);
+var Registry,TableName:string;Rows:TWLRows;
   function Setting(const Name:string):string;
   begin
     Result:='EXISTS(SELECT 1 FROM '+TableName+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+
       QuotedStr('tableVisibilityMode-'+Name)+' AND json_type(_ferretdb_sjson,''$.booleanValue'')=''true'')';
   end;
+begin
+  AdminOnly:='0';PrivateOnly:='0';RegistryGuard:='1';
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1 then
+  begin
+    Registry:=' FROM _ferretdb_collections WHERE name=''tableVisibilityModeSettings''';
+    Rows:=Db.Query('SELECT table_name'+Registry+';');
+    if Length(Rows)=1 then
+    begin
+      TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+      AdminOnly:=Setting('boardCreationAdminOnly');PrivateOnly:=Setting('allowPrivateOnly');
+      RegistryGuard:='(SELECT count(*)'+Registry+' AND table_name='+QuotedStr(Rows[0][0])+')=1';
+    end else if Length(Rows)=0 then RegistryGuard:='NOT EXISTS(SELECT 1'+Registry+')'
+    else raise Exception.Create('Ambiguous board creation policy');
+  end;
+end;
+
+procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
+const Colors='|belize|nephritis|pomegranate|pumpkin|wisteria|moderatepink|strongcyan|limegreen|midnight|dark|'+
+  'relax|corteza|appleglasspastel|clearblue|cleargreen|clearorange|clearpink|clearpurple|clearred|natural|modern|moderndark|exodark|cleandark|cleanlight|';
+var T:TWLTenant;Actor,Title,Visibility,Color,Board,Lane,ActorScope,AdminOnly,PrivateOnly,RegistryGuard,
+  Stamp,Sql,Permission,DefaultTitle,BoardId,LaneId:string;Rows:TWLRows;Reply:TJSONObject;
+  Words:TWLTranslator;Body:TJSONObject;Value:TJSONData;
+
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -1303,19 +1322,8 @@ begin
       if (Pos('|',Color)>0) or (Pos('|'+Color+'|',Colors)=0) then raise Exception.Create('Invalid board color');
     except SendError(aResponse,400,'Invalid board settings');Exit;end;
   finally Body.Free;end;
-  AdminOnly:='0';PrivateOnly:='0';RegistryGuard:='1';
-  if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1 then
-  begin
-    Registry:=' FROM _ferretdb_collections WHERE name=''tableVisibilityModeSettings''';
-    Rows:=T.Db.Query('SELECT table_name'+Registry+';');
-    if Length(Rows)=1 then
-    begin
-      TableName:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
-      AdminOnly:=Setting('boardCreationAdminOnly');PrivateOnly:=Setting('allowPrivateOnly');
-      RegistryGuard:='(SELECT count(*)'+Registry+' AND table_name='+QuotedStr(Rows[0][0])+')=1';
-    end else if Length(Rows)=0 then RegistryGuard:='NOT EXISTS(SELECT 1'+Registry+')'
-    else begin SendError(aResponse,500,'Ambiguous board creation policy');Exit;end;
-  end;
+  try BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
+  except SendError(aResponse,500,'Could not read board creation policy');Exit;end;
   Actor:=QuotedStr(Actor);ActorScope:='id='+Actor+' AND COALESCE(loginDisabled,0)=0';
   Permission:='EXISTS(SELECT 1 FROM users WHERE '+ActorScope+' AND (isAdmin=1 OR NOT '+AdminOnly+'))';
   Rows:=T.Db.Query('SELECT '+Permission+';');
@@ -1341,11 +1349,106 @@ begin
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
+function CopyBoardWorkflows(Db:TWLDb;const Source,Destination,Actor:string):string;
+const Collections:array[0..3] of string=('triggers','actions','rules','integrations');
+var Graph,Part:TJSONObject;Copies:TJSONArray;Rows:TWLRows;Raw,TableName,Physical,Storage,Payload,
+  Key,Mapped,Guards:string;Maps:array[0..1] of TJSONObject;I,J:Integer;
+  procedure SetString(Obj:TJSONObject;const Name,Text:string);
+  begin Obj.Delete(Name);Obj.Add(Name,Text);end;
+  procedure WriteRow(Row:TJSONObject;const Previous:string);
+  begin
+    Payload:=QuotedStr(TypedDocument(Row.AsJSON,Previous,'{}'));
+    Result:=Result+'INSERT INTO '+Physical+'(_ferretdb_sjson) VALUES(CASE WHEN wl_storage('+QuotedStr(Storage)+
+      ')=''blob'' THEN jsonb('+Payload+') ELSE '+Payload+' END); ';
+  end;
+  procedure RemapParts(Row:TJSONObject;const Primary,Extra:string;IdMap:TJSONObject);
+  var Parts:TJSONArray;V:TJSONData;N:Integer;Id:string;
+  begin
+    Id:=IdMap.Get(Row.Get(Primary,''),'');
+    if Id='' then raise Exception.Create('Missing workflow component');
+    SetString(Row,Primary,Id);
+    V:=Row.Find(Extra);if not (V is TJSONArray) then Exit;
+    Parts:=TJSONArray.Create;
+    for N:=0 to V.Count-1 do
+      if V.Items[N] is TJSONString then
+      begin
+        Id:=IdMap.Get(V.Items[N].AsString,'');if Id<>'' then Parts.Add(Id);
+      end;
+    Row.Delete(Extra);Row.Add(Extra,Parts);
+  end;
+begin
+  Result:='';
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then Exit;
+  Graph:=TJSONObject.Create;Maps[0]:=nil;Maps[1]:=nil;Guards:='';
+  try
+    if not Db.BeginRead then raise Exception.Create('Could not pin board workflow source');
+    try
+      ReadExportWorkflows(Db,Source,Graph);
+      for I:=0 to High(Collections) do
+      begin
+        TableName:=Collections[I];
+        Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(TableName)+';');
+        if Length(Rows)>1 then raise Exception.Create('Ambiguous board workflow source');
+        if Length(Rows)=0 then
+        begin
+          Guards:=Guards+' AND NOT EXISTS(SELECT 1 FROM _ferretdb_collections WHERE name='+QuotedStr(TableName)+')';
+          Continue;
+        end;
+        Storage:=Rows[0][0];Physical:='"'+StringReplace(Storage,'"','""',[rfReplaceAll])+'"';
+        Guards:=Guards+' AND (SELECT count(*) FROM _ferretdb_collections WHERE name='+QuotedStr(TableName)+
+          ' AND table_name='+QuotedStr(Storage)+')=1';
+        if TableName='integrations' then
+        begin
+          Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Physical+
+            ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+QuotedStr(Source)+
+            ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string'''+
+            ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'';');
+          for J:=0 to High(Rows) do
+          begin
+            Raw:=Rows[J][0];Part:=ExactObject(PlainDocument(Raw));
+            try
+              SetString(Part,'_id',NewId);SetString(Part,'boardId',Destination);SetString(Part,'userId',Actor);
+              WriteRow(Part,Raw);
+            finally Part.Free;end;
+          end;
+          Continue;
+        end;
+        Copies:=TJSONArray(Graph.Find(TableName));
+        if I<2 then Maps[I]:=TJSONObject.Create;
+        for J:=0 to Copies.Count-1 do
+        begin
+          Key:=Copies.Objects[J].Get('_id','');Mapped:=NewId;
+          if I<2 then Maps[I].Add(Key,Mapped);
+          Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Physical+
+            ' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Key)+
+            ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'';');
+          if Length(Rows)<>1 then raise Exception.Create('Workflow source changed');
+          Raw:=Rows[0][0];Part:=ExactObject(PlainDocument(Raw));
+          try
+            SetString(Part,'_id',Mapped);SetString(Part,'boardId',Destination);
+            if TableName='rules' then
+            begin
+              if (Maps[0]=nil) or (Maps[1]=nil) then raise Exception.Create('Missing workflow components');
+              RemapParts(Part,'triggerId','extraTriggerIds',Maps[0]);
+              RemapParts(Part,'actionId','extraActionIds',Maps[1]);
+            end;
+            WriteRow(Part,Raw);
+          finally Part.Free;end;
+        end;
+      end;
+    finally
+      if not Db.EndRead then raise Exception.Create('Could not close board workflow source');
+    end;
+    if Guards<>'' then Result:='SELECT CASE WHEN 1'+Guards+' THEN 1 ELSE json(''Workflow source changed'') END; '+Result;
+  finally Maps[1].Free;Maps[0].Free;Graph.Free;end;
+end;
+
 // POST copy board — structural deep copy: board + members + swimlanes + lists + cards, with
 // remapped ids. (Labels/checklists/comments copy is TODO.)
 procedure ApiBoardCopy(aRequest: TRequest; aResponse: TResponse);
 var
-  T: TWLTenant; UserId, SrcId, Title, NewBoard: string;
+  T: TWLTenant; UserId, SrcId, Title, NewBoard,Sql,Permission,AdminOnly,PrivateOnly,RegistryGuard,Visibility: string;
+  Policy:TFieldPolicy;
   B, Rows: TWLRows;
   swMap, listMap: TStringList;
   i: Integer;
@@ -1353,72 +1456,89 @@ var
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiAuthBoard(T, aResponse, UserId, aRequest.RouteParams['boardId'], False) then Exit;
   SrcId := aRequest.RouteParams['boardId'];
+  Policy:=TFieldPolicy.Create(T.Db,UserId,SrcId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  try BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
+  except SendError(aResponse,500,'Could not read board creation policy');Exit;end;
+  Permission:=Permission+' AND (NOT '+AdminOnly+' OR EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(UserId)+
+    ' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0))';
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board creation is restricted to admins');Exit;end;
   Title := BodyField(aRequest, 'title');
 
   B := T.Db.Query(Format('SELECT title,permission,type,color FROM boards WHERE id=%s LIMIT 1;',
     [QuotedStr(SrcId)]));
   if Length(B) = 0 then begin SendError(aResponse, 404, 'Board not found'); Exit; end;
   if Title = '' then Title := B[0][0] + ' Copy';
+  if Pos(#0,Title)>0 then begin SendError(aResponse,400,'Invalid board title');Exit;end;
   NewBoard := NewId;
-  T.Db.Exec(Format(
+  Visibility:='CASE WHEN '+PrivateOnly+' THEN ''private'' ELSE '+QuotedStr(B[0][1])+' END';
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' AND '+RegistryGuard+' THEN 1 ELSE json(''Copy permission changed'') END; '+Format(
     'INSERT INTO boards(id,title,slug,permission,type,color,createdAt,modifiedAt) ' +
     'VALUES(%s,%s,%s,%s,%s,%s,%s,%s);',
     [QuotedStr(NewBoard), QuotedStr(Title), QuotedStr(Slugify(Title)),
-     QuotedStr(B[0][1]), QuotedStr(B[0][2]), QuotedStr(B[0][3]),
-     QuotedStr(NowIso), QuotedStr(NowIso)]));
+     Visibility, QuotedStr(B[0][2]), QuotedStr(B[0][3]),
+     QuotedStr(NowIso), QuotedStr(NowIso)]);
 
   // members
-  Rows := T.Db.Query(Format('SELECT userId,isAdmin FROM board_members WHERE boardId=%s;', [QuotedStr(SrcId)]));
+  Rows := T.Db.Query(Format('SELECT userId,isAdmin FROM board_members WHERE boardId=%s AND isActive=1;', [QuotedStr(SrcId)]));
   for i := 0 to High(Rows) do
     if Length(Rows[i]) >= 2 then
-      T.Db.Exec(Format('INSERT INTO board_members(boardId,userId,isAdmin) VALUES(%s,%s,%s);',
-        [QuotedStr(NewBoard), QuotedStr(Rows[i][0]), QuotedStr(Rows[i][1])]));
+      Sql:=Sql+Format('INSERT INTO board_members(boardId,userId,isAdmin) VALUES(%s,%s,%s);',
+        [QuotedStr(NewBoard), QuotedStr(Rows[i][0]), QuotedStr(Rows[i][1])]);
 
   swMap := TStringList.Create; swMap.CaseSensitive := True;
   listMap := TStringList.Create; listMap.CaseSensitive := True;
   try
     // swimlanes
-    Rows := T.Db.Query(Format('SELECT id,title,sort FROM swimlanes WHERE boardId=%s;', [QuotedStr(SrcId)]));
+    Rows := T.Db.Query(Format('SELECT id,title,COALESCE(sort,0) FROM swimlanes WHERE boardId=%s;', [QuotedStr(SrcId)]));
     for i := 0 to High(Rows) do
       if Length(Rows[i]) >= 3 then
       begin
         newSw := NewId; swMap.Values[Rows[i][0]] := newSw;
-        T.Db.Exec(Format('INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES(%s,%s,%s,%s,%s);',
-          [QuotedStr(newSw), QuotedStr(NewBoard), QuotedStr(Rows[i][1]), QuotedStr(Rows[i][2]), QuotedStr(NowIso)]));
+        Sql:=Sql+Format('INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES(%s,%s,%s,%s,%s);',
+          [QuotedStr(newSw), QuotedStr(NewBoard), QuotedStr(Rows[i][1]), QuotedStr(Rows[i][2]), QuotedStr(NowIso)]);
       end;
     // lists
-    Rows := T.Db.Query(Format('SELECT id,title,sort,swimlaneId FROM lists WHERE boardId=%s AND deletedAt IS NULL;', [QuotedStr(SrcId)]));
+    Rows := T.Db.Query(Format('SELECT id,title,COALESCE(sort,0),swimlaneId FROM lists WHERE boardId=%s AND deletedAt IS NULL;', [QuotedStr(SrcId)]));
     for i := 0 to High(Rows) do
       if Length(Rows[i]) >= 4 then
       begin
         newList := NewId; listMap.Values[Rows[i][0]] := newList;
-        T.Db.Exec(Format('INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(%s,%s,%s,%s,%s,%s);',
+        Sql:=Sql+Format('INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(%s,%s,%s,%s,%s,%s);',
           [QuotedStr(newList), QuotedStr(NewBoard), QuotedStr(swMap.Values[Rows[i][3]]),
-           QuotedStr(Rows[i][1]), QuotedStr(Rows[i][2]), QuotedStr(NowIso)]));
+           QuotedStr(Rows[i][1]), QuotedStr(Rows[i][2]), QuotedStr(NowIso)]);
       end;
     // cards
     Rows := T.Db.Query(Format(
-      'SELECT id,title,description,listId,swimlaneId,userId,color,sort FROM cards WHERE boardId=%s AND deletedAt IS NULL;',
+      'SELECT id,title,description,listId,swimlaneId,userId,color,COALESCE(sort,0) FROM cards WHERE boardId=%s AND deletedAt IS NULL;',
       [QuotedStr(SrcId)]));
     for i := 0 to High(Rows) do
       if Length(Rows[i]) >= 8 then
       begin
         newCard := NewId;
-        T.Db.Exec(Format(
+        Sql:=Sql+Format(
           'INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,color,sort,' +
           'dateLastActivity,createdAt,modifiedAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);',
           [QuotedStr(newCard), QuotedStr(NewBoard),
            QuotedStr(listMap.Values[Rows[i][3]]), QuotedStr(swMap.Values[Rows[i][4]]),
            QuotedStr(Rows[i][1]), QuotedStr(Rows[i][2]), QuotedStr(Rows[i][5]),
            QuotedStr(Rows[i][6]), QuotedStr(Rows[i][7]),
-           QuotedStr(NowIso), QuotedStr(NowIso), QuotedStr(NowIso)]));
+           QuotedStr(NowIso), QuotedStr(NowIso), QuotedStr(NowIso)]);
       end;
   finally
     swMap.Free; listMap.Free;
   end;
-  SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(NewBoard, '"')]));
+  try
+    Sql:=Sql+CopyBoardWorkflows(T.Db,SrcId,NewBoard,UserId)+'COMMIT;';
+    if not T.Db.Exec(Sql) then raise Exception.Create('Board copy failed');
+  except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not copy board');Exit;end;
+  SendJson(aResponse,'"'+StringToJSONString(NewBoard)+'"');
 end;
 
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
