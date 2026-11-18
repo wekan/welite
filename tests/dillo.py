@@ -58,10 +58,15 @@ def observe_board_requests(base):
                             links['board'] = attributes['href']
                             break
                 elif route.path == '/board' and query.get('sessionId'):
-                    if Page(body).captions('/board/attachments'):
-                        observed_path = '/signed-in-board'
-                    else:
-                        observed_path = '/board'
+                    observed_path = '/board'
+                    for tag, attributes, _ in Page(body).items:
+                        if tag == 'a' and urlsplit(attributes['href']).path == '/board/attachments':
+                            links['attachments'] = attributes['href']
+                            observed_path = '/signed-in-board'
+                            break
+                elif route.path == '/board/attachments' and query.get('sessionId'):
+                    observed_path = '/signed-in-attachments'
+                    assert Page(body).captions('/board')
                 if observed_path:
                     exchanges.append((observed_path, self.headers.get('Cookie'),
                                       response.getheader('Set-Cookie'), response.status,
@@ -217,11 +222,12 @@ def assert_language_form(tools, env, observed, exchanges, links, browser_name):
     assert ('/', None, None, 200, 'fi') in exchanges
     print(f'PASS: {browser_name} signed in and rendered the Finnish home page without cookies')
 
-    assert 'board' in links
-    send('key', 'ctrl+l')
-    subprocess.run([xdotool, 'type', '--file', '-'], input=urljoin(observed, links['board']),
-                   text=True, env=env, check=True)
-    send('key', 'Return')
-    wait_for('/signed-in-board')
-    assert ('/signed-in-board', None, None, 200, 'fi') in exchanges
-    print(f'PASS: {browser_name} opened the Finnish board from its signed-in home link without cookies')
+    for link, route in [('board', '/signed-in-board'), ('attachments', '/signed-in-attachments')]:
+        assert link in links
+        send('key', 'ctrl+l')
+        subprocess.run([xdotool, 'type', '--file', '-'], input=urljoin(observed, links[link]),
+                       text=True, env=env, check=True)
+        send('key', 'Return')
+        wait_for(route)
+        assert (route, None, None, 200, 'fi') in exchanges
+    print(f'PASS: {browser_name} opened the signed-in Finnish board and attachment pages without cookies')

@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify signed-in attachment navigation in retro browsers
+
+- Open the board’s Attachments link in Dillo and NetSurf and verify the
+  Finnish response, authenticated board return link and cookie-free session.
+
 ## 2026-11-18 Verify signed-in board navigation in retro browsers
 
 - Open the board URL emitted by the signed-in home page in Dillo and
