@@ -935,6 +935,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 client.command({'insert':'attachments','documents':[dict(_id=attachment_id,name='export.txt',
                     type='text/plain',storageBackend='filesystem',metadata_json='{}',
                     meta=dict(boardId='b',listId='l',swimlaneId='s',cardId=card['_id']))]})
+                original_card,=client.find('cards',card['_id'])
+                description='<b>Export roadmap</b><script>ignored content</script>'
+                def update_export_card(change):
+                    assert client.command({'update':'cards','updates':[
+                        dict(q={'_id':card['_id']},u=change)]})['n']==1
+                update_export_card({'$set':{'description':description}})
                 download='/board/export?id=b&sessionId='+web_session
                 assert request('GET','/board/export?id=b')[0]==401
                 board_page=request('GET','/board?id=b&sessionId='+web_session)
@@ -943,13 +949,22 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     status,download_headers,body=request('GET',download+suffix)
                     assert status==200 and 'Set-Cookie' not in download_headers,(status,body)
                     assert download_headers['Content-Disposition']=='attachment; filename="board.json"'
-                    exported=next(row for row in json.loads(body)['attachments'] if row['_id']==attachment_id)
+                    document=json.loads(body)
+                    exported_card=next(row for row in document['cards'] if row['_id']==card['_id'])
+                    assert exported_card['description']=='Export roadmap'
+                    exported=next(row for row in document['attachments'] if row['_id']==attachment_id)
                     if suffix:assert 'file' not in exported
                     else:assert base64.b64decode(exported['file'])==contents
                 if os.environ.get('WELITE_UI')=='1':
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/boardexp.js'),
                                     f'http://localhost:{http_port}/board?id=b&sessionId='+web_session,
-                                    card['_id'],attachment_id,base64.b64encode(contents).decode('ascii')],check=True)
+                                    card['_id'],attachment_id,base64.b64encode(contents).decode('ascii'),
+                                    'Export roadmap'],check=True)
+                assert client.find('cards',card['_id'])[0]['description']==description
+                if 'description' in original_card:
+                    update_export_card({'$set':{'description':original_card['description']}})
+                else:
+                    update_export_card({'$unset':{'description':''}})
                 client.command({'delete':'attachments','deletes':[dict(q={'_id':attachment_id},limit=1)]})
                 print('PASS: cookie-free board download includes real attachment bytes only when requested')
                 check_list_soft_delete(request,client,database,token,web_session)

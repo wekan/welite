@@ -3,7 +3,7 @@ const { chromium } = require(process.env.WELITE_PLAYWRIGHT || 'playwright');
 const assert = require('node:assert/strict');
 
 (async () => {
-  const [boardUrl, cardId, attachmentId, expectedFile] = process.argv.slice(2);
+  const [boardUrl, cardId, attachmentId, expectedFile, expectedDescription] = process.argv.slice(2);
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
   try {
     const context = await browser.newContext({ javaScriptEnabled: false, userAgent: 'shared-http-test' });
@@ -26,7 +26,9 @@ const assert = require('node:assert/strict');
       const chunks = [];
       for await (const chunk of await download.createReadStream()) chunks.push(chunk);
       const exported = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      assert.ok(exported.cards.some(card => card._id === cardId));
+      const card = exported.cards.find(row => row._id === cardId);
+      assert.ok(card);
+      assert.equal(card.description, expectedDescription);
       assert.ok(Array.isArray(exported.users));
       const attachment = exported.attachments.find(row => row._id === attachmentId);
       assert.ok(attachment);

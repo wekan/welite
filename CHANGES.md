@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify plain-text descriptions in both board downloads
+
+- The browser and HTTP export fixtures check that formatted card text
+  becomes plain text and script content is omitted. The stored
+  description remains intact.
+
 ## 2026-11-18 Verify both board export links in Chromium
 
 - Download both JSON variants without JavaScript or cookies. Verify
