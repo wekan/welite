@@ -249,7 +249,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 with sqlite3.connect(native_file) as con:
                     assert con.execute("SELECT type FROM sqlite_master WHERE name='integrations'").fetchone()==('table',)
                 form=urlencode(dict(username='native-user',password='test-password',confirm='test-password'))
-                assert request('POST','/register',form)[0]==302
+                status,headers,_=request('POST','/register',form)
+                assert status==302 and 'Set-Cookie' not in headers
+                native_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
                 status,_,body=request('POST','/users/login',dict(username='native-user',password='test-password'))
                 assert status==200,(status,body)
                 native_token=json.loads(body)['token']
@@ -277,6 +279,9 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 changes=dict(url='https://1.0.0.1/updated',title='Updated',enabled=False,activities=[])
                 assert request('PUT',integration,changes,native_token)[0]==200
                 assert json.loads(request('GET',integration_base,token=native_token)[2])==[dict(document,**changes)]
+                native_page='/board/webhooks?id='+native_boards[0]+'&sessionId='+native_session
+                status,headers,body=request('GET',native_page)
+                assert status==200 and 'Set-Cookie' not in headers and b'Updated' in body
                 assert request('DELETE',integration,token=native_token)[0]==200
                 assert request('GET',integration,token=native_token)[0]==404
                 assert request('POST',integration_base,dict(url='https://1.1.1.1/cleanup'),native_token)[0]==200
@@ -709,7 +714,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert request('DELETE',new_path,token=token)[0]==200
                 print('PASS: integration creation and destination edits validate public IPv4 and IPv6 and retain typed defaults')
                 client.command({'insert':'integrations','documents':[dict(_id='fixture-webhook',boardId='b',
-                    userId='u',url='https://example.invalid/hook',token='fixture',enabled=True,createdAt=now)]})
+                    userId='u',url='https://example.invalid/hook',token='fixture-secret',enabled=True,createdAt=now)]})
                 integration_path='/api/boards/b/integrations/fixture-webhook'
                 status,_,body=request('GET',integration_path,token=token)
                 assert status==200,(status,body)
@@ -872,6 +877,30 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
                 assert request('GET',headers['Location'])[0]==200
                 web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                webhook_page='/board/webhooks?id=b&lang=en&sessionId='+web_session
+                assert request('GET','/board/webhooks?id=b')[0]==401
+                status,head,body=request('GET',webhook_page)
+                assert status==200 and 'Set-Cookie' not in head and 'no-store' in head['Cache-Control']
+                assert b'Outgoing Webhooks' in body and b'fixture-secret' not in body
+                assert b'/board/webhooks?id=b' in request('GET','/board?id=b&sessionId='+web_session)[2]
+                hook_members=client.find('boards','b')[0]['members']
+                def set_webhook_members(members):
+                    assert client.command({'update':'boards','updates':[
+                        {'q':{'_id':'b'},'u':{'$set':{'members':members}}}
+                    ]})['n']==1
+                set_webhook_members([dict(member,isAdmin=False) if member['userId']=='u' else member
+                                     for member in hook_members])
+                try:
+                    assert request('GET',webhook_page)[0]==403
+                    assert b'/board/webhooks?id=b' not in request('GET','/board?id=b&sessionId='+web_session)[2]
+                finally:
+                    set_webhook_members(hook_members)
+                assert request('PUT',integration_path,dict(title='Refreshed <name>',enabled=False),token)[0]==200
+                body=request('GET',webhook_page)[2]
+                assert b'Refreshed &lt;name&gt;' in body and b'Refreshed <name>' not in body
+                assert request('DELETE',integration_path,token=token)[0]==200
+                assert b'Refreshed' not in request('GET',webhook_page)[2]
+                print('PASS: cookie-free board webhook settings reflect REST changes on reload')
                 attachment_id='shared-export-file'
                 contents=b'WeLite export regression'
                 digest=hashlib.sha256(attachment_id.encode()).hexdigest()

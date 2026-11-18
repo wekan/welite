@@ -211,3 +211,7 @@ delivery requires its own address check and connection pinning.
 Both native and shared SQLite support integration reads and writes. Native
 stores add the integrations table when opened and remove a board’s
 integrations when the board is deleted.
+
+Board administrators can open **Outgoing Webhooks** from the board. The HTML
+page shows current integration metadata and reflects REST edits on reload.
+It uses the board’s browser session and omits integration credentials.

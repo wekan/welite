@@ -9,7 +9,7 @@ function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 implementation
-uses wli18n,wllocale;
+uses wli18n,wllocale,wlcfpol;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;
 var R:TWLRows; i,Count:Integer;Words:TWLTranslator;Tag:string;
 begin
@@ -29,8 +29,8 @@ begin
   finally Words.Free;end;
 end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard:string):string;
-var B,Lanes,Lists,Cards,MapLists,Subtasks:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
-  Writable,ShowSpentTime:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;
+var B,Lanes,Lists,Cards,MapLists,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
+  Writable,ShowSpentTime:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -60,6 +60,16 @@ begin
       HtmlAttr(SessionUrl(Url+'&attachments=false',S))+'">'+
       HtmlEncode(Words.Text('export-board','Export board')+' (JSON, '+
         Words.Text('export-board-without-attachments','without attachments')+')')+'</a></p>';
+    Policy:=nil;
+    try
+      try
+        Policy:=TFieldPolicy.Create(Db,S.UserId,BoardId,'');
+        Permissions:=Db.Query('SELECT '+Policy.ScopeAdminExpression(True)+';');
+      except Permissions:=nil;end;
+    finally Policy.Free;end;
+    if (Length(Permissions)=1) and (Permissions[0][0]='1') then
+      Result:=Result+'<p><a href="'+HtmlAttr(SessionUrl('/board/webhooks?id='+HTTPEncode(BoardId),S))+
+        '">'+HtmlEncode(Words.Text('outgoing-webhooks','Outgoing Webhooks'))+'</a></p>';
   end;
   Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
     ' AND archived=0 ORDER BY sort,id;');

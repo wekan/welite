@@ -56,6 +56,7 @@ procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);    // PUT boa
 procedure ApiDeleteRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiEditRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
+procedure BrowserIntegrations(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
@@ -109,7 +110,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -1323,15 +1324,50 @@ begin
   finally Rule.Free;end;
 end;
 
-procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
+procedure HandleIntegrations(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);
 const InvalidUrl='{"error":"invalid-webhook-url"}';
   NotFound='{"error":"Integration not found"}';
 var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Payload,Mutation,Guard,Raw,Encoded,DocumentColumn,StorageGuard,InsertColumns,InsertValues:string;
   Rows:TWLRows;Policy:TFieldPolicy;Admin,Reading,Creating,BadUrl,Shared:Boolean;
-  Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
+  Session:TWLSession;Entries:TJSONArray;Doc,Entry:TJSONObject;Field:TJSONData;Row:TWLRow;
+  procedure ShowIntegrations(List:TJSONArray);
+  var Language:TWLLanguage;Words:TWLTranslator;Title,Body,Name:string;Hook:TJSONObject;I:Integer;
+  begin
+    Session.LanguageTag:=RequestLanguageTag(aRequest);
+    Language:=ViewerLanguage(T.Db,Session,aRequest);
+    Words:=TWLTranslator.Create(Language);
+    try
+      Title:=Words.Text('outgoing-webhooks','Outgoing Webhooks');
+      Body:='<h1>'+HtmlEncode(Title)+'</h1><p><a href="'+
+        HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId),Session))+'">'+
+        HtmlEncode(Words.Text('board','Board'))+'</a></p><ul>';
+      if (List=nil) or (List.Count=0) then
+        Body:=Body+'<li>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</li>'
+      else
+        for I:=0 to List.Count-1 do
+        begin
+          Hook:=List.Objects[I];
+          Name:=Hook.Get('title','');
+          if Name='' then Name:=Hook.Get('url','');
+          Body:=Body+'<li><p>'+HtmlEncode(Name)+'</p>';
+          if (Hook.Get('url','')<>'') and (Hook.Get('url','')<>Name) then
+            Body:=Body+'<p>'+HtmlEncode(Hook.Get('url',''))+'</p>';
+          if not Hook.Get('enabled',True) then
+            Body:=Body+'<p>'+HtmlEncode(Words.Text('disabled','Disabled'))+'</p>';
+          Body:=Body+'</li>';
+        end;
+      aResponse.Code:=200;aResponse.ContentType:='text/html; charset=utf-8';
+      aResponse.SetCustomHeader('Cache-Control','private, no-store');
+      aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
+      aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+'</ul>','','html4');
+      aResponse.SendContent;
+    finally Words.Free;end;
+  end;
+
   procedure Missing;
   begin
-    if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
+    if Browser then ShowIntegrations(nil)
+    else if Reading and (Id='') then SendJson(aResponse,'[]') else SendJson(aResponse,NotFound,404);
   end;
   function ValidDestination(Value:TJSONData):Boolean;
   begin
@@ -1426,15 +1462,26 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
 
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
-  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
-  BoardId:=aRequest.RouteParams['boardId'];Id:=aRequest.RouteParams['intId'];
+  if Browser then
+  begin
+    if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),Session) then
+    begin SendError(aResponse,401,'Sign in to view outgoing webhooks');Exit;end;
+    Actor:=Session.UserId;BoardId:=aRequest.QueryFields.Values['id'];Id:='';
+    if (BoardId='') or (Pos(#0,BoardId)>0) then
+    begin SendError(aResponse,400,'Invalid board ID');Exit;end;
+  end
+  else
+  begin
+    if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+    BoardId:=aRequest.RouteParams['boardId'];Id:=aRequest.RouteParams['intId'];
+  end;
   Reading:=aRequest.Method='GET';Creating:=aRequest.Method='POST';BadUrl:=False;
   if not ApiAuthBoard(T,aResponse,Actor,BoardId,False) then Exit;
   Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
   Rows:=T.Db.Query('SELECT '+Permission+';');
   Admin:=(Length(Rows)=1) and (Rows[0][0]='1');
-  if not Reading and not Admin then
+  if (Browser or not Reading) and not Admin then
   begin SendError(aResponse,403,'Board administration required');Exit;end;
   Shared:=Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1;
   if Creating and not PrepareCreation then begin SendJson(aResponse,InvalidUrl,400);Exit;end;
@@ -1502,6 +1549,7 @@ begin
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change integration');Exit;end;
     SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');Exit;
   end;
+  if Browser then Scope:=Scope+' AND ('+Permission+')';
   Rows:=T.Db.Query('SELECT json('+DocumentColumn+') FROM '+TableName+' WHERE '+Scope+';');
   if (Id<>'') and (Length(Rows)<>1) then begin Missing;Exit;end;
   Entries:=TJSONArray.Create;
@@ -1520,10 +1568,20 @@ begin
           end;
         finally Doc.Free;end;
       end;
+      if Browser then begin ShowIntegrations(Entries);Exit;end;
       if Id<>'' then Payload:=Entries.Items[0].AsJSON else Payload:=Entries.AsJSON;
       SendJson(aResponse,Payload);
     except SendError(aResponse,500,'Could not read integrations');end;
   finally Entries.Free;end;
+end;
+
+procedure ApiIntegration(aRequest:TRequest;aResponse:TResponse);
+begin HandleIntegrations(aRequest,aResponse,False);end;
+
+procedure BrowserIntegrations(aRequest:TRequest;aResponse:TResponse);
+begin
+  try HandleIntegrations(aRequest,aResponse,True);
+  except SendError(aResponse,500,'Could not read integrations');end;
 end;
 
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
