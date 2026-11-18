@@ -1,9 +1,8 @@
 # WeKan-Lite — REST API — v0.1
 
-WeKan-Lite serves a subset of WeKan's REST API (the contract frozen in
-[`public/api/wekan.yml`](../public/api/wekan.yml), OpenAPI 2.0), so WeKan's Python CLI
-[`api.py`](https://github.com/wekan/wekan/blob/main/api.py) works against the FreePascal server
-unchanged. Code: `wlapi.pas`.
+WeKan-Lite implements a subset of WeKan's REST API in `src/wlapi.pas`. Use the
+endpoint list below for the supported operations. The bundled OpenAPI file
+describes the upstream API and includes routes outside this subset.
 
 ## Auth (Bearer token)
 
@@ -131,7 +130,10 @@ is self-or-admin. Non-members get `403`.
 | `POST`/`DELETE …/cards/:cardId/members/:member` | — | card (incl. `members`) |
 | `POST`/`DELETE …/cards/:cardId/assignees/:assignee` | — | card (incl. `assignees`) |
 | `GET`/`POST /api/boards/:boardId/custom-fields` | `customfields` / `addcustomfieldtoboard`¹ | list / `{"_id"}` |
-| `GET /api/boards/:boardId/custom-fields/:customField` | `customfield` | `{"_id","name","type"}` |
+| `GET /api/boards/:boardId/custom-fields/:customField` | `customfield` | definition metadata and settings |
+| `PUT`/`DELETE /api/boards/:boardId/custom-fields/:customField` | definition update and delete | `{"_id"}` |
+| `POST /api/boards/:boardId/custom-fields/:customField/dropdown-items` | append names from `items` | definition `{"_id"}` |
+| `PUT`/`DELETE /api/boards/:boardId/custom-fields/:customField/dropdown-items/:dropdownItem` | rename or delete one option | option `{"_id"}` for rename, definition `{"_id"}` for delete |
 | `POST …/cards/:cardId/customFields/:customField` | `editcustomfield` | `{"_id"}` (sets card value) |
 | `POST /api/attachment/upload` | `uploadattachment` | `{"success","attachmentId","fileName","fileSize"}` (JSON+base64) |
 | `GET /api/attachment/download/:attachmentId` | `downloadattachment` | `{"success","base64Data","fileName","fileSize"}` |
@@ -147,6 +149,12 @@ Verified end-to-end against the real `api.py` on FPC 3.2.3: login → board/swim
 createlist → addcard → cardsbyswimlane → editcard/editcardcolor → counts → editboardtitle →
 copyboard → createlabel → addchecklist/checklistid, with rows persisting to the tenant's
 SQLite DB.
+
+Definition PUT and DELETE support definitions owned by a single board. Deleting a
+definition removes its card values on that board. Deleting a dropdown option keeps
+existing card selections. New API cards initialize automatic and always-on
+fields as null. Existing-card backfill and multi-board definition mutations are
+still tracked in [TODO.md](../TODO.md).
 
 ## Notes & TODO
 

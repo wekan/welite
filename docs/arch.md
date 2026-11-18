@@ -22,43 +22,38 @@ dispatcher. The portability argument in Decision 1 holds unchanged: RTL-only, no
 
 ---
 
-## Request lifecycle (target)
+## Request lifecycle
 
 ```
 TCP :PORT
   └─ fphttpapp dispatch
        └─ httproute match  (HTTPRouter.RegisterRoute pattern → handler)
             └─ [1] tenant middleware   (wltenant.pas)
-            │       Host: header → data/domains/<domain>/  (or data/admin/)
-            │       → open/cache that tenant's db/data.db  → TWLContext.DB
+            │       Host: header → data/domains/<key>/  (or data/admin/, data/local/)
+            │       → open that tenant's files/db/wekan.db  → TWLTenant.Db
             └─ [2] auth middleware     (wlauth.pas)
             │       sessionId (URL/hidden field) → user; verify action-token on POST
             └─ [3] endpoint handler
-                    reads/writes TWLContext.DB (schema.sql tables) → renders HTML
+                    reads/writes TWLTenant.Db → renders HTML or returns JSON
 ```
 
-Two cross-cutting middlewares wrap every endpoint; everything else is a plain
-`TRequest`→`TResponse` handler like the prototypes already have.
+Route handlers resolve the tenant and apply the authorization required for the endpoint.
 
 ### 1. Tenant resolution (G8) — `wltenant.pas`
 The single most important addition over the prototypes (which are single-tenant). Normalize
-the `Host` header (lowercase, strip port and optional `www.`), map to
-`data/domains/<domain>/`, and hand the endpoint that tenant's `db/data.db` handle and
-`files/` root. `admin` is reserved → `data/admin/`. Unknown host → 404, never a fallback.
-See `goals.md` G8 for the on-disk layout. Implemented in `wltenant.pas`.
+the `Host` header, resolve its tenant key in the registry, and provide the
+`files/db/wekan.db` handle and `files/` root. The Global Admin and local tenants
+use reserved directories. Unknown hosts return HTTP 404.
+See [runtime storage](runtime.md) for path layout and migration.
 
 ### 2. Auth (G4) — `wlauth.pas`
 Lifted from [`omi/public/server.pas`](https://github.com/wekan/omi/blob/main/public/server.pas), which already solves "auth without cookies or JS":
-- **Session id travels in the URL** (`?sessionId=…`) and in **hidden form fields**, never a
-  required cookie — so IBrowse/NetSurf/Dillo/Lynx all work.
-- Every state-changing action is a `<form method="POST">` carrying an **action-token**: a
-  hash of `action | username | passwordRef | ip | userAgent | loginAt | counter | sessionId`
-  with a per-action **counter** (replay protection), bound to client **IP + User-Agent**,
-  with **idle timeout**. (omi uses an FNV-1a hash in pure Pascal — no crypto lib needed; for
-  WeKan-Lite we keep the structure and can swap in SHA-256 where a backend is available.)
-- This maps onto `schema.sql`'s `login_tokens` table: the omi prototype keeps sessions in
-  RAM + flat files; WeKan-Lite persists the hashed token in `login_tokens(hashedToken,
-  userId, createdAt, expiresAt)` per the contract's auth flow.
+- Web sessions travel with navigation and hidden form fields. State-changing
+  forms use HMAC action tokens with replay protection, client binding and idle
+  expiry.
+- Web and API login verify Meteor bcrypt or Argon2 credentials and supported
+  legacy PBKDF2 records. Native storage and the shared adapter bind tokens to the
+  tenant and current credentials. See [REST authentication](api.md#auth-bearer-token).
 
 ### 3. Endpoints
 Same shape as the prototypes' `procedure xEndpoint(aRequest: TRequest; aResponse: TResponse)`,
@@ -72,39 +67,33 @@ registered with `HTTPRouter.RegisterRoute`. They read/write the tenant DB throug
 The prototypes bracket the compatibility range; WeKan-Lite should target the **lower** one
 and treat richer output as enhancement:
 
-| Tier | Source | Browsers verified | Use |
+| Tier | Source | Prototype browser coverage | Use |
 |------|--------|-------------------|-----|
 | **HTML 3.2, table layout, no CSS/JS** | omi `server.pas` (`PrettyHtml32`) | IBrowse+AmiSSL (Amiga), Dillo (FreeDOS), Elinks/w3m/Lynx (text) | **Baseline.** Every page must work here. |
 | HTML 4.01 + minimal CSS, optional JS drag | wami `wekan.pas` | Chrome, NetSurf, Dillo desktop | Progressive enhancement for modern browsers. |
 
-Hard rule (from `goals.md` G4): **every interactive element is a plain `<form>` POST**; JS
-drag-and-drop only ever *submits the same form*. The wami `boardEndpoint` keyboard/space
-move-card JS is the enhancement layer over a `POST …/move {from,to,sort}`.
+WeLite uses links for navigation and HTML POST forms for state changes. Optional
+drag and touch controls use the same board move endpoint. The WeLite
+[Chromium tests](../tests/README.md) cover the form baseline with JavaScript and
+cookies disabled. Retro browser and hardware acceptance remains in [TODO.md](../TODO.md).
 
 ---
 
 ## Persistence — the one real fork
 
-The prototypes show **two different ways to reach SQLite**, and this is a genuine decision
-(not yet settled), so it gets its own doc: **`sqlite.md`**.
-
-- omi: **shell out to the `sqlite3` CLI** via `TProcess` (`ExecSqlOnDb`, `-separator | -batch
-  -noheader`). Zero FFI, compiles anywhere, but needs a `sqlite3` binary present and parses
-  text output.
-- contract/goals: **statically linked SQLite** in one binary (G1/G3), via FPC's `sqlite3`/
-  `sqldb` units.
-
-`wldb.pas` hides both behind one interface so endpoints don't care which is compiled in.
+The default server links SQLite. A build with `-dWLDB_CLI` runs the external
+`sqlite3` executable. Both backends use the `wldb.pas` interface, including
+transactional writes. See [SQLite modes](sqlite.md) and the [FerretDB adapter](ferret.md).
 
 ---
 
-## Suggested unit layout (this directory)
+## Server unit layout
 
 | Unit | Role | Distilled from |
 |------|------|----------------|
 | `wlhttp.lpr` | program entry: config, route table, start `fphttpapp` | wami `begin…end.` + omi `LoadSettings` |
-| `wltenant.pas` | `Host:` → tenant dir + `data.db` handle cache (G8) | **new** (prototypes are single-tenant) |
-| `wlregist.pas` | domain registry over `data/admin/db/data.db` (G8) | **new** (Global Admin store) |
+| `wltenant.pas` | `Host:` → tenant dir + `files/db/wekan.db` handle (G8) | **new** (prototypes are single-tenant) |
+| `wlregist.pas` | domain registry over `data/admin/files/db/wekan.db` (G8) | **new** (Global Admin store) |
 | `wlauth.pas` | no-cookie/no-JS sessions + action-tokens (G4) | omi session/token functions |
 | `wldb.pas` | SQLite access behind one interface (CLI or linked) | omi `ExecSqlOnDb` + `sqlite3` unit |
 | `wlhtml.pas` | retro-safe HTML helpers + HTML-3.2 pretty printer + dir wrapper | omi `PrettyHtml32`, `HtmlEncode`; wami layout |
@@ -115,33 +104,10 @@ The prototypes show **two different ways to reach SQLite**, and this is a genuin
 | `wlenhanc.pas` | progressive enhancement: MultiDrag/touch hooks + scripts | **new** (see `enhance.md`) |
 | `wlmove.pas` | combined no-JS arrows move component + `/board/move` | **new** (see `move.md`) |
 
-All seven ship alongside this doc as v0.1 skeletons — faithful to the prototypes' style
-(`{$mode objfpc}{$H+}`, `{$CODEPAGE UTF8}`, `TRequest`/`TResponse`), self-contained in their
-`uses` clauses, meant as the starting point, not a finished server (see `README.md` for the
-remaining gaps: password hashing and the linked-SQLite binding).
+## Building and testing
 
----
-
-## Build (per `SERVER_FREEPASCAL.md`, confirmed working)
-
-```bash
-fpc -O3 -Xs -o welite wlhttp.lpr     # release, stripped (~2-4 MB)
-```
-Cross-compile targets (one binary each, no runtime):
-```bash
-fpc -Px86_64           …   # Linux/macOS/FreeBSD/Windows(x86_64)
-fpc -Paarch64          …   # macOS Apple Silicon, arm64 Linux
-fpc -Pm68k -Tamiga     …   # classic Amiga 68k
-```
-TLS stays out of the binary (`webstack.md` Decision 5): AmiSSL (Amiga) / OpenSSL
-(modern) dynamically loaded, or plaintext behind a Caddy/proxy that terminates TLS.
-
----
-
-## What the prototypes still lack (WeKan-Lite work)
-- **Multitenancy** — neither prototype has it; `wltenant.pas` is the new core.
-- **schema.sql** — wami uses `users.csv`, omi uses flat files + repo `.omi` DBs; WeKan-Lite
-  must use the 24-table schema and `login_tokens` for auth.
-- **Password hashing** — both store plaintext passwords (prototype-grade); WeKan-Lite needs
-  real hashing in `users.services_json` per the contract.
-- **Global vs Domain admin** (G8 two-tier) — not in either prototype.
+Run `bash build.sh` from the repository root and select the current platform
+build or an installed cross target. The [cross-build record](cross.md) lists
+toolchain and runtime checks by target. Use a TLS-terminating proxy when serving
+a deployment over HTTPS. See [the test guide](../tests/README.md) for isolated
+native, shared-storage and browser runs.
