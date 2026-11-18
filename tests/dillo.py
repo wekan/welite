@@ -1,4 +1,4 @@
-"""Optional Dillo HTML4 board check on an isolated Xvfb display."""
+"""Optional Dillo and NetSurf HTML4 board checks on isolated Xvfb displays."""
 import os
 from pathlib import Path
 import select
@@ -9,10 +9,12 @@ import time
 
 def run(base):
     for width, height in [(640, 480), (320, 480)]:
-        check_viewport(base, width, height)
+        check_viewport(base, width, height, "Dillo")
+    if os.environ.get("WELITE_NETSURF") == "1":
+        check_viewport(base, 640, 480, "NetSurf")
 
 
-def check_viewport(base, width, height):
+def check_viewport(base, width, height, browser_name):
     size = f'{width}x{height}'
     tools = Path(os.environ['WELITE_DILLO_TOOLS']).resolve()
     with tempfile.TemporaryDirectory(prefix='wldillo-', dir=os.environ['TMPDIR']) as directory:
@@ -36,8 +38,17 @@ def check_viewport(base, width, height):
                 log.seek(0)
                 assert number.isdecimal(), log.read()
                 env['DISPLAY'] = ':' + number
-                browser = subprocess.Popen([str(tools / 'usr/bin/dillo'), '-f', '-g', size + '+0+0',
-                                            base.replace('://localhost:', '://127.0.0.1:') + '/board?id=boardtxt&lang=en'], env=env)
+                url = base.replace('://localhost:', '://127.0.0.1:') + '/board?id=boardtxt&lang=en'
+                if browser_name == 'NetSurf':
+                    env.update(GDK_BACKEND='x11', GDK_SCALE='1', GDK_DPI_SCALE='1', GTK_IM_MODULE='xim',
+                               NETSURFRES=str(tools / 'usr/share/netsurf'),
+                               XDG_CONFIG_HOME=str(Path(directory) / 'config'),
+                               XDG_CACHE_HOME=str(Path(directory) / 'cache'))
+                    args = ['netsurf-gtk', '--enable_javascript=0', f'--window_width={width}',
+                            f'--window_height={height}', url]
+                else:
+                    args = ['dillo', '-f', '-g', size + '+0+0', url]
+                browser = subprocess.Popen([str(tools / 'usr/bin' / args[0]), *args[1:]], env=env)
                 def highlight():
                     pixels = subprocess.check_output([
                         'ffmpeg', '-v', 'error', '-f', 'x11grab', '-video_size', size,
@@ -52,7 +63,7 @@ def check_viewport(base, width, height):
                         break
                     assert browser.poll() is None
                     time.sleep(.5)
-                assert len(points) > 20, 'Dillo did not render the HTML4 minimap highlight'
+                assert len(points) > 20, f'{browser_name} did not render the HTML4 minimap highlight'
                 left = min(x for x, _ in points)
                 top = min(y for _, y in points)
                 bottom = max(y for _, y in points)
@@ -70,11 +81,11 @@ def check_viewport(base, width, height):
                         break
                     time.sleep(.5)
                 else:
-                    raise AssertionError('Dillo minimap click did not move the viewport highlight')
+                    raise AssertionError(f'{browser_name} minimap click did not move the viewport highlight')
             finally:
                 if browser is not None and browser.poll() is None:
                     browser.terminate()
                     browser.wait(timeout=10)
                 display.terminate()
                 display.wait(timeout=10)
-    print(f'PASS: Dillo at {size} rendered the HTML4 minimap and followed a viewport link with cookies denied')
+    print(f'PASS: {browser_name} at {size} rendered the HTML4 minimap and followed a viewport link')
