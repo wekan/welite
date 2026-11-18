@@ -909,7 +909,7 @@ begin
           if RasterAttachment(Attached[3]) then
           begin
             FilePath:=SessionUrl(AttachmentPath(Board,Card,Attached[0])+'&preview=1',S);
-            Body:=Body+' <a href="'+HtmlAttr(FilePath)+'">'+HtmlEncode(Words.Text('view','View'))+'</a>';
+            Body:=Body+' <a href="'+HtmlAttr(FilePath)+'">'+HtmlEncode(Words.Text('preview','Preview'))+'</a>';
           end;
           if Writable then Body:=Body+AttachmentForms(Board,Card,Attached[0],Attached[1],'&from=attachments',S,Words);
           Body:=Body+'</li>';

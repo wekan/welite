@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize the attachment preview link
+
+- Use the existing Preview translation for the raster preview action.
+  Verify the Finnish label in Chromium with JavaScript and cookies disabled.
+- Recheck HTML4 minimap navigation on Linux Dillo and NetSurf at both
+  640×480 and 320×480.
+
 ## 2026-11-18 Verify the HTML attachment list in embedded builds
 
 - Run copied linked and CLI executables without external asset or schema
