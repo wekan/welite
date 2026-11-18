@@ -122,6 +122,21 @@ rendering, private SQL, and shutdown. The wrapper recorded 327 invocations.
 
 Physical amd64 hardware and other platforms remain open.
 
+## Amiga m68k toolchain on ARM64 Linux (2026-11-18)
+
+The pinned FPC source at `12e49a77d1` built and installed the
+`m68k-amiga` compiler and target packages on ARM64 Linux. The host tools
+came from the [vasm source mirror](https://github.com/StarWolf3000/vasm-mirror/tree/a13e7e7)
+and [vlink source mirror](https://github.com/retro-vault/vlink/tree/47a7f70).
+Build vasm with `CPU=m68k SYNTAX=std`, then place the resulting tools in a
+private bin directory as `m68k-amiga-vasmm68k_std` and `m68k-amiga-vlink`.
+Use `CPU_TARGET=m68k OS_TARGET=amiga BINUTILSPREFIX=m68k-amiga-` and
+`CROSSOPT='-n -O2 -XV -Avasm'` in the serial FPC cross build and installation.
+
+A stripped Pascal probe linked as an AmigaOS loadable executable. WeLite's
+CLI-backend units compiled, but the unstripped full server failed in
+vlink's STABS reader. The full server link and Amiga runtime remain open.
+
 ## Current Windows amd64 cross-build verification (2026-11-17)
 
 The same pinned FPC source builds a separate Windows compiler/unit prefix with
@@ -311,7 +326,7 @@ A `-dWLDB_CLI` binary needs the `sqlite3` command-line tool present at runtime o
 | macOS arm64    | aarch64-darwin  | needs x-bins | no aarch64-host crossbins |
 | DOS            | i386-go32v2     | needs x-bins | no aarch64-host crossbins |
 | Haiku          | x86_64-haiku    | needs x-bins | no aarch64-host crossbins |
-| Amiga m68k     | m68k-amiga      | needs x-bins | no aarch64-host crossbins |
+| Amiga m68k     | m68k-amiga      | probe linked | ARM64 host tools verified, full server link pending |
 | AmigaOS 4.1 PPC| powerpc-amiga   | needs x-bins | no aarch64-host crossbins |
 | MorphOS        | powerpc-morphos | needs x-bins | no aarch64-host crossbins |
 | AROS x86/amd64/arm64/m68k/ppc | *-aros | needs x-bins | no aarch64-host crossbins |

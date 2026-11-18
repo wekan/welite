@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Build the Amiga m68k cross-toolchain on ARM64 Linux
+
+- Build native ARM64 assembler and linker tools, then the FreePascal m68k
+  cross-compiler and target packages. Link a stripped AmigaOS probe.
+  WeLite server units compile. Full linking and runtime remain open.
+
 ## 2026-11-18 Verify signed-in attachment navigation in retro browsers
 
 - Open the board’s Attachments link in Dillo and NetSurf and verify the
