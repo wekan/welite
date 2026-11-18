@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Localize Designer page settings
+
+- Translate the page title label, access choices, edit heading and Save
+  control. Associate settings labels with their fields and keep the
+  submitted save command and access values independent of the captions.
+
 ## 2026-11-18 Localize the Designer page list
 
 - Use the viewer catalog for page-list headings, status, row actions and the

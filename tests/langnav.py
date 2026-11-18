@@ -56,6 +56,16 @@ def check_navigation(request,database,session):
         for key in ('page','storage-enabled','actions','yes','edit','preview','r-export'):
             assert ('>'+escape(arabic[key],quote=False)+'<').encode() in body,key
         assert b'dir="rtl"' in body
+        edit=next(link for link in parsed(body) if urlsplit(link).path=='/designer/page'
+                  and parse_qs(urlsplit(link).query).get('id')==['navpage'])
+        status,_,editor=request('GET',edit)
+        assert status==200
+        for form in (body,editor):
+            assert ('for="page-title">'+escape(arabic['title'],quote=False)+'<').encode() in form
+            assert ('type="submit" value="'+escape(arabic['save'])+'"').encode() in form
+            assert b'name="action" value="save"' in form
+            assert b'<option value="admin"' in form
+        assert b'<option value="admin" selected="selected">' in editor
         for link in parsed(body):
             if urlsplit(link).path in ['/designer/page','/navtest','/designer/export','/designer/page/export']:language(link)
         forms=Forms();forms.feed(body.decode())

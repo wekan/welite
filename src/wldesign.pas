@@ -1003,17 +1003,28 @@ begin
   if not Result then DesignerError(aRequest,aResponse,T.Db,S, 503, 'Designer schema unavailable');
 end;
 
-function PageFields(const P: TPage): string;
+function PageFields(const P: TPage; Words: TWLTranslator): string;
+  function RoleOption(const Value, Caption: string): string;
+  begin
+    Result:='<option value="'+HtmlAttr(Value)+'"';
+    if P.MinRole=Value then Result:=Result+' selected="selected"';
+    Result:=Result+'>'+HtmlEncode(Caption)+'</option>';
+  end;
 begin
-  Result := ' URL <input name="url" value="'+HtmlAttr(P.Url)+'">' +
-    ' Title <input name="title" value="'+HtmlAttr(P.Title)+'">' +
-    ' Columns <input name="cols" size="2" value="'+IntToStr(P.Cols)+'">' +
-    ' HTML <select name="doctype"><option>'+HtmlEncode(P.Doctype)+'</option>' +
+  Result := ' <label for="page-url">URL</label> <input id="page-url" name="url" value="'+HtmlAttr(P.Url)+'">' +
+    ' <label for="page-title">'+HtmlEncode(Words.Text('title','Title'))+
+    '</label> <input id="page-title" name="title" value="'+HtmlAttr(P.Title)+'">' +
+    ' <label for="page-cols">Columns</label> <input id="page-cols" name="cols" size="2" value="'+IntToStr(P.Cols)+'">' +
+    ' <label for="page-doctype">HTML</label> <select id="page-doctype" name="doctype"><option>'+HtmlEncode(P.Doctype)+'</option>' +
     '<option>html32</option><option>html4</option></select>' +
-    ' Direction <select name="dir"><option>'+HtmlEncode(P.Dir)+'</option>' +
+    ' <label for="page-dir">Direction</label> <select id="page-dir" name="dir"><option>'+HtmlEncode(P.Dir)+'</option>' +
     '<option>auto</option><option>ltr</option><option>rtl</option></select>' +
-    ' Access <select name="minRole"><option>'+HtmlEncode(P.MinRole)+'</option>' +
-    '<option>anon</option><option>member</option><option>admin</option></select>';
+    ' <label for="page-role">Access</label> <select id="page-role" name="minRole">' +
+    RoleOption('anon',Words.Text('public','Public'))+
+    RoleOption('member',Words.Text('cardMemberPopup-title','Member'))+
+    RoleOption('admin',Words.Text('admin','Admin'))+'</select>'+
+    '<input type="hidden" name="action" value="save">'+
+    '<input type="submit" value="'+HtmlAttr(Words.Text('save','Save'))+'">';
 end;
 
 procedure DesignerIndex(aRequest: TRequest; aResponse: TResponse);
@@ -1055,8 +1066,7 @@ begin
       AuthHiddenFields(S,'designer:/designer/import')+
       '<input type="file" name="file"><input type="submit" value="Import ZIP"></form>'+
       '<h2>Add page</h2><form method="POST" action="/designer/page/save">'+
-      AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P)+
-      '<input type="submit" name="action" value="save"></form>';
+      AuthHiddenFields(S,'designer:/designer/page/save')+PageFields(P,Words)+'</form>';
     aResponse.Content:=LanguagePage(aResponse,Language,'Designer',Body);
     aResponse.ContentType:='text/html; charset=utf-8'; aResponse.SendContent;
   finally Words.Free;end;
@@ -1159,6 +1169,7 @@ var
   PageId, Body, Cell, Dir: string;
   r,c,i,MaxRow,ViewCol,AnchorRow,AnchorCol,RowSpan,ColSpan:Integer;
   Rtl: Boolean;
+  Language: TWLLanguage; Words: TWLTranslator;
 begin
   if not RequireDesigner(aRequest, aResponse, T, S) then Exit;
 
@@ -1177,12 +1188,16 @@ begin
   Rtl := SameText(Dir, 'rtl');
 
   // grid editor: outer table = page grid; each cell shows widget preview + a button toolbar
-  Body := '<h1>Edit: ' + HtmlEncode(P.Title) + '</h1>' +
-    '<form method="POST" action="/designer/page/save">'+
-    AuthHiddenFields(S,'designer:/designer/page/save')+
-    '<input type="hidden" name="pageId" value="'+HtmlAttr(P.Id)+'">'+PageFields(P)+
-    '<input type="submit" name="action" value="save"></form>'+LineEnding +
-          '<table dir="ltr" border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
+  Language:=ViewerLanguage(T.Db,S,aRequest);
+  Words:=TWLTranslator.Create(Language);
+  try
+    Body := '<h1>'+HtmlEncode(Words.Text('edit','Edit'))+': '+HtmlEncode(P.Title)+'</h1>'+
+      '<form method="POST" action="/designer/page/save">'+
+      AuthHiddenFields(S,'designer:/designer/page/save')+
+      '<input type="hidden" name="pageId" value="'+HtmlAttr(P.Id)+'">'+PageFields(P,Words)+'</form>';
+  finally Words.Free;end;
+  Body := Body + LineEnding +
+    '<table dir="ltr" border="1" cellpadding="4" cellspacing="0" width="100%">' + LineEnding;
   for r := 0 to MaxRow do
   begin
     Body := Body + '<tr>' + LineEnding;
@@ -1223,7 +1238,7 @@ begin
     Body:=Body+WidgetForm(S,P.Id,EditWidget,'Save widget');
   Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl(P.Url,S))+'">Preview</a></p>';
 
-  aResponse.Content := LanguagePage(aResponse,ViewerLanguage(T.Db,S,aRequest),'Designer — '+P.Title,Body,Dir);
+  aResponse.Content := LanguagePage(aResponse,Language,'Designer — '+P.Title,Body,Dir);
   aResponse.ContentType := 'text/html; charset=utf-8';
   aResponse.SendContent;
 end;
