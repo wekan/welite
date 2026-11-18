@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Require administrators for REST board renames
+
+- Require active board administration or site administration. Recheck
+  permission and the stored title within the same write transaction.
+
 ## 2026-11-18 Scope REST swimlane deletion and roll back failures
 
 - Return the upstream JSON 404 for missing, foreign or already-deleted

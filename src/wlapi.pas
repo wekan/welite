@@ -982,18 +982,30 @@ begin
   finally Reply.Free;Patch.Free;Body.Free;Stored.Free;Defaults.Free;end;
 end;
 
-procedure ApiBoardTitle(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Title: string;
+procedure ApiBoardTitle(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,Title,Scope,Permission,Sql:string;
+  Policy:TFieldPolicy;Rows:TWLRows;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  BoardId := aRequest.RouteParams['boardId'];
-  Title := BodyField(aRequest, 'title');
-  T.Db.Exec(Format('UPDATE boards SET title=%s, modifiedAt=%s WHERE id=%s;',
-    [QuotedStr(Title), QuotedStr(NowIso), QuotedStr(BoardId)]));
-  SendJson(aResponse, Format('{"_id":%s,"title":%s}',
-    [AnsiQuotedStr(BoardId, '"'), AnsiQuotedStr(Title, '"')]));
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];Scope:='id='+QuotedStr(BoardId);
+  if Length(T.Db.Query('SELECT 1 FROM boards WHERE '+Scope+';'))=0 then
+  begin SendError(aResponse,404,'Board not found');Exit;end;
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+  begin SendError(aResponse,403,'Board administration required');Exit;end;
+  Title:=BodyField(aRequest,'title');
+  if Pos(#0,Title)>0 then begin SendError(aResponse,400,'Invalid board title');Exit;end;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
+    ' THEN 1 ELSE json(''Board permission changed'') END; '+
+    'UPDATE boards SET title='+QuotedStr(Title)+', modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+'; '+
+    'SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM boards WHERE '+Scope+
+    ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Board rename failed'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not rename board');Exit;end;
+  SendJson(aResponse,'{"_id":"'+StringToJSONString(BoardId)+'","title":"'+StringToJSONString(Title)+'"}');
 end;
 
 function Slugify(const S: string): string;

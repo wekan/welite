@@ -154,7 +154,25 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 uid = con.execute("SELECT id FROM users WHERE username='member'").fetchone()[0]
                 con.execute("INSERT INTO boards(id,title,slug,createdAt) VALUES('protected','Private title','protected','now')")
                 con.execute("INSERT INTO board_members(boardId,userId) VALUES('protected',?)", (uid,))
-            assert request('PUT', '/api/boards/protected/title?token='+member, {'title':'Updated'})[0] == 200
+            rename='/api/boards/protected/title?token='+member
+            assert request('PUT',rename,{'title':'Forbidden'})[0]==403
+            with sqlite3.connect(db) as con:
+                assert con.execute("SELECT title FROM boards WHERE id='protected'").fetchone()==('Private title',)
+                con.execute("UPDATE board_members SET isAdmin=1 WHERE boardId='protected'")
+            title='Updated "board"'
+            status,_,body=request('PUT',rename,{'title':title})
+            assert status==200 and json.loads(body)=={'_id':'protected','title':title}
+            with sqlite3.connect(db) as con:
+                assert con.execute("SELECT title FROM boards WHERE id='protected'").fetchone()==(title,)
+                con.execute("CREATE TRIGGER revoke_rename AFTER UPDATE OF title ON boards "
+                            "WHEN NEW.id='protected' BEGIN UPDATE board_members SET isAdmin=0 "
+                            "WHERE boardId=NEW.id; END")
+            assert request('PUT',rename,{'title':'Rolled back'})[0]==500
+            with sqlite3.connect(db) as con:
+                assert con.execute("SELECT title FROM boards WHERE id='protected'").fetchone()==(title,)
+                assert con.execute("SELECT isAdmin FROM board_members WHERE boardId='protected'").fetchone()==(1,)
+                con.execute('DROP TRIGGER revoke_rename')
+                con.execute("UPDATE board_members SET isAdmin=0 WHERE boardId='protected'")
             with sqlite3.connect(db) as con:
                 con.execute("UPDATE board_members SET isReadOnly=1 WHERE boardId='protected'")
             assert request('PUT', '/api/boards/protected/title?token='+member, {'title':'Forbidden'})[0] == 403
