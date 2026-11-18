@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Nederīgs autentifikācijas kods. Mēģiniet vēlreiz.",
   "twoFactorAuth-enabled": "Jūsu kontam ir iespējota divfaktoru autentifikācija.",
   "two-factor-required-title": "Iestatiet divfaktoru autentifikāciju",
-  "two-factor-required-text": "Šī vietne jūsu kontam pieprasa divfaktoru autentifikāciju. Iestatiet to, lai turpinātu."
+  "two-factor-required-text": "Šī vietne jūsu kontam pieprasa divfaktoru autentifikāciju. Iestatiet to, lai turpinātu.",
+  "enrollment-password-instructions": "Apstipriniet paroli, lai sāktu iestatīšanu. Šī darbība jūs nepierakstīs. Šeit nevar aizstāt jau aktīvu autentifikācijas faktoru.",
+  "enrollment-setup-denied": "Nevar sākt iestatīšanu. Pārbaudiet pierakstīšanās datus un to, vai vienreizējie kodi jau ir iespējoti.",
+  "enrollment-code-instructions": "Izmantojiet laikatkarīgus kodus: SHA1, seši cipari un 30 sekunžu intervāls. Glabājiet atslēgu slepenībā. Iestatījuma derīgums beidzas pēc piecām minūtēm.",
+  "enrollment-confirmed-instructions": "Apstiprinājuma kods jau ir izmantots. Pirms pierakstīšanās sagaidiet jaunu kodu autentifikācijas lietotnē.",
+  "enrollment-account-created": "Konts ir izveidots",
+  "registration-first-admin": "Pirmais konts saņems globālā administratora tiesības šim domēnam.",
+  "auth-too-many-attempts": "Pārāk daudz pierakstīšanās mēģinājumu. Mēģiniet vēlāk.",
+  "enrollment-setup-failed": "Neizdevās sākt iestatīšanu.",
+  "registration-global-admin-disabled": "Globālo administratoru konti tiek izveidoti lokāli. Publiskā reģistrācija ir atspējota.",
+  "auth-session-create-failed": "Neizdevās izveidot sesiju.",
+  "registration-session-failed": "Konts ir izveidots. Pierakstieties, lai turpinātu.",
+  "registration-password-unavailable": "Reģistrācija ar paroli nav pieejama."
 }
