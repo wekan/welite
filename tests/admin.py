@@ -139,8 +139,20 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             with sqlite3.connect(db) as con:
                 assert con.execute('SELECT * FROM board_members ORDER BY boardId,userId').fetchall()==before
                 con.execute('DROP TRIGGER refuse_ownership')
-            status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
-            assert status==200 and json.loads(body)==[dict(_id='owned-early',title='Earlier'),dict(_id='owned-late',title='Later')],(status,body)
+            if os.environ.get('WELITE_OWNERSHIP_UI') == '1':
+                status,headers,body=request('POST','/sign-in',dict(username='people-rest-target',password='test-password'))
+                assert status==302,(status,body)
+                member_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                with sqlite3.connect(db) as con:
+                    con.execute("INSERT INTO swimlanes(id,boardId,title,createdAt) VALUES('own-lane','ordinary','Lane','now')")
+                    con.execute("INSERT INTO lists(id,boardId,swimlaneId,title,createdAt) VALUES('own-list','ordinary','own-lane','List','now')")
+                    con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,dateLastActivity,createdAt,modifiedAt) "
+                                "VALUES('own-card','ordinary','own-lane','own-list','Retained ownership card',?,'now','now','now')",(target,))
+                subprocess.run([os.environ.get('NODE','node'),str(ROOT/'tests/ownership.js'),
+                                'http://localhost:'+str(port),member_session,admin,target],check=True)
+            else:
+                status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
+                assert status==200 and json.loads(body)==[dict(_id='owned-early',title='Earlier'),dict(_id='owned-late',title='Later')],(status,body)
             status,_,body=request('PUT',endpoint+'?token='+admin,dict(action='takeOwnership'))
             assert status==200 and json.loads(body)==[]
             with sqlite3.connect(db) as con:

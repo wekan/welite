@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify board ownership transfer in Chromium
+
+- With JavaScript and cookies disabled, the target user can still see the
+  card on a board where they have ordinary membership after reload.
+
 ## 2026-11-18 Transfer administered boards through the user API
 
 - Implement the site-admin `takeOwnership` action. Transfer the target's
