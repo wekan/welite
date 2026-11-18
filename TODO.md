@@ -216,7 +216,8 @@ Complete these steps sequentially, with regression tests and a local commit for 
 The design above remains the acceptance criteria. Move verified items to [CHANGES.md](CHANGES.md).
 Platform and browser claims require testing on those targets.
 
-- [ ] Integrate list lifecycle appends with WeKan legacy writer leases and coordinated pending-head recovery.
+- [ ] Recover expired WeKan legacy writer leases and support coordinated pending history payloads beyond list lifecycle changes.
+  Valid list lifecycle reservations recover whether their row was saved or unsaved.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
   Large CLI adapter scripts now use private short scratch files without argument-size limits.

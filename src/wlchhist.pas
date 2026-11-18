@@ -38,9 +38,9 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
   begin
     Result:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Name)+';');
   end;
-  procedure RecoverSavedPending(const IdentityScope:string);
+  procedure RecoverPending(const IdentityScope:string);
   var PendingRows:TWLRows;Pending:TJSONObject;Head,PendingDoc,PendingId,PendingHash,
-    RowHash,OldHash,Match,Replacement,RecoverySql:string;
+    RowHash,OldHash,RowIdentity,Match,Replacement,RecoverySql,Encoded,HeadMatch:string;
     function ValidHash(const Value:string):Boolean;
     var C:Char;
     begin
@@ -77,17 +77,25 @@ var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
           (ListLifecycleHash(Pending)<>RowHash) or (ListReservationHash(Pending)<>PendingHash) then Exit;
       except Exit;end;
     finally Pending.Free;end;
-    // Require the exact reserved typed document to have landed before clearing
-    // the head. Compare its data and its schema independently of root key order.
-    Match:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(PendingId)+
-      ' AND json_remove(_ferretdb_sjson,''$.$s'')=json_remove('+QuotedStr(PendingDoc)+',''$.$s'')'+
-      ' AND json_extract(_ferretdb_sjson,''$.$s'')=json_extract('+QuotedStr(PendingDoc)+',''$.$s'')';
+    RowIdentity:='json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(PendingId);
+    Encoded:=QuotedStr(PendingDoc);
+    Match:=RowIdentity+
+      ' AND json_remove(_ferretdb_sjson,''$.$s'')=json_remove('+Encoded+',''$.$s'')'+
+      ' AND json_extract(_ferretdb_sjson,''$.$s'')=json_extract('+Encoded+',''$.$s'')';
+    // Preserve the reserved data and SJSON metadata, including explicit nulls.
     Replacement:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.hash'','+QuotedStr(RowHash)+
       ',''$.pending'',NULL,''$.pendingHash'',NULL),json(_ferretdb_sjson),''{}'')';
-    RecoverySql:='BEGIN IMMEDIATE; UPDATE '+Ident(HeadTable)+
-      ' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(HeadTable)+')=''blob'' THEN jsonb('+Replacement+
-      ') ELSE '+Replacement+' END WHERE '+IdentityScope+' AND json(_ferretdb_sjson)='+QuotedStr(Head)+
-      ' AND '+Guard+' AND (SELECT count(*) FROM '+TableSql+' WHERE '+Match+')=1; COMMIT;';
+    HeadMatch:=IdentityScope+' AND json(_ferretdb_sjson)='+QuotedStr(Head);
+    RecoverySql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' AND (SELECT count(*) FROM '+
+      Ident(HeadTable)+' WHERE '+HeadMatch+')=1 THEN 1 ELSE json(''History reservation changed'') END; '+
+      'INSERT INTO '+TableSql+'(_ferretdb_sjson) SELECT CASE WHEN wl_storage('+QuotedStr(TableName)+
+      ')=''blob'' THEN jsonb('+Encoded+') ELSE '+Encoded+' END WHERE NOT EXISTS(SELECT 1 FROM '+
+      TableSql+' WHERE '+RowIdentity+'); '+
+      'SELECT CASE WHEN (SELECT count(*) FROM '+TableSql+' WHERE '+RowIdentity+')=1 AND '+
+      '(SELECT count(*) FROM '+TableSql+' WHERE '+Match+')=1 THEN 1 ELSE json(''History reservation row conflict'') END; '+
+      'UPDATE '+Ident(HeadTable)+' SET _ferretdb_sjson=CASE WHEN wl_storage('+QuotedStr(HeadTable)+
+      ')=''blob'' THEN jsonb('+Replacement+') ELSE '+Replacement+' END WHERE '+HeadMatch+
+      '; SELECT CASE WHEN changes()=1 THEN 1 ELSE json(''History reservation head changed'') END; COMMIT;';
     if not Db.Exec(RecoverySql) then Db.Exec('ROLLBACK;');
   end;
 
@@ -128,7 +136,7 @@ begin
         ' AND '+VersionOne+
         ' AND json_extract(_ferretdb_sjson,''$.$s.p._id.t'')=''string'''+
         ' AND json_extract(_ferretdb_sjson,''$.$s.p.boardId.t'')=''string''';
-      RecoverSavedPending(HeadScope);
+      RecoverPending(HeadScope);
       HeadScope:=HeadScope+' AND json_type(_ferretdb_sjson,''$.pending'')=''null'' AND json_type(_ferretdb_sjson,''$.pendingHash'')=''null'''+
         ' AND (json_type(_ferretdb_sjson,''$.hash'')=''null'' OR '+
         '(json_type(_ferretdb_sjson,''$.hash'')=''text'' AND length('+HeadHash+')=64'+
