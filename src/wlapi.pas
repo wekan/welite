@@ -194,10 +194,10 @@ begin
   if (CardId<>'') and not Exists('SELECT id FROM cards WHERE id='+QuotedStr(CardId)+
     ' AND boardId='+QuotedStr(BoardId)+Scope+';') then Exit;
   if (ChecklistId<>'') and not Exists('SELECT id FROM checklists WHERE id='+QuotedStr(ChecklistId)+
-    ' AND cardId='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+    ' AND cardId='+QuotedStr(CardId)+' AND (boardId IS NULL OR boardId='+QuotedStr(BoardId)+');') then Exit;
   if (ItemId<>'') and not Exists('SELECT id FROM checklist_items WHERE id='+QuotedStr(ItemId)+
     ' AND checklistId='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(CardId)+
-    ' AND boardId='+QuotedStr(BoardId)+';') then Exit;
+    ' AND (boardId IS NULL OR boardId='+QuotedStr(BoardId)+');') then Exit;
   if (CommentId<>'') and not Exists('SELECT id FROM card_comments WHERE id='+QuotedStr(CommentId)+
     ' AND cardId='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+';') then Exit;
   if (CustomFieldId<>'') and not Exists('SELECT customFieldId FROM custom_field_boards WHERE customFieldId='+
@@ -1484,7 +1484,7 @@ begin
   if aRequest.Method <> 'GET' then
   begin
     Predicate := 'id='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(aRequest.RouteParams['cardId'])+
-      ' AND boardId='+QuotedStr(aRequest.RouteParams['boardId']);
+      ' AND (boardId IS NULL OR boardId='+QuotedStr(aRequest.RouteParams['boardId'])+')';
     if aRequest.Method='PUT' then
     begin
       if not ChecklistChanges(aRequest,Changes) then
@@ -1591,7 +1591,7 @@ begin
     if Changes<>'' then
     begin
       Predicate:='id='+QuotedStr(ItemId)+' AND checklistId='+QuotedStr(aRequest.RouteParams['checklistId'])+
-        ' AND cardId='+QuotedStr(aRequest.RouteParams['cardId'])+' AND boardId='+QuotedStr(aRequest.RouteParams['boardId']);
+        ' AND cardId='+QuotedStr(aRequest.RouteParams['cardId'])+' AND (boardId IS NULL OR boardId='+QuotedStr(aRequest.RouteParams['boardId'])+')';
       if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM checklist_items WHERE '+
         Predicate+')=1 THEN 1 ELSE json(''Checklist item scope changed'') END; UPDATE checklist_items SET '+
         Changes+',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Predicate+'; COMMIT;') then

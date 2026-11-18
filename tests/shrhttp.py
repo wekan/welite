@@ -13,6 +13,7 @@ import time
 from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long
 from custapi import run_shared as check_custom_api
+from chkshare import run as check_shared_checklists
 from cfexpt import run_shared as check_export_policy
 from cfclon import run_shared as check_clone_policy
 from selrels import run_shared as check_relation_scope
@@ -107,6 +108,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200,(backend,status,body)
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
+                check_shared_checklists(request,client,token,card)
                 check_custom_api(request,client,database,token)
                 check_export_policy(request,client,database)
                 check_relation_scope(request,client,database)
