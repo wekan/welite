@@ -32,7 +32,7 @@ and [SQL bootstrap](docs/static.md#private-bootstrap-sql); cross-target acceptan
 - Native Linux linked and CLI SQLite builds run the [HTTP and Chromium suites](tests/README.md).
   Web sign-in and board navigation work with JavaScript disabled and first-party
   cookies blocked. Card titles open an HTML page with their descriptions and
-  checklists. Board movement, selection actions and Designer use HTML forms.
+  checklists, subtasks and attachment downloads. Board movement, selection actions and Designer use HTML forms.
 - The [REST API](docs/api.md) supports bearer-token login and board-scoped
   custom-field operations. The complete WeKan API and browser suite require
   additional compatibility work.

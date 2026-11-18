@@ -126,6 +126,34 @@ const { readFileSync } = require('node:fs');
       assert.equal((await context.request.delete(childApi, { headers })).status(), 200);
     }
     console.log('PASS: Chromium shows REST-created subtasks and hides archived subtasks without JavaScript or cookies');
+    const attachment = Buffer.from([0, 1, 10, 255]);
+    const upload = await context.request.post(boardUrl.origin + '/api/attachment/upload', {
+      headers, data: { boardId: 'b', listId: 'l', swimlaneId: 's', cardId: 'brow-card',
+        fileName: 'browser-attachment.bin', fileData: attachment.toString('base64') },
+    });
+    assert.equal(upload.status(), 200);
+    const { attachmentId } = await upload.json();
+    const file = page.getByRole('link', { name: 'browser-attachment.bin', exact: true });
+    try {
+      await page.reload();
+      const href = new URL(await file.getAttribute('href'), page.url());
+      const anonymousFile = new URL(href);
+      anonymousFile.searchParams.delete('sessionId');
+      assert.equal((await context.request.get(anonymousFile.href)).status(), 404);
+      const wrongCard = new URL(href);
+      wrongCard.searchParams.set('card', 'brow-sort');
+      assert.equal((await context.request.get(wrongCard.href)).status(), 404);
+      const [download] = await Promise.all([page.waitForEvent('download'), file.click()]);
+      assert.equal(download.suggestedFilename(), 'browser-attachment.bin');
+      assert.deepEqual(readFileSync(await download.path()), attachment);
+    } finally {
+      const remove = await context.request.delete(boardUrl.origin + '/api/attachment/delete/' +
+        encodeURIComponent(attachmentId), { headers });
+      assert.equal(remove.status(), 200);
+    }
+    await page.reload();
+    assert.equal(await file.count(), 0);
+    console.log('PASS: Chromium downloads an attachment through the HTML card without JavaScript or cookies');
     const englishDetails = page.url();
     const arabicDetails = new URL(englishDetails);
     arabicDetails.searchParams.set('lang', 'ar');

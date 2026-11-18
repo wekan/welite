@@ -5380,7 +5380,7 @@ begin
 end;
 
 procedure ApiAttachmentDownload(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, Id: string; R: TWLRows; Bytes,Path: string; O:TJSONObject;Stream:TFileStream;
+var T: TWLTenant; UserId, Id: string; R: TWLRows; Bytes,Path: string; O:TJSONObject;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -5392,16 +5392,7 @@ begin
   begin SendJson(aResponse,'{"success":false,"message":"Attachment bytes not found"}',404);Exit;end;
   if aRequest.QueryFields.Values['raw']='1' then
   begin
-    try Stream:=TFileStream.Create(Path,fmOpenRead or fmShareDenyWrite);
-    except SendError(aResponse,500,'Could not open attachment');Exit;end;
-    aResponse.FreeContentStream:=True;
-    aResponse.ContentStream:=Stream;
-    aResponse.Code:=200;
-    aResponse.ContentType:='application/octet-stream';
-    aResponse.SetCustomHeader('Content-Disposition','attachment');
-    aResponse.SetCustomHeader('Cache-Control','private, no-store');
-    aResponse.SetCustomHeader('X-Content-Type-Options','nosniff');
-    aResponse.SendContent;
+    if not SendStoredDownload(aResponse,Path) then SendError(aResponse,500,'Could not open attachment');
     Exit;
   end;
   try Bytes:=ReadFileBytes(Path);

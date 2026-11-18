@@ -9,11 +9,26 @@ function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
+procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses wli18n,wllocale,wlcfpol,wlselscp;
+uses wli18n,wllocale,wlcfpol,wlselscp,wlstore,wlshared;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
+end;
+
+function ActiveCardAttachments(Db:TWLDb;Selector:TSelectionScope;const Board,Card:string):string;
+var Rows:TWLRows;Physical:string;
+begin
+  Result:='boardId='+QuotedStr(Board)+' AND cardId='+QuotedStr(Card)+
+    ' AND '+Selector.StringField('attachments','id')+' AND '+Selector.StringField('attachments','boardId')+
+    ' AND '+Selector.StringField('attachments','cardId');
+  if not SharedStore(Db) then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''attachments'';');
+  if Length(Rows)<>1 then Exit('0');
+  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  Result:=Result+' AND EXISTS(SELECT 1 FROM '+Physical+' a WHERE json_extract(a._ferretdb_sjson,''$._id'')=attachments.id'+
+    ' AND COALESCE(json_type(a._ferretdb_sjson,''$.deletedAt''),''null'')=''null'')';
 end;
 
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string):string;
@@ -305,7 +320,7 @@ end;
 procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant;S:TWLSession;Language:TWLLanguage;Words:TWLTranslator;Selector:TSelectionScope;
   Board,Card,BoardKey,CardKey,ChecklistKey,Scope,Title,Body,Dir,TimeLabel:string;
-  Rows,Subtasks,Checklists,Items:TWLRows;Subtask,Checklist,Item:TWLRow;Open,Snapshot:Boolean;
+  Rows,Subtasks,Checklists,Items,Files:TWLRows;Subtask,Checklist,Item,Attached:TWLRow;Open,Snapshot:Boolean;
   function Assignments(const TableName,Caption:string):string;
   var Names:TWLRows;Name:TWLRow;
   begin
@@ -368,6 +383,17 @@ begin
                     HtmlEncode(Subtask[1])+'</a></li>';
                 Body:=Body+'</ul>';
               end;
+              Files:=nil;
+              if S.UserId<>'' then Files:=T.Db.Query('SELECT id,name FROM attachments WHERE '+ActiveCardAttachments(T.Db,Selector,Board,Card)+
+                ' ORDER BY createdAt,id;');
+              if Length(Files)>0 then
+              begin
+                Body:=Body+'<h2>'+HtmlEncode(Words.Text('attachments','Attachments'))+'</h2><ul>';
+                for Attached in Files do
+                  Body:=Body+'<li><a href="'+HtmlAttr(SessionUrl('/board/attachment?id='+HTTPEncode(Board)+
+                    '&card='+HTTPEncode(Card)+'&file='+HTTPEncode(Attached[0]),S))+'">'+HtmlEncode(Attached[1])+'</a></li>';
+                Body:=Body+'</ul>';
+              end;
               Scope:='cardId='+CardKey+' AND '+Selector.StringField('checklists','cardId')+
                 ' AND (COALESCE(boardId,'''')='''' OR (boardId='+BoardKey+' AND '+
                 Selector.StringField('checklists','boardId')+'))';
@@ -410,6 +436,40 @@ begin
     aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,Dir,'html4');
     aResponse.SendContent;
   finally Words.Free;end;
+end;
+
+procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;S:TWLSession;Board,Card,Id,Scope:string;
+  Selector:TSelectionScope;Rows:TWLRows;Readable,Snapshot:Boolean;
+begin
+  Board:=aRequest.QueryFields.Values['id'];Card:=aRequest.QueryFields.Values['card'];Id:=aRequest.QueryFields.Values['file'];
+  Readable:=False;
+  if (Board<>'') and (Card<>'') and (Id<>'') and (Pos(#0,Board+Card+Id)=0) and
+    ResolveTenant(aRequest,T) and TenantOpen(T) and
+    ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),S) and T.Db.BeginRead then
+  begin
+    try
+      if BoardCanRead(T.Db,S.UserId,Board) then
+      begin
+        Selector:=TSelectionScope.Create(T.Db);
+        try
+          Scope:='id='+QuotedStr(Card)+' AND boardId='+QuotedStr(Board)+' AND archived=0 AND deletedAt IS NULL'+
+            ' AND '+Selector.StringField('cards','id')+' AND '+Selector.StringField('cards','boardId');
+          if Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+';'))=1 then
+          begin
+            Rows:=T.Db.Query('SELECT id,name FROM attachments WHERE id='+QuotedStr(Id)+
+              ' AND '+ActiveCardAttachments(T.Db,Selector,Board,Card)+';');
+            Readable:=Length(Rows)=1;
+          end;
+        finally Selector.Free;end;
+      end;
+    finally Snapshot:=T.Db.EndRead;end;
+    if Snapshot and Readable and SendStoredDownload(aResponse,StoreFilePath(T.FilesDir,'attachme',Id),Rows[0][1]) then Exit;
+  end;
+  aResponse.Code:=404;
+  aResponse.ContentType:='text/plain; charset=utf-8';
+  aResponse.Content:='Attachment not found';
+  aResponse.SendContent;
 end;
 
 function BoardsView(Db:TWLDb; const W:TWidget; const S:TWLSession;const Dir,PageUrl:string):string;
