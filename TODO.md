@@ -217,7 +217,7 @@ The design above remains the acceptance criteria. Move verified items to [CHANGE
 Platform and browser claims require testing on those targets.
 
 - [ ] Recover expired WeKan legacy writer leases and support coordinated pending history payloads beyond list lifecycle changes.
-  Valid list lifecycle reservations recover whether their row was saved or unsaved.
+  Valid list lifecycle reservations recover whether their row was saved or unsaved. An expired single-writer legacy lease without a claimed row can retire atomically. Claimed rows and multiple writers remain open.
 - [ ] Implement and verify FerretDB SQLite interoperability from the actual storage format.
   Typed SJSON and TEXT/JSONB SQL-write kernels now pass against FerretDB source.
   Large CLI adapter scripts now use private short scratch files without argument-size limits.

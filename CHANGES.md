@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Retire idle expired legacy history leases
+
+- Remove an expired legacy lease and its writer token together when
+  the writer has no claimed row, then append the list lifecycle change.
+
 ## 2026-11-18 Recover unsaved coordinated list history reservations
 
 - Insert a validated reserved list lifecycle record and advance the
