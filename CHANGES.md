@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Pass the upstream dropdown deletion REST spec
+
+- All three cases pass against WeLite and FerretDB with linked SQLite.
+  Chromium verifies that a rejected deletion preserves both choices and a
+  successful deletion removes only the requested option. The selected value
+  remains intact after reload with JavaScript and cookies disabled.
+
 ## 2026-11-18 Pass the upstream card overtime REST spec
 
 - Native Chromium shows the spent-time or overtime heading after JSON and
