@@ -2106,5 +2106,17 @@
   "twoFactorCode-invalid": "Kod pengesahan tidak sah. Sila cuba lagi.",
   "twoFactorAuth-enabled": "Pengesahan dua faktor diaktifkan untuk akaun anda.",
   "two-factor-required-title": "Sediakan pengesahan dua faktor",
-  "two-factor-required-text": "Laman ini memerlukan pengesahan dua faktor untuk akaun anda. Sediakannya untuk meneruskan."
+  "two-factor-required-text": "Laman ini memerlukan pengesahan dua faktor untuk akaun anda. Sediakannya untuk meneruskan.",
+  "enrollment-password-instructions": "Sahkan kata laluan anda untuk memulakan persediaan. Langkah ini tidak melog masuk anda. Faktor pengesahan yang sudah aktif tidak boleh digantikan di sini.",
+  "enrollment-setup-denied": "Persediaan tidak dapat dimulakan. Semak butiran log masuk dan sama ada kod sekali guna sudah diaktifkan.",
+  "enrollment-code-instructions": "Gunakan kod berasaskan masa: SHA1, enam digit dan sela 30 saat. Rahsiakan kunci. Persediaan ini tamat tempoh selepas lima minit.",
+  "enrollment-confirmed-instructions": "Kod pengesahan telah digunakan. Tunggu sehingga aplikasi pengesah memaparkan kod baharu sebelum log masuk.",
+  "enrollment-account-created": "Akaun telah dicipta",
+  "registration-first-admin": "Akaun pertama akan mendapat kebenaran pentadbir global untuk domain ini.",
+  "auth-too-many-attempts": "Terlalu banyak percubaan log masuk. Cuba lagi kemudian.",
+  "enrollment-setup-failed": "Persediaan gagal dimulakan.",
+  "registration-global-admin-disabled": "Akaun pentadbir global dicipta secara setempat. Pendaftaran awam dinyahdayakan.",
+  "auth-session-create-failed": "Sesi gagal dicipta.",
+  "registration-session-failed": "Akaun telah dicipta. Log masuk untuk meneruskan.",
+  "registration-password-unavailable": "Pendaftaran dengan kata laluan tidak tersedia."
 }
