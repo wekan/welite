@@ -2392,6 +2392,44 @@ begin
   else Result:=Result+'''cardType-linkedCard'','+QuotedStr(LinkedId)+'; ';
 end;
 
+procedure RecordParentDenial(Db:TWLDb;const UserId:string);
+const Hints='{"at":"date","firstAt":"date"}';
+  Identity='json_extract(_ferretdb_sjson,''$.stream'')=''security'''+
+    ' AND json_extract(_ferretdb_sjson,''$.bleed'')=''ParentBleed'''+
+    ' AND json_extract(_ferretdb_sjson,''$.source'')=''parentId'''+
+    ' AND json_extract(_ferretdb_sjson,''$.category'')=''authz'''+
+    ' AND json_extract(_ferretdb_sjson,''$.action'')=''blocked''';
+var Rows:TWLRows;Event:TJSONObject;TableName,Physical,AtSql,Payload,Updated,Sql:string;
+  Stamp:TDateTime;AtMs:Int64;
+  function Stored(const Data:string):string;
+  begin
+    Result:='CASE WHEN wl_storage('+QuotedStr(TableName)+')=''blob'' THEN jsonb('+Data+') ELSE '+Data+' END';
+  end;
+begin
+  try
+    if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>1 then Exit;
+    if not EnsureSharedCollection(Db,'eventlog') then Exit;
+    Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''eventlog'';');
+    if Length(Rows)<>1 then Exit;
+    TableName:=Rows[0][0];Physical:='"'+StringReplace(TableName,'"','""',[rfReplaceAll])+'"';
+    Stamp:=LocalTimeToUniversal(Now);
+    AtMs:=DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp);AtSql:=IntToStr(AtMs);
+    Event:=TJSONObject.Create(['_id',NewId,'stream','security','at',AtMs,'firstAt',AtMs,
+      'severity','high','category','authz','bleed','ParentBleed','action','blocked','source','parentId',
+      'cwe','CWE-862','count',1,'userId',UserId,'detail','A card on a board the user cannot see was named as a parent.']);
+    try Payload:=QuotedStr(TypedDocument(Event.AsJSON,'',Hints));finally Event.Free;end;
+    Updated:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.at'','+AtSql+
+      ',''$.userId'','+QuotedStr(UserId)+',''$.count'',MIN(9007199254740991,MAX(0,'+
+      'COALESCE(json_extract(_ferretdb_sjson,''$.count''),0))+1)),json(_ferretdb_sjson),''{"at":"date"}'')';
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM _ferretdb_collections WHERE name=''eventlog'''+
+      ' AND table_name='+QuotedStr(TableName)+')=1 THEN 1 ELSE json(''Event log source changed'') END; '+
+      'UPDATE '+Physical+' SET _ferretdb_sjson='+Stored(Updated)+' WHERE rowid=(SELECT MIN(rowid) FROM '+Physical+
+      ' WHERE '+Identity+'); INSERT INTO '+Physical+'(_ferretdb_sjson) SELECT '+Stored(Payload)+
+      ' WHERE NOT EXISTS(SELECT 1 FROM '+Physical+' WHERE '+Identity+'); COMMIT;';
+    if not Db.Exec(Sql) then Db.Exec('ROLLBACK;');
+  except Db.Exec('ROLLBACK;');end;
+end;
+
 procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;UserId,BoardId,ListId,Lane,DefaultLane,Parent,ParentSql,ParentGuard,CardId,Relations,Sql,Guard,WritePermission,LaneGuard:string;
   Body,Entry,Item:TJSONObject;Input:TJSONData;Items,Reply:TJSONArray;Rows:TWLRows;I:Integer;
@@ -2436,8 +2474,9 @@ begin
       if Parent<>'' then
       begin
         Rows:=T.Db.Query('SELECT boardId FROM cards WHERE id='+QuotedStr(Parent)+' AND deletedAt IS NULL AND archived=0;');
-        if (Length(Rows)<>1) or not BoardCanRead(T.Db,UserId,Rows[0][0]) then
-        begin Item.Add('error','Forbidden');Continue;end;
+        if Length(Rows)<>1 then begin Item.Add('error','Forbidden');Continue;end;
+        if not BoardCanRead(T.Db,UserId,Rows[0][0]) then
+        begin RecordParentDenial(T.Db,UserId);Item.Add('error','Forbidden');Continue;end;
         ParentSql:=QuotedStr(Parent);
         ParentGuard:=' AND EXISTS(SELECT 1 FROM cards WHERE id='+ParentSql+
           ' AND boardId='+QuotedStr(Rows[0][0])+' AND archived=0 AND deletedAt IS NULL) AND '+Permission(Rows[0][0],False);

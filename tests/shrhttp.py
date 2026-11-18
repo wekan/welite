@@ -106,7 +106,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 wait_for_ferret()
                 for collection in ['boards','swimlanes','lists','cards','card_comments','checklists','checklistItems','customFields','users','activities','attachments']:client.command({'create':collection})
                 if upstream:
-                    for collection in ['rules','triggers','actions','integrations','savedCardFilters','scrumSnapshotRows']:
+                    for collection in ['rules','triggers','actions','integrations','eventlog','savedCardFilters','scrumSnapshotRows']:
                         client.command({'create':collection})
                     app=start('1')
                     subprocess.run([
@@ -332,6 +332,21 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: linked REST cards store a reference, emit one creation activity, and refuse link chains')
 
                 bulk_path='/api/boards/b/lists/l/cards/bulk'
+                client.command({'create':'eventlog'})
+                client.command({'insert':'boards','documents':[dict(_id='parent-private-board',title='Private parent board',
+                    slug='private-parent-board',permission='private',members=[])]})
+                client.command({'insert':'cards','documents':[dict(_id='parent-private-card',boardId='parent-private-board',
+                    title='Private parent title',archived=False)]})
+                for expected in (1,2):
+                    status,_,body=request('POST',bulk_path,dict(swimlaneId='s',
+                        cards=[dict(title='Rejected child',parentId='parent-private-card')]),token)
+                    assert (status,json.loads(body))==(200,[dict(index=0,error='Forbidden')]),(status,body)
+                    event,=client.command({'find':'eventlog','filter':dict(bleed='ParentBleed')})['cursor']['firstBatch']
+                    assert event['count']==expected and isinstance(event['at'],DateMs) and isinstance(event['firstAt'],DateMs)
+                    if expected==1:first_seen=event['firstAt']
+                    else:assert event['firstAt']==first_seen
+                    assert 'parent-private-card' not in str(event) and 'parent-private-board' not in str(event)
+                print('PASS: shared parent denials fold into one typed event without private identifiers')
                 status,_,body=request('POST',bulk_path,dict(swimlaneId='s',cards=[
                     dict(title='Child',parentId=card['_id'],members=['u']),
                     dict(title='Invalid placement',swimlaneId='missing'),
