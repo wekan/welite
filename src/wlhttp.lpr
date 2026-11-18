@@ -265,8 +265,12 @@ begin
   end;
 end;
 function ConfirmationForm(Request:TRequest;const Token,Message:string;Words:TWLTranslator):string;
+var Notice:string;
 begin
-  Result:='<h1>Confirm one-time codes</h1><p>'+HtmlEncode(Message)+'</p>'+
+  Notice:='';
+  if Message<>'' then Notice:='<p>'+HtmlEncode(Message)+'</p>';
+  Result:='<h1>'+HtmlEncode(Words.Text('twoFactorCode-prompt','Enter your 6-digit authentication code'))+'</h1>'+LineEnding+
+    Notice+
     '<form method="POST" action="'+HtmlAttr(LanguageUrl(Request,'/two-factor/confirm'))+'">'+
     '<input type="hidden" name="setupToken" value="'+HtmlEncode(Token)+'">'+
     '<label for="enrol-code">'+HtmlEncode(Words.Text('otp','One-time code'))+'</label> <input id="enrol-code" name="code" size="6" maxlength="6"><br>'+
@@ -296,7 +300,7 @@ begin
       Body:='<h1>'+HtmlEncode(Title)+'</h1><p>Account: '+HtmlEncode(Username)+'</p>'+
         '<p>'+HtmlEncode(Words.Text('twoFactorAuth-manual-entry','Or enter this code manually: '))+'<code id="otp-secret">'+HtmlEncode(Secret)+'</code></p>'+
         '<p>Use time-based codes: SHA1, six digits, 30 seconds. Keep the secret private. This setup expires in five minutes.</p>'+
-        ConfirmationForm(Request,Token,Words.Text('twoFactorCode-prompt','Enter your 6-digit authentication code'),Words);
+        ConfirmationForm(Request,Token,'',Words);
       SendHtml(Response,AuthPage(Request,Response,Title,Body));
     finally
       Proof.Free;
@@ -339,7 +343,9 @@ begin
   else
   begin
     if Length(Token)<>64 then Token:='';
-    SendHtml(Response,AuthPage(Request,Response,'Confirm one-time codes',ConfirmationForm(Request,Token,Words.Text('twoFactorCode-invalid','Invalid authentication code. Please try again.'),Words)));
+    Title:=Words.Text('twoFactorCode-prompt','Enter your 6-digit authentication code');
+    SendHtml(Response,AuthPage(Request,Response,Title,ConfirmationForm(Request,Token,
+      Words.Text('twoFactorCode-invalid','Invalid authentication code. Please try again.'),Words)));
   end;
   finally Words.Free;end;
 end;

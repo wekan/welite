@@ -39,6 +39,7 @@ def check_auth_language(request,database,otp):
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code='bad'))
     assert status==200 and b'action="/two-factor/confirm?lang=ar"' in body and b'href="/two-factor/setup?lang=ar"' in body
     assert translated('twoFactorCode-invalid') in body
+    assert b'<h1>'+translated('twoFactorCode-prompt')+b'</h1>' in body
     import time
     counter=int(time.time())//30
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code=otp(secret,counter)))
