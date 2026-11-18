@@ -1141,25 +1141,31 @@ begin
 end;
 
 function WidgetForm(const S: TWLSession; const PageId: string; const W: TWidget;
-  const Caption: string): string;
-  function Field(const Name, Value: string): string;
+  const Caption: string; Words: TWLTranslator): string;
+  function Field(const Name, Value, LabelText: string): string;
   begin
-    Result:=' '+HtmlEncode(Name)+' <input name="'+Name+'" value="'+HtmlAttr(Value)+'">';
+    Result:=' <label for="widget-'+Name+'">'+HtmlEncode(LabelText)+'</label>'+
+      ' <input id="widget-'+Name+'" name="'+Name+'" value="'+HtmlAttr(Value)+'">';
   end;
 begin
   Result:='<h2>'+HtmlEncode(Caption)+'</h2><form method="POST" action="/designer/widget/save">'+
     AuthHiddenFields(S,'designer:/designer/widget/save')+
     '<input type="hidden" name="pageId" value="'+HtmlAttr(PageId)+'">'+
     '<input type="hidden" name="widgetId" value="'+HtmlAttr(W.Id)+'">'+
-    Field('type',W.Typ)+Field('label',W.Lbl)+Field('name',W.Name)+Field('value',W.Value)+
-    Field('target',W.Target)+Field('binding',W.Binding)+
-    Field('row',IntToStr(W.Row))+Field('col',IntToStr(W.Col))+
-    Field('rowspan',IntToStr(W.RowSpan))+Field('colspan',IntToStr(W.ColSpan))+
-    Field('sort',FloatToStr(W.Sort))+Field('fgColor',W.FgColor)+Field('bgColor',W.BgColor)+
-    ' Options JSON <textarea name="options_json">'+HtmlEncode(W.OptionsJson)+'</textarea>'+
-    ' <input type="checkbox" name="required" value="1"';
+    Field('type',W.Typ,Words.Text('type','Type'))+
+    Field('label',W.Lbl,Words.Text('r-label','Label'))+
+    Field('name',W.Name,Words.Text('name','Name'))+Field('value',W.Value,'Value')+
+    Field('target',W.Target,'Target')+Field('binding',W.Binding,'Binding')+
+    Field('row',IntToStr(W.Row),'Row')+Field('col',IntToStr(W.Col),'Column')+
+    Field('rowspan',IntToStr(W.RowSpan),'Row span')+Field('colspan',IntToStr(W.ColSpan),'Column span')+
+    Field('sort',FloatToStr(W.Sort),Words.Text('sort','Sort'))+
+    Field('fgColor',W.FgColor,'Text color')+Field('bgColor',W.BgColor,'Background color')+
+    ' <label for="widget-options">Options JSON</label> <textarea id="widget-options" name="options_json">'+
+    HtmlEncode(W.OptionsJson)+'</textarea>'+
+    ' <input id="widget-required" type="checkbox" name="required" value="1"';
   if W.Required then Result:=Result+' checked';
-  Result:=Result+'> Required <input type="submit" value="'+HtmlAttr(Caption)+'"></form>';
+  Result:=Result+'> <label for="widget-required">Required</label> <input type="submit" value="'+
+    HtmlAttr(Caption)+'"></form>';
 end;
 
 procedure DesignerEditPage(aRequest: TRequest; aResponse: TResponse);
@@ -1232,9 +1238,9 @@ begin
       if W[i].Id=aRequest.QueryFields.Values['widgetId'] then
       begin EditWidget:=W[i]; Break; end;
     if EditWidget.Id='' then
-      Body:=Body+WidgetForm(S,P.Id,EditWidget,Words.Text('add','Add'))
+      Body:=Body+WidgetForm(S,P.Id,EditWidget,Words.Text('add','Add'),Words)
     else
-      Body:=Body+WidgetForm(S,P.Id,EditWidget,Words.Text('save','Save'));
+      Body:=Body+WidgetForm(S,P.Id,EditWidget,Words.Text('save','Save'),Words);
     Body:=Body+'<p><a href="'+HtmlAttr(SessionUrl(P.Url,S))+'">'+HtmlEncode(Words.Text('preview','Preview'))+'</a></p>';
   finally Words.Free;end;
 
