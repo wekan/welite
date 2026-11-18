@@ -48,6 +48,52 @@ begin
     Result:=Result+'</ul>';
   finally Words.Free;end;
 end;
+function MiniCardFieldValue(Definition:TJSONObject;Value:TJSONData):string;
+var Options,Selection,Parsed,Item:TJSONData;Kind,Display:string;I:Integer;
+  function OptionName(const Id:string):string;
+  var J:Integer;Option:TJSONData;
+  begin
+    Result:=Id;
+    if not (Options is TJSONArray) then Exit;
+    for J:=0 to TJSONArray(Options).Count-1 do
+    begin
+      Option:=TJSONArray(Options).Items[J];
+      if (Option is TJSONObject) and (TJSONObject(Option).Get('_id','')=Id) then
+        Exit(TJSONObject(Option).Get('name',Id));
+    end;
+  end;
+begin
+  Result:='';
+  Kind:=Definition.Get('type','');
+  Options:=Definition.FindPath('settings.dropdownItems');
+  if Kind='dropdownMultiSelect' then
+  begin
+    Parsed:=nil;Selection:=Value;
+    try
+      if Value.JSONType=jtString then
+      begin
+        try Parsed:=GetJSON(Value.AsString);except Exit;end;
+        Selection:=Parsed;
+      end;
+      if not (Selection is TJSONArray) then Exit;
+      for I:=0 to TJSONArray(Selection).Count-1 do
+      begin
+        Item:=TJSONArray(Selection).Items[I];
+        if Item.JSONType<>jtString then Continue;
+        Display:=OptionName(Item.AsString);
+        if Trim(Display)='' then Continue;
+        if Result<>'' then Result:=Result+', ';
+        Result:=Result+Display;
+      end;
+    finally Parsed.Free;end;
+  end
+  else if Value.JSONType in [jtString,jtNumber,jtBoolean] then
+  begin
+    Result:=Value.AsString;
+    if (Kind='dropdown') and (Value.JSONType=jtString) then Result:=OptionName(Result);
+  end;
+end;
+
 function MiniCardFields(Db:TWLDb;const UserId,BoardId,CardId:string):string;
 var Values:TJSONArray;Field,Definition:TJSONObject;Value,ShowLabel:TJSONData;
   Policy:TFieldPolicy;Id,Caption,Display:string;I:Integer;Snapshot:Boolean;
@@ -63,12 +109,12 @@ begin
       begin
         Field:=TJSONObject(Values.Items[I]);
         Id:=Field.Get('_id','');Value:=Field.Find('value');
-        if (Value=nil) or not (Value.JSONType in [jtString,jtNumber,jtBoolean]) or
-          (Trim(Value.AsString)='') or not Policy.Allowed(Id,False) then Continue;
+        if (Value=nil) or (Value.JSONType=jtNull) or not Policy.Allowed(Id,False) then Continue;
         Definition:=ReadDefinition(Db,Id);
         if Definition=nil then Continue;
         try
-          Display:=Value.AsString;
+          Display:=MiniCardFieldValue(Definition,Value);
+          if Trim(Display)='' then Continue;
           Caption:='';
           ShowLabel:=Definition.Find('showLabelOnMiniCard');
           if (ShowLabel<>nil) and (ShowLabel.JSONType=jtBoolean) and ShowLabel.AsBoolean then
