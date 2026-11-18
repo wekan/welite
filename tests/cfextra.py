@@ -17,6 +17,20 @@ with tempfile.TemporaryDirectory(prefix='wlcfup-',dir=os.environ['TMPDIR']) as d
             result=subprocess.run([str(out/'cfup'),str(db),mode],capture_output=True,text=True)
             assert result.returncode==0,result.stderr
             return result.stdout.strip()
+        deadlines=out/'deadlines.db'
+        with sqlite3.connect(deadlines) as con:
+            con.executescript("CREATE TABLE checklists(id TEXT); CREATE TABLE checklist_items(id TEXT); INSERT INTO checklists VALUES('old');")
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            assert list(pool.map(lambda _:run(deadlines,'deadline'),range(4)))==['yes']*4
+        with sqlite3.connect(deadlines) as con:
+            assert con.execute('SELECT id,dueAt FROM checklists').fetchall()==[('old',None)]
+            assert con.execute('SELECT dueAt FROM checklist_items').fetchall()==[]
+        conflict=out/'deadline-conflict.db'
+        with sqlite3.connect(conflict) as con:
+            con.executescript("CREATE TABLE checklists(id TEXT); CREATE TABLE checklist_items(dueAt INTEGER);")
+        assert run(conflict,'deadline')=='no'
+        with sqlite3.connect(conflict) as con:
+            assert [row[1] for row in con.execute('PRAGMA table_info(checklists)')]==['id']
         def legacy(db):
             with sqlite3.connect(db) as con:
                 con.executescript("CREATE TABLE custom_fields(id TEXT PRIMARY KEY,name TEXT,currencyCode TEXT,legacy INTEGER); INSERT INTO custom_fields VALUES('field','漢','EUR',7); CREATE TABLE related(field TEXT REFERENCES custom_fields(id)); INSERT INTO related VALUES('field');")

@@ -205,6 +205,7 @@ CREATE TABLE checklists (
   title      TEXT NOT NULL DEFAULT 'Checklist',
   sort       REAL NOT NULL,
   finishedAt TEXT,
+  dueAt      TEXT,
   hideCheckedChecklistItems INTEGER DEFAULT 0,
   hideAllChecklistItems     INTEGER DEFAULT 0,
   showChecklistAtMinicard   INTEGER DEFAULT 0,
@@ -222,6 +223,7 @@ CREATE TABLE checklist_items (
   sort        REAL NOT NULL,
   isFinished  INTEGER NOT NULL DEFAULT 0,
   createdAt   TEXT,
+  dueAt       TEXT,
   modifiedAt  TEXT NOT NULL
 );
 CREATE INDEX idx_checklist_items ON checklist_items(checklistId, sort);
