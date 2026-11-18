@@ -343,6 +343,9 @@ file from WeLite, checks that FerretDB discovers it while running, and verifies
 cookie-free sign-in, API bearer persistence across HTTP restart, live short
 WAL/SHM and refusal to overwrite a native database.
 
+Set `WELITE_UI=1` with Playwright and Chromium available to exercise webhook
+forms and REST change visibility after reload without JavaScript or cookies.
+
 `python3 tests/stop.py` verifies Unix SIGTERM/SIGINT on both HTTP backends: idle
 accept, sustained request traffic, an incomplete request, repeated stop signals,
 worker-cleanup completion, exit status zero, immediate restart and SQLite integrity.

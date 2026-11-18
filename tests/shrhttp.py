@@ -924,7 +924,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: cookie-free webhook forms create, edit and delete with scoped one-use tokens')
                 if os.environ.get('WELITE_UI')=='1':
                     subprocess.run([os.environ.get('NODE','node'),str(root/'tests/webhooks.js'),
-                                    f'http://localhost:{http_port}'+webhook_page],check=True)
+                                    f'http://localhost:{http_port}'+webhook_page],input=token,text=True,check=True)
                 attachment_id='shared-export-file'
                 contents=b'WeLite export regression'
                 digest=hashlib.sha256(attachment_id.encode()).hexdigest()
