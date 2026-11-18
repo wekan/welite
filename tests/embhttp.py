@@ -74,6 +74,7 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                     words=json.loads(locale_file.read_text())
                     for path,key in [('/missing-route?unused=1','page-not-found'),
                                      ('/board/card?id=missing&card=missing','field-link-not-found'),
+                                     ('/board/attachments?id=missing','board-not-found'),
                                      ('/board/attachment?id=missing&card=missing&file=missing','attachment-repair-broken')]:
                         status,headers,body=request('GET',f'{path}&lang={tag}')
                         assert status==404 and headers['Content-Language']==tag and 'Set-Cookie' not in headers
@@ -104,6 +105,14 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 assert body.startswith(b'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"')
                 assert b'<meta name="viewport" content="width=device-width, initial-scale=1">' in body
                 assert b'dir="rtl"' in body and b'<h1>Embedded board</h1>' in body
+                attachment_page='/board/attachments?id=embedded-board'
+                assert request('GET',attachment_page+'&lang=ar')[0]==404
+                status,headers,body=request('GET',attachment_page+'&lang=ar&sessionId='+session)
+                assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
+                words=json.loads((root/'i18n/data/ar.jsn').read_text())
+                assert all(words[key].encode() in body for key in ('attachments','no-items-message'))
+                assert b'dir="rtl"' in body and b'/board?id=embedded-board' in body
+
                 for path in ['/schema.sql','/designer.sql','/src/schema.sql','/_seed/schema.sql']:
                     status,_,body=request('GET',path);assert status==404 and b'CREATE TABLE' not in body,path
                 login=request('POST','/sign-in?lang=ar',dict(username='embedded-admin',password='test-password'),host='admin')
@@ -118,4 +127,4 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 try:server.wait(timeout=30)
                 except subprocess.TimeoutExpired:server.kill();server.wait();raise
                 if server.returncode:log.seek(0);raise AssertionError(log.read())
-        print('PASS: '+backend+' fresh directory-free embedded admin/tenant/Designer bootstrap, exact static/catalog/locale bytes, translated auth, HTML4 board, private SQL and clean shutdown')
+        print('PASS: '+backend+' fresh directory-free embedded admin/tenant/Designer bootstrap, exact static/catalog/locale bytes, translated auth, HTML4 board and attachment page, private SQL and clean shutdown')
