@@ -323,7 +323,7 @@ the backend name when each pass starts.
 
 `python3 tests/shrhttp.py` requires `FERRETDB` pointing to the maintained live
 FerretDB binary with live SQLite database and collection discovery
-(commit `2bbdc8c6` or later) and normal SQLite filename mode. It verifies new
+(commit `41ff16c4` or later) and normal SQLite filename mode. It verifies new
 history collections through Mongo find and listCollections in one server process.
 It also checks the Mongo error for malformed registry settings and retries
 after repair. It builds both HTTP backends and the CLI extension, checks canonical filename refusal without file creation, then
@@ -331,7 +331,8 @@ opens an existing Mongo-created store with `WELITE_SHARED` unset. It verifies bo
 HTTP/Mongo changes, BSON preservation, private browser sessions, API restart and
 shared revocation, with no normalized shadow database. It also provisions a fresh
 shared database through HTTP in default mode, discovers it from the already running Mongo server,
-and logs in with a Mongo-created account. Strict 8.3 sharing and full Meteor
+and logs in with a Mongo-created account. With `dbext=db`, it also verifies
+that both processes share one `wekan.db` with normal sidecars. Strict 8.3 sharing and full Meteor
 application workflows are not covered.
 
 `python3 tests/stop.py` verifies Unix SIGTERM/SIGINT on both HTTP backends: idle

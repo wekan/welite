@@ -21,8 +21,8 @@ Inspected the working source of `wekan/FerretDB`, revision
   recursive schemas; arrays have one schema per element. Dates are integer epoch
   milliseconds, not the normalized schema's ISO strings. Ordinary JSON alone loses
   distinctions such as int32/int64, date/timestamp, string/ObjectID and binary subtype.
-- The pool currently discovers `.sqlite` filenames. This and shared attachment paths
-  must be reconciled with the short runtime layout before claiming a drop-in deployment.
+- The pool defaults to `.sqlite` filenames and can use `.db` with an explicit URI
+  option. Strict short sidecars and shared attachment paths still need verification.
 
 ## Verified storage kernel
 
@@ -1761,15 +1761,18 @@ mode. Other mode values fail initialization.
 Selection never copies, renames or links database files. Shared provisioning
 initializes only an empty canonical SQLite file inside a write transaction, and
 existing stores require the FerretDB metadata table. Normalized stores are refused. A recognized
-FerretDB store already named `wekan.db` can also be opened explicitly. Both known
+FerretDB store already named `wekan.db` can also be opened explicitly. Use
+`WELITE_SHARED=1` in WeLite and the SQLite URI option `dbext=db` in FerretDB
+(commit `41ff16c4` or later) to share that filename with normal sidecars. Both known
 filenames together are refused, as are orphan known sidecars; native provisioning
 refuses a foreign `.sqlite` file rather than silently creating a shadow database.
 Explicit native mode refuses the canonical shared filename and FerretDB metadata
 in the short filename. Resolve ambiguous files and recovery state offline first.
 
-`WELITE_SHORT_NAMES=1` refuses `wekan.sqlite`: the actual FerretDB server uses
-normal SQLite sidecar names. This opt-in path does not establish a portable shared
-filename policy or migrate normalized data. Do not
+`WELITE_SHORT_NAMES=1` refuses `wekan.sqlite`. It also refuses long sidecars
+beside `wekan.db`, and normal mode refuses short sidecars. The bundled FerretDB
+SQLite currently uses normal sidecar names even with `dbext=db`, so strict shared
+8.3 support remains open. This option does not migrate normalized data. Do not
 rename or alias an open database to work around these checks. Full Meteor application
 observer/index/cache and file-byte compatibility remain separate acceptance gates.
 

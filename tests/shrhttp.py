@@ -69,6 +69,12 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
     assert selected(cases)=='refused' and selected(cases,True)==str(cases/'wekan.sqlite')
     assert selected(cases,True,dict(WELITE_SHORT_NAMES='1'))=='refused'
     (cases/'wekan.db').touch();assert selected(cases,True)=='refused' and selected(cases)=='refused'
+    (cases/'wekan.sqlite').unlink()
+    for sidecar in ('wekan.wal','wekan.shm','wekan.nal','wekan.db-wal','wekan.db-shm','wekan.db-journal'):
+        (cases/sidecar).touch()
+        settings={'WELITE_SHORT_NAMES':'1'} if sidecar.startswith('wekan.db-') else {}
+        assert selected(cases,True,settings)=='refused'
+        (cases/sidecar).unlink()
     for backend,flags in backends.items():
         print(f'RUN: shared HTTP with {backend} SQLite', flush=True)
         out=tmp/backend;out.mkdir();build(root/'src/wlhttp.lpr',out/'build',flags)
@@ -128,56 +134,65 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                         WEKAN_PLAYWRIGHT_ALL='0',WEKAN_PLAYWRIGHT_WORKERS='1'),
                         check=True)
                     continue
-                fresh=out/'fresh'
-                fresh_data=fresh/'local/files/db'
-                fresh_data.mkdir(parents=True)
-                fresh_file=fresh_data/'wekan.sqlite'
-                fresh_port=port()
-                fresh_client=Client(fresh_port)
-                fresh_command=[str(ferret),'--handler=sqlite','--sqlite-url='+fresh_data.as_uri()+'/',
-                    '--state-dir='+str(out/'fresh-state'),'--listen-addr=127.0.0.1:'+str(fresh_port),
-                    '--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable']
-                fresh_server=subprocess.Popen(fresh_command,env=env,stdout=mongo_log,stderr=mongo_log)
-                try:
-                    for _ in range(100):
-                        try:
-                            fresh_client.command({'ping':1})
-                            break
-                        except OSError:
-                            assert fresh_server.poll() is None
-                            time.sleep(.05)
+                for extension in ('sqlite','db'):
+                    fresh=out/('fresh-'+extension)
+                    fresh_data=fresh/'local/files/db'
+                    fresh_data.mkdir(parents=True)
+                    fresh_file=fresh_data/('wekan.'+extension)
+                    alternate=fresh_data/('wekan.sqlite' if extension=='db' else 'wekan.db')
+                    fresh_port=port()
+                    fresh_client=Client(fresh_port)
+                    fresh_command=[str(ferret),'--handler=sqlite','--sqlite-url='+fresh_data.as_uri()+'/?dbext='+extension,
+                        '--state-dir='+str(out/('fresh-state-'+extension)),'--listen-addr=127.0.0.1:'+str(fresh_port),
+                        '--debug-addr=127.0.0.1:'+str(port()),'--log-level=ERROR','--telemetry=disable']
+                    fresh_server=subprocess.Popen(fresh_command,env=env,stdout=mongo_log,stderr=mongo_log)
+                    try:
+                        for _ in range(100):
+                            try:
+                                fresh_client.command({'ping':1})
+                                break
+                            except OSError:
+                                assert fresh_server.poll() is None
+                                time.sleep(.05)
+                        else:
+                            raise AssertionError('FerretDB did not start')
+                        assert fresh_client.command({'find':'users'})['cursor']['firstBatch']==[]
+                        assert not fresh_file.exists()
+                        databases=fresh_client.command({'listDatabases':1,'nameOnly':True},database='admin')
+                        assert 'wekan' not in {row['name'] for row in databases['databases']}
+                        if extension=='db':
+                            fresh_client.command({'create':'users'})
+                        app=start('1' if extension=='db' else '',fresh)
+                        assert request('GET','/sign-in')[0]==200
+                        assert fresh_file.is_file() and not alternate.exists()
+                        with sqlite3.connect(fresh_file) as con:
+                            names={row[0] for row in con.execute('SELECT name FROM _ferretdb_collections')}
+                            assert {'users','boards','swimlanes','lists','cards'} <= names
+                            assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
+                        assert fresh_client.command({'find':'users'})['cursor']['firstBatch']==[]
+                        databases=fresh_client.command({'listDatabases':1,'nameOnly':True},database='admin')
+                        assert 'wekan' in {row['name'] for row in databases['databases']}
+                        assert {'users','boards'} <= {row['name'] for row in
+                            fresh_client.command({'listCollections':1})['cursor']['firstBatch']}
+                        fresh_password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
+                        assert fresh_client.command({'insert':'users','documents':[
+                            dict(_id='first-user',username='first-user',services=dict(password=fresh_password))]})['n']==1
+                        status,_,body=request('POST','/users/login',dict(username='first-user',password='test-password'))
+                        assert status==200 and json.loads(body)['id']=='first-user',(status,body)
+                        status,headers,_=request('POST','/sign-in',urlencode(
+                            dict(username='first-user',password='test-password')))
+                        assert status==302 and 'Set-Cookie' not in headers,(status,headers)
+                        assert request('GET',headers['Location'])[0]==200
+                        published=fresh_client.find('users','first-user')[0]['services']['resume']['loginTokens']
+                        assert len(published)==1,published
+                    finally:
+                        fresh_server.terminate()
+                        fresh_server.wait(timeout=10)
+                        stop()
+                    if extension=='db':
+                        print('PASS: FerretDB and WeLite share one wekan.db with standard sidecars')
                     else:
-                        raise AssertionError('FerretDB did not start')
-                    assert fresh_client.command({'find':'users'})['cursor']['firstBatch']==[]
-                    assert not fresh_file.exists()
-                    databases=fresh_client.command({'listDatabases':1,'nameOnly':True},database='admin')
-                    assert 'wekan' not in {row['name'] for row in databases['databases']}
-                    app=start('',fresh)
-                    assert request('GET','/sign-in')[0]==200
-                    assert fresh_file.is_file() and not (fresh_data/'wekan.db').exists()
-                    with sqlite3.connect(fresh_file) as con:
-                        names={row[0] for row in con.execute('SELECT name FROM _ferretdb_collections')}
-                        assert {'users','boards','swimlanes','lists','cards'} <= names
-                        assert con.execute("SELECT type FROM sqlite_master WHERE name='users'").fetchone()==('view',)
-                    assert fresh_client.command({'find':'users'})['cursor']['firstBatch']==[]
-                    databases=fresh_client.command({'listDatabases':1,'nameOnly':True},database='admin')
-                    assert 'wekan' in {row['name'] for row in databases['databases']}
-                    assert {'users','boards'} <= {row['name'] for row in
-                        fresh_client.command({'listCollections':1})['cursor']['firstBatch']}
-                    fresh_password={'bcrypt':'$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y'}
-                    assert fresh_client.command({'insert':'users','documents':[
-                        dict(_id='first-user',username='first-user',services=dict(password=fresh_password))]})['n']==1
-                    status,_,body=request('POST','/users/login',dict(username='first-user',password='test-password'))
-                    assert status==200 and json.loads(body)['id']=='first-user',(status,body)
-                    status,headers,_=request('POST','/sign-in',urlencode(
-                        dict(username='first-user',password='test-password')))
-                    assert status==302 and 'Set-Cookie' not in headers,(status,headers)
-                    assert request('GET',headers['Location'])[0]==200
-                finally:
-                    fresh_server.terminate()
-                    fresh_server.wait(timeout=10)
-                    stop()
-                print('PASS: running FerretDB discovers the fresh database provisioned through HTTP')
+                        print('PASS: running FerretDB discovers the fresh database provisioned through HTTP')
 
                 occupied=out/'occupied'
                 occupied_data=occupied/'local/files/db'

@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Share wekan.db with FerretDB using normal sidecars
+
+- Verify Mongo and HTTP access to the same `wekan.db` when FerretDB uses
+  `dbext=db` and WeLite uses explicit shared mode.
+- Refuse a sidecar layout incompatible with the selected filename mode.
+
 ## 2026-11-18 Provision new tenants in shared format by default
 
 - Default to a canonical FerretDB SQLite database on compatible
