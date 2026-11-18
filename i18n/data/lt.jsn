@@ -2105,5 +2105,17 @@
   "twoFactorCode-invalid": "Neteisingas autentifikavimo kodas. Bandykite dar kartą.",
   "twoFactorAuth-enabled": "Jūsų paskyrai įjungtas dviejų faktorių autentifikavimas.",
   "two-factor-required-title": "Nustatykite dviejų faktorių autentifikavimą",
-  "two-factor-required-text": "Ši svetainė reikalauja jūsų paskyrai dviejų faktorių autentifikavimo. Nustatykite jį, kad galėtumėte tęsti."
+  "two-factor-required-text": "Ši svetainė reikalauja jūsų paskyrai dviejų faktorių autentifikavimo. Nustatykite jį, kad galėtumėte tęsti.",
+  "enrollment-password-instructions": "Patvirtinkite slaptažodį, kad pradėtumėte sąranką. Atlikę šį veiksmą neprisijungsite. Jau aktyvaus tapatybės patvirtinimo veiksnio čia pakeisti negalima.",
+  "enrollment-setup-denied": "Nepavyksta pradėti sąrankos. Patikrinkite prisijungimo duomenis ir ar vienkartiniai kodai jau įjungti.",
+  "enrollment-code-instructions": "Naudokite laiku pagrįstus kodus: SHA1, šeši skaitmenys ir 30 sekundžių intervalas. Saugokite raktą paslaptyje. Sąranka nustos galioti po penkių minučių.",
+  "enrollment-confirmed-instructions": "Patvirtinimo kodas jau panaudotas. Prieš prisijungdami palaukite naujo kodo tapatybės patvirtinimo programėlėje.",
+  "enrollment-account-created": "Paskyra sukurta",
+  "registration-first-admin": "Pirmajai paskyrai bus suteiktos šio domeno visuotinio administratoriaus teisės.",
+  "auth-too-many-attempts": "Per daug bandymų prisijungti. Bandykite vėliau.",
+  "enrollment-setup-failed": "Nepavyko pradėti sąrankos.",
+  "registration-global-admin-disabled": "Visuotinių administratorių paskyros kuriamos vietoje. Viešoji registracija išjungta.",
+  "auth-session-create-failed": "Nepavyko sukurti seanso.",
+  "registration-session-failed": "Paskyra sukurta. Prisijunkite, kad galėtumėte tęsti.",
+  "registration-password-unavailable": "Registruotis naudojant slaptažodį negalima."
 }
