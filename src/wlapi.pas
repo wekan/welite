@@ -40,6 +40,7 @@ uses
 
 procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
+procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
 procedure ApiPublicBoards(aRequest: TRequest; aResponse: TResponse);
@@ -1847,6 +1848,61 @@ begin
     else Literal:=QuotedStr(IntToStr(Ms));
   finally Formatted.Free;end;
   Result:=True;
+end;
+
+procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;Source:TSelectionScope;UserId,UserSql,Members,Assignees,Assigned,Related,BoardMember,
+  Scope,Due,FromDate,ToDate,Sql,CardScope:string;Rows:TWLRows;
+  function DateNumber(const Value:string):string;
+  begin
+    Result:='CASE WHEN instr('+Value+',''T'')>0 THEN unixepoch('+Value+
+      ',''subsec'')*1000 ELSE CAST('+Value+' AS INTEGER) END';
+  end;
+  function Bound(const Name:string;out Literal:string):Boolean;
+  var Raw:string;Input:TJSONData;
+  begin
+    Raw:=aRequest.QueryFields.Values[Name];Literal:='';
+    if Raw='' then Exit(True);
+    Input:=TJSONString.Create(Raw);
+    try Result:=CardDateSql(Input,Literal) and (Literal<>'NULL');finally Input.Free;end;
+  end;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  if not Bound('from',FromDate) or not Bound('to',ToDate) then
+  begin SendError(aResponse,400,'Invalid due date range');Exit;end;
+  UserSql:=QuotedStr(UserId);Source:=TSelectionScope.Create(T.Db);
+  try
+    CardScope:=Source.StringField('cards','id')+' AND '+Source.StringField('cards','boardId');
+    Members:='SELECT userId FROM card_members WHERE cardId=cards.id AND '+Source.StringField('card_members','userId');
+    Assignees:='SELECT userId FROM card_assignees WHERE cardId=cards.id AND '+Source.StringField('card_assignees','userId');
+    Assigned:=UserSql+' IN ('+Assignees+')';
+    Related:='('+Assigned+' OR '+UserSql+' IN ('+Members+') OR EXISTS(SELECT 1 FROM json_each(cards.extra_json) relation '+
+      'JOIN json_each(CASE WHEN relation.type=''array'' THEN relation.value ELSE ''[]'' END) participant '+
+      'WHERE relation.key IN (''requesters'',''assigners'') AND participant.type=''text'' AND participant.value='+UserSql+'))';
+    BoardMember:='EXISTS(SELECT 1 FROM board_members WHERE boardId=cards.boardId AND userId='+UserSql+
+      ' AND isActive=1 AND '+Source.StringField('board_members','userId')+
+      ' AND ((COALESCE(isReadAssignedOnly,0)=0 AND COALESCE(isCommentAssignedOnly,0)=0 AND '+
+      'COALESCE(isNormalAssignedOnly,0)=0) OR '+Assigned+'))';
+  finally Source.Free;end;
+  Scope:='cards.archived=0 AND cards.deletedAt IS NULL AND '+CardScope+
+    ' AND EXISTS(SELECT 1 FROM boards WHERE id=cards.boardId AND archived=0) AND '+Related+' AND '+BoardMember;
+  Due:=DateNumber('cards.dueAt');
+  if (LowerCase(aRequest.QueryFields.Values['due'])='true') or
+    (LowerCase(aRequest.QueryFields.Values['due'])='yes') or
+    (aRequest.QueryFields.Values['due']='1') or (FromDate<>'') or (ToDate<>'') then
+    Scope:=Scope+' AND cards.dueAt IS NOT NULL AND cards.dueAt<>''''';
+  if FromDate<>'' then Scope:=Scope+' AND ('+Due+')>=('+DateNumber(FromDate)+')';
+  if ToDate<>'' then Scope:=Scope+' AND ('+Due+')<=('+DateNumber(ToDate)+')';
+  Sql:='SELECT json_group_array(json(card)) FROM (SELECT json_patch(''{}'',json_object(''_id'',cards.id,'+
+    '''title'',cards.title,''boardId'',cards.boardId,''swimlaneId'',cards.swimlaneId,''listId'',cards.listId,'+
+    '''dueAt'',cards.dueAt,''startAt'',cards.startAt,''endAt'',cards.endAt,'+
+    '''members'',json((SELECT json_group_array(userId) FROM ('+Members+'))),'+
+    '''assignees'',json((SELECT json_group_array(userId) FROM ('+Assignees+'))))) card FROM cards WHERE '+Scope+
+    ' ORDER BY '+Due+',cards.id);';
+  Rows:=T.Db.Query(Sql);
+  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not read user cards');Exit;end;
+  SendJson(aResponse,Rows[0][0]);
 end;
 
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);

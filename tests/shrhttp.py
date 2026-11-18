@@ -158,6 +158,27 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 stored=client.find('cards',card['_id'])[0]
                 assert [stored[field] for field in dates]==[
                     DateMs(0),DateMs(-1),DateMs(1780833600000),DateMs(1780876800000)]
+                assert request('PUT',card_path,dict(members=['u']),token)[0]==200
+                def my_cards(query=''):
+                    status,_,body=request('GET','/api/user/cards'+query,token=token)
+                    assert status==200,(status,body)
+                    return {item['_id']:item for item in json.loads(body)}
+                assert my_cards('?due=yes&from=2026-06-07&to=2026-06-08')[card['_id']]['members']==['u']
+                assert card['_id'] not in my_cards('?to=2026-06-06')
+                board_members=client.find('boards','b')[0]['members']
+                def set_card_membership(members):
+                    result=client.command({'update':'boards','updates':[dict(q={'_id':'b'},u={'$set':{'members':members}})]})
+                    assert result['n']==1,result
+                try:
+                    set_card_membership([dict(board_members[0],isReadAssignedOnly=True)])
+                    assert card['_id'] not in my_cards()
+                    set_card_membership([])
+                    assert card['_id'] not in my_cards()
+                finally:
+                    set_card_membership(board_members)
+                assert request('PUT',card_path,dict(members=[]),token)[0]==200
+                stored=client.find('cards',card['_id'])[0]
+                print('PASS: shared My Cards requires active board membership and applies due date bounds')
                 assert request('PUT',card_path,dict(dueAt='invalid'),token)[0]==404
                 assert client.find('cards',card['_id'])[0]==stored
                 assert request('PUT',card_path,dict(receivedAt=None,startAt='null',dueAt='',endAt=''),token)[0]==200

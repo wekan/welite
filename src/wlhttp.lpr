@@ -648,6 +648,7 @@ begin
   HTTPRouter.RegisterRoute('/users/login', rmPost, @ApiLogin);
   HTTPRouter.RegisterRoute('/users/logout', rmPost, @ApiLogout);
   HTTPRouter.RegisterRoute('/api/user', rmGet, @ApiUser);
+  HTTPRouter.RegisterRoute('/api/user/cards', rmGet, @ApiMyCards);
   HTTPRouter.RegisterRoute('/api/users', rmGet, @ApiUsers);
   HTTPRouter.RegisterRoute('/api/boards', rmGet, @ApiPublicBoards);
   HTTPRouter.RegisterRoute('/api/users/:userId/boards', rmGet, @ApiUserBoards);
