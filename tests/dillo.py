@@ -12,6 +12,7 @@ def run(base):
         check_viewport(base, width, height, "Dillo")
     if os.environ.get("WELITE_NETSURF") == "1":
         check_viewport(base, 640, 480, "NetSurf")
+        check_viewport(base, 320, 480, "NetSurf")
 
 
 def check_viewport(base, width, height, browser_name):

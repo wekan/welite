@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify narrow HTML4 board navigation in Linux NetSurf
+
+- NetSurf 3.11 at 320×480 displays the minimap highlight and moves the
+  viewport when the next marker is clicked, with JavaScript disabled.
+
 ## 2026-11-18 Localize missing page responses
 
 - Use the existing page-not-found translation for the HTML title and body.
