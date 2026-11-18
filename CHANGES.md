@@ -4,6 +4,11 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Verify preservation of occupied history heads
+
+- Exercise a shared list deletion while WeKan owns a pending reservation.
+  Confirm that the reservation and history records are preserved.
+
 ## 2026-11-18 Append list history to idle coordinated heads
 
 - Verify the WeKan coordinated gate and empty pending slot, then insert the

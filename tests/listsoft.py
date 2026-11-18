@@ -137,7 +137,18 @@ def run(request, client, db, token, refresh_ferret):
         assert head['hash']!=added['integrityHash'] and head['pending'] is None and head['pendingHash'] is None, head
         assert current['previousHash']==added['integrityHash'] and current['changeType']=='added', current
         assert current['newContent']['deleted'] is False and isinstance(current['previousContent']['deletedAt'],DateMs), current
+        # A reservation owned by WeKan must survive a concurrent list mutation.
+        pending = dict(_id='wekan-pending-history', boardId='b', previousHash=head['hash'])
+        result = client.command({'update':'historyChainHeads','updates':[
+            dict(q={'_id':head_id},u={'$set':dict(pending=pending,pendingHash='reserved')})]})
+        assert result['n']==1, result
+        reserved,=client.find('historyChainHeads',head_id)
+        before=changes()
+        assert request('DELETE',path,token=token)[0]==200
+        assert changes()==before
+        assert encode(client.find('historyChainHeads',head_id)[0])==encode(reserved)
     finally:
         for collection,key in [('historyWriterGates',gate_id),('historyChainHeads',head_id)]:
             assert client.command({'delete':collection,'deletes':[dict(q={'_id':key},limit=1)]})['n']==1
     print('PASS: shared coordinated lifecycle append advances an idle head with the typed history row')
+    print('PASS: shared coordinated list deletion leaves an occupied reservation intact')
