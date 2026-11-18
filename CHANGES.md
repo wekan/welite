@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Set and clear card dates over REST
+
+- Persist received, start, due and end dates as typed BSON dates in shared
+  storage. Clear them with an empty string, null, or the string `null`.
+  Live tests verify field removal and preservation on invalid input.
+
 ## 2026-11-18 Revoke REST bearer tokens on logout
 
 - Add `POST /users/logout` with single-token and logout-everywhere modes.

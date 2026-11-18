@@ -2,6 +2,7 @@ unit wlcfjson;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
 uses SysUtils,fpjson,wldb,wlsjson;
+function JsonDate(Ms:Int64):TJSONData;
 function DocumentJson(const Document:string):TJSONObject;
 function ReadModelSjson(Db:TWLDb;const Model,Collection,Identity:string):string;
 function CustomFieldsJson(const Document:string):TJSONArray;

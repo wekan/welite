@@ -248,11 +248,13 @@ begin
           if not (InsertMode or CloneMode) and ((OldValue=nil) or (OldValue.AsString<>Converted.AsString)) then Invalid;
         end;
         if InsertMode and (Converted.JSONType=jtNull) and (OldValue=nil) then Continue;
-        // WeKan restores lifecycle markers with $unset. Keep absent BSON
-        // fields absent when the native restore writes SQL NULL.
+        // WeKan unsets lifecycle markers and cleared card dates. Preserve
+        // field absence when SQL represents those operations as NULL.
         if (Converted.JSONType=jtNull) and
           ((Spec.Get('table','')='lists') or (Spec.Get('table','')='cards')) and
-          ((Name='deletedAt') or (Name='deletedBy') or (Name='deleteBatchId')) then
+          ((Name='deletedAt') or (Name='deletedBy') or (Name='deleteBatchId') or
+            ((Spec.Get('table','')='cards') and
+             ((Name='receivedAt') or (Name='startAt') or (Name='dueAt') or (Name='endAt')))) then
         begin
           RemovePath(Doc,Path);
           Continue;

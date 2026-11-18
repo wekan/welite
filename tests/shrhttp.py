@@ -145,6 +145,19 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 assert status==200,(backend,status,body)
                 card=client.find('cards',json.loads(body)['_id'])[0]
                 assert card['title']=='HTTP card' and isinstance(card['createdAt'],DateMs)
+                card_path='/api/boards/b/lists/l/cards/'+card['_id']
+                dates=dict(receivedAt=0,startAt='-1',dueAt='2026-06-07T14:00:00.000+02:00',endAt='2026-06-08')
+                assert request('PUT',card_path,dates,token)[0]==200
+                stored=client.find('cards',card['_id'])[0]
+                assert [stored[field] for field in dates]==[
+                    DateMs(0),DateMs(-1),DateMs(1780833600000),DateMs(1780876800000)]
+                assert request('PUT',card_path,dict(dueAt='invalid'),token)[0]==404
+                assert client.find('cards',card['_id'])[0]==stored
+                assert request('PUT',card_path,dict(receivedAt=None,startAt='null',dueAt='',endAt=''),token)[0]==200
+                cleared=client.find('cards',card['_id'])[0]
+                assert all(field not in cleared for field in dates)
+                print('PASS: shared REST card dates set as BSON Date and clear by field removal')
+
                 check_shared_checklists(request,client,token,card)
                 status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
                 assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)

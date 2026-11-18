@@ -1524,9 +1524,48 @@ begin
 end;
 
 // PUT card — update any of title/description/color and replace labelIds if given.
+function ChecklistDeadlineSql(Value:TJSONData;out Literal:string):Boolean; forward;
+
+function CardDateSql(Value:TJSONData;out Literal:string):Boolean;
+const TimeClip=8640000000000000;
+var Text:string;Ms:Int64;I:Integer;Number:Double;Formatted,Input:TJSONData;
+begin
+  if Value.JSONType=jtNull then begin Literal:='NULL';Exit(True);end;
+  Text:='';Result:=False;
+  if Value.JSONType=jtString then
+  begin
+    Text:=Trim(Value.AsString);
+    if (Value.AsString='') or (Value.AsString='null') then
+    begin Literal:='NULL';Exit(True);end;
+    I:=1;
+    if (Text<>'') and (Text[1]='-') then Inc(I);
+    while (I<=Length(Text)) and (Text[I] in ['0'..'9']) do Inc(I);
+    if not ((I>1) and (I>Length(Text)) and TryStrToInt64(Text,Ms)) then
+    begin
+      if (Length(Text)=10) then Text:=Text+'T00:00:00Z';
+      Input:=TJSONString.Create(Text);
+      try Exit(ChecklistDeadlineSql(Input,Literal));finally Input.Free;end;
+    end;
+  end else if Value.JSONType=jtNumber then
+  begin
+    Number:=Value.AsFloat;
+    if IsNan(Number) or IsInfinite(Number) or (Abs(Number)>TimeClip) then Exit;
+    Ms:=Trunc(Number);
+  end else Exit;
+  if (Ms< -TimeClip) or (Ms>TimeClip) then Exit;
+  Formatted:=JsonDate(Ms);
+  try
+    Text:=Formatted.AsString;
+    if (Length(Text)=24) and (Copy(Text,1,4)<>'0000') then Literal:=QuotedStr(Text)
+    else Literal:=QuotedStr(IntToStr(Ms));
+  finally Formatted.Free;end;
+  Result:=True;
+end;
+
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits:Boolean;Body:TJSONObject;Input:TJSONData;
+  DateField,DateSets,Literal:string;HasDate:Boolean;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -1535,6 +1574,28 @@ begin
   HasEdits:=BodyHasField(aRequest,'title') or BodyHasField(aRequest,'description') or
     BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
     BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
+  DateSets:='';HasDate:=False;Body:=nil;
+  try
+    try
+      if (Pos('application/json',LowerCase(aRequest.ContentType))=1) and (aRequest.Content<>'') then
+        Body:=ExactObject(aRequest.Content)
+      else
+      begin
+        Body:=TJSONObject.Create;
+        for DateField in ['receivedAt','startAt','dueAt','endAt'] do
+          if aRequest.ContentFields.IndexOfName(DateField)>=0 then
+            Body.Add(DateField,aRequest.ContentFields.Values[DateField]);
+      end;
+      for DateField in ['receivedAt','startAt','dueAt','endAt'] do
+      begin
+        Input:=Body.Find(DateField);
+        if Input=nil then Continue;
+        HasDate:=True;
+        if CardDateSql(Input,Literal) then DateSets:=DateSets+','+DateField+'='+Literal;
+      end;
+    except SendError(aResponse,400,'Invalid card update');Exit;end;
+  finally Body.Free;end;
+  HasEdits:=HasEdits or (DateSets<>'');
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   if HasArchive and not HasEdits then
   begin
@@ -1546,6 +1607,8 @@ begin
     if not ApiBoardGuard(T,aRequest,aResponse,UserId,CardNotFound) then Exit;
     Scope:=Scope+' AND listId='+QuotedStr(aRequest.RouteParams['listId']);
   end;
+  if HasDate and (DateSets='') and not (HasArchive or HasEdits) then
+  begin SendJson(aResponse,'{"message":"Error"}',404);Exit;end;
   if not CardRelationSql(T,aRequest,aResponse,BoardId,CardId,Relations) then Exit;
   Stamp:=QuotedStr(NowIso);
   ArchiveSql:='';
@@ -1569,7 +1632,7 @@ begin
   Sets:='';
   if not HasArchive or HasEdits then
   begin
-    Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp;
+    Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp+DateSets;
     if BodyHasField(aRequest,'title') then Sets:=Sets+',title='+QuotedStr(BodyField(aRequest,'title'));
     if BodyHasField(aRequest,'description') then Sets:=Sets+',description='+QuotedStr(BodyField(aRequest,'description'));
     if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
