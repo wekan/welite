@@ -3993,46 +3993,53 @@ begin
   finally O.Free; end;
 end;
 
-// POST add / DELETE remove a card member (userId in the path).
-procedure ApiCardMember(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, MemberId:string; Ok:Boolean;
+// Dedicated member and assignee routes share card scope and removal history.
+procedure ChangeCardAssignment(aRequest:TRequest;aResponse:TResponse;
+  const RouteKey,TableName,ActivityType,ActivityKey:string);
+var T:TWLTenant;Actor,CardId,BoardId,ListId,Target,Scope,Pair,ActivityId,Stamp,Sql:string;
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  CardId := aRequest.RouteParams['cardId'];
-  MemberId := aRequest.RouteParams['member'];
-  if (aRequest.Method<>'DELETE') and not EnabledBoardMember(T.Db,aRequest.RouteParams['boardId'],MemberId) then
-  begin SendError(aResponse,400,'Target is not an enabled board member'); Exit; end;
-  if aRequest.Method = 'DELETE' then
-    Ok:=T.Db.Exec(Format('DELETE FROM card_members WHERE cardId=%s AND userId=%s;',
-      [QuotedStr(CardId), QuotedStr(MemberId)]))
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,Actor,CardNotFound) then Exit;
+  CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
+  ListId:=aRequest.RouteParams['listId'];Target:=QuotedStr(aRequest.RouteParams[RouteKey]);
+  if aRequest.Method='DELETE' then
+  begin
+    Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+      ' AND listId='+QuotedStr(ListId)+' AND deletedAt IS NULL';
+    Pair:='cardId='+QuotedStr(CardId)+' AND userId='+Target;
+    ActivityId:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
+    Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+      ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+
+      'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
+      ActivityId+','+QuotedStr(ActivityType)+','+QuotedStr(Actor)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
+      ',json_patch(json_object('+QuotedStr(ActivityKey)+','+Target+'),json_object(''username'',(SELECT username FROM users WHERE id='+Target+
+      '))) FROM cards WHERE '+Scope+' AND EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+'); '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+') OR EXISTS(SELECT 1 FROM activities WHERE id='+ActivityId+
+      ') THEN 1 ELSE json(''Assignment activity missing'') END; '+
+      'DELETE FROM '+TableName+' WHERE '+Pair+'; '+
+      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+
+      ') THEN 1 ELSE json(''Assignment removal failed'') END; COMMIT;';
+  end
   else
-    Ok:=T.Db.Exec(Format('INSERT OR IGNORE INTO card_members(cardId,userId) VALUES(%s,%s);',
-      [QuotedStr(CardId), QuotedStr(MemberId)]));
-  if not Ok then begin SendError(aResponse,500,'Could not update card membership'); Exit; end;
-  SendCardById(aResponse,T.Db,CardId,UserId);
+  begin
+    if not EnabledBoardMember(T.Db,BoardId,aRequest.RouteParams[RouteKey]) then
+    begin SendJson(aResponse,'{"error":"userId is not an active member of this board"}',400);Exit;end;
+    Sql:='INSERT OR IGNORE INTO '+TableName+'(cardId,userId) VALUES('+QuotedStr(CardId)+','+Target+');';
+  end;
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update card membership');Exit;end;
+  SendCardById(aResponse,T.Db,CardId,Actor,False,BoardId);
 end;
 
-// POST add / DELETE remove a card assignee (userId in the path).
-procedure ApiCardAssignee(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, CardId, AssigneeId:string; Ok:Boolean;
+procedure ApiCardMember(aRequest:TRequest;aResponse:TResponse);
 begin
-  if not ApiTenant(aRequest, aResponse, T) then Exit;
-  if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
-  if not ApiBoardGuard(T, aRequest, aResponse, UserId) then Exit;
-  CardId := aRequest.RouteParams['cardId'];
-  AssigneeId := aRequest.RouteParams['assignee'];
-  if (aRequest.Method<>'DELETE') and not EnabledBoardMember(T.Db,aRequest.RouteParams['boardId'],AssigneeId) then
-  begin SendError(aResponse,400,'Target is not an enabled board member'); Exit; end;
-  if aRequest.Method = 'DELETE' then
-    Ok:=T.Db.Exec(Format('DELETE FROM card_assignees WHERE cardId=%s AND userId=%s;',
-      [QuotedStr(CardId), QuotedStr(AssigneeId)]))
-  else
-    Ok:=T.Db.Exec(Format('INSERT OR IGNORE INTO card_assignees(cardId,userId) VALUES(%s,%s);',
-      [QuotedStr(CardId), QuotedStr(AssigneeId)]));
-  if not Ok then begin SendError(aResponse,500,'Could not update card membership'); Exit; end;
-  SendCardById(aResponse,T.Db,CardId,UserId);
+  ChangeCardAssignment(aRequest,aResponse,'member','card_members','unjoinMember','memberId');
+end;
+
+procedure ApiCardAssignee(aRequest:TRequest;aResponse:TResponse);
+begin
+  ChangeCardAssignment(aRequest,aResponse,'assignee','card_assignees','unjoinAssignee','assigneeId');
 end;
 
 // POST card archive — archives by default; body isArchive=false unarchives.
