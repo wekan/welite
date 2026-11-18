@@ -51,11 +51,11 @@ option and refuses non-8.3 database leaf names (including entropy stocks). SQLit
 storage is in memory in this mode. Native long-filename hosts can leave strict
 mode off while using the same tenant/file layout.
 
-Existing FerretDB stores can be opened explicitly with `WELITE_SHARED=1`; see
-[shared activation](ferret.md#opt-in-http-activation-of-existing-stores). That mode
-uses the existing canonical `wekan.sqlite` without renaming it and refuses it in
-strict 8.3 mode. It does not create fresh shared stores; the admin registry remains
-native. Never alias a shared database to obtain a different filename.
+See [shared activation and provisioning](ferret.md#shared-http-activation-and-provisioning)
+for normal-filename shared stores. FerretDB's strict sidecar mode requires
+`dbext=db&shortnames=1` and its own SQLite build with
+`SQLITE_ENABLE_8_3_NAMES=2`. The shared strict round trip remains to be verified.
+Never alias a shared database to obtain a different filename.
 
 **Every program accessing the database must use the same naming policy**, including
 backup utilities, Python, FerretDB and CLI maintenance tools. Mixing policies can
@@ -71,9 +71,10 @@ cc -O2 -DSQLITE_ENABLE_8_3_NAMES=2 shell.c sqlite3.c -o sqlite3 -lm -ldl -lpthre
 ```
 
 Use that library via the loader's library path and that CLI first on `PATH` for
-all test clients. `tests/short.py` inspects live paths and reopens data after a
-process restart; `admin.py` with strict mode scans every generated component while
-the server is running. Verified on native Linux with official SQLite 3.54.1;
+all test clients. `tests/short.py` checks live short WAL/SHM and rollback-journal
+paths and reopens data after a process restart. Set `WELITE_SHORT_BACKEND=linked`
+or `cli` to test one build. `admin.py` in strict mode scans generated components
+while the server runs. Verified on native Linux with SQLite 3.54.1;
 actual DOS/Amiga filesystems remain in the cross-platform verification checklist.
 
 ## Offline migration from the previous layout

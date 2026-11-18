@@ -12,9 +12,15 @@ migration=importlib.util.module_from_spec(spec);spec.loader.exec_module(migratio
 short=re.compile(r'[A-Za-z0-9_-]{1,8}(\.[A-Za-z0-9_-]{1,3})?\Z')
 def assert_short(data):
     for path in data.rglob('*'):assert short.fullmatch(path.name),path
+backends={'linked': [], 'cli': ['-dWLDB_CLI']}
+selected=os.environ.get('WELITE_SHORT_BACKEND')
+if selected:
+    if selected not in backends:
+        raise SystemExit('WELITE_SHORT_BACKEND must be linked or cli')
+    backends={selected: backends[selected]}
 with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as directory:
     tmp=Path(directory)
-    for backend,flags in [('linked',[]),('cli',['-dWLDB_CLI'])]:
+    for backend,flags in backends.items():
         out=tmp/backend;out.mkdir();data=out/'data'
         built=subprocess.run([os.environ.get('FPC','fpc'),*flags,'-B','-Fu'+str(root/'src'),'-FU'+str(out),'-FE'+str(out),str(root/'tests/short.lpr')],capture_output=True,text=True)
         assert built.returncode==0,built.stdout+built.stderr
@@ -38,7 +44,12 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
             assert Path(lines[1])==data/'certs/d0000001'
             assert lines[2]!=lines[3] and all(Path(p).is_dir() for p in lines[2:4])
             framework=Path(lines[4]);assert framework.name=='upload.tmp' and framework.parent.is_dir() and data in framework.parents
-            if os.environ.get('WELITE_SHORT_NAMES')=='1':assert_short(data)
+            if os.environ.get('WELITE_SHORT_NAMES')=='1':
+                assert_short(data)
+                if backend=='linked':
+                    db_dir=Path(lines[0]).parent
+                    assert (db_dir/'wekan.wal').is_file(),'No live short WAL observed'
+                    assert (db_dir/'wekan.shm').is_file(),'No live short SHM observed'
             proc.communicate('\n',timeout=10);assert proc.returncode==0
             with sqlite3.connect(lines[0]) as db:assert db.execute('SELECT COUNT(*) FROM durable').fetchone()[0]==attempt+1
         if backend=='linked' and os.environ.get('WELITE_SHORT_NAMES')=='1':
@@ -67,7 +78,8 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
         db.execute('CREATE TABLE durable(value TEXT)');db.execute("INSERT INTO durable VALUES('original')")
     files=tenant/'files/attachments';files.mkdir(parents=True)
     (files/'LongCaseSensitiveIdentifier').write_bytes(b'legacy\0bytes')
-    legacy=subprocess.run([str(tmp/'linked/short'),str(old)],capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql')))
+    probe_path=tmp/next(iter(backends))/'short'
+    legacy=subprocess.run([str(probe_path),str(old)],capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql')))
     assert legacy.returncode!=0 and 'Legacy paths detected' in legacy.stderr
     assert not (old/'admin/files').exists(),'Startup modified legacy storage'
     target=tmp/'new';migration.migrate(old,target);assert_short(target)
@@ -75,7 +87,7 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
     with sqlite3.connect(copied) as db:assert db.execute('SELECT value FROM durable').fetchone()==('original',)
     expected=migration.file_path(copied.parents[1],'attachme','LongCaseSensitiveIdentifier')
     assert expected.read_bytes()==b'legacy\0bytes' and (files/'LongCaseSensitiveIdentifier').read_bytes()==b'legacy\0bytes'
-    restarted=subprocess.run([str(tmp/'linked/short'),str(target)],input='\n',capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql')),timeout=20)
+    restarted=subprocess.run([str(probe_path),str(target)],input='\n',capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql')),timeout=20)
     assert restarted.returncode==0,restarted.stderr
     with sqlite3.connect(copied) as db:assert db.execute('SELECT value FROM durable ORDER BY rowid').fetchall()==[('original',),('retained',)]
     for suffix in ['existing','symlink','invalid']:

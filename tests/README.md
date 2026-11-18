@@ -46,6 +46,7 @@ serialized independent multi-touch drops. Baseline browser scripts still disable
 
 `python3 tests/short.py` verifies persistent short tenant keys, process restarts,
 short temp directory collisions, offline migration and unsupported strict-build denial.
+Set `WELITE_SHORT_BACKEND=linked` or `cli` to verify one supported build at a time.
 For `WELITE_SHORT_NAMES=1`, every client (including Python's SQLite module) must
 load a library compiled with `SQLITE_ENABLE_8_3_NAMES=2`; the CLI must have that same
 option. See `docs/runtime.md`. In strict mode, `admin.py` also scans the complete

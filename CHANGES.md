@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Check live 8.3 SQLite sidecars on native Linux
+
+- Assert linked SQLite creates `wekan.wal`, `wekan.shm` and a short
+  rollback journal. Allow either database backend to run independently
+  in the short-filename test suite.
+
 ## 2026-11-18 Share wekan.db with FerretDB using normal sidecars
 
 - Verify Mongo and HTTP access to the same `wekan.db` when FerretDB uses
