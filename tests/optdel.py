@@ -66,6 +66,28 @@ def run_native(call,db,board,uid,exercise_case=exercise,operation='delete'):
     def clear():
         with connect(db) as con:con.execute('DROP TRIGGER opt_fail')
     exercise_case(call,board,snapshot,stored,assign,install,clear)
+    if operation=='rename':
+        base='/api/boards/'+quote(board,safe='')+'/custom-fields'
+        status,_,body=call('POST',base,dict(name='Protected options',type='dropdown',
+            settings=dict(dropdownItems=[dict(_id='target',name='Original')])))
+        assert status==200,(status,body)
+        identity=json.loads(body)['_id']
+        route=base+'/'+quote(identity,safe='')+'/dropdown-items/target'
+        with connect(db) as con:
+            con.execute('UPDATE board_members SET isAdmin=0 WHERE boardId=? AND userId=?',(board,uid))
+        try:
+            assert call('PUT',route,dict(name='Regular member'))[0]==200
+            for admin_only,read_only in [(1,0),(0,1)]:
+                with connect(db) as con:
+                    con.execute('UPDATE custom_fields SET adminOnly=?,readOnly=? WHERE id=?',
+                                (admin_only,read_only,identity))
+                before=snapshot()
+                assert call('PUT',route,dict(name='Forbidden'))[0]==403
+                assert snapshot()==before
+        finally:
+            with connect(db) as con:
+                con.execute('UPDATE board_members SET isAdmin=1 WHERE boardId=? AND userId=?',(board,uid))
+        assert call('PUT',route,dict(name='Board administrator'))[0]==200
 
 def run_shared(call,client,db,board,uid,exercise_case=exercise,operation='delete'):
     card=None;card_before=None;original=None

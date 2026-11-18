@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Match dropdown mutation authorization and missing-item replies
+
+- Return the WeKan JSON error for missing options and out-of-scope fields.
+- Apply field write policy to dropdown mutations before and during the transaction.
+  Regular members can edit unprotected options and board administrators can edit
+  protected options.
+
 ## 2026-11-18 Rename dropdown options without losing typed data
 
 - Add PUT on the scoped dropdown-option route. Resolve the exact option ID,

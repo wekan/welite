@@ -18,7 +18,11 @@ def exercise(call,board,snapshot,stored,assign,install,clear,extra_kinds=()):
         assert snapshot()==before
     for bad in [b'{"name":"one","name":"two"}',urlencode([('name','one'),('name','two')])]:
         before=snapshot();assert call('PUT',route,bad)[0]==400;assert snapshot()==before
-    before=snapshot();assert call('PUT',route.rsplit('/',1)[0]+'/missing',dict(name='Missing'))[0]==404;assert snapshot()==before
+    before=snapshot()
+    for missing in [route.rsplit('/',1)[0]+'/missing',base+'/missing/dropdown-items/second']:
+        status,_,body=call('PUT',missing,dict(name='Missing'))
+        assert status==404 and json.loads(body)==dict(error='Dropdown item not found'),(status,body)
+        assert snapshot()==before
     before=snapshot();assert call('PUT',route.rsplit('/',1)[0]+'/%GG',dict(name='Bad path'))[0]==400;assert snapshot()==before
     # Shared fixtures seed a Regex with this same rendering; this must become a string.
     for value in [dict(name='First'),urlencode(dict(name='Renamed 漢 "quoted"\nline'))]:

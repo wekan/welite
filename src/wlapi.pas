@@ -203,7 +203,7 @@ begin
 end;
 
 function ApiBoardGuard(const T: TWLTenant; aRequest: TRequest; aResponse: TResponse;
-  const UserId: string): Boolean;
+  const UserId: string; const ScopeErrorJson: string = ''): Boolean;
 begin
   Result := ApiAuthBoard(T, aResponse, UserId, aRequest.RouteParams['boardId'],
     aRequest.Method <> 'GET');
@@ -211,7 +211,9 @@ begin
   Result:=ApiChildrenBelong(T.Db,aRequest.RouteParams['boardId'],aRequest.RouteParams['swimlaneId'],
     aRequest.RouteParams['listId'],aRequest.RouteParams['cardId'],aRequest.RouteParams['checklistId'],
     aRequest.RouteParams['item'],aRequest.RouteParams['commentId'],aRequest.RouteParams['customField']);
-  if not Result then SendError(aResponse,404,'Resource does not belong to this board or parent');
+  if not Result then
+    if ScopeErrorJson<>'' then SendJson(aResponse,ScopeErrorJson,404)
+    else SendError(aResponse,404,'Resource does not belong to this board or parent');
 end;
 
 // read a form OR json field from the request body
@@ -737,6 +739,8 @@ begin
   finally O.Free;end;
 end;
 
+const DropdownNotFound = '{"error":"Dropdown item not found"}';
+
 function OptionNameInput(Request:TRequest;out Name:string;out Present:Boolean):Boolean;
 var Doc:TJSONObject;Value:TJSONData;i:Integer;
 begin
@@ -775,8 +779,8 @@ var T:TWLTenant;UserId,BoardId,FieldId,ItemId,Parent,Item,Bindings,Permission,Be
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
-  if not ApiBoardGuard(T,aRequest,aResponse,UserId) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];FieldId:=aRequest.RouteParams['customField'];ItemId:=aRequest.RouteParams['dropdownItem'];
+  if not ApiBoardGuard(T,aRequest,aResponse,UserId,DropdownNotFound) then Exit;
   Scope:=nil;Policy:=nil;Rename:=aRequest.Method='PUT';
   try
     try
@@ -786,9 +790,9 @@ begin
       Item:=' FROM custom_field_dropdown_items WHERE customFieldId='+Q(FieldId)+' AND id='+Q(ItemId);
       Rows:=T.Db.Query('SELECT CASE WHEN '+Parent+' THEN (SELECT count(*)'+Item+' AND '+Scope.StringField('custom_field_dropdown_items','id')+') ELSE 0 END;');
       if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not validate dropdown item');Exit;end;
-      if Rows[0][0]='0' then begin SendError(aResponse,404,'Dropdown item not found');Exit;end;
+      if Rows[0][0]='0' then begin SendJson(aResponse,DropdownNotFound,404);Exit;end;
       if Rows[0][0]<>'1' then begin SendError(aResponse,500,'Ambiguous dropdown item');Exit;end;
-      Permission:=Policy.DefinitionExpression('',False);
+      Permission:=Policy.ScopeWriteExpression(FieldId);
       Rows:=T.Db.Query('SELECT '+Permission+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then begin SendError(aResponse,403,'Dropdown mutation forbidden');Exit;end;
       if Rename then
