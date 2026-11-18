@@ -42,7 +42,7 @@ procedure ApiLogin(aRequest: TRequest; aResponse: TResponse);
 procedure ApiLogout(aRequest:TRequest;aResponse:TResponse);
 procedure ApiMyCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUser(aRequest: TRequest; aResponse: TResponse);
-procedure ApiDeleteUser(aRequest:TRequest;aResponse:TResponse);
+procedure ApiChangeUser(aRequest:TRequest;aResponse:TResponse);
 procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
 procedure ApiPublicBoards(aRequest: TRequest; aResponse: TResponse);
 procedure ApiUserBoards(aRequest: TRequest; aResponse: TResponse);
@@ -508,9 +508,10 @@ begin
   finally O.Free; end;
 end;
 
-procedure ApiDeleteUser(aRequest:TRequest;aResponse:TResponse);
+procedure ApiChangeUser(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"User not found"}';
-var T:TWLTenant;Actor,Target,Scope,Admin,Bindings,Sql:string;Source:TSelectionScope;I:Integer;
+var T:TWLTenant;Actor,Target,Scope,Admin,Bindings,Sql,Mutation,Action,Flag:string;Source:TSelectionScope;I:Integer;
+  Rows:TWLRows;Reply:TJSONObject;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -528,14 +529,37 @@ begin
     finally Source.Free;end;
     if Length(T.Db.Query('SELECT id FROM users WHERE '+Scope+';'))<>1 then
     begin SendJson(aResponse,NotFound,404);Exit;end;
+    Mutation:='';
+    if aRequest.Method='DELETE' then
+      Mutation:=RevokeUserTokensSQL(T.Db,Target)+'DELETE FROM users WHERE '+Scope+'; '+
+        'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Target)+
+        ') THEN 1 ELSE json(''User deletion failed'') END; '
+    else
+    begin
+      Action:=BodyField(aRequest,'action');Flag:='';
+      if (Action='disableLogin') and (Target<>Actor) then
+      begin Flag:='1';Mutation:=RevokeUserTokensSQL(T.Db,Target);end
+      else if Action='enableLogin' then Flag:='0'
+      else if Action='takeOwnership' then
+      begin SendError(aResponse,400,'Unsupported account action');Exit;end;
+      if Flag<>'' then Mutation:=Mutation+'UPDATE users SET loginDisabled='+Flag+' WHERE '+Scope+'; '+
+        'SELECT CASE WHEN EXISTS(SELECT 1 FROM users WHERE '+Scope+' AND loginDisabled='+Flag+
+        ') THEN 1 ELSE json(''User update failed'') END; ';
+    end;
     Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+Admin+
-      ' AND (SELECT count(*) FROM users WHERE '+Scope+')=1 THEN 1 ELSE json(''User deletion scope changed'') END; '+
-      RevokeUserTokensSQL(T.Db,Target)+'DELETE FROM users WHERE '+Scope+'; '+
-      'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Target)+
-      ') THEN 1 ELSE json(''User deletion failed'') END; COMMIT;';
-    if not T.Db.Exec(Sql) then raise Exception.Create('User deletion failed');
-  except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete user');Exit;end;
-  SendJson(aResponse,'{"_id":"'+StringToJSONString(Target)+'"}');
+      ' AND (SELECT count(*) FROM users WHERE '+Scope+')=1 THEN 1 ELSE json(''User scope changed'') END; '+
+      Mutation+'COMMIT;';
+    if not T.Db.Exec(Sql) then raise Exception.Create('User change failed');
+  except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change user');Exit;end;
+  if aRequest.Method='DELETE' then
+    SendJson(aResponse,'{"_id":"'+StringToJSONString(Target)+'"}')
+  else
+  begin
+    Rows:=T.Db.Query('SELECT username,loginDisabled FROM users WHERE '+Scope+';');
+    if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+    Reply:=TJSONObject.Create(['_id',Target,'username',Rows[0][0],'loginDisabled',Rows[0][1]='1']);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+  end;
 end;
 
 procedure ApiUsers(aRequest: TRequest; aResponse: TResponse);
