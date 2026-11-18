@@ -97,6 +97,8 @@ procedure ApiChecklistItems(aRequest: TRequest; aResponse: TResponse); // POST a
 procedure ApiChecklistItem(aRequest: TRequest; aResponse: TResponse);  // GET/PUT(toggle)/DELETE item
 procedure ApiCardComments(aRequest: TRequest; aResponse: TResponse);   // GET list / POST add
 procedure ApiCardComment(aRequest: TRequest; aResponse: TResponse);    // GET one / DELETE one
+function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes:string;
+  out Id:string):Boolean;
 procedure ApiAttachmentUpload(aRequest: TRequest; aResponse: TResponse);   // POST /api/attachment/upload
 procedure ApiAttachmentDownload(aRequest: TRequest; aResponse: TResponse); // GET  /api/attachment/download/:id
 procedure ApiAttachmentInfo(aRequest: TRequest; aResponse: TResponse);     // GET  /api/attachment/info/:id
@@ -5388,9 +5390,50 @@ begin
   finally fs.Free; end;
 end;
 
+function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes:string;
+  out Id:string):Boolean;
+var Path,Sql,Guard:string;Policy:TFieldPolicy;OwnsPath:Boolean;
+begin
+  Id:=NewId;
+  Path:=StoreFilePath(T.FilesDir,'attachme',Id);
+  Guard:='1';
+  if Sw<>'' then Guard:=Guard+' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+QuotedStr(Sw)+
+    ' AND boardId='+QuotedStr(BoardId)+')';
+  if Lst<>'' then Guard:=Guard+' AND EXISTS(SELECT 1 FROM lists WHERE id='+QuotedStr(Lst)+
+    ' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL AND ('+QuotedStr(Sw)+
+    '='''' OR swimlaneId='''' OR swimlaneId='+QuotedStr(Sw)+'))';
+  if Crd<>'' then
+    Guard:=Guard+' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Crd)+' AND boardId='+QuotedStr(BoardId)+
+      ' AND deletedAt IS NULL AND ('+QuotedStr(Lst)+'='''' OR listId='+QuotedStr(Lst)+
+      ') AND ('+QuotedStr(Sw)+'='''' OR swimlaneId='+QuotedStr(Sw)+'))';
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  Sql:=Format('INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,'+
+    'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
+    [QuotedStr(Id),QuotedStr(BoardId),QuotedStr(Sw),QuotedStr(Lst),QuotedStr(Crd),
+     QuotedStr(FileName),QuotedStr(FileType),Length(Bytes),QuotedStr(UserId),QuotedStr(NowIso)]);
+  OwnsPath:=False;
+  try
+    if FileExists(Path) then raise EInOutError.Create('Attachment path already exists');
+    if not ForceDirectories(ExtractFileDir(Path)) then raise EInOutError.Create('Attachment directory unavailable');
+    OwnsPath:=True;
+    WriteFileBytes(Path,Bytes);
+    if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+
+      ' THEN 1 ELSE json(''Attachment scope changed'') END; '+Sql+
+      'SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+
+      ') THEN 1 ELSE json(''Attachment insertion failed'') END; COMMIT;') then
+      raise EInOutError.Create('Attachment registration failed');
+  except
+    T.Db.Exec('ROLLBACK;');
+    if OwnsPath and FileExists(Path) then DeleteFile(Path);
+    Exit(False);
+  end;
+  Result:=True;
+end;
+
 procedure ApiAttachmentUpload(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Id,Bytes,Path,Sql,Guard,ContentType:string;
-  Input,Reply:TJSONObject;Policy:TFieldPolicy;Separator:Integer;OwnsPath:Boolean;
+var T:TWLTenant;UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Id,Bytes,ContentType:string;
+  Input,Reply:TJSONObject;Separator:Integer;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -5424,40 +5467,8 @@ begin
   if not ApiChildrenBelong(T.Db,BoardId,Sw,Lst,Crd,'','','','') then
   begin SendError(aResponse,400,'Invalid attachment parent');Exit;end;
 
-  Id:=NewId;
-  Path:=StoreFilePath(T.FilesDir,'attachme',Id);
-  Guard:='1';
-  if Sw<>'' then Guard:=Guard+' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+QuotedStr(Sw)+
-    ' AND boardId='+QuotedStr(BoardId)+')';
-  if Lst<>'' then Guard:=Guard+' AND EXISTS(SELECT 1 FROM lists WHERE id='+QuotedStr(Lst)+
-    ' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL AND ('+QuotedStr(Sw)+
-    '='''' OR swimlaneId='''' OR swimlaneId='+QuotedStr(Sw)+'))';
-  if Crd<>'' then
-    Guard:=Guard+' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Crd)+' AND boardId='+QuotedStr(BoardId)+
-      ' AND deletedAt IS NULL AND ('+QuotedStr(Lst)+'='''' OR listId='+QuotedStr(Lst)+
-      ') AND ('+QuotedStr(Sw)+'='''' OR swimlaneId='+QuotedStr(Sw)+'))';
-  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
-  try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
-  Sql:=Format('INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,'+
-    'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
-    [QuotedStr(Id),QuotedStr(BoardId),QuotedStr(Sw),QuotedStr(Lst),QuotedStr(Crd),
-     QuotedStr(FileName),QuotedStr(FileType),Length(Bytes),QuotedStr(UserId),QuotedStr(NowIso)]);
-  OwnsPath:=False;
-  try
-    if FileExists(Path) then raise EInOutError.Create('Attachment path already exists');
-    if not ForceDirectories(ExtractFileDir(Path)) then raise EInOutError.Create('Attachment directory unavailable');
-    OwnsPath:=True;
-    WriteFileBytes(Path,Bytes);
-    if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+
-      ' THEN 1 ELSE json(''Attachment scope changed'') END; '+Sql+
-      'SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+
-      ') THEN 1 ELSE json(''Attachment insertion failed'') END; COMMIT;') then
-      raise EInOutError.Create('Attachment registration failed');
-  except
-    T.Db.Exec('ROLLBACK;');
-    if OwnsPath and FileExists(Path) then DeleteFile(Path);
-    SendError(aResponse,500,'Could not store attachment');Exit;
-  end;
+  if not StoreAttachment(T,UserId,BoardId,Sw,Lst,Crd,FileName,FileType,Bytes,Id) then
+  begin SendError(aResponse,500,'Could not store attachment');Exit;end;
   Reply:=TJSONObject.Create(['success',True,'attachmentId',Id,'fileName',FileName,
     'fileSize',Length(Bytes),'storageBackend','filesystem']);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;

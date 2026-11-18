@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-18 Share attachment persistence with the card upload work
+
+- Extract the filesystem write and transactional metadata registration from
+  the REST handler. The linked shared HTTP suite verifies existing uploads
+  and cleanup on metadata failure.
+
 ## 2026-11-18 Translate the username caption during enrollment
 
 - Reuse the translated username label beside the account name on the
