@@ -4,6 +4,17 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-19 Add a configurable Kanban viewport
+
+- Put wrapping POST navigation under the board title, followed by viewport
+  arrows, coordinates, size selectors and the minimap. Put the selection
+  keypad, actions and summary before the first visible swimlane.
+- Show six lists by four swimlanes by default. Let both sizes range from 1
+  through 40 and retain them during viewport navigation. Replace board-view
+  links with buttons.
+- Expand the garden example to eight lanes, 80 lists and 248 cards. Add the
+  sample rows to existing example databases once, preserving earlier edits.
+
 ## 2026-11-19 Add a local Kanban example and board calendar
 
 - Create an isolated SQLite example from the build menu with three accounts,

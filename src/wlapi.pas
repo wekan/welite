@@ -2036,12 +2036,15 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
 
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
+  Reading:=(aRequest.Method='GET') or (Browser and (aRequest.Method='POST') and
+    (aRequest.ContentFields.Values['nav_view']='1') and
+    (aRequest.ContentFields.IndexOfName('operation')<0));
   if Browser then
   begin
     if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),Session) then
     begin BrowserError(401,'log-in','Sign in');Exit;end;
     Actor:=Session.UserId;Id:='';
-    if aRequest.Method='POST' then
+    if not Reading then
     begin
       BoardId:=aRequest.ContentFields.Values['boardId'];
       Id:=aRequest.ContentFields.Values['integrationId'];
@@ -2060,7 +2063,6 @@ begin
     if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
     BoardId:=aRequest.RouteParams['boardId'];Id:=aRequest.RouteParams['intId'];
   end;
-  Reading:=aRequest.Method='GET';
   Creating:=(aRequest.Method='POST') and (not Browser or (Operation='create'));
   Updating:=(aRequest.Method='PUT') or (Browser and (Operation='save'));
   BadUrl:=False;

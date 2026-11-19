@@ -173,7 +173,7 @@ seed_example() (
     cat src/schema.sql || exit 1
     printf "CREATE TEMP TABLE example_credentials(services TEXT NOT NULL CHECK(json_valid(services)));\n"
     printf "INSERT INTO example_credentials VALUES(json_object('password',json('%s')));\n" "${hash//\'/\'\'}"
-    cat src/example.sql || exit 1
+    cat src/example.sql src/exmore.sql || exit 1
     printf '%s\n' 'COMMIT;'
   } | sqlite3 -batch -bail "$scratch/wekan.db" || return 1
   ln "$scratch/wekan.db" "$db"
@@ -181,15 +181,23 @@ seed_example() (
 
 create_example() {
   local db="$example_root/local/files/db/wekan.db"
+  if ! command -v sqlite3 >/dev/null; then
+    echo "  Install the sqlite3 command to prepare the example database."
+    return 1
+  fi
   if [ ! -f "$db" ]; then
-    if ! command -v sqlite3 >/dev/null; then
-      echo "  Install the sqlite3 command to create the example database."
-      return 1
-    fi
     [ -x "$BINDIR/wcurrent.exe" ] || build_current || return 1
     seed_example "$db" || return 1
     echo "  Created $db"
   else
+    (
+      set -o pipefail
+      {
+        printf '%s\n' 'PRAGMA foreign_keys=ON;' 'BEGIN IMMEDIATE;'
+        cat src/exmore.sql || exit 1
+        printf '%s\n' 'COMMIT;'
+      } | sqlite3 -batch -bail "$db"
+    ) || return 1
     echo "  Using the existing example database at $db"
   fi
   use_example=true

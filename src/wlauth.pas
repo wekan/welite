@@ -61,7 +61,7 @@ function RequestUserAgent(ARequest: TRequest): string;
 function WithSessionId(const TargetPath, SessionId: string): string;
 function RequestLanguageTag(Request:TRequest):string;
 function LanguageHiddenField(const S:TWLSession):string;
-function NavigationButton(const TargetPath,Caption:string;const S:TWLSession):string;
+function NavigationButton(const TargetPath,Caption:string;const S:TWLSession;const Attributes:string=''):string;
 function SessionUrl(const TargetPath:string;const S:TWLSession):string;
 
 // --- token machinery ----------------------------------------------------------------------
@@ -258,9 +258,9 @@ begin
 end;
 function HtmlAttr(const V:string):string; forward;
 
-function NavigationButton(const TargetPath,Caption:string;const S:TWLSession):string;
+function NavigationButton(const TargetPath,Caption:string;const S:TWLSession;const Attributes:string):string;
 begin
-  Result:='<form method="POST" action="'+HtmlAttr(TargetPath)+'">'+LanguageHiddenField(S)+
+  Result:='<form method="POST" action="'+HtmlAttr(TargetPath)+'" style="display:inline-block;margin:2px"'+Attributes+'>'+LanguageHiddenField(S)+
     '<input type="hidden" name="nav_view" value="1">';
   if S.SessionId<>'' then
     Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(S.SessionId)+'">';

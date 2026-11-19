@@ -130,7 +130,7 @@ function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;Glo
 var State:TWLSession;Words:TWLTranslator;
   function Item(const Path,Key,Caption:string):string;
   begin
-    Result:='<td valign="middle">'+NavigationButton(Path,Words.Text(Key,Caption),State)+'</td>';
+    Result:=NavigationButton(Path,Words.Text(Key,Caption),State);
   end;
 begin
   Result:='';
@@ -139,15 +139,13 @@ begin
   State.LanguageTag:=LanguageTag;
   Words:=TWLTranslator.Create(ResolveLanguage(LanguageTag,'',''));
   try
-    Result:='<table border="0" cellpadding="2" cellspacing="0"><tr>'+
-      Item('/','all-boards','All Boards');
+    Result:=Item('/','all-boards','All Boards');
     if IsTenantAdmin(Db,S) then
     begin
       Result:=Result+Item('/admin','admin-panel','Admin Panel')+
         Item('/designer','','Designer')+Item('/admin/people','people','People');
       if GlobalTenant then Result:=Result+Item('/admin/domains','domains','Domains');
     end;
-    Result:=Result+'</tr></table>';
   finally Words.Free;end;
 end;
 

@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string='';const HeaderNavigation:string=''):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string='';const HeaderNavigation:string='';Columns:Integer=6;VisibleRows:Integer=4):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCalendarEndpoint(Request:TRequest;Response:TResponse);
@@ -235,9 +235,33 @@ begin
   finally if not Db.EndRead then Result:='';end;
 end;
 
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string;Columns,VisibleRows:Integer):string;
 var B,Lanes,Lists,Cards,MapLists,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
-  Writable,ShowSpentTime,ShowCustomFields:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir:string; Occupied:TWLRows;Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
+  Writable,ShowSpentTime,ShowCustomFields:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir,Arrows,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
+  function ViewPath(AX,AY:Integer):string;
+  begin
+    Result:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
+  end;
+  function SizeSelect(const Axis,Name:string;Selected:Integer):string;
+  var N:Integer;
+  begin
+    Result:='<label>'+Axis+' <select name="'+Name+'">';
+    for N:=1 to 40 do
+    begin
+      Result:=Result+'<option value="'+IntToStr(N)+'"';
+      if N=Selected then Result:=Result+' selected="selected"';
+      Result:=Result+'>'+IntToStr(N)+'</option>';
+    end;
+    Result:=Result+'</select></label> ';
+  end;
+  function ItemButton(const Command,Id,Path,Caption:string;const Attributes:string=''):string;
+  begin
+    if Writable then
+      Result:='<button type="submit" name="'+Command+'" value="'+HtmlAttr(Id)+'"'+Attributes+'>'+
+        HtmlEncode(Caption)+'</button>'
+    else
+      Result:=NavigationButton(Path,Caption,NavState,Attributes);
+  end;
   function Selection(const Kind,Id:string):string;
   begin
     if Writable then Result:=SelectCheckbox(Kind,Id)+' ' else Result:='';
@@ -259,29 +283,25 @@ begin
   try
   if SameText(Dir,'rtl') then begin Align:='right'; CellDir:='rtl'; end
   else begin Align:='left'; CellDir:='ltr'; end;
+  if (Columns<1) or (Columns>40) then Columns:=6;
+  if (VisibleRows<1) or (VisibleRows>40) then VisibleRows:=4;
+  SizeQuery:='&cols='+IntToStr(Columns)+'&rows='+IntToStr(VisibleRows);
   Back:='/board?id='+HTTPEncode(BoardId);
-  Result:='<h1>'+HtmlEncode(B[0][0])+'</h1>'+HeaderNavigation;
   NavState:=S;
   NavState.LanguageTag:=Language.Tag;
+  Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><div class="board-nav">'+HeaderNavigation;
   if HeaderNavigation='' then
-  begin
-    if S.SessionId='' then
-      Result:=Result+'<p><a href="/">'+HtmlEncode(Words.Text('all-boards','All Boards'))+'</a></p>'
-    else
-      Result:=Result+NavigationButton('/',Words.Text('all-boards','All Boards'),S);
-  end;
+    Result:=Result+NavigationButton('/',Words.Text('all-boards','All Boards'),NavState);
   Result:=Result+NavigationButton('/board/calendar?id='+HTTPEncode(BoardId),
     Words.Text('calendar','Calendar'),NavState);
   if S.UserId<>'' then
   begin
-    Result:=Result+'<p><a href="'+HtmlAttr(BoardAttachmentsUrl(BoardId,S))+'">'+
-      HtmlEncode(Words.Text('attachments','Attachments'))+'</a></p>';
+    Result:=Result+NavigationButton('/board/attachments?id='+HTTPEncode(BoardId),
+      Words.Text('attachments','Attachments'),NavState);
     Url:='/board/export?id='+HTTPEncode(BoardId);
-    Result:=Result+'<p><a href="'+HtmlAttr(SessionUrl(Url,S))+'">'+
-      HtmlEncode(Words.Text('export-board','Export board')+' (JSON)')+'</a> &middot; <a href="'+
-      HtmlAttr(SessionUrl(Url+'&attachments=false',S))+'">'+
-      HtmlEncode(Words.Text('export-board','Export board')+' (JSON, '+
-        Words.Text('export-board-without-attachments','without attachments')+')')+'</a></p>';
+    Result:=Result+NavigationButton(Url,Words.Text('export-board','Export board')+' (JSON)',NavState)+
+      NavigationButton(Url+'&attachments=false',Words.Text('export-board','Export board')+' (JSON, '+
+        Words.Text('export-board-without-attachments','without attachments')+')',NavState);
     Policy:=nil;
     try
       try
@@ -290,9 +310,10 @@ begin
       except Permissions:=nil;end;
     finally Policy.Free;end;
     if (Length(Permissions)=1) and (Permissions[0][0]='1') then
-      Result:=Result+'<p><a href="'+HtmlAttr(SessionUrl('/board/webhooks?id='+HTTPEncode(BoardId),S))+
-        '">'+HtmlEncode(Words.Text('outgoing-webhooks','Outgoing Webhooks'))+'</a></p>';
+      Result:=Result+NavigationButton('/board/webhooks?id='+HTTPEncode(BoardId),
+        Words.Text('outgoing-webhooks','Outgoing Webhooks'),NavState);
   end;
+  Result:=Result+NavigationButton(Back+'&view=all'+SizeQuery,Words.Text('view-all','View all'),NavState)+'</div>';
   Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
     ' AND archived=0 ORDER BY sort,id;');
   if X<1 then X:=1;
@@ -300,12 +321,15 @@ begin
   if Length(Lanes)=0 then begin X:=1;Y:=1;end
   else if Y>Length(Lanes) then Y:=Length(Lanes);
   Width:=0;
-  Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" align="right" border="1" cellpadding="3" cellspacing="0" summary="'+
+  Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" border="1" cellpadding="0" cellspacing="0" summary="'+
     HtmlAttr(Words.Text('board','Board')+' / '+Words.Text('view','View'))+'">';
   for MapY:=0 to High(Lanes) do
   begin
-    MapLists:=Db.Query('SELECT id,title FROM lists WHERE boardId='+QuotedStr(BoardId)+
-      ' AND (swimlaneId='+QuotedStr(Lanes[MapY][0])+' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+    MapLists:=Db.Query('SELECT l.id,l.title,EXISTS(SELECT 1 FROM cards c WHERE c.boardId=l.boardId '+
+      'AND c.listId=l.id AND c.swimlaneId='+QuotedStr(Lanes[MapY][0])+' AND c.archived=0 AND c.deletedAt IS NULL) '+
+      'FROM lists l WHERE l.boardId='+QuotedStr(BoardId)+
+      ' AND (l.swimlaneId='+QuotedStr(Lanes[MapY][0])+' OR l.swimlaneId='+QuotedStr('')+
+      ') AND l.archived=0 AND l.deletedAt IS NULL ORDER BY l.sort,l.id;');
     if MapY=Y-1 then
     begin
       Width:=Length(MapLists);
@@ -315,29 +339,22 @@ begin
     for j:=0 to High(MapLists) do
     begin
       if Align='right' then MapX:=High(MapLists)-j else MapX:=j;
-      Occupied:=Db.Query('SELECT id FROM cards WHERE boardId='+QuotedStr(BoardId)+
-        ' AND swimlaneId='+QuotedStr(Lanes[MapY][0])+' AND listId='+QuotedStr(MapLists[MapX][0])+
-        ' AND archived=0 AND deletedAt IS NULL LIMIT 1;');
-      if Length(Occupied)>0 then begin Color:='#cccccc'; CellText:='*'; end
+      if MapLists[MapX][2]='1' then begin Color:='#cccccc'; CellText:='*'; end
       else begin Color:='#ffffff'; CellText:='-'; end;
       if (MapX=X-1) and (MapY=Y-1) then Color:='#ffff66';
-      Url:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(MapX+1)+'&y='+IntToStr(MapY+1);
-      Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(SessionUrl(Url,S))+
-        '" title="'+HtmlAttr(Lanes[MapY][1]+' / '+MapLists[MapX][1])+'">'+CellText+'</a></td>';
+      Map:=Map+'<td bgcolor="'+Color+'">'+NavigationButton(ViewPath(MapX+1,MapY+1),CellText,NavState,
+        ' title="'+HtmlAttr(Lanes[MapY][1]+' / '+MapLists[MapX][1])+'"')+'</td>';
     end;
     if Length(MapLists)=0 then
     begin
       Color:='#ffffff';if MapY=Y-1 then Color:='#ffff66';
-      Url:='/board?id='+HTTPEncode(BoardId)+'&x=1&y='+IntToStr(MapY+1);
-      Map:=Map+'<td bgcolor="'+Color+'"><a href="'+HtmlAttr(SessionUrl(Url,S))+
-        '" title="'+HtmlAttr(Lanes[MapY][1]+' / '+Words.Text('no-items-message','No items.'))+'">-</a></td>';
+      Map:=Map+'<td bgcolor="'+Color+'">'+NavigationButton(ViewPath(1,MapY+1),'-',NavState,
+        ' title="'+HtmlAttr(Lanes[MapY][1]+' / '+Words.Text('no-items-message','No items.'))+'"')+'</td>';
     end;
     Map:=Map+'</tr>';
   end;
   Map:=Map+'</table>';
-  Result:=Result+Map+'<p>X '+IntToStr(X)+' Y '+IntToStr(Y)+
-    ' ('+HtmlEncode(Words.Text('color-yellow','yellow')+': '+Words.Text('current','current')+
-    '; *: '+Words.Text('cards','Cards')+'; -: '+Words.Text('no-items-message','No items.'))+')</p><p>';
+  Arrows:='';
   for m:=0 to 3 do
   begin
     MapX:=X; MapY:=Y;
@@ -355,25 +372,38 @@ begin
     end;
     if (MapY>=1) and (MapY<=Length(Lanes)) and
       ((m>=2) or ((MapX>=1) and (MapX<=Width))) then
-      Result:=Result+'<a dir="ltr" data-view-dir="'+ViewDir+'" href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+
-        '&x='+IntToStr(MapX)+'&y='+IntToStr(MapY),S))+'">'+HtmlEncode(Words.Text('view','View')+' '+CellText)+'</a> ';
+      Arrows:=Arrows+NavigationButton(ViewPath(MapX,MapY),Words.Text('view','View')+' '+CellText,NavState,
+        ' dir="ltr" data-view-dir="'+ViewDir+'"');
   end;
-  Result:=Result+'<a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId)+'&view=all',S))+
-    '">'+HtmlEncode(Words.Text('view-all','View all'))+'</a></p><br clear="all">';
-  Back:='/board?id='+HTTPEncode(BoardId);
-  if AllItems then Back:=Back+'&view=all'
-  else Back:=Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y);
-  BoardPath:=Back;
+  Result:=Result+'<div class="board-viewport" dir="ltr">'+Arrows+
+    '<span>X '+IntToStr(X)+' Y '+IntToStr(Y)+'</span> '+
+    '<form method="POST" style="display:inline-block;margin:2px" action="'+
+      HtmlAttr(Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y))+'">'+LanguageHiddenField(NavState);
+  if NavState.SessionId<>'' then Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(NavState.SessionId)+'">';
+  Result:=Result+SizeSelect('X','cols',Columns)+SizeSelect('Y','rows',VisibleRows)+
+    '<input type="submit" value="'+HtmlAttr(Words.Text('apply','Apply'))+'"></form>'+
+    '<div style="display:inline-block;vertical-align:middle">'+Map+'</div></div>';
+  BoardPath:=ViewPath(X,Y);
+  if AllItems then BoardPath:=BoardPath+'&view=all';
+  Back:=BoardPath;
   if OriginWidget<>'' then Back:=SafeReturnPath(OriginPath);
-  if Writable then Result:=Result+MoveFormBegin(S,'/board/move')+
+  if Writable then Result:=Result+MoveFormBegin(NavState,'/board/move')+
     '<input type="hidden" name="boardWidget" value="'+HtmlAttr(OriginWidget)+'">'+
     '<input type="hidden" name="boardId" value="'+HtmlAttr(BoardId)+'">'+
-    '<input type="hidden" name="back" value="'+HtmlAttr(Back)+'">';
+    '<input type="hidden" name="back" value="'+HtmlAttr(Back)+'">'+
+    '<input type="hidden" name="view_x" value="'+IntToStr(X)+'">'+
+    '<input type="hidden" name="view_y" value="'+IntToStr(Y)+'">'+
+    '<input type="hidden" name="view_cols" value="'+IntToStr(Columns)+'">'+
+    '<input type="hidden" name="view_rows" value="'+IntToStr(VisibleRows)+'">'+
+    '<input type="hidden" name="view_all" value="'+BoolToStr(AllItems,'all','')+'">'+
+    '<input type="hidden" name="view_list" value="'+HtmlAttr(ExpandedList)+'">'+
+    '<input type="hidden" name="view_subtask" value="'+HtmlAttr(SubtaskCard)+'">'+
+    MoveKeypad(NavState,0,0,0,True,True,Language.Tag);
 
   if Length(Lanes)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
   for i:=0 to High(Lanes) do
   begin
-    if not AllItems and (i<>Y-1) then Continue;
+    if not AllItems and ((i<Y-1) or (i>=Y-1+VisibleRows)) then Continue;
     Result:=Result+'<h2'+BgColorAttr(Lanes[i][2])+'>'+Selection('swimlane',Lanes[i][0])+
       HtmlEncode(Lanes[i][1])+'</h2>';
     Lists:=Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId='+QuotedStr(BoardId)+
@@ -383,7 +413,7 @@ begin
     for j:=0 to High(Lists) do
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
-      if not AllItems and (c<>X-1) then Continue;
+      if not AllItems and ((c<X-1) or (c>=X-1+Columns)) then Continue;
       Result:=Result+'<th dir="'+CellDir+'" align="'+Align+'"'+BgColorAttr(Lists[c][2])+'>'+
         Selection('list',Lists[c][0])+HtmlEncode(Lists[c][1]);
       if Lists[c][3]='1' then
@@ -395,8 +425,8 @@ begin
           CellText:=Words.Text('uncollapse','Expand');
           Url:=Url+'&expand='+HTTPEncode(Lists[c][0]);
         end;
-        Result:=Result+' <a data-list-toggle="'+HtmlAttr(Lists[c][0])+'" href="'+
-          HtmlAttr(SessionUrl(Url,S))+'">'+HtmlEncode(CellText)+'</a>';
+        Result:=Result+' '+ItemButton('view_expand',Lists[c][0],Url,CellText,
+          ' data-list-toggle="'+HtmlAttr(Lists[c][0])+'"');
       end;
       Result:=Result+'</th>';
     end;
@@ -404,7 +434,7 @@ begin
     for j:=0 to High(Lists) do
     begin
       if Align='right' then c:=High(Lists)-j else c:=j;
-      if not AllItems and (c<>X-1) then Continue;
+      if not AllItems and ((c<X-1) or (c>=X-1+Columns)) then Continue;
       Result:=Result+'<td dir="'+CellDir+'" valign="top" align="'+Align+'" data-list="'+HtmlAttr(Lists[c][0])+'" data-lane="'+HtmlAttr(Lanes[i][0])+'">';
       if (Lists[c][3]='1') and (ExpandedList<>Lists[c][0]) then
       begin
@@ -419,7 +449,8 @@ begin
       begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
-          '<a href="'+HtmlAttr(CardUrl(BoardId,Cards[k][0],S))+'">'+HtmlEncode(CardCaption(Cards[k][1],Words))+'</a></p>';
+          ItemButton('view_card',Cards[k][0],'/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(Cards[k][0]),
+            CardCaption(Cards[k][1],Words))+'</p>';
         if ShowCustomFields then Result:=Result+MiniCardFields(Db,S,BoardId,Cards[k][0],Words);
         if ShowSpentTime and (Cards[k][4]<>'') then
         begin
@@ -433,15 +464,15 @@ begin
         if ExpandedList<>'' then Url:=Url+'&expand='+HTTPEncode(ExpandedList);
         if SubtaskCard=Cards[k][0] then
         begin
-          Result:=Result+'<a href="'+HtmlAttr(SessionUrl(Url,S))+'">'+
-            HtmlEncode(Words.Text('collapse','Collapse')+' '+Words.Text('subtasks','Subtasks'))+'</a><ul>';
+          Result:=Result+ItemButton('view_tasks',Cards[k][0],Url,
+            Words.Text('collapse','Collapse')+' '+Words.Text('subtasks','Subtasks'))+'<ul>';
           Subtasks:=Db.Query('SELECT title FROM cards WHERE boardId='+QuotedStr(BoardId)+
             ' AND parentId='+QuotedStr(Cards[k][0])+' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
           for Child:=0 to High(Subtasks) do Result:=Result+'<li>'+HtmlEncode(Subtasks[Child][0])+'</li>';
           Result:=Result+'</ul>';
         end else
-          Result:=Result+'<a href="'+HtmlAttr(SessionUrl(Url+'&subtasks='+HTTPEncode(Cards[k][0]),S))+
-            '">'+HtmlEncode(Words.Text('subtasks','Subtasks'))+'</a>';
+          Result:=Result+ItemButton('view_tasks',Cards[k][0],Url+'&subtasks='+HTTPEncode(Cards[k][0]),
+            Words.Text('subtasks','Subtasks'));
       end;
       if Length(Cards)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
       Result:=Result+'</td>';
@@ -450,7 +481,7 @@ begin
   end;
   if Writable then
   begin
-    Result:=Result+MoveKeypad(S,0,0,0,True,True,Language.Tag)+MoveFormEnd;
+    Result:=Result+MoveFormEnd;
     Lists:=Db.Query('SELECT id,title,deleteBatchId FROM lists WHERE boardId='+QuotedStr(BoardId)+
       ' AND deletedAt IS NOT NULL ORDER BY deletedAt DESC,id;');
     for i:=0 to High(Lists) do
@@ -511,7 +542,9 @@ begin
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand'],aRequest.QueryFields.Values['subtasks'],
-    MainNavigation(T.Db,S,Language.Tag,T.IsAdmin));
+    MainNavigation(T.Db,S,Language.Tag,T.IsAdmin),
+    StrToIntDef(aRequest.ContentFields.Values['cols'],StrToIntDef(aRequest.QueryFields.Values['cols'],6)),
+    StrToIntDef(aRequest.ContentFields.Values['rows'],StrToIntDef(aRequest.QueryFields.Values['rows'],4)));
   if Body='' then begin
     aResponse.Code:=404;
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>','','html4');

@@ -513,8 +513,9 @@ procedure BoardMoveEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  BackTo: string;
+  BackTo,ViewCommand,ViewId,Field:string;
   MoveRtl:Boolean;
+  I,ViewCount:Integer;
   procedure Fail(Code:Integer;const Message:string);
   begin
     aResponse.Code:=Code;aResponse.ContentType:='text/html; charset=utf-8';
@@ -530,6 +531,44 @@ begin
   end;
   if not NormalizeMoveSubmit(aRequest.ContentFields) then
   begin Fail(400,'Ambiguous movement command');Exit;end;
+  ViewCount:=0; ViewCommand:=''; ViewId:='';
+  for I:=0 to aRequest.ContentFields.Count-1 do
+  begin
+    Field:=aRequest.ContentFields.Names[I];
+    if (Field='view_card') or (Field='view_expand') or (Field='view_tasks') then
+    begin
+      Inc(ViewCount);
+      ViewCommand:=Field;
+      ViewId:=aRequest.ContentFields.ValueFromIndex[I];
+    end;
+  end;
+  if ViewCount<>0 then
+  begin
+    if (ViewCount<>1) or (ViewId='') or (Pos(#0,ViewId)>0) or
+      (aRequest.ContentFields.IndexOfName('action')>=0) or
+      (aRequest.ContentFields.IndexOfName('dir')>=0) then
+    begin Fail(400,'Ambiguous board navigation');Exit;end;
+    aRequest.QueryFields.Clear;
+    aRequest.QueryFields.Values['id']:=aRequest.ContentFields.Values['boardId'];
+    if ViewCommand='view_card' then
+    begin
+      aRequest.QueryFields.Values['card']:=ViewId;
+      BoardCardEndpoint(aRequest,aResponse);
+    end
+    else
+    begin
+      for Field in ['x','y','cols','rows'] do
+        aRequest.QueryFields.Values[Field]:=aRequest.ContentFields.Values['view_'+Field];
+      aRequest.QueryFields.Values['view']:=aRequest.ContentFields.Values['view_all'];
+      aRequest.QueryFields.Values['expand']:=aRequest.ContentFields.Values['view_list'];
+      aRequest.QueryFields.Values['subtasks']:=aRequest.ContentFields.Values['view_subtask'];
+      if ViewCommand='view_expand' then Field:='expand' else Field:='subtasks';
+      if aRequest.QueryFields.Values[Field]=ViewId then aRequest.QueryFields.Values[Field]:=''
+      else aRequest.QueryFields.Values[Field]:=ViewId;
+      BoardEndpoint(aRequest,aResponse);
+    end;
+    Exit;
+  end;
   if ((aRequest.ContentFields.Values['action']='clear') and
       not BoardCanWrite(T.Db,S.UserId,aRequest.ContentFields.Values['boardId'])) or
     ((aRequest.ContentFields.Values['action']<>'clear') and
@@ -725,7 +764,9 @@ begin
   HTTPRouter.RegisterRoute('/board/attachment/delete', rmPost, @BoardAttachmentDeleteEndpoint);
   HTTPRouter.RegisterRoute('/board/attachment', rmGet, @BoardAttachmentEndpoint);
   HTTPRouter.RegisterRoute('/board/attachments', rmGet, @BoardAttachmentsEndpoint);
+  HTTPRouter.RegisterRoute('/board/attachments', rmPost, @BoardAttachmentsEndpoint);
   HTTPRouter.RegisterRoute('/board/export', rmGet, @BrowserBoardExport);
+  HTTPRouter.RegisterRoute('/board/export', rmPost, @BrowserBoardExport);
   HTTPRouter.RegisterRoute('/board/webhooks', rmGet, @BrowserIntegrations);
   HTTPRouter.RegisterRoute('/board/webhooks', rmPost, @BrowserIntegrations);
   HTTPRouter.RegisterRoute('/board/move', rmPost, @BoardMoveEndpoint);
