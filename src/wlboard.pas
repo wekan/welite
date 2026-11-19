@@ -238,7 +238,7 @@ end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string;Columns,VisibleRows:Integer):string;
 var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY,MapCol,MapCols,BlockWidth,BlockHeight:Integer;
   MapLists:array of TWLRows;
-  Writable,ShowSpentTime,ShowCustomFields,Occupied:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir,Arrows,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
+  Writable,ShowSpentTime,ShowCustomFields,Occupied:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,MapBottom,ViewDir,Arrows,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
   function ViewPath(AX,AY:Integer):string;
   begin
     Result:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
@@ -254,6 +254,11 @@ var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX
       Row:=Row div 26;
     end;
     Result:=Letters+IntToStr(Column);
+  end;
+  function MapRange(Row,FirstColumn,LastColumn:Integer):string;
+  begin
+    Result:=MapLabel(Row,FirstColumn);
+    if FirstColumn<>LastColumn then Result:=Result+' - '+MapLabel(Row,LastColumn);
   end;
   function SizeSelect(const Axis,Name:string;Selected:Integer):string;
   var N:Integer;
@@ -362,7 +367,9 @@ begin
         for j:=MapX to Min(High(MapLists[i]),MapX+BlockWidth-1) do
           if MapLists[i][j][0]='1' then Occupied:=True;
       if Occupied then Color:='#cccccc' else Color:='#ffffff';
-      CellText:=MapLabel(MapY div VisibleRows+1,MapX div Columns+1);
+      CellText:=MapRange(MapY+1,MapX+1,MapX+BlockWidth);
+      MapBottom:='';
+      if BlockHeight>1 then MapBottom:=MapRange(MapY+BlockHeight,MapX+1,MapX+BlockWidth);
       if (X>MapX) and (X<=MapX+BlockWidth) and (Y>MapY) and (Y<=MapY+BlockHeight) then
         Color:='#ffff66';
       Map:=Map+'<td align="center" bgcolor="'+Color+'" width="'+IntToStr(BlockWidth*24)+
@@ -370,7 +377,7 @@ begin
         '" data-map-rows="'+IntToStr(BlockHeight)+'">'+
         NavigationButton(ViewPath(MapX+1,MapY+1),CellText,NavState,
           ' title="X '+IntToStr(MapX+1)+'-'+IntToStr(MapX+BlockWidth)+
-          ' Y '+IntToStr(MapY+1)+'-'+IntToStr(MapY+BlockHeight)+'"')+'</td>';
+          ' Y '+IntToStr(MapY+1)+'-'+IntToStr(MapY+BlockHeight)+'"',MapBottom)+'</td>';
     end;
     Map:=Map+'</tr>';
     Inc(MapY,BlockHeight);
