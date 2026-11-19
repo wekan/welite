@@ -243,6 +243,18 @@ var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX
   begin
     Result:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
   end;
+  function MapLabel(Row,Column:Integer):string;
+  var Letters:string;
+  begin
+    Letters:='';
+    while Row>0 do
+    begin
+      Dec(Row);
+      Letters:=Chr(Ord('A')+Row mod 26)+Letters;
+      Row:=Row div 26;
+    end;
+    Result:=Letters+IntToStr(Column);
+  end;
   function SizeSelect(const Axis,Name:string;Selected:Integer):string;
   var N:Integer;
   begin
@@ -349,8 +361,8 @@ begin
       for i:=MapY to MapY+BlockHeight-1 do
         for j:=MapX to Min(High(MapLists[i]),MapX+BlockWidth-1) do
           if MapLists[i][j][0]='1' then Occupied:=True;
-      if Occupied then begin Color:='#cccccc'; CellText:='*'; end
-      else begin Color:='#ffffff'; CellText:='-'; end;
+      if Occupied then Color:='#cccccc' else Color:='#ffffff';
+      CellText:=MapLabel(MapY div VisibleRows+1,MapX div Columns+1);
       if (X>MapX) and (X<=MapX+BlockWidth) and (Y>MapY) and (Y<=MapY+BlockHeight) then
         Color:='#ffff66';
       Map:=Map+'<td align="center" bgcolor="'+Color+'" width="'+IntToStr(BlockWidth*24)+
