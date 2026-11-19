@@ -48,7 +48,7 @@ function MoveFormEnd: string;
 
 // The combined keypad + action buttons + selection summary. Counts are for the summary label.
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean = True; IncludeClone:Boolean=True;const LanguageTag:string=''): string;
+  IncludeActions: Boolean = True; IncludeClone:Boolean=True;const LanguageTag:string='';IncludeArrows:Boolean=True): string;
 
 // Normalize one native movement/action submit name to its legacy command.
 // Values are presentation only. Reject ambiguity without changing Params.
@@ -107,9 +107,11 @@ function MoveArrowButtons:string;
     Result:='<input type="submit" name="move_'+Name+'" value="'+HtmlAttr(Glyph)+'" dir="ltr"> ';
   end;
 begin
-  Result:='<div dir="ltr">'+Arrow('edge_left','<<')+Arrow('left','<')+
-    Arrow('right','>')+Arrow('edge_right','>>')+
-    Arrow('edge_up','^^')+Arrow('up','^')+Arrow('down','v')+Arrow('edge_down','vv')+'</div>';
+  Result:='<table class="board-joystick" dir="ltr" border="0" cellpadding="2" cellspacing="0">'+
+    '<tr><td colspan="4" align="center">'+Arrow('edge_up','^^')+'<br>'+Arrow('up','^')+'</td></tr>'+
+    '<tr><td>'+Arrow('edge_left','<<')+'</td><td>'+Arrow('left','<')+'</td><td>'+
+    Arrow('right','>')+'</td><td>'+Arrow('edge_right','>>')+'</td></tr>'+
+    '<tr><td colspan="4" align="center">'+Arrow('down','v')+'<br>'+Arrow('edge_down','vv')+'</td></tr></table>';
 end;
 
 function NormalizeMoveSubmit(Params:TStrings):Boolean;
@@ -141,7 +143,7 @@ begin
 end;
 
 function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
-  IncludeActions: Boolean; IncludeClone:Boolean;const LanguageTag:string): string;
+  IncludeActions: Boolean; IncludeClone:Boolean;const LanguageTag:string;IncludeArrows:Boolean): string;
 var Words:TWLTranslator;Language:TWLLanguage;
   function Button(const Action,Key,Fallback:string):string;
   begin Result:='<input type="submit" name="action_'+Action+'" value="'+HtmlAttr(Words.Text(Key,Fallback))+'"> ';end;
@@ -149,7 +151,8 @@ begin
   if not FindLanguage(LanguageTag,Language) then Language:=ResolveLanguage(S.LanguageTag,'','');
   Words:=TWLTranslator.Create(Language);
   try
-  Result:=MoveArrowButtons;
+  Result:='';
+  if IncludeArrows then Result:=MoveArrowButtons;
   if IncludeActions then Result:=Result+
     Button('edit','edit','Edit')+Button('delete','r-delete-selected','Delete selected')+
     Button('clear','r-unselect-all','Unselect all')+Button('export','r-export-selected','Export selected')+LineEnding;

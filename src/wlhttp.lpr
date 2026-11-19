@@ -548,7 +548,8 @@ begin
     Field:=aRequest.ContentFields.Names[I];
     if SameText(Field,'sel_card') or SameText(Field,'sel_list') or SameText(Field,'sel_swimlane') then
       HasSelection:=True;
-    if (Field='view_card') or (Field='view_expand') or (Field='view_tasks') then
+    if (Field='view_card') or (Field='view_expand') or (Field='view_tasks') or
+      (Field='view_map') or (Field='view_resize') then
     begin
       Inc(ViewCount);
       ViewCommand:=Field;
@@ -567,6 +568,8 @@ begin
       aRequest.QueryFields.Values['card']:=ViewId;
       BoardCardEndpoint(aRequest,aResponse);
     end
+    else if (ViewCommand='view_map') or (ViewCommand='view_resize') then
+      BoardEndpoint(aRequest,aResponse)
     else
     begin
       if ViewCommand='view_expand' then Field:='expand' else Field:='subtasks';

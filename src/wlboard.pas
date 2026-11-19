@@ -388,22 +388,16 @@ begin
       Map:=Map+'<td align="center" bgcolor="'+Color+'" width="'+IntToStr(BlockWidth*24)+
         '" height="'+IntToStr(BlockHeight*16)+'" data-map-columns="'+IntToStr(BlockWidth)+
         '" data-map-rows="'+IntToStr(BlockHeight)+'">'+
-        NavigationButton(ViewPath(MapX+1,MapY+1),CellText,NavState,
-          ' title="X '+IntToStr(MapX+1)+'-'+IntToStr(MapX+BlockWidth)+
-          ' Y '+IntToStr(MapY+1)+'-'+IntToStr(MapY+BlockHeight)+'"',MapBottom)+'</td>';
+        '<button type="submit" name="view_map" value="'+IntToStr(MapX+1)+':'+IntToStr(MapY+1)+
+        '" style="white-space:nowrap" title="X '+IntToStr(MapX+1)+'-'+IntToStr(MapX+BlockWidth)+
+        ' Y '+IntToStr(MapY+1)+'-'+IntToStr(MapY+BlockHeight)+'">'+HtmlEncode(CellText);
+      if MapBottom<>'' then Map:=Map+'<br>|<br>'+HtmlEncode(MapBottom);
+      Map:=Map+'</button></td>';
     end;
     Map:=Map+'</tr>';
     Inc(MapY,BlockHeight);
   end;
   Map:=Map+'</table>';
-  Result:=Result+'<div class="board-viewport" dir="ltr">'+
-    '<span>X '+IntToStr(X)+' Y '+IntToStr(Y)+'</span> '+
-    '<form method="POST" style="display:inline-block;margin:2px" action="'+
-      HtmlAttr(Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y))+'">'+LanguageHiddenField(NavState);
-  if NavState.SessionId<>'' then Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(NavState.SessionId)+'">';
-  Result:=Result+SizeSelect('X','cols',Columns)+SizeSelect('Y','rows',VisibleRows)+
-    '<input type="submit" value="'+HtmlAttr(Words.Text('apply','Apply'))+'"></form>'+
-    '<div style="display:inline-block;vertical-align:middle">'+Map+'</div></div>';
   BoardPath:=ViewPath(X,Y);
   if AllItems then BoardPath:=BoardPath+'&view=all';
   Back:=BoardPath;
@@ -418,16 +412,21 @@ begin
     '<input type="hidden" name="view_rows" value="'+IntToStr(VisibleRows)+'">'+
     '<input type="hidden" name="view_all" value="'+BoolToStr(AllItems,'all','')+'">'+
     '<input type="hidden" name="view_list" value="'+HtmlAttr(ExpandedList)+'">'+
-    '<input type="hidden" name="view_subtask" value="'+HtmlAttr(SubtaskCard)+'">'+
-    MoveKeypad(NavState,0,0,0,True,True,Language.Tag)
+    '<input type="hidden" name="view_subtask" value="'+HtmlAttr(SubtaskCard)+'">'
   else
   begin
     Result:=Result+'<form method="POST" action="'+HtmlAttr(BoardPath)+'">'+LanguageHiddenField(NavState)+
       '<input type="hidden" name="viewport_only" value="1">';
     if NavState.SessionId<>'' then
       Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(NavState.SessionId)+'">';
-    Result:=Result+MoveArrowButtons+'</form>';
   end;
+  Result:=Result+'<div class="board-view-settings" dir="ltr"><span>X '+IntToStr(X)+' Y '+IntToStr(Y)+'</span> '+
+    SizeSelect('X','cols',Columns)+SizeSelect('Y','rows',VisibleRows)+
+    '<input type="submit" name="view_resize" value="'+HtmlAttr(Words.Text('apply','Apply'))+'"></div>';
+  if Writable then Result:=Result+MoveKeypad(NavState,0,0,0,True,True,Language.Tag,False);
+  Result:=Result+'<table class="board-viewport" dir="ltr" border="0" cellpadding="2" cellspacing="0"><tr>'+
+    '<td valign="middle">'+MoveArrowButtons+'</td><td valign="middle">'+Map+'</td></tr></table>';
+  if not Writable then Result:=Result+'</form>';
 
   if Length(Lanes)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
   for i:=0 to High(Lanes) do
@@ -553,7 +552,7 @@ begin
   end;
 end;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
-var T:TWLTenant; S:TWLSession; Body,Dir,Title,ViewCommand:string;Language:TWLLanguage;Words:TWLTranslator;
+var T:TWLTenant; S:TWLSession; Body,Dir,Title,ViewCommand,MapTarget:string; MapSeparator:Integer;Language:TWLLanguage;Words:TWLTranslator;
 begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin
@@ -575,12 +574,28 @@ begin
       ViewCommand:=aRequest.ContentFields.Values['dir'];
   end
   else ViewCommand:=aRequest.QueryFields.Values['viewport_dir'];
+  MapTarget:=aRequest.ContentFields.Values['view_map'];
+  MapSeparator:=Pos(':',MapTarget);
+  if MapSeparator>0 then
+  begin
+    aRequest.QueryFields.Values['x']:=Copy(MapTarget,1,MapSeparator-1);
+    aRequest.QueryFields.Values['y']:=Copy(MapTarget,MapSeparator+1,Length(MapTarget));
+  end;
+  if (MapSeparator>0) or (aRequest.ContentFields.IndexOfName('view_resize')>=0) then
+    aRequest.QueryFields.Values['view']:='';
+  if (aRequest.ContentFields.IndexOfName('view_resize')>=0) or
+    ((aRequest.PathInfo='/board') and (aRequest.ContentFields.Values['viewport_only']<>'1') and
+    (aRequest.ContentFields.IndexOfName('cols')>=0) and (aRequest.ContentFields.IndexOfName('rows')>=0)) then
+  begin
+    aRequest.QueryFields.Values['cols']:=aRequest.ContentFields.Values['cols'];
+    aRequest.QueryFields.Values['rows']:=aRequest.ContentFields.Values['rows'];
+  end;
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand'],aRequest.QueryFields.Values['subtasks'],
     MainNavigation(T.Db,S,Language.Tag,T.IsAdmin),
-    StrToIntDef(aRequest.ContentFields.Values['cols'],StrToIntDef(aRequest.QueryFields.Values['cols'],6)),
-    StrToIntDef(aRequest.ContentFields.Values['rows'],StrToIntDef(aRequest.QueryFields.Values['rows'],4)),ViewCommand);
+    StrToIntDef(aRequest.QueryFields.Values['cols'],6),
+    StrToIntDef(aRequest.QueryFields.Values['rows'],4),ViewCommand);
   if Body='' then begin
     aResponse.Code:=404;
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>','','html4');
