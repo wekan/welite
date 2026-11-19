@@ -46,3 +46,43 @@ SELECT 'examplework-'||listId||'-'||slot,boardId,listId,laneId,
 
 INSERT INTO _wl_example_batches(name) SELECT 'garden-work' FROM example_expansion;
 DROP TABLE example_expansion;
+
+-- Number only the original generated text; preserve captions edited in an older demo.
+WITH lanes(id,number) AS (
+ VALUES ('planning',1),('garden',2),('seedlings',3),('orchard',4),
+        ('supplies',5),('events',6),('harvest',7),('winter',8)
+), stages(number,title) AS (
+ VALUES (1,'To do'),(2,'In progress'),(3,'Done'),(4,'Review'),(5,'Waiting'),
+        (6,'Ready'),(7,'Scheduled'),(8,'Materials'),(9,'Follow-up'),(10,'Reference')
+)
+UPDATE lists
+SET title=printf('%02d — %s',(lanes.number-1)*10+stages.number,lists.title)
+FROM lanes CROSS JOIN stages
+WHERE lists.boardId='example' AND lists.swimlaneId=lanes.id
+  AND lists.id=lanes.id||stages.number AND lists.title=stages.title
+  AND NOT EXISTS (SELECT 1 FROM _wl_example_batches WHERE name='numbered-garden');
+
+WITH verbs(slot,verb) AS (VALUES (1,'Prepare'),(2,'Check'),(3,'Document')),
+lanes(id,title) AS (
+ VALUES ('planning','Planning'),('garden','In the garden'),('seedlings','Seedlings'),
+        ('orchard','Orchard'),('supplies','Supplies'),('events','Community events'),
+        ('harvest','Harvest'),('winter','Winter preparation')
+)
+UPDATE cards
+SET title=CASE WHEN cards.title=verbs.verb||' '||lower(lanes.title)||' work'
+          THEN printf('%04d — %s',cards.cardNumber,cards.title) ELSE cards.title END,
+    description=CASE WHEN cards.description IN (
+      'To do: record progress and the next step.','In progress: record progress and the next step.',
+      'Done: record progress and the next step.','Review: record progress and the next step.',
+      'Waiting: record progress and the next step.','Ready: record progress and the next step.',
+      'Scheduled: record progress and the next step.','Materials: record progress and the next step.',
+      'Follow-up: record progress and the next step.','Reference: record progress and the next step.')
+      THEN printf('%04d — %s',cards.cardNumber,cards.description) ELSE cards.description END
+FROM verbs CROSS JOIN lanes
+WHERE cards.boardId='example' AND cards.swimlaneId=lanes.id
+  AND cards.id='examplework-'||cards.listId||'-'||verbs.slot
+  AND NOT EXISTS (SELECT 1 FROM _wl_example_batches WHERE name='numbered-garden');
+
+INSERT INTO _wl_example_batches(name)
+SELECT 'numbered-garden' WHERE EXISTS(SELECT 1 FROM boards WHERE id='example')
+ON CONFLICT(name) DO NOTHING;

@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-19 Group the minimap by viewport size
+
+- Use the selected list and swimlane counts as the minimap tile size and
+  show any remaining lists or lanes in smaller edge tiles.
+- Number duplicate sample list and card captions and descriptions. Update
+  existing demo data once, retaining manually edited text.
+
 ## 2026-11-19 Add a configurable Kanban viewport
 
 - Put wrapping POST navigation under the board title, followed by viewport

@@ -17,7 +17,7 @@ procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses DateUtils,wli18n,wllocale,wladmin,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
+uses DateUtils,Math,wli18n,wllocale,wladmin,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
 function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
 begin
   Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
@@ -236,8 +236,9 @@ begin
 end;
 
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string;Columns,VisibleRows:Integer):string;
-var B,Lanes,Lists,Cards,MapLists,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY:Integer;
-  Writable,ShowSpentTime,ShowCustomFields:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir,Arrows,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
+var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY,MapCol,MapCols,BlockWidth,BlockHeight:Integer;
+  MapLists:array of TWLRows;
+  Writable,ShowSpentTime,ShowCustomFields,Occupied:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,ViewDir,Arrows,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
   function ViewPath(AX,AY:Integer):string;
   begin
     Result:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
@@ -320,38 +321,47 @@ begin
   if Y<1 then Y:=1;
   if Length(Lanes)=0 then begin X:=1;Y:=1;end
   else if Y>Length(Lanes) then Y:=Length(Lanes);
-  Width:=0;
-  Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" border="1" cellpadding="0" cellspacing="0" summary="'+
-    HtmlAttr(Words.Text('board','Board')+' / '+Words.Text('view','View'))+'">';
+  Width:=1;
+  SetLength(MapLists,Length(Lanes));
   for MapY:=0 to High(Lanes) do
   begin
-    MapLists:=Db.Query('SELECT l.id,l.title,EXISTS(SELECT 1 FROM cards c WHERE c.boardId=l.boardId '+
+    MapLists[MapY]:=Db.Query('SELECT EXISTS(SELECT 1 FROM cards c WHERE c.boardId=l.boardId '+
       'AND c.listId=l.id AND c.swimlaneId='+QuotedStr(Lanes[MapY][0])+' AND c.archived=0 AND c.deletedAt IS NULL) '+
       'FROM lists l WHERE l.boardId='+QuotedStr(BoardId)+
       ' AND (l.swimlaneId='+QuotedStr(Lanes[MapY][0])+' OR l.swimlaneId='+QuotedStr('')+
       ') AND l.archived=0 AND l.deletedAt IS NULL ORDER BY l.sort,l.id;');
-    if MapY=Y-1 then
-    begin
-      Width:=Length(MapLists);
-      if Width=0 then X:=1 else if X>Width then X:=Width;
-    end;
+    Width:=Max(Width,Length(MapLists[MapY]));
+  end;
+  X:=Min(X,Width);
+  MapCols:=(Width+Columns-1) div Columns;
+  Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" border="1" cellpadding="0" cellspacing="0" summary="'+
+    HtmlAttr(Words.Text('board','Board')+' / '+Words.Text('view','View'))+'">';
+  MapY:=0;
+  while MapY<Length(Lanes) do
+  begin
+    BlockHeight:=Min(VisibleRows,Length(Lanes)-MapY);
     Map:=Map+'<tr>';
-    for j:=0 to High(MapLists) do
+    for MapCol:=0 to MapCols-1 do
     begin
-      if Align='right' then MapX:=High(MapLists)-j else MapX:=j;
-      if MapLists[MapX][2]='1' then begin Color:='#cccccc'; CellText:='*'; end
+      if Align='right' then MapX:=(MapCols-1-MapCol)*Columns else MapX:=MapCol*Columns;
+      BlockWidth:=Min(Columns,Width-MapX);
+      Occupied:=False;
+      for i:=MapY to MapY+BlockHeight-1 do
+        for j:=MapX to Min(High(MapLists[i]),MapX+BlockWidth-1) do
+          if MapLists[i][j][0]='1' then Occupied:=True;
+      if Occupied then begin Color:='#cccccc'; CellText:='*'; end
       else begin Color:='#ffffff'; CellText:='-'; end;
-      if (MapX=X-1) and (MapY=Y-1) then Color:='#ffff66';
-      Map:=Map+'<td bgcolor="'+Color+'">'+NavigationButton(ViewPath(MapX+1,MapY+1),CellText,NavState,
-        ' title="'+HtmlAttr(Lanes[MapY][1]+' / '+MapLists[MapX][1])+'"')+'</td>';
-    end;
-    if Length(MapLists)=0 then
-    begin
-      Color:='#ffffff';if MapY=Y-1 then Color:='#ffff66';
-      Map:=Map+'<td bgcolor="'+Color+'">'+NavigationButton(ViewPath(1,MapY+1),'-',NavState,
-        ' title="'+HtmlAttr(Lanes[MapY][1]+' / '+Words.Text('no-items-message','No items.'))+'"')+'</td>';
+      if (X>MapX) and (X<=MapX+BlockWidth) and (Y>MapY) and (Y<=MapY+BlockHeight) then
+        Color:='#ffff66';
+      Map:=Map+'<td align="center" bgcolor="'+Color+'" width="'+IntToStr(BlockWidth*24)+
+        '" height="'+IntToStr(BlockHeight*16)+'" data-map-columns="'+IntToStr(BlockWidth)+
+        '" data-map-rows="'+IntToStr(BlockHeight)+'">'+
+        NavigationButton(ViewPath(MapX+1,MapY+1),CellText,NavState,
+          ' title="X '+IntToStr(MapX+1)+'-'+IntToStr(MapX+BlockWidth)+
+          ' Y '+IntToStr(MapY+1)+'-'+IntToStr(MapY+BlockHeight)+'"')+'</td>';
     end;
     Map:=Map+'</tr>';
+    Inc(MapY,BlockHeight);
   end;
   Map:=Map+'</table>';
   Arrows:='';
