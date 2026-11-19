@@ -43,7 +43,7 @@ procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST 
 implementation
 
 uses
-  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi;
+  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi, wlpasswd, wltotp, wlautsrc, wlselscp;
 
 function NowIso: string;
 begin
@@ -282,6 +282,165 @@ begin
   finally Groups.Free;end;
 end;
 
+function PeopleToken(const Action,UserId:string):string;
+begin
+  Result:='admin:people:'+Action+':'+UserId;
+end;
+
+function PeopleForm(const S:TWLSession;const Action,UserId,Fields,Caption:string):string;
+begin
+  Result:='<form method="POST" action="/admin/people">'+AuthHiddenFields(S,PeopleToken(Action,UserId))+
+    '<input type="hidden" name="action" value="'+HtmlAttr(Action)+'">'+
+    '<input type="hidden" name="userId" value="'+HtmlAttr(UserId)+'">'+Fields+
+    '<input type="submit" value="'+HtmlAttr(Caption)+'"></form>';
+end;
+
+function IsPeopleEdit(const Action:string):Boolean;
+begin
+  Result:=(Action='add') or (Action='rename') or (Action='password') or (Action='otp') or
+    (Action='otp-clear') or (Action='delete-review') or (Action='delete');
+end;
+
+// True if a response was sent. Success for another account falls through to the fresh table.
+function EditPerson(const T:TWLTenant;var S:TWLSession;Request:TRequest;Response:TResponse;
+  const Action,UserId:string):Boolean;
+var Scope,Actor,Bindings,Mutation,Check,Username,Password,Hash,Secret,Stamp,Changes,NewId,UniqueName:string;
+  Rows:TWLRows; Selector:TSelectionScope; I:Integer; Words:TWLTranslator; Language:TWLLanguage;
+  PasswordAccount:Boolean;
+  procedure Refuse(Code:Integer;const Caption:string);
+  begin AdminError(Request,Response,T.Db,S,Code,Caption);end;
+begin
+  Result:=True;
+  if (Pos(#0,UserId)>0) or ((Action='add')<>(UserId='')) or
+    not VerifyActionToken(Request,S,PeopleToken(Action,UserId)) then
+  begin Refuse(403,'Bad token');Exit;end;
+  if (UserId=S.UserId) and ((Action='delete') or (Action='delete-review')) then
+  begin Refuse(403,'You cannot delete your own account here.');Exit;end;
+
+  PasswordAccount:=(Action='password') or (Action='otp') or (Action='otp-clear');
+  Language:=ViewerLanguage(T.Db,S,Request);
+  S.LanguageTag:=Language.Tag;
+  Words:=TWLTranslator.Create(Language);
+  try
+    try
+      Selector:=TSelectionScope.Create(T.Db);
+      try
+        Scope:='id='+QuotedStr(UserId)+' AND '+Selector.StringField('users','id');
+        Actor:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(S.UserId)+
+          ' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0 AND '+Selector.StringField('users','id')+')';
+        Bindings:='';
+        for I:=0 to Selector.Bindings.Count-1 do Bindings:=Bindings+Selector.Bindings[I];
+      finally Selector.Free;end;
+      if Action<>'add' then
+      begin
+        Rows:=T.Db.Query('SELECT username,authenticationMethod FROM users WHERE '+Scope+';');
+        if Length(Rows)<>1 then begin Refuse(404,'User not found');Exit;end;
+        if PasswordAccount and (Rows[0][1]<>'password') and (Rows[0][1]<>'') then
+        begin Refuse(400,'This account uses an external sign-in provider.');Exit;end;
+        Actor:=Actor+' AND (SELECT count(*) FROM users WHERE '+Scope+')=1';
+      end;
+      if Action='delete-review' then
+      begin
+        SendHtml(Response,AdminLayout(T,S,Request,Response,Words.Text('people','People'),
+          '<p>'+HtmlEncode(Rows[0][0])+'</p><p>'+HtmlEncode(Words.Text('delete-user-confirm-popup',
+            'Delete this account?'))+'</p>'+
+          PeopleForm(S,'delete',UserId,'',Words.Text('confirm','Confirm'))+
+          NavigationButton('/admin/people',Words.Text('cancel','Cancel'),S)));
+        Exit;
+      end;
+
+      Username:=Trim(Request.ContentFields.Values['username']);
+      if (Action='add') or (Action='rename') then
+      begin
+        if (Username='') or (Length(Username)>255) or (Pos(#0,Username)>0) then
+        begin Refuse(400,Words.Text('username','Username'));Exit;end;
+        UniqueName:='NOT EXISTS(SELECT 1 FROM users WHERE username='+QuotedStr(Username)+
+          ' COLLATE NOCASE AND id<>'+QuotedStr(UserId)+')';
+        if Length(T.Db.Query('SELECT 1 WHERE '+UniqueName+';'))<>1 then
+        begin Refuse(409,Words.Text('error-username-taken','This username is already taken'));Exit;end;
+        Actor:=Actor+' AND '+UniqueName;
+      end;
+      if (Action='add') or (Action='password') then
+      begin
+        Password:=Request.ContentFields.Values['password'];
+        if (Password='') or (Length(Password)>4096) or (Pos(#0,Password)>0) then
+        begin Refuse(400,Words.Text('username-password-required','Username and password are required.'));Exit;end;
+        if Password<>Request.ContentFields.Values['confirm'] then
+        begin Refuse(400,Words.Text('password-mismatch','Passwords do not match.'));Exit;end;
+        Hash:=HashMeteorPassword(Password);
+      end;
+      if Action='otp' then
+        try Secret:=OTPCanonicalSecret(Trim(Request.ContentFields.Values['secret']));
+        except Refuse(400,Words.Text('error','Error'));Exit;end;
+      if PasswordAccount then
+        Actor:=Actor+' AND EXISTS(SELECT 1 FROM users WHERE '+Scope+
+          ' AND COALESCE(authenticationMethod,'+QuotedStr('')+') IN ('+QuotedStr('')+','+QuotedStr('password')+'))';
+      if (Action='otp') or (Action='otp-clear') then
+        Actor:=Actor+' AND EXISTS(SELECT 1 FROM users WHERE '+Scope+
+          ' AND (json_type(services_json,''$.twoFactorAuthentication'') IS NULL OR '+
+          'json_type(services_json,''$.twoFactorAuthentication'')=''null'' OR '+
+          'json_extract(services_json,''$.twoFactorAuthentication.type'')=''otp''))';
+      Stamp:=QuotedStr(NowIso);
+      if Action='add' then
+      begin
+        NewId:=Copy(NewAuthToken,1,17);
+        Mutation:='INSERT INTO users(id,username,createdAt,modifiedAt,services_json) VALUES('+
+          QuotedStr(NewId)+','+QuotedStr(Username)+','+Stamp+','+Stamp+','+
+          QuotedStr('{"password":'+Hash+'}')+'); ';
+        Check:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(NewId)+' AND username='+QuotedStr(Username)+')';
+      end
+      else if Action='delete' then
+      begin
+        Mutation:=RevokeUserTokensSQL(T.Db,UserId)+'DELETE FROM users WHERE '+Scope+'; ';
+        Check:='NOT EXISTS(SELECT 1 FROM users WHERE '+Scope+')';
+      end
+      else
+      begin
+        case Action of
+          'rename': begin
+            Changes:='username='+QuotedStr(Username);
+            Check:=Changes;
+          end;
+          'password': begin
+            Changes:='services_json=json_set(services_json,''$.password'',json('+QuotedStr(Hash)+'))';
+            Check:='json_extract(services_json,''$.password'')=json('+QuotedStr(Hash)+')';
+          end;
+          'otp': begin
+            Changes:='services_json=json_set(services_json,''$.twoFactorAuthentication'',json_set('+
+              'CASE WHEN json_type(services_json,''$.twoFactorAuthentication'')=''object'' THEN '+
+              'json_extract(services_json,''$.twoFactorAuthentication'') ELSE ''{}'' END,'+
+              '''$.type'',''otp'',''$.secret'','+QuotedStr(Secret)+'))';
+            Check:='json_extract(services_json,''$.twoFactorAuthentication.type'')=''otp'' AND '+
+              'json_extract(services_json,''$.twoFactorAuthentication.secret'')='+QuotedStr(Secret);
+          end;
+          'otp-clear': begin
+            Changes:='services_json=json_remove(services_json,''$.twoFactorAuthentication'')';
+            Check:='json_type(services_json,''$.twoFactorAuthentication'') IS NULL';
+          end;
+        end;
+        Mutation:=RevokeUserTokensSQL(T.Db,UserId)+'UPDATE users SET '+Changes+
+          ',modifiedAt='+Stamp+' WHERE '+Scope+'; ';
+        Check:='EXISTS(SELECT 1 FROM users WHERE '+Scope+' AND '+Check+')';
+      end;
+      if not T.Db.Exec('BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+Actor+
+        ' THEN 1 ELSE json(''Account scope changed'') END; '+Mutation+
+        'SELECT CASE WHEN '+Check+' THEN 1 ELSE json(''Account change failed'') END; COMMIT;') then
+        raise Exception.Create('Account change failed');
+      if UserId=S.UserId then
+      begin
+        SendHtml(Response,LanguagePage(Response,Language,Words.Text('log-in','Sign in'),
+          '<form method="POST" action="/sign-in">'+LanguageHiddenField(S)+
+          '<input type="hidden" name="auth_view" value="1"><input type="submit" value="'+
+          HtmlAttr(Words.Text('log-in','Sign in'))+'"></form>'));
+      end
+      else Result:=False;
+    except
+      T.Db.Exec('ROLLBACK;');
+      Refuse(500,'Could not update account');
+    end;
+  finally Words.Free;end;
+end;
+
 // ------------------------------------------------------------------ /admin/people
 procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);
 var
@@ -293,16 +452,21 @@ var
   Words:TWLTranslator;
 begin
   if not RequireTenantAdmin(aRequest, aResponse, T, S) then Exit;
-
-  if (aRequest.Method = 'POST') and ((aRequest.ContentFields.Values['nav_view']<>'1') or
+  aResponse.SetCustomHeader('Cache-Control','no-store');
+  aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
+  Action:=aRequest.ContentFields.Values['action'];
+  Uid:=aRequest.ContentFields.Values['userId'];
+  if (aRequest.Method='POST') and IsPeopleEdit(Action) then
+  begin
+    if EditPerson(T,S,aRequest,aResponse,Action,Uid) then Exit;
+  end
+  else if (aRequest.Method = 'POST') and ((aRequest.ContentFields.Values['nav_view']<>'1') or
     (aRequest.ContentFields.Values['action']<>'')) then
   begin
     if not VerifyActionToken(aRequest, S, 'admin:people') then
     begin
       AdminError(aRequest,aResponse,T.Db,S,403,'Bad token');Exit;
     end;
-    Action := aRequest.ContentFields.Values['action'];
-    Uid    := aRequest.ContentFields.Values['userId'];
     SelfTarget := (Uid <> '') and (Uid = S.UserId);
     SetClause := '';
     case Action of
@@ -328,20 +492,48 @@ begin
     aResponse.SendContent; Exit;
   end;
 
-  Rows := T.Db.Query('SELECT id, username, isAdmin, loginDisabled FROM users ORDER BY createdAt;');
-  Body := '<h2>People</h2>' +
+  Rows := T.Db.Query('SELECT id, username, isAdmin, loginDisabled, authenticationMethod, '+
+    'CASE WHEN json_valid(services_json) THEN json_extract(services_json,''$.twoFactorAuthentication.type'') ELSE '+QuotedStr('')+' END '+
+    'FROM users ORDER BY createdAt,id;');
+  Words:=TWLTranslator.Create(ViewerLanguage(T.Db,S,aRequest));
+  try
+  Body:='<h2>'+HtmlEncode(Words.Text('people','People'))+'</h2>'+
+    PeopleForm(S,'add','',
+      '<label>'+HtmlEncode(Words.Text('username','Username'))+' <input name="username"></label> '+
+      '<label>'+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"></label> '+
+      '<label>'+HtmlEncode(Words.Text('password-again','Password again'))+' <input type="password" name="confirm"></label> ',
+      Words.Text('add','Add'))+
     '<table border="1" cellpadding="4" cellspacing="0">' + LineEnding +
-    '<tr><th>Username</th><th>Role</th><th>Login</th><th>Actions</th></tr>' + LineEnding;
+    '<tr><th>'+HtmlEncode(Words.Text('username','Username'))+'</th><th>'+
+    HtmlEncode(Words.Text('password','Password'))+'</th><th>'+HtmlEncode(Words.Text('otp','OTP Code'))+
+    '</th><th>Role</th><th>Login</th><th>'+HtmlEncode(Words.Text('actions','Actions'))+'</th></tr>'+LineEnding;
   for i := 0 to High(Rows) do
   begin
-    if Length(Rows[i]) < 4 then Continue;
+    if Length(Rows[i]) < 6 then Continue;
     Uid := Rows[i][0]; Uname := Rows[i][1]; IsAdm := Rows[i][2]; Disabled := Rows[i][3];
     SelfTarget := Uid = S.UserId;
     Body := Body + '<tr><td>' + HtmlEncode(Uname);
     if SelfTarget then Body := Body + ' <i>(you)</i>';
-    Body := Body + '</td><td>' +
-      IfThen(IsAdm='1',AdminRole(T),'Normal') + '</td><td>' +
-      IfThen(Disabled = '1', 'disabled', 'enabled') + '</td><td>';
+    Body:=Body+PeopleForm(S,'rename',Uid,
+      '<label>'+HtmlEncode(Words.Text('username','Username'))+' <input name="username" value="'+HtmlAttr(Uname)+'"></label> ',
+      Words.Text('save','Save'))+'</td><td>';
+    if (Rows[i][4]='password') or (Rows[i][4]='') then
+    begin
+      Body:=Body+PeopleForm(S,'password',Uid,
+        '<label>'+HtmlEncode(Words.Text('password','Password'))+' <input type="password" name="password"></label> '+
+        '<label>'+HtmlEncode(Words.Text('password-again','Password again'))+' <input type="password" name="confirm"></label> ',
+        Words.Text('save','Save'))+'</td><td>'+
+        PeopleForm(S,'otp',Uid,
+          '<label>'+HtmlEncode(Words.Text('otp','OTP Code'))+' (Base32) <input type="password" name="secret"></label> ',
+          Words.Text('save','Save'));
+      if Rows[i][5]='otp' then Body:=Body+PeopleForm(S,'otp-clear',Uid,'',
+        Words.Text('remove','Remove')+' '+Words.Text('otp','OTP Code'));
+    end
+    else Body:=Body+'&nbsp;</td><td>&nbsp;';
+    Body:=Body+'</td><td>'+IfThen(IsAdm='1',AdminRole(T),'Normal')+'</td><td>'+
+      IfThen(Disabled='1','disabled','enabled')+'</td><td>';
+    if not SelfTarget then
+      Body:=Body+PeopleForm(S,'delete-review',Uid,'',Words.Text('delete','Delete'));
     // role toggle
     if IsAdm = '1' then
     begin
@@ -360,8 +552,6 @@ begin
   Body := Body + '</table>' + LineEnding +
     '<p><small>New sign-ups are Normal users after the first tenant administrator. ' +
     'You cannot demote or disable your own account.</small></p>';
-  Words:=TWLTranslator.Create(ViewerLanguage(T.Db,S,aRequest));
-  try
     try
       Body:=Body+GroupFeatureTable(T.Db,'org',Words.Text('organizations','Organizations'),Words)+
         GroupFeatureTable(T.Db,'team',Words.Text('teams','Teams'),Words);
