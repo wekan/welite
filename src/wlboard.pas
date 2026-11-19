@@ -5,7 +5,7 @@ interface
 uses SysUtils, Classes, HTTPDefs, fpjson, jsonparser, wldb, wlauth, wltenant,
   wlhtml, wlcolors, wlmove, wlaccess, wldesign, wlenhanc, wlbrowse;
 function BoardListHtml(Db:TWLDb; const S:TWLSession; const LanguageTag:string=''):string;
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string='';const HeaderNavigation:string='';Columns:Integer=6;VisibleRows:Integer=4):string;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer=1; Y:Integer=1; AllItems:Boolean=False; const OriginWidget:string=''; const OriginPath:string='';const LanguageTag:string='';const ExpandedList:string='';const SubtaskCard:string='';const HeaderNavigation:string='';Columns:Integer=6;VisibleRows:Integer=4;const ViewCommand:string=''):string;
 function BoardMoveDirection(Db:TWLDb;const S:TWLSession;Request:TRequest;out Rtl:Boolean):Boolean;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardCalendarEndpoint(Request:TRequest;Response:TResponse);
@@ -235,10 +235,10 @@ begin
   finally if not Db.EndRead then Result:='';end;
 end;
 
-function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string;Columns,VisibleRows:Integer):string;
-var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,m,Child,Width,MapX,MapY,MapCol,MapCols,BlockWidth,BlockHeight:Integer;
+function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string;Columns,VisibleRows:Integer;const ViewCommand:string):string;
+var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,Child,Width,MapX,MapY,MapCol,MapCols,BlockWidth,BlockHeight:Integer;
   MapLists:array of TWLRows;
-  Writable,ShowSpentTime,ShowCustomFields,Occupied:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,MapBottom,ViewDir,Arrows,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
+  Writable,ShowSpentTime,ShowCustomFields,Occupied,Edge:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,MapBottom,ViewDir,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
   function ViewPath(AX,AY:Integer):string;
   begin
     Result:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
@@ -350,6 +350,19 @@ begin
     Width:=Max(Width,Length(MapLists[MapY]));
   end;
   X:=Min(X,Width);
+  if ArrowDirection(ViewCommand,ViewDir,Edge) then
+  begin
+    if Align='right' then
+      if ViewDir='left' then ViewDir:='right' else if ViewDir='right' then ViewDir:='left';
+    case ViewDir of
+      'left': if Edge then X:=1 else X:=Max(1,X-1);
+      'right': if Edge then X:=Max(X,Width-Columns+1) else X:=Min(Width,X+1);
+      'up': if Edge then Y:=1 else Y:=Max(1,Y-1);
+      'down': if Edge then Y:=Max(Y,Length(Lanes)-VisibleRows+1)
+              else Y:=Min(Max(1,Length(Lanes)),Y+1);
+    end;
+    AllItems:=False;
+  end;
   MapCols:=(Width+Columns-1) div Columns;
   Map:='<table dir="ltr" data-board-map="'+HtmlAttr(BoardId)+'" border="1" cellpadding="0" cellspacing="0" summary="'+
     HtmlAttr(Words.Text('board','Board')+' / '+Words.Text('view','View'))+'">';
@@ -383,28 +396,7 @@ begin
     Inc(MapY,BlockHeight);
   end;
   Map:=Map+'</table>';
-  Arrows:='';
-  for m:=0 to 3 do
-  begin
-    MapX:=X; MapY:=Y;
-    case m of
-      0: begin
-        if Align='right' then Inc(MapX) else Dec(MapX);
-        CellText:='<';ViewDir:='left';
-      end;
-      1: begin
-        if Align='right' then Dec(MapX) else Inc(MapX);
-        CellText:='>';ViewDir:='right';
-      end;
-      2: begin Dec(MapY); CellText:='^';ViewDir:='up'; end;
-      3: begin Inc(MapY); CellText:='v';ViewDir:='down'; end;
-    end;
-    if (MapY>=1) and (MapY<=Length(Lanes)) and
-      ((m>=2) or ((MapX>=1) and (MapX<=Width))) then
-      Arrows:=Arrows+NavigationButton(ViewPath(MapX,MapY),Words.Text('view','View')+' '+CellText,NavState,
-        ' dir="ltr" data-view-dir="'+ViewDir+'"');
-  end;
-  Result:=Result+'<div class="board-viewport" dir="ltr">'+Arrows+
+  Result:=Result+'<div class="board-viewport" dir="ltr">'+
     '<span>X '+IntToStr(X)+' Y '+IntToStr(Y)+'</span> '+
     '<form method="POST" style="display:inline-block;margin:2px" action="'+
       HtmlAttr(Back+'&x='+IntToStr(X)+'&y='+IntToStr(Y))+'">'+LanguageHiddenField(NavState);
@@ -427,7 +419,15 @@ begin
     '<input type="hidden" name="view_all" value="'+BoolToStr(AllItems,'all','')+'">'+
     '<input type="hidden" name="view_list" value="'+HtmlAttr(ExpandedList)+'">'+
     '<input type="hidden" name="view_subtask" value="'+HtmlAttr(SubtaskCard)+'">'+
-    MoveKeypad(NavState,0,0,0,True,True,Language.Tag);
+    MoveKeypad(NavState,0,0,0,True,True,Language.Tag)
+  else
+  begin
+    Result:=Result+'<form method="POST" action="'+HtmlAttr(BoardPath)+'">'+LanguageHiddenField(NavState)+
+      '<input type="hidden" name="viewport_only" value="1">';
+    if NavState.SessionId<>'' then
+      Result:=Result+'<input type="hidden" name="sessionId" value="'+HtmlAttr(NavState.SessionId)+'">';
+    Result:=Result+MoveArrowButtons+'</form>';
+  end;
 
   if Length(Lanes)=0 then Result:=Result+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>';
   for i:=0 to High(Lanes) do
@@ -553,7 +553,7 @@ begin
   end;
 end;
 procedure BoardEndpoint(aRequest:TRequest; aResponse:TResponse);
-var T:TWLTenant; S:TWLSession; Body,Dir,Title:string;Language:TWLLanguage;Words:TWLTranslator;
+var T:TWLTenant; S:TWLSession; Body,Dir,Title,ViewCommand:string;Language:TWLLanguage;Words:TWLTranslator;
 begin
   if not (ResolveTenant(aRequest,T) and TenantOpen(T)) then
   begin
@@ -568,12 +568,19 @@ begin
   Words:=TWLTranslator.Create(Language);
   try
   Title:=Words.Text('board','Board');
+  ViewCommand:='';
+  if aRequest.ContentFields.Values['viewport_only']='1' then
+  begin
+    if NormalizeMoveSubmit(aRequest.ContentFields) then
+      ViewCommand:=aRequest.ContentFields.Values['dir'];
+  end
+  else ViewCommand:=aRequest.QueryFields.Values['viewport_dir'];
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand'],aRequest.QueryFields.Values['subtasks'],
     MainNavigation(T.Db,S,Language.Tag,T.IsAdmin),
     StrToIntDef(aRequest.ContentFields.Values['cols'],StrToIntDef(aRequest.QueryFields.Values['cols'],6)),
-    StrToIntDef(aRequest.ContentFields.Values['rows'],StrToIntDef(aRequest.QueryFields.Values['rows'],4)));
+    StrToIntDef(aRequest.ContentFields.Values['rows'],StrToIntDef(aRequest.QueryFields.Values['rows'],4)),ViewCommand);
   if Body='' then begin
     aResponse.Code:=404;
     aResponse.Content:=LanguagePage(aResponse,Language,Title,'<p>'+HtmlEncode(Words.Text('board-not-found','Board not found'))+'</p>','','html4');

@@ -52,6 +52,9 @@ function MoveKeypad(const S: TWLSession; SwimlaneSel, ListSel, CardSel: Integer;
 
 // Normalize one native movement/action submit name to its legacy command.
 // Values are presentation only. Reject ambiguity without changing Params.
+function ArrowDirection(const Command:string;out Direction:string;out Edge:Boolean):Boolean;
+function MoveArrowButtons:string;
+
 function NormalizeMoveSubmit(Params:TStrings):Boolean;
 
 // Apply a submitted move: reads dir + sel_* from Params and updates the tenant DB. Returns
@@ -90,8 +93,27 @@ begin
   Result := '</form>';
 end;
 
+function ArrowDirection(const Command:string;out Direction:string;out Edge:Boolean):Boolean;
+begin
+  Direction:=LowerCase(Trim(Command));
+  Edge:=Copy(Direction,1,5)='edge_';
+  if Edge then Delete(Direction,1,5);
+  Result:=(Direction='left') or (Direction='right') or (Direction='up') or (Direction='down');
+end;
+
+function MoveArrowButtons:string;
+  function Arrow(const Name,Glyph:string):string;
+  begin
+    Result:='<input type="submit" name="move_'+Name+'" value="'+HtmlAttr(Glyph)+'" dir="ltr"> ';
+  end;
+begin
+  Result:='<div dir="ltr">'+Arrow('edge_left','<<')+Arrow('left','<')+
+    Arrow('right','>')+Arrow('edge_right','>>')+
+    Arrow('edge_up','^^')+Arrow('up','^')+Arrow('down','v')+Arrow('edge_down','vv')+'</div>';
+end;
+
 function NormalizeMoveSubmit(Params:TStrings):Boolean;
-var i,Count,Legacy:Integer;Name,Command,Kind:string;
+var i,Count,Legacy:Integer;Name,Command,Kind,Direction:string;Edge:Boolean;
 begin
   Result:=False;if Params=nil then Exit;
   Count:=0;Legacy:=0;Command:='';Kind:='';
@@ -101,9 +123,9 @@ begin
     if (Name='dir') or (Name='action') then Inc(Legacy);
     if Copy(Name,1,5)='move_' then
     begin
-      if not ((Name='move_up') or (Name='move_down') or
-        (Name='move_left') or (Name='move_right')) then Exit;
-      Inc(Count);Command:=Copy(Name,6,Length(Name));Kind:='dir';
+      Command:=Copy(Name,6,Length(Name));
+      if not ArrowDirection(Command,Direction,Edge) then Exit;
+      Inc(Count);Kind:='dir';
     end
     else if Copy(Name,1,7)='action_' then
     begin
@@ -127,18 +149,7 @@ begin
   if not FindLanguage(LanguageTag,Language) then Language:=ResolveLanguage(S.LanguageTag,'','');
   Words:=TWLTranslator.Create(Language);
   try
-  // Physical controls must not inherit RTL table-column reversal from the page.
-  // HTML 3.2 browsers ignore dir and already retain this source order.
-  // keypad as a 2-row table of submit buttons (joystick layout), like kanban.go's arrowKeys
-  Result :=
-    '<table dir="ltr" border="0" cellpadding="2" cellspacing="0"><tr>' +
-    '<td></td>' +
-    '<td align="center"><input type="submit" name="move_up" value="^" dir="ltr"></td>' +
-    '<td></td></tr><tr>' +
-    '<td><input type="submit" name="move_left" value="&lt;" dir="ltr"></td>' +
-    '<td><input type="submit" name="move_down" value="v" dir="ltr"></td>' +
-    '<td><input type="submit" name="move_right" value="&gt;" dir="ltr"></td>' +
-    '</tr></table>' + LineEnding;
+  Result:=MoveArrowButtons;
   if IncludeActions then Result:=Result+
     Button('edit','edit','Edit')+Button('delete','r-delete-selected','Delete selected')+
     Button('clear','r-unselect-all','Unselect all')+Button('export','r-export-selected','Export selected')+LineEnding;
@@ -165,7 +176,7 @@ end;
 
 // ---- reorder within a parent (up/down) ---------------------------------------------------
 // Swap the `sort` of Id with its neighbor in the same scope. GoSmaller = move toward sort 0.
-procedure SwapNeighbor(Db: TWLDb; const Table, ScopeCol, Id: string; GoSmaller: Boolean);
+procedure SwapNeighbor(Db: TWLDb; const Table, ScopeCol, Id: string; GoSmaller,Edge: Boolean);
 var
   Me, N: TWLRows;
   Scope, MySort, NId, NSort, Cmp, Ord, ScopeExtra, ExtraColumn: string;
@@ -180,6 +191,14 @@ begin
   if Table='cards' then ScopeExtra:=ScopeExtra+' AND swimlaneId='+q(Me[0][3]);
   if GoSmaller then begin Cmp := '<'; Ord := 'DESC'; end
                else begin Cmp := '>'; Ord := 'ASC';  end;
+  if Edge then
+  begin
+    if GoSmaller then Cmp:='MIN' else Cmp:='MAX';
+    if GoSmaller then Ord:='-1' else Ord:='+1';
+    Db.Exec('UPDATE '+Table+' SET sort=(SELECT COALESCE('+Cmp+'(sort),0)'+Ord+
+      ' FROM '+Table+' WHERE '+ScopeCol+'='+q(Scope)+ScopeExtra+') WHERE id='+q(Id)+ScopeExtra+';');
+    Exit;
+  end;
   N := Db.Query(Format(
     'SELECT id,sort FROM %s WHERE %s=%s%s AND sort %s %s ORDER BY sort %s LIMIT 1;',
     [Table, ScopeCol, q(Scope), ScopeExtra, Cmp, q(MySort), Ord]));
@@ -190,7 +209,7 @@ begin
 end;
 
 // ---- relocate a card to the adjacent list (left/right) -----------------------------------
-procedure MoveCardAcrossList(Db: TWLDb; const CardId: string; Next: Boolean);
+procedure MoveCardAcrossList(Db: TWLDb; const CardId: string; Next,Edge: Boolean);
 var
   C, L, MaxR: TWLRows;
   Sw, CurList, Target, BoardId: string;
@@ -204,9 +223,11 @@ begin
   for i := 0 to High(L) do
     if (Length(L[i]) > 0) and (L[i][0] = CurList) then begin idx := i; Break; end;
   if idx < 0 then Exit;
-  if Next then Inc(idx) else Dec(idx);
+  if Edge then begin if Next then idx:=High(L) else idx:=0;end
+  else if Next then Inc(idx) else Dec(idx);
   if (idx < 0) or (idx > High(L)) then Exit;             // no list that way
   Target := L[idx][0];
+  if Target=CurList then Exit;
   MaxR := Db.Query(Format('SELECT COALESCE(MAX(sort),0)+1 FROM cards WHERE listId=%s AND swimlaneId=%s AND boardId=%s;', [q(Target),q(Sw),q(BoardId)]));
   Db.Exec(Format('UPDATE cards SET listId=%s, sort=%s WHERE id=%s;',
     [q(Target), q(MaxR[0][0]), q(CardId)]));
@@ -214,7 +235,7 @@ end;
 
 // Relocate a list and all of its cards, including archived cards, as one transaction.
 // Keep boardId in every scope: legacy rows may have an empty swimlaneId.
-procedure MoveListAcrossSwimlane(Db: TWLDb; const ListId: string; Next: Boolean);
+procedure MoveListAcrossSwimlane(Db: TWLDb; const ListId: string; Next,Edge: Boolean);
 var
   L, Neighbors, MaxR: TWLRows;
   BoardId, Target, Cmp, Ord: string;
@@ -226,12 +247,20 @@ begin
   BoardId := L[0][0];
   if Next then begin Cmp := '>'; Ord := 'ASC'; end
           else begin Cmp := '<'; Ord := 'DESC'; end;
-  Neighbors := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + q(BoardId) +
+  if Edge then
+  begin
+    if Next then Ord:='DESC' else Ord:='ASC';
+    Neighbors:=Db.Query('SELECT id FROM swimlanes WHERE boardId='+q(BoardId)+
+      ' AND archived=0 ORDER BY sort '+Ord+',id '+Ord+' LIMIT 1;');
+  end
+  else
+    Neighbors := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + q(BoardId) +
     ' AND archived=0 AND (sort ' + Cmp + ' ' + q(L[0][1]) +
     ' OR (sort=' + q(L[0][1]) + ' AND id ' + Cmp + ' ' + q(L[0][2]) +
     ')) ORDER BY sort ' + Ord + ',id ' + Ord + ' LIMIT 1;');
   if Length(Neighbors) = 0 then Exit;
   Target := Neighbors[0][0];
+  if Target=L[0][2] then Exit;
   MaxR := Db.Query('SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId=' +
     q(BoardId) + ' AND swimlaneId=' + q(Target) + ' AND archived=0 AND deletedAt IS NULL;');
   // One Exec also works with the CLI backend, which opens one connection per call.
@@ -270,35 +299,55 @@ var
   Dir: string;
   Cards, Lists, Swimlanes: TStringList;
   i: Integer;
+  Edge:Boolean;
+  procedure OrderForEdge(Items:TStringList;const Table:string;Reverse:Boolean);
+  var Ids,Id,Ordering:string;Row:TWLRow;Rows:TWLRows;
+  begin
+    if not Edge or (Items.Count<2) then Exit;
+    Ids:='';
+    for Id in Items do
+    begin
+      if Ids<>'' then Ids:=Ids+',';
+      Ids:=Ids+q(Id);
+    end;
+    if Reverse then Ordering:=' DESC' else Ordering:=' ASC';
+    Rows:=Db.Query('SELECT id FROM '+Table+' WHERE id IN ('+Ids+
+      ') ORDER BY sort'+Ordering+',id'+Ordering+';');
+    if Length(Rows)<>Items.Count then Exit;
+    Items.Clear;
+    for Row in Rows do Items.Add(Row[0]);
+  end;
 begin
   Result := False;
-  Dir := LowerCase(Trim(Params.Values['dir']));
+  if not ArrowDirection(Params.Values['dir'],Dir,Edge) then Exit;
   if RightToLeft then
     if Dir='left' then Dir:='right' else if Dir='right' then Dir:='left';
-  if Dir = '' then Exit;                                 // an action button (edit/clone/…), not a move
 
   Cards := CollectSel(Params, 'card');
   Lists := CollectSel(Params, 'list');
   Swimlanes := CollectSel(Params, 'swimlane');
   try
+    OrderForEdge(Cards,'cards',Dir='up');
+    OrderForEdge(Lists,'lists',Dir='left');
+    OrderForEdge(Swimlanes,'swimlanes',Dir='up');
     for i := 0 to Cards.Count - 1 do
       case Dir of
-        'up':    SwapNeighbor(Db, 'cards', 'listId', Cards[i], True);
-        'down':  SwapNeighbor(Db, 'cards', 'listId', Cards[i], False);
-        'left':  MoveCardAcrossList(Db, Cards[i], False);
-        'right': MoveCardAcrossList(Db, Cards[i], True);
+        'up':    SwapNeighbor(Db, 'cards', 'listId', Cards[i], True,Edge);
+        'down':  SwapNeighbor(Db, 'cards', 'listId', Cards[i], False,Edge);
+        'left':  MoveCardAcrossList(Db, Cards[i], False,Edge);
+        'right': MoveCardAcrossList(Db, Cards[i], True,Edge);
       end;
     for i := 0 to Lists.Count - 1 do
       case Dir of
-        'left':  SwapNeighbor(Db, 'lists', 'swimlaneId', Lists[i], True);
-        'right': SwapNeighbor(Db, 'lists', 'swimlaneId', Lists[i], False);
-        'up':    MoveListAcrossSwimlane(Db, Lists[i], False);
-        'down':  MoveListAcrossSwimlane(Db, Lists[i], True);
+        'left':  SwapNeighbor(Db, 'lists', 'swimlaneId', Lists[i], True,Edge);
+        'right': SwapNeighbor(Db, 'lists', 'swimlaneId', Lists[i], False,Edge);
+        'up':    MoveListAcrossSwimlane(Db, Lists[i], False,Edge);
+        'down':  MoveListAcrossSwimlane(Db, Lists[i], True,Edge);
       end;
     for i := 0 to Swimlanes.Count - 1 do
       case Dir of
-        'up':    SwapNeighbor(Db, 'swimlanes', 'boardId', Swimlanes[i], True);
-        'down':  SwapNeighbor(Db, 'swimlanes', 'boardId', Swimlanes[i], False);
+        'up':    SwapNeighbor(Db, 'swimlanes', 'boardId', Swimlanes[i], True,Edge);
+        'down':  SwapNeighbor(Db, 'swimlanes', 'boardId', Swimlanes[i], False,Edge);
       end;
     Result := (Cards.Count + Lists.Count + Swimlanes.Count) > 0;
   finally

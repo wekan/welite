@@ -513,9 +513,20 @@ procedure BoardMoveEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  BackTo,ViewCommand,ViewId,Field:string;
-  MoveRtl:Boolean;
+  BackTo,ViewCommand,ViewId,Field,Direction:string;
+  MoveRtl,Edge,HasSelection:Boolean;
   I,ViewCount:Integer;
+  procedure PrepareBoardView;
+  var Name:string;
+  begin
+    aRequest.QueryFields.Clear;
+    aRequest.QueryFields.Values['id']:=aRequest.ContentFields.Values['boardId'];
+    for Name in ['x','y','cols','rows'] do
+      aRequest.QueryFields.Values[Name]:=aRequest.ContentFields.Values['view_'+Name];
+    aRequest.QueryFields.Values['view']:=aRequest.ContentFields.Values['view_all'];
+    aRequest.QueryFields.Values['expand']:=aRequest.ContentFields.Values['view_list'];
+    aRequest.QueryFields.Values['subtasks']:=aRequest.ContentFields.Values['view_subtask'];
+  end;
   procedure Fail(Code:Integer;const Message:string);
   begin
     aResponse.Code:=Code;aResponse.ContentType:='text/html; charset=utf-8';
@@ -531,10 +542,12 @@ begin
   end;
   if not NormalizeMoveSubmit(aRequest.ContentFields) then
   begin Fail(400,'Ambiguous movement command');Exit;end;
-  ViewCount:=0; ViewCommand:=''; ViewId:='';
+  ViewCount:=0; ViewCommand:=''; ViewId:=''; HasSelection:=False;
   for I:=0 to aRequest.ContentFields.Count-1 do
   begin
     Field:=aRequest.ContentFields.Names[I];
+    if SameText(Field,'sel_card') or SameText(Field,'sel_list') or SameText(Field,'sel_swimlane') then
+      HasSelection:=True;
     if (Field='view_card') or (Field='view_expand') or (Field='view_tasks') then
     begin
       Inc(ViewCount);
@@ -548,8 +561,7 @@ begin
       (aRequest.ContentFields.IndexOfName('action')>=0) or
       (aRequest.ContentFields.IndexOfName('dir')>=0) then
     begin Fail(400,'Ambiguous board navigation');Exit;end;
-    aRequest.QueryFields.Clear;
-    aRequest.QueryFields.Values['id']:=aRequest.ContentFields.Values['boardId'];
+    PrepareBoardView;
     if ViewCommand='view_card' then
     begin
       aRequest.QueryFields.Values['card']:=ViewId;
@@ -557,16 +569,19 @@ begin
     end
     else
     begin
-      for Field in ['x','y','cols','rows'] do
-        aRequest.QueryFields.Values[Field]:=aRequest.ContentFields.Values['view_'+Field];
-      aRequest.QueryFields.Values['view']:=aRequest.ContentFields.Values['view_all'];
-      aRequest.QueryFields.Values['expand']:=aRequest.ContentFields.Values['view_list'];
-      aRequest.QueryFields.Values['subtasks']:=aRequest.ContentFields.Values['view_subtask'];
       if ViewCommand='view_expand' then Field:='expand' else Field:='subtasks';
       if aRequest.QueryFields.Values[Field]=ViewId then aRequest.QueryFields.Values[Field]:=''
       else aRequest.QueryFields.Values[Field]:=ViewId;
       BoardEndpoint(aRequest,aResponse);
     end;
+    Exit;
+  end;
+  if not HasSelection and (aRequest.ContentFields.IndexOfName('action')<0) and
+    ArrowDirection(aRequest.ContentFields.Values['dir'],Direction,Edge) then
+  begin
+    PrepareBoardView;
+    aRequest.QueryFields.Values['viewport_dir']:=aRequest.ContentFields.Values['dir'];
+    BoardEndpoint(aRequest,aResponse);
     Exit;
   end;
   if ((aRequest.ContentFields.Values['action']='clear') and
@@ -590,6 +605,13 @@ begin
   end
   else begin
     ApplyMove(T.Db,aRequest.ContentFields,MoveRtl);
+  end;
+  if (aRequest.ContentFields.Values['boardWidget']='') and
+    (aRequest.ContentFields.IndexOfName('view_x')>=0) then
+  begin
+    PrepareBoardView;
+    BoardEndpoint(aRequest,aResponse);
+    Exit;
   end;
   BackTo := SafeReturnPath(aRequest.ContentFields.Values['back']);
   aResponse.Code := 302;

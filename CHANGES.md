@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-19 Combine board movement arrows
+
+- Use one set of arrows to navigate the viewport when nothing is selected
+  and to move checked cards, lists or swimlanes. Add edge arrows in all
+  four directions and keep the viewport in place for selected-item moves.
+
 ## 2026-11-19 Edit accounts in Admin Panel / People
 
 - Add local accounts, rename them, replace passwords, manage TOTP and confirm
