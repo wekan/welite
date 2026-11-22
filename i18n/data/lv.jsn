@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Neizdevās sākt iestatīšanu.",
   "registration-global-admin-disabled": "Globālo administratoru konti tiek izveidoti lokāli. Publiskā reģistrācija ir atspējota.",
   "auth-session-create-failed": "Neizdevās izveidot sesiju.",
-  "registration-password-unavailable": "Reģistrācija ar paroli nav pieejama."
+  "registration-password-unavailable": "Reģistrācija ar paroli nav pieejama.",
+  "continuous-backup-database": "Datubāze",
+  "cloud-start-date": "Sākuma datums",
+  "cloud-end-date": "Beigu datums",
+  "wekan-data-no-database": "Netika atrasta nolasāma WeKan datubāze."
 }

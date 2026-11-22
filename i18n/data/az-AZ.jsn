@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "Doğrulama kodu yanlışdır. Zəhmət olmasa yenidən cəhd edin.",
   "twoFactorAuth-enabled": "Hesabınız üçün iki faktorlu doğrulama aktivdir.",
   "two-factor-required-title": "İki faktorlu doğrulamanı qurun",
-  "two-factor-required-text": "Bu sayt hesabınız üçün iki faktorlu doğrulama tələb edir. Davam etmək üçün onu qurun."
+  "two-factor-required-text": "Bu sayt hesabınız üçün iki faktorlu doğrulama tələb edir. Davam etmək üçün onu qurun.",
+  "continuous-backup-database": "Verilənlər bazası",
+  "cloud-start-date": "Başlama tarixi",
+  "cloud-end-date": "Bitmə tarixi",
+  "wekan-data-no-database": "Oxuna bilən WeKan verilənlər bazası tapılmadı."
 }

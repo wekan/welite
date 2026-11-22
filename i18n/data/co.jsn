@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Codice d’autentificazione micca validu. Pruvate torna.",
   "twoFactorAuth-enabled": "L'autentificazione à dui fattori hè attivata per u vostru contu.",
   "two-factor-required-title": "Cunfigurate l'autentificazione à dui fattori",
-  "two-factor-required-text": "Stu situ richiede l'autentificazione à dui fattori per u vostru contu. Cunfiguratela per cuntinuà."
+  "two-factor-required-text": "Stu situ richiede l'autentificazione à dui fattori per u vostru contu. Cunfiguratela per cuntinuà.",
+  "continuous-backup-database": "Basa di dati",
+  "cloud-start-date": "Data di principiu",
+  "cloud-end-date": "Data di fine",
+  "wekan-data-no-database": "Ùn hè stata truvata nisuna basa di dati WeKan leghjibile."
 }

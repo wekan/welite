@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Is-setup ma setax jinbeda.",
   "registration-global-admin-disabled": "Il-kontijiet tal-amministraturi globali jinħolqu lokalment. Ir-reġistrazzjoni pubblika hija diżattivata.",
   "auth-session-create-failed": "Is-sessjoni ma setgħetx tinħoloq.",
-  "registration-password-unavailable": "Ir-reġistrazzjoni b’password mhix disponibbli."
+  "registration-password-unavailable": "Ir-reġistrazzjoni b’password mhix disponibbli.",
+  "continuous-backup-database": "Bażi tad-data",
+  "cloud-start-date": "Data tal-Bidu",
+  "cloud-end-date": "Data tat-Tmiem",
+  "wekan-data-no-database": "Ma nstabet ebda bażi tad-data ta' WeKan li tista' tinqara."
 }

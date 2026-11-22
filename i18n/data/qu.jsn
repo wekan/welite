@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Cheqaqchay código mana allinchu. Watuq kutiy.",
   "twoFactorAuth-enabled": "Iskay kallpa cheqaqchay qampa cuentaykipaq kachkan.",
   "two-factor-required-title": "Iskay kallpa cheqaqchayta allichay",
-  "two-factor-required-text": "Kay sitioqa cuentaykipaq iskay kallpa cheqaqchayta mañan. Allichay qatipanaykipaq."
+  "two-factor-required-text": "Kay sitioqa cuentaykipaq iskay kallpa cheqaqchayta mañan. Allichay qatipanaykipaq.",
+  "continuous-backup-database": "Willay pirwa",
+  "cloud-start-date": "Qallariy p'unchaw",
+  "cloud-end-date": "Tukukuy p'unchaw",
+  "wekan-data-no-database": "Manam ñawinchay atina WeKan willay pirwa tarikunchu."
 }

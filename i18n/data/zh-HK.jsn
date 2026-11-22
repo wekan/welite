@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "驗證代碼無效，請再試一次。",
   "twoFactorAuth-enabled": "您的帳戶已啟用雙重驗證。",
   "two-factor-required-title": "設定雙重驗證",
-  "two-factor-required-text": "本網站要求您的帳戶啟用雙重驗證。請先設定再繼續。"
+  "two-factor-required-text": "本網站要求您的帳戶啟用雙重驗證。請先設定再繼續。",
+  "continuous-backup-database": "資料庫",
+  "cloud-start-date": "開始日期",
+  "cloud-end-date": "結束日期",
+  "wekan-data-no-database": "找不到可讀取的 WeKan 資料庫。"
 }

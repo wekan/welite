@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Khoutu ya netefatso ha e nepahala. Ka kopo leka hape.",
   "twoFactorAuth-enabled": "Netefatso ya mekgwa e mmedi e kentswe tshebetsong bakeng sa akhaonto ya hao.",
   "two-factor-required-title": "Hlophisa Netefatso ya Mekgwa e Mmedi",
-  "two-factor-required-text": "Saete ena e hloka netefatso ya mekgwa e mmedi bakeng sa akhaonto ya hao. E hlophise ho tswela pele."
+  "two-factor-required-text": "Saete ena e hloka netefatso ya mekgwa e mmedi bakeng sa akhaonto ya hao. E hlophise ho tswela pele.",
+  "continuous-backup-database": "Polokelo ya data",
+  "cloud-start-date": "Letsatsi la ho qala",
+  "cloud-end-date": "Letsatsi la ho fela",
+  "wekan-data-no-database": "Ha ho a fumanwa polokelo ya data ya WeKan e balehang."
 }

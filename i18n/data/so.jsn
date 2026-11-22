@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Koodhka xaqiijinta waa khalad. Fadlan mar kale isku day.",
   "twoFactorAuth-enabled": "Xaqiijinta laba-tallaabo waa la daaray akoonkaaga.",
   "two-factor-required-title": "Dej Xaqiijinta Laba-Tallaabo",
-  "two-factor-required-text": "Goobtan waxay u baahan tahay xaqiijinta laba-tallaabo ee akoonkaaga. Dej si aad u sii wadato."
+  "two-factor-required-text": "Goobtan waxay u baahan tahay xaqiijinta laba-tallaabo ee akoonkaaga. Dej si aad u sii wadato.",
+  "continuous-backup-database": "Kaydka xogta",
+  "cloud-start-date": "Taariikhda bilowga",
+  "cloud-end-date": "Taariikhda dhammaadka",
+  "wekan-data-no-database": "Lama helin kaydka xogta WeKan oo la akhrin karo."
 }

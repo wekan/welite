@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Ongeldige verificatiecode. Probeer het opnieuw.",
   "twoFactorAuth-enabled": "Tweestapsverificatie is ingeschakeld voor uw account.",
   "two-factor-required-title": "Tweestapsverificatie instellen",
-  "two-factor-required-text": "Deze site vereist tweestapsverificatie voor uw account. Stel het in om verder te gaan."
+  "two-factor-required-text": "Deze site vereist tweestapsverificatie voor uw account. Stel het in om verder te gaan.",
+  "continuous-backup-database": "Gegevensbank",
+  "cloud-start-date": "Begindatum",
+  "cloud-end-date": "Einddatum",
+  "wekan-data-no-database": "Er is geen leesbare WeKan-gegevensbank gevonden."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Vigane autentimiskood. Proovige uuesti.",
   "twoFactorAuth-enabled": "Teie konto jaoks on kaheastmeline autentimine lubatud.",
   "two-factor-required-title": "Seadistage kaheastmeline autentimine",
-  "two-factor-required-text": "See sait nõuab teie kontole kaheastmelist autentimist. Jätkamiseks seadistage see."
+  "two-factor-required-text": "See sait nõuab teie kontole kaheastmelist autentimist. Jätkamiseks seadistage see.",
+  "continuous-backup-database": "Andmebaas",
+  "cloud-start-date": "Alguskuupäev",
+  "cloud-end-date": "Lõppkuupäev",
+  "wekan-data-no-database": "Loetavat WeKani andmebaasi ei leitud."
 }

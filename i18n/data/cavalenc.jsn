@@ -2100,5 +2100,9 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "No s’ha trobat la fitxa."
+  "field-link-not-found": "No s’ha trobat la fitxa.",
+  "continuous-backup-database": "Base de dades",
+  "cloud-start-date": "Data d'inici",
+  "cloud-end-date": "Data de finalització",
+  "wekan-data-no-database": "No s'ha trobat cap base de dades de WeKan llegible."
 }

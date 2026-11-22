@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Nastavovanie sa nepodarilo začať.",
   "registration-global-admin-disabled": "Účty globálnych správcov sa vytvárajú lokálne. Verejná registrácia je vypnutá.",
   "auth-session-create-failed": "Reláciu sa nepodarilo vytvoriť.",
-  "registration-password-unavailable": "Registrácia pomocou hesla nie je dostupná."
+  "registration-password-unavailable": "Registrácia pomocou hesla nie je dostupná.",
+  "continuous-backup-database": "Databáza",
+  "cloud-start-date": "Dátum začiatku",
+  "cloud-end-date": "Dátum konca",
+  "wekan-data-no-database": "Nenašla sa žiadna čitateľná databáza WeKan."
 }

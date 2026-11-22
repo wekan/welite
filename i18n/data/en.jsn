@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Could not start setup",
   "registration-global-admin-disabled": "Global Admin accounts are initialized locally. Public registration is disabled.",
   "auth-session-create-failed": "Could not create session",
-  "registration-password-unavailable": "Registration with a password is unavailable."
+  "registration-password-unavailable": "Registration with a password is unavailable.",
+  "continuous-backup-database": "Database",
+  "cloud-start-date": "Start Date",
+  "cloud-end-date": "End Date",
+  "wekan-data-no-database": "No readable WeKan database was found."
 }

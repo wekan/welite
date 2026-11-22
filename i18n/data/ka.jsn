@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "დაყენების დაწყება ვერ მოხერხდა.",
   "registration-global-admin-disabled": "გლობალური ადმინისტრატორების ანგარიშები ადგილობრივად იქმნება. საჯარო რეგისტრაცია გამორთულია.",
   "auth-session-create-failed": "სესიის შექმნა ვერ მოხერხდა.",
-  "registration-password-unavailable": "პაროლით რეგისტრაცია მიუწვდომელია."
+  "registration-password-unavailable": "პაროლით რეგისტრაცია მიუწვდომელია.",
+  "continuous-backup-database": "მონაცემთა ბაზა",
+  "cloud-start-date": "დაწყების თარიღი",
+  "cloud-end-date": "დასრულების თარიღი",
+  "wekan-data-no-database": "წაკითხვადი WeKan მონაცემთა ბაზა ვერ მოიძებნა."
 }

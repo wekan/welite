@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "Código de autenticación non válido. Ténteo de novo.",
   "twoFactorAuth-enabled": "A autenticación de dous factores está activada para a súa conta.",
   "two-factor-required-title": "Configurar a autenticación de dous factores",
-  "two-factor-required-text": "Este sitio require autenticación de dous factores para a súa conta. Configúrea para continuar."
+  "two-factor-required-text": "Este sitio require autenticación de dous factores para a súa conta. Configúrea para continuar.",
+  "continuous-backup-database": "Base de datos",
+  "cloud-start-date": "Data de inicio",
+  "cloud-end-date": "Data de fin",
+  "wekan-data-no-database": "Non se atopou ningunha base de datos de WeKan lexible."
 }

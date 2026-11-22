@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Ungültiger Authentifizierungscode. Bitte versuchen Sie es erneut.",
   "twoFactorAuth-enabled": "Die Zwei-Faktor-Authentifizierung ist für Ihr Konto aktiviert.",
   "two-factor-required-title": "Zwei-Faktor-Authentifizierung einrichten",
-  "two-factor-required-text": "Diese Website erfordert für Ihr Konto die Zwei-Faktor-Authentifizierung. Richten Sie sie ein, um fortzufahren."
+  "two-factor-required-text": "Diese Website erfordert für Ihr Konto die Zwei-Faktor-Authentifizierung. Richten Sie sie ein, um fortzufahren.",
+  "continuous-backup-database": "Datenbank",
+  "cloud-start-date": "Startdatum",
+  "cloud-end-date": "Enddatum",
+  "wekan-data-no-database": "Es wurde keine lesbare WeKan-Datenbank gefunden."
 }

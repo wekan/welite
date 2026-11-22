@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kode otentikasi ora sah. Coba maneh.",
   "twoFactorAuth-enabled": "Otentikasi rong faktor wis diaktifake kanggo akun sampeyan.",
   "two-factor-required-title": "Setel otentikasi rong faktor",
-  "two-factor-required-text": "Situs iki mbutuhake otentikasi rong faktor kanggo akun sampeyan. Setel supaya bisa nerusake."
+  "two-factor-required-text": "Situs iki mbutuhake otentikasi rong faktor kanggo akun sampeyan. Setel supaya bisa nerusake.",
+  "continuous-backup-database": "Basis data",
+  "cloud-start-date": "Tanggal Wiwit",
+  "cloud-end-date": "Tanggal Pungkasan",
+  "wekan-data-no-database": "Ora ana basis data WeKan sing bisa diwaca."
 }

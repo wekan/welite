@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Còdighe de autenticatzione non vàlidu. Torra a proare.",
   "twoFactorAuth-enabled": "S'autenticatzione a duos fatores est ativada pro su contu tuo.",
   "two-factor-required-title": "Cunfigura s'autenticatzione a duos fatores",
-  "two-factor-required-text": "Custu situ rechedet s'autenticatzione a duos fatores pro su contu tuo. Cunfigura·la pro sighire."
+  "two-factor-required-text": "Custu situ rechedet s'autenticatzione a duos fatores pro su contu tuo. Cunfigura·la pro sighire.",
+  "continuous-backup-database": "Base de datos",
+  "cloud-start-date": "Data de cumintzu",
+  "cloud-end-date": "Data de fine",
+  "wekan-data-no-database": "No est istada agatada peruna base de datos WeKan leghìbile."
 }

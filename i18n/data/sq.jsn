@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Konfigurimi nuk mund të nisej.",
   "registration-global-admin-disabled": "Llogaritë e administratorëve globalë krijohen lokalisht. Regjistrimi publik është çaktivizuar.",
   "auth-session-create-failed": "Sesioni nuk mund të krijohej.",
-  "registration-password-unavailable": "Regjistrimi me fjalëkalim nuk është i disponueshëm."
+  "registration-password-unavailable": "Regjistrimi me fjalëkalim nuk është i disponueshëm.",
+  "continuous-backup-database": "Baza e të dhënave",
+  "cloud-start-date": "Data e fillimit",
+  "cloud-end-date": "Data e mbarimit",
+  "wekan-data-no-database": "Nuk u gjet asnjë bazë të dhënash WeKan e lexueshme."
 }

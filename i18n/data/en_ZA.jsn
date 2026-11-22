@@ -2099,5 +2099,9 @@
   "logout": "Logout",
   "server": "Server",
   "protocol": "Protocol",
-  "field-link-not-found": "Card not found."
+  "field-link-not-found": "Card not found.",
+  "continuous-backup-database": "Database",
+  "cloud-start-date": "Start Date",
+  "cloud-end-date": "End Date",
+  "wekan-data-no-database": "No readable WeKan database was found."
 }

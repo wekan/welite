@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "غلط توثیقی کوڈ۔ دوبارہ کوشش کریں۔",
   "twoFactorAuth-enabled": "آپ کے اکاؤنٹ کے لیے دو مرحلہ توثیق فعال ہے۔",
   "two-factor-required-title": "دو مرحلہ توثیق ترتیب دیں",
-  "two-factor-required-text": "یہ سائٹ آپ کے اکاؤنٹ کے لیے دو مرحلہ توثیق لازمی قرار دیتی ہے۔ جاری رکھنے کے لیے اسے ترتیب دیں۔"
+  "two-factor-required-text": "یہ سائٹ آپ کے اکاؤنٹ کے لیے دو مرحلہ توثیق لازمی قرار دیتی ہے۔ جاری رکھنے کے لیے اسے ترتیب دیں۔",
+  "continuous-backup-database": "ڈیٹابیس",
+  "cloud-start-date": "تاریخ آغاز",
+  "cloud-end-date": "تاریخ اختتام",
+  "wekan-data-no-database": "پڑھنے کے قابل کوئی WeKan ڈیٹابیس نہیں ملا۔"
 }

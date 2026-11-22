@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Nädogry tanamak kody. Gaýtadan synanyşyň.",
   "twoFactorAuth-enabled": "Hasabyňyz üçin iki faktorly tanamak işjeňleşdirildi.",
   "two-factor-required-title": "Iki faktorly tanamagy sazlaň",
-  "two-factor-required-text": "Bu saýt hasabyňyz üçin iki faktorly tanamagy talap edýär. Dowam etmek üçin ony sazlaň."
+  "two-factor-required-text": "Bu saýt hasabyňyz üçin iki faktorly tanamagy talap edýär. Dowam etmek üçin ony sazlaň.",
+  "continuous-backup-database": "Maglumat bazasy",
+  "cloud-start-date": "Başlangyç senesi",
+  "cloud-end-date": "Gutaryş senesi",
+  "wekan-data-no-database": "Okalyp bolýan WeKan maglumat bazasy tapylmady."
 }

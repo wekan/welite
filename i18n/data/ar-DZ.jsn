@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "رمز مصادقة غير صالح. يرجى المحاولة مرة أخرى.",
   "twoFactorAuth-enabled": "المصادقة الثنائية مفعّلة لحسابك.",
   "two-factor-required-title": "إعداد المصادقة الثنائية",
-  "two-factor-required-text": "يتطلب هذا الموقع المصادقة الثنائية لحسابك. قم بإعدادها للمتابعة."
+  "two-factor-required-text": "يتطلب هذا الموقع المصادقة الثنائية لحسابك. قم بإعدادها للمتابعة.",
+  "continuous-backup-database": "قاعدة البيانات",
+  "cloud-start-date": "تاريخ البدء",
+  "cloud-end-date": "تاريخ الانتهاء",
+  "wekan-data-no-database": "لم يُعثر على قاعدة بيانات WeKan قابلة للقراءة."
 }

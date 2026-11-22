@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Dárkkistankoda ii leat rivttes. Geahččal fas.",
   "twoFactorAuth-enabled": "Guovtti-fáktora dárkkisteapmi lea aktiivvalaš du kontos.",
   "two-factor-required-title": "Ásat guovtti-fáktora dárkkisteami",
-  "two-factor-required-text": "Dát neahttabáiki gáibida guovtti-fáktora dárkkisteami du kontui. Ásat dan joatkin dihtii."
+  "two-factor-required-text": "Dát neahttabáiki gáibida guovtti-fáktora dárkkisteami du kontui. Ásat dan joatkin dihtii.",
+  "continuous-backup-database": "Diehtovuođđu",
+  "cloud-start-date": "Álgobeaivi",
+  "cloud-end-date": "Loahppabeaivi",
+  "wekan-data-no-database": "Ii gávdnon WeKan-diehtovuođđu man sáhttá lohkat."
 }

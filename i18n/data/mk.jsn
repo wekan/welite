@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Поставувањето не можеше да започне.",
   "registration-global-admin-disabled": "Сметките на глобалните администратори се создаваат локално. Јавната регистрација е оневозможена.",
   "auth-session-create-failed": "Не можеше да се создаде сесија.",
-  "registration-password-unavailable": "Регистрацијата со лозинка не е достапна."
+  "registration-password-unavailable": "Регистрацијата со лозинка не е достапна.",
+  "continuous-backup-database": "База на податоци",
+  "cloud-start-date": "Почетен датум",
+  "cloud-end-date": "Краен датум",
+  "wekan-data-no-database": "Не е пронајдена читлива база на податоци на WeKan."
 }

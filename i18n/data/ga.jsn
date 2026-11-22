@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Níorbh fhéidir an socrú a thosú.",
   "registration-global-admin-disabled": "Cruthaítear cuntais riarthóirí domhanda go logánta. Tá clárú poiblí díchumasaithe.",
   "auth-session-create-failed": "Níorbh fhéidir an seisiún a chruthú.",
-  "registration-password-unavailable": "Níl clárú le pasfhocal ar fáil."
+  "registration-password-unavailable": "Níl clárú le pasfhocal ar fáil.",
+  "continuous-backup-database": "Bunachar sonraí",
+  "cloud-start-date": "Dáta tosaigh",
+  "cloud-end-date": "Dáta deiridh",
+  "wekan-data-no-database": "Níor aimsíodh bunachar sonraí WeKan inléite."
 }

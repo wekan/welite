@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "راه‌اندازی شروع نشد.",
   "registration-global-admin-disabled": "حساب‌های مدیر کل به‌صورت محلی ایجاد می‌شوند. ثبت‌نام عمومی غیرفعال است.",
   "auth-session-create-failed": "نشست ایجاد نشد.",
-  "registration-password-unavailable": "ثبت‌نام با گذرواژه در دسترس نیست."
+  "registration-password-unavailable": "ثبت‌نام با گذرواژه در دسترس نیست.",
+  "continuous-backup-database": "پایگاه داده",
+  "cloud-start-date": "تاریخ شروع",
+  "cloud-end-date": "تاریخ پایان",
+  "wekan-data-no-database": "هیچ پایگاه دادهٔ خوانای WeKan پیدا نشد."
 }

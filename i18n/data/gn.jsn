@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Código autenticación naiporãi. Eha'ã jey.",
   "twoFactorAuth-enabled": "Ñemoañete mokõi tekoháre oñembopyahu nde kuenta-pe.",
   "two-factor-required-title": "Emboheko ñemoañete mokõi tekoháre",
-  "two-factor-required-text": "Ko tenda ojerure ñemoañete mokõi tekoháre nde kuenta-pe guarã. Emboheko rehopotáramo tenonde gotyo."
+  "two-factor-required-text": "Ko tenda ojerure ñemoañete mokõi tekoháre nde kuenta-pe guarã. Emboheko rehopotáramo tenonde gotyo.",
+  "continuous-backup-database": "Marandu ryru",
+  "cloud-start-date": "Ñepyrũ ára",
+  "cloud-end-date": "Paha ára",
+  "wekan-data-no-database": "Ndojejuhúi WeKan marandu ryru ikatúva ojelee."
 }

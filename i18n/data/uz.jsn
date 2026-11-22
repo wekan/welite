@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "Autentifikatsiya kodi noto'g'ri. Qaytadan urinib ko'ring.",
   "twoFactorAuth-enabled": "Hisobingiz uchun ikki bosqichli autentifikatsiya yoqilgan.",
   "two-factor-required-title": "Ikki bosqichli autentifikatsiyani sozlang",
-  "two-factor-required-text": "Bu sayt hisobingiz uchun ikki bosqichli autentifikatsiyani talab qiladi. Davom etish uchun uni sozlang."
+  "two-factor-required-text": "Bu sayt hisobingiz uchun ikki bosqichli autentifikatsiyani talab qiladi. Davom etish uchun uni sozlang.",
+  "continuous-backup-database": "Ma’lumotlar bazasi",
+  "cloud-start-date": "Boshlanish sanasi",
+  "cloud-end-date": "Tugash sanasi",
+  "wekan-data-no-database": "O‘qiladigan WeKan ma’lumotlar bazasi topilmadi."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "ʻOku hala ʻa e koodi fakamoʻoní. Kātaki ʻo toe feinga.",
   "twoFactorAuth-enabled": "Kuo faʻa ngāue ʻa e fakamoʻoni ua-vahe ki hoʻo ʻakauni.",
   "two-factor-required-title": "Fokotuʻu ʻa e fakamoʻoni ua-vahe",
-  "two-factor-required-text": "ʻOku fiemaʻu ʻe he uepisaiti ni ʻa e fakamoʻoni ua-vahe ki hoʻo ʻakauni. Fokotuʻu ia ke hoko atu."
+  "two-factor-required-text": "ʻOku fiemaʻu ʻe he uepisaiti ni ʻa e fakamoʻoni ua-vahe ki hoʻo ʻakauni. Fokotuʻu ia ke hoko atu.",
+  "continuous-backup-database": "Tauʻanga fakamatala",
+  "cloud-start-date": "ʻAho kamata",
+  "cloud-end-date": "ʻAho ngata",
+  "wekan-data-no-database": "ʻOku ʻikai maʻu ha tauʻanga fakamatala WeKan ʻe lava ke lau."
 }

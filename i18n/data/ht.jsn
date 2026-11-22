@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kòd otantifikasyon envalid. Tanpri eseye ankò.",
   "twoFactorAuth-enabled": "Otantifikasyon de faktè aktive pou kont ou.",
   "two-factor-required-title": "Konfigire otantifikasyon de faktè",
-  "two-factor-required-text": "Sit sa a mande otantifikasyon de faktè pou kont ou. Konfigire l pou kontinye."
+  "two-factor-required-text": "Sit sa a mande otantifikasyon de faktè pou kont ou. Konfigire l pou kontinye.",
+  "continuous-backup-database": "Baz done",
+  "cloud-start-date": "Dat kòmansman",
+  "cloud-end-date": "Dat fen",
+  "wekan-data-no-database": "Yo pa jwenn okenn baz done WeKan ki ka li."
 }

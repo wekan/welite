@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Niywłŏściwy kod autoryzacyjny. Sprōbuj jeszcze rŏz.",
   "twoFactorAuth-enabled": "Dwuskłŏdnikowŏ weryfikacyjŏ je włōnczōnŏ dlŏ twojigo kōnta.",
   "two-factor-required-title": "Nastŏw dwuskłŏdnikowõ weryfikacyjõ",
-  "two-factor-required-text": "Ta strōna wymŏgŏ dwuskłŏdnikowyj weryfikacyje dlŏ twojigo kōnta. Nastŏw jõ, coby kōntynuować."
+  "two-factor-required-text": "Ta strōna wymŏgŏ dwuskłŏdnikowyj weryfikacyje dlŏ twojigo kōnta. Nastŏw jõ, coby kōntynuować.",
+  "continuous-backup-database": "Baza danych",
+  "cloud-start-date": "Data poczōntku",
+  "cloud-end-date": "Data kōńca",
+  "wekan-data-no-database": "Niy szło znojś żodnyj czytelnyj bazy danych WeKan."
 }

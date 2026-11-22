@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Nevažeći kod za autentifikaciju. Pokušajte ponovo.",
   "twoFactorAuth-enabled": "Dvofaktorska autentifikacija je omogućena za vaš nalog.",
   "two-factor-required-title": "Postavite dvofaktorsku autentifikaciju",
-  "two-factor-required-text": "Ova stranica zahtijeva dvofaktorsku autentifikaciju za vaš račun. Postavite je da biste nastavili."
+  "two-factor-required-text": "Ova stranica zahtijeva dvofaktorsku autentifikaciju za vaš račun. Postavite je da biste nastavili.",
+  "continuous-backup-database": "Baza podataka",
+  "cloud-start-date": "Datum početka",
+  "cloud-end-date": "Datum završetka",
+  "wekan-data-no-database": "Nije pronađena čitljiva WeKan baza podataka."
 }

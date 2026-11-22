@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Nem sikerült elindítani a beállítást.",
   "registration-global-admin-disabled": "A globális rendszergazdai fiókok helyben hozhatók létre. A nyilvános regisztráció le van tiltva.",
   "auth-session-create-failed": "Nem sikerült létrehozni a munkamenetet.",
-  "registration-password-unavailable": "A jelszavas regisztráció nem érhető el."
+  "registration-password-unavailable": "A jelszavas regisztráció nem érhető el.",
+  "continuous-backup-database": "Adatbázis",
+  "cloud-start-date": "Kezdő dátum",
+  "cloud-end-date": "Záró dátum",
+  "wekan-data-no-database": "Nem található olvasható WeKan-adatbázis."
 }

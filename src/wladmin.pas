@@ -43,7 +43,7 @@ procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST 
 implementation
 
 uses
-  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi, wlpasswd, wltotp, wlautsrc, wlselscp;
+  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi, wlpasswd, wltotp, wlautsrc, wlselscp, wlwkdir;
 
 function NowIso: string;
 begin
@@ -145,6 +145,9 @@ begin
       Result:=Result+Item('/admin','admin-panel','Admin Panel')+
         Item('/designer','','Designer')+Item('/admin/people','people','People');
       if GlobalTenant then Result:=Result+Item('/admin/domains','domains','Domains');
+      // WeKan data folders are another server's: only the Global Admin reads them.
+      if GlobalTenant and WKConfigured then
+        Result:=Result+NavigationButton('/wekan','WeKan: '+Words.Text('domains','Domains'),State);
     end;
   finally Words.Free;end;
 end;

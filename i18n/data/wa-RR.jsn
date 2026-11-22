@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Diri balido an kodigo han pagpamatuod han identidad. Alayon sulayi utro.",
   "twoFactorAuth-enabled": "Aktibo an duha ka paagi han pagpamatuod han identidad para ha imo account.",
   "two-factor-required-title": "Igpahimutang an duha ka paagi han pagpamatuod han identidad",
-  "two-factor-required-text": "Ini nga site nagkikinahanglan hin duha ka paagi han pagpamatuod han identidad para ha imo account. Igpahimutang ini para magpadayon."
+  "two-factor-required-text": "Ini nga site nagkikinahanglan hin duha ka paagi han pagpamatuod han identidad para ha imo account. Igpahimutang ini para magpadayon.",
+  "continuous-backup-database": "Tipiganan hin datos",
+  "cloud-start-date": "Petsa han pagtikang",
+  "cloud-end-date": "Petsa han pagtapos",
+  "wekan-data-no-database": "Waray nakita nga nababasa nga tipiganan hin datos han WeKan."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "An cod dowbrovyans nyns yw gwir. Assayewgh arta.",
   "twoFactorAuth-enabled": "Dowbrovyans dew-fakta yw gwrys galosek rag agas akont.",
   "two-factor-required-title": "Settya dowbrovyans dew-fakta",
-  "two-factor-required-text": "An wiasva ma a res dowbrovyans dew-fakta rag agas akont. Y settya rag pesya."
+  "two-factor-required-text": "An wiasva ma a res dowbrovyans dew-fakta rag agas akont. Y settya rag pesya.",
+  "continuous-backup-database": "Databas",
+  "cloud-start-date": "Dydh dalleth",
+  "cloud-end-date": "Dydh diwedh",
+  "wekan-data-no-database": "Ny veu kevys databas WeKan redyadow."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Code firrinee neuchiart. Prow reesht my sailt.",
   "twoFactorAuth-enabled": "Ta'n firrinaghey daa-ymmyd bio er dty coontys.",
   "two-factor-required-title": "Soie seose firrinaghey daa-ymmyd",
-  "two-factor-required-text": "Ta'n ynnyd shoh feme er firrinaghey daa-ymmyd son dty choontys. Soie seose eh dy gholl er oaie."
+  "two-factor-required-text": "Ta'n ynnyd shoh feme er firrinaghey daa-ymmyd son dty choontys. Soie seose eh dy gholl er oaie.",
+  "continuous-backup-database": "Stoor-fysseree",
+  "cloud-start-date": "Laa toshee",
+  "cloud-end-date": "Laa jerree",
+  "wekan-data-no-database": "Cha row stoor-fysseree WeKan lhaihoil er ny gheddyn."
 }

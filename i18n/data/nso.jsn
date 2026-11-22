@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Khoutu ya netefatšo ga se ya nnete. Leka gape.",
   "twoFactorAuth-enabled": "Netefatšo ya mekgahlo e mebedi e diretšwe akhaonto ya gago.",
   "two-factor-required-title": "Beakanya netefatšo ya mekgahlo e mebedi",
-  "two-factor-required-text": "Saete ye e nyaka netefatšo ya mekgahlo e mebedi bakeng sa akhaonte ya gago. E beakanye gore o tšwele pele."
+  "two-factor-required-text": "Saete ye e nyaka netefatšo ya mekgahlo e mebedi bakeng sa akhaonte ya gago. E beakanye gore o tšwele pele.",
+  "continuous-backup-database": "Polokelo ya tshedimošo",
+  "cloud-start-date": "Letšatšikgwedi la go thoma",
+  "cloud-end-date": "Letšatšikgwedi la go fela",
+  "wekan-data-no-database": "Ga go a hwetšwa polokelo ya tshedimošo ya WeKan yeo e balegago."
 }

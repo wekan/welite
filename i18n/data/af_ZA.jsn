@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "Ongeldige verifikasiekode. Probeer asseblief weer.",
   "twoFactorAuth-enabled": "Twee-faktor-verifikasie is vir jou rekening geaktiveer.",
   "two-factor-required-title": "Stel twee-faktor-verifikasie op",
-  "two-factor-required-text": "Hierdie werf vereis twee-faktor-verifikasie vir jou rekening. Stel dit op om voort te gaan."
+  "two-factor-required-text": "Hierdie werf vereis twee-faktor-verifikasie vir jou rekening. Stel dit op om voort te gaan.",
+  "continuous-backup-database": "Databasis",
+  "cloud-start-date": "Begindatum",
+  "cloud-end-date": "Einddatum",
+  "wekan-data-no-database": "Geen leesbare WeKan-databasis is gevind nie."
 }

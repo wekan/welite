@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Nokwaredi koodu no nteɛ. Yɛ sɔhwɛ bio.",
   "twoFactorAuth-enabled": "Wɔama nneɛma abien nokwaredi so wɔ wo akontabuo no ho.",
   "two-factor-required-title": "Hyehyɛ nneɛma abien nokwaredi",
-  "two-factor-required-text": "Saa site yi hwehwɛ nneɛma abien nokwaredi ma wo akawnt. Hyehyɛ no na woakɔ so."
+  "two-factor-required-text": "Saa site yi hwehwɛ nneɛma abien nokwaredi ma wo akawnt. Hyehyɛ no na woakɔ so.",
+  "continuous-backup-database": "Nsɛm siebea",
+  "cloud-start-date": "Mfitiaseɛ da",
+  "cloud-end-date": "Awieeɛ da",
+  "wekan-data-no-database": "Wɔanhu WeKan nsɛm siebea biara a wotumi kenkan."
 }

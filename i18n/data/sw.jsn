@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Usanidi haukuweza kuanza.",
   "registration-global-admin-disabled": "Akaunti za wasimamizi wakuu huundwa kwenye seva yenyewe. Usajili wa umma umezimwa.",
   "auth-session-create-failed": "Kipindi cha kuingia hakikuweza kuundwa.",
-  "registration-password-unavailable": "Usajili kwa kutumia nenosiri haupatikani."
+  "registration-password-unavailable": "Usajili kwa kutumia nenosiri haupatikani.",
+  "continuous-backup-database": "Hifadhidata",
+  "cloud-start-date": "Tarehe ya kuanza",
+  "cloud-end-date": "Tarehe ya kumalizika",
+  "wekan-data-no-database": "Hakuna hifadhidata ya WeKan inayosomeka iliyopatikana."
 }

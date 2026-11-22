@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Waehere whakamotuhēhē muhu. Tēnā whakamātauria anō.",
   "twoFactorAuth-enabled": "Kua whakahohea te whakamotuhēhēnga e rua ngā take mō tō pūkete.",
   "two-factor-required-title": "Whakaritea te whakamotuhēhēnga e rua ngā take",
-  "two-factor-required-text": "E hiahia ana tēnei pae ki te whakamotuhēhēnga e rua ngā take mō tō pūkete. Whakaritea kia haere tonu ai."
+  "two-factor-required-text": "E hiahia ana tēnei pae ki te whakamotuhēhēnga e rua ngā take mō tō pūkete. Whakaritea kia haere tonu ai.",
+  "continuous-backup-database": "Pātengi raraunga",
+  "cloud-start-date": "Rā tīmata",
+  "cloud-end-date": "Rā mutunga",
+  "wekan-data-no-database": "Kāore i kitea he pātengi raraunga WeKan ka taea te pānui."
 }

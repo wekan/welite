@@ -2103,5 +2103,9 @@
   "twoFactorAuth-manual-entry": "Atau masukkan kode ini secara manual: ",
   "twoFactorCode-prompt": "Masukkan kode autentikasi 6 digit Anda",
   "twoFactorCode-invalid": "Kode autentikasi tidak valid. Silakan coba lagi.",
-  "twoFactorAuth-enabled": "Autentikasi dua faktor diaktifkan untuk akun Anda."
+  "twoFactorAuth-enabled": "Autentikasi dua faktor diaktifkan untuk akun Anda.",
+  "continuous-backup-database": "Database",
+  "cloud-start-date": "Start Date",
+  "cloud-end-date": "End Date",
+  "wekan-data-no-database": "No readable WeKan database was found."
 }

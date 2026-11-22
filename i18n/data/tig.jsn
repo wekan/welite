@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "ኮድ መረጋገጺ ቀለጥ ሀለ። ዐይብከ፡ ካልእ ዶል ፈትን።",
   "twoFactorAuth-enabled": "ን ሕሳብካ ክልተ-ረቛሒ ምርግጋጽ ተኸፊቱ ኣሎ።",
   "two-factor-required-title": "ክልተ-ረቛሒ ምርግጋጽ ኣዳሉ",
-  "two-factor-required-text": "ሌጠ ሳይት ለሕሳብካ ክልተ-ረቛሒ ምርግጋጽ ትሐትት። ትቀጽል ምን ገብእ ኣዳልዩ።"
+  "two-factor-required-text": "ሌጠ ሳይት ለሕሳብካ ክልተ-ረቛሒ ምርግጋጽ ትሐትት። ትቀጽል ምን ገብእ ኣዳልዩ።",
+  "continuous-backup-database": "ሐበሬ መካን",
+  "cloud-start-date": "ዕለት ጅማሮ",
+  "cloud-end-date": "ዕለት ኣኽሪት",
+  "wekan-data-no-database": "ልትቀረእ ትቀድር ሐበሬ መካን WeKan ኢትረከበት።"
 }

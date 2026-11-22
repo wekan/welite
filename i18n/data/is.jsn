@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Ekki tókst að hefja uppsetningu.",
   "registration-global-admin-disabled": "Reikningar almennra stjórnenda eru stofnaðir á staðnum. Opinber nýskráning er óvirk.",
   "auth-session-create-failed": "Ekki tókst að stofna setu.",
-  "registration-password-unavailable": "Nýskráning með lykilorði er ekki í boði."
+  "registration-password-unavailable": "Nýskráning með lykilorði er ekki í boði.",
+  "continuous-backup-database": "Gagnagrunnur",
+  "cloud-start-date": "Upphafsdagur",
+  "cloud-end-date": "Lokadagur",
+  "wekan-data-no-database": "Enginn læsilegur WeKan-gagnagrunnur fannst."
 }

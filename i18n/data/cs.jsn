@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Nastavení se nepodařilo zahájit.",
   "registration-global-admin-disabled": "Účty globálních správců se vytvářejí místně. Veřejná registrace je vypnuta.",
   "auth-session-create-failed": "Relaci se nepodařilo vytvořit.",
-  "registration-password-unavailable": "Registrace pomocí hesla není dostupná."
+  "registration-password-unavailable": "Registrace pomocí hesla není dostupná.",
+  "continuous-backup-database": "Databáze",
+  "cloud-start-date": "Datum začátku",
+  "cloud-end-date": "Datum konce",
+  "wekan-data-no-database": "Nebyla nalezena žádná čitelná databáze WeKan."
 }

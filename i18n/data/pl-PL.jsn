@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Nieprawidłowy kod uwierzytelniający. Spróbuj ponownie.",
   "twoFactorAuth-enabled": "Uwierzytelnianie dwuskładnikowe jest włączone dla Twojego konta.",
   "two-factor-required-title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
-  "two-factor-required-text": "Ta witryna wymaga uwierzytelniania dwuskładnikowego dla Twojego konta. Skonfiguruj je, aby kontynuować."
+  "two-factor-required-text": "Ta witryna wymaga uwierzytelniania dwuskładnikowego dla Twojego konta. Skonfiguruj je, aby kontynuować.",
+  "continuous-backup-database": "Baza danych",
+  "cloud-start-date": "Data rozpoczęcia",
+  "cloud-end-date": "Data zakończenia",
+  "wekan-data-no-database": "Nie znaleziono czytelnej bazy danych WeKan."
 }

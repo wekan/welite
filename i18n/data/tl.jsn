@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Hindi wasto ang authentication code. Pakisubukang muli.",
   "twoFactorAuth-enabled": "Naka-enable na ang two-factor authentication para sa account mo.",
   "two-factor-required-title": "I-set up ang Pagpapatunay na Dalawang-Hakbang",
-  "two-factor-required-text": "Kinakailangan ng site na ito ang pagpapatunay na dalawang-hakbang para sa iyong account. I-set up ito upang magpatuloy."
+  "two-factor-required-text": "Kinakailangan ng site na ito ang pagpapatunay na dalawang-hakbang para sa iyong account. I-set up ito upang magpatuloy.",
+  "continuous-backup-database": "Kalipunan ng datos",
+  "cloud-start-date": "Petsa ng pagsisimula",
+  "cloud-end-date": "Petsa ng pagtatapos",
+  "wekan-data-no-database": "Walang nakitang nababasang kalipunan ng datos ng WeKan."
 }

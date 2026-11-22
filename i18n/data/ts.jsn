@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Khodi ya ntiyiso a yi lulamanga. Ringeta nakambe.",
   "twoFactorAuth-enabled": "Ntiyiso wa magondzo mambirhi wu pfulekile eka akhawunti ya wena.",
   "two-factor-required-title": "Lulamisa Ntiyiso wa Magondzo Mambirhi",
-  "two-factor-required-text": "Sayiti leyi yi lava ntiyiso wa magondzo mambirhi eka akhawunti ya wena. Wu lulamise leswaku u ya emahlweni."
+  "two-factor-required-text": "Sayiti leyi yi lava ntiyiso wa magondzo mambirhi eka akhawunti ya wena. Wu lulamise leswaku u ya emahlweni.",
+  "continuous-backup-database": "Vuhlayiselo bya datha",
+  "cloud-start-date": "Siku ro sungula",
+  "cloud-end-date": "Siku ro hetelela",
+  "wekan-data-no-database": "Ku hava vuhlayiselo bya datha bya WeKan lebyi hlayekaka lebyi kumiweke."
 }

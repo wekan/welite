@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Không thể bắt đầu thiết lập.",
   "registration-global-admin-disabled": "Tài khoản quản trị toàn cục được tạo cục bộ. Tính năng đăng ký công khai đã bị tắt.",
   "auth-session-create-failed": "Không thể tạo phiên.",
-  "registration-password-unavailable": "Không thể đăng ký bằng mật khẩu."
+  "registration-password-unavailable": "Không thể đăng ký bằng mật khẩu.",
+  "continuous-backup-database": "Cơ sở dữ liệu",
+  "cloud-start-date": "Ngày bắt đầu",
+  "cloud-end-date": "Ngày kết thúc",
+  "wekan-data-no-database": "Không tìm thấy cơ sở dữ liệu WeKan nào có thể đọc được."
 }

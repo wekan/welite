@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Uppernarsaanermut kodeq eqqunngilaq. Uteqqiullugu misilikkit.",
   "twoFactorAuth-enabled": "Uppernarsaaneq marlunnik atorlugu atugarilerpat konteqarfimmi.",
   "two-factor-required-title": "Uppernarsaaneq marlunnik atorlugu aaqqissoruk",
-  "two-factor-required-text": "Quppernerup matuma kontunnut uppernarsaaneq marlunnik atorlugu piumasarivaa. Ingerlaqqinniarlutit aaqqissoruk."
+  "two-factor-required-text": "Quppernerup matuma kontunnut uppernarsaaneq marlunnik atorlugu piumasarivaa. Ingerlaqqinniarlutit aaqqissoruk.",
+  "continuous-backup-database": "Paasissutissanik toqqorsivik",
+  "cloud-start-date": "Aallartiffissaq",
+  "cloud-end-date": "Naammassiffissaq",
+  "wekan-data-no-database": "WeKan-ip paasissutissanik toqqorsivia atuarneqarsinnaasoq nassaarineqanngilaq."
 }

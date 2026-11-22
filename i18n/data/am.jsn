@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "ልክ ያልሆነ ማረጋገጫ ኮድ። እባክዎ እንደገና ይሞክሩ።",
   "twoFactorAuth-enabled": "ባለ ሁለት-ደረጃ ማረጋገጫ ለመለያዎ ነቅቷል።",
   "two-factor-required-title": "ባለ ሁለት-ደረጃ ማረጋገጫን ያዋቅሩ",
-  "two-factor-required-text": "ይህ ጣቢያ ለመለያዎ ባለ ሁለት-ደረጃ ማረጋገጫ ይፈልጋል። ለመቀጠል ያዋቅሩት።"
+  "two-factor-required-text": "ይህ ጣቢያ ለመለያዎ ባለ ሁለት-ደረጃ ማረጋገጫ ይፈልጋል። ለመቀጠል ያዋቅሩት።",
+  "continuous-backup-database": "የውሂብ ጎታ",
+  "cloud-start-date": "የመጀመሪያ ቀን",
+  "cloud-end-date": "የማብቂያ ቀን",
+  "wekan-data-no-database": "ሊነበብ የሚችል የWeKan የውሂብ ጎታ አልተገኘም።"
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kod wàll-wàllal du dëgg. Jéemaatal.",
   "twoFactorAuth-enabled": "Wàll-ñaari-kaddu dafa ubbi ci sa compte.",
   "two-factor-required-title": "Defal wàll-ñaari-kaddu",
-  "two-factor-required-text": "Sit bii dafay laaj wàll-ñaari-kaddu ci sa compte. Defal ko ngir wéy."
+  "two-factor-required-text": "Sit bii dafay laaj wàll-ñaari-kaddu ci sa compte. Defal ko ngir wéy.",
+  "continuous-backup-database": "Dàttub xibaar yi",
+  "cloud-start-date": "Bisu tàmbali",
+  "cloud-end-date": "Bisu jeex",
+  "wekan-data-no-database": "Gisuñu benn dàttub xibaar WeKan bu ñu mën a jàng."
 }

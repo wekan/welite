@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Cod de autentificare invalid. Încercați din nou.",
   "twoFactorAuth-enabled": "Autentificarea în doi factori este activată pentru contul dumneavoastră.",
   "two-factor-required-title": "Configurați autentificarea în doi factori",
-  "two-factor-required-text": "Acest site necesită autentificarea în doi factori pentru contul dumneavoastră. Configurați-o pentru a continua."
+  "two-factor-required-text": "Acest site necesită autentificarea în doi factori pentru contul dumneavoastră. Configurați-o pentru a continua.",
+  "continuous-backup-database": "Bază de date",
+  "cloud-start-date": "Data de început",
+  "cloud-end-date": "Data de sfârșit",
+  "wekan-data-no-database": "Nu a fost găsită nicio bază de date WeKan care să poată fi citită."
 }

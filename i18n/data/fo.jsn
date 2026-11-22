@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Ógildig sanningarkota. Vinarliga royn aftur.",
   "twoFactorAuth-enabled": "Tvífaktors sanning er koyrd í gongd fyri kontu tína.",
   "two-factor-required-title": "Set tvífaktors sanning upp",
-  "two-factor-required-text": "Henda heimasíðan krevur tvífaktors sanning fyri kontu tína. Set hana upp fyri at halda fram."
+  "two-factor-required-text": "Henda heimasíðan krevur tvífaktors sanning fyri kontu tína. Set hana upp fyri at halda fram.",
+  "continuous-backup-database": "Dátugrunnur",
+  "cloud-start-date": "Byrjanardagur",
+  "cloud-end-date": "Endadagur",
+  "wekan-data-no-database": "Eingin lesiligur WeKan-dátugrunnur varð funnin."
 }

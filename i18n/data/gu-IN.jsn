@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "અમાન્ય પ્રમાણીકરણ કોડ. ફરી પ્રયાસ કરો.",
   "twoFactorAuth-enabled": "તમારા ખાતા માટે બે-પરિબળ પ્રમાણીકરણ સક્ષમ છે.",
   "two-factor-required-title": "બે-પરિબળ પ્રમાણીકરણ સેટ કરો",
-  "two-factor-required-text": "આ સાઇટને તમારા ખાતા માટે બે-પરિબળ પ્રમાણીકરણ જરૂરી છે. ચાલુ રાખવા માટે તેને સેટ કરો."
+  "two-factor-required-text": "આ સાઇટને તમારા ખાતા માટે બે-પરિબળ પ્રમાણીકરણ જરૂરી છે. ચાલુ રાખવા માટે તેને સેટ કરો.",
+  "continuous-backup-database": "ડેટાબેસ",
+  "cloud-start-date": "શરૂઆતની તારીખ",
+  "cloud-end-date": "અંતિમ તારીખ",
+  "wekan-data-no-database": "વાંચી શકાય તેવો કોઈ WeKan ડેટાબેસ મળ્યો નથી."
 }

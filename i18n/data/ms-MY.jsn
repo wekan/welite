@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kod pengesahan tidak sah. Sila cuba lagi.",
   "twoFactorAuth-enabled": "Pengesahan dua faktor diaktifkan untuk akaun anda.",
   "two-factor-required-title": "Sediakan pengesahan dua faktor",
-  "two-factor-required-text": "Laman ini memerlukan pengesahan dua faktor untuk akaun anda. Sediakannya untuk meneruskan."
+  "two-factor-required-text": "Laman ini memerlukan pengesahan dua faktor untuk akaun anda. Sediakannya untuk meneruskan.",
+  "continuous-backup-database": "Pangkalan data",
+  "cloud-start-date": "Tarikh Mula",
+  "cloud-end-date": "Tarikh Tamat",
+  "wekan-data-no-database": "Tiada pangkalan data WeKan yang boleh dibaca ditemui."
 }

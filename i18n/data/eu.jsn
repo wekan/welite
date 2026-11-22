@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Ezin izan da konfigurazioa hasi.",
   "registration-global-admin-disabled": "Administratzaile globalen kontuak lokalean sortzen dira. Erregistro publikoa desgaituta dago.",
   "auth-session-create-failed": "Ezin izan da saioa sortu.",
-  "registration-password-unavailable": "Pasahitz bidezko erregistroa ez dago erabilgarri."
+  "registration-password-unavailable": "Pasahitz bidezko erregistroa ez dago erabilgarri.",
+  "continuous-backup-database": "Datu-basea",
+  "cloud-start-date": "Hasiera-data",
+  "cloud-end-date": "Amaiera-data",
+  "wekan-data-no-database": "Ez da WeKan datu-base irakurgarririk aurkitu."
 }

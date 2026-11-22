@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Postavljanje nije bilo moguće pokrenuti.",
   "registration-global-admin-disabled": "Računi globalnih administratora izrađuju se lokalno. Javna registracija je isključena.",
   "auth-session-create-failed": "Sesiju nije bilo moguće stvoriti.",
-  "registration-password-unavailable": "Registracija lozinkom nije dostupna."
+  "registration-password-unavailable": "Registracija lozinkom nije dostupna.",
+  "continuous-backup-database": "Baza podataka",
+  "cloud-start-date": "Datum početka",
+  "cloud-end-date": "Datum završetka",
+  "wekan-data-no-database": "Nije pronađena čitljiva WeKan baza podataka."
 }

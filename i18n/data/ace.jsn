@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kode otentikasi hana sah. Neu-cuba lom.",
   "twoFactorAuth-enabled": "Otentikasi dua faktor ka hudép keu akun droe neuh.",
   "two-factor-required-title": "Atô Otentikasi Dua Faktor",
-  "two-factor-required-text": "Situs nyoe meuphôm otentikasi dua faktor keu akun droeneuh. Atô dilèe mangat jeut neulanjut."
+  "two-factor-required-text": "Situs nyoe meuphôm otentikasi dua faktor keu akun droeneuh. Atô dilèe mangat jeut neulanjut.",
+  "continuous-backup-database": "Pangkai data",
+  "cloud-start-date": "Tanggai Phôn",
+  "cloud-end-date": "Tanggai Akhe",
+  "wekan-data-no-database": "Hana meuteumèe pangkai data WeKan nyang jeuet geubaca."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Codex auctenticationis non validus. Iterum tempta.",
   "twoFactorAuth-enabled": "Auctenticatio duorum factorum pro tuo censu activa est.",
   "two-factor-required-title": "Auctenticationem duorum factorum constitue",
-  "two-factor-required-text": "Hic situs auctenticationem duorum factorum pro tua ratione requirit. Eam constitue ut pergas."
+  "two-factor-required-text": "Hic situs auctenticationem duorum factorum pro tua ratione requirit. Eam constitue ut pergas.",
+  "continuous-backup-database": "Basis datorum",
+  "cloud-start-date": "Dies initii",
+  "cloud-end-date": "Dies finis",
+  "wekan-data-no-database": "Nulla basis datorum WeKan legibilis inventa est."
 }

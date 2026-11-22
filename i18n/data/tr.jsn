@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Kurulum başlatılamadı.",
   "registration-global-admin-disabled": "Genel yönetici hesapları yerel olarak oluşturulur. Herkese açık kayıt devre dışı.",
   "auth-session-create-failed": "Oturum oluşturulamadı.",
-  "registration-password-unavailable": "Parolayla kayıt kullanılamıyor."
+  "registration-password-unavailable": "Parolayla kayıt kullanılamıyor.",
+  "continuous-backup-database": "Veritabanı",
+  "cloud-start-date": "Başlangıç tarihi",
+  "cloud-end-date": "Bitiş tarihi",
+  "wekan-data-no-database": "Okunabilir bir WeKan veritabanı bulunamadı."
 }

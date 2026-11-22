@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kodiin mirkaneessaa sirrii miti. Irra deebi'ii yaali.",
   "twoFactorAuth-enabled": "Mirkaneessi lammataa akkaawuntii keetiif dandeessifameera.",
   "two-factor-required-title": "Mirkaneessa lammataa qindeessi",
-  "two-factor-required-text": "Marsariitiin kun akkaawuntii keetiif mirkaneessa lammataa barbaada. Itti fufuuf qindeessi."
+  "two-factor-required-text": "Marsariitiin kun akkaawuntii keetiif mirkaneessa lammataa barbaada. Itti fufuuf qindeessi.",
+  "continuous-backup-database": "Kuusdeetaa",
+  "cloud-start-date": "Guyyaa jalqabaa",
+  "cloud-end-date": "Guyyaa xumuraa",
+  "wekan-data-no-database": "Kuusdeetaan WeKan dubbifamuu danda'u hin argamne."
 }

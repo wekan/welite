@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Chiqapachäwi código janiw walikïti. Wasitat yant'am.",
   "twoFactorAuth-enabled": "Pä kunayman chaqañ chiqapachäwix jumanakan kuentanakaru apnaqäski.",
   "two-factor-required-title": "Pä Kunayman Chaqañ Chiqapachäwi wakicht'aña",
-  "two-factor-required-text": "Aka sitiox cuentamatakix Pä Kunayman Chaqañ Chiqapachäwi mayi. Sarantañatakix wakicht'am."
+  "two-factor-required-text": "Aka sitiox cuentamatakix Pä Kunayman Chaqañ Chiqapachäwi mayi. Sarantañatakix wakicht'am.",
+  "continuous-backup-database": "Yatiyawi pirwa",
+  "cloud-start-date": "Qallta uru",
+  "cloud-end-date": "Tukuya uru",
+  "wekan-data-no-database": "Janiw WeKan yatiyawi pirwa liyt’añjam jikxatatäkiti."
 }

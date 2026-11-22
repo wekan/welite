@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Quraşdırmaya başlamaq alınmadı.",
   "registration-global-admin-disabled": "Qlobal inzibatçı hesabları yerli olaraq yaradılır. İctimai qeydiyyat söndürülüb.",
   "auth-session-create-failed": "Sessiya yaratmaq alınmadı.",
-  "registration-password-unavailable": "Parolla qeydiyyat mümkün deyil."
+  "registration-password-unavailable": "Parolla qeydiyyat mümkün deyil.",
+  "continuous-backup-database": "Verilənlər bazası",
+  "cloud-start-date": "Başlama tarixi",
+  "cloud-end-date": "Bitmə tarixi",
+  "wekan-data-no-database": "Oxuna bilən WeKan verilənlər bazası tapılmadı."
 }

@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Penyiapan gagal dimulai.",
   "registration-global-admin-disabled": "Akun administrator global dibuat secara lokal. Pendaftaran publik dinonaktifkan.",
   "auth-session-create-failed": "Sesi gagal dibuat.",
-  "registration-password-unavailable": "Pendaftaran dengan kata sandi tidak tersedia."
+  "registration-password-unavailable": "Pendaftaran dengan kata sandi tidak tersedia.",
+  "continuous-backup-database": "Basis data",
+  "cloud-start-date": "Tanggal Mulai",
+  "cloud-end-date": "Tanggal Berakhir",
+  "wekan-data-no-database": "Tidak ditemukan basis data WeKan yang dapat dibaca."
 }

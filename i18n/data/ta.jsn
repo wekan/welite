@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "அமைப்பைத் தொடங்க இயலவில்லை.",
   "registration-global-admin-disabled": "உலகளாவிய நிர்வாகக் கணக்குகள் உள்ளூரில் உருவாக்கப்படுகின்றன. பொதுப் பதிவு முடக்கப்பட்டுள்ளது.",
   "auth-session-create-failed": "அமர்வை உருவாக்க முடியவில்லை.",
-  "registration-password-unavailable": "கடவுச்சொல் மூலம் பதிவு செய்ய முடியாது."
+  "registration-password-unavailable": "கடவுச்சொல் மூலம் பதிவு செய்ய முடியாது.",
+  "continuous-backup-database": "தரவுத்தளம்",
+  "cloud-start-date": "தொடக்கத் தேதி",
+  "cloud-end-date": "முடிவுத் தேதி",
+  "wekan-data-no-database": "படிக்கக்கூடிய WeKan தரவுத்தளம் எதுவும் காணப்படவில்லை."
 }

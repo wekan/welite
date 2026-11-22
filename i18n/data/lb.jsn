@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Ongülege Authentifikatiounscode. Probéier w.e.g. nach eng Kéier.",
   "twoFactorAuth-enabled": "D'Zwee-Faktor-Authentifikatioun ass fir däi Konto aktivéiert.",
   "two-factor-required-title": "Zwee-Faktor-Authentifikatioun aliichten",
-  "two-factor-required-text": "Dëse Site verlaangt Zwee-Faktor-Authentifikatioun fir Äre Kont. Riicht se an, fir weiderzemaachen."
+  "two-factor-required-text": "Dëse Site verlaangt Zwee-Faktor-Authentifikatioun fir Äre Kont. Riicht se an, fir weiderzemaachen.",
+  "continuous-backup-database": "Datebank",
+  "cloud-start-date": "Ufanksdatum",
+  "cloud-end-date": "Schlussdatum",
+  "wekan-data-no-database": "Keng liesbar WeKan-Datebank fonnt."
 }

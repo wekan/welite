@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "ⵜⴰⵏⴳⴰⵍⵜ ⵏ ⵓⵙⵖⵣⵏ ⵓⵔ ⵜⵖⵜⵉ. ⵜⵜⵅⵉⵍ, ⴰⵍⵙ ⴰⵔⵎ.",
   "twoFactorAuth-enabled": "ⴰⵙⵖⵣⵏ ⵙ ⵙⵉⵏ ⵉⵎⵙⴽⴰⵔⵏ ⵉⵜⵜⵓⵙⵙⵔⴼⴰ ⵉ ⵓⵎⵉⴹⴰⵏ ⵏⵏⴽ.",
   "two-factor-required-title": "ⵙⵙⵔⴼⵓ ⴰⵙⵖⵣⵏ ⵙ ⵙⵉⵏ ⵉⵎⵙⴽⴰⵔⵏ",
-  "two-factor-required-text": "ⴰⵙⵉⵜ ⴰⴷ ⵉⵙⵓⵜⵓⵔ ⴰⵙⵖⵣⵏ ⵙ ⵙⵉⵏ ⵉⵎⵙⴽⴰⵔⵏ ⵉ ⵓⵎⵉⴹⴰⵏ ⵏⵏⴽ. ⵙⵙⵔⴼⵓ ⵜ ⴰⴷ ⵜⴽⵎⵎⵍⴷ."
+  "two-factor-required-text": "ⴰⵙⵉⵜ ⴰⴷ ⵉⵙⵓⵜⵓⵔ ⴰⵙⵖⵣⵏ ⵙ ⵙⵉⵏ ⵉⵎⵙⴽⴰⵔⵏ ⵉ ⵓⵎⵉⴹⴰⵏ ⵏⵏⴽ. ⵙⵙⵔⴼⵓ ⵜ ⴰⴷ ⵜⴽⵎⵎⵍⴷ.",
+  "continuous-backup-database": "ⴰⵣⴰⴷⵓⵔ ⵏ ⵉⵙⴼⴽⴰ",
+  "cloud-start-date": "ⴰⵙⴰⴽⵓⴷ ⵏ ⵜⵙⵏⵜⵉ",
+  "cloud-end-date": "ⴰⵙⴰⴽⵓⴷ ⵏ ⵜⵉⴳⵉⵔⴰ",
+  "wekan-data-no-database": "ⵓⵔ ⵜⵜⵓⴼⴰ ⴽⵔⴰ ⵏ ⵓⵣⴰⴷⵓⵔ ⵏ ⵉⵙⴼⴽⴰ ⵏ WeKan ⵉⵜⵜⵓⵖⵔⴰⵏ."
 }

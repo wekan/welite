@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Mã xác thực không hợp lệ. Vui lòng thử lại.",
   "twoFactorAuth-enabled": "Xác thực hai yếu tố đang được bật cho tài khoản của bạn.",
   "two-factor-required-title": "Thiết lập xác thực hai yếu tố",
-  "two-factor-required-text": "Trang này yêu cầu xác thực hai yếu tố cho tài khoản của bạn. Hãy thiết lập để tiếp tục."
+  "two-factor-required-text": "Trang này yêu cầu xác thực hai yếu tố cho tài khoản của bạn. Hãy thiết lập để tiếp tục.",
+  "continuous-backup-database": "Cơ sở dữ liệu",
+  "cloud-start-date": "Ngày bắt đầu",
+  "cloud-end-date": "Ngày kết thúc",
+  "wekan-data-no-database": "Không tìm thấy cơ sở dữ liệu WeKan nào có thể đọc được."
 }

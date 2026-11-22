@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kodhi yekusimbisa haisi yechokwadi. Edza zvakare.",
   "twoFactorAuth-enabled": "Kusimbiswa kweminzvimbo miviri kwakagoneswa kuakaundi yako.",
   "two-factor-required-title": "Gadzirisa Kusimbiswa Kweminzvimbo Miviri",
-  "two-factor-required-text": "Saiti iyi inoda kusimbiswa kweminzvimbo miviri paakaundi yako. Igadzirise kuti uenderere mberi."
+  "two-factor-required-text": "Saiti iyi inoda kusimbiswa kweminzvimbo miviri paakaundi yako. Igadzirise kuti uenderere mberi.",
+  "continuous-backup-database": "Dura remashoko",
+  "cloud-start-date": "Zuva rekutanga",
+  "cloud-end-date": "Zuva rekupedzisira",
+  "wekan-data-no-database": "Hapana dura remashoko reWeKan rinoverengeka rawanikwa."
 }

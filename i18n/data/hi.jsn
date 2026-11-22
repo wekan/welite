@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "सेटअप शुरू नहीं हो सका।",
   "registration-global-admin-disabled": "वैश्विक व्यवस्थापक खाते स्थानीय रूप से बनाए जाते हैं। सार्वजनिक पंजीकरण बंद है।",
   "auth-session-create-failed": "सत्र नहीं बनाया जा सका।",
-  "registration-password-unavailable": "पासवर्ड से पंजीकरण उपलब्ध नहीं है।"
+  "registration-password-unavailable": "पासवर्ड से पंजीकरण उपलब्ध नहीं है।",
+  "continuous-backup-database": "डेटाबेस",
+  "cloud-start-date": "आरंभ तिथि",
+  "cloud-end-date": "समाप्ति तिथि",
+  "wekan-data-no-database": "पढ़ने योग्य कोई WeKan डेटाबेस नहीं मिला।"
 }

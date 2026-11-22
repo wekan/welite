@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Ne eblis komenci la agordon.",
   "registration-global-admin-disabled": "Kontoj de tutmondaj administrantoj estas kreataj loke. Publika registrado estas malŝaltita.",
   "auth-session-create-failed": "Ne eblis krei seancon.",
-  "registration-password-unavailable": "Registrado per pasvorto ne estas disponebla."
+  "registration-password-unavailable": "Registrado per pasvorto ne estas disponebla.",
+  "continuous-backup-database": "Datumbazo",
+  "cloud-start-date": "Komenca dato",
+  "cloud-end-date": "Fina dato",
+  "wekan-data-no-database": "Neniu legebla WeKan-datumbazo troviĝis."
 }

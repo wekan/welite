@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Ciafra de autenticazion nia valida. Emprova endò.",
   "twoFactorAuth-enabled": "L'autenticazion a doi fatours é atliada per tia cont.",
   "two-factor-required-title": "Mët ite l'autenticazion a doi fatours",
-  "two-factor-required-text": "Chësc sit damana l'autenticazion a doi fatours por to account. Mëtela ite por jí inant."
+  "two-factor-required-text": "Chësc sit damana l'autenticazion a doi fatours por to account. Mëtela ite por jí inant.",
+  "continuous-backup-database": "Banca dac",
+  "cloud-start-date": "Data de scumenciamënt",
+  "cloud-end-date": "Data de fin",
+  "wekan-data-no-database": "Ne n'ie nia stata abineda deguna banca dac WeKan che se possa lieje."
 }

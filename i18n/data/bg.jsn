@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Настройването не можа да започне.",
   "registration-global-admin-disabled": "Профилите на глобалните администратори се създават локално. Публичната регистрация е изключена.",
   "auth-session-create-failed": "Сесията не можа да бъде създадена.",
-  "registration-password-unavailable": "Регистрацията с парола не е достъпна."
+  "registration-password-unavailable": "Регистрацията с парола не е достъпна.",
+  "continuous-backup-database": "База данни",
+  "cloud-start-date": "Начална дата",
+  "cloud-end-date": "Крайна дата",
+  "wekan-data-no-database": "Не е намерена четима база данни на WeKan."
 }

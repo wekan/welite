@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Mɔɖeɖe si mesɔ o. Taflatse gadze agbagba.",
   "twoFactorAuth-enabled": "Kpeɖodzi eveliawo le dɔ wɔm na wò akɔnt.",
   "two-factor-required-title": "Ɖo Kpeɖodzi Eveliawo",
-  "two-factor-required-text": "Nyatakakaɖoƒe sia bia Kpeɖodzi Eveliawo na wò akɔnt. Ɖoe be nàyi edzi."
+  "two-factor-required-text": "Nyatakakaɖoƒe sia bia Kpeɖodzi Eveliawo na wò akɔnt. Ɖoe be nàyi edzi.",
+  "continuous-backup-database": "Nyatakakadzraɖoƒe",
+  "cloud-start-date": "Gɔmedzeŋkeke",
+  "cloud-end-date": "Nuwuŋkeke",
+  "wekan-data-no-database": "Womekpɔ WeKan nyatakakadzraɖoƒe si woate ŋu axlẽ o."
 }

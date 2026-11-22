@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Չհաջողվեց սկսել կարգավորումը։",
   "registration-global-admin-disabled": "Ընդհանուր ադմինիստրատորների հաշիվները ստեղծվում են տեղային եղանակով։ Հանրային գրանցումն անջատված է։",
   "auth-session-create-failed": "Չհաջողվեց ստեղծել աշխատաշրջանը։",
-  "registration-password-unavailable": "Գաղտնաբառով գրանցումը հասանելի չէ։"
+  "registration-password-unavailable": "Գաղտնաբառով գրանցումը հասանելի չէ։",
+  "continuous-backup-database": "Տվյալների բազա",
+  "cloud-start-date": "Սկզբի ամսաթիվ",
+  "cloud-end-date": "Ավարտի ամսաթիվ",
+  "wekan-data-no-database": "Ընթեռնելի WeKan տվյալների բազա չի գտնվել։"
 }

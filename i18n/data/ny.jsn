@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Nambala yotsimikizira si yoyenera. Chonde yesaninso.",
   "twoFactorAuth-enabled": "Kutsimikizira kwa njira ziwiri kwayambitsidwa pa akaunti yanu.",
   "two-factor-required-title": "Khazikitsani kutsimikizira kwa njira ziwiri",
-  "two-factor-required-text": "Tsambali limafuna kutsimikizira kwa njira ziwiri pa akaunti yanu. Khazikitsani kuti mupitirize."
+  "two-factor-required-text": "Tsambali limafuna kutsimikizira kwa njira ziwiri pa akaunti yanu. Khazikitsani kuti mupitirize.",
+  "continuous-backup-database": "Nkhokwe ya data",
+  "cloud-start-date": "Tsiku loyambira",
+  "cloud-end-date": "Tsiku lomaliza",
+  "wekan-data-no-database": "Palibe nkhokwe ya data ya WeKan yowerengeka yomwe yapezeka."
 }

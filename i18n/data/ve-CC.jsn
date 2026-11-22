@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Còdice de autenticasion no vàlido. Prova da novo.",
   "twoFactorAuth-enabled": "L'autenticasion a do fatori la xe ativa par el to account.",
   "two-factor-required-title": "Configura l'autenticasion a do fatori",
-  "two-factor-required-text": "Sto sito el richiede l'autenticasion a do fatori par el to account. Configurała par continuar."
+  "two-factor-required-text": "Sto sito el richiede l'autenticasion a do fatori par el to account. Configurała par continuar.",
+  "continuous-backup-database": "Banca de dati",
+  "cloud-start-date": "Data de inissio",
+  "cloud-end-date": "Data de fine",
+  "wekan-data-no-database": "No xe stà catà nissuna banca de dati WeKan leżibiłe."
 }

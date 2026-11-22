@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "تعذّر بدء الإعداد",
   "registration-global-admin-disabled": "تُنشأ حسابات المسؤولين العامّين محليًا. التسجيل العام معطّل.",
   "auth-session-create-failed": "تعذّر إنشاء جلسة",
-  "registration-password-unavailable": "التسجيل باستخدام كلمة مرور غير متاح."
+  "registration-password-unavailable": "التسجيل باستخدام كلمة مرور غير متاح.",
+  "continuous-backup-database": "قاعدة البيانات",
+  "cloud-start-date": "تاريخ البدء",
+  "cloud-end-date": "تاريخ الانتهاء",
+  "wekan-data-no-database": "لم يُعثر على قاعدة بيانات WeKan قابلة للقراءة."
 }

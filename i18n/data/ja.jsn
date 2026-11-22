@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "設定を開始できませんでした。",
   "registration-global-admin-disabled": "グローバル管理者のアカウントはローカルで作成されます。公開登録は無効です。",
   "auth-session-create-failed": "セッションを作成できませんでした。",
-  "registration-password-unavailable": "パスワードによる登録は利用できません。"
+  "registration-password-unavailable": "パスワードによる登録は利用できません。",
+  "continuous-backup-database": "データベース",
+  "cloud-start-date": "開始日",
+  "cloud-end-date": "終了日",
+  "wekan-data-no-database": "読み取り可能な WeKan データベースが見つかりませんでした。"
 }

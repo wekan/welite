@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "验证代码勿对，请重新再试。",
   "twoFactorAuth-enabled": "侬个账户已经开启两步验证仔。",
   "two-factor-required-title": "设置两步验证",
-  "two-factor-required-text": "迭只网站要求侬个账户开启两步验证。设置好仔再继续。"
+  "two-factor-required-text": "迭只网站要求侬个账户开启两步验证。设置好仔再继续。",
+  "continuous-backup-database": "数据库",
+  "cloud-start-date": "开始日脚",
+  "cloud-end-date": "结束日脚",
+  "wekan-data-no-database": "呒没寻着好读个 WeKan 数据库。"
 }

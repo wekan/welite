@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kode yo kwemeza ntabwo ari nziza. Nyamuneka ongera ugerageze.",
   "twoFactorAuth-enabled": "Kwemeza mu bice bibiri byarakozwe kuri konti yawe.",
   "two-factor-required-title": "Shyiraho kwemeza mu bice bibiri",
-  "two-factor-required-text": "Uru rubuga rusaba kwemeza mu bice bibiri kuri konti yawe. Bishyireho kugira ngo ukomeze."
+  "two-factor-required-text": "Uru rubuga rusaba kwemeza mu bice bibiri kuri konti yawe. Bishyireho kugira ngo ukomeze.",
+  "continuous-backup-database": "Ububikoshingiro",
+  "cloud-start-date": "Itariki yo gutangira",
+  "cloud-end-date": "Itariki yo kurangiza",
+  "wekan-data-no-database": "Nta bubikoshingiro bwa WeKan busomeka bwabonetse."
 }

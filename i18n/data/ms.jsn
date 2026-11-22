@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Persediaan gagal dimulakan.",
   "registration-global-admin-disabled": "Akaun pentadbir global dicipta secara setempat. Pendaftaran awam dinyahdayakan.",
   "auth-session-create-failed": "Sesi gagal dicipta.",
-  "registration-password-unavailable": "Pendaftaran dengan kata laluan tidak tersedia."
+  "registration-password-unavailable": "Pendaftaran dengan kata laluan tidak tersedia.",
+  "continuous-backup-database": "Pangkalan data",
+  "cloud-start-date": "Tarikh Mula",
+  "cloud-end-date": "Tarikh Tamat",
+  "wekan-data-no-database": "Tiada pangkalan data WeKan yang boleh dibaca ditemui."
 }

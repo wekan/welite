@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Codlu di aunticatsii nu easti bun. Ncearcã diznou.",
   "twoFactorAuth-enabled": "Aunticatsia cu dauã fatsi easti activã ti contul a tãu.",
   "two-factor-required-title": "Adarã aunticatsia cu dauã fatsi",
-  "two-factor-required-text": "Aestu situ cere aunticatsia cu dauã fatsi ti contul a tãu. Adar-u ta s-continuãsh."
+  "two-factor-required-text": "Aestu situ cere aunticatsia cu dauã fatsi ti contul a tãu. Adar-u ta s-continuãsh.",
+  "continuous-backup-database": "Bazã di dati",
+  "cloud-start-date": "Data di nceput",
+  "cloud-end-date": "Data di bitisiri",
+  "wekan-data-no-database": "Nu s-aflã vãrã bazã di dati WeKan tsi s-poatã s-hibã ghivisitã."
 }

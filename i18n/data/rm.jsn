@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Code d'autentificaziun nunvalid. Emprova anc ina giada.",
   "twoFactorAuth-enabled": "L'autentificaziun cun dus fatters è activada per tes cont.",
   "two-factor-required-title": "Configurar l'autentificaziun cun dus fatters",
-  "two-factor-required-text": "Questa pagina pretenda l'autentificaziun cun dus fatters per tes cont. Configurescha quella per cuntinuar."
+  "two-factor-required-text": "Questa pagina pretenda l'autentificaziun cun dus fatters per tes cont. Configurescha quella per cuntinuar.",
+  "continuous-backup-database": "Banca da datas",
+  "cloud-start-date": "Data da cumenzament",
+  "cloud-end-date": "Data da la fin",
+  "wekan-data-no-database": "Nagina banca da datas WeKan legibla n'è vegnida chattada."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Koodu nyocha ezighị ezi. Biko nwaa ọzọ.",
   "twoFactorAuth-enabled": "Nyocha ihe abụọ enwere ike maka akaụntụ gị.",
   "two-factor-required-title": "Hazie nyocha ihe abụọ",
-  "two-factor-required-text": "Saịtị a chọrọ nyocha ihe abụọ maka akaụntụ gị. Hazie ya ka ịga n'ihu."
+  "two-factor-required-text": "Saịtị a chọrọ nyocha ihe abụọ maka akaụntụ gị. Hazie ya ka ịga n'ihu.",
+  "continuous-backup-database": "Nchekwa data",
+  "cloud-start-date": "Ụbọchị mmalite",
+  "cloud-end-date": "Ụbọchị njedebe",
+  "wekan-data-no-database": "Ahụghị nchekwa data WeKan a pụrụ ịgụ."
 }

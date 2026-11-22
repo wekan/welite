@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Cha b’ urrainn dhuinn an rèiteachadh a thòiseachadh.",
   "registration-global-admin-disabled": "Thèid cunntasan nan rianairean uile-choitcheann a chruthachadh gu h-ionadail. Tha clàradh poblach à comas.",
   "auth-session-create-failed": "Cha b’ urrainn dhuinn an seisean a chruthachadh.",
-  "registration-password-unavailable": "Chan eil clàradh le facal-faire ri fhaighinn."
+  "registration-password-unavailable": "Chan eil clàradh le facal-faire ri fhaighinn.",
+  "continuous-backup-database": "Stòr-dàta",
+  "cloud-start-date": "Ceann-latha tòiseachaidh",
+  "cloud-end-date": "Ceann-latha crìochnachaidh",
+  "wekan-data-no-database": "Cha deach stòr-dàta WeKan a ghabhas leughadh a lorg."
 }

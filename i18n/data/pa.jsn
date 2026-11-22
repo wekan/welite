@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "ਗਲਤ ਪ੍ਰਮਾਣੀਕਰਨ ਕੋਡ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
   "twoFactorAuth-enabled": "ਤੁਹਾਡੇ ਖਾਤੇ ਲਈ ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਚਾਲੂ ਹੈ।",
   "two-factor-required-title": "ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਸੈੱਟ ਕਰੋ",
-  "two-factor-required-text": "ਇਸ ਸਾਈਟ ਨੂੰ ਤੁਹਾਡੇ ਖਾਤੇ ਲਈ ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਦੀ ਲੋੜ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਇਸਨੂੰ ਸੈੱਟ ਕਰੋ।"
+  "two-factor-required-text": "ਇਸ ਸਾਈਟ ਨੂੰ ਤੁਹਾਡੇ ਖਾਤੇ ਲਈ ਦੋ-ਫੈਕਟਰ ਪ੍ਰਮਾਣੀਕਰਨ ਦੀ ਲੋੜ ਹੈ। ਜਾਰੀ ਰੱਖਣ ਲਈ ਇਸਨੂੰ ਸੈੱਟ ਕਰੋ।",
+  "continuous-backup-database": "ਡੇਟਾਬੇਸ",
+  "cloud-start-date": "ਸ਼ੁਰੂਆਤੀ ਮਿਤੀ",
+  "cloud-end-date": "ਅੰਤਿਮ ਮਿਤੀ",
+  "wekan-data-no-database": "ਪੜ੍ਹਨਯੋਗ ਕੋਈ WeKan ਡੇਟਾਬੇਸ ਨਹੀਂ ਮਿਲਿਆ।"
 }

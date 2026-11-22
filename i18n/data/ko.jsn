@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "설정을 시작하지 못했습니다.",
   "registration-global-admin-disabled": "전역 관리자 계정은 로컬에서 생성됩니다. 공개 가입은 비활성화되어 있습니다.",
   "auth-session-create-failed": "세션을 생성하지 못했습니다.",
-  "registration-password-unavailable": "비밀번호를 사용한 가입은 지원되지 않습니다."
+  "registration-password-unavailable": "비밀번호를 사용한 가입은 지원되지 않습니다.",
+  "continuous-backup-database": "데이터베이스",
+  "cloud-start-date": "시작일",
+  "cloud-end-date": "종료일",
+  "wekan-data-no-database": "읽을 수 있는 WeKan 데이터베이스를 찾지 못했습니다."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Namba bilong tokim tru i no stret. Traim gen.",
   "twoFactorAuth-enabled": "Tupela-step wok bilong sekiuriti i op long akaun bilong yu.",
   "two-factor-required-title": "Redim Tupela-Step Wok bilong Sekiuriti",
-  "two-factor-required-text": "Dispela sait i laikim tupela-step wok bilong sekiuriti long akaun bilong yu. Redim bilong go het."
+  "two-factor-required-text": "Dispela sait i laikim tupela-step wok bilong sekiuriti long akaun bilong yu. Redim bilong go het.",
+  "continuous-backup-database": "Detabes",
+  "cloud-start-date": "De bilong stat",
+  "cloud-end-date": "De bilong pinis",
+  "wekan-data-no-database": "I no gat WeKan detabes yu inap ridim."
 }

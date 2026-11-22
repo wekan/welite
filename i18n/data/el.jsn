@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Δεν ήταν δυνατή η έναρξη της ρύθμισης.",
   "registration-global-admin-disabled": "Οι λογαριασμοί καθολικών διαχειριστών δημιουργούνται τοπικά. Η δημόσια εγγραφή είναι απενεργοποιημένη.",
   "auth-session-create-failed": "Δεν ήταν δυνατή η δημιουργία της συνεδρίας.",
-  "registration-password-unavailable": "Η εγγραφή με κωδικό πρόσβασης δεν είναι διαθέσιμη."
+  "registration-password-unavailable": "Η εγγραφή με κωδικό πρόσβασης δεν είναι διαθέσιμη.",
+  "continuous-backup-database": "Βάση δεδομένων",
+  "cloud-start-date": "Ημερομηνία έναρξης",
+  "cloud-end-date": "Ημερομηνία λήξης",
+  "wekan-data-no-database": "Δεν βρέθηκε αναγνώσιμη βάση δεδομένων WeKan."
 }

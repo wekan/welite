@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Tsy mety ny fangoazana fanamarinana. Andramo indray azafady.",
   "twoFactorAuth-enabled": "Mihatra amin'ny kaontinao ny fanamarinana amin'ny fomba roa.",
   "two-factor-required-title": "Ampetraho ny fanamarinana amin'ny fomba roa",
-  "two-factor-required-text": "Ity tranonkala ity dia mitaky fanamarinana amin'ny fomba roa ho an'ny kaontinao. Ampetraho izany vao afaka manohy."
+  "two-factor-required-text": "Ity tranonkala ity dia mitaky fanamarinana amin'ny fomba roa ho an'ny kaontinao. Ampetraho izany vao afaka manohy.",
+  "continuous-backup-database": "Banky angona",
+  "cloud-start-date": "Daty fanombohana",
+  "cloud-end-date": "Daty fiafarana",
+  "wekan-data-no-database": "Tsy nisy banky angona WeKan azo vakiana hita."
 }

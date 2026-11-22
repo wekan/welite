@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Lambar tabbatarwa ba daidai ba. Da fatan za a sake gwadawa.",
   "twoFactorAuth-enabled": "An kunna tabbatarwa mataki biyu don asusunka.",
   "two-factor-required-title": "Saita tabbatarwa mataki biyu",
-  "two-factor-required-text": "Wannan shafin yana buƙatar tabbatarwa mataki biyu don asusunka. Saita shi don ci gaba."
+  "two-factor-required-text": "Wannan shafin yana buƙatar tabbatarwa mataki biyu don asusunka. Saita shi don ci gaba.",
+  "continuous-backup-database": "Ma'ajiyar bayanai",
+  "cloud-start-date": "Ranar farawa",
+  "cloud-end-date": "Ranar ƙarewa",
+  "wekan-data-no-database": "Ba a sami ma’ajiyar bayanai ta WeKan da za a iya karantawa ba."
 }

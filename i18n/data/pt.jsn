@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Não foi possível iniciar a configuração.",
   "registration-global-admin-disabled": "As contas de administração global são criadas localmente. O registo público está desativado.",
   "auth-session-create-failed": "Não foi possível criar a sessão.",
-  "registration-password-unavailable": "O registo com palavra-passe não está disponível."
+  "registration-password-unavailable": "O registo com palavra-passe não está disponível.",
+  "continuous-backup-database": "Base de dados",
+  "cloud-start-date": "Data de início",
+  "cloud-end-date": "Data de fim",
+  "wekan-data-no-database": "Não foi encontrada nenhuma base de dados WeKan legível."
 }

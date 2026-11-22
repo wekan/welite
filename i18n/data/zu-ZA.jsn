@@ -2105,5 +2105,9 @@
   "twoFactorCode-invalid": "Ikhodi yokuqinisekisa ayilungile. Sicela uzame futhi.",
   "twoFactorAuth-enabled": "Ukuqinisekiswa ngezinyathelo ezimbili kuvuliwe ku-akhawunti yakho.",
   "two-factor-required-title": "Setha ukuqinisekiswa ngezinyathelo ezimbili",
-  "two-factor-required-text": "Le sayithi idinga ukuqinisekiswa ngezinyathelo ezimbili ku-akhawunti yakho. Kusethe ukuze uqhubeke."
+  "two-factor-required-text": "Le sayithi idinga ukuqinisekiswa ngezinyathelo ezimbili ku-akhawunti yakho. Kusethe ukuze uqhubeke.",
+  "continuous-backup-database": "Isizindalwazi",
+  "cloud-start-date": "Usuku lokuqala",
+  "cloud-end-date": "Usuku lokuphela",
+  "wekan-data-no-database": "Asikho isizindalwazi se-WeKan esifundekayo esitholakele."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kod seedantaagal moƴƴah. Tiiɗno eto kadi.",
   "twoFactorAuth-enabled": "Seedantaagal sappooji ɗiɗi lelnaama e konte maa.",
   "two-factor-required-title": "Teeltu seedantaagal sappooji ɗiɗi",
-  "two-factor-required-text": "Ndee lowre ina naamnii seedantaagal sappooji ɗiɗi e konte maa. Teeltu ɗum ngam jokkude."
+  "two-factor-required-text": "Ndee lowre ina naamnii seedantaagal sappooji ɗiɗi e konte maa. Teeltu ɗum ngam jokkude.",
+  "continuous-backup-database": "Ruttorde keɓe",
+  "cloud-start-date": "Ñalnde fuɗɗoode",
+  "cloud-end-date": "Ñalnde gasnde",
+  "wekan-data-no-database": "Alaa ruttorde keɓe WeKan janngotoonde yiytaa."
 }

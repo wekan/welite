@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kod fümükama no lonöfon. Begö! steifülolös dönu.",
   "twoFactorAuth-enabled": "Fümükam me düfs tel pejäfükon pro kal olik.",
   "two-factor-required-title": "Leodükolös fümükami me düfs tel",
-  "two-factor-required-text": "Topäd at flagon fümükami me düfs tel pro kal olik. Leodükolös oni ad fovön."
+  "two-factor-required-text": "Topäd at flagon fümükami me düfs tel pro kal olik. Leodükolös oni ad fovön.",
+  "continuous-backup-database": "Nünodem",
+  "cloud-start-date": "Primadät",
+  "cloud-end-date": "Finadät",
+  "wekan-data-no-database": "Nünodem WeKan reidovik no petuvon."
 }

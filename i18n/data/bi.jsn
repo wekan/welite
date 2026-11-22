@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Kod blong pruvum i no stret. Traem bakegen.",
   "twoFactorAuth-enabled": "Tu-fakta pruvum i wok long akaon blong yu.",
   "two-factor-required-title": "Setemap Tu-Fakta Pruvum",
-  "two-factor-required-text": "Saet ia i nidim Tu-Fakta Pruvum blong akaon blong yu. Setemap blong go hed."
+  "two-factor-required-text": "Saet ia i nidim Tu-Fakta Pruvum blong akaon blong yu. Setemap blong go hed.",
+  "continuous-backup-database": "Databes",
+  "cloud-start-date": "Dei blong stat",
+  "cloud-end-date": "Dei blong finis",
+  "wekan-data-no-database": "I no gat WeKan databes we yu save ridim."
 }

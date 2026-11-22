@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Codigo d'autenticación invalido. Per favor torne a intentar-lo.",
   "twoFactorAuth-enabled": "L'autenticación de dos factors ye activada ta la suya cuenta.",
   "two-factor-required-title": "Configura l'autenticación de dos factors",
-  "two-factor-required-text": "Iste sitio requiere l'autenticación de dos factors pa la tuya cuenta. Configura-la pa continar."
+  "two-factor-required-text": "Iste sitio requiere l'autenticación de dos factors pa la tuya cuenta. Configura-la pa continar.",
+  "continuous-backup-database": "Base de datos",
+  "cloud-start-date": "Calendata d'inicio",
+  "cloud-end-date": "Calendata de fin",
+  "wekan-data-no-database": "No s'ha trobato garra base de datos de WeKan que se pueda leyer."
 }

@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Akabonero k'okukakasa si ka mazima. Ddamu ogezeeko.",
   "twoFactorAuth-enabled": "Okukakasa mu ngeri bbiri kukoledde ku akawunti yo.",
   "two-factor-required-title": "Teekateeka Okukakasa mu Ngeri Bbiri",
-  "two-factor-required-text": "Omukutu guno gwetaaga okukakasa mu ngeri bbiri ku akawunti yo. Kiteekateeke okusobola okugenda mu maaso."
+  "two-factor-required-text": "Omukutu guno gwetaaga okukakasa mu ngeri bbiri ku akawunti yo. Kiteekateeke okusobola okugenda mu maaso.",
+  "continuous-backup-database": "Etterekero ly'amawulire",
+  "cloud-start-date": "Olunaku olw'okutandika",
+  "cloud-end-date": "Olunaku olw'okukomekkereza",
+  "wekan-data-no-database": "Tewali tterekero ly'amawulire erya WeKan esobola okusomebwa ezuuliddwa."
 }

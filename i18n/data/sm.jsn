@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Numera faamaoni e le saʻo. Faamolemole toe taumafai.",
   "twoFactorAuth-enabled": "Ua faagaoioia le faamaoniga e lua vaega mo lau amata.",
   "two-factor-required-title": "Faatulaga le faamaoniga e lua vaega",
-  "two-factor-required-text": "O lenei upega tafaʻilagi e manaʻomia le faamaoniga e lua vaega mo lau akaunti. Faatulaga ina ia faaauau."
+  "two-factor-required-text": "O lenei upega tafaʻilagi e manaʻomia le faamaoniga e lua vaega mo lau akaunti. Faatulaga ina ia faaauau.",
+  "continuous-backup-database": "Nofoaga o faamatalaga",
+  "cloud-start-date": "Aso amata",
+  "cloud-end-date": "Aso faaiu",
+  "wekan-data-no-database": "E leʻi maua se nofoaga o faamatalaga WeKan e mafai ona faitau."
 }

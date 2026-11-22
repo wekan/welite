@@ -32,7 +32,7 @@ uses
   {$IFDEF UNIX} cthreads, {$ENDIF}
   {$IFDEF AMIGA} Sockets, {$ENDIF}
   SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 type
@@ -750,6 +750,16 @@ begin
   HTTPRouter.RegisterRoute('/admin/domains', rmPost, @AdminDomains);
   HTTPRouter.RegisterRoute('/admin/people', rmGet, @AdminPeople);
   HTTPRouter.RegisterRoute('/admin/people', rmPost, @AdminPeople);
+  // Read-only WeKan data folders (WELITE_WEKAN_ROOTS) — see docs/wekandir.md
+  HTTPRouter.RegisterRoute('/wekan', rmGet, @WeKanDataEndpoint);
+  HTTPRouter.RegisterRoute('/wekan', rmPost, @WeKanDataEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/boards', rmGet, @WeKanBoardsEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/boards', rmPost, @WeKanBoardsEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/board', rmGet, @WeKanBoardEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/board', rmPost, @WeKanBoardEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/card', rmGet, @WeKanCardEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/card', rmPost, @WeKanCardEndpoint);
+  HTTPRouter.RegisterRoute('/wekan/file', rmGet, @WeKanFileEndpoint);
 
   // Designer (Domain Global Admin; no-JS/no-cookie) — see docs/designer.md
   HTTPRouter.RegisterRoute('/designer', rmGet, @DesignerIndex);

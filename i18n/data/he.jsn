@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "לא ניתן היה להתחיל בהגדרה.",
   "registration-global-admin-disabled": "חשבונות מנהלים כלליים נוצרים באופן מקומי. הרשמה ציבורית מושבתת.",
   "auth-session-create-failed": "לא ניתן היה ליצור הפעלה.",
-  "registration-password-unavailable": "הרשמה באמצעות סיסמה אינה זמינה."
+  "registration-password-unavailable": "הרשמה באמצעות סיסמה אינה זמינה.",
+  "continuous-backup-database": "מסד נתונים",
+  "cloud-start-date": "תאריך התחלה",
+  "cloud-end-date": "תאריך סיום",
+  "wekan-data-no-database": "לא נמצא מסד נתונים קריא של WeKan."
 }

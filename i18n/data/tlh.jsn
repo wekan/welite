@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "mI' authentication ghobe'. yIqIm.",
   "twoFactorAuth-enabled": "lIj account choq cha' Ser wa'Dich.",
   "two-factor-required-title": "cha'Ser wa'Dich yIcher",
-  "two-factor-required-text": "lo'wI' Daqlij vaD cha'Ser wa'Dich poQ Daqvam. yItaHmeH yIcher."
+  "two-factor-required-text": "lo'wI' Daqlij vaD cha'Ser wa'Dich poQ Daqvam. yItaHmeH yIcher.",
+  "continuous-backup-database": "qawHaq",
+  "cloud-start-date": "tagh jaj",
+  "cloud-end-date": "van jaj",
+  "wekan-data-no-database": "WeKan qawHaq laDlaHbogh tu'lu'be'."
 }

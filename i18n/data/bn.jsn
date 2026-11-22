@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "সেটআপ শুরু করা যায়নি।",
   "registration-global-admin-disabled": "সার্বিক প্রশাসকের অ্যাকাউন্ট স্থানীয়ভাবে তৈরি করা হয়। সবার জন্য নিবন্ধন বন্ধ আছে।",
   "auth-session-create-failed": "সেশন তৈরি করা যায়নি।",
-  "registration-password-unavailable": "পাসওয়ার্ড দিয়ে নিবন্ধন করা যাচ্ছে না।"
+  "registration-password-unavailable": "পাসওয়ার্ড দিয়ে নিবন্ধন করা যাচ্ছে না।",
+  "continuous-backup-database": "ডেটাবেস",
+  "cloud-start-date": "শুরুর তারিখ",
+  "cloud-end-date": "শেষের তারিখ",
+  "wekan-data-no-database": "পড়ার যোগ্য কোনো WeKan ডেটাবেস পাওয়া যায়নি।"
 }

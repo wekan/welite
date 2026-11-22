@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Autentifikacijan kod om vär. Ole hüvä, ladi völ kerdan.",
   "twoFactorAuth-enabled": "Kahen faktoran autentifikacii om päl sinun akkauntal.",
   "two-factor-required-title": "Säta kahen faktoran autentifikacii",
-  "two-factor-required-text": "Nece sait pakičeb kahen faktoran autentifikacijad sinun akkauntale. Säta se, miše jatkta."
+  "two-factor-required-text": "Nece sait pakičeb kahen faktoran autentifikacijad sinun akkauntale. Säta se, miše jatkta.",
+  "continuous-backup-database": "Andmbaz",
+  "cloud-start-date": "Augotišen päiv",
+  "cloud-end-date": "Lopun päiv",
+  "wekan-data-no-database": "Lugetavad WeKan-andmbazad ei ole löutud."
 }

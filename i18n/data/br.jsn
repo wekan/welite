@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "C'hod gwiriañ direizh. Klaskit en-dro mar plij.",
   "twoFactorAuth-enabled": "Gweredekaet eo ar wiriekadur daou-fakton evit ho kont.",
   "two-factor-required-title": "Kefluniañ ar wiriekadur daou-fakter",
-  "two-factor-required-text": "Al lec'hienn-mañ a c'houlenn ar wiriekadur daou-fakter evit ho kont. Kefluniit anezhañ evit kenderc'hel."
+  "two-factor-required-text": "Al lec'hienn-mañ a c'houlenn ar wiriekadur daou-fakter evit ho kont. Kefluniit anezhañ evit kenderc'hel.",
+  "continuous-backup-database": "Bank-roadennoù",
+  "cloud-start-date": "Deiziad kregiñ",
+  "cloud-end-date": "Deiziad echuiñ",
+  "wekan-data-no-database": "N'eus bet kavet bank-roadennoù WeKan lennus ebet."
 }

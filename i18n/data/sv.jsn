@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "Det gick inte att påbörja konfigureringen.",
   "registration-global-admin-disabled": "Konton för globala administratörer skapas lokalt. Offentlig registrering är inaktiverad.",
   "auth-session-create-failed": "Det gick inte att skapa sessionen.",
-  "registration-password-unavailable": "Registrering med lösenord är inte tillgänglig."
+  "registration-password-unavailable": "Registrering med lösenord är inte tillgänglig.",
+  "continuous-backup-database": "Databas",
+  "cloud-start-date": "Startdatum",
+  "cloud-end-date": "Slutdatum",
+  "wekan-data-no-database": "Ingen läsbar WeKan-databas hittades."
 }

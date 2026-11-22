@@ -2117,5 +2117,9 @@
   "enrollment-setup-failed": "ไม่สามารถเริ่มการตั้งค่าได้",
   "registration-global-admin-disabled": "บัญชีผู้ดูแลระบบส่วนกลางจะสร้างบนเครื่องโดยตรง การลงทะเบียนสาธารณะถูกปิดใช้งาน",
   "auth-session-create-failed": "ไม่สามารถสร้างเซสชันได้",
-  "registration-password-unavailable": "ไม่สามารถลงทะเบียนด้วยรหัสผ่านได้"
+  "registration-password-unavailable": "ไม่สามารถลงทะเบียนด้วยรหัสผ่านได้",
+  "continuous-backup-database": "ฐานข้อมูล",
+  "cloud-start-date": "วันที่เริ่มต้น",
+  "cloud-end-date": "วันที่สิ้นสุด",
+  "wekan-data-no-database": "ไม่พบฐานข้อมูล WeKan ที่อ่านได้"
 }

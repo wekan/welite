@@ -2116,5 +2116,9 @@
   "enrollment-setup-failed": "Die opstelling kon nie begin nie.",
   "registration-global-admin-disabled": "Rekeninge vir globale administrateurs word plaaslik geskep. Openbare registrasie is gedeaktiveer.",
   "auth-session-create-failed": "Die sessie kon nie geskep word nie.",
-  "registration-password-unavailable": "Registrasie met ’n wagwoord is nie beskikbaar nie."
+  "registration-password-unavailable": "Registrasie met ’n wagwoord is nie beskikbaar nie.",
+  "continuous-backup-database": "Databasis",
+  "cloud-start-date": "Begindatum",
+  "cloud-end-date": "Einddatum",
+  "wekan-data-no-database": "Geen leesbare WeKan-databasis is gevind nie."
 }

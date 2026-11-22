@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Cod dilysu annilys. Rhowch gynnig arall arni.",
   "twoFactorAuth-enabled": "Mae dilysiant dau ffactor wedi'i alluogi ar gyfer eich cyfrif.",
   "two-factor-required-title": "Gosod dilysiant dau ffactor",
-  "two-factor-required-text": "Mae'r wefan hon yn gofyn am ddilysiant dau ffactor ar gyfer eich cyfrif. Gosodwch ef i barhau."
+  "two-factor-required-text": "Mae'r wefan hon yn gofyn am ddilysiant dau ffactor ar gyfer eich cyfrif. Gosodwch ef i barhau.",
+  "continuous-backup-database": "Cronfa ddata",
+  "cloud-start-date": "Dyddiad Dechrau",
+  "cloud-end-date": "Dyddiad Gorffen",
+  "wekan-data-no-database": "Ni chanfuwyd cronfa ddata WeKan ddarllenadwy."
 }

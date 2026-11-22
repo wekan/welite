@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "Tlapohualli tlaixyeyecoliztli ahmo melahuac. Xicyeyeco occepa.",
   "twoFactorAuth-enabled": "Ome tlaixyeyecoliztli oquichiuh para mocuenta.",
   "two-factor-required-title": "Xicchihua ome tlaixyeyecoliztli",
-  "two-factor-required-text": "Inin tlatlaliliztli quinequi ome tlaixyeyecoliztli ic mocuenta. Xicchihua ic tictocaz."
+  "two-factor-required-text": "Inin tlatlaliliztli quinequi ome tlaixyeyecoliztli ic mocuenta. Xicchihua ic tictocaz.",
+  "continuous-backup-database": "Tlahtolpixcalli",
+  "cloud-start-date": "Tonalli tlapehualiztli",
+  "cloud-end-date": "Tonalli tlamiliztli",
+  "wekan-data-no-database": "Amo monexti WeKan tlahtolpixcalli tlen hueli mopohua."
 }

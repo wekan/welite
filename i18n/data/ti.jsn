@@ -2106,5 +2106,9 @@
   "twoFactorCode-invalid": "ናይ ምርግጋጽ ኮድ ልክዕ ኣይኮነን። በጃኻ ደጊምካ ፈትን።",
   "twoFactorAuth-enabled": "ንሕሳብካ ኽልተ-ረቛሒ ምርግጋጽ ነቒሑ ኣሎ።",
   "two-factor-required-title": "ኽልተ-ረቛሒ ምርግጋጽ ኣዳልው",
-  "two-factor-required-text": "እዚ ሳይት ንሕሳብካ ኽልተ-ረቛሒ ምርግጋጽ ይሓትት። ንምቕጻል ኣዳልዎ።"
+  "two-factor-required-text": "እዚ ሳይት ንሕሳብካ ኽልተ-ረቛሒ ምርግጋጽ ይሓትት። ንምቕጻል ኣዳልዎ።",
+  "continuous-backup-database": "ዳታቤዝ",
+  "cloud-start-date": "ዕለት ምጅማር",
+  "cloud-end-date": "ዕለት መወዳእታ",
+  "wekan-data-no-database": "ክንብቦ ዝከኣል ናይ WeKan ዳታቤዝ ኣይተረኽበን።"
 }
