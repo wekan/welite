@@ -44,6 +44,19 @@ so it can load the SQL, assets, and catalogs. Plain HTTP is the default.
 The [cross-build record](docs/cross.md) gives target-specific compiler and
 SQLite requirements.
 
+## Read WeKan data folders
+
+WeLite reads a WeKan's own folders read-only and shows them as HTML4 kanban
+pages: the FerretDB SQLite database in `files/db/wekan.sqlite` and the
+attachments in `files/attachments`, for Docker/bundle `WRITABLE_PATH` folders,
+Snap `files` folders and Weddy's `domains/<domain>` folders. Set
+`WELITE_WEKAN_ROOTS` to one or more folders separated by `;`, sign in as the
+Global Admin on the reserved `admin` host and open **WeKan: Domains**. The pages
+list the domains with their sizes, the boards of a domain, a board as swimlanes
+by lists, a card with its checklists, comments, custom fields and attachments,
+and an attachment viewer and download. Only the Global Admin sees them, because
+WeKan's users and board members are not WeLite's. See [docs/wekandir.md](docs/wekandir.md).
+
 ## Verified behavior and current limits
 
 - Native Linux linked and CLI SQLite builds run the [HTTP and Chromium suites](tests/README.md).

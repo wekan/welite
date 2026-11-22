@@ -704,3 +704,25 @@ and checks that the signed-in home page preserves the locale without cookies.
 Set `WELITE_NETSURF=1` to also check `usr/bin/netsurf-gtk` at both sizes.
 Extract the matching NetSurf resources under `usr/share/netsurf` in the same
 tool directory. NetSurf uses a fresh profile and has JavaScript disabled.
+
+## WeKan data folders
+
+`python3 tests/wkdir.py` builds `tests/wkdir.lpr` and the server with linked and
+CLI SQLite and checks the read-only WeKan data pages ([docs/wekandir.md](../docs/wekandir.md)).
+`tests/wkfix.py` writes the fixture with a real FerretDB v1 through the MongoDB
+wire protocol into WeKan's `files/db` layout: a Weddy-style root with domains and
+`cloud/domains.json`, a Docker-style `WRITABLE_PATH` and a Snap-style `files`
+folder. Set `FERRETDB` to a FerretDB binary; the default is the parent
+`.tools/ferretdb-test/ferretdb`. One domain's FerretDB keeps running for the
+first pass, so the reader is checked against a live WAL database (`mode=ro`) and
+then a stopped one (`immutable=1`). Without FerretDB the databases are loaded
+from `tests/wkdir/*.sql`, FerretDB-written dumps that
+`python3 tests/wkfix.py --dump` refreshes.
+
+It checks the domains, boards, kanban, card and attachment pages, Global Admin
+only access, HTML escaping of a `<script>` card title, and as negative tests:
+traversal through a recorded path, an id, a symbolic link, the domain, root and
+database parameters, attachments of another card or board, soft-deleted and
+GridFS attachments, and garbage, corrupt, non-FerretDB and missing databases.
+Every file in the data folders is hashed before and after: nothing may be
+created, changed or removed.

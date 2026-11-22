@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-22 Read WeKan data folders as HTML4 kanban
+
+- Read WeKan's own folders read-only, in FreePascal: FerretDB v1 SQLite
+  databases in `files/db`, through `_ferretdb_collections` and TEXT or JSONB
+  `_ferretdb_sjson` documents, and Meteor-Files attachments in
+  `files/attachments`. Find Docker and bundle `WRITABLE_PATH` folders, Snap
+  `files` folders and Weddy `domains/<domain>` folders with their Cloud Panel
+  dates under the roots in `WELITE_WEKAN_ROOTS`.
+- Open a running FerretDB's WAL database with `mode=ro` and a stopped one with
+  `immutable=1`, so no file is created or changed; refuse hot journals and
+  short-name sidecars. Serve an attachment only as a single checked file name
+  inside the attachments folder, never a path from the database or the URL.
+- Show the domains with card, attachment and database sizes, the boards of a
+  domain, a board as swimlanes by lists with labels, members, dates and
+  counts, a card with its description, custom fields, checklists, comments
+  and attachments, and an attachment viewer and download. Only the Global
+  Admin sees these pages, because WeKan's accounts are not WeLite's.
+- Add WeKan's `wekan-data-no-database` message in every language and reuse
+  WeKan's database and Cloud Panel date captions.
+- Verify on linked and CLI SQLite against databases written by FerretDB
+  v1.110.0, live and stopped, including path traversal, symbolic links,
+  malformed databases, HTML escaping and an unchanged data folder.
+
 ## 2026-11-19 Combine board movement arrows
 
 - Use one set of arrows to navigate the viewport when nothing is selected
