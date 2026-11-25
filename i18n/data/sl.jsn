@@ -225,6 +225,7 @@
   "desktop-mode": "Приказ прилагођен за екран рачунара",
   "mobile-mode": "Приказ прилагођен за екран мобилног уређаја",
   "mobile-desktop-toggle": "Замени приказ прилагођен за рачунар/мобилни",
+  "html4-html5-toggle": "Preklopi med pogledom HTML4 in HTML5",
   "zoom-in": "Приближи",
   "zoom-out": "Одаљи",
   "click-to-change-zoom": "Лупа",

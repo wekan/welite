@@ -225,6 +225,7 @@
   "desktop-mode": "Uburyo bwa mudasobwa",
   "mobile-mode": "Uburyo bwa telefone",
   "mobile-desktop-toggle": "Hinduranya hagati y'uburyo bwa telefone n'ubwa mudasobwa",
+  "html4-html5-toggle": "Hinduranya hagati y'ukwerekana kwa HTML4 n'ukwa HTML5",
   "zoom-in": "Kwegera",
   "zoom-out": "Kwigiza kure",
   "click-to-change-zoom": "Click to change zoom level",

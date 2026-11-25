@@ -225,6 +225,7 @@
   "desktop-mode": "Maitiro epakombiyuta",
   "mobile-mode": "Maitiro epanharembozha",
   "mobile-desktop-toggle": "Toggle between Mobile uye Desktop Mode",
+  "html4-html5-toggle": "Chinjana pakati pekuratidza kweHTML4 neHTML5",
   "zoom-in": "Zoom mu",
   "zoom-out": "Deredza kukura",
   "click-to-change-zoom": "Click to change zoom level",

@@ -225,6 +225,7 @@
   "desktop-mode": "وضع سطح المكتب",
   "mobile-mode": "وضع الهاتف",
   "mobile-desktop-toggle": "التبديل بين وضع الهاتف ووضع سطح المكتب",
+  "html4-html5-toggle": "التبديل بين عرض HTML4 وعرض HTML5",
   "zoom-in": "تكبير",
   "zoom-out": "تصغير",
   "click-to-change-zoom": "Click to change zoom level",

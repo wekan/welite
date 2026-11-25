@@ -225,6 +225,7 @@
   "desktop-mode": "ئۈستەل يۈزى ھالىتى",
   "mobile-mode": "كۆچمە ھالەت",
   "mobile-desktop-toggle": "كۆچمە ۋە ئۈستەل يۈزى ھالىتىنى ئالماشتۇرۇڭ",
+  "html4-html5-toggle": "HTML4 ۋە HTML5 كۆرۈنۈشىنى ئالماشتۇرۇڭ",
   "zoom-in": "چوڭايتىش",
   "zoom-out": "چوڭايتىش",
   "click-to-change-zoom": "چوڭايتىش دەرىجىسىنى ئۆزگەرتىش ئۈچۈن چېكىڭ",

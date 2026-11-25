@@ -225,6 +225,7 @@
   "desktop-mode": "桌面模式",
   "mobile-mode": "移动模式",
   "mobile-desktop-toggle": "在移动和桌面模式之间切换",
+  "html4-html5-toggle": "勒 HTML4 视图搭 HTML5 视图之间切换",
   "zoom-in": "放大",
   "zoom-out": "缩小",
   "click-to-change-zoom": "单击可更改缩放级别",

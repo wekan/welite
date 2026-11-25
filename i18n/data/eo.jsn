@@ -225,6 +225,7 @@
   "desktop-mode": "Modo de Escritorio",
   "mobile-mode": "Modo Móvil",
   "mobile-desktop-toggle": "Alterna entre el Modo Móvil y el Modo de Escritorio",
+  "html4-html5-toggle": "Ŝalti inter HTML4- kaj HTML5-vido",
   "zoom-in": "Acercar",
   "zoom-out": "Alejar",
   "click-to-change-zoom": "Haz clic para cambiar el nivel de zoom",

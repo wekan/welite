@@ -225,6 +225,7 @@
   "desktop-mode": "Modus desktop",
   "mobile-mode": "Modus mobil",
   "mobile-desktop-toggle": "Muda danter modus mobil y desktop",
+  "html4-html5-toggle": "Muda danter la vijuda HTML4 y HTML5",
   "zoom-in": "Fé plu grant",
   "zoom-out": "Fé plu pitl",
   "click-to-change-zoom": "Click to change zoom level",

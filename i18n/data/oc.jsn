@@ -225,6 +225,7 @@
   "desktop-mode": "Mode bureau",
   "mobile-mode": "Mode mobile",
   "mobile-desktop-toggle": "Basculer entre le mode mobile et le mode bureau",
+  "html4-html5-toggle": "Alternar entre la vista HTML4 e la vista HTML5",
   "zoom-in": "Agrandir",
   "zoom-out": "Réduire",
   "click-to-change-zoom": "Cliquer pour changer le niveau d'agrandissement",

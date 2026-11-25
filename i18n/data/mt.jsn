@@ -225,6 +225,7 @@
   "desktop-mode": "Modalità tad-desktop",
   "mobile-mode": "Modalità tal-mowbajl",
   "mobile-desktop-toggle": "Toggle between Mobile u Desktop Mode",
+  "html4-html5-toggle": "Aqleb bejn il-Veduta HTML4 u l-Veduta HTML5",
   "zoom-in": "Kabbar",
   "zoom-out": "Ċekken",
   "click-to-change-zoom": "Click to change zoom level",

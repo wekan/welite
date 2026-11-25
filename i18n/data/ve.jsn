@@ -225,6 +225,7 @@
   "desktop-mode": "Imodi yedeskithophu",
   "mobile-mode": "Imodi yeselula",
   "mobile-desktop-toggle": "Guqula phakathi kweModi Yeselula neyedeskithophu",
+  "html4-html5-toggle": "Shandula vhukati ha mbonalo ya HTML4 na ya HTML5",
   "zoom-in": "Sondeza",
   "zoom-out": "Hlehlisa",
   "click-to-change-zoom": "Chofoza ukuze ushintshe ileveli yokusondeza",

@@ -225,6 +225,7 @@
   "desktop-mode": "Desktop Modus",
   "mobile-mode": "Telefoon Modus",
   "mobile-desktop-toggle": "Schakel tussen Telefoon en Desktop Modus",
+  "html4-html5-toggle": "Schakel tussen HTML4- en HTML5-weergave",
   "zoom-in": "Zoom In",
   "zoom-out": "Zoom Uit",
   "click-to-change-zoom": "Klik om zoom niveau te wijzigen",

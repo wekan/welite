@@ -225,6 +225,7 @@
   "desktop-mode": "Teldustøða",
   "mobile-mode": "Fartelefonstøða",
   "mobile-desktop-toggle": "Skift millum fartelefon- og teldustøðu",
+  "html4-html5-toggle": "Skift millum HTML4- og HTML5-vísing",
   "zoom-in": "Størka",
   "zoom-out": "Minka",
   "click-to-change-zoom": "Click to change zoom level",

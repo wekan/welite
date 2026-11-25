@@ -225,6 +225,7 @@
   "desktop-mode": "Masaüstü Modu",
   "mobile-mode": "Mobil Modu",
   "mobile-desktop-toggle": "Mobil ve Masaüstü Modu arasında geçiş yapın",
+  "html4-html5-toggle": "HTML4 და HTML5 ხედებს შორის გადართვა",
   "zoom-in": "Yakınlaştır",
   "zoom-out": "Uzaklaştır",
   "click-to-change-zoom": "Yakınlaştırma düzeyini değiştirmek için tıklayın",

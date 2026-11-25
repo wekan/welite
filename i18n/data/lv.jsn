@@ -225,6 +225,7 @@
   "desktop-mode": "Darbalaukio režimas",
   "mobile-mode": "Mobilusis režimas",
   "mobile-desktop-toggle": "Perjungti tarp mobiliojo ir darbalaukio režimo",
+  "html4-html5-toggle": "Pārslēgt HTML4 vai HTML5 skatu",
   "zoom-in": "Priartinti",
   "zoom-out": "Sumažinti",
   "click-to-change-zoom": "Spustelėkite, kad pakeistumėte mastelio lygį",

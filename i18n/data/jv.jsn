@@ -225,6 +225,7 @@
   "desktop-mode": "Mode Desktop",
   "mobile-mode": "Mode Seluler",
   "mobile-desktop-toggle": "Ganti antarane Mode Seluler lan Desktop",
+  "html4-html5-toggle": "Ganti antarane Tampilan HTML4 lan HTML5",
   "zoom-in": "Gedhekake",
   "zoom-out": "Cilikake",
   "click-to-change-zoom": "Click to change zoom level",

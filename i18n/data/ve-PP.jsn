@@ -225,6 +225,7 @@
   "desktop-mode": "Työpöytätila",
   "mobile-mode": "Mobiilitila",
   "mobile-desktop-toggle": "Vaihda mobiili- ja työpöytätilan välillä",
+  "html4-html5-toggle": "Vajehta HTML4- da HTML5-nägusen keskes",
   "zoom-in": "Lähennä",
   "zoom-out": "Loitonna",
   "click-to-change-zoom": "Napsauta muuttaaksesi zoomaustasoa",

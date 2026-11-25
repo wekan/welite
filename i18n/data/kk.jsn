@@ -225,6 +225,7 @@
   "desktop-mode": "Жұмыс үстелі режимі",
   "mobile-mode": "Мобильді режим",
   "mobile-desktop-toggle": "Мобильді және жұмыс үстелі режимдерін ауыстыру",
+  "html4-html5-toggle": "HTML4 және HTML5 көріністерін ауыстыру",
   "zoom-in": "Үлкейту",
   "zoom-out": "Кішірейту",
   "click-to-change-zoom": "Click to change zoom level",

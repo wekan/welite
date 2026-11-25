@@ -225,6 +225,7 @@
   "desktop-mode": "Desktop Mode",
   "mobile-mode": "Mobile Mode",
   "mobile-desktop-toggle": "Toggle between Mobile and Desktop Mode",
+  "html4-html5-toggle": "Перемикати між поданням HTML4 і HTML5",
   "zoom-in": "Збільшити",
   "zoom-out": "Зменшити",
   "click-to-change-zoom": "Натисніть щоб змінити масштабування",

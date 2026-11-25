@@ -225,6 +225,7 @@
   "desktop-mode": "מצב שולחן עבודה",
   "mobile-mode": "מצב נייד",
   "mobile-desktop-toggle": "החלפה בין מצב לניידים לבין מצב לשולחן עבודה",
+  "html4-html5-toggle": "החלפה בין תצוגת HTML4 לבין תצוגת HTML5",
   "zoom-in": "התקרבות",
   "zoom-out": "התרחקות",
   "click-to-change-zoom": "לחיצה תשנה את רמת התקריב",

@@ -225,6 +225,7 @@
   "desktop-mode": "Modalità desktop",
   "mobile-mode": "Modalità mobile",
   "mobile-desktop-toggle": "Passa tra 'a mudaletà mobile e desktop",
+  "html4-html5-toggle": "Passa tra 'a vista HTML4 e HTML5",
   "zoom-in": "Ingrandisci",
   "zoom-out": "Riduci",
   "click-to-change-zoom": "Click to change zoom level",

@@ -225,6 +225,7 @@
   "desktop-mode": "デスクトップモード",
   "mobile-mode": "モバイルモード",
   "mobile-desktop-toggle": "Toggle between Mobile and Desktop Mode",
+  "html4-html5-toggle": "HTML4와 HTML5 보기 전환",
   "zoom-in": "拡大",
   "zoom-out": "縮小",
   "click-to-change-zoom": "Click to change zoom level",
