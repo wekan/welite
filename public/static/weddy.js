@@ -1,0 +1,4994 @@
+// Meteor's runtime config, as far as WeKan's pages and tests read it: Weddy
+// is served at the root of its origin, and every script it loads comes from
+// that same origin - there is no ROOT_URL host to load code from.
+window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
+  ROOT_URL_PATH_PREFIX: '',
+  PUBLIC_SETTINGS: { packages: { 'dynamic-import': { useLocationOrigin: true } } },
+};
+// Weddy's WeKan in the browser: Unpoly for the pages, Server-Sent Events for what
+// other people change, and interact.js for MultiDrag - every finger, or the mouse,
+// drags its own card at the same time, and a card dragged while others are
+// selected (Ctrl/Cmd-click) takes them along. From wekan/wami's public/multidrag.
+(function () {
+  'use strict';
+
+  var dragging = 0;   // drags in progress, over all pointers
+  var itemDrag = null, itemDragJustEnded = false; // a checklist item pressed or dragged
+  var stale = false;  // the board changed during a drag: reload when the last ends
+
+  // This page, as the server names it in an event it caused (X-Weddy-Page).
+  var pageId = Array.prototype.map.call((window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(new Uint8Array(12)) : [], function (n) {
+    return 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36];
+  }).join('') || String(Date.now());
+  // A form sent for the board is answered with the board, so this page names
+  // itself in it and skips the server's echo of the same change - a second
+  // refresh replaced what the member was already pointing at. A script's own
+  // call (callAsync) does not name the page: it relies on the refresh.
+  up.on('up:request:load', function (event) {
+    var req = event.request;
+    if (req && req.method !== 'GET' && /\.board-wrapper/.test(String(req.target || ''))) req.headers['X-Weddy-Page'] = pageId;
+  });
+  var staleUnderPopOver = false; // the board changed while a pop-over was open
+  var staleUnderForm = false;    // ... or while an inlined form was open
+  // An inlined form closed: hidden, and a templated one's fields taken away.
+  function closeInlinedForm(form) {
+    form.classList.add('is-hidden');
+    if (!form.querySelector(':scope > template.js-inlined-form-body')) return;
+    Array.prototype.slice.call(form.childNodes).forEach(function (n) {
+      if (!(n.matches && n.matches('template.js-inlined-form-body'))) form.removeChild(n);
+    });
+  }
+  function reloadBoard(underPopOver) {
+    // A drag in progress - or a press on a checklist item that may become
+    // one - is not swept away: the board catches up after it.
+    if (dragging > 0 || itemDrag) { stale = true; return; }
+    // An open pop-over is not swept away by somebody else's change: the board
+    // catches up when it closes. A pop-over that changes how the board is
+    // drawn (Card Settings) asks for the board under it at once: the
+    // pop-over is outside the board, so it stays.
+    // Card Settings is one of these: it follows the board drawn again itself
+    // (refreshCardSettings), as WeKan's reactive pop-over does.
+    if (!underPopOver && document.querySelector('.js-pop-over') &&
+        !document.querySelector('.js-pop-over[data-popup="boardCardSettingsPopup"]')) { staleUnderPopOver = true; return; }
+    // Nor is an inlined form opened in the card details (WeKan's inlinedForm
+    // stays as its page changes around it): the board catches up when it
+    // closes. The add-list form is always there, so it is not one of these.
+    // ... nor the card composer the user has open in a list, which a redraw
+    // would take away: the board catches up when it is sent or closed.
+    if (openEditorForm()) { staleUnderForm = true; return; }
+    // A change of this page's own - a form still on its way - is announced
+    // before its answer arrives: reload after it, or the older page wins.
+    if (up.network.isBusy()) { setTimeout(function () { reloadBoard(underPopOver); }, 150); return; }
+    stale = false;
+    if (!document.querySelector('.board-wrapper')) return;
+    // What the user opened in the card details - a <details> such as the
+    // Scrum fields' editor - stays open through somebody else's change: the
+    // same ones, by their place, are opened again in the new page.
+    // Which are open is read when the new page is in, not when the reload
+    // starts: one opened while the page was on its way stays open too.
+    var card = document.querySelector('.board-wrapper .js-card-details');
+    var cardID = card && card.dataset.card;
+    var open = openCardDetails();
+    var p = up.reload('.board-wrapper');
+    if (p && p.then) p.then(refreshCardSettings, function () {});
+    if (p && p.then) p.then(function () {
+      var now = document.querySelector('.board-wrapper .js-card-details');
+      if (!now || now.dataset.card !== cardID) return;
+      var list = cardDetailsList();
+      (detailsSeen ? detailsOpen : open).forEach(function (i) { if (list[i]) list[i].open = true; });
+      detailsSeen = false;
+    }, function () { detailsSeen = false; });
+    detailsSeen = true;
+    detailsOpen = open;
+  }
+  // An open Card Settings follows the board drawn again, in place: each pane,
+  // section and row the new page has is the same element as before, with its
+  // ticks, counts and place from the new page - nothing the user holds or
+  // looks at is swapped under them; the folds and scrolling are theirs.
+  function refreshCardSettings() {
+    // Not under a drag in Card Settings: what is held is not moved from the
+    // user's hand; it catches up after.
+    if (csDrag || cfDrag) { setTimeout(refreshCardSettings, 200); return; }
+    var pop = document.querySelector('.js-pop-over[data-popup="boardCardSettingsPopup"]');
+    var t = document.querySelector('template.js-pop-over-template[data-pop="board-card-settings"]');
+    if (!pop || !t) return;
+    var syncBox = function (from, to) {
+      if (!from || !to) return;
+      to.className = from.className;
+      to.setAttribute('aria-checked', from.getAttribute('aria-checked') || 'false');
+      var a = from.querySelector('.materialCheckBox'), b = to.querySelector('.materialCheckBox');
+      if (a && b) b.className = a.className;
+    };
+    // Children of `into` matching `sel`, by `key`, in the order of `from`'s.
+    var order = function (from, into, sel, key, sync) {
+      var have = {}, now = [], want = [];
+      Array.prototype.forEach.call(into.querySelectorAll(':scope > ' + sel), function (el) { have[el.dataset[key]] = el; now.push(el.dataset[key]); });
+      var fresh = Array.prototype.slice.call(from.querySelectorAll(':scope > ' + sel));
+      fresh.forEach(function (f) { want.push(f.dataset[key]); });
+      // The same ones in the same order: only what they show changes - no
+      // element is moved, so nothing the user looks at scrolls or jumps.
+      if (now.join('\n') === want.join('\n')) {
+        fresh.forEach(function (f) { sync(f, have[f.dataset[key]]); });
+        return;
+      }
+      var keep = {};
+      fresh.forEach(function (f) {
+        var el = have[f.dataset[key]] || f.cloneNode(true);
+        if (have[f.dataset[key]]) sync(f, el);
+        keep[f.dataset[key]] = true;
+        into.appendChild(el);
+      });
+      Object.keys(have).forEach(function (k) { if (!keep[k]) have[k].remove(); });
+    };
+    // The panels' templates as the new page draws them, and an open panel
+    // made again from its new one.
+    t.content.querySelectorAll('template.js-card-settings-panel-tpl').forEach(function (ft) {
+      var mine = pop.querySelector('template.js-card-settings-panel-tpl[data-panel="' + ft.dataset.panel + '"]');
+      if (mine) mine.replaceWith(ft.cloneNode(true));
+    });
+    pop.querySelectorAll('.js-card-settings-panel[data-kind="section"]').forEach(function (panel) {
+      // A section's panel shows settings; a field's form, or the +'s, is the
+      // user's typing, never made again under it (card-settings-sections-order:
+      // a redraw emptied the new field's name before it was sent).
+      var nt = pop.querySelector('template.js-card-settings-panel-tpl[data-panel="' + panel.dataset.panel + '"]');
+      if (!nt) return;
+      while (panel.childNodes.length > 1) panel.removeChild(panel.lastChild);
+      panel.appendChild(nt.content.cloneNode(true));
+      up.hello(panel);
+    });
+    // Each pane's custom fields as the new page lists them.
+    t.content.querySelectorAll('.js-card-settings-pane').forEach(function (fp) {
+      var fl = fp.querySelector('.js-card-settings-custom-fields');
+      var l = pop.querySelector('.js-card-settings-pane[data-side="' + fp.dataset.side + '"] .js-card-settings-custom-fields');
+      if (fl && l && fl.innerHTML !== l.innerHTML) {
+        l.innerHTML = fl.innerHTML;
+        // A field's form left open says so on its renewed hamburger.
+        l.closest('.js-card-settings-section').querySelectorAll('.js-card-settings-panel').forEach(function (panel) {
+          var b = l.querySelector('[data-panel="' + panel.dataset.panel + '"]');
+          if (b) { b.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+        });
+        up.hello(l);
+      }
+    });
+    t.content.querySelectorAll('.js-card-settings-pane').forEach(function (fp) {
+      var pane = pop.querySelector('.js-card-settings-pane[data-side="' + fp.dataset.side + '"]');
+      if (!pane) return;
+      pane.dataset.revision = fp.dataset.revision;
+      var fs = fp.querySelector('.js-card-settings-sections-sortable'), ps = pane.querySelector('.js-card-settings-sections-sortable');
+      if (!fs || !ps) return;
+      order(fs, ps, '.js-card-settings-section', 'section', function (fsec, sec) {
+        sec.classList.toggle('is-section-hidden', fsec.classList.contains('is-section-hidden'));
+        var fh = fsec.querySelector('.card-settings-inline-section-head'), h = sec.querySelector('.card-settings-inline-section-head');
+        if (fh && h) { h.dataset.flag = fh.dataset.flag || ''; h.dataset.shown = fh.dataset.shown || ''; }
+        syncBox(fsec.querySelector('.js-card-settings-section-shown, .card-settings-section-toggle'), sec.querySelector('.js-card-settings-section-shown, .card-settings-section-toggle'));
+        var fc = fsec.querySelector('.card-settings-inline-section-count'), c = sec.querySelector('.card-settings-inline-section-count');
+        if (fc && c) c.textContent = fc.textContent;
+        var fi = fsec.querySelector('.card-settings-inline-items'), items = sec.querySelector('.card-settings-inline-items');
+        if (fi && items) order(fi, items, '.js-card-field-order-row', 'key', function (frow, row) {
+          // A row whose hamburger came or went (the labels-text override
+          // set or reset) is drawn again whole.
+          if (!!frow.querySelector('.js-open-card-settings-item-menu') !== !!row.querySelector('.js-open-card-settings-item-menu')) {
+            row.className = frow.className;
+            row.innerHTML = frow.innerHTML;
+            return;
+          }
+          row.className = frow.className;
+          syncBox(frow.querySelector('.card-field-order-toggle'), row.querySelector('.card-field-order-toggle'));
+          // The row's handle as the new page draws it (drag handles on or off).
+          var fl = frow.querySelector('.card-settings-line-label'), l = row.querySelector('.card-settings-line-label');
+          if (fl && l && fl.innerHTML !== l.innerHTML) {
+            var focused = l.contains(document.activeElement);
+            l.replaceWith(fl.cloneNode(true));
+            if (focused) { var h = row.querySelector('.js-card-field-order-handle'); if (h) h.focus(); }
+          } else if (fl && l) {
+            l.className = fl.className;
+            if (fl.hasAttribute('tabindex')) l.setAttribute('tabindex', fl.getAttribute('tabindex')); else l.removeAttribute('tabindex');
+          }
+        });
+      });
+    });
+  }
+  function cardDetailsList() { return Array.prototype.slice.call(document.querySelectorAll('.board-wrapper .js-card-details details')); }
+  function openCardDetails() {
+    return cardDetailsList().map(function (d, i) { return d.open ? i : -1; }).filter(function (i) { return i >= 0; });
+  }
+  // While a reload is on its way, the open <details> of the card details as
+  // the user leaves them, by place.
+  var detailsSeen = false, detailsOpen = [];
+  document.addEventListener('toggle', function (event) {
+    if (!detailsSeen || !event.target.closest || !event.target.closest('.board-wrapper .js-card-details')) return;
+    detailsOpen = openCardDetails();
+  }, true);
+
+  function openEditorForm() {
+    return document.querySelector('.board-wrapper .js-card-details .js-inlined-form:not(.is-hidden), .board-wrapper form.js-card-composer');
+  }
+  // A form sent is answered with the whole board: what was waiting is in it.
+  up.on('up:form:submit', function () { staleUnderForm = false; });
+  // WeKan's submit-on-Enter (models/lib/editorSubmitKey.js, editorSubmit.js):
+  // in every editor, with the member's preference Enter saves and
+  // Shift+Enter is a new line; without it Enter is a new line and
+  // Ctrl/Cmd+Enter saves. Enter that ends an IME composition never saves.
+  // The preference as the newest page part says it: the board is re-rendered
+  // on each card opened, the body only on a full load.
+  function submitOnEnter(el) {
+    var at = (el && el.closest && el.closest('[data-submit-on-enter]')) || document.querySelector('.board-wrapper[data-submit-on-enter]') || document.body;
+    return !!at && at.getAttribute('data-submit-on-enter') === 'true';
+  }
+  function isSubmitKey(event) {
+    if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return false;
+    if (event.key !== 'Enter' && event.keyCode !== 13) return false;
+    return submitOnEnter(event.target) ? !event.shiftKey : !!(event.ctrlKey || event.metaKey);
+  }
+  document.addEventListener('keydown', function (event) {
+    var editor = event.target;
+    if (!editor || editor.tagName !== 'TEXTAREA' || editor.readOnly || editor.disabled || !editor.form || !isSubmitKey(event)) return;
+    var button = Array.prototype.find.call(editor.form.elements, function (c) {
+      return (c.tagName === 'BUTTON' || c.tagName === 'INPUT') && c.type === 'submit' && !c.disabled && c.getClientRects().length;
+    });
+    event.preventDefault();
+    event.stopPropagation();
+    if (button) button.click();
+    else if (editor.form.requestSubmit) editor.form.requestSubmit();
+  });
+  // WeKan's multilineTitles.creationTitles: the composer's text as one title,
+  // or - "Many" chosen - one a line, blank lines left out.
+  function creationTitles(value, separate) {
+    var title = String(value || '').replace(/\r\n?/g, '\n').trim();
+    if (!separate) return title ? [title] : [];
+    return title.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  }
+  // WeKan's inline Add List composer (#6465): the list header's + opens it
+  // after that list; it adds the lists right after it, in order, through
+  // createListAfter.
+  function closeAddListInline() {
+    document.querySelectorAll('.js-add-list-inline').forEach(function (n) { n.remove(); });
+  }
+  up.on('click', '.js-add-list-here', function (event) {
+    event.preventDefault();
+    event.stopPropagation();
+    closeAddListInline();
+    var list = this.closest('.js-list');
+    var tpl = document.querySelector('template.js-add-list-inline-template');
+    if (!list || !tpl) return;
+    var node = tpl.content.firstElementChild.cloneNode(true);
+    node.dataset.after = this.dataset.list;
+    node.dataset.swimlane = this.dataset.swimlane || '';
+    var group = 'title-mode-' + Math.random().toString(36).slice(2);
+    node.querySelectorAll('.js-multiline-title-mode').forEach(function (r) { r.name = group; });
+    list.after(node);
+    node.querySelector('textarea').focus();
+  });
+  up.on('click', '.js-close-add-list-inline', function (event) {
+    event.preventDefault();
+    closeAddListInline();
+  });
+  document.addEventListener('submit', function (event) {
+    var form = event.target;
+    if (!form.matches || !form.matches('.js-add-list-inline-form')) return;
+    event.preventDefault();
+    var node = form.closest('.js-add-list-inline');
+    var board = document.querySelector('.board-wrapper[data-board]');
+    var input = form.querySelector('.list-name-input');
+    var mode = form.querySelector('.js-multiline-title-mode:checked');
+    var titles = creationTitles(input.value, mode && mode.value === 'separate');
+    if (!titles.length || form.dataset.busy || !board) return;
+    form.dataset.busy = '1';
+    input.disabled = true;
+    var after = node.dataset.after || null;
+    var done = 0;
+    var next = function () {
+      if (done >= titles.length) return Promise.resolve();
+      return callAsync('createListAfter', { title: titles[done], boardId: board.dataset.board,
+        swimlaneId: node.dataset.swimlane || null, afterListId: after, type: 'list' }).then(function (id) {
+        after = id;
+        done += 1;
+        return next();
+      });
+    };
+    next().then(function () {
+      closeAddListInline();
+      up.reload('.board-wrapper');
+    }, function () {
+      // What was not added stays in the composer, as WeKan's.
+      input.value = titles.slice(done).join('\n');
+      input.disabled = false;
+      delete form.dataset.busy;
+      input.focus();
+    });
+  }, true);
+  // WeKan's dates in the member's calendar (#4335, client/lib/dateDisplay.js,
+  // imports/lib/calendarSystems.js): only the text shown changes - the
+  // datetime attribute, the picker and what is stored stay Gregorian. The
+  // native calendar's year, month and day in Latin digits, in the member's
+  // order, with the era where a year needs one, and the time where the date
+  // had one. Gregorian dates keep the server's text.
+  var CALENDAR_INTL = { gregorian: 'gregory', jalali: 'persian' };
+  function nativeDateText(date, system, withTime) {
+    var cal = CALENDAR_INTL[system] || system, parts = {};
+    try {
+      new Intl.DateTimeFormat('en', { calendar: cal, numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit', era: 'short' })
+        .formatToParts(date).forEach(function (p) { parts[p.type] = p.value; });
+    } catch (e) { return null; }
+    var y = parts.year || parts.relatedYear, m = parts.month, d = parts.day;
+    if (!y || !m || !d) return null;
+    var fmt = document.documentElement.getAttribute('data-date-format') || 'YYYY-MM-DD';
+    if (/-date-only$/.test(fmt)) { fmt = fmt.slice(0, -10); withTime = false; }
+    var text = fmt === 'DD-MM-YYYY' ? d + '-' + m + '-' + y : fmt === 'MM-DD-YYYY' ? m + '-' + d + '-' + y : y + '-' + m + '-' + d;
+    if (parts.era && system !== 'jalali') text += ' ' + parts.era;
+    if (withTime) text += ' ' + String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
+    return text;
+  }
+  function drawCalendarDate(el) {
+    var system = document.documentElement.getAttribute('data-calendar-system') || 'gregorian';
+    if (!el.dataset.gregorianText) el.dataset.gregorianText = el.textContent;
+    if (system === 'gregorian') { el.textContent = el.dataset.gregorianText; return; }
+    var at = new Date(el.getAttribute('datetime'));
+    if (isNaN(at.getTime())) return;
+    var text = nativeDateText(at, system, /\d:\d/.test(el.dataset.gregorianText));
+    if (text) el.textContent = text;
+  }
+  up.compiler('time[datetime]', drawCalendarDate);
+  window.weddyRedrawDates = function () { document.querySelectorAll('time[datetime]').forEach(drawCalendarDate); };
+  // WeKan's Popup.back(): the pop-over this one was opened from, else none.
+  function openPopOverFrom(name, back) {
+    openPopOver(name);
+    var p = document.querySelector('.js-pop-over');
+    if (p && back) p.dataset.back = back;
+    return p;
+  }
+  up.on('click', '.js-member-date-settings', function (event) {
+    event.preventDefault();
+    openPopOverFrom('member-date-settings', 'member-menu');
+  });
+  up.on('submit', '.js-pop-over form.js-date-format-form', function (event, form) {
+    event.preventDefault();
+    if (form.dataset.saving) return;
+    form.dataset.saving = '1';
+    var format = form.querySelector('.js-date-format-select').value, override = form.querySelector('.js-date-format-override').checked;
+    var day = Number(form.querySelector('#start-day-of-week').value), system = form.querySelector('#calendar-system').value;
+    var err = form.querySelector('.js-date-format-error');
+    callAsync('changeDateFormat', format, override)
+      .then(function () { return callAsync('changeStartDayOfWeek', day); })
+      .then(function () { return callAsync('changeCalendarSystem', system); })
+      .then(function () {
+        var html = document.documentElement;
+        // The pop-over's template is the page's, drawn once: it keeps what was
+        // saved, so it opens again with it.
+        var tpl = document.querySelector('template.js-pop-over-template[data-pop="member-date-settings"]');
+        if (tpl) {
+          var pick = function (sel, value) {
+            tpl.content.querySelectorAll(sel + ' option').forEach(function (o) {
+              if (o.value === String(value)) o.setAttribute('selected', ''); else o.removeAttribute('selected');
+            });
+          };
+          pick('.js-date-format-select', format);
+          pick('#start-day-of-week', day);
+          pick('#calendar-system', system);
+          var box = tpl.content.querySelector('.js-date-format-override');
+          if (box) { if (override) box.setAttribute('checked', ''); else box.removeAttribute('checked'); }
+        }
+        html.setAttribute('data-calendar-system', system);
+        html.setAttribute('data-start-day', String(day));
+        if (override) html.setAttribute('data-date-format', format);
+        // The page draws again with the saved settings; the pop-over goes back.
+        // Where to go back to is read now: the board drawn again closes the
+        // pop-over.
+        var pop = form.closest('.js-pop-over'), back = pop && pop.dataset.back;
+        var wrapper = document.querySelector('.board-wrapper');
+        var redrawn = wrapper ? Promise.resolve(up.reload('.board-wrapper')).catch(function () {}) : Promise.resolve();
+        if (!wrapper) document.querySelectorAll('time[datetime]').forEach(drawCalendarDate);
+        return redrawn.then(function () { if (back) openPopOver(back); else closePopOvers(); });
+      }, function (e) { err.textContent = e.reason || e.message; err.hidden = false; })
+      .finally(function () { delete form.dataset.saving; });
+  });
+  up.on('click', '.js-pop-over .js-apply-user-settings', function (event) {
+    event.preventDefault();
+    window.Popup.back();
+  });
+  // WeKan's board announcement (#1566): dismissed at its version, and the
+  // board admin's pop-over - its switch kept in the form until Save.
+  up.on('click', '.js-close-board-announcement', function (event, el) {
+    event.preventDefault();
+    var wrapper = document.querySelector('.board-wrapper'), banner = el.closest('.js-board-announcement');
+    callAsync('dismissBoardAnnouncement', wrapper.getAttribute('data-board')).then(function () { if (banner) banner.remove(); });
+  });
+  up.on('click', '.js-open-board-announcement', function (event) {
+    event.preventDefault();
+    openPopOver('board-announcement');
+  });
+  up.on('click', '.js-pop-over .js-board-announcement-enabled', function (event, el) {
+    event.preventDefault();
+    var on = !el.classList.contains('is-checked');
+    el.classList.toggle('is-checked', on);
+    var box = el.querySelector('.materialCheckBox');
+    if (box) box.classList.toggle('is-checked', on);
+    el.form.querySelector('.js-board-announcement-enabled-value').value = on ? 'true' : '';
+  });
+  up.on('up:form:submit', 'form.js-board-announcement-form', function () { closePopOvers(); });
+  // Member Settings' toggle: the profile, and this page, at once.
+  up.on('click', '.js-change-settings', function (event) {
+    event.preventDefault();
+    openPopOverFrom('change-settings', 'member-menu');
+    var c = document.querySelector('.js-pop-over .js-submit-on-enter-check');
+    if (c) c.hidden = !submitOnEnter();
+  });
+  up.on('click', '.js-pop-over .js-toggle-submit-on-enter', function (event) {
+    event.preventDefault();
+    var on = !submitOnEnter();
+    callAsync('toggleSubmitOnEnter').then(function () {
+      document.querySelectorAll('[data-submit-on-enter]').forEach(function (e) { e.setAttribute('data-submit-on-enter', on ? 'true' : ''); });
+      var c = document.querySelector('.js-pop-over .js-submit-on-enter-check');
+      if (c) c.hidden = !on;
+    });
+  });
+  // Other users' changes arrive as "board-changed".
+  // One live connection per page and board, kept while the board is drawn
+  // again: closing and opening it on every redraw lost what was announced in
+  // between (an undo right after a rule's change, rules-history). It is
+  // closed only when no page of that board is drawn any more.
+  var live = null; // { board, es, closing }
+  up.compiler('.board-wrapper[data-live]', function (el) {
+    if (typeof EventSource === 'undefined') return;
+    var board = el.getAttribute('data-board');
+    if (live && live.board === board) {
+      clearTimeout(live.closing);
+      live.closing = null;
+    } else {
+      if (live) live.es.close();
+      // The page names itself, so a change it makes to its own user is not
+      // announced back to it (X-Weddy-Live on its method calls).
+      var es = new EventSource(el.getAttribute('data-live') + '&p=' + pageId);
+      es.addEventListener('board-changed', function (e) {
+        // This page's own change (publishFrom) is on it already.
+        if (String(e.data || '').split(' ')[1] === pageId) return;
+        reloadBoard();
+      });
+      live = { board: board, es: es, closing: null };
+    }
+    return function () {
+      // A redraw puts the same board back at once; leaving it closes.
+      var mine = live;
+      if (!mine || mine.board !== board) return;
+      clearTimeout(mine.closing);
+      mine.closing = setTimeout(function () {
+        if (live === mine && !document.querySelector('.board-wrapper[data-board="' + board + '"]')) {
+          mine.es.close();
+          live = null;
+        }
+      }, 1000);
+    };
+  });
+
+  // WeKan's Calendar view (boardBody.js calendarView): FullCalendar, loaded
+  // the first time a calendar is drawn, with WeKan's options
+  // (calendarBaseOptions); the events the page carries, the cards the board
+  // shows. A day selected asks for a title and makes a card due then
+  // (createCardWithDueDate); an event dragged moves its card's due date,
+  // resized its end. The calendar is the element's _wekanCalendar, as WeKan's.
+  var fullCalendarLoad = null;
+  function loadFullCalendar() {
+    if (window.FullCalendar) return Promise.resolve();
+    if (fullCalendarLoad) return fullCalendarLoad;
+    var css = document.createElement('link');
+    css.rel = 'stylesheet'; css.href = '/static/vendor/fullcalendar.min.css';
+    document.head.appendChild(css);
+    fullCalendarLoad = new Promise(function (resolve, reject) {
+      var js = document.createElement('script');
+      js.src = '/static/vendor/fullcalendar.min.js';
+      js.onload = function () { resolve(); };
+      js.onerror = reject;
+      document.head.appendChild(js);
+    });
+    return fullCalendarLoad;
+  }
+  function calendarSetDate(el, cardId, kind, at) {
+    var body = new URLSearchParams();
+    body.append('at', at.toISOString());
+    return fetch('/b/' + el.dataset.board + '/cards/' + encodeURIComponent(cardId) + '/dates/' + kind,
+      { method: 'POST', credentials: 'same-origin', body: body, headers: { 'X-Weddy-Page': pageId } })
+      .then(function (r) { if (!r.ok) throw new Error(r.statusText); });
+  }
+  function calendarCreateCard(el, labels, start) {
+    var t = function (k) { return labels[k] || k; };
+    var modal = document.createElement('div');
+    modal.className = 'modal calendar-create-card';
+    modal.setAttribute('role', 'dialog');
+    var form = document.createElement('form');
+    form.className = 'modal-content';
+    form.innerHTML = '<div class="modal-header"><h5 class="modal-title"></h5>' +
+      '<button type="button" class="close calendar-create-close" aria-label=""><span aria-hidden="true">&times;</span></button></div>' +
+      '<div class="modal-body"><textarea rows="2" class="form-control" id="card-title-input" data-editor-submit="#create-card-button"></textarea></div>' +
+      '<div class="modal-footer"><button type="submit" class="primary confirm" id="create-card-button"></button></div>';
+    form.querySelector('.modal-title').textContent = t('r-create-card');
+    form.querySelector('.calendar-create-close').setAttribute('aria-label', t('close'));
+    form.querySelector('#create-card-button').textContent = t('add-card');
+    modal.appendChild(form);
+    var close = function () { modal.remove(); };
+    form.querySelector('.calendar-create-close').addEventListener('click', close);
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var title = form.querySelector('#card-title-input').value;
+      if (!title.trim() || !el.dataset.list || !el.dataset.swimlane) return;
+      window.Meteor.callAsync('createCardWithDueDate', el.dataset.board, el.dataset.list, title, start.toISOString(), el.dataset.swimlane)
+        .then(function () { close(); reloadBoard(true); }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+    });
+    document.body.appendChild(modal);
+    form.querySelector('#card-title-input').focus();
+  }
+  // WeKan's Calendar Mode (#3194, models/lib/calendarMode.js): each due card
+  // on its local day, the date only, with its labels and whole title; a day's
+  // cards in the board's order - the list's place, then the card's, then the
+  // title. A month or a week, the choice kept in this browser only.
+  var CALENDAR_MODE_RANGE_KEY = 'calendarModeRange';
+  function calModePad(n) { return String(n).padStart(2, '0'); }
+  function calModeDayKey(date) {
+    var d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + calModePad(d.getMonth() + 1) + '-' + calModePad(d.getDate());
+  }
+  function calModeMidnight(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function calModeDays(anchor, range, firstDay) {
+    var base = calModeMidnight(anchor);
+    var first = range === 'month' ? new Date(base.getFullYear(), base.getMonth(), 1) : base;
+    var back = (first.getDay() - firstDay + 7) % 7;
+    var start = new Date(first.getFullYear(), first.getMonth(), first.getDate() - back);
+    var monthEnd = new Date(base.getFullYear(), base.getMonth() + 1, 1), todayKey = calModeDayKey(new Date());
+    var weeks = [], cursor = start;
+    do {
+      var week = [];
+      for (var i = 0; i < 7; i += 1) {
+        var date = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + i);
+        week.push({ key: calModeDayKey(date), date: date, inRange: range === 'week' || date.getMonth() === base.getMonth(), isToday: calModeDayKey(date) === todayKey });
+      }
+      weeks.push(week);
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 7);
+    } while (range === 'month' && cursor < monthEnd && weeks.length < 6);
+    return weeks;
+  }
+  up.compiler('.js-calendar-mode-view', function (view) {
+    var cards = [];
+    try { cards = JSON.parse(view.dataset.cards || '[]'); } catch (e) { /* drawn with none */ }
+    var byDay = {};
+    var num = function (v) { return typeof v === 'number' && isFinite(v) ? v : Infinity; };
+    cards.forEach(function (c) { var k = calModeDayKey(c.dueAt); if (k) (byDay[k] = byDay[k] || []).push(c); });
+    Object.keys(byDay).forEach(function (k) {
+      byDay[k].sort(function (a, b) { return num(a.listSort) - num(b.listSort) || num(a.sort) - num(b.sort) || String(a.title).localeCompare(String(b.title)); });
+    });
+    var firstDay = pickerFirstDay(); // the member's first day of the week
+    var range = 'month';
+    try { if (localStorage.getItem(CALENDAR_MODE_RANGE_KEY) === 'week') range = 'week'; } catch (e) { /* month */ }
+    var anchor = new Date(), locale = document.documentElement.lang || 'en';
+    var grid = view.querySelector('.calendar-mode-grid'), title = view.querySelector('.calendar-mode-title');
+    function fmt(opts, d) { try { return new Intl.DateTimeFormat(locale, opts).format(d); } catch (e) { return d.toDateString(); } }
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function draw() {
+      var weeks = calModeDays(anchor, range, firstDay);
+      title.textContent = range === 'week'
+        ? fmt({ day: 'numeric', month: 'short', year: 'numeric' }, weeks[0][0].date) + ' - ' + fmt({ day: 'numeric', month: 'short', year: 'numeric' }, weeks[0][6].date)
+        : fmt({ month: 'long', year: 'numeric' }, anchor);
+      view.querySelectorAll('.js-calendar-mode-range').forEach(function (b) { b.classList.toggle('is-active', b.dataset.range === range); });
+      grid.textContent = '';
+      var head = el('div', 'calendar-mode-weekdays'); head.setAttribute('role', 'row');
+      weeks[0].forEach(function (d) { var h = el('div', 'calendar-mode-weekday', fmt({ weekday: 'short' }, d.date)); h.setAttribute('role', 'columnheader'); head.appendChild(h); });
+      grid.appendChild(head);
+      weeks.forEach(function (week) {
+        var row = el('div', 'calendar-mode-week'); row.setAttribute('role', 'row');
+        week.forEach(function (d) {
+          var cell = el('div', 'calendar-mode-day' + (d.inRange ? '' : ' is-outside') + (d.isToday ? ' is-today' : ''));
+          cell.setAttribute('role', 'gridcell'); cell.dataset.day = d.key;
+          cell.appendChild(el('div', 'calendar-mode-day-number', String(d.date.getDate())));
+          (byDay[d.key] || []).forEach(function (c) {
+            var a = el('a', 'calendar-mode-card js-calendar-mode-card' + (c.color ? ' card-label-' + c.color + '-border' : ''));
+            a.href = c.url; a.dataset.cardId = c._id;
+            if (c.labels && c.labels.length) {
+              var marks = el('div', 'calendar-mode-card-labels');
+              c.labels.forEach(function (l) { var m = el('span', 'card-label card-label-' + l.color, l.name); m.title = l.name; marks.appendChild(m); });
+              a.appendChild(marks);
+            }
+            a.appendChild(el('div', 'calendar-mode-card-title', c.title));
+            cell.appendChild(a);
+          });
+          row.appendChild(cell);
+        });
+        grid.appendChild(row);
+      });
+    }
+    function shift(step) {
+      var b = calModeMidnight(anchor);
+      anchor = range === 'week' ? new Date(b.getFullYear(), b.getMonth(), b.getDate() + 7 * step) : new Date(b.getFullYear(), b.getMonth() + step, 1);
+      draw();
+    }
+    view.addEventListener('click', function (event) {
+      var t = event.target.closest('button, .js-calendar-mode-card');
+      if (!t) return;
+      if (t.classList.contains('js-calendar-mode-today')) { anchor = new Date(); draw(); }
+      else if (t.classList.contains('js-calendar-mode-prev')) shift(-1);
+      else if (t.classList.contains('js-calendar-mode-next')) shift(1);
+      else if (t.classList.contains('js-calendar-mode-range')) {
+        if (t.dataset.range !== 'week' && t.dataset.range !== 'month') return;
+        range = t.dataset.range;
+        try { localStorage.setItem(CALENDAR_MODE_RANGE_KEY, range); } catch (e) { /* this browser only */ }
+        draw();
+      } else if (t.classList.contains('js-calendar-mode-card')) {
+        event.preventDefault();
+        up.navigate({ url: t.getAttribute('href') });
+      }
+    });
+    draw();
+  });
+  // WeKan's calendarDateDisplayOptions (client/lib/dateDisplay.js): the board
+  // calendars in the member's calendar - a month is the calendar's own month,
+  // found by its fields; the title, the day numbers and the list's days are
+  // drawn in it; Previous and Next step its months. Gregorian keeps
+  // FullCalendar's own month.
+  function nativeCalendarOptions(el) {
+    var system = document.documentElement.getAttribute('data-calendar-system') || 'gregorian';
+    var cal = CALENDAR_INTL[system] || system;
+    if (system === 'gregorian' || !calParts(new Date(), cal)) return {};
+    var labels = {};
+    try { labels = JSON.parse(el.dataset.labels || '{}'); } catch (e) { /* defaults */ }
+    var t = function (k, fallback) { return labels[k] || fallback; };
+    var marker = function (m) { return nativeDateText(new Date(m.year, m.month, m.day, 12), system, false); };
+    var range = function (date) { return calMonthRange(date, cal); };
+    var navigate = function (dir) {
+      var c = el._wekanCalendar;
+      if (!c) return;
+      if (['selectedCalendarMonth', 'selectedCalendarListMonth'].indexOf(c.view.type) < 0) { c[dir < 0 ? 'prev' : 'next'](); return; }
+      var r = range(c.getDate());
+      c.gotoDate(dir < 0 ? calDay(r.start, -1) : r.end);
+    };
+    return {
+      initialView: 'selectedCalendarMonth',
+      views: {
+        selectedCalendarMonth: { type: 'dayGrid', monthMode: true, fixedWeekCount: false, visibleRange: range },
+        selectedCalendarListMonth: { type: 'list', visibleRange: range },
+      },
+      customButtons: {
+        dayGridMonth: { text: t('month', 'Month'), click: function () { el._wekanCalendar.changeView('selectedCalendarMonth'); } },
+        listMonth: { text: t('list', 'List'), click: function () { el._wekanCalendar.changeView('selectedCalendarListMonth'); } },
+        prev: { text: t('previous', 'Previous'), click: function () { navigate(-1); } },
+        next: { text: t('next', 'Next'), click: function () { navigate(1); } },
+      },
+      titleFormat: function (info) {
+        var start = marker(info.start), end = info.end && marker(info.end);
+        return end && end !== start ? start + (info.defaultSeparator || ' – ') + end : start;
+      },
+      dayCellContent: function (info) {
+        var p = calParts(info.date, cal);
+        return p ? String(Number(p.day)) : info.dayNumberText;
+      },
+      dayHeaderContent: function (info) {
+        return ['dayGridMonth', 'selectedCalendarMonth'].indexOf(info.view.type) >= 0 ? info.text : nativeDateText(info.date, system, false);
+      },
+      listDayFormat: function (info) { return marker(info.date); },
+      listDaySideFormat: function () { return ''; },
+    };
+  }
+  up.compiler('#calendar-view, #multiboard-calendar-view', function (el) {
+    var labels = {}, events = [];
+    try { labels = JSON.parse(el.dataset.labels || '{}'); events = JSON.parse(el.dataset.events || '[]'); } catch (e) { /* drawn with none */ }
+    var t = function (k, fallback) { return labels[k] || fallback; };
+    var cal = null, gone = false;
+    loadFullCalendar().then(function () {
+      if (gone) return;
+      cal = new window.FullCalendar.Calendar(el, Object.assign({
+        initialView: 'dayGridMonth',
+        firstDay: pickerFirstDay(), // the member's first day of the week
+        weekNumbers: true,
+        headerToolbar: { left: 'title', center: '', right: 'today prev,next timeGridDay,listDay timeGridWeek,listWeek dayGridMonth,listMonth' },
+        buttonIcons: false,
+        buttonText: { prev: t('previous', 'Previous'), next: t('next', 'Next'), today: t('today', 'Today'), day: t('day', 'Day'),
+          week: t('week', 'Week'), month: t('month', 'Month'), list: t('list', 'List') },
+        height: 'auto',
+        nowIndicator: true,
+        locale: document.documentElement.lang || 'en',
+        direction: document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr',
+        // The Multi Board Calendar is read-only (#2469): a card's board is not
+        // necessarily the one open.
+        editable: el.dataset.readonly !== 'true',
+        selectable: el.dataset.readonly !== 'true',
+        navLinks: el.dataset.readonly !== 'true',
+        businessHours: { daysOfWeek: [1, 2, 3, 4, 5], start: '8:00', end: '18:00' },
+        events: events,
+        eventDrop: function (info) {
+          if (info.event.allDay) { info.revert(); return; }
+          calendarSetDate(el, info.event.id, 'due', info.event.start).catch(function () { info.revert(); });
+        },
+        eventResize: function (info) {
+          if (!info.event.end) { info.revert(); return; }
+          calendarSetDate(el, info.event.id, 'end', info.event.end).catch(function () { info.revert(); });
+        },
+        select: function (info) { calendarCreateCard(el, labels, info.start); },
+      }, nativeCalendarOptions(el)));
+      el._wekanCalendar = cal;
+      cal.render();
+    });
+    return function () { gone = true; if (cal) cal.destroy(); };
+  });
+  // WeKan's sidebar and pop-overs: the sidebar opens and closes, the board menu
+  // opens from it, and one pop-over is open at a time.
+  // As in WeKan, there is one pop-over at a time: opening one makes it from
+  // its <template>, closing it takes it away.
+  function closePopOvers() {
+    var had = document.querySelector('.js-pop-over');
+    document.querySelectorAll('.js-pop-over').forEach(function (p) { p.remove(); });
+    if (had && staleUnderPopOver) {
+      staleUnderPopOver = false;
+      setTimeout(reloadBoard, 0);
+    }
+  }
+  function openPopOver(name) {
+    closePopOvers();
+    var t = document.querySelector('template.js-pop-over-template[data-pop="' + name + '"]');
+    if (!t) return;
+    var p = document.createElement('div');
+    p.className = 'pop-over js-pop-over';
+    p.setAttribute('role', 'dialog');
+    p.setAttribute('aria-label', t.getAttribute('data-title') || '');
+    // WeKan's pop-over names itself by its template (popup.jade data-popup).
+    if (t.dataset.popup) p.setAttribute('data-popup', t.dataset.popup);
+    p.appendChild(t.content.cloneNode(true));
+    document.body.appendChild(p);
+    up.hello(p);
+  }
+  // The sidebar stays as the user left it - open or not, its activities shown
+  // or not - while the board reloads under it, as WeKan's does: kept for the tab.
+  function sidebarState(key, value) {
+    try {
+      if (value === undefined) return sessionStorage.getItem('weddy-sidebar-' + key) === '1';
+      sessionStorage.setItem('weddy-sidebar-' + key, value ? '1' : '0');
+    } catch (e) { /* no storage: the sidebar just closes on reload */ }
+    return false;
+  }
+  // The board sidebar opens below the header bar, as WeKan's, so the bar's
+  // sidebar hamburger stays on screen; the bar wraps, so its height is measured.
+  function headerHeight() {
+    var bar = document.getElementById('header');
+    if (bar) document.documentElement.style.setProperty('--weddy-header-height', bar.getBoundingClientRect().bottom + 'px');
+  }
+  up.compiler('#header', function () { headerHeight(); });
+  window.addEventListener('resize', headerHeight);
+  up.on('click', '.js-toggle-page-sidebar', function (event) {
+    event.preventDefault();
+    var sb = document.querySelector('.board-sidebar');
+    if (sb) {
+      var open = sb.classList.toggle('is-open');
+      sidebarState('open', open);
+      if (!open) { sidebarState('archives', false); sidebarState('filter', false); }
+    }
+  });
+  up.on('click', '.js-close-sidebar', function (event, el) {
+    event.preventDefault();
+    el.closest('.board-sidebar').classList.remove('is-open');
+    sidebarState('open', false);
+    sidebarState('archives', false);
+    sidebarState('filter', false);
+  });
+  // WeKan's header Create Board icon: the pop-over, its title to type into.
+  up.on('click', '.js-create-board', function (event) {
+    event.preventDefault();
+    openPopOver('create-board');
+    var t = document.querySelector('.js-pop-over .js-new-board-title');
+    if (t) t.focus();
+  });
+  // WeKan's Popup.open(name) and Popup.close(), for what opens a pop-over by
+  // its WeKan name: the Weddy pop-over whose template has that data-popup.
+  if (!window.Popup) {
+    window.Popup = {
+      open: function (name) {
+        return function () {
+          var t = document.querySelector('template.js-pop-over-template[data-popup="' + name + 'Popup"]');
+          if (t) openPopOver(t.dataset.pop);
+        };
+      },
+      close: function () { closePopOvers(); },
+      back: function () {
+        var p = document.querySelector('.js-pop-over'), back = p && p.dataset.back;
+        if (back) openPopOver(back); else closePopOvers();
+      },
+    };
+  }
+  // Board Settings / Swimlane and List (WeKan's boardSwimlaneSettingsPopup,
+  // boardListSettingsPopup).
+  up.on('click', '.js-open-board-swimlane-settings', function (event) { event.preventDefault(); openPopOver('board-swimlane-settings'); });
+  up.on('click', '.js-open-board-list-settings', function (event) { event.preventDefault(); openPopOver('board-list-settings'); });
+  function settingsBox(el, on) {
+    el.classList.toggle('is-checked', on);
+    var i = el.querySelector('.fa');
+    if (i) { i.classList.toggle('fa-check', on); i.classList.toggle('fa-square-o', !on); }
+  }
+  // A board setting of theirs, a board admin's, as WeKan's Boards.update.
+  up.on('click', '.js-board-settings-flag', function (event, el) {
+    event.preventDefault();
+    var on = !el.classList.contains('is-checked'), set = {};
+    set[el.dataset.field] = on;
+    window.Meteor.callAsync('/boards/update', { _id: el.closest('form').dataset.board }, { $set: set }).then(function () {
+      settingsBox(el, on);
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  });
+  // WeKan's boardSettingsColumnActions: a whole column at once
+  // (setBoardSettingsColumn), the boxes of that column shown as it now is.
+  up.on('click', '.js-set-settings-column', function (event, button) {
+    event.preventDefault();
+    event.stopPropagation();
+    var actions = button.closest('.board-settings-column-actions');
+    var holder = actions.closest('[data-board]') || button.closest('.js-pop-over').querySelector('[data-board]');
+    var on = button.dataset.enabled === 'true';
+    actions.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    var old = actions.querySelector('.warning');
+    if (old) old.remove();
+    window.Meteor.callAsync('setBoardSettingsColumn', holder.dataset.board, actions.dataset.section, actions.dataset.column, on).then(function () {
+      if (actions.dataset.column === 'draggable') {
+        actions.closest('.board-drag-settings').querySelectorAll('.js-board-drag-setting').forEach(function (box) { box.checked = on; });
+      } else {
+        actions.closest('form').querySelectorAll('.js-board-settings-flag').forEach(function (f) { settingsBox(f, on); });
+      }
+      reloadBoard(true);
+    }, function (err) {
+      var w = document.createElement('div');
+      w.className = 'warning'; w.setAttribute('role', 'alert'); w.textContent = (err && (err.reason || err.message)) || String(err);
+      actions.appendChild(w);
+    }).then(function () { actions.querySelectorAll('button').forEach(function (b) { b.disabled = false; }); });
+  });
+  // Board Settings / Board View (WeKan's boardViewSettingsPopup): a view's
+  // default or shown flag of a side, and its place in the menu - dragged by
+  // its name or handle, or moved by Up and Down - each written as WeKan's
+  // Boards.update writes it, the server refusing an unknown view or a side's
+  // default hidden.
+  up.on('click', '.js-open-board-view-settings', function (event) {
+    event.preventDefault();
+    openPopOver('board-view-settings');
+  });
+  function bvSet(el, set) {
+    var form = el.closest('.board-view-settings');
+    return window.Meteor.callAsync('/boards/update', { _id: form.dataset.board }, { $set: set }).then(function () {
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  }
+  function bvBox(el, on) {
+    el.classList.toggle('is-checked', on);
+    var i = el.querySelector('.fa');
+    if (i) { i.classList.toggle('fa-check', on); i.classList.toggle('fa-square-o', !on); }
+  }
+  up.on('click', '.js-board-view-default', function (event, el) {
+    event.preventDefault();
+    var row = el.closest('.js-board-view-row'), side = el.dataset.visibility, set = {};
+    set[side === 'public' ? 'defaultPublicBoardView' : 'defaultPrivateBoardView'] = row.dataset.view;
+    bvSet(el, set).then(function () {
+      el.closest('.js-board-view-sortable').querySelectorAll('.js-board-view-default[data-visibility="' + side + '"]').forEach(function (d) { bvBox(d, d === el); });
+      bvBox(row.querySelector('.js-board-view-show[data-visibility="' + side + '"]'), true);
+    });
+  });
+  up.on('click', '.js-board-view-show', function (event, el) {
+    event.preventDefault();
+    var row = el.closest('.js-board-view-row'), on = !el.classList.contains('is-checked'), set = {};
+    set['boardViewSettings.' + row.dataset.view + '.' + (el.dataset.visibility === 'public' ? 'showOnPublic' : 'showOnPrivate')] = on;
+    bvSet(el, set).then(function () { bvBox(el, on); });
+  });
+  function bvSaveOrder(box) {
+    var order = Array.prototype.map.call(box.querySelectorAll('.js-board-view-row'), function (r) { return r.dataset.view; });
+    bvSet(box, { boardViewOrder: order });
+  }
+  var bvDrag = null;
+  document.addEventListener('pointerdown', function (event) {
+    var h = event.button === 0 && event.target.closest && event.target.closest('.js-pop-over .js-board-view-order-handle');
+    if (!h) return;
+    bvDrag = { row: h.closest('.js-board-view-row'), y: event.clientY, moved: false };
+    event.preventDefault();
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (bvDrag && !bvDrag.moved && Math.abs(event.clientY - bvDrag.y) > 4) { bvDrag.moved = true; bvDrag.row.classList.add('is-dragging'); }
+  }, true);
+  document.addEventListener('pointerup', function (event) {
+    var d = bvDrag;
+    bvDrag = null;
+    if (!d || !d.moved) return;
+    d.row.classList.remove('is-dragging');
+    var under = document.elementFromPoint(event.clientX, event.clientY);
+    var target = under && under.closest('.js-board-view-row');
+    if (!target || target === d.row || target.parentNode !== d.row.parentNode) return;
+    var r = target.getBoundingClientRect();
+    target.parentNode.insertBefore(d.row, event.clientY < r.top + r.height / 2 ? target : target.nextSibling);
+    bvSaveOrder(d.row.parentNode);
+  }, true);
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    var h = event.target.closest && event.target.closest('.js-pop-over .js-board-view-order-handle');
+    if (!h) return;
+    event.preventDefault();
+    var row = h.closest('.js-board-view-row');
+    var sib = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+    if (!sib) return;
+    row.parentNode.insertBefore(row, event.key === 'ArrowUp' ? sib : sib.nextSibling);
+    h.focus();
+    bvSaveOrder(row.parentNode);
+  }, true);
+  // Board Settings / Card (WeKan's boardCardSettingsPopup).
+  up.on('click', '.js-open-board-card-settings', function (event) {
+    event.preventDefault();
+    openPopOver('board-card-settings');
+  });
+  // A row's checkbox: the board's setting for that side (/boards/update, as
+  // WeKan's Boards.update), a Scrum field's visibility (scrum.configure), or
+  // the user's own labels text - each cycling as WeKan's does.
+  function setCardSettingsBox(box, on) {
+    box.classList.toggle('is-checked', on);
+    box.setAttribute('aria-checked', on ? 'true' : 'false');
+    var m = box.querySelector('.materialCheckBox');
+    if (m) m.classList.toggle('is-checked', on);
+  }
+  // A row's setting written, as WeKan's handler of that row writes it.
+  function csWriteRow(d, pane, on) {
+    if (d.kind === 'scrum') {
+      var vis = {}; vis[d.scrum] = on;
+      return window.Meteor.callAsync('scrum.configure', pane.dataset.board, { visibility: vis }, Number(pane.dataset.revision) || 0).then(function () {
+        document.querySelectorAll('.js-card-settings-pane').forEach(function (p) { p.dataset.revision = String((Number(p.dataset.revision) || 0) + 1); });
+      });
+    }
+    if (d.kind === 'personal') {
+      // Shown follows the override: shown, then hidden, then the board's.
+      return d.side === 'minicard'
+        ? window.Meteor.callAsync('setShowLabelTextOverride', on)
+        : window.Meteor.callAsync('/users/update', { _id: window.Meteor.userId() }, { $set: { 'profile.cardLabelTextOverride': on } });
+    }
+    var set = {}; set[d.field] = on;
+    return window.Meteor.callAsync('/boards/update', { _id: pane.dataset.board }, { $set: set });
+  }
+  function csHiddenWithout(pane, id) {
+    return Array.prototype.filter.call(pane.querySelectorAll('.js-card-settings-section.is-section-hidden'), function (sec) {
+      return sec.dataset.section !== id;
+    }).map(function (sec) { return sec.dataset.section; });
+  }
+  function csFail(err) { window.alert((err && (err.reason || err.message)) || String(err)); }
+  up.on('click', '.js-card-settings-toggle', function (event, box) {
+    event.preventDefault();
+    var row = box.closest('.js-card-field-order-row');
+    var on = !box.classList.contains('is-checked');
+    csWriteRow(row.dataset, box.closest('.js-card-settings-pane'), on).then(function () {
+      setCardSettingsBox(box, on);
+      reloadBoard(true);
+    }, csFail);
+  });
+  // A section's one line, and Custom Fields' own checkbox (WeKan's
+  // singleLineChecked): ticked is the field's flag on AND the section shown;
+  // unticking turns the flag off, ticking turns it on and shows the section.
+  up.on('click', '.js-card-settings-single-toggle', function (event, box) {
+    event.preventDefault();
+    var head = box.closest('.js-card-field-order-row'), sec = box.closest('.js-card-settings-section');
+    var pane = box.closest('.js-card-settings-pane');
+    // Decided by what the box shows, the one thing the user sees: ticked, the
+    // flag goes off; unticked, the flag goes on and the section is shown -
+    // both idempotent, so nothing hangs on the page's other state being new.
+    var steps;
+    if (box.getAttribute('aria-checked') === 'true') {
+      steps = [function () { return csWriteRow(head.dataset, pane, false); }];
+    } else {
+      var set = {};
+      set[pane.dataset.side === 'minicard' ? 'cardSettingsHiddenOnMinicard' : 'cardSettingsHiddenOnCard'] = csHiddenWithout(pane, sec.dataset.section);
+      steps = [function () { return csWriteRow(head.dataset, pane, true); },
+        function () { return window.Meteor.callAsync('/boards/update', { _id: pane.dataset.board }, { $set: set }); }];
+    }
+    var on = box.getAttribute('aria-checked') !== 'true';
+    steps.reduce(function (p, step) { return p.then(step); }, Promise.resolve()).then(function () {
+      head.dataset.flag = on ? 'true' : '';
+      if (on) sec.classList.remove('is-section-hidden');
+      setCardSettingsBox(box, on);
+      reloadBoard(true);
+    }, csFail);
+  });
+  // Card Settings' layout (WeKan's boardCardSettingsPopup): a pane folds by
+  // its caret, kept for the browser; the panes stack when the pop-over is
+  // narrower than two of them; the splitter between them is the Minicard
+  // pane's share of the width - dragged, by the keys, half and half again on
+  // a double-click - kept in the user's profile (cardSettingsSplit); the
+  // corner grip resizes the pop-over.
+  var CS_MIN_EM = 16, CS_SPLITTER = 8;
+  // The split last set here: the pop-over opened again is made from the
+  // page's template, drawn with the split as it was then.
+  var csSplitNow = null;
+  function csStore(key, value) {
+    try {
+      if (value === undefined) return localStorage.getItem('weddy-card-settings-' + key);
+      localStorage.setItem('weddy-card-settings-' + key, value);
+    } catch (e) { /* no storage: the fold lasts while the pop-over is open */ }
+    return null;
+  }
+  function csFoldPane(pane, folded) {
+    pane.classList.toggle('is-pane-collapsed', folded);
+    var caret = pane.querySelector('.js-toggle-card-settings-pane');
+    if (caret) {
+      caret.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      var i = caret.querySelector('.fa');
+      if (i) { i.classList.toggle('fa-caret-down', !folded); i.classList.toggle('fa-caret-right', folded); }
+    }
+    var body = pane.querySelector('.js-card-settings-pane-body');
+    if (body) body.hidden = folded;
+    var panes = pane.closest('.js-card-settings-panes');
+    if (panes) panes.classList.toggle('has-collapsed-pane', !!panes.querySelector('.is-pane-collapsed'));
+  }
+  function csLayout(panes) {
+    var em = parseFloat(getComputedStyle(panes).fontSize) || 16;
+    // Two panes at their narrowest and the splitter fill it exactly: stacked.
+    panes.classList.toggle('is-stacked', panes.clientWidth <= 2 * CS_MIN_EM * em + CS_SPLITTER);
+  }
+  function csSetSplit(panes, f, save) {
+    var em = parseFloat(getComputedStyle(panes).fontSize) || 16;
+    var w = panes.clientWidth - CS_SPLITTER;
+    var min = w > 0 ? Math.min(0.5, CS_MIN_EM * em / w) : 0.1;
+    f = Math.max(min, Math.min(1 - min, f));
+    panes.style.setProperty('--card-settings-split', f.toFixed(4));
+    if (save) csSplitNow = f;
+    var sp = panes.querySelector('.js-card-settings-splitter');
+    if (sp) sp.setAttribute('aria-valuenow', String(Math.round(f * 100)));
+    if (save && window.Meteor && window.Meteor.userId()) {
+      clearTimeout(csSetSplit.timer);
+      csSetSplit.timer = setTimeout(function () {
+        window.Meteor.callAsync('/users/update', { _id: window.Meteor.userId() }, { $set: { 'profile.cardSettingsSplit': Number(f.toFixed(4)) } }).catch(function () {});
+      }, 200);
+    }
+  }
+  up.compiler('.js-pop-over .js-card-settings-panes', function (panes) {
+    panes.querySelectorAll('.js-card-settings-pane').forEach(function (pane) {
+      if (csStore('folded-' + pane.dataset.side) === '1') csFoldPane(pane, true);
+    });
+    csLayout(panes);
+    csSetSplit(panes, csSplitNow !== null ? csSplitNow : (parseFloat(getComputedStyle(panes).getPropertyValue('--card-settings-split')) || 0.5), false);
+    if (typeof ResizeObserver === 'undefined') return;
+    var ro = new ResizeObserver(function () { csLayout(panes); });
+    ro.observe(panes);
+    return function () { ro.disconnect(); };
+  });
+  up.on('click', '.js-toggle-card-settings-pane', function (event, el) {
+    event.preventDefault();
+    var pane = el.closest('.js-card-settings-pane');
+    var folded = !pane.classList.contains('is-pane-collapsed');
+    csFoldPane(pane, folded);
+    csStore('folded-' + pane.dataset.side, folded ? '1' : '0');
+  });
+  var csSplitDrag = null;
+  document.addEventListener('pointerdown', function (event) {
+    var sp = event.button === 0 && event.target.closest && event.target.closest('.js-pop-over .js-card-settings-splitter');
+    if (!sp) return;
+    event.preventDefault();
+    csSplitDrag = { panes: sp.closest('.js-card-settings-panes') };
+    document.body.classList.add('card-settings-splitting-active');
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (!csSplitDrag) return;
+    var r = csSplitDrag.panes.getBoundingClientRect();
+    var rtl = getComputedStyle(csSplitDrag.panes).direction === 'rtl';
+    var x = rtl ? r.right - event.clientX : event.clientX - r.left;
+    csSetSplit(csSplitDrag.panes, (x - CS_SPLITTER / 2) / (r.width - CS_SPLITTER), true);
+  }, true);
+  document.addEventListener('pointerup', function () {
+    if (!csSplitDrag) return;
+    csSplitDrag = null;
+    document.body.classList.remove('card-settings-splitting-active');
+  }, true);
+  up.on('dblclick', '.js-card-settings-splitter', function (event, sp) {
+    csSetSplit(sp.closest('.js-card-settings-panes'), 0.5, true);
+  });
+  up.on('keydown', '.js-card-settings-splitter', function (event, sp) {
+    var panes = sp.closest('.js-card-settings-panes');
+    var f = parseFloat(panes.style.getPropertyValue('--card-settings-split')) || 0.5;
+    var step = { ArrowRight: 0.05, ArrowLeft: -0.05 }[event.key];
+    if (getComputedStyle(panes).direction === 'rtl' && step) step = -step;
+    if (step) f += step;
+    else if (event.key === 'Home') f = 0;
+    else if (event.key === 'End') f = 1;
+    else return;
+    event.preventDefault();
+    csSetSplit(panes, f, true);
+  });
+  var csGrip = null;
+  document.addEventListener('pointerdown', function (event) {
+    var g = event.button === 0 && event.target.closest && event.target.closest('.js-pop-over > .js-date-popup-resize');
+    if (!g) return;
+    event.preventDefault();
+    var pop = g.parentNode, r = pop.getBoundingClientRect();
+    // From here on the pop-over is placed by its top left corner, which stays.
+    pop.style.left = r.left + 'px'; pop.style.top = r.top + 'px'; pop.style.right = 'auto';
+    csGrip = { pop: pop, x: event.clientX, y: event.clientY, w: r.width, h: r.height };
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (!csGrip) return;
+    csGrip.pop.style.width = Math.max(200, csGrip.w + event.clientX - csGrip.x) + 'px';
+    csGrip.pop.style.height = Math.max(150, csGrip.h + event.clientY - csGrip.y) + 'px';
+  }, true);
+  document.addEventListener('pointerup', function () { csGrip = null; }, true);
+  // A hamburger of Card Settings (WeKan's cardSettingsInlinePanel): what it
+  // holds opens under the section's line, inside the pane - one at a time,
+  // the same hamburger or Escape closing it, never Card Settings itself.
+  function csClosePanels(pop) {
+    (pop || document).querySelectorAll('.js-card-settings-panel').forEach(function (p) { p.remove(); });
+    (pop || document).querySelectorAll('.js-open-card-settings-section-menu.is-open, .js-open-card-settings-item-menu.is-open, .js-card-settings-edit-custom-field.is-open, .js-card-settings-add-custom-field.is-open').forEach(function (b) {
+      b.classList.remove('is-open'); b.setAttribute('aria-expanded', 'false');
+    });
+  }
+  function csOpenPanel(burger) {
+    var pop = burger.closest('.js-pop-over');
+    var t = pop && pop.querySelector('template.js-card-settings-panel-tpl[data-panel="' + burger.dataset.panel + '"]');
+    if (!t) return;
+    var panel = document.createElement('div');
+    panel.className = 'card-settings-inline-panel js-card-settings-panel card-settings-inline-panel-section';
+    panel.dataset.panel = burger.dataset.panel;
+    // WeKan's kinds (cardSettingsInlinePanel): a section's, a field's, or
+    // the + making one.
+    panel.dataset.kind = burger.dataset.panel === 'field-new' ? 'create' : burger.dataset.panel.indexOf('field-') === 0 ? 'field'
+      : burger.dataset.panel.indexOf('row-') === 0 ? 'row' : 'section';
+    var close = document.createElement('a');
+    close.href = '#'; close.className = 'card-settings-inline-panel-close js-close-card-settings-panel';
+    close.setAttribute('role', 'button'); close.setAttribute('aria-label', burger.getAttribute('aria-label') || '');
+    close.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+    panel.appendChild(close);
+    panel.appendChild(t.content.cloneNode(true));
+    // Under the section's line; a custom field's, and the +'s, under the
+    // section's list of fields, which a redraw renews around it.
+    var list = burger.closest('.js-card-settings-custom-fields');
+    var head = burger.closest('.card-settings-inline-section-head');
+    var row = burger.closest('.card-settings-inline-item.js-card-field-order-row');
+    if (row) row.parentNode.insertBefore(panel, row.nextSibling); // a row's: under the row
+    else if (list) list.parentNode.insertBefore(panel, list.nextSibling);
+    else if (head) head.parentNode.insertBefore(panel, head.nextSibling);
+    else burger.parentNode.insertBefore(panel, burger.nextSibling); // the +: under it
+    burger.classList.add('is-open');
+    burger.setAttribute('aria-expanded', 'true');
+    up.hello(panel);
+  }
+  up.on('click', '.js-open-card-settings-section-menu', function (event, burger) {
+    event.preventDefault();
+    var open = burger.classList.contains('is-open');
+    csClosePanels(burger.closest('.js-pop-over'));
+    if (!open) csOpenPanel(burger);
+  });
+  // The user's labels text back to the board's default (WeKan's
+  // setShowLabelTextOverride(null), and the card's override unset).
+  up.on('click', '.js-reset-minicard-label-text-override, .js-reset-card-label-text-override', function (event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    var pop = el.closest('.js-pop-over');
+    var done = el.classList.contains('js-reset-minicard-label-text-override')
+      ? window.Meteor.callAsync('setShowLabelTextOverride', null)
+      : window.Meteor.callAsync('/users/update', { _id: window.Meteor.userId() }, { $unset: { 'profile.cardLabelTextOverride': '' } });
+    done.then(function () { csClosePanels(pop); reloadBoard(true); }, csFail);
+  });
+  up.on('click', '.js-card-settings-edit-custom-field, .js-card-settings-add-custom-field, .js-open-card-settings-item-menu', function (event, burger) {
+    event.preventDefault();
+    var open = burger.classList.contains('is-open');
+    csClosePanels(burger.closest('.js-pop-over'));
+    if (!open) csOpenPanel(burger);
+  });
+  // Custom Fields' items dragged by their names, or moved by Up and Down:
+  // each field's place written as its sort (WeKan's placeCustomFieldOrder).
+  function cfSaveOrder(list) {
+    var ids = Array.prototype.map.call(list.querySelectorAll('.js-card-settings-custom-field'), function (el) { return el.dataset.id; });
+    Promise.all(ids.map(function (id, i) {
+      return window.Meteor.callAsync('/customFields/update', { _id: id }, { $set: { sort: i } });
+    })).then(function () { reloadBoard(true); }, csFail);
+  }
+  var cfDrag = null;
+  document.addEventListener('pointerdown', function (event) {
+    var h = event.button === 0 && event.target.closest && event.target.closest('.js-pop-over .js-card-settings-custom-field-handle');
+    if (!h) return;
+    cfDrag = { item: h.closest('.js-card-settings-custom-field'), y: event.clientY, moved: false };
+    event.preventDefault();
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (cfDrag && !cfDrag.moved && Math.abs(event.clientY - cfDrag.y) > 4) { cfDrag.moved = true; cfDrag.item.classList.add('is-dragging'); }
+  }, true);
+  document.addEventListener('pointerup', function (event) {
+    var d = cfDrag;
+    cfDrag = null;
+    if (!d || !d.moved) return;
+    d.item.classList.remove('is-dragging');
+    var under = document.elementFromPoint(event.clientX, event.clientY);
+    var target = under && under.closest('.js-card-settings-custom-field');
+    if (!target || target === d.item || target.parentNode !== d.item.parentNode) return;
+    var r = target.getBoundingClientRect();
+    target.parentNode.insertBefore(d.item, event.clientY < r.top + r.height / 2 ? target : target.nextSibling);
+    cfSaveOrder(d.item.parentNode);
+  }, true);
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    var h = event.target.closest && event.target.closest('.js-pop-over .js-card-settings-custom-field-handle');
+    if (!h) return;
+    event.preventDefault();
+    var item = h.closest('.js-card-settings-custom-field');
+    var sib = item;
+    do { sib = event.key === 'ArrowUp' ? sib.previousElementSibling : sib.nextElementSibling; } while (sib && !sib.classList.contains('js-card-settings-custom-field'));
+    if (!sib) return;
+    item.parentNode.insertBefore(item, event.key === 'ArrowUp' ? sib : sib.nextSibling);
+    h.focus();
+    cfSaveOrder(item.parentNode);
+  }, true);
+  // A custom field's checkbox: this side's flag of it (WeKan's SIDE_FLAG),
+  // through the customFields collection's own update.
+  up.on('click', '.js-card-settings-custom-field-toggle', function (event, box) {
+    event.preventDefault();
+    var item = box.closest('.js-card-settings-custom-field'), pane = box.closest('.js-card-settings-pane');
+    var on = !box.classList.contains('is-checked'), set = {};
+    set[pane.dataset.side === 'minicard' ? 'showOnCard' : 'alwaysOnCard'] = on;
+    window.Meteor.callAsync('/customFields/update', { _id: item.dataset.id }, { $set: set }).then(function () {
+      setCardSettingsBox(box, on);
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  });
+  // The field's form: its flags ticked here, saved together with its name.
+  up.on('click', '.js-card-settings-field-form [data-flag]', function (event, el) {
+    event.preventDefault();
+    var on = !el.classList.contains('is-checked');
+    el.classList.toggle('is-checked', on);
+    var m = el.querySelector('.materialCheckBox');
+    if (m) m.classList.toggle('is-checked', on);
+  });
+  up.on('submit', '.js-card-settings-field-form', function (event, form) {
+    event.preventDefault();
+    var set = { name: form.querySelector('.js-field-name').value };
+    form.querySelectorAll('[data-flag]').forEach(function (el) { set[el.dataset.flag] = el.classList.contains('is-checked'); });
+    var pop = form.closest('.js-pop-over');
+    window.Meteor.callAsync('/customFields/update', { _id: form.dataset.id }, { $set: set }).then(function () {
+      csClosePanels(pop);
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  });
+  up.on('submit', '.js-card-settings-field-create', function (event, form) {
+    event.preventDefault();
+    var pop = form.closest('.js-pop-over');
+    fetch(form.getAttribute('action'), { method: 'POST', credentials: 'same-origin', body: new URLSearchParams(new FormData(form)),
+      headers: { 'X-Weddy-Page': pageId } }).then(function (res) {
+      if (!res.ok) throw new Error(res.statusText);
+      csClosePanels(pop);
+      reloadBoard(true);
+    }).catch(function (err) { window.alert(err.message || String(err)); });
+  });
+  up.on('click', '.js-close-card-settings-panel', function (event, el) {
+    event.preventDefault();
+    csClosePanels(el.closest('.js-pop-over'));
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape' || !document.querySelector('.js-pop-over .js-card-settings-panel')) return;
+    event.stopPropagation();
+    event.preventDefault();
+    csClosePanels();
+  }, true);
+  // The panels' own controls: each a board setting, written as WeKan's
+  // Boards.update writes it (a board admin's, through /boards/update).
+  function csPanelSet(el, set) {
+    var pane = el.closest('.js-pop-over').querySelector('.js-card-settings-pane');
+    return window.Meteor.callAsync('/boards/update', { _id: pane.dataset.board }, { $set: set }).then(function () {
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  }
+  up.on('click', '.js-card-settings-panel .js-ask-move-reason', function (event, el) {
+    event.preventDefault();
+    var on = el.getAttribute('aria-checked') !== 'true';
+    csPanelSet(el, { askForMoveReason: on }).then(function () {
+      el.setAttribute('aria-checked', on ? 'true' : 'false');
+      var m = el.querySelector('.materialCheckBox');
+      if (m) m.classList.toggle('is-checked', on);
+    });
+  });
+  // A Draggable table (WeKan's boardDragSettings), Swimlane's, List's or
+  // Card's: setBoardDragging.
+  up.on('change', '.js-pop-over .js-board-drag-setting', function (event, el) {
+    window.Meteor.callAsync('setBoardDragging', el.closest('.board-drag-settings').dataset.board, el.dataset.kind, el.checked).then(function () {
+      reloadBoard(true);
+    }, function (err) { el.checked = !el.checked; window.alert((err && (err.reason || err.message)) || String(err)); });
+  });
+  up.on('click', '.js-card-settings-panel .js-field-show-parent-in-minicard', function (event, el) {
+    event.preventDefault();
+    csPanelSet(el, { presentParentTask: el.dataset.value });
+  });
+  up.on('click', '.js-card-settings-panel .js-field-has-subtasks', function (event, el) {
+    event.preventDefault();
+    csPanelSet(el, { allowsSubtasks: !el.classList.contains('is-checked') });
+  });
+  up.on('change', '.js-card-settings-panel .js-field-deposit-board', function (event, el) {
+    var v = el.value === 'null' ? null : el.value;
+    csPanelSet(el, { subtasksDefaultBoardId: v, subtasksDefaultListId: null, subtasksDefaultSwimlaneId: null });
+  });
+  up.on('change', '.js-card-settings-panel .js-field-deposit-list', function (event, el) {
+    csPanelSet(el, { subtasksDefaultListId: el.value === 'null' || el.value === '' ? null : el.value });
+  });
+  // A section of Card Settings folds by its caret, its title and count
+  // staying - kept per user (WeKan's collapsedCardSections, under the board,
+  // card-settings-<id> or card-settings-minicard-<id>).
+  up.on('click', '.js-toggle-card-settings-section', function (event, el) {
+    event.preventDefault();
+    var sec = el.closest('.js-card-settings-section'), pane = el.closest('.js-card-settings-pane');
+    var folded = !sec.classList.contains('is-collapsed');
+    sec.classList.toggle('is-collapsed', folded);
+    el.setAttribute('aria-expanded', folded ? 'false' : 'true');
+    var i = el.querySelector('.fa');
+    if (i) { i.classList.toggle('fa-caret-down', !folded); i.classList.toggle('fa-caret-right', folded); }
+    var key = (pane.dataset.side === 'minicard' ? 'card-settings-minicard-' : 'card-settings-') + sec.dataset.section;
+    window.Meteor.callAsync('setCollapsedCardSection', pane.dataset.board, key, folded).catch(function () {});
+  });
+  // The keyboard way to drag a section: Up and Down on its focused title.
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    var title = event.target.closest && event.target.closest('.js-pop-over .js-card-settings-section-handle');
+    if (!title) return;
+    event.preventDefault();
+    var sec = title.closest('.js-card-settings-section'), pane = title.closest('.js-card-settings-pane');
+    var sib = event.key === 'ArrowUp' ? sec.previousElementSibling : sec.nextElementSibling;
+    if (!sib) return;
+    sec.parentNode.insertBefore(sec, event.key === 'ArrowUp' ? sib : sib.nextSibling);
+    title.focus();
+    saveCardSettingsOrder(pane, false);
+  }, true);
+  // WeKan's movable, maximizable Card Settings (popup.js MOVABLE_POPUPS,
+  // MAXIMIZABLE_POPUPS): dragged by its title; maximized and back by the
+  // button beside its close.
+  up.compiler('.js-pop-over[data-popup="boardCardSettingsPopup"] .header', function (header) {
+    if (header.querySelector('.js-popup-maximize')) return;
+    var pop = header.closest('.js-pop-over');
+    var label = function (key) { var t = pop.querySelector('template.js-card-settings-labels'); return (t && t.dataset[key]) || ''; };
+    var max = document.createElement('a');
+    max.href = '#'; max.className = 'js-popup-maximize popup-maximize'; max.setAttribute('role', 'button');
+    max.setAttribute('aria-label', label('maximize')); max.title = label('maximize');
+    max.innerHTML = '<i class="fa fa-window-maximize" aria-hidden="true"></i>';
+    var close = header.querySelector('.js-close-pop-over');
+    header.insertBefore(max, close);
+  });
+  up.on('click', '.js-popup-maximize, .js-popup-minimize', function (event, el) {
+    event.preventDefault();
+    var pop = el.closest('.js-pop-over');
+    var maximize = el.classList.contains('js-popup-maximize');
+    pop.classList.toggle('pop-over--maximized', maximize);
+    el.classList.toggle('js-popup-maximize', !maximize);
+    el.classList.toggle('js-popup-minimize', maximize);
+    var i = el.querySelector('.fa');
+    if (i) { i.classList.toggle('fa-window-maximize', !maximize); i.classList.toggle('fa-window-restore', maximize); }
+  });
+  var popMove = null;
+  document.addEventListener('pointerdown', function (event) {
+    var t = event.button === 0 && event.target.closest && event.target.closest('.js-pop-over[data-popup="boardCardSettingsPopup"] .header-title, .js-pop-over:has(form.edit-date) > .header .header-title');
+    if (!t) return;
+    var pop = t.closest('.js-pop-over'), r = pop.getBoundingClientRect();
+    pop.style.left = r.left + 'px'; pop.style.top = r.top + 'px'; pop.style.right = 'auto';
+    popMove = { pop: pop, x: event.clientX - r.left, y: event.clientY - r.top };
+    event.preventDefault();
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (!popMove) return;
+    popMove.pop.style.left = Math.max(0, event.clientX - popMove.x) + 'px';
+    popMove.pop.style.top = Math.max(0, event.clientY - popMove.y) + 'px';
+  }, true);
+  document.addEventListener('pointerup', function () { popMove = null; }, true);
+  // WeKan's popup grip (main/popup.js resizeDatePopup): wider and taller by the
+  // pointer or by 20px per arrow key, mirrored in a right-to-left page, kept
+  // 12px inside the window, never under 320px wide.
+  // Weddy opens a pop-over at the window's edge, where WeKan's opens beside its
+  // opener, so a popup that grows past the window moves back from that edge as
+  // much as it must - the whole window is its room.
+  function resizePopOver(pop, width, height) {
+    var b = pop.getBoundingClientRect(), rtl = getComputedStyle(pop).direction === 'rtl', right = b.left + b.width;
+    var availW = Math.max(0, window.innerWidth - 24), availH = Math.max(0, window.innerHeight - 24);
+    var minH = Number(pop.dataset.resizeMinimumHeight) || Math.min(160, b.height);
+    pop.dataset.resizeMinimumHeight = String(minH);
+    var w = Math.min(availW, Math.max(Math.min(320, availW), width)), h = Math.min(availH, Math.max(Math.min(minH, availH), height));
+    var left = rtl ? right - w : b.left, top = b.top;
+    left = Math.max(12, Math.min(window.innerWidth - 12 - w, left));
+    top = Math.max(12, Math.min(window.innerHeight - 12 - h, top));
+    pop.dataset.userResized = 'true';
+    var st = { position: 'fixed', 'inset-inline-start': 'auto', 'inset-inline-end': 'auto', right: 'auto', bottom: 'auto',
+      left: left + 'px', top: top + 'px', margin: '0', 'min-width': '0', 'min-height': '0',
+      'max-width': availW + 'px', 'max-height': availH + 'px', width: w + 'px', height: h + 'px' };
+    Object.keys(st).forEach(function (k) { pop.style.setProperty(k, st[k], 'important'); });
+  }
+  var popResize = null;
+  document.addEventListener('pointerdown', function (event) {
+    var g = event.button === 0 && event.target.closest && event.target.closest('.js-pop-over > .js-date-popup-resize');
+    if (!g) return;
+    event.preventDefault(); event.stopPropagation();
+    var pop = g.closest('.js-pop-over'), b = pop.getBoundingClientRect();
+    popResize = { pop: pop, id: event.pointerId, x: event.clientX, y: event.clientY, w: b.width, h: b.height, dir: getComputedStyle(pop).direction === 'rtl' ? -1 : 1 };
+    try { g.setPointerCapture(event.pointerId); } catch (e) { /* the document still sees the moves */ }
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (!popResize || popResize.id !== event.pointerId) return;
+    event.preventDefault();
+    resizePopOver(popResize.pop, popResize.w + popResize.dir * (event.clientX - popResize.x), popResize.h + event.clientY - popResize.y);
+  }, true);
+  document.addEventListener('pointerup', function () { popResize = null; }, true);
+  document.addEventListener('pointercancel', function () { popResize = null; }, true);
+  document.addEventListener('click', function (event) {
+    if (event.target.closest && event.target.closest('.js-pop-over > .js-date-popup-resize')) { event.preventDefault(); event.stopPropagation(); }
+  }, true);
+  document.addEventListener('keydown', function (event) {
+    var g = event.target.closest && event.target.closest('.js-pop-over > .js-date-popup-resize');
+    var step = { ArrowLeft: [-20, 0], ArrowRight: [20, 0], ArrowUp: [0, -20], ArrowDown: [0, 20] }[event.key];
+    if (!g || !step) return;
+    event.preventDefault(); event.stopPropagation();
+    var pop = g.closest('.js-pop-over'), b = pop.getBoundingClientRect(), dir = getComputedStyle(pop).direction === 'rtl' ? -1 : 1;
+    resizePopOver(pop, b.width + dir * step[0], b.height + step[1]);
+  }, true);
+  // Sections and rows of Card Settings dragged above or below one another, as
+  // WeKan's: a section by its title, a row by its name; dropped on the upper
+  // half of another it goes before it, on the lower half after. The new order
+  // is the board's: a side's section order (setCardSettingsSectionOrder), or
+  // the card's field order (setCardFieldOrder), each normalised by the server.
+  var csDrag = null;
+  document.addEventListener('pointerdown', function (event) {
+    if (event.button !== 0) return;
+    var handle = event.target.closest && event.target.closest('.js-pop-over .js-card-settings-section-handle, .js-pop-over .js-card-field-order-handle');
+    if (!handle) return;
+    var row = handle.classList.contains('js-card-field-order-handle');
+    var item = row ? handle.closest('.js-card-field-order-row') : handle.closest('.js-card-settings-section');
+    var pane = handle.closest('.js-card-settings-pane');
+    if (!item || !pane) return;
+    csDrag = { item: item, row: row, pane: pane, y: event.clientY, moved: false };
+    event.preventDefault();
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    if (!csDrag) return;
+    if (!csDrag.moved && Math.abs(event.clientY - csDrag.y) > 4) {
+      csDrag.moved = true;
+      csDrag.item.classList.add('is-dragging');
+    }
+  }, true);
+  document.addEventListener('pointerup', function (event) {
+    var d = csDrag;
+    csDrag = null;
+    if (!d || !d.moved) return;
+    d.item.classList.remove('is-dragging');
+    var under = document.elementFromPoint(event.clientX, event.clientY);
+    var sel = d.row ? '.js-card-field-order-row' : '.js-card-settings-section';
+    var target = under && under.closest(sel);
+    if (!target || target === d.item || !d.pane.contains(target)) return;
+    // A row stays in its own section, as WeKan's.
+    if (d.row && target.parentNode !== d.item.parentNode) return;
+    var r = target.getBoundingClientRect();
+    target.parentNode.insertBefore(d.item, event.clientY < r.top + r.height / 2 ? target : target.nextSibling);
+    saveCardSettingsOrder(d.pane, d.row);
+  }, true);
+  // The order a pane now shows, the board's: its sections', or its rows'.
+  function saveCardSettingsOrder(pane, rows) {
+    var set = {}, minicard = pane.dataset.side === 'minicard';
+    if (rows) {
+      set[minicard ? 'minicardFieldOrder' : 'cardFieldOrder'] = Array.prototype.map.call(
+        pane.querySelectorAll('.js-card-field-order-row.is-positioned'), function (el) { return el.dataset.key; });
+    } else {
+      set[minicard ? 'minicardSettingsSectionOrder' : 'cardSettingsSectionOrder'] =
+        Array.prototype.map.call(pane.querySelectorAll('.js-card-settings-sections-sortable > .js-card-settings-section'), function (el) { return el.dataset.section; });
+    }
+    window.Meteor.callAsync('/boards/update', { _id: pane.dataset.board }, { $set: set }).then(function () {
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  }
+  // The keyboard way to drag (WeKan's ARROW_KEYS): Up and Down on a focused
+  // row's handle or name move it one row within its section.
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    var handle = event.target.closest && event.target.closest('.js-pop-over .js-card-field-order-handle');
+    if (!handle) return;
+    var row = handle.closest('.js-card-field-order-row'), pane = handle.closest('.js-card-settings-pane');
+    if (!row || !pane) return;
+    event.preventDefault();
+    var sib = row;
+    do { sib = event.key === 'ArrowUp' ? sib.previousElementSibling : sib.nextElementSibling; } while (sib && !sib.classList.contains('is-positioned'));
+    if (!sib) return;
+    row.parentNode.insertBefore(row, event.key === 'ArrowUp' ? sib : sib.nextSibling);
+    handle.focus();
+    saveCardSettingsOrder(pane, true);
+  }, true);
+  // A section's checkbox: the whole section shown on that side or not.
+  up.on('click', '.js-card-settings-section-shown', function (event, box) {
+    event.preventDefault();
+    var pane = box.closest('.js-card-settings-pane');
+    var on = !box.classList.contains('is-checked');
+    // The side's hidden sections as they are drawn, this one changed - read
+    // from the sections, as a one-line section has no such checkbox.
+    var mine = box.closest('.js-card-settings-section').dataset.section;
+    var hidden = csHiddenWithout(pane, mine);
+    if (!on) hidden.push(mine);
+    var set = {};
+    set[pane.dataset.side === 'minicard' ? 'cardSettingsHiddenOnMinicard' : 'cardSettingsHiddenOnCard'] = hidden;
+    window.Meteor.callAsync('/boards/update', { _id: pane.dataset.board }, { $set: set }).then(function () {
+      setCardSettingsBox(box, on);
+      box.closest('.js-card-settings-section').classList.toggle('is-section-hidden', !on);
+      reloadBoard(true);
+    }, function (err) { window.alert((err && (err.reason || err.message)) || String(err)); });
+  });
+  up.on('click', '.js-open-board-menu', function (event) {
+    event.preventDefault();
+    openPopOver('board-menu');
+  });
+  // The Export pop-over's "what to include" (WeKan's exportScope.js): one
+  // selection for the page, kept as the pop-over is closed and reopened, and
+  // carried by every tool link's ?fields=.
+  var exportOff = {};
+  function applyExportSelection(p) {
+    if (!p) return;
+    var fields = [];
+    p.querySelectorAll('.js-export-card-details-toggle, .js-export-field-toggle').forEach(function (a) {
+      var field = a.classList.contains('js-export-card-details-toggle') ? 'card-details' : a.dataset.field;
+      var on = !exportOff[field];
+      a.setAttribute('aria-checked', on ? 'true' : 'false');
+      var box = a.querySelector('.materialCheckBox');
+      if (box) box.classList.toggle('is-checked', on);
+      if (on) fields.push(field);
+    });
+    p.querySelectorAll('a.js-export-fields').forEach(function (a) {
+      var url = new URL(a.getAttribute('href'), location.href);
+      url.searchParams.set('fields', fields.join(','));
+      a.setAttribute('href', url.pathname + url.search);
+    });
+  }
+  up.on('click', '.js-export-board', function (event) {
+    event.preventDefault();
+    openPopOver('export');
+    applyExportSelection(document.querySelector('.js-pop-over'));
+  });
+  // #1173: a swimlane's, a list's or a card's Export and Import pop-overs
+  // (exportScopeBody): the same selection, the scope's files, or a WeKan
+  // export brought in beside it.
+  var scope = null;
+  var menuLane = null;
+  function openScope(mode, kind, target) {
+    scope = { kind: kind, target: target };
+    openPopOver(mode + '-scope');
+    var p = document.querySelector('.js-pop-over');
+    var t = document.querySelector('template.js-pop-over-template[data-pop="' + mode + '-scope"]');
+    if (!p || !t) return;
+    var title = t.getAttribute('data-title-' + kind) || '';
+    p.querySelector('.js-scope-title').textContent = title;
+    p.setAttribute('aria-label', title);
+    var board = t.getAttribute('data-board');
+    p.querySelectorAll('a.js-scope-link').forEach(function (a) {
+      var path = a.getAttribute('data-path');
+      // Every part of the address is encoded: what a page's attribute says is
+      // a name in the address, never an address of its own (code scanning
+      // #105-#107; TestScriptAddressesAreEncoded).
+      var url = '/api/boards/' + encodeURIComponent(board) + '/' + encodeURIComponent(path);
+      var q = new URLSearchParams(a.getAttribute('data-query') || '');
+      // A card's PDF and Excel are the card's own (exportScope.js routeFor).
+      if (kind === 'card' && (path === 'exportPDF' || path === 'exportExcel')) {
+        url = '/api/boards/' + encodeURIComponent(board) + '/lists/' + encodeURIComponent(target.listId) + '/cards/' + encodeURIComponent(target.cardId) + '/' + encodeURIComponent(path);
+      } else {
+        Object.keys(target).forEach(function (k) { if (target[k]) q.set(k, target[k]); });
+      }
+      q.set('fields', '');
+      var query = [];
+      q.forEach(function (v, k) { query.push(encodeURIComponent(k) + '=' + encodeURIComponent(v)); });
+      a.setAttribute('href', url + '?' + query.join('&'));
+    });
+    applyExportSelection(p);
+  }
+  up.on('click', '.js-open-swimlane-menu', function (event, el) {
+    event.preventDefault();
+    menuLane = el.getAttribute('data-swimlane');
+    openPopOver('swimlane-menu');
+  });
+  up.on('click', '.js-pop-over .js-export-swimlane, .js-pop-over .js-import-swimlane', function (event, el) {
+    event.preventDefault();
+    openScope(el.classList.contains('js-export-swimlane') ? 'export' : 'import', 'swimlane', { swimlaneId: menuLane });
+  });
+  up.on('click', '.js-pop-over .js-export-list, .js-pop-over .js-import-list', function (event, el) {
+    event.preventDefault();
+    if (!menuList) return;
+    openScope(el.classList.contains('js-export-list') ? 'export' : 'import', 'list', { listId: menuList.dataset.list });
+  });
+  up.on('click', '.js-pop-over .js-export-card, .js-pop-over .js-import-card', function (event, el) {
+    event.preventDefault();
+    openScope(el.classList.contains('js-export-card') ? 'export' : 'import', 'card', { cardId: el.dataset.card, listId: el.dataset.list });
+  });
+  // A checklist's menu (checklistActionsPopup) and its Export
+  // (exportChecklistPopup): the same body, the checklist as its scope.
+  var menuChecklist = null;
+  up.on('click', '.js-open-checklist-details-menu', function (event, el) {
+    event.preventDefault();
+    menuChecklist = el.getAttribute('data-checklist');
+    openPopOver('checklist-actions');
+  });
+  // checklistDeletePopup: the confirmation, for that checklist.
+  up.on('click', '.js-pop-over .js-delete-checklist', function (event) {
+    event.preventDefault();
+    if (!menuChecklist) return;
+    var t = document.querySelector('template.js-pop-over-template[data-pop="checklist-delete"]');
+    openPopOver('checklist-delete');
+    var f = document.querySelector('.js-pop-over .js-checklist-delete-form');
+    if (f && t) f.setAttribute('action', '/b/' + encodeURIComponent(t.getAttribute('data-board')) + '/cards/' + encodeURIComponent(t.getAttribute('data-card')) + '/checklists/' + encodeURIComponent(menuChecklist) + '/delete');
+  });
+  // checklistSortableItems: an item dragged - by its handle when the member
+  // shows drag handles, else by the item - among its checklist's items, a
+  // placeholder where it will land, and the order saved on the drop.
+  document.addEventListener('pointerdown', function (event) {
+    if (event.button !== 0 || !event.target.closest) return;
+    var item = event.target.closest('.js-checklist-items .js-checklist-item');
+    var box = item && item.closest('.js-checklist-items');
+    // The board's Draggable setting of checklist items (DRAG_SETTINGS) off:
+    // they stay put.
+    if (!box || !box.getAttribute('data-sort-url') || box.getAttribute('data-drag') === 'off') return;
+    var onHandle = !!event.target.closest('.checklistitem-handle');
+    if (box.getAttribute('data-handles') === 'true' ? !onHandle : event.target.closest('button, a, textarea, input, form, .check-box-container')) return;
+    itemDrag = { item: item, box: box, x: event.clientX, y: event.clientY, started: false };
+    // A refresh already on its way would replace the item under the pointer:
+    // it is called off, and the board catches up after the drop.
+    if (up.network.isBusy()) { up.fragment.abort('.board-wrapper'); stale = true; }
+  });
+  document.addEventListener('pointermove', function (event) {
+    var d = itemDrag;
+    if (!d) return;
+    if (!d.started) {
+      if (Math.abs(event.clientX - d.x) + Math.abs(event.clientY - d.y) < 5) return;
+      var rect = d.item.getBoundingClientRect();
+      d.started = true;
+      d.offset = d.y - rect.top;
+      d.placeholder = document.createElement('div');
+      d.placeholder.className = 'placeholder checklist-item-placeholder';
+      d.placeholder.style.height = rect.height + 'px';
+      d.box.insertBefore(d.placeholder, d.item);
+      d.item.classList.add('ui-sortable-helper');
+      document.body.classList.add('is-dragging-checklist-item');
+      if (window.getSelection) window.getSelection().removeAllRanges();
+      d.item.style.cssText += ';position:fixed;left:' + rect.left + 'px;width:' + rect.width + 'px;top:' + rect.top + 'px;z-index:1000;pointer-events:none;';
+      dragging++;
+    }
+    event.preventDefault();
+    d.item.style.top = (event.clientY - d.offset) + 'px';
+    var before = null;
+    Array.prototype.some.call(d.box.querySelectorAll(':scope > .js-checklist-item'), function (el) {
+      if (el === d.item) return false;
+      var r = el.getBoundingClientRect();
+      if (event.clientY < r.top + r.height / 2) { before = el; return true; }
+      return false;
+    });
+    if (before) d.box.insertBefore(d.placeholder, before);
+    else d.box.appendChild(d.placeholder);
+  });
+  document.addEventListener('pointerup', function () {
+    var d = itemDrag;
+    itemDrag = null;
+    if (d && !d.started && stale && dragging === 0) setTimeout(reloadBoard, 0);
+    if (!d || !d.started) return;
+    d.box.insertBefore(d.item, d.placeholder);
+    d.placeholder.remove();
+    d.item.classList.remove('ui-sortable-helper');
+    document.body.classList.remove('is-dragging-checklist-item');
+    ['position', 'left', 'width', 'top', 'z-index', 'pointer-events'].forEach(function (k) { d.item.style.removeProperty(k); });
+    itemDragJustEnded = true;
+    setTimeout(function () { itemDragJustEnded = false; }, 0);
+    var body = new URLSearchParams();
+    d.box.querySelectorAll(':scope > .js-checklist-item').forEach(function (el) { body.append('item', el.getAttribute('data-item')); });
+    fetch(d.box.getAttribute('data-sort-url'), { method: 'POST', credentials: 'same-origin', body: body, headers: { 'X-Weddy-Page': pageId } })
+      .finally(function () {
+        dragging = Math.max(0, dragging - 1);
+        if (dragging === 0 && stale) reloadBoard();
+      });
+  });
+  // The click that ends a drag does not open the item's editor.
+  document.addEventListener('click', function (event) {
+    if (itemDragJustEnded) { event.preventDefault(); event.stopPropagation(); }
+  }, true);
+  // copyAndMoveChecklist: the chosen board's swimlanes, lists and the cards
+  // of that swimlane and list, the checklist's own card chosen first.
+  function fillChecklistTarget(form, boardId, first) {
+    fetch('/b/' + encodeURIComponent(boardId) + '/places?cards=1', { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); }).then(function (p) {
+        form._places = p;
+        var fill = function (sel, rows, label, want) {
+          sel.innerHTML = '';
+          rows.forEach(function (o) {
+            var opt = document.createElement('option');
+            opt.value = o._id;
+            opt.textContent = label(o);
+            if (o._id === want) opt.selected = true;
+            sel.appendChild(opt);
+          });
+        };
+        fill(form.querySelector('.js-select-swimlanes'), p.swimlanes || [], function (o) { return o.title; }, first && form.dataset.swimlane);
+        fill(form.querySelector('.js-select-lists'), p.lists || [], function (o) { return o.title; }, first && form.dataset.list);
+        fillChecklistCards(form, first && form.dataset.card);
+      });
+  }
+  function fillChecklistCards(form, want) {
+    var p = form._places || {};
+    var lane = form.querySelector('.js-select-swimlanes').value, list = form.querySelector('.js-select-lists').value;
+    var sel = form.querySelector('.js-select-cards');
+    sel.innerHTML = '';
+    (p.cards || []).forEach(function (c) {
+      if (c.listId !== list || (lane && c.swimlaneId !== lane)) return;
+      var opt = document.createElement('option');
+      opt.value = c._id;
+      opt.textContent = c.title;
+      if (c._id === want) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+  up.on('click', '.js-pop-over .js-move-checklist, .js-pop-over .js-copy-checklist', function (event, el) {
+    event.preventDefault();
+    if (!menuChecklist) return;
+    var name = el.classList.contains('js-move-checklist') ? 'checklist-move' : 'checklist-copy';
+    var t = document.querySelector('template.js-pop-over-template[data-pop="' + name + '"]');
+    openPopOver(name);
+    var form = document.querySelector('.js-pop-over .js-checklist-target');
+    if (!form || !t) return;
+    form.setAttribute('action', '/b/' + encodeURIComponent(form.dataset.board) + '/cards/' + encodeURIComponent(form.dataset.card) + '/checklists/' + encodeURIComponent(menuChecklist) + '/' + encodeURIComponent(t.getAttribute('data-path')));
+    fillChecklistTarget(form, form.querySelector('.js-select-boards').value, true);
+  });
+  up.on('change', '.js-checklist-target .js-select-boards', function (event, sel) { fillChecklistTarget(sel.form, sel.value, false); });
+  up.on('change', '.js-checklist-target .js-select-swimlanes, .js-checklist-target .js-select-lists', function (event, sel) { fillChecklistCards(sel.form); });
+  // attachmentGallery's "+": cardAttachmentsPopup, whose "Computer" picks a
+  // file and sends it.
+  up.on('click', '.card-attachmentGallery .js-add-attachment', function (event) {
+    event.preventDefault();
+    openPopOver('card-attachments');
+  });
+  // attachmentActionsPopup, the attachment's own.
+  up.on('click', '.card-attachmentGallery .js-open-attachment-menu', function (event, el) {
+    event.preventDefault();
+    openPopOver('attachment-actions-' + el.getAttribute('data-attachment'));
+  });
+  up.on('click', '.js-pop-over .js-computer-upload', function (event, el) {
+    event.preventDefault();
+    var input = el.closest('form').querySelector('.js-attach-file');
+    if (input) input.click();
+  });
+  up.on('change', '.js-pop-over .js-attach-file', function (event, el) {
+    // Sent in the background, as WeKan's uploader: the page stays, the board
+    // is answered with the file on it.
+    if (el.files && el.files.length) up.submit(el.form);
+  });
+  // attachmentViewer: a tile opens its file in the overlay - an image, a PDF,
+  // video, audio or text - and anything else in its own tab.
+  up.on('click', '.card-attachmentGallery .open-preview', function (event, el) {
+    event.preventDefault();
+    var kind = el.getAttribute('data-kind'), src = el.getAttribute('data-src');
+    var overlay = document.getElementById('viewer-overlay');
+    if (!overlay || kind === 'none') { window.open(src, '_blank', 'noopener'); return; }
+    ['image-viewer', 'video-viewer', 'audio-viewer', 'pdf-viewer', 'txt-viewer', 'office-viewer', 'zip-viewer'].forEach(function (id) {
+      var v = document.getElementById(id);
+      if (v) v.classList.add('hidden');
+    });
+    if (kind === 'zip') {
+      // WeKan's ZIP preview: the entry names, as inert text, never links.
+      var zip = document.getElementById('zip-viewer');
+      zip.textContent = zip.dataset.loading || '';
+      zip.classList.remove('hidden');
+      fetch('/cdn/storage/attachments/' + encodeURIComponent(el.getAttribute('data-attachment-id')) + '/zip-entries', { credentials: 'same-origin' })
+        .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error); return d.entries || []; }); })
+        .then(function (entries) {
+          zip.replaceChildren();
+          if (!entries.length) { zip.textContent = zip.dataset.empty || ''; return; }
+          var ul = document.createElement('ul');
+          entries.forEach(function (name) { var li = document.createElement('li'); li.textContent = name; ul.appendChild(li); });
+          zip.appendChild(ul);
+        }, function () { zip.textContent = zip.dataset.error || ''; });
+      document.getElementById('attachment-name').textContent = el.getAttribute('data-name') || '';
+      overlay.classList.remove('hidden');
+      return;
+    }
+    var view = document.getElementById({ image: 'image-viewer', video: 'video-viewer', audio: 'audio-viewer', pdf: 'pdf-viewer', text: 'txt-viewer' }[kind]);
+    if (!view) return;
+    if (view.tagName === 'OBJECT') view.setAttribute('data', src);
+    else view.setAttribute('src', src);
+    view.classList.remove('hidden');
+    document.getElementById('attachment-name').textContent = el.getAttribute('data-name') || '';
+    overlay.classList.remove('hidden');
+  });
+  up.on('click', '#viewer-close', function () {
+    var overlay = document.getElementById('viewer-overlay');
+    if (!overlay) return;
+    overlay.classList.add('hidden');
+    overlay.querySelectorAll('video, audio').forEach(function (m) { m.pause(); });
+  });
+  // cardCustomFieldsPopup, from the Custom Fields section's hamburger.
+  up.on('click', '.js-open-custom-fields-settings', function (event) {
+    event.preventDefault();
+    openPopOver('card-custom-fields');
+  });
+  up.on('click', '.js-pop-over .js-open-create-custom-field', function (event) {
+    event.preventDefault();
+    openPopOver('create-custom-field');
+    var name = document.querySelector('.js-pop-over .js-field-name');
+    if (name) name.focus();
+  });
+  // The custom fields' layout: one per row or a grid, the member's own
+  // (toggleCustomFieldsGrid), at once on this page.
+  up.on('click', '#toggleCustomFieldsGridButton', function (event, el) {
+    event.preventDefault();
+    var body = el.closest('.card-details-group-custom-fields').querySelector('.card-details-group-body');
+    callAsync('toggleCustomFieldsGrid').then(function () {
+      if (!body) return;
+      var rows = body.classList.contains('custom-fields-one-per-row');
+      body.classList.toggle('custom-fields-one-per-row', !rows);
+      body.classList.toggle('custom-fields-grid', rows);
+    });
+  });
+  // A string template's last input, written in and Enter: one more input.
+  up.on('keydown', '.js-card-customfield-stringtemplate-item.last', function (event, el) {
+    if (event.key !== 'Enter' || !el.value.trim() || event.ctrlKey || event.metaKey) return;
+    event.preventDefault();
+    var next = el.cloneNode();
+    next.value = '';
+    el.classList.remove('last');
+    el.parentNode.insertBefore(next, el.nextSibling);
+    next.focus();
+  });
+  // cardCustomField-*: the field's title, its value or its pencil opens its
+  // editor; a checkbox's square alone saves the other value at once.
+  up.on('click', '.card-details-item-customfield .js-edit-card-custom-field-value', function (event, el) {
+    event.preventDefault();
+    var item = el.closest('.card-details-item-customfield');
+    if (event.target.closest && event.target.closest('.js-card-custom-field-checkbox .check-box-container')) {
+      var toggle = item.querySelector('form.js-card-custom-field-checkbox-toggle');
+      if (toggle) up.submit(toggle);
+      return;
+    }
+    var form = item.querySelector('form.js-inlined-form');
+    if (!form) return;
+    openFieldEditor(form);
+    // Opened while an earlier save was on its way: the board that save draws
+    // opens it again, rather than taking it away (03-cards-operations, the
+    // checkbox's square then its row, in a slow run).
+    if (up.network.isBusy()) reopenEditor = form.getAttribute('action');
+  });
+  function openFieldEditor(form) {
+    form.closest('.js-card-details').querySelectorAll('.card-details-item-customfield .js-inlined-form').forEach(function (f) { if (f !== form) closeInlinedForm(f); });
+    var body = form.querySelector(':scope > template.js-inlined-form-body');
+    if (body && !form.querySelector('input, textarea, select')) form.appendChild(body.content.cloneNode(true));
+    form.classList.remove('is-hidden');
+    var input = form.querySelector('textarea, select, input:not([type=hidden])');
+    if (input) input.focus();
+  }
+  var reopenEditor = null;
+  up.on('up:fragment:inserted', function (event, el) {
+    if (!reopenEditor || !el || !el.matches || !el.matches('.board-wrapper')) return;
+    var action = reopenEditor;
+    reopenEditor = null;
+    var form = Array.prototype.find.call(el.querySelectorAll('.card-details-item-customfield form.js-inlined-form'), function (f) {
+      return f.getAttribute('action') === action;
+    });
+    if (form && form.classList.contains('is-hidden')) openFieldEditor(form);
+  });
+  // An editor closed, or sent, needs no reopening.
+  up.on('up:form:submit', function () { reopenEditor = null; });
+  // The checkbox editor's square follows its box.
+  up.on('change', '.js-card-customfield-checkbox-editor .js-card-customfield-checkbox-input', function (event, el) {
+    var square = el.parentNode.querySelector('.materialCheckBox');
+    if (square) square.classList.toggle('is-checked', el.checked);
+  });
+  // customFieldCopyButton: the field's value to the clipboard.
+  up.on('click', '.js-copy-custom-field', function (event, el) {
+    event.preventDefault();
+    var value = el.getAttribute('data-value') || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(value);
+    el.classList.add('is-copied');
+    setTimeout(function () { el.classList.remove('is-copied'); }, 1200);
+  });
+  // The checklists' inlined forms: a "+" opens its own form - the
+  // checklist's for an item, the section's for a checklist.
+  up.on('click', '.js-checklists-section .js-open-inlined-form, .card-details-group-description .js-open-inlined-form, .card-details-subtasks .js-open-inlined-form', function (event, el) {
+    event.preventDefault();
+    var opens = el.getAttribute('data-opens');
+    var where = {
+      'add-checklist': ['.js-checklists-section', 'form.js-add-checklist'],
+      'add-checklist-item': ['.js-checklist', 'form.js-add-checklist-item'],
+      'edit-checklist-title': ['.js-checklist', 'form.js-edit-checklist-title'],
+      'edit-checklist-item': ['.js-checklist-item', 'form.js-edit-checklist-item'],
+      'edit-description': ['.card-details-group-description', 'form.js-card-description'],
+      'add-subtask': ['.card-details-subtasks', 'form.js-add-subtask'],
+    }[opens];
+    if (!where) return;
+    var box = el.closest(where[0]);
+    var form = box && box.querySelector(where[1]);
+    if (!form) return;
+    // One inlined form at a time, as WeKan's, and its fields only while open.
+    el.closest('.js-card-details').querySelectorAll('.js-checklists-section .js-inlined-form, .card-details-group-description .js-inlined-form, .card-details-subtasks .js-inlined-form').forEach(function (f) { if (f !== form) closeInlinedForm(f); });
+    var body = form.querySelector(':scope > template.js-inlined-form-body');
+    if (body && !form.querySelector('textarea')) form.appendChild(body.content.cloneNode(true));
+    form.classList.remove('is-hidden');
+    form.querySelector('textarea').focus();
+    // Opened while a redraw is on its way: the board it draws opens it again,
+    // with what was typed (checklist-single-submit, a profile changed just as
+    // the card opened).
+    if (up.network.isBusy()) reopenInlined = { opens: opens, key: inlinedKey(box), value: '' };
+  });
+  function inlinedKey(box) {
+    return (box && (box.getAttribute('data-checklist') || box.getAttribute('data-item') || box.getAttribute('data-card'))) || '';
+  }
+  var reopenInlined = null;
+  document.addEventListener('input', function (event) {
+    if (reopenInlined && event.target.closest && event.target.closest('.board-wrapper .js-card-details .js-inlined-form')) reopenInlined.value = event.target.value;
+  }, true);
+  up.on('up:fragment:inserted', function (event, el) {
+    if (!reopenInlined || !el || !el.matches || !el.matches('.board-wrapper')) return;
+    var r = reopenInlined;
+    reopenInlined = null;
+    var opener = Array.prototype.find.call(el.querySelectorAll('.js-card-details .js-open-inlined-form[data-opens="' + r.opens + '"]'), function (o) {
+      var box = o.closest('.js-checklist-item, .js-checklist, .js-checklists-section, .card-details-group-description, .card-details-subtasks');
+      return inlinedKey(box) === r.key;
+    });
+    if (!opener) return;
+    opener.click();
+    var field = el.querySelector('.js-card-details .js-inlined-form:not(.is-hidden) textarea');
+    if (field && r.value && !field.value) field.value = r.value;
+  });
+  up.on('up:form:submit', function () { reopenInlined = null; });
+  // WeKan's editDateForm: a month drawn day by day, the day picked marked,
+  // and on Save the time the browser makes of that date and the time typed
+  // (empty: the opener's default - 17:00 for a due date), refused when the
+  // date is missing or its year is not four digits (datepicker.js).
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function isoDay(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  // WeKan's calendarDateInput in the member's calendar (#4335, #6853,
+  // imports/lib/calendarMonth.js): a month is found by the calendar's own
+  // fields - leap months and a short thirteenth month included - never as a
+  // Gregorian one; the year, month and day pickers under the grid reach any
+  // date; the arrow keys walk the days. Gregorian goes the same way.
+  function pickerCalendar() { var s = document.documentElement.getAttribute('data-calendar-system') || 'gregorian'; return CALENDAR_INTL[s] || s; }
+  function pickerFirstDay() { var d = Number(document.documentElement.getAttribute('data-start-day')); return d >= 0 && d <= 6 && document.documentElement.getAttribute('data-start-day') !== '' ? d : 1; }
+  function calParts(date, cal) {
+    var parts = {};
+    try {
+      new Intl.DateTimeFormat('en', { calendar: cal, numberingSystem: 'latn', year: 'numeric', month: '2-digit', day: '2-digit', era: 'short' })
+        .formatToParts(date).forEach(function (p) { parts[p.type] = p.value; });
+    } catch (e) { return null; }
+    parts.year = parts.year || parts.relatedYear;
+    return parts;
+  }
+  function calDay(date, days) { var r = new Date(date); r.setDate(r.getDate() + days); r.setHours(12, 0, 0, 0); return r; }
+  function calMonthRange(date, cal) {
+    var key = function (v) { var p = calParts(v, cal); return (p.era || '') + '|' + p.year + '|' + p.month; };
+    var anchor = calDay(date, 0), k = key(anchor), start = anchor, end = calDay(anchor, 1);
+    for (var i = 0; i < 40; i++) { var prev = calDay(start, -1); if (key(prev) !== k) break; start = prev; }
+    for (var j = 0; j < 40 && key(end) === k; j++) end = calDay(end, 1);
+    start.setHours(0, 0, 0, 0); end.setHours(0, 0, 0, 0);
+    return { start: start, end: end };
+  }
+  function calYearKey(date, cal) { var p = calParts(date, cal); return (p.era || '') + '|' + p.year; }
+  function calYearRange(date, cal) {
+    var k = calYearKey(date, cal), start = calDay(date, 0), end = calDay(date, 1);
+    for (var i = 0; i < 400 && calYearKey(calDay(start, -1), cal) === k; i++) start = calDay(start, -1);
+    for (var j = 0; j < 400 && calYearKey(end, cal) === k; j++) end = calDay(end, 1);
+    return { start: start, end: end };
+  }
+  function calSameDayInYear(date, target, cal) {
+    var cur = calYearRange(date, cal), next = calYearRange(target, cal);
+    var c = calDay(next.start, Math.round((calDay(date, 0) - cur.start) / 86400000));
+    return c < next.end ? c : calDay(next.end, -1);
+  }
+  function calShiftYear(date, dir, cal) {
+    var cur = calYearRange(date, cal);
+    return calSameDayInYear(date, calYearRange(dir < 0 ? calDay(cur.start, -1) : cur.end, cal).start, cal);
+  }
+  function calShiftMonth(date, dir, cal) {
+    var r = calMonthRange(date, cal), next = calMonthRange(dir < 0 ? calDay(r.start, -1) : r.end, cal);
+    var c = calDay(next.start, Number(calParts(date, cal).day) - 1);
+    return c < next.end ? c : calDay(next.end, -1);
+  }
+  function calSignedYear(date, cal) {
+    var p = calParts(date, cal), y = p && Number(p.year);
+    if (!isFinite(y)) return null;
+    return /^(BC|BCE|BH|ERA0|Before)/i.test(p.era || '') ? 1 - y : y;
+  }
+  function calDateInYear(date, target, cal) {
+    if (!Number.isInteger(target)) return null;
+    try {
+      var guess = calDay(date, 0);
+      for (var step = 0; step < 40; step++) {
+        var y = calSignedYear(guess, cal);
+        if (y === null) return null;
+        if (y === target) return calSameDayInYear(date, guess, cal);
+        var next = calDay(guess, Math.round((target - y) * 365.2425) || (target > y ? 1 : -1));
+        if (isNaN(next.getTime())) return null;
+        guess = next;
+      }
+    } catch (e) { /* beyond what a date holds */ }
+    return null;
+  }
+  function calYearMonths(date, cal) {
+    var year = calYearRange(date, cal), cur = calMonthRange(date, cal).start.getTime(), out = [];
+    for (var start = year.start; start < year.end && out.length < 20;) {
+      var r = calMonthRange(start, cal);
+      out.push({ date: calDay(r.start, 0), selected: r.start.getTime() === cur });
+      start = calDay(r.end, 0);
+    }
+    return out;
+  }
+  function calSameDayInMonth(date, monthStart, cal) {
+    var next = calMonthRange(monthStart, cal), c = calDay(next.start, Number(calParts(date, cal).day) - 1);
+    return c < next.end ? c : calDay(next.end, -1);
+  }
+  function fromIsoDay(v) { if (!v) return null; var d = new Date(v.length === 10 ? v + 'T12:00:00' : v); return isNaN(d.getTime()) ? null : d; }
+  function drawCalendar(form) {
+    var lang = document.documentElement.lang || 'en', cal = pickerCalendar(), first = pickerFirstDay();
+    var shown = form._shown, picked = form.querySelector('.js-date-field').value, focusIso = form._focus || picked;
+    var fmt = function (opts, d) { try { return new Intl.DateTimeFormat(lang, opts).format(d); } catch (e) { return isoDay(d); } };
+    var monthOpts = { calendar: cal, month: 'long', year: 'numeric', numberingSystem: 'latn' };
+    if (calSignedYear(shown, cal) <= 0) monthOpts.era = 'short';
+    form.querySelector('.js-calendar-month-label').textContent = fmt(monthOpts, shown);
+    var head = form.querySelector('.js-calendar-weekdays');
+    head.innerHTML = '';
+    for (var i = 0; i < 7; i++) {
+      var th = document.createElement('th');
+      th.scope = 'col';
+      th.textContent = fmt({ weekday: 'short' }, new Date(2024, 0, 7 + ((first + i) % 7)));
+      head.appendChild(th);
+    }
+    var range = calMonthRange(shown, cal), days = [];
+    for (var lead = (range.start.getDay() - first + 7) % 7; lead > 0; lead--) days.push(null);
+    for (var day = calDay(range.start, 0); day < range.end; day = calDay(day, 1)) days.push(day);
+    while (days.length % 7) days.push(null);
+    var isos = days.filter(Boolean).map(isoDay);
+    if (isos.indexOf(focusIso) < 0) focusIso = isos[0];
+    var body = form.querySelector('.js-calendar-weeks');
+    body.innerHTML = '';
+    var today = isoDay(new Date()), tr = null;
+    days.forEach(function (d, cell) {
+      if (cell % 7 === 0) { tr = document.createElement('tr'); body.appendChild(tr); }
+      var td = document.createElement('td');
+      if (d) {
+        var iso = isoDay(d), b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'primary js-calendar-day' + (iso === today ? ' is-today' : '');
+        b.setAttribute('data-date', iso);
+        if (iso === today) b.setAttribute('aria-current', 'date'); // #6751: today, for a screen reader too
+        b.setAttribute('aria-pressed', iso === picked ? 'true' : 'false');
+        b.tabIndex = iso === focusIso ? 0 : -1;
+        b.title = fmt({ calendar: cal, dateStyle: 'full' }, d);
+        b.setAttribute('aria-label', b.title);
+        b.textContent = (calParts(d, cal) || {}).day || String(d.getDate());
+        if (iso === today) td.className = 'is-today-cell';
+        td.appendChild(b);
+      }
+      tr.appendChild(td);
+    });
+    // #6853: the year typed or stepped, the month and the day picked.
+    var year = form.querySelector('.js-calendar-year');
+    if (year) year.value = calSignedYear(shown, cal);
+    var month = form.querySelector('.js-calendar-month');
+    if (month) {
+      month.innerHTML = '';
+      calYearMonths(shown, cal).forEach(function (m) {
+        var o = document.createElement('option');
+        o.value = isoDay(m.date); o.textContent = fmt({ calendar: cal, month: 'long', numberingSystem: 'latn' }, m.date); o.selected = m.selected;
+        month.appendChild(o);
+      });
+    }
+    var daySel = form.querySelector('.js-calendar-day-select');
+    if (daySel) {
+      daySel.innerHTML = '';
+      if (isos.indexOf(picked) < 0) {
+        var none = document.createElement('option'); none.value = ''; none.textContent = '–'; none.disabled = true; none.selected = true;
+        daySel.appendChild(none);
+      }
+      days.filter(Boolean).forEach(function (d) {
+        var o = document.createElement('option');
+        o.value = isoDay(d); o.textContent = (calParts(d, cal) || {}).day; o.selected = o.value === picked;
+        daySel.appendChild(o);
+      });
+    }
+  }
+  function pickDate(form, d) {
+    form.querySelector('.js-date-field').value = isoDay(d);
+    form._shown = d; form._focus = isoDay(d);
+    drawCalendar(form);
+  }
+  // calendarTimeInput: the hour and minute selects over the hidden time.
+  function setPickerTime(form, hhmm) {
+    var p = hhmm.split(':');
+    var fill = function (sel, n, want) {
+      sel.innerHTML = '';
+      for (var i = 0; i < n; i++) {
+        var o = document.createElement('option');
+        o.value = o.textContent = pad2(i);
+        if (pad2(i) === want) o.selected = true;
+        sel.appendChild(o);
+      }
+    };
+    fill(form.querySelector('.js-calendar-hour'), 24, pad2(+p[0]));
+    fill(form.querySelector('.js-calendar-minute'), 60, pad2(+(p[1] || 0)));
+    form.querySelector('.js-time-field').value = pad2(+p[0]) + ':' + pad2(+(p[1] || 0));
+  }
+  function openDatePicker(el, defaultTime) {
+    openPopOver('edit-date');
+    var form = document.querySelector('.js-pop-over form.edit-date');
+    if (!form) return;
+    var pop = form.closest('.js-pop-over');
+    if (el.getAttribute('data-title')) {
+      pop.setAttribute('aria-label', el.getAttribute('data-title'));
+      var ht = pop.querySelector('.header-title');
+      if (ht) ht.textContent = el.getAttribute('data-title');
+    }
+    // The grip is the popup's own (WeKan's popup.tpl.jade: a child of .pop-over).
+    var grip = pop.querySelector('.js-date-popup-resize');
+    if (grip && grip.parentNode !== pop) pop.appendChild(grip);
+    form.setAttribute('action', el.getAttribute('data-url'));
+    var now = new Date();
+    if (defaultTime === 'now') defaultTime = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+    var at = el.getAttribute('data-date') ? new Date(el.getAttribute('data-date')) : null;
+    if (at && isNaN(at)) at = null;
+    // #6809: no date yet - today is picked, so Save alone saves today.
+    form.querySelector('.js-date-field').value = isoDay(at || now);
+    setPickerTime(form, at ? pad2(at.getHours()) + ':' + pad2(at.getMinutes()) : defaultTime);
+    form.querySelector('.js-delete-date').hidden = !at;
+    form._shown = calDay(at || now, 0);
+    form._focus = null;
+    drawCalendar(form);
+  }
+  up.on('click', '.js-checklist-due-date, .js-checklist-item-due-date, .js-checklists-section .js-edit-date', function (event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    openDatePicker(el, '17:00');
+  });
+  up.on('click', '.js-card-details .card-details-item .js-edit-date, .js-received-date, .js-start-date, .js-due-date, .js-end-date', function (event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    openDatePicker(el, el.getAttribute('data-default-time') || '12:00');
+  });
+  up.on('change', '.js-pop-over form.edit-date .js-calendar-hour, .js-pop-over form.edit-date .js-calendar-minute', function (event, el) {
+    var form = el.form;
+    form.querySelector('.js-time-field').value = form.querySelector('.js-calendar-hour').value + ':' + form.querySelector('.js-calendar-minute').value;
+  });
+  up.on('click', '.js-pop-over form.edit-date .js-calendar-day', function (event, el) {
+    var form = el.form;
+    form.querySelector('.js-date-field').value = el.getAttribute('data-date');
+    form._focus = el.getAttribute('data-date');
+    form.querySelectorAll('.js-calendar-day').forEach(function (b) { b.setAttribute('aria-pressed', b === el ? 'true' : 'false'); b.tabIndex = b === el ? 0 : -1; });
+    var daySel = form.querySelector('.js-calendar-day-select');
+    if (daySel) daySel.value = el.getAttribute('data-date');
+  });
+  up.on('click', '.js-pop-over form.edit-date .js-calendar-previous, .js-pop-over form.edit-date .js-calendar-next, .js-pop-over form.edit-date .js-calendar-today', function (event, el) {
+    var form = el.form, cal = pickerCalendar(), r = calMonthRange(form._shown, cal);
+    var toToday = el.classList.contains('js-calendar-today');
+    if (toToday) form._shown = calDay(new Date(), 0);
+    else form._shown = el.classList.contains('js-calendar-next') ? calDay(r.end, 0) : calDay(r.start, -1);
+    drawCalendar(form);
+    // Today goes to today's month and to today itself, choosing nothing.
+    var todayButton = toToday && form.querySelector('.js-calendar-day.is-today');
+    if (todayButton) todayButton.focus();
+  });
+  up.on('click', '.js-pop-over form.edit-date .js-calendar-year-previous, .js-pop-over form.edit-date .js-calendar-year-next', function (event, el) {
+    var form = el.form;
+    form._shown = calShiftYear(form._shown, el.classList.contains('js-calendar-year-next') ? 1 : -1, pickerCalendar());
+    drawCalendar(form);
+  });
+  // #6853: the year, month and day under the calendar select that date.
+  up.on('change', '.js-pop-over form.edit-date .js-calendar-year', function (event, el) {
+    var form = el.form, cal = pickerCalendar();
+    var target = el.value.trim() === '' ? null : calDateInYear(form._shown, Number(el.value), cal);
+    if (!target) { el.value = calSignedYear(form._shown, cal); return; }
+    pickDate(form, target);
+  });
+  up.on('keydown', '.js-pop-over form.edit-date .js-calendar-year', function (event, el) {
+    if (event.key !== 'Enter') return; // Enter applies the year, not Save
+    event.preventDefault(); event.stopPropagation();
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  up.on('change', '.js-pop-over form.edit-date .js-calendar-month', function (event, el) {
+    var form = el.form, cal = pickerCalendar();
+    pickDate(form, calSameDayInMonth(fromIsoDay(form.querySelector('.js-date-field').value) || form._shown, fromIsoDay(el.value), cal));
+  });
+  up.on('change', '.js-pop-over form.edit-date .js-calendar-day-select', function (event, el) {
+    var d = fromIsoDay(el.value);
+    if (d) pickDate(el.form, d);
+  });
+  // The days by the keyboard (WeKan's calendarDateInput): the arrows a day and
+  // a week - mirrored right to left - PageUp and PageDown a month, with Shift a
+  // year, Home and End the week's first and last day.
+  up.on('keydown', '.js-pop-over form.edit-date .js-calendar-day', function (event, el) {
+    var form = el.form, cal = pickerCalendar(), d = fromIsoDay(el.getAttribute('data-date')), next = null;
+    var h = getComputedStyle(form).direction === 'rtl' ? -1 : 1;
+    var steps = { ArrowLeft: -h, ArrowRight: h, ArrowUp: -7, ArrowDown: 7 };
+    if (event.key in steps) next = calDay(d, steps[event.key]);
+    else if (event.key === 'PageUp' || event.key === 'PageDown') next = (event.shiftKey ? calShiftYear : calShiftMonth)(d, event.key === 'PageUp' ? -1 : 1, cal);
+    else if (event.key === 'Home' || event.key === 'End') {
+      var off = (d.getDay() - pickerFirstDay() + 7) % 7;
+      next = calDay(d, event.key === 'Home' ? -off : 6 - off);
+    } else return;
+    event.preventDefault(); event.stopPropagation();
+    form._shown = next; form._focus = isoDay(next);
+    drawCalendar(form);
+    var b = form.querySelector('.js-calendar-day[data-date="' + isoDay(next) + '"]');
+    if (b) b.focus();
+  });
+  up.on('click', '.js-pop-over form.edit-date .js-delete-date', function (event, el) {
+    var form = el.form;
+    form.querySelector('[name=delete]').value = '1';
+    up.submit(form, { params: { delete: '1' } });
+  });
+  up.on('up:form:submit', 'form.edit-date', function (event, form) {
+    if (form.querySelector('[name=delete]').value === '1') return;
+    var err = form.querySelector('.js-date-error');
+    var fail = function (key) { event.preventDefault(); err.textContent = err.getAttribute('data-' + key); err.hidden = false; };
+    var day = form.querySelector('.js-date-field').value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return fail('invalid-date');
+    var time = (form.querySelector('.js-time-field').value || form._defaultTime || '12:00').trim();
+    var m = /^(\d{1,2})(?::(\d{2}))?$/.exec(time);
+    if (!m || +m[1] > 23 || +(m[2] || 0) > 59) return fail('invalid-time');
+    var at = new Date(day + 'T' + pad2(+m[1]) + ':' + (m[2] || '00') + ':00');
+    if (isNaN(at)) return fail('invalid-date');
+    if (at.getFullYear() < 1000 || at.getFullYear() > 9999) return fail('invalid-year');
+    form.querySelector('[name=at]').value = at.toISOString();
+    // Unpoly has read the form already: the time goes into what it sends.
+    if (event.params && event.params.set) event.params.set('at', at.toISOString());
+  });
+  // checklistItemAssigneePopup: for that item, its assignee marked.
+  up.on('click', '.js-checklist-item-assignee', function (event, el) {
+    event.preventDefault();
+    event.stopPropagation();
+    var url = el.getAttribute('data-url'), current = el.getAttribute('data-assignee');
+    openPopOver('checklist-item-assignee');
+    var f = document.querySelector('.js-pop-over .js-checklist-item-assignee-form');
+    if (!f) return;
+    f.setAttribute('action', url);
+    f.querySelectorAll('.js-set-checklist-item-assignee').forEach(function (b) {
+      b.classList.toggle('is-active', !!current && b.value === current);
+    });
+  });
+  // checklistItemDeletePopup: the confirmation, for that item.
+  up.on('click', '.js-delete-checklist-item', function (event, el) {
+    event.preventDefault();
+    var url = el.getAttribute('data-url');
+    openPopOver('checklist-item-delete');
+    var f = document.querySelector('.js-pop-over .js-checklist-item-delete-form');
+    if (f) f.setAttribute('action', url);
+  });
+  up.on('click', '.js-pop-over .js-export-checklist', function (event) {
+    event.preventDefault();
+    if (menuChecklist) openScope('export', 'checklist', { checklistId: menuChecklist });
+  });
+  up.on('change', '.js-pop-over .js-scope-import-file', function (event, el) {
+    var file = el.files && el.files[0];
+    if (!file || !scope) return;
+    var p = el.closest('.js-pop-over');
+    var t = document.querySelector('template.js-pop-over-template[data-pop="import-scope"]');
+    var status = p.querySelector('.js-scope-import-status');
+    var board = t.getAttribute('data-board');
+    var fields = [];
+    p.querySelectorAll('.js-export-field-toggle').forEach(function (a) {
+      if (!exportOff[a.dataset.field]) fields.push(a.dataset.field);
+    });
+    var target = { boardId: board };
+    Object.keys(scope.target).forEach(function (k) {
+      // A card's import goes below the card: the card is its place.
+      if (scope.kind === 'card' && k === 'listId') return;
+      target[k] = scope.target[k];
+    });
+    status.textContent = t.getAttribute('data-importing');
+    var done = function (counts) {
+      var parts = [];
+      Object.keys(counts || {}).forEach(function (k) { if (counts[k] > 0) parts.push(counts[k] + ' ' + k); });
+      status.textContent = t.getAttribute('data-done') + ' ' + (parts.join(', ') || '0');
+      up.reload('.board-wrapper');
+    };
+    var failed = function (notWekan) {
+      status.textContent = t.getAttribute(notWekan ? 'data-not-wekan' : 'data-failed');
+    };
+    if (/\.zip$/i.test(file.name)) {
+      var q = new URLSearchParams(target);
+      q.set('fields', fields.join(','));
+      fetch('/api/import/zip?' + q.toString(), { method: 'POST', headers: { 'Content-Type': 'application/zip' }, body: file, credentials: 'same-origin' })
+        .then(function (r) { return r.json().then(function (a) { return { ok: r.ok, a: a }; }); })
+        .then(function (x) { if (x.ok && x.a.ok) done(x.a.counts); else failed(x.a.error === 'import-not-wekan-export'); })
+        .catch(function () { failed(false); });
+    } else {
+      file.text().then(function (text) {
+        var doc;
+        try { doc = JSON.parse(text); } catch (e) { failed(true); return; }
+        return fetch('/_methods/importScoped', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify([target, doc, fields]) })
+          .then(function (r) { return r.json(); })
+          .then(function (a) { if (a && a.result) done(a.result); else failed(false); });
+      }).catch(function () { failed(false); });
+    }
+    el.value = '';
+  });
+  up.on('click', '.js-export-card-details-toggle, .js-export-field-toggle', function (event, el) {
+    // The pop-over stays open: choosing five sections is not five reopens.
+    event.preventDefault();
+    var field = el.classList.contains('js-export-card-details-toggle') ? 'card-details' : el.dataset.field;
+    exportOff[field] = !exportOff[field];
+    applyExportSelection(el.closest('.js-pop-over'));
+  });
+  up.on('click', '.js-watch-board', function (event) {
+    event.preventDefault();
+    openPopOver('watch');
+  });
+  up.on('click', '.js-open-add-swimlane-menu', function (event, el) {
+    event.preventDefault();
+    openPopOver('add-swimlane');
+    var p = document.querySelector('.js-pop-over');
+    if (!p) return;
+    var after = p.querySelector('.js-swimlane-after');
+    if (after) after.value = el.dataset.swimlane;
+    var input = p.querySelector('.swimlane-name-input');
+    if (input) input.focus();
+  });
+  // The header's member menu, and its Edit Profile (userHeader.jade).
+  up.on('click', '.js-open-header-member-menu', function (event) {
+    event.preventDefault();
+    openPopOver('member-menu');
+  });
+  up.on('click', '.js-edit-profile', function (event) {
+    event.preventDefault();
+    openPopOver('edit-profile');
+  });
+  up.on('click', '.js-add-members', function (event) {
+    event.preventDefault();
+    openPopOver('card-members');
+  });
+  // A choice in a pop-over is done when the board has reloaded with it.
+  // ... and only a choice made in it: an update the page was already waiting
+  // for when the pop-over opened leaves it open.
+  var closeAfterChoice = false;
+  // Card Settings is not such a pop-over: it stays open through its own
+  // changes, as WeKan's does (its forms' handlers send them themselves).
+  var choiceForm = function (form) { return !form.closest('.js-pop-over[data-popup="boardCardSettingsPopup"]'); };
+  up.on('up:form:submit', '.js-pop-over form', function (event, form) { if (choiceForm(form)) closeAfterChoice = true; });
+  up.on('submit', '.js-pop-over form', function (event, form) { if (choiceForm(form)) closeAfterChoice = true; });
+  up.on('up:fragment:inserted', function (event, el) {
+    if (closeAfterChoice && el && el.matches && el.matches('.board-wrapper')) {
+      closeAfterChoice = false;
+      closePopOvers();
+    }
+  });
+  up.on('click', '.js-close-pop-over', function (event) {
+    event.preventDefault();
+    closePopOvers();
+  });
+  up.on('keydown', function (event) {
+    if (event.key === 'Escape') {
+      // WeKan's EscapeActions: a pop-over first, else an inlined form of the card.
+      if (document.querySelector('.js-pop-over')) closePopOvers();
+      else document.querySelectorAll('.js-card-details .js-checklists-section .js-inlined-form:not(.is-hidden), .js-card-details .card-details-group-description .js-inlined-form:not(.is-hidden), .js-card-details .card-details-item-customfield .js-inlined-form:not(.is-hidden)').forEach(function (f) { closeInlinedForm(f); });
+      if (staleUnderForm && !openEditorForm()) { staleUnderForm = false; setTimeout(reloadBoard, 0); }
+    }
+  });
+
+  // A section heading with a caret (WeKan's client/lib/sectionCaret.js): it
+  // shows or hides the section after it, and the caret says which.
+  up.on('click', '.js-toggle-card-section, .js-toggle-show-activities', function (event, el) {
+    // A link or button in the heading does its own thing, not the fold.
+    var control = event.target.closest && event.target.closest('a, button');
+    if (control && control !== el && el.contains(control)) return;
+    event.preventDefault();
+    var section = el.nextElementSibling;
+    if (!section) return;
+    var open = section.classList.toggle('is-hidden') === false;
+    // What the heading shows only while its section is open (the layout
+    // toggle) leaves with the fold and comes back with it.
+    if (!open) {
+      el._openOnly = Array.prototype.slice.call(el.querySelectorAll('.js-section-open-only'));
+      el._openOnly.forEach(function (n) { n.remove(); });
+    } else if (el._openOnly) {
+      el._openOnly.forEach(function (n) { el.appendChild(n); });
+      el._openOnly = null;
+    }
+    if (el.classList.contains('js-toggle-show-activities')) sidebarState('activities', open);
+    // What is shown on demand is put on the page the first time it opens.
+    var stamp = open && section.querySelector(':scope > template.js-stamp-on-open');
+    if (stamp) {
+      section.appendChild(stamp.content.cloneNode(true));
+      stamp.remove();
+      up.hello(section);
+    }
+    var caret = el.querySelector('.fa-caret-right, .fa-caret-down');
+    if (caret) {
+      caret.classList.toggle('fa-caret-down', open);
+      caret.classList.toggle('fa-caret-right', !open);
+    }
+  });
+
+  // Meteor.user() and Meteor.userId() as Node.js WeKan's pages have them: the
+  // signed-in user, without secrets (/api/user), refreshed every few seconds -
+  // for WeKan's scripts and tests, which read the user that way.
+  var currentUser = null;
+  // Meteor.call / Meteor.callAsync: WeKan's methods that Weddy has, through
+  // POST /_methods/{name}; a failure is a Meteor.Error-like {error, reason}.
+  function callAsync(name) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fetch('/_methods/' + encodeURIComponent(name), {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-Weddy-Live': pageId }, body: JSON.stringify(args),
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) {
+          var e = new Error(d.reason || d.error);
+          e.error = d.error; e.reason = d.reason;
+          throw e;
+        }
+        var done = function () { return d.result; };
+        // WeKan's pages change language the moment it is set: draw this page
+        // again in it - its lang and direction too - before the call answers.
+        if (name === 'setLanguage') return refreshUser().then(rerenderPage).then(done, done);
+        // WeKan's dates follow the member's settings the moment they change.
+        var html = document.documentElement;
+        if (name === 'changeCalendarSystem') html.setAttribute('data-calendar-system', String(args[0]));
+        if (name === 'changeStartDayOfWeek') html.setAttribute('data-start-day', String(args[0]));
+        if (name === 'changeDateFormat') html.setAttribute('data-date-format', args[1] === false ? '' : String(args[0]));
+        if (/^change(CalendarSystem|DateFormat)$/.test(name) && window.weddyRedrawDates) window.weddyRedrawDates();
+        return refreshUser().then(done);
+      });
+    });
+  }
+  function rerenderPage() {
+    return fetch(window.location.href, { credentials: 'same-origin' }).then(function (r) { return r.text(); }).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      document.documentElement.lang = doc.documentElement.lang;
+      document.documentElement.dir = doc.documentElement.dir;
+      document.title = doc.title;
+      return up.render({ target: 'body', document: html, history: false });
+    });
+  }
+  // A table page's filter applies as it is chosen (WeKan's tablePage).
+  up.on('change', 'select.js-table-page-filter', function (event, el) {
+    if (el.form) el.form.requestSubmit ? el.form.requestSubmit() : el.form.submit();
+  });
+  // A page's session ended elsewhere - the password changed in another
+  // browser, the account signed out everywhere - signs this page out too, as
+  // WeKan's client is the moment its login token is gone: looked at while the
+  // page is shown, and then it is the sign-in page's.
+  {
+    setInterval(function () {
+      // Decided at each look: the page is parsed, its user known, by then.
+      if (!currentUser && !document.querySelector('.js-open-header-member-menu')) return;
+      if (document.hidden || /^\/sign-(in|up)/.test(window.location.pathname)) return;
+      fetch('/_session', { credentials: 'same-origin' }).then(function (r) {
+        if (r.status !== 401) return;
+        currentUser = null;
+        window.location.href = '/sign-in';
+      }).catch(function () {});
+    }, 5000);
+  }
+  // The required password change: when this account's sessions end - its
+  // password changed from another browser - this page goes to sign-in.
+  up.compiler('.js-password-change-required', function () {
+    var timer = setInterval(function () {
+      fetch('/_session', { credentials: 'same-origin' }).then(function (r) {
+        if (r.status === 401) { clearInterval(timer); currentUser = null; window.location.href = '/sign-in'; }
+      }).catch(function () {});
+    }, 2000);
+    return function () { clearInterval(timer); };
+  });
+  // Admin Panel / Problems / Password length: the enforce toggle, sent as
+  // the form's enforce field.
+  up.on('click', '.js-toggle-password-min-length-enforce', function (event, el) {
+    event.preventDefault();
+    var on = el.getAttribute('aria-checked') !== 'true';
+    el.setAttribute('aria-checked', on ? 'true' : 'false');
+    var box = el.querySelector('.materialCheckBox');
+    if (box) box.classList.toggle('is-checked', on);
+    var input = el.closest('form').querySelector('.js-password-min-length-enforce');
+    if (input) input.value = on ? 'true' : '';
+  });
+  // WeKan's AccountsTemplates client, the part a page asks of it: a field's
+  // rules, as the sign-up form enforces them (its minlength, the server's
+  // enforced password minimum).
+  if (!window.AccountsTemplates) {
+    window.AccountsTemplates = {
+      getField: function (id) {
+        var el = document.getElementById('at-field-' + id);
+        return el ? { _id: id, minLength: Number(el.getAttribute('minlength')) || 0 } : undefined;
+      },
+    };
+  }
+  if (!window.Meteor) {
+    window.Meteor = {
+      // Weddy's pages come drawn by the server: a subscription is ready at
+      // once, and there is nothing to stop.
+      subscribe: function () {
+        var args = Array.prototype.slice.call(arguments), last = args[args.length - 1];
+        var cb = typeof last === 'function' ? last : last && last.onReady;
+        if (typeof cb === 'function') setTimeout(cb, 0);
+        return { ready: function () { return true; }, stop: function () {}, subscriptionId: '' };
+      },
+      user: function () { return currentUser; },
+      userId: function () { return currentUser ? currentUser._id : null; },
+      callAsync: callAsync,
+      // Meteor.apply(name, args, [options], [callback]).
+      apply: function (name, args, options, cb) {
+        if (typeof options === 'function') { cb = options; options = null; }
+        var p = callAsync.apply(null, [name].concat(args || []));
+        if (cb) p.then(function (res) { cb(undefined, res); }, function (err) { cb(err); });
+        return undefined;
+      },
+      call: function () {
+        var args = Array.prototype.slice.call(arguments);
+        var cb = typeof args[args.length - 1] === 'function' ? args.pop() : null;
+        var p = callAsync.apply(null, args);
+        if (cb) p.then(function (res) { cb(undefined, res); }, function (err) { cb(err); });
+        return undefined;
+      },
+    };
+  }
+  function unreadOf(user) {
+    var list = (user && user.profile && user.profile.notifications) || [];
+    return list.filter(function (n) { return !n.read; }).length;
+  }
+  function refreshUser() {
+    return fetch('/api/user', { credentials: 'same-origin' }).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).then(function (u) {
+      if (!u) return;
+      currentUser = u;
+      var unread = unreadOf(u);
+      document.querySelectorAll('.notifications-drawer-toggle').forEach(function (el) {
+        el.classList.toggle('alert', unread > 0);
+        var c = el.querySelector('.notifications-count');
+        if (c) c.textContent = unread > 0 ? String(unread) : '';
+      });
+    }).catch(function () {});
+  }
+  // The notifications drawer: opened from the indicator; its menu marks all
+  // read, or - after a confirmation in the user's language - deletes all.
+  up.on('click', '.notifications-drawer-toggle', function (event) {
+    event.preventDefault();
+    var d = document.getElementById('notifications-drawer');
+    if (d) d.classList.toggle('is-hidden');
+  });
+  up.on('click', '#notifications-drawer .close', function (event) {
+    event.preventDefault();
+    document.getElementById('notifications-drawer').classList.add('is-hidden');
+  });
+  up.on('click', '#notifications-drawer .notification-menu-toggle', function (event) {
+    event.preventDefault();
+    document.querySelector('#notifications-drawer .notification-menu').classList.toggle('is-hidden');
+  });
+  function drawerShowRead(on) {
+    var d = document.getElementById('notifications-drawer');
+    d.classList.toggle('show-read', on);
+    d.querySelector('.js-filter-unread').classList.toggle('selected', !on);
+    d.querySelector('.js-view-all').classList.toggle('selected', on);
+    d.querySelector('.notification-menu').classList.add('is-hidden');
+  }
+  up.on('click', '#notifications-drawer .js-filter-unread', function (event) { event.preventDefault(); drawerShowRead(false); });
+  up.on('click', '#notifications-drawer .js-view-all', function (event) { event.preventDefault(); drawerShowRead(true); });
+  // #5171: a grouped row opens to show all of its card's or board's entries.
+  // Admin Panel / Organizations and Teams: new and edit pop-overs, and the
+  // feature columns - a row's box, or a column's select-all / unselect-all.
+  ['org', 'team'].forEach(function (kind) {
+    var K = kind.charAt(0).toUpperCase() + kind.slice(1);
+    up.on('click', '.new-' + kind, function (event) { event.preventDefault(); openPopOver('new-' + kind); });
+    up.on('click', '.edit-' + kind, function (event, link) {
+      event.preventDefault();
+      openPopOver('edit-' + kind + '-' + link.getAttribute('data-id'));
+    });
+    up.on('change', '.js-toggle-' + kind + '-feature', function (event, box) {
+      var f = box.getAttribute('data-feature');
+      Meteor.callAsync('set' + f.charAt(0).toUpperCase() + f.slice(1), { _id: box.getAttribute('data-id') }, box.checked)
+        .then(function () { up.reload('.setting-content'); });
+    });
+    up.on('click', '.js-' + kind + '-feature-all', function (event, link) {
+      event.preventDefault();
+      Meteor.callAsync('setAll' + K + 'sFeature', link.getAttribute('data-feature'), link.getAttribute('data-value') === 'true')
+        .then(function () { up.reload('.setting-content'); });
+    });
+  });
+  // WeKan's passwordInput: show or hide the password; a button of its own,
+  // so Space and Enter work it without sending the form.
+  up.on('click', '.password-toggle-btn', function (event, btn) {
+    event.preventDefault();
+    var input = btn.parentNode.querySelector('input.password-field');
+    if (input) input.type = input.type === 'password' ? 'text' : 'password';
+  });
+  // Admin Panel / People: a user's editUserPopup, and Active switched by a click.
+  up.on('click', '.edit-user', function (event, link) {
+    event.preventDefault();
+    openPopOver('edit-user-' + link.getAttribute('data-user-id'));
+  });
+  up.on('click', '.js-toggle-active-status', function (event, el) {
+    event.preventDefault();
+    var body = new URLSearchParams({ loginDisabled: el.getAttribute('data-is-active') === 'true' ? 'true' : 'false' });
+    fetch('/admin/people/' + encodeURIComponent(el.getAttribute('data-user-id')), { method: 'POST', body: body, credentials: 'same-origin', redirect: 'manual' })
+      .then(function () { up.reload('.setting-content'); });
+  });
+  // The minicard's "Mark as complete": the card does not open.
+  up.on('click', '.js-toggle-card-complete', function (event, link) {
+    event.preventDefault();
+    event.stopPropagation();
+    var m = location.pathname.match(/^\/b\/([^/]+)/);
+    if (!m) return;
+    var body = new URLSearchParams({ complete: link.getAttribute('data-complete') });
+    fetch('/b/' + m[1] + '/cards/' + encodeURIComponent(link.getAttribute('data-card')) + '/complete',
+      { method: 'POST', body: body, credentials: 'same-origin' }).then(function () { up.reload('.board-wrapper'); });
+  });
+  up.on('click', '#notifications-drawer .js-toggle-notification-group', function (event, link) {
+    event.preventDefault();
+    var open = link.getAttribute('aria-expanded') !== 'true';
+    link.setAttribute('aria-expanded', open ? 'true' : 'false');
+    link.textContent = (open ? '▾' : '▸') + link.textContent.slice(1);
+    document.querySelectorAll('#notifications-drawer .notification.is-group-rest').forEach(function (li) {
+      if (li.getAttribute('data-group') === link.getAttribute('data-key')) li.classList.toggle('is-group-open', open);
+    });
+  });
+  function drawerPost(path) {
+    return fetch(path, { method: 'POST', credentials: 'same-origin' }).then(function () { return refreshUser(); });
+  }
+  up.on('click', '#notifications-drawer .mark-all-read', function (event) {
+    event.preventDefault();
+    drawerPost('/notifications/read-all').then(function () {
+      document.querySelectorAll('#notifications-drawer .notification').forEach(function (n) { n.classList.add('is-read'); });
+    });
+  });
+  up.on('click', '#notifications-drawer .delete-all', function (event, el) {
+    event.preventDefault();
+    if (!window.confirm(el.dataset.confirm)) return;
+    drawerPost('/notifications/delete-all').then(function () {
+      document.querySelector('#notifications-drawer .notifications').innerHTML = '';
+    });
+  });
+
+  // Member Settings' notification delivery: a schedule is read in the
+  // clock of the browser that saves it (WeKan's browserTimezone).
+  // The import page's "People in the file": one choice checked, and the
+  // form says which. Session.set('importMembersMode', mode) chooses it too,
+  // as WeKan's page reads it from its Session.
+  function chooseMembersMode(box, mode) {
+    var link = box.querySelector('.js-import-members-mode[data-mode="' + mode + '"]');
+    if (!link) return;
+    box.querySelectorAll('.js-import-members-mode .materialCheckBox').forEach(function (c) {
+      c.classList.toggle('is-checked', c.parentNode === link);
+    });
+    box.querySelector('.js-import-members-mode-value').value = mode;
+  }
+  up.compiler('.import-members-mode', function (box) {
+    box.addEventListener('click', function (event) {
+      var link = event.target.closest('.js-import-members-mode');
+      if (!link) return;
+      event.preventDefault();
+      chooseMembersMode(box, link.getAttribute('data-mode'));
+    });
+  });
+  // "One board per project": a checkbox the form sends as splitBy, kept in
+  // Session('importSplitByProject') as WeKan's page keeps it.
+  function chooseSplit(on) {
+    document.querySelectorAll('.js-import-split-toggle .materialCheckBox').forEach(function (c) { c.classList.toggle('is-checked', !!on); });
+    document.querySelectorAll('.js-import-split-value').forEach(function (i) { i.value = on ? 'swimlane' : ''; });
+  }
+  up.on('click', '.js-import-split-toggle', function (event) {
+    event.preventDefault();
+    Session.set('importSplitByProject', !Session.get('importSplitByProject'));
+  });
+  up.compiler('.js-import-split-toggle', function () { chooseSplit(window.Session && Session.get('importSplitByProject')); });
+  // Meteor's Session, for the page state WeKan keeps there.
+  if (!window.Session) {
+    var session = {};
+    window.Session = {
+      get: function (key) { return session[key]; },
+      set: function (key, value) {
+        session[key] = value;
+        if (key === 'importMembersMode') {
+          document.querySelectorAll('.import-members-mode').forEach(function (box) { chooseMembersMode(box, value); });
+        }
+        if (key === 'importSplitByProject') chooseSplit(value);
+      },
+    };
+  }
+
+  up.compiler('input.js-browser-timezone', function (el) {
+    try { el.value = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { el.value = ''; }
+  });
+
+  // The notifications indicator: alert while there are unread ones.
+  up.compiler('.notifications-drawer-toggle', function () {
+    refreshUser();
+    var timer = setInterval(refreshUser, 4000);
+    return function () { clearInterval(timer); };
+  });
+
+  // A button rule: run it, on the board or on the open card (rules.runButton).
+  up.on('click', '.js-run-board-button, .js-run-card-button', function (event, el) {
+    event.preventDefault();
+    var args = ['rules.runButton', el.dataset.ruleId];
+    var details = el.closest('.js-card-details');
+    if (el.classList.contains('js-run-card-button') && details) args.push(details.dataset.card);
+    callAsync.apply(null, args).then(function () { up.reload('.board-wrapper'); }, function () {});
+  });
+
+  // The sidebar's members (membersWidget): a member's menu, removing one, and
+  // adding one found by a search.
+  up.on('click', '.board-sidebar a.js-member', function (event, el) {
+    event.preventDefault();
+    openPopOver('member-' + el.dataset.user);
+  });
+  up.on('click', '.js-pop-over a.js-remove-member', function (event, el) {
+    event.preventDefault();
+    openPopOver('remove-member-' + el.dataset.user);
+  });
+  up.on('click', '.js-manage-board-members', function (event) {
+    event.preventDefault();
+    openPopOver('add-member');
+    var input = document.querySelector('.js-pop-over .js-search-member-input');
+    if (input) input.focus();
+  });
+  // WeKan's Filter sidebar: its Advanced Filter applied on change, by the
+  // board drawn again with only the cards it matches - the server decides,
+  // with the same query a rule's advanced-filter trigger uses.
+  function applyBoardFilter(text) {
+    var view = document.querySelector('.js-filter-view');
+    setBoardFilterParams({ advanced: text, last: text && view ? view.dataset.applied || '' : '' });
+  }
+
+  up.on('click', '.js-open-filter-view', function (event) {
+    event.preventDefault();
+    closePopOvers();
+    var sb = document.querySelector('.board-sidebar');
+    if (!sb) return;
+    sb.classList.add('is-open');
+    var view = sb.querySelector('.js-filter-view');
+    if (view) view.classList.remove('is-hidden');
+    sidebarState('open', true);
+    sidebarState('filter', true);
+  });
+  // WeKan's card text and label filters (client/lib/filter.js), kept in the
+  // URL so the board - and its Calendar view - is drawn again with only the
+  // cards they match. A label goes chosen -> excluded -> off (#2886); "no
+  // label" is chosen or off.
+  // The state is kept here between a click and the board drawn for it, so a
+  // second click before the first answer builds on the first, not on the page.
+  var pendingFilter = null, filterNav = 0;
+  function boardFilterState() {
+    if (!pendingFilter) {
+      var q = new URL(window.location.href).searchParams;
+      pendingFilter = {};
+      ['advanced', 'last', 'text', 'labels', 'xlabels', 'labelMode'].forEach(function (k) { pendingFilter[k] = q.get(k) || ''; });
+    }
+    return pendingFilter;
+  }
+  function setBoardFilterParams(change) {
+    var st = boardFilterState();
+    Object.keys(change).forEach(function (k) { st[k] = change[k]; });
+    var url = new URL(window.location.href);
+    Object.keys(st).forEach(function (k) {
+      if (st[k]) url.searchParams.set(k, st[k]); else url.searchParams.delete(k);
+    });
+    var mine = ++filterNav;
+    Promise.resolve(up.navigate({ url: url.pathname + url.search, target: '.board-wrapper', history: 'replace', cache: false }))
+      .finally(function () { if (mine === filterNav) pendingFilter = null; });
+  }
+  up.on('change', '.js-field-card-filter', function (event, el) {
+    setBoardFilterParams({ text: el.value.trim() });
+  });
+  up.on('change', '.js-label-filter-mode', function (event, el) {
+    setBoardFilterParams({ labelMode: el.value === 'and' ? 'and' : '' });
+  });
+  up.on('click', '.js-toggle-label-filter', function (event, el) {
+    event.preventDefault();
+    var st = boardFilterState(), id = el.getAttribute('data-filter-id');
+    var chosen = st.labels ? st.labels.split(',') : [], excluded = st.xlabels ? st.xlabels.split(',') : [];
+    var state = chosen.indexOf(id) >= 0 ? 'in' : excluded.indexOf(id) >= 0 ? 'out' : '';
+    var next = id === '__none__' ? (state === 'in' ? '' : 'in') : (state === 'in' ? 'out' : state === 'out' ? '' : 'in');
+    chosen = chosen.filter(function (x) { return x !== id; });
+    excluded = excluded.filter(function (x) { return x !== id; });
+    if (next === 'in') chosen.push(id); else if (next === 'out') excluded.push(id);
+    setBoardFilterParams({ labels: chosen.join(','), xlabels: excluded.join(',') });
+  });
+  up.compiler('.js-label-filters input[data-indeterminate="true"]', function (input) { input.indeterminate = true; });
+  up.on('click', '.js-filter-reset', function (event) {
+    event.preventDefault();
+    setBoardFilterParams({ advanced: '', last: '', text: '', labels: '', xlabels: '', labelMode: '' });
+  });
+  up.on('change', '.js-field-advanced-filter', function (event, el) {
+    applyBoardFilter(el.value.trim());
+  });
+  var memberSearch = null;
+  up.compiler('.board-sidebar', function (sb) {
+    if (sidebarState('open')) sb.classList.add('is-open');
+    var filterView = sb.querySelector('.js-filter-view');
+    if (filterView && sidebarState('filter')) filterView.classList.remove('is-hidden');
+    var archives = sb.querySelector('.js-archives-view');
+    if (archives && sidebarState('archives')) archives.classList.remove('is-hidden');
+    var toggle = sb.querySelector('.js-toggle-show-activities');
+    if (toggle && sidebarState('activities') && toggle.nextElementSibling.classList.contains('is-hidden')) toggle.click();
+  });
+  up.on('input', '.js-search-member-input', function (event, input) {
+    clearTimeout(memberSearch);
+    memberSearch = setTimeout(function () {
+      var board = document.querySelector('.board-wrapper');
+      var list = input.closest('.js-pop-over').querySelector('.js-member-search-results');
+      fetch('/b/' + board.dataset.board + '/members/search?q=' + encodeURIComponent(input.value), { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); }).then(function (users) {
+          list.innerHTML = '';
+          users.forEach(function (u) {
+            var li = document.createElement('li');
+            li.className = 'item js-member-item';
+            var a = document.createElement('a');
+            a.className = 'name js-select-member member';
+            a.href = '#';
+            a.dataset.user = u._id;
+            a.title = u.fullname + ' (' + u.username + ')';
+            var name = document.createElement('span');
+            name.className = 'full-name';
+            name.textContent = u.fullname + ' ';
+            var un = document.createElement('span');
+            un.className = 'username';
+            un.textContent = '(' + u.username + ')';
+            a.appendChild(name);
+            a.appendChild(un);
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+        });
+    }, 200);
+  });
+  up.on('click', '.js-member-search-results .js-select-member', function (event, el) {
+    event.preventDefault();
+    var board = document.querySelector('.board-wrapper');
+    var form = new FormData();
+    form.append('userId', el.dataset.user);
+    fetch('/b/' + board.dataset.board + '/members', { method: 'POST', body: form, credentials: 'same-origin' })
+      .then(function () { closePopOvers(); up.reload('.board-wrapper'); });
+  });
+
+  // The card's actions menu (cardDetailsActionsPopup) and Archive's confirmation.
+  up.on('click', '.js-open-card-details-menu', function (event) {
+    event.preventDefault();
+    openPopOver('card-actions');
+  });
+  up.on('click', '.js-pop-over a.js-move-card', function (event) {
+    event.preventDefault();
+    openPopOver('move-card');
+  });
+  up.on('click', '.js-pop-over a.js-copy-card', function (event) {
+    event.preventDefault();
+    openPopOver('copy-card');
+  });
+  // Another board chosen: its swimlanes and lists in the selects.
+  up.on('change', '.js-card-target .js-select-boards', function (event, sel) {
+    var form = sel.closest('form');
+    fetch('/b/' + sel.value + '/places', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (p) {
+      [['swimlanes', '.js-select-swimlanes'], ['lists', '.js-select-lists']].forEach(function (k) {
+        var target = form.querySelector(k[1]);
+        target.innerHTML = '';
+        (p[k[0]] || []).forEach(function (o) {
+          var opt = document.createElement('option');
+          opt.value = o._id;
+          opt.textContent = o.n + '. ' + o.title;
+          target.appendChild(opt);
+        });
+      });
+    });
+  });
+  up.on('click', '.js-pop-over a.js-archive', function (event) {
+    event.preventDefault();
+    openPopOver('card-archive');
+  });
+
+  // The card's labels (cardLabelsPopup) and a new one (createLabelPopup).
+  up.on('click', '.js-add-labels', function (event) {
+    event.preventDefault();
+    openPopOver('card-labels');
+  });
+  up.on('click', '.js-pop-over .js-add-label', function (event) {
+    event.preventDefault();
+    openPopOver('create-label');
+  });
+  up.on('click', '.js-palette-color', function (event, el) {
+    var radio = el.querySelector('input');
+    if (radio) radio.checked = true;
+    el.parentNode.querySelectorAll('.js-palette-color').forEach(function (p) { p.classList.toggle('is-selected', p === el); });
+  });
+  up.on('click', '.js-change-visibility', function (event) {
+    event.preventDefault();
+    openPopOver('visibility');
+  });
+  up.on('click', '.js-edit-board-title', function (event) {
+    event.preventDefault();
+    openPopOver('board-title');
+  });
+  // Archived Items: the board's Archive in its sidebar (archivesSidebar).
+  up.on('click', '.js-open-archives', function (event) {
+    event.preventDefault();
+    closePopOvers();
+    var sb = document.querySelector('.board-sidebar');
+    if (!sb) return;
+    sb.classList.add('is-open');
+    var view = sb.querySelector('.js-archives-view');
+    if (view) view.classList.remove('is-hidden');
+    sidebarState('open', true);
+    sidebarState('archives', true);
+  });
+  up.on('click', '.js-restore-card, .js-restore', function (event, el) {
+    event.preventDefault();
+    // A card whose list is gone or full asks for another list first (#6772).
+    if (el.dataset.pop) { openPopOver(el.dataset.pop); return; }
+    up.submit(el.closest('form'));
+  });
+  up.on('click', '.js-restore-all-cards', function (event, el) {
+    event.preventDefault();
+    up.submit(el.closest('form'));
+  });
+  // A pop-over the server asked to show at once: Restore all's left-out count.
+  // and the card a restore was refused for, its list being full.
+  up.compiler('.js-open-pop-on-load', function (el) {
+    setTimeout(function () { openPopOver(el.getAttribute('data-pop')); }, 0);
+  });
+
+  // A card full-screen, or not: the user's own choice (toggleCardMaximized).
+  // WeKan's card caret: the user's own fold of the opened card's details.
+  up.on('click', '.js-card-collapse-toggle', function (event, el) {
+    event.preventDefault();
+    callAsync('setCardCollapsed', el.dataset.collapsed !== 'true').then(function () { up.reload('.board-wrapper'); });
+  });
+  up.on('click', '.js-maximize-card-details, .js-minimize-card-details', function (event) {
+    event.preventDefault();
+    callAsync('toggleCardMaximized').then(function () { up.reload('.board-wrapper'); });
+  });
+  // Copy link: the card's absolute address to the clipboard.
+  up.on('click', '.js-copy-card-link', function (event, el) {
+    event.preventDefault();
+    var url = window.location.origin + el.dataset.path;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url);
+    closePopOvers();
+  });
+  // The card title's editor: open on its leading part.
+  up.on('click', '.card-details-title-edit-zone', function (event, el) {
+    event.preventDefault();
+    var form = el.closest('.card-details-header').querySelector('.js-card-details-title');
+    if (!form) return;
+    form.classList.remove('is-hidden');
+    form.querySelector('textarea').focus();
+  });
+
+  // A link in a minicard's title opens on its own, without opening the card
+  // or its editor (#6639): caught before the minicard sees the click.
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest && event.target.closest('.minicard-title-text .viewer a');
+    if (!link) return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.open(link.href, '_blank', 'noopener');
+  }, true);
+
+  // An invitation to the board: accept it, or decline it and go to All Boards.
+  up.on('click', '.js-member-invite-accept', function (event, el) {
+    event.preventDefault();
+    var board = el.closest('.board-wrapper');
+    callAsync('acceptInvite', board.dataset.board).then(function () { up.reload('.board-wrapper'); });
+  });
+  up.on('click', '.js-member-invite-decline', function (event, el) {
+    event.preventDefault();
+    var board = el.closest('.board-wrapper');
+    callAsync('quitBoard', board.dataset.board).then(function () { up.navigate({ url: '/' }); });
+  });
+
+  // The board's star: the user's favorite (WeKan's toggleBoardStar).
+  up.on('click', '.js-star-board', function (event, el) {
+    event.preventDefault();
+    var board = el.closest('.board-wrapper');
+    if (!board) return;
+    var on = !el.classList.contains('is-active');
+    el.classList.toggle('is-active', on);
+    var icon = el.querySelector('.fa');
+    if (icon) {
+      icon.classList.toggle('fa-star', on);
+      icon.classList.toggle('fa-star-o', !on);
+    }
+    el.title = on ? el.dataset.unstar : el.dataset.star;
+    callAsync('toggleBoardStar', board.dataset.board).catch(function () {
+      el.classList.toggle('is-active', !on);
+    });
+  });
+
+  // A list's caret collapses it, for this user, in this swimlane (#6712):
+  // at once on the page, and kept in the profile as WeKan's
+  // setListCollapsedState, so a reload shows it the same.
+  up.on('click', '.js-collapse', function (event, el) {
+    event.preventDefault();
+    var list = el.closest('.js-list');
+    var board = el.closest('.board-wrapper');
+    if (!list || !board) return;
+    var collapsed = !list.classList.contains('list-collapsed');
+    list.classList.toggle('list-collapsed', collapsed);
+    var icon = el.querySelector('.fa');
+    if (icon) {
+      icon.classList.toggle('fa-caret-right', collapsed);
+      icon.classList.toggle('fa-caret-down', !collapsed);
+    }
+    var label = collapsed ? el.dataset.uncollapse : el.dataset.collapse;
+    if (label) { el.title = label; el.setAttribute('aria-label', label); }
+    var key = list.dataset.list + (list.dataset.swimlane ? ':' + list.dataset.swimlane : '');
+    callAsync('setListCollapsedState', board.dataset.board, key, collapsed).catch(function () {});
+  });
+
+  // A list's card composer: on the page only while open - at the top of the
+  // list from its "+", at the top or the bottom from its menu - and × takes it
+  // away (WeKan's inlined form).
+  var menuList = null; // the list whose menu is open
+  function openComposer(list, position) {
+    if (!list) return;
+    list.querySelectorAll('form.js-card-composer').forEach(function (f) { f.remove(); });
+    var t = list.querySelector('template.js-card-composer-template');
+    var body = list.querySelector('.js-minicards');
+    if (!t || !body) return;
+    var form = t.content.firstElementChild.cloneNode(true);
+    form.querySelector('.js-card-position').value = position;
+    if (position === 'top') body.parentNode.insertBefore(form, body);
+    else body.parentNode.insertBefore(form, body.nextSibling);
+    up.hello(form);
+    form.querySelector('textarea').focus();
+  }
+  // Multi-Selection: on, the sidebar shows what to do with the selection;
+  // a list's menu selects all its cards; the selection goes to the Archive
+  // with WeKan's archiveSelectedCards.
+  // The selection outlasts the board's reloads, as WeKan's Multi-Selection.
+  // objects are WeKan's structural selection: swimlanes, lists, checklists
+  // and items, "kind:id", beside the cards.
+  var multiSelection = { on: false, cards: {}, objects: {} };
+  function showMultiSelection(wrapper) {
+    if (!multiSelection.on) return;
+    var sb = wrapper.querySelector('.board-sidebar');
+    if (sb) sb.classList.add('is-open');
+    var view = wrapper.querySelector('.js-multiselection-view');
+    if (view) view.classList.remove('is-hidden');
+    wrapper.querySelectorAll('.js-minicard').forEach(function (c) {
+      c.classList.toggle('is-selected', !!multiSelection.cards[c.dataset.card]);
+    });
+    wrapper.querySelectorAll('.js-toggle-multi-selection').forEach(function (b) {
+      var on = !!multiSelection.cards[b.dataset.card];
+      b.classList.remove('is-hidden');
+      b.classList.toggle('is-checked', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    wrapper.querySelectorAll('.js-structural-selection').forEach(function (b) {
+      var on = !!multiSelection.objects[b.dataset.kind + ':' + b.dataset.id];
+      b.classList.remove('is-hidden');
+      b.classList.toggle('is-checked', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
+  // WeKan's folds, each the user's own: a swimlane (setSwimlaneCollapsedState),
+  // a minicard (setCardCollapsedState) and a minicard's checklist - the same
+  // fold as in the opened card (setCollapsedCardSection, "checklist-<id>").
+  // A fold never opens the card it sits on.
+  function toggleFold(el) {
+    var board = document.querySelector('.board-wrapper[data-board]');
+    if (!board) return;
+    var folded = el.dataset.collapsed !== 'true', p;
+    if (el.classList.contains('js-collapse-swimlane')) {
+      p = callAsync('setSwimlaneCollapsedState', board.dataset.board, el.dataset.swimlane, folded);
+    } else if (el.classList.contains('js-collapse-minicard')) {
+      p = callAsync('setCardCollapsedState', board.dataset.board, el.dataset.card, folded);
+    } else {
+      var mini = el.closest('.js-minicard[data-card]');
+      if (!mini) return;
+      p = callAsync('setCollapsedCardSection', mini.dataset.card, 'checklist-' + el.dataset.checklist, folded);
+    }
+    p.then(function () { up.reload('.board-wrapper'); }, function () {});
+  }
+  document.addEventListener('click', function (event) {
+    var el = event.target.closest && event.target.closest('.js-collapse-swimlane, .js-collapse-minicard, .minicard-checklist .js-collapse-checklist');
+    if (!el) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    toggleFold(el);
+  }, true);
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    var el = event.target.closest && event.target.closest('.js-collapse-minicard, .minicard-checklist .js-collapse-checklist');
+    if (!el) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    toggleFold(el);
+  }, true);
+  // A selection checkbox selects; it never opens the card it sits on.
+  document.addEventListener('click', function (event) {
+    var b = event.target.closest && event.target.closest('.js-structural-selection, .js-toggle-multi-selection');
+    if (!b) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (b.classList.contains('js-structural-selection')) {
+      var key = b.dataset.kind + ':' + b.dataset.id;
+      if (multiSelection.objects[key]) delete multiSelection.objects[key];
+      else multiSelection.objects[key] = true;
+    } else if (multiSelection.cards[b.dataset.card]) delete multiSelection.cards[b.dataset.card];
+    else multiSelection.cards[b.dataset.card] = true;
+    var wrapper = b.closest('.board-wrapper');
+    if (wrapper) showMultiSelection(wrapper);
+  }, true);
+  // WeKan's moveObjectsPopup: board, swimlane, list, card, checklist and item
+  // offered step by step (structuralMoveOptions), a change clearing the steps
+  // after it; Move sends the mixed selection to moveBoardObjects.
+  var moveFields = ['boardId', 'swimlaneId', 'listId', 'cardId', 'checklistId', 'itemId'];
+  function mixedSelection() {
+    var out = Object.keys(multiSelection.objects).map(function (k) {
+      var i = k.indexOf(':');
+      return { kind: k.slice(0, i), id: k.slice(i + 1) };
+    });
+    Object.keys(multiSelection.cards).forEach(function (id) { out.push({ kind: 'card', id: id }); });
+    return out;
+  }
+  function loadMoveOptions(form) {
+    var target = form._target;
+    return callAsync('structuralMoveOptions', target).then(function (opts) {
+      moveFields.forEach(function (key) {
+        var sel = form.querySelector('.js-object-destination[data-field="' + key + '"]');
+        if (!sel) return;
+        sel.replaceChildren();
+        if (key !== 'boardId') {
+          var empty = document.createElement('option');
+          empty.value = '';
+          empty.textContent = sel.dataset.empty || '—';
+          sel.appendChild(empty);
+        }
+        (opts[key] || []).forEach(function (o) {
+          var opt = document.createElement('option');
+          opt.value = o._id;
+          opt.textContent = o.title;
+          if (target[key] === o._id) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      });
+    }, function (e) { showMoveError(form, e); });
+  }
+  function showMoveError(form, e) {
+    var w = form.querySelector('.js-move-objects-error');
+    w.textContent = (e && (e.reason || e.message)) || '';
+    w.classList.toggle('is-hidden', !w.textContent);
+  }
+  // WeKan's mixed drag (structuralSelection.js): a selected object dragged
+  // onto a swimlane, list, card, checklist or item moves the whole selection
+  // there, before or after it as the drop's half says. Read from the page's
+  // data attributes; names in the preview are text, never cloned controls.
+  function structuralEntityAt(el, drop) {
+    if (!el || !el.closest) return null;
+    var tries = [
+      ['item', '.minicard-checklist-item[data-item], .js-checklist-item[data-item]', 'item'],
+      ['checklist', '.minicard-checklist[data-checklist], .js-checklist[data-checklist]', 'checklist'],
+      ['card', '.js-minicard[data-card]', 'card'],
+      ['list', '.js-list[data-list]', 'list'],
+    ];
+    for (var i = 0; i < tries.length; i++) {
+      var node = el.closest(tries[i][1]);
+      if (node) return { kind: tries[i][0], id: node.dataset[tries[i][2]], node: node };
+    }
+    var head = el.closest('.js-swimlane-header[data-swimlane]');
+    if (head) return { kind: 'swimlane', id: head.dataset.swimlane, node: head };
+    var lane = drop && el.closest('.js-swimlane[data-swimlane]');
+    if (lane) return { kind: 'swimlane', id: lane.dataset.swimlane, node: lane };
+    return null;
+  }
+  function structuralTargetFor(entity, boardID) {
+    var t = { boardId: boardID, position: 'before' };
+    var node = entity.node, kind = entity.kind;
+    if (kind === 'item') {
+      t.itemId = entity.id;
+      var cl = node.closest('[data-checklist]');
+      if (cl) t.checklistId = cl.dataset.checklist;
+      kind = 'checklist';
+    } else if (kind === 'checklist') t.checklistId = entity.id;
+    if (kind === 'checklist') {
+      var mc = node.closest('.js-minicard[data-card]') || node.closest('.js-card-details[data-card]');
+      if (mc) t.cardId = mc.dataset.card;
+      kind = 'card';
+    } else if (kind === 'card') t.cardId = entity.id;
+    if (kind === 'card' || kind === 'list') {
+      var list = node.closest('.js-list[data-list]');
+      if (list) { t.listId = list.dataset.list; t.swimlaneId = list.dataset.swimlane || undefined; }
+    }
+    if (!t.swimlaneId) {
+      var lane = node.closest('[data-swimlane]');
+      if (lane) t.swimlaneId = lane.dataset.swimlane;
+    }
+    Object.keys(t).forEach(function (k) { if (t[k] === undefined) delete t[k]; });
+    return t;
+  }
+  function structuralSelected(entity) {
+    return entity.kind === 'card' ? !!multiSelection.cards[entity.id] : !!multiSelection.objects[entity.kind + ':' + entity.id];
+  }
+  // Pointer events, in the capture phase: the board's own drag (interact.js)
+  // listens to them, so a drag of the selection never starts it too.
+  var structuralDrag = null;
+  document.addEventListener('pointerdown', function (event) {
+    if (event.button !== 0 || !multiSelection.on || !Object.keys(multiSelection.objects).length) return;
+    if (event.target.closest('input,textarea,button,select,.materialCheckBox')) return;
+    var entity = structuralEntityAt(event.target, false);
+    if (!entity || !structuralSelected(entity)) return;
+    event.stopImmediatePropagation();
+    event.preventDefault();
+    structuralDrag = { x: event.clientX, y: event.clientY, selection: mixedSelection() };
+  }, true);
+  document.addEventListener('pointermove', function (event) {
+    var d = structuralDrag;
+    if (!d) return;
+    if (!d.preview && Math.hypot(event.clientX - d.x, event.clientY - d.y) < 7) return;
+    if (!d.preview) {
+      d.preview = document.createElement('div');
+      d.preview.className = 'structural-drag-preview';
+      var count = document.createElement('div');
+      count.className = 'structural-drag-count';
+      count.textContent = String(d.selection.length);
+      d.preview.appendChild(count);
+      document.body.appendChild(d.preview);
+    }
+    event.preventDefault();
+    d.preview.style.left = (event.clientX + 12) + 'px';
+    d.preview.style.top = (event.clientY + 12) + 'px';
+    if (d.target) d.target.node.classList.remove('structural-drop-target');
+    d.target = structuralEntityAt(document.elementFromPoint(event.clientX, event.clientY), true);
+    if (d.target) d.target.node.classList.add('structural-drop-target');
+  }, true);
+  document.addEventListener('pointerup', function (event) {
+    var d = structuralDrag;
+    if (!d) return;
+    structuralDrag = null;
+    if (d.preview) d.preview.remove();
+    if (d.target) d.target.node.classList.remove('structural-drop-target');
+    if (!d.preview || !d.target) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    document.addEventListener('click', function (c) { c.preventDefault(); c.stopImmediatePropagation(); }, { capture: true, once: true });
+    var board = document.querySelector('.board-wrapper[data-board]');
+    if (!board) return;
+    var destination = structuralTargetFor(d.target, board.dataset.board);
+    // Before or after by the drop's half - of a list's header when dropped on
+    // it, the part of the list one aims at, not of the whole column.
+    var under = document.elementFromPoint(event.clientX, event.clientY);
+    var header = d.target.kind === 'list' && under && under.closest && under.closest('.list-header');
+    var bounds = (header && d.target.node.contains(header) ? header : d.target.node).getBoundingClientRect();
+    destination.position = event.clientY < bounds.y + bounds.height / 2 ? 'before' : 'after';
+    callAsync('moveBoardObjects', board.dataset.board, d.selection, destination, { drag: true }).then(function () {
+      multiSelection = { on: false, cards: {}, objects: {} };
+      up.reload('.board-wrapper');
+    }, function (e) {
+      // An incomplete destination is corrected in the Move pop-over.
+      openPopOver('move-objects');
+      var form = document.querySelector('.js-pop-over .js-move-objects-form');
+      if (!form) return;
+      form._target = destination;
+      loadMoveOptions(form).then(function () { showMoveError(form, e); });
+    });
+  }, true);
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape' || !structuralDrag) return;
+    if (structuralDrag.preview) structuralDrag.preview.remove();
+    if (structuralDrag.target) structuralDrag.target.node.classList.remove('structural-drop-target');
+    structuralDrag = null;
+  }, true);
+  up.on('click', '.js-move-selection', function (event) {
+    event.preventDefault();
+    var board = document.querySelector('.board-wrapper[data-board]');
+    if (!board || !mixedSelection().length) return;
+    openPopOver('move-objects');
+    var form = document.querySelector('.js-pop-over .js-move-objects-form');
+    form._target = { boardId: board.dataset.board };
+    loadMoveOptions(form);
+  });
+  document.addEventListener('change', function (event) {
+    var sel = event.target;
+    if (!sel.matches || !sel.matches('.js-move-objects-form .js-object-destination')) return;
+    var form = sel.closest('.js-move-objects-form');
+    var key = sel.dataset.field;
+    var next = Object.assign({}, form._target);
+    next[key] = sel.value;
+    if (!sel.value) delete next[key];
+    moveFields.slice(moveFields.indexOf(key) + 1).forEach(function (k) { delete next[k]; });
+    form._target = next;
+    showMoveError(form, null);
+    loadMoveOptions(form);
+  });
+  up.on('click', '.js-move-objects', function (event, el) {
+    event.preventDefault();
+    var form = el.closest('.js-move-objects-form');
+    var board = document.querySelector('.board-wrapper[data-board]');
+    if (!form || !board || el.disabled) return;
+    el.disabled = true;
+    var target = Object.assign({}, form._target, { position: form.querySelector('.js-object-position').value });
+    callAsync('moveBoardObjects', board.dataset.board, mixedSelection(), target).then(function () {
+      multiSelection = { on: false, cards: {}, objects: {} };
+      closePopOvers();
+      up.reload('.board-wrapper');
+    }, function (e) {
+      el.disabled = false;
+      showMoveError(form, e);
+    });
+  });
+  up.compiler('.board-wrapper', function (wrapper) { showMultiSelection(wrapper); });
+  up.on('click', '.js-multiselection-activate', function (event, el) {
+    event.preventDefault();
+    multiSelection.on = true;
+    showMultiSelection(el.closest('.board-wrapper'));
+  });
+  up.on('click', '.js-pop-over .js-select-cards', function (event) {
+    event.preventDefault();
+    var list = menuList;
+    closePopOvers();
+    if (!list) return;
+    multiSelection.on = true;
+    list.querySelectorAll('.js-minicard').forEach(function (c) { multiSelection.cards[c.dataset.card] = true; });
+    var wrapper = document.querySelector('.board-wrapper');
+    if (wrapper) showMultiSelection(wrapper);
+  });
+  up.on('click', '.js-archive-selection', function (event) {
+    event.preventDefault();
+    var board = document.querySelector('.board-wrapper');
+    var ids = Object.keys(multiSelection.cards);
+    if (!ids.length) return;
+    callAsync('archiveSelectedCards', board.dataset.board, ids).then(function () {
+      multiSelection = { on: false, cards: {}, objects: {} };
+      up.reload('.board-wrapper');
+    },
+      function (e) { window.alert(e.reason || e.message); });
+  });
+  // Watch or Unwatch the list whose menu is open (WeKan's watch method).
+  up.on('click', '.js-pop-over .js-toggle-watch-list', function (event) {
+    event.preventDefault();
+    var list = menuList;
+    closePopOvers();
+    if (!list) return;
+    callAsync('watch', 'list', list.dataset.list, list.dataset.watching ? null : 'watching').then(function () { up.reload('.board-wrapper'); });
+  });
+  // WeKan's List permissions (#4527): the page of the list whose menu is open.
+  up.on('click', '.js-pop-over .js-list-permissions', function (event, el) {
+    event.preventDefault();
+    var list = menuList;
+    closePopOvers();
+    if (!list) return;
+    up.navigate({ url: el.dataset.base + '/lists/' + encodeURIComponent(list.dataset.list) + '/permissions' });
+  });
+  up.on('click', '.js-open-list-menu', function (event, el) {
+    event.preventDefault();
+    menuList = el.closest('.js-list');
+    openPopOver('list-menu');
+    var w = document.querySelector('.js-pop-over .js-toggle-watch-list');
+    if (w) w.textContent = menuList.dataset.watching ? w.dataset.unwatch : w.dataset.watch;
+  });
+  // listBody.jade's "+ Add card" under the list: the composer at the bottom.
+  up.on('click', '.js-list a.open-minicard-composer', function (event, el) {
+    event.preventDefault();
+    openComposer(el.closest('.js-list'), 'bottom');
+  });
+  up.on('click', '.js-add-card', function (event, el) {
+    event.preventDefault();
+    var inMenu = el.closest('.js-pop-over');
+    var list = inMenu ? menuList : el.closest('.js-list');
+    if (inMenu) closePopOvers();
+    openComposer(list, el.classList.contains('list-header-plus-bottom') ? 'bottom' : 'top');
+  });
+  // WeKan's #4693: tick a subtask done in its parent's Subtasks.
+  up.on('click', '.js-toggle-subtask-done', function (event, el) {
+    event.preventDefault();
+    var done = el.getAttribute('aria-checked') !== 'true';
+    callAsync('setSubtaskDone', el.dataset.parent, el.dataset.subtask, done).then(function () {
+      up.reload('.board-wrapper');
+    }, function () {});
+  });
+  up.on('click', '.js-close-inlined-form', function (event, el) {
+    event.preventDefault();
+    reopenEditor = null;
+    reopenInlined = null;
+    var form = el.closest('.js-inlined-form');
+    if (form.classList.contains('js-card-composer')) form.remove();
+    else closeInlinedForm(form);
+    if (staleUnderForm) { staleUnderForm = false; setTimeout(reloadBoard, 0); }
+  });
+
+  // Ctrl/Cmd-click selects cards for a drag that moves many.
+  up.on('click', '.js-minicard', function (event, el) {
+    if (el.getAttribute('data-dragged') === '1') {
+      el.removeAttribute('data-dragged');
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (el.classList.toggle('is-selected')) multiSelection.cards[el.dataset.card] = true;
+      else delete multiSelection.cards[el.dataset.card];
+    }
+  });
+
+  // Where the pointer is: the list body under it, and the place among its cards.
+  function dropTarget(x, y, moving) {
+    var stack = document.elementsFromPoint(x, y);
+    for (var i = 0; i < stack.length; i++) {
+      // The dragged cards are under the pointer too, still inside the list they
+      // came from: look past them.
+      if (moving.some(function (m) { return m.contains(stack[i]); })) continue;
+      var body = stack[i].closest && stack[i].closest('.js-minicards');
+      if (!body) continue;
+      var cards = Array.prototype.filter.call(body.querySelectorAll('.js-minicard'), function (c) {
+        return moving.indexOf(c) === -1;
+      });
+      var before = null, after = null;
+      for (var j = 0; j < cards.length; j++) {
+        var r = cards[j].getBoundingClientRect();
+        if (y < r.top + r.height / 2) { after = cards[j]; break; }
+        before = cards[j];
+      }
+      return { body: body, before: before, after: after };
+    }
+    return null;
+  }
+
+  function sortOf(el) { return parseFloat(el.getAttribute('data-sort')) || 0; }
+
+  // The sorts of n cards placed between two neighbours.
+  function sorts(target, n) {
+    var lo = target.before ? sortOf(target.before) : null;
+    var hi = target.after ? sortOf(target.after) : null;
+    var out = [];
+    for (var i = 1; i <= n; i++) {
+      if (lo === null && hi === null) out.push(i - 1);
+      else if (lo === null) out.push(hi - (n + 1 - i));
+      else if (hi === null) out.push(lo + i);
+      else out.push(lo + (hi - lo) * i / (n + 1));
+    }
+    return out;
+  }
+
+  function resetPosition(el) {
+    el.style.transform = '';
+    el.removeAttribute('data-x');
+    el.removeAttribute('data-y');
+    el.classList.remove('is-dragging');
+  }
+
+  function drop(event) {
+    var el = event.target;
+    var wrapper = el.closest('.board-wrapper');
+    var moving = el.classList.contains('is-selected')
+      ? Array.prototype.slice.call(wrapper.querySelectorAll('.js-minicard.is-selected'))
+      : [el];
+    var target = dropTarget(event.client.x, event.client.y, moving);
+    resetPosition(el);
+    if (!target) return Promise.resolve(false);
+    var place = sorts(target, moving.length);
+    var moves = moving.map(function (card, i) {
+      return {
+        cardId: card.getAttribute('data-card'),
+        listId: target.body.getAttribute('data-list'),
+        swimlaneId: target.body.getAttribute('data-swimlane'),
+        sort: place[i],
+      };
+    });
+    // Shown at once where it was dropped; the server's answer redraws the board.
+    var anchor = target.after;
+    moving.forEach(function (card) {
+      card.classList.remove('is-selected');
+      delete multiSelection.cards[card.dataset.card];
+      target.body.insertBefore(card, anchor);
+    });
+    return fetch(wrapper.getAttribute('data-move'), {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moves: moves }),
+    }).then(function (res) { return res.ok; }, function () { return false; });
+  }
+
+  if (window.interact) {
+    interact.maxInteractions(Infinity); // MultiDrag: one interaction per pointer
+    interact('.js-minicard').draggable({
+      inertia: false,
+      autoScroll: true,
+      listeners: {
+        start: function (event) {
+          dragging++;
+          event.target.classList.add('is-dragging');
+        },
+        move: function (event) {
+          var t = event.target;
+          var x = (parseFloat(t.getAttribute('data-x')) || 0) + event.dx;
+          var y = (parseFloat(t.getAttribute('data-y')) || 0) + event.dy;
+          t.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+          t.setAttribute('data-x', x);
+          t.setAttribute('data-y', y);
+        },
+        end: function (event) {
+          event.target.setAttribute('data-dragged', '1');
+          setTimeout(function () { event.target.removeAttribute('data-dragged'); }, 0);
+          drop(event).then(function () {
+            dragging = Math.max(0, dragging - 1);
+            if (dragging === 0) reloadBoard();
+          });
+        },
+      },
+    });
+  }
+
+  // WeKan's Rules page: its title, then a trigger, then an action, which
+  // saves the rule (rules.createRule) - one pane at a time, as rulesMain.
+  var ruleState = { name: '', trigger: null };
+  function rulesPage(el) { return el.closest('.rules-page'); }
+  function showPane(page, name) {
+    var t = page.querySelector('template.js-rules-pane[data-pane="' + name + '"]');
+    var stage = page.querySelector('.js-rules-stage');
+    if (!t || !stage) return;
+    stage.innerHTML = '';
+    stage.appendChild(t.content.cloneNode(true));
+    stage.querySelectorAll('.js-rule-name').forEach(function (n) { n.textContent = ruleState.name; });
+    up.hello(stage);
+  }
+  up.compiler('.rules-page', function (page) {
+    if (page.dataset.view === 'import') {
+      showPane(page, 'list');
+      openPopOver('rules-import-export');
+    } else {
+      showPane(page, page.dataset.view || 'list');
+    }
+  });
+  // On the Rules page, Board Settings' Rules entries switch the view in place.
+  function rulesMenuEntry(view) {
+    return function (event) {
+      var page = document.querySelector('.rules-page');
+      if (!page) return; // on the board they are links to the Rules page
+      event.preventDefault();
+      closePopOvers();
+      document.querySelector('.board-sidebar').classList.remove('is-open');
+      if (view === 'import') openPopOver('rules-import-export');
+      else showPane(page, view);
+    };
+  }
+  up.on('click', '.js-open-rules-view, .js-open-rules-list-view', rulesMenuEntry('list'));
+  up.on('click', '.js-open-rules-workflow-view', rulesMenuEntry('workflow'));
+  up.on('click', '.js-open-rules-import-export', rulesMenuEntry('import'));
+  // WeKan's rulesBots: add and remove a bot, hand a card to one, stop, answer
+  // and reply - each a method, then the view again; drag a card to a column
+  // to move it, as on the board.
+  function botsDone(promise, errorBox) {
+    return promise.then(function () { location.reload(); }, function (e) {
+      var box = errorBox && document.querySelector(errorBox);
+      if (box) { box.textContent = (e && (e.reason || e.error)) || String(e); box.hidden = false; }
+    });
+  }
+  up.on('submit', '.js-bots-add', function (event, form) {
+    event.preventDefault();
+    var view = form.closest('.bots-view');
+    var token = form.querySelector('.js-bots-token').value;
+    var doc = { boardId: view.dataset.board, title: form.querySelector('.js-bots-title').value.trim(),
+      url: form.querySelector('.js-bots-url').value.trim(), bot: true, enabled: true };
+    if (token) doc.token = token;
+    botsDone(Meteor.callAsync('/integrations/insert', doc), '.js-bots-add-error');
+  });
+  up.on('click', '.js-bots-remove', function (event, el) {
+    event.preventDefault();
+    botsDone(Meteor.callAsync('/integrations/remove', { _id: el.getAttribute('data-id') }));
+  });
+  up.on('click', '.js-bots-dispatch', function (event, el) {
+    var choose = el.closest('.bots-drawer').querySelector('.js-bots-choose');
+    if (choose && choose.value) botsDone(Meteor.callAsync('botDispatch', el.getAttribute('data-card-id'), choose.value));
+  });
+  up.on('click', '.js-bots-stop', function (event, el) {
+    botsDone(Meteor.callAsync('botStop', el.getAttribute('data-run-id')));
+  });
+  up.on('click', '.js-bots-answer', function (event, el) {
+    botsDone(Meteor.callAsync('botAnswer', el.getAttribute('data-run-id'), el.getAttribute('data-value')));
+  });
+  up.on('submit', '.js-bots-reply', function (event, form) {
+    event.preventDefault();
+    var text = form.querySelector('.js-bots-reply-text').value;
+    if (text.trim()) botsDone(Meteor.callAsync('botReply', form.getAttribute('data-run-id'), text));
+  });
+  var botsDragged = null;
+  up.on('dragstart', '.js-bots-card', function (event, el) {
+    botsDragged = el;
+    if (event.dataTransfer) event.dataTransfer.setData('text/plain', el.getAttribute('data-card-id'));
+  });
+  up.on('dragover', '.js-bots-drop', function (event) { event.preventDefault(); });
+  up.on('drop', '.js-bots-drop', function (event, column) {
+    event.preventDefault();
+    var card = botsDragged;
+    botsDragged = null;
+    if (!card || card.closest('.js-bots-drop') === column) return;
+    var view = column.closest('.bots-view');
+    var last = 0;
+    column.querySelectorAll('.js-bots-card').forEach(function (c) { last = Math.max(last, Number(c.getAttribute('data-sort')) || 0); });
+    fetch('/b/' + view.dataset.board + '/move', {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ moves: [{ cardId: card.getAttribute('data-card-id'), listId: column.getAttribute('data-list-id'),
+        swimlaneId: card.getAttribute('data-swimlane-id'), sort: last + 1 }] }),
+    }).then(function () { location.reload(); });
+  });
+  // Export the ticked rules, or all of them.
+  up.on('click', '.js-rules-export-json, .js-rules-export-csv', function (event, el) {
+    var page = document.querySelector('.rules-page');
+    if (!page) return;
+    var ids = Array.prototype.map.call(page.querySelectorAll('.js-rule-select:checked'), function (b) { return b.dataset.ruleId; });
+    if (ids.length) el.href = el.href.split('&ids=')[0] + '&ids=' + ids.join(',');
+  });
+  // WeKan's rulesImportExport parsers: its round-trippable CSV, Trello Butler
+  // text and n8n / Node-RED workflows, each a list of { title, trigger, action }.
+  function csvRecords(text) {
+    var rows = [], row = [], field = '', quoted = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (quoted) {
+        if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+        else if (ch === '"') quoted = false;
+        else field += ch;
+      } else if (ch === '"') quoted = true;
+      else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\n' || ch === '\r') {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = [];
+      } else field += ch;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+  function csvToRules(text) {
+    var rows = csvRecords(String(text || '').trim());
+    if (!rows.length) return [];
+    var head = rows.shift();
+    var json = function (v) { try { return v ? JSON.parse(v) : {}; } catch (e) { return {}; } };
+    return rows.map(function (cells) {
+      var r = {};
+      head.forEach(function (h, i) { r[h] = cells[i]; });
+      if (!r.triggerType || !r.actionType) return null;
+      var trigger = json(r.triggerFields), action = json(r.actionFields);
+      trigger.activityType = r.triggerType; action.actionType = r.actionType;
+      return { title: r.title, trigger: trigger, action: action };
+    }).filter(Boolean);
+  }
+  function parseTrelloButler(text) {
+    var rules = [], unmapped = [];
+    String(text || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean).forEach(function (line) {
+      // The list name as written: a trigger matches its list by exact name.
+      var m = line.match(/when a card is added to list ["\u201c](.+?)["\u201d].*move the card to the (top|bottom)/i);
+      if (!m) { unmapped.push(line); return; }
+      rules.push({ title: line, trigger: { activityType: 'createCard', listName: m[1], swimlaneName: '*', cardTitle: '*', userId: '*' },
+        action: { actionType: m[2].toLowerCase() === 'top' ? 'moveCardToTop' : 'moveCardToBottom', listName: '*', swimlaneName: '*' } });
+    });
+    return { rules: rules, unmapped: unmapped };
+  }
+  function workflowTrigger(type, name) {
+    var s = ((type || '') + ' ' + (name || '')).toLowerCase();
+    if (/schedule|cron|interval|inject/.test(s)) return { activityType: 'scheduledTrigger', scheduleKind: 'calendar', scheduleType: 'daily', atTime: '09:00', listName: '*', swimlaneName: '*' };
+    if (/trigger|webhook|http in|http-in|start/.test(s)) return { activityType: 'createCard', listName: '*', swimlaneName: '*', cardTitle: '*', userId: '*' };
+    return null;
+  }
+  function workflowAction(type, name) {
+    var s = ((type || '') + ' ' + (name || '')).toLowerCase();
+    if (/archive/.test(s)) return { actionType: 'archive' };
+    if (/move.*top|to top/.test(s)) return { actionType: 'moveCardToTop', listName: '*', swimlaneName: '*' };
+    if (/move.*bottom/.test(s)) return { actionType: 'moveCardToBottom', listName: '*', swimlaneName: '*' };
+    if (/complete|done/.test(s)) return { actionType: 'markCardComplete' };
+    if (/email|mail|smtp|gmail/.test(s)) return { actionType: 'sendEmail', emailTo: '', emailSubject: 'Imported workflow', emailMsg: '' };
+    if (/create.*card|wekan|card/.test(s)) return { actionType: 'createCard', cardName: name || 'Imported card', listName: '*', swimlaneName: '*' };
+    return null;
+  }
+  function parseWorkflow(text, format) {
+    var data;
+    try { data = JSON.parse(text); } catch (e) { return { rules: [], unmapped: [], error: 'invalid JSON' }; }
+    var fmt = format;
+    if (!fmt || fmt === 'auto') {
+      if (data && data.nodes && data.connections) fmt = 'n8n';
+      else if (Array.isArray(data) || (data && data.flows)) fmt = 'nodered';
+    }
+    var rules = [], unmapped = [];
+    if (fmt === 'n8n') {
+      var byName = {};
+      (data.nodes || []).forEach(function (n) { byName[n.name] = n; });
+      Object.keys(data.connections || {}).forEach(function (src) {
+        var from = byName[src];
+        if (!from) return;
+        var trig = workflowTrigger(from.type, src);
+        ((data.connections[src].main || []).flat()).forEach(function (o) {
+          var to = o && byName[o.node];
+          if (!to) return;
+          var act = workflowAction(to.type, to.name);
+          if (trig && act) rules.push({ title: src + ' \u2192 ' + (to.name || o.node), trigger: trig, action: act });
+          else unmapped.push(src + ' \u2192 ' + o.node);
+        });
+      });
+    } else if (fmt === 'nodered') {
+      var nodes = Array.isArray(data) ? data : (data.flows || []), byId = {};
+      nodes.forEach(function (n) { byId[n.id] = n; });
+      nodes.forEach(function (n) {
+        var trig = workflowTrigger(n.type, n.name);
+        if (!trig) return;
+        ((n.wires || []).flat()).forEach(function (id) {
+          var to = byId[id];
+          if (!to) return;
+          var act = workflowAction(to.type, to.name), label = (n.name || n.type) + ' \u2192 ' + (to.name || to.type);
+          if (act) rules.push({ title: label, trigger: trig, action: act }); else unmapped.push(label);
+        });
+      });
+    } else return { rules: [], unmapped: [], error: 'unknown format' };
+    return { rules: rules, unmapped: unmapped };
+  }
+  // Saves each as a new rule of this board, and says how many - and how many
+  // lines it could not map - as WeKan's reportImport.
+  function importParsedRules(el, rules, unmapped) {
+    var page = document.querySelector('.rules-page');
+    var pop = el.closest('.js-pop-over');
+    var msg = pop.querySelector('.js-rules-import-message');
+    var words = pop.querySelector('[data-done]');
+    Promise.all(rules.map(function (r) {
+      return callAsync('rules.createRule', page.dataset.board, r.title || 'Imported rule', r.trigger || {}, r.action || {});
+    })).then(function () {
+      var text = (words.dataset.done || '').replace('__count__', rules.length);
+      if (unmapped && unmapped.length) text += ' \u2014 ' + (words.dataset.unmapped || '').replace('__count__', unmapped.length);
+      msg.textContent = text;
+      up.reload('.rules-list');
+    }, function (e) { msg.textContent = e.reason || e.message; });
+  }
+  up.on('click', '.js-rules-import-csv', function (event, el) {
+    event.preventDefault();
+    importParsedRules(el, csvToRules(el.closest('.js-pop-over').querySelector('.js-rules-import-text').value), []);
+  });
+  up.on('click', '.js-rules-import-trello', function (event, el) {
+    event.preventDefault();
+    var p = parseTrelloButler(el.closest('.js-pop-over').querySelector('.js-rules-import-text').value);
+    importParsedRules(el, p.rules, p.unmapped);
+  });
+  up.on('click', '.js-rules-import-workflow', function (event, el) {
+    event.preventDefault();
+    var pop = el.closest('.js-pop-over');
+    var p = parseWorkflow(pop.querySelector('.js-rules-import-text').value, pop.querySelector('.js-workflow-format').value);
+    if (p.error) { pop.querySelector('.js-rules-import-message').textContent = p.error; return; }
+    importParsedRules(el, p.rules, p.unmapped);
+  });
+  window.weddyRulesImport = { csvToRules: csvToRules, parseTrelloButler: parseTrelloButler, parseWorkflow: parseWorkflow }; // for the tests
+  // Import: each rule of an exported JSON, saved as a new rule of this board.
+  up.on('click', '.js-rules-import-json', function (event, el) {
+    event.preventDefault();
+    var page = document.querySelector('.rules-page');
+    var pop = el.closest('.js-pop-over');
+    var msg = pop.querySelector('.js-rules-import-message');
+    var parsed;
+    try { parsed = JSON.parse(pop.querySelector('.js-rules-import-text').value); } catch (e) { msg.textContent = String(e.message); return; }
+    var rules = Array.isArray(parsed) ? parsed : (parsed && parsed.rules) || [];
+    Promise.all(rules.map(function (r) {
+      return callAsync('rules.createRule', page.dataset.board, r.title || '', r.trigger || {}, r.action || {});
+    })).then(function () {
+      closePopOvers();
+      up.reload('.rules-page');
+    }, function (e) { msg.textContent = e.reason || e.message; });
+  });
+  // WeKan's rulesWorkflow builder: chips dragged into When and Then, Add Rule;
+  // an action dropped onto a rule replaces what it does.
+  var workflowDrag = null; // { kind: 'trigger' | 'action', doc, label }
+  var workflowPick = { trigger: null, action: null };
+  function workflowSlot(slot, pick) {
+    slot.textContent = '';
+    var span = document.createElement('span');
+    span.className = pick ? 'workflow-node-text' : 'workflow-slot-placeholder';
+    span.textContent = pick ? pick.label : slot.dataset.empty;
+    slot.appendChild(span);
+    var stage = slot.closest('.rules-workflow');
+    var add = stage && stage.querySelector('.js-create-workflow-rule');
+    if (add) add.disabled = !(workflowPick.trigger && workflowPick.action);
+  }
+  document.addEventListener('dragstart', function (event) {
+    var chip = event.target.closest && event.target.closest('.js-trigger-chip, .js-action-chip');
+    if (!chip) return;
+    workflowDrag = { kind: chip.matches('.js-trigger-chip') ? 'trigger' : 'action', doc: JSON.parse(chip.dataset.doc), label: chip.dataset.label };
+    if (event.dataTransfer) event.dataTransfer.setData('text/plain', chip.dataset.label);
+  });
+  document.addEventListener('dragover', function (event) {
+    if (event.target.closest && event.target.closest('.js-when-slot, .js-then-slot, .js-rule-node')) event.preventDefault();
+  });
+  document.addEventListener('drop', function (event) {
+    var target = event.target.closest && event.target.closest('.js-when-slot, .js-then-slot, .js-rule-node');
+    if (!target || !workflowDrag) return;
+    event.preventDefault();
+    var drag = workflowDrag;
+    workflowDrag = null;
+    if (target.matches('.js-when-slot') && drag.kind === 'trigger') { workflowPick.trigger = drag; workflowSlot(target, drag); }
+    else if (target.matches('.js-then-slot') && drag.kind === 'action') { workflowPick.action = drag; workflowSlot(target, drag); }
+    else if (target.matches('.js-rule-node') && drag.kind === 'action') {
+      var err = target.closest('.rules-workflow').querySelector('.js-workflow-error');
+      var title = (target.querySelector('.workflow-rule-title') || {}).textContent || '';
+      callAsync('rules.updateRule', target.dataset.ruleId, title, JSON.parse(target.dataset.trigger || '{}'), drag.doc).then(function () { up.reload('.rules-page'); }, function (e) { err.textContent = e.reason || e.message; err.hidden = false; });
+    }
+  });
+  up.on('click', '.js-create-workflow-rule', function (event, el) {
+    event.preventDefault();
+    if (!workflowPick.trigger || !workflowPick.action) return;
+    var stage = el.closest('.rules-workflow');
+    var titleField = stage.querySelector('.js-workflow-rule-title');
+    var title = titleField.value.trim() || (workflowPick.trigger.label + ' \u2192 ' + workflowPick.action.label);
+    var err = stage.querySelector('.js-workflow-error');
+    el.disabled = true;
+    callAsync('rules.createRule', rulesPage(el).dataset.board, title, workflowPick.trigger.doc, workflowPick.action.doc).then(function () {
+      workflowPick = { trigger: null, action: null };
+      up.reload('.rules-page');
+    }, function (e) { err.textContent = e.reason || e.message; err.hidden = false; el.disabled = false; });
+  });
+  up.on('click', '.js-delete-workflow-rule', function (event, el) {
+    event.preventDefault();
+    callAsync('rules.deleteRule', el.closest('.js-rule-node').dataset.ruleId).then(function () { up.reload('.rules-page'); });
+  });
+  // WeKan's Wrike workflow import: lists and rules made on the server.
+  up.on('click', '.js-rules-import-wrike', function (event, el) {
+    event.preventDefault();
+    var page = document.querySelector('.rules-page');
+    var pop = el.closest('.js-pop-over');
+    var msg = pop.querySelector('.js-rules-import-message');
+    callAsync('rules.importWrikeWorkflow', page.dataset.board, pop.querySelector('.js-rules-import-text').value).then(function (res) {
+      msg.textContent = (el.dataset.done || '').replace('__name__', res.name).replace('__lists__', res.listsCreated)
+        .replace('__rules__', res.rulesCreated).replace('__skipped__', res.notRead);
+      up.reload('.rules-list');
+    }, function (e) { msg.textContent = e.reason || e.message; });
+  });
+  up.on('click', '.rules-page .js-goto-details', function (event, el) {
+    event.preventDefault();
+    showPane(rulesPage(el), 'details-' + el.dataset.ruleId);
+  });
+  function selectRules(el, on) {
+    rulesPage(el).querySelectorAll('.js-rule-select').forEach(function (b) { b.checked = on; });
+  }
+  up.on('click', '.rules-page .js-rules-select-all', function (event, el) { event.preventDefault(); selectRules(el, true); });
+  up.on('click', '.rules-page .js-rules-select-none', function (event, el) { event.preventDefault(); selectRules(el, false); });
+  up.on('click', '.rules-page .js-rules-delete-selected', function (event, el) {
+    event.preventDefault();
+    var ids = Array.prototype.map.call(rulesPage(el).querySelectorAll('.js-rule-select:checked'), function (b) { return b.dataset.ruleId; });
+    Promise.all(ids.map(function (id) { return callAsync('rules.deleteRule', id); })).then(function () { up.reload('.rules-page'); });
+  });
+  // Utils.getTriggerActionDesc: the item's words, and what is chosen in it.
+  function ruleDesc(button) {
+    var item = button.closest('.trigger-item');
+    var parts = [];
+    item.querySelectorAll('.trigger-content > *').forEach(function (el) {
+      if (el.classList.contains('trigger-text')) {
+        parts.push(el.textContent.trim().toLowerCase());
+      } else if (el.querySelector('select')) {
+        var sel = el.querySelector('select');
+        parts.push(sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text.trim().toLowerCase() : '');
+      } else if (el.querySelector('textarea, input')) {
+        parts.push(el.querySelector('textarea, input').value.trim());
+      }
+    });
+    return parts.filter(function (x) { return x; }).join(' ');
+  }
+  function val(page, id) { var el = page.querySelector('#' + id); return el ? el.value : ''; }
+  up.on('click', '.js-goto-trigger', function (event, el) {
+    event.preventDefault();
+    var page = rulesPage(el);
+    ruleState = { name: val(page, 'ruleTitle').trim(), trigger: null };
+    showPane(page, 'trigger');
+  });
+  // #2713: edit a rule - the same wizard, saving it in place (rules.updateRule).
+  up.on('click', '.rules-page .js-edit-rule-full', function (event, el) {
+    event.preventDefault();
+    ruleState = { name: el.dataset.title || '', trigger: null, editing: el.dataset.ruleId };
+    showPane(rulesPage(el), 'trigger');
+  });
+  up.on('click', '.rules-page .js-goback', function (event, el) {
+    event.preventDefault();
+    showPane(rulesPage(el), el.dataset.to);
+  });
+  up.on('click', '.rules-page .triggers-side-menu li', function (event, el) {
+    var pane = el.closest('.js-rules-stage');
+    pane.querySelectorAll('.triggers-side-menu li').forEach(function (li) { li.classList.toggle('active', li === el); });
+    pane.querySelectorAll('.js-rules-tab').forEach(function (t) { t.classList.toggle('is-hidden', t.dataset.tab !== el.dataset.tab); });
+  });
+  // The triggers, as boardTriggers.js and buttonTriggers.js make them.
+  var triggerMakers = {
+    'js-add-create-trigger': function (p) {
+      return { activityType: 'createCard', cardTitle: '*', listName: val(p, 'create-list-name'), swimlaneName: val(p, 'create-swimlane-name') };
+    },
+    'js-add-gen-moved-trigger': function () {
+      return { activityType: 'moveCard', cardTitle: '*', listName: '*', oldListName: '*', swimlaneName: '*' };
+    },
+    'js-add-moved-trigger': function (p) {
+      var list = val(p, 'move-list-name'), sw = val(p, 'create-swimlane-name-2');
+      return val(p, 'move-action') === 'moved-from'
+        ? { activityType: 'moveCard', cardTitle: '*', swimlaneName: sw, listName: '*', oldListName: list }
+        : { activityType: 'moveCard', cardTitle: '*', swimlaneName: sw, listName: list, oldListName: '*' };
+    },
+    // #2076: moved forward or back, matched by list order on the server.
+    'js-add-move-direction-trigger': function (p) {
+      return { activityType: 'moveCardDirection', direction: val(p, 'move-direction') === 'back' ? 'back' : 'forward', cardTitle: '*' };
+    },
+    'js-add-arch-trigger': function (p) {
+      var kind = { archived: 'archivedCard', unarchived: 'restoredCard', commented: 'addComment' }[val(p, 'arch-action')];
+      return { activityType: kind, cardTitle: '*' };
+    },
+    // cardTriggers.js
+    'js-add-gen-label-trigger': function (p) { return { activityType: val(p, 'label-action') === 'removed' ? 'removedLabel' : 'addedLabel' }; },
+    'js-add-spec-label-trigger': function (p) {
+      return { activityType: val(p, 'spec-label-action') === 'removed' ? 'removedLabel' : 'addedLabel', labelId: val(p, 'spec-label') };
+    },
+    'js-add-gen-member-trigger': function (p) { return { activityType: val(p, 'gen-member-action') === 'removed' ? 'unjoinMember' : 'joinMember' }; },
+    'js-add-spec-member-trigger': function (p) {
+      return { activityType: val(p, 'spec-member-action') === 'removed' ? 'unjoinMember' : 'joinMember', username: val(p, 'spec-member') };
+    },
+    'js-add-gen-assignee-trigger': function (p) { return { activityType: val(p, 'gen-assignee-action') === 'removed' ? 'unjoinAssignee' : 'joinAssignee' }; },
+    'js-add-spec-assignee-trigger': function (p) {
+      return { activityType: val(p, 'spec-assignee-action') === 'removed' ? 'unjoinAssignee' : 'joinAssignee', username: val(p, 'spec-assignee') };
+    },
+    'js-add-attachment-trigger': function (p) { return { activityType: val(p, 'attach-action') === 'removed' ? 'deleteAttachment' : 'addAttachment' }; },
+    // #2194: the card's title or description contains a text; nothing without one.
+    'js-add-text-contains-trigger': function (p) {
+      var text = val(p, 'text-contains-value').trim();
+      return text ? { activityType: 'textContainsTrigger', textContains: text } : null;
+    },
+    // scheduledTriggers.js
+    'js-add-scheduled-trigger': function (p) {
+      return { activityType: 'scheduledTrigger', scheduleKind: 'calendar', scheduleType: val(p, 'schedule-type'),
+        atTime: val(p, 'schedule-time') || '09:00', weekday: parseInt(val(p, 'schedule-weekday'), 10),
+        dayOfMonth: parseInt(val(p, 'schedule-dom'), 10) || 1, onDate: val(p, 'schedule-date') || '',
+        listName: val(p, 'schedule-list-name') || '*', swimlaneName: '*' };
+    },
+    'js-add-due-trigger': function (p) {
+      return { activityType: 'scheduledTrigger', scheduleKind: 'due', dueCondition: val(p, 'due-condition'),
+        dateField: val(p, 'due-date-field') === 'startAt' ? 'startAt' : 'dueAt', days: parseInt(val(p, 'due-days'), 10) || 0,
+        atTime: val(p, 'due-time') || '09:00', listName: '*', swimlaneName: '*' };
+    },
+    'js-add-aging-trigger': function (p) {
+      return { activityType: 'scheduledTrigger', scheduleKind: 'aging', days: parseInt(val(p, 'aging-days'), 10) || 7,
+        atTime: val(p, 'aging-time') || '09:00', listName: val(p, 'aging-list-name') || '*', swimlaneName: '*' };
+    },
+    'js-add-cron-trigger': function (p) {
+      var input = p.querySelector('#cron-expression');
+      var cron = String(input.value || '').trim().replace(/\s+/g, ' ');
+      // Five fields, as WeKan's form asks; the server checks the rest.
+      if (cron.split(' ').length !== 5) {
+        input.setCustomValidity(input.dataset.invalid || 'invalid'); input.reportValidity();
+        return null;
+      }
+      input.setCustomValidity('');
+      return { activityType: 'scheduledTrigger', scheduleKind: 'cron', cron: cron, listName: val(p, 'cron-list-name') || '*', swimlaneName: '*' };
+    },
+    'js-add-due-date-changed-trigger': function () { return { activityType: 'a-dueAt' }; },
+    'js-add-start-date-changed-trigger': function () { return { activityType: 'a-startAt' }; },
+    'js-add-end-date-changed-trigger': function () { return { activityType: 'a-endAt' }; },
+    'js-add-received-date-changed-trigger': function () { return { activityType: 'a-receivedAt' }; },
+    // checklistTriggers.js
+    'js-add-gen-check-trigger': function (p) { return { activityType: val(p, 'gen-check-action') === 'removed' ? 'removeChecklist' : 'addChecklist' }; },
+    'js-add-spec-check-trigger': function (p) {
+      return { activityType: val(p, 'spec-check-action') === 'removed' ? 'removeChecklist' : 'addChecklist', checklistName: val(p, 'check-name') };
+    },
+    'js-add-gen-comp-trigger': function (p) {
+      return { activityType: val(p, 'gen-comp-check-action') === 'uncompleted' ? 'uncompleteChecklist' : 'completeChecklist' };
+    },
+    'js-add-spec-comp-trigger': function (p) {
+      return { activityType: val(p, 'spec-comp-check-action') === 'uncompleted' ? 'uncompleteChecklist' : 'completeChecklist',
+        checklistName: val(p, 'spec-comp-check-name') };
+    },
+    'js-add-gen-check-item-trigger': function (p) { return { activityType: val(p, 'check-item-gen-action') === 'unchecked' ? 'uncheckedItem' : 'checkedItem' }; },
+    'js-add-spec-check-item-trigger': function (p) {
+      return { activityType: val(p, 'check-item-spec-action') === 'unchecked' ? 'uncheckedItem' : 'checkedItem', checklistItemName: val(p, 'check-item-name') };
+    },
+    'js-add-button-trigger': function (p) {
+      return { activityType: 'button', buttonType: val(p, 'button-type') || 'card', buttonLabel: val(p, 'button-label') || 'Run' };
+    },
+  };
+  // The actions, as boardActions.js and cardActions.js make them.
+  var actionMakers = {
+    'js-add-gen-move-action': function (p) {
+      return { actionType: val(p, 'move-gen-action') === 'bottom' ? 'moveCardToBottom' : 'moveCardToTop', listName: '*', swimlaneName: '*' };
+    },
+    'js-add-spec-move-action': function (p) {
+      return { actionType: val(p, 'move-spec-action') === 'bottom' ? 'moveCardToBottom' : 'moveCardToTop',
+        listName: val(p, 'listName'), swimlaneName: val(p, 'swimlaneName') || '*', boardId: val(p, 'board-id') };
+    },
+    'js-add-arch-action': function (p) { return { actionType: val(p, 'arch-action') }; },
+    'js-add-swimlane-action': function (p) { return { actionType: 'addSwimlane', swimlaneName: val(p, 'swimlane-name') }; },
+    'js-create-card-action': function (p) {
+      return { actionType: 'createCard', cardName: val(p, 'card-name'), listName: val(p, 'list-name'), swimlaneName: val(p, 'swimlane-name2') };
+    },
+    'js-set-date-action': function (p) { return { actionType: val(p, 'setdate-action'), dateField: val(p, 'setdate-datefield') }; },
+    'js-remove-datevalue-action': function (p) { return { actionType: 'removeDate', dateField: val(p, 'setdate-removedatefieldvalue') }; },
+    'js-add-label-action': function (p) {
+      return { actionType: val(p, 'label-action') === 'remove' ? 'removeLabel' : 'addLabel', labelId: val(p, 'label-id') };
+    },
+    'js-add-member-action': function (p) {
+      return { actionType: val(p, 'member-action') === 'remove' ? 'removeMember' : 'addMember', username: val(p, 'member-name') };
+    },
+    'js-add-actinguser-member-action': function () { return { actionType: 'addMember', username: '_actinguser_' }; },
+    // checklistActions.js
+    'js-add-checklist-action': function (p) {
+      return { actionType: val(p, 'check-action') === 'remove' ? 'removeChecklist' : 'addChecklist', checklistName: val(p, 'checklist-name') };
+    },
+    'js-add-checkall-action': function (p) {
+      return { actionType: val(p, 'checkall-action') === 'uncheck' ? 'uncheckAll' : 'checkAll', checklistName: val(p, 'checklist-name2') };
+    },
+    'js-add-check-item-action': function (p) {
+      return { actionType: val(p, 'check-item-action') === 'uncheck' ? 'uncheckItem' : 'checkItem',
+        checkItemName: val(p, 'checkitem-name'), checklistName: val(p, 'checklist-name3') };
+    },
+    // WeKan's copyCard: a list and swimlane of the chosen board, or nothing.
+    'js-copy-card-action': function (p) {
+      var board = val(p, 'board-id-copy'), list = val(p, 'list-id-copy'), lane = val(p, 'swimlane-id-copy');
+      return board && list && lane ? { actionType: 'copyCard', boardId: board, listId: list, swimlaneId: lane } : null;
+    },
+    // WeKan's mailActions; nothing without a recipient.
+    'js-mail-action': function (p) {
+      var to = val(p, 'email-to').trim();
+      var discussion = p.querySelector('#email-discussion');
+      var details = p.querySelector('#email-card-details');
+      var files = p.querySelector('#email-attachments');
+      return to ? { actionType: 'sendEmail', emailTo: to, emailSubject: val(p, 'email-subject'), emailMsg: val(p, 'email-msg'),
+        includeCardDetails: !!(details && details.checked), includeChecklistsAndComments: !!(discussion && discussion.checked),
+        includeAttachments: !!(files && files.checked) } : null;
+    },
+    'js-link-card-action': function (p) {
+      return { actionType: 'linkCard', boardId: val(p, 'board-id-link'), listName: val(p, 'listName-link') || '*', swimlaneName: val(p, 'swimlaneName-link') || '*' };
+    },
+    'js-sort-list-action': function (p) {
+      return { actionType: 'sortList', listName: val(p, 'sort-list-name') || '*', sortField: val(p, 'sort-field') };
+    },
+    'js-set-reldate-action': function (p) {
+      return { actionType: 'setDateRelative', dateField: val(p, 'reldate-datefield'),
+        days: parseInt(val(p, 'reldate-days'), 10) || 0, unit: val(p, 'reldate-unit') };
+    },
+    'js-add-checklist-items-action': function (p) {
+      return { actionType: 'addChecklistWithItems', checklistName: val(p, 'checklist-name-3'), checklistItems: val(p, 'checklist-items') };
+    },
+  };
+  function makerOf(el, makers) {
+    for (var cls in makers) if (el.classList.contains(cls)) return makers[cls];
+    return null;
+  }
+  up.on('click', '.rules-page .js-goto-action', function (event, el) {
+    event.preventDefault();
+    var make = makerOf(el, triggerMakers);
+    if (!make) return;
+    var page = rulesPage(el);
+    var trigger = make(el.closest('.js-rules-tab'));
+    if (!trigger) return; // a trigger that needs a value, without one
+    trigger.desc = ruleDesc(el);
+    ruleState.trigger = trigger;
+    showPane(page, 'action');
+  });
+  up.on('click', '.rules-page .js-goto-rules', function (event, el) {
+    event.preventDefault();
+    var make = makerOf(el, actionMakers);
+    if (!make || !ruleState.trigger) return;
+    var page = rulesPage(el);
+    var action = make(el.closest('.js-rules-tab'));
+    if (!action) return; // an action that needs a value, without one
+    action.desc = ruleDesc(el);
+    var saved = ruleState.editing
+      ? callAsync('rules.updateRule', ruleState.editing, ruleState.name, ruleState.trigger, action)
+      : callAsync('rules.createRule', page.dataset.board, ruleState.name, ruleState.trigger, action);
+    saved.then(function () {
+      up.reload('.rules-page');
+    }, function (e) { window.alert(e.reason || e.message); });
+  });
+  up.on('click', '.rules-page .js-delete-rule', function (event, el) {
+    event.preventDefault();
+    callAsync('rules.deleteRule', el.dataset.ruleId).then(function () { up.reload('.rules-page'); });
+  });
+  up.on('click', '.rules-page .js-toggle-rule-enabled', function (event, el) {
+    event.preventDefault();
+    var on = !!el.querySelector('.fa-toggle-off');
+    callAsync('rules.setEnabled', el.dataset.ruleId, on).then(function () { up.reload('.rules-page'); });
+  });
+
+  // The Copy Card action offers the lists and swimlanes of the board chosen.
+  function copyTargets(select) {
+    var tab = select.closest('.js-rules-tab');
+    if (!tab) return;
+    ['list-id-copy', 'swimlane-id-copy'].forEach(function (id) {
+      var target = tab.querySelector('#' + id);
+      if (!target) return;
+      var first = null;
+      Array.prototype.forEach.call(target.options, function (o) {
+        o.hidden = o.dataset.board !== select.value;
+        if (!o.hidden && !first) first = o;
+      });
+      if (!target.selectedOptions[0] || target.selectedOptions[0].hidden) target.value = first ? first.value : '';
+    });
+  }
+  up.compiler('#board-id-copy', function (select) { copyTargets(select); });
+  document.addEventListener('change', function (event) {
+    if (event.target.matches && event.target.matches('#board-id-copy')) copyTargets(event.target);
+  });
+  // #3195: the rule editor's "Insert variable" picker, as WeKan's
+  // ruleVariablePicker: the token goes in at the caret of the text field last
+  // focused in that editor, the caret after it, the field focused again.
+  var RULE_TEXT_FIELD = 'input[type="text"], input:not([type]), textarea';
+  document.addEventListener('focusin', function (event) {
+    var body = event.target.closest && event.target.closest('.triggers-main-body');
+    if (body && event.target.matches(RULE_TEXT_FIELD)) body.weddyLastField = event.target;
+  });
+  document.addEventListener('change', function (event) {
+    var select = event.target;
+    if (!select.matches || !select.matches('.js-rule-variable-picker')) return;
+    var token = select.value;
+    select.value = '';
+    var body = select.closest('.triggers-main-body');
+    if (!token || !body) return;
+    var field = body.weddyLastField && body.contains(body.weddyLastField) && body.weddyLastField.offsetParent !== null ? body.weddyLastField : null;
+    if (!field) {
+      field = Array.prototype.find.call(body.querySelectorAll(RULE_TEXT_FIELD), function (f) { return f.offsetParent !== null; });
+    }
+    if (!field) return;
+    var text = field.value || '', start = field.selectionStart, end = field.selectionEnd;
+    var valid = typeof start === 'number' && typeof end === 'number' && start >= 0 && start <= end && end <= text.length;
+    var from = valid ? start : text.length, to = valid ? end : text.length;
+    field.value = text.slice(0, from) + token + text.slice(to);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.focus();
+    field.setSelectionRange(from + token.length, from + token.length);
+  });
+
+  // Admin Panel / Problems / Recovery: WeKan's emailRecoveryReports - one row a
+  // recipient, paused, resumed, cancelled and retried. A request keeps its id
+  // until it is confirmed, so trying it again never repeats an old cancel
+  // against mail queued later.
+  up.compiler('.email-recovery-reports', function (panel) {
+    var strings = {};
+    var tpl = panel.querySelector('template.js-recovery-strings');
+    if (tpl) tpl.content.querySelectorAll('[data-k]').forEach(function (el) { strings[el.dataset.k] = el.textContent; });
+    var say = function (key) { return strings[key] || key; };
+    var state = { search: '', page: 1, total: 0, rows: [], busy: false, request: 0 };
+    var commands = {};
+    var errorEl = panel.querySelector('.js-recovery-error'), busyEl = panel.querySelector('.js-recovery-busy');
+    var body = panel.querySelector('tbody'), empty = panel.querySelector('.table-page-empty');
+    function message(text) { errorEl.textContent = text || ''; errorEl.hidden = !text; }
+    function setBusy(on) { state.busy = on; busyEl.hidden = !on; render(); }
+    function para(text, cls) {
+      var p = document.createElement('p');
+      if (cls) p.className = cls;
+      p.textContent = text;
+      return p;
+    }
+    function when(v) { return v ? new Date(v).toLocaleString() : '—'; }
+    function render() {
+      body.textContent = '';
+      state.rows.forEach(function (row) {
+        var tr = document.createElement('tr');
+        tr.dataset.recipient = row.userId;
+        var cells = [[para(row.username), para(row.userId, 'quiet')],
+          [document.createTextNode(say(row.paused ? 'email-recovery-paused' : row.failed ? 'email-recovery-attention' : 'email-recovery-pending'))],
+          [para(say('email-recovery-queued') + ': ' + row.queued), para(say('email-recovery-retrying') + ': ' + row.retrying),
+            para(say('email-recovery-stopped') + ': ' + row.failed)]
+            .concat((row.failures || []).map(function (f) { return para(say('email-failure-' + f.reason) + ': ' + f.count, 'quiet'); }))
+            .concat([para(say('email-recovery-attempts') + ': ' + row.attempts)]),
+          [para(say('email-recovery-oldest') + ': ' + when(row.oldest)), para(say('email-recovery-next') + ': ' + (!row.paused ? when(row.nextAttemptAt) : '—'))]
+            .concat(row.changedAt ? [para(say('email-recovery-changed') + ': ' + when(row.changedAt)), para(row.changedBy || '', 'quiet')] : []),
+          []];
+        var actions = [[row.paused ? 'resume' : 'pause', true], ['retry', row.failed > 0], ['cancel', row.queued > 0]];
+        actions.forEach(function (a) {
+          if (!a[1]) return;
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'js-email-queue-action'; b.dataset.action = a[0]; b.disabled = state.busy;
+          b.textContent = say('email-recovery-' + a[0]); b.weddyRow = row;
+          cells[4].push(b);
+        });
+        cells.forEach(function (children) {
+          var td = document.createElement('td');
+          children.forEach(function (c) { td.appendChild(c); });
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      empty.hidden = state.rows.length > 0;
+      var pages = Math.max(1, Math.ceil(state.total / 10));
+      panel.querySelector('.table-page-page-info').textContent = state.page + ' / ' + pages;
+      panel.querySelector('.table-page-total').textContent = state.total ? String(state.total) : '';
+      panel.querySelector('.js-table-page-prev').classList.toggle('disabled', state.page <= 1);
+      panel.querySelector('.js-table-page-next').classList.toggle('disabled', state.page >= pages);
+    }
+    function load(page) {
+      var request = ++state.request;
+      state.rows = []; state.page = page || 1;
+      render();
+      callAsync('emailRecoveryReport', { search: state.search, page: state.page }).then(function (result) {
+        if (request !== state.request) return;
+        state.rows = result.rows || []; state.total = result.total || 0; state.page = result.page || 1;
+        render();
+      }, function () { if (request === state.request) message(say('email-recovery-unavailable')); });
+    }
+    function random() {
+      var a = new Uint8Array(24); crypto.getRandomValues(a);
+      return Array.prototype.map.call(a, function (b) { return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[b % 62]; }).join('');
+    }
+    function onSearchKey(event) {
+      event.stopPropagation();
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      state.search = event.target.value.trim().slice(0, 100);
+      load(1);
+    }
+    function onClick(event) {
+      var el = event.target.closest('button');
+      if (!el || !panel.contains(el)) return;
+      if (el.matches('.js-table-page-prev, .js-table-page-next')) {
+        event.preventDefault();
+        var pages = Math.max(1, Math.ceil(state.total / 10));
+        var next = state.page + (el.matches('.js-table-page-next') ? 1 : -1);
+        if (next >= 1 && next <= pages && next !== state.page) load(next);
+        return;
+      }
+      if (el.matches('.js-table-page-action')) { event.preventDefault(); message(''); load(state.page); return; }
+      if (!el.matches('.js-email-queue-action') || state.busy) return;
+      event.preventDefault();
+      var action = el.dataset.action, userId = el.weddyRow.userId;
+      if (action === 'cancel' && !window.confirm(say('email-recovery-confirm-cancel'))) return;
+      var key = userId + ':' + action;
+      if (!commands[key]) commands[key] = random();
+      setBusy(true); message('');
+      callAsync('controlEmailRecovery', { userId: userId, action: action, requestId: commands[key] }).then(function (result) {
+        setBusy(false);
+        delete commands[key];
+        if (result && result.status === 'superseded') message(say('email-recovery-superseded'));
+        load(state.page);
+      }, function (error) {
+        setBusy(false);
+        message(say(error && error.error === 'email-recovery-busy' ? 'email-recovery-busy' : 'email-recovery-failed'));
+        load(state.page);
+      });
+    }
+    var search = panel.querySelector('.js-table-page-search');
+    search.addEventListener('keydown', onSearchKey);
+    panel.addEventListener('click', onClick);
+    load(1);
+    return function () { search.removeEventListener('keydown', onSearchKey); panel.removeEventListener('click', onClick); };
+  });
+
+  // Admin Panel / Problems / Recovery: WeKan's activityNotificationRecoveryReports.
+  // The table is the report of activityNotificationRecoveryReport, ten a page;
+  // each row's buttons pause, resume, cancel and retry with the revision the
+  // administrator saw, never a newer one.
+  up.compiler('.activity-notification-recovery-reports', function (panel) {
+    var strings = {};
+    var tpl = panel.querySelector('template.js-recovery-strings');
+    if (tpl) tpl.content.querySelectorAll('[data-k]').forEach(function (el) { strings[el.dataset.k] = el.textContent; });
+    var say = function (key) {
+      var args = Array.prototype.slice.call(arguments, 1), i = 0;
+      return (strings[key] || key).replace(/%s/g, function () { return String(args[i++]); });
+    };
+    var state = { search: '', page: 1, total: 0, rows: [], busy: false, request: 0 };
+    var errorEl = panel.querySelector('.js-recovery-error'), busyEl = panel.querySelector('.js-recovery-busy');
+    var body = panel.querySelector('tbody'), empty = panel.querySelector('.table-page-empty');
+    function message(text) { errorEl.textContent = text || ''; errorEl.hidden = !text; }
+    function setBusy(on) { state.busy = on; busyEl.hidden = !on; render(); }
+    function cell(tr, children) {
+      var td = document.createElement('td');
+      children.forEach(function (c) { if (c) td.appendChild(c); });
+      tr.appendChild(td);
+      return td;
+    }
+    function para(text, cls) {
+      var p = document.createElement('p');
+      if (cls) p.className = cls;
+      p.textContent = text;
+      return p;
+    }
+    function button(cls, label, disabled, row) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = cls; b.textContent = label; b.disabled = disabled;
+      b.weddyRow = row;
+      return b;
+    }
+    function render() {
+      body.textContent = '';
+      state.rows.forEach(function (row) {
+        var tr = document.createElement('tr');
+        tr.dataset.intent = row.intentId;
+        cell(tr, [para(row.activityId), row.cardId ? para(say('card') + ': ' + row.cardId, 'quiet') : null]);
+        cell(tr, [document.createTextNode(row.boardId)]);
+        cell(tr, [para(say('activity-recovery-status-' + row.status)),
+          row.paused && row.status !== 'cancelled' ? para(say('activity-recovery-paused')) : null]);
+        cell(tr, [document.createTextNode(row.createdAt ? new Date(row.createdAt).toLocaleString() : '—')]);
+        var noControl = state.busy || !row.canControl;
+        cell(tr, [button('js-cancel-activity-notification', say('activity-recovery-cancel'), noControl, row),
+          button('js-control-activity-notification', say(row.paused ? 'activity-recovery-resume' : 'activity-recovery-pause'), noControl, row),
+          button('js-retry-activity-notification', say('activity-recovery-retry'), state.busy || !row.canRetry, row)]);
+        body.appendChild(tr);
+      });
+      empty.hidden = state.rows.length > 0;
+      var pages = Math.max(1, Math.ceil(state.total / 10));
+      panel.querySelector('.table-page-page-info').textContent = state.page + ' / ' + pages;
+      panel.querySelector('.table-page-total').textContent = state.total ? String(state.total) : '';
+      panel.querySelector('.js-table-page-prev').classList.toggle('disabled', state.page <= 1);
+      panel.querySelector('.js-table-page-next').classList.toggle('disabled', state.page >= pages);
+    }
+    // WeKan's report is reactive: a row that recovery is delivering right now
+    // ("processing", its lease held) turns back when the lease is released.
+    // This one asks again, a second later, while a row is processing - else
+    // its buttons stayed disabled until the page was reloaded.
+    var again = null;
+    function load(page, keepRows) {
+      var request = ++state.request;
+      clearTimeout(again); again = null;
+      state.page = page || 1;
+      if (!keepRows) { state.rows = []; render(); }
+      callAsync('activityNotificationRecoveryReport', { search: state.search, page: state.page }).then(function (result) {
+        if (request !== state.request) return;
+        state.rows = result.rows || []; state.total = result.total || 0; state.page = result.page || 1;
+        render();
+        if (state.rows.some(function (row) { return row.status === 'processing'; }) && panel.isConnected) {
+          again = setTimeout(function () { if (!state.busy) load(state.page, true); }, 1000);
+        }
+      }, function () {
+        if (request !== state.request) return;
+        message(say('activity-recovery-unavailable'));
+      });
+    }
+    function known(error, codes, fallback) {
+      return say(error && codes.indexOf(error.error) >= 0 ? error.error : fallback);
+    }
+    function onSearchKey(event) {
+      event.stopPropagation();
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      state.search = event.target.value.trim().slice(0, 100);
+      load(1);
+    }
+    function onClick(event) {
+      var el = event.target.closest('button');
+      if (!el || !panel.contains(el)) return;
+      var row = el.weddyRow;
+      if (el.matches('.js-table-page-prev, .js-table-page-next')) {
+        event.preventDefault();
+        var pages = Math.max(1, Math.ceil(state.total / 10));
+        var next = state.page + (el.matches('.js-table-page-next') ? 1 : -1);
+        if (next >= 1 && next <= pages && next !== state.page) load(next);
+        return;
+      }
+      if (el.matches('.js-table-page-action')) {
+        event.preventDefault(); message('');
+        var done = function (result) {
+          setBusy(false);
+          message(say('activity-recovery-bulk-result', result.cancelled || 0, result.completed || 0, result.remaining || 0));
+          load(state.page);
+        };
+        var failed = function () { setBusy(false); message(say('activity-recovery-control-failed')); load(state.page); };
+        if (el.dataset.action === 'retry-all-activity-notifications') {
+          setBusy(true);
+          callAsync('retryAllActivityNotifications').then(done, failed);
+        } else if (el.dataset.action === 'cancel-old-activity-notifications') {
+          var answer = window.prompt(say('activity-recovery-cancel-older-prompt'), '7');
+          var days = Number(answer);
+          if (answer === null || !isFinite(days) || days < 0) return;
+          setBusy(true);
+          callAsync('cancelActivityNotificationsOlderThan', { days: days }).then(done, failed);
+        } else load(state.page);
+        return;
+      }
+      if (!row || state.busy) return;
+      event.preventDefault();
+      var controlCodes = ['activity-recovery-busy', 'activity-recovery-control-conflict'];
+      var after = function (codes, fallback) {
+        return [function () { setBusy(false); load(state.page); },
+          function (error) { setBusy(false); message(known(error, codes, fallback)); load(state.page); }];
+      };
+      var random = function () {
+        var a = new Uint8Array(24); crypto.getRandomValues(a);
+        return Array.prototype.map.call(a, function (b) { return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'[b % 62]; }).join('');
+      };
+      var then;
+      if (el.matches('.js-cancel-activity-notification')) {
+        if (!row.canControl || !window.confirm(say('activity-recovery-cancel-confirm'))) return;
+        message(''); setBusy(true); then = after(controlCodes, 'activity-recovery-control-failed');
+        callAsync('cancelActivityNotificationRecovery', { intentId: row.intentId, expectedRevision: row.controlRevision, requestId: random() })
+          .then(then[0], then[1]);
+      } else if (el.matches('.js-control-activity-notification')) {
+        if (!row.canControl) return;
+        message(''); setBusy(true); then = after(controlCodes, 'activity-recovery-control-failed');
+        callAsync('controlActivityNotificationRecovery', { intentId: row.intentId, paused: !row.paused,
+          expectedRevision: row.controlRevision, requestId: random() }).then(then[0], then[1]);
+      } else if (el.matches('.js-retry-activity-notification')) {
+        if (!row.canRetry) return;
+        message(''); setBusy(true);
+        then = after(['activity-recovery-busy', 'activity-recovery-denied', 'activity-recovery-source-unavailable',
+          'activity-recovery-disabled', 'activity-recovery-paused', 'activity-recovery-status-cancelled'], 'activity-recovery-failed');
+        callAsync('retryActivityNotification', { intentId: row.intentId }).then(then[0], then[1]);
+      }
+    }
+    var search = panel.querySelector('.js-table-page-search');
+    search.addEventListener('keydown', onSearchKey);
+    panel.addEventListener('click', onClick);
+    load(1);
+    return function () { clearTimeout(again); search.removeEventListener('keydown', onSearchKey); panel.removeEventListener('click', onClick); };
+  });
+
+  // Ctrl+Z and Ctrl+Shift+Z (Cmd on a Mac) on a board: undo and redo one's
+  // own last change (changeHistory.undoLast / redoLast), as WeKan's
+  // keyboard shortcuts - never while typing in a field.
+  document.addEventListener('keydown', function (e) {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || (e.key || '').toLowerCase() !== 'z') return;
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    var wrapper = document.querySelector('.board-wrapper[data-board]');
+    if (!wrapper) return;
+    e.preventDefault();
+    historyKeystroke(wrapper.getAttribute('data-board'), e.shiftKey ? 'redo' : 'undo')
+      .then(function () { up.reload('.board-wrapper'); }, function () {});
+  });
+
+  // WeKan's client/lib/historyKeyRequest.js: each keystroke's request id,
+  // kept in sessionStorage until the server answers, so a lost reply's
+  // retry repeats that request instead of undoing one more change. A row
+  // the keyed path does not cover falls back to the ordinary call.
+  var HISTORY_KEY = 'wekan-history-key-request', HISTORY_KEY_AGE = 10 * 60 * 1000;
+  function newHistoryRequestId() {
+    var a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', id = 'key-';
+    for (var i = 0; i < 28; i++) id += a[Math.floor(Math.random() * a.length) % a.length];
+    return id;
+  }
+  function storedHistoryRequest(now) {
+    try {
+      var v = JSON.parse(sessionStorage.getItem(HISTORY_KEY) || 'null');
+      return v && typeof v === 'object' && isFinite(v.at) && v.at <= now && now - v.at <= HISTORY_KEY_AGE && typeof v.boardId === 'string' && v.boardId &&
+        (v.direction === 'undo' || v.direction === 'redo') && /^[A-Za-z0-9_-]{16,128}$/.test(v.requestId || '') ? v : null;
+    } catch (err) { return null; }
+  }
+  function storeHistoryRequest(v) {
+    try { if (v) sessionStorage.setItem(HISTORY_KEY, JSON.stringify(v)); else sessionStorage.removeItem(HISTORY_KEY); } catch (err) { /* not retried after a reload */ }
+  }
+  // The keystroke's own call: the reply settles its request at once, with
+  // none of callAsync's refresh of the user after it.
+  function historyCall(name) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return fetch('/_methods/' + encodeURIComponent(name), {
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(args),
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok) { var e = new Error(d.reason || d.error); e.error = d.error; e.reason = d.reason; throw e; }
+        return d.result;
+      });
+    });
+  }
+  function historyKeystroke(boardId, direction) {
+    var now = Date.now(), pending = storedHistoryRequest(now);
+    if (pending && pending.boardId !== boardId) pending = null;
+    var fresh = { boardId: boardId, direction: direction, requestId: newHistoryRequestId(), at: now };
+    var calls = !pending ? [fresh] : pending.direction === direction ? [pending] : [pending, fresh];
+    var run = function (i) {
+      if (i >= calls.length) return Promise.resolve('settled');
+      var req = calls[i], method = req.direction === 'undo' ? 'changeHistory.undoLast' : 'changeHistory.redoLast';
+      storeHistoryRequest(req);
+      return historyCall(method, req.boardId, req.requestId).then(function () { return 'done'; }, function (err) {
+        var code = err && err.error;
+        if (code === 'scrum-history-request-unsupported') return 'unsupported';
+        if (code === undefined || code === null || code === 'too-many-requests' || code === 503 || code === 'timeout') return 'retry';
+        return 'done';
+      }).then(function (outcome) {
+        if (outcome === 'retry') return 'pending';
+        storeHistoryRequest(null);
+        var next = function () { return run(i + 1); };
+        if (outcome === 'unsupported') return historyCall(method, req.boardId).then(next, next);
+        return next();
+      });
+    };
+    return run(0);
+  }
+
+  window.weddyMultiDrag = { sorts: sorts }; // for the tests
+
+  // WeKan's Board View button (boardChangeViewPopup): the views this board has.
+  up.on('click', '.js-toggle-board-view', function (event) {
+    event.preventDefault();
+    openPopOver('board-view');
+  });
+
+  // WeKan's Scrum views (scrumView.js), drawn by the server (scrum_view.go):
+  // what the view has chosen is in its address, and every change is the
+  // method WeKan's view calls, then the view drawn again - or the error.
+  function scrumView() { return document.querySelector('.scrum-view'); }
+  function scrumLink(changes) {
+    var url = new URL(scrumView().dataset.link, location.href);
+    Object.keys(changes).forEach(function (k) {
+      if (changes[k]) url.searchParams.set(k, changes[k]); else url.searchParams.delete(k);
+    });
+    return url.pathname + url.search;
+  }
+  function scrumGo(url) { return up.navigate({ url: url, target: '.scrum-view', history: true, cache: false }); }
+  function scrumError(message) {
+    var p = document.querySelector('.scrum-view .js-scrum-error');
+    if (!p) return;
+    p.textContent = message || '';
+    p.hidden = !message;
+  }
+  var scrumBusy = false;
+  function scrumMutate(method) {
+    if (scrumBusy) return Promise.resolve(false);
+    var v = scrumView();
+    var args = [method, v.dataset.board].concat(Array.prototype.slice.call(arguments, 1));
+    scrumBusy = true;
+    scrumError('');
+    return callAsync.apply(null, args).then(function (result) {
+      scrumBusy = false;
+      return up.reload('.scrum-view', { cache: false }).then(function () { return result || true; });
+    }, function (e) {
+      scrumBusy = false;
+      scrumError(e.reason || e.message);
+      return false;
+    });
+  }
+  function scrumFields(form) {
+    var out = {};
+    new FormData(form).forEach(function (v, k) { if (!(k in out)) out[k] = v; });
+    return out;
+  }
+  function nullable(v) { return v ? v : null; }
+  function scrumRevision(el) { return el.dataset.revision === '' || el.dataset.revision === undefined ? null : Number(el.dataset.revision); }
+  // A date and time as the field shows it, in the browser's time zone - and
+  // back, the stored instant kept when the field was not changed.
+  function localDateTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 23).replace(/:00\.000$/, '').replace(/\.000$/, '');
+  }
+  function scrumTimestamp(value, original) {
+    if (!value) return null;
+    return value === localDateTime(original) ? original : new Date(value).toISOString();
+  }
+  up.compiler('.js-scrum-local-time', function (el) { el.value = localDateTime(el.dataset.iso); });
+  up.on('click', '.js-scrum-refresh', function (event) { event.preventDefault(); up.reload('.scrum-view', { cache: false }); });
+  up.on('change', '.js-scrum-sprint', function (event, el) { scrumGo(scrumLink({ sprint: el.value, event: '', limit: '' })); });
+  up.on('change', '.js-scrum-release-select', function (event, el) { scrumGo(scrumLink({ release: el.value })); });
+  up.on('change', '.js-scrum-event-select', function (event, el) { scrumGo(scrumLink({ event: el.value })); });
+  up.on('click', '.js-scrum-new', function (event) { event.preventDefault(); scrumGo(scrumLink({ sprint: '', event: '' })); });
+  up.on('change', '.js-scrum-chart-metric', function (event, el) {
+    var metric = el.value === 'estimate' ? 'estimate' : 'count';
+    var root = el.closest('.scrum-view') || document;
+    root.querySelectorAll('.scrum-chart-series').forEach(function (sr) {
+      var label = sr.querySelector('.scrum-chart-label');
+      if (label) label.textContent = label.dataset.label + ': ' + sr.dataset[metric];
+      var bar = sr.querySelector('.scrum-chart-bar');
+      if (bar) bar.style.width = sr.dataset[metric === 'estimate' ? 'widthEstimate' : 'widthCount'] + '%';
+    });
+  });
+  up.on('submit', '.js-scrum-settings', function (event, form) {
+    event.preventDefault();
+    var v = scrumFields(form), fd = new FormData(form);
+    scrumMutate('scrum.configure', { enabled: v.enabled === 'on', productGoal: v.productGoal, definitionOfDone: v.definitionOfDone,
+      estimateSource: v.estimateSource, estimateCustomFieldId: nullable(v.estimateCustomFieldId), estimateUnit: v.estimateUnit,
+      completionPolicy: v.completionPolicy, productOwnerId: nullable(v.productOwnerId), scrumMasterId: nullable(v.scrumMasterId),
+      developerIds: fd.getAll('developerIds'), workingDays: fd.getAll('workingDays').map(Number) },
+    Number(scrumView().dataset.settingsRevision));
+  });
+  up.on('submit', '.js-scrum-sprint-form', function (event, form) {
+    event.preventDefault();
+    var v = scrumFields(form);
+    scrumMutate('scrum.saveSprint', nullable(form.dataset.sprint), { name: v.name, goal: v.goal, plannedStart: nullable(v.plannedStart),
+      plannedEnd: nullable(v.plannedEnd), capacity: v.capacity === '' ? null : Number(v.capacity), capacityUnit: v.capacityUnit }, scrumRevision(form))
+      .then(function (saved) { if (saved && saved._id && !form.dataset.sprint) scrumGo(scrumLink({ sprint: saved._id })); });
+  });
+  up.on('click', '.js-scrum-start', function (event, el) {
+    event.preventDefault();
+    scrumMutate('scrum.startSprint', scrumView().dataset.sprint, Number(el.dataset.revision));
+  });
+  up.on('click', '.js-scrum-close', function (event, el) {
+    event.preventDefault();
+    if (!confirm(scrumView().dataset.confirmClose)) return;
+    var rollover = document.querySelector('.scrum-view .js-scrum-rollover');
+    scrumMutate('scrum.closeSprint', scrumView().dataset.sprint, Number(el.dataset.revision), nullable(rollover && rollover.value));
+  });
+  up.on('click', '.js-scrum-resume-close', function (event, el) {
+    event.preventDefault();
+    scrumMutate('scrum.closeSprint', scrumView().dataset.sprint, Number(el.dataset.revision), nullable(el.dataset.rollover));
+  });
+  up.on('click', '.js-scrum-cancel', function (event, el) {
+    event.preventDefault();
+    if (!confirm(scrumView().dataset.confirmCancel)) return;
+    var reason = document.querySelector('.scrum-view .js-scrum-cancel-reason');
+    scrumMutate('scrum.cancelSprint', scrumView().dataset.sprint, Number(el.dataset.revision), reason ? reason.value : '');
+  });
+  up.on('submit', '.js-scrum-card', function (event, form) {
+    event.preventDefault();
+    var v = scrumFields(form);
+    scrumMutate('scrum.updateCard', form.dataset.cardId, { sprintId: nullable(v.sprintId),
+      releaseIds: new FormData(form).getAll('releaseIds').filter(Boolean),
+      backlogRank: v.backlogRank === '' ? null : Number(v.backlogRank), issueType: v.issueType, acceptanceCriteria: v.acceptanceCriteria },
+    Number(form.dataset.revision || 0));
+  });
+  up.on('submit', '.js-scrum-release', function (event, form) {
+    event.preventDefault();
+    var v = scrumFields(form);
+    var at = form.querySelector('[name="releasedAt"]');
+    scrumMutate('scrum.saveRelease', nullable(form.dataset.release), { name: v.name, goal: v.goal, plannedStart: nullable(v.plannedStart),
+      plannedEnd: nullable(v.plannedEnd), state: v.state, notes: v.notes, releasedAt: scrumTimestamp(v.releasedAt, at && at.dataset.iso) }, scrumRevision(form));
+  });
+  up.on('submit', '.js-scrum-event', function (event, form) {
+    event.preventDefault();
+    var v = scrumFields(form);
+    var at = form.querySelector('[name="startsAt"]');
+    scrumMutate('scrum.saveEvent', nullable(form.dataset.event), { name: v.name, kind: v.kind, startsAt: scrumTimestamp(v.startsAt, at && at.dataset.iso),
+      timeboxMinutes: Number(v.timeboxMinutes), notes: v.notes, sprintId: scrumView().dataset.sprint,
+      followUpCardIds: new FormData(form).getAll('followUpCardIds') }, scrumRevision(form));
+  });
+
+  // WeKan's scrumDailyHistory: a sprint's daily observations, asked for here
+  // (scrum.getDailyHistory) and drawn - by cards or by estimate, each unit and
+  // partiality on its own scale, missing days left out. An answer that comes
+  // after the view moved on to another sprint is dropped.
+  function esc(text) { var d = document.createElement('div'); d.textContent = text == null ? '' : String(text); return d.innerHTML; }
+  function dailyTotal(sec, t) {
+    return sec.dataset.total.replace('__count__', t.count).replace('__estimate__', t.estimate).replace('__unknown__', t.unknown);
+  }
+  function drawDaily(sec, history, metric) {
+    var body = sec.querySelector('.js-scrum-daily-body');
+    var d = sec.dataset, html = '';
+    if (history.partial) html += '<p class="scrum-partial-report">' + esc(d.partial) + '</p>';
+    if (history.truncated) html += '<p class="warning">' + esc(d.truncated) + '</p>';
+    var rows = history.rows || [];
+    if (!rows.length) { body.innerHTML = html + '<p>' + esc(d.empty) + '</p>'; return; }
+    html += '<label>' + esc(d.cards) + ' / ' + esc(d.estimate) + '<select class="js-scrum-daily-metric">' +
+      '<option value="count"' + (metric === 'count' ? ' selected' : '') + '>' + esc(d.cards) + '</option>' +
+      '<option value="estimate"' + (metric === 'estimate' ? ' selected' : '') + '>' + esc(d.estimate) + '</option></select></label>';
+    var groups = [], bySig = {};
+    rows.forEach(function (row) {
+      var sig = JSON.stringify([row.unit, !!row.partial]);
+      if (!bySig[sig]) { bySig[sig] = { unit: row.unit, partial: !!row.partial, rows: [], max: 0 }; groups.push(bySig[sig]); }
+      var g = bySig[sig];
+      g.rows.push(row);
+      ['scope', 'remaining', 'completed'].forEach(function (k) { g.max = Math.max(g.max, row[k][metric]); });
+    });
+    groups.forEach(function (g) {
+      html += '<section class="scrum-chart"><p>' + esc(g.unit) + '</p>' + (g.partial ? '<p>' + esc(d.partialSnapshot) + '</p>' : '');
+      g.rows.forEach(function (row) {
+        var at = new Date(row.capturedAt).toISOString();
+        html += '<figure class="scrum-chart-row scrum-daily-row"><figcaption><time datetime="' + at + '">' + at + '</time></figcaption>';
+        ['scope', 'remaining', 'completed'].forEach(function (k) {
+          var v = row[k][metric], width = g.max ? 100 * v / g.max : 0;
+          html += '<div class="scrum-chart-series"><span class="scrum-chart-label">' + esc(d[k]) + ': ' + esc(v) + '</span>' +
+            '<div class="scrum-chart-track" aria-hidden="true"><div class="scrum-chart-bar ' + k + '" style="width: ' + width + '%"></div></div>' +
+            '<small>' + esc(dailyTotal(sec, row[k])) + '</small></div>';
+        });
+        html += '</figure>';
+      });
+      html += '</section>';
+    });
+    body.innerHTML = html;
+  }
+  up.compiler('.js-scrum-daily', function (sec) {
+    var gone = false;
+    sec.weddyMetric = 'count';
+    window.Meteor.callAsync('scrum.getDailyHistory', sec.dataset.board, sec.dataset.sprint).then(function (history) {
+      if (gone || !sec.isConnected) return;
+      sec.weddyHistory = history;
+      drawDaily(sec, history, sec.weddyMetric);
+    }, function (e) {
+      if (gone || !sec.isConnected) return;
+      sec.querySelector('.js-scrum-daily-body').innerHTML = '<p class="warning" role="alert">' + esc(e.reason || e.message) + '</p>';
+    });
+    return function () { gone = true; };
+  });
+  up.on('change', '.js-scrum-daily-metric', function (event, el) {
+    var sec = el.closest('.js-scrum-daily');
+    sec.weddyMetric = el.value === 'estimate' ? 'estimate' : 'count';
+    if (sec.weddyHistory) drawDaily(sec, sec.weddyHistory, sec.weddyMetric);
+  });
+  // WeKan's exportChartPopup: the chart's PDF and Excel, each link carrying a
+  // download token of its own, as WeKan's carry the login token.
+  up.on('click', '.js-export-chart', function (event, el) {
+    event.preventDefault();
+    var board = (el.closest('[data-board]') || document.querySelector('[data-board]')).dataset.board;
+    callAsync('exportDownloadToken').then(function (token) {
+      closePopOvers();
+      var p = document.createElement('div');
+      p.className = 'pop-over js-pop-over';
+      p.setAttribute('role', 'dialog');
+      var list = '<ul class="pop-over-list">';
+      [['exportPDF', 'fa-file-pdf-o', 'PDF'], ['exportExcel', 'fa-file-excel-o', 'Excel']].forEach(function (f) {
+        var q = new URLSearchParams({ authToken: token });
+        if (el.dataset.sprintId) q.set('sprintId', el.dataset.sprintId);
+        list += '<li><a href="/api/boards/' + encodeURIComponent(board) + '/charts/' + encodeURIComponent(el.dataset.chartKey) + '/' + f[0] + '?' + q.toString() +
+          '" download><i class="fa ' + f[1] + '"></i> ' + f[2] + '</a></li>';
+      });
+      p.innerHTML = '<div class="header"><a class="close-btn js-close-pop-over" href="#">×</a></div><div class="content">' + list + '</ul></div>';
+      document.body.appendChild(p);
+    }, function (e) { scrumError(e.reason || e.message); });
+  });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && document.querySelector('.js-pop-over')) closePopOvers(); });
+
+  // WeKan's scrumScopeHistory: a point per change, each bar on the sprint's
+  // largest scope; a History that does not reproduce the sprint says so.
+  up.compiler('.js-scrum-scope', function (sec) {
+    var gone = false, d = sec.dataset, body = sec.querySelector('.js-scrum-scope-body');
+    window.Meteor.callAsync('scrum.getScopeHistory', d.board, d.sprint).then(function (h) {
+      if (gone || !sec.isConnected) return;
+      var html = '';
+      if (h.partial) html += '<p class="scrum-partial-report">' + esc(d.partial) + '</p>';
+      if (h.consistent === false) html += '<p class="warning js-scrum-scope-inconsistent">' + esc(d.inconsistent) + '</p>';
+      if (h.truncated) html += '<p class="warning">' + esc(d.truncated) + '</p>';
+      var points = h.points || [];
+      if (!points.length) { body.innerHTML = html + '<p>' + esc(d.empty) + '</p>'; return; }
+      var max = Math.max.apply(null, [1].concat(points.map(function (p) { return p.scope; })));
+      var cause = function (c) {
+        var key = 'cause' + String(c).replace(/^./, function (x) { return x.toUpperCase(); });
+        return d[key] || ('scrum-scope-cause-' + c);
+      };
+      html += '<section class="scrum-chart"><p>' + esc(h.unit) + '</p>';
+      points.forEach(function (p) {
+        var at = new Date(p.at).toISOString();
+        html += '<figure class="scrum-chart-row scrum-scope-row"><figcaption><time datetime="' + at + '">' + at + '</time> ' + esc(cause(p.cause)) + '</figcaption>';
+        ['scope', 'remaining', 'completed'].forEach(function (k) {
+          html += '<div class="scrum-chart-series"><span class="scrum-chart-label">' + esc(d[k]) + ': ' + esc(p[k]) + '</span>' +
+            '<div class="scrum-chart-track" aria-hidden="true"><div class="scrum-chart-bar ' + k + '" style="width: ' + Math.round(p[k] / max * 100) + '%"></div></div></div>';
+        });
+        html += '</figure>';
+      });
+      body.innerHTML = html + '</section>';
+    }, function (e) {
+      if (gone || !sec.isConnected) return;
+      body.innerHTML = '<p class="warning" role="alert">' + esc(e.reason || e.message) + '</p>';
+    });
+    return function () { gone = true; };
+  });
+
+  // WeKan's import-into-board panel (scrumView.js importTransfer): the file
+  // reduced to what the import reads (scrumTransferFileFields), a dry run,
+  // then the import - the panel stays as it is, showing what happened.
+  function transferFields(file) {
+    if (!file || typeof file !== 'object' || Array.isArray(file)) throw new Error('Invalid Scrum transfer: expected a JSON object');
+    if (typeof file.format === 'string') return { scrumTransfer: file, scrumTransferLosses: [], cards: [], lists: [], customFields: [] };
+    if (!file.scrumTransfer || typeof file.scrumTransfer !== 'object') throw new Error('Invalid Scrum transfer: this file has no Scrum planning');
+    var rows = function (list, pick) {
+      return (Array.isArray(list) ? list : []).filter(function (r) { return r && typeof r._id === 'string' && r._id && r._id.length <= 200; }).map(pick);
+    };
+    var out = { scrumTransfer: file.scrumTransfer, scrumTransferLosses: Array.isArray(file.scrumTransferLosses) ? file.scrumTransferLosses : [],
+      cards: rows(file.cards, function (r) { var o = { _id: r._id }; if (typeof r.title === 'string') o.title = r.title.slice(0, 10000); if (Number.isSafeInteger(r.cardNumber)) o.cardNumber = r.cardNumber; return o; }),
+      lists: rows(file.lists, function (r) { var o = { _id: r._id }; if (typeof r.title === 'string') o.title = r.title.slice(0, 10000); return o; }),
+      customFields: rows(file.customFields, function (r) { var o = { _id: r._id }; if (typeof r.name === 'string') o.name = r.name.slice(0, 10000); if (typeof r.type === 'string') o.type = r.type.slice(0, 100); return o; }) };
+    if (typeof file._id === 'string' && file._id.length <= 500) out._id = file._id;
+    return out;
+  }
+  function transferChanges(p) {
+    return !!(p.sprints.created.length || p.releases.created.length || p.events.created || p.cards.updated || p.dailyObservations);
+  }
+  function drawTransfer(panel, p) {
+    var d = panel.dataset, fill = function (text, values) {
+      Object.keys(values).forEach(function (k) { text = text.split('__' + k + '__').join(values[k]); });
+      return text;
+    };
+    var html = '<div class="scrum-transfer-preview" role="status">';
+    if (p.changed) html += '<p class="js-scrum-transfer-done">' + esc(d.done) + '</p>';
+    ['sprints', 'releases'].forEach(function (k) {
+      html += '<p>' + esc(fill(d[k], { created: p[k].created.length, matched: p[k].matched.length, skipped: p[k].skipped.length })) + '</p>';
+    });
+    html += '<p>' + esc(fill(d.cards, { updated: p.cards.updated, unchanged: p.cards.unchanged, unmatched: p.cards.unmatched })) + '</p>';
+    if (p.dryRun && !transferChanges(p)) html += '<p class="js-scrum-transfer-nothing">' + esc(d.nothing) + '</p>';
+    (p.losses || []).forEach(function (l) {
+      var key = 'loss' + String(l.reason || '').replace(/(^|-)([a-z])/g, function (m, a, c) { return c.toUpperCase(); });
+      html += '<p class="scrum-transfer-loss">' + esc(fill(d[key] || d.lossOmitted, { reference: l.sourceId })) + '</p>';
+    });
+    if (p.dryRun && transferChanges(p)) html += '<button class="primary js-scrum-transfer-apply" type="button">' + esc(d.import) + '</button>';
+    panel.querySelector('.js-scrum-transfer-result').innerHTML = html + '</div>';
+  }
+  function runTransfer(panel, dryRun) {
+    if (!panel.weddyFile) { scrumError(panel.dataset.choose); return; }
+    scrumError('');
+    window.Meteor.callAsync('scrum.importIntoBoard', panel.dataset.board, panel.weddyFile, { dryRun: dryRun })
+      .then(function (p) { drawTransfer(panel, p); }, function (e) { scrumError(e.reason || e.message); });
+  }
+  up.on('change', '.js-scrum-transfer-file', function (event, el) {
+    var panel = el.closest('.scrum-transfer-import'), file = el.files && el.files[0];
+    panel.weddyFile = null;
+    panel.querySelector('.js-scrum-transfer-result').innerHTML = '';
+    scrumError('');
+    if (!file) return;
+    file.text().then(function (text) {
+      try { panel.weddyFile = transferFields(JSON.parse(text)); }
+      catch (e) { scrumError(e instanceof SyntaxError ? panel.dataset.invalid : e.message); }
+    });
+  });
+  up.on('click', '.js-scrum-transfer-preview', function (event, el) { event.preventDefault(); runTransfer(el.closest('.scrum-transfer-import'), true); });
+  up.on('click', '.js-scrum-transfer-apply', function (event, el) { event.preventDefault(); runTransfer(el.closest('.scrum-transfer-import'), false); });
+
+  // WeKan's scrumMetadata form: the card's Scrum fields through
+  // scrum.updateCard - every chosen release, none when cleared.
+  up.on('click', '.minicard .scrum-metadata', function (event) { event.stopPropagation(); });
+  // What was chosen in it, until it is sent, is not taken away by the board
+  // drawn again under it (scrum-multiple-releases: a redraw came between the
+  // choice and Save, and Save sent the releases the card already had).
+  var scrumEdit = null;
+  function scrumFormValues(form) {
+    var values = {};
+    Array.prototype.forEach.call(form.elements, function (f) {
+      if (!f.name) return;
+      values[f.name] = f.multiple ? Array.prototype.filter.call(f.options, function (o) { return o.selected; }).map(function (o) { return o.value; }) : f.value;
+    });
+    return values;
+  }
+  ['input', 'change'].forEach(function (type) {
+    document.addEventListener(type, function (event) {
+      var form = event.target.closest && event.target.closest('.board-wrapper .js-card-details form.js-scrum-metadata');
+      if (form) scrumEdit = { card: form.dataset.card, values: scrumFormValues(form) };
+    }, true);
+  });
+  up.on('up:fragment:inserted', function (event, el) {
+    if (!scrumEdit || !el || !el.matches || !el.matches('.board-wrapper')) return;
+    var edit = scrumEdit;
+    var form = el.querySelector('.js-card-details form.js-scrum-metadata[data-card="' + edit.card + '"]');
+    if (!form) { scrumEdit = null; return; }
+    Array.prototype.forEach.call(form.elements, function (f) {
+      if (!f.name || !(f.name in edit.values)) return;
+      var v = edit.values[f.name];
+      if (f.multiple) Array.prototype.forEach.call(f.options, function (o) { o.selected = v.indexOf(o.value) >= 0; });
+      else f.value = v;
+    });
+    var box = form.closest('details');
+    if (box) box.open = true;
+  });
+  up.on('submit', '.js-scrum-metadata', function (event, form) {
+    event.preventDefault();
+    scrumEdit = null;
+    var fd = new FormData(form), meta = {};
+    fd.forEach(function (v, k) { if (!(k in meta)) meta[k] = v; });
+    ['sprintId', 'releaseId'].forEach(function (k) { if (k in meta) meta[k] = meta[k] || null; });
+    if (form.querySelector('select[name="releaseIds"]')) meta.releaseIds = fd.getAll('releaseIds').filter(Boolean);
+    if ('backlogRank' in meta) meta.backlogRank = meta.backlogRank === '' ? null : Number(meta.backlogRank);
+    callAsync('scrum.updateCard', form.dataset.board, form.dataset.card, meta, Number(form.dataset.revision || 0))
+      .then(function () { reloadBoard(); }, function (e) {
+        var p = form.querySelector('.warning') || form.insertBefore(document.createElement('p'), form.firstChild);
+        p.className = 'warning'; p.setAttribute('role', 'alert'); p.textContent = e.reason || e.message;
+      });
+  });
+
+  // WeKan's Scrum views open the board's History in a pop-over, at its
+  // Scrum changes: the History page's own table, its Restore included.
+  up.on('click', '.js-scrum-history', function (event, el) {
+    event.preventDefault();
+    fetch(el.getAttribute('href'), { credentials: 'same-origin' }).then(function (r) { return r.text(); }).then(function (html) {
+      var table = new DOMParser().parseFromString(html, 'text/html').querySelector('.history-table');
+      if (!table) return;
+      closePopOvers();
+      var p = document.createElement('div');
+      p.className = 'pop-over js-pop-over';
+      p.setAttribute('role', 'dialog');
+      p.innerHTML = '<div class="header"><a class="close-btn js-close-pop-over" href="#">×</a></div><div class="content"></div>';
+      p.querySelector('.content').appendChild(document.importNode(table, true));
+      document.body.appendChild(p);
+      up.hello(p);
+    });
+  });
+
+  // The stopped Scrum History operation's notice: its board admin rolls it
+  // back or, confirmed, discards it (scrum.resolveHistoryCheckpoint).
+  up.on('click', '.js-history-checkpoint-rollback, .js-history-checkpoint-discard', function (event, el) {
+    event.preventDefault();
+    var notice = el.closest('.js-history-checkpoint-notice');
+    var action = el.classList.contains('js-history-checkpoint-rollback') ? 'rollback' : 'discard';
+    if (action === 'discard' && !confirm(notice.dataset.confirm)) return;
+    el.disabled = true;
+    callAsync('scrum.resolveHistoryCheckpoint', notice.dataset.board, notice.dataset.key, action).then(function () {
+      notice.remove();
+      reloadBoard();
+    }, function (e) {
+      el.disabled = false;
+      var p = notice.querySelector('.js-history-checkpoint-error');
+      p.textContent = e.reason || e.message;
+      p.hidden = false;
+    });
+  });
+
+  // An interrupted Scrum import, finished or discarded by a board admin
+  // (scrum.resumeImport, scrum.discardImport).
+  up.on('click', '.js-scrum-resume-import, .js-scrum-discard-import', function (event, el) {
+    event.preventDefault();
+    scrumMutate(el.classList.contains('js-scrum-resume-import') ? 'scrum.resumeImport' : 'scrum.discardImport');
+  });
+
+  // While a rollover or a large undo runs in the background, the Scrum view
+  // looks again every few seconds; nothing is polled otherwise.
+  // Swimlane and list resizing, as WeKan's list.js and swimlanes.js: a list's
+  // handle on its inline end - its left edge right-to-left, where dragging
+  // left widens it (#6801) - and a swimlane's at its bottom. A list's width is
+  // the board's (applyListWidth, or the board's one width while same width for
+  // all lists is on, or the viewer's own modes); a swimlane's height is the
+  // user's own.
+  var MIN_LIST_WIDTH = 200, MAX_LIST_WIDTH = 1000, MIN_LANE_HEIGHT = 100, MAX_LANE_HEIGHT = 2000;
+  function pageXY(e) {
+    var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+    return { x: t.pageX, y: t.pageY };
+  }
+  function sizeTo(el, prop, px) {
+    var p = px + 'px';
+    el.style.setProperty(prop === 'width' ? '--list-width' : '--swimlane-height', p);
+    el.style.setProperty(prop, p);
+    el.style.setProperty('min-' + prop, p);
+    el.style.setProperty('max-' + prop, p);
+    el.style.setProperty('flex', 'none');
+  }
+  function resizeDrag(handle, el, prop, start) {
+    var dir = prop === 'width' && window.getComputedStyle(el).direction === 'rtl' ? -1 : 1;
+    var from = el.getBoundingClientRect()[prop];
+    var min = prop === 'width' ? MIN_LIST_WIDTH : MIN_LANE_HEIGHT, max = prop === 'width' ? MAX_LIST_WIDTH : MAX_LANE_HEIGHT;
+    var size = from;
+    el.classList.add(prop === 'width' ? 'list-resizing' : 'swimlane-resizing');
+    document.body.classList.add(prop === 'width' ? 'list-resizing-active' : 'swimlane-resizing-active');
+    document.body.style.userSelect = 'none';
+    dragging++;
+    function move(e) {
+      var at = pageXY(e), d = prop === 'width' ? (at.x - start.x) * dir : at.y - start.y;
+      size = Math.round(Math.max(min, Math.min(max, from + d)));
+      sizeTo(el, prop, size);
+      if (prop === 'height') window.dispatchEvent(new Event('wekan-swimlane-resized'));
+      if (e.cancelable) e.preventDefault();
+    }
+    function end(e) {
+      if (e) move(e);
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', end);
+      el.classList.remove('list-resizing', 'swimlane-resizing');
+      document.body.classList.remove('list-resizing-active', 'swimlane-resizing-active');
+      document.body.style.userSelect = '';
+      var wrapper = el.closest('.board-wrapper');
+      var boardId = wrapper && wrapper.getAttribute('data-board');
+      var saved = prop === 'height' ? callAsync('applySwimlaneHeightToStorage', boardId, el.getAttribute('data-swimlane'), size)
+        : saveListWidth(wrapper, el, size);
+      // The board drawn again during the drag catches up once it is saved.
+      Promise.resolve(saved).catch(function (err) { if (window.console) console.error('Error saving the size:', err); })
+        .then(function () {
+          dragging = Math.max(0, dragging - 1);
+          if (dragging === 0 && stale) reloadBoard();
+        });
+    }
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('touchend', end);
+  }
+  // A list's width, saved where the board's mode keeps it (saveListWidth):
+  // the board's one width, the viewer's own one width - every list of the
+  // board that width at once, in both - the viewer's personal width, or the
+  // list's own.
+  function saveListWidth(wrapper, list, size) {
+    var boardId = wrapper.getAttribute('data-board');
+    var all = function () { wrapper.querySelectorAll('.js-list:not(.list-collapsed)').forEach(function (l) { sizeTo(l, 'width', size); }); };
+    if (wrapper.getAttribute('data-same-width') === 'true') { all(); return callAsync('/boards/update', { _id: boardId }, { $set: { sameWidthForAllListsValue: size } }); }
+    if (wrapper.getAttribute('data-fixed-width') === 'true') { all(); return callAsync('setFixedListWidth', boardId, size); }
+    if (wrapper.getAttribute('data-personal-width') === 'true') return callAsync('applyListWidthToStorage', boardId, list.getAttribute('data-list'), size, size);
+    return callAsync('applyListWidth', boardId, list.getAttribute('data-list'), size, size);
+  }
+  // WeKan's setListWidthPopup, from the list menu: the list's width typed in,
+  // whole pixels of at least 200 (parseListWidthInput), and the viewer's own
+  // same width for all lists turned on or off; its note says whose width it is.
+  var widthList = null;
+  up.on('click', '.js-pop-over .js-set-list-width', function (event) {
+    event.preventDefault();
+    widthList = menuList;
+    if (!widthList) return;
+    openPopOver('list-width');
+    var p = document.querySelector('.js-pop-over #js-list-width-edit'), wrapper = widthList.closest('.board-wrapper');
+    if (!p || !wrapper) return;
+    var fixed = wrapper.getAttribute('data-fixed-width') === 'true';
+    p.querySelector('.list-width-value').value = Math.round(widthList.getBoundingClientRect().width);
+    var toggle = p.querySelector('.js-toggle-fixed-list-width');
+    toggle.title = fixed ? toggle.dataset.onTitle : toggle.dataset.offTitle;
+    toggle.querySelector('i').className = 'fa ' + (fixed ? 'fa-check-square-o' : 'fa-square-o');
+    var note = p.querySelector('.list-width-scope-note');
+    note.textContent = fixed ? note.dataset.fixed : wrapper.getAttribute('data-personal-width') === 'true' ? note.dataset.personal : note.dataset.shared;
+  });
+  up.on('click', '.js-pop-over .list-width-apply', function (event, el) {
+    event.preventDefault();
+    var p = el.closest('#js-list-width-edit'), raw = String(p.querySelector('.list-width-value').value).trim();
+    var width = /^\d+$/.test(raw) ? Number(raw) : NaN;
+    if (!(width >= MIN_LIST_WIDTH && width <= MAX_LIST_WIDTH) || !widthList) { p.querySelector('.list-width-error').classList.remove('is-hidden'); return; }
+    var list = widthList, wrapper = list.closest('.board-wrapper');
+    closePopOvers();
+    Promise.resolve(saveListWidth(wrapper, list, width)).then(function () { reloadBoard(); }, function (e) { window.alert(e.reason || e.message); });
+  });
+  up.on('click', '.js-pop-over .js-toggle-fixed-list-width', function (event) {
+    event.preventDefault();
+    var wrapper = widthList && widthList.closest('.board-wrapper');
+    closePopOvers();
+    if (!wrapper) return;
+    var boardId = wrapper.getAttribute('data-board'), enable = wrapper.getAttribute('data-fixed-width') !== 'true';
+    // WeKan: the two modes are exclusive - same width turns the viewer's own
+    // automatic width off.
+    var first = enable && wrapper.getAttribute('data-personal-width') === 'true' && wrapper.getAttribute('data-auto-width') === 'true'
+      ? callAsync('setPersonalAutoWidth', boardId, false) : Promise.resolve();
+    first.then(function () { return callAsync('setFixedListWidthEnabled', boardId, enable); }).then(function () { reloadBoard(); });
+  });
+  // #6409 WeKan's automatic width: the viewer's own in personal mode, else the
+  // board's.
+  up.on('click', '.js-pop-over .js-toggle-auto-width', function (event) {
+    event.preventDefault();
+    var wrapper = widthList && widthList.closest('.board-wrapper');
+    closePopOvers();
+    if (!wrapper) return;
+    var boardId = wrapper.getAttribute('data-board'), on = wrapper.getAttribute('data-auto-width') !== 'true';
+    var method = wrapper.getAttribute('data-personal-width') === 'true' ? 'setPersonalAutoWidth' : 'setBoardAutoWidth';
+    callAsync(method, boardId, on).then(function () { reloadBoard(); }, function (e) { window.alert(e.reason || e.message); });
+  });
+  function resizeStart(event) {
+    var handle = event.target.closest && event.target.closest('.js-list-resize-handle, .js-swimlane-resize-handle');
+    if (!handle || (event.type === 'mousedown' && event.button !== 0)) return;
+    var isList = handle.classList.contains('js-list-resize-handle');
+    var el = handle.closest(isList ? '.js-list' : '.js-swimlane');
+    if (!el) return;
+    event.preventDefault();
+    event.stopPropagation();
+    resizeDrag(handle, el, isList ? 'width' : 'height', pageXY(event));
+  }
+  document.addEventListener('mousedown', resizeStart, true);
+  document.addEventListener('touchstart', resizeStart, { capture: true, passive: false });
+  up.compiler('.scrum-view[data-polling="true"]', function () {
+    var t = setTimeout(function () { up.reload('.scrum-view', { cache: false }); }, 3000);
+    return function () { clearTimeout(t); };
+  });
+})();

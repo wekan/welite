@@ -596,7 +596,8 @@ begin
   Body:=BoardHtml(T.Db,aRequest.QueryFields.Values['id'],S,Dir,
     StrToIntDef(aRequest.QueryFields.Values['x'],1),StrToIntDef(aRequest.QueryFields.Values['y'],1),
     aRequest.QueryFields.Values['view']='all','','',Language.Tag,aRequest.QueryFields.Values['expand'],aRequest.QueryFields.Values['subtasks'],
-    MainNavigation(T.Db,S,Language.Tag,T.IsAdmin),
+    MainNavigation(T.Db,S,Language.Tag,T.IsAdmin,
+      BoardRoute(aRequest.QueryFields.Values['id'],BoardSlug(T.Db,aRequest.QueryFields.Values['id']))),
     StrToIntDef(aRequest.QueryFields.Values['cols'],6),
     StrToIntDef(aRequest.QueryFields.Values['rows'],4),ViewCommand);
   if Body='' then begin

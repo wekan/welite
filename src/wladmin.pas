@@ -34,7 +34,7 @@ function RequireTenantAdmin(aRequest: TRequest; aResponse: TResponse;
 function RequireGlobalAdmin(aRequest: TRequest; aResponse: TResponse;
   out T: TWLTenant; out S: TWLSession): Boolean;
 
-function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;GlobalTenant:Boolean=False):string;
+function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;GlobalTenant:Boolean=False;const ViewPath:string='/'):string;
 
 procedure AdminIndex(aRequest: TRequest; aResponse: TResponse);     // GET  /admin
 procedure AdminDomains(aRequest: TRequest; aResponse: TResponse);   // GET/POST /admin/domains
@@ -43,7 +43,7 @@ procedure AdminPeople(aRequest: TRequest; aResponse: TResponse);    // GET/POST 
 implementation
 
 uses
-  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi, wlpasswd, wltotp, wlautsrc, wlselscp, wlwkdir;
+  StrUtils, DateUtils, fpjson, wlregist, wllocale, wli18n, wlapi, wlpasswd, wltotp, wlautsrc, wlselscp, wlwkdir, wlview;
 
 function NowIso: string;
 begin
@@ -126,7 +126,7 @@ begin
   if T.IsAdmin then Result:='Global Admin' else Result:='Domain Global Admin';
 end;
 
-function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;GlobalTenant:Boolean):string;
+function MainNavigation(Db:TWLDb;const S:TWLSession;const LanguageTag:string;GlobalTenant:Boolean;const ViewPath:string):string;
 var State:TWLSession;Words:TWLTranslator;
   function Item(const Path,Key,Caption:string):string;
   begin
@@ -149,6 +149,10 @@ begin
       if GlobalTenant and WKConfigured then
         Result:=Result+NavigationButton('/wekan','WeKan: '+Words.Text('domains','Domains'),State);
     end;
+    // The HTML4/HTML5 toggle (wlview), like WeKan's mobile/desktop toggle: the
+    // same page in the HTML5 view, the session carried into its cookie (wlh5).
+    Result:=Result+NavigationButton(ViewSwitchUrl(ViewPath,wvHtml5),'HTML5',State,
+      ' title="'+HtmlAttr(Words.Text('html4-html5-toggle','Toggle between HTML4 and HTML5 view'))+'" class="html-view-toggle"');
   finally Words.Free;end;
 end;
 

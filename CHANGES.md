@@ -4,6 +4,29 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-26 The HTML5 view for modern browsers
+
+- Serve two views on one backend: modern browsers (Chromium 90+, Firefox 90+,
+  Safari 14+) get the HTML5 view, Weddy's pages - WeKan's own markup, class
+  names, CSS and script - and IBrowse, NetSurf, Dillo, old and unknown
+  browsers the HTML4 view as before (`src/wlview.pas`).
+- Add the HTML4/HTML5 toggle to the top header of both views, made like
+  WeKan's mobile/desktop toggle. `?ui=html4` or `?ui=html5` switches and is
+  kept in a `welite-ui` cookie where the browser keeps cookies. The toggle
+  from the HTML4 view carries its session into the HTML5 view, and the HTML4
+  view uses that session again after the toggle back.
+- Render Weddy's sign-in form, All Boards with its Starred and Remaining
+  sections, the board with its swimlanes, lists and minicards, the opened
+  card's details and "Board not found" from WeLite's data, with the same
+  queries and access checks as the HTML4 view (`src/wlh5.pas`). Weddy's
+  static files are in `public/static/` under 8.3 names.
+- Sign in to the HTML5 view with WeKan's `meteor_login_token` cookie: a WeLite
+  session, or a Meteor login token of a shared store. Log Out revokes it.
+- Verify on linked and CLI SQLite (`tests/view.py`): the choice by
+  User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
+  Log Out, the switch both ways, and negative cases - a user who is no member,
+  a forged cookie, another browser presenting the session, retro browsers.
+
 ## 2026-11-26 WeKan's URL routes
 
 - Serve a board at WeKan's `/b/:id/:slug` and a card at

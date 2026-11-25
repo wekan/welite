@@ -1,0 +1,1163 @@
+/* Weddy's WeKan: the look of WeKan's board, in one small file. */
+:root { --bg: #f4f5f7; --list: #ebecf0; --card: #fff; --text: #172b4d; --accent: #0079bf; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--bg); }
+.header-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 12px; background: #2c3e50; color: #fff; }
+.header-bar a, .header-bar button { color: #fff; background: none; border: 0; font: inherit; cursor: pointer; text-decoration: none; }
+.header-user { margin-inline-start: auto; }
+button.primary, .at-btn { background: var(--accent); color: #fff; border: 0; border-radius: 3px; padding: 6px 12px; cursor: pointer; }
+input[type=text], input[type=password], textarea { font: inherit; padding: 6px 8px; border: 1px solid #c1c7d0; border-radius: 3px; width: 100%; }
+.is-hidden { display: none !important; }
+
+.auth-layout { display: flex; justify-content: center; padding: 48px 12px; }
+.auth-dialog { background: #fff; padding: 24px; border-radius: 6px; width: 100%; max-width: 360px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.auth-dialog form { display: grid; gap: 8px; }
+.at-error { color: #b00020; margin-bottom: 8px; }
+
+.board-list-wrapper { padding: 16px; }
+.board-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.board-list-item { display: block; min-height: 80px; padding: 12px; border-radius: 4px; background: #2980b9; color: #fff; font-weight: 600; text-decoration: none; }
+.js-add-board form { display: grid; gap: 6px; }
+
+.board-wrapper { display: flex; flex-direction: column; min-height: calc(100vh - 44px); background: #2980b9; }
+.board-header { padding: 8px 12px; color: #fff; }
+.board-header h1 { margin: 0; font-size: 18px; }
+.board-canvas { flex: 1; overflow: auto; padding: 0 8px 8px; }
+.swimlane { margin-bottom: 12px; }
+.swimlane-header { color: #fff; font-weight: 600; padding: 4px; }
+.list-group { display: flex; align-items: flex-start; gap: 8px; }
+.list { position: relative; flex: 0 0 var(--list-width, 272px); background: var(--list); border-radius: 4px; padding: 6px; }
+.list-header { display: flex; justify-content: space-between; align-items: center; padding: 4px; font-weight: 600; }
+.list-header a { text-decoration: none; color: inherit; font-size: 18px; padding: 0 6px; }
+/* A collapsed list: a narrow column with its caret and name, as WeKan's list.css. */
+.list.list-collapsed { flex: none; min-width: 30px; max-width: 30px; width: 30px; }
+.list.list-collapsed .list-header { flex-direction: column; justify-content: flex-start; }
+.list.list-collapsed .list-header-name { writing-mode: vertical-rl; }
+.list.list-collapsed .list-header-plus-top, .list.list-collapsed .list-body, .list.list-collapsed .js-card-composer { display: none; }
+.list-body { min-height: 24px; display: flex; flex-direction: column; gap: 6px; }
+.minicard-wrapper { display: block; text-decoration: none; color: inherit; touch-action: none; user-select: none; }
+.minicard { background: var(--card); border-radius: 3px; padding: 6px 8px; box-shadow: 0 1px 0 rgba(9,30,66,.25); }
+.minicard-wrapper.is-selected .minicard { outline: 2px solid var(--accent); }
+.minicard-wrapper.is-dragging { position: relative; z-index: 10; opacity: .9; }
+.js-inlined-form { display: grid; gap: 6px; margin-top: 6px; }
+.js-list-composer { background: rgba(255,255,255,.3); }
+
+.card-details { position: fixed; inset-block: 44px 0; inset-inline-end: 0; width: min(480px, 100%); background: #fff; padding: 16px; overflow: auto; box-shadow: 0 0 12px rgba(0,0,0,.3); }
+.card-details-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.card-details-header a { font-size: 22px; text-decoration: none; color: inherit; }
+.card-description { white-space: pre-wrap; }
+.board-not-found { padding: 24px; }
+
+.setting-content, .cloud-panel { padding: 16px; }
+.cloud-settings form, .js-cloud-domain-form, .js-cloudflare-form { display: grid; gap: 6px; max-width: 480px; }
+.cloud-panel { display: flex; gap: 24px; align-items: flex-start; }
+.cloud-menu { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
+.cloud-menu a.is-active { font-weight: 600; }
+.cloud-pane { flex: 1; overflow-x: auto; }
+.cloud-domains { border-collapse: collapse; margin-bottom: 16px; }
+.cloud-domains th, .cloud-domains td { border: 1px solid #c1c7d0; padding: 4px 8px; text-align: start; }
+.js-cloud-delete { display: inline; }
+.cloud-saved { color: #1b5e20; }
+.language-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px; }
+.language-list button { width: 100%; text-align: start; background: #fff; border: 1px solid #c1c7d0; border-radius: 3px; padding: 6px; cursor: pointer; }
+.language-list button.is-active { border-color: var(--accent); font-weight: 600; }
+.profile form, .people form.js-registration-form { display: grid; gap: 6px; max-width: 420px; margin-bottom: 16px; }
+.people-table { border-collapse: collapse; }
+.people-table th, .people-table td { border: 1px solid #c1c7d0; padding: 4px 8px; text-align: start; }
+
+/* The board's sidebar and WeKan's pop-overs. */
+.board-header { display: flex; align-items: center; gap: .5em; }
+.board-header-btn { cursor: pointer; text-decoration: none; padding: 0 .4em; }
+.board-sidebar { display: none; position: fixed; top: var(--weddy-header-height, 0px); right: 0; bottom: 0; width: 18em; max-width: 100%;
+  background: #f7f7f7; box-shadow: -2px 0 6px rgba(0,0,0,.2); padding: 1em; z-index: 20; overflow-y: auto; }
+.board-sidebar.is-open { display: block; }
+/* An open card sits beside an open sidebar, and above it where both cannot fit. */
+.card-details { z-index: 21; }
+.board-sidebar.is-open ~ .card-details { inset-inline-end: 18em; }
+@media (max-width: 760px) { .board-sidebar.is-open ~ .card-details { inset-inline-end: 0; } }
+.sidebar-xmark { float: right; text-decoration: none; }
+.pop-over { position: fixed; top: 4em; right: 1em; width: 22em; max-width: calc(100% - 2em); max-height: calc(100% - 6em);
+  overflow-y: auto; background: #fff; border-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 30; }
+.pop-over.is-hidden { display: none; }
+.pop-over .header { display: flex; justify-content: space-between; padding: .5em .8em; border-bottom: 1px solid #ddd; }
+.pop-over .content { padding: .5em .8em; }
+.pop-over-list { list-style: none; margin: 0; padding: 0; }
+.pop-over-list a { display: block; padding: .3em .2em; }
+.pop-over-list-subheading { margin: .5em 0 .2em; }
+
+/* Comments and activities. */
+.is-hidden { display: none !important; }
+.comment, .activity { padding: .3em 0; border-bottom: 1px solid #eee; }
+.comment-member, .activity-member { font-weight: bold; margin-right: .3em; }
+.activity-time { color: #888; font-size: .85em; }
+.js-new-comment-input { width: 100%; min-height: 3em; }
+.js-toggle-card-section, .js-toggle-show-activities { cursor: pointer; }
+
+/* The Font Awesome icons Weddy's pages use, as characters: WeKan's class names,
+   no icon font to load. */
+.fa { display: inline-block; font-style: normal; min-width: 1em; text-align: center; }
+.fa-plus::before { content: "+"; }
+.fa-bars::before, .fa-navicon::before { content: "\2630"; }
+.fa-pencil-square-o::before { content: "\270E"; }
+.fa-user-plus::before { content: "\1F464"; }
+.fa-shopping-cart::before { content: "\1F6D2"; }
+.fa-magic::before { content: "\2728"; }
+.fa-hand-pointer-o::before { content: "\261D"; }
+.fa-lock::before { content: "\1F512"; }
+.fa-users::before { content: "\1F465"; }
+.fa-globe::before { content: "\1F310"; }
+.fa-eye::before { content: "\1F441"; }
+.fa-star::before { content: "\2605"; }
+.fa-star-o::before { content: "\2606"; }
+.js-star-board.is-active { color: #f1c40f; }
+.fa-caret-right::before { content: "\25B8"; }
+.fa-caret-down::before { content: "\25BE"; }
+.fa-caret-left::before { content: "\25C2"; }
+.fa-comment-o::before { content: "\1F4AC"; }
+
+/* WeKan's notifications drawer. */
+#notifications-drawer { position: fixed; top: 44px; right: 0; width: min(24em, 100%); max-height: calc(100vh - 44px); overflow: auto;
+  background: #fff; box-shadow: -2px 2px 8px rgba(0,0,0,.25); z-index: 30; padding: 8px; }
+#notifications-drawer .notification.is-read { opacity: .6; display: none; }
+#notifications-drawer.show-read .notification.is-read { display: list-item; }
+#notifications-drawer .notification.is-group-rest { display: none; }
+#notifications-drawer .notification.is-group-rest.is-group-open:not(.is-read), #notifications-drawer.show-read .notification.is-group-rest.is-group-open { display: list-item; }
+#notifications-drawer .notification-group a { display: block; padding: 4px 8px; font-weight: bold; }
+/* WeKan's "Mark as complete" on the minicard: a small checkbox before the title. */
+.minicard-complete-toggle { display: inline-block; vertical-align: middle; margin-right: 4px; }
+.minicard-complete-toggle .materialCheckBox { display: inline-block; width: 12px; height: 12px; border: 2px solid #7f7f7f; border-radius: 2px; }
+.minicard-complete-toggle .materialCheckBox.is-checked { border-color: #3cb500; background: #3cb500; }
+
+/* The Rules page's Bots view: WeKan's client/components/rules/rulesBots.css,
+   its theme colours falling back to this file's. */
+/* Board Settings / Bots: kanbots' layout - a rail of bots, live runs and
+   activity, the board's lists as columns, a card's thread in a drawer - in
+   the board's own theme. The accent is the theme's (--theme-accent); the run
+   states are told apart by their words as well as their colours. Logical
+   properties, so a right-to-left language mirrors it. */
+
+.bots-view {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  min-height: calc(100vh - 120px);
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.bots-rail {
+  flex: 0 0 240px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.bots-rail-section h3 {
+  margin: 0 0 6px;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.bots-list,
+.bots-live,
+.bots-activity,
+.bots-thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bots-bot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.bots-bot.is-disabled {
+  opacity: 0.5;
+}
+
+.bots-bot-name {
+  font-weight: bold;
+}
+
+.bots-bot-host {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+
+.bots-add {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.bots-add input {
+  margin: 0 !important;
+}
+
+.bots-board {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bots-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bots-header h2 {
+  margin: 0 0 8px;
+}
+
+.bots-columns {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  align-items: flex-start;
+  padding-bottom: 8px;
+}
+
+.bots-column {
+  flex: 0 0 260px;
+  padding: 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.bots-column.is-drop-target {
+  outline: 2px dashed var(--theme-accent, var(--accent, #01628c));
+}
+
+.bots-column-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.85em;
+}
+
+.bots-counter {
+  padding: 0 6px;
+  border-radius: 2em;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.bots-card {
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--card-background, var(--card, #fff));
+  color: var(--card-text, var(--text, inherit));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  cursor: grab;
+}
+
+.bots-card.is-selected {
+  outline: 2px solid var(--theme-accent, var(--accent, #01628c));
+}
+
+.bots-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.8em;
+}
+
+.bots-card-title {
+  display: block;
+  margin: 4px 0;
+  font-weight: bold;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bots-pill {
+  padding: 0 6px;
+  border-radius: 2em;
+  font-size: 0.75em;
+  font-weight: bold;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.bots-pill.is-running { color: #0969da; }
+.bots-pill.is-awaiting_input { color: #bf8700; }
+.bots-pill.is-review { color: #8250df; }
+.bots-pill.is-done { color: #1a7f37; }
+.bots-pill.is-failed { color: #cf222e; }
+.bots-pill.is-queued,
+.bots-pill.is-stopped { color: inherit; opacity: 0.7; }
+
+.bots-ticker {
+  font-family: monospace;
+  font-size: 0.8em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bots-question {
+  font-size: 0.85em;
+  margin-top: 4px;
+}
+
+.bots-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.bots-options button {
+  margin: 0 !important;
+  padding: 2px 8px;
+}
+
+.bots-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 0.8em;
+}
+
+.bots-card-meta .member {
+  width: 20px;
+  height: 20px;
+}
+
+.bots-drawer {
+  flex: 0 0 340px;
+  padding: 12px;
+  border-inline-start: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  overflow-y: auto;
+}
+
+.bots-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.bots-drawer-header h3 {
+  margin: 0;
+}
+
+.bots-drawer-header a {
+  color: inherit;
+}
+
+.bots-dispatch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.bots-thread-item {
+  padding: 6px 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.bots-thread-item.is-event {
+  opacity: 0.85;
+}
+
+.bots-thread-meta {
+  font-size: 0.8em;
+}
+
+.bots-reply textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .bots-view {
+    flex-direction: column;
+  }
+
+  .bots-rail,
+  .bots-drawer {
+    flex-basis: auto;
+  }
+}
+
+/* The Rules page's Blocks view: WeKan's rules.css. */
+.rules-blocks-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 12px 0; }
+.rules-blocks-toolbar label { flex: 1 1 220px; min-width: 0; }
+.rules-blocks-toolbar select, .rules-blocks textarea { width: 100%; max-width: 100%; box-sizing: border-box; }
+.rules-blocks-workspace { position: relative; width: 100%; height: 520px; min-height: 320px; border: 1px solid #aaa; }
+.rules-blocks-workspace .blocklyToolbox { color: #222; }
+
+/* WeKan's #3275: an image attachment's thumbnail in the card's list. */
+.attachment-thumbnail { display: block; max-width: 100%; max-height: 160px; margin: 4px 0; border-radius: 3px; }
+
+/* WeKan's Export pop-over (popup.css, forms.css): what to include beside the
+   formats when the window has room, stacked when it does not; each row a
+   materialCheckBox, the tick when it is on - as the import page's People in
+   the file and One board per project are. */
+@media screen and (min-width: 801px) {
+  .pop-over:has(.export-board-panes) { top: 10px; right: 10px; width: calc(100vw - 20px); max-width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
+  .pop-over .export-board-panes { display: grid; grid-template-columns: minmax(260px, 0.8fr) minmax(340px, 1.2fr); column-gap: 18px; align-items: start; }
+  .pop-over .export-board-pane-formats { border-inline-start: 1px solid rgba(0, 0, 0, 0.12); padding-inline-start: 18px; }
+}
+.pop-over .export-board-pane .pop-over-list.export-scope-select a { display: flex; align-items: flex-start; gap: 6px; }
+.export-scope-select .materialCheckBox, .import-members-mode .materialCheckBox, .js-import-split-toggle .materialCheckBox { position: relative; width: 13px; height: 13px; z-index: 0; border: 2px solid #5a5a5a; border-radius: 1px; transition: 0.2s; margin: 3px 0 0 0; cursor: pointer; flex: none; }
+.export-scope-select .materialCheckBox.is-checked, .import-members-mode .materialCheckBox.is-checked, .js-import-split-toggle .materialCheckBox.is-checked { top: -4px; left: -3px; width: 7px; height: 15px; margin-right: 6px; border-top: 2px solid transparent; border-left: 2px solid transparent; border-bottom: 2px solid #3cb500; border-right: 2px solid #3cb500; transform: rotate(40deg); backface-visibility: hidden; transform-origin: 100% 100%; }
+.js-import-members-mode, .js-import-split-toggle { display: flex; align-items: flex-start; gap: 6px; }
+
+/* WeKan's checklists (checklists.css): the progress bar and the items. */
+.fa-check::before { content: "\2713"; }
+.fa-exchange::before { content: "\21C4"; }
+.checklist { margin: .5em 0 1em; }
+.checklist-title { display: flex; align-items: center; gap: .4em; }
+.checklist-title h4.title { margin: 0; flex: 1; }
+.checklist-details-menu { cursor: pointer; text-decoration: none; }
+.checklist-progress-bar-container { display: flex; align-items: center; gap: .5em; margin: .3em 0; }
+.checklist-progress-bar { flex: 1; height: .5em; background: #ddd; border-radius: 3px; overflow: hidden; }
+.checklist-progress { height: 100%; background: #3cb500; }
+.checklist-item { display: flex; align-items: center; gap: .5em; padding: .15em 0; }
+.checklist-item.is-checked .item-title { text-decoration: line-through; color: #888; }
+.fa-trash::before { content: "\1F5D1"; }
+.checklist-item form.check-box-container { margin: 0; display: inline-flex; }
+.checklist-item button.check-box { border: 1px solid #888; background: #fff; width: 1em; height: 1em; padding: 0; cursor: pointer; border-radius: 2px; }
+.checklist-item button.check-box.is-checked { background: #3cb500; border-color: #3cb500; }
+.checklists-bottom-actions { margin: .3em 0; }
+.add-checklist-item, .add-checklist, .add-checklist-top { cursor: pointer; text-decoration: none; margin-left: .3em; }
+.fa-ban::before { content: "\26D4"; }
+.checklist-item-assignee { margin-left: auto; text-decoration: none; cursor: pointer; }
+.checklist-item-assignee .member { font-size: .8em; padding: 0 .4em; border-radius: 3px; background: #dfe1e6; }
+.js-checklist-item-assignee-form button { background: none; border: 0; width: 100%; text-align: left; padding: .3em .6em; cursor: pointer; }
+.js-checklist-item-assignee-form button.is-active { font-weight: bold; }
+.fa-arrows::before { content: "\2725"; }
+.checklistitem-handle { cursor: grab; margin-right: .2em; }
+.js-checklist-items[data-sort-url]:not([data-sort-url=""]) .js-checklist-item { touch-action: none; }
+.checklist-item-placeholder { border: 1px dashed #aaa; background: #f4f5f7; border-radius: 3px; }
+.checklist-item.ui-sortable-helper { background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.25); user-select: none; }
+
+/* WeKan's cardDetails.css: the card's items side by side, wrapping. */
+.card-details .card-details-items { display: flex; flex-wrap: wrap; margin: 15px 0; gap: 0.5em; }
+.card-details .card-details-items .card-details-item { margin-inline-end: 0.5em; flex-grow: 1; }
+.card-details .card-details-items .card-details-item:last-child { margin-inline-end: 0; }
+.card-details .card-details-items .card-details-item.card-details-item-labels { display: block; word-wrap: break-word; max-width: 95%; }
+.card-details .card-details-item-title { margin: 0 0 .2em; }
+body.is-dragging-checklist-item { user-select: none; -webkit-user-select: none; }
+
+/* WeKan's date badges and editDateForm (datepicker.css, calendarDateInput.css). */
+.fa-clock-o::before { content: "\1F552"; }
+.checklist-due-date-add, .checklist-item-due-date-add { background: none; border: 0; cursor: pointer; padding: 0 .2em; text-decoration: none; }
+.card-date.due-date { display: inline-block; font-size: .85em; padding: 0 .4em; border-radius: 3px; background: #dfe1e6; color: #172b4d; text-decoration: none; margin: .1em 0; }
+.edit-date .fields { display: flex; gap: 1em; flex-wrap: wrap; }
+.edit-date .right input { width: 6em; }
+.selected-calendar-heading { display: flex; align-items: center; gap: .3em; margin-bottom: .3em; }
+.selected-calendar-heading span { flex: 1; text-align: center; font-weight: bold; }
+.selected-calendar-picker table { border-collapse: collapse; }
+.selected-calendar-picker th { font-size: .75em; font-weight: normal; color: #5e6c84; }
+.js-calendar-day { width: 2.2em; height: 2em; padding: 0; margin: 1px; }
+.js-calendar-day[aria-pressed="true"] { outline: 2px solid #172b4d; }
+.js-calendar-day.is-today { font-weight: bold; }
+.edit-date .warning { color: #b04632; margin: .3em 0; }
+.fa-sign-out::before { content: "\21E5"; }
+.fa-hourglass-start::before { content: "\23F3"; }
+.fa-hourglass-end::before { content: "\231B"; }
+.card-date { display: inline-block; font-size: .85em; padding: 0 .4em; border-radius: 3px; background: #dfe1e6; color: #172b4d; text-decoration: none; }
+.calendar-time-input { display: flex; align-items: center; gap: .2em; }
+.fa-file-text-o::before { content: "\1F4C4"; }
+.card-details-group-description .card-description-view { display: block; color: inherit; text-decoration: none; min-height: 1.5em; }
+.card-details-group-description textarea.js-new-description-input { width: 100%; min-height: 8em; }
+
+/* listBody.jade's closed bottom composer, hidden while the composer is open. */
+.open-minicard-composer { display: block; padding: .3em .5em; color: #5e6c84; text-decoration: none; }
+.open-minicard-composer:hover { background: rgba(9,30,66,.08); color: #172b4d; }
+.js-list:has(form.js-card-composer) .open-minicard-composer { display: none; }
+.minicard-composer textarea { width: 100%; border: 0; resize: both; min-height: 3em; }
+.add-controls { display: flex; align-items: center; gap: .5em; margin-top: .3em; }
+
+/* WeKan's custom fields on the card (cardCustomFields.css). */
+.fa-list-alt::before, .fa-list::before { content: "\2261"; }
+.fa-copy::before { content: "\2398"; }
+.fa-times-thin::before { content: "\00D7"; }
+.card-details-group-custom-fields .custom-fields-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .5em 1em; }
+.card-details-group-custom-fields .custom-fields-one-per-row { display: block; }
+.card-details-group-custom-fields .custom-fields-one-per-row .card-details-item-customfield { margin-bottom: .5em; }
+.fa-th-large::before { content: "\25A6"; }
+#toggleCustomFieldsGridButton { background: none; border: 0; cursor: pointer; padding: 0 .3em; }
+.custom-field-multi-select-item { display: block; }
+.js-card-customfield-stringtemplate-item { display: block; width: 100%; margin-bottom: .2em; }
+.card-details-item-customfield { min-width: 8em; }
+.card-details-item-customfield .is-editable { cursor: pointer; }
+.card-details-section-menu { margin-left: .4em; text-decoration: none; }
+.js-card-custom-field-checkbox { cursor: pointer; display: inline-flex; }
+.js-copy-custom-field { text-decoration: none; margin-right: .3em; }
+.js-copy-custom-field.is-copied::after { content: " \2713"; color: #3cb500; }
+.js-pop-over li.item .js-select-field { background: none; border: 0; display: flex; gap: .5em; align-items: center; width: 100%; text-align: left; cursor: pointer; padding: .3em .5em; }
+/* WeKan's forms.css materialCheckBox, wherever the card details and their
+   pop-overs show one: a square, the tick when it is on. */
+.card-details .materialCheckBox, .js-pop-over .materialCheckBox { display: inline-block; position: relative; width: 13px; height: 13px; border: 2px solid #5a5a5a; border-radius: 1px; flex: none; cursor: pointer; box-sizing: content-box; }
+.card-details .materialCheckBox.is-checked, .js-pop-over .materialCheckBox.is-checked { width: 7px; height: 15px; border-top-color: transparent; border-left-color: transparent; border-bottom-color: #3cb500; border-right-color: #3cb500; transform: rotate(40deg); top: -4px; }
+.card-details label.check-box-container { cursor: pointer; display: inline-flex; align-items: center; }
+.card-details label.check-box-container input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.create-custom-field label { display: block; margin-top: .4em; }
+
+/* WeKan's attachmentGallery and attachmentViewer (attachments.css). */
+.fa-paperclip::before { content: "\1F4CE"; }
+.fa-arrow-down::before { content: "\2193"; }
+.hidden, .hide { display: none !important; }
+.attachment-gallery { display: flex; flex-wrap: wrap; gap: .5em; align-items: flex-start; }
+.attachment-item { display: flex; gap: .4em; border: 1px solid #dfe1e6; border-radius: 3px; padding: .3em; max-width: 100%; }
+.attachment-thumbnail-container { width: 64px; height: 48px; border: 0; background: #f4f5f7; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; overflow: hidden; }
+.attachment-thumbnail-container img { max-width: 100%; max-height: 100%; }
+.attachment-thumbnail-text { font-weight: bold; text-transform: uppercase; color: #5e6c84; }
+.attachment-actions { display: flex; gap: .4em; align-items: center; }
+.attachment-actions form { margin: 0; }
+.attachment-actions button { background: none; border: 0; cursor: pointer; padding: 0; }
+.card-attachmentGallery .add-attachment { align-self: center; padding: .2em .5em; }
+#viewer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 2000; display: flex; flex-direction: column; }
+#viewer-overlay.hidden { display: none !important; }
+#viewer-top-bar { display: flex; justify-content: space-between; color: #fff; padding: .5em 1em; }
+#viewer-close { background: none; border: 0; color: #fff; font-size: 1.5em; cursor: pointer; }
+#viewer-container { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+#viewer-content { width: 90%; height: 90%; display: flex; align-items: center; justify-content: center; }
+#viewer-content img, #viewer-content video { max-width: 100%; max-height: 100%; }
+#viewer-content object { width: 100%; height: 100%; background: #fff; }
+.minicard-cover img { display: block; max-width: 100%; max-height: 120px; margin-top: .3em; border-radius: 2px; }
+.js-pop-over form button.js-add-cover, .js-pop-over form button.js-remove-cover, .js-pop-over form button.js-add-background-image, .js-pop-over form button.js-remove-background-image { background: none; border: 0; width: 100%; text-align: left; cursor: pointer; padding: .3em .5em; }
+
+/* WeKan's minicard assignees and comments (minicard.css): the avatars float
+   at the end; the comments clear them and wrap, never covered by them. */
+.minicard-assignees { float: inline-end; display: flex; flex-wrap: wrap; gap: 2px; justify-content: flex-end; max-width: 100%; margin-top: .2em; }
+.minicard-assignees .member { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #dfe1e6; color: #172b4d; font-size: 10px; font-weight: bold; }
+.minicard-comments { clear: both; margin-top: .3em; }
+.minicard-comment { display: flex; gap: .3em; font-size: .85em; color: #5e6c84; }
+.minicard-comment-text { white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+.fa-comment-o::before { content: "\1F4AC"; }
+.minicard::after { content: ""; display: block; clear: both; }
+
+/* WeKan's scrumView.css: the Scrum views (scrum.pug). */
+.scrum-view { box-sizing: border-box; width: 100%; height: 100%; overflow: auto; padding: 16px; }
+.scrum-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.scrum-view h2 { margin-inline-end: auto; }
+.scrum-view form { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding-block: 12px; }
+.scrum-view label { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+.scrum-view textarea { resize: both; min-width: 140px; max-width: 100%; box-sizing: border-box; }
+.scrum-view select, .scrum-view input { max-width: 100%; box-sizing: border-box; }
+.scrum-view button { white-space: normal; height: auto; min-height: 32px; }
+.scrum-planning { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; }
+.scrum-table-scroll { max-width: 100%; overflow-x: auto; }
+.scrum-table { width: 100%; border-collapse: collapse; }
+.scrum-table th, .scrum-table td { text-align: start; padding: 8px; border-bottom: 1px solid currentColor; vertical-align: top; }
+.scrum-view pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.scrum-view details > summary { cursor: pointer; padding-block: 8px; }
+.scrum-metadata { margin: 8px; overflow-wrap: anywhere; white-space: normal; }
+.scrum-metadata strong { margin-inline-end: 5px; }
+.scrum-metadata label { display: block; margin-block: 6px; }
+.scrum-metadata textarea { resize: both; max-width: 100%; box-sizing: border-box; }
+.scrum-field-settings label { gap: 8px; align-items: center; margin-block: 8px; }
+/* Scrum forms use labelled native checkboxes; global material form rules hide them. */
+.scrum-view input[type="checkbox"], .scrum-field-settings input[type="checkbox"] {
+  display: inline-block;
+  visibility: visible;
+  position: static;
+  inset-inline-start: auto;
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  flex: 0 0 16px;
+  padding: 0;
+  margin: 0;
+  appearance: auto;
+  cursor: pointer;
+}
+
+.scrum-chart { margin-block: 16px; border-block-end: 1px solid currentColor; }
+.scrum-chart-row { margin: 12px 0; overflow-wrap: anywhere; }
+.scrum-chart-series { display: grid; grid-template-columns: minmax(100px, 1fr) 3fr; gap: 4px 12px; margin-block: 8px; }
+.scrum-chart-series small { grid-column: 1 / -1; }
+.scrum-chart-track { align-self: center; height: 16px; border: 1px solid currentColor; }
+.scrum-chart-bar { height: 100%; background: currentColor; }
+.scrum-chart-bar.committed, .scrum-chart-bar.added { opacity: .55; }
+@media (max-width: 480px) {
+  .scrum-chart-series { grid-template-columns: 1fr; }
+}
+
+/* A rollover or a large undo running in the background (server/scrum.js,
+   server/lib/scrumBatchJobs.js): how far it is. */
+.scrum-background-job .scrum-progress {
+  height: 0.5rem;
+  max-width: 24rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+.scrum-background-job .scrum-progress-bar {
+  height: 100%;
+  background: #3cb500;
+  transition: width 0.3s ease;
+}
+
+/* A card's releases: a multiple select (several releases per card). Some
+   global form rules give selects one row's height; show a few rows. */
+.scrum-view select[multiple], .scrum-metadata select[multiple] { min-height: 5.5em; height: auto; }
+.scrum-multiple-help { display: block; opacity: .8; max-width: 32em; }
+
+/* WeKan's inline Add List composer (swimlanes.jade addListInline) and the
+   multiline title choice (forms.css). */
+.list-header-add-list { margin-inline-start: 4px; color: inherit; text-decoration: none; }
+.list.js-add-list-inline { background: var(--list); border-radius: 3px; padding: 8px; }
+.multiline-title-choice { border: 0; padding: 0; margin: 8px 0; min-width: 0; }
+.multiline-title-choice legend { font-weight: bold; margin-bottom: 4px; }
+.multiline-title-choice label { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+.multiline-title-choice input[type="radio"] { width: auto; margin: 0; flex: 0 0 auto; }
+
+/* WeKan's multi-selection checkboxes (structuralSelection.jade, listBody.jade):
+   a square box beside what it selects, filled when selected. */
+.multi-selection-checkbox { display: inline-block; box-sizing: border-box; width: 16px; height: 16px; min-width: 16px; max-width: 16px; min-height: 16px; max-height: 16px; align-self: center; flex: 0 0 16px; padding: 0; margin: 2px 4px; border: 2px solid #5a5a5a; border-radius: 2px; background: #fff; cursor: pointer; vertical-align: middle; line-height: 0; }
+.multi-selection-checkbox.is-checked { border-color: var(--accent); background: var(--accent); }
+.minicard-wrapper > .js-toggle-multi-selection { position: relative; z-index: 1; }
+.minicard-checklist { margin-top: 4px; font-size: 12px; }
+.minicard-checklist .checklist-header { display: flex; align-items: center; gap: 4px; }
+.minicard-checklist .checklist-title { margin: 0; font-size: 12px; }
+.minicard-checklist-item { display: flex; align-items: center; gap: 4px; }
+.minicard-checklist-item .materialCheckBox { width: 10px; height: 10px; border: 2px solid #7f7f7f; border-radius: 2px; flex: none; }
+.minicard-checklist-item .materialCheckBox.is-checked { border-color: #3cb500; background: #3cb500; }
+.structural-drag-preview { position: fixed; z-index: 10000; pointer-events: none; background: #fff; border: 1px solid #c1c7d0; border-radius: 3px; padding: 4px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.2); font-size: 12px; }
+.structural-drag-count { font-weight: bold; }
+.structural-drop-target { outline: 2px dashed var(--accent); }
+/* WeKan's folds: a folded swimlane is its header, a folded minicard its title. */
+.swimlane-collapsed .swimlane-header { opacity: .85; }
+.minicard-collapsed > :not(.minicard-title) { display: none !important; }
+.minicard-collapse-toggle, .checklist-collapse, .swimlane-collapse-indicator { color: inherit; text-decoration: none; cursor: pointer; margin-inline-end: 4px; }
+/* WeKan's Card Settings (sidebar.css .card-settings-panes): the Minicard and
+   Card panes side by side when the pop-over is wide enough, stacked when it
+   is not, each scrolling on its own; a section is a checklist of its rows. */
+.js-pop-over[data-popup="boardCardSettingsPopup"] { width: min(56rem, calc(100vw - 2rem)); height: min(40rem, calc(100vh - 6rem));
+  max-width: calc(100vw - 1rem); max-height: calc(100vh - 5rem); display: flex; flex-direction: column; overflow: hidden; }
+.js-pop-over[data-popup="boardCardSettingsPopup"] > .card-settings-panes-container { flex: 1 1 auto; min-height: 0; display: flex; }
+.card-settings-panes { --card-settings-split: 0.5; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: row; }
+.card-settings-pane { min-width: 16em; min-height: 0; display: flex; flex-direction: column; }
+.card-settings-pane-minicard { flex: 0 0 calc((100% - 8px) * var(--card-settings-split)); }
+.card-settings-pane-card { flex: 1 1 0; }
+.card-settings-pane-head { display: flex; align-items: center; gap: 0.3rem; flex: none; }
+.card-settings-pane-collapse { color: inherit; width: 1rem; text-align: center; }
+.card-settings-pane-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.card-settings-splitter { flex: 0 0 8px; cursor: col-resize; background: linear-gradient(to right, transparent 3px, #ccc 3px, #ccc 5px, transparent 5px); touch-action: none; }
+.card-settings-splitter:focus-visible { outline: 2px solid #0079bf; }
+/* A folded pane is its title; the other takes the width, with no splitter. */
+.card-settings-pane.is-pane-collapsed { flex: 0 0 auto; min-width: 0; }
+.card-settings-panes.has-collapsed-pane .card-settings-pane:not(.is-pane-collapsed) { flex: 1 1 0; }
+.card-settings-panes.has-collapsed-pane .card-settings-splitter, .card-settings-panes.is-stacked .card-settings-splitter { display: none; }
+/* Narrower than two panes: Minicard above Card, each as tall as it needs. */
+.card-settings-panes.is-stacked { flex-direction: column; overflow-y: auto; }
+.card-settings-panes.is-stacked .card-settings-pane { flex: none; min-width: 0; }
+.card-settings-panes.is-stacked .card-settings-pane-body { overflow: visible; }
+.js-date-popup-resize { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; padding: 0; border: 0; cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, #999 50%, #999 60%, transparent 60%, transparent 75%, #999 75%, #999 85%, transparent 85%); }
+.card-settings-pane-title { margin: 0 0 0.5rem; font-size: 1rem; }
+.card-settings-inline-section { margin-bottom: 0.6rem; }
+.card-settings-inline-section.is-section-hidden .card-settings-inline-items { opacity: 0.5; }
+.card-settings-inline-section-head, .card-settings-line { display: flex; align-items: center; gap: 0.4rem; }
+.card-settings-inline-section-title { margin: 0; font-size: 0.95rem; flex: 1; }
+.card-settings-inline-section-count { color: #777; font-size: 0.85em; }
+.card-settings-inline-items { padding-inline-start: 1.4rem; }
+.card-settings-line { padding: 2px 0; }
+.card-settings-line-label .fa { margin-inline-end: 0.25rem; }
+.card-field-order-toggle { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; }
+.card-field-order-toggle.is-disabled { opacity: 0.5; cursor: default; }
+/* WeKan's minicard work item type badge (minicard.css .minicard-issue-type). */
+.minicard-issue-type { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8em; padding: 0 0.3rem; border-radius: 3px; background: #eee; }
+.minicard-issue-type.issue-type-red { color: #b04632; }
+.minicard-issue-type.issue-type-green { color: #3d7a00; }
+.minicard-issue-type.issue-type-blue { color: #0067b0; }
+.minicard-issue-type.issue-type-purple { color: #6f42c1; }
+.minicard-issue-type.issue-type-orange { color: #b35900; }
+/* Card Settings' sides (card_sides.go): the opened card folded to its header
+   by its caret, and the minicard's requested by, location and last change. */
+.card-details-collapsed > :not(.card-details-header) { display: none; }
+.card-collapse-toggle { margin-inline-end: 0.3rem; }
+.card-details-description-badge { margin-inline-start: 0.3rem; color: #777; }
+.minicard-requested-by, .minicard-location, .minicard-last-activity { font-size: 0.85em; color: #555; margin-top: 2px; }
+.minicard-requested-by .fa, .minicard-location .fa, .minicard-last-activity .fa { margin-inline-end: 0.25rem; }
+/* WeKan's card colours (minicard.css .minicard-<colour>, cardDetails.css
+   .card-details-<colour>): each colour's own rule, for Card Settings' card
+   colour on either side. */
+.minicard-green { background-color: #3cb500 !important; color: #fff !important; }
+.minicard-yellow { background-color: #fad900 !important; }
+.minicard-orange { background-color: #ff9f19 !important; }
+.minicard-red { background-color: #eb4646 !important; color: #fff !important; }
+.minicard-purple { background-color: #a632db !important; color: #fff !important; }
+.minicard-blue { background-color: #0079bf !important; color: #fff !important; }
+.minicard-pink { background-color: #ff78cb !important; }
+.minicard-sky { background-color: #00c2e0 !important; color: #fff !important; }
+.minicard-black { background-color: #4d4d4d !important; color: #fff !important; }
+.minicard-lime { background-color: #51e898 !important; }
+.minicard-silver { background-color: #c0c0c0 !important; }
+.minicard-peachpuff { background-color: #ffdab9 !important; }
+.minicard-crimson { background-color: #dc143c !important; color: #fff !important; }
+.minicard-plum { background-color: #dda0dd !important; }
+.minicard-darkgreen { background-color: #006400 !important; color: #fff !important; }
+.minicard-slateblue { background-color: #6a5acd !important; color: #fff !important; }
+.minicard-magenta { background-color: #f0f !important; color: #fff !important; }
+.minicard-gold { background-color: #ffd700 !important; }
+.minicard-navy { background-color: #000080 !important; color: #fff !important; }
+.minicard-gray { background-color: #808080 !important; color: #fff !important; }
+.minicard-saddlebrown { background-color: #8b4513 !important; color: #fff !important; }
+.minicard-paleturquoise { background-color: #afeeee !important; }
+.minicard-mistyrose { background-color: #ffe4e1 !important; }
+.minicard-indigo { background-color: #4b0082 !important; color: #fff !important; }
+.card-details-white { background: #fff !important; color: #000 !important; border: 1px solid #eee; }
+.card-details-green { background: #3cb500 !important; color: #fff !important; }
+.card-details-yellow { background: #fad900 !important; color: #000 !important; }
+.card-details-orange { background: #ff9f19 !important; color: #000 !important; }
+.card-details-red { background: #eb4646 !important; color: #fff !important; }
+.card-details-purple { background: #a632db !important; color: #fff !important; }
+.card-details-blue { background: #0079bf !important; color: #fff !important; }
+.card-details-pink { background: #ff78cb !important; color: #000 !important; }
+.card-details-sky { background: #00c2e0 !important; color: #fff !important; }
+.card-details-black { background: #4d4d4d !important; color: #fff !important; }
+.card-details-lime { background: #51e898 !important; color: #000 !important; }
+.card-details-silver { background: #c0c0c0 !important; color: #000 !important; }
+.card-details-peachpuff { background: #ffdab9 !important; color: #000 !important; }
+.card-details-crimson { background: #dc143c !important; color: #fff !important; }
+.card-details-plum { background: #dda0dd !important; color: #000 !important; }
+.card-details-darkgreen { background: #006400 !important; color: #fff !important; }
+.card-details-slateblue { background: #6a5acd !important; color: #fff !important; }
+.card-details-magenta { background: #f0f !important; color: #fff !important; }
+.card-details-gold { background: #ffd700 !important; color: #000 !important; }
+.card-details-navy { background: #000080 !important; color: #fff !important; }
+.card-details-gray { background: #808080 !important; color: #fff !important; }
+.card-details-saddlebrown { background: #8b4513 !important; color: #fff !important; }
+.card-details-paleturquoise { background: #afeeee !important; color: #000 !important; }
+.card-details-mistyrose { background: #ffe4e1 !important; color: #000 !important; }
+.card-details-indigo { background: #4b0082 !important; color: #fff !important; }
+/* Card Settings' drags: a section by its title, a row by its name. */
+.js-card-settings-section-handle, .js-card-field-order-handle { cursor: grab; user-select: none; touch-action: none; }
+.js-card-settings-section.is-dragging, .js-card-field-order-row.is-dragging { opacity: 0.5; }
+.card-settings-inline-collapse { color: inherit; width: 1rem; text-align: center; }
+/* The opened card's sections (WeKan's one section model). */
+.card-details-section > .card-details-item-title.js-toggle-card-section .fa { margin-inline-end: 0.3rem; }
+/* Each section of the opened card a full-width block, as WeKan's; inside it
+   the fields flow in a row, and what is a group of its own (custom fields,
+   checklists, attachments, comments ...) takes the whole width. */
+.card-details .card-details-items { display: block; }
+.card-details-items > .card-details-section { margin-bottom: 0.5em; }
+.card-details-section-body { display: flex; flex-wrap: wrap; gap: 0.5em; }
+.card-details-section-body > :not(.card-details-item) { flex: 1 1 100%; min-width: 0; }
+/* Card Settings' hamburger panels, under their section's line. */
+.card-settings-inline-menu { margin-inline-start: auto; color: inherit; padding: 0 0.3rem; }
+.card-settings-inline-menu.is-open { color: #0079bf; }
+.card-settings-inline-panel { position: relative; margin: 0.3rem 0 0.5rem; padding: 0.5rem 1.6rem 0.5rem 0.6rem; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; }
+.card-settings-inline-panel-close { position: absolute; top: 0.3rem; right: 0.4rem; color: inherit; }
+.card-settings-inline-panel .board-subtask-settings a.flex { display: flex; gap: 0.4rem; align-items: center; padding: 2px 0; }
+.card-settings-inline-panel .board-subtask-settings label { display: block; margin-top: 0.4rem; }
+.card-settings-inline-panel .board-subtask-settings select { width: 100%; }
+.card-settings-inline-panel .card-ask-move-reason { display: flex; gap: 0.4rem; align-items: center; }
+.card-settings-custom-fields-list { padding-inline-start: 1.4rem; }
+.card-settings-custom-field .card-settings-inline-menu { margin-inline-start: auto; }
+.card-settings-add-custom-field { display: inline-block; padding: 2px 0; color: inherit; }
+.card-settings-panel-form label { display: block; margin-bottom: 0.3rem; }
+.card-settings-panel-form a.flex { display: flex; gap: 0.4rem; align-items: center; padding: 2px 0; color: inherit; }
+/* WeKan's Board Settings / Board View (sidebar.css .board-view-settings). */
+.js-pop-over[data-popup="boardViewSettingsPopup"] { width: min(44rem, calc(100vw - 2rem)); }
+.board-view-settings-row { display: grid; grid-template-columns: repeat(4, 4.5rem) 1fr; align-items: center; gap: 0.3rem; padding: 2px 0; }
+.board-view-settings-head h4 { margin: 0; font-size: 0.75rem; font-weight: normal; color: #555; }
+.board-view-settings-rows { max-height: 60vh; overflow-y: auto; }
+.board-view-settings-row a.flex { display: inline-flex; color: inherit; }
+.board-view-drag-label, .board-view-order-handle { cursor: grab; user-select: none; touch-action: none; }
+.board-view-settings-row.is-dragging { opacity: 0.5; }
+/* WeKan's board settings column actions and Draggable tables. */
+.board-drag-settings { border-collapse: collapse; margin: 0.3rem 0; }
+.board-drag-settings th, .board-drag-settings td { padding: 2px 0.5rem; text-align: start; }
+.board-settings-column-actions { display: inline-flex; gap: 0.3rem; margin-inline-start: 0.4rem; font-weight: normal; }
+.board-settings-column-actions button { font-size: 0.8em; padding: 0 0.4rem; }
+.board-settings-column-actions .warning { color: #b04632; }
+.board-swimlane-settings .check-div a.flex, .board-list-settings .check-div a.flex { display: flex; gap: 0.4rem; align-items: center; color: inherit; padding: 2px 0; }
+/* A folded section of Card Settings: its title and count, no rows. */
+.js-card-settings-section.is-collapsed .card-settings-inline-items, .js-card-settings-section.is-collapsed .card-settings-custom-fields-list { display: none; }
+.card-settings-inline-section.is-single .card-settings-inline-section-head { padding-inline-start: 1rem; }
+.card-settings-inline-section-title[tabindex="0"]:focus-visible { outline: 2px solid #0079bf; }
+/* A maximized Card Settings fills the window. */
+.js-pop-over.pop-over--maximized { left: 0.5rem !important; top: 0.5rem !important; right: 0.5rem !important; width: auto !important; height: calc(100vh - 1rem) !important; max-height: none; }
+.popup-maximize { margin-inline-start: auto; margin-inline-end: 0.5rem; color: inherit; }
+.js-pop-over[data-popup="boardCardSettingsPopup"] .header-title { cursor: move; user-select: none; }
+.js-card-settings-custom-field-handle { cursor: grab; user-select: none; touch-action: none; }
+.js-card-settings-custom-field.is-dragging { opacity: 0.5; }
+/* Clipped, never scrolled: scrollIntoView scrolls every overflow:hidden
+   ancestor too, which shifted the whole of Card Settings up under its
+   header; only each pane's body scrolls. */
+.js-pop-over[data-popup="boardCardSettingsPopup"], .js-pop-over[data-popup="boardCardSettingsPopup"] > .card-settings-panes-container { overflow: clip; }
+.card-settings-panes:not(.is-stacked), .card-settings-pane { overflow: clip; }
+/* WeKan's Calendar view (boardBody.css .calendar-view): today's number marked,
+   the card colours on their events, and the create-card dialog. */
+.calendar-view { padding: 0.5rem 1rem; background: #fff; border-radius: 4px; margin: 0.5rem; }
+.calendar-view .fc-daygrid-day.fc-day-today .fc-daygrid-day-number { background: #3cb500; color: #fff; border-radius: 1em; padding: 0 0.4em; }
+.calendar-event-green { background: #3cb500; border-color: #3cb500; } .calendar-event-red { background: #eb4646; border-color: #eb4646; }
+.calendar-event-blue { background: #0079bf; border-color: #0079bf; } .calendar-event-yellow { background: #fad900; border-color: #fad900; color: #000; }
+.calendar-event-orange { background: #ff9f19; border-color: #ff9f19; } .calendar-event-purple { background: #a632db; border-color: #a632db; }
+.modal.calendar-create-card { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.3); z-index: 2000; }
+.calendar-create-card .modal-content { background: #fff; border-radius: 6px; padding: 0.8rem; min-width: min(24rem, 90vw); }
+.calendar-create-card .modal-header { display: flex; justify-content: space-between; align-items: center; }
+.calendar-create-card textarea { width: 100%; box-sizing: border-box; }
+.js-toggle-password-min-length-enforce { display: inline-flex; gap: 0.4rem; align-items: center; color: inherit; }
+.js-toggle-password-min-length-enforce .materialCheckBox { display: inline-block; width: 13px; height: 13px; border: 2px solid #5a5a5a; border-radius: 1px; }
+.js-toggle-password-min-length-enforce .materialCheckBox.is-checked { width: 7px; height: 15px; border-top-color: transparent; border-left-color: transparent; border-bottom-color: #3cb500; border-right-color: #3cb500; transform: rotate(40deg); }
+
+/* Swimlane and list resizing, as WeKan's list.css and swimlanes.css: a list's
+   handle on its inline end, a swimlane's at its bottom. */
+.list-resize-handle { position: absolute; top: 0; inset-inline-end: -3px; width: 6px; height: 100%; cursor: col-resize; z-index: 10; border-radius: 2px; }
+.list:hover .list-resize-handle { background: rgba(0, 0, 0, .1); }
+.list-resize-handle:hover, .list:hover .list-resize-handle:hover { background: rgba(0, 123, 255, .4); box-shadow: 0 0 4px rgba(0, 123, 255, .3); }
+.list-resize-handle:active { background: rgba(0, 123, 255, .6); }
+.list.list-collapsed .list-resize-handle { display: none; }
+/* #6409 automatic width: the lists share the row (list.css .list-auto-width). */
+.list.list-auto-width { flex: 1 1 0; min-width: 0; }
+.list.list-auto-width .list-resize-handle { display: none; }
+.js-swimlane { position: relative; }
+.js-swimlane[style*="height"] { display: flex; flex-direction: column; overflow: hidden; }
+.js-swimlane[style*="height"] > .list-group { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.swimlane-resize-handle { position: absolute; bottom: 0; inset-inline: 0; height: 8px; cursor: row-resize; z-index: 20; border-radius: 2px; }
+.swimlane:hover .swimlane-resize-handle { background: rgba(0, 0, 0, .1); }
+.swimlane-resize-handle:hover { background: rgba(0, 123, 255, .4); }
+.list.list-resizing, .swimlane.swimlane-resizing { transition: none !important; }
+
+/* WeKan's Calendar Mode (#3194), client/components/boards/calendarModeView.css. */
+/* #3194: Calendar Mode - Trello's calendar. */
+.calendar-mode-view {
+  padding: 8px 12px;
+  overflow: auto;
+}
+.calendar-mode-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.calendar-mode-title {
+  margin: 0;
+  font-size: 1.3em;
+}
+.calendar-mode-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.calendar-mode-buttons button.is-active {
+  font-weight: bold;
+  box-shadow: inset 0 -2px 0 currentColor;
+}
+.calendar-mode-weekdays,
+.calendar-mode-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.calendar-mode-weekday {
+  padding: 4px;
+  font-weight: bold;
+  text-align: center;
+}
+.calendar-mode-day {
+  min-height: 110px;
+  padding: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  min-width: 0;
+}
+.calendar-mode-day.is-outside {
+  opacity: 0.55;
+}
+.calendar-mode-day.is-today .calendar-mode-day-number {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.calendar-mode-day-number {
+  font-size: 0.85em;
+  margin-bottom: 4px;
+}
+.calendar-mode-card {
+  display: block;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.calendar-mode-card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+.calendar-mode-card-labels .card-label {
+  font-size: 0.75em;
+  padding: 0 4px;
+  border-radius: 3px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.calendar-mode-card-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media screen and (max-width: 800px) {
+  .calendar-mode-day {
+    min-height: 70px;
+  }
+}
+
+/* WeKan's date picker (forms/calendarDateInput.css), whole. */
+.calendar-date-input {
+  min-width: 0;
+  width: 100%;
+}
+.calendar-date-input > input,
+.calendar-date-input > .js-calendar-toggle {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.selected-calendar-picker {
+  background: inherit;
+  color: inherit;
+  margin-block: 8px;
+  width: 100%;
+}
+.selected-calendar-heading {
+  align-items: center;
+  display: flex;
+  gap: 3px;
+  justify-content: space-between;
+}
+.selected-calendar-heading span {
+  flex: 1;
+  text-align: center;
+}
+.selected-calendar-heading button,
+.selected-calendar-picker .js-calendar-day {
+  margin: 0;
+  min-width: 24px;
+  padding: 4px;
+}
+.calendar-date-input .selected-calendar-picker table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  color: inherit;
+}
+.calendar-date-input .selected-calendar-picker table th {
+  font-size: calc(10px * var(--wekan-ui-font-scale, 1));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calendar-date-input .selected-calendar-picker table td {
+  text-align: center;
+  padding: 2px;
+}
+.selected-calendar-picker td .js-calendar-day {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 0;
+}
+.selected-calendar-picker .js-calendar-day[aria-pressed='true'] {
+  font-weight: bold;
+  outline: 2px solid currentColor;
+}
+/* #6751: today's day is distinct from every other day, in every theme. Today
+   gets its OWN fill - green with white text - instead of a mark drawn on the
+   theme's fill: a ring in the button's text colour was too faint on themes
+   whose day buttons are already a strong colour (wisteria's purple, #6751
+   comment 6097142848). The fill and the text colour are !important because the
+   custom theme colour sets the picker buttons' background with !important; the
+   selector (0,4,1) is more specific than every theme's `.board-color-x
+   .selected-calendar-picker button.primary` (0,3,1), so it wins over all of
+   them. The white inset ring and the underline still mark it without colour
+   vision. Logical properties only: RTL-safe. */
+.calendar-date-input .selected-calendar-picker button.js-calendar-day.is-today {
+  background: #2e7d32 !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 2px #fff;
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+/* Today and selected: the selected outline is drawn outside the button in
+   today's green, as white (the text colour) would vanish on a light popup. */
+.calendar-date-input .selected-calendar-picker button.js-calendar-day.is-today[aria-pressed='true'] {
+  outline: 2px solid #2e7d32;
+  outline-offset: 2px;
+}
+.calendar-date-input .selected-calendar-picker td.is-today-cell {
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  border-radius: 9px;
+}
+.calendar-date-input button:focus-visible,
+.calendar-time-input select:focus-visible,
+.calendar-date-input input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.calendar-time-input {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+.calendar-time-input select {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+  padding-inline: 4px;
+}
+
+/* #6838: a word, not an arrow - it may be wider than the arrows beside it. */
+.selected-calendar-heading .js-calendar-today {
+  white-space: nowrap;
+  padding-inline: 6px;
+}
+/* #6853: year, month and day drop-downs under the calendar. */
+.selected-calendar-selects {
+  display: flex;
+  gap: 4px;
+  margin-block-start: 6px;
+}
+.selected-calendar-selects select,
+.selected-calendar-selects input {
+  flex: 1;
+  box-sizing: border-box;
+  height: auto;
+  margin-bottom: 0;
+  min-width: 0;
+  padding-inline: 4px;
+}
+.selected-calendar-selects .js-calendar-year { flex: 1.4; }
+.calendar-date-input .selected-calendar-selects select:focus-visible,
+.calendar-date-input .selected-calendar-selects input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* WeKan's date popup: its layout, and its grip (main/popup.css). */
+.pop-over:has(.edit-date) .content:not(.no-height) {
+  width: 100%;
+  padding-bottom: 16px;
+  margin-bottom: 0;
+}
+.pop-over:has(.edit-date) .datepicker-container {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 0;
+}
+.pop-over:has(.edit-date) .datepicker-container .fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pop-over:has(.edit-date) .datepicker-container label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.pop-over:has(.edit-date) .datepicker-container .edit-date {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+}
+.pop-over[data-popup='boardViewSettingsPopup'] > .header,
+.pop-over:has(.edit-date) > .header {
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 100%;
+}
+.pop-over:has(.edit-date) .edit-date > button {
+  flex-shrink: 0;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+.pop-over:has(.edit-date) .selected-calendar-heading button {
+  min-height: 32px;
+}
+
+/* Every popup owns a small grip, independent of themed/full-width buttons. */
+.pop-over > button.js-date-popup-resize {
+  display: block !important;
+  position: absolute !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: 0 !important;
+  top: auto !important;
+  bottom: 0 !important;
+  z-index: 20;
+  box-sizing: border-box;
+  width: 24px !important;
+  min-width: 0 !important;
+  max-width: 24px !important;
+  height: 24px !important;
+  min-height: 0 !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  /* Centre the grip glyph in its fixed box at any font scale. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+html[dir='rtl'] .pop-over > button.js-date-popup-resize {
+  cursor: nesw-resize;
+}
+html[dir='rtl'] .pop-over > button.js-date-popup-resize > span {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+.pop-over > button.js-date-popup-resize:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+/* Resized shells keep the grip outside the scrolling content. */
+.pop-over[data-user-resized] {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box;
+  padding-bottom: 24px;
+}
+/* The year field's own width (an input's size) made the row - and the popup
+   with it - wider than the calendar: the three share the row by flex alone. */
+.selected-calendar-selects select,
+.selected-calendar-selects input { width: 0; }
+.pop-over:has(.edit-date) .datepicker-container .fields > .left { min-width: 0; }
+/* #1566: the board's announcement, in the site announcement's style
+   (header.css .announcement), above the canvas (boardBody.css). */
+.announcement { width: 100%; text-align: center; padding: 0; margin: 0; background: #f8ecbd; color: #172b4d; clear: both; }
+.announcement ul { list-style: none; margin: 0; padding: 7px; }
+.board-wrapper > .board-announcement { flex: 0 0 auto; position: relative; z-index: 1; }
+.board-announcement .js-close-board-announcement { margin-inline-start: 8px; color: inherit; text-decoration: none; cursor: pointer; }

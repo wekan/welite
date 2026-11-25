@@ -223,15 +223,18 @@ Order of the work, each step committed with its tests:
   working. WeLite's own features that WeKan has no page for (Designer,
   `/wekan` data folders, two-factor setup, the no-JS form actions such as
   `/board/move`) keep their paths.
-- [ ] **The view chooser.** A modern browser (Chromium, Firefox, Safari, Edge and
+- [x] **The view chooser** (CHANGES.md, 2026-11-26). A modern browser (Chromium, Firefox, Safari, Edge and
   their engines) gets HTML5; IBrowse, NetSurf, Dillo, Lynx, w3m, Elinks, old
   Internet Explorer and an unknown User-Agent get HTML4. `?ui=html4` or
   `?ui=html5` overrides it, remembered in a `welite-ui` cookie where the browser
   keeps cookies; HTML4 never needs that cookie.
-- [ ] **The toggle in the top header** of both views, with WeKan's own icons
+- [x] **The toggle in the top header** (CHANGES.md, 2026-11-26) of both views, with WeKan's own icons
   and words: the HTML4 view as plain links, the HTML5 view as WeKan's header
   button.
-- [ ] **The HTML5 view**: Weddy's layout (header, notifications, member menu),
+- [ ] **The HTML5 view** - started (CHANGES.md, 2026-11-26): sign-in, All
+  Boards, the board and the opened card's title and description are in. Next:
+  the card's other sections, adding cards and lists, the board header's menus
+  and the sidebar, each as WeKan's specs need it. Weddy's layout (header, notifications, member menu),
   sign-in and sign-up, All Boards, the board with swimlanes, lists and
   minicards, and the card details, rendered by Pascal from WeLite's data, with
   Weddy's `/static` files (wekan.css, weddy.js, weddy-blocks.js, unpoly,

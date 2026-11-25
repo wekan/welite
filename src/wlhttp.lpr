@@ -32,7 +32,7 @@ uses
   {$IFDEF UNIX} cthreads, {$ENDIF}
   {$IFDEF AMIGA} Sockets, {$ENDIF}
   SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes, wlview, wlh5
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 type
@@ -54,6 +54,21 @@ begin
   // WeKan's routes (/b/:id/:slug, /b/:boardId/:slug/:cardId, /sign-up) are
   // served by the WeLite pages they name (wlroutes).
   RewriteWeKanRoute(Request);
+  // ?ui=html4|html5 from the header's toggle is remembered (wlview); a modern
+  // browser's pages are the HTML5 view (wlh5), every other request the HTML4 one.
+  RememberView(Request,Response);
+  // The toggle's POST from the HTML4 view: its session into the HTML5 view's
+  // cookie, and the same page again by GET (wlh5).
+  if SwitchToHtml5(Request,Response) then begin CleanupUploads(Request);Exit;end;
+  // The HTML4 view reads a session from the URL or the form; after the toggle
+  // from the HTML5 view it is in the login cookie instead.
+  if RequestView(Request)=wvHtml4 then CarryCookieSession(Request);
+  if RequestView(Request)=wvHtml5 then
+  try
+    if ServeHtml5(Request,Response) then Exit;
+  finally
+    if Response.ContentSent then CleanupUploads(Request);
+  end;
   try inherited DoRouteRequest(Request,Response);
   finally CleanupUploads(Request);end;
 end;
@@ -215,7 +230,10 @@ begin
       '  '+HtmlEncode(Words.Text('otp','One-time code (if enabled)'))+' <input name="code" size="6" maxlength="6"><br>'+LineEnding+
       '  <input type="submit" value="'+HtmlAttr(Title)+'">'+LineEnding+'</form>'+LineEnding+
       AuthNavigation(Request,'/two-factor/setup',Words.Text('two-factor-required-title','Set up two-factor authentication'))+
-      AuthNavigation(Request,'/sign-up',Words.Text('create-account','Create an account (Register)')),Dir,Tag);
+      AuthNavigation(Request,'/sign-up',Words.Text('create-account','Create an account (Register)'))+
+      // The HTML4/HTML5 toggle (wlview): a plain link, as no session is carried yet.
+      '<p><a class="html-view-toggle" href="/sign-in?ui=html5" title="'+
+      HtmlAttr(Words.Text('html4-html5-toggle','Toggle between HTML4 and HTML5 view'))+'">HTML5</a></p>',Dir,Tag);
   finally Words.Free;end;
 end;
 
@@ -259,6 +277,8 @@ begin
       S:=CreateAuthenticatedSession(T.Db,aRequest,Proof,30*24*60*60);
       if S.SessionId='' then
       begin AuthError(aRequest,aResponse,500,'log-in','Sign in','Could not create session','auth-session-create-failed');Exit; end;
+      // The HTML5 view keeps the session in WeKan's login cookie (wlh5).
+      if RequestView(aRequest)=wvHtml5 then begin Html5SignedIn(aResponse,S.SessionId);Exit;end;
       ShowHome(aRequest,aResponse,S);Exit;
     finally Proof.Free;end;
     SendHtml(aResponse,SignInForm(aRequest,aResponse,'Invalid login.'));
@@ -743,6 +763,7 @@ begin
   HTTPRouter.RegisterRoute('/two-factor/setup', rmGet, @EnrollmentEndpoint);
   HTTPRouter.RegisterRoute('/two-factor/setup', rmPost, @EnrollmentEndpoint);
   HTTPRouter.RegisterRoute('/two-factor/confirm', rmPost, @EnrollmentConfirmEndpoint);
+  HTTPRouter.RegisterRoute('/logout', rmPost, @Html5LogoutEndpoint);
   HTTPRouter.RegisterRoute('/register', rmGet, @RegisterEndpoint);
   HTTPRouter.RegisterRoute('/register', rmPost, @RegisterEndpoint);
 
