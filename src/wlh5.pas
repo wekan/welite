@@ -235,6 +235,13 @@ begin
         HtmlAttr(BoardTitle) + '">' + E(BoardTitle) + '</span></div>';
     Header := Header +
       Html5ViewToggle(PathAndQuery(Request), Words.Text('html4-html5-toggle', 'Toggle between HTML4 and HTML5 view')) +
+      // layout.pug: the notifications indicator and its drawer. weddy.js keeps
+      // the signed-in user fresh from it (refreshUser, GET /api/user).
+      '<div id="notifications" class="notifications"><a class="notifications-drawer-toggle js-toggle-notifications-drawer" href="#" title="' +
+      HtmlAttr(Words.Text('notifications', 'Notifications')) + '" aria-label="' + HtmlAttr(Words.Text('notifications', 'Notifications')) +
+      '" data-unread="0">&#128276;<span class="notifications-count"></span></a></div>' +
+      '<section id="notifications-drawer" class="is-hidden"><div class="header"><h5>' + E(Words.Text('notifications', 'Notifications')) +
+      '</h5><a class="close" href="#" title="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><ul class="notifications"></ul></section>' +
       '<a class="header-user js-open-header-member-menu" href="/">' + E(S.Username) + '</a>' +
       '<form class="js-logout" method="post" action="/logout"><button class="js-logout-button" type="submit">' +
       E(Words.Text('log-out', 'Log Out')) + '</button></form></div>';
@@ -520,7 +527,11 @@ begin
           HtmlAttr(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '">+</a>' +
           '<a class="js-open-list-menu" href="#" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' +
           HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('listActionPopup-title', 'List Actions')) +
-          '" aria-label="' + HtmlAttr(Words.Text('listActionPopup-title', 'List Actions')) + '">&#9776;</a>';
+          '" aria-label="' + HtmlAttr(Words.Text('listActionPopup-title', 'List Actions')) + '">&#9776;</a>' +
+          // listHeader.jade: the inline Add List composer after this list (#6465).
+          '<a class="js-add-list-here list-header-add-list" href="#" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' +
+          HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('add-list', 'Add list')) + '" aria-label="' +
+          HtmlAttr(Words.Text('add-list', 'Add list')) + '"><i class="fa fa-plus-square-o"></i></a>';
       Canvas := Canvas + '<div class="list js-list" id="js-list-' + HtmlAttr(Lists[j][0]) + '" data-list="' +
         HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"><div class="list-header">' +
         '<span class="list-header-name">' + E(Lists[j][1]) + '</span>' + Composer + '</div>' +
@@ -553,6 +564,21 @@ begin
           E(Words.Text('add-card', 'Add Card')) + '</a>';
       Canvas := Canvas + '</div>';
     end;
+    if Writable then
+      // board.pug: WeKan's addListInline, cloned after the list whose header +
+      // was clicked (weddy.js, createListAfter), and the Add list composer
+      // after the swimlane's lists.
+      Canvas := Canvas + '<template class="js-add-list-inline-template"><div class="list list-composer js-list-composer js-add-list-inline">' +
+        '<div class="list-header-add"><form class="js-add-list-inline-form"><textarea class="list-name-input full-line" rows="2" dir="auto" placeholder="' +
+        HtmlAttr(Words.Text('add-list', 'Add list')) + '" aria-label="' + HtmlAttr(Words.Text('add-list', 'Add list')) +
+        '" autocomplete="off" required></textarea><div class="edit-controls clearfix"><button class="primary confirm" type="submit">' +
+        E(Words.Text('save', 'Save')) + '</button><a class="js-close-add-list-inline" href="#" title="' + HtmlAttr(Words.Text('close', 'Close')) +
+        '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></form></div></div></template>' +
+        '<div class="list js-list-composer"><form class="js-inlined-form js-list-form" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+        '/lists" up-submit up-target=".board-wrapper"><input type="hidden" name="swimlaneId" value="' + HtmlAttr(Lanes[i][0]) + '">' +
+        '<input class="list-name-input" type="text" name="title" aria-label="' + HtmlAttr(Words.Text('add-list', 'Add list')) +
+        '" placeholder="' + HtmlAttr(Words.Text('add-list', 'Add list')) + '" required><button class="primary" type="submit">' +
+        E(Words.Text('add-list', 'Add list')) + '</button></form></div>';
     Canvas := Canvas + '</div></div>';
   end;
   Details := '';
@@ -654,6 +680,33 @@ begin
     SendJsonAnswer(Response, 200, '{"result":1}');
     Exit;
   end;
+  if Name = 'createListAfter' then
+  begin
+    // server/models/lists.js: {title, boardId, swimlaneId, afterListId, type};
+    // it answers the new list's id.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count >= 1) and (TJSONArray(Args).Items[0] is TJSONObject)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Selector := TJSONObject(TJSONArray(Args).Items[0]);
+      if (Selector.Find('title') = nil) or (Selector.Find('title').JSONType <> jtString) or
+        (Selector.Find('boardId') = nil) or (Selector.Find('boardId').JSONType <> jtString) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := CreateViewList(T, S.UserId, Selector.Get('boardId', ''),
+        Selector.Get('swimlaneId', ''), Selector.Get('afterListId', ''), Selector.Get('title', ''), Id, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(Id) + '"}');
+    Exit;
+  end;
   if Name = '/checklists/remove' then
   begin
     // The collection's own method (server/permissions/checklists.js): a
@@ -711,6 +764,18 @@ begin
   end;
 end;
 
+// The signed-in user as WeKan's client knows it: _id, username, profile.
+function UserJson(Db: TWLDb; const UserId: string): string;
+var R: TWLRows; Profile: string;
+begin
+  R := Db.Query('SELECT id,username,CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END FROM users WHERE id=' +
+    QuotedStr(UserId) + ' LIMIT 1;');
+  if Length(R) <> 1 then Exit('{}');
+  Profile := R[0][2];
+  if (Profile = '') or (Profile[1] <> '{') then Profile := '{}';
+  Result := '{"_id":"' + StringToJSONString(R[0][0]) + '","username":"' + StringToJSONString(R[0][1]) + '","profile":' + Profile + '}';
+end;
+
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back: string;
@@ -740,10 +805,11 @@ begin
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
   n := Length(P);
-  if (n < 3) or (P[0] <> 'b') or (P[2] <> 'cards') or (P[1] = '') then Exit;
+  if (n < 3) or (P[0] <> 'b') or (P[1] = '') or not ((P[2] = 'cards') or ((P[2] = 'lists') and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
-  if n = 3 then Action := 'add-card'
+  if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
+  else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
   else if (n = 5) and (P[4] = 'comments') then Action := 'add-comment'
@@ -758,7 +824,9 @@ begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
   if not Html5User(T.Db, Request, S) then Exit;
   Result := True;
-  if Action = 'add-card' then
+  if Action = 'add-list' then
+    Code := CreateViewList(T, S.UserId, BoardId, Request.ContentFields.Values['swimlaneId'], '', Title, NewId, Error)
+  else if Action = 'add-card' then
     Code := CreateViewCard(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
       Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'], NewId, Error)
   else if Action = 'rename-card' then
@@ -817,6 +885,27 @@ begin
   Result := False;
   if Request.Method <> 'GET' then Exit;
   Path := Request.PathInfo;
+  // weddy.js's refreshUser: GET /api/user, same-origin, with the login cookie
+  // and no bearer token - the signed-in user, read only. Every other /api/
+  // route keeps the REST API's bearer token.
+  // weddy.js's look at its session every few seconds: 401 once it is gone.
+  if Path = '/_session' then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    Result := True;
+    if Html5User(T.Db, Request, S) then SendJsonAnswer(Response, 200, '{}')
+    else SendJsonAnswer(Response, 401, '{"error":"Unauthorized"}');
+    Exit;
+  end;
+  if (Path = '/api/user') and (Request.Authorization = '') and (Request.CookieFields.Values[LOGIN_COOKIE] <> '') then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    Result := True;
+    if not Html5User(T.Db, Request, S) then
+    begin SendJsonAnswer(Response, 401, '{"error":"Unauthorized"}'); Exit; end;
+    SendJsonAnswer(Response, 200, UserJson(T.Db, S.UserId));
+    Exit;
+  end;
   // The root arrives as an empty PathInfo.
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/board') or (Path = '/board/card') or

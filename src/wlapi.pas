@@ -100,6 +100,12 @@ function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,T
 // write access, the card on that board, a title that is text. Returns the
 // HTTP status (200 when renamed) and sends nothing.
 function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
+// A list added from a view, as WeKan's createListAfter adds one
+// (server/models/lists.js): with board write access, into the swimlane of
+// the list it follows (else the given one, else the board's first), right
+// after AfterListId - halfway to the next list, or one after it - or last
+// when there is none. Returns the HTTP status (200 when added).
+function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterListId,Title:string;out ListId,Error:string):Integer;
 // WeKan's comment capability (models/lib/boardRoleCapabilities.js): a site
 // admin, or an active member who may read the board and whose role may
 // comment - everyone but No comments, Read only and Read assigned only.
@@ -4437,6 +4443,49 @@ begin
     QuotedStr(CommentId)+','+QuotedStr(BoardId)+','+QuotedStr(CardId)+','+QuotedStr(UserId)+','+QuotedStr(Text)+','+
     Stamp+','+Stamp+'); COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');CommentId:='';Error:='Could not add comment';Exit(500);end;
+  Result:=200;
+end;
+
+function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterListId,Title:string;out ListId,Error:string):Integer;
+var Lane,Sort,Stamp:string;After,Next,R:TWLRows;Fmt:TFormatSettings;AfterSort,NextSort:Double;
+begin
+  ListId:='';Error:='';
+  if (BoardId='') or (Trim(Title)='') or (Pos(#0,BoardId+SwimlaneId+AfterListId+Title)>0) then
+  begin Error:='Invalid list';Exit(400);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Access denied';Exit(403);end;
+  Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';Fmt.ThousandSeparator:=#0;
+  Lane:=SwimlaneId;
+  if (Lane<>'') and (Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id='+QuotedStr(Lane)+' AND boardId='+QuotedStr(BoardId)+';'))<>1) then
+  begin Error:='Swimlane does not belong to this board';Exit(400);end;
+  if Lane='' then
+  begin
+    R:=T.Db.Query('SELECT id FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+' ORDER BY archived,sort,id LIMIT 1;');
+    if Length(R)=1 then Lane:=R[0][0];
+  end;
+  if AfterListId<>'' then
+  begin
+    After:=T.Db.Query('SELECT COALESCE(swimlaneId,''''),json_quote(sort) FROM lists WHERE id='+QuotedStr(AfterListId)+
+      ' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL;');
+    if Length(After)<>1 then begin Error:='Selected list not found';Exit(404);end;
+    if After[0][0]<>'' then Lane:=After[0][0];
+    AfterSort:=StrToFloatDef(After[0][1],0,Fmt);
+    // The next list of that swimlane (or of every swimlane), by sort.
+    Next:=T.Db.Query('SELECT json_quote(sort) FROM lists WHERE boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL'+
+      ' AND (swimlaneId='+QuotedStr(Lane)+' OR swimlaneId='''') AND sort>'+FloatToStr(AfterSort,Fmt)+' ORDER BY sort LIMIT 1;');
+    if Length(Next)=1 then
+    begin
+      NextSort:=StrToFloatDef(Next[0][0],AfterSort+2,Fmt);
+      Sort:=FloatToStr(AfterSort+(NextSort-AfterSort)/2,Fmt);
+    end
+    else Sort:=FloatToStr(AfterSort+1,Fmt);
+  end
+  else
+    Sort:='(SELECT coalesce(max(sort),-1)+1 FROM lists WHERE boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL'+
+      ' AND (swimlaneId='+QuotedStr(Lane)+' OR swimlaneId=''''))';
+  ListId:=NewId;Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt) VALUES('+
+    QuotedStr(ListId)+','+QuotedStr(BoardId)+','+QuotedStr(Lane)+','+QuotedStr(Title)+','+Sort+','+Stamp+','+Stamp+'); COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');ListId:='';Error:='Could not create list';Exit(500);end;
   Result:=200;
 end;
 

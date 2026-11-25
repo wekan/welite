@@ -324,6 +324,32 @@ def http_checks(server, tmp, backend):
                                                           headers=auth)[2])]
         assert texts == ['Owner <i>note</i>', 'From comment only'], texts
 
+        # Add a list: the swimlane's Add list form (last), and weddy.js's
+        # createListAfter after a given list (server/models/lists.js).
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-add-list-here' in page and b'js-add-list-inline-template' in page
+        assert request('POST', '/b/%s/lists' % board_id, {'title': 'Done', 'swimlaneId': lane}, cookie=owner)[0] == 200
+        def list_titles():
+            return [l['title'] for l in json.loads(request('GET', '/api/boards/%s/lists' % board_id, headers=auth)[2])]
+        assert list_titles()[-1] == 'Done', list_titles()
+        status, _, body, _ = request('POST', '/_methods/createListAfter', [{'title': 'Doing', 'boardId': board_id,
+                                     'swimlaneId': lane, 'afterListId': list_id, 'type': 'list'}], cookie=owner, as_json=True)
+        assert status == 200 and json.loads(body)['result'], body
+        assert list_titles() == ['Todo', 'Doing', 'Done'], list_titles()
+        # Negative: a non-member, and a list to follow that is not on the board.
+        assert request('POST', '/b/%s/lists' % board_id, {'title': 'Stranger', 'swimlaneId': lane}, cookie=stranger)[0] == 403
+        status, _, body, _ = request('POST', '/_methods/createListAfter', [{'title': 'Lost', 'boardId': board_id,
+                                     'afterListId': 'no-such-list'}], cookie=owner, as_json=True)
+        assert status == 404, body
+        assert 'Stranger' not in list_titles() and 'Lost' not in list_titles()
+        # weddy.js's user and session looks, with the cookie only.
+        status, _, body, _ = request('GET', '/api/user', cookie=owner)
+        assert status == 200 and json.loads(body)['username'] == 'owner', body
+        assert request('GET', '/_session', cookie=owner)[0] == 200
+        assert request('GET', '/_session')[0] == 401
+        # Negative: the cookie opens no other REST route.
+        assert request('GET', '/api/boards/%s' % board_id, cookie=owner)[0] == 401
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

@@ -59,6 +59,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   (`BoardCanComment`, models/lib/boardRoleCapabilities.js in WeKan): Comment
   only may comment, No comments, Read only and non-members may not. Two more
   of WeKan's tests pass, 24 in all.
+- Add a list in the HTML5 view: the swimlane's Add list form at the end of
+  the lists, the "+" beside a list's header, and WeKan's `createListAfter`
+  method, sorted as WeKan sorts a list added after another
+  (`CreateViewList`). The header has WeKan's notifications toggle, so
+  weddy.js reads the signed-in user at `GET /api/user` and checks the
+  session at `/_session` with the cookie alone; the cookie opens no other
+  REST route. WeKan's `#6865` test opens the form, but it also expects
+  Escape to close it, which weddy.js does not do, so it is not listed.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,
