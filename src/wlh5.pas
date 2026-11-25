@@ -493,6 +493,67 @@ begin
 end;
 
 // board.pug: the board, and when CardId is given, its opened card.
+// _cardsec_labels.pug: the card's labels, and the "+" that opens
+// cardLabelsPopup for whoever may change the card.
+function LabelsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
+var R: TWLRows; i: Integer;
+begin
+  R := Db.Query('SELECT l.id,COALESCE(l.name,''''),l.color FROM card_labels c JOIN board_labels l ON l.id=c.labelId AND ' +
+    'l.boardId=' + QuotedStr(BoardId) + ' WHERE c.cardId=' + QuotedStr(CardId) + ';');
+  Result := '<div class="card-details-item card-details-item-labels"><h3 class="card-details-item-title">' +
+    E(Words.Text('labels', 'Labels')) + '</h3>';
+  for i := 0 to High(R) do
+    Result := Result + '<span class="card-label card-label-' + HtmlAttr(R[i][2]) + '" data-label="' + HtmlAttr(R[i][0]) +
+      '">' + E(R[i][1]) + '</span>';
+  if Writable then
+    Result := Result + '<a class="card-details-item-add-button js-add-labels" href="#" title="' +
+      HtmlAttr(Words.Text('cardLabelsPopup-title', 'Labels')) + '" aria-label="' +
+      HtmlAttr(Words.Text('cardLabelsPopup-title', 'Labels')) + '">+</a>';
+  Result := Result + '</div>';
+end;
+
+// board.pug's cardLabelsPopup - every label of the board, each a form that
+// puts it on the card or takes it off - and, for a board admin,
+// createLabelPopup: a name and a color of WeKan's label palette.
+function LabelsPopups(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; CanCreate: Boolean): string;
+const Palette: array[0..23] of string = ('green', 'yellow', 'orange', 'red', 'purple', 'blue', 'sky', 'lime', 'pink',
+  'black', 'silver', 'peachpuff', 'crimson', 'plum', 'darkgreen', 'slateblue', 'magenta', 'gold', 'navy', 'gray',
+  'saddlebrown', 'paleturquoise', 'mistyrose', 'indigo');
+var R: TWLRows; i: Integer; Selected: Boolean; Name: string;
+begin
+  R := Db.Query('SELECT l.id,COALESCE(l.name,''''),l.color,EXISTS(SELECT 1 FROM card_labels c WHERE c.cardId=' +
+    QuotedStr(CardId) + ' AND c.labelId=l.id) FROM board_labels l WHERE l.boardId=' + QuotedStr(BoardId) + ';');
+  Result := '<template class="js-pop-over-template" data-pop="card-labels" data-title="' +
+    HtmlAttr(Words.Text('cardLabelsPopup-title', 'Labels')) + '"><ul class="edit-labels-pop-over">';
+  for i := 0 to High(R) do
+  begin
+    Selected := R[i][3] = '1';
+    Name := R[i][1];
+    if Selected then Name := Name + ' ' + #$E2#$9C#$93;
+    Result := Result + '<li class="js-card-label-item"><form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+      '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/labels/' + HtmlAttr(HTTPEncode(R[i][0])) +
+      '" up-submit up-target=".board-wrapper"><button class="card-label card-label-selectable js-select-label card-label-' +
+      HtmlAttr(R[i][2]) + IfThen(Selected, ' active', '') + '" type="submit">' + E(Name) + '</button></form></li>';
+  end;
+  Result := Result + '</ul>';
+  if CanCreate then
+    Result := Result + '<a class="quiet-button full js-add-label" href="#">' +
+      E(Words.Text('createLabelPopup-title', 'Create Label')) + '</a>';
+  Result := Result + '</template>';
+  if not CanCreate then Exit;
+  Result := Result + '<template class="js-pop-over-template" data-pop="create-label" data-title="' +
+    HtmlAttr(Words.Text('createLabelPopup-title', 'Create Label')) + '"><form class="create-label" method="post" action="/b/' +
+    HtmlAttr(HTTPEncode(BoardId)) + '/labels" up-submit up-target=".board-wrapper"><input type="hidden" name="card" value="' +
+    HtmlAttr(CardId) + '"><label for="labelName">' + E(Words.Text('name', 'Name')) + '</label>' +
+    '<textarea class="js-label-name" id="labelName" rows="2" name="name"></textarea><label>' +
+    E(Words.Text('select-color', 'Select a color')) + '</label><div class="palette-colors">';
+  for i := 0 to High(Palette) do
+    Result := Result + '<label class="card-label palette-color js-palette-color card-label-' + Palette[i] + '" title="' +
+      Palette[i] + '"><input type="radio" name="color" value="' + Palette[i] + '"></label>';
+  Result := Result + '</div><button class="primary wide" type="submit">' + E(Words.Text('create', 'Create')) +
+    '</button></form></template>';
+end;
+
 // _cardsec_members.pug: the card's members, and the "+" that opens the
 // card-members pop-over (cardMembersPopup) for whoever may change the card.
 function MembersSection(Db: TWLDb; Words: TWLTranslator; const CardId: string; Writable: Boolean): string;
@@ -612,7 +673,7 @@ end;
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
-  Selector: TSelectionScope; Writable, Maximized, TextEditor: Boolean;
+  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel: Boolean;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -734,14 +795,18 @@ begin
     Details := Details +
       '<a class="js-close-card-details" href="' + HtmlAttr(Route) + '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '" up-follow up-target=".board-wrapper">&times;</a></div>';
+    if BoardAllows(Db, BoardId, 'allowsLabels') then
+      Details := Details + LabelsSection(Db, Words, BoardId, CardId, Writable);
     if BoardAllows(Db, BoardId, 'allowsMembers') then
       Details := Details + MembersSection(Db, Words, CardId, Writable);
     TextEditor := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
+    CanCreateLabel := Writable and BoardCanCreateLabel(Db, S.UserId, BoardId);
     Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
       DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
-    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId);
+    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
+      LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel);
   end;
   // board.pug's list menu, drawn once; weddy.js opens it for the list whose
   // menu button was clicked.
@@ -923,14 +988,18 @@ begin
   //   /b/:id/cards/:card/people                       its Requested By or Assigned By
   //   /b/:id/cards/:card/description                  its description
   //   /b/:id/cards/:card/members/:user                a board member on or off it
+  //   /b/:id/cards/:card/labels/:label                one of the board's labels on or off it
+  //   /b/:id/labels                                   a new board label (card= to return to)
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
   n := Length(P);
-  if (n < 3) or (P[0] <> 'b') or (P[1] = '') or not ((P[2] = 'cards') or ((P[2] = 'lists') and (n = 3))) then Exit;
+  if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
+    not ((P[2] = 'cards') or (((P[2] = 'lists') or (P[2] = 'labels')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
+  else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
   else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
@@ -938,6 +1007,7 @@ begin
   else if (n = 5) and (P[4] = 'people') then Action := 'set-person'
   else if (n = 5) and (P[4] = 'description') then Action := 'set-description'
   else if (n = 6) and (P[4] = 'members') then Action := 'toggle-member'
+  else if (n = 6) and (P[4] = 'labels') then Action := 'toggle-label'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
@@ -961,6 +1031,17 @@ begin
       Request.ContentFields.Values['value'], Error)
   else if Action = 'set-description' then
     Code := SetViewCardDescription(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['description'], Error)
+  else if Action = 'add-label' then
+  begin
+    Code := CreateViewLabel(T, S.UserId, BoardId, Request.ContentFields.Values['name'],
+      Request.ContentFields.Values['color'], NewId, Error);
+    // createLabelPopup was opened from a card: back to it, open.
+    CardId := Request.ContentFields.Values['card'];
+    if (CardId <> '') and (Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
+      QuotedStr(BoardId) + ' AND deletedAt IS NULL;')) <> 1) then CardId := '';
+  end
+  else if Action = 'toggle-label' then
+    Code := ToggleViewCardLabel(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'toggle-member' then
     Code := ToggleViewCardMember(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'add-comment' then

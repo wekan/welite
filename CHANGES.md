@@ -79,6 +79,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   `welite.js` opens and closes the Requested By and Assigned By forms, which
   weddy.js leaves alone. All 6 tests of WeKan's `16-card-members-description`
   pass, none by finding the section missing; 28 pass in all.
+- Show a card's labels in the HTML5 view, put one of the board's labels on
+  the card or take it off from WeKan's labels pop-over
+  (`ToggleViewCardLabel`), and create a label from it as a board admin with
+  the checks and write of `PUT /api/boards/:id/labels`, which now share
+  `BoardLabelPermission` and `WriteBoardLabel`. Three more of WeKan's tests
+  pass, 31 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

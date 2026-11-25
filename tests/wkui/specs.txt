@@ -25,3 +25,6 @@
 08-notifications-activity.e2e.js: adding a comment appears in the card activity log
 08-notifications-activity.e2e.js: activity log entries include a non-empty timestamp
 16-card-members-description.e2e.js
+11-labels-duedates.e2e.js: label selector popup opens from a card
+11-labels-duedates.e2e.js: creating a new label via the popup shows it in the list
+11-labels-duedates.e2e.js: applying a seeded label to a card shows it in card details

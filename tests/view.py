@@ -379,6 +379,38 @@ def http_checks(server, tmp, backend):
         assert request('POST', rest_member % users['stranger'], {}, headers=auth, as_json=True)[0] == 400
         assert card_doc()['members'] == []
 
+        # Labels (_cardsec_labels.pug): cardLabelsPopup puts a board label on
+        # the card or takes it off; createLabelPopup, for a board admin, adds
+        # one with the REST API's checks (PUT /api/boards/:id/labels, #5819).
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'js-add-labels' in page and b'data-pop="card-labels"' in page and b'data-pop="create-label"' in page
+        status, _, page, _ = request('POST', '/b/%s/labels' % board_id, {'name': 'Urgent <x>', 'color': 'red', 'card': card_id},
+                                     cookie=owner)
+        assert status == 200 and b'card-details js-card-details' in page, 'back to the open card'
+        found = re.findall(rb'/labels/([0-9a-f]+)" up-submit up-target="\.board-wrapper"><button class="card-label '
+                           rb'card-label-selectable js-select-label card-label-(\w+)" type="submit">Urgent &lt;x&gt;<', page)
+        assert len(found) == 1 and found[0][1] == b'red' and b'<x>' not in page, found
+        urgent = found[0][0].decode()
+        status, _, page, _ = request('POST', '%s/labels/%s' % (card_path, urgent), {}, cookie=owner)
+        assert status == 200 and card_doc()['labelIds'] == [urgent]
+        assert ('class="card-label card-label-red" data-label="%s"' % urgent).encode() in page
+        assert request('POST', '%s/labels/%s' % (card_path, urgent), {}, cookie=owner)[0] == 200
+        assert card_doc()['labelIds'] == [], 'the same form takes it off again'
+        # The REST route shares the write: the same name and color is the same label.
+        status, _, body, _ = request('PUT', '/api/boards/%s/labels' % board_id, {'label': {'name': 'Urgent <x>', 'color': 'red'}},
+                                     headers=auth, as_json=True)
+        assert status == 200 and json.loads(body) == urgent, body
+        # Negative: not a board admin (a Worker, a non-member), a color not of
+        # the palette, a label of no board, and a non-member's card change.
+        assert request('POST', '/b/%s/labels' % board_id, {'name': 'W', 'color': 'red'}, cookie=worker)[0] == 403
+        assert b'data-pop="create-label"' not in request('GET', '%s/%s' % (route, card_id), cookie=worker)[2]
+        assert request('POST', '/b/%s/labels' % board_id, {'name': 'S', 'color': 'red'}, cookie=stranger)[0] == 403
+        assert request('POST', '/b/%s/labels' % board_id, {'name': 'C', 'color': 'chartreuse'}, cookie=owner)[0] == 400
+        assert request('POST', '%s/labels/no-such-label' % card_path, {}, cookie=owner)[0] == 400
+        assert request('POST', '%s/labels/%s' % (card_path, urgent), {}, cookie=stranger)[0] == 403
+        popup = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert popup.count(b'js-select-label') == 1 and card_doc()['labelIds'] == [], 'no label was added'
+
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'card-details-item-requested-by' in page and b'card-details-item-assigned-by' in page

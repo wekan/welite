@@ -138,6 +138,12 @@ function ToggleViewCardMember(const T:TWLTenant;const UserId,BoardId,CardId,Memb
 function SetViewCardPerson(const T:TWLTenant;const UserId,BoardId,CardId,Field,Value:string;out Error:string):Integer;
 // The card's description, from the HTML5 view's description editor.
 function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;
+// A board label from a view (WeKan's createLabelPopup), with the checks and
+// write of PUT /api/boards/:boardId/labels: a board admin, a known color.
+function CreateViewLabel(const T:TWLTenant;const UserId,BoardId,Name,Color:string;out LabelId,Error:string):Integer;
+function BoardCanCreateLabel(Db:TWLDb;const UserId,BoardId:string):Boolean;
+// One of the board's labels on the card, or off it (cardLabelsPopup).
+function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);     // GET cards in a list
@@ -3372,23 +3378,63 @@ begin
 end;
 
 // PUT board label — return the existing or newly created label ID as JSON.
+const
+  LabelColors='|white|green|yellow|orange|red|purple|blue|sky|lime|pink|black|silver|'+
+    'peachpuff|crimson|plum|darkgreen|slateblue|magenta|gold|navy|gray|saddlebrown|paleturquoise|mistyrose|indigo|';
+
+// Who may create a board's labels: its board admins (#5819). Permission is
+// the SQL expression the write checks again inside its transaction.
+function BoardLabelPermission(Db:TWLDb;const UserId,BoardId:string;out Permission,Error:string):Integer;
+var Policy:TFieldPolicy;Rows:TWLRows;
+begin
+  Permission:='';Error:='';
+  if (BoardId='') or (Pos(#0,BoardId)>0) or
+    (Length(Db.Query('SELECT id FROM boards WHERE id='+QuotedStr(BoardId)+';'))<>1) then
+  begin Error:='Board not found';Exit(404);end;
+  Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=Db.Query('SELECT '+Permission+';');
+  if Length(Rows)<>1 then begin Error:='Could not check label permission';Exit(500);end;
+  if Rows[0][0]<>'1' then begin Error:='Only a board admin can create or edit labels';Exit(403);end;
+  Result:=200;
+end;
+
+// The label, or the board's label of the same name and color: its id.
+function WriteBoardLabel(const T:TWLTenant;const BoardId,Permission,RawName,RawColor:string;out LabelId,Error:string):Integer;
+var Name,Color,Existing,Id,Board:string;Rows:TWLRows;
+begin
+  LabelId:='';Error:='';
+  Name:=Trim(RawName);Color:=RawColor;
+  try CheckUtf8(Name);except Error:='Invalid label';Exit(400);end;
+  if Pos(#0,Name)>0 then begin Error:='Invalid label';Exit(400);end;
+  if Color='' then Color:='green';
+  if (Pos('|',Color)>0) or (Pos('|'+Color+'|',LabelColors)=0) then begin Error:='Invalid label';Exit(400);end;
+  Board:=QuotedStr(BoardId);
+  Existing:='SELECT id FROM board_labels WHERE boardId='+Board+' AND name='+QuotedStr(Name)+
+    ' AND color='+QuotedStr(Color)+' ORDER BY id LIMIT 1';
+  Rows:=T.Db.Query('SELECT lower(hex(randomblob(3)));');
+  if Length(Rows)<>1 then begin Error:='Could not create label';Exit(500);end;
+  Id:=Rows[0][0];
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Label permission changed'') END; '+
+    'INSERT INTO board_labels(boardId,id,name,color) SELECT '+Board+','+QuotedStr(Id)+','+
+    QuotedStr(Name)+','+QuotedStr(Color)+' WHERE NOT EXISTS('+Existing+'); '+
+    'SELECT CASE WHEN '+Permission+' AND EXISTS('+Existing+') THEN 1 ELSE json(''Label write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not create label';Exit(500);end;
+  Rows:=T.Db.Query(Existing+';');
+  if Length(Rows)<>1 then begin Error:='Could not find label';Exit(500);end;
+  LabelId:=Rows[0][0];
+  Result:=200;
+end;
+
 procedure ApiCreateLabel(aRequest: TRequest; aResponse: TResponse);
-const Colors='|white|green|yellow|orange|red|purple|blue|sky|lime|pink|black|silver|'+
-  'peachpuff|crimson|plum|darkgreen|slateblue|magenta|gold|navy|gray|saddlebrown|paleturquoise|mistyrose|indigo|';
-  Denied='Only a board admin can create or edit labels';
-var T:TWLTenant;UserId,BoardId,Color,Name,Id,Permission,Existing,Sql:string;
-  Policy:TFieldPolicy;Body:TJSONObject;LabelData,Value:TJSONData;Rows:TWLRows;
+var T:TWLTenant;UserId,BoardId,Color,Name,Id,Permission,Error:string;Code:Integer;
+  Body:TJSONObject;LabelData,Value:TJSONData;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
-  BoardId:=QuotedStr(aRequest.RouteParams['boardId']);
-  if Length(T.Db.Query('SELECT id FROM boards WHERE id='+BoardId+';'))<>1 then
-  begin SendError(aResponse,404,'Board not found');Exit;end;
-  Policy:=TFieldPolicy.Create(T.Db,UserId,aRequest.RouteParams['boardId'],'');
-  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
-  Rows:=T.Db.Query('SELECT '+Permission+';');
-  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not check label permission');Exit;end;
-  if Rows[0][0]<>'1' then begin SendError(aResponse,403,Denied);Exit;end;
+  BoardId:=aRequest.RouteParams['boardId'];
+  Code:=BoardLabelPermission(T.Db,UserId,BoardId,Permission,Error);
+  if Code<>200 then begin SendError(aResponse,Code,Error);Exit;end;
   Name:='';Color:='';Body:=nil;
   try
     try
@@ -3411,27 +3457,25 @@ begin
         Color:=aRequest.ContentFields.Values['color'];
         if (Name='') and (Color='') then raise Exception.Create('Missing label');
       end;
-      Name:=Trim(Name);CheckUtf8(Name);
-      if Pos(#0,Name)>0 then raise Exception.Create('Invalid label name');
-      if Color='' then Color:='green';
-      if (Pos('|',Color)>0) or (Pos('|'+Color+'|',Colors)=0) then
-        raise Exception.Create('Invalid label color');
     except SendError(aResponse,400,'Invalid label');Exit;end;
   finally Body.Free;end;
-  Existing:='SELECT id FROM board_labels WHERE boardId='+BoardId+' AND name='+QuotedStr(Name)+
-    ' AND color='+QuotedStr(Color)+' ORDER BY id LIMIT 1';
-  Rows:=T.Db.Query('SELECT lower(hex(randomblob(3)));');
-  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not create label');Exit;end;
-  Id:=Rows[0][0];
-  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Label permission changed'') END; '+
-    'INSERT INTO board_labels(boardId,id,name,color) SELECT '+BoardId+','+QuotedStr(Id)+','+
-    QuotedStr(Name)+','+QuotedStr(Color)+' WHERE NOT EXISTS('+Existing+'); '+
-    'SELECT CASE WHEN '+Permission+' AND EXISTS('+Existing+') THEN 1 ELSE json(''Label write failed'') END; COMMIT;';
-  if not T.Db.Exec(Sql) then
-  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create label');Exit;end;
-  Rows:=T.Db.Query(Existing+';');
-  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not find label');Exit;end;
-  SendJson(aResponse,'"'+StringToJSONString(Rows[0][0])+'"');
+  Code:=WriteBoardLabel(T,BoardId,Permission,Name,Color,Id,Error);
+  if Code<>200 then begin SendError(aResponse,Code,Error);Exit;end;
+  SendJson(aResponse,'"'+StringToJSONString(Id)+'"');
+end;
+
+function CreateViewLabel(const T:TWLTenant;const UserId,BoardId,Name,Color:string;out LabelId,Error:string):Integer;
+var Permission:string;
+begin
+  LabelId:='';
+  Result:=BoardLabelPermission(T.Db,UserId,BoardId,Permission,Error);
+  if Result=200 then Result:=WriteBoardLabel(T,BoardId,Permission,Name,Color,LabelId,Error);
+end;
+
+function BoardCanCreateLabel(Db:TWLDb;const UserId,BoardId:string):Boolean;
+var Permission,Error:string;
+begin
+  Result:=BoardLabelPermission(Db,UserId,BoardId,Permission,Error)=200;
 end;
 
 function BoolInt(const S: string): Integer;
@@ -5475,6 +5519,29 @@ begin
   if (BoardId<>'') and not BoardAllows(T.Db,BoardId,Setting) then
   begin Error:='this field is not yours to change';Exit(403);end;
   Result:=SetViewCardText(T,UserId,BoardId,CardId,Field,Trim(Value),Error);
+end;
+
+function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
+var Pair,Present:string;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  if (LabelId='') or (Pos(#0,LabelId)>0) or (Length(T.Db.Query('SELECT 1 FROM board_labels WHERE boardId='+
+    QuotedStr(BoardId)+' AND id='+QuotedStr(LabelId)+';'))<>1) then
+  begin Error:='Label is not on this board';Exit(400);end;
+  Pair:='cardId='+QuotedStr(CardId)+' AND labelId='+QuotedStr(LabelId);
+  Present:='EXISTS(SELECT 1 FROM card_labels WHERE '+Pair+')';
+  if Length(T.Db.Query('SELECT 1 WHERE '+Present+';'))=1 then
+  begin
+    if not T.Db.Exec('BEGIN IMMEDIATE; DELETE FROM card_labels WHERE '+Pair+'; SELECT CASE WHEN NOT '+Present+
+      ' THEN 1 ELSE json(''Card label change failed'') END; COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;');Error:='Could not update card labels';Exit(500);end;
+  end
+  else if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM board_labels WHERE boardId='+
+    QuotedStr(BoardId)+' AND id='+QuotedStr(LabelId)+') THEN 1 ELSE json(''Label changed'') END; '+
+    'INSERT INTO card_labels(cardId,labelId) SELECT '+QuotedStr(CardId)+','+QuotedStr(LabelId)+' WHERE NOT '+Present+
+    '; SELECT CASE WHEN '+Present+' THEN 1 ELSE json(''Card label change failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update card labels';Exit(500);end;
 end;
 
 function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;
