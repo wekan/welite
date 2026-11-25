@@ -421,6 +421,17 @@ def http_checks(server, tmp, backend):
         status, _, page, _ = request('POST', dates + 'due', {'at': '2099-12-31T17:00:00.000Z', 'delete': ''}, cookie=owner)
         assert status == 200 and b'js-edit-date card-date due-date' in page and b'2099-12-31 17:00' in page
         assert b'data-date="2099-12-31T17:00:00' in page
+        # The minicard shows it, and opens the date picker for whoever may set it.
+        board_page = request('GET', route, cookie=owner)[2]
+        assert b'minicard-date minicard-date-due date due-date js-edit-date js-due-date' in board_page
+        assert b'data-pop="edit-date"' in board_page, 'the date picker without an opened card'
+        worker_page = request('GET', route, cookie=worker)[2]
+        assert b'<span class="badge minicard-date minicard-date-due' in worker_page and b'js-due-date' not in worker_page
+        assert request('PUT', '/api/boards/%s/cardSettings' % board_id, {'allowsDueDateOnMinicard': False}, headers=auth,
+                       as_json=True)[0] == 200
+        assert b'minicard-date-due' not in request('GET', route, cookie=owner)[2], 'negative: not where the board hides it'
+        assert request('PUT', '/api/boards/%s/cardSettings' % board_id, {'allowsDueDateOnMinicard': True}, headers=auth,
+                       as_json=True)[0] == 200
         status, _, page, _ = request('POST', dates + 'due', {'at': '', 'delete': '1'}, cookie=owner)
         assert status == 200 and b'js-due-date' in page and b'js-edit-date card-date due-date' not in page and b'2099-12-31' not in page
         # Negative: a date that is not one, a year of five digits, a kind that

@@ -757,10 +757,91 @@ begin
   Result := Result + '</div>';
 end;
 
+// What WeKan's minicard shows of its card, each where the board shows it on
+// the minicard (Card Settings' *OnMinicard): its labels, its dates - for
+// whoever may set them, opening the date picker, as WeKan's minicard dates -
+// and its members.
+type
+  TMinicardShows = record
+    Labels, Members: Boolean;
+    Dates: array[0..3] of Boolean;
+    SetDates: Boolean;
+  end;
+
+function MinicardShows(Db: TWLDb; const BoardId: string; SetDates: Boolean): TMinicardShows;
+const Settings: array[0..3] of string = ('allowsReceivedDate', 'allowsStartDate', 'allowsDueDate', 'allowsEndDate');
+var i: Integer;
+begin
+  Result.Labels := BoardAllows(Db, BoardId, 'allowsLabels') and BoardAllows(Db, BoardId, 'allowsLabelsOnMinicard');
+  Result.Members := BoardAllows(Db, BoardId, 'allowsMembers') and BoardAllows(Db, BoardId, 'allowsMembersOnMinicard');
+  for i := 0 to 3 do
+    Result.Dates[i] := BoardAllows(Db, BoardId, Settings[i]) and
+      BoardAllows(Db, BoardId, StringReplace(Settings[i], 'Date', 'DateOnMinicard', []));
+  Result.SetDates := SetDates;
+end;
+
+function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Shows: TMinicardShows;
+  const Dates: array of string): string;
+const
+  Kinds: array[0..3] of string = ('received', 'start', 'due', 'end');
+  Icons: array[0..3] of string = ('fa-sign-out', 'fa-hourglass-start', 'fa-clock-o', 'fa-hourglass-end');
+  Captions: array[0..3] of string = ('Received', 'Start', 'Due', 'End');
+  Titles: array[0..3] of string = ('editCardReceivedDatePopup-title', 'editCardStartDatePopup-title',
+    'editCardDueDatePopup-title', 'editCardEndDatePopup-title');
+  TitleCaptions: array[0..3] of string = ('Change received date', 'Change start date', 'Change due date', 'Change end date');
+  Defaults: array[0..3] of string = ('now', 'now', '17:00', 'now');
+var R: TWLRows; i: Integer; Line, Shown, Label_, Cls: string;
+begin
+  Result := '';
+  if Shows.Labels then
+  begin
+    R := Db.Query('SELECT COALESCE(l.name,''''),l.color FROM card_labels c JOIN board_labels l ON l.id=c.labelId AND l.boardId=' +
+      QuotedStr(BoardId) + ' WHERE c.cardId=' + QuotedStr(CardId) + ';');
+    if Length(R) > 0 then
+    begin
+      Result := Result + '<div class="minicard-labels">';
+      for i := 0 to High(R) do
+        Result := Result + '<span class="card-label card-label-' + HtmlAttr(R[i][1]) + '" title="' + HtmlAttr(R[i][0]) +
+          '">' + E(R[i][0]) + '</span>';
+      Result := Result + '</div>';
+    end;
+  end;
+  Line := '';
+  for i := 0 to 3 do
+    if Shows.Dates[i] and (Dates[i] <> '') then
+    begin
+      Label_ := Words.Text('card-' + Kinds[i], Captions[i]);
+      Shown := StringReplace(Copy(Dates[i], 1, 16), 'T', ' ', []);
+      Cls := 'badge minicard-date minicard-date-' + Kinds[i] + ' date ' + Kinds[i] + '-date';
+      if Shows.SetDates then
+        Line := Line + '<a class="' + Cls + ' js-edit-date js-' + Kinds[i] + '-date" href="#" title="' + HtmlAttr(Label_) +
+          '" data-url="' + HtmlAttr('/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/dates/' + Kinds[i]) +
+          '" data-date="' + HtmlAttr(Dates[i]) + '" data-default-time="' + Defaults[i] + '" data-title="' +
+          HtmlAttr(Words.Text(Titles[i], TitleCaptions[i])) + '">'
+      else
+        Line := Line + '<span class="' + Cls + '" title="' + HtmlAttr(Label_) + '">';
+      Line := Line + '<i class="fa ' + Icons[i] + '"></i> <time datetime="' + HtmlAttr(Dates[i]) + '">' + E(Shown) + '</time>' +
+        IfThen(Shows.SetDates, '</a>', '</span>');
+    end;
+  if Line <> '' then Result := Result + '<div class="dates">' + Line + '</div>';
+  if Shows.Members then
+  begin
+    R := Db.Query('SELECT u.username FROM card_members c JOIN users u ON u.id=c.userId WHERE c.cardId=' + QuotedStr(CardId) +
+      ' ORDER BY u.username;');
+    if Length(R) > 0 then
+    begin
+      Result := Result + '<div class="minicard-members js-minicard-members">';
+      for i := 0 to High(R) do
+        Result := Result + '<span class="member" title="' + HtmlAttr(R[i][0]) + '">' + E(UpperCase(Copy(R[i][0], 1, 2))) + '</span>';
+      Result := Result + '</div>';
+    end;
+  end;
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
-  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel: Boolean;
+  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates: Boolean; Shows: TMinicardShows;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -770,6 +851,8 @@ begin
   BoardTitle := B[0][0];
   Route := BoardRoute(BoardId, B[0][2]);
   Writable := (S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId);
+  BoardDates := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
+  Shows := MinicardShows(Db, BoardId, BoardDates);
   Canvas := '';
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
@@ -801,7 +884,8 @@ begin
         HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"><div class="list-header">' +
         '<span class="list-header-name">' + E(Lists[j][1]) + '</span>' + Composer + '</div>' +
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
-      Cards := Db.Query('SELECT c.id,c.title,c.sort FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+      Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
+        'COALESCE(c.dueAt,''''),COALESCE(c.endAt,'''') FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL ORDER BY c.sort,c.id;');
       for k := 0 to High(Cards) do
@@ -810,7 +894,8 @@ begin
           HtmlAttr(CardRoute(BoardId, B[0][2], Cards[k][0])) + '" up-follow up-clickable up-target=".board-wrapper" data-card="' +
           HtmlAttr(Cards[k][0]) + '" data-card-id="' + HtmlAttr(Cards[k][0]) + '" data-sort="' + HtmlAttr(Cards[k][2]) +
           '"><div class="minicard"><div class="minicard-title"><span class="minicard-title-text">' +
-          E(Cards[k][1]) + '</span></div></div></div>';
+          E(Cards[k][1]) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
+          [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]]) + '</div></div>';
       Canvas := Canvas + '</div>';
       if Writable then
         Canvas := Canvas + '<template class="js-card-composer-template">' +
@@ -896,8 +981,10 @@ begin
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel);
-    if TextEditor then Details := Details + DatePopup(Words);
   end;
+  // The date picker, drawn once: the opened card's dates and the minicards'
+  // open it (weddy.js).
+  if BoardDates then Details := Details + DatePopup(Words);
   // board.pug's list menu, drawn once; weddy.js opens it for the list whose
   // menu button was clicked.
   if Writable then

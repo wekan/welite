@@ -90,6 +90,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   date picker (`SetViewCardDate`): by whoever may change the card but a
   Worker, a four-digit year, with WeKan's `a-<field>` activity and its old
   value (timingChangeActivity.js). Six more of WeKan's tests pass, 37 in all.
+- Show the minicard's labels, dates and members in the HTML5 view where Card
+  Settings shows them on the minicard (`allows*OnMinicard`). A minicard's
+  date opens the date picker for whoever may set it, as WeKan's minicard
+  dates do (Weddy's are badges only), so one more of WeKan's tests passes,
+  38 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

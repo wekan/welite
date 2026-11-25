@@ -34,3 +34,4 @@
 11-labels-duedates.e2e.js: #6809: Save without picking a day saves today
 11-labels-duedates.e2e.js: changing an existing due date saves the replacement (#6607)
 11-labels-duedates.e2e.js: clearing a due date removes its badge from the card
+11-labels-duedates.e2e.js: clicking an existing start date reopens and saves its editor
