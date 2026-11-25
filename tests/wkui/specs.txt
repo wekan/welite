@@ -28,3 +28,9 @@
 11-labels-duedates.e2e.js: label selector popup opens from a card
 11-labels-duedates.e2e.js: creating a new label via the popup shows it in the list
 11-labels-duedates.e2e.js: applying a seeded label to a card shows it in card details
+11-labels-duedates.e2e.js: #6615: an existing card with dates opens and remains editable
+11-labels-duedates.e2e.js: due date "+" button opens the date-editor popup
+11-labels-duedates.e2e.js: setting a due date saves the selected value
+11-labels-duedates.e2e.js: #6809: Save without picking a day saves today
+11-labels-duedates.e2e.js: changing an existing due date saves the replacement (#6607)
+11-labels-duedates.e2e.js: clearing a due date removes its badge from the card

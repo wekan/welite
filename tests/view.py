@@ -411,6 +411,34 @@ def http_checks(server, tmp, backend):
         popup = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert popup.count(b'js-select-label') == 1 and card_doc()['labelIds'] == [], 'no label was added'
 
+        # Dates (_cardsec_date.pug): a "+" for each date the board uses, the
+        # date picker, and a set or a cleared date with its a-<field> activity.
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        for kind in ['received', 'start', 'due', 'end']:
+            assert ('class="card-label add-label js-%s-date"' % kind).encode() in page, kind
+        assert b'data-pop="edit-date"' in page and b'selected-calendar-picker' in page
+        dates = card_path + '/dates/'
+        status, _, page, _ = request('POST', dates + 'due', {'at': '2099-12-31T17:00:00.000Z', 'delete': ''}, cookie=owner)
+        assert status == 200 and b'js-edit-date card-date due-date' in page and b'2099-12-31 17:00' in page
+        assert b'data-date="2099-12-31T17:00:00' in page
+        status, _, page, _ = request('POST', dates + 'due', {'at': '', 'delete': '1'}, cookie=owner)
+        assert status == 200 and b'js-due-date' in page and b'js-edit-date card-date due-date' not in page and b'2099-12-31' not in page
+        # Negative: a date that is not one, a year of five digits, a kind that
+        # is not a date, a Worker, a non-member, a date the board does not use.
+        assert request('POST', dates + 'due', {'at': 'tomorrow'}, cookie=owner)[0] == 400
+        assert request('POST', dates + 'due', {'at': '12345-01-01T00:00:00.000Z'}, cookie=owner)[0] == 400
+        assert request('POST', dates + 'title', {'at': '2099-12-31T17:00:00.000Z'}, cookie=owner)[0] == 404
+        assert request('POST', dates + 'start', {'at': '2099-12-31T17:00:00.000Z'}, cookie=worker)[0] == 403
+        assert b'data-pop="edit-date"' not in request('GET', '%s/%s' % (route, card_id), cookie=worker)[2]
+        assert request('POST', dates + 'start', {'at': '2099-12-31T17:00:00.000Z'}, cookie=stranger)[0] == 403
+        assert request('PUT', '/api/boards/%s/cardSettings' % board_id, {'allowsEndDate': False}, headers=auth,
+                       as_json=True)[0] == 200
+        assert request('POST', dates + 'end', {'at': '2099-12-31T17:00:00.000Z'}, cookie=owner)[0] == 403
+        assert b'card-details-item-end' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert request('PUT', '/api/boards/%s/cardSettings' % board_id, {'allowsEndDate': True}, headers=auth,
+                       as_json=True)[0] == 200
+        assert b'card-date' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2], 'no date was set'
+
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'card-details-item-requested-by' in page and b'card-details-item-assigned-by' in page

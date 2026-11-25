@@ -142,6 +142,13 @@ function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Te
 // write of PUT /api/boards/:boardId/labels: a board admin, a known color.
 function CreateViewLabel(const T:TWLTenant;const UserId,BoardId,Name,Color:string;out LabelId,Error:string):Integer;
 function BoardCanCreateLabel(Db:TWLDb;const UserId,BoardId:string):Boolean;
+// A card's Received, Start, Due or End (Kind received, start, due, end) from
+// the HTML5 view's date picker: set to At, or cleared, by whoever may change
+// the card but a Worker, on a board that uses that date; with WeKan's
+// a-<field> activity (server/lib/timingChangeActivity.js).
+function SetViewCardDate(const T:TWLTenant;const UserId,BoardId,CardId,Kind,At:string;Remove:Boolean;
+  out Error:string):Integer;
+function ViewDateKindField(const Kind:string;out Field,Setting:string):Boolean;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -5542,6 +5549,59 @@ begin
     'INSERT INTO card_labels(cardId,labelId) SELECT '+QuotedStr(CardId)+','+QuotedStr(LabelId)+' WHERE NOT '+Present+
     '; SELECT CASE WHEN '+Present+' THEN 1 ELSE json(''Card label change failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card labels';Exit(500);end;
+end;
+
+function ViewDateKindField(const Kind:string;out Field,Setting:string):Boolean;
+begin
+  Result:=True;
+  if Kind='received' then begin Field:='receivedAt';Setting:='allowsReceivedDate';end
+  else if Kind='start' then begin Field:='startAt';Setting:='allowsStartDate';end
+  else if Kind='due' then begin Field:='dueAt';Setting:='allowsDueDate';end
+  else if Kind='end' then begin Field:='endAt';Setting:='allowsEndDate';end
+  else Result:=False;
+end;
+
+function SetViewCardDate(const T:TWLTenant;const UserId,BoardId,CardId,Kind,At:string;Remove:Boolean;
+  out Error:string):Integer;
+var Field,Setting,Literal,Scope,Stamp,Changed,Act:string;Input:TJSONData;Year:Integer;
+begin
+  Error:='';
+  if not ViewDateKindField(Kind,Field,Setting) then begin Error:='not found';Exit(404);end;
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  if not BoardCanEditCardText(T.Db,UserId,BoardId) then begin Error:='your role on this board cannot change it';Exit(403);end;
+  if not BoardAllows(T.Db,BoardId,Setting) then begin Error:='this board does not use this date';Exit(403);end;
+  if Remove then Literal:='NULL'
+  else
+  begin
+    // The time the date picker made (weddy.js: toISOString), as Weddy's
+    // datePickerValue takes it: an RFC 3339 time of a four-digit year.
+    Year:=StrToIntDef(Copy(At,1,4),0);
+    if (Length(At)<20) or (At[5]<>'-') or (At[11]<>'T') or (Pos(#0,At)>0) then
+    begin Error:='invalid-date';Exit(400);end;
+    if (Year<1000) or (Year>9999) then begin Error:='invalid-year';Exit(400);end;
+    Input:=TJSONString.Create(At);
+    try
+      if not CardDateSql(Input,Literal) or (Literal='NULL') then begin Error:='invalid-date';Exit(400);end;
+    finally Input.Free;end;
+  end;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Stamp:=QuotedStr(NowIso);
+  // timingChangeActivity.js: a date set carries timeValue, a date cleared
+  // timeOldValue alone, and clearing a date the card did not have records nothing.
+  if Remove then
+    Changed:='COALESCE('+Field+','''')<>'''''
+  else Changed:='1';
+  Act:='INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
+    QuotedStr(NewId)+','+QuotedStr('a-'+Field)+','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
+    ',json_object(''timeKey'','+QuotedStr(Field)+',''timeOldValue'',COALESCE('+Field+',''''),''cardTitle'',title,'+
+    '''username'',(SELECT username FROM users WHERE id='+QuotedStr(UserId)+')';
+  if not Remove then Act:=Act+',''timeValue'','+Literal;
+  Act:=Act+') FROM cards WHERE '+Scope+' AND '+Changed+'; ';
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+    ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+Act+'UPDATE cards SET '+Field+'='+Literal+
+    ',modifiedAt='+Stamp+',dateLastActivity='+Stamp+' WHERE '+Scope+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
 end;
 
 function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;

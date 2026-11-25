@@ -85,6 +85,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the checks and write of `PUT /api/boards/:id/labels`, which now share
   `BoardLabelPermission` and `WriteBoardLabel`. Three more of WeKan's tests
   pass, 31 in all.
+- Show a card's Received, Start, Due and End in the HTML5 view where the
+  board uses them, as a badge or a "+", and set or clear them from Weddy's
+  date picker (`SetViewCardDate`): by whoever may change the card but a
+  Worker, a four-digit year, with WeKan's `a-<field>` activity and its old
+  value (timingChangeActivity.js). Six more of WeKan's tests pass, 37 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

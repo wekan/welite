@@ -493,6 +493,93 @@ begin
 end;
 
 // board.pug: the board, and when CardId is given, its opened card.
+// _cardsec_date.pug: Received, Start, Due and End, as the board allows them -
+// a badge, or a "+" for whoever may set them, opening the date picker.
+function DatesSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Values: array of string;
+  CanSet: Boolean): string;
+const
+  Kinds: array[0..3] of string = ('received', 'start', 'due', 'end');
+  Icons: array[0..3] of string = ('fa-sign-out', 'fa-hourglass-start', 'fa-clock-o', 'fa-hourglass-end');
+  Captions: array[0..3] of string = ('Received', 'Start', 'Due', 'End');
+  Titles: array[0..3] of string = ('editCardReceivedDatePopup-title', 'editCardStartDatePopup-title',
+    'editCardDueDatePopup-title', 'editCardEndDatePopup-title');
+  TitleCaptions: array[0..3] of string = ('Change received date', 'Change start date', 'Change due date', 'Change end date');
+  Defaults: array[0..3] of string = ('now', 'now', '17:00', 'now');
+var i: Integer; Field, Setting, Label_, Url, Common, Shown: string;
+begin
+  Result := '';
+  for i := 0 to 3 do
+  begin
+    ViewDateKindField(Kinds[i], Field, Setting);
+    if not BoardAllows(Db, BoardId, Setting) then Continue;
+    Label_ := Words.Text('card-' + Kinds[i], Captions[i]);
+    Url := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/dates/' + Kinds[i];
+    Common := ' title="' + HtmlAttr(Label_) + '" data-url="' + HtmlAttr(Url) + '" data-default-time="' + Defaults[i] +
+      '" data-title="' + HtmlAttr(Words.Text(Titles[i], TitleCaptions[i])) + '"';
+    Result := Result + '<div class="card-details-item card-details-item-' + Kinds[i] + '"><h3 class="card-details-item-title">' +
+      '<i class="fa ' + Icons[i] + '"></i> ' + E(Label_) + '</h3>';
+    if Values[i] <> '' then
+    begin
+      // The stored time, to the minute: 2026-08-20T17:00:00.000Z -> 2026-08-20 17:00.
+      Shown := StringReplace(Copy(Values[i], 1, 16), 'T', ' ', []);
+      if CanSet then
+        Result := Result + '<a class="js-edit-date card-date ' + Kinds[i] + '-date" href="#"' + Common + ' data-date="' +
+          HtmlAttr(Values[i]) + '"><time datetime="' + HtmlAttr(Values[i]) + '">' + E(Shown) + '</time></a>'
+      else
+        Result := Result + '<a class="card-date ' + Kinds[i] + '-date" title="' + HtmlAttr(Label_) + '"><time datetime="' +
+          HtmlAttr(Values[i]) + '">' + E(Shown) + '</time></a>';
+    end
+    else if CanSet then
+      Result := Result + '<a class="card-label add-label js-' + Kinds[i] + '-date" href="#"' + Common +
+        '><i class="fa fa-plus"></i></a>';
+    Result := Result + '</div>';
+  end;
+end;
+
+// board.pug's date picker (WeKan's editCard*DatePopup and calendarDateInput):
+// weddy.js draws the month and sends the time made of the day and time picked.
+function DatePopup(Words: TWLTranslator): string;
+  function T(const Key, Caption: string): string;
+  begin
+    Result := HtmlAttr(Words.Text(Key, Caption));
+  end;
+begin
+  Result := '<template class="js-pop-over-template" data-pop="edit-date" data-title="' +
+    T('editCardDueDatePopup-title', 'Change due date') + '"><div class="header"><span class="header-title">' +
+    T('editCardDueDatePopup-title', 'Change due date') + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    T('close', 'Close') + '">&times;</a></div>' +
+    '<button class="js-date-popup-resize" type="button" aria-label="' + T('size', 'Size') + '" title="' + T('size', 'Size') +
+    '"><span aria-hidden="true">&#9698;</span></button>' +
+    '<div class="datepicker-container"><form class="edit-date" method="post" action="#" up-submit up-target=".board-wrapper">' +
+    '<input type="hidden" name="at"><input type="hidden" name="delete" value="">' +
+    '<div class="fields"><div class="left"><div class="calendar-date-input">' +
+    '<input class="js-calendar-native-value js-date-field" id="date" type="hidden" name="date">' +
+    '<div class="selected-calendar-picker"><div class="selected-calendar-heading">' +
+    '<button class="primary js-calendar-year-previous" type="button" aria-label="' + T('previous', 'Previous') + ' ' +
+    T('predicate-year', 'year') + '">&laquo;</button>' +
+    '<button class="primary js-calendar-previous" type="button" aria-label="' + T('previous', 'Previous') + ' ' +
+    T('month', 'Month') + '">&lsaquo;</button>' +
+    '<span class="js-calendar-month-label" aria-live="polite"></span>' +
+    '<button class="primary js-calendar-today" type="button" aria-label="' + T('today', 'Today') + '">' + T('today', 'Today') +
+    '</button><button class="primary js-calendar-next" type="button" aria-label="' + T('next', 'Next') + ' ' +
+    T('month', 'Month') + '">&rsaquo;</button>' +
+    '<button class="primary js-calendar-year-next" type="button" aria-label="' + T('next', 'Next') + ' ' +
+    T('predicate-year', 'year') + '">&raquo;</button></div>' +
+    '<table><thead><tr class="js-calendar-weekdays"></tr></thead><tbody class="js-calendar-weeks"></tbody></table>' +
+    '<div class="selected-calendar-selects"><input class="js-calendar-year" type="number" step="1" inputmode="numeric" aria-label="' +
+    T('predicate-year', 'year') + '"><select class="js-calendar-month" aria-label="' + T('month', 'Month') +
+    '"></select><select class="js-calendar-day-select" aria-label="' + T('day', 'Day') + '"></select></div></div></div></div>' +
+    '<div class="right"><label>' + T('time', 'Time') + '</label><div class="calendar-time-input">' +
+    '<input class="js-calendar-native-time js-time-field" id="time" type="hidden" name="time">' +
+    '<select class="js-calendar-hour" aria-label="' + T('hours', 'hours') + '"></select><span aria-hidden="true">:</span>' +
+    '<select class="js-calendar-minute" aria-label="' + T('minutes', 'minutes') + '"></select></div></div></div>' +
+    '<div class="warning js-date-error" hidden data-invalid-date="' + T('invalid-date', 'Invalid date') +
+    '" data-invalid-time="' + T('invalid-time', 'Invalid time') + '" data-invalid-year="' + T('invalid-year', 'Invalid year') +
+    '"></div><button class="primary wide left js-submit-date" type="submit">' + T('save', 'Save') +
+    '</button><button class="js-delete-date negate wide right" type="button">' + T('delete', 'Delete') +
+    '</button></form></div></template>';
+end;
+
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
 // cardLabelsPopup for whoever may change the card.
 function LabelsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
@@ -764,7 +851,8 @@ begin
   begin
     Selector := TSelectionScope.Create(Db);
     try
-      Card := Db.Query('SELECT title,description,COALESCE(requestedBy,''''),COALESCE(assignedBy,'''') FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
+      Card := Db.Query('SELECT title,description,COALESCE(requestedBy,''''),COALESCE(assignedBy,''''),COALESCE(receivedAt,''''),' +
+        'COALESCE(startAt,''''),COALESCE(dueAt,''''),COALESCE(endAt,'''') FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
         QuotedStr(BoardId) + ' AND archived=0 AND deletedAt IS NULL AND ' + Selector.StringField('cards', 'id') +
         ' AND ' + Selector.StringField('cards', 'boardId') + ';');
     finally
@@ -801,12 +889,14 @@ begin
       Details := Details + MembersSection(Db, Words, CardId, Writable);
     TextEditor := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
     CanCreateLabel := Writable and BoardCanCreateLabel(Db, S.UserId, BoardId);
+    Details := Details + DatesSection(Db, Words, BoardId, CardId, [Card[0][4], Card[0][5], Card[0][6], Card[0][7]], TextEditor);
     Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
       DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel);
+    if TextEditor then Details := Details + DatePopup(Words);
   end;
   // board.pug's list menu, drawn once; weddy.js opens it for the list whose
   // menu button was clicked.
@@ -990,6 +1080,7 @@ begin
   //   /b/:id/cards/:card/members/:user                a board member on or off it
   //   /b/:id/cards/:card/labels/:label                one of the board's labels on or off it
   //   /b/:id/labels                                   a new board label (card= to return to)
+  //   /b/:id/cards/:card/dates/:kind                  its received, start, due or end date (delete=1 clears)
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
@@ -1008,6 +1099,7 @@ begin
   else if (n = 5) and (P[4] = 'description') then Action := 'set-description'
   else if (n = 6) and (P[4] = 'members') then Action := 'toggle-member'
   else if (n = 6) and (P[4] = 'labels') then Action := 'toggle-label'
+  else if (n = 6) and (P[4] = 'dates') then Action := 'set-date'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
@@ -1040,6 +1132,9 @@ begin
     if (CardId <> '') and (Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
       QuotedStr(BoardId) + ' AND deletedAt IS NULL;')) <> 1) then CardId := '';
   end
+  else if Action = 'set-date' then
+    Code := SetViewCardDate(T, S.UserId, BoardId, CardId, P[5], Request.ContentFields.Values['at'],
+      Request.ContentFields.Values['delete'] = '1', Error)
   else if Action = 'toggle-label' then
     Code := ToggleViewCardLabel(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'toggle-member' then
