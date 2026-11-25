@@ -345,11 +345,22 @@ begin
     '</ul><ul class="board-list js-boards">' + Items + '</ul></div>';
 end;
 
+// The user's own profile flag (users.profile.<Name>), as WeKan's profile keeps it.
+function ProfileFlag(Db: TWLDb; const UserId, Name: string): Boolean;
+var R: TWLRows;
+begin
+  Result := False;
+  if UserId = '' then Exit;
+  R := Db.Query('SELECT CASE WHEN json_valid(profile_json) AND json_extract(profile_json,''$.' + Name +
+    ''')=1 THEN 1 ELSE 0 END FROM users WHERE id=' + QuotedStr(UserId) + ' LIMIT 1;');
+  Result := (Length(R) = 1) and (Length(R[0]) = 1) and (R[0][0] = '1');
+end;
+
 // board.pug: the board, and when CardId is given, its opened card.
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
-  Selector: TSelectionScope; Writable: Boolean;
+  Selector: TSelectionScope; Writable, Maximized: Boolean;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -428,9 +439,21 @@ begin
       Selector.Free;
     end;
     if Length(Card) <> 1 then Exit;
-    Details := '<div class="card-details js-card-details" data-card="' + HtmlAttr(CardId) + '">' +
+    Maximized := ProfileFlag(Db, S.UserId, 'cardMaximized');
+    Details := '<div class="card-details js-card-details' + IfThen(Maximized, ' card-details-maximized', '') +
+      '" data-card="' + HtmlAttr(CardId) + '">' +
       '<div class="card-details-header"><h2 class="card-details-title js-card-title">' +
-      '<span class="card-details-title-edit-zone">' + E(Card[0][0]) + '</span></h2>' +
+      '<span class="card-details-title-edit-zone">' + E(Card[0][0]) + '</span></h2>';
+    // The user's own full-screen card (WeKan's toggleCardMaximized, /_methods/).
+    if Maximized then
+      Details := Details + '<a class="js-minimize-card-details" href="#" title="' +
+        HtmlAttr(Words.Text('minimize-card', 'Minimize Card')) + '" aria-label="' +
+        HtmlAttr(Words.Text('minimize-card', 'Minimize Card')) + '">&#128471;</a>'
+    else
+      Details := Details + '<a class="js-maximize-card-details" href="#" title="' +
+        HtmlAttr(Words.Text('maximize-card', 'Maximize Card')) + '" aria-label="' +
+        HtmlAttr(Words.Text('maximize-card', 'Maximize Card')) + '">&#128470;</a>';
+    Details := Details +
       '<a class="js-close-card-details" href="' + HtmlAttr(Route) + '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '" up-follow up-target=".board-wrapper">&times;</a></div>';
     if Card[0][1] <> '' then
@@ -463,6 +486,40 @@ begin
   Response.SendContent;
 end;
 
+procedure SendJsonAnswer(Response: TResponse; Code: Integer; const Json: string);
+begin
+  Response.Code := Code;
+  Response.ContentType := 'application/json; charset=utf-8';
+  Response.SetCustomHeader('Cache-Control', 'no-store');
+  Response.Content := Json;
+  Response.ContentLength := Length(Response.Content);
+  Response.SendContent;
+end;
+
+// weddy.js's callAsync(name, ...args): POST /_methods/<name> with the
+// arguments as a JSON array, answered {"result": ...} or, as Meteor answers a
+// method error, {"error": code, "reason": text}. The methods are WeKan's
+// Meteor methods of the same name, each with WeKan's own meaning.
+procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
+var T: TWLTenant; S: TWLSession;
+begin
+  if not (ResolveTenant(Request, T) and TenantOpen(T)) then
+  begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
+  if not Html5User(T.Db, Request, S) then
+  begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  if Name = 'toggleCardMaximized' then
+  begin
+    // models/users.js: profile.cardMaximized becomes the opposite of what it was.
+    if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
+      '''$.cardMaximized'',json(CASE WHEN json_valid(profile_json) AND json_extract(profile_json,''$.cardMaximized'')=1 ' +
+      'THEN ''false'' ELSE ''true'' END)) WHERE id=' + QuotedStr(S.UserId) + ';') then
+    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  SendJsonAnswer(Response, 404, '{"error":404,"reason":"Method ''' + StringToJSONString(Name) + ''' not found"}');
+end;
+
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   Path, BoardId, Slug, CardId, Error, Content, BoardTitle: string; Code: Integer; Found: Boolean;
@@ -471,6 +528,12 @@ begin
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
+  if Copy(Path, 1, 10) = '/_methods/' then
+  begin
+    Result := True;
+    ServeMethod(Request, Response, Copy(Path, 11, MaxInt));
+    Exit;
+  end;
   if not SplitBoardRoute(Path, BoardId, Slug, CardId) or (Slug <> 'cards') or (CardId <> '') then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
   if not Html5User(T.Db, Request, S) then Exit;

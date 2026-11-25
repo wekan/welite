@@ -35,6 +35,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   (`CreateViewCard` in `src/wlapi.pas`), first or last in its list. Three more
   of WeKan's tests pass: add to top, add to bottom, and a minicard title that
   opens the card.
+- Answer weddy.js's `callAsync` at `POST /_methods/<name>`, WeKan's Meteor
+  methods by the same names, as Meteor answers them: `{"result": ...}`, or
+  `{"error", "reason"}` - 401 when not signed in, 404 for a method WeLite has
+  not got. The first is `toggleCardMaximized`, the user's own full-screen
+  card (`users.profile.cardMaximized`), and the card's maximize and minimize
+  buttons. Two more of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

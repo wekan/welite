@@ -185,6 +185,23 @@ def http_checks(server, tmp, backend):
         assert b'The card &lt;b&gt;text&lt;/b&gt;' in page and b'<b>text</b>' not in page
         assert ('class="js-close-card-details" href="%s"' % route).encode() in page
 
+        # weddy.js's callAsync: toggleCardMaximized, WeKan's own Meteor method.
+        card_path = '%s/%s' % (route, card_id)
+        status, _, body, _ = request('POST', '/_methods/toggleCardMaximized', [], cookie=owner, as_json=True)
+        assert status == 200 and json.loads(body) == {'result': 1}, body
+        page = request('GET', card_path, cookie=owner)[2]
+        assert b'card-details js-card-details card-details-maximized' in page and b'js-minimize-card-details' in page
+        request('POST', '/_methods/toggleCardMaximized', [], cookie=owner, as_json=True)
+        page = request('GET', card_path, cookie=owner)[2]
+        assert b'card-details-maximized' not in page and b'js-maximize-card-details' in page
+        # Negative: no cookie is refused as Meteor refuses it, and changes nothing;
+        # an unknown method is not found, its name safely in the JSON answer.
+        status, _, body, _ = request('POST', '/_methods/toggleCardMaximized', [], as_json=True)
+        assert status == 401 and json.loads(body)['error'] == 401
+        assert b'card-details-maximized' not in request('GET', card_path, cookie=owner)[2]
+        status, _, body, _ = request('POST', '/_methods/no%22such%0Amethod', [], cookie=owner, as_json=True)
+        assert status == 404 and json.loads(body)['error'] == 404, body
+
         # Negative: a user who is no member does not see the board, nor the card.
         status, headers, _, cookies = request('POST', '/sign-in', {'username': 'stranger', 'password': 'test-password'})
         stranger = 'meteor_login_token=' + cookie_value(cookies, 'meteor_login_token')
