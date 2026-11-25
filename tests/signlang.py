@@ -59,7 +59,7 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                     for key in ['register','username','password','password-again']:
                         expected=html.escape(local.get(key) or english[key],quote=True).replace('&#x27;',"'")
                         assert expected in registration,(row['tag'],key)
-                    assert '<form method="GET" action="/register">' in registration
+                    assert '<form method="GET" action="/sign-up">' in registration
                     for field in ['username','password','confirm']:assert 'name="'+field+'"' in registration
                     status,headers,enrollment=request(path='/two-factor/setup?lang='+quote(row['tag']))
                     assert status==200 and headers['Content-Language']==row['tag'].replace('_','-')
@@ -75,7 +75,7 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                     assert status==200 and headers['Content-Language']=='fi'
                     assert html.escape(fi.get(key) or english[key],quote=True).replace('&#x27;',"'") in body
                     assert 'private-password' not in body and 'different-password' not in body and 'private-user' not in body
-                    assert 'action="/register?lang=fi"' in body
+                    assert 'action="/sign-up?lang=fi"' in body
                 wrong='wrongsecret-sensitive'
                 status,headers,body=request('ar','POST',dict(username='private-username',password=wrong))
                 assert status==200 and headers['Content-Language']=='ar' and 'dir="rtl"' in body

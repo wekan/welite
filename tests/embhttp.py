@@ -117,7 +117,7 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
                 words=json.loads((root/'i18n/data/ar.jsn').read_text())
                 assert all(words[key].encode() in body for key in ('attachments','no-items-message'))
-                assert b'dir="rtl"' in body and b'/board?id=embedded-board' in body
+                assert b'dir="rtl"' in body and b'/b/embedded-board/' in body
 
                 for path in ['/schema.sql','/designer.sql','/src/schema.sql','/_seed/schema.sql']:
                     status,_,body=request('GET',path);assert status==404 and b'CREATE TABLE' not in body,path

@@ -1,4 +1,5 @@
 """HTTP regressions for every Designer administrator gate; no cookies or JS."""
+import re
 import http.client
 import json
 import hashlib
@@ -89,8 +90,13 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 raise RuntimeError('Server did not start')
             def register(name):
                 status, headers, body = request('POST', '/register', {'username':name, 'password':'test-password', 'confirm':'test-password'})
-                assert status == 302, (status, headers, body)
-                return parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                # Since fd5f992 (2026-11-19) registration signs the person in and
+                # renders All Boards at once, its navigation POSTed with the new
+                # session - there is no redirect to read the session from.
+                assert status == 200, (status, headers, body)
+                found = re.search(rb'name="sessionId" value="([0-9a-f]+)"', body)
+                assert found, body
+                return found.group(1).decode()
             admin = register('administrator')
             member = register('member')
             check_admin_tiers(request,tmp,admin)

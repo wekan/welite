@@ -4,6 +4,23 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## 2026-11-26 WeKan's URL routes
+
+- Serve a board at WeKan's `/b/:id/:slug` and a card at
+  `/b/:boardId/:slug/:cardId` (WeKan's config/router.js), and registration at
+  `/sign-up`. The slug is not checked, as in WeKan, and `/b/:id` is the board
+  too. WeKan's own `/b/templates` and `/b/:id/:slug/rules` are not boards.
+- Build every board, card and registration link with these routes and the
+  board's stored slug (`src/wlroutes.pas`). The former `/board?id=`,
+  `/board/card?id=&card=` and `/register` still open the same pages, so old
+  links keep working. A Designer page cannot take a WeKan route.
+- A board its viewer may change still opens a card inside its POSTed form, so
+  the session never goes into a URL.
+- Verify on linked and CLI SQLite (`tests/routes.py`): the builders and the
+  parser, every route over HTTP, links in All Boards and on the board, the
+  former routes, and negative cases - an unknown board, a path with more
+  parts, `/b/templates`, and no board without a session.
+
 ## 2026-11-22 Read WeKan data folders as HTML4 kanban
 
 - Read WeKan's own folders read-only, in FreePascal: FerretDB v1 SQLite

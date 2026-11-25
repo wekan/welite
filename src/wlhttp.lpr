@@ -32,7 +32,7 @@ uses
   {$IFDEF UNIX} cthreads, {$ENDIF}
   {$IFDEF AMIGA} Sockets, {$ENDIF}
   SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 type
@@ -51,6 +51,9 @@ const
 
 procedure TWLCleanRouter.DoRouteRequest(Request:TRequest;Response:TResponse);
 begin
+  // WeKan's routes (/b/:id/:slug, /b/:boardId/:slug/:cardId, /sign-up) are
+  // served by the WeLite pages they name (wlroutes).
+  RewriteWeKanRoute(Request);
   try inherited DoRouteRequest(Request,Response);
   finally CleanupUploads(Request);end;
 end;
@@ -144,7 +147,7 @@ begin
 
     Body:=Body+BoardListHtml(T.Db,S,Language.Tag)+
       AuthNavigation(aRequest,'/sign-in',Words.Text('log-in','Sign in'))+
-      AuthNavigation(aRequest,'/register',Words.Text('register','Register'));
+      AuthNavigation(aRequest,'/sign-up',Words.Text('register','Register'));
     // detection is best-effort, never gates output (every page works on the HTML 3.2 baseline)
     Writeln('Client: ', BrowserName(DetectBrowser(RequestUserAgent(aRequest))));
     SendHtml(aResponse,LanguagePage(aResponse,Language,'WeKan-Lite',Body));
@@ -212,7 +215,7 @@ begin
       '  '+HtmlEncode(Words.Text('otp','One-time code (if enabled)'))+' <input name="code" size="6" maxlength="6"><br>'+LineEnding+
       '  <input type="submit" value="'+HtmlAttr(Title)+'">'+LineEnding+'</form>'+LineEnding+
       AuthNavigation(Request,'/two-factor/setup',Words.Text('two-factor-required-title','Set up two-factor authentication'))+
-      AuthNavigation(Request,'/register',Words.Text('create-account','Create an account (Register)')),Dir,Tag);
+      AuthNavigation(Request,'/sign-up',Words.Text('create-account','Create an account (Register)')),Dir,Tag);
   finally Words.Free;end;
 end;
 
@@ -380,7 +383,7 @@ begin
   Words:=TWLTranslator.Create(Language);
   try
     Title:=Words.Text('register','Register');
-    Body:=LanguagePicker(Language,Words,'/register')+'<h1>'+HtmlEncode(Title)+'</h1>';
+    Body:=LanguagePicker(Language,Words,'/sign-up')+'<h1>'+HtmlEncode(Title)+'</h1>';
     if Message<>'' then Body:=Body+'<p>'+HtmlEncode(Words.Text(MessageKey,Message))+'</p>';
     if First then Body:=Body+'<p>'+HtmlEncode(Words.Text('registration-first-admin',
       'This first account will be the Domain Global Admin.'))+'</p>';
@@ -505,7 +508,7 @@ begin
   begin aResponse.Code:=409;aResponse.SendContent;Exit;end;
   S.LanguageTag:=RequestLanguageTag(aRequest);
   aResponse.Code:=302;
-  aResponse.SetCustomHeader('Location',SessionUrl('/board?id='+HTTPEncode(BoardId),S));
+  aResponse.SetCustomHeader('Location',SessionUrl(BoardRoute(BoardId,BoardSlug(T.Db,BoardId)),S));
   aResponse.SendContent;
 end;
 

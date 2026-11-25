@@ -200,6 +200,75 @@ See the [standalone build and startup instructions](README.md#run-with-standalon
 and [cross-build records](docs/cross.md). The checklist below tracks the
 remaining platform and workflow verification.
 
+## HTML4 and HTML5 views on one backend (2026-11-26)
+
+The goal, as the maintainer set it: WeLite serves **two user interfaces on its
+existing backend**. Retro browsers get the HTML4 view WeLite has now; modern
+browsers get **Weddy's HTML5 view** - WeKan's own markup, class names, CSS and
+script, as caddy-wekan-plugin's Go Pug templates render it - so WeKan's own
+Playwright UI tests can run against WeLite. The **User-Agent** chooses the view,
+and an **HTML4/HTML5 toggle in the top header**, made like WeKan's mobile/desktop
+toggle (`.js-mobile-mode-toggle` in client/components/main/header.jade), lets
+the viewer switch. And WeLite's **URL routes are WeKan's** (config/router.js),
+so a WeKan link opens the same page in WeLite.
+
+Order of the work, each step committed with its tests:
+
+- [x] **WeKan's URL routes** (CHANGES.md, 2026-11-26; WeKan's admin, search
+  and list routes follow as their pages arrive). `/b/:id/:slug` for a board, `/b/:boardId/:slug/:cardId`
+  for a card, `/sign-up` for registration, and WeKan's admin, search and list
+  routes as their pages arrive. A board's slug is not checked, as in WeKan.
+  WeLite's former page routes (`/board?id=`, `/board/card?id=&card=`,
+  `/register`) answer with a redirect to the WeKan route, so old links keep
+  working. WeLite's own features that WeKan has no page for (Designer,
+  `/wekan` data folders, two-factor setup, the no-JS form actions such as
+  `/board/move`) keep their paths.
+- [ ] **The view chooser.** A modern browser (Chromium, Firefox, Safari, Edge and
+  their engines) gets HTML5; IBrowse, NetSurf, Dillo, Lynx, w3m, Elinks, old
+  Internet Explorer and an unknown User-Agent get HTML4. `?ui=html4` or
+  `?ui=html5` overrides it, remembered in a `welite-ui` cookie where the browser
+  keeps cookies; HTML4 never needs that cookie.
+- [ ] **The toggle in the top header** of both views, with WeKan's own icons
+  and words: the HTML4 view as plain links, the HTML5 view as WeKan's header
+  button.
+- [ ] **The HTML5 view**: Weddy's layout (header, notifications, member menu),
+  sign-in and sign-up, All Boards, the board with swimlanes, lists and
+  minicards, and the card details, rendered by Pascal from WeLite's data, with
+  Weddy's `/static` files (wekan.css, weddy.js, weddy-blocks.js, unpoly,
+  interact) under 8.3 names.
+- [ ] **WeKan's UI tests against the HTML5 view**, as Weddy runs them
+  (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
+  WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
+  the `meteor_login_token` cookie. Record which specs pass, and add each page's
+  specs as the page arrives.
+
+Found on the way, not part of this goal:
+
+- **`tests/admin.py` and the 36 test modules it runs are stale since fd5f992**
+  (2026-11-19, "Post browser navigation state from sign-in and home"): sign-in
+  and registration now render the signed-in page instead of redirecting, and
+  the home page's board links became POSTed forms, but the tests still expect
+  the redirect and `<a href>` links. `admin.py`'s own `register()` is updated;
+  `tests/tiers.py` is the next to fail. `tests/wkdir.py` and `tests/routes.py`
+  are written against the current behaviour and pass.
+
+Design questions for the maintainer (work goes on with the stated default):
+
+- **Where the HTML5 view remembers the choice when the viewer is signed in.**
+  Default: the `welite-ui` cookie only. Alternative: a per-user profile setting
+  in the database, so the choice follows the account to another browser.
+- **Which User-Agents are "modern".** Default: Chromium 90+, Firefox 90+, Safari
+  14+ and anything with those engines; everything else HTML4. A browser in
+  between (old Android WebView, Pale Moon, SeaMonkey) gets HTML4 until it is
+  listed.
+- **Sessions in the HTML5 view.** WeLite's HTML4 view carries the session in the
+  URL, without cookies (G4). Weddy's view and WeKan's tests use the
+  `meteor_login_token` cookie. Default: the HTML5 view accepts that cookie, and
+  the HTML4 view keeps working without any cookie. Is a cookie in the HTML5
+  view acceptable for WeLite's no-cookie goal?
+- **Unpoly and interact in the binary.** Weddy's view needs them (about 170 KB).
+  Default: embedded like WeLite's other `public/` files.
+
 ## Implementation checklist
 
 Complete these steps sequentially, with regression tests and a local commit for each.

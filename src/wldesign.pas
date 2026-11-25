@@ -1091,7 +1091,9 @@ begin
     (Pos('..',Url)>0) or (Url[Length(Url)]='/') then Exit;
   for i:=2 to Length(Url) do
     if not (Url[i] in ['a'..'z','A'..'Z','0'..'9','/','-','_']) then Exit;
-  if (Url='/sign-in') or (Url='/register') or (Url='/users/login') or
+  // WeKan's routes too (wlroutes): a Designer page never shadows a board or card.
+  if (Url='/sign-in') or (Url='/register') or (Url='/sign-up') or (Url='/users/login') or
+    (Url='/b') or (Pos('/b/',Url)=1) or
     (Url='/admin') or (Pos('/admin/',Url)=1) or (Url='/designer') or
     (Pos('/designer/',Url)=1) or (Url='/api') or (Pos('/api/',Url)=1) or
     ((Url='/board') or (Pos('/board/',Url)=1)) then Exit;

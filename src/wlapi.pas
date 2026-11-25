@@ -120,7 +120,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -1861,7 +1861,7 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
     try
       Title:=Words.Text('outgoing-webhooks','Outgoing Webhooks');
       Body:='<h1>'+HtmlEncode(Title)+'</h1><p><a href="'+
-        HtmlAttr(SessionUrl('/board?id='+HTTPEncode(BoardId),Session))+'">'+
+        HtmlAttr(SessionUrl(BoardRoute(BoardId,BoardSlug(T.Db,BoardId)),Session))+'">'+
         HtmlEncode(Words.Text('board','Board'))+'</a></p>'+FormStart('create','')+
         '<p><label>'+HtmlEncode(Words.Text('url','URL'))+' <input name="url" value=""></label> '+
         '<input type="submit" value="'+HtmlAttr(Words.Text('new-outgoing-webhook','New Outgoing Webhook'))+'"></p></form><ul>';

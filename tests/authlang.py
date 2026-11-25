@@ -28,7 +28,8 @@ def check_auth_language(request,database,otp):
     assert b'href="/two-factor/setup?lang=ar">'+translated('two-factor-required-title')+b'</a>' in body
     status,headers,body=request('GET','/register?lang='+language)
     assert status==200 and headers['Content-Language']==language and b'dir="rtl"' in body
-    assert b'action="/register?lang=ar"' in body and b'href="/sign-in?lang=ar"' in body
+    # Registration is WeKan's /sign-up (src/wlroutes.pas).
+    assert b'action="/sign-up?lang=ar"' in body and b'href="/sign-in?lang=ar"' in body
     status,headers,body=request('POST','/register?lang='+language,dict(username=user,password=password,confirm=password))
     assert status==200 and b'<h1>'+translated('enrollment-account-created')+b'</h1>' in body and b'href="/two-factor/setup?lang=ar"' in body
     assert translated('two-factor-required-text') in body
@@ -71,5 +72,5 @@ def check_auth_language(request,database,otp):
     assert token not in headers['Location'] and secret not in headers['Location'] and user not in headers['Location'] and password not in headers['Location']
     # Unsupported input cannot become a retry URL or response header.
     status,headers,body=request('GET','/register?lang=..%2Fbad')
-    assert status==200 and headers['Content-Language']=='en' and b'action="/register"' in body
+    assert status==200 and headers['Content-Language']=='en' and b'action="/sign-up"' in body
     print('PASS: registration/setup/confirmation/retry/sign-in language continuity, safe state-only URLs, existing no-store/no-referrer controls and unsupported-language refusal')

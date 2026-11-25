@@ -17,10 +17,11 @@ procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
 implementation
-uses DateUtils,Math,wli18n,wllocale,wladmin,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec;
-function CardUrl(const BoardId,CardId:string;const S:TWLSession):string;
+uses DateUtils,Math,wli18n,wllocale,wladmin,wlcfpol,wlselscp,wlstore,wlferr,wlapi,wlcfjson,wlcfspec,wlroutes;
+// WeKan's card route /b/:boardId/:slug/:cardId (wlroutes), with the board's own slug.
+function CardUrl(Db:TWLDb;const BoardId,CardId:string;const S:TWLSession):string;
 begin
-  Result:=SessionUrl('/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(CardId),S);
+  Result:=SessionUrl(CardRoute(BoardId,BoardSlug(Db,BoardId),CardId),S);
 end;
 
 function CardCaption(const Title:string;Words:TWLTranslator):string;
@@ -34,10 +35,10 @@ begin
   Result:=SessionUrl('/board/attachments?id='+HTTPEncode(Board),S);
 end;
 
-function AttachmentReturnUrl(Request:TRequest;const Board,Card:string;const S:TWLSession):string;
+function AttachmentReturnUrl(Db:TWLDb;Request:TRequest;const Board,Card:string;const S:TWLSession):string;
 begin
   if Request.QueryFields.Values['from']='attachments' then Result:=BoardAttachmentsUrl(Board,S)
-  else Result:=CardUrl(Board,Card,S);
+  else Result:=CardUrl(Db,Board,Card,S);
 end;
 
 function AttachmentUploadAction(const Board,Card:string):string;
@@ -90,14 +91,14 @@ begin
   Tag:=LanguageTag;if Tag='' then Tag:=S.LanguageTag;
   Words:=TWLTranslator.Create(ResolveLanguage(Tag,SessionLanguage(Db,S),''));
   try
-    R:=Db.Query('SELECT id,title,color FROM boards WHERE archived=0 ORDER BY sort,id;');
+    R:=Db.Query('SELECT id,title,color,slug FROM boards WHERE archived=0 ORDER BY sort,id;');
     Result:='<h2>'+HtmlEncode(Words.Text('boards','Boards'))+'</h2><ul>'; Count:=0;
     for i:=0 to High(R) do if BoardCanRead(Db,S.UserId,R[i][0]) then
     begin
       Inc(Count);
       Navigation:=S;
       Navigation.LanguageTag:=Tag;
-      Result:=Result+'<li>'+NavigationButton('/board?id='+HTTPEncode(R[i][0]),R[i][1],Navigation)+'</li>';
+      Result:=Result+'<li>'+NavigationButton(BoardRoute(R[i][0],R[i][3]),R[i][1],Navigation)+'</li>';
     end;
     if Count=0 then Result:=Result+'<li>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</li>';
     Result:=Result+'</ul>';
@@ -238,10 +239,10 @@ end;
 function BoardHtml(Db:TWLDb; const BoardId:string; const S:TWLSession; const Dir:string; X:Integer; Y:Integer; AllItems:Boolean;const OriginWidget,OriginPath,LanguageTag,ExpandedList,SubtaskCard,HeaderNavigation:string;Columns,VisibleRows:Integer;const ViewCommand:string):string;
 var B,Lanes,Lists,Cards,Subtasks,Permissions:TWLRows; i,j,k,c,Child,Width,MapX,MapY,MapCol,MapCols,BlockWidth,BlockHeight:Integer;
   MapLists:array of TWLRows;
-  Writable,ShowSpentTime,ShowCustomFields,Occupied,Edge:Boolean; Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,MapBottom,ViewDir,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
+  Writable,ShowSpentTime,ShowCustomFields,Occupied,Edge:Boolean; Route,Back,BoardPath,Align,CellDir,Map,Url,Color,CellText,MapBottom,ViewDir,SizeQuery:string; Words:TWLTranslator;Tag:string;Language:TWLLanguage;Policy:TFieldPolicy;NavState:TWLSession;
   function ViewPath(AX,AY:Integer):string;
   begin
-    Result:='/board?id='+HTTPEncode(BoardId)+'&x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
+    Result:=Route+'?x='+IntToStr(AX)+'&y='+IntToStr(AY)+SizeQuery;
   end;
   function MapLabel(Row,Column:Integer):string;
   var Letters:string;
@@ -304,7 +305,9 @@ begin
   if (Columns<1) or (Columns>40) then Columns:=6;
   if (VisibleRows<1) or (VisibleRows>40) then VisibleRows:=4;
   SizeQuery:='&cols='+IntToStr(Columns)+'&rows='+IntToStr(VisibleRows);
-  Back:='/board?id='+HTTPEncode(BoardId);
+  // WeKan's board route (wlroutes); every view of the board is a query on it.
+  Route:=BoardRoute(BoardId,BoardSlug(Db,BoardId));
+  Back:=Route;
   NavState:=S;
   NavState.LanguageTag:=Language.Tag;
   Result:='<h1>'+HtmlEncode(B[0][0])+'</h1><div class="board-nav">'+HeaderNavigation;
@@ -331,7 +334,7 @@ begin
       Result:=Result+NavigationButton('/board/webhooks?id='+HTTPEncode(BoardId),
         Words.Text('outgoing-webhooks','Outgoing Webhooks'),NavState);
   end;
-  Result:=Result+NavigationButton(Back+'&view=all'+SizeQuery,Words.Text('view-all','View all'),NavState)+'</div>';
+  Result:=Result+NavigationButton(Route+'?view=all'+SizeQuery,Words.Text('view-all','View all'),NavState)+'</div>';
   Lanes:=Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
     ' AND archived=0 ORDER BY sort,id;');
   if X<1 then X:=1;
@@ -477,7 +480,7 @@ begin
       begin
         Result:=Result+'<p'+DraggableAttrs('card',Cards[k][0],'/board/move')+
           BgColorAttr(Cards[k][2])+'>'+Selection('card',Cards[k][0])+
-          ItemButton('view_card',Cards[k][0],'/board/card?id='+HTTPEncode(BoardId)+'&card='+HTTPEncode(Cards[k][0]),
+          ItemButton('view_card',Cards[k][0],CardRoute(BoardId,BoardSlug(Db,BoardId),Cards[k][0]),
             CardCaption(Cards[k][1],Words))+'</p>';
         if ShowCustomFields then Result:=Result+MiniCardFields(Db,S,BoardId,Cards[k][0],Words);
         if ShowSpentTime and (Cards[k][4]<>'') then
@@ -672,7 +675,7 @@ begin
       Path:='/board/calendar?id='+HTTPEncode(Board);
       Body:='<h1>'+HtmlEncode(Title+' — '+Boards[0][0])+'</h1>'+
         MainNavigation(T.Db,S,Language.Tag,T.IsAdmin)+
-        NavigationButton('/board?id='+HTTPEncode(Board)+'&view=all',Words.Text('board','Board'),S);
+        NavigationButton(BoardRoute(Board,BoardSlug(T.Db,Board))+'?view=all',Words.Text('board','Board'),S);
       if MonthDate>EncodeDate(1,1,1) then
         Body:=Body+NavigationButton(Path+'&month='+FormatDateTime('yyyy-mm',IncMonth(MonthDate,-1)),
           Words.Text('previous','Previous'),S);
@@ -706,7 +709,7 @@ begin
             while (Card<Length(Cards)) and (Cards[Card][2]=DayKey) do
             begin
               Body:=Body+'<div'+BgColorAttr(Cards[Card][3])+'>'+
-                NavigationButton('/board/card?id='+HTTPEncode(Board)+'&card='+HTTPEncode(Cards[Card][0]),
+                NavigationButton(CardRoute(Board,BoardSlug(T.Db,Board),Cards[Card][0]),
                   CardCaption(Cards[Card][1],Words),S)+'</div>';
               Inc(Card);
             end;
@@ -767,7 +770,7 @@ begin
             if Length(Rows)=1 then
             begin
               Title:=CardCaption(Rows[0][0],Words);
-              Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
+              Body:='<p><a href="'+HtmlAttr(SessionUrl(BoardRoute(Board,BoardSlug(T.Db,Board)),S))+'">'+
                 HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>'+
                 MainNavigation(T.Db,S,Language.Tag,T.IsAdmin);
               if Rows[0][1]<>'' then Body:=Body+'<p>'+HtmlEncode(Rows[0][1])+'</p>';
@@ -793,7 +796,7 @@ begin
               begin
                 Body:=Body+'<h2>'+HtmlEncode(Words.Text('subtasks','Subtasks'))+'</h2><ul>';
                 for Subtask in Subtasks do
-                  Body:=Body+'<li><a href="'+HtmlAttr(CardUrl(Board,Subtask[0],S))+'">'+
+                  Body:=Body+'<li><a href="'+HtmlAttr(CardUrl(T.Db,Board,Subtask[0],S))+'">'+
                     HtmlEncode(CardCaption(Subtask[1],Words))+'</a></li>';
                 Body:=Body+'</ul>';
               end;
@@ -875,7 +878,7 @@ var T:TWLTenant;S:TWLSession;Board,Card,Field,Option,Condition,Guard:string;
       Title:=Words.Text('error','Error');
       Body:='<h1>'+HtmlEncode(Title)+'</h1>';
       if (S.UserId<>'') and (Board<>'') and (Card<>'') and (Pos(#0,Board+Card)=0) then
-        Body:=Body+'<p><a href="'+HtmlAttr(CardUrl(Board,Card,S))+'">'+
+        Body:=Body+'<p><a href="'+HtmlAttr(CardUrl(T.Db,Board,Card,S))+'">'+
           HtmlEncode(Words.Text('card','Card'))+'</a></p>';
       aResponse.Code:=Status;
       aResponse.ContentType:='text/html; charset=utf-8';
@@ -923,7 +926,7 @@ begin
     except Reject(500);Exit;end;
   finally Selector.Free;Policy.Free;end;
   aResponse.Code:=303;
-  aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+  aResponse.SetCustomHeader('Location',CardUrl(T.Db,Board,Card,S));
   aResponse.SendContent;
 end;
 
@@ -981,7 +984,7 @@ begin
   if not StoreAttachment(T,S.UserId,Board,Rows[0][0],Rows[0][1],Card,Upload.FileName,FileType,Stream,Id,True) then
   begin Reject(500,'upload-failed','Upload failed');Exit;end;
   aResponse.Code:=303;
-  aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+  aResponse.SetCustomHeader('Location',CardUrl(T.Db,Board,Card,S));
   aResponse.SendContent;
 end;
 
@@ -1044,7 +1047,7 @@ begin
     begin T.Db.Exec('ROLLBACK;');Reject(500);Exit;end;
   finally Policy.Free;Selector.Free;end;
   aResponse.Code:=303;
-  aResponse.SetCustomHeader('Location',CardUrl(Board,Card,S));
+  aResponse.SetCustomHeader('Location',CardUrl(T.Db,Board,Card,S));
   aResponse.SendContent;
 end;
 
@@ -1071,7 +1074,7 @@ begin
   begin
     S.LanguageTag:=RequestLanguageTag(aRequest);
     aResponse.Code:=303;
-    aResponse.SetCustomHeader('Location',AttachmentReturnUrl(aRequest,Board,Card,S));
+    aResponse.SetCustomHeader('Location',AttachmentReturnUrl(T.Db,aRequest,Board,Card,S));
     aResponse.SendContent;Exit;
   end;
   Language:=ViewerLanguage(T.Db,S,aRequest);
@@ -1124,7 +1127,7 @@ begin
     if Allowed and Snapshot then
     begin
       aResponse.Code:=200;
-      Body:='<p><a href="'+HtmlAttr(SessionUrl('/board?id='+HTTPEncode(Board),S))+'">'+
+      Body:='<p><a href="'+HtmlAttr(SessionUrl(BoardRoute(Board,BoardSlug(T.Db,Board)),S))+'">'+
         HtmlEncode(Words.Text('board','Board'))+'</a></p><h1>'+HtmlEncode(Title)+'</h1>'+
                 MainNavigation(T.Db,S,Language.Tag,T.IsAdmin);
       if Length(Rows)=0 then Body:=Body+'<p>'+HtmlEncode(Words.Text('no-items-message','No items.'))+'</p>'
