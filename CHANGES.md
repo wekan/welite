@@ -66,7 +66,19 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   weddy.js reads the signed-in user at `GET /api/user` and checks the
   session at `/_session` with the cookie alone; the cookie opens no other
   REST route. WeKan's `#6865` test opens the form, but it also expects
-  Escape to close it, which weddy.js does not do, so it is not listed.
+  Escape to close it, and the form to stay open after a list is added. WeLite's
+  own `public/static/welite.js` closes it on Escape, as WeKan's EscapeActions;
+  weddy.js closes it after adding, so the test is not listed.
+- Show a card's members in the HTML5 view and put a board member on the card
+  or take them off from WeKan's members pop-over, with the REST API's member
+  checks and its join/unjoin activity (`ToggleViewCardMember`, sharing
+  `CardAssignmentSql` with the REST route). Show Requested By and Assigned
+  By where the board shows them, Edit when set and Add when empty, and
+  change them (`SetViewCardPerson`); edit the description
+  (`SetViewCardDescription`). A Worker may change neither, as in WeKan.
+  `welite.js` opens and closes the Requested By and Assigned By forms, which
+  weddy.js leaves alone. All 6 tests of WeKan's `16-card-members-description`
+  pass, none by finding the section missing; 28 pass in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

@@ -122,7 +122,7 @@ def http_checks(server, tmp, backend):
                     raise AssertionError(log.read())
                 time.sleep(.05)
         # Accounts and a board, through the HTML4 view and the REST API.
-        for name in ['owner', 'stranger', 'commenter', 'silent']:
+        for name in ['owner', 'stranger', 'commenter', 'silent', 'worker']:
             status, _, _, _ = request('POST', '/sign-up', {'username': name, 'password': 'test-password',
                                                           'confirm': 'test-password'}, agent='Welite-test')
             assert status == 200
@@ -151,7 +151,7 @@ def http_checks(server, tmp, backend):
             assert status == 200 and b'HTML 3.2' in page and b'id="at-pwd-form"' not in page, agent
             assert b'href="/sign-in?ui=html5"' in page, 'the HTML4 toggle'
         # Weddy's static files, under 8.3 names.
-        for name in ['wekan.css', 'weddy.js', 'unpoly.js', 'unpoly.css', 'interact.js', 'welite.css']:
+        for name in ['wekan.css', 'weddy.js', 'unpoly.js', 'unpoly.css', 'interact.js', 'welite.css', 'welite.js']:
             status, _, body, _ = request('GET', '/static/' + name)
             assert status == 200 and len(body) > 200, name
 
@@ -298,14 +298,14 @@ def http_checks(server, tmp, backend):
         # Comments (_cardsec_comments.pug), with WeKan's comment capability:
         # Comment only may comment, No comments may not (boardRoleCapabilities.js).
         users = {u['username']: u['_id'] for u in json.loads(request('GET', '/api/users', headers=auth)[2])}
-        for name, role in [('commenter', 'isCommentOnly'), ('silent', 'isNoComments')]:
+        for name, role in [('commenter', 'isCommentOnly'), ('silent', 'isNoComments'), ('worker', 'isWorker')]:
             status, _, body, _ = request('POST', '/api/boards/%s/members/%s/add' % (board_id, users[name]),
                                          {'action': 'add', 'isAdmin': False, role: True}, headers=auth, as_json=True)
             assert status == 200, body
         def cookie_of(name):
             cookies = request('POST', '/sign-in', {'username': name, 'password': 'test-password'})[3]
             return 'meteor_login_token=' + cookie_value(cookies, 'meteor_login_token')
-        commenter, silent = cookie_of('commenter'), cookie_of('silent')
+        commenter, silent, worker = cookie_of('commenter'), cookie_of('silent'), cookie_of('worker')
         comments_path = '/b/%s/cards/%s/comments' % (board_id, card_id)
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert ('action="%s"' % comments_path).encode() in page
@@ -349,6 +349,72 @@ def http_checks(server, tmp, backend):
         assert request('GET', '/_session')[0] == 401
         # Negative: the cookie opens no other REST route.
         assert request('GET', '/api/boards/%s' % board_id, cookie=owner)[0] == 401
+
+        # The card's members (_cardsec_members.pug): the "+" and the pop-over of
+        # board members, each a form that puts the member on the card or takes
+        # them off, with the REST API's member checks and its activity.
+        card_path = '/b/%s/cards/%s' % (board_id, card_id)
+        def card_doc():
+            return json.loads(request('GET', '/api/boards/%s/lists/%s/cards/%s' % (board_id, list_id, card_id),
+                                      headers=auth)[2])
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'js-add-members' in page and b'data-pop="card-members"' in page
+        assert ('action="%s/members/%s"' % (card_path, login['id'])).encode() in page
+        status, _, page, _ = request('POST', '%s/members/%s' % (card_path, login['id']), {}, cookie=owner)
+        assert status == 200 and b'card-member js-member' in page and card_doc()['members'] == [login['id']]
+        status, _, page, _ = request('POST', '%s/members/%s' % (card_path, login['id']), {}, cookie=owner)
+        assert status == 200 and card_doc()['members'] == [], 'the same form takes the member off again'
+        # Negative: a user who is no member of the board cannot be put on the
+        # card, and a non-member or Comment only changes nothing.
+        assert request('POST', '%s/members/%s' % (card_path, users['stranger']), {}, cookie=owner)[0] == 400
+        assert request('POST', '%s/members/%s' % (card_path, login['id']), {}, cookie=stranger)[0] == 403
+        assert request('POST', '%s/members/%s' % (card_path, users['commenter']), {}, cookie=commenter)[0] == 403
+        assert b'js-add-members' not in request('GET', '%s/%s' % (route, card_id), cookie=commenter)[2]
+        assert card_doc()['members'] == []
+        # The REST API's member route shares the write: on, off, and not a non-member.
+        rest_member = '/api/boards/%s/lists/%s/cards/%s/members/%%s' % (board_id, list_id, card_id)
+        assert request('POST', rest_member % users['commenter'], {}, headers=auth, as_json=True)[0] == 200
+        assert card_doc()['members'] == [users['commenter']]
+        assert request('DELETE', rest_member % users['commenter'], headers=auth)[0] == 200
+        assert request('POST', rest_member % users['stranger'], {}, headers=auth, as_json=True)[0] == 400
+        assert card_doc()['members'] == []
+
+        # Requested By and Assigned By: Edit when set, Add when empty; free text.
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'card-details-item-requested-by' in page and b'card-details-item-assigned-by' in page
+        status, _, page, _ = request('POST', card_path + '/people', {'field': 'requestedBy', 'value': ' Customer <One> '},
+                                     cookie=owner)
+        assert status == 200 and b'Customer &lt;One&gt;' in page and b'<One>' not in page
+        card_page = lambda: request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'<div class="viewer">Customer &lt;One&gt;</div>' in card_page(), 'stored trimmed'
+        # Negative: no other field by this form, no Worker, no non-member, and
+        # not on a board that does not show it.
+        assert request('POST', card_path + '/people', {'field': 'title', 'value': 'X'}, cookie=owner)[0] == 403
+        assert request('POST', card_path + '/people', {'field': 'assignedBy', 'value': 'W'}, cookie=worker)[0] == 403
+        assert request('POST', card_path + '/people', {'field': 'assignedBy', 'value': 'S'}, cookie=stranger)[0] == 403
+        assert request('POST', card_path + '/people', {'field': 'assignedBy', 'value': 'x' * 1001}, cookie=owner)[0] == 400
+        status, _, body, _ = request('PUT', '/api/boards/%s/cardSettings' % board_id, {'allowsAssignedBy': False},
+                                     headers=auth, as_json=True)
+        assert status == 200, body
+        assert request('POST', card_path + '/people', {'field': 'assignedBy', 'value': 'Off'}, cookie=owner)[0] == 403
+        assert b'card-details-item-assigned-by' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        status, _, body, _ = request('PUT', '/api/boards/%s/cardSettings' % board_id, {'allowsAssignedBy': True},
+                                     headers=auth, as_json=True)
+        page = card_page()
+        assert status == 200, body
+        assert card_doc()['title'] == 'Renamed Card' and b'card-details-item-assigned-by' in page
+        assert b'>W<' not in page and b'>S<' not in page and b'>Off<' not in page and b'fa-plus' in page
+
+        # The description's editor.
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'data-opens="edit-description"' in page and ('action="%s/description"' % card_path).encode() in page
+        status, _, page, _ = request('POST', card_path + '/description', {'description': 'New <b>words</b>'}, cookie=owner)
+        assert status == 200 and b'New &lt;b&gt;words&lt;/b&gt;' in page and card_doc()['description'] == 'New <b>words</b>'
+        # Negative: a Worker sees it without the editor and cannot change it, nor can a non-member.
+        assert b'data-opens="edit-description"' not in request('GET', '%s/%s' % (route, card_id), cookie=worker)[2]
+        assert request('POST', card_path + '/description', {'description': 'Worker'}, cookie=worker)[0] == 403
+        assert request('POST', card_path + '/description', {'description': 'Stranger'}, cookie=stranger)[0] == 403
+        assert card_doc()['description'] == 'New <b>words</b>'
 
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.

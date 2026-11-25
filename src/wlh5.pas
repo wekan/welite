@@ -83,7 +83,8 @@ const
     '<link rel="stylesheet" href="/static/welite.css">' +
     '<script src="/static/unpoly.js"></script>' +
     '<script src="/static/interact.js"></script>' +
-    '<script src="/static/weddy.js"></script>';
+    '<script src="/static/weddy.js"></script>' +
+    '<script src="/static/welite.js"></script>';
 
 function E(const Value: string): string;
 begin
@@ -492,10 +493,126 @@ begin
 end;
 
 // board.pug: the board, and when CardId is given, its opened card.
+// _cardsec_members.pug: the card's members, and the "+" that opens the
+// card-members pop-over (cardMembersPopup) for whoever may change the card.
+function MembersSection(Db: TWLDb; Words: TWLTranslator; const CardId: string; Writable: Boolean): string;
+var R: TWLRows; i: Integer;
+begin
+  R := Db.Query('SELECT u.id,u.username FROM card_members c JOIN users u ON u.id=c.userId WHERE c.cardId=' +
+    QuotedStr(CardId) + ' ORDER BY u.username;');
+  Result := '<div class="card-details-item card-details-item-members"><h3 class="card-details-item-title">' +
+    E(Words.Text('members', 'Members')) + '</h3>';
+  for i := 0 to High(R) do
+    Result := Result + '<span class="card-member js-member member" data-user="' + HtmlAttr(R[i][0]) + '">' +
+      E(R[i][1]) + '</span>';
+  if Writable then
+    Result := Result + '<a class="card-details-item-add-button js-add-members" href="#" title="' +
+      HtmlAttr(Words.Text('add-members', 'Add Members')) + '" aria-label="' +
+      HtmlAttr(Words.Text('add-members', 'Add Members')) + '">+</a>';
+  Result := Result + '</div>';
+end;
+
+function MembersPopup(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string): string;
+var R: TWLRows; i: Integer; Selected: Boolean; Name: string;
+begin
+  R := Db.Query('SELECT u.id,u.username,COALESCE(json_extract(u.profile_json,''$.fullname''),''''),' +
+    'EXISTS(SELECT 1 FROM card_members c WHERE c.cardId=' + QuotedStr(CardId) + ' AND c.userId=u.id) ' +
+    'FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
+    ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0 ORDER BY u.username;');
+  Result := '<template class="js-pop-over-template" data-pop="card-members" data-title="' +
+    HtmlAttr(Words.Text('cardMembersPopup-title', 'Members')) + '"><div class="header"><span class="header-title">' +
+    E(Words.Text('cardMembersPopup-title', 'Members')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list js-card-member-list">';
+  for i := 0 to High(R) do
+  begin
+    Selected := R[i][3] = '1';
+    Name := R[i][1];
+    if R[i][2] <> '' then Name := Name + ' (' + R[i][2] + ')';
+    if Selected then Name := Name + ' ' + #$E2#$9C#$93;
+    Result := Result + '<li><form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' +
+      HtmlAttr(HTTPEncode(CardId)) + '/members/' + HtmlAttr(HTTPEncode(R[i][0])) + '" up-submit up-target=".board-wrapper">' +
+      '<button class="js-select-member' + IfThen(Selected, ' is-active', '') + '" type="submit" data-user="' +
+      HtmlAttr(R[i][0]) + '">' + E(Name) + '</button></form></li>';
+  end;
+  Result := Result + '</ul></div></template>';
+end;
+
+// _cardsec_members.pug's people: WeKan's Requested By and Assigned By, free
+// text, each on a board that shows it; Edit when set, Add when empty.
+function PeopleSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId, RequestedBy, AssignedBy: string;
+  Editable: Boolean): string;
+  function Person(const Field, Setting, Key, Caption, Icon, Value: string): string;
+  var Label_: string;
+  begin
+    Result := '';
+    if not BoardAllows(Db, BoardId, Setting) then Exit;
+    Label_ := Words.Text(Key, Caption);
+    Result := '<div class="card-details-item card-details-item-name card-details-item-' + Key +
+      '"><h3 class="card-details-item-title"><i class="fa ' + Icon + '"></i> ' + E(Label_) + '</h3>';
+    if Value <> '' then Result := Result + '<div class="viewer">' + E(Value) + '</div>';
+    if Editable then
+    begin
+      Result := Result + '<div class="card-details-person-controls">';
+      if Value <> '' then
+        Result := Result + '<a class="js-open-inlined-form" href="#" title="' + HtmlAttr(Words.Text('edit', 'Edit')) +
+          '" aria-label="' + HtmlAttr(Words.Text('edit', 'Edit')) + '"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>'
+      else
+        Result := Result + '<a class="js-open-inlined-form" href="#" title="' + HtmlAttr(Words.Text('add', 'Add')) +
+          '" aria-label="' + HtmlAttr(Words.Text('add', 'Add')) + '"><i class="fa fa-plus" aria-hidden="true"></i></a>';
+      Result := Result + '</div><form class="js-inlined-form is-hidden" method="post" action="/b/' +
+        HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/people" up-submit up-target=".board-wrapper">' +
+        '<input type="hidden" name="field" value="' + Field + '"><input type="text" name="value" value="' + HtmlAttr(Value) +
+        '" aria-label="' + HtmlAttr(Label_) + '"><button class="primary" type="submit">' + E(Words.Text('save', 'Save')) +
+        '</button><a class="js-close-inlined-form" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
+        '">&times;</a></form>';
+    end;
+    Result := Result + '</div>';
+  end;
+begin
+  Result := Person('requestedBy', 'allowsRequestedBy', 'requested-by', 'Requested By', 'fa-shopping-cart', RequestedBy) +
+    Person('assignedBy', 'allowsAssignedBy', 'assigned-by', 'Assigned By', 'fa-user-plus', AssignedBy);
+end;
+
+// _cardsec_description.pug: the description, and for whoever may change it
+// the pencil - and the text - that open its editor, whose field is on the
+// page only while open (weddy.js clones it from the template).
+function DescriptionSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId, Text: string; CanEdit: Boolean): string;
+var Viewer: string;
+begin
+  Result := '';
+  if not CanEdit and (Text = '') then Exit;
+  Result := '<div class="card-details-group card-details-group-description">';
+  if BoardAllows(Db, BoardId, 'allowsDescriptionTitle') then
+    Result := Result + '<h3 class="card-details-item-title"><i class="fa fa-file-text-o"></i> ' +
+      E(Words.Text('description', 'Description')) + '</h3>';
+  Viewer := '';
+  if Text <> '' then Viewer := '<div class="viewer">' + E(Text) + '</div>';
+  if BoardAllows(Db, BoardId, 'allowsDescriptionText') then
+  begin
+    if CanEdit then
+      Result := Result + '<a class="js-open-inlined-form" href="#" data-opens="edit-description" title="' +
+        HtmlAttr(Words.Text('edit', 'Edit')) + '" aria-label="' + HtmlAttr(Words.Text('edit', 'Edit')) +
+        '"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>' +
+        '<a class="js-open-inlined-form card-description-view" href="#" data-opens="edit-description" title="' +
+        HtmlAttr(Words.Text('edit', 'Edit')) + '">' + Viewer + '</a>' +
+        '<form class="card-description js-card-description js-inlined-form is-hidden" method="post" action="/b/' +
+        HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/description" up-submit up-target=".board-wrapper">' +
+        '<template class="js-inlined-form-body"><div class="new-description js-new-description is-open">' +
+        '<textarea class="editor js-new-description-input" name="description" dir="auto" aria-label="' +
+        HtmlAttr(Words.Text('description', 'Description')) + '">' + E(Text) + '</textarea></div>' +
+        '<div class="edit-controls clearfix"><button class="primary" type="submit">' + E(Words.Text('save', 'Save')) +
+        '</button><a class="js-close-inlined-form" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
+        '">&times;</a></div></template></form>'
+    else if Text <> '' then
+      Result := Result + '<div class="card-description">' + Viewer + '</div>';
+  end;
+  Result := Result + '</div>';
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
-  Selector: TSelectionScope; Writable, Maximized: Boolean;
+  Selector: TSelectionScope; Writable, Maximized, TextEditor: Boolean;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -586,7 +703,7 @@ begin
   begin
     Selector := TSelectionScope.Create(Db);
     try
-      Card := Db.Query('SELECT title,description FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
+      Card := Db.Query('SELECT title,description,COALESCE(requestedBy,''''),COALESCE(assignedBy,'''') FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
         QuotedStr(BoardId) + ' AND archived=0 AND deletedAt IS NULL AND ' + Selector.StringField('cards', 'id') +
         ' AND ' + Selector.StringField('cards', 'boardId') + ';');
     finally
@@ -617,12 +734,14 @@ begin
     Details := Details +
       '<a class="js-close-card-details" href="' + HtmlAttr(Route) + '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '" up-follow up-target=".board-wrapper">&times;</a></div>';
-    if Card[0][1] <> '' then
-      Details := Details + '<div class="card-details-item card-details-item-description"><div class="viewer">' +
-        E(Card[0][1]) + '</div></div>';
+    if BoardAllows(Db, BoardId, 'allowsMembers') then
+      Details := Details + MembersSection(Db, Words, CardId, Writable);
+    TextEditor := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
+    Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
+      DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
-    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId);
+    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId);
   end;
   // board.pug's list menu, drawn once; weddy.js opens it for the list whose
   // menu button was clicked.
@@ -801,6 +920,9 @@ begin
   //   /b/:id/cards/:card/checklists/:cl/items/:it/toggle   check or uncheck the item
   //   /b/:id/cards/:card/checklists/:cl/delete        delete the checklist and its items
   //   /b/:id/cards/:card/comments                     comment on the card
+  //   /b/:id/cards/:card/people                       its Requested By or Assigned By
+  //   /b/:id/cards/:card/description                  its description
+  //   /b/:id/cards/:card/members/:user                a board member on or off it
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
@@ -813,6 +935,9 @@ begin
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
   else if (n = 5) and (P[4] = 'comments') then Action := 'add-comment'
+  else if (n = 5) and (P[4] = 'people') then Action := 'set-person'
+  else if (n = 5) and (P[4] = 'description') then Action := 'set-description'
+  else if (n = 6) and (P[4] = 'members') then Action := 'toggle-member'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
@@ -831,6 +956,13 @@ begin
       Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'], NewId, Error)
   else if Action = 'rename-card' then
     Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
+  else if Action = 'set-person' then
+    Code := SetViewCardPerson(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['field'],
+      Request.ContentFields.Values['value'], Error)
+  else if Action = 'set-description' then
+    Code := SetViewCardDescription(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['description'], Error)
+  else if Action = 'toggle-member' then
+    Code := ToggleViewCardMember(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'add-comment' then
     Code := AddViewComment(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['comment'], NewId, Error)
   else if Action = 'add-checklist' then

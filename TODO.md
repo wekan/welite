@@ -235,10 +235,10 @@ Order of the work, each step committed with its tests:
   user, Log Out, the toggle), sign-in, All Boards with Starred and Remaining,
   the board with swimlanes, lists and minicards, the opened card's title,
   description and maximize/minimize, adding a card at the top or bottom of a
-  list and renaming it, checklists, comments, adding a list, weddy.js's `/_methods/` calls, rendered by Pascal from
+  list and renaming it, checklists, comments, adding a list, the card's members, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
   WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 24 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 28 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's
@@ -247,8 +247,8 @@ Order of the work, each step committed with its tests:
 Next, after this goal:
 
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
-  the card's other sections (members, labels, dates,
-  attachments, custom fields), adding swimlanes, the board header's
+  the card's other sections (labels, dates, attachments, custom fields),
+  adding swimlanes, the board header's
   menus and the sidebar, the board views, Member Settings and the Admin Panel.
   Each is Weddy's template ported to `src/wlh5.pas` over WeLite's data, each
   write through the REST API's own checks (as `CreateViewCard`), each Meteor

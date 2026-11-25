@@ -15,8 +15,6 @@
 02-cards-open-view.e2e.js: maximize button switches card to full-screen view
 02-cards-open-view.e2e.js: minimize button collapses the maximized card back
 02-cards-open-view.e2e.js: editing the card title does not break the card
-16-card-members-description.e2e.js: seeded description text is visible when card opens
-16-card-members-description.e2e.js: adding a new card via the list inline form creates the card
 12-checklists.e2e.js: add-checklist button opens the inline form
 12-checklists.e2e.js: creating a checklist adds it to the card details
 12-checklists.e2e.js: adding an item to a checklist renders it in the item list
@@ -26,3 +24,4 @@
 12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items
 08-notifications-activity.e2e.js: adding a comment appears in the card activity log
 08-notifications-activity.e2e.js: activity log entries include a non-empty timestamp
+16-card-members-description.e2e.js

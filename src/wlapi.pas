@@ -123,6 +123,21 @@ function ToggleViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,C
 // Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
 // items and only its items.
 function DeleteViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId:string;out Error:string):Integer;
+// A board's card setting (boards' allows*, kept in settings_json): on unless
+// the board turned it off, as WeKan's defaults are.
+function BoardAllows(Db:TWLDb;const BoardId,Setting:string):Boolean;
+// Whoever may change the card's description, Requested By and Assigned By:
+// board write access, unless a Worker (WeKan's canModifyCard, unless isWorker).
+function BoardCanEditCardText(Db:TWLDb;const UserId,BoardId:string):Boolean;
+// A board member on the card, or off it, from a view (the HTML5 view's
+// members pop-over), with the checks, writes and activity of POST and DELETE
+// /api/boards/:boardId/lists/:listId/cards/:cardId/members/:memberId.
+function ToggleViewCardMember(const T:TWLTenant;const UserId,BoardId,CardId,MemberId:string;out Error:string):Integer;
+// The card's Requested By or Assigned By (Field requestedBy or assignedBy),
+// free text, on a board that shows it.
+function SetViewCardPerson(const T:TWLTenant;const UserId,BoardId,CardId,Field,Value:string;out Error:string):Integer;
+// The card's description, from the HTML5 view's description editor.
+function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);     // GET cards in a list
@@ -5329,30 +5344,24 @@ begin
 end;
 
 // Dedicated member and assignee routes record history only for actual changes.
-procedure ChangeCardAssignment(aRequest:TRequest;aResponse:TResponse;
-  const RouteKey,TableName,ActivityNoun,ActivityKey:string);
-var T:TWLTenant;Actor,CardId,BoardId,ListId,TargetId,Target,Scope,Pair,Present,Changing,
-  ActivityType,ActivityId,Stamp,Sql,Mutation,FinalState,TargetGuard:string;
+// The guarded transaction that puts TargetId on the card or takes them off
+// (TableName card_members or card_assignees), with its join/unjoin activity;
+// Scope selects the one card.
+function CardAssignmentSql(const Actor,BoardId,CardId,Scope,TableName,ActivityNoun,ActivityKey,TargetId:string;
+  Remove:Boolean):string;
+var Target,Pair,Present,Changing,ActivityType,ActivityId,Stamp,Mutation,FinalState,TargetGuard:string;
 begin
-  if not ApiTenant(aRequest,aResponse,T) then Exit;
-  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
-  if not ApiBoardGuard(T,aRequest,aResponse,Actor,CardNotFound) then Exit;
-  CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
-  ListId:=aRequest.RouteParams['listId'];TargetId:=aRequest.RouteParams[RouteKey];Target:=QuotedStr(TargetId);
-  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
-    ' AND listId='+QuotedStr(ListId)+' AND deletedAt IS NULL';
+  Target:=QuotedStr(TargetId);
   Pair:='cardId='+QuotedStr(CardId)+' AND userId='+Target;
   Present:='EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Pair+')';
   TargetGuard:='';
-  if aRequest.Method='DELETE' then
+  if Remove then
   begin
     ActivityType:='unjoin'+ActivityNoun;Changing:=Present;FinalState:='NOT '+Present;
     Mutation:='DELETE FROM '+TableName+' WHERE '+Pair+'; ';
   end
   else
   begin
-    if not EnabledBoardMember(T.Db,BoardId,TargetId) then
-    begin SendJson(aResponse,'{"error":"userId is not an active member of this board"}',400);Exit;end;
     TargetGuard:='SELECT CASE WHEN EXISTS(SELECT 1 FROM users u JOIN board_members m ON m.userId=u.id '+
       'WHERE u.id='+Target+' AND COALESCE(u.loginDisabled,0)=0 AND m.boardId='+QuotedStr(BoardId)+
       ' AND m.isActive=1) THEN 1 ELSE json(''Assignment target changed'') END; ';
@@ -5361,7 +5370,7 @@ begin
       ' WHERE '+Changing+'; ';
   end;
   ActivityId:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
-  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+  Result:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+TargetGuard+
     'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
     ActivityId+','+QuotedStr(ActivityType)+','+QuotedStr(Actor)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
@@ -5370,7 +5379,23 @@ begin
     'SELECT CASE WHEN NOT ('+Changing+') OR EXISTS(SELECT 1 FROM activities WHERE id='+ActivityId+
     ') THEN 1 ELSE json(''Assignment activity missing'') END; '+Mutation+
     'SELECT CASE WHEN '+FinalState+' THEN 1 ELSE json(''Assignment change failed'') END; COMMIT;';
-  if not T.Db.Exec(Sql) then
+end;
+
+procedure ChangeCardAssignment(aRequest:TRequest;aResponse:TResponse;
+  const RouteKey,TableName,ActivityNoun,ActivityKey:string);
+var T:TWLTenant;Actor,CardId,BoardId,ListId,TargetId,Scope:string;Remove:Boolean;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  if not ApiBoardGuard(T,aRequest,aResponse,Actor,CardNotFound) then Exit;
+  CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
+  ListId:=aRequest.RouteParams['listId'];TargetId:=aRequest.RouteParams[RouteKey];
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND listId='+QuotedStr(ListId)+' AND deletedAt IS NULL';
+  Remove:=aRequest.Method='DELETE';
+  if not Remove and not EnabledBoardMember(T.Db,BoardId,TargetId) then
+  begin SendJson(aResponse,'{"error":"userId is not an active member of this board"}',400);Exit;end;
+  if not T.Db.Exec(CardAssignmentSql(Actor,BoardId,CardId,Scope,TableName,ActivityNoun,ActivityKey,TargetId,Remove)) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update card membership');Exit;end;
   SendCardById(aResponse,T.Db,CardId,Actor,False,BoardId);
 end;
@@ -5384,6 +5409,79 @@ procedure ApiCardAssignee(aRequest:TRequest;aResponse:TResponse);
 begin
   ChangeCardAssignment(aRequest,aResponse,'assignee','card_assignees','Assignee','assigneeId');
 end;
+
+function BoardAllows(Db:TWLDb;const BoardId,Setting:string):Boolean;
+var R:TWLRows;
+begin
+  R:=Db.Query('SELECT COALESCE(json_extract(settings_json,'+QuotedStr('$.'+Setting)+'),1) FROM boards WHERE id='+
+    QuotedStr(BoardId)+';');
+  Result:=(Length(R)<>1) or ((R[0][0]<>'0') and (R[0][0]<>''));
+end;
+
+function BoardCanEditCardText(Db:TWLDb;const UserId,BoardId:string):Boolean;
+begin
+  Result:=(UserId<>'') and (BoardId<>'') and BoardCanWrite(Db,UserId,BoardId) and
+    (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+QuotedStr(UserId)+
+      ' AND isActive=1 AND COALESCE(isWorker,0)=1;'))=0);
+end;
+
+function ViewCardScope(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+begin
+  Error:='';
+  if (BoardId='') or (CardId='') or (Pos(#0,BoardId+CardId)>0) then begin Error:='Card not found';Exit(404);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then begin Error:='Card not found';Exit(404);end;
+  Result:=200;
+end;
+
+function ToggleViewCardMember(const T:TWLTenant;const UserId,BoardId,CardId,MemberId:string;out Error:string):Integer;
+var Scope:string;Remove:Boolean;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  if (MemberId='') or (Pos(#0,MemberId)>0) then begin Error:='Member not found';Exit(404);end;
+  Remove:=Length(T.Db.Query('SELECT 1 FROM card_members WHERE cardId='+QuotedStr(CardId)+' AND userId='+QuotedStr(MemberId)+';'))=1;
+  if not Remove and not EnabledBoardMember(T.Db,BoardId,MemberId) then
+  begin Error:='userId is not an active member of this board';Exit(400);end;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  if not T.Db.Exec(CardAssignmentSql(UserId,BoardId,CardId,Scope,'card_members','Member','memberId',MemberId,Remove)) then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update card membership';Exit(500);end;
+end;
+
+function SetViewCardText(const T:TWLTenant;const UserId,BoardId,CardId,Column,Value:string;out Error:string):Integer;
+var Scope,Stamp:string;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  if not BoardCanEditCardText(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if Pos(#0,Value)>0 then begin Error:='Invalid value';Exit(400);end;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET '+Column+'='+QuotedStr(Value)+',modifiedAt='+Stamp+
+    ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+    ' AND '+Column+'='+QuotedStr(Value)+')=1 THEN 1 ELSE json(''Card write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
+end;
+
+function SetViewCardPerson(const T:TWLTenant;const UserId,BoardId,CardId,Field,Value:string;out Error:string):Integer;
+var Setting:string;
+begin
+  // Only WeKan's two, each on a board that shows it.
+  Error:='';
+  if Field='requestedBy' then Setting:='allowsRequestedBy'
+  else if Field='assignedBy' then Setting:='allowsAssignedBy'
+  else begin Error:='this field is not yours to change';Exit(403);end;
+  if Length(Value)>1000 then begin Error:='Invalid value';Exit(400);end;
+  if (BoardId<>'') and not BoardAllows(T.Db,BoardId,Setting) then
+  begin Error:='this field is not yours to change';Exit(403);end;
+  Result:=SetViewCardText(T,UserId,BoardId,CardId,Field,Trim(Value),Error);
+end;
+
+function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;
+begin
+  Result:=SetViewCardText(T,UserId,BoardId,CardId,'description',Text,Error);
+end;
+
 
 // POST card archive — archives by default; body isArchive=false unarchives.
 procedure ApiCardArchive(aRequest: TRequest; aResponse: TResponse);
