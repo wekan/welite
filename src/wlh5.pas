@@ -443,7 +443,14 @@ begin
     Details := '<div class="card-details js-card-details' + IfThen(Maximized, ' card-details-maximized', '') +
       '" data-card="' + HtmlAttr(CardId) + '">' +
       '<div class="card-details-header"><h2 class="card-details-title js-card-title">' +
-      '<span class="card-details-title-edit-zone">' + E(Card[0][0]) + '</span></h2>';
+      '<span class="card-details-title-edit-zone js-open-inlined-form">' + E(Card[0][0]) + '</span></h2>';
+    // board.pug: the title's editor, opened by its leading part (weddy.js).
+    if Writable then
+      Details := Details + '<form class="js-card-details-title js-inlined-form is-hidden" method="post" action="/b/' +
+        HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/title" up-submit up-target=".board-wrapper">' +
+        '<textarea class="js-edit-card-title" name="title" rows="2" dir="auto" aria-label="' + HtmlAttr(Words.Text('title', 'Title')) +
+        '" required>' + E(Card[0][0]) + '</textarea><button class="primary" type="submit">' + E(Words.Text('save', 'Save')) +
+        '</button></form>';
     // The user's own full-screen card (WeKan's toggleCardMaximized, /_methods/).
     if Maximized then
       Details := Details + '<a class="js-minimize-card-details" href="#" title="' +
@@ -522,7 +529,7 @@ end;
 
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
-  Path, BoardId, Slug, CardId, Error, Content, BoardTitle: string; Code: Integer; Found: Boolean;
+  Path, BoardId, Slug, CardId, Error, Content, BoardTitle: string; Code: Integer; Found, Renamed: Boolean;
 begin
   Result := False;
   if Request.Method <> 'POST' then Exit;
@@ -534,10 +541,43 @@ begin
     ServeMethod(Request, Response, Copy(Path, 11, MaxInt));
     Exit;
   end;
-  if not SplitBoardRoute(Path, BoardId, Slug, CardId) or (Slug <> 'cards') or (CardId <> '') then Exit;
+  // /b/:id/cards/:cardId/title is a WeKan card route with "title" for a card
+  // id; only its POST from this view is the title editor's.
+  Renamed := False;
+  if (Copy(Path, Length(Path) - 5, 6) = '/title') and
+    SplitBoardRoute(Copy(Path, 1, Length(Path) - 6), BoardId, Slug, CardId) and (Slug = 'cards') and (CardId <> '') then
+    Renamed := True
+  else if not SplitBoardRoute(Path, BoardId, Slug, CardId) or (Slug <> 'cards') or (CardId <> '') then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
   if not Html5User(T.Db, Request, S) then Exit;
   Result := True;
+  if Renamed then
+  begin
+    Code := RenameViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['title'], Error);
+    Language := ViewerLanguage(T.Db, S, Request);
+    Words := TWLTranslator.Create(Language);
+    try
+      if Code <> 200 then
+      begin
+        SendPage(Response, Code, Page(Request, Language, Words, S, Error, '',
+          '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
+        Exit;
+      end;
+      Content := '';
+      Found := False;
+      if T.Db.BeginRead then
+      try
+        Content := BoardContent(T.Db, S, Words, BoardId, CardId, BoardTitle, Found);
+      finally
+        T.Db.EndRead;
+      end;
+      Response.SetCustomHeader('X-Up-Location', CardRoute(BoardId, BoardSlug(T.Db, BoardId), CardId));
+      SendPage(Response, 200, Page(Request, Language, Words, S, BoardTitle, BoardTitle, Content));
+    finally
+      Words.Free;
+    end;
+    Exit;
+  end;
   Language := ViewerLanguage(T.Db, S, Request);
   Words := TWLTranslator.Create(Language);
   try

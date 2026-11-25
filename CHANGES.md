@@ -41,6 +41,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   not got. The first is `toggleCardMaximized`, the user's own full-screen
   card (`users.profile.cardMaximized`), and the card's maximize and minimize
   buttons. Two more of WeKan's tests pass.
+- Rename a card in the HTML5 view: its title's editor posts to
+  `/b/:id/cards/:cardId/title`, checked as the REST API checks a card's title
+  (`RenameViewCard`). One more of WeKan's tests passes.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

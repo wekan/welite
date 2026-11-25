@@ -232,14 +232,14 @@ Order of the work, each step committed with its tests:
   and words: the HTML4 view as plain links, the HTML5 view as WeKan's header
   button.
 - [ ] **The HTML5 view** - started (CHANGES.md, 2026-11-26): sign-in, All
-  Boards, the board, the opened card's title and description, and adding a
-  card are in. Next: the card's other sections, adding lists, the board header's menus
+  Boards, the board, the opened card's title and description, adding and renaming
+  a card are in. Next: the card's other sections, adding lists, the board header's menus
   and the sidebar, each as WeKan's specs need it. Weddy's layout (header, notifications, member menu),
   sign-in and sign-up, All Boards, the board with swimlanes, lists and
   minicards, and the card details, rendered by Pascal from WeLite's data, with
   Weddy's `/static` files (wekan.css, weddy.js, weddy-blocks.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 12 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 13 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's

@@ -241,6 +241,23 @@ def http_checks(server, tmp, backend):
         cards = json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, list_id), headers=auth)[2])
         assert not {'Stranger Card', 'Anonymous Card', 'Form Card'} & {c['title'] for c in cards}, cards
 
+        # The card title's editor (board.pug: POST /b/:id/cards/:cardId/title).
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert ('action="/b/%s/cards/%s/title"' % (board_id, card_id)).encode() in page
+        status, headers, page, _ = request('POST', '/b/%s/cards/%s/title' % (board_id, card_id),
+                                           {'title': 'Renamed Card'}, cookie=owner)
+        assert status == 200 and b'Renamed Card' in page and b'js-card-details' in page, status
+        assert headers.get('X-Up-Location') == '%s/%s' % (route, card_id)
+        def card_title():
+            cards = json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, list_id), headers=auth)[2])
+            return [c['title'] for c in cards if c['_id'] == card_id][0]
+        assert card_title() == 'Renamed Card'
+        # Negative: no member, an empty title, and a card that is not on the board rename nothing.
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': 'Stranger'}, cookie=stranger)[0] == 403
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': ''}, cookie=owner)[0] == 400
+        assert request('POST', '/b/%s/cards/no-such-card/title' % board_id, {'title': 'X'}, cookie=owner)[0] == 404
+        assert card_title() == 'Renamed Card'
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

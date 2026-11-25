@@ -95,6 +95,11 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // sends nothing; Error says why not.
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
+// A card's new title from a view (the HTML5 view's title editor), checked as
+// PUT /api/boards/:boardId/lists/:listId/cards/:cardId checks a title: board
+// write access, the card on that board, a title that is text. Returns the
+// HTTP status (200 when renamed) and sends nothing.
+function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);     // GET cards in a list
@@ -4371,6 +4376,24 @@ begin
   if not T.Db.Exec('BEGIN IMMEDIATE; '+CardCreateSql(BoardId,ListId,Lane,CardId,UserId,Title,'',QuotedStr(''),Sort)+
     InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');CardId:='';Error:='Could not create card';Exit(500);end;
+  Result:=200;
+end;
+
+function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
+var Scope,Stamp:string;
+begin
+  Error:='';
+  if (BoardId='') or (CardId='') or (Trim(Title)='') or (Pos(#0,BoardId+CardId+Title)>0) then
+  begin Error:='Invalid title';Exit(400);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then
+  begin Error:='Card not found';Exit(404);end;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET title='+QuotedStr(Title)+',modifiedAt='+Stamp+
+    ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+    ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Card rename failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not rename card';Exit(500);end;
   Result:=200;
 end;
 
