@@ -44,6 +44,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Rename a card in the HTML5 view: its title's editor posts to
   `/b/:id/cards/:cardId/title`, checked as the REST API checks a card's title
   (`RenameViewCard`). One more of WeKan's tests passes.
+- Run two more of WeKan's tests: a card's description shows when it opens,
+  and a card added from the bottom of a list appears. 15 pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

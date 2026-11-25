@@ -231,19 +231,31 @@ Order of the work, each step committed with its tests:
 - [x] **The toggle in the top header** (CHANGES.md, 2026-11-26) of both views, with WeKan's own icons
   and words: the HTML4 view as plain links, the HTML5 view as WeKan's header
   button.
-- [ ] **The HTML5 view** - started (CHANGES.md, 2026-11-26): sign-in, All
-  Boards, the board, the opened card's title and description, adding and renaming
-  a card are in. Next: the card's other sections, adding lists, the board header's menus
-  and the sidebar, each as WeKan's specs need it. Weddy's layout (header, notifications, member menu),
-  sign-in and sign-up, All Boards, the board with swimlanes, lists and
-  minicards, and the card details, rendered by Pascal from WeLite's data, with
-  Weddy's `/static` files (wekan.css, weddy.js, weddy-blocks.js, unpoly,
+- [x] **The HTML5 view** (CHANGES.md, 2026-11-26): Weddy's layout (header,
+  user, Log Out, the toggle), sign-in, All Boards with Starred and Remaining,
+  the board with swimlanes, lists and minicards, the opened card's title,
+  description and maximize/minimize, adding a card at the top or bottom of a
+  list and renaming it, weddy.js's `/_methods/` calls, rendered by Pascal from
+  WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 13 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 15 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's
   specs as the page arrives.
+
+Next, after this goal:
+
+- [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
+  the card's other sections (members, labels, dates, checklists, comments,
+  attachments, custom fields), adding lists and swimlanes, the board header's
+  menus and the sidebar, the board views, Member Settings and the Admin Panel.
+  Each is Weddy's template ported to `src/wlh5.pas` over WeLite's data, each
+  write through the REST API's own checks (as `CreateViewCard`), each Meteor
+  method weddy.js calls answered at `/_methods/`. Add a spec line to
+  `tests/wkui/specs.txt` when its page is done; `WELITE_WEKAN_SPECS=all bash
+  tests/wkui/run.sh` shows how far it is. Weddy's TEMPLATES.md and its
+  `tests/wekan/wekan-specs.txt` list what Weddy has, in the order it was done.
 
 Found on the way, not part of this goal:
 
