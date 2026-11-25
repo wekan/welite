@@ -24,3 +24,5 @@
 12-checklists.e2e.js: checklist progress bar appears when items are checked
 12-checklists.e2e.js: deleting a checklist removes it from the card
 12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items
+08-notifications-activity.e2e.js: adding a comment appears in the card activity log
+08-notifications-activity.e2e.js: activity log entries include a non-empty timestamp

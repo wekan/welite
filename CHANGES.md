@@ -54,6 +54,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   `DeleteViewChecklist`). The 7 checklist tests of WeKan's `12-checklists`
   run against it and pass, none of them by finding the section missing. 22
   pass in all.
+- Show a card's comments in the HTML5 view, with who wrote them and when,
+  and comment on a card with WeKan's comment capability
+  (`BoardCanComment`, models/lib/boardRoleCapabilities.js in WeKan): Comment
+  only may comment, No comments, Read only and non-members may not. Two more
+  of WeKan's tests pass, 24 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

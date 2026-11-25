@@ -443,6 +443,32 @@ begin
   Result := Result + '</div>';
 end;
 
+// _cardsec_comments.pug: the card's comments, newest last, and the form for
+// whoever may comment on the board.
+function CommentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; CanComment: Boolean): string;
+var R: TWLRows; i: Integer; Shown: string;
+begin
+  Result := '<h3 class="card-details-item-title js-toggle-card-section" data-section="comments" role="button" tabindex="0">' +
+    '<i class="fa fa-comment-o" aria-hidden="true"></i> ' + E(Words.Text('comments', 'Comments')) + '</h3><div class="comments">';
+  if CanComment then
+    Result := Result + '<div class="new-comment js-new-comment"><form class="js-new-comment-form" method="post" action="/b/' +
+      HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/comments" up-submit up-target=".board-wrapper">' +
+      '<textarea class="editor js-new-comment-input" name="comment" aria-label="' + HtmlAttr(Words.Text('comment', 'Comment')) +
+      '" required></textarea><button class="primary confirm js-add-comment" type="submit">' + E(Words.Text('comment', 'Comment')) +
+      '</button></form></div>';
+  R := Db.Query('SELECT c.id,c.text,COALESCE(c.createdAt,''''),COALESCE(u.username,'''') FROM card_comments c LEFT JOIN users u ON u.id=c.userId ' +
+    'WHERE c.cardId=' + QuotedStr(CardId) + ' AND (c.boardId IS NULL OR c.boardId=' + QuotedStr(BoardId) + ') ORDER BY c.createdAt,c.id;');
+  for i := 0 to High(R) do
+  begin
+    // The stored time, as minutes: 2026-11-26T01:02:03.456Z -> 2026-11-26 01:02.
+    Shown := StringReplace(Copy(R[i][2], 1, 16), 'T', ' ', []);
+    Result := Result + '<div class="comment" data-id="' + HtmlAttr(R[i][0]) + '"><span class="comment-member">' + E(R[i][3]) +
+      '</span><div class="comment-text"><div class="viewer">' + E(R[i][1]) + '</div></div><time class="activity-time" datetime="' +
+      HtmlAttr(R[i][2]) + '">' + E(Shown) + '</time></div>';
+  end;
+  Result := Result + '</div>';
+end;
+
 // board.pug's checklistActionsPopup and checklistDeletePopup, for the opened card.
 function ChecklistPopups(Words: TWLTranslator; const BoardId, CardId: string): string;
 begin
@@ -568,7 +594,8 @@ begin
     if Card[0][1] <> '' then
       Details := Details + '<div class="card-details-item card-details-item-description"><div class="viewer">' +
         E(Card[0][1]) + '</div></div>';
-    Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) + '</div>';
+    Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
+      CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId);
   end;
   // board.pug's list menu, drawn once; weddy.js opens it for the list whose
@@ -708,6 +735,7 @@ begin
   //   /b/:id/cards/:card/checklists/:cl/items         add an item to it
   //   /b/:id/cards/:card/checklists/:cl/items/:it/toggle   check or uncheck the item
   //   /b/:id/cards/:card/checklists/:cl/delete        delete the checklist and its items
+  //   /b/:id/cards/:card/comments                     comment on the card
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
@@ -718,6 +746,7 @@ begin
   if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
+  else if (n = 5) and (P[4] = 'comments') then Action := 'add-comment'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
@@ -734,6 +763,8 @@ begin
       Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'], NewId, Error)
   else if Action = 'rename-card' then
     Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
+  else if Action = 'add-comment' then
+    Code := AddViewComment(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['comment'], NewId, Error)
   else if Action = 'add-checklist' then
     Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
   else if Action = 'add-item' then

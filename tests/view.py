@@ -122,7 +122,7 @@ def http_checks(server, tmp, backend):
                     raise AssertionError(log.read())
                 time.sleep(.05)
         # Accounts and a board, through the HTML4 view and the REST API.
-        for name in ['owner', 'stranger']:
+        for name in ['owner', 'stranger', 'commenter', 'silent']:
             status, _, _, _ = request('POST', '/sign-up', {'username': name, 'password': 'test-password',
                                                           'confirm': 'test-password'}, agent='Welite-test')
             assert status == 200
@@ -294,6 +294,35 @@ def http_checks(server, tmp, backend):
         assert status == 403 and [c for c in checklists() if c['_id'] == cl2], 'negative: a non-member removes nothing'
         status, _, body, _ = request('POST', '/_methods/%2Fchecklists%2Fremove', [{'_id': cl2}], cookie=owner, as_json=True)
         assert status == 200 and json.loads(body) == {'result': 1} and not [c for c in checklists() if c['_id'] == cl2]
+
+        # Comments (_cardsec_comments.pug), with WeKan's comment capability:
+        # Comment only may comment, No comments may not (boardRoleCapabilities.js).
+        users = {u['username']: u['_id'] for u in json.loads(request('GET', '/api/users', headers=auth)[2])}
+        for name, role in [('commenter', 'isCommentOnly'), ('silent', 'isNoComments')]:
+            status, _, body, _ = request('POST', '/api/boards/%s/members/%s/add' % (board_id, users[name]),
+                                         {'action': 'add', 'isAdmin': False, role: True}, headers=auth, as_json=True)
+            assert status == 200, body
+        def cookie_of(name):
+            cookies = request('POST', '/sign-in', {'username': name, 'password': 'test-password'})[3]
+            return 'meteor_login_token=' + cookie_value(cookies, 'meteor_login_token')
+        commenter, silent = cookie_of('commenter'), cookie_of('silent')
+        comments_path = '/b/%s/cards/%s/comments' % (board_id, card_id)
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert ('action="%s"' % comments_path).encode() in page
+        status, _, page, _ = request('POST', comments_path, {'comment': 'Owner <i>note</i>'}, cookie=owner)
+        assert status == 200 and b'Owner &lt;i&gt;note&lt;/i&gt;' in page and b'<i>note</i>' not in page
+        assert request('POST', comments_path, {'comment': 'From comment only'}, cookie=commenter)[0] == 200
+        # Comment only may comment but not change the card.
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': 'X'}, cookie=commenter)[0] == 403
+        # Negative: No comments, a non-member and an empty comment add nothing;
+        # the No comments member gets no comment form.
+        assert request('POST', comments_path, {'comment': 'From no comments'}, cookie=silent)[0] == 403
+        assert b'js-new-comment-form' not in request('GET', '%s/%s' % (route, card_id), cookie=silent)[2]
+        assert request('POST', comments_path, {'comment': 'From stranger'}, cookie=stranger)[0] == 403
+        assert request('POST', comments_path, {'comment': '  '}, cookie=owner)[0] == 400
+        texts = [c['comment'] for c in json.loads(request('GET', '/api/boards/%s/cards/%s/comments' % (board_id, card_id),
+                                                          headers=auth)[2])]
+        assert texts == ['Owner <i>note</i>', 'From comment only'], texts
 
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.

@@ -100,6 +100,13 @@ function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,T
 // write access, the card on that board, a title that is text. Returns the
 // HTTP status (200 when renamed) and sends nothing.
 function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
+// WeKan's comment capability (models/lib/boardRoleCapabilities.js): a site
+// admin, or an active member who may read the board and whose role may
+// comment - everyone but No comments, Read only and Read assigned only.
+function BoardCanComment(Db:TWLDb;const UserId,BoardId:string):Boolean;
+// A comment on a card from a view (the HTML5 view's comment form), stored as
+// POST /api/boards/:boardId/cards/:cardId/comments stores one.
+function AddViewComment(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out CommentId,Error:string):Integer;
 // A card's checklists from a view (the HTML5 view's checklists section), with
 // the checks and writes of the REST API's checklist routes: board write
 // access, the card - and the checklist and the item - on that board, a title
@@ -4404,6 +4411,32 @@ begin
     ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Card rename failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not rename card';Exit(500);end;
+  Result:=200;
+end;
+
+function BoardCanComment(Db:TWLDb;const UserId,BoardId:string):Boolean;
+begin
+  Result:=False;
+  if (UserId='') or (BoardId='') or not BoardCanRead(Db,UserId,BoardId) then Exit;
+  if Length(Db.Query('SELECT 1 FROM users WHERE id='+QuotedStr(UserId)+' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0;'))=1 then Exit(True);
+  Result:=Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+QuotedStr(UserId)+
+    ' AND isActive=1 AND COALESCE(isNoComments,0)=0 AND COALESCE(isReadOnly,0)=0 AND COALESCE(isReadAssignedOnly,0)=0;'))=1;
+end;
+
+function AddViewComment(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out CommentId,Error:string):Integer;
+var Stamp:string;
+begin
+  CommentId:='';Error:='';
+  if (BoardId='') or (CardId='') or (Pos(#0,BoardId+CardId+Text)>0) then begin Error:='Card not found';Exit(404);end;
+  if not BoardCanComment(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then
+  begin Error:='Resource does not belong to this board or parent';Exit(404);end;
+  if Trim(Text)='' then begin Error:='Invalid comment';Exit(400);end;
+  CommentId:=NewId;Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO card_comments(id,boardId,cardId,userId,text,createdAt,modifiedAt) VALUES('+
+    QuotedStr(CommentId)+','+QuotedStr(BoardId)+','+QuotedStr(CardId)+','+QuotedStr(UserId)+','+QuotedStr(Text)+','+
+    Stamp+','+Stamp+'); COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');CommentId:='';Error:='Could not add comment';Exit(500);end;
   Result:=200;
 end;
 
