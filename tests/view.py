@@ -151,9 +151,9 @@ def http_checks(server, tmp, backend):
             assert status == 200 and b'HTML 3.2' in page and b'id="at-pwd-form"' not in page, agent
             assert b'href="/sign-in?ui=html5"' in page, 'the HTML4 toggle'
         # Weddy's static files, under 8.3 names.
-        for name in ['wekan.css', 'weddy.js', 'unpoly.js', 'unpoly.css', 'interact.js']:
+        for name in ['wekan.css', 'weddy.js', 'unpoly.js', 'unpoly.css', 'interact.js', 'welite.css']:
             status, _, body, _ = request('GET', '/static/' + name)
-            assert status == 200 and len(body) > 1000, name
+            assert status == 200 and len(body) > 200, name
 
         # Signed out, the HTML5 view sends to its sign-in page.
         status, headers, _, _ = request('GET', '/')

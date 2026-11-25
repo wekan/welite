@@ -73,6 +73,7 @@ const
   STATIC_HEAD =
     '<link rel="stylesheet" href="/static/unpoly.css">' +
     '<link rel="stylesheet" href="/static/wekan.css">' +
+    '<link rel="stylesheet" href="/static/welite.css">' +
     '<script src="/static/unpoly.js"></script>' +
     '<script src="/static/interact.js"></script>' +
     '<script src="/static/weddy.js"></script>';

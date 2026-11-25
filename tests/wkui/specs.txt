@@ -1,0 +1,11 @@
+# WeKan's own Playwright specs (tests/playwright/specs/ in WeKan) that run
+# against WeLite's HTML5 view: the ones whose pages WeLite has so far. A line
+# is a spec file - all of it - or "file: test title", one test of it. Add a
+# line when its page is done; WELITE_WEKAN_SPECS=all runs them all.
+01-boards-users.e2e.js: board loads within 10 seconds and renders lists
+01-boards-users.e2e.js: user added to board can see it on their boards list
+01-boards-users.e2e.js: user NOT added to board cannot see it
+01-boards-users.e2e.js: board renders all three seeded lists without freezing
+02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
+02-cards-open-view.e2e.js: card opens without the maximized class by default (minimized view)
+02-cards-open-view.e2e.js: closing the card detail panel hides it

@@ -22,6 +22,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   static files are in `public/static/` under 8.3 names.
 - Sign in to the HTML5 view with WeKan's `meteor_login_token` cookie: a WeLite
   session, or a Meteor login token of a shared store. Log Out revokes it.
+- Run WeKan's own Playwright tests against the HTML5 view with
+  `bash tests/wkui/run.sh`: FerretDB makes the shared store, WeKan's
+  `helpers/db.js` seeds it, WeLite serves it, and the specs listed in
+  `tests/wkui/specs.txt` run in Chromium. All 7 listed pass: a board loads
+  and renders its lists, a member sees the board in All Boards and a
+  non-member gets "Board not found", a minicard opens the card's details,
+  which are not maximized and close again.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

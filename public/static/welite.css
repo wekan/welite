@@ -1,0 +1,13 @@
+/* WeLite's additions to Weddy's wekan.css for the HTML5 view (src/wlh5.pas).
+   Weddy's own files stay as Weddy has them. */
+
+/* All Boards' sections: the whole row is the section's link, as WeKan's
+   .menu-item is clickable as a whole (its click handler is on the item). */
+.board-list-menu .menu-item > a.js-select-menu {
+  display: block;
+}
+
+/* The HTML4/HTML5 toggle in the header, beside WeKan's other header buttons. */
+.html-view-toggle {
+  display: inline-block;
+}
