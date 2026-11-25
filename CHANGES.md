@@ -95,6 +95,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   date opens the date picker for whoever may set it, as WeKan's minicard
   dates do (Weddy's are badges only), so one more of WeKan's tests passes,
   38 in all.
+- Add a swimlane in the HTML5 view below or above the one whose "+" opened
+  WeKan's swimlaneAddPopup, sorted between it and its neighbour as WeKan's
+  titleSortIndexes (`CreateViewSwimlane`), and fold a swimlane for its user
+  only with WeKan's `setSwimlaneCollapsedState` (`SetViewProfileFold`: ids
+  only as keys, as assertSafeMapKey, on a board the user may read). Five of
+  WeKan's `13-swimlanes` tests pass, 43 in all; "adding a new swimlane"
+  looks for a link Weddy's and WeLite's pop-over do not have, so the add is
+  verified by `tests/view.py`.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

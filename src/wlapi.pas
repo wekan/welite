@@ -106,6 +106,16 @@ function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:stri
 // after AfterListId - halfway to the next list, or one after it - or last
 // when there is none. Returns the HTTP status (200 when added).
 function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterListId,Title:string;out ListId,Error:string):Integer;
+// A swimlane added from a view (WeKan's swimlaneAddPopup): with board write
+// access, below - or above - AfterId, between it and its neighbour, or last
+// without one; a template-swimlane on a templates board.
+function CreateViewSwimlane(const T:TWLTenant;const UserId,BoardId,AfterId:string;Above:Boolean;const Title:string;
+  out LaneId,Error:string):Integer;
+// A fold the user keeps in their profile, Map[BoardId][Key] (WeKan's
+// collapsedSwimlanes, collapsedLists...): ids only (assertSafeMapKey), on a
+// board the user may read.
+function ProfileFold(Db:TWLDb;const UserId,Map,BoardId,Key:string):Boolean;
+function SetViewProfileFold(const T:TWLTenant;const UserId,Map,BoardId,Key:string;Folded:Boolean;out Error:string):Integer;
 // WeKan's comment capability (models/lib/boardRoleCapabilities.js): a site
 // admin, or an active member who may read the board and whose role may
 // comment - everyone but No comments, Read only and Read assigned only.
@@ -4552,6 +4562,74 @@ begin
   if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt) VALUES('+
     QuotedStr(ListId)+','+QuotedStr(BoardId)+','+QuotedStr(Lane)+','+QuotedStr(Title)+','+Sort+','+Stamp+','+Stamp+'); COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');ListId:='';Error:='Could not create list';Exit(500);end;
+  Result:=200;
+end;
+
+// A map key of the user's profile, as WeKan's assertSafeMapKey allows one:
+// an id of letters, digits, '-' and '_'.
+function SafeMapKey(const Key:string):Boolean;
+var i:Integer;
+begin
+  Result:=(Key<>'') and (Length(Key)<=128);
+  for i:=1 to Length(Key) do
+    if not (Key[i] in ['A'..'Z','a'..'z','0'..'9','-','_']) then Exit(False);
+end;
+
+function ProfileFold(Db:TWLDb;const UserId,Map,BoardId,Key:string):Boolean;
+var R:TWLRows;
+begin
+  Result:=False;
+  if (UserId='') or not SafeMapKey(BoardId) or not SafeMapKey(Key) then Exit;
+  R:=Db.Query('SELECT CASE WHEN json_valid(profile_json) AND json_extract(profile_json,'+
+    QuotedStr('$.'+Map+'."'+BoardId+'"."'+Key+'"')+')=1 THEN 1 ELSE 0 END FROM users WHERE id='+QuotedStr(UserId)+' LIMIT 1;');
+  Result:=(Length(R)=1) and (R[0][0]='1');
+end;
+
+function SetViewProfileFold(const T:TWLTenant;const UserId,Map,BoardId,Key:string;Folded:Boolean;out Error:string):Integer;
+var Profile,Path,Value:string;
+begin
+  Error:='';
+  if Folded then Value:='true' else Value:='false';
+  if not SafeMapKey(BoardId) or not SafeMapKey(Key) then begin Error:='Invalid map key';Exit(400);end;
+  if not BoardCanRead(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+  Path:='$.'+Map+'."'+BoardId+'"';
+  // json_set makes no missing parent: the map and the board's object first.
+  if not T.Db.Exec('UPDATE users SET profile_json=json_set(json_set(json_set('+Profile+','''+'$.'+Map+''','+
+    'json(COALESCE(json_extract('+Profile+','''+'$.'+Map+'''),''{}''))),'''+Path+''',json(COALESCE(json_extract('+Profile+
+    ','''+Path+'''),''{}''))),'''+Path+'."'+Key+'"'',json('''+Value+''')) WHERE id='+QuotedStr(UserId)+';') then
+  begin Error:='Could not save';Exit(500);end;
+  Result:=200;
+end;
+
+function CreateViewSwimlane(const T:TWLTenant;const UserId,BoardId,AfterId:string;Above:Boolean;const Title:string;
+  out LaneId,Error:string):Integer;
+var Lanes:TWLRows;Fmt:TFormatSettings;i,At:Integer;Sort,Stamp:string;Prev,Next:Double;HasPrev,HasNext:Boolean;
+begin
+  LaneId:='';Error:='';
+  if (BoardId='') or (Trim(Title)='') or (Pos(#0,BoardId+AfterId+Title)>0) then begin Error:='Invalid swimlane';Exit(400);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Access denied';Exit(403);end;
+  Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';Fmt.ThousandSeparator:=#0;
+  // swimlaneHeader.js swimlaneAddPopup: below (or above) the chosen swimlane,
+  // between it and its neighbour (titleSortIndexes); last without one.
+  Lanes:=T.Db.Query('SELECT id,json_quote(COALESCE(sort,0)) FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+
+    ' AND archived=0 ORDER BY sort,id;');
+  At:=-1;
+  for i:=0 to High(Lanes) do if Lanes[i][0]=AfterId then At:=i;
+  if (AfterId<>'') and (At<0) then begin Error:='Swimlane does not belong to this board';Exit(404);end;
+  if At<0 then At:=Length(Lanes) else if not Above then Inc(At);
+  HasPrev:=At>0;HasNext:=At<Length(Lanes);
+  if HasPrev then Prev:=StrToFloatDef(Lanes[At-1][1],0,Fmt);
+  if HasNext then Next:=StrToFloatDef(Lanes[At][1],0,Fmt);
+  if HasPrev and HasNext then Sort:=FloatToStr(Prev+(Next-Prev)/2,Fmt)
+  else if HasPrev then Sort:=FloatToStr(Prev+1,Fmt)
+  else if HasNext then Sort:=FloatToStr(Next-1,Fmt)
+  else Sort:='0';
+  LaneId:=NewId;Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO swimlanes(id,boardId,title,type,sort,createdAt,modifiedAt) SELECT '+
+    QuotedStr(LaneId)+','+QuotedStr(BoardId)+','+QuotedStr(Title)+',CASE WHEN type=''template-container'' THEN '+
+    '''template-swimlane'' ELSE ''swimlane'' END,'+Sort+','+Stamp+','+Stamp+' FROM boards WHERE id='+QuotedStr(BoardId)+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');LaneId:='';Error:='Could not create swimlane';Exit(500);end;
   Result:=200;
 end;
 

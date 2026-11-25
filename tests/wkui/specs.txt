@@ -35,3 +35,8 @@
 11-labels-duedates.e2e.js: changing an existing due date saves the replacement (#6607)
 11-labels-duedates.e2e.js: clearing a due date removes its badge from the card
 11-labels-duedates.e2e.js: clicking an existing start date reopens and saves its editor
+13-swimlanes.e2e.js: board renders with a visible swimlane section
+13-swimlanes.e2e.js: swimlane header shows the seeded "Default" title
+13-swimlanes.e2e.js: swimlane action popup opens without JS errors
+13-swimlanes.e2e.js: clicking the swimlane collapse button does not crash the page
+13-swimlanes.e2e.js: adding a new swimlane creates it on the board

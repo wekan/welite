@@ -841,7 +841,8 @@ end;
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
-  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates: Boolean; Shows: TMinicardShows;
+  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded: Boolean;
+  Shows: TMinicardShows; Header: string;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -858,9 +859,30 @@ begin
     ' AND archived=0 ORDER BY sort,id;');
   for i := 0 to High(Lanes) do
   begin
+    // swimlaneHeader.jade: the caret folds the swimlane, for this user
+    // (setSwimlaneCollapsedState); the "+" opens swimlaneAddPopup. A folded
+    // swimlane keeps its header and shows nothing of its lists: it is no
+    // .js-swimlane, and has no id.
+    Folded := (S.UserId <> '') and ProfileFold(Db, S.UserId, 'collapsedSwimlanes', BoardId, Lanes[i][0]);
+    Header := '<div class="swimlane-header js-swimlane-header" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
+    if S.UserId <> '' then
+      Header := Header + '<a class="swimlane-collapse-indicator js-collapse-swimlane swimlane-header-collapse" href="#" data-swimlane="' +
+        HtmlAttr(Lanes[i][0]) + '" data-collapsed="' + IfThen(Folded, 'true', '') + '" title="' +
+        HtmlAttr(Words.Text('collapse', 'Collapse')) + '" aria-label="' + HtmlAttr(Words.Text('collapse', 'Collapse')) +
+        '"><i class="fa ' + IfThen(Folded, 'fa-caret-right', 'fa-caret-down') + '"></i></a>';
+    Header := Header + '<span class="swimlane-header-name title">' + E(Lanes[i][1]) + '</span>';
+    if Writable then
+      Header := Header + '<a class="js-open-add-swimlane-menu swimlane-header-plus-icon" href="#" data-swimlane="' +
+        HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('add-swimlane', 'Add Swimlane')) + '" aria-label="' +
+        HtmlAttr(Words.Text('add-swimlane', 'Add Swimlane')) + '"><i class="fa fa-plus"></i></a>';
+    Header := Header + '</div>';
+    if Folded then
+    begin
+      Canvas := Canvas + '<div class="swimlane swimlane-collapsed" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">' + Header + '</div>';
+      Continue;
+    end;
     Canvas := Canvas + '<div class="swimlane js-swimlane" id="swimlane-' + HtmlAttr(Lanes[i][0]) + '" data-swimlane="' +
-      HtmlAttr(Lanes[i][0]) + '"><div class="swimlane-header js-swimlane-header" data-swimlane="' + HtmlAttr(Lanes[i][0]) +
-      '"><span class="swimlane-header-name title">' + E(Lanes[i][1]) + '</span></div><div class="list-group js-lists">';
+      HtmlAttr(Lanes[i][0]) + '">' + Header + '<div class="list-group js-lists">';
     Lists := Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId=' + QuotedStr(BoardId) +
       ' AND (swimlaneId=' + QuotedStr(Lanes[i][0]) + ' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
     for j := 0 to High(Lists) do
@@ -982,6 +1004,20 @@ begin
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel);
   end;
+  // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
+  if Writable then
+    Details := Details + '<template class="js-pop-over-template" data-pop="add-swimlane" data-title="' +
+      HtmlAttr(Words.Text('swimlaneAddPopup-title', 'Add Swimlane')) + '"><form class="js-add-swimlane-form" method="post" action="/b/' +
+      HtmlAttr(HTTPEncode(BoardId)) + '/swimlanes" up-submit up-target=".board-wrapper">' +
+      '<input class="js-swimlane-after" type="hidden" name="after"><textarea class="swimlane-name-input full-line" name="title" rows="2" ' +
+      'dir="auto" placeholder="' + HtmlAttr(Words.Text('add-swimlane', 'Add Swimlane')) + '" aria-label="' +
+      HtmlAttr(Words.Text('add-swimlane', 'Add Swimlane')) + '" autocomplete="off" required></textarea>' +
+      '<label class="swimlane-placement-option"><input class="js-swimlane-placement" type="radio" name="placement" value="below" checked>' +
+      '<span dir="auto">' + E(Words.Text('below-selected-swimlane', 'Below selected swimlane')) + '</span></label>' +
+      '<label class="swimlane-placement-option"><input class="js-swimlane-placement" type="radio" name="placement" value="above">' +
+      '<span dir="auto">' + E(Words.Text('above-selected-swimlane', 'Above selected swimlane')) + '</span></label>' +
+      '<div class="edit-controls clearfix"><button class="primary confirm" type="submit">' + E(Words.Text('add', 'Add')) +
+      '</button></div></form></template>';
   // The date picker, drawn once: the opened card's dates and the minicards'
   // open it (weddy.js).
   if BoardDates then Details := Details + DatePopup(Words);
@@ -1039,6 +1075,31 @@ begin
       'THEN ''false'' ELSE ''true'' END)) WHERE id=' + QuotedStr(S.UserId) + ';') then
     begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'setSwimlaneCollapsedState' then
+  begin
+    // server/models/users.js: [boardId, swimlaneId, collapsed], the user's own
+    // profile.collapsedSwimlanes[boardId][swimlaneId]; keys are ids only
+    // (assertSafeMapKey), and of a board the user may read.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 3) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtBoolean)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := SetViewProfileFold(T, S.UserId, 'collapsedSwimlanes', TJSONArray(Args).Items[0].AsString,
+        TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[2].AsBoolean, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
   if Name = 'createListAfter' then
@@ -1167,17 +1228,19 @@ begin
   //   /b/:id/cards/:card/members/:user                a board member on or off it
   //   /b/:id/cards/:card/labels/:label                one of the board's labels on or off it
   //   /b/:id/labels                                   a new board label (card= to return to)
+  //   /b/:id/swimlanes                                a swimlane below (or above) after=
   //   /b/:id/cards/:card/dates/:kind                  its received, start, due or end date (delete=1 clears)
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or (((P[2] = 'lists') or (P[2] = 'labels')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
   else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
+  else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
@@ -1210,6 +1273,9 @@ begin
       Request.ContentFields.Values['value'], Error)
   else if Action = 'set-description' then
     Code := SetViewCardDescription(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['description'], Error)
+  else if Action = 'add-swimlane' then
+    Code := CreateViewSwimlane(T, S.UserId, BoardId, Request.ContentFields.Values['after'],
+      Request.ContentFields.Values['placement'] = 'above', Title, NewId, Error)
   else if Action = 'add-label' then
   begin
     Code := CreateViewLabel(T, S.UserId, BoardId, Request.ContentFields.Values['name'],

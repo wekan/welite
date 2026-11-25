@@ -450,6 +450,39 @@ def http_checks(server, tmp, backend):
                        as_json=True)[0] == 200
         assert b'card-date' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2], 'no date was set'
 
+        # Swimlanes (swimlaneHeader.jade): the "+" opens swimlaneAddPopup, a
+        # swimlane below or above the chosen one, and the caret folds one for
+        # this user only (setSwimlaneCollapsedState).
+        def lane_titles():
+            return [l['title'] for l in json.loads(request('GET', '/api/boards/%s/swimlanes' % board_id, headers=auth)[2])]
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-open-add-swimlane-menu' in page and b'data-pop="add-swimlane"' in page and b'js-collapse-swimlane' in page
+        first = lane_titles()[0]
+        assert request('POST', '/b/%s/swimlanes' % board_id, {'title': 'Below', 'after': lane, 'placement': 'below'},
+                       cookie=owner)[0] == 200
+        assert request('POST', '/b/%s/swimlanes' % board_id, {'title': 'Above', 'after': lane, 'placement': 'above'},
+                       cookie=owner)[0] == 200
+        assert lane_titles() == ['Above', first, 'Below'], lane_titles()
+        # Negative: a non-member, an empty title, a swimlane of no board.
+        assert request('POST', '/b/%s/swimlanes' % board_id, {'title': 'S', 'after': lane}, cookie=stranger)[0] == 403
+        assert request('POST', '/b/%s/swimlanes' % board_id, {'title': ' ', 'after': lane}, cookie=owner)[0] == 400
+        assert request('POST', '/b/%s/swimlanes' % board_id, {'title': 'L', 'after': 'no-such-lane'}, cookie=owner)[0] == 404
+        assert b'js-open-add-swimlane-menu' not in request('GET', route, cookie=commenter)[2]
+        assert lane_titles() == ['Above', first, 'Below']
+        status, _, body, _ = request('POST', '/_methods/setSwimlaneCollapsedState', [board_id, lane, True],
+                                     cookie=owner, as_json=True)
+        assert status == 200, body
+        page = request('GET', route, cookie=owner)[2]
+        assert ('class="swimlane swimlane-collapsed" data-swimlane="%s"' % lane).encode() in page
+        assert ('id="swimlane-%s"' % lane).encode() not in page
+        assert ('id="swimlane-%s"' % lane).encode() in request('GET', route, cookie=commenter)[2], 'folded for its user only'
+        # Negative: a key that is not an id, a board the user cannot read, the wrong types.
+        assert request('POST', '/_methods/setSwimlaneCollapsedState', [board_id, 'a"b', True], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setSwimlaneCollapsedState', [board_id, lane, True], cookie=stranger, as_json=True)[0] == 403
+        assert request('POST', '/_methods/setSwimlaneCollapsedState', [board_id, lane, 'yes'], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setSwimlaneCollapsedState', [board_id, lane, False], cookie=owner, as_json=True)[0] == 200
+        assert ('id="swimlane-%s"' % lane).encode() in request('GET', route, cookie=owner)[2], 'unfolded again'
+
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'card-details-item-requested-by' in page and b'card-details-item-assigned-by' in page
