@@ -87,6 +87,14 @@ procedure ApiListArchive(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCopyCard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST add card
+// A card added from a view (the HTML5 view's Add card form), with the same
+// checks and writes as POST /api/boards/:boardId/lists/:listId/cards: board
+// write access, the list and swimlane on that board, the swimlane holding the
+// list, the board's custom fields initialized. Position 'top' puts it first in
+// its list, anything else last. Returns the HTTP status (200 when added) and
+// sends nothing; Error says why not.
+function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
+  out CardId,Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);     // GET cards in a list
@@ -4334,6 +4342,36 @@ begin
     Relations+InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
+end;
+
+function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
+  out CardId,Error:string):Integer;
+var Lane,Sort,InitialFields:string;
+begin
+  CardId:='';Error:='';
+  if (BoardId='') or (ListId='') or (Trim(Title)='') or (Pos(#0,BoardId+ListId+Swimlane+Title)>0) then
+  begin Error:='Invalid card';Exit(400);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  Lane:=Swimlane;
+  if not ApiChildrenBelong(T.Db,BoardId,Lane,ListId,'','','','','') then
+  begin Error:='Invalid card parent';Exit(400);end;
+  if (Lane<>'') and (Length(T.Db.Query('SELECT id FROM lists WHERE id='+QuotedStr(ListId)+
+    ' AND (swimlaneId='''' OR swimlaneId='+QuotedStr(Lane)+');'))=0) then
+  begin Error:='List is in another swimlane';Exit(400);end;
+  // First or last among the cards of this list in this swimlane.
+  if Position='top' then
+    Sort:='(SELECT coalesce(min(sort),1)-1 FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND listId='+
+      QuotedStr(ListId)+' AND swimlaneId='+QuotedStr(Lane)+' AND deletedAt IS NULL)'
+  else
+    Sort:='(SELECT coalesce(max(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND listId='+
+      QuotedStr(ListId)+' AND swimlaneId='+QuotedStr(Lane)+' AND deletedAt IS NULL)';
+  CardId:=NewId;
+  try InitialFields:=InitializeCardFields(T.Db,BoardId,CardId);
+  except Error:='Could not initialize custom fields';Exit(500);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardCreateSql(BoardId,ListId,Lane,CardId,UserId,Title,'',QuotedStr(''),Sort)+
+    InitialFields+' COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');CardId:='';Error:='Could not create card';Exit(500);end;
+  Result:=200;
 end;
 
 // Send one card as JSON (incl. its labelIds). Returns False (and sends 404) if missing.

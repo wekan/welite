@@ -45,6 +45,13 @@ function Html5User(Db: TWLDb; Request: TRequest; out S: TWLSession): Boolean;
 // view serves it instead.
 function ServeHtml5(Request: TRequest; Response: TResponse): Boolean;
 
+// A POST of the HTML5 view's forms and of weddy.js's /_methods/ calls, by a
+// viewer signed in with the login cookie and carrying no WeLite form session
+// (the HTML4 view's forms always do): POST /b/:id/cards adds a card, and the
+// board is drawn again for Unpoly to take its .board-wrapper. Returns False
+// when the request is not one of these.
+function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
+
 // After a successful sign-in in the HTML5 view: the login cookie, and back to
 // All Boards.
 procedure Html5SignedIn(Response: TResponse; const SessionId: string);
@@ -67,7 +74,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke;
+  wlview, wlselscp, wlrevoke, wlapi;
 
 const
   STATIC_HEAD =
@@ -341,8 +348,8 @@ end;
 // board.pug: the board, and when CardId is given, its opened card.
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
-var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details: string;
-  Selector: TSelectionScope;
+var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
+  Selector: TSelectionScope; Writable: Boolean;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -351,6 +358,7 @@ begin
   if Length(B) <> 1 then Exit;
   BoardTitle := B[0][0];
   Route := BoardRoute(BoardId, B[0][2]);
+  Writable := (S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId);
   Canvas := '';
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
@@ -363,9 +371,20 @@ begin
       ' AND (swimlaneId=' + QuotedStr(Lanes[i][0]) + ' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
     for j := 0 to High(Lists) do
     begin
+      Composer := '';
+      if Writable then
+        // board.pug: the list header's "+" (Add card to top of list), and the
+        // composer weddy.js clones from its template into the list.
+        Composer := '<a class="js-add-card list-header-plus-top" href="#" data-list="' + HtmlAttr(Lists[j][0]) +
+          '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '" title="' +
+          HtmlAttr(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '" aria-label="' +
+          HtmlAttr(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '">+</a>' +
+          '<a class="js-open-list-menu" href="#" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' +
+          HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('listActionPopup-title', 'List Actions')) +
+          '" aria-label="' + HtmlAttr(Words.Text('listActionPopup-title', 'List Actions')) + '">&#9776;</a>';
       Canvas := Canvas + '<div class="list js-list" id="js-list-' + HtmlAttr(Lists[j][0]) + '" data-list="' +
         HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"><div class="list-header">' +
-        '<span class="list-header-name">' + E(Lists[j][1]) + '</span></div>' +
+        '<span class="list-header-name">' + E(Lists[j][1]) + '</span>' + Composer + '</div>' +
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
       Cards := Db.Query('SELECT c.id,c.title,c.sort FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
@@ -377,7 +396,23 @@ begin
           HtmlAttr(Cards[k][0]) + '" data-card-id="' + HtmlAttr(Cards[k][0]) + '" data-sort="' + HtmlAttr(Cards[k][2]) +
           '"><div class="minicard"><div class="minicard-title"><span class="minicard-title-text">' +
           E(Cards[k][1]) + '</span></div></div></div>';
-      Canvas := Canvas + '</div></div>';
+      Canvas := Canvas + '</div>';
+      if Writable then
+        Canvas := Canvas + '<template class="js-card-composer-template">' +
+          '<form class="js-inlined-form js-card-composer" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+          '/cards" up-submit up-target=".board-wrapper">' +
+          '<input type="hidden" name="listId" value="' + HtmlAttr(Lists[j][0]) + '">' +
+          '<input type="hidden" name="swimlaneId" value="' + HtmlAttr(Lanes[i][0]) + '">' +
+          '<input class="js-card-position" type="hidden" name="position" value="bottom">' +
+          '<div class="minicard minicard-composer js-composer"><textarea class="minicard-composer-textarea js-card-title" name="title" dir="auto" aria-label="' +
+          HtmlAttr(Words.Text('title', 'Title')) + '" required></textarea></div>' +
+          '<div class="add-controls clearfix"><button class="primary confirm" type="submit">' +
+          E(Words.Text('add-card', 'Add Card')) + '</button><a class="js-close-inlined-form" href="#" aria-label="' +
+          HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></form></template>' +
+          '<a class="open-minicard-composer js-card-composer js-open-inlined-form" href="#" title="' +
+          HtmlAttr(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '"><i class="fa fa-plus"></i> ' +
+          E(Words.Text('add-card', 'Add Card')) + '</a>';
+      Canvas := Canvas + '</div>';
     end;
     Canvas := Canvas + '</div></div>';
   end;
@@ -403,10 +438,69 @@ begin
         E(Card[0][1]) + '</div></div>';
     Details := Details + '</div>';
   end;
+  // board.pug's list menu, drawn once; weddy.js opens it for the list whose
+  // menu button was clicked.
+  if Writable then
+    Details := Details + '<template class="js-pop-over-template" data-pop="list-menu" data-title="' +
+      HtmlAttr(Words.Text('listActionPopup-title', 'List Actions')) + '"><ul class="pop-over-list">' +
+      '<li><a class="js-add-card list-header-plus-top" href="#">&uarr; ' +
+      E(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '</a></li>' +
+      '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
+      E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '" data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1></div>' +
     '<div class="board-canvas" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
+end;
+
+procedure SendPage(Response: TResponse; Code: Integer; const Html: string);
+begin
+  Response.Code := Code;
+  Response.ContentType := 'text/html; charset=utf-8';
+  Response.SetCustomHeader('Cache-Control', 'no-store');
+  Response.Content := Html;
+  Response.ContentLength := Length(Response.Content);
+  Response.SendContent;
+end;
+
+function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
+var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
+  Path, BoardId, Slug, CardId, Error, Content, BoardTitle: string; Code: Integer; Found: Boolean;
+begin
+  Result := False;
+  if Request.Method <> 'POST' then Exit;
+  if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
+  Path := Request.PathInfo;
+  if not SplitBoardRoute(Path, BoardId, Slug, CardId) or (Slug <> 'cards') or (CardId <> '') then Exit;
+  if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+  if not Html5User(T.Db, Request, S) then Exit;
+  Result := True;
+  Language := ViewerLanguage(T.Db, S, Request);
+  Words := TWLTranslator.Create(Language);
+  try
+    Code := CreateViewCard(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
+      Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['title'],
+      Request.ContentFields.Values['position'], CardId, Error);
+    if Code <> 200 then
+    begin
+      SendPage(Response, Code, Page(Request, Language, Words, S, Error, '',
+        '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
+      Exit;
+    end;
+    // The board again, with the new card: Unpoly takes its .board-wrapper.
+    Content := '';
+    Found := False;
+    if T.Db.BeginRead then
+    try
+      Content := BoardContent(T.Db, S, Words, BoardId, '', BoardTitle, Found);
+    finally
+      T.Db.EndRead;
+    end;
+    Response.SetCustomHeader('X-Up-Location', BoardRoute(BoardId, BoardSlug(T.Db, BoardId)));
+    SendPage(Response, 200, Page(Request, Language, Words, S, BoardTitle, BoardTitle, Content));
+  finally
+    Words.Free;
+  end;
 end;
 
 function ServeHtml5(Request: TRequest; Response: TResponse): Boolean;

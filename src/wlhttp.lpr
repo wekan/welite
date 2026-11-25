@@ -51,6 +51,9 @@ const
 
 procedure TWLCleanRouter.DoRouteRequest(Request:TRequest;Response:TResponse);
 begin
+  // The HTML5 view's own form posts (POST /b/:id/cards), before the WeKan
+  // route below would read /b/:id/cards as a board (wlh5).
+  if ServeHtml5Action(Request,Response) then begin CleanupUploads(Request);Exit;end;
   // WeKan's routes (/b/:id/:slug, /b/:boardId/:slug/:cardId, /sign-up) are
   // served by the WeLite pages they name (wlroutes).
   RewriteWeKanRoute(Request);

@@ -198,6 +198,32 @@ def http_checks(server, tmp, backend):
         status, headers, _, _ = request('GET', '/', cookie='meteor_login_token=' + 'f' * 64)
         assert status == 302 and headers['Location'] == '/sign-in'
 
+        # Add card (board.pug's composer posts to /b/:id/cards): first or last in its list.
+        status, _, page, _ = request('GET', route, cookie=owner)
+        assert b'class="js-add-card list-header-plus-top"' in page and b'template class="js-card-composer-template"' in page
+        assert ('action="/b/%s/cards"' % board_id).encode() in page and b'data-pop="list-menu"' in page
+        for title, position in [('Top Card', 'top'), ('Bottom Card', 'bottom')]:
+            status, headers, page, _ = request('POST', '/b/%s/cards' % board_id,
+                                               {'listId': list_id, 'swimlaneId': lane, 'position': position, 'title': title},
+                                               cookie=owner)
+            assert status == 200 and b'class="board-wrapper' in page and title.encode() in page, (status, page[-300:])
+            assert headers.get('X-Up-Location') == route
+        cards = json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, list_id), headers=auth)[2])
+        titles = [c['title'] for c in cards]
+        assert titles[0] == 'Top Card' and titles[-1] == 'Bottom Card' and 'View Card' in titles, titles
+        # Negative: no member, no title, no cookie, and an HTML4 form's POST all add nothing.
+        status, _, _, _ = request('POST', '/b/%s/cards' % board_id, {'listId': list_id, 'swimlaneId': lane,
+                                  'title': 'Stranger Card'}, cookie=stranger)
+        assert status == 403, status
+        status, _, _, _ = request('POST', '/b/%s/cards' % board_id, {'listId': list_id, 'swimlaneId': lane, 'title': ' '},
+                                  cookie=owner)
+        assert status == 400, status
+        request('POST', '/b/%s/cards' % board_id, {'listId': list_id, 'swimlaneId': lane, 'title': 'Anonymous Card'})
+        request('POST', '/b/%s/cards' % board_id, {'listId': list_id, 'swimlaneId': lane, 'title': 'Form Card',
+                                                   'sessionId': token}, cookie=owner)
+        cards = json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, list_id), headers=auth)[2])
+        assert not {'Stranger Card', 'Anonymous Card', 'Form Card'} & {c['title'] for c in cards}, cards
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

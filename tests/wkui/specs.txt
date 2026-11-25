@@ -9,3 +9,6 @@
 02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
 02-cards-open-view.e2e.js: card opens without the maximized class by default (minimized view)
 02-cards-open-view.e2e.js: closing the card detail panel hides it
+03-cards-operations.e2e.js: add-to-top places the card first in the list
+03-cards-operations.e2e.js: add-to-bottom places the card last in the list
+02-cards-open-view.e2e.js: a minicard title opens the card instead of an inline editor

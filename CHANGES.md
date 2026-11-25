@@ -29,6 +29,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   and renders its lists, a member sees the board in All Boards and a
   non-member gets "Board not found", a minicard opens the card's details,
   which are not maximized and close again.
+- Add a card in the HTML5 view: the list header's "+", the list menu's
+  Add card to top or bottom of list, and Weddy's composer, posting to
+  `/b/:id/cards`. The card is added with the REST API's own checks and writes
+  (`CreateViewCard` in `src/wlapi.pas`), first or last in its list. Three more
+  of WeKan's tests pass: add to top, add to bottom, and a minicard title that
+  opens the card.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,
