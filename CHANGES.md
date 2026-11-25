@@ -46,6 +46,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   (`RenameViewCard`). One more of WeKan's tests passes.
 - Run two more of WeKan's tests: a card's description shows when it opens,
   and a card added from the bottom of a list appears. 15 pass.
+- Show a card's checklists in the HTML5 view, with their progress and items,
+  and add a checklist, add an item, check or uncheck it, and delete a
+  checklist with its items and only its items - by the section's forms and
+  by WeKan's own `/checklists/remove` method - with the REST API's checks
+  (`CreateViewChecklist`, `AddViewChecklistItem`, `ToggleViewChecklistItem`,
+  `DeleteViewChecklist`). The 7 checklist tests of WeKan's `12-checklists`
+  run against it and pass, none of them by finding the section missing. 22
+  pass in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

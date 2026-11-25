@@ -100,6 +100,16 @@ function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,T
 // write access, the card on that board, a title that is text. Returns the
 // HTTP status (200 when renamed) and sends nothing.
 function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
+// A card's checklists from a view (the HTML5 view's checklists section), with
+// the checks and writes of the REST API's checklist routes: board write
+// access, the card - and the checklist and the item - on that board, a title
+// that is text. Each returns the HTTP status (200 when done) and sends nothing.
+function CreateViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out ChecklistId,Error:string):Integer;
+function AddViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,Title:string;out ItemId,Error:string):Integer;
+function ToggleViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,ItemId:string;out Error:string):Integer;
+// Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
+// items and only its items.
+function DeleteViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
 procedure ApiCardEdit(aRequest: TRequest; aResponse: TResponse);      // PUT card (title/desc/color/labels)
 procedure ApiListCards(aRequest: TRequest; aResponse: TResponse);     // GET cards in a list
@@ -4395,6 +4405,79 @@ begin
     ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Card rename failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not rename card';Exit(500);end;
   Result:=200;
+end;
+
+function ViewChecklistScope(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,ItemId:string;out Error:string):Integer;
+begin
+  Error:='';
+  if (BoardId='') or (CardId='') or (Pos(#0,BoardId+CardId+ChecklistId+ItemId)>0) then
+  begin Error:='Card not found';Exit(404);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if not ApiChildrenBelong(T.Db,BoardId,'','',CardId,ChecklistId,ItemId,'','') then
+  begin Error:='Resource does not belong to this board or parent';Exit(404);end;
+  Result:=200;
+end;
+
+function ValidViewTitle(const Title:string):Boolean;
+begin
+  Result:=(Trim(Title)<>'') and (Pos(#0,Title)=0);
+end;
+
+function CreateViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out ChecklistId,Error:string):Integer;
+var Stamp:string;
+begin
+  ChecklistId:='';
+  Result:=ViewChecklistScope(T,UserId,BoardId,CardId,'','',Error);
+  if Result<>200 then Exit;
+  if not ValidViewTitle(Title) then begin Error:='Invalid checklist title';Exit(400);end;
+  ChecklistId:=NewId;Stamp:=QuotedStr(NowIso);
+  // Last among the card's checklists.
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO checklists(id,cardId,boardId,title,sort,createdAt,modifiedAt) VALUES('+
+    QuotedStr(ChecklistId)+','+QuotedStr(CardId)+','+QuotedStr(BoardId)+','+QuotedStr(Title)+
+    ',(SELECT coalesce(max(sort),-1)+1 FROM checklists WHERE cardId='+QuotedStr(CardId)+'),'+Stamp+','+Stamp+'); COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');ChecklistId:='';Error:='Could not create checklist';Exit(500);end;
+end;
+
+function AddViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,Title:string;out ItemId,Error:string):Integer;
+var Stamp:string;
+begin
+  ItemId:='';
+  if ChecklistId='' then begin Error:='Checklist not found';Exit(404);end;
+  Result:=ViewChecklistScope(T,UserId,BoardId,CardId,ChecklistId,'',Error);
+  if Result<>200 then Exit;
+  if not ValidViewTitle(Title) then begin Error:='Invalid item title';Exit(400);end;
+  ItemId:=NewId;Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO checklist_items(id,checklistId,cardId,boardId,title,sort,createdAt,modifiedAt) VALUES('+
+    QuotedStr(ItemId)+','+QuotedStr(ChecklistId)+','+QuotedStr(CardId)+','+QuotedStr(BoardId)+','+QuotedStr(Title)+
+    ',(SELECT coalesce(max(sort),-1)+1 FROM checklist_items WHERE checklistId='+QuotedStr(ChecklistId)+'),'+Stamp+','+Stamp+'); COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');ItemId:='';Error:='Could not create checklist item';Exit(500);end;
+end;
+
+function ToggleViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,ItemId:string;out Error:string):Integer;
+var Predicate:string;
+begin
+  if (ChecklistId='') or (ItemId='') then begin Error:='Item not found';Exit(404);end;
+  Result:=ViewChecklistScope(T,UserId,BoardId,CardId,ChecklistId,ItemId,Error);
+  if Result<>200 then Exit;
+  Predicate:='id='+QuotedStr(ItemId)+' AND checklistId='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(CardId)+
+    ' AND (boardId IS NULL OR boardId='+QuotedStr(BoardId)+')';
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM checklist_items WHERE '+Predicate+
+    ')=1 THEN 1 ELSE json(''Checklist item scope changed'') END; UPDATE checklist_items SET isFinished=CASE WHEN isFinished=1 '+
+    'THEN 0 ELSE 1 END,modifiedAt='+QuotedStr(NowIso)+' WHERE '+Predicate+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update checklist item';Exit(500);end;
+end;
+
+function DeleteViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId:string;out Error:string):Integer;
+var Predicate:string;
+begin
+  if ChecklistId='' then begin Error:='Checklist not found';Exit(404);end;
+  Result:=ViewChecklistScope(T,UserId,BoardId,CardId,ChecklistId,'',Error);
+  if Result<>200 then Exit;
+  Predicate:='id='+QuotedStr(ChecklistId)+' AND cardId='+QuotedStr(CardId)+' AND (boardId IS NULL OR boardId='+QuotedStr(BoardId)+')';
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM checklists WHERE '+Predicate+
+    ')=1 THEN 1 ELSE json(''Checklist scope changed'') END; DELETE FROM checklists WHERE '+Predicate+
+    '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM checklists WHERE '+Predicate+') THEN 1 ELSE json(''Checklist write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not delete checklist';Exit(500);end;
 end;
 
 // Send one card as JSON (incl. its labelIds). Returns False (and sends 404) if missing.

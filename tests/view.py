@@ -258,6 +258,43 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/b/%s/cards/no-such-card/title' % board_id, {'title': 'X'}, cookie=owner)[0] == 404
         assert card_title() == 'Renamed Card'
 
+        # Checklists (_cardsec_checklists.pug): add one, add items, check one, delete it.
+        base = '/b/%s/cards/%s/checklists' % (board_id, card_id)
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'class="add-checklist-top js-open-inlined-form"' in page and ('action="%s"' % base).encode() in page
+        assert request('POST', base, {'title': 'Steps'}, cookie=owner)[0] == 200
+        def checklists():
+            return json.loads(request('GET', '/api/boards/%s/cards/%s/checklists' % (board_id, card_id), headers=auth)[2])
+        cl = [c for c in checklists() if c['title'] == 'Steps'][0]
+        for title in ['First', 'Second']:
+            assert request('POST', '%s/%s/items' % (base, cl['_id']), {'title': title}, cookie=owner)[0] == 200
+        cl = [c for c in checklists() if c['_id'] == cl['_id']][0]
+        assert [i['title'] for i in cl['items']] == ['First', 'Second'], cl
+        first = cl['items'][0]['_id']
+        status, _, page, _ = request('POST', '%s/%s/items/%s/toggle' % (base, cl['_id'], first), {}, cookie=owner)
+        assert status == 200 and b'checklist-progress-bar-container' in page and b'50%' in page
+        assert [i['isFinished'] for i in [c for c in checklists() if c['_id'] == cl['_id']][0]['items']] == [True, False]
+        # Negative: a non-member, another card's checklist and an empty title change nothing.
+        assert request('POST', base, {'title': 'Stranger'}, cookie=stranger)[0] == 403
+        assert request('POST', '%s/%s/items/%s/toggle' % (base, cl['_id'], first), {}, cookie=stranger)[0] == 403
+        assert request('POST', '%s/%s/delete' % (base, cl['_id']), {}, cookie=stranger)[0] == 403
+        other = '/b/%s/cards/%s/checklists' % (board_id, 'no-such-card')
+        assert request('POST', '%s/%s/items' % (other, cl['_id']), {'title': 'X'}, cookie=owner)[0] == 404
+        assert request('POST', base, {'title': ' '}, cookie=owner)[0] == 400
+        assert [i['isFinished'] for i in [c for c in checklists() if c['_id'] == cl['_id']][0]['items']] == [True, False]
+        # Delete, by the form and by WeKan's collection method.
+        assert request('POST', '%s/%s/delete' % (base, cl['_id']), {}, cookie=owner)[0] == 200
+        assert not [c for c in checklists() if c['_id'] == cl['_id']]
+        request('POST', base, {'title': 'By method'}, cookie=owner)
+        cl2 = [c for c in checklists() if c['title'] == 'By method'][0]['_id']
+        status, _, body, _ = request('POST', '/_methods/%2Fchecklists%2Fremove', [{'title': 'By method'}],
+                                     cookie=owner, as_json=True)
+        assert status == 403 and 'only remove documents by ID' in json.loads(body)['reason'], 'negative: by ID only'
+        status, _, body, _ = request('POST', '/_methods/%2Fchecklists%2Fremove', [{'_id': cl2}], cookie=stranger, as_json=True)
+        assert status == 403 and [c for c in checklists() if c['_id'] == cl2], 'negative: a non-member removes nothing'
+        status, _, body, _ = request('POST', '/_methods/%2Fchecklists%2Fremove', [{'_id': cl2}], cookie=owner, as_json=True)
+        assert status == 200 and json.loads(body) == {'result': 1} and not [c for c in checklists() if c['_id'] == cl2]
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

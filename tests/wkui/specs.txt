@@ -17,3 +17,10 @@
 02-cards-open-view.e2e.js: editing the card title does not break the card
 16-card-members-description.e2e.js: seeded description text is visible when card opens
 16-card-members-description.e2e.js: adding a new card via the list inline form creates the card
+12-checklists.e2e.js: add-checklist button opens the inline form
+12-checklists.e2e.js: creating a checklist adds it to the card details
+12-checklists.e2e.js: adding an item to a checklist renders it in the item list
+12-checklists.e2e.js: checking a checklist item adds the is-checked class
+12-checklists.e2e.js: checklist progress bar appears when items are checked
+12-checklists.e2e.js: deleting a checklist removes it from the card
+12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items

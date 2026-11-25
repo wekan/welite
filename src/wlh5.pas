@@ -356,6 +356,108 @@ begin
   Result := (Length(R) = 1) and (Length(R[0]) = 1) and (R[0][0] = '1');
 end;
 
+// _cardsec_checklists.pug: the opened card's checklists, each with its
+// progress and items; for whoever may change the card, a checklist added (the
+// title line's "+" before there is one, the bottom one after), an item added
+// under its checklist, an item checked, and the checklist's menu.
+function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
+var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished: string;
+  function InlinedForm(const Cls, Action, Label_: string): string;
+  begin
+    // Its fields are on the page only while it is open (WeKan's inlinedForm).
+    Result := '<form class="' + Cls + ' js-inlined-form is-hidden" method="post" action="' + HtmlAttr(Action) +
+      '" up-submit up-target=".board-wrapper"><template class="js-inlined-form-body">' +
+      '<textarea class="js-add-checklist-item" name="title" rows="1" aria-label="' + HtmlAttr(Label_) + '" required></textarea>' +
+      '<div class="edit-controls clearfix"><button class="primary confirm js-submit-add-checklist-item-form" type="submit">' +
+      E(Words.Text('save', 'Save')) + '</button><a class="js-close-inlined-form" href="#" aria-label="' +
+      HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></template></form>';
+  end;
+begin
+  Result := '';
+  Base := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/checklists';
+  Lists := Db.Query('SELECT id,title FROM checklists WHERE cardId=' + QuotedStr(CardId) +
+    ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ') ORDER BY sort,id;');
+  if (Length(Lists) = 0) and not Writable then Exit;
+  Result := '<div class="card-checklist-attachmentGallery card-checklists js-checklists-section"><div class="checklists-title">' +
+    '<h3 class="card-details-item-title"><i class="fa fa-check"></i> ' + E(Words.Text('checklists', 'Checklists'));
+  if Writable and (Length(Lists) = 0) then
+    Result := Result + '<a class="add-checklist-top js-open-inlined-form" href="#" data-opens="add-checklist" title="' +
+      HtmlAttr(Words.Text('add-checklist', 'Add Checklist')) + '" aria-label="' + HtmlAttr(Words.Text('add-checklist', 'Add Checklist')) +
+      '"><i class="fa fa-plus"></i></a>';
+  Result := Result + '</h3></div><div class="card-checklist-items">';
+  for i := 0 to High(Lists) do
+  begin
+    Items := Db.Query('SELECT id,title,COALESCE(isFinished,0) FROM checklist_items WHERE checklistId=' + QuotedStr(Lists[i][0]) +
+      ' AND cardId=' + QuotedStr(CardId) + ' ORDER BY sort,id;');
+    Done := 0;
+    ItemsHtml := '';
+    for k := 0 to High(Items) do
+    begin
+      if Items[k][2] = '1' then begin Inc(Done); Finished := ' is-checked'; end else Finished := '';
+      ItemsHtml := ItemsHtml + '<div class="js-checklist-item checklist-item' + Finished + '" data-item="' + HtmlAttr(Items[k][0]) +
+        '" role="checkbox" aria-checked="' + IfThen(Finished <> '', 'true', 'false') + '" aria-readonly="' +
+        IfThen(Writable, 'false', 'true') + '" tabindex="' + IfThen(Writable, '0', '-1') + '">';
+      if Writable then
+        ItemsHtml := ItemsHtml + '<form class="check-box-container js-toggle-checklist-item" method="post" action="' +
+          HtmlAttr(Base + '/' + HTTPEncode(Lists[i][0]) + '/items/' + HTTPEncode(Items[k][0]) + '/toggle') +
+          '" up-submit up-target=".board-wrapper"><button class="check-box materialCheckBox' + Finished +
+          '" type="submit" aria-label="' + HtmlAttr(Items[k][1]) + '"></button></form>'
+      else
+        ItemsHtml := ItemsHtml + '<div class="check-box-container"><div class="check-box materialCheckBox' + Finished + '"></div></div>';
+      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + E(Items[k][1]) + '</div></div>';
+    end;
+    Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
+    if Writable then
+      Checklist := Checklist + '<a class="fa fa-navicon checklist-details-menu js-open-checklist-details-menu" href="#" data-checklist="' +
+        HtmlAttr(Lists[i][0]) + '" title="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) +
+        '" aria-label="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"></a>';
+    Checklist := Checklist + '<h4 class="title">' + E(Lists[i][1]) + '</h4></div>';
+    // WeKan's progress: the share of its items checked, shown once one is.
+    if (Length(Items) > 0) and (Done > 0) then
+    begin
+      Percent := (Done * 100) div Length(Items);
+      Checklist := Checklist + '<div class="checklist-progress-bar-container"><div class="checklist-progress-text">' +
+        IntToStr(Percent) + '%</div><div class="checklist-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' +
+        IntToStr(Percent) + '" aria-label="' + HtmlAttr(Lists[i][1]) + '"><div class="checklist-progress" style="width:' +
+        IntToStr(Percent) + '%"></div></div></div>';
+    end;
+    Checklist := Checklist + '<div class="checklist-items js-checklist-items">' + ItemsHtml + '</div>';
+    if Writable then
+      Checklist := Checklist + '<a class="add-checklist-item js-open-inlined-form" href="#" data-opens="add-checklist-item" title="' +
+        HtmlAttr(Words.Text('add-checklist-item', 'Add an item to checklist')) + '" aria-label="' +
+        HtmlAttr(Words.Text('add-checklist-item', 'Add an item to checklist')) + '"><i class="fa fa-plus"></i></a>' +
+        InlinedForm('js-add-checklist-item', Base + '/' + HTTPEncode(Lists[i][0]) + '/items',
+          Words.Text('add-checklist-item', 'Add an item to checklist'));
+    Result := Result + Checklist + '</div>';
+  end;
+  Result := Result + '</div>';
+  if Writable then
+  begin
+    Result := Result + '<div class="checklists-bottom-actions">';
+    if Length(Lists) > 0 then
+      Result := Result + '<a class="add-checklist js-open-inlined-form" href="#" data-opens="add-checklist" title="' +
+        HtmlAttr(Words.Text('add-checklist', 'Add Checklist')) + '" aria-label="' + HtmlAttr(Words.Text('add-checklist', 'Add Checklist')) +
+        '"><i class="fa fa-plus"></i></a>';
+    Result := Result + InlinedForm('js-add-checklist', Base, Words.Text('add-checklist', 'Add Checklist')) + '</div>';
+  end;
+  Result := Result + '</div>';
+end;
+
+// board.pug's checklistActionsPopup and checklistDeletePopup, for the opened card.
+function ChecklistPopups(Words: TWLTranslator; const BoardId, CardId: string): string;
+begin
+  Result := '<template class="js-pop-over-template" data-pop="checklist-actions" data-title="' +
+    HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"><div class="content"><ul class="pop-over-list"><li>' +
+    '<a class="js-delete-checklist delete-checklist" href="#"><i class="fa fa-trash"></i> ' + E(Words.Text('delete', 'Delete')) +
+    ' ...</a></li></ul></div></template>' +
+    '<template class="js-pop-over-template" data-pop="checklist-delete" data-title="' +
+    HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '" data-board="' + HtmlAttr(BoardId) +
+    '" data-card="' + HtmlAttr(CardId) + '"><div class="content"><p>' +
+    E(Words.Text('confirm-checklist-delete-popup', 'Are you sure you want to delete the checklist?')) +
+    '</p><form class="js-checklist-delete-form" method="post" action="#" up-submit up-target=".board-wrapper">' +
+    '<button class="js-confirm negate full" type="submit">' + E(Words.Text('delete', 'Delete')) + '</button></form></div></template>';
+end;
+
 // board.pug: the board, and when CardId is given, its opened card.
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean): string;
@@ -466,7 +568,8 @@ begin
     if Card[0][1] <> '' then
       Details := Details + '<div class="card-details-item card-details-item-description"><div class="viewer">' +
         E(Card[0][1]) + '</div></div>';
-    Details := Details + '</div>';
+    Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) + '</div>';
+    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId);
   end;
   // board.pug's list menu, drawn once; weddy.js opens it for the list whose
   // menu button was clicked.
@@ -508,7 +611,7 @@ end;
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
-var T: TWLTenant; S: TWLSession;
+var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code: Integer;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
@@ -524,12 +627,67 @@ begin
     SendJsonAnswer(Response, 200, '{"result":1}');
     Exit;
   end;
+  if Name = '/checklists/remove' then
+  begin
+    // The collection's own method (server/permissions/checklists.js): a
+    // checklist by its id only, removed by whoever may change its card, with
+    // its items and nobody else's (#6816); it answers how many it removed.
+    Id := '';
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if (Args is TJSONArray) and (TJSONArray(Args).Count >= 1) and (TJSONArray(Args).Items[0] is TJSONObject) then
+      begin
+        Selector := TJSONObject(TJSONArray(Args).Items[0]);
+        if (Selector.Count = 1) and (Selector.Names[0] = '_id') and (Selector.Items[0].JSONType = jtString) then
+          Id := Selector.Items[0].AsString;
+      end;
+    finally
+      Args.Free;
+    end;
+    if (Id = '') or (Pos(#0, Id) > 0) then
+    begin
+      SendJsonAnswer(Response, 403, '{"error":403,"reason":"Not permitted. Untrusted code may only remove documents by ID."}');
+      Exit;
+    end;
+    R := T.Db.Query('SELECT l.cardId,c.boardId FROM checklists l JOIN cards c ON c.id=l.cardId WHERE l.id=' + QuotedStr(Id) + ' LIMIT 1;');
+    if Length(R) <> 1 then begin SendJsonAnswer(Response, 200, '{"result":0}'); Exit; end;
+    Code := DeleteViewChecklist(T, S.UserId, R[0][1], R[0][0], Id, Error);
+    if Code = 403 then
+    begin SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}'); Exit; end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
   SendJsonAnswer(Response, 404, '{"error":404,"reason":"Method ''' + StringToJSONString(Name) + ''' not found"}');
+end;
+
+// The parts of a path, each decoded: /b/x/cards/y -> b, x, cards, y.
+function PathParts(const Path: string): TStringArray;
+var Rest: string; At: Integer;
+begin
+  Result := nil;
+  Rest := Path;
+  if (Rest <> '') and (Rest[1] = '/') then Delete(Rest, 1, 1);
+  while Rest <> '' do
+  begin
+    At := Pos('/', Rest);
+    if At = 0 then At := Length(Rest) + 1;
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := HTTPDecode(Copy(Rest, 1, At - 1));
+    Delete(Rest, 1, At);
+  end;
 end;
 
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
-  Path, BoardId, Slug, CardId, Error, Content, BoardTitle: string; Code: Integer; Found, Renamed: Boolean;
+  Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back: string;
+  P: TStringArray; Code, n: Integer; Found: Boolean;
 begin
   Result := False;
   if Request.Method <> 'POST' then Exit;
@@ -538,68 +696,74 @@ begin
   if Copy(Path, 1, 10) = '/_methods/' then
   begin
     Result := True;
-    ServeMethod(Request, Response, Copy(Path, 11, MaxInt));
+    // weddy.js encodes the name (encodeURIComponent): a collection's own
+    // method such as /checklists/remove arrives as %2Fchecklists%2Fremove.
+    ServeMethod(Request, Response, HTTPDecode(Copy(Path, 11, MaxInt)));
     Exit;
   end;
-  // /b/:id/cards/:cardId/title is a WeKan card route with "title" for a card
-  // id; only its POST from this view is the title editor's.
-  Renamed := False;
-  if (Copy(Path, Length(Path) - 5, 6) = '/title') and
-    SplitBoardRoute(Copy(Path, 1, Length(Path) - 6), BoardId, Slug, CardId) and (Slug = 'cards') and (CardId <> '') then
-    Renamed := True
-  else if not SplitBoardRoute(Path, BoardId, Slug, CardId) or (Slug <> 'cards') or (CardId <> '') then Exit;
+  // The HTML5 view's forms (board.pug, _cardsec_*.pug), all under /b/:id/cards:
+  //   /b/:id/cards                                    add a card
+  //   /b/:id/cards/:card/title                        rename it
+  //   /b/:id/cards/:card/checklists                   add a checklist
+  //   /b/:id/cards/:card/checklists/:cl/items         add an item to it
+  //   /b/:id/cards/:card/checklists/:cl/items/:it/toggle   check or uncheck the item
+  //   /b/:id/cards/:card/checklists/:cl/delete        delete the checklist and its items
+  // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
+  // POST of this view, signed in by the cookie, is taken as one of these.
+  P := PathParts(Path);
+  n := Length(P);
+  if (n < 3) or (P[0] <> 'b') or (P[2] <> 'cards') or (P[1] = '') then Exit;
+  BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
+  Title := Request.ContentFields.Values['title'];
+  if n = 3 then Action := 'add-card'
+  else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
+  else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
+  else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
+  else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
+  else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
+  else Exit;
+  if n >= 4 then CardId := P[3];
+  if n >= 6 then ChecklistId := P[5];
+  if n >= 8 then ItemId := P[7];
+  if (CardId = '') and (n >= 4) then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
   if not Html5User(T.Db, Request, S) then Exit;
   Result := True;
-  if Renamed then
-  begin
-    Code := RenameViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['title'], Error);
-    Language := ViewerLanguage(T.Db, S, Request);
-    Words := TWLTranslator.Create(Language);
-    try
-      if Code <> 200 then
-      begin
-        SendPage(Response, Code, Page(Request, Language, Words, S, Error, '',
-          '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
-        Exit;
-      end;
-      Content := '';
-      Found := False;
-      if T.Db.BeginRead then
-      try
-        Content := BoardContent(T.Db, S, Words, BoardId, CardId, BoardTitle, Found);
-      finally
-        T.Db.EndRead;
-      end;
-      Response.SetCustomHeader('X-Up-Location', CardRoute(BoardId, BoardSlug(T.Db, BoardId), CardId));
-      SendPage(Response, 200, Page(Request, Language, Words, S, BoardTitle, BoardTitle, Content));
-    finally
-      Words.Free;
-    end;
-    Exit;
-  end;
+  if Action = 'add-card' then
+    Code := CreateViewCard(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
+      Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'], NewId, Error)
+  else if Action = 'rename-card' then
+    Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
+  else if Action = 'add-checklist' then
+    Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
+  else if Action = 'add-item' then
+    Code := AddViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, Title, NewId, Error)
+  else if Action = 'toggle-item' then
+    Code := ToggleViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Error)
+  else
+    Code := DeleteViewChecklist(T, S.UserId, BoardId, CardId, ChecklistId, Error);
   Language := ViewerLanguage(T.Db, S, Request);
   Words := TWLTranslator.Create(Language);
   try
-    Code := CreateViewCard(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
-      Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['title'],
-      Request.ContentFields.Values['position'], CardId, Error);
     if Code <> 200 then
     begin
       SendPage(Response, Code, Page(Request, Language, Words, S, Error, '',
         '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
       Exit;
     end;
-    // The board again, with the new card: Unpoly takes its .board-wrapper.
+    // The board again - with the card open when the action was on a card -
+    // for Unpoly to take its .board-wrapper.
     Content := '';
     Found := False;
     if T.Db.BeginRead then
     try
-      Content := BoardContent(T.Db, S, Words, BoardId, '', BoardTitle, Found);
+      Content := BoardContent(T.Db, S, Words, BoardId, CardId, BoardTitle, Found);
     finally
       T.Db.EndRead;
     end;
-    Response.SetCustomHeader('X-Up-Location', BoardRoute(BoardId, BoardSlug(T.Db, BoardId)));
+    if CardId <> '' then Back := CardRoute(BoardId, BoardSlug(T.Db, BoardId), CardId)
+    else Back := BoardRoute(BoardId, BoardSlug(T.Db, BoardId));
+    Response.SetCustomHeader('X-Up-Location', Back);
     SendPage(Response, 200, Page(Request, Language, Words, S, BoardTitle, BoardTitle, Content));
   finally
     Words.Free;
