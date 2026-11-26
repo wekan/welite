@@ -333,3 +333,5 @@ card-settings-sections-order.e2e.js: the splitter: dragged it widens one pane, c
 card-settings-sections-order.e2e.js: a hamburger opens its content under its line inside the pane, not in a popup
 card-settings-sections-order.e2e.js: a custom field's hamburger edits it inline, and the + creates one inline; Card Settings stays
 card-settings-sections-order.e2e.js: the corner grip resizes Card Settings; the panes follow, and stack below two panes' width
+card-settings-both-sides.e2e.js: new sides render where chosen, and nothing changes until chosen
+card-settings-both-sides.e2e.js: rows for what had none: card color and the description badge, each side on its own

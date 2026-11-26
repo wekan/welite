@@ -500,6 +500,16 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the user's own split and labels text, and setCollapsedCardSection,
   setShowLabelTextOverride and /customFields/update are added. 11 of WeKan's
   Card Settings tests pass; 437 of WeKan's tests pass in one run.
+- Draw the rows' new minicard and card sides as Card Settings has them:
+  Requested By, location, last activity, the description's badge and the
+  card colour on the minicard; the caret folding the card's details (WeKan's
+  setCardCollapsed, the user's own), the swimlane name, the header's colour
+  and the description's badge on the card. A colour is a class only when it
+  is a colour name. A board's settings written by another server or a
+  database tool draw its open pages again. The board page reads the
+  minicards' sides with its cards and the profile once, so it is no slower
+  for them. 13 of WeKan's 14 Card Settings tests pass, and 440 of WeKan's
+  tests in one run.
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

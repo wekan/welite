@@ -254,6 +254,14 @@ begin
   if D is TJSONObject then Result := TJSONObject(D) else D.Free;
 end;
 
+// The side's field order of an already read board document (nil: none).
+function FieldOrderOf(B: TJSONObject; const Side: string): TStringArray;
+begin
+  if B = nil then Exit(LayoutApply(Side, []));
+  if Side = 'minicard' then Result := LayoutApply(Side, StringsOf(B.Find('minicardFieldOrder')))
+  else Result := LayoutApply(Side, StringsOf(B.Find('cardFieldOrder')));
+end;
+
 function BoardFieldOrder(Db: TWLDb; const BoardId, Side: string): TStringArray;
 var B: TJSONObject;
 begin
@@ -497,7 +505,7 @@ begin
       Hidden := nil;
       if (B <> nil) and (Side = 'minicard') then Hidden := StringsOf(B.Find('cardSettingsHiddenOnMinicard'))
       else if B <> nil then Hidden := StringsOf(B.Find('cardSettingsHiddenOnCard'));
-      Rows := RowsForSide(Side, BoardFieldOrder(Db, BoardId, Side));
+      Rows := RowsForSide(Side, FieldOrderOf(B, Side));
       try
         if B <> nil then
         begin
@@ -721,6 +729,10 @@ begin
     'members': Result := 'members';
     'assignee': Result := 'assignees';
     'comments': Result := 'comments';
+    'requestedBy': Result := 'requestedBy';
+    'location': Result := 'location';
+    'activities': Result := 'activities';
+    'descriptionText': Result := 'descriptionBadge';
   else Result := '';
   end;
 end;

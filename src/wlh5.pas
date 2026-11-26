@@ -729,6 +729,12 @@ begin
     else Flag := ProfileField(T.Db, UserId, 'showDesktopDragHandles') <> '1';
     if not SetProfileField(T.Db, UserId, 'showDesktopDragHandles', IfThen(Flag, 'true', 'false')) then begin Error := 'Could not save'; Exit(500); end;
   end
+  else if Name = 'setCardCollapsed' then
+  begin
+    // [value]: the user's own fold of the card's details.
+    if (Args.Count <> 1) or not Bool(0) then Exit;
+    if not SetProfileField(T.Db, UserId, 'cardCollapsed', IfThen(Args.Booleans[0], 'true', 'false')) then begin Error := 'Could not save'; Exit(500); end;
+  end
   else if Name = 'toggleUnreadChanges' then
   begin
     // On records since when, so cards never opened are not all marked.
@@ -763,7 +769,8 @@ var i: Integer;
 begin
   for i := 0 to High(SETTING_TOGGLES) do if SETTING_TOGGLES[i][0] = Name then Exit(True);
   Result := (Name = 'changeDateFormat') or (Name = 'changeStartDayOfWeek') or (Name = 'changeCalendarSystem') or
-    (Name = 'setBoardDateFormat') or (Name = 'toggleDesktopDragHandles') or (Name = 'toggleUnreadChanges');
+    (Name = 'setBoardDateFormat') or (Name = 'toggleDesktopDragHandles') or (Name = 'toggleUnreadChanges') or
+    (Name = 'setCardCollapsed');
 end;
 
 // dateFormatSettings.js formatLabel: a format's name, and " · Time" unless it
@@ -884,8 +891,18 @@ const ROWS: array[0..8] of TRow = (
   (Cls: 'js-toggle-submit-on-enter'; Icon: 'fa-level-down'; Key: 'submit-on-enter'; Fallback: 'Submit editors with Enter'; Hint: 'submit-on-enter-description'; Method: 'toggleSubmitOnEnter'; Field: 'submitOnEnter'; Shown: False),
   (Cls: 'js-toggle-open-many-cards-at-once'; Icon: 'fa-clone'; Key: 'open-many-cards-at-once'; Fallback: 'Open many cards at once'; Hint: 'open-many-cards-at-once-description'; Method: 'toggleOpenManyCardsAtOnce'; Field: 'openManyCardsAtOnce'; Shown: False),
   (Cls: 'js-toggle-checklist-ding-sound'; Icon: 'fa-bell'; Key: 'checklist-ding-sound'; Fallback: 'Play a sound when a checklist item is completed'; Hint: 'checklist-ding-sound-description'; Method: 'toggleChecklistDingSound'; Field: 'checklistDingSound'; Shown: False));
-var i: Integer; Value: string; On_: Boolean;
+var i: Integer; Value: string; On_: Boolean; P: TWLRows; Profile: TJSONData; V: TJSONData;
 begin
+  // The user's profile, read once for every row.
+  Profile := nil;
+  P := Db.Query('SELECT CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END FROM users WHERE id=' + QuotedStr(UserId) + ' LIMIT 1;');
+  if Length(P) = 1 then
+    try
+      Profile := GetJSON(P[0][0]);
+    except
+      Profile := nil;
+    end;
+  try
   Result := '<template class="js-pop-over-template" data-pop="member-date-settings" data-popup="memberDateSettingsPopup" data-title="' +
     HtmlAttr(Words.Text('date-format', 'Date Format')) + '"><div class="content">' +
     DateFormatEditor(Db, Words, UserId, BoardId, True) + '</div></template>' +
@@ -893,7 +910,17 @@ begin
     HtmlAttr(Words.Text('changeSettingsPopup-title', 'Change Settings')) + '"><div class="content"><ul class="pop-over-list change-settings-list">';
   for i := 0 to High(ROWS) do
   begin
-    Value := ProfileField(Db, UserId, ROWS[i].Field);
+    Value := '';
+    if Profile is TJSONObject then
+    begin
+      V := TJSONObject(Profile).Find(ROWS[i].Field);
+      if V <> nil then
+        case V.JSONType of
+          jtBoolean: Value := IfThen(V.AsBoolean, '1', '0');
+          jtString: Value := V.AsString;
+          jtNumber: Value := V.AsString;
+        end;
+    end;
     if ROWS[i].Field = 'unreadChangesSince' then On_ := Value <> ''
     else if ROWS[i].Shown then On_ := Value <> '1'
     else On_ := Value = '1';
@@ -907,6 +934,9 @@ begin
   end;
   Result := Result + '</ul><button class="primary js-apply-user-settings" type="button">' + E(Words.Text('apply', 'Apply')) +
     '</button></div></template>';
+  finally
+    Profile.Free;
+  end;
 end;
 
 // Admin Panel / Settings / Appearance (settingBody.jade): what the HTML5 view
@@ -2851,6 +2881,8 @@ end;
 type
   TMinicardShows = record
     Labels, Members, Assignees, Comments, Complete: Boolean;
+    // Card Settings' minicard sides (wlcardst's table, each with its default).
+    RequestedBy, Location, LastActivity, DescriptionBadge, CardColor: Boolean;
     Dates: array[0..3] of Boolean;
     SetDates: Boolean;
   end;
@@ -2893,6 +2925,11 @@ begin
   // Off unless the board turns them on.
   Result.Comments := BoardSettingFlag(Db, BoardId, 'allowsCommentsOnMinicard', False);
   Result.Complete := SetDates and BoardSettingFlag(Db, BoardId, 'allowsDueCompleteOnMinicard', False);
+  Result.RequestedBy := BoardSettingFlag(Db, BoardId, 'allowsRequestedByOnMinicard', True);
+  Result.Location := BoardSettingFlag(Db, BoardId, 'allowsLocationOnMinicard', False);
+  Result.LastActivity := BoardSettingFlag(Db, BoardId, 'allowsActivitiesOnMinicard', False);
+  Result.DescriptionBadge := BoardSettingFlag(Db, BoardId, 'allowsDescriptionBadgeOnMinicard', True);
+  Result.CardColor := BoardSettingFlag(Db, BoardId, 'allowsCardColorOnMinicard', True);
   for i := 0 to 3 do
     Result.Dates[i] := BoardAllows(Db, BoardId, Settings[i]) and
       BoardAllows(Db, BoardId, StringReplace(Settings[i], 'Date', 'DateOnMinicard', []));
@@ -2921,8 +2958,47 @@ begin
   Result := '';
 end;
 
+// A card colour fit for a class name (minicard-<color>, card-details-<color>):
+// WeKan's colour names are lowercase words.
+function ColorName(const Color: string): Boolean;
+var i: Integer;
+begin
+  Result := (Color <> '') and (Length(Color) <= 24);
+  for i := 1 to Length(Color) do if not (Color[i] in ['a'..'z']) then Exit(False);
+end;
+
+// A card's places: the names of its locations (WeKan's locations), else the
+// one location WeLite keeps (locationName).
+function LocationNames(const Json, Single: string): TStringArray;
+var D: TJSONData; i: Integer;
+begin
+  Result := nil;
+  D := nil;
+  try
+    try
+      D := GetJSON(Json);
+    except
+      D := nil;
+    end;
+    if D is TJSONArray then
+      for i := 0 to TJSONArray(D).Count - 1 do
+        if (TJSONArray(D).Items[i] is TJSONObject) and (TJSONObject(TJSONArray(D).Items[i]).Get('name', '') <> '') then
+        begin
+          SetLength(Result, Length(Result) + 1);
+          Result[High(Result)] := TJSONObject(TJSONArray(D).Items[i]).Get('name', '');
+        end;
+  finally
+    D.Free;
+  end;
+  if (Length(Result) = 0) and (Single <> '') then
+  begin
+    SetLength(Result, 1);
+    Result[0] := Single;
+  end;
+end;
+
 function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Shows: TMinicardShows;
-  const Dates: array of string): string;
+  const Dates: array of string; const Extra: array of string): string;
 const
   Kinds: array[0..3] of string = ('received', 'start', 'due', 'end');
   Icons: array[0..3] of string = ('fa-sign-out', 'fa-hourglass-start', 'fa-clock-o', 'fa-hourglass-end');
@@ -2931,7 +3007,7 @@ const
     'editCardDueDatePopup-title', 'editCardEndDatePopup-title');
   TitleCaptions: array[0..3] of string = ('Change received date', 'Change start date', 'Change due date', 'Change end date');
   Defaults: array[0..3] of string = ('now', 'now', '17:00', 'now');
-var R: TWLRows; i, Mark: Integer; Line, Shown, Label_, Cls: string; Pieces: TSectionBodies;
+var R: TWLRows; i, Mark: Integer; Line, Shown, Label_, Cls: string; Pieces: TSectionBodies; Places: TStringArray;
   // What was drawn since Mark is the piece Key: kept aside, put back in the
   // Minicard pane's order at the end.
   procedure Piece(const Key: string);
@@ -3004,6 +3080,35 @@ begin
     end;
   end;
   Piece('assignees');
+  // Requested By, its location, its last activity and the description's
+  // badge, as Card Settings shows them on the minicard (board.pug).
+  // Extra, from the board's cards query: requestedBy, description,
+  // dateLastActivity, locationName, the locations.
+  if Length(Extra) = 5 then
+  begin
+    SetLength(R, 1);
+    SetLength(R[0], 5);
+    for i := 0 to 4 do R[0][i] := Extra[i];
+    if Shows.RequestedBy and (R[0][0] <> '') then
+      Result := Result + '<div class="minicard-requested-by" title="' + HtmlAttr(Words.Text('requested-by', 'Requested By')) +
+        '"><i class="fa fa-shopping-cart"></i><span>' + E(R[0][0]) + '</span></div>';
+    Piece('requestedBy');
+    if Shows.Location then
+    begin
+      Places := LocationNames(R[0][4], R[0][3]);
+      for i := 0 to High(Places) do
+        Result := Result + '<div class="minicard-location"><i class="fa fa-map-marker"></i>' + E(Places[i]) + '</div>';
+    end;
+    Piece('location');
+    if Shows.LastActivity and (R[0][2] <> '') then
+      Result := Result + '<div class="minicard-last-activity" title="' + HtmlAttr(Words.Text('activities', 'Activities')) +
+        '"><i class="fa fa-history"></i>' + E(FormatShownDate(R[0][2], ViewDateFormat)) + '</div>';
+    Piece('activities');
+    if Shows.DescriptionBadge and (Trim(R[0][1]) <> '') then
+      Result := Result + '<div class="badge badge-state-image-only" title="' + HtmlAttr(R[0][1]) +
+        '"><span class="badge-icon"><i class="fa fa-file-text-o"></i></span></div>';
+    Piece('descriptionBadge');
+  end;
   // Its newest three comments, each cut at 140 characters, each on a line
   // of its own (the 2026-10-08 report).
   if Shows.Comments then
@@ -3206,7 +3311,7 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
-  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter; Sections: TSectionBodies;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -3310,7 +3415,11 @@ begin
         'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE((SELECT attachments.id FROM attachments WHERE attachments.id=c.coverId AND ' +
         'attachments.cardId=c.id AND attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/svg+xml'') AND ' +
         // LiveAttachmentSQL names the table attachments, unaliased.
-        LiveAttachmentSQL(Db) + '),''''),COALESCE(c.dueComplete,0) FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+        LiveAttachmentSQL(Db) + '),''''),COALESCE(c.dueComplete,0),COALESCE(c.color,''''),' +
+        // The minicard's Card Settings sides (MinicardBadges' Extra).
+        'COALESCE(c.requestedBy,''''),COALESCE(c.description,''''),COALESCE(c.dateLastActivity,''''),COALESCE(c.locationName,''''),' +
+        'CASE WHEN json_valid(c.extra_json) AND json_type(c.extra_json,''$.locations'')=''array'' THEN ' +
+        'json_extract(c.extra_json,''$.locations'') ELSE ''[]'' END FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
@@ -3318,7 +3427,8 @@ begin
         Canvas := Canvas + '<div class="minicard-wrapper js-minicard" up-href="' +
           HtmlAttr(CardRoute(BoardId, B[0][2], Cards[k][0])) + '" up-follow up-clickable up-target=".board-wrapper" data-card="' +
           HtmlAttr(Cards[k][0]) + '" data-card-id="' + HtmlAttr(Cards[k][0]) + '" data-sort="' + HtmlAttr(Cards[k][2]) +
-          '"><div class="minicard">' +
+          // Card colour, Show on Minicard (WeKan's minicard-<color>).
+          '"><div class="minicard' + IfThen(Shows.CardColor and ColorName(Cards[k][9]), ' minicard-' + Cards[k][9], '') + '">' +
           // WeKan's minicard cover: the card's cover image.
           IfThen(Cards[k][7] <> '', '<div class="minicard-cover"><img src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Cards[k][7])) +
             '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title">' +
@@ -3329,7 +3439,8 @@ begin
             '"><div class="materialCheckBox' + IfThen(Cards[k][8] = '1', ' is-checked', '') + '"></div></a>', '') +
           '<span class="minicard-title-text">' +
           MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
-          [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]]) + '</div></div>';
+          [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]],
+          [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14]]) + '</div></div>';
       Canvas := Canvas + '</div>';
       if Writable then
         Canvas := Canvas + '<template class="js-card-composer-template">' +
@@ -3371,7 +3482,7 @@ begin
     Selector := TSelectionScope.Create(Db);
     try
       Card := Db.Query('SELECT title,description,COALESCE(requestedBy,''''),COALESCE(assignedBy,''''),COALESCE(receivedAt,''''),' +
-        'COALESCE(startAt,''''),COALESCE(dueAt,''''),COALESCE(endAt,''''),swimlaneId,listId FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
+        'COALESCE(startAt,''''),COALESCE(dueAt,''''),COALESCE(endAt,''''),swimlaneId,listId,COALESCE(color,'''') FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
         QuotedStr(BoardId) + ' AND archived=0 AND deletedAt IS NULL AND ' + Selector.StringField('cards', 'id') +
         ' AND ' + Selector.StringField('cards', 'boardId') + ';');
     finally
@@ -3379,10 +3490,21 @@ begin
     end;
     if Length(Card) <> 1 then Exit;
     Maximized := ProfileFlag(Db, S.UserId, 'cardMaximized');
+    // Card Settings' card sides: the caret folding the card's details (the
+    // user's own fold), the header's colour, the description's badge.
+    CardCollapse := BoardSettingFlag(Db, BoardId, 'allowsCardCollapse', True);
+    CardCollapsed := CardCollapse and ProfileFlag(Db, S.UserId, 'cardCollapsed');
     Details := '<div class="card-details js-card-details' + IfThen(Maximized, ' card-details-maximized', '') +
-      '" data-card="' + HtmlAttr(CardId) + '">' +
-      '<div class="card-details-header"><h2 class="card-details-title js-card-title">' +
-      '<span class="card-details-title-edit-zone js-open-inlined-form">' + MarkdownViewer(Card[0][0], PlainLinks, PlainSource) + '</span></h2>';
+      IfThen(CardCollapsed, ' card-details-collapsed', '') + '" data-card="' + HtmlAttr(CardId) + '">' +
+      '<div class="card-details-header' + IfThen(BoardSettingFlag(Db, BoardId, 'allowsCardColorOnCard', True) and ColorName(Card[0][10]),
+        ' card-details-' + Card[0][10], '') + '">' +
+      IfThen(CardCollapse and (S.UserId <> ''), '<a class="card-collapse-toggle js-card-collapse-toggle" href="#" data-collapsed="' +
+        IfThen(CardCollapsed, 'true', '') + '" title="' + HtmlAttr(Words.Text('collapse', 'Collapse')) + '" aria-label="' +
+        HtmlAttr(Words.Text('collapse', 'Collapse')) + '"><i class="fa ' + IfThen(CardCollapsed, 'fa-caret-right', 'fa-caret-down') +
+        '"></i></a>', '') + '<h2 class="card-details-title js-card-title">' +
+      '<span class="card-details-title-edit-zone js-open-inlined-form">' + MarkdownViewer(Card[0][0], PlainLinks, PlainSource) + '</span></h2>' +
+      IfThen(BoardSettingFlag(Db, BoardId, 'allowsDescriptionBadgeOnCard', False) and (Trim(Card[0][1]) <> ''),
+        '<i class="fa fa-file-text-o card-details-description-badge" title="' + HtmlAttr(Words.Text('description', 'Description')) + '"></i>', '');
     // board.pug: the title's editor, opened by its leading part (weddy.js).
     if Writable then
       Details := Details + '<form class="js-card-details-title js-inlined-form is-hidden" method="post" action="/b/' +
@@ -3416,6 +3538,14 @@ begin
     CanCreateLabel := Writable and BoardCanCreateLabel(Db, S.UserId, BoardId);
     Sections := nil;
     PutSection(Sections, 'card', ListPickerSection(Db, Words, BoardId, CardId, Card[0][8], Card[0][9], Writable));
+    // Swimlane, Show on Card: the swimlane the card is in.
+    if BoardSettingFlag(Db, BoardId, 'allowsSwimlaneNameOnCard', False) then
+    begin
+      Lists := Db.Query('SELECT title FROM swimlanes WHERE id=' + QuotedStr(Card[0][8]) + ' AND boardId=' + QuotedStr(BoardId) + ';');
+      if Length(Lists) = 1 then
+        PutSection(Sections, 'card', '<div class="card-details-item card-details-swimlane-name"><h3 class="card-details-item-title">' +
+          '<i class="fa fa-list-alt"></i> ' + E(Words.Text('swimlane', 'Swimlane')) + '</h3>' + E(Lists[0][0]) + '</div>');
+    end;
     if BoardAllows(Db, BoardId, 'allowsLabels') then
       PutSection(Sections, 'labels', LabelsSection(Db, Words, BoardId, CardId, Writable));
     if BoardAllows(Db, BoardId, 'allowsMembers') then
@@ -4779,7 +4909,9 @@ begin
     '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM lists WHERE boardId=' + B + '),' +
     '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM swimlanes WHERE boardId=' + B + '),' +
     '(SELECT count(*)||max(createdAt) FROM activities WHERE boardId=' + B + '),' +
-    '(SELECT modifiedAt FROM boards WHERE id=' + B + ');');
+    // The board's fields kept in settings_json too: Card Settings' sides,
+    // written by a database tool or another server without modifiedAt.
+    '(SELECT COALESCE(modifiedAt,'''')||length(settings_json)||settings_json FROM boards WHERE id=' + B + ');');
   Result := '';
   if Length(R) = 1 then Result := R[0][0] + '|' + R[0][1] + '|' + R[0][2] + '|' + R[0][3] + '|' + R[0][4];
   Result := Result + '|' + RulesSignature(Db, BoardId) +

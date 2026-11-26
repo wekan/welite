@@ -470,6 +470,33 @@ def http_checks(server, tmp, backend):
         assert method('setCollapsedCardSection', [board_id, 'card-settings-date', False])[0] == 200
         assert method('setShowLabelTextOverride', [False])[0] == 200 and method('setShowLabelTextOverride', [None])[0] == 200
         assert method('setShowLabelTextOverride', ['yes'])[0] == 400
+        # The rows' minicard and card sides: the card colour (a class only for a
+        # colour name), Requested By, the caret folding the card's details.
+        def card_set(**values):
+            for path in data.glob('**/files/db/wekan.db'):
+                with sqlite3.connect(path) as con:
+                    if con.execute("SELECT 1 FROM sqlite_master WHERE name='cards'").fetchone():
+                        for column, value in values.items():
+                            con.execute('UPDATE cards SET %s=? WHERE id=?' % column, (value, card_id))
+        def opened():
+            return request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        card_set(color='green', requestedBy='Requester <x>')
+        page = shown()
+        assert b'class="minicard minicard-green"' in page and b'card-details-header card-details-green' in opened()
+        assert b'class="minicard-requested-by"' in page and b'Requester &lt;x&gt;' in page and b'Requester <x>' not in page
+        card_set(color='green" onmouseover="x')
+        page = shown()
+        assert b'onmouseover' not in page and b'minicard-green' not in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsCardColorOnMinicard': False, 'allowsRequestedByOnMinicard': False}}])[0] == 200
+        card_set(color='green')
+        page = shown()
+        assert b'minicard-green' not in page and b'card-details-green' in opened() and b'minicard-requested-by' not in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsCardColorOnMinicard': True, 'allowsRequestedByOnMinicard': True}}])[0] == 200
+        card_set(color=None, requestedBy='')
+        assert b'js-card-collapse-toggle' in opened()
+        assert method('setCardCollapsed', [True])[0] == 200 and b'card-details-collapsed' in opened()
+        assert method('setCardCollapsed', ['yes'])[0] == 400
+        assert method('setCardCollapsed', [False])[0] == 200 and b'card-details-collapsed' not in opened()
         # The Rules need the shared store: here they say so, and write nothing.
         status, _, body, _ = request('POST', '/_methods/rules.createRule',
                                      [board_id, 'R', {'activityType': 'createCard'}, {'actionType': 'archive'}], cookie=owner, as_json=True)
