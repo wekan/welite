@@ -260,8 +260,7 @@ Next, after this goal:
   REST API specs) and spec 14's vote, Planning Poker and watch; Weddy's
   remaining lines are the next to port.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
-  the card's other sections (an attachment's rename and an SVG attachment,
-  which needs an SVG sanitizer; Markdown in comments and checklists; a custom field's edit and
+  the card's other sections (an attachment's rename and its thumbnail route (attachment-thumbnail); Markdown in comments and checklists; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's
   other badges (checklists, description, Requested By, location, last activity),
   WeKan's mobile layout (body.mobile-mode: lists as mini-lists, one opened at

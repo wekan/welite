@@ -81,7 +81,9 @@ def pure_checks(tmp):
         for m in _re.finditer(r'LiveAttachmentSQL\(', text):
             before = text[max(0, m.start() - 600):m.start()]
             stmt = before[before.rfind(';') + 1:]
-            assert not _re.search(r'\battachments\s+(?:AS\s+)?[a-z]\w*\s+WHERE', stmt, _re.I), (pas.name, stmt[-200:])
+            # FROM or JOIN attachments a ... - the WHERE form and the JOIN form both.
+            assert not _re.search(r'\b(?:FROM|JOIN)\s+attachments\s+(?:AS\s+)?(?!WHERE\b|JOIN\b|ON\b|LEFT\b|INNER\b)[a-z]\w*',
+                                  stmt, _re.I), (pas.name, stmt[-200:])
     print('PASS: no aliased attachments beside LiveAttachmentSQL')
     # Negative: the server is linked without a widestring manager, so a
     # WideString case or compare function fails at run time on every page.
@@ -584,6 +586,34 @@ def http_checks(server, tmp, backend):
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s' % html_att, cookie=owner)
         assert status == 200 and headers.get('Content-Type') == 'application/octet-stream', 'negative: HTML is never shown'
         assert headers.get('Content-Disposition', '').startswith('attachment') and headers.get('X-Content-Type-Options') == 'nosniff'
+        # An SVG is an image again (svgResponse.js): stored sanitized, served
+        # sanitized again, inline, under a policy that lets nothing run or load.
+        known = lambda page: [a.decode() for a in re.findall(rb'data-attachment="([^"]+)"', page)]
+        evil = (b'<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" onload="window.ran=1">'
+                b'<script>window.ran=2</script><rect width="4" height="4" fill="#2b6cb0"/></svg>')
+        before = known(request('GET', '%s/%s' % (route, card_id), cookie=owner)[2])
+        status, _, page, _ = upload('evil.svg', 'image/svg+xml', evil, owner)
+        assert status == 200, page[-300:]
+        svg_att = [a for a in known(page) if a not in before][0]
+        for query in ('', '?download=true'):
+            status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s%s' % (svg_att, query), cookie=owner)
+            assert status == 200 and headers.get('Content-Type') == 'image/svg+xml', headers
+            assert "default-src 'none'" in headers.get('Content-Security-Policy', '') and 'sandbox' in headers['Content-Security-Policy']
+            assert b'<rect width="4" height="4" fill="#2b6cb0"></rect>' in body and b'script' not in body and b'onload' not in body
+        assert request('GET', '/cdn/storage/attachments/%s' % svg_att, cookie=owner)[1]['Content-Disposition'] == 'inline'
+        assert ('data-pop="attachment-actions-%s"' % svg_att).encode() in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2], \
+            'an image: a cover and a background'
+        stored = [f for f in data.glob('**/attachme/**/*.bin') if b'#2b6cb0' in f.read_bytes()]
+        assert stored and all(b'script' not in f.read_bytes() for f in stored), 'stored sanitized'
+        # Negative: an SVG that is not well-formed is only downloaded, never shown.
+        before = known(page)
+        page = upload('broken.svg', 'image/svg+xml', b'<svg xmlns="http://www.w3.org/2000/svg"><g><script>x()</script></svg>', owner)[2]
+        broken = [a for a in known(page) if a not in before][0]
+        status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s' % broken, cookie=owner)
+        assert headers.get('Content-Type') == 'application/octet-stream' and headers['Content-Disposition'].startswith('attachment')
+        assert ('data-pop="attachment-actions-%s"' % broken).encode() not in page, 'no image'
+        for a in (svg_att, broken):
+            assert request('POST', '%s/attachments/%s/delete' % (card_path, a), {}, cookie=owner)[0] == 200
         # Negative: no file to a non-member, nor without the cookie; no upload by
         # Comment only or a non-member; no delete by a non-member.
         assert request('GET', '/cdn/storage/attachments/%s' % att, cookie=stranger)[0] == 404

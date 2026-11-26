@@ -82,7 +82,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg;
 
 const
   STATIC_HEAD =
@@ -1198,7 +1198,9 @@ end;
 // (SendStoredDownload); anything else is opened, and so downloaded, in its own tab.
 function AttachmentPreviewKind(const MimeType: string): string;
 begin
-  if (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/gif') or (MimeType = 'image/webp') then
+  // An SVG is an image again: sanitized, and served under a script-free sandbox.
+  if (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/gif') or (MimeType = 'image/webp') or
+    (MimeType = 'image/svg+xml') then
     Result := 'image'
   else Result := 'none';
 end;
@@ -2533,7 +2535,7 @@ begin
   if (Id = '') or (Length(Id) > 64) then Exit;
   for i := 1 to Length(Id) do if not (Id[i] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-']) then Exit;
   if Length(Db.Query('SELECT 1 FROM attachments WHERE id=' + QuotedStr(Id) + ' AND boardId=' + QuotedStr(BoardId) +
-    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'') AND ' + LiveAttachmentSQL(Db) + ';')) <> 1 then Exit;
+    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/svg+xml'') AND ' + LiveAttachmentSQL(Db) + ';')) <> 1 then Exit;
   Result := ' style="background-image: url(' + Prefix + Id + '); background-size: cover;"';
 end;
 
@@ -2625,7 +2627,7 @@ begin
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
       Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
         'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE((SELECT attachments.id FROM attachments WHERE attachments.id=c.coverId AND ' +
-        'attachments.cardId=c.id AND attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'') AND ' +
+        'attachments.cardId=c.id AND attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/svg+xml'') AND ' +
         // LiveAttachmentSQL names the table attachments, unaliased.
         LiveAttachmentSQL(Db) + '),''''),COALESCE(c.dueComplete,0) FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
@@ -3313,7 +3315,8 @@ end;
 // user may change, stored as the HTML4 view's upload stores it.
 function AddViewAttachment(const T: TWLTenant; const UserId, BoardId, CardId: string; Request: TRequest;
   out Error: string): Integer;
-var Rows: TWLRows; Upload: TUploadedFile; FileType, Id: string;
+var Rows: TWLRows; Upload: TUploadedFile; FileType, Id, Raw, Clean, Removed: string; Changed: Boolean;
+  Body: TStream;
 begin
   Error := '';
   if (BoardId = '') or (CardId = '') or (Pos(#0, BoardId + CardId) > 0) then begin Error := 'Card not found'; Exit(404); end;
@@ -3328,9 +3331,38 @@ begin
   begin Error := 'Upload failed'; Exit(400); end;
   FileType := Upload.ContentType;
   if FileType = '' then FileType := 'application/octet-stream';
-  if not StoreAttachment(T, UserId, BoardId, Rows[0][0], Rows[0][1], CardId, ExtractFileName(Upload.FileName), FileType,
-    Upload.Stream, Id, True) then
-  begin Error := 'Upload failed'; Exit(500); end;
+  // An SVG is stored sanitized (models/lib/sanitizeUploadedFile.js); active
+  // markup taken out of it is a stored-XSS attempt defused, and is recorded.
+  // One that is not well-formed is kept as it came, and only downloaded.
+  Body := Upload.Stream;
+  Clean := '';
+  if IsSvg(FileType, Upload.FileName) and (Upload.Stream.Size <= MAX_SVG_BYTES) then
+  begin
+    SetLength(Raw, Upload.Stream.Size);
+    Upload.Stream.Position := 0;
+    if Length(Raw) > 0 then Upload.Stream.ReadBuffer(Raw[1], Length(Raw));
+    Upload.Stream.Position := 0;
+    if SanitizeSvg(Raw, Clean, Changed, Removed) then
+    begin
+      FileType := 'image/svg+xml';
+      Body := TStringStream.Create(Clean);
+      if Changed then
+      try
+        RecordSecurityEvent(T.Db, UserId, 'FileBleed', 'fileUpload', 'file', 'medium', 'CWE-79', 'sanitized',
+          'removed active content (JavaScript / XML) from file content "' + ExtractFileName(Upload.FileName) + '": ' + Removed);
+      except { logging must never break the upload } end;
+    end
+    else FileType := 'application/octet-stream';
+  end
+  // One too large to read is no image either.
+  else if IsSvg(FileType, Upload.FileName) then FileType := 'application/octet-stream';
+  try
+    if not StoreAttachment(T, UserId, BoardId, Rows[0][0], Rows[0][1], CardId, ExtractFileName(Upload.FileName), FileType,
+      Body, Id, True) then
+    begin Error := 'Upload failed'; Exit(500); end;
+  finally
+    if Body <> Upload.Stream then Body.Free;
+  end;
   Result := 200;
 end;
 
@@ -3351,7 +3383,7 @@ end;
 // read. Only a raster image is shown inline (SendStoredDownload); ?download=
 // and every other file come as a download, with nosniff.
 function ServeAttachmentFile(Request: TRequest; Response: TResponse; const Path: string): Boolean;
-var T: TWLTenant; S: TWLSession; P: TStringArray; Rows: TWLRows; Preview: string;
+var T: TWLTenant; S: TWLSession; P: TStringArray; Rows: TWLRows; Preview, Removed: string; Changed: Boolean;
 begin
   Result := False;
   P := PathParts(Path);
@@ -3362,13 +3394,28 @@ begin
   Rows := nil;
   if Html5User(T.Db, Request, S) and (Pos(#0, P[3]) = 0) then
   begin
-    Rows := T.Db.Query('SELECT a.boardId,COALESCE(a.name,''''),COALESCE(a.type,'''') FROM attachments a JOIN cards c ON c.id=a.cardId ' +
-      'AND c.boardId=a.boardId AND c.archived=0 AND c.deletedAt IS NULL WHERE a.id=' + QuotedStr(P[3]) + ' AND ' +
+    // Unaliased: LiveAttachmentSQL names attachments itself.
+    Rows := T.Db.Query('SELECT attachments.boardId,COALESCE(attachments.name,''''),COALESCE(attachments.type,'''') FROM attachments ' +
+      'JOIN cards c ON c.id=attachments.cardId AND c.boardId=attachments.boardId AND c.archived=0 AND c.deletedAt IS NULL ' +
+      'WHERE attachments.id=' + QuotedStr(P[3]) + ' AND ' +
       LiveAttachmentSQL(T.Db) + ';');
     if (Length(Rows) = 1) and not BoardCanRead(T.Db, S.UserId, Rows[0][0]) then Rows := nil;
   end;
+  // An SVG: sanitized again on its way out, whatever is stored
+  // (server/lib/svgResponse.js); one stored with active content is recorded.
+  if (Length(Rows) = 1) and IsSvg(Rows[0][2], Rows[0][1]) and
+    SendSvgImage(Response, StoreFilePath(T.FilesDir, 'attachme', P[3]), Rows[0][1], Request.QueryFields.Values['download'] <> '',
+      Changed, Removed) then
+  begin
+    if Changed then
+    try
+      RecordSecurityEvent(T.Db, S.UserId, 'FileBleed', 'fileView', 'file', 'medium', 'CWE-79', 'sanitized',
+        'removed active content (JavaScript / XML) from file content "' + Rows[0][1] + '": ' + Removed);
+    except { logging must never break serving } end;
+    Exit;
+  end;
   Preview := '';
-  if (Length(Rows) = 1) and (Request.QueryFields.Values['download'] = '') then Preview := Rows[0][2];
+  if (Length(Rows) = 1) and (Request.QueryFields.Values['download'] = '') and not IsSvg(Rows[0][2], Rows[0][1]) then Preview := Rows[0][2];
   if (Length(Rows) = 1) and SendStoredDownload(Response, StoreFilePath(T.FilesDir, 'attachme', P[3]), Rows[0][1], Preview) then Exit;
   SendJsonAnswer(Response, 404, '{"error":"Attachment not found"}');
 end;

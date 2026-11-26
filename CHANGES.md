@@ -354,6 +354,20 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   has no regular expressions to give, so `src/wladvf.pas` evaluates the
   filter in Pascal, card by card - nothing typed reaches the database as
   SQL. `tests/advfilter.py` checks it as data. 279 of WeKan's tests pass.
+- Show an SVG attachment as an image again (WeKan's svgSanitizer.js and
+  svgResponse.js, as Weddy's svg_sanitize.go): stored sanitized and served
+  sanitized again, inline, under `default-src 'none'; ... sandbox` - no
+  script, foreignObject, animation or frame element, no on* handler, no
+  script URL however it is spelled, no data: document, no dangerous style,
+  no DOCTYPE or entity. `src/wlsvg.pas` reads the XML itself, so no entity
+  is ever expanded; a file that is not well-formed is only downloaded.
+  Active content taken out is recorded in Admin Panel / Problems
+  (FileBleed). An SVG is a card's cover and the board's background too.
+  `tests/svgclean.py` checks the sanitizer as data.
+- Fix the attachment route of a shared store: its query aliased the
+  attachments table beside LiveAttachmentSQL, which names it, so every
+  attachment answered 404; the guard in `tests/view.py` now also finds
+  the JOIN form. 280 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

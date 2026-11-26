@@ -127,6 +127,11 @@ function ProfileFold(Db:TWLDb;const UserId,Map,BoardId,Key:string):Boolean;
 function SetViewProfileFold(const T:TWLTenant;const UserId,Map,BoardId,Key:string;Folded:Boolean;out Error:string):Integer;
 // The user's own profile.<Map>[BoardId] (Key '') or profile.<Map>[BoardId][Key]
 // set to a JSON value (a number or a boolean), on a board the user reads.
+// A shared store's Admin Panel / Problems row for an event of a security
+// kind (models/lib/securityCategories.js): one row per kind that counts its
+// occurrences (eventLogSummary.js). Action is 'blocked', 'detected' or
+// 'sanitized'. Logging never breaks the caller.
+procedure RecordSecurityEvent(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Action,Detail:string);
 // A new password for Target (WeKan's setPassword, and Member Settings'
 // Change Password once the caller checked the old one): a site admin's for
 // anyone, or the user's own; a password account only, within the password
@@ -4448,7 +4453,7 @@ end;
 // A refused attempt in a shared store's eventlog, as WeKan's securityLog
 // records one (models/lib/eventLogSummary.js): one row per kind of attempt
 // that counts them, never a row per attempt.
-procedure RecordSecurityDenial(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Detail:string);
+procedure RecordSecurityEvent(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Action,Detail:string);
 const Hints='{"at":"date","firstAt":"date"}';
 var Rows:TWLRows;Event:TJSONObject;TableName,Physical,AtSql,Payload,Updated,Sql,Identity:string;
   Stamp:TDateTime;AtMs:Int64;
@@ -4461,7 +4466,7 @@ begin
     ' AND json_extract(_ferretdb_sjson,''$.bleed'')='+QuotedStr(Bleed)+
     ' AND json_extract(_ferretdb_sjson,''$.source'')='+QuotedStr(Source)+
     ' AND json_extract(_ferretdb_sjson,''$.category'')='+QuotedStr(Category)+
-    ' AND json_extract(_ferretdb_sjson,''$.action'')=''blocked''';
+    ' AND json_extract(_ferretdb_sjson,''$.action'')='+QuotedStr(Action);
   try
     if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>1 then Exit;
     if not EnsureSharedCollection(Db,'eventlog') then Exit;
@@ -4471,7 +4476,7 @@ begin
     Stamp:=LocalTimeToUniversal(Now);
     AtMs:=DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp);AtSql:=IntToStr(AtMs);
     Event:=TJSONObject.Create(['_id',NewId,'stream','security','at',AtMs,'firstAt',AtMs,
-      'severity',Severity,'category',Category,'bleed',Bleed,'action','blocked','source',Source,
+      'severity',Severity,'category',Category,'bleed',Bleed,'action',Action,'source',Source,
       'cwe',Cwe,'count',1,'userId',UserId,'detail',Detail]);
     try Payload:=QuotedStr(TypedDocument(Event.AsJSON,'',Hints));finally Event.Free;end;
     Updated:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.at'','+AtSql+
@@ -4484,6 +4489,11 @@ begin
       ' WHERE NOT EXISTS(SELECT 1 FROM '+Physical+' WHERE '+Identity+'); COMMIT;';
     if not Db.Exec(Sql) then Db.Exec('ROLLBACK;');
   except Db.Exec('ROLLBACK;');end;
+end;
+
+procedure RecordSecurityDenial(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Detail:string);
+begin
+  RecordSecurityEvent(Db,UserId,Bleed,Source,Category,Severity,Cwe,'blocked',Detail);
 end;
 
 procedure RecordParentDenial(Db:TWLDb;const UserId:string);
@@ -6246,14 +6256,15 @@ begin
   Result:=200;
 end;
 
-// The attachment, of the card on the board, a raster image still there.
+// The attachment, of the card on the board, an image still there - a raster
+// one, or an SVG, which is stored and served sanitized (src/wlsvg.pas).
 function ViewImageAttachment(const T:TWLTenant;const BoardId,CardId,AttachmentId:string;out Error:string):Integer;
 begin
   Error:='';
   if (AttachmentId='') or (Pos(#0,AttachmentId)>0) or (Length(T.Db.Query('SELECT 1 FROM attachments WHERE id='+QuotedStr(AttachmentId)+
     ' AND boardId='+QuotedStr(BoardId)+' AND cardId='+QuotedStr(CardId)+' AND '+LiveAttachmentSQL(T.Db)+';'))<>1) then begin Error:='Attachment not found';Exit(404);end;
   if Length(T.Db.Query('SELECT 1 FROM attachments WHERE id='+QuotedStr(AttachmentId)+
-    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'');'))<>1 then
+    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/svg+xml'');'))<>1 then
   begin Error:='Only an image is a cover or a background';Exit(400);end;
   Result:=200;
 end;
