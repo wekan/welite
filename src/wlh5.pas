@@ -1527,6 +1527,91 @@ begin
   Result := Result + '</tbody></table></div></div></div>';
 end;
 
+// WeKan's activities (client/components/activities, Weddy's activities.go):
+// the newest first, each its member and its sentence in the reader's
+// language - the sentence escaped, each name in it escaped too.
+function ActivityRows(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Limit: Integer): string;
+var R: TWLRows; i, k: Integer; Key, Fallback, Board, Text, Sentence, Part: string; Args: array of string;
+  function Data(const Field: string): string;
+  begin
+    Result := 'CASE WHEN json_valid(a.data_json) THEN json_extract(a.data_json,''$.' + Field + ''') END';
+  end;
+  function Person(const Column: string): string;
+  begin
+    Result := '(SELECT COALESCE(NULLIF(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,''''),u.username) ' +
+      'FROM users u WHERE u.id=' + Column + ')';
+  end;
+  procedure Say(const AKey, AFallback: string; const AArgs: array of string);
+  var j: Integer;
+  begin
+    Key := AKey; Fallback := AFallback;
+    SetLength(Args, Length(AArgs));
+    for j := 0 to High(AArgs) do Args[j] := AArgs[j];
+  end;
+begin
+  Result := '';
+  if Pos(#0, BoardId + CardId) > 0 then Exit;
+  R := Db.Query('SELECT a.id,a.activityType,COALESCE(' + Person('a.userId') + ',''''),' +
+    'COALESCE((SELECT title FROM cards WHERE id=a.cardId),' + Data('cardTitle') + ',''''),' +
+    'COALESCE((SELECT title FROM lists WHERE id=a.listId),' + Data('listName') + ',''''),' +
+    'COALESCE((SELECT title FROM lists WHERE id=' + Data('oldListId') + '),' + Data('oldListName') + ',''''),' +
+    'COALESCE((SELECT title FROM checklists WHERE id=' + Data('checklistId') + '),''''),' +
+    'COALESCE(' + Person(Data('memberId')) + ',''''),COALESCE(' + Data('attachmentName') + ',''''),' +
+    'COALESCE(' + Data('commentText') + ',''''),COALESCE(' + Data('title') + ',''''),' +
+    'COALESCE((SELECT title FROM swimlanes WHERE id=a.swimlaneId),''''),' +
+    'COALESCE((SELECT name FROM custom_fields WHERE id=' + Data('customFieldId') + '),''''),' +
+    'COALESCE(' + Data('value') + ',''''),COALESCE(a.createdAt,''''),(SELECT title FROM boards WHERE id=a.boardId) ' +
+    'FROM activities a WHERE a.boardId=' + QuotedStr(BoardId) + IfThen(CardId <> '', ' AND a.cardId=' + QuotedStr(CardId), '') +
+    ' ORDER BY a.createdAt DESC LIMIT ' + IntToStr(Limit) + ';');
+  for i := 0 to High(R) do
+  begin
+    Board := R[i][15];
+    case R[i][1] of
+      'a-changedTitle': Say('activity-changedTitle', 'changed title to %s of %s', [R[i][13], R[i][3]]);
+      'a-changedDescription': Say('activity-changedDescription', 'changed description of %s', [R[i][3]]);
+      'createBoard': Say('activity-created', 'created %s', [Board]);
+      'addBoardMember': Say('activity-added', 'added %s to %s', [R[i][7], Board]);
+      'removeBoardMember': Say('activity-excluded', 'excluded %s from %s', [R[i][7], Board]);
+      'createCard': Say('activity-added', 'added %s to %s', [R[i][3], R[i][4]]);
+      'moveCard': Say('activity-moved', 'moved %s from %s to %s', [R[i][3], R[i][5], R[i][4]]);
+      'archivedCard': Say('activity-archived', '%s moved to Archive', [R[i][3]]);
+      'restoredCard': Say('activity-sent', 'sent %s to %s', [R[i][3], Board]);
+      'addChecklist': Say('activity-checklist-added', 'added checklist to %s', [R[i][3]]);
+      'removedChecklist': Say('activity-checklist-removed', 'removed a checklist from %s', [R[i][3]]);
+      'addChecklistItem', 'addedChecklistItem': Say('activity-checklist-item-added', 'added checklist item to ''%s'' in %s', [R[i][6], R[i][3]]);
+      'addComment': Say('activity-on', 'on %s', [R[i][3]]);
+      'editComment': Say('activity-editComment', 'edited comment %s', [R[i][9]]);
+      'deleteComment': Say('activity-deleteComment', 'deleted comment %s', [R[i][9]]);
+      'addAttachment': Say('activity-attached', 'attached %s to %s', [R[i][8], R[i][3]]);
+      'deleteAttachment': Say('activity-delete-attach', 'deleted an attachment from %s', [R[i][3]]);
+      'createList': Say('activity-added', 'added %s to %s', [R[i][4], Board]);
+      'archivedList': Say('activity-archived', '%s moved to Archive', [R[i][4]]);
+      'removeList': Say('activity-removed', 'removed %s from %s', [R[i][10], Board]);
+      'joinMember': Say('activity-added', 'added %s to %s', [R[i][7], R[i][3]]);
+      'unjoinMember': Say('activity-removed', 'removed %s from %s', [R[i][7], R[i][3]]);
+      'createSwimlane': Say('activity-added', 'added %s to %s', [R[i][11], Board]);
+      'createCustomField': Say('activity-customfield-created', 'created custom field %s', [R[i][12]]);
+    else
+      // WeKan: {{_ activity.activityType}}
+      Say(R[i][1], R[i][1], []);
+    end;
+    Sentence := Words.Text(Key, Fallback);
+    Text := ''; k := 0;
+    while Pos('%s', Sentence) > 0 do
+    begin
+      Part := Copy(Sentence, 1, Pos('%s', Sentence) - 1);
+      Text := Text + E(Part);
+      if k <= High(Args) then Text := Text + E(Args[k]);
+      Inc(k);
+      Delete(Sentence, 1, Length(Part) + 2);
+    end;
+    Text := Text + E(Sentence);
+    Result := Result + '<div class="activity" data-id="' + HtmlAttr(R[i][0]) + '"><div class="activity-desc"><span class="activity-member">' +
+      E(R[i][2]) + '</span> ' + Text + '</div><time class="activity-time" datetime="' + HtmlAttr(R[i][14]) + '">' +
+      E(StringReplace(Copy(R[i][14], 1, 16), 'T', ' ', [])) + '</time></div>';
+  end;
+end;
+
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
@@ -1576,7 +1661,13 @@ begin
       '"><i class="fa fa-plus"></i></a>';
   Result := Result + '</div></div><h3><a class="board-header-btn js-open-board-menu" href="#" title="' +
     HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) + '">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
-    '</a></h3></div></div>' +
+    '</a></h3>' +
+    // The board's activities, for a board admin, put on the page when opened.
+    IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), '<hr><h3 class="activity-title js-toggle-show-activities" role="button" tabindex="0" title="' +
+      HtmlAttr(Words.Text('activities', 'Activities')) + '"><i class="fa fa-caret-right"></i><i class="fa fa-comment-o"></i> ' +
+      E(Words.Text('activities', 'Activities')) + '</h3><div class="activities js-sidebar-activities is-hidden"><template class="js-stamp-on-open">' +
+      ActivityRows(Db, Words, BoardId, '', 50) + '</template></div>', '') +
+    '</div></div>' +
     '<template class="js-pop-over-template" data-pop="board-menu" data-title="' + HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '"><div class="header"><span class="header-title">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
@@ -2105,7 +2196,12 @@ begin
     Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable) +
       AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId));
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
-      CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
+      CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) +
+      // The card's activities, opened by their heading.
+      '<h3 class="card-details-item-title js-toggle-card-section" data-section="activities" role="button" tabindex="0">' +
+      '<i class="fa fa-caret-right"></i> ' + E(Words.Text('activities', 'Activities')) + '</h3>' +
+      '<div class="card-details-section js-card-section is-hidden" data-section="activities"><div class="activities js-card-activities">' +
+      ActivityRows(Db, Words, BoardId, CardId, 100) + '</div></div></div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
     Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);

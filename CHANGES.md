@@ -218,6 +218,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   address is kept as the account's email, one account's only; the form shows
   its errors with what was typed, and a new account is signed in with the
   login cookie. WeKan's spec 05 passes whole: 237 of WeKan's tests pass.
+- Add the activities to the HTML5 view, as WeKan's activities.jade and
+  Weddy's activities.go: the card's, opened by their heading, and the
+  board's in the sidebar for a board admin, put on the page when opened -
+  newest first, each its member and WeKan's sentence in the reader's
+  language, every name in it escaped. 238 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

@@ -1083,6 +1083,17 @@ def http_checks(server, tmp, backend):
             assert ('value="%s"' % form['username']).encode() in page and cookie_value(cookies, 'meteor_login_token') is None
         assert card_db("SELECT count(*) FROM users WHERE username='other_h5'")[0] == 0
 
+        # The card's and the board's activities (activities.jade), in the
+        # reader's language, every name escaped.
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, moved), {'title': 'Moved <b>x</b>'}, cookie=owner)[0] == 200
+        page = request('GET', '%s/%s' % (route, moved), cookie=owner)[2]
+        assert b'data-section="activities"' in page and b'class="activities js-card-activities"' in page
+        act = card_db("SELECT id FROM activities WHERE cardId=? AND activityType='moveCard' ORDER BY createdAt LIMIT 1", moved)[0]
+        assert ('<div class="activity" data-id="%s">' % act).encode() in page
+        assert b'Moved &lt;b&gt;x&lt;/b&gt;' in page and b'Moved <b>x</b>' not in page
+        assert b'js-sidebar-activities' in page and b'js-sidebar-activities' not in request('GET', route, cookie=worker)[2], 'for a board admin'
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, moved), {'title': 'Cherry'}, cookie=owner)[0] == 200
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

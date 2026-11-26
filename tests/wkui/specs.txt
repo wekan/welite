@@ -42,6 +42,7 @@
 08-notifications-activity.e2e.js: Notifications & activity log › activity log shows board-level activities
 08-notifications-activity.e2e.js: Notifications & activity log › working (time) log fields are accessible on a card
 08-notifications-activity.e2e.js: Notifications & activity log › @mention in a comment is stored in the activity DB
+08-notifications-activity.e2e.js: Notifications & activity log › #1658 opening a card Activities section shows its persisted history
 09-my-cards-filter.e2e.js: My Cards, filter & sort › sorting cards by date does not crash and reorders list
 09-my-cards-filter.e2e.js: My Cards, filter & sort › changing a custom field value saves without breaking the card
 09-my-cards-filter.e2e.js: My Cards, filter & sort › changing the list (category) from the card list-selector moves it correctly
