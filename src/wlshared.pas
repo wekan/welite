@@ -12,6 +12,9 @@ function SharedStore(Db:TWLDb):Boolean;
 // PASSWORD_MIN_LENGTH, else 8, at most 256 - and whether it is enforced
 // (passwordMinLengthEnforce, else PASSWORD_MIN_LENGTH_ENFORCE=true).
 procedure PasswordPolicy(Db:TWLDb;out MinLength:Integer;out Enforce:Boolean);
+// A top-level boolean of a shared store's site settings (Admin Panel's
+// renderLinksAsPlainText, alwaysShowCodeAsText...); False without one.
+function SharedSettingOn(Db:TWLDb;const Key:string):Boolean;
 function ApiTokenLifetime(Db:TWLDb):Int64;
 function ApiTokenLifetimeMs(Db:TWLDb;out Condition:string):Double;
 function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:string):Int64;
@@ -59,6 +62,20 @@ begin
   if Value.JSONType=jtBoolean then Result:=LowerCase(Value.AsString) else Result:=Value.AsString;
   if Result='' then Result:=Fallback;
 end;
+function SharedSettingOn(Db:TWLDb;const Key:string):Boolean;
+var Doc:TJSONObject;Snapshot:string;Value:TJSONData;
+begin
+  Result:=False;Doc:=nil;
+  try
+    try
+      if SharedStore(Db) then Doc:=ReadSettings(Db,Snapshot);
+    except Doc:=nil;end;
+    if Doc=nil then Exit;
+    Value:=Doc.Find(Key);
+    Result:=(Value<>nil) and (Value.JSONType=jtBoolean) and Value.AsBoolean;
+  finally Doc.Free;end;
+end;
+
 procedure PasswordPolicy(Db:TWLDb;out MinLength:Integer;out Enforce:Boolean);
 var Doc:TJSONObject;Snapshot,Raw,Flag:string;N:Double;
 begin

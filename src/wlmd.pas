@@ -24,8 +24,13 @@ interface
 function MarkdownHtml(const Text: string): string;
 
 // WeKan's +viewer: a one-paragraph text inline in <span class="viewer">,
-// anything more in <div class="viewer">.
-function MarkdownViewer(const Text: string): string;
+// anything more in <div class="viewer">. Admin Panel's text display: with
+// PlainLinks no link is drawn (renderLinksAsPlainText), with PlainSource the
+// source itself is shown (alwaysShowCodeAsText).
+function MarkdownViewer(const Text: string; PlainLinks: Boolean = False; PlainSource: Boolean = False): string;
+
+// markdown-it-emoji's emoji for a shortcode (without its colons), or ''.
+function EmojiOf(const Code: string): string;
 
 // Whether an address may be a link's target.
 function SafeLinkUrl(const Url: string): Boolean;
@@ -33,6 +38,27 @@ function SafeLinkUrl(const Url: string): Boolean;
 implementation
 
 uses SysUtils, StrUtils;
+
+{$I wlemoji.inc}
+
+function EmojiOf(const Code: string): string;
+var Lo, Hi, Mid, C: Integer;
+begin
+  Result := '';
+  Lo := 0; Hi := EMOJI_COUNT - 1;
+  while Lo <= Hi do
+  begin
+    Mid := (Lo + Hi) div 2;
+    C := CompareStr(EMOJI_CODES[Mid], Code);
+    if C = 0 then Exit(EMOJI_CHARS[Mid]);
+    if C < 0 then Lo := Mid + 1 else Hi := Mid - 1;
+  end;
+end;
+
+threadvar
+  // Admin Panel's renderLinksAsPlainText, for the Markdown this thread draws
+  // (the server answers requests on threads of its own).
+  NoLinks: Boolean;
 
 function Esc(const S: string): string;
 begin
@@ -58,6 +84,7 @@ end;
 
 function Link(const Url, InnerHtml: string): string;
 begin
+  if NoLinks then Exit(InnerHtml);
   Result := '<a href="' + Esc(Url) + '" rel="nofollow noopener" target="_blank">' + InnerHtml + '</a>';
 end;
 
@@ -116,6 +143,21 @@ begin
       begin
         Result := Result + Link(Url, Esc(Url));
         i := j; Continue;
+      end;
+    end;
+    // :shortcode: (markdown-it-emoji), never inside code.
+    if S[i] = ':' then
+    begin
+      j := i + 1;
+      while (j <= Length(S)) and (S[j] in ['a'..'z', '0'..'9', '_', '+', '-']) do Inc(j);
+      if (j <= Length(S)) and (S[j] = ':') and (j > i + 1) then
+      begin
+        Text := EmojiOf(Copy(S, i + 1, j - i - 1));
+        if Text <> '' then
+        begin
+          Result := Result + Text;
+          i := j + 1; Continue;
+        end;
       end;
     end;
     // **strong**, ~~strike~~, *emphasis*
@@ -247,10 +289,16 @@ begin
   EndPara; EndList;
 end;
 
-function MarkdownViewer(const Text: string): string;
+function MarkdownViewer(const Text: string; PlainLinks: Boolean; PlainSource: Boolean): string;
 var Html: string;
 begin
-  Html := MarkdownHtml(Text);
+  if PlainSource then Exit('<div class="viewer"><pre>' + Esc(Text) + '</pre></div>');
+  NoLinks := PlainLinks;
+  try
+    Html := MarkdownHtml(Text);
+  finally
+    NoLinks := False;
+  end;
   if (Copy(Html, 1, 3) = '<p>') and (Copy(Html, Length(Html) - 3, 4) = '</p>') and (PosEx('<p>', Html, 2) = 0) then
     Result := '<span class="viewer">' + Copy(Html, 4, Length(Html) - 7) + '</span>'
   else

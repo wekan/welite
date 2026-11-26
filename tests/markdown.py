@@ -43,6 +43,20 @@ CASES = [
     ('[x](https://a.example/" onclick="alert(1))', '<span class="viewer">x)</span>'),
     ('[x](https://a.example/&quot;x)', '<span class="viewer"><a href="https://a.example/&amp;quot;x" rel="nofollow noopener" target="_blank">x</a></span>'),
     ('"quoted" & \'single\'', '<span class="viewer">&quot;quoted&quot; &amp; &#39;single&#39;</span>'),
+    # markdown-it-emoji: a known shortcode is its emoji, never inside code,
+    # an unknown one stays text.
+    (':thumbsup: :heart: :tada: :nosuchcode: `:smile:`',
+     '<span class="viewer">👍 ❤️ 🎉 :nosuchcode: <code>:smile:</code></span>'),
+    ('# Demo [card](https://example.com/) :thumbsup:',
+     '<div class="viewer"><h1>Demo <a href="https://example.com/" rel="nofollow noopener" target="_blank">card</a> 👍</h1></div>'),
+]
+# Admin Panel's text display: (text, PlainLinks, PlainSource, HTML).
+POLICY = [
+    ('[card](https://example.com/) :tada:', True, False, '<span class="viewer">card 🎉</span>'),
+    ('see https://wekan.fi/', True, False, '<span class="viewer">see https://wekan.fi/</span>'),
+    ('# Demo <b>x</b>', False, True, '<div class="viewer"><pre># Demo &lt;b&gt;x&lt;/b&gt;</pre></div>'),
+    ('[card](https://example.com/)', False, False,
+     '<span class="viewer"><a href="https://example.com/" rel="nofollow noopener" target="_blank">card</a></span>'),
 ]
 
 
@@ -56,6 +70,9 @@ def main():
         for text, _ in CASES:
             pascal = "'" + text.replace("'", "''").replace('\n', "'#10'") + "'"
             lines.append('  WriteLn(MarkdownViewer(%s));' % pascal)
+        for text, links, source, _ in POLICY:
+            pascal = "'" + text.replace("'", "''").replace('\n', "'#10'") + "'"
+            lines.append('  WriteLn(MarkdownViewer(%s, %s, %s));' % (pascal, str(links), str(source)))
         lines.append('end.')
         src.write_text('\n'.join(lines) + '\n', encoding='utf-8')
         out = tmp / 'build'
@@ -69,7 +86,11 @@ def main():
             if line != want:
                 failed += 1
                 print('FAIL: %r\n  got  %s\n  want %s' % (text, line, want))
-        assert len(got) == len(CASES), got
+        assert len(got) == len(CASES) + len(POLICY), got
+        for (text, links, source, want), line in zip(POLICY, got[len(CASES):]):
+            if line != want:
+                failed += 1
+                print('FAIL policy: %r\n  got  %s\n  want %s' % (text, line, want))
         # Negative, for every case: each '<' starts one of the viewer's own
         # tags, and only a link has an address - a safe one.
         allowed = re.compile(r'<(?:/?(?:p|br|h[1-6]|ul|ol|li|blockquote|pre|code|strong|em|del|span|div|a)|span class="viewer"|'
@@ -78,7 +99,7 @@ def main():
             rest = allowed.sub('', line)
             assert '<' not in rest and '>' not in rest, (line, rest)
         assert failed == 0, failed
-    print('PASS: Markdown viewer, %d cases' % len(CASES))
+    print('PASS: Markdown viewer, %d cases' % (len(CASES) + len(POLICY)))
 
 
 if __name__ == '__main__':

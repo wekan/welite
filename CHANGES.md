@@ -264,6 +264,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the minimum, and getPasswordPolicy answers signed out. `tests/wkui/run.sh`
   makes the site settings document WeKan makes at startup. 249 of WeKan's
   tests pass.
+- Add markdown-it-emoji's shortcodes (`:thumbsup:` is 👍, never inside code)
+  and Admin Panel's text display to the HTML5 view's viewer: with
+  renderLinksAsPlainText no link is drawn, with alwaysShowCodeAsText the
+  source itself is shown, for the minicard's and the card's title, the
+  description and the card's list picker. The emoji table is generated from
+  markdown-it-emoji 3.1.0's full set (MIT) by `releases/genemoji.py`.
+  258 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

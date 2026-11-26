@@ -1043,7 +1043,9 @@ begin
   Result := '<div class="card-details-item card-details-item-list"><h3 class="card-details-item-title">' +
     E(Words.Text('list', 'List')) + '</h3>';
   if not Writable then Exit(Result + '<span>' + E(Current) + '</span></div>');
-  Result := Result + '<details class="card-details-list-picker"><summary>' + E(Current) + '</summary>' +
+  // The list's name as WeKan's viewer draws it, under Admin Panel's text display.
+  Result := Result + '<details class="card-details-list-picker"><summary>' +
+    MarkdownViewer(Current, SharedSettingOn(Db, 'renderLinksAsPlainText'), SharedSettingOn(Db, 'alwaysShowCodeAsText')) + '</summary>' +
     '<div class="card-details-list-options" role="listbox" aria-label="' + HtmlAttr(Words.Text('list', 'List')) + '">';
   for i := 0 to High(Lists) do
     Result := Result + '<form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) +
@@ -1918,7 +1920,7 @@ begin
     Result := Result + '<h3 class="card-details-item-title"><i class="fa fa-file-text-o"></i> ' +
       E(Words.Text('description', 'Description')) + '</h3>';
   Viewer := '';
-  if Text <> '' then Viewer := MarkdownViewer(Text);
+  if Text <> '' then Viewer := MarkdownViewer(Text, SharedSettingOn(Db, 'renderLinksAsPlainText'), SharedSettingOn(Db, 'alwaysShowCodeAsText'));
   if BoardAllows(Db, BoardId, 'allowsDescriptionText') then
   begin
     if CanEdit then
@@ -2151,7 +2153,7 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
-  Width: Integer;
+  Width: Integer; PlainLinks, PlainSource: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter;
 begin
   Result := ''; BoardTitle := ''; Found := False;
@@ -2164,6 +2166,9 @@ begin
   Writable := (S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId);
   BoardDates := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
   Shows := MinicardShows(Db, BoardId, BoardDates);
+  // Admin Panel's text display, for every viewer on the page.
+  PlainLinks := SharedSettingOn(Db, 'renderLinksAsPlainText');
+  PlainSource := SharedSettingOn(Db, 'alwaysShowCodeAsText');
   Filter := ParseBoardFilter(Db, BoardId, Query);
   FilterCond := BoardFilterSql(Filter);
   CardSort := ParseCardSort(Query);
@@ -2252,7 +2257,7 @@ begin
             HtmlAttr(IfThen(Cards[k][8] = '1', Words.Text('card-mark-incomplete', 'Mark as incomplete'), Words.Text('card-mark-complete', 'Mark as complete'))) +
             '"><div class="materialCheckBox' + IfThen(Cards[k][8] = '1', ' is-checked', '') + '"></div></a>', '') +
           '<span class="minicard-title-text">' +
-          MarkdownViewer(Cards[k][1]) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
+          MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]]) + '</div></div>';
       Canvas := Canvas + '</div>';
       if Writable then
@@ -2306,7 +2311,7 @@ begin
     Details := '<div class="card-details js-card-details' + IfThen(Maximized, ' card-details-maximized', '') +
       '" data-card="' + HtmlAttr(CardId) + '">' +
       '<div class="card-details-header"><h2 class="card-details-title js-card-title">' +
-      '<span class="card-details-title-edit-zone js-open-inlined-form">' + MarkdownViewer(Card[0][0]) + '</span></h2>';
+      '<span class="card-details-title-edit-zone js-open-inlined-form">' + MarkdownViewer(Card[0][0], PlainLinks, PlainSource) + '</span></h2>';
     // board.pug: the title's editor, opened by its leading part (weddy.js).
     if Writable then
       Details := Details + '<form class="js-card-details-title js-inlined-form is-hidden" method="post" action="/b/' +

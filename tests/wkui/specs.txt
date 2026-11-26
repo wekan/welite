@@ -176,6 +176,15 @@ admin-attachment-retention.e2e.js: negative: an ordinary user cannot open the re
 admin-new-env-settings.e2e.js: negative: an ordinary user is offered none of them
 assist-due-from-title.e2e.js: Due date from the title › Board Settings / Card turns it off for the add-card form (negative)
 avatar-sub-path.e2e.js: lazily loaded code is fetched from the page origin, not ROOT_URL's host
+board-view-titles.e2e.js: minicard title honors formatted
+board-view-titles.e2e.js: minicard title honors plain-links
+board-view-titles.e2e.js: minicard title honors plain-source
+board-view-titles.e2e.js: opened card title honors formatted
+board-view-titles.e2e.js: opened card title honors plain-links
+board-view-titles.e2e.js: opened card title honors plain-source
+board-view-titles.e2e.js: opened card List dropdown title honors formatted
+board-view-titles.e2e.js: opened card List dropdown title honors plain-links
+board-view-titles.e2e.js: opened card List dropdown title honors plain-source
 calendar-today-marker.e2e.js: due-date popup marks today, and only today
 calendar-today-marker.e2e.js: due-date popup fills today green on the wisteria theme
 calendar-today-marker.e2e.js: due-date popup fills today green on the dark theme
