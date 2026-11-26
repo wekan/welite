@@ -253,6 +253,9 @@ function AdminUpdateViewUser(const T:TWLTenant;const Actor,Target:string;Values:
 // WeKan's setCreateUser: a site admin makes a password account.
 function AdminCreateViewUser(const T:TWLTenant;const Actor,Fullname,Username,Initials,Password,IsAdmin,LoginDisabled,Email:string;
   out NewId,Error:string):Integer;
+// The card's "Mark as complete" (dueComplete) from the minicard, by whoever
+// may change the card.
+function SetViewCardComplete(const T:TWLTenant;const UserId,BoardId,CardId:string;Done:Boolean;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6199,6 +6202,19 @@ begin
     ',0); SELECT CASE WHEN EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(NewId)+') THEN 1 ELSE json(''User creation failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');NewId:='';Error:='error-user-notCreated';Exit(500);end;
   Result:=200;
+end;
+
+function SetViewCardComplete(const T:TWLTenant;const UserId,BoardId,CardId:string;Done:Boolean;out Error:string):Integer;
+var Scope,Stamp:string;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET dueComplete='+IntToStr(Ord(Done))+',modifiedAt='+Stamp+' WHERE '+Scope+
+    ' AND COALESCE(dueComplete,0)<>'+IntToStr(Ord(Done))+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+    ' AND COALESCE(dueComplete,0)='+IntToStr(Ord(Done))+')=1 THEN 1 ELSE json(''Complete failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
 end;
 
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;

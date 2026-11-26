@@ -82,6 +82,13 @@ def pure_checks(tmp):
             stmt = before[before.rfind(';') + 1:]
             assert not _re.search(r'\battachments\s+(?:AS\s+)?[a-z]\w*\s+WHERE', stmt, _re.I), (pas.name, stmt[-200:])
     print('PASS: no aliased attachments beside LiveAttachmentSQL')
+    # Negative: the server is linked without a widestring manager, so a
+    # WideString case or compare function fails at run time on every page.
+    for pas in sorted((ROOT / 'src').glob('*.pas')):
+        text = pas.read_text(encoding='utf-8', errors='replace')
+        bad = _re.findall(r'\b(?:Wide(?:Upper|Lower)Case|WideCompare(?:Str|Text)|WideSameText|UnicodeUpperCase|UnicodeLowerCase)\s*\(', text)
+        assert not bad, (pas.name, bad)
+    print('PASS: no widestring manager needed')
 
 
 def http_checks(server, tmp, backend):
@@ -1093,6 +1100,31 @@ def http_checks(server, tmp, backend):
         assert b'Moved &lt;b&gt;x&lt;/b&gt;' in page and b'Moved <b>x</b>' not in page
         assert b'js-sidebar-activities' in page and b'js-sidebar-activities' not in request('GET', route, cookie=worker)[2], 'for a board admin'
         assert request('POST', '/b/%s/cards/%s/title' % (board_id, moved), {'title': 'Cherry'}, cookie=owner)[0] == 200
+
+        # The minicard's assignees, newest comments and "Mark as complete", as
+        # the board's Card Settings show them.
+        mini = lambda who=owner: request('GET', route, cookie=who)[2]
+        assert b'minicard-comments' not in mini() and b'js-toggle-card-complete' not in mini(), 'off by default'
+        card_db('INSERT INTO card_assignees(cardId,userId) VALUES(?,?)', card_id, users['worker'])
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.allowsCommentsOnMinicard',json('true'),"
+                 "'$.allowsDueCompleteOnMinicard',json('true')) WHERE id=?", board_id)
+        page = mini()
+        assert b'<div class="minicard-assignees js-minicard-assignees"><span class="member" title="Renamed &lt;Worker&gt;">RW</span>' in page
+        assert b'<span class="minicard-comment-text">Zebra quartz</span>' in page and page.count(b'class="minicard-comment"') >= 3
+        toggle = ('class="minicard-complete-toggle js-toggle-card-complete" href="#" data-card="%s" data-complete="true"' % card_id).encode()
+        assert toggle in page and toggle not in mini(worker), 'not for a Worker'
+        status, _, _, _ = request('POST', card_path + '/complete', {'complete': 'true'}, cookie=owner)
+        assert status == 204 and card_db('SELECT dueComplete FROM cards WHERE id=?', card_id)[0] == 1
+        assert ('data-card="%s" data-complete="false"' % card_id).encode() in mini()
+        # Negative: no non-member, and the assignees follow the board's setting.
+        assert request('POST', card_path + '/complete', {'complete': 'false'}, cookie=stranger)[0] == 403
+        assert card_db('SELECT dueComplete FROM cards WHERE id=?', card_id)[0] == 1
+        assert request('POST', card_path + '/complete', {'complete': 'false'}, cookie=owner)[0] == 204
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.allowsAssigneeOnMinicard',json('false')) WHERE id=?", board_id)
+        assert b'minicard-assignees' not in mini()
+        board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.allowsAssigneeOnMinicard','$.allowsCommentsOnMinicard',"
+                 "'$.allowsDueCompleteOnMinicard') WHERE id=?", board_id)
+        card_db('DELETE FROM card_assignees WHERE cardId=?', card_id)
 
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.

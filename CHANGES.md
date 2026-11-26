@@ -223,6 +223,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board's in the sidebar for a board admin, put on the page when opened -
   newest first, each its member and WeKan's sentence in the reader's
   language, every name in it escaped. 238 of WeKan's tests pass.
+- Add the minicard's assignees (an avatar each, their initials), its newest
+  three comments on lines of their own, and "Mark as complete" for whoever
+  may change the card, as the board's Card Settings show them (WeKan's
+  getMinicardFlag; Weddy's minicard_badges.go). A test fails on any
+  WideString case function, which needs a widestring manager the server is
+  not linked with. 240 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

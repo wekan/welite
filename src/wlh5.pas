@@ -1915,10 +1915,37 @@ end;
 // and its members.
 type
   TMinicardShows = record
-    Labels, Members: Boolean;
+    Labels, Members, Assignees, Comments, Complete: Boolean;
     Dates: array[0..3] of Boolean;
     SetDates: Boolean;
   end;
+
+// A board's card setting as stored (settings_json), Default when it has none.
+function BoardSettingFlag(Db: TWLDb; const BoardId, Setting: string; Default: Boolean): Boolean;
+var R: TWLRows;
+begin
+  Result := Default;
+  R := Db.Query('SELECT json_type(settings_json,''$.' + Setting + ''') FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND json_valid(settings_json);');
+  if (Length(R) = 1) and ((R[0][0] = 'true') or (R[0][0] = 'false')) then Result := R[0][0] = 'true'
+  else if (Length(R) = 1) and (R[0][0] = 'integer') then
+    Result := Db.Query('SELECT json_extract(settings_json,''$.' + Setting + ''') FROM boards WHERE id=' + QuotedStr(BoardId) + ';')[0][0] <> '0';
+end;
+
+// A person's initials as the minicard shows them: their own, or the first
+// letters of the first two words of their name.
+function PersonInitials(const Initials, Name: string): string;
+var Words_: TStringArray; i: Integer; W: UnicodeString;
+begin
+  if Initials <> '' then Exit(Initials);
+  Result := '';
+  Words_ := Trim(Name).Split([' '], TStringSplitOptions.ExcludeEmpty);
+  for i := 0 to High(Words_) do
+  begin
+    if i > 1 then Break;
+    W := UTF8Decode(Words_[i]);
+    if W <> '' then Result := Result + UpperCase(UTF8Encode(Copy(W, 1, 1)));
+  end;
+end;
 
 function MinicardShows(Db: TWLDb; const BoardId: string; SetDates: Boolean): TMinicardShows;
 const Settings: array[0..3] of string = ('allowsReceivedDate', 'allowsStartDate', 'allowsDueDate', 'allowsEndDate');
@@ -1926,6 +1953,11 @@ var i: Integer;
 begin
   Result.Labels := BoardAllows(Db, BoardId, 'allowsLabels') and BoardAllows(Db, BoardId, 'allowsLabelsOnMinicard');
   Result.Members := BoardAllows(Db, BoardId, 'allowsMembers') and BoardAllows(Db, BoardId, 'allowsMembersOnMinicard');
+  // getMinicardFlag: allowsAssigneeOnMinicard, else allowsAssignee, else on.
+  Result.Assignees := BoardSettingFlag(Db, BoardId, 'allowsAssigneeOnMinicard', BoardSettingFlag(Db, BoardId, 'allowsAssignee', True));
+  // Off unless the board turns them on.
+  Result.Comments := BoardSettingFlag(Db, BoardId, 'allowsCommentsOnMinicard', False);
+  Result.Complete := SetDates and BoardSettingFlag(Db, BoardId, 'allowsDueCompleteOnMinicard', False);
   for i := 0 to 3 do
     Result.Dates[i] := BoardAllows(Db, BoardId, Settings[i]) and
       BoardAllows(Db, BoardId, StringReplace(Settings[i], 'Date', 'DateOnMinicard', []));
@@ -1985,6 +2017,39 @@ begin
       Result := Result + '<div class="minicard-members js-minicard-members">';
       for i := 0 to High(R) do
         Result := Result + '<span class="member" title="' + HtmlAttr(R[i][0]) + '">' + E(UpperCase(Copy(R[i][0], 1, 2))) + '</span>';
+      Result := Result + '</div>';
+    end;
+  end;
+  // WeKan's minicard assignees: an avatar each, their name its title.
+  if Shows.Assignees then
+  begin
+    R := Db.Query('SELECT COALESCE(NULLIF(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,''''),u.username),' +
+      'COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.initials'') END,'''') ' +
+      'FROM card_assignees c JOIN users u ON u.id=c.userId WHERE c.cardId=' + QuotedStr(CardId) + ' ORDER BY u.username;');
+    if Length(R) > 0 then
+    begin
+      Result := Result + '<div class="minicard-assignees js-minicard-assignees">';
+      for i := 0 to High(R) do
+        Result := Result + '<span class="member" title="' + HtmlAttr(R[i][0]) + '">' + E(PersonInitials(R[i][1], R[i][0])) + '</span>';
+      Result := Result + '</div>';
+    end;
+  end;
+  // Its newest three comments, each cut at 140 characters, each on a line
+  // of its own (the 2026-10-08 report).
+  if Shows.Comments then
+  begin
+    R := Db.Query('SELECT text FROM card_comments WHERE boardId=' + QuotedStr(BoardId) + ' AND cardId=' + QuotedStr(CardId) +
+      ' ORDER BY createdAt DESC LIMIT 3;');
+    if Length(R) > 0 then
+    begin
+      Result := Result + '<div class="minicard-comments">';
+      for i := 0 to High(R) do
+      begin
+        Shown := R[i][0];
+        if Length(UTF8Decode(Shown)) > 140 then Shown := UTF8Encode(Copy(UTF8Decode(Shown), 1, 140)) + '…';
+        Result := Result + '<div class="minicard-comment"><span class="minicard-comment-icon"><i class="fa fa-comment-o"></i></span>' +
+          '<span class="minicard-comment-text">' + E(Shown) + '</span></div>';
+      end;
       Result := Result + '</div>';
     end;
   end;
@@ -2090,7 +2155,7 @@ begin
         'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE((SELECT attachments.id FROM attachments WHERE attachments.id=c.coverId AND ' +
         'attachments.cardId=c.id AND attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'') AND ' +
         // LiveAttachmentSQL names the table attachments, unaliased.
-        LiveAttachmentSQL(Db) + '),'''') FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+        LiveAttachmentSQL(Db) + '),''''),COALESCE(c.dueComplete,0) FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
@@ -2101,7 +2166,13 @@ begin
           '"><div class="minicard">' +
           // WeKan's minicard cover: the card's cover image.
           IfThen(Cards[k][7] <> '', '<div class="minicard-cover"><img src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Cards[k][7])) +
-            '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title"><span class="minicard-title-text">' +
+            '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title">' +
+          // WeKan's "Mark as complete" on the minicard, when Card Settings shows it there.
+          IfThen(Shows.Complete, '<a class="minicard-complete-toggle js-toggle-card-complete" href="#" data-card="' + HtmlAttr(Cards[k][0]) +
+            '" data-complete="' + IfThen(Cards[k][8] = '1', 'false', 'true') + '" title="' +
+            HtmlAttr(IfThen(Cards[k][8] = '1', Words.Text('card-mark-incomplete', 'Mark as incomplete'), Words.Text('card-mark-complete', 'Mark as complete'))) +
+            '"><div class="materialCheckBox' + IfThen(Cards[k][8] = '1', ' is-checked', '') + '"></div></a>', '') +
+          '<span class="minicard-title-text">' +
           MarkdownViewer(Cards[k][1]) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]]) + '</div></div>';
       Canvas := Canvas + '</div>';
@@ -2724,6 +2795,7 @@ begin
   else if (n = 5) and (P[4] = 'copy-to') then Action := 'copy-card'
   else if (n = 5) and (P[4] = 'archive') then Action := 'archive-card'
   else if (n = 5) and (P[4] = 'vote') then Action := 'vote'
+  else if (n = 5) and (P[4] = 'complete') then Action := 'complete'
   else if (n = 5) and (P[4] = 'poker') then Action := 'poker'
   else if (n = 5) and (P[4] = 'watch') then Action := 'watch-card'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'delete') then Action := 'delete-attachment'
@@ -2807,6 +2879,17 @@ begin
     Code := WatchViewBoard(T, S.UserId, BoardId, Request.QueryFields.Values['level'], Error)
   else if Action = 'poker' then
     Code := PokerViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['state'], Error)
+  else if Action = 'complete' then
+  begin
+    Code := SetViewCardComplete(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['complete'] = 'true', Error);
+    // weddy.js redraws the board itself: no page for it.
+    if Code = 200 then
+    begin
+      Response.Code := 204;
+      Response.SendContent;
+      Exit;
+    end;
+  end
   else if Action = 'vote' then
     Code := VoteViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['vote'], Error)
   else if Action = 'add-attachment' then
