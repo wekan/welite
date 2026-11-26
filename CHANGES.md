@@ -290,6 +290,15 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   forges an invitation (InviteProfileBleed). A test fails on a transaction
   begun or committed in an Exec of its own, which the CLI backend runs as a
   process of its own. 264 of WeKan's tests pass.
+- Add notifications to the HTML5 view: a comment writes WeKan's addComment
+  activity and puts it into each recipient's profile.notifications, once,
+  as WeKan's boardNotificationRecipients.js chooses them - those who take
+  part in the card and the board's watchers, or those it mentions (@name,
+  @"a name", @board_members, @card_members...), only active members who
+  watch or track the board or watch the list or the card (#6658), never the
+  author unless they mention themselves. A list's watchers are read from a
+  shared store's lists document. The header's bell shows them unread, from
+  `/api/user`. 267 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

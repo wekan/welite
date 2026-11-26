@@ -15,6 +15,9 @@ procedure PasswordPolicy(Db:TWLDb;out MinLength:Integer;out Enforce:Boolean);
 // A top-level boolean of a shared store's site settings (Admin Panel's
 // renderLinksAsPlainText, alwaysShowCodeAsText...); False without one.
 function SharedSettingOn(Db:TWLDb;const Key:string):Boolean;
+// A shared store's document of Collection by its _id, as plain JSON; '' when
+// the store has no such collection or document (and in a WeLite store).
+function SharedDocument(Db:TWLDb;const Collection,DocId:string):string;
 function ApiTokenLifetime(Db:TWLDb):Int64;
 function ApiTokenLifetimeMs(Db:TWLDb;out Condition:string):Double;
 function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:string):Int64;
@@ -62,6 +65,18 @@ begin
   if Value.JSONType=jtBoolean then Result:=LowerCase(Value.AsString) else Result:=Value.AsString;
   if Result='' then Result:=Fallback;
 end;
+function SharedDocument(Db:TWLDb;const Collection,DocId:string):string;
+var Rows:TWLRows;
+begin
+  Result:='';
+  if (Pos(#0,Collection+DocId)>0) or not SharedStore(Db) then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+';');
+  if Length(Rows)<>1 then Exit;
+  Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Id(Rows[0][0])+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(DocId)+' LIMIT 1;');
+  if Length(Rows)<>1 then Exit;
+  try Result:=PlainDocument(Rows[0][0]);except Result:='';end;
+end;
+
 function SharedSettingOn(Db:TWLDb;const Key:string):Boolean;
 var Doc:TJSONObject;Snapshot:string;Value:TJSONData;
 begin

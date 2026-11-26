@@ -1302,6 +1302,37 @@ def http_checks(server, tmp, backend):
         assert call('quitBoard', [board_id], silent)[0] == 403
         card_db('UPDATE board_members SET isActive=1 WHERE boardId=? AND userId=?', board_id, users['silent'])
 
+        # Notifications (boardNotificationRecipients.js): a comment notifies the
+        # board's watchers and those it mentions, active members who watch or
+        # track the board, each once; never its author, nobody muted (#6658).
+        notes = lambda uid: json.loads(card_db("SELECT COALESCE(json_extract(profile_json,'$.notifications'),'[]') FROM users WHERE id=?", uid)[0])
+        comment_on = lambda text, who=owner: request('POST', '/b/%s/cards/%s/comments' % (board_id, card_id), {'comment': text}, cookie=who)
+        for uid in (users['worker'], login['id']):
+            card_db("UPDATE users SET profile_json=json_set(profile_json,'$.notifications',json('[]')) WHERE id=?", uid)
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.watchers',json(?)) WHERE id=?",
+                 json.dumps([{'userId': users['worker'], 'level': 'watching'}]), board_id)
+        assert comment_on('Plain words')[0] == 200
+        got = notes(users['worker'])
+        assert len(got) == 1 and got[0]['read'] is None
+        act = card_db('SELECT activityType,json_extract(data_json,\'$.commentId\') FROM activities WHERE id=?', got[0]['activity'])
+        assert act[0] == 'addComment' and act[1], 'the addComment activity it points to'
+        assert notes(login['id']) == [], 'never the author'
+        # A mention reaches a member who tracks the board; a muted one gets nothing.
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.watchers',json(?)) WHERE id=?",
+                 json.dumps([{'userId': login['id'], 'level': 'tracking'}]), board_id)
+        assert comment_on('@owner look', worker)[0] == 200
+        assert len(notes(login['id'])) == 1, 'mentioned and tracking'
+        assert len(notes(users['worker'])) == 1, 'the author of the mention, muted now, gets no more'
+        # Watching the card itself notifies, the board muted or not.
+        assert card_watchers() == [users['worker']]
+        assert comment_on('@worker on a card you watch')[0] == 200
+        assert len(notes(users['worker'])) == 2
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.watchers',json('[]')) WHERE id=?", card_id)
+        assert comment_on('@worker and nobody else')[0] == 200
+        assert len(notes(users['worker'])) == 2, 'a mention does not opt a muted member back in'
+        assert b'"notifications":[' in request('GET', '/api/user', cookie=owner)[2]
+        board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.watchers') WHERE id=?", board_id)
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

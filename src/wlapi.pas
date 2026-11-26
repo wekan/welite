@@ -4749,8 +4749,128 @@ begin
     ' AND isActive=1 AND COALESCE(isNoComments,0)=0 AND COALESCE(isReadOnly,0)=0 AND COALESCE(isReadAssignedOnly,0)=0;'))=1;
 end;
 
+// WeKan's @mentions in a comment: @name or @"a name".
+function CommentMentions(const Text:string):TStringArray;
+var i,j:Integer;Name:string;
+  procedure Add(const N:string);
+  begin if N<>'' then begin SetLength(Result,Length(Result)+1);Result[High(Result)]:=N;end;end;
+begin
+  Result:=nil;i:=1;
+  while i<=Length(Text) do
+  begin
+    if (Text[i]='@') and ((i=1) or not (Text[i-1] in ['A'..'Z','a'..'z','0'..'9','_'])) then
+    begin
+      j:=i+1;Name:='';
+      if (j<=Length(Text)) and (Text[j]='"') then
+      begin
+        Inc(j);
+        while (j<=Length(Text)) and (Text[j]<>'"') do begin Name:=Name+Text[j];Inc(j);end;
+        if j>Length(Text) then Name:='';
+      end
+      else
+        while (j<=Length(Text)) and (Text[j] in ['A'..'Z','a'..'z','0'..'9','_','.','@','-']) do begin Name:=Name+Text[j];Inc(j);end;
+      Add(Name);i:=j;
+    end;
+    Inc(i);
+  end;
+end;
+
+function HasId(const L:TStringArray;const Id:string):Boolean;
+var i:Integer;
+begin
+  Result:=False;for i:=0 to High(L) do if L[i]=Id then Exit(True);
+end;
+
+procedure AddId(var L:TStringArray;const Id:string);
+begin
+  if (Id<>'') and not HasId(L,Id) then begin SetLength(L,Length(L)+1);L[High(L)]:=Id;end;
+end;
+
+procedure AddRows(var L:TStringArray;const R:TWLRows);
+var i:Integer;
+begin
+  for i:=0 to High(R) do AddId(L,R[i][0]);
+end;
+
+// The statements that put the activity into each recipient's
+// profile.notifications, once, as WeKan makes them
+// (server/models/activities.js, models/lib/boardNotificationRecipients.js):
+// the people who take part in the card and the board's watchers, or those
+// a comment mentions; only active members who watch or track the board, or
+// watch the list or the card (#6658); never the actor, unless they mention
+// themselves.
+function NotificationsSql(Db:TWLDb;const ActorId,BoardId,ListId,CardId,CommentText,ActivityId:string):string;
+var Participants,Watchers,Scoped,Watching,Tracking,Members,Names:TStringArray;R:TWLRows;i,j:Integer;
+  Mentioned,SelfMention:Boolean;Doc:TJSONData;Arr:TJSONData;
+begin
+  Result:='';Participants:=nil;Watchers:=nil;Scoped:=nil;Watching:=nil;Tracking:=nil;Members:=nil;
+  AddRows(Members,Db.Query('SELECT m.userId FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId='+QuotedStr(BoardId)+
+    ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0;'));
+  // The list's watchers: a shared store's lists document has them.
+  if ListId<>'' then
+  begin
+    Doc:=nil;
+    try
+      try Doc:=GetJSON(SharedDocument(Db,'lists',ListId));except Doc:=nil;end;
+      if Doc is TJSONObject then
+      begin
+        Arr:=TJSONObject(Doc).Find('watchers');
+        if Arr is TJSONArray then
+          for i:=0 to TJSONArray(Arr).Count-1 do
+            if TJSONArray(Arr).Items[i].JSONType=jtString then
+            begin AddId(Scoped,TJSONArray(Arr).Items[i].AsString);AddId(Watchers,TJSONArray(Arr).Items[i].AsString);end;
+      end;
+    finally Doc.Free;end;
+  end;
+  if CardId<>'' then
+  begin
+    AddRows(Participants,Db.Query('SELECT userId FROM cards WHERE id='+QuotedStr(CardId)+';'));
+    AddRows(Participants,Db.Query('SELECT userId FROM card_members WHERE cardId='+QuotedStr(CardId)+';'));
+    AddRows(Participants,Db.Query('SELECT userId FROM card_assignees WHERE cardId='+QuotedStr(CardId)+';'));
+    R:=Db.Query('SELECT w.value FROM cards,json_each(CASE WHEN json_valid(cards.extra_json) THEN cards.extra_json ELSE ''{}'' END,''$.watchers'') w '+
+      'WHERE cards.id='+QuotedStr(CardId)+';');
+    AddRows(Scoped,R);AddRows(Watchers,R);
+  end;
+  Mentioned:=False;SelfMention:=False;
+  Names:=CommentMentions(CommentText);
+  for i:=0 to High(Names) do
+  begin
+    if Names[i]='board_members' then for j:=0 to High(Members) do AddId(Watchers,Members[j])
+    else if Names[i]='board_assignees' then
+      AddRows(Watchers,Db.Query('SELECT DISTINCT a.userId FROM card_assignees a JOIN cards c ON c.id=a.cardId WHERE c.boardId='+QuotedStr(BoardId)+';'))
+    else if Names[i]='card_members' then AddRows(Watchers,Db.Query('SELECT userId FROM card_members WHERE cardId='+QuotedStr(CardId)+';'))
+    else if Names[i]='card_assignees' then AddRows(Watchers,Db.Query('SELECT userId FROM card_assignees WHERE cardId='+QuotedStr(CardId)+';'))
+    else
+    begin
+      R:=Db.Query('SELECT id FROM users WHERE username='+QuotedStr(Names[i])+';');
+      if (Length(R)<>1) or not HasId(Members,R[0][0]) then Continue;
+      AddId(Watchers,R[0][0]);
+      if R[0][0]=ActorId then SelfMention:=True;
+    end;
+    Mentioned:=True;
+  end;
+  R:=Db.Query('SELECT json_extract(w.value,''$.userId''),json_extract(w.value,''$.level'') FROM boards,json_each(CASE WHEN json_valid(boards.settings_json) '+
+    'THEN boards.settings_json ELSE ''{}'' END,''$.watchers'') w WHERE boards.id='+QuotedStr(BoardId)+' AND w.type=''object'';');
+  for i:=0 to High(R) do
+    if R[i][1]='watching' then AddId(Watching,R[i][0])
+    else if R[i][1]='tracking' then AddId(Tracking,R[i][0]);
+  if not Mentioned then
+  begin
+    for i:=0 to High(Watching) do AddId(Watchers,Watching[i]);
+    for i:=0 to High(Participants) do if HasId(Tracking,Participants[i]) then AddId(Watchers,Participants[i]);
+  end;
+  for i:=0 to High(Watchers) do
+    if HasId(Members,Watchers[i]) and (HasId(Watching,Watchers[i]) or HasId(Tracking,Watchers[i]) or HasId(Scoped,Watchers[i])) and
+      ((Watchers[i]<>ActorId) or SelfMention) then
+      Result:=Result+'UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,'+
+        '''$.notifications'',json_insert(COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,''$.notifications''),json(''[]'')),'+
+        '''$[#]'',json_object(''activity'','+QuotedStr(ActivityId)+',''read'',json(''null'')))) WHERE id='+QuotedStr(Watchers[i])+
+        ' AND NOT EXISTS(SELECT 1 FROM json_each(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,''$.notifications'') n '+
+        'WHERE json_extract(n.value,''$.activity'')='+QuotedStr(ActivityId)+'); ';
+end;
+
 function AddViewComment(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out CommentId,Error:string):Integer;
-var Stamp:string;
+var Stamp,ActivityId:string;Card:TWLRows;
 begin
   CommentId:='';Error:='';
   if (BoardId='') or (CardId='') or (Pos(#0,BoardId+CardId+Text)>0) then begin Error:='Card not found';Exit(404);end;
@@ -4758,10 +4878,16 @@ begin
   if not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then
   begin Error:='Resource does not belong to this board or parent';Exit(404);end;
   if Trim(Text)='' then begin Error:='Invalid comment';Exit(400);end;
-  CommentId:=NewId;Stamp:=QuotedStr(NowIso);
+  CommentId:=NewId;ActivityId:=NewId;Stamp:=QuotedStr(NowIso);
+  Card:=T.Db.Query('SELECT COALESCE(listId,''''),COALESCE(swimlaneId,'''') FROM cards WHERE id='+QuotedStr(CardId)+';');
+  if Length(Card)<>1 then begin Error:='Card not found';Exit(404);end;
+  // WeKan's addComment activity, and the notifications it makes.
   if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO card_comments(id,boardId,cardId,userId,text,createdAt,modifiedAt) VALUES('+
     QuotedStr(CommentId)+','+QuotedStr(BoardId)+','+QuotedStr(CardId)+','+QuotedStr(UserId)+','+QuotedStr(Text)+','+
-    Stamp+','+Stamp+'); COMMIT;') then
+    Stamp+','+Stamp+'); INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) VALUES('+
+    QuotedStr(ActivityId)+',''addComment'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+QuotedStr(CardId)+','+QuotedStr(Card[0][0])+','+
+    QuotedStr(Card[0][1])+','+Stamp+','+Stamp+',json_object(''commentId'','+QuotedStr(CommentId)+')); '+
+    NotificationsSql(T.Db,UserId,BoardId,Card[0][0],CardId,Text,ActivityId)+'COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');CommentId:='';Error:='Could not add comment';Exit(500);end;
   Result:=200;
 end;
