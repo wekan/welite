@@ -2303,5 +2303,6 @@
   "label-text-overridden": "재정의됨",
   "label-text-follows-board": "보드의 기본값을 따름",
   "drag-to-reorder": "드래그하여 순서를 바꾸세요. 위쪽 및 아래쪽 화살표 키로 한 칸씩 이동합니다.",
-  "ask-move-reason": "카드 이동 → 설명?"
+  "ask-move-reason": "카드 이동 → 설명?",
+  "draggable": "드래그 가능"
 }

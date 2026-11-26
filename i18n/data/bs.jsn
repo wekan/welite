@@ -2303,5 +2303,6 @@
   "label-text-overridden": "zamijenjeno",
   "label-text-follows-board": "prati zadanu postavku table",
   "drag-to-reorder": "Prevucite za promjenu redoslijeda. Tipke sa strelicama gore i dolje pomjeraju za jedno mjesto.",
-  "ask-move-reason": "Premjesti karticu → Opis?"
+  "ask-move-reason": "Premjesti karticu → Opis?",
+  "draggable": "Može se prevlačiti"
 }

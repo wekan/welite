@@ -2303,5 +2303,6 @@
   "label-text-overridden": "kugqithisiwe",
   "label-text-follows-board": "ilandela okuzenzakalelayo kwebhodi",
   "drag-to-reorder": "Hudula ukuze ushintshe ukuhleleka. Izinkinobho zemicibisholo yaphezulu naphansi zihambisa indawo eyodwa.",
-  "ask-move-reason": "Hambisa Ikhadi → Incazelo?"
+  "ask-move-reason": "Hambisa Ikhadi → Incazelo?",
+  "draggable": "Kungahudulwa"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "pevotüköl",
   "label-text-follows-board": "sökon stabi taba",
   "drag-to-reorder": "Tränön ad votükön sökaleodi. Tastats sagitas sui e donio mufükons bosi me step bal.",
-  "ask-move-reason": "Begön kodi ven kads pamufükons"
+  "ask-move-reason": "Begön kodi ven kads pamufükons",
+  "draggable": "Tirovik"
 }

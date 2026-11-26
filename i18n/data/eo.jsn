@@ -2303,5 +2303,6 @@
   "label-text-overridden": "anstataŭigita",
   "label-text-follows-board": "sekvas la apriorajxon de la tabulo",
   "drag-to-reorder": "Trenu por reordigi. La sagoklavoj supren kaj malsupren movas je unu pozicio.",
-  "ask-move-reason": "Movi karton → Priskribo?"
+  "ask-move-reason": "Movi karton → Priskribo?",
+  "draggable": "Trenebla"
 }

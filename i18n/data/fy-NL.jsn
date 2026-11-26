@@ -2303,5 +2303,6 @@
   "label-text-overridden": "oerskreaun",
   "label-text-follows-board": "folget de standertynstelling fan it boerd",
   "drag-to-reorder": "Sleep om de folchoarder te feroarjen. De pylktoetsen omheech en omleech ferpleatse ien plak.",
-  "ask-move-reason": "Kaart ferpleatse → Beskriuwing?"
+  "ask-move-reason": "Kaart ferpleatse → Beskriuwing?",
+  "draggable": "Fersleepber"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "oorskryf",
   "label-text-follows-board": "volg bordverstek",
   "drag-to-reorder": "Sleep om die volgorde te verander. Die op- en afpyltjiesleutels skuif een posisie.",
-  "ask-move-reason": "Beweeg kaart → Beskrywing?"
+  "ask-move-reason": "Beweeg kaart → Beskrywing?",
+  "draggable": "Sleepbaar"
 }

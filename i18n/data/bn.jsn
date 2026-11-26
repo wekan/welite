@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ওভাররাইড করা হয়েছে",
   "label-text-follows-board": "বোর্ডের ডিফল্ট অনুসরণ করে",
   "drag-to-reorder": "ক্রম বদলাতে টেনে আনুন। ওপর ও নিচের তীরচিহ্নের কী এক ধাপ সরায়।",
-  "ask-move-reason": "কার্ড সরান → বিবরণ?"
+  "ask-move-reason": "কার্ড সরান → বিবরণ?",
+  "draggable": "টেনে নেওয়া যায়"
 }

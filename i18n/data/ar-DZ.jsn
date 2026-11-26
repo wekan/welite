@@ -2303,5 +2303,6 @@
   "label-text-overridden": "تم التجاوز",
   "label-text-follows-board": "يتبع الإعداد الافتراضي للوحة",
   "drag-to-reorder": "اسحب لتغيير الترتيب. ينقل مفتاحا السهم لأعلى ولأسفل العنصر خطوة واحدة.",
-  "ask-move-reason": "نقل البطاقة → وصف?"
+  "ask-move-reason": "نقل البطاقة → وصف?",
+  "draggable": "قابل للسحب"
 }

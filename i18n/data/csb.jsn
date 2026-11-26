@@ -2303,5 +2303,6 @@
   "label-text-overridden": "zmieniony",
   "label-text-follows-board": "jidze za domëslnym ùstôwã tôfli",
   "drag-to-reorder": "Przecygni, bë zmienic pòréńdã. Klawisze strzałków w górã i w dół przesëwają ò jedno môl.",
-  "ask-move-reason": "Przeniesc kôrtã → Òpisënk?"
+  "ask-move-reason": "Przeniesc kôrtã → Òpisënk?",
+  "draggable": "Mòże bëc przecygóné"
 }

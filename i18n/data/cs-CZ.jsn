@@ -2303,5 +2303,6 @@
   "label-text-overridden": "přepsáno",
   "label-text-follows-board": "řídí se výchozím nastavením tabule",
   "drag-to-reorder": "Přetažením změňte pořadí. Klávesy se šipkami nahoru a dolů posunou položku o jednu pozici.",
-  "ask-move-reason": "Přesunout kartu → Popis?"
+  "ask-move-reason": "Přesunout kartu → Popis?",
+  "draggable": "Přetahovatelné"
 }

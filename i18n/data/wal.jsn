@@ -2303,5 +2303,6 @@
   "label-text-overridden": "laamettida",
   "label-text-follows-board": "bookkiyaa gishetaa kaalliya",
   "drag-to-reorder": "Maaruwaa laammanawu goochcha. Pude kiyiyoogaanne duge wodhdhiyoogaa bessiya wonttafetu qulfeti issi tangguwaa qaassees.",
-  "ask-move-reason": "Kaardiyaa laammissa → Qonccissuwaa?"
+  "ask-move-reason": "Kaardiyaa laammissa → Qonccissuwaa?",
+  "draggable": "Goochchanaw danddayettees"
 }

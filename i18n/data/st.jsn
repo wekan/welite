@@ -2303,5 +2303,6 @@
   "label-text-overridden": "e fetotswe",
   "label-text-follows-board": "e latela tlhophiso ya tlwaelo ya boto",
   "drag-to-reorder": "Hula ho fetola tatellano. Dikonopo tsa metsu e yang hodimo le tlase di suthisa sebaka se le seng.",
-  "ask-move-reason": "Botsa lebaka ha ho suthiswa dikarete"
+  "ask-move-reason": "Botsa lebaka ha ho suthiswa dikarete",
+  "draggable": "E ka hulwa"
 }

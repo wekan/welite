@@ -2303,5 +2303,6 @@
   "label-text-overridden": "上書き済み",
   "label-text-follows-board": "ボードの既定値に従う",
   "drag-to-reorder": "ドラッグして並べ替えます。上矢印キーと下矢印キーで1つずつ移動します。",
-  "ask-move-reason": "カードの移動 → 詳細?"
+  "ask-move-reason": "カードの移動 → 詳細?",
+  "draggable": "ドラッグ可能"
 }

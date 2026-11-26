@@ -2303,5 +2303,6 @@
   "label-text-overridden": "chanjys",
   "label-text-follows-board": "sywya standard an vord",
   "drag-to-reorder": "Draylya rag arrey arta. An alhwedhow seth war-vann ha war-woles a wra gwaya unn gam.",
-  "ask-move-reason": "Gwaya an garten → Deskrifans?"
+  "ask-move-reason": "Gwaya an garten → Deskrifans?",
+  "draggable": "A yll bos draylys"
 }

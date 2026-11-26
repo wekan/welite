@@ -2303,5 +2303,6 @@
   "label-text-overridden": "přepisane",
   "label-text-follows-board": "sćěhuje standard tafle",
   "drag-to-reorder": "Ćehń, zo by porjad změnił. Šipkowej tasće horje a dele přesuwatej wo jedne městno.",
-  "ask-move-reason": "Při přesuwanju kartow so za přičinu prašeć"
+  "ask-move-reason": "Při přesuwanju kartow so za přičinu prašeć",
+  "draggable": "Ćahnjenjom přesuwajomne"
 }

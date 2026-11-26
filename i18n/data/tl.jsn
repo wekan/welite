@@ -2303,5 +2303,6 @@
   "label-text-overridden": "na-override",
   "label-text-follows-board": "sumusunod sa default ng board",
   "drag-to-reorder": "I-drag upang baguhin ang pagkakasunod-sunod. Ang mga pataas at pababang arrow key ay naglilipat nang isang puwesto.",
-  "ask-move-reason": "Ilipat ang kard → Paglalarawan?"
+  "ask-move-reason": "Ilipat ang kard → Paglalarawan?",
+  "draggable": "Maaaring i-drag"
 }

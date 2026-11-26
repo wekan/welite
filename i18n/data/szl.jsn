@@ -2303,5 +2303,6 @@
   "label-text-overridden": "nadpisane",
   "label-text-follows-board": "idzie za wychodnym sztelōnkym tabule",
   "drag-to-reorder": "Przeciōngnij, coby zmienić porzōndek. Klawisze strzałek do gōry i na dōł przesuwajōm ô jedno miyjsce.",
-  "ask-move-reason": "Przeniyś karta → Ôpis?"
+  "ask-move-reason": "Przeniyś karta → Ôpis?",
+  "draggable": "Do przeciōnganiŏ"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "alãxit",
   "label-text-follows-board": "urmeadzã predefinitlu ali tabelã",
   "drag-to-reorder": "Tradzi ti s-schimbi arãndarea. Tastili cu sãdzãts n-sus shi n-gios mutã cu un loc.",
-  "ask-move-reason": "Ãntreabã trã itie cãndu s-mutã cãrtsã"
+  "ask-move-reason": "Ãntreabã trã itie cãndu s-mutã cãrtsã",
+  "draggable": "S'poati trãdziri"
 }

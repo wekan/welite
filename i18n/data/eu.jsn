@@ -2303,5 +2303,6 @@
   "label-text-overridden": "gainidatzita",
   "label-text-follows-board": "taularen lehenespena jarraitzen du",
   "drag-to-reorder": "Arrastatu ordena aldatzeko. Gora eta behera gezi-teklek posizio bat mugitzen dute.",
-  "ask-move-reason": "Lekuz aldatu txartela → Deskripzioa?"
+  "ask-move-reason": "Lekuz aldatu txartela → Deskripzioa?",
+  "draggable": "Arrastagarria"
 }

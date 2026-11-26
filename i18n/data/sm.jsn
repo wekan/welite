@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ua suia",
   "label-text-follows-board": "e mulimuli i le mea masani a le laupapa",
   "drag-to-reorder": "Toso e sui ai le faasologa. O ki aū i luga ma lalo e sii ai i le tulaga e tasi.",
-  "ask-move-reason": "Sii le pepa → Faamatalaga?"
+  "ask-move-reason": "Sii le pepa → Faamatalaga?",
+  "draggable": "E mafai ona toso"
 }

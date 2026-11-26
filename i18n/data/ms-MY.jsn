@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ditindih",
   "label-text-follows-board": "mengikut lalai papan",
   "drag-to-reorder": "Seret untuk menyusun semula. Kekunci anak panah atas dan bawah menggerakkan satu langkah.",
-  "ask-move-reason": "Pindah Kad → Penerangan?"
+  "ask-move-reason": "Pindah Kad → Penerangan?",
+  "draggable": "Boleh diseret"
 }

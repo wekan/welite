@@ -2303,5 +2303,6 @@
   "label-text-overridden": "byahinduwe",
   "label-text-follows-board": "gukurikiza mburabuzi y'ikibaho",
   "drag-to-reorder": "Kurura kugira ngo uhindure urukurikirane. Utubuto tw’imyambi ijya hejuru no hasi twimura umwanya umwe.",
-  "ask-move-reason": "Kwimura ikarita → Ibisobanuro?"
+  "ask-move-reason": "Kwimura ikarita → Ibisobanuro?",
+  "draggable": "Gishobora gukururwa"
 }

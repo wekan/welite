@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ditimpa",
   "label-text-follows-board": "mengikuti default papan",
   "drag-to-reorder": "Seret untuk mengubah urutan. Tombol panah atas dan bawah memindahkan satu langkah.",
-  "ask-move-reason": "Pindahkan kartu → Deskripsi?"
+  "ask-move-reason": "Pindahkan kartu → Deskripsi?",
+  "draggable": "Dapat diseret"
 }

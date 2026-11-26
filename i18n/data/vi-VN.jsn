@@ -2303,5 +2303,6 @@
   "label-text-overridden": "đã ghi đè",
   "label-text-follows-board": "theo mặc định của bảng",
   "drag-to-reorder": "Kéo để sắp xếp lại. Các phím mũi tên lên và xuống di chuyển một vị trí.",
-  "ask-move-reason": "Di chuyển Thẻ → Mô tả?"
+  "ask-move-reason": "Di chuyển Thẻ → Mô tả?",
+  "draggable": "Có thể kéo"
 }

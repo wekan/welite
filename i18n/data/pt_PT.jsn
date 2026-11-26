@@ -2303,5 +2303,6 @@
   "label-text-overridden": "substituído",
   "label-text-follows-board": "segue a predefinição do quadro",
   "drag-to-reorder": "Arraste para reordenar. As teclas de seta para cima e para baixo movem uma posição.",
-  "ask-move-reason": "Mover o Cartão → Descrição?"
+  "ask-move-reason": "Mover o Cartão → Descrição?",
+  "draggable": "Arrastável"
 }

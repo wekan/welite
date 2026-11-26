@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sobreescrit",
   "label-text-follows-board": "segueix el valor per defecte del tauler",
   "drag-to-reorder": "Arrossegueu per canviar l’ordre. Les tecles de fletxa amunt i avall mouen una posició.",
-  "ask-move-reason": "Moure fitxa → Descripció?"
+  "ask-move-reason": "Moure fitxa → Descripció?",
+  "draggable": "Arrossegable"
 }

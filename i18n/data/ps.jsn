@@ -2303,5 +2303,6 @@
   "label-text-overridden": "لغوه شوی",
   "label-text-follows-board": "د بورډ تلواله تعقيبوي",
   "drag-to-reorder": "د ترتیب بدلولو لپاره یې راکش کړئ. د پورته او ښکته غشي کیلي یو ځای خوځوي.",
-  "ask-move-reason": "کارت لېږدول → تشريح?"
+  "ask-move-reason": "کارت لېږدول → تشريح?",
+  "draggable": "د راکښلو وړ"
 }

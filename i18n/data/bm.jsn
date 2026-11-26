@@ -2303,5 +2303,6 @@
   "label-text-overridden": "a caman yɛlɛma",
   "label-text-follows-board": "a bɛ tugu walanda ka kunbɛnbaliya la",
   "drag-to-reorder": "A sama walasa a labɛncogo yɛlɛma. Sanfɛ ani duguma binyɛ-kunbutonw bɛ a lamaga yɔrɔ kelen.",
-  "ask-move-reason": "Karti bila yɔrɔ wɛrɛ → Ɲɛfɔli?"
+  "ask-move-reason": "Karti bila yɔrɔ wɛrɛ → Ɲɛfɔli?",
+  "draggable": "A bɛ se ka sama"
 }

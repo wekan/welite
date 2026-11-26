@@ -2303,5 +2303,6 @@
   "label-text-overridden": "remplaçat",
   "label-text-follows-board": "sègue lo defaut del tablèu",
   "drag-to-reorder": "Lisatz per cambiar l’òrdre. Las tòcas de flècha cap amont e cap aval desplaçan d’una posicion.",
-  "ask-move-reason": "Bolegar la carta → Descripcion?"
+  "ask-move-reason": "Bolegar la carta → Descripcion?",
+  "draggable": "Se pòt far lisar"
 }

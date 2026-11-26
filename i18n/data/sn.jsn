@@ -2303,5 +2303,6 @@
   "label-text-overridden": "zvashandurwa",
   "label-text-follows-board": "inotevera zvakajairika zvebhodhi",
   "drag-to-reorder": "Dhonza kuti uchinje kurongeka. Mabhatani emiseve yokumusoro neyokuzasi anofambisa nzvimbo imwe.",
-  "ask-move-reason": "Fambisa kadhi → Tsanangudzo?"
+  "ask-move-reason": "Fambisa kadhi → Tsanangudzo?",
+  "draggable": "Zvinogona kudhonzwa"
 }

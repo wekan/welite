@@ -2303,5 +2303,6 @@
   "label-text-overridden": "überschrieben",
   "label-text-follows-board": "folgt der Board-Standardeinstellung",
   "drag-to-reorder": "Zum Umordnen ziehen. Die Pfeiltasten nach oben und unten verschieben um einen Schritt.",
-  "ask-move-reason": "Karte verschieben → Beschreibung?"
+  "ask-move-reason": "Karte verschieben → Beschreibung?",
+  "draggable": "Verschiebbar"
 }

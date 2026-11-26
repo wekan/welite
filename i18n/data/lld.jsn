@@ -2303,5 +2303,6 @@
   "label-text-overridden": "mudà",
   "label-text-follows-board": "va do l standard dla tofl",
   "drag-to-reorder": "Strasciné per mudé l orden. I tasc cun les freces in su y in ju sposta de na posizion.",
-  "ask-move-reason": "Dumandé na rejon canche se sposta ciartes"
+  "ask-move-reason": "Dumandé na rejon canche se sposta ciartes",
+  "draggable": "Se possa tiré"
 }

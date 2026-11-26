@@ -2303,5 +2303,6 @@
   "label-text-overridden": "diystyriwyd",
   "label-text-follows-board": "yn dilyn rhagosodiad y bwrdd",
   "drag-to-reorder": "Llusgwch i newid y drefn. Mae’r bysellau saeth i fyny ac i lawr yn symud un safle.",
-  "ask-move-reason": "Cerdyn Symud → Disgrifiad?"
+  "ask-move-reason": "Cerdyn Symud → Disgrifiad?",
+  "draggable": "Gellir ei lusgo"
 }

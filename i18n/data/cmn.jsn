@@ -2303,5 +2303,6 @@
   "label-text-overridden": "已覆盖",
   "label-text-follows-board": "跟随看板默认设置",
   "drag-to-reorder": "拖动以调整顺序。按向上和向下箭头键可移动一个位置。",
-  "ask-move-reason": "移动卡 → 描述?"
+  "ask-move-reason": "移动卡 → 描述?",
+  "draggable": "可拖动"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "choHlu'pu'",
   "label-text-follows-board": "raS DichmoH tlha'",
   "drag-to-reorder": "patlhmey DachoHmeH yIHoq. Dung bIng je 'angbogh leQmey Dalo'DI', Daq wa' vIHmoHlu'.",
-  "ask-move-reason": "'echletHommey vIHmoHlu'DI' meq yItlhob"
+  "ask-move-reason": "'echletHommey vIHmoHlu'DI' meq yItlhob",
+  "draggable": "HoqlaH vay'"
 }

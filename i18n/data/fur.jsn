@@ -2303,5 +2303,6 @@
   "label-text-overridden": "modificât",
   "label-text-follows-board": "sedi il predefinît de bachece",
   "drag-to-reorder": "Strissine par cambiâ l’ordin. I tascj cu lis frecis in sù e in jù a spostin di une posizion.",
-  "ask-move-reason": "Sposte la cjarte → Descrizion?"
+  "ask-move-reason": "Sposte la cjarte → Descrizion?",
+  "draggable": "Si pues strissinâ"
 }

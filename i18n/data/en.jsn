@@ -2303,5 +2303,6 @@
   "label-text-overridden": "overridden",
   "label-text-follows-board": "follows board default",
   "drag-to-reorder": "Drag to reorder. Up and Down arrow keys move one step.",
-  "ask-move-reason": "Ask for a reason when moving cards"
+  "ask-move-reason": "Ask for a reason when moving cards",
+  "draggable": "Draggable"
 }

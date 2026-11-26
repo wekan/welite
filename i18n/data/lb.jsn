@@ -2303,5 +2303,6 @@
   "label-text-overridden": "iwwerschriwwen",
   "label-text-follows-board": "follegt der Standardastellung vum Bord",
   "drag-to-reorder": "Zitt fir d’Reiefolleg ze änneren. D’Feiltasten no uewen an no ënne réckelen ëm eng Plaz.",
-  "ask-move-reason": "Kaart réckelen → Beschreiwung?"
+  "ask-move-reason": "Kaart réckelen → Beschreiwung?",
+  "draggable": "Verréckelbar"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ginsaliwnan",
   "label-text-follows-board": "nasunod ha daan nga takda han pisara",
   "drag-to-reorder": "Iguyod basi bag-uhon an pagkasunod-sunod. An mga arrow key tipaigbaw ngan tipaubos nagpapabalhin hin usa nga puwesto.",
-  "ask-move-reason": "Ibalhin an Card → Deskripsyon?"
+  "ask-move-reason": "Ibalhin an Card → Deskripsyon?",
+  "draggable": "Mahimo iguyod"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sobrescrito",
   "label-text-follows-board": "sigue el valor predeterminado del tablero",
   "drag-to-reorder": "Arrastre para reordenar. Las teclas de flecha arriba y abajo desplazan una posición.",
-  "ask-move-reason": "Mover Tarjeta → Descripción?"
+  "ask-move-reason": "Mover Tarjeta → Descripción?",
+  "draggable": "Arrastrable"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "caghlaait",
   "label-text-follows-board": "geiyrt er y vun-choyrle voayrd",
   "drag-to-reorder": "Tayrn dy chur ayns oardagh noa. Ta ogheryn side seose as sheese gleashaghey un cheim.",
-  "ask-move-reason": "Gleashagh y kaart → Coontey?"
+  "ask-move-reason": "Gleashagh y kaart → Coontey?",
+  "draggable": "Foddee oo tayrn eh"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "an maye gurbi",
   "label-text-follows-board": "yana bin tsohon saitin allo",
   "drag-to-reorder": "Ja don sauya jeri. Maɓallan kibiya sama da ƙasa suna matsar da wuri ɗaya.",
-  "ask-move-reason": "Matsar da kati → Bayani?"
+  "ask-move-reason": "Matsar da kati → Bayani?",
+  "draggable": "Ana iya ja"
 }

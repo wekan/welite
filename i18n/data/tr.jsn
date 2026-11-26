@@ -2303,5 +2303,6 @@
   "label-text-overridden": "geçersiz kılındı",
   "label-text-follows-board": "panonun varsayılanını izler",
   "drag-to-reorder": "Sıralamayı değiştirmek için sürükleyin. Yukarı ve aşağı ok tuşları bir adım taşır.",
-  "ask-move-reason": "Kartı taşı → Açıklama?"
+  "ask-move-reason": "Kartı taşı → Açıklama?",
+  "draggable": "Sürüklenebilir"
 }

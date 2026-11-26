@@ -2303,5 +2303,6 @@
   "label-text-overridden": "senisim pinis",
   "label-text-follows-board": "i bihainim seting bilong bot",
   "drag-to-reorder": "Pulim bilong senisim oda. Ol aro ki i go antap na daun i muv wanpela ples.",
-  "ask-move-reason": "Muvim kat → Stori?"
+  "ask-move-reason": "Muvim kat → Stori?",
+  "draggable": "Yu inap pulim"
 }

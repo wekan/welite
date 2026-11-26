@@ -2303,5 +2303,6 @@
   "label-text-overridden": "已经覆盖",
   "label-text-follows-board": "跟看板默认设置",
   "drag-to-reorder": "拖动来调换次序。向上搭向下箭头键一趟移动一个位置。",
-  "ask-move-reason": "移动卡片个辰光询问原因"
+  "ask-move-reason": "移动卡片个辰光询问原因",
+  "draggable": "好拖动"
 }

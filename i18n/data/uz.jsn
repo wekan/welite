@@ -2303,5 +2303,6 @@
   "label-text-overridden": "bekor qilindi",
   "label-text-follows-board": "doskaning standart sozlamasiga amal qiladi",
   "drag-to-reorder": "Tartibni oʻzgartirish uchun sudrang. Yuqoriga va pastga yoʻnalish tugmalari bir oʻringa siljitadi.",
-  "ask-move-reason": "Kartani ko'chirish → Tavsif?"
+  "ask-move-reason": "Kartani ko'chirish → Tavsif?",
+  "draggable": "Sudrash mumkin"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "waɗtaama",
   "label-text-follows-board": "jokki teelte kartal",
   "drag-to-reorder": "Daas ngam feewtinde deggondiral kadi. Butoŋaaji piaali dow e les eggina feere wooto.",
-  "ask-move-reason": "Eggin kartal → Sifaa?"
+  "ask-move-reason": "Eggin kartal → Sifaa?",
+  "draggable": "Ena waawi daaseede"
 }

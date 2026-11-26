@@ -2303,5 +2303,6 @@
   "label-text-overridden": "tilsidesat",
   "label-text-follows-board": "følger tavlens standard",
   "drag-to-reorder": "Træk for at ændre rækkefølgen. Pil op og pil ned flytter ét trin.",
-  "ask-move-reason": "Flyt kort → Beskrivelse?"
+  "ask-move-reason": "Flyt kort → Beskrivelse?",
+  "draggable": "Kan trækkes"
 }

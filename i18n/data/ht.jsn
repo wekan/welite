@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ranplase",
   "label-text-follows-board": "swiv reglaj pa defo tablo a",
   "drag-to-reorder": "Trennen pou chanje lòd la. Touch flèch monte ak desann yo deplase yon pozisyon.",
-  "ask-move-reason": "Mande yon rezon lè yo deplase kat"
+  "ask-move-reason": "Mande yon rezon lè yo deplase kat",
+  "draggable": "Ou ka trennen li"
 }

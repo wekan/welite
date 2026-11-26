@@ -510,6 +510,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   minicards' sides with its cards and the profile once, so it is no slower
   for them. 13 of WeKan's 14 Card Settings tests pass, and 440 of WeKan's
   tests in one run.
+- Add Card's hamburger's table of what may be dragged on the board (WeKan's
+  setBoardDragging, a board admin's or the site admin's) and Subtasks
+  Settings' deposit board and list: only a board the user may write, and a
+  list or swimlane on it; anything else is refused and recorded
+  (SubtaskDepositBleed).
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

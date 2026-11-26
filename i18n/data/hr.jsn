@@ -2303,5 +2303,6 @@
   "label-text-overridden": "zaobiđeno",
   "label-text-follows-board": "prati zadanu postavku ploče",
   "drag-to-reorder": "Povucite za promjenu redoslijeda. Tipke sa strelicama gore i dolje pomiču za jedno mjesto.",
-  "ask-move-reason": "Zatraži razlog pri premještanju kartica"
+  "ask-move-reason": "Zatraži razlog pri premještanju kartica",
+  "draggable": "Može se povlačiti"
 }

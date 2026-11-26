@@ -2303,5 +2303,6 @@
   "label-text-overridden": "felülbírálva",
   "label-text-follows-board": "a tábla alapértelmezését követi",
   "drag-to-reorder": "Húzza az átrendezéshez. A fel és le nyílbillentyűk egy hellyel mozgatnak.",
-  "ask-move-reason": "Kártya áthelyezése → Leírás?"
+  "ask-move-reason": "Kártya áthelyezése → Leírás?",
+  "draggable": "Húzással mozgatható"
 }

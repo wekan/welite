@@ -2303,5 +2303,6 @@
   "label-text-overridden": "anashkaluar",
   "label-text-follows-board": "ndjek parazgjedhjen e tabelës",
   "drag-to-reorder": "Tërhiqeni për të ndryshuar rendin. Tastet me shigjeta lart dhe poshtë zhvendosin me një pozicion.",
-  "ask-move-reason": "Zhvendos kartën → Përshkrimi?"
+  "ask-move-reason": "Zhvendos kartën → Përshkrimi?",
+  "draggable": "I tërheqshëm"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "kuo liliu",
   "label-text-follows-board": "muimui he fokotuʻutuʻu ʻo e papā",
   "drag-to-reorder": "Fusi ke liliu ʻa e fakahokohoko. ʻOku ʻave ʻe he ngaahi kī foʻi tao ki ʻolunga mo lalo ha tuʻunga ʻe taha.",
-  "ask-move-reason": "Hiki ʻa e kaati → Fakamatala?"
+  "ask-move-reason": "Hiki ʻa e kaati → Fakamatala?",
+  "draggable": "ʻE lava ke toho"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sáraithe",
   "label-text-follows-board": "leanann sé réamhshocrú an chláir",
   "drag-to-reorder": "Tarraing chun an t-ord a athrú. Bogann na heochracha saighde suas agus síos áit amháin.",
-  "ask-move-reason": "Iarr cúis agus cártaí á mbogadh"
+  "ask-move-reason": "Iarr cúis agus cártaí á mbogadh",
+  "draggable": "Intarraingthe"
 }

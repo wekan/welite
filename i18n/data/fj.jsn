@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sa vakasautaki",
   "label-text-follows-board": "muria na ivakarau ni iVola",
   "drag-to-reorder": "Dreta mo veisautaka na veitaravi. Na ibulukau ni gasau cake kei ra e tosoya e dua na itutu.",
-  "ask-move-reason": "Toso na kadi → Vakamacala?"
+  "ask-move-reason": "Toso na kadi → Vakamacala?",
+  "draggable": "E rawa ni yaraki"
 }

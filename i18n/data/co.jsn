@@ -2303,5 +2303,6 @@
   "label-text-overridden": "persunalizatu",
   "label-text-follows-board": "seguita u valore predefinitu di a tavula",
   "drag-to-reorder": "Trascina per cambià l’ordine. I tasti à freccia in sù è in ghjò movenu d’una pusizione.",
-  "ask-move-reason": "Dumandà una ragione quandu si spostanu e carte"
+  "ask-move-reason": "Dumandà una ragione quandu si spostanu e carte",
+  "draggable": "Trascinabile"
 }

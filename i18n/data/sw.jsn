@@ -2303,5 +2303,6 @@
   "label-text-overridden": "imebatilishwa",
   "label-text-follows-board": "inafuata chaguo-msingi la ubao",
   "drag-to-reorder": "Buruta ili kubadilisha mpangilio. Vitufe vya mishale ya juu na chini husogeza nafasi moja.",
-  "ask-move-reason": "Hamisha Kadi → Maelezo?"
+  "ask-move-reason": "Hamisha Kadi → Maelezo?",
+  "draggable": "Inaweza kuburutwa"
 }

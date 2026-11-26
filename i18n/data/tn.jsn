@@ -2303,5 +2303,6 @@
   "label-text-overridden": "e fetotswe",
   "label-text-follows-board": "e latela tlwaelo ya boto",
   "drag-to-reorder": "Goga go fetola thulaganyo. Dikonopo tsa metsu e e yang kwa godimo le kwa tlase di sutisa lefelo le le lengwe.",
-  "ask-move-reason": "Suthisa karata → Tlhaloso?"
+  "ask-move-reason": "Suthisa karata → Tlhaloso?",
+  "draggable": "E ka gogwa"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "igqithisiwe",
   "label-text-follows-board": "ilandela umgangatho wangoku webhodi",
   "drag-to-reorder": "Tsala ukuze utshintshe ulandelelwano. Amaqhosha eentolo eziya phezulu nasezantsi asusa indawo enye.",
-  "ask-move-reason": "Hambisa iKhadi → Inkcazo?"
+  "ask-move-reason": "Hambisa iKhadi → Inkcazo?",
+  "draggable": "Inokutsalwa"
 }

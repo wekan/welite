@@ -497,6 +497,28 @@ def http_checks(server, tmp, backend):
         assert method('setCardCollapsed', [True])[0] == 200 and b'card-details-collapsed' in opened()
         assert method('setCardCollapsed', ['yes'])[0] == 400
         assert method('setCardCollapsed', [False])[0] == 200 and b'card-details-collapsed' not in opened()
+        # Card's hamburger: whether each kind may be dragged (setBoardDragging),
+        # and Subtasks Settings' deposit - a board the caller may write, a list
+        # of it. Negative: a stranger, an unknown kind, a board or list that
+        # is not the caller's to use (SubtaskDepositBleed).
+        page = shown()
+        assert b'class="board-drag-settings"' in page and b'data-kind="subtask"' in page and b'js-field-deposit-board' in page
+        assert method('setBoardDragging', [board_id, 'card', False])[0] == 200
+        assert b'data-kind="card" aria-label' in shown()
+        assert method('setBoardDragging', [board_id, 'card', False], cookie=stranger)[0] == 403
+        assert method('setBoardDragging', [board_id, 'nope', False])[0] == 400
+        assert method('setBoardDragging', [board_id, 'card', 'no'])[0] == 400
+        assert method('setBoardDragging', [board_id, 'card', True])[0] == 200
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'subtasksDefaultBoardId': board_id, 'subtasksDefaultListId': list_id}}])[0] == 200
+        for bad in [{'subtasksDefaultBoardId': 'not-a-board'}, {'subtasksDefaultListId': 'no-such-list'},
+                    {'subtasksDefaultBoardId': 'a"b'}, {'subtasksDefaultListId': 7}]:
+            assert method('/boards/update', [{'_id': board_id}, {'$set': bad}])[0] == 403, bad
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='boards'").fetchone():
+                    assert con.execute('SELECT subtasksDefaultBoardId,subtasksDefaultListId FROM boards WHERE id=?', (board_id,)).fetchone() == (board_id, list_id)
+                    assert json.loads(con.execute('SELECT settings_json FROM boards WHERE id=?', (board_id,)).fetchone()[0])['allowsCardDragging'] is True
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'subtasksDefaultBoardId': None}}])[0] == 200
         # The Rules need the shared store: here they say so, and write nothing.
         status, _, body, _ = request('POST', '/_methods/rules.createRule',
                                      [board_id, 'R', {'activityType': 'createCard'}, {'actionType': 'archive'}], cookie=owner, as_json=True)

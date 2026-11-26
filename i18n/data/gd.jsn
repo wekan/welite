@@ -2303,5 +2303,6 @@
   "label-text-overridden": "tar-àithnte",
   "label-text-follows-board": "a' leantainn gnàth-shuidheachadh a' bhùird",
   "drag-to-reorder": "Slaod gus an t-òrdugh atharrachadh. Gluaisidh na h-iuchraichean saighde suas agus sìos aon àite.",
-  "ask-move-reason": "Iarr adhbhar nuair a ghluaiseas tu cairtean"
+  "ask-move-reason": "Iarr adhbhar nuair a ghluaiseas tu cairtean",
+  "draggable": "Gabhaidh a shlaodadh"
 }

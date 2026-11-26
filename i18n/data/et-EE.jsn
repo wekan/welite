@@ -2303,5 +2303,6 @@
   "label-text-overridden": "tühistatud",
   "label-text-follows-board": "järgib tahvli vaikeseadet",
   "drag-to-reorder": "Järjekorra muutmiseks lohista. Üles- ja allanooleklahvid liigutavad ühe koha võrra.",
-  "ask-move-reason": "Liikumiskaart → Kirjeldus?"
+  "ask-move-reason": "Liikumiskaart → Kirjeldus?",
+  "draggable": "Lohistatav"
 }

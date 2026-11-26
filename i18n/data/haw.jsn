@@ -2303,5 +2303,6 @@
   "label-text-overridden": "hoʻololi ʻia",
   "label-text-follows-board": "hahai i ka papa maʻamau",
   "drag-to-reorder": "E alakō e hoʻololi i ke kaʻina. Hoʻoneʻe nā kī pua i luna a i lalo i hoʻokahi kūlana.",
-  "ask-move-reason": "Hoʻoneʻe i ke kāleka → Wehewehe?"
+  "ask-move-reason": "Hoʻoneʻe i ke kāleka → Wehewehe?",
+  "draggable": "Hiki ke kauō"
 }

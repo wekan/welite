@@ -2303,5 +2303,6 @@
   "label-text-overridden": "vajehtadud",
   "label-text-follows-board": "i tevhela zwe bammbi ḽa ita",
   "drag-to-reorder": "Veda, miše vajehtada järgendust. Ülähäks da alahaks ozutajad nol’klavišad sirdadas ühten sijan verran.",
-  "ask-move-reason": "Sirdä kart → Kirjutuz?"
+  "ask-move-reason": "Sirdä kart → Kirjutuz?",
+  "draggable": "Saa vedada"
 }

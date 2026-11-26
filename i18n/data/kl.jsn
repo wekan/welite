@@ -2303,5 +2303,6 @@
   "label-text-overridden": "allanngortinneqarpoq",
   "label-text-follows-board": "allattaviup atuutsissutaanik malinnippoq",
   "drag-to-reorder": "Tulleriinnerat allanngortinniarlugu uniaruk. Toortakkat qummut ammullu tikkuutillit ataatsimik nuussissapput.",
-  "ask-move-reason": "Kortsi nuuguk → Nassuiaat?"
+  "ask-move-reason": "Kortsi nuuguk → Nassuiaat?",
+  "draggable": "Uniarneqarsinnaavoq"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "prepísané",
   "label-text-follows-board": "riadi sa predvoleným nastavením tabule",
   "drag-to-reorder": "Potiahnutím zmeňte poradie. Klávesy so šípkami nahor a nadol posunú položku o jednu pozíciu.",
-  "ask-move-reason": "Pýtať sa na dôvod pri presúvaní kariet"
+  "ask-move-reason": "Pýtať sa na dôvod pri presúvaní kariet",
+  "draggable": "Presúvateľné potiahnutím"
 }

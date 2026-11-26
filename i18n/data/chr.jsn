@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ᎨᏥᏁᏟᏴᏒ",
   "label-text-follows-board": "ᎦᏂᏓᏅᏗᏱ ᏗᏓᎴᏂᏍᎬ ᎠᏍᏓᏩᏗᏒ",
   "drag-to-reorder": "ᎦᎾᏏᏅᏍᏗ ᏔᎵᏁ ᏗᏙᎳᎩ ᏗᎦᏁᏟᏴᏍᏗ. ᎦᎸᎳᏗ ᎠᎴ ᎡᎳᏗ ᏗᎦᏘᏅᏗ ᏗᏐᏢᏍᏙᏗ ᏌᏊ ᎤᏙᏢᏒ ᏓᎦᏅᎭ.",
-  "ask-move-reason": "ᎪᏪᎵ ᎯᏘᏅᏍᏓ → ᎧᏃᎮᏗ?"
+  "ask-move-reason": "ᎪᏪᎵ ᎯᏘᏅᏍᏓ → ᎧᏃᎮᏗ?",
+  "draggable": "ᎬᏩᎵ ᎤᎾᏌᏁᏍᏗ"
 }

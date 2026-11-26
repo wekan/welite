@@ -2303,5 +2303,6 @@
   "label-text-overridden": "kikyusiddwa",
   "label-text-follows-board": "egoberera olubaawo",
   "drag-to-reorder": "Sika okukyusa ensengeka. Amapeesa g’obusaale obw’okugenda waggulu ne wansi gasimbula ekifo kimu.",
-  "ask-move-reason": "Simbula ekaadi → Ennyonyola?"
+  "ask-move-reason": "Simbula ekaadi → Ennyonyola?",
+  "draggable": "Kisobola okusikibwa"
 }

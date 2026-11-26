@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ləğv edildi",
   "label-text-follows-board": "lövhənin standartına uyğundur",
   "drag-to-reorder": "Sıranı dəyişmək üçün sürükləyin. Yuxarı və aşağı ox düymələri bir mövqe hərəkət etdirir.",
-  "ask-move-reason": "Kartı köçürün → Təsvir?"
+  "ask-move-reason": "Kartı köçürün → Təsvir?",
+  "draggable": "Sürüklənə bilən"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sobreescrito",
   "label-text-follows-board": "sigue lo predeterminau d'o tablero",
   "drag-to-reorder": "Arrocegar ta cambiar l’orden. As teclas de flecha enta alto y enta baixo mueven una posición.",
-  "ask-move-reason": "Mover a tarcheta → Descripción?"
+  "ask-move-reason": "Mover a tarcheta → Descripción?",
+  "draggable": "Se puede arrocegar"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "wɔasesa",
   "label-text-follows-board": "edi bɔɔd no nhyehyɛe a wɔahyɛ dedaw no akyi",
   "drag-to-reorder": "Twe na sesa sɛnea wɔahyehyɛ no. Agyan a ɛkɔ soro ne fam no bɔtn tu baabi baako.",
-  "ask-move-reason": "Fa kaad no kɔ baabi → Nkyerɛkyerɛmu?"
+  "ask-move-reason": "Fa kaad no kɔ baabi → Nkyerɛkyerɛmu?",
+  "draggable": "Wotumi twe"
 }

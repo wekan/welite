@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sostituìo",
   "label-text-follows-board": "seguisi el predefinìo del quadro",
   "drag-to-reorder": "Strasina par cambiar l’ordine. I tasti co łe frece in su e in zo i sposta de na posision.",
-  "ask-move-reason": "Domanda un motivo co se sposta le schede"
+  "ask-move-reason": "Domanda un motivo co se sposta le schede",
+  "draggable": "Se pol strasinar"
 }

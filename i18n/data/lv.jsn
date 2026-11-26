@@ -2303,5 +2303,6 @@
   "label-text-overridden": "pārrakstīts",
   "label-text-follows-board": "seko dēļa noklusējumam",
   "drag-to-reorder": "Velciet, lai mainītu secību. Augšupvērstās un lejupvērstās bultiņas taustiņi pārvieto par vienu pozīciju.",
-  "ask-move-reason": "Pārvietot kartiņu → Apraksts?"
+  "ask-move-reason": "Pārvietot kartiņu → Apraksts?",
+  "draggable": "Velkams"
 }

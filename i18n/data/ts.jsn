@@ -2303,5 +2303,6 @@
   "label-text-overridden": "xi cinciwile",
   "label-text-follows-board": "ya landzelela xiyimo xa bodo",
   "drag-to-reorder": "Koka ku cinca nandzelelano. Tikunupu ta miseve ya le henhla ni le hansi ti fambisa ndhawu yin’we.",
-  "ask-move-reason": "Rhurhisa khadi → Nhlamuselo?"
+  "ask-move-reason": "Rhurhisa khadi → Nhlamuselo?",
+  "draggable": "Swi nga kokiwa"
 }

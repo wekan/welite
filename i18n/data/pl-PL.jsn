@@ -2303,5 +2303,6 @@
   "label-text-overridden": "nadpisane",
   "label-text-follows-board": "zgodne z domyślnym ustawieniem tablicy",
   "drag-to-reorder": "Przeciągnij, aby zmienić kolejność. Klawisze strzałek w górę i w dół przesuwają o jedną pozycję.",
-  "ask-move-reason": "Przenieś kartę → Opis?"
+  "ask-move-reason": "Przenieś kartę → Opis?",
+  "draggable": "Można przeciągać"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "tikrasqa",
   "label-text-follows-board": "pizarrapa ñawpaq kamachiynin qatin",
   "drag-to-reorder": "Watiqmanta ñiqichanapaq aysay. Hananman hinallataq urayman wach'i ñit'inakuna huk tatkillamanta kuyuchinku.",
-  "ask-move-reason": "Kartata astay → Willakuy?"
+  "ask-move-reason": "Kartata astay → Willakuy?",
+  "draggable": "Aysayta atikun"
 }

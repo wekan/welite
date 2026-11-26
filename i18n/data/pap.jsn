@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sobreskirbí",
   "label-text-follows-board": "ta sigui e default di tabla",
   "drag-to-reorder": "Rastra pa kambia e òrdu. E teklanan di flecha ariba i abou ta move un posishon.",
-  "ask-move-reason": "Move e karchi → Deskripshon?"
+  "ask-move-reason": "Move e karchi → Deskripshon?",
+  "draggable": "Por lastra"
 }

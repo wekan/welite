@@ -2303,5 +2303,6 @@
   "label-text-overridden": "remplacé",
   "label-text-follows-board": "suit le réglage par défaut du tableau",
   "drag-to-reorder": "Faites glisser pour réorganiser. Les touches fléchées Haut et Bas déplacent d’un cran.",
-  "ask-move-reason": "Déplacer la carte → Texte descriptif?"
+  "ask-move-reason": "Déplacer la carte → Texte descriptif?",
+  "draggable": "Déplaçable par glissement"
 }

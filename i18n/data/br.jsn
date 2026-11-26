@@ -2303,5 +2303,6 @@
   "label-text-overridden": "flastret",
   "label-text-follows-board": "heuliañ dre-ziouer ar follenn",
   "drag-to-reorder": "Sachit evit cheñch an urzh. An touchennoù biroù d’an nec’h ha d’an traoñ a zilec’h a ul lec’h.",
-  "ask-move-reason": "Dilec’hiañ ar gartenn → Deskrivadur?"
+  "ask-move-reason": "Dilec’hiañ ar gartenn → Deskrivadur?",
+  "draggable": "Gallout a reer riklañ"
 }

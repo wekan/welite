@@ -2303,5 +2303,6 @@
   "label-text-overridden": "jijjiirame",
   "label-text-follows-board": "durduuba bordii hordofa",
   "drag-to-reorder": "Tartiiba jijjiiruuf harkisi. Qabduuwwan xiyyaa olii fi gadii bakka tokko sochoosu.",
-  "ask-move-reason": "Kaardii jijjiiri → Ibsa?"
+  "ask-move-reason": "Kaardii jijjiiri → Ibsa?",
+  "draggable": "Harkifamuu danda'a"
 }

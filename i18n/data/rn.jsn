@@ -2303,5 +2303,6 @@
   "label-text-overridden": "vyahinduwe",
   "label-text-follows-board": "gukurikira ivyagenywe n'imbaho",
   "drag-to-reorder": "Kurura kugira uhindure urukurikirane. Utubuto tw’imyampi ija hejuru no hasi twimura ikibanza kimwe.",
-  "ask-move-reason": "Kwimura ikarata → Insiguro?"
+  "ask-move-reason": "Kwimura ikarata → Insiguro?",
+  "draggable": "Gishobora gukwegerwa"
 }

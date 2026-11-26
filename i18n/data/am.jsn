@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ተሻሽሏል",
   "label-text-follows-board": "የሰሌዳውን ነባሪ ይከተላል",
   "drag-to-reorder": "ቅደም ተከተሉን ለመቀየር ይጎትቱ። ወደ ላይ እና ወደ ታች የቀስት ቁልፎች በአንድ ቦታ ያንቀሳቅሳሉ።",
-  "ask-move-reason": "ካርድ አንቀሳቅስ → መግለጫ?"
+  "ask-move-reason": "ካርድ አንቀሳቅስ → መግለጫ?",
+  "draggable": "ሊጎተት የሚችል"
 }

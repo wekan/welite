@@ -2303,5 +2303,6 @@
   "label-text-overridden": "la burburiyay",
   "label-text-follows-board": "raacaysa caadiga sabuurada",
   "drag-to-reorder": "Jiid si aad u beddesho kala horreynta. Furayaasha fallaarta kor iyo hoos waxay dhaqaajiyaan hal boos.",
-  "ask-move-reason": "U wareeji kaarka → Sharaxaad?"
+  "ask-move-reason": "U wareeji kaarka → Sharaxaad?",
+  "draggable": "Waa la jiidi karaa"
 }

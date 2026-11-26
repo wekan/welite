@@ -2303,5 +2303,6 @@
   "label-text-overridden": "nosoloana",
   "label-text-follows-board": "manaraka ny default-n'ny tapatoetra",
   "drag-to-reorder": "Tariho mba hanovana ny filaharana. Ny bokotra zana-tsipìka miakatra sy midina dia mamindra toerana iray.",
-  "ask-move-reason": "Angataho ny antony rehefa mamindra karatra"
+  "ask-move-reason": "Angataho ny antony rehefa mamindra karatra",
+  "draggable": "Azo tarihina"
 }

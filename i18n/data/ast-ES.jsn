@@ -2303,5 +2303,6 @@
   "label-text-overridden": "sobrescritu",
   "label-text-follows-board": "sigue lo predetermináo del tableru",
   "drag-to-reorder": "Arrastra pa cambiar l’orde. Les tecles de flecha arriba y abaxo mueven una posición.",
-  "ask-move-reason": "Mover la tarjeta → Descripción?"
+  "ask-move-reason": "Mover la tarjeta → Descripción?",
+  "draggable": "Pue arrastrase"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ਓਵਰਰਾਈਡ ਕੀਤਾ ਗਿਆ",
   "label-text-follows-board": "ਬੋਰਡ ਦੇ ਮੂਲ ਨੂੰ ਅਨੁਸਰਦਾ ਹੈ",
   "drag-to-reorder": "ਕ੍ਰਮ ਬਦਲਣ ਲਈ ਖਿੱਚੋ। ਉੱਪਰ ਅਤੇ ਹੇਠਾਂ ਵਾਲੇ ਤੀਰ ਦੀਆਂ ਕੁੰਜੀਆਂ ਇੱਕ ਥਾਂ ਹਿਲਾਉਂਦੀਆਂ ਹਨ।",
-  "ask-move-reason": "ਮੂਵ ਕਾਰਡ → ਵਰਣਨ?"
+  "ask-move-reason": "ਮੂਵ ਕਾਰਡ → ਵਰਣਨ?",
+  "draggable": "ਖਿੱਚਣਯੋਗ"
 }

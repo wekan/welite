@@ -2303,5 +2303,6 @@
   "label-text-overridden": "overschreven",
   "label-text-follows-board": "volgt de standaard van het bord",
   "drag-to-reorder": "Sleep om de volgorde te wijzigen. De pijltoetsen omhoog en omlaag verplaatsen één stap.",
-  "ask-move-reason": "Verplaats kaart → Beschrijving?"
+  "ask-move-reason": "Verplaats kaart → Beschrijving?",
+  "draggable": "Versleepbaar"
 }

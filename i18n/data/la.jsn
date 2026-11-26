@@ -2303,5 +2303,6 @@
   "label-text-overridden": "praetermissum",
   "label-text-follows-board": "sequitur praedefinitum tabulae",
   "drag-to-reorder": "Trahe ut ordinem mutes. Claves sagittarum sursum et deorsum uno loco movent.",
-  "ask-move-reason": "Chartam move → Descriptio?"
+  "ask-move-reason": "Chartam move → Descriptio?",
+  "draggable": "Trahi potest"
 }

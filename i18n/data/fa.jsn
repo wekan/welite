@@ -2303,5 +2303,6 @@
   "label-text-overridden": "لغو شد",
   "label-text-follows-board": "پیرو پیش‌فرض تخته است",
   "drag-to-reorder": "برای تغییر ترتیب بکشید. کلیدهای پیکان بالا و پایین یک گام جابه‌جا می‌کنند.",
-  "ask-move-reason": "حرکت کارت → توضیحات?"
+  "ask-move-reason": "حرکت کارت → توضیحات?",
+  "draggable": "قابل کشیدن"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "åsidosatt",
   "label-text-follows-board": "följer tavlans standardinställning",
   "drag-to-reorder": "Dra för att ändra ordningen. Uppåt- och nedåtpilarna flyttar ett steg.",
-  "ask-move-reason": "Flytta kort → Beskrivning?"
+  "ask-move-reason": "Flytta kort → Beskrivning?",
+  "draggable": "Dragbar"
 }

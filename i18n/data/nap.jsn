@@ -2303,5 +2303,6 @@
   "label-text-overridden": "cagnato",
   "label-text-follows-board": "segue 'a mpustazione predefinita d' 'a tavula",
   "drag-to-reorder": "Strascina pe cagnà ll’ordene. ’E taste cu ’e frecce ’ncoppa e abbascio spostano ’e na pusizzione.",
-  "ask-move-reason": "Sposta 'a carta → Descrizzione?"
+  "ask-move-reason": "Sposta 'a carta → Descrizzione?",
+  "draggable": "Se pò trascinà"
 }

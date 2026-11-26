@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ohitettu",
   "label-text-follows-board": "noudattaa taulun oletusta",
   "drag-to-reorder": "Järjestä uudelleen vetämällä. Ylä- ja alanuolinäppäimet siirtävät yhden askeleen.",
-  "ask-move-reason": "Kysy syy korttia siirrettäessä"
+  "ask-move-reason": "Kysy syy korttia siirrettäessä",
+  "draggable": "Vedettävissä"
 }

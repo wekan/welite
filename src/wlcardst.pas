@@ -52,11 +52,15 @@ function CardSettingsBoardWrite(SetObj: TJSONObject; out Clean: TJSONObject): Bo
 
 implementation
 
-uses StrUtils, Math, wlhtml;
+uses StrUtils, Math, wlhtml, wlaccess;
 
 {$I tpl/cardset.inc}
 
 const
+  // WeKan's DRAG_SETTINGS of the Card section: kind, board field, label.
+  DRAG_KINDS: array[0..3] of array[0..2] of string = (('card', 'allowsCardDragging', 'card'),
+    ('checklist', 'allowsChecklistDragging', 'checklists'), ('item', 'allowsChecklistItemDragging', 'r-item'),
+    ('subtask', 'allowsSubtaskDragging', 'subtasks'));
   // The Boards schema's presentParentTask, each its own translation key.
   PARENT_TASKS: array[0..4] of string = ('prefix-with-full-path', 'prefix-with-parent', 'subtext-with-full-path',
     'subtext-with-parent', 'no-parent');
@@ -439,6 +443,35 @@ begin
   Result := Result + '</div>';
 end;
 
+// Subtasks Settings' deposit (boardSubtaskSettingsBody): the board new
+// subtasks go to - one the user may write - and its list, or none.
+function DepositSelects(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId: string): string;
+var R, Boards, Lists: TWLRows; Board, List: string; i: Integer;
+  function T(const Key: string): string;
+  begin
+    Result := Words.Text(Key, Key);
+  end;
+begin
+  R := Db.Query('SELECT COALESCE(subtasksDefaultBoardId,''''),COALESCE(subtasksDefaultListId,'''') FROM boards WHERE id=' + QuotedStr(BoardId) + ';');
+  Board := ''; List := '';
+  if Length(R) = 1 then begin Board := R[0][0]; List := R[0][1]; end;
+  if Board = 'null' then Board := '';
+  Boards := Db.Query('SELECT b.id,b.title FROM boards b JOIN board_members m ON m.boardId=b.id WHERE m.userId=' + QuotedStr(UserId) +
+    ' AND m.isActive=1 AND b.archived=0 ORDER BY b.title,b.id;');
+  Result := '<label>' + E(T('deposit-subtasks-board')) + '<select class="js-field-deposit-board">';
+  for i := 0 to High(Boards) do
+    if BoardCanWrite(Db, UserId, Boards[i][0]) then
+      Result := Result + '<option value="' + E(Boards[i][0]) + '"' + IfThen(Boards[i][0] = Board, ' selected', '') + '>' + E(Boards[i][1]) + '</option>';
+  Result := Result + '<option value="null"' + IfThen(Board = '', ' selected', '') + '>' + E(T('custom-field-dropdown-none')) + '</option></select></label>';
+  if Board = '' then Lists := nil
+  else Lists := Db.Query('SELECT id,title FROM lists WHERE boardId=' + QuotedStr(Board) + ' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+  Result := Result + '<label>' + E(T('deposit-subtasks-list')) + '<select class="js-field-deposit-list">';
+  for i := 0 to High(Lists) do
+    Result := Result + '<option value="' + E(Lists[i][0]) + '"' + IfThen(Lists[i][0] = List, ' selected', '') + '>' + E(Lists[i][1]) + '</option>';
+  Result := Result + '<option value="null"' + IfThen((List = '') or (List = 'null'), ' selected', '') + '>' + E(T('custom-field-dropdown-none')) +
+    '</option></select></label>';
+end;
+
 function CardSettingsPopup(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId: string; Admin, Handles: Boolean): string;
 var B, Profile, Folds, Visibility: TJSONObject; Sections: TJSONArray; Hidden, Order, Keys, Labels, Icons: TStringArray;
   Rows: TList; Side, Html, Lines, Title, Line, FoldKey, Label_, Split, Override: string; s, r, i, Checked, Count: Integer;
@@ -612,7 +645,18 @@ begin
       Panels := '<template class="js-card-settings-panel-tpl" data-panel="section-card"><div class="card-settings-section-menu">' +
         '<div class="check-div card-settings-board-option card-settings-ask-move-reason"><a class="flex card-ask-move-reason js-ask-move-reason" ' +
         'href="#" role="checkbox" aria-checked="' + IfThen(On_, 'true', 'false') + '">' + Box(On_) + '<span>' + E(T('ask-move-reason')) +
-        '</span></a></div></div></template>';
+        '</span></a></div>' +
+        // WeKan's boardDragSettings of the Card section (models/lib/boardDragging.js):
+        // whether each kind may be dragged on this board, on until turned off.
+        '<table class="board-drag-settings" data-board="' + E(BoardId) + '"><thead><tr><th>' + E(T('name')) + '</th><th>' +
+        E(T('draggable')) + '</th></tr></thead><tbody>';
+      for Lb := 0 to High(DRAG_KINDS) do
+      begin
+        On_ := Flag(B, DRAG_KINDS[Lb][1], True);
+        Panels := Panels + '<tr><td>' + E(T(DRAG_KINDS[Lb][2])) + '</td><td><input class="js-board-drag-setting" type="checkbox" data-kind="' +
+          DRAG_KINDS[Lb][0] + '"' + IfThen(On_, ' checked', '') + ' aria-label="' + E(T(DRAG_KINDS[Lb][2])) + '"></td></tr>';
+      end;
+      Panels := Panels + '</tbody></table></div></template>';
       PR := Db.Query('SELECT COALESCE(presentParentTask,''no-parent'') FROM boards WHERE id=' + QuotedStr(BoardId) + ';');
       if Length(PR) = 1 then Parent := PR[0][0] else Parent := 'no-parent';
       Panels := Panels + '<template class="js-card-settings-panel-tpl" data-panel="section-subtasks"><div class="card-settings-section-menu">' +
@@ -626,7 +670,7 @@ begin
       On_ := Flag(B, 'allowsSubtasks', True);
       Panels := Panels + '<hr><div class="check-div"><a class="flex js-field-has-subtasks' + IfThen(On_, ' is-checked', '') +
         '" href="#"><i class="fa ' + IfThen(On_, 'fa-check', 'fa-square-o') + '"></i><span>' + E(T('show-subtasks-field')) +
-        '</span></a></div></form></div></div></template>';
+        '</span></a></div>' + DepositSelects(Db, Words, UserId, BoardId) + '</form></div></div></template>';
     end;
     Result := '<template class="js-pop-over-template" data-pop="board-card-settings" data-popup="boardCardSettingsPopup" data-title="' +
       E(T('card-settings')) + '"><div class="header"><span class="header-title">' + E(T('card-settings')) +
@@ -640,6 +684,13 @@ begin
     B.Free;
     Profile.Free;
   end;
+end;
+
+function SafeId(const Id: string): Boolean;
+var i: Integer;
+begin
+  Result := (Id <> '') and (Length(Id) <= 64);
+  for i := 1 to Length(Id) do if not (Id[i] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_']) then Exit(False);
 end;
 
 function CardSettingsBoardWrite(SetObj: TJSONObject; out Clean: TJSONObject): Boolean;
@@ -709,6 +760,14 @@ begin
       if (V.JSONType <> jtString) or not Contains(['prefix-with-full-path', 'prefix-with-parent', 'subtext-with-full-path',
         'subtext-with-parent', 'no-parent'], V.AsString) then Exit;
       Clean.Add(Path, V.AsString);
+    end
+    else if (Path = 'subtasksDefaultBoardId') or (Path = 'subtasksDefaultListId') or (Path = 'subtasksDefaultSwimlaneId') then
+    begin
+      // An id, or none (WeKan's "null" choice); whether the caller may name
+      // it is the caller's check (SubtaskDepositBleed).
+      if V.JSONType = jtNull then Clean.Add(Path, TJSONNull.Create)
+      else if (V.JSONType = jtString) and SafeId(V.AsString) then Clean.Add(Path, V.AsString)
+      else Exit;
     end
     else if (Path = 'cardFieldOrder') or (Path = 'minicardFieldOrder') then
     begin

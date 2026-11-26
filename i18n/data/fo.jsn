@@ -2303,5 +2303,6 @@
   "label-text-overridden": "broytt",
   "label-text-follows-board": "fylgir tavlu-forsetning",
   "drag-to-reorder": "Drag fyri at broyta raðfylgjuna. Pílatastarnir upp og niður flyta eitt pláss.",
-  "ask-move-reason": "Flyt kortið → Lýsing?"
+  "ask-move-reason": "Flyt kortið → Lýsing?",
+  "draggable": "Kann dragast"
 }

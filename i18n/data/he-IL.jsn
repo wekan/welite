@@ -2303,5 +2303,6 @@
   "label-text-overridden": "נדרס",
   "label-text-follows-board": "עוקב אחר ברירת המחדל של הלוח",
   "drag-to-reorder": "יש לגרור כדי לשנות את הסדר. מקשי החצים למעלה ולמטה מזיזים צעד אחד.",
-  "ask-move-reason": "העברת כרטיס → תיאור?"
+  "ask-move-reason": "העברת כרטיס → תיאור?",
+  "draggable": "ניתן לגרירה"
 }

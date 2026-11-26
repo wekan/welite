@@ -2303,5 +2303,6 @@
   "label-text-overridden": "kua whakakapia",
   "label-text-follows-board": "e whai ana i te taunoa papa",
   "drag-to-reorder": "Tōia hei huri i te raupapa. Ka neke ngā pātuhi pere whakarunga, whakararo hoki kia kotahi te tūranga.",
-  "ask-move-reason": "Nekehia te kāri → Whakaahuatanga?"
+  "ask-move-reason": "Nekehia te kāri → Whakaahuatanga?",
+  "draggable": "Ka taea te tō"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "üýtgedildi",
   "label-text-follows-board": "tagtanyň öýjük sazlamasyna eýerýär",
   "drag-to-reorder": "Tertibi üýtgetmek üçin süýräň. Ýokary we aşak ok düwmeleri bir orun süýşürýär.",
-  "ask-move-reason": "Kart göçüriň → Düşündiriş?"
+  "ask-move-reason": "Kart göçüriň → Düşündiriş?",
+  "draggable": "Süýräp bolýar"
 }

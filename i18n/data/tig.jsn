@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ተቐይሩ",
   "label-text-follows-board": "ን ቀደም ምድላው ምዱድ ይስዕብ",
   "drag-to-reorder": "ለስርዐት እግል ትቀይር ሰሐብ። መፍትሕ ህንጎራ ናይ ላዕል ወታሐት ሐቴ ከጥወት ለልትሐረክ።",
-  "ask-move-reason": "ወረቀት ካርድ ኣንቀሳቕስ → ዋስፎ?"
+  "ask-move-reason": "ወረቀት ካርድ ኣንቀሳቕስ → ዋስፎ?",
+  "draggable": "ለይትጀረር ቀድር"
 }

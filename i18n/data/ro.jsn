@@ -2303,5 +2303,6 @@
   "label-text-overridden": "suprascris",
   "label-text-follows-board": "urmează setarea implicită a panoului",
   "drag-to-reorder": "Trageți pentru a schimba ordinea. Tastele săgeată în sus și în jos deplasează cu o poziție.",
-  "ask-move-reason": "Cere un motiv la mutarea cardurilor"
+  "ask-move-reason": "Cere un motiv la mutarea cardurilor",
+  "draggable": "Poate fi tras"
 }

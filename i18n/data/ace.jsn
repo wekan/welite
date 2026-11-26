@@ -2303,5 +2303,6 @@
   "label-text-overridden": "geutimpa",
   "label-text-follows-board": "tu'ôt default papan",
   "drag-to-reorder": "Tarék keu meuubah urutan. Tombôi panah u ateueh ngon u miyup geupeupinah saboh teumpat.",
-  "ask-move-reason": "Tanyong sabab watèe peupinah kad"
+  "ask-move-reason": "Tanyong sabab watèe peupinah kad",
+  "draggable": "Jeuet teutarék"
 }

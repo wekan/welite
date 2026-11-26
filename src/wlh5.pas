@@ -3656,8 +3656,8 @@ end;
 // and setCollapsedCardSection, a custom field's through /customFields/update.
 // 200, or a Meteor error's code and reason.
 function CardSettingsMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Error: string): Integer;
-var Selector, Modifier, Clean, SetPart: TJSONObject; BoardId, Sql, Profile, Path, Id, Cols: string; i: Integer; V: TJSONData;
-  R: TWLRows;
+var Selector, Modifier, Clean, SetPart: TJSONObject; BoardId, Sql, Profile, Path, Id, Cols, Deposit: string; i: Integer; V: TJSONData;
+  R: TWLRows; Refused: Boolean;
 begin
   Error := 'Match failed';
   Result := 400;
@@ -3681,12 +3681,51 @@ begin
     if not CardSettingsBoardWrite(TJSONObject(Modifier.Find('$set')), Clean) then
     begin Clean.Free; Error := 'Access denied'; Exit(403); end;
     try
+      // Subtasks Settings' deposit: a board the caller may write, a landing
+      // list on the subtasks board (SubtaskDepositBleed). A new board resets
+      // the list and swimlane: they were the old board's.
+      if Clean.Find('subtasksDefaultBoardId') <> nil then
+      begin
+        if Clean.Find('subtasksDefaultListId') = nil then Clean.Add('subtasksDefaultListId', TJSONNull.Create);
+        if Clean.Find('subtasksDefaultSwimlaneId') = nil then Clean.Add('subtasksDefaultSwimlaneId', TJSONNull.Create);
+        if Clean.Find('subtasksDefaultBoardId').JSONType = jtString then Deposit := Clean.Strings['subtasksDefaultBoardId'] else Deposit := '';
+      end
+      else
+      begin
+        R := T.Db.Query('SELECT COALESCE(subtasksDefaultBoardId,'''') FROM boards WHERE id=' + QuotedStr(BoardId) + ';');
+        if Length(R) = 1 then Deposit := R[0][0] else Deposit := '';
+      end;
+      if Deposit = 'null' then Deposit := '';
+      Refused := (Clean.Find('subtasksDefaultBoardId') <> nil) and (Deposit <> '') and (Deposit <> BoardId) and
+        not BoardCanWrite(T.Db, UserId, Deposit);
+      if Deposit = '' then Deposit := BoardId;
+      if not Refused and (Clean.Find('subtasksDefaultListId') <> nil) and (Clean.Find('subtasksDefaultListId').JSONType = jtString) then
+        Refused := Length(T.Db.Query('SELECT 1 FROM lists WHERE id=' + QuotedStr(Clean.Strings['subtasksDefaultListId']) +
+          ' AND boardId=' + QuotedStr(Deposit) + ';')) = 0;
+      if not Refused and (Clean.Find('subtasksDefaultSwimlaneId') <> nil) and (Clean.Find('subtasksDefaultSwimlaneId').JSONType = jtString) then
+        Refused := Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id=' + QuotedStr(Clean.Strings['subtasksDefaultSwimlaneId']) +
+          ' AND boardId=' + QuotedStr(Deposit) + ';')) = 0;
+      if Refused then
+      begin
+        try
+          RecordSecurityEvent(T.Db, UserId, 'SubtaskDepositBleed', 'method:/boards/update', 'authz', 'high', 'CWE-639', 'blocked',
+            'Subtasks board or landing place the caller may not use refused');
+        except
+          // logging must never break the guard
+        end;
+        Error := 'Access denied'; Exit(403);
+      end;
       Sql := 'CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END';
       Cols := '';
       for i := 0 to Clean.Count - 1 do
         // presentParentTask is a column of its own; the rest are the board's
         // fields kept in settings_json.
         if Clean.Names[i] = 'presentParentTask' then Cols := Cols + ',presentParentTask=' + QuotedStr(Clean.Items[i].AsString)
+        else if (Clean.Names[i] = 'subtasksDefaultBoardId') or (Clean.Names[i] = 'subtasksDefaultListId') then
+        begin
+          if Clean.Items[i].JSONType = jtNull then Cols := Cols + ',' + Clean.Names[i] + '=NULL'
+          else Cols := Cols + ',' + Clean.Names[i] + '=' + QuotedStr(Clean.Items[i].AsString);
+        end
         else Sql := 'json_set(' + Sql + ',' + QuotedStr('$.' + Clean.Names[i]) + ',json(' + QuotedStr(Clean.Items[i].AsJSON) + '))';
       if not T.Db.Exec('UPDATE boards SET settings_json=' + Sql + Cols + ',modifiedAt=' +
         QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) + ' WHERE id=' + QuotedStr(BoardId) + ';') then
@@ -3749,6 +3788,30 @@ begin
       'json(COALESCE(json_extract(' + Profile + ',''$.collapsedCardSections''),''{}''))),' + QuotedStr(Path) + ',json(COALESCE(json_extract(' +
       Profile + ',' + QuotedStr(Path) + '),''{}''))),' + QuotedStr(Path + '."' + Args.Strings[1] + '"') + ',json(''' +
       IfThen((Args.Items[2].JSONType = jtBoolean) and Args.Booleans[2], 'true', 'false') + ''')) WHERE id=' + QuotedStr(UserId) + ';') then
+    begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'setBoardDragging' then
+  begin
+    // [boardId, kind, enabled] (server/moveBoardObjects.js): whether the board
+    // lets that kind be dragged, a board admin's or the site admin's.
+    if (Args.Count <> 3) or (Args.Items[0].JSONType <> jtString) or (Args.Items[1].JSONType <> jtString) or
+      (Args.Items[2].JSONType <> jtBoolean) then Exit;
+    case Args.Strings[1] of
+      'swimlane': Path := 'allowsSwimlaneDragging';
+      'list': Path := 'allowsListDragging';
+      'card': Path := 'allowsCardDragging';
+      'checklist': Path := 'allowsChecklistDragging';
+      'item': Path := 'allowsChecklistItemDragging';
+      'subtask': Path := 'allowsSubtaskDragging';
+    else begin Error := 'invalid-setting'; Exit(400); end;
+    end;
+    BoardId := Args.Strings[0];
+    if not (BoardOwnAdmin(T.Db, UserId, BoardId) or IsSiteAdmin(T.Db, UserId)) or
+      (Length(T.Db.Query('SELECT 1 FROM boards WHERE id=' + QuotedStr(BoardId) + ';')) <> 1) then
+    begin Error := 'not-authorized'; Exit(403); end;
+    if not T.Db.Exec('UPDATE boards SET settings_json=json_set(CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END,' +
+      QuotedStr('$.' + Path) + ',json(''' + IfThen(Args.Booleans[2], 'true', 'false') + ''')),modifiedAt=' +
+      QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) + ' WHERE id=' + QuotedStr(BoardId) + ';') then
     begin Error := 'Could not save'; Exit(500); end;
   end
   else if Name = '/customFields/update' then
@@ -4170,7 +4233,7 @@ begin
   // WeKan's isAvatarUploadBlocked (#4740): Admin Panel / Attachments'
   // limitSettings.avatarsUploadBlocked; avatars stay enabled without it.
   // Board Settings / Card's writes (wlcardst).
-  if (Name = '/boards/update') or (Name = 'setShowLabelTextOverride') or
+  if (Name = '/boards/update') or (Name = 'setShowLabelTextOverride') or (Name = 'setBoardDragging') or
     (Name = 'setCollapsedCardSection') or (Name = '/customFields/update') then
   begin
     Args := nil;
@@ -4194,7 +4257,7 @@ begin
     else
     begin
       // The board's pages draw again, the writer's too: its cards change.
-      if (Name = '/boards/update') or (Name = '/customFields/update') then AnnounceToAll;
+      if (Name = '/boards/update') or (Name = '/customFields/update') or (Name = 'setBoardDragging') then AnnounceToAll;
       SendJsonAnswer(Response, 200, '{"result":1}');
     end;
     Exit;

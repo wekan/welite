@@ -2303,5 +2303,6 @@
   "label-text-overridden": "yo shandukiswa",
   "label-text-follows-board": "i tevhela zwa u thoma zwa bodo",
   "drag-to-reorder": "Kokodzani u dzudzanya hafhu. Khii dza misevhe ya nṱha na fhasi dzi sudzulusa nga vhukando vhuthihi.",
-  "ask-move-reason": "Vhudzisa tshiitisi musi hu tshi pfuluswa makhadi"
+  "ask-move-reason": "Vhudzisa tshiitisi musi hu tshi pfuluswa makhadi",
+  "draggable": "Zwi nga kokodzwa"
 }

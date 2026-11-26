@@ -2303,5 +2303,6 @@
   "label-text-overridden": "patlac",
   "label-text-follows-board": "quitoca tlapechtli neneuhcayotl",
   "drag-to-reorder": "Xictilana inic occeppa ticahuipana. In huehcapa ihuan tlani mitl tlapacholoni quicuica san ce tlatlalilli.",
-  "ask-move-reason": "Xicolini amatlapalli → Tlahtolli?"
+  "ask-move-reason": "Xicolini amatlapalli → Tlahtolli?",
+  "draggable": "Huel motilana"
 }

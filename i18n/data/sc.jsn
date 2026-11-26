@@ -2303,5 +2303,6 @@
   "label-text-overridden": "modificadu",
   "label-text-follows-board": "sighit s'impostatzione predefinida de sa tàula",
   "drag-to-reorder": "Tira pro cambiare s’òrdine. Sos tastos a fritza in susu e in giosso mòvent de una positzione.",
-  "ask-move-reason": "Pedi una resone cando si tràmudant cartas"
+  "ask-move-reason": "Pedi una resone cando si tràmudant cartas",
+  "draggable": "Trascinàbile"
 }

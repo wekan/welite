@@ -2303,5 +2303,6 @@
   "label-text-overridden": "soppiku",
   "label-text-follows-board": "moo topp njëkk bu tablo bi",
   "drag-to-reorder": "Xëccal ngir soppi toftal gi. Butoŋu fett yi jëm ci kaw ak ci suuf dañuy yëngal benn barab.",
-  "ask-move-reason": "Yóbbu karta → Melokaan?"
+  "ask-move-reason": "Yóbbu karta → Melokaan?",
+  "draggable": "Mën nañu koo diri"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "diganti",
   "label-text-follows-board": "ndherek standar papan",
   "drag-to-reorder": "Seret kanggo ngganti urutan. Tombol panah munggah lan mudhun mindhah siji posisi.",
-  "ask-move-reason": "Pindhah kertu → Katrangan?"
+  "ask-move-reason": "Pindhah kertu → Katrangan?",
+  "draggable": "Bisa diseret"
 }

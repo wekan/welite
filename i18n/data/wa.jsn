@@ -2303,5 +2303,6 @@
   "label-text-overridden": "candjî",
   "label-text-follows-board": "shuve li prémetou do tåvlea",
   "drag-to-reorder": "Saetchîz po candjî l’ ôre. Les tapes di fletche pa dzeu et pa dzo bodjèt d’ ene plaece.",
-  "ask-move-reason": "Dimander ene råjhon cwand on bodje des cåtes"
+  "ask-move-reason": "Dimander ene råjhon cwand on bodje des cåtes",
+  "draggable": "On pout l' saetchî"
 }

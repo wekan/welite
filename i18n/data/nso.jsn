@@ -2303,5 +2303,6 @@
   "label-text-overridden": "e fetotšwe",
   "label-text-follows-board": "e latela tlhaelo ya boto",
   "drag-to-reorder": "Goga go fetoša tatelano. Dikonopo tša mesebe ya godimo le fase di šuthiša lefelo le tee.",
-  "ask-move-reason": "Šuthiša karata → Tlhalošo?"
+  "ask-move-reason": "Šuthiša karata → Tlhalošo?",
+  "draggable": "E ka gogwa"
 }

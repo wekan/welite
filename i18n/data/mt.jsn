@@ -2303,5 +2303,6 @@
   "label-text-overridden": "miksur",
   "label-text-follows-board": "isegwi l-valur default tal-bord",
   "drag-to-reorder": "Iddreggja biex tibdel l-ordni. It-tasti bil-vleġeġ ’il fuq u ’l isfel iċaqalqu b’pożizzjoni waħda.",
-  "ask-move-reason": "Mexxi l-karta → Deskrizzjoni?"
+  "ask-move-reason": "Mexxi l-karta → Deskrizzjoni?",
+  "draggable": "Jista’ jitkaxkar"
 }

@@ -2303,5 +2303,6 @@
   "label-text-overridden": "overstyrt",
   "label-text-follows-board": "følger tavlens standard",
   "drag-to-reorder": "Dra for å endre rekkefølgen. Pil opp og pil ned flytter ett trinn.",
-  "ask-move-reason": "Flytt Kort → Beskrivelse?"
+  "ask-move-reason": "Flytt Kort → Beskrivelse?",
+  "draggable": "Kan dras"
 }

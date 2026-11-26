@@ -2303,5 +2303,6 @@
   "label-text-overridden": "canciatu",
   "label-text-follows-board": "sigui lu predefinutu dâ tavula",
   "drag-to-reorder": "Strascina pi canciari l’òrdini. Li tasti a freccia ’n susu e ’n giusu mòvinu di na pusizzioni.",
-  "ask-move-reason": "Spusta la carta → Discrizzioni?"
+  "ask-move-reason": "Spusta la carta → Discrizzioni?",
+  "draggable": "Trascinàbbili"
 }

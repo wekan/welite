@@ -2303,5 +2303,6 @@
   "label-text-overridden": "已覆寫",
   "label-text-follows-board": "遵循看板預設值",
   "drag-to-reorder": "拖曳以調整順序。按向上和向下方向鍵可移動一個位置。",
-  "ask-move-reason": "移動卡片 → 描述?"
+  "ask-move-reason": "移動卡片 → 描述?",
+  "draggable": "可拖曳"
 }

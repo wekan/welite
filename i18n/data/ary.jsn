@@ -2303,5 +2303,6 @@
   "label-text-overridden": "متبدل",
   "label-text-follows-board": "كيتبع إعدادات البورد",
   "drag-to-reorder": "جرّ باش تبدّل الترتيب. زراير السهم للفوق وللتحت كيحرّكو بلاصة وحدة.",
-  "ask-move-reason": "نقل البطاقة → وصف?"
+  "ask-move-reason": "نقل البطاقة → وصف?",
+  "draggable": "يمكن تجرّو"
 }

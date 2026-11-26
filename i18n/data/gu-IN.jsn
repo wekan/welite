@@ -2303,5 +2303,6 @@
   "label-text-overridden": "ઓવરરાઇડ કરેલ",
   "label-text-follows-board": "બોર્ડ ડિફોલ્ટને અનુસરે છે",
   "drag-to-reorder": "ક્રમ બદલવા માટે ખેંચો. ઉપર અને નીચેના તીરવાળી કીઓ એક સ્થાન ખસેડે છે.",
-  "ask-move-reason": "કાર્ડ ખસેડો → વર્ણન?"
+  "ask-move-reason": "કાર્ડ ખસેડો → વર્ણન?",
+  "draggable": "ખેંચી શકાય તેવું"
 }
