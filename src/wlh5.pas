@@ -74,7 +74,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore;
 
 const
   STATIC_HEAD =
@@ -763,6 +763,95 @@ begin
     '</select></label><button class="primary wide" type="submit">' + E(Words.Text('create', 'Create')) + '</button></form></template>';
 end;
 
+// The kind of preview WeKan's attachmentViewer gives a file: a raster image
+// in the overlay, as the file route serves only those inline
+// (SendStoredDownload); anything else is opened, and so downloaded, in its own tab.
+function AttachmentPreviewKind(const MimeType: string): string;
+begin
+  if (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/gif') or (MimeType = 'image/webp') then
+    Result := 'image'
+  else Result := 'none';
+end;
+
+function SizeText(const Bytes: string): string;
+var N: Int64;
+begin
+  N := StrToInt64Def(Bytes, 0);
+  if N >= 1048576 then Result := FormatFloat('0.0', N / 1048576) + ' MB'
+  else if N >= 1024 then Result := FormatFloat('0.0', N / 1024) + ' kB'
+  else Result := IntToStr(N) + ' B';
+end;
+
+// _cardsec_attachments.pug: WeKan's attachmentGallery - a "+" opening
+// cardAttachmentsPopup for whoever may change the card, and each attachment
+// as a tile, its thumbnail or its extension opening attachmentViewer, with
+// its name, size, download and delete.
+function AttachmentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
+var R: TWLRows; i: Integer; Id, Name, Kind, Src, Ext: string;
+begin
+  R := Db.Query('SELECT id,COALESCE(name,''''),COALESCE(type,''''),COALESCE(size,0) FROM attachments WHERE boardId=' +
+    QuotedStr(BoardId) + ' AND cardId=' + QuotedStr(CardId) + ' AND ' + LiveAttachmentSQL(Db) + ' ORDER BY createdAt,id;');
+  Result := '<div class="card-checklist-attachmentGallery card-attachmentGallery">' +
+    '<h3 class="card-details-item-title js-toggle-card-section" data-section="attachments" role="button" tabindex="0">' +
+    '<i class="fa fa-caret-down"></i><i class="fa fa-paperclip"></i> ' + E(Words.Text('attachments', 'Attachments')) + '</h3>' +
+    '<div class="attachment-gallery attachments js-attachments">';
+  if Writable then
+    Result := Result + '<a class="card-label add-label add-attachment js-add-attachment" href="#" title="' +
+      HtmlAttr(Words.Text('add-attachment', 'Add Attachment')) + '" aria-label="' +
+      HtmlAttr(Words.Text('add-attachment', 'Add Attachment')) + '"><i class="fa fa-plus"></i></a>';
+  for i := 0 to High(R) do
+  begin
+    Id := R[i][0]; Name := R[i][1]; Kind := AttachmentPreviewKind(R[i][2]);
+    Src := '/cdn/storage/attachments/' + HTTPEncode(Id) + '/original/' + HTTPEncode(Name);
+    Ext := LowerCase(ExtractFileExt(Name));
+    if Ext <> '' then Delete(Ext, 1, 1);
+    Result := Result + '<div class="attachment-item js-attachment" data-attachment="' + HtmlAttr(Id) + '">' +
+      '<button class="attachment-thumbnail-container open-preview" type="button" aria-label="' +
+      HtmlAttr(Words.Text('preview', 'Preview') + ': ' + Name) + '" data-attachment-id="' + HtmlAttr(Id) + '" data-kind="' + Kind +
+      '" data-name="' + HtmlAttr(Name) + '" data-src="' + HtmlAttr(Src) + '">';
+    if Kind = 'image' then
+      Result := Result + '<img class="attachment-thumbnail" src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Id)) +
+        '/thumbnail" alt="' + HtmlAttr(Name) + '" title="' + HtmlAttr(Name) + '" loading="lazy">'
+    else
+      Result := Result + '<span class="attachment-thumbnail-text">' + E(Ext) + '</span>';
+    Result := Result + '</button><div class="attachment-details-container"><div class="attachment-details"><div>' +
+      '<b class="attachment-name">' + E(Name) + '</b> <span class="file-size">(' + E(SizeText(R[i][3])) + ')</span></div>' +
+      '<div class="attachment-actions"><a class="js-download" href="' + HtmlAttr(Src) + '?download=true" download="' +
+      HtmlAttr(Name) + '" title="' + HtmlAttr(Words.Text('download', 'Download')) + '" aria-label="' +
+      HtmlAttr(Words.Text('download', 'Download')) + '"><i class="fa fa-arrow-down"></i></a>';
+    if Writable then
+      Result := Result + '<form class="js-attachment-delete" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' +
+        HtmlAttr(HTTPEncode(CardId)) + '/attachments/' + HtmlAttr(HTTPEncode(Id)) + '/delete" up-submit up-target=".board-wrapper">' +
+        '<button class="js-confirm-delete" type="submit" title="' + HtmlAttr(Words.Text('delete', 'Delete')) + '" aria-label="' +
+        HtmlAttr(Words.Text('delete', 'Delete')) + '"><i class="fa fa-trash"></i></button></form>';
+    Result := Result + '</div></div></div></div>';
+  end;
+  Result := Result + '</div></div>';
+end;
+
+// board.pug's cardAttachmentsPopup (a file from the computer) and
+// attachmentViewer, hidden until a tile is opened.
+function AttachmentsPopups(Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
+begin
+  Result := '';
+  if Writable then
+    Result := '<template class="js-pop-over-template" data-pop="card-attachments" data-title="' +
+      HtmlAttr(Words.Text('cardAttachmentsPopup-title', 'Attach From…')) + '"><form class="js-attachment-upload" method="post" action="/b/' +
+      HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/attachments" enctype="multipart/form-data" ' +
+      'up-submit up-target=".board-wrapper"><ul class="pop-over-list"><li><input class="js-attach-file hide" type="file" name="file" aria-label="' +
+      HtmlAttr(Words.Text('add-attachment', 'Add Attachment')) + '" required><a class="js-computer-upload" href="#">' +
+      E(Words.Text('computer', 'Computer')) + '</a></li></ul></form></template>';
+  Result := Result + '<div class="hidden" id="viewer-overlay" role="dialog" aria-modal="true" aria-labelledby="attachment-name">' +
+    '<div id="viewer-top-bar"><span id="attachment-name"></span><button id="viewer-close" type="button" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-times-thin"></i></button></div><div id="viewer-container">' +
+    '<div id="viewer-content"><img class="hidden" id="image-viewer" alt="' + HtmlAttr(Words.Text('preview', 'Preview')) + '">' +
+    '<video class="hidden" id="video-viewer" controls></video><audio class="hidden" id="audio-viewer" controls></audio>' +
+    '<object class="hidden" id="pdf-viewer" type="application/pdf"><span class="pdf-preview-error">' +
+    E(Words.Text('preview-pdf-not-supported', 'Your device does not support previewing PDF. Try downloading instead.')) +
+    '</span></object><object class="hidden" id="txt-viewer" type="text/plain"></object><div class="hidden" id="office-viewer"></div>' +
+    '</div></div></div>';
+end;
+
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
 // cardLabelsPopup for whoever may change the card.
 function LabelsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
@@ -1182,11 +1271,13 @@ begin
     Details := Details + DatesSection(Db, Words, BoardId, CardId, [Card[0][4], Card[0][5], Card[0][6], Card[0][7]], TextEditor);
     Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
       DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
-    Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable);
+    Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable) +
+      AttachmentsSection(Db, Words, BoardId, CardId, Writable);
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
+    Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);
   end;
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
   if Writable then
@@ -1392,6 +1483,70 @@ begin
   Result := '{"_id":"' + StringToJSONString(R[0][0]) + '","username":"' + StringToJSONString(R[0][1]) + '","profile":' + Profile + '}';
 end;
 
+// cardAttachmentsPopup's upload: one file, onto a live card of a board the
+// user may change, stored as the HTML4 view's upload stores it.
+function AddViewAttachment(const T: TWLTenant; const UserId, BoardId, CardId: string; Request: TRequest;
+  out Error: string): Integer;
+var Rows: TWLRows; Upload: TUploadedFile; FileType, Id: string;
+begin
+  Error := '';
+  if (BoardId = '') or (CardId = '') or (Pos(#0, BoardId + CardId) > 0) then begin Error := 'Card not found'; Exit(404); end;
+  if not BoardCanWrite(T.Db, UserId, BoardId) then begin Error := 'Board access forbidden'; Exit(403); end;
+  Rows := T.Db.Query('SELECT swimlaneId,listId FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' + QuotedStr(BoardId) +
+    ' AND archived=0 AND deletedAt IS NULL;');
+  if Length(Rows) <> 1 then begin Error := 'Card not found'; Exit(404); end;
+  if Request.Files.Count <> 1 then begin Error := 'Upload failed'; Exit(400); end;
+  Upload := Request.Files[0];
+  if (Upload.FieldName <> 'file') or (Upload.FileName = '') or (Pos(#0, Upload.FileName + Upload.ContentType) > 0) or
+    (Pos(#13, Upload.ContentType) > 0) or (Pos(#10, Upload.ContentType) > 0) then
+  begin Error := 'Upload failed'; Exit(400); end;
+  FileType := Upload.ContentType;
+  if FileType = '' then FileType := 'application/octet-stream';
+  if not StoreAttachment(T, UserId, BoardId, Rows[0][0], Rows[0][1], CardId, ExtractFileName(Upload.FileName), FileType,
+    Upload.Stream, Id, True) then
+  begin Error := 'Upload failed'; Exit(500); end;
+  Result := 200;
+end;
+
+// The attachment's delete, by whoever may change the board, of that card only.
+function DeleteViewAttachment(const T: TWLTenant; const UserId, BoardId, CardId, AttachmentId: string; out Error: string): Integer;
+begin
+  Error := '';
+  if (AttachmentId = '') or (Pos(#0, BoardId + CardId + AttachmentId) > 0) then begin Error := 'Attachment not found'; Exit(404); end;
+  if not BoardCanWrite(T.Db, UserId, BoardId) then begin Error := 'Board access forbidden'; Exit(403); end;
+  if Length(T.Db.Query('SELECT 1 FROM attachments WHERE id=' + QuotedStr(AttachmentId) + ' AND boardId=' + QuotedStr(BoardId) +
+    ' AND cardId=' + QuotedStr(CardId) + ';')) <> 1 then begin Error := 'Attachment not found'; Exit(404); end;
+  if not DeleteStoredAttachment(T, UserId, BoardId, AttachmentId, CardId) then begin Error := 'Could not delete attachment'; Exit(500); end;
+  Result := 200;
+end;
+
+// WeKan's file route, /cdn/storage/attachments/:id[/original/:name or
+// /thumbnail]: an attachment of a live card on a board the signed-in user may
+// read. Only a raster image is shown inline (SendStoredDownload); ?download=
+// and every other file come as a download, with nosniff.
+function ServeAttachmentFile(Request: TRequest; Response: TResponse; const Path: string): Boolean;
+var T: TWLTenant; S: TWLSession; P: TStringArray; Rows: TWLRows; Preview: string;
+begin
+  Result := False;
+  P := PathParts(Path);
+  if (Length(P) < 4) or (P[0] <> 'cdn') or (P[1] <> 'storage') or (P[2] <> 'attachments') or (P[3] = '') then Exit;
+  if not ((Length(P) = 4) or ((Length(P) = 5) and (P[4] = 'thumbnail')) or ((Length(P) = 6) and (P[4] = 'original'))) then Exit;
+  if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+  Result := True;
+  Rows := nil;
+  if Html5User(T.Db, Request, S) and (Pos(#0, P[3]) = 0) then
+  begin
+    Rows := T.Db.Query('SELECT a.boardId,COALESCE(a.name,''''),COALESCE(a.type,'''') FROM attachments a JOIN cards c ON c.id=a.cardId ' +
+      'AND c.boardId=a.boardId AND c.archived=0 AND c.deletedAt IS NULL WHERE a.id=' + QuotedStr(P[3]) + ' AND ' +
+      LiveAttachmentSQL(T.Db) + ';');
+    if (Length(Rows) = 1) and not BoardCanRead(T.Db, S.UserId, Rows[0][0]) then Rows := nil;
+  end;
+  Preview := '';
+  if (Length(Rows) = 1) and (Request.QueryFields.Values['download'] = '') then Preview := Rows[0][2];
+  if (Length(Rows) = 1) and SendStoredDownload(Response, StoreFilePath(T.FilesDir, 'attachme', P[3]), Rows[0][1], Preview) then Exit;
+  SendJsonAnswer(Response, 404, '{"error":"Attachment not found"}');
+end;
+
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back: string;
@@ -1427,6 +1582,8 @@ begin
   //   /b/:id/cards/:card/dates/:kind                  its received, start, due or end date (delete=1 clears)
   //   /b/:id/cards/:card/custom-fields/:field         a custom field's value
   //   /b/:id/cards/:card/custom-fields/:field/toggle  the field onto the card or off it
+  //   /b/:id/cards/:card/attachments                  a file onto the card (multipart, "file")
+  //   /b/:id/cards/:card/attachments/:att/delete      the attachment off it
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
@@ -1449,6 +1606,8 @@ begin
   else if (n = 6) and (P[4] = 'labels') then Action := 'toggle-label'
   else if (n = 6) and (P[4] = 'dates') then Action := 'set-date'
   else if (n = 6) and (P[4] = 'custom-fields') then Action := 'set-field'
+  else if (n = 5) and (P[4] = 'attachments') then Action := 'add-attachment'
+  else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'delete') then Action := 'delete-attachment'
   else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
@@ -1494,6 +1653,10 @@ begin
     if (CardId <> '') and (Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
       QuotedStr(BoardId) + ' AND deletedAt IS NULL;')) <> 1) then CardId := '';
   end
+  else if Action = 'add-attachment' then
+    Code := AddViewAttachment(T, S.UserId, BoardId, CardId, Request, Error)
+  else if Action = 'delete-attachment' then
+    Code := DeleteViewAttachment(T, S.UserId, BoardId, CardId, P[5], Error)
   else if (Action = 'set-field') or (Action = 'toggle-field') then
     Code := SetViewCardField(T, S.UserId, BoardId, CardId, P[5], Request.ContentFields, Action = 'toggle-field', Error)
   else if Action = 'set-date' then
@@ -1576,6 +1739,11 @@ begin
     if not Html5User(T.Db, Request, S) then
     begin SendJsonAnswer(Response, 401, '{"error":"Unauthorized"}'); Exit; end;
     SendJsonAnswer(Response, 200, UserJson(T.Db, S.UserId));
+    Exit;
+  end;
+  if Copy(Path, 1, 25) = '/cdn/storage/attachments/' then
+  begin
+    Result := ServeAttachmentFile(Request, Response, Path);
     Exit;
   end;
   // The root arrives as an empty PathInfo.

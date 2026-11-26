@@ -235,10 +235,10 @@ Order of the work, each step committed with its tests:
   user, Log Out, the toggle), sign-in, All Boards with Starred and Remaining,
   the board with swimlanes, lists and minicards, the opened card's title,
   description and maximize/minimize, adding a card at the top or bottom of a
-  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
+  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
   WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 49 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 54 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's
@@ -247,7 +247,9 @@ Order of the work, each step committed with its tests:
 Next, after this goal:
 
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
-  the card's other sections (attachments; a custom field's edit and
+  the card's other sections (an attachment's cover, background and
+  rename; markdown in descriptions and comments; the card's menu with copy
+  link; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's
   other badges (assignees, checklists, comments, description, Requested By),
   Mobile Mode, the board header's

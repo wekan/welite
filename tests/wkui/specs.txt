@@ -46,3 +46,8 @@
 03-cards-operations.e2e.js: a date custom field tooltip names the field, not "Starts on"
 03-cards-operations.e2e.js: custom field layout toggle switches and persists its layout
 23-rest-api-more.e2e.js: custom fields: create, get, delete
+07-attachments-links.e2e.js: attachment panel button opens from card details
+07-attachments-links.e2e.js: file input for attachments is present in the DOM
+07-attachments-links.e2e.js: the attachment overlay provides native PDF and isolated Office previews
+07-attachments-links.e2e.js: paste image listener is attached to the card description editor
+07-attachments-links.e2e.js: attachment area displays existing attachments without errors

@@ -114,6 +114,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   (`toggleCustomFieldsGrid`). Writes go through the field policy and
   `SaveCardFieldValue` (`SetViewCardField`). Six more of WeKan's tests pass,
   49 in all.
+- Show a card's attachments in the HTML5 view as WeKan's attachmentGallery,
+  upload one from cardAttachmentsPopup (multipart, stored as the HTML4 view's
+  upload stores it) and delete one, and serve them at WeKan's
+  `/cdn/storage/attachments/:id[/original/:name]` to a signed-in user who may
+  read the board: only a raster image is shown inline, everything else -
+  HTML and SVG among them - comes as a download with `nosniff`, and
+  `?download=` always does. Five more of WeKan's tests pass, 54 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

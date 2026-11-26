@@ -90,7 +90,9 @@ def http_checks(server, tmp, backend):
             h['Cookie'] = cookie
         h.update(headers or {})
         body = None
-        if data is not None:
+        if isinstance(data, bytes):
+            body = data
+        elif data is not None:
             if as_json:
                 h['Content-Type'] = 'application/json'
                 body = json.dumps(data)
@@ -511,6 +513,46 @@ def http_checks(server, tmp, backend):
         # The layout, the user's own (toggleCustomFieldsGrid).
         assert request('POST', '/_methods/toggleCustomFieldsGrid', [], cookie=owner, as_json=True)[0] == 200
         assert request('POST', '/_methods/toggleCustomFieldsGrid', [], as_json=True)[0] == 401
+
+        # Attachments (_cardsec_attachments.pug): a file uploaded onto the card,
+        # served by WeKan's file route - a raster image inline, anything else
+        # as a download with nosniff - and deleted.
+        def upload(name, mime, content, cookie):
+            boundary = 'welitetestboundary'
+            body = ('--%s\r\nContent-Disposition: form-data; name="file"; filename="%s"\r\nContent-Type: %s\r\n\r\n'
+                    % (boundary, name, mime)).encode() + content + ('\r\n--%s--\r\n' % boundary).encode()
+            return request('POST', card_path + '/attachments', body, cookie=cookie,
+                           headers={'Content-Type': 'multipart/form-data; boundary=' + boundary})
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'js-add-attachment' in page and b'data-pop="card-attachments"' in page and b'id="pdf-viewer"' in page
+        png = bytes.fromhex('89504e470d0a1a0a0000000d4948445200000001000000010806000000'
+                            '1f15c4890000000d49444154789c6360000000000500010d0a2db40000000049454e44ae426082')
+        status, _, page, _ = upload('dot.png', 'image/png', png, owner)
+        assert status == 200 and b'attachment-name">dot.png<' in page, page[-300:]
+        att = re.search(rb'data-attachment="([^"]+)"', page).group(1).decode()
+        status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png' % att, cookie=owner)
+        assert status == 200 and body == png and headers.get('Content-Type') == 'image/png', headers
+        assert headers.get('Content-Disposition', '').startswith('inline') and headers.get('X-Content-Type-Options') == 'nosniff'
+        status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png?download=true' % att, cookie=owner)
+        assert status == 200 and headers.get('Content-Disposition', '').startswith('attachment'), headers
+        status, _, page, _ = upload('page.html', 'text/html', b'<script>alert(1)</script>', owner)
+        html_att = [a for a in re.findall(rb'data-attachment="([^"]+)"', page) if a.decode() != att][0].decode()
+        status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s' % html_att, cookie=owner)
+        assert status == 200 and headers.get('Content-Type') == 'application/octet-stream', 'negative: HTML is never shown'
+        assert headers.get('Content-Disposition', '').startswith('attachment') and headers.get('X-Content-Type-Options') == 'nosniff'
+        # Negative: no file to a non-member, nor without the cookie; no upload by
+        # Comment only or a non-member; no delete by a non-member.
+        assert request('GET', '/cdn/storage/attachments/%s' % att, cookie=stranger)[0] == 404
+        assert request('GET', '/cdn/storage/attachments/%s' % att)[0] == 404
+        assert upload('x.txt', 'text/plain', b'x', commenter)[0] == 403
+        assert upload('x.txt', 'text/plain', b'x', stranger)[0] == 403
+        assert request('POST', card_path + '/attachments', {'file': 'x'}, cookie=owner)[0] == 400, 'no file, no upload'
+        assert request('POST', '%s/attachments/%s/delete' % (card_path, att), {}, cookie=stranger)[0] == 403
+        assert request('POST', '%s/attachments/no-such/delete' % card_path, {}, cookie=owner)[0] == 404
+        for a in (att, html_att):
+            assert request('POST', '%s/attachments/%s/delete' % (card_path, a), {}, cookie=owner)[0] == 200
+        assert b'class="attachment-name"' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert request('GET', '/cdn/storage/attachments/%s' % att, cookie=owner)[0] == 404
 
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
