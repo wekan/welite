@@ -283,6 +283,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   token up and signs the account in with WeKan's own login token - unless it
   needs a second factor, which a link cannot give. A used, unknown or too
   old token goes to sign-in and changes nothing. 261 of WeKan's tests pass.
+- Add board invitations to the HTML5 view (sidebar.jade): an invited user
+  accepts (WeKan's acceptInvite) or declines (quitBoard) from the board's
+  sidebar. Only a user holding an invitation is (re)activated (#4730); the
+  users collection's own update is refused with WeKan's 403, so nobody
+  forges an invitation (InviteProfileBleed). A test fails on a transaction
+  begun or committed in an Exec of its own, which the CLI backend runs as a
+  process of its own. 264 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

@@ -238,7 +238,7 @@ Order of the work, each step committed with its tests:
   list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, the card's menu (copy link, move, copy, archive), the board's rename, star, sidebar with Archive, the member menu and archived boards, the card's vote, Planning Poker and watch, the board's watch, Filter (card text and labels) and Sort Cards, the header's icon collapse and mobile/desktop toggle, the sidebar's members (add, remove), Markdown in titles and descriptions, an attachment as the cover or the background, folded lists, Admin Panel / People, the sign-up form, the card's and the sidebar's activities, the minicard's assignees, comments and Mark as complete, the user's own list widths, Edit Profile, Multi-Selection's archive, the board's visibility (and instance boards, #3249), the password policy at sign-up, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
   WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 261 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 264 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's

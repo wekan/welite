@@ -1676,6 +1676,11 @@ begin
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
     HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a><div class="sidebar-content js-board-sidebar-content">' +
     FilterView +
+    // sidebar.jade: an invitation to this board, to accept or decline.
+    IfThen(ViewInvited(Db, S.UserId, BoardId), '<div class="js-board-invitation"><p><i class="fa fa-exclamation-triangle"></i> ' +
+      E(Words.Text('just-invited', 'You are just invited to this board')) + '</p><button class="js-member-invite-accept primary" type="button">' +
+      E(Words.Text('accept', 'Accept')) + '</button><button class="js-member-invite-decline" type="button">' + E(Words.Text('decline', 'Decline')) +
+      '</button></div><hr>', '') +
     // WeKan's multiselectionSidebar: what to do with the selected cards.
     IfThen(Writable, '<div class="multiselection-sidebar js-multiselection-view is-hidden"><h3>' +
       E(Words.Text('multi-selection-on', 'Multi-Selection is on')) + '</h3><ul class="pop-over-list"><li><a class="js-archive-selection" href="#">' +
@@ -2659,6 +2664,38 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":null}');
+    Exit;
+  end;
+  if (Name = 'acceptInvite') or (Name = 'quitBoard') then
+  begin
+    // server/models/boards.js: [boardId]. acceptInvite answers false without an
+    // invitation (#4730); quitBoard leaves the board and clears the invitation.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Items[0].AsString;
+    finally
+      Args.Free;
+    end;
+    if Name = 'acceptInvite' then Code := AcceptViewInvite(T, S.UserId, Id, Error)
+    else Code := QuitViewBoard(T, S.UserId, Id, Error);
+    if Code = 204 then begin SendJsonAnswer(Response, 200, '{"result":false}'); Exit; end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":true}');
+    Exit;
+  end;
+  // The users collection's own update: WeKan's allow rule refuses a client
+  // writing an account, its invitations included (InviteProfileBleed).
+  if Name = '/users/update' then
+  begin
+    SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}');
     Exit;
   end;
   if Name = 'setMobileMode' then

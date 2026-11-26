@@ -283,6 +283,11 @@ function SetViewBoardVisibility(const T:TWLTenant;const UserId,BoardId,Visibilit
 // its board; error codes are WeKan's (permission-denied, invalid-field,
 // invalid-swimlane, board-not-found).
 function SetViewListSort(const T:TWLTenant;const UserId,BoardId,ListId:string;Data:TJSONObject;out Error:string):Integer;
+// A board invitation (profile.invitedBoards): WeKan's acceptInvite - 204 when
+// the user holds none (#4730) - and quitBoard, which also declines one.
+function ViewInvited(Db:TWLDb;const UserId,BoardId:string):Boolean;
+function AcceptViewInvite(const T:TWLTenant;const UserId,BoardId:string;out Error:string):Integer;
+function QuitViewBoard(const T:TWLTenant;const UserId,BoardId:string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6403,6 +6408,50 @@ begin
   end;
   if not T.Db.Exec('UPDATE lists SET '+Sets+' WHERE id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+';') then
   begin Error:='Could not update list';Exit(500);end;
+  Result:=200;
+end;
+
+function ViewInvited(Db:TWLDb;const UserId,BoardId:string):Boolean;
+begin
+  Result:=(UserId<>'') and (Pos(#0,UserId+BoardId)=0) and (Length(Db.Query('SELECT 1 FROM users,json_each(CASE WHEN json_valid(users.profile_json) '+
+    'THEN users.profile_json ELSE ''{}'' END,''$.invitedBoards'') i WHERE users.id='+QuotedStr(UserId)+' AND i.value='+QuotedStr(BoardId)+';'))>0);
+end;
+
+// The statement that clears the user's invitation to the board.
+function ViewPullInviteSql(const UserId,BoardId:string):string;
+begin
+  Result:='UPDATE users SET profile_json=json_set(profile_json,''$.invitedBoards'',json((SELECT json_group_array(value) FROM '+
+    'json_each(profile_json,''$.invitedBoards'') WHERE value IS NOT '+QuotedStr(BoardId)+'))) WHERE id='+QuotedStr(UserId)+
+    ' AND json_valid(profile_json); ';
+end;
+
+function AcceptViewInvite(const T:TWLTenant;const UserId,BoardId:string;out Error:string):Integer;
+begin
+  Error:='';
+  if (BoardId='') or (Length(T.Db.Query('SELECT 1 FROM boards WHERE id='+QuotedStr(BoardId)+';'))<>1) then
+  begin Error:='error-board-doesNotExist';Exit(404);end;
+  // #4730: only a user holding an invitation (re)activates their membership.
+  if not ViewInvited(T.Db,UserId,BoardId) then Exit(204);
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+ViewPullInviteSql(UserId,BoardId)+'UPDATE board_members SET isActive=1 WHERE boardId='+
+    QuotedStr(BoardId)+' AND userId='+QuotedStr(UserId)+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not accept';Exit(500);end;
+  Result:=200;
+end;
+
+function QuitViewBoard(const T:TWLTenant;const UserId,BoardId:string;out Error:string):Integer;
+var Member,Invited:Boolean;Sql:string;
+begin
+  Error:='';
+  if (BoardId='') or (Pos(#0,BoardId)>0) or (Length(T.Db.Query('SELECT 1 FROM boards WHERE id='+QuotedStr(BoardId)+';'))<>1) then
+  begin Error:='error-board-doesNotExist';Exit(404);end;
+  Member:=Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+QuotedStr(UserId)+' AND isActive=1;'))=1;
+  Invited:=ViewInvited(T.Db,UserId,BoardId);
+  if not (Member or Invited) then begin Error:='error-board-notAMember';Exit(403);end;
+  Sql:='BEGIN IMMEDIATE; ';
+  if Invited then Sql:=Sql+ViewPullInviteSql(UserId,BoardId);
+  if Member then Sql:=Sql+'UPDATE board_members SET isActive=0,isAdmin=0 WHERE boardId='+QuotedStr(BoardId)+' AND userId='+QuotedStr(UserId)+'; ';
+  if not T.Db.Exec(Sql+'COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not quit';Exit(500);end;
   Result:=200;
 end;
 

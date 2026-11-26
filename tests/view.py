@@ -89,6 +89,14 @@ def pure_checks(tmp):
         bad = _re.findall(r'\b(?:Wide(?:Upper|Lower)Case|WideCompare(?:Str|Text)|WideSameText|UnicodeUpperCase|UnicodeLowerCase)\s*\(', text)
         assert not bad, (pas.name, bad)
     print('PASS: no widestring manager needed')
+    # Negative: a transaction is one Exec. The CLI backend runs each Exec as
+    # its own sqlite3 process, so a BEGIN in an Exec of its own commits nothing
+    # it was meant to guard.
+    for pas in sorted((ROOT / 'src').glob('*.pas')):
+        text = pas.read_text(encoding='utf-8', errors='replace')
+        bad = _re.findall(r"Exec\('(?:BEGIN(?: IMMEDIATE)?|COMMIT);?'\)", text)
+        assert not bad, (pas.name, bad)
+    print('PASS: every transaction is one Exec')
 
 
 def http_checks(server, tmp, backend):
@@ -1267,6 +1275,32 @@ def http_checks(server, tmp, backend):
         left = json.loads(card_db("SELECT json_extract(services_json,'$.email.verificationTokens') FROM users WHERE id=?", made_id)[0])
         assert [t['token'] for t in left] == ['old-token'], 'the used token is gone'
         assert request('GET', '/verify-email/good-token')[1]['Location'] == '/sign-in', 'and cannot be used again'
+
+        # Board invitations (sidebar.jade): accepted or declined from the
+        # sidebar; nobody forges one (InviteProfileBleed, #4730).
+        invite = lambda uid: card_db("UPDATE users SET profile_json=json_set(profile_json,'$.invitedBoards',json(?)) WHERE id=?",
+                                     json.dumps([board_id]), uid)
+        invited = lambda uid: board_id in json.loads(card_db("SELECT COALESCE(json_extract(profile_json,'$.invitedBoards'),'[]') FROM users WHERE id=?", uid)[0])
+        member_active = lambda uid: card_db('SELECT isActive FROM board_members WHERE boardId=? AND userId=?', board_id, uid)[0]
+        invite(users['silent'])
+        # Its password was changed in Admin Panel / People above.
+        silent = 'meteor_login_token=' + cookie_value(request('POST', '/sign-in', {'username': 'silent', 'password': 'New-pass-99'})[3], 'meteor_login_token')
+        assert b'js-member-invite-accept' in request('GET', route, cookie=silent)[2]
+        assert b'js-member-invite-accept' not in request('GET', route, cookie=owner)[2]
+        acc = call('acceptInvite', [board_id], silent)
+        assert json.loads(acc[2]).get('result') is True, acc[:3:2]
+        assert not invited(users['silent']) and member_active(users['silent']) == 1
+        invite(users['silent'])
+        assert json.loads(call('quitBoard', [board_id], silent)[2])['result'] is True
+        assert not invited(users['silent']) and member_active(users['silent']) == 0, 'declined'
+        # Negative: no invitation, no acceptance; the account is not written
+        # by the client; a non-member quits nothing.
+        status, _, body, _ = call('/users/update', [{'_id': users['silent']}, {'$addToSet': {'profile.invitedBoards': board_id}}], silent)
+        assert status == 403 and json.loads(body) == {'error': 403, 'reason': 'Access denied'} and not invited(users['silent'])
+        assert json.loads(call('acceptInvite', [board_id], silent)[2])['result'] is False
+        assert member_active(users['silent']) == 0, 'a removed member does not reactivate'
+        assert call('quitBoard', [board_id], silent)[0] == 403
+        card_db('UPDATE board_members SET isActive=1 WHERE boardId=? AND userId=?', board_id, users['silent'])
 
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
