@@ -1171,6 +1171,23 @@ def http_checks(server, tmp, backend):
         assert card_db('SELECT address,verified FROM user_emails WHERE userId=?', users['worker']) == ('worker2@example.invalid', 0)
         assert request('POST', '/_methods/setUsername', ['worker', users['worker']], cookie=owner, as_json=True)[0] == 200
 
+        # Multi-Selection: a list's cards selected, then archived together with
+        # WeKan's archiveSelectedCards - the whole selection checked first.
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-multiselection-activate' in page and b'js-multiselection-view is-hidden' in page and b'js-select-cards' in page
+        assert b'js-multiselection-activate' not in request('GET', route, cookie=commenter)[2]
+        arch = lambda ids, who=owner, board=board_id: request('POST', '/_methods/archiveSelectedCards', [board, ids], cookie=who, as_json=True)
+        pair = [sorted_ids['Apple'], sorted_ids['Damson']]
+        assert arch(pair, stranger)[0] == 403 and arch(pair + ['nope'])[0] == 400 and arch([])[0] == 400
+        assert arch([pair[0], 5])[0] == 400
+        assert card_db('SELECT count(*) FROM cards WHERE id IN (?,?) AND archived=0', *pair)[0] == 2, 'nothing archived by a refused selection'
+        assert arch(pair + [pair[0]])[0] == 200, 'each card once'
+        assert card_db('SELECT count(*) FROM cards WHERE id IN (?,?) AND archived=1', *pair)[0] == 2
+        assert card_db("SELECT count(*) FROM activities WHERE activityType='archivedCard' AND cardId IN (?,?)", *pair)[0] == 2
+        assert arch(pair)[0] == 400, 'not archived twice'
+        for cid in pair:
+            assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': cid}, cookie=owner)[0] == 200
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

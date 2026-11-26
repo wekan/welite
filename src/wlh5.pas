@@ -1674,6 +1674,10 @@ begin
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
     HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a><div class="sidebar-content js-board-sidebar-content">' +
     FilterView +
+    // WeKan's multiselectionSidebar: what to do with the selected cards.
+    IfThen(Writable, '<div class="multiselection-sidebar js-multiselection-view is-hidden"><h3>' +
+      E(Words.Text('multi-selection-on', 'Multi-Selection is on')) + '</h3><ul class="pop-over-list"><li><a class="js-archive-selection" href="#">' +
+      E(Words.Text('archive-selection', 'Move selection to Archive')) + '</a></li></ul></div>', '') +
     '<div class="archives-sidebar js-archives-view is-hidden"><h3>' + E(Words.Text('archives', 'Archives')) + '</h3>' + Archived + '</div>' +
     '<div class="board-widget board-widget-members membersWidget"><h3 class="board-widget-title">' + E(Words.Text('members', 'Members')) +
     '</h3><div class="board-widget-content">';
@@ -2361,11 +2365,16 @@ begin
       '<li><a class="js-add-card list-header-plus-top" href="#">&uarr; ' +
       E(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '</a></li>' +
       '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
-      E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li></ul></template>';
+      E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li>' +
+      '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
     ' data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
-    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + SortButton(Words, CardSort) + '</div>' +
+    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + SortButton(Words, CardSort) +
+    // WeKan's Multi-Selection: select cards, then act on all of them.
+    IfThen(Writable, '<a class="board-header-btn js-multiselection-activate" href="#" title="' +
+      HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) + '" aria-label="' + HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) +
+      '">&#9745;</a>', '') + '</div>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     '<div class="board-canvas" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
@@ -2396,7 +2405,7 @@ end;
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
-var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage;
+var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
@@ -2535,6 +2544,35 @@ begin
         Code := ViewSetUsername(T, S.UserId, TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[0].AsString, Error)
       else
         Code := ViewSetEmail(T, S.UserId, TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[0].AsString, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
+    Exit;
+  end;
+  if Name = 'archiveSelectedCards' then
+  begin
+    // server/models/cards.js: [boardId, [cardId, ...]].
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtArray)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      SetLength(Ids, TJSONArray(TJSONArray(Args).Items[1]).Count);
+      for n := 0 to High(Ids) do
+      begin
+        if TJSONArray(TJSONArray(Args).Items[1]).Items[n].JSONType <> jtString then
+        begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+        Ids[n] := TJSONArray(TJSONArray(Args).Items[1]).Items[n].AsString;
+      end;
+      Code := ArchiveViewCards(T, S.UserId, TJSONArray(Args).Items[0].AsString, Ids, Error);
     finally
       Args.Free;
     end;

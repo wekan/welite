@@ -271,6 +271,11 @@ function ViewSetUsername(const T:TWLTenant;const Actor,Target,Username:string;ou
 function ViewSetEmail(const T:TWLTenant;const Actor,Target,Email:string;out Error:string):Integer;
 // editProfilePopup: the user's own full name and initials.
 function ViewSetOwnProfile(const T:TWLTenant;const UserId,Fullname,Initials:string;out Error:string):Integer;
+// WeKan's archiveSelectedCards (Multi-Selection): the whole selection is
+// checked first - each card on the board, not archived yet, an assigned-only
+// member's only when assigned to them (GHSA-6xqf-jh8x-4wxc) - and only then
+// is each archived, with its archivedCard activity.
+function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Ids:array of string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6314,6 +6319,36 @@ begin
   if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,'+
     '''$.fullname'','+QuotedStr(Name)+',''$.initials'','+QuotedStr(Ini)+'),modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(UserId)+';') then
   begin Error:='Could not save';Exit(500);end;
+  Result:=200;
+end;
+
+function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Ids:array of string;out Error:string):Integer;
+var Unique:array of string;i,j:Integer;Seen:Boolean;List,U:string;
+begin
+  Error:='';Unique:=nil;
+  for i:=0 to High(Ids) do
+  begin
+    if (Ids[i]='') or (Pos(#0,Ids[i])>0) then begin Error:='invalid-card-selection';Exit(400);end;
+    Seen:=False;
+    for j:=0 to High(Unique) do if Unique[j]=Ids[i] then Seen:=True;
+    if not Seen then begin SetLength(Unique,Length(Unique)+1);Unique[High(Unique)]:=Ids[i];end;
+  end;
+  if (Length(Unique)=0) or (Length(Unique)>5000) then begin Error:='invalid-card-selection';Exit(400);end;
+  if (BoardId='') or (Pos(#0,BoardId)>0) or not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='not-authorized';Exit(403);end;
+  List:='';
+  for i:=0 to High(Unique) do begin if List<>'' then List:=List+',';List:=List+QuotedStr(Unique[i]);end;
+  if StrToIntDef(T.Db.Query('SELECT count(*) FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL AND id IN ('+
+    List+');')[0][0],-1)<>Length(Unique) then begin Error:='invalid-card-selection';Exit(400);end;
+  U:=QuotedStr(UserId);
+  if Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+U+' AND isActive=1 AND '+
+    '(COALESCE(isNormalAssignedOnly,0)=1 OR COALESCE(isCommentAssignedOnly,0)=1 OR COALESCE(isReadAssignedOnly,0)=1) AND EXISTS(SELECT 1 FROM cards c '+
+    'WHERE c.id IN ('+List+') AND NOT EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId='+U+'));'))>0 then
+  begin Error:='not-authorized';Exit(403);end;
+  for i:=0 to High(Unique) do
+  begin
+    Result:=ArchiveViewCard(T,UserId,BoardId,Unique[i],Error);
+    if Result<>200 then Exit;
+  end;
   Result:=200;
 end;
 

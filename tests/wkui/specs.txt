@@ -26,6 +26,24 @@
 03-cards-operations.e2e.js: copying a card to an empty board shows an error or empty list selector without crashing
 03-cards-operations.e2e.js: changing list via card detail list-selector moves the card
 03-cards-operations.e2e.js: archived card can be unarchived from the archives sidebar
+03-cards-operations.e2e.js: Cards – operations › #1942: a private-source linked card opens and closes from its snapshot
+03-cards-operations.e2e.js: Cards – operations › #6612 attachment viewer uses most of a desktop viewport
+03-cards-operations.e2e.js: Cards – operations › archiving a card removes it from board view
+03-cards-operations.e2e.js: Cards – operations › multi-selection archives every selected card
+03-cards-operations.e2e.js: Cards – operations › archived card can be unarchived from the archives sidebar
+03-cards-operations.e2e.js: Cards – operations › moving a card to another list shows it only in the target list
+03-cards-operations.e2e.js: Cards – operations › move does not create duplicate cards
+03-cards-operations.e2e.js: Cards – operations › copying a card adds it to the target list without removing the original
+03-cards-operations.e2e.js: Cards – operations › changing list via card detail list-selector moves the card
+03-cards-operations.e2e.js: Cards – operations › cards can be sorted by newest/earliest without error
+03-cards-operations.e2e.js: Cards – operations › copying a card to an empty board shows an error or empty list selector without crashing
+03-cards-operations.e2e.js: Cards – operations › custom fields panel opens from card details
+03-cards-operations.e2e.js: Cards – operations › checkbox custom fields toggle and can be removed from a card
+03-cards-operations.e2e.js: Cards – operations › currency custom fields save and offer an X beside Save
+03-cards-operations.e2e.js: Cards – operations › a date custom field tooltip names the field, not "Starts on"
+03-cards-operations.e2e.js: Cards – operations › custom field layout toggle switches and persists its layout
+03-cards-operations.e2e.js: Cards – operations › add-to-top places the card first in the list
+03-cards-operations.e2e.js: Cards – operations › add-to-bottom places the card last in the list
 05-admin-users.e2e.js
 06-views-layout.e2e.js: cards seeded in different lists appear in the correct list columns
 06-views-layout.e2e.js: scrolling down a long list reaches the last card

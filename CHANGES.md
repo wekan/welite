@@ -244,6 +244,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   unverified. A shared store's accountSettings are read for the switches;
   `tests/wkui/run.sh` makes them as WeKan's collectionBootstrap does. 243 of
   WeKan's tests pass.
+- Add Multi-Selection to the HTML5 view: the board header's button, a
+  list's Select all cards, and the sidebar's Move selection to Archive, with
+  WeKan's archiveSelectedCards - every card of the selection checked before
+  the first is archived (on the board, not archived yet, an assigned-only
+  member's only when assigned to them, GHSA-6xqf-jh8x-4wxc). 247 of WeKan's
+  tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,
