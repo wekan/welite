@@ -2123,5 +2123,6 @@
   "notification-group-board": "بورڊ __board__ تي __count__ اطلاع",
   "password-too-short": "ڳجهو لفظ گهٽ ۾ گهٽ __min__ اکرن جو هجڻ گهرجي.",
   "login-refused-bad-password": "غلط ڳجهو لفظ",
-  "login-refused-braked": "تمام گهڻيون ناڪام ڪوششون"
+  "login-refused-braked": "تمام گهڻيون ناڪام ڪوششون",
+  "advanced-filter-card-dates-hint": "ڪارڊ جون تاريخون @createdAt، @receivedAt، @startAt، @dueAt، @endAt يا @listEnteredAt سان ڇاڻيو. مثال: @endAt >= '2026-01-01' يا @endAt = none. @ سان شروع ٿيندڙ حسب ضرورت خاني جي نالي کي واڪ جي نشانين ۾ رکو."
 }

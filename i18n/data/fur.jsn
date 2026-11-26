@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notifichis su la taule __board__",
   "password-too-short": "La peraule di ordin e à di jessi lungje almancul __min__ caratars.",
   "login-refused-bad-password": "Peraule di ordin sbaliade",
-  "login-refused-braked": "Masse tentatîfs falîts"
+  "login-refused-braked": "Masse tentatîfs falîts",
+  "advanced-filter-card-dates-hint": "Filtre lis datis des cjartis cun @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Esempli: @endAt >= '2026-01-01' o @endAt = none. Met tra virgulutis un non di cjamp personalizât che al tache cun @."
 }

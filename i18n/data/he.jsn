@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ התראות בלוח __board__",
   "password-too-short": "הססמה חייבת להכיל לפחות __min__ תווים.",
   "login-refused-bad-password": "ססמה שגויה",
-  "login-refused-braked": "יותר מדי ניסיונות כושלים"
+  "login-refused-braked": "יותר מדי ניסיונות כושלים",
+  "advanced-filter-card-dates-hint": "אפשר לסנן תאריכי כרטיס באמצעות @createdAt, @receivedAt, @startAt, @dueAt, @endAt או @listEnteredAt. לדוגמה: @endAt >= '2026-01-01' או @endAt = none. יש להקיף במירכאות שם של שדה מותאם אישית שמתחיל ב־@."
 }

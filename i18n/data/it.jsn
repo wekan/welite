@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ notifiche sulla bacheca __board__",
   "password-too-short": "La parola d'accesso deve contenere almeno __min__ caratteri.",
   "login-refused-bad-password": "Parola d'accesso errata",
-  "login-refused-braked": "Troppi tentativi falliti"
+  "login-refused-braked": "Troppi tentativi falliti",
+  "advanced-filter-card-dates-hint": "Filtra le date delle schede con @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Esempio: @endAt >= '2026-01-01' oppure @endAt = none. Racchiudi tra virgolette il nome di un campo personalizzato che inizia con @."
 }

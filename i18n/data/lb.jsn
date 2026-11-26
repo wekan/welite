@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ Notifikatiounen op der Tafel __board__",
   "password-too-short": "D'Passwuert muss mindestens __min__ Zeeche laang sinn.",
   "login-refused-bad-password": "Falscht Passwuert",
-  "login-refused-braked": "Ze vill gescheitert Versich"
+  "login-refused-braked": "Ze vill gescheitert Versich",
+  "advanced-filter-card-dates-hint": "Filtert Kaartendatumer mat @createdAt, @receivedAt, @startAt, @dueAt, @endAt oder @listEnteredAt. Beispill: @endAt >= '2026-01-01' oder @endAt = none. Setzt den Numm vun engem personaliséierte Feld, dee mat @ ufänkt, an Zitatzeechen."
 }

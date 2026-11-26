@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ obavještenja na tabli __board__",
   "password-too-short": "Lozinka mora imati najmanje __min__ znakova.",
   "login-refused-bad-password": "Pogrešna lozinka",
-  "login-refused-braked": "Previše neuspješnih pokušaja"
+  "login-refused-braked": "Previše neuspješnih pokušaja",
+  "advanced-filter-card-dates-hint": "Filtrirajte datume kartica pomoću @createdAt, @receivedAt, @startAt, @dueAt, @endAt ili @listEnteredAt. Primjer: @endAt >= '2026-01-01' ili @endAt = none. Naziv prilagođenog polja koji počinje s @ stavite pod navodnike."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ تخته‌سیده __count__ بیلدیریشنامه",
   "password-too-short": "پارول کمیده __min__ بلگیدن ایبارت بولیشی کیرک.",
   "login-refused-bad-password": "نوتوغری پارول",
-  "login-refused-braked": "موفقیتسیز اورینیشلر جوده کوپ"
+  "login-refused-braked": "موفقیتسیز اورینیشلر جوده کوپ",
+  "advanced-filter-card-dates-hint": "کارت سنه‌لرینی @createdAt، @receivedAt، @startAt، @dueAt، @endAt یا @listEnteredAt بیلن فیلترلنگ. مثلاً: @endAt >= '2026-01-01' یا @endAt = none. @ بیلن باشلنه‌دیگن مخصوص میدان نامینی قۉشتیرناققه آلینگ."
 }

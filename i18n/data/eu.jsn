@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ jakinarazpen __board__ arbelean",
   "password-too-short": "Pasahitzak gutxienez __min__ karaktere izan behar ditu.",
   "login-refused-bad-password": "Pasahitz okerra",
-  "login-refused-braked": "Huts egindako saiakera gehiegi"
+  "login-refused-braked": "Huts egindako saiakera gehiegi",
+  "advanced-filter-card-dates-hint": "Iragazi txartelen datak @createdAt, @receivedAt, @startAt, @dueAt, @endAt edo @listEnteredAt erabiliz. Adibidez: @endAt >= '2026-01-01' edo @endAt = none. Jarri komatxo artean @ ikurrarekin hasten den eremu pertsonalizatuaren izena."
 }

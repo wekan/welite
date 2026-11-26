@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ тактасында __count__ билдирүү",
   "password-too-short": "Сырсөз кеминде __min__ белгиден турушу керек.",
   "login-refused-bad-password": "Сырсөз туура эмес",
-  "login-refused-braked": "Ийгиликсиз аракеттер өтө көп"
+  "login-refused-braked": "Ийгиликсиз аракеттер өтө көп",
+  "advanced-filter-card-dates-hint": "Карточка даталарын @createdAt, @receivedAt, @startAt, @dueAt, @endAt же @listEnteredAt менен чыпкалаңыз. Мисалы: @endAt >= '2026-01-01' же @endAt = none. @ менен башталган ыңгайлаштырылган талаанын атын тырмакчага алыңыз."
 }

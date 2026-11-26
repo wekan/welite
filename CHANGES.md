@@ -346,6 +346,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Russian - reach WeLite. `tests/catalogs.py` fails on a text that differs
   from WeKan's or a placeholder that is not the English one. 277 of WeKan's
   tests pass.
+- Add the Filter sidebar's Advanced Filter to the HTML5 view (WeKan's
+  advancedFilter.js, as Weddy's advanced_filter.go): custom fields by name,
+  a dropdown by its option's name, numbers by the whole token, date fields
+  and the card's own @dates by range, `= none`, regexes, and/or, not and
+  brackets. One that does not parse keeps the last that did (?last=). SQLite
+  has no regular expressions to give, so `src/wladvf.pas` evaluates the
+  filter in Pascal, card by card - nothing typed reaches the database as
+  SQL. `tests/advfilter.py` checks it as data. 279 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

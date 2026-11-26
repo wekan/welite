@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ ബോർഡിൽ __count__ അറിയിപ്പുകൾ",
   "password-too-short": "പാസ്‌വേഡിന് കുറഞ്ഞത് __min__ അക്ഷരങ്ങൾ നീളം വേണം.",
   "login-refused-bad-password": "തെറ്റായ പാസ്‌വേഡ്",
-  "login-refused-braked": "വളരെയധികം പരാജയപ്പെട്ട ശ്രമങ്ങൾ"
+  "login-refused-braked": "വളരെയധികം പരാജയപ്പെട്ട ശ്രമങ്ങൾ",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt അല്ലെങ്കിൽ @listEnteredAt ഉപയോഗിച്ച് കാർഡ് തീയതികൾ അരിക്കുക. ഉദാഹരണം: @endAt >= '2026-01-01' അല്ലെങ്കിൽ @endAt = none. @ കൊണ്ട് തുടങ്ങുന്ന ഇഷ്ടാനുസൃത ഫീൽഡിന്റെ പേര് ഉദ്ധരണിചിഹ്നങ്ങളിൽ എഴുതുക."
 }

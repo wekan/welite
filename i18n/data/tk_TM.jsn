@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ tagtasynda __count__ duýduryş",
   "password-too-short": "Parol azyndan __min__ simwoldan ybarat bolmaly.",
   "login-refused-bad-password": "Nädogry parol",
-  "login-refused-braked": "Şowsuz synanyşyklar gaty köp"
+  "login-refused-braked": "Şowsuz synanyşyklar gaty köp",
+  "advanced-filter-card-dates-hint": "Kart senelerini @createdAt, @receivedAt, @startAt, @dueAt, @endAt ýa-da @listEnteredAt bilen süzüň. Mysal: @endAt >= '2026-01-01' ýa-da @endAt = none. @ bilen başlanýan ýörite meýdanyň adyny dyrnak içine alyň."
 }

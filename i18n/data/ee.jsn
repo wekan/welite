@@ -2123,5 +2123,6 @@
   "notification-group-board": "Nyanyanana __count__ le kpekpeɖeŋu __board__ dzi",
   "password-too-short": "Ele be ɣaɣlanya la nanye dzesi __min__ ya teti.",
   "login-refused-bad-password": "Ɣaɣlanya mesɔ o",
-  "login-refused-braked": "Agbagbadzedze siwo medze edzi o sɔ gbɔ akpa"
+  "login-refused-braked": "Agbagbadzedze siwo medze edzi o sɔ gbɔ akpa",
+  "advanced-filter-card-dates-hint": "Tia agbalẽvi ƒe ŋkekewo kple @createdAt, @receivedAt, @startAt, @dueAt, @endAt alo @listEnteredAt. Kpɔɖeŋu: @endAt >= '2026-01-01' alo @endAt = none. De teƒe tɔxɛ ƒe ŋkɔ si dze egɔme kple @ la ɖe nyaɖegbee ƒe dzesiwo me."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ teavitust tahvlil __board__",
   "password-too-short": "Parool peab olema vähemalt __min__ tähemärki pikk.",
   "login-refused-bad-password": "Vale parool",
-  "login-refused-braked": "Liiga palju ebaõnnestunud katseid"
+  "login-refused-braked": "Liiga palju ebaõnnestunud katseid",
+  "advanced-filter-card-dates-hint": "Filtreeri kaardi kuupäevi väljadega @createdAt, @receivedAt, @startAt, @dueAt, @endAt või @listEnteredAt. Näide: @endAt >= '2026-01-01' või @endAt = none. Pane märgiga @ algav kohandatud välja nimi jutumärkidesse."
 }

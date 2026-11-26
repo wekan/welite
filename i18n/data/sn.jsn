@@ -2123,5 +2123,6 @@
   "notification-group-board": "Zviziviso __count__ pabhodhi __board__",
   "password-too-short": "Pasiwedhi inofanira kuva nemavara __min__ kana kupfuura.",
   "login-refused-bad-password": "Pasiwedhi isiriyo",
-  "login-refused-braked": "Kuedza kwakawandisa kwakakundikana"
+  "login-refused-braked": "Kuedza kwakawandisa kwakakundikana",
+  "advanced-filter-card-dates-hint": "Sefa mazuva emakadhi ne @createdAt, @receivedAt, @startAt, @dueAt, @endAt kana @listEnteredAt. Muenzaniso: @endAt >= '2026-01-01' kana @endAt = none. Isa zita remunda wawakagadzira rinotanga ne @ muzviratidzo zvekutaura."
 }

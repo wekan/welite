@@ -2123,5 +2123,6 @@
   "notification-group-board": "dikitsiso di le __count__ mo botong __board__",
   "password-too-short": "Lefoko la sephiri le tshwanetse go nna le bonnye ditlhaka di le __min__.",
   "login-refused-bad-password": "Lefoko la sephiri le le phoso",
-  "login-refused-braked": "Maiteko a mantsi thata a a paletsweng"
+  "login-refused-braked": "Maiteko a mantsi thata a a paletsweng",
+  "advanced-filter-card-dates-hint": "Sefa matlha a dikarata ka @createdAt, @receivedAt, @startAt, @dueAt, @endAt kgotsa @listEnteredAt. Sekai: @endAt >= '2026-01-01' kgotsa @endAt = none. Tsenya leina la lefelo le le itiretsweng le le simololang ka @ fa gare ga matshwao a nopolo."
 }

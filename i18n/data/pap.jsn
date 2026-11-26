@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notifikashon riba tabla __board__",
   "password-too-short": "E kontraseña mester tin por lo ménos __min__ karakter.",
   "login-refused-bad-password": "Kontraseña robes",
-  "login-refused-braked": "Muchu purba fayá"
+  "login-refused-braked": "Muchu purba fayá",
+  "advanced-filter-card-dates-hint": "Filtra fechanan di karchi ku @createdAt, @receivedAt, @startAt, @dueAt, @endAt òf @listEnteredAt. Ehèmpel: @endAt >= '2026-01-01' òf @endAt = none. Pone nòmber di un veld personalisá ku ta kuminsá ku @ entre komianan."
 }

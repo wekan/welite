@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ огоҳинома дар тахтаи __board__",
   "password-too-short": "Рамз бояд на камтар аз __min__ аломат дошта бошад.",
   "login-refused-bad-password": "Рамзи нодуруст",
-  "login-refused-braked": "Кӯшишҳои ноком аз ҳад зиёд"
+  "login-refused-braked": "Кӯшишҳои ноком аз ҳад зиёд",
+  "advanced-filter-card-dates-hint": "Санаҳои кортро бо @createdAt, @receivedAt, @startAt, @dueAt, @endAt ё @listEnteredAt полоиш кунед. Мисол: @endAt >= '2026-01-01' ё @endAt = none. Номи майдони фармоиширо, ки бо @ оғоз мешавад, дар нохунак гузоред."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ хӑма ҫинче __count__ пӗлтерӳ",
   "password-too-short": "Вӑрттӑн сӑмахра __min__ паллӑран кая мар пулмалла.",
   "login-refused-bad-password": "Вӑрттӑн сӑмах тӗрӗс мар",
-  "login-refused-braked": "Ӑнӑҫсӑр хӑтланусем ытла нумай"
+  "login-refused-braked": "Ӑнӑҫсӑр хӑтланусем ытла нумай",
+  "advanced-filter-card-dates-hint": "Карточкӑсен кунӗсене @createdAt, @receivedAt, @startAt, @dueAt, @endAt е @listEnteredAt пулӑшнипе суйлӑр. Тӗслӗх: @endAt >= '2026-01-01' е @endAt = none. @ паллӑран пуҫланакан хӑвӑр уйӑн ятне кавычкӑна илӗр."
 }

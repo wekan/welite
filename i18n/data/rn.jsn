@@ -2123,5 +2123,6 @@
   "notification-group-board": "Amakuru __count__ ku capa __board__",
   "password-too-short": "Ijambo ry'ibanga ritegerezwa kugira nibura indome __min__.",
   "login-refused-bad-password": "Ijambo ry'ibanga ritari ryo",
-  "login-refused-braked": "Ukugerageza kwananiwe ni kwinshi cane"
+  "login-refused-braked": "Ukugerageza kwananiwe ni kwinshi cane",
+  "advanced-filter-card-dates-hint": "Yungurura amatariki y'amakarata ukoresheje @createdAt, @receivedAt, @startAt, @dueAt, @endAt canke @listEnteredAt. Akarorero: @endAt >= '2026-01-01' canke @endAt = none. Shira izina ry'ikibanza cihariye ritangurwa na @ hagati y'utwuguruzo n'utwugarizo."
 }

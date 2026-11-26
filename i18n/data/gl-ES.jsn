@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notificacións no taboleiro __board__",
   "password-too-short": "O contrasinal debe ter polo menos __min__ caracteres.",
   "login-refused-bad-password": "Contrasinal incorrecto",
-  "login-refused-braked": "Demasiados intentos fallidos"
+  "login-refused-braked": "Demasiados intentos fallidos",
+  "advanced-filter-card-dates-hint": "Filtra as datas das tarxetas con @createdAt, @receivedAt, @startAt, @dueAt, @endAt ou @listEnteredAt. Exemplo: @endAt >= '2026-01-01' ou @endAt = none. Pon entre comiñas o nome dun campo personalizado que comece por @."
 }

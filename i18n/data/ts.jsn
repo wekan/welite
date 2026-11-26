@@ -2123,5 +2123,6 @@
   "notification-group-board": "Switiviso swa __count__ eka bodo __board__",
   "password-too-short": "Xiletelo xa xihundla xi fanele ku va ni maletere ya __min__ hi ku tsongo.",
   "login-refused-bad-password": "Xiletelo xa xihundla xo hoxeka",
-  "login-refused-braked": "Ku ringeta ko tala ngopfu loku tsandzekeke"
+  "login-refused-braked": "Ku ringeta ko tala ngopfu loku tsandzekeke",
+  "advanced-filter-card-dates-hint": "Sefa masiku ya makhadi hi @createdAt, @receivedAt, @startAt, @dueAt, @endAt kumbe @listEnteredAt. Xikombiso: @endAt >= '2026-01-01' kumbe @endAt = none. Veka vito ra ndhawu leyi endleriweke wena leri sungulaka hi @ endzeni ka swirhatana."
 }

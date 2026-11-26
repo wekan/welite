@@ -2123,5 +2123,6 @@
   "notification-group-board": "બોર્ડ __board__ પર __count__ સૂચનાઓ",
   "password-too-short": "પાસવર્ડ ઓછામાં ઓછો __min__ અક્ષરો લાંબો હોવો જોઈએ.",
   "login-refused-bad-password": "ખોટો પાસવર્ડ",
-  "login-refused-braked": "ઘણા બધા નિષ્ફળ પ્રયાસો"
+  "login-refused-braked": "ઘણા બધા નિષ્ફળ પ્રયાસો",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt અથવા @listEnteredAt થી કાર્ડની તારીખો ગાળો. ઉદાહરણ: @endAt >= '2026-01-01' અથવા @endAt = none. @ થી શરૂ થતા કસ્ટમ ક્ષેત્રના નામને અવતરણ ચિહ્નોમાં મૂકો."
 }

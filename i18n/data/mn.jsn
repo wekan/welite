@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ самбар дээр __count__ мэдэгдэл",
   "password-too-short": "Нууц үг хамгийн багадаа __min__ тэмдэгттэй байх ёстой.",
   "login-refused-bad-password": "Нууц үг буруу",
-  "login-refused-braked": "Амжилтгүй оролдлого хэт олон"
+  "login-refused-braked": "Амжилтгүй оролдлого хэт олон",
+  "advanced-filter-card-dates-hint": "Картын огноог @createdAt, @receivedAt, @startAt, @dueAt, @endAt эсвэл @listEnteredAt ашиглан шүүнэ. Жишээ: @endAt >= '2026-01-01' эсвэл @endAt = none. @ тэмдгээр эхэлсэн тусгай талбарын нэрийг хашилтад оруулна уу."
 }

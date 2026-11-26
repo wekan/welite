@@ -2123,5 +2123,6 @@
   "notification-group-board": "Beeksisa __count__ gabatee __board__ irratti",
   "password-too-short": "Jechi darbii yoo xiqqaate qubee __min__ qabaachuu qaba.",
   "login-refused-bad-password": "Jecha darbii dogoggoraa",
-  "login-refused-braked": "Yaaliiwwan kufaatii baay'ee"
+  "login-refused-braked": "Yaaliiwwan kufaatii baay'ee",
+  "advanced-filter-card-dates-hint": "Guyyoota kaardii @createdAt, @receivedAt, @startAt, @dueAt, @endAt yookaan @listEnteredAt fayyadamuun calali. Fakkeenya: @endAt >= '2026-01-01' yookaan @endAt = none. Maqaa dirree dhuunfaa kan @ dhaan jalqabu mallattoolee waraabbii gidduu kaa'i."
 }

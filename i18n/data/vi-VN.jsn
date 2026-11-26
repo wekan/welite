@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ thông báo trên bảng __board__",
   "password-too-short": "Mật khẩu phải dài ít nhất __min__ ký tự.",
   "login-refused-bad-password": "Sai mật khẩu",
-  "login-refused-braked": "Quá nhiều lần thử thất bại"
+  "login-refused-braked": "Quá nhiều lần thử thất bại",
+  "advanced-filter-card-dates-hint": "Lọc ngày của thẻ bằng @createdAt, @receivedAt, @startAt, @dueAt, @endAt hoặc @listEnteredAt. Ví dụ: @endAt >= '2026-01-01' hoặc @endAt = none. Đặt tên trường tùy chỉnh bắt đầu bằng @ trong dấu nháy."
 }

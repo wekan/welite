@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ njoftime në tabelën __board__",
   "password-too-short": "Fjalëkalimi duhet të ketë të paktën __min__ karaktere.",
   "login-refused-bad-password": "Fjalëkalim i gabuar",
-  "login-refused-braked": "Shumë përpjekje të dështuara"
+  "login-refused-braked": "Shumë përpjekje të dështuara",
+  "advanced-filter-card-dates-hint": "Filtro datat e kartave me @createdAt, @receivedAt, @startAt, @dueAt, @endAt ose @listEnteredAt. Shembull: @endAt >= '2026-01-01' ose @endAt = none. Vendos në thonjëza emrin e një fushe të personalizuar që fillon me @."
 }

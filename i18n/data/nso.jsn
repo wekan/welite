@@ -2123,5 +2123,6 @@
   "notification-group-board": "Ditsebišo tše __count__ go poto __board__",
   "password-too-short": "Lentšu la sephiri le swanetše go ba le bonnyane bja dihlaka tše __min__.",
   "login-refused-bad-password": "Lentšu la sephiri le fošagetše",
-  "login-refused-braked": "Maiteko a mantši kudu ao a paletšwego"
+  "login-refused-braked": "Maiteko a mantši kudu ao a paletšwego",
+  "advanced-filter-card-dates-hint": "Sefa matšatšikgwedi a dikarata ka @createdAt, @receivedAt, @startAt, @dueAt, @endAt goba @listEnteredAt. Mohlala: @endAt >= '2026-01-01' goba @endAt = none. Bea leina la lefelo leo le itiretšwego leo le thomago ka @ magareng ga maswao a tsopolo."
 }

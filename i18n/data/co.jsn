@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ nutificazioni nant'à a tavula __board__",
   "password-too-short": "A parolla d'intrata deve avè almenu __min__ caratteri.",
   "login-refused-bad-password": "Parolla d'intrata sbagliata",
-  "login-refused-braked": "Troppu tentativi falluti"
+  "login-refused-braked": "Troppu tentativi falluti",
+  "advanced-filter-card-dates-hint": "Filtrà e date di carte cù @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Esempiu: @endAt >= '2026-01-01' o @endAt = none. Mette trà virgulette u nome d'un campu persunalizatu chì principia cù @."
 }

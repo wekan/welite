@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ powiadōmiyń na tabuli __board__",
   "password-too-short": "Hasło musi mieć niy mynij jak __min__ znakōw.",
   "login-refused-bad-password": "Złe hasło",
-  "login-refused-braked": "Za tela niyudanych prōbōw"
+  "login-refused-braked": "Za tela niyudanych prōbōw",
+  "advanced-filter-card-dates-hint": "Filtruj daty kart bez @createdAt, @receivedAt, @startAt, @dueAt, @endAt abo @listEnteredAt. Przikłŏd: @endAt >= '2026-01-01' abo @endAt = none. Nazwa włŏsnego pola, kerŏ zaczynŏ sie ôd @, dej we cudzysłōw."
 }

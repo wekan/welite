@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ fráboðanir á talvuni __board__",
   "password-too-short": "Loyniorðið má vera í minsta lagi __min__ tekn langt.",
   "login-refused-bad-password": "Skeivt loyniorð",
-  "login-refused-braked": "Ov nógvar miseydnaðar royndir"
+  "login-refused-braked": "Ov nógvar miseydnaðar royndir",
+  "advanced-filter-card-dates-hint": "Sálda dagfestingar á kortum við @createdAt, @receivedAt, @startAt, @dueAt, @endAt ella @listEnteredAt. Dømi: @endAt >= '2026-01-01' ella @endAt = none. Set gásareygu rundan um navnið á einum tillagaðum teigi, sum byrjar við @."
 }

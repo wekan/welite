@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ gwarnyans war an estyllen __board__",
   "password-too-short": "Res yw dhe'n ger-tremena bos hirra a __min__ lytherenn dhe'n lyha.",
   "login-refused-bad-password": "Ger-tremena kammek",
-  "login-refused-braked": "Re a assayow fyllys"
+  "login-refused-braked": "Re a assayow fyllys",
+  "advanced-filter-card-dates-hint": "Hidla dedhyasow kartennow gans @createdAt, @receivedAt, @startAt, @dueAt, @endAt po @listEnteredAt. Ensampel: @endAt >= '2026-01-01' po @endAt = none. Rhowgh dyfynow a-dro dhe hanow maes a-vusur a dhallath gans @."
 }

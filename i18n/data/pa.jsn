@@ -2123,5 +2123,6 @@
   "notification-group-board": "ਬੋਰਡ __board__ 'ਤੇ __count__ ਸੂਚਨਾਵਾਂ",
   "password-too-short": "ਪਾਸਵਰਡ ਘੱਟੋ-ਘੱਟ __min__ ਅੱਖਰਾਂ ਦਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।",
   "login-refused-bad-password": "ਗਲਤ ਪਾਸਵਰਡ",
-  "login-refused-braked": "ਬਹੁਤ ਸਾਰੀਆਂ ਅਸਫਲ ਕੋਸ਼ਿਸ਼ਾਂ"
+  "login-refused-braked": "ਬਹੁਤ ਸਾਰੀਆਂ ਅਸਫਲ ਕੋਸ਼ਿਸ਼ਾਂ",
+  "advanced-filter-card-dates-hint": "ਕਾਰਡ ਦੀਆਂ ਤਾਰੀਖਾਂ ਨੂੰ @createdAt, @receivedAt, @startAt, @dueAt, @endAt ਜਾਂ @listEnteredAt ਨਾਲ ਫਿਲਟਰ ਕਰੋ। ਉਦਾਹਰਨ: @endAt >= '2026-01-01' ਜਾਂ @endAt = none. @ ਨਾਲ ਸ਼ੁਰੂ ਹੋਣ ਵਾਲੇ ਕਸਟਮ ਖੇਤਰ ਦੇ ਨਾਮ ਨੂੰ ਹਵਾਲਾ ਚਿੰਨ੍ਹਾਂ ਵਿੱਚ ਲਿਖੋ।"
 }

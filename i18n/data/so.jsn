@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ ogeysiis oo ku saabsan sabuuradda __board__",
   "password-too-short": "Furaha sirtu waa inuu ahaadaa ugu yaraan __min__ xaraf.",
   "login-refused-bad-password": "Furaha sirta oo khaldan",
-  "login-refused-braked": "Isku dayo badan oo fashilmay"
+  "login-refused-braked": "Isku dayo badan oo fashilmay",
+  "advanced-filter-card-dates-hint": "Taariikhaha kaararka ku shaandhee @createdAt, @receivedAt, @startAt, @dueAt, @endAt ama @listEnteredAt. Tusaale: @endAt >= '2026-01-01' ama @endAt = none. Magaca goob gaar ah oo ku bilaabma @ ku dhex qor calaamadaha xigashada."
 }

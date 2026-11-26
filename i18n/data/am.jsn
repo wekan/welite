@@ -2123,5 +2123,6 @@
   "notification-group-board": "በሰሌዳ __board__ ላይ __count__ ማሳወቂያዎች",
   "password-too-short": "የይለፍ ቃሉ ቢያንስ __min__ ቁምፊዎች ሊኖሩት ይገባል።",
   "login-refused-bad-password": "የተሳሳተ የይለፍ ቃል",
-  "login-refused-braked": "በጣም ብዙ ያልተሳኩ ሙከራዎች"
+  "login-refused-braked": "በጣም ብዙ ያልተሳኩ ሙከራዎች",
+  "advanced-filter-card-dates-hint": "የካርድ ቀናትን በ @createdAt, @receivedAt, @startAt, @dueAt, @endAt ወይም @listEnteredAt ያጣሩ። ምሳሌ፦ @endAt >= '2026-01-01' ወይም @endAt = none። በ @ የሚጀምር የብጁ መስክ ስምን በጥቅስ ምልክቶች ውስጥ ያስገቡ።"
 }

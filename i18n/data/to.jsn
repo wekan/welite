@@ -2123,5 +2123,6 @@
   "notification-group-board": "Fakatokanga ʻe __count__ ʻi he papa __board__",
   "password-too-short": "Kuopau ke ʻi ai ʻi he lea fufū ha mataʻitohi ʻe __min__ pe lahi ange.",
   "login-refused-bad-password": "Lea fufū hala",
-  "login-refused-braked": "Lahi fau e ngaahi feinga taʻelavameʻa"
+  "login-refused-braked": "Lahi fau e ngaahi feinga taʻelavameʻa",
+  "advanced-filter-card-dates-hint": "Fili ʻa e ngaahi ʻaho ʻo e kaati ʻaki ʻa e @createdAt, @receivedAt, @startAt, @dueAt, @endAt pe @listEnteredAt. Fakatātā: @endAt >= '2026-01-01' pe @endAt = none. ʻĀ takai ʻaki ʻa e ngaahi fakaʻilonga lea ʻa e hingoa ʻo ha feituʻu fakapatonu ʻoku kamata ʻaki ʻa e @."
 }

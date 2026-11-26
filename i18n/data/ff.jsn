@@ -2123,5 +2123,6 @@
   "notification-group-board": "Tintine __count__ e alluwal __board__",
   "password-too-short": "Finnde suuraande ina foti heewde alkule __min__ ko famɗi fof.",
   "login-refused-bad-password": "Finnde suuraande nde moƴƴaani",
-  "login-refused-braked": "Etaaɗe ɓurɗe heewde ɗe ronkii"
+  "login-refused-braked": "Etaaɗe ɓurɗe heewde ɗe ronkii",
+  "advanced-filter-card-dates-hint": "Siiwtu ñalɗe kartal e @createdAt, @receivedAt, @startAt, @dueAt, @endAt walla @listEnteredAt. Yeru: @endAt >= '2026-01-01' walla @endAt = none. Waɗ innde gesa keeriinga fuɗɗoriinga @ e nder maantore toɗɗugol."
 }

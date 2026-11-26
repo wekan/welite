@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ самбар дээрэ __count__ мэдээсэл",
   "password-too-short": "Нюуса үгэ хамгийн багаар __min__ тэмдэгтэй байха ёһотой.",
   "login-refused-bad-password": "Буруу нюуса үгэ",
-  "login-refused-braked": "Бүтэлгүй оролдолго хэтэ олон"
+  "login-refused-braked": "Бүтэлгүй оролдолго хэтэ олон",
+  "advanced-filter-card-dates-hint": "Карточкын үдэрнүүдые @createdAt, @receivedAt, @startAt, @dueAt, @endAt гү, али @listEnteredAt-аар шүүгты. Жэшээ: @endAt >= '2026-01-01' гү, али @endAt = none. @ тэмдэгээр эхилһэн өөрын талбарай нэрэ хашалта соо бэшэгты."
 }

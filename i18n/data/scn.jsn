@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ nutifichi supra la tavula __board__",
   "password-too-short": "La palora d'ordini havi a essiri longa armenu __min__ caratteri.",
   "login-refused-bad-password": "Palora d'ordini sbagghiata",
-  "login-refused-braked": "Troppi tentativi falluti"
+  "login-refused-braked": "Troppi tentativi falluti",
+  "advanced-filter-card-dates-hint": "Filtra li dati di li carti cu @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Esempiu: @endAt >= '2026-01-01' o @endAt = none. Metti tra virguletti lu nomu d'un campu pirsunalizzatu chi accuminza cu @."
 }

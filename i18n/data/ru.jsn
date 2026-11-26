@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ уведомлений на доске __board__",
   "password-too-short": "Пароль должен содержать не менее __min__ символов.",
   "login-refused-bad-password": "Неверный пароль",
-  "login-refused-braked": "Слишком много неудачных попыток"
+  "login-refused-braked": "Слишком много неудачных попыток",
+  "advanced-filter-card-dates-hint": "Фильтруйте даты карточек с помощью @createdAt, @receivedAt, @startAt, @dueAt, @endAt или @listEnteredAt. Пример: @endAt >= '2026-01-01' или @endAt = none. Название пользовательского поля, начинающееся с @, заключите в кавычки."
 }

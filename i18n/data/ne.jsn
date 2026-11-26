@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ बोर्डमा __count__ सूचना",
   "password-too-short": "पासवर्ड कम्तीमा __min__ वर्ण लामो हुनुपर्छ।",
   "login-refused-bad-password": "गलत पासवर्ड",
-  "login-refused-braked": "धेरै असफल प्रयासहरू"
+  "login-refused-braked": "धेरै असफल प्रयासहरू",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt वा @listEnteredAt प्रयोग गरेर कार्डका मिति छान्नुहोस्। उदाहरण: @endAt >= '2026-01-01' वा @endAt = none। @ बाट सुरु हुने अनुकूलित फिल्डको नाम उद्धरण चिह्नभित्र राख्नुहोस्।"
 }

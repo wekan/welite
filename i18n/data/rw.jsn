@@ -2123,5 +2123,6 @@
   "notification-group-board": "Imenyesha __count__ ku kibaho __board__",
   "password-too-short": "Ijambobanga rigomba kugira nibura inyuguti __min__.",
   "login-refused-bad-password": "Ijambobanga ritari ryo",
-  "login-refused-braked": "Kugerageza kunanirwa kwabaye kwinshi cyane"
+  "login-refused-braked": "Kugerageza kunanirwa kwabaye kwinshi cyane",
+  "advanced-filter-card-dates-hint": "Shungura amatariki y'amakarita ukoresheje @createdAt, @receivedAt, @startAt, @dueAt, @endAt cyangwa @listEnteredAt. Urugero: @endAt >= '2026-01-01' cyangwa @endAt = none. Shyira izina ry'umwanya wihariye ritangirwa na @ hagati y'utwuguruzo n'utwugarizo."
 }

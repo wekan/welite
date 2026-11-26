@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ መልእኽትታት ኣብ ሰሌዳ __board__",
   "password-too-short": "መሕለፊ ቃል እንተወሓደ __min__ ፊደላት ክህልዎ ኣለዎ።",
   "login-refused-bad-password": "ጌጋ መሕለፊ ቃል",
-  "login-refused-braked": "ኣዝዮም ብዙሓት ዘይተዓወቱ ፈተነታት"
+  "login-refused-braked": "ኣዝዮም ብዙሓት ዘይተዓወቱ ፈተነታት",
+  "advanced-filter-card-dates-hint": "ዕለታት ካርድ ብ @createdAt፣ @receivedAt፣ @startAt፣ @dueAt፣ @endAt ወይ @listEnteredAt ኣጻሪ። ኣብነት፦ @endAt >= '2026-01-01' ወይ @endAt = none። ብ @ ዝጅምር ስም ብሕታዊ ዓውዲ ኣብ ምልክታት ጥቕሲ ኣእቱ።"
 }

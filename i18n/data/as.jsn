@@ -2123,5 +2123,6 @@
   "notification-group-board": "ফলক __board__-ত __count__ টা জাননী",
   "password-too-short": "পাছৱৰ্ডটো অতি কমেও __min__ টা আখৰৰ হ'ব লাগিব।",
   "login-refused-bad-password": "ভুল পাছৱৰ্ড",
-  "login-refused-braked": "অতি বেছি বিফল প্ৰচেষ্টা"
+  "login-refused-braked": "অতি বেছি বিফল প্ৰচেষ্টা",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt বা @listEnteredAt ব্যৱহাৰ কৰি কাৰ্ডৰ তাৰিখ ছাঁকক। উদাহৰণ: @endAt >= '2026-01-01' বা @endAt = none। @ ৰে আৰম্ভ হোৱা নিজা ক্ষেত্ৰৰ নাম উদ্ধৃতি চিহ্নৰ ভিতৰত লিখক।"
 }

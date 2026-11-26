@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ notifikasi pada papan __board__",
   "password-too-short": "Kata sandi harus terdiri dari minimal __min__ karakter.",
   "login-refused-bad-password": "Kata sandi salah",
-  "login-refused-braked": "Terlalu banyak percobaan gagal"
+  "login-refused-braked": "Terlalu banyak percobaan gagal",
+  "advanced-filter-card-dates-hint": "Saring tanggal kartu dengan @createdAt, @receivedAt, @startAt, @dueAt, @endAt atau @listEnteredAt. Contoh: @endAt >= '2026-01-01' atau @endAt = none. Apit nama kolom khusus yang dimulai dengan @ menggunakan tanda kutip."
 }

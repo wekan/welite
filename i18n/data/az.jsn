@@ -2134,5 +2134,6 @@
   "notification-group-board": "__board__ lövhəsində __count__ bildiriş",
   "password-too-short": "Parol ən azı __min__ simvol uzunluğunda olmalıdır.",
   "login-refused-bad-password": "Yanlış parol",
-  "login-refused-braked": "Həddindən çox uğursuz cəhd"
+  "login-refused-braked": "Həddindən çox uğursuz cəhd",
+  "advanced-filter-card-dates-hint": "Kart tarixlərini @createdAt, @receivedAt, @startAt, @dueAt, @endAt və ya @listEnteredAt ilə süzgəcdən keçirin. Nümunə: @endAt >= '2026-01-01' və ya @endAt = none. @ ilə başlayan xüsusi sahə adını dırnaq işarələri arasına alın."
 }

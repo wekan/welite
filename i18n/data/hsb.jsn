@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ zdźělenkow na tafli __board__",
   "password-too-short": "Hesło dyrbi znajmjeńša __min__ znamješkow dołhe być.",
   "login-refused-bad-password": "Wopačne hesło",
-  "login-refused-braked": "Přewjele njeporadźenych pospytow"
+  "login-refused-braked": "Přewjele njeporadźenych pospytow",
+  "advanced-filter-card-dates-hint": "Filtrujće datumy kartow z @createdAt, @receivedAt, @startAt, @dueAt, @endAt abo @listEnteredAt. Přikład: @endAt >= '2026-01-01' abo @endAt = none. Stajće mjeno swójskeho pola, kotrež so z @ započina, do pazorkow."
 }

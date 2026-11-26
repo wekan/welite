@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notifications sol tåvlea __board__",
   "password-too-short": "Li sicret doet esse long d' å moens __min__ caracteres.",
   "login-refused-bad-password": "Måva sicret",
-  "login-refused-braked": "Trop d' saye ki n' ont nén rexhou"
+  "login-refused-braked": "Trop d' saye ki n' ont nén rexhou",
+  "advanced-filter-card-dates-hint": "Passer les dates des cåtes avou @createdAt, @receivedAt, @startAt, @dueAt, @endAt ou @listEnteredAt. Egzimpe: @endAt >= '2026-01-01' ou @endAt = none. Metoz inte wiyemets li no d’on tchamp da vosse ki cmince avou @."
 }

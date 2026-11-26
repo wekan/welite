@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ notifiki fuq il-bord __board__",
   "password-too-short": "Il-kelma ta’ għassa trid tkun twila mill-inqas __min__ karattri.",
   "login-refused-bad-password": "Kelma ta’ għassa ħażina",
-  "login-refused-braked": "Wisq tentattivi falluti"
+  "login-refused-braked": "Wisq tentattivi falluti",
+  "advanced-filter-card-dates-hint": "Iffiltra d-dati tal-karti b’@createdAt, @receivedAt, @startAt, @dueAt, @endAt jew @listEnteredAt. Eżempju: @endAt >= '2026-01-01' jew @endAt = none. Poġġi isem ta’ qasam personalizzat li jibda b’@ bejn il-virgoletti."
 }

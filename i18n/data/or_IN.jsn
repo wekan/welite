@@ -2123,5 +2123,6 @@
   "notification-group-board": "ବୋର୍ଡ __board__ ରେ __count__ ବିଜ୍ଞପ୍ତି",
   "password-too-short": "ପାସୱାର୍ଡ ଅତି କମରେ __min__ ଅକ୍ଷର ଲମ୍ବା ହେବା ଆବଶ୍ୟକ।",
   "login-refused-bad-password": "ଭୁଲ ପାସୱାର୍ଡ",
-  "login-refused-braked": "ଅତ୍ୟଧିକ ବିଫଳ ପ୍ରୟାସ"
+  "login-refused-braked": "ଅତ୍ୟଧିକ ବିଫଳ ପ୍ରୟାସ",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt କିମ୍ବା @listEnteredAt ବ୍ୟବହାର କରି କାର୍ଡର ତାରିଖ ଫିଲ୍ଟର କରନ୍ତୁ। ଉଦାହରଣ: @endAt >= '2026-01-01' କିମ୍ବା @endAt = none। @ ରୁ ଆରମ୍ଭ ହେଉଥିବା କଷ୍ଟମ କ୍ଷେତ୍ରର ନାମକୁ ଉଦ୍ଧୃତି ଚିହ୍ନ ମଧ୍ୟରେ ରଖନ୍ତୁ।"
 }

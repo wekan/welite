@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ ծանուցում __board__ տախտակում",
   "password-too-short": "Գաղտնաբառը պետք է լինի առնվազն __min__ նիշ։",
   "login-refused-bad-password": "Սխալ գաղտնաբառ",
-  "login-refused-braked": "Չափազանց շատ անհաջող փորձեր"
+  "login-refused-braked": "Չափազանց շատ անհաջող փորձեր",
+  "advanced-filter-card-dates-hint": "Զտեք քարտերի ամսաթվերը՝ օգտագործելով @createdAt, @receivedAt, @startAt, @dueAt, @endAt կամ @listEnteredAt։ Օրինակ՝ @endAt >= '2026-01-01' կամ @endAt = none։ @-ով սկսվող անհատական դաշտի անունը գրեք չակերտների մեջ։"
 }

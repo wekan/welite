@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ дуоскаҕа __count__ биллэрии",
   "password-too-short": "Кистэлэҥ тыл саамай аҕыйаҕа __min__ бэлиэлээх буолуохтаах.",
   "login-refused-bad-password": "Кистэлэҥ тыл сыыһа",
-  "login-refused-braked": "Наһаа элбэх сатамматах холонуу"
+  "login-refused-braked": "Наһаа элбэх сатамматах холонуу",
+  "advanced-filter-card-dates-hint": "Карточкалар күннэрин @createdAt, @receivedAt, @startAt, @dueAt, @endAt эбэтэр @listEnteredAt көмөтүнэн тал. Холобур: @endAt >= '2026-01-01' эбэтэр @endAt = none. @ бэлиэттэн саҕаланар бэйэҥ оҥорбут хонууҥ аатын кэбиэчкэҕэ ыл."
 }

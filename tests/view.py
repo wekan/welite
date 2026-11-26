@@ -538,6 +538,20 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/b/%s/custom-fields' % board_id, {'name': 'S', 'type': 'text'}, cookie=stranger)[0] == 403
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'>123.45<' in page and page.count(b'js-select-field') == 1, 'nothing else was written'
+        # The Filter sidebar's Advanced Filter (src/wladvf.pas): by the field's
+        # name; one that does not parse keeps the last that did (?last=).
+        from urllib.parse import quote
+        shown = lambda q: ('data-card-id="%s"' % card_id).encode() in request('GET', route + '?' + q, cookie=owner)[2]
+        assert shown('advanced=' + quote('Budget > 100')) and not shown('advanced=' + quote('Budget < 100'))
+        assert shown('advanced=' + quote('Budget == 123.45')) and not shown('advanced=' + quote('not Budget == 123.45'))
+        page = request('GET', route + '?advanced=' + quote('Budget <') + '&last=' + quote('Budget < 100'), cookie=owner)[2]
+        assert ('data-card-id="%s"' % card_id).encode() not in page and b'data-applied="Budget &lt; 100"' in page
+        assert b'class="js-field-advanced-filter" type="text" value="Budget &lt;"' in page, 'the typed one stays in the field'
+        # Negative: no field of that name, a regex that does not compile, text
+        # that is SQL - none filters, and none reaches the database as SQL.
+        for bad in ("Nope == 1", "Budget == /(/", "Budget == x' OR 1=1 --", "' OR 1=1 --"):
+            page = request('GET', route + '?advanced=' + quote(bad), cookie=owner)[2]
+            assert ('data-card-id="%s"' % card_id).encode() in page and b'data-applied=""' in page, bad
         assert request('POST', fields + '/toggle', {}, cookie=owner)[0] == 200
         assert b'card-details-item-customfield' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         # The layout, the user's own (toggleCustomFieldsGrid).

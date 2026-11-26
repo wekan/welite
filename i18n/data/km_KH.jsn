@@ -2123,5 +2123,6 @@
   "notification-group-board": "ការជូនដំណឹង __count__ នៅលើក្តារ __board__",
   "password-too-short": "ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោចណាស់ __min__ តួអក្សរ។",
   "login-refused-bad-password": "ពាក្យសម្ងាត់ខុស",
-  "login-refused-braked": "ការព្យាយាមបរាជ័យច្រើនពេក"
+  "login-refused-braked": "ការព្យាយាមបរាជ័យច្រើនពេក",
+  "advanced-filter-card-dates-hint": "ត្រងកាលបរិច្ឆេទកាតដោយប្រើ @createdAt, @receivedAt, @startAt, @dueAt, @endAt ឬ @listEnteredAt។ ឧទាហរណ៍៖ @endAt >= '2026-01-01' ឬ @endAt = none។ ដាក់ឈ្មោះវាលផ្ទាល់ខ្លួនដែលចាប់ផ្តើមដោយ @ ក្នុងសញ្ញាសម្រង់។"
 }

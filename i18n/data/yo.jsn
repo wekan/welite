@@ -2123,5 +2123,6 @@
   "notification-group-board": "Awọn iwifunni __count__ lori pátákó __board__",
   "password-too-short": "Ọ̀rọ̀ìgbaniwọlé gbọ́dọ̀ ní ó kéré tán __min__ àmì.",
   "login-refused-bad-password": "Ọ̀rọ̀ìgbaniwọlé tí kò tọ́",
-  "login-refused-braked": "Ìgbìyànjú tí kò yọrí sí rere ti pọ̀ jù"
+  "login-refused-braked": "Ìgbìyànjú tí kò yọrí sí rere ti pọ̀ jù",
+  "advanced-filter-card-dates-hint": "Ṣàyẹ̀wò àwọn ọjọ́ káàdì pẹ̀lú @createdAt, @receivedAt, @startAt, @dueAt, @endAt tàbí @listEnteredAt. Àpẹẹrẹ: @endAt >= '2026-01-01' tàbí @endAt = none. Fi àmì àyọlò yí orúkọ ààyè àdáni tó bẹ̀rẹ̀ pẹ̀lú @ ká."
 }

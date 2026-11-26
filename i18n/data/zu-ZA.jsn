@@ -2123,5 +2123,6 @@
   "notification-group-board": "Izaziso ezingu-__count__ ebhodini __board__",
   "password-too-short": "Iphasiwedi kumele ibe nezinhlamvu okungenani ezingu-__min__.",
   "login-refused-bad-password": "Iphasiwedi engalungile",
-  "login-refused-braked": "Imizamo eminingi kakhulu engaphumelelanga"
+  "login-refused-braked": "Imizamo eminingi kakhulu engaphumelelanga",
+  "advanced-filter-card-dates-hint": "Hlunga izinsuku zamakhadi usebenzisa @createdAt, @receivedAt, @startAt, @dueAt, @endAt noma @listEnteredAt. Isibonelo: @endAt >= '2026-01-01' noma @endAt = none. Faka igama lenkambu eyenziwe ngokwezifiso eqala ngo-@ phakathi kwezimpawu zokucaphuna."
 }

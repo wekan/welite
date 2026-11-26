@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ පුවරුවේ දැනුම්දීම් __count__",
   "password-too-short": "මුරපදය අවම වශයෙන් අක්ෂර __min__ ක් දිග විය යුතුය.",
   "login-refused-bad-password": "වැරදි මුරපදය",
-  "login-refused-braked": "අසාර්ථක උත්සාහයන් ඕනෑවට වඩා"
+  "login-refused-braked": "අසාර්ථක උත්සාහයන් ඕනෑවට වඩා",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt හෝ @listEnteredAt භාවිතයෙන් කාඩ්පත් දින පෙරන්න. උදාහරණය: @endAt >= '2026-01-01' හෝ @endAt = none. @ වලින් ඇරඹෙන අභිරුචි ක්ෂේත්‍ර නාමයක් උද්ධෘත ලකුණු තුළ ලියන්න."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ फलकावर __count__ सूचना",
   "password-too-short": "पासवर्ड किमान __min__ अक्षरांचा असणे आवश्यक आहे.",
   "login-refused-bad-password": "चुकीचा पासवर्ड",
-  "login-refused-braked": "खूप जास्त अयशस्वी प्रयत्न"
+  "login-refused-braked": "खूप जास्त अयशस्वी प्रयत्न",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt किंवा @listEnteredAt वापरून कार्डांचे दिनांक गाळा. उदाहरण: @endAt >= '2026-01-01' किंवा @endAt = none. @ ने सुरू होणाऱ्या सानुकूल क्षेत्राचे नाव अवतरणचिन्हांत लिहा."
 }

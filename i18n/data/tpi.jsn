@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ nius long bot __board__",
   "password-too-short": "Paswot i mas i gat __min__ leta o moa.",
   "login-refused-bad-password": "Paswot i rong",
-  "login-refused-braked": "Planti tumas traim i no wok"
+  "login-refused-braked": "Planti tumas traim i no wok",
+  "advanced-filter-card-dates-hint": "Filtarim ol de bilong kat wantaim @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Eksampel: @endAt >= '2026-01-01' o @endAt = none. Putim nem bilong bokis yu yet i makim, sapos nem i stat wantaim @, insait long ol mak bilong toktok."
 }

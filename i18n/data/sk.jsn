@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ oznámení na nástenke __board__",
   "password-too-short": "Heslo musí mať aspoň __min__ znakov.",
   "login-refused-bad-password": "Nesprávne heslo",
-  "login-refused-braked": "Príliš veľa neúspešných pokusov"
+  "login-refused-braked": "Príliš veľa neúspešných pokusov",
+  "advanced-filter-card-dates-hint": "Filtrujte dátumy kariet pomocou @createdAt, @receivedAt, @startAt, @dueAt, @endAt alebo @listEnteredAt. Príklad: @endAt >= '2026-01-01' alebo @endAt = none. Názov vlastného poľa začínajúci znakom @ uzavrite do úvodzoviek."
 }

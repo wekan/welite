@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ aviseringar på tavlan __board__",
   "password-too-short": "Lösenordet måste vara minst __min__ tecken långt.",
   "login-refused-bad-password": "Fel lösenord",
-  "login-refused-braked": "För många misslyckade försök"
+  "login-refused-braked": "För många misslyckade försök",
+  "advanced-filter-card-dates-hint": "Filtrera kortdatum med @createdAt, @receivedAt, @startAt, @dueAt, @endAt eller @listEnteredAt. Exempel: @endAt >= '2026-01-01' eller @endAt = none. Sätt citattecken runt anpassade fältnamn som börjar med @."
 }

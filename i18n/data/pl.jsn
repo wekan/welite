@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ powiadomień na tablicy __board__",
   "password-too-short": "Hasło musi mieć co najmniej __min__ znaków.",
   "login-refused-bad-password": "Błędne hasło",
-  "login-refused-braked": "Zbyt wiele nieudanych prób"
+  "login-refused-braked": "Zbyt wiele nieudanych prób",
+  "advanced-filter-card-dates-hint": "Filtruj daty kart za pomocą @createdAt, @receivedAt, @startAt, @dueAt, @endAt lub @listEnteredAt. Przykład: @endAt >= '2026-01-01' lub @endAt = none. Nazwę pola niestandardowego zaczynającą się od @ ujmij w cudzysłów."
 }

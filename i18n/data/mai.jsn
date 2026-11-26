@@ -2123,5 +2123,6 @@
   "notification-group-board": "पट्ट __board__ पर __count__ सूचना",
   "password-too-short": "पासवर्ड कमसँ कम __min__ अक्षरक होमक चाही।",
   "login-refused-bad-password": "गलत पासवर्ड",
-  "login-refused-braked": "बहुत बेसी असफल प्रयास"
+  "login-refused-braked": "बहुत बेसी असफल प्रयास",
+  "advanced-filter-card-dates-hint": "कार्डक तारीख सभकेँ @createdAt, @receivedAt, @startAt, @dueAt, @endAt वा @listEnteredAt सँ छानू। उदाहरण: @endAt >= '2026-01-01' वा @endAt = none। @ सँ आरम्भ होमयवला कस्टम क्षेत्रक नाम उद्धरण चिह्नक बीच लिखू।"
 }

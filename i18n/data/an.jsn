@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notificacions en o tablero __board__",
   "password-too-short": "La clau de paso ha de tener a lo menos __min__ caracters.",
   "login-refused-bad-password": "Clau de paso incorrecta",
-  "login-refused-braked": "Masiaus intentos fallius"
+  "login-refused-braked": "Masiaus intentos fallius",
+  "advanced-filter-card-dates-hint": "Filtra as datas d'as tarchetas con @createdAt, @receivedAt, @startAt, @dueAt, @endAt u @listEnteredAt. Eixemplo: @endAt >= '2026-01-01' u @endAt = none. Mete entre cometas o nombre d'un campo personalizau que empecipie con @."
 }

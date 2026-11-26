@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ известия за таблото __board__",
   "password-too-short": "Паролата трябва да е дълга поне __min__ знака.",
   "login-refused-bad-password": "Грешна парола",
-  "login-refused-braked": "Твърде много неуспешни опити"
+  "login-refused-braked": "Твърде много неуспешни опити",
+  "advanced-filter-card-dates-hint": "Филтрирайте датите на картите с @createdAt, @receivedAt, @startAt, @dueAt, @endAt или @listEnteredAt. Пример: @endAt >= '2026-01-01' или @endAt = none. Оградете с кавички името на персонализирано поле, започващо с @."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ whakamōhiotanga i te papa __board__",
   "password-too-short": "Kia __min__ pūāhua te roa o te kupuhipa, neke atu rānei.",
   "login-refused-bad-password": "Kupuhipa hē",
-  "login-refused-braked": "He nui rawa ngā whakamātau i rahua"
+  "login-refused-braked": "He nui rawa ngā whakamātau i rahua",
+  "advanced-filter-card-dates-hint": "Tātarihia ngā rā kāri mā @createdAt, @receivedAt, @startAt, @dueAt, @endAt, @listEnteredAt rānei. Hei tauira: @endAt >= '2026-01-01', @endAt = none rānei. Whakaurua te ingoa o tētahi āpure ritenga e tīmata ana ki @ ki waenga i ngā tohu kīanga."
 }

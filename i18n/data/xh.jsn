@@ -2123,5 +2123,6 @@
   "notification-group-board": "Izaziso __count__ kwibhodi __board__",
   "password-too-short": "Inombolo yokuvula kufuneka ibe noonobumba abangama-__min__ ubuncinane.",
   "login-refused-bad-password": "Inombolo yokuvula engachanekanga",
-  "login-refused-braked": "Iinzame ezininzi kakhulu ezingaphumelelanga"
+  "login-refused-braked": "Iinzame ezininzi kakhulu ezingaphumelelanga",
+  "advanced-filter-card-dates-hint": "Hluza imihla yamakhadi usebenzisa @createdAt, @receivedAt, @startAt, @dueAt, @endAt okanye @listEnteredAt. Umzekelo: @endAt >= '2026-01-01' okanye @endAt = none. Faka igama lendawo eyenzelwe wena eqala ngo-@ phakathi kweempawu zocaphulo."
 }

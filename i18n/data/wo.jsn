@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ yégle ci tablo __board__",
   "password-too-short": "Baatu jall bi war na am lumu néewee __min__ araf.",
   "login-refused-bad-password": "Baatu jall bu juumee",
-  "login-refused-braked": "Jéem yu bari lool yu antuwul"
+  "login-refused-braked": "Jéem yu bari lool yu antuwul",
+  "advanced-filter-card-dates-hint": "Séddale bés yu karta yi ak @createdAt, @receivedAt, @startAt, @dueAt, @endAt walla @listEnteredAt. Royukaay: @endAt >= '2026-01-01' walla @endAt = none. Teg turu wàll wu ñu def ci soxla wu tàmbali ak @ ci diggante màndargay wax."
 }

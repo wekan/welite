@@ -2134,5 +2134,6 @@
   "notification-group-board": "__board__ বোর্ডে __count__টি বিজ্ঞপ্তি",
   "password-too-short": "পাসওয়ার্ডটি কমপক্ষে __min__ অক্ষরের হতে হবে।",
   "login-refused-bad-password": "ভুল পাসওয়ার্ড",
-  "login-refused-braked": "অনেক বেশি ব্যর্থ প্রচেষ্টা"
+  "login-refused-braked": "অনেক বেশি ব্যর্থ প্রচেষ্টা",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt বা @listEnteredAt দিয়ে কার্ডের তারিখ ফিল্টার করুন। উদাহরণ: @endAt >= '2026-01-01' বা @endAt = none। @ দিয়ে শুরু হওয়া কাস্টম ঘরের নাম উদ্ধৃতি চিহ্নের মধ্যে রাখুন।"
 }

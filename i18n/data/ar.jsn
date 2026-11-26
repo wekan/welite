@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ إشعارًا على اللوحة __board__",
   "password-too-short": "يجب ألا يقل طول كلمة المرور عن __min__ حرفًا.",
   "login-refused-bad-password": "كلمة مرور خاطئة",
-  "login-refused-braked": "محاولات فاشلة كثيرة جدًا"
+  "login-refused-braked": "محاولات فاشلة كثيرة جدًا",
+  "advanced-filter-card-dates-hint": "رشّح تواريخ البطاقات باستخدام @createdAt أو @receivedAt أو @startAt أو @dueAt أو @endAt أو @listEnteredAt. مثال: @endAt >= '2026-01-01' أو @endAt = none. ضع اسم الحقل المخصص الذي يبدأ بـ @ بين علامتي اقتباس."
 }

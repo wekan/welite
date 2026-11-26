@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ ειδοποιήσεις στον πίνακα __board__",
   "password-too-short": "Ο κωδικός πρέπει να έχει τουλάχιστον __min__ χαρακτήρες.",
   "login-refused-bad-password": "Λάθος κωδικός",
-  "login-refused-braked": "Πάρα πολλές αποτυχημένες προσπάθειες"
+  "login-refused-braked": "Πάρα πολλές αποτυχημένες προσπάθειες",
+  "advanced-filter-card-dates-hint": "Φιλτράρετε ημερομηνίες καρτών με @createdAt, @receivedAt, @startAt, @dueAt, @endAt ή @listEnteredAt. Παράδειγμα: @endAt >= '2026-01-01' ή @endAt = none. Βάλτε σε εισαγωγικά το όνομα προσαρμοσμένου πεδίου που αρχίζει με @."
 }

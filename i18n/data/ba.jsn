@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ тактаһында __count__ хәбәр",
   "password-too-short": "Серһүҙ кәмендә __min__ символдан торорға тейеш.",
   "login-refused-bad-password": "Хаталы серһүҙ",
-  "login-refused-braked": "Уңышһыҙ тырышлыҡтар бик күп"
+  "login-refused-braked": "Уңышһыҙ тырышлыҡтар бик күп",
+  "advanced-filter-card-dates-hint": "Карточка даталарын @createdAt, @receivedAt, @startAt, @dueAt, @endAt йәки @listEnteredAt ярҙамында фильтрлағыҙ. Мәҫәлән: @endAt >= '2026-01-01' йәки @endAt = none. @ менән башланған махсус ҡыр исемен тырнаҡтарға алығыҙ."
 }

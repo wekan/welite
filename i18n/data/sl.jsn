@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ obvestil na tabli __board__",
   "password-too-short": "Geslo mora imeti vsaj __min__ znakov.",
   "login-refused-bad-password": "Napačno geslo",
-  "login-refused-braked": "Preveč neuspelih poskusov"
+  "login-refused-braked": "Preveč neuspelih poskusov",
+  "advanced-filter-card-dates-hint": "Filtrirajte datume kartic z @createdAt, @receivedAt, @startAt, @dueAt, @endAt ali @listEnteredAt. Primer: @endAt >= '2026-01-01' ali @endAt = none. Ime polja po meri, ki se začne z @, obdajte z narekovaji."
 }

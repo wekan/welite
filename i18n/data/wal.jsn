@@ -2123,5 +2123,6 @@
   "notification-group-board": "Bookkiya __board__ bolla erissuwaa __count__",
   "password-too-short": "Geeman qaalay unttennan __min__ ishaara gidana koshshees.",
   "login-refused-bad-password": "Geeman qaalay balla",
-  "login-refused-braked": "Paaciyo daro paacettida"
+  "login-refused-braked": "Paaciyo daro paacettida",
+  "advanced-filter-card-dates-hint": "Kaardetu gallassata @createdAt, @receivedAt, @startAt, @dueAt, @endAt woykko @listEnteredAt go’ettidi shaakka. Leemisuwa: @endAt >= '2026-01-01' woykko @endAt = none. @-n doommiya ne medhdhida saaxiniyaa sunttaa issi asa qaalaa akkiyo malaatatu giddon wotta."
 }

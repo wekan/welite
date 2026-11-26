@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notìficas in sa tàula __board__",
   "password-too-short": "Sa crae depet èssere longa a su mancu __min__ caràteres.",
   "login-refused-bad-password": "Crae isballiada",
-  "login-refused-braked": "Tropu tentativos faddidos"
+  "login-refused-braked": "Tropu tentativos faddidos",
+  "advanced-filter-card-dates-hint": "Filtra is datas de is cartas cun @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Esempru: @endAt >= '2026-01-01' o @endAt = none. Pone intre virguletas su nòmene de unu campu personalizadu chi cumintzat cun @."
 }

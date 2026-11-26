@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ raSDaq __count__ ghuHmoHmeH QInmey",
   "password-too-short": "pegh mu' ghajnIS __min__ ngutlh qoj latlh.",
   "login-refused-bad-password": "pegh mu' muj",
-  "login-refused-braked": "Qapbe'bogh nIDmey law' law'qu'"
+  "login-refused-braked": "Qapbe'bogh nIDmey law' law'qu'",
+  "advanced-filter-card-dates-hint": "'echletHom jajmey DawIvmeH @createdAt, @receivedAt, @startAt, @dueAt, @endAt, @listEnteredAt ghap yIlo'. ghantoH: @endAt >= '2026-01-01' pagh @endAt = none. @ 'oHchugh pong Degh wa'DIch'e', De' 'ay' pong cherbogh lo'wI' luDechjaj jatlhlu'bogh mu'mey Deghmey."
 }

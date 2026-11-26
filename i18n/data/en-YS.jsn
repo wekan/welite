@@ -2117,5 +2117,6 @@
   "notification-group-board": "__count__ notifications on board __board__",
   "password-too-short": "The password must be at least __min__ characters long.",
   "login-refused-bad-password": "Wrong password",
-  "login-refused-braked": "Too many failed attempts"
+  "login-refused-braked": "Too many failed attempts",
+  "advanced-filter-card-dates-hint": "Filter card dates with @createdAt, @receivedAt, @startAt, @dueAt, @endAt or @listEnteredAt. Example: @endAt >= '2026-01-01' or @endAt = none. Quote a custom field name that starts with @."
 }

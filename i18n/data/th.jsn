@@ -2134,5 +2134,6 @@
   "notification-group-board": "การแจ้งเตือน __count__ รายการบนบอร์ด __board__",
   "password-too-short": "รหัสผ่านต้องมีความยาวอย่างน้อย __min__ ตัวอักษร",
   "login-refused-bad-password": "รหัสผ่านไม่ถูกต้อง",
-  "login-refused-braked": "พยายามไม่สำเร็จหลายครั้งเกินไป"
+  "login-refused-braked": "พยายามไม่สำเร็จหลายครั้งเกินไป",
+  "advanced-filter-card-dates-hint": "กรองวันที่ของการ์ดด้วย @createdAt, @receivedAt, @startAt, @dueAt, @endAt หรือ @listEnteredAt ตัวอย่าง: @endAt >= '2026-01-01' หรือ @endAt = none ใส่เครื่องหมายอัญประกาศครอบชื่อช่องกำหนดเองที่ขึ้นต้นด้วย @"
 }

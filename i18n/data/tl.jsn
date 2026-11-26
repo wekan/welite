@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ abiso sa pisara __board__",
   "password-too-short": "Ang password ay dapat may hindi bababa sa __min__ na karakter.",
   "login-refused-bad-password": "Maling password",
-  "login-refused-braked": "Masyadong maraming bigong pagsubok"
+  "login-refused-braked": "Masyadong maraming bigong pagsubok",
+  "advanced-filter-card-dates-hint": "Salain ang mga petsa ng kard gamit ang @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Halimbawa: @endAt >= '2026-01-01' o @endAt = none. Lagyan ng panipi ang pangalan ng pasadyang field na nagsisimula sa @."
 }

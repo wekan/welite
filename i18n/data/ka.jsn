@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ შეტყობინება დაფაზე __board__",
   "password-too-short": "პაროლი უნდა შედგებოდეს მინიმუმ __min__ სიმბოლოსგან.",
   "login-refused-bad-password": "არასწორი პაროლი",
-  "login-refused-braked": "ძალიან ბევრი წარუმატებელი მცდელობა"
+  "login-refused-braked": "ძალიან ბევრი წარუმატებელი მცდელობა",
+  "advanced-filter-card-dates-hint": "გაფილტრეთ ბარათების თარიღები @createdAt, @receivedAt, @startAt, @dueAt, @endAt ან @listEnteredAt გამოყენებით. მაგალითი: @endAt >= '2026-01-01' ან @endAt = none. მორგებული ველის სახელი, რომელიც @ ნიშნით იწყება, ბრჭყალებში ჩასვით."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ ⵜⵉⵏⵖⵎⵉⵙⵉⵏ ⵖⴼ ⵜⴼⵍⵡⵉⵜ __board__",
   "password-too-short": "ⵉⵇⵇⴰⵏ ⴰⴷ ⵜⵉⵍⵉ ⵜⴳⵓⵔⵉ ⵏ ⵓⵣⵔⴰⵢ ⵙ __min__ ⵏ ⵡⴰⵙⴽⴰⵍⵏ ⵓⵍⴰ ⵓⴳⴳⴰⵔ.",
   "login-refused-bad-password": "ⵜⴰⴳⵓⵔⵉ ⵏ ⵓⵣⵔⴰⵢ ⵓⵔ ⵉⵖⵓⴷⵏ",
-  "login-refused-braked": "ⴰⵟⵟⴰⵙ ⵏ ⵜⵉⵔⵎⵉⵜⵉⵏ ⵓⵔ ⵉⴷⴷⵉⵏ"
+  "login-refused-braked": "ⴰⵟⵟⴰⵙ ⵏ ⵜⵉⵔⵎⵉⵜⵉⵏ ⵓⵔ ⵉⴷⴷⵉⵏ",
+  "advanced-filter-card-dates-hint": "ⵙⵉⵣⴷⴻⴳ ⵉⵙⴰⴽⵓⴷⴻⵏ ⵏ ⵜⴽⴰⵔⴹⵉⵡⵉⵏ ⵙ @createdAt, @receivedAt, @startAt, @dueAt, @endAt ⵏⵖ @listEnteredAt. ⴰⵎⴻⴷⵢⴰ: @endAt >= '2026-01-01' ⵏⵖ @endAt = none. ⴻⵔⵔ ⵉⵙⵎ ⵏ ⵡⵓⵔⵜⵉ ⵜⵙⴽⵔⴻⴹ ⵉ ⵉⴱⴷⴰⵏ ⵙ @ ⴳⴰⵔ ⵜⵎⵉⵜⴰⵔ ⵏ ⵓⵙⵓⴷⴻⵔ."
 }

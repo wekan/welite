@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ pemberitahuan pada papan __board__",
   "password-too-short": "Kata laluan mestilah sekurang-kurangnya __min__ aksara panjang.",
   "login-refused-bad-password": "Kata laluan salah",
-  "login-refused-braked": "Terlalu banyak percubaan yang gagal"
+  "login-refused-braked": "Terlalu banyak percubaan yang gagal",
+  "advanced-filter-card-dates-hint": "Tapis tarikh kad dengan @createdAt, @receivedAt, @startAt, @dueAt, @endAt atau @listEnteredAt. Contoh: @endAt >= '2026-01-01' atau @endAt = none. Letakkan nama medan tersuai yang bermula dengan @ dalam tanda petikan."
 }

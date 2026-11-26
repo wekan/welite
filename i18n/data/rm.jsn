@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notificaziuns sin la tabella __board__",
   "password-too-short": "Il pled-clav sto cuntegnair almain __min__ caracters.",
   "login-refused-bad-password": "Pled-clav fauss",
-  "login-refused-braked": "Memia blers emprovs falliids"
+  "login-refused-braked": "Memia blers emprovs falliids",
+  "advanced-filter-card-dates-hint": "Filtrar las datas da las cartas cun @createdAt, @receivedAt, @startAt, @dueAt, @endAt u @listEnteredAt. Exempel: @endAt >= '2026-01-01' u @endAt = none. Metter tranter virgulettas in num d’in champ persunalisà che cumenza cun @."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "బోర్డు __board__ పై __count__ నోటిఫికేషన్‌లు",
   "password-too-short": "పాస్వర్డ్ కనీసం __min__ అక్షరాల పొడవు ఉండాలి.",
   "login-refused-bad-password": "తప్పు పాస్వర్డ్",
-  "login-refused-braked": "చాలా ఎక్కువ విఫల ప్రయత్నాలు"
+  "login-refused-braked": "చాలా ఎక్కువ విఫల ప్రయత్నాలు",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt లేదా @listEnteredAt తో కార్డు తేదీలను వడపోయండి. ఉదాహరణ: @endAt >= '2026-01-01' లేదా @endAt = none. @ తో ప్రారంభమయ్యే అనుకూల ఫీల్డ్ పేరును ఉద్ధరణ చిహ్నాల్లో ఉంచండి."
 }

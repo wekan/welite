@@ -2117,5 +2117,6 @@
   "notification-group-board": "__count__ notificacions al tauler __board__",
   "password-too-short": "La contrasenya ha de tindre almenys __min__ caràcters.",
   "login-refused-bad-password": "Contrasenya incorrecta",
-  "login-refused-braked": "Massa intents fallits"
+  "login-refused-braked": "Massa intents fallits",
+  "advanced-filter-card-dates-hint": "Filtreu les dates de les fitxes amb @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Exemple: @endAt >= '2026-01-01' o @endAt = none. Poseu entre cometes el nom d'un camp personalitzat que comenci per @."
 }

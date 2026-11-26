@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ sciigoj ĉe tabulo __board__",
   "password-too-short": "La pasvorto devas havi almenaŭ __min__ signojn.",
   "login-refused-bad-password": "Malĝusta pasvorto",
-  "login-refused-braked": "Tro multaj malsukcesaj provoj"
+  "login-refused-braked": "Tro multaj malsukcesaj provoj",
+  "advanced-filter-card-dates-hint": "Filtru kartajn datojn per @createdAt, @receivedAt, @startAt, @dueAt, @endAt aŭ @listEnteredAt. Ekzemple: @endAt >= '2026-01-01' aŭ @endAt = none. Metu inter citilojn nomon de propra kampo, kiu komenciĝas per @."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ kemenn war an daolenn __board__",
   "password-too-short": "Ret eo d'ar ger-tremen bezañ __min__ arouezenn da nebeutañ.",
   "login-refused-bad-password": "Ger-tremen fall",
-  "login-refused-braked": "Re a daolioù-esae c'hwitet"
+  "login-refused-braked": "Re a daolioù-esae c'hwitet",
+  "advanced-filter-card-dates-hint": "Silañ deiziadoù ar c'hartennoù gant @createdAt, @receivedAt, @startAt, @dueAt, @endAt pe @listEnteredAt. Skouer: @endAt >= '2026-01-01' pe @endAt = none. Lakait anv ur vaezienn bersonelaet a grog gant @ etre klochedoù."
 }

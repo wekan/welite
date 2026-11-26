@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ na veivakaraitaki ena vola __board__",
   "password-too-short": "Na vosa ni curu me vakalevu ena __min__ na matanivola.",
   "login-refused-bad-password": "Vosa ni curu e cala",
-  "login-refused-braked": "Levu sara na sasaga e druka"
+  "login-refused-braked": "Levu sara na sasaga e druka",
+  "advanced-filter-card-dates-hint": "Vakatautaka na tikinisiga ni kadi ena @createdAt, @receivedAt, @startAt, @dueAt, @endAt se @listEnteredAt. Kena ivakaraitaki: @endAt >= '2026-01-01' se @endAt = none. Biuta na yaca ni vanua vakatabakidua e tekivu ena @ ena maliwa ni ivakatakilakila ni vosacavuti."
 }

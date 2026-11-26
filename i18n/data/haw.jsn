@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ hoʻolaha no ka papa __board__",
   "password-too-short": "Pono ka lōʻihi o ka ʻōlelo huna ma ka liʻiliʻi he __min__ hua palapala.",
   "login-refused-bad-password": "ʻŌlelo huna hewa",
-  "login-refused-braked": "Nui loa nā hoʻāʻo i hāʻule"
+  "login-refused-braked": "Nui loa nā hoʻāʻo i hāʻule",
+  "advanced-filter-card-dates-hint": "E kānana i nā lā kāleka me @createdAt, @receivedAt, @startAt, @dueAt, @endAt a i ʻole @listEnteredAt. Laʻana: @endAt >= '2026-01-01' a i ʻole @endAt = none. E kau i ka inoa o ke kahua hoʻopilikino e hoʻomaka ana me @ ma waena o nā kaha puanaʻī."
 }

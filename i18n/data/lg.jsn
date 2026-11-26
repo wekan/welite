@@ -2123,5 +2123,6 @@
   "notification-group-board": "Obubaka __count__ ku lubaawo __board__",
   "password-too-short": "Ekigambo ekyekusifu kirina okuba n'ennukuta ezitakka wansi wa __min__.",
   "login-refused-bad-password": "Ekigambo ekyekusifu kikyamu",
-  "login-refused-braked": "Okugezaako okulemereddwa kungi nnyo"
+  "login-refused-braked": "Okugezaako okulemereddwa kungi nnyo",
+  "advanced-filter-card-dates-hint": "Sengejja ennaku za kaadi ng’okozesa @createdAt, @receivedAt, @startAt, @dueAt, @endAt oba @listEnteredAt. Ekyokulabirako: @endAt >= '2026-01-01' oba @endAt = none. Teeka erinnya ly’ekifo kye weetegekedde eritandika ne @ wakati w’obubonero obw’okujuliza."
 }

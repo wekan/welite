@@ -2134,5 +2134,6 @@
   "notification-group-board": "__board__ panosunda __count__ bildirim",
   "password-too-short": "Parola en az __min__ karakter uzunluğunda olmalıdır.",
   "login-refused-bad-password": "Yanlış parola",
-  "login-refused-braked": "Çok fazla başarısız deneme"
+  "login-refused-braked": "Çok fazla başarısız deneme",
+  "advanced-filter-card-dates-hint": "Kart tarihlerini @createdAt, @receivedAt, @startAt, @dueAt, @endAt veya @listEnteredAt ile filtreleyin. Örnek: @endAt >= '2026-01-01' veya @endAt = none. @ ile başlayan özel alan adlarını tırnak içine alın."
 }

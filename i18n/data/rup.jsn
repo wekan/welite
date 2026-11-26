@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ nutificãri pi tabela __board__",
   "password-too-short": "Zborlu di intrari lipseashti s-aibã tsi cama putsãn __min__ semni.",
   "login-refused-bad-password": "Zbor di intrari greșit",
-  "login-refused-braked": "Multi ncirchări fără izbândă"
+  "login-refused-braked": "Multi ncirchări fără izbândă",
+  "advanced-filter-card-dates-hint": "Filtreadzã datili a cartilor cu @createdAt, @receivedAt, @startAt, @dueAt, @endAt icã @listEnteredAt. Exemplu: @endAt >= '2026-01-01' icã @endAt = none. Baga tu ghilimeli numa a unui cãmpu personalizat tsi ahurheashti cu @."
 }

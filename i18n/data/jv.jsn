@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ kabar ing papan __board__",
   "password-too-short": "Tembung sandi kudu paling ora __min__ karakter.",
   "login-refused-bad-password": "Tembung sandi salah",
-  "login-refused-braked": "Kakèhan upaya sing gagal"
+  "login-refused-braked": "Kakèhan upaya sing gagal",
+  "advanced-filter-card-dates-hint": "Saring tanggal kertu nganggo @createdAt, @receivedAt, @startAt, @dueAt, @endAt utawa @listEnteredAt. Tuladha: @endAt >= '2026-01-01' utawa @endAt = none. Wenehana tandha petik ing jeneng kolom khusus sing diwiwiti nganggo @."
 }

@@ -82,7 +82,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf;
 
 const
   STATIC_HEAD =
@@ -1506,6 +1506,11 @@ type
     Text: string;
     Labels, Excluded: TStringArray;
     NoLabel, AndMode: Boolean;
+    // The Advanced Filter: as typed, the one applied (typed, else the last
+    // that parsed), and the cards it shows.
+    Advanced, Applied: string;
+    HasAdvanced: Boolean;
+    AdvancedIds: TStringArray;
   end;
 
 function HasString(const Items: TStringArray; const Value: string): Boolean;
@@ -1535,8 +1540,62 @@ begin
   end;
 end;
 
+// The board's cards an Advanced Filter shows (src/wladvf.pas, with the
+// board's custom fields by name and a dropdown's options by name, as WeKan's
+// buildAdvancedFilterResolversFromCustomFields); False for one that does not
+// parse.
+function AdvancedFilterCards(Db: TWLDb; const BoardId, Filter: string; out Ids: TStringArray): Boolean;
+var R, V: TWLRows; Fields: array of TAdvField; Cards: array of TAdvCard; i, j, n: Integer; Node: TAdvNode;
+begin
+  Ids := nil;
+  R := Db.Query('SELECT f.id,f.name,f.type,COALESCE((SELECT group_concat(d.name || ''='' || d.id, char(10)) FROM ' +
+    '(SELECT name,id FROM custom_field_dropdown_items WHERE customFieldId=f.id ORDER BY sort,id) d),'''') FROM custom_fields f ' +
+    // No rowid: in a shared store these are views.
+    'JOIN custom_field_boards b ON b.customFieldId=f.id WHERE b.boardId=' + QuotedStr(BoardId) + ';');
+  Fields := nil;
+  for i := 0 to High(R) do
+  begin
+    // A name the board has twice is the first field of that name.
+    n := -1;
+    for j := 0 to High(Fields) do if Fields[j].Name = R[i][1] then n := j;
+    if n >= 0 then Continue;
+    n := Length(Fields); SetLength(Fields, n + 1);
+    Fields[n].Id := R[i][0]; Fields[n].Name := R[i][1]; Fields[n].Kind := R[i][2];
+    if R[i][3] <> '' then Fields[n].Options := R[i][3].Split([#10]) else Fields[n].Options := nil;
+  end;
+  Node := ParseAdvancedFilter(Filter, Fields);
+  if Node = nil then Exit(False);
+  try
+    R := Db.Query('SELECT id,COALESCE(createdAt,''''),COALESCE(receivedAt,''''),COALESCE(startAt,''''),COALESCE(dueAt,''''),' +
+      'COALESCE(endAt,''''),COALESCE(CASE WHEN json_valid(extra_json) THEN json_extract(extra_json,''$.listEnteredAt'') END,'''') ' +
+      'FROM cards WHERE boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL;');
+    V := Db.Query('SELECT v.cardId,v.customFieldId,COALESCE(CAST(v.value AS TEXT),''''),v.value IS NULL FROM card_custom_field_values v ' +
+      'JOIN cards c ON c.id=v.cardId WHERE c.boardId=' + QuotedStr(BoardId) + ' AND c.deletedAt IS NULL ORDER BY v.cardId;');
+    SetLength(Cards, 1);
+    for i := 0 to High(R) do
+    begin
+      Cards[0] := Default(TAdvCard);
+      for j := 0 to 5 do Cards[0].Dates[j] := R[i][j + 1];
+      for j := 0 to High(V) do
+        if V[j][0] = R[i][0] then
+        begin
+          n := Length(Cards[0].Values); SetLength(Cards[0].Values, n + 1);
+          Cards[0].Values[n].FieldId := V[j][1]; Cards[0].Values[n].Value := V[j][2]; Cards[0].Values[n].IsNull := V[j][3] = '1';
+        end;
+      if AdvancedFilterMatches(Node, Cards[0]) then
+      begin
+        SetLength(Ids, Length(Ids) + 1);
+        Ids[High(Ids)] := R[i][0];
+      end;
+    end;
+  finally
+    Node.Free;
+  end;
+  Result := True;
+end;
+
 function ParseBoardFilter(Db: TWLDb; const BoardId: string; Query: TStrings): TBoardFilter;
-var Known: TWLRows; Unused: Boolean; Wide: UnicodeString;
+var Known: TWLRows; Unused: Boolean; Wide: UnicodeString; Candidate: string; k: Integer;
 begin
   Result := Default(TBoardFilter);
   if Query = nil then Exit;
@@ -1548,11 +1607,25 @@ begin
   Known := Db.Query('SELECT id FROM board_labels WHERE boardId=' + QuotedStr(BoardId) + ';');
   Result.Labels := FilterLabelIds(Known, Query.Values['labels'], Result.NoLabel);
   Result.Excluded := FilterLabelIds(Known, Query.Values['xlabels'], Unused);
+  // The Advanced Filter typed when it parses, else the last that did
+  // (?last=), as WeKan's sidebar keeps its last selector.
+  Result.Advanced := Copy(Trim(Query.Values['advanced']), 1, 2000);
+  if Pos(#0, Result.Advanced) > 0 then Result.Advanced := '';
+  for k := 0 to 1 do
+  begin
+    if k = 0 then Candidate := Result.Advanced else Candidate := Copy(Trim(Query.Values['last']), 1, 2000);
+    if (Candidate = '') or (Pos(#0, Candidate) > 0) then Continue;
+    if AdvancedFilterCards(Db, BoardId, Candidate, Result.AdvancedIds) then
+    begin
+      Result.Applied := Candidate; Result.HasAdvanced := True;
+      Break;
+    end;
+  end;
 end;
 
 function FilterActive(const F: TBoardFilter): Boolean;
 begin
-  Result := (F.Text <> '') or (Length(F.Labels) > 0) or F.NoLabel or (Length(F.Excluded) > 0);
+  Result := (F.Text <> '') or (Length(F.Labels) > 0) or F.NoLabel or (Length(F.Excluded) > 0) or F.HasAdvanced;
 end;
 
 function SqlList(const Items: TStringArray): string;
@@ -1590,6 +1663,11 @@ begin
   if Alts <> '' then Result := Result + ' AND (' + Alts + ')';
   if Length(F.Excluded) > 0 then
     Result := Result + ' AND NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId=c.id AND labelId IN (' + SqlList(F.Excluded) + '))';
+  if F.HasAdvanced then
+  begin
+    if Length(F.AdvancedIds) = 0 then Result := Result + ' AND 0'
+    else Result := Result + ' AND c.id IN (' + SqlList(F.AdvancedIds) + ')';
+  end;
   if F.Text <> '' then
   begin
     Q := QuotedStr(F.Text);
@@ -1619,7 +1697,7 @@ end;
 function FilterSidebar(Db: TWLDb; Words: TWLTranslator; const BoardId: string; const F: TBoardFilter): string;
 var R: TWLRows; i: Integer; Chosen, Excluded: Boolean;
 begin
-  Result := '<div class="filter-sidebar js-filter-view is-hidden"><h3><i class="fa fa-list"></i> ' +
+  Result := '<div class="filter-sidebar js-filter-view is-hidden" data-applied="' + E(F.Applied) + '"><h3><i class="fa fa-list"></i> ' +
     E(Words.Text('filter-card-text-label', 'Filter by card text')) + '</h3>' +
     '<input class="js-field-card-filter" type="text" maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(F.Text) +
     '" aria-label="' + HtmlAttr(Words.Text('filter-card-text-label', 'Filter by card text')) + '"><hr>' +
@@ -1643,7 +1721,11 @@ begin
       '><span class="card-label square card-label-' + HtmlAttr(R[i][2]) + '"></span><span class="sidebar-list-item-description">' +
       E(R[i][1]) + '</span></label></li>';
   end;
-  Result := Result + '</ul></div>';
+  // filterSidebar's Advanced Filter, with WeKan's help and the card dates hint.
+  Result := Result + '</ul><hr><h3>' + E(Words.Text('advanced-filter-label', 'Advanced Filter')) + '</h3>' +
+    '<input class="js-field-advanced-filter" type="text" value="' + E(F.Advanced) + '" aria-label="' +
+    E(Words.Text('advanced-filter-label', 'Advanced Filter')) + '"><span>' + E(Words.Text('advanced-filter-description', '')) +
+    '</span><p class="quiet">' + E(Words.Text('advanced-filter-card-dates-hint', '')) + '</p></div>';
 end;
 
 // WeKan's Sort Cards (cardsSortPopup; board_sort.go in Weddy): a display

@@ -2123,5 +2123,6 @@
   "notification-group-board": "看板 __board__ 上有 __count__ 条通知",
   "password-too-short": "密码长度至少为 __min__ 个字符。",
   "login-refused-bad-password": "密码错误",
-  "login-refused-braked": "失败尝试次数过多"
+  "login-refused-braked": "失败尝试次数过多",
+  "advanced-filter-card-dates-hint": "使用 @createdAt、@receivedAt、@startAt、@dueAt、@endAt 或 @listEnteredAt 筛选卡片日期。例如：@endAt >= '2026-01-01' 或 @endAt = none。以 @ 开头的自定义字段名称须用引号括起。"
 }

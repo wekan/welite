@@ -2134,5 +2134,6 @@
   "notification-group-board": "__board__ பலகையில் __count__ அறிவிப்புகள்",
   "password-too-short": "கடவுச்சொல் குறைந்தது __min__ எழுத்துகள் நீளமாக இருக்க வேண்டும்.",
   "login-refused-bad-password": "தவறான கடவுச்சொல்",
-  "login-refused-braked": "மிக அதிகமான தோல்வியுற்ற முயற்சிகள்"
+  "login-refused-braked": "மிக அதிகமான தோல்வியுற்ற முயற்சிகள்",
+  "advanced-filter-card-dates-hint": "@createdAt, @receivedAt, @startAt, @dueAt, @endAt அல்லது @listEnteredAt மூலம் அட்டைத் தேதிகளை வடிகட்டவும். எடுத்துக்காட்டு: @endAt >= '2026-01-01' அல்லது @endAt = none. @ உடன் தொடங்கும் தனிப்பயன் புலப் பெயரை மேற்கோள் குறிகளுக்குள் இடவும்."
 }

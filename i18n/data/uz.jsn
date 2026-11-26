@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ taxtasida __count__ ta bildirishnoma",
   "password-too-short": "Parol kamida __min__ ta belgidan iborat bo'lishi kerak.",
   "login-refused-bad-password": "Noto'g'ri parol",
-  "login-refused-braked": "Muvaffaqiyatsiz urinishlar juda ko'p"
+  "login-refused-braked": "Muvaffaqiyatsiz urinishlar juda ko'p",
+  "advanced-filter-card-dates-hint": "Karta sanalarini @createdAt, @receivedAt, @startAt, @dueAt, @endAt yoki @listEnteredAt bilan filtrlang. Masalan: @endAt >= '2026-01-01' yoki @endAt = none. @ bilan boshlanadigan maxsus maydon nomini qoʻshtirnoqqa oling."
 }

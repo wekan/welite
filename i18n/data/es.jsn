@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ notificaciones en el tablero __board__",
   "password-too-short": "La contraseña debe tener al menos __min__ caracteres.",
   "login-refused-bad-password": "Contraseña incorrecta",
-  "login-refused-braked": "Demasiados intentos fallidos"
+  "login-refused-braked": "Demasiados intentos fallidos",
+  "advanced-filter-card-dates-hint": "Filtra las fechas de las tarjetas con @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Ejemplo: @endAt >= '2026-01-01' o @endAt = none. Pon entre comillas los nombres de campos personalizados que empiecen por @."
 }

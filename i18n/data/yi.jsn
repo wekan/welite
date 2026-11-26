@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ אָנזאָגן אויפֿן ברעט __board__",
   "password-too-short": "דאָס פּאַראָל מוז זײַן כאָטש __min__ צייכנס לאַנג.",
   "login-refused-bad-password": "פֿאַלשער פּאַראָל",
-  "login-refused-braked": "צו פֿיל דורכגעפֿאַלענע פּרוּוון"
+  "login-refused-braked": "צו פֿיל דורכגעפֿאַלענע פּרוּוון",
+  "advanced-filter-card-dates-hint": "פֿילטרירט קאָרט־דאַטעס מיט @createdAt, @receivedAt, @startAt, @dueAt, @endAt אָדער @listEnteredAt. בײַשפּיל: @endAt >= '2026-01-01' אָדער @endAt = none. שטעלט דעם נאָמען פֿון אַ צוגעפּאַסטן פֿעלד וואָס הייבט זיך אָן מיט @ צווישן ציטירצייכנס."
 }

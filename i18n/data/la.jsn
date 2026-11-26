@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notificationes de tabula __board__",
   "password-too-short": "Tessera saltem __min__ litteras longa esse debet.",
   "login-refused-bad-password": "Tessera falsa",
-  "login-refused-braked": "Nimis multi conatus irriti"
+  "login-refused-braked": "Nimis multi conatus irriti",
+  "advanced-filter-card-dates-hint": "Dies chartarum cribra per @createdAt, @receivedAt, @startAt, @dueAt, @endAt vel @listEnteredAt. Exempli gratia: @endAt >= '2026-01-01' vel @endAt = none. Nomen campi proprii quod ab @ incipit signis citationis include."
 }

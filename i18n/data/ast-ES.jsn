@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ avisos nel tableru __board__",
   "password-too-short": "La contraseña tien de tener polo menos __min__ caráuteres.",
   "login-refused-bad-password": "Contraseña incorreuta",
-  "login-refused-braked": "Demasiaos intentos fallíos"
+  "login-refused-braked": "Demasiaos intentos fallíos",
+  "advanced-filter-card-dates-hint": "Filtra les feches de les tarxetes con @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Exemplu: @endAt >= '2026-01-01' o @endAt = none. Pon ente comines el nome d'un campu personalizáu qu'entame con @."
 }

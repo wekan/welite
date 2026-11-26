@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ notificări pe panoul __board__",
   "password-too-short": "Parola trebuie să aibă cel puțin __min__ caractere.",
   "login-refused-bad-password": "Parolă greșită",
-  "login-refused-braked": "Prea multe încercări eșuate"
+  "login-refused-braked": "Prea multe încercări eșuate",
+  "advanced-filter-card-dates-hint": "Filtrați datele cardurilor cu @createdAt, @receivedAt, @startAt, @dueAt, @endAt sau @listEnteredAt. Exemplu: @endAt >= '2026-01-01' sau @endAt = none. Puneți între ghilimele numele unui câmp personalizat care începe cu @."
 }

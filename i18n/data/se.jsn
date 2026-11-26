@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ dieđáhusa távvalis __board__",
   "password-too-short": "Beassansátnis galgá leat unnimusat __min__ mearka.",
   "login-refused-bad-password": "Boasttu beassansátni",
-  "login-refused-braked": "Menddo ollu boasttu geahččalusat"
+  "login-refused-braked": "Menddo ollu boasttu geahččalusat",
+  "advanced-filter-card-dates-hint": "Silli goarttaid beaivemeriid @createdAt, @receivedAt, @startAt, @dueAt, @endAt dahje @listEnteredAt bokte. Ovdamearka: @endAt >= '2026-01-01' dahje @endAt = none. Bija ieš ráhkaduvvon gieddenama, mii álgá @-mearkkain, sitáhtamearkkaid sisa."
 }

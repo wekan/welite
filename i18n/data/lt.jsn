@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ pranešimų lentoje __board__",
   "password-too-short": "Slaptažodis turi būti bent __min__ simbolių ilgio.",
   "login-refused-bad-password": "Neteisingas slaptažodis",
-  "login-refused-braked": "Per daug nesėkmingų bandymų"
+  "login-refused-braked": "Per daug nesėkmingų bandymų",
+  "advanced-filter-card-dates-hint": "Filtruokite kortelių datas naudodami @createdAt, @receivedAt, @startAt, @dueAt, @endAt arba @listEnteredAt. Pavyzdys: @endAt >= '2026-01-01' arba @endAt = none. Pasirinktinio lauko pavadinimą, prasidedantį @, rašykite kabutėse."
 }

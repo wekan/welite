@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ haba bak papan __board__",
   "password-too-short": "Kata sandi beu paleng kureung __min__ karakter.",
   "login-refused-bad-password": "Kata Sandi salah",
-  "login-refused-braked": "Le that cuba nyang gagai"
+  "login-refused-braked": "Le that cuba nyang gagai",
+  "advanced-filter-card-dates-hint": "Saréng tanggai kad ngön @createdAt, @receivedAt, @startAt, @dueAt, @endAt atawa @listEnteredAt. Contoh: @endAt >= '2026-01-01' atawa @endAt = none. Boh tanda kutip bak nan ruang khusuih nyang geuphôn ngön @."
 }

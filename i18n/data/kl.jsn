@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ nalunaarutit ilisarnaammi __board__",
   "password-too-short": "Isissutissaq minnerpaamik __min__ naqinnernik takissuseqassaaq.",
   "login-refused-bad-password": "Isissutissaq kukkusoq",
-  "login-refused-braked": "Misileraaneq iluatsinngitsut amerlavallaarput"
+  "login-refused-braked": "Misileraaneq iluatsinngitsut amerlavallaarput",
+  "advanced-filter-card-dates-hint": "Kortit ullui @createdAt, @receivedAt, @startAt, @dueAt, @endAt imaluunniit @listEnteredAt atorlugit immikkoortikkit. Assersuut: @endAt >= '2026-01-01' imaluunniit @endAt = none. Immersugassap nammineq pilersitap aqqa @-mik aallartittoq issuaanermut nalunaaqutsersuutit akornanni allaguk."
 }

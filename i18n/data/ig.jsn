@@ -2123,5 +2123,6 @@
   "notification-group-board": "Ọkwa __count__ na bọọdụ __board__",
   "password-too-short": "Okwuntughe ga-enwerịrị opekata mpe mkpụrụedemede __min__.",
   "login-refused-bad-password": "Okwuntughe ezighi ezi",
-  "login-refused-braked": "Ọtụtụ mgbalị dara ada"
+  "login-refused-braked": "Ọtụtụ mgbalị dara ada",
+  "advanced-filter-card-dates-hint": "Jiri @createdAt, @receivedAt, @startAt, @dueAt, @endAt ma ọ bụ @listEnteredAt yọchaa ụbọchị kaadị. Dịka: @endAt >= '2026-01-01' ma ọ bụ @endAt = none. Tinye aha oghere ahaziri nke na-amalite na @ nʼime akara nkwuputa."
 }

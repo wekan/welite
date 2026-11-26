@@ -2123,5 +2123,6 @@
   "notification-group-board": "Sanarwa __count__ a kan allo __board__",
   "password-too-short": "Kalmar sirri dole ta kasance aƙalla haruffa __min__.",
   "login-refused-bad-password": "Kalmar sirri ba daidai ba",
-  "login-refused-braked": "Ƙoƙarin da bai yi nasara ba sun yi yawa"
+  "login-refused-braked": "Ƙoƙarin da bai yi nasara ba sun yi yawa",
+  "advanced-filter-card-dates-hint": "Tace kwanakin kati da @createdAt, @receivedAt, @startAt, @dueAt, @endAt ko @listEnteredAt. Misali: @endAt >= '2026-01-01' ko @endAt = none. Saka sunan filin musamman da ya fara da @ cikin alamomin zance."
 }

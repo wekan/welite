@@ -2123,5 +2123,6 @@
   "notification-group-board": "Kunnafoni __count__ walan __board__ kan",
   "password-too-short": "Gundo daɲɛ ka kan ka sɛbɛnni __min__ sɔrɔ a dɔgɔyalen na.",
   "login-refused-bad-password": "Gundo daɲɛ tɛ tiɲɛ ye",
-  "login-refused-braked": "Ɲɛsin caman ma ɲɛ"
+  "login-refused-braked": "Ɲɛsin caman ma ɲɛ",
+  "advanced-filter-card-dates-hint": "Karti donw woloma ni @createdAt, @receivedAt, @startAt, @dueAt, @endAt walima @listEnteredAt ye. Misali: @endAt >= '2026-01-01' walima @endAt = none. I yɛrɛ ye yɔrɔ min labɛn, ni a tɔgɔ bɛ daminɛ ni @ ye, kuma taamasiyɛnw bila tɔgɔ fan fila la."
 }

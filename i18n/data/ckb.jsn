@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ ئاگادارکردنەوە لەسەر تەختەی __board__",
   "password-too-short": "وشەی نهێنی دەبێت لانیکەم __min__ پیت بێت.",
   "login-refused-bad-password": "وشەی نهێنی هەڵە",
-  "login-refused-braked": "هەوڵی سەرنەکەوتووی زۆر"
+  "login-refused-braked": "هەوڵی سەرنەکەوتووی زۆر",
+  "advanced-filter-card-dates-hint": "بەرواری کارتەکان بە @createdAt، @receivedAt، @startAt، @dueAt، @endAt یان @listEnteredAt پاڵاوتن بکە. نموونە: @endAt >= '2026-01-01' یان @endAt = none. ناوی خانەی تایبەت کە بە @ دەست پێ دەکات لە نێوان کوتیشندا بنووسە."
 }

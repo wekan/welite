@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ varsler på tavlen __board__",
   "password-too-short": "Passordet må være minst __min__ tegn langt.",
   "login-refused-bad-password": "Feil passord",
-  "login-refused-braked": "For mange mislykkede forsøk"
+  "login-refused-braked": "For mange mislykkede forsøk",
+  "advanced-filter-card-dates-hint": "Filtrer kortdatoer med @createdAt, @receivedAt, @startAt, @dueAt, @endAt eller @listEnteredAt. Eksempel: @endAt >= '2026-01-01' eller @endAt = none. Sett anførselstegn rundt egendefinerte feltnavn som begynner med @."
 }

@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ ilmoitusta taululla __board__",
   "password-too-short": "Salasanan on oltava vähintään __min__ merkkiä pitkä.",
   "login-refused-bad-password": "Väärä salasana",
-  "login-refused-braked": "Liian monta epäonnistunutta yritystä"
+  "login-refused-braked": "Liian monta epäonnistunutta yritystä",
+  "advanced-filter-card-dates-hint": "Suodata korttien päivämääriä kentillä @createdAt, @receivedAt, @startAt, @dueAt, @endAt tai @listEnteredAt. Esimerkki: @endAt >= '2026-01-01' tai @endAt = none. Kirjoita @-merkillä alkava mukautetun kentän nimi lainausmerkkeihin."
 }

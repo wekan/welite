@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ kennisgewings op raad __board__",
   "password-too-short": "Die wagwoord moet ten minste __min__ karakters lank wees.",
   "login-refused-bad-password": "Verkeerde wagwoord",
-  "login-refused-braked": "Te veel mislukte pogings"
+  "login-refused-braked": "Te veel mislukte pogings",
+  "advanced-filter-card-dates-hint": "Filtreer kaartdatums met @createdAt, @receivedAt, @startAt, @dueAt, @endAt of @listEnteredAt. Voorbeeld: @endAt >= '2026-01-01' of @endAt = none. Plaas 'n pasgemaakte veldnaam wat met @ begin tussen aanhalingstekens."
 }

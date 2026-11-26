@@ -2123,5 +2123,6 @@
   "notification-group-board": "Zidziwitso __count__ pa bolodi __board__",
   "password-too-short": "Mawu achinsinsi ayenera kukhala ndi zilembo zosachepera __min__.",
   "login-refused-bad-password": "Mawu achinsinsi olakwika",
-  "login-refused-braked": "Kuyesa kolephera kochuluka kwambiri"
+  "login-refused-braked": "Kuyesa kolephera kochuluka kwambiri",
+  "advanced-filter-card-dates-hint": "Sefani madeti a makhadi pogwiritsa ntchito @createdAt, @receivedAt, @startAt, @dueAt, @endAt kapena @listEnteredAt. Chitsanzo: @endAt >= '2026-01-01' kapena @endAt = none. Ikani dzina la malo amene mwapanga lomwe limayamba ndi @ pakati pa zizindikiro za mawu ogwidwa."
 }

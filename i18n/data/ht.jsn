@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notifikasyon sou tablo __board__",
   "password-too-short": "Modpas la dwe gen omwen __min__ karaktè.",
   "login-refused-bad-password": "Modpas la pa bon",
-  "login-refused-braked": "Twòp tantativ ki echwe"
+  "login-refused-braked": "Twòp tantativ ki echwe",
+  "advanced-filter-card-dates-hint": "Filtre dat kat yo ak @createdAt, @receivedAt, @startAt, @dueAt, @endAt oswa @listEnteredAt. Egzanp: @endAt >= '2026-01-01' oswa @endAt = none. Mete non yon chan pèsonalize ki kòmanse ak @ ant gimè."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "Tatiso letili-__count__ elibhodini __board__",
   "password-too-short": "Liphasiwedi kufanele libe netinhlamvu letingu __min__ noma ngetulu.",
   "login-refused-bad-password": "Liphasiwedi lelingakalungi",
-  "login-refused-braked": "Kuzama lokunyenti lokungaphumelelanga"
+  "login-refused-braked": "Kuzama lokunyenti lokungaphumelelanga",
+  "advanced-filter-card-dates-hint": "Hlunga tinsuku temakhadi usebentisa @createdAt, @receivedAt, @startAt, @dueAt, @endAt nobe @listEnteredAt. Sibonelo: @endAt >= '2026-01-01' nobe @endAt = none. Faka ligama lendzawo leyentiwe ngekwakho lelicala nga-@ emkhatsini wetimphawu tekucaphuna."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ тақтасында __count__ хабарлама",
   "password-too-short": "Құпия сөз кемінде __min__ таңбадан тұруы керек.",
   "login-refused-bad-password": "Құпия сөз қате",
-  "login-refused-braked": "Сәтсіз әрекеттер тым көп"
+  "login-refused-braked": "Сәтсіз әрекеттер тым көп",
+  "advanced-filter-card-dates-hint": "Карточка күндерін @createdAt, @receivedAt, @startAt, @dueAt, @endAt немесе @listEnteredAt арқылы сүзгілеңіз. Мысалы: @endAt >= '2026-01-01' немесе @endAt = none. @ таңбасынан басталатын теңшелетін өріс атауын тырнақшаға алыңыз."
 }

@@ -2134,5 +2134,6 @@
   "notification-group-board": "ボード __board__ に __count__ 件の通知",
   "password-too-short": "パスワードは __min__ 文字以上にしてください。",
   "login-refused-bad-password": "パスワードが違います",
-  "login-refused-braked": "失敗した試行が多すぎます"
+  "login-refused-braked": "失敗した試行が多すぎます",
+  "advanced-filter-card-dates-hint": "@createdAt、@receivedAt、@startAt、@dueAt、@endAt、@listEnteredAt でカードの日付を絞り込めます。例: @endAt >= '2026-01-01' または @endAt = none。@ で始まるカスタムフィールド名は引用符で囲んでください。"
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ ሓበሬታ ዲብ ምዱድ __board__",
   "password-too-short": "ሚስጥር ቃል ሕድ ዝሕድ __min__ ፊደላት ሊትረከብ ገብእ።",
   "login-refused-bad-password": "ሚስጥር ቃል ጌጋ",
-  "login-refused-braked": "ብዙሕ ዘይተዓወተ ፈተነ"
+  "login-refused-braked": "ብዙሕ ዘይተዓወተ ፈተነ",
+  "advanced-filter-card-dates-hint": "ተመር ናይ ካርዳት ብ @createdAt, @receivedAt, @startAt, @dueAt, @endAt አው @listEnteredAt ፍረዝ። ምሳል: @endAt >= '2026-01-01' አው @endAt = none. ብ @ ለብድእ ስሜት ናይ ለሐነጽካሁ ክፍል ማእከል ዓላማት ናይ ጥቅስ ክተቦ።"
 }

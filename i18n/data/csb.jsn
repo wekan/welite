@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ wiadłów na tôfli __board__",
   "password-too-short": "Parola mùszi miec nômni __min__ znaków.",
   "login-refused-bad-password": "Lëchô parola",
-  "login-refused-braked": "Za wiele nieùdałëch próbów"
+  "login-refused-braked": "Za wiele nieùdałëch próbów",
+  "advanced-filter-card-dates-hint": "Filtrëjë datë kôrtów przez @createdAt, @receivedAt, @startAt, @dueAt, @endAt abò @listEnteredAt. Przëmiôr: @endAt >= '2026-01-01' abò @endAt = none. Miono swòjégò pòla zaczënającé sã òd @ wstaw w cëdzësłów."
 }

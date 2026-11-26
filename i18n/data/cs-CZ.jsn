@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ oznámení na tablu __board__",
   "password-too-short": "Heslo musí mít alespoň __min__ znaků.",
   "login-refused-bad-password": "Chybné heslo",
-  "login-refused-braked": "Příliš mnoho neúspěšných pokusů"
+  "login-refused-braked": "Příliš mnoho neúspěšných pokusů",
+  "advanced-filter-card-dates-hint": "Filtrujte data karet pomocí @createdAt, @receivedAt, @startAt, @dueAt, @endAt nebo @listEnteredAt. Příklad: @endAt >= '2026-01-01' nebo @endAt = none. Název vlastního pole začínající znakem @ uzavřete do uvozovek."
 }

@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ hysbysiad ar y bwrdd __board__",
   "password-too-short": "Rhaid i'r cyfrinair fod o leiaf __min__ nod o hyd.",
   "login-refused-bad-password": "Cyfrinair anghywir",
-  "login-refused-braked": "Gormod o ymdrechion aflwyddiannus"
+  "login-refused-braked": "Gormod o ymdrechion aflwyddiannus",
+  "advanced-filter-card-dates-hint": "Hidlo dyddiadau cardiau gyda @createdAt, @receivedAt, @startAt, @dueAt, @endAt neu @listEnteredAt. Enghraifft: @endAt >= '2026-01-01' neu @endAt = none. Rhowch enw maes personol sy'n dechrau gyda @ mewn dyfynodau."
 }

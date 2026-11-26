@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ momarandu peteĩcha __board__ rehe",
   "password-too-short": "Ñe'ẽñemi oguerekova'erã __min__ tai michĩvéramo.",
   "login-refused-bad-password": "Ñe'ẽñemi vai",
-  "login-refused-braked": "Heta eterei ñeha'ã oñeikytĩva"
+  "login-refused-braked": "Heta eterei ñeha'ã oñeikytĩva",
+  "advanced-filter-card-dates-hint": "Emboguaha kuatia'i arakuéra @createdAt, @receivedAt, @startAt, @dueAt, @endAt térã @listEnteredAt rupive. Techapyrã: @endAt >= '2026-01-01' térã @endAt = none. Emoĩ tai'apy ryepýpe ñu ojeporavóva réra oñepyrũva @ reheve."
 }

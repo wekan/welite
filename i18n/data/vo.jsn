@@ -2123,5 +2123,6 @@
   "notification-group-board": "Sususiams __count__ su tab __board__",
   "password-too-short": "Letavöd muton labön mu nemödo malatis __min__.",
   "login-refused-bad-password": "Letavöd neverätik",
-  "login-refused-braked": "Steifüls no eplöpöls tu mödiks"
+  "login-refused-braked": "Steifüls no eplöpöls tu mödiks",
+  "advanced-filter-card-dates-hint": "Filütön dätis kadas me @createdAt, @receivedAt, @startAt, @dueAt, @endAt u @listEnteredAt. Sam: @endAt >= '2026-01-01' u @endAt = none. Züükön me saitamals nemi fela fa geban pefümöl, kel primon me @."
 }

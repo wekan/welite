@@ -2134,5 +2134,6 @@
   "notification-group-board": "बोर्ड __board__ पर __count__ सूचनाएँ",
   "password-too-short": "पासवर्ड कम से कम __min__ वर्णों का होना चाहिए।",
   "login-refused-bad-password": "गलत पासवर्ड",
-  "login-refused-braked": "बहुत अधिक असफल प्रयास"
+  "login-refused-braked": "बहुत अधिक असफल प्रयास",
+  "advanced-filter-card-dates-hint": "कार्ड की तिथियाँ @createdAt, @receivedAt, @startAt, @dueAt, @endAt या @listEnteredAt से फ़िल्टर करें। उदाहरण: @endAt >= '2026-01-01' या @endAt = none। @ से शुरू होने वाले कस्टम फ़ील्ड के नाम को उद्धरण चिह्नों में रखें।"
 }

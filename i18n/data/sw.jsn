@@ -2134,5 +2134,6 @@
   "notification-group-board": "Arifa __count__ kwenye bodi __board__",
   "password-too-short": "Nenosiri lazima liwe na angalau herufi __min__.",
   "login-refused-bad-password": "Nenosiri si sahihi",
-  "login-refused-braked": "Majaribio mengi mno yaliyoshindwa"
+  "login-refused-braked": "Majaribio mengi mno yaliyoshindwa",
+  "advanced-filter-card-dates-hint": "Chuja tarehe za kadi kwa @createdAt, @receivedAt, @startAt, @dueAt, @endAt au @listEnteredAt. Mfano: @endAt >= '2026-01-01' au @endAt = none. Weka jina la sehemu maalum linaloanza na @ ndani ya alama za kunukuu."
 }

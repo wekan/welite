@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ اعلان در برد __board__",
   "password-too-short": "کلمه عبور باید دست‌کم __min__ نویسه باشد.",
   "login-refused-bad-password": "کلمه عبور اشتباه",
-  "login-refused-braked": "تلاش‌های ناموفق بیش از حد"
+  "login-refused-braked": "تلاش‌های ناموفق بیش از حد",
+  "advanced-filter-card-dates-hint": "تاریخ‌های کارت را با @createdAt، @receivedAt، @startAt، @dueAt، @endAt یا @listEnteredAt فیلتر کنید. نمونه: @endAt >= '2026-01-01' یا @endAt = none. نام فیلد سفارشی که با @ شروع می‌شود را در گیومه قرار دهید."
 }

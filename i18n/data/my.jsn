@@ -2123,5 +2123,6 @@
   "notification-group-board": "ဘုတ် __board__ ပေါ်တွင် အကြောင်းကြားချက် __count__ ခု",
   "password-too-short": "စကားဝှက်သည် အနည်းဆုံး စာလုံး __min__ လုံး ရှည်ရမည်။",
   "login-refused-bad-password": "စကားဝှက် မှားနေသည်",
-  "login-refused-braked": "မအောင်မြင်သော ကြိုးပမ်းမှု များလွန်းသည်"
+  "login-refused-braked": "မအောင်မြင်သော ကြိုးပမ်းမှု များလွန်းသည်",
+  "advanced-filter-card-dates-hint": "ကတ်ရက်စွဲများကို @createdAt၊ @receivedAt၊ @startAt၊ @dueAt၊ @endAt သို့မဟုတ် @listEnteredAt ဖြင့် စစ်ထုတ်ပါ။ ဥပမာ - @endAt >= '2026-01-01' သို့မဟုတ် @endAt = none။ @ ဖြင့် စသော စိတ်ကြိုက်အကွက်အမည်ကို ကိုးကားအမှတ်အသားအတွင်း ထည့်ပါ။"
 }

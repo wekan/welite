@@ -2123,5 +2123,6 @@
   "notification-group-board": "Fampandrenesana __count__ ao amin’ny solaitra __board__",
   "password-too-short": "Tsy maintsy misy litera __min__ farafahakeliny ny teny miafina.",
   "login-refused-bad-password": "Teny miafina diso",
-  "login-refused-braked": "Andrana tsy nahomby be loatra"
+  "login-refused-braked": "Andrana tsy nahomby be loatra",
+  "advanced-filter-card-dates-hint": "Sivano ny datin'ny karatra amin'ny @createdAt, @receivedAt, @startAt, @dueAt, @endAt na @listEnteredAt. Ohatra: @endAt >= '2026-01-01' na @endAt = none. Asio farango sosona ny anaran'ny saha manokana manomboka amin'ny @."
 }

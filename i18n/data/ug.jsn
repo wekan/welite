@@ -2123,5 +2123,6 @@
   "notification-group-board": "__board__ تاختىسىدا __count__ ئۇقتۇرۇش",
   "password-too-short": "پارول كەم دېگەندە __min__ ھەرپ بولۇشى كېرەك.",
   "login-refused-bad-password": "پارول خاتا",
-  "login-refused-braked": "مەغلۇپ بولغان سىناشلار بەك كۆپ"
+  "login-refused-braked": "مەغلۇپ بولغان سىناشلار بەك كۆپ",
+  "advanced-filter-card-dates-hint": "كارتا چېسلالىرىنى @createdAt، @receivedAt، @startAt، @dueAt، @endAt ياكى @listEnteredAt ئارقىلىق سۈزۈڭ. مەسىلەن: @endAt >= '2026-01-01' ياكى @endAt = none. @ بىلەن باشلانغان خاس مەيدان نامىنى تىرناق ئىچىگە ئېلىڭ."
 }

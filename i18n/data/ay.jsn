@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ yatiyäwinaka __board__ pirqana",
   "password-too-short": "Imantata aruxa __min__ qillqanakat juk'ampiniwa utjañapa.",
   "login-refused-bad-password": "Imantata aru janiw walikiti",
-  "login-refused-braked": "Walja pantjat yant'anaka"
+  "login-refused-braked": "Walja pantjat yant'anaka",
+  "advanced-filter-card-dates-hint": "Kartanakana urunaka suysuñatakixa @createdAt, @receivedAt, @startAt, @dueAt, @endAt jan ukaxa @listEnteredAt apnaqama. Akhama: @endAt >= '2026-01-01' jan ukaxa @endAt = none. @ chimpumpi qalltir wakichata yatiyawin sutipxa comillas chimpunakampi muyuntayama."
 }

@@ -2123,5 +2123,6 @@
   "notification-group-board": "په تخته __board__ کې __count__ خبرتیاوې",
   "password-too-short": "پټنوم باید لږ تر لږه __min__ توري اوږد وي.",
   "login-refused-bad-password": "ناسم پټنوم",
-  "login-refused-braked": "ډېرې ناکامې هڅې"
+  "login-refused-braked": "ډېرې ناکامې هڅې",
+  "advanced-filter-card-dates-hint": "د کارت نېټې په @createdAt، @receivedAt، @startAt، @dueAt، @endAt يا @listEnteredAt سره چاڼ کړئ. بېلګه: @endAt >= '2026-01-01' يا @endAt = none. د دوديز ډګر هغه نوم چې په @ پيلېږي، په نقل قول نښو کې وليکئ."
 }

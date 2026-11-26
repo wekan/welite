@@ -2123,5 +2123,6 @@
   "notification-group-board": "फळो __board__ चेर __count__ सुचोवण्यो",
   "password-too-short": "पासवर्ड उण्यांत उणो __min__ अक्षरांचो आसूंक जाय.",
   "login-refused-bad-password": "चुकीचो पासवर्ड",
-  "login-refused-braked": "खूब अपेस आयिल्ले यत्न"
+  "login-refused-braked": "खूब अपेस आयिल्ले यत्न",
+  "advanced-filter-card-dates-hint": "कार्डांच्यो तारखो @createdAt, @receivedAt, @startAt, @dueAt, @endAt वा @listEnteredAt वापरून गाळात. देखीक: @endAt >= '2026-01-01' वा @endAt = none. @ पासून सुरू जावपी सानुकूल क्षेत्राचें नांव अवतरण चिन्नांमदीं दवरात."
 }

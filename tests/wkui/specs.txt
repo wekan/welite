@@ -260,3 +260,5 @@ password-change-other-sessions.e2e.js: changing one's own password signs every s
 50-language-popup.e2e.js: language popup places flags by language and region (rtl)
 50-language-popup.e2e.js: audited pull keeps target-language board controls (ve-PP)
 50-language-popup.e2e.js: audited pull keeps target-language board controls (zgh)
+advanced-filter-field-identity.e2e.js: co advanced-filter help renders the exact examples
+advanced-filter-field-identity.e2e.js: st advanced-filter help renders the exact examples

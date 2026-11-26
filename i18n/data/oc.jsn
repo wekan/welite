@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notificacions sul tablèu __board__",
   "password-too-short": "Lo senhal deu far almens __min__ caractèrs.",
   "login-refused-bad-password": "Senhal incorrècte",
-  "login-refused-braked": "Tròp d’ensages fracassats"
+  "login-refused-braked": "Tròp d’ensages fracassats",
+  "advanced-filter-card-dates-hint": "Filtratz las datas de las cartas amb @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Exemple : @endAt >= '2026-01-01' o @endAt = none. Metètz entre verguetas lo nom d'un camp personalizat que comença per @."
 }

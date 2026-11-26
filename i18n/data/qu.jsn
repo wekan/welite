@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ willaykuna __board__ pirqapi",
   "password-too-short": "Pakasqa rimayqa aswan pisillaqa __min__ sananchayuq kanan tiyan.",
   "login-refused-bad-password": "Pantasqa pakasqa rimay",
-  "login-refused-braked": "Ancha achka pantasqa ruraykuna"
+  "login-refused-braked": "Ancha achka pantasqa ruraykuna",
+  "advanced-filter-card-dates-hint": "Kartakunapa p'unchawninkunata suysunaykipaq @createdAt, @receivedAt, @startAt, @dueAt, @endAt utaq @listEnteredAt nisqata llamk'achiy. Kay hina: @endAt >= '2026-01-01' utaq @endAt = none. @ unanchawan qallariq kikinchasqa willaypa sutinta comillas unanchakunawan muyurichiy."
 }

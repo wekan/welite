@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ известувања на таблото __board__",
   "password-too-short": "Лозинката мора да има најмалку __min__ знаци.",
   "login-refused-bad-password": "Погрешна лозинка",
-  "login-refused-braked": "Премногу неуспешни обиди"
+  "login-refused-braked": "Премногу неуспешни обиди",
+  "advanced-filter-card-dates-hint": "Филтрирајте ги датумите на картичките со @createdAt, @receivedAt, @startAt, @dueAt, @endAt или @listEnteredAt. Пример: @endAt >= '2026-01-01' или @endAt = none. Ставете го во наводници името на приспособеното поле што почнува со @."
 }

@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ paziņojumi dēlī __board__",
   "password-too-short": "Parolei jābūt vismaz __min__ rakstzīmes garai.",
   "login-refused-bad-password": "Nepareiza parole",
-  "login-refused-braked": "Pārāk daudz neveiksmīgu mēģinājumu"
+  "login-refused-braked": "Pārāk daudz neveiksmīgu mēģinājumu",
+  "advanced-filter-card-dates-hint": "Filtrējiet kartiņu datumus ar @createdAt, @receivedAt, @startAt, @dueAt, @endAt vai @listEnteredAt. Piemērs: @endAt >= '2026-01-01' vai @endAt = none. Pielāgota lauka nosaukumu, kas sākas ar @, ievietojiet pēdiņās."
 }

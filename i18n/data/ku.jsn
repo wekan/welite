@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ agahdarî li ser depoya __board__",
   "password-too-short": "Divê şîfre herî kêm __min__ tîp be.",
   "login-refused-bad-password": "Şîfreya şaş",
-  "login-refused-braked": "Gelek hewldanên têkçûyî"
+  "login-refused-braked": "Gelek hewldanên têkçûyî",
+  "advanced-filter-card-dates-hint": "Dîrokên kartan bi @createdAt, @receivedAt, @startAt, @dueAt, @endAt an @listEnteredAt parzûn bike. Mînak: @endAt >= '2026-01-01' an @endAt = none. Navê qada taybet a ku bi @ dest pê dike di nav nîşaneyên jêgirtinê de binivîse."
 }

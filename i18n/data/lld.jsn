@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notificazions sön le tofl __board__",
   "password-too-short": "La parola secreta mëss avëi almanco __min__ carateres.",
   "login-refused-bad-password": "Parola secreta falada",
-  "login-refused-braked": "Massa proves falades"
+  "login-refused-braked": "Massa proves falades",
+  "advanced-filter-card-dates-hint": "Filtré la dates dla ciartes cun @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Ejëmpl: @endAt >= '2026-01-01' o @endAt = none. Met danter virgulëtes l inom de n ciamp persunalisà che scumëncia cun @."
 }

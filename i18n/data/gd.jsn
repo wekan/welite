@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ brath air bòrd __board__",
   "password-too-short": "Feumaidh am facal-faire a bhith __min__ caractaran a dh'fhaid air a char as lugha.",
   "login-refused-bad-password": "Facal-faire ceàrr",
-  "login-refused-braked": "Cus oidhirpean a dh'fhàillig"
+  "login-refused-braked": "Cus oidhirpean a dh'fhàillig",
+  "advanced-filter-card-dates-hint": "Criathraich cinn-latha nan cairtean le @createdAt, @receivedAt, @startAt, @dueAt, @endAt no @listEnteredAt. Eisimpleir: @endAt >= '2026-01-01' no @endAt = none. Cuir ainm raoin ghnàthaichte a thòisicheas le @ ann an comharran-labhairt."
 }

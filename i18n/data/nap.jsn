@@ -2123,5 +2123,6 @@
   "notification-group-board": "__count__ notifiche ncopp'a tavula __board__",
   "password-too-short": "'A parola 'e ordene adda essere longa almeno __min__ caratteri.",
   "login-refused-bad-password": "Parola d'ordine sbagliata",
-  "login-refused-braked": "Troppe tentative fallite"
+  "login-refused-braked": "Troppe tentative fallite",
+  "advanced-filter-card-dates-hint": "Filtra 'e date d''e carte cu @createdAt, @receivedAt, @startAt, @dueAt, @endAt o @listEnteredAt. Esempio: @endAt >= '2026-01-01' o @endAt = none. Miette tra virgulette 'o nomme 'e nu campo personalizzato ca accummenza cu @."
 }

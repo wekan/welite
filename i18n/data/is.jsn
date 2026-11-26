@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ tilkynningar á töflunni __board__",
   "password-too-short": "Lykilorðið verður að vera að minnsta kosti __min__ stafir.",
   "login-refused-bad-password": "Rangt lykilorð",
-  "login-refused-braked": "Of margar misheppnaðar tilraunir"
+  "login-refused-braked": "Of margar misheppnaðar tilraunir",
+  "advanced-filter-card-dates-hint": "Síaðu dagsetningar spjalda með @createdAt, @receivedAt, @startAt, @dueAt, @endAt eða @listEnteredAt. Dæmi: @endAt >= '2026-01-01' eða @endAt = none. Settu heiti sérsniðins reits sem byrjar á @ innan gæsalappa."
 }

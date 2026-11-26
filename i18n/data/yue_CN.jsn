@@ -2123,5 +2123,6 @@
   "notification-group-board": "看板 __board__ 有 __count__ 個通知",
   "password-too-short": "密碼最少要有 __min__ 個字元。",
   "login-refused-bad-password": "密碼錯咗",
-  "login-refused-braked": "失敗嘅嘗試太多"
+  "login-refused-braked": "失敗嘅嘗試太多",
+  "advanced-filter-card-dates-hint": "用 @createdAt、@receivedAt、@startAt、@dueAt、@endAt 或 @listEnteredAt 篩選卡片日期。例如：@endAt >= '2026-01-01' 或 @endAt = none。以 @ 開頭嘅自訂欄位名稱要加引號。"
 }

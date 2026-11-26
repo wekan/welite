@@ -2134,5 +2134,6 @@
   "notification-group-board": "__count__ értesítés a(z) __board__ táblán",
   "password-too-short": "A jelszónak legalább __min__ karakter hosszúnak kell lennie.",
   "login-refused-bad-password": "Hibás jelszó",
-  "login-refused-braked": "Túl sok sikertelen próbálkozás"
+  "login-refused-braked": "Túl sok sikertelen próbálkozás",
+  "advanced-filter-card-dates-hint": "A kártyák dátumait a @createdAt, @receivedAt, @startAt, @dueAt, @endAt vagy @listEnteredAt mezővel szűrheti. Példa: @endAt >= '2026-01-01' vagy @endAt = none. A @ jellel kezdődő egyéni mezőneveket tegye idézőjelbe."
 }

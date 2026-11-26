@@ -2123,5 +2123,6 @@
   "notification-group-board": "Nḓivhadzo dza __count__ kha bodo __board__",
   "password-too-short": "Phasiwede i fanela u vha na zwiṅwalwa __min__ kana u fhira.",
   "login-refused-bad-password": "Phasiwede i songo luga",
-  "login-refused-braked": "Vhulingo vhunzhi vhu sa bvelaho phanda"
+  "login-refused-braked": "Vhulingo vhunzhi vhu sa bvelaho phanda",
+  "advanced-filter-card-dates-hint": "Ṱalulani datumu dza garaṱa nga @createdAt, @receivedAt, @startAt, @dueAt, @endAt kana @listEnteredAt. Tsumbo: @endAt >= '2026-01-01' kana @endAt = none. Vheani dzina ḽa tshipiḓa tsho itelwaho inwi ḽi thomaho nga @ kha zwiga zwa khoutheisheni."
 }

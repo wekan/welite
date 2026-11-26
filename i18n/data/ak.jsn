@@ -2123,5 +2123,6 @@
   "notification-group-board": "Amanneɛbɔ __count__ wɔ bɔɔd __board__ so",
   "password-too-short": "Ɛsɛ sɛ ahintasɛm no nkyerɛwde dodow yɛ __min__ anaa ɛboro saa.",
   "login-refused-bad-password": "Ahintasɛm no nyɛ",
-  "login-refused-braked": "Mmɔden a ɛntumi nyɛ adwuma dɔɔso"
+  "login-refused-braked": "Mmɔden a ɛntumi nyɛ adwuma dɔɔso",
+  "advanced-filter-card-dates-hint": "Fa @createdAt, @receivedAt, @startAt, @dueAt, @endAt anaa @listEnteredAt yiyi kaad nna mu. Nhwɛsoɔ: @endAt >= '2026-01-01' anaa @endAt = none. Fa nsɛm a wɔafa aka ho agyiraehyɛde twa beae a woahyɛ da ayɛ no din ho, sɛ ɛde @ na efi ase a."
 }
