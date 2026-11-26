@@ -50,6 +50,18 @@ const
   DEFAULT_I18N  = 'i18n';     // translations dir (i18n/langs.jsn + i18n/data). Override WELITE_I18N.
   I18N_MOUNT    = '/i18n';    // URL the i18n/ tree is served under (i18n/langs.jsn -> /i18n/langs.jsn).
 
+// A shared store's scheduled rules for one minute (wlrules), as its tenant:
+// <Dir>files/db/wekan.db.
+procedure RunScheduledHook(Db:TWLDb;const Path:string;Local,Utc:TDateTime);
+var T:TWLTenant;
+begin
+  T:=Default(TWLTenant);
+  T.Db:=Db;T.DbPath:=Path;
+  T.FilesDir:=ExtractFilePath(ExcludeTrailingPathDelimiter(ExtractFilePath(Path)));
+  T.Dir:=ExtractFilePath(ExcludeTrailingPathDelimiter(T.FilesDir));
+  RunScheduledRules(T,Local,Utc);
+end;
+
 procedure TWLCleanRouter.DoRouteRequest(Request:TRequest;Response:TResponse);
 begin
   // A request that writes runs the board's rules before it answers (wlrules).
@@ -1001,6 +1013,8 @@ begin
   Writeln('WeKan-Lite listening on :', Application.Port, ' (data root: ', DataDir, ')');
   StartHTTPStop;
   try
+    // The scheduled rules of every shared store, from the maintenance pass.
+    ScheduledHook:=@RunScheduledHook;
     StartMaintenance(DataDir);
     Application.Run;
   finally

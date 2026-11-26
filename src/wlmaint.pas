@@ -18,11 +18,16 @@ type TWLMaintainer=class(TThread)
     procedure AddPath(const Path:string);
     function FailedPasses:LongInt;
   end;
+// Called each pass for every shared store, once for each minute since its
+// last pass (at most the last ten): the minute's local and UTC time. The
+// HTML5 view's scheduled rules (wlrules RunScheduledRules, set by wlhttp).
+type TWLScheduledHook=procedure(Db:TWLDb;const Path:string;Local,Utc:TDateTime);
+var ScheduledHook:TWLScheduledHook=nil;
 procedure StartMaintenance(const DataRoot:string='');
 procedure StopMaintenance;
 procedure RegisterMaintenanceDb(Db:TWLDb);
 implementation
-uses wlshared,wlsweep,wldisc;
+uses DateUtils,wlshared,wlsweep,wldisc;
 var Worker:TWLMaintainer=nil;WorkerLock:TRTLCriticalSection;
 constructor TWLMaintainer.Create(PollMs:LongWord;const DataRoot:string);
 begin
@@ -50,9 +55,10 @@ end;
 function TWLMaintainer.FailedPasses:LongInt;
 begin Result:=InterlockedCompareExchange(FFailures,0,0);end;
 procedure TWLMaintainer.Execute;
-var Paths:TStringList;i:Integer;Db:TWLDb;Rows:TWLRows;Succeeded:Boolean;
+var Paths,LastMinute:TStringList;i:Integer;Db:TWLDb;Rows:TWLRows;Succeeded:Boolean;Minute,From_,m:Int64;Wait:Int64;
 begin
   Paths:=TStringList.Create;
+  LastMinute:=TStringList.Create;
   try
     while not Terminated do
     begin
@@ -80,14 +86,32 @@ begin
               if Rows[0][0]='view' then Succeeded:=SweepSharedTokens(Db,UnixMillis(Now))
               else if Rows[0][0]='table' then Succeeded:=SweepLegacyTokens(Db,UnixMillis(Now));
             end;
+            // The scheduled rules, each minute since this store's last pass.
+            if (Length(Rows)=1) and (Rows[0][0]='view') and Assigned(ScheduledHook) then
+            begin
+              Minute:=Trunc(LocalTimeToUniversal(Now)*1440);
+              From_:=StrToInt64Def(LastMinute.Values[Paths[i]],Minute-1)+1;
+              if From_<Minute-9 then From_:=Minute-9;
+              for m:=From_ to Minute do
+                try ScheduledHook(Db,Paths[i],UniversalTimeToLocal(m/1440),m/1440);
+                except InterlockedIncrement(FFailures);end;
+              LastMinute.Values[Paths[i]]:=IntToStr(Minute);
+            end;
             if not Succeeded then InterlockedIncrement(FFailures);
           except InterlockedIncrement(FFailures);end;
         finally Db.Free;end;
       end;
-      if not Terminated then RTLEventWaitFor(FWake,FPollMs);
+      // With scheduled rules, the next pass at the start of the next minute.
+      Wait:=FPollMs;
+      if Assigned(ScheduledHook) then
+      begin
+        Wait:=60000-MilliSecondOfTheMinute(Now)+500;
+        if Wait>FPollMs then Wait:=FPollMs;
+      end;
+      if not Terminated then RTLEventWaitFor(FWake,Wait);
       RTLEventResetEvent(FWake);
     end;
-  finally Paths.Free;end;
+  finally Paths.Free;LastMinute.Free;end;
 end;
 procedure StartMaintenance(const DataRoot:string);
 begin

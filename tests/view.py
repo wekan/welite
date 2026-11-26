@@ -561,10 +561,16 @@ def http_checks(server, tmp, backend):
             cards = json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, list_id), headers=auth)[2])
             return [c['title'] for c in cards if c['_id'] == card_id][0]
         assert card_title() == 'Renamed Card'
-        # Negative: no member, an empty title, and a card that is not on the board rename nothing.
+        # Negative: no member and a card that is not on the board rename nothing.
         assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': 'Stranger'}, cookie=stranger)[0] == 403
-        assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': ''}, cookie=owner)[0] == 400
         assert request('POST', '/b/%s/cards/no-such-card/title' % board_id, {'title': 'X'}, cookie=owner)[0] == 404
+        assert card_title() == 'Renamed Card'
+        # A title may be cleared, as in WeKan's card details (2026-11-26: it is
+        # an edit History keeps, card-clear-undo-redo; it used to be refused),
+        # and is kept without the spaces around it.
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': '  '}, cookie=owner)[0] in (200, 303)
+        assert card_title() == ''
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': '  Renamed Card  '}, cookie=owner)[0] in (200, 303)
         assert card_title() == 'Renamed Card'
 
         # Checklists (_cardsec_checklists.pug): add one, add items, check one, delete it.

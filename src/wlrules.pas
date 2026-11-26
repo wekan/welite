@@ -78,13 +78,17 @@ function RulesSignature(Db: TWLDb; const BoardId: string): string;
 // The rules an activity of a board starts, run now (the engine's own entry,
 // for tests and for writes outside a request).
 procedure RunRulesSince(const T: TWLTenant; const Stamp: string);
+// Scheduled triggers (WeKan's server/scheduledRules.js): each that fires in
+// the minute of Local (atTime, calendar) or Utc (cron) runs its rules' actions
+// on the cards it chooses, once in that minute.
+procedure RunScheduledRules(const T: TWLTenant; Local, Utc: TDateTime);
 
 const
   MAX_RULE_DEPTH = 5;
 
 implementation
 
-uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase, wlwrike, wlh5, wlchhist, wlchhash;
+uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase, wlwrike, wlh5, wlchhist, wlchhash, wlsched;
 
 threadvar
   ArmedRequest: TRequest;
@@ -2092,6 +2096,67 @@ begin
   end;
 end;
 
+// A card's title or description row undone (previousContent back) or redone
+// (newContent back): only while the card still has the value the other side
+// left - a newer edit is never overwritten (history-conflict).
+function ApplyCardHistory(Db: TWLDb; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var Prev, Next, Put, Expect: TJSONData; Field, CardId: string; R: TWLRows;
+  function ValueOf(Content: TJSONData): string;
+  var V: TJSONData;
+  begin
+    Result := '';
+    if not (Content is TJSONObject) then Exit;
+    V := TJSONObject(Content).Find('value');
+    if (V <> nil) and (V.JSONType = jtString) then Result := V.AsString;
+  end;
+begin
+  Result := False; Error := '';
+  Prev := Row.Find('previousContent'); Next := Row.Find('newContent');
+  if Direction = 'undo' then begin Put := Prev; Expect := Next; end else begin Put := Next; Expect := Prev; end;
+  if Put is TJSONObject then Field := Str(TJSONObject(Put), 'field')
+  else if Expect is TJSONObject then Field := Str(TJSONObject(Expect), 'field')
+  else Field := '';
+  if (Field <> 'title') and (Field <> 'description') then Exit;
+  CardId := Str(Row, 'entityId');
+  R := Db.Query('SELECT COALESCE(' + Field + ','''') FROM cards WHERE id=' + Q(CardId) + ' AND boardId=' + Q(Str(Row, 'boardId')) +
+    ' AND deletedAt IS NULL;');
+  if Length(R) <> 1 then Exit;
+  if R[0][0] <> ValueOf(Expect) then begin Error := 'history-conflict'; Exit; end;
+  Result := Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET ' + Field + '=' + Q(ValueOf(Put)) + ',modifiedAt=' + Q(NowIso) +
+    ' WHERE id=' + Q(CardId) + '; COMMIT;');
+  if not Result then Db.Exec('ROLLBACK;');
+end;
+
+// A list's lifecycle row undone (the list and the cards of its delete batch
+// back) or redone (the list and its live cards deleted again, in the same
+// batch). A card deleted on its own, in another batch, is not touched.
+function ApplyListHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var ListId, BoardId, Batch, Markers: string;
+begin
+  Result := False; Error := '';
+  if Str(Row, 'group') <> 'lifecycle' then Exit;
+  ListId := Str(Row, 'entityId'); BoardId := Str(Row, 'boardId'); Batch := Str(Row, 'batchId');
+  if (ListId = '') or (Batch = '') then Exit;
+  // A removal undone and a restore redone put it back; the other two delete it.
+  if (Direction = 'undo') = (Str(Row, 'changeType') = 'removed') then
+  begin
+    if Length(Db.Query('SELECT 1 FROM lists WHERE id=' + Q(ListId) + ' AND boardId=' + Q(BoardId) + ' AND deleteBatchId=' + Q(Batch) + ';')) <> 1 then
+    begin Error := 'history-conflict'; Exit; end;
+    Result := Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL WHERE listId=' + Q(ListId) +
+      ' AND boardId=' + Q(BoardId) + ' AND deleteBatchId=' + Q(Batch) + '; UPDATE lists SET deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL ' +
+      'WHERE id=' + Q(ListId) + ' AND deleteBatchId=' + Q(Batch) + '; COMMIT;');
+  end
+  else
+  begin
+    if Length(Db.Query('SELECT 1 FROM lists WHERE id=' + Q(ListId) + ' AND boardId=' + Q(BoardId) + ' AND deletedAt IS NULL;')) <> 1 then
+    begin Error := 'history-conflict'; Exit; end;
+    Markers := 'deletedAt=' + Q(NowIso) + ',deletedBy=' + Q(UserId) + ',deleteBatchId=' + Q(Batch);
+    Result := Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET ' + Markers + ' WHERE listId=' + Q(ListId) + ' AND boardId=' + Q(BoardId) +
+      ' AND deletedAt IS NULL; UPDATE lists SET ' + Markers + ' WHERE id=' + Q(ListId) + ' AND deletedAt IS NULL; COMMIT;');
+  end;
+  if not Result then Db.Exec('ROLLBACK;');
+end;
+
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
 var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList;
   i, Restored, Skipped: Integer; Applied: Boolean;
@@ -2152,9 +2217,11 @@ begin
   try
     if Rows.Count = 0 then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
     Row := Rows.Objects[0];
-    if Str(Row, 'entityType') <> 'rule' then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
-    Applied := ApplyRuleHistory(T.Db, UserId, Row, Direction, Error);
-    if Error = 'history-conflict' then Exit(MethodError(409, Error, 'The rule changed after this history entry', Answer));
+    if Str(Row, 'entityType') = 'card' then Applied := ApplyCardHistory(T.Db, Row, Direction, Error)
+    else if Str(Row, 'entityType') = 'list' then Applied := ApplyListHistory(T.Db, UserId, Row, Direction, Error)
+    else if Str(Row, 'entityType') = 'rule' then Applied := ApplyRuleHistory(T.Db, UserId, Row, Direction, Error)
+    else begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
+    if Error = 'history-conflict' then Exit(MethodError(409, Error, 'It changed after this history entry', Answer));
     if Error <> '' then Exit(MethodError(403, Error, Error, Answer));
     if Applied then
     begin
@@ -2168,8 +2235,8 @@ begin
       end;
     end;
     if Applied then AnnounceToAll;
-    Answer := '{"result":{"' + Key + '":' + IfThen(Applied, 'true', 'false') + ',"entityType":"rule","entityId":"' +
-      StringToJSONString(Str(Row, 'entityId')) + '","group":"rules"}}';
+    Answer := '{"result":{"' + Key + '":' + IfThen(Applied, 'true', 'false') + ',"entityType":"' + StringToJSONString(Str(Row, 'entityType')) +
+      '","entityId":"' + StringToJSONString(Str(Row, 'entityId')) + '","group":"' + StringToJSONString(Str(Row, 'group')) + '"}}';
     Result := 200;
   finally
     Rows.Free;
@@ -2256,6 +2323,173 @@ begin
   FreeAndNil(CopyChain);
   // What was claimed a day ago is never read again.
   T.Db.Exec('DELETE FROM _wl_rule_seen WHERE at<' + Q(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', IncDay(LocalTimeToUniversal(Now), -1))) + ';');
+end;
+
+// A number of a document (days, weekday...) as text, also when stored as a
+// string; '' without one.
+function NumText(Doc: TJSONObject; const Name: string): string;
+var V: TJSONData;
+begin
+  Result := '';
+  V := Doc.Find(Name);
+  if V = nil then Exit;
+  case V.JSONType of
+    jtNumber: Result := IntToStr(Round(V.AsFloat));
+    jtString: Result := V.AsString;
+  end;
+end;
+
+function NumOf(Doc: TJSONObject; const Name: string): Double;
+var V: TJSONData;
+begin
+  Result := 0;
+  V := Doc.Find(Name);
+  if V = nil then Exit;
+  case V.JSONType of
+    jtNumber: Result := V.AsFloat;
+    jtString: Result := StrToFloatDef(V.AsString, 0, DefaultFormatSettings);
+  end;
+end;
+
+// WeKan's boardActorId (models/lib/boardActor.js): who a board's own timed
+// work acts as - its first active admin, else its first active member.
+function BoardActor(Db: TWLDb; const BoardId: string): string;
+var R: TWLRows;
+begin
+  R := Db.Query('SELECT userId FROM board_members WHERE boardId=' + Q(BoardId) + ' AND isActive=1 ORDER BY isAdmin DESC,userId LIMIT 1;');
+  if Length(R) = 1 then Result := R[0][0] else Result := '';
+end;
+
+// The cards a scheduled trigger acts on (scheduledRules.js selectCards):
+// the board's open cards - of the trigger's list, unless '*' - and of them
+// those whose due or start date meets dueCondition, or that have been in
+// their list for at least `days` days.
+function ScheduledCards(Db: TWLDb; Trig: TJSONObject; NowMs: Int64): TStringArray;
+var R, Since, Lists: TWLRows; Where, ListName, Field: string; i: Integer; Keep: Boolean; At: Int64; Days: Double;
+begin
+  Result := nil;
+  Where := 'boardId=' + Q(Str(Trig, 'boardId')) + ' AND archived=0 AND deletedAt IS NULL';
+  ListName := Str(Trig, 'listName');
+  if (ListName <> '') and (ListName <> '*') then
+  begin
+    Lists := Db.Query('SELECT id FROM lists WHERE boardId=' + Q(Str(Trig, 'boardId')) + ' AND title=' + Q(ListName) + ' LIMIT 1;');
+    if Length(Lists) = 0 then Exit;
+    Where := Where + ' AND listId=' + Q(Lists[0][0]);
+  end;
+  if Str(Trig, 'dateField') = 'startAt' then Field := 'startAt' else Field := 'dueAt';
+  R := Db.Query('SELECT id,COALESCE(' + Field + ',''''),COALESCE(createdAt,'''') FROM cards WHERE ' + Where + ' ORDER BY sort,id;');
+  Days := NumOf(Trig, 'days');
+  for i := 0 to High(R) do
+  begin
+    Keep := True;
+    if Str(Trig, 'scheduleKind') = 'due' then
+      Keep := MatchesScheduledDate(R[i][1], Str(Trig, 'dueCondition'), Days, NowMs)
+    else if Str(Trig, 'scheduleKind') = 'aging' then
+    begin
+      // daysInList: since its newest move or creation, else since created.
+      Since := Db.Query('SELECT createdAt FROM activities WHERE cardId=' + Q(R[i][0]) +
+        ' AND activityType IN (''moveCard'',''createCard'') ORDER BY createdAt DESC LIMIT 1;');
+      if (Length(Since) = 1) and (Since[0][0] <> '') then Keep := MatchesScheduledDate(Since[0][0], 'overdue', Days, NowMs)
+      else Keep := MatchesScheduledDate(R[i][2], 'overdue', Days, NowMs);
+    end;
+    if Keep then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := R[i][0];
+    end;
+  end;
+end;
+
+procedure RunScheduledRules(const T: TWLTenant; Local, Utc: TDateTime);
+var Triggers, Rules: TJSONArray; Trig, Rule, Act, Fields: TJSONObject; i, j, k, c: Integer; Slot, Kind, At, Stamp, Sql: string;
+  Cards, Ids: TStringArray; A: TActivity; NowMs: Int64; V: TJSONData; Ran: Boolean;
+begin
+  if (T.Db = nil) or not IsShared(T.Db) then Exit;
+  Triggers := FindDocs(T.Db, 'triggers', DocField('activityType') + '=''scheduledTrigger''', DocField('_id'));
+  try
+    if Triggers.Count = 0 then Exit;
+    Slot := SlotKey(Local);
+    NowMs := DateTimeToUnix(Utc, True) * 1000;
+    Stamp := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', Utc);
+    for i := 0 to Triggers.Count - 1 do
+    try
+      Trig := Triggers.Objects[i];
+      // Once a minute at most (lastRunKey).
+      if Str(Trig, 'lastRunKey') = Slot then Continue;
+      Kind := Str(Trig, 'scheduleKind');
+      if Kind = 'cron' then
+      begin
+        if not CronMatches(Str(Trig, 'cron'), Utc) then Continue;
+      end
+      else
+      begin
+        At := Str(Trig, 'atTime');
+        if (At <> '') and (At <> HourMinute(Local)) then Continue;
+        if (Kind = 'calendar') and not CalendarDue(Str(Trig, 'scheduleType'), Str(Trig, 'onDate'), NumText(Trig, 'weekday'),
+          NumText(Trig, 'dayOfMonth'), Local) then Continue;
+      end;
+      Ran := False;
+      Rules := FindDocs(T.Db, 'rules', DocField('boardId') + '=' + Q(Str(Trig, 'boardId')) + ' AND (' + DocField('triggerId') + '=' +
+        Q(Str(Trig, '_id')) + ' OR EXISTS(SELECT 1 FROM json_each(_ferretdb_sjson,''$.extraTriggerIds'') WHERE value=' +
+        Q(Str(Trig, '_id')) + '))', DocField('createdAt') + ',' + DocField('_id'));
+      try
+        for j := 0 to Rules.Count - 1 do
+        begin
+          Rule := Rules.Objects[j];
+          // A disabled rule never fires (#2322), on a schedule too.
+          V := Rule.Find('enabled');
+          if (V <> nil) and (V.JSONType = jtBoolean) and not V.AsBoolean then Continue;
+          Ids := RuleActionIds(Rule);
+          if Length(Ids) = 0 then Continue;
+          Cards := ScheduledCards(T.Db, Trig, NowMs);
+          A.Id := ''; A.Kind := 'scheduledTrigger'; A.UserId := BoardActor(T.Db, Str(Trig, 'boardId'));
+          A.BoardId := Str(Trig, 'boardId'); A.ListId := ''; A.SwimlaneId := '';
+          for k := 0 to High(Ids) do
+          begin
+            Act := FindDoc(T.Db, 'actions', Ids[k]);
+            if Act = nil then Continue;
+            A.Data := TJSONObject.Create;
+            try
+              // A board-level action runs once when no card is chosen.
+              if (Length(Cards) = 0) and ((Str(Act, 'actionType') = 'createCard') or (Str(Act, 'actionType') = 'addSwimlane') or
+                (Str(Act, 'actionType') = 'moveAllCardsInList')) then
+              begin
+                A.CardId := '';
+                PerformAction(T, A, Act);
+              end
+              else
+                for c := 0 to High(Cards) do
+                begin
+                  A.CardId := Cards[c];
+                  PerformAction(T, A, Act);
+                end;
+              Ran := True;
+            finally
+              A.Data.Free;
+              Act.Free;
+            end;
+          end;
+        end;
+      finally
+        Rules.Free;
+      end;
+      // The minute is the trigger's: it does not run again in it.
+      Fields := TJSONObject.Create(['lastRunKey', Slot, 'lastRunAt', NowMs]);
+      try
+        Sql := UpdateDocSql(T.Db, 'triggers', Str(Trig, '_id'), Fields, '{"lastRunAt":"date"}');
+      finally
+        Fields.Free;
+      end;
+      if not T.Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;') then T.Db.Exec('ROLLBACK;');
+      // What the actions did starts the board's other rules, as a request's
+      // writes do.
+      if Ran then RunRulesSince(T, Stamp);
+    except
+      // One bad rule never stops the scan.
+    end;
+  finally
+    Triggers.Free;
+  end;
 end;
 
 var

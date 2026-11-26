@@ -3509,8 +3509,9 @@ begin
     if Writable then
       Details := Details + '<form class="js-card-details-title js-inlined-form is-hidden" method="post" action="/b/' +
         HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/title" up-submit up-target=".board-wrapper">' +
+        // A title may be cleared, as in WeKan's card details (History keeps it).
         '<textarea class="js-edit-card-title" name="title" rows="2" dir="auto" aria-label="' + HtmlAttr(Words.Text('title', 'Title')) +
-        '" required>' + E(Card[0][0]) + '</textarea><button class="primary" type="submit">' + E(Words.Text('save', 'Save')) +
+        '">' + E(Card[0][0]) + '</textarea><button class="primary" type="submit">' + E(Words.Text('save', 'Save')) +
         '</button></form>';
     // The user's own full-screen card (WeKan's toggleCardMaximized, /_methods/).
     if Maximized then
@@ -4262,6 +4263,34 @@ begin
     end;
     Exit;
   end;
+  // server/models/lists.js lists.softRemove(listId): the list and its cards
+  // soft-deleted, for whoever may change the board.
+  if Name = 'lists.softRemove' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Strings[0];
+    finally
+      Args.Free;
+    end;
+    R := T.Db.Query('SELECT boardId,COALESCE(deleteBatchId,'''') FROM lists WHERE id=' + QuotedStr(Id) + ';');
+    if Length(R) <> 1 then begin SendJsonAnswer(Response, 404, '{"error":"not-found","reason":"List not found"}'); Exit; end;
+    if not BoardCanWrite(T.Db, S.UserId, R[0][0]) then
+    begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"You cannot modify this board."}'); Exit; end;
+    Code := SoftRemoveViewList(T, S.UserId, R[0][0], Id, Error);
+    if Code <> 200 then begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    R := T.Db.Query('SELECT COALESCE(deleteBatchId,'''') FROM lists WHERE id=' + QuotedStr(Id) + ';');
+    AnnounceToAll;
+    SendJsonAnswer(Response, 200, '{"result":{"deleted":true,"batchId":"' + StringToJSONString(R[0][0]) + '"}}');
+    Exit;
+  end;
   if Name = '/settings/update' then
   begin
     Args := nil;
@@ -4968,8 +4997,10 @@ function BoardSignature(Db: TWLDb; const BoardId: string): string;
 var R: TWLRows; B: string;
 begin
   B := QuotedStr(BoardId);
-  R := Db.Query('SELECT (SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM cards WHERE boardId=' + B + '),' +
-    '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM lists WHERE boardId=' + B + '),' +
+  // A soft delete and its undo change neither modifiedAt nor archived: the
+  // live rows are counted too.
+  R := Db.Query('SELECT (SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived)||''/''||sum(deletedAt IS NULL) FROM cards WHERE boardId=' + B + '),' +
+    '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived)||''/''||sum(deletedAt IS NULL) FROM lists WHERE boardId=' + B + '),' +
     '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM swimlanes WHERE boardId=' + B + '),' +
     '(SELECT count(*)||max(createdAt) FROM activities WHERE boardId=' + B + '),' +
     // The board's fields kept in settings_json too: Card Settings' sides,

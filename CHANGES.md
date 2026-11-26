@@ -515,6 +515,22 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Settings' deposit board and list: only a board the user may write, and a
   list or swimlane on it; anything else is refused and recorded
   (SubtaskDepositBleed).
+- Run WeKan's scheduled rule triggers (`src/wlsched.pas`, WeKan's
+  scheduledRules.js, cronSchedule.js and scheduledDueFilter.js): a cron
+  schedule in UTC, a calendar one (once, daily, weekdays, weekly, monthly) at
+  its time of day, and a card's due or start date or its days in its list -
+  each once in its minute, as the board's first admin, its actions on the
+  cards it chooses and then the rules those start. The maintenance pass runs
+  them at the start of each minute and catches up on missed ones.
+  `tests/sched.py` compares 286 answers with WeKan's own JavaScript;
+  `tests/rules.py` runs one end to end, and a disabled and an invalid one.
+- Keep a card's title and description in History (WeKan's
+  changeHistoryGroups diffFields: added, edited, removed) from the card
+  details, `/cards/update` and the REST API, and undo and redo them - never
+  over a newer edit (history-conflict). A title may be cleared and is kept
+  without the spaces around it, as WeKan keeps it. Add lists.softRemove, and
+  undo and redo of a deleted list with the cards of its batch only (#1023); a
+  soft delete and its undo draw the board's pages again.
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

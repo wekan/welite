@@ -352,8 +352,10 @@ procedure ApiListDelete(aRequest: TRequest; aResponse: TResponse);     // DELETE
 procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE board (cascade)
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
+// A list soft-deleted with its cards in one batch (lists.softRemove).
+function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -4848,21 +4850,58 @@ begin
     ') FROM cards WHERE '+Scope+' AND COALESCE('+Column+','''')<>'+QuotedStr(Value)+'; ';
 end;
 
+// A card's title or description now, as text ('' when it has none).
+function CardTextOf(Db:TWLDb;const CardId,Column:string):string;
+var R:TWLRows;
+begin
+  Result:='';
+  if (Column<>'title') and (Column<>'description') then Exit;
+  R:=Db.Query('SELECT COALESCE('+Column+','''') FROM cards WHERE id='+QuotedStr(CardId)+';');
+  if Length(R)=1 then Result:=R[0][0];
+end;
+
+// WeKan's History of a card's title or description (models/lib/changeHistoryGroups.js
+// diffFields): one row, its group the field's, 'added' from empty, 'removed'
+// to empty, else 'edited'; nothing when the value did not change. In a
+// shared store, as every History row (wlchhist).
+procedure RecordCardTextHistory(Db:TWLDb;const UserId,BoardId,CardId,Column,Old,New:string);
+var Before,After:TJSONObject;Kind:string;
+begin
+  if (Old=New) or ((Column<>'title') and (Column<>'description')) then Exit;
+  if Old='' then Kind:='added' else if New='' then Kind:='removed' else Kind:='edited';
+  Before:=TJSONObject.Create(['field',Column,'value',Old]);
+  After:=TJSONObject.Create(['field',Column,'value',New]);
+  try
+    try
+      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,Column,Kind,Before,After);
+    except
+      // History never fails the edit it records.
+    end;
+  finally
+    Before.Free;After.Free;
+  end;
+end;
+
 function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
-var Scope,Stamp:string;
+var Scope,Stamp,Title_,Old:string;
 begin
   Error:='';
-  if (BoardId='') or (CardId='') or (Trim(Title)='') or (Pos(#0,BoardId+CardId+Title)>0) then
+  // A title may be cleared (WeKan's card details), and is kept without the
+  // spaces around it.
+  Title_:=Trim(Title);
+  if (BoardId='') or (CardId='') or (Pos(#0,BoardId+CardId+Title)>0) then
   begin Error:='Invalid title';Exit(400);end;
   if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
   if not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then
   begin Error:='Card not found';Exit(404);end;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   Stamp:=QuotedStr(NowIso);
-  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardTextActivitySql(UserId,Scope,'title',Title)+'UPDATE cards SET title='+QuotedStr(Title)+',modifiedAt='+Stamp+
+  Old:=CardTextOf(T.Db,CardId,'title');
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardTextActivitySql(UserId,Scope,'title',Title_)+'UPDATE cards SET title='+QuotedStr(Title_)+',modifiedAt='+Stamp+
     ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
-    ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Card rename failed'') END; COMMIT;') then
+    ' AND title='+QuotedStr(Title_)+')=1 THEN 1 ELSE json(''Card rename failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not rename card';Exit(500);end;
+  RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',Old,Title_);
   Result:=200;
 end;
 
@@ -5488,8 +5527,9 @@ procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
-  Code:Integer;MoveError:string;
+  Code:Integer;MoveError:string;HasDescription:Boolean;NewTitle,NewDescription,OldTitle,OldDescription:string;
 begin
+  HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
@@ -5517,7 +5557,9 @@ begin
       begin
         if (Input.JSONType<>jtString) or (Pos(#0,Input.AsString)>0) then
         begin SendJson(aResponse,'{"error":"Invalid title"}',400);Exit;end;
-        FieldSets:=',title='+QuotedStr(Input.AsString);
+        // A title of only spaces clears it (WeKan trims a title).
+        NewTitle:=Trim(Input.AsString);
+        FieldSets:=',title='+QuotedStr(NewTitle);
       end;
       for FieldName in ['receivedAt','startAt','dueAt','endAt'] do
       begin
@@ -5556,6 +5598,7 @@ begin
         if Pos(#0,Value)>0 then
         begin SendJson(aResponse,'{"error":"Invalid description"}',400);Exit;end;
         FieldSets:=FieldSets+',description='+QuotedStr(Value);
+        HasDescription:=True;NewDescription:=Value;
       end;
       Input:=Body.Find('dueComplete');
       if Input<>nil then
@@ -5621,6 +5664,8 @@ begin
     if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;
+  if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
+  if HasDescription then OldDescription:=CardTextOf(T.Db,CardId,'description');
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ')=1 THEN 1 ELSE json(''Card edit scope changed'') END; '+Sets+ArchiveSql+Relations+' COMMIT;') then
   begin
@@ -5630,6 +5675,8 @@ begin
     else SendError(aResponse,500,'Could not edit card');
     Exit;
   end;
+  if HasTitle then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',OldTitle,NewTitle);
+  if HasDescription then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'description',OldDescription,NewDescription);
   // #6423: a listId or swimlaneId in the body moves the card there, within
   // its board, with WeKan's moveCard activity (MoveViewCard's checks).
   if BodyHasField(aRequest,'listId') or BodyHasField(aRequest,'swimlaneId') then
@@ -6133,7 +6180,7 @@ begin
 end;
 
 function SetViewCardText(const T:TWLTenant;const UserId,BoardId,CardId,Column,Value:string;out Error:string):Integer;
-var Scope,Stamp:string;
+var Scope,Stamp,Old:string;
 begin
   Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
   if Result<>200 then Exit;
@@ -6141,10 +6188,12 @@ begin
   if Pos(#0,Value)>0 then begin Error:='Invalid value';Exit(400);end;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   Stamp:=QuotedStr(NowIso);
+  Old:=CardTextOf(T.Db,CardId,Column);
   if not T.Db.Exec('BEGIN IMMEDIATE; '+CardTextActivitySql(UserId,Scope,Column,Value)+'UPDATE cards SET '+Column+'='+QuotedStr(Value)+',modifiedAt='+Stamp+
     ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ' AND '+Column+'='+QuotedStr(Value)+')=1 THEN 1 ELSE json(''Card write failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
+  RecordCardTextHistory(T.Db,UserId,BoardId,CardId,Column,Old,Value);
 end;
 
 function SetViewCardPerson(const T:TWLTenant;const UserId,BoardId,CardId,Field,Value:string;out Error:string):Integer;
@@ -7235,6 +7284,34 @@ begin
   finally Reply.Free;Body.Free;end;
 end;
 
+// A list soft-deleted with its live cards in one batch (WeKan's
+// softRemoveList): marked, not destroyed, and recorded in History, so undo
+// restores it whole. 200 also for a list already deleted; 404 for none.
+function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
+var Scope,CardScope,Markers,Batch,BatchId,Sql,Stamp:string;Position:TWLRows;
+begin
+  Error:='';
+  if (BoardId='') or (ListId='') or (Pos(#0,BoardId+ListId)>0) then begin Error:='List not found';Exit(404);end;
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId);
+  if Length(T.Db.Query('SELECT 1 FROM lists WHERE '+Scope+';'))<>1 then begin Error:='List not found';Exit(404);end;
+  if Length(T.Db.Query('SELECT 1 FROM lists WHERE '+Scope+' AND deletedAt IS NOT NULL;'))=1 then Exit(200);
+  BatchId:=NewId;Batch:=QuotedStr(BatchId);Stamp:=NowIso;
+  Markers:='deletedAt='+QuotedStr(Stamp)+',deletedBy='+QuotedStr(UserId)+',deleteBatchId='+Batch;
+  Position:=T.Db.Query('SELECT swimlaneId,sort FROM lists WHERE '+Scope+' AND deletedAt IS NULL;');
+  CardScope:='listId='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
+    ' AND deletedAt IS NULL)=1 THEN 1 ELSE json(''List delete scope changed'') END; '+
+    'UPDATE cards SET '+Markers+' WHERE '+CardScope+'; UPDATE lists SET '+Markers+
+    ' WHERE '+Scope+' AND deletedAt IS NULL; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+
+    Scope+' AND deleteBatchId='+Batch+')=1 AND NOT EXISTS(SELECT 1 FROM cards WHERE '+CardScope+
+    ') THEN 1 ELSE json(''Could not mark list and cards deleted'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not delete list';Exit(500);end;
+  if Length(Position)=1 then
+    try RecordListPosition(T.Db,UserId,BoardId,ListId,BatchId,Stamp,Position[0],False);except end;
+  Result:=200;
+end;
+
 // DELETE list — its cards have no FK on listId, so remove them first (their children cascade).
 procedure ApiListDelete(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
@@ -7243,23 +7320,12 @@ begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
-  ListId:=aRequest.RouteParams['listId'];BoardId:=QuotedStr(aRequest.RouteParams['boardId']);
-  BatchId:=NewId;Batch:=QuotedStr(BatchId);Stamp:=NowIso;
-  Markers:='deletedAt='+QuotedStr(Stamp)+',deletedBy='+QuotedStr(UserId)+',deleteBatchId='+Batch;
-  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId;
-  Position:=T.Db.Query('SELECT swimlaneId,sort FROM lists WHERE '+Scope+' AND deletedAt IS NULL;');
-  CardScope:='listId='+QuotedStr(ListId)+' AND boardId='+BoardId+' AND deletedAt IS NULL';
-  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
-    ' AND deletedAt IS NULL)=1 THEN 1 ELSE json(''List delete scope changed'') END; '+
-    'UPDATE cards SET '+Markers+' WHERE '+CardScope+'; UPDATE lists SET '+Markers+
-    ' WHERE '+Scope+' AND deletedAt IS NULL; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+
-    Scope+' AND deleteBatchId='+Batch+')=1 AND NOT EXISTS(SELECT 1 FROM cards WHERE '+CardScope+
-    ') THEN 1 ELSE json(''Could not mark list and cards deleted'') END; COMMIT;';
-  if not T.Db.Exec(Sql) then
-  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete list');Exit;end;
-  if Length(Position)=1 then
-    try RecordListPosition(T.Db,UserId,aRequest.RouteParams['boardId'],ListId,BatchId,
-      Stamp,Position[0],False);except end;
+  ListId:=aRequest.RouteParams['listId'];BoardId:=aRequest.RouteParams['boardId'];
+  // A list already deleted is not found here, as before.
+  if Length(T.Db.Query('SELECT 1 FROM lists WHERE id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND deletedAt IS NULL;'))<>1 then begin SendError(aResponse,500,'Could not delete list');Exit;end;
+  if SoftRemoveViewList(T,UserId,BoardId,ListId,Sql)<>200 then
+  begin SendError(aResponse,500,'Could not delete list');Exit;end;
   Reply:=TJSONObject.Create(['_id',ListId]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;

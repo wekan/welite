@@ -335,3 +335,5 @@ card-settings-sections-order.e2e.js: a custom field's hamburger edits it inline,
 card-settings-sections-order.e2e.js: the corner grip resizes Card Settings; the panes follow, and stack below two panes' width
 card-settings-both-sides.e2e.js: new sides render where chosen, and nothing changes until chosen
 card-settings-both-sides.e2e.js: rows for what had none: card color and the description badge, each side on its own
+list-delete-undo.e2e.js: #1023: undo restores a deleted list and its cards
+list-delete-undo.e2e.js: #1023: a read-only member cannot undo a list deletion

@@ -262,11 +262,86 @@ def main():
             for who in ['stranger', 'admin']:
                 status, refused = call(who, 'setBoardDateFormat', home, 'YYYY-MM-DD', False)
                 assert status == 403 and refused['error'] == 'not-authorized', (who, refused)
-            board = find('boards', {'_id': home})[0]
-            assert board['dateFormat'] == 'MM-DD-YYYY' and board['dateFormatOverride'] is True, board
+            stored_board = find('boards', {'_id': home})[0]
+            assert stored_board['dateFormat'] == 'MM-DD-YYYY' and stored_board['dateFormatOverride'] is True, stored_board
             sources = {e.get('source') for e in find('eventlog', {}) if e.get('bleed') == 'AuthBleed'}
             assert {'method:/settings/update', 'method:setBoardDateFormat'} <= sources, sources
             print('PASS: Admin Panel and board date formats for their admins only; refusals recorded')
+
+            # Scheduled triggers (wlsched, wlrules RunScheduledRules): a cron
+            # schedule of every minute, run by the maintenance pass at the
+            # start of the next minute, acts on its list's cards only, once
+            # in that minute. Negative: a disabled rule, a card of another
+            # list, an invalid schedule - nothing.
+            timed, timed_lane, timed_lists = board('owner', 'Timed', ['Queue', 'Kept'])
+            queued = card('owner', timed, timed_lists['Queue'], timed_lane, 'Tick')
+            kept = card('owner', timed, timed_lists['Kept'], timed_lane, 'Stays')
+            status, made = call('owner', 'rules.createRule', timed, 'Every minute',
+                                {'activityType': 'scheduledTrigger', 'scheduleKind': 'cron', 'cron': '* * * * *', 'listName': 'Queue'},
+                                {'actionType': 'archive'})
+            assert status == 200, made
+            status, off = call('owner', 'rules.createRule', timed, 'Disabled',
+                               {'activityType': 'scheduledTrigger', 'scheduleKind': 'cron', 'cron': '* * * * *', 'listName': 'Kept'},
+                               {'actionType': 'archive'})
+            assert status == 200, off
+            assert call('owner', 'rules.setEnabled', off['result']['_id'], False)[0] == 200
+            status, bad = call('owner', 'rules.createRule', timed, 'Never',
+                               {'activityType': 'scheduledTrigger', 'scheduleKind': 'cron', 'cron': '61 * * * *', 'listName': 'Kept'},
+                               {'actionType': 'archive'})
+            assert status == 200, bad
+            deadline = time.time() + 130
+            while time.time() < deadline and not find('cards', {'_id': queued})[0].get('archived'):
+                time.sleep(2)
+            assert find('cards', {'_id': queued})[0].get('archived') is True, 'the scheduled rule did not run'
+            assert find('cards', {'_id': kept})[0].get('archived') is False, 'a disabled or invalid rule ran'
+            trig = find('triggers', {'_id': made['result']['triggerId']})[0]
+            assert re.fullmatch(r'\d{4}-\d\d-\d\d \d\d:\d\d', trig.get('lastRunKey', '')), trig
+            print('PASS: a scheduled rule runs on its list\'s cards each minute; a disabled or invalid one does not')
+
+            # History of a card's title and description (WeKan's
+            # card-clear-undo-redo): clearing is an edit, its row says
+            # removed, undo puts it back and redo clears it again; a REST
+            # title of only spaces clears it; clearing an empty title records
+            # nothing; an undo never overwrites a newer edit.
+            texts, texts_lane, texts_lists = board('owner', 'Texts', ['Inbox'])
+            note = card('owner', texts, texts_lists['Inbox'], texts_lane, 'Alpha Card')
+            path = '/api/boards/%s/lists/%s/cards/%s' % (texts, texts_lists['Inbox'], note)
+            def put(fields):
+                status, _, body = request('PUT', path, fields, token=tokens['owner'], as_json=True)
+                assert status == 200, (fields, status, body)
+            def rows(field):
+                return [r for r in find('changeHistory', {'entityType': 'card', 'entityId': note})
+                        if (r.get('previousContent') or {}).get('field') == field or (r.get('newContent') or {}).get('field') == field]
+            def current(field):
+                return find('cards', {'_id': note})[0].get(field)
+            put({'description': 'Kept in History'})
+            put({'description': ''})
+            assert current('description') == ''
+            assert any(r['changeType'] == 'removed' and r['previousContent']['value'] == 'Kept in History' for r in rows('description')), rows('description')
+            assert call('owner', 'changeHistory.undoLast', texts)[1]['result']['undone'] is True
+            assert current('description') == 'Kept in History'
+            assert call('owner', 'changeHistory.redoLast', texts)[1]['result']['redone'] is True
+            assert current('description') == ''
+            put({'title': '   '})
+            assert current('title') == '', 'only spaces clears the title'
+            assert [r['changeType'] for r in rows('title')] == ['removed'], rows('title')
+            put({'title': ''})
+            assert len(rows('title')) == 1, 'clearing an empty title records nothing'
+            assert call('owner', 'changeHistory.undoLast', texts)[1]['result']['undone'] is True
+            assert current('title') == 'Alpha Card'
+            # Negative: the title edited after the row - undo of the row
+            # before it is a conflict, and the newer title stays.
+            put({'title': 'Beta'})
+            assert call('owner', 'changeHistory.undoLast', texts)[1]['result']['undone'] is True
+            assert current('title') == 'Alpha Card'
+            request('PUT', path, {'title': 'Gamma'}, token=tokens['owner'], as_json=True)
+            client.command({'update': 'cards', 'updates': [{'q': {'_id': note}, 'u': {'$set': {'title': 'Changed elsewhere'}}}]})
+            status, conflict = call('owner', 'changeHistory.undoLast', texts)
+            assert status == 409 and conflict['error'] == 'history-conflict', conflict
+            assert current('title') == 'Changed elsewhere'
+            # And a stranger undoes nothing on the board.
+            assert call('stranger', 'changeHistory.undoLast', texts)[0] == 403
+            print('PASS: a card\'s title and description History: cleared, undone, redone, trimmed, nothing for no change, conflicts refused')
         finally:
             for proc in (app, ferret):
                 if proc is not None and proc.poll() is None:
