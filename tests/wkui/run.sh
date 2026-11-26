@@ -58,7 +58,7 @@ const { MongoClient } = require(process.argv[1]);
   const db = c.db("wekan");
   for (const name of ["boards","swimlanes","lists","cards","card_comments","checklists","checklistItems","customFields","users","activities","attachments",
                       "rules","triggers","actions","integrations","eventlog","savedCardFilters","scrumSnapshotRows","org","team","settings",
-                      "changeHistory"])
+                      "changeHistory","shortPasswordLogins"])
     await db.createCollection(name).catch(e => { if (!/already exists/i.test(e.message)) throw e; });
   // WeKan collectionBootstrap.js, as WeKan (and Weddy) run it when they make
   // the store WeLite shares: the Admin Panel account switches, off.

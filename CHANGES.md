@@ -455,6 +455,15 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   securityreport.pug): the security stream's summary rows - kind, source,
   the most recent account and how many times - newest first, searched and a
   page at a time, for a site admin. 416 of WeKan's tests pass.
+- Add Admin Panel / Problems / Password length (WeKan's
+  passwordLengthReport, Weddy's passwordlength.pug): the minimum and its
+  enforcement, saved as the Admin Panel's login settings, and the report of
+  who signs in with a shorter password - one row an account, counted, with
+  its address and both sign-in times, by Too short, Fixed and All. While the
+  minimum is enforced, such an account changes its password before anything
+  else (WeKan's passwordChangeRequired), and the change fixes its row. The
+  sign-up form keeps WeKan's own minimum of 6 while none is enforced. 421 of
+  WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

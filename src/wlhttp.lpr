@@ -32,7 +32,7 @@ uses
   {$IFDEF UNIX} cthreads, {$ENDIF}
   {$IFDEF AMIGA} Sockets, {$ENDIF}
   SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes, wlview, wlh5, wlrules
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes, wlview, wlh5, wlrules, wlprob
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 type
@@ -289,6 +289,8 @@ begin
     Proof:=nil;
     if AuthenticateAccount(T.Db,Username,Password,aRequest.ContentFields.Values['code'],Proof) then
     try
+      // Admin Panel / Problems / Password length: a shorter password reported (wlprob).
+      NoteSignInPassword(T.Db,Proof.UserId,Proof.Username,Password,aRequest.RemoteAddress);
       // The HTML5 view of a shared store signs in as WeKan does: a Meteor
       // login token, in the user's services.resume.loginTokens, so that
       // WeKan and the store's other readers see the session (and a password

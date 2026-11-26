@@ -232,7 +232,6 @@ notification-delivery-settings.e2e.js: #5171 tray: an entry scheduled for later 
 notification-delivery-settings.e2e.js: Corsican clear notification drawer renders corrected card activity
 notification-delivery-settings.e2e.js: Corsican delete-all confirmation preserves cancellation
 oidc-redirect-guard.e2e.js: OIDC automatic attempt stays latched across browser callback reloads
-password-min-length-signup-login.e2e.js: sign-up registers when not enforced, and an enforced minimum refuses only a too short password
 password-submit-event.e2e.js: password submit replay reaches the form handler after click
 password-submit-event.e2e.js: password submit replay reaches the form handler after Enter
 rest-checklist-not-found.e2e.js: missing and existing checklist IDs preserve board access and authentication errors
@@ -315,3 +314,5 @@ admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through d
 admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through definition-insert
 admin-only-custom-fields.e2e.js: ordinary member copying retains public values and omits protected values
 admin-only-custom-fields.e2e.js: blocked field attacks appear as a Problems summary without secret values
+password-length-report.e2e.js
+password-min-length-signup-login.e2e.js

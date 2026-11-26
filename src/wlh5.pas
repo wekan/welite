@@ -3989,6 +3989,23 @@ begin
   // Member Settings' Change Password: the password now, then the new one
   // twice. Every session ends with it, this one too (WeKan's
   // passwordChangeRequired.js), so the viewer goes to sign in again.
+  // Admin Panel / Problems / Password length's Save (wlprob): the minimum
+  // and its enforcement, a site admin's; back to the page.
+  if Path = '/admin/problems/password-length' then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    Response.Code := 303;
+    if not IsSiteAdmin(T.Db, S.UserId) then begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+    if SavePasswordLength(T.Db, Request.ContentFields.Values['minLength'], Request.ContentFields.Values['enforce']) then
+      Response.SetCustomHeader('Location', '/admin/problems/password-length?saved=1')
+    else
+      Response.SetCustomHeader('Location', '/admin/problems/password-length?error=minLength');
+    Response.SetCustomHeader('Cache-Control', 'no-store');
+    SendResponse(Response);
+    Exit;
+  end;
   if Path = '/profile/password' then
   begin
     if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
@@ -4005,6 +4022,8 @@ begin
     begin
       Code := ViewSetPassword(T, S.UserId, S.UserId, Request.ContentFields.Values['newPassword'], Error);
       if (Code <> 200) and (Error <> 'error-password-policy') then Error := 'error-undefined';
+      // Changed: no more required, and its short-password report fixed (wlprob).
+      if Error = '' then EndPasswordChangeRequirement(T.Db, S.UserId);
     end;
     Response.Code := 303;
     if Error <> '' then Response.SetCustomHeader('Location', '/profile/password?error=' + HTTPEncode(Error))
@@ -4403,6 +4422,7 @@ begin
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
     (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
+    (Path = '/admin/problems/password-length') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
@@ -4435,6 +4455,25 @@ begin
     if Path = '/language/popup' then
     begin
       Send(200, LanguagePopup(Words, Language));
+      Exit;
+    end;
+    // A password shorter than an enforced minimum is changed first: every
+    // other page is that request (WeKan's passwordChangeRequired).
+    if (Path <> '/profile/password') and PasswordChangeRequired(T.Db, S.UserId) then
+    begin
+      Send(200, Page(Request, Language, Words, S, Words.Text('password-change-required-title', 'Change your password'), '',
+        PasswordChangeRequiredContent(T.Db, Words)));
+      Exit;
+    end;
+    // Admin Panel / Problems / Password length (wlprob), a site admin's.
+    if Path = '/admin/problems/password-length' then
+    begin
+      if not IsSiteAdmin(T.Db, S.UserId) then
+        Send(404, Page(Request, Language, Words, S, Words.Text('error-notAuthorized', 'You are not authorized to view this page.'), '',
+          '<div class="big-message quiet"><h1>' + E(Words.Text('error-notAuthorized', 'You are not authorized to view this page.')) + '</h1></div>'))
+      else
+        Send(200, Page(Request, Language, Words, S, Words.Text('password-length-report-title', 'Password length'), '',
+          PasswordLengthContent(T.Db, Words, Language.Tag, Request.QueryFields)));
       Exit;
     end;
     if Path = '/profile/password' then
@@ -4549,7 +4588,8 @@ var Language: TWLLanguage; Words: TWLTranslator; Error: string; T: TWLTenant; Mi
 begin
   MinLength := 0; Enforce := False;
   if ResolveTenant(Request, T) and TenantOpen(T) then PasswordPolicy(T.Db, MinLength, Enforce);
-  if not Enforce then MinLength := 0;
+  // Not enforced, the form keeps WeKan's own minimum (config/accounts.js).
+  if not Enforce then MinLength := 6;
   Language := ViewerLanguage(nil, Default(TWLSession), Request);
   Words := TWLTranslator.Create(Language);
   try
