@@ -56,6 +56,10 @@ function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 // All Boards.
 procedure Html5SignedIn(Response: TResponse; const SessionId: string);
 
+// A sign-in refused in the HTML5 view: the sign-in form again, with WeKan's
+// error and the username that was typed.
+procedure Html5SignInFailed(Request: TRequest; Response: TResponse; const Username: string);
+
 // The HTML4 view's toggle is a POST of ?ui=html5 with the page's session: put
 // that session into the login cookie and send the viewer to the same page by
 // GET, now in the HTML5 view. Returns True when it answered.
@@ -258,8 +262,9 @@ end;
 // layout.pug: the document, its head, and the header bar.
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
-var Dir, Header: string;
+var Dir, Header: string; SiteAdmin: Boolean; T: TWLTenant;
 begin
+  SiteAdmin := (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and IsSiteAdmin(T.Db, S.UserId);
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
   Header := '';
   if S.UserId <> '' then
@@ -290,7 +295,10 @@ begin
       HtmlAttr(Words.Text('memberMenuPopup-title', 'Member Settings')) + '"><div class="content"><ul class="pop-over-list">' +
       '<li><a href="/" up-follow><i class="fa fa-home"></i> ' + E(Words.Text('all-boards', 'All Boards')) + '</a></li><hr>' +
       '<li><a class="board-header-btn js-open-archived-board" href="/allboards/archive"><i class="fa fa-archive"></i> ' +
-      E(Words.Text('archives', 'Archives')) + '</a></li></ul></div></template>' +
+      E(Words.Text('archives', 'Archives')) + '</a></li>' +
+      // The Admin Panel, for a site admin (memberMenuPopup's js-go-setting).
+      IfThen(SiteAdmin, '<li><a class="js-go-setting" href="/admin/people"><i class="fa fa-lock"></i> ' +
+        E(Words.Text('admin-panel', 'Admin Panel')) + '</a></li>', '') + '</ul></div></template>' +
       '<form class="js-logout" method="post" action="/logout"><button class="js-logout-button" type="submit">' +
       E(Words.Text('log-out', 'Log Out')) + '</button></form></div>';
   end
@@ -317,7 +325,10 @@ begin
     '<input id="at-field-username_and_email" type="text" name="username" value="' + HtmlAttr(Username) +
     '" autocomplete="username" required>' +
     '<label for="at-field-password">' + E(Words.Text('password', 'Password')) + '</label>' +
-    '<div class="password-input-container"><input id="at-field-password" class="password-field" type="password" name="password" autocomplete="current-password" required></div>' +
+    '<div class="password-input-container"><input id="at-field-password" class="password-field" type="password" name="password" autocomplete="current-password" required>' +
+    '<button class="password-toggle-btn primary" type="button" aria-label="' + HtmlAttr(Words.Text('password', 'Password') + ': ' +
+    Words.Text('visibility', 'Visibility')) + '" title="' + HtmlAttr(Words.Text('password', 'Password') + ': ' + Words.Text('visibility', 'Visibility')) +
+    '">&#128065;</button></div>' +
     '<button id="at-btn" class="at-btn submit primary" type="submit">' + E(Words.Text('log-in', 'Log In')) + '</button>' +
     '</form>' +
     '<p class="at-signup-link"><a class="js-sign-up" href="/sign-up">' + E(Words.Text('register', 'Register')) + '</a></p>' +
@@ -1420,6 +1431,71 @@ begin
       '"></div><ul class="pop-over-list js-member-search-results"></ul></template>';
 end;
 
+// Admin Panel / People (peopleBody.jade, Weddy's people.pug): its tabs, its
+// left menu and the People pane - the users, edited in editUserPopup, with
+// Admin and Active switched in the table - for a site admin.
+function PeopleContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const ErrorKey: string): string;
+var R: TWLRows; i: Integer; Id, YesNo: string;
+  function Opt(const Value, Caption: string; Selected: Boolean): string;
+  begin
+    Result := '<option value="' + Value + '"' + IfThen(Selected, ' selected', '') + '>' + E(Caption) + '</option>';
+  end;
+begin
+  R := Db.Query('SELECT u.id,u.username,COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,''''),' +
+    'COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.initials'') END,''''),' +
+    'COALESCE((SELECT group_concat(address,'' '') FROM user_emails e WHERE e.userId=u.id),''''),COALESCE(u.isAdmin,0),COALESCE(u.loginDisabled,0) ' +
+    'FROM users u ORDER BY u.username LIMIT 1000;');
+  Result := '<div class="setting-content people"><div class="admin-panel-tabs"><a class="people is-active" href="/admin/people">' +
+    E(Words.Text('people', 'People')) + '</a></div><div class="content-body"><div class="side-menu"><ul>' +
+    '<li class="active"><a class="js-left-menu-item" href="/admin/people" data-id="people-setting">' + E(Words.Text('people', 'People')) +
+    '</a></li></ul></div><div class="main-body"><h2 class="pane-title">' + E(Words.Text('people', 'People')) + '</h2>';
+  if ErrorKey <> '' then Result := Result + '<p class="at-error js-people-error">' + E(Words.Text(ErrorKey, ErrorKey)) + '</p>';
+  Result := Result + '<p>' + E(Words.Text('people-number', 'The number of people is:')) + ' ' + IntToStr(Length(R)) + '</p>' +
+    '<table class="people-table"><thead><tr><th>' + E(Words.Text('edit', 'Edit')) + '</th><th>' + E(Words.Text('username', 'Username')) +
+    '</th><th>' + E(Words.Text('fullname', 'Full Name')) + '</th><th>' + E(Words.Text('email', 'Email')) + '</th><th>' +
+    E(Words.Text('admin', 'Admin')) + '</th><th>' + E(Words.Text('active', 'Active')) + '</th></tr></thead><tbody>';
+  for i := 0 to High(R) do
+  begin
+    Id := R[i][0];
+    Result := Result + '<tr class="js-person" data-user="' + HtmlAttr(Id) + '"><td><a class="edit-user" href="#" data-user-id="' + HtmlAttr(Id) +
+      '"><i class="fa fa-pencil-square-o"></i> ' + E(Words.Text('edit', 'Edit')) + '</a>' +
+      '<template class="js-pop-over-template" data-pop="edit-user-' + HtmlAttr(Id) + '" data-title="' + HtmlAttr(Words.Text('edit', 'Edit')) + '">' +
+      '<form class="js-edit-user" method="post" action="/admin/people/' + HtmlAttr(HTTPEncode(Id)) + '/edit">' +
+      '<label>' + E(Words.Text('username', 'Username')) + '<input class="js-profile-username" type="text" name="username" value="' +
+      HtmlAttr(R[i][1]) + '" required></label><label>' + E(Words.Text('fullname', 'Full Name')) +
+      '<textarea class="js-profile-fullname" name="fullname" rows="2">' + E(R[i][2]) + '</textarea></label><label>' +
+      E(Words.Text('initials', 'Initials')) + '<input class="js-profile-initials" type="text" name="initials" maxlength="8" value="' +
+      HtmlAttr(R[i][3]) + '"></label>';
+    if Id <> S.UserId then
+      Result := Result + '<label>' + E(Words.Text('admin', 'Admin')) + '<select class="select-role js-profile-isadmin" name="isAdmin">' +
+        Opt('false', Words.Text('no', 'No'), R[i][5] <> '1') + Opt('true', Words.Text('yes', 'Yes'), R[i][5] = '1') + '</select></label>';
+    Result := Result + '<label>' + E(Words.Text('email', 'Email')) + '<input class="js-profile-email" type="email" name="email" value="' +
+      HtmlAttr(Trim(Copy(R[i][4], 1, Pos(' ', R[i][4] + ' ') - 1))) + '"></label>';
+    if Id <> S.UserId then
+      Result := Result + '<label>' + E(Words.Text('active-person', 'Active')) + '<select class="select-active js-profile-isactive" name="loginDisabled">' +
+        Opt('false', Words.Text('yes', 'Yes'), R[i][6] <> '1') + Opt('true', Words.Text('no', 'No'), R[i][6] = '1') + '</select></label>';
+    Result := Result + '<label>' + E(Words.Text('password', 'Password')) +
+      '<input class="js-profile-password" type="password" name="password" autocomplete="new-password"></label>' +
+      '<div class="buttonsContainer"><input class="primary wide" type="submit" value="' + HtmlAttr(Words.Text('save', 'Save')) +
+      '"></div></form></template></td><td class="username">' + E(R[i][1]) + '</td><td>' + E(R[i][2]) + '</td><td>' + E(R[i][4]) + '</td><td>';
+    YesNo := IfThen(R[i][5] = '1', Words.Text('yes', 'Yes'), Words.Text('no', 'No'));
+    if Id <> S.UserId then
+      Result := Result + '<form method="post" action="/admin/people/' + HtmlAttr(HTTPEncode(Id)) + '"><input type="hidden" name="isAdmin" value="' +
+        IfThen(R[i][5] = '1', 'false', 'true') + '"><button class="js-toggle-admin" type="submit">' + E(YesNo) + '</button></form>'
+    else Result := Result + E(Words.Text('yes', 'Yes'));
+    Result := Result + '</td><td class="account-active-status">';
+    if Id = S.UserId then Result := Result + E(Words.Text('yes', 'Yes'))
+    else if R[i][6] = '1' then
+      Result := Result + '<span class="text-red js-toggle-active-status" data-user-id="' + HtmlAttr(Id) + '" data-is-active="false" title="' +
+        HtmlAttr(Words.Text('admin-people-user-inactive', 'User is inactive - click to activate')) + '" role="button" tabindex="0">&#10005;</span>'
+    else
+      Result := Result + '<span class="text-green js-toggle-active-status" data-user-id="' + HtmlAttr(Id) + '" data-is-active="true" title="' +
+        HtmlAttr(Words.Text('admin-people-user-active', 'User is active - click to deactivate')) + '" role="button" tabindex="0">&#10003;</span>';
+    Result := Result + '</td></tr>';
+  end;
+  Result := Result + '</tbody></table></div></div></div>';
+end;
+
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
@@ -2066,7 +2142,7 @@ end;
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
-var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code: Integer; Lang: TWLLanguage;
+var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
@@ -2101,6 +2177,37 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'setCreateUser' then
+  begin
+    // WeKan's setCreateUser: [fullname, username, initials, password, isAdmin,
+    // isActive (the form's inverted select: loginDisabled), email, orgs,
+    // teams, boards], by a site admin; it answers nothing.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      Code := 400;
+      if (Args is TJSONArray) and (TJSONArray(Args).Count = 10) then
+      begin
+        Code := 200;
+        for n := 0 to 6 do if TJSONArray(Args).Items[n].JSONType <> jtString then Code := 400;
+        for n := 7 to 9 do if TJSONArray(Args).Items[n].JSONType <> jtArray then Code := 400;
+      end;
+      if Code <> 200 then begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := AdminCreateViewUser(T, S.UserId, TJSONArray(Args).Items[0].AsString, TJSONArray(Args).Items[1].AsString,
+        TJSONArray(Args).Items[2].AsString, TJSONArray(Args).Items[3].AsString, TJSONArray(Args).Items[4].AsString,
+        TJSONArray(Args).Items[5].AsString, TJSONArray(Args).Items[6].AsString, Id, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(Id) + '"}');
     Exit;
   end;
   if Name = 'setMobileMode' then
@@ -2397,6 +2504,30 @@ begin
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
+  // Admin Panel / People's forms: /admin/people/:id/edit (editUserPopup) and
+  // /admin/people/:id (the table's Admin and Active), back to People.
+  if Copy(Path, 1, 14) = '/admin/people/' then
+  begin
+    P := PathParts(Path);
+    n := Length(P);
+    if not (((n = 3) or ((n = 4) and (P[3] = 'edit'))) and (P[2] <> '')) then Exit;
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    Code := AdminUpdateViewUser(T, S.UserId, P[2], Request.ContentFields, n = 3, Error);
+    if Code = 404 then
+    begin
+      Response.Code := 404;
+      Response.Content := 'not found';
+      Response.SendContent;
+      Exit;
+    end;
+    Response.Code := 303;
+    if Code = 200 then Response.SetCustomHeader('Location', '/admin/people')
+    else Response.SetCustomHeader('Location', '/admin/people?error=' + HTTPEncode(Error));
+    Response.SendContent;
+    Exit;
+  end;
   if Copy(Path, 1, 10) = '/_methods/' then
   begin
     Result := True;
@@ -2660,7 +2791,7 @@ begin
   // The root arrives as an empty PathInfo.
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/board') or (Path = '/board/card') or
-    (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/')) then Exit;
+    (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
@@ -2680,6 +2811,16 @@ begin
       Response.Code := 302;
       Response.SetCustomHeader('Location', '/sign-in');
       Response.SendContent;
+      Exit;
+    end;
+    if (Path = '/people') or (Path = '/admin/people') then
+    begin
+      if not IsSiteAdmin(T.Db, S.UserId) then
+        Send(404, Page(Request, Language, Words, S, Words.Text('error-notAuthorized', 'You are not authorized to view this page.'), '',
+          '<div class="big-message quiet"><h1>' + E(Words.Text('error-notAuthorized', 'You are not authorized to view this page.')) + '</h1></div>'))
+      else
+        Send(200, Page(Request, Language, Words, S, Words.Text('people', 'People'), '',
+          PeopleContent(T.Db, S, Words, Request.QueryFields.Values['error'])));
       Exit;
     end;
     if (Path = '/') or (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') then
@@ -2707,6 +2848,19 @@ begin
     Title := BoardTitle;
     Send(200, Page(Request, Language, Words, S, Title, BoardTitle, Content,
       BoardQuickAccess(T.Db, Words, S, Request.QueryFields.Values['id'], BoardTitle)));
+  finally
+    Words.Free;
+  end;
+end;
+
+procedure Html5SignInFailed(Request: TRequest; Response: TResponse; const Username: string);
+var Language: TWLLanguage; Words: TWLTranslator;
+begin
+  Language := ViewerLanguage(nil, Default(TWLSession), Request);
+  Words := TWLTranslator.Create(Language);
+  try
+    SendPage(Response, 403, Page(Request, Language, Words, Default(TWLSession), Words.Text('log-in', 'Log In'), '',
+      SignInContent(Words, Words.Text('error-ldap-login', 'An error occurred while trying to login'), Username)));
   finally
     Words.Free;
   end;

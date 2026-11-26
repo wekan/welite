@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Permití kambia e nòmber di usuario",
   "tableVisibilityMode-allowPrivateOnly": "Bisibilidat di e tablanan: permití solamente tablanan pribás",
   "tableVisibilityMode": "Bisibilidat di e tablanan",
+  "visibility": "Bisibilidat",
   "createdAt": "Fecha di alta",
   "modifiedAt": "Modificado e",
   "verified": "Berificado",

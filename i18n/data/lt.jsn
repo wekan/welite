@@ -923,6 +923,7 @@
   "accounts-allowUserNameChange": "Leisti keisti vartotojo vardą",
   "tableVisibilityMode-allowPrivateOnly": "Lentų matomumas: leisti tik privačias lentas",
   "tableVisibilityMode": "Lentų matomumas",
+  "visibility": "Matomumas",
   "createdAt": "Sukurta",
   "modifiedAt": "Pakeistas adresu",
   "verified": "Patvirtinta",

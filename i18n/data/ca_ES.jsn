@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Permet el canvi de nom d'usuari",
   "tableVisibilityMode-allowPrivateOnly": "Visibilitat dels taulers: permet només taulers privats",
   "tableVisibilityMode": "Visibilitat de taulers",
+  "visibility": "Visibilitat",
   "createdAt": "Creat",
   "modifiedAt": "Modificat a",
   "verified": "Verificat",

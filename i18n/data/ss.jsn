@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Kushintja Ligama Lemsebentisi",
   "tableVisibilityMode-allowPrivateOnly": "Kubonakala kwemabhodi: Vumela emabhodi angasese kuphela",
   "tableVisibilityMode": "Kubonakala kwemabhodi",
+  "visibility": "Kubonakala",
   "createdAt": "Kudalwe nga",
   "modifiedAt": "Kushintjwe nga",
   "verified": "Kucinisekisiwe",

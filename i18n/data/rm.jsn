@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Midar il num d'utilisader",
   "tableVisibilityMode-allowPrivateOnly": "Visibladad da las tabellas: permetter mo tabellas privatas",
   "tableVisibilityMode": "Visibladad da las tabellas",
+  "visibility": "Visibladad",
   "createdAt": "Creà ils",
   "modifiedAt": "Modifitgà ils",
   "verified": "Verifitgà",

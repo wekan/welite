@@ -923,6 +923,7 @@
   "accounts-allowUserNameChange": "İstifadəçi adının dəyişdirilməsinə icazə verin",
   "tableVisibilityMode-allowPrivateOnly": "Lövhələrin görünməsi: Yalnız şəxsi lövhələrə icazə verin",
   "tableVisibilityMode": "Lövhələrin görünməsi",
+  "visibility": "Görünürlük",
   "createdAt": "Yaradılıb",
   "modifiedAt": "Dəyişdirilib",
   "verified": "Doğrulanıb",

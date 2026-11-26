@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "အသုံးပြုသူအမည် ပြောင်းခြင်း",
   "tableVisibilityMode-allowPrivateOnly": "ဘုတ်မြင်နိုင်မှု: သီးသန့်ဘုတ်များသာ ခွင့်ပြုရန်",
   "tableVisibilityMode": "ဘုတ်မြင်နိုင်မှု",
+  "visibility": "မြင်နိုင်မှု",
   "createdAt": "ဖန်တီးသည့်အချိန်",
   "modifiedAt": "ပြင်ဆင်သည့်အချိန်",
   "verified": "အတည်ပြုပြီး",

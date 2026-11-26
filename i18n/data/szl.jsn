@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Zezwól na zmianę nazwy używŏcza",
   "tableVisibilityMode-allowPrivateOnly": "Widoczność tabul: Ino tabule prywatne",
   "tableVisibilityMode": "Widoczność tabul",
+  "visibility": "Widoczność",
   "createdAt": "Utworzone o",
   "modifiedAt": "Zmodyfikowano",
   "verified": "Zweryfikowane",

@@ -28,6 +28,13 @@
 03-cards-operations.e2e.js: archived card can be unarchived from the archives sidebar
 05-admin-users.e2e.js: Admin – user management › login page sign-in link is visible and accessible
 05-admin-users.e2e.js: Admin – user management › login page renders correctly on a fresh load
+05-admin-users.e2e.js: Admin – user management › admin can navigate to People tab and see the user list
+05-admin-users.e2e.js: Admin – user management › admin user list action buttons are fully visible at default zoom (no zoom-out required)
+05-admin-users.e2e.js: Admin – user management › admin can open and save the edit user popup without error
+05-admin-users.e2e.js: Admin – user management › admin can deactivate a user
+05-admin-users.e2e.js: Admin – user management › admin can change a user password and the new password allows login
+05-admin-users.e2e.js: Admin – user management › non-admin user cannot access /people (admin-only)
+05-admin-users.e2e.js: Admin – user management › sign-in tabs directly between fields and Enter in password submits
 06-views-layout.e2e.js: cards seeded in different lists appear in the correct list columns
 06-views-layout.e2e.js: scrolling down a long list reaches the last card
 07-attachments-links.e2e.js: attachment panel button opens from card details
@@ -138,6 +145,7 @@
 30-ldap-orgs-teams.e2e.js: #4737 sync LDAP groups as Organizations/Teams › non-admin client call is rejected and creates nothing
 31-templates-allboards.e2e.js: #2339 #5850 All Boards / Templates redesign › #6643: Archive shows an archived subtasks helper board
 36-fixed-bug-regressions.e2e.js: Fixed-bug regressions › #5892 a collapsed list with a custom width still shrinks to the rail
+36-fixed-bug-regressions.e2e.js: Fixed-bug regressions › #6420 voting buttons render without a currentUser ReferenceError
 38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › anonymous/public-board: fixed width lives in localStorage and does not leak across boards
 40-rest-card-move-list.e2e.js
 41-admin-newest-features.e2e.js: Admin – newest features › NEGATIVE: board Table view column headers are not clickable-sortable
@@ -145,6 +153,7 @@
 42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › NEGATIVE: a comment on a different board is not published into this board
 44-calendar-date-display.e2e.js: gregorian popup opens a full-width calendar with only hour/minute controls
 44-calendar-date-display.e2e.js: buddhist popup opens a full-width calendar with only hour/minute controls
+44-calendar-date-display.e2e.js: RTL date popup keeps its bottom-left grip and moves with physical pointer coordinates
 70-rest-board-management.e2e.js: normal member cannot rename a board through REST
 76-list-collapse-refresh.e2e.js
 77-public-board-favorite.e2e.js: #6713 public board favorite survives reload and appears in Favorites

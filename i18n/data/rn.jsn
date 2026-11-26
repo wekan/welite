@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Guhindura izina ry'uwukoresha",
   "tableVisibilityMode-allowPrivateOnly": "Ukuboneka kw'ivyapa: Emerera ivyapa vy'ibanga gusa",
   "tableVisibilityMode": "Ukuboneka kw'ivyapa",
+  "visibility": "Ukuboneka",
   "createdAt": "Vyaremwe ku",
   "modifiedAt": "Vyahinduwe ku",
   "verified": "Vyemejwe",

@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Киирии аатын уларытыы",
   "tableVisibilityMode-allowPrivateOnly": "Дуоскалар көстүүлэрэ: хааччахтаммыт дуоскалары эрэ көҥүллээ",
   "tableVisibilityMode": "Дуоскалар көстүүлэрэ",
+  "visibility": "Көстүү",
   "createdAt": "Оҥоһуллубут кэмэ",
   "modifiedAt": "Уларытыллыбыт кэмэ",
   "verified": "Бигэргэтиллибит",

@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "inoa mea hoʻohana hoʻololi",
   "tableVisibilityMode-allowPrivateOnly": "nā papa likipilikawa: ʻae pilikino nā papa wale nō",
   "tableVisibilityMode": "nā papa likipilikawa",
+  "visibility": "likipilikawa",
   "createdAt": "hana ʻia ma",
   "modifiedAt": "mokipieka ma",
   "verified": "lelipieka",

@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Athrú Ainm Úsáideora",
   "tableVisibilityMode-allowPrivateOnly": "Infheictheacht clár: Ceadaigh cláir phríobháideacha amháin",
   "tableVisibilityMode": "Infheictheacht clár",
+  "visibility": "Infheictheacht",
   "createdAt": "Cruthaithe ar",
   "modifiedAt": "Athraithe ar",
   "verified": "Fíoraithe",

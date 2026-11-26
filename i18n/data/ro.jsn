@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Consenti la modifica del nome utente",
   "tableVisibilityMode-allowPrivateOnly": "Visibilità bacheche: Consenti solo le bacheche private",
   "tableVisibilityMode": "Visibilità bacheche",
+  "visibility": "Vizibilitate",
   "createdAt": "Creato alle",
   "modifiedAt": "Modificato il",
   "verified": "Verificato",

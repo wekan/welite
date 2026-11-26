@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Consenti la cagna d' 'o nomme utente",
   "tableVisibilityMode-allowPrivateOnly": "Visibilità tavule: Consenti sulo le tavule private",
   "tableVisibilityMode": "Visibilità tavule",
+  "visibility": "Visibilità",
   "createdAt": "Creato alle",
   "modifiedAt": "Modificato il",
   "verified": "Verificato",

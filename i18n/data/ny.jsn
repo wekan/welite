@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Kusintha dzina la wogwiritsa ntchito",
   "tableVisibilityMode-allowPrivateOnly": "Kuoneka kwa mabodi: Lolani mabodi achinsinsi okha",
   "tableVisibilityMode": "Kuoneka kwa mabodi",
+  "visibility": "Kuoneka",
   "createdAt": "Zapangidwa pa",
   "modifiedAt": "Zasinthidwa pa",
   "verified": "Zatsimikizidwa",

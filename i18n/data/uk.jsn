@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Дозволити зміну імені користувача",
   "tableVisibilityMode-allowPrivateOnly": "Видимість дошок: дозволити тільки приватні дошки",
   "tableVisibilityMode": "Видимість дошок",
+  "visibility": "Видимість",
   "createdAt": "Створено",
   "modifiedAt": "Змінено",
   "verified": "Перевірено",

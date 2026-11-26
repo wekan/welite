@@ -923,6 +923,7 @@
   "accounts-allowUserNameChange": "អនុញ្ញាតឱ្យប្តូរឈ្មោះអ្នកប្រើប្រាស់",
   "tableVisibilityMode-allowPrivateOnly": "លទ្ធភាពមើលឃើញក្តារ៖ អនុញ្ញាតតែក្តារឯកជនប៉ុណ្ណោះ។",
   "tableVisibilityMode": "ភាពមើលឃើញក្តារ",
+  "visibility": "ភាពមើលឃើញ",
   "createdAt": "បង្កើតនៅ",
   "modifiedAt": "បានកែប្រែនៅ",
   "verified": "ផ្ទៀងផ្ទាត់",

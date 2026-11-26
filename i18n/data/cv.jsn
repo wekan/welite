@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Усӑҫӑ ятне улӑштарас",
   "tableVisibilityMode-allowPrivateOnly": "Хӑмасем курӑнни: харпӑрлӑ хӑмасене кӑна май парас",
   "tableVisibilityMode": "Хӑмасем курӑнни",
+  "visibility": "Курӑнмалли",
   "createdAt": "Тунӑ вӑхӑт",
   "modifiedAt": "Улӑштарнӑ вӑхӑт",
   "verified": "Тӗрӗсленӗ",

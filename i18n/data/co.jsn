@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Cambiamentu di u nome d’utilizatore",
   "tableVisibilityMode-allowPrivateOnly": "Visibilità di e tavule: permette solu e tavule private",
   "tableVisibilityMode": "Visibilità tavule",
+  "visibility": "Visibilità",
   "createdAt": "Creatu u",
   "modifiedAt": "Mudificatu u",
   "verified": "Verificatu",

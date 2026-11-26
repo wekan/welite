@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Хэрэглэгчын нэрэ хубилгаха",
   "tableVisibilityMode-allowPrivateOnly": "Самбарнуудай харагдаса: гансал хубиин самбарнуудые зүбшөөхэ",
   "tableVisibilityMode": "Самбарнуудай харагдаса",
+  "visibility": "Харагдаса",
   "createdAt": "Байгуулагдаһан саг",
   "modifiedAt": "Хубилгагдаһан саг",
   "verified": "Баталагдаһан",

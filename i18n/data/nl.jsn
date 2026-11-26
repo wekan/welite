@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Sta Gebruikersnaam wijzigingen toe",
   "tableVisibilityMode-allowPrivateOnly": "Zichtbaarheid borden: Sta alleen privé borden toe",
   "tableVisibilityMode": "Zichtbaarheid borden",
+  "visibility": "Zichtbaarheid",
   "createdAt": "Aangemaakt op",
   "modifiedAt": "Gewijzigd op",
   "verified": "Geverifieerd",

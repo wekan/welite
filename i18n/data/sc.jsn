@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Càmbiu de su nùmene de utente",
   "tableVisibilityMode-allowPrivateOnly": "Visibilidade de sas tàulas: permite isceti tàulas privadas",
   "tableVisibilityMode": "Visibilidade de sas tàulas",
+  "visibility": "Visibilidade",
   "createdAt": "Creadu su",
   "modifiedAt": "Modificadu su",
   "verified": "Verificadu",

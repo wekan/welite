@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "वापरपी नांव बदलप",
   "tableVisibilityMode-allowPrivateOnly": "फळो दृश्यताय: फकत खाजगी फळ्यांक परवानगी",
   "tableVisibilityMode": "फळो दृश्यताय",
+  "visibility": "दृश्यताय",
   "createdAt": "तयार केल्लें",
   "modifiedAt": "बदल केल्लें",
   "verified": "तपासिल्लें",

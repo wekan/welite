@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Ndryshimi i emrit të përdoruesit",
   "tableVisibilityMode-allowPrivateOnly": "Dukshmëria e tabelave: Lejo vetëm tabela private",
   "tableVisibilityMode": "Dukshmëria e tabelave",
+  "visibility": "Dukshmëria",
   "createdAt": "Krijuar më",
   "modifiedAt": "Ndryshuar më",
   "verified": "E verifikuar",

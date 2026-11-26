@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Chanj hanow-usyer",
   "tableVisibilityMode-allowPrivateOnly": "Gweladewder estyllennow: Gasa estyllennow privedh hepken",
   "tableVisibilityMode": "Gweladewder estyllennow",
+  "visibility": "Gweladewder",
   "createdAt": "Gwruthyl orth",
   "modifiedAt": "Chanjys orth",
   "verified": "Afydhys",

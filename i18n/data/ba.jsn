@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Ҡулланыусы исемен үҙгәртеү",
   "tableVisibilityMode-allowPrivateOnly": "Таҡталарҙың күренеүе: шәхси таҡталарҙы ғына рөхсәт итергә",
   "tableVisibilityMode": "Таҡталарҙың күренеүе",
+  "visibility": "Күренеү",
   "createdAt": "Булдырылған",
   "modifiedAt": "Үҙгәртелгән",
   "verified": "Раҫланған",

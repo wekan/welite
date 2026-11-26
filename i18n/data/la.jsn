@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Mutatio nominis usoris",
   "tableVisibilityMode-allowPrivateOnly": "Visibilitas tabularum: permitte tantum tabulas privatas",
   "tableVisibilityMode": "Visibilitas tabularum",
+  "visibility": "Visibilitas",
   "createdAt": "Creatum die",
   "modifiedAt": "Mutatum die",
   "verified": "Confirmatum",

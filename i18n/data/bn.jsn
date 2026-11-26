@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "ব্যবহারকারীর নাম পরিবর্তন",
   "tableVisibilityMode-allowPrivateOnly": "বোর্ডের দৃশ্যমানতা: শুধু ব্যক্তিগত বোর্ডের অনুমতি দিন",
   "tableVisibilityMode": "বোর্ডের দৃশ্যমানতা",
+  "visibility": "দৃশ্যমানতা",
   "createdAt": "তৈরির সময়",
   "modifiedAt": "পরিবর্তনের সময়",
   "verified": "যাচাইকৃত",

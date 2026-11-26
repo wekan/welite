@@ -202,6 +202,17 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Fix the minicard query in a shared store: LiveAttachmentSQL names the
   attachments table unaliased, and a test now fails on any query that
   aliases it beside LiveAttachmentSQL. 227 of WeKan's tests pass.
+- Add Admin Panel / People to the HTML5 view (`/people`, `/admin/people`),
+  as WeKan's peopleBody and editUserPopup and Weddy's people.pug: a site
+  admin edits a user's username, full name, initials, address, admin and
+  access and sets a new password, switches Admin and Active in the table,
+  and makes a user with WeKan's setCreateUser. One's own admin and access
+  are not one's own to take away; a new password or access taken away signs
+  the user out everywhere. The member menu has the Admin Panel for a site
+  admin.
+- Show a refused sign-in in the HTML5 view as its own form again, with
+  WeKan's error and the typed username, and give the password field
+  WeKan's visibility button. 236 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

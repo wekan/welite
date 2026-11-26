@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "उपयोगकर्ता नाँव बदलाव",
   "tableVisibilityMode-allowPrivateOnly": "बोर्ड दृश्यता: खाली निजी बोर्ड के अनुमति दीं",
   "tableVisibilityMode": "बोर्ड दृश्यता",
+  "visibility": "दृश्यता",
   "createdAt": "बनल समय",
   "modifiedAt": "बदलल समय",
   "verified": "सत्यापित",

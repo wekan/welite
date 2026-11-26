@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "ಬಳಕೆದಾರಹೆಸರು ಬದಲಾವಣೆ",
   "tableVisibilityMode-allowPrivateOnly": "ಫಲಕಗಳ ಗೋಚರತೆ: ಖಾಸಗಿ ಫಲಕಗಳಿಗೆ ಮಾತ್ರ ಅನುಮತಿಸಿ",
   "tableVisibilityMode": "ಫಲಕಗಳ ಗೋಚರತೆ",
+  "visibility": "ಗೋಚರತೆ",
   "createdAt": "ರಚಿಸಿದ ಸಮಯ",
   "modifiedAt": "ಮಾರ್ಪಡಿಸಿದ ಸಮಯ",
   "verified": "ಪರಿಶೀಲಿಸಲಾಗಿದೆ",

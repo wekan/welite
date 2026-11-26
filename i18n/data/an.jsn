@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Cambio d'o nombre d'usuario",
   "tableVisibilityMode-allowPrivateOnly": "Visibilidad de os tableros: permitir solo tableros privados",
   "tableVisibilityMode": "Visibilidad de os tableros",
+  "visibility": "Visibilidad",
   "createdAt": "Calendata de alta",
   "modifiedAt": "Modificado el",
   "verified": "Verificado",

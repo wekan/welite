@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Atharrachadh Ainm-cleachdaiche",
   "tableVisibilityMode-allowPrivateOnly": "Faicsinneachd bhòrd: Ceadaich bùird phrìobhaideach a-mhàin",
   "tableVisibilityMode": "Faicsinneachd bhòrd",
+  "visibility": "Faicsinneachd",
   "createdAt": "Air a chruthachadh aig",
   "modifiedAt": "Air atharrachadh aig",
   "verified": "Dearbhaichte",

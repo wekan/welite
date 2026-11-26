@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "د کارن‌نوم بدلون",
   "tableVisibilityMode-allowPrivateOnly": "د تختو ښکاره‌والی: يوازې شخصي تختو ته اجازه",
   "tableVisibilityMode": "د تختو ښکاره‌والی",
+  "visibility": "ښکاره‌والی",
   "createdAt": "د جوړېدو وخت",
   "modifiedAt": "د بدلون وخت",
   "verified": "تاييد شوی",

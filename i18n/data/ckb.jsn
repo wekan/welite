@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "گۆڕینی ناوی بەکارهێنەر",
   "tableVisibilityMode-allowPrivateOnly": "دەرکەوتنی تەختەکان: تەنها ڕێگە بە تەختە تایبەتەکان بدە",
   "tableVisibilityMode": "دەرکەوتنی تەختەکان",
+  "visibility": "دەرکەوتن",
   "createdAt": "دروستکرا لە",
   "modifiedAt": "گۆڕدرا لە",
   "verified": "پشتڕاستکراوە",

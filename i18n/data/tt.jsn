@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Кулланучы исемен үзгәртү",
   "tableVisibilityMode-allowPrivateOnly": "Такталарның күренүе: шәхси такталарны гына рөхсәт итү",
   "tableVisibilityMode": "Такталарның күренүе",
+  "visibility": "Күренү",
   "createdAt": "Төзелгән вакыт",
   "modifiedAt": "Үзгәртелгән вакыт",
   "verified": "Тикшерелгән",

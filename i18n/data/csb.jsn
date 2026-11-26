@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Zmiana miona brëkòwnika",
   "tableVisibilityMode-allowPrivateOnly": "Widoczność tôblëcòw: Tylko tôblëce prywatne",
   "tableVisibilityMode": "Widoczność tôblëcòw",
+  "visibility": "Widzawnosc",
   "createdAt": "Data ùsôdzeniô",
   "modifiedAt": "Data zmianë",
   "verified": "Sprôwdzoné",

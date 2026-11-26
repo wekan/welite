@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "ഉപയോക്തൃനാമം മാറ്റുക",
   "tableVisibilityMode-allowPrivateOnly": "ബോർഡുകളുടെ ദൃശ്യത: സ്വകാര്യ ബോർഡുകൾ മാത്രം അനുവദിക്കുക",
   "tableVisibilityMode": "ബോർഡുകളുടെ ദൃശ്യത",
+  "visibility": "ദൃശ്യത",
   "createdAt": "സൃഷ്ടിച്ച സമയം",
   "modifiedAt": "മാറ്റിയ സമയം",
   "verified": "സ്ഥിരീകരിച്ചത്",

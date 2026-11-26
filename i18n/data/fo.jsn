@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Broyting av brúkaranavni",
   "tableVisibilityMode-allowPrivateOnly": "Sjónleiki hjá talvum: loyv bert privatum talvum",
   "tableVisibilityMode": "Sjónleiki hjá talvum",
+  "visibility": "Sjónleiki",
   "createdAt": "Stovnað",
   "modifiedAt": "Broytt",
   "verified": "Váttað",

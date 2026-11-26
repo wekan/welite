@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "صارف نام کی تبدیلی",
   "tableVisibilityMode-allowPrivateOnly": "بورڈز کی مرئیت: صرف نجی بورڈز کی اجازت دیں",
   "tableVisibilityMode": "بورڈز کی مرئیت",
+  "visibility": "مرئیت",
   "createdAt": "بنانے کا وقت",
   "modifiedAt": "ترمیم کا وقت",
   "verified": "تصدیق شدہ",

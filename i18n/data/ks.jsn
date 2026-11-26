@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "صارف ناو تبدیلی",
   "tableVisibilityMode-allowPrivateOnly": "بورڈ نظر یُن: صرف ذٲتی بورڈن اجازت دِیو",
   "tableVisibilityMode": "بورڈ نظر یُن",
+  "visibility": "نظر یُن",
   "createdAt": "بنٲونہٕ آمُت",
   "modifiedAt": "بدلٲونہٕ آمُت",
   "verified": "تصدیق شُدٕ",

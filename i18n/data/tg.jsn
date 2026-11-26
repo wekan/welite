@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Тағйир додани номи корбар",
   "tableVisibilityMode-allowPrivateOnly": "Намоёнии тахтаҳо: танҳо иҷозати тахтаҳои хусусӣ",
   "tableVisibilityMode": "Намоёнии тахтаҳо",
+  "visibility": "Намоёнӣ",
   "createdAt": "Сохта шуд дар",
   "modifiedAt": "Тағйир дода шуд дар",
   "verified": "Тасдиқшуда",

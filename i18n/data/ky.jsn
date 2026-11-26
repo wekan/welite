@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Колдонуучу атын өзгөртүү",
   "tableVisibilityMode-allowPrivateOnly": "Такталардын көрүнүшү: жеке такталарга гана уруксат берүү",
   "tableVisibilityMode": "Такталардын көрүнүшү",
+  "visibility": "Көрүнүшү",
   "createdAt": "Түзүлгөн убакыт",
   "modifiedAt": "Өзгөртүлгөн убакыт",
   "verified": "Ырасталган",

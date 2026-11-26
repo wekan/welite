@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Změnu wužiwarskeho mjena dowolić",
   "tableVisibilityMode-allowPrivateOnly": "Widźomnosć taflow: jenož priwatne tafle dowolić",
   "tableVisibilityMode": "Widźomnosć taflow",
+  "visibility": "Widźomnosć",
   "createdAt": "Wutworjene",
   "modifiedAt": "Změnjene",
   "verified": "Wobkrućeny",

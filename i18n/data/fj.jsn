@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Veisau ni Yaca ni Vakayagataka",
   "tableVisibilityMode-allowPrivateOnly": "Rairai ni vola: Vakatara ga na vola vakaitaukei",
   "tableVisibilityMode": "Rairai ni vola",
+  "visibility": "Rairai",
   "createdAt": "Buli ena",
   "modifiedAt": "Veisautaki ena",
   "verified": "Vakadeitaki",

@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "استعمال ڪندڙ نالو تبديل ڪريو",
   "tableVisibilityMode-allowPrivateOnly": "بورڊ ڏيک: رڳو خانگي بورڊ ڏيو",
   "tableVisibilityMode": "بورڊن جو ڏيک",
+  "visibility": "ڏيک",
   "createdAt": "ٺهڻ جو وقت",
   "modifiedAt": "تبديليءَ جو وقت",
   "verified": "تصديق ٿيل",

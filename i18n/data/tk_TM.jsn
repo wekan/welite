@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Ulanyjy adynyň üýtgemegine rugsat beriň",
   "tableVisibilityMode-allowPrivateOnly": "Tagtalaryň görnükliligi: Diňe hususy tagtalara rugsat beriň",
   "tableVisibilityMode": "Tagtalar görünýär",
+  "visibility": "Görnüşlilik",
   "createdAt": "Döredildi",
   "modifiedAt": "Üýtgedildi",
   "verified": "Barlanyldy",

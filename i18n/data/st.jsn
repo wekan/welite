@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Fetola lebitso la mosebedisi",
   "tableVisibilityMode-allowPrivateOnly": "Ponahalo ya diboto: Dumella diboto tsa poraefete feela",
   "tableVisibilityMode": "Ponahalo ya diboto",
+  "visibility": "Ponahalo",
   "createdAt": "E thehilwe ka",
   "modifiedAt": "E fetotswe ka",
   "verified": "E netefaditswe",

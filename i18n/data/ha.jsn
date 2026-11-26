@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Canza sunan mai amfani",
   "tableVisibilityMode-allowPrivateOnly": "Ganuwar alluna: Ba da izinin alluna masu zaman kansu kawai",
   "tableVisibilityMode": "Ganuwar alluna",
+  "visibility": "Ganuwa",
   "createdAt": "An ƙirƙira a",
   "modifiedAt": "An gyara a",
   "verified": "An tabbatar",

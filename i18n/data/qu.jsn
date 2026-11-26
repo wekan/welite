@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Llamkaqpa sutinta tikray",
   "tableVisibilityMode-allowPrivateOnly": "Pirqakunap rikukuynin: sapallan pirqakunallata saqiy",
   "tableVisibilityMode": "Pirqakunap rikukuynin",
+  "visibility": "Rikukuynin",
   "createdAt": "Kamasqa kaq pacha",
   "modifiedAt": "Tikrasqa kaq pacha",
   "verified": "Chiqaqchasqa",

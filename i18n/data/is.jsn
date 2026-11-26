@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Breyting notandanafns",
   "tableVisibilityMode-allowPrivateOnly": "Sýnileiki taflna: Leyfa aðeins lokaðar töflur",
   "tableVisibilityMode": "Sýnileiki taflna",
+  "visibility": "Sýnileiki",
   "createdAt": "Stofnað",
   "modifiedAt": "Breytt",
   "verified": "Staðfest",

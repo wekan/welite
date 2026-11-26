@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Dozvoli promjenu korisničkog imena",
   "tableVisibilityMode-allowPrivateOnly": "Vidljivost tabli: dopusti samo privatne table",
   "tableVisibilityMode": "Vidljivost tabli",
+  "visibility": "Vidljivost",
   "createdAt": "Kreirano",
   "modifiedAt": "Izmijenjeno",
   "verified": "Potvrđeno",

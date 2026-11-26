@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Пайдаланушы атын өзгерту",
   "tableVisibilityMode-allowPrivateOnly": "Тақталардың көрінуі: тек жеке тақталарға рұқсат беру",
   "tableVisibilityMode": "Тақталардың көрінуі",
+  "visibility": "Көрінуі",
   "createdAt": "Жасалған уақыты",
   "modifiedAt": "Өзгертілген уақыты",
   "verified": "Расталған",

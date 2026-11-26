@@ -1001,6 +1001,64 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/_methods/setListCollapsedState', [board_id, key, True], cookie=stranger, as_json=True)[0] == 403
         assert not folded()
 
+        # Admin Panel / People (people.pug): a site admin edits a user, switches
+        # Admin and Active, and makes a user with setCreateUser.
+        user_row = lambda uid: card_db('SELECT username,isAdmin,loginDisabled,json_extract(profile_json,\'$.fullname\') FROM users WHERE id=?', uid)
+        assert card_db('SELECT isAdmin FROM users WHERE id=?', login['id'])[0] == 1, 'the first account is the admin'
+        page = request('GET', '/people', cookie=owner)[2]
+        assert b'admin-panel-tabs' in page and b'data-id="people-setting"' in page and b'<td class="username">worker</td>' in page
+        assert b'js-go-setting' in page and b'js-go-setting' not in request('GET', '/', cookie=worker)[2]
+        assert ('data-pop="edit-user-%s"' % users['worker']).encode() in page
+        assert ('class="text-green js-toggle-active-status" data-user-id="%s"' % users['worker']).encode() in page
+        status, headers, _, _ = request('POST', '/admin/people/%s/edit' % users['worker'],
+                                        {'username': 'worker', 'fullname': 'Renamed <Worker>', 'initials': 'RW',
+                                         'email': 'worker@example.invalid', 'isAdmin': 'false', 'loginDisabled': 'false', 'password': ''}, cookie=owner)
+        assert status == 303 and headers['Location'] == '/admin/people' and user_row(users['worker'])[3] == 'Renamed <Worker>'
+        assert b'Renamed &lt;Worker&gt;' in request('GET', '/people', cookie=owner)[2]
+        assert request('POST', '/admin/people/%s' % users['worker'], {'loginDisabled': 'true'}, cookie=owner)[0] == 303
+        assert user_row(users['worker'])[2] == 1 and user_row(users['worker'])[3] == 'Renamed <Worker>', 'only Active changed'
+        assert request('GET', route, cookie=worker)[0] in (302, 404), 'signed out when deactivated'
+        assert request('POST', '/admin/people/%s' % users['worker'], {'loginDisabled': 'false'}, cookie=owner)[0] == 303
+        assert user_row(users['worker'])[2] == 0
+        worker = cookie_of('worker')
+        # A new password signs the user in with it, and out of the old sessions.
+        assert request('POST', '/admin/people/%s/edit' % users['silent'], {'username': 'silent', 'fullname': 'S', 'initials': '',
+                       'email': '', 'isAdmin': 'false', 'loginDisabled': 'false', 'password': 'New-pass-99'}, cookie=owner)[0] == 303
+        assert json.loads(request('POST', '/users/login', {'username': 'silent', 'password': 'New-pass-99'})[2]).get('token')
+        assert 'token' not in json.loads(request('POST', '/users/login', {'username': 'silent', 'password': 'test-password'})[2])
+        status, _, body, _ = request('POST', '/_methods/setCreateUser', ['Made User', 'made_user', 'MU', 'Made-pass-1', 'false', 'false',
+                                     'made@example.invalid', [], [], []], cookie=owner, as_json=True)
+        made = json.loads(body).get('result')
+        assert status == 200 and made and user_row(made)[0] == 'made_user', body
+        assert json.loads(request('POST', '/users/login', {'username': 'made_user', 'password': 'Made-pass-1'})[2]).get('token')
+        # Negative: only a site admin, one's own admin and access stay, names
+        # are WeKan's, an address and a username are one account's.
+        assert request('GET', '/people', cookie=worker)[0] == 404
+        assert request('POST', '/admin/people/%s' % login['id'], {'isAdmin': 'false'}, cookie=worker)[0] == 404
+        assert request('POST', '/_methods/setCreateUser', ['X', 'x_user', 'X', 'pw-12345', 'false', 'false', 'x@example.invalid', [], [], []],
+                       cookie=worker, as_json=True)[0] == 403
+        assert request('POST', '/admin/people/%s' % login['id'], {'isAdmin': 'false', 'loginDisabled': 'true'}, cookie=owner)[0] == 303
+        assert user_row(login['id'])[1:3] == (1, 0), "one's own"
+        status, headers, _, _ = request('POST', '/admin/people/%s/edit' % users['worker'], {'username': 'made_user'}, cookie=owner)
+        assert status == 303 and 'error=error-username-taken' in headers['Location'] and user_row(users['worker'])[0] == 'worker'
+        status, headers, _, _ = request('POST', '/admin/people/%s/edit' % users['worker'], {'username': 'a b/c'}, cookie=owner)
+        assert 'error=error-user-notCreated' in headers['Location']
+        status, headers, _, _ = request('POST', '/admin/people/%s/edit' % users['worker'], {'username': 'worker', 'email': 'made@example.invalid'}, cookie=owner)
+        assert 'error=error-email-taken' in headers['Location']
+        assert request('POST', '/_methods/setCreateUser', ['X', 'made_user', 'X', 'pw-12345', 'false', 'false', 'y@example.invalid', [], [], []],
+                       cookie=owner, as_json=True)[0] == 409
+        assert request('POST', '/_methods/setCreateUser', ['X', 'y_user', 'X', 'pw-12345', 'yes', 'false', 'y@example.invalid', [], [], []],
+                       cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/admin/people/nobody/edit', {'username': 'x'}, cookie=owner)[0] == 404
+
+        # A refused sign-in in the HTML5 view: its own form again, with WeKan's
+        # error, the typed username kept as text, the password toggle, no cookie.
+        status, _, page, cookies = request('POST', '/sign-in', {'username': 'owner"<x>', 'password': 'wrong'})
+        assert status == 403 and b'class="at-error js-login-error"' in page and b'password-toggle-btn' in page
+        assert b'value="owner&quot;&lt;x&gt;"' in page and cookie_value(cookies, 'meteor_login_token') is None
+        status, _, page, _ = request('POST', '/sign-in', {'username': 'owner', 'password': 'wrong'}, agent=IBROWSE)
+        assert b'HTML 3.2' in page, 'the HTML4 view keeps its own form'
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

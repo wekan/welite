@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "pangalan ng gumagamit Baguhin",
   "tableVisibilityMode-allowPrivateOnly": "pisaras pagkakakita: Payagan Pribadong pisaras lamang",
   "tableVisibilityMode": "pisaras pagkakakita",
+  "visibility": "Pagkakakita",
   "createdAt": "Ginawa sa",
   "modifiedAt": "Binago sa",
   "verified": "Napatunayan",

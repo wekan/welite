@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Povolit změnu uživatelského jména",
   "tableVisibilityMode-allowPrivateOnly": "Viditelnost tabel: Povolit pouze soukromé tabla",
   "tableVisibilityMode": "Viditelnost tabel",
+  "visibility": "Viditeľnosť",
   "createdAt": "Vytvořeno v",
   "modifiedAt": "Modifikováno",
   "verified": "Ověřen",

@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "वापरकर्तानाव बदल",
   "tableVisibilityMode-allowPrivateOnly": "फलक दृश्यता: फक्त खाजगी फलकांना परवानगी द्या",
   "tableVisibilityMode": "फलक दृश्यता",
+  "visibility": "दृश्यता",
   "createdAt": "तयार केले",
   "modifiedAt": "बदलले",
   "verified": "सत्यापित",

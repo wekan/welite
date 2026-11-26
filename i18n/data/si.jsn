@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "පරිශීලක නම වෙනස් කිරීම",
   "tableVisibilityMode-allowPrivateOnly": "පුවරු දෘශ්‍යතාව: පුද්ගලික පුවරු පමණක් ඉඩ දෙන්න",
   "tableVisibilityMode": "පුවරු දෘශ්‍යතාව",
+  "visibility": "දෘශ්‍යතාව",
   "createdAt": "නිර්මාණය කළේ",
   "modifiedAt": "වෙනස් කළේ",
   "verified": "සත්‍යාපිතයි",

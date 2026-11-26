@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Caghlaa ennym ymmydeyr",
   "tableVisibilityMode-allowPrivateOnly": "Fakinys boayrdyn: Lhig da boayrdyn preevaadjagh ny lomarcan",
   "tableVisibilityMode": "Fakinys boayrdyn",
+  "visibility": "Fakinys",
   "createdAt": "Crooit ec",
   "modifiedAt": "Caghlaait ec",
   "verified": "Firrinaghit",

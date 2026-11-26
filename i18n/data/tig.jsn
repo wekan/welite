@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "ለውጢ ስሜት መትነፍዓይ",
   "tableVisibilityMode-allowPrivateOnly": "ርኡይነት ምዱዳት፦ ውልቃዊ ምዱዳት ጥራይ ፍቐድ",
   "tableVisibilityMode": "ርኡይነት ምዱዳት",
+  "visibility": "ርእየት",
   "createdAt": "ዝተፈጥረሉ",
   "modifiedAt": "ዝተቐየረሉ",
   "verified": "ዝተረጋገጸ",

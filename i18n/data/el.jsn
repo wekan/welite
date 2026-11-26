@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Επίτρεψε Αλλαγή Ονόματος χρήστη",
   "tableVisibilityMode-allowPrivateOnly": "Visibilità bacheche: Consenti solo le bacheche private",
   "tableVisibilityMode": "Visibilità bacheche",
+  "visibility": "Ορατότητα",
   "createdAt": "Δημιουργήθηκε στις",
   "modifiedAt": "Modificato il",
   "verified": "Επιβεβαιώθηκε",

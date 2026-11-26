@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Guhindura Izina ry'Ukoresha",
   "tableVisibilityMode-allowPrivateOnly": "Ukugaragara kw'ibibaho: Emera ibibaho byigenga gusa",
   "tableVisibilityMode": "Ukugaragara kw'ibibaho",
+  "visibility": "Ukugaragara",
   "createdAt": "Byaremwe ku",
   "modifiedAt": "Byahinduwe ku",
   "verified": "Byemejwe",

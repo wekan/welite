@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "לאפשר שינוי שם משתמש",
   "tableVisibilityMode-allowPrivateOnly": "הופעה של לוחות: לאפשר לוחות פרטיים בלבד",
   "tableVisibilityMode": "הופעה של לוחות",
+  "visibility": "נראות",
   "createdAt": "נוצר ב",
   "modifiedAt": "נערך ב־",
   "verified": "עבר אימות",

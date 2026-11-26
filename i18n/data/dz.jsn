@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "སྤྱོད་མཁན་མིང་བསྒྱུར།",
   "tableVisibilityMode-allowPrivateOnly": "བྱང་གཞིའི་མཐོང་ཚད། སྒེར་གྱི་བྱང་གཞི་ཁོ་ན་ཆོག",
   "tableVisibilityMode": "བྱང་གཞིའི་མཐོང་ཚད།",
+  "visibility": "མཐོང་ཚད།",
   "createdAt": "གསར་བཟོའི་དུས།",
   "modifiedAt": "བསྒྱུར་བའི་དུས།",
   "verified": "ར་སྤྲོད་བྱས།",

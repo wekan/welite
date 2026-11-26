@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "ለውጢ ስም ተጠቃሚ",
   "tableVisibilityMode-allowPrivateOnly": "ርኡይነት ሰሌዳታት፦ ብሕታዊ ሰሌዳታት ጥራይ ፍቐድ",
   "tableVisibilityMode": "ርኡይነት ሰሌዳታት",
+  "visibility": "ርኡይነት",
   "createdAt": "ዝተፈጥረሉ",
   "modifiedAt": "ዝተቐየረሉ",
   "verified": "ተረጋጊጹ",

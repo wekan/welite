@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "ব্যৱহাৰকাৰী নাম সলনি",
   "tableVisibilityMode-allowPrivateOnly": "ব'ৰ্ডৰ দৃশ্যমানতা: কেৱল ব্যক্তিগত ব'ৰ্ড অনুমতি দিয়ক",
   "tableVisibilityMode": "ব'ৰ্ডৰ দৃশ্যমানতা",
+  "visibility": "দৃশ্যমানতা",
   "createdAt": "সৃষ্টিৰ সময়",
   "modifiedAt": "পৰিৱৰ্তনৰ সময়",
   "verified": "সত্যাপিত",

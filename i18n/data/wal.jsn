@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Go'ettiya asaa sunttaa laammiyoogaa",
   "tableVisibilityMode-allowPrivateOnly": "Bookkiyaa be'ettiyoogaa: Bagga bookkiyata xalla maata imma",
   "tableVisibilityMode": "Bookkiyaa be'ettiyoogaa",
+  "visibility": "Be'ettiyoogaa",
   "createdAt": "Medhettida wode",
   "modifiedAt": "Laamettida wode",
   "verified": "Tumu gidoogee erettiis",

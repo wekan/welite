@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Änneren vum Benutzernamens erlauben",
   "tableVisibilityMode-allowPrivateOnly": "Board-Siichtbarkeet: Erlaube ausschließlich private Boards",
   "tableVisibilityMode": "Siichtbarkeet den Boards",
+  "visibility": "Siichtbarkeet",
   "createdAt": "Erstellt den",
   "modifiedAt": "Geändert den",
   "verified": "Geprüft",

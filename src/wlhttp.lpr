@@ -284,6 +284,7 @@ begin
       if RequestView(aRequest)=wvHtml5 then begin Html5SignedIn(aResponse,S.SessionId);Exit;end;
       ShowHome(aRequest,aResponse,S);Exit;
     finally Proof.Free;end;
+    if RequestView(aRequest)=wvHtml5 then begin Html5SignInFailed(aRequest,aResponse,Username);Exit;end;
     SendHtml(aResponse,SignInForm(aRequest,aResponse,'Invalid login.'));
     Exit;
   end;

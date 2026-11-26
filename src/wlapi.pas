@@ -193,6 +193,8 @@ function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;ou
 // role flags) or removed by a board admin, as POST
 // /api/boards/:boardId/members/:userId/add and /remove do it: 200, or the
 // code and its Error.
+// An enabled site admin of the tenant.
+function IsSiteAdmin(Db: TWLDb; const UserId: string): Boolean;
 function ChangeBoardMembership(const T:TWLTenant;const Actor,BoardId,TargetId:string;Add:Boolean;
   const Columns,Values,Sets:string;out Error:string):Integer;
 // A card's vote (cardDetails.jade's vote section): nil-like (Present False)
@@ -240,6 +242,17 @@ function PokerViewCard(const T:TWLTenant;const UserId,BoardId,CardId,State:strin
 // address (/cdn/storage/attachments/<id>) is stored as the background.
 function SetViewCardCover(const T:TWLTenant;const UserId,BoardId,CardId,AttachmentId:string;out Error:string):Integer;
 function SetViewBoardBackground(const T:TWLTenant;const UserId,BoardId,CardId,AttachmentId:string;out Error:string):Integer;
+// Admin Panel / People from the HTML5 view (Weddy's admin_people.go, WeKan's
+// editUserPopup): a site admin changes a user. Values holds the form's
+// fields; with Partial only those present change (the table's Admin and
+// Active toggles), else the whole form (username, fullname, initials,
+// email, isAdmin, loginDisabled, and a new password when one is given).
+// One's own admin and access are not one's own to take away here. A new
+// password, or access taken away, signs the user out everywhere.
+function AdminUpdateViewUser(const T:TWLTenant;const Actor,Target:string;Values:TStrings;Partial:Boolean;out Error:string):Integer;
+// WeKan's setCreateUser: a site admin makes a password account.
+function AdminCreateViewUser(const T:TWLTenant;const Actor,Fullname,Username,Initials,Password,IsAdmin,LoginDisabled,Email:string;
+  out NewId,Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6056,6 +6069,136 @@ begin
     QuotedStr(BoardId)+'; SELECT CASE WHEN (SELECT count(*) FROM boards WHERE id='+QuotedStr(BoardId)+' AND COALESCE(backgroundImageURL,'''')='+
     NextUrl+')=1 THEN 1 ELSE json(''Background failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not set the background';Exit(500);end;
+end;
+
+function ViewUsernameValid(const Username:string):Boolean;
+var i:Integer;
+begin
+  Result:=(Length(Username)>=2) and (Length(Username)<=64);
+  if Result then
+    for i:=1 to Length(Username) do
+      if not (Username[i] in ['A'..'Z','a'..'z','0'..'9','.','_','-']) then Exit(False);
+end;
+
+function ViewEmailValid(const Email:string):Boolean;
+var At:Integer;
+begin
+  At:=Pos('@',Email);
+  Result:=(Length(Email)<=254) and (At>1) and (Pos(' ',Email)=0) and (Pos(#9,Email)=0) and (Pos('@',Copy(Email,At+1,MaxInt))=0) and
+    (Pos('.',Copy(Email,At+2,MaxInt))>0) and (Email[Length(Email)]<>'.') and (Pos(#0,Email)=0);
+end;
+
+// The guarded statement's start: the actor is an enabled site admin, of the
+// accounts this store selects, and the target is one of them.
+function ViewAdminGuard(const T:TWLTenant;const Actor,Target:string;out Scope,Bindings:string):string;
+var Source:TSelectionScope;I:Integer;Admin:string;
+begin
+  Source:=TSelectionScope.Create(T.Db);
+  try
+    Scope:='id='+QuotedStr(Target)+' AND '+Source.StringField('users','id');
+    Admin:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
+      ' AND isAdmin=1 AND COALESCE(loginDisabled,0)=0 AND '+Source.StringField('users','id')+')';
+    Bindings:='';
+    for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
+  finally Source.Free;end;
+  Result:=AuthSourceCondition(T.Db)+' AND '+Admin;
+end;
+
+function AdminUpdateViewUser(const T:TWLTenant;const Actor,Target:string;Values:TStrings;Partial:Boolean;out Error:string):Integer;
+var Scope,Bindings,Guard,Sets,Mutation,Username,Fullname,Initials,Email,Password,Profile,Hash:string;
+  Rows:TWLRows;Revoke:Boolean;
+  function Has(const Name:string):Boolean;
+  begin Result:=not Partial or (Values.IndexOfName(Name)>=0);end;
+begin
+  Error:='';
+  if (Actor='') or not IsSiteAdmin(T.Db,Actor) then begin Error:='Not found';Exit(404);end;
+  if (Target='') or (Pos(#0,Target)>0) then begin Error:='User not found';Exit(404);end;
+  Guard:=ViewAdminGuard(T,Actor,Target,Scope,Bindings);
+  Rows:=T.Db.Query('SELECT username,COALESCE(authenticationMethod,'''') FROM users WHERE '+Scope+';');
+  if Length(Rows)<>1 then begin Error:='User not found';Exit(404);end;
+  Sets:='modifiedAt='+QuotedStr(NowIso);Mutation:='';Revoke:=False;
+  Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+  if Has('fullname') or Has('initials') then
+  begin
+    Fullname:=Trim(Values.Values['fullname']);Initials:=Trim(Values.Values['initials']);
+    if (Length(Fullname)>200) or (Length(UTF8Decode(Initials))>8) or (Pos(#0,Fullname+Initials)>0) then
+    begin Error:='error-user-notCreated';Exit(400);end;
+    Sets:=Sets+',profile_json=json_set('+Profile+',''$.fullname'','+QuotedStr(Fullname)+',''$.initials'','+QuotedStr(Initials)+')';
+  end;
+  Username:=Trim(Values.Values['username']);
+  if Has('username') and (Username<>'') and (Username<>Rows[0][0]) then
+  begin
+    if not ViewUsernameValid(Username) then begin Error:='error-user-notCreated';Exit(400);end;
+    if Length(T.Db.Query('SELECT 1 FROM users WHERE username='+QuotedStr(Username)+' COLLATE NOCASE AND id<>'+QuotedStr(Target)+';'))>0 then
+    begin Error:='error-username-taken';Exit(409);end;
+    Sets:=Sets+',username='+QuotedStr(Username);
+  end;
+  Email:=LowerCase(Trim(Values.Values['email']));
+  if Has('email') and (Email<>'') and (Length(T.Db.Query('SELECT 1 FROM user_emails WHERE userId='+QuotedStr(Target)+
+    ' AND lower(address)='+QuotedStr(Email)+';'))=0) then
+  begin
+    if not ViewEmailValid(Email) then begin Error:='error-user-notCreated';Exit(400);end;
+    if Length(T.Db.Query('SELECT 1 FROM user_emails WHERE lower(address)='+QuotedStr(Email)+';'))>0 then
+    begin Error:='error-email-taken';Exit(409);end;
+    Mutation:=Mutation+'DELETE FROM user_emails WHERE userId='+QuotedStr(Target)+'; INSERT INTO user_emails(userId,address,verified) VALUES('+
+      QuotedStr(Target)+','+QuotedStr(Email)+','+IntToStr(Ord(Values.Values['verified']='true'))+'); ';
+  end;
+  if Target<>Actor then
+  begin
+    if Has('isAdmin') then Sets:=Sets+',isAdmin='+IntToStr(Ord(Values.Values['isAdmin']='true'));
+    if Has('loginDisabled') then
+    begin
+      Sets:=Sets+',loginDisabled='+IntToStr(Ord(Values.Values['loginDisabled']='true'));
+      Revoke:=Values.Values['loginDisabled']='true';
+    end;
+  end;
+  Password:=Values.Values['password'];
+  if Has('password') and (Password<>'') then
+  begin
+    if (Rows[0][1]<>'') and (Rows[0][1]<>'password') then begin Error:='This account uses an external sign-in provider.';Exit(400);end;
+    if (Length(Password)>4096) or (Pos(#0,Password)>0) then begin Error:='error-password-policy';Exit(400);end;
+    Hash:=HashMeteorPassword(Password);
+    Sets:=Sets+',services_json=json_set(CASE WHEN json_valid(services_json) THEN services_json ELSE ''{}'' END,''$.password'',json('+
+      QuotedStr(Hash)+'))';
+    Revoke:=True;
+  end;
+  if Revoke then Mutation:=RevokeUserTokensSQL(T.Db,Target)+Mutation;
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Guard+' AND (SELECT count(*) FROM users WHERE '+Scope+
+    ')=1 THEN 1 ELSE json(''User scope changed'') END; UPDATE users SET '+Sets+' WHERE '+Scope+'; '+Mutation+'COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update account';Exit(500);end;
+  Result:=200;
+end;
+
+function AdminCreateViewUser(const T:TWLTenant;const Actor,Fullname,Username,Initials,Password,IsAdmin,LoginDisabled,Email:string;
+  out NewId,Error:string):Integer;
+var Scope,Bindings,Guard,Stamp,Mail:string;
+begin
+  NewId:='';Error:='';
+  if (Actor='') or not IsSiteAdmin(T.Db,Actor) then begin Error:='Only administrators can create users';Exit(403);end;
+  if (Pos('/',Fullname+Username+Email+Initials)>0) or (Pos(#0,Fullname+Username+Email+Initials+Password)>0) then
+  begin Error:='error-user-notCreated';Exit(400);end;
+  if ((IsAdmin<>'true') and (IsAdmin<>'false')) or ((LoginDisabled<>'true') and (LoginDisabled<>'false')) then
+  begin Error:='invalid-parameters';Exit(400);end;
+  Mail:=LowerCase(Trim(Email));
+  if not ViewUsernameValid(Username) or not ViewEmailValid(Mail) or (Length(Fullname)>200) or (Length(UTF8Decode(Initials))>8) then
+  begin Error:='error-user-notCreated';Exit(400);end;
+  if (Password='') or (Length(Password)>4096) then begin Error:='error-password-policy';Exit(400);end;
+  if Length(T.Db.Query('SELECT 1 FROM users WHERE username='+QuotedStr(Username)+' COLLATE NOCASE;'))>0 then
+  begin Error:='username-already-taken';Exit(409);end;
+  if Length(T.Db.Query('SELECT 1 FROM user_emails WHERE lower(address)='+QuotedStr(Mail)+';'))>0 then
+  begin Error:='email-already-taken';Exit(409);end;
+  NewId:=Copy(NewAuthToken,1,17);
+  Guard:=ViewAdminGuard(T,Actor,NewId,Scope,Bindings);
+  Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Guard+' AND NOT EXISTS(SELECT 1 FROM users WHERE username='+
+    QuotedStr(Username)+' COLLATE NOCASE) THEN 1 ELSE json(''User scope changed'') END; '+
+    'INSERT INTO users(id,username,createdAt,modifiedAt,services_json,profile_json,isAdmin,loginDisabled) VALUES('+QuotedStr(NewId)+','+
+    QuotedStr(Username)+','+Stamp+','+Stamp+','+QuotedStr('{"password":'+HashMeteorPassword(Password)+'}')+','+
+    'json_object(''fullname'','+QuotedStr(Fullname)+',''initials'','+QuotedStr(Initials)+'),'+IntToStr(Ord(IsAdmin='true'))+','+
+    IntToStr(Ord(LoginDisabled='true'))+'); INSERT INTO user_emails(userId,address,verified) VALUES('+QuotedStr(NewId)+','+QuotedStr(Mail)+
+    ',0); SELECT CASE WHEN EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(NewId)+') THEN 1 ELSE json(''User creation failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');NewId:='';Error:='error-user-notCreated';Exit(500);end;
+  Result:=200;
 end;
 
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;

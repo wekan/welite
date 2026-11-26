@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "የተጠቃሚ ስም ለውጥ",
   "tableVisibilityMode-allowPrivateOnly": "የሰሌዳዎች ታይነት፦ የግል ሰሌዳዎችን ብቻ ፍቀድ",
   "tableVisibilityMode": "የሰሌዳዎች ታይነት",
+  "visibility": "ታይነት",
   "createdAt": "የተፈጠረበት",
   "modifiedAt": "የተሻሻለበት",
   "verified": "የተረጋገጠ",

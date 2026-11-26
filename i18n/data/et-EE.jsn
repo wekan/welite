@@ -924,6 +924,7 @@
   "accounts-allowUserNameChange": "Lubage kasutajanime muutmine",
   "tableVisibilityMode-allowPrivateOnly": "Tahvlite nähtavus: Lubage ainult privaatseid tahvleid",
   "tableVisibilityMode": "Tahvlite nähtavus",
+  "visibility": "Nähtavus",
   "createdAt": "Loodud aadressil",
   "modifiedAt": "Muudetud aadressil",
   "verified": "Kinnitatud",
