@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Self delete utent account",
   "hide-minicard-label-text": "Aħbi minicard label text",
   "show-desktop-drag-handles": "Uri desktop drag handles",
+  "toggle-header-icons-collapsed": "Ġbid/wessa' l-ikoni tal-intestatura",
   "assignee": "Assenjat",
   "assignees": "Assenjati",
   "cardAssigneesPopup-title": "Assenjat",

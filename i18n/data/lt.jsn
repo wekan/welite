@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Leiskite vartotojams patiems ištrinti savo paskyrą",
   "hide-minicard-label-text": "Slėpti mini kortelės etiketės tekstą",
   "show-desktop-drag-handles": "Rodyti darbalaukio vilkimo rankenas",
+  "toggle-header-icons-collapsed": "Suskleisti / išskleisti antraštės piktogramas",
   "assignee": "Perėmėjas",
   "assignees": "Perėmėjai",
   "cardAssigneesPopup-title": "Perėmėjas",

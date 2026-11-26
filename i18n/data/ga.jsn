@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Lig don úsáideoir a chuntas féin a scriosadh",
   "hide-minicard-label-text": "Folaigh téacs lipéad an mhionchárta",
   "show-desktop-drag-handles": "Taispeáin hanlaí tarraingthe deisce",
+  "toggle-header-icons-collapsed": "Laghdaigh/leathnaigh deilbhíní an cheanntásca (ar fhón póca/ríomhaire, go dtí na fógraí)",
   "assignee": "Sannaí",
   "assignees": "Sannaithe",
   "cardAssigneesPopup-title": "Sannaí",

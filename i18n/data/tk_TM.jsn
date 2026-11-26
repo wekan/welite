@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Ulanyjylara hasabyny özbaşdak pozmaga rugsat beriň",
   "hide-minicard-label-text": "Minikard belliginiň tekstini gizläň",
   "show-desktop-drag-handles": "Iş stolunyň süýrüji tutawaçlaryny görkeziň",
+  "toggle-header-icons-collapsed": "Sözbaşy nyşanlaryny ýygnamak/giňeltmek",
   "assignee": "Bellenen",
   "assignees": "Bellenenler",
   "cardAssigneesPopup-title": "Bellenen",

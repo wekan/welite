@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Киһи бэйэтин бэлиэтэниитин сотуута",
   "hide-minicard-label-text": "Кыра карточка бэлиэтин тиэкиһин кистээ",
   "show-desktop-drag-handles": "Десктопка көһөрөр туткалары көрдөр",
+  "toggle-header-icons-collapsed": "Титул бэлиэлэрин хомуйуу/арыйыы",
   "assignee": "Эппиэттиир",
   "assignees": "Эппиэттииллэр",
   "cardAssigneesPopup-title": "Эппиэттиир",

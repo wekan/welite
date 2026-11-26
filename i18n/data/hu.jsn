@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Engedje a felhasználóknak, hogy maguk töröljék a fiókjukat",
   "hide-minicard-label-text": "Rejtse el a Címke szövegét a mini Kártyákon",
   "show-desktop-drag-handles": "Mutassa a fogd-és-vidd eseményeket",
+  "toggle-header-icons-collapsed": "Fejléc ikonok összecsukása/kibontása",
   "assignee": "Felelős",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Felelős",

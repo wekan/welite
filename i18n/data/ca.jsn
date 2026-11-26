@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Permet als usuaris eliminar el seu compte ells mateixos",
   "hide-minicard-label-text": "Amaga el text de l'etiqueta de la minifitxa",
   "show-desktop-drag-handles": "Mostra les nanses d'arrossegament de l'escriptori",
+  "toggle-header-icons-collapsed": "Redueix/expandeix les icones de la capçalera",
   "assignee": "Assignat",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Assignat",

@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Permette à l’utilizatori di squassà u so contu",
   "hide-minicard-label-text": "Piattà u testu di l’etichette nant’à a minicarta",
   "show-desktop-drag-handles": "Mustrà e maniglie di trascinamentu nant’à l’urdinatore",
+  "toggle-header-icons-collapsed": "Riduce/espande l’icone di l’intestazione (passaghju mobile/urdinatore à e nutificazioni)",
   "assignee": "Assignatu",
   "assignees": "Assignati",
   "cardAssigneesPopup-title": "Assignatu",

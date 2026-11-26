@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ተጠቃሚው የራሱን መለያ እንዲሰርዝ",
   "hide-minicard-label-text": "የትንሽ ካርድ መለያ ጽሑፍን ደብቅ",
   "show-desktop-drag-handles": "የዴስክቶፕ መጎተቻ መያዣዎችን አሳይ",
+  "toggle-header-icons-collapsed": "የራስጌ አዶዎችን አሳንስ/አስፋ",
   "assignee": "ኃላፊ",
   "assignees": "ኃላፊዎች",
   "cardAssigneesPopup-title": "ኃላፊ",

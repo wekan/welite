@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "अपन उपयोगकर्ता खाता स्वयं मेटाउ",
   "hide-minicard-label-text": "लघुकार्ड लेबल पाठ नुकाउ",
   "show-desktop-drag-handles": "डेस्कटॉप घींचबाक हैंडल देखाउ",
+  "toggle-header-icons-collapsed": "हेडर आइकनक सङ्कुचित/विस्तृत करू",
   "assignee": "उत्तरदायी",
   "assignees": "उत्तरदायी लोकनि",
   "cardAssigneesPopup-title": "उत्तरदायी",

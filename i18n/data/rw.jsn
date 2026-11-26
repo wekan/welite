@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Kwemerera ukoresha kwisibira konti",
   "hide-minicard-label-text": "Hisha inyandiko y'akamenyetso k'ikarita ntoyi",
   "show-desktop-drag-handles": "Erekana aho gukururira kuri mudasobwa",
+  "toggle-header-icons-collapsed": "Gufunga/gufungura udushushondanga tw'umutwe",
   "assignee": "Uwahawe akazi",
   "assignees": "Abahawe akazi",
   "cardAssigneesPopup-title": "Uwahawe akazi",

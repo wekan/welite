@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ഉപയോക്താവിന് സ്വന്തം അക്കൗണ്ട് ഇല്ലാതാക്കാം",
   "hide-minicard-label-text": "മിനികാർഡിലെ ലേബൽ ടെക്സ്റ്റ് മറയ്ക്കുക",
   "show-desktop-drag-handles": "ഡെസ്ക്ടോപ്പ് വലിക്കൽ ഹാൻഡിലുകൾ കാണിക്കുക",
+  "toggle-header-icons-collapsed": "ഹെഡർ ഐക്കണുകൾ ചുരുക്കുക/വികസിപ്പിക്കുക",
   "assignee": "ചുമതലപ്പെട്ടയാൾ",
   "assignees": "ചുമതലപ്പെട്ടവർ",
   "cardAssigneesPopup-title": "ചുമതലപ്പെട്ടയാൾ",

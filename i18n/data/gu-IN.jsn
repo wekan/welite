@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "વપરાશકર્તાઓને તેમના એકાઉન્ટને સ્વયં કાઢી નાખવાની મંજૂરી આપો",
   "hide-minicard-label-text": "મિનીકાર્ડ લેબલ ટેક્સ્ટ છુપાવો",
   "show-desktop-drag-handles": "ડેસ્કટોપ ડ્રેગ હેન્ડલ્સ બતાવો",
+  "toggle-header-icons-collapsed": "હેડર આઇકન સંકોચો/વિસ્તૃત કરો",
   "assignee": "સોંપનાર",
   "assignees": "સોંપણીઓ",
   "cardAssigneesPopup-title": "સોંપનાર",

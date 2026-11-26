@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Хэрэглэгчэдэ өөрын бүридхэл усадхахые зүбшөөхэ",
   "hide-minicard-label-text": "Бишыхан картын тэмдэгэй бэшэг нюуха",
   "show-desktop-drag-handles": "Компьютерэй шэрэхэ барюулнуудые харуулха",
+  "toggle-header-icons-collapsed": "Тэргэ тэмдэгүүдые хомосорхо/дэлгэхэ",
   "assignee": "Харюусалгата",
   "assignees": "Харюусалгатанууд",
   "cardAssigneesPopup-title": "Харюусалгата",

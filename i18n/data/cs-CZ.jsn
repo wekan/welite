@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Dovolit uživatelům smazat vlastní účet",
   "hide-minicard-label-text": "Skrýt text popisku minikarty",
   "show-desktop-drag-handles": "Zobrazit okraje pro přesun plochy",
+  "toggle-header-icons-collapsed": "Sbalit/rozbalit ikony hlavičky",
   "assignee": "Řešitel",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Řešitel",

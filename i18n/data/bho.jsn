@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "उपयोगकर्ता के आपन खाता मेटावे दीं",
   "hide-minicard-label-text": "छोट कार्ड के लेबल लिखाई छिपाईं",
   "show-desktop-drag-handles": "डेस्कटॉप खींच पकड़ देखाईं",
+  "toggle-header-icons-collapsed": "हेडर आइकन के संकुचित/विस्तार करीं",
   "assignee": "जिम्मेदार",
   "assignees": "जिम्मेदार लोग",
   "cardAssigneesPopup-title": "जिम्मेदार",

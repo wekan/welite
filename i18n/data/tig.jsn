@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "መትነፍዓይ ሕሳቡ ባዕሉ ይደምስስ",
   "hide-minicard-label-text": "ጽሑፍ እሻረት ንእሽቶ ካርድ ሕባእ",
   "show-desktop-drag-handles": "መስሓቢታት ዴስክቶፕ ኣርኢ",
+  "toggle-header-icons-collapsed": "ኣይኮናት ርእሲ ምጥርናፍ/ምስፍሕፋሕ",
   "assignee": "ሓላፍ",
   "assignees": "ሓለፍቲ",
   "cardAssigneesPopup-title": "ሓላፍ",

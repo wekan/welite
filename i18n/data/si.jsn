@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "පරිශීලක ගිණුම ස්වයංව මකා දැමීම",
   "hide-minicard-label-text": "කුඩා කාඩ්පත් ලේබල් පෙළ සඟවන්න",
   "show-desktop-drag-handles": "ඩෙස්ක්ටොප් ඇදීමේ හැඬල පෙන්වන්න",
+  "toggle-header-icons-collapsed": "ශීර්ෂ අයිකන හකුළන්න/විහිදන්න",
   "assignee": "පවරන ලද අය",
   "assignees": "පවරන ලද අය",
   "cardAssigneesPopup-title": "පවරන ලද අය",

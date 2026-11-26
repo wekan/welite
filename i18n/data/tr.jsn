@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Kullanıcılara hesaplarını silmek için izin ver.",
   "hide-minicard-label-text": "Mini kart etiklerini gizle",
   "show-desktop-drag-handles": "Masaüstü sürükleme tutamaçlarını göster",
+  "toggle-header-icons-collapsed": "Başlık simgelerini daralt/genişlet",
   "assignee": "Atanan",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Atanan",

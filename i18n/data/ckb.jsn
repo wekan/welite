@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "سڕینەوەی هەژمار لەلایەن خۆی",
   "hide-minicard-label-text": "دەقی ناونیشانی کارتی بچووک بشارەوە",
   "show-desktop-drag-handles": "دەسکەکانی ڕاکێشانی ڕوومێز پیشان بدە",
+  "toggle-header-icons-collapsed": "کۆکردنەوە/کردنەوەی ئایکۆنەکانی سەرپەڕە",
   "assignee": "بەرپرس",
   "assignees": "بەرپرسان",
   "cardAssigneesPopup-title": "بەرپرس",

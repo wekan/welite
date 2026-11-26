@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Pozwól użytkownikom na wyciepowanie własnych kont",
   "hide-minicard-label-text": "Skryj opisy etykiet miniaturach kart",
   "show-desktop-drag-handles": "Pokoż przeciągnięcia na pulpit",
+  "toggle-header-icons-collapsed": "Zwiń/rozwiń ikōny nagōwka",
   "assignee": "Ôdpowiedzialny",
   "assignees": "Ôdpowiedzialni",
   "cardAssigneesPopup-title": "Ôdpowiedzialny",

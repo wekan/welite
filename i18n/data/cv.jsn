@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Усӑҫӑна хӑй аккаунтне кӑларма май парас",
   "hide-minicard-label-text": "Кӗске карточкӑри паллӑ текстне пытӑрас",
   "show-desktop-drag-handles": "Ӗҫ сӗтелӗн сӗтӗрмелли тыткӑчӗсене кӑтартас",
+  "toggle-header-icons-collapsed": "Пуҫлӑх ӗлкисене пуҫтарасси/сарасси",
   "assignee": "Яваплӑ",
   "assignees": "Яваплисем",
   "cardAssigneesPopup-title": "Яваплӑ",

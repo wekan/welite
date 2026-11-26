@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ተጠቃሚ መለያኡ ባዕሉ ይደምስስ",
   "hide-minicard-label-text": "ጽሑፍ ምልክት ንኡስ ካርድ ሕባእ",
   "show-desktop-drag-handles": "መትሓዚታት ምጉታት ዴስክቶፕ ኣርኢ",
+  "toggle-header-icons-collapsed": "ኣይኮናት ርእሲ ምጥርናፍ/ምስፍሕፋሕ",
   "assignee": "ሓላፊ",
   "assignees": "ሓለፍቲ",
   "cardAssigneesPopup-title": "ሓላፊ",

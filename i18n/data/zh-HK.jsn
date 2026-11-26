@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "允許用戶自行刪除其帳戶",
   "hide-minicard-label-text": "隱藏迷你卡片標籤內文",
   "show-desktop-drag-handles": "顯示桌面拖曳工具",
+  "toggle-header-icons-collapsed": "收合/展開標題圖示",
   "assignee": "承辦人",
   "assignees": "承辦人",
   "cardAssigneesPopup-title": "承辦人",

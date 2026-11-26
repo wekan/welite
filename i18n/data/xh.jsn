@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Vumela abasebenzisi ukuba bazicime iakhawunti yabo",
   "hide-minicard-label-text": "Fihla itekisi yeleyibhile encinci",
   "show-desktop-drag-handles": "Bonisa iziphatho zotsalo kwidesktop",
+  "toggle-header-icons-collapsed": "Vala/vula imifanekiso yesihloko",
   "assignee": "Owabelweyo",
   "assignees": "Abathunyiweyo",
   "cardAssigneesPopup-title": "Owabelweyo",

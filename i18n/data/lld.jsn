@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "L utënt possa scancelé si cont",
   "hide-minicard-label-text": "Platé l test dla etichetes sun la minciarta",
   "show-desktop-drag-handles": "Mustré i maniesc per tiré sun l desktop",
+  "toggle-header-icons-collapsed": "Stlù/giaurì la icones dla testa (mudé mobil/desktop per la notificazions)",
   "assignee": "Respunsabl",
   "assignees": "Respunsabli",
   "cardAssigneesPopup-title": "Respunsabl",

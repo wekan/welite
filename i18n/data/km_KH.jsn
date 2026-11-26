@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "អនុញ្ញាតឱ្យអ្នកប្រើប្រាស់លុបគណនីរបស់ពួកគេដោយខ្លួនឯង។",
   "hide-minicard-label-text": "លាក់អត្ថបទស្លាកកាតតូច",
   "show-desktop-drag-handles": "បង្ហាញចំណុចទាញអូសលើតុ",
+  "toggle-header-icons-collapsed": "បង្រួម/ពង្រីក រូបតំណាងក្បាល",
   "assignee": "អ្នកចាត់តាំង",
   "assignees": "អ្នកទទួលបន្ទុក",
   "cardAssigneesPopup-title": "អ្នកចាត់តាំង",

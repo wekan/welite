@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Famafan'ny mpampiasa ny kaontiny",
   "hide-minicard-label-text": "Afeno ny soratry ny marika amin'ny karatra kely",
   "show-desktop-drag-handles": "Asehoy ny tahony fitarihana amin'ny solosaina",
+  "toggle-header-icons-collapsed": "Aforitra/avelaro ny kisary eo amin’ny lohapejy (amin’ny finday/solosaina, hatramin’ny fampahafantarana)",
   "assignee": "Voatendry",
   "assignees": "Voatendry",
   "cardAssigneesPopup-title": "Voatendry",

@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Samostalno brisanje korisničkog računa",
   "hide-minicard-label-text": "Sakrij tekst oznake na minikartici",
   "show-desktop-drag-handles": "Prikaži ručke za povlačenje u načinu rada za računar",
+  "toggle-header-icons-collapsed": "Skupi/proširi ikone zaglavlja",
   "assignee": "Zaduženi",
   "assignees": "Zaduženi",
   "cardAssigneesPopup-title": "Zaduženi",

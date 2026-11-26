@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ئىشلەتكۈچىلەرنىڭ ھېساباتىنى ئۆزى ئۆچۈرۈشىگە يول قويۇڭ",
   "hide-minicard-label-text": "كىچىك تىپتىكى بەلگە تېكىستىنى يوشۇرۇش",
   "show-desktop-drag-handles": "ئۈستەل يۈزى سۆرەش تۇتقۇچىنى كۆرسەت",
+  "toggle-header-icons-collapsed": "بېشى سىنبەلگىلىرىنى قاتلاش/يېيىش",
   "assignee": "ھاۋالە قىلغۇچى",
   "assignees": "ھاۋالە قىلغۇچىلار",
   "cardAssigneesPopup-title": "ھاۋالە قىلغۇچى",

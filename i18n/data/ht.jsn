@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Pèmèt itilizatè efase pwòp kont li",
   "hide-minicard-label-text": "Kache tèks etikèt mini-kat",
   "show-desktop-drag-handles": "Montre manch pou glise sou òdinatè",
+  "toggle-header-icons-collapsed": "Redui/elaji ikòn antèt yo (soti nan bouton pou chanje ant mobil ak òdinatè rive nan notifikasyon yo)",
   "assignee": "Moun ki asiyen",
   "assignees": "Moun ki asiyen yo",
   "cardAssigneesPopup-title": "Moun ki asiyen",

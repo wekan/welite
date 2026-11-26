@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "వినియోగదారులు తమ ఖాతాను స్వయంగా తొలగించుకోవడానికి అనుమతించండి",
   "hide-minicard-label-text": "మినీకార్డ్ లేబుల్ వచనాన్ని దాచండి",
   "show-desktop-drag-handles": "డెస్క్‌టాప్ డ్రాగ్ హ్యాండిల్‌లను చూపండి",
+  "toggle-header-icons-collapsed": "హెడర్ చిహ్నాలను కుదించు/విస్తరించు",
   "assignee": "అసైనీ",
   "assignees": "అప్పగించినవారు",
   "cardAssigneesPopup-title": "అసైనీ",

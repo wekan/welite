@@ -222,6 +222,39 @@ begin
   if Result = '' then Result := Request.PathInfo;
 end;
 
+// header.jade's quick access: Home, the toggle that collapses the header's
+// icons and the page's title, in that order; then the mobile/desktop toggle,
+// the first of the icons it collapses. weddy.js keeps both choices: the
+// collapse for this session, the mode in localStorage's wekan-mobile-mode and
+// in the user's profile.mobileMode (WeKan's setMobileMode), given here as
+// data-profile.
+function QuickAccessBar(Words: TWLTranslator; const TitleHtml, MobileChoice: string): string;
+begin
+  Result := '<div id="header-quick-access" class="nodragscroll" role="navigation" aria-label="' +
+    HtmlAttr(Words.Text('all-boards', 'All Boards')) + '"><span class="home-icon allBoards">' +
+    '<a class="header-home-link" href="/" up-follow title="' + HtmlAttr(Words.Text('all-boards', 'All Boards')) +
+    '" aria-label="' + HtmlAttr(Words.Text('all-boards', 'All Boards')) + '"><i class="fa fa-home"></i></a>' +
+    '<a class="board-header-btn js-toggle-header-icons-collapsed" href="#" title="' +
+    HtmlAttr(Words.Text('toggle-header-icons-collapsed', 'Collapse/expand header icons (mobile/desktop toggle to notifications)')) +
+    '" aria-label="' + HtmlAttr(Words.Text('toggle-header-icons-collapsed',
+    'Collapse/expand header icons (mobile/desktop toggle to notifications)')) + '"><i class="fa fa-angle-double-left"></i></a>' +
+    TitleHtml + '</span><div class="mobile-mode-toggle js-header-collapsible-icon"><a class="board-header-btn js-mobile-mode-toggle desktop-active" ' +
+    'href="#" title="' + HtmlAttr(Words.Text('mobile-desktop-toggle', 'Toggle between Mobile and Desktop Mode')) + '" aria-label="' +
+    HtmlAttr(Words.Text('mobile-desktop-toggle', 'Toggle between Mobile and Desktop Mode')) + '" data-profile="' + HtmlAttr(MobileChoice) +
+    '"><i class="desktop-icon"><i class="fa fa-desktop"></i></i></a></div></div>';
+end;
+
+// The user's profile.mobileMode: 'true', 'false', or '' when never chosen.
+function MobileModeChoice(Db: TWLDb; const UserId: string): string;
+var R: TWLRows;
+begin
+  Result := '';
+  if (Db = nil) or (UserId = '') then Exit;
+  R := Db.Query('SELECT CASE json_type(profile_json,''$.mobileMode'') WHEN ''true'' THEN ''true'' WHEN ''false'' THEN ''false'' ' +
+    'ELSE '''' END FROM users WHERE id=' + QuotedStr(UserId) + ' AND json_valid(profile_json);');
+  if Length(R) = 1 then Result := R[0][0];
+end;
+
 // layout.pug: the document, its head, and the header bar.
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
@@ -236,8 +269,8 @@ begin
     // header.jade's quick access: the board's title, renamed by its admin.
     if QuickAccess <> '' then Header := Header + QuickAccess
     else if BoardTitle <> '' then
-      Header := Header + '<div id="header-quick-access" class="nodragscroll"><span class="header-page-title" role="heading" aria-level="1" title="' +
-        HtmlAttr(BoardTitle) + '">' + E(BoardTitle) + '</span></div>';
+      Header := Header + QuickAccessBar(Words, '<span class="header-page-title" role="heading" aria-level="1" title="' +
+        HtmlAttr(BoardTitle) + '">' + E(BoardTitle) + '</span>', '');
     Header := Header +
       Html5ViewToggle(PathAndQuery(Request), Words.Text('html4-html5-toggle', 'Toggle between HTML4 and HTML5 view')) +
       // layout.pug: the notifications indicator and its drawer. weddy.js keeps
@@ -995,14 +1028,15 @@ end;
 function BoardQuickAccess(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, Title: string): string;
 begin
   if not BoardCanAdmin(Db, S.UserId, BoardId) then
-    Exit('<div id="header-quick-access" class="nodragscroll"><span class="header-page-title" role="heading" aria-level="1" title="' +
-      HtmlAttr(Title) + '">' + E(Title) + '</span></div>');
-  Result := '<div id="header-quick-access" class="nodragscroll"><span class="header-page-title js-edit-board-title is-editable" ' +
+    Exit(QuickAccessBar(Words, '<span class="header-page-title" role="heading" aria-level="1" title="' +
+      HtmlAttr(Title) + '">' + E(Title) + '</span>', MobileModeChoice(Db, S.UserId)));
+  Result := QuickAccessBar(Words, '<span class="header-page-title js-edit-board-title is-editable" ' +
     'role="heading" aria-level="1" title="' + HtmlAttr(Title) + '">' + E(Title) + '</span>' +
     '<template class="js-pop-over-template" data-pop="board-title" data-title="' + HtmlAttr(Words.Text('rename', 'Rename')) + '">' +
     '<form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/title"><label>' + E(Words.Text('title', 'Title')) +
     '<textarea class="js-board-name" name="title" rows="2" dir="auto" required>' + E(Title) + '</textarea></label>' +
-    '<input class="primary wide" type="submit" value="' + HtmlAttr(Words.Text('rename', 'Rename')) + '"></form></template></div>';
+    '<input class="primary wide" type="submit" value="' + HtmlAttr(Words.Text('rename', 'Rename')) + '"></form></template>',
+    MobileModeChoice(Db, S.UserId));
 end;
 
 // The board's star (boardStarButton), the user's own (profile.starredBoards).
@@ -1929,6 +1963,28 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'setMobileMode' then
+  begin
+    // server/models/users.js: [enabled], a boolean, as profile.mobileMode.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtBoolean)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Id := IfThen(TJSONArray(Args).Items[0].AsBoolean, 'true', 'false');
+    finally
+      Args.Free;
+    end;
+    if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
+      '''$.mobileMode'',json(' + QuotedStr(Id) + ')) WHERE id=' + QuotedStr(S.UserId) + ';') then
+    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
   if Name = 'setLanguage' then

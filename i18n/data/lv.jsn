@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Ļaut lietotājiem dzēst savus kontus",
   "hide-minicard-label-text": "Slēpt birku tekstu mini kartiņā",
   "show-desktop-drag-handles": "Rādīt darba virsmas vilkšanas simbolus",
+  "toggle-header-icons-collapsed": "Sakļaut/izvērst galvenes ikonas",
   "assignee": "Īpašnieks",
   "assignees": "Perėmėjai",
   "cardAssigneesPopup-title": "Īpašnieks",

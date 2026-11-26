@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ಬಳಕೆದಾರ ಖಾತೆಯನ್ನು ಸ್ವತಃ ಅಳಿಸಲು ಅನುಮತಿಸಿ",
   "hide-minicard-label-text": "ಮಿನಿಕಾರ್ಡ್ ಲೇಬಲ್ ಪಠ್ಯ ಮರೆಮಾಡಿ",
   "show-desktop-drag-handles": "ಡೆಸ್ಕ್‌ಟಾಪ್ ಎಳೆಯುವ ಹಿಡಿಕೆಗಳನ್ನು ತೋರಿಸಿ",
+  "toggle-header-icons-collapsed": "ಹೆಡರ್ ಐಕಾನ್‌ಗಳನ್ನು ಸಂಕುಚಿಸಿ/ವಿಸ್ತರಿಸಿ",
   "assignee": "ನಿಯೋಜಿತರು",
   "assignees": "ನಿಯೋಜಿತರು",
   "cardAssigneesPopup-title": "ನಿಯೋಜಿತರು",

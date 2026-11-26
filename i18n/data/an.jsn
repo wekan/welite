@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Permitir a os usuarios borrar su cuenta",
   "hide-minicard-label-text": "Amagar o texto d’a etiqueta d’a minitarcheta",
   "show-desktop-drag-handles": "Mostrar os controles de arrastre d'o escritorio",
+  "toggle-header-icons-collapsed": "Contrayer/expandir iconas de capitero",
   "assignee": "Asignau",
   "assignees": "Asignaus",
   "cardAssigneesPopup-title": "Asignau",

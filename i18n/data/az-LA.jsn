@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "İstifadəçilərə öz hesablarını silmək imkanı verin",
   "hide-minicard-label-text": "Minikart etiket mətnini gizlədin",
   "show-desktop-drag-handles": "İş masasının sürükləmə tutacaqlarını göstərin",
+  "toggle-header-icons-collapsed": "Başlıq nişanlarını yığ/aç",
   "assignee": "Təyinatçı",
   "assignees": "Təyin edilmiş şəxslər",
   "cardAssigneesPopup-title": "Təyinatçı",

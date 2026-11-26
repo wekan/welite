@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Loyv brúkara at strika sína egnu kontu",
   "hide-minicard-label-text": "Fjal merkistekst á smákorti",
   "show-desktop-drag-handles": "Vís dráttarhandtøk á skriviborði",
+  "toggle-header-icons-collapsed": "Fjal/vís yvirskriftartekn",
   "assignee": "Ábyrgdari",
   "assignees": "Ábyrgdarar",
   "cardAssigneesPopup-title": "Ábyrgdari",

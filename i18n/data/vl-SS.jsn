@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Sta gebruikers toe om hun eigen account te verwijderen",
   "hide-minicard-label-text": "Verberg minikaart labeltekst",
   "show-desktop-drag-handles": "Toon sleep gereedschap op werkblad",
+  "toggle-header-icons-collapsed": "Pictogrammen in de kopbalk in-/uitklappen (wisselen tussen mobiel en desktop naar meldingen)",
   "assignee": "Toegewezen aan",
   "assignees": "Toegewezen personen",
   "cardAssigneesPopup-title": "Toegewezen aan",

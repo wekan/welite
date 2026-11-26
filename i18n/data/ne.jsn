@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "प्रयोगकर्ता खाता आफैँ मेटाउन दिनुहोस्",
   "hide-minicard-label-text": "सानो कार्डको लेबल पाठ लुकाउनुहोस्",
   "show-desktop-drag-handles": "डेस्कटप तान्ने ह्यान्डलहरू देखाउनुहोस्",
+  "toggle-header-icons-collapsed": "हेडर आइकनहरू संक्षिप्त/विस्तृत गर्नुहोस्",
   "assignee": "जिम्मेवार",
   "assignees": "जिम्मेवारहरू",
   "cardAssigneesPopup-title": "जिम्मेवार",

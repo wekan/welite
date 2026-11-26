@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Leyfa notanda að eyða eigin aðgangi",
   "hide-minicard-label-text": "Fela texta merkja á smáspjaldi",
   "show-desktop-drag-handles": "Sýna draghandföng á skjáborði",
+  "toggle-header-icons-collapsed": "Fella saman/opna haustákn",
   "assignee": "Ábyrgðaraðili",
   "assignees": "Ábyrgðaraðilar",
   "cardAssigneesPopup-title": "Ábyrgðaraðili",

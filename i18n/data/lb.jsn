@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Erlaube Benutzern ihr Benotzerkont selbst zu läschen",
   "hide-minicard-label-text": "Labeltext op Minikarte ausblenden",
   "show-desktop-drag-handles": "Desktop-Ziehpunkte uweisen",
+  "toggle-header-icons-collapsed": "Header-Symboler zesummeklappen/opklappen",
   "assignee": "Zoustänneg",
   "assignees": "Zoustänneg",
   "cardAssigneesPopup-title": "Zoustänneg",

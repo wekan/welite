@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "སྤྱོད་མཁན་གྱིས་རང་གི་རྩིས་ཐོ་སུབ།",
   "hide-minicard-label-text": "ཤོག་བྱང་ཆུང་བའི་ཁ་བྱང་ཡི་གེ་སྦས།",
   "show-desktop-drag-handles": "མདུན་ངོས་ཀྱི་འདྲུད་འཛིན་སྟོན།",
+  "toggle-header-icons-collapsed": "མགོ་ཡིག་གི་མཚོན་རིས་བསྡུས/བརྐྱངས",
   "assignee": "འགན་འབག་མི།",
   "assignees": "འགན་འབག་མི་ཚུ།",
   "cardAssigneesPopup-title": "འགན་འབག་མི།",

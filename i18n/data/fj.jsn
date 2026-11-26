@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Bokoca vakataki iko na akaude ni vakayagataka",
   "hide-minicard-label-text": "Vunitaka na itukutuku ni ivakatakilakila ena kadi lailai",
   "show-desktop-drag-handles": "Vakaraitaka na idre ena kompiuta",
+  "toggle-header-icons-collapsed": "Vakalailaitaka/vakalevutaka na aikoni ni ulutaga",
   "assignee": "E lesi kina",
   "assignees": "O ira era lesi kina",
   "cardAssigneesPopup-title": "E lesi kina",

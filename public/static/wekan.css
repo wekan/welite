@@ -113,6 +113,18 @@ input[type=text], input[type=password], textarea { font: inherit; padding: 6px 8
 .fa-caret-right::before { content: "\25B8"; }
 .fa-caret-down::before { content: "\25BE"; }
 .fa-caret-left::before { content: "\25C2"; }
+.fa-home::before { content: "\2302"; }
+.fa-angle-double-left::before { content: "\00AB"; }
+.fa-angle-double-right::before { content: "\00BB"; }
+.fa-desktop::before { content: "\1F5A5"; }
+.fa-mobile::before { content: "\1F4F1"; }
+.fa-sort::before { content: "\21C5"; }
+.fa-filter::before { content: "\29E9"; }
+.fa-calendar::before { content: "\1F4C5"; }
+.fa-sort-alpha-asc::before { content: "A\2193"; }
+.fa-arrow-up::before { content: "\2191"; }
+.fa-thumbs-o-up::before { content: "\1F44D"; }
+.fa-tag::before, .fa-tags::before { content: "\1F3F7"; }
 .fa-comment-o::before { content: "\1F4AC"; }
 
 /* WeKan's notifications drawer. */
@@ -1161,3 +1173,18 @@ html[dir='rtl'] .pop-over > button.js-date-popup-resize > span {
 .announcement ul { list-style: none; margin: 0; padding: 7px; }
 .board-wrapper > .board-announcement { flex: 0 0 auto; position: relative; z-index: 1; }
 .board-announcement .js-close-board-announcement { margin-inline-start: 8px; color: inherit; text-decoration: none; cursor: pointer; }
+
+/* WeKan's header (header.css): the toggle beside Home hides every icon from
+   the mobile/desktop toggle on, and the header's Home, toggle and title sit
+   on one line. */
+#header-quick-access .home-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+#header-quick-access[data-header-icons-collapsed="true"] .js-header-collapsible-icon {
+  display: none !important;
+}
+#header-quick-access .mobile-mode-toggle {
+  display: inline-flex;
+}

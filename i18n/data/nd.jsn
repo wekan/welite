@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Vumela umsebenzisi azisusele i-akhawunti",
   "hide-minicard-label-text": "Fihla umbhalo welebula ekhadini elincane",
   "show-desktop-drag-handles": "Bonisa izibambo zokuhudula kudeskithophu",
+  "toggle-header-icons-collapsed": "Vala/vula izithonjana zesihloko",
   "assignee": "Onikwe umsebenzi",
   "assignees": "Abanikwe umsebenzi",
   "cardAssigneesPopup-title": "Onikwe umsebenzi",

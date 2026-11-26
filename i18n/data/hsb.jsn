@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Wužiwarjam dowolić, swójske konto zhašeć",
   "hide-minicard-label-text": "Tekst etiketow na minikarće schować",
   "show-desktop-drag-handles": "Ćahadła za desktop pokazać",
+  "toggle-header-icons-collapsed": "Symbole hłowoweje lajsty zwinyć/rozwinyć (mobilny/desktop přepinak k zdźělenkam)",
   "assignee": "Přirjadowana wosoba",
   "assignees": "Přirjadowane wosoby",
   "cardAssigneesPopup-title": "Přirjadowana wosoba",

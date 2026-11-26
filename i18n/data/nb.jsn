@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Tillat brukere å slette egen konto",
   "hide-minicard-label-text": "Skjul tekst på etikett",
   "show-desktop-drag-handles": "Vis ikon for flytting av kort",
+  "toggle-header-icons-collapsed": "Slå sammen/utvid hode-ikoner",
   "assignee": "Tildelt",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Tildelt",

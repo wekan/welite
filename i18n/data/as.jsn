@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ব্যৱহাৰকাৰীয়ে নিজৰ একাউণ্ট মচিব পাৰিব",
   "hide-minicard-label-text": "মিনিকাৰ্ডৰ লেবেল পাঠ লুকুৱাওক",
   "show-desktop-drag-handles": "ডেস্কটপৰ ড্ৰেগ হেণ্ডেল দেখুৱাওক",
+  "toggle-header-icons-collapsed": "হেডাৰ চিহ্নসমূহ সংকোচন/সম্প্ৰসাৰণ কৰক",
   "assignee": "দায়িত্বপ্ৰাপ্ত",
   "assignees": "দায়িত্বপ্ৰাপ্তসকল",
   "cardAssigneesPopup-title": "দায়িত্বপ্ৰাপ্ত",

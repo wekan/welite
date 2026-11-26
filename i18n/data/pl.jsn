@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Pozwól użytkownikom na usuwanie własnych kont",
   "hide-minicard-label-text": "Ukryj opisy etykiet miniaturach kart",
   "show-desktop-drag-handles": "Pokaż przeciągnięcia na pulpit",
+  "toggle-header-icons-collapsed": "Zwiń/rozwiń ikony nagłówka",
   "assignee": "Przypisani",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Przypisani",

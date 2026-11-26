@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "允许用户自行删除其帐户",
   "hide-minicard-label-text": "隐藏迷你卡片标签文本",
   "show-desktop-drag-handles": "显示桌面拖放手柄",
+  "toggle-header-icons-collapsed": "收起/展开标题图标",
   "assignee": "被指派人",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "被指派人",

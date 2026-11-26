@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Թույլ տվեք օգտվողներին ինքնուրույն ջնջել իրենց հաշիվը",
   "hide-minicard-label-text": "Թաքցնել մինի քարտի պիտակի տեքստը",
   "show-desktop-drag-handles": "Ցույց տալ աշխատասեղանի քաշման բռնակները",
+  "toggle-header-icons-collapsed": "Ծալել/բացել վերնագրի պատկերակները",
   "assignee": "Հանձնարարող",
   "assignees": "Հանձնարարվածներ",
   "cardAssigneesPopup-title": "Հանձնարարող",

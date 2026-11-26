@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Lolani wogwiritsa ntchito kudzifufutira akaunti",
   "hide-minicard-label-text": "Bisani mawu a chizindikiro pa khadi laling'ono",
   "show-desktop-drag-handles": "Onetsani zogwirira pokokera pa desktop",
+  "toggle-header-icons-collapsed": "Kufunga/kutsegula tizindilo ta mutu",
   "assignee": "Woperekedwa ntchito",
   "assignees": "Operekedwa ntchito",
   "cardAssigneesPopup-title": "Woperekedwa ntchito",

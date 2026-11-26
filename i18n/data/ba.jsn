@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Ҡулланыусыға үҙ иҫәбен юйырға рөхсәт итергә",
   "hide-minicard-label-text": "Мини-карточка тамғаһы текстын йәшерергә",
   "show-desktop-drag-handles": "Өҫтәлдә һөйрәү тотҡаларын күрһәтергә",
+  "toggle-header-icons-collapsed": "Баш өлгө символдарын йыйыу/йәйеү",
   "assignee": "Яуаплы",
   "assignees": "Яуаплылар",
   "cardAssigneesPopup-title": "Яуаплы",

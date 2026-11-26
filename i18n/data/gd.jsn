@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Leig le cleachdaiche a chunntas fhèin a sguabadh às",
   "hide-minicard-label-text": "Falaich teacsa leubail na mion-chairte",
   "show-desktop-drag-handles": "Seall làmhan-slaodaidh deasg",
+  "toggle-header-icons-collapsed": "Co-theannaich/leudaich ìomhaighean a’ bhanna-chinn (tionndaidh gu brathan air fòn-làimhe/deasg)",
   "assignee": "Neach-obrach",
   "assignees": "Luchd-obrach",
   "cardAssigneesPopup-title": "Neach-obrach",

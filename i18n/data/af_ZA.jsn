@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Laat gebruikers toe om hul rekening self uit te vee",
   "hide-minicard-label-text": "Versteek minikaart-etiketteks",
   "show-desktop-drag-handles": "Wys lessenaar sleephandvatsels",
+  "toggle-header-icons-collapsed": "Vou/brei kopikone uit",
   "assignee": "Gevolmagtigde",
   "assignees": "Toegewers",
   "cardAssigneesPopup-title": "Gevolmagtigde",

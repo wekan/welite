@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Колдонуучуга өз аккаунтун өчүрүүгө уруксат берүү",
   "hide-minicard-label-text": "Кичи карточкадагы белгинин текстин жашыруу",
   "show-desktop-drag-handles": "Иш тактадагы сүйрөө туткаларын көрсөтүү",
+  "toggle-header-icons-collapsed": "Аталык сүрөтчөлөрдү жыйыштыруу/жайып көрсөтүү",
   "assignee": "Жооптуу",
   "assignees": "Жооптуулар",
   "cardAssigneesPopup-title": "Жооптуу",

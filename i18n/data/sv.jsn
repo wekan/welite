@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Tillåt användare att själv ta bort sina konton",
   "hide-minicard-label-text": "Dölj etikett för minikort",
   "show-desktop-drag-handles": "Visa greppytor i desktop",
+  "toggle-header-icons-collapsed": "Fäll ihop/ut header-ikoner",
   "assignee": "Tilldelad till",
   "assignees": "Tilldelade",
   "cardAssigneesPopup-title": "Tilldelad till",

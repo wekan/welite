@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Cho phép người dùng tự xóa tài khoản của họ",
   "hide-minicard-label-text": "Ẩn nhãn minicard",
   "show-desktop-drag-handles": "Hiển thị nút kéo thả trên Desktop",
+  "toggle-header-icons-collapsed": "Thu gọn/mở rộng biểu tượng tiêu đề",
   "assignee": "Người được giao",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Người được giao",

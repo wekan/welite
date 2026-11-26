@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "السماح للمستخدم بحذف حسابه بنفسه",
   "hide-minicard-label-text": "مخفی کردن اسم لیبل مینی کارت",
   "show-desktop-drag-handles": "عرض مقابض السحب على سطح المكتب",
+  "toggle-header-icons-collapsed": "طيّ/فتح أيقونات الترويسة",
   "assignee": "محول‌شده",
   "assignees": "المكلَّفون",
   "cardAssigneesPopup-title": "محول‌شده",

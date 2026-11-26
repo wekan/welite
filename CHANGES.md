@@ -166,6 +166,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   card's sort changes, and ties keep the manual order. weddy.js is Weddy's
   again, with its Sort Cards; sort-by-votes and sort-by-label-order are
   copied from WeKan's catalogs. 213 of WeKan's tests pass.
+- Add WeKan's header to the HTML5 view's board: Home, the toggle beside it
+  that hides the header's icons for the session, and the board's title, in
+  that order, then the mobile/desktop toggle - WeKan's setMobileMode, kept in
+  localStorage's wekan-mobile-mode and the user's profile.mobileMode, chosen
+  by a narrow or touch screen until the user chooses. weddy.js and wekan.css
+  are Weddy's again, with the toggles and the glyphs of the header's new
+  icons. WeKan's mobile layout itself (body.mobile-mode) is still to come.
+  214 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

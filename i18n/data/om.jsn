@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Fayyadamaan herrega ofii akka haqu hayyami",
   "hide-minicard-label-text": "Barruu asxaa kaardii xiqqaa dhoksi",
   "show-desktop-drag-handles": "Qabannoowwan harkisuu kompiitara minjaalaa agarsiisi",
+  "toggle-header-icons-collapsed": "Suuraawwan mataduree cufuu/banuu",
   "assignee": "Kan itti kenname",
   "assignees": "Kanneen itti kennaman",
   "cardAssigneesPopup-title": "Kan itti kenname",

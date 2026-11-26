@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "کاروونکي ته د خپل حساب د ړنګولو اجازه",
   "hide-minicard-label-text": "د کوچني کارت د نښان متن پټ کړئ",
   "show-desktop-drag-handles": "د ډېسکټاپ د راکشولو لاستي وښيئ",
+  "toggle-header-icons-collapsed": "د سرلیک نښې راونشلول/غځول",
   "assignee": "ګمارل شوی",
   "assignees": "ګمارل شوي",
   "cardAssigneesPopup-title": "ګمارل شوی",

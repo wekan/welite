@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Permetti agli utenti di cancellare il loro profilo",
   "hide-minicard-label-text": "Nascondi etichetta minicard",
   "show-desktop-drag-handles": "Mostra maniglie di trascinamento del desktop",
+  "toggle-header-icons-collapsed": "Comprimi/espandi le icone dell'intestazione",
   "assignee": "Assegnatario",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Assegnatario",

@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Permitir a los usuarios eliminar su cuenta",
   "hide-minicard-label-text": "Ezkutatu minitxartelaren etiketaren testua",
   "show-desktop-drag-handles": "Mostrar los controles de arrastre del escritorio",
+  "toggle-header-icons-collapsed": "Tolestu/zabaldu goiburuko ikonoak",
   "assignee": "Asignado",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Asignado",

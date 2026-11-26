@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Foydalanuvchilarga o'z hisoblarini o'chirishga ruxsat bering",
   "hide-minicard-label-text": "Minikarta yorlig'i matnini yashirish",
   "show-desktop-drag-handles": "Ish stoli sudrab tortish tutqichlarini ko'rsatish",
+  "toggle-header-icons-collapsed": "سرلوحه بیلگیلرینی ییغیش/یاییش",
   "assignee": "Tayinlovchi",
   "assignees": "Tayinlovchilar",
   "cardAssigneesPopup-title": "Tayinlovchi",

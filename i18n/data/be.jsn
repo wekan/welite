@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Allow users to self delete their account",
   "hide-minicard-label-text": "Hide minicard label text",
   "show-desktop-drag-handles": "Show desktop drag handles",
+  "toggle-header-icons-collapsed": "Згарнуць/разгарнуць значкі загалоўка",
   "assignee": "Assignee",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Assignee",

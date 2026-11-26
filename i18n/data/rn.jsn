@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Kwemerera uwukoresha kwifutira konti",
   "hide-minicard-label-text": "Nyegeza igisomwa c'akarango k'ikarata ntoyi",
   "show-desktop-drag-handles": "Erekana utwuma two gukwega kuri mudasobwa",
+  "toggle-header-icons-collapsed": "Gufunga/gufungura udushushanyo tw'umutwe",
   "assignee": "Uwahawe igikorwa",
   "assignees": "Abahawe igikorwa",
   "cardAssigneesPopup-title": "Uwahawe igikorwa",

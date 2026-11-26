@@ -881,6 +881,25 @@ def http_checks(server, tmp, backend):
         assert sort_order('?sort=%22%3E%3Cscript%3E')[0] == manual
         assert [card_db('SELECT sort FROM cards WHERE id=?', sorted_ids[t])[0] for t in ['Cherry', 'Apple', 'Banana', 'Damson']] == [0, 1, 2, 3]
 
+        # WeKan's header: Home, the collapse toggle and the title, then the
+        # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
+        page = request('GET', route, cookie=owner)[2]
+        at = [page.find(x) for x in (b'class="header-home-link"', b'js-toggle-header-icons-collapsed',
+                                     b'class="header-page-title', b'class="mobile-mode-toggle js-header-collapsible-icon"')]
+        assert -1 not in at and at == sorted(at), at
+        assert b'data-profile=""' in page
+        mobile = lambda: card_db("SELECT json_type(profile_json,'$.mobileMode') FROM users WHERE id=?", login['id'])[0]
+        assert request('POST', '/_methods/setMobileMode', [True], cookie=owner, as_json=True)[0] == 200 and mobile() == 'true'
+        assert b'data-profile="true"' in request('GET', route, cookie=owner)[2]
+        assert request('POST', '/_methods/setMobileMode', [False], cookie=owner, as_json=True)[0] == 200 and mobile() == 'false'
+        assert b'data-profile="false"' in request('GET', route, cookie=owner)[2]
+        # Negative: only a boolean, only signed in, and only one's own.
+        for args in (['true'], [1], [None], [], [True, True], [{'$set': 1}]):
+            assert request('POST', '/_methods/setMobileMode', args, cookie=owner, as_json=True)[0] == 400, args
+        assert request('POST', '/_methods/setMobileMode', [True], as_json=True)[0] == 401
+        assert mobile() == 'false'
+        assert b'data-profile=""' in request('GET', route, cookie=worker)[2], "another user's choice is theirs"
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

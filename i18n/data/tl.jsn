@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Self tanggalin gumagamit account",
   "hide-minicard-label-text": "Itago minikard etiketa teksto",
   "show-desktop-drag-handles": "Ipakita desktop drag handles",
+  "toggle-header-icons-collapsed": "I-collapse/i-expand ang mga icon ng header",
   "assignee": "Nakatalaga",
   "assignees": "Mga nakatalaga",
   "cardAssigneesPopup-title": "Nakatalaga",

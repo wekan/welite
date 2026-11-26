@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "صارف کو اپنا اکاؤنٹ خود حذف کرنے دیں",
   "hide-minicard-label-text": "منی کارڈ پر لیبل کا متن چھپائیں",
   "show-desktop-drag-handles": "ڈیسک ٹاپ پر گھسیٹنے کے ہینڈل دکھائیں",
+  "toggle-header-icons-collapsed": "ہیڈر آئیکنز کو سکیڑیں/پھیلائیں (موبائل/ڈیسک ٹاپ پر اطلاعات کی طرف ٹوگل)",
   "assignee": "ذمہ دار",
   "assignees": "ذمہ داران",
   "cardAssigneesPopup-title": "ذمہ دار",

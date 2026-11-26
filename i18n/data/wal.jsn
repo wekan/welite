@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Go'ettiya asay ba akaawuntiyaa ba huuphen xayssana",
   "hide-minicard-label-text": "Guutha kaardiyaa malaataa xaafuwaa qotta",
   "show-desktop-drag-handles": "Desktopiyaa goochchiyo oykkiyaabata bessa",
+  "toggle-header-icons-collapsed": "Huuphaa malaata shiishshiyoogaa/gakkaiyoogaa",
   "assignee": "Oosoy imettidoogaa",
   "assignees": "Oosoy imettidoogeeta",
   "cardAssigneesPopup-title": "Oosoy imettidoogaa",

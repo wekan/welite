@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Vetëfshirja e llogarisë së përdoruesit",
   "hide-minicard-label-text": "Fshih tekstin e etiketës së minikartës",
   "show-desktop-drag-handles": "Shfaq dorezat e tërheqjes në desktop",
+  "toggle-header-icons-collapsed": "Palos/zgjero ikonat e kokës",
   "assignee": "I caktuari",
   "assignees": "Të caktuarit",
   "cardAssigneesPopup-title": "I caktuari",

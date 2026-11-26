@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Võimaldab kasutajatel ise oma konto kustutada",
   "hide-minicard-label-text": "Peida minikaardi sildi tekst",
   "show-desktop-drag-handles": "Näita töölaua lohistuskäepidemeid",
+  "toggle-header-icons-collapsed": "Ahenda/laienda päise ikoonid",
   "assignee": "Vastuvõtja",
   "assignees": "Assignees",
   "cardAssigneesPopup-title": "Vastuvõtja",

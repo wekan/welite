@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "ユーザー自身のアカウント削除を許可",
   "hide-minicard-label-text": "ミニカードのラベル名を隠す",
   "show-desktop-drag-handles": "デスクトップへのドラッグハンドルを表示",
+  "toggle-header-icons-collapsed": "ヘッダーアイコンの折りたたみ/展開",
   "assignee": "担当者",
   "assignees": "担当者",
   "cardAssigneesPopup-title": "担当者",

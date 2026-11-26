@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Atuisup nammineq kontomik piiaasinnaanera",
   "hide-minicard-label-text": "Kortsiaqqami nalunaaqutap allagaa isertoruk",
   "show-desktop-drag-handles": "Qarasaasiami kalitsissutit takukkit",
+  "toggle-header-icons-collapsed": "Nutserlugu ikoneqarfik ataaseerlugu/ammaqqullugu",
   "assignee": "Akisussaasoq",
   "assignees": "Akisussaasut",
   "cardAssigneesPopup-title": "Akisussaasoq",

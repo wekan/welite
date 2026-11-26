@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Autoriser les utilisateurs à supprimer leur compte",
   "hide-minicard-label-text": "Cacher l'étiquette de la mini-carte",
   "show-desktop-drag-handles": "Voir les poignées de déplacement du bureau",
+  "toggle-header-icons-collapsed": "Itago o ipakita an mga icon ha ulohan (pagbalhin ngadto ha mga pahibaro ha mobile o desktop)",
   "assignee": "Personne assignée",
   "assignees": "Intervenants",
   "cardAssigneesPopup-title": "Personne assignée",

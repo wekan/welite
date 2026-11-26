@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Mosebedisi a ka itlhakolela akhaonto",
   "hide-minicard-label-text": "Pata mongolo wa leibole kareteng e nyenyane",
   "show-desktop-drag-handles": "Bontsha mehele ya ho hula ya komporo",
+  "toggle-header-icons-collapsed": "Kgutsufatsa/atolosa ditshwantsho tsa hlooho (fapoha ho ditsebiso mohaleng/komporong)",
   "assignee": "Ea abetsoeng",
   "assignees": "Ba abetsoeng",
   "cardAssigneesPopup-title": "Ea abetsoeng",

@@ -1229,6 +1229,7 @@
   "accounts-allowUserDelete": "Ruhusu watumiaji kufuta akaunti zao wenyewe",
   "hide-minicard-label-text": "Ficha maandishi ya lebo ya kadi ndogo",
   "show-desktop-drag-handles": "Onyesha vishikizo vya kukokota vya eneo-kazi",
+  "toggle-header-icons-collapsed": "Kunja/panua aikoni za kichwa",
   "assignee": "Mkabidhiwa",
   "assignees": "Waliokabidhiwa",
   "cardAssigneesPopup-title": "Mkabidhiwa",

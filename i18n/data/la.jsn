@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Permitte usori rationem suam delere",
   "hide-minicard-label-text": "Cela textum titulorum in chartula",
   "show-desktop-drag-handles": "Monstra ansas trahendi in computatro mensali",
+  "toggle-header-icons-collapsed": "Imagines capitis coartare/expandere",
   "assignee": "Delegatus",
   "assignees": "Delegati",
   "cardAssigneesPopup-title": "Delegatus",

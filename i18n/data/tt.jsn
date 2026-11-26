@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "Кулланучының үз хисабын үзе бетерүе",
   "hide-minicard-label-text": "Миникарточкадагы тамга текстын яшерү",
   "show-desktop-drag-handles": "Компьютерда сөйрәү тоткаларын күрсәтү",
+  "toggle-header-icons-collapsed": "Башлам сүрәтчекләрен җыю/җәю (мобиль җайланмада һәм компьютерда белдерүләргә күчү)",
   "assignee": "Җаваплы",
   "assignees": "Җаваплылар",
   "cardAssigneesPopup-title": "Җаваплы",

@@ -1230,6 +1230,7 @@
   "accounts-allowUserDelete": "वापरकर्त्याला स्वतःचे खाते हटवू द्या",
   "hide-minicard-label-text": "मिनिकार्ड लेबल मजकूर लपवा",
   "show-desktop-drag-handles": "डेस्कटॉप ड्रॅग हँडल दाखवा",
+  "toggle-header-icons-collapsed": "हेडर आयकॉन आकुंचित/विस्तृत करा",
   "assignee": "नियुक्त व्यक्ती",
   "assignees": "नियुक्त व्यक्ती",
   "cardAssigneesPopup-title": "नियुक्त व्यक्ती",
