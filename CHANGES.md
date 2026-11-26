@@ -128,6 +128,15 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   (`CopyViewCard`), and archive it (`ArchiveViewCard`); and the card's list
   picker. weddy.js reads another board's swimlanes and lists at
   `GET /b/:id/places`. Eight more of WeKan's tests pass, 62 in all.
+- Add the board's header and sidebar to the HTML5 view: the board admin
+  renames the board from its title in the top header (boardChangeTitlePopup;
+  `RenameBoard`, which `PUT /api/boards/:id/title` now shares), the user stars
+  it (WeKan's `toggleBoardStar`), and the sidebar - opened from the header's
+  hamburger - has the board's members, the board menu and its Archived Items:
+  the archived cards, lists and swimlanes, each restored by whoever may change
+  the board (`RestoreViewItem`). The member menu opens All Boards' Archive,
+  `/allboards/archive`, the archived boards the user is a member of. Eight
+  more of WeKan's tests pass, 70 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

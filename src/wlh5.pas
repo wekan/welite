@@ -222,7 +222,7 @@ end;
 
 // layout.pug: the document, its head, and the header bar.
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
-  const S: TWLSession; const Title, BoardTitle, Content: string): string;
+  const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
 var Dir, Header: string;
 begin
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
@@ -231,7 +231,9 @@ begin
   begin
     Header := '<div id="header" class="header-bar">' +
       '<a class="header-all-boards js-all-boards" href="/" up-follow>' + E(Words.Text('all-boards', 'All Boards')) + '</a>';
-    if BoardTitle <> '' then
+    // header.jade's quick access: the board's title, renamed by its admin.
+    if QuickAccess <> '' then Header := Header + QuickAccess
+    else if BoardTitle <> '' then
       Header := Header + '<div id="header-quick-access" class="nodragscroll"><span class="header-page-title" role="heading" aria-level="1" title="' +
         HtmlAttr(BoardTitle) + '">' + E(BoardTitle) + '</span></div>';
     Header := Header +
@@ -244,6 +246,16 @@ begin
       '<section id="notifications-drawer" class="is-hidden"><div class="header"><h5>' + E(Words.Text('notifications', 'Notifications')) +
       '</h5><a class="close" href="#" title="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><ul class="notifications"></ul></section>' +
       '<a class="header-user js-open-header-member-menu" href="/">' + E(S.Username) + '</a>' +
+      // The sidebar hamburger, on a board (header.jade).
+      IfThen(BoardTitle <> '', '<div class="board-header-btns header-sidebar-toggle"><div class="separator"></div>' +
+        '<a class="board-header-btn js-toggle-page-sidebar" href="#" title="' + HtmlAttr(Words.Text('sidebar-open', 'Open Sidebar')) +
+        '" aria-label="' + HtmlAttr(Words.Text('sidebar-open', 'Open Sidebar')) + '">&#9776;</a></div>', '') +
+      // WeKan's memberMenuPopup: what the HTML5 view has of it.
+      '<template class="js-pop-over-template" data-pop="member-menu" data-title="' +
+      HtmlAttr(Words.Text('memberMenuPopup-title', 'Member Settings')) + '"><div class="content"><ul class="pop-over-list">' +
+      '<li><a href="/" up-follow><i class="fa fa-home"></i> ' + E(Words.Text('all-boards', 'All Boards')) + '</a></li><hr>' +
+      '<li><a class="board-header-btn js-open-archived-board" href="/allboards/archive"><i class="fa fa-archive"></i> ' +
+      E(Words.Text('archives', 'Archives')) + '</a></li></ul></div></template>' +
       '<form class="js-logout" method="post" action="/logout"><button class="js-logout-button" type="submit">' +
       E(Words.Text('log-out', 'Log Out')) + '</button></form></div>';
   end
@@ -327,13 +339,25 @@ var R: TWLRows; i, Starred, Remaining: Integer; Sec, Items: string; IsStarred: B
   end;
 begin
   Sec := Section;
-  if (Sec <> 'starred') and (Sec <> 'remaining') then Sec := 'starred';
+  if (Sec <> 'starred') and (Sec <> 'remaining') and (Sec <> 'archive') then Sec := 'starred';
   StarredIds := StarredSet;
   try
-    R := Db.Query('SELECT id,title,color,slug FROM boards WHERE archived=0 ORDER BY sort,id;');
+    // WeKan's Archive (#allboards/archive): the archived boards the user is an
+    // active member of - every one for a site admin. (BoardCanRead answers for
+    // a board that is not archived.)
+    if Sec = 'archive' then
+      R := Db.Query('SELECT b.id,b.title,b.color,b.slug FROM boards b WHERE b.archived=1 AND (EXISTS(SELECT 1 FROM board_members m ' +
+        'WHERE m.boardId=b.id AND m.userId=' + QuotedStr(S.UserId) + ' AND m.isActive=1) OR EXISTS(SELECT 1 FROM users u WHERE u.id=' +
+        QuotedStr(S.UserId) + ' AND u.isAdmin=1 AND COALESCE(u.loginDisabled,0)=0)) ORDER BY b.sort,b.id;')
+    else
+      R := Db.Query('SELECT id,title,color,slug FROM boards WHERE archived=0 ORDER BY sort,id;');
     Starred := 0; Remaining := 0; Items := '';
     for i := 0 to High(R) do
-      if BoardCanRead(Db, S.UserId, R[i][0]) then
+      if Sec = 'archive' then
+        Items := Items + '<li class="js-board ' + HtmlAttr(R[i][0]) + ' archived" data-id="' + HtmlAttr(R[i][0]) +
+          '"><span class="board-list-item board-color-' + HtmlAttr(R[i][2]) + '"><span class="board-list-item-name">' + E(R[i][1]) +
+          '</span></span></li>'
+      else if (Sec <> 'archive') and BoardCanRead(Db, S.UserId, R[i][0]) then
       begin
         IsStarred := StarredIds.IndexOf(R[i][0]) >= 0;
         if IsStarred then Inc(Starred) else Inc(Remaining);
@@ -964,6 +988,86 @@ begin
   Json := Json + '],"lists":[' + Part + ']}';
 end;
 
+// header.jade's quick access on a board: its title, which opens the rename
+// pop-over (boardChangeTitlePopup) for a board admin.
+function BoardQuickAccess(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, Title: string): string;
+begin
+  if not BoardCanAdmin(Db, S.UserId, BoardId) then
+    Exit('<div id="header-quick-access" class="nodragscroll"><span class="header-page-title" role="heading" aria-level="1" title="' +
+      HtmlAttr(Title) + '">' + E(Title) + '</span></div>');
+  Result := '<div id="header-quick-access" class="nodragscroll"><span class="header-page-title js-edit-board-title is-editable" ' +
+    'role="heading" aria-level="1" title="' + HtmlAttr(Title) + '">' + E(Title) + '</span>' +
+    '<template class="js-pop-over-template" data-pop="board-title" data-title="' + HtmlAttr(Words.Text('rename', 'Rename')) + '">' +
+    '<form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/title"><label>' + E(Words.Text('title', 'Title')) +
+    '<textarea class="js-board-name" name="title" rows="2" dir="auto" required>' + E(Title) + '</textarea></label>' +
+    '<input class="primary wide" type="submit" value="' + HtmlAttr(Words.Text('rename', 'Rename')) + '"></form></template></div>';
+end;
+
+// The board's star (boardStarButton), the user's own (profile.starredBoards).
+function BoardStarButton(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string): string;
+var R: TWLRows; Starred: Boolean;
+begin
+  Result := '';
+  if S.UserId = '' then Exit;
+  R := Db.Query('SELECT EXISTS(SELECT 1 FROM json_each(COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ' +
+    'ELSE ''{}'' END,''$.starredBoards''),''[]'')) WHERE value=' + QuotedStr(BoardId) + ') FROM users WHERE id=' + QuotedStr(S.UserId) + ';');
+  Starred := (Length(R) = 1) and (R[0][0] = '1');
+  Result := '<a class="board-header-btn js-star-board' + IfThen(Starred, ' is-active', '') + '" href="#" title="' +
+    HtmlAttr(IfThen(Starred, Words.Text('click-to-unstar', 'Click to unstar this board.'), Words.Text('click-to-star', 'Click to star this board.'))) +
+    '" data-star="' + HtmlAttr(Words.Text('click-to-star', 'Click to star this board.')) + '" data-unstar="' +
+    HtmlAttr(Words.Text('click-to-unstar', 'Click to unstar this board.')) + '"><i class="fa ' + IfThen(Starred, 'fa-star', 'fa-star-o') + '"></i></a>';
+end;
+
+// board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
+// its Archived Items) and the Archive (archivesSidebar) with its restore.
+function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean): string;
+var R: TWLRows; i: Integer; Archived: string;
+  function Item(const Kind, Id, Title: string; Card: Boolean): string;
+  var Restore: string;
+  begin
+    Restore := '';
+    if Writable then
+      Restore := '<form class="js-restore-form" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+        '/archive/restore" up-submit up-target=".board-wrapper"><input type="hidden" name="kind" value="' + Kind +
+        '"><input type="hidden" name="id" value="' + HtmlAttr(Id) + '"><a class="' + IfThen(Card, 'js-restore-card', 'js-restore') +
+        '" href="#">' + E(Words.Text('restore', 'Restore')) + '</a></form>';
+    if Card then
+      Result := '<div class="minicard-wrapper archived-item archived-card-item" data-kind="cards" data-id="' + HtmlAttr(Id) +
+        '"><div class="minicard"><div class="minicard-title">' + E(Title) + '</div></div>' + Restore + '</div>'
+    else
+      Result := '<div class="archived-item" data-kind="' + Kind + '" data-id="' + HtmlAttr(Id) + '"><span class="archived-item-title">' +
+        E(Title) + '</span>' + Restore + '</div>';
+  end;
+begin
+  Archived := '';
+  R := Db.Query('SELECT id,title FROM cards WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 AND deletedAt IS NULL ORDER BY archivedAt DESC,id;');
+  for i := 0 to High(R) do Archived := Archived + Item('cards', R[i][0], R[i][1], True);
+  R := Db.Query('SELECT id,title FROM lists WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 AND deletedAt IS NULL ORDER BY sort,id;');
+  for i := 0 to High(R) do Archived := Archived + Item('lists', R[i][0], R[i][1], False);
+  R := Db.Query('SELECT id,title FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 ORDER BY sort,id;');
+  for i := 0 to High(R) do Archived := Archived + Item('swimlanes', R[i][0], R[i][1], False);
+  if Archived = '' then
+    Archived := '<p class="no-items-message">' + E(Words.Text('no-archived-cards', 'No archived cards.')) + '</p>';
+  Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a><div class="sidebar-content js-board-sidebar-content">' +
+    '<div class="archives-sidebar js-archives-view is-hidden"><h3>' + E(Words.Text('archives', 'Archives')) + '</h3>' + Archived + '</div>' +
+    '<div class="board-widget board-widget-members membersWidget"><h3 class="board-widget-title">' + E(Words.Text('members', 'Members')) +
+    '</h3><div class="board-widget-content">';
+  R := Db.Query('SELECT u.id,u.username FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
+    ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0 ORDER BY u.username;');
+  for i := 0 to High(R) do
+    Result := Result + '<a class="member js-member" href="#" data-user="' + HtmlAttr(R[i][0]) + '" title="' + HtmlAttr(R[i][1]) +
+      '" aria-label="' + HtmlAttr(R[i][1]) + '"><span class="member-initials">' + E(R[i][1]) + '</span></a>';
+  Result := Result + '</div></div><h3><a class="board-header-btn js-open-board-menu" href="#" title="' +
+    HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) + '">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
+    '</a></h3></div></div>' +
+    '<template class="js-pop-over-template" data-pop="board-menu" data-title="' + HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) +
+    '"><div class="header"><span class="header-title">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
+    '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
+    '<div class="content"><ul class="pop-over-list"><li><a class="js-open-archives" href="#"><i class="fa fa-archive"></i> ' +
+    E(Words.Text('archived-items', 'Archived Items')) + '</a></li></ul></div></template>';
+end;
+
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
 // cardLabelsPopup for whoever may change the card.
 function LabelsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
@@ -1426,7 +1530,8 @@ begin
       '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '" data-board="' + HtmlAttr(BoardId) + '">' +
-    '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1></div>' +
+    '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
+    BoardStarButton(Db, Words, S, BoardId) + '</div>' + BoardSidebar(Db, Words, S, BoardId, Writable) +
     '<div class="board-canvas" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
 end;
@@ -1469,6 +1574,27 @@ begin
       '''$.cardMaximized'',json(CASE WHEN json_valid(profile_json) AND json_extract(profile_json,''$.cardMaximized'')=1 ' +
       'THEN ''false'' ELSE ''true'' END)) WHERE id=' + QuotedStr(S.UserId) + ';') then
     begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'toggleBoardStar' then
+  begin
+    // models/users.js: [boardId], the board in the user's starredBoards or out of it.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := ToggleViewBoardStar(T.Db, S.UserId, TJSONArray(Args).Items[0].AsString, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
     Exit;
   end;
@@ -1712,6 +1838,8 @@ begin
   //   /b/:id/labels                                   a new board label (card= to return to)
   //   /b/:id/swimlanes                                a swimlane below (or above) after=
   //   /b/:id/custom-fields                            a new custom field of the board (card= to return to)
+  //   /b/:id/title                                    the board renamed, by its admin (a page form: answered 303)
+  //   /b/:id/archive/restore                          an archived card, list or swimlane back (kind=, id=)
   //   /b/:id/cards/:card/dates/:kind                  its received, start, due or end date (delete=1 clears)
   //   /b/:id/cards/:card/custom-fields/:field         a custom field's value
   //   /b/:id/cards/:card/custom-fields/:field/toggle  the field onto the card or off it
@@ -1725,11 +1853,13 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
   else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
+  else if (n = 3) and (P[2] = 'title') then Action := 'rename-board'
+  else if (n = 4) and (P[2] = 'archive') then Action := 'restore'
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
   else if n = 3 then Action := 'add-card'
@@ -1752,10 +1882,10 @@ begin
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
   else Exit;
-  if n >= 4 then CardId := P[3];
+  if (n >= 4) and (P[2] = 'cards') then CardId := P[3];
   if n >= 6 then ChecklistId := P[5];
   if n >= 8 then ItemId := P[7];
-  if (CardId = '') and (n >= 4) then Exit;
+  if (CardId = '') and (n >= 4) and (P[2] = 'cards') then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
   if not Html5User(T.Db, Request, S) then Exit;
   Result := True;
@@ -1771,6 +1901,10 @@ begin
       Request.ContentFields.Values['value'], Error)
   else if Action = 'set-description' then
     Code := SetViewCardDescription(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['description'], Error)
+  else if Action = 'rename-board' then
+    Code := RenameBoard(T, S.UserId, BoardId, Title, Error)
+  else if Action = 'restore' then
+    Code := RestoreViewItem(T, S.UserId, BoardId, Request.ContentFields.Values['kind'], Request.ContentFields.Values['id'], Error)
   else if Action = 'add-custom-field' then
   begin
     Code := CreateViewCustomField(T, S.UserId, BoardId, Request.ContentFields.Values['name'],
@@ -1836,6 +1970,14 @@ begin
         '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
       Exit;
     end;
+    // boardChangeTitlePopup is a plain form: back to the board, renamed.
+    if Action = 'rename-board' then
+    begin
+      Response.Code := 303;
+      Response.SetCustomHeader('Location', BoardRoute(BoardId, BoardSlug(T.Db, BoardId)));
+      Response.SendContent;
+      Exit;
+    end;
     // The board again - with the card open when the action was on a card -
     // for Unpoly to take its .board-wrapper.
     Content := '';
@@ -1849,7 +1991,8 @@ begin
     if CardId <> '' then Back := CardRoute(BoardId, BoardSlug(T.Db, BoardId), CardId)
     else Back := BoardRoute(BoardId, BoardSlug(T.Db, BoardId));
     Response.SetCustomHeader('X-Up-Location', Back);
-    SendPage(Response, 200, Page(Request, Language, Words, S, BoardTitle, BoardTitle, Content));
+    SendPage(Response, 200, Page(Request, Language, Words, S, BoardTitle, BoardTitle, Content,
+      BoardQuickAccess(T.Db, Words, S, BoardId, BoardTitle)));
   finally
     Words.Free;
   end;
@@ -1945,7 +2088,8 @@ begin
       Exit;
     end;
     Title := BoardTitle;
-    Send(200, Page(Request, Language, Words, S, Title, BoardTitle, Content));
+    Send(200, Page(Request, Language, Words, S, Title, BoardTitle, Content,
+      BoardQuickAccess(T.Db, Words, S, Request.QueryFields.Values['id'], BoardTitle)));
   finally
     Words.Free;
   end;

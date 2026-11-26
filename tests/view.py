@@ -10,6 +10,7 @@ import json
 import os
 import re
 import socket
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -582,9 +583,48 @@ def http_checks(server, tmp, backend):
         copy_path = '/b/%s/cards/%s' % (board_id, copies[0]['_id'])
         assert request('POST', copy_path + '/archive', {}, cookie=stranger)[0] == 403
         status, _, page, _ = request('POST', copy_path + '/archive', {}, cookie=owner)
-        assert status == 200 and b'The copy' not in page
+        assert status == 200 and ('data-card-id="%s"' % copies[0]['_id']).encode() not in page
         assert json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, second_list), headers=auth)[2]) == []
         assert request('POST', copy_path + '/archive', {}, cookie=owner)[0] == 404, 'an archived card is not archived again'
+
+        # The board's header and sidebar: rename (its admin), star, the
+        # sidebar's Archive and restore, and the archived boards.
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-edit-board-title' in page and b'data-pop="board-title"' in page and b'js-star-board' in page
+        assert b'js-toggle-page-sidebar' in page and b'js-open-board-menu' in page and b'data-pop="member-menu"' in page
+        assert b'js-edit-board-title' not in request('GET', route, cookie=worker)[2], 'only its admin renames the board'
+        status, headers, _, _ = request('POST', '/b/%s/title' % board_id, {'title': 'Renamed <Board>'}, cookie=owner)
+        assert status == 303 and headers.get('Location', '').startswith('/b/%s/' % board_id), (status, headers)
+        assert json.loads(request('GET', '/api/boards/%s' % board_id, headers=auth)[2])['title'] == 'Renamed <Board>'
+        assert request('POST', '/b/%s/title' % board_id, {'title': 'W'}, cookie=worker)[0] == 403
+        assert request('POST', '/b/%s/title' % board_id, {'title': 'S'}, cookie=stranger)[0] == 403
+        assert request('PUT', '/api/boards/%s/title' % board_id, {'title': 'View Board'}, headers=auth, as_json=True)[0] == 200
+        assert json.loads(request('GET', '/api/boards/%s' % board_id, headers=auth)[2])['title'] == 'View Board'
+        status, _, body, _ = request('POST', '/_methods/toggleBoardStar', [board_id], cookie=owner, as_json=True)
+        assert status == 200 and b'js-star-board is-active' in request('GET', route, cookie=owner)[2]
+        assert request('POST', '/_methods/toggleBoardStar', [board_id], cookie=owner, as_json=True)[0] == 200
+        assert b'js-star-board is-active' not in request('GET', route, cookie=owner)[2]
+        assert request('POST', '/_methods/toggleBoardStar', [board_id], cookie=stranger, as_json=True)[0] == 404
+        # Archive: the card archived earlier is in the sidebar, and comes back.
+        page = request('GET', route, cookie=owner)[2]
+        assert ('data-kind="cards" data-id="%s"' % copies[0]['_id']).encode() in page
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': copies[0]['_id']}, cookie=stranger)[0] == 403
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'users', 'id': copies[0]['_id']}, cookie=owner)[0] == 404
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': copies[0]['_id']}, cookie=owner)[0] == 200
+        assert [c['_id'] for c in json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, second_list),
+                                                     headers=auth)[2])] == [copies[0]['_id']]
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': copies[0]['_id']}, cookie=owner)[0] == 404, \
+            'a card that is not archived is not restored'
+        # The archived boards: a member's, and not a non-member's.
+        archived = json.loads(request('POST', '/api/boards', {'title': 'Old Board', 'owner': login['id']}, headers=auth, as_json=True)[2])['_id']
+        # The REST API has no board archive route: archived in its database, as WeKan's Archive would.
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='boards'").fetchone():
+                    con.execute('UPDATE boards SET archived=1 WHERE id=?', (archived,))
+        assert ('js-board %s archived' % archived).encode() in request('GET', '/allboards/archive', cookie=owner)[2]
+        assert ('js-board %s' % archived).encode() not in request('GET', '/allboards/archive', cookie=stranger)[2]
+        assert ('js-board %s' % archived).encode() not in request('GET', '/allboards/remaining', cookie=owner)[2]
 
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]

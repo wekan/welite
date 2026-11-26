@@ -106,6 +106,15 @@ function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:stri
 // after AfterListId - halfway to the next list, or one after it - or last
 // when there is none. Returns the HTTP status (200 when added).
 function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterListId,Title:string;out ListId,Error:string):Integer;
+// The board's admins (a site admin too): who renames the board.
+function BoardCanAdmin(Db:TWLDb;const UserId,BoardId:string):Boolean;
+// The board's new title, as PUT /api/boards/:boardId/title renames it.
+function RenameBoard(const T:TWLTenant;const UserId,BoardId,Title:string;out Error:string):Integer;
+// WeKan's toggleBoardStar: the board in the user's starredBoards, or out of it.
+function ToggleViewBoardStar(Db:TWLDb;const UserId,BoardId:string;out Error:string):Integer;
+// archivesSidebar's restore of an archived card, list or swimlane (Kind
+// cards, lists or swimlanes) of the board.
+function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId:string;out Error:string):Integer;
 // A swimlane added from a view (WeKan's swimlaneAddPopup): with board write
 // access, below - or above - AfterId, between it and its neighbour, or last
 // without one; a template-swimlane on a templates board.
@@ -1561,30 +1570,95 @@ begin
   finally Reply.Free;Patch.Free;Body.Free;Stored.Free;Defaults.Free;end;
 end;
 
-procedure ApiBoardTitle(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,BoardId,Title,Scope,Permission,Sql:string;
-  Policy:TFieldPolicy;Rows:TWLRows;
+// The board admin's right (#5819's ScopeAdminExpression, a site admin too):
+// what renames the board, from the REST API and from a view alike.
+function BoardAdminPermission(Db:TWLDb;const UserId,BoardId:string;out Permission:string):Boolean;
+var Policy:TFieldPolicy;Rows:TWLRows;
 begin
-  if not ApiTenant(aRequest,aResponse,T) then Exit;
-  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
-  BoardId:=aRequest.RouteParams['boardId'];Scope:='id='+QuotedStr(BoardId);
-  if Length(T.Db.Query('SELECT 1 FROM boards WHERE '+Scope+';'))=0 then
-  begin SendError(aResponse,404,'Board not found');Exit;end;
-  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
   try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
-  Rows:=T.Db.Query('SELECT '+Permission+';');
-  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
-  begin SendError(aResponse,403,'Board administration required');Exit;end;
-  Title:=BodyField(aRequest,'title');
-  if Pos(#0,Title)>0 then begin SendError(aResponse,400,'Invalid board title');Exit;end;
-  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
+  Rows:=Db.Query('SELECT '+Permission+';');
+  Result:=(Length(Rows)=1) and (Rows[0][0]='1');
+end;
+
+function BoardCanAdmin(Db:TWLDb;const UserId,BoardId:string):Boolean;
+var Permission:string;
+begin
+  Result:=(UserId<>'') and (BoardId<>'') and (Pos(#0,BoardId)=0) and
+    (Length(Db.Query('SELECT 1 FROM boards WHERE id='+QuotedStr(BoardId)+';'))=1) and
+    BoardAdminPermission(Db,UserId,BoardId,Permission);
+end;
+
+function RenameBoard(const T:TWLTenant;const UserId,BoardId,Title:string;out Error:string):Integer;
+var Scope,Permission:string;
+begin
+  Error:='';
+  Scope:='id='+QuotedStr(BoardId);
+  if (BoardId='') or (Pos(#0,BoardId)>0) or (Length(T.Db.Query('SELECT 1 FROM boards WHERE '+Scope+';'))=0) then
+  begin Error:='Board not found';Exit(404);end;
+  if not BoardAdminPermission(T.Db,UserId,BoardId,Permission) then begin Error:='Board administration required';Exit(403);end;
+  if Pos(#0,Title)>0 then begin Error:='Invalid board title';Exit(400);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
     ' THEN 1 ELSE json(''Board permission changed'') END; '+
     'UPDATE boards SET title='+QuotedStr(Title)+', modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+'; '+
     'SELECT CASE WHEN '+Permission+' AND (SELECT count(*) FROM boards WHERE '+Scope+
-    ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Board rename failed'') END; COMMIT;';
-  if not T.Db.Exec(Sql) then
-  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not rename board');Exit;end;
+    ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Board rename failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not rename board';Exit(500);end;
+  Result:=200;
+end;
+
+procedure ApiBoardTitle(aRequest:TRequest;aResponse:TResponse);
+var T:TWLTenant;UserId,BoardId,Title,Error:string;Code:Integer;
+begin
+  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
+  BoardId:=aRequest.RouteParams['boardId'];
+  if Length(T.Db.Query('SELECT 1 FROM boards WHERE id='+QuotedStr(BoardId)+';'))=0 then
+  begin SendError(aResponse,404,'Board not found');Exit;end;
+  if not BoardCanAdmin(T.Db,UserId,BoardId) then begin SendError(aResponse,403,'Board administration required');Exit;end;
+  Title:=BodyField(aRequest,'title');
+  Code:=RenameBoard(T,UserId,BoardId,Title,Error);
+  if Code<>200 then begin SendError(aResponse,Code,Error);Exit;end;
   SendJson(aResponse,'{"_id":"'+StringToJSONString(BoardId)+'","title":"'+StringToJSONString(Title)+'"}');
+end;
+
+// models/users.js toggleBoardStar: the board in profile.starredBoards, or out of
+// it, for a board the user may read.
+function ToggleViewBoardStar(Db:TWLDb;const UserId,BoardId:string;out Error:string):Integer;
+var Profile,Stars,Id:string;
+begin
+  Error:='';
+  if (BoardId='') or (Pos(#0,BoardId)>0) or not BoardCanRead(Db,UserId,BoardId) then begin Error:='Board not found';Exit(404);end;
+  Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+  Stars:='COALESCE(json_extract('+Profile+',''$.starredBoards''),''[]'')';
+  Id:=QuotedStr(BoardId);
+  if not Db.Exec('UPDATE users SET profile_json=json_set('+Profile+',''$.starredBoards'',CASE WHEN EXISTS(SELECT 1 FROM json_each('+Stars+
+    ') WHERE value='+Id+') THEN (SELECT json_group_array(value) FROM json_each('+Stars+') WHERE value<>'+Id+') ELSE json_insert('+Stars+
+    ',''$[#]'','+Id+') END) WHERE id='+QuotedStr(UserId)+';') then
+  begin Error:='Could not save';Exit(500);end;
+  Result:=200;
+end;
+
+// archivesSidebar's restore: an archived card, list or swimlane of the board
+// back on it, by whoever may change the board.
+function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId:string;out Error:string):Integer;
+var Table,Scope,Extra:string;
+begin
+  Error:='';
+  if (BoardId='') or (ItemId='') or (Pos(#0,BoardId+ItemId)>0) then begin Error:='Not found';Exit(404);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  Extra:='';
+  if Kind='cards' then begin Table:='cards';Extra:=' AND deletedAt IS NULL';end
+  else if Kind='lists' then begin Table:='lists';Extra:=' AND deletedAt IS NULL';end
+  else if Kind='swimlanes' then Table:='swimlanes'
+  else begin Error:='Not found';Exit(404);end;
+  Scope:='id='+QuotedStr(ItemId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=1'+Extra;
+  if Length(T.Db.Query('SELECT 1 FROM '+Table+' WHERE '+Scope+';'))<>1 then begin Error:='Not found';Exit(404);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE '+Table+' SET archived=0,archivedAt=NULL,modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+
+    '; SELECT CASE WHEN (SELECT count(*) FROM '+Table+' WHERE id='+QuotedStr(ItemId)+' AND archived=0)=1 THEN 1 '+
+    'ELSE json(''Restore failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not restore';Exit(500);end;
+  Result:=200;
 end;
 
 function Slugify(const S: string): string;
