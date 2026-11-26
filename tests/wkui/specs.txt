@@ -150,6 +150,7 @@
 44-calendar-date-display.e2e.js: gregorian popup opens a full-width calendar with only hour/minute controls
 44-calendar-date-display.e2e.js: buddhist popup opens a full-width calendar with only hour/minute controls
 44-calendar-date-display.e2e.js: RTL date popup keeps its bottom-left grip and moves with physical pointer coordinates
+45-profile-email.e2e.js
 70-rest-board-management.e2e.js: normal member cannot rename a board through REST
 76-list-collapse-refresh.e2e.js
 77-public-board-favorite.e2e.js: #6713 public board favorite survives reload and appears in Favorites

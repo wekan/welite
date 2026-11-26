@@ -236,6 +236,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   that user only. A profile map key is never an object's own key
   (`__proto__`, `constructor`, `prototype`), as WeKan's assertSafeMapKey
   refuses them. 242 of WeKan's tests pass.
+- Add Member Settings' Edit Profile to the HTML5 view (editProfilePopup):
+  one's own full name and initials, and the username and address where
+  Admin Panel's accounts-allowUserNameChange and accounts-allowEmailChange
+  allow changing them - for a site admin always - with WeKan's setUsername
+  and setEmail, a taken name or address refused and a new address
+  unverified. A shared store's accountSettings are read for the switches;
+  `tests/wkui/run.sh` makes them as WeKan's collectionBootstrap does. 243 of
+  WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

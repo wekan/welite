@@ -1149,6 +1149,28 @@ def http_checks(server, tmp, backend):
         board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.allowsPersonalListWidth') WHERE id=?", board_id)
         assert not styled(410)
 
+        # editProfilePopup and WeKan's setUsername/setEmail: one's own name and
+        # initials; username and address for a site admin, or where Admin Panel
+        # allows it (off in a store without accountSettings).
+        page = request('GET', '/', cookie=worker)[2]
+        assert b'class="js-edit-profile"' in page and b'data-pop="edit-profile"' in page
+        assert b'class="js-profile-username" type="text" value="worker" readonly' in page, 'not changeable by a member'
+        status, headers, _, _ = request('POST', '/profile', {'fullname': 'Worker <Two>', 'initials': 'W2'}, cookie=worker)
+        assert status == 303 and user_row(users['worker'])[3] == 'Worker <Two>'
+        assert request('POST', '/_methods/setUsername', ['renamed_worker', users['worker']], cookie=worker, as_json=True)[0] == 403
+        assert request('POST', '/_methods/setEmail', ['w2@example.invalid', users['worker']], cookie=worker, as_json=True)[0] == 403
+        assert request('POST', '/_methods/setUsername', ['taken', login['id']], cookie=worker, as_json=True)[0] == 403, 'nobody else'
+        assert user_row(users['worker'])[0] == 'worker'
+        assert request('POST', '/_methods/setUsername', ['worker_two', users['worker']], cookie=owner, as_json=True)[0] == 200
+        assert user_row(users['worker'])[0] == 'worker_two'
+        status, _, body, _ = request('POST', '/_methods/setUsername', ['made_user', users['worker']], cookie=owner, as_json=True)
+        assert status == 409 and json.loads(body)['error'] == 'username-already-taken'
+        assert request('POST', '/_methods/setUsername', ['a/b', users['worker']], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setEmail', ['made@example.invalid', users['worker']], cookie=owner, as_json=True)[0] == 409
+        assert request('POST', '/_methods/setEmail', ['Worker2@Example.invalid', users['worker']], cookie=owner, as_json=True)[0] == 200
+        assert card_db('SELECT address,verified FROM user_emails WHERE userId=?', users['worker']) == ('worker2@example.invalid', 0)
+        assert request('POST', '/_methods/setUsername', ['worker', users['worker']], cookie=owner, as_json=True)[0] == 200
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

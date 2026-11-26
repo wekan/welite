@@ -230,6 +230,31 @@ begin
   if Result = '' then Result := Request.PathInfo;
 end;
 
+// WeKan's editProfilePopup (Weddy's layout.pug): the full name and initials,
+// the username and the address editable when Admin Panel allows changing
+// them - for a site admin always.
+function EditProfilePopup(Db: TWLDb; Words: TWLTranslator; const UserId: string): string;
+var R: TWLRows; Admin, Names, Mails: Boolean;
+begin
+  Result := '';
+  R := Db.Query('SELECT u.username,COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,''''),' +
+    'COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.initials'') END,''''),' +
+    'COALESCE((SELECT address FROM user_emails e WHERE e.userId=u.id LIMIT 1),'''') FROM users u WHERE u.id=' + QuotedStr(UserId) + ';');
+  if Length(R) <> 1 then Exit;
+  Admin := IsSiteAdmin(Db, UserId);
+  Names := Admin or AccountSettingOn(Db, 'accounts-allowUserNameChange');
+  Mails := Admin or AccountSettingOn(Db, 'accounts-allowEmailChange');
+  Result := '<template class="js-pop-over-template" data-pop="edit-profile" data-title="' + HtmlAttr(Words.Text('editProfilePopup-title', 'Edit Profile')) +
+    '"><form class="js-edit-profile-form" method="post" action="/profile"><label>' + E(Words.Text('fullname', 'Full Name')) +
+    '<textarea class="js-profile-fullname" name="fullname" rows="2">' + E(R[0][1]) + '</textarea></label><label>' +
+    E(Words.Text('username', 'Username')) + '<input class="js-profile-username" type="text" ' + IfThen(Names, 'name="username" ', '') +
+    'value="' + HtmlAttr(R[0][0]) + '"' + IfThen(Names, '', ' readonly') + '></label><label>' + E(Words.Text('initials', 'Initials')) +
+    '<input class="js-profile-initials" type="text" name="initials" maxlength="8" value="' + HtmlAttr(R[0][2]) + '"></label><label>' +
+    E(Words.Text('email', 'Email')) + '<input class="js-profile-email" type="email" ' + IfThen(Mails, 'name="email" ', '') + 'value="' +
+    HtmlAttr(R[0][3]) + '"' + IfThen(Mails, '', ' readonly') + '></label><div class="buttonsContainer"><input class="primary wide" type="submit" value="' +
+    HtmlAttr(Words.Text('save', 'Save')) + '"></div></form></template>';
+end;
+
 // header.jade's quick access: Home, the toggle that collapses the header's
 // icons and the page's title, in that order; then the mobile/desktop toggle,
 // the first of the icons it collapses. weddy.js keeps both choices: the
@@ -266,9 +291,11 @@ end;
 // layout.pug: the document, its head, and the header bar.
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
-var Dir, Header: string; SiteAdmin: Boolean; T: TWLTenant;
+var Dir, Header, ProfilePopup: string; SiteAdmin: Boolean; T: TWLTenant;
 begin
   SiteAdmin := (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and IsSiteAdmin(T.Db, S.UserId);
+  ProfilePopup := '';
+  if (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) then ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId);
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
   Header := '';
   if S.UserId <> '' then
@@ -300,9 +327,10 @@ begin
       '<li><a href="/" up-follow><i class="fa fa-home"></i> ' + E(Words.Text('all-boards', 'All Boards')) + '</a></li><hr>' +
       '<li><a class="board-header-btn js-open-archived-board" href="/allboards/archive"><i class="fa fa-archive"></i> ' +
       E(Words.Text('archives', 'Archives')) + '</a></li>' +
+      '<li><a class="js-edit-profile" href="#"><i class="fa fa-user"></i> ' + E(Words.Text('edit-profile', 'Edit Profile')) + '</a></li>' +
       // The Admin Panel, for a site admin (memberMenuPopup's js-go-setting).
       IfThen(SiteAdmin, '<li><a class="js-go-setting" href="/admin/people"><i class="fa fa-lock"></i> ' +
-        E(Words.Text('admin-panel', 'Admin Panel')) + '</a></li>', '') + '</ul></div></template>' +
+        E(Words.Text('admin-panel', 'Admin Panel')) + '</a></li>', '') + '</ul></div></template>' + ProfilePopup +
       '<form class="js-logout" method="post" action="/logout"><button class="js-logout-button" type="submit">' +
       E(Words.Text('log-out', 'Log Out')) + '</button></form></div>';
   end
@@ -2490,6 +2518,31 @@ begin
     SendJsonAnswer(Response, 200, '{"result":true}');
     Exit;
   end;
+  if (Name = 'setUsername') or (Name = 'setEmail') then
+  begin
+    // server/models/users.js: [value, userId].
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      if Name = 'setUsername' then
+        Code := ViewSetUsername(T, S.UserId, TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[0].AsString, Error)
+      else
+        Code := ViewSetEmail(T, S.UserId, TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[0].AsString, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
+    Exit;
+  end;
   if Name = 'setMobileMode' then
   begin
     // server/models/users.js: [enabled], a boolean, as profile.mobileMode.
@@ -2784,6 +2837,29 @@ begin
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
+  // editProfilePopup's form: the user's own name and initials, and the
+  // username and address where they may be changed; back where it was sent from.
+  if Path = '/profile' then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    Code := ViewSetOwnProfile(T, S.UserId, Request.ContentFields.Values['fullname'], Request.ContentFields.Values['initials'], Error);
+    Title := Trim(Request.ContentFields.Values['username']);
+    if (Code = 200) and (Request.ContentFields.IndexOfName('username') >= 0) and (Title <> '') and (Title <> S.Username) then
+      Code := ViewSetUsername(T, S.UserId, S.UserId, Title, Error);
+    Title := LowerCase(Trim(Request.ContentFields.Values['email']));
+    if (Code = 200) and (Request.ContentFields.IndexOfName('email') >= 0) and (Title <> '') and
+      (Length(T.Db.Query('SELECT 1 FROM user_emails WHERE userId=' + QuotedStr(S.UserId) + ' AND lower(address)=' + QuotedStr(Title) + ';')) = 0) then
+      Code := ViewSetEmail(T, S.UserId, S.UserId, Title, Error);
+    Back := SafeReturnPath(Request.Referer);
+    if Back = '' then Back := '/';
+    if Code <> 200 then Back := '/?error=' + HTTPEncode(Error);
+    Response.Code := 303;
+    Response.SetCustomHeader('Location', Back);
+    Response.SendContent;
+    Exit;
+  end;
   // Admin Panel / People's forms: /admin/people/:id/edit (editUserPopup) and
   // /admin/people/:id (the table's Admin and Active), back to People.
   if Copy(Path, 1, 14) = '/admin/people/' then

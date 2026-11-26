@@ -259,6 +259,18 @@ function AdminCreateViewUser(const T:TWLTenant;const Actor,Fullname,Username,Ini
 // The card's "Mark as complete" (dueComplete) from the minicard, by whoever
 // may change the card.
 function SetViewCardComplete(const T:TWLTenant;const UserId,BoardId,CardId:string;Done:Boolean;out Error:string):Integer;
+// WeKan's AccountSettings (Admin Panel / People / Login): accounts-allowEmailChange
+// and accounts-allowUserNameChange, read from a shared store's accountSettings
+// (booleanValue); off in a store that has none.
+function AccountSettingOn(Db:TWLDb;const Id:string):Boolean;
+// WeKan's setUsername and setEmail: a site admin changes anybody's, a member
+// their own while the setting allows it; a taken name or address is refused.
+// Error is WeKan's error code (not-authorized, invalid-username,
+// username-already-taken, invalid-email, email-already-taken).
+function ViewSetUsername(const T:TWLTenant;const Actor,Target,Username:string;out Error:string):Integer;
+function ViewSetEmail(const T:TWLTenant;const Actor,Target,Email:string;out Error:string):Integer;
+// editProfilePopup: the user's own full name and initials.
+function ViewSetOwnProfile(const T:TWLTenant;const UserId,Fullname,Initials:string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6239,6 +6251,70 @@ begin
     ' AND COALESCE(dueComplete,0)<>'+IntToStr(Ord(Done))+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ' AND COALESCE(dueComplete,0)='+IntToStr(Ord(Done))+')=1 THEN 1 ELSE json(''Complete failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
+end;
+
+function AccountSettingOn(Db:TWLDb;const Id:string):Boolean;
+var Rows:TWLRows;
+begin
+  Result:=False;
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE type=''table'' AND name=''_ferretdb_collections'';'))=0 then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''accountSettings'';');
+  if Length(Rows)<>1 then Exit;
+  Rows:=Db.Query('SELECT json_extract(_ferretdb_sjson,''$.booleanValue'') FROM "'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+
+    '" WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(Id)+' LIMIT 1;');
+  Result:=(Length(Rows)=1) and (Rows[0][0]='1');
+end;
+
+function ViewMayChangeAccount(const T:TWLTenant;const Actor,Target,Setting:string):Boolean;
+begin
+  Result:=(Actor<>'') and (IsSiteAdmin(T.Db,Actor) or ((Actor=Target) and AccountSettingOn(T.Db,Setting)));
+end;
+
+function ViewSetUsername(const T:TWLTenant;const Actor,Target,Username:string;out Error:string):Integer;
+var Scope,Bindings,Guard,Name:string;
+begin
+  Error:='';Name:=Trim(Username);
+  if (Pos('/',Username+Target)>0) or (Pos(#0,Username+Target)>0) then begin Error:='not-authorized';Exit(400);end;
+  if not ViewMayChangeAccount(T,Actor,Target,'accounts-allowUserNameChange') then begin Error:='not-authorized';Exit(403);end;
+  if not ViewUsernameValid(Name) then begin Error:='invalid-username';Exit(400);end;
+  if Length(T.Db.Query('SELECT 1 FROM users WHERE username='+QuotedStr(Name)+' COLLATE NOCASE;'))>0 then
+  begin Error:='username-already-taken';Exit(409);end;
+  Guard:=ViewAdminGuard(T,Actor,Target,Scope,Bindings);
+  if not IsSiteAdmin(T.Db,Actor) then Guard:='1';
+  if Length(T.Db.Query('SELECT 1 FROM users WHERE '+Scope+';'))<>1 then begin Error:='not-authorized';Exit(404);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Guard+' AND NOT EXISTS(SELECT 1 FROM users WHERE username='+
+    QuotedStr(Name)+' COLLATE NOCASE) THEN 1 ELSE json(''Username taken'') END; UPDATE users SET username='+QuotedStr(Name)+
+    ',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='username-already-taken';Exit(409);end;
+  Result:=200;
+end;
+
+function ViewSetEmail(const T:TWLTenant;const Actor,Target,Email:string;out Error:string):Integer;
+var Mail:string;
+begin
+  Error:='';Mail:=LowerCase(Trim(Email));
+  if (Pos('/',Email+Target)>0) or (Pos(#0,Email+Target)>0) then begin Error:='not-authorized';Exit(400);end;
+  if not ViewMayChangeAccount(T,Actor,Target,'accounts-allowEmailChange') then begin Error:='not-authorized';Exit(403);end;
+  if not ViewEmailValid(Mail) then begin Error:='invalid-email';Exit(400);end;
+  if Length(T.Db.Query('SELECT 1 FROM users WHERE id='+QuotedStr(Target)+';'))<>1 then begin Error:='not-authorized';Exit(404);end;
+  if Length(T.Db.Query('SELECT 1 FROM user_emails WHERE lower(address)='+QuotedStr(Mail)+';'))>0 then
+  begin Error:='email-already-taken';Exit(409);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; DELETE FROM user_emails WHERE userId='+QuotedStr(Target)+'; INSERT INTO user_emails(userId,address,verified) VALUES('+
+    QuotedStr(Target)+','+QuotedStr(Mail)+',0); COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='email-already-taken';Exit(409);end;
+  Result:=200;
+end;
+
+function ViewSetOwnProfile(const T:TWLTenant;const UserId,Fullname,Initials:string;out Error:string):Integer;
+var Name,Ini:string;
+begin
+  Error:='';Name:=Trim(Fullname);Ini:=Trim(Initials);
+  if (UserId='') or (Length(Name)>200) or (Length(UTF8Decode(Ini))>8) or (Pos(#0,Name+Ini)>0) then
+  begin Error:='error-user-notCreated';Exit(400);end;
+  if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,'+
+    '''$.fullname'','+QuotedStr(Name)+',''$.initials'','+QuotedStr(Ini)+'),modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(UserId)+';') then
+  begin Error:='Could not save';Exit(500);end;
+  Result:=200;
 end;
 
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;

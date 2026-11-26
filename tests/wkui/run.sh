@@ -59,6 +59,10 @@ const { MongoClient } = require(process.argv[1]);
   for (const name of ["boards","swimlanes","lists","cards","card_comments","checklists","checklistItems","customFields","users","activities","attachments",
                       "rules","triggers","actions","integrations","eventlog","savedCardFilters","scrumSnapshotRows","org","team","settings"])
     await db.createCollection(name).catch(e => { if (!/already exists/i.test(e.message)) throw e; });
+  // WeKan collectionBootstrap.js, as WeKan (and Weddy) run it when they make
+  // the store WeLite shares: the Admin Panel account switches, off.
+  for (const [i, id] of ["accounts-allowEmailChange", "accounts-allowUserNameChange", "accounts-allowUserDelete"].entries())
+    await db.collection("accountSettings").updateOne({ _id: id }, { $setOnInsert: { booleanValue: false, sort: i === 1 ? 1 : 0 } }, { upsert: true });
   await c.close();
 })().catch(e => { console.error(e.message); process.exit(1); });
 ' "$WEDDY_WEKAN_TESTS/node_modules/mongodb" "mongodb://127.0.0.1:$DBPORT/wekan" >> "$LOG_DIR/ferretdb.log" 2>&1 || {
