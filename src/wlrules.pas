@@ -1396,6 +1396,46 @@ begin
     Db.Exec('ROLLBACK;');
 end;
 
+// createCard: a card named by the action (its {variables} filled) in a list
+// of the rule's board - named, or the triggering card's own - in a swimlane
+// named, the card's own, or the board's first.
+procedure RuleCreateCard(Db: TWLDb; const A: TActivity; Act: TJSONObject; Vars: TStringList);
+var Title, ListId, LaneId, Name: string; R, Card: TWLRows;
+begin
+  Title := Trim(SubstituteVars(Str(Act, 'cardName'), Vars));
+  if (Title = '') or (A.UserId = '') then Exit;
+  Card := nil;
+  if A.CardId <> '' then Card := Db.Query('SELECT listId,swimlaneId FROM cards WHERE id=' + Q(A.CardId) + ' AND boardId=' + Q(A.BoardId) + ';');
+  Name := Str(Act, 'listName');
+  if (Name <> '') and (Name <> '*') then
+  begin
+    R := Db.Query('SELECT id FROM lists WHERE boardId=' + Q(A.BoardId) + ' AND title=' + Q(SubstituteVars(Name, Vars)) +
+      ' AND archived=0 AND deletedAt IS NULL ORDER BY sort LIMIT 1;');
+    if Length(R) <> 1 then Exit;
+    ListId := R[0][0];
+  end
+  else if Length(Card) = 1 then ListId := Card[0][0]
+  else Exit;
+  LaneId := '';
+  Name := Str(Act, 'swimlaneName');
+  if (Name <> '') and (Name <> '*') then
+  begin
+    R := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + Q(A.BoardId) + ' AND title=' + Q(SubstituteVars(Name, Vars)) +
+      ' AND archived=0 LIMIT 1;');
+    if Length(R) = 1 then LaneId := R[0][0];
+  end
+  else if Length(Card) = 1 then LaneId := Card[0][1];
+  if LaneId = '' then
+  begin
+    R := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + Q(A.BoardId) + ' AND archived=0 ORDER BY sort LIMIT 1;');
+    if Length(R) <> 1 then Exit;
+    LaneId := R[0][0];
+  end;
+  if not Db.Exec('BEGIN IMMEDIATE; ' + CardCreateSql(A.BoardId, ListId, LaneId, NewId, A.UserId, Title, '', 'NULL',
+    '(SELECT COALESCE(max(sort),-1)+1 FROM cards WHERE listId=' + Q(ListId) + ' AND swimlaneId=' + Q(LaneId) + ')') + 'COMMIT;') then
+    Db.Exec('ROLLBACK;');
+end;
+
 procedure PerformAction(const T: TWLTenant; const A: TActivity; Act: TJSONObject);
 var Db: TWLDb; Kind, Field, Text, Id, Checklist, Scope, Stamp, Table, JoinKind, Key: string; Vars: TStringList;
   Card, R: TWLRows; Users: TStringArray; U: string; i: Integer; Items: TStringArray; Remove: Boolean;
@@ -1414,6 +1454,7 @@ begin
       'copyCard': RuleCopyCard(T, A, Act);
       'sortList': RuleSortList(Db, A, Act);
       'linkCard': RuleLinkCard(Db, A, Act);
+      'createCard': RuleCreateCard(Db, A, Act, Vars);
       'archive':
         if Card[0][1] = '0' then
           Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET archived=1,archivedAt=' + Stamp + ',modifiedAt=' + Stamp + Scope +

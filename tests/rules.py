@@ -163,6 +163,27 @@ def main():
             assert order == ['Zulu', 'Alpha'], order
             print('PASS: sortList orders the list by name')
 
+            # createCard: a follow-up card, named with the trigger card's title,
+            # in the list the action names. Negative: a list that is not there
+            # makes no card.
+            status, made = call('owner', 'rules.createRule', home, 'Follow up',
+                                {'activityType': 'moveCard', 'listName': 'Done'},
+                                {'actionType': 'createCard', 'cardName': 'Review {card}', 'listName': 'Todo', 'swimlaneName': '*'})
+            assert status == 200, made
+            moved = find('cards', {'listId': lists['Todo'], 'title': 'apple'})[0]['_id']
+            status, _, body = request('PUT', '/api/boards/%s/lists/%s/cards/%s' % (home, lists['Todo'], moved),
+                                      {'listId': lists['Done']}, token=tokens['owner'], as_json=True)
+            assert status == 200, body
+            assert len(find('cards', {'listId': lists['Todo'], 'title': 'Review apple'})) == 1
+            call('owner', 'rules.deleteRule', made['result']['_id'])
+            status, made = call('owner', 'rules.createRule', home, 'Nowhere',
+                                {'activityType': 'createCard', 'listName': 'Done'},
+                                {'actionType': 'createCard', 'cardName': 'Lost', 'listName': 'No such list'})
+            card('owner', home, lists['Done'], lane, 'Trigger')
+            assert find('cards', {'title': 'Lost'}) == []
+            call('owner', 'rules.deleteRule', made['result']['_id'])
+            print('PASS: createCard makes the follow-up card, and none without its list')
+
             # linkCard: into a list of another board the user may change.
             status, made = call('owner', 'rules.createRule', home, 'Link to Away',
                                 {'activityType': 'createCard', 'listName': 'Done'},
@@ -191,8 +212,10 @@ def main():
             # History: each rule write one row of the board's hash chain;
             # undo takes a new rule away, redo puts it back.
             rows = find('changeHistory', {'boardId': home, 'entityType': 'rule'})
-            assert len(rows) == 2 and all(re.fullmatch('[0-9a-f]{64}', r['integrityHash']) for r in rows), rows
-            assert rows[1]['previousHash'] == rows[0]['integrityHash'], rows
+            rows.sort(key=lambda r: r['createdAt'])
+            assert len(rows) >= 2 and all(re.fullmatch('[0-9a-f]{64}', r['integrityHash']) for r in rows), rows
+            assert rows[0]['previousHash'] is None and all(b['previousHash'] == a['integrityHash'] for a, b in zip(rows, rows[1:])), rows
+            assert [r['changeType'] for r in rows].count('removed') == 2
             # Negative: the action was changed behind the history's back - undo
             # does not overwrite what it did not write.
             status, conflict = call('owner', 'changeHistory.undoLast', home)
@@ -210,7 +233,7 @@ def main():
             assert status == 403 and denied['error'] == 'not-authorized', denied
             status, denied = call('stranger', 'rules.createRule', home, 'Mine', {'activityType': 'createCard'}, {'actionType': 'archive'})
             assert status == 403 and denied['error'] == 'not-authorized', denied
-            assert len(find('rules', {'boardId': home})) == 2
+            assert len(find('rules', {'boardId': home})) == 2, find('rules', {'boardId': home})
             print('PASS: rule history undo and redo, and their refusals')
         finally:
             for proc in (app, ferret):

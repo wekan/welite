@@ -436,10 +436,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   page that changed it, which keeps what it drew (a rule's change is drawn
   on every page, its own too, as its buttons are the server's). 402 of
   WeKan's tests pass.
-- Add the Sort List and Link Card rule actions: a list's cards in the order
+- Add the Sort List, Link Card and Create Card rule actions: a list's cards in the order
   of their name, creation, change or due date; a linked card in a list of a
   board the rule's user may change, and nothing - recorded as RuleBleed - in
-  one they may not. `tests/rules.py` runs the rules on FerretDB over HTTP:
+  one they may not; a follow-up card named with {variables}. `tests/rules.py`
+  runs the rules on FerretDB over HTTP:
   both actions, their refusal, and the history's undo, redo, conflict and
   refusal.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
