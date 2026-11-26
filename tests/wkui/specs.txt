@@ -301,3 +301,7 @@ rules-history.e2e.js: method editing isolates shared rule components and support
 rules-history.e2e.js: REST editing isolates shared rule components and supports undo/redo
 rules-history.e2e.js: method button trigger changes synchronize menu metadata and History
 rules-history.e2e.js: REST button trigger changes synchronize menu metadata and History
+accepted-audit-fixes.e2e.js: F01 A01 A02: keyboard rule controls save string checklist and item names
+card-creation-activity.e2e.js: ordinary card creation records one complete activity visible in card history in en
+card-creation-activity.e2e.js: ordinary card creation records one complete activity visible in card history in co
+card-creation-activity.e2e.js: ordinary card creation records one complete activity visible in card history in la
