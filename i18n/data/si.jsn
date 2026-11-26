@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "මෙම කණ්ඩායම පුවරුවෙන් ඉවත් කිරීමට ඔබට විශ්වාසද?",
   "confirm-btn": "තහවුරු කරන්න",
   "remove-btn": "ඉවත් කරන්න",
+  "filter-card-text-label": "කාඩ්පත් පෙළ පෙරන්න",
   "filter-card-title-label": "කාඩ්පත් මාතෘකාව අනුව පෙරහන් කරන්න",
   "invite-people-success": "ලියාපදිංචි වීමේ ආරාධනය සාර්ථකව යවන ලදී",
   "invite-people-error": "ලියාපදිංචි වීමේ ආරාධනය යැවීමේදී දෝෂයක් ඇති විය",

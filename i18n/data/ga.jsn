@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "An bhfuil tú cinnte gur mian leat an fhoireann seo a bhaint den chlár?",
   "confirm-btn": "Deimhnigh",
   "remove-btn": "Bain",
+  "filter-card-text-label": "Scag téacs cárta",
   "filter-card-title-label": "Scag de réir teideal cárta",
   "invite-people-success": "Seoladh an cuireadh chun clárú go rathúil",
   "invite-people-error": "Earráid agus an cuireadh chun clárú á sheoladh",

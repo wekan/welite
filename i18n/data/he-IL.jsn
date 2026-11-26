@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "להסיר את הצוות הזה מהלוח?",
   "confirm-btn": "אישור",
   "remove-btn": "הסרה",
+  "filter-card-text-label": "סינון טקסט הכרטיס",
   "filter-card-title-label": "סינון לפי כותרת כרטיס",
   "invite-people-success": "ההזמנה להירשם נשלחה בהצלחה",
   "invite-people-error": "שגיאה בשליחת ההזמנה להירשם",

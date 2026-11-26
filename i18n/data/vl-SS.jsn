@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Weet je zeker dat je dit team van het bord wilt verwijderen?",
   "confirm-btn": "Bevestig",
   "remove-btn": "Verwijder",
+  "filter-card-text-label": "Kaarttekst filteren",
   "filter-card-title-label": "Filter kaart op titel",
   "invite-people-success": "Uitnodiging om te registreren succesvol verzonden",
   "invite-people-error": "Fout tijdens het verzenden van de uitnodiging om te registreren",

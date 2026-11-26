@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Ar tikrai norite pašalinti šią komandą iš lentos?",
   "confirm-btn": "Patvirtinti",
   "remove-btn": "Pašalinti",
+  "filter-card-text-label": "Filtruoti kortelių tekstą",
   "filter-card-title-label": "Filtruoti pagal kortelės pavadinimą",
   "invite-people-success": "Kvietimas registruotis išsiųstas sėkmingai",
   "invite-people-error": "Klaida siunčiant kvietimą registruotis",

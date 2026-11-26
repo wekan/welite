@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "ايا ډاډه ياست چې دا ډله له تختې لرې کول غواړئ؟",
   "confirm-btn": "تاييد کړئ",
   "remove-btn": "لرې کړئ",
+  "filter-card-text-label": "د کارت متن چاڼ کړئ",
   "filter-card-title-label": "د کارت د سرليک له مخې چاڼ کړئ",
   "invite-people-success": "د نوم‌ليکنې بلنه په برياليتوب ولېږل شوه",
   "invite-people-error": "د نوم‌ليکنې بلنې د لېږلو پر مهال تېروتنه وشوه",

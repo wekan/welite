@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "ਕੀ ਤੁਸੀਂ ਯਕੀਨੀ ਤੌਰ 'ਤੇ ਇਸ ਟੀਮ ਨੂੰ ਬੋਰਡ ਤੋਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?",
   "confirm-btn": "ਪੁਸ਼ਟੀ ਕਰੋ",
   "remove-btn": "ਹਟਾਓ",
+  "filter-card-text-label": "ਕਾਰਡ ਦਾ ਪਾਠ ਫਿਲਟਰ ਕਰੋ",
   "filter-card-title-label": "ਕਾਰਡ ਦੇ ਸਿਰਲੇਖ ਦੁਆਰਾ ਫਿਲਟਰ ਕਰੋ",
   "invite-people-success": "ਰਜਿਸਟਰ ਕਰਨ ਦਾ ਸੱਦਾ ਸਫਲਤਾ ਨਾਲ ਭੇਜਿਆ ਗਿਆ",
   "invite-people-error": "ਰਜਿਸਟਰ ਕਰਨ ਲਈ ਸੱਦਾ ਭੇਜਣ ਦੌਰਾਨ ਗਲਤੀ",

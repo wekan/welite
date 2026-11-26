@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Chceće woprawdźe tutón team z tafle wotstronić ?",
   "confirm-btn": "Wobkrućić",
   "remove-btn": "Wotstronić",
+  "filter-card-text-label": "Tekst kartow filtrować",
   "filter-card-title-label": "Po titulu karty filtrować",
   "invite-people-success": "Přeprošenje k registraciji je so wuspěšnje pósłało",
   "invite-people-error": "Zmylk při słanju přeprošenja k registraciji",

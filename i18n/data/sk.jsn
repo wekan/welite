@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ste si istý, že chcete odstrániť tento tím z nástenky ?",
   "confirm-btn": "Potvrdit",
   "remove-btn": "Odstranit",
+  "filter-card-text-label": "Filtrovať text kariet",
   "filter-card-title-label": "Filtrovat pomocí názvů karet",
   "invite-people-success": "Zaproszenie do rejestracji zostało wysłane",
   "invite-people-error": "Błąd podczas wysyłki zaproszenia do rejestracji",

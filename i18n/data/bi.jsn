@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Yu sua se yu wantem tekemaot tim ia long bod ?",
   "confirm-btn": "Konfemem",
   "remove-btn": "Tekemaot",
+  "filter-card-text-label": "Filta long teks blong kad",
   "filter-card-title-label": "Filtarem folem taetol blong kad",
   "invite-people-success": "Oli sendem gud singaot blong mekem akaon",
   "invite-people-error": "Problem taem i sendem singaot blong mekem akaon",

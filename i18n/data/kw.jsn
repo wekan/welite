@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Os ta sur bos hwans dhis treylya an bagas ma dhyworth an estyllen?",
   "confirm-btn": "Afydhya",
   "remove-btn": "Treylya",
+  "filter-card-text-label": "Hidla tekst kartennow",
   "filter-card-title-label": "Hidla dre ditel karten",
   "invite-people-success": "Galow dhe omrolya danvenys yn sowen",
   "invite-people-error": "Gwall ow tanvon galow dhe omrolya",

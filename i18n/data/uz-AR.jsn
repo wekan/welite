@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Haqiqatan ham bu jamoani kengashdan olib tashlamoqchimisiz?",
   "confirm-btn": "Tasdiqlang",
   "remove-btn": "O'chirish",
+  "filter-card-text-label": "کارت متنینی فیلترلش",
   "filter-card-title-label": "Karta nomi bo'yicha filtrlang",
   "invite-people-success": "Ro'yxatdan o'tish uchun taklif muvaffaqiyatli yuborildi",
   "invite-people-error": "Roʻyxatdan oʻtish uchun taklifnoma yuborishda xatolik yuz berdi",

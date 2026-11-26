@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Bu komandanı lövhədən silmək istədiyinizə əminsiniz?",
   "confirm-btn": "Təsdiq edin",
   "remove-btn": "Sil",
+  "filter-card-text-label": "Kart mətnini süzgəcdən keçir",
   "filter-card-title-label": "Kartın başlığına görə süzün",
   "invite-people-success": "Qeydiyyatdan keçməyə dəvət uğurla göndərildi",
   "invite-people-error": "Qeydiyyat üçün dəvət göndərilərkən xəta baş verdi",

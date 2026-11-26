@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Na o netefatsa hore o batla ho tlosa sehlopha sena botong?",
   "confirm-btn": "Netefatsa",
   "remove-btn": "Tlosa",
+  "filter-card-text-label": "Sefa mongolo oa karete",
   "filter-card-title-label": "Sefa ka sehlooho sa karete",
   "invite-people-success": "Memo ya ho ingodisa e rometswe ka katleho",
   "invite-people-error": "Phoso ha ho romelwa memo ya ho ingodisa",

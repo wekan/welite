@@ -137,6 +137,27 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the board (`RestoreViewItem`). The member menu opens All Boards' Archive,
   `/allboards/archive`, the archived boards the user is a member of. Eight
   more of WeKan's tests pass, 70 in all.
+- Add the card's vote, Planning Poker and watch, and the board's watch, to
+  the HTML5 view, with WeKan's rules: an active board member - or anybody who
+  can see the board, when the vote or Planning Poker allows non-members -
+  votes until the end date (showVotingButtons, `cards.vote`: the other side
+  moves the vote, the same side again takes it back) and plays one card of
+  the deck (`cards.pokerVote`), on a board that allows Planning Poker;
+  whoever can see the board watches a card - an assigned-only member only a
+  card assigned to them - and chooses watching, tracking or muted for the
+  board (`watch`, muted being no watcher at all). weddy.js's `setLanguage`
+  sets the user's language, and the HTML5 view now reads that language for a
+  viewer signed in with WeKan's own login token too. All of WeKan's spec 14
+  passes.
+- Add the Filter to the HTML5 view: the board header's Filter button - on,
+  with its reset, while a filter is - and the sidebar's card text and label
+  filters (WeKan's client/lib/filter.js, Weddy's board_filter.go). The card
+  text is matched in titles, descriptions, comments, checklists and their
+  items, case-insensitive; labels are any or every chosen one, or no label,
+  and an excluded label always wins. Only the board's own labels filter, and
+  the filter is the board drawn for the viewer, never an access check. The
+  key filter-card-text-label is copied from WeKan's catalogs. 212 of WeKan's
+  tests pass, all of those listed.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

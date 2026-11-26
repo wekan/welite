@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "E o tlhomamisegile wena batla go tlosa eno setlhopha go tswa boto?",
   "confirm-btn": "Tlhomamisa",
   "remove-btn": "Tlosa",
+  "filter-card-text-label": "Sefa mokwalo wa karata",
   "filter-card-title-label": "Setlhotlhi ka karata setlhogo",
   "invite-people-success": "Taletso go register rometswe ka success",
   "invite-people-error": "Phoso fa sending taletso go register",

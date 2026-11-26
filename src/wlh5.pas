@@ -113,6 +113,8 @@ begin
   begin
     S.UserId := UserId;
     S.Username := UserName(Db, UserId);
+    // The token is this tenant's: its user's profile (their language) is read here.
+    S.TenantDb := ExpandFileName(Db.Path);
     Result := S.Username <> '';
   end;
 end;
@@ -1018,9 +1020,204 @@ begin
     HtmlAttr(Words.Text('click-to-unstar', 'Click to unstar this board.')) + '"><i class="fa ' + IfThen(Starred, 'fa-star', 'fa-star-o') + '"></i></a>';
 end;
 
+// The board's watch level (boardHeader.jade's js-watch-board) and
+// boardChangeWatchPopup's three levels, the user's own.
+function BoardWatchButton(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string): string;
+const Levels: array[0..2] of string = ('watching', 'tracking', 'muted');
+var Level: string; i: Integer;
+begin
+  Result := '';
+  if S.UserId = '' then Exit;
+  Level := BoardWatchLevel(Db, S.UserId, BoardId);
+  Result := '<a class="board-header-btn js-watch-board" href="#" title="' + HtmlAttr(Words.Text(Level, Level)) +
+    '"><span class="board-header-btn-label">' + E(Words.Text(Level, Level)) + '</span></a>' +
+    '<template class="js-pop-over-template" data-pop="watch" data-title="' +
+    HtmlAttr(Words.Text('boardChangeWatchPopup-title', 'Change Watch')) + '"><div class="header"><span class="header-title">' +
+    E(Words.Text('boardChangeWatchPopup-title', 'Change Watch')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list described-list">';
+  for i := 0 to High(Levels) do
+    Result := Result + '<li><a class="js-select-watch" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/watch?level=' + Levels[i] +
+      '" up-method="post" up-target=".board-wrapper" data-level="' + Levels[i] + '">' + E(Words.Text(Levels[i], Levels[i])) +
+      IfThen(Level = Levels[i], ' &#10003;', '') + '</a><span class="sub-name">' +
+      E(Words.Text(Levels[i] + '-info', '')) + '</span></li>';
+  Result := Result + '</ul></div></template>';
+end;
+
+// The card's watch (cardDetails.jade's js-toggle-watch-card), as Weddy
+// places it: under the card's header.
+function CardWatchLink(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, CardId: string): string;
+var Watching: Boolean;
+begin
+  Result := '';
+  if S.UserId = '' then Exit;
+  Watching := CardWatching(Db, S.UserId, CardId);
+  Result := '<a class="js-toggle-watch-card' + IfThen(Watching, ' is-checked', '') + '" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+    '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/watch" up-method="post" up-target=".board-wrapper">' +
+    IfThen(Watching, E(Words.Text('watching', 'Watching')) + ' &#10003;', E(Words.Text('watch', 'Watch'))) + '</a>';
+end;
+
+// The Filter sidebar's card text and label filters (WeKan's
+// client/lib/filter.js; board_filter.go in Weddy), kept in the board's URL
+// by weddy.js and applied here, by the board drawn with only the cards they
+// match. A display filter of a board the viewer already reads, never an
+// access check:
+//   ?text=      the card text (#3361): title, description, comments,
+//               checklist and item titles, case-insensitive
+//   ?labels=    labels a card must carry, comma separated; __none__ is no label
+//   ?xlabels=   labels a card must not carry (#2886: exclusion wins)
+//   ?labelMode=and   every chosen label instead of any (#2044)
+const
+  MAX_FILTER_TEXT = 512; // sidebarFilters.jade's maxlength
+  NO_LABEL = '__none__';
+type
+  TBoardFilter = record
+    Text: string;
+    Labels, Excluded: TStringArray;
+    NoLabel, AndMode: Boolean;
+  end;
+
+function HasString(const Items: TStringArray; const Value: string): Boolean;
+var i: Integer;
+begin
+  Result := False;
+  for i := 0 to High(Items) do if Items[i] = Value then Exit(True);
+end;
+
+// The board's own label ids named in Raw, each once; NoLabel says whether
+// __none__ was among them.
+function FilterLabelIds(const Known: TWLRows; const Raw: string; out NoLabel: Boolean): TStringArray;
+var Parts: TStringArray; i, j: Integer;
+begin
+  Result := nil; NoLabel := False;
+  if Raw = '' then Exit;
+  Parts := Raw.Split([',']);
+  for i := 0 to High(Parts) do
+  begin
+    if Parts[i] = NO_LABEL then begin NoLabel := True; Continue; end;
+    for j := 0 to High(Known) do
+      if (Known[j][0] = Parts[i]) and not HasString(Result, Known[j][0]) then
+      begin
+        SetLength(Result, Length(Result) + 1);
+        Result[High(Result)] := Known[j][0];
+      end;
+  end;
+end;
+
+function ParseBoardFilter(Db: TWLDb; const BoardId: string; Query: TStrings): TBoardFilter;
+var Known: TWLRows; Unused: Boolean; Wide: UnicodeString;
+begin
+  Result := Default(TBoardFilter);
+  if Query = nil then Exit;
+  Result.Text := Trim(Query.Values['text']);
+  Wide := UTF8Decode(Result.Text);
+  if Length(Wide) > MAX_FILTER_TEXT then Result.Text := UTF8Encode(Copy(Wide, 1, MAX_FILTER_TEXT));
+  if Pos(#0, Result.Text) > 0 then Result.Text := '';
+  Result.AndMode := Query.Values['labelMode'] = 'and';
+  Known := Db.Query('SELECT id FROM board_labels WHERE boardId=' + QuotedStr(BoardId) + ';');
+  Result.Labels := FilterLabelIds(Known, Query.Values['labels'], Result.NoLabel);
+  Result.Excluded := FilterLabelIds(Known, Query.Values['xlabels'], Unused);
+end;
+
+function FilterActive(const F: TBoardFilter): Boolean;
+begin
+  Result := (F.Text <> '') or (Length(F.Labels) > 0) or F.NoLabel or (Length(F.Excluded) > 0);
+end;
+
+function SqlList(const Items: TStringArray): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(Items) do
+  begin
+    if Result <> '' then Result := Result + ',';
+    Result := Result + QuotedStr(Items[i]);
+  end;
+end;
+
+// ' AND ...' on cards c: the cards the filter matches; '' for no filter.
+function BoardFilterSql(const F: TBoardFilter): string;
+var Alts, Q, Has: string;
+  function Contains(const Column: string): string;
+  begin
+    Result := 'instr(lower(COALESCE(' + Column + ','''')),lower(' + Q + '))>0';
+  end;
+begin
+  Result := '';
+  Alts := '';
+  if Length(F.Labels) > 0 then
+  begin
+    Has := 'SELECT count(DISTINCT labelId) FROM card_labels WHERE cardId=c.id AND labelId IN (' + SqlList(F.Labels) + ')';
+    if F.AndMode then Alts := '(' + Has + ')=' + IntToStr(Length(F.Labels))
+    else Alts := '(' + Has + ')>0';
+  end;
+  if F.NoLabel then
+  begin
+    if Alts <> '' then Alts := Alts + ' OR ';
+    Alts := Alts + 'NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId=c.id)';
+  end;
+  if Alts <> '' then Result := Result + ' AND (' + Alts + ')';
+  if Length(F.Excluded) > 0 then
+    Result := Result + ' AND NOT EXISTS(SELECT 1 FROM card_labels WHERE cardId=c.id AND labelId IN (' + SqlList(F.Excluded) + '))';
+  if F.Text <> '' then
+  begin
+    Q := QuotedStr(F.Text);
+    Result := Result + ' AND (' + Contains('c.title') + ' OR ' + Contains('c.description') +
+      ' OR EXISTS(SELECT 1 FROM card_comments m WHERE m.cardId=c.id AND ' + Contains('m.text') + ')' +
+      ' OR EXISTS(SELECT 1 FROM checklists l WHERE l.cardId=c.id AND ' + Contains('l.title') + ')' +
+      ' OR EXISTS(SELECT 1 FROM checklist_items i WHERE i.cardId=c.id AND ' + Contains('i.title') + '))';
+  end;
+end;
+
+// boardHeader.jade's Filter button - on, with its reset, while a filter is -
+// and filterSidebar's card text and label filters.
+function FilterButton(Words: TWLTranslator; const F: TBoardFilter): string;
+begin
+  if FilterActive(F) then
+    Result := '<a class="board-header-btn js-open-filter-view js-filter-active" href="#" title="' +
+      HtmlAttr(Words.Text('filter-on-desc', 'You are filtering cards on this board. Click here to edit filter.')) +
+      '"><i class="fa fa-filter"></i><span class="board-header-btn-label">' +
+      E(Words.Text('filter-on-desc', 'You are filtering cards on this board. Click here to edit filter.')) + '</span></a>' +
+      '<a class="board-header-btn-close js-filter-reset" href="#" title="' + HtmlAttr(Words.Text('filter-clear', 'Clear filter')) +
+      '">&#10005;</a>'
+  else
+    Result := '<a class="board-header-btn js-open-filter-view" href="#" title="' + HtmlAttr(Words.Text('filter', 'Filter')) +
+      '"><i class="fa fa-filter"></i><span class="board-header-btn-label">' + E(Words.Text('filter', 'Filter')) + '</span></a>';
+end;
+
+function FilterSidebar(Db: TWLDb; Words: TWLTranslator; const BoardId: string; const F: TBoardFilter): string;
+var R: TWLRows; i: Integer; Chosen, Excluded: Boolean;
+begin
+  Result := '<div class="filter-sidebar js-filter-view is-hidden"><h3><i class="fa fa-list"></i> ' +
+    E(Words.Text('filter-card-text-label', 'Filter by card text')) + '</h3>' +
+    '<input class="js-field-card-filter" type="text" maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(F.Text) +
+    '" aria-label="' + HtmlAttr(Words.Text('filter-card-text-label', 'Filter by card text')) + '"><hr>' +
+    '<h3><i class="fa fa-tag"></i> ' + E(Words.Text('filter-labels-label', 'Filter by labels')) + '</h3>' +
+    '<select class="js-label-filter-mode" aria-label="' + HtmlAttr(Words.Text('filter-labels-label', 'Filter by labels')) + '">' +
+    IfThen(F.AndMode, '<option value="or">OR</option><option value="and" selected>AND</option>',
+      '<option value="or" selected>OR</option><option value="and">AND</option>') + '</select>' +
+    '<ul class="sidebar-list js-label-filters"><li' + IfThen(F.NoLabel, ' class="active"', '') + '>' +
+    '<label class="name filter-native-choice js-toggle-label-filter" data-filter-id="' + NO_LABEL + '" data-state="' +
+    IfThen(F.NoLabel, 'in', '') + '"><input type="checkbox"' + IfThen(F.NoLabel, ' checked', '') +
+    '><span class="sidebar-list-item-description">' + E(Words.Text('filter-no-label', 'No label')) + '</span></label></li>';
+  R := Db.Query('SELECT id,COALESCE(name,''''),color FROM board_labels WHERE boardId=' + QuotedStr(BoardId) + ';');
+  for i := 0 to High(R) do
+  begin
+    Chosen := HasString(F.Labels, R[i][0]);
+    Excluded := HasString(F.Excluded, R[i][0]);
+    Result := Result + '<li class="' + IfThen(Chosen, 'active', '') + IfThen(Excluded, ' excluded', '') + '">' +
+      '<label class="name filter-native-choice js-toggle-label-filter" data-filter-id="' + HtmlAttr(R[i][0]) + '" data-state="' +
+      IfThen(Chosen, 'in', IfThen(Excluded, 'out', '')) + '"><input type="checkbox"' +
+      IfThen(Chosen, ' checked', IfThen(Excluded, ' data-indeterminate="true"', '')) +
+      '><span class="card-label square card-label-' + HtmlAttr(R[i][2]) + '"></span><span class="sidebar-list-item-description">' +
+      E(R[i][1]) + '</span></label></li>';
+  end;
+  Result := Result + '</ul></div>';
+end;
+
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
-function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean): string;
+function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
+  const FilterView: string): string;
 var R: TWLRows; i: Integer; Archived: string;
   function Item(const Kind, Id, Title: string; Card: Boolean): string;
   var Restore: string;
@@ -1050,6 +1247,7 @@ begin
     Archived := '<p class="no-items-message">' + E(Words.Text('no-archived-cards', 'No archived cards.')) + '</p>';
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
     HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a><div class="sidebar-content js-board-sidebar-content">' +
+    FilterView +
     '<div class="archives-sidebar js-archives-view is-hidden"><h3>' + E(Words.Text('archives', 'Archives')) + '</h3>' + Archived + '</div>' +
     '<div class="board-widget board-widget-members membersWidget"><h3 class="board-widget-title">' + E(Words.Text('members', 'Members')) +
     '</h3><div class="board-widget-content">';
@@ -1212,6 +1410,63 @@ end;
 // _cardsec_description.pug: the description, and for whoever may change it
 // the pencil - and the text - that open its editor, whose field is on the
 // page only while open (weddy.js clones it from the template).
+// The card's vote (cardDetails.jade's vote section, _cardsec_vote.pug in
+// Weddy): the counts - names to see when the vote is public - the question,
+// and the two buttons for whoever showVotingButtons lets vote.
+function VoteSection(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string): string;
+var V: TCardVote; Tag: string;
+begin
+  Result := '';
+  V := ReadCardVote(Db, UserId, BoardId, CardId);
+  if not V.Present then Exit;
+  if V.IsPublic then Tag := 'a' else Tag := 'div';
+  Result := '<div class="card-details-group card-details-group-vote">' +
+    '<h3 class="card-details-item-title js-toggle-card-section" data-section="vote" role="button" tabindex="0">' +
+    '<i class="fa fa-caret-down"></i> ' + E(Words.Text('vote-question', 'Voting question')) + '</h3>' +
+    '<div class="card-details-section" data-section="vote"><div class="vote-result">' +
+    '<' + Tag + ' class="card-label card-label-green' + IfThen(V.IsPublic, ' js-show-positive-votes', '') + '">' +
+    IntToStr(V.Positive) + '</' + Tag + '>' +
+    '<' + Tag + ' class="card-label card-label-red' + IfThen(V.IsPublic, ' js-show-negative-votes', '') + '">' +
+    IntToStr(V.Negative) + '</' + Tag + '></div>' +
+    '<div class="viewer">' + E(V.Question) + '</div>';
+  if V.CanVote then
+    Result := Result + '<form class="js-vote-form" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' +
+      HtmlAttr(HTTPEncode(CardId)) + '/vote" up-submit up-target=".board-wrapper">' +
+      '<button class="card-details-green js-vote js-vote-positive' + IfThen(V.ForIt, ' voted', '') +
+      '" type="submit" name="vote" value="positive">' + E(Words.Text('vote-for-it', 'for it')) + '</button>' +
+      '<button class="card-details-red js-vote js-vote-negative' + IfThen(V.Against, ' voted', '') +
+      '" type="submit" name="vote" value="negative">' + E(Words.Text('vote-against', 'against')) + '</button></form>';
+  Result := Result + '</div></div>';
+end;
+
+// The card's Planning Poker (_cardsec_poker.pug in Weddy): the question and
+// WeKan's deck, the user's card marked, for whoever may play.
+function PokerSection(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string): string;
+const Classes: array[0..9] of string = ('one', 'two', 'three', 'five', 'eight', 'thirteen', 'twenty', 'forty',
+  'one-hundred', 'unsure');
+  Fallbacks: array[0..9] of string = ('1', '2', '3', '5', '8', '13', '20', '40', '100', '?');
+var P: TCardPoker; i: Integer;
+begin
+  Result := '';
+  P := ReadCardPoker(Db, UserId, BoardId, CardId);
+  if not P.Present then Exit;
+  Result := '<div class="card-details-group card-details-group-poker">' +
+    '<h3 class="card-details-item-title js-toggle-card-section" data-section="poker" role="button" tabindex="0">' +
+    '<i class="fa fa-caret-down"></i> ' + E(Words.Text('poker-question', 'Planning Poker')) + '</h3>' +
+    '<div class="card-details-section" data-section="poker"><div class="viewer">' + E(P.Question) + '</div>';
+  if P.CanVote then
+  begin
+    Result := Result + '<form class="poker-result" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' +
+      HtmlAttr(HTTPEncode(CardId)) + '/poker" up-submit up-target=".board-wrapper">';
+    for i := 0 to High(POKER_FIELDS) do
+      Result := Result + '<div class="poker-deck"><div class="poker-card"><button class="inner js-poker js-poker-vote-' + Classes[i] +
+        IfThen(P.Voted = POKER_FIELDS[i], ' poker-voted', '') + '" type="submit" name="state" value="' + POKER_FIELDS[i] + '">' +
+        E(Words.Text('poker-' + POKER_FIELDS[i], Fallbacks[i])) + '</button></div></div>';
+    Result := Result + '</form>';
+  end;
+  Result := Result + '</div></div>';
+end;
+
 function DescriptionSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId, Text: string; CanEdit: Boolean): string;
 var Viewer: string;
 begin
@@ -1327,10 +1582,10 @@ begin
 end;
 
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
-  out BoardTitle: string; out Found: Boolean): string;
+  out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded: Boolean;
-  Shows: TMinicardShows; Header: string;
+  Shows: TMinicardShows; Header, FilterCond: string; Filter: TBoardFilter;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -1342,6 +1597,8 @@ begin
   Writable := (S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId);
   BoardDates := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
   Shows := MinicardShows(Db, BoardId, BoardDates);
+  Filter := ParseBoardFilter(Db, BoardId, Query);
+  FilterCond := BoardFilterSql(Filter);
   Canvas := '';
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
@@ -1397,7 +1654,7 @@ begin
       Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
         'COALESCE(c.dueAt,''''),COALESCE(c.endAt,'''') FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
-        ' AND c.archived=0 AND c.deletedAt IS NULL ORDER BY c.sort,c.id;');
+        ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY c.sort,c.id;');
       for k := 0 to High(Cards) do
         // A block that opens the card, as Weddy's and WeKan's minicard.
         Canvas := Canvas + '<div class="minicard-wrapper js-minicard" up-href="' +
@@ -1483,6 +1740,7 @@ begin
     Details := Details +
       '<a class="js-close-card-details" href="' + HtmlAttr(Route) + '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '" up-follow up-target=".board-wrapper">&times;</a></div>';
+    Details := Details + CardWatchLink(Db, Words, S, BoardId, CardId);
     Details := Details + ListPickerSection(Db, Words, BoardId, CardId, Card[0][8], Card[0][9], Writable);
     if BoardAllows(Db, BoardId, 'allowsLabels') then
       Details := Details + LabelsSection(Db, Words, BoardId, CardId, Writable);
@@ -1493,6 +1751,7 @@ begin
     Details := Details + DatesSection(Db, Words, BoardId, CardId, [Card[0][4], Card[0][5], Card[0][6], Card[0][7]], TextEditor);
     Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
       DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
+    Details := Details + VoteSection(Db, Words, S.UserId, BoardId, CardId) + PokerSection(Db, Words, S.UserId, BoardId, CardId);
     Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable) +
       AttachmentsSection(Db, Words, BoardId, CardId, Writable);
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
@@ -1531,7 +1790,8 @@ begin
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '" data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
-    BoardStarButton(Db, Words, S, BoardId) + '</div>' + BoardSidebar(Db, Words, S, BoardId, Writable) +
+    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + '</div>' +
+    BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     '<div class="board-canvas" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
 end;
@@ -1561,7 +1821,7 @@ end;
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
-var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code: Integer;
+var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code: Integer; Lang: TWLLanguage;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
@@ -1596,6 +1856,29 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'setLanguage' then
+  begin
+    // server/models/users.js: [language], a supported one, as profile.language.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      if not FindLanguage(TJSONArray(Args).Items[0].AsString, Lang) then
+      begin SendJsonAnswer(Response, 400, '{"error":"invalid-language","reason":"Language is not supported"}'); Exit; end;
+    finally
+      Args.Free;
+    end;
+    if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
+      '''$.language'',' + QuotedStr(Lang.Tag) + ') WHERE id=' + QuotedStr(S.UserId) + ';') then
+    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
   if Name = 'toggleCustomFieldsGrid' then
@@ -1848,12 +2131,16 @@ begin
   //   /b/:id/cards/:card/copy-to                      a copy, here or on another board
   //   /b/:id/cards/:card/archive                      archived
   //   /b/:id/cards/:card/attachments/:att/delete      the attachment off it
+  //   /b/:id/cards/:card/vote                         vote=positive|negative (cards.vote)
+  //   /b/:id/cards/:card/poker                        state=one|two|...|unsure (cards.pokerVote)
+  //   /b/:id/cards/:card/watch                        the user watching the card, or not (watch)
+  //   /b/:id/watch?level=watching|tracking|muted      the user's level on the board (watch)
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
@@ -1862,6 +2149,7 @@ begin
   else if (n = 4) and (P[2] = 'archive') then Action := 'restore'
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
+  else if (n = 3) and (P[2] = 'watch') then Action := 'watch-board'
   else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
@@ -1876,6 +2164,9 @@ begin
   else if (n = 5) and (P[4] = 'move-to') then Action := 'move-card'
   else if (n = 5) and (P[4] = 'copy-to') then Action := 'copy-card'
   else if (n = 5) and (P[4] = 'archive') then Action := 'archive-card'
+  else if (n = 5) and (P[4] = 'vote') then Action := 'vote'
+  else if (n = 5) and (P[4] = 'poker') then Action := 'poker'
+  else if (n = 5) and (P[4] = 'watch') then Action := 'watch-card'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'delete') then Action := 'delete-attachment'
   else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
@@ -1938,6 +2229,14 @@ begin
     // The archived card is no longer on the board: the board without it.
     if Code = 200 then CardId := '';
   end
+  else if Action = 'watch-card' then
+    Code := WatchViewCard(T, S.UserId, BoardId, CardId, Error)
+  else if Action = 'watch-board' then
+    Code := WatchViewBoard(T, S.UserId, BoardId, Request.QueryFields.Values['level'], Error)
+  else if Action = 'poker' then
+    Code := PokerViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['state'], Error)
+  else if Action = 'vote' then
+    Code := VoteViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['vote'], Error)
   else if Action = 'add-attachment' then
     Code := AddViewAttachment(T, S.UserId, BoardId, CardId, Request, Error)
   else if Action = 'delete-attachment' then
@@ -2078,7 +2377,7 @@ begin
     if T.Db.BeginRead then
     try
       Content := BoardContent(T.Db, S, Words, Request.QueryFields.Values['id'],
-        IfThen(Path = '/board/card', Request.QueryFields.Values['card'], ''), BoardTitle, Found);
+        IfThen(Path = '/board/card', Request.QueryFields.Values['card'], ''), BoardTitle, Found, Request.QueryFields);
     finally
       T.Db.EndRead;
     end;

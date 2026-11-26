@@ -189,6 +189,45 @@ function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,De
 function CopyViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList,Title:string;
   out NewCard,Error:string):Integer;
 function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+// A card's vote (cardDetails.jade's vote section): nil-like (Present False)
+// when it has none. WeKan's showVotingButtons decides CanVote: an active
+// member of the board - or anybody who can see it, when the vote allows
+// non-members - until the vote ends.
+type
+  TCardVote = record
+    Present, IsPublic, CanVote, ForIt, Against: Boolean;
+    Question: string;
+    Positive, Negative: Integer;
+  end;
+function ReadCardVote(Db:TWLDb;const UserId,BoardId,CardId:string):TCardVote;
+// WeKan's cards.vote from a click on Side ('positive' or 'negative'): the
+// other side, or no vote yet, votes for that side; one's own side again
+// takes the vote back.
+function VoteViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Side:string;out Error:string):Integer;
+// WeKan's watch (server/notifications/watch.js) from a view: whoever can see
+// the board watches a card - an assigned-only member only a card assigned to
+// them (GHSA-r4gm-mjj9-g3x8) - and chooses their level on the board:
+// watching, tracking or muted (WeKan's default, kept as no watcher at all).
+function CardWatching(Db:TWLDb;const UserId,CardId:string):Boolean;
+function BoardWatchLevel(Db:TWLDb;const UserId,BoardId:string):string;
+function WatchViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+function WatchViewBoard(const T:TWLTenant;const UserId,BoardId,Level:string;out Error:string):Integer;
+// A card's Planning Poker (cardDetails.jade's poker section), on a board
+// that allows it (allowsPoker): its question, the user's card in WeKan's
+// deck, and whether they may play - WeKan's showPlanningPokerButtons: an
+// active member, or anybody who can see the board when it allows
+// non-members, until it ends.
+const
+  POKER_FIELDS: array[0..9] of string = ('one', 'two', 'three', 'five', 'eight', 'thirteen', 'twenty', 'forty',
+    'oneHundred', 'unsure');
+type
+  TCardPoker = record
+    Present, CanVote: Boolean;
+    Question, Voted: string;
+  end;
+function ReadCardPoker(Db:TWLDb;const UserId,BoardId,CardId:string):TCardPoker;
+// WeKan's cards.pokerVote: the user's card is State, and no other.
+function PokerViewCard(const T:TWLTenant;const UserId,BoardId,CardId,State:string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -5731,6 +5770,196 @@ begin
   if (BoardId<>'') and not BoardAllows(T.Db,BoardId,Setting) then
   begin Error:='this field is not yours to change';Exit(403);end;
   Result:=SetViewCardText(T,UserId,BoardId,CardId,Field,Trim(Value),Error);
+end;
+
+// Whether the card's <Path>.end - a date as an ISO string, milliseconds, or
+// {"$date": ...} - is before now.
+function CardEndedSql(const Path:string):string;
+var Ms,Iso,P:string;
+begin
+  Ms:=IntToStr(UnixMillis(LocalTimeToUniversal(Now)));Iso:=QuotedStr(NowIso);P:='''$.'+Path+'.end''';
+  Result:='CASE json_type(extra_json,'+P+') WHEN ''text'' THEN json_extract(extra_json,'+P+')<'+Iso+
+    ' WHEN ''integer'' THEN json_extract(extra_json,'+P+')<'+Ms+' WHEN ''real'' THEN json_extract(extra_json,'+P+')<'+Ms+
+    ' WHEN ''object'' THEN COALESCE(json_extract(extra_json,''$.'+Path+'.end."$date"'')<'+Iso+',0) ELSE 0 END';
+end;
+
+function ReadCardVote(Db:TWLDb;const UserId,BoardId,CardId:string):TCardVote;
+var Rows:TWLRows;U,Ended:string;
+begin
+  Result:=Default(TCardVote);
+  if (UserId='') or (CardId='') or (Pos(#0,UserId+BoardId+CardId)>0) then Exit;
+  U:=QuotedStr(UserId);
+  Ended:=CardEndedSql('vote');
+  Rows:=Db.Query('SELECT COALESCE(json_extract(extra_json,''$.vote.question''),''''),'+
+    'COALESCE(json_extract(extra_json,''$.vote.public''),0),'+
+    'COALESCE(json_extract(extra_json,''$.vote.allowNonBoardMembers''),0),'+
+    '(SELECT count(*) FROM json_each(extra_json,''$.vote.positive'')),'+
+    '(SELECT count(*) FROM json_each(extra_json,''$.vote.negative'')),'+
+    'EXISTS(SELECT 1 FROM json_each(extra_json,''$.vote.positive'') WHERE value='+U+'),'+
+    'EXISTS(SELECT 1 FROM json_each(extra_json,''$.vote.negative'') WHERE value='+U+'),'+Ended+
+    ' FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND deletedAt IS NULL AND json_valid(extra_json);');
+  if (Length(Rows)<>1) or (Rows[0][0]='') then Exit;
+  Result.Present:=True;
+  Result.Question:=Rows[0][0];
+  Result.IsPublic:=Rows[0][1]='1';
+  Result.Positive:=StrToIntDef(Rows[0][3],0);
+  Result.Negative:=StrToIntDef(Rows[0][4],0);
+  Result.ForIt:=Rows[0][5]='1';
+  Result.Against:=Rows[0][6]='1';
+  Result.CanVote:=(Rows[0][7]<>'1') and (EnabledBoardMember(Db,BoardId,UserId) or
+    ((Rows[0][2]='1') and BoardCanRead(Db,UserId,BoardId)));
+end;
+
+function VoteViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Side:string;out Error:string):Integer;
+var V:TCardVote;Scope,Owned,Stamp,U,Add,Drop,Without:string;
+begin
+  Error:='';
+  if (Side<>'positive') and (Side<>'negative') then begin Error:='Invalid vote';Exit(400);end;
+  if (BoardId='') or (CardId='') or (UserId='') or (Pos(#0,BoardId+CardId+UserId)>0) or
+    not BoardCanRead(T.Db,UserId,BoardId) or
+    not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then begin Error:='Card not found';Exit(404);end;
+  V:=ReadCardVote(T.Db,UserId,BoardId,CardId);
+  if not (V.Present and V.CanVote) then begin Error:='this vote is not open to you';Exit(403);end;
+  U:=QuotedStr(UserId);
+  Without:='(SELECT json_group_array(value) FROM json_each(extra_json,''$.vote.%s'') WHERE value<>'+U+')';
+  if Side='positive' then begin Add:='positive';Drop:='negative';end else begin Add:='negative';Drop:='positive';end;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  // json_each has an id of its own: the card's columns by name.
+  Owned:='cards.id='+QuotedStr(CardId)+' AND cards.boardId='+QuotedStr(BoardId)+' AND cards.deletedAt IS NULL';
+  Stamp:=QuotedStr(NowIso);
+  if (not V.ForIt and not V.Against) or (V.Against and (Side='positive')) or (V.ForIt and (Side='negative')) then
+    // $pull the other side, $addToSet this one.
+    Result:=Ord(T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET extra_json=json_set(extra_json,''$.vote.'+Drop+''',json('+
+      Format(Without,[Drop])+'),''$.vote.'+Add+''',json_insert(json('+Format(Without,[Add])+'),''$[#]'','+U+')),modifiedAt='+
+      Stamp+',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards,json_each(cards.extra_json,''$.vote.'+
+      Add+''') WHERE '+Owned+' AND value='+U+') THEN 1 ELSE json(''Vote failed'') END; COMMIT;'))
+  else
+    // The same side again: $pull from both.
+    Result:=Ord(T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET extra_json=json_set(extra_json,''$.vote.positive'',json('+
+      Format(Without,['positive'])+'),''$.vote.negative'',json('+Format(Without,['negative'])+')),modifiedAt='+Stamp+
+      ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM cards,json_each(cards.extra_json,''$.vote'') v,'+
+      'json_each(v.value) WHERE '+Owned+' AND v.key IN (''positive'',''negative'') AND json_each.value='+U+
+      ') THEN 1 ELSE json(''Vote failed'') END; COMMIT;'));
+  if Result=1 then Result:=200
+  else begin T.Db.Exec('ROLLBACK;');Error:='Could not vote';Result:=500;end;
+end;
+
+function CardWatching(Db:TWLDb;const UserId,CardId:string):Boolean;
+begin
+  Result:=(UserId<>'') and (Pos(#0,UserId+CardId)=0) and (Length(Db.Query('SELECT 1 FROM cards,json_each(cards.extra_json,''$.watchers'') w '+
+    'WHERE cards.id='+QuotedStr(CardId)+' AND json_valid(cards.extra_json) AND w.value='+QuotedStr(UserId)+' LIMIT 1;'))=1);
+end;
+
+function BoardWatchLevel(Db:TWLDb;const UserId,BoardId:string):string;
+var R:TWLRows;
+begin
+  Result:='muted';
+  if (UserId='') or (Pos(#0,UserId+BoardId)>0) then Exit;
+  R:=Db.Query('SELECT json_extract(w.value,''$.level'') FROM boards,json_each(boards.settings_json,''$.watchers'') w '+
+    'WHERE boards.id='+QuotedStr(BoardId)+' AND json_valid(boards.settings_json) AND w.type=''object'' AND '+
+    'json_extract(w.value,''$.userId'')='+QuotedStr(UserId)+' LIMIT 1;');
+  if (Length(R)=1) and ((R[0][0]='watching') or (R[0][0]='tracking')) then Result:=R[0][0];
+end;
+
+function WatchViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+var U,Scope,Owned,Others,Next,Negate:string;Watching:Boolean;
+begin
+  Error:='';
+  if (BoardId='') or (CardId='') or (UserId='') or (Pos(#0,BoardId+CardId+UserId)>0) or
+    not BoardCanRead(T.Db,UserId,BoardId) or
+    not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then begin Error:='Card not found';Exit(404);end;
+  U:=QuotedStr(UserId);
+  // An assigned-only member: only a card assigned to them.
+  if Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+U+
+    ' AND isActive=1 AND (COALESCE(isNormalAssignedOnly,0)=1 OR COALESCE(isCommentAssignedOnly,0)=1 OR '+
+    'COALESCE(isReadAssignedOnly,0)=1) AND NOT EXISTS(SELECT 1 FROM card_assignees WHERE cardId='+QuotedStr(CardId)+
+    ' AND userId='+U+');'))=1 then begin Error:='Card not found';Exit(404);end;
+  Watching:=CardWatching(T.Db,UserId,CardId);
+  Others:='(SELECT json_group_array(value) FROM json_each(CASE WHEN json_type(extra_json,''$.watchers'')=''array'' '+
+    'THEN json_extract(extra_json,''$.watchers'') ELSE ''[]'' END) WHERE value IS NOT '+U+')';
+  if Watching then begin Next:='json('+Others+')';Negate:='NOT ';end
+  else begin Next:='json_insert(json('+Others+'),''$[#]'','+U+')';Negate:='';end;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Owned:='cards.id='+QuotedStr(CardId)+' AND cards.boardId='+QuotedStr(BoardId);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET extra_json=json_set(extra_json,''$.watchers'','+Next+') WHERE '+Scope+
+    ' AND json_valid(extra_json); SELECT CASE WHEN '+Negate+'EXISTS(SELECT 1 FROM cards,json_each(cards.extra_json,'+
+    '''$.watchers'') w WHERE '+Owned+' AND w.value='+U+') THEN 1 ELSE json(''Watch failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not watch the card';Exit(500);end;
+  Result:=200;
+end;
+
+function WatchViewBoard(const T:TWLTenant;const UserId,BoardId,Level:string;out Error:string):Integer;
+var U,Others,Next:string;
+begin
+  Error:='';
+  if (Level<>'watching') and (Level<>'tracking') and (Level<>'muted') then
+  begin Error:='watching, tracking or muted';Exit(400);end;
+  if (BoardId='') or (UserId='') or (Pos(#0,BoardId+UserId)>0) or not BoardCanRead(T.Db,UserId,BoardId) then
+  begin Error:='Board not found';Exit(404);end;
+  U:=QuotedStr(UserId);
+  Others:='(SELECT json_group_array(json(value)) FROM json_each(CASE WHEN json_type(settings_json,''$.watchers'')=''array'' '+
+    'THEN json_extract(settings_json,''$.watchers'') ELSE ''[]'' END) WHERE type<>''object'' OR json_extract(value,''$.userId'') IS NOT '+U+')';
+  // setWatcher: the default level is no watcher.
+  if Level='muted' then Next:='json('+Others+')'
+  else Next:='json_insert(json('+Others+'),''$[#]'',json_object(''userId'','+U+',''level'','+QuotedStr(Level)+'))';
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE boards SET settings_json=json_set(settings_json,''$.watchers'','+Next+') WHERE id='+
+    QuotedStr(BoardId)+' AND json_valid(settings_json); COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not watch the board';Exit(500);end;
+  if BoardWatchLevel(T.Db,UserId,BoardId)<>Level then begin Error:='Could not watch the board';Exit(500);end;
+  Result:=200;
+end;
+
+function ReadCardPoker(Db:TWLDb;const UserId,BoardId,CardId:string):TCardPoker;
+var Rows:TWLRows;Voted:string;i:Integer;
+begin
+  Result:=Default(TCardPoker);
+  if (UserId='') or (CardId='') or (Pos(#0,UserId+BoardId+CardId)>0) or not BoardAllows(Db,BoardId,'allowsPoker') then Exit;
+  Voted:='''''';
+  for i:=High(POKER_FIELDS) downto 0 do
+    Voted:='CASE WHEN EXISTS(SELECT 1 FROM json_each(extra_json,''$.poker.'+POKER_FIELDS[i]+''') WHERE value='+
+      QuotedStr(UserId)+') THEN '''+POKER_FIELDS[i]+''' ELSE '+Voted+' END';
+  Rows:=Db.Query('SELECT CASE WHEN json_type(extra_json,''$.poker.question'')=''text'' THEN json_extract(extra_json,''$.poker.question'') ELSE '''' END,'+
+    'COALESCE(json_extract(extra_json,''$.poker.allowNonBoardMembers''),0),'+CardEndedSql('poker')+','+Voted+
+    ' FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL AND json_valid(extra_json);');
+  if (Length(Rows)<>1) or (Rows[0][0]='') then Exit;
+  Result.Present:=True;
+  Result.Question:=Rows[0][0];
+  Result.Voted:=Rows[0][3];
+  Result.CanVote:=(Rows[0][2]<>'1') and (EnabledBoardMember(Db,BoardId,UserId) or
+    ((Rows[0][1]='1') and BoardCanRead(Db,UserId,BoardId)));
+end;
+
+function PokerViewCard(const T:TWLTenant;const UserId,BoardId,CardId,State:string;out Error:string):Integer;
+var P:TCardPoker;U,Sets,Owned,Stamp:string;i:Integer;Known:Boolean;
+begin
+  Error:='';Known:=False;
+  for i:=0 to High(POKER_FIELDS) do if POKER_FIELDS[i]=State then Known:=True;
+  if not Known then begin Error:='Invalid Planning Poker card';Exit(400);end;
+  if (BoardId='') or (CardId='') or (UserId='') or (Pos(#0,BoardId+CardId+UserId)>0) or
+    not BoardCanRead(T.Db,UserId,BoardId) or
+    not ApiChildrenBelong(T.Db,BoardId,'','',CardId,'','','','') then begin Error:='Card not found';Exit(404);end;
+  P:=ReadCardPoker(T.Db,UserId,BoardId,CardId);
+  if not (P.Present and P.CanVote) then begin Error:='this Planning Poker is not open to you';Exit(403);end;
+  U:=QuotedStr(UserId);Sets:='';
+  // setPoker: $pull from every other card, $addToSet to this one.
+  for i:=0 to High(POKER_FIELDS) do
+  begin
+    if Sets<>'' then Sets:=Sets+',';
+    Sets:=Sets+'''$.poker.'+POKER_FIELDS[i]+''',';
+    if POKER_FIELDS[i]=State then Sets:=Sets+'json_insert(';
+    Sets:=Sets+'json((SELECT json_group_array(value) FROM json_each(extra_json,''$.poker.'+POKER_FIELDS[i]+''') WHERE value<>'+U+'))';
+    if POKER_FIELDS[i]=State then Sets:=Sets+',''$[#]'','+U+')';
+  end;
+  Owned:='cards.id='+QuotedStr(CardId)+' AND cards.boardId='+QuotedStr(BoardId)+' AND cards.deletedAt IS NULL';
+  Stamp:=QuotedStr(NowIso);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET extra_json=json_set(extra_json,'+Sets+'),modifiedAt='+Stamp+
+    ',dateLastActivity='+Stamp+' WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND deletedAt IS NULL; SELECT CASE WHEN (SELECT count(*) FROM cards,json_each(cards.extra_json,''$.poker'') f,json_each(f.value) v '+
+    'WHERE '+Owned+' AND f.type=''array'' AND v.value='+U+')=1 AND EXISTS(SELECT 1 FROM cards,json_each(cards.extra_json,''$.poker.'+
+    State+''') v WHERE '+Owned+' AND v.value='+U+') THEN 1 ELSE json(''Planning Poker failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not play the card';Exit(500);end;
+  Result:=200;
 end;
 
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;

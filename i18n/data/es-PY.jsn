@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "¿Estás seguro de que quieres eliminar a este equipo del tablero?",
   "confirm-btn": "Confirmar",
   "remove-btn": "Eliminar",
+  "filter-card-text-label": "Filtrar el texto de las tarjetas",
   "filter-card-title-label": "Filtrar por el título de la tarjeta",
   "invite-people-success": "Invitation to register sent with success",
   "invite-people-error": "Error al enviar la invitación para registrarse",

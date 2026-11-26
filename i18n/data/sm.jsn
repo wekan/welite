@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "E te mautinoa e te manao e aveese lenei au mai le laupapa?",
   "confirm-btn": "Faamaonia",
   "remove-btn": "Aveese",
+  "filter-card-text-label": "Faamama tusitusiga o le pepa",
   "filter-card-title-label": "Faamama i le ulutala o le pepa",
   "invite-people-success": "Ua manuia le auina atu o le valaaulia e lesitala",
   "invite-people-error": "Sese a o auina atu le valaaulia e lesitala",

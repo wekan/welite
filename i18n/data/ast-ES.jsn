@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "¿Estás seguro de que quieres eliminar a este equipo del tablero?",
   "confirm-btn": "Confirmar",
   "remove-btn": "Eliminar",
+  "filter-card-text-label": "Filtrar el testu de la tarxeta",
   "filter-card-title-label": "Filtrar por el título de la tarjeta",
   "invite-people-success": "Invitació per registrar-se enviada amb èxit",
   "invite-people-error": "Error al enviar la invitación para registrarse",

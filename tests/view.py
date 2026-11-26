@@ -663,6 +663,175 @@ def http_checks(server, tmp, backend):
         assert request('POST', card_path + '/description', {'description': 'Stranger'}, cookie=stranger)[0] == 403
         assert card_doc()['description'] == 'New <b>words</b>'
 
+        # The card's vote (cardDetails.jade, WeKan's cards.vote), set in the
+        # database as WeKan's vote popup would set it.
+        def card_db(sql, *args):
+            out = None
+            for path in data.glob('**/files/db/wekan.db'):
+                with sqlite3.connect(path) as con:
+                    if con.execute("SELECT 1 FROM sqlite_master WHERE name='cards'").fetchone():
+                        out = con.execute(sql, args).fetchone()
+            return out
+        vote_of = lambda: json.loads(card_db("SELECT json_extract(extra_json,'$.vote') FROM cards WHERE id=?", card_id)[0])
+        card_page = lambda who=owner: request('GET', '%s/%s' % (route, card_id), cookie=who)[2]
+        assert b'card-details-group-vote' not in card_page(), 'no vote, no section'
+        assert request('POST', card_path + '/vote', {'vote': 'positive'}, cookie=owner)[0] == 403, 'no vote to vote in'
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.vote',json(?)) WHERE id=?",
+                json.dumps({'question': 'Ship <it>?', 'public': True, 'positive': [], 'negative': []}), card_id)
+        page = card_page()
+        assert b'<div class="viewer">Ship &lt;it&gt;?</div>' in page and b'js-show-positive-votes">0<' in page
+        assert b'js-vote js-vote-positive"' in page and ('action="%s/vote"' % card_path).encode() in page
+        status, _, page, _ = request('POST', card_path + '/vote', {'vote': 'positive'}, cookie=owner)
+        assert status == 200 and b'js-vote-positive voted' in page and b'js-show-positive-votes">1<' in page
+        assert vote_of()['positive'] == [login['id']] and vote_of()['negative'] == []
+        # The other side moves the vote; the same side again takes it back.
+        assert request('POST', card_path + '/vote', {'vote': 'negative'}, cookie=owner)[0] == 200
+        assert vote_of()['positive'] == [] and vote_of()['negative'] == [login['id']]
+        assert b'js-vote-negative voted' in card_page() and b'js-vote-positive voted' not in card_page()
+        assert request('POST', card_path + '/vote', {'vote': 'negative'}, cookie=owner)[0] == 200
+        assert vote_of()['positive'] == [] and vote_of()['negative'] == [], 'withdrawn'
+        # Any member votes, a Worker too, and two votes count as two.
+        assert request('POST', card_path + '/vote', {'vote': 'positive'}, cookie=worker)[0] == 200
+        assert request('POST', card_path + '/vote', {'vote': 'positive'}, cookie=owner)[0] == 200
+        assert len(vote_of()['positive']) == 2 and b'js-show-positive-votes">2<' in card_page()
+        # Negative: no other answer, no non-member, and nobody after the end.
+        assert request('POST', card_path + '/vote', {'vote': 'maybe'}, cookie=owner)[0] == 400
+        assert request('POST', card_path + '/vote', {'vote': 'positive'}, cookie=stranger)[0] == 404
+        assert b'card-details-group-vote' not in card_page(stranger)
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.vote.allowNonBoardMembers',json('true')) WHERE id=?", card_id)
+        assert request('POST', card_path + '/vote', {'vote': 'negative'}, cookie=stranger)[0] == 404, \
+            'a vote open to non-members is still on a board they cannot see'
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.vote.end','2001-01-01T00:00:00.000Z') WHERE id=?", card_id)
+        assert request('POST', card_path + '/vote', {'vote': 'negative'}, cookie=owner)[0] == 403
+        assert b'js-vote-form' not in card_page() and b'js-show-positive-votes">2<' in card_page(), 'the result stays'
+        assert len(vote_of()['positive']) == 2 and vote_of()['negative'] == []
+        # A private vote shows the counts without the voters' names to open.
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.vote.public',json('false')) WHERE id=?", card_id)
+        assert b'js-show-positive-votes' not in card_page() and b'card-label card-label-green">2<' in card_page()
+        # setLanguage (server/models/users.js): a supported language, the user's own.
+        assert request('POST', '/_methods/setLanguage', ['la'], cookie=owner, as_json=True)[0] == 200
+        assert b'Quaestio suffragii' in card_page() and b'Voting question' in card_page(worker)
+        assert request('POST', '/_methods/setLanguage', ['xx-nope'], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setLanguage', [1], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setLanguage', ['fi'], as_json=True)[0] == 401
+        assert b'Quaestio suffragii' in card_page()
+        # The same with WeKan's own login token in the cookie (a REST login's).
+        assert b'Quaestio suffragii' in card_page('meteor_login_token=' + login['token'])
+        assert request('POST', '/_methods/setLanguage', ['en'], cookie=owner, as_json=True)[0] == 200
+        assert b'Voting question' in card_page()
+
+        # Watching (server/notifications/watch.js): the card, the user's own,
+        # and the board's level, the user's own; muted is no watcher at all.
+        def board_db(sql, *args):
+            out = None
+            for path in data.glob('**/files/db/wekan.db'):
+                with sqlite3.connect(path) as con:
+                    if con.execute("SELECT 1 FROM sqlite_master WHERE name='boards'").fetchone():
+                        out = con.execute(sql, args).fetchone()
+            return out
+        card_watchers = lambda: json.loads(card_db("SELECT COALESCE(json_extract(extra_json,'$.watchers'),'[]') FROM cards WHERE id=?", card_id)[0])
+        board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
+        page = card_page()
+        assert ('class="js-toggle-watch-card" href="%s/watch"' % card_path).encode() in page
+        status, _, page, _ = request('POST', card_path + '/watch', {}, cookie=owner)
+        assert status == 200 and b'js-toggle-watch-card is-checked' in page and card_watchers() == [login['id']]
+        assert request('POST', card_path + '/watch', {}, cookie=worker)[0] == 200
+        assert len(card_watchers()) == 2 and b'js-toggle-watch-card is-checked' in card_page(worker)
+        assert request('POST', card_path + '/watch', {}, cookie=owner)[0] == 200
+        assert card_watchers() == [users['worker']], 'unwatched, the other watcher kept'
+        assert b'js-toggle-watch-card is-checked' not in card_page()
+        # Negative: no non-member, and an assigned-only member only their own cards.
+        assert request('POST', card_path + '/watch', {}, cookie=stranger)[0] == 404
+        assert request('POST', '/b/%s/cards/%s/watch' % (board_id, 'nope'), {}, cookie=owner)[0] == 404
+        board_db('UPDATE board_members SET isNormalAssignedOnly=1 WHERE boardId=? AND userId=?', board_id, users['commenter'])
+        assert request('POST', card_path + '/watch', {}, cookie=commenter)[0] == 404
+        board_db('UPDATE board_members SET isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['commenter'])
+        assert users['commenter'] not in card_watchers()
+        # The board: muted by default, a level by the popup, muted again.
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-watch-board' in page and b'data-pop="watch"' in page and b'Muted &#10003;' in page
+        status, _, page, _ = request('POST', '/b/%s/watch?level=watching' % board_id, {}, cookie=owner)
+        assert status == 200 and b'Watching &#10003;' in page
+        assert request('POST', '/b/%s/watch?level=tracking' % board_id, {}, cookie=worker)[0] == 200
+        assert request('POST', '/b/%s/watch?level=tracking' % board_id, {}, cookie=owner)[0] == 200
+        assert sorted((w['userId'], w['level']) for w in board_watchers()) == \
+            sorted([(login['id'], 'tracking'), (users['worker'], 'tracking')]), 'one entry each'
+        assert request('POST', '/b/%s/watch?level=muted' % board_id, {}, cookie=owner)[0] == 200
+        assert board_watchers() == [{'userId': users['worker'], 'level': 'tracking'}]
+        assert b'Muted &#10003;' in request('GET', route, cookie=owner)[2]
+        # Negative: no other level, and no non-member.
+        assert request('POST', '/b/%s/watch?level=loud' % board_id, {}, cookie=owner)[0] == 400
+        assert request('POST', '/b/%s/watch?level=watching' % board_id, {}, cookie=stranger)[0] == 404
+        assert board_watchers() == [{'userId': users['worker'], 'level': 'tracking'}]
+
+        # Planning Poker (cardDetails.jade, WeKan's cards.pokerVote), on a board
+        # that allows it: the user's card is one card, and no other.
+        poker_of = lambda: json.loads(card_db("SELECT COALESCE(json_extract(extra_json,'$.poker'),'{}') FROM cards WHERE id=?", card_id)[0])
+        assert b'card-details-group-poker' not in card_page()
+        assert request('POST', card_path + '/poker', {'state': 'five'}, cookie=owner)[0] == 403, 'no Planning Poker'
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.poker',json(?)) WHERE id=?",
+                json.dumps({'question': 'Size <it>', 'end': {'$date': '2999-01-01T00:00:00.000Z'}}), card_id)
+        page = card_page()
+        assert b'<div class="viewer">Size &lt;it&gt;</div>' in page and b'js-poker-vote-one-hundred" type="submit" name="state" value="oneHundred">100<' in page
+        status, _, page, _ = request('POST', card_path + '/poker', {'state': 'five'}, cookie=owner)
+        assert status == 200 and b'js-poker-vote-five poker-voted' in page and poker_of()['five'] == [login['id']]
+        assert request('POST', card_path + '/poker', {'state': 'eight'}, cookie=owner)[0] == 200
+        assert request('POST', card_path + '/poker', {'state': 'eight'}, cookie=worker)[0] == 200
+        assert poker_of()['five'] == [] and sorted(poker_of()['eight']) == sorted([login['id'], users['worker']])
+        assert sum(len(v) for v in poker_of().values() if isinstance(v, list)) == 2, 'one card each'
+        # Negative: no card outside the deck, no non-member, not after the end,
+        # and not on a board that turned Planning Poker off.
+        assert request('POST', card_path + '/poker', {'state': 'seven'}, cookie=owner)[0] == 400
+        assert request('POST', card_path + '/poker', {'state': 'one'}, cookie=stranger)[0] == 404
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.poker.end',json(?)) WHERE id=?",
+                json.dumps({'$date': '2001-01-01T00:00:00.000Z'}), card_id)
+        assert request('POST', card_path + '/poker', {'state': 'one'}, cookie=owner)[0] == 403
+        assert b'js-poker-vote-one' not in card_page() and b'Size &lt;it&gt;' in card_page()
+        card_db("UPDATE cards SET extra_json=json_remove(extra_json,'$.poker.end') WHERE id=?", card_id)
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.allowsPoker',json('false')) WHERE id=?", board_id)
+        assert b'card-details-group-poker' not in card_page()
+        assert request('POST', card_path + '/poker', {'state': 'one'}, cookie=owner)[0] == 403
+        board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.allowsPoker') WHERE id=?", board_id)
+        assert poker_of()['one'] == [] and len(poker_of()['eight']) == 2
+
+        # The Filter sidebar (client/lib/filter.js): card text and labels in the
+        # board's URL, the board drawn with only the cards they match.
+        def shown(query=''):
+            page = request('GET', route + query, cookie=owner)[2]
+            return set(x.decode() for x in re.findall(rb'class="minicard-wrapper js-minicard" up-href="[^"]*" up-follow '
+                                                     rb'up-clickable up-target="\.board-wrapper" data-card="([^"]+)"', page)), page
+        everything, page = shown()
+        assert card_id in everything and len(everything) >= 2
+        assert b'js-open-filter-view"' in page and b'js-filter-active' not in page and b'js-filter-view is-hidden' in page
+        assert request('POST', '%s/labels/%s' % (card_path, urgent), {}, cookie=owner)[0] == 200
+        status, _, body, _ = request('PUT', '/api/boards/%s/labels' % board_id, {'label': {'name': 'Second', 'color': 'blue'}},
+                                     headers=auth, as_json=True)
+        assert status == 200, body
+        second = json.loads(body)
+        second = second.get('_id', second) if isinstance(second, dict) else second
+        assert shown('?labels=' + urgent)[0] == {card_id}
+        assert shown('?xlabels=' + urgent)[0] == everything - {card_id}, 'exclusion'
+        assert card_id not in shown('?labels=__none__')[0]
+        assert shown('?labels=%s,__none__' % urgent)[0] == everything
+        assert shown('?labels=%s,%s' % (urgent, second))[0] == {card_id}, 'any'
+        assert shown('?labels=%s,%s&labelMode=and' % (urgent, second))[0] == set(), 'every one'
+        assert shown('?labels=%s&xlabels=%s' % (urgent, urgent))[0] == set(), 'exclusion wins'
+        assert request('POST', comments_path, {'comment': 'Zebra quartz'}, cookie=owner)[0] == 200
+        found, page = shown('?text=ZEBRA%20Quartz')
+        assert found == {card_id}, 'a comment, case-insensitive'
+        assert b'js-filter-active' in page and b'js-filter-reset' in page and b'value="ZEBRA Quartz"' in page
+        assert ('data-filter-id="%s" data-state="in"' % urgent).encode() in shown('?labels=' + urgent)[1]
+        assert ('data-filter-id="%s" data-state="out"' % urgent).encode() in shown('?xlabels=' + urgent)[1]
+        # Negative: no label of another board or none at all filters, a quote is
+        # text and nothing more, and the filter is the viewer's display only.
+        found, page = shown('?labels=nolabel&xlabels=%27')
+        assert found == everything and b'js-filter-active' not in page
+        assert shown('?text=%27)%20OR%201%3D1%20--')[0] == set()
+        assert shown('?text=' + 'x' * 2000)[0] == set()
+        assert request('GET', route + '?labels=' + urgent, cookie=stranger)[0] == 404
+        assert card_doc()['labelIds'] == [urgent]
+        assert request('POST', '%s/labels/%s' % (card_path, urgent), {}, cookie=owner)[0] == 200
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

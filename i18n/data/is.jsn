@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ertu viss um að þú viljir fjarlægja þetta teymi af töflunni?",
   "confirm-btn": "Staðfesta",
   "remove-btn": "Fjarlægja",
+  "filter-card-text-label": "Sía texta spjalda",
   "filter-card-title-label": "Sía eftir heiti spjalds",
   "invite-people-success": "Boð um skráningu var sent",
   "invite-people-error": "Villa kom upp við að senda boð um skráningu",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ies sëgur de vulëi tò demez chësc team dala tofl ?",
   "confirm-btn": "Cunfermé",
   "remove-btn": "Tò demez",
+  "filter-card-text-label": "Filtré l test dla ciartes",
   "filter-card-title-label": "Filtré do titul dla ciarta",
   "invite-people-success": "La nvidëda a se registré ie stata mandeda cun suzes",
   "invite-people-error": "Fal tl mandé la nvidëda a se registré",

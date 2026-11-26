@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Sei sicuro di voler rimuovere chisto team a 'a tavula?",
   "confirm-btn": "Cunferma",
   "remove-btn": "Rimuovi",
+  "filter-card-text-label": "Filtra 'o testo d''a carta",
   "filter-card-title-label": "Filtra pe tìtulo carta",
   "invite-people-success": "Invito a registrarse mannato cu successo",
   "invite-people-error": "Errore mentre se mannava ll'invito a registrarse",

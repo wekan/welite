@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "okakasa ggwe yagala eri ggyawo kino tiimu okuva lubaawo?",
   "confirm-btn": "Kakasa",
   "remove-btn": "Ggyawo",
+  "filter-card-text-label": "Sengejja ebigambo by'ekaadi",
   "filter-card-title-label": "Sengeka nga kaadi mutwe",
   "invite-people-success": "Okuyita eri register sent na obuwanguzi",
   "invite-people-error": "Nsobi while sending okuyita eri register",

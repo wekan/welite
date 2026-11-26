@@ -6,25 +6,59 @@
 01-boards-users.e2e.js: user added to board can see it on their boards list
 01-boards-users.e2e.js: user NOT added to board cannot see it
 01-boards-users.e2e.js: board renders all three seeded lists without freezing
+01-boards-users.e2e.js: Boards – user membership › board loads within 10 seconds and renders lists
+01-boards-users.e2e.js: Boards – user membership › user added to board can see it on their boards list
+01-boards-users.e2e.js: Boards – user membership › user NOT added to board cannot see it
+01-boards-users.e2e.js: Boards – user membership › board admin can change a member role to admin
+01-boards-users.e2e.js: Boards – user membership › board renders all three seeded lists without freezing
 02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
 02-cards-open-view.e2e.js: card opens without the maximized class by default (minimized view)
 02-cards-open-view.e2e.js: closing the card detail panel hides it
-03-cards-operations.e2e.js: add-to-top places the card first in the list
-03-cards-operations.e2e.js: add-to-bottom places the card last in the list
 02-cards-open-view.e2e.js: a minicard title opens the card instead of an inline editor
 02-cards-open-view.e2e.js: maximize button switches card to full-screen view
 02-cards-open-view.e2e.js: minimize button collapses the maximized card back
 02-cards-open-view.e2e.js: editing the card title does not break the card
-12-checklists.e2e.js: add-checklist button opens the inline form
-12-checklists.e2e.js: creating a checklist adds it to the card details
-12-checklists.e2e.js: adding an item to a checklist renders it in the item list
-12-checklists.e2e.js: checking a checklist item adds the is-checked class
-12-checklists.e2e.js: checklist progress bar appears when items are checked
-12-checklists.e2e.js: deleting a checklist removes it from the card
-12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items
+02-cards-open-view.e2e.js: copy-link button produces a URL that opens the card in full-screen view
+03-cards-operations.e2e.js: add-to-top places the card first in the list
+03-cards-operations.e2e.js: add-to-bottom places the card last in the list
+03-cards-operations.e2e.js: custom fields panel opens from card details
+03-cards-operations.e2e.js: checkbox custom fields toggle and can be removed from a card
+03-cards-operations.e2e.js: currency custom fields save and offer an X beside Save
+03-cards-operations.e2e.js: a date custom field tooltip names the field, not "Starts on"
+03-cards-operations.e2e.js: custom field layout toggle switches and persists its layout
+03-cards-operations.e2e.js: archiving a card removes it from board view
+03-cards-operations.e2e.js: moving a card to another list shows it only in the target list
+03-cards-operations.e2e.js: move does not create duplicate cards
+03-cards-operations.e2e.js: copying a card adds it to the target list without removing the original
+03-cards-operations.e2e.js: copying a card to an empty board shows an error or empty list selector without crashing
+03-cards-operations.e2e.js: changing list via card detail list-selector moves the card
+03-cards-operations.e2e.js: archived card can be unarchived from the archives sidebar
+05-admin-users.e2e.js: Admin – user management › login page sign-in link is visible and accessible
+05-admin-users.e2e.js: Admin – user management › login page renders correctly on a fresh load
+06-views-layout.e2e.js: cards seeded in different lists appear in the correct list columns
+06-views-layout.e2e.js: scrolling down a long list reaches the last card
+07-attachments-links.e2e.js: attachment panel button opens from card details
+07-attachments-links.e2e.js: file input for attachments is present in the DOM
+07-attachments-links.e2e.js: the attachment overlay provides native PDF and isolated Office previews
+07-attachments-links.e2e.js: paste image listener is attached to the card description editor
+07-attachments-links.e2e.js: attachment area displays existing attachments without errors
+07-attachments-links.e2e.js: copy-link row copies a valid URL to the clipboard
+07-attachments-links.e2e.js: Attachments & links › card description can contain a link that renders as a clickable anchor
 08-notifications-activity.e2e.js: adding a comment appears in the card activity log
 08-notifications-activity.e2e.js: activity log entries include a non-empty timestamp
-16-card-members-description.e2e.js
+08-notifications-activity.e2e.js: Notifications & activity log › #6658: assigning a muted board member creates no notification
+08-notifications-activity.e2e.js: Notifications & activity log › activity log shows board-level activities
+08-notifications-activity.e2e.js: Notifications & activity log › working (time) log fields are accessible on a card
+08-notifications-activity.e2e.js: Notifications & activity log › @mention in a comment is stored in the activity DB
+09-my-cards-filter.e2e.js: My Cards, filter & sort › sorting cards by date does not crash and reorders list
+09-my-cards-filter.e2e.js: My Cards, filter & sort › changing a custom field value saves without breaking the card
+09-my-cards-filter.e2e.js: My Cards, filter & sort › changing the list (category) from the card list-selector moves it correctly
+10-stability.e2e.js: Stability & connectivity › comment is not lost when the page is refreshed immediately after saving
+10-stability.e2e.js: Stability & connectivity › #6654: a private-board session survives a full page refresh
+10-stability.e2e.js: Stability & connectivity › login link is visible on 5 consecutive fresh page loads
+10-stability.e2e.js: Stability & connectivity › automated 90-day archive rule: cards modified > 90 days ago are archived by cron
+10-stability.e2e.js: Stability & connectivity › multiple simultaneous board views by different users stay independent
+10-stability.e2e.js: Stability & connectivity › page does not emit JS errors on initial board load
 11-labels-duedates.e2e.js: label selector popup opens from a card
 11-labels-duedates.e2e.js: creating a new label via the popup shows it in the list
 11-labels-duedates.e2e.js: applying a seeded label to a card shows it in card details
@@ -35,35 +69,140 @@
 11-labels-duedates.e2e.js: changing an existing due date saves the replacement (#6607)
 11-labels-duedates.e2e.js: clearing a due date removes its badge from the card
 11-labels-duedates.e2e.js: clicking an existing start date reopens and saves its editor
+12-checklists.e2e.js: add-checklist button opens the inline form
+12-checklists.e2e.js: creating a checklist adds it to the card details
+12-checklists.e2e.js: adding an item to a checklist renders it in the item list
+12-checklists.e2e.js: checking a checklist item adds the is-checked class
+12-checklists.e2e.js: checklist progress bar appears when items are checked
+12-checklists.e2e.js: deleting a checklist removes it from the card
+12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items
 13-swimlanes.e2e.js: board renders with a visible swimlane section
 13-swimlanes.e2e.js: swimlane header shows the seeded "Default" title
 13-swimlanes.e2e.js: swimlane action popup opens without JS errors
 13-swimlanes.e2e.js: clicking the swimlane collapse button does not crash the page
 13-swimlanes.e2e.js: adding a new swimlane creates it on the board
-03-cards-operations.e2e.js: custom fields panel opens from card details
-03-cards-operations.e2e.js: checkbox custom fields toggle and can be removed from a card
-03-cards-operations.e2e.js: currency custom fields save and offer an X beside Save
-03-cards-operations.e2e.js: a date custom field tooltip names the field, not "Starts on"
-03-cards-operations.e2e.js: custom field layout toggle switches and persists its layout
-23-rest-api-more.e2e.js: custom fields: create, get, delete
-07-attachments-links.e2e.js: attachment panel button opens from card details
-07-attachments-links.e2e.js: file input for attachments is present in the DOM
-07-attachments-links.e2e.js: the attachment overlay provides native PDF and isolated Office previews
-07-attachments-links.e2e.js: paste image listener is attached to the card description editor
-07-attachments-links.e2e.js: attachment area displays existing attachments without errors
-03-cards-operations.e2e.js: archiving a card removes it from board view
-03-cards-operations.e2e.js: moving a card to another list shows it only in the target list
-03-cards-operations.e2e.js: move does not create duplicate cards
-03-cards-operations.e2e.js: copying a card adds it to the target list without removing the original
-03-cards-operations.e2e.js: copying a card to an empty board shows an error or empty list selector without crashing
-03-cards-operations.e2e.js: changing list via card detail list-selector moves the card
-07-attachments-links.e2e.js: copy-link row copies a valid URL to the clipboard
-02-cards-open-view.e2e.js: copy-link button produces a URL that opens the card in full-screen view
-03-cards-operations.e2e.js: archived card can be unarchived from the archives sidebar
-06-views-layout.e2e.js: cards seeded in different lists appear in the correct list columns
-06-views-layout.e2e.js: scrolling down a long list reaches the last card
+14-voting-watchers.e2e.js
 15-board-actions.e2e.js: #6660: star/unstar persists through the server method
 15-board-actions.e2e.js: archiving a card removes it from the board list
 15-board-actions.e2e.js: board settings (board menu) opens from the right sidebar
 15-board-actions.e2e.js: renaming board via popup updates the board title
 15-board-actions.e2e.js: member menu opens Boards in Archive and shows archived boards
+15-board-actions.e2e.js: Board-level actions › filter sidebar opens when filter button is clicked
+16-card-members-description.e2e.js
+17-rest-api.e2e.js: REST API: data + permissions › #1437 logout revokes the presented REST token
+17-rest-api.e2e.js: REST API: data + permissions › user deletion confirms removal and reports a repeat as 404
+17-rest-api.e2e.js: REST API: data + permissions › #4743/#5813 bulk create assigns unique card numbers, bulk delete removes them
+17-rest-api.e2e.js: REST API: data + permissions › #4743 bulk create rejects an oversized array (>500)
+17-rest-api.e2e.js: REST API: data + permissions › #5819 bulk labels merge (add keeps existing, remove drops, dedupe)
+17-rest-api.e2e.js: REST API: data + permissions › #5819 bulk labels rejects a label not on the board
+17-rest-api.e2e.js: REST API: data + permissions › #5819 label creation is BoardAdmin-gated (non-admin member denied)
+17-rest-api.e2e.js: REST API: data + permissions › #5998 add board member with named role=admin sets isAdmin
+17-rest-api.e2e.js: REST API: data + permissions › #5998 add board member rejects an invalid role
+17-rest-api.e2e.js: REST API: data + permissions › #5998 adding a board member requires board admin (non-admin member denied)
+17-rest-api.e2e.js: REST API: data + permissions › #5998 add card member: board member allowed, non-member rejected
+17-rest-api.e2e.js: REST API: data + permissions › #5846 set then clear a card due date
+17-rest-api.e2e.js: REST API: data + permissions › #3697 clearing members via REST stores an array, never null
+17-rest-api.e2e.js: REST API: data + permissions › #2875 create a card with no / empty members stores [] not null
+17-rest-api.e2e.js: REST API: data + permissions › #5650 board created via REST without owner is owned by the caller
+17-rest-api.e2e.js: REST API: data + permissions › copying a card cross-board re-homes its subtasks onto the destination board
+17-rest-api.e2e.js: REST API: data + permissions › #5166 copied comments get the destination boardId and keep their author
+17-rest-api.e2e.js: REST API: data + permissions › #5688 copying a card copies its checklist and all items
+17-rest-api.e2e.js: REST API: data + permissions › #3252 deleting a card removes its children and adds one delete activity
+17-rest-api.e2e.js: REST API: data + permissions › #5592/#5627 copying a board copies its webhooks and rules
+17-rest-api.e2e.js: REST API: data + permissions › #1894 a disabled user cannot be added to a board
+17-rest-api.e2e.js: REST API: data + permissions › #5897 create a linked card referencing an existing card
+17-rest-api.e2e.js: REST API: data + permissions › copy a card to position 0 of another list
+17-rest-api.e2e.js: REST API: data + permissions › #3062 get and update board card settings
+17-rest-api.e2e.js: REST API: data + permissions › #4815 GET /api/user/cards returns the user's cards, with a due filter
+17-rest-api.e2e.js: REST API: data + permissions › unauthenticated request cannot read user cards
+17-rest-api.e2e.js: bulk create refuses a parent card on a board the caller cannot see (ParentBleed)
+17-rest-api.e2e.js: member add/remove with an unknown action never returns the user document (HashBleed)
+17-rest-api.e2e.js: a refused REST read answers 403, not 200 with an error object (ErrorBleed)
+17-rest-api.e2e.js: an assigned-only member cannot read the whole board over REST (AssignedBleed)
+18-rtl-layout.e2e.js: LTR (English) layout › board view: direction, visible cards, first list on leading side
+18-rtl-layout.e2e.js: LTR (English) layout › card details panel: direction and visible title
+19-accessibility.e2e.js: Accessibility › the html element declares its language and text direction
+23-rest-api-more.e2e.js: custom fields: create, get, delete
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › rules: create, list, get, edit and delete
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › whole-board import recreates the board together with its rules
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › rules: unauthenticated request is rejected
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › export with attachments=false returns the board without attachment file data
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › card PUT sets stickers, locations and the complete checkbox
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › swimlanes: create, get, edit, delete
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › lists: create, get, edit, delete
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › checklists and items: create, get, delete
+23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › comments: create and list
+24-feature-issues.e2e.js: Feature issues › #4266 deleting a board removes its rules, triggers and actions
+28-dependencies-rest.e2e.js: REST API: card dependencies › full CRUD with type/color/icon, plus validation
+28-dependencies-rest.e2e.js: REST API: card dependencies › unauthenticated requests are rejected
+29-card-settings-avatar.e2e.js: Card Settings: "Mark as complete" on minicards › complete toggle is hidden on minicards by default
+30-ldap-orgs-teams.e2e.js: #4737 sync LDAP groups as Organizations/Teams › non-admin client call is rejected and creates nothing
+31-templates-allboards.e2e.js: #2339 #5850 All Boards / Templates redesign › #6643: Archive shows an archived subtasks helper board
+36-fixed-bug-regressions.e2e.js: Fixed-bug regressions › #5892 a collapsed list with a custom width still shrinks to the rail
+38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › anonymous/public-board: fixed width lives in localStorage and does not leak across boards
+40-rest-card-move-list.e2e.js: REST API: move card to another list (#6423) › a user without board write access cannot move the card (negative)
+41-admin-newest-features.e2e.js: Admin – newest features › NEGATIVE: board Table view column headers are not clickable-sortable
+42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › a card comment (carrying boardId) is published and shown when the card is opened
+42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › NEGATIVE: a comment on a different board is not published into this board
+44-calendar-date-display.e2e.js: gregorian popup opens a full-width calendar with only hour/minute controls
+44-calendar-date-display.e2e.js: buddhist popup opens a full-width calendar with only hour/minute controls
+70-rest-board-management.e2e.js: normal member cannot rename a board through REST
+77-public-board-favorite.e2e.js: #6713 public board favorite survives reload and appears in Favorites
+admin-attachment-retention.e2e.js: negative: an ordinary user cannot open the retention settings
+admin-new-env-settings.e2e.js: negative: an ordinary user is offered none of them
+assist-due-from-title.e2e.js: Due date from the title › Board Settings / Card turns it off for the add-card form (negative)
+avatar-sub-path.e2e.js: lazily loaded code is fetched from the page origin, not ROOT_URL's host
+calendar-today-marker.e2e.js: due-date popup marks today, and only today
+calendar-today-marker.e2e.js: due-date popup fills today green on the wisteria theme
+calendar-today-marker.e2e.js: due-date popup fills today green on the dark theme
+calendar-today-marker.e2e.js: due-date popup fills today green on the appleglasspastel theme
+card-copy-boundary.e2e.js: the copy dialog still creates a renamed card
+checklist-single-submit.e2e.js: #6700 one checklist persists after click
+checklist-single-submit.e2e.js: #6700 one checklist persists after Control+Enter
+default-avatar.e2e.js: the default avatar route redirects to an http(s) address or answers 404
+due-date-keyboard-shortcut.e2e.js: #6750 due date keyboard shortcut › negative: Space on a focused button activates the button, not the Space shortcut (#6755)
+due-date-keyboard-shortcut.e2e.js: #6750 due date keyboard shortcut › negative: d over a minicard does nothing when shortcuts are disabled (#6755)
+duplicate-dependencies.e2e.js: REST accepts both duplicate types and retains board boundary validation
+editor-enter-preference.e2e.js: list editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: card editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: description editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: checklist editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: item editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: comment editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: title editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: copy editor follows submit-on-Enter=false
+editor-multiline-resize.e2e.js: card editor can be manually enlarged and keeps its size while typing (ltr)
+editor-multiline-resize.e2e.js: card editor can be manually enlarged and keeps its size while typing (rtl)
+hook-bleed.e2e.js: moving a card with a webhook enabled is no HookBleed, and the mover keeps their account
+import-export-format-audit.e2e.js: csv: empty imports fail without creating a board
+import-export-format-audit.e2e.js: markdown: empty imports fail without creating a board
+import-export-format-audit.e2e.js: excel: empty imports fail without creating a board
+invite-member-email-case.e2e.js: negative: a similar but different address is not taken for the colleague
+issue-6793-comments-follow-card-move.e2e.js: Comments follow a card moved to another board (#6793) › NEGATIVE: a refused REST move moves neither the card nor its comment
+keyboard-nonlatin-once.e2e.js: a shortcut runs once for the d key on a Latin, a Farsi and a Cyrillic layout
+minicard-requested-by-6872.e2e.js: #6872 Requested by / Assigned by on the minicard › negative: nothing picked and nothing typed draws no line
+minicard-requested-by-6872.e2e.js: #6872 Requested by / Assigned by on the minicard › Show on Minicard off hides a picked member
+minicard-rule-button-6836.e2e.js: negative: with Show on Minicard off (the default) the minicard has no rule button
+notification-delivery-settings.e2e.js: #5171 tray: an entry scheduled for later is not counted until its time
+oidc-redirect-guard.e2e.js: OIDC automatic attempt stays latched across browser callback reloads
+password-submit-event.e2e.js: password submit replay reaches the form handler after click
+password-submit-event.e2e.js: password submit replay reaches the form handler after Enter
+rest-checklist-not-found.e2e.js: missing and existing checklist IDs preserve board access and authentication errors
+rest-integration-update.e2e.js: integration PUT preserves authentication and board-admin requirements
+rest-list-archive.e2e.js: a list is archived and restored by REST, and not by someone without access
+rest-user-update.e2e.js: user PUT preserves successful updates and hides session secrets
+rest-user-update.e2e.js: user PUT checks authentication and site-admin access before missing-user responses
+rtl-check-mark.e2e.js: a checked checkbox sits on its own square left-to-right and right-to-left
+sanitize-html-nested-iframe.e2e.js: a board whose card holds nested iframes exports and imports, and nobody is locked out
+viewport-matrix.e2e.js: phone-portrait › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: phone-landscape › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: iphone-duo-inner-portrait › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: iphone-duo-inner-landscape › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: iphone-duo-cover-portrait › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: iphone-duo-cover-landscape › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: tablet-portrait › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: tablet-landscape › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: laptop-landscape › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: laptop-portrait › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: touchscreen55-landscape › board header: icons and texts on screen, no sideways page scroll
+viewport-matrix.e2e.js: touchscreen55-portrait › board header: icons and texts on screen, no sideways page scroll

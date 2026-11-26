@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Voulez-vous vraiment supprimer cette équipe du tableau ?",
   "confirm-btn": "Conferma",
   "remove-btn": "Rimuovi",
+  "filter-card-text-label": "Φιλτράρισμα κειμένου καρτών",
   "filter-card-title-label": "Filtra per titolo scheda",
   "invite-people-success": "Inviti di registrazione inviati correttamente",
   "invite-people-error": "Errore durante l'invio degli inviti di registrazione",

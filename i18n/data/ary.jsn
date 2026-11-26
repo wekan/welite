@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "هل أنت متأكد أنك تريد إزالة هذا الفريق من اللوحة؟",
   "confirm-btn": "تأكيد",
   "remove-btn": "إزالة",
+  "filter-card-text-label": "صفّي نص البطاقة",
   "filter-card-title-label": "التصفية حسب عنوان البطاقة",
   "invite-people-success": "تم إرسال دعوة التسجيل بنجاح",
   "invite-people-error": "حدث خطأ أثناء إرسال دعوة التسجيل",

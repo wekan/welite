@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Sind Dir sicher, dat Dir dëst Team vom Board ewechhuelen möchten?",
   "confirm-btn": "Bestätegen",
   "remove-btn": "ewechhuelen",
+  "filter-card-text-label": "Kaartentext filteren",
   "filter-card-title-label": "Nach Titel den Kaart filtern",
   "invite-people-success": "Registrierungseinladung erfollegräich versandt",
   "invite-people-error": "Feeler beim Versand den Registrierungseinladung",

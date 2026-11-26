@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Garee kana gabatee irraa haquu kee mirkaneeffatteettaa?",
   "confirm-btn": "Mirkaneessi",
   "remove-btn": "Haqi",
+  "filter-card-text-label": "Barruu kaardii calali",
   "filter-card-title-label": "Mata duree kaardiitiin calali",
   "invite-people-success": "Affeerraan galmaa’uuf ergame milkaa’eera",
   "invite-people-error": "Affeerraa galmaa’uuf erguu keessatti dogoggorri uumame",

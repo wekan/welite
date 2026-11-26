@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Esteu segur que voleu eliminar aquest equip del tauler?",
   "confirm-btn": "Confirmeu",
   "remove-btn": "Eliminar",
+  "filter-card-text-label": "Filtra el text de les fitxes",
   "filter-card-title-label": "Filtra per títol de la fitxa",
   "invite-people-success": "Invitació per registrar-se enviada amb èxit",
   "invite-people-error": "S'ha produït un error en enviar la invitació per registrar-se",

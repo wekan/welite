@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ert tú vís/ur í, at tú vilt taka hetta liðið av talvuni?",
   "confirm-btn": "Vátta",
   "remove-btn": "Tak burtur",
+  "filter-card-text-label": "Sálda tekst á kortum",
   "filter-card-title-label": "Sálda eftir kortheiti",
   "invite-people-success": "Innbjóðingin til skráseting varð send",
   "invite-people-error": "Villa kom fyri, meðan innbjóðingin til skráseting varð send",

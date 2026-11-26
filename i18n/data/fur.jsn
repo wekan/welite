@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Sei sicuro di voler rimuovere chest team dalla taule?",
   "confirm-btn": "Conferme",
   "remove-btn": "Gjave",
+  "filter-card-text-label": "Filtre il test des cjartis",
   "filter-card-title-label": "Filtra par titul cjarte",
   "invite-people-success": "Inviti di registrazione invieti correttamente",
   "invite-people-error": "Erroris durante l'invio degli inviti di registrazione",

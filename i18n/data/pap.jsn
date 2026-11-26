@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Bo ta sigur ku bo ke kita na e tim di e tabla?",
   "confirm-btn": "Confirmar",
   "remove-btn": "Kita",
+  "filter-card-text-label": "Filtrá teksto di karchi",
   "filter-card-title-label": "Filtrar pa e título di e karchi",
   "invite-people-success": "Inbitashon di registro enbiada ku éxito",
   "invite-people-error": "Eror na e manda e inbitashon pa registrarse",

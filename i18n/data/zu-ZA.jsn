@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Uqinisekile ukuthi ufuna ukususa leli thimba ebhodini ?",
   "confirm-btn": "Qinisekisa",
   "remove-btn": "Susa",
+  "filter-card-text-label": "Hlunga umbhalo wekhadi",
   "filter-card-title-label": "Hlunga ngesihloko sekhadi",
   "invite-people-success": "Isimemo sokubhalisa sithunyelwe ngempumelelo",
   "invite-people-error": "Iphutha ngenkathi kuthunyelwa isimemo sokubhalisa",

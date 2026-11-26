@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Czy na pewno chcesz usunąć ten zespół z tabule?",
   "confirm-btn": "Potwierdź",
   "remove-btn": "Wyciep",
+  "filter-card-text-label": "Filtruj tekst kart",
   "filter-card-title-label": "Filtruj podug tytułu karty",
   "invite-people-success": "Zaproszenie do rejestracji ôstało wysłane",
   "invite-people-error": "Feler podczas wysyłki zaproszenia do rejestracji",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Certusne es te hanc manum ex tabula removere velle?",
   "confirm-btn": "Confirma",
   "remove-btn": "Remove",
+  "filter-card-text-label": "Textum chartarum cribra",
   "filter-card-title-label": "Filtra secundum titulum chartae",
   "invite-people-success": "Invitatio ad inscriptionem feliciter missa est",
   "invite-people-error": "Error dum invitatio ad inscriptionem mittebatur",

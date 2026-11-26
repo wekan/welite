@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "ይህን ቡድን ከቦርዱ ማስወገድ እርግጠኛ ነዎት?",
   "confirm-btn": "አረጋግጥ",
   "remove-btn": "አስወግድ",
+  "filter-card-text-label": "የካርድ ጽሑፍ አጣራ",
   "filter-card-title-label": "በካርድ ርዕስ አጣራ",
   "invite-people-success": "የምዝገባ ግብዣው በተሳካ ሁኔታ ተልኳል",
   "invite-people-error": "የምዝገባ ግብዣውን ሲልኩ ስህተት ተፈጥሯል",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Je i sigurt që dëshiron ta heqësh këtë ekip nga tabela?",
   "confirm-btn": "Konfirmo",
   "remove-btn": "Hiq",
+  "filter-card-text-label": "Filtro tekstin e kartës",
   "filter-card-title-label": "Filtro sipas titullit të kartës",
   "invite-people-success": "Ftesa për regjistrim u dërgua me sukses",
   "invite-people-error": "Gabim gjatë dërgimit të ftesës për regjistrim",

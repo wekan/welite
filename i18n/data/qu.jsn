@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "¿Chiqaptachu kay ayllutaqa pirqamanta qichuyta munanki?",
   "confirm-btn": "Takyachiy",
   "remove-btn": "Qichuy",
+  "filter-card-text-label": "Kartap qillqanta suysuy",
   "filter-card-title-label": "Kartapa uma sutinwan suysuy",
   "invite-people-success": "Qillqakunapaq invitacionqa allintam apachisqa",
   "invite-people-error": "Qillqakunapaq invitacionta apachichkaspa pantay",

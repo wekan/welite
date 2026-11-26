@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Oled sa kindel, et tahad selle meeskonna foorumist eemaldada ?",
   "confirm-btn": "Kinnitage",
   "remove-btn": "Eemaldage",
+  "filter-card-text-label": "Filtreeri kaardi teksti",
   "filter-card-title-label": "Filtreeri kaardi pealkirja järgi",
   "invite-people-success": "Edukalt saadetud kutse registreerimiseks",
   "invite-people-error": "Viga registreerimiskutse saatmisel",

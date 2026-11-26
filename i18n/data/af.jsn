@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Is jy seker jy wil hierdie span van die bord verwyder?",
   "confirm-btn": "Bevestig",
   "remove-btn": "Verwyder",
+  "filter-card-text-label": "Filtreer kaartteks",
   "filter-card-title-label": "Filtreer volgens kaarttitel",
   "invite-people-success": "Uitnodiging om te registreer met sukses gestuur",
   "invite-people-error": "Kon nie uitnodiging stuur om te registreer nie",

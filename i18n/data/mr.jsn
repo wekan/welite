@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "हा संघ फलकावरून काढायचा आहे याची खात्री आहे का?",
   "confirm-btn": "पुष्टी करा",
   "remove-btn": "काढा",
+  "filter-card-text-label": "कार्डातील मजकूर गाळा",
   "filter-card-title-label": "कार्ड शीर्षकानुसार फिल्टर करा",
   "invite-people-success": "नोंदणीचे आमंत्रण यशस्वीरित्या पाठवले",
   "invite-people-error": "नोंदणीचे आमंत्रण पाठवताना त्रुटी आली",

@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Biztos vagy benne, hogy eltávolítod ezt a Csapatot a Tábláról?",
   "confirm-btn": "Megerősítés",
   "remove-btn": "Távolítsd el",
+  "filter-card-text-label": "Kártyaszöveg szűrése",
   "filter-card-title-label": "Kártya címe alapján Szűrés",
   "invite-people-success": "Sikeresen elküldtem a meghívót a regisztrálónak",
   "invite-people-error": "Hiba történt a meghívó elküldésekor.",

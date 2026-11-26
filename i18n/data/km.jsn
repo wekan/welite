@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "តើ​អ្នក​ប្រាកដ​ជា​ចង់​ដក​ក្រុម​នេះ​ចេញ​ពី​ក្រុមប្រឹក្សា​ឬ?",
   "confirm-btn": "បញ្ជាក់",
   "remove-btn": "ដកចេញ",
+  "filter-card-text-label": "ត្រងអត្ថបទកាត",
   "filter-card-title-label": "ត្រងតាមចំណងជើងកាត",
   "invite-people-success": "ការអញ្ជើញឱ្យចុះឈ្មោះដោយជោគជ័យ",
   "invite-people-error": "មាន​បញ្ហា​ពេល​ផ្ញើ​ការ​អញ្ជើញ​ឱ្យ​ចុះ​ឈ្មោះ",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Bu topary tagtadan aýyrmak isleýändigiňize ynanýarsyňyzmy?",
   "confirm-btn": "Tassykla",
   "remove-btn": "Aýyr",
+  "filter-card-text-label": "Kartyň tekstini süzüň",
   "filter-card-title-label": "Kartyň ady boýunça süzüň",
   "invite-people-success": "Üstünlik bilen iberilen çakylyk",
   "invite-people-error": "Hasaba alynmak üçin çakylyk iberilende säwlik",

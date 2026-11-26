@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Vuls ti propi allontanar questa squadra da la tabella?",
   "confirm-btn": "Confermar",
   "remove-btn": "Allontanar",
+  "filter-card-text-label": "Filtrar il text da las cartas",
   "filter-card-title-label": "Filtrar tenor il titel da la carta",
   "invite-people-success": "Invitaziun da sa registrar tramessa cun success",
   "invite-people-error": "Errur durant il trametter da l’invitaziun da sa registrar",

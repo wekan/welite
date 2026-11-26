@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ҫак командӑна хӑмаран кӑларса пӑрахасси ҫинчен шанатӑр-и?",
   "confirm-btn": "Ҫирӗплетес",
   "remove-btn": "Кӑларса пӑрахас",
+  "filter-card-text-label": "Карточка текстне фильтрлас",
   "filter-card-title-label": "Карточка ячӗ тӑрӑх суйлас",
   "invite-people-success": "Регистрацие чӗнӳ ӑнӑҫлӑ янӑ",
   "invite-people-error": "Регистрацие чӗнӳ янӑ чухне йӑнӑш тухрӗ",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Opravdu chcete odstranit tento tým z tabla ?",
   "confirm-btn": "Potvrdit",
   "remove-btn": "Odstranit",
+  "filter-card-text-label": "Filtrovat text karet",
   "filter-card-title-label": "Filtrovat pomocí názvů karet",
   "invite-people-success": "Invitation to register sent with success",
   "invite-people-error": "Error while sending invitation to register",

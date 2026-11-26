@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Tena hanala ity ekipa ity amin'ny solaitra ve ianao?",
   "confirm-btn": "Hamafiso",
   "remove-btn": "Esory",
+  "filter-card-text-label": "Sivano ny lahatsoratry ny karatra",
   "filter-card-title-label": "Sivanina araka ny lohatenin'ny karatra",
   "invite-people-success": "Nahomby ny fandefasana fanasana hisoratra anarana",
   "invite-people-error": "Nisy hadisoana teo am-pandefasana fanasana hisoratra anarana",

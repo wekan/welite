@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Xana u tiyisile leswaku u lava ku susa ntlawa lowu eka bodo ?",
   "confirm-btn": "tiyisisa",
   "remove-btn": "susa",
+  "filter-card-text-label": "Sefa tsalwa ra khadi",
   "filter-card-title-label": "sefa hi khadi nhlokomhaka",
   "invite-people-success": "Xirhambo xo tsarisa xi rhumeriwile hi ku humelela",
   "invite-people-error": "Xihoxo loko ku rhumeriwa xirhambo xo tsarisa",

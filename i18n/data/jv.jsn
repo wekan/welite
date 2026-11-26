@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Apa sampeyan yakin arep mbusak tim iki saka papan?",
   "confirm-btn": "Konfirmasi",
   "remove-btn": "Busak",
+  "filter-card-text-label": "Saring teks kertu",
   "filter-card-title-label": "Saring miturut judhul kertu",
   "invite-people-success": "Undhangan kanggo ndhaptar kasil dikirim",
   "invite-people-error": "Kaluputan nalika ngirim undhangan kanggo ndhaptar",

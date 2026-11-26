@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Վստա՞հ եք, որ ցանկանում եք հեռացնել այս թիմին խորհրդի կազմից:",
   "confirm-btn": "Հաստատել",
   "remove-btn": "Հեռացնել",
+  "filter-card-text-label": "Զտել քարտի տեքստը",
   "filter-card-title-label": "Զտել ըստ քարտի վերնագրի",
   "invite-people-success": "Գրանցվելու հրավերն ուղարկվել է հաջողությամբ",
   "invite-people-error": "Սխալ գրանցվելու հրավեր ուղարկելիս",

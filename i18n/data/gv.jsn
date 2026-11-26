@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Vel oo shickyr dy vel oo gearree yn possan shoh y ghoaill jeh'n voayrd?",
   "confirm-btn": "Firrinaghey",
   "remove-btn": "Gow jeh",
+  "filter-card-text-label": "Sheel teks y kaart",
   "filter-card-title-label": "Screeu liorish ennym kaart",
   "invite-people-success": "Cuirrey dy scryssey currit dy speeideilagh",
   "invite-people-error": "Marranys tra v'eh cur cuirrey dy scryssey",

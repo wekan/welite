@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "您確定要從董事會中刪除該團隊嗎？",
   "confirm-btn": "確認",
   "remove-btn": "消除",
+  "filter-card-text-label": "篩選卡片文字",
   "filter-card-title-label": "按卡片標題過濾",
   "invite-people-success": "註冊邀請已成功發送",
   "invite-people-error": "發送註冊邀請時出錯",

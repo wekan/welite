@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "O sa vakadeitaka ni o via kauta tani na tim oqo mai na vola?",
   "confirm-btn": "Vakadeitaka",
   "remove-btn": "Kauta tani",
+  "filter-card-text-label": "Vakasavasavataka na volavola ni kadi",
   "filter-card-title-label": "Vakatautaka ena ulutaga ni kadi",
   "invite-people-success": "Sa vakau rawa na veisureti me vola yaca",
   "invite-people-error": "Cala ni vakau veisureti me vola yaca",

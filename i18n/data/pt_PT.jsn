@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Tem certeza de que deseja excluir este time do quadro?",
   "confirm-btn": "Confirmar",
   "remove-btn": "Remover",
+  "filter-card-text-label": "Filtrar o texto dos cartões",
   "filter-card-title-label": "Filtrar por título do cartão",
   "invite-people-success": "Convite para registrar-se enviado com sucesso",
   "invite-people-error": "Erro durante envio do convite para registrar-se",

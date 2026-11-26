@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Eshti sigur cã vrei s-scots aestã echipã di pi tabelã ?",
   "confirm-btn": "Adiverea",
   "remove-btn": "Rimuovi",
+  "filter-card-text-label": "Filtreadzã textul a cartãljei",
   "filter-card-title-label": "Filtreadzã dupã titlul a cartãljei",
   "invite-people-success": "Invitatsia ti înregistrari fu trimisã cu sucses",
   "invite-people-error": "Eroari la trimiteri a invitatsiei ti înregistrari",

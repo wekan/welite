@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Энэ бүлэгые самбарһаа гаргахаяа үнэхөөрөө хүсэжэ байна гүт?",
   "confirm-btn": "Баталха",
   "remove-btn": "Гаргаха",
+  "filter-card-text-label": "Карточкын бэшэгые шүүхэ",
   "filter-card-title-label": "Картын нэрээр шүүхэ",
   "invite-people-success": "Бүридхүүлхэ урилга амжалтатай эльгээгдэбэ",
   "invite-people-error": "Бүридхүүлхэ урилга эльгээхэ үедэ алдуу гараба",

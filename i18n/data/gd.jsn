@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "A bheil thu cinnteach gu bheil thu airson an sgioba seo a thoirt far a' bhùird?",
   "confirm-btn": "Dearbhaich",
   "remove-btn": "Thoir air falbh",
+  "filter-card-text-label": "Criathraich teacsa nan cairtean",
   "filter-card-title-label": "Criathraich a rèir tiotal na cairt",
   "invite-people-success": "Chaidh an cuireadh clàraidh a chur gu soirbheachail",
   "invite-people-error": "Mearachd fhad 's a bha an cuireadh clàraidh ga chur",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Yu laik tru long rausim dispela tim long bot?",
   "confirm-btn": "Oraitim",
   "remove-btn": "Rausim",
+  "filter-card-text-label": "Filta long ol tok bilong kat",
   "filter-card-title-label": "Sivim long nem bilong kat",
   "invite-people-success": "Tok bilong singautim i kam raitim nem i go gut pinis",
   "invite-people-error": "Rong i kamap taim i salim tok bilong singautim i kam raitim nem",

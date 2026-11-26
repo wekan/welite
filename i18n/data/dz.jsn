@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "རུ་ཁག་འདི་བྱང་གཞི་ནས་བཏོན་ན་འདོད་ཐག་ཆོད་ཡིན་ནམ།",
   "confirm-btn": "ངོས་འཛིན།",
   "remove-btn": "བཏོན།",
+  "filter-card-text-label": "ཤོག་བྱང་གི་ཚིག་ཡིག་བཙགས།",
   "filter-card-title-label": "ཤོག་བྱང་ཁ་བྱང་ལྟར་ཚགས་མ་རྒྱོབ།",
   "invite-people-success": "ཐོ་འགོད་གདན་ཞུ་ལེགས་པར་བསྐུར།",
   "invite-people-error": "ཐོ་འགོད་གདན་ཞུ་གཏོང་སྐབས་ནོར་འཁྲུལ།",

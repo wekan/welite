@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Je, una uhakika unataka kuiondoa timu hii kwenye ubao?",
   "confirm-btn": "Thibitisha",
   "remove-btn": "Ondoa",
+  "filter-card-text-label": "Chuja maandishi ya kadi",
   "filter-card-title-label": "Chuja kwa kichwa cha kadi",
   "invite-people-success": "Mwaliko wa kujiandikisha umetumwa kwa mafanikio",
   "invite-people-error": "Hitilafu wakati wa kutuma mwaliko wa kujiandikisha",

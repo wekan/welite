@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Anda pasti untuk membuang pasukan ini daripada papan?",
   "confirm-btn": "Sahkan",
   "remove-btn": "hapus",
+  "filter-card-text-label": "Saring teks kartu",
   "filter-card-title-label": "Tapis dengan Judul Kad",
   "invite-people-success": "Jemputan untuk pendaftaran telah berjaya dihantar",
   "invite-people-error": "Ralat semasa mengantar jemputan pendaftaran",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "আপুনি নিশ্চিতনে যে বৰ্ডৰ পৰা এই দলটো আঁতৰাব বিচাৰে?",
   "confirm-btn": "নিশ্চিত কৰক",
   "remove-btn": "আঁতৰাওক",
+  "filter-card-text-label": "কাৰ্ডৰ পাঠ ছাঁকক",
   "filter-card-title-label": "কাৰ্ডৰ শিৰোনাম অনুসৰি ফিল্টাৰ কৰক",
   "invite-people-success": "পঞ্জীয়নৰ আমন্ত্ৰণ সফলতাৰে পঠিওৱা হ'ল",
   "invite-people-error": "পঞ্জীয়নৰ আমন্ত্ৰণ পঠিয়াওঁতে ত্ৰুটি ঘটিল",

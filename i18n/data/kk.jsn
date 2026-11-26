@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Бұл команданы тақтадан шынымен алып тастағыңыз келе ме?",
   "confirm-btn": "Растау",
   "remove-btn": "Алып тастау",
+  "filter-card-text-label": "Карточка мәтінін сүзгілеу",
   "filter-card-title-label": "Карточка атауы бойынша сүзу",
   "invite-people-success": "Тіркелуге шақыру сәтті жіберілді",
   "invite-people-error": "Тіркелуге шақыру жіберу қатесі",

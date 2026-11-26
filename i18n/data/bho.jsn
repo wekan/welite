@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "का रउआ सचहूँ एह बोर्ड से ई टीम हटावल चाहत बानी?",
   "confirm-btn": "पुष्टि करीं",
   "remove-btn": "हटाईं",
+  "filter-card-text-label": "कार्ड के लिखावट छाँटीं",
   "filter-card-title-label": "कार्ड शीर्षक से छाँटीं",
   "invite-people-success": "पंजीकरण के नेवता सफलतापूर्वक भेजल गइल",
   "invite-people-error": "पंजीकरण के नेवता भेजे में गलती",

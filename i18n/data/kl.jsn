@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Suleqatigiit taakku ilisarnaammit matumani piiassallugit qulakkeerpiuk?",
   "confirm-btn": "Uppernarsaruk",
   "remove-btn": "Piiguk",
+  "filter-card-text-label": "Kortip allassimasui immikkoortitikkit",
   "filter-card-title-label": "Kortsip qulequtaa naapertorlugu immikkoortiteruk",
   "invite-people-success": "Nalunaarsornissamut qaaqqusissut iluatsittumik nassiunneqarpoq",
   "invite-people-error": "Nalunaarsornissamut qaaqqusissummik nassiussinermi kukkuneq",

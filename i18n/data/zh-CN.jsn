@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "请确认是否删除面板上此团队？此操作无法撤销。",
   "confirm-btn": "确认",
   "remove-btn": "移除",
+  "filter-card-text-label": "筛选卡片文本",
   "filter-card-title-label": "按卡片标题筛选",
   "invite-people-success": "成功发送注册邀请",
   "invite-people-error": "发送注册邀请时出错",

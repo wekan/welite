@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Sind Sie sicher, das Sie dieses Team vom Board entfernen möchten?",
   "confirm-btn": "Bestätigen",
   "remove-btn": "entfernen",
+  "filter-card-text-label": "Kartentext filtern",
   "filter-card-title-label": "Nach Titel der Karte filtern",
   "invite-people-success": "Registrierungseinladung erfolgreich versandt",
   "invite-people-error": "Fehler beim Versand der Registrierungseinladung",

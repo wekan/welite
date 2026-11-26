@@ -1564,6 +1564,7 @@
   "remove-team-from-table": "Binne jo wis dat jo dit team fan it boerd fuortsmite wolle?",
   "confirm-btn": "Befêstigje",
   "remove-btn": "Fuortsmite",
+  "filter-card-text-label": "Filterje kaarttekst",
   "filter-card-title-label": "Filterje op kaarttitel",
   "invite-people-success": "Utnoeging om te registrearjen ferstjoerd mei súkses",
   "invite-people-error": "Flater by it ferstjoeren fan útnoeging om te registrearjen",

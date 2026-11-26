@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Na gwës chcesz rëmnąc no karno z tôflë?",
   "confirm-btn": "Pòcwierdzë",
   "remove-btn": "Rëmôj",
+  "filter-card-text-label": "Filtrëjë tekst kôrtów",
   "filter-card-title-label": "Filtruj według tytułu kôrtë",
   "invite-people-success": "Zôproszenié do registracëji òstało wëslóné",
   "invite-people-error": "Fela przë wësyłaniu zôproszeniô do registracëji",

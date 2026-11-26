@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Bu takımı tahtadan çıkarmak istediğinizden emin misiniz?",
   "confirm-btn": "Onayla",
   "remove-btn": "Kaldır",
+  "filter-card-text-label": "Kart metnini filtrele",
   "filter-card-title-label": "Kart başlığına göre filtrele",
   "invite-people-success": "Kayıt daveti başarıyla gönderildi",
   "invite-people-error": "Kayıt için davet gönderirken hata oluştu",

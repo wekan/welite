@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Sigurado ka ba ikaw want sa alisin ito koponan mula sa the pisara ?",
   "confirm-btn": "Kumpirmahin",
   "remove-btn": "Alisin",
+  "filter-card-text-label": "Salain ang teksto ng kard",
   "filter-card-title-label": "Salain ni kard pamagat",
   "invite-people-success": "Imbitasyon sa register ipinadala kasama ang success",
   "invite-people-error": "Mali while sending imbitasyon sa register",

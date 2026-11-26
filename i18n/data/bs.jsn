@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Jeste li sigurni da želite ukloniti ovaj tim s table?",
   "confirm-btn": "Potvrdi",
   "remove-btn": "Ukloniti",
+  "filter-card-text-label": "Filtriraj tekst kartica",
   "filter-card-title-label": "Filtriraj po naslovu kartice",
   "invite-people-success": "Poziv za registraciju je uspješno poslan",
   "invite-people-error": "Greška prilikom slanja poziva za registraciju",

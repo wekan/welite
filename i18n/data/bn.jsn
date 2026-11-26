@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "আপনি কি নিশ্চিত যে বোর্ড থেকে এই দল সরাতে চান?",
   "confirm-btn": "নিশ্চিত করুন",
   "remove-btn": "সরান",
+  "filter-card-text-label": "কার্ডের টেক্সট ফিল্টার করুন",
   "filter-card-title-label": "কার্ডের শিরোনাম দিয়ে ছাঁকুন",
   "invite-people-success": "নিবন্ধনের আমন্ত্রণ সফলভাবে পাঠানো হয়েছে",
   "invite-people-error": "নিবন্ধনের আমন্ত্রণ পাঠানোর সময় ত্রুটি",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "보드에서 이 팀을 제거하시겠습니까?",
   "confirm-btn": "확인",
   "remove-btn": "제거",
+  "filter-card-text-label": "카드 텍스트 필터링",
   "filter-card-title-label": "카드 제목으로 필터",
   "invite-people-success": "등록을 위한 초대가 전송되었습니다",
   "invite-people-error": "등록 중 오류 발생",

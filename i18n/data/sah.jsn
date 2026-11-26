@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Бу бөлөҕү дуоскаттан ылары гынаҕын дуо?",
   "confirm-btn": "Бигэргэт",
   "remove-btn": "Ыл",
+  "filter-card-text-label": "Карточка тиэкиһин фильтрдаа",
   "filter-card-title-label": "Карточка аатынан сүүрдэн көр",
   "invite-people-success": "Бэлиэтэнэр ыҥырыы сөпкө ыытылынна",
   "invite-people-error": "Бэлиэтэнэр ыҥырыыны ыытарга алҕас таҕыста",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "您確定要從看板中移除該團隊嗎？",
   "confirm-btn": "確認",
   "remove-btn": "移除",
+  "filter-card-text-label": "篩選卡片文字",
   "filter-card-title-label": "按卡片標題篩選",
   "invite-people-success": "已成功傳送邀請",
   "invite-people-error": "傳送註冊邀請時發生錯誤",

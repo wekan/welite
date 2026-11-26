@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Er du sikker på at du vil fjerne dette teamet fra tavlen?",
   "confirm-btn": "Bekreft",
   "remove-btn": "Fjern",
+  "filter-card-text-label": "Filtrer korttekst",
   "filter-card-title-label": "Filtrer etter tittel på kort",
   "invite-people-success": "Vellykket utsendelse av invitasjon til registrering",
   "invite-people-error": "Feil ved utsendelse av invitasjon til registrering",

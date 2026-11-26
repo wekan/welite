@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Är du säker att du vill ta bort detta team från tavlan?",
   "confirm-btn": "Bekräfta",
   "remove-btn": "Fjern",
+  "filter-card-text-label": "Filtrer korttekst",
   "filter-card-title-label": "Filtrera på korttitel",
   "invite-people-success": "Inbjudan till registerad skickades",
   "invite-people-error": "Fel när inbjudan till registrerad skickades",

@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Are you sure you want to remove this team from the board ?",
   "confirm-btn": "Confirm",
   "remove-btn": "Xóa",
+  "filter-card-text-label": "กรองข้อความของการ์ด",
   "filter-card-title-label": "Filter by card title",
   "invite-people-success": "Invitation to register sent with success",
   "invite-people-error": "Error while sending invitation to register",

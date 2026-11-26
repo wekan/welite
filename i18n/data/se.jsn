@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Háliidatgo duođaid váldit dán joavkku eret távvalis?",
   "confirm-btn": "Nanne",
   "remove-btn": "Váldde eret",
+  "filter-card-text-label": "Sille goartta teavstta",
   "filter-card-title-label": "Silli goartta namahusa mielde",
   "invite-people-success": "Registrerenbovdehus sáddejuvvui lihkostuvvan",
   "invite-people-error": "Meattáhus registrerenbovdehusa sáddedettiin",

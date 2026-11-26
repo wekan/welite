@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "A ydych yn siŵr eich bod am dynnu'r tîm hwn oddi ar y bwrdd ?",
   "confirm-btn": "Cadarnhau",
   "remove-btn": "Dileu",
+  "filter-card-text-label": "Hidlo testun cardiau",
   "filter-card-title-label": "Hidlo yn ôl teitl cerdyn",
   "invite-people-success": "Gwahoddiad i gofrestru wedi'i anfon yn llwyddiannus",
   "invite-people-error": "Gwall wrth anfon gwahoddiad i gofrestru",

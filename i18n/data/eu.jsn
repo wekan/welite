@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ziur talde hau arbeletik kendu nahi duzula?",
   "confirm-btn": "Confirmar",
   "remove-btn": "Kendu",
+  "filter-card-text-label": "Iragazi txartelen testua",
   "filter-card-title-label": "Iragazi txartelaren tituluaren arabera",
   "invite-people-success": "Invitació per registrar-se enviada amb èxit",
   "invite-people-error": "Error al enviar la invitación para registrarse",

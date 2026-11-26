@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Ha kifiliyaa bookkiyaappe digganaw neeni ammanettiyye ?",
   "confirm-btn": "Mintta",
   "remove-btn": "Digga",
+  "filter-card-text-label": "Kaardiyaa xaafuwaa piltterissa",
   "filter-card-title-label": "Kaardiya huuphe sunttan piltterissa",
   "invite-people-success": "Gelanaw shoobbiya kiittay attamada yedettiis",
   "invite-people-error": "Gelanaw shoobbiya kiittaa yeddishin balaa medhettiis",

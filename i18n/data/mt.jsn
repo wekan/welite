@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "Żgur you want għal remove dan team minn il- bord ?",
   "confirm-btn": "Ikkonferma",
   "remove-btn": "Neħħi",
+  "filter-card-text-label": "Iffiltra t-test tal-karta",
   "filter-card-title-label": "Iffiltra by kard titlu",
   "invite-people-success": "Invitation għal register sent ma’ success",
   "invite-people-error": "Żball while sending invitation għal register",

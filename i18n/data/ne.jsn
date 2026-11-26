@@ -1565,6 +1565,7 @@
   "remove-team-from-table": "के तपाईं यो टोलीलाई बोर्डबाट हटाउन निश्चित हुनुहुन्छ?",
   "confirm-btn": "पुष्टि गर्नुहोस्",
   "remove-btn": "हटाउनुहोस्",
+  "filter-card-text-label": "कार्डको पाठ छान्नुहोस्",
   "filter-card-title-label": "कार्ड शीर्षकद्वारा फिल्टर गर्नुहोस्",
   "invite-people-success": "दर्ता निमन्त्रणा सफलतापूर्वक पठाइयो",
   "invite-people-error": "दर्ता निमन्त्रणा पठाउँदा त्रुटि भयो",
