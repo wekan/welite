@@ -881,6 +881,57 @@ def http_checks(server, tmp, backend):
         assert sort_order('?sort=%22%3E%3Cscript%3E')[0] == manual
         assert [card_db('SELECT sort FROM cards WHERE id=?', sorted_ids[t])[0] for t in ['Cherry', 'Apple', 'Banana', 'Damson']] == [0, 1, 2, 3]
 
+        # #6423: PUT .../cards/:id with a listId moves the card within its board,
+        # with WeKan's moveCard activity.
+        moved = sorted_ids['Cherry']
+        status, _, body, _ = request('PUT', '/api/boards/%s/lists/%s/cards/%s' % (board_id, sort_list, moved),
+                                     {'listId': list_id}, headers=auth, as_json=True)
+        assert status == 200, body
+        assert card_db('SELECT listId FROM cards WHERE id=?', moved)[0] == list_id
+        assert card_db("SELECT count(*) FROM activities WHERE cardId=? AND activityType='moveCard'", moved)[0] == 1
+        status, _, body, _ = request('PUT', '/api/boards/%s/lists/%s/cards/%s' % (board_id, list_id, moved),
+                                     {'listId': sort_list}, headers=auth, as_json=True)
+        assert status == 200 and card_db('SELECT listId FROM cards WHERE id=?', moved)[0] == sort_list, body
+        # Negative: no list of another board, no other board, and no non-member.
+        other = json.loads(request('POST', '/api/boards', {'title': 'Elsewhere', 'owner': login['id']}, headers=auth, as_json=True)[2])['_id']
+        other_list = json.loads(request('POST', '/api/boards/%s/lists' % other, {'title': 'There'}, headers=auth, as_json=True)[2])['_id']
+        assert request('PUT', '/api/boards/%s/lists/%s/cards/%s' % (board_id, sort_list, moved), {'listId': other_list},
+                       headers=auth, as_json=True)[0] == 400
+        assert request('PUT', '/api/boards/%s/lists/%s/cards/%s' % (board_id, sort_list, moved), {'listId': other_list, 'boardId': other},
+                       headers=auth, as_json=True)[0] == 400
+        stranger_login = json.loads(request('POST', '/users/login', {'username': 'stranger', 'password': 'test-password'})[2])
+        assert request('PUT', '/api/boards/%s/lists/%s/cards/%s' % (board_id, sort_list, moved), {'listId': list_id},
+                       headers={'Authorization': 'Bearer ' + stranger_login['token']}, as_json=True)[0] in (401, 403, 404)
+        assert card_db('SELECT listId FROM cards WHERE id=?', moved)[0] == sort_list
+
+        # The sidebar's members (membersWidget): a board admin searches, adds
+        # and removes one, with the REST API's own membership checks.
+        active = lambda uid: card_db('SELECT isActive FROM board_members WHERE boardId=? AND userId=?', board_id, uid)
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-manage-board-members' in page and b'data-pop="add-member"' in page
+        assert b'js-manage-board-members' not in request('GET', route, cookie=worker)[2]
+        found = json.loads(request('GET', '/b/%s/members/search?q=STRAN' % board_id, cookie=owner)[2])
+        assert [u['username'] for u in found] == ['stranger'], found
+        assert json.loads(request('GET', '/b/%s/members/search?q=work' % board_id, cookie=owner)[2]) == [], 'already a member'
+        assert json.loads(request('GET', '/b/%s/members/search?q=%%25' % board_id, cookie=owner)[2]) == [], 'text, not a pattern'
+        assert request('GET', '/b/%s/members/search?q=stran' % board_id, cookie=worker)[0] == 404
+        assert request('POST', '/b/%s/members' % board_id, {'userId': users['stranger']}, cookie=worker)[0] == 404
+        assert active(users['stranger']) in (None, (0,))
+        status, _, page, _ = request('POST', '/b/%s/members' % board_id, {'userId': users['stranger']}, cookie=owner)
+        assert status == 200 and active(users['stranger']) == (1,)
+        assert ('data-pop="remove-member-%s"' % users['stranger']).encode() in page
+        assert ('data-pop="remove-member-%s"' % login['id']).encode() in page and \
+            ('class="js-remove-member" href="#" data-user="%s"' % login['id']).encode() not in page, 'not oneself'
+        # Negative: a member who is not an admin is offered no removal and
+        # removes nobody; nobody who does not exist is added.
+        assert b'js-remove-member' not in request('GET', route, cookie=worker)[2]
+        assert request('POST', '/b/%s/members/%s/remove' % (board_id, users['stranger']), {}, cookie=worker)[0] == 404
+        assert request('POST', '/b/%s/members' % board_id, {'userId': 'nobody'}, cookie=owner)[0] == 404
+        status, _, page, _ = request('POST', '/b/%s/members/%s/remove' % (board_id, users['stranger']), {}, cookie=owner)
+        assert status == 200 and active(users['stranger']) == (0,)
+        assert ('data-user="%s"' % users['stranger']).encode() not in page, 'gone from the sidebar'
+        assert request('POST', '/b/%s/members/%s/remove' % (board_id, users['stranger']), {}, cookie=owner)[0] == 404
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

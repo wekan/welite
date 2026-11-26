@@ -2,15 +2,7 @@
 # against WeLite's HTML5 view: the ones whose pages WeLite has so far. A line
 # is a spec file - all of it - or "file: test title", one test of it. Add a
 # line when its page is done; WELITE_WEKAN_SPECS=all runs them all.
-01-boards-users.e2e.js: board loads within 10 seconds and renders lists
-01-boards-users.e2e.js: user added to board can see it on their boards list
-01-boards-users.e2e.js: user NOT added to board cannot see it
-01-boards-users.e2e.js: board renders all three seeded lists without freezing
-01-boards-users.e2e.js: Boards – user membership › board loads within 10 seconds and renders lists
-01-boards-users.e2e.js: Boards – user membership › user added to board can see it on their boards list
-01-boards-users.e2e.js: Boards – user membership › user NOT added to board cannot see it
-01-boards-users.e2e.js: Boards – user membership › board admin can change a member role to admin
-01-boards-users.e2e.js: Boards – user membership › board renders all three seeded lists without freezing
+01-boards-users.e2e.js
 02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
 02-cards-open-view.e2e.js: card opens without the maximized class by default (minimized view)
 02-cards-open-view.e2e.js: closing the card detail panel hides it
@@ -123,6 +115,10 @@
 17-rest-api.e2e.js: an assigned-only member cannot read the whole board over REST (AssignedBleed)
 18-rtl-layout.e2e.js: LTR (English) layout › board view: direction, visible cards, first list on leading side
 18-rtl-layout.e2e.js: LTR (English) layout › card details panel: direction and visible title
+18-rtl-layout.e2e.js: RTL (Arabic) layout › board view: direction, visible cards, first list on leading side
+18-rtl-layout.e2e.js: RTL (Arabic) layout › card details panel: direction and visible title
+18-rtl-layout.e2e.js: RTL (Urdu) layout › board view: direction, visible cards, first list on leading side
+18-rtl-layout.e2e.js: RTL (Urdu) layout › card details panel: direction and visible title
 19-accessibility.e2e.js: Accessibility › the html element declares its language and text direction
 23-rest-api-more.e2e.js: custom fields: create, get, delete
 23-rest-api-more.e2e.js: REST API: rules + card sub-resources + core CRUD › rules: create, list, get, edit and delete
@@ -142,7 +138,7 @@
 31-templates-allboards.e2e.js: #2339 #5850 All Boards / Templates redesign › #6643: Archive shows an archived subtasks helper board
 36-fixed-bug-regressions.e2e.js: Fixed-bug regressions › #5892 a collapsed list with a custom width still shrinks to the rail
 38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › anonymous/public-board: fixed width lives in localStorage and does not leak across boards
-40-rest-card-move-list.e2e.js: REST API: move card to another list (#6423) › a user without board write access cannot move the card (negative)
+40-rest-card-move-list.e2e.js
 41-admin-newest-features.e2e.js: Admin – newest features › NEGATIVE: board Table view column headers are not clickable-sortable
 42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › a card comment (carrying boardId) is published and shown when the card is opened
 42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › NEGATIVE: a comment on a different board is not published into this board

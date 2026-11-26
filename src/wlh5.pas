@@ -1319,6 +1319,82 @@ begin
   Result := Result + '</ul></div></template>';
 end;
 
+// The role flags of a plain member (no role), as ChangeBoardMembership takes them.
+procedure PlainMemberFlags(out Columns, Values, Sets: string);
+const Flags: array[0..7] of string = ('isAdmin', 'isNoComments', 'isCommentOnly', 'isWorker',
+  'isNormalAssignedOnly', 'isCommentAssignedOnly', 'isReadOnly', 'isReadAssignedOnly');
+var i: Integer;
+begin
+  Columns := ''; Values := ''; Sets := '';
+  for i := 0 to High(Flags) do
+  begin
+    Columns := Columns + ',' + Flags[i]; Values := Values + ',0'; Sets := Sets + ',' + Flags[i] + '=0';
+  end;
+end;
+
+// addMemberPopup's search (members.go's searchMembers in Weddy): for a board
+// admin, up to ten enabled users whose username, full name or address starts
+// with Q, case-insensitive, who are not active members yet.
+function MemberSearchJson(Db: TWLDb; const UserId, BoardId, Q: string; out Json: string): Boolean;
+var R: TWLRows; i: Integer; Text, Starts: string;
+  function Prefix(const Column: string): string;
+  begin
+    Result := 'substr(lower(COALESCE(' + Column + ','''')),1,' + IntToStr(Length(Text)) + ')=lower(' + QuotedStr(Text) + ')';
+  end;
+begin
+  Json := '[]';
+  Result := (UserId <> '') and (Pos(#0, BoardId + Q) = 0) and BoardCanAdmin(Db, UserId, BoardId);
+  if not Result then Exit;
+  Text := Trim(Q);
+  if (Text = '') or (Length(Text) > 100) then Exit;
+  Starts := '(' + Prefix('u.username') + ' OR ' + Prefix('CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END') +
+    ' OR EXISTS(SELECT 1 FROM user_emails e WHERE e.userId=u.id AND ' + Prefix('e.address') + '))';
+  R := Db.Query('SELECT u.id,u.username,COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,'''') ' +
+    'FROM users u WHERE COALESCE(u.loginDisabled,0)=0 AND ' + Starts + ' AND NOT EXISTS(SELECT 1 FROM board_members m WHERE m.boardId=' +
+    QuotedStr(BoardId) + ' AND m.userId=u.id AND m.isActive=1) ORDER BY u.username LIMIT 10;');
+  Json := '[';
+  for i := 0 to High(R) do
+  begin
+    if i > 0 then Json := Json + ',';
+    Json := Json + '{"_id":"' + StringToJSONString(R[i][0]) + '","username":"' + StringToJSONString(R[i][1]) +
+      '","fullname":"' + StringToJSONString(R[i][2]) + '"}';
+  end;
+  Json := Json + ']';
+end;
+
+// membersWidget's memberPopup and removeMemberPopup for each active member,
+// and addMemberPopup, for a board admin (board.pug in Weddy).
+function MemberPopups(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string): string;
+var R: TWLRows; i: Integer; Admin: Boolean;
+begin
+  Result := '';
+  Admin := (S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId);
+  R := Db.Query('SELECT u.id,u.username,COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,'''') ' +
+    'FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
+    ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0 ORDER BY u.username;');
+  for i := 0 to High(R) do
+  begin
+    Result := Result + '<template class="js-pop-over-template" data-pop="member-' + HtmlAttr(R[i][0]) + '" data-title="' +
+      HtmlAttr(IfThen(R[i][2] <> '', R[i][2], R[i][1])) + '"><div class="board-member-menu"><div class="miniprofile-header"><div class="info"><h3>' +
+      '<div class="js-profile">' + E(R[i][2]) + '</div></h3><p class="quiet">@' + E(R[i][1]) + '</p></div></div><ul class="pop-over-list">';
+    if Admin and (R[i][0] <> S.UserId) then
+      Result := Result + '<li><a class="js-remove-member" href="#" data-user="' + HtmlAttr(R[i][0]) + '">' +
+        E(Words.Text('remove-from-board', 'Remove from Board')) + '</a></li>';
+    Result := Result + '</ul></div></template>';
+    if Admin then
+      Result := Result + '<template class="js-pop-over-template" data-pop="remove-member-' + HtmlAttr(R[i][0]) + '" data-title="' +
+        HtmlAttr(Words.Text('remove-member', 'Remove Member')) + '"><form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+        '/members/' + HtmlAttr(HTTPEncode(R[i][0])) + '/remove" up-submit up-target=".board-wrapper"><p>' +
+        E(Words.Text('remove-member', 'Remove Member')) + ': ' + E(R[i][2]) + ' (@' + E(R[i][1]) + ')</p>' +
+        '<button class="js-confirm negate full" type="submit">' + E(Words.Text('remove-member', 'Remove Member')) + '</button></form></template>';
+  end;
+  if Admin then
+    Result := Result + '<template class="js-pop-over-template" data-pop="add-member" data-title="' +
+      HtmlAttr(Words.Text('add-members', 'Add Members')) + '"><div class="js-search-member"><input class="js-search-member-input" type="text" placeholder="' +
+      HtmlAttr(Words.Text('email-address', 'Email Address')) + '" aria-label="' + HtmlAttr(Words.Text('add-members', 'Add Members')) +
+      '"></div><ul class="pop-over-list js-member-search-results"></ul></template>';
+end;
+
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
@@ -1361,6 +1437,11 @@ begin
   for i := 0 to High(R) do
     Result := Result + '<a class="member js-member" href="#" data-user="' + HtmlAttr(R[i][0]) + '" title="' + HtmlAttr(R[i][1]) +
       '" aria-label="' + HtmlAttr(R[i][1]) + '"><span class="member-initials">' + E(R[i][1]) + '</span></a>';
+  // membersWidget's add, for whoever may invite: a board admin.
+  if (S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId) then
+    Result := Result + '<a class="member add-member js-manage-board-members" href="#" title="' +
+      HtmlAttr(Words.Text('add-members', 'Add Members')) + '" aria-label="' + HtmlAttr(Words.Text('add-members', 'Add Members')) +
+      '"><i class="fa fa-plus"></i></a>';
   Result := Result + '</div></div><h3><a class="board-header-btn js-open-board-menu" href="#" title="' +
     HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) + '">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '</a></h3></div></div>' +
@@ -1869,6 +1950,7 @@ begin
     if Writable then
       Details := Details + CardMenuPopups(Db, Words, S, BoardId, B[0][2], CardId, Card[0][0], Card[0][8], Card[0][9]);
   end;
+  Details := Details + MemberPopups(Db, Words, S, BoardId);
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
   if Writable then
     Details := Details + '<template class="js-pop-over-template" data-pop="add-swimlane" data-title="' +
@@ -2207,7 +2289,7 @@ end;
 
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
-  Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back: string;
+  Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
   P: TStringArray; Code, n: Integer; Found: Boolean;
 begin
   Result := False;
@@ -2221,6 +2303,14 @@ begin
       Result := True;
       if PlacesJson(T.Db, S.UserId, P[1], Content) then SendJsonAnswer(Response, 200, Content)
       else SendJsonAnswer(Response, 403, '{"error":"Board access forbidden"}');
+    end;
+    // addMemberPopup's search: GET /b/:id/members/search?q=, for a board admin.
+    if (Length(P) = 4) and (P[2] = 'members') and (P[3] = 'search') and ResolveTenant(Request, T) and TenantOpen(T) and
+      Html5User(T.Db, Request, S) then
+    begin
+      Result := True;
+      if MemberSearchJson(T.Db, S.UserId, P[1], Request.QueryFields.Values['q'], Content) then SendJsonAnswer(Response, 200, Content)
+      else SendJsonAnswer(Response, 404, '{"error":"not found"}');
     end;
     Exit;
   end;
@@ -2269,7 +2359,7 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
@@ -2279,6 +2369,8 @@ begin
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
   else if (n = 3) and (P[2] = 'watch') then Action := 'watch-board'
+  else if (n = 3) and (P[2] = 'members') then Action := 'add-member'
+  else if (n = 5) and (P[2] = 'members') then Action := 'remove-member'
   else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
@@ -2357,6 +2449,17 @@ begin
     Code := ArchiveViewCard(T, S.UserId, BoardId, CardId, Error);
     // The archived card is no longer on the board: the board without it.
     if Code = 200 then CardId := '';
+  end
+  else if (Action = 'add-member') or (Action = 'remove-member') then
+  begin
+    PlainMemberFlags(Columns, Values, Sets);
+    if Action = 'add-member' then
+      Code := ChangeBoardMembership(T, S.UserId, BoardId, Request.ContentFields.Values['userId'], True, Columns, Values, Sets, Error)
+    else
+      Code := ChangeBoardMembership(T, S.UserId, BoardId, P[3], False, Columns, Values, Sets, Error);
+    // Only a board admin changes members; to anybody else the board's
+    // membership is not there to change.
+    if Code = 403 then Code := 404;
   end
   else if Action = 'watch-card' then
     Code := WatchViewCard(T, S.UserId, BoardId, CardId, Error)

@@ -189,6 +189,12 @@ function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,De
 function CopyViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList,Title:string;
   out NewCard,Error:string):Integer;
 function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+// A board member added (made active again, with Columns/Values/Sets of the
+// role flags) or removed by a board admin, as POST
+// /api/boards/:boardId/members/:userId/add and /remove do it: 200, or the
+// code and its Error.
+function ChangeBoardMembership(const T:TWLTenant;const Actor,BoardId,TargetId:string;Add:Boolean;
+  const Columns,Values,Sets:string;out Error:string):Integer;
 // A card's vote (cardDetails.jade's vote section): nil-like (Present False)
 // when it has none. WeKan's showVotingButtons decides CanVote: an active
 // member of the board - or anybody who can see it, when the vote allows
@@ -1393,14 +1399,68 @@ begin
   finally O.Free; end;
 end;
 
+function ChangeBoardMembership(const T:TWLTenant;const Actor,BoardId,TargetId:string;Add:Boolean;
+  const Columns,Values,Sets:string;out Error:string):Integer;
+var Board,Target,Scope,UserScope,Permission,Bindings,Sql,AdminCheck,MemberKey:string;Policy:TFieldPolicy;
+  Source:TSelectionScope;Rows:TWLRows;I:Integer;
+begin
+  Error:='';Board:=QuotedStr(BoardId);
+  if (BoardId='') or (Pos(#0,BoardId+TargetId)>0) or (Length(T.Db.Query('SELECT id FROM boards WHERE id='+Board+';'))<>1) then
+  begin Error:='Board not found';Exit(404);end;
+  Policy:=TFieldPolicy.Create(T.Db,Actor,BoardId,'');
+  try Permission:=Policy.ScopeAdminExpression(True);finally Policy.Free;end;
+  Rows:=T.Db.Query('SELECT '+Permission+';');
+  if (Length(Rows)<>1) or (Rows[0][0]<>'1') then begin Error:='Board administration required';Exit(403);end;
+  Target:=QuotedStr(TargetId);
+  Source:=TSelectionScope.Create(T.Db);
+  try
+    UserScope:='id='+Target+' AND '+Source.StringField('users','id');
+    MemberKey:=Source.StringField('board_members','userId');
+    Scope:='boardId='+Board+' AND userId='+Target;
+    Bindings:='';
+    for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
+  finally Source.Free;end;
+  Rows:=T.Db.Query('SELECT COALESCE(loginDisabled,0) FROM users WHERE '+UserScope+';');
+  if Length(Rows)<>1 then begin Error:='User not found';Exit(404);end;
+  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+
+    '(SELECT count(*) FROM users WHERE '+UserScope;
+  if Add then
+  begin
+    if Rows[0][0]<>'0' then begin Error:='User is disabled';Exit(400);end;
+    Sql:=Sql+' AND COALESCE(loginDisabled,0)=0)=1 AND NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+
+      ' AND NOT '+MemberKey+') THEN 1 ELSE json(''Board membership scope changed'') END; '+
+      'UPDATE board_members SET isActive=1'+Sets+' WHERE '+Scope+' AND COALESCE(isActive,0)=0; '+
+      'INSERT INTO board_members(boardId,userId,isActive'+Columns+') SELECT '+Board+','+Target+',1'+Values+
+      ' WHERE NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+'); '+
+      'SELECT CASE WHEN (SELECT count(*) FROM board_members WHERE '+Scope+
+      ' AND isActive=1 AND '+MemberKey+')=1 THEN 1 ELSE json(''Board member add failed'') END; COMMIT;';
+  end else
+  begin
+    Rows:=T.Db.Query('SELECT isAdmin FROM board_members WHERE '+Scope+' AND isActive=1 AND '+MemberKey+';');
+    if Length(Rows)<>1 then begin Error:='Member not found';Exit(404);end;
+    AdminCheck:='(isAdmin=0 OR (SELECT count(*) FROM board_members WHERE boardId='+Board+
+      ' AND isActive=1 AND isAdmin=1 AND '+MemberKey+')>1)';
+    if Length(T.Db.Query('SELECT 1 FROM board_members WHERE '+Scope+' AND '+AdminCheck+';'))<>1 then
+    begin Error:='The last board admin cannot be removed';Exit(409);end;
+    Sql:=Sql+')=1 AND (SELECT count(*) FROM board_members WHERE '+Scope+' AND isActive=1 AND '+MemberKey+' AND '+
+      AdminCheck+')=1 THEN 1 ELSE json(''Board membership scope changed'') END; '+
+      'UPDATE board_members SET isActive=0,isAdmin=0 WHERE '+Scope+'; SELECT CASE WHEN '+
+      '(SELECT count(*) FROM board_members WHERE '+Scope+' AND isActive=0 AND isAdmin=0)=1 '+
+      'THEN 1 ELSE json(''Board member removal failed'') END; COMMIT;';
+  end;
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not change board membership';Exit(500);end;
+  Result:=200;
+end;
+
+
 procedure ApiBoardMembership(aRequest:TRequest;aResponse:TResponse;Add:Boolean);
 const Flags:array[0..7] of string=('isAdmin','isNoComments','isCommentOnly','isWorker',
   'isNormalAssignedOnly','isCommentAssignedOnly','isReadOnly','isReadAssignedOnly');
   Roles:array[0..7] of string=('admin','nocomments','commentonly','worker',
   'normalassignedonly','commentassignedonly','readonly','readassignedonly');
-var T:TWLTenant;Actor,BoardId,Board,Target,Scope,UserScope,Permission,Action,Role,Columns,Values,Sets,
-  Bindings,Sql,AdminCheck,MemberKey:string;Policy:TFieldPolicy;Source:TSelectionScope;
-  Body:TJSONObject;Value:TJSONData;Rows:TWLRows;I,RoleIndex:Integer;Enabled:Boolean;
+var T:TWLTenant;Actor,BoardId,Board,Permission,Action,Role,Columns,Values,Sets:string;Policy:TFieldPolicy;
+  Body:TJSONObject;Value:TJSONData;Rows:TWLRows;I,RoleIndex,Code:Integer;Enabled:Boolean;Error:string;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -1450,45 +1510,9 @@ begin
       end;
     except SendError(aResponse,400,'Invalid membership role');Exit;end;
   finally Body.Free;end;
-  Target:=QuotedStr(aRequest.RouteParams['userId']);
-  Source:=TSelectionScope.Create(T.Db);
-  try
-    UserScope:='id='+Target+' AND '+Source.StringField('users','id');
-    MemberKey:=Source.StringField('board_members','userId');
-    Scope:='boardId='+Board+' AND userId='+Target;
-    Bindings:='';
-    for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
-  finally Source.Free;end;
-  Rows:=T.Db.Query('SELECT COALESCE(loginDisabled,0) FROM users WHERE '+UserScope+';');
-  if Length(Rows)<>1 then begin SendJson(aResponse,'{"error":"User not found"}',404);Exit;end;
-  Sql:='BEGIN IMMEDIATE; '+Bindings+'SELECT CASE WHEN '+Permission+' AND '+
-    '(SELECT count(*) FROM users WHERE '+UserScope;
-  if Add then
-  begin
-    if Rows[0][0]<>'0' then begin SendError(aResponse,400,'User is disabled');Exit;end;
-    Sql:=Sql+' AND COALESCE(loginDisabled,0)=0)=1 AND NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+
-      ' AND NOT '+MemberKey+') THEN 1 ELSE json(''Board membership scope changed'') END; '+
-      'UPDATE board_members SET isActive=1'+Sets+' WHERE '+Scope+' AND COALESCE(isActive,0)=0; '+
-      'INSERT INTO board_members(boardId,userId,isActive'+Columns+') SELECT '+Board+','+Target+',1'+Values+
-      ' WHERE NOT EXISTS(SELECT 1 FROM board_members WHERE '+Scope+'); '+
-      'SELECT CASE WHEN (SELECT count(*) FROM board_members WHERE '+Scope+
-      ' AND isActive=1 AND '+MemberKey+')=1 THEN 1 ELSE json(''Board member add failed'') END; COMMIT;';
-  end else
-  begin
-    Rows:=T.Db.Query('SELECT isAdmin FROM board_members WHERE '+Scope+' AND isActive=1 AND '+MemberKey+';');
-    if Length(Rows)<>1 then begin SendJson(aResponse,'{"error":"Member not found"}',404);Exit;end;
-    AdminCheck:='(isAdmin=0 OR (SELECT count(*) FROM board_members WHERE boardId='+Board+
-      ' AND isActive=1 AND isAdmin=1 AND '+MemberKey+')>1)';
-    if Length(T.Db.Query('SELECT 1 FROM board_members WHERE '+Scope+' AND '+AdminCheck+';'))<>1 then
-    begin SendError(aResponse,409,'The last board admin cannot be removed');Exit;end;
-    Sql:=Sql+')=1 AND (SELECT count(*) FROM board_members WHERE '+Scope+' AND isActive=1 AND '+MemberKey+' AND '+
-      AdminCheck+')=1 THEN 1 ELSE json(''Board membership scope changed'') END; '+
-      'UPDATE board_members SET isActive=0,isAdmin=0 WHERE '+Scope+'; SELECT CASE WHEN '+
-      '(SELECT count(*) FROM board_members WHERE '+Scope+' AND isActive=0 AND isAdmin=0)=1 '+
-      'THEN 1 ELSE json(''Board member removal failed'') END; COMMIT;';
-  end;
-  if not T.Db.Exec(Sql) then
-  begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change board membership');Exit;end;
+  Code:=ChangeBoardMembership(T,Actor,BoardId,aRequest.RouteParams['userId'],Add,Columns,Values,Sets,Error);
+  if Code=404 then begin SendJson(aResponse,'{"error":"'+StringToJSONString(Error)+'"}',404);Exit;end;
+  if Code<>200 then begin SendError(aResponse,Code,Error);Exit;end;
   Rows:=T.Db.Query('SELECT json_array(json_object(''_id'',id,''title'',title)) FROM boards WHERE id='+Board+';');
   if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not read board');Exit;end;
   SendJson(aResponse,Rows[0][0]);
@@ -5118,6 +5142,7 @@ procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
+  Code:Integer;MoveError:string;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -5254,6 +5279,15 @@ begin
       SendJson(aResponse,CardNotFound,404)
     else SendError(aResponse,500,'Could not edit card');
     Exit;
+  end;
+  // #6423: a listId or swimlaneId in the body moves the card there, within
+  // its board, with WeKan's moveCard activity (MoveViewCard's checks).
+  if BodyHasField(aRequest,'listId') or BodyHasField(aRequest,'swimlaneId') then
+  begin
+    Value:=BodyField(aRequest,'listId');
+    if Value='' then Value:=aRequest.RouteParams['listId'];
+    Code:=MoveViewCard(T,UserId,BoardId,CardId,BodyField(aRequest,'boardId'),BodyField(aRequest,'swimlaneId'),Value,MoveError);
+    if Code<>200 then begin SendError(aResponse,Code,MoveError);Exit;end;
   end;
   if HasSort or HasOvertime or HasTitle then SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}')
   else SendCardById(aResponse,T.Db,CardId,UserId,False,BoardId);

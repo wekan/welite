@@ -174,6 +174,17 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   are Weddy's again, with the toggles and the glyphs of the header's new
   icons. WeKan's mobile layout itself (body.mobile-mode) is still to come.
   214 of WeKan's tests pass.
+- Add the sidebar's members to the HTML5 view, as WeKan's membersWidget,
+  addMemberPopup, memberPopup and removeMemberPopup: a board admin searches
+  users by username, full name or address (`GET /b/:id/members/search`),
+  adds one and removes one - never oneself - through the same checks and
+  writes as `POST /api/boards/:boardId/members/:userId/add` and `/remove`
+  (`ChangeBoardMembership`, which those REST routes now share).
+- Move a card with `PUT /api/boards/:boardId/lists/:listId/cards/:cardId`
+  and a `listId` or `swimlaneId` in the body (#6423), within its board, with
+  WeKan's moveCard activity; a list of another board is refused.
+- WeKan's spec 01 and spec 40 pass whole, and the HTML5 view's board and card
+  are right-to-left in Arabic and Urdu. 225 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

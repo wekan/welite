@@ -235,10 +235,10 @@ Order of the work, each step committed with its tests:
   user, Log Out, the toggle), sign-in, All Boards with Starred and Remaining,
   the board with swimlanes, lists and minicards, the opened card's title,
   description and maximize/minimize, adding a card at the top or bottom of a
-  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, the card's menu (copy link, move, copy, archive), the board's rename, star, sidebar with Archive, the member menu and archived boards, the card's vote, Planning Poker and watch, the board's watch, Filter (card text and labels) and Sort Cards, the header's icon collapse and mobile/desktop toggle, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
+  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, the card's menu (copy link, move, copy, archive), the board's rename, star, sidebar with Archive, the member menu and archived boards, the card's vote, Planning Poker and watch, the board's watch, Filter (card text and labels) and Sort Cards, the header's icon collapse and mobile/desktop toggle, the sidebar's members (add, remove), Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
   WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 214 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 225 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's
@@ -275,6 +275,12 @@ Next, after this goal:
   `tests/wekan/wekan-specs.txt` list what Weddy has, in the order it was done.
 
 Found on the way, not part of this goal:
+
+- **`tests/shrhttp.py` fails at its line 198** (2026-11-26): the database
+  listing it reads from FerretDB has no `wekan` database at that point. It
+  fails the same way without the HTML5 view's changes of that day, so it is
+  older than them; `tests/view.py` and WeKan's specs through
+  `tests/wkui/run.sh` cover the shared store meanwhile.
 
 - **`tests/admin.py` and the 36 test modules it runs are stale since fd5f992**
   (2026-11-19, "Post browser navigation state from sign-in and home"): sign-in
