@@ -60,6 +60,10 @@ procedure Html5SignedIn(Response: TResponse; const SessionId: string);
 // error and the username that was typed.
 procedure Html5SignInFailed(Request: TRequest; Response: TResponse; const Username: string);
 
+// The HTML5 view's sign-up form (Weddy's signup.pug), with an error by its
+// translation key when there is one, and what was typed.
+procedure Html5SignUpPage(Request: TRequest; Response: TResponse; Code: Integer; const ErrorKey, Fallback, Username, Email: string);
+
 // The HTML4 view's toggle is a POST of ?ui=html5 with the page's session: put
 // that session into the login cookie and send the viewer to the same page by
 // GET, now in the HTML5 view. Returns True when it answered.
@@ -313,6 +317,33 @@ begin
 end;
 
 // signin.pug
+// Weddy's signup.pug, WeKan's register form: username, address, the
+// password twice, each password with its visibility button.
+function SignUpContent(Words: TWLTranslator; const Error, Username, Email: string): string;
+  function Toggle: string;
+  begin
+    Result := '<button class="password-toggle-btn primary" type="button" aria-label="' + HtmlAttr(Words.Text('password', 'Password') + ': ' +
+      Words.Text('visibility', 'Visibility')) + '" title="' + HtmlAttr(Words.Text('password', 'Password') + ': ' +
+      Words.Text('visibility', 'Visibility')) + '">&#128065;</button>';
+  end;
+begin
+  Result := '<div class="auth-layout"><div class="auth-dialog at-form"><h1 class="at-title">' + E(Words.Text('register', 'Register')) + '</h1>';
+  if Error <> '' then Result := Result + '<div class="at-error js-signup-error">' + E(Error) + '</div>';
+  Result := Result + '<form id="at-signup-form" method="post" action="/sign-up">' +
+    '<label for="at-field-username">' + E(Words.Text('username', 'Username')) + '</label>' +
+    '<input id="at-field-username" type="text" name="username" value="' + HtmlAttr(Username) + '" autocomplete="username" required>' +
+    '<label for="at-field-email">' + E(Words.Text('email', 'Email')) + '</label>' +
+    '<input id="at-field-email" type="email" name="email" value="' + HtmlAttr(Email) + '" autocomplete="email" required>' +
+    '<label for="at-field-password">' + E(Words.Text('password', 'Password')) + '</label>' +
+    '<div class="password-input-container"><input id="at-field-password" class="password-field" type="password" name="password" ' +
+    'autocomplete="new-password" required>' + Toggle + '</div>' +
+    '<label for="at-field-password_again">' + E(Words.Text('password-again', 'Password (again)')) + '</label>' +
+    '<div class="password-input-container"><input id="at-field-password_again" class="password-field" type="password" name="confirm" ' +
+    'autocomplete="new-password" required>' + Toggle + '</div>' +
+    '<button id="at-btn" class="at-btn submit primary" type="submit">' + E(Words.Text('create-account', 'Create Account')) + '</button>' +
+    '</form><p><a href="/sign-in">' + E(Words.Text('log-in', 'Log In')) + '</a></p></div></div>';
+end;
+
 function SignInContent(Words: TWLTranslator; const Error, Username: string): string;
 begin
   Result := '<div class="auth-layout"><div class="auth-dialog at-form">' +
@@ -2790,7 +2821,7 @@ begin
   end;
   // The root arrives as an empty PathInfo.
   if Path = '' then Path := '/';
-  if not ((Path = '/') or (Path = '/sign-in') or (Path = '/board') or (Path = '/board/card') or
+  if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
@@ -2804,6 +2835,13 @@ begin
     begin
       Send(200, Page(Request, Language, Words, Default(TWLSession), Words.Text('log-in', 'Log In'), '',
         SignInContent(Words, '', '')));
+      Exit;
+    end;
+    if Path = '/register' then
+    begin
+      Words.Free;
+      Words := nil;
+      Html5SignUpPage(Request, Response, 200, '', '', '', '');
       Exit;
     end;
     if not SignedIn then
@@ -2861,6 +2899,21 @@ begin
   try
     SendPage(Response, 403, Page(Request, Language, Words, Default(TWLSession), Words.Text('log-in', 'Log In'), '',
       SignInContent(Words, Words.Text('error-ldap-login', 'An error occurred while trying to login'), Username)));
+  finally
+    Words.Free;
+  end;
+end;
+
+procedure Html5SignUpPage(Request: TRequest; Response: TResponse; Code: Integer; const ErrorKey, Fallback, Username, Email: string);
+var Language: TWLLanguage; Words: TWLTranslator; Error: string;
+begin
+  Language := ViewerLanguage(nil, Default(TWLSession), Request);
+  Words := TWLTranslator.Create(Language);
+  try
+    Error := '';
+    if ErrorKey <> '' then Error := Words.Text(ErrorKey, Fallback);
+    SendPage(Response, Code, Page(Request, Language, Words, Default(TWLSession), Words.Text('register', 'Register'), '',
+      SignUpContent(Words, Error, Username, Email)));
   finally
     Words.Free;
   end;

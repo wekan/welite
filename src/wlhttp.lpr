@@ -430,8 +430,8 @@ procedure RegisterEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
   S: TWLSession;
-  Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition, Title: string;
-  First: Boolean;RegistrationPolicy:TFactorPolicy;Words:TWLTranslator;
+  Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition, Title, Email: string;
+  First, Html5: Boolean;RegistrationPolicy:TFactorPolicy;Words:TWLTranslator;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if T.IsAdmin then
@@ -447,24 +447,39 @@ begin
     Username := Trim(aRequest.ContentFields.Values['username']);
     Password := aRequest.ContentFields.Values['password'];
     Confirm  := aRequest.ContentFields.Values['confirm'];
+    // The HTML5 view's form (wlh5) also takes WeKan's address, kept as the
+    // account's email; its errors are shown in that form.
+    Email := LowerCase(Trim(aRequest.ContentFields.Values['email']));
+    Html5 := RequestView(aRequest)=wvHtml5;
 
     if (Username = '') or (Password = '') then
     begin
+      if Html5 then Html5SignUpPage(aRequest,aResponse,400,'username-password-required','Username and password are required.',Username,Email) else
       SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'username-password-required','Username and password are required.'));
       Exit;
     end;
     if Password <> Confirm then
     begin
+      if Html5 then Html5SignUpPage(aRequest,aResponse,400,'password-mismatch','Passwords do not match.',Username,Email) else
       SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'password-mismatch','Passwords do not match.'));
       Exit;
     end;
     if Length(T.Db.Query(Format('SELECT id FROM users WHERE username=%s LIMIT 1;',
                                 [QuotedStr(Username)]))) > 0 then
     begin
+      if Html5 then Html5SignUpPage(aRequest,aResponse,400,'error-username-taken','That username is taken.',Username,Email) else
       SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'error-username-taken','That username is taken.'));
       Exit;
     end;
 
+    if Html5 and ((Email='') or (Length(Email)>254) or (Pos('@',Email)<2) or (Pos(' ',Email)>0) or (Pos(#0,Email)>0)) then
+    begin Html5SignUpPage(aRequest,aResponse,400,'error-user-notCreated','Could not create the account.',Username,Email);Exit;end;
+    if (Email<>'') and (Length(T.Db.Query('SELECT 1 FROM user_emails WHERE lower(address)='+QuotedStr(Email)+';'))>0) then
+    begin
+      if Html5 then Html5SignUpPage(aRequest,aResponse,409,'error-email-taken','Email has already been taken',Username,Email)
+      else SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'error-email-taken','Email has already been taken'));
+      Exit;
+    end;
     First := NoUsersYet(T);                 // first account -> Global Admin
     Uid   := NewId;
     Hash  := HashMeteorPassword(Password); // JSON object stored at services.password
@@ -483,10 +498,13 @@ begin
        QuotedStr('{"password":' + Hash + '}'),PolicyCondition])) or
       (Length(T.Db.Query('SELECT id FROM users WHERE id='+QuotedStr(Uid)+';'))<>1) then
     begin
+      if Html5 then Html5SignUpPage(aRequest,aResponse,400,'error-user-notCreated','Could not create the account.',Username,Email) else
       SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'error-user-notCreated','Could not create the account.'));
       Exit;
     end;
 
+    if (Email<>'') and not T.Db.Exec('INSERT INTO user_emails(userId,address,verified) VALUES('+QuotedStr(Uid)+','+QuotedStr(Email)+',0);') then
+    begin AuthError(aRequest,aResponse,500,'register','Register','Could not create the account.','error-user-notCreated');Exit;end;
     if RegistrationPolicy=fpRequired then
     begin
       Words:=TWLTranslator.Create(ResolveLanguage(RequestLanguageTag(aRequest),'',aRequest.AcceptLanguage));
@@ -505,6 +523,7 @@ begin
     S := CreateSession(T.Db, aRequest, Uid,Username,HashText(Hash),30*24*60*60);
     if S.SessionId='' then
     begin AuthError(aRequest,aResponse,500,'register','Register','Account created! You can now sign in.','account-created');Exit; end;
+    if Html5 then begin Html5SignedIn(aResponse,S.SessionId);Exit;end;
     ShowHome(aRequest,aResponse,S);
     Exit;
   end;

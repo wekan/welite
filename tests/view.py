@@ -1059,6 +1059,30 @@ def http_checks(server, tmp, backend):
         status, _, page, _ = request('POST', '/sign-in', {'username': 'owner', 'password': 'wrong'}, agent=IBROWSE)
         assert b'HTML 3.2' in page, 'the HTML4 view keeps its own form'
 
+        # The HTML5 view's sign-up (signup.pug): WeKan's fields, two visibility
+        # buttons, the address kept, signed in by the login cookie.
+        page = request('GET', '/sign-up')[2]
+        for field in (b'id="at-field-username"', b'id="at-field-email"', b'id="at-field-password"', b'id="at-field-password_again"'):
+            assert field in page, field
+        assert page.count(b'password-toggle-btn') == 2
+        status, headers, _, cookies = request('POST', '/sign-up', {'username': 'html5_user', 'email': 'H5@Example.invalid',
+                                                                  'password': 'pw-h5-123', 'confirm': 'pw-h5-123'})
+        assert status == 302 and headers['Location'] == '/' and cookie_value(cookies, 'meteor_login_token')
+        made = card_db("SELECT id FROM users WHERE username='html5_user'")[0]
+        assert card_db('SELECT address FROM user_emails WHERE userId=?', made)[0] == 'h5@example.invalid'
+        assert card_db('SELECT isAdmin FROM users WHERE id=?', made)[0] == 0
+        # Negative: the form again with the error and what was typed - no
+        # second account by a name or an address, no mismatch, no address.
+        for form, code, key in [({'username': 'html5_user', 'email': 'x@example.invalid'}, 400, None),
+                                ({'username': 'other_h5', 'email': 'h5@example.invalid'}, 409, None),
+                                ({'username': 'other_h5', 'email': 'o@example.invalid', 'confirm': 'nope'}, 400, None),
+                                ({'username': 'other_h5', 'email': ''}, 400, None)]:
+            body = dict({'password': 'pw-h5-123', 'confirm': 'pw-h5-123'}, **form)
+            status, _, page, cookies = request('POST', '/sign-up', body)
+            assert status == code and b'class="at-error js-signup-error"' in page, (form, status)
+            assert ('value="%s"' % form['username']).encode() in page and cookie_value(cookies, 'meteor_login_token') is None
+        assert card_db("SELECT count(*) FROM users WHERE username='other_h5'")[0] == 0
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

@@ -26,15 +26,7 @@
 03-cards-operations.e2e.js: copying a card to an empty board shows an error or empty list selector without crashing
 03-cards-operations.e2e.js: changing list via card detail list-selector moves the card
 03-cards-operations.e2e.js: archived card can be unarchived from the archives sidebar
-05-admin-users.e2e.js: Admin – user management › login page sign-in link is visible and accessible
-05-admin-users.e2e.js: Admin – user management › login page renders correctly on a fresh load
-05-admin-users.e2e.js: Admin – user management › admin can navigate to People tab and see the user list
-05-admin-users.e2e.js: Admin – user management › admin user list action buttons are fully visible at default zoom (no zoom-out required)
-05-admin-users.e2e.js: Admin – user management › admin can open and save the edit user popup without error
-05-admin-users.e2e.js: Admin – user management › admin can deactivate a user
-05-admin-users.e2e.js: Admin – user management › admin can change a user password and the new password allows login
-05-admin-users.e2e.js: Admin – user management › non-admin user cannot access /people (admin-only)
-05-admin-users.e2e.js: Admin – user management › sign-in tabs directly between fields and Enter in password submits
+05-admin-users.e2e.js
 06-views-layout.e2e.js: cards seeded in different lists appear in the correct list columns
 06-views-layout.e2e.js: scrolling down a long list reaches the last card
 07-attachments-links.e2e.js: attachment panel button opens from card details
