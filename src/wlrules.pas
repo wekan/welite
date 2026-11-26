@@ -1343,6 +1343,59 @@ begin
   CopyChain.Values[NewCard] := Chain + Key + '|';
 end;
 
+// sortList: the cards of a list - named, or the card's own - in the card's
+// swimlane, ordered by name, created, modified or (the default) due date.
+procedure RuleSortList(Db: TWLDb; const A: TActivity; Act: TJSONObject);
+var Card, R, L: TWLRows; ListId, Order, Sql: string; i: Integer;
+begin
+  Card := Db.Query('SELECT boardId,listId,swimlaneId FROM cards WHERE id=' + Q(A.CardId) + ';');
+  if Length(Card) <> 1 then Exit;
+  ListId := Card[0][1];
+  if (Str(Act, 'listName') <> '') and (Str(Act, 'listName') <> '*') then
+  begin
+    L := Db.Query('SELECT id FROM lists WHERE boardId=' + Q(Card[0][0]) + ' AND title=' + Q(Str(Act, 'listName')) + ' LIMIT 1;');
+    if Length(L) <> 1 then Exit;
+    ListId := L[0][0];
+  end;
+  case Str(Act, 'sortField') of
+    'name': Order := 'lower(title)';
+    'created': Order := 'createdAt';
+    'modified': Order := 'modifiedAt';
+  else Order := 'dueAt IS NULL, dueAt';
+  end;
+  R := Db.Query('SELECT id FROM cards WHERE listId=' + Q(ListId) + ' AND swimlaneId=' + Q(Card[0][2]) +
+    ' AND archived=0 AND deletedAt IS NULL ORDER BY ' + Order + ', sort;');
+  Sql := '';
+  for i := 0 to High(R) do Sql := Sql + 'UPDATE cards SET sort=' + IntToStr(i) + ' WHERE id=' + Q(R[i][0]) + '; ';
+  if (Sql <> '') and not Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;') then Db.Exec('ROLLBACK;');
+end;
+
+// linkCard: a linked card of this one in a list (by name) and swimlane (by
+// name, else the first) of a board its user may change (RuleBleed's canary
+// otherwise).
+procedure RuleLinkCard(Db: TWLDb; const A: TActivity; Act: TJSONObject);
+var Dest, ListId, LaneId, Source, NewCard: string; R: TWLRows;
+begin
+  Dest := Str(Act, 'boardId');
+  if Dest = '' then Dest := A.BoardId;
+  if (Pos(#0, Dest) > 0) or not BoardCanWrite(Db, A.UserId, Dest) then begin RecordRuleCanary(Db, A.UserId); Exit; end;
+  R := Db.Query('SELECT id FROM lists WHERE boardId=' + Q(Dest) + ' AND title=' + Q(Str(Act, 'listName')) +
+    ' AND archived=0 AND deletedAt IS NULL ORDER BY sort LIMIT 1;');
+  if Length(R) <> 1 then Exit;
+  ListId := R[0][0];
+  R := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + Q(Dest) + ' AND title=' + Q(Str(Act, 'swimlaneName')) + ' AND archived=0 LIMIT 1;');
+  if Length(R) <> 1 then R := Db.Query('SELECT id FROM swimlanes WHERE boardId=' + Q(Dest) + ' AND archived=0 ORDER BY sort LIMIT 1;');
+  if Length(R) <> 1 then Exit;
+  LaneId := R[0][0];
+  R := Db.Query('SELECT COALESCE(NULLIF(linkedId,''''),id),title FROM cards WHERE id=' + Q(A.CardId) + ' AND deletedAt IS NULL;');
+  if Length(R) <> 1 then Exit;
+  Source := R[0][0];
+  NewCard := NewId;
+  if not Db.Exec('BEGIN IMMEDIATE; ' + CardCreateSql(Dest, ListId, LaneId, NewCard, A.UserId, R[0][1], '', 'NULL',
+    '(SELECT COALESCE(max(sort),-1)+1 FROM cards WHERE listId=' + Q(ListId) + ' AND swimlaneId=' + Q(LaneId) + ')', Source) + 'COMMIT;') then
+    Db.Exec('ROLLBACK;');
+end;
+
 procedure PerformAction(const T: TWLTenant; const A: TActivity; Act: TJSONObject);
 var Db: TWLDb; Kind, Field, Text, Id, Checklist, Scope, Stamp, Table, JoinKind, Key: string; Vars: TStringList;
   Card, R: TWLRows; Users: TStringArray; U: string; i: Integer; Items: TStringArray; Remove: Boolean;
@@ -1359,6 +1412,8 @@ begin
     case Kind of
       'moveCardToTop', 'moveCardToBottom': RuleMoveCard(Db, A, Act, Vars);
       'copyCard': RuleCopyCard(T, A, Act);
+      'sortList': RuleSortList(Db, A, Act);
+      'linkCard': RuleLinkCard(Db, A, Act);
       'archive':
         if Card[0][1] = '0' then
           Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET archived=1,archivedAt=' + Stamp + ',modifiedAt=' + Stamp + Scope +

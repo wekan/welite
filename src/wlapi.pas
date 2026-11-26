@@ -107,6 +107,9 @@ function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:stri
 // when there is none. Returns the HTTP status (200 when added).
 function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterListId,Title:string;out ListId,Error:string):Integer;
 // The board's admins (a site admin too): who renames the board.
+// The SQL of a new card (and WeKan's createCard activity of it); a linked
+// card with LinkedId.
+function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string=''):string;
 function BoardCanAdmin(Db:TWLDb;const UserId,BoardId:string):Boolean;
 // The board's new title, as PUT /api/boards/:boardId/title renames it.
 function RenameBoard(const T:TWLTenant;const UserId,BoardId,Title:string;out Error:string):Integer;
