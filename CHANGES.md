@@ -277,6 +277,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   WeKan's permission-denied, and the collection update with its 403 "Access
   denied" - and only sort, swimlaneId and the time stamps, a swimlane of the
   same board. 259 of WeKan's tests pass.
+- Answer an address's verification link in the HTML5 view (#1426, Meteor's
+  Accounts.verifyEmail): `/verify-email/<token>` with a token of the
+  account, not older than 30 days, marks the address verified, uses the
+  token up and signs the account in with WeKan's own login token - unless it
+  needs a second factor, which a link cannot give. A used, unknown or too
+  old token goes to sign-in and changes nothing. 261 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

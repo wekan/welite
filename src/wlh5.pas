@@ -82,7 +82,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd;
 
 const
   STATIC_HEAD =
@@ -3235,9 +3235,39 @@ begin
   end;
 end;
 
+// Meteor's Accounts.verifyEmail (#1426): the link's token, of an account that
+// has it, not older than 30 days (emailVerificationTokenExpirationInDays),
+// marks its address verified and is used up; the account is then signed in
+// as WeKan does it - unless it needs a second factor, which a link cannot
+// give (IssueLoginToken refuses it). False for any other token.
+function VerifyEmailToken(Db: TWLDb; const Token: string; out UserId, LoginToken: string): Boolean;
+var R: TWLRows; Address, Ref, Cutoff: string;
+begin
+  Result := False; UserId := ''; LoginToken := '';
+  if (Token = '') or (Length(Token) > 200) or (Pos(#0, Token) > 0) then Exit;
+  Cutoff := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now) - 30);
+  R := Db.Query('SELECT u.id,json_extract(t.value,''$.address''),COALESCE(json_extract(u.services_json,''$.password''),'''') FROM users u,' +
+    'json_each(CASE WHEN json_valid(u.services_json) THEN u.services_json ELSE ''{}'' END,''$.email.verificationTokens'') t ' +
+    'WHERE json_extract(t.value,''$.token'')=' + QuotedStr(Token) + ' AND COALESCE(u.loginDisabled,0)=0 AND (CASE json_type(t.value,''$.when'') ' +
+    'WHEN ''text'' THEN json_extract(t.value,''$.when'')>=' + QuotedStr(Cutoff) + ' ELSE 1 END) LIMIT 2;');
+  if Length(R) <> 1 then Exit;
+  UserId := R[0][0]; Address := R[0][1];
+  if not Db.Exec('BEGIN IMMEDIATE; UPDATE user_emails SET verified=1 WHERE userId=' + QuotedStr(UserId) + ' AND lower(address)=lower(' +
+    QuotedStr(Address) + '); UPDATE users SET services_json=json_set(services_json,''$.email.verificationTokens'',json((SELECT json_group_array(json(value)) ' +
+    'FROM json_each(services_json,''$.email.verificationTokens'') WHERE json_extract(value,''$.token'') IS NOT ' + QuotedStr(Token) + '))) WHERE id=' +
+    QuotedStr(UserId) + '; COMMIT;') then
+  begin Db.Exec('ROLLBACK;'); Exit; end;
+  Result := True;
+  // Signed in with WeKan's own login token - a resume token, as a REST or
+  // Meteor login gives one, which the login cookie carries.
+  Ref := CredentialFingerprint(R[0][2]);
+  LoginToken := NewAuthToken;
+  if (Ref = '') or not IssueLoginToken(Db, UserId, LoginToken, Ref, 'api', ApiTokenLifetime(Db)) then LoginToken := '';
+end;
+
 function ServeHtml5(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
-  Path, Title, BoardTitle, Content, Section: string; Found, SignedIn: Boolean;
+  Path, Title, BoardTitle, Content, Section, Verified, LoginToken: string; Found, SignedIn: Boolean;
   procedure Send(Code: Integer; const Html: string);
   begin
     Response.Code := Code;
@@ -3275,6 +3305,21 @@ begin
   if Copy(Path, 1, 25) = '/cdn/storage/attachments/' then
   begin
     Result := ServeAttachmentFile(Request, Response, Path);
+    Exit;
+  end;
+  // An address's verification link: verified and signed in, or to sign-in.
+  if Copy(Path, 1, 14) = '/verify-email/' then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    Result := True;
+    if VerifyEmailToken(T.Db, Copy(Path, 15, MaxInt), Verified, LoginToken) and (LoginToken <> '') then
+      Html5SignedIn(Response, LoginToken)
+    else
+    begin
+      Response.Code := 302;
+      Response.SetCustomHeader('Location', '/sign-in');
+      Response.SendContent;
+    end;
     Exit;
   end;
   // The root arrives as an empty PathInfo.

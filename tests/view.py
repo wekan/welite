@@ -1245,6 +1245,29 @@ def http_checks(server, tmp, backend):
         assert call('updateListSort', [other_list, board_id, {'sort': 1}])[0] == 403
         assert call('updateListSort', [sort_list, board_id, {'sort': before}])[0] == 200
 
+        # #1426 Accounts.verifyEmail: the link verifies the address and signs
+        # the account in; a used, unknown or too old token does nothing.
+        made_id = card_db("SELECT id FROM users WHERE username='made_user'")[0]
+        set_tokens = lambda tokens: card_db("UPDATE users SET services_json=json_set(services_json,'$.email',json(?)) WHERE id=?",
+                                            json.dumps({'verificationTokens': tokens}), made_id)
+        verified = lambda: card_db('SELECT verified FROM user_emails WHERE userId=?', made_id)[0]
+        set_tokens([{'token': 'old-token', 'address': 'made@example.invalid', 'when': '2001-01-01T00:00:00.000Z'},
+                    {'token': 'good-token', 'address': 'made@example.invalid', 'when': time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())}])
+        assert verified() == 0
+        for bad in ('not-a-real-token', 'old-token'):
+            status, headers, _, cookies = request('GET', '/verify-email/' + bad)
+            assert status == 302 and headers['Location'] == '/sign-in' and cookie_value(cookies, 'meteor_login_token') is None, bad
+        assert verified() == 0, 'neither an unknown nor a too old token verifies'
+        status, headers, _, cookies = request('GET', '/verify-email/good-token')
+        assert status == 302 and headers['Location'] == '/' and cookie_value(cookies, 'meteor_login_token')
+        assert verified() == 1
+        signed = 'meteor_login_token=' + cookie_value(cookies, 'meteor_login_token')
+        home = request('GET', '/', cookie=signed)
+        assert b'made_user' in home[2], ('signed in as the account', home[0], home[1].get('Location'))
+        left = json.loads(card_db("SELECT json_extract(services_json,'$.email.verificationTokens') FROM users WHERE id=?", made_id)[0])
+        assert [t['token'] for t in left] == ['old-token'], 'the used token is gone'
+        assert request('GET', '/verify-email/good-token')[1]['Location'] == '/sign-in', 'and cannot be used again'
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

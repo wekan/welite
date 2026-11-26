@@ -162,6 +162,7 @@
 38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › anonymous/public-board: fixed width lives in localStorage and does not leak across boards
 38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › logged-in: enabling fixed width makes all lists share one width; resize updates all
 38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › logged-in NEGATIVE: width < 200 rejected; OFF means per-list widths are independent
+39-email-verification.e2e.js
 40-rest-card-move-list.e2e.js
 41-admin-newest-features.e2e.js: Admin – newest features › NEGATIVE: board Table view column headers are not clickable-sortable
 42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › a card comment (carrying boardId) is published and shown when the card is opened
