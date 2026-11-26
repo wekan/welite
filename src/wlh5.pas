@@ -82,7 +82,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules;
 
 const
   STATIC_HEAD =
@@ -139,7 +139,7 @@ begin
   Response.Code := 302;
   Response.SetCustomHeader('Location', '/');
   Response.SetCustomHeader('Cache-Control', 'no-store');
-  Response.SendContent;
+  SendResponse(Response);
 end;
 
 function SwitchToHtml5(Request: TRequest; Response: TResponse): Boolean;
@@ -184,7 +184,7 @@ begin
   Response.Code := 303;
   Response.SetCustomHeader('Location', Target);
   Response.SetCustomHeader('Cache-Control', 'no-store');
-  Response.SendContent;
+  SendResponse(Response);
 end;
 
 procedure CarryCookieSession(Request: TRequest);
@@ -228,7 +228,7 @@ begin
   Response.Code := 302;
   Response.SetCustomHeader('Location', '/sign-in');
   Response.SetCustomHeader('Cache-Control', 'no-store');
-  Response.SendContent;
+  SendResponse(Response);
 end;
 
 function PathAndQuery(Request: TRequest): string;
@@ -2855,7 +2855,7 @@ begin
   Response.SetCustomHeader('Cache-Control', 'no-store');
   Response.Content := Html;
   Response.ContentLength := Length(Response.Content);
-  Response.SendContent;
+  SendResponse(Response);
 end;
 
 procedure SendJsonAnswer(Response: TResponse; Code: Integer; const Json: string);
@@ -2865,7 +2865,7 @@ begin
   Response.SetCustomHeader('Cache-Control', 'no-store');
   Response.Content := Json;
   Response.ContentLength := Length(Response.Content);
-  Response.SendContent;
+  SendResponse(Response);
 end;
 
 // weddy.js's callAsync(name, ...args): POST /_methods/<name> with the
@@ -2887,6 +2887,25 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  // WeKan's rules.* methods (wlrules).
+  if Copy(Name, 1, 6) = 'rules.' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not (Args is TJSONArray) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := RulesMethod(T, S.UserId, Name, TJSONArray(Args), Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 0 then
+    begin SendJsonAnswer(Response, Code, Error); Exit; end;
+  end;
   if Name = 'toggleCardMaximized' then
   begin
     // models/users.js: profile.cardMaximized becomes the opposite of what it was.
@@ -3531,7 +3550,7 @@ begin
       Response.SetCustomHeader('Location', '/sign-in');
     end;
     Response.SetCustomHeader('Cache-Control', 'no-store');
-    Response.SendContent;
+    SendResponse(Response);
     Exit;
   end;
   // The notifications drawer's menu, from weddy.js: every notification of
@@ -3567,7 +3586,7 @@ begin
     if Code <> 200 then Back := '/?error=' + HTTPEncode(Error);
     Response.Code := 303;
     Response.SetCustomHeader('Location', Back);
-    Response.SendContent;
+    SendResponse(Response);
     Exit;
   end;
   // Admin Panel / People's forms: /admin/people/:id/edit (editUserPopup) and
@@ -3585,13 +3604,13 @@ begin
     begin
       Response.Code := 404;
       Response.Content := 'not found';
-      Response.SendContent;
+      SendResponse(Response);
       Exit;
     end;
     Response.Code := 303;
     if Code = 200 then Response.SetCustomHeader('Location', '/admin/people')
     else Response.SetCustomHeader('Location', '/admin/people?error=' + HTTPEncode(Error));
-    Response.SendContent;
+    SendResponse(Response);
     Exit;
   end;
   if Copy(Path, 1, 10) = '/_methods/' then
@@ -3757,7 +3776,7 @@ begin
     if Code = 200 then
     begin
       Response.Code := 204;
-      Response.SendContent;
+      SendResponse(Response);
       Exit;
     end;
   end
@@ -3804,7 +3823,7 @@ begin
     begin
       Response.Code := 303;
       Response.SetCustomHeader('Location', BoardRoute(BoardId, BoardSlug(T.Db, BoardId)));
-      Response.SendContent;
+      SendResponse(Response);
       Exit;
     end;
     // The board again - with the card open when the action was on a card -
@@ -3867,7 +3886,7 @@ var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
     Response.SetCustomHeader('Cache-Control', 'no-store');
     Response.Content := Html;
     Response.ContentLength := Length(Response.Content);
-    Response.SendContent;
+    SendResponse(Response);
   end;
 begin
   ReadBoardView(Request);
@@ -3911,7 +3930,7 @@ begin
     begin
       Response.Code := 302;
       Response.SetCustomHeader('Location', '/sign-in');
-      Response.SendContent;
+      SendResponse(Response);
     end;
     Exit;
   end;
@@ -3919,6 +3938,7 @@ begin
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
+    (Path = '/board/rules') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
@@ -3945,7 +3965,7 @@ begin
     begin
       Response.Code := 302;
       Response.SetCustomHeader('Location', '/sign-in');
-      Response.SendContent;
+      SendResponse(Response);
       Exit;
     end;
     if Path = '/language/popup' then
@@ -3975,6 +3995,23 @@ begin
       if Pos('/', Section) > 0 then Section := Copy(Section, 1, Pos('/', Section) - 1);
       Send(200, Page(Request, Language, Words, S, Words.Text('all-boards', 'All Boards'), '',
         BoardsContent(T.Db, S, Words, Section)));
+      Exit;
+    end;
+    // WeKan's rulesMain: the board's Rules page (wlrules).
+    if Path = '/board/rules' then
+    begin
+      Content := '';
+      if T.Db.BeginRead then
+      try
+        Content := RulesPageContent(T.Db, S.UserId, Request.QueryFields.Values['id'], Request.QueryFields.Values['view'], Words,
+          Language.Tag, BoardTitle);
+      finally
+        T.Db.EndRead;
+      end;
+      if Content = '' then
+        Send(404, Page(Request, Language, Words, S, Words.Text('board-not-found', 'Board not found'), '', NotFoundContent(Words)))
+      else
+        Send(200, Page(Request, Language, Words, S, Words.Text('rules', 'Rules'), '', Content));
       Exit;
     end;
     Content := '';

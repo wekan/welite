@@ -97,9 +97,8 @@ begin
   if (Length(Parts) < 1) or (Length(Parts) > 3) then Exit;
   for i := 0 to High(Parts) do
     if Parts[i] = '' then Exit;
-  // WeKan's /b/templates and /b/:id/:slug/rules are pages of their own.
+  // WeKan's /b/templates is a page of its own.
   if Parts[0] = 'templates' then Exit;
-  if (Length(Parts) = 3) and (Parts[2] = 'rules') then Exit;
   BoardId := Parts[0];
   if Length(Parts) > 1 then Slug := Parts[1];
   if Length(Parts) > 2 then CardId := Parts[2];
@@ -118,7 +117,10 @@ begin
   end;
   if not SplitBoardRoute(Path, BoardId, Slug, CardId) then Exit;
   Request.QueryFields.Values['id'] := BoardId;
-  if CardId = '' then
+  // WeKan's /b/:id/:slug/rules: the board's Rules page (wlrules).
+  if CardId = 'rules' then
+    Request.PathInfo := '/board/rules'
+  else if CardId = '' then
     Request.PathInfo := '/board'
   else
   begin

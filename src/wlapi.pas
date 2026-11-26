@@ -344,7 +344,7 @@ procedure ApiBoardDelete(aRequest: TRequest; aResponse: TResponse);    // DELETE
 procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE swimlane (+ its cards)
 
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes;
+uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -366,7 +366,7 @@ begin
   aResponse.ContentType := 'application/json; charset=utf-8';
   aResponse.Content := Json;
   aResponse.ContentLength := Length(aResponse.Content);
-  aResponse.SendContent;
+  SendResponse(aResponse);
 end;
 
 procedure SendError(aResponse: TResponse; Code: Integer; const Reason: string);
@@ -2147,7 +2147,7 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
       aResponse.Location:=SessionUrl('/board/webhooks?id='+HTTPEncode(BoardId),Session);
       aResponse.SetCustomHeader('Cache-Control','private, no-store');
       aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
-      aResponse.SendContent;
+      SendResponse(aResponse);
     end
     else SendJson(aResponse,'{"_id":"'+StringToJSONString(Id)+'"}');
   end;
@@ -2206,7 +2206,7 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
       aResponse.SetCustomHeader('Cache-Control','private, no-store');
       aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
       aResponse.Content:=LanguagePage(aResponse,Language,Title,Body+'</ul>','','html4');
-      aResponse.SendContent;
+      SendResponse(aResponse);
     finally Words.Free;end;
   end;
 
@@ -2227,7 +2227,7 @@ var T:TWLTenant;Actor,BoardId,Id,Permission,Source,TableName,Scope,Sql,Key,Paylo
       aResponse.Code:=Status;
       aResponse.ContentType:='text/html; charset=utf-8';
       aResponse.Content:=LanguagePage(aResponse,Language,Title,Body,'','html4');
-      aResponse.SendContent;
+      SendResponse(aResponse);
     finally Words.Free;end;
   end;
 

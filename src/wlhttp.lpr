@@ -32,13 +32,14 @@ uses
   {$IFDEF UNIX} cthreads, {$ENDIF}
   {$IFDEF AMIGA} Sockets, {$ENDIF}
   SysUtils, Classes, DateUtils, wlattemp, wlenroll, wlpolicy, wlshared, wlmaint, wlstop, wli18n, wllocale, fphttpapp, httpdefs, httproute,
-  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes, wlview, wlh5
+  wltenant, wlauth, wldb, wlhtml, wlbrowse, wldesign, wlmove, wlstatic, wlapi, wlpasswd, wladmin, wlaccess, wlboard,wlselect,wlentrop, wlwkweb, wlroutes, wlview, wlh5, wlrules
   {$IFDEF WLEMBED}, wlassets {$ENDIF};   // wlassets registers the embedded-asset lookup
 
 type
   TWLCleanRouter=class(THTTPRouter)
   protected
     procedure DoRouteRequest(Request:TRequest;Response:TResponse);override;
+    procedure RouteRequest(Request:TRequest;Response:TResponse);
   end;
 
 const
@@ -50,6 +51,17 @@ const
   I18N_MOUNT    = '/i18n';    // URL the i18n/ tree is served under (i18n/langs.jsn -> /i18n/langs.jsn).
 
 procedure TWLCleanRouter.DoRouteRequest(Request:TRequest;Response:TResponse);
+begin
+  // A request that writes runs the board's rules before it answers (wlrules).
+  ArmRules(Request);
+  try
+    RouteRequest(Request,Response);
+  finally
+    FlushRules;
+  end;
+end;
+
+procedure TWLCleanRouter.RouteRequest(Request:TRequest;Response:TResponse);
 begin
   // The HTML5 view's own form posts (POST /b/:id/cards), before the WeKan
   // route below would read /b/:id/cards as a board (wlh5).

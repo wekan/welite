@@ -384,6 +384,25 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   server in the `welite-mobile` cookie and the chosen list (WeKan's Session
   currentList) in `welite-list`, and draws the board again only when the
   mode differs from what was drawn. 286 of WeKan's tests pass.
+- Add WeKan's Rules (`src/wlrules.pas`): the board's Rules page
+  (/b/:id/:slug/rules) with its list, the wizard - title, trigger, action -
+  and the Workflow view's palette; the rules.createRule, updateRule,
+  deleteRule and setEnabled methods, a board admin's, with RuleBleed's check
+  that an action names only a board its creator may change (a refusal is in
+  Admin Panel / Problems); and the engine. A request that writes runs the
+  rules its activities start before it answers: card created, moved (to a
+  list, or forward or back), archived, restored, commented, labels, members,
+  assignees, checklists, items, attachments, dates, and a title or
+  description containing a text; the actions move to the top or bottom,
+  archive, restore, color, labels, members, assignees, checklists and their
+  items, swimlane, comment, complete and dates, with WeKan's {variables}.
+  Rules started by rules stop 5 deep (BypassBleed's rule loop, recorded).
+  The page is Weddy's rules.pug: `releases/pugtpl` turns a Pug template into
+  the Go template text Weddy draws, and `src/wltpl.pas` draws that text, so
+  Weddy's other pages can come the same way. `src/wlcase.pas` gives upper and
+  lower case without a unicodestring manager, which WeLite has none of.
+  `tests/tpl.py` and `tests/textcase.py` check both as data. 368 of WeKan's
+  tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

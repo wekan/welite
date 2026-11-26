@@ -269,3 +269,19 @@ svg-attachment.e2e.js: an uploaded SVG is sanitized, previewed, a cover and a bo
 accepted-audit-fixes.e2e.js: A05: password reveal is reachable by Tab and never submits
 inactive-account-security.e2e.js: People Active control uses the authorized method and persists its change
 inactive-account-security.e2e.js: admin-created administrator flags persist and ordinary users cannot create accounts
+
+# WeKan's Rules (wlrules): the Rules page, its methods and the engine.
+20-rules.e2e.js: Rules › Rules opens as a fullscreen page with the board rules header
+20-rules.e2e.js: Rules › can create an event rule and see it in the list
+20-rules.e2e.js: Rules › RuleBleed: cross-board actions require destination write access
+20-rules.e2e.js: Rules › #6630: a current-date action stores its description only on the Action
+20-rules.e2e.js: Rules › Import / Export dialog offers JSON and CSV export
+20-rules.e2e.js: Rules › can select all rules and switch to the workflow view
+20-rules.e2e.js: eu named-member rule trigger uses its own verb composition
+20-rules.e2e.js: th named-member rule trigger uses its own verb composition
+20-rules.e2e.js: en named-member rule trigger uses its own verb composition
+20-rules.e2e.js: Galician attachment rule actions agree with the attachment noun
+44-rules.e2e.js
+rule-move-direction.e2e.js
+rule-trigger-vars.e2e.js: the trigger editor explains which variables trigger fields accept
+rule-trigger-vars.e2e.js: the rule editor inserts a picked variable into the last focused field
