@@ -260,8 +260,7 @@ password-change-other-sessions.e2e.js: changing one's own password signs every s
 50-language-popup.e2e.js: language popup places flags by language and region (rtl)
 50-language-popup.e2e.js: audited pull keeps target-language board controls (ve-PP)
 50-language-popup.e2e.js: audited pull keeps target-language board controls (zgh)
-advanced-filter-field-identity.e2e.js: co advanced-filter help renders the exact examples
-advanced-filter-field-identity.e2e.js: st advanced-filter help renders the exact examples
+advanced-filter-field-identity.e2e.js
 svg-attachment.e2e.js: an uploaded SVG is sanitized, previewed, a cover and a board background
 50-language-popup.e2e.js: missing profile language follows browser preferences; saved choice wins
 13-swimlanes.e2e.js: Swimlanes › Mobile Mode keeps other swimlanes lists visible when one list opens
@@ -271,17 +270,25 @@ inactive-account-security.e2e.js: People Active control uses the authorized meth
 inactive-account-security.e2e.js: admin-created administrator flags persist and ordinary users cannot create accounts
 
 # WeKan's Rules (wlrules): the Rules page, its methods and the engine.
-20-rules.e2e.js: Rules › Rules opens as a fullscreen page with the board rules header
-20-rules.e2e.js: Rules › can create an event rule and see it in the list
-20-rules.e2e.js: Rules › RuleBleed: cross-board actions require destination write access
-20-rules.e2e.js: Rules › #6630: a current-date action stores its description only on the Action
-20-rules.e2e.js: Rules › Import / Export dialog offers JSON and CSV export
-20-rules.e2e.js: Rules › can select all rules and switch to the workflow view
-20-rules.e2e.js: eu named-member rule trigger uses its own verb composition
-20-rules.e2e.js: th named-member rule trigger uses its own verb composition
-20-rules.e2e.js: en named-member rule trigger uses its own verb composition
-20-rules.e2e.js: Galician attachment rule actions agree with the attachment noun
+20-rules.e2e.js
 44-rules.e2e.js
 rule-move-direction.e2e.js
 rule-trigger-vars.e2e.js: the trigger editor explains which variables trigger fields accept
 rule-trigger-vars.e2e.js: the rule editor inserts a picked variable into the last focused field
+71-button-rule-boundary.e2e.js
+88-basque-rule-subject-order.e2e.js
+corsican-rule-controls.e2e.js: Latin rule actions distinguish top and bottom of the current list
+haitian-rule-semantics.e2e.js
+minicard-rule-button-6836.e2e.js: negative: with Show on Minicard off
+rules-back-to-board-6852.e2e.js: #6852 Rules page Back to the board › Back on the Rules page opens the board
+rules-blocks.e2e.js: Blocks keeps rule writes restricted to board admins
+rule-copy-card.e2e.js
+rule-variables.e2e.js
+corsican-rule-controls.e2e.js: co workflow builder distinguishes triggers from actions
+corsican-rule-controls.e2e.js: la workflow builder distinguishes triggers from actions
+corsican-rule-controls.e2e.js: co date triggers include both initial setting and later changes
+corsican-rule-controls.e2e.js: gd date triggers include both initial setting and later changes
+corsican-rule-controls.e2e.js: Latin rule import dialog explains partial conversion and keeps format identifiers
+corsican-rule-controls.e2e.js: Latin workflow toolbox distinguishes its trigger and action labels
+
+advanced-filter-card-dates.e2e.js

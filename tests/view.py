@@ -249,6 +249,61 @@ def http_checks(server, tmp, backend):
         status, headers, _, _ = request('GET', '/', cookie='meteor_login_token=' + 'f' * 64)
         assert status == 302 and headers['Location'] == '/sign-in'
 
+        # Meteor's client update of a card: its title and description, with
+        # WeKan's a-changedTitle / a-changedDescription activities, which the
+        # board's rules read (wlrules); anything else is 403.
+        def activities(kind):
+            n = 0
+            for path in data.glob('**/files/db/wekan.db'):
+                with sqlite3.connect(path) as con:
+                    if con.execute("SELECT 1 FROM sqlite_master WHERE name='activities'").fetchone():
+                        n += con.execute('SELECT count(*) FROM activities WHERE cardId=? AND activityType=?', (card_id, kind)).fetchone()[0]
+            return n
+        before = activities('a-changedTitle')
+        status, _, body, _ = request('POST', '/_methods/%2Fcards%2Fupdate', [{'_id': card_id}, {'$set': {'title': 'Renamed by update'}}],
+                                     cookie=owner, as_json=True)
+        assert status == 200 and json.loads(body) == {'result': 1}, body
+        assert b'Renamed by update' in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert activities('a-changedTitle') == before + 1
+        # The same title again changes nothing, and is no activity.
+        request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'Renamed by update'}}], cookie=owner, as_json=True)
+        assert activities('a-changedTitle') == before + 1
+        status, _, body, _ = request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'description': 'Described by update'}}],
+                                     cookie=owner, as_json=True)
+        assert status == 200 and activities('a-changedDescription') == 1, body
+        # Negative: a field the client may not write, an operator, a stranger.
+        for modifier in [{'$set': {'boardId': 'elsewhere'}}, {'$set': {'title': 'x', 'sort': 1}}, {'$inc': {'sort': 1}},
+                         {'$set': {'title': 7}}]:
+            status, _, body, _ = request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, modifier], cookie=owner, as_json=True)
+            assert status == 403 and json.loads(body)['reason'] == 'Access denied', (modifier, body)
+        status, _, body, _ = request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'Stolen'}}],
+                                     cookie=stranger, as_json=True)
+        assert status == 403 and b'Stolen' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'View Card', 'description': 'The card <b>text</b>'}}],
+                cookie=owner, as_json=True)
+        # createCardWithDueDate: the Calendar's card on a day. Negative: no
+        # date, a date that is not one, a stranger's board (AuthBleed).
+        status, _, body, _ = request('POST', '/_methods/createCardWithDueDate',
+                                     [board_id, list_id, 'Due card', '2027-01-01T00:00:00.000Z', lane], cookie=owner, as_json=True)
+        assert status == 200 and json.loads(body)['result'], body
+        due_card = json.loads(body)['result']
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='cards'").fetchone():
+                    assert con.execute('SELECT dueAt FROM cards WHERE id=?', (due_card,)).fetchone() == ('2027-01-01T00:00:00.000Z',)
+                    con.execute('DELETE FROM cards WHERE id=?', (due_card,))
+        for args in [[board_id, list_id, 'Due card', 'tomorrow', lane], [board_id, list_id, 'Due card', lane]]:
+            status, _, body, _ = request('POST', '/_methods/createCardWithDueDate', args, cookie=owner, as_json=True)
+            assert status == 400, body
+        status, _, body, _ = request('POST', '/_methods/createCardWithDueDate',
+                                     [board_id, list_id, 'Planted', '2027-01-01T00:00:00.000Z', lane], cookie=stranger, as_json=True)
+        assert status == 403 and json.loads(body)['error'] == 'not-authorized', body
+        assert b'Planted' not in request('GET', route, cookie=owner)[2]
+        # The Rules need the shared store: here they say so, and write nothing.
+        status, _, body, _ = request('POST', '/_methods/rules.createRule',
+                                     [board_id, 'R', {'activityType': 'createCard'}, {'actionType': 'archive'}], cookie=owner, as_json=True)
+        assert status == 501, body
+
         # Add card (board.pug's composer posts to /b/:id/cards): first or last in its list.
         status, _, page, _ = request('GET', route, cookie=owner)
         assert b'class="js-add-card list-header-plus-top"' in page and b'template class="js-card-composer-template"' in page

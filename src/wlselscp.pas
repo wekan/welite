@@ -204,9 +204,14 @@ end;
 function TSelectionScope.StringField(const Name,Column:string):string;
 var Info:TJSONObject;Mapped,Identity,Match:string;
   function Canonical(const SourcePath:string):string;
+  var Kinds:string;
   begin
+    // A document's own _id may be a Mongo ObjectId - a row a database tool or
+    // a test wrote without one, as WeKan reads it. It is text in the view
+    // and never a reference; every reference stays a string.
+    Kinds:='=''string''';if SourcePath='_id' then Kinds:=' IN (''string'',''objectId'')';
     Result:='json_type(ss._ferretdb_sjson,'+Q(Path(SourcePath,False))+')=''text'' AND '+
-      'json_extract(ss._ferretdb_sjson,'+Q(Path(SourcePath,True))+')=''string'' AND '+
+      'json_extract(ss._ferretdb_sjson,'+Q(Path(SourcePath,True))+')'+Kinds+' AND '+
       'json_extract(ss._ferretdb_sjson,'+Q(Path(SourcePath,False))+')<>''''';
   end;
 begin

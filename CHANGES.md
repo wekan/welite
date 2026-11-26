@@ -403,6 +403,24 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   lower case without a unicodestring manager, which WeLite has none of.
   `tests/tpl.py` and `tests/textcase.py` check both as data. 368 of WeKan's
   tests pass.
+- Add the rest of WeKan's Rules that the Rules page offers: button rules -
+  the board's in its header, the card's on the opened card - and
+  rules.runButton (RuleButtonBleed: a button outside the writable board is
+  refused and recorded); the Copy Card action, which copies a card once per
+  event and never into a list or a board its user may not change; the
+  advanced-filter trigger, which reads the card as it is on every card
+  activity; the Wrike workflow import and the rules' JSON, CSV and Wrike
+  downloads (`src/wlwrike.pas`, `tests/wrike.py`); and Board Settings' Rules
+  entries on the board. rules.updateRule changes a rule's trigger and action
+  where they are, as WeKan does, and copies one another rule shares.
+- Write WeKan's activities where they were missing: createCard for every new
+  card, a-changedTitle and a-changedDescription when a card's text changes,
+  setCustomField and unsetCustomField when a custom field's value does - what
+  the card's activities show and what the rules start from. Add WeKan's
+  /cards/update (a card's title and description), createCardWithDueDate
+  (AuthBleed recorded) and setCardCustomFieldCheckbox, -Currency and
+  -Assigned methods. A copied card's ObjectId-keyed rows (written by a
+  database tool) are copied too. 393 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

@@ -35,7 +35,18 @@ function RulesPageContent(Db: TWLDb; const UserId, BoardId, View: string; Words:
 // A rules.* method (rules.createRule, rules.updateRule, rules.deleteRule,
 // rules.setEnabled) with its JSON arguments: the HTTP code and the answer,
 // {"result":...} or Meteor's {"error":...,"reason":...}. 0 for any other name.
-function RulesMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+function RulesMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
+  Words: TWLTranslator = nil): Integer;
+
+// The Rules page's downloads (/b/:id/:slug/rules/export?format=json|csv|wrike,
+// ids=...): the board's rules as WeKan exports them, or the board as a Wrike
+// workflow. False when the user is not the board's admin.
+function RulesExport(Db: TWLDb; const UserId, BoardId, Format, Ids: string; out Body, ContentType, FileName: string): Boolean;
+
+// WeKan's boardButtons and cardButtons: the board's enabled button rules of
+// ButtonType ('board' or 'card') as the board header's links or the opened
+// card's buttons; '' when there are none.
+function RuleButtonsHtml(Db: TWLDb; const BoardId, ButtonType: string; Words: TWLTranslator): string;
 
 // The engine's hooks: arm at the start of a request, flush before it answers.
 procedure ArmRules(Request: TRequest);
@@ -52,7 +63,7 @@ const
 
 implementation
 
-uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase;
+uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase, wlwrike, wlh5;
 
 threadvar
   ArmedRequest: TRequest;
@@ -582,14 +593,53 @@ begin
   Result := True;
 end;
 
-function RulesMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+function RunButton(const T: TWLTenant; const UserId: string; Args: TJSONArray; out Answer: string): Integer; forward;
+
+function ImportWrike(const T: TWLTenant; const UserId: string; Args: TJSONArray; Words: TWLTranslator; out Answer: string): Integer; forward;
+
+function RulesMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
+  Words: TWLTranslator): Integer;
 var BoardId, Title, Error, Ids, Sql, TriggerId, ActionId: string; Trigger, Action, Rule, Fields: TJSONObject;
   Stamp: Int64;
+  // The part (trigger or action) the rule's edit writes: in place when only
+  // this rule names it, else a new one. Its SQL goes into Sql; its id is the result.
+  function PartFor(const Part, Collection: string; Doc: TJSONObject; const CurrentId, Changed: string): string;
+  var Others: TJSONArray; Old: TJSONObject; Extra: string; Shared: Boolean;
+  begin
+    Extra := 'extra' + UpperCase(Part[1]) + Copy(Part, 2, MaxInt) + 'Ids';
+    Others := FindDocs(T.Db, 'rules', DocField('_id') + '<>' + Q(Str(Rule, '_id')) + ' AND (' + DocField(Part + 'Id') + '=' +
+      Q(CurrentId) + ' OR EXISTS(SELECT 1 FROM json_each(_ferretdb_sjson,''$.' + Extra + ''') WHERE value=' + Q(CurrentId) + '))', '');
+    try
+      Shared := Others.Count > 0;
+    finally
+      Others.Free;
+    end;
+    Old := nil;
+    if not Shared then Old := FindDoc(T.Db, Collection, CurrentId);
+    try
+      if Old = nil then Result := NewId else Result := CurrentId;
+      Doc.Delete('_id'); Doc.Add('_id', Result);
+      Doc.Delete('boardId');
+      if (Part = 'action') and (Str(TJSONObject(Args.Items[3]), 'boardId') <> '') then Doc.Add('boardId', Str(TJSONObject(Args.Items[3]), 'boardId'))
+      else Doc.Add('boardId', BoardId);
+      Doc.Delete('createdAt'); Doc.Add('createdAt', Stamp);
+      Doc.Delete(Changed); Doc.Add(Changed, Stamp);
+      if Old <> nil then
+      begin
+        Sql := Sql + DeleteDocSql(T.Db, Collection, CurrentId);
+      end;
+      Sql := Sql + InsertDocSql(T.Db, Collection, Doc, DateHints);
+    finally
+      Old.Free;
+    end;
+  end;
 begin
   Answer := '';
   if (Name <> 'rules.createRule') and (Name <> 'rules.updateRule') and (Name <> 'rules.deleteRule') and
-    (Name <> 'rules.setEnabled') then Exit(0);
+    (Name <> 'rules.setEnabled') and (Name <> 'rules.runButton') and (Name <> 'rules.importWrikeWorkflow') then Exit(0);
   if not IsShared(T.Db) then Exit(MethodError(501, 'not-supported', 'Rules need the shared store', Answer));
+  if Name = 'rules.runButton' then Exit(RunButton(T, UserId, Args, Answer));
+  if Name = 'rules.importWrikeWorkflow' then Exit(ImportWrike(T, UserId, Args, Words, Answer));
   if Name = 'rules.deleteRule' then
   begin
     if not AdminRule(T.Db, UserId, Args, Rule, Result, Answer) then Exit;
@@ -663,27 +713,30 @@ begin
       Answer := '{"result":' + Ids + '}';
       Exit(200);
     end;
-    // updateRule: a new trigger and action for the rule, the old ones gone
-    // when no other rule shares them - an edit never changes another rule.
+    // updateRule: the rule's trigger and action are changed where they are,
+    // keeping their ids, as WeKan's; one another rule shares is left as it
+    // is and this rule gets a copy of its own - an edit never changes
+    // another rule.
     Stamp := NowMs;
     NormalizeTrigger(Trigger);
-    TriggerId := NewId; ActionId := NewId;
-    Trigger.Add('_id', TriggerId); Trigger.Add('boardId', BoardId); Trigger.Add('createdAt', Stamp); Trigger.Add('updatedAt', Stamp);
-    if Str(Action, 'boardId') = '' then Action.Add('boardId', BoardId);
-    Action.Add('_id', ActionId); Action.Add('createdAt', Stamp); Action.Add('modifiedAt', Stamp);
-    Sql := RemoveRuleSql(T.Db, Rule);
-    // RemoveRuleSql removes the rule too: it comes back with its new parts.
-    Fields := TJSONObject(Rule.Clone);
+    Sql := '';
+    TriggerId := PartFor('trigger', 'triggers', Trigger, Str(Rule, 'triggerId'), 'updatedAt');
+    ActionId := PartFor('action', 'actions', Action, Str(Rule, 'actionId'), 'modifiedAt');
+    Fields := TJSONObject.Create(['triggerId', TriggerId, 'actionId', ActionId, 'title', Title, 'modifiedAt', Stamp]);
     try
-      Fields.Delete('triggerId'); Fields.Add('triggerId', TriggerId);
-      Fields.Delete('actionId'); Fields.Add('actionId', ActionId);
-      Fields.Delete('extraTriggerIds'); Fields.Delete('extraActionIds');
-      Fields.Delete('title'); Fields.Add('title', Title);
-      Fields.Delete('modifiedAt'); Fields.Add('modifiedAt', Stamp);
-      Fields.Delete('createdAt');
-      Fields.Add('createdAt', Stamp);
-      Sql := Sql + InsertDocSql(T.Db, 'triggers', Trigger, DateHints) + InsertDocSql(T.Db, 'actions', Action, DateHints) +
-        InsertDocSql(T.Db, 'rules', Fields, DateHints);
+      if Str(Trigger, 'activityType') = 'button' then
+      begin
+        if Str(Trigger, 'buttonType') = 'board' then Fields.Add('buttonType', 'board') else Fields.Add('buttonType', 'card');
+        if Str(Trigger, 'buttonLabel') <> '' then Fields.Add('buttonLabel', Str(Trigger, 'buttonLabel'))
+        else Fields.Add('buttonLabel', Title);
+      end
+      else
+      begin
+        // WeKan's ruleButtonMetadata: no button, no button fields.
+        Fields.Add('buttonType', TJSONNull.Create);
+        Fields.Add('buttonLabel', TJSONNull.Create);
+      end;
+      Sql := Sql + UpdateDocSql(T.Db, 'rules', Str(Rule, '_id'), Fields, DateHints);
     finally
       Fields.Free;
     end;
@@ -834,7 +887,7 @@ end;
 // The enabled rules of the activity's own board one of whose triggers it matches.
 function MatchingRules(Db: TWLDb; const A: TActivity): TJSONArray;
 var Triggers, Found: TJSONArray; Fields: TStringArray; i: Integer; Seen: TStringList; Trig, Rule: TJSONObject;
-  Card: TWLRows; Direction: string; Matched: Boolean; V: TJSONData;
+  Card: TWLRows; Direction: string; Matched: Boolean; V: TJSONData; Matches: TStringArray;
   procedure AddRules(const TriggerId: string);
   var j: Integer;
   begin
@@ -894,6 +947,22 @@ begin
         finally
           Triggers.Free;
         end;
+      end;
+    end;
+    // #3092: the card matches the advanced filter - the Filter sidebar's own
+    // language, against the card's current state, on any card activity. A
+    // filter that does not parse, or names a field the board has not, never
+    // matches.
+    if (A.CardId <> '') and (Length(Card) = 1) then
+    begin
+      Triggers := FindDocs(Db, 'triggers', DocField('activityType') + '=''advancedFilterTrigger'' AND ' + DocField('boardId') + '=' +
+        Q(A.BoardId), DocField('_id'));
+      try
+        for i := 0 to Triggers.Count - 1 do
+          if AdvancedFilterCards(Db, A.BoardId, Str(Triggers.Objects[i], 'advancedFilter'), Matches) and
+            (IndexStr(A.CardId, Matches) >= 0) then AddRules(Str(Triggers.Objects[i], '_id'));
+      finally
+        Triggers.Free;
       end;
     end;
     // #2194: the card's title or description contains a text.
@@ -1116,10 +1185,47 @@ begin
 end;
 
 // One action of a rule, on the activity's card, as the activity's user.
-procedure PerformAction(Db: TWLDb; const A: TActivity; Act: TJSONObject);
-var Kind, Field, Text, Id, Checklist, Scope, Stamp, Table, JoinKind, Key: string; Vars: TStringList;
+// The copy actions that made each card of this run (WeKan's copy chain): a
+// card made by a copy action is never copied by that action again, so a rule
+// "when a card is added, copy it" copies each new card once.
+threadvar
+  CopyChain: TStringList;
+
+procedure RuleCopyCard(const T: TWLTenant; const A: TActivity; Act: TJSONObject);
+var Key, Chain, Dest, NewCard, Error: string;
+begin
+  Key := Str(Act, '_id');
+  if Key = '' then Key := Str(Act, 'boardId') + '/' + Str(Act, 'listId') + '/' + Str(Act, 'swimlaneId');
+  Chain := '';
+  if CopyChain <> nil then Chain := CopyChain.Values[A.CardId];
+  if Pos('|' + Key + '|', Chain) > 0 then Exit;
+  Dest := Str(Act, 'boardId');
+  if Dest = '' then Dest := A.BoardId;
+  // RuleBleed: a stored action naming a board its user may no longer change.
+  if (Dest <> A.BoardId) and not BoardCanWrite(T.Db, A.UserId, Dest) then
+  begin
+    RecordRuleCanary(T.Db, A.UserId);
+    Exit;
+  end;
+  // A stored action's list and swimlane are the destination board's own, not
+  // archived: an action edited to name another board's list copies nothing.
+  if (Length(T.Db.Query('SELECT 1 FROM lists WHERE id=' + Q(Str(Act, 'listId')) + ' AND boardId=' + Q(Dest) +
+    ' AND archived=0 AND deletedAt IS NULL;')) <> 1) or
+    (Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id=' + Q(Str(Act, 'swimlaneId')) + ' AND boardId=' + Q(Dest) +
+    ' AND archived=0;')) <> 1) then Exit;
+  // CopyViewCard checks the rest: both boards writable, the card on its own.
+  if CopyViewCard(T, A.UserId, A.BoardId, A.CardId, Dest, Str(Act, 'swimlaneId'), Str(Act, 'listId'), '', NewCard, Error) <> 200 then Exit;
+  if NewCard = '' then Exit;
+  if CopyChain = nil then CopyChain := TStringList.Create;
+  if Chain = '' then Chain := '|';
+  CopyChain.Values[NewCard] := Chain + Key + '|';
+end;
+
+procedure PerformAction(const T: TWLTenant; const A: TActivity; Act: TJSONObject);
+var Db: TWLDb; Kind, Field, Text, Id, Checklist, Scope, Stamp, Table, JoinKind, Key: string; Vars: TStringList;
   Card, R: TWLRows; Users: TStringArray; U: string; i: Integer; Items: TStringArray; Remove: Boolean;
 begin
+  Db := T.Db;
   Kind := Str(Act, 'actionType');
   if (A.BoardId = '') or not BoardCanWrite(Db, A.UserId, A.BoardId) then Exit;
   Card := Db.Query('SELECT boardId,archived,listId FROM cards WHERE id=' + Q(A.CardId) + ' AND deletedAt IS NULL;');
@@ -1130,6 +1236,7 @@ begin
     Stamp := Q(NowIso);
     case Kind of
       'moveCardToTop', 'moveCardToBottom': RuleMoveCard(Db, A, Act, Vars);
+      'copyCard': RuleCopyCard(T, A, Act);
       'archive':
         if Card[0][1] = '0' then
           Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET archived=1,archivedAt=' + Stamp + ',modifiedAt=' + Stamp + Scope +
@@ -1249,6 +1356,377 @@ begin
   end;
 end;
 
+function HtmlText(const S: string): string;
+begin
+  Result := StringReplace(StringReplace(StringReplace(StringReplace(S, '&', '&amp;', [rfReplaceAll]), '<', '&lt;', [rfReplaceAll]),
+    '>', '&gt;', [rfReplaceAll]), '"', '&quot;', [rfReplaceAll]);
+end;
+
+function RuleButtonsHtml(Db: TWLDb; const BoardId, ButtonType: string; Words: TWLTranslator): string;
+var Docs: TJSONArray; i: Integer; V: TJSONData; Lbl, Items: string;
+begin
+  Result := '';
+  if not IsShared(Db) then Exit;
+  Docs := FindDocs(Db, 'rules', DocField('boardId') + '=' + Q(BoardId) + ' AND ' + DocField('buttonType') + '=' + Q(ButtonType),
+    DocField('createdAt') + ',' + DocField('_id'));
+  try
+    Items := '';
+    for i := 0 to Docs.Count - 1 do
+    begin
+      V := Docs.Objects[i].Find('enabled');
+      if (V <> nil) and (V.JSONType = jtBoolean) and not V.AsBoolean then Continue;
+      Lbl := Str(Docs.Objects[i], 'buttonLabel');
+      if Lbl = '' then Lbl := Str(Docs.Objects[i], 'title');
+      if ButtonType = 'board' then
+        Items := Items + '<a class="board-header-btn js-run-board-button" href="#" data-rule-id="' + HtmlText(Str(Docs.Objects[i], '_id')) +
+          '" title="' + HtmlText(Lbl) + '"><i class="fa fa-magic"></i><span>' + HtmlText(Lbl) + '</span></a>'
+      else
+        Items := Items + '<button class="primary js-run-card-button" type="button" data-rule-id="' + HtmlText(Str(Docs.Objects[i], '_id')) +
+          '"><i class="fa fa-magic"></i> ' + HtmlText(Lbl) + '</button>';
+    end;
+  finally
+    Docs.Free;
+  end;
+  if (Items = '') or (ButtonType = 'board') then Exit(Items);
+  Result := '<div class="card-details-item card-details-item-buttons"><h3 class="card-details-item-title">' +
+    '<i class="fa fa-hand-pointer-o"></i> ' + HtmlText(Words.Text('r-card-button', 'Card button')) + '</h3>' +
+    '<div class="card-details-item-content card-buttons">' + Items + '</div></div>';
+end;
+
+// WeKan's rules.runButton(ruleId[, cardId]): an enabled button rule of a board
+// the user may change, on the board or on one of its cards; its actions done
+// as that user. Anything else is refused and recorded (RuleButtonBleed).
+function RunButton(const T: TWLTenant; const UserId: string; Args: TJSONArray; out Answer: string): Integer;
+var Rule, Trigger, Act: TJSONObject; V: TJSONData; A: TActivity; Ids: TStringArray; k: Integer; Allowed: Boolean;
+begin
+  if (Args.Count < 1) or (Args.Items[0].JSONType <> jtString) or
+    ((Args.Count > 1) and not (Args.Items[1].JSONType in [jtString, jtNull])) then
+    Exit(MethodError(400, 'Match.Error', 'Expected a rule id', Answer));
+  Rule := FindDoc(T.Db, 'rules', Args.Strings[0]);
+  if Rule = nil then Exit(MethodError(404, 'not-found', 'Rule not found', Answer));
+  Trigger := nil;
+  try
+    V := Rule.Find('enabled');
+    if (V <> nil) and (V.JSONType = jtBoolean) and not V.AsBoolean then
+      Exit(MethodError(400, 'rule-disabled', 'Rule is disabled', Answer));
+    Trigger := FindDoc(T.Db, 'triggers', Str(Rule, 'triggerId'));
+    if (Trigger = nil) or (Str(Trigger, 'activityType') <> 'button') then
+      Exit(MethodError(400, 'not-a-button', 'Rule is not a button rule', Answer));
+    A := Default(TActivity);
+    A.Kind := 'button'; A.UserId := UserId; A.BoardId := Str(Rule, 'boardId');
+    if (Args.Count > 1) and (Args.Items[1].JSONType = jtString) then A.CardId := Args.Strings[1];
+    Allowed := (A.BoardId <> '') and (Pos(#0, A.BoardId + A.CardId) = 0) and BoardCanWrite(T.Db, UserId, A.BoardId);
+    if Allowed and (A.CardId <> '') then
+      Allowed := Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + Q(A.CardId) + ' AND boardId=' + Q(A.BoardId) +
+        ' AND deletedAt IS NULL;')) = 1;
+    if not Allowed then
+    begin
+      try
+        RecordSecurityEvent(T.Db, UserId, 'RuleButtonBleed', 'rule:button', 'authz', 'high', 'CWE-639', 'blocked',
+          'Button rule denied because its caller or card is outside the writable board context.');
+      except
+        // logging must never break the guard
+      end;
+      Exit(MethodError(403, 'not-authorized', 'Button rule context is not authorized.', Answer));
+    end;
+    A.Data := TJSONObject.Create;
+    try
+      Ids := RuleActionIds(Rule);
+      for k := 0 to High(Ids) do
+      begin
+        Act := FindDoc(T.Db, 'actions', Ids[k]);
+        if Act = nil then Continue;
+        try
+          PerformAction(T, A, Act);
+        finally
+          Act.Free;
+        end;
+      end;
+    finally
+      A.Data.Free;
+    end;
+    Answer := '{"result":true}';
+    Result := 200;
+  finally
+    Trigger.Free;
+    Rule.Free;
+  end;
+end;
+
+// The board's rules with their first action, in their order: each one's
+// [rule, trigger, action] (the caller frees the array).
+function BoardRuleParts(Db: TWLDb; const BoardId: string): TJSONArray;
+var Rules: TJSONArray; i: Integer; Trig, Act: TJSONObject; Ids: TStringArray;
+begin
+  Result := TJSONArray.Create;
+  Rules := FindDocs(Db, 'rules', DocField('boardId') + '=' + Q(BoardId), DocField('createdAt') + ',' + DocField('_id'));
+  try
+    for i := 0 to Rules.Count - 1 do
+    begin
+      Trig := FindDoc(Db, 'triggers', Str(Rules.Objects[i], 'triggerId'));
+      Ids := RuleActionIds(Rules.Objects[i]);
+      Act := nil;
+      if Length(Ids) > 0 then Act := FindDoc(Db, 'actions', Ids[0]);
+      if (Trig = nil) or (Act = nil) then begin Trig.Free; Act.Free; Continue; end;
+      Result.Add(TJSONArray.Create([Rules.Objects[i].Clone, Trig, Act]));
+    end;
+  finally
+    Rules.Free;
+  end;
+end;
+
+// WeKan's completionByList: the lists a move rule marks complete or
+// incomplete, the last rule winning.
+function Completion(Parts: TJSONArray): TStringList;
+var i: Integer; Trig, Act: TJSONObject; List: string;
+begin
+  Result := TStringList.Create;
+  for i := 0 to Parts.Count - 1 do
+  begin
+    Trig := TJSONArray(Parts.Items[i]).Objects[1];
+    Act := TJSONArray(Parts.Items[i]).Objects[2];
+    List := Str(Trig, 'listName');
+    if (Str(Trig, 'activityType') <> 'moveCard') or (List = '') or (List = '*') then Continue;
+    if Str(Act, 'actionType') = 'markCardComplete' then Result.Values[List] := 'complete'
+    else if Str(Act, 'actionType') = 'markCardIncomplete' then Result.Values[List] := 'incomplete';
+  end;
+end;
+
+function LowerFirst(const S: string): string;
+var U: string; Len: Integer;
+begin
+  if S = '' then Exit('');
+  if Ord(S[1]) < $80 then Len := 1 else if Ord(S[1]) < $E0 then Len := 2 else if Ord(S[1]) < $F0 then Len := 3 else Len := 4;
+  U := Copy(S, 1, Len);
+  Result := Utf8Lower(U) + Copy(S, Len + 1, MaxInt);
+end;
+
+// WeKan's rules.importWrikeWorkflow(boardId, text): a board admin's import - a
+// status without a list becomes a list, after the one before it, in its
+// color; and each list without a complete or incomplete move rule gets the
+// one its group means. A second import adds nothing.
+function ImportWrike(const T: TWLTenant; const UserId: string; Args: TJSONArray; Words: TWLTranslator; out Answer: string): Integer;
+var BoardId, WName, Error, ListId, Sort, Ids, Kind, Key, TriggerDesc, ActionDesc, Title, Sql: string; Statuses: TWrikeStatuses;
+  NotRead, i, k, ListsCreated, RulesCreated: Integer; Lists: TWLRows; Titles, Governed: TStringList; Prev: Double; Found: Boolean;
+  Parts: TJSONArray; Trig, Act: TJSONObject; Next, Low: Double; Have: Boolean; Sorts: array of Double;
+  function Say(const K, Fallback: string): string;
+  begin
+    if Words <> nil then Result := Words.Text(K, Fallback) else Result := Fallback;
+  end;
+begin
+  if (Args.Count < 2) or (Args.Items[0].JSONType <> jtString) or (Args.Items[1].JSONType <> jtString) then
+    Exit(MethodError(400, 'Match.Error', 'Expected a board id and a text', Answer));
+  BoardId := Args.Strings[0];
+  if (Pos(#0, BoardId) > 0) or (Length(T.Db.Query('SELECT 1 FROM boards WHERE id=' + Q(BoardId) + ';')) <> 1) then
+    Exit(MethodError(404, 'not-found', 'Board not found', Answer));
+  if not BoardCanAdmin(T.Db, UserId, BoardId) then Exit(MethodError(403, 'not-authorized', 'Must be a board admin', Answer));
+  if not ReadWrikeWorkflow(Args.Strings[1], WName, Statuses, NotRead, Error) then
+    Exit(MethodError(400, 'invalid-import-format', Error, Answer));
+  Lists := T.Db.Query('SELECT id,title,COALESCE(sort,0) FROM lists WHERE boardId=' + Q(BoardId) +
+    ' AND archived=0 AND deletedAt IS NULL ORDER BY sort;');
+  Titles := TStringList.Create;
+  Governed := TStringList.Create;
+  try
+    SetLength(Sorts, Length(Lists));
+    for i := 0 to High(Lists) do
+    begin
+      Sorts[i] := StrToFloatDef(Lists[i][2], 0, DefaultFormatSettings);
+      if Titles.IndexOfName(Lists[i][1]) < 0 then Titles.Values[Lists[i][1]] := Lists[i][2];
+    end;
+    ListsCreated := 0;
+    Have := False; Prev := 0;
+    Sql := '';
+    for i := 0 to High(Statuses) do
+    begin
+      if Titles.IndexOfName(Statuses[i].Name) >= 0 then
+      begin
+        Have := True;
+        Prev := StrToFloatDef(Titles.Values[Statuses[i].Name], 0, DefaultFormatSettings);
+        Continue;
+      end;
+      // WeKan's createListAfter: right after the previous status' list, or
+      // before every list.
+      if not Have then
+      begin
+        Low := 0;
+        for k := 0 to High(Sorts) do
+          if (k = 0) or (Sorts[k] < Low) then Low := Sorts[k];
+        Prev := Low - 1;
+      end
+      else
+      begin
+        Found := False; Next := 0;
+        for k := 0 to High(Sorts) do
+          if (Sorts[k] > Prev) and (not Found or (Sorts[k] < Next)) then begin Next := Sorts[k]; Found := True; end;
+        if Found then Prev := (Prev + Next) / 2 else Prev := Prev + 1;
+      end;
+      Have := True;
+      Sort := FloatToStr(Prev, DefaultFormatSettings);
+      ListId := NewId;
+      Sql := Sql + 'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color) VALUES(' + Q(ListId) + ',' + Q(BoardId) +
+        ','''',' + Q(Statuses[i].Name) + ',' + Sort + ',' + Q(NowIso) + ',' + IfThen(Statuses[i].Color = '', 'NULL', Q(Statuses[i].Color)) + '); ';
+      SetLength(Sorts, Length(Sorts) + 1);
+      Sorts[High(Sorts)] := Prev;
+      Titles.Values[Statuses[i].Name] := Sort;
+      Inc(ListsCreated);
+    end;
+    if (Sql <> '') and not T.Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;'); Exit(MethodError(500, 'internal-error', 'Could not add the lists', Answer)); end;
+    // The lists that already have a complete or incomplete move rule.
+    Parts := BoardRuleParts(T.Db, BoardId);
+    try
+      for i := 0 to Parts.Count - 1 do
+      begin
+        Trig := TJSONArray(Parts.Items[i]).Objects[1];
+        Act := TJSONArray(Parts.Items[i]).Objects[2];
+        if (Str(Trig, 'activityType') = 'moveCard') and ((Str(Act, 'actionType') = 'markCardComplete') or
+          (Str(Act, 'actionType') = 'markCardIncomplete')) then Governed.Add(Str(Trig, 'listName'));
+      end;
+    finally
+      Parts.Free;
+    end;
+    RulesCreated := 0;
+    for i := 0 to High(Statuses) do
+    begin
+      if Governed.IndexOf(Statuses[i].Name) >= 0 then Continue;
+      if (Statuses[i].Group = 'Completed') or (Statuses[i].Group = 'Cancelled') then
+      begin Kind := 'markCardComplete'; Key := 'r-mark-complete'; end
+      else begin Kind := 'markCardIncomplete'; Key := 'r-mark-incomplete'; end;
+      TriggerDesc := Say('r-when-a-card-is-moved', 'When a card is moved to another list') + ': ' + Statuses[i].Name;
+      ActionDesc := Say(Key, Key);
+      Title := 'Wrike ' + Statuses[i].Group + ': When ' + LowerFirst(TriggerDesc) + ', then ' + LowerFirst(ActionDesc);
+      Trig := TJSONObject.Create(['activityType', 'moveCard', 'listName', Statuses[i].Name, 'oldListName', '*', 'swimlaneName', '*',
+        'cardTitle', '*', 'userId', '*', 'desc', TriggerDesc]);
+      Act := TJSONObject.Create(['actionType', Kind, 'desc', ActionDesc]);
+      try
+        if not InsertRule(T, BoardId, Title, Trig, Act, Ids) then
+          Exit(MethodError(500, 'internal-error', 'Could not create the rule', Answer));
+      finally
+        Trig.Free;
+        Act.Free;
+      end;
+      Governed.Add(Statuses[i].Name);
+      Inc(RulesCreated);
+    end;
+  finally
+    Governed.Free;
+    Titles.Free;
+  end;
+  Answer := '{"result":{"name":"' + StringToJSONString(WName) + '","statuses":' + IntToStr(Length(Statuses)) + ',"listsCreated":' +
+    IntToStr(ListsCreated) + ',"rulesCreated":' + IntToStr(RulesCreated) + ',"notRead":' + IntToStr(NotRead) + '}}';
+  Result := 200;
+end;
+
+function CsvField(const S: string): string;
+begin
+  if (Pos(',', S) > 0) or (Pos('"', S) > 0) or (Pos(#10, S) > 0) or (Pos(#13, S) > 0) then
+    Result := '"' + StringReplace(S, '"', '""', [rfReplaceAll]) + '"'
+  else Result := S;
+end;
+
+function RulesExport(Db: TWLDb; const UserId, BoardId, Format, Ids: string; out Body, ContentType, FileName: string): Boolean;
+var Parts, Entries, Extra: TJSONArray; Picked: TStringList; i, k: Integer; Rule, Trig, Act, E, Out_, TF, AF: TJSONObject;
+  R: TWLRows; Lists: TWrikeLists; Comp: TStringList; ActIds: TStringArray; More: TJSONObject; Wf: TJSONObject; Title: string;
+begin
+  Result := False; Body := ''; ContentType := ''; FileName := '';
+  if (BoardId = '') or (Pos(#0, BoardId) > 0) or not IsShared(Db) or not BoardCanAdmin(Db, UserId, BoardId) then Exit;
+  Result := True;
+  Parts := BoardRuleParts(Db, BoardId);
+  try
+    if Format = 'wrike' then
+    begin
+      R := Db.Query('SELECT title,COALESCE(color,'''') FROM lists WHERE boardId=' + Q(BoardId) +
+        ' AND archived=0 AND deletedAt IS NULL ORDER BY sort;');
+      SetLength(Lists, Length(R));
+      for i := 0 to High(R) do begin Lists[i].Title := R[i][0]; Lists[i].Color := R[i][1]; end;
+      R := Db.Query('SELECT title FROM boards WHERE id=' + Q(BoardId) + ';');
+      Title := '';
+      if Length(R) = 1 then Title := R[0][0];
+      Comp := Completion(Parts);
+      try
+        Wf := WrikeWorkflowFromBoard(Title, Lists, Comp);
+      finally
+        Comp.Free;
+      end;
+      try
+        Body := Wf.FormatJSON([], 2);
+      finally
+        Wf.Free;
+      end;
+      ContentType := 'application/json';
+      FileName := 'wrike-workflow.json';
+      Exit;
+    end;
+    Picked := TStringList.Create;
+    Entries := TJSONArray.Create;
+    try
+      if Ids <> '' then Picked.CommaText := Ids;
+      for i := 0 to Parts.Count - 1 do
+      begin
+        Rule := TJSONArray(Parts.Items[i]).Objects[0];
+        if (Ids <> '') and (Picked.IndexOf(Str(Rule, '_id')) < 0) then Continue;
+        Trig := TJSONArray(Parts.Items[i]).Objects[1];
+        Act := TJSONArray(Parts.Items[i]).Objects[2];
+        E := TJSONObject.Create(['title', Str(Rule, 'title')]);
+        E.Add('trigger', PortableDoc(Trig));
+        E.Add('action', PortableDoc(Act));
+        ActIds := RuleActionIds(Rule);
+        if Length(ActIds) > 1 then
+        begin
+          Extra := TJSONArray.Create;
+          for k := 1 to High(ActIds) do
+          begin
+            More := FindDoc(Db, 'actions', ActIds[k]);
+            if More <> nil then
+            begin
+              Extra.Add(PortableDoc(More));
+              More.Free;
+            end;
+          end;
+          E.Add('extraActions', Extra);
+        end;
+        Entries.Add(E);
+      end;
+      if Format = 'csv' then
+      begin
+        Body := 'title,triggerType,triggerFields,actionType,actionFields'#13#10;
+        for i := 0 to Entries.Count - 1 do
+        begin
+          TF := TJSONObject(Entries.Objects[i].Objects['trigger'].Clone);
+          AF := TJSONObject(Entries.Objects[i].Objects['action'].Clone);
+          try
+            TF.Delete('activityType');
+            AF.Delete('actionType');
+            Body := Body + CsvField(Str(Entries.Objects[i], 'title')) + ',' +
+              CsvField(Str(Entries.Objects[i].Objects['trigger'], 'activityType')) + ',' + CsvField(TF.AsJSON) + ',' +
+              CsvField(Str(Entries.Objects[i].Objects['action'], 'actionType')) + ',' + CsvField(AF.AsJSON) + #13#10;
+          finally
+            TF.Free;
+            AF.Free;
+          end;
+        end;
+        ContentType := 'text/csv; charset=utf-8';
+        FileName := 'wekan-rules.csv';
+        Exit;
+      end;
+      Out_ := TJSONObject.Create(['_format', 'wekan-rules-1.0.0', 'boardId', BoardId]);
+      try
+        Out_.Add('rules', Entries.Clone);
+        Body := Out_.FormatJSON([], 2);
+      finally
+        Out_.Free;
+      end;
+      ContentType := 'application/json';
+      FileName := 'wekan-rules.json';
+    finally
+      Entries.Free;
+      Picked.Free;
+    end;
+  finally
+    Parts.Free;
+  end;
+end;
+
 function ReadActivities(Db: TWLDb; const Stamp: string): TWLRows;
 begin
   Result := Db.Query('SELECT id,activityType,COALESCE(userId,''''),COALESCE(boardId,''''),COALESCE(cardId,''''),COALESCE(listId,''''),' +
@@ -1271,6 +1749,7 @@ begin
   // No rule anywhere: nothing to run, and nothing to claim.
   if not CollectionTable(T.Db, 'rules', Raw, Tbl) or (Length(T.Db.Query('SELECT 1 FROM ' + Tbl + ' LIMIT 1;')) = 0) then Exit;
   T.Db.Exec('CREATE TABLE IF NOT EXISTS _wl_rule_seen(id TEXT PRIMARY KEY, at TEXT NOT NULL);');
+  FreeAndNil(CopyChain);
   for Depth := 0 to MAX_RULE_DEPTH do
   begin
     Rows := ReadActivities(T.Db, Stamp);
@@ -1309,7 +1788,7 @@ begin
               Act := FindDoc(T.Db, 'actions', Ids[k]);
               if Act = nil then Continue;
               try
-                PerformAction(T.Db, A, Act);
+                PerformAction(T, A, Act);
                 Any := True;
               finally
                 Act.Free;
@@ -1325,6 +1804,7 @@ begin
     end;
     if not Any then Break;
   end;
+  FreeAndNil(CopyChain);
   // What was claimed a day ago is never read again.
   T.Db.Exec('DELETE FROM _wl_rule_seen WHERE at<' + Q(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', IncDay(LocalTimeToUniversal(Now), -1))) + ';');
 end;

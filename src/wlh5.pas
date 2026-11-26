@@ -52,6 +52,11 @@ function ServeHtml5(Request: TRequest; Response: TResponse): Boolean;
 // when the request is not one of these.
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 
+// The Filter sidebar's Advanced Filter over a board's cards: the ids of the
+// cards it selects; False when the filter does not parse. wlrules' advanced
+// filter trigger reads a card with it.
+function AdvancedFilterCards(Db: TWLDb; const BoardId, Filter: string; out Ids: TStringArray): Boolean;
+
 // After a successful sign-in in the HTML5 view: the login cookie, and back to
 // All Boards.
 procedure Html5SignedIn(Response: TResponse; const SessionId: string);
@@ -2064,6 +2069,12 @@ var R: TWLRows; i: Integer; Archived: string;
       Result := '<div class="archived-item" data-kind="' + Kind + '" data-id="' + HtmlAttr(Id) + '"><span class="archived-item-title">' +
         E(Title) + '</span>' + Restore + '</div>';
   end;
+  function RuleMenuLink(const Cls, View, Icon, Key, Fallback: string): string;
+  begin
+    Result := '<li><a class="' + Cls + '" href="' + HtmlAttr(BoardRoute(BoardId, BoardSlug(Db, BoardId)) + '/rules' + View) +
+      '" title="' + HtmlAttr(Words.Text(Key, Fallback)) + '"><i class="fa ' + Icon + '"></i> ' + E(Words.Text(Key, Fallback)) +
+      '</a></li>';
+  end;
 begin
   Archived := '';
   R := Db.Query('SELECT id,title FROM cards WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 AND deletedAt IS NULL ORDER BY archivedAt DESC,id;');
@@ -2112,7 +2123,15 @@ begin
     '"><div class="header"><span class="header-title">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
     '<div class="content"><ul class="pop-over-list"><li><a class="js-open-archives" href="#"><i class="fa fa-archive"></i> ' +
-    E(Words.Text('archived-items', 'Archived Items')) + '</a></li></ul></div></template>';
+    E(Words.Text('archived-items', 'Archived Items')) + '</a></li>' +
+    // Board Settings / Rules, for a board admin: the Rules page and its views
+    // (wlrules), as Weddy's board.pug links them.
+    IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId),
+      RuleMenuLink('js-open-rules-view', '', 'fa-magic', 'rules', 'Rules') +
+      RuleMenuLink('js-open-rules-list-view', '?view=list', 'fa-list', 'r-list-view', 'List view') +
+      RuleMenuLink('js-open-rules-workflow-view', '?view=workflow', 'fa-sitemap', 'r-workflow-view', 'Workflow view') +
+      RuleMenuLink('js-open-rules-import-export', '?view=import', 'fa-exchange', 'rulesImportExportPopup-title', 'Import / Export'), '') +
+    '</ul></div></template>';
 end;
 
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
@@ -2779,6 +2798,8 @@ begin
       '<a class="js-close-card-details" href="' + HtmlAttr(Route) + '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '" up-follow up-target=".board-wrapper">&times;</a></div>';
     Details := Details + CardWatchLink(Db, Words, S, BoardId, CardId);
+    // WeKan's cardButtons: the board's card button rules.
+    if Writable then Details := Details + RuleButtonsHtml(Db, BoardId, 'card', Words);
     Details := Details + ListPickerSection(Db, Words, BoardId, CardId, Card[0][8], Card[0][9], Writable);
     if BoardAllows(Db, BoardId, 'allowsLabels') then
       Details := Details + LabelsSection(Db, Words, BoardId, CardId, Writable);
@@ -2836,7 +2857,10 @@ begin
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
     ' data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
-    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + SortButton(Words, CardSort) +
+    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) +
+    // WeKan's boardButtons: the board's button rules, for whoever may change it.
+    IfThen((S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId), RuleButtonsHtml(Db, BoardId, 'board', Words), '') +
+    FilterButton(Words, Filter) + SortButton(Words, CardSort) +
     // WeKan's visibility button and boardVisibilityList, for a board admin.
     IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), VisibilityButton(Words, BoardId, B[0][4]), '') +
     // WeKan's Multi-Selection: select cards, then act on all of them.
@@ -2873,7 +2897,7 @@ end;
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
-var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
+var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
@@ -2899,12 +2923,163 @@ begin
       end;
       if not (Args is TJSONArray) then
       begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
-      Code := RulesMethod(T, S.UserId, Name, TJSONArray(Args), Error);
+      RulesWords := TWLTranslator.Create(ViewerLanguage(T.Db, S, Request));
+      try
+        Code := RulesMethod(T, S.UserId, Name, TJSONArray(Args), Error, RulesWords);
+      finally
+        RulesWords.Free;
+      end;
     finally
       Args.Free;
     end;
     if Code <> 0 then
     begin SendJsonAnswer(Response, Code, Error); Exit; end;
+  end;
+  // WeKan's createCardWithDueDate(boardId, listId, title, dueDate, swimlaneId):
+  // the Calendar view's card on a clicked day. A refusal is recorded as
+  // AuthBleed: the view offers it only to who may change the board.
+  // WeKan's setCardCustomFieldCheckbox, setCardCustomFieldCurrency and
+  // setCardCustomFieldAssigned (server/models/cards.js): [cardId, fieldId,
+  // value] - a field already on the card for the first two, the field onto
+  // the card or off it for the third - written as the card's custom fields are.
+  if (Name = 'setCardCustomFieldCheckbox') or (Name = 'setCardCustomFieldCurrency') or (Name = 'setCardCustomFieldAssigned') then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 3) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString) and
+        (((Name = 'setCardCustomFieldCurrency') and (TJSONArray(Args).Items[2].JSONType = jtNumber)) or
+         ((Name <> 'setCardCustomFieldCurrency') and (TJSONArray(Args).Items[2].JSONType = jtBoolean)))) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      R := T.Db.Query('SELECT boardId FROM cards WHERE id=' + QuotedStr(TJSONArray(Args).Strings[0]) + ' AND deletedAt IS NULL;');
+      if Length(R) <> 1 then begin SendJsonAnswer(Response, 404, '{"error":"not-found","reason":"Card not found"}'); Exit; end;
+      Id := 'cardId=' + QuotedStr(TJSONArray(Args).Strings[0]) + ' AND customFieldId=' + QuotedStr(TJSONArray(Args).Strings[1]);
+      n := Length(T.Db.Query('SELECT 1 FROM card_custom_field_values WHERE ' + Id + ';'));
+      Ids := nil;
+      if Name = 'setCardCustomFieldAssigned' then
+      begin
+        // On the card already, or off it already: nothing to change.
+        if (n = 1) = TJSONArray(Args).Booleans[2] then
+        begin SendJsonAnswer(Response, 200, '{"result":' + IfThen(n = 1, 'true', 'false') + '}'); Exit; end;
+        Code := SetViewCardField(T, S.UserId, R[0][0], TJSONArray(Args).Strings[0], TJSONArray(Args).Strings[1], nil, True, Error);
+      end
+      else if n <> 1 then
+      begin SendJsonAnswer(Response, 400, '{"error":"custom-field-not-on-card","reason":"custom-field-not-on-card"}'); Exit; end
+      else
+      begin
+        FieldValues := TStringList.Create;
+        try
+          if Name = 'setCardCustomFieldCheckbox' then FieldValues.Values['value'] := IfThen(TJSONArray(Args).Booleans[2], 'true', 'false')
+          else FieldValues.Values['value'] := FloatToStr(TJSONArray(Args).Floats[2], DefaultFormatSettings);
+          Code := SetViewCardField(T, S.UserId, R[0][0], TJSONArray(Args).Strings[0], TJSONArray(Args).Strings[1], FieldValues, False, Error);
+        finally
+          FieldValues.Free;
+        end;
+      end;
+      if Code <> 200 then
+      begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+      SendJsonAnswer(Response, 200, '{"result":' + TJSONArray(Args).Items[2].AsJSON + '}');
+    finally
+      Args.Free;
+    end;
+    Exit;
+  end;
+  // Meteor's client update of a card, as WeKan's allow rules let a card
+  // editor make it: (id or {_id}, {$set: {title | description}}) - the title
+  // and description of a card of a board one may change, with WeKan's text
+  // activities. Anything else is Meteor's 403 "Access denied".
+  if Name = '/cards/update' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      Id := '';
+      if (Args is TJSONArray) and (TJSONArray(Args).Count >= 2) then
+      begin
+        if TJSONArray(Args).Items[0].JSONType = jtString then Id := TJSONArray(Args).Strings[0]
+        else if (TJSONArray(Args).Items[0] is TJSONObject) and (TJSONArray(Args).Items[0].Count = 1) and
+          (TJSONObject(TJSONArray(Args).Items[0]).Find('_id') is TJSONString) then
+          Id := TJSONObject(TJSONArray(Args).Items[0]).Strings['_id'];
+      end;
+      Selector := nil;
+      if (Id <> '') and (TJSONArray(Args).Items[1] is TJSONObject) and (TJSONArray(Args).Items[1].Count = 1) and
+        (TJSONObject(TJSONArray(Args).Items[1]).Find('$set') is TJSONObject) then
+        Selector := TJSONObject(TJSONObject(TJSONArray(Args).Items[1]).Find('$set'));
+      Code := 403; Error := 'Access denied';
+      if (Selector <> nil) and (Selector.Count >= 1) then
+      begin
+        R := T.Db.Query('SELECT boardId FROM cards WHERE id=' + QuotedStr(Id) + ' AND deletedAt IS NULL;');
+        if Length(R) <> 1 then begin SendJsonAnswer(Response, 200, '{"result":0}'); Exit; end;
+        Code := 200;
+        for n := 0 to Selector.Count - 1 do
+          if (Code = 200) and not (((Selector.Names[n] = 'title') or (Selector.Names[n] = 'description')) and
+            (Selector.Items[n].JSONType = jtString)) then begin Code := 403; Error := 'Access denied'; end;
+        for n := 0 to Selector.Count - 1 do
+          if Code = 200 then
+            if Selector.Names[n] = 'title' then
+              Code := RenameViewCard(T, S.UserId, R[0][0], Id, Selector.Items[n].AsString, Error)
+            else
+              Code := SetViewCardDescription(T, S.UserId, R[0][0], Id, Selector.Items[n].AsString, Error);
+        if Code = 403 then Error := 'Access denied';
+      end;
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'createCardWithDueDate' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 5) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtString) and
+        (TJSONArray(Args).Items[3].JSONType = jtString) and (TJSONArray(Args).Items[4].JSONType = jtString) and
+        (Length(TJSONArray(Args).Strings[3]) = 24) and (TJSONArray(Args).Strings[3][11] = 'T') and
+        (TJSONArray(Args).Strings[3][24] = 'Z')) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      if not BoardCanWrite(T.Db, S.UserId, TJSONArray(Args).Strings[0]) then
+      begin
+        if Length(T.Db.Query('SELECT 1 FROM boards WHERE id=' + QuotedStr(TJSONArray(Args).Strings[0]) + ';')) = 1 then
+        begin
+          try
+            RecordSecurityEvent(T.Db, S.UserId, 'AuthBleed', 'method:createCardWithDueDate', 'authz', 'high', 'CWE-862', 'blocked',
+              'Card insert refused: no write access to the board');
+          except
+            // logging must never break the guard
+          end;
+          SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"not-authorized"}');
+        end
+        else SendJsonAnswer(Response, 404, '{"error":"not-found","reason":"not-found"}');
+        Exit;
+      end;
+      Code := CreateViewCard(T, S.UserId, TJSONArray(Args).Strings[0], TJSONArray(Args).Strings[1], TJSONArray(Args).Strings[4],
+        TJSONArray(Args).Strings[2], 'top', Id, Error);
+      if (Code = 200) and not T.Db.Exec('UPDATE cards SET dueAt=' + QuotedStr(TJSONArray(Args).Strings[3]) + ' WHERE id=' +
+        QuotedStr(Id) + ';') then begin Code := 500; Error := 'Could not set the due date'; end;
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(Id) + '"}');
+    Exit;
   end;
   if Name = 'toggleCardMaximized' then
   begin
@@ -3938,7 +4113,7 @@ begin
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
-    (Path = '/board/rules') or
+    (Path = '/board/rules') or (Path = '/board/rules/export') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
@@ -3995,6 +4170,25 @@ begin
       if Pos('/', Section) > 0 then Section := Copy(Section, 1, Pos('/', Section) - 1);
       Send(200, Page(Request, Language, Words, S, Words.Text('all-boards', 'All Boards'), '',
         BoardsContent(T.Db, S, Words, Section)));
+      Exit;
+    end;
+    // The Rules page's downloads: the rules as JSON or CSV, the board as a
+    // Wrike workflow (wlrules).
+    if Path = '/board/rules/export' then
+    begin
+      if RulesExport(T.Db, S.UserId, Request.QueryFields.Values['id'], Request.QueryFields.Values['format'],
+        Request.QueryFields.Values['ids'], Content, Section, Title) then
+      begin
+        Response.Code := 200;
+        Response.ContentType := Section;
+        Response.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Title + '"');
+        Response.SetCustomHeader('Cache-Control', 'no-store');
+        Response.Content := Content;
+        Response.ContentLength := Length(Content);
+        SendResponse(Response);
+      end
+      else
+        Send(404, Page(Request, Language, Words, S, Words.Text('board-not-found', 'Board not found'), '', NotFoundContent(Words)));
       Exit;
     end;
     // WeKan's rulesMain: the board's Rules page (wlrules).

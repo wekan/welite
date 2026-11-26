@@ -94,6 +94,12 @@ begin
       Parts[High(Parts)] := HTTPDecode(Copy(Rest, Start, i - Start));
       Start := i + 1;
     end;
+  // /b/:id/:slug/rules/export: the Rules page's downloads.
+  if (Length(Parts) = 4) and (Parts[2] = 'rules') and (Parts[3] = 'export') then
+  begin
+    BoardId := Parts[0]; Slug := Parts[1]; CardId := 'rules/export';
+    Exit(True);
+  end;
   if (Length(Parts) < 1) or (Length(Parts) > 3) then Exit;
   for i := 0 to High(Parts) do
     if Parts[i] = '' then Exit;
@@ -120,6 +126,8 @@ begin
   // WeKan's /b/:id/:slug/rules: the board's Rules page (wlrules).
   if CardId = 'rules' then
     Request.PathInfo := '/board/rules'
+  else if CardId = 'rules/export' then
+    Request.PathInfo := '/board/rules/export'
   else if CardId = '' then
     Request.PathInfo := '/board'
   else

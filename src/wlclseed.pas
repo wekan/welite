@@ -89,7 +89,11 @@ begin
       if Parts[High(Parts)]='' then raise Exception.Create('Invalid clone relation path');
       if Parent<>nil then Parent.Delete(Parts[High(Parts)]);
     end;
-    Result:=TypedDocument(Plain.AsJSON,Source,'{}');
+    // The copy gets an id of its own, a string: a source whose _id is an
+    // ObjectId (a database tool wrote it without one) does not pass that type
+    // on to the string id that replaces it.
+    if Plain.Find('_id') is TJSONString then Result:=TypedDocument(Plain.AsJSON,Source,'{"_id":"string"}')
+    else Result:=TypedDocument(Plain.AsJSON,Source,'{}');
   finally Spec.Free;Plain.Free;end;
 end;
 end.

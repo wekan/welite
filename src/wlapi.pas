@@ -4448,6 +4448,13 @@ begin
     ',(SELECT max(0,coalesce(max(cardNumber),0))+1 FROM cards WHERE boardId='+Board+'),';
   if LinkedId='' then Result:=Result+'''cardType-card'',NULL; '
   else Result:=Result+'''cardType-linkedCard'','+QuotedStr(LinkedId)+'; ';
+  // WeKan's createCard activity, as its cards.after.insert writes one for
+  // every new card (models/activities.js): what the board's activities show
+  // and what a "when a card is added" rule starts from (wlrules).
+  Result:=Result+'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+    'SELECT '+QuotedStr(NewId)+',''createCard'','+QuotedStr(Author)+',c.boardId,c.id,c.listId,c.swimlaneId,'+Stamp+','+Stamp+
+    ',json_object(''cardTitle'',c.title,''listName'',(SELECT l.title FROM lists l WHERE l.id=c.listId),'+
+    '''swimlaneName'',(SELECT s.title FROM swimlanes s WHERE s.id=c.swimlaneId)) FROM cards c WHERE c.id='+QuotedStr(CardId)+'; ';
 end;
 
 // A refused attempt in a shared store's eventlog, as WeKan's securityLog
@@ -4612,10 +4619,7 @@ begin
     ') THEN 1 ELSE json(''Linked card scope changed'') END; '+
     CardCreateSql(BoardId,ListId,Lane,Id,Actor,Title,'','NULL',
       '(SELECT count(*) FROM cards WHERE listId='+ListKey+' AND boardId='+Board+
-      ' AND archived=0 AND deletedAt IS NULL)',LinkedId)+InitializeSharedAssignments(Db,BoardId,Id,True,True)+
-    'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt) VALUES('+
-    QuotedStr(NewId)+',''createCard'','+QuotedStr(Actor)+','+Board+','+QuotedStr(Id)+','+
-    ListKey+','+LaneKey+','+Stamp+','+Stamp+'); COMMIT;';
+      ' AND archived=0 AND deletedAt IS NULL)',LinkedId)+InitializeSharedAssignments(Db,BoardId,Id,True,True)+'COMMIT;';
   if not Db.Exec(Sql) then
   begin Db.Exec('ROLLBACK;');SendError(Response,500,'Could not create linked card');Exit;end;
   SendJson(Response,'{"_id":"'+StringToJSONString(Id)+'"}');
@@ -4757,6 +4761,23 @@ begin
   Result:=200;
 end;
 
+// WeKan's after.update activities of a card's text: a-changedTitle or
+// a-changedDescription with the old and the new value, when it changes -
+// what the card's activities show and what the board's rules read (wlrules).
+// The SQL goes before the update, in its transaction.
+function CardTextActivitySql(const UserId,Scope,Column,Value:string):string;
+var Kind,Title:string;
+begin
+  Result:='';
+  if Column='title' then begin Kind:='a-changedTitle';Title:=QuotedStr(Value);end
+  else if Column='description' then begin Kind:='a-changedDescription';Title:='title';end
+  else Exit;
+  Result:='INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
+    QuotedStr(NewId)+','+QuotedStr(Kind)+','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+QuotedStr(NowIso)+','+QuotedStr(NowIso)+
+    ',json_object(''cardTitle'','+Title+',''oldValue'',COALESCE('+Column+',''''),''value'','+QuotedStr(Value)+
+    ') FROM cards WHERE '+Scope+' AND COALESCE('+Column+','''')<>'+QuotedStr(Value)+'; ';
+end;
+
 function RenameViewCard(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out Error:string):Integer;
 var Scope,Stamp:string;
 begin
@@ -4768,7 +4789,7 @@ begin
   begin Error:='Card not found';Exit(404);end;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   Stamp:=QuotedStr(NowIso);
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET title='+QuotedStr(Title)+',modifiedAt='+Stamp+
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardTextActivitySql(UserId,Scope,'title',Title)+'UPDATE cards SET title='+QuotedStr(Title)+',modifiedAt='+Stamp+
     ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ' AND title='+QuotedStr(Title)+')=1 THEN 1 ELSE json(''Card rename failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not rename card';Exit(500);end;
@@ -6046,7 +6067,7 @@ begin
   if Pos(#0,Value)>0 then begin Error:='Invalid value';Exit(400);end;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
   Stamp:=QuotedStr(NowIso);
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET '+Column+'='+QuotedStr(Value)+',modifiedAt='+Stamp+
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardTextActivitySql(UserId,Scope,Column,Value)+'UPDATE cards SET '+Column+'='+QuotedStr(Value)+',modifiedAt='+Stamp+
     ',dateLastActivity='+Stamp+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ' AND '+Column+'='+QuotedStr(Value)+')=1 THEN 1 ELSE json(''Card write failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
@@ -6840,8 +6861,21 @@ begin
     finally Items.Free;Seen.Free;end;
   end
   else begin Error:='not editable here';Exit(403);end;
+  Rows:=T.Db.Query('SELECT CASE WHEN value IS NULL THEN char(0) ELSE CAST(value AS TEXT) END FROM card_custom_field_values WHERE '+Scope+';');
+  if Length(Rows)=1 then Raw:=Rows[0][0] else Raw:=#0;
   if not SaveCardFieldValue(T.Db,CardId,FieldId,Literal,Guard) then
   begin Error:='Could not save custom-field value';Exit(500);end;
+  // WeKan's cardCustomFields hook: a changed value is an activity -
+  // setCustomField with the value, or unsetCustomField - which notifies the
+  // card's watchers and starts the board's rules (an advanced-filter
+  // trigger reads the card as it is now).
+  Rows:=T.Db.Query('SELECT CASE WHEN value IS NULL THEN char(0) ELSE CAST(value AS TEXT) END,'+
+    'CASE WHEN value IS NULL THEN ''unsetCustomField'' ELSE ''setCustomField'' END,'+
+    'json_object(''customFieldId'','+QuotedStr(FieldId)+',''value'',value) FROM card_custom_field_values WHERE '+Scope+';');
+  if (Length(Rows)=1) and (Rows[0][0]<>Raw) then
+    T.Db.Exec('INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+      'SELECT '+QuotedStr(NewId)+','+QuotedStr(Rows[0][1])+','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+QuotedStr(NowIso)+','+
+      QuotedStr(NowIso)+','+QuotedStr(Rows[0][2])+' FROM cards WHERE id='+QuotedStr(CardId)+';');
   Result:=200;
 end;
 
