@@ -71,6 +71,17 @@ def pure_checks(tmp):
         '/?ui=html4',
     ], out
     print('PASS: view choice and toggle URL')
+    # Negative, the whole source: LiveAttachmentSQL names the attachments
+    # table unaliased and aliases its own as a, so no query that uses it may
+    # alias attachments (in a shared store every such query failed).
+    import re as _re
+    for pas in sorted((ROOT / 'src').glob('*.pas')):
+        text = pas.read_text(encoding='utf-8', errors='replace')
+        for m in _re.finditer(r'LiveAttachmentSQL\(', text):
+            before = text[max(0, m.start() - 600):m.start()]
+            stmt = before[before.rfind(';') + 1:]
+            assert not _re.search(r'\battachments\s+(?:AS\s+)?[a-z]\w*\s+WHERE', stmt, _re.I), (pas.name, stmt[-200:])
+    print('PASS: no aliased attachments beside LiveAttachmentSQL')
 
 
 def http_checks(server, tmp, backend):
@@ -550,8 +561,38 @@ def http_checks(server, tmp, backend):
         assert request('POST', card_path + '/attachments', {'file': 'x'}, cookie=owner)[0] == 400, 'no file, no upload'
         assert request('POST', '%s/attachments/%s/delete' % (card_path, att), {}, cookie=stranger)[0] == 403
         assert request('POST', '%s/attachments/no-such/delete' % card_path, {}, cookie=owner)[0] == 404
+        # attachmentActionsPopup: an image as the card's cover and the board's
+        # background, and off again; nothing else is either.
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert ('data-pop="attachment-actions-%s"' % att).encode() in page and b'js-add-background-image' in page
+        assert ('data-pop="attachment-actions-%s"' % html_att).encode() not in page, 'only an image'
+        cover_img = ('<div class="minicard-cover"><img src="/cdn/storage/attachments/%s"' % att).encode()
+        background = ('style="background-image: url(/cdn/storage/attachments/%s); background-size: cover;"' % att).encode()
+        status, _, page, _ = request('POST', '%s/attachments/%s/cover' % (card_path, att), {}, cookie=owner)
+        assert status == 200 and cover_img in page and b'js-remove-cover' in page
+        assert request('POST', '%s/attachments/%s/cover' % (card_path, att), {}, cookie=owner)[0] == 200
+        assert cover_img not in request('GET', route, cookie=owner)[2], 'the same image again takes it off'
+        status, _, page, _ = request('POST', '%s/attachments/%s/background' % (card_path, att), {}, cookie=owner)
+        assert status == 200 and background in page and b'js-remove-background-image' in page
+        assert background in request('GET', route, cookie=worker)[2], "the board's, for every member"
+        # Negative: no HTML file as either, no background by a member who is
+        # not an admin, nothing by a non-member, and no attachment of another card.
+        assert request('POST', '%s/attachments/%s/cover' % (card_path, html_att), {}, cookie=owner)[0] == 400
+        assert request('POST', '%s/attachments/%s/background' % (card_path, html_att), {}, cookie=owner)[0] == 400
+        assert request('POST', '%s/attachments/%s/background' % (card_path, att), {}, cookie=worker)[0] == 403
+        assert b'js-add-background-image' not in request('GET', '%s/%s' % (route, card_id), cookie=worker)[2]
+        assert request('POST', '%s/attachments/%s/cover' % (card_path, att), {}, cookie=stranger)[0] == 403
+        assert request('POST', '/b/%s/cards/%s/attachments/%s/cover' % (board_id, 'other-card', att), {}, cookie=owner)[0] == 404
+        assert background in request('GET', route, cookie=owner)[2]
+        assert request('POST', '%s/attachments/%s/background' % (card_path, att), {}, cookie=owner)[0] == 200
+        assert background not in request('GET', route, cookie=owner)[2]
+        assert request('POST', '%s/attachments/%s/background' % (card_path, att), {}, cookie=owner)[0] == 200
+        assert request('POST', '%s/attachments/%s/cover' % (card_path, att), {}, cookie=owner)[0] == 200
+
         for a in (att, html_att):
             assert request('POST', '%s/attachments/%s/delete' % (card_path, a), {}, cookie=owner)[0] == 200
+        assert b'minicard-cover' not in request('GET', route, cookie=owner)[2] and b'background-image' not in \
+            request('GET', route, cookie=owner)[2], 'a deleted image is neither'
         assert b'class="attachment-name"' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert request('GET', '/cdn/storage/attachments/%s' % att, cookie=owner)[0] == 404
 
@@ -931,6 +972,34 @@ def http_checks(server, tmp, backend):
         assert status == 200 and active(users['stranger']) == (0,)
         assert ('data-user="%s"' % users['stranger']).encode() not in page, 'gone from the sidebar'
         assert request('POST', '/b/%s/members/%s/remove' % (board_id, users['stranger']), {}, cookie=owner)[0] == 404
+
+        # WeKan's viewer (src/wlmd.pas): a Markdown link in a title is a link on
+        # the minicard and in the card; HTML in it stays text.
+        titled = sorted_ids['Banana']
+        titled_path = '/b/%s/cards/%s' % (board_id, titled)
+        assert request('POST', titled_path + '/title', {'title': '[Wekan](https://example.invalid/x) <b>no</b>'}, cookie=owner)[0] == 200
+        page = request('GET', '%s/%s' % (route, titled), cookie=owner)[2]
+        link = b'<a href="https://example.invalid/x" rel="nofollow noopener" target="_blank">Wekan</a> &lt;b&gt;no&lt;/b&gt;'
+        assert page.count(link) == 2, 'the minicard and the card'
+        assert request('POST', titled_path + '/title', {'title': '[x](javascript:alert(1)) <img src=x onerror=alert(1)>'}, cookie=owner)[0] == 200
+        page = request('GET', route, cookie=owner)[2]
+        assert b'href="javascript' not in page and b'<img src=x' not in page and b'&lt;img src=x onerror=alert(1)&gt;' in page
+        assert request('POST', titled_path + '/title', {'title': 'Banana'}, cookie=owner)[0] == 200
+
+        # #6712: a list folded per user, per swimlane (setListCollapsedState).
+        key = '%s:%s' % (sort_list, lane)
+        folded = lambda who=owner: ('class="list js-list list-collapsed" id="js-list-%s"' % sort_list).encode() in request('GET', route, cookie=who)[2]
+        assert not folded() and b'js-collapse"' in request('GET', route, cookie=owner)[2]
+        assert request('POST', '/_methods/setListCollapsedState', [board_id, key, True], cookie=owner, as_json=True)[0] == 200
+        assert folded() and not folded(worker), "the owner's, not the worker's"
+        assert request('POST', '/_methods/setListCollapsedState', [board_id, key, False], cookie=owner, as_json=True)[0] == 200
+        assert not folded()
+        # Negative: keys are ids (PrototypeBleed), the board one the user reads.
+        for bad in ('__proto__.x', 'a:b:c', 'x"]', ':' + lane, ''):
+            assert request('POST', '/_methods/setListCollapsedState', [board_id, bad, True], cookie=owner, as_json=True)[0] == 400, bad
+        assert request('POST', '/_methods/setListCollapsedState', [board_id, key, 'yes'], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setListCollapsedState', [board_id, key, True], cookie=stranger, as_json=True)[0] == 403
+        assert not folded()
 
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.

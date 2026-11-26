@@ -185,6 +185,23 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   WeKan's moveCard activity; a list of another board is refused.
 - WeKan's spec 01 and spec 40 pass whole, and the HTML5 view's board and card
   are right-to-left in Arabic and Urdu. 225 of WeKan's tests pass.
+- Add WeKan's viewer to the HTML5 view (`src/wlmd.pas`): a card's title on
+  its minicard and in its details, and its description, are Markdown -
+  paragraphs, headings, quotes, lists, fenced code, strong, emphasis, strike,
+  code and links, bare http(s) addresses too. Every character is escaped
+  first, so HTML a user wrote stays text, and a link goes only to an http,
+  https or mailto address or a path of this site. `tests/markdown.py` checks
+  17 texts, the attacks among them, and that each tag in the output is the
+  viewer's own.
+- Add attachmentActionsPopup to the HTML5 view: an image attached to a card
+  is its cover on the minicard, or the board's background for a board
+  admin, and off again by the same button; only the board's own raster
+  image attachments, by their address, are ever used.
+- Fold a list per user and per swimlane (#6712, WeKan's
+  setListCollapsedState into profile.collapsedLists), kept after a reload.
+- Fix the minicard query in a shared store: LiveAttachmentSQL names the
+  attachments table unaliased, and a test now fails on any query that
+  aliases it beside LiveAttachmentSQL. 227 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

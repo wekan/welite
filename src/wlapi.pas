@@ -234,6 +234,12 @@ type
 function ReadCardPoker(Db:TWLDb;const UserId,BoardId,CardId:string):TCardPoker;
 // WeKan's cards.pokerVote: the user's card is State, and no other.
 function PokerViewCard(const T:TWLTenant;const UserId,BoardId,CardId,State:string;out Error:string):Integer;
+// attachmentActionsPopup: a raster image attached to the card as its cover,
+// or none again, by whoever may change the card; and as the board's
+// background, or none again, by a board admin. Only an attachment's own
+// address (/cdn/storage/attachments/<id>) is stored as the background.
+function SetViewCardCover(const T:TWLTenant;const UserId,BoardId,CardId,AttachmentId:string;out Error:string):Integer;
+function SetViewBoardBackground(const T:TWLTenant;const UserId,BoardId,CardId,AttachmentId:string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -4765,11 +4771,20 @@ begin
     if not (Key[i] in ['A'..'Z','a'..'z','0'..'9','-','_']) then Exit(False);
 end;
 
+// A key of a profile fold map: an id, or a list's "listId:swimlaneId" (#6712).
+function SafeFoldKey(const Key:string):Boolean;
+var At:Integer;
+begin
+  At:=Pos(':',Key);
+  if At=0 then Exit(SafeMapKey(Key));
+  Result:=SafeMapKey(Copy(Key,1,At-1)) and SafeMapKey(Copy(Key,At+1,MaxInt));
+end;
+
 function ProfileFold(Db:TWLDb;const UserId,Map,BoardId,Key:string):Boolean;
 var R:TWLRows;
 begin
   Result:=False;
-  if (UserId='') or not SafeMapKey(BoardId) or not SafeMapKey(Key) then Exit;
+  if (UserId='') or not SafeMapKey(BoardId) or not SafeFoldKey(Key) then Exit;
   R:=Db.Query('SELECT CASE WHEN json_valid(profile_json) AND json_extract(profile_json,'+
     QuotedStr('$.'+Map+'."'+BoardId+'"."'+Key+'"')+')=1 THEN 1 ELSE 0 END FROM users WHERE id='+QuotedStr(UserId)+' LIMIT 1;');
   Result:=(Length(R)=1) and (R[0][0]='1');
@@ -4780,7 +4795,7 @@ var Profile,Path,Value:string;
 begin
   Error:='';
   if Folded then Value:='true' else Value:='false';
-  if not SafeMapKey(BoardId) or not SafeMapKey(Key) then begin Error:='Invalid map key';Exit(400);end;
+  if not SafeMapKey(BoardId) or not SafeFoldKey(Key) then begin Error:='Invalid map key';Exit(400);end;
   if not BoardCanRead(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
   Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
   Path:='$.'+Map+'."'+BoardId+'"';
@@ -5994,6 +6009,53 @@ begin
     State+''') v WHERE '+Owned+' AND v.value='+U+') THEN 1 ELSE json(''Planning Poker failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not play the card';Exit(500);end;
   Result:=200;
+end;
+
+// The attachment, of the card on the board, a raster image still there.
+function ViewImageAttachment(const T:TWLTenant;const BoardId,CardId,AttachmentId:string;out Error:string):Integer;
+begin
+  Error:='';
+  if (AttachmentId='') or (Pos(#0,AttachmentId)>0) or (Length(T.Db.Query('SELECT 1 FROM attachments WHERE id='+QuotedStr(AttachmentId)+
+    ' AND boardId='+QuotedStr(BoardId)+' AND cardId='+QuotedStr(CardId)+' AND '+LiveAttachmentSQL(T.Db)+';'))<>1) then begin Error:='Attachment not found';Exit(404);end;
+  if Length(T.Db.Query('SELECT 1 FROM attachments WHERE id='+QuotedStr(AttachmentId)+
+    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'');'))<>1 then
+  begin Error:='Only an image is a cover or a background';Exit(400);end;
+  Result:=200;
+end;
+
+function SetViewCardCover(const T:TWLTenant;const UserId,BoardId,CardId,AttachmentId:string;out Error:string):Integer;
+var Scope,Next:string;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  Result:=ViewImageAttachment(T,BoardId,CardId,AttachmentId,Error);
+  if Result<>200 then Exit;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  // The same image again takes the cover off.
+  if Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+' AND coverId='+QuotedStr(AttachmentId)+';'))=1 then Next:=''''''
+  else Next:=QuotedStr(AttachmentId);
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET coverId='+Next+' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+
+    Scope+' AND COALESCE(coverId,'''')='+Next+')=1 THEN 1 ELSE json(''Cover failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not set the cover';Exit(500);end;
+end;
+
+function SetViewBoardBackground(const T:TWLTenant;const UserId,BoardId,CardId,AttachmentId:string;out Error:string):Integer;
+var Url,NextUrl,NextId:string;
+begin
+  Error:='';
+  if (BoardId='') or (UserId='') or (Pos(#0,BoardId+CardId+UserId)>0) or not BoardCanRead(T.Db,UserId,BoardId) then
+  begin Error:='Board not found';Exit(404);end;
+  if not BoardCanAdmin(T.Db,UserId,BoardId) then begin Error:='Only a board admin sets the background';Exit(403);end;
+  Result:=ViewImageAttachment(T,BoardId,CardId,AttachmentId,Error);
+  if Result<>200 then Exit;
+  Url:='/cdn/storage/attachments/'+AttachmentId;
+  if Length(T.Db.Query('SELECT 1 FROM boards WHERE id='+QuotedStr(BoardId)+' AND backgroundImageURL='+QuotedStr(Url)+';'))=1 then
+  begin NextUrl:='''''';NextId:='''''';end
+  else begin NextUrl:=QuotedStr(Url);NextId:=QuotedStr(AttachmentId);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE boards SET backgroundImageURL='+NextUrl+',backgroundImageId='+NextId+' WHERE id='+
+    QuotedStr(BoardId)+'; SELECT CASE WHEN (SELECT count(*) FROM boards WHERE id='+QuotedStr(BoardId)+' AND COALESCE(backgroundImageURL,'''')='+
+    NextUrl+')=1 THEN 1 ELSE json(''Background failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not set the background';Exit(500);end;
 end;
 
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;

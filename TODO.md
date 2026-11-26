@@ -235,10 +235,10 @@ Order of the work, each step committed with its tests:
   user, Log Out, the toggle), sign-in, All Boards with Starred and Remaining,
   the board with swimlanes, lists and minicards, the opened card's title,
   description and maximize/minimize, adding a card at the top or bottom of a
-  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, the card's menu (copy link, move, copy, archive), the board's rename, star, sidebar with Archive, the member menu and archived boards, the card's vote, Planning Poker and watch, the board's watch, Filter (card text and labels) and Sort Cards, the header's icon collapse and mobile/desktop toggle, the sidebar's members (add, remove), Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
+  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, the card's menu (copy link, move, copy, archive), the board's rename, star, sidebar with Archive, the member menu and archived boards, the card's vote, Planning Poker and watch, the board's watch, Filter (card text and labels) and Sort Cards, the header's icon collapse and mobile/desktop toggle, the sidebar's members (add, remove), Markdown in titles and descriptions, an attachment as the cover or the background, folded lists, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
   WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 225 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 227 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's
@@ -260,8 +260,8 @@ Next, after this goal:
   REST API specs) and spec 14's vote, Planning Poker and watch; Weddy's
   remaining lines are the next to port.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
-  the card's other sections (an attachment's cover, background and
-  rename; markdown in descriptions and comments; a custom field's edit and
+  the card's other sections (an attachment's rename and an SVG attachment,
+  which needs an SVG sanitizer; Markdown in comments and checklists; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's
   other badges (assignees, checklists, comments, description, Requested By),
   WeKan's mobile layout (body.mobile-mode: lists as mini-lists, one opened at
@@ -291,6 +291,16 @@ Found on the way, not part of this goal:
   are written against the current behaviour and pass.
 
 Design questions for the maintainer (work goes on with the stated default):
+
+- **HTML inside Markdown in the HTML5 view.** WeKan's viewer renders Markdown
+  and lets the safe part of any HTML a user wrote through DOMPurify (bold,
+  tables, a link); Weddy does the same with bluemonday. WeLite's viewer
+  (`src/wlmd.pas`) is written in Pascal without an HTML sanitizer, so it
+  escapes every character first and only Markdown's own syntax becomes
+  markup. Default: HTML a user wrote is shown as its text, never as markup -
+  nothing can be run, at the cost of `<b>` showing as `<b>`. Should WeLite
+  get a tag allow-list for HTML too? Admin Panel's renderLinksAsPlainText and
+  alwaysShowCodeAsText are not read by it yet either.
 
 - **Moving a card to another board from the HTML5 view.** WeKan's Card.move
   maps the card's labels to the other board's by name and color, drops

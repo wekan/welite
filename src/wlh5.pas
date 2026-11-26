@@ -74,7 +74,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd;
 
 const
   STATIC_HEAD =
@@ -845,9 +845,13 @@ end;
 // cardAttachmentsPopup for whoever may change the card, and each attachment
 // as a tile, its thumbnail or its extension opening attachmentViewer, with
 // its name, size, download and delete.
-function AttachmentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
-var R: TWLRows; i: Integer; Id, Name, Kind, Src, Ext: string;
+function AttachmentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, Admin: Boolean): string;
+var R, C: TWLRows; i: Integer; Id, Name, Kind, Src, Ext, Act, Cover, Background: string;
 begin
+  C := Db.Query('SELECT COALESCE((SELECT coverId FROM cards WHERE id=' + QuotedStr(CardId) + '),''''),' +
+    'COALESCE((SELECT backgroundImageURL FROM boards WHERE id=' + QuotedStr(BoardId) + '),'''');');
+  Cover := ''; Background := '';
+  if Length(C) = 1 then begin Cover := C[0][0]; Background := C[0][1]; end;
   R := Db.Query('SELECT id,COALESCE(name,''''),COALESCE(type,''''),COALESCE(size,0) FROM attachments WHERE boardId=' +
     QuotedStr(BoardId) + ' AND cardId=' + QuotedStr(CardId) + ' AND ' + LiveAttachmentSQL(Db) + ' ORDER BY createdAt,id;');
   Result := '<div class="card-checklist-attachmentGallery card-attachmentGallery">' +
@@ -883,6 +887,27 @@ begin
         HtmlAttr(HTTPEncode(CardId)) + '/attachments/' + HtmlAttr(HTTPEncode(Id)) + '/delete" up-submit up-target=".board-wrapper">' +
         '<button class="js-confirm-delete" type="submit" title="' + HtmlAttr(Words.Text('delete', 'Delete')) + '" aria-label="' +
         HtmlAttr(Words.Text('delete', 'Delete')) + '"><i class="fa fa-trash"></i></button></form>';
+    // attachmentActionsPopup: the card's cover, and the board's background
+    // for a board admin.
+    if Writable and (Kind = 'image') then
+    begin
+      Act := '/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/attachments/' + HtmlAttr(HTTPEncode(Id));
+      Result := Result + '<a class="js-open-attachment-menu" href="#" data-attachment="' + HtmlAttr(Id) + '" title="' +
+        HtmlAttr(Words.Text('attachmentActionsPopup-title', 'Attachment Actions')) + '" aria-label="' +
+        HtmlAttr(Words.Text('attachmentActionsPopup-title', 'Attachment Actions')) + '"><i class="fa fa-bars"></i></a>' +
+        '<template class="js-pop-over-template" data-pop="attachment-actions-' + HtmlAttr(Id) + '" data-title="' +
+        HtmlAttr(Words.Text('attachmentActionsPopup-title', 'Attachment Actions')) + '"><ul class="pop-over-list"><li><form method="post" action="' +
+        Act + '/cover" up-submit up-target=".board-wrapper">' + IfThen(Id = Cover,
+        '<button class="js-remove-cover" type="submit">' + E(Words.Text('remove-cover', 'Remove cover image from minicard')) + '</button>',
+        '<button class="js-add-cover" type="submit">' + E(Words.Text('add-cover', 'Add cover image to minicard')) + '</button>') + '</form></li>';
+      if Admin then
+        Result := Result + '<li><form method="post" action="' + Act + '/background" up-submit up-target=".board-wrapper">' +
+          IfThen('/cdn/storage/attachments/' + Id = Background,
+          '<button class="js-remove-background-image" type="submit">' + E(Words.Text('remove-background-image', 'Remove background image')) + '</button>',
+          '<button class="js-add-background-image" type="submit">' + E(Words.Text('add-background-image', 'Add background image')) + '</button>') +
+          '</form></li>';
+      Result := Result + '</ul></template>';
+    end;
     Result := Result + '</div></div></div></div>';
   end;
   Result := Result + '</div></div>';
@@ -1663,7 +1688,7 @@ begin
     Result := Result + '<h3 class="card-details-item-title"><i class="fa fa-file-text-o"></i> ' +
       E(Words.Text('description', 'Description')) + '</h3>';
   Viewer := '';
-  if Text <> '' then Viewer := '<div class="viewer">' + E(Text) + '</div>';
+  if Text <> '' then Viewer := MarkdownViewer(Text);
   if BoardAllows(Db, BoardId, 'allowsDescriptionText') then
   begin
     if CanEdit then
@@ -1767,16 +1792,32 @@ begin
   end;
 end;
 
+// The board's background (Weddy's BackgroundStyle): only ever one of its own
+// raster image attachments, by its address.
+function BackgroundStyle(Db: TWLDb; const BoardId, Url: string): string;
+const Prefix = '/cdn/storage/attachments/';
+var Id: string; i: Integer;
+begin
+  Result := '';
+  if Copy(Url, 1, Length(Prefix)) <> Prefix then Exit;
+  Id := Copy(Url, Length(Prefix) + 1, MaxInt);
+  if (Id = '') or (Length(Id) > 64) then Exit;
+  for i := 1 to Length(Id) do if not (Id[i] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-']) then Exit;
+  if Length(Db.Query('SELECT 1 FROM attachments WHERE id=' + QuotedStr(Id) + ' AND boardId=' + QuotedStr(BoardId) +
+    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'') AND ' + LiveAttachmentSQL(Db) + ';')) <> 1 then Exit;
+  Result := ' style="background-image: url(' + Prefix + Id + '); background-size: cover;"';
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
-  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded: Boolean;
+  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
   if not BoardCanRead(Db, S.UserId, BoardId) then Exit;
-  B := Db.Query('SELECT title,color,slug FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 LIMIT 1;');
+  B := Db.Query('SELECT title,color,slug,COALESCE(backgroundImageURL,'''') FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 LIMIT 1;');
   if Length(B) <> 1 then Exit;
   BoardTitle := B[0][0];
   Route := BoardRoute(BoardId, B[0][2]);
@@ -1835,12 +1876,23 @@ begin
           '<a class="js-add-list-here list-header-add-list" href="#" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' +
           HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('add-list', 'Add list')) + '" aria-label="' +
           HtmlAttr(Words.Text('add-list', 'Add list')) + '"><i class="fa fa-plus-square-o"></i></a>';
-      Canvas := Canvas + '<div class="list js-list" id="js-list-' + HtmlAttr(Lists[j][0]) + '" data-list="' +
-        HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"><div class="list-header">' +
+      // listHeader.jade's caret: per user, per list in this swimlane (#6712).
+      ListFolded := ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0] + ':' + Lanes[i][0]) or
+        ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0]);
+      Canvas := Canvas + '<div class="list js-list' + IfThen(ListFolded, ' list-collapsed', '') + '" id="js-list-' + HtmlAttr(Lists[j][0]) +
+        '" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"><div class="list-header">' +
+        IfThen(S.UserId <> '', '<a class="list-collapse-indicator js-collapse" href="#" data-collapse="' + HtmlAttr(Words.Text('collapse', 'Collapse')) +
+          '" data-uncollapse="' + HtmlAttr(Words.Text('uncollapse', 'Uncollapse')) + '" title="' +
+          HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '" aria-label="' +
+          HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '"><i class="fa ' +
+          IfThen(ListFolded, 'fa-caret-right', 'fa-caret-down') + '"></i></a>', '') +
         '<span class="list-header-name">' + E(Lists[j][1]) + '</span>' + Composer + '</div>' +
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
       Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
-        'COALESCE(c.dueAt,''''),COALESCE(c.endAt,'''') FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+        'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE((SELECT attachments.id FROM attachments WHERE attachments.id=c.coverId AND ' +
+        'attachments.cardId=c.id AND attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'') AND ' +
+        // LiveAttachmentSQL names the table attachments, unaliased.
+        LiveAttachmentSQL(Db) + '),'''') FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
@@ -1848,8 +1900,11 @@ begin
         Canvas := Canvas + '<div class="minicard-wrapper js-minicard" up-href="' +
           HtmlAttr(CardRoute(BoardId, B[0][2], Cards[k][0])) + '" up-follow up-clickable up-target=".board-wrapper" data-card="' +
           HtmlAttr(Cards[k][0]) + '" data-card-id="' + HtmlAttr(Cards[k][0]) + '" data-sort="' + HtmlAttr(Cards[k][2]) +
-          '"><div class="minicard"><div class="minicard-title"><span class="minicard-title-text">' +
-          E(Cards[k][1]) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
+          '"><div class="minicard">' +
+          // WeKan's minicard cover: the card's cover image.
+          IfThen(Cards[k][7] <> '', '<div class="minicard-cover"><img src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Cards[k][7])) +
+            '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title"><span class="minicard-title-text">' +
+          MarkdownViewer(Cards[k][1]) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]]) + '</div></div>';
       Canvas := Canvas + '</div>';
       if Writable then
@@ -1903,7 +1958,7 @@ begin
     Details := '<div class="card-details js-card-details' + IfThen(Maximized, ' card-details-maximized', '') +
       '" data-card="' + HtmlAttr(CardId) + '">' +
       '<div class="card-details-header"><h2 class="card-details-title js-card-title">' +
-      '<span class="card-details-title-edit-zone js-open-inlined-form">' + E(Card[0][0]) + '</span></h2>';
+      '<span class="card-details-title-edit-zone js-open-inlined-form">' + MarkdownViewer(Card[0][0]) + '</span></h2>';
     // board.pug: the title's editor, opened by its leading part (weddy.js).
     if Writable then
       Details := Details + '<form class="js-card-details-title js-inlined-form is-hidden" method="post" action="/b/' +
@@ -1941,7 +1996,7 @@ begin
       DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
     Details := Details + VoteSection(Db, Words, S.UserId, BoardId, CardId) + PokerSection(Db, Words, S.UserId, BoardId, CardId);
     Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable) +
-      AttachmentsSection(Db, Words, BoardId, CardId, Writable);
+      AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId));
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
@@ -1977,7 +2032,8 @@ begin
       E(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '</a></li>' +
       '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li></ul></template>';
-  Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '" data-board="' + HtmlAttr(BoardId) + '">' +
+  Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
+    ' data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
     BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + SortButton(Words, CardSort) + '</div>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
@@ -2100,6 +2156,30 @@ begin
       'THEN ''false'' ELSE ''true'' END)) WHERE id=' + QuotedStr(S.UserId) + ';') then
     begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'setListCollapsedState' then
+  begin
+    // server/models/users.js: [boardId, "listId:swimlaneId" or listId,
+    // collapsed], the user's own profile.collapsedLists[boardId][key] (#6712).
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 3) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtBoolean)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := SetViewProfileFold(T, S.UserId, 'collapsedLists', TJSONArray(Args).Items[0].AsString,
+        TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[2].AsBoolean, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
   if Name = 'setSwimlaneCollapsedState' then
@@ -2389,6 +2469,8 @@ begin
   else if (n = 5) and (P[4] = 'poker') then Action := 'poker'
   else if (n = 5) and (P[4] = 'watch') then Action := 'watch-card'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'delete') then Action := 'delete-attachment'
+  else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'cover') then Action := 'attachment-cover'
+  else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'background') then Action := 'attachment-background'
   else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
@@ -2471,6 +2553,10 @@ begin
     Code := VoteViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['vote'], Error)
   else if Action = 'add-attachment' then
     Code := AddViewAttachment(T, S.UserId, BoardId, CardId, Request, Error)
+  else if Action = 'attachment-cover' then
+    Code := SetViewCardCover(T, S.UserId, BoardId, CardId, P[5], Error)
+  else if Action = 'attachment-background' then
+    Code := SetViewBoardBackground(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'delete-attachment' then
     Code := DeleteViewAttachment(T, S.UserId, BoardId, CardId, P[5], Error)
   else if (Action = 'set-field') or (Action = 'toggle-field') then

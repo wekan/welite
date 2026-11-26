@@ -11,6 +11,7 @@
 02-cards-open-view.e2e.js: minimize button collapses the maximized card back
 02-cards-open-view.e2e.js: editing the card title does not break the card
 02-cards-open-view.e2e.js: copy-link button produces a URL that opens the card in full-screen view
+02-cards-open-view.e2e.js: Cards – open & view modes › #6639: a markdown link in a minicard title opens instead of editing
 03-cards-operations.e2e.js: add-to-top places the card first in the list
 03-cards-operations.e2e.js: add-to-bottom places the card last in the list
 03-cards-operations.e2e.js: custom fields panel opens from card details
@@ -145,6 +146,7 @@
 44-calendar-date-display.e2e.js: gregorian popup opens a full-width calendar with only hour/minute controls
 44-calendar-date-display.e2e.js: buddhist popup opens a full-width calendar with only hour/minute controls
 70-rest-board-management.e2e.js: normal member cannot rename a board through REST
+76-list-collapse-refresh.e2e.js
 77-public-board-favorite.e2e.js: #6713 public board favorite survives reload and appears in Favorites
 admin-attachment-retention.e2e.js: negative: an ordinary user cannot open the retention settings
 admin-new-env-settings.e2e.js: negative: an ordinary user is offered none of them
