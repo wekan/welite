@@ -40,3 +40,9 @@
 13-swimlanes.e2e.js: swimlane action popup opens without JS errors
 13-swimlanes.e2e.js: clicking the swimlane collapse button does not crash the page
 13-swimlanes.e2e.js: adding a new swimlane creates it on the board
+03-cards-operations.e2e.js: custom fields panel opens from card details
+03-cards-operations.e2e.js: checkbox custom fields toggle and can be removed from a card
+03-cards-operations.e2e.js: currency custom fields save and offer an X beside Save
+03-cards-operations.e2e.js: a date custom field tooltip names the field, not "Starts on"
+03-cards-operations.e2e.js: custom field layout toggle switches and persists its layout
+23-rest-api-more.e2e.js: custom fields: create, get, delete

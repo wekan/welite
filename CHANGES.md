@@ -103,6 +103,17 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   WeKan's `13-swimlanes` tests pass, 43 in all; "adding a new swimlane"
   looks for a link Weddy's and WeLite's pop-over do not have, so the add is
   verified by `tests/view.py`.
+- Show a card's custom fields in the HTML5 view, for whoever may change the
+  card on a board that uses them: each field the REST API's field policy lets
+  the user see, with its cardCustomField-* editor - text, number, currency
+  (123,45 is 123.45), checkbox (its square saves at once), date (the date
+  picker), dropdown, multi-select and string template - and the section's
+  picker that puts a field on the card or takes it off, creates a field of
+  the board (`CreateViewCustomField`, sharing `WriteBoardField` with
+  `POST /api/boards/:id/custom-fields`), and the user's own layout
+  (`toggleCustomFieldsGrid`). Writes go through the field policy and
+  `SaveCardFieldValue` (`SetViewCardField`). Six more of WeKan's tests pass,
+  49 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

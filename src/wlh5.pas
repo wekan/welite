@@ -580,6 +580,189 @@ begin
     '</button></form></div></template>';
 end;
 
+// _cardsec_customFields.pug: for whoever may change the card, on a board that
+// uses custom fields, one section - its hamburger the picker of the board's
+// fields (cardCustomFieldsPopup), its layout toggle (toggleCustomFieldsGrid)
+// - and each field of the card the user may see, with its cardCustomField-*
+// editor, whose fields are on the page only while it is open.
+function CustomFieldsSection(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, CardId: string;
+  Writable: Boolean): string;
+var R, Items: TWLRows; i, j: Integer; Id, Name, Kind, Value, Shown, Action, Editor, Body, Close, Copy_: string;
+  Editable, Checked: Boolean; Parsed: TJSONData; Arr: TJSONArray;
+  function ItemName(const ItemId: string): string;
+  var k: Integer;
+  begin
+    Result := '';
+    for k := 0 to High(Items) do if Items[k][0] = ItemId then Exit(Items[k][1]);
+  end;
+begin
+  Result := '';
+  if not (Writable and BoardAllows(Db, BoardId, 'allowsCustomFields')) then Exit;
+  R := Db.Query('SELECT f.id,f.name,f.type,COALESCE(v.value,''''),COALESCE(f.currencyCode,''''),' +
+    'COALESCE(f.stringtemplateFormat,''''),COALESCE(f.stringtemplateSeparator,'''') FROM card_custom_field_values v ' +
+    'JOIN custom_fields f ON f.id=v.customFieldId JOIN custom_field_boards b ON b.customFieldId=f.id AND b.boardId=' +
+    QuotedStr(BoardId) + ' WHERE v.cardId=' + QuotedStr(CardId) + ' ORDER BY f.name,f.id;');
+  Result := '<div class="card-details-group card-details-group-custom-fields">' +
+    '<h3 class="card-details-item-title js-toggle-card-section" data-section="customFields" role="button" tabindex="0">' +
+    '<i class="fa fa-caret-down"></i><i class="fa fa-list-alt"></i> ' + E(Words.Text('custom-fields', 'Custom Fields')) +
+    '<a class="card-details-section-menu js-open-custom-fields-settings" href="#" title="' +
+    HtmlAttr(Words.Text('custom-fields', 'Custom Fields')) + '" aria-label="' + HtmlAttr(Words.Text('custom-fields', 'Custom Fields')) +
+    '"><i class="fa fa-navicon"></i></a><button class="custom-fields-layout-toggle js-section-open-only" id="toggleCustomFieldsGridButton" ' +
+    'type="button" title="' + HtmlAttr(Words.Text('change', 'Change') + ' ' + Words.Text('custom-fields', 'Custom Fields') + ' ' +
+    Words.Text('layout', 'Layout')) + '" aria-label="' + HtmlAttr(Words.Text('change', 'Change') + ' ' +
+    Words.Text('custom-fields', 'Custom Fields') + ' ' + Words.Text('layout', 'Layout')) + '"><i class="fa fa-th-large"></i></button></h3>' +
+    '<div class="card-details-group-body ' + IfThen(ProfileFlag(Db, S.UserId, 'customFieldsGrid'), 'custom-fields-one-per-row',
+    'custom-fields-grid') + '">';
+  Close := '<div class="edit-controls clearfix"><button class="primary" type="submit">' + E(Words.Text('save', 'Save')) +
+    '</button><a class="fa fa-times-thin js-close-inlined-form" href="#" title="' + HtmlAttr(Words.Text('close', 'Close')) + '"></a></div>';
+  for i := 0 to High(R) do
+  begin
+    Id := R[i][0]; Name := R[i][1]; Kind := R[i][2]; Value := R[i][3];
+    if not ViewFieldAllowed(Db, S.UserId, BoardId, CardId, Id, False) then Continue;
+    Editable := ViewFieldAllowed(Db, S.UserId, BoardId, CardId, Id, True);
+    Items := Db.Query('SELECT id,name FROM custom_field_dropdown_items WHERE customFieldId=' + QuotedStr(Id) + ' ORDER BY sort,id;');
+    // The value as it is shown.
+    Shown := Value;
+    Arr := nil;
+    if (Kind = 'dropdownMultiSelect') or (Kind = 'stringtemplate') then
+    begin
+      Shown := '';
+      try
+        Parsed := GetJSON(Value);
+        if Parsed is TJSONArray then Arr := TJSONArray(Parsed) else Parsed.Free;
+      except
+        Arr := nil;
+      end;
+      if Arr <> nil then
+        for j := 0 to Arr.Count - 1 do
+        begin
+          if Kind = 'dropdownMultiSelect' then
+            Shown := Shown + IfThen(Shown <> '', ', ', '') + ItemName(Arr.Items[j].AsString)
+          else
+            Shown := Shown + IfThen(Shown <> '', IfThen(R[i][6] <> '', R[i][6], ' '), '') +
+              StringReplace(IfThen(R[i][5] <> '', R[i][5], '%{value}'), '%{value}', Arr.Items[j].AsString, [rfReplaceAll]);
+        end;
+    end
+    else if Kind = 'dropdown' then Shown := ItemName(Value)
+    else if Kind = 'currency' then begin if Value <> '' then Shown := Value + IfThen(R[i][4] <> '', ' ' + R[i][4], ''); end
+    else if Kind = 'date' then Shown := StringReplace(Copy(Value, 1, 16), 'T', ' ', []);
+    Checked := (Value = '1') or (Value = 'true');
+    Action := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/custom-fields/' + HTTPEncode(Id);
+    Copy_ := '<span class="custom-field-copy-control"><a class="fa fa-copy js-copy-custom-field" href="#" title="' +
+      HtmlAttr(Words.Text('copy-text-to-clipboard', 'Copy text to clipboard')) + '" data-value="' + HtmlAttr(Shown) + '"></a></span>';
+    Result := Result + '<div class="card-details-item card-details-item-customfield" data-field="' + HtmlAttr(Id) + '" data-type="' +
+      HtmlAttr(Kind) + '"><h3 class="card-details-item-title' + IfThen(Editable, ' js-edit-card-custom-field-value is-editable', '') +
+      '"' + IfThen(Editable, ' role="button" tabindex="0" title="' + HtmlAttr(Words.Text('edit', 'Edit')) + '"', ' tabindex="-1"') +
+      '><i class="fa fa-list"></i> ' + E(Name) + '</h3>';
+    if (Kind = 'date') and Editable then
+    begin
+      Result := Result + '<a class="js-edit-date js-custom-field-edit-trigger" href="#" title="' + HtmlAttr(Name + ': ' + Shown) +
+        '" aria-label="' + HtmlAttr(Words.Text('edit', 'Edit')) + '" data-url="' + HtmlAttr(Action) + '" data-date="' + HtmlAttr(Value) +
+        '" data-default-time="now" data-title="' + HtmlAttr(Name) + '">';
+      if Value <> '' then
+        Result := Result + '<div class="card-date"><time datetime="' + HtmlAttr(Value) + '">' + E(Shown) + '</time></div>'
+      else
+        Result := Result + '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>';
+      Result := Result + '</a>';
+    end
+    else if (Kind = 'checkbox') and Editable then
+      Result := Result + '<form class="js-card-custom-field-checkbox-toggle" method="post" action="' + HtmlAttr(Action) +
+        '" up-submit up-target=".board-wrapper"><input type="hidden" name="value" value="' + IfThen(Checked, 'false', 'true') +
+        '"></form><div class="js-card-custom-field-checkbox js-edit-card-custom-field-value checklist-item' +
+        IfThen(Checked, ' is-checked', '') + '" title="' + HtmlAttr(Words.Text('edit', 'Edit')) + '" aria-label="' +
+        HtmlAttr(Words.Text('edit', 'Edit')) + '" role="button" tabindex="0"><div class="check-box-container"><div class="check-box materialCheckBox' +
+        IfThen(Checked, ' is-checked', '') + '"></div></div></div>' +
+        '<form class="js-inlined-form is-hidden js-card-customfield-checkbox-editor" method="post" action="' + HtmlAttr(Action) +
+        '" up-submit up-target=".board-wrapper"><template class="js-inlined-form-body">' + Copy_ +
+        '<label class="check-box-container"><input class="js-card-customfield-checkbox-input" type="checkbox" name="value" value="true"' +
+        IfThen(Checked, ' checked', '') + '><div class="check-box materialCheckBox' + IfThen(Checked, ' is-checked', '') +
+        '"></div></label><input type="hidden" name="value" value="false">' + Close + '</template></form>'
+    else if Editable then
+    begin
+      Result := Result + '<a class="js-edit-card-custom-field-value" href="#" title="' + HtmlAttr(Words.Text('edit', 'Edit')) +
+        '" aria-label="' + HtmlAttr(Words.Text('edit', 'Edit')) + '">' +
+        IfThen(Shown <> '', E(Shown), '<i class="fa fa-pencil-square-o" aria-hidden="true"></i>') + '</a>';
+      if Kind = 'text' then
+        Editor := '<textarea class="editor" name="value" dir="auto" aria-label="' + HtmlAttr(Name) + '">' + E(Value) + '</textarea>'
+      else if Kind = 'number' then
+        Editor := '<input type="number" step="any" name="value" value="' + HtmlAttr(Value) + '" aria-label="' + HtmlAttr(Name) + '">'
+      else if Kind = 'dropdown' then
+      begin
+        Editor := '<select class="inline" name="value" aria-label="' + HtmlAttr(Name) + '"><option value="">&ndash;</option>';
+        for j := 0 to High(Items) do
+          Editor := Editor + '<option value="' + HtmlAttr(Items[j][0]) + '"' + IfThen(Items[j][0] = Value, ' selected', '') + '>' +
+            E(Items[j][1]) + '</option>';
+        Editor := Editor + '</select>';
+      end
+      else if Kind = 'dropdownMultiSelect' then
+      begin
+        Editor := '<div class="js-card-customfield-dropdown-multi-select-items"><input type="hidden" name="value" value="">';
+        for j := 0 to High(Items) do
+          Editor := Editor + '<label class="custom-field-multi-select-item"><input type="checkbox" name="value" value="' +
+            HtmlAttr(Items[j][0]) + '"' + IfThen((Arr <> nil) and (Pos('"' + Items[j][0] + '"', Value) > 0), ' checked', '') + '> ' +
+            E(Items[j][1]) + '</label>';
+        Editor := Editor + '</div>';
+      end
+      else if Kind = 'stringtemplate' then
+      begin
+        Editor := '';
+        if Arr <> nil then
+          for j := 0 to Arr.Count - 1 do
+            Editor := Editor + '<input class="js-card-customfield-stringtemplate-item" type="text" name="value" value="' +
+              HtmlAttr(Arr.Items[j].AsString) + '" autocomplete="off">';
+        Editor := Editor + '<input class="js-card-customfield-stringtemplate-item last" type="text" name="value" value="" placeholder="' +
+          HtmlAttr(Words.Text('custom-field-stringtemplate-item-placeholder', 'Press enter to add more items')) + '" autocomplete="off">';
+      end
+      else
+        Editor := '<input type="text" name="value" value="' + HtmlAttr(Value) + '" aria-label="' + HtmlAttr(Name) + '" autocomplete="off">';
+      Body := Copy_ + Editor + Close;
+      Result := Result + '<form class="js-inlined-form is-hidden js-card-customfield-' + HtmlAttr(Kind) + '" method="post" action="' +
+        HtmlAttr(Action) + '" up-submit up-target=".board-wrapper"><template class="js-inlined-form-body">' + Body + '</template></form>';
+    end
+    else if Shown <> '' then
+      Result := Result + '<div class="viewer">' + E(Shown) + '</div>';
+    Arr.Free;
+    Result := Result + '</div>';
+  end;
+  Result := Result + '</div></div>';
+end;
+
+// cardCustomFieldsPopup: every field of the board the user may see, ticked
+// when it is on this card; a click puts it on or takes it off.
+function CustomFieldsPopup(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, CardId: string): string;
+var R: TWLRows; i: Integer;
+begin
+  R := Db.Query('SELECT f.id,f.name,EXISTS(SELECT 1 FROM card_custom_field_values v WHERE v.cardId=' + QuotedStr(CardId) +
+    ' AND v.customFieldId=f.id) FROM custom_fields f JOIN custom_field_boards b ON b.customFieldId=f.id AND b.boardId=' +
+    QuotedStr(BoardId) + ' ORDER BY f.name,f.id;');
+  Result := '<template class="js-pop-over-template" data-pop="card-custom-fields" data-title="' +
+    HtmlAttr(Words.Text('custom-fields', 'Custom Fields')) + '"><ul class="pop-over-list">';
+  for i := 0 to High(R) do
+    if ViewFieldAllowed(Db, S.UserId, BoardId, CardId, R[i][0], False) then
+      Result := Result + '<li class="item"><form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' +
+        HtmlAttr(HTTPEncode(CardId)) + '/custom-fields/' + HtmlAttr(HTTPEncode(R[i][0])) + '/toggle" up-submit up-target=".board-wrapper">' +
+        '<button class="name js-select-field" type="submit" title="' + HtmlAttr(Words.Text('show-field-on-card', 'Show this field on card')) +
+        '"><div class="materialCheckBox' + IfThen(R[i][2] = '1', ' is-checked', '') + '"></div><span class="full-name">' +
+        E(R[i][1]) + '</span></button></form></li>';
+  Result := Result + '</ul><div class="card-custom-fields-more">' + IfThen(Length(R) > 0, '<hr>', '') +
+    '<a class="quiet-button full js-open-create-custom-field" href="#"><i class="fa fa-plus"></i><span> ' +
+    E(Words.Text('createCustomField', 'Create Field')) + '</span></a></div></template>' +
+    // createCustomFieldPopup: a field's name and type, shown on cards.
+    '<template class="js-pop-over-template" data-pop="create-custom-field" data-title="' +
+    HtmlAttr(Words.Text('createCustomFieldPopup-title', 'Create Field')) + '"><form class="create-custom-field" method="post" action="/b/' +
+    HtmlAttr(HTTPEncode(BoardId)) + '/custom-fields" up-submit up-target=".board-wrapper"><input type="hidden" name="card" value="' +
+    HtmlAttr(CardId) + '"><label>' + E(Words.Text('name', 'Name')) +
+    '<input class="js-field-name" type="text" name="name" required maxlength="200" autocomplete="off"></label><label>' +
+    E(Words.Text('type', 'Type')) + '<select class="js-field-type" name="type">' +
+    '<option value="text">' + E(Words.Text('custom-field-text', 'Text')) + '</option>' +
+    '<option value="number">' + E(Words.Text('custom-field-number', 'Number')) + '</option>' +
+    '<option value="date">' + E(Words.Text('custom-field-date', 'Date')) + '</option>' +
+    '<option value="checkbox">' + E(Words.Text('custom-field-checkbox', 'Checkbox')) + '</option>' +
+    '<option value="currency">' + E(Words.Text('custom-field-currency', 'Currency')) + '</option>' +
+    '<option value="dropdown">' + E(Words.Text('custom-field-dropdown', 'Dropdown List')) + '</option>' +
+    '</select></label><button class="primary wide" type="submit">' + E(Words.Text('create', 'Create')) + '</button></form></template>';
+end;
+
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
 // cardLabelsPopup for whoever may change the card.
 function LabelsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
@@ -999,10 +1182,11 @@ begin
     Details := Details + DatesSection(Db, Words, BoardId, CardId, [Card[0][4], Card[0][5], Card[0][6], Card[0][7]], TextEditor);
     Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
       DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
+    Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable);
     Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
       CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) + '</div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
-      LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel);
+      LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
   end;
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
   if Writable then
@@ -1072,6 +1256,16 @@ begin
     // models/users.js: profile.cardMaximized becomes the opposite of what it was.
     if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
       '''$.cardMaximized'',json(CASE WHEN json_valid(profile_json) AND json_extract(profile_json,''$.cardMaximized'')=1 ' +
+      'THEN ''false'' ELSE ''true'' END)) WHERE id=' + QuotedStr(S.UserId) + ';') then
+    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if Name = 'toggleCustomFieldsGrid' then
+  begin
+    // models/users.js toggleFieldsGrid: profile.customFieldsGrid becomes the opposite.
+    if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
+      '''$.customFieldsGrid'',json(CASE WHEN json_valid(profile_json) AND json_extract(profile_json,''$.customFieldsGrid'')=1 ' +
       'THEN ''false'' ELSE ''true'' END)) WHERE id=' + QuotedStr(S.UserId) + ';') then
     begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
@@ -1229,18 +1423,22 @@ begin
   //   /b/:id/cards/:card/labels/:label                one of the board's labels on or off it
   //   /b/:id/labels                                   a new board label (card= to return to)
   //   /b/:id/swimlanes                                a swimlane below (or above) after=
+  //   /b/:id/custom-fields                            a new custom field of the board (card= to return to)
   //   /b/:id/cards/:card/dates/:kind                  its received, start, due or end date (delete=1 clears)
+  //   /b/:id/cards/:card/custom-fields/:field         a custom field's value
+  //   /b/:id/cards/:card/custom-fields/:field/toggle  the field onto the card or off it
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
   else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
+  else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
   else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
@@ -1250,6 +1448,8 @@ begin
   else if (n = 6) and (P[4] = 'members') then Action := 'toggle-member'
   else if (n = 6) and (P[4] = 'labels') then Action := 'toggle-label'
   else if (n = 6) and (P[4] = 'dates') then Action := 'set-date'
+  else if (n = 6) and (P[4] = 'custom-fields') then Action := 'set-field'
+  else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
@@ -1273,6 +1473,15 @@ begin
       Request.ContentFields.Values['value'], Error)
   else if Action = 'set-description' then
     Code := SetViewCardDescription(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['description'], Error)
+  else if Action = 'add-custom-field' then
+  begin
+    Code := CreateViewCustomField(T, S.UserId, BoardId, Request.ContentFields.Values['name'],
+      Request.ContentFields.Values['type'], NewId, Error);
+    // Opened from a card: back to it, open.
+    CardId := Request.ContentFields.Values['card'];
+    if (CardId <> '') and (Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
+      QuotedStr(BoardId) + ' AND deletedAt IS NULL;')) <> 1) then CardId := '';
+  end
   else if Action = 'add-swimlane' then
     Code := CreateViewSwimlane(T, S.UserId, BoardId, Request.ContentFields.Values['after'],
       Request.ContentFields.Values['placement'] = 'above', Title, NewId, Error)
@@ -1285,6 +1494,8 @@ begin
     if (CardId <> '') and (Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
       QuotedStr(BoardId) + ' AND deletedAt IS NULL;')) <> 1) then CardId := '';
   end
+  else if (Action = 'set-field') or (Action = 'toggle-field') then
+    Code := SetViewCardField(T, S.UserId, BoardId, CardId, P[5], Request.ContentFields, Action = 'toggle-field', Error)
   else if Action = 'set-date' then
     Code := SetViewCardDate(T, S.UserId, BoardId, CardId, P[5], Request.ContentFields.Values['at'],
       Request.ContentFields.Values['delete'] = '1', Error)

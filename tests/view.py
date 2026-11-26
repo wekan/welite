@@ -483,6 +483,35 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/_methods/setSwimlaneCollapsedState', [board_id, lane, False], cookie=owner, as_json=True)[0] == 200
         assert ('id="swimlane-%s"' % lane).encode() in request('GET', route, cookie=owner)[2], 'unfolded again'
 
+        # Custom fields (_cardsec_customFields.pug): a field created from the
+        # card's picker, put on the card, its value saved for its type, and
+        # taken off again - with the REST API's field policy.
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'js-open-custom-fields-settings' in page and b'data-pop="create-custom-field"' in page
+        assert request('POST', '/b/%s/custom-fields' % board_id, {'name': 'Budget', 'type': 'currency', 'card': card_id},
+                       cookie=owner)[0] == 200
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        field_id = re.search(rb'/custom-fields/([^/"]+)/toggle"', page).group(1).decode()
+        fields = card_path + '/custom-fields/' + field_id
+        assert request('POST', fields + '/toggle', {}, cookie=owner)[0] == 200
+        status, _, page, _ = request('POST', fields, {'value': '123,45'}, cookie=owner)
+        assert status == 200 and b'card-details-item-customfield' in page and b'>123.45<' in page, page[-400:]
+        # Negative: a value that is no number, a field of no board, a
+        # non-member, a type that is not one, an empty name.
+        assert request('POST', fields, {'value': '1.2.3'}, cookie=owner)[0] == 400
+        assert request('POST', card_path + '/custom-fields/no-such-field', {'value': '1'}, cookie=owner)[0] == 404
+        assert request('POST', fields, {'value': '9'}, cookie=stranger)[0] == 403
+        assert request('POST', '/b/%s/custom-fields' % board_id, {'name': 'X', 'type': 'script'}, cookie=owner)[0] == 400
+        assert request('POST', '/b/%s/custom-fields' % board_id, {'name': ' ', 'type': 'text'}, cookie=owner)[0] == 400
+        assert request('POST', '/b/%s/custom-fields' % board_id, {'name': 'S', 'type': 'text'}, cookie=stranger)[0] == 403
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'>123.45<' in page and page.count(b'js-select-field') == 1, 'nothing else was written'
+        assert request('POST', fields + '/toggle', {}, cookie=owner)[0] == 200
+        assert b'card-details-item-customfield' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        # The layout, the user's own (toggleCustomFieldsGrid).
+        assert request('POST', '/_methods/toggleCustomFieldsGrid', [], cookie=owner, as_json=True)[0] == 200
+        assert request('POST', '/_methods/toggleCustomFieldsGrid', [], as_json=True)[0] == 401
+
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'card-details-item-requested-by' in page and b'card-details-item-assigned-by' in page

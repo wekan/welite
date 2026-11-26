@@ -159,6 +159,19 @@ function BoardCanCreateLabel(Db:TWLDb;const UserId,BoardId:string):Boolean;
 function SetViewCardDate(const T:TWLTenant;const UserId,BoardId,CardId,Kind,At:string;Remove:Boolean;
   out Error:string):Integer;
 function ViewDateKindField(const Kind:string;out Field,Setting:string):Boolean;
+// A card's custom field from a view (cardCustomField-* and
+// cardCustomFieldsPopup): with Toggle the field onto the card, empty, or off
+// it; else its value from the form's "value" (and a date's "at"/"delete"),
+// parsed for the field's type. The REST API's field policy decides, and its
+// write saves.
+function SetViewCardField(const T:TWLTenant;const UserId,BoardId,CardId,FieldId:string;Values:TStrings;Toggle:Boolean;
+  out Error:string):Integer;
+// createCustomFieldPopup: a board's custom field by name and type, shown on
+// cards, created as POST /api/boards/:id/custom-fields creates one.
+function CreateViewCustomField(const T:TWLTenant;const UserId,BoardId,Name,Typ:string;out Id,Error:string):Integer;
+// Whether the REST API's field policy lets the user read (Write False) or
+// change the card's value of the field.
+function ViewFieldAllowed(Db:TWLDb;const UserId,BoardId,CardId,FieldId:string;Write:Boolean):Boolean;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -3536,9 +3549,65 @@ begin
   finally if not Result then FreeAndNil(Settings);Doc.Free;end;
 end;
 
+// A board's new custom field: the field policy's definition right, its
+// dropdown items, the createCustomField activity. 200 and its id, or the
+// status and why not.
+function WriteBoardField(const T:TWLTenant;const UserId,BoardId,Name,Typ:string;const Flags:TDefinitionFlags;
+  Settings:TJSONObject;out Id,Error:string):Integer;
+var Stamp,Sql,GuardSql,DropdownSql,DropdownGuards:string;Data:TJSONObject;Rows:TWLRows;Policy:TFieldPolicy;
+begin
+  Id:='';Error:='';
+  Policy:=nil;
+  try
+    try
+      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+      Rows:=T.Db.Query('SELECT '+Policy.DefinitionExpression('',Flags[5]=1)+';');
+      if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
+      begin Error:='Custom-field creation forbidden';Exit(403);end;
+    except Error:='Custom-field creation forbidden';Exit(403);end;
+    Id:=NewId;Stamp:=NowIso;
+    try DropdownSql:=DropdownScript(T.Db,Id,Settings,DropdownGuards);
+    except Error:='Could not prepare dropdown settings';Id:='';Exit(500);end;
+    GuardSql:='SELECT CASE WHEN '+Policy.DefinitionExpression('',Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; ';
+    Sql:='BEGIN IMMEDIATE; '+DropdownGuards+GuardSql+Format(
+      'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
+      'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) VALUES(%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s);',
+      [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],QuotedStr(Stamp),QuotedStr(Stamp),SettingsLiteral(Settings,'currencyCode'),
+       SettingsLiteral(Settings,'stringtemplateFormat'),SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
+      'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); '+DropdownSql;
+    Data:=TJSONObject.Create(['customFieldId',Id]);
+    try
+      Sql:=Sql+'INSERT INTO activities(id,activityType,userId,boardId,createdAt,modifiedAt,data_json) VALUES('+
+        QuotedStr(NewId)+',''createCustomField'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+
+        QuotedStr(Stamp)+','+QuotedStr(Stamp)+','+QuotedStr(Data.AsJSON)+'); '+
+        'SELECT CASE WHEN '+Policy.DefinitionExpression(Id,Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; '+DropdownGuards+'COMMIT;';
+    finally Data.Free;end;
+    if not T.Db.Exec(Sql) then
+    begin T.Db.Exec('ROLLBACK;');Id:='';Error:='Could not create custom field';Exit(500);end;
+  finally Policy.Free;end;
+  Result:=200;
+end;
+
+// createCustomFieldPopup from the card's picker: a field of the board by its
+// name and type, shown on cards, with the REST API's checks.
+function CreateViewCustomField(const T:TWLTenant;const UserId,BoardId,Name,Typ:string;out Id,Error:string):Integer;
+var Flags:TDefinitionFlags;Settings:TJSONObject;i:Integer;
+begin
+  Id:='';
+  if (BoardId='') or (Trim(Name)='') or (Length(Name)>200) or (Pos(#0,BoardId+Name)>0) or not ValidDefinitionType(Typ) then
+  begin Error:='a name and a known type are needed';Exit(400);end;
+  try CheckUtf8(Name);except Error:='a name and a known type are needed';Exit(400);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Custom-field creation forbidden';Exit(403);end;
+  for i:=0 to High(Flags) do Flags[i]:=0;
+  Flags[0]:=1;
+  Settings:=TJSONObject.Create;
+  try Result:=WriteBoardField(T,UserId,BoardId,Trim(Name),Typ,Flags,Settings,Id,Error);
+  finally Settings.Free;end;
+end;
+
 // GET board custom fields / POST create a custom field
 procedure ApiCustomFields(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; UserId, BoardId, Id, Name, Typ,Stamp,Sql: string;Flags:TDefinitionFlags;Reply,Data,Settings:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index:Integer;Policy:TFieldPolicy;GuardSql,DropdownSql,DropdownGuards:string;
+var T: TWLTenant; UserId, BoardId, Id, Name, Typ, Error: string;Flags:TDefinitionFlags;Reply,Settings:TJSONObject;Rows:TWLRows;Items:TJSONArray;Index,Code:Integer;
 begin
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
@@ -3548,36 +3617,12 @@ begin
   begin
     if not DefinitionInput(aRequest,Name,Typ,Flags,Settings) then
     begin SendError(aResponse,400,'Invalid custom-field name, type, options or unsupported settings');Exit;end;
-    Policy:=nil;
     try
-      try
-        Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
-        Rows:=T.Db.Query('SELECT '+Policy.DefinitionExpression('',Flags[5]=1)+';');
-        if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
-        begin SendError(aResponse,403,'Custom-field creation forbidden');Exit;end;
-      except SendError(aResponse,403,'Custom-field creation forbidden');Exit;end;
-      Id:=NewId;Stamp:=NowIso;
-      try DropdownSql:=DropdownScript(T.Db,Id,Settings,DropdownGuards);
-      except SendError(aResponse,500,'Could not prepare dropdown settings');Exit;end;
-      GuardSql:='SELECT CASE WHEN '+Policy.DefinitionExpression('',Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; ';
-      Sql:='BEGIN IMMEDIATE; '+DropdownGuards+GuardSql+Format(
-        'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
-        'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) VALUES(%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s);',
-        [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],QuotedStr(Stamp),QuotedStr(Stamp),SettingsLiteral(Settings,'currencyCode'),
-         SettingsLiteral(Settings,'stringtemplateFormat'),SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
-        'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); '+DropdownSql;
-      Data:=TJSONObject.Create(['customFieldId',Id]);
-      try
-        Sql:=Sql+'INSERT INTO activities(id,activityType,userId,boardId,createdAt,modifiedAt,data_json) VALUES('+
-          QuotedStr(NewId)+',''createCustomField'','+QuotedStr(UserId)+','+QuotedStr(BoardId)+','+
-          QuotedStr(Stamp)+','+QuotedStr(Stamp)+','+QuotedStr(Data.AsJSON)+'); '+
-          'SELECT CASE WHEN '+Policy.DefinitionExpression(Id,Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; '+DropdownGuards+'COMMIT;';
-      finally Data.Free;end;
-      if not T.Db.Exec(Sql) then
-      begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create custom field');Exit;end;
-      Reply:=TJSONObject.Create(['_id',Id]);
-      try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
-    finally Policy.Free;Settings.Free;end;
+      Code:=WriteBoardField(T,UserId,BoardId,Name,Typ,Flags,Settings,Id,Error);
+    finally Settings.Free;end;
+    if Code<>200 then begin SendError(aResponse,Code,Error);Exit;end;
+    Reply:=TJSONObject.Create(['_id',Id]);
+    try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
     Exit;
   end;
   Rows:=T.Db.Query(Format('SELECT cf.id,cf.name,cf.type FROM custom_fields cf '+
@@ -5680,6 +5725,143 @@ begin
     ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+Act+'UPDATE cards SET '+Field+'='+Literal+
     ',modifiedAt='+Stamp+',dateLastActivity='+Stamp+' WHERE '+Scope+'; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
+end;
+
+function ViewFieldNumber(const Raw:string;Currency:Boolean;out Literal:string):Boolean;
+var Text,Clean:string;i:Integer;Number:Double;Fmt:TFormatSettings;
+begin
+  Result:=False;Literal:='NULL';
+  Text:=Trim(Raw);
+  if Currency then
+  begin
+    // Weddy's parseFieldValue: 123,45 is 123.45 (the decimal comma); 1,234.5 keeps its point.
+    Clean:='';
+    for i:=1 to Length(Text) do if Text[i] in ['0'..'9','.',',','+','-'] then Clean:=Clean+Text[i];
+    if (Pos(',',Clean)>0) and (Pos('.',Clean)=0) then Clean:=StringReplace(Clean,',','.',[]);
+    Text:=StringReplace(Clean,',','',[rfReplaceAll]);
+  end;
+  if Text='' then Exit(True);
+  Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';Fmt.ThousandSeparator:=#0;
+  if not TryStrToFloat(Text,Number,Fmt) or IsNan(Number) or IsInfinite(Number) or (Abs(Number)>1e300) then Exit;
+  Literal:=FloatToStrF(Number,ffGeneral,17,0,Fmt);
+  Result:=True;
+end;
+
+function ViewFieldAllowed(Db:TWLDb;const UserId,BoardId,CardId,FieldId:string;Write:Boolean):Boolean;
+var Policy:TFieldPolicy;
+begin
+  Result:=False;
+  if (UserId='') or (Pos(#0,FieldId)>0) then Exit;
+  Policy:=TFieldPolicy.Create(Db,UserId,BoardId,CardId);
+  try
+    try Result:=Policy.Allowed(FieldId,Write);except Result:=False;end;
+  finally Policy.Free;end;
+end;
+
+function SetViewCardField(const T:TWLTenant;const UserId,BoardId,CardId,FieldId:string;Values:TStrings;Toggle:Boolean;
+  out Error:string):Integer;
+var Def,Rows:TWLRows;Kind,Literal,Raw,Guard,At,Scope:string;Policy:TFieldPolicy;Allowed:Boolean;Items:TJSONArray;i:Integer;
+  Input:TJSONData;Year:Integer;Seen:TStringList;
+  function Known(const ItemId:string):Boolean;
+  begin
+    Result:=Length(T.Db.Query('SELECT 1 FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(FieldId)+
+      ' AND id='+QuotedStr(ItemId)+';'))=1;
+  end;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  if (FieldId='') or (Pos(#0,FieldId)>0) then begin Error:='custom-field-not-found';Exit(404);end;
+  if not BoardAllows(T.Db,BoardId,'allowsCustomFields') then begin Error:='this board does not use custom fields';Exit(403);end;
+  Def:=T.Db.Query('SELECT f.type FROM custom_fields f JOIN custom_field_boards b ON b.customFieldId=f.id WHERE f.id='+
+    QuotedStr(FieldId)+' AND b.boardId='+QuotedStr(BoardId)+';');
+  if Length(Def)<>1 then begin Error:='custom-field-not-found';Exit(404);end;
+  Kind:=Def[0][0];
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,CardId);
+  try
+    try Allowed:=Policy.Allowed(FieldId,True);Guard:=Policy.Guard(FieldId);except Allowed:=False;end;
+  finally Policy.Free;end;
+  if not Allowed then begin Error:='Custom-field write forbidden';Exit(403);end;
+  Scope:='cardId='+QuotedStr(CardId)+' AND customFieldId='+QuotedStr(FieldId);
+  if Toggle then
+  begin
+    // cardCustomFieldsPopup: the field onto the card, empty, or off it.
+    if Length(T.Db.Query('SELECT 1 FROM card_custom_field_values WHERE '+Scope+';'))=1 then
+    begin
+      if not T.Db.Exec('BEGIN IMMEDIATE; '+Guard+'DELETE FROM card_custom_field_values WHERE '+Scope+'; COMMIT;') then
+      begin T.Db.Exec('ROLLBACK;');Error:='Could not save custom-field value';Exit(500);end;
+    end
+    else if not SaveCardFieldValue(T.Db,CardId,FieldId,'NULL',Guard) then
+    begin Error:='Could not save custom-field value';Exit(500);end;
+    Exit(200);
+  end;
+  Raw:=Values.Values['value'];
+  Literal:='NULL';
+  // The value of the form for the field's type, as WeKan's cardCustomField-*
+  // editors make it (Weddy's parseFieldValue): an empty one clears it.
+  if Kind='text' then
+  begin
+    if (Length(Raw)>100000) or (Pos(#0,Raw)>0) then begin Error:='invalid-custom-field-value';Exit(400);end;
+    if Trim(Raw)<>'' then Literal:=QuotedStr(Raw);
+  end
+  else if (Kind='number') or (Kind='currency') then
+  begin
+    if not ViewFieldNumber(Raw,Kind='currency',Literal) then begin Error:='invalid-custom-field-value';Exit(400);end;
+  end
+  else if Kind='checkbox' then
+  begin
+    if (Raw='true') or (Raw='on') or (Raw='1') then Literal:='1' else Literal:='0';
+  end
+  else if Kind='date' then
+  begin
+    if Values.Values['delete']<>'1' then
+    begin
+      At:=Values.Values['at'];Year:=StrToIntDef(Copy(At,1,4),0);
+      if (Length(At)<20) or (At[5]<>'-') or (At[11]<>'T') or (Pos(#0,At)>0) or (Year<1000) or (Year>9999) then
+      begin Error:='invalid-custom-field-value';Exit(400);end;
+      Input:=TJSONString.Create(At);
+      try
+        if not CardDateSql(Input,Literal) or (Literal='NULL') then begin Error:='invalid-custom-field-value';Exit(400);end;
+      finally Input.Free;end;
+    end;
+  end
+  else if Kind='dropdown' then
+  begin
+    if Raw<>'' then
+    begin
+      if not Known(Raw) then begin Error:='invalid-custom-field-value';Exit(400);end;
+      Literal:=QuotedStr(Raw);
+    end;
+  end
+  else if (Kind='dropdownMultiSelect') or (Kind='stringtemplate') then
+  begin
+    Items:=TJSONArray.Create;Seen:=TStringList.Create;
+    try
+      for i:=0 to Values.Count-1 do
+      begin
+        if Values.Names[i]<>'value' then Continue;
+        Raw:=Values.ValueFromIndex[i];
+        if Pos(#0,Raw)>0 then begin Error:='invalid-custom-field-value';Exit(400);end;
+        if Kind='dropdownMultiSelect' then
+        begin
+          if Raw='' then Continue;
+          if not Known(Raw) then begin Error:='invalid-custom-field-value';Exit(400);end;
+          if Seen.IndexOf(Raw)>=0 then Continue;
+          Seen.Add(Raw);
+        end
+        else
+        begin
+          if Trim(Raw)='' then Continue;
+          if (Length(Raw)>10000) or (Items.Count>=200) then begin Error:='invalid-custom-field-value';Exit(400);end;
+        end;
+        Items.Add(Raw);
+      end;
+      if Items.Count>0 then Literal:=QuotedStr(Items.AsJSON);
+    finally Items.Free;Seen.Free;end;
+  end
+  else begin Error:='not editable here';Exit(403);end;
+  if not SaveCardFieldValue(T.Db,CardId,FieldId,Literal,Guard) then
+  begin Error:='Could not save custom-field value';Exit(500);end;
+  Result:=200;
 end;
 
 function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;
