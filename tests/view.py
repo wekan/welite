@@ -1126,6 +1126,29 @@ def http_checks(server, tmp, backend):
                  "'$.allowsDueCompleteOnMinicard') WHERE id=?", board_id)
         card_db('DELETE FROM card_assignees WHERE cardId=?', card_id)
 
+        # #5729: the user's own same width for every list, and personal widths
+        # while the board allows them; a width is 200 to 1000 (#6465).
+        call = lambda name, args, who=owner: request('POST', '/_methods/' + name, args, cookie=who, as_json=True)
+        styled = lambda w, who=owner: ('id="js-list-%s" data-list="%s" data-swimlane="%s" style="--list-width:%dpx;"'
+                                       % (sort_list, sort_list, lane, w)).encode() in request('GET', route, cookie=who)[2]
+        assert call('setFixedListWidthEnabled', [board_id, True])[0] == 200 and styled(220), 'the default width'
+        assert call('setFixedListWidth', [board_id, 360])[0] == 200 and styled(360) and not styled(360, worker)
+        status, _, body, _ = call('setFixedListWidth', [board_id, 150])
+        assert status == 400 and json.loads(body)['error'] == 'invalid-width' and styled(360)
+        assert call('setFixedListWidth', [board_id, 5000])[0] == 400 and call('setFixedListWidth', [board_id, '300'])[0] == 400
+        assert call('setFixedListWidthEnabled', [board_id, False])[0] == 200 and not styled(360)
+        assert call('applyListWidthToStorage', [board_id, sort_list, 410, 410])[0] == 200 and not styled(410), 'not allowed yet'
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.allowsPersonalListWidth',json('true')) WHERE id=?", board_id)
+        assert styled(410) and not styled(410, worker)
+        # Negative: keys are ids and never an object's own (PrototypeBleed), and
+        # a board the user reads.
+        for key in ('__proto__', 'constructor', 'prototype'):
+            assert call('applyListWidthToStorage', [board_id, key, 300, 300])[0] == 400, key
+        assert call('applyListWidthToStorage', [board_id, 'x"]', 300, 300])[0] == 400
+        assert call('setFixedListWidthEnabled', [board_id, True], stranger)[0] == 403
+        board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.allowsPersonalListWidth') WHERE id=?", board_id)
+        assert not styled(410)
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

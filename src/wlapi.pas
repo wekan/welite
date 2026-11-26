@@ -125,6 +125,9 @@ function CreateViewSwimlane(const T:TWLTenant;const UserId,BoardId,AfterId:strin
 // board the user may read.
 function ProfileFold(Db:TWLDb;const UserId,Map,BoardId,Key:string):Boolean;
 function SetViewProfileFold(const T:TWLTenant;const UserId,Map,BoardId,Key:string;Folded:Boolean;out Error:string):Integer;
+// The user's own profile.<Map>[BoardId] (Key '') or profile.<Map>[BoardId][Key]
+// set to a JSON value (a number or a boolean), on a board the user reads.
+function SetViewProfileValue(const T:TWLTenant;const UserId,Map,BoardId,Key,JsonValue:string;out Error:string):Integer;
 // WeKan's comment capability (models/lib/boardRoleCapabilities.js): a site
 // admin, or an active member who may read the board and whose role may
 // comment - everyone but No comments, Read only and Read assigned only.
@@ -4785,6 +4788,8 @@ begin
   Result:=(Key<>'') and (Length(Key)<=128);
   for i:=1 to Length(Key) do
     if not (Key[i] in ['A'..'Z','a'..'z','0'..'9','-','_']) then Exit(False);
+  // PrototypeBleed (WeKan's assertSafeMapKey): never an object's own key.
+  if (Key='__proto__') or (Key='constructor') or (Key='prototype') then Exit(False);
 end;
 
 // A key of a profile fold map: an id, or a list's "listId:swimlaneId" (#6712).
@@ -4804,6 +4809,25 @@ begin
   R:=Db.Query('SELECT CASE WHEN json_valid(profile_json) AND json_extract(profile_json,'+
     QuotedStr('$.'+Map+'."'+BoardId+'"."'+Key+'"')+')=1 THEN 1 ELSE 0 END FROM users WHERE id='+QuotedStr(UserId)+' LIMIT 1;');
   Result:=(Length(R)=1) and (R[0][0]='1');
+end;
+
+function SetViewProfileValue(const T:TWLTenant;const UserId,Map,BoardId,Key,JsonValue:string;out Error:string):Integer;
+var Profile,Path,Target:string;
+begin
+  Error:='';
+  if not SafeMapKey(BoardId) or ((Key<>'') and not SafeFoldKey(Key)) then begin Error:='Invalid map key';Exit(400);end;
+  if not BoardCanRead(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+  Path:='$.'+Map+'."'+BoardId+'"';
+  if Key='' then
+    Target:='json_set(json_set('+Profile+','''+'$.'+Map+''',json(COALESCE(json_extract('+Profile+','''+'$.'+Map+'''),''{}''))),'''+
+      Path+''',json('+QuotedStr(JsonValue)+'))'
+  else
+    Target:='json_set(json_set(json_set('+Profile+','''+'$.'+Map+''',json(COALESCE(json_extract('+Profile+','''+'$.'+Map+'''),''{}''))),'''+
+      Path+''',json(COALESCE(json_extract('+Profile+','''+Path+'''),''{}''))),'''+Path+'."'+Key+'"'',json('+QuotedStr(JsonValue)+'))';
+  if not T.Db.Exec('UPDATE users SET profile_json='+Target+' WHERE id='+QuotedStr(UserId)+';') then
+  begin Error:='Could not save';Exit(500);end;
+  Result:=200;
 end;
 
 function SetViewProfileFold(const T:TWLTenant;const UserId,Map,BoardId,Key:string;Folded:Boolean;out Error:string):Integer;

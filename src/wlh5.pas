@@ -2055,6 +2055,31 @@ begin
   end;
 end;
 
+// The width a list is drawn at for the user, in Weddy's (WeKan's) order: the
+// user's own same width for the board while it is on (220 without one), the
+// user's personal width while the board allows them; 0 for the stylesheet's.
+function ListWidthOf(Db: TWLDb; const UserId, BoardId, ListId: string): Integer;
+var R: TWLRows; W: Double;
+  function Valid(const V: string; out N: Double): Boolean;
+  begin
+    N := StrToFloatDef(V, -1, DefaultFormatSettings);
+    Result := (N >= 200) and (N <= 1000);
+  end;
+begin
+  Result := 0;
+  if (UserId = '') or (Pos('"', BoardId + ListId) > 0) or (Pos(#0, BoardId + ListId) > 0) then Exit;
+  R := Db.Query('SELECT json_extract(profile_json,''$.fixedListWidthBoards."' + BoardId + '"''),' +
+    'json_extract(profile_json,''$.fixedListWidths."' + BoardId + '"''),json_extract(profile_json,''$.listWidths."' + BoardId + '"."' + ListId + '"'') ' +
+    'FROM users WHERE id=' + QuotedStr(UserId) + ' AND json_valid(profile_json);');
+  if Length(R) <> 1 then Exit;
+  if R[0][0] = '1' then
+  begin
+    if Valid(R[0][1], W) then Exit(Round(W));
+    Exit(220);
+  end;
+  if BoardSettingFlag(Db, BoardId, 'allowsPersonalListWidth', False) and Valid(R[0][2], W) then Result := Round(W);
+end;
+
 // The board's background (Weddy's BackgroundStyle): only ever one of its own
 // raster image attachments, by its address.
 function BackgroundStyle(Db: TWLDb; const BoardId, Url: string): string;
@@ -2075,6 +2100,7 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
+  Width: Integer;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter;
 begin
   Result := ''; BoardTitle := ''; Found := False;
@@ -2142,8 +2168,10 @@ begin
       // listHeader.jade's caret: per user, per list in this swimlane (#6712).
       ListFolded := ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0] + ':' + Lanes[i][0]) or
         ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0]);
+      Width := ListWidthOf(Db, S.UserId, BoardId, Lists[j][0]);
       Canvas := Canvas + '<div class="list js-list' + IfThen(ListFolded, ' list-collapsed', '') + '" id="js-list-' + HtmlAttr(Lists[j][0]) +
-        '" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"><div class="list-header">' +
+        '" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"' +
+        IfThen((Width > 0) and not ListFolded, ' style="--list-width:' + IntToStr(Width) + 'px;"', '') + '><div class="list-header">' +
         IfThen(S.UserId <> '', '<a class="list-collapse-indicator js-collapse" href="#" data-collapse="' + HtmlAttr(Words.Text('collapse', 'Collapse')) +
           '" data-uncollapse="' + HtmlAttr(Words.Text('uncollapse', 'Uncollapse')) + '" title="' +
           HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '" aria-label="' +
@@ -2406,6 +2434,60 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(Id) + '"}');
+    Exit;
+  end;
+  if (Name = 'setFixedListWidthEnabled') or (Name = 'setFixedListWidth') or (Name = 'applyListWidthToStorage') then
+  begin
+    // server/models/users.js (#5729, #6465): the user's own same width for
+    // every list of a board - on or off, and its width - and a list's own
+    // personal width with its constraint; a width is 200 to 1000.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      Code := 400;
+      if Args is TJSONArray then
+        if Name = 'setFixedListWidthEnabled' then
+        begin
+          if (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+            (TJSONArray(Args).Items[1].JSONType = jtBoolean) then
+            Code := SetViewProfileValue(T, S.UserId, 'fixedListWidthBoards', TJSONArray(Args).Items[0].AsString, '',
+              TJSONArray(Args).Items[1].AsJSON, Error);
+        end
+        else if Name = 'setFixedListWidth' then
+        begin
+          if (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+            (TJSONArray(Args).Items[1].JSONType = jtNumber) then
+          begin
+            if (TJSONArray(Args).Items[1].AsFloat < 200) or (TJSONArray(Args).Items[1].AsFloat > 1000) then
+            begin SendJsonAnswer(Response, 400, '{"error":"invalid-width","reason":"Width must be >= 200"}'); Exit; end;
+            Code := SetViewProfileValue(T, S.UserId, 'fixedListWidths', TJSONArray(Args).Items[0].AsString, '',
+              TJSONArray(Args).Items[1].AsJSON, Error);
+          end;
+        end
+        else if (TJSONArray(Args).Count = 4) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+          (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtNumber) and
+          (TJSONArray(Args).Items[3].JSONType = jtNumber) then
+        begin
+          if (TJSONArray(Args).Items[2].AsFloat < 200) or (TJSONArray(Args).Items[2].AsFloat > 1000) then
+          begin SendJsonAnswer(Response, 400, '{"error":"invalid-width","reason":"Width must be >= 200"}'); Exit; end;
+          Code := SetViewProfileValue(T, S.UserId, 'listWidths', TJSONArray(Args).Items[0].AsString,
+            TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[2].AsJSON, Error);
+          if Code = 200 then
+            Code := SetViewProfileValue(T, S.UserId, 'listConstraints', TJSONArray(Args).Items[0].AsString,
+              TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[3].AsJSON, Error);
+        end;
+      if (Code = 400) and (Error = '') then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":true}');
     Exit;
   end;
   if Name = 'setMobileMode' then

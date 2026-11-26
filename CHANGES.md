@@ -229,6 +229,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   getMinicardFlag; Weddy's minicard_badges.go). A test fails on any
   WideString case function, which needs a widestring manager the server is
   not linked with. 240 of WeKan's tests pass.
+- Add the user's own list widths to the HTML5 view (#5729, #6465): the same
+  width for every list of a board (WeKan's setFixedListWidthEnabled and
+  setFixedListWidth, 200 to 1000, 220 until one is set) and a list's personal
+  width while the board allows them (applyListWidthToStorage), drawn for
+  that user only. A profile map key is never an object's own key
+  (`__proto__`, `constructor`, `prototype`), as WeKan's assertSafeMapKey
+  refuses them. 242 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,
