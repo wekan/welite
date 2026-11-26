@@ -246,6 +246,16 @@ Order of the work, each step committed with its tests:
 
 Next, after this goal:
 
+- [ ] **Every WeKan feature in both the HTML5 view and Weddy, together**
+  (asked 2026-11-26). A feature is added to WeLite's HTML5 view and to Weddy
+  (caddy-wekan-plugin, whose markup and weddy.js the HTML5 view uses) in the
+  same piece of work, so WeKan's own Web UI and REST API specs pass against
+  both: `tests/wkui/specs.txt` here and Weddy's `tests/wekan/wekan-specs.txt`
+  name the same spec lines, and a feature is done when its lines are in both.
+  On 2026-11-26 they shared 62 lines; Weddy had 405 more - many of them
+  WeKan's REST API specs, which run against WeLite's REST API - and WeLite 3
+  that Weddy does not yet pass. Work the lists toward the same set, then add
+  each new feature to both.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
   the card's other sections (an attachment's cover, background and
   rename; markdown in descriptions and comments; a custom field's edit and
