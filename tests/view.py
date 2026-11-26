@@ -281,6 +281,23 @@ def http_checks(server, tmp, backend):
         assert status == 403 and b'Stolen' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'View Card', 'description': 'The card <b>text</b>'}}],
                 cookie=owner, as_json=True)
+        # The live board (weddy.js' EventSource): an event stream for a member,
+        # announced in the board's data-live; a change to the board is an event.
+        # Negative: a stranger gets no stream, and nothing about the board.
+        assert ('data-live="/b/%s/live?v=1"' % board_id).encode() in request('GET', route, cookie=owner)[2]
+        conn = http.client.HTTPConnection('127.0.0.1', listen, timeout=10)
+        conn.request('GET', '/b/%s/live?v=1&p=pagetest' % board_id, None, {'Host': 'localhost', 'User-Agent': CHROME, 'Cookie': owner})
+        live = conn.getresponse()
+        assert live.status == 200 and live.getheader('Content-Type', '').startswith('text/event-stream'), live.status
+        assert live.fp.readline().startswith(b'retry:')
+        request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'Live change'}}], cookie=owner, as_json=True)
+        seen = b''
+        while b'event: board-changed' not in seen:
+            seen += live.fp.readline()
+        conn.close()
+        request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'View Card'}}], cookie=owner, as_json=True)
+        status, headers, body, _ = request('GET', '/b/%s/live?v=1' % board_id, cookie=stranger)
+        assert status == 404 and b'event' not in body, (status, body)
         # createCardWithDueDate: the Calendar's card on a day. Negative: no
         # date, a date that is not one, a stranger's board (AuthBleed).
         status, _, body, _ = request('POST', '/_methods/createCardWithDueDate',

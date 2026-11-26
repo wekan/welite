@@ -1858,7 +1858,7 @@ end;
 
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 var T:TWLTenant;UserId,BoardId,Permission,RuleId,TriggerId,ActionId,Title,Sql,Guards:string;
-  Body,Rule,Trigger,Action,Reply:TJSONObject;Rows:TWLRows;
+  Body,Rule,Trigger,Action,Reply,Before,After:TJSONObject;Rows:TWLRows;
   Policy:TFieldPolicy;
   function WorkflowInsert(const Collection:string;Doc:TJSONObject):string;
   var Found:TWLRows;TableName,QuotedTable,Payload:string;
@@ -1920,6 +1920,9 @@ begin
         ' THEN 1 ELSE json(''Workflow scope changed'') END; '+Sql+'COMMIT;') then
         raise Exception.Create('Rule creation failed');
     except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create rule');Exit;end;
+    // One history row for the new rule (wlrules' RecordRuleHistory).
+    Before:=TJSONObject.Create(['rule',TJSONNull.Create]);After:=RuleSnapshot(T.Db,RuleId);
+    try RecordRuleHistory(T.Db,UserId,Before,After);finally After.Free;Before.Free;end;
     Reply:=TJSONObject.Create(['_id',RuleId,'triggerId',TriggerId,'actionId',ActionId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally Rule.Free;Body.Free;end;
@@ -1928,7 +1931,7 @@ end;
 procedure ApiEditRule(aRequest:TRequest;aResponse:TResponse);
 const Doc='_ferretdb_sjson';
 var T:TWLTenant;UserId,BoardId,RuleId,Permission,Guard,RuleTable,RuleScope,RuleRaw,Sql,Bindings:string;
-  Rows:TWLRows;Body,Rule:TJSONObject;Value:TJSONData;Policy:TFieldPolicy;
+  Rows:TWLRows;Body,Rule,Before,After:TJSONObject;Value:TJSONData;Policy:TFieldPolicy;
   function Bind(const Collection:string;out Storage:string):string;
   var Found:TWLRows;
   begin
@@ -2012,6 +2015,7 @@ begin
   if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
   begin SendError(aResponse,403,'Board administration required');Exit;end;
   Body:=nil;Rule:=nil;Bindings:='';Guard:='';Sql:='';
+  Before:=RuleSnapshot(T.Db,RuleId);After:=nil;
   try
     try
       try Body:=ExactObject(aRequest.Content);
@@ -2028,6 +2032,20 @@ begin
         ((Value is TJSONBoolean) and Value.AsBoolean) or ((Value is TJSONString) and (Value.AsString='true'))));
       EditPart('trigger','triggers','activityType','extraTriggerIds');
       EditPart('action','actions','actionType','extraActionIds');
+      // WeKan's ruleButtonMetadata: a button trigger's type and label on the
+      // rule, which the board's menu reads; any other trigger, none.
+      Value:=Body.Find('trigger');
+      if Value is TJSONObject then
+      begin
+        Rule.Delete('buttonType');Rule.Delete('buttonLabel');
+        if TJSONObject(Value).Get('activityType','')='button' then
+        begin
+          if TJSONObject(Value).Get('buttonType','')='board' then Rule.Add('buttonType','board') else Rule.Add('buttonType','card');
+          if TJSONObject(Value).Get('buttonLabel','')<>'' then Rule.Add('buttonLabel',TJSONObject(Value).Get('buttonLabel',''))
+          else if Rule.Get('title','')<>'' then Rule.Add('buttonLabel',Rule.Get('title',''))
+          else Rule.Add('buttonLabel','Rule');
+        end;
+      end;
       Encoded:=QuotedStr(TypedDocument(Rule.AsJSON,RuleRaw,'{}'));
       Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+Bindings+Guard+
         ' AND (SELECT count(*) FROM '+RuleTable+' WHERE '+RuleScope+' AND json('+Doc+')='+QuotedStr(RuleRaw)+
@@ -2041,14 +2059,16 @@ begin
       on E:EConvertError do begin SendError(aResponse,400,'Invalid workflow update');Exit;end;
       on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit rule');Exit;end;
     end;
+    After:=RuleSnapshot(T.Db,RuleId);
+    RecordRuleHistory(T.Db,UserId,Before,After);
     SendJson(aResponse,'{"_id":"'+StringToJSONString(RuleId)+'"}');
-  finally Rule.Free;Body.Free;end;
+  finally After.Free;Before.Free;Rule.Free;Body.Free;end;
 end;
 
 procedure ApiDeleteRule(aRequest:TRequest;aResponse:TResponse);
 const Doc='_ferretdb_sjson';NotFound='{"error":"Rule not found"}';
 var T:TWLTenant;Actor,BoardId,RuleId,Permission,Scope,Source,Original,Bindings,Sql:string;
-  Rows:TWLRows;Rule:TJSONObject;Policy:TFieldPolicy;
+  Rows:TWLRows;Rule,Before,After:TJSONObject;Policy:TFieldPolicy;
   function Bind(const Collection:string):string;
   var Found:TWLRows;
   begin
@@ -2103,7 +2123,7 @@ begin
   begin SendError(aResponse,403,'Board administration required');Exit;end;
   if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=0 then
   begin SendJson(aResponse,NotFound,404);Exit;end;
-  Rule:=nil;Bindings:='';
+  Rule:=nil;Bindings:='';Before:=nil;After:=nil;
   try
     try
       Source:=Bind('rules');
@@ -2121,10 +2141,13 @@ begin
         ')=1 THEN 1 ELSE json(''Workflow scope changed'') END; DELETE FROM '+Source+' WHERE '+Scope+
         '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM '+Source+' WHERE '+Scope+
         ') THEN 1 ELSE json(''Workflow removal failed'') END; '+Sql+'COMMIT;';
+      Before:=RuleSnapshot(T.Db,RuleId);
       if not T.Db.Exec(Sql) then raise Exception.Create('Rule removal failed');
     except T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not delete rule');Exit;end;
+    After:=RuleSnapshot(T.Db,RuleId);
+    RecordRuleHistory(T.Db,Actor,Before,After);
     SendJson(aResponse,'{"_id":"'+StringToJSONString(RuleId)+'"}');
-  finally Rule.Free;end;
+  finally After.Free;Before.Free;Rule.Free;end;
 end;
 
 procedure HandleIntegrations(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);

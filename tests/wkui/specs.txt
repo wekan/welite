@@ -292,3 +292,12 @@ corsican-rule-controls.e2e.js: Latin rule import dialog explains partial convers
 corsican-rule-controls.e2e.js: Latin workflow toolbox distinguishes its trigger and action labels
 
 advanced-filter-card-dates.e2e.js
+rules-history.e2e.js: ordinary board members cannot restore rule configuration through History
+rules-history.e2e.js: undo refuses to overwrite another administrator’s newer rule edit
+rules-history.e2e.js: Rules REST writes create one attributed History entry per compound operation
+rules-history.e2e.js: method deletion preserves shared rule components and History restores without overwriting them
+rules-history.e2e.js: REST deletion preserves shared rule components and History restores without overwriting them
+rules-history.e2e.js: method editing isolates shared rule components and supports undo/redo
+rules-history.e2e.js: REST editing isolates shared rule components and supports undo/redo
+rules-history.e2e.js: method button trigger changes synchronize menu metadata and History
+rules-history.e2e.js: REST button trigger changes synchronize menu metadata and History

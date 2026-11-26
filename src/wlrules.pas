@@ -48,11 +48,29 @@ function RulesExport(Db: TWLDb; const UserId, BoardId, Format, Ids: string; out 
 // card's buttons; '' when there are none.
 function RuleButtonsHtml(Db: TWLDb; const BoardId, ButtonType: string; Words: TWLTranslator): string;
 
+// Rules' history, as WeKan's server/lib/ruleHistory.js: a rule as one
+// snapshot - {rule, trigger, action[, extraTriggers, extraActions]} without
+// timestamps, {rule: null} when it is not there - before and after each
+// write, and one changeHistory row when they differ (wlchhist).
+function RuleSnapshot(Db: TWLDb; const RuleId: string): TJSONObject;
+procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSONObject);
+// WeKan's changeHistory.undoLast(boardId), redoLast(boardId) and
+// restore(rowId), for the rule rows of a board one administers: 0 for any
+// other method name.
+function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+
 // The engine's hooks: arm at the start of a request, flush before it answers.
 procedure ArmRules(Request: TRequest);
 procedure FlushRules;
 // Response.SendContent, with the request's rules run first.
 procedure SendResponse(Response: TResponse);
+
+// The page that wrote last (weddy.js' X-Weddy-Page / X-Weddy-Live) if it
+// wrote in the last few seconds: a board's live events name it, so that page
+// does not draw again what it drew itself.
+function RecentWriterPage: string;
+// What the board's rules are now, as a short text that changes when they do.
+function RulesSignature(Db: TWLDb; const BoardId: string): string;
 
 // The rules an activity of a board starts, run now (the engine's own entry,
 // for tests and for writes outside a request).
@@ -63,11 +81,13 @@ const
 
 implementation
 
-uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase, wlwrike, wlh5;
+uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase, wlwrike, wlh5, wlchhist, wlchhash;
 
 threadvar
   ArmedRequest: TRequest;
   ArmedStamp: string;
+
+procedure AnnounceToAll; forward;
 
 function Q(const S: string): string;
 begin
@@ -182,7 +202,8 @@ begin
     for i := 0 to Fields.Count - 1 do
     begin
       Plain.Delete(Fields.Names[i]);
-      Plain.Add(Fields.Names[i], Fields.Items[i].Clone);
+      // null is WeKan's $unset: the field goes.
+      if Fields.Items[i].JSONType <> jtNull then Plain.Add(Fields.Names[i], Fields.Items[i].Clone);
     end;
     Result := 'UPDATE ' + Tbl + ' SET _ferretdb_sjson=' + DocLiteral(Raw, TypedDocument(Plain.AsJSON, Previous, Hints)) +
       ' WHERE ' + DocField('_id') + '=' + Q(Id) + '; ';
@@ -593,11 +614,112 @@ begin
   Result := True;
 end;
 
+// A document without its timestamps (WeKan's document()).
+function Untimed(Doc: TJSONObject): TJSONData;
+begin
+  if Doc = nil then Exit(TJSONNull.Create);
+  Result := Doc.Clone;
+  TJSONObject(Result).Delete('createdAt');
+  TJSONObject(Result).Delete('updatedAt');
+  TJSONObject(Result).Delete('modifiedAt');
+end;
+
+function RuleSnapshot(Db: TWLDb; const RuleId: string): TJSONObject;
+var Rule, Part: TJSONObject; V: TJSONData; Docs: TJSONArray; i: Integer; Key, Coll, Field: string;
+begin
+  Result := TJSONObject.Create;
+  Rule := FindDoc(Db, 'rules', RuleId);
+  if Rule = nil then begin Result.Add('rule', TJSONNull.Create); Exit; end;
+  try
+    Result.Add('rule', Untimed(Rule));
+    Part := FindDoc(Db, 'triggers', Str(Rule, 'triggerId'));
+    Result.Add('trigger', Untimed(Part)); Part.Free;
+    Part := FindDoc(Db, 'actions', Str(Rule, 'actionId'));
+    Result.Add('action', Untimed(Part)); Part.Free;
+    for Key in ['extraTriggers', 'extraActions'] do
+    begin
+      if Key = 'extraTriggers' then begin Field := 'extraTriggerIds'; Coll := 'triggers'; end
+      else begin Field := 'extraActionIds'; Coll := 'actions'; end;
+      V := Rule.Find(Field);
+      if not (V is TJSONArray) or (V.Count = 0) then Continue;
+      Docs := TJSONArray.Create;
+      for i := 0 to V.Count - 1 do
+      begin
+        if V.Items[i].JSONType = jtString then Part := FindDoc(Db, Coll, V.Items[i].AsString) else Part := nil;
+        Docs.Add(Untimed(Part));
+        Part.Free;
+      end;
+      Result.Add(Key, Docs);
+    end;
+  finally
+    Rule.Free;
+  end;
+end;
+
+procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSONObject);
+var Rule: TJSONData; Kind: string;
+begin
+  if (UserId = '') or (Before = nil) or (After = nil) then Exit;
+  if CanonicalHistoryValue(Before) = CanonicalHistoryValue(After) then Exit;
+  AnnounceToAll;
+  Rule := After.Find('rule');
+  if not (Rule is TJSONObject) then Rule := Before.Find('rule');
+  if not (Rule is TJSONObject) then Exit;
+  Kind := 'edited';
+  if not (Before.Find('rule') is TJSONObject) then Kind := 'added'
+  else if not (After.Find('rule') is TJSONObject) then Kind := 'removed';
+  try
+    RecordHistoryRow(Db, UserId, Str(TJSONObject(Rule), 'boardId'), 'rule', Str(TJSONObject(Rule), '_id'), 'rules', Kind, Before, After);
+  except
+    // History never fails the write it records.
+  end;
+end;
+
 function RunButton(const T: TWLTenant; const UserId: string; Args: TJSONArray; out Answer: string): Integer; forward;
 
 function ImportWrike(const T: TWLTenant; const UserId: string; Args: TJSONArray; Words: TWLTranslator; out Answer: string): Integer; forward;
 
+function RulesMethodBody(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
+  Words: TWLTranslator): Integer; forward;
+
+// Each write of a rule between two snapshots of it: one history row (WeKan's
+// withRuleHistory) when it changed something.
 function RulesMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
+  Words: TWLTranslator): Integer;
+var RuleId: string; Before, After: TJSONObject; Reply: TJSONData;
+begin
+  if (Name <> 'rules.createRule') and (Name <> 'rules.updateRule') and (Name <> 'rules.deleteRule') and (Name <> 'rules.setEnabled') then
+    Exit(RulesMethodBody(T, UserId, Name, Args, Answer, Words));
+  RuleId := '';
+  if (Name <> 'rules.createRule') and (Args.Count > 0) and (Args.Items[0].JSONType = jtString) then RuleId := Args.Strings[0];
+  Before := nil; After := nil;
+  try
+    if RuleId <> '' then Before := RuleSnapshot(T.Db, RuleId)
+    else Before := TJSONObject.Create(['rule', TJSONNull.Create]);
+    Result := RulesMethodBody(T, UserId, Name, Args, Answer, Words);
+    if Result <> 200 then Exit;
+    if Name = 'rules.createRule' then
+    begin
+      Reply := nil;
+      try
+        Reply := GetJSON(Answer);
+        if (Reply is TJSONObject) and (TJSONObject(Reply).Find('result') is TJSONObject) then
+          RuleId := TJSONObject(TJSONObject(Reply).Find('result')).Get('_id', '');
+      except
+        RuleId := '';
+      end;
+      Reply.Free;
+    end;
+    if RuleId = '' then Exit;
+    After := RuleSnapshot(T.Db, RuleId);
+    RecordRuleHistory(T.Db, UserId, Before, After);
+  finally
+    Before.Free;
+    After.Free;
+  end;
+end;
+
+function RulesMethodBody(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
   Words: TWLTranslator): Integer;
 var BoardId, Title, Error, Ids, Sql, TriggerId, ActionId: string; Trigger, Action, Rule, Fields: TJSONObject;
   Stamp: Int64;
@@ -1727,6 +1849,236 @@ begin
   end;
 end;
 
+// A document written back whole, with its id: the one there now replaced.
+function ReplaceDocSql(Db: TWLDb; const Collection: string; Doc: TJSONObject): string;
+var Copy_: TJSONObject; Stamp: Int64;
+begin
+  Stamp := NowMs;
+  Copy_ := TJSONObject(Doc.Clone);
+  try
+    Copy_.Delete('createdAt'); Copy_.Add('createdAt', Stamp);
+    if Collection = 'triggers' then begin Copy_.Delete('updatedAt'); Copy_.Add('updatedAt', Stamp); end
+    else begin Copy_.Delete('modifiedAt'); Copy_.Add('modifiedAt', Stamp); end;
+    Result := DeleteDocSql(Db, Collection, Str(Doc, '_id')) + InsertDocSql(Db, Collection, Copy_, DateHints);
+  finally
+    Copy_.Free;
+  end;
+end;
+
+// Whether a rule other than RuleId names the part Id (Field: trigger or action).
+function PartUsedElsewhere(Db: TWLDb; const Field, Id, RuleId: string): Boolean;
+var Others: TJSONArray; Extra: string;
+begin
+  Extra := 'extra' + UpperCase(Field[1]) + Copy(Field, 2, MaxInt) + 'Ids';
+  Others := FindDocs(Db, 'rules', DocField('_id') + '<>' + Q(RuleId) + ' AND (' + DocField(Field + 'Id') + '=' + Q(Id) +
+    ' OR EXISTS(SELECT 1 FROM json_each(_ferretdb_sjson,''$.' + Extra + ''') WHERE value=' + Q(Id) + '))', '');
+  try
+    Result := Others.Count > 0;
+  finally
+    Others.Free;
+  end;
+end;
+
+// The parts a rule used that no rule uses now: removed.
+procedure RemoveUnusedParts(Db: TWLDb; Rule: TJSONObject);
+var Field, Coll, Id, Sql: string; Ids: TStringArray; V: TJSONData; i: Integer;
+begin
+  Sql := '';
+  for Field in ['trigger', 'action'] do
+  begin
+    if Field = 'trigger' then Coll := 'triggers' else Coll := 'actions';
+    Ids := TStringArray.Create(Str(Rule, Field + 'Id'));
+    V := Rule.Find('extra' + UpperCase(Field[1]) + Copy(Field, 2, MaxInt) + 'Ids');
+    if V is TJSONArray then
+      for i := 0 to V.Count - 1 do
+        if V.Items[i].JSONType = jtString then begin SetLength(Ids, Length(Ids) + 1); Ids[High(Ids)] := V.Items[i].AsString; end;
+    for Id in Ids do
+      if (Id <> '') and not PartUsedElsewhere(Db, Field, Id, '') then Sql := Sql + DeleteDocSql(Db, Coll, Id);
+  end;
+  if (Sql <> '') and not Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;') then Db.Exec('ROLLBACK;');
+end;
+
+// WeKan's applyRuleHistory: a snapshot of the row put back, a board admin's.
+// Direction undo puts previousContent back, redo newContent, restore the
+// row's content whatever the rule is now. Error is set (Meteor's error) when
+// refused; False without one when there is nothing it may write.
+function ApplyRuleHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var BoardId, RuleId, Sql: string; Current, Content, Expected, Rule, Trig, Act, CurRule, Part, Existing: TJSONObject;
+  Parts: TJSONArray; Colls, Fields: TStringList; V, W: TJSONData; i: Integer; Shared: Boolean; Key, Coll, IdsKey: string;
+  function Obj(Data: TJSONData): TJSONObject;
+  begin
+    if Data is TJSONObject then Result := TJSONObject(Data) else Result := nil;
+  end;
+begin
+  Result := False; Error := '';
+  BoardId := Str(Row, 'boardId'); RuleId := Str(Row, 'entityId');
+  if not BoardCanAdmin(Db, UserId, BoardId) then begin Error := 'not-authorized'; Exit; end;
+  Current := RuleSnapshot(Db, RuleId);
+  Parts := TJSONArray.Create; Colls := TStringList.Create; Fields := TStringList.Create;
+  try
+    CurRule := Obj(Current.Find('rule'));
+    if (CurRule <> nil) and (Str(CurRule, 'boardId') <> BoardId) then begin Error := 'not-authorized'; Exit; end;
+    Expected := Obj(Row.Find('previousContent'));
+    Content := Obj(Row.Find('newContent'));
+    if Direction = 'undo' then
+    begin
+      Expected := Obj(Row.Find('newContent'));
+      Content := Obj(Row.Find('previousContent'));
+    end
+    else if (Direction = 'restore') and (Content = nil) then Content := Obj(Row.Find('previousContent'));
+    // Undo and redo never overwrite a later edit by somebody else.
+    if (Direction <> 'restore') and ((Expected = nil) or (CanonicalHistoryValue(Current) <> CanonicalHistoryValue(Expected))) then
+    begin Error := 'history-conflict'; Exit; end;
+    if (Content = nil) or (Content.Find('rule') = nil) then Exit;
+    Rule := Obj(Content.Find('rule'));
+    if Rule = nil then
+    begin
+      if CurRule = nil then Exit;
+      Sql := RemoveRuleSql(Db, CurRule);
+      Result := Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;');
+      if not Result then Db.Exec('ROLLBACK;');
+      Exit;
+    end;
+    Trig := Obj(Content.Find('trigger')); Act := Obj(Content.Find('action'));
+    if (Str(Rule, '_id') <> RuleId) or (Str(Rule, 'boardId') <> BoardId) or (Trig = nil) or (Act = nil) or
+      (Str(Trig, '_id') <> Str(Rule, 'triggerId')) or (Str(Act, '_id') <> Str(Rule, 'actionId')) or
+      (Str(Trig, 'boardId') <> BoardId) then Exit;
+    Parts.Add(Trig.Clone); Colls.Add('triggers'); Fields.Add('trigger');
+    Parts.Add(Act.Clone); Colls.Add('actions'); Fields.Add('action');
+    for Key in ['extraTriggers', 'extraActions'] do
+    begin
+      if Key = 'extraTriggers' then begin Coll := 'triggers'; IdsKey := 'extraTriggerIds'; end
+      else begin Coll := 'actions'; IdsKey := 'extraActionIds'; end;
+      V := Content.Find(Key); W := Rule.Find(IdsKey);
+      if (V = nil) and ((W = nil) or (W.Count = 0)) then Continue;
+      if not (V is TJSONArray) or not (W is TJSONArray) or (V.Count <> W.Count) then Exit;
+      for i := 0 to V.Count - 1 do
+      begin
+        Part := Obj(V.Items[i]);
+        if (Part = nil) or (W.Items[i].JSONType <> jtString) or (Str(Part, '_id') <> W.Items[i].AsString) or
+          (Str(Part, 'boardId') <> BoardId) then Exit;
+        Parts.Add(Part.Clone); Colls.Add(Coll); Fields.Add(Copy(Coll, 1, Length(Coll) - 1));
+      end;
+    end;
+    // Every target checked before the first write: another board's document,
+    // or another rule's shared part that differs, is never replaced.
+    Sql := '';
+    for i := 0 to Parts.Count - 1 do
+    begin
+      Part := Parts.Objects[i];
+      Existing := FindDoc(Db, Colls[i], Str(Part, '_id'));
+      try
+        if (Existing <> nil) and (Str(Existing, 'boardId') <> Str(Part, 'boardId')) then Exit;
+        Shared := PartUsedElsewhere(Db, Fields[i], Str(Part, '_id'), RuleId);
+        if Shared then
+        begin
+          W := Untimed(Existing);
+          try
+            if (Existing = nil) or (CanonicalHistoryValue(W) <> CanonicalHistoryValue(Part)) then Exit;
+          finally
+            W.Free;
+          end;
+          Continue;
+        end;
+        Sql := Sql + ReplaceDocSql(Db, Colls[i], Part);
+      finally
+        Existing.Free;
+      end;
+    end;
+    Sql := Sql + ReplaceDocSql(Db, 'rules', Rule);
+    Result := Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;');
+    if not Result then begin Db.Exec('ROLLBACK;'); Exit; end;
+    // The parts the rule used before and uses no more.
+    if CurRule <> nil then RemoveUnusedParts(Db, CurRule);
+  finally
+    Fields.Free; Colls.Free; Parts.Free; Current.Free;
+  end;
+end;
+
+function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList;
+  i, Restored, Skipped: Integer; Applied: Boolean;
+begin
+  Answer := '';
+  if (Name <> 'changeHistory.undoLast') and (Name <> 'changeHistory.redoLast') and (Name <> 'changeHistory.restore') then Exit(0);
+  if not IsShared(T.Db) then Exit(MethodError(501, 'not-supported', 'History needs the shared store', Answer));
+  if Name = 'changeHistory.restore' then
+  begin
+    Ids := TStringList.Create;
+    try
+      if (Args.Count >= 1) and (Args.Items[0].JSONType = jtString) then Ids.Add(Args.Strings[0])
+      else if (Args.Count >= 1) and (Args.Items[0] is TJSONArray) then
+      begin
+        for i := 0 to Args.Items[0].Count - 1 do
+          if Args.Items[0].Items[i].JSONType = jtString then Ids.Add(Args.Items[0].Items[i].AsString);
+      end
+      else Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
+      Restored := 0; Skipped := 0;
+      for i := 0 to Ids.Count - 1 do
+      begin
+        Row := FindDoc(T.Db, 'changeHistory', Ids[i]);
+        if Row = nil then begin Inc(Skipped); Continue; end;
+        Before := nil; After := nil;
+        try
+          if not BoardCanAdmin(T.Db, UserId, Str(Row, 'boardId')) then Exit(MethodError(403, 'not-authorized', 'Must be a board admin', Answer));
+          if Str(Row, 'entityType') <> 'rule' then begin Inc(Skipped); Continue; end;
+          Before := RuleSnapshot(T.Db, Str(Row, 'entityId'));
+          Applied := ApplyRuleHistory(T.Db, UserId, Row, 'restore', Error);
+          if Error <> '' then Exit(MethodError(403, Error, Error, Answer));
+          if not Applied then begin Inc(Skipped); Continue; end;
+          After := RuleSnapshot(T.Db, Str(Row, 'entityId'));
+          RecordHistoryRow(T.Db, UserId, Str(Row, 'boardId'), 'rule', Str(Row, 'entityId'), 'rules', 'restored', Before, After,
+            Str(Row, '_id'), UserId);
+          AnnounceToAll;
+          Inc(Restored);
+        finally
+          After.Free; Before.Free; Row.Free;
+        end;
+      end;
+    finally
+      Ids.Free;
+    end;
+    Answer := '{"result":{"restored":' + IntToStr(Restored) + ',"skipped":' + IntToStr(Skipped) + '}}';
+    Exit(200);
+  end;
+  // undoLast / redoLast: the user's newest change on the board, or the one
+  // most recently undone.
+  if (Args.Count < 1) or (Args.Items[0].JSONType <> jtString) then Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
+  BoardId := Args.Strings[0];
+  if (Pos(#0, BoardId) > 0) or not BoardCanWrite(T.Db, UserId, BoardId) then Exit(MethodError(403, 'not-authorized', 'not-authorized', Answer));
+  if Name = 'changeHistory.undoLast' then begin Direction := 'undo'; Key := 'undone'; Sort := 'createdAt'; end
+  else begin Direction := 'redo'; Key := 'redone'; Sort := 'undoneAt'; end;
+  Rows := FindDocs(T.Db, 'changeHistory', DocField('boardId') + '=' + Q(BoardId) + ' AND ' + DocField('userId') + '=' + Q(UserId) +
+    ' AND json_type(_ferretdb_sjson,''$.undone'')=' + IfThen(Direction = 'redo', '''true''', '''false''') +
+    ' AND COALESCE(json_type(_ferretdb_sjson,''$.isCheckpoint''),'''')<>''true''' +
+    ' AND COALESCE(json_type(_ferretdb_sjson,''$.superseded''),'''')<>''true''', DocField(Sort) + ' DESC LIMIT 1');
+  try
+    if Rows.Count = 0 then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
+    Row := Rows.Objects[0];
+    if Str(Row, 'entityType') <> 'rule' then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
+    Applied := ApplyRuleHistory(T.Db, UserId, Row, Direction, Error);
+    if Error = 'history-conflict' then Exit(MethodError(409, Error, 'The rule changed after this history entry', Answer));
+    if Error <> '' then Exit(MethodError(403, Error, Error, Answer));
+    if Applied then
+    begin
+      Fields := TJSONObject.Create(['undone', Direction = 'undo']);
+      try
+        if Direction = 'undo' then Fields.Add('undoneAt', NowMs);
+        if T.Db.Exec('BEGIN IMMEDIATE; ' + UpdateDocSql(T.Db, 'changeHistory', Str(Row, '_id'), Fields, '{"undoneAt":"date","createdAt":"date"}') +
+          'COMMIT;') then else T.Db.Exec('ROLLBACK;');
+      finally
+        Fields.Free;
+      end;
+    end;
+    if Applied then AnnounceToAll;
+    Answer := '{"result":{"' + Key + '":' + IfThen(Applied, 'true', 'false') + ',"entityType":"rule","entityId":"' +
+      StringToJSONString(Str(Row, 'entityId')) + '","group":"rules"}}';
+    Result := 200;
+  finally
+    Rows.Free;
+  end;
+end;
+
 function ReadActivities(Db: TWLDb; const Stamp: string): TWLRows;
 begin
   Result := Db.Query('SELECT id,activityType,COALESCE(userId,''''),COALESCE(boardId,''''),COALESCE(cardId,''''),COALESCE(listId,''''),' +
@@ -1809,8 +2161,66 @@ begin
   T.Db.Exec('DELETE FROM _wl_rule_seen WHERE at<' + Q(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', IncDay(LocalTimeToUniversal(Now), -1))) + ';');
 end;
 
+var
+  WriterLock: TRTLCriticalSection;
+  WriterPage: string;
+  WriterAt: TDateTime;
+
+function RecentWriterPage: string;
+begin
+  EnterCriticalSection(WriterLock);
+  try
+    if (WriterPage <> '') and (SecondsBetween(Now, WriterAt) <= 5) then Result := WriterPage else Result := '';
+  finally
+    LeaveCriticalSection(WriterLock);
+  end;
+end;
+
+function RulesSignature(Db: TWLDb; const BoardId: string): string;
+var Raw, Tbl: string; R: TWLRows;
+begin
+  Result := '';
+  if not CollectionTable(Db, 'rules', Raw, Tbl) then Exit;
+  // What a rule is, not when it was written: a REST edit keeps modifiedAt.
+  R := Db.Query('SELECT COALESCE(group_concat(COALESCE(' + DocField('_id') + ','''')||'':''||COALESCE(' + DocField('triggerId') +
+    ','''')||'':''||COALESCE(' + DocField('actionId') + ','''')||'':''||COALESCE(' + DocField('buttonType') + ','''')||'':''||' +
+    'COALESCE(' + DocField('buttonLabel') + ','''')||'':''||COALESCE(json_type(_ferretdb_sjson,''$.enabled''),'''')||'':''||' +
+    'COALESCE(' + DocField('title') + ',''''),char(10)),'''') FROM ' + Tbl + ' WHERE ' + DocField('boardId') + '=' + Q(BoardId) + ';');
+  if Length(R) = 1 then Result := R[0][0];
+end;
+
+// A change every page draws again, the one that made it too: a rule's
+// buttons are drawn by the server (Weddy's hub.publish, not publishFrom).
+procedure AnnounceToAll;
+begin
+  EnterCriticalSection(WriterLock);
+  try
+    WriterPage := '';
+  finally
+    LeaveCriticalSection(WriterLock);
+  end;
+end;
+
+procedure NoteWriter(Request: TRequest);
+var Page: string; i: Integer;
+begin
+  Page := Request.GetCustomHeader('X-Weddy-Page');
+  if Page = '' then Page := Request.GetCustomHeader('X-Weddy-Live');
+  if (Page = '') or (Length(Page) > 64) then Exit;
+  for i := 1 to Length(Page) do
+    if not (Page[i] in ['0'..'9', 'a'..'z', 'A'..'Z', '-', '_']) then Exit;
+  EnterCriticalSection(WriterLock);
+  try
+    WriterPage := Page;
+    WriterAt := Now;
+  finally
+    LeaveCriticalSection(WriterLock);
+  end;
+end;
+
 procedure ArmRules(Request: TRequest);
 begin
+  if (Request <> nil) and (Request.Method <> 'GET') and (Request.Method <> 'HEAD') then NoteWriter(Request);
   ArmedRequest := nil;
   ArmedStamp := '';
   if (Request = nil) or (Request.Method = 'GET') or (Request.Method = 'HEAD') or (Request.Method = 'OPTIONS') then Exit;
@@ -1840,4 +2250,8 @@ begin
   Response.SendContent;
 end;
 
+initialization
+  InitCriticalSection(WriterLock);
+finalization
+  DoneCriticalSection(WriterLock);
 end.

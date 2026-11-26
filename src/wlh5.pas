@@ -87,7 +87,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver;
 
 const
   STATIC_HEAD =
@@ -2855,7 +2855,7 @@ begin
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li>' +
       '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
-    ' data-board="' + HtmlAttr(BoardId) + '">' +
+    ' data-board="' + HtmlAttr(BoardId) + '" data-live="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/live?v=1">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
     BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) +
     // WeKan's boardButtons: the board's button rules, for whoever may change it.
@@ -2911,6 +2911,25 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  // WeKan's changeHistory.undoLast, redoLast and restore, for rule rows (wlrules).
+  if Copy(Name, 1, 14) = 'changeHistory.' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not (Args is TJSONArray) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := HistoryMethod(T, S.UserId, Name, TJSONArray(Args), Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 0 then
+    begin SendJsonAnswer(Response, Code, Error); Exit; end;
+  end;
   // WeKan's rules.* methods (wlrules).
   if Copy(Name, 1, 6) = 'rules.' then
   begin
@@ -3666,6 +3685,69 @@ begin
   SendJsonAnswer(Response, 404, '{"error":"Attachment not found"}');
 end;
 
+type
+  // The server's own response, whose connection a live board writes to.
+  TLiveResponse = class(TFPHTTPConnectionResponse);
+
+// What the board is now, as a short text that changes when the board does:
+// its cards, lists, swimlanes, activities and rules.
+function BoardSignature(Db: TWLDb; const BoardId: string): string;
+var R: TWLRows; B: string;
+begin
+  B := QuotedStr(BoardId);
+  R := Db.Query('SELECT (SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM cards WHERE boardId=' + B + '),' +
+    '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM lists WHERE boardId=' + B + '),' +
+    '(SELECT count(*)||max(COALESCE(modifiedAt,''''))||sum(archived) FROM swimlanes WHERE boardId=' + B + '),' +
+    '(SELECT count(*)||max(createdAt) FROM activities WHERE boardId=' + B + '),' +
+    '(SELECT modifiedAt FROM boards WHERE id=' + B + ');');
+  Result := '';
+  if Length(R) = 1 then Result := R[0][0] + '|' + R[0][1] + '|' + R[0][2] + '|' + R[0][3] + '|' + R[0][4];
+  Result := Result + '|' + RulesSignature(Db, BoardId);
+end;
+
+// weddy.js' live board: GET /b/:id/live?p=<page>, an event stream that says
+// "board-changed <page that changed it>" whenever the board changes, so every
+// open page of the board draws it again - another user's change, or a rule's.
+// The stream ends after five minutes; EventSource opens it again.
+procedure ServeLiveBoard(const T: TWLTenant; Response: TResponse; const BoardId: string);
+var Last, Now_: string; i: Integer; Line: string; Socket: TStream;
+begin
+  Response.Code := 200;
+  Response.ContentType := 'text/event-stream';
+  Response.SetCustomHeader('Cache-Control', 'no-store');
+  Response.SetCustomHeader('Connection', 'close');
+  Response.SetCustomHeader('X-Accel-Buffering', 'no');
+  Response.SendHeaders;
+  if not (Response is TFPHTTPConnectionResponse) then begin Response.Content := ''; Response.SendContent; Exit; end;
+  Socket := TLiveResponse(Response).Connection.Socket;
+  Last := BoardSignature(T.Db, BoardId);
+  try
+    Line := 'retry: 2000'#10': live'#10#10;
+    Socket.WriteBuffer(Line[1], Length(Line));
+    for i := 1 to 300 do
+    begin
+      Sleep(1000);
+      Now_ := BoardSignature(T.Db, BoardId);
+      if Now_ <> Last then
+      begin
+        Last := Now_;
+        Line := 'event: board-changed'#10'data: board-changed ' + RecentWriterPage + #10#10;
+        Socket.WriteBuffer(Line[1], Length(Line));
+      end
+      else if i mod 15 = 0 then
+      begin
+        Line := ': ping'#10#10;
+        Socket.WriteBuffer(Line[1], Length(Line));
+      end;
+    end;
+  except
+    // The page went away: the stream ends with it.
+  end;
+  Response.Content := '';
+  Response.ContentLength := 0;
+  Response.SendContent;
+end;
+
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
@@ -3678,6 +3760,14 @@ begin
   if (Request.Method = 'GET') and (Copy(Request.PathInfo, 1, 3) = '/b/') and (Request.CookieFields.Values[LOGIN_COOKIE] <> '') then
   begin
     P := PathParts(Request.PathInfo);
+    // The live board (weddy.js' EventSource).
+    if (Length(P) = 3) and (P[2] = 'live') and ResolveTenant(Request, T) and TenantOpen(T) and Html5User(T.Db, Request, S) then
+    begin
+      Result := True;
+      if BoardCanRead(T.Db, S.UserId, P[1]) then ServeLiveBoard(T, Response, P[1])
+      else SendJsonAnswer(Response, 404, '{"error":"not found"}');
+      Exit;
+    end;
     if (Length(P) = 3) and (P[2] = 'places') and ResolveTenant(Request, T) and TenantOpen(T) and Html5User(T.Db, Request, S) then
     begin
       Result := True;

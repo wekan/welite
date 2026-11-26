@@ -6,6 +6,12 @@ uses fpjson;
 // Hash a list lifecycle record after dates have been rendered as UTC ISO strings.
 function ListLifecycleHash(Row:TJSONObject):string;
 function HistoryBoardKey(const Prefix,BoardId:string):string;
+// WeKan's canonical() of a history value (models/lib/changeHistoryIntegrity.js):
+// keys sorted, arrays in order, numbers as JSON.stringify writes them. Two
+// rule snapshots are the same when their canonical texts are.
+function CanonicalHistoryValue(Value:TJSONData):string;
+// hashHistoryRow of any row: its protected keys, canonical, SHA-256.
+function HistoryRowHash(Row:TJSONObject):string;
 function ListReservationHash(Row:TJSONObject):string;
 procedure ReservationHashes(const Document:string;out RowHash,PendingHash:string;
   const LegacyHash:string='';const ExpectedPendingHash:string='');
@@ -39,12 +45,84 @@ begin
   Result:=Result+'"';
 end;
 
+// JSON.stringify of a number: an integer as its digits, any other the
+// shortest decimal that reads back as the same double, an exponent only from
+// 1e21 up and below 1e-6.
+function JsNumber(Value:TJSONData):string;
+var D,Back:Double;P,E,Dot,ExpAt,I:Integer;Text,Digits,Mantissa,Full,Candidate:string;Neg:Boolean;
+begin
+  if TJSONNumber(Value).NumberType in [ntInteger,ntInt64,ntQWord] then Exit(Value.AsJSON);
+  D:=Value.AsFloat;
+  if IsNan(D) or IsInfinite(D) then raise Exception.Create('history contains a non-finite number');
+  if D=0 then Exit('0');
+  if (Frac(D)=0) and (Abs(D)<1e21) then Exit(FormatFloat('0',D));
+  // The shortest form that reads back as the same double: the 17 digits
+  // Str gives (FloatToStrF stops at 15), rounded to fewer while they still do.
+  Str(Abs(D):25,Full);Full:=Trim(Full);
+  ExpAt:=Pos('E',Full);E:=StrToInt(Copy(Full,ExpAt+1,MaxInt));
+  Digits:=StringReplace(Copy(Full,1,ExpAt-1),'.','',[]);
+  Text:=Copy(Digits,1,1)+'.'+Copy(Digits,2,MaxInt)+'E'+IntToStr(E);
+  for P:=1 to Length(Digits) do
+  begin
+    Mantissa:=Copy(Digits,1,P);
+    if (P<Length(Digits)) and (Digits[P+1]>='5') then
+    begin
+      // Rounded up, the carry through the nines.
+      I:=P;
+      while (I>=1) and (Mantissa[I]='9') do begin Mantissa[I]:='0';Dec(I);end;
+      if I>=1 then Mantissa[I]:=Chr(Ord(Mantissa[I])+1) else Mantissa:='1'+Mantissa;
+    end;
+    if Length(Mantissa)>P then Candidate:=Copy(Mantissa,1,1)+'.'+Copy(Mantissa,2,MaxInt)+'E'+IntToStr(E+1)
+    else Candidate:=Copy(Mantissa,1,1)+'.'+Copy(Mantissa,2,MaxInt)+'E'+IntToStr(E);
+    if TryStrToFloat(Candidate,Back,DefaultFormatSettings) and (Back=Abs(D)) then begin Text:=Candidate;Break;end;
+  end;
+  if D<0 then Text:='-'+Text;
+  // As digits and the exponent of the first of them: d.ddd x 10^E.
+  Neg:=(Text<>'') and (Text[1]='-');
+  if Neg then Delete(Text,1,1);
+  ExpAt:=Pos('E',UpperCase(Text));E:=0;
+  if ExpAt>0 then begin E:=StrToInt(Copy(Text,ExpAt+1,MaxInt));Text:=Copy(Text,1,ExpAt-1);end;
+  Dot:=Pos('.',Text);
+  if Dot=0 then Dot:=Length(Text)+1;
+  Digits:=StringReplace(Text,'.','',[]);
+  E:=E+Dot-2;
+  I:=1;
+  while (I<Length(Digits)) and (Digits[I]='0') do begin Inc(I);Dec(E);end;
+  Digits:=Copy(Digits,I,MaxInt);
+  while (Length(Digits)>1) and (Digits[Length(Digits)]='0') do Delete(Digits,Length(Digits),1);
+  if (Abs(D)>=1e21) or (Abs(D)<1e-6) then
+  begin
+    Mantissa:=Copy(Digits,1,1);
+    if Length(Digits)>1 then Mantissa:=Mantissa+'.'+Copy(Digits,2,MaxInt);
+    if E>=0 then Result:=Mantissa+'e+'+IntToStr(E) else Result:=Mantissa+'e'+IntToStr(E);
+  end
+  else if E>=0 then
+  begin
+    while Length(Digits)<E+1 do Digits:=Digits+'0';
+    Result:=Copy(Digits,1,E+1);
+    if Length(Digits)>E+1 then Result:=Result+'.'+Copy(Digits,E+2,MaxInt);
+  end
+  else Result:='0.'+StringOfChar('0',-E-1)+Digits;
+  if Neg then Result:='-'+Result;
+end;
+
 function LifecycleValue(Value:TJSONData;const Key:string):string;
 var Keys:TStringList;I:Integer;Obj:TJSONObject;
 begin
   if Value=nil then Exit('{"$undefined":true}');
   case Value.JSONType of
     jtNull,jtBoolean: Result:=Value.AsJSON;
+    jtNumber: Result:=JsNumber(Value);
+    jtArray:
+    begin
+      Result:='[';
+      for I:=0 to Value.Count-1 do
+      begin
+        if I<>0 then Result:=Result+',';
+        Result:=Result+LifecycleValue(Value.Items[I],'');
+      end;
+      Result:=Result+']';
+    end;
     jtString:
       if (Key='createdAt') or (Key='deletedAt') then
         Result:='{"$date":'+JsonString(Value.AsString)+'}'
@@ -79,6 +157,16 @@ begin
     Body:=Body+JsonString(ProtectedKeys[I])+':'+LifecycleValue(Row.Find(ProtectedKeys[I]),ProtectedKeys[I]);
   end;
   Result:=Sha256Hex(Body+'}');
+end;
+
+function CanonicalHistoryValue(Value:TJSONData):string;
+begin
+  Result:=LifecycleValue(Value,'');
+end;
+
+function HistoryRowHash(Row:TJSONObject):string;
+begin
+  Result:=ListLifecycleHash(Row);
 end;
 
 function ListReservationHash(Row:TJSONObject):string;

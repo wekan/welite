@@ -1,14 +1,20 @@
 unit wlchhist;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
-uses wldb;
+uses wldb,fpjson;
 
 procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
   Restored:Boolean);
 procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId,DeletedAt:string);
+// One row of WeKan's changeHistory with its own content (a rule's snapshots,
+// say): ChangeType added, edited, removed or restored, Previous and Next its
+// previousContent and newContent; RestoredFromId and RestoredByUserId for a
+// restore. Appended to the board's hash chain as every row is. True when written.
+function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Group,ChangeType:string;
+  Previous,Next:TJSONData;const RestoredFromId:string='';const RestoredByUserId:string=''):Boolean;
 
 implementation
-uses SysUtils,DateUtils,fpjson,wlchhash,wlsjson,wlferr;
+uses SysUtils,DateUtils,wlchhash,wlsjson,wlferr;
 
 function Milliseconds(const Text:string):Int64;
 var Date:TDateTime;Stamp,Epoch:TTimeStamp;
@@ -19,7 +25,9 @@ begin
 end;
 
 procedure RecordLifecycleChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt,
-  EntityType,EntityId,CardId,Name:string;Restored:Boolean);
+  EntityType,EntityId,CardId,Name:string;Restored:Boolean;const OwnGroup:string='';const OwnChange:string='';
+  OwnPrevious:TJSONData=nil;OwnNext:TJSONData=nil;const RestoredFromId:string='';const RestoredByUserId:string='';
+  Written:PBoolean=nil);
 const GateCollections:array[0..1] of string=('historyWriterGates','historyChainHeads');
   Schema='CREATE TABLE IF NOT EXISTS _wl_change_history('+
   'id TEXT PRIMARY KEY,boardId TEXT NOT NULL,userId TEXT NOT NULL,integrityHash TEXT NOT NULL,'+
@@ -321,6 +329,31 @@ begin
     if EntityType='attachment' then Stamp:=DeletedAt;
     ChangeType:='removed';DateKey:='newContent';
     if Restored then begin ChangeType:='added';DateKey:='previousContent';end;
+    if OwnGroup<>'' then
+    begin
+      // A row with its own content: no list lifecycle in it.
+      ChangeType:=OwnChange;
+      Row:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'swimlaneId',TJSONNull.Create,'listId',TJSONNull.Create,
+        'entityType',EntityType,'entityId',EntityId,'group',OwnGroup,'changeType',ChangeType,
+        'userId',UserId,'createdAt',Stamp,'undone',False,'superseded',False,'isCheckpoint',False]);
+      Hints:=TJSONObject.Create(['createdAt','date']);
+      try
+        Row.Add('cardId',TJSONNull.Create);
+        if RestoredFromId='' then Row.Add('restoredFromId',TJSONNull.Create) else Row.Add('restoredFromId',RestoredFromId);
+        if RestoredByUserId='' then Row.Add('restoredByUserId',TJSONNull.Create) else Row.Add('restoredByUserId',RestoredByUserId);
+        Row.Add('undoneAt',TJSONNull.Create);
+        Row.Add('batchId',TJSONNull.Create);
+        if Previous='' then Row.Add('previousHash',TJSONNull.Create) else Row.Add('previousHash',Previous);
+        if OwnPrevious=nil then Row.Add('previousContent',TJSONNull.Create) else Row.Add('previousContent',OwnPrevious.Clone);
+        if OwnNext=nil then Row.Add('newContent',TJSONNull.Create) else Row.Add('newContent',OwnNext.Clone);
+        Hash:=HistoryRowHash(Row);
+        Row.Add('integrityHash',Hash);
+        Row.Delete('createdAt');Row.Add('createdAt',Milliseconds(Stamp));
+        Doc:=QuotedStr(TypedDocument(Row.AsJSON,'',Hints.AsJSON));
+      finally Hints.Free;Row.Free;end;
+    end
+    else
+    begin
     Row:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'swimlaneId',LaneId,'listId',ListId,
       'entityType',EntityType,'entityId',EntityId,'group','lifecycle','changeType',ChangeType,
       'userId',UserId,'createdAt',Stamp,'undone',False,'superseded',False,'isCheckpoint',False]);
@@ -358,6 +391,9 @@ begin
       end;
       Doc:=QuotedStr(TypedDocument(Row.AsJSON,'',Hints.AsJSON));
     finally Hints.Free;Row.Free;end;
+    end;
+    // A restore is no new branch of the user's history: their redo stays.
+    if ChangeType='restored' then RedoSql:='';
     if Shared then
       InsertSql:='INSERT INTO '+TableSql+'(_ferretdb_sjson) VALUES(CASE WHEN wl_storage('+QuotedStr(TableName)+
         ')=''blob'' THEN jsonb('+Doc+') ELSE '+Doc+' END); '
@@ -375,9 +411,22 @@ begin
     end;
     Sql:='BEGIN IMMEDIATE; '+LookupSource+'SELECT CASE WHEN '+Guard+' AND ('+Lookup+')='+QuotedStr(Previous)+
       ' THEN 1 ELSE json(''History tip changed'') END; '+RedoSql+InsertSql+HeadWrite+'COMMIT;';
-    if Db.Exec(Sql) then Exit;
+    if Db.Exec(Sql) then
+    begin
+      if Written<>nil then Written^:=True;
+      Exit;
+    end;
     Db.Exec('ROLLBACK;');
   end;
+end;
+
+function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Group,ChangeType:string;
+  Previous,Next:TJSONData;const RestoredFromId:string;const RestoredByUserId:string):Boolean;
+begin
+  Result:=False;
+  if (UserId='') or (BoardId='') or (EntityId='') or (Group='') or (ChangeType='') then Exit;
+  RecordLifecycleChange(Db,UserId,BoardId,'','','','',EntityType,EntityId,'','',False,Group,ChangeType,Previous,Next,
+    RestoredFromId,RestoredByUserId,@Result);
 end;
 
 procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;

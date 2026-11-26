@@ -421,6 +421,21 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   (AuthBleed recorded) and setCardCustomFieldCheckbox, -Currency and
   -Assigned methods. A copied card's ObjectId-keyed rows (written by a
   database tool) are copied too. 393 of WeKan's tests pass.
+- Add the Rules' history, as WeKan's server/lib/ruleHistory.js: every
+  rule write - from the Rules page or the REST API - is one changeHistory
+  row with the rule's snapshot before and after, in the board's hash chain
+  (`src/wlchhist.pas`; `src/wlchhash.pas` writes WeKan's canonical text,
+  numbers and arrays included, `tests/histhash.py`).
+  changeHistory.undoLast and redoLast put it back for a board admin and
+  refuse to overwrite another admin's newer edit; restore takes an older
+  snapshot on purpose, never replacing a part another rule shares. A REST
+  edit keeps the rule's button fields in step with its trigger.
+- Draw the board again when it changes elsewhere, as Weddy's live board:
+  weddy.js' EventSource reads /b/:id/live, which says board-changed when the
+  board's cards, lists, swimlanes, activities or rules change - naming the
+  page that changed it, which keeps what it drew (a rule's change is drawn
+  on every page, its own too, as its buttons are the server's). 402 of
+  WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,
