@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Naammassiffissaq",
   "wekan-data-no-database": "WeKan-ip paasissutissanik toqqorsivia atuarneqarsinnaasoq nassaarineqanngilaq.",
   "sort-by-votes": "Naatsorsuutit atorlugu aaqqissuuk",
-  "sort-by-label-order": "Nalunaaqutsersuutit tulleriiaarnerat"
+  "sort-by-label-order": "Nalunaaqutsersuutit tulleriiaarnerat",
+  "notification-group-card": "__count__ nalunaarutit kortsimi __card__",
+  "notification-group-board": "__count__ nalunaarutit ilisarnaammi __board__",
+  "password-too-short": "Isissutissaq minnerpaamik __min__ naqinnernik takissuseqassaaq.",
+  "login-refused-bad-password": "Isissutissaq kukkusoq",
+  "login-refused-braked": "Misileraaneq iluatsinngitsut amerlavallaarput"
 }

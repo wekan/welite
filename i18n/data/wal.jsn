@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Wuraa gallassaa",
   "wekan-data-no-database": "Nabbabettiya WeKan paayduwaa demettibeenna.",
   "sort-by-votes": "Dabbura mala worqet",
-  "sort-by-label-order": "Malaatata maaraa"
+  "sort-by-label-order": "Malaatata maaraa",
+  "notification-group-card": "Kaardiya __card__ bolla erissuwaa __count__",
+  "notification-group-board": "Bookkiya __board__ bolla erissuwaa __count__",
+  "password-too-short": "Geeman qaalay unttennan __min__ ishaara gidana koshshees.",
+  "login-refused-bad-password": "Geeman qaalay balla",
+  "login-refused-braked": "Paaciyo daro paacettida"
 }

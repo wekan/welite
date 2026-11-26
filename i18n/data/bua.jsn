@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Дүүрэхэ үдэр",
   "wekan-data-no-database": "Уншаха аргатай WeKan үгэгдэлэй сан олдобогүй.",
   "sort-by-votes": "Дуудалгаар эмхэтгэл",
-  "sort-by-label-order": "Тэмдэгүүдэй эрэмбэ"
+  "sort-by-label-order": "Тэмдэгүүдэй эрэмбэ",
+  "notification-group-card": "__card__ карточка дээрэ __count__ мэдээсэл",
+  "notification-group-board": "__board__ самбар дээрэ __count__ мэдээсэл",
+  "password-too-short": "Нюуса үгэ хамгийн багаар __min__ тэмдэгтэй байха ёһотой.",
+  "login-refused-bad-password": "Буруу нюуса үгэ",
+  "login-refused-braked": "Бүтэлгүй оролдолго хэтэ олон"
 }

@@ -2129,5 +2129,10 @@
   "continuous-backup-database": "Gagnagrunnur",
   "cloud-start-date": "Upphafsdagur",
   "cloud-end-date": "Lokadagur",
-  "wekan-data-no-database": "Enginn læsilegur WeKan-gagnagrunnur fannst."
+  "wekan-data-no-database": "Enginn læsilegur WeKan-gagnagrunnur fannst.",
+  "notification-group-card": "__count__ tilkynningar á spjaldinu __card__",
+  "notification-group-board": "__count__ tilkynningar á töflunni __board__",
+  "password-too-short": "Lykilorðið verður að vera að minnsta kosti __min__ stafir.",
+  "login-refused-bad-password": "Rangt lykilorð",
+  "login-refused-braked": "Of margar misheppnaðar tilraunir"
 }

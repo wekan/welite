@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Dies finis",
   "wekan-data-no-database": "Nulla basis datorum WeKan legibilis inventa est.",
   "sort-by-votes": "Ordinare secundum suffragia",
-  "sort-by-label-order": "Ordo titellorum"
+  "sort-by-label-order": "Ordo titellorum",
+  "notification-group-card": "__count__ notificationes de charta __card__",
+  "notification-group-board": "__count__ notificationes de tabula __board__",
+  "password-too-short": "Tessera saltem __min__ litteras longa esse debet.",
+  "login-refused-bad-password": "Tessera falsa",
+  "login-refused-braked": "Nimis multi conatus irriti"
 }

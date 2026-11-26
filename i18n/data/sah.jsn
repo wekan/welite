@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Бүтэр күнэ",
   "wekan-data-no-database": "Ааҕыллар WeKan дааннайдарын баазата көстүбэтэ.",
   "sort-by-votes": "Ымсыылар устун ырытыы",
-  "sort-by-label-order": "Бэлиэлэр бэрээдэктэрэ"
+  "sort-by-label-order": "Бэлиэлэр бэрээдэктэрэ",
+  "notification-group-card": "__card__ карточкаҕа __count__ биллэрии",
+  "notification-group-board": "__board__ дуоскаҕа __count__ биллэрии",
+  "password-too-short": "Кистэлэҥ тыл саамай аҕыйаҕа __min__ бэлиэлээх буолуохтаах.",
+  "login-refused-bad-password": "Кистэлэҥ тыл сыыһа",
+  "login-refused-braked": "Наһаа элбэх сатамматах холонуу"
 }

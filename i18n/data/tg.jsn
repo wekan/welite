@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Санаи анҷом",
   "wekan-data-no-database": "Пойгоҳи додаҳои хондашавандаи WeKan ёфт нашуд.",
   "sort-by-votes": "Аз рӯи овозҳо мураттаб кардан",
-  "sort-by-label-order": "Тартиби нишонаҳо"
+  "sort-by-label-order": "Тартиби нишонаҳо",
+  "notification-group-card": "__count__ огоҳинома дар корти __card__",
+  "notification-group-board": "__count__ огоҳинома дар тахтаи __board__",
+  "password-too-short": "Рамз бояд на камтар аз __min__ аломат дошта бошад.",
+  "login-refused-bad-password": "Рамзи нодуруст",
+  "login-refused-braked": "Кӯшишҳои ноком аз ҳад зиёд"
 }

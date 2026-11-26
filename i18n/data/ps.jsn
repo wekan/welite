@@ -2118,5 +2118,10 @@
   "cloud-end-date": "د پای نېټه",
   "wekan-data-no-database": "د لوستلو وړ د WeKan ډيټابېس ونه موندل شو.",
   "sort-by-votes": "د رایو له مخې ترتیب کول",
-  "sort-by-label-order": "د نښو ترتیب"
+  "sort-by-label-order": "د نښو ترتیب",
+  "notification-group-card": "په کارت __card__ کې __count__ خبرتیاوې",
+  "notification-group-board": "په تخته __board__ کې __count__ خبرتیاوې",
+  "password-too-short": "پټنوم باید لږ تر لږه __min__ توري اوږد وي.",
+  "login-refused-bad-password": "ناسم پټنوم",
+  "login-refused-braked": "ډېرې ناکامې هڅې"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Date di fin",
   "wekan-data-no-database": "No je stade cjatade nissune base di dâts WeKan che si pues lei.",
   "sort-by-votes": "Ordene par vôts",
-  "sort-by-label-order": "Ordin des etichetis"
+  "sort-by-label-order": "Ordin des etichetis",
+  "notification-group-card": "__count__ notifichis su la cjarte __card__",
+  "notification-group-board": "__count__ notifichis su la taule __board__",
+  "password-too-short": "La peraule di ordin e à di jessi lungje almancul __min__ caratars.",
+  "login-refused-bad-password": "Peraule di ordin sbaliade",
+  "login-refused-braked": "Masse tentatîfs falîts"
 }

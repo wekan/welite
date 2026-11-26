@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Tsiku lomaliza",
   "wekan-data-no-database": "Palibe nkhokwe ya data ya WeKan yowerengeka yomwe yapezeka.",
   "sort-by-votes": "Sanjani malingana ndi mavoti",
-  "sort-by-label-order": "Ndondomeko ya zilembo"
+  "sort-by-label-order": "Ndondomeko ya zilembo",
+  "notification-group-card": "Zidziwitso __count__ pa khadi __card__",
+  "notification-group-board": "Zidziwitso __count__ pa bolodi __board__",
+  "password-too-short": "Mawu achinsinsi ayenera kukhala ndi zilembo zosachepera __min__.",
+  "login-refused-bad-password": "Mawu achinsinsi olakwika",
+  "login-refused-braked": "Kuyesa kolephera kochuluka kwambiri"
 }

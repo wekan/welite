@@ -2129,5 +2129,10 @@
   "continuous-backup-database": "ডেটাবেস",
   "cloud-start-date": "শুরুর তারিখ",
   "cloud-end-date": "শেষের তারিখ",
-  "wekan-data-no-database": "পড়ার যোগ্য কোনো WeKan ডেটাবেস পাওয়া যায়নি।"
+  "wekan-data-no-database": "পড়ার যোগ্য কোনো WeKan ডেটাবেস পাওয়া যায়নি।",
+  "notification-group-card": "__card__ কার্ডে __count__টি বিজ্ঞপ্তি",
+  "notification-group-board": "__board__ বোর্ডে __count__টি বিজ্ঞপ্তি",
+  "password-too-short": "পাসওয়ার্ডটি কমপক্ষে __min__ অক্ষরের হতে হবে।",
+  "login-refused-bad-password": "ভুল পাসওয়ার্ড",
+  "login-refused-braked": "অনেক বেশি ব্যর্থ প্রচেষ্টা"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Tanggai Akhe",
   "wekan-data-no-database": "Hana meuteumèe pangkai data WeKan nyang jeuet geubaca.",
   "sort-by-votes": "Sôt meunurôt vote",
-  "sort-by-label-order": "Urutan dapeuta label"
+  "sort-by-label-order": "Urutan dapeuta label",
+  "notification-group-card": "__count__ haba bak kad __card__",
+  "notification-group-board": "__count__ haba bak papan __board__",
+  "password-too-short": "Kata sandi beu paleng kureung __min__ karakter.",
+  "login-refused-bad-password": "Kata Sandi salah",
+  "login-refused-braked": "Le that cuba nyang gagai"
 }

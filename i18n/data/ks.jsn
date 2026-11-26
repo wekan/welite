@@ -2118,5 +2118,10 @@
   "cloud-end-date": "اختتامٕچ تٲریخ",
   "wekan-data-no-database": "کانٛہہ پرنہٕ لایق WeKan ڈیٹابیس آو نہٕ لبنہٕ۔",
   "sort-by-votes": "رایہِ مطابق ترتیب دِیو",
-  "sort-by-label-order": "لیبلن ہُند ترتیب"
+  "sort-by-label-order": "لیبلن ہُند ترتیب",
+  "notification-group-card": "کارڈ __card__ پؠٹھ __count__ اطلاعات",
+  "notification-group-board": "بورڈ __board__ پؠٹھ __count__ اطلاعات",
+  "password-too-short": "پاس ورڈ گژھِ کم از کم __min__ حرفن ہُنٛد آسُن۔",
+  "login-refused-bad-password": "غلط پاس ورڈ",
+  "login-refused-braked": "واریاہ ناکام کوشِشہٕ"
 }

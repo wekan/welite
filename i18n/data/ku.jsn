@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Dîroka dawiyê",
   "wekan-data-no-database": "Danegeheke WeKan a xwendinbar nehat dîtin.",
   "sort-by-votes": "Li gorî dengan rêz bike",
-  "sort-by-label-order": "Rêza etîketan"
+  "sort-by-label-order": "Rêza etîketan",
+  "notification-group-card": "__count__ agahdarî li ser karta __card__",
+  "notification-group-board": "__count__ agahdarî li ser depoya __board__",
+  "password-too-short": "Divê şîfre herî kêm __min__ tîp be.",
+  "login-refused-bad-password": "Şîfreya şaş",
+  "login-refused-braked": "Gelek hewldanên têkçûyî"
 }

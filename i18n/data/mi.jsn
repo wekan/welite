@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Rā mutunga",
   "wekan-data-no-database": "Kāore i kitea he pātengi raraunga WeKan ka taea te pānui.",
   "sort-by-votes": "Whakaraupapa e ai ki ngā pōti",
-  "sort-by-label-order": "Raupapa tapanga"
+  "sort-by-label-order": "Raupapa tapanga",
+  "notification-group-card": "__count__ whakamōhiotanga i te kāri __card__",
+  "notification-group-board": "__count__ whakamōhiotanga i te papa __board__",
+  "password-too-short": "Kia __min__ pūāhua te roa o te kupuhipa, neke atu rānei.",
+  "login-refused-bad-password": "Kupuhipa hē",
+  "login-refused-braked": "He nui rawa ngā whakamātau i rahua"
 }

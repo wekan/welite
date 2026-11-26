@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Endadagur",
   "wekan-data-no-database": "Eingin lesiligur WeKan-dátugrunnur varð funnin.",
   "sort-by-votes": "Raða eftir atkvøðum",
-  "sort-by-label-order": "Raðfylgja merkja"
+  "sort-by-label-order": "Raðfylgja merkja",
+  "notification-group-card": "__count__ fráboðanir á kortinum __card__",
+  "notification-group-board": "__count__ fráboðanir á talvuni __board__",
+  "password-too-short": "Loyniorðið má vera í minsta lagi __min__ tekn langt.",
+  "login-refused-bad-password": "Skeivt loyniorð",
+  "login-refused-braked": "Ov nógvar miseydnaðar royndir"
 }

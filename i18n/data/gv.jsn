@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Laa jerree",
   "wekan-data-no-database": "Cha row stoor-fysseree WeKan lhaihoil er ny gheddyn.",
   "sort-by-votes": "Sorçhaghey liorish coyrtyn",
-  "sort-by-label-order": "Oardagh ny lipaidyn"
+  "sort-by-label-order": "Oardagh ny lipaidyn",
+  "notification-group-card": "__count__ fysseree er y kaart __card__",
+  "notification-group-board": "__count__ fysseree er y voayrd __board__",
+  "password-too-short": "Shegin da'n fockle-arrey ve __min__ cowraghyn er y chooid sloo.",
+  "login-refused-bad-password": "Fockle-arrey neuchiart",
+  "login-refused-braked": "Rouyr dy phrowallyn nagh ren soilshaghey"
 }

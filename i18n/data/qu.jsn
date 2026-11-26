@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Tukukuy p'unchaw",
   "wekan-data-no-database": "Manam ñawinchay atina WeKan willay pirwa tarikunchu.",
   "sort-by-votes": "Votokunawan churay",
-  "sort-by-label-order": "Unanchakunap ñiqin"
+  "sort-by-label-order": "Unanchakunap ñiqin",
+  "notification-group-card": "__count__ willaykuna __card__ kartapi",
+  "notification-group-board": "__count__ willaykuna __board__ pirqapi",
+  "password-too-short": "Pakasqa rimayqa aswan pisillaqa __min__ sananchayuq kanan tiyan.",
+  "login-refused-bad-password": "Pantasqa pakasqa rimay",
+  "login-refused-braked": "Ancha achka pantasqa ruraykuna"
 }

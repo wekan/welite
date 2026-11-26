@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Аяктаган күнү",
   "wekan-data-no-database": "Окула турган WeKan маалыматтар базасы табылган жок.",
   "sort-by-votes": "Добуштар боюнча иреттөө",
-  "sort-by-label-order": "Белгилердин тартиби"
+  "sort-by-label-order": "Белгилердин тартиби",
+  "notification-group-card": "__card__ карточкасында __count__ билдирүү",
+  "notification-group-board": "__board__ тактасында __count__ билдирүү",
+  "password-too-short": "Сырсөз кеминде __min__ белгиден турушу керек.",
+  "login-refused-bad-password": "Сырсөз туура эмес",
+  "login-refused-braked": "Ийгиликсиз аракеттер өтө көп"
 }

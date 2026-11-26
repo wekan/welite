@@ -2118,5 +2118,10 @@
   "cloud-end-date": "ʻAho ngata",
   "wekan-data-no-database": "ʻOku ʻikai maʻu ha tauʻanga fakamatala WeKan ʻe lava ke lau.",
   "sort-by-votes": "Fakamaau'aki 'a e ngaahi vōti",
-  "sort-by-label-order": "Hokohoko ʻo e ngaahi fakaʻilonga"
+  "sort-by-label-order": "Hokohoko ʻo e ngaahi fakaʻilonga",
+  "notification-group-card": "Fakatokanga ʻe __count__ ʻi he kaati __card__",
+  "notification-group-board": "Fakatokanga ʻe __count__ ʻi he papa __board__",
+  "password-too-short": "Kuopau ke ʻi ai ʻi he lea fufū ha mataʻitohi ʻe __min__ pe lahi ange.",
+  "login-refused-bad-password": "Lea fufū hala",
+  "login-refused-braked": "Lahi fau e ngaahi feinga taʻelavameʻa"
 }

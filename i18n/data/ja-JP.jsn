@@ -2118,5 +2118,10 @@
   "cloud-end-date": "終了日",
   "wekan-data-no-database": "読み取り可能な WeKan データベースが見つかりませんでした。",
   "sort-by-votes": "投票数で並べ替え",
-  "sort-by-label-order": "ラベル順"
+  "sort-by-label-order": "ラベル順",
+  "notification-group-card": "カード __card__ に __count__ 件の通知",
+  "notification-group-board": "ボード __board__ に __count__ 件の通知",
+  "password-too-short": "パスワードは __min__ 文字以上にしてください。",
+  "login-refused-bad-password": "パスワードが違います",
+  "login-refused-braked": "失敗した試行が多すぎます"
 }

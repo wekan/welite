@@ -59,6 +59,8 @@
 08-notifications-activity.e2e.js: Notifications & activity log › #6658: assigning a muted board member creates no notification
 08-notifications-activity.e2e.js: Notifications & activity log › activity log shows board-level activities
 08-notifications-activity.e2e.js: Notifications & activity log › working (time) log fields are accessible on a card
+08-notifications-activity.e2e.js: #6704 #1938 password textarea selects case-insensitive comment mentions
+08-notifications-activity.e2e.js: #6704 #1938 ldap textarea selects case-insensitive comment mentions
 08-notifications-activity.e2e.js: Notifications & activity log › @mention in a comment is stored in the activity DB
 08-notifications-activity.e2e.js: Notifications & activity log › #1658 opening a card Activities section shows its persisted history
 08-notifications-activity.e2e.js: Notifications & activity log › #6658 explicit list watching receives comments on a muted board
@@ -227,6 +229,8 @@ minicard-requested-by-6872.e2e.js: #6872 Requested by / Assigned by on the minic
 minicard-requested-by-6872.e2e.js: #6872 Requested by / Assigned by on the minicard › Show on Minicard off hides a picked member
 minicard-rule-button-6836.e2e.js: negative: with Show on Minicard off (the default) the minicard has no rule button
 notification-delivery-settings.e2e.js: #5171 tray: an entry scheduled for later is not counted until its time
+notification-delivery-settings.e2e.js: Corsican clear notification drawer renders corrected card activity
+notification-delivery-settings.e2e.js: Corsican delete-all confirmation preserves cancellation
 oidc-redirect-guard.e2e.js: OIDC automatic attempt stays latched across browser callback reloads
 password-min-length-signup-login.e2e.js: sign-up registers when not enforced, and an enforced minimum refuses only a too short password
 password-submit-event.e2e.js: password submit replay reaches the form handler after click
@@ -250,3 +254,9 @@ viewport-matrix.e2e.js: laptop-landscape › board header: icons and texts on sc
 viewport-matrix.e2e.js: laptop-portrait › board header: icons and texts on screen, no sideways page scroll
 viewport-matrix.e2e.js: touchscreen55-landscape › board header: icons and texts on screen, no sideways page scroll
 viewport-matrix.e2e.js: touchscreen55-portrait › board header: icons and texts on screen, no sideways page scroll
+tray-bleed.e2e.js: a client cannot add a notification entry, but can still mark one read
+password-change-other-sessions.e2e.js: changing one's own password signs every session out, and only the new one signs in
+50-language-popup.e2e.js: language popup places flags by language and region (ltr)
+50-language-popup.e2e.js: language popup places flags by language and region (rtl)
+50-language-popup.e2e.js: audited pull keeps target-language board controls (ve-PP)
+50-language-popup.e2e.js: audited pull keeps target-language board controls (zgh)

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Fecha de finalización",
   "wekan-data-no-database": "No se encontró ninguna base de datos de WeKan legible.",
   "sort-by-votes": "Ordenar por votos",
-  "sort-by-label-order": "Orden de etiquetas"
+  "sort-by-label-order": "Orden de etiquetas",
+  "notification-group-card": "__count__ notificaciones en la tarjeta __card__",
+  "notification-group-board": "__count__ notificaciones en el tablero __board__",
+  "password-too-short": "La contraseña debe tener al menos __min__ caracteres.",
+  "login-refused-bad-password": "Contraseña incorrecta",
+  "login-refused-braked": "Demasiados intentos fallidos"
 }

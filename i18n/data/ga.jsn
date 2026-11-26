@@ -2129,5 +2129,10 @@
   "continuous-backup-database": "Bunachar sonraí",
   "cloud-start-date": "Dáta tosaigh",
   "cloud-end-date": "Dáta deiridh",
-  "wekan-data-no-database": "Níor aimsíodh bunachar sonraí WeKan inléite."
+  "wekan-data-no-database": "Níor aimsíodh bunachar sonraí WeKan inléite.",
+  "notification-group-card": "__count__ fógra ar chárta __card__",
+  "notification-group-board": "__count__ fógra ar chlár __board__",
+  "password-too-short": "Caithfidh an pasfhocal a bheith __min__ carachtar ar fad ar a laghad.",
+  "login-refused-bad-password": "Pasfhocal mícheart",
+  "login-refused-braked": "An iomarca iarrachtaí teipthe"
 }

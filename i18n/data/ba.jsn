@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Тамамланыу көнө",
   "wekan-data-no-database": "Уҡырлыҡ WeKan мәғлүмәттәр базаһы табылманы.",
   "sort-by-votes": "Тауыштар буйынса тәртипкә индереү",
-  "sort-by-label-order": "Билдәләр тәртибе"
+  "sort-by-label-order": "Билдәләр тәртибе",
+  "notification-group-card": "__card__ карточкаһында __count__ хәбәр",
+  "notification-group-board": "__board__ тактаһында __count__ хәбәр",
+  "password-too-short": "Серһүҙ кәмендә __min__ символдан торорға тейеш.",
+  "login-refused-bad-password": "Хаталы серһүҙ",
+  "login-refused-braked": "Уңышһыҙ тырышлыҡтар бик күп"
 }

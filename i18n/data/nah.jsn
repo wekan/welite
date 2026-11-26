@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Tonalli tlamiliztli",
   "wekan-data-no-database": "Amo monexti WeKan tlahtolpixcalli tlen hueli mopohua.",
   "sort-by-votes": "Xitlālīlo īca votos",
-  "sort-by-label-order": "Machiotl tecpantiliztli"
+  "sort-by-label-order": "Machiotl tecpantiliztli",
+  "notification-group-card": "__count__ tenahuatiliztli ipan amatlapalli __card__",
+  "notification-group-board": "__count__ tenahuatiliztli ipan huapalli __board__",
+  "password-too-short": "In ichtaca tlahtolli monequi quipiaz achi __min__ tlahcuilolmachiotl.",
+  "login-refused-bad-password": "Ichtaca tlahtolli ahmo melahuac",
+  "login-refused-braked": "Miac yeyecoliztli tlen ahmo oquiz"
 }

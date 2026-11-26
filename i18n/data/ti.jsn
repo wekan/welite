@@ -2118,5 +2118,10 @@
   "cloud-end-date": "ዕለት መወዳእታ",
   "wekan-data-no-database": "ክንብቦ ዝከኣል ናይ WeKan ዳታቤዝ ኣይተረኽበን።",
   "sort-by-votes": "ብድምጺ ስራዕ",
-  "sort-by-label-order": "ቅደም ተኸተል ምልክታት"
+  "sort-by-label-order": "ቅደም ተኸተል ምልክታት",
+  "notification-group-card": "__count__ መልእኽትታት ኣብ ካርድ __card__",
+  "notification-group-board": "__count__ መልእኽትታት ኣብ ሰሌዳ __board__",
+  "password-too-short": "መሕለፊ ቃል እንተወሓደ __min__ ፊደላት ክህልዎ ኣለዎ።",
+  "login-refused-bad-password": "ጌጋ መሕለፊ ቃል",
+  "login-refused-braked": "ኣዝዮም ብዙሓት ዘይተዓወቱ ፈተነታት"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Data kōńca",
   "wekan-data-no-database": "Niy szło znojś żodnyj czytelnyj bazy danych WeKan.",
   "sort-by-votes": "Zortować podle głosōw",
-  "sort-by-label-order": "Porzōndek etyket"
+  "sort-by-label-order": "Porzōndek etyket",
+  "notification-group-card": "__count__ powiadōmiyń na karcie __card__",
+  "notification-group-board": "__count__ powiadōmiyń na tabuli __board__",
+  "password-too-short": "Hasło musi mieć niy mynij jak __min__ znakōw.",
+  "login-refused-bad-password": "Złe hasło",
+  "login-refused-braked": "Za tela niyudanych prōbōw"
 }

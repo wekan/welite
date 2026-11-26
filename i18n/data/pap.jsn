@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Fecha di fin",
   "wekan-data-no-database": "No a haña ningun base di dato di WeKan ku por lesa.",
   "sort-by-votes": "Sorterá pa voto",
-  "sort-by-label-order": "Orden di etiketanan"
+  "sort-by-label-order": "Orden di etiketanan",
+  "notification-group-card": "__count__ notifikashon riba karchi __card__",
+  "notification-group-board": "__count__ notifikashon riba tabla __board__",
+  "password-too-short": "E kontraseña mester tin por lo ménos __min__ karakter.",
+  "login-refused-bad-password": "Kontraseña robes",
+  "login-refused-braked": "Muchu purba fayá"
 }

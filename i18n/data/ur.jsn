@@ -2118,5 +2118,10 @@
   "cloud-end-date": "تاریخ اختتام",
   "wekan-data-no-database": "پڑھنے کے قابل کوئی WeKan ڈیٹابیس نہیں ملا۔",
   "sort-by-votes": "ووٹوں کے مطابق ترتیب دیں",
-  "sort-by-label-order": "لیبل کی ترتیب"
+  "sort-by-label-order": "لیبل کی ترتیب",
+  "notification-group-card": "کارڈ __card__ پر __count__ اطلاعات",
+  "notification-group-board": "بورڈ __board__ پر __count__ اطلاعات",
+  "password-too-short": "پاس ورڈ کم از کم __min__ حروف پر مشتمل ہونا چاہیے۔",
+  "login-refused-bad-password": "غلط پاس ورڈ",
+  "login-refused-braked": "بہت زیادہ ناکام کوششیں"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Itariki yo kurangiza",
   "wekan-data-no-database": "Nta bubikoshingiro bwa WeKan busomeka bwabonetse.",
   "sort-by-votes": "Tondeka ukurikije amajwi",
-  "sort-by-label-order": "Uko ibirango bikurikirana"
+  "sort-by-label-order": "Uko ibirango bikurikirana",
+  "notification-group-card": "Imenyesha __count__ ku ikarita __card__",
+  "notification-group-board": "Imenyesha __count__ ku kibaho __board__",
+  "password-too-short": "Ijambobanga rigomba kugira nibura inyuguti __min__.",
+  "login-refused-bad-password": "Ijambobanga ritari ryo",
+  "login-refused-braked": "Kugerageza kunanirwa kwabaye kwinshi cyane"
 }

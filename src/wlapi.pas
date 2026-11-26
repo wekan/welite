@@ -127,6 +127,22 @@ function ProfileFold(Db:TWLDb;const UserId,Map,BoardId,Key:string):Boolean;
 function SetViewProfileFold(const T:TWLTenant;const UserId,Map,BoardId,Key:string;Folded:Boolean;out Error:string):Integer;
 // The user's own profile.<Map>[BoardId] (Key '') or profile.<Map>[BoardId][Key]
 // set to a JSON value (a number or a boolean), on a board the user reads.
+// A new password for Target (WeKan's setPassword, and Member Settings'
+// Change Password once the caller checked the old one): a site admin's for
+// anyone, or the user's own; a password account only, within the password
+// policy. Every session of Target is signed out (server/passwordChangeRequired.js).
+function ViewSetPassword(const T:TWLTenant;const Actor,Target,Password:string;out Error:string):Integer;
+// The users collection's own update from a client (/_methods//users/update),
+// as far as WeLite's views use it: the user's own notification marked read
+// or unread ($set or $unset of profile.notifications.<n>.read) or removed
+// ($pull from profile.notifications). Any other write of the notification
+// list is TrayBleed's attack - refused and recorded in Problems - and
+// everything else is refused as before (InviteProfileBleed). The HTTP status.
+function ViewUsersUpdate(Db:TWLDb;const UserId,Content:string):Integer;
+// The notifications drawer's menu (WeKan's notificationsDrawer): every
+// notification of the user read now, or none left.
+function MarkAllNotificationsRead(Db:TWLDb;const UserId:string):Boolean;
+function DeleteAllNotifications(Db:TWLDb;const UserId:string):Boolean;
 function SetViewProfileValue(const T:TWLTenant;const UserId,Map,BoardId,Key,JsonValue:string;out Error:string):Integer;
 // WeKan's comment capability (models/lib/boardRoleCapabilities.js): a site
 // admin, or an active member who may read the board and whose role may
@@ -4429,20 +4445,23 @@ begin
   else Result:=Result+'''cardType-linkedCard'','+QuotedStr(LinkedId)+'; ';
 end;
 
-procedure RecordParentDenial(Db:TWLDb;const UserId:string);
+// A refused attempt in a shared store's eventlog, as WeKan's securityLog
+// records one (models/lib/eventLogSummary.js): one row per kind of attempt
+// that counts them, never a row per attempt.
+procedure RecordSecurityDenial(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Detail:string);
 const Hints='{"at":"date","firstAt":"date"}';
-  Identity='json_extract(_ferretdb_sjson,''$.stream'')=''security'''+
-    ' AND json_extract(_ferretdb_sjson,''$.bleed'')=''ParentBleed'''+
-    ' AND json_extract(_ferretdb_sjson,''$.source'')=''parentId'''+
-    ' AND json_extract(_ferretdb_sjson,''$.category'')=''authz'''+
-    ' AND json_extract(_ferretdb_sjson,''$.action'')=''blocked''';
-var Rows:TWLRows;Event:TJSONObject;TableName,Physical,AtSql,Payload,Updated,Sql:string;
+var Rows:TWLRows;Event:TJSONObject;TableName,Physical,AtSql,Payload,Updated,Sql,Identity:string;
   Stamp:TDateTime;AtMs:Int64;
   function Stored(const Data:string):string;
   begin
     Result:='CASE WHEN wl_storage('+QuotedStr(TableName)+')=''blob'' THEN jsonb('+Data+') ELSE '+Data+' END';
   end;
 begin
+  Identity:='json_extract(_ferretdb_sjson,''$.stream'')=''security'''+
+    ' AND json_extract(_ferretdb_sjson,''$.bleed'')='+QuotedStr(Bleed)+
+    ' AND json_extract(_ferretdb_sjson,''$.source'')='+QuotedStr(Source)+
+    ' AND json_extract(_ferretdb_sjson,''$.category'')='+QuotedStr(Category)+
+    ' AND json_extract(_ferretdb_sjson,''$.action'')=''blocked''';
   try
     if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))<>1 then Exit;
     if not EnsureSharedCollection(Db,'eventlog') then Exit;
@@ -4452,8 +4471,8 @@ begin
     Stamp:=LocalTimeToUniversal(Now);
     AtMs:=DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp);AtSql:=IntToStr(AtMs);
     Event:=TJSONObject.Create(['_id',NewId,'stream','security','at',AtMs,'firstAt',AtMs,
-      'severity','high','category','authz','bleed','ParentBleed','action','blocked','source','parentId',
-      'cwe','CWE-862','count',1,'userId',UserId,'detail','A card on a board the user cannot see was named as a parent.']);
+      'severity',Severity,'category',Category,'bleed',Bleed,'action','blocked','source',Source,
+      'cwe',Cwe,'count',1,'userId',UserId,'detail',Detail]);
     try Payload:=QuotedStr(TypedDocument(Event.AsJSON,'',Hints));finally Event.Free;end;
     Updated:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.at'','+AtSql+
       ',''$.userId'','+QuotedStr(UserId)+',''$.count'',MIN(9007199254740991,MAX(0,'+
@@ -4465,6 +4484,12 @@ begin
       ' WHERE NOT EXISTS(SELECT 1 FROM '+Physical+' WHERE '+Identity+'); COMMIT;';
     if not Db.Exec(Sql) then Db.Exec('ROLLBACK;');
   except Db.Exec('ROLLBACK;');end;
+end;
+
+procedure RecordParentDenial(Db:TWLDb;const UserId:string);
+begin
+  RecordSecurityDenial(Db,UserId,'ParentBleed','parentId','authz','high','CWE-862',
+    'A card on a board the user cannot see was named as a parent.');
 end;
 
 procedure ApiBulkCards(aRequest:TRequest;aResponse:TResponse);
@@ -4798,12 +4823,19 @@ end;
 // the people who take part in the card and the board's watchers, or those
 // a comment mentions; only active members who watch or track the board, or
 // watch the list or the card (#6658); never the actor, unless they mention
-// themselves.
-function NotificationsSql(Db:TWLDb;const ActorId,BoardId,ListId,CardId,CommentText,ActivityId:string):string;
+// themselves. The member an activity is about (memberId) takes part in it,
+// and one just put on the card as a member or an assignee is told (#5833,
+// unless NOTIFY_ON_ASSIGN=false) - still only when watching or tracking.
+// Nothing when Admin Panel turned notifications off (#5820), and only once
+// the activity is there: a statement that wrote none notifies nobody.
+function NotificationsSql(Db:TWLDb;const ActorId,BoardId,ListId,CardId,CommentText,ActivityId:string;
+  const ActivityType:string='';const MemberId:string=''):string;
 var Participants,Watchers,Scoped,Watching,Tracking,Members,Names:TStringArray;R:TWLRows;i,j:Integer;
   Mentioned,SelfMention:Boolean;Doc:TJSONData;Arr:TJSONData;
 begin
   Result:='';Participants:=nil;Watchers:=nil;Scoped:=nil;Watching:=nil;Tracking:=nil;Members:=nil;
+  if (BoardId='') or SharedSettingOn(Db,'disableNotifications') then Exit;
+  if MemberId<>'' then AddId(Participants,MemberId);
   AddRows(Members,Db.Query('SELECT m.userId FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId='+QuotedStr(BoardId)+
     ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0;'));
   // The list's watchers: a shared store's lists document has them.
@@ -4859,6 +4891,8 @@ begin
     for i:=0 to High(Watching) do AddId(Watchers,Watching[i]);
     for i:=0 to High(Participants) do if HasId(Tracking,Participants[i]) then AddId(Watchers,Participants[i]);
   end;
+  if (MemberId<>'') and ((ActivityType='joinMember') or (ActivityType='joinAssignee')) and
+    (LowerCase(GetEnvironmentVariable('NOTIFY_ON_ASSIGN'))<>'false') then AddId(Watchers,MemberId);
   for i:=0 to High(Watchers) do
     if HasId(Members,Watchers[i]) and (HasId(Watching,Watchers[i]) or HasId(Tracking,Watchers[i]) or HasId(Scoped,Watchers[i])) and
       ((Watchers[i]<>ActorId) or SelfMention) then
@@ -4866,7 +4900,8 @@ begin
         '''$.notifications'',json_insert(COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,''$.notifications''),json(''[]'')),'+
         '''$[#]'',json_object(''activity'','+QuotedStr(ActivityId)+',''read'',json(''null'')))) WHERE id='+QuotedStr(Watchers[i])+
         ' AND NOT EXISTS(SELECT 1 FROM json_each(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,''$.notifications'') n '+
-        'WHERE json_extract(n.value,''$.activity'')='+QuotedStr(ActivityId)+'); ';
+        'WHERE json_extract(n.value,''$.activity'')='+QuotedStr(ActivityId)+') AND EXISTS(SELECT 1 FROM activities WHERE id='+
+        QuotedStr(ActivityId)+'); ';
 end;
 
 function AddViewComment(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out CommentId,Error:string):Integer;
@@ -5886,9 +5921,9 @@ end;
 // The guarded transaction that puts TargetId on the card or takes them off
 // (TableName card_members or card_assignees), with its join/unjoin activity;
 // Scope selects the one card.
-function CardAssignmentSql(const Actor,BoardId,CardId,Scope,TableName,ActivityNoun,ActivityKey,TargetId:string;
+function CardAssignmentSql(Db:TWLDb;const Actor,BoardId,CardId,Scope,TableName,ActivityNoun,ActivityKey,TargetId:string;
   Remove:Boolean):string;
-var Target,Pair,Present,Changing,ActivityType,ActivityId,Stamp,Mutation,FinalState,TargetGuard:string;
+var Target,Pair,Present,Changing,ActivityType,ActivityId,Stamp,Mutation,FinalState,TargetGuard,Notify:string;R:TWLRows;
 begin
   Target:=QuotedStr(TargetId);
   Pair:='cardId='+QuotedStr(CardId)+' AND userId='+Target;
@@ -5908,7 +5943,12 @@ begin
     Mutation:='INSERT INTO '+TableName+'(cardId,userId) SELECT '+QuotedStr(CardId)+','+Target+
       ' WHERE '+Changing+'; ';
   end;
-  ActivityId:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
+  ActivityId:=NewId;Stamp:=QuotedStr(NowIso);
+  // The notifications of the activity, when the change writes one.
+  R:=Db.Query('SELECT COALESCE(listId,'''') FROM cards WHERE id='+QuotedStr(CardId)+';');
+  Notify:='';
+  if Length(R)=1 then Notify:=NotificationsSql(Db,Actor,BoardId,R[0][0],CardId,'',ActivityId,ActivityType,TargetId);
+  ActivityId:=QuotedStr(ActivityId);
   Result:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+TargetGuard+
     'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) SELECT '+
@@ -5917,7 +5957,7 @@ begin
     '))) FROM cards WHERE '+Scope+' AND '+Changing+'; '+
     'SELECT CASE WHEN NOT ('+Changing+') OR EXISTS(SELECT 1 FROM activities WHERE id='+ActivityId+
     ') THEN 1 ELSE json(''Assignment activity missing'') END; '+Mutation+
-    'SELECT CASE WHEN '+FinalState+' THEN 1 ELSE json(''Assignment change failed'') END; COMMIT;';
+    'SELECT CASE WHEN '+FinalState+' THEN 1 ELSE json(''Assignment change failed'') END; '+Notify+'COMMIT;';
 end;
 
 procedure ChangeCardAssignment(aRequest:TRequest;aResponse:TResponse;
@@ -5934,7 +5974,7 @@ begin
   Remove:=aRequest.Method='DELETE';
   if not Remove and not EnabledBoardMember(T.Db,BoardId,TargetId) then
   begin SendJson(aResponse,'{"error":"userId is not an active member of this board"}',400);Exit;end;
-  if not T.Db.Exec(CardAssignmentSql(Actor,BoardId,CardId,Scope,TableName,ActivityNoun,ActivityKey,TargetId,Remove)) then
+  if not T.Db.Exec(CardAssignmentSql(T.Db,Actor,BoardId,CardId,Scope,TableName,ActivityNoun,ActivityKey,TargetId,Remove)) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not update card membership');Exit;end;
   SendCardById(aResponse,T.Db,CardId,Actor,False,BoardId);
 end;
@@ -5983,7 +6023,7 @@ begin
   if not Remove and not EnabledBoardMember(T.Db,BoardId,MemberId) then
   begin Error:='userId is not an active member of this board';Exit(400);end;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
-  if not T.Db.Exec(CardAssignmentSql(UserId,BoardId,CardId,Scope,'card_members','Member','memberId',MemberId,Remove)) then
+  if not T.Db.Exec(CardAssignmentSql(T.Db,UserId,BoardId,CardId,Scope,'card_members','Member','memberId',MemberId,Remove)) then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card membership';Exit(500);end;
 end;
 
@@ -6795,7 +6835,7 @@ begin
 end;
 
 function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string):Integer;
-var Card:TWLRows;Scope,Stamp,Sort:string;
+var Card:TWLRows;Scope,Stamp,Sort,ActivityId:string;
 begin
   Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
   if Result<>200 then Exit;
@@ -6816,14 +6856,17 @@ begin
   Stamp:=QuotedStr(NowIso);
   Sort:='(SELECT coalesce(max(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND listId='+QuotedStr(DestList)+
     ' AND swimlaneId='+QuotedStr(Scope)+' AND deletedAt IS NULL)';
-  // WeKan's moveCard activity (models/cards.js), with the lists' names.
+  // WeKan's moveCard activity (models/cards.js), with the lists' names, and
+  // its notifications.
+  ActivityId:=NewId;
   if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
-    'SELECT '+QuotedStr(NewId)+',''moveCard'','+QuotedStr(UserId)+',boardId,id,'+QuotedStr(DestList)+','+QuotedStr(Scope)+','+Stamp+','+Stamp+
+    'SELECT '+QuotedStr(ActivityId)+',''moveCard'','+QuotedStr(UserId)+',boardId,id,'+QuotedStr(DestList)+','+QuotedStr(Scope)+','+Stamp+','+Stamp+
     ',json_object(''cardTitle'',title,''oldListId'',listId,''oldSwimlaneId'',swimlaneId,'+
     '''listName'',(SELECT title FROM lists WHERE id='+QuotedStr(DestList)+'),''oldListName'',(SELECT title FROM lists WHERE id=cards.listId),'+
     '''swimlaneName'',(SELECT title FROM swimlanes WHERE id='+QuotedStr(Scope)+')) FROM cards WHERE id='+QuotedStr(CardId)+'; '+
     'UPDATE cards SET swimlaneId='+QuotedStr(Scope)+',listId='+QuotedStr(DestList)+',sort='+Sort+',modifiedAt='+Stamp+
-    ',dateLastActivity='+Stamp+' WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+'; COMMIT;') then
+    ',dateLastActivity='+Stamp+' WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+'; '+
+    NotificationsSql(T.Db,UserId,BoardId,DestList,CardId,'',ActivityId,'moveCard')+'COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not move card';Exit(500);end;
   Result:=200;
 end;
@@ -6851,19 +6894,21 @@ begin
 end;
 
 function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
-var Scope,Stamp:string;
+var Scope,Stamp,ActivityId:string;R:TWLRows;
 begin
   Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
   if Result<>200 then Exit;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
-  if Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+';'))<>1 then begin Error:='Card not found';Exit(404);end;
-  Stamp:=QuotedStr(NowIso);
-  // As POST .../cards/:cardId/archive archives it, with WeKan's archivedCard activity.
+  R:=T.Db.Query('SELECT COALESCE(listId,'''') FROM cards WHERE '+Scope+';');
+  if Length(R)<>1 then begin Error:='Card not found';Exit(404);end;
+  Stamp:=QuotedStr(NowIso);ActivityId:=NewId;
+  // As POST .../cards/:cardId/archive archives it, with WeKan's archivedCard
+  // activity and its notifications.
   if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
-    'SELECT '+QuotedStr(NewId)+',''archivedCard'','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
+    'SELECT '+QuotedStr(ActivityId)+',''archivedCard'','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
     ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
     ' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE id='+QuotedStr(CardId)+' AND archived=1)=1 THEN 1 '+
-    'ELSE json(''Archive write failed'') END; COMMIT;') then
+    'ELSE json(''Archive write failed'') END; '+NotificationsSql(T.Db,UserId,BoardId,R[0][0],CardId,'',ActivityId,'archivedCard')+'COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not change card archive state';Exit(500);end;
 end;
 
@@ -6913,7 +6958,8 @@ end;
 // DELETE card — children (labels/members/comments/checklists/…) cascade via FK.
 // The activity records the claimed delete in the same transaction as the cascade.
 function DeleteRestCard(Db:TWLDb;const UserId,BoardId,ListId,CardId:string;out Removed:Boolean):Boolean;
-var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings,Attachments,AttachmentScope,BatchId:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
+var Scope,Claim,Actor,Stamp,Sql,Permission,Bindings,Attachments,AttachmentScope,BatchId,Notify:string;Policy:TFieldPolicy;Source:TSelectionScope;I:Integer;
+  R:TWLRows;
 begin
   Result:=False;Removed:=False;BatchId:=NewId;Claim:=QuotedStr(BatchId);Actor:=QuotedStr(UserId);Stamp:=QuotedStr(NowIso);
   try
@@ -6935,6 +6981,10 @@ begin
       Bindings:='';
       for I:=0 to Source.Bindings.Count-1 do Bindings:=Bindings+Source.Bindings[I];
     finally Source.Free;end;
+    // WeKan's deleteCard activity notifies those of the card, read before it goes.
+    R:=Db.Query('SELECT COALESCE(listId,'''') FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+';');
+    Notify:='';
+    if Length(R)=1 then Notify:=NotificationsSql(Db,UserId,BoardId,R[0][0],CardId,'',BatchId,'deleteCard');
     Sql:='BEGIN IMMEDIATE; '+Bindings+
       'SELECT CASE WHEN '+Permission+' THEN 1 ELSE json(''Card deletion permission changed'') END; '+
       'INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
@@ -6942,7 +6992,7 @@ begin
       ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; '+Attachments+
       'DELETE FROM cards WHERE '+Scope+' AND EXISTS(SELECT 1 FROM activities WHERE id='+Claim+'); '+
       'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM cards WHERE '+Scope+
-      ') THEN 1 ELSE json(''Card deletion failed'') END; COMMIT;';
+      ') THEN 1 ELSE json(''Card deletion failed'') END; '+Notify+'COMMIT;';
     if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
     Removed:=Length(Db.Query('SELECT id FROM activities WHERE id='+Claim+';'))=1;
     Result:=True;
@@ -7458,6 +7508,126 @@ begin
     Reply.Add('count',Attachments.Count);
     SendJson(aResponse,Reply.AsJSON);
   finally Reply.Free;end;
+end;
+
+
+function MarkAllNotificationsRead(Db: TWLDb; const UserId: string): Boolean;
+begin
+  Result := Db.Exec('UPDATE users SET profile_json=json_set(profile_json,''$.notifications'',(SELECT json_group_array(json(v)) FROM (SELECT ' +
+    'CASE WHEN json_extract(n.value,''$.read'') IS NULL THEN json_set(n.value,''$.read'',strftime(''%Y-%m-%dT%H:%M:%fZ'',''now'')) ' +
+    'ELSE n.value END AS v FROM json_each(json_extract(profile_json,''$.notifications'')) n ORDER BY n.key))) WHERE id=' + QuotedStr(UserId) +
+    ' AND json_valid(profile_json) AND json_type(profile_json,''$.notifications'')=''array'';');
+end;
+
+function DeleteAllNotifications(Db: TWLDb; const UserId: string): Boolean;
+begin
+  Result := Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
+    '''$.notifications'',json(''[]'')) WHERE id=' + QuotedStr(UserId) + ';');
+end;
+
+
+function ViewUsersUpdate(Db:TWLDb;const UserId,Content:string):Integer;
+var Args,Selector,Modifier,Ops,Value,Field:TJSONData;i,j,Index:Integer;Op,Path,Sql,Profile,Stored,At:string;Tray,Other:Boolean;
+  function IsIsoInstant(const V:string):Boolean;
+  const Shape='dddd-dd-ddTdd:dd:dd.dddZ';
+  var k:Integer;
+  begin
+    Result:=Length(V)=Length(Shape);
+    if Result then
+      for k:=1 to Length(Shape) do
+        if ((Shape[k]='d') and not (V[k] in ['0'..'9'])) or ((Shape[k]<>'d') and (V[k]<>Shape[k])) then Exit(False);
+  end;
+  // profile.notifications.<n>.read: the n.
+  function ReadIndex(const P:string):Integer;
+  const Prefix='profile.notifications.';
+  var Rest:string;k:Integer;
+  begin
+    Result:=-1;
+    if (Copy(P,1,Length(Prefix))<>Prefix) or (Copy(P,Length(P)-4,5)<>'.read') then Exit;
+    Rest:=Copy(P,Length(Prefix)+1,Length(P)-Length(Prefix)-5);
+    if (Rest='') or (Length(Rest)>6) then Exit;
+    for k:=1 to Length(Rest) do if not (Rest[k] in ['0'..'9']) then Exit;
+    Result:=StrToInt(Rest);
+  end;
+begin
+  Result:=403;Args:=nil;Sql:='';Tray:=False;Other:=False;
+  Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+  try
+    try Args:=GetJSON(Content);except Exit(400);end;
+    if not (Args is TJSONArray) or (TJSONArray(Args).Count<2) then Exit(400);
+    Selector:=TJSONArray(Args).Items[0];Modifier:=TJSONArray(Args).Items[1];
+    if not (Modifier is TJSONObject) or (TJSONObject(Modifier).Count=0) then Exit(400);
+    for i:=0 to TJSONObject(Modifier).Count-1 do
+    begin
+      Op:=TJSONObject(Modifier).Names[i];Ops:=TJSONObject(Modifier).Items[i];
+      if not (Ops is TJSONObject) then begin Other:=True;Continue;end;
+      for j:=0 to TJSONObject(Ops).Count-1 do
+      begin
+        Path:=TJSONObject(Ops).Names[j];Value:=TJSONObject(Ops).Items[j];
+        if (Path<>'profile.notifications') and (Copy(Path,1,22)<>'profile.notifications.') then begin Other:=True;Continue;end;
+        Index:=ReadIndex(Path);
+        At:='''$.notifications['+IntToStr(Index)+']''';
+        if (Op='$unset') and (Index>=0) then
+          Sql:=Sql+'UPDATE users SET profile_json=json_remove('+Profile+',''$.notifications['+IntToStr(Index)+'].read'') WHERE id='+
+            QuotedStr(UserId)+' AND json_type('+Profile+','+At+')=''object''; '
+        else if (Op='$set') and (Index>=0) then
+        begin
+          // Read at a date - EJSON's {"$date":ms} - or unread, null.
+          Field:=nil;
+          if Value is TJSONObject then Field:=TJSONObject(Value).Find('$date');
+          if Value.JSONType=jtNull then Stored:='json(''null'')'
+          else if (Field<>nil) and (Field.JSONType=jtNumber) and (TJSONObject(Value).Count=1) then
+            Stored:='strftime(''%Y-%m-%dT%H:%M:%fZ'','+FloatToStr(Field.AsFloat/1000,DefaultFormatSettings)+',''unixepoch'')'
+          // JSON.stringify's date, 2026-11-26T10:00:00.000Z, and no other text.
+          else if (Value.JSONType=jtString) and IsIsoInstant(Value.AsString) then Stored:=QuotedStr(Value.AsString)
+          else begin Tray:=True;Continue;end;
+          Sql:=Sql+'UPDATE users SET profile_json=json_set('+Profile+',''$.notifications['+IntToStr(Index)+'].read'','+Stored+
+            ') WHERE id='+QuotedStr(UserId)+' AND json_type('+Profile+','+At+')=''object''; ';
+        end
+        else if (Op='$pull') and (Path='profile.notifications') and (Value is TJSONObject) and (TJSONObject(Value).Count=1) and
+          (TJSONObject(Value).Find('activity')<>nil) and (TJSONObject(Value).Find('activity').JSONType=jtString) then
+          Sql:=Sql+'UPDATE users SET profile_json=json_set('+Profile+',''$.notifications'',(SELECT json_group_array(json(v)) FROM '+
+            '(SELECT n.value AS v FROM json_each('+Profile+',''$.notifications'') n WHERE COALESCE(json_extract(n.value,''$.activity''),'''')<>'+
+            QuotedStr(TJSONObject(Value).Find('activity').AsString)+' ORDER BY n.key))) WHERE id='+QuotedStr(UserId)+
+            ' AND json_type('+Profile+',''$.notifications'')=''array''; '
+        else Tray:=True;
+      end;
+    end;
+    if Tray then
+    begin
+      // No WeLite page adds to or rewrites the tray: only an attempt reaches here.
+      try
+        RecordSecurityDenial(Db,UserId,'TrayBleed','ddp:user-notifications','authz','high','CWE-639',
+          'Client write of server-issued notification entries denied.');
+      except { logging must never break the guard } end;
+      Exit(403);
+    end;
+    if Other or (Sql='') then Exit(403);
+    // Only the user's own account.
+    if not (Selector is TJSONObject) or (TJSONObject(Selector).Count<>1) or (TJSONObject(Selector).Find('_id')=nil) or
+      (TJSONObject(Selector).Find('_id').JSONType<>jtString) or (TJSONObject(Selector).Find('_id').AsString<>UserId) then Exit(403);
+    if Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then Result:=200
+    else begin Db.Exec('ROLLBACK;');Result:=500;end;
+  finally Args.Free;end;
+end;
+
+
+function ViewSetPassword(const T:TWLTenant;const Actor,Target,Password:string;out Error:string):Integer;
+var Rows:TWLRows;MinLength:Integer;Enforce:Boolean;
+begin
+  Error:='';
+  if (Actor='') or ((Actor<>Target) and not IsSiteAdmin(T.Db,Actor)) then begin Error:='Access denied';Exit(403);end;
+  if (Target='') or (Pos(#0,Target+Password)>0) or (Length(Password)>4096) or (Password='') then
+  begin Error:='error-password-policy';Exit(400);end;
+  Rows:=T.Db.Query('SELECT COALESCE(authenticationMethod,'''') FROM users WHERE id='+QuotedStr(Target)+';');
+  if Length(Rows)<>1 then begin Error:='User not found';Exit(404);end;
+  if (Rows[0][0]<>'') and (Rows[0][0]<>'password') then begin Error:='This account uses an external sign-in provider.';Exit(400);end;
+  PasswordPolicy(T.Db,MinLength,Enforce);
+  if Enforce and (Length(UTF8Decode(Password))<MinLength) then begin Error:='error-password-policy';Exit(400);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; '+RevokeUserTokensSQL(T.Db,Target)+'UPDATE users SET services_json=json_set(CASE WHEN json_valid(services_json) '+
+    'THEN services_json ELSE ''{}'' END,''$.password'',json('+QuotedStr(HashMeteorPassword(Password))+')) WHERE id='+QuotedStr(Target)+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update account';Exit(500);end;
+  Result:=200;
 end;
 
 end.

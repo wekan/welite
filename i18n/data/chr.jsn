@@ -2118,5 +2118,10 @@
   "cloud-end-date": "ᎤᎵᏍᏆᏗᏍᏗ ᎢᎦ",
   "wekan-data-no-database": "WeKan ᎧᏃᎮᏓ ᎠᏓᏁᎸ Ꮭ ᎠᏩᏛᏗ.",
   "sort-by-votes": "ᎠᏓᏅᏖᏗ ᎢᏳᏍᏗ ᏗᎪᏪᎵᏍᎩ",
-  "sort-by-label-order": "ᏗᎪᏪᎳᏅᎯ ᏚᏙᏢᏒ"
+  "sort-by-label-order": "ᏗᎪᏪᎳᏅᎯ ᏚᏙᏢᏒ",
+  "notification-group-card": "__count__ ᏗᎾᏓᏃᎮᎸᏍᎩ ᎪᏪᎵ __card__ ᎠᏂ",
+  "notification-group-board": "__count__ ᏗᎾᏓᏃᎮᎸᏍᎩ ᏗᏟᎶᏍᏙᏗ __board__ ᎠᏂ",
+  "password-too-short": "ᎦᎵᏍᎦᏂ ᎧᏁᏬᏍᏗ __min__ ᏗᎪᏪᎶᏗ ᎢᎦᎢ ᎨᏎᏍᏗ.",
+  "login-refused-bad-password": "ᎦᎵᏍᎦᏂ ᎧᏁᏬᏍᏗ ᎤᏲ",
+  "login-refused-braked": "ᎤᏣᏘ ᏂᏚᏂᎸᏒᎾ ᏧᏂᎸᏫᏍᏓᏁᏗ"
 }

@@ -15,6 +15,9 @@ procedure PasswordPolicy(Db:TWLDb;out MinLength:Integer;out Enforce:Boolean);
 // A top-level boolean of a shared store's site settings (Admin Panel's
 // renderLinksAsPlainText, alwaysShowCodeAsText...); False without one.
 function SharedSettingOn(Db:TWLDb;const Key:string):Boolean;
+// A text of a shared store's site settings by its dotted path
+// (notificationDelivery.tray.grouping); '' without one.
+function SharedSettingText(Db:TWLDb;const Path:string):string;
 // A shared store's document of Collection by its _id, as plain JSON; '' when
 // the store has no such collection or document (and in a WeLite store).
 function SharedDocument(Db:TWLDb;const Collection,DocId:string):string;
@@ -88,6 +91,20 @@ begin
     if Doc=nil then Exit;
     Value:=Doc.Find(Key);
     Result:=(Value<>nil) and (Value.JSONType=jtBoolean) and Value.AsBoolean;
+  finally Doc.Free;end;
+end;
+
+function SharedSettingText(Db:TWLDb;const Path:string):string;
+var Doc:TJSONObject;Snapshot:string;Value:TJSONData;
+begin
+  Result:='';Doc:=nil;
+  try
+    try
+      if SharedStore(Db) then Doc:=ReadSettings(Db,Snapshot);
+    except Doc:=nil;end;
+    if Doc=nil then Exit;
+    Value:=Doc.FindPath(Path);
+    if (Value<>nil) and (Value.JSONType=jtString) then Result:=Value.AsString;
   finally Doc.Free;end;
 end;
 

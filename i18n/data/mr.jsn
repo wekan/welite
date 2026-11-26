@@ -2118,5 +2118,10 @@
   "cloud-end-date": "समाप्ती तारीख",
   "wekan-data-no-database": "वाचता येईल असा कोणताही WeKan डेटाबेस सापडला नाही.",
   "sort-by-votes": "मतांनुसार क्रमवारी लावा",
-  "sort-by-label-order": "लेबल क्रम"
+  "sort-by-label-order": "लेबल क्रम",
+  "notification-group-card": "__card__ कार्डवर __count__ सूचना",
+  "notification-group-board": "__board__ फलकावर __count__ सूचना",
+  "password-too-short": "पासवर्ड किमान __min__ अक्षरांचा असणे आवश्यक आहे.",
+  "login-refused-bad-password": "चुकीचा पासवर्ड",
+  "login-refused-braked": "खूप जास्त अयशस्वी प्रयत्न"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Data kùńca",
   "wekan-data-no-database": "Nie nalazłô sã żódnô czëtnô baza pòdôwków WeKan.",
   "sort-by-votes": "Zortnąc wedle głosów",
-  "sort-by-label-order": "Pòrządk etikétów"
+  "sort-by-label-order": "Pòrządk etikétów",
+  "notification-group-card": "__count__ wiadłów na kôrce __card__",
+  "notification-group-board": "__count__ wiadłów na tôfli __board__",
+  "password-too-short": "Parola mùszi miec nômni __min__ znaków.",
+  "login-refused-bad-password": "Lëchô parola",
+  "login-refused-braked": "Za wiele nieùdałëch próbów"
 }

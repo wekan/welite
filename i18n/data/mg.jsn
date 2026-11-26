@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Daty fiafarana",
   "wekan-data-no-database": "Tsy nisy banky angona WeKan azo vakiana hita.",
   "sort-by-votes": "Alamino araka ny vato",
-  "sort-by-label-order": "Filaharan'ny marika"
+  "sort-by-label-order": "Filaharan'ny marika",
+  "notification-group-card": "Fampandrenesana __count__ ao amin’ny karatra __card__",
+  "notification-group-board": "Fampandrenesana __count__ ao amin’ny solaitra __board__",
+  "password-too-short": "Tsy maintsy misy litera __min__ farafahakeliny ny teny miafina.",
+  "login-refused-bad-password": "Teny miafina diso",
+  "login-refused-braked": "Andrana tsy nahomby be loatra"
 }

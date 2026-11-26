@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Data de fin",
   "wekan-data-no-database": "Ne n'ie nia stata abineda deguna banca dac WeKan che se possa lieje.",
   "sort-by-votes": "Ordenèr sun i vòc",
-  "sort-by-label-order": "Orden dla etichetes"
+  "sort-by-label-order": "Orden dla etichetes",
+  "notification-group-card": "__count__ notificazions sön la ciarta __card__",
+  "notification-group-board": "__count__ notificazions sön le tofl __board__",
+  "password-too-short": "La parola secreta mëss avëi almanco __min__ carateres.",
+  "login-refused-bad-password": "Parola secreta falada",
+  "login-refused-braked": "Massa proves falades"
 }

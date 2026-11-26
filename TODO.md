@@ -266,7 +266,7 @@ Next, after this goal:
   other badges (checklists, description, Requested By, location, last activity),
   WeKan's mobile layout (body.mobile-mode: lists as mini-lists, one opened at
   a time, as WeKan's 13-swimlanes and 02-cards-open-view mobile specs test it), the board header's Advanced Filter,
-  multi-selection's labels, members and move, notifications of the other activities (a comment notifies already) and the notifications drawer's list, the comment editor's @mention picker (#6704), the board views, the rest of Member Settings (change password, language, date settings, avatar), a password shorter than a later minimum (it signs in, must be changed, and the change signs every session out; reported in Problems) and the rest of the Admin Panel (Organizations, Teams, Settings, Problems).
+  multi-selection's labels, members and move, notifications of the board's and list's own activities (a card's notify already), the board views, the rest of Member Settings (date settings, avatar, and - with no language in the profile - the browser's own languages: WeKan reads navigator.languages in the page, the HTML5 view reads Accept-Language, so 50-language-popup's "missing profile language follows browser preferences" fails), a password shorter than a later minimum (it signs in, must be changed, and the change signs every session out; reported in Problems) and the rest of the Admin Panel (Organizations, Teams, Settings, Problems).
   Each is Weddy's template ported to `src/wlh5.pas` over WeLite's data, each
   write through the REST API's own checks (as `CreateViewCard`), each Meteor
   method weddy.js calls answered at `/_methods/`. Add a spec line to

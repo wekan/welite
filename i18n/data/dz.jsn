@@ -2118,5 +2118,10 @@
   "cloud-end-date": "མཇུག་བསྡུའི་ཚེས་གྲངས།",
   "wekan-data-no-database": "ལྷག་ཚུགས་པའི་ WeKan གནས་སྡུད་གཞི་རྟེན་མ་ཐོབ།",
   "sort-by-votes": "འོས་བསྡོམས་ལྟར་གོ་རིམ",
-  "sort-by-label-order": "ཁ་ཡིག་གི་གོ་རིམ"
+  "sort-by-label-order": "ཁ་ཡིག་གི་གོ་རིམ",
+  "notification-group-card": "ཤོག་བྱང་ __card__ གུ་ བརྡ་བསྐུལ་ __count__",
+  "notification-group-board": "བྱང་གཞི་ __board__ གུ་ བརྡ་བསྐུལ་ __count__",
+  "password-too-short": "ཆོག་ཡིག་འདི་ ཉུང་ཤོས་ཡིག་འབྲུ་ __min__ དགོ།",
+  "login-refused-bad-password": "ཆོག་ཡིག་ནོར་འདུག",
+  "login-refused-braked": "འབད་རྩོལ་འཐུས་ཤོར་མང་དྲགས།"
 }

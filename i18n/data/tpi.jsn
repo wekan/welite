@@ -2118,5 +2118,10 @@
   "cloud-end-date": "De bilong pinis",
   "wekan-data-no-database": "I no gat WeKan detabes yu inap ridim.",
   "sort-by-votes": "Soim bihain long vot",
-  "sort-by-label-order": "Lain bilong ol mak"
+  "sort-by-label-order": "Lain bilong ol mak",
+  "notification-group-card": "__count__ nius long kat __card__",
+  "notification-group-board": "__count__ nius long bot __board__",
+  "password-too-short": "Paswot i mas i gat __min__ leta o moa.",
+  "login-refused-bad-password": "Paswot i rong",
+  "login-refused-braked": "Planti tumas traim i no wok"
 }

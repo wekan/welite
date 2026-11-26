@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Taariikhda dhammaadka",
   "wekan-data-no-database": "Lama helin kaydka xogta WeKan oo la akhrin karo.",
   "sort-by-votes": "U kala sooc codadka",
-  "sort-by-label-order": "Kala horreynta calaamadaha"
+  "sort-by-label-order": "Kala horreynta calaamadaha",
+  "notification-group-card": "__count__ ogeysiis oo ku saabsan kaarka __card__",
+  "notification-group-board": "__count__ ogeysiis oo ku saabsan sabuuradda __board__",
+  "password-too-short": "Furaha sirtu waa inuu ahaadaa ugu yaraan __min__ xaraf.",
+  "login-refused-bad-password": "Furaha sirta oo khaldan",
+  "login-refused-braked": "Isku dayo badan oo fashilmay"
 }

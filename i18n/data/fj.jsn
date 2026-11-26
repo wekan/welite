@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Tikinisiga ni mudu",
   "wekan-data-no-database": "E sega ni kune e dua na kato ni itukutuku ni WeKan e rawa ni wiliki.",
   "sort-by-votes": "Vakadonuya ena ivakarau ni vootaki",
-  "sort-by-label-order": "Ivakarau ni ivakatakilakila"
+  "sort-by-label-order": "Ivakarau ni ivakatakilakila",
+  "notification-group-card": "__count__ na veivakaraitaki ena kadi __card__",
+  "notification-group-board": "__count__ na veivakaraitaki ena vola __board__",
+  "password-too-short": "Na vosa ni curu me vakalevu ena __min__ na matanivola.",
+  "login-refused-bad-password": "Vosa ni curu e cala",
+  "login-refused-braked": "Levu sara na sasaga e druka"
 }

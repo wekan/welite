@@ -299,6 +299,53 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   author unless they mention themselves. A list's watchers are read from a
   shared store's lists document. The header's bell shows them unread, from
   `/api/user`. 267 of WeKan's tests pass.
+- Add the comment editor's @ mention menu to the HTML5 view (editor.js,
+  #6704): typing @ and part of an active board member's username or full
+  name, in any case, opens `.textcomplete-dropdown` on top of the card; a
+  click, Enter or Tab writes "@username (Full Name) " and Enter does not send
+  the comment. The members come with the textarea as escaped JSON, and the
+  menu writes them as text. 269 of WeKan's tests pass.
+- Add the notifications drawer's list to the HTML5 view (notificationsDrawer,
+  as Weddy's): the user's notifications newest first, each the activity's
+  act-* sentence in the user's language with its board, its actor and its
+  names in bold and the card a link to it, only of boards the user may
+  still read, and an entry scheduled for later (#5171 showAt) not before
+  its time. The tray grouping - the member's, the board's or Admin Panel's -
+  puts one card's or one board's entries in one row (#5171). Its menu marks
+  all read or deletes all, after the confirmation in the user's language.
+  271 of WeKan's tests pass.
+- Notify of a card's other activities as of its comments (WeKan's
+  prepareActivityNotification): moved, archived, deleted, and a member or
+  an assignee put on it or taken off - the member it is about takes part,
+  and one just put on it is told (#5833, unless NOTIFY_ON_ASSIGN=false),
+  still only when watching or tracking (#6658). Nothing when Admin Panel
+  turned notifications off (#5820), and nothing from a change that wrote no
+  activity.
+- Let the tray mark the user's own notification read or unread and remove
+  it through the users collection's update, as WeKan's allow rule does; any
+  other write of the notification list is refused and recorded in Admin
+  Panel / Problems as TrayBleed, and every other account write is refused
+  as before. 272 of WeKan's tests pass.
+- Add Member Settings' Change Password to the HTML5 view (changePasswordPopup,
+  `/profile/password`): the password now and the new one twice, within the
+  password policy; the password now is checked within the sign-in limit, so
+  the form is no way round it. Every session of the account ends with the
+  change, this one too (WeKan's passwordChangeRequired.js), and so does
+  WeKan's setPassword, a site admin's. In a shared store the HTML5 view
+  signs in with a Meteor login token in services.resume, as WeKan does, so
+  WeKan and WeLite see the same sessions. 273 of WeKan's tests pass.
+- Add Member Settings' Change Language to the HTML5 view (WeKan's
+  changeLanguagePopup): every language by its name, with its language's
+  flag, its region's flag and name and (RTL), across the whole window. The
+  flags come from WeKan's languageFlags.js (`releases/genflags.py` makes
+  `src/wlflags.inc`, `src/wlflag.pas` draws them), and `tests/langflag.py`
+  compares them with WeKan's own for each of its languages.
+- Bring the catalogs up to WeKan's (`releases/synclang.py`): each text a
+  catalog has is now WeKan's, so the corrections made in WeKan - a Veps or
+  Tamazight catalog that held Finnish or Arabic, a Mongolian one that held
+  Russian - reach WeLite. `tests/catalogs.py` fails on a text that differs
+  from WeKan's or a placeholder that is not the English one. 277 of WeKan's
+  tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

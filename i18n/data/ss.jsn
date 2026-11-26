@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Lusuku lwekuphela",
   "wekan-data-no-database": "Akutfolakalanga sisekelo sedatha se-WeKan lesifundzekako.",
   "sort-by-votes": "Hlela ngekulandzela emavoti",
-  "sort-by-label-order": "Kuhleleka kwemalebula"
+  "sort-by-label-order": "Kuhleleka kwemalebula",
+  "notification-group-card": "Tatiso letili-__count__ kulikhadi __card__",
+  "notification-group-board": "Tatiso letili-__count__ elibhodini __board__",
+  "password-too-short": "Liphasiwedi kufanele libe netinhlamvu letingu __min__ noma ngetulu.",
+  "login-refused-bad-password": "Liphasiwedi lelingakalungi",
+  "login-refused-braked": "Kuzama lokunyenti lokungaphumelelanga"
 }

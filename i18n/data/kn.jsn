@@ -2118,5 +2118,10 @@
   "cloud-end-date": "ಅಂತಿಮ ದಿನಾಂಕ",
   "wekan-data-no-database": "ಓದಬಹುದಾದ ಯಾವುದೇ WeKan ಡೇಟಾಬೇಸ್ ಕಂಡುಬಂದಿಲ್ಲ.",
   "sort-by-votes": "ಮತಗಳ ಪ್ರಕಾರ ವಿಂಗಡಿಸಿ",
-  "sort-by-label-order": "ಲೇಬಲ್ ಕ್ರಮ"
+  "sort-by-label-order": "ಲೇಬಲ್ ಕ್ರಮ",
+  "notification-group-card": "__card__ ಕಾರ್ಡ್‌ನಲ್ಲಿ __count__ ಅಧಿಸೂಚನೆಗಳು",
+  "notification-group-board": "__board__ ಫಲಕದಲ್ಲಿ __count__ ಅಧಿಸೂಚನೆಗಳು",
+  "password-too-short": "ಪಾಸ್‌ವರ್ಡ್ ಕನಿಷ್ಠ __min__ ಅಕ್ಷರಗಳಷ್ಟು ಉದ್ದವಿರಬೇಕು.",
+  "login-refused-bad-password": "ತಪ್ಪು ಪಾಸ್‌ವರ್ಡ್",
+  "login-refused-braked": "ತುಂಬಾ ವಿಫಲ ಪ್ರಯತ್ನಗಳು"
 }

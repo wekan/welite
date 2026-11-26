@@ -2118,5 +2118,10 @@
   "cloud-end-date": "የማብቂያ ቀን",
   "wekan-data-no-database": "ሊነበብ የሚችል የWeKan የውሂብ ጎታ አልተገኘም።",
   "sort-by-votes": "በድምጽ መሠረት ደርድር",
-  "sort-by-label-order": "የመለያዎች ቅደም ተከተል"
+  "sort-by-label-order": "የመለያዎች ቅደም ተከተል",
+  "notification-group-card": "በካርድ __card__ ላይ __count__ ማሳወቂያዎች",
+  "notification-group-board": "በሰሌዳ __board__ ላይ __count__ ማሳወቂያዎች",
+  "password-too-short": "የይለፍ ቃሉ ቢያንስ __min__ ቁምፊዎች ሊኖሩት ይገባል።",
+  "login-refused-bad-password": "የተሳሳተ የይለፍ ቃል",
+  "login-refused-braked": "በጣም ብዙ ያልተሳኩ ሙከራዎች"
 }

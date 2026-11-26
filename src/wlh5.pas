@@ -82,7 +82,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag;
 
 const
   STATIC_HEAD =
@@ -198,8 +198,21 @@ begin
   Request.QueryFields.Values['sessionId'] := Token;
 end;
 
+// The login cookie, cleared.
+procedure Html5ClearLoginCookie(Response: TResponse);
+var C: TCookie;
+begin
+  C := Response.Cookies.Add;
+  C.Name := LOGIN_COOKIE;
+  C.Value := '';
+  C.Path := '/';
+  C.HttpOnly := True;
+  C.SameSite := ssLax;
+  C.Expires := EncodeDate(1970, 1, 2);
+end;
+
 procedure Html5LogoutEndpoint(Request: TRequest; Response: TResponse);
-var T: TWLTenant; S: TWLSession; Token: string; C: TCookie;
+var T: TWLTenant; S: TWLSession; Token: string;
 begin
   if (ResolveTenant(Request, T) and TenantOpen(T)) and Html5User(T.Db, Request, S) then
   begin
@@ -211,13 +224,7 @@ begin
       T.Db.Exec('ROLLBACK;');
     end;
   end;
-  C := Response.Cookies.Add;
-  C.Name := LOGIN_COOKIE;
-  C.Value := '';
-  C.Path := '/';
-  C.HttpOnly := True;
-  C.SameSite := ssLax;
-  C.Expires := EncodeDate(1970, 1, 2);
+  Html5ClearLoginCookie(Response);
   Response.Code := 302;
   Response.SetCustomHeader('Location', '/sign-in');
   Response.SetCustomHeader('Cache-Control', 'no-store');
@@ -289,13 +296,277 @@ begin
 end;
 
 // layout.pug: the document, its head, and the header bar.
+// WeKan's changeLanguagePopup (userHeader.jade): every language, by its
+// name, each with its language's flag, its region's flag and name, and (RTL)
+// for one written right to left; the language now checked. Sent when the
+// member menu's Change Language is opened, not on every page.
+function LanguagePopup(Words: TWLTranslator; const Current: TWLLanguage): string;
+var i, j: Integer; L: TWLLanguage; Order: array of TWLLanguage; Flag, Country, Name, Region, Dir: string;
+begin
+  SetLength(Order, LanguageCount);
+  for i := 0 to LanguageCount - 1 do Order[i] := LanguageAt(i);
+  // By name, as WeKan sorts them; a tag breaks a tie, for a stable order.
+  for i := 1 to High(Order) do
+  begin
+    L := Order[i]; j := i - 1;
+    while (j >= 0) and ((CompareStr(Order[j].Name, L.Name) > 0) or
+      ((Order[j].Name = L.Name) and (CompareStr(Order[j].Tag, L.Tag) > 0))) do
+    begin
+      Order[j + 1] := Order[j]; Dec(j);
+    end;
+    Order[j + 1] := L;
+  end;
+  Dir := IfThen(Current.Rtl, 'rtl', 'ltr');
+  Result := '<template class="js-pop-over-template" data-pop="change-language" data-popup="changeLanguagePopup" data-title="' +
+    E(Words.Text('changeLanguagePopup-title', 'Change Language')) + '"><div class="header"><span class="header-title">' +
+    E(Words.Text('changeLanguagePopup-title', 'Change Language')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    E(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list">';
+  for i := 0 to High(Order) do
+  begin
+    L := Order[i];
+    LanguageFlags(L.Tag, Flag, Country);
+    LanguageLabelParts(L.Name, Country, Name, Region);
+    Result := Result + '<li' + IfThen(L.Tag = Current.Tag, ' class="active"', '') + '><a class="js-set-language" href="#" dir="' + Dir +
+      '" data-language="' + E(L.Tag) + '"><span class="language-label"><span class="language-main-line">' +
+      '<span class="emoji-icon language-flags" dir="ltr" aria-hidden="true">' + Flag + '</span><bdi class="language-name">' + E(Name) +
+      '</bdi>' + IfThen(L.Rtl, '<span class="language-rtl" dir="ltr">(RTL)</span>', '') + '</span>';
+    if Country <> '' then
+      Result := Result + '<span class="language-region">(<span class="emoji-icon language-country-flag" dir="ltr" aria-hidden="true">' +
+        Country + '</span>' + IfThen(Region <> '', '&nbsp;<bdi>' + E(Region) + '</bdi>', '') + ')</span>';
+    Result := Result + '</span>' + IfThen(L.Tag = Current.Tag, '<i class="fa fa-check"></i>', '') + '</a></li>';
+  end;
+  Result := Result + '</ul></div></template>';
+end;
+
+// Member Settings' Change Password (WeKan's changePasswordPopup, with
+// AccountsTemplates' fields as Weddy's profile.pug has them): the password
+// now, the new one twice, within the password policy's minimum.
+function ChangePasswordContent(Db: TWLDb; Words: TWLTranslator; const ErrorKey: string): string;
+var MinLength: Integer; Enforce: Boolean; Shown: string;
+begin
+  PasswordPolicy(Db, MinLength, Enforce);
+  Shown := '';
+  if ErrorKey = 'error-password-policy' then
+    Shown := StringReplace(Words.Text('password-too-short', 'The password must be at least __min__ characters long.'),
+      '__min__', IntToStr(MinLength), [rfReplaceAll])
+  else if ErrorKey = 'password-mismatch' then Shown := Words.Text('password-mismatch', 'Passwords do not match')
+  else if ErrorKey = 'login-refused-bad-password' then Shown := Words.Text('login-refused-bad-password', 'Wrong password')
+  else if ErrorKey = 'login-refused-braked' then Shown := Words.Text('login-refused-braked', 'Too many failed attempts')
+  else if ErrorKey <> '' then Shown := Words.Text('error-undefined', 'Something went wrong');
+  Result := '<div class="setting-content profile"><h2>' + E(Words.Text('changePasswordPopup-title', 'Change Password')) + '</h2>' +
+    IfThen(Shown <> '', '<p class="at-error js-profile-error">' + E(Shown) + '</p>', '') +
+    '<form class="js-password-form at-form" method="post" action="/profile/password">' +
+    '<label for="at-field-current_password">' + E(Words.Text('password', 'Password')) + '</label>' +
+    '<input id="at-field-current_password" type="password" name="oldPassword" autocomplete="current-password" required>' +
+    '<label for="at-field-password">' + E(Words.Text('change-password', 'Change password')) + '</label>' +
+    '<input id="at-field-password" type="password" name="newPassword" autocomplete="new-password"' +
+    IfThen(Enforce, ' minlength="' + IntToStr(MinLength) + '"', '') + ' required>' +
+    '<label for="at-field-password_again">' + E(Words.Text('password-again', 'Password (again)')) + '</label>' +
+    '<input id="at-field-password_again" type="password" name="newPassword2" autocomplete="new-password"' +
+    IfThen(Enforce, ' minlength="' + IntToStr(MinLength) + '"', '') + ' required>' +
+    '<button id="at-btn" class="at-btn primary" type="submit">' + E(Words.Text('change-password', 'Change password')) + '</button>' +
+    '</form></div>';
+end;
+
+// WeKan's notificationsDrawer, as Weddy's notifications_drawer.go: the
+// activity types whose act-* sentence a notification shows.
+const
+  DRAWER_SENTENCES: array[0..53] of string = (
+    'createCard', 'moveCard', 'archivedCard', 'restoredCard', 'addComment', 'joinMember', 'unjoinMember',
+    'joinAssignee', 'unjoinAssignee', 'addChecklist', 'addAttachment', 'createList', 'createSwimlane', 'createBoard',
+    'addedLabel', 'removedLabel', 'addBoardMember', 'removeBoardMember', 'deleteCard', 'checkedItem', 'uncheckedItem',
+    'addChecklistItem', 'addLabel', 'addSubtask', 'archivedBoard', 'archivedList', 'archivedSwimlane',
+    'changedBoardTitle', 'changedListTitle', 'changedSwimlaneTitle', 'completeChecklist', 'createCustomField',
+    'deleteAttachment', 'deleteBoard', 'deleteComment', 'deleteCustomField', 'editCard', 'editComment',
+    'importBoard', 'importCard', 'importList', 'moveCardBoard', 'moveCardToOtherBoard', 'removeBoard',
+    'removeChecklist', 'removeChecklistItem', 'removedChecklistItem', 'removeLabel', 'removeList', 'removeSwimlane',
+    'restoredList', 'restoredSwimlane', 'setCustomField', 'uncompleteChecklist');
+  // The names an act-* sentence may hold, in the order DrawerItems reads them.
+  DRAWER_PARAMS: array[0..14] of string = ('board', 'user', 'card', 'list', 'swimlane', 'oldList', 'oldSwimlane',
+    'oldBoard', 'checklist', 'checklistItem', 'attachment', 'comment', 'customField', 'customFieldValue', 'label');
+
+// WeKan's renderNotificationItem: the board, the actor, then the sentence
+// with each name in bold and quoted - the card's a link to it - and a name
+// that is not there left out. Everything but the markup is escaped.
+function ClearNotificationItem(const Sentence: string; const Params: array of string; const CardUrl: string): string;
+var i, j, k: Integer; Body, Key, Value, Head: string; Escaped: string;
+begin
+  Escaped := E(Sentence); Body := ''; i := 1;
+  while i <= Length(Escaped) do
+  begin
+    if (Copy(Escaped, i, 2) = '__') then
+    begin
+      j := i + 2;
+      while (j <= Length(Escaped)) and (Escaped[j] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) and (Copy(Escaped, j, 2) <> '__') do Inc(j);
+      if (j > i + 2) and (Copy(Escaped, j, 2) = '__') then
+      begin
+        Key := Copy(Escaped, i + 2, j - i - 2); Value := '';
+        for k := 0 to High(DRAWER_PARAMS) do
+          if (DRAWER_PARAMS[k] = Key) and (k <= High(Params)) then Value := Params[k];
+        if Value <> '' then
+        begin
+          if (Key = 'card') and (CardUrl <> '') then
+            Body := Body + '<b><a href="' + E(CardUrl) + '">' + E('"' + Value + '"') + '</a></b>'
+          else Body := Body + '<b>' + E('"' + Value + '"') + '</b>';
+        end;
+        i := j + 2; Continue;
+      end;
+    end;
+    Body := Body + Escaped[i]; Inc(i);
+  end;
+  Head := '';
+  if Params[0] <> '' then Head := Head + '<b>' + E(Params[0]) + '</b>: ';
+  if Params[1] <> '' then Head := Head + '<b>' + E(Params[1]) + '</b> ';
+  Result := '<div class="wekan-notification-item">' + Head + Trim(Body) + '</div>';
+end;
+
+// WeKan's trayDeliveryFor(boardId).grouping: the member's tray setting, else
+// the board's, else Admin Panel's, else none.
+function TrayGrouping(Db: TWLDb; const UserId, BoardId: string): string;
+var R: TWLRows;
+  function Valid(const G: string): Boolean;
+  begin
+    Result := (G = 'none') or (G = 'card') or (G = 'board');
+  end;
+begin
+  R := Db.Query('SELECT COALESCE(CASE WHEN json_valid(profile_json) THEN json_extract(profile_json,''$.notificationDelivery.tray.grouping'') END,'''') ' +
+    'FROM users WHERE id=' + QuotedStr(UserId) + ';');
+  if (Length(R) = 1) and Valid(R[0][0]) then Exit(R[0][0]);
+  if BoardId <> '' then
+  begin
+    R := Db.Query('SELECT COALESCE(CASE WHEN json_valid(settings_json) THEN json_extract(settings_json,''$.notificationDelivery.tray.grouping'') END,'''') ' +
+      'FROM boards WHERE id=' + QuotedStr(BoardId) + ';');
+    if (Length(R) = 1) and Valid(R[0][0]) then Exit(R[0][0]);
+  end;
+  Result := SharedSettingText(Db, 'notificationDelivery.tray.grouping');
+  if not Valid(Result) then Result := 'none';
+end;
+
+// The drawer's rows: the user's notifications, newest first, at most 100, of
+// boards the user may still read (a board left keeps none of its activity
+// here), an entry scheduled for later (#5171 showAt) not before its time;
+// and - #5171, when the tray grouping says so - one card's or one board's
+// entries in one row, its first shown until the row is opened.
+function DrawerItems(Db: TWLDb; Words: TWLTranslator; const UserId: string): string;
+type TItem = record Html, Read, Activity, Shown, Board, Card, BoardTitle, CardTitle, Key: string; end;
+var R: TWLRows; i, j, k, n, Count: Integer; Items: array of TItem; Params: array of string;
+  Sentence, CardUrl, Grouping, Key, Label_: string; Known: Boolean; Keys: TStringList;
+  function Data(const Field: string): string;
+  begin
+    Result := 'CASE WHEN json_valid(a.data_json) THEN json_extract(a.data_json,''$.' + Field + ''') END';
+  end;
+  function Title(const Table, IdSql: string): string;
+  begin
+    Result := 'COALESCE((SELECT title FROM ' + Table + ' WHERE id=' + IdSql + '),'''')';
+  end;
+begin
+  Result := '';
+  R := Db.Query('SELECT json_extract(n.value,''$.activity''),CASE WHEN json_extract(n.value,''$.read'') IS NULL THEN 0 ELSE 1 END,' +
+    'a.activityType,COALESCE(a.boardId,''''),COALESCE(a.cardId,''''),COALESCE(a.createdAt,''''),' +
+    Title('boards', 'a.boardId') + ',COALESCE((SELECT slug FROM boards WHERE id=a.boardId),''''),' +
+    'COALESCE((SELECT COALESCE(NULLIF(CASE WHEN json_valid(x.profile_json) THEN json_extract(x.profile_json,''$.fullname'') END,''''),x.username) FROM users x WHERE x.id=a.userId),''''),' +
+    'COALESCE(NULLIF(' + Data('cardTitle') + ',''''),(SELECT title FROM cards WHERE id=a.cardId),''''),' +
+    Title('lists', 'a.listId') + ',' + Title('swimlanes', 'a.swimlaneId') + ',' +
+    Title('lists', Data('oldListId')) + ',' + Title('swimlanes', Data('oldSwimlaneId')) + ',' + Title('boards', Data('oldBoardId')) + ',' +
+    Title('checklists', Data('checklistId')) + ',' + Title('checklist_items', Data('checklistItemId')) + ',' +
+    'COALESCE(' + Data('attachmentName') + ',''''),' +
+    'COALESCE((SELECT text FROM card_comments WHERE id=' + Data('commentId') + '),''''),' +
+    'COALESCE((SELECT name FROM custom_fields WHERE id=' + Data('customFieldId') + '),''''),' +
+    // #3141: an admin-only field's value reaches only board admins.
+    'CASE WHEN COALESCE((SELECT adminOnly FROM custom_fields WHERE id=' + Data('customFieldId') + '),0)=0 OR EXISTS(SELECT 1 FROM board_members m ' +
+    'WHERE m.boardId=a.boardId AND m.userId=' + QuotedStr(UserId) + ' AND m.isAdmin=1) THEN COALESCE(CAST(' + Data('value') + ' AS TEXT),'''') ELSE '''' END,' +
+    'COALESCE((SELECT COALESCE(NULLIF(l.name,''''),l.color) FROM board_labels l WHERE l.boardId=a.boardId AND l.id=' + Data('labelId') + '),'''') ' +
+    'FROM users u, json_each(CASE WHEN json_valid(u.profile_json) AND json_type(u.profile_json,''$.notifications'')=''array'' ' +
+    'THEN json_extract(u.profile_json,''$.notifications'') ELSE ''[]'' END) n ' +
+    'JOIN activities a ON a.id=json_extract(n.value,''$.activity'') ' +
+    'WHERE u.id=' + QuotedStr(UserId) + ' AND (COALESCE(json_type(n.value,''$.showAt''),'''') NOT IN (''integer'',''real'') OR ' +
+    'json_extract(n.value,''$.showAt'')<=CAST((julianday(''now'')-2440587.5)*86400000 AS INTEGER)) ' +
+    'ORDER BY n.key DESC LIMIT 500;');
+  SetLength(Items, 0);
+  for i := 0 to High(R) do
+  begin
+    if Length(Items) >= 100 then Break;
+    if (R[i][3] <> '') and not BoardCanRead(Db, UserId, R[i][3]) then Continue;
+    SetLength(Params, Length(DRAWER_PARAMS));
+    Params[0] := R[i][6]; Params[1] := R[i][8];
+    Params[2] := IfThen(R[i][4] <> '', R[i][9], '');
+    for k := 3 to 14 do Params[k] := R[i][k + 7];
+    CardUrl := '';
+    if (R[i][3] <> '') and (R[i][4] <> '') then
+      CardUrl := '/b/' + HTTPEncode(R[i][3]) + '/' + HTTPEncode(R[i][7]) + '/' + HTTPEncode(R[i][4]);
+    Known := False;
+    for k := 0 to High(DRAWER_SENTENCES) do
+      if DRAWER_SENTENCES[k] = R[i][2] then Known := True;
+    Sentence := '';
+    if Known then Sentence := Words.Text('act-' + R[i][2], '');
+    n := Length(Items); SetLength(Items, n + 1);
+    if Sentence <> '' then Items[n].Html := ClearNotificationItem(Sentence, Params, CardUrl)
+    // An activity with no sentence of its own shows its type, as WeKan's.
+    else Items[n].Html := E(R[i][2]);
+    Items[n].Read := R[i][1]; Items[n].Activity := R[i][0];
+    Items[n].Shown := StringReplace(Copy(R[i][5], 1, 16), 'T', ' ', []);
+    Items[n].Board := R[i][3]; Items[n].Card := R[i][4];
+    Items[n].BoardTitle := R[i][6]; Items[n].CardTitle := R[i][9];
+  end;
+  // WeKan's groupEntries: the grouping key of each entry, by its board's grouping.
+  Keys := TStringList.Create;
+  try
+    for i := 0 to High(Items) do
+    begin
+      Grouping := TrayGrouping(Db, UserId, Items[i].Board);
+      if (Grouping = 'card') and (Items[i].Card <> '') then Items[i].Key := 'card:' + Items[i].Card
+      else if (Grouping = 'card') or (Grouping = 'board') then Items[i].Key := 'board:' + Items[i].Board
+      else Items[i].Key := 'single:' + IntToStr(i);
+      if Keys.IndexOf(Items[i].Key) < 0 then Keys.Add(Items[i].Key);
+    end;
+    for j := 0 to Keys.Count - 1 do
+    begin
+      Key := Keys[j]; Count := 0;
+      for i := 0 to High(Items) do if Items[i].Key = Key then Inc(Count);
+      Label_ := '';
+      if Count > 1 then
+      begin
+        for i := 0 to High(Items) do
+          if Items[i].Key = Key then
+          begin
+            if Copy(Key, 1, 5) = 'card:' then
+              Label_ := StringReplace(StringReplace(Words.Text('notification-group-card', '__count__ notifications on card __card__'),
+                '__count__', IntToStr(Count), [rfReplaceAll]), '__card__', Items[i].CardTitle, [rfReplaceAll])
+            else
+              Label_ := StringReplace(StringReplace(Words.Text('notification-group-board', '__count__ notifications on board __board__'),
+                '__count__', IntToStr(Count), [rfReplaceAll]), '__board__', Items[i].BoardTitle, [rfReplaceAll]);
+            Break;
+          end;
+        Result := Result + '<li class="notification-group" data-key="' + E(Key) + '"><a class="js-toggle-notification-group" href="#" ' +
+          'data-key="' + E(Key) + '" aria-expanded="false">&#9656; ' + E(Label_) + '</a></li>';
+      end;
+      n := 0;
+      for i := 0 to High(Items) do
+        if Items[i].Key = Key then
+        begin
+          Result := Result + '<li class="notification' + IfThen(Items[i].Read = '1', ' is-read', '') +
+            IfThen((Count > 1) and (n > 0), ' is-group-rest', '') + '" data-activity="' + E(Items[i].Activity) +
+            '" data-group="' + IfThen(Count > 1, E(Key), '') + '"><div class="notification-clear-item">' + Items[i].Html +
+            '</div><div class="notification-date"><small class="quiet">' + E(Items[i].Shown) + '</small></div></li>';
+          Inc(n);
+        end;
+    end;
+  finally
+    Keys.Free;
+  end;
+end;
+
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
-var Dir, Header, ProfilePopup: string; SiteAdmin: Boolean; T: TWLTenant;
+var Dir, Header, ProfilePopup, Drawer: string; SiteAdmin: Boolean; T: TWLTenant;
 begin
   SiteAdmin := (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and IsSiteAdmin(T.Db, S.UserId);
-  ProfilePopup := '';
-  if (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) then ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId);
+  ProfilePopup := ''; Drawer := '';
+  if (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) then
+  begin
+    ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId);
+    Drawer := DrawerItems(T.Db, Words, S.UserId);
+  end;
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
   Header := '';
   if S.UserId <> '' then
@@ -314,8 +585,16 @@ begin
       '<div id="notifications" class="notifications"><a class="notifications-drawer-toggle js-toggle-notifications-drawer" href="#" title="' +
       HtmlAttr(Words.Text('notifications', 'Notifications')) + '" aria-label="' + HtmlAttr(Words.Text('notifications', 'Notifications')) +
       '" data-unread="0">&#128276;<span class="notifications-count"></span></a></div>' +
-      '<section id="notifications-drawer" class="is-hidden"><div class="header"><h5>' + E(Words.Text('notifications', 'Notifications')) +
-      '</h5><a class="close" href="#" title="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><ul class="notifications"></ul></section>' +
+      '<section id="notifications-drawer" class="is-hidden"><div class="header"><a class="notification-menu-toggle" href="#" title="' +
+      HtmlAttr(Words.Text('menu', 'Menu')) + '">&#9776;</a><div class="notification-menu is-hidden">' +
+      '<a class="menu-item js-filter-unread selected" href="#">' + E(Words.Text('filter-by-unread', 'Filter by unread')) + '</a>' +
+      '<a class="menu-item js-view-all" href="#">' + E(Words.Text('view-all', 'View All')) + '</a>' +
+      '<a class="menu-item mark-all-read" href="#">' + E(Words.Text('mark-all-as-read', 'Mark all as read')) + '</a>' +
+      '<a class="menu-item delete-all" href="#" data-confirm="' + E(Words.Text('delete-all-notifications-confirm',
+      'Are you sure you want to delete all notifications? This action cannot be undone.')) + '">' +
+      E(Words.Text('delete-all-notifications', 'Delete all notifications')) + '</a></div><h5>' + E(Words.Text('notifications', 'Notifications')) +
+      '</h5><a class="close" href="#" title="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><ul class="notifications">' +
+      Drawer + '</ul></section>' +
       '<a class="header-user js-open-header-member-menu" href="/">' + E(S.Username) + '</a>' +
       // The sidebar hamburger, on a board (header.jade).
       IfThen(BoardTitle <> '', '<div class="board-header-btns header-sidebar-toggle"><div class="separator"></div>' +
@@ -328,6 +607,10 @@ begin
       '<li><a class="board-header-btn js-open-archived-board" href="/allboards/archive"><i class="fa fa-archive"></i> ' +
       E(Words.Text('archives', 'Archives')) + '</a></li>' +
       '<li><a class="js-edit-profile" href="#"><i class="fa fa-user"></i> ' + E(Words.Text('edit-profile', 'Edit Profile')) + '</a></li>' +
+      '<li><a class="js-change-password" href="/profile/password"><i class="fa fa-key"></i> ' +
+      E(Words.Text('changePasswordPopup-title', 'Change Password')) + '</a></li>' +
+      '<li><a class="js-change-language" href="/language/popup"><i class="fa fa-globe"></i> ' +
+      E(Words.Text('changeLanguagePopup-title', 'Change Language')) + '</a></li>' +
       // The Admin Panel, for a site admin (memberMenuPopup's js-go-setting).
       IfThen(SiteAdmin, '<li><a class="js-go-setting" href="/admin/people"><i class="fa fa-lock"></i> ' +
         E(Words.Text('admin-panel', 'Admin Panel')) + '</a></li>', '') + '</ul></div></template>' + ProfilePopup +
@@ -582,6 +865,24 @@ end;
 
 // _cardsec_comments.pug: the card's comments, newest last, and the form for
 // whoever may comment on the board.
+// The board's active members for the comment editor's @ mention menu
+// (editor.js's mentions strategy: board.activeMembers()), as JSON
+// [{"u":username,"f":full name}] - welite.js draws the menu from it.
+function MentionMembersJson(Db: TWLDb; const BoardId: string): string;
+var R: TWLRows; i: Integer;
+begin
+  R := Db.Query('SELECT u.username,COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.fullname'') END,'''') ' +
+    'FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
+    ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0 ORDER BY u.username;');
+  Result := '[';
+  for i := 0 to High(R) do
+  begin
+    if i > 0 then Result := Result + ',';
+    Result := Result + '{"u":"' + StringToJSONString(R[i][0]) + '","f":"' + StringToJSONString(R[i][1]) + '"}';
+  end;
+  Result := Result + ']';
+end;
+
 function CommentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; CanComment: Boolean): string;
 var R: TWLRows; i: Integer; Shown: string;
 begin
@@ -591,7 +892,7 @@ begin
     Result := Result + '<div class="new-comment js-new-comment"><form class="js-new-comment-form" method="post" action="/b/' +
       HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/comments" up-submit up-target=".board-wrapper">' +
       '<textarea class="editor js-new-comment-input" name="comment" aria-label="' + HtmlAttr(Words.Text('comment', 'Comment')) +
-      '" required></textarea><button class="primary confirm js-add-comment" type="submit">' + E(Words.Text('comment', 'Comment')) +
+      '" data-mentions="' + E(MentionMembersJson(Db, BoardId)) + '" required></textarea><button class="primary confirm js-add-comment" type="submit">' + E(Words.Text('comment', 'Comment')) +
       '</button></form></div>';
   R := Db.Query('SELECT c.id,c.text,COALESCE(c.createdAt,''''),COALESCE(u.username,'''') FROM card_comments c LEFT JOIN users u ON u.id=c.userId ' +
     'WHERE c.cardId=' + QuotedStr(CardId) + ' AND (c.boardId IS NULL OR c.boardId=' + QuotedStr(BoardId) + ') ORDER BY c.createdAt,c.id;');
@@ -2691,11 +2992,15 @@ begin
     SendJsonAnswer(Response, 200, '{"result":true}');
     Exit;
   end;
-  // The users collection's own update: WeKan's allow rule refuses a client
-  // writing an account, its invitations included (InviteProfileBleed).
+  // The users collection's own update: the tray's read marks and removals
+  // of the user's own notifications, and nothing else - WeKan's allow and
+  // deny rules refuse a client writing an account, its invitations
+  // (InviteProfileBleed) and its notification list (TrayBleed) included.
   if Name = '/users/update' then
   begin
-    SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}');
+    Code := ViewUsersUpdate(T.Db, S.UserId, Request.Content);
+    if Code = 200 then SendJsonAnswer(Response, 200, '{"result":1}')
+    else SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"Access denied"}');
     Exit;
   end;
   if Name = 'setMobileMode' then
@@ -2717,6 +3022,30 @@ begin
     if not T.Db.Exec('UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
       '''$.mobileMode'',json(' + QuotedStr(Id) + ')) WHERE id=' + QuotedStr(S.UserId) + ';') then
     begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
+    Exit;
+  end;
+  if Name = 'setPassword' then
+  begin
+    // WeKan's setPassword (server/models/users.js): [newPassword, userId], a
+    // site admin's; every session of that user is signed out.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      if not IsSiteAdmin(T.Db, S.UserId) then begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"Access denied"}'); Exit; end;
+      Code := ViewSetPassword(T, S.UserId, TJSONArray(Args).Items[1].AsString, TJSONArray(Args).Items[0].AsString, Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
@@ -2965,7 +3294,7 @@ end;
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
-  P: TStringArray; Code, n: Integer; Found: Boolean;
+  P: TStringArray; Code, n: Integer; Found: Boolean; Proof: TWLLoginProof;
 begin
   Result := False;
   // weddy.js's GET /b/:id/places (the move and copy pop-overs' other board),
@@ -2992,6 +3321,50 @@ begin
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
+  // Member Settings' Change Password: the password now, then the new one
+  // twice. Every session ends with it, this one too (WeKan's
+  // passwordChangeRequired.js), so the viewer goes to sign in again.
+  if Path = '/profile/password' then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    Error := ''; Proof := nil;
+    if Request.ContentFields.Values['newPassword'] <> Request.ContentFields.Values['newPassword2'] then Error := 'password-mismatch'
+    // The password now is checked as a sign-in is, within the same limit,
+    // so this form is no way round it to guess the password.
+    else if not ReserveLoginAttempt(T.Db, S.Username, Request.RemoteAddress, DateTimeToUnix(Now, False)) then Error := 'login-refused-braked'
+    else if not AuthenticateAccount(T.Db, S.Username, Request.ContentFields.Values['oldPassword'], '', Proof) then Error := 'login-refused-bad-password';
+    Proof.Free;
+    if Error = '' then
+    begin
+      Code := ViewSetPassword(T, S.UserId, S.UserId, Request.ContentFields.Values['newPassword'], Error);
+      if (Code <> 200) and (Error <> 'error-password-policy') then Error := 'error-undefined';
+    end;
+    Response.Code := 303;
+    if Error <> '' then Response.SetCustomHeader('Location', '/profile/password?error=' + HTTPEncode(Error))
+    else
+    begin
+      Html5ClearLoginCookie(Response);
+      Response.SetCustomHeader('Location', '/sign-in');
+    end;
+    Response.SetCustomHeader('Cache-Control', 'no-store');
+    Response.SendContent;
+    Exit;
+  end;
+  // The notifications drawer's menu, from weddy.js: every notification of
+  // the signed-in user read, or deleted.
+  if (Path = '/notifications/read-all') or (Path = '/notifications/delete-all') then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    if Path = '/notifications/read-all' then Found := MarkAllNotificationsRead(T.Db, S.UserId)
+    else Found := DeleteAllNotifications(T.Db, S.UserId);
+    if Found then SendJsonAnswer(Response, 200, '{"ok":true}')
+    else SendJsonAnswer(Response, 500, '{"error":"Internal Server Error"}');
+    Exit;
+  end;
   // editProfilePopup's form: the user's own name and initials, and the
   // username and address where they may be changed; back where it was sent from.
   if Path = '/profile' then
@@ -3362,7 +3735,8 @@ begin
   // The root arrives as an empty PathInfo.
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
-    (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people')) then Exit;
+    (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
+    (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
@@ -3389,6 +3763,17 @@ begin
       Response.Code := 302;
       Response.SetCustomHeader('Location', '/sign-in');
       Response.SendContent;
+      Exit;
+    end;
+    if Path = '/language/popup' then
+    begin
+      Send(200, LanguagePopup(Words, Language));
+      Exit;
+    end;
+    if Path = '/profile/password' then
+    begin
+      Send(200, Page(Request, Language, Words, S, Words.Text('changePasswordPopup-title', 'Change Password'), '',
+        ChangePasswordContent(T.Db, Words, Request.QueryFields.Values['error'])));
       Exit;
     end;
     if (Path = '/people') or (Path = '/admin/people') then

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Dei blong finis",
   "wekan-data-no-database": "I no gat WeKan databes we yu save ridim.",
   "sort-by-votes": "Sotem folem ol vot",
-  "sort-by-label-order": "Oda blong ol mak"
+  "sort-by-label-order": "Oda blong ol mak",
+  "notification-group-card": "__count__ niusem long kad __card__",
+  "notification-group-board": "__count__ niusem long bod __board__",
+  "password-too-short": "Paswod i mas gat __min__ leta o moa.",
+  "login-refused-bad-password": "Paswod i rong",
+  "login-refused-braked": "Tumas traehad we i no wok"
 }

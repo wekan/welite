@@ -541,7 +541,7 @@
   "user-can-not-export-card-to-excel": "Mutirhisi a nga swi koti ku humesa khadi eka Excel",
   "exportBoardPopup-title": "Humesa bodo",
   "exportCardPopup-title": "humesa khadi",
-  "sort": "Hlela",
+  "sort": "Longoloxa",
   "sorted": "Longoloxiwile",
   "remove-sort": "susa mhaka",
   "sort-desc": "Tshikelela ku Hlela Nxaxamelo",
@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Siku ro hetelela",
   "wekan-data-no-database": "Ku hava vuhlayiselo bya datha bya WeKan lebyi hlayekaka lebyi kumiweke.",
   "sort-by-votes": "Hlela hi ku ya hi mavhoti",
-  "sort-by-label-order": "Ku landzelelana ka swikombiso"
+  "sort-by-label-order": "Ku landzelelana ka swikombiso",
+  "notification-group-card": "Switiviso swa __count__ eka khadi __card__",
+  "notification-group-board": "Switiviso swa __count__ eka bodo __board__",
+  "password-too-short": "Xiletelo xa xihundla xi fanele ku va ni maletere ya __min__ hi ku tsongo.",
+  "login-refused-bad-password": "Xiletelo xa xihundla xo hoxeka",
+  "login-refused-braked": "Ku ringeta ko tala ngopfu loku tsandzekeke"
 }

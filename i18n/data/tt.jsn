@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Тәмамлану көне",
   "wekan-data-no-database": "Укып булырлык WeKan мәгълүмат базасы табылмады.",
   "sort-by-votes": "Тавышлар буенча тәртипкә кертү",
-  "sort-by-label-order": "Билгеләр тәртибе"
+  "sort-by-label-order": "Билгеләр тәртибе",
+  "notification-group-card": "__card__ карточкасында __count__ хәбәр",
+  "notification-group-board": "__board__ тактасында __count__ хәбәр",
+  "password-too-short": "Серсүз ким дигәндә __min__ символдан торырга тиеш.",
+  "login-refused-bad-password": "Серсүз дөрес түгел",
+  "login-refused-braked": "Уңышсыз омтылышлар артык күп"
 }

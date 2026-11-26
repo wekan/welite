@@ -2118,5 +2118,10 @@
   "cloud-end-date": "শেষৰ তাৰিখ",
   "wekan-data-no-database": "পঢ়িব পৰা কোনো WeKan ডাটাবেছ পোৱা নগ'ল।",
   "sort-by-votes": "ভোটৰ দ্বাৰা সজাওক",
-  "sort-by-label-order": "লেবেলৰ ক্ৰম"
+  "sort-by-label-order": "লেবেলৰ ক্ৰম",
+  "notification-group-card": "কাৰ্ড __card__-ত __count__ টা জাননী",
+  "notification-group-board": "ফলক __board__-ত __count__ টা জাননী",
+  "password-too-short": "পাছৱৰ্ডটো অতি কমেও __min__ টা আখৰৰ হ'ব লাগিব।",
+  "login-refused-bad-password": "ভুল পাছৱৰ্ড",
+  "login-refused-braked": "অতি বেছি বিফল প্ৰচেষ্টা"
 }

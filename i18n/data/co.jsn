@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Data di fine",
   "wekan-data-no-database": "Ùn hè stata truvata nisuna basa di dati WeKan leghjibile.",
   "sort-by-votes": "Urdinà per voti",
-  "sort-by-label-order": "Ordine di l'etichette"
+  "sort-by-label-order": "Ordine di l'etichette",
+  "notification-group-card": "__count__ nutificazioni nant'à a carta __card__",
+  "notification-group-board": "__count__ nutificazioni nant'à a tavula __board__",
+  "password-too-short": "A parolla d'intrata deve avè almenu __min__ caratteri.",
+  "login-refused-bad-password": "Parolla d'intrata sbagliata",
+  "login-refused-braked": "Troppu tentativi falluti"
 }

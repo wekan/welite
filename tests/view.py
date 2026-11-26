@@ -5,6 +5,7 @@ retro or unknown one the HTML4 view. ?ui=html4|html5 switches and is kept in
 the welite-ui cookie. The HTML5 view signs in with WeKan's meteor_login_token
 cookie. Linked and CLI SQLite.
 """
+import html
 import http.client
 import json
 import os
@@ -1330,8 +1331,140 @@ def http_checks(server, tmp, backend):
         card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.watchers',json('[]')) WHERE id=?", card_id)
         assert comment_on('@worker and nobody else')[0] == 200
         assert len(notes(users['worker'])) == 2, 'a mention does not opt a muted member back in'
+        # The card's other activities notify the same way (activities.js):
+        # moved, put on the card - the member it is about takes part (#5833) -
+        # and archived; a muted member is told nothing.
+        kinds = lambda uid: [card_db('SELECT activityType FROM activities WHERE id=?', n['activity'])[0] for n in notes(uid)]
+        card_db("UPDATE users SET profile_json=json_set(profile_json,'$.notifications',json('[]')) WHERE id=?", users['worker'])
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.watchers',json(?)) WHERE id=?",
+                 json.dumps([{'userId': users['worker'], 'level': 'watching'}]), board_id)
+        assert request('POST', card_path + '/move-to', {'listId': second_list, 'swimlaneId': lane}, cookie=owner)[0] == 200
+        assert request('POST', card_path + '/move-to', {'listId': list_id, 'swimlaneId': lane}, cookie=owner)[0] == 200
+        assert kinds(users['worker']) == ['moveCard', 'moveCard'], kinds(users['worker'])
+        assert notes(login['id']) == [] or 'moveCard' not in kinds(login['id']), 'never the one who moved it'
+        card_db('DELETE FROM card_members WHERE cardId=? AND userId=?', card_id, users['worker'])
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.watchers',json(?)) WHERE id=?",
+                 json.dumps([{'userId': users['worker'], 'level': 'tracking'}]), board_id)
+        assert request('POST', '%s/members/%s' % (card_path, users['worker']), {}, cookie=owner)[0] == 200
+        assert kinds(users['worker'])[-1] == 'joinMember', kinds(users['worker'])
+        assert request('POST', '%s/members/%s' % (card_path, users['worker']), {}, cookie=owner)[0] == 200
+        assert kinds(users['worker'])[-1] == 'unjoinMember', kinds(users['worker'])
+        board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.watchers') WHERE id=?", board_id)
+        before = len(notes(users['worker']))
+        assert request('POST', '%s/members/%s' % (card_path, users['worker']), {}, cookie=owner)[0] == 200
+        assert request('POST', '%s/members/%s' % (card_path, users['worker']), {}, cookie=owner)[0] == 200
+        assert len(notes(users['worker'])) == before, 'muted: put on the card and off it, told nothing'
+        # Negative: a change that writes no activity notifies nobody.
+        board_db("UPDATE boards SET settings_json=json_set(settings_json,'$.watchers',json(?)) WHERE id=?",
+                 json.dumps([{'userId': users['worker'], 'level': 'watching'}]), board_id)
+        before = len(notes(users['worker']))
+        assert request('POST', card_path + '/move-to', {'listId': list_id, 'swimlaneId': lane}, cookie=owner)[0] == 200
+        assert len(notes(users['worker'])) == before, 'a move to where it is is no move'
+        api = (ROOT / 'src/wlapi.pas').read_text()
+        at = api.index('function NotificationsSql(')
+        guard = api[at:api.index('function AddViewComment(', at)]
+        assert "SharedSettingOn(Db,'disableNotifications')" in guard and 'EXISTS(SELECT 1 FROM activities WHERE id=' in guard
         assert b'"notifications":[' in request('GET', '/api/user', cookie=owner)[2]
         board_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.watchers') WHERE id=?", board_id)
+
+        # #6704: the comment editor's @ mention menu is drawn from the board's
+        # active members, carried as JSON on the textarea - escaped, so a full
+        # name cannot end the attribute; an inactive member is not offered.
+        def mentions():
+            page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2].decode()
+            found = re.search(r'<textarea class="editor js-new-comment-input"[^>]* data-mentions="([^"]*)"', page)
+            assert found, 'the comment editor carries the members'
+            return {m['u']: m['f'] for m in json.loads(html.unescape(found.group(1)))}
+        card_db("UPDATE users SET profile_json=json_set(profile_json,'$.fullname',?) WHERE id=?", 'Wor"ker <b>&amp;', users['worker'])
+        got = mentions()
+        assert got['worker'] == 'Wor"ker <b>&amp;' and 'owner' in got, got
+        card_db('UPDATE board_members SET isActive=0 WHERE boardId=? AND userId=?', board_id, users['silent'])
+        assert 'silent' not in mentions(), 'an inactive member is not offered'
+        card_db('UPDATE board_members SET isActive=1 WHERE boardId=? AND userId=?', board_id, users['silent'])
+        card_db("UPDATE users SET profile_json=json_remove(profile_json,'$.fullname') WHERE id=?", users['worker'])
+        # Negative: the menu writes names as text, never as markup.
+        js = (ROOT / 'public/static/welite.js').read_text()
+        menu = js[js.index('function mentionUpdate'):js.index("document.addEventListener('input'")]
+        assert 'textContent' in menu and 'innerHTML' not in menu and 'insertAdjacentHTML' not in menu
+
+        # The notifications drawer (notificationsDrawer, Weddy's
+        # notifications_drawer.go): newest first, the act-* sentence with the
+        # board, the actor and the names in bold, the card a link to it.
+        title = card_db('SELECT title FROM cards WHERE id=?', card_id)[0]
+        for aid, kind, board, at in (('drawer-a1', 'createCard', board_id, '2026-11-26T01:00:00.000Z'),
+                                     ('drawer-a2', 'addComment', board_id, '2026-11-26T02:00:00.000Z'),
+                                     ('drawer-a3', 'createCard', 'no-such-board', '2026-11-26T03:00:00.000Z'),
+                                     ('drawer-a4', 'createBoard', board_id, '2026-11-26T04:00:00.000Z'),
+                                     ('drawer-a5', 'noSentenceOfItsOwn<b>', board_id, '2026-11-26T05:00:00.000Z')):
+            card_db('INSERT INTO activities(id,activityType,userId,boardId,cardId,createdAt,data_json) VALUES(?,?,?,?,?,?,?)',
+                    aid, kind, users['worker'], board, card_id if kind != 'createBoard' else None, at,
+                    json.dumps({'cardTitle': 'Shown <i>title</i>'}) if aid == 'drawer-a2' else '{}')
+        later = int(time.time() * 1000) + 24 * 3600000
+        card_db("UPDATE users SET profile_json=json_set(profile_json,'$.notifications',json(?)) WHERE id=?", json.dumps([
+            {'activity': 'drawer-a1', 'read': None}, {'activity': 'drawer-a2', 'read': '2026-11-26T02:30:00.000Z'},
+            {'activity': 'drawer-a3', 'read': None}, {'activity': 'drawer-a4', 'read': None, 'showAt': later},
+            {'activity': 'drawer-a5', 'read': None}, {'activity': 'drawer-missing', 'read': None}]), login['id'])
+        def drawer():
+            page = request('GET', route, cookie=owner)[2].decode()
+            body = page[page.index('<section id="notifications-drawer"'):page.index('</section>', page.index('<section id="notifications-drawer"'))]
+            return body, re.findall(r'<li class="notification([^"]*)" data-activity="([^"]*)"', body)
+        body, rows = drawer()
+        assert [r[1] for r in rows] == ['drawer-a5', 'drawer-a2', 'drawer-a1'], rows
+        assert [r[0] for r in rows] == ['', ' is-read', ''], 'the read one is marked'
+        link = '<b><a href="/b/%s/' % board_id
+        assert link in body and ('/%s">&quot;%s&quot;</a></b>' % (card_id, title)) in body, body
+        assert '&quot;Shown &lt;i&gt;title&lt;/i&gt;&quot;' in body and '<i>title' not in body, 'the activity\'s title, escaped'
+        assert 'noSentenceOfItsOwn&lt;b&gt;' in body and 'OfItsOwn<b>' not in body, 'an unknown type shows itself, as text'
+        assert '__card__' not in body and '__list__' not in body
+        assert 'class="menu-item mark-all-read"' in body and 'class="menu-item delete-all" href="#" data-confirm="' in body
+        # #5171: the board's entries in one row when the member groups by board.
+        card_db("UPDATE users SET profile_json=json_set(profile_json,'$.notificationDelivery',json(?)) WHERE id=?",
+                json.dumps({'tray': {'grouping': 'board'}}), login['id'])
+        body, rows = drawer()
+        assert '<li class="notification-group" data-key="board:%s">' % board_id in body and '>&#9656; 3 ' in body, body
+        assert [r[0] for r in rows] == ['', ' is-read is-group-rest', ' is-group-rest'], rows
+        card_db("UPDATE users SET profile_json=json_remove(profile_json,'$.notificationDelivery') WHERE id=?", login['id'])
+        # The menu: all read, then none; nobody signed in changes nothing.
+        assert request('POST', '/notifications/read-all', {})[0] in (302, 303, 401, 403, 404)
+        assert notes(login['id'])[0]['read'] is None, 'nobody signed in marks nothing read'
+        assert request('POST', '/notifications/read-all', {}, cookie=owner)[0] == 200
+        assert all(n['read'] for n in notes(login['id'])), notes(login['id'])
+        assert [r[0] for r in drawer()[1]] == [' is-read'] * 3
+        assert request('POST', '/notifications/delete-all', {}, cookie=worker)[0] == 200
+        assert len(notes(login['id'])) == 6, "one user's menu leaves another's notifications"
+        assert request('POST', '/notifications/delete-all', {}, cookie=owner)[0] == 200
+        assert notes(login['id']) == [] and drawer()[1] == []
+        card_db("DELETE FROM activities WHERE id LIKE 'drawer-a%'")
+        # TrayBleed: the tray's own writes of the user's own entries pass -
+        # read at a date, unread, removed - and nothing else does.
+        tray = lambda mod, who=owner, uid=None: call('/users/update', [{'_id': uid or login['id']}, mod], who)[0]
+        card_db("UPDATE users SET profile_json=json_set(profile_json,'$.notifications',json(?)) WHERE id=?",
+                json.dumps([{'activity': 'own-1', 'read': None}, {'activity': 'own-2', 'read': None}]), login['id'])
+        assert tray({'$set': {'profile.notifications.0.read': '2026-11-26T10:00:00.000Z'}}) == 200
+        assert notes(login['id'])[0]['read'] == '2026-11-26T10:00:00.000Z' and notes(login['id'])[1]['read'] is None
+        assert tray({'$set': {'profile.notifications.1.read': {'$date': 1764151200000}}}) == 200
+        assert notes(login['id'])[1]['read'].startswith('2025-11-26T10:00:00'), notes(login['id'])
+        assert tray({'$set': {'profile.notifications.0.read': None}}) == 200 and notes(login['id'])[0]['read'] is None
+        assert tray({'$unset': {'profile.notifications.1.read': 1}}) == 200 and 'read' not in notes(login['id'])[1]
+        assert tray({'$pull': {'profile.notifications': {'activity': 'own-1'}}}) == 200
+        assert [n['activity'] for n in notes(login['id'])] == ['own-2']
+        # Negative: no entry added, rewritten or given another activity, no
+        # text as a date, no other user's tray, nothing beside it.
+        for mod in ({'$push': {'profile.notifications': {'activity': 'foreign'}}},
+                    {'$set': {'profile.notifications': [{'activity': 'foreign'}]}},
+                    {'$set': {'profile.notifications.0.activity': 'foreign'}},
+                    {'$set': {'profile.notifications.0.read': 'yesterday'}},
+                    {'$set': {'profile.notifications.0': {'activity': 'foreign'}}},
+                    {'$addToSet': {'profile.notifications': {'activity': 'foreign'}}},
+                    {'$set': {'profile.notifications.0.read': None, 'profile.fullname': 'x'}},
+                    {'$set': {'profile.notifications.0.read': None}, '$push': {'profile.notifications': {'activity': 'x'}}}):
+            assert tray(mod) == 403, mod
+        assert tray({'$set': {'profile.notifications.0.read': None}}, uid=users['worker']) == 403
+        assert tray({'$set': {'profile.notifications.0.read': None}}, who=None) in (401, 403)
+        assert [n['activity'] for n in notes(login['id'])] == ['own-2'], notes(login['id'])
+        api = (ROOT / 'src/wlapi.pas').read_text()
+        at = api.index('function ViewUsersUpdate(')
+        assert "'TrayBleed','ddp:user-notifications'" in api[at:api.index('finally Args.Free;end;', at)], 'an attempt is recorded'
 
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
@@ -1372,6 +1505,70 @@ def http_checks(server, tmp, backend):
         # Negative: a toggle with no valid session sets no login cookie.
         status, headers, _, cookies = request('POST', '/?ui=html5', {'nav_view': '1', 'sessionId': 'f' * 64}, agent=IBROWSE)
         assert status == 303 and cookie_value(cookies, 'meteor_login_token') is None
+
+        # Member Settings' Change Language (changeLanguagePopup): fetched when
+        # opened, every installed language, the one now checked.
+        assert b'class="js-change-language" href="/language/popup"' in request('GET', '/', cookie=owner)[2]
+        popup = request('GET', '/language/popup', cookie=owner)[2].decode()
+        tags = re.findall(r'class="js-set-language" href="#" dir="ltr" data-language="([^"]+)"', popup)
+        installed = len([f for f in (ROOT / 'i18n/data').glob('*.jsn') if not f.is_symlink()])
+        assert len(tags) > 200 and len(tags) == len(set(tags)) and len(tags) <= installed + 5, (len(tags), installed)
+        assert popup.startswith('<template class="js-pop-over-template" data-pop="change-language" data-popup="changeLanguagePopup"')
+        assert '<li class="active"><a class="js-set-language" href="#" dir="ltr" data-language="en">' in popup
+        assert popup.count('fa-check') == 1 and popup.count('(RTL)') >= 5
+        assert '<bdi class="language-name">English</bdi>' in popup and '&nbsp;<bdi>Brazil</bdi>' in popup
+        assert request('GET', '/language/popup')[1].get('Location') == '/sign-in', 'signed-in only'
+
+        # Member Settings' Change Password (changePasswordPopup): the password
+        # now and the new one twice; then every session is signed out, this
+        # one too (passwordChangeRequired.js), and only the new one signs in.
+        assert b'class="js-change-password" href="/profile/password"' in request('GET', '/', cookie=stranger)[2]
+        page = request('GET', '/profile/password', cookie=stranger)[2]
+        assert b'id="at-field-current_password"' in page and b'name="newPassword2"' in page and b'minlength="9"' in page
+        assert request('GET', '/profile/password')[1].get('Location') == '/sign-in'
+        stranger2 = cookie_of('stranger')
+        change = lambda old, new, again=None, who=stranger: request('POST', '/profile/password',
+            {'oldPassword': old, 'newPassword': new, 'newPassword2': new if again is None else again}, cookie=who)[:2]
+        # Negative: the wrong password now, two that differ, one too short.
+        for args, key in ((('wrong-password', 'Changed-pass-1'), 'login-refused-bad-password'),
+                          (('test-password', 'Changed-pass-1', 'Changed-pass-2'), 'password-mismatch'),
+                          (('test-password', 'short1'), 'error-password-policy')):
+            status, headers = change(*args)
+            assert status == 303 and headers['Location'] == '/profile/password?error=' + key, (status, headers)
+        assert b'at least 9 characters' in request('GET', '/profile/password?error=error-password-policy', cookie=stranger)[2]
+        assert request('GET', '/', cookie=stranger)[0] == 200 and request('GET', '/', cookie=stranger2)[0] == 200, 'nothing changed'
+        # Negative: the form is held to the sign-in limit, five a while.
+        api = (ROOT / 'src/wlh5.pas').read_text()
+        at = api.index("if Path = '/profile/password' then\n  begin\n    if not (ResolveTenant")
+        form = api[at:api.index('ViewSetPassword(', at)]
+        assert form.index('ReserveLoginAttempt(') < form.index('AuthenticateAccount('), 'checked within the limit'
+        card_db("DELETE FROM _wl_attempt WHERE bucket LIKE 'account:%'")
+        for _ in range(5):
+            assert change('guess', 'Changed-pass-1')[1]['Location'].endswith('error=login-refused-braked') is False
+        assert change('test-password', 'Changed-pass-1')[1]['Location'] == '/profile/password?error=login-refused-braked', \
+            'even the right password, once the guesses are spent'
+        assert request('GET', '/', cookie=stranger)[0] == 200
+        card_db("DELETE FROM _wl_attempt WHERE bucket LIKE 'account:%'")
+        status, headers = change('test-password', 'Changed-pass-1')
+        assert status == 303 and headers['Location'] == '/sign-in'
+        for who in (stranger, stranger2):
+            assert request('GET', '/', cookie=who)[1].get('Location') == '/sign-in', 'every session signed out'
+        assert 'token' not in json.loads(request('POST', '/users/login', {'username': 'stranger', 'password': 'test-password'})[2])
+        card_db("DELETE FROM _wl_attempt WHERE bucket LIKE 'account:%'")
+        stranger = 'meteor_login_token=' + json.loads(request('POST', '/users/login',
+            {'username': 'stranger', 'password': 'Changed-pass-1'})[2])['token']
+        assert request('GET', '/', cookie=stranger)[0] == 200
+        # WeKan's setPassword: a site admin's, and it signs that user out too.
+        status, _, body, _ = request('POST', '/_methods/setPassword', ['Admin-set-pass-1', users['stranger']], cookie=worker, as_json=True)
+        assert status == 403, body
+        assert request('POST', '/_methods/setPassword', ['Admin-set-pass-1'], cookie=owner, as_json=True)[0] == 400
+        assert request('POST', '/_methods/setPassword', ['short', users['stranger']], cookie=owner, as_json=True)[0] == 400
+        assert request('GET', '/', cookie=stranger)[0] == 200, 'a refused setPassword signs nobody out'
+        assert request('POST', '/_methods/setPassword', ['Admin-set-pass-1', users['stranger']], cookie=owner, as_json=True)[0] == 200
+        assert request('GET', '/', cookie=stranger)[1].get('Location') == '/sign-in'
+        card_db("DELETE FROM _wl_attempt WHERE bucket LIKE 'account:%'")
+        got = request('POST', '/users/login', {'username': 'stranger', 'password': 'Admin-set-pass-1'})
+        assert json.loads(got[2]).get('token'), got[:3]
 
         # Log Out revokes the cookie's session.
         status, headers, _, cookies = request('POST', '/logout', {}, cookie=owner)

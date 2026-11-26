@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Dydh diwedh",
   "wekan-data-no-database": "Ny veu kevys databas WeKan redyadow.",
   "sort-by-votes": "Restra dre vôtys",
-  "sort-by-label-order": "Aray an labellow"
+  "sort-by-label-order": "Aray an labellow",
+  "notification-group-card": "__count__ gwarnyans war an karten __card__",
+  "notification-group-board": "__count__ gwarnyans war an estyllen __board__",
+  "password-too-short": "Res yw dhe'n ger-tremena bos hirra a __min__ lytherenn dhe'n lyha.",
+  "login-refused-bad-password": "Ger-tremena kammek",
+  "login-refused-braked": "Re a assayow fyllys"
 }

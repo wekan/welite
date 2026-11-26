@@ -860,7 +860,7 @@
   "attachment-limit-mode-blocked": "Blokirano",
   "attachment-limit-unit-gb": "GB",
   "attachment-limit-unit-mb": "MB",
-  "attachment-limit-unit-bytes": "Bajtovi",
+  "attachment-limit-unit-bytes": "Bytes",
   "people": "Ljudi",
   "registration": "Registracija",
   "disable-self-registration": "Onemogući samostalnu registraciju",
@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Datum završetka",
   "wekan-data-no-database": "Nije pronađena čitljiva WeKan baza podataka.",
   "sort-by-votes": "Poređaj po glasovima",
-  "sort-by-label-order": "Redoslijed oznaka"
+  "sort-by-label-order": "Redoslijed oznaka",
+  "notification-group-card": "__count__ obavještenja na kartici __card__",
+  "notification-group-board": "__count__ obavještenja na tabli __board__",
+  "password-too-short": "Lozinka mora imati najmanje __min__ znakova.",
+  "login-refused-bad-password": "Pogrešna lozinka",
+  "login-refused-braked": "Previše neuspješnih pokušaja"
 }

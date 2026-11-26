@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Letsatsi la ho fela",
   "wekan-data-no-database": "Ha ho a fumanwa polokelo ya data ya WeKan e balehang.",
   "sort-by-votes": "Hlopha ho ya ka likhetho",
-  "sort-by-label-order": "Tatellano ya dileibole"
+  "sort-by-label-order": "Tatellano ya dileibole",
+  "notification-group-card": "Ditsebiso tse __count__ kareteng ya __card__",
+  "notification-group-board": "Ditsebiso tse __count__ botong ya __board__",
+  "password-too-short": "Phasewete e tlameha ho ba le bonyane ditlhaku tse __min__.",
+  "login-refused-bad-password": "Phasewete e fosahetseng",
+  "login-refused-braked": "Diteko tse ngata haholo tse hlolehileng"
 }

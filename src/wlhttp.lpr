@@ -258,7 +258,7 @@ end;
 procedure SignInEndpoint(aRequest: TRequest; aResponse: TResponse);
 var
   T: TWLTenant;
-  Username, Password: string;
+  Username, Password, Token: string;
   Proof: TWLLoginProof;
   S: TWLSession;
 
@@ -277,6 +277,17 @@ begin
     Proof:=nil;
     if AuthenticateAccount(T.Db,Username,Password,aRequest.ContentFields.Values['code'],Proof) then
     try
+      // The HTML5 view of a shared store signs in as WeKan does: a Meteor
+      // login token, in the user's services.resume.loginTokens, so that
+      // WeKan and the store's other readers see the session (and a password
+      // change or Admin Panel's sign-out ends it everywhere).
+      if (RequestView(aRequest)=wvHtml5) and SharedStore(T.Db) then
+      begin
+        Token:=NewAuthToken;
+        if not IssueAccountToken(T.Db,Proof,Token,'api',ApiTokenLifetime(T.Db)) then
+        begin AuthError(aRequest,aResponse,500,'log-in','Sign in','Could not create session','auth-session-create-failed');Exit; end;
+        Html5SignedIn(aResponse,Token);Exit;
+      end;
       S:=CreateAuthenticatedSession(T.Db,aRequest,Proof,30*24*60*60);
       if S.SessionId='' then
       begin AuthError(aRequest,aResponse,500,'log-in','Sign in','Could not create session','auth-session-create-failed');Exit; end;

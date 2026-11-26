@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Вӗҫӗмлӗ кун",
   "wekan-data-no-database": "Вулама май пур WeKan палӑрту бази тупӑнмарӗ.",
   "sort-by-votes": "Сасӑсем тӑрӑх йӗркелесси",
-  "sort-by-label-order": "Паллӑсен йӗрки"
+  "sort-by-label-order": "Паллӑсен йӗрки",
+  "notification-group-card": "__card__ карточка ҫинче __count__ пӗлтерӳ",
+  "notification-group-board": "__board__ хӑма ҫинче __count__ пӗлтерӳ",
+  "password-too-short": "Вӑрттӑн сӑмахра __min__ паллӑран кая мар пулмалла.",
+  "login-refused-bad-password": "Вӑрттӑн сӑмах тӗрӗс мар",
+  "login-refused-braked": "Ӑнӑҫсӑр хӑтланусем ытла нумай"
 }

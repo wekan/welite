@@ -2118,5 +2118,10 @@
   "cloud-end-date": "निमाणी तारीख",
   "wekan-data-no-database": "वाचूंक जाता असो खंयचोच WeKan म्हायतीकोश मेळ्ळो ना.",
   "sort-by-votes": "मतां प्रमाण वर्गीकरण करचें",
-  "sort-by-label-order": "लेबलांचो क्रम"
+  "sort-by-label-order": "लेबलांचो क्रम",
+  "notification-group-card": "कार्ड __card__ चेर __count__ सुचोवण्यो",
+  "notification-group-board": "फळो __board__ चेर __count__ सुचोवण्यो",
+  "password-too-short": "पासवर्ड उण्यांत उणो __min__ अक्षरांचो आसूंक जाय.",
+  "login-refused-bad-password": "चुकीचो पासवर्ड",
+  "login-refused-braked": "खूब अपेस आयिल्ले यत्न"
 }

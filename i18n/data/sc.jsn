@@ -1844,8 +1844,8 @@
   "cloud-connection-failed": "Connessione faddida",
   "cloud-settings-saved": "Impostatziones de s'archiviatzione sarvadas",
   "cloud-settings-save-failed": "Impossìbile sarvare sas impostatziones de s'archiviatzione",
-  "move-storage-azure": "Elementu: Azure Blob",
-  "move-storage-gcs": "Elementu: Google Cloud Storage",
+  "move-storage-azure": "Archìviu Azure Blob",
+  "move-storage-gcs": "Archìviu Google Cloud Storage",
   "attachment-move-storage-azure": "Tràmuda s'alligadu a Azure Blob Storage",
   "attachment-move-storage-gcs": "Tràmuda s'alligadu a Google Cloud Storage",
   "gridfs-enabled": "GridFS abilitadu",
@@ -2010,7 +2010,7 @@
   "force-board-scan": "Fortza s'analisi de sa tàula",
   "gridfs-attachments": "Alligados GridFS",
   "gridfs-size": "Mannària de GridFS",
-  "gridfs-storage": "Elementu: GridFS",
+  "gridfs-storage": "Archìviu GridFS",
   "hide-list-on-minicard": "Cua sa lista in sa minicarta",
   "idle-migration": "Migratzione in pasu",
   "job-description": "Descritzione de su protzessu",
@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Data de fine",
   "wekan-data-no-database": "No est istada agatada peruna base de datos WeKan leghìbile.",
   "sort-by-votes": "Ordinare pro votos",
-  "sort-by-label-order": "Òrdine de is etichetas"
+  "sort-by-label-order": "Òrdine de is etichetas",
+  "notification-group-card": "__count__ notìficas in sa carta __card__",
+  "notification-group-board": "__count__ notìficas in sa tàula __board__",
+  "password-too-short": "Sa crae depet èssere longa a su mancu __min__ caràteres.",
+  "login-refused-bad-password": "Crae isballiada",
+  "login-refused-braked": "Tropu tentativos faddidos"
 }

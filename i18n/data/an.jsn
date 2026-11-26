@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Calendata de fin",
   "wekan-data-no-database": "No s'ha trobato garra base de datos de WeKan que se pueda leyer.",
   "sort-by-votes": "Ordenar por votos",
-  "sort-by-label-order": "Orden d'etiquetas"
+  "sort-by-label-order": "Orden d'etiquetas",
+  "notification-group-card": "__count__ notificacions en a tarcheta __card__",
+  "notification-group-board": "__count__ notificacions en o tablero __board__",
+  "password-too-short": "La clau de paso ha de tener a lo menos __min__ caracters.",
+  "login-refused-bad-password": "Clau de paso incorrecta",
+  "login-refused-braked": "Masiaus intentos fallius"
 }

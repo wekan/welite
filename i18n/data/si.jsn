@@ -1153,7 +1153,7 @@
   "r-by": "විසින්",
   "r-add-checklist": "පිරික්සුම් ලැයිස්තුවක් එක් කරන්න",
   "r-with-items": "අයිතම සමඟ",
-  "r-items-list": "අයිතම: item1,item2,item3",
+  "r-items-list": "අයිතමය1,අයිතමය2,අයිතමය3",
   "r-add-swimlane": "පිහිනුම් මංතීරුවක් එක් කරන්න",
   "r-swimlane-name": "පිහිනුම් මංතීරු නම",
   "r-board-note": "සටහන: හැකි සියලු අගයන්ට ගැළපීමට ක්ෂේත්‍රයක් හිස්ව තබන්න.",
@@ -2118,5 +2118,10 @@
   "cloud-end-date": "අවසාන දිනය",
   "wekan-data-no-database": "කියවිය හැකි WeKan දත්ත සමුදායක් හමු නොවීය.",
   "sort-by-votes": "ඡන්ද අනුව අනුපිළිවෙළට සකසන්න",
-  "sort-by-label-order": "ලේබල අනුපිළිවෙළ"
+  "sort-by-label-order": "ලේබල අනුපිළිවෙළ",
+  "notification-group-card": "__card__ කාඩ්පතේ දැනුම්දීම් __count__",
+  "notification-group-board": "__board__ පුවරුවේ දැනුම්දීම් __count__",
+  "password-too-short": "මුරපදය අවම වශයෙන් අක්ෂර __min__ ක් දිග විය යුතුය.",
+  "login-refused-bad-password": "වැරදි මුරපදය",
+  "login-refused-braked": "අසාර්ථක උත්සාහයන් ඕනෑවට වඩා"
 }

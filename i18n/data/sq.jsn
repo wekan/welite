@@ -2129,5 +2129,10 @@
   "continuous-backup-database": "Baza e të dhënave",
   "cloud-start-date": "Data e fillimit",
   "cloud-end-date": "Data e mbarimit",
-  "wekan-data-no-database": "Nuk u gjet asnjë bazë të dhënash WeKan e lexueshme."
+  "wekan-data-no-database": "Nuk u gjet asnjë bazë të dhënash WeKan e lexueshme.",
+  "notification-group-card": "__count__ njoftime në kartën __card__",
+  "notification-group-board": "__count__ njoftime në tabelën __board__",
+  "password-too-short": "Fjalëkalimi duhet të ketë të paktën __min__ karaktere.",
+  "login-refused-bad-password": "Fjalëkalim i gabuar",
+  "login-refused-braked": "Shumë përpjekje të dështuara"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Ñalnde gasnde",
   "wekan-data-no-database": "Alaa ruttorde keɓe WeKan janngotoonde yiytaa.",
   "sort-by-votes": "Fensitde e voote",
-  "sort-by-label-order": "Doggol maandeeji"
+  "sort-by-label-order": "Doggol maandeeji",
+  "notification-group-card": "Tintine __count__ e kartal __card__",
+  "notification-group-board": "Tintine __count__ e alluwal __board__",
+  "password-too-short": "Finnde suuraande ina foti heewde alkule __min__ ko famɗi fof.",
+  "login-refused-bad-password": "Finnde suuraande nde moƴƴaani",
+  "login-refused-braked": "Etaaɗe ɓurɗe heewde ɗe ronkii"
 }

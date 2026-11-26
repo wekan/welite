@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Nuwuŋkeke",
   "wekan-data-no-database": "Womekpɔ WeKan nyatakakadzraɖoƒe si woate ŋu axlẽ o.",
   "sort-by-votes": "Ðo ɖe vote nu",
-  "sort-by-label-order": "Dzesiwo ƒe ɖoɖo"
+  "sort-by-label-order": "Dzesiwo ƒe ɖoɖo",
+  "notification-group-card": "Nyanyanana __count__ le kaɖi __card__ ŋu",
+  "notification-group-board": "Nyanyanana __count__ le kpekpeɖeŋu __board__ dzi",
+  "password-too-short": "Ele be ɣaɣlanya la nanye dzesi __min__ ya teti.",
+  "login-refused-bad-password": "Ɣaɣlanya mesɔ o",
+  "login-refused-braked": "Agbagbadzedze siwo medze edzi o sɔ gbɔ akpa"
 }

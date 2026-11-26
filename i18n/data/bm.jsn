@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Laban don",
   "wekan-data-no-database": "WeKan datakurun si ma sɔrɔ min bɛ se ka kalan.",
   "sort-by-votes": "Vote fɛ kɛnɛ sigicogo",
-  "sort-by-label-order": "Taamasiyɛnw sigicogo"
+  "sort-by-label-order": "Taamasiyɛnw sigicogo",
+  "notification-group-card": "Kunnafoni __count__ karti __card__ kan",
+  "notification-group-board": "Kunnafoni __count__ walan __board__ kan",
+  "password-too-short": "Gundo daɲɛ ka kan ka sɛbɛnni __min__ sɔrɔ a dɔgɔyalen na.",
+  "login-refused-bad-password": "Gundo daɲɛ tɛ tiɲɛ ye",
+  "login-refused-braked": "Ɲɛsin caman ma ɲɛ"
 }

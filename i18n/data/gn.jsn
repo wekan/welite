@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Paha ára",
   "wekan-data-no-database": "Ndojejuhúi WeKan marandu ryru ikatúva ojelee.",
   "sort-by-votes": "Mboja'o votos rupi",
-  "sort-by-label-order": "Techaukaha rysýi"
+  "sort-by-label-order": "Techaukaha rysýi",
+  "notification-group-card": "__count__ momarandu kuatia'i __card__ rehe",
+  "notification-group-board": "__count__ momarandu peteĩcha __board__ rehe",
+  "password-too-short": "Ñe'ẽñemi oguerekova'erã __min__ tai michĩvéramo.",
+  "login-refused-bad-password": "Ñe'ẽñemi vai",
+  "login-refused-braked": "Heta eterei ñeha'ã oñeikytĩva"
 }

@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Ranar ƙarewa",
   "wekan-data-no-database": "Ba a sami ma’ajiyar bayanai ta WeKan da za a iya karantawa ba.",
   "sort-by-votes": "Tsara bisa ga ƙuri'u",
-  "sort-by-label-order": "Tsarin alamomi"
+  "sort-by-label-order": "Tsarin alamomi",
+  "notification-group-card": "Sanarwa __count__ a kan kati __card__",
+  "notification-group-board": "Sanarwa __count__ a kan allo __board__",
+  "password-too-short": "Kalmar sirri dole ta kasance aƙalla haruffa __min__.",
+  "login-refused-bad-password": "Kalmar sirri ba daidai ba",
+  "login-refused-braked": "Ƙoƙarin da bai yi nasara ba sun yi yawa"
 }

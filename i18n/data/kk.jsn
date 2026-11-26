@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Аяқталу күні",
   "wekan-data-no-database": "Оқылатын WeKan дерекқоры табылмады.",
   "sort-by-votes": "Дауыстар бойынша сұрыптау",
-  "sort-by-label-order": "Белгілер реті"
+  "sort-by-label-order": "Белгілер реті",
+  "notification-group-card": "__card__ карточкасында __count__ хабарлама",
+  "notification-group-board": "__board__ тақтасында __count__ хабарлама",
+  "password-too-short": "Құпия сөз кемінде __min__ таңбадан тұруы керек.",
+  "login-refused-bad-password": "Құпия сөз қате",
+  "login-refused-braked": "Сәтсіз әрекеттер тым көп"
 }

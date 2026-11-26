@@ -2118,5 +2118,10 @@
   "cloud-end-date": "Guyyaa xumuraa",
   "wekan-data-no-database": "Kuusdeetaan WeKan dubbifamuu danda'u hin argamne.",
   "sort-by-votes": "Sagalee irratti hiriirsi",
-  "sort-by-label-order": "Tartiiba mallattoowwanii"
+  "sort-by-label-order": "Tartiiba mallattoowwanii",
+  "notification-group-card": "Beeksisa __count__ kaardii __card__ irratti",
+  "notification-group-board": "Beeksisa __count__ gabatee __board__ irratti",
+  "password-too-short": "Jechi darbii yoo xiqqaate qubee __min__ qabaachuu qaba.",
+  "login-refused-bad-password": "Jecha darbii dogoggoraa",
+  "login-refused-braked": "Yaaliiwwan kufaatii baay'ee"
 }
