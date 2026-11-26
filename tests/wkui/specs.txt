@@ -263,3 +263,5 @@ password-change-other-sessions.e2e.js: changing one's own password signs every s
 advanced-filter-field-identity.e2e.js: co advanced-filter help renders the exact examples
 advanced-filter-field-identity.e2e.js: st advanced-filter help renders the exact examples
 svg-attachment.e2e.js: an uploaded SVG is sanitized, previewed, a cover and a board background
+50-language-popup.e2e.js: missing profile language follows browser preferences; saved choice wins
+13-swimlanes.e2e.js: Swimlanes › Mobile Mode keeps other swimlanes lists visible when one list opens

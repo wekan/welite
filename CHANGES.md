@@ -368,6 +368,22 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   attachments table beside LiveAttachmentSQL, which names it, so every
   attachment answered 404; the guard in `tests/view.py` now also finds
   the JOIN form. 280 of WeKan's tests pass.
+- With no language chosen, show the HTML5 view in the browser's own
+  languages, as WeKan's preferredLanguage does: welite.js gives the server
+  navigator.languages in the `welite-languages` cookie and draws the page
+  again once, and the server takes the first WeKan has, with WeKan's
+  aliases (vep is ve-PP, es-419 es-LA...), which Accept-Language now uses
+  too. Nothing is saved in the profile, and a chosen language wins. The
+  page is drawn again only when that gives another language than the
+  page's: welite.js chooses among the view's tags as WeKan's
+  matchBrowserLanguage does.
+- Add WeKan's mobile view of the board (swimlanes.jade, isMiniScreen): in
+  mobile mode every list of a swimlane is a compact row (miniList), and
+  the one chosen opens inside its own swimlane while the other swimlanes
+  keep their rows. weddy.js decides the mode as before; welite.js tells the
+  server in the `welite-mobile` cookie and the chosen list (WeKan's Session
+  currentList) in `welite-list`, and draws the board again only when the
+  mode differs from what was drawn. 282 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

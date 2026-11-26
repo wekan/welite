@@ -368,6 +368,19 @@ begin
     '</form></div>';
 end;
 
+// Every language tag the view has, space-separated, for welite.js to
+// choose among the browser's own as WeKan's matchBrowserLanguage does.
+function LanguageTags: string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to LanguageCount - 1 do
+  begin
+    if Result <> '' then Result := Result + ' ';
+    Result := Result + LanguageAt(i).Tag;
+  end;
+end;
+
 // WeKan's notificationsDrawer, as Weddy's notifications_drawer.go: the
 // activity types whose act-* sentence a notification shows.
 const
@@ -621,7 +634,10 @@ begin
     Header := '<div id="header" class="header-bar">' +
       Html5ViewToggle(PathAndQuery(Request), Words.Text('html4-html5-toggle', 'Toggle between HTML4 and HTML5 view')) + '</div>';
   Result := '<!DOCTYPE html>' + LineEnding +
-    '<html lang="' + HtmlAttr(StringReplace(Language.Tag, '_', '-', [rfReplaceAll])) + '" dir="' + Dir + '">' +
+    '<html lang="' + HtmlAttr(StringReplace(Language.Tag, '_', '-', [rfReplaceAll])) + '" dir="' + Dir + '"' +
+    // No language chosen: welite.js tells the server the browser's own.
+    IfThen(not ((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and ProfileLanguageSet(T.Db, S)),
+      ' data-language-source="browser" data-language-tags="' + E(LanguageTags) + '"', '') + '>' +
     '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
     '<title>' + E(Title) + ' - WeKan</title>' + STATIC_HEAD + '</head>' +
     '<body>' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
@@ -2539,11 +2555,32 @@ begin
   Result := ' style="background-image: url(' + Prefix + Id + '); background-size: cover;"';
 end;
 
+threadvar
+  // WeKan's mobile view for this request (body.mobile-mode, as weddy.js
+  // decides it, told in the welite-mobile cookie), and its Session
+  // currentList as list:swimlane (the welite-list cookie).
+  BoardMobile: Boolean;
+  BoardCurrentList, BoardCurrentLane: string;
+
+// The request's mobile view and current list, from welite.js's cookies.
+procedure ReadBoardView(Request: TRequest);
+var V: string; At: Integer;
+begin
+  BoardMobile := Request.CookieFields.Values['welite-mobile'] = '1';
+  V := HTTPDecode(Request.CookieFields.Values['welite-list']);
+  At := Pos(':', V);
+  if (At > 1) and (Length(V) <= 200) and (Pos(#0, V) = 0) then
+  begin
+    BoardCurrentList := Copy(V, 1, At - 1); BoardCurrentLane := Copy(V, At + 1, MaxInt);
+  end
+  else begin BoardCurrentList := ''; BoardCurrentLane := ''; end;
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
-  Width: Integer; PlainLinks, PlainSource: Boolean;
+  Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter;
 begin
   Result := ''; BoardTitle := ''; Found := False;
@@ -2594,8 +2631,22 @@ begin
       HtmlAttr(Lanes[i][0]) + '">' + Header + '<div class="list-group js-lists">';
     Lists := Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId=' + QuotedStr(BoardId) +
       ' AND (swimlaneId=' + QuotedStr(Lanes[i][0]) + ' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+    // WeKan's mobile view (swimlanes.jade, isMiniScreen): the current list
+    // opened inside its own swimlane, every other list of a swimlane a
+    // compact row (miniList) that opens it.
+    LaneHasCurrent := False;
+    if BoardMobile and (BoardCurrentList <> '') and (BoardCurrentLane = Lanes[i][0]) then
+      for j := 0 to High(Lists) do if Lists[j][0] = BoardCurrentList then LaneHasCurrent := True;
     for j := 0 to High(Lists) do
     begin
+      if BoardMobile and LaneHasCurrent and (Lists[j][0] <> BoardCurrentList) then Continue;
+      if BoardMobile and not LaneHasCurrent then
+      begin
+        Canvas := Canvas + '<a class="mini-list js-select-list js-list mobile-view" id="js-list-' + HtmlAttr(Lists[j][0]) +
+          '" href="#" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) +
+          '"><div class="list-header"><span class="list-header-name">' + E(Lists[j][1]) + '</span></div></a>';
+        Continue;
+      end;
       Composer := '';
       if Writable then
         // board.pug: the list header's "+" (Add card to top of list), and the
@@ -2615,7 +2666,8 @@ begin
       ListFolded := ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0] + ':' + Lanes[i][0]) or
         ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0]);
       Width := ListWidthOf(Db, S.UserId, BoardId, Lists[j][0]);
-      Canvas := Canvas + '<div class="list js-list' + IfThen(ListFolded, ' list-collapsed', '') + '" id="js-list-' + HtmlAttr(Lists[j][0]) +
+      Canvas := Canvas + '<div class="list js-list' + IfThen(ListFolded, ' list-collapsed', '') + IfThen(BoardMobile, ' mobile-view', '') +
+        '" id="js-list-' + HtmlAttr(Lists[j][0]) +
         '" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '"' +
         IfThen((Width > 0) and not ListFolded, ' style="--list-width:' + IntToStr(Width) + 'px;"', '') + '><div class="list-header">' +
         IfThen(S.UserId <> '', '<a class="list-collapse-indicator js-collapse" href="#" data-collapse="' + HtmlAttr(Words.Text('collapse', 'Collapse')) +
@@ -3425,6 +3477,7 @@ var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
   P: TStringArray; Code, n: Integer; Found: Boolean; Proof: TWLLoginProof;
 begin
+  ReadBoardView(Request);
   Result := False;
   // weddy.js's GET /b/:id/places (the move and copy pop-overs' other board),
   // before WeKan's routes take /b/:id/:slug: the board's swimlanes and lists.
@@ -3817,6 +3870,7 @@ var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
     Response.SendContent;
   end;
 begin
+  ReadBoardView(Request);
   Result := False;
   if Request.Method <> 'GET' then Exit;
   Path := Request.PathInfo;

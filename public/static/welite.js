@@ -142,4 +142,69 @@
     event.preventDefault();
     if (window.Meteor) window.Meteor.callAsync('setLanguage', link.getAttribute('data-language')).catch(function () {});
   });
+  // WeKan's preferredLanguage: with no language chosen, the page is in the
+  // browser's own (navigator.languages), which only the page knows - kept in
+  // the welite-languages cookie for the server, and the page drawn again in
+  // it once when the list changed. Nothing is saved in the profile.
+  (function () {
+    if (document.documentElement.getAttribute('data-language-source') !== 'browser') return;
+    var list = [].concat(navigator.languages || [], navigator.language || [], navigator.userLanguage || [])
+      .filter(function (v) { return typeof v === 'string' && /^[A-Za-z0-9@_-]{1,35}$/.test(v); }).slice(0, 20).join(',');
+    var now = (document.cookie.match(/(?:^|;\s*)welite-languages=([^;]*)/) || [])[1];
+    var want = encodeURIComponent(list);
+    if (!list || now === want) return;
+    document.cookie = 'welite-languages=' + want + '; path=/; max-age=31536000; samesite=lax';
+    // WeKan's matchBrowserLanguage over the tags the server has: drawn again
+    // only when that is another language than the page's.
+    var tags = (document.documentElement.getAttribute('data-language-tags') || '').split(' ');
+    var norm = function (t) { return String(t).toLowerCase().replace(/[_@]/g, '-'); };
+    var aliases = { vep: 've-PP', vec: 've-CC', vls: 'vl-SS', war: 'wa-RR', 'es-419': 'es-LA', 'be-by': 'be-BE',
+      'uz-arab': 'uz-AR', 'uz-latn': 'uz-LA', iw: 'he', ji: 'yi', 'in': 'id', no: 'nb', yue: 'yue_CN', wuu: 'wuu-Hans', 'zh-mo': 'zh-Hant' };
+    var find = function (t) { for (var i = 0; i < tags.length; i++) if (tags[i] && norm(tags[i]) === norm(t)) return tags[i]; return ''; };
+    var match = function (value) {
+      var c = value.replace(/[_@]/g, '-');
+      while (c) {
+        var hit = find(c) || (aliases[c.toLowerCase()] && find(aliases[c.toLowerCase()]));
+        if (hit) return hit;
+        var cut = c.lastIndexOf('-');
+        c = cut > 0 ? c.slice(0, cut) : '';
+      }
+      return '';
+    };
+    var chosen = '';
+    list.split(',').some(function (v) { chosen = match(v); return !!chosen; });
+    if (!chosen || norm(chosen) === norm(document.documentElement.getAttribute('lang') || '')) return;
+    try {
+      if (sessionStorage.getItem('welite-languages-reload') === want) return;
+      sessionStorage.setItem('welite-languages-reload', want);
+    } catch (e) { /* no storage: one reload still */ }
+    window.location.reload();
+  })();
+  // WeKan's mobile view (isMiniScreen): the server draws a swimlane's lists
+  // as compact rows when weddy.js has put the page in mobile mode, told in
+  // the welite-mobile cookie; the page is drawn again once when it differs,
+  // and at each mobile/desktop toggle. A row opens its list in its own
+  // swimlane (Session currentList, the welite-list cookie).
+  function cookie(name) { return (document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)')) || [])[1] || ''; }
+  function setCookie(name, value) { document.cookie = name + '=' + value + '; path=/; max-age=31536000; samesite=lax'; }
+  // No cookie is desktop, as the server draws it.
+  function drawnMobile() { return cookie('welite-mobile') === '1' ? '1' : '0'; }
+  function syncMobile(reload) {
+    var on = document.body.classList.contains('mobile-mode') ? '1' : '0';
+    if (drawnMobile() === on) return;
+    setCookie('welite-mobile', on);
+    if (reload && document.querySelector('.board-wrapper')) up.reload('.board-wrapper');
+  }
+  // A compiler runs after weddy.js's, which decides the mode, on each board drawn.
+  up.compiler('.board-wrapper', function () {
+    var before = drawnMobile();
+    syncMobile(false);
+    if (before !== drawnMobile()) setTimeout(function () { up.reload('.board-wrapper'); }, 0);
+  });
+  up.on('click', '.js-mobile-mode-toggle', function () { setTimeout(function () { syncMobile(true); }, 0); });
+  up.on('click', '.js-select-list', function (event, row) {
+    event.preventDefault();
+    setCookie('welite-list', encodeURIComponent(row.getAttribute('data-list') + ':' + row.getAttribute('data-swimlane')));
+    up.reload('.board-wrapper');
+  });
 })();

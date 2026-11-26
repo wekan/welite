@@ -19,6 +19,9 @@ function LanguageCount:Integer;
 function LanguageAt(Index:Integer):TWLLanguage;
 function FindLanguage(const Value:string;out Language:TWLLanguage):Boolean;
 function ResolveLanguage(const Query,Profile,AcceptLanguage:string):TWLLanguage;
+// WeKan's preferredLanguage without a profile language: the first of the
+// browser's own languages (navigator.languages, comma-separated) WeKan has.
+function BrowserLanguages(const List:string;out Language:TWLLanguage):Boolean;
 function LanguageIsRtl(const Value:string):Boolean;
 implementation
 uses jsonparser,wlstatic;
@@ -86,6 +89,17 @@ function LanguageAt(Index:Integer):TWLLanguage;
 begin
   if (Index<0) or (Index>=Length(Languages)) then Result:=English else Result:=Languages[Index];
 end;
+function BrowserAlias(const Canonical:string):string;
+const
+  Names:array[0..15] of string=('vep','vec','vls','war','es-419','be-by','ca-valencia','uz-arab','uz-latn','iw','ji','in','no',
+    'yue','wuu','zh-mo');
+  Tags:array[0..15] of string=('ve-PP','ve-CC','vl-SS','wa-RR','es-LA','be-BE','ca-valencia','uz-AR','uz-LA','he','yi','id','nb',
+    'yue_CN','wuu-Hans','zh-Hant');
+var i:Integer;
+begin
+  Result:='';
+  for i:=0 to High(Names) do if Names[i]=Canonical then Exit(Tags[i]);
+end;
 function FindLanguage(const Value:string;out Language:TWLLanguage):Boolean;
 var i,At:Integer;Want,Parent:string;
 begin
@@ -98,6 +112,12 @@ begin
   repeat
     for i:=0 to High(Languages) do if (Want=Canonical(Languages[i].Tag)) or (Want=Canonical(Languages[i].Key)) then
     begin Language:=Languages[i];Exit(True);end;
+    // WeKan's browserLanguage.js aliases: a browser's BCP 47 tag for one of
+    // WeKan's historical locale names (vep is ve-PP, es-419 es-LA...).
+    Parent:=BrowserAlias(Want);
+    if Parent<>'' then
+      for i:=0 to High(Languages) do if (Canonical(Parent)=Canonical(Languages[i].Tag)) or (Canonical(Parent)=Canonical(Languages[i].Key)) then
+      begin Language:=Languages[i];Exit(True);end;
     At:=LastDelimiter('-',Want);if At=0 then Break;
     Parent:=Copy(Want,1,At-1);Want:=Parent;
   until False;
@@ -116,6 +136,14 @@ begin
   begin for i:=1 to Length(Digits) do if Digits[i]<>'0' then Exit;Weight:=1000;end
   else begin while Length(Digits)<3 do Digits:=Digits+'0';Weight:=StrToInt(Digits);end;
   Result:=True;
+end;
+function BrowserLanguages(const List:string;out Language:TWLLanguage):Boolean;
+var Items:TStringArray;Item:string;
+begin
+  Result:=False;Language:=English;
+  if (List='') or (Length(List)>2048) then Exit;
+  Items:=List.Split([',']);
+  for Item in Items do if FindLanguage(Trim(Item),Language) then Exit(True);
 end;
 function ResolveLanguage(const Query,Profile,AcceptLanguage:string):TWLLanguage;
 var Parts:TStringList;i,At,Weight,Best:Integer;Part,Range,Param:string;Candidate:TWLLanguage;

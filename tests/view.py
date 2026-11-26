@@ -1550,6 +1550,39 @@ def http_checks(server, tmp, backend):
         status, headers, _, cookies = request('POST', '/?ui=html5', {'nav_view': '1', 'sessionId': 'f' * 64}, agent=IBROWSE)
         assert status == 303 and cookie_value(cookies, 'meteor_login_token') is None
 
+        # WeKan's mobile view (isMiniScreen): every list of a swimlane a
+        # compact row, the current one (welite-list) opened in its own lane.
+        page = request('GET', route, cookie=owner + '; welite-mobile=1')[2].decode()
+        rows = re.findall(r'<a class="mini-list js-select-list js-list mobile-view" id="js-list-([^"]+)"', page)
+        assert list_id in rows and 'class="list-body' not in page, rows
+        lane_of = re.search(r'data-list="%s" data-swimlane="([^"]+)"' % re.escape(list_id), page).group(1)
+        page = request('GET', route, cookie=owner + '; welite-mobile=1; welite-list=' + quote(list_id + ':' + lane_of))[2].decode()
+        assert ('class="list js-list mobile-view" id="js-list-%s"' % list_id) in page and 'class="list-body' in page
+        lane = page[page.index('id="swimlane-%s"' % lane_of):]
+        lane = lane[:lane.find('class="swimlane ', 10) if lane.find('class="swimlane ', 10) > 0 else len(lane)]
+        assert 'mini-list' not in lane, 'only the current list in its lane'
+        # Negative: desktop by default, and a current list of no lane is none.
+        assert 'mini-list' not in request('GET', route, cookie=owner)[2].decode()
+        assert 'class="list-body' not in request('GET', route, cookie=owner + '; welite-mobile=1; welite-list=nope')[2].decode()
+
+        # WeKan's preferredLanguage: no language chosen, the browser's own
+        # list (the welite-languages cookie welite.js keeps), with WeKan's
+        # aliases (vep is ve-PP); a chosen one wins, and nothing is saved.
+        lang = lambda page: re.search(rb'<html lang="([^"]+)"', page).group(1).decode()
+        card_db("UPDATE users SET profile_json=json_remove(profile_json,'$.language') WHERE id=?", users['worker'])
+        page = request('GET', route, cookie=worker)[2]
+        assert b'data-language-source="browser"' in page
+        assert lang(request('GET', route, cookie=worker + '; welite-languages=zz-ZZ%2Cvep')[2]) == 've-PP'
+        assert lang(request('GET', route, cookie=worker + '; welite-languages=zz-ZZ%2Cfi-FI')[2]) == 'fi'
+        assert lang(request('GET', route, cookie=worker, headers={'Accept-Language': 'vep'})[2]) == 've-PP'
+        assert card_db("SELECT json_extract(profile_json,'$.language') FROM users WHERE id=?", users['worker'])[0] is None
+        # Negative: nothing it does not have, no path, and a chosen language wins.
+        assert lang(request('GET', route, cookie=worker + '; welite-languages=..%2F..%2Fetc%2Cxx')[2]) == 'en'
+        assert request('POST', '/_methods/setLanguage', ['de'], cookie=worker, as_json=True)[0] == 200
+        page = request('GET', route, cookie=worker + '; welite-languages=fi')[2]
+        assert lang(page) == 'de' and b'data-language-source' not in page
+        assert request('POST', '/_methods/setLanguage', ['en'], cookie=worker, as_json=True)[0] == 200
+
         # Member Settings' Change Language (changeLanguagePopup): fetched when
         # opened, every installed language, the one now checked.
         assert b'class="js-change-language" href="/language/popup"' in request('GET', '/', cookie=owner)[2]
