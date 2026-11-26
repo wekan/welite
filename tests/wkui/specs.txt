@@ -156,6 +156,7 @@
 29-card-settings-avatar.e2e.js: Card Settings: "Mark as complete" on minicards › enabling "Show at Minicard" shows the complete toggle on minicards
 30-ldap-orgs-teams.e2e.js: #4737 sync LDAP groups as Organizations/Teams › non-admin client call is rejected and creates nothing
 31-templates-allboards.e2e.js: #2339 #5850 All Boards / Templates redesign › #6643: Archive shows an archived subtasks helper board
+35-list-sort-permissions.e2e.js
 36-fixed-bug-regressions.e2e.js: Fixed-bug regressions › #5892 a collapsed list with a custom width still shrinks to the rail
 36-fixed-bug-regressions.e2e.js: Fixed-bug regressions › #6420 voting buttons render without a currentUser ReferenceError
 38-fixed-list-width.e2e.js: Fixed (same) width for all lists (#5729) › anonymous/public-board: fixed width lives in localStorage and does not leak across boards

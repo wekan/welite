@@ -1228,6 +1228,23 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/sign-up', {'username': 'long_pw', 'email': 'long@example.invalid', 'password': 'x' * 513,
                                             'confirm': 'x' * 513})[0] == 400
 
+        # #5462/#5997: a list's order by WeKan's updateListSort and by the
+        # collection's own update - write access only, and it persists.
+        list_sort = lambda: card_db('SELECT sort FROM lists WHERE id=?', sort_list)[0]
+        before = list_sort()
+        status, _, body, _ = call('updateListSort', [sort_list, board_id, {'sort': -999}], commenter)
+        assert status == 403 and json.loads(body)['error'] == 'permission-denied'
+        status, _, body, _ = call('/lists/update', [{'_id': sort_list}, {'$set': {'sort': -999}}], commenter)
+        assert status == 403 and json.loads(body) == {'error': 403, 'reason': 'Access denied'}
+        assert list_sort() == before, 'the order is unchanged after refused attempts'
+        assert call('updateListSort', [sort_list, board_id, {'sort': -3}])[0] == 200 and list_sort() == -3
+        # Negative: no other field, no swimlane of another board, no list of another board.
+        status, _, body, _ = call('updateListSort', [sort_list, board_id, {'title': 'x'}])
+        assert status == 400 and json.loads(body)['error'] == 'invalid-field'
+        assert call('updateListSort', [sort_list, board_id, {'swimlaneId': 'elsewhere'}])[0] == 400
+        assert call('updateListSort', [other_list, board_id, {'sort': 1}])[0] == 403
+        assert call('updateListSort', [sort_list, board_id, {'sort': before}])[0] == 200
+
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.
         page = request('GET', route, cookie=owner)[2]

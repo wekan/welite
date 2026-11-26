@@ -271,6 +271,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   description and the card's list picker. The emoji table is generated from
   markdown-it-emoji 3.1.0's full set (MIT) by `releases/genemoji.py`.
   258 of WeKan's tests pass.
+- Answer WeKan's updateListSort and the lists collection's own update in the
+  HTML5 view (#5462, #5997): a list's sort and swimlane, by whoever may
+  change its board - a read-only or comment-only member is refused with
+  WeKan's permission-denied, and the collection update with its 403 "Access
+  denied" - and only sort, swimlaneId and the time stamps, a swimlane of the
+  same board. 259 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

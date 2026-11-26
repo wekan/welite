@@ -279,6 +279,10 @@ function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Id
 // boardChangeVisibilityPopup: a board admin makes the board private, visible
 // to the instance's signed-in users (#3249) or public.
 function SetViewBoardVisibility(const T:TWLTenant;const UserId,BoardId,Visibility:string;out Error:string):Integer;
+// WeKan's updateListSort: a list's sort and swimlane, by whoever may change
+// its board; error codes are WeKan's (permission-denied, invalid-field,
+// invalid-swimlane, board-not-found).
+function SetViewListSort(const T:TWLTenant;const UserId,BoardId,ListId:string;Data:TJSONObject;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6365,6 +6369,40 @@ begin
     QuotedStr(BoardId)+'; SELECT CASE WHEN (SELECT permission FROM boards WHERE id='+QuotedStr(BoardId)+')='+QuotedStr(Visibility)+
     ' THEN 1 ELSE json(''Visibility failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not change visibility';Exit(500);end;
+  Result:=200;
+end;
+
+function SetViewListSort(const T:TWLTenant;const UserId,BoardId,ListId:string;Data:TJSONObject;out Error:string):Integer;
+var i:Integer;Key,Sets,Lane:string;Value:TJSONData;Fmt:TFormatSettings;
+begin
+  Error:='';
+  if (BoardId='') or (ListId='') or (Pos(#0,BoardId+ListId)>0) or
+    (Length(T.Db.Query('SELECT 1 FROM boards WHERE id='+QuotedStr(BoardId)+';'))<>1) then begin Error:='board-not-found';Exit(404);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='permission-denied';Exit(403);end;
+  if Length(T.Db.Query('SELECT 1 FROM lists WHERE id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+';'))<>1 then
+  begin Error:='permission-denied';Exit(403);end;
+  Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';
+  Sets:='modifiedAt='+QuotedStr(NowIso);
+  for i:=0 to Data.Count-1 do
+  begin
+    Key:=Data.Names[i];Value:=Data.Items[i];
+    if Key='sort' then
+    begin
+      if Value.JSONType<>jtNumber then begin Error:='invalid-field';Exit(400);end;
+      Sets:=Sets+',sort='+FloatToStr(Value.AsFloat,Fmt);
+    end
+    else if Key='swimlaneId' then
+    begin
+      if Value.JSONType<>jtString then begin Error:='invalid-swimlane';Exit(400);end;
+      Lane:=Value.AsString;
+      if (Lane<>'') and (Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id='+QuotedStr(Lane)+' AND boardId='+QuotedStr(BoardId)+';'))<>1) then
+      begin Error:='invalid-swimlane';Exit(400);end;
+      Sets:=Sets+',swimlaneId='+QuotedStr(Lane);
+    end
+    else if (Key<>'updatedAt') and (Key<>'modifiedAt') then begin Error:='invalid-field';Exit(400);end;
+  end;
+  if not T.Db.Exec('UPDATE lists SET '+Sets+' WHERE id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+';') then
+  begin Error:='Could not update list';Exit(500);end;
   Result:=200;
 end;
 

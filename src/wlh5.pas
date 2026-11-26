@@ -2615,6 +2615,52 @@ begin
     SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
+  if (Name = 'updateListSort') or (Name = '/lists/update') then
+  begin
+    // server/models/lists.js updateListSort: [listId, boardId, {sort, swimlaneId,
+    // updatedAt, modifiedAt}], by whoever may change the board (#5462, #5997);
+    // and the collection's own update, [{_id}, {$set: {sort / swimlaneId}}], as
+    // WeKan's allow rule answers it: 403 "Access denied" without write access.
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count >= 2)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Selector := nil;
+      if Name = 'updateListSort' then
+      begin
+        if not ((TJSONArray(Args).Count = 3) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+          (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtObject)) then
+        begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+        Id := TJSONArray(Args).Items[0].AsString;
+        Code := SetViewListSort(T, S.UserId, TJSONArray(Args).Items[1].AsString, Id, TJSONObject(TJSONArray(Args).Items[2]), Error);
+      end
+      else
+      begin
+        if not ((TJSONArray(Args).Items[0].JSONType = jtObject) and (TJSONArray(Args).Items[1].JSONType = jtObject) and
+          (TJSONObject(TJSONArray(Args).Items[0]).Find('_id') is TJSONString) and
+          (TJSONObject(TJSONArray(Args).Items[1]).Find('$set') is TJSONObject)) then
+        begin SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}'); Exit; end;
+        Id := TJSONObject(TJSONArray(Args).Items[0]).Get('_id', '');
+        R := T.Db.Query('SELECT boardId FROM lists WHERE id=' + QuotedStr(Id) + ';');
+        if Length(R) <> 1 then begin SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}'); Exit; end;
+        Code := SetViewListSort(T, S.UserId, R[0][0], Id, TJSONObject(TJSONObject(TJSONArray(Args).Items[1]).Find('$set')), Error);
+        if Code <> 200 then begin SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}'); Exit; end;
+        SendJsonAnswer(Response, 200, '{"result":1}');
+        Exit;
+      end;
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":null}');
+    Exit;
+  end;
   if Name = 'setMobileMode' then
   begin
     // server/models/users.js: [enabled], a boolean, as profile.mobileMode.
