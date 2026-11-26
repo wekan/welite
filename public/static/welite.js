@@ -208,3 +208,141 @@
     up.reload('.board-wrapper');
   });
 })();
+
+// Member Settings / Date and Change Settings, and Board Settings / Date
+// (WeKan's dateFormatSettings.js, userHeader.js changeSettingsPopup).
+(function () {
+  'use strict';
+  if (!window.up) return;
+  function call(name) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return window.Meteor.callAsync.apply(window.Meteor, [name].concat(args));
+  }
+  // A pop-over is a copy of its page template: what changes in it changes in
+  // the template too, so it opens again as it was left.
+  function inTemplate(pop, selector, change) {
+    var t = document.querySelector('template.js-pop-over-template[data-pop="' + pop + '"]');
+    if (t) t.content.querySelectorAll(selector).forEach(change);
+  }
+  function backTo(name) {
+    var p = document.querySelector('.js-pop-over');
+    if (p) p.dataset.back = name;
+  }
+  up.on('click', '.js-open-board-date-settings', function (event) {
+    event.preventDefault();
+    window.Popup.open('boardDateSettings')();
+    backTo('board-menu');
+  });
+  // The member's Enabled / Disabled follows the box before Save.
+  up.on('change', '.js-pop-over .js-date-format-form .js-date-format-override', function (event, box) {
+    var text = box.form.querySelector('.js-member-date-format-enabled');
+    if (text) text.textContent = box.checked ? text.dataset.enabled : text.dataset.disabled;
+  });
+  // The board's form saves setBoardDateFormat; weddy.js's handler is the
+  // member's, and is not reached for it.
+  document.addEventListener('submit', function (event) {
+    var form = event.target;
+    if (!form.matches || !form.matches('.js-pop-over form.js-date-format-form[data-board]')) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (form.dataset.saving) return;
+    form.dataset.saving = '1';
+    var format = form.querySelector('.js-date-format-select').value, on = form.querySelector('.js-date-format-override').checked;
+    var err = form.querySelector('.js-date-format-error');
+    call('setBoardDateFormat', form.dataset.board, format, on).then(function () {
+      inTemplate('board-date-settings', '.js-date-format-select option', function (o) {
+        if (o.value === format) o.setAttribute('selected', ''); else o.removeAttribute('selected');
+      });
+      inTemplate('board-date-settings', '.js-date-format-override', function (b) {
+        if (on) b.setAttribute('checked', ''); else b.removeAttribute('checked');
+      });
+      var wrapper = document.querySelector('.board-wrapper');
+      return wrapper ? Promise.resolve(up.reload('.board-wrapper')).catch(function () {}) : null;
+    }, function (e) { err.textContent = e.reason || e.message; err.hidden = false; throw e; })
+      .then(function () { window.Popup.back(); }, function () {})
+      .finally(function () { delete form.dataset.saving; });
+  }, true);
+  up.on('click', '.js-pop-over .js-show-week-of-year-toggle', function (event, el) {
+    event.preventDefault();
+    call('toggleShowWeekOfYear').then(function () {
+      var on = !el.querySelector('.fa').classList.contains('fa-check');
+      var flip = function (i) { i.classList.toggle('fa-check', on); i.classList.toggle('fa-square-o', !on); };
+      flip(el.querySelector('.fa'));
+      inTemplate('board-date-settings', '.js-show-week-of-year-toggle .fa', flip);
+    });
+  });
+  up.on('click', '.js-pop-over .js-welite-setting', function (event, el) {
+    event.preventDefault();
+    var method = el.dataset.method;
+    call(method).then(function () {
+      var check = el.querySelector('.js-setting-check'), on = check.hidden;
+      check.hidden = !on;
+      inTemplate('change-settings', '[data-method="' + method + '"] .js-setting-check', function (c) {
+        if (on) c.removeAttribute('hidden'); else c.setAttribute('hidden', '');
+      });
+      // The drag handles are drawn on the board itself.
+      if (method === 'toggleDesktopDragHandles' && document.querySelector('.board-wrapper')) up.reload('.board-wrapper');
+    });
+  });
+})();
+
+// Admin Panel / Settings / Appearance: each box toggles as it is clicked,
+// the date section's Save writes its two fields (settingBody.js
+// js-visibility-date-save).
+(function () {
+  'use strict';
+  if (!window.up) return;
+  up.on('click', '.admin-appearance .js-toggle-hide-logo, .admin-appearance .js-toggle-date-format', function (event, el) {
+    event.preventDefault();
+    el.querySelector('.materialCheckBox').classList.toggle('is-checked');
+  });
+  up.on('click', '.admin-appearance .js-visibility-date-save', function (event, el) {
+    event.preventDefault();
+    var pane = el.closest('.admin-appearance');
+    window.Meteor.callAsync('/settings/update', { _id: pane.dataset.setting }, { $set: {
+      hideDateFormat: pane.querySelector('#global-date-format-enabled').classList.contains('is-checked'),
+      globalDateFormat: pane.querySelector('#global-date-format').value,
+    } }).catch(function () {});
+  });
+  // A history entry a script pushed (WeKan's FlowRouter.go, a test's
+  // navigateInApp): its page is drawn as a link to it would draw it. The
+  // entries Unpoly makes are Unpoly's own.
+  window.addEventListener('popstate', function (event) {
+    if (event.state && event.state.up) return;
+    up.render({ url: window.location.href, target: 'body', history: false }).catch(function () {});
+  });
+})();
+
+// Meteor.loggingIn(), as WeKan's scripts and tests ask it: the HTML5 view's
+// page is drawn signed in already, so it never is.
+if (window.Meteor && !window.Meteor.loggingIn) window.Meteor.loggingIn = function () { return false; };
+
+// A date pop-over opens with what stands now: its template was drawn with the
+// page, and Admin Panel's or the board's format may have changed since.
+(function () {
+  'use strict';
+  if (!window.up) return;
+  function refresh(scope) {
+    var wrapper = document.querySelector('.board-wrapper');
+    var board = wrapper ? wrapper.getAttribute('data-board') || '' : '';
+    var pop = scope === 'board' ? 'board-date-settings' : 'member-date-settings';
+    fetch('/date-settings?scope=' + scope + '&board=' + encodeURIComponent(board), { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) {
+        if (html === null) return;
+        var t = document.querySelector('template.js-pop-over-template[data-pop="' + pop + '"]');
+        var open = document.querySelector('.js-pop-over[data-popup="' + (scope === 'board' ? 'boardDateSettingsPopup' : 'memberDateSettingsPopup') + '"] .content');
+        [t && t.content.querySelector('.content'), open].forEach(function (box) {
+          if (!box) return;
+          var editor = document.createElement('div');
+          editor.innerHTML = html;
+          // Only the formats that stand elsewhere: the form is this pop-over's
+          // own, saved through it, and is not swapped under the user.
+          var now = editor.querySelector('.date-format-inherited'), was = box.querySelector(':scope > .date-format-inherited');
+          if (now && was && now.innerHTML !== was.innerHTML) was.innerHTML = now.innerHTML;
+        });
+      }).catch(function () {});
+  }
+  up.on('click', '.js-member-date-settings', function () { setTimeout(function () { refresh('member'); }, 0); });
+  up.on('click', '.js-open-board-date-settings', function () { setTimeout(function () { refresh('board'); }, 0); });
+})();

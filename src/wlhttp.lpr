@@ -53,6 +53,7 @@ const
 procedure TWLCleanRouter.DoRouteRequest(Request:TRequest;Response:TResponse);
 begin
   // A request that writes runs the board's rules before it answers (wlrules).
+  ResetViewState;
   ArmRules(Request);
   try
     RouteRequest(Request,Response);

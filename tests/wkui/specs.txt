@@ -319,3 +319,6 @@ admin-only-custom-fields.e2e.js: ordinary member copying retains public values a
 admin-only-custom-fields.e2e.js: blocked field attacks appear as a Problems summary without secret values
 password-length-report.e2e.js
 password-min-length-signup-login.e2e.js
+global-date-format.e2e.js: Date settings cascade from global to board to member through their own controls
+change-settings-popup-6835.e2e.js: Change Settings: aligned icons, compact wrapped lines, divided rows (fa)
+change-settings-popup-6835.e2e.js: Change Settings: aligned icons, compact wrapped lines, divided rows (en)

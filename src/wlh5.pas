@@ -83,11 +83,15 @@ procedure CarryCookieSession(Request: TRequest);
 // sent to the sign-in page.
 procedure Html5LogoutEndpoint(Request: TRequest; Response: TResponse);
 
+// A request starts with no board's date format or board of its own: a
+// thread's earlier request leaves none behind.
+procedure ResetViewState;
+
 implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef;
 
 const
   STATIC_HEAD =
@@ -460,6 +464,37 @@ begin
   if not Valid(Result) then Result := 'none';
 end;
 
+threadvar
+  // The date format of the page being drawn (wldatef): set where a board's
+  // page starts, '' (YYYY-MM-DD) elsewhere.
+  ViewDateFormat: string;
+  // The board whose page is being drawn, for the member menu's Date.
+  ViewBoardId: string;
+
+// WeKan's resolveDateFormat for this viewer on this board: the member's own
+// format while their override is on, the board's, Admin Panel's.
+function ViewDateFor(Db: TWLDb; const UserId, BoardId: string): string;
+var U, B: TWLRows; Member, Board: string; MemberOn, BoardOn: Boolean;
+begin
+  Member := ''; Board := ''; MemberOn := False; BoardOn := False;
+  if UserId <> '' then
+  begin
+    U := Db.Query('SELECT COALESCE(CASE WHEN json_valid(profile_json) THEN json_extract(profile_json,''$.dateFormat'') END,''''),' +
+      'CASE WHEN json_valid(profile_json) AND json_type(profile_json,''$.dateFormatOverride'')=''true'' THEN 1 ELSE 0 END ' +
+      'FROM users WHERE id=' + QuotedStr(UserId) + ' LIMIT 1;');
+    if Length(U) = 1 then begin Member := U[0][0]; MemberOn := U[0][1] = '1'; end;
+  end;
+  if BoardId <> '' then
+  begin
+    B := Db.Query('SELECT COALESCE(CASE WHEN json_valid(settings_json) THEN json_extract(settings_json,''$.dateFormat'') END,''''),' +
+      'CASE WHEN json_valid(settings_json) AND json_type(settings_json,''$.dateFormatOverride'')=''true'' THEN 1 ELSE 0 END ' +
+      'FROM boards WHERE id=' + QuotedStr(BoardId) + ' LIMIT 1;');
+    if Length(B) = 1 then begin Board := B[0][0]; BoardOn := B[0][1] = '1'; end;
+  end;
+  Result := ResolveDateFormat(Member, MemberOn, Board, BoardOn, SharedSettingText(Db, 'globalDateFormat'),
+    SharedSettingOn(Db, 'hideDateFormat'));
+end;
+
 // The drawer's rows: the user's notifications, newest first, at most 100, of
 // boards the user may still read (a board left keeps none of its activity
 // here), an entry scheduled for later (#5171 showAt) not before its time;
@@ -522,7 +557,7 @@ begin
     // An activity with no sentence of its own shows its type, as WeKan's.
     else Items[n].Html := E(R[i][2]);
     Items[n].Read := R[i][1]; Items[n].Activity := R[i][0];
-    Items[n].Shown := StringReplace(Copy(R[i][5], 1, 16), 'T', ' ', []);
+    Items[n].Shown := FormatShownDate(R[i][5], ViewDateFormat);
     Items[n].Board := R[i][3]; Items[n].Card := R[i][4];
     Items[n].BoardTitle := R[i][6]; Items[n].CardTitle := R[i][9];
   end;
@@ -574,6 +609,409 @@ begin
   end;
 end;
 
+// The user's own profile field Key (a plain name) set to a JSON value, or
+// removed with JsonValue ''.
+function SetProfileField(Db: TWLDb; const UserId, Key, JsonValue: string): Boolean;
+var Profile: string;
+begin
+  Profile := 'CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+  if JsonValue = '' then
+    Result := Db.Exec('UPDATE users SET profile_json=json_remove(' + Profile + ',''$.' + Key + ''') WHERE id=' + QuotedStr(UserId) + ';')
+  else
+    Result := Db.Exec('UPDATE users SET profile_json=json_set(' + Profile + ',''$.' + Key + ''',json(' + QuotedStr(JsonValue) +
+      ')) WHERE id=' + QuotedStr(UserId) + ';');
+end;
+
+// The profile field Key as SQLite gives it ('' when missing).
+function ProfileField(Db: TWLDb; const UserId, Key: string): string;
+var R: TWLRows;
+begin
+  R := Db.Query('SELECT COALESCE(CASE WHEN json_valid(profile_json) THEN json_extract(profile_json,''$.' + Key + ''') END,'''') ' +
+    'FROM users WHERE id=' + QuotedStr(UserId) + ' LIMIT 1;');
+  if Length(R) = 1 then Result := R[0][0] else Result := '';
+end;
+
+const
+  // dateFormatSettings.js weekDays: Sunday first, as profile.startDayOfWeek counts.
+  WEEKDAY_KEYS: array[0..6] of string = ('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday');
+  // WeKan's imports/lib/calendarSystems.js CALENDAR_SYSTEM_IDS.
+  CALENDAR_SYSTEMS: array[0..17] of string = ('gregorian', 'jalali', 'buddhist', 'chinese', 'coptic', 'dangi',
+    'ethioaa', 'ethiopic', 'hebrew', 'indian', 'islamic', 'islamic-civil', 'islamic-rgsa', 'islamic-tbla',
+    'islamic-umalqura', 'iso8601', 'japanese', 'roc');
+  // Member Settings / Change Settings (userHeader.jade changeSettingsPopup):
+  // each toggle's method, its profile field, and whether it is shown unless
+  // turned off (hideFocusOutline stores the hiding).
+  SETTING_TOGGLES: array[0..7] of array[0..1] of string = (
+    ('toggleKeepTitleTags', 'keepTitleTags'), ('toggleHideFocusOutline', 'hideFocusOutline'),
+    ('toggleKeepAddCardFormOpen', 'keepAddCardFormOpen'), ('toggleTitleBracketLabel', 'titleBracketLabel'),
+    ('toggleSubmitOnEnter', 'submitOnEnter'), ('toggleOpenManyCardsAtOnce', 'openManyCardsAtOnce'),
+    ('toggleChecklistDingSound', 'checklistDingSound'), ('toggleShowWeekOfYear', 'showWeekOfYear'));
+
+function KnownCalendar(const Id: string): Boolean;
+var i: Integer;
+begin
+  for i := 0 to High(CALENDAR_SYSTEMS) do if CALENDAR_SYSTEMS[i] = Id then Exit(True);
+  Result := False;
+end;
+
+// The member's date and display preferences, as WeKan's server/models/users.js
+// and boards.js answer them: 200, or a Meteor error's code and reason.
+function PreferenceMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Error: string): Integer;
+var i: Integer; Flag: Boolean; R: TWLRows;
+  function Str(k: Integer): Boolean;
+  begin Result := (Args.Count > k) and (Args.Items[k].JSONType = jtString); end;
+  function Bool(k: Integer): Boolean;
+  begin Result := (Args.Count > k) and (Args.Items[k].JSONType = jtBoolean); end;
+begin
+  Error := 'Match failed';
+  Result := 400;
+  if Name = 'changeDateFormat' then
+  begin
+    // [format, override = true]: one of WeKan's six formats.
+    if not Str(0) or ((Args.Count > 1) and not Bool(1)) or (Args.Count > 2) then Exit;
+    if not ValidDateFormat(Args.Strings[0]) then begin Error := 'invalid-date-format'; Exit; end;
+    Flag := (Args.Count < 2) or Args.Booleans[1];
+    if not (SetProfileField(T.Db, UserId, 'dateFormat', '"' + Args.Strings[0] + '"') and
+      SetProfileField(T.Db, UserId, 'dateFormatOverride', IfThen(Flag, 'true', 'false'))) then begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'changeStartDayOfWeek' then
+  begin
+    if (Args.Count <> 1) or (Args.Items[0].JSONType <> jtNumber) or (Frac(Args.Items[0].AsFloat) <> 0) or
+      (Args.Items[0].AsFloat < 0) or (Args.Items[0].AsFloat > 6) then Exit;
+    if not SetProfileField(T.Db, UserId, 'startDayOfWeek', IntToStr(Round(Args.Items[0].AsFloat))) then begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'changeCalendarSystem' then
+  begin
+    if (Args.Count <> 1) or not Str(0) then Exit;
+    if not KnownCalendar(Args.Strings[0]) then begin Error := 'invalid-calendar-system'; Exit; end;
+    if not SetProfileField(T.Db, UserId, 'calendarSystem', '"' + Args.Strings[0] + '"') then begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'setBoardDateFormat' then
+  begin
+    // server/models/boards.js: [boardId, format, override], for a board admin.
+    if (Args.Count <> 3) or not Str(0) or not Str(1) or not Bool(2) then Exit;
+    // allowIsBoardAdmin: an admin of this board's own, not the site admin.
+    if (Pos(#0, Args.Strings[0]) > 0) or (Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(Args.Strings[0]) +
+      ' AND userId=' + QuotedStr(UserId) + ' AND isActive=1 AND isAdmin=1;')) = 0) then
+    begin
+      // Board Settings / Date is offered to the board's admins only.
+      if Length(T.Db.Query('SELECT 1 FROM boards WHERE id=' + QuotedStr(Args.Strings[0]) + ';')) = 1 then
+        try
+          RecordSecurityEvent(T.Db, UserId, 'AuthBleed', 'method:setBoardDateFormat', 'authz', 'high', 'CWE-862', 'blocked',
+            'Board date format change refused: not an admin of the board');
+        except
+          // logging must never break the guard
+        end;
+      Error := 'not-authorized'; Exit(403);
+    end;
+    if not ValidDateFormat(Args.Strings[1]) then begin Error := 'invalid-date-format'; Exit; end;
+    if not T.Db.Exec('UPDATE boards SET settings_json=json_set(CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END,' +
+      '''$.dateFormat'',' + QuotedStr(Args.Strings[1]) + ',''$.dateFormatOverride'',json(''' + IfThen(Args.Booleans[2], 'true', 'false') +
+      ''')),modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) + ' WHERE id=' + QuotedStr(Args.Strings[0]) + ';') then begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'toggleDesktopDragHandles' then
+  begin
+    // [show]: shown or hidden as asked, else the other way round.
+    if (Args.Count > 1) or ((Args.Count = 1) and not Bool(0) and (Args.Items[0].JSONType <> jtNull)) then Exit;
+    if (Args.Count = 1) and Bool(0) then Flag := Args.Booleans[0]
+    else Flag := ProfileField(T.Db, UserId, 'showDesktopDragHandles') <> '1';
+    if not SetProfileField(T.Db, UserId, 'showDesktopDragHandles', IfThen(Flag, 'true', 'false')) then begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'toggleUnreadChanges' then
+  begin
+    // On records since when, so cards never opened are not all marked.
+    if Args.Count <> 0 then Exit;
+    if ProfileField(T.Db, UserId, 'unreadChangesSince') <> '' then Flag := SetProfileField(T.Db, UserId, 'unreadChangesSince', '')
+    else Flag := SetProfileField(T.Db, UserId, 'unreadChangesSince',
+      '"' + FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now)) + '"');
+    if not Flag then begin Error := 'Could not save'; Exit(500); end;
+  end
+  else
+  begin
+    if Args.Count <> 0 then Exit;
+    Error := 'Method not found';
+    for i := 0 to High(SETTING_TOGGLES) do
+      if SETTING_TOGGLES[i][0] = Name then
+      begin
+        R := nil;
+        Flag := ProfileField(T.Db, UserId, SETTING_TOGGLES[i][1]) <> '1';
+        if not SetProfileField(T.Db, UserId, SETTING_TOGGLES[i][1], IfThen(Flag, 'true', 'false')) then begin Error := 'Could not save'; Exit(500); end;
+        Error := '';
+        Exit(200);
+      end;
+    Exit(404);
+  end;
+  Error := '';
+  Result := 200;
+end;
+
+// The methods PreferenceMethod answers.
+function IsPreferenceMethod(const Name: string): Boolean;
+var i: Integer;
+begin
+  for i := 0 to High(SETTING_TOGGLES) do if SETTING_TOGGLES[i][0] = Name then Exit(True);
+  Result := (Name = 'changeDateFormat') or (Name = 'changeStartDayOfWeek') or (Name = 'changeCalendarSystem') or
+    (Name = 'setBoardDateFormat') or (Name = 'toggleDesktopDragHandles') or (Name = 'toggleUnreadChanges');
+end;
+
+// dateFormatSettings.js formatLabel: a format's name, and " · Time" unless it
+// is date-only; an unknown one is the first.
+function DateFormatLabel(Words: TWLTranslator; const Format: string): string;
+var F: string;
+begin
+  F := Format;
+  if not ValidDateFormat(F) then F := DATE_FORMATS[0];
+  if Copy(F, Length(F) - 9, 10) = '-date-only' then
+    Result := Words.Text('date-format-' + LowerCase(Copy(F, 1, Length(F) - 10)), Copy(F, 1, Length(F) - 10))
+  else
+    Result := Words.Text('date-format-' + LowerCase(F), F) + ' '#$C2#$B7' ' + Words.Text('time', 'Time');
+end;
+
+// dateFormatSettings.jade dateFormatEditor: Admin Panel's format and the
+// board's as they stand, then the form for this scope - the board's (Board
+// Settings / Date), or the member's with the first day of the week and the
+// calendar (Member Settings / Date).
+function DateFormatEditor(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId: string; Member: Boolean): string;
+var R: TWLRows; Format, Day, Calendar: string; Enabled: Boolean; i: Integer;
+  function Status(const Cls, Heading: string; On_: Boolean; const F: string): string;
+  begin
+    Result := '<div class="' + Cls + '"><strong>' + E(Heading) + '</strong><p><span>' +
+      E(IfThen(On_, Words.Text('r-rule-enabled', 'Enabled'), Words.Text('r-rule-disabled', 'Disabled'))) + '</span>: ' +
+      E(DateFormatLabel(Words, F)) + '</p></div>';
+  end;
+  function Opt(const Value, Name: string; Selected: Boolean): string;
+  begin
+    Result := '<option value="' + HtmlAttr(Value) + '"' + IfThen(Selected, ' selected', '') + '>' + E(Name) + '</option>';
+  end;
+begin
+  Format := ''; Enabled := False; Day := '1'; Calendar := 'gregorian';
+  if Member then
+    R := Db.Query('SELECT COALESCE(json_extract(p,''$.dateFormat''),''''),CASE WHEN json_type(p,''$.dateFormatOverride'')=''true'' THEN 1 ELSE 0 END,' +
+      'COALESCE(json_extract(p,''$.startDayOfWeek''),1),COALESCE(json_extract(p,''$.calendarSystem''),''gregorian'') ' +
+      'FROM (SELECT CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END p FROM users WHERE id=' + QuotedStr(UserId) + ' LIMIT 1);')
+  else
+    R := Db.Query('SELECT COALESCE(json_extract(p,''$.dateFormat''),''''),CASE WHEN json_type(p,''$.dateFormatOverride'')=''true'' THEN 1 ELSE 0 END,1,''gregorian'' ' +
+      'FROM (SELECT CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END p FROM boards WHERE id=' + QuotedStr(BoardId) + ' LIMIT 1);');
+  if Length(R) = 1 then
+  begin
+    Format := R[0][0]; Enabled := R[0][1] = '1'; Day := R[0][2]; Calendar := R[0][3];
+  end;
+  if not ValidDateFormat(Format) then Format := DATE_FORMATS[0];
+  if not KnownCalendar(Calendar) then Calendar := 'gregorian';
+  Result := '<div class="date-format-inherited">' +
+    Status('js-global-date-format-status', Words.Text('date-format-for-everyone', 'Date Format for everyone'),
+      SharedSettingOn(Db, 'hideDateFormat'), SharedSettingText(Db, 'globalDateFormat'));
+  if Member then
+  begin
+    // The board's line on a board's page only.
+    if BoardId <> '' then
+    begin
+      R := Db.Query('SELECT COALESCE(json_extract(p,''$.dateFormat''),''''),CASE WHEN json_type(p,''$.dateFormatOverride'')=''true'' THEN 1 ELSE 0 END ' +
+        'FROM (SELECT CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END p FROM boards WHERE id=' + QuotedStr(BoardId) + ' LIMIT 1);');
+      if Length(R) = 1 then
+        Result := Result + Status('js-board-date-format-status', Words.Text('board', 'Board') + ': ' + Words.Text('date-format', 'Date Format'),
+          R[0][1] = '1', R[0][0]);
+    end;
+  end
+  else Result := Result + '<hr>';
+  Result := Result + '</div><form class="js-date-format-form"' + IfThen(Member, '', ' data-board="' + HtmlAttr(BoardId) + '"') + '>';
+  if Member then
+    Result := Result + '<strong class="js-member-date-format-heading">' + E(Words.Text('memberMenuPopup-title', 'Member Settings')) + ': ' +
+      E(Words.Text('date-format', 'Date Format')) + '</strong>';
+  Result := Result + '<label class="flex"><input class="js-date-format-override" type="checkbox"' + IfThen(Enabled, ' checked', '') + '>';
+  if Member then
+    Result := Result + '<span class="js-member-date-format-enabled" data-enabled="' + HtmlAttr(Words.Text('r-rule-enabled', 'Enabled')) +
+      '" data-disabled="' + HtmlAttr(Words.Text('r-rule-disabled', 'Disabled')) + '">' +
+      E(IfThen(Enabled, Words.Text('r-rule-enabled', 'Enabled'), Words.Text('r-rule-disabled', 'Disabled'))) + '</span>'
+  else
+    Result := Result + E(Words.Text('date-format', 'Date Format'));
+  Result := Result + '</label><select class="js-date-format-select" aria-label="' + HtmlAttr(Words.Text('date-format', 'Date Format')) + '">';
+  for i := 0 to High(DATE_FORMATS) do Result := Result + Opt(DATE_FORMATS[i], DateFormatLabel(Words, DATE_FORMATS[i]), DATE_FORMATS[i] = Format);
+  Result := Result + '</select>';
+  if Member then
+  begin
+    Result := Result + '<hr><label class="bold clear" for="start-day-of-week"><i class="fa fa-calendar"></i> ' +
+      E(Words.Text('start-day-of-week', 'Set day of the week start')) + '</label><select id="start-day-of-week">';
+    for i := 0 to 6 do
+      Result := Result + Opt(IntToStr(i), Words.Text(WEEKDAY_KEYS[i], WEEKDAY_KEYS[i]), IntToStr(i) = Day);
+    Result := Result + '</select><hr><label class="bold clear" for="calendar-system"><i class="fa fa-calendar-check-o"></i> ' +
+      E(Words.Text('calendar-system', 'Calendar system (date display)')) + '</label><select id="calendar-system">';
+    for i := 0 to High(CALENDAR_SYSTEMS) do
+      Result := Result + Opt(CALENDAR_SYSTEMS[i], Words.Text('calendar-system-' + CALENDAR_SYSTEMS[i], CALENDAR_SYSTEMS[i]),
+        CALENDAR_SYSTEMS[i] = Calendar);
+    Result := Result + '</select>';
+  end;
+  Result := Result + '<p class="error js-date-format-error" hidden></p><button class="primary" type="submit">' +
+    E(Words.Text('save', 'Save')) + '</button></form>';
+end;
+
+// boardDateSettingsPopup: the board's date format, and the week of the year
+// (the member's own) under it.
+function BoardDateSettingsPopup(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId: string): string;
+begin
+  Result := '<template class="js-pop-over-template" data-pop="board-date-settings" data-popup="boardDateSettingsPopup" data-title="' + HtmlAttr(Words.Text('date', 'Date')) + '">' +
+    '<div class="content">' + DateFormatEditor(Db, Words, UserId, BoardId, False) +
+    '<hr><ul class="show-week-of-year-toggle"><a class="flex js-show-week-of-year-toggle" href="#" title="' +
+    HtmlAttr(Words.Text('show-week-of-year', 'Show week of year (ISO 8601)')) + '"><i class="fa ' +
+    IfThen(ProfileField(Db, UserId, 'showWeekOfYear') = '1', 'fa-check', 'fa-square-o') + '"></i><span>' +
+    E(Words.Text('show-week-of-year', 'Show week of year (ISO 8601)')) + '</span></a></ul></div></template>';
+end;
+
+// The member menu's Date and Change Settings pop-overs (memberDateSettingsPopup,
+// changeSettingsPopup): each row of Change Settings a toggle, its check mark
+// while on.
+function MemberSettingsPopups(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId: string): string;
+type TRow = record Cls, Icon, Key, Fallback, Hint, Method, Field: string; Shown: Boolean; end;
+const ROWS: array[0..8] of TRow = (
+  (Cls: 'js-toggle-desktop-drag-handles'; Icon: 'fa-arrows'; Key: 'show-desktop-drag-handles'; Fallback: 'Show desktop drag handles'; Hint: ''; Method: 'toggleDesktopDragHandles'; Field: 'showDesktopDragHandles'; Shown: False),
+  (Cls: 'js-toggle-unread-changes'; Icon: 'fa-circle'; Key: 'show-unread-changes'; Fallback: 'Mark cards changed since I last opened them'; Hint: 'show-unread-changes-desc'; Method: 'toggleUnreadChanges'; Field: 'unreadChangesSince'; Shown: False),
+  (Cls: 'js-toggle-keep-title-tags'; Icon: 'fa-hashtag'; Key: 'keep-title-tags'; Fallback: 'Keep #label and @member in new card titles'; Hint: 'keep-title-tags-description'; Method: 'toggleKeepTitleTags'; Field: 'keepTitleTags'; Shown: False),
+  (Cls: 'js-toggle-hide-focus-outline'; Icon: 'fa-square-o'; Key: 'show-focus-outline'; Fallback: 'Show focus outline'; Hint: ''; Method: 'toggleHideFocusOutline'; Field: 'hideFocusOutline'; Shown: True),
+  (Cls: 'js-toggle-keep-add-card-form-open'; Icon: 'fa-plus-square'; Key: 'keep-add-card-form-open'; Fallback: 'Keep the Add card form open after adding a card'; Hint: 'keep-add-card-form-open-description'; Method: 'toggleKeepAddCardFormOpen'; Field: 'keepAddCardFormOpen'; Shown: False),
+  (Cls: 'js-toggle-title-bracket-label'; Icon: 'fa-tag'; Key: 'title-bracket-label'; Fallback: 'Turn [label] at the start of a new card title into a label'; Hint: 'title-bracket-label-description'; Method: 'toggleTitleBracketLabel'; Field: 'titleBracketLabel'; Shown: False),
+  (Cls: 'js-toggle-submit-on-enter'; Icon: 'fa-level-down'; Key: 'submit-on-enter'; Fallback: 'Submit editors with Enter'; Hint: 'submit-on-enter-description'; Method: 'toggleSubmitOnEnter'; Field: 'submitOnEnter'; Shown: False),
+  (Cls: 'js-toggle-open-many-cards-at-once'; Icon: 'fa-clone'; Key: 'open-many-cards-at-once'; Fallback: 'Open many cards at once'; Hint: 'open-many-cards-at-once-description'; Method: 'toggleOpenManyCardsAtOnce'; Field: 'openManyCardsAtOnce'; Shown: False),
+  (Cls: 'js-toggle-checklist-ding-sound'; Icon: 'fa-bell'; Key: 'checklist-ding-sound'; Fallback: 'Play a sound when a checklist item is completed'; Hint: 'checklist-ding-sound-description'; Method: 'toggleChecklistDingSound'; Field: 'checklistDingSound'; Shown: False));
+var i: Integer; Value: string; On_: Boolean;
+begin
+  Result := '<template class="js-pop-over-template" data-pop="member-date-settings" data-popup="memberDateSettingsPopup" data-title="' +
+    HtmlAttr(Words.Text('date-format', 'Date Format')) + '"><div class="content">' +
+    DateFormatEditor(Db, Words, UserId, BoardId, True) + '</div></template>' +
+    '<template class="js-pop-over-template" data-pop="change-settings" data-popup="changeSettingsPopup" data-title="' +
+    HtmlAttr(Words.Text('changeSettingsPopup-title', 'Change Settings')) + '"><div class="content"><ul class="pop-over-list change-settings-list">';
+  for i := 0 to High(ROWS) do
+  begin
+    Value := ProfileField(Db, UserId, ROWS[i].Field);
+    if ROWS[i].Field = 'unreadChangesSince' then On_ := Value <> ''
+    else if ROWS[i].Shown then On_ := Value <> '1'
+    else On_ := Value = '1';
+    // The submit-on-enter check keeps weddy.js's own class: it toggles it.
+    Result := Result + '<li><a class="' + ROWS[i].Cls + IfThen(ROWS[i].Method = 'toggleSubmitOnEnter', '', ' js-welite-setting') +
+      '" href="#" data-method="' + ROWS[i].Method + '"' +
+      IfThen(ROWS[i].Hint <> '', ' title="' + HtmlAttr(Words.Text(ROWS[i].Hint, '')) + '"', '') + '><i class="fa ' + ROWS[i].Icon + '"></i>' +
+      E(Words.Text(ROWS[i].Key, ROWS[i].Fallback)) + '<i class="fa fa-check' +
+      IfThen(ROWS[i].Method = 'toggleSubmitOnEnter', ' js-submit-on-enter-check', ' js-setting-check') + '"' +
+      IfThen(On_, '', ' hidden') + '></i></a></li>';
+  end;
+  Result := Result + '</ul><button class="primary js-apply-user-settings" type="button">' + E(Words.Text('apply', 'Apply')) +
+    '</button></div></template>';
+end;
+
+// Admin Panel / Settings / Appearance (settingBody.jade): what the HTML5 view
+// has of it - Hide Logo as it stands, and the date format for everyone with
+// its own Save (js-visibility-date-save), which writes only those two.
+function AppearanceContent(Db: TWLDb; Words: TWLTranslator): string;
+var Doc: TJSONData; Id, Format: string; DateOn, Logo: Boolean; i: Integer;
+  function Flag(const Name: string): Boolean;
+  var V: TJSONData;
+  begin
+    V := TJSONObject(Doc).Find(Name);
+    Result := (V <> nil) and (V.JSONType = jtBoolean) and V.AsBoolean;
+  end;
+begin
+  Id := ''; Format := ''; DateOn := False; Logo := False;
+  Doc := nil;
+  try
+    try
+      Doc := GetJSON(SharedFirstDocument(Db, 'settings'));
+    except
+      Doc := nil;
+    end;
+    if Doc is TJSONObject then
+    begin
+      Id := TJSONObject(Doc).Get('_id', '');
+      Format := TJSONObject(Doc).Get('globalDateFormat', '');
+      DateOn := Flag('hideDateFormat');
+      Logo := Flag('hideLogo');
+    end;
+  finally
+    Doc.Free;
+  end;
+  if not ValidDateFormat(Format) then Format := DATE_FORMATS[0];
+  Result := '<div class="setting-content admin-appearance" data-setting="' + HtmlAttr(Id) + '"><h1>' +
+    E(Words.Text('admin-panel', 'Admin Panel')) + ': ' + E(Words.Text('layout', 'Layout')) + '</h1><ul class="admin-pane-list">' +
+    '<li class="tableVisibilityMode-form"><a class="flex js-toggle-hide-logo" href="#"><div class="materialCheckBox' +
+    IfThen(Logo, ' is-checked', '') + '" id="hide-logo"></div><span>' + E(Words.Text('hide-logo', 'Hide Logo')) + '</span></a></li>' +
+    '<li class="admin-pane-group-separator"><hr></li><li><h2 class="admin-pane-group-title">' + E(Words.Text('date', 'Date')) + '</h2></li>' +
+    '<li class="tableVisibilityMode-form"><a class="flex js-toggle-date-format" href="#"><div class="materialCheckBox' +
+    IfThen(DateOn, ' is-checked', '') + '" id="global-date-format-enabled"></div><span>' + E(Words.Text('date-format', 'Date Format')) +
+    ':</span></a><select class="wekan-form-control" id="global-date-format" aria-label="' + HtmlAttr(Words.Text('date-format', 'Date Format')) + '">';
+  for i := 0 to High(DATE_FORMATS) do
+    Result := Result + '<option value="' + DATE_FORMATS[i] + '"' + IfThen(DATE_FORMATS[i] = Format, ' selected', '') + '>' +
+      E(DateFormatLabel(Words, DATE_FORMATS[i])) + '</option>';
+  Result := Result + '</select></li><li><button class="js-visibility-date-save primary" type="button">' + E(Words.Text('save', 'Save')) +
+    '</button></li></ul></div>';
+end;
+
+// WeKan's /settings/update for a site admin, as Settings' allow rule lets it
+// through: the one settings document by its _id, $set or $unset of the
+// fields the HTML5 view's Admin Panel writes - the date format for everyone
+// (one of WeKan's six) and whether it is on, and Hide Logo. Anything else is
+// refused, nothing written.
+function SettingsUpdate(Db: TWLDb; const UserId: string; Args: TJSONArray; out Error: string): Integer;
+var Selector, Modifier, Fields: TJSONObject; Part: TJSONData; i, k: Integer; Name, Op: string; Doc: TJSONData;
+begin
+  Error := 'Match failed';
+  Result := 400;
+  if not IsSiteAdmin(Db, UserId) then
+  begin
+    // Nothing on a page sends it for anybody else: an attempt.
+    try
+      RecordSecurityEvent(Db, UserId, 'AuthBleed', 'method:/settings/update', 'authz', 'high', 'CWE-862', 'blocked',
+        'Admin Panel settings change refused: not the site admin');
+    except
+      // logging must never break the guard
+    end;
+    Error := 'Access denied'; Exit(403);
+  end;
+  if (Args.Count <> 2) or not (Args.Items[0] is TJSONObject) or not (Args.Items[1] is TJSONObject) then Exit;
+  Selector := TJSONObject(Args.Items[0]); Modifier := TJSONObject(Args.Items[1]);
+  if (Selector.Count <> 1) or (Selector.Find('_id') = nil) or (Selector.Find('_id').JSONType <> jtString) or (Modifier.Count = 0) then Exit;
+  Doc := nil;
+  try
+    try
+      Doc := GetJSON(SharedFirstDocument(Db, 'settings'));
+    except
+      Doc := nil;
+    end;
+    if not (Doc is TJSONObject) or (TJSONObject(Doc).Get('_id', '') <> Selector.Get('_id', '')) then
+    begin Error := 'Not found'; Exit(404); end;
+  finally
+    Doc.Free;
+  end;
+  Fields := TJSONObject.Create;
+  try
+    for i := 0 to Modifier.Count - 1 do
+    begin
+      Op := Modifier.Names[i]; Part := Modifier.Items[i];
+      if ((Op <> '$set') and (Op <> '$unset')) or not (Part is TJSONObject) then Exit;
+      for k := 0 to TJSONObject(Part).Count - 1 do
+      begin
+        Name := TJSONObject(Part).Names[k];
+        if (Name <> 'hideDateFormat') and (Name <> 'globalDateFormat') and (Name <> 'hideLogo') then
+        begin Error := 'Access denied'; Exit(403); end;
+        if Op = '$unset' then Fields.Add(Name, TJSONNull.Create)
+        else if Name = 'globalDateFormat' then
+        begin
+          if (TJSONObject(Part).Items[k].JSONType <> jtString) or not ValidDateFormat(TJSONObject(Part).Items[k].AsString) then
+          begin Error := 'invalid-date-format'; Exit(400); end;
+          Fields.Add(Name, TJSONObject(Part).Items[k].AsString);
+        end
+        else
+        begin
+          if TJSONObject(Part).Items[k].JSONType <> jtBoolean then Exit;
+          Fields.Add(Name, TJSONObject(Part).Items[k].AsBoolean);
+        end;
+      end;
+    end;
+    if not SaveSettingsFields(Db, Selector.Get('_id', ''), Fields) then begin Error := 'Could not save'; Exit(500); end;
+  finally
+    Fields.Free;
+  end;
+  Error := '';
+  Result := 200;
+end;
+
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
 var Dir, Header, ProfilePopup, Drawer: string; SiteAdmin: Boolean; T: TWLTenant;
@@ -582,7 +1020,7 @@ begin
   ProfilePopup := ''; Drawer := '';
   if (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) then
   begin
-    ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId);
+    ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId) + MemberSettingsPopups(T.Db, Words, S.UserId, ViewBoardId);
     Drawer := DrawerItems(T.Db, Words, S.UserId);
   end;
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
@@ -629,6 +1067,10 @@ begin
       E(Words.Text('changePasswordPopup-title', 'Change Password')) + '</a></li>' +
       '<li><a class="js-change-language" href="/language/popup"><i class="fa fa-globe"></i> ' +
       E(Words.Text('changeLanguagePopup-title', 'Change Language')) + '</a></li>' +
+      // Member Settings / Date and Change Settings (userHeader.jade).
+      '<li><a class="js-member-date-settings" href="#"><i class="fa fa-calendar"></i> ' + E(Words.Text('date', 'Date')) + '</a></li>' +
+      '<li><a class="js-change-settings" href="#"><i class="fa fa-cog"></i> ' +
+      E(Words.Text('change-settings', 'Change Settings')) + '</a></li>' +
       // The Admin Panel, for a site admin (memberMenuPopup's js-go-setting).
       IfThen(SiteAdmin, '<li><a class="js-go-setting" href="/admin/people"><i class="fa fa-lock"></i> ' +
         E(Words.Text('admin-panel', 'Admin Panel')) + '</a></li>', '') + '</ul></div></template>' + ProfilePopup +
@@ -920,7 +1362,7 @@ begin
   for i := 0 to High(R) do
   begin
     // The stored time, as minutes: 2026-11-26T01:02:03.456Z -> 2026-11-26 01:02.
-    Shown := StringReplace(Copy(R[i][2], 1, 16), 'T', ' ', []);
+    Shown := FormatShownDate(R[i][2], ViewDateFormat);
     Result := Result + '<div class="comment" data-id="' + HtmlAttr(R[i][0]) + '"><span class="comment-member">' + E(R[i][3]) +
       '</span><div class="comment-text"><div class="viewer">' + E(R[i][1]) + '</div></div><time class="activity-time" datetime="' +
       HtmlAttr(R[i][2]) + '">' + E(Shown) + '</time></div>';
@@ -972,7 +1414,7 @@ begin
     if Values[i] <> '' then
     begin
       // The stored time, to the minute: 2026-08-20T17:00:00.000Z -> 2026-08-20 17:00.
-      Shown := StringReplace(Copy(Values[i], 1, 16), 'T', ' ', []);
+      Shown := FormatShownDate(Values[i], ViewDateFormat);
       if CanSet then
         Result := Result + '<a class="js-edit-date card-date ' + Kinds[i] + '-date" href="#"' + Common + ' data-date="' +
           HtmlAttr(Values[i]) + '"><time datetime="' + HtmlAttr(Values[i]) + '">' + E(Shown) + '</time></a>'
@@ -1096,7 +1538,7 @@ begin
     end
     else if Kind = 'dropdown' then Shown := ItemName(Value)
     else if Kind = 'currency' then begin if Value <> '' then Shown := Value + IfThen(R[i][4] <> '', ' ' + R[i][4], ''); end
-    else if Kind = 'date' then Shown := StringReplace(Copy(Value, 1, 16), 'T', ' ', []);
+    else if Kind = 'date' then Shown := FormatShownDate(Value, ViewDateFormat);
     Checked := (Value = '1') or (Value = 'true');
     Action := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/custom-fields/' + HTTPEncode(Id);
     Copy_ := '<span class="custom-field-copy-control"><a class="fa fa-copy js-copy-custom-field" href="#" title="' +
@@ -2044,7 +2486,7 @@ begin
     Text := Text + E(Sentence);
     Result := Result + '<div class="activity" data-id="' + HtmlAttr(R[i][0]) + '"><div class="activity-desc"><span class="activity-member">' +
       E(R[i][2]) + '</span> ' + Text + '</div><time class="activity-time" datetime="' + HtmlAttr(R[i][14]) + '">' +
-      E(StringReplace(Copy(R[i][14], 1, 16), 'T', ' ', [])) + '</time></div>';
+      E(FormatShownDate(R[i][14], ViewDateFormat)) + '</time></div>';
   end;
 end;
 
@@ -2134,6 +2576,9 @@ begin
     '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
     '<div class="content"><ul class="pop-over-list"><li><a class="js-open-archives" href="#"><i class="fa fa-archive"></i> ' +
     E(Words.Text('archived-items', 'Archived Items')) + '</a></li>' +
+    // Board Settings / Date (sidebar.jade boardMenuPopup).
+    IfThen(S.UserId <> '', '<li><a class="js-open-board-date-settings" href="#" title="' + HtmlAttr(Words.Text('date', 'Date')) +
+      '"><i class="fa fa-calendar"></i> ' + E(Words.Text('date', 'Date')) + '</a></li>', '') +
     // Board Settings / Rules, for a board admin: the Rules page and its views
     // (wlrules), as Weddy's board.pug links them.
     IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId),
@@ -2141,7 +2586,7 @@ begin
       RuleMenuLink('js-open-rules-list-view', '?view=list', 'fa-list', 'r-list-view', 'List view') +
       RuleMenuLink('js-open-rules-workflow-view', '?view=workflow', 'fa-sitemap', 'r-workflow-view', 'Workflow view') +
       RuleMenuLink('js-open-rules-import-export', '?view=import', 'fa-exchange', 'rulesImportExportPopup-title', 'Import / Export'), '') +
-    '</ul></div></template>';
+    '</ul></div></template>' + IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId), '');
 end;
 
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
@@ -2464,7 +2909,7 @@ begin
     if Shows.Dates[i] and (Dates[i] <> '') then
     begin
       Label_ := Words.Text('card-' + Kinds[i], Captions[i]);
-      Shown := StringReplace(Copy(Dates[i], 1, 16), 'T', ' ', []);
+      Shown := FormatShownDate(Dates[i], ViewDateFormat);
       Cls := 'badge minicard-date minicard-date-' + Kinds[i] + ' date ' + Kinds[i] + '-date';
       if Shows.SetDates then
         Line := Line + '<a class="' + Cls + ' js-edit-date js-' + Kinds[i] + '-date" href="#" title="' + HtmlAttr(Label_) +
@@ -2605,12 +3050,122 @@ begin
   else begin BoardCurrentList := ''; BoardCurrentLane := ''; end;
 end;
 
+type
+  TCardSection = record Id, Icon, Key, Fallback: string; Header: Boolean; end;
+  // Each section's content by its id: HTML may hold line breaks, which a
+  // TStringList's name=value pairs would split.
+  TSectionBodies = array of record Id, Html: string; end;
+
+procedure PutSection(var Bodies: TSectionBodies; const Id, Html: string);
+var i: Integer;
+begin
+  for i := 0 to High(Bodies) do
+    if Bodies[i].Id = Id then begin Bodies[i].Html := Bodies[i].Html + Html; Exit; end;
+  SetLength(Bodies, Length(Bodies) + 1);
+  Bodies[High(Bodies)].Id := Id;
+  Bodies[High(Bodies)].Html := Html;
+end;
+
+function SectionOf(const Bodies: TSectionBodies; const Id: string): string;
+var i: Integer;
+begin
+  for i := 0 to High(Bodies) do if Bodies[i].Id = Id then Exit(Bodies[i].Html);
+  Result := '';
+end;
+
+const
+  // WeKan's cardSettingsSections.js SECTIONS, in the Card pane's default
+  // order: each section's icon and title. Header: drawn with its heading here
+  // - the others open with a title of their own (Labels, Members, ...) or fold
+  // under their own (custom fields, vote, attachments), as Weddy's
+  // card_sections.go has it.
+  CARD_SECTIONS: array[0..13] of TCardSection = (
+    (Id: 'labels'; Icon: 'fa-tag'; Key: 'labels'; Fallback: 'Labels'; Header: False),
+    (Id: 'date'; Icon: 'fa-calendar'; Key: 'date'; Fallback: 'Date'; Header: True),
+    (Id: 'members'; Icon: 'fa-users'; Key: 'members'; Fallback: 'Members'; Header: False),
+    (Id: 'card'; Icon: 'fa-id-card-o'; Key: 'card'; Fallback: 'Card'; Header: True),
+    (Id: 'time'; Icon: 'fa-clock-o'; Key: 'time'; Fallback: 'Time'; Header: True),
+    (Id: 'customFields'; Icon: 'fa-list-alt'; Key: 'custom-fields'; Fallback: 'Custom Fields'; Header: False),
+    (Id: 'vote'; Icon: 'fa-thumbs-up'; Key: 'vote-question'; Fallback: 'Vote'; Header: False),
+    (Id: 'poker'; Icon: 'fa-check-square'; Key: 'poker-question'; Fallback: 'Planning Poker'; Header: False),
+    (Id: 'description'; Icon: 'fa-file-text-o'; Key: 'description'; Fallback: 'Description'; Header: False),
+    (Id: 'scrum'; Icon: 'fa-repeat'; Key: 'scrum-settings'; Fallback: 'Scrum'; Header: True),
+    (Id: 'checklists'; Icon: 'fa-check'; Key: 'checklists'; Fallback: 'Checklists'; Header: False),
+    (Id: 'subtasks'; Icon: 'fa-sitemap'; Key: 'subtasks'; Fallback: 'Subtasks'; Header: False),
+    (Id: 'attachments'; Icon: 'fa-paperclip'; Key: 'attachments'; Fallback: 'Attachments'; Header: False),
+    (Id: 'comments'; Icon: 'fa-comment-o'; Key: 'comments'; Fallback: 'Comments'; Header: False));
+
+// WeKan's sectionOrder(stored, 'card'): the board's stored ids that are known,
+// once each, then the rest in the default order.
+function CardSectionOrder(Db: TWLDb; const BoardId: string): TStringArray;
+var R: TWLRows; i, n: Integer; L: TStringArray;
+  function Known(const Id: string): Boolean;
+  var k: Integer;
+  begin
+    for k := 0 to High(CARD_SECTIONS) do if CARD_SECTIONS[k].Id = Id then Exit(True);
+    Result := False;
+  end;
+  function Has(const Id: string): Boolean;
+  var k: Integer;
+  begin
+    for k := 0 to n - 1 do if L[k] = Id then Exit(True);
+    Result := False;
+  end;
+begin
+  SetLength(L, Length(CARD_SECTIONS));
+  n := 0;
+  R := Db.Query('SELECT j.value FROM boards b, json_each(CASE WHEN json_valid(b.settings_json) AND ' +
+    'json_type(b.settings_json,''$.cardSettingsSectionOrder'')=''array'' THEN json_extract(b.settings_json,''$.cardSettingsSectionOrder'') ' +
+    'ELSE ''[]'' END) j WHERE b.id=' + QuotedStr(BoardId) + ' AND j.type=''text'' ORDER BY j.key;');
+  for i := 0 to High(R) do
+    if Known(R[i][0]) and not Has(R[i][0]) then begin L[n] := R[i][0]; Inc(n); end;
+  for i := 0 to High(CARD_SECTIONS) do
+    if not Has(CARD_SECTIONS[i].Id) then begin L[n] := CARD_SECTIONS[i].Id; Inc(n); end;
+  SetLength(L, n);
+  Result := L;
+end;
+
+// The sections Card Settings hides on the card (cardSettingsHiddenOnCard).
+function CardSectionHidden(Db: TWLDb; const BoardId, Id: string): Boolean;
+begin
+  Result := Length(Db.Query('SELECT 1 FROM boards b, json_each(CASE WHEN json_valid(b.settings_json) AND ' +
+    'json_type(b.settings_json,''$.cardSettingsHiddenOnCard'')=''array'' THEN json_extract(b.settings_json,''$.cardSettingsHiddenOnCard'') ' +
+    'ELSE ''[]'' END) j WHERE b.id=' + QuotedStr(BoardId) + ' AND j.value=' + QuotedStr(Id) + ';')) > 0;
+end;
+
+// cardDetails.jade's .card-details-items: each section this card has
+// something for, in the Card pane's order, headed where it has no heading of
+// its own. Bodies holds each section's content by its id ('' for none).
+function CardSectionsHtml(Db: TWLDb; Words: TWLTranslator; const BoardId: string; const Bodies: TSectionBodies): string;
+var Order: TStringArray; i, k: Integer; Body: string;
+begin
+  Result := '<div class="card-details-left"><div class="card-details-items">';
+  Order := CardSectionOrder(Db, BoardId);
+  for i := 0 to High(Order) do
+  begin
+    Body := SectionOf(Bodies, Order[i]);
+    // Card is there on every card: its heading is the card's own place.
+    if ((Body = '') and (Order[i] <> 'card')) or CardSectionHidden(Db, BoardId, Order[i]) then Continue;
+    for k := 0 to High(CARD_SECTIONS) do
+      if CARD_SECTIONS[k].Id = Order[i] then
+      begin
+        Result := Result + '<div class="card-details-section card-details-section-' + Order[i] + '" data-card-section="' + Order[i] + '">';
+        if CARD_SECTIONS[k].Header then
+          Result := Result + '<h3 class="card-details-item-title js-toggle-card-section" data-section="' + Order[i] +
+            '" role="button" tabindex="0"><i class="fa ' + CARD_SECTIONS[k].Icon + '" aria-hidden="true"></i> ' +
+            E(Words.Text(CARD_SECTIONS[k].Key, CARD_SECTIONS[k].Fallback)) + '</h3>';
+        Result := Result + '<div class="card-details-section-body">' + Body + '</div></div>';
+      end;
+  end;
+  Result := Result + '</div></div>';
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
-  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter; Sections: TSectionBodies;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -2618,6 +3173,8 @@ begin
   B := Db.Query('SELECT title,color,slug,COALESCE(backgroundImageURL,''''),COALESCE(permission,''private'') FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 LIMIT 1;');
   if Length(B) <> 1 then Exit;
   BoardTitle := B[0][0];
+  ViewDateFormat := ViewDateFor(Db, S.UserId, BoardId);
+  ViewBoardId := BoardId;
   Route := BoardRoute(BoardId, B[0][2]);
   Writable := (S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId);
   BoardDates := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
@@ -2810,21 +3367,27 @@ begin
     Details := Details + CardWatchLink(Db, Words, S, BoardId, CardId);
     // WeKan's cardButtons: the board's card button rules.
     if Writable then Details := Details + RuleButtonsHtml(Db, BoardId, 'card', Words);
-    Details := Details + ListPickerSection(Db, Words, BoardId, CardId, Card[0][8], Card[0][9], Writable);
-    if BoardAllows(Db, BoardId, 'allowsLabels') then
-      Details := Details + LabelsSection(Db, Words, BoardId, CardId, Writable);
-    if BoardAllows(Db, BoardId, 'allowsMembers') then
-      Details := Details + MembersSection(Db, Words, CardId, Writable);
+    // WeKan's one section model (cardDetails.jade): each section's content,
+    // drawn in the Card pane's order (CardSectionsHtml).
     TextEditor := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
     CanCreateLabel := Writable and BoardCanCreateLabel(Db, S.UserId, BoardId);
-    Details := Details + DatesSection(Db, Words, BoardId, CardId, [Card[0][4], Card[0][5], Card[0][6], Card[0][7]], TextEditor);
-    Details := Details + PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor) +
-      DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor);
-    Details := Details + VoteSection(Db, Words, S.UserId, BoardId, CardId) + PokerSection(Db, Words, S.UserId, BoardId, CardId);
-    Details := Details + CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable) +
-      AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId));
-    Details := Details + ChecklistsSection(Db, Words, BoardId, CardId, Writable) +
-      CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)) +
+    Sections := nil;
+    PutSection(Sections, 'card', ListPickerSection(Db, Words, BoardId, CardId, Card[0][8], Card[0][9], Writable));
+    if BoardAllows(Db, BoardId, 'allowsLabels') then
+      PutSection(Sections, 'labels', LabelsSection(Db, Words, BoardId, CardId, Writable));
+    if BoardAllows(Db, BoardId, 'allowsMembers') then
+      PutSection(Sections, 'members', MembersSection(Db, Words, CardId, Writable));
+    PutSection(Sections, 'members', PeopleSection(Db, Words, BoardId, CardId, Card[0][2], Card[0][3], TextEditor));
+    PutSection(Sections, 'date', DatesSection(Db, Words, BoardId, CardId, [Card[0][4], Card[0][5], Card[0][6], Card[0][7]], TextEditor));
+    PutSection(Sections, 'description', DescriptionSection(Db, Words, BoardId, CardId, Card[0][1], TextEditor));
+    PutSection(Sections, 'vote', VoteSection(Db, Words, S.UserId, BoardId, CardId));
+    PutSection(Sections, 'poker', PokerSection(Db, Words, S.UserId, BoardId, CardId));
+    PutSection(Sections, 'customFields', CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable));
+    PutSection(Sections, 'attachments', AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId)));
+    PutSection(Sections, 'checklists', ChecklistsSection(Db, Words, BoardId, CardId, Writable));
+    PutSection(Sections, 'comments', CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)));
+    Details := Details + CardSectionsHtml(Db, Words, BoardId, Sections);
+    Details := Details +
       // The card's activities, opened by their heading.
       '<h3 class="card-details-item-title js-toggle-card-section" data-section="activities" role="button" tabindex="0">' +
       '<i class="fa fa-caret-right"></i> ' + E(Words.Text('activities', 'Activities')) + '</h3>' +
@@ -3290,6 +3853,52 @@ begin
   end;
   // WeKan's isAvatarUploadBlocked (#4740): Admin Panel / Attachments'
   // limitSettings.avatarsUploadBlocked; avatars stay enabled without it.
+  if Name = '/settings/update' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not (Args is TJSONArray) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := SettingsUpdate(T.Db, S.UserId, TJSONArray(Args), Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+      SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}')
+    else
+      SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  if IsPreferenceMethod(Name) then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not (Args is TJSONArray) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := PreferenceMethod(T, S.UserId, Name, TJSONArray(Args), Error);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+      SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}')
+    else
+    begin
+      // The board's other pages draw again: a board's format is theirs too.
+      if Name = 'setBoardDateFormat' then AnnounceToAll;
+      SendJsonAnswer(Response, 200, '{"result":true}');
+    end;
+    Exit;
+  end;
   if Name = 'isAvatarUploadBlocked' then
   begin
     SendJsonAnswer(Response, 200, '{"result":' + IfThen(AvatarUploadBlocked(T.Db), 'true', 'false') + '}');
@@ -3810,7 +4419,9 @@ begin
   if Length(R) <> 1 then Exit('{}');
   Profile := R[0][2];
   if (Profile = '') or (Profile[1] <> '{') then Profile := '{}';
-  Result := '{"_id":"' + StringToJSONString(R[0][0]) + '","username":"' + StringToJSONString(R[0][1]) + '","profile":' + Profile + '}';
+  // isAdmin as Meteor.user() has it: the site admin's Admin Panel.
+  Result := '{"_id":"' + StringToJSONString(R[0][0]) + '","username":"' + StringToJSONString(R[0][1]) + '","profile":' + Profile +
+    ',"isAdmin":' + IfThen(IsSiteAdmin(Db, R[0][0]), 'true', 'false') + '}';
 end;
 
 // cardAttachmentsPopup's upload: one file, onto a live card of a board the
@@ -3939,7 +4550,9 @@ begin
     '(SELECT modifiedAt FROM boards WHERE id=' + B + ');');
   Result := '';
   if Length(R) = 1 then Result := R[0][0] + '|' + R[0][1] + '|' + R[0][2] + '|' + R[0][3] + '|' + R[0][4];
-  Result := Result + '|' + RulesSignature(Db, BoardId);
+  Result := Result + '|' + RulesSignature(Db, BoardId) +
+    // Admin Panel's date format draws every board's dates (wldatef).
+    '|' + SharedSettingText(Db, 'globalDateFormat') + IfThen(SharedSettingOn(Db, 'hideDateFormat'), '+', '-');
 end;
 
 // weddy.js' live board: GET /b/:id/live?p=<page>, an event stream that says
@@ -4006,6 +4619,46 @@ begin
   Result := False;
   // weddy.js's GET /b/:id/places (the move and copy pop-overs' other board),
   // before WeKan's routes take /b/:id/:slug: the board's swimlanes and lists.
+  // The date pop-overs as they stand now (welite.js asks when one opens): a
+  // page's templates are drawn with it, and Admin Panel's or the board's
+  // format may have changed since.
+  if (Request.Method = 'GET') and (Request.PathInfo = '/date-settings') and ResolveTenant(Request, T) and TenantOpen(T) and
+    Html5User(T.Db, Request, S) then
+  begin
+    Result := True;
+    BoardId := Request.QueryFields.Values['board'];
+    if (BoardId <> '') and not BoardCanRead(T.Db, S.UserId, BoardId) then
+    begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+    Language := ViewerLanguage(T.Db, S, Request);
+    Words := TWLTranslator.Create(Language);
+    try
+      if Request.QueryFields.Values['scope'] = 'board' then
+      begin
+        if BoardId = '' then begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+        Content := DateFormatEditor(T.Db, Words, S.UserId, BoardId, False);
+      end
+      else Content := DateFormatEditor(T.Db, Words, S.UserId, BoardId, True);
+    finally
+      Words.Free;
+    end;
+    Response.Code := 200;
+    Response.ContentType := 'text/html; charset=utf-8';
+    Response.SetCustomHeader('Cache-Control', 'no-store');
+    Response.Content := Content;
+    SendResponse(Response);
+    Exit;
+  end;
+  // A guest's page of a public board follows it live too (#3249).
+  if (Request.Method = 'GET') and (Copy(Request.PathInfo, 1, 3) = '/b/') and (Request.CookieFields.Values[LOGIN_COOKIE] = '') then
+  begin
+    P := PathParts(Request.PathInfo);
+    if (Length(P) = 3) and (P[2] = 'live') and ResolveTenant(Request, T) and TenantOpen(T) and BoardCanRead(T.Db, '', P[1]) then
+    begin
+      Result := True;
+      ServeLiveBoard(T, Response, P[1]);
+      Exit;
+    end;
+  end;
   if (Request.Method = 'GET') and (Copy(Request.PathInfo, 1, 3) = '/b/') and (Request.CookieFields.Values[LOGIN_COOKIE] <> '') then
   begin
     P := PathParts(Request.PathInfo);
@@ -4472,7 +5125,7 @@ begin
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
     (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
-    (Path = '/admin/problems/password-length') or
+    (Path = '/admin/problems/password-length') or (Path = '/admin/settings/appearance') or (Path = '/admin/settings/visibility') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
@@ -4495,7 +5148,10 @@ begin
       Html5SignUpPage(Request, Response, 200, '', '', '', '');
       Exit;
     end;
-    if not SignedIn then
+    // A public board is anybody's to read (#3249, WeKan's
+    // readableWithoutMembership); every other page wants a sign-in.
+    if not SignedIn and not (((Path = '/board') or (Path = '/board/card')) and
+      BoardCanRead(T.Db, '', Request.QueryFields.Values['id'])) then
     begin
       Response.Code := 302;
       Response.SetCustomHeader('Location', '/sign-in');
@@ -4524,6 +5180,16 @@ begin
       else
         Send(200, Page(Request, Language, Words, S, Words.Text('password-length-report-title', 'Password length'), '',
           PasswordLengthContent(T.Db, Words, Language.Tag, Request.QueryFields)));
+      Exit;
+    end;
+    // Admin Panel / Settings / Appearance, a site admin's.
+    if (Path = '/admin/settings/appearance') or (Path = '/admin/settings/visibility') then
+    begin
+      if not IsSiteAdmin(T.Db, S.UserId) then
+        Send(404, Page(Request, Language, Words, S, Words.Text('error-notAuthorized', 'You are not authorized to view this page.'), '',
+          '<div class="big-message quiet"><h1>' + E(Words.Text('error-notAuthorized', 'You are not authorized to view this page.')) + '</h1></div>'))
+      else
+        Send(200, Page(Request, Language, Words, S, Words.Text('layout', 'Layout'), '', AppearanceContent(T.Db, Words)));
       Exit;
     end;
     if Path = '/profile/password' then
@@ -4650,6 +5316,12 @@ begin
   finally
     Words.Free;
   end;
+end;
+
+procedure ResetViewState;
+begin
+  ViewDateFormat := '';
+  ViewBoardId := '';
 end;
 
 end.

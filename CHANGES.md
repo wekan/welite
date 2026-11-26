@@ -471,6 +471,23 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   WeKan's isAvatarUploadBlocked (#4740) from Admin Panel's
   attachmentStorageSettings. `tests/avatar.py` compares every case with
   WeKan's own JavaScript. 424 of WeKan's tests pass.
+- Draw every date in the format WeKan would (`src/wldatef.pas`, WeKan's
+  resolveDateFormat): the member's own while their override is on, else the
+  board's, else Admin Panel's, else YYYY-MM-DD, with or without the time.
+  `tests/datefmt.py` compares all 512 combinations with WeKan's own
+  JavaScript. Add Member Settings / Date (format, first day of the week,
+  calendar) and Change Settings (#6835, its nine toggles), Board Settings /
+  Date with the week of the year for a board admin of the board's own, and
+  Admin Panel / Settings / Appearance's date format for everyone and Hide
+  Logo, with WeKan's changeDateFormat, changeStartDayOfWeek,
+  changeCalendarSystem, setBoardDateFormat, the toggles and /settings/update
+  - each refusing a format that is not one of WeKan's six, and the last
+  anybody but the site admin and any other field. A change of the board's or
+  Admin Panel's format draws the board's other pages again, a guest's page of
+  a public board too, which now opens in the HTML5 view.
+- Draw the opened card's sections in the board's Card Settings order (WeKan's
+  one section model), each section this card has something for, Date and
+  Card under their own headings. 427 of WeKan's tests pass.
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

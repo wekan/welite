@@ -18,6 +18,7 @@ them. Checked through FerretDB itself, as WeKan would read the board:
 """
 import http.client
 import json
+import urllib.parse
 import os
 import re
 import socket
@@ -131,7 +132,7 @@ def main():
                 return b['_id'], b['defaultSwimlaneId'], made
 
             def call(who, method, *args):
-                status, _, body = request('POST', '/_methods/' + method, list(args), cookie=cookies[who], as_json=True)
+                status, _, body = request('POST', '/_methods/' + urllib.parse.quote(method, safe=''), list(args), cookie=cookies[who], as_json=True)
                 return status, json.loads(body)
 
             def card(who, board_id, list_id, lane, title):
@@ -235,6 +236,37 @@ def main():
             assert status == 403 and denied['error'] == 'not-authorized', denied
             assert len(find('rules', {'boardId': home})) == 2, find('rules', {'boardId': home})
             print('PASS: rule history undo and redo, and their refusals')
+
+            # Admin Panel / Settings / Appearance's date format (/settings/update)
+            # and Board Settings / Date (setBoardDateFormat): the site admin's,
+            # and a board admin's of the board's own. Negative: a format that is
+            # not one of WeKan's six, a field the page does not write, anybody
+            # else - whose attempt is in Admin Panel / Problems (AuthBleed).
+            assert client.command({'insert': 'settings', 'documents': [{'_id': 'date-settings', 'hideDateFormat': False}]})['n'] == 1
+            status, done = call('admin', '/settings/update', {'_id': 'date-settings'},
+                                {'$set': {'hideDateFormat': True, 'globalDateFormat': 'DD-MM-YYYY'}})
+            assert status == 200, done
+            stored = find('settings', {'_id': 'date-settings'})[0]
+            assert stored['hideDateFormat'] is True and stored['globalDateFormat'] == 'DD-MM-YYYY', stored
+            for modifier, code in [({'$set': {'globalDateFormat': 'invalid'}}, 400), ({'$set': {'smtpHost': 'evil'}}, 403),
+                                   ({'$push': {'globalDateFormat': 'x'}}, 400), ({'$set': {'hideDateFormat': 'yes'}}, 400)]:
+                status, refused = call('admin', '/settings/update', {'_id': 'date-settings'}, modifier)
+                assert status == code, (modifier, status, refused)
+            assert call('admin', '/settings/update', {'_id': 'other'}, {'$set': {'hideDateFormat': False}})[0] == 404
+            status, refused = call('stranger', '/settings/update', {'_id': 'date-settings'}, {'$set': {'hideDateFormat': False}})
+            assert status == 403, refused
+            stored = find('settings', {'_id': 'date-settings'})[0]
+            assert stored['hideDateFormat'] is True and stored['globalDateFormat'] == 'DD-MM-YYYY' and 'smtpHost' not in stored, stored
+            assert call('owner', 'setBoardDateFormat', home, 'MM-DD-YYYY', True)[0] == 200
+            assert find('boards', {'_id': home})[0]['dateFormat'] == 'MM-DD-YYYY'
+            for who in ['stranger', 'admin']:
+                status, refused = call(who, 'setBoardDateFormat', home, 'YYYY-MM-DD', False)
+                assert status == 403 and refused['error'] == 'not-authorized', (who, refused)
+            board = find('boards', {'_id': home})[0]
+            assert board['dateFormat'] == 'MM-DD-YYYY' and board['dateFormatOverride'] is True, board
+            sources = {e.get('source') for e in find('eventlog', {}) if e.get('bleed') == 'AuthBleed'}
+            assert {'method:/settings/update', 'method:setBoardDateFormat'} <= sources, sources
+            print('PASS: Admin Panel and board date formats for their admins only; refusals recorded')
         finally:
             for proc in (app, ferret):
                 if proc is not None and proc.poll() is None:

@@ -347,6 +347,80 @@ def http_checks(server, tmp, backend):
         status, _, body, _ = request('POST', '/_methods/isAvatarUploadBlocked', [], cookie=owner, as_json=True)
         assert status == 200 and json.loads(body) == {'result': False}, body
         assert request('POST', '/_methods/isAvatarUploadBlocked', [], as_json=True)[0] == 401
+        # The date format a date is drawn in (wldatef): the member's own while
+        # their override is on, the board's while its own is on, else
+        # YYYY-MM-DD; refused for a format that is not one of WeKan's six.
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='cards'").fetchone():
+                    con.execute("UPDATE cards SET dueAt='2026-03-21T12:00:00.000Z' WHERE id=?", (card_id,))
+        def shown():
+            return request('GET', route, cookie=owner)[2]
+        def method(name, args, cookie=owner):
+            status, _, body, _ = request('POST', '/_methods/' + name, args, cookie=cookie, as_json=True)
+            return status, json.loads(body)
+        assert b'>2026-03-21 12:00</time>' in shown()
+        assert method('changeDateFormat', ['DD-MM-YYYY', True]) == (200, {'result': True})
+        assert b'>21-03-2026 12:00</time>' in shown() and b'datetime="2026-03-21T12:00:00.000Z"' in shown()
+        assert method('changeDateFormat', ['MM-DD-YYYY', False])[0] == 200
+        assert b'>2026-03-21 12:00</time>' in shown(), 'not while the override is off'
+        assert method('setBoardDateFormat', [board_id, 'DD-MM-YYYY-date-only', True])[0] == 200
+        assert b'>21-03-2026</time>' in shown()
+        for args in [[board_id, 'invalid', True], [board_id, 'DD-MM-YYYY', 'yes'], [board_id, 'DD-MM-YYYY']]:
+            assert method('setBoardDateFormat', args)[0] == 400, args
+        status, answer = method('setBoardDateFormat', [board_id, 'MM-DD-YYYY', True], cookie=stranger)
+        assert status == 403 and answer['error'] == 'not-authorized', answer
+        assert b'>21-03-2026</time>' in shown(), 'a stranger changes nothing'
+        for args in [['invalid', True], ['DD-MM-YYYY', 'yes'], [7]]:
+            assert method('changeDateFormat', args)[0] == 400, args
+        assert method('changeStartDayOfWeek', [7])[0] == 400 and method('changeStartDayOfWeek', [1.5])[0] == 400
+        assert method('changeStartDayOfWeek', [0])[0] == 200
+        assert method('changeCalendarSystem', ['nope']) == (400, {'error': 'invalid-calendar-system', 'reason': 'invalid-calendar-system'})
+        assert method('changeCalendarSystem', ['jalali'])[0] == 200
+        assert method('setBoardDateFormat', [board_id, 'YYYY-MM-DD', False])[0] == 200
+        assert b'>2026-03-21 12:00</time>' in shown()
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='cards'").fetchone():
+                    con.execute('UPDATE cards SET dueAt=NULL WHERE id=?', (card_id,))
+        # Member Settings / Date shows the board's line; Change Settings each
+        # toggle, its check mark while on.
+        page = shown()
+        assert b'class="js-member-date-settings"' in page and b'class="js-change-settings"' in page
+        assert b'data-popup="memberDateSettingsPopup"' in page and b'class="js-board-date-format-status"' in page
+        assert b'class="pop-over-list change-settings-list"' in page and b'js-open-board-date-settings' in page
+        assert b'data-method="toggleKeepTitleTags"' in page
+        assert method('toggleKeepTitleTags', [])[0] == 200
+        assert method('toggleKeepTitleTags', [1])[0] == 400
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='users'").fetchone():
+                    profile = json.loads(con.execute("SELECT profile_json FROM users WHERE username='owner'").fetchone()[0])
+                    assert profile['keepTitleTags'] is True and profile['startDayOfWeek'] == 0 and profile['calendarSystem'] == 'jalali'
+                    assert profile['dateFormat'] == 'MM-DD-YYYY' and profile['dateFormatOverride'] is False, profile
+        assert method('toggleKeepTitleTags', [])[0] == 200
+        # The date pop-overs as they stand: for whoever is signed in, of a
+        # board they may read. Negative: none without a login, none of a
+        # stranger's board.
+        status, _, body, _ = request('GET', '/date-settings?scope=member&board=' + board_id, cookie=owner)
+        assert status == 200 and b'js-board-date-format-status' in body and b'js-member-date-format-heading' in body
+        status, _, body, _ = request('GET', '/date-settings?scope=board&board=' + board_id, cookie=owner)
+        assert status == 200 and b'data-board="' + board_id.encode() + b'"' in body and b'start-day-of-week' not in body
+        assert request('GET', '/date-settings?scope=board&board=' + board_id, cookie=stranger)[0] == 404
+        assert b'js-date-format-form' not in request('GET', '/date-settings?scope=member')[2]
+        # Admin Panel / Settings / Appearance: the site admin's. Negative:
+        # nobody else's, and /settings/update writes only what it may, for the
+        # site admin only - here there is no shared settings document at all.
+        status, _, page, _ = request('GET', '/admin/settings/appearance', cookie=owner)
+        assert status == 200 and b'id="global-date-format"' in page and b'id="global-date-format-enabled"' in page
+        status, _, page, _ = request('GET', '/admin/settings/appearance', cookie=stranger)
+        assert status == 404 and b'id="global-date-format"' not in page and b'js-visibility-date-save' not in page
+        assert method('/settings/update', [{'_id': 'x'}, {'$set': {'hideDateFormat': True}}], cookie=stranger)[0] == 403
+        assert method('/settings/update', [{'_id': 'x'}, {'$set': {'hideDateFormat': True}}])[0] == 404
+        # A guest's page of a public board follows it live; a private board's
+        # stream is nobody's without a login.
+        status, headers, body, _ = request('GET', '/b/%s/live?v=1' % board_id)
+        assert not headers.get('Content-Type', '').startswith('text/event-stream') and b'event:' not in body, (status, headers)
         # The Rules need the shared store: here they say so, and write nothing.
         status, _, body, _ = request('POST', '/_methods/rules.createRule',
                                      [board_id, 'R', {'activityType': 'createCard'}, {'actionType': 'archive'}], cookie=owner, as_json=True)

@@ -48,6 +48,9 @@ function PasswordLengthContent(Db: TWLDb; Words: TWLTranslator; const Lang: stri
 function SavePasswordLength(Db: TWLDb; const MinLength, Enforce: string): Boolean;
 // What the required change shows in place of every page.
 function PasswordChangeRequiredContent(Db: TWLDb; Words: TWLTranslator): string;
+// The shared store's settings document of Id, each of Fields set (a null
+// removes it), the rest as it was.
+function SaveSettingsFields(Db: TWLDb; const Id: string; Fields: TJSONObject): Boolean;
 
 implementation
 
@@ -452,6 +455,11 @@ begin
     '<input id="at-field-password_again" type="password" name="newPassword2" autocomplete="new-password" minlength="' + Min + '" required>' +
     '<button id="at-btn" class="at-btn primary" type="submit">' + HtmlEncode(Words.Text('change-password', 'Change password')) + '</button>' +
     '</form></div></div>';
+end;
+
+function SaveSettingsFields(Db: TWLDb; const Id: string; Fields: TJSONObject): Boolean;
+begin
+  Result := (Id <> '') and (Pos(#0, Id) = 0) and WriteDoc(Db, 'settings', 'json_extract(_ferretdb_sjson,''$._id'')=' + Q(Id), Fields, nil, '{}');
 end;
 
 end.

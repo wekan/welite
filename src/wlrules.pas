@@ -69,6 +69,9 @@ procedure SendResponse(Response: TResponse);
 // wrote in the last few seconds: a board's live events name it, so that page
 // does not draw again what it drew itself.
 function RecentWriterPage: string;
+// The live board's next change is everybody's, the writer's page too: a
+// change other pages draw differently (a rule, a board's date format).
+procedure AnnounceToAll;
 // What the board's rules are now, as a short text that changes when they do.
 function RulesSignature(Db: TWLDb; const BoardId: string): string;
 
@@ -86,8 +89,6 @@ uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wl
 threadvar
   ArmedRequest: TRequest;
   ArmedStamp: string;
-
-procedure AnnounceToAll; forward;
 
 function Q(const S: string): string;
 begin
