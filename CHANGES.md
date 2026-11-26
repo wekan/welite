@@ -383,7 +383,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   keep their rows. weddy.js decides the mode as before; welite.js tells the
   server in the `welite-mobile` cookie and the chosen list (WeKan's Session
   currentList) in `welite-list`, and draws the board again only when the
-  mode differs from what was drawn. 282 of WeKan's tests pass.
+  mode differs from what was drawn. 286 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,
