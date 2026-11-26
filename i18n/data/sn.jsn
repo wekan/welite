@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Ona pachine nguva",
   "private": "Zvakavanzika",
   "private-desc": "bhodhi iri iri zvakavanzika. chete people akawedzera ku the bhodhi anogona view uye gadzirisa it.",
+  "instance": "Vashandisi vakapinda",
+  "instance-desc": "Mushandisi wese akapinda muWeKan ino anogona kuona bhodhi iri. Harimboratidzwi kuvanhu vasina kupinda. Vanhu vakawedzerwa kubhodhi chete ndivo vanogona kurigadzirisa.",
   "profile": "Purofairi",
   "public": "Zveruzhinji",
   "public-desc": "bhodhi iri iri zveruzhinji. It's visible ku anyone ne the link uye will ratidza up mu tsvaga engines like Google. chete people akawedzera ku the bhodhi anogona gadzirisa.",

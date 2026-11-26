@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Foarbyld",
   "private": "Privee",
   "private-desc": "Dit boerd is privee. Allinnich minsken taheakke oan it boerd kinne it besjen en bewurkje.",
+  "instance": "Oanmelde brûkers",
+  "instance-desc": "Elke oanmelde brûker fan dizze WeKan kin dit boerd besjen. It wurdt nea toand oan minsken dy’t net oanmeld binne. Allinnich minsken dy’t oan it boerd tafoege binne, kinne it bewurkje.",
   "profile": "Profyl",
   "public": "Iepenbier",
   "public-desc": "Dit boerd is iepenbier. It is sichtber foar elkenien mei de keppeling en sil ferskine yn sykmasines lykas Google. Allinnich minsken taheakke oan it boerd kinne bewurkje.",

@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Hakiki",
   "private": "Privat",
   "private-desc": "Bodi hii ni ya kibinafsi. Watu walioongezwa kwenye ubao pekee ndio wanaoweza kuitazama na kuihariri.",
+  "instance": "Watumiaji walioingia",
+  "instance-desc": "Kila mtumiaji aliyeingia katika WeKan hii anaweza kuona bodi hii. Haionyeshwi kamwe kwa watu ambao hawajaingia. Watu walioongezwa kwenye bodi pekee ndio wanaoweza kuhariri.",
   "profile": "Wasifu",
   "public": "Hadharani",
   "public-desc": "Bodi hii ni ya umma. Inaonekana kwa mtu yeyote aliye na kiungo na itaonekana katika injini za utafutaji kama vile Google. Watu walioongezwa kwenye ubao pekee ndio wanaoweza kuhariri.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Previsualizar",
   "private": "Privata",
   "private-desc": "Este tablero es privado. Sólo las personas añadidas al tablero pueden verlo y editarlo.",
+  "instance": "Ensalutintaj uzantoj",
+  "instance-desc": "Ĉiu ensalutinta uzanto de ĉi tiu WeKan povas vidi ĉi tiun tabulon. Ĝi neniam estas montrata al homoj, kiuj ne ensalutis. Nur homoj aldonitaj al la tabulo povas redakti.",
   "profile": "Profilo",
   "public": "Publika",
   "public-desc": "Este tablero es público. Es visible para cualquiera a través del enlace, y se mostrará en los buscadores como Google. Sólo las personas añadidas al tablero pueden editarlo.",

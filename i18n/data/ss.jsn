@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Kubuka Kwekucala",
   "private": "Kwangasese",
   "private-desc": "Lelibhodi lingasese. Bantfu labangetwe ebhodini kuphela labangalibuka baphindze balihlele.",
+  "instance": "Basebentisi labangenile",
+  "instance-desc": "Wonkhe umsebentisi longenile kule WeKan angalibona lelibhodi. Alikhonjiswa nanini kubantfu labangangeni. Bantfu labengetwe ebhodini kuphela labangalihlela.",
   "profile": "Iphrofayela",
   "public": "Kwemphakatsi",
   "public-desc": "Lelibhodi lisesidlangalaleni. Libonakala kunoma ngubani lonesichumanisi futsi litawubonakala kutinjini tekusesha njenge-Google. Bantfu labangetwe ebhodini kuphela labangalihlela.",

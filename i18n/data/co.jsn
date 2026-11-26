@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privatu",
   "private-desc": "Sta tavula hè privata. Solu e persone aghjunte à a tavula ponu vede la è mudificà la.",
+  "instance": "Utilizatori cunnessi",
+  "instance-desc": "Ogni utilizatore cunnessu à stu WeKan pò vede sta tavula. Ùn hè mai mustrata à e persone micca cunnesse. Solu e persone aghjunte à a tavula ponu mudificalla.",
   "profile": "Prufilu",
   "public": "Pubblicu",
   "public-desc": "Sta tavula hè publica. Hè visibile à tutti quelli chì anu u ligame è serà mustrata in i mutori di ricerca cum’è Google. Solu e persone aghjunte à a tavula ponu mudificà la.",

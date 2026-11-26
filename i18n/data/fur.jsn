@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprime",
   "private": "Privât",
   "private-desc": "Cheste taule è privata. Solo le persone aggiunte alla taule posa son vederla e modificherla.",
+  "instance": "Utents che a àn fat l'acès",
+  "instance-desc": "Ogni utent che al à fat l'acès a chest WeKan al pues viodi cheste taule. No ven mai mostrade a cui che nol à fat l'acès. Dome lis personis zontadis ae taule a puedin modificâle.",
   "profile": "Profîl",
   "public": "Publiche",
   "public-desc": "Cheste taule è pubblica. Al è visibile a chiunque abbia il link e sarà mostreta dai motori di ricîr come Google. Solo le persone aggiunte alla taule posa son modificherla.",

@@ -82,7 +82,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared;
 
 const
   STATIC_HEAD =
@@ -347,7 +347,7 @@ end;
 // signin.pug
 // Weddy's signup.pug, WeKan's register form: username, address, the
 // password twice, each password with its visibility button.
-function SignUpContent(Words: TWLTranslator; const Error, Username, Email: string): string;
+function SignUpContent(Words: TWLTranslator; const Error, Username, Email: string; MinLength: Integer): string;
   function Toggle: string;
   begin
     Result := '<button class="password-toggle-btn primary" type="button" aria-label="' + HtmlAttr(Words.Text('password', 'Password') + ': ' +
@@ -363,10 +363,10 @@ begin
     '<label for="at-field-email">' + E(Words.Text('email', 'Email')) + '</label>' +
     '<input id="at-field-email" type="email" name="email" value="' + HtmlAttr(Email) + '" autocomplete="email" required>' +
     '<label for="at-field-password">' + E(Words.Text('password', 'Password')) + '</label>' +
-    '<div class="password-input-container"><input id="at-field-password" class="password-field" type="password" name="password" ' +
+    '<div class="password-input-container"><input id="at-field-password" class="password-field" type="password" name="password" ' + IfThen(MinLength > 0, 'minlength="' + IntToStr(MinLength) + '" ', '') +
     'autocomplete="new-password" required>' + Toggle + '</div>' +
     '<label for="at-field-password_again">' + E(Words.Text('password-again', 'Password (again)')) + '</label>' +
-    '<div class="password-input-container"><input id="at-field-password_again" class="password-field" type="password" name="confirm" ' +
+    '<div class="password-input-container"><input id="at-field-password_again" class="password-field" type="password" name="confirm" ' + IfThen(MinLength > 0, 'minlength="' + IntToStr(MinLength) + '" ', '') +
     'autocomplete="new-password" required>' + Toggle + '</div>' +
     '<button id="at-btn" class="at-btn submit primary" type="submit">' + E(Words.Text('create-account', 'Create Account')) + '</button>' +
     '</form><p><a href="/sign-in">' + E(Words.Text('log-in', 'Log In')) + '</a></p></div></div>';
@@ -2112,6 +2112,25 @@ begin
   if BoardSettingFlag(Db, BoardId, 'allowsPersonalListWidth', False) and Valid(R[0][2], W) then Result := Round(W);
 end;
 
+function VisibilityButton(Words: TWLTranslator; const BoardId, Permission: string): string;
+const Values: array[0..2] of string = ('private', 'instance', 'public');
+  Icons: array[0..2] of string = ('fa-lock', 'fa-users', 'fa-globe');
+  Captions: array[0..2] of string = ('Private', 'Signed-in users', 'Public');
+var i, At: Integer;
+begin
+  At := 0;
+  for i := 0 to 2 do if Values[i] = Permission then At := i;
+  Result := '<a class="board-header-btn js-change-visibility" href="#" title="' + HtmlAttr(Words.Text(Values[At], Captions[At])) +
+    '"><i class="fa ' + Icons[At] + '"></i><span class="board-header-btn-label">' + E(Words.Text(Values[At], Captions[At])) + '</span></a>' +
+    '<template class="js-pop-over-template" data-pop="visibility" data-title="' +
+    HtmlAttr(Words.Text('boardChangeVisibilityPopup-title', 'Change Visibility')) + '"><ul class="pop-over-list described-list">';
+  for i := 0 to 2 do
+    Result := Result + '<li><form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/visibility"><input type="hidden" name="visibility" value="' +
+      Values[i] + '"><button class="js-select-visibility" type="submit"><i class="fa ' + Icons[i] + '"></i> ' + E(Words.Text(Values[i], Captions[i])) +
+      '<span class="sub-name">' + E(Words.Text(Values[i] + '-desc', '')) + '</span></button></form></li>';
+  Result := Result + '</ul></template>';
+end;
+
 // The board's background (Weddy's BackgroundStyle): only ever one of its own
 // raster image attachments, by its address.
 function BackgroundStyle(Db: TWLDb; const BoardId, Url: string): string;
@@ -2138,7 +2157,7 @@ begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
   if not BoardCanRead(Db, S.UserId, BoardId) then Exit;
-  B := Db.Query('SELECT title,color,slug,COALESCE(backgroundImageURL,'''') FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 LIMIT 1;');
+  B := Db.Query('SELECT title,color,slug,COALESCE(backgroundImageURL,''''),COALESCE(permission,''private'') FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 LIMIT 1;');
   if Length(B) <> 1 then Exit;
   BoardTitle := B[0][0];
   Route := BoardRoute(BoardId, B[0][2]);
@@ -2371,6 +2390,8 @@ begin
     ' data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
     BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + SortButton(Words, CardSort) +
+    // WeKan's visibility button and boardVisibilityList, for a board admin.
+    IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), VisibilityButton(Words, BoardId, B[0][4]), '') +
     // WeKan's Multi-Selection: select cards, then act on all of them.
     IfThen(Writable, '<a class="board-header-btn js-multiselection-activate" href="#" title="' +
       HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) + '" aria-label="' + HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) +
@@ -2405,10 +2426,18 @@ end;
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
-var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string;
+var T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
+  // server/lib/passwordPolicy.js's getPasswordPolicy answers without a
+  // login: the sign-up form checks against it before anybody signed in.
+  if Name = 'getPasswordPolicy' then
+  begin
+    PasswordPolicy(T.Db, n, Enforce);
+    SendJsonAnswer(Response, 200, '{"result":{"minLength":' + IntToStr(n) + ',"enforce":' + IfThen(Enforce, 'true', 'false') + '}}');
+    Exit;
+  end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
   if Name = 'toggleCardMaximized' then
@@ -2964,7 +2993,7 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
@@ -2974,6 +3003,7 @@ begin
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
   else if (n = 3) and (P[2] = 'watch') then Action := 'watch-board'
+  else if (n = 3) and (P[2] = 'visibility') then Action := 'visibility'
   else if (n = 3) and (P[2] = 'members') then Action := 'add-member'
   else if (n = 5) and (P[2] = 'members') then Action := 'remove-member'
   else if n = 3 then Action := 'add-card'
@@ -3069,6 +3099,8 @@ begin
     // membership is not there to change.
     if Code = 403 then Code := 404;
   end
+  else if Action = 'visibility' then
+    Code := SetViewBoardVisibility(T, S.UserId, BoardId, Request.ContentFields.Values['visibility'], Error)
   else if Action = 'watch-card' then
     Code := WatchViewCard(T, S.UserId, BoardId, CardId, Error)
   else if Action = 'watch-board' then
@@ -3125,7 +3157,7 @@ begin
       Exit;
     end;
     // boardChangeTitlePopup is a plain form: back to the board, renamed.
-    if Action = 'rename-board' then
+    if (Action = 'rename-board') or (Action = 'visibility') then
     begin
       Response.Code := 303;
       Response.SetCustomHeader('Location', BoardRoute(BoardId, BoardSlug(T.Db, BoardId)));
@@ -3280,15 +3312,18 @@ begin
 end;
 
 procedure Html5SignUpPage(Request: TRequest; Response: TResponse; Code: Integer; const ErrorKey, Fallback, Username, Email: string);
-var Language: TWLLanguage; Words: TWLTranslator; Error: string;
+var Language: TWLLanguage; Words: TWLTranslator; Error: string; T: TWLTenant; MinLength: Integer; Enforce: Boolean;
 begin
+  MinLength := 0; Enforce := False;
+  if ResolveTenant(Request, T) and TenantOpen(T) then PasswordPolicy(T.Db, MinLength, Enforce);
+  if not Enforce then MinLength := 0;
   Language := ViewerLanguage(nil, Default(TWLSession), Request);
   Words := TWLTranslator.Create(Language);
   try
     Error := '';
     if ErrorKey <> '' then Error := Words.Text(ErrorKey, Fallback);
     SendPage(Response, Code, Page(Request, Language, Words, Default(TWLSession), Words.Text('register', 'Register'), '',
-      SignUpContent(Words, Error, Username, Email)));
+      SignUpContent(Words, Error, Username, Email, MinLength)));
   finally
     Words.Free;
   end;

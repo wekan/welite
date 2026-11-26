@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Vista prèvia",
   "private": "Privat",
   "private-desc": "Aquest tauler és privat. Només les persones afegides al tauler poden veure´l i editar-lo.",
+  "instance": "Usuaris amb la sessió iniciada",
+  "instance-desc": "Tots els usuaris que hagin iniciat sessió en aquest WeKan poden veure aquest tauler. No es mostra mai a persones que no hagin iniciat sessió. Només les persones afegides al tauler el poden editar.",
   "profile": "Perfil",
   "public": "Públic",
   "public-desc": "Aquest tauler és públic. És visible per a qualsevol persona amb l'enllaç i es mostrarà en els motors de cerca com Google. Només persones afegides al tauler poden editar-lo.",

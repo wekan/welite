@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "預覽",
   "private": "私人的",
   "private-desc": "該委員會是私人的。只有新增到圖板的人員才能查看和編輯它。",
+  "instance": "已登入嘅用戶",
+  "instance-desc": "呢個 WeKan 嘅所有已登入用戶都可以睇到呢個看板。未登入嘅人永遠睇唔到。只有已加入看板嘅人先可以編輯。",
   "profile": "輪廓",
   "public": "民眾",
   "public-desc": "該委員會是公開的。任何知道該連結的人都可以看到它，並且會顯示在 Google 等搜尋引擎中。只有加入到論壇的人員才能編輯。",

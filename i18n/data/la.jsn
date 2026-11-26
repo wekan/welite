@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Praevisio",
   "private": "Privata",
   "private-desc": "Haec tabula privata est. Solum homines tabulae additi eam videre et mutare possunt.",
+  "instance": "Utentes ingressi",
+  "instance-desc": "Omnis utens in hoc WeKan ingressus hanc tabulam videre potest. Numquam ostenditur iis qui ingressi non sunt. Solum ii qui tabulae additi sunt eam mutare possunt.",
   "profile": "Descriptio usoris",
   "public": "Publica",
   "public-desc": "Haec tabula publica est. Quivis ligamen habens eam videre potest, et in quaesitoriis ut Google apparebit. Solum homines tabulae additi eam mutare possunt.",

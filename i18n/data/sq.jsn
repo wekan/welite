@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Pamje paraprake",
   "private": "Private",
   "private-desc": "Kjo tabelë është private. Vetëm njerëzit e shtuar në tabelë mund ta shikojnë dhe redaktojnë.",
+  "instance": "Përdorues të identifikuar",
+  "instance-desc": "Çdo përdorues i identifikuar në këtë WeKan mund ta shohë këtë tabelë. Ajo nuk u shfaqet kurrë personave që nuk janë identifikuar. Vetëm personat e shtuar në tabelë mund të redaktojnë.",
   "profile": "Profili",
   "public": "Publike",
   "public-desc": "Kjo tabelë është publike. Është e dukshme për këdo që ka lidhjen dhe shfaqet në motorë kërkimi si Google. Vetëm njerëzit e shtuar në tabelë mund ta redaktojnë.",

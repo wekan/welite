@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privata",
   "private-desc": "Questa bacheca è privata. Solo le persone aggiunte alla bacheca possono vederla e modificarla.",
+  "instance": "Utenti che hanno effettuato l’accesso",
+  "instance-desc": "Ogni utente che ha effettuato l’accesso a questa istanza di WeKan può visualizzare questa bacheca. Non viene mai mostrata a chi non ha effettuato l’accesso. Solo le persone aggiunte alla bacheca possono modificarla.",
   "profile": "Profilo",
   "public": "Pubblica",
   "public-desc": "Questa bacheca è pubblica. È visibile a chiunque abbia il link e sarà mostrata dai motori di ricerca come Google. Solo le persone aggiunte alla bacheca possono modificarla.",

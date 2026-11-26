@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Önizləmə",
   "private": "Şəxsi",
   "private-desc": "Bu lövhə özəldir. Yalnız lövhəyə əlavə edilmiş insanlar ona baxa və redaktə edə bilər.",
+  "instance": "Daxil olmuş istifadəçilər",
+  "instance-desc": "Bu WeKan-a daxil olmuş hər bir istifadəçi bu lövhəyə baxa bilər. Lövhə daxil olmamış şəxslərə heç vaxt göstərilmir. Yalnız lövhəyə əlavə edilmiş şəxslər redaktə edə bilər.",
   "profile": "Profil",
   "public": "İctimai",
   "public-desc": "Bu şura ictimaidir. O, linki olan hər kəsə görünür və Google kimi axtarış sistemlərində görünəcək. Yalnız lövhəyə əlavə edilmiş şəxslər redaktə edə bilər.",

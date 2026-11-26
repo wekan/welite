@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Buka kuqala",
   "private": "Okuyimfihlo",
   "private-desc": "Leli bhodi liyimfihlo. Abantu abengezwe ebhodini kuphela abangalibuka futhi balihlele.",
+  "instance": "Abasebenzisi abangene ngemvume",
+  "instance-desc": "Wonke umsebenzisi ongene ngemvume kule WeKan angabuka leli bhodi. Aliboniswa nhlobo kubantu abangangeni ngemvume. Abantu abangezwe ebhodini kuphela abangakwazi ukulihlela.",
   "profile": "Iphrofayela",
   "public": "Esidlangalaleni",
   "public-desc": "Leli bhodi lisesidlangalaleni. Ibonakala kunoma ubani onesixhumanisi futhi izovela ezinjinini zokusesha ezifana ne-Google. Abantu abengezwe ebhodini kuphela abangahlela.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Aurreikusi",
   "private": "Pribatua",
   "private-desc": "Arbel hau pribatua da. Arbelera gehitutako jendeak besterik ezin du ikusi eta editatu.",
+  "instance": "Saioa hasi duten erabiltzaileak",
+  "instance-desc": "WeKan honetan saioa hasi duen edozein erabiltzailek ikus dezake arbel hau. Ez zaie inoiz erakusten saioa hasi ez dutenei. Arbelean gehitutako pertsonek soilik edita dezakete.",
   "profile": "Profila",
   "public": "Publikoa",
   "public-desc": "Arbel hau publikoa da lotura duen edonorentzat ikusgai dago eta Google bezalako bilatzaileetan agertuko da. Arbelera gehitutako kideek besterik ezin dute editatu.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "પૂર્વાવલોકન",
   "private": "ખાનગી",
   "private-desc": "यह बोर्ड is private. Only people  संकलित तक the बोर्ड can  आलोकन और  संपादित करें it.",
+  "instance": "साइन इन किए हुए उपयोगकर्ता",
+  "instance-desc": "इस WeKan में साइन इन किया हुआ हर उपयोगकर्ता यह बोर्ड देख सकता है। यह उन लोगों को कभी नहीं दिखाया जाता जिन्होंने साइन इन नहीं किया है। केवल बोर्ड में जोड़े गए लोग ही संपादन कर सकते हैं।",
   "profile": "પ્રોફાઇલ",
   "public": "જાહેર",
   "public-desc": "यह बोर्ड is public. It's visible तक anyone साथ में the link और will show up अंदर में गूगल की तरह खोज इंजन । केवल लोग  संकलित तक बोर्ड संपादित कर सकते हैं.",

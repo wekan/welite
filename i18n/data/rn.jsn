@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Raba imbere",
   "private": "Bwite",
   "private-desc": "Iki capa ni ic'ibanga. Abantu bongewe ku capa gusa ni bo bashobora kukibona no kugihindura.",
+  "instance": "Abakoresha binjiye",
+  "instance-desc": "Umukoresha wese yinjiye muri iyi WeKan arashobora kubona iki capa. Nticigera cerekanwa abantu batinjiye. Abantu bongewe ku capa ni bo bonyene bashobora kugihindura.",
   "profile": "Umwidondoro",
   "public": "Rusangi",
   "public-desc": "Iki capa ni ica bose. Umuntu wese afise ihuriro arakibona kandi kizoboneka mu mashini zirondera nka Google. Abantu bongewe ku capa gusa ni bo bashobora kugihindura.",

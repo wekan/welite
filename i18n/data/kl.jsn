@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Siumut takussutissaq",
   "private": "Nammineq",
   "private-desc": "Ilisarnaat una namminerisamik atorneqarpoq. Inuit ilisarnaammut ilanngunneqartut kisimik takusinnaallugulu allanngortissinnaavaat.",
+  "instance": "Atuisutut isersimasut",
+  "instance-desc": "WeKan-imut uunga atuisutut isersimasut tamarmik allattarfik una takusinnaavaat. Atuisutut isersimanngitsunut takutinneqanngisaannarpoq. Allattarfimmut ilanngunneqarsimasut kisimik allanngortissinnaavaat.",
   "profile": "Profili",
   "public": "Tamanut ammasoq",
   "public-desc": "Ilisarnaat una tamanut ammasuuvoq. Kinaluunniit linkilik takusinnaavaa Google-tullu ujaasissutit inernerini takuneqarsinnaalluni. Inuit ilisarnaammut ilanngunneqartut kisimik allanngortitsisinnaapput.",

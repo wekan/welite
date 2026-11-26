@@ -431,7 +431,7 @@ var
   T: TWLTenant;
   S: TWLSession;
   Username, Password, Confirm, Uid, Hash, Iso, PolicySecret, PolicyCondition, Title, Email: string;
-  First, Html5: Boolean;RegistrationPolicy:TFactorPolicy;Words:TWLTranslator;
+  First, Html5, Enforce: Boolean; MinLength: Integer;RegistrationPolicy:TFactorPolicy;Words:TWLTranslator;
 begin
   if not RequireTenant(aRequest, aResponse, T) then Exit;
   if T.IsAdmin then
@@ -456,6 +456,14 @@ begin
     begin
       if Html5 then Html5SignUpPage(aRequest,aResponse,400,'username-password-required','Username and password are required.',Username,Email) else
       SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'username-password-required','Username and password are required.'));
+      Exit;
+    end;
+    // WeKan's password policy: an enforced minimum, and never over 512.
+    PasswordPolicy(T.Db,MinLength,Enforce);
+    if (Enforce and (Length(UTF8Decode(Password))<MinLength)) or (Length(UTF8Decode(Password))>512) then
+    begin
+      if Html5 then Html5SignUpPage(aRequest,aResponse,400,'password-too-short','The password is too short.',Username,Email) else
+      SendHtml(aResponse, RegisterForm(aRequest,aResponse,NoUsersYet(T),'password-too-short','The password is too short.'));
       Exit;
     end;
     if Password <> Confirm then

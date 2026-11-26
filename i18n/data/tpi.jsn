@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Lukluk pastaim",
   "private": "Praivet",
   "private-desc": "Dispela bot i praivet. Ol manmeri ol i putim long bot tasol inap lukim na senisim em.",
+  "instance": "Ol yusa i go insait pinis",
+  "instance-desc": "Olgeta yusa i bin sain in long dispela WeKan inap lukim dispela bot. Ol manmeri i no sain in bai i no inap lukim dispela bot. Ol manmeri ol i bin putim long bot tasol inap senisim em.",
   "profile": "Profail",
   "public": "Bilong olgeta",
   "public-desc": "Dispela bot i bilong olgeta. Olgeta manmeri i gat link inap lukim na em bai kamap long ol masin bilong painim olsem Google. Ol manmeri ol i putim long bot tasol inap senisim.",

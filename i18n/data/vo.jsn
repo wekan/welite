@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Prévisualiser",
   "private": "Privata",
   "private-desc": "Ce tableau est privé. Seuls les membres peuvent y accéder et le modifier.",
+  "instance": "Gebans enunädöl oki",
+  "instance-desc": "Geban alik, kel enunädon oki in WeKan at, kanon logön tabi at. Tab at neai pajonon menes, kels no enunädons oki. Te mens pelüüköl tabe kanons redakön oni.",
   "profile": "Profilo",
   "public": "Publika",
   "public-desc": "Ce tableau est public. Il est accessible par toutes les personnes disposant du lien et apparaîtra dans les résultats des moteurs de recherche tels que Google. Seuls les membres peuvent le modifier.",

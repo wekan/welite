@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Pretpregled",
   "private": "Privatno",
   "private-desc": "Ови списи су тајни. Само одобрени сарадници могу да их читају и уређују.",
+  "instance": "Prijavljeni korisnici",
+  "instance-desc": "Svaki prijavljeni korisnik ovog WeKana može vidjeti ovu ploču. Nikada se ne prikazuje osobama koje nisu prijavljene. Uređivati je mogu samo osobe dodane na ploču.",
   "profile": "Profil",
   "public": "Javno",
   "public-desc": "Ови списи су потпуно јавни. Видљиви су сваком ко има везу до њих и појавиће се и у google претрагама. Једино одобрени сарадници могу бити уредници.",

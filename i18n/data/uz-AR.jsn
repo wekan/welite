@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Ko‘rib chiqish",
   "private": "Shaxsiy",
   "private-desc": "Bu kengash shaxsiydir. Uni faqat doskaga qo‘shilgan odamlar ko‘rishi va tahrirlashi mumkin.",
+  "instance": "تیزیمگه کیرگن فایدلنووچیلر",
+  "instance-desc": "بو WeKan تیزیمیگه کیرگن هر بیر فایدلنووچی اوشبو تخته‌نی کۉره آله‌دی. او تیزیمگه کیرمه‌گن آدملرگه هیچ قچان کۉرسه‌تیلمیدی. فقط تختگه قۉشیلگن آدملر تحریرلی آله‌دی.",
   "profile": "Profil",
   "public": "Ommaviy",
   "public-desc": "Bu kengash ommaviydir. U havolaga ega bo'lgan har bir kishiga ko'rinadi va Google kabi qidiruv tizimlarida paydo bo'ladi. Faqat doskaga qoʻshilgan odamlar tahrirlashi mumkin.",

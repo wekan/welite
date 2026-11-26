@@ -7,6 +7,11 @@ function ResolvedFactorPolicy(Db:TWLDb;const Method,Services:string;IsAdmin:Bool
   out Secret,Condition:string):TFactorPolicy;
 function ResolvedPasswordAllowed(Db:TWLDb;const Method,Services:string;IsAdmin:Boolean):Boolean;
 function SharedStore(Db:TWLDb):Boolean;
+// WeKan's passwordPolicyConfig (server/lib/passwordPolicy.js): the minimum
+// length - a shared store's settings.loginOptions.passwordMinLength, else
+// PASSWORD_MIN_LENGTH, else 8, at most 256 - and whether it is enforced
+// (passwordMinLengthEnforce, else PASSWORD_MIN_LENGTH_ENFORCE=true).
+procedure PasswordPolicy(Db:TWLDb;out MinLength:Integer;out Enforce:Boolean);
 function ApiTokenLifetime(Db:TWLDb):Int64;
 function ApiTokenLifetimeMs(Db:TWLDb;out Condition:string):Double;
 function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:string):Int64;
@@ -54,6 +59,28 @@ begin
   if Value.JSONType=jtBoolean then Result:=LowerCase(Value.AsString) else Result:=Value.AsString;
   if Result='' then Result:=Fallback;
 end;
+procedure PasswordPolicy(Db:TWLDb;out MinLength:Integer;out Enforce:Boolean);
+var Doc:TJSONObject;Snapshot,Raw,Flag:string;N:Double;
+begin
+  MinLength:=8;
+  Raw:=Trim(GetEnvironmentVariable('PASSWORD_MIN_LENGTH'));
+  Flag:=Trim(GetEnvironmentVariable('PASSWORD_MIN_LENGTH_ENFORCE'));
+  Doc:=nil;
+  try
+    try
+      if SharedStore(Db) then Doc:=ReadSettings(Db,Snapshot);
+    except Doc:=nil;end;
+    if Doc<>nil then
+    begin
+      Raw:=SettingValue(Doc,'loginOptions','passwordMinLength',Raw);
+      Flag:=SettingValue(Doc,'loginOptions','passwordMinLengthEnforce',Flag);
+    end;
+  finally Doc.Free;end;
+  N:=StrToFloatDef(Raw,0,DefaultFormatSettings);
+  if (N>=1) and (Frac(N)=0) then MinLength:=Round(Min(N,256));
+  Enforce:=Flag='true';
+end;
+
 function AccountPolicyCondition(Db:TWLDb):string;
 var Doc:TJSONObject;Snapshot:string;
 begin

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Jonga kwangaphambili",
   "private": "Yabucala",
   "private-desc": "Le bhodi ibucala. Ngabantu abongezwe kwibhodi kuphela abanokuyijonga kwaye bayihlele.",
+  "instance": "Abasebenzisi abangenileyo",
+  "instance-desc": "Wonke umsebenzisi ongenileyo kule WeKan unokulibona eli bhodi. Alize liboniswe kubantu abangangenanga. Ngabantu abongezwe ebhodini kuphela abanokulihlela.",
   "profile": "Inkangeleko yesimo",
   "public": "Uluntu",
   "public-desc": "Le bhodi isesidlangalaleni. Ibonakala kuye nabani na onekhonkco kwaye iya kuvela kwiinjini zokukhangela ezifana noGoogle. Ngabantu abongezwe kwibhodi kuphela abanokuhlela.",

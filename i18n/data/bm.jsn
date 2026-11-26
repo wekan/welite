@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Ɲɛjira",
   "private": "Gundo",
   "private-desc": "Tabali in ye gundo ye. Mɔgɔ minnu farala tabali kan dɔrɔn bɛ se ka a lajɛ ani ka a yɛlɛma.",
+  "instance": "Baarakɛlaw minnu donna",
+  "instance-desc": "Baarakɛla bɛɛ min donna WeKan nin kɔnɔ, o bɛ se ka walan nin ye. A tɛ jira mɔgɔw la abada minnu ma don. Mɔgɔw minnu farala walan kan, olu dɔrɔn bɛ se k’a yɛlɛma.",
   "profile": "I ka kunnafoni",
   "public": "Foroba",
   "public-desc": "Tabali in ye foroba ye. Mɔgɔ o mɔgɔ min bɛ ni lasigiden ye bɛ se ka a ye, wa a bɛna jira ɲinini minɛnw na i n'a fɔ Google. Mɔgɔ minnu farala tabali kan dɔrɔn bɛ se ka a yɛlɛma.",

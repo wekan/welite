@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Prévisualiser",
   "private": "Privé",
   "private-desc": "Ce tableau est privé. Seuls les membres peuvent y accéder et le modifier.",
+  "instance": "Implijerien kevreet",
+  "instance-desc": "Pep implijer kevreet eus ar WeKan-mañ a c'hall gwelet an daolenn-mañ. Ne vez diskouezet morse d'an dud n'int ket kevreet. An dud ouzhpennet d'an daolenn hepken a c'hall kemmañ.",
   "profile": "Profil",
   "public": "Public",
   "public-desc": "Ce tableau est public. Il est accessible par toutes les personnes disposant du lien et apparaîtra dans les résultats des moteurs de recherche tels que Google. Seuls les membres peuvent le modifier.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Vorschau",
   "private": "Privat",
   "private-desc": "Dieses Board ist privat. Nur Nutzer, die zu dem Board gehören, können es anschauen und bearbeiten.",
+  "instance": "'elpu'bogh lo'wI'pu'",
+  "instance-desc": "'echletvam leghlaH WeKanvam 'elpu'bogh Hoch lo'wI'. 'elpu'be'bogh ghotpu'vaD not 'echletvam cha'lu'. 'echletvam luchoHlaH 'echletvamvaD ghotpu' chellu'pu'bogh neH.",
   "profile": "Profil",
   "public": "Öffentlich",
   "public-desc": "Dieses Board ist öffentlich. Es ist für jeden, der den Link kennt, sichtbar und taucht in Suchmaschinen wie Google auf. Nur Nutzer, die zum Board hinzugefügt wurden, können es bearbeiten.",

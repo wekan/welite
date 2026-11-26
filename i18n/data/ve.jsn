@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Buka kuqala",
   "private": "Okuyimfihlo",
   "private-desc": "Leli bhodi liyimfihlo. Abantu abengezwe ebhodini kuphela abangalibuka futhi balihlele.",
+  "instance": "Vhashumisi vho dzhenaho",
+  "instance-desc": "Mushumisi muṅwe na muṅwe o dzhenaho kha WeKan iyi a nga vhona bodo iyi. A i sumbedzwi vhathu vha songo dzhenaho na luthihi. Ndi vhathu vho engedzwaho kha bodo fhedzi vhane vha nga i lulamisa.",
   "profile": "Iphrofayela",
   "public": "Esidlangalaleni",
   "public-desc": "Leli bhodi lisesidlangalaleni. Ibonakala kunoma ubani onesixhumanisi futhi izovela ezinjinini zokusesha ezifana ne-Google. Abantu abengezwe ebhodini kuphela abangahlela.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Podgląd",
   "private": "Prywatna",
   "private-desc": "Ta tablica jest prywatna. Tylko osoby dodane do tej tablicy mogą ją zobaczyć i edytować.",
+  "instance": "Zalogowani użytkownicy",
+  "instance-desc": "Każdy zalogowany użytkownik tej instancji WeKan może przeglądać tę tablicę. Nigdy nie jest ona pokazywana osobom niezalogowanym. Edytować mogą tylko osoby dodane do tablicy.",
   "profile": "Profil",
   "public": "Publiczna",
   "public-desc": "Ta tablica jest publiczna. Jest widoczna dla wszystkich, którzy mają do niej odnośnik i będzie wynikiem silników wyszukiwania takich jak Google. Tylko użytkownicy dodani do tablicy mogą ją edytować.",

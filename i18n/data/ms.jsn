@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Semakan",
   "private": "Peribadi",
   "private-desc": "Papan ini peribadi. Hanya ahli papan sahaja dapat papar dan ubah suai  ia.",
+  "instance": "Pengguna yang telah log masuk",
+  "instance-desc": "Setiap pengguna yang log masuk ke WeKan ini boleh melihat papan ini. Ia tidak pernah ditunjukkan kepada orang yang belum log masuk. Hanya orang yang ditambahkan pada papan boleh menyunting.",
   "profile": "Profail",
   "public": "Umum",
   "public-desc": "Papan ini Umum. Ianya dapat dilihat oleh semua yang ada pautan dan akan timbul dalam enjin carian seperti Google. Hanya ahli sahaja boleh ubah suai papan ini.",

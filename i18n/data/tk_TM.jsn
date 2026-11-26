@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Öňünden syn",
   "private": "Hususy",
   "private-desc": "Bu geňeş şahsy. Diňe tagta goşulan adamlar ony görüp we redaktirläp bilerler.",
+  "instance": "Hasabyna giren ulanyjylar",
+  "instance-desc": "Bu WeKan-da hasabyna giren her ulanyjy bu tagtany görüp biler. Hasabyna girmedik adamlara ol hiç wagt görkezilmeýär. Diňe tagta goşulan adamlar ony redaktirläp bilerler.",
   "profile": "Profil",
   "public": "Köpçülik",
   "public-desc": "Bu geňeş köpçülige açyk. Baglanyşygy bolanlara görünýär we Google ýaly gözleg motorlarynda görkeziler. Diňe tagta goşulan adamlar redaktirläp bilerler.",

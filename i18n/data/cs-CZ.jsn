@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Náhled",
   "private": "Soukromý",
   "private-desc": "Toto tablo je soukromé. Pouze vybraní uživatelé ho mohou zobrazit a upravovat.",
+  "instance": "Přihlášení uživatelé",
+  "instance-desc": "Toto tablo si může prohlížet každý přihlášený uživatel této instance WeKanu. Nepřihlášeným se nikdy nezobrazuje. Upravovat je mohou pouze lidé přidaní k tablu.",
   "profile": "Profil",
   "public": "Veřejný",
   "public-desc": "Toto tablo je veřejné. Je viditelné pro každého, kdo na něj má odkaz a bude zobrazeno ve vyhledávačích jako je Google. Pouze vybraní uživatelé ho mohou upravovat.",

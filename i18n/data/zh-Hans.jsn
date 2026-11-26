@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Preview",
   "private": "Private",
   "private-desc": "This board is private. Only people added to the board can view and edit it.",
+  "instance": "已登录的用户",
+  "instance-desc": "所有登录此 WeKan 的用户都能查看此看板。未登录的人永远无法看到此看板。只有已加入看板的人才能编辑。",
   "profile": "Profile",
   "public": "Public",
   "public-desc": "This board is public. It's visible to anyone with the link and will show up in search engines like Google. Only people added to the board can edit.",

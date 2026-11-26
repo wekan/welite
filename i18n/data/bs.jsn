@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Pretpregled",
   "private": "Privatno",
   "private-desc": "Ova tabla je privatna. Samo osobe dodane na tablu mogu je pregledati i uređivati.",
+  "instance": "Prijavljeni korisnici",
+  "instance-desc": "Svaki prijavljeni korisnik ovog WeKana može vidjeti ovu tablu. Nikada se ne prikazuje osobama koje nisu prijavljene. Uređivati je mogu samo osobe dodane na tablu.",
   "profile": "Profil",
   "public": "Javno",
   "public-desc": "Ova tabla je javna. Vidljiva je svima koji imaju poveznicu i pojavit će se u pretraživačima poput Googlea. Samo osobe dodane na tablu mogu je uređivati.",

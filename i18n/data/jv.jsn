@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Pratinjau",
   "private": "Pribadi",
   "private-desc": "Papan iki pribadi. Mung wong sing ditambahake menyang papan sing bisa ndeleng lan ngowahi.",
+  "instance": "Pangguna sing wis mlebu",
+  "instance-desc": "Saben pangguna sing wis mlebu ing WeKan iki bisa ndeleng papan iki. Papan iki ora tau dituduhake marang wong sing durung mlebu. Mung wong sing ditambahake menyang papan sing bisa nyunting.",
   "profile": "Profil",
   "public": "Umum",
   "public-desc": "Papan iki umum. Sapa wae sing nduweni pranala bisa ndeleng lan bakal katon ing mesin telusur kaya Google. Mung wong sing ditambahake menyang papan sing bisa ngowahi.",

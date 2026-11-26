@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Prevista",
   "private": "Privat",
   "private-desc": "Questa tabella è privata. Mo persunas agiuntadas a la tabella la pon vesair e modifitgar.",
+  "instance": "Utilisaders annunziads",
+  "instance-desc": "Mintga utilisader annunzià en questa installaziun da WeKan po vesair questa tabella. Ella na vegn mai mussada a persunas che n’èn betg annunziadas. Mo persunas agiuntadas a la tabella pon la modifitgar.",
   "profile": "Profil",
   "public": "Publica",
   "public-desc": "Questa tabella è publica. Ella è visibla per mintgin cun la colliaziun e vegn mussada en maschinas da tschertga sco Google. Mo persunas agiuntadas a la tabella pon la modifitgar.",

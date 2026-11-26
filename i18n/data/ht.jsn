@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Apèsi",
   "private": "Prive",
   "private-desc": "Tablo sa a prive. Se sèlman moun yo ajoute sou tablo a ki ka wè ak modifye li.",
+  "instance": "Itilizatè ki konekte yo",
+  "instance-desc": "Chak itilizatè ki konekte nan WeKan sa a ka wè tablo sa a. Yo pa janm montre li bay moun ki pa konekte. Se sèlman moun yo ajoute nan tablo a ki ka modifye li.",
   "profile": "Pwofil",
   "public": "Piblik",
   "public-desc": "Tablo sa a piblik. Tout moun ki gen lyen an ka wè li epi li ap parèt nan motè rechèch tankou Google. Se sèlman moun yo ajoute sou tablo a ki ka modifye li.",

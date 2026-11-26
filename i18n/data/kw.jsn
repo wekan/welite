@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Ragweles",
   "private": "Privedh",
   "private-desc": "An estyllen ma yw privedh. Tus keworrys dhe'n estyllen hepken a yll y gweles hag y chanjya.",
+  "instance": "Devnydhyoryon omgelmys",
+  "instance-desc": "Pub devnydhyer omgelmys a'n WeKan ma a yll gweles an estyllen ma. Hi ny vydh byth diskwedhys dhe dus nad yns omgelmys. Tus keworrys dhe'n estyllen hepken a yll golegi.",
   "profile": "Profil",
   "public": "Poblek",
   "public-desc": "An estyllen ma yw poblek. Yma gweladew dhe nebonan gans an kevren ha dres y dhisplegya yn jynnys hwithrans kepar ha Google. Tus keworrys dhe'n estyllen hepken a yll chanjya.",

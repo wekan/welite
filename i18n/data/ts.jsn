@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Xikombiso xa le mahlweni",
   "private": "Xa xihundla",
   "private-desc": "Bodo leyi i ya xihundla. Vanhu lava engeteriweke eka bodo ntsena va nga yi vona ni ku yi hlela.",
+  "instance": "Vatirhisi lava ngheneke",
+  "instance-desc": "Mutirhisi un’wana ni un’wana loyi a ngheneke eka WeKan leyi a nga vona bodo leyi. A yi kombisiwi vanhu lava nga nghenangiki nikatsongo. I vanhu lava engeteriweke eka bodo ntsena lava nga yi lulamisaka.",
   "profile": "Vuxokoxoko",
   "public": "Xa vanhu",
   "public-desc": "Bodo leyi i ya mani na mani. Yi voniwa hi un'wana na un'wana la nga na xihlanganisi naswona yi ta humelela eka swilavisisi swo fana na Google. Vanhu lava engeteriweke eka bodo ntsena va nga yi hlela.",

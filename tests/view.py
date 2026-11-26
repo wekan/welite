@@ -96,7 +96,9 @@ def http_checks(server, tmp, backend):
     listen = free_port()
     env = dict(os.environ, WELITE_DATA=str(data), WELITE_SHARED='0', WELITE_PORT=str(listen),
                WELITE_SCHEMA=str(ROOT / 'src/schema.sql'), WELITE_DESIGNER=str(ROOT / 'src/designer.sql'),
-               WELITE_I18N=str(ROOT / 'i18n'), WELITE_PUBLIC=str(ROOT / 'public'))
+               WELITE_I18N=str(ROOT / 'i18n'), WELITE_PUBLIC=str(ROOT / 'public'),
+               # WeKan's password policy from the environment, enforced.
+               PASSWORD_MIN_LENGTH='9', PASSWORD_MIN_LENGTH_ENFORCE='true')
     for variable in ['REQUIRE_2FA', 'LDAP_ENABLE', 'WELITE_ENTROPY_FILE', 'WELITE_ARGON_SECRET_FILE', 'WELITE_SHORT_NAMES']:
         env.pop(variable, None)
     log = (tmp / ('server-' + backend + '.log')).open('w+')
@@ -1187,6 +1189,44 @@ def http_checks(server, tmp, backend):
         assert arch(pair)[0] == 400, 'not archived twice'
         for cid in pair:
             assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': cid}, cookie=owner)[0] == 200
+
+        # The board's visibility (boardVisibilityList), by a board admin, and
+        # #3249: an instance board read by every signed-in user, edited only
+        # by its members, never seen signed out.
+        page = request('GET', route, cookie=owner)[2]
+        assert b'js-change-visibility' in page and b'data-pop="visibility"' in page and b'fa fa-lock' in page
+        assert b'js-change-visibility' not in request('GET', route, cookie=worker)[2]
+        visibility = lambda: board_db('SELECT permission FROM boards WHERE id=?', board_id)[0]
+        assert request('POST', '/b/%s/visibility' % board_id, {'visibility': 'instance'}, cookie=worker)[0] == 403
+        assert request('POST', '/b/%s/visibility' % board_id, {'visibility': 'everyone'}, cookie=owner)[0] == 400
+        assert visibility() == 'private'
+        outsider = 'meteor_login_token=' + cookie_value(request('POST', '/sign-in', {'username': 'html5_user', 'password': 'pw-h5-123'})[3], 'meteor_login_token')
+        assert request('GET', route, cookie=outsider)[0] == 404
+        status, headers, _, _ = request('POST', '/b/%s/visibility' % board_id, {'visibility': 'instance'}, cookie=owner)
+        assert status == 303 and visibility() == 'instance' and b'fa fa-users' in request('GET', route, cookie=owner)[2]
+        assert request('GET', route, cookie=outsider)[0] == 200, 'any signed-in user reads it'
+        h5 = json.loads(request('POST', '/users/login', {'username': 'html5_user', 'password': 'pw-h5-123'})[2])
+        assert request('POST', '/api/boards/%s/lists/%s/cards' % (board_id, list_id), {'title': 'Not a member', 'authorId': h5['id'],
+                       'swimlaneId': lane}, headers={'Authorization': 'Bearer ' + h5['token']}, as_json=True)[0] != 200, 'only members edit it'
+        assert request('GET', route)[0] in (302, 404), 'never signed out'
+        assert request('POST', '/b/%s/visibility' % board_id, {'visibility': 'private'}, cookie=owner)[0] == 303
+        assert visibility() == 'private' and request('GET', route, cookie=outsider)[0] == 404
+
+        # WeKan's password policy (passwordPolicy.js): getPasswordPolicy answers
+        # signed out; an enforced minimum refuses a shorter password at sign-up.
+        status, _, body, _ = request('POST', '/_methods/getPasswordPolicy', [], as_json=True)
+        assert status == 200 and json.loads(body)['result'] == {'minLength': 9, 'enforce': True}, body
+        assert b'minlength="9"' in request('GET', '/sign-up')[2]
+        status, _, page, _ = request('POST', '/sign-up', {'username': 'short_pw', 'email': 'short@example.invalid',
+                                                        'password': 'Eight-88', 'confirm': 'Eight-88'})
+        assert status == 400 and b'js-signup-error' in page and card_db("SELECT count(*) FROM users WHERE username='short_pw'")[0] == 0
+        status, _, page, _ = request('POST', '/sign-up', {'username': 'short_pw', 'password': 'Eight-88', 'confirm': 'Eight-88'}, agent='Welite-test')
+        assert card_db("SELECT count(*) FROM users WHERE username='short_pw'")[0] == 0, 'the HTML4 view refuses it too'
+        status, headers, _, _ = request('POST', '/sign-up', {'username': 'nine_pw', 'email': 'nine@example.invalid',
+                                                           'password': 'Nine-9999', 'confirm': 'Nine-9999'})
+        assert status == 302 and card_db("SELECT count(*) FROM users WHERE username='nine_pw'")[0] == 1, 'exactly long enough'
+        assert request('POST', '/sign-up', {'username': 'long_pw', 'email': 'long@example.invalid', 'password': 'x' * 513,
+                                            'confirm': 'x' * 513})[0] == 400
 
         # WeKan's header: Home, the collapse toggle and the title, then the
         # mobile/desktop toggle; setMobileMode keeps the choice, a boolean.

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Esikatsele",
   "private": "Yksityinen",
   "private-desc": "Tämä taulu on yksityinen. Vain taululle lisätyt henkilöt voivat nähdä ja muokata sitä.",
+  "instance": "Sistemaha tulnud kävutajad",
+  "instance-desc": "Iga kävutai, kudamb om tulnud neche WeKan-sistemaha, voib nähta necen laudan. Neile, kudambad ei ole tulnud sistemaha, necid laudad nikonz ei näüta. Vaiše laudal ližatud ristitud voiba vajehta sidä.",
   "profile": "Profiili",
   "public": "Julkinen",
   "public-desc": "Tämä taulu on julkinen. Se näkyy kenelle tahansa jolla on linkki ja näkyy myös hakukoneissa kuten Google. Vain taululle lisätyt henkilöt voivat muokata sitä.",

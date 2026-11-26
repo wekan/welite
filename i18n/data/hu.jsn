@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Előnézet",
   "private": "Személyes",
   "private-desc": "Ez a tábla személyes. Csak a táblához hozzáadott emberek tekinthetik meg és szerkeszthetik.",
+  "instance": "Bejelentkezett felhasználók",
+  "instance-desc": "A WeKan ezen példányának minden bejelentkezett felhasználója megtekintheti ezt a táblát. A be nem jelentkezett személyeknek soha nem jelenik meg. Csak a táblához hozzáadott személyek szerkeszthetik.",
   "profile": "Profil",
   "public": "Nyilvános",
   "public-desc": "Ez a tábla nyilvános. A hivatkozás birtokában bárki számára látható, és megjelenik az olyan keresőmotorokban, mint például a Google. Csak a táblához hozzáadott emberek szerkeszthetik.",

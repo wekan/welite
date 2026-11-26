@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Ko‘rib chiqish",
   "private": "Shaxsiy",
   "private-desc": "Bu kengash shaxsiydir. Uni faqat doskaga qo‘shilgan odamlar ko‘rishi va tahrirlashi mumkin.",
+  "instance": "Tizimga kirgan foydalanuvchilar",
+  "instance-desc": "Bu WeKan tizimiga kirgan har bir foydalanuvchi ushbu taxtani koʻra oladi. U tizimga kirmagan odamlarga hech qachon koʻrsatilmaydi. Faqat taxtaga qoʻshilgan odamlar tahrirlay oladi.",
   "profile": "Profil",
   "public": "Ommaviy",
   "public-desc": "Bu kengash ommaviydir. U havolaga ega bo'lgan har bir kishiga ko'rinadi va Google kabi qidiruv tizimlarida paydo bo'ladi. Faqat doskaga qoʻshilgan odamlar tahrirlashi mumkin.",

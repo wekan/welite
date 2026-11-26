@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Ro-shealladh",
   "private": "Prìobhaideach",
   "private-desc": "Tha am bòrd seo prìobhaideach. Chan fhaod ach daoine a chaidh a chur ris a' bhòrd fhaicinn agus a dheasachadh.",
+  "instance": "Luchd-cleachdaidh a tha air clàradh a-steach",
+  "instance-desc": "Chì gach cleachdaiche a tha air clàradh a-steach dhan WeKan seo am bòrd seo. Cha tèid a shealltainn gu bràth do dhaoine nach eil air clàradh a-steach. Chan urrainn ach daoine a chaidh a chur ris a' bhòrd a dheasachadh.",
   "profile": "Pròifil",
   "public": "Poblach",
   "public-desc": "Tha am bòrd seo poblach. Chì duine sam bith aig a bheil an ceangal e agus nochdaidh e ann an einnseanan-luirg mar Google. Chan fhaod ach daoine a chaidh a chur ris a' bhòrd deasachadh.",

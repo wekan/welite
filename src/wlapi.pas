@@ -276,6 +276,9 @@ function ViewSetOwnProfile(const T:TWLTenant;const UserId,Fullname,Initials:stri
 // member's only when assigned to them (GHSA-6xqf-jh8x-4wxc) - and only then
 // is each archived, with its archivedCard activity.
 function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Ids:array of string;out Error:string):Integer;
+// boardChangeVisibilityPopup: a board admin makes the board private, visible
+// to the instance's signed-in users (#3249) or public.
+function SetViewBoardVisibility(const T:TWLTenant;const UserId,BoardId,Visibility:string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -6349,6 +6352,19 @@ begin
     Result:=ArchiveViewCard(T,UserId,BoardId,Unique[i],Error);
     if Result<>200 then Exit;
   end;
+  Result:=200;
+end;
+
+function SetViewBoardVisibility(const T:TWLTenant;const UserId,BoardId,Visibility:string;out Error:string):Integer;
+begin
+  Error:='';
+  if (Visibility<>'private') and (Visibility<>'instance') and (Visibility<>'public') then begin Error:='Invalid visibility';Exit(400);end;
+  if (BoardId='') or (Pos(#0,BoardId)>0) or not BoardCanRead(T.Db,UserId,BoardId) then begin Error:='Board not found';Exit(404);end;
+  if not BoardCanAdmin(T.Db,UserId,BoardId) then begin Error:='Board administration required';Exit(403);end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE boards SET permission='+QuotedStr(Visibility)+',modifiedAt='+QuotedStr(NowIso)+' WHERE id='+
+    QuotedStr(BoardId)+'; SELECT CASE WHEN (SELECT permission FROM boards WHERE id='+QuotedStr(BoardId)+')='+QuotedStr(Visibility)+
+    ' THEN 1 ELSE json(''Visibility failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not change visibility';Exit(500);end;
   Result:=200;
 end;
 

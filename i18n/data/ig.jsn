@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Nhụchalụ",
   "private": "Nkeonwe",
   "private-desc": "Bọdụ a bụ nke nzuzo. Naanị ndị agbakwunyere na bọọdụ nwere ike ịlele ma dezie ya.",
+  "instance": "Ndị ọrụ banyere akaụntụ",
+  "instance-desc": "Onye ọrụ ọ bụla banyere akaụntụ na WeKan a nwere ike ịhụ bọọdụ a. A naghị egosi ya ndị na-abanyeghị akaụntụ. Naanị ndị agbakwunyere na bọọdụ nwere ike idezi ya.",
   "profile": "Profaịlụ",
   "public": "Ọha",
   "public-desc": "Bọdụ a bụ ọha. A na-ahụ ya onye ọ bụla nwere njikọ ahụ, ọ ga-apụtakwa na igwe nchọta dị ka Google. Naanị ndị agbakwunyere na bọọdụ nwere ike idezi.",

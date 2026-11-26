@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Prebisualizar",
   "private": "Privá",
   "private-desc": "E tabla ta pribá. Solamente e personas añadidas na e tabla pueden berlo i editálo.",
+  "instance": "Usuarionan ku a drenta",
+  "instance-desc": "Tur usuario ku a drenta den e WeKan aki por wak e tabla aki. Nunka e ta wordu mustrá na hende ku no a drenta. Solamente hende ku a wordu agregá na e tabla por editá.",
   "profile": "Perfil",
   "public": "Públiko",
   "public-desc": "E tabla ta públiko. Ta bisible pa cualkiera na trabés di e enlase, i se mustraá den e buscadores como Google. Solamente e personas añadidas na e tabla pueden editálo.",

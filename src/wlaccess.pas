@@ -31,7 +31,10 @@ begin
         (M[0][3]='0') and (M[0][4]='0') and (M[0][5]='0'));
     end;
   end;
-  Result:=not WriteAccess and (B[0][0]='public');
+  // #3249: a public board for anybody, an instance board for every enabled,
+  // signed-in user of the instance - reading only, as WeKan's
+  // readableWithoutMembership.
+  Result:=not WriteAccess and ((B[0][0]='public') or ((B[0][0]='instance') and (Length(U)>0)));
 end;
 function BoardCanRead(Db: TWLDb; const UserId, BoardId: string): Boolean;
 begin Result:=BoardAccess(Db,UserId,BoardId,False); end;

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Forskoðun",
   "private": "Einka",
   "private-desc": "Þessi tafla er lokuð. Aðeins fólk sem hefur verið bætt við töfluna getur skoðað hana og breytt.",
+  "instance": "Innskráðir notendur",
+  "instance-desc": "Allir innskráðir notendur þessa WeKan geta skoðað þessa töflu. Hún er aldrei sýnd fólki sem er ekki innskráð. Aðeins fólk sem hefur verið bætt við töfluna getur breytt henni.",
   "profile": "Notandasnið",
   "public": "Opinbert",
   "public-desc": "Þessi tafla er opin. Allir með tengilinn geta séð hana og hún birtist í leitarvélum á borð við Google. Aðeins fólk sem hefur verið bætt við töfluna getur breytt henni.",

@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Preview",
   "private": "Private",
   "private-desc": "This board is private. Only people added to the board can view and edit it.",
+  "instance": "Карыстальнікі, якія ўвайшлі",
+  "instance-desc": "Кожны карыстальнік, які ўвайшоў у гэты WeKan, можа бачыць гэтую дошку. Яна ніколі не паказваецца тым, хто не ўвайшоў. Рэдагаваць могуць толькі людзі, дададзеныя на дошку.",
   "profile": "Profile",
   "public": "Public",
   "public-desc": "This board is public. It's visible to anyone with the link and will show up in search engines like Google. Only people added to the board can edit.",

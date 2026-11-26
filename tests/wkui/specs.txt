@@ -201,6 +201,7 @@ hook-bleed.e2e.js: moving a card with a webhook enabled is no HookBleed, and the
 import-export-format-audit.e2e.js: csv: empty imports fail without creating a board
 import-export-format-audit.e2e.js: markdown: empty imports fail without creating a board
 import-export-format-audit.e2e.js: excel: empty imports fail without creating a board
+instance-board-visibility.e2e.js: the owner can make a board visible to signed-in users
 invite-member-email-case.e2e.js: negative: a similar but different address is not taken for the colleague
 issue-6793-comments-follow-card-move.e2e.js: Comments follow a card moved to another board (#6793) › NEGATIVE: a refused REST move moves neither the card nor its comment
 keyboard-nonlatin-once.e2e.js: a shortcut runs once for the d key on a Latin, a Farsi and a Cyrillic layout
@@ -210,6 +211,7 @@ minicard-requested-by-6872.e2e.js: #6872 Requested by / Assigned by on the minic
 minicard-rule-button-6836.e2e.js: negative: with Show on Minicard off (the default) the minicard has no rule button
 notification-delivery-settings.e2e.js: #5171 tray: an entry scheduled for later is not counted until its time
 oidc-redirect-guard.e2e.js: OIDC automatic attempt stays latched across browser callback reloads
+password-min-length-signup-login.e2e.js: sign-up registers when not enforced, and an enforced minimum refuses only a too short password
 password-submit-event.e2e.js: password submit replay reaches the form handler after click
 password-submit-event.e2e.js: password submit replay reaches the form handler after Enter
 rest-checklist-not-found.e2e.js: missing and existing checklist IDs preserve board access and authentication errors

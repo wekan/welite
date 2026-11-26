@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Prévisualiser",
   "private": "Privé",
   "private-desc": "Ce tableau est privé. Seuls les membres peuvent y accéder et le modifier.",
+  "instance": "Uzeus elodjîs",
+  "instance-desc": "Tchaeke uzeu elodjî dins ç’ WeKan ci pout vey ç’ tåvlea ci. I n’ est måy mostré ås djins ki n’ sont nén elodjîs. Seulmint les djins radjoutés å tåvlea polèt l’ candjî.",
   "profile": "Profil",
   "public": "Public",
   "public-desc": "Ce tableau est public. Il est accessible par toutes les personnes disposant du lien et apparaîtra dans les résultats des moteurs de recherche tels que Google. Seuls les membres peuvent le modifier.",

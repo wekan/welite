@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Peržiūra",
   "private": "Privatus",
   "private-desc": "Ši lenta yra privati. Ją peržiūrėti ir redaguoti gali tik prie lentos įtraukti žmonės.",
+  "instance": "Prisijungę naudotojai",
+  "instance-desc": "Kiekvienas prisijungęs šios WeKan sistemos naudotojas gali peržiūrėti šią lentą. Ji niekada nerodoma neprisijungusiems žmonėms. Redaguoti gali tik į lentą įtraukti žmonės.",
   "profile": "Profilis",
   "public": "Viešas",
   "public-desc": "Ši lenta yra vieša. Jį mato visi, turintys nuorodą, ir jis bus rodomas paieškos sistemose, pvz., „Google“. Redaguoti gali tik prie lentos pridėti žmonės.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Vorschau",
   "private": "Privat",
   "private-desc": "Dëst Board ass privat. Nur Nutzer, déi zu dem Board gehören, kënnen es anschauen un beaarbechten.",
+  "instance": "Ugemellt Benotzer",
+  "instance-desc": "All ugemellte Benotzer vun dësem WeKan kann dës Tafel gesinn. Si gëtt ni Leit gewisen, déi net ugemellt sinn. Nëmme Leit, déi op d’Tafel bäigesat goufen, kënnen se änneren.",
   "profile": "Profil",
   "public": "Ëffentlech",
   "public-desc": "Dëst Board ass ëffentlech. Es ass fir jeden, den den Link kennt, sichtbar un taucht in Suchmaschinen wie Google op. Nur Nutzer, déi fir de Board derbäigesat goufen, kënnen es beaarbechten.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privadu",
   "private-desc": "Custa tàula est privada. Isceti sas persones agiuntas a sa tàula la podent bìdere e modificare.",
+  "instance": "Utentes cunnessos",
+  "instance-desc": "Cada utente cunnessu a custu WeKan podet bìdere custa tàula. Non est ammustrada mai a is persones chi non sunt cunnessas. Isceti is persones agiuntas a sa tàula la podent modificare.",
   "profile": "Profilu",
   "public": "Pùblicu",
   "public-desc": "Custa tàula est pùblica. Est visìbile a chie si siat chi tèngiat su ligàmene e at a èssere ammustrada dae sos motores de chirca comente Google. Isceti sas persones agiuntas a sa tàula la podent modificare.",

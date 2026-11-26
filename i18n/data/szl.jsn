@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Podgląd",
   "private": "Prywatne",
   "private-desc": "Ta tabula je prywatna. Ino osoby dodane do tej tabule mogą ją zobaczyć i edytować.",
+  "instance": "Zalogowani używŏcze",
+  "instance-desc": "Kożdy zalogowany używŏcz tego WeKan może widzieć ta tabula. Nigdy niy je pokŏzowanŏ niyzalogowanym ôsobōm. Ino ôsoby dodane do tabule mogōm edytować.",
   "profile": "Profil",
   "public": "Publiczne",
   "public-desc": "Ta tabula je publiczna. Je widoczna dlŏ wszyskich, którzy mają do niej odnośnik i bydzie wynikiem silników wyszukiwania takich jak Google. Ino używŏcze dodani do tabule mogą ją edytować.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Kasetidi xeella",
   "private": "Bagga",
   "private-desc": "Ha bookkiyay bagga. Bookkiyaakko gujjettida asati xalaala be'anaw qassi laammanaw danddayoosona.",
+  "instance": "Gelida go'ettiya asata",
+  "instance-desc": "Ha WeKan gelida go'ettiya asati wuri ha bookkiya be'ana danddayoosona. Gelibeenna asati ha bookkiya muleka be'okkona. Bookkiyako gujettida asati xalla laammana danddayoosona.",
   "profile": "Ne taarikiyaa",
   "public": "Asa ubbaassi",
   "public-desc": "Ha bookkiyay asa ubbaassi. Gattiyaabaa de'iya ooninne be'ana danddayees, qassi Google mala koyiyo miishshatun bettees. Bookkiyaakko gujjettida asati xalaala laammana danddayoosona.",

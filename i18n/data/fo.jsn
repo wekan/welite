@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Forsýning",
   "private": "Privat",
   "private-desc": "Henda talvan er privat. Bert fólk, sum eru løgd afturat talvuni, kunnu síggja og broyta hana.",
+  "instance": "Innritaðir brúkarar",
+  "instance-desc": "Allir innritaðir brúkarar á hesum WeKan kunnu síggja hesa talvuna. Hon verður ongantíð víst fólki, sum ikki eru innritað. Bert fólk, sum eru løgd afturat talvuni, kunnu broyta hana.",
   "profile": "Vangi",
   "public": "Alment",
   "public-desc": "Henda talvan er almenn. Øll við leinkjuni síggja hana, og hon verður víst í leitimaskinum sum Google. Bert fólk, sum eru løgd afturat talvuni, kunnu broyta hana.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Videari di nãinti",
   "private": "Privat",
   "private-desc": "Aesta tabelã easti privatã. Mash persoanili adãvgati la tabelã pot s-u vedzã shi s-u alãxeascã.",
+  "instance": "Folositori intrats",
+  "instance-desc": "Cathi folositor intrat tu aestu WeKan poati sã veadã aestã tabelã. Nu s’ aratã vãrnãoarã la oaminjlji tsi nu suntu intrats. Ma oaminjlji adãvgats la tabelã pot sã u alãxeascã.",
   "profile": "Profil",
   "public": "Publicu",
   "public-desc": "Aesta tabelã easti publicã. Poati s-u vedzã catsi ari ligãtura shi va s-aparã tu motoari di cãutari ca Google. Mash persoanili adãvgati la tabelã pot s-u alãxeascã.",

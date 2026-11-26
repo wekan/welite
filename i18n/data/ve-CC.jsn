@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privata",
   "private-desc": "Questa bacheca è privata. Solo le persone aggiunte alla bacheca possono vederla e modificarla.",
+  "instance": "Utenti che ga fato l’aceso",
+  "instance-desc": "Ogni utente che ga fato l’aceso a sto WeKan el pol védar sta bacheca. No la vien mai mostrà a chi no ga fato l’aceso. Solo le persone zontà a la bacheca le pol modificarla.",
   "profile": "Profilo",
   "public": "Pubblica",
   "public-desc": "Questa bacheca è pubblica. È visibile a chiunque abbia il link e sarà mostrata dai motori di ricerca come Google. Solo le persone aggiunte alla bacheca possono modificarla.",

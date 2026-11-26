@@ -250,6 +250,20 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the first is archived (on the board, not archived yet, an assigned-only
   member's only when assigned to them, GHSA-6xqf-jh8x-4wxc). 247 of WeKan's
   tests pass.
+- Add the board's visibility to the HTML5 view (boardVisibilityList): a
+  board admin makes it private, visible to signed-in users or public. An
+  instance board (#3249) is read by every enabled, signed-in user of the
+  instance and changed only by its members, as WeKan's
+  readableWithoutMembership - in the access rules every view and the REST
+  API share.
+- Add WeKan's password policy (passwordPolicy.js): the minimum length from
+  a shared store's settings.loginOptions or PASSWORD_MIN_LENGTH (8 without
+  one), enforced when passwordMinLengthEnforce or
+  PASSWORD_MIN_LENGTH_ENFORCE says so, and never more than 512 characters.
+  Sign-up refuses a shorter password in both views, the HTML5 form carries
+  the minimum, and getPasswordPolicy answers signed out. `tests/wkui/run.sh`
+  makes the site settings document WeKan makes at startup. 249 of WeKan's
+  tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

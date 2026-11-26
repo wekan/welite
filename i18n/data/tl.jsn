@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Silipin",
   "private": "Pribado",
   "private-desc": "Ito pisara ay pribado. Lamang people idinagdag sa the pisara maaaring tingnan at i-edit it.",
+  "instance": "Mga naka-sign in na gumagamit",
+  "instance-desc": "Makikita ng bawat naka-sign in na gumagamit ng WeKan na ito ang pisarang ito. Hindi ito kailanman ipinapakita sa mga hindi naka-sign in. Ang mga idinagdag lamang sa pisara ang maaaring mag-edit.",
   "profile": "Katauhan",
   "public": "Pampubliko",
   "public-desc": "Ito pisara ay pampubliko. It's nakikita sa anyone kasama ang the ugnay at ay ipakita up sa maghanap engines like Google. Lamang people idinagdag sa the pisara maaaring i-edit.",

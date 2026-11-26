@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Přehlad",
   "private": "Priwatny",
   "private-desc": "Tuta tafla je priwatna. Jenož wosoby, kotrež su tafli přidate, móža ju widźeć a wobdźěłać.",
+  "instance": "Přizjewjeni wužiwarjo",
+  "instance-desc": "Kóždy přizjewjeny wužiwar tutoho WeKan móže tutu taflu widźeć. Njepřizjewjenym wosobam so ženje njepokazuje. Jenož wosoby, kotrež su tafli přidate, móža ju wobdźěłać.",
   "profile": "Profil",
   "public": "Zjawny",
   "public-desc": "Tuta tafla je zjawna. Je za kóždeho z wotkazom widźomna a pokaza so w pytanskich mašinach kaž Google. Jenož wosoby, kotrež su tafli přidate, móža ju wobdźěłać.",

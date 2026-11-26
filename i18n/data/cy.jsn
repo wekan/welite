@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Rhagolwg",
   "private": "Preifat",
   "private-desc": "Mae'r bwrdd hwn yn breifat. Dim ond pobl sydd wedi'u hychwanegu at y bwrdd all ei weld a'i olygu.",
+  "instance": "Defnyddwyr sydd wedi mewngofnodi",
+  "instance-desc": "Gall pob defnyddiwr sydd wedi mewngofnodi i'r WeKan hwn weld y bwrdd hwn. Ni chaiff byth ei ddangos i bobl nad ydynt wedi mewngofnodi. Dim ond pobl sydd wedi'u hychwanegu at y bwrdd all olygu.",
   "profile": "Proffil",
   "public": "Cyhoeddus",
   "public-desc": "Mae'r bwrdd hwn yn gyhoeddus. Mae'n weladwy i unrhyw un sydd â'r ddolen a bydd yn ymddangos mewn peiriannau chwilio fel Google. Dim ond pobl sydd wedi'u hychwanegu at y bwrdd all olygu.",

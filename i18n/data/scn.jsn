@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privatu",
   "private-desc": "Chista tàvula è privata. Solu li persone aggiunte alla tàvula possunnu vederla e canciarla.",
+  "instance": "Utenti chi traseru",
+  "instance-desc": "Ogni utenti chi trasiu nta stu WeKan pò vìdiri sta tavula. Nun veni ammustrata mai a li pirsuni chi nun traseru. Sulu li pirsuni junciuti a la tavula la ponnu canciari.",
   "profile": "Prufilu",
   "public": "Pùbblicu",
   "public-desc": "Chista tàvula è pubblica. È visibili a chiunque abbia lu link e sarà mostrata dai motori di ricerca comu Google. Solu li persone aggiunte alla tàvula possunnu canciarla.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Réamhamharc",
   "private": "Príobháideach",
   "private-desc": "Tá an clár seo príobháideach. Ní féidir ach le daoine a cuireadh leis an gclár é a fheiceáil agus a chur in eagar.",
+  "instance": "Úsáideoirí sínithe isteach",
+  "instance-desc": "Is féidir le gach úsáideoir atá sínithe isteach sa WeKan seo an clár seo a fheiceáil. Ní thaispeántar riamh é do dhaoine nach bhfuil sínithe isteach. Ní féidir ach le daoine atá curtha leis an gclár eagarthóireacht a dhéanamh.",
   "profile": "Próifíl",
   "public": "Poiblí",
   "public-desc": "Tá an clár seo poiblí. Feicfidh duine ar bith a bhfuil an nasc aige é agus beidh sé le feiceáil in innill chuardaigh ar nós Google. Ní féidir ach le daoine a cuireadh leis an gclár é a chur in eagar.",

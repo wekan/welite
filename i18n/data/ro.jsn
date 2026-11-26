@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privat",
   "private-desc": "Questa bacheca è privata. Solo le persone aggiunte alla bacheca possono vederla e modificarla.",
+  "instance": "Utilizatori autentificați",
+  "instance-desc": "Orice utilizator autentificat în această instanță WeKan poate vedea acest panou. Acesta nu este afișat niciodată persoanelor neautentificate. Numai persoanele adăugate la panou îl pot edita.",
   "profile": "Profil",
   "public": "Pubblica",
   "public-desc": "Questa bacheca è pubblica. È visibile a chiunque abbia il link e sarà mostrata dai motori di ricerca come Google. Solo le persone aggiunte alla bacheca possono modificarla.",

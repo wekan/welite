@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Pêşdîtin",
   "private": "Taybet",
   "private-desc": "Ev depo taybet e. Tenê mirovên ku li depoyê hatine zêdekirin dikarin wê bibînin û biguherînin.",
+  "instance": "Bikarhênerên têketî",
+  "instance-desc": "Her bikarhênerek ku ketibe vê WeKan dikare vê panelê bibîne. Ev panel tu carî ji kesên ku neketine re nayê nîşandan. Tenê kesên ku li panelê hatine zêdekirin dikarin wê biguherînin.",
   "profile": "Profîl",
   "public": "Giştî",
   "public-desc": "Ev depo giştî ye. Ji her kesê ku girêdanê heye re xuya ye û wê di motorên lêgerînê yên wek Google de xuya bibe. Tenê mirovên li depoyê zêdekirî dikarin wê biguherînin.",

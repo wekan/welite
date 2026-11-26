@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Topi-maso",
   "private": "Manokana",
   "private-desc": "Manokana ity solaitra ity. Ireo olona nampiana amin'ny solaitra ihany no afaka mijery sy manova azy.",
+  "instance": "Mpampiasa niditra",
+  "instance-desc": "Afaka mijery ity solaitra ity ny mpampiasa rehetra niditra amin'ity WeKan ity. Tsy aseho amin'ny olona tsy niditra mihitsy izany. Ny olona nampidirina ao amin'ny solaitra ihany no afaka manova.",
   "profile": "Mombamomba",
   "public": "Ho an'ny besinimaro",
   "public-desc": "Ho an'ny daholobe ity solaitra ity. Hitan'izay rehetra manana ny rohy izy ary hiseho amin'ny milina fikarohana tahaka an'i Google. Ireo olona nampiana amin'ny solaitra ihany no afaka manova.",

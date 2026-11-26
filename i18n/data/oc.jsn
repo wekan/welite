@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Apercebut",
   "private": "Privat",
   "private-desc": "Aqueste tablèu es privat. Solament las personas apondudas a aquete tablèu lo pòdon veire e editar.",
+  "instance": "Utilizaires connectats",
+  "instance-desc": "Cada utilizaire connectat a aqueste WeKan pòt veire aqueste tablèu. Es pas jamai afichat a las personas pas connectadas. Sonque las personas ajustadas al tablèu pòdon modificar.",
   "profile": "Perfil",
   "public": "Públic",
   "public-desc": "Ce tableau est public. Il est accessible par toutes les personnes disposant du lien et apparaîtra dans les résultats des moteurs de recherche tels que Google. Seuls les membres peuvent le modifier.",

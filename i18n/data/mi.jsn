@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Arokite",
   "private": "Tūmataiti",
   "private-desc": "He tūmataiti tēnei papa. Ko ngā tāngata kua tāpirihia ki te papa anake ka taea te tiro me te whakatika.",
+  "instance": "Ngā kaiwhakamahi kua takiuru",
+  "instance-desc": "Ka taea e ia kaiwhakamahi kua takiuru ki tēnei WeKan te tiro i tēnei papa. Kāore rawa e whakaaturia ki ngā tāngata kāore anō kia takiuru. Ko ngā tāngata kua tāpirihia ki te papa anake ka āhei ki te whakatika.",
   "profile": "Kōtaha",
   "public": "Tūmatanui",
   "public-desc": "He tūmatanui tēnei papa. Ka kitea e te tangata whai i te hono, ā, ka puta ki ngā pūkaha rapu pēnei i a Google. Ko ngā tāngata kua tāpirihia ki te papa anake ka taea te whakatika.",

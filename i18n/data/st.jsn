@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Ponelopele",
   "private": "Poraefete",
   "private-desc": "Boto ena ke ya poraefete. Ke batho ba ekeditsweng botong feela ba ka e bonang le ho e hlophisa.",
+  "instance": "Basebelisi ba keneng",
+  "instance-desc": "Mosebelisi e mong le e mong ea keneng ho WeKan ena a ka bona boto ena. Ha ho mohla e bontšoang batho ba sa kenang. Ke batho ba kentsoeng botong feela ba ka e fetolang.",
   "profile": "Boitsebiso",
   "public": "Ya setjhaba",
   "public-desc": "Boto ena ke ya setjhaba. E bonahala ho mang kapa mang ya nang le lehokelo mme e tla hlaha dienjineng tsa ho batla tse kang Google. Ke batho ba ekeditsweng botong feela ba ka e hlophisang.",

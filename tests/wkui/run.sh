@@ -63,6 +63,10 @@ const { MongoClient } = require(process.argv[1]);
   // the store WeLite shares: the Admin Panel account switches, off.
   for (const [i, id] of ["accounts-allowEmailChange", "accounts-allowUserNameChange", "accounts-allowUserDelete"].entries())
     await db.collection("accountSettings").updateOne({ _id: id }, { $setOnInsert: { booleanValue: false, sort: i === 1 ? 1 : 0 } }, { upsert: true });
+  // ...and the site settings document WeKan makes at startup (server/models/settings.js).
+  if (!(await db.collection("settings").findOne({})))
+    await db.collection("settings").insertOne({ _id: "wkui-settings", disableRegistration: false, createdAt: new Date(), modifiedAt: new Date(),
+      displayAuthenticationMethod: true, defaultAuthenticationMethod: "password" });
   await c.close();
 })().catch(e => { console.error(e.message); process.exit(1); });
 ' "$WEDDY_WEKAN_TESTS/node_modules/mongodb" "mongodb://127.0.0.1:$DBPORT/wekan" >> "$LOG_DIR/ferretdb.log" 2>&1 || {

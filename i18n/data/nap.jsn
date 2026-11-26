@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Anteprima",
   "private": "Privato",
   "private-desc": "Chesta tavula è privata. Sulo le persone aggiunte alla tavula possono vederla e modificarla.",
+  "instance": "Utiente ca hanno trasuto",
+  "instance-desc": "Ogne utente ca ha trasuto dint'a stu WeKan pò vedé sta tavula. Nun vene mustrata maje a chi nun ha trasuto. Sulo 'e perzone agghiunte â tavula ponno cagnà.",
   "profile": "Prufilo",
   "public": "Pubbleco",
   "public-desc": "Chesta tavula è pubblica. È visibile a chiunque abbia il link e sarà mostrata dai motori di ricerca comme Google. Sulo le persone aggiunte alla tavula possono modificarla.",

@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Dehra minn qabel",
   "private": "Privat",
   "private-desc": "Dan bord huwa private. Only people żied għal il- bord can view u edit it.",
+  "instance": "Utenti li daħlu fis-sistema",
+  "instance-desc": "Kull utent li daħal f’dan il-WeKan jista’ jara dan il-bord. Qatt ma jintwera lil nies li ma daħlux fis-sistema. Jistgħu jeditjaw biss in-nies miżjuda mal-bord.",
   "profile": "Profil",
   "public": "Pubbliku",
   "public-desc": "Dan bord huwa public. It's visible għal anyone ma’ il- link u will show up ġewwa search engines like Google. Only people żied għal il- bord can edit.",

@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Pré-visualizar",
   "private": "Privado",
   "private-desc": "Este quadro é privado. Apenas o membros do quadro o podem visualizar e editar.",
+  "instance": "Usuarios coa sesión iniciada",
+  "instance-desc": "Todos os usuarios que iniciaron sesión neste WeKan poden ver este taboleiro. Nunca se mostra a persoas que non iniciaron sesión. Só poden editalo as persoas engadidas ao taboleiro.",
   "profile": "Perfil",
   "public": "Público",
   "public-desc": "Este quadro é público. Está visível para qualquer pessoa com a ligação e será exibido em motores de busca como o Google. Apenas os membros do quadro o podem editar.",

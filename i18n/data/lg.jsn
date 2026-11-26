@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Kulaba nga tonnaba",
   "private": "Kya kyama",
   "private-desc": "Kino lubaawo kiri kyama. Kyokka abantu yayongeddeko eri lubaawo sobola laba ne kyusa kyo.",
+  "instance": "Abakozesa abayingidde",
+  "instance-desc": "Buli mukozesa ayingidde mu WeKan eno asobola okulaba olubaawo luno. Terulaga bantu batayingidde n’akatono. Abantu abongereddwa ku lubaawo bokka be basobola okulukyusa.",
   "profile": "Ebikukwatako",
   "public": "Kya bonna",
   "public-desc": "Kino lubaawo kiri lwatu. It's kirabika eri anyone na kakwate ne kijja laga up mu noonya engines like Google. Kyokka abantu yayongeddeko eri lubaawo sobola kyusa.",

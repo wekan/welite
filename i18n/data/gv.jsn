@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Roie-haishbynys",
   "private": "Preevaadjagh",
   "private-desc": "Ta'n boayrd shoh preevaadjagh. Cha nod agh deiney currit da'n voayrd eh y akin as y reaghey.",
+  "instance": "Ymmydeyryn ta er loggal stiagh",
+  "instance-desc": "Foddee dy chooilley ymmydeyr ta er loggal stiagh ayns y WeKan shoh fakin y boayrd shoh. Cha bee eh rieau er ny hoilshaghey da sleih nagh vel er loggal stiagh. Cha nod agh yn sleih ta er nyn goyrt er y voayrd eh y chaghlaa.",
   "profile": "Persoonaght",
   "public": "Theayagh",
   "public-desc": "Ta'n boayrd shoh theayagh. T'eh ry-akin da peiagh erbee lesh y chiangley as hig eh rish ayns greieyn shirrey myr Google. Cha nod agh deiney currit da'n voayrd reaghey.",

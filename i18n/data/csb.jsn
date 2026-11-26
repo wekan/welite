@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Pòdzérk",
   "private": "Priwatné",
   "private-desc": "Ta tôblëca jest prywatna. Tylko osoby dodane do tej tôblëcë mogą ją zobaczyć i edytowôć.",
+  "instance": "Zalogòwóny brëkòwnicë",
+  "instance-desc": "Kòżdi zalogòwóny brëkòwnik tegò WeKan mòże widzec nã tôflã. Nigdë nie je pòkôzëwónô òsobóm, chtërné nie są zalogòwóné. Blós òsobë dodóné do tôflë mògą jã edytowac.",
   "profile": "Profil",
   "public": "Pùbliczné",
   "public-desc": "Ta tôblëca jest publiczna. Jest widoczna dla wszëtczich, ktòrzy mają do niej odnośnik i będzie wynikiem silnikòw wyszukiwania takich jak Google. Tylko brëkòwnicë dodani do tôblëcë mogą ją edytowôć.",

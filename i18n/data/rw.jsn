@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Igaragazambere",
   "private": "Bwite",
   "private-desc": "Iki kibaho kirigenga. Abantu bongewe ku kibaho gusa ni bo bashobora kukireba no kugihindura.",
+  "instance": "Abakoresha binjiye",
+  "instance-desc": "Buri mukoresha winjiye muri iyi WeKan ashobora kureba iki kibaho. Nticyigera cyerekanwa abantu batinjiye. Abantu bongewe ku kibaho ni bo bonyine bashobora kugihindura.",
   "profile": "Umwirondoro",
   "public": "Rusange",
   "public-desc": "Iki kibaho ni rusange. Umuntu wese ufite ihuza arakibona kandi kizagaragara muri moteri z'ishakisha nka Google. Abantu bongewe ku kibaho gusa ni bo bashobora kugihindura.",

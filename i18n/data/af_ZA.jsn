@@ -739,6 +739,8 @@
   "previewClipboardImagePopup-title": "Voorskou",
   "private": "Privaat",
   "private-desc": "Hierdie bord is privaat. Slegs mense wat by die bord gevoeg is, kan dit bekyk en redigeer.",
+  "instance": "Aangemelde gebruikers",
+  "instance-desc": "Elke aangemelde gebruiker van hierdie WeKan kan hierdie bord bekyk. Dit word nooit aan mense gewys wat nie aangemeld is nie. Slegs mense wat by die bord gevoeg is, kan dit wysig.",
   "profile": "Profiel",
   "public": "Publiek",
   "public-desc": "Hierdie bord is publiek. Dit is sigbaar vir enigiemand met die skakel en sal in soekenjins soos Google verskyn. Slegs mense wat by die bord gevoeg is, kan wysig.",

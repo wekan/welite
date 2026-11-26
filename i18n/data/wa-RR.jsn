@@ -740,6 +740,8 @@
   "previewClipboardImagePopup-title": "Prévisualiser",
   "private": "Privé",
   "private-desc": "Ce tableau est privé. Seuls les membres peuvent y accéder et le modifier.",
+  "instance": "Mga gumaramit nga naka-log in",
+  "instance-desc": "An tagsa nga gumaramit nga naka-log in hini nga WeKan makakakita hini nga pisara. Diri gud ini iginpapakita ha mga tawo nga waray mag-log in. An mga tawo la nga igindugang ha pisara an puydi mag-edit.",
   "profile": "Profil",
   "public": "Public",
   "public-desc": "Ce tableau est public. Il est accessible par toutes les personnes disposant du lien et apparaîtra dans les résultats des moteurs de recherche tels que Google. Seuls les membres peuvent le modifier.",
