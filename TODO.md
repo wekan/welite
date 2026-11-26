@@ -235,10 +235,10 @@ Order of the work, each step committed with its tests:
   user, Log Out, the toggle), sign-in, All Boards with Starred and Remaining,
   the board with swimlanes, lists and minicards, the opened card's title,
   description and maximize/minimize, adding a card at the top or bottom of a
-  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
+  list and renaming it, checklists, comments, adding a list, the card's labels, dates, members, the minicard's labels, dates and members, adding and folding swimlanes, custom fields, attachments, the card's menu (copy link, move, copy, archive), Requested By, Assigned By and description, weddy.js's `/_methods/` calls, rendered by Pascal from
   WeLite's data, with Weddy's `/static` files (wekan.css, weddy.js, unpoly,
   interact) under 8.3 names.
-- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 54 of WeKan's tests pass, 2026-11-26), as Weddy runs them
+- [x] **WeKan's UI tests against the HTML5 view** (`bash tests/wkui/run.sh`; 62 of WeKan's tests pass, 2026-11-26), as Weddy runs them
   (tests/wekan in Weddy): WeLite in shared mode on a FerretDB SQLite store that
   WeKan's `helpers/db.js` seeds over the MongoDB wire protocol, signed in with
   the `meteor_login_token` cookie. Record which specs pass, and add each page's
@@ -248,8 +248,7 @@ Next, after this goal:
 
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
   the card's other sections (an attachment's cover, background and
-  rename; markdown in descriptions and comments; the card's menu with copy
-  link; a custom field's edit and
+  rename; markdown in descriptions and comments; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's
   other badges (assignees, checklists, comments, description, Requested By),
   Mobile Mode, the board header's
@@ -272,6 +271,14 @@ Found on the way, not part of this goal:
   are written against the current behaviour and pass.
 
 Design questions for the maintainer (work goes on with the stated default):
+
+- **Moving a card to another board from the HTML5 view.** WeKan's Card.move
+  maps the card's labels to the other board's by name and color, drops
+  members who are not on it, and moves its checklists, comments and
+  attachments with it. Default: the HTML5 view's Move Card offers only the
+  card's own board (copying to another board works), and a move to another
+  board stays the HTML4 view's (`/board/move`). Should the HTML5 view get the
+  cross-board move too, with WeKan's mapping?
 
 - **Where the HTML5 view remembers the choice when the viewer is signed in.**
   Default: the `welite-ui` cookie only. Alternative: a per-user profile setting

@@ -554,6 +554,38 @@ def http_checks(server, tmp, backend):
         assert b'class="attachment-name"' not in request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert request('GET', '/cdn/storage/attachments/%s' % att, cookie=owner)[0] == 404
 
+        # The card's menu (cardDetailsActionsPopup): move to another list of the
+        # board, copy, the other board's places, archive - and the negatives.
+        second_list = json.loads(request('POST', '/api/boards/%s/lists' % board_id, {'title': 'Second', 'swimlaneId': lane}, headers=auth,
+                                         as_json=True)[2])['_id']
+        page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
+        assert b'js-open-card-details-menu' in page and b'data-pop="card-actions"' in page and b'card-details-list-picker' in page
+        status, _, page, _ = request('POST', card_path + '/move-to', {'boardId': board_id, 'swimlaneId': lane,
+                                                                      'listId': second_list}, cookie=owner)
+        assert status == 200, page[-400:]
+        assert json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, second_list), headers=auth)[2])[0]['_id'] == card_id
+        # Negative: a list of no board, another board, a non-member, Comment only.
+        assert request('POST', card_path + '/move-to', {'listId': 'no-such-list'}, cookie=owner)[0] == 400
+        assert request('POST', card_path + '/move-to', {'boardId': 'other', 'listId': list_id}, cookie=owner)[0] == 400
+        assert request('POST', card_path + '/move-to', {'listId': list_id}, cookie=stranger)[0] == 403
+        assert request('POST', card_path + '/move-to', {'listId': list_id}, cookie=commenter)[0] == 403
+        assert request('POST', card_path + '/move-to', {'listId': list_id, 'swimlaneId': lane}, cookie=owner)[0] == 200
+        status, _, page, _ = request('POST', card_path + '/copy-to', {'boardId': board_id, 'swimlaneId': lane,
+                                                                      'listId': second_list, 'title': 'The copy'}, cookie=owner)
+        assert status == 200
+        copies = json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, second_list), headers=auth)[2])
+        assert [c['title'] for c in copies] == ['The copy'], copies
+        assert request('POST', card_path + '/copy-to', {'swimlaneId': lane, 'listId': second_list}, cookie=stranger)[0] == 403
+        status, _, body, _ = request('GET', '/b/%s/places' % board_id, cookie=owner)
+        assert status == 200 and second_list in [l['_id'] for l in json.loads(body)['lists']]
+        assert request('GET', '/b/%s/places' % board_id, cookie=stranger)[0] == 403
+        copy_path = '/b/%s/cards/%s' % (board_id, copies[0]['_id'])
+        assert request('POST', copy_path + '/archive', {}, cookie=stranger)[0] == 403
+        status, _, page, _ = request('POST', copy_path + '/archive', {}, cookie=owner)
+        assert status == 200 and b'The copy' not in page
+        assert json.loads(request('GET', '/api/boards/%s/lists/%s/cards' % (board_id, second_list), headers=auth)[2]) == []
+        assert request('POST', copy_path + '/archive', {}, cookie=owner)[0] == 404, 'an archived card is not archived again'
+
         # Requested By and Assigned By: Edit when set, Add when empty; free text.
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'card-details-item-requested-by' in page and b'card-details-item-assigned-by' in page

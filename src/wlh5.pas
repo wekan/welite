@@ -852,6 +852,118 @@ begin
     '</div></div></div>';
 end;
 
+function BoardTitleOf(Db: TWLDb; const BoardId: string): string;
+var R: TWLRows;
+begin
+  R := Db.Query('SELECT title FROM boards WHERE id=' + QuotedStr(BoardId) + ';');
+  if Length(R) = 1 then Result := R[0][0] else Result := '';
+end;
+
+// The lists of the card's swimlane on its board (every swimlane's, and that
+// one's), for the list picker and the move and copy pop-overs, numbered as
+// WeKan's selects number them.
+function BoardPlaces(Db: TWLDb; const BoardId, LaneId: string; out Lanes, Lists: TWLRows): Boolean;
+begin
+  Lanes := Db.Query('SELECT id,title FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=0 ORDER BY sort,id;');
+  Lists := Db.Query('SELECT id,title FROM lists WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=0 AND deletedAt IS NULL' +
+    IfThen(LaneId <> '', ' AND (COALESCE(swimlaneId,'''')='''' OR swimlaneId=' + QuotedStr(LaneId) + ')', '') + ' ORDER BY sort,id;');
+  Result := True;
+end;
+
+function PlaceOptions(const Rows: TWLRows; const Selected: string): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(Rows) do
+    Result := Result + '<option value="' + HtmlAttr(Rows[i][0]) + '"' + IfThen(Rows[i][0] = Selected, ' selected', '') + '>' +
+      IntToStr(i + 1) + '. ' + E(Rows[i][1]) + '</option>';
+end;
+
+// _cardsec_card.pug: the card's list, and the picker of another of its board.
+function ListPickerSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId, LaneId, ListId: string; Writable: Boolean): string;
+var Lanes, Lists: TWLRows; i: Integer; Current: string;
+begin
+  BoardPlaces(Db, BoardId, LaneId, Lanes, Lists);
+  Current := '';
+  for i := 0 to High(Lists) do if Lists[i][0] = ListId then Current := Lists[i][1];
+  Result := '<div class="card-details-item card-details-item-list"><h3 class="card-details-item-title">' +
+    E(Words.Text('list', 'List')) + '</h3>';
+  if not Writable then Exit(Result + '<span>' + E(Current) + '</span></div>');
+  Result := Result + '<details class="card-details-list-picker"><summary>' + E(Current) + '</summary>' +
+    '<div class="card-details-list-options" role="listbox" aria-label="' + HtmlAttr(Words.Text('list', 'List')) + '">';
+  for i := 0 to High(Lists) do
+    Result := Result + '<form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) +
+      '/move-to" up-submit up-target=".board-wrapper"><input type="hidden" name="boardId" value="' + HtmlAttr(BoardId) +
+      '"><input type="hidden" name="swimlaneId" value="' + HtmlAttr(LaneId) + '"><input type="hidden" name="listId" value="' +
+      HtmlAttr(Lists[i][0]) + '"><button class="js-select-card-details-list-option" type="submit" role="option" data-list-id="' +
+      HtmlAttr(Lists[i][0]) + '" aria-selected="' + IfThen(Lists[i][0] = ListId, 'true', 'false') + '">' + E(Lists[i][1]) +
+      '</button></form>';
+  Result := Result + '</div></details></div>';
+end;
+
+// board.pug's cardDetailsActionsPopup - copy link, move, copy, archive - and
+// the moveCardPopup, copyCardPopup and cardArchivePopup it opens.
+function CardMenuPopups(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, Slug, CardId, Title,
+  LaneId, ListId: string): string;
+var Lanes, Lists, Boards: TWLRows; Base, BoardOptions, CopyBoards: string; i: Integer;
+  function Target(const Kind, Action, Extra, ButtonText: string; const Choices: string): string;
+  begin
+    Result := '<template class="js-pop-over-template" data-pop="' + Kind + '" data-title="' + HtmlAttr(ButtonText) + '">' +
+      '<form class="js-card-target" method="post" action="' + HtmlAttr(Base + Action) + '" up-submit up-target=".board-wrapper">' + Extra +
+      '<label>' + E(Words.Text('boards', 'Boards')) + '</label><select class="js-select-boards" name="boardId">' + Choices + '</select>' +
+      '<label>' + E(Words.Text('swimlane', 'Swimlane')) + '</label><select class="js-select-swimlanes" name="swimlaneId">' +
+      PlaceOptions(Lanes, LaneId) + '</select><label>' + E(Words.Text('list', 'List')) + '</label><select class="js-select-lists" name="listId">' +
+      PlaceOptions(Lists, ListId) + '</select><button class="primary confirm js-done" type="submit">' + E(Words.Text('done', 'Done')) +
+      '</button></form></template>';
+  end;
+begin
+  BoardPlaces(Db, BoardId, '', Lanes, Lists);
+  Base := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId);
+  BoardOptions := '<option value="' + HtmlAttr(BoardId) + '" selected>' + E(BoardTitleOf(Db, BoardId)) + '</option>';
+  // A copy may go to any board the user may change, this one first.
+  CopyBoards := BoardOptions;
+  Boards := Db.Query('SELECT b.id,b.title FROM boards b JOIN board_members m ON m.boardId=b.id AND m.userId=' + QuotedStr(S.UserId) +
+    ' AND m.isActive=1 WHERE b.archived=0 AND b.id<>' + QuotedStr(BoardId) + ' AND COALESCE(b.type,''board'')=''board'' ORDER BY b.title,b.id;');
+  for i := 0 to High(Boards) do
+    if BoardCanWrite(Db, S.UserId, Boards[i][0]) then
+      CopyBoards := CopyBoards + '<option value="' + HtmlAttr(Boards[i][0]) + '">' + E(Boards[i][1]) + '</option>';
+  Result := '<template class="js-pop-over-template" data-pop="card-actions" data-title="' +
+    HtmlAttr(Words.Text('cardDetailsActionsPopup-title', 'Card Actions')) + '"><ul class="pop-over-list">' +
+    '<li><a class="js-copy-card-link" href="#" data-path="' + HtmlAttr(CardRoute(BoardId, Slug, CardId)) + '"><i class="fa fa-link"></i> ' +
+    E(Words.Text('copy-card-link-to-clipboard', 'Copy card link to clipboard')) + '</a></li>' +
+    '<li><a class="js-move-card" href="#"><i class="fa fa-arrow-right"></i> ' + E(Words.Text('moveCardPopup-title', 'Move Card')) + '</a></li>' +
+    '<li><a class="js-copy-card" href="#"><i class="fa fa-copy"></i> ' + E(Words.Text('copyCardPopup-title', 'Copy Card')) + '</a></li>' +
+    '<li><a class="js-archive" href="#"><i class="fa fa-archive"></i> ' + E(Words.Text('archive', 'Archive')) + '</a></li></ul></template>' +
+    Target('move-card', '/move-to', '', Words.Text('moveCardPopup-title', 'Move Card'), BoardOptions) +
+    Target('copy-card', '/copy-to', '<label for="copy-card-title">' + E(Words.Text('title', 'Title')) +
+      '</label><textarea id="copy-card-title" name="title" rows="2">' + E(Title) + '</textarea>',
+      Words.Text('copyCardPopup-title', 'Copy Card'), CopyBoards) +
+    '<template class="js-pop-over-template" data-pop="card-archive" data-title="' + HtmlAttr(Words.Text('archive', 'Archive')) + '">' +
+    '<form method="post" action="' + HtmlAttr(Base + '/archive') + '" up-submit up-target=".board-wrapper" up-history="true"><p>' +
+    E(Words.Text('card-archive-pop', 'The card will not be visible in this list after archiving it.')) + '</p><p>' +
+    E(Words.Text('card-archive-suggest-cancel', 'You can later restore card from Archive.')) +
+    '</p><button class="js-confirm negate full" type="submit">' + E(Words.Text('archive', 'Archive')) + '</button></form></template>';
+end;
+
+// GET /b/:id/places (weddy.js, another board chosen in the move or copy
+// pop-over): that board's swimlanes and lists, for a user who may change it.
+function PlacesJson(Db: TWLDb; const UserId, BoardId: string; out Json: string): Boolean;
+var Lanes, Lists: TWLRows; i: Integer; Part: string;
+begin
+  Result := (UserId <> '') and (BoardId <> '') and (Pos(#0, BoardId) = 0) and BoardCanWrite(Db, UserId, BoardId);
+  if not Result then Exit;
+  BoardPlaces(Db, BoardId, '', Lanes, Lists);
+  Json := '{"swimlanes":[';
+  for i := 0 to High(Lanes) do
+    Json := Json + IfThen(i > 0, ',', '') + '{"_id":"' + StringToJSONString(Lanes[i][0]) + '","n":' + IntToStr(i + 1) +
+      ',"title":"' + StringToJSONString(Lanes[i][1]) + '"}';
+  Part := '';
+  for i := 0 to High(Lists) do
+    Part := Part + IfThen(i > 0, ',', '') + '{"_id":"' + StringToJSONString(Lists[i][0]) + '","n":' + IntToStr(i + 1) +
+      ',"title":"' + StringToJSONString(Lists[i][1]) + '"}';
+  Json := Json + '],"lists":[' + Part + ']}';
+end;
+
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
 // cardLabelsPopup for whoever may change the card.
 function LabelsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
@@ -1231,7 +1343,7 @@ begin
     Selector := TSelectionScope.Create(Db);
     try
       Card := Db.Query('SELECT title,description,COALESCE(requestedBy,''''),COALESCE(assignedBy,''''),COALESCE(receivedAt,''''),' +
-        'COALESCE(startAt,''''),COALESCE(dueAt,''''),COALESCE(endAt,'''') FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
+        'COALESCE(startAt,''''),COALESCE(dueAt,''''),COALESCE(endAt,''''),swimlaneId,listId FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
         QuotedStr(BoardId) + ' AND archived=0 AND deletedAt IS NULL AND ' + Selector.StringField('cards', 'id') +
         ' AND ' + Selector.StringField('cards', 'boardId') + ';');
     finally
@@ -1259,9 +1371,15 @@ begin
       Details := Details + '<a class="js-maximize-card-details" href="#" title="' +
         HtmlAttr(Words.Text('maximize-card', 'Maximize Card')) + '" aria-label="' +
         HtmlAttr(Words.Text('maximize-card', 'Maximize Card')) + '">&#128470;</a>';
+    // cardDetails.jade's hamburger: cardDetailsActionsPopup.
+    if Writable then
+      Details := Details + '<a class="card-details-menu js-open-card-details-menu" href="#" title="' +
+        HtmlAttr(Words.Text('cardDetailsActionsPopup-title', 'Card Actions')) + '" aria-label="' +
+        HtmlAttr(Words.Text('cardDetailsActionsPopup-title', 'Card Actions')) + '">&#9776;</a>';
     Details := Details +
       '<a class="js-close-card-details" href="' + HtmlAttr(Route) + '" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '" up-follow up-target=".board-wrapper">&times;</a></div>';
+    Details := Details + ListPickerSection(Db, Words, BoardId, CardId, Card[0][8], Card[0][9], Writable);
     if BoardAllows(Db, BoardId, 'allowsLabels') then
       Details := Details + LabelsSection(Db, Words, BoardId, CardId, Writable);
     if BoardAllows(Db, BoardId, 'allowsMembers') then
@@ -1278,6 +1396,8 @@ begin
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
     Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);
+    if Writable then
+      Details := Details + CardMenuPopups(Db, Words, S, BoardId, B[0][2], CardId, Card[0][0], Card[0][8], Card[0][9]);
   end;
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
   if Writable then
@@ -1553,6 +1673,19 @@ var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
   P: TStringArray; Code, n: Integer; Found: Boolean;
 begin
   Result := False;
+  // weddy.js's GET /b/:id/places (the move and copy pop-overs' other board),
+  // before WeKan's routes take /b/:id/:slug: the board's swimlanes and lists.
+  if (Request.Method = 'GET') and (Copy(Request.PathInfo, 1, 3) = '/b/') and (Request.CookieFields.Values[LOGIN_COOKIE] <> '') then
+  begin
+    P := PathParts(Request.PathInfo);
+    if (Length(P) = 3) and (P[2] = 'places') and ResolveTenant(Request, T) and TenantOpen(T) and Html5User(T.Db, Request, S) then
+    begin
+      Result := True;
+      if PlacesJson(T.Db, S.UserId, P[1], Content) then SendJsonAnswer(Response, 200, Content)
+      else SendJsonAnswer(Response, 403, '{"error":"Board access forbidden"}');
+    end;
+    Exit;
+  end;
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
@@ -1583,6 +1716,9 @@ begin
   //   /b/:id/cards/:card/custom-fields/:field         a custom field's value
   //   /b/:id/cards/:card/custom-fields/:field/toggle  the field onto the card or off it
   //   /b/:id/cards/:card/attachments                  a file onto the card (multipart, "file")
+  //   /b/:id/cards/:card/move-to                      another list or swimlane of its board
+  //   /b/:id/cards/:card/copy-to                      a copy, here or on another board
+  //   /b/:id/cards/:card/archive                      archived
   //   /b/:id/cards/:card/attachments/:att/delete      the attachment off it
   // Each is also the shape of a WeKan route (/b/:id/:slug/...), so only a
   // POST of this view, signed in by the cookie, is taken as one of these.
@@ -1607,6 +1743,9 @@ begin
   else if (n = 6) and (P[4] = 'dates') then Action := 'set-date'
   else if (n = 6) and (P[4] = 'custom-fields') then Action := 'set-field'
   else if (n = 5) and (P[4] = 'attachments') then Action := 'add-attachment'
+  else if (n = 5) and (P[4] = 'move-to') then Action := 'move-card'
+  else if (n = 5) and (P[4] = 'copy-to') then Action := 'copy-card'
+  else if (n = 5) and (P[4] = 'archive') then Action := 'archive-card'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'delete') then Action := 'delete-attachment'
   else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
@@ -1652,6 +1791,18 @@ begin
     CardId := Request.ContentFields.Values['card'];
     if (CardId <> '') and (Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' +
       QuotedStr(BoardId) + ' AND deletedAt IS NULL;')) <> 1) then CardId := '';
+  end
+  else if Action = 'move-card' then
+    Code := MoveViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['boardId'],
+      Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['listId'], Error)
+  else if Action = 'copy-card' then
+    Code := CopyViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['boardId'],
+      Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['listId'], Title, NewId, Error)
+  else if Action = 'archive-card' then
+  begin
+    Code := ArchiveViewCard(T, S.UserId, BoardId, CardId, Error);
+    // The archived card is no longer on the board: the board without it.
+    if Code = 200 then CardId := '';
   end
   else if Action = 'add-attachment' then
     Code := AddViewAttachment(T, S.UserId, BoardId, CardId, Request, Error)

@@ -51,3 +51,11 @@
 07-attachments-links.e2e.js: the attachment overlay provides native PDF and isolated Office previews
 07-attachments-links.e2e.js: paste image listener is attached to the card description editor
 07-attachments-links.e2e.js: attachment area displays existing attachments without errors
+03-cards-operations.e2e.js: archiving a card removes it from board view
+03-cards-operations.e2e.js: moving a card to another list shows it only in the target list
+03-cards-operations.e2e.js: move does not create duplicate cards
+03-cards-operations.e2e.js: copying a card adds it to the target list without removing the original
+03-cards-operations.e2e.js: copying a card to an empty board shows an error or empty list selector without crashing
+03-cards-operations.e2e.js: changing list via card detail list-selector moves the card
+07-attachments-links.e2e.js: copy-link row copies a valid URL to the clipboard
+02-cards-open-view.e2e.js: copy-link button produces a URL that opens the card in full-screen view

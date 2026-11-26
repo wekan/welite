@@ -121,6 +121,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   read the board: only a raster image is shown inline, everything else -
   HTML and SVG among them - comes as a download with `nosniff`, and
   `?download=` always does. Five more of WeKan's tests pass, 54 in all.
+- Add the card's menu to the HTML5 view (cardDetailsActionsPopup): copy the
+  card's link, move it to another list or swimlane of its board with WeKan's
+  moveCard activity (`MoveViewCard`), copy it - here or to another board the
+  user may change, with its own title - as the REST API copies one
+  (`CopyViewCard`), and archive it (`ArchiveViewCard`); and the card's list
+  picker. weddy.js reads another board's swimlanes and lists at
+  `GET /b/:id/places`. Eight more of WeKan's tests pass, 62 in all.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

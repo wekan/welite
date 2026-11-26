@@ -172,6 +172,14 @@ function CreateViewCustomField(const T:TWLTenant;const UserId,BoardId,Name,Typ:s
 // Whether the REST API's field policy lets the user read (Write False) or
 // change the card's value of the field.
 function ViewFieldAllowed(Db:TWLDb;const UserId,BoardId,CardId,FieldId:string;Write:Boolean):Boolean;
+// The card's menu (cardDetailsActionsPopup): moved to another list or
+// swimlane of its board, with WeKan's moveCard activity and last in its new
+// place; copied - to this board or another the user may change - as POST
+// .../cards/:cardId/copy copies one, with copyCardPopup's title; archived.
+function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string):Integer;
+function CopyViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList,Title:string;
+  out NewCard,Error:string):Integer;
+function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
 // One of the board's labels on the card, or off it (cardLabelsPopup).
 function ToggleViewCardLabel(const T:TWLTenant;const UserId,BoardId,CardId,LabelId:string;out Error:string):Integer;
 procedure ApiCard(aRequest: TRequest; aResponse: TResponse);
@@ -5862,6 +5870,79 @@ begin
   if not SaveCardFieldValue(T.Db,CardId,FieldId,Literal,Guard) then
   begin Error:='Could not save custom-field value';Exit(500);end;
   Result:=200;
+end;
+
+function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string):Integer;
+var Card:TWLRows;Scope,Stamp,Sort:string;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  if (DestBoard<>'') and (DestBoard<>BoardId) then
+  begin Error:='A card moves to another board from the HTML4 view only';Exit(400);end;
+  if (DestList='') or (Pos(#0,DestLane+DestList)>0) then begin Error:='Invalid card move destination';Exit(400);end;
+  Card:=T.Db.Query('SELECT swimlaneId,listId FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+    ' AND archived=0 AND deletedAt IS NULL;');
+  if Length(Card)<>1 then begin Error:='Card not found';Exit(404);end;
+  // The card keeps its swimlane unless another is chosen; the list is one of
+  // the board's, of every swimlane or of that one.
+  Scope:=DestLane;if Scope='' then Scope:=Card[0][0];
+  if not ApiChildrenBelong(T.Db,BoardId,Scope,DestList,'','','','','') or
+    (Length(T.Db.Query('SELECT 1 FROM lists WHERE id='+QuotedStr(DestList)+' AND boardId='+QuotedStr(BoardId)+
+      ' AND archived=0 AND deletedAt IS NULL AND (COALESCE(swimlaneId,'''')='''' OR swimlaneId='+QuotedStr(Scope)+');'))<>1) then
+  begin Error:='Invalid card move destination';Exit(400);end;
+  if (Scope=Card[0][0]) and (DestList=Card[0][1]) then Exit(200);
+  Stamp:=QuotedStr(NowIso);
+  Sort:='(SELECT coalesce(max(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND listId='+QuotedStr(DestList)+
+    ' AND swimlaneId='+QuotedStr(Scope)+' AND deletedAt IS NULL)';
+  // WeKan's moveCard activity (models/cards.js), with the lists' names.
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+    'SELECT '+QuotedStr(NewId)+',''moveCard'','+QuotedStr(UserId)+',boardId,id,'+QuotedStr(DestList)+','+QuotedStr(Scope)+','+Stamp+','+Stamp+
+    ',json_object(''cardTitle'',title,''oldListId'',listId,''oldSwimlaneId'',swimlaneId,'+
+    '''listName'',(SELECT title FROM lists WHERE id='+QuotedStr(DestList)+'),''oldListName'',(SELECT title FROM lists WHERE id=cards.listId),'+
+    '''swimlaneName'',(SELECT title FROM swimlanes WHERE id='+QuotedStr(Scope)+')) FROM cards WHERE id='+QuotedStr(CardId)+'; '+
+    'UPDATE cards SET swimlaneId='+QuotedStr(Scope)+',listId='+QuotedStr(DestList)+',sort='+Sort+',modifiedAt='+Stamp+
+    ',dateLastActivity='+Stamp+' WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not move card';Exit(500);end;
+  Result:=200;
+end;
+
+function CopyViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList,Title:string;
+  out NewCard,Error:string):Integer;
+var Card:TWLRows;Board:string;
+begin
+  NewCard:='';
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  Board:=DestBoard;if Board='' then Board:=BoardId;
+  if (DestList='') or (DestLane='') or (Pos(#0,Board+DestLane+DestList+Title)>0) then
+  begin Error:='Invalid card copy destination';Exit(400);end;
+  if not BoardCanWrite(T.Db,UserId,Board) then begin Error:='Board access forbidden';Exit(403);end;
+  if not ApiChildrenBelong(T.Db,Board,DestLane,DestList,'','','','','') then begin Error:='Invalid card copy destination';Exit(400);end;
+  Card:=T.Db.Query('SELECT listId FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL;');
+  if Length(Card)<>1 then begin Error:='Card not found';Exit(404);end;
+  try
+    if not CopyRestCard(T,UserId,BoardId,Card[0][0],CardId,Board,DestList,DestLane,-1,NewCard) then
+    begin Error:='Could not copy card';Exit(500);end;
+  except Error:='Could not copy card';Exit(500);end;
+  // copyCardPopup's title: the copy's own.
+  if Trim(Title)<>'' then Result:=RenameViewCard(T,UserId,Board,NewCard,Title,Error) else Result:=200;
+end;
+
+function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+var Scope,Stamp:string;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
+  if Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+';'))<>1 then begin Error:='Card not found';Exit(404);end;
+  Stamp:=QuotedStr(NowIso);
+  // As POST .../cards/:cardId/archive archives it, with WeKan's archivedCard activity.
+  if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+    'SELECT '+QuotedStr(NewId)+',''archivedCard'','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
+    ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
+    ' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE id='+QuotedStr(CardId)+' AND archived=1)=1 THEN 1 '+
+    'ELSE json(''Archive write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not change card archive state';Exit(500);end;
 end;
 
 function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;
