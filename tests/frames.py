@@ -80,9 +80,13 @@ def check_frames(request,database,session,editor,member):
         error('POST','/designer/widget/move',dict(fields,widgetId='missing-frame',dir='left'),404)
         body=check('/admin/people?sessionId='+session)
         forms=Forms();forms.feed(body.decode())
-        fields=next(fields for path,fields in forms.forms if path=='/admin/people')
         with sqlite3.connect(database) as con:
             target=con.execute("SELECT id,isAdmin,loginDisabled FROM users WHERE username='member'").fetchone()
+        # Each row has its own edit forms since b4e4f34, each signed for its own
+        # action: submit the member's Disable login form.
+        fields=next(fields for path,fields in forms.forms if path=='/admin/people'
+                    and fields.get('action')=='disable' and fields.get('userId')==target[0])
+        with sqlite3.connect(database) as con:
             con.execute("CREATE TRIGGER frameact BEFORE UPDATE ON users WHEN NEW.username='member' BEGIN SELECT RAISE(ABORT,'forced'); END")
         try:
             error('POST','/admin/people',dict(fields,action='disable',userId=target[0]),500)

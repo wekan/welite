@@ -26,7 +26,8 @@ def run(request,db,session):
     with sqlite3.connect(db) as con:con.execute("CREATE TRIGGER nodrop BEFORE UPDATE ON cards WHEN NEW.id='dcard2' BEGIN SELECT RAISE(ABORT,'blocked');END")
     assert post(data())==400 and rows()==original
     with sqlite3.connect(db) as con:con.execute('DROP TRIGGER nodrop')
-    token=data();assert post(token)==302
+    # A drop from the board's own form redraws the board in place (it posts view_x).
+    token=data();assert post(token)==200
     moved=rows();assert all(row[1:3]==('dlist2','dlan2') for row in moved) and moved[0][3]!=moved[1][3]
     assert post(token)==403 and rows()==moved
     print('PASS: shared-endpoint multi-card drops, target ownership/lane checks, transaction rollback and token replay rejection')

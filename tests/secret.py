@@ -1,4 +1,5 @@
 """Private Argon2 secret policy and real web/API token lifecycle, both backends."""
+from signin import session_of, signed_in
 import hashlib
 import hmac
 import http.client
@@ -40,7 +41,7 @@ with tempfile.TemporaryDirectory(prefix='wlsecret-',dir=os.environ['TMPDIR']) as
                         time.sleep(.05)
                 else:raise AssertionError('Server did not start')
                 for name in ['secret-user','bcrypt-user']:
-                    assert request('POST','/register',dict(username=name,password='test-password',confirm='test-password'))[0]==302
+                    assert signed_in(request('POST','/register',dict(username=name,password='test-password',confirm='test-password')))
                 db=out/'data/local/files/db/wekan.db'
                 services=dict(password=dict(argon2=fixture,bcrypt='$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y',reset=dict(token='retain')))
                 with sqlite3.connect(db) as con:
@@ -57,8 +58,8 @@ with tempfile.TemporaryDirectory(prefix='wlsecret-',dir=os.environ['TMPDIR']) as
                 assert login(route='/sign-in')[0]==200
                 assert login('bcrypt-user')[0]==200
                 pepper.write_bytes(secret)
-                web_response=login(route='/sign-in');assert web_response[0]==302
-                web=parse_qs(urlsplit(web_response[1]['Location']).query)['sessionId'][0]
+                web_response=login(route='/sign-in')
+                web=signed_in(web_response)
                 api_response=login();assert api_response[0]==200
                 api=json.loads(api_response[2])['token']
                 assert request('GET','/api/user?token='+web)[0]==200 and request('GET','/api/user?token='+api)[0]==200

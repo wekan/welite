@@ -12,5 +12,8 @@ for tag in ['zh-HK','zh-Hant','zh-TW']:
     assert tokens.tokens(data[key])==tokens.tokens(en[key]),tag
     prose=tokens.prose(data[key])
     assert 'at swimlane' not in prose and 'swimlane' not in prose,tag
-    assert data['swimlane'] in prose and '刪除' in prose,tag
+    # The activity names the swimlane with the catalog's own word for it -
+    # 'swimlanes' (泳道); 'swimlane' itself is the longer 泳道流程圖
+    # (swimlane diagram), a Transifex translation kept as it is.
+    assert data['swimlanes'] in prose and data['swimlanes'] in data['swimlane'] and '刪除' in prose,tag
 print('PASS: Traditional Chinese attachment activity, native swimlane/deletion prose, rejected English fragment and exact argument inventories/key order')

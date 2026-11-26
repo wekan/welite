@@ -1,4 +1,5 @@
 """Web/API disabled-account denial and actual panel revocation/re-enable behavior."""
+from signin import session_of, signed_in
 from layout import Forms
 from urllib.parse import parse_qs, urlsplit
 import json
@@ -10,9 +11,7 @@ USERNAME_TAKEN=SOURCE_WORDS['error-username-taken'].encode()
 
 def run(request,db,admin):
     user='session-user';password='test-password'
-    status,headers,_=request('POST','/register',dict(username=user,password=password,confirm=password))
-    assert status==302
-    old=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    old=signed_in(request('POST','/register',dict(username=user,password=password,confirm=password)))
     first=request('POST','/users/login',dict(username=user,password=password))
     assert first[0]==200
     api=json.loads(first[2])['token']
@@ -20,7 +19,9 @@ def run(request,db,admin):
     with sqlite3.connect(db) as con:uid=con.execute('SELECT id FROM users WHERE username=?',(user,)).fetchone()[0]
     def people(action):
         parser=Forms();parser.feed(request('GET','/admin/people?sessionId='+admin)[2].decode())
-        data=next(values for path,values in parser.forms if path=='/admin/people')
+        # Each row's forms are signed for their own action (b4e4f34).
+        data=next(values for path,values in parser.forms if path=='/admin/people'
+                  and values.get('action')==action and values.get('userId')==uid)
         return request('POST','/admin/people',dict(data,action=action,userId=uid))
     assert request('GET','/api/user?token='+api)[0]==200
     # A direct disabled flag is checked on every request, independent of panel revocation.
@@ -41,9 +42,7 @@ def run(request,db,admin):
     # Re-enabling never revives the previously revoked credentials.
     assert request('GET','/api/user?token='+api)[0]==401
     assert request('GET','/designer?sessionId='+old)[0]==302
-    new=request('POST','/sign-in',dict(username=user,password=password))
-    assert new[0]==302
-    fresh=parse_qs(urlsplit(new[1]['Location']).query)['sessionId'][0]
+    fresh=signed_in(request('POST','/sign-in',dict(username=user,password=password)))
     assert fresh!=old
     # A password-hash change invalidates the web context's credential binding.
     with sqlite3.connect(db) as con:
@@ -64,8 +63,7 @@ def run(request,db,admin):
     meteor=dict(password=dict(bcrypt='$2b$04$......................b8CYpLYfgS/XMWDCU3/.oCRJREnOf3y',reset=dict(token='preserve-reset')),resume=dict(loginTokens=[dict(hashedToken='meteor-resume-not-private')]))
     with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
     response=request('POST','/sign-in',dict(username=user,password=password))
-    assert response[0]==302
-    meteor_web=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
+    meteor_web=signed_in(response)
     response=request('POST','/users/login',dict(username=user,password=password))
     assert response[0]==200
     meteor_api=json.loads(response[2])['token']
@@ -85,8 +83,7 @@ def run(request,db,admin):
     meteor['password']['argon2']='$argon2id$v=19$m=32,t=2,p=1$AAECAwQFBgcICQoLDA0ODw$eL9VAPxb5H9dbhpqPyL7Z7AkFp72MImsQmo94Yh0kAY'
     with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
     response=request('POST','/sign-in',dict(username=user,password=password))
-    assert response[0]==302
-    argon_web=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
+    argon_web=signed_in(response)
     response=request('POST','/users/login',dict(username=user,password=password))
     assert response[0]==200
     argon_api=json.loads(response[2])['token']
@@ -108,7 +105,7 @@ def run(request,db,admin):
     for encoded in [legacy_argon,legacy_argon.replace('$v=16','')]:
         meteor['password']['argon2']=encoded
         with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(meteor),uid))
-        assert request('POST','/sign-in',dict(username=user,password=password))[0]==302
+        assert signed_in(request('POST','/sign-in',dict(username=user,password=password)))
         response=request('POST','/users/login',dict(username=user,password=password))
         assert response[0]==200
         token=json.loads(response[2])['token']
@@ -121,8 +118,8 @@ def run(request,db,admin):
     for factor in [dict(type='otp',secret='JBSWY3DPEHPK3PXP'),dict(type='unknown',secret='fixture'),'malformed']:
         before=request('POST','/users/login',dict(username=user,password=password));assert before[0]==200
         policy_api=json.loads(before[2])['token']
-        before=request('POST','/sign-in',dict(username=user,password=password));assert before[0]==302
-        policy_web=parse_qs(urlsplit(before[1]['Location']).query)['sessionId'][0]
+        before=request('POST','/sign-in',dict(username=user,password=password))
+        policy_web=signed_in(before)
         blocked=json.loads(json.dumps(policy_services));blocked['twoFactorAuthentication']=factor
         with sqlite3.connect(db) as con:
             con.execute('UPDATE users SET services_json=? WHERE id=?',(json.dumps(blocked),uid))

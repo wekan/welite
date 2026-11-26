@@ -258,6 +258,13 @@ begin
 end;
 function HtmlAttr(const V:string):string; forward;
 
+function ContentText(const V:string):string;
+begin
+  Result:=StringReplace(V,'&','&amp;',[rfReplaceAll]);
+  Result:=StringReplace(Result,'<','&lt;',[rfReplaceAll]);
+  Result:=StringReplace(Result,'>','&gt;',[rfReplaceAll]);
+end;
+
 function NavigationButton(const TargetPath,Caption:string;const S:TWLSession;const Attributes,BottomCaption:string):string;
 begin
   Result:='<form method="POST" action="'+HtmlAttr(TargetPath)+'" style="display:inline-block;margin:2px"'+Attributes+'>'+LanguageHiddenField(S)+
@@ -267,8 +274,10 @@ begin
   if BottomCaption='' then
     Result:=Result+'<input type="submit" value="'+HtmlAttr(Caption)+'">'
   else
+    // Element content, not an attribute: escaping the quote alone would leave
+    // a caption's markup live.
     Result:=Result+'<button type="submit" style="white-space:nowrap">'+
-      HtmlAttr(Caption)+'<br>|<br>'+HtmlAttr(BottomCaption)+'</button>';
+      ContentText(Caption)+'<br>|<br>'+ContentText(BottomCaption)+'</button>';
   Result:=Result+'</form>';
 end;
 

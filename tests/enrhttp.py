@@ -1,5 +1,6 @@
 """Public required-factor enrollment without granting premature application access."""
 from autherr import check as check_auth_error
+from signin import session_of, signed_in
 import base64
 import hashlib
 import hmac
@@ -168,7 +169,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                 stop();env['WELITE_DATA']=str(out/'admins-data');env['REQUIRE_2FA']='admins';start()
                 register('first-admin')
                 ordinary=request('POST','/register',dict(username='ordinary',password='test-password',confirm='test-password'))
-                assert ordinary[0]==302 and 'sessionId=' in ordinary[1]['Location'],ordinary
+                assert signed_in(ordinary),ordinary
                 admins_db=out/'admins-data/local/files/db/wekan.db'
                 with sqlite3.connect(admins_db) as con:
                     before=con.execute('SELECT hashedToken FROM login_tokens ORDER BY hashedToken').fetchall()
@@ -189,7 +190,7 @@ with tempfile.TemporaryDirectory(prefix='wlenrhttp-',dir=os.environ['TMPDIR']) a
                     assert con.execute("SELECT count(*) FROM users WHERE username='saved-account'").fetchone()==(1,)
                     con.execute('DROP TRIGGER fail_session')
                 recovered=request('POST','/sign-in?lang=fi',dict(username='saved-account',password='test-password'))
-                assert recovered[0]==302 and 'sessionId=' in recovered[1]['Location']
+                assert signed_in(recovered)
 
 
                 print('PASS: '+backend+' required-factor registration, private HTTP setup, cookie-free confirmation, client binding, shared derived-account limits, rollback/retry, pending restart, expiry/replacement and fresh-code login')

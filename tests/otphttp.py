@@ -1,4 +1,5 @@
 """Public web/API OTP logins and shared durable attempt limits, both SQLite backends."""
+from signin import session_of, signed_in
 import base64
 import hashlib
 import hmac
@@ -78,14 +79,14 @@ with tempfile.TemporaryDirectory(prefix='wlotphttp-',dir=os.environ['TMPDIR']) a
                 assert login(code=otp(center+1))[0]==429,'Restart reset allowance'
                 assert request('GET','/api/user?token='+api)[0]==200
                 expire()
-                response=login('/sign-in',otp(center+1));assert response[0]==302,response
+                response=login('/sign-in',otp(center+1))
                 assert 'Set-Cookie' not in response[1]
-                web=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
-                assert b'Username: factor' in request('GET',response[1]['Location'])[2]
+                web=signed_in(response)
+                assert b'Username: factor' in response[2]
                 assert login('/sign-in',otp(center+1))[0]==200,'Replay was accepted'
                 # Existing password-only accounts still use the same issuer and limiter.
                 assert login(username='plain')[0]==200
-                assert login('/sign-in',username='plain')[0]==302
+                assert signed_in(login('/sign-in',username='plain'))
                 # An issuer error leaves both the OTP and token tables unchanged.
                 with sqlite3.connect(db) as con:
                     con.execute("CREATE TRIGGER deny_meta BEFORE INSERT ON authmeta BEGIN SELECT RAISE(ABORT,'forced'); END")

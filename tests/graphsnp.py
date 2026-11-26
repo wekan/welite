@@ -1,4 +1,5 @@
 """Test-only CLI proxy forces an independent writer between graph read commands."""
+from signin import session_of, signed_in
 import json
 import os
 from pathlib import Path
@@ -62,8 +63,8 @@ def run_shared(request,client,db,control):
     board='snapshot-board';card='snapshot-card'
     for collection,documents in [('boards',[dict(_id=board,title='old',slug=board,permission='private',members=[dict(userId='u',isAdmin=True,isActive=True)])]),('lists',[dict(_id='snapshot-list',boardId=board,title='List')]),('cards',[dict(_id=card,boardId=board,listId='snapshot-list',title='old')])]:
         assert client.command({'insert':collection,'documents':documents})['n']==len(documents)
-    status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')));assert status in [302,303],(status,body)
-    session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0];done=control.with_suffix('.done')
+    status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')));assert status==200 and 'Location' not in headers,(status,body[:300])
+    session=session_of(body);done=control.with_suffix('.done')
     try:
         for action in ['export','clone']:
             for collection,identity in [('boards',board),('cards',card)]:

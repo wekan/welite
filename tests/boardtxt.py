@@ -1,5 +1,6 @@
 """Native board links, titles and empty/not-found states over real HTTP."""
 import html
+import re
 import json
 import os
 from pathlib import Path
@@ -172,7 +173,7 @@ def run(request,database,administrator,member,base):
                      if action.startswith('/board/card/dropdown?'))
     status,headers,rejected=request('POST',path,dict(fields,option='missing'))
     assert status==404 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
-    assert b'dir="rtl"' in rejected and b'lang=ar' in rejected and b'/board/card?' in rejected
+    assert b'dir="rtl"' in rejected and b'lang=ar' in rejected and b'/b/boardtxt/boardtxt/txtcard?' in rejected, rejected  # the card route (wlroutes)
     status,headers,_=request('POST',path,dict(fields,option='alternate'))
     assert status==303 and 'Set-Cookie' not in headers
     assert b'<option value="alternate" selected>Alternate option</option>' in request('GET',headers['Location'])[2]
@@ -220,19 +221,18 @@ def run(request,database,administrator,member,base):
         assert page.captions('/')==[words['all-boards']],(tag,'all-boards',page.items)
         assert len(page.maps)==1 and page.maps[0]['summary']==words['board']+' / '+words['view'],(tag,page.maps)
         assert page.maps[0]['data-board-map']==board
-        legend=words['color-yellow']+': '+words['current']+'; *: '+words['cards']+'; -: '+words['no-items-message']
-        assert html.escape(legend,quote=False).encode() in body,(tag,'legend')
-        arrows={'left':'<','right':'>','up':'^','down':'v'}
-        native=[(attrs,text) for name,attrs,text in page.items if name=='a' and 'data-view-dir' in attrs]
-        if board=='boardtxt':assert len(native)>=2,(tag,native)
-        for attrs,text in native:
-            assert attrs['dir']=='ltr' and text==words['view']+' '+arrows[attrs['data-view-dir']],(tag,attrs,text)
+        # The minimap names its tiles by coordinates (a6649f1, c7d1009) and the
+        # joystick beside it moves the view (dca8ab6): no legend, no arrow links.
+        if board=='boardtxt':assert b'data-map-columns=' in body and b'name="view_map"' in body,(tag,'map tiles')
+        arrows={attrs['name']:attrs['value'] for attrs in page.submits if attrs.get('name','').startswith('move_')}
+        assert {'move_up','move_down','move_left','move_right'}<=set(arrows),(tag,arrows)
+        assert all(attrs.get('dir')=='ltr' for attrs in page.submits if attrs.get('name','').startswith('move_'))
 
         all_captions=[text for name,attrs,text in page.items if name=='a' and 'data-list-toggle' not in attrs and parse_qs(urlsplit(attrs['href']).query).get('view')==['all']]
-        assert all_captions==[words['view-all']],(tag,'view-all')
+        assert all_captions==[words['view-all']],(tag,'view-all',all_captions)
         assert html.escape(words['no-items-message'],quote=False).encode() in body,(tag,'empty')
         assert b'Board <user>' not in body and b'List <user>' not in body
-        actions={attrs['name']:attrs['value'] for attrs in page.submits if attrs['name'].startswith('action_')}
+        actions={attrs['name']:attrs['value'] for attrs in page.submits if attrs.get('name','').startswith('action_')}
         if session==administrator:
             expected={'action_edit':words['edit'],'action_delete':words['r-delete-selected'],
                       'action_clear':words['r-unselect-all'],'action_export':words['r-export-selected'],
@@ -256,33 +256,33 @@ def run(request,database,administrator,member,base):
             assert html.escape(local['board-not-found'],quote=False).encode() in body
             assert b'Card &lt;test&gt;' not in body
 
-        # Empty lanes still occupy one navigable map position and allow vertical escape.
+        # Empty lanes still occupy one navigable map position and allow vertical
+        # escape: the joystick posts the move to the viewport (viewport_only).
+        def moved(board,x,y,tag,**fields):
+            query=urlencode(dict(id=board,x=x,y=y,lang=tag,rows=1))
+            status,_,body=request('POST','/board?'+query,dict(viewport_only='1',lang=tag,**fields))
+            assert status==200,(status,body[:300])
+            found=re.search(rb'<span>X (\d+) Y (\d+)</span>',body)
+            return (int(found.group(1)),int(found.group(2))),body
         for tag in ('fi','ar'):
             status,_,body=request('GET','/board?'+urlencode(dict(id='boardtxt',x=999,y=3,lang=tag)))
-            assert status==200 and b'X 1 Y 3' in body,(tag,'empty position')
-            page=BoardPage(body)
-            views={attrs['data-view-dir']:attrs['href'] for name,attrs,_ in page.items if name=='a' and 'data-view-dir' in attrs}
-            assert set(views)=={'up'},(tag,views)
-            assert parse_qs(urlsplit(views['up']).query)['y']==['2']
-            status,_,body=request('GET',views['up']);assert status==200 and b'X 1 Y 2' in body
-            page=BoardPage(body)
-            empty=next(attrs['href'] for name,attrs,_ in page.items if name=='a' and attrs.get('title','').startswith('txtempty / '))
-            params=parse_qs(urlsplit(empty).query)
-            assert params['x']==['1'] and params['y']==['3'] and params['lang']==[tag]
-            status,_,body=request('GET',empty);assert status==200 and b'X 1 Y 3' in body
+            # X clamps to the widest lane of the board (2 lists), even on an empty lane.
+            assert status==200 and b'X 2 Y 3' in body,(tag,'empty position',re.findall(rb'<span>X.{0,30}',body))
+            assert moved('boardtxt',999,3,tag,move_down='v')[0][1]==3,(tag,'no lane below the last')
+            assert moved('boardtxt',999,3,tag,move_up='^')[0]==(2,2)
+            # The empty lane is a map tile of its own, and selecting it lands on it.
+            position,body=moved('boardtxt',1,1,tag,view_map='1:3')
+            assert position==(1,3) and b'value="1:3"' in body
             status,_,body=request('GET','/board?'+urlencode(dict(id='boardnone',x=999,y=999,lang=tag)))
             assert status==200 and b'X 1 Y 1' in body
-            assert not any('data-view-dir' in attrs for name,attrs,_ in BoardPage(body).items if name=='a')
+            assert moved('boardnone',999,999,tag,move_down='v')[0]==(1,1)
         # A middle empty lane must expose both vertical neighbors as well.
         with sqlite3.connect(database) as con:con.execute("UPDATE swimlanes SET sort=0.5 WHERE id='txtempty'")
         for tag in ('fi','ar'):
             status,_,body=request('GET','/board?'+urlencode(dict(id='boardtxt',x=999,y=2,lang=tag)))
-            assert status==200 and b'X 1 Y 2' in body
-            views={attrs['data-view-dir']:attrs['href'] for name,attrs,_ in BoardPage(body).items if name=='a' and 'data-view-dir' in attrs}
-            assert set(views)=={'up','down'},views
-            for direction,target in [('up','1'),('down','3')]:
-                assert parse_qs(urlsplit(views[direction]).query)['y']==[target]
-                assert request('GET',views[direction])[0]==200
+            assert status==200 and b'X 2 Y 2' in body
+            for field,target in [('move_up',1),('move_down',3)]:
+                assert moved('boardtxt',999,2,tag,**{field:'^'})[0][1]==target,(tag,field)
         with sqlite3.connect(database) as con:con.execute("UPDATE swimlanes SET sort=2 WHERE id='txtempty'")
         check('fi',header='fi')
         with sqlite3.connect(database) as con:con.execute("UPDATE users SET profile_json=? WHERE username='administrator'",(json.dumps({'language':'ar'}),))

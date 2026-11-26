@@ -1,4 +1,5 @@
 """Live token credential/tenant/client binding and HMAC tamper rejection."""
+from signin import session_of, signed_in
 from layout import Forms
 from urllib.parse import parse_qs, urlsplit
 import hashlib
@@ -9,8 +10,7 @@ from paths import domain_db
 def run(request,db,admin):
     name='crypto-user';password='test-password'
     registered=request('POST','/register',dict(username=name,password=password,confirm=password))
-    assert registered[0]==302
-    web=parse_qs(urlsplit(registered[1]['Location']).query)['sessionId'][0]
+    web=signed_in(registered)
     login=request('POST','/users/login',dict(username=name,password=password))
     assert login[0]==200
     api=json.loads(login[2])['token'];uid=json.loads(login[2])['id']

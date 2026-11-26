@@ -464,6 +464,29 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   else (WeKan's passwordChangeRequired), and the change fixes its row. The
   sign-up form keeps WeKan's own minimum of 6 while none is enforced. 421 of
   WeKan's tests pass.
+- Draw a member's uploaded avatar in the board's members widget at the path
+  WeKan is served under now (WeKan's avatarDisplayUrl, `src/wlavatar.pas`):
+  an old host or ROOT_URL prefix before `/cdn/storage/avatars/` is dropped,
+  anything that is not a WeKan avatar is left as stored and escaped. Answer
+  WeKan's isAvatarUploadBlocked (#4740) from Admin Panel's
+  attachmentStorageSettings. `tests/avatar.py` compares every case with
+  WeKan's own JavaScript. 424 of WeKan's tests pass.
+- End the live board's stream as soon as its page closes it, rather than at
+  the next ping up to 15 seconds later, so a stopping server no longer waits
+  for it.
+- A copy of a card whose source `_id` is an ObjectId gets a string id, and
+  only an ObjectId: a source `_id` of any other type is refused again as no
+  identity. `/b/:id/:slug/rules` is the board's Rules page now.
+- Bring the 189 catalogs that lacked them up to en.jsn's keys and order from
+  WeKan's catalogs (`releases/synclang.py` now adds a missing key); the
+  enrollment texts of 2026-11-18 had reached only a few of them. Bosnian
+  "Bajtovi" in place of the English "Bytes", in WeKan first.
+- Bring `tests/admin.py` and the suites it runs, and the sign-in, enrollment,
+  session, OTP and copy suites, up to the signed-in page that sign-in and
+  registration answer with since fd5f992 (2026-11-19): the session is read
+  from its forms, navigation from its POSTed buttons, and a move from the
+  board redraws it in place. A navigation button's caption is now escaped as
+  element content, not only as an attribute.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

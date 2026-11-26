@@ -26,7 +26,8 @@ with tempfile.TemporaryDirectory(prefix='wlconn-',dir=os.environ['TMPDIR']) as d
                 else:raise AssertionError('Server startup timeout')
                 client=http.client.HTTPConnection('127.0.0.1',port,timeout=10)
                 try:
-                    cases=[('GET','/sign-in',None,{200}),('GET','/robots.txt',None,{200}),('GET','/',None,{302}),
+                    cases=[('GET','/sign-in',None,{200}),('GET','/robots.txt',None,{200}),('GET','/',None,{200}),
+                           # '/' is the guest home page since fd5f992, no longer a redirect to sign-in.
                            ('GET','/missing-route',None,{404}),('GET','/api/user?token=invalid',None,{401}),
                            ('POST','/board/move','sessionId=invalid',{403}),('POST','/sign-in','username=missing&password=invalid',{200,429})]
                     for _ in range(4):

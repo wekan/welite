@@ -1,4 +1,5 @@
 """Shared HTML clone permissions and transaction-time field/role changes."""
+from signin import session_of, signed_in
 import json
 import copy
 import sqlite3
@@ -20,8 +21,8 @@ def run_shared(request,client,db,token):
     assert client.command({'insert':'customFields','documents':[dict(_id=field,name='Clone field',type='text',boardIds=[board],adminOnly=False,readOnly=False)]})['n']==1
     assert client.command({'insert':'cards','documents':[dict(_id=cid,boardId=board,listId='clone-list',userId=uid,title='Clone card',opaque=opaque,createdAt=DateMs(0),modifiedAt=DateMs(0),dateLastActivity=DateMs(0),customFields=[dict(_id=field,value='original')])]})['n']==1
     status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
-    assert status in [302,303],(status,body)
-    session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    assert status==200 and 'Location' not in headers,(status,body[:300])
+    session=session_of(body)
     def cards():return client.command({'find':'cards','filter':dict(boardId=board)})['cursor']['firstBatch']
     def snapshot():
         result=[]

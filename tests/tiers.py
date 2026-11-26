@@ -1,3 +1,4 @@
+import re
 """HTTP role and host isolation checks, called by admin.py."""
 from autherr import check as check_auth_error
 from frames import Document
@@ -29,9 +30,11 @@ def run(request, tmp, local_admin):
     assert denied[0]==403;check_auth_error(denied,'ar',title_key='register')
     assert '<p>تُنشأ حسابات المسؤولين العامّين محليًا. التسجيل العام معطّل.</p>'.encode() in denied[2]
     assert 'Location' not in denied[1]
-    status, headers, _ = request('POST', '/sign-in', {'username':'global-admin','password':'global-test-password'}, host='admin')
-    assert status == 302, (status,headers)
-    global_admin = parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    # Signed in, the home page comes at once with the session in its forms
+    # (fd5f992: the session no longer travels in a redirect's URL).
+    status, headers, body = request('POST', '/sign-in', {'username':'global-admin','password':'global-test-password'}, host='admin')
+    assert status == 200 and 'Location' not in headers, (status,headers)
+    global_admin = re.search(rb'name="sessionId" value="([0-9a-f]{64})"', body).group(1).decode()
     assert request('GET', '/admin/domains?sessionId='+global_admin, host='admin')[0] == 200
     assert request('GET', '/admin/domains?sessionId='+local_admin, host='admin')[0] == 302
     assert request('GET', '/admin/domains?sessionId='+global_admin)[0] == 302
@@ -66,9 +69,10 @@ def run(request, tmp, local_admin):
     db = domain_db(tmp/'data','team.example')
     with sqlite3.connect(db) as con:
         assert con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
-    status, headers, _ = request('POST','/register',{'username':'team-admin','password':'test-password','confirm':'test-password'},host='team.example')
-    assert status == 302
-    team_admin = parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    # Registered, the home page comes at once with the session in its forms (fd5f992).
+    status, headers, body = request('POST','/register',{'username':'team-admin','password':'test-password','confirm':'test-password'},host='team.example')
+    assert status == 200 and 'Location' not in headers, (status,headers)
+    team_admin = re.search(rb'name="sessionId" value="([0-9a-f]{64})"', body).group(1).decode()
     assert request('GET','/admin/people?sessionId='+team_admin,host='team.example')[0] == 200
     assert request('GET','/designer?sessionId='+team_admin,host='team.example')[0] == 200
     assert request('GET','/admin/domains?sessionId='+team_admin,host='team.example')[0] == 403

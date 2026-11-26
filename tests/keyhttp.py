@@ -51,12 +51,14 @@ def run(request,database,session):
     try:
         # Arabic physical left advances the logical index. The visible value is ignored.
         form=fields();form.update(sel_card='card');form['move_'+direction]='drop'
-        status,headers,_=request('POST','/board/move',form)
-        assert status==302 and parse_qs(urlsplit(headers['Location']).query)['lang']==['ar']
+        status,headers,moved_body=request('POST','/board/move',form)
+        # A move from the board's own form (it posts view_x) redraws that board
+        # in place rather than redirecting, in the viewer's language and direction.
+        assert status==200 and 'Location' not in headers and b'<html dir="rtl" lang="ar">' in moved_body,(status,headers,moved_body[:500])
         with sqlite3.connect(database) as con:
             assert con.execute("SELECT listId FROM cards WHERE id='card'").fetchone()==(lists[1-index],)
         form=fields();form.update(sel_card='card');form['move_'+('right' if direction=='left' else 'left')]='translated label'
-        assert request('POST','/board/move',form)[0]==302
+        assert request('POST','/board/move',form)[0]==200
         with sqlite3.connect(database) as con:
             assert con.execute("SELECT listId FROM cards WHERE id='card'").fetchone()==(original[0],)
     finally:

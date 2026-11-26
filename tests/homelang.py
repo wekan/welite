@@ -16,12 +16,34 @@ class Page(HTMLParser):
         super().__init__(); self.parts = []; self.items = []
         self.feed(body.decode())
     def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        # Navigation is a form button since the signed-in navigation (3c53b50):
+        # a form's submit caption reads as a link to the form's action.
+        # Its hidden fields (language, session) join the action's query, as the
+        # link's query carried them; nav_view/auth_view mark a navigation form,
+        # and the board's viewport and move forms are not links.
+        if tag == 'form':
+            self.form = attrs.get('action', ''); self.form_attrs = attrs; self.hidden = []; self.navigation = False
+        elif tag == 'input' and getattr(self, 'form', None) is not None:
+            if attrs.get('type') == 'hidden' and attrs.get('name') in ('nav_view', 'auth_view'):
+                self.navigation = True
+            elif attrs.get('type') == 'hidden':
+                self.hidden.append((attrs.get('name', ''), attrs.get('value', '')))
+            elif attrs.get('type') == 'submit' and self.navigation:
+                href = self.form
+                if self.hidden:
+                    href += ('&' if '?' in href else '?') + urlencode(self.hidden)
+                link = {k: v for k, v in self.form_attrs.items() if k not in ('method', 'action', 'style')}
+                link['href'] = href
+                self.items.append(('a', link, attrs.get('value', '')))
         if tag in ('h2', 'a', 'b'):
-            self.parts.append((tag, dict(attrs), []))
+            self.parts.append((tag, attrs, []))
     def handle_data(self, text):
         for _, _, parts in self.parts:
             parts.append(text)
     def handle_endtag(self, tag):
+        if tag == 'form':
+            self.form = None
         if self.parts and self.parts[-1][0] == tag:
             name, attrs, parts = self.parts.pop()
             self.items.append((name, attrs, ''.join(parts)))
@@ -29,9 +51,15 @@ class Page(HTMLParser):
         return [text for tag, attrs, text in self.items
                 if tag == 'a' and urlsplit(attrs['href']).path == path]
     def board_ids(self):
-        return [parse_qs(urlsplit(attrs['href']).query).get('id', [''])[0]
-                for tag, attrs, _ in self.items
-                if tag == 'a' and urlsplit(attrs['href']).path == '/board']
+        ids = []
+        for tag, attrs, _ in self.items:
+            if tag != 'a': continue
+            url = urlsplit(attrs['href'])
+            if url.path == '/board':
+                ids.append(parse_qs(url.query).get('id', [''])[0])
+            elif url.path.startswith('/b/'):
+                ids.append(url.path.split('/')[2])
+        return ids
 
 def run(request, database, administrator, member, base):
     def words(tag):
@@ -51,7 +79,7 @@ def run(request, database, administrator, member, base):
         page = Page(body)
         assert ('h2', {}, local['boards']) in page.items, (tag, 'boards', page.items)
         assert page.captions('/sign-in') == [local['log-in']], (tag, 'log-in')
-        assert page.captions('/register') == [local['register']], (tag, 'register')
+        assert page.captions('/sign-up') == [local['register']], (tag, 'register')
         assert b'<script' not in body.lower()
         return page, body, local
     with sqlite3.connect(database) as con:
@@ -65,12 +93,15 @@ def run(request, database, administrator, member, base):
             tag = row['tag']
             guest, body, local = check(tag, query={'lang': tag})
             assert 'homelang' not in guest.board_ids()
-            assert b'Home &lt;safe&gt;' not in body
+            assert b'Home &lt;safe&gt;' not in body and b'Home <safe>' not in body
             if not public:
                 assert local['no-items-message'].encode() in body, (tag, 'empty')
             signed, body, _ = check(tag, member, {'lang': tag})
             assert 'homelang' in signed.board_ids()
-            assert b'Home &lt;safe&gt;' in body and b'Home <safe>' not in body
+            # The board button carries the title in its quoted value attribute,
+            # and nowhere else unescaped.
+            assert b'value="Home <safe>"' in body
+            assert b'Home <safe>' not in body.replace(b'value="Home <safe>"', b'')
             assert not signed.captions('/admin')
         with sqlite3.connect(database) as con:
             con.execute("UPDATE users SET profile_json=? WHERE username='administrator'", (json.dumps({'language': 'ar'}),))

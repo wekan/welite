@@ -324,6 +324,29 @@ def http_checks(server, tmp, backend):
                                      [board_id, list_id, 'Planted', '2027-01-01T00:00:00.000Z', lane], cookie=stranger, as_json=True)
         assert status == 403 and json.loads(body)['error'] == 'not-authorized', body
         assert b'Planted' not in request('GET', route, cookie=owner)[2]
+        # An uploaded avatar in the members widget, at the path WeKan is served
+        # under now (avatarDisplayUrl): no old host or prefix survives, and a
+        # stored value that is not an avatar is escaped, never markup.
+        def set_avatar(value):
+            for path in data.glob('**/files/db/wekan.db'):
+                with sqlite3.connect(path) as con:
+                    if con.execute("SELECT 1 FROM sqlite_master WHERE name='board_members'").fetchone():
+                        con.execute("UPDATE users SET profile_json=json_set(COALESCE(profile_json,'{}'),'$.avatarUrl',?) "
+                                    "WHERE id IN (SELECT userId FROM board_members WHERE boardId=?)", (value, board_id))
+        set_avatar('https://old-name.example/wekan/cdn/storage/avatars/subPathAvatar1')
+        page = request('GET', route, cookie=owner)[2]
+        assert b'<img class="avatar avatar-image" src="/cdn/storage/avatars/subPathAvatar1"' in page, page[-600:]
+        assert b'old-name.example' not in page
+        set_avatar('"><script>alert(1)</script>')
+        page = request('GET', route, cookie=owner)[2]
+        assert b'<script>alert(1)' not in page and b'src="&quot;&gt;&lt;script&gt;' in page
+        set_avatar('')
+        assert b'class="avatar avatar-image"' not in request('GET', route, cookie=owner)[2]
+        # isAvatarUploadBlocked (#4740): off without Admin Panel's setting.
+        # Negative: it needs a login, as every method.
+        status, _, body, _ = request('POST', '/_methods/isAvatarUploadBlocked', [], cookie=owner, as_json=True)
+        assert status == 200 and json.loads(body) == {'result': False}, body
+        assert request('POST', '/_methods/isAvatarUploadBlocked', [], as_json=True)[0] == 401
         # The Rules need the shared store: here they say so, and write nothing.
         status, _, body, _ = request('POST', '/_methods/rules.createRule',
                                      [board_id, 'R', {'activityType': 'createCard'}, {'actionType': 'archive'}], cookie=owner, as_json=True)

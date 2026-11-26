@@ -1,17 +1,27 @@
 """Locale survives actual board/Designer/admin links, GET forms and signed mutations."""
+import re
 from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
 import json
 import sqlite3
-from urllib.parse import parse_qs,urlsplit,urlencode
+from urllib.parse import parse_qs,urlsplit,urlencode,unquote
 from layout import Forms
 class Links(HTMLParser):
     def __init__(self):super().__init__();self.links=[]
     def handle_starttag(self,tag,attrs):
         if tag=='a':self.links.append(dict(attrs).get('href',''))
 def parsed(body):
-    result=Links();result.feed(body.decode());return result.links
+    # Links, and the navigation form buttons that replaced most of them, with
+    # their hidden language and session fields read as the query (homelang.Page).
+    from homelang import Page
+    result=Links();result.feed(body.decode())
+    return result.links+[attrs['href'] for tag,attrs,_ in Page(body).items if tag=='a' and attrs.get('href','') not in result.links]
+def board_id(link):
+    # A board is /board?id= or WeKan's route /b/<id>/<slug> (1adaf40).
+    url=urlsplit(link)
+    if url.path.startswith('/b/'):return unquote(url.path.split('/')[2])
+    return parse_qs(url.query).get('id',[''])[0]
 def check_navigation(request,database,session):
     def language(url):
         params=parse_qs(urlsplit(url).query)
@@ -19,14 +29,14 @@ def check_navigation(request,database,session):
         return params
     home_body=request('GET','/?'+urlencode(dict(sessionId=session,lang='ar')))[2]
     for link in parsed(home_body):
-        if urlsplit(link).path in ['/board','/admin','/sign-in','/register']:
+        if urlsplit(link).path in ['/board','/admin','/sign-in','/register','/sign-up'] or urlsplit(link).path.startswith('/b/'):
             params=language(link)
-            if urlsplit(link).path in ['/sign-in','/register']:assert 'sessionId' not in params
+            if urlsplit(link).path in ['/sign-in','/register','/sign-up']:assert 'sessionId' not in params
     board='/board?'+urlencode(dict(id='protected',view='all',sessionId=session,lang='ar'))
     status,_,body=request('GET',board);assert status==200
     links=parsed(body)
     for link in links:
-        if urlsplit(link).path in ['/','/board']:language(link)
+        if urlsplit(link).path in ['/','/board'] or urlsplit(link).path.startswith('/b/'):language(link)
     forms=Forms();forms.feed(body.decode())
     move=next(fields for action,fields in forms.forms if action=='/board/move')
     assert move['lang']=='ar'
@@ -45,7 +55,7 @@ def check_navigation(request,database,session):
         con.execute("INSERT INTO page_widgets(id,pageId,type,label,target,sort,createdAt,modifiedAt) VALUES('navlink','navpage','link','Fragment','/navtest#spot',1,'now','now')")
     try:
         body=request('GET','/?'+urlencode(dict(sessionId=session,lang='ar')))[2]
-        unusual=next(link for link in parsed(body) if parse_qs(urlsplit(link).query).get('id')==['nav&lang=fi'])
+        unusual=next(link for link in parsed(body) if board_id(link)=='nav&lang=fi')
         language(unusual)
         status,_,body=request('GET',unusual)
         assert status==200 and b'URL board' in body
@@ -100,7 +110,7 @@ def check_navigation(request,database,session):
             if urlsplit(link).path in ['/designer','/admin/people']:language(link)
         # A request without explicit state does not inherit an earlier request's choice.
         body=request('GET','/board?id=protected&sessionId='+session)[2]
-        assert b'name="lang"' not in body
+        assert b'name="lang" value="ar"' not in body, re.findall(rb'.{0,80}name="lang".{0,40}', body)[:3]
     finally:
         with sqlite3.connect(database) as con:
             con.execute("DELETE FROM page_widgets WHERE pageId='navpage'")

@@ -25,6 +25,9 @@ import tempfile
 import time
 from urllib.parse import urlencode, urlsplit, parse_qs
 
+
+from signin import session_of
+
 ROOT = Path(__file__).resolve().parents[1]
 GETS = ['/designer', '/designer/page', '/designer/page/export', '/designer/export']
 POSTS = ['/designer/widget/sort', '/designer/widget/delete', '/designer/page/save', '/designer/widget/move', '/designer/widget/save', '/designer/page/import', '/designer/import']
@@ -115,7 +118,11 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 status,headers,body=request('GET','/admin/people?sessionId='+admin)
                 assert status==200 and 'Set-Cookie' not in headers
                 label=b'disabled' if disabled else b'enabled'
-                assert b'<tr><td>people-rest-target</td><td>Normal</td><td>'+label+b'</td>' in body
+                # The username cell holds the account edit forms since b4e4f34
+                # (edit accounts from the People page): read the Role and Login
+                # cells of that account's row.
+                row=re.search(rb'<tr><td>people-rest-target<form.*?</tr>', body, re.S)
+                assert row and b'</td><td>Normal</td><td>'+label+b'</td>' in row.group(0), row and row.group(0)[-400:]
                 with sqlite3.connect(db) as con:
                     assert con.execute('SELECT loginDisabled FROM users WHERE id=?',(target,)).fetchone()==(int(disabled),)
             check_login_status(False)
@@ -147,8 +154,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 con.execute('DROP TRIGGER refuse_ownership')
             if os.environ.get('WELITE_OWNERSHIP_UI') == '1':
                 status,headers,body=request('POST','/sign-in',dict(username='people-rest-target',password='test-password'))
-                assert status==302,(status,body)
-                member_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                assert status==200,(status,body)
+                member_session=session_of(body)
                 with sqlite3.connect(db) as con:
                     con.execute("INSERT INTO swimlanes(id,boardId,title,createdAt) VALUES('own-lane','ordinary','Lane','now')")
                     con.execute("INSERT INTO lists(id,boardId,swimlaneId,title,createdAt) VALUES('own-list','ordinary','own-lane','List','now')")
@@ -170,8 +177,8 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             # Long UTF-8 plaintext works through registration and the CLI seed contract.
             seeded_password='日本語 🔑 '+('long-password-'*8)
             response=request('POST','/register',dict(username='credential-format',password=seeded_password,confirm=seeded_password))
-            assert response[0]==302,response
-            original_session=parse_qs(urlsplit(response[1]['Location']).query)['sessionId'][0]
+            assert response[0]==200 and 'Location' not in response[1],response
+            original_session=session_of(response[2])
             assert request('GET','/api/user?token='+original_session)[0]==200
             generated=subprocess.run([str(build/'wlhttp'),'hashpw',seeded_password],cwd=tmp,env=env,capture_output=True,text=True,check=True)
             seed=json.loads(generated.stdout)
@@ -179,7 +186,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             with sqlite3.connect(db) as con:
                 con.execute('UPDATE users SET services_json=? WHERE username=?',(json.dumps(dict(password=seed)),'credential-format'))
             assert request('GET','/api/user?token='+original_session)[0]==401
-            assert request('POST','/sign-in',dict(username='credential-format',password=seeded_password))[0]==302
+            assert session_of(request('POST','/sign-in',dict(username='credential-format',password=seeded_password))[2])
             assert request('POST','/users/login',dict(username='credential-format',password=seeded_password))[0]==200
             assert request('POST','/users/login',dict(username='credential-format',password=seeded_password+'wrong'))[0]==401
             # Existing PBKDF2 records still authenticate; login never rewrites them.
@@ -187,7 +194,7 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
             legacy='pbkdf2_sha1$50000$'+legacy_salt.hex()+'$'+hashlib.pbkdf2_hmac('sha1',seeded_password.encode(),legacy_salt,50000).hex()
             legacy_services=json.dumps(dict(password=legacy))
             with sqlite3.connect(db) as con:con.execute('UPDATE users SET services_json=? WHERE username=?',(legacy_services,'credential-format'))
-            assert request('POST','/sign-in',dict(username='credential-format',password=seeded_password))[0]==302
+            assert session_of(request('POST','/sign-in',dict(username='credential-format',password=seeded_password))[2])
             assert request('POST','/users/login',dict(username='credential-format',password=seeded_password))[0]==200
             with sqlite3.connect(db) as con:
                 assert con.execute('SELECT services_json FROM users WHERE username=?',('credential-format',)).fetchone()[0]==legacy_services
@@ -255,7 +262,10 @@ with tempfile.TemporaryDirectory(prefix='wladmin-', dir=os.environ['TMPDIR']) as
                 con.execute("INSERT INTO cards(id,boardId,listId,swimlaneId,title,userId,createdAt,modifiedAt,dateLastActivity) VALUES('card','protected','todo','lane','Card <test>',?,'now','now','now')", (uid,))
             assert request('GET', '/board?id=protected')[0] == 404
             status, _, body = request('GET', '/board?id=protected&sessionId='+member)
-            assert status == 200 and b'Card &lt;test&gt;' in body and b'sel_card' not in body
+            # A member who cannot write gets the card as an open-card button,
+            # its title in the quoted value attribute, which escapes the quote.
+            assert status == 200 and b'value="Card <test>"' in body and b'sel_card' not in body, (status, body[-3000:])
+            assert b'<test>' not in body.replace(b'value="Card <test>"', b'')
             status, _, body = request('GET', '/board?id=protected&sessionId='+admin)
             assert status == 200 and b'sel_card' in body and b'Swimlane &lt;one&gt;' in body
             if os.environ.get('WELITE_UI') == '1':

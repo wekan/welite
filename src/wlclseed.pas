@@ -67,9 +67,9 @@ begin
 end;
 
 function RootCloneSeed(const Source,Model:string):string;
-var Plain,Spec,Parent:TJSONObject;Managed:TJSONData;Parts:TStringArray;Path:string;i,j:Integer;Child:TJSONData;
+var Plain,Spec,Parent,Typed:TJSONObject;Managed,IdSchema:TJSONData;Parts:TStringArray;Path:string;i,j:Integer;Child:TJSONData;FromObjectId:Boolean;
 begin
-  Plain:=nil;Spec:=nil;
+  Plain:=nil;Spec:=nil;Typed:=nil;
   try
     Plain:=ExactObject(PlainDocument(Source));Spec:=ExactObject(Model);Managed:=Spec.Find('managed');
     if not (Managed is TJSONArray) then raise Exception.Create('Missing clone relation contract');
@@ -91,9 +91,12 @@ begin
     end;
     // The copy gets an id of its own, a string: a source whose _id is an
     // ObjectId (a database tool wrote it without one) does not pass that type
-    // on to the string id that replaces it.
-    if Plain.Find('_id') is TJSONString then Result:=TypedDocument(Plain.AsJSON,Source,'{"_id":"string"}')
+    // on to the string id that replaces it. Only an ObjectId: any other type
+    // of _id (a regex...) is no identity, and the copy is refused as before.
+    Typed:=ExactObject(Source);IdSchema:=SourceSchema(Typed,'_id');
+    FromObjectId:=(IdSchema is TJSONObject) and (TJSONObject(IdSchema).Get('t','')='objectId');
+    if FromObjectId and (Plain.Find('_id') is TJSONString) then Result:=TypedDocument(Plain.AsJSON,Source,'{"_id":"string"}')
     else Result:=TypedDocument(Plain.AsJSON,Source,'{}');
-  finally Spec.Free;Plain.Free;end;
+  finally Typed.Free;Spec.Free;Plain.Free;end;
 end;
 end.

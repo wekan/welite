@@ -61,6 +61,8 @@ begin
   Split('/b/a%20b/x%2Fy');
   Split('/b/templates');
   Split('/b/abc/my-board/rules');
+  Split('/b/abc/my-board/rules/export');
+  Split('/b/abc/my-board/rules/other');
   Split('/b/abc/my-board/c1/extra');
   Split('/b//my-board');
   Split('/b/');
@@ -83,9 +85,15 @@ end.
         '/b/abc|1|abc||',                    # WeKan's /b/:id
         '/b/abc/my-board/c1|1|abc|my-board|c1',
         '/b/a%20b/x%2Fy|1|a b|x/y|',
+        '/b/templates|0',                    # WeKan's templates container
+        # WeKan's /b/:id/:slug/rules is the board's Rules page (wlrules,
+        # 2026-11-26): carried as the card part 'rules', and its downloads as
+        # 'rules/export', which ServeWekanRoute sends to /board/rules[/export].
+        # This was a negative case before the Rules page existed.
+        '/b/abc/my-board/rules|1|abc|my-board|rules',
+        '/b/abc/my-board/rules/export|1|abc|my-board|rules/export',
         # Negative: WeKan's own pages and anything else are not a board.
-        '/b/templates|0',
-        '/b/abc/my-board/rules|0',
+        '/b/abc/my-board/rules/other|0',
         '/b/abc/my-board/c1/extra|0',
         '/b//my-board|0',
         '/b/|0',

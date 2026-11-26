@@ -1,4 +1,5 @@
 """Selection exports cannot narrow away unreadable values elsewhere on a board."""
+from signin import session_of, signed_in
 import json
 import sqlite3
 from urllib.parse import urlencode
@@ -16,10 +17,8 @@ def run_shared(request,client,db):
     assert client.command({'insert':'customFields','documents':[dict(_id=field,name='Private',type='text',boardIds=[board],adminOnly=True)]})['n']==1
     assert client.command({'insert':'cards','documents':[dict(_id=cid,title='Selected',boardId=board,listId='export-list'),dict(_id=hidden,title='Outside selection',boardId=board,listId='export-list',customFields=[dict(_id=field,value='EXPORT PRIVATE SECRET')])]})['n']==2
     status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
-    assert status in [302,303],(status,body)
-    location=headers['Location']
-    from urllib.parse import parse_qs,urlsplit
-    session=parse_qs(urlsplit(location).query)['sessionId'][0]
+    assert status==200 and 'Location' not in headers,(status,body[:300])
+    session=session_of(body)
     def snapshot():return [encode(client.find(name,identity)[0]) for name,identity in [('boards',board),('cards',cid),('cards',hidden),('customFields',field)]]+[encode(row) for row in client.find('activities','export-activity')]
     def export(expected):
         status,_,body=request('GET','/board?'+urlencode(dict(id=board,sessionId=session)))

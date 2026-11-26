@@ -1,4 +1,5 @@
 """Language-only state through required enrollment and registration."""
+from signin import form_to, signed_in
 import re
 import json
 import html
@@ -25,17 +26,17 @@ def check_auth_language(request,database,otp):
     language='ar';user='language-user';password='language-test-password'
     status,headers,body=request('GET','/sign-in?lang='+language)
     assert status==200 and headers['Content-Language']==language and 'Set-Cookie' not in headers
-    assert b'href="/two-factor/setup?lang=ar">'+translated('two-factor-required-title')+b'</a>' in body
+    assert form_to(body,'/two-factor/setup','ar',translated('two-factor-required-title'))
     status,headers,body=request('GET','/register?lang='+language)
     assert status==200 and headers['Content-Language']==language and b'dir="rtl"' in body
-    # Registration is WeKan's /sign-up (src/wlroutes.pas).
-    assert b'action="/sign-up?lang=ar"' in body and b'href="/sign-in?lang=ar"' in body
+    # The form is WeKan's /sign-up page (src/wlroutes.pas); it posts to /register.
+    assert form_to(body,'/register','ar') and form_to(body,'/sign-in','ar')
     status,headers,body=request('POST','/register?lang='+language,dict(username=user,password=password,confirm=password))
-    assert status==200 and b'<h1>'+translated('enrollment-account-created')+b'</h1>' in body and b'href="/two-factor/setup?lang=ar"' in body
+    assert status==200 and b'<h1>'+translated('enrollment-account-created')+b'</h1>' in body and form_to(body,'/two-factor/setup','ar')
     assert translated('two-factor-required-text') in body
-    assert translated('two-factor-required-title')+b'</a>' in body
+    assert form_to(body,'/two-factor/setup','ar',translated('two-factor-required-title'))
     status,headers,body=request('GET','/two-factor/setup?lang='+language)
-    assert status==200 and b'action="/two-factor/setup?lang=ar"' in body
+    assert status==200 and form_to(body,'/two-factor/setup','ar')
     assert b'<h1>'+translated('two-factor-required-title')+b'</h1>' in body
     for key in ('username','password'):
         field=('enrol-'+key).encode()
@@ -43,11 +44,11 @@ def check_auth_language(request,database,otp):
         assert b'<input id="'+field+b'"' in body
     assert headers['Cache-Control']=='no-store' and headers['Referrer-Policy']=='no-referrer'
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password='wrong-private-password'))
-    assert status==200 and b'href="/two-factor/setup?lang=ar"' in body and b'wrong-private-password' not in body
-    assert translated('two-factor-required-title')+b'</a>' in body
+    assert status==200 and form_to(body,'/two-factor/setup','ar') and b'wrong-private-password' not in body
+    assert form_to(body,'/two-factor/setup','ar',translated('two-factor-required-title'))
     status,headers,body=request('POST','/two-factor/setup?lang='+language,dict(username=user,password=password))
     assert status==200 and headers['Content-Language']==language and 'Location' not in headers and 'Set-Cookie' not in headers
-    assert b'action="/two-factor/confirm?lang=ar"' in body
+    assert form_to(body,'/two-factor/confirm','ar')
     assert b'<label for="enrol-code">'+translated('otp')+b'</label>' in body
     assert b'<input id="enrol-code" name="code"' in body and translated('confirm') in body
     assert translated('twoFactorAuth-manual-entry') in body
@@ -56,21 +57,22 @@ def check_auth_language(request,database,otp):
     secret=re.search(rb'<code id="otp-secret">([A-Z2-7]{32})</code>',body).group(1).decode()
     token=re.search(rb'name="setupToken" value="([a-f0-9]{64})"',body).group(1).decode()
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code='bad'))
-    assert status==200 and b'action="/two-factor/confirm?lang=ar"' in body and b'href="/two-factor/setup?lang=ar"' in body
+    assert status==200 and form_to(body,'/two-factor/confirm','ar') and form_to(body,'/two-factor/setup','ar')
     assert translated('twoFactorCode-invalid') in body
-    assert translated('two-factor-required-title')+b'</a>' in body
+    assert form_to(body,'/two-factor/setup','ar',translated('two-factor-required-title'))
     assert b'<h1>'+translated('twoFactorCode-prompt')+b'</h1>' in body
     import time
     counter=int(time.time())//30
     status,headers,body=request('POST','/two-factor/confirm?lang='+language,dict(setupToken=token,code=otp(secret,counter)))
-    assert status==200 and translated('twoFactorAuth-enabled') in body and b'href="/sign-in?lang=ar"' in body
+    assert status==200 and translated('twoFactorAuth-enabled') in body and form_to(body,'/sign-in','ar')
     assert headers['Cache-Control']=='no-store' and headers['Referrer-Policy']=='no-referrer'
     status,headers,body=request('POST','/sign-in?lang='+language,dict(username=user,password=password,code=otp(secret,counter+1)))
-    assert status==302
-    params=parse_qs(urlsplit(headers['Location']).query)
-    assert set(params)=={'sessionId','lang'} and params['lang']==[language]
-    assert token not in headers['Location'] and secret not in headers['Location'] and user not in headers['Location'] and password not in headers['Location']
+    # The signed-in home page, in the posted language, carries the session in
+    # its forms and never the setup token, secret or password (fd5f992).
+    assert signed_in((status,headers,body)) and 'Location' not in headers
+    assert headers['Content-Language']==language and b'name="lang" value="'+language.encode()+b'"' in body
+    assert token.encode() not in body and secret.encode() not in body and password.encode() not in body
     # Unsupported input cannot become a retry URL or response header.
     status,headers,body=request('GET','/register?lang=..%2Fbad')
-    assert status==200 and headers['Content-Language']=='en' and b'action="/sign-up"' in body
+    assert status==200 and headers['Content-Language']=='en' and form_to(body,'/register')
     print('PASS: registration/setup/confirmation/retry/sign-in language continuity, safe state-only URLs, existing no-store/no-referrer controls and unsupported-language refusal')

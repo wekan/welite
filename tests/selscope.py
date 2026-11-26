@@ -58,8 +58,12 @@ with tempfile.TemporaryDirectory(prefix='wlscope-',dir=os.environ['TMPDIR']) as 
                                 plan=con.execute('EXPLAIN QUERY PLAN SELECT id FROM '+table+' WHERE '+command.get('column','boardId')+'='+q(owner)+' AND '+expression).fetchall()
                             actual['indexed']=any('owned_id' in row[3] for row in plan)
                         return actual
-                    setup();actual=run({});assert actual==dict(ids=['plain'],indexed=True),actual;count+=1
-                    assert run(dict(column='id'))['ids']==[];count+=1
+                    # A document whose own _id is an ObjectId is in scope by its text
+                    # (2026-11-26, fb43308: a copy takes along rows a database tool
+                    # wrote without an id); its boardId still has to be a string.
+                    # Two documents of one _id text stay an error, below.
+                    setup();actual=run({});assert actual==dict(ids=['plain',owner],indexed=True),actual;count+=1
+                    assert run(dict(column='id'))['ids']==[owner];count+=1
                     mutations=["UPDATE _wl_models SET version=2;","UPDATE _ferretdb_collections SET settings='{\"uuid\":\"changed\"}';",
                                'DROP VIEW '+table+'; CREATE VIEW '+table+" AS SELECT json_extract(_ferretdb_sjson,'$._id') id,'foreign' boardId FROM owned;"]
                     for mutation in mutations:
@@ -73,8 +77,9 @@ with tempfile.TemporaryDirectory(prefix='wlscope-',dir=os.environ['TMPDIR']) as 
                     with sqlite3.connect(database) as con:
                         con.execute('DROP VIEW '+table)
                         con.execute('CREATE VIEW '+table+' AS SELECT json_extract(_ferretdb_sjson,\'$._id\') id,'+q(owner)+' boardId FROM owned')
-                    # The displayed foreign row cannot borrow a canonical source value.
-                    assert run({})['ids']==['plain'];count+=1
+                    # The displayed foreign row cannot borrow a canonical source value
+                    # (the ObjectId row's own source boardId is the owner).
+                    assert run({})['ids']==['plain',owner];count+=1
                     for cast_column in ['id','boardId']:
                         setup()
                         plain=dict(_id='7' if cast_column=='id' else 'plain')

@@ -1,4 +1,5 @@
 """Live selection relations cannot turn nonstring BSON keys into string authority."""
+from signin import session_of, signed_in
 import json
 import sqlite3
 from urllib.parse import urlencode,urlsplit,parse_qs
@@ -16,8 +17,8 @@ def run_shared(request,client,db):
         ('customFields',[dict(_id=field,name='Field',type='text',boardIds=[board,Regex('relation-board-extra','')],adminOnly=False,settings=dict(dropdownItems=dropdown)),dict(_id=badfield,name='Wrong board type',type='text',boardIds=[Regex(board,'')],adminOnly=False)]),
         ('cards',[record])]:
         assert client.command({'insert':collection,'documents':documents})['n']==len(documents)
-    status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')));assert status in [302,303],(status,body)
-    session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+    status,headers,body=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')));assert status==200 and 'Location' not in headers,(status,body[:300])
+    session=session_of(body)
     def update(collection,identity,changes):
         assert client.command({'update':collection,'updates':[dict(q=dict(_id=identity),u={'$set':changes})]})['n']==1
     def snapshot():

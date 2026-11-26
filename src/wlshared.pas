@@ -21,6 +21,9 @@ function SharedSettingText(Db:TWLDb;const Path:string):string;
 // A shared store's document of Collection by its _id, as plain JSON; '' when
 // the store has no such collection or document (and in a WeLite store).
 function SharedDocument(Db:TWLDb;const Collection,DocId:string):string;
+// A shared store's one document of a singleton Collection (Admin Panel's
+// attachmentStorageSettings...), as plain JSON; '' without one.
+function SharedFirstDocument(Db:TWLDb;const Collection:string):string;
 function ApiTokenLifetime(Db:TWLDb):Int64;
 function ApiTokenLifetimeMs(Db:TWLDb;out Condition:string):Double;
 function ApiTokenExpiration(Db:TWLDb;WhenMs,TtlSeconds:Int64;out Condition:string):Int64;
@@ -76,6 +79,18 @@ begin
   Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+';');
   if Length(Rows)<>1 then Exit;
   Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Id(Rows[0][0])+' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(DocId)+' LIMIT 1;');
+  if Length(Rows)<>1 then Exit;
+  try Result:=PlainDocument(Rows[0][0]);except Result:='';end;
+end;
+
+function SharedFirstDocument(Db:TWLDb;const Collection:string):string;
+var Rows:TWLRows;
+begin
+  Result:='';
+  if (Pos(#0,Collection)>0) or not SharedStore(Db) then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+QuotedStr(Collection)+';');
+  if Length(Rows)<>1 then Exit;
+  Rows:=Db.Query('SELECT json(_ferretdb_sjson) FROM '+Id(Rows[0][0])+' LIMIT 1;');
   if Length(Rows)<>1 then Exit;
   try Result:=PlainDocument(Rows[0][0]);except Result:='';end;
 end;

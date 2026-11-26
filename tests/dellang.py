@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import sqlite3
 import subprocess
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from layout import Forms
 from homelang import Page
 from paths import stored
@@ -91,7 +91,7 @@ def run(request,database,session,base):
         assert doc.names==captions,(tag,doc.names)
         assert doc.inputs['action_confirm-delete']['value']==words['confirm']
         assert ('<title>'+html.escape(words['confirm']+' / '+words['r-delete-selected'],quote=False)+'</title>').encode() in body
-        page=Page(body);assert page.captions('/board')==[words['cancel']],(tag,'cancel')
+        page=Page(body);assert [text for tag2,attrs,text in page.items if tag2=='a' and (urlsplit(attrs['href']).path=='/board' or urlsplit(attrs['href']).path.startswith('/b/'))]==[words['cancel']],(tag,'cancel',page.items)
         assert b'This includes' not in body and b'confirm-delete' in body
         form=Forms();form.feed(body.decode());return next(fields for action,fields in form.forms if action=='/board/move')
     def deleted():

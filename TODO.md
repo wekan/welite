@@ -259,10 +259,6 @@ Next, after this goal:
   Later on 2026-11-26 WeLite passed 137 more of Weddy's lines (most of them
   REST API specs) and spec 14's vote, Planning Poker and watch; Weddy's
   remaining lines are the next to port.
-- [ ] **tests/admin.py fails in tests/tiers.py line 33**: the global admin's
-  sign-in on the `admin` host answers 200 instead of 302 - already at
-  83b7b40 (2026-11-26), before the HTML5 view's Rules; needs a look at the
-  global-admin sign-in.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
   the card's other sections (an attachment's rename and its thumbnail route (attachment-thumbnail); Markdown in comments and checklists; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's
@@ -291,13 +287,14 @@ Found on the way, not part of this goal:
   older than them; `tests/view.py` and WeKan's specs through
   `tests/wkui/run.sh` cover the shared store meanwhile.
 
-- **`tests/admin.py` and the 36 test modules it runs are stale since fd5f992**
-  (2026-11-19, "Post browser navigation state from sign-in and home"): sign-in
-  and registration now render the signed-in page instead of redirecting, and
-  the home page's board links became POSTed forms, but the tests still expect
-  the redirect and `<a href>` links. `admin.py`'s own `register()` is updated;
-  `tests/tiers.py` is the next to fail. `tests/wkdir.py` and `tests/routes.py`
-  are written against the current behaviour and pass.
+- **Four older test failures** (2026-11-26; each fails the same way on
+  ab0d9ac, before that day's work): `tests/ferroot.py` (`releases/genmodel.py
+  --check` reports the generated model out of date), `tests/keypad.py` (the
+  test program stops with runtime error 217), `tests/short.py` (the first
+  domain's database is not at `domains/d0000001/files/db/wekan.db`) and
+  `tests/pathid.py` (its path identity cases answer differently). Two more
+  need something this sandbox lacks: `tests/embhttp.py` an `fpcres` beside
+  `$FPC`, `tests/argonv.py` the reference Argon2 source in `ARGON2_SRC`.
 
 Design questions for the maintainer (work goes on with the stated default):
 

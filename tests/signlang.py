@@ -1,4 +1,5 @@
 """Translated sign-in HTML on linked/CLI backends, with no script/cookie requirement."""
+from signin import session_of, signed_in, form_to
 import html
 import http.client
 from html.parser import HTMLParser
@@ -48,8 +49,9 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                     for key in ['log-in','username','password','otp','create-account']:
                         expected=html.escape(local.get(key) or english[key],quote=True).replace('&#x27;',"'")
                         assert expected in body,(row['tag'],key,expected)
-                    assert 'action="/sign-in?lang='+row['tag']+'"' in body
-                    assert '<form method="GET" action="/sign-in">' in body
+                    assert form_to(body,'/sign-in',row['tag'])
+                    # The language picker posts its choice (auth_view=1), as the page's other forms.
+                    assert '<form method="POST" action="/sign-in"><input type="hidden" name="auth_view" value="1"><label>' in body
                     assert '<option value="'+row['tag']+'" selected="selected">' in body
                     assert html.escape(row['name'],quote=True).replace('&#x27;',"'") in body
                     assert '<script' not in body.lower()
@@ -59,7 +61,8 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                     for key in ['register','username','password','password-again']:
                         expected=html.escape(local.get(key) or english[key],quote=True).replace('&#x27;',"'")
                         assert expected in registration,(row['tag'],key)
-                    assert '<form method="GET" action="/sign-up">' in registration
+                    # The language picker posts its choice (auth_view=1), as the page's other forms.
+                    assert '<form method="POST" action="/sign-up"><input type="hidden" name="auth_view" value="1"><label>' in registration
                     for field in ['username','password','confirm']:assert 'name="'+field+'"' in registration
                     status,headers,enrollment=request(path='/two-factor/setup?lang='+quote(row['tag']))
                     assert status==200 and headers['Content-Language']==row['tag'].replace('_','-')
@@ -75,20 +78,19 @@ with tempfile.TemporaryDirectory(prefix='wlsign-',dir=os.environ['TMPDIR']) as d
                     assert status==200 and headers['Content-Language']=='fi'
                     assert html.escape(fi.get(key) or english[key],quote=True).replace('&#x27;',"'") in body
                     assert 'private-password' not in body and 'different-password' not in body and 'private-user' not in body
-                    assert 'action="/sign-up?lang=fi"' in body
+                    assert form_to(body,'/register','fi')
                 wrong='wrongsecret-sensitive'
                 status,headers,body=request('ar','POST',dict(username='private-username',password=wrong))
                 assert status==200 and headers['Content-Language']=='ar' and 'dir="rtl"' in body
-                assert 'action="/sign-in?lang=ar"' in body and wrong not in body and 'private-username' not in body
-                status,_,_=request(method='POST',path='/register',data=dict(username='user',password='test-password',confirm='test-password'))
-                assert status==302
+                assert form_to(body,'/sign-in','ar') and wrong not in body and 'private-username' not in body
+                assert signed_in(request(method='POST',path='/register',data=dict(username='user',password='test-password',confirm='test-password')))
                 status,headers,body=request('fi','POST',dict(username='user',password='different-private-password',confirm='different-private-password'),path='/register?lang=fi')
                 assert status==200 and html.escape(fi.get('error-username-taken') or english['error-username-taken'],quote=True).replace('&#x27;',"'") in body
                 assert 'different-private-password' not in body
-                status,headers,_=request('fi','POST',dict(username='user',password='test-password'))
-                assert status==302
-                location=parse_qs(urlsplit(headers['Location']).query)
-                assert location['lang']==['fi'] and 'sessionId' in location and set(location)=={'lang','sessionId'}
+                # The signed-in home page keeps the posted language (fd5f992).
+                status,headers,body=request('fi','POST',dict(username='user',password='test-password'))
+                assert signed_in((status,headers,body))
+                assert headers['Content-Language']=='fi' and 'name="lang" value="fi"' in body
                 app.terminate();assert app.wait(timeout=8)==0
                 fixture=out/'i18n';(fixture/'data').mkdir(parents=True)
                 en=dict(next(row for row in catalog if row['tag']=='en'),name='<script>native</script>')

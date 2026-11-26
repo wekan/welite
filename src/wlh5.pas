@@ -87,7 +87,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, wlcfpol, wlprob;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar;
 
 const
   STATIC_HEAD =
@@ -2100,11 +2100,21 @@ begin
     '<div class="archives-sidebar js-archives-view is-hidden"><h3>' + E(Words.Text('archives', 'Archives')) + '</h3>' + Archived + '</div>' +
     '<div class="board-widget board-widget-members membersWidget"><h3 class="board-widget-title">' + E(Words.Text('members', 'Members')) +
     '</h3><div class="board-widget-content">';
-  R := Db.Query('SELECT u.id,u.username FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
+  R := Db.Query('SELECT u.id,u.username,COALESCE(CASE WHEN json_valid(u.profile_json) THEN json_extract(u.profile_json,''$.avatarUrl'') END,'''') ' +
+    'FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
     ' AND m.isActive=1 AND COALESCE(u.loginDisabled,0)=0 ORDER BY u.username;');
   for i := 0 to High(R) do
+  begin
     Result := Result + '<a class="member js-member" href="#" data-user="' + HtmlAttr(R[i][0]) + '" title="' + HtmlAttr(R[i][1]) +
-      '" aria-label="' + HtmlAttr(R[i][1]) + '"><span class="member-initials">' + E(R[i][1]) + '</span></a>';
+      '" aria-label="' + HtmlAttr(R[i][1]) + '">';
+    // An uploaded avatar, at the path WeKan is served under now
+    // (avatarDisplayUrl, wlavatar); its initials otherwise.
+    if R[i][2] <> '' then
+      Result := Result + '<img class="avatar avatar-image" src="' + E(AvatarDisplayUrl(R[i][2], '')) + '" alt="' + E(R[i][1]) + '">'
+    else
+      Result := Result + '<span class="member-initials">' + E(R[i][1]) + '</span>';
+    Result := Result + '</a>';
+  end;
   // membersWidget's add, for whoever may invite: a board admin.
   if (S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId) then
     Result := Result + '<a class="member add-member js-manage-board-members" href="#" title="' +
@@ -2896,6 +2906,27 @@ end;
 // arguments as a JSON array, answered {"result": ...} or, as Meteor answers a
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
+// Admin Panel / Attachments / Transfer limits: avatar uploads blocked (#4740),
+// a shared store's attachmentStorageSettings document; False without one.
+function AvatarUploadBlocked(Db: TWLDb): Boolean;
+var Doc: TJSONData; Value: TJSONData;
+begin
+  Result := False;
+  Doc := nil;
+  try
+    try
+      Doc := GetJSON(SharedFirstDocument(Db, 'attachmentStorageSettings'));
+    except
+      Doc := nil;
+    end;
+    if not (Doc is TJSONObject) then Exit;
+    Value := TJSONObject(Doc).FindPath('limitSettings.avatarsUploadBlocked');
+    Result := (Value <> nil) and (Value.JSONType = jtBoolean) and Value.AsBoolean;
+  finally
+    Doc.Free;
+  end;
+end;
+
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   // The values of a copy that its copier may not read: not kept.
@@ -3255,6 +3286,13 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(Id) + '"}');
+    Exit;
+  end;
+  // WeKan's isAvatarUploadBlocked (#4740): Admin Panel / Attachments'
+  // limitSettings.avatarsUploadBlocked; avatars stay enabled without it.
+  if Name = 'isAvatarUploadBlocked' then
+  begin
+    SendJsonAnswer(Response, 200, '{"result":' + IfThen(AvatarUploadBlocked(T.Db), 'true', 'false') + '}');
     Exit;
   end;
   if Name = 'createCardWithDueDate' then
@@ -3909,7 +3947,7 @@ end;
 // open page of the board draws it again - another user's change, or a rule's.
 // The stream ends after five minutes; EventSource opens it again.
 procedure ServeLiveBoard(const T: TWLTenant; Response: TResponse; const BoardId: string);
-var Last, Now_: string; i: Integer; Line: string; Socket: TStream;
+var Last, Now_: string; i: Integer; Line: string; Socket: TSocketStream; Waits: Boolean; B: Byte;
 begin
   Response.Code := 200;
   Response.ContentType := 'text/event-stream';
@@ -3920,12 +3958,24 @@ begin
   if not (Response is TFPHTTPConnectionResponse) then begin Response.Content := ''; Response.SendContent; Exit; end;
   Socket := TLiveResponse(Response).Connection.Socket;
   Last := BoardSignature(T.Db, BoardId);
+  // The second between two looks is a read with a one-second timeout: an
+  // EventSource sends nothing after its request, so the read ends at the
+  // timeout, or at once with 0 when the page has closed the stream - which
+  // then ends here, not at the next ping up to 15 seconds later (a stopping
+  // server waited for it). Without a read timeout, a plain wait.
+  try
+    Socket.IOTimeout := 1000;
+    Waits := True;
+  except
+    Waits := False;
+  end;
   try
     Line := 'retry: 2000'#10': live'#10#10;
     Socket.WriteBuffer(Line[1], Length(Line));
     for i := 1 to 300 do
     begin
-      Sleep(1000);
+      if not Waits then Sleep(1000)
+      else if Socket.Read(B, 1) = 0 then Break;
       Now_ := BoardSignature(T.Db, BoardId);
       if Now_ <> Last then
       begin

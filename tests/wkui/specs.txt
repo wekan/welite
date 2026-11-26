@@ -161,6 +161,8 @@
 28-dependencies-rest.e2e.js: REST API: card dependencies › unauthenticated requests are rejected
 29-card-settings-avatar.e2e.js: Card Settings: "Mark as complete" on minicards › complete toggle is hidden on minicards by default
 29-card-settings-avatar.e2e.js: Card Settings: "Mark as complete" on minicards › enabling "Show at Minicard" shows the complete toggle on minicards
+29-card-settings-avatar.e2e.js: #4740 Admin Panel: block avatar uploads › avatar uploads are enabled by default
+29-card-settings-avatar.e2e.js: #4740 Admin Panel: block avatar uploads › avatarsUploadBlocked setting blocks avatar uploads
 30-ldap-orgs-teams.e2e.js: #4737 sync LDAP groups as Organizations/Teams › non-admin client call is rejected and creates nothing
 31-templates-allboards.e2e.js: #2339 #5850 All Boards / Templates redesign › #6643: Archive shows an archived subtasks helper board
 35-list-sort-permissions.e2e.js
@@ -185,6 +187,7 @@
 admin-attachment-retention.e2e.js: negative: an ordinary user cannot open the retention settings
 admin-new-env-settings.e2e.js: negative: an ordinary user is offered none of them
 assist-due-from-title.e2e.js: Due date from the title › Board Settings / Card turns it off for the add-card form (negative)
+avatar-sub-path.e2e.js: a stored avatar URL is drawn under the path WeKan is served at now
 avatar-sub-path.e2e.js: lazily loaded code is fetched from the page origin, not ROOT_URL's host
 board-view-titles.e2e.js: minicard title honors formatted
 board-view-titles.e2e.js: minicard title honors plain-links
