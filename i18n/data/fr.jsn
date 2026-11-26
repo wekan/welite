@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Flux de travail Wrike",
   "r-wrike-workflow-note": "Un flux de travail Wrike est une liste de statuts, chacun dans le groupe Active, Completed, Deferred ou Cancelled. L’exportation écrit les listes de ce tableau sous forme d’un tel flux, nommé d’après le tableau, dans le format JSON renvoyé par l’API de Wrike pour les flux de travail : créez ce flux dans Wrike avant d’importer l’exportation Wrike Excel du tableau, afin que ses statuts soient appliqués. L’importation lit le JSON collé ci-dessus, provenant de WeKan ou de GET /workflows de Wrike, dans le tableau choisi : un statut sans liste devient une liste, et une règle marque une carte comme terminée lorsqu’elle passe à un statut Completed ou Cancelled, et comme non terminée dans un statut Active ou Deferred. Les règles d’automatisation propres à Wrike ne peuvent pas être exportées depuis Wrike.",
   "text-contains-trigger-description": "Correspond lorsqu’une carte est créée, ou que son titre ou sa description est modifié, et que le nouveau texte contient ceci (insensible à la casse).",
-  "text-contains-trigger-label": "Texte à rechercher"
+  "text-contains-trigger-label": "Texte à rechercher",
+  "event-action": "Opération de l'événement",
+  "event-attempts": "Tentatives",
+  "event-bleed": "Nom",
+  "event-category": "Catégorie",
+  "event-datetime": "Date et heure",
+  "event-detail": "Détail",
+  "event-severity": "Gravité",
+  "event-source": "Origine de l'événement",
+  "password-length-report-title": "Longueur du mot de passe",
+  "recoveryReportTitle": "Récupération",
+  "securityReportTitle": "Sécurité"
 }

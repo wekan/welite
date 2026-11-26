@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike 工作流",
   "r-wrike-workflow-note": "Wrike 工作流是一组状态，每个状态属于 Active、Completed、Deferred 或 Cancelled 组。导出会将此看板的列表写成一个以看板名称命名的工作流，使用 Wrike API 返回工作流时的 JSON 格式：在导入看板的 Wrike Excel 导出文件之前，先在 Wrike 中创建该工作流，以便应用其状态。导入会将上方粘贴的 JSON（来自 WeKan 或 Wrike 的 GET /workflows）读入选定看板：没有对应列表的状态会成为列表；规则会在卡片移入 Completed 或 Cancelled 状态时将其标记为已完成，在 Active 或 Deferred 状态时标记为未完成。无法从 Wrike 导出其自身的自动化规则。",
   "text-contains-trigger-description": "当创建卡片，或其标题或描述被更改，且新文本包含此内容时匹配（不区分大小写）。",
-  "text-contains-trigger-label": "要搜索的文本"
+  "text-contains-trigger-label": "要搜索的文本",
+  "event-action": "操作",
+  "event-attempts": "尝试次数",
+  "event-bleed": "名称",
+  "event-category": "类别",
+  "event-datetime": "日期和时间",
+  "event-detail": "详情",
+  "event-severity": "严重程度",
+  "event-source": "来源",
+  "password-length-report-title": "密码长度",
+  "recoveryReportTitle": "恢复",
+  "securityReportTitle": "安全"
 }

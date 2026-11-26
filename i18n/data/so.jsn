@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Habka shaqada Wrike",
   "r-wrike-workflow-note": "Habka shaqada Wrike waa liis xaalado ah, mid kastaa wuxuu ku jiraa kooxda Active, Completed, Deferred ama Cancelled. Soo saaristu waxay u qortaa liisaska sabuuraddan sidii hal hab oo magaca sabuuradda leh, qaabka JSON ee API-ga Wrike u celiyo habababka shaqada: ku samee habkaas Wrike ka hor intaadan soo dejin soo saarista Excel ee Wrike ee sabuuradda, si xaaladihiisa loo dabaqo. Soo dejintu waxay akhrisaa JSON-kaas korka lagu dhajiyay, ha ahaado WeKan ama GET /workflows ee Wrike, una gelisaa sabuuradda la doortay: xaalad aan liis lahayn waxay noqotaa liis, xeerna wuxuu kaar u calaamadeeyaa la dhammeeyay marka loo raro xaalad Completed ama Cancelled, aan la dhammeyn marka uu ku jiro mid Active ama Deferred. Xeerarka otomaatiga ah ee Wrike laftiisa lagama soo saari karo Wrike.",
   "text-contains-trigger-description": "Waxay la mid tahay marka kaadh la abuuro, ama cinwaankiisa ama sharraxaaddiisa la beddelo, iyo haddii qoraalka cusub uu ka kooban yahay tan (kama fiirsanayo xarfaha waaweyn iyo kuwa yaryar).",
-  "text-contains-trigger-label": "Qoraal la raadinayo"
+  "text-contains-trigger-label": "Qoraal la raadinayo",
+  "event-action": "Ficil",
+  "event-attempts": "Isku-dayo",
+  "event-bleed": "Magac",
+  "event-category": "Qayb",
+  "event-datetime": "Taariikh iyo waqti",
+  "event-detail": "Faahfaahin",
+  "event-severity": "Darnaan",
+  "event-source": "Il",
+  "password-length-report-title": "Dhererka furaha sirta",
+  "recoveryReportTitle": "Soo-kabasho",
+  "securityReportTitle": "Warbixinta Amniga"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-ip suliffiup ingerlanera",
   "r-wrike-workflow-note": "Wrike-ip suliffiup ingerlanera killiffiit allattorsimaffiannik, tamarmik Active, Completed, Deferred imaluunniit Cancelled-imi gruppemiittunik. Nuussinerup ilisarnaatip matuma allattorsimaffii ataatsimut allappai, ilisarnaatip aqqanik ateqartumut, JSON-imi Wrike-ip API-iata suliffiup ingerlaneranut utertittagaani: suliffiup ingerlanera taanna Wrike-mi pilersiguk ilisarnaatip Wrike-mut Excel-imik nuussinera eqqutinnagu, taamaalilluni killiffii atorneqassapput. Eqqussinerup JSON taanna qulaani ikkunneqartoq atuarpaa, WeKan-imit imaluunniit Wrike-ip GET /workflows-ianit, ilisarnaammut toqqakkamut: killiffik allattorsimaffeqanngitsoq allattorsimaffinngortarpoq, malittarisassarlu kortsimik naammassisutut nalunaaqutsersuisarpoq Completed-imut imaluunniit Cancelled-imut killiffimmut nuunneqarpat, naammassinngitsutullu Active-imi imaluunniit Deferred-imi. Wrike-ip nammineq automatiskiusumik malittarisassai Wrike-mit nuunneqarsinnaanngillat.",
   "text-contains-trigger-description": "Naleqquppoq kaarti pilerneqarnerani, imaluunniit qulequtaa imaluunniit allaqqusaa allanngortinneqarnerani, allagaq nutaaq una imaqarpat (naqinnermik angisuunik minneqanngitsunillu immikkoortitseqqunani).",
-  "text-contains-trigger-label": "Ujaqqiaruttoq"
+  "text-contains-trigger-label": "Ujaqqiaruttoq",
+  "event-action": "Iliuuseq",
+  "event-attempts": "Misiliinerit",
+  "event-bleed": "Ateq",
+  "event-category": "Immikkoortoq",
+  "event-datetime": "Ulloq piffissarlu",
+  "event-detail": "Paasissutissaq",
+  "event-severity": "Sakkortussuseq",
+  "event-source": "Aallaavik",
+  "password-length-report-title": "Isissutissap takissusia",
+  "recoveryReportTitle": "Utertitsineq",
+  "securityReportTitle": "Isumannaallisaanermut nalunaarusiaq"
 }

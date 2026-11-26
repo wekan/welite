@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Kayendedwe ka ntchito ka Wrike",
   "r-wrike-workflow-note": "Kayendedwe ka ntchito ka Wrike ndi mndandanda wa mikhalidwe, uliwonse mu gulu la Active, Completed, Deferred kapena Cancelled. Kutulutsa kumalemba mindandanda ya bolodi ili ngati kamodzi, kotchedwa dzina la bolodi, mu JSON yomwe API ya Wrike imabweza pa kayendedwe ka ntchito: pangani kayendedwe kameneko mu Wrike musanalowetse kutulutsa kwa Wrike Excel kwa bolodi, kuti mikhalidwe yake igwiritsidwe ntchito. Kulowetsa kumawerenga JSON imeneyo yomatidwa pamwambapa, kuchokera ku WeKan kapena ku GET /workflows ya Wrike, mu bolodi losankhidwa: mkhalidwe wopanda mndandanda umakhala mndandanda, ndipo lamulo limasonyeza kuti khadi latha likasamutsidwira ku mkhalidwe wa Completed kapena Cancelled ndipo silinathe likakhala mu Active kapena Deferred. Malamulo a automation a Wrike sangathe kutulutsidwa mu Wrike.",
   "text-contains-trigger-description": "Zimagwirizana pamene kadi yalengedwa, kapena mutu wake kapena kufotokoza kwake kwasinthidwa, ndipo mawu atsopano ali ndi izi (osasiyanitsa zilembo zazikulu ndi zazing'ono).",
-  "text-contains-trigger-label": "Mawu ofunika kusaka"
+  "text-contains-trigger-label": "Mawu ofunika kusaka",
+  "event-action": "Chochita",
+  "event-attempts": "Zoyesa",
+  "event-bleed": "Dzina",
+  "event-category": "Gulu",
+  "event-datetime": "Deti ndi nthawi",
+  "event-detail": "Tsatanetsatane",
+  "event-severity": "Kuopsa",
+  "event-source": "Gwero",
+  "password-length-report-title": "Kutalika kwa mawu achinsinsi",
+  "recoveryReportTitle": "Kubwezeretsa",
+  "securityReportTitle": "Lipoti la chitetezo"
 }

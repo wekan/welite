@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ӗҫ юхӑмӗ",
   "r-wrike-workflow-note": "Wrike ӗҫ юхӑмӗ — тӑрӑмсен списокӗ, кашниех Active, Completed, Deferred е Cancelled ушкӑнра. Экспорт ҫак хӑмари спискӑсене пӗр ӗҫ юхӑмӗ пек ҫырать, хӑма ячӗпе, Wrike API ӗҫ юхӑмӗсем валли тавӑракан JSON-пе: хӑмана Wrike Excel экспортне импортличчен ҫав ӗҫ юхӑмне Wrike-ра тӑвӑр, вара унӑн тӑрӑмӗсем усӑ курӑнаҫҫӗ. Импорт ҫӳлерех лартнӑ ҫав JSON-а, WeKan-ран е Wrike-ӑн GET /workflows-ӗнчен, суйланӑ хӑмана вулать: списокӗ ҫук тӑрӑм список пулать, правило вара карточкӑна Completed е Cancelled тӑрӑма куҫарсан вӗҫленӗ, Active е Deferred тӑрӑмра вӗҫленмен тесе палӑртать. Wrike-ӑн хӑйӗн автоматизаци правилисене Wrike-ран экспортлама ҫук.",
   "text-contains-trigger-description": "Карточка тунă чух е унăн ячейĕ е ăнлантарăвĕ улшăннă чух, çĕнĕ текстра ку пур пулсан килĕшет (пысăк тата пĕчĕк саспаллисене уйăрмасть).",
-  "text-contains-trigger-label": "Шыракан текст"
+  "text-contains-trigger-label": "Шыракан текст",
+  "event-action": "Ӗҫ",
+  "event-attempts": "Тӑрӑшнӑ хутсем",
+  "event-bleed": "Ят",
+  "event-category": "Категори",
+  "event-datetime": "Кун тата вӑхӑт",
+  "event-detail": "Тӗплӗ кӑтарту",
+  "event-severity": "Пысӑклӑхӗ",
+  "event-source": "Ҫӑлкуҫ",
+  "password-length-report-title": "Вӑрттӑн сӑмах тӑршшӗ",
+  "recoveryReportTitle": "Тавӑру",
+  "securityReportTitle": "Хӑрушсӑрлӑх отчӗчӗ"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-ᐅᑉ ᐱᓕᕆᓂᕐᒧᑦ ᐊᖅᑯᑎᖓ",
   "r-wrike-workflow-note": "Wrike-ᐅᑉ ᐱᓕᕆᓂᕐᒧᑦ ᐊᖅᑯᑎᖓ ᖃᓄᐃᓕᖓᓂᕐᓄᑦ ᑎᑎᖅᑲᓕᐊᖑᔪᖅ, ᐊᑐᓂ Active, Completed, Deferred ᐅᕝᕙᓘᓐᓃᑦ Cancelled ᑲᑎᖅᓱᖅᓯᒪᔪᓂ. ᐊᓂᑎᑦᓯᓂᖅ ᐅᓇ ᐊᓪᓚᕕᐅᑉ ᑎᑎᖅᑲᓕᐊᖏᑦ ᐊᑕᐅᓯᕐᒥᒃ ᑎᑎᕋᖅᐸᒃᑕᖏᑦ, ᐊᓪᓚᕕᐅᑉ ᐊᑎᖓᓂᒃ ᐊᑎᓕᒃ, JSON-ᒥ Wrike-ᐅᑉ API-ᖓᑕ ᐱᓕᕆᓂᕐᒧᑦ ᐊᖅᑯᑎᓄᑦ ᑭᐅᔾᔪᑎᖓᓂᒃ: ᐊᓪᓚᕕᐅᑉ Wrike Excel ᐊᓂᑎᑕᐅᓯᒪᔪᖓ ᐃᓯᖅᑎᑦᑎᓚᐅᖅᑎᓐᓇᒍ ᑕᒪᓐᓇ ᐱᓕᕆᓂᕐᒧᑦ ᐊᖅᑯᑎ Wrike-ᒥ ᓴᓇᓗᒍ, ᖃᓄᐃᓕᖓᓂᖏᑦ ᐊᑐᓕᖁᓪᓗᒋᑦ. ᐃᓯᖅᑎᑦᓯᓂᖅ ᖁᓛᓂ ᐃᓕᔭᐅᔪᖅ JSON ᐅᖃᓕᒫᖅᐸᒃᑕᖓ, WeKan-ᒥᑦ ᐅᕝᕙᓘᓐᓃᑦ Wrike-ᐅᑉ GET /workflows-ᖓᓂᑦ, ᓂᕈᐊᖅᑕᐅᔪᒧᑦ ᐊᓪᓚᕕᒻᒧᑦ: ᑎᑎᖅᑲᓕᐊᖃᖏᑦᑐᖅ ᖃᓄᐃᓕᖓᓂᖅ ᑎᑎᖅᑲᓕᐊᙳᖅᐸᒃᑐᖅ, ᒪᓕᒐᕐᓗ ᐊᓪᓚᖅᓯᒪᔪᖅ ᐱᔭᕇᖅᓯᒪᔪᖅ ᓇᓗᓇᐃᖅᐸᒃᑕᖓ Completed ᐅᕝᕙᓘᓐᓃᑦ Cancelled ᖃᓄᐃᓕᖓᓂᕐᒧᑦ ᓅᑕᐅᒐᐃᑉᐸᑦ ᐱᔭᕇᖏᑦᑐᕐᓗ Active ᐅᕝᕙᓘᓐᓃᑦ Deferred-ᒥ. Wrike-ᐅᑉ ᐃᒻᒥᓂᒃ ᐱᓕᕆᑦᑕᕆᐊᖃᖏᑦᑐᑦ ᒪᓕᒐᖏᑦ Wrike-ᒥᑦ ᐊᓂᑎᑕᐅᔪᓐᓇᖏᑦᑐᑦ.",
   "text-contains-trigger-description": "Naammattailima kaaqtaq sanavigaangani, uvvaluunniit titiqqanga uvvaluunniit titiraujanga allanngutinngami, titirausiq nutaaq una ilaqaqtillugu (titirausiit angijuit mikijuillu asijjiinngittut).",
-  "text-contains-trigger-label": "Titirausiq ujjirumaguvit"
+  "text-contains-trigger-label": "Titirausiq ujjirumaguvit",
+  "event-action": "ᐱᓕᕆᐊᖅ",
+  "event-attempts": "ᐆᒃᑐᕋᕐᓃᑦ",
+  "event-bleed": "ᐊᑎᖅ",
+  "event-category": "ᖃᓄᐃᑦᑑᓂᖓ",
+  "event-datetime": "ᐅᓪᓗᖅ ᐊᒻᒪ ᖃᔅᓯᙳᕐᓂᖓ",
+  "event-detail": "ᓇᓗᓇᐃᖅᓯᒪᔪᖅ",
+  "event-severity": "ᖃᓄᑎᒋ ᐊᔪᕐᓇᕐᓂᖓ",
+  "event-source": "ᐱᒋᐊᕐᕕᖓ",
+  "password-length-report-title": "ᐃᓯᕐᕕᒃᓴᐅᑉ ᑕᑭᓂᖓ",
+  "recoveryReportTitle": "ᐅᑎᖅᑎᑦᓯᓂᖅ",
+  "securityReportTitle": "ᐊᑦᑕᕐᓇᙱᓐᓂᐅᑉ ᐅᓂᒃᑳᖓ"
 }

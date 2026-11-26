@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike darbo eiga",
   "r-wrike-workflow-note": "Wrike darbo eiga yra būsenų sąrašas; kiekviena būsena priklauso grupei Active, Completed, Deferred arba Cancelled. Eksportas įrašo šios lentos sąrašus kaip vieną darbo eigą, pavadintą lentos vardu, JSON formatu, kurį Wrike API grąžina darbo eigoms: sukurkite šią darbo eigą Wrike prieš importuodami lentos Wrike Excel eksportą, kad būtų pritaikytos jos būsenos. Importas skaito aukščiau įklijuotą JSON iš WeKan arba Wrike GET /workflows į pasirinktą lentą: būsena, neturinti sąrašo, tampa sąrašu, o taisyklė pažymi kortelę baigta perkėlus ją į Completed arba Cancelled būseną ir nebaigta perkėlus į Active arba Deferred būseną. Pačių Wrike automatizavimo taisyklių eksportuoti iš Wrike negalima.",
   "text-contains-trigger-description": "Atitinka, kai kortelė sukuriama arba pakeičiamas jos pavadinimas ar aprašas, ir naujame tekste yra tai (neskiriant didžiųjų ir mažųjų raidžių).",
-  "text-contains-trigger-label": "Ieškomas tekstas"
+  "text-contains-trigger-label": "Ieškomas tekstas",
+  "event-action": "Veiksmas",
+  "event-attempts": "Bandymai",
+  "event-bleed": "Pavadinimas",
+  "event-category": "Kategorija",
+  "event-datetime": "Data ir laikas",
+  "event-detail": "Išsami informacija",
+  "event-severity": "Rimtumas",
+  "event-source": "Šaltinis",
+  "password-length-report-title": "Slaptažodžio ilgis",
+  "recoveryReportTitle": "Atkūrimas",
+  "securityReportTitle": "Sauga"
 }

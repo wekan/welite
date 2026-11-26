@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike жұмыс процесі",
   "r-wrike-workflow-note": "Wrike жұмыс процесі - күйлер тізімі, әрқайсысы Active, Completed, Deferred немесе Cancelled тобында. Экспорт осы тақтаның тізімдерін тақта атымен аталған бір процесс ретінде, Wrike API жұмыс процестері үшін қайтаратын JSON түрінде жазады: тақтаның Wrike Excel экспортын импорттамас бұрын сол жұмыс процесін Wrike-та жасаңыз, сонда оның күйлері қолданылады. Импорт жоғарыда қойылған JSON-ды (WeKan-нан немесе Wrike-тың GET /workflows сұрауынан) таңдалған тақтаға оқиды: тізімі жоқ күй тізімге айналады, ал ереже карточка Completed немесе Cancelled күйіне жылжытылғанда оны аяқталған, Active немесе Deferred күйінде аяқталмаған деп белгілейді. Wrike-тың өз автоматтандыру ережелерін Wrike-тан экспорттау мүмкін емес.",
   "text-contains-trigger-description": "Карточка құрылғанда немесе оның тақырыбы не сипаттамасы өзгертілгенде, жаңа мәтін мұны қамтыса сәйкес келеді (әріп регистріне тәуелсіз).",
-  "text-contains-trigger-label": "Іздейтін мәтін"
+  "text-contains-trigger-label": "Іздейтін мәтін",
+  "event-action": "Әрекет",
+  "event-attempts": "Әрекеттер",
+  "event-bleed": "Аты",
+  "event-category": "Санат",
+  "event-datetime": "Күн және уақыт",
+  "event-detail": "Мәлімет",
+  "event-severity": "Маңыздылық",
+  "event-source": "Дереккөз",
+  "password-length-report-title": "Құпия сөз ұзындығы",
+  "recoveryReportTitle": "Қалпына келтіру",
+  "securityReportTitle": "Қауіпсіздік есебі"
 }

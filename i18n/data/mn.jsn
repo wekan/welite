@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ажлын урсгал",
   "r-wrike-workflow-note": "Wrike ажлын урсгал нь төлөвүүдийн жагсаалт бөгөөд тус бүр Active, Completed, Deferred эсвэл Cancelled бүлэгт байна. Экспорт нь энэ самбарын жагсаалтуудыг самбарын нэрээр нэрлэсэн нэг урсгал болгон Wrike-ийн API ажлын урсгалд буцаадаг JSON хэлбэрээр бичнэ: самбарын Wrike Excel экспортыг импортлохоос өмнө тэр урсгалыг Wrike-д үүсгэвэл төлөвүүд нь хэрэглэгдэнэ. Импорт нь дээр буулгасан, WeKan эсвэл Wrike-ийн GET /workflows-оос авсан JSON-ыг сонгосон самбар руу уншина: жагсаалтгүй төлөв жагсаалт болж, карт Completed эсвэл Cancelled төлөвт шилжихэд дууссан, Active эсвэл Deferred төлөвт дуусаагүй гэж тэмдэглэх дүрэм нэмэгдэнэ. Wrike-ийн өөрийн автоматжуулалтын дүрмийг Wrike-аас экспортлох боломжгүй.",
   "text-contains-trigger-description": "Карт үүсгэх үед, эсвэл түүний гарчиг эсвэл тайлбар өөрчлөгдөх үед, шинэ текст үүнийг агуулж байвал тохирно (том жижиг үсэг ялгахгүй).",
-  "text-contains-trigger-label": "Хайх текст"
+  "text-contains-trigger-label": "Хайх текст",
+  "event-action": "Үйлдэл",
+  "event-attempts": "Оролдлого",
+  "event-bleed": "Нэр",
+  "event-category": "Ангилал",
+  "event-datetime": "Огноо ба цаг",
+  "event-detail": "Дэлгэрэнгүй",
+  "event-severity": "Ноцтой байдал",
+  "event-source": "Эх сурвалж",
+  "password-length-report-title": "Нууц үгийн урт",
+  "recoveryReportTitle": "Сэргээлт",
+  "securityReportTitle": "Аюулгүй байдал"
 }

@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Flux de lucru Wrike",
   "r-wrike-workflow-note": "Un flux de lucru Wrike este o listă de stări, fiecare aparținând grupului Active, Completed, Deferred sau Cancelled. Exportul scrie listele acestui panou ca un singur flux de lucru, denumit după panou, în formatul JSON returnat de API-ul Wrike pentru fluxurile de lucru: creați acest flux în Wrike înainte de a importa exportul Wrike Excel al panoului, pentru a-i aplica stările. Importul citește JSON-ul lipit mai sus, din WeKan sau din GET /workflows din Wrike, în panoul ales: o stare fără listă devine o listă, iar o regulă marchează un card ca finalizat când este mutat într-o stare Completed sau Cancelled și ca nefinalizat într-o stare Active sau Deferred. Regulile de automatizare proprii ale Wrike nu pot fi exportate din Wrike.",
   "text-contains-trigger-description": "Se potrivește atunci când un card este creat, sau titlul ori descrierea sa este modificată, iar noul text conține acest lucru (fără a ține cont de majuscule).",
-  "text-contains-trigger-label": "Text de căutat"
+  "text-contains-trigger-label": "Text de căutat",
+  "event-action": "Acțiune",
+  "event-attempts": "Încercări",
+  "event-bleed": "Nume",
+  "event-category": "Categorie",
+  "event-datetime": "Dată și oră",
+  "event-detail": "Detaliu",
+  "event-severity": "Severitate",
+  "event-source": "Sursă",
+  "password-length-report-title": "Lungimea parolei",
+  "recoveryReportTitle": "Recuperare",
+  "securityReportTitle": "Securitate"
 }

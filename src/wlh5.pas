@@ -87,7 +87,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, wlcfpol;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, wlcfpol, wlprob;
 
 const
   STATIC_HEAD =
@@ -4402,7 +4402,7 @@ begin
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
-    (Path = '/board/rules') or (Path = '/board/rules/export') or
+    (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
   // A session in the URL is the HTML4 view's: that page keeps its own view.
   if Request.QueryFields.Values['sessionId'] <> '' then Exit;
@@ -4441,6 +4441,18 @@ begin
     begin
       Send(200, Page(Request, Language, Words, S, Words.Text('changePasswordPopup-title', 'Change Password'), '',
         ChangePasswordContent(T.Db, Words, Request.QueryFields.Values['error'])));
+      Exit;
+    end;
+    // Admin Panel / Problems / Security Report (wlprob), a site admin's.
+    if Path = '/admin/problems/security-report' then
+    begin
+      if not IsSiteAdmin(T.Db, S.UserId) then
+        Send(404, Page(Request, Language, Words, S, Words.Text('error-notAuthorized', 'You are not authorized to view this page.'), '',
+          '<div class="big-message quiet"><h1>' + E(Words.Text('error-notAuthorized', 'You are not authorized to view this page.')) + '</h1></div>'))
+      else
+        Send(200, Page(Request, Language, Words, S, Words.Text('securityReportTitle', 'Security Report'), '',
+          SecurityReportContent(T.Db, Words, Language.Tag, Request.QueryFields.Values['q'],
+          StrToIntDef(Request.QueryFields.Values['page'], 1))));
       Exit;
     end;
     if (Path = '/people') or (Path = '/admin/people') then

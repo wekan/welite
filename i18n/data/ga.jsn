@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Sreabhadh oibre Wrike",
   "r-wrike-workflow-note": "Is liosta stádas é sreabhadh oibre Wrike, agus gach stádas sa ghrúpa Active, Completed, Deferred nó Cancelled. Scríobhann Easpórtáil liostaí an chláir seo mar shreabhadh oibre amháin, ainmnithe i ndiaidh an chláir, sa JSON a thugann API Wrike ar ais do shreafaí oibre: cruthaigh an sreabhadh oibre sin in Wrike sula n-iompórtálann tú easpórtáil Wrike Excel an chláir, ionas go gcuirfear a stádais i bhfeidhm. Léann Iompórtáil an JSON sin atá greamaithe thuas, ó WeKan nó ó GET /workflows Wrike, isteach sa chlár roghnaithe: déantar liosta de stádas gan liosta, agus marcálann riail cárta mar chríochnaithe nuair a bhogtar é go stádas Completed nó Cancelled, agus mar neamhchríochnaithe i stádas Active nó Deferred. Ní féidir rialacha uathoibrithe Wrike féin a easpórtáil ó Wrike.",
   "text-contains-trigger-description": "Meaitseálann sé nuair a chruthaítear cárta, nó nuair a athraítear a theideal nó a chur síos, agus go bhfuil an méid seo sa téacs nua (gan aird ar chás na litreacha).",
-  "text-contains-trigger-label": "Téacs le cuardach"
+  "text-contains-trigger-label": "Téacs le cuardach",
+  "event-action": "Gníomh",
+  "event-attempts": "Iarrachtaí",
+  "event-bleed": "Ainm",
+  "event-category": "Catagóir",
+  "event-datetime": "Dáta agus am",
+  "event-detail": "Mionsonra",
+  "event-severity": "Déine",
+  "event-source": "Foinse",
+  "password-length-report-title": "Fad an phasfhocail",
+  "recoveryReportTitle": "Aisghabháil",
+  "securityReportTitle": "Tuairisc Slándála"
 }

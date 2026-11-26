@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike वर्कफ़्लो",
   "r-wrike-workflow-note": "Wrike वर्कफ़्लो स्टेटस के एगो सूची ह, हर एक Active, Completed, Deferred भा Cancelled समूह में। निर्यात एह बोर्ड के सूची के एगो वर्कफ़्लो के रूप में लिखेला, बोर्ड के नाम पर, ओह JSON में जवन Wrike के API वर्कफ़्लो खातिर लौटावेला: बोर्ड के Wrike Excel निर्यात आयात करे से पहिले Wrike में ऊ वर्कफ़्लो बनाईं, ताकि ओकर स्टेटस लागू होखे। आयात ऊपर चिपकावल ओह JSON के, WeKan से भा Wrike के GET /workflows से, चुनल बोर्ड में पढ़ेला: बिना सूची वाला स्टेटस एगो सूची बनेला, आ एगो नियम कार्ड के पूरा चिह्नित करेला जब ऊ Completed भा Cancelled स्टेटस में ले जाइल जाला आ अधूरा जब Active भा Deferred में। Wrike के अपना स्वचालन नियम Wrike से निर्यात ना हो सकेला।",
   "text-contains-trigger-description": "ई तब मेल खाला जब कार्ड बनावल जाला, भा एकर शीर्षक भा विवरण बदलल जाला, आ नया टेक्स्ट में ई शामिल होखे (बड़का छोट अक्षर में फरक ना)।",
-  "text-contains-trigger-label": "खोजे खातिर टेक्स्ट"
+  "text-contains-trigger-label": "खोजे खातिर टेक्स्ट",
+  "event-action": "कार्रवाई",
+  "event-attempts": "कोसिस",
+  "event-bleed": "नाम",
+  "event-category": "श्रेणी",
+  "event-datetime": "तारीख आ समय",
+  "event-detail": "विवरण",
+  "event-severity": "गंभीरता",
+  "event-source": "स्रोत",
+  "password-length-report-title": "पासवर्ड के लंबाई",
+  "recoveryReportTitle": "पुनर्प्राप्ति",
+  "securityReportTitle": "सुरक्षा रपट"
 }

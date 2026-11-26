@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "เวิร์กโฟลว์ของ Wrike",
   "r-wrike-workflow-note": "เวิร์กโฟลว์ของ Wrike คือรายการสถานะ โดยแต่ละสถานะอยู่ในกลุ่ม Active, Completed, Deferred หรือ Cancelled การส่งออกจะเขียนรายการของบอร์ดนี้เป็นเวิร์กโฟลว์เดียว ใช้ชื่อบอร์ดและรูปแบบ JSON ที่ API ของ Wrike ส่งกลับสำหรับเวิร์กโฟลว์ ให้สร้างเวิร์กโฟลว์นั้นใน Wrike ก่อนนำเข้าไฟล์ Excel ของบอร์ดที่ส่งออกสำหรับ Wrike เพื่อให้ใช้สถานะเหล่านี้ได้ การนำเข้าจะอ่าน JSON ที่วางด้านบนจาก WeKan หรือ GET /workflows ของ Wrike เข้าสู่บอร์ดที่เลือก สถานะที่ยังไม่มีรายการจะสร้างเป็นรายการ และกฎจะทำเครื่องหมายการ์ดว่าเสร็จแล้วเมื่อย้ายไปยังสถานะ Completed หรือ Cancelled และยังไม่เสร็จเมื่อย้ายไปยัง Active หรือ Deferred ไม่สามารถส่งออกกฎอัตโนมัติของ Wrike เองออกจาก Wrike ได้",
   "text-contains-trigger-description": "ตรงกันเมื่อมีการสร้างการ์ด หรือมีการเปลี่ยนชื่อหรือคำอธิบาย และข้อความใหม่มีสิ่งนี้อยู่ (ไม่สนใจตัวพิมพ์เล็กพิมพ์ใหญ่)",
-  "text-contains-trigger-label": "ข้อความที่ต้องการค้นหา"
+  "text-contains-trigger-label": "ข้อความที่ต้องการค้นหา",
+  "event-action": "การดำเนินการ",
+  "event-attempts": "จำนวนครั้งที่พยายาม",
+  "event-bleed": "ชื่อ",
+  "event-category": "หมวดหมู่",
+  "event-datetime": "วันที่และเวลา",
+  "event-detail": "รายละเอียด",
+  "event-severity": "ความรุนแรง",
+  "event-source": "แหล่งที่มา",
+  "password-length-report-title": "ความยาวรหัสผ่าน",
+  "recoveryReportTitle": "การกู้คืน",
+  "securityReportTitle": "ความปลอดภัย"
 }

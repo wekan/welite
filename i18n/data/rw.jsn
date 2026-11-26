@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Urujya n'uruza rw'akazi rwa Wrike",
   "r-wrike-workflow-note": "Urujya n'uruza rw'akazi rwa Wrike ni urutonde rw'imiterere, buri yose iri mu itsinda rya Active, Completed, Deferred cyangwa Cancelled. Gusohora kwandika intonde z'iki kibaho nk'urumwe, rwitiriwe ikibaho, muri JSON API ya Wrike isubiza ku rujya n'uruza rw'akazi: kora urwo rujya n'uruza muri Wrike mbere yo kwinjiza isohora rya Excel rya Wrike ry'ikibaho, kugira ngo imiterere yarwo ikoreshwe. Kwinjiza gusoma iyo JSON yashyizwe hejuru, ivuye muri WeKan cyangwa muri GET /workflows ya Wrike, ikayishyira ku kibaho cyatoranyijwe: imiterere idafite urutonde iba urutonde, kandi itegeko rishyira ikarita nk'iyarangiye iyo yimuriwe mu miterere ya Completed cyangwa Cancelled, n'iyitarangiye mu ya Active cyangwa Deferred. Amategeko y'ikoresha-ryikora ya Wrike ubwayo ntashobora gusohorwa muri Wrike.",
   "text-contains-trigger-description": "Bihura igihe ikarita iremwe, cyangwa umutwe wayo cyangwa ibisobanuro byayo bihinduwe, kandi umwandiko mushya ukubiyemo ibi (inyuguti nini n'intoya ntibitaho).",
-  "text-contains-trigger-label": "Umwandiko ushakwa"
+  "text-contains-trigger-label": "Umwandiko ushakwa",
+  "event-action": "Igikorwa",
+  "event-attempts": "Kugerageza",
+  "event-bleed": "Izina",
+  "event-category": "Icyiciro",
+  "event-datetime": "Itariki n'igihe",
+  "event-detail": "Ibisobanuro",
+  "event-severity": "Uburemere",
+  "event-source": "Inkomoko",
+  "password-length-report-title": "Uburebure bw'ijambobanga",
+  "recoveryReportTitle": "Kugarura",
+  "securityReportTitle": "Raporo y'umutekano"
 }

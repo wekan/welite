@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike itequiohhui",
   "r-wrike-workflow-note": "Ce Wrike itequiohhui ce tocatlahtolli nemiliztli, sesen ipan Active, Completed, Deferred noso Cancelled nechicoliztli. Tlaquixtiliztli quitlahcuiloa inin huapalli itocatlahtolhuan quen ce, ica huapalli itocayo, ipan JSON tlen Wrike iAPI quicuepa para tequiohhuitl: xicchihua inon tequiohhuitl ipan Wrike achtopa ticcalaquiz huapalli iWrike Excel iquixtiliz, ic itlanemiliz motlaliz. Tlacalaquiliztli quipohua inon JSON tlatlalilli icpac, itech WeKan noso itech Wrike iGET /workflows, ipan huapalli tlapehpenalli: ce nemiliztli amo ica tocatlahtolli mocuepa tocatlahtolli, ihuan ce nahuatilli quimachiotia ce amatlapalli quen otlan ihcuac mocuica ipan ce Completed noso Cancelled nemiliztli ihuan amo otlan ipan ce Active noso Deferred. Wrike inahuatil amo huel moquixtiah itech Wrike.",
   "text-contains-trigger-description": "Monelhuayōtia ihcuac ce tlahcuilōlmachiyōtl mochīhua, ahnozo tocaitl ahnozo tlahtōltēnyōtl mocuepa, īhuān yancuīc tlahtōlli quipiya inin (ahmo motta huēyi ahnozo tepitōn tlahcuilōlli).",
-  "text-contains-trigger-label": "Tlahtōlli in tlahtlanilo"
+  "text-contains-trigger-label": "Tlahtōlli in tlahtlanilo",
+  "event-action": "Tequitl",
+  "event-attempts": "Tlayeyecoliztin",
+  "event-bleed": "Tocaitl",
+  "event-category": "Tlamantli",
+  "event-datetime": "Ilhuitl ihuan cahuitl",
+  "event-detail": "Tlanonotzalli",
+  "event-severity": "Ohuiliztli",
+  "event-source": "Canin hualehua",
+  "password-length-report-title": "Ihuehcayo in ichtaca tlahtolli",
+  "recoveryReportTitle": "Cuepaliztli",
+  "securityReportTitle": "Temachtiliztli tlanonotzaliztli"
 }

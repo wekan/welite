@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Alur kerja Wrike",
   "r-wrike-workflow-note": "Alur kerja Wrike nakeuh dapeuta status, tiep status lam kelompok Active, Completed, Deferred atawa Cancelled. Ekspor geutuléh dapeuta papan nyoe sibagoe saboh alur, ngon nan papan, lam JSON nyang geupeuwoe le API Wrike keu alur kerja: peugöt alur kerja nyan bak Wrike sigohlom impor ekspor Excel Wrike papan nyoe, mangat status jih geungui. Impor geubaca JSON nyang geutempel di ateuh, nibak WeKan atawa nibak GET /workflows Wrike, u papan nyang geupileh: status nyang hana dapeuta jeuet keu dapeuta, ngon saboh aturan geutanda kad leusoe meunyoe geupinah u status Completed atawa Cancelled ngon goh leusoe bak status Active atawa Deferred. Aturan otomatis Wrike keudroe h'an jeuet geuekspor nibak Wrike.",
   "text-contains-trigger-description": "Cok watèe kad geupeugöt, atawa judul atawa deskripsi jih geuubah, ngön teks barô na nyoe (hana peduli haraih rayeuk/ubit).",
-  "text-contains-trigger-label": "Teks keu neu-mita"
+  "text-contains-trigger-label": "Teks keu neu-mita",
+  "event-action": "Buet",
+  "event-attempts": "Ci nyang geupeubuet",
+  "event-bleed": "Nan",
+  "event-category": "Kategori",
+  "event-datetime": "Uroe ngon watée",
+  "event-detail": "Rincian",
+  "event-severity": "Keuparah",
+  "event-source": "Sumber",
+  "password-length-report-title": "Panyang kata sandi",
+  "recoveryReportTitle": "Peuulang",
+  "securityReportTitle": "Laporan Keuamanan"
 }

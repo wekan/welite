@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Laawol golle Wrike",
   "r-wrike-workflow-note": "Laawol golle Wrike ko doggol ngonkaaji, kala gooto e fedde Active, Completed, Deferred walla Cancelled. Yaltingol ina winnda doggi alluwal ngal no gootol, innaaɗo e innde alluwal, e JSON mo API Wrike artirta wonande laabi golle: sos laawol golle ngol e Wrike hade naatnude yaltingol Excel Wrike alluwal ngal, ngam ngonkaaji mum ngollora. Naatnugol ina janngi JSON ɓortaaɗo dow, iwde e WeKan walla e GET /workflows Wrike, e alluwal cuɓaangal: ngonka mo alaa doggol ina wonta doggol, tee sariya ina maanta kartal no timmungal so ngal eggini e ngonka Completed walla Cancelled tee no timmaani e ngonka Active walla Deferred. Sariyaaji automasiyoŋ Wrike e hoore mum waawaa yaltineede e Wrike.",
   "text-contains-trigger-description": "Waɗi ɗuum tuma kaatoo winndaa, walla tiitoonde walla fillayle mum waylaa, e winndannde hesere ndee woni e ɗuum (alaa fii mawɗe walla pamare winndannde).",
-  "text-contains-trigger-label": "Winndannde ndaarteende"
+  "text-contains-trigger-label": "Winndannde ndaarteende",
+  "event-action": "Golle",
+  "event-attempts": "Etorɗe",
+  "event-bleed": "Innde",
+  "event-category": "Fedde",
+  "event-datetime": "Ñalngu e waktu",
+  "event-detail": "Cariiɗe",
+  "event-severity": "Caɗeele",
+  "event-source": "Iwdi",
+  "password-length-report-title": "Njuuteendi finnde suuraande",
+  "recoveryReportTitle": "Ruttindol",
+  "securityReportTitle": "Jaŋtol kisal"
 }

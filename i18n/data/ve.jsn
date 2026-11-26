@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Maitele a mushumo a Wrike",
   "r-wrike-workflow-note": "Maitele a mushumo a Wrike ndi mutevhe wa zwiimo, tshiṅwe na tshiṅwe kha tshigwada tsha Active, Completed, Deferred kana Cancelled. U bvisela nnḓa hu ṅwala mitevhe ya bodo iyi sa maitele maṱhihi, o ṋewaho dzina ḽa bodo, kha JSON ine API ya Wrike ya i vhuisa kha maitele a mushumo: sikani maitele ayo kha Wrike ni sa athu dzhenisa faela ya Excel ya bodo yo bviselwaho nnḓa u bva kha Wrike, uri zwiimo zwayo zwi shumiswe. U dzhenisa hu vhala JSON iyo yo nambatedzwaho nṱha, u bva kha WeKan kana kha GET /workflows ya Wrike, kha bodo yo nangwaho: tshiimo tshi si na mutevhe tshi vha mutevhe, nahone mulayo u swaya khadi sa ḽo fhela musi ḽi tshi pfuluselwa kha tshiimo tsha Completed kana Cancelled, na sa ḽi songo fhela kha tsha Active kana Deferred. Milayo ya Wrike ya u ḓiitela zwithu a i koni u bviselwa nnḓa u bva kha Wrike.",
   "text-contains-trigger-description": "I elana musi khadi ḽi tshi sikiwa, kana dzina kana ṱhaluso yaḽo i tshi shandulwa, nahone maipfi maswa a vha na izwi (hu sa sedzwi vhuhulwane ha maḽeḓere).",
-  "text-contains-trigger-label": "Maṅwalwa a u ṱoḓwa"
+  "text-contains-trigger-label": "Maṅwalwa a u ṱoḓwa",
+  "event-action": "Nyito",
+  "event-attempts": "Ndingedzo",
+  "event-bleed": "Dzina",
+  "event-category": "Khethekanyo",
+  "event-datetime": "Ḓuvha na tshifhinga",
+  "event-detail": "Zwidodombedzwa",
+  "event-severity": "Vhukuma",
+  "event-source": "Vhubvo",
+  "password-length-report-title": "Vhulapfu ha phasiwede",
+  "recoveryReportTitle": "U vhuedzedza",
+  "securityReportTitle": "Tsireledzo"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ажалай урсгал",
   "r-wrike-workflow-note": "Wrike ажалай урсгал гэдэг хадаа Active, Completed, Deferred али Cancelled бүлэгэй байдалнуудай жагсаал юм. Экспорт энэ самбарай жагсаалнуудые самбарай нэрээр нэрлэгдэһэн нэгэ урсгал болгожо, Wrike-ай API-гай ажалай урсгалда бусаадаг JSON болгон бэшэнэ: самбарай Wrike Excel экспорт оруулхаһаа урда Wrike дээрэ тэрэ ажалай урсгал үүсхэгты, тиигэбэл байдалнуудынь хэрэглэгдэнэ. Оруулга дээрэ оруулһан JSON-ые, WeKan-һаа али Wrike-ай GET /workflows-һоо, шэлэгдэһэн самбарта уншана: жагсаалгүй байдал жагсаал болоно, дүрим карточкые Completed али Cancelled байдалда зөөхэдэ дүүргэгдэһэн, Active али Deferred байдалда дүүргэгдээгүй гэжэ тэмдэглэнэ. Wrike-ай өөрын автомат дүримүүдые Wrike-һаа гаргажа болохогүй.",
   "text-contains-trigger-description": "Картачка зохёогдоходо, али нэрэ, тайлбари хубилаhан үедэ, шэнэ текст энээниие агуулhан байбал таарана (томо/бага үзэгтэ хамаагүй).",
-  "text-contains-trigger-label": "Бэдэрхэ текст"
+  "text-contains-trigger-label": "Бэдэрхэ текст",
+  "event-action": "Үйлэ",
+  "event-attempts": "Туршалтанууд",
+  "event-bleed": "Нэрэ",
+  "event-category": "Түрэл",
+  "event-datetime": "Үдэр ба саг",
+  "event-detail": "Дэлгэрэнгы мэдээсэл",
+  "event-severity": "Хүндэ шата",
+  "event-source": "Эхин газар",
+  "password-length-report-title": "Нюуса үгын урта",
+  "recoveryReportTitle": "Һэргээхэ",
+  "securityReportTitle": "Аюулгүй байдалай тайлан"
 }

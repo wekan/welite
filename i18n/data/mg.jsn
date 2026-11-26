@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Fizotran’asa Wrike",
   "r-wrike-workflow-note": "Ny fizotran’asa Wrike dia lisitry ny sata, izay samy ao amin’ny vondrona Active, Completed, Deferred na Cancelled. Ny fanondranana dia manoratra ny lisitr’ity solaitra ity ho fizotran’asa iray mitondra ny anaran’ny solaitra, amin’ny endrika JSON averin’ny API Wrike ho an’ny fizotran’asa: forony ao amin’ny Wrike aloha io fizotran’asa io alohan’ny hanafarana ny fanondranana Excel Wrike an’ny solaitra, mba hampiharana ny sata ao aminy. Ny fanafarana dia mamaky ilay JSON napetaka etsy ambony, avy amin’ny WeKan na GET /workflows an’ny Wrike, ho ao amin’ny solaitra voafidy: lasa lisitra ny sata tsy manana lisitra, ary misy fitsipika manamarika ny karatra ho vita rehefa afindra amin’ny sata Completed na Cancelled, ary ho tsy vita amin’ny Active na Deferred. Tsy azo avoaka avy amin’ny Wrike ny fitsipika mandeha ho azy an’ny Wrike.",
   "text-contains-trigger-description": "Mifanaraka rehefa mamorona karatra, na rehefa miova ny lohateniny na ny famaritany, ary ny lahatsoratra vaovao dia misy izany (tsy miraikitra amin'ny litera lehibe na kely).",
-  "text-contains-trigger-label": "Lahatsoratra tadiavina"
+  "text-contains-trigger-label": "Lahatsoratra tadiavina",
+  "event-action": "Hetsika",
+  "event-attempts": "Fanandramana",
+  "event-bleed": "Anarana",
+  "event-category": "Sokajy",
+  "event-datetime": "Daty sy ora",
+  "event-detail": "Antsipiriany",
+  "event-severity": "Hamafin'ny olana",
+  "event-source": "Loharano",
+  "password-length-report-title": "Halavan'ny teny miafina",
+  "recoveryReportTitle": "Famerenana",
+  "securityReportTitle": "Tatitra fiarovana"
 }

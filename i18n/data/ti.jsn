@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "ናይ Wrike ኣገባብ ስራሕ",
   "r-wrike-workflow-note": "ናይ Wrike ኣገባብ ስራሕ ዝርዝር ኩነታት እዩ፡ ነፍሲ ወከፎም ኣብ ጉጅለ Active፡ Completed፡ Deferred ወይ Cancelled። ምውጻእ ዝርዝራት ናይዚ ሰሌዳ ከም ሓደ፡ ብስም ሰሌዳ ዝተሰምየ፡ ብናይ JSON ቅርጺ Wrike API ንኣገባባት ስራሕ ዝመልሶ ይጽሕፍ፦ ቅድሚ ናይ Wrike Excel ምውጻእ ናይቲ ሰሌዳ ምእታው ነቲ ኣገባብ ስራሕ ኣብ Wrike ፍጠሮ፡ ምእንቲ ኩነታቱ ክትግበሩ። ምእታው ነቲ ኣብ ላዕሊ ዝተለጠፈ JSON፡ ካብ WeKan ወይ ካብ ናይ Wrike GET /workflows፡ ናብቲ ዝተመርጸ ሰሌዳ የንብብ፦ ዝርዝር ዘይብሉ ኩነታት ዝርዝር ይኸውን፡ ሓደ ሕጊ ድማ ካርድ ናብ Completed ወይ Cancelled ኩነታት ምስ ዝግዕዝ ከም ዝተዛዘመ፡ ኣብ Active ወይ Deferred ድማ ከም ዘይተዛዘመ ይምልክቶ። ናይ Wrike ገዛእ ርእሱ ሕግታት ኣውቶማቲክ ካብ Wrike ክወጹ ኣይክእሉን።",
   "text-contains-trigger-description": "ካርዲ ምስ ዝፍጠር፡ ወይ ኣርእስቱ ወይ መግለጺኡ ምስ ዝቕየር፡ ሓድሽ ጽሑፍ ነዚ ምስ ዝሓዘ ይሰማማዕ (ዓቢ ወይ ንኡስ ፊደል ኣይፍለን)።",
-  "text-contains-trigger-label": "ዝድለ ጽሑፍ"
+  "text-contains-trigger-label": "ዝድለ ጽሑፍ",
+  "event-action": "ተግባር",
+  "event-attempts": "ፈተነታት",
+  "event-bleed": "ስም",
+  "event-category": "ምድብ",
+  "event-datetime": "ዕለትን ሰዓትን",
+  "event-detail": "ዝርዝር ሓበሬታ",
+  "event-severity": "ክብደት",
+  "event-source": "ምንጪ",
+  "password-length-report-title": "ንውሓት መሕለፊ ቃል",
+  "recoveryReportTitle": "ምሕዋይ",
+  "securityReportTitle": "ጸብጻብ ድሕነት"
 }

@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Ток рада Wrike",
   "r-wrike-workflow-note": "Ток рада Wrike је листа статуса, сваки у групи Active, Completed, Deferred или Cancelled. Извоз записује делове поступка са ове табле као један ток рада, назван по табли, у JSON облику који Wrike API враћа за токове рада: направите тај ток рада у Wrike-у пре увоза извозне датотеке табле у формату Wrike Excel како би се применили његови статуси. Увоз чита горе налепљени JSON из WeKan-а или захтева GET /workflows из Wrike-а у изабрану таблу: статус без дела поступка постаје део поступка, а правило означава картицу као завршену када се премести у статус Completed или Cancelled и као незавршену у статусу Active или Deferred. Сопствена правила аутоматизације Wrike-а не могу да се извезу из Wrike-а.",
   "text-contains-trigger-description": "Поклапа се када се картица направи, или се њен наслов или опис промени, а нови текст садржи ово (без разликовања великих и малих слова).",
-  "text-contains-trigger-label": "Текст за претрагу"
+  "text-contains-trigger-label": "Текст за претрагу",
+  "event-action": "Радња",
+  "event-attempts": "Покушаји",
+  "event-bleed": "Назив",
+  "event-category": "Категорија",
+  "event-datetime": "Датум и време",
+  "event-detail": "Детаљ",
+  "event-severity": "Озбиљност",
+  "event-source": "Извор",
+  "password-length-report-title": "Дужина лозинке",
+  "recoveryReportTitle": "Опоравак",
+  "securityReportTitle": "Безбедност"
 }

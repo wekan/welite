@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-bargogolgan",
   "r-wrike-workflow-note": "Wrike-bargogolgan lea dilálistu, juohke dilli Active-, Completed-, Deferred- dahje Cancelled-joavkkus. Olggosfievrrideapmi čállá dán távvala listtuid ovttan, távvala nama mielde, dan JSON-hámis maid Wrike API máhcaha bargogolganiidda: ráhkat dan bargogolgana Wrikes ovdal go sisafievrridat távvala Wrike Excel-olggosfievrrideami, vai dan dilit geavahuvvojit. Sisafievrrideapmi lohká dan JSON:a mii lea liibmejuvvon bajábeallái, WeKanis dahje Wrike GET /workflows:as, válljejuvvon távvalii: dilli mas ii leat listu šaddá listun, ja njuolggadus merke goartta gárvvisin go dat sirdojuvvo Completed- dahje Cancelled-dillái ja gárvvekeahttun Active- dahje Deferred-dillái. Wrike iežas automatiserennjuolggadusaid ii sáhte olggosfievrridit Wrikes.",
   "text-contains-trigger-description": "Heivve go korta ráhkaduvvo, dahje su namahus dahje čilgehus rievdaduvvo, ja ođđa teaksta sisttisdoallá dán (stuora ja smávva bustávaid gaskkas ii leat erohus).",
-  "text-contains-trigger-label": "Teaksta maid ohcat"
+  "text-contains-trigger-label": "Teaksta maid ohcat",
+  "event-action": "Doaibma",
+  "event-attempts": "Geahččaleamit",
+  "event-bleed": "Namma",
+  "event-category": "Kategoriija",
+  "event-datetime": "Beaivi ja áigi",
+  "event-detail": "Dárkilvuohta",
+  "event-severity": "Duođalašvuohta",
+  "event-source": "Gáldu",
+  "password-length-report-title": "Beassansáni guhkkodat",
+  "recoveryReportTitle": "Máhcaheapmi",
+  "securityReportTitle": "Sihkarvuođaraporta"
 }

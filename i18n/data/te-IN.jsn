@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike వర్క్‌ఫ్లో",
   "r-wrike-workflow-note": "Wrike వర్క్‌ఫ్లో అనేది స్థితుల జాబితా, ప్రతి ఒక్కటి Active, Completed, Deferred లేదా Cancelled సమూహంలో ఉంటుంది. ఎగుమతి ఈ బోర్డు జాబితాలను బోర్డు పేరుతో ఒకే వర్క్‌ఫ్లోగా, వర్క్‌ఫ్లోల కోసం Wrike API తిరిగి ఇచ్చే JSON లో వ్రాస్తుంది: బోర్డు Wrike Excel ఎగుమతిని దిగుమతి చేసే ముందు Wrike లో ఆ వర్క్‌ఫ్లోను సృష్టించండి, తద్వారా దాని స్థితులు వర్తిస్తాయి. దిగుమతి పైన అతికించిన ఆ JSON ను, WeKan నుండి లేదా Wrike GET /workflows నుండి, ఎంచుకున్న బోర్డులోకి చదువుతుంది: జాబితా లేని స్థితి జాబితాగా మారుతుంది, మరియు Completed లేదా Cancelled స్థితికి తరలించినప్పుడు కార్డ్‌ను పూర్తయినదిగా, Active లేదా Deferred స్థితిలో అసంపూర్ణంగా గుర్తించే నియమం జోడించబడుతుంది. Wrike సొంత ఆటోమేషన్ నియమాలను Wrike నుండి ఎగుమతి చేయలేరు.",
   "text-contains-trigger-description": "కార్డు సృష్టించబడినప్పుడు లేదా దాని శీర్షిక లేదా వివరణ మార్చబడినప్పుడు మరియు కొత్త వచనం దీన్ని కలిగి ఉంటే సరిపోలుతుంది (అక్షర పరిమాణంతో సంబంధం లేదు).",
-  "text-contains-trigger-label": "శోధించవలసిన వచనం"
+  "text-contains-trigger-label": "శోధించవలసిన వచనం",
+  "event-action": "చర్య",
+  "event-attempts": "ప్రయత్నాలు",
+  "event-bleed": "పేరు",
+  "event-category": "వర్గం",
+  "event-datetime": "తేదీ మరియు సమయం",
+  "event-detail": "వివరం",
+  "event-severity": "తీవ్రత",
+  "event-source": "మూలం",
+  "password-length-report-title": "పాస్‌వర్డ్ పొడవు",
+  "recoveryReportTitle": "పునరుద్ధరణ",
+  "securityReportTitle": "భద్రత"
 }

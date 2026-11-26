@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Phallo ya mošomo ya Wrike",
   "r-wrike-workflow-note": "Phallo ya mošomo ya Wrike ke lelokelelo la maemo, le lengwe le le lengwe le le sehlopheng sa Active, Completed, Deferred goba Cancelled. Go romela go ngwala malokelelo a poto ye bjalo ka phallo e tee, e reetšwe ka poto, ka JSON yeo API ya Wrike e e bušetšago bakeng sa diphallo tša mošomo: hlama phallo yeo ya mošomo go Wrike pele o tsenya go romela ga Excel ga Wrike ga poto, gore maemo a yona a šomišwe. Go tsenya go bala JSON yeo e kgomareditšwego ka godimo, go tšwa go WeKan goba go GET /workflows ya Wrike, go poto ye e kgethilwego: boemo bjo bo se nago lelokelelo bo fetoga lelokelelo, gomme molao o swaya karata e feditšwe ge e išwa boemong bja Completed goba Cancelled, gomme e sa fela boemong bja Active goba Deferred. Melao ya Wrike ya go itiriša ga e kgone go romelwa go tšwa go Wrike.",
   "text-contains-trigger-description": "E swanelana ge karata e hlangwa, goba hlogo goba tlhaloso ya yona e fetošwa, gomme sengwalwa se seswa se na le se (ga go na phapano magareng a ditlhaka tše kgolo le tše nnyane).",
-  "text-contains-trigger-label": "Sengwalwa seo se nyakwago"
+  "text-contains-trigger-label": "Sengwalwa seo se nyakwago",
+  "event-action": "Tiro",
+  "event-attempts": "Maiteko",
+  "event-bleed": "Leina",
+  "event-category": "Legoro",
+  "event-datetime": "Letšatšikgwedi le nako",
+  "event-detail": "Ntlha",
+  "event-severity": "Bogale",
+  "event-source": "Mothopo",
+  "password-length-report-title": "Botelele bja lentšu la sephiri",
+  "recoveryReportTitle": "Khwetšo",
+  "securityReportTitle": "Pego ya Tšhireletšo"
 }

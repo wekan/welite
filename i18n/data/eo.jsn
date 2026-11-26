@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Laborfluo de Wrike",
   "r-wrike-workflow-note": "Laborfluo de Wrike estas listo de statoj, ĉiu en la grupo Active, Completed, Deferred aŭ Cancelled. Eksporto skribas la listojn de ĉi tiu tabulo kiel tian laborfluon, nomitan laŭ la tabulo, en la JSON-formato, kiun la API de Wrike liveras por laborfluoj: kreu tiun laborfluon en Wrike antaŭ ol importi la eksporton de la tabulo en Wrike Excel, por ke ĝiaj statoj estu aplikataj. Importo legas tiun JSON, algluitan supre, el WeKan aŭ el GET /workflows de Wrike, en la elektitan tabulon: stato sen listo fariĝas listo, kaj regulo markas karton finita kiam ĝi estas movita al stato Completed aŭ Cancelled, kaj nefinita ĉe Active aŭ Deferred. La propraj aŭtomatigaj reguloj de Wrike ne povas esti eksportitaj el Wrike.",
   "text-contains-trigger-description": "Kongruas kiam karto estas kreita, aŭ ĝia titolo aŭ priskribo estas ŝanĝita, kaj la nova teksto enhavas ĉi tion (sen distingo inter majuskloj kaj minuskloj).",
-  "text-contains-trigger-label": "Teksto serĉenda"
+  "text-contains-trigger-label": "Teksto serĉenda",
+  "event-action": "Ago",
+  "event-attempts": "Provoj",
+  "event-bleed": "Nomo",
+  "event-category": "Kategorio",
+  "event-datetime": "Dato kaj horo",
+  "event-detail": "Detalo",
+  "event-severity": "Graveco",
+  "event-source": "Fonto",
+  "password-length-report-title": "Longo de pasvorto",
+  "recoveryReportTitle": "Reakiro",
+  "securityReportTitle": "Sekureco"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ورڪ فلو",
   "r-wrike-workflow-note": "Wrike ورڪ فلو حالتن جي هڪ فهرست آهي، هر هڪ Active، Completed، Deferred يا Cancelled گروپ ۾. برآمد هن بورڊ جون فهرستون بورڊ جي نالي سان هڪ ورڪ فلو طور، ان JSON ۾ لکي ٿي جيڪو Wrike جي API ورڪ فلوز لاءِ ڏئي ٿي: بورڊ جي Wrike Excel برآمد درآمد ڪرڻ کان اڳ Wrike ۾ اهو ورڪ فلو ٺاهيو، ته جيئن ان جون حالتون لاڳو ٿين. درآمد مٿي پيسٽ ٿيل اهو JSON، WeKan مان يا Wrike جي GET /workflows مان، چونڊيل بورڊ ۾ پڙهي ٿي: فهرست کان سواءِ حالت فهرست بڻجي ٿي، ۽ هڪ قاعدو ڪارڊ کي مڪمل نشان لڳائي ٿو جڏهن اهو Completed يا Cancelled حالت ۾ منتقل ٿئي ۽ Active يا Deferred ۾ اڻپورو. Wrike جا پنهنجا آٽوميشن قاعدا Wrike مان برآمد نٿا ٿي سگهن.",
   "text-contains-trigger-description": "ملي ٿو جڏهن ڪارڊ ٺهي ٿو، يا ان جو عنوان يا وضاحت تبديل ٿئي ٿي، ۽ نئون متن هي شامل رکي ٿو (وڏن ننڍن اکرن ۾ فرق ناهي).",
-  "text-contains-trigger-label": "ڳوليو لاءِ متن"
+  "text-contains-trigger-label": "ڳوليو لاءِ متن",
+  "event-action": "عمل",
+  "event-attempts": "ڪوششون",
+  "event-bleed": "نالو",
+  "event-category": "زمرو",
+  "event-datetime": "تاريخ ۽ وقت",
+  "event-detail": "تفصيل",
+  "event-severity": "شدت",
+  "event-source": "ذريعو",
+  "password-length-report-title": "ڳجهي لفظ جي ڊيگهه",
+  "recoveryReportTitle": "بحالي",
+  "securityReportTitle": "سلامتيءَ جي رپورٽ"
 }

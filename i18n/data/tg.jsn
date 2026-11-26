@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Ҷараёни кории Wrike",
   "r-wrike-workflow-note": "Ҷараёни кории Wrike рӯйхати ҳолатҳост, ҳар кадом дар гурӯҳи Active, Completed, Deferred ё Cancelled. Содирот рӯйхатҳои ин тахтаро ҳамчун як ҷараён, бо номи тахта, дар JSON-е менависад, ки API-и Wrike барои ҷараёнҳои корӣ бармегардонад: пеш аз ворид кардани содироти Excel-и Wrike-и тахта ин ҷараёнро дар Wrike созед, то ҳолатҳояш татбиқ шаванд. Воридот JSON-и дар боло гузошташударо, аз WeKan ё аз GET /workflows-и Wrike, ба тахтаи интихобшуда мехонад: ҳолати бе рӯйхат рӯйхат мешавад, ва қоида кортро ҳангоми гузаронидан ба ҳолати Completed ё Cancelled анҷомёфта ва дар ҳолати Active ё Deferred анҷомнаёфта қайд мекунад. Қоидаҳои худкории худи Wrike-ро аз Wrike содир кардан мумкин нест.",
   "text-contains-trigger-description": "Вақте ки корт эҷод мешавад, ё сарлавҳа ё тавсифи он тағйир меёбад ва матни нав инро дар бар мегирад, мувофиқат мекунад (новобаста аз ҳарфи калон ё хурд).",
-  "text-contains-trigger-label": "Матни ҷустуҷӯшаванда"
+  "text-contains-trigger-label": "Матни ҷустуҷӯшаванда",
+  "event-action": "Амал",
+  "event-attempts": "Кӯшишҳо",
+  "event-bleed": "Ном",
+  "event-category": "Гурӯҳ",
+  "event-datetime": "Сана ва вақт",
+  "event-detail": "Тафсилот",
+  "event-severity": "Шиддат",
+  "event-source": "Манбаъ",
+  "password-length-report-title": "Дарозии рамз",
+  "recoveryReportTitle": "Барқарорсозӣ",
+  "securityReportTitle": "Гузориши амният"
 }

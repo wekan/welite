@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Verkflæði Wrike",
   "r-wrike-workflow-note": "Verkflæði Wrike er listi yfir stöður, hver í hópnum Active, Completed, Deferred eða Cancelled. Útflutningur skrifar lista þessarar töflu sem eitt verkflæði, nefnt eftir töflunni, á JSON-sniðinu sem API Wrike skilar fyrir verkflæði: búðu til það verkflæði í Wrike áður en þú flytur inn Wrike Excel-útflutning töflunnar svo stöðurnar verði notaðar. Innflutningur les JSON sem er límt inn hér að ofan, úr WeKan eða GET /workflows í Wrike, inn á valda töflu: staða án lista verður að lista og regla merkir spjald sem lokið þegar það er fært í stöðuna Completed eða Cancelled og sem ólokið í stöðunni Active eða Deferred. Ekki er hægt að flytja eigin sjálfvirknireglur Wrike út úr Wrike.",
   "text-contains-trigger-description": "Passar þegar spjald er búið til, eða titli þess eða lýsingu er breytt, og nýi textinn inniheldur þetta (ekki næmt fyrir há- og lágstöfum).",
-  "text-contains-trigger-label": "Texti sem á að leita að"
+  "text-contains-trigger-label": "Texti sem á að leita að",
+  "event-action": "Aðgerð",
+  "event-attempts": "Tilraunir",
+  "event-bleed": "Nafn",
+  "event-category": "Flokkur",
+  "event-datetime": "Dagsetning og tími",
+  "event-detail": "Upplýsingar",
+  "event-severity": "Alvarleiki",
+  "event-source": "Uppruni",
+  "password-length-report-title": "Lengd lykilorðs",
+  "recoveryReportTitle": "Endurheimt",
+  "securityReportTitle": "Öryggisskýrsla"
 }

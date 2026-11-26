@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Pracovný postup Wrike",
   "r-wrike-workflow-note": "Pracovný postup Wrike je zoznam stavov, z ktorých každý patrí do skupiny Active, Completed, Deferred alebo Cancelled. Export zapíše zoznamy tejto nástenky ako jeden pracovný postup pomenovaný podľa nástenky, vo formáte JSON, ktorý API Wrike vracia pre pracovné postupy: tento pracovný postup vytvorte vo Wrike pred importom exportu nástenky vo formáte Wrike Excel, aby sa použili jeho stavy. Import načíta vyššie vložený JSON z WeKan alebo z GET /workflows vo Wrike do vybranej nástenky: zo stavu bez zoznamu sa stane zoznam a pravidlo označí kartu ako dokončenú pri presune do stavu Completed alebo Cancelled a ako nedokončenú v stave Active alebo Deferred. Vlastné automatizačné pravidlá Wrike nemožno z Wrike exportovať.",
   "text-contains-trigger-description": "Zhoduje sa, keď je karta vytvorená alebo je zmenený jej názov či popis a nový text toto obsahuje (bez rozlišovania veľkých a malých písmen).",
-  "text-contains-trigger-label": "Text na vyhľadanie"
+  "text-contains-trigger-label": "Text na vyhľadanie",
+  "event-action": "Akcia",
+  "event-attempts": "Pokusy",
+  "event-bleed": "Názov",
+  "event-category": "Kategória",
+  "event-datetime": "Dátum a čas",
+  "event-detail": "Podrobnosti",
+  "event-severity": "Závažnosť",
+  "event-source": "Zdroj",
+  "password-length-report-title": "Dĺžka hesla",
+  "recoveryReportTitle": "Obnova",
+  "securityReportTitle": "Bezpečnosť"
 }

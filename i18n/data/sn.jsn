@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Maitiro ebasa eWrike",
   "r-wrike-workflow-note": "Maitiro ebasa eWrike irondedzero yemamiriro, rimwe nerimwe riri muboka reActive, Completed, Deferred kana Cancelled. Kubudisa kunonyora marondedzero ebhodhi rino semaitiro mamwe, akatumidzwa zita rebhodhi, muJSON inodzoswa neAPI yeWrike yemaitiro ebasa: gadzira maitiro iwayo muWrike usati wapinza kubudisa kweExcel kweWrike kwebhodhi, kuti mamiriro awo ashandiswe. Kupinza kunoverenga JSON iyoyo yaiswa pamusoro apa, kubva kuWeKan kana kuGET /workflows yeWrike, mubhodhi rakasarudzwa: mamiriro asina rondedzero anova rondedzero, uye mutemo unoratidza kadhi serakapedzwa kana rafambiswa kumamiriro eCompleted kana Cancelled uye risina kupedzwa muActive kana Deferred. Mitemo yeWrike yekuzviitira yega haigone kubudiswa kubva kuWrike.",
   "text-contains-trigger-description": "Inoenderana kana kadhi richigadzirwa, kana musoro kana tsanangudzo yacho ichishandurwa, uye mazwi matsva aine izvi (asina musiyano wemavara makuru nemadiki).",
-  "text-contains-trigger-label": "Mazwi okutsvaga"
+  "text-contains-trigger-label": "Mazwi okutsvaga",
+  "event-action": "chiito",
+  "event-attempts": "Kuedza",
+  "event-bleed": "Zita",
+  "event-category": "Boka",
+  "event-datetime": "zuva uye nguva",
+  "event-detail": "Ruzivo",
+  "event-severity": "Kukomba",
+  "event-source": "Kunobva",
+  "password-length-report-title": "Kureba kwepasiwedhi",
+  "recoveryReportTitle": "Kudzoreredza",
+  "securityReportTitle": "Mushumo wechengetedzo"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike 工作流程",
   "r-wrike-workflow-note": "Wrike 工作流程是一組狀態，每個狀態屬於 Active、Completed、Deferred 或 Cancelled 群組。匯出會將此看板的清單寫成一個以看板名稱命名的工作流程，使用 Wrike API 傳回工作流程時的 JSON 格式：在匯入看板的 Wrike Excel 匯出檔案之前，先在 Wrike 中建立該工作流程，以便套用其狀態。匯入會將上方貼上的 JSON（來自 WeKan 或 Wrike 的 GET /workflows）讀入選取的看板：沒有對應清單的狀態會成為清單；規則會在卡片移入 Completed 或 Cancelled 狀態時將其標記為已完成，在 Active 或 Deferred 狀態時標記為未完成。無法從 Wrike 匯出其本身的自動化規則。",
   "text-contains-trigger-description": "當建立卡片，或其標題或描述被變更，且新文字包含此內容時符合（不區分大小寫）。",
-  "text-contains-trigger-label": "要搜尋的文字"
+  "text-contains-trigger-label": "要搜尋的文字",
+  "event-action": "動作",
+  "event-attempts": "嘗試",
+  "event-bleed": "名稱",
+  "event-category": "類別",
+  "event-datetime": "日期和時間",
+  "event-detail": "詳細資訊",
+  "event-severity": "嚴重程度",
+  "event-source": "來源",
+  "password-length-report-title": "密碼長度",
+  "recoveryReportTitle": "還原",
+  "securityReportTitle": "安全"
 }

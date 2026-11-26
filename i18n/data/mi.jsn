@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Rerenga mahi Wrike",
   "r-wrike-workflow-note": "He rārangi tūnga te rerenga mahi Wrike, kei ia tūnga tōna rōpū Active, Completed, Deferred, Cancelled rānei. Ka tuhi te kaweatu i ngā rārangi o tēnei papa hei rerenga mahi kotahi, kua tapaina ki te ingoa o te papa, ki te JSON ka whakahokia e te API a Wrike mō ngā rerenga mahi: hangaia taua rerenga mahi i Wrike i mua i te kawemai i te kaweatu Excel Wrike o te papa, kia whakahāngaitia ōna tūnga. Ka pānui te kawemai i taua JSON kua whakapiria i runga ake, mai i WeKan, mai i te GET /workflows a Wrike rānei, ki te papa kua kōwhiria: ka huri tētahi tūnga kāore ōna rārangi hei rārangi, ā, ka tohu tētahi ture i tētahi kāri kua oti ina nekehia ki tētahi tūnga Completed, Cancelled rānei, kāore anō kia oti i tētahi Active, Deferred rānei. Kāore e taea te kaweatu i ngā ture aunoa ake a Wrike mai i Wrike.",
   "text-contains-trigger-description": "Ka taurite ina hangaia he kāri, ina rerekē rānei te taitara, te whakaahuatanga rānei, ā, kei roto i te kuputuhi hōu tēnei (kāore e aro ki ngā reta nui, iti rānei).",
-  "text-contains-trigger-label": "Kuputuhi hei rapu"
+  "text-contains-trigger-label": "Kuputuhi hei rapu",
+  "event-action": "Hohenga",
+  "event-attempts": "Ngā Whakamātau",
+  "event-bleed": "Ingoa",
+  "event-category": "Kāwai",
+  "event-datetime": "Rā me te wā",
+  "event-detail": "Taipitopito",
+  "event-severity": "Taumaha",
+  "event-source": "Pūtake",
+  "password-length-report-title": "Te roa o te kupuhipa",
+  "recoveryReportTitle": "Whakaora",
+  "securityReportTitle": "Pūrongo Haumarutanga"
 }

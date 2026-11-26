@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike कार्यप्रवाह",
   "r-wrike-workflow-note": "Wrike कार्यप्रवाह स्थितियों की एक सूची है; हर स्थिति Active, Completed, Deferred या Cancelled समूह में होती है। निर्यात इस बोर्ड की सूचियों को बोर्ड के नाम वाले एक कार्यप्रवाह के रूप में उस JSON प्रारूप में लिखता है जो Wrike का API कार्यप्रवाहों के लिए लौटाता है: बोर्ड की Wrike Excel निर्यात फ़ाइल आयात करने से पहले Wrike में वह कार्यप्रवाह बनाएँ, ताकि उसकी स्थितियाँ लागू हों। आयात ऊपर चिपकाए गए JSON को, चाहे वह WeKan से हो या Wrike के GET /workflows से, चुने हुए बोर्ड में पढ़ता है: बिना सूची वाली स्थिति एक सूची बन जाती है, और एक नियम कार्ड को Completed या Cancelled स्थिति में ले जाने पर पूरा तथा Active या Deferred स्थिति में अधूरा चिह्नित करता है। Wrike के अपने स्वचालन नियमों को Wrike से निर्यात नहीं किया जा सकता।",
   "text-contains-trigger-description": "यह तब मेल खाता है जब कार्ड बनाया जाता है, या उसका शीर्षक या विवरण बदला जाता है, और नया पाठ इसे शामिल करता है (बड़े-छोटे अक्षरों में अंतर नहीं)।",
-  "text-contains-trigger-label": "खोजने के लिए पाठ"
+  "text-contains-trigger-label": "खोजने के लिए पाठ",
+  "event-action": "क्रिया",
+  "event-attempts": "प्रयास",
+  "event-bleed": "नाम",
+  "event-category": "श्रेणी",
+  "event-datetime": "दिनांक और समय",
+  "event-detail": "विवरण",
+  "event-severity": "गंभीरता",
+  "event-source": "स्रोत",
+  "password-length-report-title": "पासवर्ड की लंबाई",
+  "recoveryReportTitle": "पुनर्प्राप्ति",
+  "securityReportTitle": "सुरक्षा"
 }

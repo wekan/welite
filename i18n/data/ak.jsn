@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike adwuma kwan",
   "r-wrike-workflow-note": "Wrike adwuma kwan yɛ tebea ahodoɔ nhwɛso, na biara wɔ Active, Completed, Deferred anaa Cancelled kuo mu. Yi adi kyerɛw bɔɔd yi nhwɛso sɛ adwuma kwan baako, a wɔde bɔɔd no din too so, wɔ JSON a Wrike API de ma adwuma akwan mu: yɛ saa adwuma kwan no wɔ Wrike mu ansa na wode bɔɔd no Wrike Excel a wɔayi adi aba mu, sɛdeɛ ne tebea bɛyɛ adwuma. Fa ba mu kenkan JSON a wɔde ahyɛ mu wɔ soro no, fi WeKan anaa Wrike GET /workflows, kɔ bɔɔd a wɔapaw no mu: tebea a nhwɛso nni hɔ ma no bɛyɛ nhwɛso, na mmara bi hyɛ kaad agyiraeɛ sɛ awie sɛ wɔde kɔ Completed anaa Cancelled tebea mu, na ɛnwieeɛ sɛ ɛwɔ Active anaa Deferred mu. Wontumi nyi Wrike ankasa automation mmara mfi Wrike mu.",
   "text-contains-trigger-description": "Ɛfata bere a wɔyɛ krataa foforo, anaa wɔsesa ne ti anaa nkyerɛkyerɛmu, na nsɛm foforo no wɔ eyi mu (aksɛrɛ akɛse ne nketewa nnyɛ hwee).",
-  "text-contains-trigger-label": "Nsɛm a wɔrehwehwɛ"
+  "text-contains-trigger-label": "Nsɛm a wɔrehwehwɛ",
+  "event-action": "Adeyɛ",
+  "event-attempts": "Mpɛn a wɔasɔ ahwɛ",
+  "event-bleed": "Din",
+  "event-category": "Ɔfã",
+  "event-datetime": "Da ne bere",
+  "event-detail": "Nkyerɛkyerɛmu",
+  "event-severity": "Sɛnea emu yɛ den",
+  "event-source": "Fibea",
+  "password-length-report-title": "Ahintasɛm tenten",
+  "recoveryReportTitle": "San fa bra",
+  "securityReportTitle": "Ahobammɔ ho amanneɛbɔ"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "ڕەوتی کاری Wrike",
   "r-wrike-workflow-note": "ڕەوتی کاری Wrike لیستێکی دۆخەکانە، هەریەکەیان لە گرووپی Active، Completed، Deferred یان Cancelled. هەناردەکردن لیستەکانی ئەم تەختەیە وەک یەک ڕەوتی کار دەنووسێت، بە ناوی تەختەکەوە، لەو JSON ـەی کە API ی Wrike بۆ ڕەوتەکانی کار دەیگەڕێنێتەوە: ئەو ڕەوتی کارە لە Wrike دروست بکە پێش هاوردەکردنی هەناردەی Excel ی Wrike ی تەختەکە، بۆ ئەوەی دۆخەکانی جێبەجێ بکرێن. هاوردەکردن ئەو JSON ـە دەخوێنێتەوە کە لە سەرەوە لکێنراوە، لە WeKan یان لە GET /workflows ی Wrike، بۆ ناو تەختە هەڵبژێردراوەکە: دۆخێک بێ لیست دەبێتە لیست، و یاسایەک کارتێک وەک تەواوبوو نیشان دەکات کاتێک دەگوازرێتەوە بۆ دۆخێکی Completed یان Cancelled و وەک تەواونەبوو لە دۆخێکی Active یان Deferred. یاسا خۆکارەکانی خودی Wrike ناتوانرێن لە Wrike هەناردە بکرێن.",
   "text-contains-trigger-description": "يتطابق عند إنشاء بطاقة، أو تغيير عنوانها أو وصفها، ويحتوي النص الجديد على هذا (دون تمييز بين الأحرف الكبيرة والصغيرة).",
-  "text-contains-trigger-label": "النص المراد البحث عنه"
+  "text-contains-trigger-label": "النص المراد البحث عنه",
+  "event-action": "کردار",
+  "event-attempts": "هەوڵەکان",
+  "event-bleed": "ناو",
+  "event-category": "پۆل",
+  "event-datetime": "بەروار و کات",
+  "event-detail": "وردەکاری",
+  "event-severity": "توندی",
+  "event-source": "سەرچاوە",
+  "password-length-report-title": "درێژیی وشەی نهێنی",
+  "recoveryReportTitle": "گەڕاندنەوە",
+  "securityReportTitle": "ڕاپۆرتی ئاسایش"
 }

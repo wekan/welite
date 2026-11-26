@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike-arbejdsgang",
   "r-wrike-workflow-note": "En Wrike-arbejdsgang er en liste over statusser, hver i gruppen Active, Completed, Deferred eller Cancelled. Eksporten skriver denne tavles lister som én sådan arbejdsgang, navngivet efter tavlen, i det JSON-format, som Wrikes API returnerer for arbejdsgange: opret arbejdsgangen i Wrike, før du importerer tavlens Wrike Excel-eksport, så dens statusser anvendes. Importen læser den JSON, der er indsat ovenfor, fra WeKan eller Wrikes GET /workflows, ind i den valgte tavle: en status uden en liste bliver en liste, og en regel markerer et kort som fuldført, når det flyttes til statussen Completed eller Cancelled, og som ikke fuldført i Active eller Deferred. Wrikes egne automatiseringsregler kan ikke eksporteres fra Wrike.",
   "text-contains-trigger-description": "Matcher når et kort oprettes, eller dets titel eller beskrivelse ændres, og den nye tekst indeholder dette (uafhængigt af store/små bogstaver).",
-  "text-contains-trigger-label": "Tekst der skal søges efter"
+  "text-contains-trigger-label": "Tekst der skal søges efter",
+  "event-action": "Handling",
+  "event-attempts": "Forsøg",
+  "event-bleed": "Navn",
+  "event-category": "Kategori",
+  "event-datetime": "Dato og klokkeslæt",
+  "event-detail": "Detalje",
+  "event-severity": "Alvorsgrad",
+  "event-source": "Kilde",
+  "password-length-report-title": "Kodeordslængde",
+  "recoveryReportTitle": "Gendannelse",
+  "securityReportTitle": "Sikkerhed"
 }

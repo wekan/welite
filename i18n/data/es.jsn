@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Flujo de trabajo de Wrike",
   "r-wrike-workflow-note": "Un flujo de trabajo de Wrike es una lista de estados, cada uno en el grupo Active, Completed, Deferred o Cancelled. La exportación escribe las listas de este tablero como un flujo de ese tipo, con el nombre del tablero, en el formato JSON que devuelve la API de Wrike para los flujos de trabajo: crea ese flujo en Wrike antes de importar la exportación Wrike Excel del tablero, para que se apliquen sus estados. La importación lee el JSON pegado arriba, procedente de WeKan o de GET /workflows de Wrike, en el tablero elegido: un estado sin lista se convierte en una lista, y una regla marca una tarjeta como completada cuando se mueve a un estado Completed o Cancelled y como no completada en un estado Active o Deferred. Las propias reglas de automatización de Wrike no se pueden exportar desde Wrike.",
   "text-contains-trigger-description": "Coincide cuando se crea una tarjeta, o se cambia su título o descripción, y el nuevo texto contiene esto (sin distinguir mayúsculas y minúsculas).",
-  "text-contains-trigger-label": "Texto a buscar"
+  "text-contains-trigger-label": "Texto a buscar",
+  "event-action": "Acción",
+  "event-attempts": "Intentos",
+  "event-bleed": "Nombre",
+  "event-category": "Categoría",
+  "event-datetime": "Fecha y hora",
+  "event-detail": "Detalle",
+  "event-severity": "Gravedad",
+  "event-source": "Origen",
+  "password-length-report-title": "Longitud de la contraseña",
+  "recoveryReportTitle": "Recuperación",
+  "securityReportTitle": "Seguridad"
 }

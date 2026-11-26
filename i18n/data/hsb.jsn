@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-dźěłowy wotběh",
   "r-wrike-workflow-note": "Wrike-dźěłowy wotběh je lisćina statusow, kóždy w skupinje Active, Completed, Deferred abo Cancelled. Eksport zapisa lisćiny tuteje tafle jako jedyn wotběh z mjenom tafle, w JSON, kotryž API Wrike za dźěłowe wotběhi wróći: wutworće tutón wotběh we Wrike, prjedy hač Excel-eksport tafle do Wrike importujeće, zo bychu so jeho statusy nałožili. Import čita tutón horjeka zasadźeny JSON, z WeKan abo z GET /workflows Wrike, do wubraneje tafle: status bjez lisćiny budźe lisćina, a prawidło markěruje kartu jako dokónčenu, hdyž so do statusa Completed abo Cancelled přesunje, a jako njedokónčenu w statusu Active abo Deferred. Swójske awtomatiske prawidła Wrike njedadźa so z Wrike eksportować.",
   "text-contains-trigger-description": "Wotpowěduje, hdyž so karta wutwori abo so jeje titul abo wopisanje změni a nowy tekst to wobsahuje (bjez rozeznawanja wulkopisanja).",
-  "text-contains-trigger-label": "Tekst za pytanje"
+  "text-contains-trigger-label": "Tekst za pytanje",
+  "event-action": "Akcija",
+  "event-attempts": "Pospyty",
+  "event-bleed": "Mjeno",
+  "event-category": "Kategorija",
+  "event-datetime": "Datum a čas",
+  "event-detail": "Podrobnosć",
+  "event-severity": "Ćežkosć",
+  "event-source": "Žórło",
+  "password-length-report-title": "Dołhosć hesła",
+  "recoveryReportTitle": "Wobnowjenje",
+  "securityReportTitle": "Rozprawa wo wěstoće"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike خىزمەت ئېقىمى",
   "r-wrike-workflow-note": "Wrike خىزمەت ئېقىمى ھالەتلەر تىزىملىكى بولۇپ، ھەر بىرى Active، Completed، Deferred ياكى Cancelled گۇرۇپپىسىدا بولىدۇ. ئېكسپورت بۇ تاختىنىڭ تىزىملىكلىرىنى تاختا ئىسمىدىكى بىر ئېقىم قىلىپ، Wrike API خىزمەت ئېقىملىرى ئۈچۈن قايتۇرىدىغان JSON دا يازىدۇ: تاختىنىڭ Wrike Excel ئېكسپورتىنى ئەكىرىشتىن بۇرۇن ئۇ خىزمەت ئېقىمىنى Wrike دا قۇرۇڭ، شۇندا ئۇنىڭ ھالەتلىرى قوللىنىلىدۇ. ئەكىرىش يۇقىرىغا چاپلانغان، WeKan دىن ياكى Wrike نىڭ GET /workflows دىن كەلگەن JSON نى تاللانغان تاختىغا ئوقۇيدۇ: تىزىملىكى يوق ھالەت تىزىملىككە ئايلىنىدۇ، قائىدە كارتا Completed ياكى Cancelled ھالىتىگە يۆتكەلگەندە ئۇنى تامام، Active ياكى Deferred ھالىتىدە تامام ئەمەس دەپ بەلگىلەيدۇ. Wrike نىڭ ئۆز ئاپتوماتلاشتۇرۇش قائىدىلىرىنى Wrike دىن ئېكسپورت قىلغىلى بولمايدۇ.",
   "text-contains-trigger-description": "كارتا قۇرۇلغاندا، ياكى ماۋزۇسى/چۈشەندۈرۈشى ئۆزگەرتىلگەندە، يېڭى تېكىست بۇنى ئۆز ئىچىگە ئالسا ماس كېلىدۇ (چوڭ كىچىك ھەرپكە سەزگۈر ئەمەس).",
-  "text-contains-trigger-label": "ئىزدەيدىغان تېكىست"
+  "text-contains-trigger-label": "ئىزدەيدىغان تېكىست",
+  "event-action": "مەشغۇلات",
+  "event-attempts": "سىناشلار",
+  "event-bleed": "ئىسمى",
+  "event-category": "كاتېگورىيە",
+  "event-datetime": "چېسلا ۋە ۋاقىت",
+  "event-detail": "تەپسىلات",
+  "event-severity": "ئېغىرلىق دەرىجىسى",
+  "event-source": "مەنبە",
+  "password-length-report-title": "پارول ئۇزۇنلۇقى",
+  "recoveryReportTitle": "ئەسلىگە كەلتۈرۈش",
+  "securityReportTitle": "بىخەتەرلىك"
 }

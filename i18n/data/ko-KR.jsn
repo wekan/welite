@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike 워크플로",
   "r-wrike-workflow-note": "Wrike 워크플로는 상태 목록이며 각 상태는 Active, Completed, Deferred 또는 Cancelled 그룹에 속합니다. 내보내기는 이 보드의 목록을 보드 이름을 가진 하나의 워크플로로, Wrike API가 워크플로에 대해 반환하는 JSON 형식으로 기록합니다. 상태가 적용되도록 보드의 Wrike Excel 내보내기를 가져오기 전에 Wrike에서 이 워크플로를 생성하세요. 가져오기는 위에 붙여넣은 WeKan 또는 Wrike의 GET /workflows에서 얻은 JSON을 선택한 보드로 읽어들입니다. 대응하는 목록이 없는 상태는 목록이 되며, 카드를 Completed 또는 Cancelled 상태로 옮기면 완료로, Active 또는 Deferred 상태에서는 미완료로 표시하는 규칙을 만듭니다. Wrike 자체 자동화 규칙은 Wrike에서 내보낼 수 없습니다.",
   "text-contains-trigger-description": "카드가 생성되거나 제목 또는 설명이 변경될 때, 새 텍스트에 이 내용이 포함되어 있으면 일치합니다 (대소문자를 구분하지 않음).",
-  "text-contains-trigger-label": "검색할 텍스트"
+  "text-contains-trigger-label": "검색할 텍스트",
+  "event-action": "작업",
+  "event-attempts": "시도 횟수",
+  "event-bleed": "이름",
+  "event-category": "범주",
+  "event-datetime": "날짜 및 시간",
+  "event-detail": "세부 정보",
+  "event-severity": "심각도",
+  "event-source": "출처",
+  "password-length-report-title": "암호 길이",
+  "recoveryReportTitle": "복구",
+  "securityReportTitle": "보안"
 }

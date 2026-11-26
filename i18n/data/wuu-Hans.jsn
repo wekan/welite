@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike 工作流",
   "r-wrike-workflow-note": "Wrike 工作流是一只状态列表，每只状态属于 Active、Completed、Deferred 或者 Cancelled 组。导出会拿搿块看板个列表写成一只工作流，用看板名字命名，格式是 Wrike API 返回工作流用个 JSON：导入搿块看板个 Wrike Excel 导出文件以前，要先勒 Wrike 里向建立搿只工作流，好应用伊个状态。导入会读取贴勒上头个 JSON（来自 WeKan 或者 Wrike GET /workflows），放到选中个看板里向：呒没对应列表个状态会变成一只列表；规则会勒卡片移进 Completed 或者 Cancelled 状态个辰光标记完成，移进 Active 或者 Deferred 个辰光标记未完成。Wrike 自家个自动化规则呒办法从 Wrike 导出。",
   "text-contains-trigger-description": "创建卡片，或者修改伊个标题、描述个辰光，假使新文本包含搿段内容就匹配（勿区分大小写）。",
-  "text-contains-trigger-label": "要搜索的文本"
+  "text-contains-trigger-label": "要搜索的文本",
+  "event-action": "操作",
+  "event-attempts": "尝试次数",
+  "event-bleed": "名称",
+  "event-category": "类别",
+  "event-datetime": "日脚搭辰光",
+  "event-detail": "详情",
+  "event-severity": "严重程度",
+  "event-source": "来源",
+  "password-length-report-title": "密码长度",
+  "recoveryReportTitle": "恢复",
+  "securityReportTitle": "安全报告"
 }

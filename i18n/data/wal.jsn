@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike oosuwaa ogiyaa",
   "r-wrike-workflow-note": "Wrike oosuwaa ogiyay hanotata mazgabaa, ubbay Active, Completed, Deferred woykko Cancelled citan de'ees. Kessuwaa ha bookkiya mazgabata bookkiya sunttan sunttettida issi oosuwaa ogiyaa gidi, Wrike-a API oosuwaa ogiyaas zaariyo JSON-n xaafees: bookkiya Wrike Excel kessuwaa gelissanaappe kase he oosuwaa ogiyaa Wrike-n medha, hiza a hanotati oottettoosona. Gelissuwaa bollan wottida JSON, WeKan-ppe woykko Wrike-a GET /workflows-ppe, doorettida bookkiyaa nabbabees: mazgabay baynna hanotay mazgabaa gidees, qassi seeray kaardiyay Completed woykko Cancelled hanotaa sirssettiyo wode wurssettidaagaa, Active woykko Deferred hanotan wurssettibeennaagaa gidi malaatees. Wrike-a huuphe automation seerati Wrike-ppe kessettana danddayokkona.",
   "text-contains-trigger-description": "Kaardiyay medhettiya wode, woy huucettay woy birshechchay laamettiya wodenne ooratha qaalay hessa oyqqiko gigees (dalgga woy guutha pilggetu giddon dummatethi baawa).",
-  "text-contains-trigger-label": "Koyettiya qaala"
+  "text-contains-trigger-label": "Koyettiya qaala",
+  "event-action": "Oosuwaa",
+  "event-attempts": "Paaccuwata",
+  "event-bleed": "Sunttaa",
+  "event-category": "Qommuwaa",
+  "event-datetime": "Gallassaanne wodiyaa",
+  "event-detail": "Qonccissuwaa",
+  "event-severity": "Daafatettaa",
+  "event-source": "Yiyo sohuwaa",
+  "password-length-report-title": "Geeman qaalaa adussatettaa",
+  "recoveryReportTitle": "Zaaruwaa",
+  "securityReportTitle": "Naagettaa erissuwaa"
 }

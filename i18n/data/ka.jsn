@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike-ის სამუშაო პროცესი",
   "r-wrike-workflow-note": "Wrike-ის სამუშაო პროცესი სტატუსების სიაა, თითოეული ჯგუფში Active, Completed, Deferred ან Cancelled. ექსპორტი ამ დაფის სიებს წერს ერთ პროცესად, დაფის სახელით, იმ JSON-ში, რომელსაც Wrike-ის API სამუშაო პროცესებისთვის აბრუნებს: შექმენით ეს პროცესი Wrike-ში დაფის Wrike Excel ექსპორტის იმპორტამდე, რომ მისი სტატუსები გამოიყენებოდეს. იმპორტი კითხულობს ზემოთ ჩასმულ JSON-ს, WeKan-იდან ან Wrike-ის GET /workflows-იდან, არჩეულ დაფაში: სტატუსი სიის გარეშე სიად იქცევა, ხოლო წესი ბარათს დასრულებულად ნიშნავს, როცა ის Completed ან Cancelled სტატუსში გადადის, და დაუსრულებლად — Active ან Deferred სტატუსში. Wrike-ის საკუთარი ავტომატიზაციის წესების ექსპორტი Wrike-იდან შეუძლებელია.",
   "text-contains-trigger-description": "ემთხვევა, როცა ბარათი იქმნება, ან იცვლება მისი სათაური ან აღწერა, და ახალი ტექსტი შეიცავს ამას (რეგისტრის მიუხედავად).",
-  "text-contains-trigger-label": "საძიებო ტექსტი"
+  "text-contains-trigger-label": "საძიებო ტექსტი",
+  "event-action": "მოქმედება",
+  "event-attempts": "მცდელობები",
+  "event-bleed": "სახელი",
+  "event-category": "კატეგორია",
+  "event-datetime": "თარიღი და დრო",
+  "event-detail": "დეტალი",
+  "event-severity": "სიმძიმე",
+  "event-source": "წყარო",
+  "password-length-report-title": "პაროლის სიგრძე",
+  "recoveryReportTitle": "აღდგენა",
+  "securityReportTitle": "უსაფრთხოება"
 }

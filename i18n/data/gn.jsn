@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike tembiapo rape",
   "r-wrike-workflow-note": "Peteĩ Wrike tembiapo rape ha'e peteĩ teko ysaja, peteĩteĩ oĩva Active, Completed, Deferred térã Cancelled atýpe. Mosẽ ohai ko peteĩcha ysajakuéra peteĩ ramo, hérava peteĩcha rehe, JSON Wrike API omoherakuãvape tembiapo rapekuérape g̃uarã: emoheñói upe tembiapo rape Wrike-pe eguerúvo mboyve peteĩcha Wrike Excel mosẽ, ojepuru hag̃ua iteko. Mboguahẽ omoñe'ẽ upe JSON oñembojáva yvate, WeKan-gui térã Wrike GET /workflows-gui, peteĩcha ojeporavóvape: peteĩ teko ysaja'ỹre oiko ysaja, ha peteĩ mbojojaha omoĩ kuatia'i opapyre ramo oñemongu'évo Completed térã Cancelled tekópe ha nahu'ãiva Active térã Deferred tekópe. Wrike mbojojaha automation ndaikatúi oñemosẽ Wrike-gui.",
   "text-contains-trigger-description": "Ojoja kuatiañe ojejapo vove, térã hérape térã ñemombe’úpe oñemoambue vove, ha pe ñe’ẽ pyahúpe oĩ kóva (ndoikoi mba’eve letra guasu térã michĩva).",
-  "text-contains-trigger-label": "Techarã ojejapyhy va’erã"
+  "text-contains-trigger-label": "Techarã ojejapyhy va’erã",
+  "event-action": "Tembiapo",
+  "event-attempts": "Ñeha'ã kuéra",
+  "event-bleed": "Téra",
+  "event-category": "Aty",
+  "event-datetime": "Arange ha aravo",
+  "event-detail": "Marandu hesakãva",
+  "event-severity": "Ivaikue",
+  "event-source": "Moõguipa",
+  "password-length-report-title": "Ñe'ẽñemi pukukue",
+  "recoveryReportTitle": "Ñemboguevi",
+  "securityReportTitle": "Tekorosã mombe'upy"
 }

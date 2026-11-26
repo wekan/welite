@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-Arbeitsablauf",
   "r-wrike-workflow-note": "Ein Wrike-Arbeitsablauf ist eine Liste von Zuständen, jeweils in der Gruppe Active, Completed, Deferred oder Cancelled. Der Export schreibt die Listen dieser Arbeitstafel als einen solchen Arbeitsablauf mit dem Namen der Arbeitstafel in das JSON-Format, das Wrikes API für Arbeitsabläufe zurückgibt: Erstelle diesen Arbeitsablauf in Wrike, bevor du den Wrike-Excel-Export der Arbeitstafel importierst, damit seine Zustände angewendet werden. Der Import liest das oben eingefügte JSON aus WeKan oder Wrikes GET /workflows in die ausgewählte Arbeitstafel ein: Ein Zustand ohne Liste wird zu einer Liste, und eine Regel markiert eine Karte als abgeschlossen, wenn sie in einen Zustand der Gruppe Completed oder Cancelled verschoben wird, und als nicht abgeschlossen bei Active oder Deferred. Wrikes eigene Automatisierungsregeln können nicht aus Wrike exportiert werden.",
   "text-contains-trigger-description": "Trifft zu, wenn eine Karte erstellt wird oder ihr Titel oder ihre Beschreibung geändert wird und der neue Text dies enthält (Groß-/Kleinschreibung wird ignoriert).",
-  "text-contains-trigger-label": "Zu suchender Text"
+  "text-contains-trigger-label": "Zu suchender Text",
+  "event-action": "Aktion",
+  "event-attempts": "Versuche",
+  "event-bleed": "Bleed-Bezeichnung",
+  "event-category": "Kategorie",
+  "event-datetime": "Datum und Uhrzeit",
+  "event-detail": "Einzelheit zum Ereignis",
+  "event-severity": "Schweregrad",
+  "event-source": "Quelle",
+  "password-length-report-title": "Passwortlänge",
+  "recoveryReportTitle": "Wiederherstellung",
+  "securityReportTitle": "Sicherheit"
 }

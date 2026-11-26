@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Potek dela Wrike",
   "r-wrike-workflow-note": "Potek dela Wrike je seznam stanj, vsako v skupini Active, Completed, Deferred ali Cancelled. Izvoz zapiše sezname te table kot en potek dela z imenom table v obliki JSON, ki jo API Wrike vrne za poteke dela: ustvarite ta potek dela v Wrike pred uvozom izvozne datoteke table v obliki Wrike Excel, da se uporabijo njegova stanja. Uvoz prebere zgoraj prilepljeni JSON iz WeKana ali zahteve GET /workflows iz Wrike v izbrano tablo: stanje brez seznama postane seznam, pravilo pa označi kartico kot dokončano, ko se premakne v stanje Completed ali Cancelled, in kot nedokončano v stanju Active ali Deferred. Lastnih pravil avtomatizacije Wrike ni mogoče izvoziti iz Wrike.",
   "text-contains-trigger-description": "Ujema se, ko je kartica ustvarjena ali se spremeni njen naslov ali opis, novo besedilo pa to vsebuje (ne glede na velike/male črke).",
-  "text-contains-trigger-label": "Besedilo za iskanje"
+  "text-contains-trigger-label": "Besedilo za iskanje",
+  "event-action": "Dejanje",
+  "event-attempts": "Poskusi",
+  "event-bleed": "Ime",
+  "event-category": "Kategorija",
+  "event-datetime": "Datum in čas",
+  "event-detail": "Podrobnosti",
+  "event-severity": "Resnost",
+  "event-source": "Vir",
+  "password-length-report-title": "Dolžina gesla",
+  "recoveryReportTitle": "Obnovitev",
+  "securityReportTitle": "Varnost"
 }

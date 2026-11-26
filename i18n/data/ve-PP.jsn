@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-radonjärgend",
   "r-wrike-workflow-note": "Wrike-radonjärgend om statusoiden lugetiž, jogahine Active-, Completed-, Deferred- vai Cancelled-gruppas. Eksport kirjutab necen laudan lugetišed ühteks, laudan nimel, JSON-formatas, kudamban Wrike-programman API pördab radonjärgendoiden täht: tehkat se radonjärgend Wrike-programmas enne laudan Wrike Excel -eksportan importad, miše sen statusad kävutadas. Import lugeb ülähän pandud JSON:an, WeKan-programmaspäi vai Wrike-programman GET /workflows -pärospäi, valitud laudaha: status ilma lugetišeta tegese lugetišeks, i sändo znamoičeb kartan lopetadud, konz se sirtase Completed- vai Cancelled-statusaha, i lopmatoman Active- vai Deferred-statusas. Wrike-programman ičeze avtomatizacijan sändoid ei voi eksportiruida Wrike-programmaspäi.",
   "text-contains-trigger-description": "Iyahambisana lapho ikhadi lidalwa, noma isihloko noma incazelo yalo ishintshwa, futhi umbhalo omusha unalokhu (akunandaba nosayizi wezinhlamvu).",
-  "text-contains-trigger-label": "Umbhalo ozofunwa"
+  "text-contains-trigger-label": "Umbhalo ozofunwa",
+  "event-action": "Tego",
+  "event-attempts": "Nyito",
+  "event-bleed": "Nimi",
+  "event-category": "Kategorii",
+  "event-datetime": "Päivmär i aig",
+  "event-detail": "Ližatedod",
+  "event-severity": "Kovuden korktuz’",
+  "event-source": "Tsimo",
+  "password-length-report-title": "Peitsanan piduz",
+  "recoveryReportTitle": "Endištand",
+  "securityReportTitle": "Turvalližusen raport"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "سير عمل Wrike",
   "r-wrike-workflow-note": "سير عمل Wrike هو قائمة حالات، تنتمي كل منها إلى مجموعة Active أو Completed أو Deferred أو Cancelled. يكتب التصدير قوائم هذه اللوحة كسير عمل واحد يحمل اسم اللوحة، بتنسيق JSON الذي تعيده واجهة API الخاصة بـWrike لسير العمل: أنشئ سير العمل هذا في Wrike قبل استيراد ملف Wrike Excel المصدّر من اللوحة، لتطبيق حالاته. يقرأ الاستيراد JSON الملصق أعلاه، من WeKan أو من GET /workflows في Wrike، إلى اللوحة المحددة: تتحول الحالة التي لا توجد لها قائمة إلى قائمة، وتضع قاعدة علامة الاكتمال على البطاقة عند نقلها إلى حالة Completed أو Cancelled، وعلامة عدم الاكتمال في حالة Active أو Deferred. لا يمكن تصدير قواعد الأتمتة الخاصة بـWrike من Wrike.",
   "text-contains-trigger-description": "يتطابق عند إنشاء بطاقة، أو تغيير عنوانها أو وصفها، ويحتوي النص الجديد على هذا (دون تمييز بين الأحرف الكبيرة والصغيرة).",
-  "text-contains-trigger-label": "النص المراد البحث عنه"
+  "text-contains-trigger-label": "النص المراد البحث عنه",
+  "event-action": "الإجراء",
+  "event-attempts": "المحاولات",
+  "event-bleed": "الاسم",
+  "event-category": "الفئة",
+  "event-datetime": "التاريخ والوقت",
+  "event-detail": "التفاصيل",
+  "event-severity": "الخطورة",
+  "event-source": "المصدر",
+  "password-length-report-title": "طول كلمة المرور",
+  "recoveryReportTitle": "الاستعادة",
+  "securityReportTitle": "الأمان"
 }

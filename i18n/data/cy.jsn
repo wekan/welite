@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Llif gwaith Wrike",
   "r-wrike-workflow-note": "Rhestr o statwsau yw llif gwaith Wrike, pob un yn y grŵp Active, Completed, Deferred neu Cancelled. Mae allforio yn ysgrifennu rhestrau'r bwrdd hwn fel un, wedi'i enwi ar ôl y bwrdd, yn y JSON y mae API Wrike yn ei ddychwelyd ar gyfer llifoedd gwaith: crëwch y llif gwaith hwnnw yn Wrike cyn mewnforio allforio Excel Wrike y bwrdd, fel bod ei statwsau'n cael eu cymhwyso. Mae mewnforio yn darllen y JSON hwnnw a gludwyd uchod, o WeKan neu o GET /workflows Wrike, i'r bwrdd a ddewiswyd: daw statws heb restr yn rhestr, ac mae rheol yn nodi cerdyn yn gyflawn pan gaiff ei symud i statws Completed neu Cancelled ac yn anghyflawn mewn un Active neu Deferred. Ni ellir allforio rheolau awtomeiddio Wrike ei hun o Wrike.",
   "text-contains-trigger-description": "Yn cyfateb pan grëir cerdyn, neu pan newidir ei deitl neu ei ddisgrifiad, a bod y testun newydd yn cynnwys hyn (dim gwahaniaeth rhwng llythrennau mawr a bach).",
-  "text-contains-trigger-label": "Testun i chwilio amdano"
+  "text-contains-trigger-label": "Testun i chwilio amdano",
+  "event-action": "Gweithred",
+  "event-attempts": "Ymgeisiadau",
+  "event-bleed": "Enw",
+  "event-category": "Categori",
+  "event-datetime": "Dyddiad ac amser",
+  "event-detail": "Manylion",
+  "event-severity": "Difrifoldeb",
+  "event-source": "Ffynhonnell",
+  "password-length-report-title": "Hyd cyfrinair",
+  "recoveryReportTitle": "Adfer",
+  "securityReportTitle": "Diogelwch"
 }

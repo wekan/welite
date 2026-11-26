@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike wokflo",
   "r-wrike-workflow-note": "Wanpela Wrike wokflo em i lis bilong ol stetas, wan wan i stap long grup Active, Completed, Deferred o Cancelled. Export i raitim ol lis bilong dispela bot olsem wanpela, i kisim nem bilong bot, long JSON we API bilong Wrike i salim bek bilong ol wokflo: wokim dispela wokflo long Wrike pastaim long bringim Wrike Excel export bilong bot i kam, olsem na ol stetas bilong en i wok. Import i ritim dispela JSON yu pestim antap, long WeKan o long GET /workflows bilong Wrike, i go insait long bot yu makim: stetas i no gat lis i kamap wanpela lis, na wanpela rul i makim kat olsem i pinis taim em i go long stetas Completed o Cancelled na i no pinis long Active o Deferred. Ol rul bilong otomesen bilong Wrike yet i no inap go aut long Wrike.",
   "text-contains-trigger-description": "I wanpela taim ol i wokim wanpela kaad, o senisim nem o stori bilong en, na nupela rait i gat dispela samting (i no makim bikpela na liklik leta).",
-  "text-contains-trigger-label": "Rait bilong painim"
+  "text-contains-trigger-label": "Rait bilong painim",
+  "event-action": "Wok",
+  "event-attempts": "Ol taim bilong traim",
+  "event-bleed": "Nem",
+  "event-category": "Kain samting",
+  "event-datetime": "Det na taim",
+  "event-detail": "Ol liklik hap bilong toksave",
+  "event-severity": "Mak bilong hevi",
+  "event-source": "Ples i kam long en",
+  "password-length-report-title": "Longpela bilong paswot",
+  "recoveryReportTitle": "Putim bek",
+  "securityReportTitle": "Ripot bilong seifti"
 }

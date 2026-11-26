@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "د Wrike کاري بهیر",
   "r-wrike-workflow-note": "د Wrike کاري بهیر د حالتونو لړليک دی، هر یو د Active، Completed، Deferred یا Cancelled ډلې کې. صادرول د دې تختې لړليکونه د یوه په توګه لیکي، د تختې په نوم، په هغه JSON کې چې د Wrike API د کاري بهیرونو لپاره ورکوي: دا کاري بهیر په Wrike کې جوړ کړئ مخکې له دې چې د تختې د Wrike Excel صادرول دننه کړئ، ترڅو د هغه حالتونه پلي شي. دننه کول هغه JSON چې پورته لګول شوی، له WeKan یا د Wrike له GET /workflows څخه، ټاکل شوې تختې ته لولي: هغه حالت چې لړليک نه لري په لړليک بدلېږي، او یو قاعده کارت بشپړ نښه کوي کله چې Completed یا Cancelled حالت ته ولېږدول شي او په Active یا Deferred کې نابشپړ. د Wrike خپل اتوماتیک قواعد له Wrike څخه نشي صادرېدای.",
   "text-contains-trigger-description": "سمون لري کله چې کارت جوړ شي، یا د هغه سرلیک یا تشریح بدله شي، او نوی متن دا ولري (د لویو او وړو تورو توپیر نه کوي).",
-  "text-contains-trigger-label": "د لټون لپاره متن"
+  "text-contains-trigger-label": "د لټون لپاره متن",
+  "event-action": "کړنه",
+  "event-attempts": "هڅې",
+  "event-bleed": "نوم",
+  "event-category": "وېشنيزه",
+  "event-datetime": "نېټه او وخت",
+  "event-detail": "جزئيات",
+  "event-severity": "شدت",
+  "event-source": "سرچينه",
+  "password-length-report-title": "د پټنوم اوږدوالی",
+  "recoveryReportTitle": "بېرته راګرځونه",
+  "securityReportTitle": "د امنيت راپور"
 }

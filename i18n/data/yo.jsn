@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Ilana iṣẹ Wrike",
   "r-wrike-workflow-note": "Ilana iṣẹ Wrike jẹ akojọ awọn ipo, ọkọọkan ninu ẹgbẹ Active, Completed, Deferred tabi Cancelled. Gbigbe jade kọ awọn akojọ pátákó yii bi ọkan, ti a npè ni orukọ pátákó, ninu JSON ti API Wrike da pada fun awọn ilana iṣẹ: ṣẹda ilana iṣẹ yẹn ni Wrike ṣaaju gbigbe wọle gbigbe jade Excel Wrike ti pátákó naa, ki a le lo awọn ipo rẹ. Gbigbe wọle ka JSON yẹn ti a lẹ loke, lati WeKan tabi lati GET /workflows ti Wrike, sinu pátákó ti a yan: ipo ti ko ni akojọ di akojọ kan, ati ofin kan samisi kaadi bi ti pari nigbati a ba gbe e sinu ipo Completed tabi Cancelled ati bi ko pari ninu ipo Active tabi Deferred. A ko le gbe awọn ofin adaṣe Wrike funrararẹ jade lati Wrike.",
   "text-contains-trigger-description": "Ó bára mu nígbà tí a bá dá káàdì kan, tàbí tí àkọlé tàbí àpèjúwe rẹ̀ bá yípadà, tí ọ̀rọ̀ tuntun sì ní èyí nínú (kò yàtọ̀ sí lẹ́tà ńlá tàbí kékeré).",
-  "text-contains-trigger-label": "Ọ̀rọ̀ tí a fẹ́ wá"
+  "text-contains-trigger-label": "Ọ̀rọ̀ tí a fẹ́ wá",
+  "event-action": "Ìṣe",
+  "event-attempts": "Ìgbìyànjú",
+  "event-bleed": "Orúkọ",
+  "event-category": "Ẹ̀ka",
+  "event-datetime": "Ọjọ́ àti àkókò",
+  "event-detail": "Àlàyé",
+  "event-severity": "Ìdiwọ̀n",
+  "event-source": "Orísun",
+  "password-length-report-title": "Gígùn ọ̀rọ̀ìgbaniwọlé",
+  "recoveryReportTitle": "Ìmúbọ̀sípò",
+  "securityReportTitle": "Ààbò"
 }

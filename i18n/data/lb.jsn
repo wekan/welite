@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-Workflow",
   "r-wrike-workflow-note": "E Wrike-Workflow ass eng Lëscht vu Statussen, jidderee an der Grupp Active, Completed, Deferred oder Cancelled. Den Export schreift d'Lëschte vun dëser Tafel als een, no der Tafel benannt, am JSON, deen d'API vu Wrike fir Workflows zréckgëtt: maacht dee Workflow am Wrike, ier Dir de Wrike-Excel-Export vun der Tafel importéiert, sou datt seng Statussen applizéiert ginn. Den Import liest deen uewen agefüügte JSON, vu WeKan oder vu Wrike sengem GET /workflows, an déi gewielten Tafel: e Status ouni Lëscht gëtt eng Lëscht, an eng Regel markéiert eng Kaart als ofgeschloss, wann se an e Completed- oder Cancelled-Status geréckelt gëtt, an als net ofgeschloss an engem Active- oder Deferred-Status. Déi eegen Automatiséierungsregele vu Wrike kënnen net aus Wrike exportéiert ginn.",
   "text-contains-trigger-description": "Passt wann eng Kaart erstallt gëtt, oder hiren Titel oder Beschreiwung geännert gëtt, an den neien Text dëst enthält (ouni Ënnerscheed tëscht Groussbuschtawen a Klengbuschtawen).",
-  "text-contains-trigger-label": "Text fir ze sichen"
+  "text-contains-trigger-label": "Text fir ze sichen",
+  "event-action": "Aktioun",
+  "event-attempts": "Versich",
+  "event-bleed": "Numm",
+  "event-category": "Kategorie",
+  "event-datetime": "Datum un Uhrzeit",
+  "event-detail": "Einzelheit fir de Ereignis",
+  "event-severity": "Schwéiergrad",
+  "event-source": "Quell",
+  "password-length-report-title": "Passwuertlängt",
+  "recoveryReportTitle": "Restauratioun",
+  "securityReportTitle": "Sécherheetsrapport"
 }

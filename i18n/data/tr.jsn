@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike iş akışı",
   "r-wrike-workflow-note": "Bir Wrike iş akışı, her biri Active, Completed, Deferred veya Cancelled grubunda olan durumların listesidir. Dışa aktarım, bu panonun listelerini panonun adını taşıyan tek bir iş akışı olarak, Wrike API'sinin iş akışları için döndürdüğü JSON biçiminde yazar: durumlarının uygulanması için panonun Wrike Excel dışa aktarımını içe aktarmadan önce bu iş akışını Wrike'ta oluşturun. İçe aktarım, yukarıya yapıştırılan WeKan veya Wrike'ın GET /workflows çıktısından alınan JSON'u seçilen panoya okur: listesi olmayan bir durum bir listeye dönüşür ve bir kural, kart Completed veya Cancelled durumuna taşındığında onu tamamlanmış, Active veya Deferred durumunda ise tamamlanmamış olarak işaretler. Wrike'ın kendi otomasyon kuralları Wrike'tan dışa aktarılamaz.",
   "text-contains-trigger-description": "Bir kart oluşturulduğunda veya başlığı ya da açıklaması değiştirildiğinde ve yeni metin bunu içerdiğinde eşleşir (büyük/küçük harf duyarsız).",
-  "text-contains-trigger-label": "Aranacak metin"
+  "text-contains-trigger-label": "Aranacak metin",
+  "event-action": "Eylem",
+  "event-attempts": "Denemeler",
+  "event-bleed": "Ad",
+  "event-category": "Kategori",
+  "event-datetime": "Tarih ve saat",
+  "event-detail": "Ayrıntı",
+  "event-severity": "Önem derecesi",
+  "event-source": "Kaynak",
+  "password-length-report-title": "Parola uzunluğu",
+  "recoveryReportTitle": "Kurtarma",
+  "securityReportTitle": "Güvenlik"
 }

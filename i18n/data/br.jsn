@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Red-labour Wrike",
   "r-wrike-workflow-note": "Ur red-labour Wrike zo ur roll statudoù, pep hini er strollad Active, Completed, Deferred pe Cancelled. An ezporzhiañ a skriv rolloù an daolenn-mañ evel unan, anvet diouzh an daolenn, er JSON a ro API Wrike evit ar redoù-labour: krouit ar red-labour-se e Wrike a-raok enporzhiañ ezporzhiadur Excel Wrike an daolenn, evit ma vo lakaet e statudoù da dalvezout. An enporzhiañ a lenn ar JSON-se peget a-us, eus WeKan pe eus GET /workflows Wrike, en daolenn dibabet: ur statud hep roll a zeu da vezañ ur roll, hag ur reolenn a verk ur gartenn evel echu pa vez dilec'hiet d'ur statud Completed pe Cancelled ha n'eo ket echu en ur statud Active pe Deferred. Reolennoù emgefreek Wrike e-unan ne c'hallont ket bezañ ezporzhiet eus Wrike.",
   "text-contains-trigger-description": "A glot pa vez krouet ur gartenn, pe pa vez cheñchet he zitl pe he deskrivadur, ha ma vez an destenn nevez ennañ an dra-mañ (heb diforc'h etre lizherennoù bras ha bihan).",
-  "text-contains-trigger-label": "Testenn da glask"
+  "text-contains-trigger-label": "Testenn da glask",
+  "event-action": "Ober",
+  "event-attempts": "Esaeoù",
+  "event-bleed": "Anv",
+  "event-category": "Rummad",
+  "event-datetime": "Deiziad hag eur",
+  "event-detail": "Munud",
+  "event-severity": "Garvder",
+  "event-source": "Mammenn",
+  "password-length-report-title": "Hirder ar ger-tremen",
+  "recoveryReportTitle": "Adtapout",
+  "securityReportTitle": "Diogelroez"
 }

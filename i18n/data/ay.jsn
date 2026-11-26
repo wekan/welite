@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike lurañ thakhi",
   "r-wrike-workflow-note": "Mä Wrike lurañ thakhix estados ukanakan mä listapawa, sapa mayax Active, Completed, Deferred jan ukax Cancelled tamana. Mistuyañax aka pirqan listanakap mä ukham qillqi, pirqa sutipampi, Wrike API ukax lurañ thakhinakatak kutt'ayki uka JSON ukana: pirqan Wrike Excel mistuyäwip apaniñat nayraqat uka lurañ thakhi Wrike ukan lurt'aña, ukhamat estados ukanakapax apnaqatäñapataki. Apaniñax patan qillqaqata uka JSON liyi, WeKan ukat jan ukax Wrike GET /workflows ukat, ajllita pirqaru: jan listani estadox mä listaruw tuku, ukat mä kamachix mä tarjeta tukuyatjam chimpuchi Completed jan ukax Cancelled estado ukar unxtayatäki ukhax, ukat jan tukuyatjam Active jan ukax Deferred ukana. Wrike pachpa automatización kamachinakapax janiw Wrike ukat mistuyaskaspati.",
   "text-contains-trigger-description": "Tarjeta luratax ukhamaraki, jan ukax sutipa jan ukax qhanañchapa mayjt’ayata, machaq qillqata akax katuqi ukhamawa (jach’a jan ukax jisk’a qillqanakar mana uñjkiti).",
-  "text-contains-trigger-label": "Thaqhaña arunaka"
+  "text-contains-trigger-label": "Thaqhaña arunaka",
+  "event-action": "luräwi",
+  "event-attempts": "yantʼawinaka",
+  "event-bleed": "Suti",
+  "event-category": "Kasta t'aqa",
+  "event-datetime": "uru ukat pacha",
+  "event-detail": "Juk'amp yatiyawi",
+  "event-severity": "Ch'amapa",
+  "event-source": "qallta",
+  "password-length-report-title": "Imantata aru jach'a",
+  "recoveryReportTitle": "Kuttʼayaña",
+  "securityReportTitle": "jarkʼaqawi yatiyawi"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike कार्यप्रवाह",
   "r-wrike-workflow-note": "Wrike कार्यप्रवाह म्हणजे स्थितींची यादी; प्रत्येक स्थिती Active, Completed, Deferred किंवा Cancelled गटातील असते. निर्यात या फलकाच्या याद्यांचा एक कार्यप्रवाह फलकाच्या नावाने लिहिते, Wrike चे API कार्यप्रवाहांसाठी देते त्या JSON स्वरूपात. फलकाची Wrike Excel निर्यात आयात करण्यापूर्वी Wrike मध्ये तो कार्यप्रवाह तयार करा, म्हणजे त्यातील स्थिती लागू होतील. आयात वर पेस्ट केलेला WeKan किंवा Wrike च्या GET /workflows मधून मिळालेला JSON निवडलेल्या फलकात वाचते: यादी नसलेल्या स्थितीसाठी यादी तयार होते. कार्ड Completed किंवा Cancelled स्थितीत हलवल्यावर एक नियम ते पूर्ण, आणि Active किंवा Deferred स्थितीत हलवल्यावर अपूर्ण म्हणून चिन्हांकित करतो. Wrike चे स्वतःचे स्वयंचलित नियम Wrike मधून निर्यात करता येत नाहीत.",
   "text-contains-trigger-description": "कार्ड तयार केल्यावर, किंवा त्याचे शीर्षक किंवा वर्णन बदलल्यावर, आणि नवीन मजकुरात हे समाविष्ट असल्यास जुळते (अक्षरांच्या आकाराचा फरक नाही).",
-  "text-contains-trigger-label": "शोधण्यासाठी मजकूर"
+  "text-contains-trigger-label": "शोधण्यासाठी मजकूर",
+  "event-action": "क्रिया",
+  "event-attempts": "प्रयत्न",
+  "event-bleed": "नाव",
+  "event-category": "श्रेणी",
+  "event-datetime": "तारीख आणि वेळ",
+  "event-detail": "तपशील",
+  "event-severity": "तीव्रता",
+  "event-source": "स्रोत",
+  "password-length-report-title": "पासवर्डची लांबी",
+  "recoveryReportTitle": "पुनर्प्राप्ती",
+  "securityReportTitle": "सुरक्षा अहवाल"
 }

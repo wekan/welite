@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Ukugeleza komsebenzi kweWrike",
   "r-wrike-workflow-note": "Ukugeleza komsebenzi kweWrike kuwuhlu lwezimo, ngasinye siseqenjini le-Active, Completed, Deferred noma Cancelled. Ukuthumela ngaphandle kubhala izinhlu zaleli bhodi njengokugeleza okukodwa, okuqanjwe ngegama lebhodi, nge-JSON ebuyiswa yi-API yeWrike yokugeleza komsebenzi: dala lokho kugeleza kuWrike ngaphambi kokungenisa i-Excel yeWrike yaleli bhodi ukuze izimo zalo zisetshenziswe. Ukungenisa kufunda leyo JSON enamathiselwe ngenhla, evela kuWeKan noma ku-GET /workflows yeWrike, kuyifake ebhodini elikhethiwe: isimo esingenalo uhlu siba uhlu, bese umthetho uphawula ikhadi njengeliqediwe lapho lithuthelwa esimweni se-Completed noma Cancelled, nanjengelingaqediwe ku-Active noma Deferred. Imithetho yeWrike yokusebenza ngokuzenzakalela ayikwazi ukuthunyelwa ngaphandle kuWrike.",
   "text-contains-trigger-description": "Iyahambisana lapho ikhadi lidalwa, noma isihloko noma incazelo yalo ishintshwa, futhi umbhalo omusha unalokhu (akunandaba nosayizi wezinhlamvu).",
-  "text-contains-trigger-label": "Umbhalo ozofunwa"
+  "text-contains-trigger-label": "Umbhalo ozofunwa",
+  "event-action": "Isenzo",
+  "event-attempts": "Imizamo",
+  "event-bleed": "Igama",
+  "event-category": "Isigaba",
+  "event-datetime": "Usuku nesikhathi",
+  "event-detail": "Imininingwane",
+  "event-severity": "Ubukhulu",
+  "event-source": "Umthombo",
+  "password-length-report-title": "Ubude bephasiwedi",
+  "recoveryReportTitle": "Ukubuyisela",
+  "securityReportTitle": "Ezokuphepha"
 }

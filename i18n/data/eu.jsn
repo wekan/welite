@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike lan-fluxua",
   "r-wrike-workflow-note": "Wrike lan-fluxua egoeren zerrenda bat da, bakoitza Active, Completed, Deferred edo Cancelled taldekoa. Esportazioak arbel honen zerrendak lan-fluxu bakar gisa idazten ditu, arbelaren izenarekin, Wrike-ren APIak lan-fluxuetarako itzultzen duen JSON formatuan: sortu lan-fluxu hori Wrike-n arbelaren Wrike Excel esportazioa inportatu aurretik, egoerak aplikatzeko. Inportazioak goian itsatsitako JSON hori irakurtzen du, WeKan-etik edo Wrike-ren GET /workflows eskaeratik, hautatutako arbelera: zerrendarik gabeko egoera zerrenda bihurtzen da, eta arau batek txartela osatutzat markatzen du Completed edo Cancelled egoera batera mugitzean, eta osatu gabetzat Active edo Deferred egoera batean. Wrike-ren automatizazio-arauak ezin dira Wrike-tik esportatu.",
   "text-contains-trigger-description": "Bat dator txartel bat sortzen denean, edo bere izenburua edo deskribapena aldatzen denean, eta testu berriak hau badu (maiuskula/minuskulen artean bereizi gabe).",
-  "text-contains-trigger-label": "Bilatu beharreko testua"
+  "text-contains-trigger-label": "Bilatu beharreko testua",
+  "event-action": "Ekintza",
+  "event-attempts": "Saiakerak",
+  "event-bleed": "Izena",
+  "event-category": "Kategoria",
+  "event-datetime": "Data eta ordua",
+  "event-detail": "Xehetasuna",
+  "event-severity": "Larritasuna",
+  "event-source": "Iturria",
+  "password-length-report-title": "Pasahitzaren luzera",
+  "recoveryReportTitle": "Berreskuratzea",
+  "securityReportTitle": "Segurtasuna"
 }

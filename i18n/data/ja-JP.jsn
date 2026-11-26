@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrikeワークフロー",
   "r-wrike-workflow-note": "Wrikeワークフローはステータスの一覧で、各ステータスはActive、Completed、Deferred、Cancelledのいずれかのグループに属します。エクスポートでは、このボードのリストを、ボード名を持つ1つのワークフローとして、Wrike APIがワークフロー用に返すJSON形式で書き出します。ステータスを適用するには、ボードのWrike Excelエクスポートをインポートする前に、このワークフローをWrikeで作成してください。インポートでは、上に貼り付けたWeKan由来またはWrikeのGET /workflows由来のJSONを選択したボードに読み込みます。対応するリストのないステータスはリストになり、CompletedまたはCancelledのステータスへ移動したカードを完了、ActiveまたはDeferredでは未完了にするルールが作られます。Wrike独自の自動化ルールはWrikeからエクスポートできません。",
   "text-contains-trigger-description": "カードが作成されたとき、またはそのタイトルもしくは説明が変更されたときに、新しいテキストがこれを含む場合に一致します（大文字小文字は区別しません）。",
-  "text-contains-trigger-label": "検索するテキスト"
+  "text-contains-trigger-label": "検索するテキスト",
+  "event-action": "アクション",
+  "event-attempts": "試行回数",
+  "event-bleed": "名前",
+  "event-category": "カテゴリ",
+  "event-datetime": "日時",
+  "event-detail": "詳細",
+  "event-severity": "重大度",
+  "event-source": "ソース",
+  "password-length-report-title": "パスワードの長さ",
+  "recoveryReportTitle": "復旧",
+  "securityReportTitle": "セキュリティ"
 }

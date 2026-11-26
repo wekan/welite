@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flusso 'e fatica Wrike",
   "r-wrike-workflow-note": "Nu flusso 'e fatica Wrike è na lista 'e stati, ognuno int'o gruppo Active, Completed, Deferred o Cancelled. L'esportazione scrive 'e liste 'e chesta tavula comme uno sulo, c''o nomme d'a tavula, int'o JSON ca ll'API 'e Wrike dà pe' 'e flusse 'e fatica: crea chillu flusso dint'a Wrike primma 'e mpurtà ll'esportazione Excel Wrike d''a tavula, accussì 'e stati suoje se applicano. L'mportazione legge chillu JSON ncullato ccà ncoppa, 'a WeKan o d''o GET /workflows 'e Wrike, int'a tavula scigliuta: nu stato senza lista addeventa na lista, e na reola segna na carta comme fernuta quanno vene spustata int'a nu stato Completed o Cancelled e nun fernuta int'a nu stato Active o Deferred. 'E reole 'e automazione 'e Wrike nun se ponno spurtà 'a Wrike.",
   "text-contains-trigger-description": "Corrisponne quanno na carta vene criata, o 'o titolo o 'a descrizzione soia vene cagnato, e 'o testo nuovo conteneno chesto (senza differenza 'e maiuscole e minuscole).",
-  "text-contains-trigger-label": "Testo 'a cercà"
+  "text-contains-trigger-label": "Testo 'a cercà",
+  "event-action": "Azzione",
+  "event-attempts": "Tentative",
+  "event-bleed": "Nomme",
+  "event-category": "Categoria",
+  "event-datetime": "Data e ora",
+  "event-detail": "Dettaglio",
+  "event-severity": "Gravità",
+  "event-source": "Origgine",
+  "password-length-report-title": "Lunghezza d''a parola 'e ordene",
+  "recoveryReportTitle": "Ripristino",
+  "securityReportTitle": "Sicurezza"
 }

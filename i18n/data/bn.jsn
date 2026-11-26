@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike কর্মপ্রবাহ",
   "r-wrike-workflow-note": "Wrike কর্মপ্রবাহ হলো অবস্থার তালিকা; প্রতিটি অবস্থা Active, Completed, Deferred বা Cancelled দলের অন্তর্ভুক্ত। রপ্তানি এই বোর্ডের তালিকাগুলোকে বোর্ডের নামে একটি কর্মপ্রবাহ হিসেবে লেখে, Wrike-এর API কর্মপ্রবাহের জন্য যে JSON দেয় সেই বিন্যাসে। বোর্ডের Wrike Excel রপ্তানি আমদানির আগে Wrike-এ ওই কর্মপ্রবাহ তৈরি করুন, যাতে তার অবস্থাগুলো প্রয়োগ হয়। আমদানি ওপরে পেস্ট করা WeKan অথবা Wrike-এর GET /workflows থেকে পাওয়া JSON নির্বাচিত বোর্ডে পড়ে: যে অবস্থার তালিকা নেই তার জন্য তালিকা তৈরি হয়। একটি নিয়ম কার্ডকে Completed বা Cancelled অবস্থায় সরালে সম্পন্ন এবং Active বা Deferred অবস্থায় সরালে অসম্পূর্ণ চিহ্নিত করে। Wrike-এর নিজস্ব স্বয়ংক্রিয় নিয়ম Wrike থেকে রপ্তানি করা যায় না।",
   "text-contains-trigger-description": "একটি কার্ড তৈরি হলে, বা এর শিরোনাম বা বিবরণ পরিবর্তিত হলে এবং নতুন পাঠ্যটিতে এটি থাকলে মিলে যায় (বড়/ছোট হাতের অক্ষর নির্বিশেষে)।",
-  "text-contains-trigger-label": "অনুসন্ধানের জন্য পাঠ্য"
+  "text-contains-trigger-label": "অনুসন্ধানের জন্য পাঠ্য",
+  "event-action": "কাজ",
+  "event-attempts": "প্রচেষ্টা",
+  "event-bleed": "নাম",
+  "event-category": "বিভাগ",
+  "event-datetime": "তারিখ ও সময়",
+  "event-detail": "বিস্তারিত",
+  "event-severity": "গুরুত্ব",
+  "event-source": "উৎস",
+  "password-length-report-title": "পাসওয়ার্ডের দৈর্ঘ্য",
+  "recoveryReportTitle": "পুনরুদ্ধার",
+  "securityReportTitle": "নিরাপত্তা প্রতিবেদন"
 }

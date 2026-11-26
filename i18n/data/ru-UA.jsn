@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Рабочий процесс Wrike",
   "r-wrike-workflow-note": "Рабочий процесс Wrike — это список статусов, каждый из которых относится к группе Active, Completed, Deferred или Cancelled. Экспорт записывает списки этой доски как один рабочий процесс, названный в честь доски, в формате JSON, который API Wrike возвращает для рабочих процессов: создайте этот рабочий процесс в Wrike перед импортом экспорта доски в формате Wrike Excel, чтобы применить его статусы. Импорт читает вставленный выше JSON из WeKan или из GET /workflows в Wrike в выбранную доску: статус без списка становится списком, а правило отмечает карточку как завершённую при перемещении в статус Completed или Cancelled и как незавершённую в статусе Active или Deferred. Собственные правила автоматизации Wrike нельзя экспортировать из Wrike.",
   "text-contains-trigger-description": "Срабатывает, когда карточка создана или изменён её заголовок или описание, и новый текст содержит это (без учёта регистра).",
-  "text-contains-trigger-label": "Текст для поиска"
+  "text-contains-trigger-label": "Текст для поиска",
+  "event-action": "Действие",
+  "event-attempts": "Попытки",
+  "event-bleed": "Имя",
+  "event-category": "Категория",
+  "event-datetime": "Дата и время",
+  "event-detail": "Подробности",
+  "event-severity": "Серьёзность",
+  "event-source": "Источник",
+  "password-length-report-title": "Длина пароля",
+  "recoveryReportTitle": "Восстановление",
+  "securityReportTitle": "Безопасность"
 }

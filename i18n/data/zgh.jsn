@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "ⴰⵣⴰⵢⵍⴰ ⵏ ⵜⵡⵓⵔⵉ ⵏ Wrike",
   "r-wrike-workflow-note": "ⴰⵣⴰⵢⵍⴰ ⵏ ⵜⵡⵓⵔⵉ ⵏ Wrike ⵉⴳⴰ ⵜⴰⵍⴳⴰⵎⵜ ⵏ ⵉⴷⴷⴰⴷⵏ, ⴽⵓ ⵢⴰⵏ ⴳ ⵜⵔⴰⴱⴱⵓⵜ Active, Completed, Deferred ⵏⵖ Cancelled. ⴰⵙⵙⵓⴼⵖ ⵉⵜⵜⴰⵔⵓ ⵜⵉⵍⴳⴰⵎⵉⵏ ⵏ ⵜⴼⵍⵡⵉⵜ ⴰⴷ ⴰⵎ ⵢⴰⵏ, ⵙ ⵉⵙⵎ ⵏ ⵜⴼⵍⵡⵉⵜ, ⴳ JSON ⵏⵏⴰ ⵜⵜⵔⴰⵔ API ⵏ Wrike ⵉ workflows: ⵙⴽⵔ ⴰⵣⴰⵢⵍⴰ ⴰⴷ ⴳ Wrike ⵇⴱⵍ ⴰⴷ ⵜⵙⴽⵛⵎⴷ ⴰⵙⵙⵓⴼⵖ Excel ⵏ Wrike ⵏ ⵜⴼⵍⵡⵉⵜ, ⴰⴷ ⵜⵜⵓⵙⵏⵙⵙⵏ ⵉⴷⴷⴰⴷⵏ ⵏⵏⵙ. ⴰⵙⴽⵛⵎ ⵉⵜⵜⵖⵔⴰ JSON ⴰⴷ ⵉⵜⵜⵓⵙⵏⵜⴹⵏ ⴷⴰⵙⵓⵏⵏⵉⴳ, ⵙⴳ WeKan ⵏⵖ ⵙⴳ GET /workflows ⵏ Wrike, ⵖⵔ ⵜⴼⵍⵡⵉⵜ ⵉⵜⵜⵓⵙⵜⴰⵢⵏ: ⴰⴷⴷⴰⴷ ⴱⵍⴰ ⵜⴰⵍⴳⴰⵎⵜ ⴰⴷ ⵉⴳ ⵜⴰⵍⴳⴰⵎⵜ, ⴷ ⵢⴰⵏ ⵓⵍⵓⴳⵏ ⴰⴷ ⵉⵙⵎⴰⵜⵔ ⵜⴰⴽⴰⵕⴹⴰ ⴰⵎ ⵜⵜⵓⵙⵎⴷ ⵎⵍⵎⵉ ⵜⵜⵓⵙⵎⵓⵜⵜⵉ ⵖⵔ ⴰⴷⴷⴰⴷ Completed ⵏⵖ Cancelled ⴷ ⴰⵎ ⵓⵔ ⵜⵜⵓⵙⵎⴷ ⴳ ⴰⴷⴷⴰⴷ Active ⵏⵖ Deferred. ⵉⵍⵓⴳⵏⵏ ⵏ ⵓⵙⵡⵓⵔⵉ ⴰⵡⵔⵎⴰⵏ ⵏ Wrike ⵓⵔ ⵣⵎⵉⵔⵏ ⴰⴷ ⵜⵜⵓⵙⵙⵓⴼⵖⵏ ⵙⴳ Wrike.",
   "text-contains-trigger-description": "ⵢⵜⵜⵡⴰⵙⵙⵉⴷⴼ ⵎⴰⵕⵕⴰ ⵜⵜⵓⵙⴽⴰⵔ ⵜⵓⵜⵍⴰⵢⵜ, ⵏⵖ ⵢⵜⵜⵓⴱⴷⴻⵍ ⴰⵣⵡⵍ ⵏⵖ ⴰⴳⵍⵍⵉⴷ ⵏⵏⵙ, ⴷ ⴰⴹⵕⵉⵚ ⴰⵎⴰⵢⵏⵓ ⵢⵜⵜⵓⵙⵙⵉⴷⴼ ⴰⵢⴰ.",
-  "text-contains-trigger-label": "ⴰⴹⵕⵉⵚ ⵉⵜⵜⵓⵔⴰⵔⵏ"
+  "text-contains-trigger-label": "ⴰⴹⵕⵉⵚ ⵉⵜⵜⵓⵔⴰⵔⵏ",
+  "event-action": "ⵜⵉⴳⴰⵡⵜ",
+  "event-attempts": "ⵜⵉⵔⵎⵜⵉⵏ",
+  "event-bleed": "ⵉⵙⵎ",
+  "event-category": "ⵜⴰⵙⵎⵉⵍ",
+  "event-datetime": "ⴰⵙⴰⴽⵓⴷ ⴷ ⵡⴰⴽⵓⴷ",
+  "event-detail": "ⴰⴳⵍⴰⵎ",
+  "event-severity": "ⵜⴰⵏⵥⴰⴹⵜ",
+  "event-source": "ⴰⵖⴱⴰⵍⵓ",
+  "password-length-report-title": "ⵜⵉⵖⵣⵉ ⵏ ⵜⴳⵓⵔⵉ ⵏ ⵓⵣⵔⴰⵢ",
+  "recoveryReportTitle": "ⴰⵙⵎⴰⵍ",
+  "securityReportTitle": "ⵜⴰⵏⴼⵔⵓⵜ"
 }

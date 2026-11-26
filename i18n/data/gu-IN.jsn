@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike કાર્યપ્રવાહ",
   "r-wrike-workflow-note": "Wrike કાર્યપ્રવાહ સ્થિતિઓની યાદી છે; દરેક સ્થિતિ Active, Completed, Deferred અથવા Cancelled જૂથમાં હોય છે. નિકાસ આ બોર્ડની યાદીઓને બોર્ડના નામવાળા એક કાર્યપ્રવાહ તરીકે તે JSON બંધારણમાં લખે છે જે Wrikeનું API કાર્યપ્રવાહો માટે આપે છે: બોર્ડની Wrike Excel નિકાસ આયાત કરતાં પહેલાં Wrikeમાં તે કાર્યપ્રવાહ બનાવો, જેથી તેની સ્થિતિઓ લાગુ થાય. આયાત ઉપર પેસ્ટ કરેલું JSON, WeKanમાંથી અથવા Wrikeના GET /workflowsમાંથી, પસંદ કરેલા બોર્ડમાં વાંચે છે: યાદી વિનાની સ્થિતિ એક યાદી બને છે, અને એક નિયમ કાર્ડને Completed અથવા Cancelled સ્થિતિમાં ખસેડતાં પૂર્ણ તથા Active અથવા Deferred સ્થિતિમાં અપૂર્ણ ચિહ્નિત કરે છે. Wrikeના પોતાના સ્વચાલન નિયમો Wrikeમાંથી નિકાસ કરી શકાતા નથી.",
   "text-contains-trigger-description": "જ્યારે કાર્ડ બનાવવામાં આવે, અથવા તેનું શીર્ષક કે વર્ણન બદલવામાં આવે, અને નવું લખાણ આ સમાવે ત્યારે મેળ ખાય છે (અક્ષરના કદ સાથે કોઈ ફરક નથી).",
-  "text-contains-trigger-label": "શોધવા માટેનું લખાણ"
+  "text-contains-trigger-label": "શોધવા માટેનું લખાણ",
+  "event-action": "ક્રિયા",
+  "event-attempts": "પ્રયાસો",
+  "event-bleed": "નામ",
+  "event-category": "શ્રેણી",
+  "event-datetime": "તારીખ અને સમય",
+  "event-detail": "વિગત",
+  "event-severity": "ગંભીરતા",
+  "event-source": "સ્રોત",
+  "password-length-report-title": "પાસવર્ડની લંબાઈ",
+  "recoveryReportTitle": "પુનઃપ્રાપ્તિ",
+  "securityReportTitle": "સુરક્ષા"
 }

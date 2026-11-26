@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike Qu' He",
   "r-wrike-workflow-note": "Wrike Qu' He 'oH Dotlhmey tetlh'e', Hoch Active, Completed, Deferred pagh Cancelled ghomDaq. raSvam tetlhmey wa' rur ghItlh ngeH, raS ponglu', Wrike API Qu' HemeyvaD nobbogh JSONDaq: raS Wrike Excel ngeH Daqempa' WrikeDaq Qu' Hevetlh yIchenmoH, Dotlhmeychaj lo'lu'meH. Dung lanlu'pu'bogh JSONvetlh laD qem, WeKan pagh Wrike GET /workflows vo', wIvlu'bogh raSDaq: tetlh ghajbe'bogh Dotlh tetlh moj, 'ej Completed pagh Cancelled DotlhDaq vIHmoHlu'DI' 'echletHom rInpu' 'e' per chut, Active pagh Deferred DotlhDaq rInbe'. Wrike Qu'mey Daj chutmey ngeHlaHlu'be' Wrikevo'.",
   "text-contains-trigger-description": "DujHom chenmoHlu'DI', pagh pong pagh chu' choHlu'DI', latlh mu'mey chu' vetlh chevlu'DI' rap.",
-  "text-contains-trigger-label": "mu'mey nejlu'bogh"
+  "text-contains-trigger-label": "mu'mey nejlu'bogh",
+  "event-action": "vangghach",
+  "event-attempts": "nIDmey",
+  "event-bleed": "pong",
+  "event-category": "Segh",
+  "event-datetime": "jaj poH je",
+  "event-detail": "'ay'Hom",
+  "event-severity": "Saghghach",
+  "event-source": "mung",
+  "password-length-report-title": "pegh mu' tIqghach",
+  "recoveryReportTitle": "chu'qa'ghach",
+  "securityReportTitle": "Hub"
 }

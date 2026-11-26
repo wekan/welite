@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flux de trabalh Wrike",
   "r-wrike-workflow-note": "Un flux de trabalh Wrike es una lista d'estats, cadun dins lo grop Active, Completed, Deferred o Cancelled. L'exportacion escriu las listas d'aqueste tablèu coma un sol flux, nomenat coma lo tablèu, dins lo JSON que l'API de Wrike torna pels fluxes de trabalh : creatz aquel flux dins Wrike abans d'importar l'exportacion Excel Wrike del tablèu, per que sos estats sián aplicats. L'importacion legís aquel JSON pegat çai-sus, de WeKan o del GET /workflows de Wrike, dins lo tablèu causit : un estat sens lista ven una lista, e una règla marca una carta coma acabada quand es desplaçada dins un estat Completed o Cancelled e coma pas acabada dins un estat Active o Deferred. Las règlas d'automatizacion pròprias de Wrike se pòdon pas exportar de Wrike.",
   "text-contains-trigger-description": "Correspond quand una carta es creada, o que son títol o sa descripcion es modificat, e que lo tèxte novèl conten aquò (sens distincion de majuscula e minuscula).",
-  "text-contains-trigger-label": "Tèxte de recercar"
+  "text-contains-trigger-label": "Tèxte de recercar",
+  "event-action": "Accion",
+  "event-attempts": "Temptativas",
+  "event-bleed": "Nom",
+  "event-category": "Categoria",
+  "event-datetime": "Data e ora",
+  "event-detail": "Detalh",
+  "event-severity": "Gravitat",
+  "event-source": "Font",
+  "password-length-report-title": "Longor del senhal",
+  "recoveryReportTitle": "Recuperacion",
+  "securityReportTitle": "Seguretat"
 }

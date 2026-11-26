@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike darbplūsma",
   "r-wrike-workflow-note": "Wrike darbplūsma ir statusu saraksts, kurā katrs statuss ir grupā Active, Completed, Deferred vai Cancelled. Eksports ieraksta šī dēļa sarakstus kā vienu darbplūsmu ar dēļa nosaukumu JSON formātā, ko Wrike API atgriež darbplūsmām: izveidojiet šo darbplūsmu Wrike pirms dēļa Wrike Excel eksporta importēšanas, lai tiktu piemēroti tās statusi. Imports nolasa augstāk ielīmēto JSON no WeKan vai Wrike GET /workflows pieprasījuma izvēlētajā dēlī: statuss bez saraksta kļūst par sarakstu, un kārtula atzīmē kartiņu kā pabeigtu, kad tā tiek pārvietota uz statusu Completed vai Cancelled, un kā nepabeigtu statusā Active vai Deferred. Paša Wrike automatizācijas kārtulas nevar eksportēt no Wrike.",
   "text-contains-trigger-description": "Atbilst, kad tiek izveidota kartīte vai tiek mainīts tās nosaukums vai apraksts, un jaunais teksts satur šo (reģistrjutība netiek ņemta vērā).",
-  "text-contains-trigger-label": "Meklējamais teksts"
+  "text-contains-trigger-label": "Meklējamais teksts",
+  "event-action": "Darbība",
+  "event-attempts": "Mēģinājumi",
+  "event-bleed": "Nosaukums",
+  "event-category": "Kategorija",
+  "event-datetime": "Datums un laiks",
+  "event-detail": "Detaļas",
+  "event-severity": "Nopietnība",
+  "event-source": "Avots",
+  "password-length-report-title": "Paroles garums",
+  "recoveryReportTitle": "Atjaunošana",
+  "securityReportTitle": "Drošība"
 }

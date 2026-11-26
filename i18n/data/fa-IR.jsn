@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "گردش کار Wrike",
   "r-wrike-workflow-note": "گردش کار Wrike لیستی از وضعیت‌هاست که هر کدام در گروه Active، Completed، Deferred یا Cancelled قرار دارند. خروجی، لیست‌های این برد را به‌صورت یک گردش کار با نام برد، در قالب JSON که API مربوط به Wrike برای گردش کارها برمی‌گرداند می‌نویسد: پیش از وارد کردن خروجی Wrike Excel برد، آن گردش کار را در Wrike بسازید تا وضعیت‌هایش اعمال شوند. وارد کردن، JSON چسبانده‌شده در بالا را از WeKan یا درخواست GET /workflows در Wrike به برد انتخاب‌شده می‌خواند: وضعیتی که لیست ندارد به لیست تبدیل می‌شود و یک قانون، کارت را هنگام انتقال به وضعیت Completed یا Cancelled تکمیل‌شده و در وضعیت Active یا Deferred تکمیل‌نشده علامت می‌زند. قوانین خودکارسازی خود Wrike را نمی‌توان از Wrike خروجی گرفت.",
   "text-contains-trigger-description": "زمانی که کارتی ایجاد می‌شود یا عنوان یا توضیحات آن تغییر می‌کند و متن جدید شامل این باشد مطابقت دارد (بدون توجه به حروف بزرگ و کوچک).",
-  "text-contains-trigger-label": "متن مورد جستجو"
+  "text-contains-trigger-label": "متن مورد جستجو",
+  "event-action": "اقدام",
+  "event-attempts": "تلاش‌ها",
+  "event-bleed": "نام",
+  "event-category": "دسته‌بندی",
+  "event-datetime": "تاریخ و زمان",
+  "event-detail": "جزئیات",
+  "event-severity": "شدت",
+  "event-source": "منبع",
+  "password-length-report-title": "طول کلمه عبور",
+  "recoveryReportTitle": "بازیابی",
+  "securityReportTitle": "امنیت"
 }

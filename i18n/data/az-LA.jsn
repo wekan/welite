@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike iş axını",
   "r-wrike-workflow-note": "Wrike iş axını hər biri Active, Completed, Deferred və ya Cancelled qrupunda olan statuslar siyahısıdır. İxrac bu lövhənin siyahılarını lövhənin adı ilə adlandırılmış iş axını kimi, Wrike API-nin iş axınları üçün qaytardığı JSON formatında yazır: lövhənin Wrike Excel ixracını idxal etməzdən əvvəl Wrike-da bu iş axınını yaradın ki, statuslar tətbiq olunsun. İdxal yuxarıya yapışdırılmış, WeKan-dan və ya Wrike GET /workflows sorğusundan alınmış JSON-u seçilmiş lövhəyə oxuyur: siyahısı olmayan status siyahıya çevrilir, qayda isə kart Completed və ya Cancelled statusuna köçürüləndə onu tamamlanmış, Active və ya Deferred statusuna köçürüləndə tamamlanmamış kimi işarələyir. Wrike-ın öz avtomatlaşdırma qaydalarını Wrike-dan ixrac etmək mümkün deyil.",
   "text-contains-trigger-description": "Kart yaradıldıqda və ya onun başlığı yaxud təsviri dəyişdirildikdə, yeni mətn bunu ehtiva edərsə uyğunlaşır (böyük/kiçik hərflərə həssas deyil).",
-  "text-contains-trigger-label": "Axtarılacaq mətn"
+  "text-contains-trigger-label": "Axtarılacaq mətn",
+  "event-action": "Əməliyyat",
+  "event-attempts": "Cəhdlər",
+  "event-bleed": "Ad",
+  "event-category": "Kateqoriya",
+  "event-datetime": "Tarix və vaxt",
+  "event-detail": "Təfərrüat",
+  "event-severity": "Ciddilik",
+  "event-source": "Mənbə",
+  "password-length-report-title": "Parol uzunluğu",
+  "recoveryReportTitle": "Bərpa",
+  "securityReportTitle": "Təhlükəsizlik"
 }

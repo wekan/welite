@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike کا طریقۂ کار",
   "r-wrike-workflow-note": "Wrike کا طریقۂ کار حالتوں کی فہرست ہے؛ ہر حالت Active، Completed، Deferred یا Cancelled گروہ میں ہوتی ہے۔ برآمد اس بورڈ کی فہرستوں کو بورڈ کے نام سے ایک طریقۂ کار کے طور پر اس JSON شکل میں لکھتی ہے جو Wrike کی API طریقہ ہائے کار کے لیے واپس کرتی ہے۔ بورڈ کی Wrike Excel برآمد درآمد کرنے سے پہلے وہ طریقۂ کار Wrike میں بنائیں تاکہ اس کی حالتیں لاگو ہوں۔ درآمد اوپر چسپاں JSON کو، جو WeKan یا Wrike کے GET /workflows سے آیا ہو، منتخب بورڈ میں پڑھتی ہے: جس حالت کی فہرست نہ ہو اس کے لیے فہرست بنتی ہے، اور قاعدہ کارڈ کو Completed یا Cancelled حالت میں منتقل کرنے پر مکمل اور Active یا Deferred میں منتقل کرنے پر نامکمل نشان زد کرتا ہے۔ Wrike کے اپنے خودکار قواعد Wrike سے برآمد نہیں کیے جا سکتے۔",
   "text-contains-trigger-description": "اس وقت مماثل ہوتا ہے جب کارڈ بنایا جائے، یا اس کا عنوان یا تفصیل تبدیل ہو، اور نیا متن یہ شامل رکھتا ہو (بڑے چھوٹے حروف کی تفریق کے بغیر)۔",
-  "text-contains-trigger-label": "تلاش کے لیے متن"
+  "text-contains-trigger-label": "تلاش کے لیے متن",
+  "event-action": "اقدام",
+  "event-attempts": "کوششیں",
+  "event-bleed": "نام",
+  "event-category": "زمرہ",
+  "event-datetime": "تاریخ اور وقت",
+  "event-detail": "تفصیل",
+  "event-severity": "شدت",
+  "event-source": "ماخذ",
+  "password-length-report-title": "پاس ورڈ کی لمبائی",
+  "recoveryReportTitle": "بحالی",
+  "securityReportTitle": "سکیورٹی رپورٹ"
 }

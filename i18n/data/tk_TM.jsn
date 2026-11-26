@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike iş akymy",
   "r-wrike-workflow-note": "Wrike iş akymy ýagdaýlaryň sanawydyr, olaryň her biri Active, Completed, Deferred ýa-da Cancelled toparynda. Eksport bu tagtanyň sanawlaryny tagtanyň ady bilen bir iş akymy hökmünde, Wrike API-siniň iş akymlary üçin gaýtarýan JSON-ynda ýazýar: tagtanyň Wrike Excel eksportyny import etmezden öň şol iş akymyny Wrike-da dörediň, şeýdip onuň ýagdaýlary ulanylar. Import ýokarda goýlan şol JSON-y, WeKan-dan ýa-da Wrike-yň GET /workflows-yndan, saýlanan tagta okaýar: sanawy bolmadyk ýagdaý sanawa öwrülýär, düzgün bolsa kart Completed ýa-da Cancelled ýagdaýyna geçirilende ony tamamlanan, Active ýa-da Deferred ýagdaýynda tamamlanmadyk diýip belleýär. Wrike-yň öz awtomatlaşdyryş düzgünlerini Wrike-dan eksport edip bolmaýar.",
   "text-contains-trigger-description": "Bir kart oluşturulduğunda veya başlığı ya da açıklaması değiştirildiğinde ve yeni metin bunu içerdiğinde eşleşir (büyük/küçük harf duyarsız).",
-  "text-contains-trigger-label": "Aranacak metin"
+  "text-contains-trigger-label": "Aranacak metin",
+  "event-action": "Hereket",
+  "event-attempts": "Synanyşyklar",
+  "event-bleed": "At",
+  "event-category": "Kategoriýa",
+  "event-datetime": "Sene we wagt",
+  "event-detail": "Jikme-jiklik",
+  "event-severity": "Agyrlyk",
+  "event-source": "Çeşme",
+  "password-length-report-title": "Parolyň uzynlygy",
+  "recoveryReportTitle": "Dikeldiş",
+  "securityReportTitle": "Howpsuzlyk"
 }

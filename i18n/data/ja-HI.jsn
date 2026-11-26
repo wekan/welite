@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrikeの わーくふろー",
   "r-wrike-workflow-note": "Wrikeの わーくふろーは、じょうたいの いちらんです。それぞれの じょうたいは Active、Completed、Deferred、Cancelledの どれかの ぐるーぷに はいります。えくすぽーとでは、この ぼーどの りすとを、ぼーどめいを もつ ひとつの わーくふろーとして、Wrike APIが わーくふろーように かえす JSONけいしきで かきだします。じょうたいを てきようするには、ぼーどの Wrike Excelえくすぽーとを いんぽーとする まえに、この わーくふろーを Wrikeで つくってください。いんぽーとでは、うえに はりつけた WeKan または Wrikeの GET /workflowsからの JSONを、えらんだ ぼーどに よみこみます。たいおうする りすとが ない じょうたいは りすとに なります。Completed または Cancelledに うつした かーどを かんりょう、Active または Deferredでは みかんりょうに する るーるが つくられます。Wrikeどくじの じどうかるーるは Wrikeから えくすぽーとできません。",
   "text-contains-trigger-description": "カードが作成されたとき、またはそのタイトルもしくは説明が変更されたときに、新しいテキストがこれを含む場合に一致します（大文字小文字は区別しません）。",
-  "text-contains-trigger-label": "検索するテキスト"
+  "text-contains-trigger-label": "検索するテキスト",
+  "event-action": "アクション",
+  "event-attempts": "試行回数",
+  "event-bleed": "名前",
+  "event-category": "カテゴリ",
+  "event-datetime": "日時",
+  "event-detail": "詳細",
+  "event-severity": "重大度",
+  "event-source": "ソース",
+  "password-length-report-title": "パスワードの長さ",
+  "recoveryReportTitle": "復旧",
+  "securityReportTitle": "セキュリティ"
 }

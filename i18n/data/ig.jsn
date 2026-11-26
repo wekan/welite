@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Usoro ọrụ Wrike",
   "r-wrike-workflow-note": "Usoro ọrụ Wrike bụ ndepụta ọnọdụ, nke ọ bụla nọ n’ìgwè Active, Completed, Deferred ma ọ bụ Cancelled. Mbupụ na-ede ndepụta bọọdụ a dịka otu usoro ọrụ nwere aha bọọdụ ahụ, na JSON API Wrike na-eweghachi maka usoro ọrụ: mepụta usoro ọrụ ahụ na Wrike tupu ibubata mbupụ Wrike Excel nke bọọdụ ahụ, ka e jiri ọnọdụ ya. Mbubata na-agụ JSON e tinyere n’elu, site na WeKan ma ọ bụ GET /workflows nke Wrike, n’ime bọọdụ ahọpụtara: ọnọdụ na-enweghị ndepụta na-aghọ ndepụta, iwu na-akakwa kaadị ka emechara mgbe e bugara ya na ọnọdụ Completed ma ọ bụ Cancelled, ma ka emechaghị na Active ma ọ bụ Deferred. Enweghị ike ibupụ iwu akpaaka nke Wrike n’onwe ya site na Wrike.",
   "text-contains-trigger-description": "Ọ na-adaba mgbe e mepụtara kaadị, ma ọ bụ mgbe agbanwere aha ya ma ọ bụ nkọwa ya, ma ederede ọhụrụ nwere nke a (a na-adịghị ewepụta mkpụrụedemede buru ibu ma ọ bụ nta).",
-  "text-contains-trigger-label": "Ederede a ga-achọ"
+  "text-contains-trigger-label": "Ederede a ga-achọ",
+  "event-action": "Omume",
+  "event-attempts": "Mgbalị",
+  "event-bleed": "Aha",
+  "event-category": "Ụdị",
+  "event-datetime": "Ụbọchị na oge",
+  "event-detail": "Nkọwa",
+  "event-severity": "Ịdị njọ",
+  "event-source": "Isi mmalite",
+  "password-length-report-title": "Ogologo okwuntughe",
+  "recoveryReportTitle": "Mgbake",
+  "securityReportTitle": "Nchekwa"
 }

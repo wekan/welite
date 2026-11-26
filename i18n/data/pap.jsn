@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Fluho di trabou di Wrike",
   "r-wrike-workflow-note": "Un fluho di trabou di Wrike ta un lista di estadonan, kada un den e grupo Active, Completed, Deferred òf Cancelled. Eksportashon ta skirbi e listanan di e tabla aki komo un fluho, ku e nòmber di e tabla, den e JSON ku e API di Wrike ta duna bèk pa fluhonan di trabou: krea e fluho ei den Wrike promé ku importá e eksportashon di Excel di Wrike pa e tabla, pa su estadonan wordu apliká. Importashon ta lesa e JSON pegá ariba, di WeKan òf di Wrike GET /workflows, den e tabla selektá: un estado sin lista ta bira un lista, i un regla ta marka un karchi komo kompletá ora e ta wordu mové na un estado Completed òf Cancelled, i komo no kompletá den un estado Active òf Deferred. E reglanan di automatisashon propio di Wrike no por wordu eksportá for di Wrike.",
   "text-contains-trigger-description": "E ta match ora nan krea un karchi, òf nan kambia su título òf deskripshon, i e teksto nobo ta kontené esaki (sin distinshon entre lèter grandi i chikí).",
-  "text-contains-trigger-label": "Teksto pa buska"
+  "text-contains-trigger-label": "Teksto pa buska",
+  "event-action": "Akshon",
+  "event-attempts": "Intentos",
+  "event-bleed": "Nòmber",
+  "event-category": "Categoría",
+  "event-datetime": "Fecha i ora",
+  "event-detail": "Detaye",
+  "event-severity": "Grabedad",
+  "event-source": "Origen",
+  "password-length-report-title": "Largura di kontraseña",
+  "recoveryReportTitle": "Recuperashon",
+  "securityReportTitle": "Seguridat"
 }

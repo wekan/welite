@@ -451,6 +451,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   non-admin's /customFields/insert or update of adminOnly are refused. WeKan's
   copyCard copies a card without the values its copier may not write. 415 of
   WeKan's tests pass.
+- Add Admin Panel / Problems / Security Report (`src/wlprob.pas`, Weddy's
+  securityreport.pug): the security stream's summary rows - kind, source,
+  the most recent account and how many times - newest first, searched and a
+  page at a time, for a site admin. 416 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

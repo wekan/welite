@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Aliran kerja Wrike",
   "r-wrike-workflow-note": "Aliran kerja Wrike ialah senarai status, setiap satunya dalam kumpulan Active, Completed, Deferred atau Cancelled. Eksport menulis senarai papan ini sebagai satu aliran kerja yang dinamakan mengikut papan, dalam JSON yang dikembalikan oleh API Wrike untuk aliran kerja: cipta aliran kerja itu dalam Wrike sebelum mengimport eksport Wrike Excel papan supaya statusnya digunakan. Import membaca JSON yang ditampal di atas, daripada WeKan atau GET /workflows Wrike, ke papan yang dipilih: status tanpa senarai menjadi senarai, dan peraturan menandakan kad sebagai selesai apabila dipindahkan ke status Completed atau Cancelled, serta belum selesai dalam status Active atau Deferred. Peraturan automasi Wrike sendiri tidak boleh dieksport daripada Wrike.",
   "text-contains-trigger-description": "Sepadan apabila kad dicipta, atau tajuk atau penerangannya diubah, dan teks baharu mengandungi ini (tidak sensitif huruf besar/kecil).",
-  "text-contains-trigger-label": "Teks untuk dicari"
+  "text-contains-trigger-label": "Teks untuk dicari",
+  "event-action": "Tindakan",
+  "event-attempts": "Percubaan",
+  "event-bleed": "Nama",
+  "event-category": "Kategori",
+  "event-datetime": "Tarikh dan masa",
+  "event-detail": "Butiran",
+  "event-severity": "Keterukan",
+  "event-source": "Sumber",
+  "password-length-report-title": "Panjang kata laluan",
+  "recoveryReportTitle": "Pemulihan",
+  "securityReportTitle": "Keselamatan"
 }

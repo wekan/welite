@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ਵਰਕਫਲੋ",
   "r-wrike-workflow-note": "Wrike ਵਰਕਫਲੋ ਸਥਿਤੀਆਂ ਦੀ ਇੱਕ ਸੂਚੀ ਹੈ, ਹਰ ਇੱਕ Active, Completed, Deferred ਜਾਂ Cancelled ਸਮੂਹ ਵਿੱਚ। ਨਿਰਯਾਤ ਇਸ ਬੋਰਡ ਦੀਆਂ ਸੂਚੀਆਂ ਨੂੰ ਬੋਰਡ ਦੇ ਨਾਮ 'ਤੇ ਇੱਕ ਵਰਕਫਲੋ ਵਜੋਂ ਲਿਖਦਾ ਹੈ, ਉਸ JSON ਵਿੱਚ ਜੋ Wrike ਦਾ API ਵਰਕਫਲੋਆਂ ਲਈ ਵਾਪਸ ਕਰਦਾ ਹੈ: ਬੋਰਡ ਦਾ Wrike Excel ਨਿਰਯਾਤ ਆਯਾਤ ਕਰਨ ਤੋਂ ਪਹਿਲਾਂ Wrike ਵਿੱਚ ਉਹ ਵਰਕਫਲੋ ਬਣਾਓ, ਤਾਂ ਜੋ ਉਸਦੀਆਂ ਸਥਿਤੀਆਂ ਲਾਗੂ ਹੋਣ। ਆਯਾਤ ਉੱਪਰ ਪੇਸਟ ਕੀਤਾ ਉਹ JSON, WeKan ਤੋਂ ਜਾਂ Wrike ਦੇ GET /workflows ਤੋਂ, ਚੁਣੇ ਬੋਰਡ ਵਿੱਚ ਪੜ੍ਹਦਾ ਹੈ: ਸੂਚੀ ਤੋਂ ਬਿਨਾਂ ਸਥਿਤੀ ਇੱਕ ਸੂਚੀ ਬਣ ਜਾਂਦੀ ਹੈ, ਅਤੇ ਇੱਕ ਨਿਯਮ ਕਾਰਡ ਨੂੰ ਪੂਰਾ ਨਿਸ਼ਾਨਬੱਧ ਕਰਦਾ ਹੈ ਜਦੋਂ ਉਹ Completed ਜਾਂ Cancelled ਸਥਿਤੀ ਵਿੱਚ ਜਾਂਦਾ ਹੈ ਅਤੇ Active ਜਾਂ Deferred ਵਿੱਚ ਅਧੂਰਾ। Wrike ਦੇ ਆਪਣੇ ਆਟੋਮੇਸ਼ਨ ਨਿਯਮ Wrike ਤੋਂ ਨਿਰਯਾਤ ਨਹੀਂ ਕੀਤੇ ਜਾ ਸਕਦੇ।",
   "text-contains-trigger-description": "ਜਦੋਂ ਕਾਰਡ ਬਣਾਇਆ ਜਾਂਦਾ ਹੈ, ਜਾਂ ਇਸਦਾ ਸਿਰਲੇਖ ਜਾਂ ਵੇਰਵਾ ਬਦਲਿਆ ਜਾਂਦਾ ਹੈ, ਅਤੇ ਨਵਾਂ ਟੈਕਸਟ ਇਹ ਸ਼ਾਮਲ ਕਰਦਾ ਹੈ ਤਾਂ ਮੇਲ ਖਾਂਦਾ ਹੈ (ਅੱਖਰ ਦਾ ਆਕਾਰ ਮਾਇਨੇ ਨਹੀਂ ਰੱਖਦਾ)।",
-  "text-contains-trigger-label": "ਖੋਜਣ ਲਈ ਟੈਕਸਟ"
+  "text-contains-trigger-label": "ਖੋਜਣ ਲਈ ਟੈਕਸਟ",
+  "event-action": "ਕਾਰਵਾਈ",
+  "event-attempts": "ਕੋਸ਼ਿਸ਼ਾਂ",
+  "event-bleed": "ਨਾਮ",
+  "event-category": "ਸ਼੍ਰੇਣੀ",
+  "event-datetime": "ਮਿਤੀ ਅਤੇ ਸਮਾਂ",
+  "event-detail": "ਵੇਰਵਾ",
+  "event-severity": "ਗੰਭੀਰਤਾ",
+  "event-source": "ਸਰੋਤ",
+  "password-length-report-title": "ਪਾਸਵਰਡ ਦੀ ਲੰਬਾਈ",
+  "recoveryReportTitle": "ਬਹਾਲੀ",
+  "securityReportTitle": "ਸੁਰੱਖਿਆ"
 }

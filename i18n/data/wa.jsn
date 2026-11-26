@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Cours di bouye Wrike",
   "r-wrike-workflow-note": "On cours di bouye Wrike est ene djivêye d' estats, tchaeke dins l' groupe Active, Completed, Deferred ou Cancelled. L' ebagaedje scrît les djivêyes di ci tåvlea ci come onk, lomé come li tåvlea, dins l' JSON ki l' API di Wrike rind po les cours di bouye: fijhoz ci cours di bouye la dins Wrike divant d' abaguer l' ebagaedje Excel Wrike do tåvlea, po ki ses estats soeyexhe metous. L' abagaedje lét ci JSON la aclapé pa dzeu, di WeKan ou do GET /workflows di Wrike, dins l' tåvlea tchoezi: on estat sins djivêye divint ene djivêye, eyet ene rîle marke ene cåte come fineye cwand ele est bodjeye dins on estat Completed ou Cancelled eyet nén fineye dins on estat Active ou Deferred. Les prôpès rîles d' otomatizåcion di Wrike ni polèt nén esse ebaguêyes foû di Wrike.",
   "text-contains-trigger-description": "Corespond cwand ene cåte est fwaite, ou ki s' tite ou s' discrijhaedje est candjî, eyet li novea tecse a çoula (sins fé cåze inte grandès et ptitès letes).",
-  "text-contains-trigger-label": "Tecse a cweri"
+  "text-contains-trigger-label": "Tecse a cweri",
+  "event-action": "Accion",
+  "event-attempts": "Sayes",
+  "event-bleed": "No",
+  "event-category": "Categoreye",
+  "event-datetime": "Date et eure",
+  "event-detail": "Detay",
+  "event-severity": "Severité",
+  "event-source": "Sourdant",
+  "password-length-report-title": "Longueu do sicret",
+  "recoveryReportTitle": "Ricweraedje",
+  "securityReportTitle": "Rapoirt di såvrité"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ୱାର୍କଫ୍ଲୋ",
   "r-wrike-workflow-note": "ଏକ Wrike ୱାର୍କଫ୍ଲୋ ହେଉଛି ସ୍ଥିତିଗୁଡ଼ିକର ଏକ ତାଲିକା, ପ୍ରତ୍ୟେକ Active, Completed, Deferred କିମ୍ବା Cancelled ଗୋଷ୍ଠୀରେ। ରପ୍ତାନି ଏହି ବୋର୍ଡର ତାଲିକାଗୁଡ଼ିକୁ ବୋର୍ଡ ନାମରେ ଗୋଟିଏ ୱାର୍କଫ୍ଲୋ ଭାବରେ, Wrike ର API ୱାର୍କଫ୍ଲୋ ପାଇଁ ଫେରାଉଥିବା JSON ରେ ଲେଖେ: ବୋର୍ଡର Wrike Excel ରପ୍ତାନି ଆମଦାନି କରିବା ପୂର୍ବରୁ Wrike ରେ ସେହି ୱାର୍କଫ୍ଲୋ ତିଆରି କରନ୍ତୁ, ଯାହାଫଳରେ ଏହାର ସ୍ଥିତିଗୁଡ଼ିକ ପ୍ରୟୋଗ ହେବ। ଆମଦାନି ଉପରେ ପେଷ୍ଟ କରାଯାଇଥିବା ସେହି JSON, WeKan ରୁ କିମ୍ବା Wrike ର GET /workflows ରୁ, ବଛାଯାଇଥିବା ବୋର୍ଡରେ ପଢ଼େ: ତାଲିକା ବିନା ସ୍ଥିତି ଏକ ତାଲିକା ହୁଏ, ଏବଂ ଏକ ନିୟମ କାର୍ଡକୁ Completed କିମ୍ବା Cancelled ସ୍ଥିତିକୁ ଘୁଞ୍ଚାଇଲେ ସମ୍ପୂର୍ଣ୍ଣ ଏବଂ Active କିମ୍ବା Deferred ରେ ଅସମ୍ପୂର୍ଣ୍ଣ ଚିହ୍ନିତ କରେ। Wrike ର ନିଜ ସ୍ୱୟଂଚାଳିତ ନିୟମଗୁଡ଼ିକ Wrike ରୁ ରପ୍ତାନି କରାଯାଇପାରିବ ନାହିଁ।",
   "text-contains-trigger-description": "କାର୍ଡ ସୃଷ୍ଟି ହେଲେ କିମ୍ବା ଏହାର ଶୀର୍ଷକ ବା ବିବରଣୀ ବଦଳିଲେ, ଏବଂ ନୂଆ ପାଠ୍ୟରେ ଏହା ଥିଲେ ମେଳ ହୁଏ (ବଡ଼ ଓ ଛୋଟ ଅକ୍ଷର ମଧ୍ୟରେ ଭେଦ ନାହିଁ)।",
-  "text-contains-trigger-label": "ଖୋଜିବାକୁ ଥିବା ପାଠ୍ୟ"
+  "text-contains-trigger-label": "ଖୋଜିବାକୁ ଥିବା ପାଠ୍ୟ",
+  "event-action": "କାର୍ଯ୍ୟ",
+  "event-attempts": "ପ୍ରଚେଷ୍ଟା",
+  "event-bleed": "ନାମ",
+  "event-category": "ବର୍ଗ",
+  "event-datetime": "ତାରିଖ ଏବଂ ସମୟ",
+  "event-detail": "ବିବରଣୀ",
+  "event-severity": "ଗମ୍ଭୀରତା",
+  "event-source": "ଉତ୍ସ",
+  "password-length-report-title": "ପାସୱାର୍ଡ ଦୈର୍ଘ୍ୟ",
+  "recoveryReportTitle": "ପୁନରୁଦ୍ଧାର",
+  "securityReportTitle": "ସୁରକ୍ଷା"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-workflow",
   "r-wrike-workflow-note": "Een Wrike-workflow is een lijst van statussen, elk in de groep Active, Completed, Deferred of Cancelled. Exporteren schrijft de lijsten van dit bord als één workflow, genoemd naar het bord, in de JSON die de API van Wrike voor workflows teruggeeft: maak die workflow aan in Wrike voor u de Wrike Excel-export van het bord importeert, zodat de statussen toegepast worden. Importeren leest die JSON, hierboven geplakt, uit WeKan of uit GET /workflows van Wrike, in het gekozen bord: een status zonder lijst wordt een lijst, en een regel markeert een kaart als voltooid wanneer ze naar een status Completed of Cancelled verplaatst wordt, en als onvoltooid in een status Active of Deferred. De eigen automatiseringsregels van Wrike kunnen niet uit Wrike geëxporteerd worden.",
   "text-contains-trigger-description": "Komt overeen wanneer een kaart wordt aangemaakt, of de titel of beschrijving wordt gewijzigd, en de nieuwe tekst dit bevat (hoofdlettergevoeligheid speelt geen rol).",
-  "text-contains-trigger-label": "Te zoeken tekst"
+  "text-contains-trigger-label": "Te zoeken tekst",
+  "event-action": "Actie",
+  "event-attempts": "Pogiengen",
+  "event-bleed": "Naam",
+  "event-category": "Categorie",
+  "event-datetime": "Datum en tijd",
+  "event-detail": "Bijzonderheid van gebeurtenis",
+  "event-severity": "Ernst",
+  "event-source": "Bron",
+  "password-length-report-title": "Wachtwoordlengte",
+  "recoveryReportTitle": "Herstel",
+  "securityReportTitle": "Beveiliging"
 }

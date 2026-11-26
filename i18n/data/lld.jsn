@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flus de lëur de Wrike",
   "r-wrike-workflow-note": "N flus de lëur de Wrike é na lista de stać, vignun tl grup Active, Completed, Deferred o Cancelled. L'esportaziun scrí les listes de chësc tofl sciöche un flus, cun l'inom dl tofl, tl JSON che l'API de Wrike dá zoruch por i flus de lëur: fá chël flus te Wrike dan che t'importëies l'esportaziun Excel de Wrike dl tofl, inscí che so stać vëgn adorá. L'importaziun lí chël JSON incolé dessura, da WeKan o dal GET /workflows de Wrike, tl tofl tlü fora: n stat zënza lista dëventa na lista, y na regula segna na ciarta sciöche conclüdia canche ara vëgn spostada te n stat Completed o Cancelled y nia conclüdia te n stat Active o Deferred. Les regules de automatisaziun de Wrike instësc ne po nia gnì esportades da Wrike.",
   "text-contains-trigger-description": "Va bën canche na ciarta vën criada, o si titul o descrizion vën mudà, y l test nuef à ite chësc (zënza fé desferënza danter lëtres granes y pitles).",
-  "text-contains-trigger-label": "Test da crì"
+  "text-contains-trigger-label": "Test da crì",
+  "event-action": "Azion",
+  "event-attempts": "Tentatifs",
+  "event-bleed": "Inom",
+  "event-category": "Categoria",
+  "event-datetime": "Data y ëura",
+  "event-detail": "Dettaglio",
+  "event-severity": "Gravità",
+  "event-source": "Urigin",
+  "password-length-report-title": "Lunghezza dla parola secreta",
+  "recoveryReportTitle": "Ripristino",
+  "securityReportTitle": "Rapport de segurëza"
 }

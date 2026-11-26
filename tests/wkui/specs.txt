@@ -314,3 +314,4 @@ admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through r
 admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through definition
 admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through definition-insert
 admin-only-custom-fields.e2e.js: ordinary member copying retains public values and omits protected values
+admin-only-custom-fields.e2e.js: blocked field attacks appear as a Problems summary without secret values

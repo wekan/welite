@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Sruth-obbree Wrike",
   "r-wrike-workflow-note": "Ta sruth-obbree Wrike ny rolley dy staydyn, dy chooilley unnane ayns y bunnee Active, Completed, Deferred ny Cancelled. Ta Cur magh screeu rolleeyn y voayrd shoh myr un, enmit er y voayrd, ayns y JSON ta API Wrike cur er ash son sruthyn-obbree: jean y sruth-obbree shen ayns Wrike roish cur stiagh cur magh Excel Wrike y voayrd, dy vod ny staydyn echey ve currit er. Ta Cur stiagh lhaih y JSON shen greimit heose, veih WeKan ny veih GET /workflows Wrike, gys y boayrd reiht: ta stayd gyn rolley jannoo rolley, as ta reill cowraghey kaart myr jeant tra t'eh scughit gys stayd Completed ny Cancelled as neuhjeant ayns stayd Active ny Deferred. Cha vod reillyn hene-obbraghey Wrike ve currit magh veih Wrike.",
   "text-contains-trigger-description": "Ta shen cordail tra t’eh er ny chroo caart, ny tra t’eh er ny caghlaa yn ennym ny yn coontey, as ta'n teks noa cummey shoh (gyn currym er lettyryn mooar ny beg).",
-  "text-contains-trigger-label": "Y teks dy hirrey er e hon"
+  "text-contains-trigger-label": "Y teks dy hirrey er e hon",
+  "event-action": "Jantys",
+  "event-attempts": "Prowalyn",
+  "event-bleed": "Ennym",
+  "event-category": "Ronney",
+  "event-datetime": "Date as traa",
+  "event-detail": "Myn-phoynt",
+  "event-severity": "Çhymmeys",
+  "event-source": "Bun",
+  "password-length-report-title": "Lhiurid fockle-arrey",
+  "recoveryReportTitle": "Aaghey",
+  "securityReportTitle": "Tuarastyl sauçhys"
 }

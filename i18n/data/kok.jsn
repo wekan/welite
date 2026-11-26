@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike कार्यप्रवाह",
   "r-wrike-workflow-note": "Wrike कार्यप्रवाह म्हळ्यार स्थितींची वळेरी, दरेक Active, Completed, Deferred वा Cancelled गटांत. निर्यात ह्या फळ्याच्यो वळेऱ्यो एक कार्यप्रवाह म्हूण, फळ्याच्या नांवान, Wrike चें API कार्यप्रवाहांखातीर परत दिता त्या JSON ांत बरयता: फळ्याची Wrike Excel निर्यात आयात करचे आदीं तो कार्यप्रवाह Wrike त तयार करात, जाका लागून ताच्यो स्थिती लागू जातात. आयात वयर पेस्ट केल्लो JSON, WeKan वयल्यान वा Wrike च्या GET /workflows वयल्यान, वेंचिल्ल्या फळ्यांत वाचता: वळेरी नाशिल्ली स्थिती वळेरी जाता, आनी कार्ड Completed वा Cancelled स्थितींत हालयलें जाल्यार नेम तें पुराय म्हूण चिन्नीत करता आनी Active वा Deferred स्थितींत अपुराय म्हूण. Wrike चे आपले स्वयंचलन नेम Wrike तल्यान निर्यात करूंक जायनात.",
   "text-contains-trigger-description": "कार्ड तयार केल्ल्यावेळार, वा तांचें शीर्षक वा विवरण बदल्ल्यार, आनी नवो मजकूर हाका आसा जाल्यार जुळटा (व्हड लहान अक्षरांक फरक ना).",
-  "text-contains-trigger-label": "सोदून काडपाची मजकूर"
+  "text-contains-trigger-label": "सोदून काडपाची मजकूर",
+  "event-action": "कृती",
+  "event-attempts": "यत्न",
+  "event-bleed": "नांव",
+  "event-category": "वर्ग",
+  "event-datetime": "तारीख आनी वेळ",
+  "event-detail": "तपशील",
+  "event-severity": "गंभीरताय",
+  "event-source": "स्त्रोत",
+  "password-length-report-title": "पासवर्डाची लांबाय",
+  "recoveryReportTitle": "पुनर्प्राप्ती",
+  "securityReportTitle": "सुरक्षा अहवाल"
 }

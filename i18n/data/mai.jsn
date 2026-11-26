@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike कार्यप्रवाह",
   "r-wrike-workflow-note": "Wrike कार्यप्रवाह स्थिति सभक एकटा सूची अछि, प्रत्येक Active, Completed, Deferred वा Cancelled समूह मे। निर्यात एहि पट्टक सूची सभकेँ, पट्टक नाम पर एकटा कार्यप्रवाहक रूपमे, ओहि JSON मे लिखैत अछि जे Wrike क API कार्यप्रवाह लेल दैत अछि: पट्टक Wrike Excel निर्यात आयात करबा सँ पहिने Wrike मे ओ कार्यप्रवाह बनाउ, जाहि सँ ओकर स्थिति लागू होअए। आयात ऊपर पेस्ट कएल ओ JSON, WeKan सँ वा Wrike क GET /workflows सँ, चुनल पट्ट मे पढ़ैत अछि: बिना सूचीक स्थिति एकटा सूची बनैत अछि, आ एकटा नियम कार्डकेँ पूर्ण चिह्नित करैत अछि जखन ओ Completed वा Cancelled स्थिति मे लऽ जाएल जाइत अछि आ अपूर्ण जखन Active वा Deferred मे। Wrike क अपन स्वचालन नियम Wrike सँ निर्यात नहि कएल जा सकैत अछि।",
   "text-contains-trigger-description": "ई तखन मेल खाइत अछि जखन कार्ड बनाओल जाइत अछि, वा एकर शीर्षक अथवा विवरण बदलल जाइत अछि, आ नव पाठ मे ई सामिल अछि (बड़का छोट अक्षर मे अंतर नहि)।",
-  "text-contains-trigger-label": "खोजबाक शब्द"
+  "text-contains-trigger-label": "खोजबाक शब्द",
+  "event-action": "कार्रवाई",
+  "event-attempts": "प्रयास",
+  "event-bleed": "नाम",
+  "event-category": "श्रेणी",
+  "event-datetime": "दिनांक आ समय",
+  "event-detail": "विवरण",
+  "event-severity": "गंभीरता",
+  "event-source": "स्रोत",
+  "password-length-report-title": "पासवर्डक लंबाइ",
+  "recoveryReportTitle": "पुनर्प्राप्ति",
+  "securityReportTitle": "सुरक्षा रिपोर्ट"
 }

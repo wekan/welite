@@ -298,6 +298,14 @@ def http_checks(server, tmp, backend):
         request('POST', '/_methods/%2Fcards%2Fupdate', [card_id, {'$set': {'title': 'View Card'}}], cookie=owner, as_json=True)
         status, headers, body, _ = request('GET', '/b/%s/live?v=1' % board_id, cookie=stranger)
         assert status == 404 and b'event' not in body, (status, body)
+        # Admin Panel / Problems / Security Report: a site admin's page (the
+        # owner signed up first). Negative: anybody else is not authorized;
+        # a search is shown back escaped, never as markup.
+        status, _, page, _ = request('GET', '/admin/problems/security-report?q=%3Cb%3Ex', cookie=owner)
+        assert status == 200 and b'class="table-page-table security-report"' in page and b'value="&lt;b&gt;x"' in page, page[-400:]
+        assert b'<b>x' not in page
+        status, _, page, _ = request('GET', '/admin/problems/security-report', cookie=stranger)
+        assert status == 404 and b'security-report"' not in page
         # createCardWithDueDate: the Calendar's card on a day. Negative: no
         # date, a date that is not one, a stranger's board (AuthBleed).
         status, _, body, _ = request('POST', '/_methods/createCardWithDueDate',

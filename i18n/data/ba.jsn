@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike эш процесы",
   "r-wrike-workflow-note": "Wrike эш процесы — статустар исемлеге, уларҙың һәр береһе Active, Completed, Deferred йәки Cancelled төркөмөндә. Экспорт был тактаның исемлектәрен такта исеме менән аталған бер процесс итеп, Wrike API эш процестары өсөн ҡайтарған JSON-да яҙа: тактаның Wrike Excel экспортын импортлар алдынан был эш процесын Wrike-та булдырығыҙ, шунда уның статустары ҡулланыла. Импорт өҫтә ҡуйылған JSON-ды, WeKan-дан йәки Wrike-тың GET /workflows-ынан, һайланған тактаға уҡый: исемлеге булмаған статус исемлеккә әйләнә, ә ҡағиҙә карточканы Completed йәки Cancelled статусына күсерелгәндә тамамланған, Active йәки Deferred статусында тамамланмаған тип билдәләй. Wrike-тың үҙ автоматлаштырыу ҡағиҙәләрен Wrike-тан экспортлап булмай.",
   "text-contains-trigger-description": "Карта булдырылғанда йәки уның исеме йә тасуирламаһы үҙгәртелгәндә, яңы текст быны үҙ эсенә алһа тап килә (баш һәм бәләкәй хәрефтәргә ҡарамай).",
-  "text-contains-trigger-label": "Эҙләү өсөн текст"
+  "text-contains-trigger-label": "Эҙләү өсөн текст",
+  "event-action": "Ғәмәл",
+  "event-attempts": "Ынтылыштар",
+  "event-bleed": "Исем",
+  "event-category": "Категория",
+  "event-datetime": "Көн һәм ваҡыт",
+  "event-detail": "Ентеклек",
+  "event-severity": "Етдилек",
+  "event-source": "Сығанаҡ",
+  "password-length-report-title": "Серһүҙ оҙонлоғо",
+  "recoveryReportTitle": "Тергеҙеү",
+  "securityReportTitle": "Хәүефһеҙлек хисабы"
 }

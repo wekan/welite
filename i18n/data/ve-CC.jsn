@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flusso de lavoro Wrike",
   "r-wrike-workflow-note": "Un flusso de lavoro Wrike el ze na lista de stati, ognuno inte el grupo Active, Completed, Deferred o Cancelled. Esporta el scrive łe liste de sto quadro come uno, ciamà come el quadro, inte el JSON che l'API de Wrike ła ritorna par i flussi de lavoro: crea cuel flusso in Wrike prima de inportar l'esportasion Excel Wrike del quadro, cusì i so stati i vien aplicà. Inporta el łeze cuel JSON incołà de sora, da WeKan o da GET /workflows de Wrike, inte el quadro sielto: un stato sensa lista el deventa na lista, e na regoła ła segna na scheda conpletà co ła vien spostà in un stato Completed o Cancelled e no conpletà in un Active o Deferred. Łe regołe de automasion de Wrike no łe pol èsar esportà da Wrike.",
   "text-contains-trigger-description": "Scata co na scheda ła vien creà, o co el so tìtoło o ła so descrision i vien canbià, e el testo novo el contien questo (no inporta maiùscołe o minùscołe).",
-  "text-contains-trigger-label": "Testo da sercar"
+  "text-contains-trigger-label": "Testo da sercar",
+  "event-action": "Asion",
+  "event-attempts": "Tentativi",
+  "event-bleed": "Nome",
+  "event-category": "Categoria",
+  "event-datetime": "Data e ora",
+  "event-detail": "Detajo",
+  "event-severity": "Gravità",
+  "event-source": "Fonte",
+  "password-length-report-title": "Longhesa de ła password",
+  "recoveryReportTitle": "Recupero",
+  "securityReportTitle": "Raporto de sicuresa"
 }

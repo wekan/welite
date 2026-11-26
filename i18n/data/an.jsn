@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Fluxo de treballo de Wrike",
   "r-wrike-workflow-note": "Un fluxo de treballo de Wrike ye una lista d'estaus, cadaguno en o grupo Active, Completed, Deferred u Cancelled. A exportación escribe as listas d'este tablero como un solo fluxo, con o nombre d'o tablero, en o JSON que torna a API de Wrike pa os fluxos de treballo: creya ixe fluxo en Wrike antes d'importar a exportación Excel de Wrike d'o tablero, ta que s'apliquen os suyos estaus. A importación leye ixe JSON apegau alto, de WeKan u d'o GET /workflows de Wrike, en o tablero eslechiu: un estau sin lista se torna una lista, y una regla marca una tarcheta como completada quan se mueve ta un estau Completed u Cancelled y como no completada en un estau Active u Deferred. As reglas d'automatización propias de Wrike no se pueden exportar dende Wrike.",
   "text-contains-trigger-description": "Coincide cuan se creya una targeta, u se cambia o suyo titol u descripción, e o texto nuevo contién isto (sin distinción entre mayusclas y minusclas).",
-  "text-contains-trigger-label": "Texto a mirar"
+  "text-contains-trigger-label": "Texto a mirar",
+  "event-action": "Acción",
+  "event-attempts": "Intentos",
+  "event-bleed": "Nombre",
+  "event-category": "Categoría",
+  "event-datetime": "Calendata y hora",
+  "event-detail": "Detalle",
+  "event-severity": "Gravedad",
+  "event-source": "Origen",
+  "password-length-report-title": "Longaria d'a clau de paso",
+  "recoveryReportTitle": "Recuperación",
+  "securityReportTitle": "Seguridad"
 }

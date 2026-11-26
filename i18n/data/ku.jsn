@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Herikîna karê ya Wrike",
   "r-wrike-workflow-note": "Herikîna karê ya Wrike lîsteyeke rewşan e, her yek di koma Active, Completed, Deferred an Cancelled de. Derxistin lîsteyên vê depoyê wekî yek, bi navê depoyê, di wê JSON-ê de dinivîse ku API-ya Wrike ji bo herikînên karê vedigerîne: berî têxistina derxistina Excel a Wrike ya depoyê wê herikîna karê li Wrike çêke, da ku rewşên wê werin sepandin. Têxistin wê JSON-a li jor zeliqandî, ji WeKan an ji GET /workflows ya Wrike, dixwîne û dixe depoya hilbijartî: rewşek bê lîste dibe lîsteyek, û rêbazek kartê wekî qediyayî nîşan dike dema ku ew tê birin rewşeke Completed an Cancelled, û wekî neqediyayî di rewşeke Active an Deferred de. Rêbazên otomasyonê yên Wrike bi xwe ji Wrike nayên derxistin.",
   "text-contains-trigger-description": "يتطابق عند إنشاء بطاقة، أو تغيير عنوانها أو وصفها، ويحتوي النص الجديد على هذا (دون تمييز بين الأحرف الكبيرة والصغيرة).",
-  "text-contains-trigger-label": "النص المراد البحث عنه"
+  "text-contains-trigger-label": "النص المراد البحث عنه",
+  "event-action": "Kiryar",
+  "event-attempts": "Ceribandin",
+  "event-bleed": "Nav",
+  "event-category": "Kategorî",
+  "event-datetime": "Dîrok û dem",
+  "event-detail": "Hûrgulî",
+  "event-severity": "Giranî",
+  "event-source": "Çavkanî",
+  "password-length-report-title": "Dirêjiya şîfreyê",
+  "recoveryReportTitle": "Vegerandin",
+  "securityReportTitle": "Rapora ewlehiyê"
 }

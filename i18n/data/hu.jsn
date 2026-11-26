@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike-munkafolyamat",
   "r-wrike-workflow-note": "A Wrike-munkafolyamat állapotok listája, amelyek mindegyike az Active, Completed, Deferred vagy Cancelled csoportba tartozik. Az exportálás a tábla listáit egyetlen, a tábláról elnevezett munkafolyamatként írja ki abban a JSON-formátumban, amelyet a Wrike API a munkafolyamatokhoz ad vissza: hozza létre ezt a munkafolyamatot a Wrike-ban a tábla Wrike Excel-exportjának importálása előtt, hogy az állapotai érvényesüljenek. Az importálás a fent beillesztett, WeKanból vagy a Wrike GET /workflows végpontjáról származó JSON-t olvassa be a kiválasztott táblába: a lista nélküli állapotból lista lesz, és egy szabály befejezettnek jelöli a kártyát, amikor Completed vagy Cancelled állapotba kerül, illetve befejezetlennek Active vagy Deferred állapotban. A Wrike saját automatizálási szabályai nem exportálhatók a Wrike-ból.",
   "text-contains-trigger-description": "Akkor egyezik, ha egy kártya létrejön, vagy a címe, illetve leírása megváltozik, és az új szöveg ezt tartalmazza (kis- és nagybetűre nem érzékeny).",
-  "text-contains-trigger-label": "Keresendő szöveg"
+  "text-contains-trigger-label": "Keresendő szöveg",
+  "event-action": "Művelet",
+  "event-attempts": "Próbálkozások",
+  "event-bleed": "Név",
+  "event-category": "Kategória",
+  "event-datetime": "Dátum és idő",
+  "event-detail": "Részlet",
+  "event-severity": "Súlyosság",
+  "event-source": "Forrás",
+  "password-length-report-title": "Jelszóhossz",
+  "recoveryReportTitle": "Helyreállítás",
+  "securityReportTitle": "Biztonság"
 }

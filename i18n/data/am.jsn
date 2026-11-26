@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "የWrike የሥራ ፍሰት",
   "r-wrike-workflow-note": "የWrike የሥራ ፍሰት የሁኔታዎች ዝርዝር ነው፣ እያንዳንዱም በActive፣ Completed፣ Deferred ወይም Cancelled ቡድን ውስጥ ነው። መላክ የዚህን ሰሌዳ ዝርዝሮች በሰሌዳው ስም የተሰየመ አንድ የሥራ ፍሰት አድርጎ፣ የWrike API ለሥራ ፍሰቶች በሚመልሰው JSON ይጽፋል፦ የሰሌዳውን የWrike Excel መላኪያ ከማስገባትዎ በፊት ያንን የሥራ ፍሰት በWrike ውስጥ ይፍጠሩ፣ ሁኔታዎቹ እንዲተገበሩ። ማስመጣት ከላይ የተለጠፈውን JSON፣ ከWeKan ወይም ከWrike GET /workflows፣ ወደ ተመረጠው ሰሌዳ ያነባል፦ ዝርዝር የሌለው ሁኔታ ዝርዝር ይሆናል፣ ደንብም ካርድ ወደ Completed ወይም Cancelled ሁኔታ ሲንቀሳቀስ እንደተጠናቀቀ፣ በActive ወይም Deferred ውስጥ ደግሞ እንዳልተጠናቀቀ ምልክት ያደርጋል። የWrike የራሱ የራስ-ሰር ደንቦች ከWrike ሊላኩ አይችሉም።",
   "text-contains-trigger-description": "ካርድ ሲፈጠር ወይም ርዕሱ ወይም መግለጫው ሲቀየር እና አዲሱ ጽሑፍ ይህን ካካተተ ይዛመዳል (የፊደል መጠን ግምት ውስጥ አይገባም)።",
-  "text-contains-trigger-label": "የሚፈለግ ጽሑፍ"
+  "text-contains-trigger-label": "የሚፈለግ ጽሑፍ",
+  "event-action": "እርምጃ",
+  "event-attempts": "ሙከራዎች",
+  "event-bleed": "ስም",
+  "event-category": "ምድብ",
+  "event-datetime": "ቀንና ሰዓት",
+  "event-detail": "ዝርዝር",
+  "event-severity": "ክብደት",
+  "event-source": "ምንጭ",
+  "password-length-report-title": "የይለፍ ቃል ርዝመት",
+  "recoveryReportTitle": "መልሶ ማግኘት",
+  "securityReportTitle": "የደህንነት ሪፖርት"
 }

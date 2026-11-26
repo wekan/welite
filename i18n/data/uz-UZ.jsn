@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ish jarayoni",
   "r-wrike-workflow-note": "Wrike ish jarayoni har biri Active, Completed, Deferred yoki Cancelled guruhiga kiruvchi holatlar roʻyxatidir. Eksport bu taxtaning roʻyxatlarini taxta nomi bilan atalgan bitta ish jarayoni sifatida, Wrike API ish jarayonlari uchun qaytaradigan JSON formatida yozadi: holatlar qoʻllanishi uchun taxtaning Wrike Excel eksportini import qilishdan oldin Wrike-da shu ish jarayonini yarating. Import yuqoriga joylashtirilgan, WeKan-dan yoki Wrike GET /workflows soʻrovidan olingan JSON-ni tanlangan taxtaga oʻqiydi: roʻyxati yoʻq holat roʻyxatga aylanadi, qoida esa karta Completed yoki Cancelled holatiga koʻchirilganda uni bajarilgan, Active yoki Deferred holatiga koʻchirilganda bajarilmagan deb belgilaydi. Wrike-ning oʻz avtomatlashtirish qoidalarini Wrike-dan eksport qilib boʻlmaydi.",
   "text-contains-trigger-description": "Karta yaratilganda yoki uning sarlavhasi yoki tavsifi o'zgartirilganda va yangi matn buni o'z ichiga olsa mos keladi (katta-kichik harflarga sezgir emas).",
-  "text-contains-trigger-label": "Qidiriladigan matn"
+  "text-contains-trigger-label": "Qidiriladigan matn",
+  "event-action": "Amal",
+  "event-attempts": "Urinishlar",
+  "event-bleed": "Nomi",
+  "event-category": "Toifa",
+  "event-datetime": "Sana va vaqt",
+  "event-detail": "Tafsilot",
+  "event-severity": "Jiddiylik",
+  "event-source": "Manba",
+  "password-length-report-title": "Parol uzunligi",
+  "recoveryReportTitle": "Tiklash",
+  "securityReportTitle": "Xavfsizlik"
 }

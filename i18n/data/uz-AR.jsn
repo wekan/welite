@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ایش جریانی",
   "r-wrike-workflow-note": "Wrike ایش جریانی - حالتلر رۉیختی، هر بیری Active، Completed، Deferred یاکی Cancelled گروهیده. اکسپورت اوشبو تخته رۉیختلرینی تخته نامی بیلن بیر ایش جریانی صفتیده، Wrike API سی ایش جریانلری اوچون قیته‌ره‌دیگن JSON ده یازه‌دی: تخته‌نینگ Wrike Excel اکسپورتینی ایمپورت قیلیشدن آلدین او ایش جریانینی Wrike ده یرتینگ، شونده اونینگ حالتلری قۉللنه‌دی. ایمپورت یوقاریده جایلشتیریلگن او JSON نی، WeKan دن یاکی Wrike نینگ GET /workflows دن، تنلنگن تخته‌گه اۉقیدی: رۉیختی یۉق حالت رۉیختگه ایلنه‌دی، قاعده ایسه کارت Completed یاکی Cancelled حالتیگه کۉچیریلگنده اونی تمام‌لنگن، Active یاکی Deferred ده ایسه تمام‌لنمه‌گن دېب بیلگیله‌یدی. Wrike نینگ اۉز اوتاماتلشتیریش قاعده‌لرینی Wrike دن اکسپورت قیلیب بۉلمیدی.",
   "text-contains-trigger-description": "کارت یرتیلگنده یاکی اونینگ سرلوحه‌سی یاکی توصیفی اۉزگرتیریلگنده وه ینگی متن بونی اۉز ایچیگه آلسه ماس کیله‌دی (کتته-کیچیک حرفلرگه سیزگیر ایمس).",
-  "text-contains-trigger-label": "قیدیریله‌دیگن متن"
+  "text-contains-trigger-label": "قیدیریله‌دیگن متن",
+  "event-action": "عمل",
+  "event-attempts": "اورینیشلر",
+  "event-bleed": "نامی",
+  "event-category": "تایفه",
+  "event-datetime": "سنه وه وقت",
+  "event-detail": "تفصیلات",
+  "event-severity": "جدّیلیک",
+  "event-source": "منبع",
+  "password-length-report-title": "پارول اوزونلیگی",
+  "recoveryReportTitle": "تیکلش",
+  "securityReportTitle": "خوفسیزلیک"
 }

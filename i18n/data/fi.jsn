@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike-työnkulku",
   "r-wrike-workflow-note": "Wrike-työnkulku on tilojen lista, jossa jokainen tila kuuluu ryhmään Active, Completed, Deferred tai Cancelled. Vienti kirjoittaa tämän taulun listat yhdeksi tällaiseksi työnkuluksi, joka nimetään taulun mukaan, siinä JSON-muodossa, jossa Wriken API palauttaa työnkulut: luo työnkulku Wrikessä ennen taulun Wrike Excel -viennin tuontia, jotta sen tilat otetaan käyttöön. Tuonti lukee yllä liitetyn JSONin, joka on peräisin WeKanista tai Wriken GET /workflows -kutsusta, valittuun tauluun: tilasta, jolla ei ole listaa, tulee lista, ja sääntö merkitsee kortin valmiiksi, kun se siirretään Completed- tai Cancelled-tilaan, ja keskeneräiseksi Active- tai Deferred-tilassa. Wriken omia automaatiosääntöjä ei voi viedä Wrikestä.",
   "text-contains-trigger-description": "Täsmää, kun kortti luodaan tai sen otsikkoa tai kuvausta muutetaan ja uusi teksti sisältää tämän (ei väliä kirjainkoolla).",
-  "text-contains-trigger-label": "Etsittävä teksti"
+  "text-contains-trigger-label": "Etsittävä teksti",
+  "event-action": "Toiminto",
+  "event-attempts": "Yritykset",
+  "event-bleed": "Nimi",
+  "event-category": "Luokka",
+  "event-datetime": "Päivämäärä ja aika",
+  "event-detail": "Tiedot",
+  "event-severity": "Vakavuus",
+  "event-source": "Lähde",
+  "password-length-report-title": "Salasanan pituus",
+  "recoveryReportTitle": "Palautus",
+  "securityReportTitle": "Tietoturva"
 }

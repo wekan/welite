@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Przepływ pracy Wrike",
   "r-wrike-workflow-note": "Przepływ pracy Wrike to lista statusów, z których każdy należy do grupy Active, Completed, Deferred lub Cancelled. Eksport zapisuje listy tej tablicy jako jeden taki przepływ o nazwie tablicy, w formacie JSON zwracanym przez API Wrike dla przepływów pracy: utwórz ten przepływ we Wrike przed zaimportowaniem eksportu Wrike Excel tej tablicy, aby jego statusy zostały zastosowane. Import wczytuje wklejony powyżej JSON z WeKan lub GET /workflows Wrike do wybranej tablicy: status bez listy staje się listą, a reguła oznacza kartę jako ukończoną po przeniesieniu do statusu Completed lub Cancelled i jako nieukończoną w statusie Active lub Deferred. Własnych reguł automatyzacji Wrike nie można eksportować z Wrike.",
   "text-contains-trigger-description": "Pasuje, gdy karta zostanie utworzona lub jej tytuł albo opis zostanie zmieniony, a nowy tekst zawiera to (bez rozróżniania wielkości liter).",
-  "text-contains-trigger-label": "Tekst do wyszukania"
+  "text-contains-trigger-label": "Tekst do wyszukania",
+  "event-action": "Działanie",
+  "event-attempts": "Próby",
+  "event-bleed": "Nazwa",
+  "event-category": "Kategoria",
+  "event-datetime": "Data i godzina",
+  "event-detail": "Szczegół",
+  "event-severity": "Ważność",
+  "event-source": "Źródło",
+  "password-length-report-title": "Długość hasła",
+  "recoveryReportTitle": "Odzyskiwanie",
+  "securityReportTitle": "Bezpieczeństwo"
 }

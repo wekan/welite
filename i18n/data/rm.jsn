@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Workflow da Wrike",
   "r-wrike-workflow-note": "In workflow da Wrike è ina glista da status, mintgin en la gruppa Active, Completed, Deferred u Cancelled. L'export scriva las glistas da questa tabella sco in workflow, numnà tenor la tabella, en il JSON che l'API da Wrike returna per workflows: creai quest workflow en Wrike avant che importar l'export Excel da Wrike da la tabella, uschè che ses status vegnan applitgads. L'importaziun legia quest JSON encollà survart, da WeKan u da GET /workflows da Wrike, en la tabella tschernida: in status senza glista daventa ina glista, ed ina regla marca ina carta sco terminada cura ch'ella vegn spustada en in status Completed u Cancelled e sco betg terminada en in status Active u Deferred. Las atgnas reglas d'automatisaziun da Wrike na pon betg vegnir exportadas da Wrike.",
   "text-contains-trigger-description": "Correspunda cur ch'ina carta vegn creada, u ch'il titel u la descripziun vegn midà, ed il text nov cuntegna quai (senza distinguer maiusclas e minusclas).",
-  "text-contains-trigger-label": "Text da tschertgar"
+  "text-contains-trigger-label": "Text da tschertgar",
+  "event-action": "Acziun",
+  "event-attempts": "Emprovas",
+  "event-bleed": "Num",
+  "event-category": "Categoria",
+  "event-datetime": "Data ed ura",
+  "event-detail": "Detagl",
+  "event-severity": "Gravitad",
+  "event-source": "Funtauna",
+  "password-length-report-title": "Lunghezza dal pled-clav",
+  "recoveryReportTitle": "Restabiliment",
+  "securityReportTitle": "Rapport da segirezza"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike иш агымы",
   "r-wrike-workflow-note": "Wrike иш агымы — бул статустардын тизмеси, ар бири Active, Completed, Deferred же Cancelled тобунда. Экспорт бул тактанын тизмелерин тактанын аты менен аталган бир иш агымы катары, Wrike API иш агымдары үчүн кайтарган JSON түрүндө жазат: тактанын Wrike Excel экспортун импорттоодон мурун ошол иш агымын Wrike'та түзүңүз, ошондо анын статустары колдонулат. Импорт жогоруда чапталган JSON'ду, WeKan'дан же Wrike'тын GET /workflows'унан, тандалган тактага окуйт: тизмеси жок статус тизме болот, ал эми эреже карточка Completed же Cancelled статусуна жылдырылганда аны аткарылды, Active же Deferred статусунда аткарылган жок деп белгилейт. Wrike'тын өз автоматташтыруу эрежелерин Wrike'тан экспорттоого болбойт.",
   "text-contains-trigger-description": "Карточка түзүлгөндө же анын аталышы же сүрөттөлүшү өзгөртүлгөндө, жаңы текст муну камтыса дал келет (регистрге көз каранды эмес).",
-  "text-contains-trigger-label": "Издөө үчүн текст"
+  "text-contains-trigger-label": "Издөө үчүн текст",
+  "event-action": "Аракет",
+  "event-attempts": "Аракеттер",
+  "event-bleed": "Аты",
+  "event-category": "Категория",
+  "event-datetime": "Күнү жана убактысы",
+  "event-detail": "Чоо-жайы",
+  "event-severity": "Оордук деңгээли",
+  "event-source": "Булак",
+  "password-length-report-title": "Сырсөздүн узундугу",
+  "recoveryReportTitle": "Калыбына келтирүү",
+  "securityReportTitle": "Коопсуздук отчёту"
 }

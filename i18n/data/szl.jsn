@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Przebieg roboty Wrike",
   "r-wrike-workflow-note": "Przebieg roboty Wrike to lista statusōw, kożdy w grupie Active, Completed, Deferred abo Cancelled. Eksport pisze listy tyj tabule jako jedyn przebieg, nazwany po tabuli, w JSON, kery API Wrike wrŏcŏ dlŏ przebiegōw roboty: zrōb tyn przebieg we Wrike przed importym eksportu Excel tyj tabule do Wrike, coby jego statusy były użyte. Import czytŏ tyn JSON wklejōny wyżyj, z WeKan abo z GET /workflows Wrike, do ôbranyj tabule: status bez listy stŏwŏ sie listōm, a reguła ôznaczŏ karta jako skōńczōnŏ, kej je przeniesiōnŏ do statusu Completed abo Cancelled, a jako niyskōńczōnŏ w Active abo Deferred. Włŏsnych regułōw automatyzacyje Wrike niy idzie eksportować z Wrike.",
   "text-contains-trigger-description": "Pasuje, kej kartã sie zrychtuje, abo jeji nogōwek abo ôpis sie zmiyni, a nowy tekst mŏ to w sobie (wielge i mołe litery sie niy rozrōżniajōm).",
-  "text-contains-trigger-label": "Tekst do wyszukanio"
+  "text-contains-trigger-label": "Tekst do wyszukanio",
+  "event-action": "Działanie",
+  "event-attempts": "Próby",
+  "event-bleed": "Miano",
+  "event-category": "Kategoria",
+  "event-datetime": "Datum i godzina",
+  "event-detail": "Szczegół",
+  "event-severity": "Ważność",
+  "event-source": "Źródło",
+  "password-length-report-title": "Długość hasła",
+  "recoveryReportTitle": "Odzyskiwanie",
+  "securityReportTitle": "Bezpieczeństwo"
 }

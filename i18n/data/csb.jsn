@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Przebiég robòtë Wrike",
   "r-wrike-workflow-note": "Przebiég robòtë Wrike to lësta statusów, kòżdi w grëpie Active, Completed, Deferred abò Cancelled. Ekspòrt pisze lëstë ti tôflë jakno jeden przebiég, mionowóny pò tôfli, w JSON, chtëren API Wrike òddôwô dlô przebiégów robòtë: zrobi nen przebiég we Wrike przed impòrtã ekspòrtu Excel ti tôflë do Wrike, żebë jegò statusë bëłë brëkòwóné. Impòrt czëtô nen JSON wklejony wëżi, z WeKan abò z GET /workflows Wrike, do wëbróny tôflë: status bez lëstë stôwô sã lëstą, a prawidło òbznaczô kôrtã jakno skùńczoną, czej je przeniesionô do statusu Completed abò Cancelled, a jakno nieskùńczoną w Active abò Deferred. Włôsnëch prawidłów aùtomatizacje Wrike nie mòżna ekspòrtowac z Wrike.",
   "text-contains-trigger-description": "Zgôdzô sã czej kôrta òstanié ùsôdzonô, abo jistnã titel abo òpisënk ostanié zmieniony, a nowi tekst zamëka to (bez rozëznôwaniô wiôldżich i môłëch lëter).",
-  "text-contains-trigger-label": "Tekst do wëszukaniô"
+  "text-contains-trigger-label": "Tekst do wëszukaniô",
+  "event-action": "Działanié",
+  "event-attempts": "Pròby",
+  "event-bleed": "Miono",
+  "event-category": "Kategòriô",
+  "event-datetime": "Datum i czas",
+  "event-detail": "Szczegòł",
+  "event-severity": "Wôżnosc",
+  "event-source": "Źròdło",
+  "password-length-report-title": "Dłëgòsc parolë",
+  "recoveryReportTitle": "Odzyskiwanié",
+  "securityReportTitle": "Rapòrt bezpiekù"
 }

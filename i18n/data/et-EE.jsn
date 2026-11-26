@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike’i töövoog",
   "r-wrike-workflow-note": "Wrike’i töövoog on olekute loetelu, kus iga olek kuulub rühma Active, Completed, Deferred või Cancelled. Eksport kirjutab selle tahvli loetelud üheks tahvli nimega töövooks JSON-vormingus, mille Wrike’i API töövoogude jaoks tagastab: loo see töövoog Wrike’is enne tahvli Wrike Exceli ekspordi importimist, et selle olekud rakenduksid. Import loeb ülal kleebitud JSON-i WeKanist või Wrike’i päringust GET /workflows valitud tahvlisse: ilma loeteluta olekust saab loetelu ning reegel märgib kaardi lõpetatuks, kui see viiakse olekusse Completed või Cancelled, ja lõpetamata kaardiks olekus Active või Deferred. Wrike’i enda automatiseerimisreegleid ei saa Wrike’ist eksportida.",
   "text-contains-trigger-description": "Sobib, kui kaart luuakse või selle pealkirja või kirjeldust muudetakse ning uus tekst sisaldab seda (tõstutundetu).",
-  "text-contains-trigger-label": "Otsitav tekst"
+  "text-contains-trigger-label": "Otsitav tekst",
+  "event-action": "Toiming",
+  "event-attempts": "Katsed",
+  "event-bleed": "Nimi",
+  "event-category": "Kategooria",
+  "event-datetime": "Kuupäev ja kellaaeg",
+  "event-detail": "Üksikasjad",
+  "event-severity": "Raskusaste",
+  "event-source": "Allikas",
+  "password-length-report-title": "Parooli pikkus",
+  "recoveryReportTitle": "Taastamine",
+  "securityReportTitle": "Turvalisus"
 }

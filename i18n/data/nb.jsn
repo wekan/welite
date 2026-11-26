@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike-arbeidsflyt",
   "r-wrike-workflow-note": "En Wrike-arbeidsflyt er en liste med statuser, hver i gruppen Active, Completed, Deferred eller Cancelled. Eksporten skriver listene på denne tavlen som én slik arbeidsflyt, oppkalt etter tavlen, i JSON-formatet som Wrikes API returnerer for arbeidsflyter: opprett arbeidsflyten i Wrike før du importerer tavlens Wrike Excel-eksport, slik at statusene brukes. Importen leser JSON som er limt inn ovenfor, fra WeKan eller Wrikes GET /workflows, inn i den valgte tavlen: en status uten liste blir en liste, og en regel markerer et kort som fullført når det flyttes til statusen Completed eller Cancelled og som ikke fullført i Active eller Deferred. Wrikes egne automatiseringsregler kan ikke eksporteres fra Wrike.",
   "text-contains-trigger-description": "Samsvarer når et kort opprettes, eller tittelen eller beskrivelsen endres, og den nye teksten inneholder dette (uavhengig av store/små bokstaver).",
-  "text-contains-trigger-label": "Tekst å søke etter"
+  "text-contains-trigger-label": "Tekst å søke etter",
+  "event-action": "Handling",
+  "event-attempts": "Forsøk",
+  "event-bleed": "Navn",
+  "event-category": "Kategori",
+  "event-datetime": "Dato og klokkeslett",
+  "event-detail": "Detalj",
+  "event-severity": "Alvorlighetsgrad",
+  "event-source": "Kilde",
+  "password-length-report-title": "Passordlengde",
+  "recoveryReportTitle": "Gjenoppretting",
+  "securityReportTitle": "Sikkerhet"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flus di lavôr Wrike",
   "r-wrike-workflow-note": "Un flus di lavôr Wrike al è une liste di stâts, ognidun tal grup Active, Completed, Deferred o Cancelled. La esportazion e scrîf lis listis di cheste taule come un flus, cul non de taule, tal JSON che la API di Wrike e torne pai flus di lavôr: cree chel flus su Wrike prime di impuartâ la esportazion Excel Wrike de taule, cussì che i siei stâts a vegnin aplicâts. La impuartazion e lei chel JSON tacât parsore, di WeKan o dal GET /workflows di Wrike, te taule sielzude: un stât cence liste al devente une liste, e une regule e segne une cjarte come complete cuant che e ven movude intun stât Completed o Cancelled e no complete intun stât Active o Deferred. Lis regulis di automazion di Wrike no si puedin espuartâ di Wrike.",
   "text-contains-trigger-description": "E corispuint cuant che une scède e ven creade, o che il sô titul o descrizion e ven cambiade, e il test gnûf al conten chest (cence distinzion tra maiusculis e minusculis).",
-  "text-contains-trigger-label": "Test di cirî"
+  "text-contains-trigger-label": "Test di cirî",
+  "event-action": "Azion",
+  "event-attempts": "Tentatîfs",
+  "event-bleed": "Non",
+  "event-category": "Categorie",
+  "event-datetime": "Date e oris",
+  "event-detail": "Detai",
+  "event-severity": "Gravitât",
+  "event-source": "Origjin",
+  "password-length-report-title": "Lungjece de peraule di ordin",
+  "recoveryReportTitle": "Recupar",
+  "securityReportTitle": "Rapuart di sigurece"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flussu di travagghiu Wrike",
   "r-wrike-workflow-note": "Nu flussu di travagghiu Wrike è na lista di stati, ognunu nnô gruppu Active, Completed, Deferred o Cancelled. L'esportazzioni scrivi li listi di sta tavula comu unu sulu, chiamatu comu la tavula, nnô JSON ca l'API di Wrike duna pî flussi di travagghiu: crea ddu flussu nta Wrike prima di mpurtari l'esportazzioni Excel di Wrike dâ tavula, accussì li so stati s'applicanu. L'importazzioni leggi ddu JSON ncuddatu di supra, di WeKan o dô GET /workflows di Wrike, nnâ tavula scigghiuta: nu statu senza lista addiventa na lista, e na rigula marca na carta comu cumpritata quannu è spustata nta nu statu Completed o Cancelled e nun cumpritata nta unu Active o Deferred. Li riguli d'automazzioni di Wrike stissu nun si ponnu esportari di Wrike.",
   "text-contains-trigger-description": "Cummatti quannu na carta veni criata, o lu sò tìtulu o discrizzioni veni cangiatu, e lu testu novu cunteni chistu (senza distinguiri maiuscuri e minuscuri).",
-  "text-contains-trigger-label": "Testu di circari"
+  "text-contains-trigger-label": "Testu di circari",
+  "event-action": "Azzzioni",
+  "event-attempts": "Tintativi",
+  "event-bleed": "Nomu",
+  "event-category": "Catigurìa",
+  "event-datetime": "Data e ura",
+  "event-detail": "Dittagghiu",
+  "event-severity": "Gravitati",
+  "event-source": "Urìggini",
+  "password-length-report-title": "Lunghizza dâ palora d'ordini",
+  "recoveryReportTitle": "Ripigghiu",
+  "securityReportTitle": "Sicurizza"
 }

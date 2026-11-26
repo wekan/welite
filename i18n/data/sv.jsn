@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Wrike-arbetsflöde",
   "r-wrike-workflow-note": "Ett Wrike-arbetsflöde är en lista med statusar, var och en i gruppen Active, Completed, Deferred eller Cancelled. Exporten skriver den här tavlans listor som ett sådant arbetsflöde, namngivet efter tavlan, i det JSON-format som Wrikes API returnerar för arbetsflöden: skapa arbetsflödet i Wrike innan du importerar tavlans Wrike Excel-export, så att dess statusar används. Importen läser den JSON som klistrats in ovan, från WeKan eller Wrikes GET /workflows, till den valda tavlan: en status utan lista blir en lista, och en regel markerar ett kort som slutfört när det flyttas till statusen Completed eller Cancelled och som ej slutfört i Active eller Deferred. Wrikes egna automatiseringsregler kan inte exporteras från Wrike.",
   "text-contains-trigger-description": "Matchar när ett kort skapas, eller dess titel eller beskrivning ändras, och den nya texten innehåller detta (skiftlägesokänsligt).",
-  "text-contains-trigger-label": "Text att söka efter"
+  "text-contains-trigger-label": "Text att söka efter",
+  "event-action": "Åtgärd",
+  "event-attempts": "Försök",
+  "event-bleed": "Namn",
+  "event-category": "Kategori",
+  "event-datetime": "Datum och tid",
+  "event-detail": "Detalj",
+  "event-severity": "Allvarlighetsgrad",
+  "event-source": "Källa",
+  "password-length-report-title": "Lösenordslängd",
+  "recoveryReportTitle": "Återställning",
+  "securityReportTitle": "Säkerhet"
 }

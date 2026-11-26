@@ -2189,5 +2189,16 @@
   "r-wrike-workflow": "Flux de treball del Wrike",
   "r-wrike-workflow-note": "Un flux de treball del Wrike és una llista d’estats, cadascun dels quals pertany al grup Active, Completed, Deferred o Cancelled. L’exportació escriu les llistes d’este tauler com un sol flux de treball amb el nom del tauler, en el JSON que l’API del Wrike retorna per als fluxos de treball: creeu este flux al Wrike abans d’importar l’exportació Wrike Excel del tauler perquè s’apliquen els seus estats. La importació llig el JSON enganxat més amunt, del WeKan o del GET /workflows del Wrike, al tauler triat: un estat sense llista es convertix en una llista, i una regla marca una fitxa com a completada quan es mou a un estat Completed o Cancelled i com a no completada en un estat Active o Deferred. Les regles d’automatització pròpies del Wrike no es poden exportar del Wrike.",
   "text-contains-trigger-description": "Coincideix quan es crea una targeta, o es canvia el seu títol o descripció, i el nou text conté això (sense distingir majúscules i minúscules).",
-  "text-contains-trigger-label": "Text a cercar"
+  "text-contains-trigger-label": "Text a cercar",
+  "event-action": "Acció",
+  "event-attempts": "Intents",
+  "event-bleed": "Nom",
+  "event-category": "Categoria",
+  "event-datetime": "Data i hora",
+  "event-detail": "Detall",
+  "event-severity": "Gravetat",
+  "event-source": "Origen",
+  "password-length-report-title": "Longitud de la contrasenya",
+  "recoveryReportTitle": "Recuperació",
+  "securityReportTitle": "Seguretat"
 }

@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Flusso di lavoro Wrike",
   "r-wrike-workflow-note": "Un flusso di lavoro Wrike è una lista di stati, ciascuno nel gruppo Active, Completed, Deferred o Cancelled. L'esportazione scrive le liste di questa bacheca come un unico flusso, con il nome della bacheca, nel formato JSON restituito dall'API di Wrike per i flussi di lavoro: crea quel flusso in Wrike prima di importare l'esportazione Wrike Excel della bacheca, affinché i suoi stati vengano applicati. L'importazione legge il JSON incollato sopra, proveniente da WeKan o da GET /workflows di Wrike, nella bacheca scelta: uno stato senza lista diventa una lista, e una regola contrassegna una scheda come completata quando viene spostata in uno stato Completed o Cancelled e come non completata in uno stato Active o Deferred. Le regole di automazione proprie di Wrike non possono essere esportate da Wrike.",
   "text-contains-trigger-description": "Corrisponde quando una scheda viene creata, o il suo titolo o descrizione viene modificato, e il nuovo testo contiene questo (senza distinzione tra maiuscole e minuscole).",
-  "text-contains-trigger-label": "Testo da cercare"
+  "text-contains-trigger-label": "Testo da cercare",
+  "event-action": "Azione",
+  "event-attempts": "Tentativi",
+  "event-bleed": "Nome",
+  "event-category": "Categoria",
+  "event-datetime": "Data e ora",
+  "event-detail": "Dettaglio",
+  "event-severity": "Gravità",
+  "event-source": "Origine",
+  "password-length-report-title": "Lunghezza della parola d'accesso",
+  "recoveryReportTitle": "Ripristino",
+  "securityReportTitle": "Sicurezza"
 }

@@ -2189,5 +2189,16 @@
   "r-wrike-workflow": "Wrike workflow",
   "r-wrike-workflow-note": "A Wrike workflow is a list of statuses, each in the Active, Completed, Deferred or Cancelled group. Export writes this board's lists as one, named after the board, in the JSON Wrike's API returns for workflows: create that workflow in Wrike before importing the board's Wrike Excel export, so its statuses are applied. Import reads that JSON pasted above, from WeKan or from Wrike's GET /workflows, into the chosen board: a status without a list becomes a list, and a rule marks a card complete when it is moved into a Completed or Cancelled status and incomplete in an Active or Deferred one. Wrike's own automation rules cannot be exported from Wrike.",
   "text-contains-trigger-description": "Matches when a card is created, or its title or description is changed, and the new text contains this (case-insensitive).",
-  "text-contains-trigger-label": "Text to search for"
+  "text-contains-trigger-label": "Text to search for",
+  "event-action": "Action",
+  "event-attempts": "Attempts",
+  "event-bleed": "Name",
+  "event-category": "Category",
+  "event-datetime": "Date and time",
+  "event-detail": "Detail",
+  "event-severity": "Severity",
+  "event-source": "Source",
+  "password-length-report-title": "Password length",
+  "recoveryReportTitle": "Recovery",
+  "securityReportTitle": "Security"
 }

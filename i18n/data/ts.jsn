@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Ndlela ya ntirho ya Wrike",
   "r-wrike-workflow-note": "Ndlela ya ntirho ya Wrike i nxaxamelo wa swiyimo, xin'wana na xin'wana xi ri eka ntlawa wa Active, Completed, Deferred kumbe Cancelled. Ku humesa ku tsala minxaxamelo ya bodo leyi tanihi yin'we, leyi thyiweke hi bodo, eka JSON leyi API ya Wrike yi yi vuyisaka ya tindlela ta ntirho: endla ndlela yoleyo ya ntirho eka Wrike u nga si nghenisa ku humesa ka Excel ka Wrike ka bodo, leswaku swiyimo swa yona swi tirhisiwa. Ku nghenisa ku hlaya JSON yoleyo leyi namarheriweke laha henhla, ku suka eka WeKan kumbe eka GET /workflows ya Wrike, eka bodo leyi hlawuriweke: xiyimo lexi nga riki na nxaxamelo xi va nxaxamelo, naswona nawu wu fungha khadi ri hetisiwile loko ri rhurhiseriwa eka xiyimo xa Completed kumbe Cancelled naswona ri nga hetisiwanga eka xa Active kumbe Deferred. Milawu ya Wrike ya yoxe ya ku tiendlekela a yi koti ku humesiwa eka Wrike.",
   "text-contains-trigger-description": "Yi fambisana loko khadi ri endliwa, kumbe nhloko-mhaka kumbe nhlamuselo ya rona yi cinciwa, naswona rungula lerintshwa ri ri na leswi (a ku na ku hambana ka maletere lamakulu na lamatsongo).",
-  "text-contains-trigger-label": "Rungula leswi lavekaka"
+  "text-contains-trigger-label": "Rungula leswi lavekaka",
+  "event-action": "xiendlo",
+  "event-attempts": "Ku ringeta",
+  "event-bleed": "Vito",
+  "event-category": "Muxaka",
+  "event-datetime": "siku na nkarhi",
+  "event-detail": "Vuxokoxoko",
+  "event-severity": "Ku tika",
+  "event-source": "Xihlovo",
+  "password-length-report-title": "Ku leha ka xiletelo xa xihundla",
+  "recoveryReportTitle": "Ku vuyisela",
+  "securityReportTitle": "Xiviko xa vuhlayiseki"
 }

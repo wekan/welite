@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike llamk'ay puriy",
   "r-wrike-workflow-note": "Wrike llamk'ay puriyqa kaykunap sutisuyunmi, sapankataq Active, Completed, Deferred utaq Cancelled huñupi. Hurquyqa kay pirqap sutisuyunkunata huk hina qillqan, pirqap sutinwan, Wrikep APIn llamk'ay puriykunapaq kutichisqan JSONpi: chay llamk'ay puriyta Wrikepi ruway pirqap Wrike Excel hurqusqanta manaraq yaykuchichkaspa, kayninkuna churakunanpaq. Yaykuchiyqa hanaqpi k'askachisqa JSONta ñawinchan, WeKanmanta utaq Wrikep GET /workflows nisqanmanta, akllasqa pirqaman: mana sutisuyuyuq kayqa sutisuyum kanqa, huk kamachiytaq kartata tukusqa nispa unanchan Completed utaq Cancelled kayman astakuptin, mana tukusqataq Active utaq Deferred kaypi. Wrikep kikin automatización kamachiykunaqa manam Wrikemanta hurquyta atikunchu.",
   "text-contains-trigger-description": "Kikinchakun tarjeta ruwakuptin, utaq sutin utaq willaynin tikrachikuptin, mosoq qillqa kayta apaptin (hatun utaq huch’uy qillqa mana imapas kanchu).",
-  "text-contains-trigger-label": "Maskana simikuna"
+  "text-contains-trigger-label": "Maskana simikuna",
+  "event-action": "Ruray",
+  "event-attempts": "Munaykuna",
+  "event-bleed": "Suti",
+  "event-category": "Laya",
+  "event-datetime": "P'unchaw, pachapas",
+  "event-detail": "Sut'inchay",
+  "event-severity": "Llasaynin",
+  "event-source": "Maymanta",
+  "password-length-report-title": "Pakasqa rimaypa sunin",
+  "recoveryReportTitle": "Kutichiy",
+  "securityReportTitle": "Amachaypa willakuynin"
 }

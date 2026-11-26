@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike কৰ্মপ্ৰবাহ",
   "r-wrike-workflow-note": "Wrike কৰ্মপ্ৰবাহ হৈছে স্থিতিৰ এখন তালিকা, প্ৰতিটো Active, Completed, Deferred বা Cancelled গোটত। ৰপ্তানিয়ে এই ফলকৰ তালিকাসমূহক ফলকৰ নামেৰে এটা কৰ্মপ্ৰবাহ হিচাপে, কৰ্মপ্ৰবাহৰ বাবে Wrike-ৰ API-এ ঘূৰাই দিয়া JSON-ত লিখে: ফলকৰ Wrike Excel ৰপ্তানি আমদানি কৰাৰ আগতে Wrike-ত সেই কৰ্মপ্ৰবাহ সৃষ্টি কৰক, যাতে ইয়াৰ স্থিতিসমূহ প্ৰয়োগ হয়। আমদানিয়ে ওপৰত পেষ্ট কৰা সেই JSON, WeKan বা Wrike-ৰ GET /workflows-ৰ পৰা, বাছনি কৰা ফলকত পঢ়ে: তালিকা নথকা স্থিতি এটা তালিকা হয়, আৰু এটা নিয়মে কাৰ্ড Completed বা Cancelled স্থিতিলৈ নিলে সম্পূৰ্ণ আৰু Active বা Deferred-ত অসম্পূৰ্ণ বুলি চিহ্নিত কৰে। Wrike-ৰ নিজৰ স্বয়ংক্ৰিয়কৰণ নিয়মসমূহ Wrike-ৰ পৰা ৰপ্তানি কৰিব নোৱাৰি।",
   "text-contains-trigger-description": "কাৰ্ড এখন সৃষ্টি হ'লে, বা তাৰ শিৰোনাম বা বিৱৰণ সলনি কৰিলে, আৰু নতুন লিখনিত ইয়াক অন্তৰ্ভুক্ত কৰিলে মিল হয় (আখৰৰ আকাৰ গণনা কৰা নহয়)।",
-  "text-contains-trigger-label": "বিচাৰিব লগা লিখনি"
+  "text-contains-trigger-label": "বিচাৰিব লগা লিখনি",
+  "event-action": "কাৰ্য",
+  "event-attempts": "প্ৰচেষ্টাসমূহ",
+  "event-bleed": "নাম",
+  "event-category": "শ্ৰেণী",
+  "event-datetime": "তাৰিখ আৰু সময়",
+  "event-detail": "সবিশেষ",
+  "event-severity": "গুৰুত্ব",
+  "event-source": "উৎস",
+  "password-length-report-title": "পাছৱৰ্ডৰ দৈৰ্ঘ্য",
+  "recoveryReportTitle": "পুনৰুদ্ধাৰ",
+  "securityReportTitle": "সুৰক্ষা প্ৰতিবেদন"
 }

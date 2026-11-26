@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Fluxul di lucru Wrike",
   "r-wrike-workflow-note": "Un flux di lucru Wrike easti unã listã di stãri, cathi unã tu grupul Active, Completed, Deferred i Cancelled. Exportul scrie listili a aishtei tabelã ca unu, cu numa a tabelãljei, tu JSON-lu tsi API-lu a Wrike u toarnã trã fluxurli di lucru: fã atel flux di lucru tu Wrike ma nãinti s-importsã exportul Excel Wrike a tabelãljei, tra s-hibã aplicati stãrli a lui. Importul ghivãseashti atel JSON lipit ma nsus, di la WeKan i di la GET /workflows a Wrike, tu tabela aleaptã: unã stari fãrã listã s-fatsi unã listã, shi unã reguli semnu unã cartã ca bitisitã cãndu easti mutatã tu unã stari Completed i Cancelled shi ca nibitisitã tu unã stari Active i Deferred. Reguli di automatizari a Wrike singur nu pot s-hibã exportati di Wrike.",
   "text-contains-trigger-description": "S-acljamã cãndu unã cartelã s-fatsi, i titlul icea descrierea a ljei si mutã, sh textul nãu ari aestu lucru (fãrã distinctsii tu grãmusti mãri i njits).",
-  "text-contains-trigger-label": "Textu di cãftari"
+  "text-contains-trigger-label": "Textu di cãftari",
+  "event-action": "Actsiuni",
+  "event-attempts": "Probi",
+  "event-bleed": "Numã",
+  "event-category": "Categorii",
+  "event-datetime": "Datã shi oarã",
+  "event-detail": "Detaliu",
+  "event-severity": "Greatsã",
+  "event-source": "Sursã",
+  "password-length-report-title": "Lungimea a zborlui di intrari",
+  "recoveryReportTitle": "Recuperare",
+  "securityReportTitle": "Raport di siguripsiri"
 }

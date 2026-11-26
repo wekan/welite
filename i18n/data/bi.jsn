@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Rod blong wok blong Wrike",
   "r-wrike-workflow-note": "Wan rod blong wok blong Wrike i wan lis blong ol stetas, evri wan i stap long grup Active, Completed, Deferred o Cancelled. Eksport i raetem ol lis blong bod ia olsem wan, we i karem nem blong bod, long JSON we API blong Wrike i givim blong ol rod blong wok: mekem rod blong wok ia long Wrike bifo yu karem Wrike Excel eksport blong bod i kam, blong oli yusum ol stetas blong hem. Import i ridim JSON ia we yu pestem antap, we i kam long WeKan o long GET /workflows blong Wrike, i go long bod we yu jusum: wan stetas we i no gat lis i kam wan lis, mo wan rul i makem wan kad se i finis taem oli muvum i go long wan stetas Completed o Cancelled, mo se i no finis long Active o Deferred. Yu no save sendem ol rul blong otomesen blong Wrike i kamaot long Wrike.",
   "text-contains-trigger-description": "I wok taem oli mekem wan kad, o taem oli jenisim taetol o diskripsen blong hem, mo niufala raeting i gat samting ia (bigfala o smol leta i no impoten).",
-  "text-contains-trigger-label": "Raeting blong lukaotem"
+  "text-contains-trigger-label": "Raeting blong lukaotem",
+  "event-action": "Aksen",
+  "event-attempts": "Ol traem",
+  "event-bleed": "Nem",
+  "event-category": "Kategori",
+  "event-datetime": "Deit mo taem",
+  "event-detail": "Ditel",
+  "event-severity": "Hamas i strong",
+  "event-source": "Sos",
+  "password-length-report-title": "Longfala blong paswod",
+  "recoveryReportTitle": "Putumbak",
+  "securityReportTitle": "Ripot blong sefti"
 }

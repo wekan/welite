@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Mtiririko wa kazi wa Wrike",
   "r-wrike-workflow-note": "Mtiririko wa kazi wa Wrike ni orodha ya hali, kila moja ikiwa kwenye kundi la Active, Completed, Deferred au Cancelled. Uhamishaji unaandika orodha za bodi hii kama mtiririko mmoja, wenye jina la bodi, katika JSON inayorejeshwa na API ya Wrike kwa mitiririko ya kazi: unda mtiririko huo katika Wrike kabla ya kuagiza faili ya Excel ya bodi iliyohamishwa kwa Wrike, ili hali zake zitumike. Uagizaji unasoma JSON hiyo iliyobandikwa hapo juu, kutoka WeKan au GET /workflows ya Wrike, kwenye bodi iliyochaguliwa: hali isiyo na orodha inakuwa orodha, na kanuni huweka kadi kuwa imekamilika inapohamishwa kwenye hali ya Completed au Cancelled na kuwa haijakamilika katika Active au Deferred. Kanuni za otomatiki za Wrike yenyewe haziwezi kuhamishwa kutoka Wrike.",
   "text-contains-trigger-description": "Inalingana wakati kadi inapoundwa, au kichwa au maelezo yake yanapobadilishwa, na maandishi mapya yana hii (bila kujali herufi kubwa au ndogo).",
-  "text-contains-trigger-label": "Maandishi ya kutafuta"
+  "text-contains-trigger-label": "Maandishi ya kutafuta",
+  "event-action": "Kitendo",
+  "event-attempts": "Majaribio",
+  "event-bleed": "Jina",
+  "event-category": "Kategoria",
+  "event-datetime": "Tarehe na saa",
+  "event-detail": "Maelezo",
+  "event-severity": "Ukali",
+  "event-source": "Chanzo",
+  "password-length-report-title": "Urefu wa nenosiri",
+  "recoveryReportTitle": "Urejeshaji",
+  "securityReportTitle": "Usalama"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Vobaflum ela Wrike",
   "r-wrike-workflow-note": "Vobaflum ela Wrike binon lised stadas, alik in grup Active, Completed, Deferred u Cancelled. Seveig penon lisedis taba at as bal, penemöl ma tab, in JSON, keli API ela Wrike gegivon pro vobaflums: jafolös vobaflumi at in Wrike büä nüveigol seveigi Excel ela Wrike taba, dat stads onik pagebons. Nüveig reidon JSON at pepladöl löpo, se WeKan u se GET /workflows ela Wrike, ini tab pevälöl: stad nen lised vedon lised, e nom mäkon kadi as pefinöl ven patopätükon ini stad Completed u Cancelled e as nepefinöl in stad Active u Deferred. Noms itjäfidik lönik ela Wrike no kanons paseveigön se Wrike.",
   "text-contains-trigger-description": "Pötön ven kad pajafon, u ven tiäd u bepenam onik pavotükon, e vödem nulik ninädon atosi (nen dif tonatas gretik e smalik).",
-  "text-contains-trigger-label": "Vödem ad sukön"
+  "text-contains-trigger-label": "Vödem ad sukön",
+  "event-action": "Dun",
+  "event-attempts": "Steifüls",
+  "event-bleed": "Nem",
+  "event-category": "Klad",
+  "event-datetime": "Del e tim",
+  "event-detail": "Vüot",
+  "event-severity": "Fikuläd",
+  "event-source": "Fon",
+  "password-length-report-title": "Lunot letavöda",
+  "recoveryReportTitle": "Regetam",
+  "securityReportTitle": "Nunod sefa"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Tatelano ya mosebetsi ya Wrike",
   "r-wrike-workflow-note": "Tatelano ya mosebetsi ya Wrike ke lenane la maemo, le leng le le leng le le sehlopheng sa Active, Completed, Deferred kapa Cancelled. Ho ntsha data ho ngola manane a boto ena e le tatelano e le nngwe, e bitswang ka lebitso la boto, ka JSON eo API ya Wrike e e kgutlisang bakeng sa ditatelano tsa mosebetsi: theha tatelano eo ho Wrike pele o kenya data ya boto e ntshitsweng ka Wrike Excel, hore maemo a yona a sebediswe. Ho kenya ho bala JSON eo e manamisitsweng ka hodimo, e tswang ho WeKan kapa ho GET /workflows ya Wrike, ho e kenya botong e kgethilweng: boemo bo se nang lenane bo fetoha lenane, mme molao o tshwaya karete e phethilwe ha e fallisetswa boemong ba Completed kapa Cancelled, mme e sa phethwa ha e le ho Active kapa Deferred. Melao ya Wrike ka boyona ya ho etsa mesebetsi ka boiketsetso e ke ke ya ntshuwa ho Wrike.",
   "text-contains-trigger-description": "E tsamaellana ha ho thehwa karete, kapa sehlooho kapa tlhaloso ya yona e fetotswe, mme mongolo o motjha o na le sena (ha ho na phapano lipakeng tsa ditlhaku tse kgolo le tse nyane).",
-  "text-contains-trigger-label": "Mongolo o batlwang"
+  "text-contains-trigger-label": "Mongolo o batlwang",
+  "event-action": "Ketso",
+  "event-attempts": "Diteko",
+  "event-bleed": "Lebitso",
+  "event-category": "Mokgahlelo",
+  "event-datetime": "Letsatsi le nako",
+  "event-detail": "Dintlha",
+  "event-severity": "Boima ba bothata",
+  "event-source": "Mohlodi",
+  "password-length-report-title": "Bolelele ba phasewete",
+  "recoveryReportTitle": "Ho kgutlisetsa",
+  "securityReportTitle": "Tlaleho ya tshireletso"
 }

@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Rrjedha e punës në Wrike",
   "r-wrike-workflow-note": "Një rrjedhë pune në Wrike është një listë gjendjesh, secila në grupin Active, Completed, Deferred ose Cancelled. Eksporti i shkruan listat e kësaj tabele si një rrjedhë të vetme pune, me emrin e tabelës, në formatin JSON që API-ja e Wrike kthen për rrjedhat e punës: krijojeni atë rrjedhë pune në Wrike përpara se të importoni eksportin Wrike Excel të tabelës, që të zbatohen gjendjet e saj. Importi lexon JSON-in e ngjitur më sipër, nga WeKan ose nga kërkesa GET /workflows e Wrike, në tabelën e zgjedhur: një gjendje pa listë bëhet listë dhe një rregull e shënon kartën si të përfunduar kur zhvendoset në gjendjen Completed ose Cancelled, dhe si të papërfunduar në gjendjen Active ose Deferred. Rregullat vetjake të automatizimit të Wrike nuk mund të eksportohen nga Wrike.",
   "text-contains-trigger-description": "Përputhet kur krijohet një kartë, ose titulli apo përshkrimi i saj ndryshohet, dhe teksti i ri e përmban këtë (pa dallim shkronjash të mëdha/vogla).",
-  "text-contains-trigger-label": "Teksti për t’u kërkuar"
+  "text-contains-trigger-label": "Teksti për t’u kërkuar",
+  "event-action": "Veprimi",
+  "event-attempts": "Përpjekjet",
+  "event-bleed": "Emri",
+  "event-category": "Kategoria",
+  "event-datetime": "Data dhe ora",
+  "event-detail": "Hollësia",
+  "event-severity": "Rëndësia",
+  "event-source": "Burimi",
+  "password-length-report-title": "Gjatësia e fjalëkalimit",
+  "recoveryReportTitle": "Rikuperimi",
+  "securityReportTitle": "Raporti i sigurisë"
 }

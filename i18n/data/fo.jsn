@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike-arbeiðsgongd",
   "r-wrike-workflow-note": "Ein Wrike-arbeiðsgongd er ein listi av støðum, hvør í bólkinum Active, Completed, Deferred ella Cancelled. Útflutningur skrivar listarnar á hesi talvuni sum eina, nevnda eftir talvuni, í tí JSON, sum API hjá Wrike skilar fyri arbeiðsgongdir: stovna ta arbeiðsgongdina í Wrike áðrenn tú innflytur Wrike Excel-útflutningin av talvuni, so støður hennara verða nýttar. Innflutningur lesur hatta JSON, sett inn omanfyri, úr WeKan ella úr GET /workflows hjá Wrike, inn í valdu talvuna: ein støða uttan lista verður til ein lista, og ein regla merkir eitt kort liðugt, tá ið tað verður flutt í eina Completed- ella Cancelled-støðu, og óliðugt í eini Active- ella Deferred-støðu. Egnu sjálvvirknisreglurnar hjá Wrike kunnu ikki útflytast úr Wrike.",
   "text-contains-trigger-description": "Samsvarar, tá ið eitt spælabræv verður stovnað, ella heiti tess ella lýsing verður broytt, og tann nýggi tekstan inniheldur hetta (ikki serkent millum stórar og smáar bókstavir).",
-  "text-contains-trigger-label": "Tekstur, sum skal leitast eftir"
+  "text-contains-trigger-label": "Tekstur, sum skal leitast eftir",
+  "event-action": "Gerð",
+  "event-attempts": "Royndir",
+  "event-bleed": "Navn",
+  "event-category": "Bólkur",
+  "event-datetime": "Dagfesting og tíð",
+  "event-detail": "Nágreining",
+  "event-severity": "Álvarsemi",
+  "event-source": "Kelda",
+  "password-length-report-title": "Longd á loyniorði",
+  "recoveryReportTitle": "Endurvinning",
+  "securityReportTitle": "Trygdarfrágreiðing"
 }

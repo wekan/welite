@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Quy trình Wrike",
   "r-wrike-workflow-note": "Một quy trình Wrike là danh sách các trạng thái, mỗi trạng thái thuộc nhóm Active, Completed, Deferred hoặc Cancelled. Chức năng xuất ghi các danh sách của bảng này thành một quy trình mang tên bảng, theo định dạng JSON mà API của Wrike trả về cho quy trình: hãy tạo quy trình đó trong Wrike trước khi nhập bản xuất Excel Wrike của bảng để áp dụng các trạng thái. Chức năng nhập đọc JSON được dán ở trên, từ WeKan hoặc GET /workflows của Wrike, vào bảng đã chọn: trạng thái chưa có danh sách sẽ trở thành danh sách, và một quy tắc đánh dấu thẻ đã hoàn thành khi chuyển vào trạng thái Completed hoặc Cancelled, và chưa hoàn thành khi ở trạng thái Active hoặc Deferred. Không thể xuất các quy tắc tự động hóa riêng của Wrike từ Wrike.",
   "text-contains-trigger-description": "Khớp khi thẻ được tạo, hoặc tiêu đề hay mô tả của nó được thay đổi, và văn bản mới chứa nội dung này (không phân biệt chữ hoa chữ thường).",
-  "text-contains-trigger-label": "Văn bản cần tìm"
+  "text-contains-trigger-label": "Văn bản cần tìm",
+  "event-action": "Hành động",
+  "event-attempts": "Số lần thử",
+  "event-bleed": "Tên",
+  "event-category": "Danh mục",
+  "event-datetime": "Ngày và giờ",
+  "event-detail": "Chi tiết",
+  "event-severity": "Mức độ nghiêm trọng",
+  "event-source": "Nguồn",
+  "password-length-report-title": "Độ dài mật khẩu",
+  "recoveryReportTitle": "Khôi phục",
+  "securityReportTitle": "Bảo mật"
 }

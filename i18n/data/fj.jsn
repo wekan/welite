@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Ivakarau ni cakacaka ni Wrike",
   "r-wrike-workflow-note": "E dua na ivakarau ni cakacaka ni Wrike e dua na lisi ni ituvaki, yadua ena ilawalawa Active, Completed, Deferred se Cancelled. Na vakauta yani e vola na lisi ni vola oqo me dua, e vakayacani me vaka na vola, ena JSON e vakasukuma mai na API ni Wrike me baleta na ivakarau ni cakacaka: buli taumada na ivakarau ni cakacaka oqori ena Wrike ni bera ni kauta mai na Wrike Excel export ni vola, me rawa ni vakayagataki na kena ituvaki. Na kauta mai e wilika na JSON oqori e biuta e cake, mai WeKan se mai na GET /workflows ni Wrike, ki na vola sa digitaki: e dua na ituvaki e sega ni dua na lisi e yaco me lisi, ka e dua na lawa e vakatakilakilataka e dua na kadi me sa oti ni toso ki na ituvaki Completed se Cancelled ka sega ni oti ena dua na ituvaki Active se Deferred. Na lawa vakaitaukei ni Wrike e sega ni rawa ni vakauta yani mai Wrike.",
   "text-contains-trigger-description": "E veiganiti ni buli e dua na kaati, se veisau na ulutaga se ivakamacala kei na vosa vou e tiko kina na ka oqo (sega ni kauaitaki na levu se lailai ni itaba vosa).",
-  "text-contains-trigger-label": "Vosa me vakasaqara"
+  "text-contains-trigger-label": "Vosa me vakasaqara",
+  "event-action": "Cakacaka",
+  "event-attempts": "Tovo",
+  "event-bleed": "Yaca",
+  "event-category": "Mataqali",
+  "event-datetime": "Siga kei na gauna",
+  "event-detail": "Matailalai",
+  "event-severity": "Bibi",
+  "event-source": "iVurevure",
+  "password-length-report-title": "Balavu ni vosa ni curu",
+  "recoveryReportTitle": "Veivakalesui",
+  "securityReportTitle": "iTukutuku ni Veitaqomaki"
 }

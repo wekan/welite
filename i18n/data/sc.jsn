@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Flussu de traballu de Wrike",
   "r-wrike-workflow-note": "Unu flussu de traballu de Wrike est una lista de istados, cada unu in su grupu Active, Completed, Deferred o Cancelled. S'esportatzione iscriet sas listas de custa tàula comente unu flussu, cun su nùmene de sa tàula, in su JSON chi s'API de Wrike torrat pro sos flussos de traballu: crea cussu flussu in Wrike prima de importare s'esportatzione Excel de Wrike de sa tàula, gasi sos istados suos sunt aplicados. S'importatzione leghet cussu JSON incolladu inoghe subra, dae WeKan o dae GET /workflows de Wrike, in sa tàula seberada: un'istadu chene lista diventat una lista, e una règula marcat una carta comente cumprida cando est mòvida in un'istadu Completed o Cancelled e no cumprida in unu Active o Deferred. Sas règulas de automatizatzione de Wrike etotu non podent èssere esportadas dae Wrike.",
   "text-contains-trigger-description": "Currispondet cando una carta est creada, o cando su tìtulu o sa descritzione sua mudat, e su testu nou cuntenet custu (sena distìnghere majùsculas e minùsculas).",
-  "text-contains-trigger-label": "Testu de chircare"
+  "text-contains-trigger-label": "Testu de chircare",
+  "event-action": "Atzione",
+  "event-attempts": "Proas",
+  "event-bleed": "Nùmene",
+  "event-category": "Categoria",
+  "event-datetime": "Data e ora",
+  "event-detail": "Detàlliu",
+  "event-severity": "Gravidade",
+  "event-source": "Orìgine",
+  "password-length-report-title": "Longària de sa crae",
+  "recoveryReportTitle": "Recùperu",
+  "securityReportTitle": "Seguresa"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Tsarin aiki na Wrike",
   "r-wrike-workflow-note": "Tsarin aiki na Wrike jerin matsayi ne, kowanne a rukunin Active, Completed, Deferred ko Cancelled. Fitarwa tana rubuta jerin abubuwan wannan allo a matsayin ɗaya, mai sunan allon, a cikin JSON da API na Wrike ke dawowa don tsarin aiki: ƙirƙiri wannan tsarin aiki a Wrike kafin shigo da fitarwar Excel ta Wrike na allon, don a yi amfani da matsayinsa. Shigowa tana karanta wannan JSON da aka liƙa a sama, daga WeKan ko daga GET /workflows na Wrike, zuwa allon da aka zaɓa: matsayin da ba shi da jeri yana zama jeri, kuma doka tana alamta kati a matsayin an kammala lokacin da aka matsar da shi zuwa matsayin Completed ko Cancelled kuma ba a kammala ba a matsayin Active ko Deferred. Ba za a iya fitar da dokokin aiki da kai na Wrike daga Wrike ba.",
   "text-contains-trigger-description": "Yana daidaitawa lokacin da aka ƙirƙiri kati, ko aka canza taken ko bayaninsa, kuma sabon rubutun ya ƙunshi wannan (ba tare da bambance manyan da ƙananan haruffa ba).",
-  "text-contains-trigger-label": "Rubutun da za a nema"
+  "text-contains-trigger-label": "Rubutun da za a nema",
+  "event-action": "Aiki",
+  "event-attempts": "Ƙoƙari",
+  "event-bleed": "Suna",
+  "event-category": "Rukuni",
+  "event-datetime": "Kwanan wata da lokaci",
+  "event-detail": "Cikakken bayani",
+  "event-severity": "Tsananin matsala",
+  "event-source": "Tushe",
+  "password-length-report-title": "Tsawon kalmar sirri",
+  "recoveryReportTitle": "Farfaɗowa",
+  "securityReportTitle": "Rahoton tsaro"
 }

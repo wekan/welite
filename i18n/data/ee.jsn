@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike ƒe dɔwɔwɔ ƒe mɔ",
   "r-wrike-workflow-note": "Wrike ƒe dɔwɔwɔ ƒe mɔ nye nɔnɔmewo ƒe xexlẽdzesi, ɖesiaɖe le Active, Completed, Deferred alo Cancelled ƒuƒoƒo me. Ðeɖe ŋlɔa kpekpeɖeŋu sia ƒe xexlẽdzesiwo abe ɖeka ene, si woyɔ ɖe kpekpeɖeŋu la ŋkɔ, le JSON si Wrike ƒe API trɔna ɖoa na dɔwɔwɔ ƒe mɔwo me: wɔ dɔwɔwɔ ƒe mɔ ma le Wrike me hafi nàtsɔ kpekpeɖeŋu la ƒe Wrike Excel ɖeɖe va eme, ale be woazã eƒe nɔnɔmewo. Nuxɔxɔ xlẽa JSON ma si nètsɔ de etame, tso WeKan alo tso Wrike ƒe GET /workflows, ɖe kpekpeɖeŋu si wotia me: nɔnɔme si si xexlẽdzesi mele o la zua xexlẽdzesi, eye se aɖe dea dzesi kaɖi be wowu enu ne wotsɔe yi Completed alo Cancelled nɔnɔme me eye be mewu enu o le Active alo Deferred me. Womate ŋu aɖe Wrike ŋutɔ ƒe automation sewo tso Wrike o.",
   "text-contains-trigger-description": "Ewɔ ɖeka ne wowɔ sanvɔ aɖe, alo woɖe asi le eƒe tanya alo numeɖeɖe ŋu, eye nya yeyea dze eme (aléliadzenu nu manɔ vovo o).",
-  "text-contains-trigger-label": "Nya si dim ge"
+  "text-contains-trigger-label": "Nya si dim ge",
+  "event-action": "Nuwɔnaɖoanyi",
+  "event-attempts": "Kpɔkpɔwo",
+  "event-bleed": "Ŋkɔ",
+  "event-category": "Hatsotso",
+  "event-datetime": "Ŋkeke kple ɣeyiɣi",
+  "event-detail": "Nyatakaka",
+  "event-severity": "Sesẽme",
+  "event-source": "Nutoƒe",
+  "password-length-report-title": "Ɣaɣlanya ƒe didime",
+  "recoveryReportTitle": "Nugbugbɔkpɔkpɔ",
+  "securityReportTitle": "Dedienɔnɔ ƒe nyatakakagbalẽ"
 }

@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Founga ngāue Wrike",
   "r-wrike-workflow-note": "Ko ha founga ngāue Wrike ko ha lisi ʻo e ngaahi tuʻunga, ʻa ia ʻoku takitaha ʻi he kulupu Active, Completed, Deferred pe Cancelled. ʻOku tohi ʻe he ʻave ki tuʻa ʻa e ngaahi lisi ʻo e papa ko ʻeni ko e taha, ʻoku fakahingoa ʻaki ʻa e papa, ʻi he JSON ʻoku fakafoki ʻe he API ʻa Wrike ki he ngaahi founga ngāue: faʻu ʻa e founga ngāue ko ia ʻi Wrike ki muʻa ke hū mai ʻa e ʻave ki tuʻa Excel Wrike ʻo e papa, koeʻuhi ke ngāueʻaki hono ngaahi tuʻunga. ʻOku lau ʻe he hū mai ʻa e JSON ko ia kuo pēsiti ʻi ʻolunga, mei WeKan pe mei he GET /workflows ʻa Wrike, ki he papa kuo fili: ko ha tuʻunga ʻoku ʻikai hano lisi ʻoku hoko ko ha lisi, pea ʻoku fakaʻilongaʻi ʻe ha tuʻutuʻuni ha kaati ko e kakato ʻi hono hiki ki ha tuʻunga Completed pe Cancelled pea ʻikai kakato ʻi ha tuʻunga Active pe Deferred. ʻOku ʻikai lava ke ʻave ki tuʻa mei Wrike ʻa e ngaahi tuʻutuʻuni fakaʻotomētiki ʻa Wrike tonu.",
   "text-contains-trigger-description": "Fehoanaki ‘i he taimi ‘oku ngaohi ai ha kaati, pe liliu hono kaveinga pe fakamatala, pea ‘oku ‘i ai ‘i he tohi fo‘ou ‘a e me‘a ni (‘oku ‘ikai mahu‘inga’ia ‘i he lahi pe si’i ‘o e mataliliu).",
-  "text-contains-trigger-label": "Konga tohi ke kumi"
+  "text-contains-trigger-label": "Konga tohi ke kumi",
+  "event-action": "Ngāue",
+  "event-attempts": "Ngaahi feinga",
+  "event-bleed": "Hingoa",
+  "event-category": "Faʻahinga",
+  "event-datetime": "ʻAho mo e taimi",
+  "event-detail": "Fakaikiiki",
+  "event-severity": "Mamafa",
+  "event-source": "Tupuʻanga",
+  "password-length-report-title": "Lōloa ʻo e lea fufū",
+  "recoveryReportTitle": "Fakafoki",
+  "securityReportTitle": "Lipooti ʻo e malu"
 }

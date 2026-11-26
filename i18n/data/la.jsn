@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Ordo operum Wrike",
   "r-wrike-workflow-note": "Ordo operum Wrike est index statuum, quorum quisque ad gregem Active, Completed, Deferred aut Cancelled pertinet. Exportatio indices huius tabulae in unum ordinem, nomine tabulae appellatum, scribit in forma JSON quam API Wrike pro ordinibus operum reddit: crea illum ordinem in Wrike antequam exportationem Excel Wrike tabulae importes, ut status eius adhibeantur. Importatio illud JSON supra insertum, ex WeKan aut ex GET /workflows Wrike, in tabulam selectam legit: status sine indice fit index, et regula chartam perfectam notat cum in statum Completed aut Cancelled movetur, imperfectam autem in statu Active aut Deferred. Regulae automatariae ipsius Wrike ex Wrike exportari non possunt.",
   "text-contains-trigger-description": "Congruit cum chartula creatur, vel titulus aut descriptio eius mutatur, et novus textus hoc continet (sine discrimine litterarum maiusculorum et minusculorum).",
-  "text-contains-trigger-label": "Textus quaerendus"
+  "text-contains-trigger-label": "Textus quaerendus",
+  "event-action": "Actio",
+  "event-attempts": "Conatus",
+  "event-bleed": "Nomen",
+  "event-category": "Categoria",
+  "event-datetime": "Dies et hora",
+  "event-detail": "Singula",
+  "event-severity": "Gravitas",
+  "event-source": "Fons",
+  "password-length-report-title": "Longitudo tesserae",
+  "recoveryReportTitle": "Restitutio",
+  "securityReportTitle": "Relatio securitatis"
 }

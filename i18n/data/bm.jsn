@@ -2195,5 +2195,16 @@
   "r-wrike-workflow": "Wrike baara taabolo",
   "r-wrike-workflow-note": "Wrike baara taabolo ye cogoyaw lisiti ye, u kelen-kelen bɛɛ bɛ Active, Completed, Deferred walima Cancelled kulu kɔnɔ. Labɔli bɛ nin walan ka lisitiw sɛbɛn i n'a fɔ kelen, min tɔgɔ ye walan tɔgɔ ye, JSON kɔnɔ Wrike ka API bɛ min segin baara taabolow kama: o baara taabolo dilan Wrike kɔnɔ sani i ka walan ka Wrike Excel labɔli don, walasa a ka cogoyaw ka sigi. Donni bɛ o JSON kalan min donna sanfɛ, ka bɔ WeKan walima Wrike ka GET /workflows la, ka don walan sugandilen kɔnɔ: cogoya min tɛ ni lisiti ye, o bɛ kɛ lisiti ye, ani sariya dɔ bɛ karti taamasiyɛn ko a dafara ni a lataara Completed walima Cancelled cogoya la, ani ko a ma dafa Active walima Deferred cogoya la. Wrike yɛrɛ ka sariya automatikiw tɛ se ka labɔ Wrike la.",
   "text-contains-trigger-description": "A bɛnnen don ni kaatiw dara, wala ni a ka ntitre wala kɔrɔfɔli falenna, ani sɛbɛn kura in b’a la (sɛbɛn belebeleba ani fitininw tɛ danfara).",
-  "text-contains-trigger-label": "Sɛbɛnni ɲinini kɛra"
+  "text-contains-trigger-label": "Sɛbɛnni ɲinini kɛra",
+  "event-action": "Kɛwale",
+  "event-attempts": "Ɲɛsinliw",
+  "event-bleed": "Tɔgɔ",
+  "event-category": "Kulu",
+  "event-datetime": "Don ni waati",
+  "event-detail": "Kunnafoni",
+  "event-severity": "Gɛlɛya hakɛ",
+  "event-source": "Bɔyɔrɔ",
+  "password-length-report-title": "Gundo daɲɛ janya",
+  "recoveryReportTitle": "Laseginni",
+  "securityReportTitle": "Lakana lapɔrɔ"
 }

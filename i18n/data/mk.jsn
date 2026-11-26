@@ -2206,5 +2206,16 @@
   "r-wrike-workflow": "Работен тек на Wrike",
   "r-wrike-workflow-note": "Работниот тек на Wrike е список со состојби, секоја во групата Active, Completed, Deferred или Cancelled. Извозот ги запишува списоците на ова табло како еден работен тек со името на таблото, во форматот JSON што API на Wrike го враќа за работните текови: создајте го тој тек во Wrike пред да ја увезете извезената датотека на таблото во формат Wrike Excel, за да се применат неговите состојби. Увозот го чита JSON залепен погоре, од WeKan или од барањето GET /workflows на Wrike, во избраното табло: состојба без список станува список, а правило ја означува картата како завршена кога ќе се премести во состојба Completed или Cancelled, и како незавршена во состојба Active или Deferred. Сопствените правила за автоматизација на Wrike не можат да се извезат од Wrike.",
   "text-contains-trigger-description": "Се совпаѓа кога ќе се создаде картичка или ќе се промени нејзиниот наслов или опис, а новиот текст го содржи ова (без разлика на големи и мали букви).",
-  "text-contains-trigger-label": "Текст за пребарување"
+  "text-contains-trigger-label": "Текст за пребарување",
+  "event-action": "Дејство",
+  "event-attempts": "Обиди",
+  "event-bleed": "Име",
+  "event-category": "Категорија",
+  "event-datetime": "Датум и време",
+  "event-detail": "Детали",
+  "event-severity": "Сериозност",
+  "event-source": "Извор",
+  "password-length-report-title": "Должина на лозинка",
+  "recoveryReportTitle": "Обновување",
+  "securityReportTitle": "Безбедност"
 }
