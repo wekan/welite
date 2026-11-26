@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ᑐᑭᓯᒋᐊᒐᓴᖃᕐᕕᒃ",
   "cloud-start-date": "ᐱᒋᐊᕐᕕᐅᑉ ᐅᓪᓗᖓ",
   "cloud-end-date": "ᐃᓱᓕᕝᕕᐅᑉ ᐅᓪᓗᖓ",
-  "wekan-data-no-database": "WeKan ᑐᑭᓯᒋᐊᒐᓴᖃᕐᕕᒃ ᐅᖃᓕᒫᒐᒃᓴᖅ ᓇᓂᔭᐅᖏᑦᑐᖅ."
+  "wekan-data-no-database": "WeKan ᑐᑭᓯᒋᐊᒐᓴᖃᕐᕕᒃ ᐅᖃᓕᒫᒐᒃᓴᖅ ᓇᓂᔭᐅᖏᑦᑐᖅ.",
+  "sort-by-votes": "Niruarutigut naunaiyarniq",
+  "sort-by-label-order": "ᓇᓗᓇᐃᒃᑯᑕᐃᑦ ᑭᖑᓕᕇᓐᓂᖏᑦ"
 }

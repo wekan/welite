@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Ruttorde keɓe",
   "cloud-start-date": "Ñalnde fuɗɗoode",
   "cloud-end-date": "Ñalnde gasnde",
-  "wekan-data-no-database": "Alaa ruttorde keɓe WeKan janngotoonde yiytaa."
+  "wekan-data-no-database": "Alaa ruttorde keɓe WeKan janngotoonde yiytaa.",
+  "sort-by-votes": "Fensitde e voote",
+  "sort-by-label-order": "Doggol maandeeji"
 }

@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Autentikasi dua faktor diaktifkan untuk akun Anda.",
   "two-factor-required-title": "Siapkan autentikasi dua faktor",
   "two-factor-required-text": "Situs ini mewajibkan autentikasi dua faktor untuk akun Anda. Siapkan untuk melanjutkan.",
+  "sort-by-votes": "Urutkan berdasarkan suara",
+  "sort-by-label-order": "Urutan label",
   "enrollment-password-instructions": "Konfirmasikan kata sandi Anda untuk memulai penyiapan. Langkah ini tidak membuat Anda masuk. Faktor autentikasi yang aktif tidak dapat diganti di sini.",
   "enrollment-setup-denied": "Penyiapan tidak dapat dimulai. Periksa kredensial Anda dan pastikan apakah kode sekali pakai sudah diaktifkan.",
   "enrollment-code-instructions": "Gunakan kode berbasis waktu: SHA1, enam digit, dan interval 30 detik. Jaga kerahasiaan kunci. Penyiapan ini kedaluwarsa setelah lima menit.",

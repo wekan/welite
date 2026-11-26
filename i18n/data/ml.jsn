@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ഡാറ്റാബേസ്",
   "cloud-start-date": "ആരംഭ തീയതി",
   "cloud-end-date": "അവസാന തീയതി",
-  "wekan-data-no-database": "വായിക്കാവുന്ന WeKan ഡാറ്റാബേസ് ഒന്നും കണ്ടെത്തിയില്ല."
+  "wekan-data-no-database": "വായിക്കാവുന്ന WeKan ഡാറ്റാബേസ് ഒന്നും കണ്ടെത്തിയില്ല.",
+  "sort-by-votes": "വോട്ടുകൾ അനുസരിച്ച് ക്രമീകരിക്കുക",
+  "sort-by-label-order": "ലേബൽ ക്രമം"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Палӑрту бази",
   "cloud-start-date": "Пуҫламӑш кун",
   "cloud-end-date": "Вӗҫӗмлӗ кун",
-  "wekan-data-no-database": "Вулама май пур WeKan палӑрту бази тупӑнмарӗ."
+  "wekan-data-no-database": "Вулама май пур WeKan палӑрту бази тупӑнмарӗ.",
+  "sort-by-votes": "Сасӑсем тӑрӑх йӗркелесси",
+  "sort-by-label-order": "Паллӑсен йӗрки"
 }

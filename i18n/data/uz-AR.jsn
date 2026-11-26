@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "معلومات‌لر بازه‌سی",
   "cloud-start-date": "باشلنیش سنه‌سی",
   "cloud-end-date": "توگش سنه‌سی",
-  "wekan-data-no-database": "اوقیله‌دیگن WeKan معلومات‌لر بازه‌سی تاپیلمه‌دی."
+  "wekan-data-no-database": "اوقیله‌دیگن WeKan معلومات‌لر بازه‌سی تاپیلمه‌دی.",
+  "sort-by-votes": "آوازلرگه کۉره سرلش",
+  "sort-by-label-order": "یارلیقلر ترتیبی"
 }

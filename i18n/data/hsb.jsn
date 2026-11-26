@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Datowa banka",
   "cloud-start-date": "Spočatny datum",
   "cloud-end-date": "Kónčny datum",
-  "wekan-data-no-database": "Čitajomna datowa banka WeKan njeje so namakała."
+  "wekan-data-no-database": "Čitajomna datowa banka WeKan njeje so namakała.",
+  "sort-by-votes": "Po hłosach sortěrować",
+  "sort-by-label-order": "Porjad etiketow"
 }

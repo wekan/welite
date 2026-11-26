@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ڈیٹابیس",
   "cloud-start-date": "شروعاتٕچ تٲریخ",
   "cloud-end-date": "اختتامٕچ تٲریخ",
-  "wekan-data-no-database": "کانٛہہ پرنہٕ لایق WeKan ڈیٹابیس آو نہٕ لبنہٕ۔"
+  "wekan-data-no-database": "کانٛہہ پرنہٕ لایق WeKan ڈیٹابیس آو نہٕ لبنہٕ۔",
+  "sort-by-votes": "رایہِ مطابق ترتیب دِیو",
+  "sort-by-label-order": "لیبلن ہُند ترتیب"
 }

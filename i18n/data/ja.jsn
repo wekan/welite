@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "アカウントで二要素認証が有効になっています。",
   "two-factor-required-title": "二要素認証の設定",
   "two-factor-required-text": "このサイトではアカウントに二要素認証が必要です。続行するには設定してください。",
+  "sort-by-votes": "投票数で並べ替え",
+  "sort-by-label-order": "ラベル順",
   "enrollment-password-instructions": "設定を開始するにはパスワードを確認してください。この操作ではログインしません。すでに有効な認証要素はここでは変更できません。",
   "enrollment-setup-denied": "設定を開始できません。ログイン情報と、ワンタイムコードがすでに有効になっていないかを確認してください。",
   "enrollment-code-instructions": "時間ベースのコードを使用してください。方式はSHA1、桁数は6桁、間隔は30秒です。鍵は秘密にしてください。この設定は5分後に期限切れになります。",

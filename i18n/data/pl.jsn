@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Uwierzytelnianie dwuskładnikowe jest włączone dla Twojego konta.",
   "two-factor-required-title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
   "two-factor-required-text": "Ta witryna wymaga uwierzytelniania dwuskładnikowego dla Twojego konta. Skonfiguruj je, aby kontynuować.",
+  "sort-by-votes": "Sortuj według głosów",
+  "sort-by-label-order": "Kolejność etykiet",
   "enrollment-password-instructions": "Potwierdź hasło, aby rozpocząć konfigurację. Ten krok nie powoduje zalogowania. Nie można tutaj zastąpić aktywnego składnika uwierzytelniania.",
   "enrollment-setup-denied": "Nie można rozpocząć konfiguracji. Sprawdź dane logowania i upewnij się, czy kody jednorazowe nie są już włączone.",
   "enrollment-code-instructions": "Używaj kodów opartych na czasie: SHA1, sześć cyfr i okres 30 sekund. Nie udostępniaj klucza. Konfiguracja wygasa po pięciu minutach.",

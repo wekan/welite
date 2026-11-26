@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Paasissutissanik toqqorsivik",
   "cloud-start-date": "Aallartiffissaq",
   "cloud-end-date": "Naammassiffissaq",
-  "wekan-data-no-database": "WeKan-ip paasissutissanik toqqorsivia atuarneqarsinnaasoq nassaarineqanngilaq."
+  "wekan-data-no-database": "WeKan-ip paasissutissanik toqqorsivia atuarneqarsinnaasoq nassaarineqanngilaq.",
+  "sort-by-votes": "Naatsorsuutit atorlugu aaqqissuuk",
+  "sort-by-label-order": "Nalunaaqutsersuutit tulleriiaarnerat"
 }

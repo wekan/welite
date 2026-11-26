@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "qawHaq",
   "cloud-start-date": "tagh jaj",
   "cloud-end-date": "van jaj",
-  "wekan-data-no-database": "WeKan qawHaq laDlaHbogh tu'lu'be'."
+  "wekan-data-no-database": "WeKan qawHaq laDlaHbogh tu'lu'be'.",
+  "sort-by-votes": "vote mI' lo' rurmoH",
+  "sort-by-label-order": "permey mI'"
 }

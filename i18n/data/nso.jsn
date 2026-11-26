@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Polokelo ya tshedimošo",
   "cloud-start-date": "Letšatšikgwedi la go thoma",
   "cloud-end-date": "Letšatšikgwedi la go fela",
-  "wekan-data-no-database": "Ga go a hwetšwa polokelo ya tshedimošo ya WeKan yeo e balegago."
+  "wekan-data-no-database": "Ga go a hwetšwa polokelo ya tshedimošo ya WeKan yeo e balegago.",
+  "sort-by-votes": "Hlopha ka go ya ka mantsu",
+  "sort-by-label-order": "Tatelano ya diswayo"
 }

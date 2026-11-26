@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "Databasis",
   "cloud-start-date": "Begindatum",
   "cloud-end-date": "Einddatum",
-  "wekan-data-no-database": "Geen leesbare WeKan-databasis is gevind nie."
+  "wekan-data-no-database": "Geen leesbare WeKan-databasis is gevind nie.",
+  "sort-by-votes": "Sorteer volgens stemme",
+  "sort-by-label-order": "Etiketvolgorde"
 }

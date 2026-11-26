@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Kalipunan ng datos",
   "cloud-start-date": "Petsa ng pagsisimula",
   "cloud-end-date": "Petsa ng pagtatapos",
-  "wekan-data-no-database": "Walang nakitang nababasang kalipunan ng datos ng WeKan."
+  "wekan-data-no-database": "Walang nakitang nababasang kalipunan ng datos ng WeKan.",
+  "sort-by-votes": "Ayusin ayon sa mga boto",
+  "sort-by-label-order": "Pagkakasunod-sunod ng mga etiketa"
 }

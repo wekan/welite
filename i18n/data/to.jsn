@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Tauʻanga fakamatala",
   "cloud-start-date": "ʻAho kamata",
   "cloud-end-date": "ʻAho ngata",
-  "wekan-data-no-database": "ʻOku ʻikai maʻu ha tauʻanga fakamatala WeKan ʻe lava ke lau."
+  "wekan-data-no-database": "ʻOku ʻikai maʻu ha tauʻanga fakamatala WeKan ʻe lava ke lau.",
+  "sort-by-votes": "Fakamaau'aki 'a e ngaahi vōti",
+  "sort-by-label-order": "Hokohoko ʻo e ngaahi fakaʻilonga"
 }

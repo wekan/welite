@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Basis data",
   "cloud-start-date": "Tanggal Wiwit",
   "cloud-end-date": "Tanggal Pungkasan",
-  "wekan-data-no-database": "Ora ana basis data WeKan sing bisa diwaca."
+  "wekan-data-no-database": "Ora ana basis data WeKan sing bisa diwaca.",
+  "sort-by-votes": "Urutake miturut swara",
+  "sort-by-label-order": "Urutan label"
 }

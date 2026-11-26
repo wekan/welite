@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Banco de dados",
   "cloud-start-date": "Data de início",
   "cloud-end-date": "Data de término",
-  "wekan-data-no-database": "Nenhum banco de dados WeKan legível foi encontrado."
+  "wekan-data-no-database": "Nenhum banco de dados WeKan legível foi encontrado.",
+  "sort-by-votes": "Ordenar por votos",
+  "sort-by-label-order": "Ordem das etiquetas"
 }

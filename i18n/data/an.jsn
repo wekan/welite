@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Base de datos",
   "cloud-start-date": "Calendata d'inicio",
   "cloud-end-date": "Calendata de fin",
-  "wekan-data-no-database": "No s'ha trobato garra base de datos de WeKan que se pueda leyer."
+  "wekan-data-no-database": "No s'ha trobato garra base de datos de WeKan que se pueda leyer.",
+  "sort-by-votes": "Ordenar por votos",
+  "sort-by-label-order": "Orden d'etiquetas"
 }

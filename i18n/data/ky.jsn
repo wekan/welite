@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Маалыматтар базасы",
   "cloud-start-date": "Башталган күнү",
   "cloud-end-date": "Аяктаган күнү",
-  "wekan-data-no-database": "Окула турган WeKan маалыматтар базасы табылган жок."
+  "wekan-data-no-database": "Окула турган WeKan маалыматтар базасы табылган жок.",
+  "sort-by-votes": "Добуштар боюнча иреттөө",
+  "sort-by-label-order": "Белгилердин тартиби"
 }

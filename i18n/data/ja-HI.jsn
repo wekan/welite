@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "でーたべーす",
   "cloud-start-date": "開始日",
   "cloud-end-date": "終了日",
-  "wekan-data-no-database": "よみとれる WeKan でーたべーすが みつかりませんでした。"
+  "wekan-data-no-database": "よみとれる WeKan でーたべーすが みつかりませんでした。",
+  "sort-by-votes": "投票数で並べ替え",
+  "sort-by-label-order": "ラベル順"
 }

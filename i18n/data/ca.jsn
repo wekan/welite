@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "L'autenticació de dos factors està activada per al vostre compte.",
   "two-factor-required-title": "Configura l'autenticació de dos factors",
   "two-factor-required-text": "Aquest lloc requereix l'autenticació de dos factors per al teu compte. Configura-la per continuar.",
+  "sort-by-votes": "Ordena per vots",
+  "sort-by-label-order": "Ordre de les etiquetes",
   "enrollment-password-instructions": "Confirmeu la contrasenya per iniciar la configuració. Aquest pas no inicia la sessió. Aquí no es pot substituir un factor d’autenticació actiu.",
   "enrollment-setup-denied": "No es pot iniciar la configuració. Comproveu les credencials i si els codis d’un sol ús ja estan activats.",
   "enrollment-code-instructions": "Feu servir codis basats en el temps: SHA1, sis dígits i un interval de 30 segons. Mantingueu la clau en secret. La configuració caduca al cap de cinc minuts.",

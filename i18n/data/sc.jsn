@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Base de datos",
   "cloud-start-date": "Data de cumintzu",
   "cloud-end-date": "Data de fine",
-  "wekan-data-no-database": "No est istada agatada peruna base de datos WeKan leghìbile."
+  "wekan-data-no-database": "No est istada agatada peruna base de datos WeKan leghìbile.",
+  "sort-by-votes": "Ordinare pro votos",
+  "sort-by-label-order": "Òrdine de is etichetas"
 }

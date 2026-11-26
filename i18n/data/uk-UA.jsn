@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "База даних",
   "cloud-start-date": "Дата початку",
   "cloud-end-date": "Дата завершення",
-  "wekan-data-no-database": "Не знайдено бази даних WeKan, яку можна прочитати."
+  "wekan-data-no-database": "Не знайдено бази даних WeKan, яку можна прочитати.",
+  "sort-by-votes": "Сортувати за голосами",
+  "sort-by-label-order": "Порядок міток"
 }

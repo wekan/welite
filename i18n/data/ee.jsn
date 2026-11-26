@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Nyatakakadzraɖoƒe",
   "cloud-start-date": "Gɔmedzeŋkeke",
   "cloud-end-date": "Nuwuŋkeke",
-  "wekan-data-no-database": "Womekpɔ WeKan nyatakakadzraɖoƒe si woate ŋu axlẽ o."
+  "wekan-data-no-database": "Womekpɔ WeKan nyatakakadzraɖoƒe si woate ŋu axlẽ o.",
+  "sort-by-votes": "Ðo ɖe vote nu",
+  "sort-by-label-order": "Dzesiwo ƒe ɖoɖo"
 }

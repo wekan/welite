@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "មូលដ្ឋានទិន្នន័យ",
   "cloud-start-date": "កាលបរិច្ឆេទចាប់ផ្តើម",
   "cloud-end-date": "កាលបរិច្ឆេទបញ្ចប់",
-  "wekan-data-no-database": "រកមិនឃើញមូលដ្ឋានទិន្នន័យ WeKan ដែលអាចអានបានទេ។"
+  "wekan-data-no-database": "រកមិនឃើញមូលដ្ឋានទិន្នន័យ WeKan ដែលអាចអានបានទេ។",
+  "sort-by-votes": "តម្រៀបតាមការបោះឆ្នោត",
+  "sort-by-label-order": "លំដាប់ស្លាក"
 }

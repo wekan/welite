@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Үгэгдэлэй сан",
   "cloud-start-date": "Эхилхэ үдэр",
   "cloud-end-date": "Дүүрэхэ үдэр",
-  "wekan-data-no-database": "Уншаха аргатай WeKan үгэгдэлэй сан олдобогүй."
+  "wekan-data-no-database": "Уншаха аргатай WeKan үгэгдэлэй сан олдобогүй.",
+  "sort-by-votes": "Дуудалгаар эмхэтгэл",
+  "sort-by-label-order": "Тэмдэгүүдэй эрэмбэ"
 }

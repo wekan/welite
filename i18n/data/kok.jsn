@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "म्हायतीकोश",
   "cloud-start-date": "सुरवातेची तारीख",
   "cloud-end-date": "निमाणी तारीख",
-  "wekan-data-no-database": "वाचूंक जाता असो खंयचोच WeKan म्हायतीकोश मेळ्ळो ना."
+  "wekan-data-no-database": "वाचूंक जाता असो खंयचोच WeKan म्हायतीकोश मेळ्ळो ना.",
+  "sort-by-votes": "मतां प्रमाण वर्गीकरण करचें",
+  "sort-by-label-order": "लेबलांचो क्रम"
 }

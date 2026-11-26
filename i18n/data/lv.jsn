@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Jūsu kontam ir iespējota divfaktoru autentifikācija.",
   "two-factor-required-title": "Iestatiet divfaktoru autentifikāciju",
   "two-factor-required-text": "Šī vietne jūsu kontam pieprasa divfaktoru autentifikāciju. Iestatiet to, lai turpinātu.",
+  "sort-by-votes": "Kārtot pēc balsīm",
+  "sort-by-label-order": "Birku secība",
   "enrollment-password-instructions": "Apstipriniet paroli, lai sāktu iestatīšanu. Šī darbība jūs nepierakstīs. Šeit nevar aizstāt jau aktīvu autentifikācijas faktoru.",
   "enrollment-setup-denied": "Nevar sākt iestatīšanu. Pārbaudiet pierakstīšanās datus un to, vai vienreizējie kodi jau ir iespējoti.",
   "enrollment-code-instructions": "Izmantojiet laikatkarīgus kodus: SHA1, seši cipari un 30 sekunžu intervāls. Glabājiet atslēgu slepenībā. Iestatījuma derīgums beidzas pēc piecām minūtēm.",

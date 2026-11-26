@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Podatkovna zbirka",
   "cloud-start-date": "Datum začetka",
   "cloud-end-date": "Datum konca",
-  "wekan-data-no-database": "Ni bilo najdene berljive podatkovne zbirke WeKan."
+  "wekan-data-no-database": "Ni bilo najdene berljive podatkovne zbirke WeKan.",
+  "sort-by-votes": "Razvrsti po glasovih",
+  "sort-by-label-order": "Vrstni red oznak"
 }

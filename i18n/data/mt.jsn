@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "L-awtentikazzjoni b'żewġ fatturi hija attivata għall-kont tiegħek.",
   "two-factor-required-title": "Issettja l-awtentikazzjoni b’żewġ fatturi",
   "two-factor-required-text": "Dan is-sit jeħtieġ awtentikazzjoni b’żewġ fatturi għall-kont tiegħek. Issettjaha biex tkompli.",
+  "sort-by-votes": "Issortja skont il-voti",
+  "sort-by-label-order": "Ordni tat-tikketti",
   "enrollment-password-instructions": "Ikkonferma l-password tiegħek biex tibda s-setup. Dan il-pass ma jilloggjakx. Fattur ta’ awtentikazzjoni li diġà huwa attiv ma jistax jinbidel hawn.",
   "enrollment-setup-denied": "Ma jistax jinbeda s-setup. Iċċekkja l-kredenzjali tiegħek u jekk il-kodiċijiet li jintużaw darba biss humiex diġà attivi.",
   "enrollment-code-instructions": "Uża kodiċijiet ibbażati fuq il-ħin: SHA1, sitt ċifri u intervall ta’ 30 sekonda. Żomm iċ-ċavetta sigrieta. Is-setup jiskadi wara ħames minuti.",

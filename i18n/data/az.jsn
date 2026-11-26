@@ -2108,6 +2108,8 @@
   "twoFactorAuth-enabled": "Hesabınız üçün iki mərhələli doğrulama aktivdir.",
   "two-factor-required-title": "İki mərhələli doğrulamanı qurun",
   "two-factor-required-text": "Bu sayt hesabınız üçün iki mərhələli doğrulama tələb edir. Davam etmək üçün onu qurun.",
+  "sort-by-votes": "Səslərə görə sırala",
+  "sort-by-label-order": "Etiketlərin sırası",
   "enrollment-password-instructions": "Quraşdırmaya başlamaq üçün parolunuzu təsdiqləyin. Bu addım hesabınıza daxil olmur. Artıq aktiv olan autentifikasiya amilini burada əvəz etmək mümkün deyil.",
   "enrollment-setup-denied": "Quraşdırmaya başlamaq mümkün deyil. Giriş məlumatlarınızı yoxlayın və birdəfəlik kodların artıq aktiv olub-olmadığını müəyyən edin.",
   "enrollment-code-instructions": "Vaxta əsaslanan kodlardan istifadə edin: SHA1, altı rəqəm və 30 saniyəlik interval. Açarı gizli saxlayın. Quraşdırmanın müddəti beş dəqiqədən sonra bitir.",

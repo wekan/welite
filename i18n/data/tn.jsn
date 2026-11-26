@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Polokelotshedimosetso",
   "cloud-start-date": "Letlha la go simolola",
   "cloud-end-date": "Letlha la bofelo",
-  "wekan-data-no-database": "Ga go a bonwa polokelotshedimosetso ya WeKan e e balegang."
+  "wekan-data-no-database": "Ga go a bonwa polokelotshedimosetso ya WeKan e e balegang.",
+  "sort-by-votes": "Baakanya go ya ka dikgetho",
+  "sort-by-label-order": "Thulaganyo ya ditshwao"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Base di dâts",
   "cloud-start-date": "Date di inizi",
   "cloud-end-date": "Date di fin",
-  "wekan-data-no-database": "No je stade cjatade nissune base di dâts WeKan che si pues lei."
+  "wekan-data-no-database": "No je stade cjatade nissune base di dâts WeKan che si pues lei.",
+  "sort-by-votes": "Ordene par vôts",
+  "sort-by-label-order": "Ordin des etichetis"
 }

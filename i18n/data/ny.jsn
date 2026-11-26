@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Nkhokwe ya data",
   "cloud-start-date": "Tsiku loyambira",
   "cloud-end-date": "Tsiku lomaliza",
-  "wekan-data-no-database": "Palibe nkhokwe ya data ya WeKan yowerengeka yomwe yapezeka."
+  "wekan-data-no-database": "Palibe nkhokwe ya data ya WeKan yowerengeka yomwe yapezeka.",
+  "sort-by-votes": "Sanjani malingana ndi mavoti",
+  "sort-by-label-order": "Ndondomeko ya zilembo"
 }

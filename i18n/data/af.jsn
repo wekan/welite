@@ -2108,6 +2108,8 @@
   "twoFactorAuth-enabled": "Twee-faktor-verifikasie is vir jou rekening geaktiveer.",
   "two-factor-required-title": "Stel twee-faktor-verifikasie op",
   "two-factor-required-text": "Hierdie werf vereis twee-faktor-verifikasie vir jou rekening. Stel dit op om voort te gaan.",
+  "sort-by-votes": "Sorteer volgens stemme",
+  "sort-by-label-order": "Etiketvolgorde",
   "enrollment-password-instructions": "Bevestig jou wagwoord om die opstelling te begin. Hierdie stap meld jou nie aan nie. Jy kan nie hier ’n aktiewe stawingsfaktor vervang nie.",
   "enrollment-setup-denied": "Die opstelling kan nie begin nie. Gaan jou aanmeldbesonderhede na en kyk of eenmalige kodes reeds geaktiveer is.",
   "enrollment-code-instructions": "Gebruik tydgebaseerde kodes: SHA1, ses syfers en ’n interval van 30 sekondes. Hou die sleutel geheim. Die opstelling verval ná vyf minute.",

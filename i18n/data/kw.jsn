@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Databas",
   "cloud-start-date": "Dydh dalleth",
   "cloud-end-date": "Dydh diwedh",
-  "wekan-data-no-database": "Ny veu kevys databas WeKan redyadow."
+  "wekan-data-no-database": "Ny veu kevys databas WeKan redyadow.",
+  "sort-by-votes": "Restra dre vôtys",
+  "sort-by-label-order": "Aray an labellow"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Willay pirwa",
   "cloud-start-date": "Qallariy p'unchaw",
   "cloud-end-date": "Tukukuy p'unchaw",
-  "wekan-data-no-database": "Manam ñawinchay atina WeKan willay pirwa tarikunchu."
+  "wekan-data-no-database": "Manam ñawinchay atina WeKan willay pirwa tarikunchu.",
+  "sort-by-votes": "Votokunawan churay",
+  "sort-by-label-order": "Unanchakunap ñiqin"
 }

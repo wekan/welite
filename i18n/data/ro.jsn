@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Autentificarea în doi factori este activată pentru contul dumneavoastră.",
   "two-factor-required-title": "Configurați autentificarea în doi factori",
   "two-factor-required-text": "Acest site necesită autentificarea în doi factori pentru contul dumneavoastră. Configurați-o pentru a continua.",
+  "sort-by-votes": "Sortare după voturi",
+  "sort-by-label-order": "Ordinea etichetelor",
   "enrollment-password-instructions": "Confirmați parola pentru a începe configurarea. Acest pas nu vă autentifică. Un factor de autentificare deja activ nu poate fi înlocuit aici.",
   "enrollment-setup-denied": "Configurarea nu poate fi pornită. Verificați datele de autentificare și dacă sunt deja activate codurile de unică folosință.",
   "enrollment-code-instructions": "Folosiți coduri bazate pe timp: SHA1, șase cifre și un interval de 30 de secunde. Păstrați cheia secretă. Configurarea expiră după cinci minute.",

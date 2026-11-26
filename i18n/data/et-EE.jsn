@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Andmebaas",
   "cloud-start-date": "Alguskuupäev",
   "cloud-end-date": "Lõppkuupäev",
-  "wekan-data-no-database": "Loetavat WeKani andmebaasi ei leitud."
+  "wekan-data-no-database": "Loetavat WeKani andmebaasi ei leitud.",
+  "sort-by-votes": "Sordi häälte järgi",
+  "sort-by-label-order": "Märgiste järjekord"
 }

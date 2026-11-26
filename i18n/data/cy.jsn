@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Mae dilysiant dau ffactor wedi'i alluogi ar gyfer eich cyfrif.",
   "two-factor-required-title": "Gosod dilysiant dau ffactor",
   "two-factor-required-text": "Mae'r wefan hon yn gofyn am ddilysiant dau ffactor ar gyfer eich cyfrif. Gosodwch ef i barhau.",
+  "sort-by-votes": "Trefnu yn ôl pleidleisiau",
+  "sort-by-label-order": "Trefn labeli",
   "enrollment-password-instructions": "Cadarnhewch eich cyfrinair i ddechrau’r gosodiad. Ni fydd y cam hwn yn eich mewngofnodi. Ni ellir disodli ffactor dilysu sydd eisoes yn weithredol yma.",
   "enrollment-setup-denied": "Ni ellir dechrau’r gosodiad. Gwiriwch eich manylion mewngofnodi ac a yw codau untro eisoes wedi’u galluogi.",
   "enrollment-code-instructions": "Defnyddiwch godau sy’n seiliedig ar amser: SHA1, chwe digid a chyfnod o 30 eiliad. Cadwch yr allwedd yn gyfrinachol. Daw’r gosodiad i ben ymhen pum munud.",

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Marandu ryru",
   "cloud-start-date": "Ñepyrũ ára",
   "cloud-end-date": "Paha ára",
-  "wekan-data-no-database": "Ndojejuhúi WeKan marandu ryru ikatúva ojelee."
+  "wekan-data-no-database": "Ndojejuhúi WeKan marandu ryru ikatúva ojelee.",
+  "sort-by-votes": "Mboja'o votos rupi",
+  "sort-by-label-order": "Techaukaha rysýi"
 }

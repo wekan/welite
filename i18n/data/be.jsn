@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "База даных",
   "cloud-start-date": "Дата пачатку",
   "cloud-end-date": "Дата заканчэння",
-  "wekan-data-no-database": "Не знойдзена чытэльная база даных WeKan."
+  "wekan-data-no-database": "Не знойдзена чытэльная база даных WeKan.",
+  "sort-by-votes": "Сартаваць паводле галасоў",
+  "sort-by-label-order": "Парадак метак"
 }

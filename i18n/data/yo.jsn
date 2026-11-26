@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Ibi ipamọ data",
   "cloud-start-date": "Ọjọ ibẹrẹ",
   "cloud-end-date": "Ọjọ ipari",
-  "wekan-data-no-database": "A kò rí ibi ìpamọ́ data WeKan tí a lè kà."
+  "wekan-data-no-database": "A kò rí ibi ìpamọ́ data WeKan tí a lè kà.",
+  "sort-by-votes": "Tò nípasẹ̀ ìdìbò",
+  "sort-by-label-order": "Ètò àwọn àkọlé"
 }

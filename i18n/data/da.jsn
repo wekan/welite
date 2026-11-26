@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Totrinsbekræftelse er aktiveret for din konto.",
   "two-factor-required-title": "Opsæt totrinsbekræftelse",
   "two-factor-required-text": "Dette websted kræver totrinsbekræftelse for din konto. Opsæt den for at fortsætte.",
+  "sort-by-votes": "Sortér efter stemmer",
+  "sort-by-label-order": "Etiketrækkefølge",
   "enrollment-password-instructions": "Bekræft din adgangskode for at begynde opsætningen. Dette trin logger dig ikke ind. En aktiv godkendelsesfaktor kan ikke udskiftes her.",
   "enrollment-setup-denied": "Opsætningen kan ikke startes. Kontrollér dine loginoplysninger, og se, om engangskoder allerede er aktiveret.",
   "enrollment-code-instructions": "Brug tidsbaserede koder: SHA1, seks cifre og et interval på 30 sekunder. Hold nøglen hemmelig. Opsætningen udløber efter fem minutter.",

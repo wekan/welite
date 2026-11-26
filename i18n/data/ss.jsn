@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Sisekelo sedatha",
   "cloud-start-date": "Lusuku lwekucala",
   "cloud-end-date": "Lusuku lwekuphela",
-  "wekan-data-no-database": "Akutfolakalanga sisekelo sedatha se-WeKan lesifundzekako."
+  "wekan-data-no-database": "Akutfolakalanga sisekelo sedatha se-WeKan lesifundzekako.",
+  "sort-by-votes": "Hlela ngekulandzela emavoti",
+  "sort-by-label-order": "Kuhleleka kwemalebula"
 }

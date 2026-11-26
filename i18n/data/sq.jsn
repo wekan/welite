@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Vërtetimi me dy faktorë është aktivizuar për llogarinë tuaj.",
   "two-factor-required-title": "Konfiguroni vërtetimin me dy faktorë",
   "two-factor-required-text": "Ky sajt kërkon vërtetim me dy faktorë për llogarinë tuaj. Konfigurojeni për të vazhduar.",
+  "sort-by-votes": "Rendit sipas votave",
+  "sort-by-label-order": "Renditja e etiketave",
   "enrollment-password-instructions": "Konfirmoni fjalëkalimin për të nisur konfigurimin. Ky hap nuk ju fut në llogari. Një faktor aktiv i vërtetimit nuk mund të zëvendësohet këtu.",
   "enrollment-setup-denied": "Konfigurimi nuk mund të nisë. Kontrolloni të dhënat e hyrjes dhe nëse kodet njëpërdorimëshe janë tashmë të aktivizuara.",
   "enrollment-code-instructions": "Përdorni kode të bazuara në kohë: SHA1, gjashtë shifra dhe interval prej 30 sekondash. Mbajeni çelësin sekret. Konfigurimi skadon pas pesë minutash.",

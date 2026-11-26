@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Pātengi raraunga",
   "cloud-start-date": "Rā tīmata",
   "cloud-end-date": "Rā mutunga",
-  "wekan-data-no-database": "Kāore i kitea he pātengi raraunga WeKan ka taea te pānui."
+  "wekan-data-no-database": "Kāore i kitea he pātengi raraunga WeKan ka taea te pānui.",
+  "sort-by-votes": "Whakaraupapa e ai ki ngā pōti",
+  "sort-by-label-order": "Raupapa tapanga"
 }

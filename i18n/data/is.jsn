@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Tvíþætt auðkenning er virkjuð fyrir reikninginn þinn.",
   "two-factor-required-title": "Settu upp tvíþætta auðkenningu",
   "two-factor-required-text": "Þessi vefur krefst tvíþættrar auðkenningar fyrir aðganginn þinn. Settu hana upp til að halda áfram.",
+  "sort-by-votes": "Raða eftir atkvæðum",
+  "sort-by-label-order": "Röð merkja",
   "enrollment-password-instructions": "Staðfestu lykilorðið þitt til að hefja uppsetningu. Þú skráir þig ekki inn í þessu skrefi. Ekki er hægt að skipta hér um virkan auðkenningarþátt.",
   "enrollment-setup-denied": "Ekki er hægt að hefja uppsetningu. Athugaðu innskráningarupplýsingarnar og hvort einnota kóðar séu þegar virkir.",
   "enrollment-code-instructions": "Notaðu tímabundna kóða: SHA1, sex tölustafi og 30 sekúndna bil. Haltu lyklinum leyndum. Uppsetningin rennur út eftir fimm mínútur.",

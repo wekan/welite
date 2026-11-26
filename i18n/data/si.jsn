@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "දත්ත සමුදාය",
   "cloud-start-date": "ආරම්භක දිනය",
   "cloud-end-date": "අවසාන දිනය",
-  "wekan-data-no-database": "කියවිය හැකි WeKan දත්ත සමුදායක් හමු නොවීය."
+  "wekan-data-no-database": "කියවිය හැකි WeKan දත්ත සමුදායක් හමු නොවීය.",
+  "sort-by-votes": "ඡන්ද අනුව අනුපිළිවෙළට සකසන්න",
+  "sort-by-label-order": "ලේබල අනුපිළිවෙළ"
 }

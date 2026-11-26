@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ሐበሬ መካን",
   "cloud-start-date": "ዕለት ጅማሮ",
   "cloud-end-date": "ዕለት ኣኽሪት",
-  "wekan-data-no-database": "ልትቀረእ ትቀድር ሐበሬ መካን WeKan ኢትረከበት።"
+  "wekan-data-no-database": "ልትቀረእ ትቀድር ሐበሬ መካን WeKan ኢትረከበት።",
+  "sort-by-votes": "ብድምጺ ስራዕ",
+  "sort-by-label-order": "ስርዓት እሻራት"
 }

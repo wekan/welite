@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Detabes",
   "cloud-start-date": "De bilong stat",
   "cloud-end-date": "De bilong pinis",
-  "wekan-data-no-database": "I no gat WeKan detabes yu inap ridim."
+  "wekan-data-no-database": "I no gat WeKan detabes yu inap ridim.",
+  "sort-by-votes": "Soim bihain long vot",
+  "sort-by-label-order": "Lain bilong ol mak"
 }

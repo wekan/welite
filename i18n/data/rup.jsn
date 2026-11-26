@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Bazã di dati",
   "cloud-start-date": "Data di nceput",
   "cloud-end-date": "Data di bitisiri",
-  "wekan-data-no-database": "Nu s-aflã vãrã bazã di dati WeKan tsi s-poatã s-hibã ghivisitã."
+  "wekan-data-no-database": "Nu s-aflã vãrã bazã di dati WeKan tsi s-poatã s-hibã ghivisitã.",
+  "sort-by-votes": "Aradã dupã voturi",
+  "sort-by-label-order": "Aradha a etichetilor"
 }

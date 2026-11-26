@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Cronfa ddata",
   "cloud-start-date": "Dyddiad Dechrau",
   "cloud-end-date": "Dyddiad Gorffen",
-  "wekan-data-no-database": "Ni chanfuwyd cronfa ddata WeKan ddarllenadwy."
+  "wekan-data-no-database": "Ni chanfuwyd cronfa ddata WeKan ddarllenadwy.",
+  "sort-by-votes": "Trefnu yn ôl pleidleisiau",
+  "sort-by-label-order": "Trefn y labeli"
 }

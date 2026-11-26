@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Nünodem",
   "cloud-start-date": "Primadät",
   "cloud-end-date": "Finadät",
-  "wekan-data-no-database": "Nünodem WeKan reidovik no petuvon."
+  "wekan-data-no-database": "Nünodem WeKan reidovik no petuvon.",
+  "sort-by-votes": "Leodükön ma vögods",
+  "sort-by-label-order": "Leod ninädapenädas"
 }

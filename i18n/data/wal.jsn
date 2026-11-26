@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Paayduwaa",
   "cloud-start-date": "Doomettaa gallassaa",
   "cloud-end-date": "Wuraa gallassaa",
-  "wekan-data-no-database": "Nabbabettiya WeKan paayduwaa demettibeenna."
+  "wekan-data-no-database": "Nabbabettiya WeKan paayduwaa demettibeenna.",
+  "sort-by-votes": "Dabbura mala worqet",
+  "sort-by-label-order": "Malaatata maaraa"
 }

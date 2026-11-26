@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Yatiyawi pirwa",
   "cloud-start-date": "Qallta uru",
   "cloud-end-date": "Tukuya uru",
-  "wekan-data-no-database": "Janiw WeKan yatiyawi pirwa liyt’añjam jikxatatäkiti."
+  "wekan-data-no-database": "Janiw WeKan yatiyawi pirwa liyt’añjam jikxatatäkiti.",
+  "sort-by-votes": "Votonakar chika churasa",
+  "sort-by-label-order": "Unanchanakan siqipa"
 }

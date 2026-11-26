@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "계정에 2단계 인증이 활성화되어 있습니다.",
   "two-factor-required-title": "2단계 인증 설정",
   "two-factor-required-text": "이 사이트는 계정에 2단계 인증을 요구합니다. 계속하려면 설정하세요.",
+  "sort-by-votes": "투표순으로 정렬",
+  "sort-by-label-order": "라벨 순서",
   "enrollment-password-instructions": "설정을 시작하려면 비밀번호를 확인하세요. 이 단계에서는 로그인되지 않습니다. 이미 활성화된 인증 수단은 여기서 교체할 수 없습니다.",
   "enrollment-setup-denied": "설정을 시작할 수 없습니다. 로그인 정보와 일회용 코드가 이미 활성화되어 있는지 확인하세요.",
   "enrollment-code-instructions": "시간 기반 코드를 사용하세요. 알고리즘은 SHA1, 코드는 6자리, 갱신 간격은 30초입니다. 키를 비밀로 유지하세요. 이 설정은 5분 후 만료됩니다.",

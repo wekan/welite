@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Nsɛm siebea",
   "cloud-start-date": "Mfitiaseɛ da",
   "cloud-end-date": "Awieeɛ da",
-  "wekan-data-no-database": "Wɔanhu WeKan nsɛm siebea biara a wotumi kenkan."
+  "wekan-data-no-database": "Wɔanhu WeKan nsɛm siebea biara a wotumi kenkan.",
+  "sort-by-votes": "Hyehyɛ no sɛnea votenom te",
+  "sort-by-label-order": "Nsɛnkyerɛnne nhyehyɛe"
 }

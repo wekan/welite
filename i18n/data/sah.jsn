@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Дааннайдар баазалара",
   "cloud-start-date": "Саҕаланар күнэ",
   "cloud-end-date": "Бүтэр күнэ",
-  "wekan-data-no-database": "Ааҕыллар WeKan дааннайдарын баазата көстүбэтэ."
+  "wekan-data-no-database": "Ааҕыллар WeKan дааннайдарын баазата көстүбэтэ.",
+  "sort-by-votes": "Ымсыылар устун ырытыы",
+  "sort-by-label-order": "Бэлиэлэр бэрээдэктэрэ"
 }

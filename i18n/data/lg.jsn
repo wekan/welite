@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Etterekero ly'amawulire",
   "cloud-start-date": "Olunaku olw'okutandika",
   "cloud-end-date": "Olunaku olw'okukomekkereza",
-  "wekan-data-no-database": "Tewali tterekero ly'amawulire erya WeKan esobola okusomebwa ezuuliddwa."
+  "wekan-data-no-database": "Tewali tterekero ly'amawulire erya WeKan esobola okusomebwa ezuuliddwa.",
+  "sort-by-votes": "Tegeka ng'okusinziira ku bukalikuti",
+  "sort-by-label-order": "Ensengeka y'obubonero"
 }

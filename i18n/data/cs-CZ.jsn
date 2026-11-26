@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Databáze",
   "cloud-start-date": "Datum začátku",
   "cloud-end-date": "Datum konce",
-  "wekan-data-no-database": "Nebyla nalezena žádná čitelná databáze WeKan."
+  "wekan-data-no-database": "Nebyla nalezena žádná čitelná databáze WeKan.",
+  "sort-by-votes": "Řadit podle hlasů",
+  "sort-by-label-order": "Pořadí štítků"
 }

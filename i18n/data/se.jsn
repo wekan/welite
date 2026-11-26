@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Diehtovuođđu",
   "cloud-start-date": "Álgobeaivi",
   "cloud-end-date": "Loahppabeaivi",
-  "wekan-data-no-database": "Ii gávdnon WeKan-diehtovuođđu man sáhttá lohkat."
+  "wekan-data-no-database": "Ii gávdnon WeKan-diehtovuođđu man sáhttá lohkat.",
+  "sort-by-votes": "Sortere jienaid mielde",
+  "sort-by-label-order": "Gilkoriid ortnet"
 }

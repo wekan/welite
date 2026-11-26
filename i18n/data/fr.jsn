@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "L'authentification à deux facteurs est activée pour votre compte.",
   "two-factor-required-title": "Configurer l'authentification à deux facteurs",
   "two-factor-required-text": "Ce site exige l'authentification à deux facteurs pour votre compte. Configurez-la pour continuer.",
+  "sort-by-votes": "Trier par votes",
+  "sort-by-label-order": "Ordre des étiquettes",
   "enrollment-password-instructions": "Confirmez votre mot de passe pour commencer la configuration. Cette étape ne vous connecte pas. Vous ne pouvez pas remplacer ici un facteur déjà actif.",
   "enrollment-setup-denied": "Impossible de lancer la configuration. Vérifiez vos identifiants et si les codes à usage unique sont déjà activés.",
   "enrollment-code-instructions": "Utilisez des codes temporaires : SHA1, six chiffres, 30 secondes. Gardez la clé secrète. Cette configuration expire au bout de cinq minutes.",

@@ -88,6 +88,7 @@
 15-board-actions.e2e.js: renaming board via popup updates the board title
 15-board-actions.e2e.js: member menu opens Boards in Archive and shows archived boards
 15-board-actions.e2e.js: Board-level actions › filter sidebar opens when filter button is clicked
+15-board-actions.e2e.js: Board-level actions › sort cards popup opens without JS errors
 16-card-members-description.e2e.js
 17-rest-api.e2e.js: REST API: data + permissions › #1437 logout revokes the presented REST token
 17-rest-api.e2e.js: REST API: data + permissions › user deletion confirms removal and reports a repeat as 404

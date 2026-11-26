@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Datebank",
   "cloud-start-date": "Ufanksdatum",
   "cloud-end-date": "Schlussdatum",
-  "wekan-data-no-database": "Keng liesbar WeKan-Datebank fonnt."
+  "wekan-data-no-database": "Keng liesbar WeKan-Datebank fonnt.",
+  "sort-by-votes": "No Stëmmen sortéieren",
+  "sort-by-label-order": "Etikettenuerdnung"
 }

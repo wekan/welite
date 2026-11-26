@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "דאַטן־באַזע",
   "cloud-start-date": "אָנהייב דאַטע",
   "cloud-end-date": "סוף דאַטע",
-  "wekan-data-no-database": "קיין לייענבאַרע WeKan דאַטן־באַזע איז ניט געפֿונען געוואָרן."
+  "wekan-data-no-database": "קיין לייענבאַרע WeKan דאַטן־באַזע איז ניט געפֿונען געוואָרן.",
+  "sort-by-votes": "סארטירן לויט קולות",
+  "sort-by-label-order": "סדר פֿון לאַבעלס"
 }

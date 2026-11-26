@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Tá fíordheimhniú dhá fhachtóir cumasaithe do do chuntas.",
   "two-factor-required-title": "Socraigh fíordheimhniú dhá fhachtóir",
   "two-factor-required-text": "Éilíonn an suíomh seo fíordheimhniú dhá fhachtóir do do chuntas. Socraigh é chun leanúint ar aghaidh.",
+  "sort-by-votes": "Sórtáil de réir vótaí",
+  "sort-by-label-order": "Ord na lipéad",
   "enrollment-password-instructions": "Deimhnigh do phasfhocal chun an socrú a thosú. Ní shíníonn an chéim seo isteach thú. Ní féidir fachtóir fíordheimhnithe atá gníomhach cheana a athsholáthar anseo.",
   "enrollment-setup-denied": "Ní féidir an socrú a thosú. Seiceáil do shonraí sínithe isteach agus an bhfuil cóid aonuaire cumasaithe cheana féin.",
   "enrollment-code-instructions": "Úsáid cóid atá bunaithe ar am: SHA1, sé dhigit agus eatramh 30 soicind. Coinnigh an eochair faoi rún. Rachaidh an socrú in éag i gceann cúig nóiméad.",

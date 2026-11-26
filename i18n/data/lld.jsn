@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Banca dac",
   "cloud-start-date": "Data de scumenciamënt",
   "cloud-end-date": "Data de fin",
-  "wekan-data-no-database": "Ne n'ie nia stata abineda deguna banca dac WeKan che se possa lieje."
+  "wekan-data-no-database": "Ne n'ie nia stata abineda deguna banca dac WeKan che se possa lieje.",
+  "sort-by-votes": "Ordenèr sun i vòc",
+  "sort-by-label-order": "Orden dla etichetes"
 }

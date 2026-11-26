@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "資料庫",
   "cloud-start-date": "開始日期",
   "cloud-end-date": "結束日期",
-  "wekan-data-no-database": "找不到可讀取的 WeKan 資料庫。"
+  "wekan-data-no-database": "找不到可讀取的 WeKan 資料庫。",
+  "sort-by-votes": "依投票數排序",
+  "sort-by-label-order": "標籤順序"
 }

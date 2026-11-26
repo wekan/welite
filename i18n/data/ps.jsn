@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ډيټابېس",
   "cloud-start-date": "د پیل نېټه",
   "cloud-end-date": "د پای نېټه",
-  "wekan-data-no-database": "د لوستلو وړ د WeKan ډيټابېس ونه موندل شو."
+  "wekan-data-no-database": "د لوستلو وړ د WeKan ډيټابېس ونه موندل شو.",
+  "sort-by-votes": "د رایو له مخې ترتیب کول",
+  "sort-by-label-order": "د نښو ترتیب"
 }

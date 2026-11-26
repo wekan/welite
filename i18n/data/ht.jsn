@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Baz done",
   "cloud-start-date": "Dat kòmansman",
   "cloud-end-date": "Dat fen",
-  "wekan-data-no-database": "Yo pa jwenn okenn baz done WeKan ki ka li."
+  "wekan-data-no-database": "Yo pa jwenn okenn baz done WeKan ki ka li.",
+  "sort-by-votes": "Triye pa vòt",
+  "sort-by-label-order": "Lòd etikèt yo"
 }

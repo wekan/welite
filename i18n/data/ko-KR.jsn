@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "데이터베이스",
   "cloud-start-date": "시작일",
   "cloud-end-date": "종료일",
-  "wekan-data-no-database": "읽을 수 있는 WeKan 데이터베이스를 찾지 못했습니다."
+  "wekan-data-no-database": "읽을 수 있는 WeKan 데이터베이스를 찾지 못했습니다.",
+  "sort-by-votes": "투표순으로 정렬",
+  "sort-by-label-order": "라벨 순서"
 }

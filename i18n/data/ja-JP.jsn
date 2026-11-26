@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "データベース",
   "cloud-start-date": "開始日",
   "cloud-end-date": "終了日",
-  "wekan-data-no-database": "読み取り可能な WeKan データベースが見つかりませんでした。"
+  "wekan-data-no-database": "読み取り可能な WeKan データベースが見つかりませんでした。",
+  "sort-by-votes": "投票数で並べ替え",
+  "sort-by-label-order": "ラベル順"
 }

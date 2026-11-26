@@ -158,6 +158,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the filter is the board drawn for the viewer, never an access check. The
   key filter-card-text-label is copied from WeKan's catalogs. 212 of WeKan's
   tests pass, all of those listed.
+- Add Sort Cards to the HTML5 view, as WeKan's cardsSortPopup and Weddy's
+  board_sort.go: due date (cards without one first), title, newest or oldest
+  first, votes (positive minus negative) and the board's label order (cards
+  without a label last), kept in the board's URL beside the filter, with
+  Sort is on and its reset while an order is. A display order only: no
+  card's sort changes, and ties keep the manual order. weddy.js is Weddy's
+  again, with its Sort Cards; sort-by-votes and sort-by-label-order are
+  copied from WeKan's catalogs. 213 of WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

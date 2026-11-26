@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Tipiganan hin datos",
   "cloud-start-date": "Petsa han pagtikang",
   "cloud-end-date": "Petsa han pagtapos",
-  "wekan-data-no-database": "Waray nakita nga nababasa nga tipiganan hin datos han WeKan."
+  "wekan-data-no-database": "Waray nakita nga nababasa nga tipiganan hin datos han WeKan.",
+  "sort-by-votes": "Ayosa sumala han mga boto",
+  "sort-by-label-order": "Han-sunod han mga label"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Nchekwa data",
   "cloud-start-date": "Ụbọchị mmalite",
   "cloud-end-date": "Ụbọchị njedebe",
-  "wekan-data-no-database": "Ahụghị nchekwa data WeKan a pụrụ ịgụ."
+  "wekan-data-no-database": "Ahụghị nchekwa data WeKan a pụrụ ịgụ.",
+  "sort-by-votes": "Hazie site na votu",
+  "sort-by-label-order": "Usoro akara"
 }

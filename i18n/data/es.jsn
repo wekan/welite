@@ -2108,6 +2108,8 @@
   "twoFactorAuth-enabled": "La autenticación de dos factores está activada para su cuenta.",
   "two-factor-required-title": "Configurar la autenticación de dos factores",
   "two-factor-required-text": "Este sitio requiere autenticación de dos factores para su cuenta. Configúrela para continuar.",
+  "sort-by-votes": "Ordenar por votos",
+  "sort-by-label-order": "Orden de etiquetas",
   "enrollment-password-instructions": "Confirme su contraseña para iniciar la configuración. Este paso no inicia sesión. Aquí no puede sustituir un factor que ya esté activo.",
   "enrollment-setup-denied": "No se puede iniciar la configuración. Compruebe sus credenciales y si ya están activados los códigos de un solo uso.",
   "enrollment-code-instructions": "Use códigos basados en el tiempo: SHA1, seis dígitos y 30 segundos. Mantenga la clave en secreto. Esta configuración caduca en cinco minutos.",

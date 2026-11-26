@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Xác thực hai yếu tố đang được bật cho tài khoản của bạn.",
   "two-factor-required-title": "Thiết lập xác thực hai yếu tố",
   "two-factor-required-text": "Trang này yêu cầu xác thực hai yếu tố cho tài khoản của bạn. Hãy thiết lập để tiếp tục.",
+  "sort-by-votes": "Sắp xếp theo số phiếu bầu",
+  "sort-by-label-order": "Thứ tự nhãn",
   "enrollment-password-instructions": "Xác nhận mật khẩu để bắt đầu thiết lập. Bước này không đăng nhập bạn vào hệ thống. Bạn không thể thay thế yếu tố xác thực đang hoạt động tại đây.",
   "enrollment-setup-denied": "Không thể bắt đầu thiết lập. Hãy kiểm tra thông tin đăng nhập và xem mã dùng một lần đã được bật hay chưa.",
   "enrollment-code-instructions": "Sử dụng mã dựa trên thời gian: SHA1, sáu chữ số và chu kỳ 30 giây. Hãy giữ bí mật khóa. Thiết lập này hết hạn sau năm phút.",

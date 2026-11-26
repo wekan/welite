@@ -2105,5 +2105,7 @@
   "continuous-backup-database": "Database",
   "cloud-start-date": "Start Date",
   "cloud-end-date": "End Date",
-  "wekan-data-no-database": "No readable WeKan database was found."
+  "wekan-data-no-database": "No readable WeKan database was found.",
+  "sort-by-votes": "Sort by votes",
+  "sort-by-label-order": "Label order"
 }

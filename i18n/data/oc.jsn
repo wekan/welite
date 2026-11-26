@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Basa de donadas",
   "cloud-start-date": "Data de començament",
   "cloud-end-date": "Data de fin",
-  "wekan-data-no-database": "Cap de basa de donadas WeKan legibla pas trobada."
+  "wekan-data-no-database": "Cap de basa de donadas WeKan legibla pas trobada.",
+  "sort-by-votes": "Triar per vòtes",
+  "sort-by-label-order": "Òrdre de las etiquetas"
 }

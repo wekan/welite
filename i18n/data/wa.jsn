@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Båze di dnêyes",
   "cloud-start-date": "Date di cminçmint",
   "cloud-end-date": "Date di fén",
-  "wekan-data-no-database": "Nole båze di dnêyes WeKan lijhåve n' a stî trovêye."
+  "wekan-data-no-database": "Nole båze di dnêyes WeKan lijhåve n' a stî trovêye.",
+  "sort-by-votes": "Rindjî sorlon les vôtes",
+  "sort-by-label-order": "Ôrde des etiketes"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Stoor-fysseree",
   "cloud-start-date": "Laa toshee",
   "cloud-end-date": "Laa jerree",
-  "wekan-data-no-database": "Cha row stoor-fysseree WeKan lhaihoil er ny gheddyn."
+  "wekan-data-no-database": "Cha row stoor-fysseree WeKan lhaihoil er ny gheddyn.",
+  "sort-by-votes": "Sorçhaghey liorish coyrtyn",
+  "sort-by-label-order": "Oardagh ny lipaidyn"
 }

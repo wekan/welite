@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Danegeh",
   "cloud-start-date": "Dîroka destpêkê",
   "cloud-end-date": "Dîroka dawiyê",
-  "wekan-data-no-database": "Danegeheke WeKan a xwendinbar nehat dîtin."
+  "wekan-data-no-database": "Danegeheke WeKan a xwendinbar nehat dîtin.",
+  "sort-by-votes": "Li gorî dengan rêz bike",
+  "sort-by-label-order": "Rêza etîketan"
 }

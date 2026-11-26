@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Dura remashoko",
   "cloud-start-date": "Zuva rekutanga",
   "cloud-end-date": "Zuva rekupedzisira",
-  "wekan-data-no-database": "Hapana dura remashoko reWeKan rinoverengeka rawanikwa."
+  "wekan-data-no-database": "Hapana dura remashoko reWeKan rinoverengeka rawanikwa.",
+  "sort-by-votes": "Rongedza zvichienderana nemavhoti",
+  "sort-by-label-order": "Kurongeka kwemareberu"
 }

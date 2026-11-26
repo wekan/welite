@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "डेटाबेस",
   "cloud-start-date": "सुरु मिति",
   "cloud-end-date": "अन्त्य मिति",
-  "wekan-data-no-database": "पढ्न मिल्ने कुनै WeKan डेटाबेस फेला परेन।"
+  "wekan-data-no-database": "पढ्न मिल्ने कुनै WeKan डेटाबेस फेला परेन।",
+  "sort-by-votes": "मतको आधारमा क्रमबद्ध गर्नुहोस्",
+  "sort-by-label-order": "लेबलको क्रम"
 }

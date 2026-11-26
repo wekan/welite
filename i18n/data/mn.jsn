@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Өгөгдлийн сан",
   "cloud-start-date": "Эхлэх огноо",
   "cloud-end-date": "Дуусах огноо",
-  "wekan-data-no-database": "Уншигдах WeKan өгөгдлийн сан олдсонгүй."
+  "wekan-data-no-database": "Уншигдах WeKan өгөгдлийн сан олдсонгүй.",
+  "sort-by-votes": "Санал хураалтаар эрэмбэлэх",
+  "sort-by-label-order": "Шошгын дараалал"
 }

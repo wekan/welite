@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Dufaktora aŭtentigo estas ŝaltita por via konto.",
   "two-factor-required-title": "Agordu dufaktoran aŭtentigon",
   "two-factor-required-text": "Ĉi tiu retejo postulas dufaktoran aŭtentigon por via konto. Agordu ĝin por daŭrigi.",
+  "sort-by-votes": "Ordigi laŭ voĉoj",
+  "sort-by-label-order": "Ordo de etikedoj",
   "enrollment-password-instructions": "Konfirmu vian pasvorton por komenci la agordon. Ĉi tiu paŝo ne ensalutas vin. Ĉi tie ne eblas anstataŭigi jam aktivan aŭtentigan faktoron.",
   "enrollment-setup-denied": "Ne eblas komenci la agordon. Kontrolu viajn ensalutajn informojn kaj ĉu unufojaj kodoj jam estas aktivigitaj.",
   "enrollment-code-instructions": "Uzu tempobazitajn kodojn: SHA1, ses ciferoj kaj intervalo de 30 sekundoj. Tenu la ŝlosilon sekreta. La agordo eksvalidiĝos post kvin minutoj.",

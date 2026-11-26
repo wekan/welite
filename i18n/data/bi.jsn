@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Databes",
   "cloud-start-date": "Dei blong stat",
   "cloud-end-date": "Dei blong finis",
-  "wekan-data-no-database": "I no gat WeKan databes we yu save ridim."
+  "wekan-data-no-database": "I no gat WeKan databes we yu save ridim.",
+  "sort-by-votes": "Sotem folem ol vot",
+  "sort-by-label-order": "Oda blong ol mak"
 }

@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Die Zwei-Faktor-Authentifizierung ist für Ihr Konto aktiviert.",
   "two-factor-required-title": "Zwei-Faktor-Authentifizierung einrichten",
   "two-factor-required-text": "Diese Website erfordert für Ihr Konto die Zwei-Faktor-Authentifizierung. Richten Sie sie ein, um fortzufahren.",
+  "sort-by-votes": "Nach Stimmen sortieren",
+  "sort-by-label-order": "Reihenfolge der Kennzeichnungen",
   "enrollment-password-instructions": "Bestätigen Sie Ihr Passwort, um die Einrichtung zu starten. Sie werden dadurch nicht angemeldet. Ein bereits aktiver Faktor kann hier nicht ersetzt werden.",
   "enrollment-setup-denied": "Die Einrichtung kann nicht gestartet werden. Prüfen Sie Ihre Zugangsdaten und ob Einmalcodes bereits aktiviert sind.",
   "enrollment-code-instructions": "Verwenden Sie zeitbasierte Codes: SHA1, sechs Stellen, 30 Sekunden. Halten Sie den Schlüssel geheim. Diese Einrichtung läuft nach fünf Minuten ab.",

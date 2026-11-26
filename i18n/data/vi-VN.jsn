@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Cơ sở dữ liệu",
   "cloud-start-date": "Ngày bắt đầu",
   "cloud-end-date": "Ngày kết thúc",
-  "wekan-data-no-database": "Không tìm thấy cơ sở dữ liệu WeKan nào có thể đọc được."
+  "wekan-data-no-database": "Không tìm thấy cơ sở dữ liệu WeKan nào có thể đọc được.",
+  "sort-by-votes": "Sắp xếp theo số phiếu bầu",
+  "sort-by-label-order": "Thứ tự nhãn"
 }

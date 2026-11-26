@@ -1214,6 +1214,77 @@ begin
   Result := Result + '</ul></div>';
 end;
 
+// WeKan's Sort Cards (cardsSortPopup; board_sort.go in Weddy): a display
+// order of each list's cards, kept in the board's URL (?sort=) by weddy.js.
+// No card's sort changes, and ties keep the manual order.
+const
+  CARD_SORTS: array[0..5] of string = ('due', 'title', 'created-desc', 'created-asc', 'votes', 'label-order');
+  CARD_SORT_ICONS: array[0..5] of string = ('fa-calendar', 'fa-sort-alpha-asc', 'fa-arrow-down', 'fa-arrow-up',
+    'fa-thumbs-o-up', 'fa-tags');
+  CARD_SORT_LABELS: array[0..5] of string = ('due-date', 'title-alphabetically', 'created-at-newest-first',
+    'created-at-oldest-first', 'sort-by-votes', 'sort-by-label-order');
+  CARD_SORT_FALLBACKS: array[0..5] of string = ('Due Date', 'Title (Alphabetically)', 'Created At (Newest First)',
+    'Created At (Oldest First)', 'Sort by votes', 'Label order');
+
+// The ?sort= of the URL when it is one of WeKan's, else ''.
+function ParseCardSort(Query: TStrings): string;
+var i: Integer;
+begin
+  Result := '';
+  if Query = nil then Exit;
+  for i := 0 to High(CARD_SORTS) do
+    if Query.Values['sort'] = CARD_SORTS[i] then Exit(CARD_SORTS[i]);
+end;
+
+// The ORDER BY of the board's cards c for the order: WeKan's {dueAt: 1} puts
+// cards without a due date first; votes are positive minus negative (#3050);
+// the label order is where a card's first label comes in the board's labels,
+// cards without one last (#2040).
+function CardSortSql(Db: TWLDb; const BoardId, Key: string): string;
+var R: TWLRows; i: Integer; Rank: string;
+begin
+  if Key = 'due' then Result := 'CASE WHEN COALESCE(c.dueAt,'''')='''' THEN 0 ELSE 1 END,c.dueAt,'
+  else if Key = 'title' then Result := 'c.title,'
+  else if Key = 'created-desc' then Result := 'c.createdAt DESC,'
+  else if Key = 'created-asc' then Result := 'c.createdAt,'
+  else if Key = 'votes' then
+    Result := '(SELECT count(*) FROM json_each(CASE WHEN json_valid(c.extra_json) THEN c.extra_json ELSE ''{}'' END,''$.vote.positive''))-' +
+      '(SELECT count(*) FROM json_each(CASE WHEN json_valid(c.extra_json) THEN c.extra_json ELSE ''{}'' END,''$.vote.negative'')) DESC,'
+  else if Key = 'label-order' then
+  begin
+    R := Db.Query('SELECT id FROM board_labels WHERE boardId=' + QuotedStr(BoardId) + ';');
+    Rank := '';
+    for i := 0 to High(R) do Rank := Rank + ' WHEN ' + QuotedStr(R[i][0]) + ' THEN ' + IntToStr(i);
+    if Rank = '' then Result := ''
+    else Result := 'COALESCE((SELECT min(CASE l.labelId' + Rank + ' END) FROM card_labels l WHERE l.cardId=c.id),' +
+      IntToStr(Length(R) + 1) + '),';
+  end
+  else Result := '';
+end;
+
+// boardHeader.jade's Sort Cards - Sort is on, with its reset, while an order
+// is - and cardsSortPopup.
+function SortButton(Words: TWLTranslator; const Key: string): string;
+var i: Integer;
+begin
+  if Key <> '' then
+    Result := '<a class="board-header-btn js-sort-cards emphasis" href="#" title="' + HtmlAttr(Words.Text('sort-is-on', 'Sort is on')) +
+      '"><i class="fa fa-sort"></i><span class="board-header-btn-label">' + E(Words.Text('sort-is-on', 'Sort is on')) + '</span></a>' +
+      '<a class="board-header-btn-close js-sort-reset" href="#" title="' + HtmlAttr(Words.Text('remove-sort', 'Remove sort')) + '">&#10005;</a>'
+  else
+    Result := '<a class="board-header-btn js-sort-cards" href="#" title="' + HtmlAttr(Words.Text('sort-cards', 'Sort Cards')) +
+      '"><i class="fa fa-sort"></i><span class="board-header-btn-label">' + E(Words.Text('sort-cards', 'Sort Cards')) + '</span></a>';
+  Result := Result + '<template class="js-pop-over-template" data-pop="cards-sort" data-title="' +
+    HtmlAttr(Words.Text('sort-cards', 'Sort Cards')) + '"><div class="header"><span class="header-title">' +
+    E(Words.Text('sort-cards', 'Sort Cards')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list">';
+  for i := 0 to High(CARD_SORTS) do
+    Result := Result + '<li><a class="js-sort-card-order js-sort-' + CARD_SORTS[i] + IfThen(Key = CARD_SORTS[i], ' is-active', '') +
+      '" href="#" data-sort="' + CARD_SORTS[i] + '"><i class="fa ' + CARD_SORT_ICONS[i] + '"></i> ' +
+      E(Words.Text(CARD_SORT_LABELS[i], CARD_SORT_FALLBACKS[i])) + IfThen(Key = CARD_SORTS[i], ' &#10003;', '') + '</a><hr></li>';
+  Result := Result + '</ul></div></template>';
+end;
+
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
@@ -1585,7 +1656,7 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded: Boolean;
-  Shows: TMinicardShows; Header, FilterCond: string; Filter: TBoardFilter;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -1599,6 +1670,8 @@ begin
   Shows := MinicardShows(Db, BoardId, BoardDates);
   Filter := ParseBoardFilter(Db, BoardId, Query);
   FilterCond := BoardFilterSql(Filter);
+  CardSort := ParseCardSort(Query);
+  SortSql := CardSortSql(Db, BoardId, CardSort);
   Canvas := '';
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
@@ -1654,7 +1727,7 @@ begin
       Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
         'COALESCE(c.dueAt,''''),COALESCE(c.endAt,'''') FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
-        ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY c.sort,c.id;');
+        ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
         // A block that opens the card, as Weddy's and WeKan's minicard.
         Canvas := Canvas + '<div class="minicard-wrapper js-minicard" up-href="' +
@@ -1790,7 +1863,7 @@ begin
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '" data-board="' + HtmlAttr(BoardId) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
-    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + '</div>' +
+    BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) + FilterButton(Words, Filter) + SortButton(Words, CardSort) + '</div>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     '<div class="board-canvas" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;

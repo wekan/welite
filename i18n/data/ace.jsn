@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Pangkai data",
   "cloud-start-date": "Tanggai Phôn",
   "cloud-end-date": "Tanggai Akhe",
-  "wekan-data-no-database": "Hana meuteumèe pangkai data WeKan nyang jeuet geubaca."
+  "wekan-data-no-database": "Hana meuteumèe pangkai data WeKan nyang jeuet geubaca.",
+  "sort-by-votes": "Sôt meunurôt vote",
+  "sort-by-label-order": "Urutan dapeuta label"
 }

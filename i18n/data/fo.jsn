@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Dátugrunnur",
   "cloud-start-date": "Byrjanardagur",
   "cloud-end-date": "Endadagur",
-  "wekan-data-no-database": "Eingin lesiligur WeKan-dátugrunnur varð funnin."
+  "wekan-data-no-database": "Eingin lesiligur WeKan-dátugrunnur varð funnin.",
+  "sort-by-votes": "Raða eftir atkvøðum",
+  "sort-by-label-order": "Raðfylgja merkja"
 }

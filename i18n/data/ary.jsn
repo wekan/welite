@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "قاعدة البيانات",
   "cloud-start-date": "تاريخ البدء",
   "cloud-end-date": "تاريخ الانتهاء",
-  "wekan-data-no-database": "ما تلقات حتى قاعدة بيانات ديال WeKan اللي تقدر تتقرا."
+  "wekan-data-no-database": "ما تلقات حتى قاعدة بيانات ديال WeKan اللي تقدر تتقرا.",
+  "sort-by-votes": "رتب حسب الأصوات",
+  "sort-by-label-order": "ترتيب العلامات"
 }

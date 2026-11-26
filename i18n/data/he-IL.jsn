@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "מסד נתונים",
   "cloud-start-date": "תאריך התחלה",
   "cloud-end-date": "תאריך סיום",
-  "wekan-data-no-database": "לא נמצא מסד נתונים קריא של WeKan."
+  "wekan-data-no-database": "לא נמצא מסד נתונים קריא של WeKan.",
+  "sort-by-votes": "מיין לפי הצבעות",
+  "sort-by-label-order": "סדר התוויות"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Bank-roadennoù",
   "cloud-start-date": "Deiziad kregiñ",
   "cloud-end-date": "Deiziad echuiñ",
-  "wekan-data-no-database": "N'eus bet kavet bank-roadennoù WeKan lennus ebet."
+  "wekan-data-no-database": "N'eus bet kavet bank-roadennoù WeKan lennus ebet.",
+  "sort-by-votes": "Rummañ hervez ar mouezhioù",
+  "sort-by-label-order": "Urzh an tikedennoù"
 }

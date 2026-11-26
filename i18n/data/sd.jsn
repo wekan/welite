@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ڊيٽابيس",
   "cloud-start-date": "شروعاتي تاريخ",
   "cloud-end-date": "آخري تاريخ",
-  "wekan-data-no-database": "پڙهڻ جوڳو ڪو به WeKan ڊيٽابيس نه مليو."
+  "wekan-data-no-database": "پڙهڻ جوڳو ڪو به WeKan ڊيٽابيس نه مليو.",
+  "sort-by-votes": "ووٽن آهر ترتيب ڏيو",
+  "sort-by-label-order": "ليبل جي ترتيب"
 }

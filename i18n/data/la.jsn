@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Basis datorum",
   "cloud-start-date": "Dies initii",
   "cloud-end-date": "Dies finis",
-  "wekan-data-no-database": "Nulla basis datorum WeKan legibilis inventa est."
+  "wekan-data-no-database": "Nulla basis datorum WeKan legibilis inventa est.",
+  "sort-by-votes": "Ordinare secundum suffragia",
+  "sort-by-label-order": "Ordo titellorum"
 }

@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Dvojfaktorové overenie je pre váš účet povolené.",
   "two-factor-required-title": "Nastavte dvojfaktorové overenie",
   "two-factor-required-text": "Táto stránka vyžaduje pre váš účet dvojfaktorové overenie. Nastavte ho, aby ste mohli pokračovať.",
+  "sort-by-votes": "Zoradiť podľa hlasov",
+  "sort-by-label-order": "Poradie štítkov",
   "enrollment-password-instructions": "Potvrďte heslo a začnite nastavovanie. Týmto krokom sa neprihlásite. Aktívny overovací faktor tu nemožno nahradiť.",
   "enrollment-setup-denied": "Nastavovanie nemožno začať. Skontrolujte prihlasovacie údaje a zistite, či už nie sú povolené jednorazové kódy.",
   "enrollment-code-instructions": "Používajte časové kódy: SHA1, šesť číslic a interval 30 sekúnd. Kľúč nikomu neprezrádzajte. Platnosť nastavenia vyprší o päť minút.",

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ساندان",
   "cloud-start-date": "باشلىنىش ۋاقتى",
   "cloud-end-date": "ئاخىرلىشىش ۋاقتى",
-  "wekan-data-no-database": "ئوقۇغىلى بولىدىغان WeKan ساندانى تېپىلمىدى."
+  "wekan-data-no-database": "ئوقۇغىلى بولىدىغان WeKan ساندانى تېپىلمىدى.",
+  "sort-by-votes": "ئاۋاز بويىچە تەرتىپلەش",
+  "sort-by-label-order": "بەلگىلەر تەرتىپى"
 }

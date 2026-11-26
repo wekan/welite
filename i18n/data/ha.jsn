@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Ma'ajiyar bayanai",
   "cloud-start-date": "Ranar farawa",
   "cloud-end-date": "Ranar ƙarewa",
-  "wekan-data-no-database": "Ba a sami ma’ajiyar bayanai ta WeKan da za a iya karantawa ba."
+  "wekan-data-no-database": "Ba a sami ma’ajiyar bayanai ta WeKan da za a iya karantawa ba.",
+  "sort-by-votes": "Tsara bisa ga ƙuri'u",
+  "sort-by-label-order": "Tsarin alamomi"
 }

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Isiseko sedatha",
   "cloud-start-date": "Umhla wokuqala",
   "cloud-end-date": "Umhla wokuphela",
-  "wekan-data-no-database": "Akukho siseko sedatha se-WeKan esifundekayo esifunyenweyo."
+  "wekan-data-no-database": "Akukho siseko sedatha se-WeKan esifundekayo esifunyenweyo.",
+  "sort-by-votes": "Hlela ngokwamavoti",
+  "sort-by-label-order": "Ulandelelwano lweeleyibhile"
 }

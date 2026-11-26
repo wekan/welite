@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Base di dato",
   "cloud-start-date": "Fecha di kuminsamentu",
   "cloud-end-date": "Fecha di fin",
-  "wekan-data-no-database": "No a haña ningun base di dato di WeKan ku por lesa."
+  "wekan-data-no-database": "No a haña ningun base di dato di WeKan ku por lesa.",
+  "sort-by-votes": "Sorterá pa voto",
+  "sort-by-label-order": "Orden di etiketanan"
 }

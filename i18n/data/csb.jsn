@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Baza pòdôwków",
   "cloud-start-date": "Data zôczątkù",
   "cloud-end-date": "Data kùńca",
-  "wekan-data-no-database": "Nie nalazłô sã żódnô czëtnô baza pòdôwków WeKan."
+  "wekan-data-no-database": "Nie nalazłô sã żódnô czëtnô baza pòdôwków WeKan.",
+  "sort-by-votes": "Zortnąc wedle głosów",
+  "sort-by-label-order": "Pòrządk etikétów"
 }

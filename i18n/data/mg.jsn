@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Banky angona",
   "cloud-start-date": "Daty fanombohana",
   "cloud-end-date": "Daty fiafarana",
-  "wekan-data-no-database": "Tsy nisy banky angona WeKan azo vakiana hita."
+  "wekan-data-no-database": "Tsy nisy banky angona WeKan azo vakiana hita.",
+  "sort-by-votes": "Alamino araka ny vato",
+  "sort-by-label-order": "Filaharan'ny marika"
 }

@@ -2108,6 +2108,8 @@
   "twoFactorAuth-enabled": "Uthibitishaji wa hatua mbili umewashwa kwa akaunti yako.",
   "two-factor-required-title": "Weka uthibitishaji wa hatua mbili",
   "two-factor-required-text": "Tovuti hii inahitaji uthibitishaji wa hatua mbili kwa akaunti yako. Uweke ili kuendelea.",
+  "sort-by-votes": "Panga kulingana na kura",
+  "sort-by-label-order": "Mpangilio wa lebo",
   "enrollment-password-instructions": "Thibitisha nenosiri lako ili kuanza usanidi. Hatua hii haitakuingiza kwenye akaunti. Huwezi kubadilisha hapa njia ya uthibitishaji ambayo tayari inatumika.",
   "enrollment-setup-denied": "Usanidi hauwezi kuanza. Kagua taarifa zako za kuingia na kama misimbo ya matumizi ya mara moja tayari imewashwa.",
   "enrollment-code-instructions": "Tumia misimbo inayotegemea muda: SHA1, tarakimu sita na kipindi cha sekunde 30. Weka ufunguo kuwa siri. Usanidi utaisha baada ya dakika tano.",

@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Kuusdeetaa",
   "cloud-start-date": "Guyyaa jalqabaa",
   "cloud-end-date": "Guyyaa xumuraa",
-  "wekan-data-no-database": "Kuusdeetaan WeKan dubbifamuu danda'u hin argamne."
+  "wekan-data-no-database": "Kuusdeetaan WeKan dubbifamuu danda'u hin argamne.",
+  "sort-by-votes": "Sagalee irratti hiriirsi",
+  "sort-by-label-order": "Tartiiba mallattoowwanii"
 }

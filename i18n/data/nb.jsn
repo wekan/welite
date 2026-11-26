@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Tofaktorautentisering er aktivert for kontoen din.",
   "two-factor-required-title": "Sett opp tofaktorautentisering",
   "two-factor-required-text": "Dette nettstedet krever tofaktorautentisering for kontoen din. Sett det opp for å fortsette.",
+  "sort-by-votes": "Sorter etter stemmer",
+  "sort-by-label-order": "Etikettrekkefølge",
   "enrollment-password-instructions": "Bekreft passordet ditt for å starte oppsettet. Dette trinnet logger deg ikke inn. En aktiv autentiseringsfaktor kan ikke byttes ut her.",
   "enrollment-setup-denied": "Oppsettet kan ikke startes. Kontroller påloggingsopplysningene dine og om engangskoder allerede er aktivert.",
   "enrollment-code-instructions": "Bruk tidsbaserte koder: SHA1, seks sifre og et intervall på 30 sekunder. Hold nøkkelen hemmelig. Oppsettet utløper etter fem minutter.",

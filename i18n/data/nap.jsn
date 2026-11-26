@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Base 'e date",
   "cloud-start-date": "Data d'inizio",
   "cloud-end-date": "Data 'e fine",
-  "wekan-data-no-database": "Nun s'è truvata nisciuna base 'e date WeKan liggibbele."
+  "wekan-data-no-database": "Nun s'è truvata nisciuna base 'e date WeKan liggibbele.",
+  "sort-by-votes": "Ordena pe' vute",
+  "sort-by-label-order": "Ordene 'e etichette"
 }

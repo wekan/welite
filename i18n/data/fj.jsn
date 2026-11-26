@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Kato ni itukutuku",
   "cloud-start-date": "Tikinisiga ni tekivu",
   "cloud-end-date": "Tikinisiga ni mudu",
-  "wekan-data-no-database": "E sega ni kune e dua na kato ni itukutuku ni WeKan e rawa ni wiliki."
+  "wekan-data-no-database": "E sega ni kune e dua na kato ni itukutuku ni WeKan e rawa ni wiliki.",
+  "sort-by-votes": "Vakadonuya ena ivakarau ni vootaki",
+  "sort-by-label-order": "Ivakarau ni ivakatakilakila"
 }

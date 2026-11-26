@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "قاعدة البيانات",
   "cloud-start-date": "تاريخ البدء",
   "cloud-end-date": "تاريخ الانتهاء",
-  "wekan-data-no-database": "لم يُعثر على قاعدة بيانات WeKan قابلة للقراءة."
+  "wekan-data-no-database": "لم يُعثر على قاعدة بيانات WeKan قابلة للقراءة.",
+  "sort-by-votes": "الترتيب حسب الأصوات",
+  "sort-by-label-order": "ترتيب العلامات"
 }

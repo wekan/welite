@@ -2108,6 +2108,8 @@
   "twoFactorAuth-enabled": "Jūsų paskyrai įjungtas dviejų faktorių autentifikavimas.",
   "two-factor-required-title": "Nustatykite dviejų faktorių autentifikavimą",
   "two-factor-required-text": "Ši svetainė reikalauja jūsų paskyrai dviejų faktorių autentifikavimo. Nustatykite jį, kad galėtumėte tęsti.",
+  "sort-by-votes": "Rikiuoti pagal balsus",
+  "sort-by-label-order": "Etikečių tvarka",
   "enrollment-password-instructions": "Patvirtinkite slaptažodį, kad pradėtumėte sąranką. Atlikę šį veiksmą neprisijungsite. Jau aktyvaus tapatybės patvirtinimo veiksnio čia pakeisti negalima.",
   "enrollment-setup-denied": "Nepavyksta pradėti sąrankos. Patikrinkite prisijungimo duomenis ir ar vienkartiniai kodai jau įjungti.",
   "enrollment-code-instructions": "Naudokite laiku pagrįstus kodus: SHA1, šeši skaitmenys ir 30 sekundžių intervalas. Saugokite raktą paslaptyje. Sąranka nustos galioti po penkių minučių.",

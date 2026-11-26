@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ᎧᏃᎮᏓ ᎠᏓᏁᎸ",
   "cloud-start-date": "ᏗᏓᎴᏂᏍᎬ ᎢᎦ",
   "cloud-end-date": "ᎤᎵᏍᏆᏗᏍᏗ ᎢᎦ",
-  "wekan-data-no-database": "WeKan ᎧᏃᎮᏓ ᎠᏓᏁᎸ Ꮭ ᎠᏩᏛᏗ."
+  "wekan-data-no-database": "WeKan ᎧᏃᎮᏓ ᎠᏓᏁᎸ Ꮭ ᎠᏩᏛᏗ.",
+  "sort-by-votes": "ᎠᏓᏅᏖᏗ ᎢᏳᏍᏗ ᏗᎪᏪᎵᏍᎩ",
+  "sort-by-label-order": "ᏗᎪᏪᎳᏅᎯ ᏚᏙᏢᏒ"
 }

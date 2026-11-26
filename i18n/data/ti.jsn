@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ዳታቤዝ",
   "cloud-start-date": "ዕለት ምጅማር",
   "cloud-end-date": "ዕለት መወዳእታ",
-  "wekan-data-no-database": "ክንብቦ ዝከኣል ናይ WeKan ዳታቤዝ ኣይተረኽበን።"
+  "wekan-data-no-database": "ክንብቦ ዝከኣል ናይ WeKan ዳታቤዝ ኣይተረኽበን።",
+  "sort-by-votes": "ብድምጺ ስራዕ",
+  "sort-by-label-order": "ቅደም ተኸተል ምልክታት"
 }

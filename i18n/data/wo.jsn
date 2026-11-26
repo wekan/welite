@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Dàttub xibaar yi",
   "cloud-start-date": "Bisu tàmbali",
   "cloud-end-date": "Bisu jeex",
-  "wekan-data-no-database": "Gisuñu benn dàttub xibaar WeKan bu ñu mën a jàng."
+  "wekan-data-no-database": "Gisuñu benn dàttub xibaar WeKan bu ñu mën a jàng.",
+  "sort-by-votes": "Yère ci vot yi",
+  "sort-by-label-order": "Toftalu etiket yi"
 }

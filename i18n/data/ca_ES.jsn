@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Base de dades",
   "cloud-start-date": "Data d'inici",
   "cloud-end-date": "Data de finalització",
-  "wekan-data-no-database": "No s'ha trobat cap base de dades de WeKan llegible."
+  "wekan-data-no-database": "No s'ha trobat cap base de dades de WeKan llegible.",
+  "sort-by-votes": "Ordena per vots",
+  "sort-by-label-order": "Ordre de les etiquetes"
 }

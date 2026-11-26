@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "የውሂብ ጎታ",
   "cloud-start-date": "የመጀመሪያ ቀን",
   "cloud-end-date": "የማብቂያ ቀን",
-  "wekan-data-no-database": "ሊነበብ የሚችል የWeKan የውሂብ ጎታ አልተገኘም።"
+  "wekan-data-no-database": "ሊነበብ የሚችል የWeKan የውሂብ ጎታ አልተገኘም።",
+  "sort-by-votes": "በድምጽ መሠረት ደርድር",
+  "sort-by-label-order": "የመለያዎች ቅደም ተከተል"
 }

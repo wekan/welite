@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "डेटाबेस",
   "cloud-start-date": "आरम्भ तिथि",
   "cloud-end-date": "अन्त तिथि",
-  "wekan-data-no-database": "पढ़ल जा सकय बला कोनो WeKan डेटाबेस नहि भेटल।"
+  "wekan-data-no-database": "पढ़ल जा सकय बला कोनो WeKan डेटाबेस नहि भेटल।",
+  "sort-by-votes": "वोट के अनुसार क्रमबद्ध करू",
+  "sort-by-label-order": "लेबल क्रम"
 }

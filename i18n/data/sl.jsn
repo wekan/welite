@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Dvofaktorska avtentikacija je omogočena za vaš račun.",
   "two-factor-required-title": "Nastavite dvofaktorsko avtentikacijo",
   "two-factor-required-text": "Ta stran za vaš račun zahteva dvofaktorsko avtentikacijo. Nastavite jo za nadaljevanje.",
+  "sort-by-votes": "Razvrsti po glasovih",
+  "sort-by-label-order": "Vrstni red oznak",
   "enrollment-password-instructions": "Za začetek nastavitve potrdite geslo. S tem korakom se ne prijavite. Že dejavnega načina preverjanja pristnosti tukaj ni mogoče zamenjati.",
   "enrollment-setup-denied": "Nastavitve ni mogoče začeti. Preverite podatke za prijavo in ali so enkratne kode že omogočene.",
   "enrollment-code-instructions": "Uporabite časovno omejene kode: SHA1, šest števk in interval 30 sekund. Ključ naj ostane skrivnost. Nastavitev poteče po petih minutah.",

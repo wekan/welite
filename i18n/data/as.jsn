@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "ডাটাবেছ",
   "cloud-start-date": "আৰম্ভণিৰ তাৰিখ",
   "cloud-end-date": "শেষৰ তাৰিখ",
-  "wekan-data-no-database": "পঢ়িব পৰা কোনো WeKan ডাটাবেছ পোৱা নগ'ল।"
+  "wekan-data-no-database": "পঢ়িব পৰা কোনো WeKan ডাটাবেছ পোৱা নগ'ল।",
+  "sort-by-votes": "ভোটৰ দ্বাৰা সজাওক",
+  "sort-by-label-order": "লেবেলৰ ক্ৰম"
 }

@@ -2109,6 +2109,8 @@
   "twoFactorAuth-enabled": "Tha dearbhadh dà-cheum an comas airson a' chunntais agad.",
   "two-factor-required-title": "Suidhich dearbhadh dà-cheum",
   "two-factor-required-text": "Tha an làrach seo ag iarraidh dearbhadh dà-cheum airson a' chunntais agad. Suidhich e gus leantainn air adhart.",
+  "sort-by-votes": "Seòrsaich a rèir bhòtaichean",
+  "sort-by-label-order": "Òrdugh nan leubailean",
   "enrollment-password-instructions": "Dearbhaich am facal-faire agad gus an rèiteachadh a thòiseachadh. Cha chlàraich an ceum seo a-steach thu. Chan urrainn dhut factar dearbhaidh a tha gnìomhach atharrachadh an seo.",
   "enrollment-setup-denied": "Chan urrainn dhuinn an rèiteachadh a thòiseachadh. Thoir sùil air an fhiosrachadh clàraidh agad agus a bheil còdan aon-chleachdaidh an comas mu thràth.",
   "enrollment-code-instructions": "Cleachd còdan stèidhichte air ùine: SHA1, sia àireamhan agus eadar-ama de 30 diog. Cùm an iuchair dìomhair. Thig an rèiteachadh gu crìch an ceann còig mionaidean.",

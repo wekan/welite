@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Pangkalan data",
   "cloud-start-date": "Tarikh Mula",
   "cloud-end-date": "Tarikh Tamat",
-  "wekan-data-no-database": "Tiada pangkalan data WeKan yang boleh dibaca ditemui."
+  "wekan-data-no-database": "Tiada pangkalan data WeKan yang boleh dibaca ditemui.",
+  "sort-by-votes": "Susun mengikut undi",
+  "sort-by-label-order": "Susunan label"
 }

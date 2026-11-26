@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Ububikoshingiro",
   "cloud-start-date": "Itariki yo gutangira",
   "cloud-end-date": "Itariki yo kurangiza",
-  "wekan-data-no-database": "Nta bubikoshingiro bwa WeKan busomeka bwabonetse."
+  "wekan-data-no-database": "Nta bubikoshingiro bwa WeKan busomeka bwabonetse.",
+  "sort-by-votes": "Tondeka ukurikije amajwi",
+  "sort-by-label-order": "Uko ibirango bikurikirana"
 }

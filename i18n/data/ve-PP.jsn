@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Andmbaz",
   "cloud-start-date": "Augotišen päiv",
   "cloud-end-date": "Lopun päiv",
-  "wekan-data-no-database": "Lugetavad WeKan-andmbazad ei ole löutud."
+  "wekan-data-no-database": "Lugetavad WeKan-andmbazad ei ole löutud.",
+  "sort-by-votes": "Sortirui äniden mödhe",
+  "sort-by-label-order": "Znamoiden järgenduz"
 }

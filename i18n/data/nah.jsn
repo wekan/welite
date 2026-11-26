@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Tlahtolpixcalli",
   "cloud-start-date": "Tonalli tlapehualiztli",
   "cloud-end-date": "Tonalli tlamiliztli",
-  "wekan-data-no-database": "Amo monexti WeKan tlahtolpixcalli tlen hueli mopohua."
+  "wekan-data-no-database": "Amo monexti WeKan tlahtolpixcalli tlen hueli mopohua.",
+  "sort-by-votes": "Xitlālīlo īca votos",
+  "sort-by-label-order": "Machiotl tecpantiliztli"
 }

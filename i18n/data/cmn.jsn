@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "数据库",
   "cloud-start-date": "开始日期",
   "cloud-end-date": "结束日期",
-  "wekan-data-no-database": "未找到可读取的 WeKan 数据库。"
+  "wekan-data-no-database": "未找到可读取的 WeKan 数据库。",
+  "sort-by-votes": "按投票排序",
+  "sort-by-label-order": "标签顺序"
 }

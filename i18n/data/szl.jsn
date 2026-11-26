@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Baza danych",
   "cloud-start-date": "Data poczōntku",
   "cloud-end-date": "Data kōńca",
-  "wekan-data-no-database": "Niy szło znojś żodnyj czytelnyj bazy danych WeKan."
+  "wekan-data-no-database": "Niy szło znojś żodnyj czytelnyj bazy danych WeKan.",
+  "sort-by-votes": "Zortować podle głosōw",
+  "sort-by-label-order": "Porzōndek etyket"
 }

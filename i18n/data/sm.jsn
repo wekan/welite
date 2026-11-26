@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Nofoaga o faamatalaga",
   "cloud-start-date": "Aso amata",
   "cloud-end-date": "Aso faaiu",
-  "wekan-data-no-database": "E leʻi maua se nofoaga o faamatalaga WeKan e mafai ona faitau."
+  "wekan-data-no-database": "E leʻi maua se nofoaga o faamatalaga WeKan e mafai ona faitau.",
+  "sort-by-votes": "Fa'atonuina e tusa ai ma palota",
+  "sort-by-label-order": "Faasologa o igoa faailoga"
 }

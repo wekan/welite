@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "پایگاه داده",
   "cloud-start-date": "تاریخ شروع",
   "cloud-end-date": "تاریخ پایان",
-  "wekan-data-no-database": "هیچ پایگاه دادهٔ خوانای WeKan پیدا نشد."
+  "wekan-data-no-database": "هیچ پایگاه دادهٔ خوانای WeKan پیدا نشد.",
+  "sort-by-votes": "مرتب‌سازی بر اساس رأی‌ها",
+  "sort-by-label-order": "ترتیب لیبل ها"
 }

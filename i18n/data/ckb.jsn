@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "بنکەدراوە",
   "cloud-start-date": "ڕێکەوتی دەستپێک",
   "cloud-end-date": "ڕێکەوتی کۆتایی",
-  "wekan-data-no-database": "هیچ بنکەدراوەیەکی WeKanی خوێندنەوەگونجاو نەدۆزرایەوە."
+  "wekan-data-no-database": "هیچ بنکەدراوەیەکی WeKanی خوێندنەوەگونجاو نەدۆزرایەوە.",
+  "sort-by-votes": "ڕیزکردن بەپێی دەنگەکان",
+  "sort-by-label-order": "ڕیزبەندی پێناسەکان"
 }

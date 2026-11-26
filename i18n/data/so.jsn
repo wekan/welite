@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Kaydka xogta",
   "cloud-start-date": "Taariikhda bilowga",
   "cloud-end-date": "Taariikhda dhammaadka",
-  "wekan-data-no-database": "Lama helin kaydka xogta WeKan oo la akhrin karo."
+  "wekan-data-no-database": "Lama helin kaydka xogta WeKan oo la akhrin karo.",
+  "sort-by-votes": "U kala sooc codadka",
+  "sort-by-label-order": "Kala horreynta calaamadaha"
 }

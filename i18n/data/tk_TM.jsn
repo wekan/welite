@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Maglumat bazasy",
   "cloud-start-date": "Başlangyç senesi",
   "cloud-end-date": "Gutaryş senesi",
-  "wekan-data-no-database": "Okalyp bolýan WeKan maglumat bazasy tapylmady."
+  "wekan-data-no-database": "Okalyp bolýan WeKan maglumat bazasy tapylmady.",
+  "sort-by-votes": "Sesler boýunça tertiplemek",
+  "sort-by-label-order": "Bellikleriň tertibi"
 }

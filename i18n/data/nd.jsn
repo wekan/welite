@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Isizindalwazi",
   "cloud-start-date": "Usuku lokuqala",
   "cloud-end-date": "Usuku lokuphela",
-  "wekan-data-no-database": "Akutholakalanga isizindalwazi se-WeKan esingabalwa."
+  "wekan-data-no-database": "Akutholakalanga isizindalwazi se-WeKan esingabalwa.",
+  "sort-by-votes": "Hlela ngokwamavoti",
+  "sort-by-label-order": "Ukulandelana kwamalebula"
 }

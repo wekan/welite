@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Βάση δεδομένων",
   "cloud-start-date": "Ημερομηνία έναρξης",
   "cloud-end-date": "Ημερομηνία λήξης",
-  "wekan-data-no-database": "Δεν βρέθηκε αναγνώσιμη βάση δεδομένων WeKan."
+  "wekan-data-no-database": "Δεν βρέθηκε αναγνώσιμη βάση δεδομένων WeKan.",
+  "sort-by-votes": "Ταξινόμηση κατά ψήφους",
+  "sort-by-label-order": "Σειρά ετικετών"
 }

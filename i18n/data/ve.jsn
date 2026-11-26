@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "Databeisi",
   "cloud-start-date": "Ḓuvha ḽa u thoma",
   "cloud-end-date": "Ḓuvha ḽa u fhedza",
-  "wekan-data-no-database": "A hu na databeisi ya WeKan i vhalaeaho yo wanalaho."
+  "wekan-data-no-database": "A hu na databeisi ya WeKan i vhalaeaho yo wanalaho.",
+  "sort-by-votes": "Dzudzanya nga dzivouthu",
+  "sort-by-label-order": "Mutevhe wa dziḽeibuḽu"
 }

@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "Ma’lumotlar bazasi",
   "cloud-start-date": "Boshlanish sanasi",
   "cloud-end-date": "Tugash sanasi",
-  "wekan-data-no-database": "O‘qiladigan WeKan ma’lumotlar bazasi topilmadi."
+  "wekan-data-no-database": "O‘qiladigan WeKan ma’lumotlar bazasi topilmadi.",
+  "sort-by-votes": "Ovozlarga ko'ra saralash",
+  "sort-by-label-order": "Yorliqlar tartibi"
 }

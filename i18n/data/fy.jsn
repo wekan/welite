@@ -2111,5 +2111,7 @@
   "continuous-backup-database": "Databank",
   "cloud-start-date": "Begjindatum",
   "cloud-end-date": "Eindatum",
-  "wekan-data-no-database": "Gjin lêsbere WeKan-databank fûn."
+  "wekan-data-no-database": "Gjin lêsbere WeKan-databank fûn.",
+  "sort-by-votes": "Sortearje op stimmen",
+  "sort-by-label-order": "Folchoarder fan oantsjuttingsetiketten"
 }

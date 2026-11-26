@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Bază de date",
   "cloud-start-date": "Data de început",
   "cloud-end-date": "Data de sfârșit",
-  "wekan-data-no-database": "Nu a fost găsită nicio bază de date WeKan care să poată fi citită."
+  "wekan-data-no-database": "Nu a fost găsită nicio bază de date WeKan care să poată fi citită.",
+  "sort-by-votes": "Sortare după voturi",
+  "sort-by-label-order": "Ordinea etichetelor"
 }

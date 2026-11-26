@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Polokelo ya data",
   "cloud-start-date": "Letsatsi la ho qala",
   "cloud-end-date": "Letsatsi la ho fela",
-  "wekan-data-no-database": "Ha ho a fumanwa polokelo ya data ya WeKan e balehang."
+  "wekan-data-no-database": "Ha ho a fumanwa polokelo ya data ya WeKan e balehang.",
+  "sort-by-votes": "Hlopha ho ya ka likhetho",
+  "sort-by-label-order": "Tatellano ya dileibole"
 }

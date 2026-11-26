@@ -832,6 +832,55 @@ def http_checks(server, tmp, backend):
         assert card_doc()['labelIds'] == [urgent]
         assert request('POST', '%s/labels/%s' % (card_path, urgent), {}, cookie=owner)[0] == 200
 
+        # Sort Cards (cardsSortPopup): a display order of each list's cards by
+        # ?sort=, ties in the manual order, and no card's sort changed.
+        sort_list = json.loads(request('POST', '/api/boards/%s/lists' % board_id, {'title': 'Sorting', 'swimlaneId': lane},
+                                       headers=auth, as_json=True)[2])['_id']
+        sorted_ids = {}
+        for i, title in enumerate(['Cherry', 'Apple', 'Banana', 'Damson']):
+            made = json.loads(request('POST', '/api/boards/%s/lists/%s/cards' % (board_id, sort_list),
+                                      {'title': title, 'authorId': login['id'], 'swimlaneId': lane},
+                                      headers=auth, as_json=True)[2])
+            assert '_id' in made, made
+            sorted_ids[title] = made['_id']
+            card_db('UPDATE cards SET sort=?, createdAt=? WHERE id=?', float(i), '2030-01-%02dT12:00:00.000Z' % (10 + i), sorted_ids[title])
+        card_db("UPDATE cards SET dueAt='2030-01-05T12:00:00.000Z' WHERE id=?", sorted_ids['Cherry'])
+        card_db("UPDATE cards SET dueAt='2030-01-03T12:00:00.000Z' WHERE id=?", sorted_ids['Apple'])
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.vote',json(?)) WHERE id=?",
+                json.dumps({'positive': ['x', 'y'], 'negative': []}), sorted_ids['Banana'])
+        card_db("UPDATE cards SET extra_json=json_set(extra_json,'$.vote',json(?)) WHERE id=?",
+                json.dumps({'positive': ['x'], 'negative': ['y', 'z']}), sorted_ids['Damson'])
+        assert request('POST', '/b/%s/cards/%s/labels/%s' % (board_id, sorted_ids['Damson'], second), {}, cookie=owner)[0] == 200
+        assert request('POST', '/b/%s/cards/%s/labels/%s' % (board_id, sorted_ids['Apple'], urgent), {}, cookie=owner)[0] == 200
+        title_of = {v: k for k, v in sorted_ids.items()}
+        def sort_order(query=''):
+            page = request('GET', route + query, cookie=owner)[2]
+            body = page[page.index(('id="js-list-%s"' % sort_list).encode()):]
+            body = body[:body.index(b'class="list js-list"')] if b'class="list js-list"' in body else body
+            return ','.join(title_of[x.decode()] for x in re.findall(rb'class="minicard-wrapper js-minicard" up-href="[^"]*" up-follow '
+                                                                      rb'up-clickable up-target="\.board-wrapper" data-card="([^"]+)"', body)), page
+        manual, page = sort_order()
+        assert manual == 'Cherry,Apple,Banana,Damson', manual
+        # The board's label order is the one the board shows its labels in.
+        shown_labels = [x.decode() for x in re.findall(rb'js-toggle-label-filter" data-filter-id="([^"]+)"', page)]
+        label_order = 'Apple,Damson' if shown_labels.index(urgent) < shown_labels.index(second) else 'Damson,Apple'
+        label_order += ',Cherry,Banana'
+        assert b'js-sort-cards"' in page and b'js-sort-reset' not in page and b'data-pop="cards-sort"' in page
+        for query, want in [('due', 'Banana,Damson,Apple,Cherry'), ('title', 'Apple,Banana,Cherry,Damson'),
+                            ('created-desc', 'Damson,Banana,Apple,Cherry'), ('created-asc', 'Cherry,Apple,Banana,Damson'),
+                            ('votes', 'Banana,Cherry,Apple,Damson'), ('label-order', label_order)]:
+            got, page = sort_order('?sort=' + query)
+            assert got == want, (query, got, want)
+            assert b'js-sort-cards emphasis' in page and b'js-sort-reset' in page
+            assert ('class="js-sort-card-order js-sort-%s is-active" href="#" data-sort="%s"' % (query, query)).encode() in page
+            assert page.count(b' is-active" href="#" data-sort=') == 1
+        # Negative: an order WeKan does not have is no order, markup is no
+        # order, and no card's sort changed.
+        got, page = sort_order('?sort=sort')
+        assert got == manual and b'js-sort-reset' not in page
+        assert sort_order('?sort=%22%3E%3Cscript%3E')[0] == manual
+        assert [card_db('SELECT sort FROM cards WHERE id=?', sorted_ids[t])[0] for t in ['Cherry', 'Apple', 'Banana', 'Damson']] == [0, 1, 2, 3]
+
         # ?ui=html4 switches a modern browser to HTML4, and the cookie keeps it;
         # the login cookie's session is the HTML4 view's session then.
         status, _, page, cookies = request('GET', '/?ui=html4', cookie=owner)

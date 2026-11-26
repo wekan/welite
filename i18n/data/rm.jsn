@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Banca da datas",
   "cloud-start-date": "Data da cumenzament",
   "cloud-end-date": "Data da la fin",
-  "wekan-data-no-database": "Nagina banca da datas WeKan legibla n'è vegnida chattada."
+  "wekan-data-no-database": "Nagina banca da datas WeKan legibla n'è vegnida chattada.",
+  "sort-by-votes": "Zavrar tenor vuschs",
+  "sort-by-label-order": "Urden da las etichettas"
 }

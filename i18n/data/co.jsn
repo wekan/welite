@@ -2112,5 +2112,7 @@
   "continuous-backup-database": "Basa di dati",
   "cloud-start-date": "Data di principiu",
   "cloud-end-date": "Data di fine",
-  "wekan-data-no-database": "Ùn hè stata truvata nisuna basa di dati WeKan leghjibile."
+  "wekan-data-no-database": "Ùn hè stata truvata nisuna basa di dati WeKan leghjibile.",
+  "sort-by-votes": "Urdinà per voti",
+  "sort-by-label-order": "Ordine di l'etichette"
 }
