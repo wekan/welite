@@ -259,6 +259,10 @@ Next, after this goal:
   Later on 2026-11-26 WeLite passed 137 more of Weddy's lines (most of them
   REST API specs) and spec 14's vote, Planning Poker and watch; Weddy's
   remaining lines are the next to port.
+- [ ] **tests/admin.py fails in tests/tiers.py line 33**: the global admin's
+  sign-in on the `admin` host answers 200 instead of 302 - already at
+  83b7b40 (2026-11-26), before the HTML5 view's Rules; needs a look at the
+  global-admin sign-in.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
   the card's other sections (an attachment's rename and its thumbnail route (attachment-thumbnail); Markdown in comments and checklists; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's

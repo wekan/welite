@@ -87,7 +87,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, wlcfpol;
 
 const
   STATIC_HEAD =
@@ -2898,6 +2898,108 @@ end;
 // Meteor methods of the same name, each with WeKan's own meaning.
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
+  // The values of a copy that its copier may not read: not kept.
+  procedure RedactCopiedFields(const CardId, BoardId: string);
+  var Policy: TFieldPolicy; V: TWLRows; k: Integer; Sql: string;
+  begin
+    V := T.Db.Query('SELECT customFieldId FROM card_custom_field_values WHERE cardId=' + QuotedStr(CardId) + ';');
+    Sql := '';
+    Policy := TFieldPolicy.Create(T.Db, S.UserId, BoardId, CardId);
+    try
+      for k := 0 to High(V) do
+        try
+          if not Policy.Allowed(V[k][0], False) then
+            Sql := Sql + 'DELETE FROM card_custom_field_values WHERE cardId=' + QuotedStr(CardId) + ' AND customFieldId=' + QuotedStr(V[k][0]) + '; ';
+        except
+          Sql := Sql + 'DELETE FROM card_custom_field_values WHERE cardId=' + QuotedStr(CardId) + ' AND customFieldId=' + QuotedStr(V[k][0]) + '; ';
+        end;
+    finally
+      Policy.Free;
+    end;
+    if (Sql <> '') and not T.Db.Exec('BEGIN IMMEDIATE; ' + Sql + 'COMMIT;') then T.Db.Exec('ROLLBACK;');
+  end;
+
+  function CardFieldsUpdate(const CardId: string; Modifier: TJSONObject; out Why: string): Integer;
+  var Card: TJSONObject; Fields, V: TJSONData; Board, Key, FieldId: string; R: TWLRows; Index: Integer; Values: TStringList;
+    // One field, or one field's entry, checked as a list of it.
+    function ForgedOne(Item: TJSONData): Boolean;
+    var One: TJSONArray;
+    begin
+      One := TJSONArray.Create([Item.Clone]);
+      try
+        Result := AdminFieldForgery(T.Db, S.UserId, Board, CardId, One, 'method:/cards/update');
+      finally
+        One.Free;
+      end;
+    end;
+  begin
+    Why := 'Access denied';
+    R := T.Db.Query('SELECT boardId FROM cards WHERE id=' + QuotedStr(CardId) + ' AND deletedAt IS NULL;');
+    if Length(R) <> 1 then Exit(404);
+    Board := R[0][0];
+    if not BoardCanWrite(T.Db, S.UserId, Board) then Exit(403);
+    Card := nil;
+    try
+      try
+        V := GetJSON(SharedDocument(T.Db, 'cards', CardId));
+        if V is TJSONObject then Card := TJSONObject(V) else V.Free;
+      except
+        Card := nil;
+      end;
+      if Card <> nil then Fields := Card.Find('customFields') else Fields := nil;
+      // Only $set of one or more customFields.N.value.
+      if (Modifier.Count <> 1) or not (Modifier.Find('$set') is TJSONObject) then
+      begin
+        // A replace, a $push or an $unset of the array: an attempt when the
+        // card holds, or the change names, a field the user may not write.
+        if AdminFieldForgery(T.Db, S.UserId, Board, CardId, Fields, 'method:/cards/update') then Exit(403);
+        for Index := 0 to Modifier.Count - 1 do
+        begin
+          V := Modifier.Items[Index];
+          if (V is TJSONObject) and (TJSONObject(V).Find('customFields') <> nil) then
+          begin
+            if AdminFieldForgery(T.Db, S.UserId, Board, CardId, TJSONObject(V).Find('customFields'), 'method:/cards/update') then Exit(403);
+            if (TJSONObject(V).Find('customFields') is TJSONObject) and ForgedOne(TJSONObject(V).Find('customFields')) then Exit(403);
+          end;
+        end;
+        Exit(403);
+      end;
+      V := Modifier.Find('$set');
+      for Index := 0 to V.Count - 1 do
+      begin
+        Key := TJSONObject(V).Names[Index];
+        if Key = 'customFields' then
+        begin
+          if AdminFieldForgery(T.Db, S.UserId, Board, CardId, Fields, 'method:/cards/update') or
+            AdminFieldForgery(T.Db, S.UserId, Board, CardId, V.Items[Index], 'method:/cards/update') then Exit(403);
+          Exit(403);
+        end;
+        if (Copy(Key, 1, 13) <> 'customFields.') or (Copy(Key, Length(Key) - 5, 6) <> '.value') then Exit(403);
+      end;
+      for Index := 0 to V.Count - 1 do
+      begin
+        Key := TJSONObject(V).Names[Index];
+        n := StrToIntDef(Copy(Key, 14, Length(Key) - 19), -1);
+        if not (Fields is TJSONArray) or (n < 0) or (n >= Fields.Count) or not (Fields.Items[n] is TJSONObject) then Exit(403);
+        FieldId := TJSONObject(Fields.Items[n]).Get('_id', '');
+        Card.Add('_wl_field', TJSONObject.Create(['_id', FieldId]));
+        if ForgedOne(Card.Objects['_wl_field']) then Exit(403);
+        Card.Delete('_wl_field');
+        Values := TStringList.Create;
+        try
+          if V.Items[Index].JSONType = jtString then Values.Values['value'] := V.Items[Index].AsString
+          else Values.Values['value'] := V.Items[Index].AsJSON;
+          Result := SetViewCardField(T, S.UserId, Board, CardId, FieldId, Values, False, Why);
+        finally
+          Values.Free;
+        end;
+        if Result <> 200 then Exit;
+      end;
+      Result := 200;
+    finally
+      Card.Free;
+    end;
+  end;
 begin
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then
   begin SendJsonAnswer(Response, 404, '{"error":404,"reason":"Unknown domain"}'); Exit; end;
@@ -3030,6 +3132,19 @@ begin
           Id := TJSONObject(TJSONArray(Args).Items[0]).Strings['_id'];
       end;
       Selector := nil;
+      // A card's custom fields, as WeKan's allow rules take them: the one
+      // change its card details make - $set customFields.N.value - of a
+      // field the user may write. Every other change of the array, and a
+      // value of a field they may not write, is refused, and an attempt on
+      // an admin-only field recorded (AdminFieldBleed).
+      if (Id <> '') and (TJSONArray(Args).Items[1] is TJSONObject) and (Pos('customFields', TJSONArray(Args).Items[1].AsJSON) > 0) then
+      begin
+        Code := CardFieldsUpdate(Id, TJSONObject(TJSONArray(Args).Items[1]), Error);
+        if Code <> 200 then
+        begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+        SendJsonAnswer(Response, 200, '{"result":1}');
+        Exit;
+      end;
       if (Id <> '') and (TJSONArray(Args).Items[1] is TJSONObject) and (TJSONArray(Args).Items[1].Count = 1) and
         (TJSONObject(TJSONArray(Args).Items[1]).Find('$set') is TJSONObject) then
         Selector := TJSONObject(TJSONObject(TJSONArray(Args).Items[1]).Find('$set'));
@@ -3056,6 +3171,90 @@ begin
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
     SendJsonAnswer(Response, 200, '{"result":1}');
+    Exit;
+  end;
+  // AdminFieldBleed on WeKan's other ways to write a custom field: a card
+  // inserted, or copied, with values; a field defined or changed as
+  // admin-only - each refused and recorded when it names what the user may
+  // not write. What they do otherwise is not a method of this view.
+  if (Name = '/cards/insert') or (Name = 'copyCard') or (Name = '/customFields/insert') or (Name = '/customFields/update') then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      Code := 0;
+      if Args is TJSONArray then
+      begin
+        Selector := nil;
+        if (Name = '/cards/insert') and (TJSONArray(Args).Count >= 1) and (TJSONArray(Args).Items[0] is TJSONObject) then
+        begin
+          Selector := TJSONObject(TJSONArray(Args).Items[0]);
+          if AdminFieldForgery(T.Db, S.UserId, Selector.Get('boardId', ''), '', Selector.Find('customFields'), 'method:/cards/insert') then Code := 403;
+        end
+        else if (Name = 'copyCard') and (TJSONArray(Args).Count >= 6) and (TJSONArray(Args).Items[5] is TJSONObject) and
+          (TJSONArray(Args).Items[1].JSONType = jtString) then
+        begin
+          if AdminFieldForgery(T.Db, S.UserId, TJSONArray(Args).Strings[1], '', TJSONObject(TJSONArray(Args).Items[5]).Find('customFields'),
+            'method:copyCard') then Code := 403;
+        end
+        else if (Name = '/customFields/insert') and (TJSONArray(Args).Count >= 1) and (TJSONArray(Args).Items[0] is TJSONObject) then
+        begin
+          Selector := TJSONObject(TJSONArray(Args).Items[0]);
+          if (Selector.Find('adminOnly') <> nil) and (Selector.Find('boardIds') is TJSONArray) then
+            for n := 0 to Selector.Arrays['boardIds'].Count - 1 do
+              if (Selector.Arrays['boardIds'].Items[n].JSONType = jtString) and
+                not BoardCanAdmin(T.Db, S.UserId, Selector.Arrays['boardIds'].Strings[n]) then Code := 403;
+          if Code = 403 then RecordAdminFieldAttempt(T.Db, S.UserId, 'method:/customFields/insert', 'An admin-only field defined by a non-admin.');
+        end
+        else if (Name = '/customFields/update') and (TJSONArray(Args).Count >= 2) and (Pos('adminOnly', TJSONArray(Args).Items[1].AsJSON) > 0) then
+        begin
+          Id := '';
+          if TJSONArray(Args).Items[0].JSONType = jtString then Id := TJSONArray(Args).Strings[0]
+          else if TJSONArray(Args).Items[0] is TJSONObject then Id := TJSONObject(TJSONArray(Args).Items[0]).Get('_id', '');
+          R := T.Db.Query('SELECT boardId FROM custom_field_boards WHERE customFieldId=' + QuotedStr(Id) + ';');
+          for n := 0 to High(R) do
+            if not BoardCanAdmin(T.Db, S.UserId, R[n][0]) then Code := 403;
+          if Code = 403 then RecordAdminFieldAttempt(T.Db, S.UserId, 'method:/customFields/update', 'A field''s admin-only flag changed by a non-admin.');
+        end;
+      end;
+    finally
+      Args.Free;
+    end;
+    if Code = 403 then
+    begin SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}'); Exit; end;
+  end;
+  // WeKan's copyCard(cardId, boardId, swimlaneId, listId, insertAtTop,
+  // mergeCardValues): the card copied as the card menu copies it; a value of
+  // a custom field the copier may not read is not copied with it.
+  if Name = 'copyCard' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count >= 4) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString) and (TJSONArray(Args).Items[2].JSONType = jtString) and
+        (TJSONArray(Args).Items[3].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      R := T.Db.Query('SELECT boardId FROM cards WHERE id=' + QuotedStr(TJSONArray(Args).Strings[0]) + ' AND deletedAt IS NULL;');
+      if Length(R) <> 1 then begin SendJsonAnswer(Response, 404, '{"error":"not-found","reason":"Card not found"}'); Exit; end;
+      Code := CopyViewCard(T, S.UserId, R[0][0], TJSONArray(Args).Strings[0], TJSONArray(Args).Strings[1], TJSONArray(Args).Strings[2],
+        TJSONArray(Args).Strings[3], '', Id, Error);
+      if Code = 200 then
+        RedactCopiedFields(Id, TJSONArray(Args).Strings[1]);
+    finally
+      Args.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(Id) + '"}');
     Exit;
   end;
   if Name = 'createCardWithDueDate' then

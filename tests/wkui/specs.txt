@@ -305,3 +305,12 @@ accepted-audit-fixes.e2e.js: F01 A01 A02: keyboard rule controls save string che
 card-creation-activity.e2e.js: ordinary card creation records one complete activity visible in card history in en
 card-creation-activity.e2e.js: ordinary card creation records one complete activity visible in card history in co
 card-creation-activity.e2e.js: ordinary card creation records one complete activity visible in card history in la
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through insert
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through replace
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through push
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through unset
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through copy
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through rest
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through definition
+admin-only-custom-fields.e2e.js: member cannot forge admin-only fields through definition-insert
+admin-only-custom-fields.e2e.js: ordinary member copying retains public values and omits protected values

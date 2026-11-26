@@ -12,7 +12,7 @@ procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
 function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
   Position:Int64;out NewId:string):Boolean;
 implementation
-uses wlcfjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp,wlshared,wlattdel,wlpasswd;
+uses wlcfjson,wlsjson,wlstore,wllocale,wli18n,wlcfpol,wlcfscan,wlclseed,wlselscp,wlshared,wlattdel,wlpasswd;
 type EInvalidSelection=class(Exception);
 function q(const V:string):string;
 begin Result:=QuotedStr(V); end;
@@ -651,7 +651,8 @@ end;
 const CloneTables:array[0..11] of string=('swimlanes','lists','cards','checklists','checklist_items',
   'card_members','card_assignees','card_labels','card_custom_field_values','card_dependencies',
   'card_comments','attachments');
-function ClonePermissionGuards(const T:TWLTenant;const S:TWLSession;Graph:TJSONObject;out Guards:string):Boolean;
+function ClonePermissionGuards(const T:TWLTenant;const S:TWLSession;Graph:TJSONObject;out Guards:string;
+  OmitProtected:Boolean=False):Boolean;
 var Data:TJSONObject;Cards,Bindings:TJSONArray;Policy:TFieldPolicy;Rows:TWLRows;Part,BoardId:string;i:Integer;
 begin
   Result:=False;Guards:='';Policy:=nil;Data:=TJSONObject(Graph.Find('data'));BoardId:=Graph.Get('boardId','');
@@ -676,6 +677,10 @@ begin
       if not PayloadCopyGuards(T.Db,S.UserId,BoardId,Graph.Find('_clone_sources'),Part) then Exit;
       Guards:=Guards+Part;
       Cards:=TJSONArray(Data.Find('cards'));
+      // A card's copy that leaves out what its copier may not write (the
+      // payload was filtered, and PayloadCopyGuards checked what is left)
+      // does not need its source card to hold nothing protected.
+      if not OmitProtected then
       for i:=0 to Cards.Count-1 do
       begin
         Policy:=TFieldPolicy.Create(T.Db,S.UserId,BoardId,Cards.Objects[i].Get('id',''));
@@ -893,19 +898,81 @@ begin
   end;
 end;
 
+// A card's typed source document without the customFields entries of
+// Dropped, its other fields and their types as they were.
+function WithoutFields(const Typed:string;Dropped:TStrings):string;
+var Plain:TJSONObject;Fields:TJSONData;I:Integer;
+begin
+  Result:=Typed;
+  if Typed='' then Exit;
+  Plain:=ExactObject(PlainDocument(Typed));
+  try
+    Fields:=Plain.Find('customFields');
+    if not (Fields is TJSONArray) then Exit;
+    I:=0;
+    while I<Fields.Count do
+      if (Fields.Items[I] is TJSONObject) and (Dropped.IndexOf(TJSONObject(Fields.Items[I]).Get('_id',''))>=0) then
+        TJSONArray(Fields).Delete(I)
+      else Inc(I);
+    Result:=TypedDocument(Plain.AsJSON,Typed,'{}');
+  finally Plain.Free;end;
+end;
+
 function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
   Position:Int64;out NewId:string):Boolean;
 var Graph:TJSONObject;Params:TStringList;Session:TWLSession;Policy:TFieldPolicy;
-  Guard,Permission,Placement,SourceId:string;Rows:TWLRows;
+  Guard,Permission,Placement,SourceId,Name:string;Rows:TWLRows;Values:TJSONArray;I:Integer;Allowed:Boolean;Dropped:TStringList;
 begin
-  Result:=False;NewId:='';Graph:=nil;Params:=TStringList.Create;
+  Result:=False;NewId:='';Graph:=nil;Params:=TStringList.Create;Dropped:=TStringList.Create;
   try
     Session:=Default(TWLSession);Session.UserId:=UserId;
     Params.Values['action']:='clone';Params.Values['boardId']:=BoardId;Params.Values['sel_card']:=CardId;
     Params.Values['toBoardId']:=DestBoard;Params.Values['toListId']:=DestList;
     Params.Values['toSwimlaneId']:=DestLane;if Position>=0 then Params.Values['position']:=IntToStr(Position);
     Graph:=SelectionGraph(T,Params);
-    if not ClonePermissionGuards(T,Session,Graph,Guard) then Exit;
+    // WeKan's copyCard copies the values its copier may write and leaves the
+    // rest out - an admin-only field's value stays with the original card.
+    Values:=TJSONArray(TJSONObject(Graph.Find('data')).Find('card_custom_field_values'));
+    if Values<>nil then
+    begin
+      Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,CardId);
+      try
+        I:=0;
+        while I<Values.Count do
+        begin
+          Allowed:=False;
+          try Allowed:=Policy.Allowed(TJSONObject(Values.Items[I]).Get('customFieldId',''),True);except Allowed:=False;end;
+          if Allowed then Inc(I) else
+          begin
+            Dropped.Add(TJSONObject(Values.Items[I]).Get('customFieldId',''));
+            Values.Delete(I);
+          end;
+        end;
+      finally Policy.Free;end;
+      // ...and the definitions that came along only for those values.
+      for Name in ['custom_fields','custom_field_boards','custom_field_dropdown_items'] do
+      begin
+        Values:=TJSONArray(TJSONObject(Graph.Find('data')).Find(Name));
+        if Values=nil then Continue;
+        I:=0;
+        while I<Values.Count do
+          if (Values.Items[I] is TJSONObject) and ((Dropped.IndexOf(TJSONObject(Values.Items[I]).Get('id',''))>=0) and (Name='custom_fields') or
+            (Dropped.IndexOf(TJSONObject(Values.Items[I]).Get('customFieldId',''))>=0)) then Values.Delete(I)
+          else Inc(I);
+      end;
+    end;
+    // The source documents the copy is built from: without those values too.
+    if Dropped.Count>0 then
+      for Name in ['_clone_sources','cards'] do
+      begin
+        if Name='cards' then Values:=TJSONArray(TJSONObject(Graph.Find('data')).Find('cards'))
+        else Values:=TJSONArray(Graph.Find(Name));
+        if Values=nil then Continue;
+        for I:=0 to Values.Count-1 do
+          if (Values.Items[I] is TJSONObject) and (TJSONObject(Values.Items[I]).Find('_wl_source') is TJSONString) then
+            TJSONObject(Values.Items[I]).Strings['_wl_source']:=WithoutFields(TJSONObject(Values.Items[I]).Strings['_wl_source'],Dropped);
+      end;
+    if not ClonePermissionGuards(T,Session,Graph,Guard,True) then Exit;
     Policy:=TFieldPolicy.Create(T.Db,UserId,DestBoard,'');
     try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
     Placement:='EXISTS(SELECT 1 FROM swimlanes WHERE id='+q(DestLane)+' AND boardId='+q(DestBoard)+' AND archived=0)'+
@@ -919,7 +986,7 @@ begin
       ' THEN 1 ELSE json(''Card copy scope changed'') END; ';
     Result:=CloneSelection(T,Session,Graph,Params,Guard,True);
     if Result then NewId:=Params.Values['clonedCardId'];
-  finally Graph.Free;Params.Free;end;
+  finally Dropped.Free;Graph.Free;Params.Free;end;
 end;
 
 function DeletionDetails(Db:TWLDb;Data:TJSONObject;const BoardId:string;

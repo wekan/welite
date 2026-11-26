@@ -443,6 +443,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   runs the rules on FerretDB over HTTP:
   both actions, their refusal, and the history's undo, redo, conflict and
   refusal. 406 of WeKan's tests pass.
+- Refuse every way to write an admin-only custom field (#3141,
+  AdminFieldBleed, recorded in Admin Panel / Problems with the account's
+  name): Meteor's /cards/update takes only $set customFields.N.value of a
+  field the user may write, and a replace, $push or $unset of the array, a
+  /cards/insert or copyCard naming such a field, the REST card edit, and a
+  non-admin's /customFields/insert or update of adminOnly are refused. WeKan's
+  copyCard copies a card without the values its copier may not write. 415 of
+  WeKan's tests pass.
 - Verify on linked and CLI SQLite (`tests/view.py`): the choice by
   User-Agent, the toggle URL, every page over HTTP, the cookie sign-in and
   Log Out, the switch both ways, and negative cases - a user who is no member,

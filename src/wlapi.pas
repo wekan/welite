@@ -110,6 +110,12 @@ function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterL
 // The SQL of a new card (and WeKan's createCard activity of it); a linked
 // card with LinkedId.
 function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string=''):string;
+// AdminFieldBleed (#3141): whether Fields (a card's customFields, as a
+// client sent them) names a field of the board the user may not write - an
+// admin-only one, for anybody but a board admin. True is an attempt, refused
+// by the caller and recorded here in Admin Panel / Problems.
+function AdminFieldForgery(Db:TWLDb;const UserId,BoardId,CardId:string;Fields:TJSONData;const Source:string):Boolean;
+procedure RecordAdminFieldAttempt(Db:TWLDb;const UserId,Source,Detail:string);
 function BoardCanAdmin(Db:TWLDb;const UserId,BoardId:string):Boolean;
 // The board's new title, as PUT /api/boards/:boardId/title renames it.
 function RenameBoard(const T:TWLTenant;const UserId,BoardId,Title:string;out Error:string):Integer;
@@ -4488,7 +4494,7 @@ end;
 // that counts them, never a row per attempt.
 procedure RecordSecurityEvent(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Action,Detail:string);
 const Hints='{"at":"date","firstAt":"date"}';
-var Rows:TWLRows;Event:TJSONObject;TableName,Physical,AtSql,Payload,Updated,Sql,Identity:string;
+var Rows:TWLRows;Event:TJSONObject;TableName,Physical,AtSql,Payload,Updated,Sql,Identity,Username:string;
   Stamp:TDateTime;AtMs:Int64;
   function Stored(const Data:string):string;
   begin
@@ -4508,12 +4514,16 @@ begin
     TableName:=Rows[0][0];Physical:='"'+StringReplace(TableName,'"','""',[rfReplaceAll])+'"';
     Stamp:=LocalTimeToUniversal(Now);
     AtMs:=DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp);AtSql:=IntToStr(AtMs);
+    // The most recent occurrence's account, by name too, as WeKan's summary
+    // row has it (models/lib/eventLogSummary.js).
+    Rows:=Db.Query('SELECT COALESCE(username,'''') FROM users WHERE id='+QuotedStr(UserId)+';');
+    if Length(Rows)=1 then Username:=Rows[0][0] else Username:='';
     Event:=TJSONObject.Create(['_id',NewId,'stream','security','at',AtMs,'firstAt',AtMs,
       'severity',Severity,'category',Category,'bleed',Bleed,'action',Action,'source',Source,
-      'cwe',Cwe,'count',1,'userId',UserId,'detail',Detail]);
+      'cwe',Cwe,'count',1,'userId',UserId,'username',Username,'detail',Detail]);
     try Payload:=QuotedStr(TypedDocument(Event.AsJSON,'',Hints));finally Event.Free;end;
     Updated:='wl_sjson(json_set(wl_plain(json(_ferretdb_sjson)),''$.at'','+AtSql+
-      ',''$.userId'','+QuotedStr(UserId)+',''$.count'',MIN(9007199254740991,MAX(0,'+
+      ',''$.userId'','+QuotedStr(UserId)+',''$.username'','+QuotedStr(Username)+',''$.count'',MIN(9007199254740991,MAX(0,'+
       'COALESCE(json_extract(_ferretdb_sjson,''$.count''),0))+1)),json(_ferretdb_sjson),''{"at":"date"}'')';
     Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM _ferretdb_collections WHERE name=''eventlog'''+
       ' AND table_name='+QuotedStr(TableName)+')=1 THEN 1 ELSE json(''Event log source changed'') END; '+
@@ -4522,6 +4532,40 @@ begin
       ' WHERE NOT EXISTS(SELECT 1 FROM '+Physical+' WHERE '+Identity+'); COMMIT;';
     if not Db.Exec(Sql) then Db.Exec('ROLLBACK;');
   except Db.Exec('ROLLBACK;');end;
+end;
+
+procedure RecordAdminFieldAttempt(Db:TWLDb;const UserId,Source,Detail:string);
+begin
+  try
+    RecordSecurityEvent(Db,UserId,'AdminFieldBleed',Source,'authz','high','CWE-863','blocked',Detail);
+  except
+    // logging must never break the guard
+  end;
+end;
+
+function AdminFieldForgery(Db:TWLDb;const UserId,BoardId,CardId:string;Fields:TJSONData;const Source:string):Boolean;
+var Policy:TFieldPolicy;I:Integer;FieldId:string;Item:TJSONData;
+begin
+  Result:=False;
+  if not (Fields is TJSONArray) then Exit;
+  Policy:=TFieldPolicy.Create(Db,UserId,BoardId,CardId);
+  try
+    for I:=0 to Fields.Count-1 do
+    begin
+      Item:=Fields.Items[I];
+      if not (Item is TJSONObject) then Continue;
+      FieldId:=TJSONObject(Item).Get('_id','');
+      if (FieldId='') or (Pos(#0,FieldId)>0) then Continue;
+      if Length(Db.Query('SELECT 1 FROM custom_field_boards WHERE customFieldId='+QuotedStr(FieldId)+
+        ' AND boardId='+QuotedStr(BoardId)+';'))<>1 then Continue;
+      try
+        if not Policy.Allowed(FieldId,True) then Result:=True;
+      except
+        Result:=True;
+      end;
+    end;
+  finally Policy.Free;end;
+  if Result then RecordAdminFieldAttempt(Db,UserId,Source,'A custom field the user may not write was named.');
 end;
 
 procedure RecordSecurityDenial(Db:TWLDb;const UserId,Bleed,Source,Category,Severity,Cwe,Detail:string);
@@ -5464,6 +5508,10 @@ begin
           if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
             Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
       end;
+      // AdminFieldBleed: a custom field the user may not write, refused.
+      if (Body.Find('customFields')<>nil) and
+        AdminFieldForgery(T.Db,UserId,BoardId,CardId,Body.Find('customFields'),'rest:PUT card') then
+      begin SendError(aResponse,403,'Custom-field write forbidden');Exit;end;
       Input:=Body.Find('title');HasTitle:=Input<>nil;
       if HasTitle then
       begin
