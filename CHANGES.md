@@ -488,6 +488,18 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Draw the opened card's sections in the board's Card Settings order (WeKan's
   one section model), each section this card has something for, Date and
   Card under their own headings. 427 of WeKan's tests pass.
+- Add Board Settings / Card (WeKan's boardCardSettingsPopup, `src/wlcardst.pas`
+  from Weddy's table of WeKan's rows): the Minicard and Card panes side by
+  side, each section's checkbox and rows, the section and row drags, the
+  folds, the splitter, the hamburgers (Ask for move reason, Subtasks
+  Settings) and the custom fields edited and created in place. The card and
+  the minicard follow their pane: its sections, its rows (the card's dates,
+  the minicard's dates, people and comments), none of a hidden section.
+  /boards/update writes exactly Card Settings' own fields for an admin of the
+  board's own (others refused and recorded, AuthBleed), /users/update also
+  the user's own split and labels text, and setCollapsedCardSection,
+  setShowLabelTextOverride and /customFields/update are added. 11 of WeKan's
+  Card Settings tests pass; 437 of WeKan's tests pass in one run.
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

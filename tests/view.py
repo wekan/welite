@@ -421,6 +421,55 @@ def http_checks(server, tmp, backend):
         # stream is nobody's without a login.
         status, headers, body, _ = request('GET', '/b/%s/live?v=1' % board_id)
         assert not headers.get('Content-Type', '').startswith('text/event-stream') and b'event:' not in body, (status, headers)
+        # Board Settings / Card (wlcardst): the two panes, a board admin's to
+        # change. /boards/update writes Card Settings' own fields only, as
+        # they are to be stored; /users/update the user's own split and
+        # labels text; setCollapsedCardSection the user's own fold.
+        page = shown()
+        assert b'data-popup="boardCardSettingsPopup"' in page and b'js-open-board-card-settings' in page
+        assert page.count(b'js-card-settings-pane"') == 0 and page.count(b'js-card-settings-pane ') >= 2
+        assert b'data-side="minicard"' in page and b'js-card-settings-sections-sortable' in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'cardSettingsSectionOrder': ['comments', 'nope', 'labels', 'comments']}}])[0] == 200
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'cardSettingsHiddenOnCard': ['vote', 'labels']}}])[0] == 200
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsReceivedDate': False, 'cardFieldOrder': ['dueDate', 'receivedDate']}}])[0] == 200
+        for args, code in [([{'_id': board_id}, {'$set': {'title': 'Renamed'}}], 403),
+                           ([{'_id': board_id}, {'$set': {'allowsReceivedDate': 'no'}}], 403),
+                           ([{'_id': board_id}, {'$set': {'cardSettingsHiddenOnCard': ['nope']}}], 403),
+                           ([{'_id': board_id}, {'$unset': {'allowsLabels': ''}}], 400),
+                           ([{'_id': board_id}], 400)]:
+            assert method('/boards/update', args)[0] == code, args
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsLabels': False}}], cookie=stranger)[0] == 403
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='boards'").fetchone():
+                    settings, title = con.execute('SELECT settings_json,title FROM boards WHERE id=?', (board_id,)).fetchone()
+                    settings = json.loads(settings)
+                    assert title == 'View Board' and settings['allowsReceivedDate'] is False and 'allowsLabels' not in settings
+                    assert settings['cardSettingsSectionOrder'][:3] == ['comments', 'labels', 'date'], settings
+                    assert len(settings['cardSettingsSectionOrder']) == 14
+                    assert settings['cardSettingsHiddenOnCard'] == ['labels', 'vote']
+                    order = settings['cardFieldOrder']
+                    assert order.index('dueDate') < order.index('receivedDate') and 'nope' not in order, order
+        page = shown()
+        assert page.index(b'data-card-section="comments"') < page.index(b'data-card-section="date"') if b'data-card-section="comments"' in page else True
+        assert b'data-card-section="labels"' not in page and b'data-card-section="vote"' not in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'cardSettingsHiddenOnCard': [], 'cardSettingsSectionOrder': [],
+                                                                      'allowsReceivedDate': True, 'cardFieldOrder': []}}])[0] == 200
+        owner_id = json.loads(request('GET', '/api/user', cookie=owner)[2])['_id']
+        assert method('/users/update', [{'_id': owner_id}, {'$set': {'profile.cardSettingsSplit': 0.3}}])[0] == 200
+        for args, code in [([{'_id': owner_id}, {'$set': {'profile.cardSettingsSplit': 3}}], 403),
+                           ([{'_id': owner_id}, {'$set': {'username': 'evil'}}], 403),
+                           ([{'_id': owner_id}, {'$set': {'profile.isAdmin': True}}], 403),
+                           ([{'_id': 'someone-else'}, {'$set': {'profile.cardSettingsSplit': 0.5}}], 403)]:
+            assert method('/users/update', args)[0] == code, args
+        assert b'--card-settings-split: 0.3' in shown()
+        assert method('setCollapsedCardSection', [board_id, 'card-settings-date', True])[0] == 200
+        assert method('setCollapsedCardSection', [board_id, '__proto__', True])[0] == 400
+        assert method('setCollapsedCardSection', [board_id, 'a b', True])[0] == 400
+        assert b'is-collapsed" data-section="date"' in shown()
+        assert method('setCollapsedCardSection', [board_id, 'card-settings-date', False])[0] == 200
+        assert method('setShowLabelTextOverride', [False])[0] == 200 and method('setShowLabelTextOverride', [None])[0] == 200
+        assert method('setShowLabelTextOverride', ['yes'])[0] == 400
         # The Rules need the shared store: here they say so, and write nothing.
         status, _, body, _ = request('POST', '/_methods/rules.createRule',
                                      [board_id, 'R', {'activityType': 'createCard'}, {'actionType': 'archive'}], cookie=owner, as_json=True)

@@ -91,7 +91,7 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst;
 
 const
   STATIC_HEAD =
@@ -107,6 +107,15 @@ function E(const Value: string): string;
 begin
   Result := HtmlEncode(Value);
 end;
+
+// allowIsBoardAdmin: an admin of the board's own (WeKan's Boards allow rule).
+function BoardOwnAdmin(Db: TWLDb; const UserId, BoardId: string): Boolean;
+begin
+  Result := (UserId <> '') and (BoardId <> '') and (Pos(#0, BoardId) = 0) and
+    (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(BoardId) + ' AND userId=' + QuotedStr(UserId) +
+      ' AND isActive=1 AND isAdmin=1;')) > 0);
+end;
+
 
 function UserName(Db: TWLDb; const UserId: string): string;
 var R: TWLRows;
@@ -470,6 +479,9 @@ threadvar
   ViewDateFormat: string;
   // The board whose page is being drawn, for the member menu's Date.
   ViewBoardId: string;
+  // The order of the minicard's pieces and of the card's dates on this
+  // board (Card Settings' panes, wlcardst).
+  ViewMinicardPieces, ViewCardDates: TStringArray;
 
 // WeKan's resolveDateFormat for this viewer on this board: the member's own
 // format while their override is on, the board's, Admin Panel's.
@@ -1398,11 +1410,15 @@ const
     'editCardDueDatePopup-title', 'editCardEndDatePopup-title');
   TitleCaptions: array[0..3] of string = ('Change received date', 'Change start date', 'Change due date', 'Change end date');
   Defaults: array[0..3] of string = ('now', 'now', '17:00', 'now');
-var i: Integer; Field, Setting, Label_, Url, Common, Shown: string;
+var i, n, k: Integer; Field, Setting, Label_, Url, Common, Shown: string;
 begin
   Result := '';
-  for i := 0 to 3 do
+  // In the Card pane's row order (wlcardst), WeKan's own without one.
+  for n := 0 to 3 do
   begin
+    i := n;
+    if Length(ViewCardDates) = 4 then
+      for k := 0 to 3 do if Kinds[k] = ViewCardDates[n] then i := k;
     ViewDateKindField(Kinds[i], Field, Setting);
     if not BoardAllows(Db, BoardId, Setting) then Continue;
     Label_ := Words.Text('card-' + Kinds[i], Captions[i]);
@@ -2576,6 +2592,9 @@ begin
     '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
     '<div class="content"><ul class="pop-over-list"><li><a class="js-open-archives" href="#"><i class="fa fa-archive"></i> ' +
     E(Words.Text('archived-items', 'Archived Items')) + '</a></li>' +
+    // Board Settings / Card (sidebar.jade boardMenuPopup), for a member.
+    IfThen(S.UserId <> '', '<li><a class="js-open-board-card-settings" href="#" title="' + HtmlAttr(Words.Text('card-settings', 'Card Settings')) +
+      '"><i class="fa fa-id-card-o"></i> ' + E(Words.Text('card-settings', 'Card Settings')) + '</a></li>', '') +
     // Board Settings / Date (sidebar.jade boardMenuPopup).
     IfThen(S.UserId <> '', '<li><a class="js-open-board-date-settings" href="#" title="' + HtmlAttr(Words.Text('date', 'Date')) +
       '"><i class="fa fa-calendar"></i> ' + E(Words.Text('date', 'Date')) + '</a></li>', '') +
@@ -2586,7 +2605,9 @@ begin
       RuleMenuLink('js-open-rules-list-view', '?view=list', 'fa-list', 'r-list-view', 'List view') +
       RuleMenuLink('js-open-rules-workflow-view', '?view=workflow', 'fa-sitemap', 'r-workflow-view', 'Workflow view') +
       RuleMenuLink('js-open-rules-import-export', '?view=import', 'fa-exchange', 'rulesImportExportPopup-title', 'Import / Export'), '') +
-    '</ul></div></template>' + IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId), '');
+    '</ul></div></template>' + IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId) +
+      CardSettingsPopup(Db, Words, S.UserId, BoardId, BoardOwnAdmin(Db, S.UserId, BoardId),
+        ProfileField(Db, S.UserId, 'showDesktopDragHandles') = '1'), '');
 end;
 
 // _cardsec_labels.pug: the card's labels, and the "+" that opens
@@ -2878,6 +2899,28 @@ begin
   Result.SetDates := SetDates;
 end;
 
+type
+  // Each section's content by its id: HTML may hold line breaks, which a
+  // TStringList's name=value pairs would split.
+  TSectionBodies = array of record Id, Html: string; end;
+
+procedure PutSection(var Bodies: TSectionBodies; const Id, Html: string);
+var i: Integer;
+begin
+  for i := 0 to High(Bodies) do
+    if Bodies[i].Id = Id then begin Bodies[i].Html := Bodies[i].Html + Html; Exit; end;
+  SetLength(Bodies, Length(Bodies) + 1);
+  Bodies[High(Bodies)].Id := Id;
+  Bodies[High(Bodies)].Html := Html;
+end;
+
+function SectionOf(const Bodies: TSectionBodies; const Id: string): string;
+var i: Integer;
+begin
+  for i := 0 to High(Bodies) do if Bodies[i].Id = Id then Exit(Bodies[i].Html);
+  Result := '';
+end;
+
 function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Shows: TMinicardShows;
   const Dates: array of string): string;
 const
@@ -2888,9 +2931,18 @@ const
     'editCardDueDatePopup-title', 'editCardEndDatePopup-title');
   TitleCaptions: array[0..3] of string = ('Change received date', 'Change start date', 'Change due date', 'Change end date');
   Defaults: array[0..3] of string = ('now', 'now', '17:00', 'now');
-var R: TWLRows; i: Integer; Line, Shown, Label_, Cls: string;
+var R: TWLRows; i, Mark: Integer; Line, Shown, Label_, Cls: string; Pieces: TSectionBodies;
+  // What was drawn since Mark is the piece Key: kept aside, put back in the
+  // Minicard pane's order at the end.
+  procedure Piece(const Key: string);
+  begin
+    PutSection(Pieces, Key, Copy(Result, Mark + 1, MaxInt));
+    SetLength(Result, Mark);
+  end;
 begin
   Result := '';
+  Pieces := nil;
+  Mark := 0;
   if Shows.Labels then
   begin
     R := Db.Query('SELECT COALESCE(l.name,''''),l.color FROM card_labels c JOIN board_labels l ON l.id=c.labelId AND l.boardId=' +
@@ -2904,6 +2956,7 @@ begin
       Result := Result + '</div>';
     end;
   end;
+  Piece('labels');
   Line := '';
   for i := 0 to 3 do
     if Shows.Dates[i] and (Dates[i] <> '') then
@@ -2922,6 +2975,7 @@ begin
         IfThen(Shows.SetDates, '</a>', '</span>');
     end;
   if Line <> '' then Result := Result + '<div class="dates">' + Line + '</div>';
+  Piece('dates');
   if Shows.Members then
   begin
     R := Db.Query('SELECT u.username FROM card_members c JOIN users u ON u.id=c.userId WHERE c.cardId=' + QuotedStr(CardId) +
@@ -2934,6 +2988,7 @@ begin
       Result := Result + '</div>';
     end;
   end;
+  Piece('members');
   // WeKan's minicard assignees: an avatar each, their name its title.
   if Shows.Assignees then
   begin
@@ -2948,6 +3003,7 @@ begin
       Result := Result + '</div>';
     end;
   end;
+  Piece('assignees');
   // Its newest three comments, each cut at 140 characters, each on a line
   // of its own (the 2026-10-08 report).
   if Shows.Comments then
@@ -2967,6 +3023,10 @@ begin
       Result := Result + '</div>';
     end;
   end;
+  Piece('comments');
+  // The Minicard pane's order (wlcardst): its sections, its rows.
+  if Length(ViewMinicardPieces) = 0 then ViewMinicardPieces := MinicardPieceOrder(nil, '');
+  for i := 0 to High(ViewMinicardPieces) do Result := Result + SectionOf(Pieces, ViewMinicardPieces[i]);
 end;
 
 // The width a list is drawn at for the user, in Weddy's (WeKan's) order: the
@@ -3052,26 +3112,7 @@ end;
 
 type
   TCardSection = record Id, Icon, Key, Fallback: string; Header: Boolean; end;
-  // Each section's content by its id: HTML may hold line breaks, which a
-  // TStringList's name=value pairs would split.
-  TSectionBodies = array of record Id, Html: string; end;
 
-procedure PutSection(var Bodies: TSectionBodies; const Id, Html: string);
-var i: Integer;
-begin
-  for i := 0 to High(Bodies) do
-    if Bodies[i].Id = Id then begin Bodies[i].Html := Bodies[i].Html + Html; Exit; end;
-  SetLength(Bodies, Length(Bodies) + 1);
-  Bodies[High(Bodies)].Id := Id;
-  Bodies[High(Bodies)].Html := Html;
-end;
-
-function SectionOf(const Bodies: TSectionBodies; const Id: string): string;
-var i: Integer;
-begin
-  for i := 0 to High(Bodies) do if Bodies[i].Id = Id then Exit(Bodies[i].Html);
-  Result := '';
-end;
 
 const
   // WeKan's cardSettingsSections.js SECTIONS, in the Card pane's default
@@ -3175,6 +3216,8 @@ begin
   BoardTitle := B[0][0];
   ViewDateFormat := ViewDateFor(Db, S.UserId, BoardId);
   ViewBoardId := BoardId;
+  ViewMinicardPieces := MinicardPieceOrder(Db, BoardId);
+  ViewCardDates := CardDateOrder(Db, BoardId);
   Route := BoardRoute(BoardId, B[0][2]);
   Writable := (S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId);
   BoardDates := Writable and BoardCanEditCardText(Db, S.UserId, BoardId);
@@ -3469,6 +3512,149 @@ end;
 // arguments as a JSON array, answered {"result": ...} or, as Meteor answers a
 // method error, {"error": code, "reason": text}. The methods are WeKan's
 // Meteor methods of the same name, each with WeKan's own meaning.
+// A key of a profile map (assertSafeMapKey): letters, digits, '-', '_', ':'.
+function ProfileMapKey(const Key: string): Boolean;
+var i: Integer;
+begin
+  Result := (Key <> '') and (Length(Key) <= 200) and (Key <> '__proto__') and (Key <> 'constructor') and (Key <> 'prototype');
+  for i := 1 to Length(Key) do
+    if not (Key[i] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', ':']) then Exit(False);
+end;
+
+// Board Settings / Card's writes (weddy.js): the board's fields through
+// /boards/update, the user's own through /users/update, setShowLabelTextOverride
+// and setCollapsedCardSection, a custom field's through /customFields/update.
+// 200, or a Meteor error's code and reason.
+function CardSettingsMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Error: string): Integer;
+var Selector, Modifier, Clean, SetPart: TJSONObject; BoardId, Sql, Profile, Path, Id, Cols: string; i: Integer; V: TJSONData;
+  R: TWLRows;
+begin
+  Error := 'Match failed';
+  Result := 400;
+  if Name = '/boards/update' then
+  begin
+    if (Args.Count <> 2) or not (Args.Items[0] is TJSONObject) or not (Args.Items[1] is TJSONObject) then Exit;
+    Selector := TJSONObject(Args.Items[0]); Modifier := TJSONObject(Args.Items[1]);
+    BoardId := Selector.Get('_id', '');
+    if (Selector.Count <> 1) or (BoardId = '') or (Modifier.Count <> 1) or not (Modifier.Find('$set') is TJSONObject) then Exit;
+    if not BoardOwnAdmin(T.Db, UserId, BoardId) then
+    begin
+      if Length(T.Db.Query('SELECT 1 FROM boards WHERE id=' + QuotedStr(BoardId) + ';')) = 1 then
+        try
+          RecordSecurityEvent(T.Db, UserId, 'AuthBleed', 'method:/boards/update', 'authz', 'high', 'CWE-862', 'blocked',
+            'Board settings change refused: not an admin of the board');
+        except
+          // logging must never break the guard
+        end;
+      Error := 'Access denied'; Exit(403);
+    end;
+    if not CardSettingsBoardWrite(TJSONObject(Modifier.Find('$set')), Clean) then
+    begin Clean.Free; Error := 'Access denied'; Exit(403); end;
+    try
+      Sql := 'CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END';
+      Cols := '';
+      for i := 0 to Clean.Count - 1 do
+        // presentParentTask is a column of its own; the rest are the board's
+        // fields kept in settings_json.
+        if Clean.Names[i] = 'presentParentTask' then Cols := Cols + ',presentParentTask=' + QuotedStr(Clean.Items[i].AsString)
+        else Sql := 'json_set(' + Sql + ',' + QuotedStr('$.' + Clean.Names[i]) + ',json(' + QuotedStr(Clean.Items[i].AsJSON) + '))';
+      if not T.Db.Exec('UPDATE boards SET settings_json=' + Sql + Cols + ',modifiedAt=' +
+        QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) + ' WHERE id=' + QuotedStr(BoardId) + ';') then
+      begin Error := 'Could not save'; Exit(500); end;
+    finally
+      Clean.Free;
+    end;
+  end
+  else if Name = '/users/update' then
+  begin
+    // The user's own Card Settings split and labels text override.
+    if (Args.Count <> 2) or not (Args.Items[0] is TJSONObject) or not (Args.Items[1] is TJSONObject) then Exit;
+    Selector := TJSONObject(Args.Items[0]); Modifier := TJSONObject(Args.Items[1]);
+    if (Selector.Count <> 1) or (Selector.Get('_id', '') <> UserId) then begin Error := 'Access denied'; Exit(403); end;
+    if Modifier.Count <> 1 then Exit;
+    Profile := 'CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+    SetPart := nil;
+    if Modifier.Find('$set') is TJSONObject then SetPart := TJSONObject(Modifier.Find('$set'))
+    else if Modifier.Find('$unset') is TJSONObject then SetPart := TJSONObject(Modifier.Find('$unset'))
+    else begin Error := 'Access denied'; Exit(403); end;
+    for i := 0 to SetPart.Count - 1 do
+    begin
+      Path := SetPart.Names[i]; V := SetPart.Items[i];
+      if Modifier.Find('$unset') <> nil then
+      begin
+        if Path <> 'profile.cardLabelTextOverride' then begin Error := 'Access denied'; Exit(403); end;
+        Profile := 'json_remove(' + Profile + ',''$.cardLabelTextOverride'')';
+      end
+      else if (Path = 'profile.cardSettingsSplit') and (V.JSONType = jtNumber) and (V.AsFloat >= 0) and (V.AsFloat <= 1) then
+        Profile := 'json_set(' + Profile + ',''$.cardSettingsSplit'',json(' + QuotedStr(V.AsJSON) + '))'
+      else if (Path = 'profile.cardLabelTextOverride') and (V.JSONType = jtBoolean) then
+        Profile := 'json_set(' + Profile + ',''$.cardLabelTextOverride'',json(''' + IfThen(V.AsBoolean, 'true', 'false') + '''))'
+      else
+      begin Error := 'Access denied'; Exit(403); end;
+    end;
+    if not T.Db.Exec('UPDATE users SET profile_json=' + Profile + ' WHERE id=' + QuotedStr(UserId) + ';') then
+    begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'setShowLabelTextOverride' then
+  begin
+    // [on]: shown or hidden for this user; null follows the board again.
+    if Args.Count <> 1 then Exit;
+    if Args.Items[0].JSONType = jtNull then Sql := 'json_remove(' + 'CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END' +
+      ',''$.showLabelTextOverride'')'
+    else if Args.Items[0].JSONType = jtBoolean then
+      Sql := 'json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,''$.showLabelTextOverride'',json(''' +
+        IfThen(Args.Booleans[0], 'true', 'false') + '''))'
+    else Exit;
+    if not T.Db.Exec('UPDATE users SET profile_json=' + Sql + ' WHERE id=' + QuotedStr(UserId) + ';') then
+    begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = 'setCollapsedCardSection' then
+  begin
+    // [id, sectionKey, collapsed]: the user's own fold (models/users.js).
+    if (Args.Count <> 3) or (Args.Items[0].JSONType <> jtString) or (Args.Items[1].JSONType <> jtString) then Exit;
+    if not ProfileMapKey(Args.Strings[0]) or not ProfileMapKey(Args.Strings[1]) then begin Error := 'Invalid map key'; Exit; end;
+    Profile := 'CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
+    Path := '$.collapsedCardSections."' + Args.Strings[0] + '"';
+    if not T.Db.Exec('UPDATE users SET profile_json=json_set(json_set(json_set(' + Profile + ',''$.collapsedCardSections'',' +
+      'json(COALESCE(json_extract(' + Profile + ',''$.collapsedCardSections''),''{}''))),' + QuotedStr(Path) + ',json(COALESCE(json_extract(' +
+      Profile + ',' + QuotedStr(Path) + '),''{}''))),' + QuotedStr(Path + '."' + Args.Strings[1] + '"') + ',json(''' +
+      IfThen((Args.Items[2].JSONType = jtBoolean) and Args.Booleans[2], 'true', 'false') + ''')) WHERE id=' + QuotedStr(UserId) + ';') then
+    begin Error := 'Could not save'; Exit(500); end;
+  end
+  else if Name = '/customFields/update' then
+  begin
+    // [{_id}, {$set}]: a field's name and its four "on card" flags, for an
+    // admin of every board it is on.
+    if (Args.Count <> 2) or not (Args.Items[0] is TJSONObject) or not (Args.Items[1] is TJSONObject) then Exit;
+    Id := TJSONObject(Args.Items[0]).Get('_id', '');
+    Modifier := TJSONObject(Args.Items[1]);
+    if (Id = '') or (Modifier.Count <> 1) or not (Modifier.Find('$set') is TJSONObject) then Exit;
+    R := T.Db.Query('SELECT boardId FROM custom_field_boards WHERE customFieldId=' + QuotedStr(Id) + ';');
+    if Length(R) = 0 then begin Error := 'Not found'; Exit(404); end;
+    for i := 0 to High(R) do
+      if not BoardOwnAdmin(T.Db, UserId, R[i][0]) then begin Error := 'Access denied'; Exit(403); end;
+    SetPart := TJSONObject(Modifier.Find('$set'));
+    Cols := '';
+    for i := 0 to SetPart.Count - 1 do
+    begin
+      Path := SetPart.Names[i]; V := SetPart.Items[i];
+      if (Path = 'name') and (V.JSONType = jtString) and (Trim(V.AsString) <> '') and (Length(V.AsString) <= 200) then
+        Cols := Cols + ',name=' + QuotedStr(V.AsString)
+      else if ((Path = 'showOnCard') or (Path = 'automaticallyOnCard') or (Path = 'alwaysOnCard') or (Path = 'showLabelOnMiniCard')) and
+        (V.JSONType = jtBoolean) then
+        Cols := Cols + ',' + Path + '=' + IfThen(V.AsBoolean, '1', '0')
+      else begin Error := 'Access denied'; Exit(403); end;
+    end;
+    if Cols = '' then Exit;
+    if not T.Db.Exec('UPDATE custom_fields SET modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',
+      LocalTimeToUniversal(Now))) + Cols + ' WHERE id=' + QuotedStr(Id) + ';') then
+    begin Error := 'Could not save'; Exit(500); end;
+  end
+  else begin Error := 'Method not found'; Exit(404); end;
+  Error := '';
+  Result := 200;
+end;
+
 // Admin Panel / Attachments / Transfer limits: avatar uploads blocked (#4740),
 // a shared store's attachmentStorageSettings document; False without one.
 function AvatarUploadBlocked(Db: TWLDb): Boolean;
@@ -3853,6 +4039,36 @@ begin
   end;
   // WeKan's isAvatarUploadBlocked (#4740): Admin Panel / Attachments'
   // limitSettings.avatarsUploadBlocked; avatars stay enabled without it.
+  // Board Settings / Card's writes (wlcardst).
+  if (Name = '/boards/update') or (Name = 'setShowLabelTextOverride') or
+    (Name = 'setCollapsedCardSection') or (Name = '/customFields/update') then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not (Args is TJSONArray) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Code := CardSettingsMethod(T, S.UserId, Name, TJSONArray(Args), Error);
+    finally
+      Args.Free;
+    end;
+    // A collection write refused is Meteor's 403 "Access denied".
+    if (Code = 403) and (Error = 'Access denied') then
+      SendJsonAnswer(Response, 403, '{"error":403,"reason":"Access denied"}')
+    else if Code <> 200 then
+      SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}')
+    else
+    begin
+      // The board's pages draw again, the writer's too: its cards change.
+      if (Name = '/boards/update') or (Name = '/customFields/update') then AnnounceToAll;
+      SendJsonAnswer(Response, 200, '{"result":1}');
+    end;
+    Exit;
+  end;
   if Name = '/settings/update' then
   begin
     Args := nil;
@@ -4194,6 +4410,22 @@ begin
   if Name = '/users/update' then
   begin
     Code := ViewUsersUpdate(T.Db, S.UserId, Request.Content);
+    // Else Card Settings' own: the user's split and labels text override
+    // (wlcardst). Each refuses without writing what is not its own.
+    if Code <> 200 then
+    begin
+      Args := nil;
+      try
+        try
+          Args := GetJSON(Request.Content);
+        except
+          Args := nil;
+        end;
+        if (Args is TJSONArray) and (CardSettingsMethod(T, S.UserId, Name, TJSONArray(Args), Error) = 200) then Code := 200;
+      finally
+        Args.Free;
+      end;
+    end;
     if Code = 200 then SendJsonAnswer(Response, 200, '{"result":1}')
     else SendJsonAnswer(Response, Code, '{"error":' + IntToStr(Code) + ',"reason":"Access denied"}');
     Exit;
@@ -5322,6 +5554,8 @@ procedure ResetViewState;
 begin
   ViewDateFormat := '';
   ViewBoardId := '';
+  ViewMinicardPieces := nil;
+  ViewCardDates := nil;
 end;
 
 end.
