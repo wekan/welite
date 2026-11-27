@@ -578,6 +578,13 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board, opened by address and in the Archive; the board's activities are not
   theirs. `tests/view.py` checks each, and all six of WeKan's
   history-read-scope tests pass.
+- Serve a file at WeKan's older address too, /cfs/files/attachments/:id,
+  and to an API client's Bearer token; an assigned-only member gets their own
+  cards' files and a 403 for another card's, recorded as AssignedBleed. Add
+  WeKan's searchAttachmentDocumentText: the board's documents whose extracted
+  text has the words, of an assigned-only member's own cards only
+  (GHSA-3cgr-47wm-9cc9). `tests/view.py` checks each; both of WeKan's
+  assigned-only-reads tests pass.
 - Add WeKan's createBoardFromCard: a card becomes a link to a new board of
   the caller's, as private as the policy wants, by a writer of its board or
   an assigned-only writer on their own card; archiveSelectedCards lets that

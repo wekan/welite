@@ -58,6 +58,10 @@ procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSO
 // restore(rowId), for the rule rows of a board one administers: 0 for any
 // other method name.
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+// WeKan's searchAttachmentDocumentText: the documents of the board whose
+// extracted text has Needle, as a JSON array of {attachmentId, cardId,
+// snippet}, at most 50; of an assigned-only member's own cards only.
+function SearchDocumentText(Db: TWLDb; const UserId, BoardId, Needle: string; AssignedOnly: Boolean): string;
 
 // The engine's hooks: arm at the start of a request, flush before it answers.
 procedure ArmRules(Request: TRequest);
@@ -2395,6 +2399,36 @@ begin
     Before.Free; After.Free;
   end;
   Result := 1;
+end;
+
+function SearchDocumentText(Db: TWLDb; const UserId, BoardId, Needle: string; AssignedOnly: Boolean): string;
+var Raw, Tbl, Text, Low, Like: string; Rows, Found: TJSONArray; i, At, From: Integer; Row: TJSONObject;
+begin
+  Result := '[]';
+  if (Length(Needle) < 2) or not CollectionTable(Db, 'documentPreviews', Raw, Tbl) then Exit;
+  // A LIKE pattern of the needle as it is: its \, % and _ escaped.
+  Like := StringReplace(StringReplace(StringReplace(LowerCase(Needle), '\', '\\', [rfReplaceAll]), '%', '\%', [rfReplaceAll]),
+    '_', '\_', [rfReplaceAll]);
+  Rows := FindDocs(Db, 'documentPreviews', DocField('boardId') + '=' + Q(BoardId) + ' AND lower(' + DocField('searchText') + ') LIKE ' +
+    Q('%' + Like + '%') + ' ESCAPE ''\''' + IfThen(AssignedOnly, ' AND ' + DocField('cardId') + ' IN (SELECT cardId FROM card_assignees WHERE userId=' +
+    Q(UserId) + ')', ''), DocField('_id') + ' LIMIT 50');
+  Found := TJSONArray.Create;
+  try
+    for i := 0 to Rows.Count - 1 do
+    begin
+      Row := Rows.Objects[i];
+      Text := Str(Row, 'searchText');
+      Low := LowerCase(Text);
+      At := Pos(LowerCase(Needle), Low) - 1;
+      From := At - 80;
+      if From < 0 then From := 0;
+      Found.Add(TJSONObject.Create(['attachmentId', Str(Row, 'attachmentId'), 'cardId', Str(Row, 'cardId'), 'snippet', Copy(Text, From + 1, 240)]));
+    end;
+    Result := Found.AsJSON;
+  finally
+    Found.Free;
+    Rows.Free;
+  end;
 end;
 
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;

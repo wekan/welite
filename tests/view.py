@@ -1238,6 +1238,25 @@ def http_checks(server, tmp, backend):
         assert card_db('SELECT COUNT(*) FROM attachments WHERE id=?', hidden_att)[0] == 1, 'the hidden file stays'
         owner_listed = json.loads(request('GET', '/api/attachment/list/%s' % board_id, headers=auth)[2])
         assert {mine_att, hidden_att} <= {a['attachmentId'] for a in owner_listed['attachments']}
+        # The file routes with a Bearer token (WeKan's universalFileServer):
+        # another card's file refused, at both addresses; their own served.
+        for route_ in ('/cdn/storage/attachments/%s', '/cfs/files/attachments/%s'):
+            status, _, body, _ = request('GET', route_ % hidden_att, headers=worker_auth)
+            assert status == 403 and b'synthetic' not in body, (route_, status)
+            status, _, body, _ = request('GET', route_ % mine_att, headers=worker_auth)
+            assert status == 200 and body == b'synthetic file', (route_, status)
+        assert request('GET', '/cdn/storage/attachments/%s' % hidden_att, headers=auth)[0] == 200, 'negative: the owner reads it'
+        assert request('GET', '/cdn/storage/attachments/%s' % hidden_att, headers={'Authorization': 'Bearer nonsense'})[0] == 404
+        # searchAttachmentDocumentText: a member's search (no extracted text in
+        # a store of WeLite's own), a stranger's refused, a short one empty.
+        doc_search = lambda args, who=owner: request('POST', '/_methods/searchAttachmentDocumentText', args, cookie=who, as_json=True)
+        status, _, body, _ = doc_search([board_id, 'synthetic'])
+        assert status == 200 and json.loads(body)['result'] == [], body
+        assert json.loads(doc_search([board_id, ' a '])[2])['result'] == []
+        assert doc_search([board_id, 'synthetic'], stranger)[0] == 403
+        assert doc_search([board_id, 'synthetic'], worker)[0] == 200, 'an assigned-only member searches their own'
+        for bad in ([board_id], [board_id, 5], [5, 'x']):
+            assert doc_search(bad)[0] == 400, bad
         assert request('DELETE', '/api/attachment/delete/%s' % mine_att, headers=worker_auth)[0] == 200, 'their own card\'s file'
         assert request('DELETE', '/api/attachment/delete/%s' % hidden_att, headers=auth)[0] == 200
         board_db('UPDATE board_members SET isWorker=1, isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])

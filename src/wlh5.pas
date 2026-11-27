@@ -4390,6 +4390,41 @@ begin
       StringToJSONString(R[0][2]) + '","message":"Attachment deleted successfully"}}');
     Exit;
   end;
+  // server/routes/universalFileServer.js searchAttachmentDocumentText
+  // [boardId, query]: the board's documents whose text has it - of an
+  // assigned-only member's own cards only (AssignedBleed, GHSA-3cgr-47wm-9cc9).
+  if Name = 'searchAttachmentDocumentText' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[0].JSONType = jtString) and
+        (TJSONArray(Args).Items[1].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":"Match.Error","reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Strings[0];
+      CardTitle := '';
+      // Runs of white space are one space, trimmed, at most 200 characters.
+      for n := 1 to Length(TJSONArray(Args).Strings[1]) do
+        if TJSONArray(Args).Strings[1][n] in [#9, #10, #13, ' '] then
+        begin
+          if (CardTitle <> '') and (CardTitle[Length(CardTitle)] <> ' ') then CardTitle := CardTitle + ' ';
+        end
+        else CardTitle := CardTitle + TJSONArray(Args).Strings[1][n];
+      CardTitle := Copy(Trim(CardTitle), 1, 200);
+    finally
+      Args.Free;
+    end;
+    if Length(CardTitle) < 2 then begin SendJsonAnswer(Response, 200, '{"result":[]}'); Exit; end;
+    if (Pos(#0, Id) > 0) or not (BoardCanRead(T.Db, S.UserId, Id) or AssignedOnlyMember(T.Db, S.UserId, Id)) then
+    begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"not-authorized"}'); Exit; end;
+    SendJsonAnswer(Response, 200, '{"result":' + SearchDocumentText(T.Db, S.UserId, Id, CardTitle,
+      not BoardCanRead(T.Db, S.UserId, Id)) + '}');
+    Exit;
+  end;
   // server/models/lists.js's WIP limit methods, a board admin's: applyWipLimit
   // [listId, limit] sets the value - 1 when it is no number of at least one -
   // enableWipLimit [listId] turns the limit on or off (a value of 0 becoming
@@ -5371,23 +5406,52 @@ end;
 // read. Only a raster image is shown inline (SendStoredDownload); ?download=
 // and every other file come as a download, with nosniff.
 function ServeAttachmentFile(Request: TRequest; Response: TResponse; const Path: string): Boolean;
-var T: TWLTenant; S: TWLSession; P: TStringArray; Rows: TWLRows; Preview, Removed: string; Changed: Boolean;
+var T: TWLTenant; S: TWLSession; P: TStringArray; Rows: TWLRows; Preview, Removed, Token: string; Changed, Signed: Boolean;
 begin
   Result := False;
   P := PathParts(Path);
-  if (Length(P) < 4) or (P[0] <> 'cdn') or (P[1] <> 'storage') or (P[2] <> 'attachments') or (P[3] = '') then Exit;
+  if (Length(P) < 4) or not (((P[0] = 'cdn') and (P[1] = 'storage')) or ((P[0] = 'cfs') and (P[1] = 'files'))) or
+    (P[2] <> 'attachments') or (P[3] = '') then Exit;
   if not ((Length(P) = 4) or ((Length(P) = 5) and (P[4] = 'thumbnail')) or ((Length(P) = 6) and (P[4] = 'original'))) then Exit;
   if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
   Result := True;
   Rows := nil;
-  if Html5User(T.Db, Request, S) and (Pos(#0, P[3]) = 0) then
+  // The page's cookie, or an API client's Bearer token.
+  Signed := Html5User(T.Db, Request, S);
+  if not Signed then
+  begin
+    Token := Request.Authorization;
+    if Token = '' then Token := Request.CustomHeaders.Values['Authorization'];
+    S := Default(TWLSession);
+    Signed := (Copy(Token, 1, 7) = 'Bearer ') and ValidateLoginToken(T.Db, Request, Trim(Copy(Token, 8, MaxInt)), S.UserId);
+  end;
+  if Signed and (Pos(#0, P[3]) = 0) then
   begin
     // Unaliased: LiveAttachmentSQL names attachments itself.
-    Rows := T.Db.Query('SELECT attachments.boardId,COALESCE(attachments.name,''''),COALESCE(attachments.type,'''') FROM attachments ' +
+    Rows := T.Db.Query('SELECT attachments.boardId,COALESCE(attachments.name,''''),COALESCE(attachments.type,''''),attachments.cardId FROM attachments ' +
       'JOIN cards c ON c.id=attachments.cardId AND c.boardId=attachments.boardId AND c.archived=0 AND c.deletedAt IS NULL ' +
       'WHERE attachments.id=' + QuotedStr(P[3]) + ' AND ' +
       LiveAttachmentSQL(T.Db) + ';');
-    if (Length(Rows) = 1) and not BoardCanRead(T.Db, S.UserId, Rows[0][0]) then Rows := nil;
+    if (Length(Rows) = 1) and not BoardCanRead(T.Db, S.UserId, Rows[0][0]) then
+    begin
+      // An assigned-only member: their own cards' files (GHSA-3cgr-47wm-9cc9);
+      // another card's is refused and recorded (AssignedBleed).
+      if AssignedOnlyMember(T.Db, S.UserId, Rows[0][0]) then
+      begin
+        if not CardAssignedTo(T.Db, S.UserId, Rows[0][0], Rows[0][3]) then
+        begin
+          try
+            RecordSecurityEvent(T.Db, S.UserId, 'AssignedBleed', 'file-server:cdn', 'authz', 'medium', 'CWE-863', 'blocked',
+              'Assigned-only member asked for an attachment of a card not assigned to them.');
+          except
+            // logging must never break the guard
+          end;
+          SendJsonAnswer(Response, 403, '{"error":"Forbidden"}');
+          Exit;
+        end;
+      end
+      else Rows := nil;
+    end;
   end;
   // An SVG: sanitized again on its way out, whatever is stored
   // (server/lib/svgResponse.js); one stored with active content is recorded.
@@ -6027,7 +6091,8 @@ begin
     SendJsonAnswer(Response, 200, UserJson(T.Db, S.UserId));
     Exit;
   end;
-  if Copy(Path, 1, 25) = '/cdn/storage/attachments/' then
+  // /cfs/files/attachments/:id is WeKan's older address of the same file.
+  if (Copy(Path, 1, 25) = '/cdn/storage/attachments/') or (Copy(Path, 1, 23) = '/cfs/files/attachments/') then
   begin
     Result := ServeAttachmentFile(Request, Response, Path);
     Exit;
