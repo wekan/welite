@@ -1350,7 +1350,7 @@ end;
 function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
 var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, ItemUrl, DueLabel: string;
   ShowDue: Boolean;
-  function InlinedForm(const Cls, Action, Label_: string; const Title: string = ''; Editing: Boolean = False): string;
+  function InlinedForm(const Cls, Action, Label_: string; const Title: string = ''; Editing: Boolean = False; const DeleteUrl: string = ''): string;
   begin
     // Its fields are on the page only while it is open (WeKan's inlinedForm).
     Result := '<form class="' + Cls + ' js-inlined-form is-hidden" method="post" action="' + HtmlAttr(Action) +
@@ -1359,7 +1359,11 @@ var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsH
       HtmlAttr(Label_) + '" required>' + E(Title) + '</textarea>' +
       '<div class="edit-controls clearfix"><button class="primary confirm js-submit-' + IfThen(Editing, 'edit', 'add') + '-checklist-item-form" type="submit">' +
       E(Words.Text('save', 'Save')) + '</button><a class="js-close-inlined-form" href="#" aria-label="' +
-      HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></template></form>';
+      HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a>';
+    if DeleteUrl <> '' then
+      Result := Result + '<a class="js-delete-checklist-item" href="#" data-url="' + HtmlAttr(DeleteUrl) + '">' +
+        E(Words.Text('delete', 'Delete')) + '…</a>';
+    Result := Result + '</div></template></form>';
   end;
   function Deadline(const Value, Url, Kind: string): string;
   var Target: string;
@@ -1422,7 +1426,7 @@ begin
         MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div>';
       if Writable then
         ItemsHtml := ItemsHtml + InlinedForm('js-edit-checklist-item', ItemUrl + '/title',
-          Words.Text('add-checklist-item', 'Checklist item'), Items[k][1], True);
+          Words.Text('add-checklist-item', 'Checklist item'), Items[k][1], True, ItemUrl + '/delete');
       ItemsHtml := ItemsHtml + Deadline(Items[k][3], ItemUrl, 'checklist-item') + '</div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
@@ -1522,6 +1526,12 @@ begin
     HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"><div class="content"><ul class="pop-over-list"><li>' +
     '<a class="js-delete-checklist delete-checklist" href="#"><i class="fa fa-trash"></i> ' + E(Words.Text('delete', 'Delete')) +
     ' ...</a></li></ul></div></template>' +
+    '<template class="js-pop-over-template" data-pop="checklist-item-delete" data-title="' +
+    HtmlAttr(Words.Text('delete', 'Delete')) + '"><div class="content"><p>' +
+    E(Words.Text('confirm-checklist-item-delete-popup', 'Are you sure you want to delete the checklist item?')) +
+    '</p><form class="js-checklist-item-delete-form" method="post" action="#" up-submit up-target=".board-wrapper">' +
+    '<button class="js-confirm negate full" type="submit">' + E(Words.Text('delete', 'Delete')) +
+    '</button></form></div></template>' +
     '<template class="js-pop-over-template" data-pop="checklist-delete" data-title="' +
     HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '" data-board="' + HtmlAttr(BoardId) +
     '" data-card="' + HtmlAttr(CardId) + '"><div class="content"><p>' +
@@ -7292,6 +7302,7 @@ begin
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'title') then Action := 'checklist-title'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'due') then Action := 'checklist-due'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
+  else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'delete') then Action := 'delete-item'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'title') then Action := 'checklist-title'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'due') then Action := 'checklist-due'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
@@ -7441,6 +7452,8 @@ begin
     Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
   else if Action = 'add-item' then
     Code := AddViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, Title, NewId, Error)
+  else if Action = 'delete-item' then
+    Code := DeleteViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Error)
   else if Action = 'toggle-item' then
     Code := ToggleViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Error)
   else

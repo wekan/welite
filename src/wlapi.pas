@@ -190,6 +190,8 @@ function AddViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,Chec
 function ToggleViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,ItemId:string;out Error:string):Integer;
 function RenameViewChecklist(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, Title: string;
   out Error: string): Integer;
+function DeleteViewChecklistItem(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId: string;
+  out Error: string): Integer;
 function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, At: string;
   Remove: Boolean; out Error: string): Integer;
 // Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
@@ -5733,6 +5735,23 @@ begin
     ')=1 THEN 1 ELSE json(''Checklist scope changed'') END; DELETE FROM checklists WHERE '+Predicate+
     '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM checklists WHERE '+Predicate+') THEN 1 ELSE json(''Checklist write failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not delete checklist';Exit(500);end;
+end;
+
+function DeleteViewChecklistItem(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId: string;
+  out Error: string): Integer;
+var Scope: string;
+begin
+  if (ChecklistId = '') or (ItemId = '') then begin Error := 'Item not found'; Exit(404); end;
+  Result := ViewChecklistScope(T, UserId, BoardId, CardId, ChecklistId, ItemId, Error);
+  if Result <> 200 then Exit;
+  Scope := 'id=' + QuotedStr(ItemId) + ' AND checklistId=' + QuotedStr(ChecklistId) +
+    ' AND cardId=' + QuotedStr(CardId) + ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ')';
+  if not T.Db.Exec('BEGIN IMMEDIATE; DELETE FROM checklist_items WHERE ' + Scope +
+    ' AND EXISTS(SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
+    ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL)' +
+    '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM checklist_items WHERE ' + Scope +
+    ') THEN 1 ELSE json(''Checklist item delete failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); Error := 'Could not delete checklist item'; Exit(500); end;
 end;
 
 // Send one card as JSON (incl. its labelIds). Returns False (and sends 404) if missing.

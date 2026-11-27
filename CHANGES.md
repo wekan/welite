@@ -7,7 +7,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 ## HTML5 mobile board navigation
 
 - Edit checklist and item titles in place on the open card, using the same
-  inline forms as Weddy.
+  inline forms as Weddy. Delete a single item from its editor after confirming
+  the removal. Other items stay on the checklist.
 
 - Apply the member’s saved calendar and first weekday to card dates and date
   pickers when the page opens. WeLite now runs the same complete calendar
