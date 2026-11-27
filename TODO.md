@@ -271,7 +271,8 @@ Next, after this goal:
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
-  export-access (the board's PDF, Excel and chart exports), scoped ZIP exports, and the
+  export-access (board PDF, chart exports and exports of individual cards),
+  scoped ZIP and Excel exports, Weddy’s additional Excel sheets and styling, and the
   remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.

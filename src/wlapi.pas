@@ -65,6 +65,7 @@ procedure BrowserIntegrations(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
+procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
@@ -404,7 +405,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,zipper;
+uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -2845,8 +2846,19 @@ procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 begin BoardExport(aRequest,aResponse,True);end;
 
 function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
-  out BoardId, UserId: string): Boolean;
+  out BoardId, UserId: string; PlainNotFound: Boolean = False): Boolean;
 var Board: TWLRows; Session: TWLSession;
+  procedure NotFound;
+  var MessageText: RawByteString;
+  begin
+    if not PlainNotFound then begin SendError(aResponse, 404, 'Board not found'); Exit; end;
+    aResponse.Code := 404;
+    aResponse.ContentType := 'text/plain; charset=utf-8';
+    MessageText := 'Board not found';
+    aResponse.Content := MessageText;
+    aResponse.ContentLength := Length(MessageText);
+    aResponse.SendContent;
+  end;
 begin
   Result := False;
   if not ApiTenant(aRequest, aResponse, T) then Exit;
@@ -2854,16 +2866,17 @@ begin
   begin SendError(aResponse, 403, 'Board export restricted by instance settings'); Exit; end;
   BoardId := aRequest.RouteParams['boardId'];
   if (BoardId = '') or (Pos(#0, BoardId) > 0) then
-  begin SendError(aResponse, 404, 'Board not found'); Exit; end;
+  begin NotFound; Exit; end;
   Board := T.Db.Query('SELECT permission FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
-  if Length(Board) <> 1 then begin SendError(aResponse, 404, 'Board not found'); Exit; end;
+  if Length(Board) <> 1 then begin NotFound; Exit; end;
   UserId := '';
   if (aRequest.Authorization <> '') or (aRequest.QueryFields.Values['authToken'] <> '') or
     (aRequest.QueryFields.Values['token'] <> '') then
   begin
     if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   end
-  else if ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), Session) then UserId := Session.UserId;
+  else if Html5User(T.Db, aRequest, Session) or
+    ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), Session) then UserId := Session.UserId;
   if Board[0][0] <> 'public' then
   begin
     if UserId = '' then begin SendError(aResponse, 401, 'Sign in to download a board'); Exit; end;
@@ -2899,6 +2912,34 @@ begin
       aResponse.ContentType := 'text/csv; charset=utf-8';
       aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.csv"');
     end;
+    aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
+    aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
+    Output.Position := 0;
+    aResponse.ContentLength := Output.Size;
+    aResponse.ContentStream := Output;
+    try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
+  finally Output.Free; Payload.Free; end;
+end;
+
+procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Key: string; Payload: TJSONObject; Output: TMemoryStream;
+begin
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True) then Exit;
+  for Key in ['swimlaneId','listId','cardId','checklistId'] do
+    if aRequest.QueryFields.IndexOfName(Key) >= 0 then
+    begin SendError(aResponse, 400, 'Scoped Excel export is unavailable'); Exit; end;
+  try
+    Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
+  except SendError(aResponse, 500, 'Could not export board'); Exit; end;
+  if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
+  Output := TMemoryStream.Create;
+  try
+    try
+      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields']);
+    except SendError(aResponse, 500, 'Could not export board'); Exit; end;
+    aResponse.Code := 200;
+    aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.xlsx"');
     aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
     aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
     Output.Position := 0;
@@ -3046,7 +3087,8 @@ begin
   begin
     if (aRequest.Authorization = '') and (aRequest.QueryFields.Values['authToken'] = '') and
       (aRequest.QueryFields.Values['token'] = '') and
-      ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), Session) then UserId := Session.UserId
+      (Html5User(T.Db, aRequest, Session) or
+        ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), Session)) then UserId := Session.UserId
     else if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
     if not BoardHasMember(T.Db, UserId, BoardId) or AssignedOnlyMember(T.Db, UserId, BoardId) then
     begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;

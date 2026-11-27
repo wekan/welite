@@ -477,3 +477,5 @@ export-access.e2e.js: assigned-only private member cannot read unfiltered calend
 public-csv-export-fields.e2e.js
 export-access.e2e.js: assigned-only private member cannot read unfiltered export/csv
 export-access.e2e.js: assigned-only private member cannot read unfiltered exportZip
+board-excel-export.e2e.js
+export-access.e2e.js: assigned-only private member cannot read unfiltered exportExcel

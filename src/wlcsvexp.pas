@@ -2,19 +2,24 @@ unit wlcsvexp;
 {$mode objfpc}{$H+}{$CODEPAGE UTF8}
 interface
 uses Classes, fpjson;
+type
+  TBoardCell = record Text: string; LiteralText: Boolean; end;
+  TBoardRow = array of TBoardCell;
+  TBoardRowWriter = procedure(const Row: TBoardRow) of object;
+procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean = False);
 procedure WriteBoardCsv(Stream: TStream; Board: TJSONObject; const Fields, Separator: string);
 
 implementation
 uses SysUtils, StrUtils;
 
-procedure WriteBoardCsv(Stream: TStream; Board: TJSONObject; const Fields, Separator: string);
+procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean);
 const
   Captions: array[0..19] of string = ('Title','Description','List','Swimlane','Owner','Requested By','Assigned By',
     'Members','Assignee','Labels','Start','Due','End','Overtime (hours)','Spent time (hours)',
     'Created at','Last modified at','Last activity','Voting','Archived');
   Parts: array[0..19] of string = ('','description','board-info','board-info','people','people','people',
     'people','people','labels','dates','dates','dates','dates','dates','dates','dates','dates','voting','');
-var Selected: TStringArray; All: Boolean; Row: string; Cells: array[0..19] of string;
+var Selected: TStringArray; All: Boolean; Row: TBoardRow; Cells: array[0..19] of string;
   Cards, Definitions, Users, Lists, Lanes, Labels, Values: TJSONData;
   Card, Def, Field, Setting, Vote: TJSONObject; I, J, F: Integer;
 
@@ -46,19 +51,18 @@ var Selected: TStringArray; All: Boolean; Row: string; Cells: array[0..19] of st
   end;
 
   procedure Add(const Text: string; EscapeFormula: Boolean = True);
-  var Cell: string;
+  var N: Integer;
   begin
-    Cell := Text;
-    if EscapeFormula and (Cell <> '') and (Cell[1] in ['=', '+', '-', '@', #9, #13]) then Cell := '''' + Cell;
-    if Row <> '' then Row := Row + Separator;
-    Row := Row + '"' + StringReplace(Cell, '"', '""', [rfReplaceAll]) + '"';
+    N := Length(Row);
+    SetLength(Row, N + 1);
+    Row[N].Text := Text;
+    Row[N].LiteralText := EscapeFormula;
   end;
 
   procedure Flush;
   begin
-    Row := Row + #13#10;
-    Stream.WriteBuffer(Row[1], Length(Row));
-    Row := '';
+    Write(Row);
+    Row := nil;
   end;
 
   function GetText(Obj: TJSONObject; const Key, Fallback: string): string;
@@ -158,8 +162,7 @@ begin
     Includes('checklists') or Includes('comments') or Includes('subtasks') or Includes('card-details') or
     Includes('board-header') or Includes('activities') or Includes('poker') or Includes('stickers') or
     Includes('locations') or Includes('dependencies') or Includes('sort') or Includes('scrum'));
-  Row := '';
-  if Separator <> #9 then Stream.WriteBuffer(#$EF#$BB#$BF, 3);
+  Row := nil;
   Cards := Board.Find('cards'); Lists := Board.Find('lists'); Lanes := Board.Find('swimlanes');
   Labels := Board.Find('labels'); Users := Board.Find('users'); Definitions := Board.Find('customFields');
   for I := Low(Captions) to High(Captions) do if Includes(Parts[I]) then Add(Captions[I]);
@@ -185,7 +188,8 @@ begin
   for I := 0 to Cards.Count - 1 do
   begin
     Card := TJSONArray(Cards).Objects[I];
-    if (Card.Get('linkedId', '') <> '') or (GetText(Card, 'deletedAt', '') <> '') then Continue;
+    if (Card.Get('linkedId', '') <> '') or (GetText(Card, 'deletedAt', '') <> '') or
+      (SkipArchived and Card.Get('archived', False)) then Continue;
     Cells[0] := Card.Get('title', '');
     Cells[1] := Card.Get('description', '');
     Cells[2] := Lookup(Lists, Card.Get('listId', ''), 'title');
@@ -218,5 +222,38 @@ begin
     end;
     Flush;
   end;
+end;
+
+type TCsvWriter = class
+  Stream: TStream;
+  Separator: string;
+  procedure Write(const Row: TBoardRow);
+end;
+
+procedure TCsvWriter.Write(const Row: TBoardRow);
+var I: Integer; Cell, Line: string;
+begin
+  Line := '';
+  for I := 0 to High(Row) do
+  begin
+    Cell := Row[I].Text;
+    if Row[I].LiteralText and (Cell <> '') and (Cell[1] in ['=', '+', '-', '@', #9, #13]) then Cell := '''' + Cell;
+    if I > 0 then Line := Line + Separator;
+    Line := Line + '"' + StringReplace(Cell, '"', '""', [rfReplaceAll]) + '"';
+  end;
+  Line := Line + #13#10;
+  Stream.WriteBuffer(Line[1], Length(Line));
+end;
+
+procedure WriteBoardCsv(Stream: TStream; Board: TJSONObject; const Fields, Separator: string);
+var Writer: TCsvWriter;
+begin
+  if Separator <> #9 then Stream.WriteBuffer(#$EF#$BB#$BF, 3);
+  Writer := TCsvWriter.Create;
+  try
+    Writer.Stream := Stream;
+    Writer.Separator := Separator;
+    ReadBoardRows(Board, Fields, @Writer.Write);
+  finally Writer.Free; end;
 end;
 end.

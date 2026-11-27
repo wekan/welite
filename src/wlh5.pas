@@ -2722,7 +2722,10 @@ begin
   Result := '<template class="js-pop-over-template" data-pop="export" data-title="' +
     HtmlAttr(Words.Text('export', 'Export')) + '"><div class="header"><span class="header-title">' +
     E(Words.Text('export', 'Export')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
-    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list export-scope-select">';
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list export-scope-select">' +
+    '<li><a class="flex js-export-card-details-toggle" href="#" role="checkbox" aria-checked="true">' +
+    '<span class="materialCheckBox is-checked"></span><span>' +
+    E(Words.Text('export-card-details', 'Card details')) + '</span></a></li>';
   for I := Low(Parts) to High(Parts) do
     Result := Result + '<li><a class="flex js-export-field-toggle" href="#" data-field="' + Parts[I] +
       '" role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
@@ -2732,7 +2735,8 @@ begin
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
-    '/exportZip">WeKan ZIP</a></li></ul></div></template>';
+    '/exportZip">WeKan ZIP</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/exportExcel?fields=">Excel (.xlsx)</a></li></ul></div></template>';
 end;
 
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;

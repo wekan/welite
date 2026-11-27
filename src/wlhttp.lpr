@@ -925,6 +925,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/calendar.ics', rmGet, @ApiBoardCalendar);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/csv', rmGet, @ApiBoardCsv);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportZip', rmGet, @ApiBoardZip);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/exportExcel', rmGet, @ApiBoardExcel);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/domains', rmGet, @ApiBoardDomains);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/domains', rmPost, @ApiBoardDomains);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/domains/:domain', rmDelete, @ApiBoardDomains);
