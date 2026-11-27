@@ -478,6 +478,7 @@ threadvar
   // The date format of the page being drawn (wldatef): set where a board's
   // page starts, '' (YYYY-MM-DD) elsewhere.
   ViewDateFormat: string;
+  ViewWeekOfYear: Boolean;
   // The board whose page is being drawn, for the member menu's Date.
   ViewBoardId: string;
   // The order of the minicard's pieces and of the card's dates on this
@@ -495,6 +496,14 @@ threadvar
 
 // WeKan's resolveDateFormat for this viewer on this board: the member's own
 // format while their override is on, the board's, Admin Panel's.
+function IsoWeekBadge(const Value: string): string;
+var At: TDateTime;
+begin
+  Result := '';
+  if ViewWeekOfYear and TryISO8601ToDate(Value, At, True) then
+    Result := '<b class="card-date-iso-week">' + IntToStr(WeekOfTheYear(At)) + '</b>';
+end;
+
 function ViewDateFor(Db: TWLDb; const UserId, BoardId: string): string;
 var U, B: TWLRows; Member, Board: string; MemberOn, BoardOn: Boolean;
 begin
@@ -763,6 +772,7 @@ begin
       begin
         R := nil;
         Flag := ProfileField(T.Db, UserId, SETTING_TOGGLES[i][1]) <> '1';
+        if Name = 'toggleShowWeekOfYear' then Flag := ProfileField(T.Db, UserId, 'showWeekOfYear') = '0';
         if not SetProfileField(T.Db, UserId, SETTING_TOGGLES[i][1], IfThen(Flag, 'true', 'false')) then begin Error := 'Could not save'; Exit(500); end;
         Error := '';
         Exit(200);
@@ -880,10 +890,10 @@ function BoardDateSettingsPopup(Db: TWLDb; Words: TWLTranslator; const UserId, B
 begin
   Result := '<template class="js-pop-over-template" data-pop="board-date-settings" data-popup="boardDateSettingsPopup" data-title="' + HtmlAttr(Words.Text('date', 'Date')) + '">' +
     '<div class="content">' + DateFormatEditor(Db, Words, UserId, BoardId, False) +
-    '<hr><ul class="show-week-of-year-toggle"><a class="flex js-show-week-of-year-toggle" href="#" title="' +
+    '<hr><ul class="show-week-of-year-toggle"><button type="button" class="flex js-show-week-of-year-toggle" title="' +
     HtmlAttr(Words.Text('show-week-of-year', 'Show week of year (ISO 8601)')) + '"><i class="fa ' +
-    IfThen(ProfileField(Db, UserId, 'showWeekOfYear') = '1', 'fa-check', 'fa-square-o') + '"></i><span>' +
-    E(Words.Text('show-week-of-year', 'Show week of year (ISO 8601)')) + '</span></a></ul></div></template>';
+    IfThen(ProfileField(Db, UserId, 'showWeekOfYear') <> '0', 'fa-check', 'fa-square-o') + '"></i><span>' +
+    E(Words.Text('show-week-of-year', 'Show week of year (ISO 8601)')) + '</span></button></ul></div></template>';
 end;
 
 // The member menu's Date and Change Settings pop-overs (memberDateSettingsPopup,
@@ -1506,10 +1516,10 @@ begin
       Shown := FormatShownDate(Values[i], ViewDateFormat);
       if CanSet then
         Result := Result + '<a class="js-edit-date card-date ' + Kinds[i] + '-date" href="#"' + Common + ' data-date="' +
-          HtmlAttr(Values[i]) + '"><time datetime="' + HtmlAttr(Values[i]) + '">' + E(Shown) + '</time></a>'
+          HtmlAttr(Values[i]) + '"><time datetime="' + HtmlAttr(Values[i]) + '">' + E(Shown) + '</time>' + IsoWeekBadge(Values[i]) + '</a>'
       else
         Result := Result + '<a class="card-date ' + Kinds[i] + '-date" title="' + HtmlAttr(Label_) + '"><time datetime="' +
-          HtmlAttr(Values[i]) + '">' + E(Shown) + '</time></a>';
+          HtmlAttr(Values[i]) + '">' + E(Shown) + '</time>' + IsoWeekBadge(Values[i]) + '</a>';
     end
     else if CanSet then
       Result := Result + '<a class="card-label add-label js-' + Kinds[i] + '-date" href="#"' + Common +
@@ -3146,7 +3156,7 @@ begin
           HtmlAttr(Words.Text(Titles[i], TitleCaptions[i])) + '">'
       else
         Line := Line + '<span class="' + Cls + '" title="' + HtmlAttr(Label_) + '">';
-      Line := Line + '<i class="fa ' + Icons[i] + '"></i> <time datetime="' + HtmlAttr(Dates[i]) + '">' + E(Shown) + '</time>' +
+      Line := Line + '<i class="fa ' + Icons[i] + '"></i> <time datetime="' + HtmlAttr(Dates[i]) + '">' + E(Shown) + '</time>' + IsoWeekBadge(Dates[i]) +
         IfThen(Shows.SetDates, '</a>', '</span>');
     end;
   if Line <> '' then Result := Result + '<div class="dates">' + Line + '</div>';
@@ -3463,6 +3473,7 @@ begin
   if Length(B) <> 1 then Exit;
   BoardTitle := B[0][0];
   ViewDateFormat := ViewDateFor(Db, S.UserId, BoardId);
+  ViewWeekOfYear := (S.UserId <> '') and (ProfileField(Db, S.UserId, 'showWeekOfYear') <> '0');
   ViewBoardId := BoardId;
   ViewMinicardPieces := MinicardPieceOrder(Db, BoardId);
   ViewCardDates := CardDateOrder(Db, BoardId);
@@ -6489,6 +6500,7 @@ end;
 procedure ResetViewState;
 begin
   ViewDateFormat := '';
+  ViewWeekOfYear := False;
   ViewBoardId := '';
   ViewMinicardPieces := nil;
   ViewCardDates := nil;

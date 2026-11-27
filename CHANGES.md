@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Show ISO week numbers next to the dates on cards and minicards in the
+  HTML5 view. The member can switch them on or off from the board Date
+  menu, and the open board updates immediately.
 - Match existing bracket labels with Unicode case folding, including
   accented letters, Greek and multi-character folds such as ß and SS.
   The comparison works in linked SQLite and the SQLite CLI.

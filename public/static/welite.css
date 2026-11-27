@@ -254,3 +254,5 @@ body.has-hide-focus-outline [tabindex]:focus {
 body.has-hide-focus-outline :is(a, button, input, select, textarea, summary, [tabindex], [role="button"], [contenteditable="true"]):focus-visible {
   box-shadow: none !important;
 }
+
+.card-date-iso-week { margin-inline-start: 0.35em; }

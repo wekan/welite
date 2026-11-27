@@ -268,12 +268,15 @@
   }, true);
   up.on('click', '.js-pop-over .js-show-week-of-year-toggle', function (event, el) {
     event.preventDefault();
+    if (el.disabled) return;
+    el.disabled = true;
     call('toggleShowWeekOfYear').then(function () {
       var on = !el.querySelector('.fa').classList.contains('fa-check');
       var flip = function (i) { i.classList.toggle('fa-check', on); i.classList.toggle('fa-square-o', !on); };
       flip(el.querySelector('.fa'));
       inTemplate('board-date-settings', '.js-show-week-of-year-toggle .fa', flip);
-    });
+      return up.reload('.board-wrapper');
+    }).finally(function () { el.disabled = false; });
   });
   up.on('click', '.js-pop-over .js-welite-setting', function (event, el) {
     event.preventDefault();
