@@ -3112,6 +3112,30 @@ begin
   end;
 end;
 
+function MinicardRequesters(Db: TWLDb; const BoardId, Requesters: string): string;
+var People: TWLRows; i: Integer; Avatar: string;
+begin
+  Result := '';
+  if (Requesters = '') or (Requesters = '[]') then Exit;
+  People := Db.Query('SELECT u.username,COALESCE(json_extract(p,''$.fullname''),u.username),' +
+    'COALESCE(json_extract(p,''$.initials''),''''),COALESCE(json_extract(p,''$.avatarUrl''),'''') FROM (' +
+    'SELECT u.*,CASE WHEN json_valid(u.profile_json) THEN u.profile_json ELSE ''{}'' END AS p FROM users u) u ' +
+    'JOIN board_members m ON m.userId=u.id AND m.boardId=' + QuotedStr(BoardId) + ' AND m.isActive=1 ' +
+    'JOIN (SELECT value,MIN(key) AS ordinal FROM json_each(' + QuotedStr(Requesters) +
+    ') WHERE type=''text'' GROUP BY value) picked ON picked.value=u.id ' +
+    'WHERE COALESCE(u.loginDisabled,0)=0 ORDER BY picked.ordinal;');
+  for i := 0 to High(People) do
+  begin
+    Result := Result + '<span class="member minicard-requester" title="' + HtmlAttr(People[i][1]) + '">';
+    Avatar := AvatarDisplayUrl(People[i][3], '');
+    if StartsStr('/cdn/storage/avatars/', Avatar) or StartsStr('/cfs/files/avatars/', Avatar) then
+      Result := Result + '<img class="avatar avatar-image" src="' + HtmlAttr(Avatar) + '" alt="' + HtmlAttr(People[i][1]) + '">'
+    else
+      Result := Result + '<span class="member-initials">' + E(PersonInitials(People[i][2], People[i][1])) + '</span>';
+    Result := Result + '</span>';
+  end;
+end;
+
 function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Shows: TMinicardShows;
   const Dates: array of string; const Extra: array of string; PlainLinks, PlainSource: Boolean): string;
 const
@@ -3211,15 +3235,19 @@ begin
   // Requested By, its location, its last activity and the description's
   // badge, as Card Settings shows them on the minicard (board.pug).
   // Extra, from the board's cards query: requestedBy, description,
-  // dateLastActivity, locationName, the locations.
-  if Length(Extra) = 5 then
+  // dateLastActivity, locationName, the locations and the picked requesters.
+  if Length(Extra) = 6 then
   begin
     SetLength(R, 1);
     SetLength(R[0], 5);
     for i := 0 to 4 do R[0][i] := Extra[i];
-    if Shows.RequestedBy and (R[0][0] <> '') then
-      Result := Result + '<div class="minicard-requested-by" title="' + HtmlAttr(Words.Text('requested-by', 'Requested By')) +
-        '"><i class="fa fa-shopping-cart"></i><span>' + E(R[0][0]) + '</span></div>';
+    if Shows.RequestedBy then
+    begin
+      Line := MinicardRequesters(Db, BoardId, Extra[5]);
+      if (Line <> '') or (R[0][0] <> '') then
+        Result := Result + '<div class="minicard-requested-by" title="' + HtmlAttr(Words.Text('requested-by', 'Requested By')) +
+          '"><i class="fa fa-shopping-cart"></i>' + Line + IfThen(R[0][0] <> '', '<span>' + E(R[0][0]) + '</span>', '') + '</div>';
+    end;
     Piece('requestedBy');
     if Shows.Location then
     begin
@@ -3616,7 +3644,9 @@ begin
         'COALESCE(c.requestedBy,''''),COALESCE(c.description,''''),COALESCE(c.dateLastActivity,''''),' +
         'COALESCE(NULLIF(c.locationName,''''),c.locationAddress,''''),' +
         'CASE WHEN json_valid(c.extra_json) AND json_type(c.extra_json,''$.locations'')=''array'' THEN ' +
-        'json_extract(c.extra_json,''$.locations'') ELSE ''[]'' END FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+        'json_extract(c.extra_json,''$.locations'') ELSE ''[]'' END,' +
+        'CASE WHEN json_valid(c.extra_json) THEN CASE WHEN json_type(c.extra_json,''$.requesters'')=''array'' THEN ' +
+        'json_extract(c.extra_json,''$.requesters'') ELSE ''[]'' END ELSE ''[]'' END FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
@@ -3637,7 +3667,7 @@ begin
           '<span class="minicard-title-text">' +
           MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]],
-          [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14]], PlainLinks, PlainSource) + '</div></div>';
+          [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14], Cards[k][15]], PlainLinks, PlainSource) + '</div></div>';
       Canvas := Canvas + '</div>';
       if Writable then
         Canvas := Canvas + '<template class="js-card-composer-template">' +

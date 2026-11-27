@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 minicards
 
+- Show picked requesters alongside the free-text requester on a minicard,
+  in their saved order. Resolve active board members only and use initials
+  when there is no local avatar.
 - Show the Markdown description preview with an optional heading when the
   board enables description text. Otherwise the description badge follows
   its own setting. Locations use their name or address, with a fallback to

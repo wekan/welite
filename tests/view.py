@@ -512,6 +512,20 @@ def http_checks(server, tmp, backend):
         page = shown()
         assert b'minicard-green' not in page and b'card-details-green' in opened() and b'minicard-requested-by' not in page
         assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsCardColorOnMinicard': True, 'allowsRequestedByOnMinicard': True}}])[0] == 200
+        outsider_id = None
+        for path in data.glob('**/files/db/wekan.db'):
+            with sqlite3.connect(path) as con:
+                if con.execute("SELECT 1 FROM sqlite_master WHERE name='cards'").fetchone():
+                    outsider_id, = con.execute('SELECT id FROM users WHERE username=?', ('stranger',)).fetchone()
+        assert outsider_id
+        card_set(requestedBy='', extra_json=json.dumps({'requesters': [login['id'], outsider_id, login['id']]}))
+        page = shown()
+        assert page.count(b'class="member minicard-requester"') == 1
+        assert b'class="member minicard-requester" title="owner"' in page
+        assert b'class="member minicard-requester" title="stranger"' not in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsRequestedByOnMinicard': False}}])[0] == 200
+        assert b'class="member minicard-requester"' not in shown()
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsRequestedByOnMinicard': True}}])[0] == 200
         card_set(description='**Minicard preview**', locationAddress='Fallback & address', dateLastActivity='2026-03-21T12:00:00.000Z')
         page = shown()
         assert b'badge-state-image-only" title="**Minicard preview**"' in page
