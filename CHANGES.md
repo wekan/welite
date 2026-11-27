@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Checklist items can be dragged between checklists on the same card.
+  A shared Chromium test covers dropping into an empty checklist.
+
 - Board and member History have a group filter, including archive and
   removal entries. The filter stays selected when paging or restoring.
 
