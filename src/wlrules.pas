@@ -2120,7 +2120,7 @@ end;
 // (newContent back): only while the card still has the value the other side
 // left - a newer edit is never overwritten (history-conflict).
 function HistoryDateLiteral(Content: TJSONData; const Field: string; out Literal: string; AllowAbsent: Boolean = False): Boolean;
-var V: TJSONData;
+var V: TJSONData; Millis: Int64;
 begin
   Result := False;
   if AllowAbsent and ((Content = nil) or (Content is TJSONNull)) then
@@ -2144,6 +2144,8 @@ begin
     Literal := CanonicalHistoryValue(V);
     Exit(True);
   end;
+  if TJSONObject(Content).Get('isDate', False) and (V.JSONType <> jtNull) and
+    not HistoryDateMillis(V, Millis) then Exit;
   Result := CardDateSql(V, Literal);
 end;
 

@@ -91,7 +91,7 @@ implementation
 
 uses wlboard, wlthumb, Math,
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, wlchhist, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, wlchhist, wlcfjson, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
   wlcrypt;
 
 const
@@ -7860,18 +7860,16 @@ begin
 end;
 
 function HistoryDate(Value: TJSONData; const DateFormat: string): string;
-var At: TDateTime;
+var Millis: Int64; Date: TJSONData;
 begin
   Result := '';
   if Value = nil then Exit;
   if Value.JSONType = jtString then Exit(FormatShownDate(Value.AsString, DateFormat));
-  if Value.JSONType <> jtNumber then Exit;
+  if not HistoryDateMillis(Value, Millis) then Exit;
+  Date := JsonDate(Millis);
   try
-    At := UnixToDateTime(Value.AsInt64 div 1000, True) + (Value.AsInt64 mod 1000) / MSecsPerDay;
-    Result := FormatShownDate(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', At), DateFormat);
-  except
-    Result := '';
-  end;
+    Result := FormatShownDate(Date.AsString, DateFormat);
+  finally Date.Free; end;
 end;
 
 function HistoryRuleSummary(Row: TJSONObject; Words: TWLTranslator): string;
@@ -7970,7 +7968,11 @@ begin
   if Value <> nil then
   begin
     if Value.JSONType = jtNull then Exit('—');
-    if Values.Get('isDate', False) then Exit(HistoryDate(Value, DateFormat));
+    if Values.Get('isDate', False) then
+    begin
+      if Value.JSONType = jtNumber then Exit(HistoryDate(Value, DateFormat));
+      Exit('');
+    end;
     if Value.JSONType = jtBoolean then
       case Values.Get('field', '') of
         'dueComplete', 'isOvertime', 'isFinished', 'hideCheckedChecklistItems', 'hideAllChecklistItems', 'archived':

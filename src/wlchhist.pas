@@ -20,9 +20,22 @@ const HistorySpentTimeSql = 'CASE WHEN spentTime IS NOT NULL THEN printf(''%!.26
 
 function CardHistoryDateField(const Field: string): Boolean;
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
+function HistoryDateMillis(Value: TJSONData; out Millis: Int64): Boolean;
 
 implementation
-uses SysUtils,DateUtils,wlchhash,wlsjson,wlferr;
+uses SysUtils,Math,DateUtils,wlchhash,wlsjson,wlferr;
+
+function HistoryDateMillis(Value: TJSONData; out Millis: Int64): Boolean;
+const TimeClip = 8640000000000000;
+var Number: Double;
+begin
+  Result := False;
+  if (Value = nil) or (Value.JSONType <> jtNumber) then Exit;
+  Number := Value.AsFloat;
+  if IsNan(Number) or IsInfinite(Number) or (Abs(Number) > TimeClip) then Exit;
+  Millis := Trunc(Number);
+  Result := Number = Millis;
+end;
 
 function CardHistoryDateField(const Field: string): Boolean;
 begin
