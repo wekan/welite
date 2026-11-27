@@ -32,7 +32,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   accept nonnegative hours and support the same history operations.
   Their previous-value snapshots read SQLite REAL values at full precision.
   REST corrections and history replay preserve double precision in the
-  shared store.
+  shared store. The FerretDB integration suite checks exact REAL writes
+  through both the insert and update projections.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

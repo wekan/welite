@@ -95,8 +95,14 @@ with tempfile.TemporaryDirectory(prefix='wlroots-',dir=os.environ['TMPDIR']) as 
                 assert sql("UPDATE attachments SET cardId='next' WHERE id='file';",'exec')=='ok'
                 attachment=client.find('attachments','file')[0]
                 assert attachment['meta']['cardId']=='next' and attachment['meta']['other']=='keep' and attachment['versions']['original']['path']=='keep'
-                assert sql("INSERT INTO boards(id,title,slug,createdAt) VALUES('new','New','new','1969-12-31T23:59:59.999Z');",'exec')=='ok'
-                assert client.find('boards','new')[0]['createdAt']==DateMs(-1)
+                hours=1.2345678901234567
+                assert sql(f"INSERT INTO boards(id,title,slug,createdAt,spentTime) VALUES('new','New','new','1969-12-31T23:59:59.999Z',{hours!r});",'exec')=='ok'
+                inserted=client.find('boards','new')[0]
+                assert inserted['createdAt']==DateMs(-1)
+                assert inserted['spentTime']==hours,inserted['spentTime']
+                hours=9.876543210987654
+                assert sql(f"UPDATE boards SET spentTime={hours!r} WHERE id='new';",'exec')=='ok'
+                assert client.find('boards','new')[0]['spentTime']==hours
                 stamp='2026-11-16T12:34:56.789Z'
                 inserts=[
                     ('swimlanes','lane',dict(boardId='board',title='Lane',createdAt=stamp)),
