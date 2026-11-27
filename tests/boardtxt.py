@@ -71,7 +71,7 @@ def run(request,database,administrator,member,base):
         con.execute("UPDATE swimlanes SET createdAt=?, modifiedAt=? WHERE id='txtlane'", container_dates)
         con.execute("UPDATE custom_fields SET sort=4.25, createdAt=?, modifiedAt=? WHERE id='port-field'",
                     container_dates)
-    for fields in ('dependencies,locations,stickers,people,labels,custom-fields', 'description'):
+    for fields in ('dependencies,locations,stickers,people,labels,custom-fields,sort', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
         assert status == 200, body
@@ -83,6 +83,8 @@ def run(request,database,administrator,member,base):
             zipped = json.loads(bundle.read('wekan.json'))
         assert zipped['customFields'] == payload['customFields']
         card = next(row for row in payload['cards'] if row['_id'] == 'txtcard')
+        zipped_card = next(row for row in zipped['cards'] if row['_id'] == 'txtcard')
+        assert ('sort' in card) == ('sort' in zipped_card) == ('sort' in fields.split(','))
         assert 'extra_json' not in card and 'internalOnly' not in card
         if fields.startswith('dependencies'):
             assert {row['_id']: row['name'] for row in payload['labels']} == {'port': 'Port', 'unused': 'Unused'}
@@ -130,6 +132,8 @@ def run(request,database,administrator,member,base):
             "WHERE c.boardId=? AND f.name='Port field' AND d.id='pier'", (imported_id,)
         ).fetchone()
         assert json.loads(value) == ['pier'] and option == 'Pier'
+        assert con.execute("SELECT count(DISTINCT sort) FROM cards WHERE boardId=?",
+                           (imported_id,)).fetchone() == (3,)
         assert con.execute(
             "SELECT title,archived,dueComplete FROM cards WHERE boardId=? AND parentId IS NOT NULL ORDER BY title",
             (imported_id,)

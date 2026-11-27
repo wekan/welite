@@ -39,7 +39,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   settings also round-trip, including explicitly expanded lists and lists
   that use the default state. Imports retain valid creation and modification
   timestamps on lists, swimlanes and newly imported boards. Custom field
-  definitions keep their sort values and valid timestamps on import.
+  definitions keep their sort values and valid timestamps on import. The
+  Sort field group controls card sort values in JSON and ZIP. Imports use
+  file order for cards without a sort value.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

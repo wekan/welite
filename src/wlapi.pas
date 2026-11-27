@@ -3203,6 +3203,7 @@ begin
     RemoveCardFields('stickers', ['stickers']);
     RemoveCardFields('locations', ['locations','locationName','locationAddress','locationLatitude','locationLongitude']);
     RemoveCardFields('dependencies', ['cardDependencies','dependencies']);
+    RemoveCardFields('sort', ['sort']);
     if Selected.IndexOf('board-header') < 0 then Board.Delete('description');
     if Selected.IndexOf('scrum') < 0 then
     begin
@@ -4731,7 +4732,7 @@ begin
         if Name=CardId then Name:='';
         if TargetBoard = '' then NumberSql := IntToStr(CardNumbers[J])
         else NumberSql := '(SELECT COALESCE(MAX(cardNumber),0)+1 FROM cards WHERE boardId='+Board+')';
-        SortSql := SortValue(Row);
+        SortSql := SortValue(Row,IntToStr(J));
         if TargetCard <> '' then SortSql := CardPosition+'+'+IntToStr(J+1);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
           'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived,color,dueComplete) VALUES('+
