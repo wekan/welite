@@ -17,7 +17,7 @@ implementation
 function RasterAttachment(const FileType:string):Boolean;
 begin
   Result:=(FileType='image/png') or (FileType='image/jpeg') or
-    (FileType='image/gif') or (FileType='image/webp');
+    (FileType='image/gif') or (FileType='image/webp') or (FileType='image/bmp');
 end;
 function StoreFilePath(const FilesDir,Kind,Id:string):string;
 var Digest:string;i:Integer;

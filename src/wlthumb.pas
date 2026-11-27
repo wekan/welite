@@ -8,7 +8,7 @@ function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: stri
 
 implementation
 
-uses Classes, SysUtils, Types, Math, FPImage, FPReadPNG, FPReadJPEG, FPWritePNG, Dynlibs, CTypes;
+uses Classes, SysUtils, Types, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPWritePNG, Dynlibs, CTypes;
 
 const
   MaxInputBytes = 32 * 1024 * 1024;
@@ -126,13 +126,35 @@ begin
   until Kind = 'IEND';
 end;
 
+// The common uncompressed, 24-bit Windows bitmap with a BITMAPINFOHEADER.
+function BMPSize(Stream: TStream): TPoint;
+var Header: array[0..53] of Byte; Width, Height: LongInt; Stride: Int64;
+  function LE32(Offset: Integer): Cardinal;
+  begin
+    Result := Cardinal(Header[Offset]) or (Cardinal(Header[Offset+1]) shl 8) or
+      (Cardinal(Header[Offset+2]) shl 16) or (Cardinal(Header[Offset+3]) shl 24);
+  end;
+begin
+  Result := Point(0, 0);
+  Stream.ReadBuffer(Header, SizeOf(Header));
+  if (Header[0] <> Ord('B')) or (Header[1] <> Ord('M')) or (LE32(10) <> SizeOf(Header)) or (LE32(14) <> 40) or
+    (LE32(26) <> $00180001) or (LE32(30) <> 0) then Exit;
+  Width := LongInt(LE32(18));
+  Height := LongInt(LE32(22));
+  if (Width <= 0) or (Height = 0) or (Height = Low(LongInt)) then Exit;
+  Height := Abs(Height);
+  if not ValidSize(Point(Width, Height)) then Exit;
+  Stride := (Int64(Width) * 3 + 3) and not Int64(3);
+  if Stride * Height <= Stream.Size - SizeOf(Header) then Result := Point(Width, Height);
+end;
+
 function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: string): Boolean;
 var Input: TFileStream; Output: TMemoryStream; Source, Preview: TFPMemoryImage;
   Reader: TFPCustomImageReader; Writer: TFPWriterPNG; Size: TPoint; W, H, X, Y, SX, SY, Offset: Integer;
   Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor; OutputType: string;
 begin
   Result := False;
-  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/webp') then Exit;
+  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/webp') and (MimeType <> 'image/bmp') then Exit;
   Input := nil;
   Output := nil;
   Source := nil;
@@ -154,6 +176,11 @@ begin
         begin
           Size := PNGSize(Input);
           Reader := TFPReaderPNG.Create;
+        end
+        else if MimeType = 'image/bmp' then
+        begin
+          Size := BMPSize(Input);
+          Reader := TFPReaderBMP.Create;
         end
         else
         begin

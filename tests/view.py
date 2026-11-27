@@ -968,6 +968,20 @@ def http_checks(server, tmp, backend):
             assert thumbnail.startswith(b'\x89PNG\r\n\x1a\n') and struct.unpack('>II', thumbnail[16:24]) == (512, 256)
         assert request('GET', thumb_url, cookie=stranger)[0] == 404
         assert request('POST', '%s/attachments/%s/delete' % (card_path, wide.decode()), {}, cookie=owner)[0] == 200
+        bmp = (struct.pack('<2sIHHI', b'BM', 78, 0, 0, 54) + struct.pack('<IiiHHIIiiII', 40, 3, 2, 1, 24, 0, 24, 0, 0, 0, 0)
+               + (b'\x99\x66\x33' * 3 + b'\x00' * 3) * 2)
+        status, _, page, _ = upload('small.bmp', 'image/bmp', bmp, owner)
+        assert status == 200
+        bmp_id, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - {att.encode()}
+        bmp_thumb = '/cdn/storage/attachments/%s/thumbnail' % bmp_id.decode()
+        assert ('src="%s"' % bmp_thumb).encode() in page
+        status, headers, thumbnail, _ = request('GET', bmp_thumb, cookie=owner)
+        assert status == 200
+        if webp:
+            assert headers['Content-Type'] == 'image/webp' and webp_size(thumbnail) == (3, 2)
+        else:
+            assert headers['Content-Type'] == 'image/png' and struct.unpack('>II', thumbnail[16:24]) == (3, 2)
+        assert request('POST', '%s/attachments/%s/delete' % (card_path, bmp_id.decode()), {}, cookie=owner)[0] == 200
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png?download=true' % att, cookie=owner)
         assert status == 200 and headers.get('Content-Disposition', '').startswith('attachment'), headers
         rename = '/b/%s/cards/%s/attachments/%s/rename' % (board_id, card_id, att)

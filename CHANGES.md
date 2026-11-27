@@ -21,6 +21,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 card attachments
 
+- Preview uncompressed 24-bit BMP attachments in the gallery and on
+  minicard covers. The decoder checks image dimensions and row lengths
+  before reading pixels.
 - On Linux with `libwebp.so.7`, decode WebP attachments and encode thumbnails
   in WebP. PNG and JPEG attachments still produce PNG previews on builds
   without the optional library.
