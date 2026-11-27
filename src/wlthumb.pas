@@ -329,10 +329,23 @@ begin
 end;
 {$ENDIF}
 
-function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
+function ThumbnailMediaType(const MimeType: string): string;
+var Separator: Integer;
 begin
-  Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
-    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) or IsTarga(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') or IsTIFF(MimeType) {$ENDIF};
+  Separator := Pos(';', MimeType);
+  if Separator > 0 then Result := Copy(MimeType, 1, Separator - 1)
+  else Result := MimeType;
+  Result := LowerCase(Trim(Result));
+end;
+
+function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
+var MediaType: string;
+begin
+  MediaType := ThumbnailMediaType(MimeType);
+  Result := (MediaType = 'image/png') or (MediaType = 'image/jpeg') or (MediaType = 'image/pjpeg') or
+    (MediaType = 'image/webp') or (MediaType = 'image/bmp') or (MediaType = 'image/x-ms-bmp') or
+    IsNetpbm(MediaType) or IsTarga(MediaType)
+    {$IFDEF LINUX} or (MediaType = 'image/gif') or IsTIFF(MediaType) {$ENDIF};
 end;
 
 function ReadBE32(Stream: TStream): Cardinal;
@@ -398,37 +411,38 @@ function RenderAttachmentThumbnail(Output: TStream; const Path, MimeType: string
   PreferWebP: Boolean; out Size: TPoint; out OutputType: string): Boolean;
 var Input: TFileStream; Source, Preview: TFPMemoryImage;
   Reader: TFPCustomImageReader; Writer: TFPWriterPNG; W, H, X, Y, SX, SY, Offset: Integer;
-  Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor;
+  Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor; MediaType: string;
 begin
   Result := False;
-  if not SupportsAttachmentThumbnail(MimeType) then Exit;
+  MediaType := ThumbnailMediaType(MimeType);
+  if not SupportsAttachmentThumbnail(MediaType) then Exit;
   Input := nil;
   Source := nil;
   Preview := nil;
   Reader := nil;
   Writer := nil;
   Codec := Default(TWebPCodec);
-  if PreferWebP or (MimeType = 'image/webp') then Codec := LoadWebP;
+  if PreferWebP or (MediaType = 'image/webp') then Codec := LoadWebP;
   try
     try
       Input := TFileStream.Create(Path, fmOpenRead or fmShareDenyWrite);
       if (Input.Size = 0) or (Input.Size > MaxInputBytes) then Exit;
       {$IFDEF LINUX}
-      if MimeType = 'image/gif' then
+      if MediaType = 'image/gif' then
       begin
         if not ReadGif(Path, Size, Source) then Exit;
       end
-      else if IsTIFF(MimeType) then
+      else if IsTIFF(MediaType) then
       begin
         if not ReadTIFF(Path, Size, Pixels) then Exit;
       end
       else
       {$ENDIF}
-      if MimeType = 'image/webp' then
+      if MediaType = 'image/webp' then
       begin
         if not ReadWebP(Codec, Input, Size, Pixels) then Exit;
       end
-      else if IsNetpbm(MimeType) then
+      else if IsNetpbm(MediaType) then
       begin
         Reader := TBoundedPNMReader.Create;
         Source := TBoundedPNMImage.Create(0, 0);
@@ -438,17 +452,17 @@ begin
       end
       else
       begin
-        if MimeType = 'image/png' then
+        if MediaType = 'image/png' then
         begin
           Size := PNGSize(Input);
           Reader := TFPReaderPNG.Create;
         end
-        else if (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') then
+        else if (MediaType = 'image/bmp') or (MediaType = 'image/x-ms-bmp') then
         begin
           Size := BMPSize(Input);
           Reader := TFPReaderBMP.Create;
         end
-        else if IsTarga(MimeType) then
+        else if IsTarga(MediaType) then
         begin
           Size := TargaSize(Input);
           Reader := TFPReaderTarga.Create;

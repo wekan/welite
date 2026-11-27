@@ -295,6 +295,7 @@ def run(request,database,administrator,member,base):
     try:
         for mime, contents, expected in (
             ('image/x-ms-bmp', bmp, 1),
+            ('Image/X-MS-BMP; name=preview.bmp', bmp, 1),
             ('image/tiff', tiff, tiff_preview),
             ('image/x-tiff', compressed_tiff, tiff_preview),
             ('image/tiff', tiff[:-1], 0),

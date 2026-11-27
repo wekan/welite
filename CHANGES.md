@@ -65,6 +65,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   libtiff provides per-allocation and cumulative memory limits. HTTP tests
   verify embedded uncompressed and Deflate-compressed TIFF previews,
   including the `image/x-tiff` MIME type. A truncated TIFF is skipped.
+  Preview format detection accepts mixed-case MIME types and parameters.
 
 - Export one card to Excel from Card Actions with selectable fields. The
   download route checks that the card belongs to the requested board and list.
