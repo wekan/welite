@@ -276,7 +276,7 @@ Next, after this goal:
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
   and remaining History restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
-  and checklist visibility and item completion.
+  checklist visibility and item completion, and list WIP limit summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:

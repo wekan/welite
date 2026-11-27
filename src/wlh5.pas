@@ -7865,6 +7865,16 @@ end;
 
 function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat: string): string;
 var Value, Document: TJSONData; NumberFormat: TFormatSettings;
+  procedure AppendWipFlag(const Field, Key, Fallback: string);
+  var Flag: TJSONData;
+  begin
+    Flag := TJSONObject(Value).Find(Field);
+    if (Flag = nil) or (Flag.JSONType <> jtBoolean) then Exit;
+    if Result <> '' then Result := Result + ' '#$C2#$B7' ';
+    Result := Result + Words.Text(Key, Fallback) + ': ';
+    if Flag.AsBoolean then Result := Result + Words.Text('yes', 'Yes')
+    else Result := Result + Words.Text('no', 'No');
+  end;
 begin
   Result := '';
   if Values = nil then Exit;
@@ -7886,6 +7896,19 @@ begin
       NumberFormat := DefaultFormatSettings;
       NumberFormat.DecimalSeparator := '.';
       Exit(FloatToStr(Value.AsFloat, NumberFormat));
+    end;
+    if (Values.Get('field', '') = 'wipLimit') and (Value is TJSONObject) then
+    begin
+      Document := TJSONObject(Value).Find('value');
+      if (Document <> nil) and (Document.JSONType = jtNumber) then
+      begin
+        NumberFormat := DefaultFormatSettings;
+        NumberFormat.DecimalSeparator := '.';
+        Result := FloatToStr(Document.AsFloat, NumberFormat);
+      end;
+      AppendWipFlag('enabled', 'enable-wip-limit', 'Enable WIP Limit');
+      AppendWipFlag('soft', 'soft-wip-limit', 'Soft WIP Limit');
+      Exit;
     end;
     if Value.JSONType = jtString then
     begin
@@ -8041,6 +8064,9 @@ begin
                   'dueAt': GroupLabel := Words.Text('card-due', 'Due');
                   'endAt': GroupLabel := Words.Text('card-end', 'End');
                 end;
+            'wipLimit':
+              if Row.Get('entityType', '') = 'list' then
+                GroupLabel := Words.Text('edit-wip-limit', 'Edit WIP Limit');
             'spentTime':
               if Row.Get('entityType', '') = 'card' then
                 GroupLabel := Words.Text('spent-time-hours', 'Spent time (hours)');

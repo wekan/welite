@@ -17,7 +17,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   date rows use the translated Received, Start, Due and End labels. Time
   rows identify hours and show overtime as a translated Yes or No.
   Checklist history displays the translated visibility settings and item
-  completion, with Yes or No values.
+  completion, with Yes or No values. List WIP history shows the limit
+  and whether it is enabled and soft.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
