@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Emoañete Tape",
   "board-view-time": "Ára",
   "time-adjustments": "aravo — Δ — Puruhára réra",
-  "time-adjustment-note": "Tembiasakue: Δ aravo; Puruhára réra ≠ Omba'apótava kuéra."
+  "time-adjustment-note": "Tembiasakue: Δ aravo; Puruhára réra ≠ Omba'apótava kuéra.",
+  "auto-archive-days": "Emondo kuatia'i ñongatuhápe ohasa rire ko'ã ára tembiapo'ỹre",
+  "auto-archive-off": "Ogue",
+  "auto-archive-hint": "Ojehecha aravo jave. Kuatia'i oñemoambue jave ojeipapáma omba'apóva ramo; ta'ãngarã araka'eve ndojeguerahái ñongatuhápe. Eheja nandi embogue hag̃ua."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Sebentisa Umtsandvo",
   "board-view-time": "Sikhatsi",
   "time-adjustments": "ema-awa — Δ — Ligama lemsebentisi",
-  "time-adjustment-note": "Umlandvo: Δ ema-awa; Ligama lemsebentisi ≠ Labanikwe umsebenti."
+  "time-adjustment-note": "Umlandvo: Δ ema-awa; Ligama lemsebentisi ≠ Labanikwe umsebenti.",
+  "auto-archive-days": "Yisa emakhadi esigcinweni ngemuva kwalelinani lemalanga angasebenti",
+  "auto-archive-off": "Kucishiwe",
+  "auto-archive-hint": "Kuhlolwa njalo ngelihora. Likhadi libalwa njengalelisebentako njalo nalishintjwa; emathemplethi awayiswa esigcinweni nanini. Shiya kunganalutfo kuze ucishe loku."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Applitgar a la swimlane",
   "board-view-time": "Temp",
   "time-adjustments": "Adattaziuns dal temp tenor autur",
-  "time-adjustment-note": "Midadas da las uras registradas, gruppadas tenor la persuna che modifitgescha il total. Quai n'èn betg sesidas da lavur individualas. Valurs negativas èn correcturas. Temp pli baud betg registrà na po betg vegnir attribuì."
+  "time-adjustment-note": "Midadas da las uras registradas, gruppadas tenor la persuna che modifitgescha il total. Quai n'èn betg sesidas da lavur individualas. Valurs negativas èn correcturas. Temp pli baud betg registrà na po betg vegnir attribuì.",
+  "auto-archive-days": "Archivar cartas suenter quest dumber da dis senza activitad",
+  "auto-archive-off": "Deactivà",
+  "auto-archive-hint": "Vegn controllà mintga ura. Ina carta vala sco activa mintga giada ch’ella vegn midada; models na vegnan mai archivads. Laschar vid per deactivar."
 }

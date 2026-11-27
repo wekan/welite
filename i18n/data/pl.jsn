@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Zastosuj Ścieżka",
   "board-view-time": "Czas",
   "time-adjustments": "godzin — Δ — Nazwa użytkownika",
-  "time-adjustment-note": "Zmiany zarejestrowanych godzin, pogrupowane według osoby edytującej łączny czas. Nie są to pojedyncze sesje pracy. Wartości ujemne są korektami. Wcześniejszego niezarejestrowanego czasu nie można przypisać żadnej osobie."
+  "time-adjustment-note": "Zmiany zarejestrowanych godzin, pogrupowane według osoby edytującej łączny czas. Nie są to pojedyncze sesje pracy. Wartości ujemne są korektami. Wcześniejszego niezarejestrowanego czasu nie można przypisać żadnej osobie.",
+  "auto-archive-days": "Archiwizuj karty po tylu dniach bez aktywności",
+  "auto-archive-off": "Wyłączone",
+  "auto-archive-hint": "Sprawdzane co godzinę. Każda zmiana karty jest uznawana za aktywność; szablony nigdy nie są archiwizowane. Pozostaw puste, aby wyłączyć."
 }

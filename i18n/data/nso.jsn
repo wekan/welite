@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Diriša Tsela",
   "board-view-time": "Nako",
   "time-adjustments": "diiri — Δ — Leina la mošomiši",
-  "time-adjustment-note": "Histori: Δ diiri; Leina la mošomiši ≠ Bao ba filwego mošomo."
+  "time-adjustment-note": "Histori: Δ diiri; Leina la mošomiši ≠ Bao ba filwego mošomo.",
+  "auto-archive-days": "Iša dikarata polokelong ka morago ga palo ye ya matšatši di sa šome",
+  "auto-archive-off": "E timilwe",
+  "auto-archive-hint": "E lekolwa iri ye nngwe le ye nngwe. Karata e tšewa e šoma nako le nako ge e fetolwa; dithempleite ga di išwe polokelong le ka mohla. Tlogela lefelo le se na selo go tima se."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplică la culoar",
   "board-view-time": "Timp",
   "time-adjustments": "Ajustări de timp după autor",
-  "time-adjustment-note": "Modificări ale orelor înregistrate, grupate după persoana care editează totalul. Acestea nu sunt sesiuni de lucru individuale. Valorile negative sunt corecții. Timpul anterior neînregistrat nu poate fi atribuit unei persoane."
+  "time-adjustment-note": "Modificări ale orelor înregistrate, grupate după persoana care editează totalul. Acestea nu sunt sesiuni de lucru individuale. Valorile negative sunt corecții. Timpul anterior neînregistrat nu poate fi atribuit unei persoane.",
+  "auto-archive-days": "Arhivează cardurile după acest număr de zile fără activitate",
+  "auto-archive-off": "Dezactivat",
+  "auto-archive-hint": "Se verifică în fiecare oră. Orice modificare a unui card este considerată activitate; șabloanele nu sunt niciodată arhivate. Lăsați necompletat pentru dezactivare."
 }

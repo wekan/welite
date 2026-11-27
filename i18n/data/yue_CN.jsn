@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "申請 泳道",
   "board-view-time": "時間",
   "time-adjustments": "小時 — Δ — 使用者名稱",
-  "time-adjustment-note": "歷史: Δ 小時; 使用者名稱 ≠ 受讓人."
+  "time-adjustment-note": "歷史: Δ 小時; 使用者名稱 ≠ 受讓人.",
+  "auto-archive-days": "卡片冇活動達到以下日數就移至存檔",
+  "auto-archive-off": "關閉",
+  "auto-archive-hint": "每小時檢查一次。卡片有任何改動都算有活動；範本永遠唔會移至存檔。留空就會關閉。"
 }

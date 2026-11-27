@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Applica Corsia",
   "board-view-time": "Ora",
   "time-adjustments": "ore — Δ — Nome utente",
-  "time-adjustment-note": "Modifiche alle ore registrate, raggruppate per persona che modifica il totale. Non si tratta di singole sessioni di lavoro. I valori negativi sono correzioni. Il tempo precedente non registrato non può essere attribuito a nessuno."
+  "time-adjustment-note": "Modifiche alle ore registrate, raggruppate per persona che modifica il totale. Non si tratta di singole sessioni di lavoro. I valori negativi sono correzioni. Il tempo precedente non registrato non può essere attribuito a nessuno.",
+  "auto-archive-days": "Archivia le schede dopo questo numero di giorni senza attività",
+  "auto-archive-off": "Disattivato",
+  "auto-archive-hint": "Controllo ogni ora. Ogni modifica a una scheda conta come attività; i modelli non vengono mai archiviati. Lascia vuoto per disattivare."
 }

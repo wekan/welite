@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Taikyti Plaukimo juosta",
   "board-view-time": "Laikas",
   "time-adjustments": "valandų — Δ — Vartotojo vardas",
-  "time-adjustment-note": "Užregistruotų valandų pakeitimai, sugrupuoti pagal bendrą sumą redaguojantį asmenį. Tai nėra atskiri darbo seansai. Neigiamos reikšmės yra pataisymai. Ankstesnio neužregistruoto laiko negalima priskirti jokiam asmeniui."
+  "time-adjustment-note": "Užregistruotų valandų pakeitimai, sugrupuoti pagal bendrą sumą redaguojantį asmenį. Tai nėra atskiri darbo seansai. Neigiamos reikšmės yra pataisymai. Ankstesnio neužregistruoto laiko negalima priskirti jokiam asmeniui.",
+  "auto-archive-days": "Archyvuoti korteles po tiek dienų be veiklos",
+  "auto-archive-off": "Išjungta",
+  "auto-archive-hint": "Tikrinama kas valandą. Kortelė laikoma aktyvia kaskart ją pakeitus; šablonai niekada nearchyvuojami. Palikite tuščią, kad išjungtumėte."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Zã Mɔ",
   "board-view-time": "Ɣeyiɣi",
   "time-adjustments": "gaƒoƒowo — Δ — Zãla ŋkɔ",
-  "time-adjustment-note": "Ŋutinya: Δ gaƒoƒowo; Zãla ŋkɔ ≠ Ame siwo wotsɔ dɔ na."
+  "time-adjustment-note": "Ŋutinya: Δ gaƒoƒowo; Zãla ŋkɔ ≠ Ame siwo wotsɔ dɔ na.",
+  "auto-archive-days": "Ʋu agbalẽviwo yi dzraɖoƒe ne ŋkeke siawo va yi dɔwɔwɔ aɖeke manɔmee",
+  "auto-archive-off": "Tsi",
+  "auto-archive-hint": "Wokpɔnɛ gaƒoƒo ɖe sia ɖe. Wobua agbalẽvi be ele dɔ wɔm ɣesiaɣi si wotrɔe; womeʋua kpɔɖeŋuwo yi dzraɖoƒe gbeɖe o. Gae ɖi gbɔlo be nàtsii."
 }

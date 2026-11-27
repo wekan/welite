@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "ተግብር መስመር",
   "board-view-time": "ግዜ",
   "time-adjustments": "ሰዓታት — Δ — ስም ተጠቃሚ",
-  "time-adjustment-note": "ታሪኽ: Δ ሰዓታት; ስም ተጠቃሚ ≠ ሓለፍቲ."
+  "time-adjustment-note": "ታሪኽ: Δ ሰዓታት; ስም ተጠቃሚ ≠ ሓለፍቲ.",
+  "auto-archive-days": "ንኽንድዚ መዓልታት ብዘይ ንጥፈት ዝጸንሑ ካርዳት ናብ መዝገብ ኣግዕዝ",
+  "auto-archive-off": "ጠፊኡ",
+  "auto-archive-hint": "ኣብ ነፍሲ ወከፍ ሰዓት ይምርመር። ካርድ ኣብ ዝተቐየረሉ እዋን ንጡፍ ተባሂሉ ይቝጸር፤ ሞዴላት ፈጺሞም ናብ መዝገብ ኣይግዕዙን። ንምጥፋእ ጥራይ ግደፎ።"
 }

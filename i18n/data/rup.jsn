@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicã la cali",
   "board-view-time": "Chiro",
   "time-adjustments": "Alãxiri di chiro dupã autor",
-  "time-adjustment-note": "Alãxiri la oarili ãnsimnati, adunati dupã omlu tsi alãxeashti totalu. Aesti nu suntu sesiuni di lucru singuri. Valorli negativi suntu ndreptãri. Chirolu di ma nãinti tsi nu fu ãnsimnat nu poati s-hibã dat a cuiva."
+  "time-adjustment-note": "Alãxiri la oarili ãnsimnati, adunati dupã omlu tsi alãxeashti totalu. Aesti nu suntu sesiuni di lucru singuri. Valorli negativi suntu ndreptãri. Chirolu di ma nãinti tsi nu fu ãnsimnat nu poati s-hibã dat a cuiva.",
+  "auto-archive-days": "Mutã cartili tu arhivã dupã atãnti dzãli fãrã activitati",
+  "auto-archive-off": "Dizactivat",
+  "auto-archive-hint": "S-verificã cafi orã. Carta s-numirã activã cafi oarã cãndu s-alãxeashti; modelili nu s-mutã vãrnãoarã tu arhivã. Lasã cãmpul gol ca s-dizactiveadzã."
 }

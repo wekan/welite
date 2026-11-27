@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "应用 泳道",
   "board-view-time": "时间",
   "time-adjustments": "小时 — Δ — 用户名",
-  "time-adjustment-note": "历史记录: Δ 小时; 用户名 ≠ 指派人."
+  "time-adjustment-note": "历史记录: Δ 小时; 用户名 ≠ 指派人.",
+  "auto-archive-days": "卡片连续此天数没有活动后归档",
+  "auto-archive-off": "关闭",
+  "auto-archive-hint": "每小时检查一次。卡片的任何更改都算作活动；模板永远不会被归档。留空即可关闭。"
 }

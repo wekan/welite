@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Applica Corsie",
   "board-view-time": "Timp",
   "time-adjustments": "oris — Δ — Non utent",
-  "time-adjustment-note": "Cronologjie: Δ oris; Non utent ≠ Assegnâts."
+  "time-adjustment-note": "Cronologjie: Δ oris; Non utent ≠ Assegnâts.",
+  "auto-archive-days": "Archive lis cjartis dopo chest numar di dîs cence ativitât",
+  "auto-archive-off": "Disativât",
+  "auto-archive-hint": "Controlât ogni ore. Une cjarte e je considerade ative ogni volte che e ven modificade; i modei no vegnin mai archiviâts. Lasse vueit par disativâ."
 }

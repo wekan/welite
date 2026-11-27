@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Cur rish Cassan",
   "board-view-time": "Traa",
   "time-adjustments": "ooraghyn — Δ — Ennym ymmydeyr",
-  "time-adjustment-note": "Shennaghys: Δ ooraghyn; Ennym ymmydeyr ≠ Currit daue."
+  "time-adjustment-note": "Shennaghys: Δ ooraghyn; Ennym ymmydeyr ≠ Currit daue.",
+  "auto-archive-days": "Cur kaartyn 'sy tashtey lurg yn earroo shoh dy laghyn gyn obbraghey",
+  "auto-archive-off": "Dooit",
+  "auto-archive-hint": "Scrutit dagh oor. Ta kaart coontit myr bio tra t'eh caghlaait; cha bee sampleyryn currit 'sy tashtey dy bragh. Faag follym dy chur eh ass."
 }

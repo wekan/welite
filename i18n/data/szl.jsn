@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Zastosuj Ślak",
   "board-view-time": "Czas",
   "time-adjustments": "godzin — Δ — Miano używŏcza",
-  "time-adjustment-note": "Historia: Δ godzin; Miano używŏcza ≠ Ôdpowiedzialni."
+  "time-adjustment-note": "Historia: Δ godzin; Miano używŏcza ≠ Ôdpowiedzialni.",
+  "auto-archive-days": "Archiwizuj karty po tela dniach bez aktywności",
+  "auto-archive-off": "Wyłōnczōne",
+  "auto-archive-hint": "Sprawdzane co godzina. Karta liczy sie jako aktywnŏ przi kożdyj zmianie; szablōny nigdy niy sōm archiwizowane. Ôstŏw prōżne pole, coby to wyłōnczyć."
 }

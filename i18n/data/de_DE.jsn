@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Übernehmen Arbeitsbahn",
   "board-view-time": "Zeit",
   "time-adjustments": "Stunden — Δ — Benutzername",
-  "time-adjustment-note": "Änderungen an erfassten Stunden, gruppiert nach der Person, die die Gesamtsumme bearbeitet. Dies sind keine einzelnen Arbeitssitzungen. Negative Werte sind Korrekturen. Zuvor nicht erfasste Zeit kann keiner Person zugeordnet werden."
+  "time-adjustment-note": "Änderungen an erfassten Stunden, gruppiert nach der Person, die die Gesamtsumme bearbeitet. Dies sind keine einzelnen Arbeitssitzungen. Negative Werte sind Korrekturen. Zuvor nicht erfasste Zeit kann keiner Person zugeordnet werden.",
+  "auto-archive-days": "Karten nach so vielen Tagen ohne Aktivität archivieren",
+  "auto-archive-off": "Aus",
+  "auto-archive-hint": "Wird stündlich geprüft. Jede Änderung einer Karte zählt als Aktivität; Vorlagen werden nie archiviert. Zum Ausschalten leer lassen."
 }

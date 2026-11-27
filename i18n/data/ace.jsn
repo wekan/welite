@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Ngui keu swimlane",
   "board-view-time": "Watèe",
   "time-adjustments": "Peuseusuai watèe lé ureueng tuléh",
-  "time-adjustment-note": "Ubah jeuem nyang ka geucatat, geukumpoi meunurôt ureueng nyang ubah jumeulah. Nyoe kon sesi buet sidroe-sidroe. Nilai negatif nakeuh peubeutôi. Watèe awai nyang hana geucatat hana jeuet geupeuhubong ngön soe pih."
+  "time-adjustment-note": "Ubah jeuem nyang ka geucatat, geukumpoi meunurôt ureueng nyang ubah jumeulah. Nyoe kon sesi buet sidroe-sidroe. Nilai negatif nakeuh peubeutôi. Watèe awai nyang hana geucatat hana jeuet geupeuhubong ngön soe pih.",
+  "auto-archive-days": "Keubah kad bak arsip lheueh uroe saboh bilangan nyoe hana keugiatan",
+  "auto-archive-off": "Matê",
+  "auto-archive-hint": "Dipeureksa tiep jeum. Kartu dianggab na keugiatan meunyo diubah; klise hana tom dipeusimpan bak arsip. Peubiyeu soh keu peumatê."
 }

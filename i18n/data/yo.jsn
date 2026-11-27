@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Waye Ọ̀nà ìwẹ̀",
   "board-view-time": "Akoko",
   "time-adjustments": "wakati — Δ — Orukọ olumulo",
-  "time-adjustment-note": "Itan: Δ wakati; Orukọ olumulo ≠ Awọn ayanfunni."
+  "time-adjustment-note": "Itan: Δ wakati; Orukọ olumulo ≠ Awọn ayanfunni.",
+  "auto-archive-days": "Fi àwọn káàdì sí ibi ìpamọ́ lẹ́yìn iye ọjọ́ yìí láìsí ìgbésẹ̀ kankan",
+  "auto-archive-off": "Pípa",
+  "auto-archive-hint": "A máa ń ṣàyẹ̀wò ní gbogbo wákàtí. Káàdì kan ní ìgbésẹ̀ nígbàkigbà tí a bá yí i padà; a kì í fi àwọn àwòṣe sí ibi ìpamọ́ láé. Fi sílẹ̀ ní òfo láti pa á."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Dirisa Tsela",
   "board-view-time": "Nako",
   "time-adjustments": "diura — Δ — Leina la modirisi",
-  "time-adjustment-note": "Hisetori: Δ diura; Leina la modirisi ≠ Ba ba neetsweng tiro."
+  "time-adjustment-note": "Hisetori: Δ diura; Leina la modirisi ≠ Ba ba neetsweng tiro.",
+  "auto-archive-days": "Isa dikarata kwa polokelong morago ga palo eno ya malatsi di sa dire",
+  "auto-archive-off": "E timilwe",
+  "auto-archive-hint": "E tlhatlhobiwa ura nngwe le nngwe. Karata e tsewa e dira nako le nako fa e fetolwa; dithempleite ga di isiwe kwa polokelong le ka motlha. Tlogela lefelo le lolea go tima seno."
 }

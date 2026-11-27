@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Müraciət edin Üzgüçülük zolağı",
   "board-view-time": "Vaxt",
   "time-adjustments": "saat — Δ — İstifadəçi adı",
-  "time-adjustment-note": "Qeydə alınmış saatlardakı dəyişikliklər ümumi məbləği redaktə edən şəxsə görə qruplaşdırılır. Bunlar ayrı-ayrı iş sessiyaları deyil. Mənfi dəyərlər düzəlişlərdir. Əvvəllər qeydə alınmamış vaxtı hər hansı şəxsə aid etmək mümkün deyil."
+  "time-adjustment-note": "Qeydə alınmış saatlardakı dəyişikliklər ümumi məbləği redaktə edən şəxsə görə qruplaşdırılır. Bunlar ayrı-ayrı iş sessiyaları deyil. Mənfi dəyərlər düzəlişlərdir. Əvvəllər qeydə alınmamış vaxtı hər hansı şəxsə aid etmək mümkün deyil.",
+  "auto-archive-days": "Bu qədər gün fəaliyyətsiz qalan kartları arxivləşdir",
+  "auto-archive-off": "Söndürülüb",
+  "auto-archive-hint": "Hər saat yoxlanılır. Kart hər dəfə dəyişdirildikdə aktiv sayılır; şablonlar heç vaxt arxivləşdirilmir. Söndürmək üçün boş saxlayın."
 }

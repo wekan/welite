@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Ñanman churay",
   "board-view-time": "Pacha",
   "time-adjustments": "Qillqaqman hina pacha allichaykuna",
-  "time-adjustment-note": "Qillqasqa urakunapi tikraykuna, llapanta allichaq runaman huñusqa. Kaykunaqa manam sapanka llamk'ay tinkuykunachu. Mana kaq chaninkunaqa allichaykunam. Ñawpaq mana qillqasqa pachataqa manam pimanpas churayta atikunchu."
+  "time-adjustment-note": "Qillqasqa urakunapi tikraykuna, llapanta allichaq runaman huñusqa. Kaykunaqa manam sapanka llamk'ay tinkuykunachu. Mana kaq chaninkunaqa allichaykunam. Ñawpaq mana qillqasqa pachataqa manam pimanpas churayta atikunchu.",
+  "auto-archive-days": "Kay yupay p'unchawkuna mana kuyuriptin kartakunata waqaychanaman apay",
+  "auto-archive-off": "Wañuchisqa",
+  "auto-archive-hint": "Sapa uram qhawakun. Kartata hukmanyachaptinku, kuyurichisqa hina yupakun; plantillakunaqa manam hayk'aqpas waqaychanaman apakunchu. Wañuchinaykipaq ch'usaqta saqiy."
 }

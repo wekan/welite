@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Sebenzisa Umzila",
   "board-view-time": "Isikhathi",
   "time-adjustments": "amahora — Δ — Ibizo lomsebenzisi",
-  "time-adjustment-note": "Umlando: Δ amahora; Ibizo lomsebenzisi ≠ Abanikwe umsebenzi."
+  "time-adjustment-note": "Umlando: Δ amahora; Ibizo lomsebenzisi ≠ Abanikwe umsebenzi.",
+  "auto-archive-days": "Yisa amakhadi esiphaleni ngemva kwalenani lezinsuku engasebenzi",
+  "auto-archive-off": "Kuvaliwe",
+  "auto-archive-hint": "Kuhlolwa ihola ngalinye. Ikhadi lithathwa njengelisebenzayo njalo lapho liguqulwa; amathemplethi kawayiswa esiphaleni loba nini. Tshiya kungelalutho ukuze uvale lokhu."
 }

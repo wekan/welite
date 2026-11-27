@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aymar aruna: Apply Thakhi",
   "board-view-time": "Pacha",
   "time-adjustments": "horanaka — Δ — Apnaqirin sutipa",
-  "time-adjustment-note": "Nayra sarawi: Δ horanaka; Apnaqirin sutipa ≠ Lurañataki churatanaka."
+  "time-adjustment-note": "Nayra sarawi: Δ horanaka; Apnaqirin sutipa ≠ Lurañataki churatanaka.",
+  "auto-archive-days": "Aka qhawqha urunaka jan unxtkaspa kartanaka imañaru apaña",
+  "auto-archive-off": "Jiwata",
+  "auto-archive-hint": "Sapa urasana uñakipata. Karta mayjt'ayata ukhaxa lurawini sasina jakthapitawa; uñtawinakaxa janipuniw imañaru apatakiti. Jiwayañatakixa ch'usaq jaytama."
 }

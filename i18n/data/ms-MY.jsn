@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Guna Aliran Renang",
   "board-view-time": "Masa",
   "time-adjustments": "ja — Δ — Nama Pengguna",
-  "time-adjustment-note": "Perubahan pada jam yang direkodkan, dikumpulkan mengikut orang yang menyunting jumlah keseluruhan. Ini bukan sesi kerja individu. Nilai negatif ialah pembetulan. Masa terdahulu yang tidak direkodkan tidak dapat dikaitkan dengan sesiapa."
+  "time-adjustment-note": "Perubahan pada jam yang direkodkan, dikumpulkan mengikut orang yang menyunting jumlah keseluruhan. Ini bukan sesi kerja individu. Nilai negatif ialah pembetulan. Masa terdahulu yang tidak direkodkan tidak dapat dikaitkan dengan sesiapa.",
+  "auto-archive-days": "Arkibkan kad selepas bilangan hari tanpa aktiviti ini",
+  "auto-archive-off": "Dimatikan",
+  "auto-archive-hint": "Disemak setiap jam. Kad dianggap aktif setiap kali diubah; templat tidak pernah diarkibkan. Biarkan kosong untuk mematikannya."
 }

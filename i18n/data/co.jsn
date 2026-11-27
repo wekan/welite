@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Appiecà à a corsia",
   "board-view-time": "Tempu",
   "time-adjustments": "Aghjustamenti di tempu per autore",
-  "time-adjustment-note": "Mudifiche à l'ore arregistrate, raggruppate secondu a persona chì mudifica u tutale. Ùn sò micca sessioni di travagliu individuale. I valori negativi sò currezzioni. U tempu precedente micca arregistratu ùn pò esse attribuitu à nimu."
+  "time-adjustment-note": "Mudifiche à l'ore arregistrate, raggruppate secondu a persona chì mudifica u tutale. Ùn sò micca sessioni di travagliu individuale. I valori negativi sò currezzioni. U tempu precedente micca arregistratu ùn pò esse attribuitu à nimu.",
+  "auto-archive-days": "Archivià e carte dopu à stu numeru di ghjorni senza attività",
+  "auto-archive-off": "Disattivatu",
+  "auto-archive-hint": "Verificatu ogni ora. Una carta hè cunsiderata attiva ogni volta ch'ella hè mudificata; i mudelli ùn sò mai archiviati. Lascià viotu per disattivà."
 }

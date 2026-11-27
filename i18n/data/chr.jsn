@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "ᎲᏗ ᏅᏃᎯ",
   "board-view-time": "ᎠᏟᏆᎾᎢ",
   "time-adjustments": "ᏑᏟᎶᏓ — Δ — ᎤᏬᏢᏗ ᏚᏙᎥ",
-  "time-adjustment-note": "ᏄᏍᏛ ᎢᎸᏍᎩ: Δ ᏑᏟᎶᏓ; ᎤᏬᏢᏗ ᏚᏙᎥ ≠ ᎨᏥᏁᏤᎸ."
+  "time-adjustment-note": "ᏄᏍᏛ ᎢᎸᏍᎩ: Δ ᏑᏟᎶᏓ; ᎤᏬᏢᏗ ᏚᏙᎥ ≠ ᎨᏥᏁᏤᎸ.",
+  "auto-archive-days": "ᎪᏪᎵ ᎠᏍᏆᏂᎪᏙᏗᏱ ᎯᏘᏅᏍᏓ ᎯᎠ ᎢᎦ ᎢᎦᎢ ᎥᏝ ᎦᎵᏬᎩ ᏱᎩ",
+  "auto-archive-off": "ᎠᏍᏚᎢᏓ",
+  "auto-archive-hint": "ᏑᎵᏱᎶᎢ ᏂᎦᏓ ᎠᎦᏛᎲᏍᎦ. ᎪᏪᎵ ᎦᎵᏬᎩ ᎨᏎᏍᏗ ᎢᏳᏃ ᎠᏓᏁᏟᏴᏍᎦ; ᎠᏟᎶᏍᏔᏅ ᎥᏝ ᎢᏳᏍᏗ ᎠᏍᏆᏂᎪᏙᏗᏱ ᏱᎨᎦᏅᎦ. ᎤᏏᏫ ᎯᎨᏎᏍᏓ ᎾᏍᎩ ᎠᏍᏚᎢᏍᏗ."
 }

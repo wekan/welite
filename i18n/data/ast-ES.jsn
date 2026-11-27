@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar Carril",
   "board-view-time": "Hora",
   "time-adjustments": "horas — Δ — Nombre de usuario",
-  "time-adjustment-note": "Cambeos nes hores rexistraes, agrupaos pola persona que modifica'l total. Nun son sesiones de trabayu individuales. Los valores negativos son correiciones. El tiempu anterior non rexistráu nun se pue atribuyir a nenguna persona."
+  "time-adjustment-note": "Cambeos nes hores rexistraes, agrupaos pola persona que modifica'l total. Nun son sesiones de trabayu individuales. Los valores negativos son correiciones. El tiempu anterior non rexistráu nun se pue atribuyir a nenguna persona.",
+  "auto-archive-days": "Archivar les tarxetes dempués d'esti númberu de díes ensin actividá",
+  "auto-archive-off": "Desactivao",
+  "auto-archive-hint": "Compruébase cada hora. Una tarxeta cuenta como activa cuando se camuda; les plantíes nunca s'archiven. Déxalo balero pa desactivalo."
 }

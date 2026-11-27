@@ -67,6 +67,8 @@ function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJS
 // shared store it is the board document's own announcement, its updatedAt a
 // date WeKan reads; in WeLite's own store, the board's settings.
 function ReadBoardAnnouncement(Db: TWLDb; const BoardId: string; out Enabled: Boolean; out Body, Version: string): Boolean;
+function BoardAutoArchiveDays(Db:TWLDb;const BoardId:string):string;
+function SetBoardAutoArchiveDays(Db:TWLDb;const UserId,BoardId,Value:string):Integer;
 function WriteBoardAnnouncement(Db: TWLDb; const BoardId: string; Enabled: Boolean; const Body: string): Boolean;
 // WeKan's searchAttachmentDocumentText: the documents of the board whose
 // extracted text has Needle, as a JSON array of {attachmentId, cardId,
@@ -3034,6 +3036,42 @@ begin
   finally
     Doc.Free;
   end;
+end;
+
+function BoardAutoArchiveDays(Db:TWLDb;const BoardId:string):string;
+var Doc:TJSONObject;Value:TJSONData;
+begin
+  Result:='';
+  Doc:=FindDoc(Db,'boards',BoardId);
+  if Doc=nil then Exit;
+  try
+    Value:=Doc.Find('autoArchiveInactiveDays');
+    if (Value<>nil) and (Value.JSONType=jtNumber) then Result:=Value.AsString;
+  finally Doc.Free;end;
+end;
+
+function SetBoardAutoArchiveDays(Db:TWLDb;const UserId,BoardId,Value:string):Integer;
+var Days:Integer;C:Char;Fields:TJSONObject;Text:string;
+begin
+  Text:=Trim(Value);
+  if not IsShared(Db) or not BoardCanAdmin(Db,UserId,BoardId) then Exit(403);
+  for C in Text do if not (C in ['0'..'9']) then Exit(400);
+  Days:=0;
+  if (Text<>'') and (not TryStrToInt(Text,Days) or (Days<1) or (Days>3650)) then Exit(400);
+  Fields:=TJSONObject.Create;
+  try
+    if Days=0 then Fields.Add('autoArchiveInactiveDays',TJSONNull.Create)
+    else Fields.Add('autoArchiveInactiveDays',Days);
+    if not Db.Exec('BEGIN IMMEDIATE;') then Exit(500);
+    try
+      if BoardCanAdmin(Db,UserId,BoardId) and
+        Db.Exec(UpdateDocSql(Db,'boards',BoardId,Fields,'{}')+'COMMIT;') then Exit(200);
+    except
+      // The board might have disappeared while the form was open.
+    end;
+    Db.Exec('ROLLBACK;');
+    Result:=500;
+  finally Fields.Free;end;
 end;
 
 function WriteBoardAnnouncement(Db: TWLDb; const BoardId: string; Enabled: Boolean; const Body: string): Boolean;

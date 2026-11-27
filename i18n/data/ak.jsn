@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Fa di dwuma wɔ adwuma kwan no mu",
   "board-view-time": "Berɛ",
   "time-adjustments": "Bere nsakrae a wɔakyekyɛ sɛnea nea ɔyɛe no te",
-  "time-adjustment-note": "Nsakrae wɔ nnɔnhwerew a wɔakyerɛw mu, a wɔakyekyɛ mu sɛnea nea ɔsesa akontaabom no te. Eyinom nyɛ bere biara a wɔde yɛɛ adwuma no mmiako mmiako. Botae a ɛba fam sen 0 yɛ nsiesie. Wɔrentumi nkyerɛ onipa a bere dedaw a wɔankyerɛw no yɛ ne de."
+  "time-adjustment-note": "Nsakrae wɔ nnɔnhwerew a wɔakyerɛw mu, a wɔakyekyɛ mu sɛnea nea ɔsesa akontaabom no te. Eyinom nyɛ bere biara a wɔde yɛɛ adwuma no mmiako mmiako. Botae a ɛba fam sen 0 yɛ nsiesie. Wɔrentumi nkyerɛ onipa a bere dedaw a wɔankyerɛw no yɛ ne de.",
+  "auto-archive-days": "Fa kaad kɔ adekorabea bere a ayɛ nna dodow yi a dwumadi biara nni so",
+  "auto-archive-off": "Adum",
+  "auto-archive-hint": "Wɔhwɛ mu dɔnhwere biara. Sɛ wɔsesa kaad bi a, wɔbu no sɛ ɛreyɛ adwuma; wɔmfa nhwɛsoɔ nkɔ adekorabea da. Gya hɔ kwa na adum."
 }

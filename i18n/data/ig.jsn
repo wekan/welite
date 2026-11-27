@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Tinye Ụgbọ mmiri",
   "board-view-time": "Oge",
   "time-adjustments": "elekere — Δ — Aha njirimara",
-  "time-adjustment-note": "Akụkọ ihe mere eme: Δ elekere; Aha njirimara ≠ Ndị ọrụ."
+  "time-adjustment-note": "Akụkọ ihe mere eme: Δ elekere; Aha njirimara ≠ Ndị ọrụ.",
+  "auto-archive-days": "Tinye kaadị nʼebe nchekwa mgbe ụbọchị ole a gafere na-enweghị ọrụ",
+  "auto-archive-off": "Gbanyụrụ",
+  "auto-archive-hint": "A na-enyocha kwa elekere. A na-agụ kaadị dị ka nke na-arụ ọrụ mgbe ọ bụla a gbanwere ya; a naghị etinye ndebiri nʼebe nchekwa. Hapụ ya efu iji gbanyụọ ya."
 }

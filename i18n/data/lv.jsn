@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Saglabāt Josla",
   "board-view-time": "Laiks",
   "time-adjustments": "stundas — Δ — Lietotājvārds",
-  "time-adjustment-note": "Reģistrēto stundu izmaiņas, sagrupētas pēc personas, kura rediģē kopējo skaitu. Tās nav atsevišķas darba sesijas. Negatīvās vērtības ir labojumi. Iepriekš nereģistrēto laiku nevar attiecināt uz kādu personu."
+  "time-adjustment-note": "Reģistrēto stundu izmaiņas, sagrupētas pēc personas, kura rediģē kopējo skaitu. Tās nav atsevišķas darba sesijas. Negatīvās vērtības ir labojumi. Iepriekš nereģistrēto laiku nevar attiecināt uz kādu personu.",
+  "auto-archive-days": "Arhivēt kartiņas pēc šāda dienu skaita bez aktivitātes",
+  "auto-archive-off": "Izslēgts",
+  "auto-archive-hint": "Pārbaude notiek katru stundu. Kartiņa tiek uzskatīta par aktīvu ikreiz, kad tā tiek mainīta; veidnes nekad netiek arhivētas. Atstājiet tukšu, lai izslēgtu."
 }

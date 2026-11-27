@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Huuwtin Laawol",
   "board-view-time": "Saanga",
   "time-adjustments": "waktuji — Δ — Innde kuutorɗo",
-  "time-adjustment-note": "Aslol: Δ waktuji; Innde kuutorɗo ≠ Halfinaaɓe."
+  "time-adjustment-note": "Aslol: Δ waktuji; Innde kuutorɗo ≠ Halfinaaɓe.",
+  "auto-archive-days": "Eggin karte e mooftirde caggal balɗe keewɗe hono ɗee tawa alaa golle",
+  "auto-archive-off": "Ñifaa",
+  "auto-archive-hint": "Ƴeewteetee waktu kala. Kartal ina limoore e golle kala nde ngal waylaa; mbaadi njuɓɓudi mbaɗaaka e mooftirde hay sahaa. Accu meho ngam ñifde ɗum."
 }

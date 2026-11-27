@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar Carril",
   "board-view-time": "Tiempo",
   "time-adjustments": "horas — Δ — Nombre d'usuario",
-  "time-adjustment-note": "Cambios en as horas rechistradas, agrupaus seguntes a persona que modifica o total. No son sesions de treballo individuals. Os valors negativos son correccions. O tiempo anterior no rechistrau no se puede atribuir a denguna persona."
+  "time-adjustment-note": "Cambios en as horas rechistradas, agrupaus seguntes a persona que modifica o total. No son sesions de treballo individuals. Os valors negativos son correccions. O tiempo anterior no rechistrau no se puede atribuir a denguna persona.",
+  "auto-archive-days": "Archivar as tarchetas dimpués d'iste numero de días sin actividat",
+  "auto-archive-off": "Desactivau",
+  "auto-archive-hint": "Se compreba cada hora. Una tarcheta cuenta como activa quan se cambia; as plantillas nunca no s'archivan. Deixa-lo vuedo ta desactivar-lo."
 }

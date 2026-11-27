@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Ogiyaa bolla oosissa",
   "board-view-time": "Wodiyaa",
   "time-adjustments": "Xaafidaagaa baggaara wodiyaa laammuwata",
-  "time-adjustment-note": "Xaafettida saatiyatu laammuwata, ubbaa laammiya asaa baggaara shiishettidaagaa. Hayti dumma oosuwaa wodiyata gidokkona. Zaa'aa gatiyati giigissuwata. Kase xaafettibeenna wodiyaa oonakka immanau danddayettenna."
+  "time-adjustment-note": "Xaafettida saatiyatu laammuwata, ubbaa laammiya asaa baggaara shiishettidaagaa. Hayti dumma oosuwaa wodiyata gidokkona. Zaa'aa gatiyati giigissuwata. Kase xaafettibeenna wodiyaa oonakka immanau danddayettenna.",
+  "auto-archive-days": "Ha qoodan de’iya gallassatun oosoi baynna kaardeta naago sohuwaa efa",
+  "auto-archive-off": "To’ettida",
+  "auto-archive-hint": "Saatiyaa ubban be’ettana. Kaardiyaa laammiyo wode oosoi de’iyagaadan qoodettana; leemisuwatu mulekka naago sohuwaa efettokkona. To’ana mala mela agga."
 }

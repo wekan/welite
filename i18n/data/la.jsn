@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Applica semitae",
   "board-view-time": "Tempus",
   "time-adjustments": "Correctiones temporis secundum auctorem",
-  "time-adjustment-note": "Mutationes horarum notarum secundum eum qui summam mutat ordinatae. Hae non sunt singulae sessiones laboris. Numeri negativi emendationes indicant. Tempus antea non notatum nulli homini attribui potest."
+  "time-adjustment-note": "Mutationes horarum notarum secundum eum qui summam mutat ordinatae. Hae non sunt singulae sessiones laboris. Numeri negativi emendationes indicant. Tempus antea non notatum nulli homini attribui potest.",
+  "auto-archive-days": "Chartas post tot dies sine actione in tabularium move",
+  "auto-archive-off": "Inactivum",
+  "auto-archive-hint": "Singulis horis examinatur. Charta activa habetur quoties mutatur; exemplaria numquam in tabularium moventur. Vacuum relinque ut hoc inactives."
 }

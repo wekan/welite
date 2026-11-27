@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Kävuta ujundšoidule",
   "board-view-time": "Aig",
   "time-adjustments": "časud — Δ — Kävutajan nimi",
-  "time-adjustment-note": "Istorii: Δ časud; Kävutajan nimi ≠ Märitud kävutajad."
+  "time-adjustment-note": "Istorii: Δ časud; Kävutajan nimi ≠ Märitud kävutajad.",
+  "auto-archive-days": "Sirdä kartad arhivaha, konz ne oma olend ninda äi päiväd tegendoita",
+  "auto-archive-off": "Väljas",
+  "auto-archive-hint": "Tarkastadas joga čas. Kart lugedas aktivizeks joga kerd, konz se toižetadas; viliteziš ei nikonz sirdeta arhivaha. Jätä tühjaks, miše panda päs väl'lä."
 }

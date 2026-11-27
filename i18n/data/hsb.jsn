@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Na dróhu nałožić",
   "board-view-time": "Čas",
   "time-adjustments": "Časowe korektury po awtorje",
-  "time-adjustment-note": "Změny zapisanych hodźin, zeskupjene po wosobje, kotraž cyłkowny čas wobdźěłuje. To njejsu jednotliwe dźěłowe sesije. Negatiwne hódnoty su korektury. Prjedawši njezapisany čas njeda so přirjadować."
+  "time-adjustment-note": "Změny zapisanych hodźin, zeskupjene po wosobje, kotraž cyłkowny čas wobdźěłuje. To njejsu jednotliwe dźěłowe sesije. Negatiwne hódnoty su korektury. Prjedawši njezapisany čas njeda so přirjadować.",
+  "auto-archive-days": "Karty po tak wjele dnjach bjez aktiwity archiwować",
+  "auto-archive-off": "Wupinjene",
+  "auto-archive-hint": "Přepruwuje so kóždu hodźinu. Karta so při kóždej změnje jako aktiwna liči; předłohi so ženje njearchiwuja. Wostajće polo prózdne, zo byšće funkciju wupinył."
 }

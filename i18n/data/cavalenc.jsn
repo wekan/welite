@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nom del grup (opcional)",
   "wip-limit-group-add": "Afegeix un grup de límit WIP",
   "wip-limit-group-select-swimlane": "Selecciona tauler Carril",
-  "wip-limit-group-apply-swimlane": "Aplica Carril"
+  "wip-limit-group-apply-swimlane": "Aplica Carril",
+  "auto-archive-days": "Arxiva les fitxes després d'aquest nombre de dies sense activitat",
+  "auto-archive-off": "Desactivat",
+  "auto-archive-hint": "Es comprova cada hora. Una fitxa es considera activa sempre que es modifica; les plantilles no s'arxiven mai. Deixeu-ho buit per desactivar-ho."
 }

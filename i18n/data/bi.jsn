@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Yusum long swimlane",
   "board-view-time": "Taem",
   "time-adjustments": "Ol jenis blong taem folem man we i raetem",
-  "time-adjustment-note": "Ol jenis long ol aoa we oli rekodem, grupum folem man we i jenisim totel. Hemia i no ol wanwan sesen blong wok. Ol negativ valiu oli blong stretem. I no save talem hu i mekem taem bifo we oli no rekodem."
+  "time-adjustment-note": "Ol jenis long ol aoa we oli rekodem, grupum folem man we i jenisim totel. Hemia i no ol wanwan sesen blong wok. Ol negativ valiu oli blong stretem. I no save talem hu i mekem taem bifo we oli no rekodem.",
+  "auto-archive-days": "Putum ol kad long stoa afta long namba blong dei ia we i no gat jenis",
+  "auto-archive-off": "Of",
+  "auto-archive-hint": "Hem i jekem evri aoa. Taem wan kad i jenis, hem i kaont olsem kad we i gat aktiviti; ol templet oli neva go long stoa. Livim bokis i emti blong stopem hem."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Atoruk Aqqut",
   "board-view-time": "Piffissaq",
   "time-adjustments": "akunnerit — Δ — Atuisup aqqa",
-  "time-adjustment-note": "Oqaluttuarisaanera: Δ akunnerit; Atuisup aqqa ≠ Akisussaasut."
+  "time-adjustment-note": "Oqaluttuarisaanera: Δ akunnerit; Atuisup aqqa ≠ Akisussaasut.",
+  "auto-archive-days": "Kortit ulluni taama amerlatigisuni allanngortinneqanngitsut toqqorsivimmut nuukkit",
+  "auto-archive-off": "Atorunnaarsitaq",
+  "auto-archive-hint": "Nalunaaquttap akunneri tamaasa misissorneqartarpoq. Korti allanngortinneqaraangat atorneqarsimasutut naatsorsuunneqartarpoq; ilusilersuutit qaquguluunniit toqqorsivimmut nuunneqanngillat. Atorunnaarsinniarlugu imaqanngitsuutiguk."
 }

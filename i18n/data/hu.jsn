@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Alkalmaz Úszósáv",
   "board-view-time": "Idő",
   "time-adjustments": "óra — Δ — Felhasználónév",
-  "time-adjustment-note": "A rögzített órák változásai az összesített értéket módosító személy szerint csoportosítva. Ezek nem különálló munkamenetek. A negatív értékek korrekciók. A korábban nem rögzített idő nem rendelhető személyhez."
+  "time-adjustment-note": "A rögzített órák változásai az összesített értéket módosító személy szerint csoportosítva. Ezek nem különálló munkamenetek. A negatív értékek korrekciók. A korábban nem rögzített idő nem rendelhető személyhez.",
+  "auto-archive-days": "Kártyák archiválása ennyi napnyi tétlenség után",
+  "auto-archive-off": "Kikapcsolva",
+  "auto-archive-hint": "Ellenőrzés óránként. A kártya minden módosítása tevékenységnek számít; a sablonok soha nem kerülnek archiválásra. A kikapcsoláshoz hagyja üresen."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar ao carril",
   "board-view-time": "Tempo",
   "time-adjustments": "horas — Δ — Nome de usuario",
-  "time-adjustment-note": "Cambios nas horas rexistradas, agrupados pola persoa que modifica o total. Non son sesións de traballo individuais. Os valores negativos son correccións. O tempo anterior non rexistrado non se pode atribuír a ningunha persoa."
+  "time-adjustment-note": "Cambios nas horas rexistradas, agrupados pola persoa que modifica o total. Non son sesións de traballo individuais. Os valores negativos son correccións. O tempo anterior non rexistrado non se pode atribuír a ningunha persoa.",
+  "auto-archive-days": "Arquivar tarxetas despois deste número de días sen actividade",
+  "auto-archive-off": "Desactivado",
+  "auto-archive-hint": "Compróbase cada hora. Calquera cambio nunha tarxeta conta como actividade; os modelos nunca se arquivan. Déixao baleiro para desactivalo."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Mete en ouve sol coridôr",
   "board-view-time": "Tins",
   "time-adjustments": "Candjmints di tins pa oteur",
-  "time-adjustment-note": "Candjmints des eures eredjistrêyes, rassonlés pa l' djin ki candje li totå. Ci n' sont nén des sessions d' ovraedje individuweles. Les valixhances negatives sont des coridjaedjes. Do tins d' divant nén eredjistré ni pout nén esse dné a ene sakî."
+  "time-adjustment-note": "Candjmints des eures eredjistrêyes, rassonlés pa l' djin ki candje li totå. Ci n' sont nén des sessions d' ovraedje individuweles. Les valixhances negatives sont des coridjaedjes. Do tins d' divant nén eredjistré ni pout nén esse dné a ene sakî.",
+  "auto-archive-days": "Mete les cåtes el årtchive après tant d’ djoûs sins activité",
+  "auto-archive-off": "Dismetou",
+  "auto-archive-hint": "Verifyî a tchaeke eure. Ene cåte est contêye come active a tchaeke candjmint; les modeles ni sont måy metous el årtchive. Leyîz l’ tchamp vude po dismete çoula."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Codso Waddo",
   "board-view-time": "Waqti",
   "time-adjustments": "saacadood — Δ — Magaca isticmaalaha",
-  "time-adjustment-note": "Isbeddellada saacadaha la diiwaangeliyey waxaa loo kooxeeyaa qofka wax ka beddelaya wadarta. Kuwani ma aha kalfadhiyo shaqo oo gooni-gooni ah. Qiimayaasha taban waa sixitaanno. Waqti hore oo aan la diiwaangelin looma nisbayn karo qofna."
+  "time-adjustment-note": "Isbeddellada saacadaha la diiwaangeliyey waxaa loo kooxeeyaa qofka wax ka beddelaya wadarta. Kuwani ma aha kalfadhiyo shaqo oo gooni-gooni ah. Qiimayaasha taban waa sixitaanno. Waqti hore oo aan la diiwaangelin looma nisbayn karo qofna.",
+  "auto-archive-days": "Kaararka kaydi marka maalmahan oo dhan aan wax laga beddelin",
+  "auto-archive-off": "Dansan",
+  "auto-archive-hint": "Saacad kasta ayaa la hubiyaa. Kaarka waxaa loo tixgeliyaa mid firfircoon mar kasta oo wax laga beddelo; qaababka diyaarka ah waligood lama kaydiyo. Meesha bannaan ka dhig si aad u damiso."
 }

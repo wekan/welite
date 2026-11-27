@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Ymgeisiwch Lôn nofio",
   "board-view-time": "Amser",
   "time-adjustments": "oriau — Δ — Enw defnyddiwr",
-  "time-adjustment-note": "Newidiadau i'r oriau a gofnodwyd, wedi'u grwpio yn ôl y person sy'n golygu'r cyfanswm. Nid sesiynau gwaith unigol yw'r rhain. Cywiriadau yw gwerthoedd negyddol. Ni ellir priodoli amser blaenorol na chafodd ei gofnodi i unrhyw berson."
+  "time-adjustment-note": "Newidiadau i'r oriau a gofnodwyd, wedi'u grwpio yn ôl y person sy'n golygu'r cyfanswm. Nid sesiynau gwaith unigol yw'r rhain. Cywiriadau yw gwerthoedd negyddol. Ni ellir priodoli amser blaenorol na chafodd ei gofnodi i unrhyw berson.",
+  "auto-archive-days": "Archifo cardiau ar ôl y nifer hwn o ddiwrnodau heb weithgaredd",
+  "auto-archive-off": "I ffwrdd",
+  "auto-archive-hint": "Gwirir bob awr. Mae cerdyn yn cyfrif fel un gweithredol pryd bynnag y caiff ei newid; ni archifir templedi byth. Gadewch yn wag i'w ddiffodd."
 }

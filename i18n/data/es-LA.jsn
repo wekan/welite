@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar Carril",
   "board-view-time": "Hora",
   "time-adjustments": "horas — Δ — Nombre de usuario",
-  "time-adjustment-note": "Cambios en las horas registradas, agrupados por la persona que modifica el total. No son sesiones de trabajo individuales. Los valores negativos son correcciones. El tiempo anterior que no se haya registrado no se puede atribuir a ninguna persona."
+  "time-adjustment-note": "Cambios en las horas registradas, agrupados por la persona que modifica el total. No son sesiones de trabajo individuales. Los valores negativos son correcciones. El tiempo anterior que no se haya registrado no se puede atribuir a ninguna persona.",
+  "auto-archive-days": "Archivar tarjetas después de este número de días sin actividad",
+  "auto-archive-off": "Desactivado",
+  "auto-archive-hint": "Se comprueba cada hora. Cualquier cambio en una tarjeta cuenta como actividad; las plantillas nunca se archivan. Déjalo vacío para desactivarlo."
 }

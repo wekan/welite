@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Applika għall-korsija",
   "board-view-time": "Ħin",
   "time-adjustments": "Aġġustamenti tal-ħin skont l-awtur",
-  "time-adjustment-note": "Bidliet fis-sigħat irreġistrati, miġbura skont il-persuna li teditja t-total. Dawn mhumiex sessjonijiet individwali ta’ xogħol. Valuri negattivi huma korrezzjonijiet. Ħin preċedenti mhux irreġistrat ma jistax jiġi attribwit."
+  "time-adjustment-note": "Bidliet fis-sigħat irreġistrati, miġbura skont il-persuna li teditja t-total. Dawn mhumiex sessjonijiet individwali ta’ xogħol. Valuri negattivi huma korrezzjonijiet. Ħin preċedenti mhux irreġistrat ma jistax jiġi attribwit.",
+  "auto-archive-days": "Arkivja l-karti wara dan in-numru ta’ jiem mingħajr attività",
+  "auto-archive-off": "Mitfi",
+  "auto-archive-hint": "Jiġi ċċekkjat kull siegħa. Karta titqies attiva kull meta tinbidel; il-mudelli qatt ma jiġu arkivjati. Ħalli vojt biex titfi din il-funzjoni."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Rakenda Ujumisrada",
   "board-view-time": "Aeg",
   "time-adjustments": "tundi — Δ — Kasutajanimi",
-  "time-adjustment-note": "Kirjapandud tundide muudatused, rühmitatuna kogusummat muutnud isiku järgi. Need ei ole eraldi tööseansid. Negatiivsed väärtused on parandused. Varem kirjapanemata aega ei saa ühelegi isikule omistada."
+  "time-adjustment-note": "Kirjapandud tundide muudatused, rühmitatuna kogusummat muutnud isiku järgi. Need ei ole eraldi tööseansid. Negatiivsed väärtused on parandused. Varem kirjapanemata aega ei saa ühelegi isikule omistada.",
+  "auto-archive-days": "Arhiveeri kaardid pärast nii mitut tegevuseta päeva",
+  "auto-archive-off": "Väljas",
+  "auto-archive-hint": "Kontrollitakse iga tund. Kaardi iga muudatus loetakse tegevuseks; malle ei arhiveerita kunagi. Väljalülitamiseks jäta tühjaks."
 }

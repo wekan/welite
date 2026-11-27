@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Apply Swimlane",
   "board-view-time": "Time",
   "time-adjustments": "Time adjustments by author",
-  "time-adjustment-note": "Changes to recorded hours, grouped by the person editing the total. These are not individual work sessions. Negative values are corrections. Earlier unrecorded time cannot be attributed."
+  "time-adjustment-note": "Changes to recorded hours, grouped by the person editing the total. These are not individual work sessions. Negative values are corrections. Earlier unrecorded time cannot be attributed.",
+  "auto-archive-days": "Archive cards after this many days without activity",
+  "auto-archive-off": "Off",
+  "auto-archive-hint": "Checked every hour. A card counts as active whenever it is changed; templates are never archived. Leave empty to turn it off."
 }

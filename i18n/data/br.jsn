@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Arloañ ouzh ar vandenn",
   "board-view-time": "Amzer",
   "time-adjustments": "eurvezhioù — Δ — Anv implijer",
-  "time-adjustment-note": "Istor: Δ eurvezhioù; Anv implijer ≠ Kepenniñ."
+  "time-adjustment-note": "Istor: Δ eurvezhioù; Anv implijer ≠ Kepenniñ.",
+  "auto-archive-days": "Diellaouiñ ar c'hartennoù goude an niver-mañ a zevezhioù hep obererezh",
+  "auto-archive-off": "Diweredekaet",
+  "auto-archive-hint": "Gwiriet bep eur. Ur gartenn zo oberiant pa vez cheñchet; ne vez ket diellaouet ar patromoù morse. Lezit goullo evit diweredekaat."
 }

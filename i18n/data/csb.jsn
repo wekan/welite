@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Zastosëjë do stegnë",
   "board-view-time": "Czas",
   "time-adjustments": "Pòprawczi czasu wedle aùtora",
-  "time-adjustment-note": "Zmianë zapisónëch gòdzënów, pògrëpòwóné wedle òsobë editëjący sëmã. Nie są to òsóbné sesëje robòtë. Ùjemné wôrtnotë są pòprawkama. Wczasniészégò niezapisónégò czasu nie mòżna przëpisac òsobie."
+  "time-adjustment-note": "Zmianë zapisónëch gòdzënów, pògrëpòwóné wedle òsobë editëjący sëmã. Nie są to òsóbné sesëje robòtë. Ùjemné wôrtnotë są pòprawkama. Wczasniészégò niezapisónégò czasu nie mòżna przëpisac òsobie.",
+  "auto-archive-days": "Archiwizùjë kôrtë pò telë dniach bez aktiwnoscë",
+  "auto-archive-off": "Wëłączoné",
+  "auto-archive-hint": "Sprôwdzóné kòżdą gòdzënã. Kôrta je aktiwnô, czedë je zmieniwónô; szablónë nigdë nie są archiwizowóné. Òstawi pùsté, żebë wëłączëc."
 }

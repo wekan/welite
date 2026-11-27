@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Lagre Svømmebane",
   "board-view-time": "Tid",
   "time-adjustments": "timer — Δ — Brukernavn",
-  "time-adjustment-note": "Endringer i registrerte timer, gruppert etter personen som endrer totalsummen. Dette er ikke individuelle arbeidsøkter. Negative verdier er korrigeringer. Tid som ikke tidligere er registrert, kan ikke tilskrives noen."
+  "time-adjustment-note": "Endringer i registrerte timer, gruppert etter personen som endrer totalsummen. Dette er ikke individuelle arbeidsøkter. Negative verdier er korrigeringer. Tid som ikke tidligere er registrert, kan ikke tilskrives noen.",
+  "auto-archive-days": "Arkiver kort etter så mange dager uten aktivitet",
+  "auto-archive-off": "Av",
+  "auto-archive-hint": "Kontrolleres hver time. Enhver endring av et kort regnes som aktivitet; maler arkiveres aldri. La feltet stå tomt for å slå av."
 }

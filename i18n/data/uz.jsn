@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Murojaat qiling Suzish chizig'i",
   "board-view-time": "Vaqt",
   "time-adjustments": "soat — Δ — Foydalanuvchi nomi",
-  "time-adjustment-note": "Qayd etilgan soatlardagi oʻzgarishlar jami qiymatni tahrirlagan shaxs boʻyicha guruhlangan. Bular alohida ish seanslari emas. Manfiy qiymatlar tuzatishlardir. Avval qayd etilmagan vaqtni biror shaxsga bogʻlab boʻlmaydi."
+  "time-adjustment-note": "Qayd etilgan soatlardagi oʻzgarishlar jami qiymatni tahrirlagan shaxs boʻyicha guruhlangan. Bular alohida ish seanslari emas. Manfiy qiymatlar tuzatishlardir. Avval qayd etilmagan vaqtni biror shaxsga bogʻlab boʻlmaydi.",
+  "auto-archive-days": "Shuncha kun faoliyatsiz qolgan kartalarni arxivlash",
+  "auto-archive-off": "Oʻchirilgan",
+  "auto-archive-hint": "Har soatda tekshiriladi. Karta har safar oʻzgartirilganda faol hisoblanadi; shablonlar hech qachon arxivlanmaydi. Oʻchirish uchun boʻsh qoldiring."
 }

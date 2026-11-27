@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Gwiritsani ntchito Njira",
   "board-view-time": "Nthawi",
   "time-adjustments": "maola — Δ — Dzina logwiritsa ntchito",
-  "time-adjustment-note": "Mbiri: Δ maola; Dzina logwiritsa ntchito ≠ Operekedwa ntchito."
+  "time-adjustment-note": "Mbiri: Δ maola; Dzina logwiritsa ntchito ≠ Operekedwa ntchito.",
+  "auto-archive-days": "Sungani makhadi ku malo osungira patatha masiku ochuluka chonchi opanda zochitika",
+  "auto-archive-off": "Yazimitsidwa",
+  "auto-archive-hint": "Zimayang'aniridwa ola lililonse. Khadi limaonedwa kuti likugwira ntchito nthawi iliyonse likasinthidwa; ma template sasungidwa konse ku malo osungira. Siyani malo opanda kanthu kuti muzimitse izi."
 }

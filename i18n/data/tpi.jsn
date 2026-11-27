@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Yusim long rot bilong kat",
   "board-view-time": "Taim",
   "time-adjustments": "Ol senis bilong taim long man i bin senisim",
-  "time-adjustment-note": "Ol senis long ol aua i gat rekot, bungim long wan wan man i editim olgeta namba. Dispela i no ol wan wan taim bilong mekim wok. Ol veliu i gat minus em ol stretim. Taim bilong bipo i no gat rekot, yu no inap makim husat i mekim."
+  "time-adjustment-note": "Ol senis long ol aua i gat rekot, bungim long wan wan man i editim olgeta namba. Dispela i no ol wan wan taim bilong mekim wok. Ol veliu i gat minus em ol stretim. Taim bilong bipo i no gat rekot, yu no inap makim husat i mekim.",
+  "auto-archive-days": "Putim ol kat long stua bihain long dispela hamas de i no gat senis",
+  "auto-archive-off": "Pas",
+  "auto-archive-hint": "Em i sekim olgeta aua. Taim wanpela kat i senis, em i kaun olsem kat i gat wok; em i no save putim ol templet long stua. Larim bokis i stap nating bilong stopim dispela."
 }

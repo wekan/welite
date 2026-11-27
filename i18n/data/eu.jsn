@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplikatu Carril",
   "board-view-time": "Ordua",
   "time-adjustments": "ordu — Δ — Erabiltzaile-izena",
-  "time-adjustment-note": "Erregistratutako orduen aldaketak, guztizkoa editatzen duen pertsonaren arabera taldekatuta. Ez dira banakako lan-saioak. Balio negatiboak zuzenketak dira. Aurretik erregistratu gabeko denbora ezin zaio inori egotzi."
+  "time-adjustment-note": "Erregistratutako orduen aldaketak, guztizkoa editatzen duen pertsonaren arabera taldekatuta. Ez dira banakako lan-saioak. Balio negatiboak zuzenketak dira. Aurretik erregistratu gabeko denbora ezin zaio inori egotzi.",
+  "auto-archive-days": "Artxibatu txartelak jarduerarik gabeko egun kopuru honen ondoren",
+  "auto-archive-off": "Desaktibatuta",
+  "auto-archive-hint": "Orduro egiaztatzen da. Txartel bat aktibotzat hartzen da aldatzen den bakoitzean; txantiloiak ez dira inoiz artxibatzen. Utzi hutsik desaktibatzeko."
 }

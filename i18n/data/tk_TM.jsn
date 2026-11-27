@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Giriş Swimüzmek",
   "board-view-time": "Wagt",
   "time-adjustments": "sagat — Δ — Ulanyjy ady",
-  "time-adjustment-note": "Taryh: Δ sagat; Ulanyjy ady ≠ Bellenenler."
+  "time-adjustment-note": "Taryh: Δ sagat; Ulanyjy ady ≠ Bellenenler.",
+  "auto-archive-days": "Işjeňliksiz şu kadar gün geçenden soň kartlary arhiwläň",
+  "auto-archive-off": "Öçürilen",
+  "auto-archive-hint": "Her sagatda barlanýar. Kart her gezek üýtgedilende işjeň hasaplanýar; şablonlar hiç wagt arhiwlenmeýär. Öçürmek üçin boş goýuň."
 }

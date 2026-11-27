@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Xictequihui Ohtli",
   "board-view-time": "Tonalli",
   "time-adjustments": "horas — Δ — Tequitini itoca",
-  "time-adjustment-note": "Yehuacayotl: Δ horas; Tequitini itoca ≠ Tlanahuatiltin."
+  "time-adjustment-note": "Yehuacayotl: Δ horas; Tequitini itoca ≠ Tlanahuatiltin.",
+  "auto-archive-days": "Xiquinhuica amatlapaltin pixcalco ihcuac panohqueh inin quezqui tonaltin huan amo itlah mochihua",
+  "auto-archive-off": "Amo tequiti",
+  "auto-archive-hint": "Moitta cece hora. Ihcuac mopatla amatlapalli, motlapohua quen tequiti; neixcuitiltin ayic mohuicah pixcalco. Xiccahua amo itlah ipan inic amo ma tequiti."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Uporabi za plavalno stezo",
   "board-view-time": "Čas",
   "time-adjustments": "ure — Δ — Up. ime",
-  "time-adjustment-note": "Spremembe zabeleženih ur, združene po osebi, ki ureja skupno število. To niso posamezne delovne seje. Negativne vrednosti so popravki. Prejšnjega nezabeleženega časa ni mogoče pripisati osebi."
+  "time-adjustment-note": "Spremembe zabeleženih ur, združene po osebi, ki ureja skupno število. To niso posamezne delovne seje. Negativne vrednosti so popravki. Prejšnjega nezabeleženega časa ni mogoče pripisati osebi.",
+  "auto-archive-days": "Arhiviraj kartice po toliko dneh brez dejavnosti",
+  "auto-archive-off": "Izklopljeno",
+  "auto-archive-hint": "Preverjanje poteka vsako uro. Kartica se šteje za dejavno ob vsaki spremembi; predloge se nikoli ne arhivirajo. Za izklop pustite prazno."
 }

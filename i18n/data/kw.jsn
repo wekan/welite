@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Gorra yn ober Hyns",
   "board-view-time": "Termyn",
   "time-adjustments": "ourys — Δ — Hanow devnydhyer",
-  "time-adjustment-note": "Istori: Δ ourys; Hanow devnydhyer ≠ Apoyntysi."
+  "time-adjustment-note": "Istori: Δ ourys; Hanow devnydhyer ≠ Apoyntysi.",
+  "auto-archive-days": "Gwaya kartennow dhe'n kovskrifva wosa an niver ma a dhedhyow heb aktivita",
+  "auto-archive-off": "Marow",
+  "auto-archive-hint": "Gwirys pub eur. Karten yw gweythresek pan vo hi chanjys; patronyow ny vydh byth gwayys dhe'n kovskrifva. Gesewgh an maes gwag rag y dhiskweredha."
 }

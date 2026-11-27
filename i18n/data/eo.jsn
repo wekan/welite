@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Apliki al naĝlinio",
   "board-view-time": "Tempo",
   "time-adjustments": "horoj — Δ — Uzantnomo",
-  "time-adjustment-note": "Ŝanĝoj de registritaj horoj, grupigitaj laŭ la persono redaktanta la sumon. Ĉi tiuj ne estas apartaj laborseancoj. Negativaj valoroj estas korektoj. Antaŭa neregistrita tempo ne povas esti atribuita al iu persono."
+  "time-adjustment-note": "Ŝanĝoj de registritaj horoj, grupigitaj laŭ la persono redaktanta la sumon. Ĉi tiuj ne estas apartaj laborseancoj. Negativaj valoroj estas korektoj. Antaŭa neregistrita tempo ne povas esti atribuita al iu persono.",
+  "auto-archive-days": "Arkivi kartojn post ĉi tiu nombro da tagoj sen aktiveco",
+  "auto-archive-off": "Malŝaltita",
+  "auto-archive-hint": "Kontrolata ĉiuhore. Karto estas konsiderata aktiva ĉiufoje kiam ĝi ŝanĝiĝas; ŝablonoj neniam estas arkivataj. Lasu malplena por malŝalti."
 }

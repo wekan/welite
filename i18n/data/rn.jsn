@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Shira mu ngiro Umurongo",
   "board-view-time": "Igihe",
   "time-adjustments": "amasaha — Δ — Izina ry'ukoresha",
-  "time-adjustment-note": "Amateka: Δ amasaha; Izina ry'ukoresha ≠ Abahawe igikorwa."
+  "time-adjustment-note": "Amateka: Δ amasaha; Izina ry'ukoresha ≠ Abahawe igikorwa.",
+  "auto-archive-days": "Shira amakarata mu bubiko inyuma y'iyi misi ata gikorwa",
+  "auto-archive-off": "Birazimye",
+  "auto-archive-hint": "Bisuzumwa buri saha. Ikarata ifatwa nk'iriko irakoreshwa igihe cose ihinduwe; inyandikorugero ntizigera zishirwa mu bubiko. Hasige ubusa kugira ngo ubizimye."
 }

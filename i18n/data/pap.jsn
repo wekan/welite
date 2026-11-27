@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar Kaminda",
   "board-view-time": "Tempu",
   "time-adjustments": "horas — Δ — Nòmber di usuario",
-  "time-adjustment-note": "Historial: Δ horas; Nòmber di usuario ≠ Enkargánan."
+  "time-adjustment-note": "Historial: Δ horas; Nòmber di usuario ≠ Enkargánan.",
+  "auto-archive-days": "Archiva karchinan despues di e kantidat aki di dia sin aktividat",
+  "auto-archive-off": "Pagá",
+  "auto-archive-hint": "Ta kontrolá kada ora. Un karchi ta konta komo aktivo kada biaha ku e ta wordu kambiá; plantianan nunka ta wordu archivá. Laga e vak bashi pa desaktivá esaki."
 }

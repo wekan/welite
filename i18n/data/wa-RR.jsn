@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Igbutang Couloir",
   "board-view-time": "Oras",
   "time-adjustments": "oras — Δ — Nom d'utilisateur",
-  "time-adjustment-note": "Kasaysayan: Δ oras; Nom d'utilisateur ≠ Mga Gin-asignaran."
+  "time-adjustment-note": "Kasaysayan: Δ oras; Nom d'utilisateur ≠ Mga Gin-asignaran.",
+  "auto-archive-days": "Ibalhin an mga kard ngadto ha arkibo katapos hini kadamo nga adlaw nga waray aktibidad",
+  "auto-archive-off": "Nakapalong",
+  "auto-archive-hint": "Ginsususi kada oras. An kard gin-iihap nga aktibo kada pagbag-o hini; an mga padron diri gud iginbabalhin ngadto ha arkibo. Bayai nga waray sulod basi mapalong ini."
 }

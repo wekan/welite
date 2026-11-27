@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Kozesa ku kakubo",
   "board-view-time": "Muda",
   "time-adjustments": "Enkyukakyuka z'ebiseera ng'omuwandiisi bw'ali",
-  "time-adjustment-note": "Enkyukakyuka mu ssaawa eziwandiikiddwa, nga zigattiddwa okusinziira ku muntu akyusizza omugatte. Bino si biseera bya mulimu kinnoomu. Emiwendo egiri wansi wa zeero kutereeza. Ebiseera eby'emabega ebitaawandiikibwa tebiyinza kuweebwa muntu."
+  "time-adjustment-note": "Enkyukakyuka mu ssaawa eziwandiikiddwa, nga zigattiddwa okusinziira ku muntu akyusizza omugatte. Bino si biseera bya mulimu kinnoomu. Emiwendo egiri wansi wa zeero kutereeza. Ebiseera eby'emabega ebitaawandiikibwa tebiyinza kuweebwa muntu.",
+  "auto-archive-days": "Twala kaadi mu tterekero oluvannyuma lw’ennaku zino nga tewali kikolebwako",
+  "auto-archive-off": "Kizikiddwa",
+  "auto-archive-hint": "Kikeberwa buli ssaawa. Kaadi ebalibwa ng’eriko ekikolebwa buli lw’ekyusibwa; ebyokulabirako tebitwalibwa mu tterekero n’akatono. Lekawo nga wereere okukizikiza."
 }

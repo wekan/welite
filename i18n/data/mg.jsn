@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Ampiharo amin’ny lalana",
   "board-view-time": "Fotoana",
   "time-adjustments": "Fanitsiana ny fotoana araka ny mpanao azy",
-  "time-adjustment-note": "Fanovana ny ora voarakitra, navondrona araka ny olona nanova ny fitambarany. Tsy fotoam-piasana tsirairay ireo. Fanitsiana ny sanda miiba. Tsy azo ampifandraisina amin’olona ny fotoana taloha tsy voarakitra."
+  "time-adjustment-note": "Fanovana ny ora voarakitra, navondrona araka ny olona nanova ny fitambarany. Tsy fotoam-piasana tsirairay ireo. Fanitsiana ny sanda miiba. Tsy azo ampifandraisina amin’olona ny fotoana taloha tsy voarakitra.",
+  "auto-archive-days": "Alefaso any amin'ny arisiva ny karatra rehefa tsy misy hetsika mandritra ny isan'ny andro voafaritra",
+  "auto-archive-off": "Tsy mandeha",
+  "auto-archive-hint": "Hamarinina isan'ora. Heverina ho mavitrika ny karatra isaky ny ovaina; tsy alefa any amin'ny arisiva mihitsy ny môdely. Avelao ho banga mba hampitsaharana azy."
 }

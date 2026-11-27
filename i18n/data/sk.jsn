@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Použiť Dráha",
   "board-view-time": "Čas",
   "time-adjustments": "Úpravy času podľa autora",
-  "time-adjustment-note": "Zmeny zaznamenaných hodín zoskupené podľa osoby, ktorá upravila celkový čas. Nie sú to jednotlivé pracovné úseky. Záporné hodnoty sú opravy. Skorší nezaznamenaný čas nemožno priradiť."
+  "time-adjustment-note": "Zmeny zaznamenaných hodín zoskupené podľa osoby, ktorá upravila celkový čas. Nie sú to jednotlivé pracovné úseky. Záporné hodnoty sú opravy. Skorší nezaznamenaný čas nemožno priradiť.",
+  "auto-archive-days": "Archivovať karty po tomto počte dní bez aktivity",
+  "auto-archive-off": "Vypnuté",
+  "auto-archive-hint": "Kontroluje sa každú hodinu. Každá zmena karty sa počíta ako aktivita; šablóny sa nikdy nearchivujú. Na vypnutie ponechajte prázdne."
 }

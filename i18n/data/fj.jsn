@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Vakayagataka Sala",
   "board-view-time": "Gauna",
   "time-adjustments": "aua — Δ — Yaca ni dauvakayagataka",
-  "time-adjustment-note": "iTukutuku Makawa: Δ aua; Yaca ni dauvakayagataka ≠ O ira era lesi kina."
+  "time-adjustment-note": "iTukutuku Makawa: Δ aua; Yaca ni dauvakayagataka ≠ O ira era lesi kina.",
+  "auto-archive-days": "Maroroya na kadi ni sa oti na iwiliwili ni siga oqo ka sega ni dua na cakacaka",
+  "auto-archive-off": "Boko",
+  "auto-archive-hint": "E dikevi ena veiauwa. E okati me cakacaka tiko na kadi ena veigauna e veisautaki kina; e sega ni maroroi vakadua na ivakarau vakarautaki. Laiva me lala me bokoci kina oqo."
 }

@@ -2830,6 +2830,19 @@ end;
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
   const FilterView: string; PlainLinks, PlainSource: Boolean): string;
 var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards, CanExport, CanImport: Boolean;
+  function AutoArchiveForm:string;
+  begin
+    Result:='';
+    if not IsShared(Db) or not BoardCanAdmin(Db,S.UserId,BoardId) then Exit;
+    Result:='<li><form method="post" action="/b/'+HtmlAttr(HTTPEncode(BoardId))+
+      '/auto-archive" up-submit up-target=".board-wrapper"><label for="auto-archive-days">'+
+      E(Words.Text('auto-archive-days','Archive cards after this many days without activity'))+
+      '</label><input id="auto-archive-days" class="js-auto-archive-days" type="number" name="days" min="1" max="3650" '+
+      'placeholder="'+HtmlAttr(Words.Text('auto-archive-off','Off'))+'" value="'+HtmlAttr(BoardAutoArchiveDays(Db,BoardId))+
+      '" aria-describedby="auto-archive-hint"><p id="auto-archive-hint">'+
+      E(Words.Text('auto-archive-hint','Leave empty to turn it off.'))+'</p><button type="submit">'+
+      E(Words.Text('save','Save'))+'</button></form></li>';
+  end;
   // WeKan's restoreArchivedCardToListPopup (#6772): the card's list is gone,
   // or full at a hard WIP limit - one of the lists with room instead.
   function BlockedPopup(const Id, ListId: string): string;
@@ -2982,6 +2995,7 @@ begin
       E(Words.Text('board-announcement', 'Board announcement')) + '</a></li>', '') +
     IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), '<li><a class="js-open-board-wip-limit-groups" href="#">' +
       E(Words.Text('wip-limit-groups', 'WIP Limit Groups')) + '</a></li>', '') +
+    AutoArchiveForm +
     // Board Settings / Card (sidebar.jade boardMenuPopup), for a member.
     IfThen(S.UserId <> '', '<li><a class="js-open-board-card-settings" href="#" title="' + HtmlAttr(Words.Text('card-settings', 'Card Settings')) +
       '"><i class="fa fa-id-card-o"></i> ' + E(Words.Text('card-settings', 'Card Settings')) + '</a></li>', '') +
@@ -7750,12 +7764,13 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or ((P[2] = 'announcement') and (n = 3)) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or (((P[2] = 'announcement') or (P[2] = 'auto-archive')) and (n = 3)) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
   else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
   else if (n = 3) and (P[2] = 'title') then Action := 'rename-board'
+  else if (n = 3) and (P[2] = 'auto-archive') then Action := 'auto-archive'
   else if (n = 3) and (P[2] = 'announcement') then Action := 'announcement'
   else if (n = 4) and (P[2] = 'archive') and (P[3] = 'restore-all-cards') then Action := 'restore-all'
   else if (n = 4) and (P[2] = 'archive') then Action := 'restore'
@@ -7833,6 +7848,14 @@ begin
     // the card's "restore it to another list" open.
     if (Code = 409) and (Error = 'restore-blocked') then
     begin ViewRestoreBlocked := Request.ContentFields.Values['id']; Code := 200; end;
+  end
+  else if Action = 'auto-archive' then
+  begin
+    Code:=SetBoardAutoArchiveDays(T.Db,S.UserId,BoardId,Request.ContentFields.Values['days']);
+    Error:='Could not save';
+    if Code=400 then Error:='Expected a whole number of days from 1 to 3650 or an empty value';
+    if Code=403 then Error:='Only a board admin may change inactivity archiving';
+    if Code=200 then AnnounceToAll;
   end
   else if Action = 'announcement' then
   begin

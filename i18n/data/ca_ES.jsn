@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplica Carril",
   "board-view-time": "Hora",
   "time-adjustments": "hores — Δ — Nom d'usuari",
-  "time-adjustment-note": "Canvis en les hores registrades, agrupats per la persona que modifica el total. No són sessions de treball individuals. Els valors negatius són correccions. El temps anterior no registrat no es pot atribuir a cap persona."
+  "time-adjustment-note": "Canvis en les hores registrades, agrupats per la persona que modifica el total. No són sessions de treball individuals. Els valors negatius són correccions. El temps anterior no registrat no es pot atribuir a cap persona.",
+  "auto-archive-days": "Arxiva les fitxes després d'aquest nombre de dies sense activitat",
+  "auto-archive-off": "Desactivat",
+  "auto-archive-hint": "Es comprova cada hora. Una fitxa es considera activa sempre que es modifica; les plantilles no s'arxiven mai. Deixeu-ho buit per desactivar-ho."
 }

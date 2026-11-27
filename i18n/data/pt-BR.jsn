@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar Raia",
   "board-view-time": "Tempo",
   "time-adjustments": "horas — Δ — Nome de usuário",
-  "time-adjustment-note": "Alterações nas horas registradas, agrupadas pela pessoa que altera o total. Não são sessões de trabalho individuais. Os valores negativos são correções. O tempo anterior não registrado não pode ser atribuído a ninguém."
+  "time-adjustment-note": "Alterações nas horas registradas, agrupadas pela pessoa que altera o total. Não são sessões de trabalho individuais. Os valores negativos são correções. O tempo anterior não registrado não pode ser atribuído a ninguém.",
+  "auto-archive-days": "Arquivar cartões após este número de dias sem atividade",
+  "auto-archive-off": "Desativado",
+  "auto-archive-hint": "Verificado a cada hora. Qualquer alteração em um cartão conta como atividade; os modelos nunca são arquivados. Deixe vazio para desativar."
 }

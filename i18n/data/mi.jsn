@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Hoatu Ara",
   "board-view-time": "Wā",
   "time-adjustments": "ngā hāora — Δ — Ingoa kaiwhakamahi",
-  "time-adjustment-note": "Hītori: Δ ngā hāora; Ingoa kaiwhakamahi ≠ Ngā kaiwhiwhi mahi."
+  "time-adjustment-note": "Hītori: Δ ngā hāora; Ingoa kaiwhakamahi ≠ Ngā kaiwhiwhi mahi.",
+  "auto-archive-days": "Purangatia ngā kāri i muri i ēnei rā kāore he mahi",
+  "auto-archive-off": "Weto",
+  "auto-archive-hint": "Ka tirohia ia hāora. Ka kiia he hohe te kāri ina panonitia; kāore rawa ngā tātauira e purangatia. Waiho kia pātea hei whakaweto."
 }

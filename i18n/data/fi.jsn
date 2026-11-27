@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Käytä Uimarata",
   "board-view-time": "Aika",
   "time-adjustments": "Tuntimuutokset tekijöittäin",
-  "time-adjustment-note": "Kirjattujen tuntien muutokset summan muokkaajan mukaan. Nämä eivät ole yksittäisiä työjaksoja. Negatiiviset luvut ovat korjauksia. Aiemman kirjaamattoman ajan tekijää ei voida päätellä."
+  "time-adjustment-note": "Kirjattujen tuntien muutokset summan muokkaajan mukaan. Nämä eivät ole yksittäisiä työjaksoja. Negatiiviset luvut ovat korjauksia. Aiemman kirjaamattoman ajan tekijää ei voida päätellä.",
+  "auto-archive-days": "Arkistoi kortit näin monen toimettoman päivän jälkeen",
+  "auto-archive-off": "Pois käytöstä",
+  "auto-archive-hint": "Tarkistetaan tunnin välein. Jokainen kortin muutos lasketaan toiminnaksi; mallikortteja ei koskaan arkistoida. Poista toiminto käytöstä jättämällä kenttä tyhjäksi."
 }

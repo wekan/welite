@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Geavat Bálggis",
   "board-view-time": "Áigi",
   "time-adjustments": "diimmut — Δ — Geavaheaddjinamma",
-  "time-adjustment-note": "Historjá: Δ diimmut; Geavaheaddjinamma ≠ Ovddasvástideaddjit."
+  "time-adjustment-note": "Historjá: Δ diimmut; Geavaheaddjinamma ≠ Ovddasvástideaddjit.",
+  "auto-archive-days": "Sirdde goarttaid vuorkái go leat leamaš ná galle beaivvi doaimma haga",
+  "auto-archive-off": "Eret",
+  "auto-archive-hint": "Dárkkistuvvo juohke diimmu. Goartta rehkenasto aktiivan juohke háve go dat rievdaduvvo; mállet eai goassege sirddu vuorkái. Guođe guorusin jus háliidat bidjat dán eret."
 }

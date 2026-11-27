@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Applica Corsia",
   "board-view-time": "Tiempo",
   "time-adjustments": "ore — Δ — Nomme 'e utente",
-  "time-adjustment-note": "Cronologgia: Δ ore; Nomme 'e utente ≠ Assignate."
+  "time-adjustment-note": "Cronologgia: Δ ore; Nomme 'e utente ≠ Assignate.",
+  "auto-archive-days": "Archivia 'e carte doppo stu nummero 'e juorne senza attività",
+  "auto-archive-off": "Stutato",
+  "auto-archive-hint": "Cuntrullato ogne ora. Na carta è attiva quanno vene cagnata; 'e mudelle nun songo archiviate maje. Lassa vacante pe stutà."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aanmelden Werkbaan",
   "board-view-time": "Tijd",
   "time-adjustments": "uren — Δ — Gebruikersnaam",
-  "time-adjustment-note": "Wijzigingen in geregistreerde uren, gegroepeerd op de persoon die het totaal aanpast. Dit zijn geen afzonderlijke werksessies. Negatieve waarden zijn correcties. Eerdere niet-geregistreerde tijd kan niet aan iemand worden toegeschreven."
+  "time-adjustment-note": "Wijzigingen in geregistreerde uren, gegroepeerd op de persoon die het totaal aanpast. Dit zijn geen afzonderlijke werksessies. Negatieve waarden zijn correcties. Eerdere niet-geregistreerde tijd kan niet aan iemand worden toegeschreven.",
+  "auto-archive-days": "Archiveer kaarten na dit aantal dagen zonder activiteit",
+  "auto-archive-off": "Uit",
+  "auto-archive-hint": "Wordt elk uur gecontroleerd. Elke wijziging aan een kaart telt als activiteit; sjablonen worden nooit gearchiveerd. Laat leeg om dit uit te schakelen."
 }

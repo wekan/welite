@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Uygula Kulvar",
   "board-view-time": "Zaman",
   "time-adjustments": "saat — Δ — Kullanıcı adı",
-  "time-adjustment-note": "Kaydedilen saatlerdeki değişiklikler, toplamı düzenleyen kişiye göre gruplandırılır. Bunlar ayrı çalışma oturumları değildir. Negatif değerler düzeltmelerdir. Daha önce kaydedilmemiş süre herhangi bir kişiye atfedilemez."
+  "time-adjustment-note": "Kaydedilen saatlerdeki değişiklikler, toplamı düzenleyen kişiye göre gruplandırılır. Bunlar ayrı çalışma oturumları değildir. Negatif değerler düzeltmelerdir. Daha önce kaydedilmemiş süre herhangi bir kişiye atfedilemez.",
+  "auto-archive-days": "Bu kadar gün etkinlik olmadığında kartları arşivle",
+  "auto-archive-off": "Kapalı",
+  "auto-archive-hint": "Her saat kontrol edilir. Karttaki her değişiklik etkinlik sayılır; şablonlar asla arşivlenmez. Kapatmak için boş bırakın."
 }

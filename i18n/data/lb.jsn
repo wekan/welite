@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Übernehmen Bunn",
   "board-view-time": "Zäit",
   "time-adjustments": "Stonnen — Δ — Benotzernumm",
-  "time-adjustment-note": "Ännerunge vun den erfaasste Stonnen, gruppéiert no der Persoun, déi den Total ännert. Dëst si keng eenzel Aarbechtssessiounen. Negativ Wäerter si Korrekturen. Zäit, déi virdrun net erfaasst gouf, kann kenger Persoun zougeuerdent ginn."
+  "time-adjustment-note": "Ännerunge vun den erfaasste Stonnen, gruppéiert no der Persoun, déi den Total ännert. Dëst si keng eenzel Aarbechtssessiounen. Negativ Wäerter si Korrekturen. Zäit, déi virdrun net erfaasst gouf, kann kenger Persoun zougeuerdent ginn.",
+  "auto-archive-days": "Kaarten no esou vill Deeg ouni Aktivitéit archivéieren",
+  "auto-archive-off": "Aus",
+  "auto-archive-hint": "Gëtt all Stonn iwwerpréift. Eng Kaart zielt als aktiv, wann se geännert gëtt; Virlage ginn ni archivéiert. Eidel loossen, fir dëst auszeschalten."
 }

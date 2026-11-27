@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Tillämpa Simbana",
   "board-view-time": "Tid",
   "time-adjustments": "timmar — Δ — Användarnamn",
-  "time-adjustment-note": "Ändringar av registrerade timmar, grupperade efter personen som ändrar totalsumman. Detta är inte enskilda arbetspass. Negativa värden är korrigeringar. Tid som inte registrerats tidigare kan inte tillskrivas någon."
+  "time-adjustment-note": "Ändringar av registrerade timmar, grupperade efter personen som ändrar totalsumman. Detta är inte enskilda arbetspass. Negativa värden är korrigeringar. Tid som inte registrerats tidigare kan inte tillskrivas någon.",
+  "auto-archive-days": "Arkivera kort efter så här många dagar utan aktivitet",
+  "auto-archive-off": "Av",
+  "auto-archive-hint": "Kontrolleras varje timme. Varje ändring av ett kort räknas som aktivitet; mallar arkiveras aldrig. Lämna tomt för att stänga av."
 }

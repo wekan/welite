@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "A kɛ Sira",
   "board-view-time": "Waati",
   "time-adjustments": "lɛriw — Δ — Baarakɛla tɔgɔ",
-  "time-adjustment-note": "Tariku: Δ lɛriw; Baarakɛla tɔgɔ ≠ Baarakɛlaw."
+  "time-adjustment-note": "Tariku: Δ lɛriw; Baarakɛla tɔgɔ ≠ Baarakɛlaw.",
+  "auto-archive-days": "Karti bila marayɔrɔ la ni don hakɛ nin tɛmɛna kɛwaleya tɛ a kan",
+  "auto-archive-off": "A dabɔlen",
+  "auto-archive-hint": "A bɛ lajɛ lɛrɛ o lɛrɛ. Ni karti yɛlɛmana, a bɛ jate i n’a fɔ kɛwaleya bɛ a kan; misaliw tɛ bila marayɔrɔ la abada. A to lankolon walasa k’a dabɔ."
 }

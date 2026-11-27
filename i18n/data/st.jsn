@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Sebedisa tseleng",
   "board-view-time": "Nako",
   "time-adjustments": "Ditokiso tsa nako ho ya ka motho ya di entseng",
-  "time-adjustment-note": "Diphetoho tsa dihora tse tlalehilweng, tse hlophisitsweng ho ya ka motho ya fetolang kakaretso. Tsena ha se dinako tsa mosebetsi ka bonngwe. Boleng bo ka tlase ho lefela ke ditokiso. Nako ya pele e sa tlalehwang e ke ke ya abelwa motho."
+  "time-adjustment-note": "Diphetoho tsa dihora tse tlalehilweng, tse hlophisitsweng ho ya ka motho ya fetolang kakaretso. Tsena ha se dinako tsa mosebetsi ka bonngwe. Boleng bo ka tlase ho lefela ke ditokiso. Nako ya pele e sa tlalehwang e ke ke ya abelwa motho.",
+  "auto-archive-days": "Isa dikarete polokelong ka mora palo ena ya matsatsi di sa sebetse",
+  "auto-archive-off": "E timme",
+  "auto-archive-hint": "E hlahlojwa hora le hora. Karete e nkuwa e sebetsa nako le nako ha e fetolwa; dithempleite ha di iswe polokelong le ka mohla. Siya sebaka se se na letho ho tima sena."
 }

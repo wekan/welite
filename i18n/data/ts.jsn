@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Tirhisa eka ndlela",
   "board-view-time": "Nkarhi",
   "time-adjustments": "Ku lulamisiwa ka nkarhi hi mutsari",
-  "time-adjustment-note": "Ku cinca ka tiawara leti tsariweke, swi hlengeletiwile hi munhu loyi a lulamisaka nhlayo hinkwayo. Leswi a hi minkarhi ya ntirho yo hambana. Mimpimo ya le hansi ka zero i ku lulamisa. Nkarhi wa khale lowu nga tsariwangiki a wu koti ku nyikiwa munhu."
+  "time-adjustment-note": "Ku cinca ka tiawara leti tsariweke, swi hlengeletiwile hi munhu loyi a lulamisaka nhlayo hinkwayo. Leswi a hi minkarhi ya ntirho yo hambana. Mimpimo ya le hansi ka zero i ku lulamisa. Nkarhi wa khale lowu nga tsariwangiki a wu koti ku nyikiwa munhu.",
+  "auto-archive-days": "Yisa makhadi eka vuhlayiselo bya swa khale endzhaku ka nhlayo leyi ya masiku ma nga tirhi",
+  "auto-archive-off": "Swi timiwile",
+  "auto-archive-hint": "Swi kamberiwa awara yin’wana ni yin’wana. Khadi ri tekiwa ri tirha nkarhi wun’wana ni wun’wana loko ri cinciwa; tithempleyiti a ti yisiwi eka vuhlayiselo bya swa khale nikatsongo. Siya ndhawu yi nga ri na xilo leswaku u tima leswi."
 }

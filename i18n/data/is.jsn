@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Virkja Sundbraut",
   "board-view-time": "Tími",
   "time-adjustments": "klukkustundir — Δ — Notandanafn",
-  "time-adjustment-note": "Breytingar á skráðum klukkustundum, flokkaðar eftir þeim sem breytir heildinni. Þetta eru ekki einstakar vinnulotur. Neikvæð gildi eru leiðréttingar. Ekki er hægt að eigna neinum tíma sem var ekki skráður áður."
+  "time-adjustment-note": "Breytingar á skráðum klukkustundum, flokkaðar eftir þeim sem breytir heildinni. Þetta eru ekki einstakar vinnulotur. Neikvæð gildi eru leiðréttingar. Ekki er hægt að eigna neinum tíma sem var ekki skráður áður.",
+  "auto-archive-days": "Setja spjöld í safn eftir þennan fjölda daga án virkni",
+  "auto-archive-off": "Slökkt",
+  "auto-archive-hint": "Athugað á klukkustundar fresti. Spjald telst virkt í hvert sinn sem því er breytt; sniðmát eru aldrei sett í safn. Hafðu reitinn auðan til að slökkva."
 }

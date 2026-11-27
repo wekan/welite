@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Nýt Bein",
   "board-view-time": "Tíð",
   "time-adjustments": "tímar — Δ — Brúkaranavn",
-  "time-adjustment-note": "Broytingar í skrásettum tímum, bólkaðar eftir tí persóni, sum broytir samlaða talið. Hetta eru ikki einstakar arbeiðsløtur. Negativ virði eru rættingar. Tíð, sum ikki varð skrásett áður, kann ikki knýtast at nøkrum persóni."
+  "time-adjustment-note": "Broytingar í skrásettum tímum, bólkaðar eftir tí persóni, sum broytir samlaða talið. Hetta eru ikki einstakar arbeiðsløtur. Negativ virði eru rættingar. Tíð, sum ikki varð skrásett áður, kann ikki knýtast at nøkrum persóni.",
+  "auto-archive-days": "Flyt kort í goymslu eftir so nógvar dagar uttan virksemi",
+  "auto-archive-off": "Sløkt",
+  "auto-archive-hint": "Verður kannað hvønn tíma. Eitt kort verður roknað sum virkið, hvørja ferð tað verður broytt; formar verða ongantíð fluttir í goymslu. Lat teigin vera tóman fyri at sløkkja."
 }

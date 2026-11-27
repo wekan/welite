@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Omba Njia",
   "board-view-time": "Wakati",
   "time-adjustments": "masaa — Δ — Jina la mtumiaji",
-  "time-adjustment-note": "Mabadiliko ya saa zilizorekodiwa, yaliyopangwa kulingana na mtu anayehariri jumla. Hivi si vipindi binafsi vya kazi. Thamani hasi ni masahihisho. Muda wa awali ambao haukurekodiwa hauwezi kuhusishwa na mtu yeyote."
+  "time-adjustment-note": "Mabadiliko ya saa zilizorekodiwa, yaliyopangwa kulingana na mtu anayehariri jumla. Hivi si vipindi binafsi vya kazi. Thamani hasi ni masahihisho. Muda wa awali ambao haukurekodiwa hauwezi kuhusishwa na mtu yeyote.",
+  "auto-archive-days": "Weka kadi kwenye kumbukumbu baada ya siku hizi bila shughuli",
+  "auto-archive-off": "Imezimwa",
+  "auto-archive-hint": "Huangaliwa kila saa. Kadi huhesabiwa kuwa hai kila inapobadilishwa; violezo haviwekwi kamwe kwenye kumbukumbu. Acha tupu ili kuzima."
 }

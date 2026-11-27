@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Àplica a sa corsia",
   "board-view-time": "Tempus",
   "time-adjustments": "Acontzos de su tempus pro autore",
-  "time-adjustment-note": "Modìficas a sas oras registradas, agrupadas segundu sa persone chi modìficat su totale. Non sunt sessiones de traballu individuales. Sos valores negativos sunt curretziones. Su tempus de in antis non registradu non si podet atribuire a nemos."
+  "time-adjustment-note": "Modìficas a sas oras registradas, agrupadas segundu sa persone chi modìficat su totale. Non sunt sessiones de traballu individuales. Sos valores negativos sunt curretziones. Su tempus de in antis non registradu non si podet atribuire a nemos.",
+  "auto-archive-days": "Archìvia is cartas a pustis de custu nùmeru de dies sena atividade",
+  "auto-archive-off": "Disativadu",
+  "auto-archive-hint": "Verificadu cada ora. Una carta est cunsiderada ativa cada borta chi est modificada; is modellos non sunt archiviados mai. Lassa bòidu pro disativare."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplike nan kouloir la",
   "board-view-time": "Tan",
   "time-adjustments": "Ajisteman tan selon otè",
-  "time-adjustment-note": "Chanjman nan kantite èdtan ki anrejistre yo, gwoupe selon moun ki modifye total la. Sa yo pa sesyon travay endividyèl. Valè negatif yo se koreksyon. Yo pa ka atribye tan anvan ki pa t anrejistre a okenn moun."
+  "time-adjustment-note": "Chanjman nan kantite èdtan ki anrejistre yo, gwoupe selon moun ki modifye total la. Sa yo pa sesyon travay endividyèl. Valè negatif yo se koreksyon. Yo pa ka atribye tan anvan ki pa t anrejistre a okenn moun.",
+  "auto-archive-days": "Mete kat yo nan achiv apre kantite jou sa a san aktivite",
+  "auto-archive-off": "Dezaktive",
+  "auto-archive-hint": "Yo verifye sa chak èdtan. Yon kat konsidere kòm aktif chak fwa yo modifye li; yo pa janm mete modèl yo nan achiv. Kite sa vid pou dezaktive li."
 }

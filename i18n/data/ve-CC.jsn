@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Àplica a la corsia",
   "board-view-time": "Tenpo",
   "time-adjustments": "Corezion del tenpo par autor",
-  "time-adjustment-note": "Canbiamenti a le ore registrade, ragrupà par la persona che modifica el totale. No le xe session de lavoro singole. I valori negativi i xe corezion. El tenpo de prima no registrà no se pol atribuirlo."
+  "time-adjustment-note": "Canbiamenti a le ore registrade, ragrupà par la persona che modifica el totale. No le xe session de lavoro singole. I valori negativi i xe corezion. El tenpo de prima no registrà no se pol atribuirlo.",
+  "auto-archive-days": "Sposta łe schede inte l’archivio dopo sti dì sensa atività",
+  "auto-archive-off": "Desativà",
+  "auto-archive-hint": "Controłà ogni ora. Na scheda ła xe considerà ativa ogni volta che ła vien canbià; i modełi no i vien mai archiviài. Lassa vodo par desativar."
 }

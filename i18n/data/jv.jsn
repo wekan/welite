@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Trapake Lajur",
   "board-view-time": "Wektu",
   "time-adjustments": "jam — Δ — Jeneng panganggo",
-  "time-adjustment-note": "Owah-owahan jam sing dicathet, diklompokake miturut wong sing nyunting gunggung wektu. Iki dudu sesi kerja siji-siji. Nilai negatif iku koreksi. Wektu sadurunge sing ora dicathet ora bisa digandhengake karo sapa wae."
+  "time-adjustment-note": "Owah-owahan jam sing dicathet, diklompokake miturut wong sing nyunting gunggung wektu. Iki dudu sesi kerja siji-siji. Nilai negatif iku koreksi. Wektu sadurunge sing ora dicathet ora bisa digandhengake karo sapa wae.",
+  "auto-archive-days": "Arsipake kertu sawise ora ana kegiatan nganti pirang dina iki",
+  "auto-archive-off": "Mati",
+  "auto-archive-hint": "Dipriksa saben jam. Kertu dianggep aktif saben ana owah-owahan; cithakan ora tau diarsipake. Kosongake kanggo mateni."
 }

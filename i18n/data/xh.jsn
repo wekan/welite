@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Faka isicelo Ukuqubha",
   "board-view-time": "Ixesha",
   "time-adjustments": "iiyure — Δ — Igama lomsebenzisi",
-  "time-adjustment-note": "Imbali: Δ iiyure; Igama lomsebenzisi ≠ Abathunyiweyo."
+  "time-adjustment-note": "Imbali: Δ iiyure; Igama lomsebenzisi ≠ Abathunyiweyo.",
+  "auto-archive-days": "Faka amakhadi kwindawo yogcino emva kweli nani leentsuku engenamsebenzi",
+  "auto-archive-off": "Kucinyiwe",
+  "auto-archive-hint": "Kujongwa rhoqo ngeyure. Ikhadi lithathwa njengelisebenzayo nanini na litshintshwa; iitempleyithi azifakwa kwindawo yogcino nanini na. Shiya kungenanto ukuze ucime oku."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Appliquer Yoon",
   "board-view-time": "Waxtu",
   "time-adjustments": "waxtu — Δ — Turu jëfandikukat bi",
-  "time-adjustment-note": "Jaar jaar: Δ waxtu; Turu jëfandikukat bi ≠ Ñi ñu sas."
+  "time-adjustment-note": "Jaar jaar: Δ waxtu; Turu jëfandikukat bi ≠ Ñi ñu sas.",
+  "auto-archive-days": "Yóbbu karta yi ci àrsiw bi gannaaw limu fan yii te amul yëngu",
+  "auto-archive-off": "Suux",
+  "auto-archive-hint": "Dañu koy seet waxtu wu nekk. Karta bu ñu soppi dañu koy jàppe ni mu ngi yëngu; duñu yóbbu royuwaay yi ci àrsiw bi mukk. Bayyil wàll wi deful dara ngir suuxal ko."
 }

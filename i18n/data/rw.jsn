@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Shyira ku murongo",
   "board-view-time": "Igihe",
   "time-adjustments": "amasaha — Δ — Izina ry'ukoresha",
-  "time-adjustment-note": "Amateka: Δ amasaha; Izina ry'ukoresha ≠ Abahawe akazi."
+  "time-adjustment-note": "Amateka: Δ amasaha; Izina ry'ukoresha ≠ Abahawe akazi.",
+  "auto-archive-days": "Shyira amakarita mu bubiko nyuma y'iyi minsi nta gikorwa",
+  "auto-archive-off": "Birazimye",
+  "auto-archive-hint": "Bigenzurwa buri saha. Ikarita ifatwa nk'ikora igihe cyose ihinduwe; inyandikorugero ntizigera zishyirwa mu bubiko. Hasige ubusa kugira ngo ubizimye."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Cuir i bhfeidhm ar an lána",
   "board-view-time": "Am",
   "time-adjustments": "uaireanta — Δ — Ainm úsáideora",
-  "time-adjustment-note": "Athruithe ar na huaireanta taifeadta, grúpáilte de réir an duine a chuireann an t-iomlán in eagar. Ní seisiúin oibre aonair iad seo. Is ceartúcháin iad luachanna diúltacha. Ní féidir am roimhe seo nár taifeadadh a lua le duine ar bith."
+  "time-adjustment-note": "Athruithe ar na huaireanta taifeadta, grúpáilte de réir an duine a chuireann an t-iomlán in eagar. Ní seisiúin oibre aonair iad seo. Is ceartúcháin iad luachanna diúltacha. Ní féidir am roimhe seo nár taifeadadh a lua le duine ar bith.",
+  "auto-archive-days": "Cartlannaigh cártaí tar éis an oiread seo laethanta gan ghníomhaíocht",
+  "auto-archive-off": "Múchta",
+  "auto-archive-hint": "Seiceáiltear gach uair an chloig é. Meastar cárta a bheith gníomhach nuair a athraítear é; ní chartlannaítear teimpléid riamh. Fág folamh chun é a mhúchadh."
 }

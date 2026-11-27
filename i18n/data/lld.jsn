@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Apliché ala swimlane",
   "board-view-time": "Tëmp",
   "time-adjustments": "Mudazions dl tëmp do autor",
-  "time-adjustment-note": "Mudazions dla ëures registredes, abinedes do la persona che muda l total. Chëstes ne n’ie nia sescions de lëur singules. I valëures negatifs ie corezions. L tëmp de dant nia registrà ne possa nia vester dat a deguni."
+  "time-adjustment-note": "Mudazions dla ëures registredes, abinedes do la persona che muda l total. Chëstes ne n’ie nia sescions de lëur singules. I valëures negatifs ie corezions. L tëmp de dant nia registrà ne possa nia vester dat a deguni.",
+  "auto-archive-days": "Sposté la ciartes tl archif do tanc dis zënza ativité",
+  "auto-archive-off": "Desativà",
+  "auto-archive-hint": "Cuntrolé vigni ëura. Na ciarta ie ativa vigni iede che la vën mudeda; i modiei ne vën mai spostei tl archif. Lascié l ciamp vueit per desativé."
 }

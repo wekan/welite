@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Primjeni Traka",
   "board-view-time": "Vrijeme",
   "time-adjustments": "sati — Δ — Korisničko ime",
-  "time-adjustment-note": "Promjene evidentiranih sati, grupisane prema osobi koja uređuje ukupan iznos. To nisu pojedinačne radne sesije. Negativne vrijednosti su ispravke. Ranije neevidentirano vrijeme ne može se pripisati nijednoj osobi."
+  "time-adjustment-note": "Promjene evidentiranih sati, grupisane prema osobi koja uređuje ukupan iznos. To nisu pojedinačne radne sesije. Negativne vrijednosti su ispravke. Ranije neevidentirano vrijeme ne može se pripisati nijednoj osobi.",
+  "auto-archive-days": "Arhiviraj kartice nakon ovoliko dana bez aktivnosti",
+  "auto-archive-off": "Isključeno",
+  "auto-archive-hint": "Provjerava se svakog sata. Kartica se smatra aktivnom pri svakoj promjeni; predlošci se nikada ne arhiviraju. Za isključivanje ostavite prazno."
 }

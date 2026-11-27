@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Cuir an sàs Slighe",
   "board-view-time": "Ùine",
   "time-adjustments": "uairean — Δ — Ainm-cleachdaiche",
-  "time-adjustment-note": "Atharrachaidhean air na h-uairean clàraichte, air an cruinneachadh a rèir an neach a dheasaicheas an t-suim iomlan. Chan e seiseanan obrach fa leth a tha seo. Tha luachan àicheil nan ceartachaidhean. Cha ghabh ùine roimhe nach deach a chlàradh a chur às leth duine sam bith."
+  "time-adjustment-note": "Atharrachaidhean air na h-uairean clàraichte, air an cruinneachadh a rèir an neach a dheasaicheas an t-suim iomlan. Chan e seiseanan obrach fa leth a tha seo. Tha luachan àicheil nan ceartachaidhean. Cha ghabh ùine roimhe nach deach a chlàradh a chur às leth duine sam bith.",
+  "auto-archive-days": "Tasglannaich cairtean às dèidh na h-uimhir seo de làithean gun ghnìomhachd",
+  "auto-archive-off": "Dheth",
+  "auto-archive-hint": "Thèid seo a sgrùdadh gach uair a thìde. Tha cairt gnìomhach uair sam bith a thèid atharrachadh oirre; cha tèid teamplaidean a thasglannadh gu bràth. Fàg bàn gus a chur dheth."
 }

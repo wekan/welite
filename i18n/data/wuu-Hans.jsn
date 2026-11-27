@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "应用到泳道",
   "board-view-time": "时间",
   "time-adjustments": "按修改者分组个时间调整",
-  "time-adjustment-note": "记录小时数个改动，按修改总数个人分组。搿些勿是单独个工作时段。负数是修正。以前呒没记录个时间归勿到具体个人。"
+  "time-adjustment-note": "记录小时数个改动，按修改总数个人分组。搿些勿是单独个工作时段。负数是修正。以前呒没记录个时间归勿到具体个人。",
+  "auto-archive-days": "卡片呒没活动超过搿能多天以后移到存档里",
+  "auto-archive-off": "关脱",
+  "auto-archive-hint": "每个钟头检查一趟。卡片只要改动过就算有活动；模板绝勿会移到存档里。留空就好关脱搿项功能。"
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Ilapat Daanan",
   "board-view-time": "Oras",
   "time-adjustments": "mga oras — Δ — pangalan ng gumagamit",
-  "time-adjustment-note": "Mga pagbabago sa naitalang oras, na nakapangkat ayon sa taong nag-edit ng kabuuan. Hindi ito mga indibidwal na sesyon ng trabaho. Ang mga negatibong halaga ay mga pagwawasto. Hindi maaaring iugnay sa sinuman ang dating oras na hindi naitala."
+  "time-adjustment-note": "Mga pagbabago sa naitalang oras, na nakapangkat ayon sa taong nag-edit ng kabuuan. Hindi ito mga indibidwal na sesyon ng trabaho. Ang mga negatibong halaga ay mga pagwawasto. Hindi maaaring iugnay sa sinuman ang dating oras na hindi naitala.",
+  "auto-archive-days": "Ilipat sa archive ang mga kard pagkatapos ng ganitong bilang ng araw na walang aktibidad",
+  "auto-archive-off": "Naka-off",
+  "auto-archive-hint": "Sinusuri bawat oras. Itinuturing na aktibo ang kard sa tuwing binabago ito; hindi kailanman inililipat sa archive ang mga template. Iwanang walang laman upang i-off."
 }

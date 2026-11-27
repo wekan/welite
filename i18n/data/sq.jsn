@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Zbato Korsi",
   "board-view-time": "Koha",
   "time-adjustments": "orë — Δ — Emri i përdoruesit",
-  "time-adjustment-note": "Ndryshimet në orët e regjistruara, të grupuara sipas personit që redakton totalin. Këto nuk janë seanca pune individuale. Vlerat negative janë korrigjime. Koha e mëparshme e paregjistruar nuk mund t’i atribuohet asnjë personi."
+  "time-adjustment-note": "Ndryshimet në orët e regjistruara, të grupuara sipas personit që redakton totalin. Këto nuk janë seanca pune individuale. Vlerat negative janë korrigjime. Koha e mëparshme e paregjistruar nuk mund t’i atribuohet asnjë personi.",
+  "auto-archive-days": "Arkivo kartat pas kaq ditësh pa veprimtari",
+  "auto-archive-off": "Çaktivizuar",
+  "auto-archive-hint": "Kontrollohet çdo orë. Një kartë quhet aktive sa herë ndryshohet; shabllonet nuk arkivohen kurrë. Lëre bosh për ta çaktivizuar."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Tapasse Swimbaan",
   "board-view-time": "Tiid",
   "time-adjustments": "oeren — Δ — Brûkersnamme",
-  "time-adjustment-note": "Feroarings oan registrearre oeren, groepearre neffens de persoan dy't it totaal bewurket. Dit binne gjin aparte wurksesjes. Negative wearden binne korreksjes. Eardere net-registrearre tiid kin net oan immen taskreaun wurde."
+  "time-adjustment-note": "Feroarings oan registrearre oeren, groepearre neffens de persoan dy't it totaal bewurket. Dit binne gjin aparte wurksesjes. Negative wearden binne korreksjes. Eardere net-registrearre tiid kin net oan immen taskreaun wurde.",
+  "auto-archive-days": "Argivearje kaarten nei safolle dagen sûnder aktiviteit",
+  "auto-archive-off": "Ut",
+  "auto-archive-hint": "Wurdt elk oere kontrolearre. In kaart telt as aktyf as er wizige wurdt; sjabloanen wurde nea argivearre. Lit leech om dit út te skeakeljen."
 }

@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Doen aansoek Swembaan",
   "board-view-time": "Tyd",
   "time-adjustments": "ure — Δ — Gebruikersnaam",
-  "time-adjustment-note": "Veranderings aan aangetekende ure, gegroepeer volgens die persoon wat die totaal wysig. Dit is nie afsonderlike werksessies nie. Negatiewe waardes is regstellings. Tyd wat vroeër nie aangeteken is nie, kan nie aan iemand toegeskryf word nie."
+  "time-adjustment-note": "Veranderings aan aangetekende ure, gegroepeer volgens die persoon wat die totaal wysig. Dit is nie afsonderlike werksessies nie. Negatiewe waardes is regstellings. Tyd wat vroeër nie aangeteken is nie, kan nie aan iemand toegeskryf word nie.",
+  "auto-archive-days": "Argiveer kaarte ná soveel dae sonder aktiwiteit",
+  "auto-archive-off": "Af",
+  "auto-archive-hint": "Word elke uur nagegaan. 'n Kaart tel as aktief wanneer dit verander word; sjablone word nooit geargiveer nie. Laat leeg om dit af te skakel."
 }

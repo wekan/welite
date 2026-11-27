@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "Aplicar Couloir",
   "board-view-time": "Orodatatge",
   "time-adjustments": "oras — Δ — Nom d’utilizaire",
-  "time-adjustment-note": "Cambiaments de las oras enregistradas, gropats segon la persona que modifica lo total. Son pas de sesilhas de trabalh individualas. Las valors negativas son de correccions. Lo temps anterior pas enregistrat pòt pas èsser atribuït a degun."
+  "time-adjustment-note": "Cambiaments de las oras enregistradas, gropats segon la persona que modifica lo total. Son pas de sesilhas de trabalh individualas. Las valors negativas son de correccions. Lo temps anterior pas enregistrat pòt pas èsser atribuït a degun.",
+  "auto-archive-days": "Archivar las cartas aprèp aqueste nombre de jorns sens activitat",
+  "auto-archive-off": "Desactivat",
+  "auto-archive-hint": "Verificat cada ora. Una carta es considerada activa quand es modificada ; los modèls son pas jamai archivats. Daissatz void per desactivar."
 }

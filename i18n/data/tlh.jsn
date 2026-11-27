@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "HevaD yIlo'",
   "board-view-time": "poH",
   "time-adjustments": "ghItlhwI'vaD poH choHmey",
-  "time-adjustment-note": "qonlu'pu'bogh repmey choHmey, Hoch choHwI'vaD ghomlu'. vum poHmey nIteb ghap bIH. pagh mI'mey tI'ghach 'oH. qonlu'be'pu'bogh poH ngo' vay'vaD nobHa'laHbe'lu'."
+  "time-adjustment-note": "qonlu'pu'bogh repmey choHmey, Hoch choHwI'vaD ghomlu'. vum poHmey nIteb ghap bIH. pagh mI'mey tI'ghach 'oH. qonlu'be'pu'bogh poH ngo' vay'vaD nobHa'laHbe'lu'.",
+  "auto-archive-days": "choHbe'taHvIS 'echletHom, rInDI' jajmeyvam, polmeH DaqDaq yIvIHmoH",
+  "auto-archive-off": "Qotlhlu'",
+  "auto-archive-hint": "Hoch rep nuDlu'. 'echletHom choHlu'DI', vangtaH 'e' qellu'; not chenmoHmeH ghantoHmey polmeH DaqDaq vIHmoHlu'. DaQotlhmeH, chImmoH."
 }

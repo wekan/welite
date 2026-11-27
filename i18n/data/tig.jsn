@@ -2331,5 +2331,8 @@
   "wip-limit-group-apply-swimlane": "ተግብር መገዲ",
   "board-view-time": "ወቅት",
   "time-adjustments": "ሰዐታት — Δ — ስም ተጠቃማይ",
-  "time-adjustment-note": "ታሪኽ: Δ ሰዐታት; ስም ተጠቃማይ ≠ ሓለፍቲ."
+  "time-adjustment-note": "ታሪኽ: Δ ሰዐታት; ስም ተጠቃማይ ≠ ሓለፍቲ.",
+  "auto-archive-days": "ካርዳት ምን ለእሊ ዕደት አምዕል ብላ ሐረከት ሐልፈው እት መሕፈዝ አትሐዞም",
+  "auto-archive-off": "ዐጡል",
+  "auto-archive-hint": "እት ኩል ሰዐት ይትፈተሽ። ወረቀት ካርድ ወቅት ለትቀየር ሐረከት ብታ ተትሐሰብ፤ ሞደላት እት መሕፈዝ አበደን ኢትትሐዝ። ምስል ትዐጥሎ ፋርግ ሕድጎ።"
 }
