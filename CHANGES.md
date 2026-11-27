@@ -9,6 +9,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Mark subtasks done or undone on the parent card. The section reports the
   completed and total counts and shows the state read-only to viewers.
   A subtask with multiple parents appears under each, with one shared status.
+  Linked subtasks read and update the original card's status according to
+  the viewer's permissions on that card.
 - Add and open subtasks from the card's Subtasks section. The title editor
   follows the member's Submit on Enter setting in both modes. Optionally
   copy the parent's current labels when creating a subtask.

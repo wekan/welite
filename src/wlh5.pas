@@ -3534,22 +3534,27 @@ end;
 
 function SubtasksSection(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string;
   Writable: Boolean): string;
-var Rows: TWLRows; Row: TWLRow; AddTitle, Items, Toggle, Status, Kind: string; Done, Total: Integer; Checked: Boolean;
+var Rows: TWLRows; Row: TWLRow; AddTitle, Items, Toggle, Status, Kind, TargetBoard, TargetId: string; Done, Total: Integer; Checked, TargetReadable: Boolean;
 begin
   Items := ''; Done := 0; Total := 0;
-  Rows := Db.Query('SELECT c.id,c.title,c.boardId,b.slug,COALESCE(c.dueComplete,0),COALESCE(c.type,''cardType-card'') ' +
-    'FROM cards c JOIN boards b ON b.id=c.boardId WHERE ' +
+  Rows := Db.Query('SELECT c.id,c.title,c.boardId,b.slug,COALESCE(target.dueComplete,0),COALESCE(target.boardId,''''),COALESCE(target.id,'''') ' +
+    'FROM cards c JOIN boards b ON b.id=c.boardId LEFT JOIN cards target ON ' +
+    'target.id=CASE WHEN c.type=''cardType-linkedCard'' THEN c.linkedId ELSE c.id END ' +
+    'AND COALESCE(target.type,''cardType-card'')=''cardType-card'' AND target.archived=0 AND target.deletedAt IS NULL WHERE ' +
     SubtaskParentSql(CardId, 'c.') + ' AND c.archived=0 AND c.deletedAt IS NULL AND b.archived=0 ORDER BY c.subtaskSort,c.sort,c.id;');
   for Row in Rows do
     if BoardCanRead(Db, UserId, Row[2]) or
        (AssignedOnlyMember(Db, UserId, Row[2]) and CardAssignedTo(Db, UserId, Row[2], Row[0])) then
     begin
-      Checked := Row[4] = '1';
-      Inc(Total);
+      TargetBoard := Row[5]; TargetId := Row[6];
+      TargetReadable := (TargetId <> '') and (BoardCanRead(Db, UserId, TargetBoard) or
+        (AssignedOnlyMember(Db, UserId, TargetBoard) and CardAssignedTo(Db, UserId, TargetBoard, TargetId)));
+      Checked := TargetReadable and (Row[4] = '1');
+      if TargetReadable then Inc(Total);
       if Checked then Inc(Done);
-      Status := ' role="checkbox" aria-checked="' + IfThen(Checked, 'true', 'false') + '"';
+      Status := ' role="checkbox" aria-checked="' + IfThen(TargetReadable, IfThen(Checked, 'true', 'false'), 'mixed') + '"';
       Kind := '<div class="materialCheckBox' + IfThen(Checked, ' is-checked', '') + '"></div>';
-      if (Row[5] = 'cardType-card') and BoardCanWrite(Db, UserId, Row[2]) then
+      if TargetReadable and BoardCanWrite(Db, UserId, TargetBoard) then
         Toggle := '<a class="subtask-done-toggle js-toggle-subtask-done" href="#"' + Status + ' data-parent="' +
           HtmlAttr(CardId) + '" data-subtask="' + HtmlAttr(Row[0]) + '" title="' +
           HtmlAttr(IfThen(Checked, Words.Text('subtask-mark-not-done', 'Mark subtask not done'),

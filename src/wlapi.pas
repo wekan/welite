@@ -5089,7 +5089,7 @@ begin
 end;
 
 function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
-var Rows:TWLRows; ParentScope,SubtaskScope,ParentBoard,TargetBoard,Guard,Value:string; Policy:TFieldPolicy;
+var Rows:TWLRows; ParentScope,SubtaskScope,TargetScope,ParentBoard,SubtaskBoard,TargetBoard,TargetId,Guard,Value:string; Policy:TFieldPolicy;
 begin
   Error:='not-found';
   if (ParentId='') or (SubtaskId='') or (Pos(#0,ParentId+SubtaskId)>0) then Exit(404);
@@ -5100,19 +5100,38 @@ begin
   if not BoardCanRead(T.Db,UserId,ParentBoard) and
     not (AssignedOnlyMember(T.Db,UserId,ParentBoard) and CardAssignedTo(T.Db,UserId,ParentBoard,ParentId)) then Exit(404);
   SubtaskScope:='id='+QuotedStr(SubtaskId)+' AND '+SubtaskParentSql(ParentId,'')+
-    ' AND archived=0 AND deletedAt IS NULL AND COALESCE(type,''cardType-card'')=''cardType-card''';
-  Rows:=T.Db.Query('SELECT boardId FROM cards WHERE '+SubtaskScope+';');
+    ' AND archived=0 AND deletedAt IS NULL';
+  Rows:=T.Db.Query('SELECT boardId,COALESCE(type,''cardType-card''),COALESCE(linkedId,'''') FROM cards WHERE '+SubtaskScope+';');
+  if Length(Rows)<>1 then Exit(404);
+  SubtaskBoard:=Rows[0][0];
+  if not BoardCanRead(T.Db,UserId,SubtaskBoard) and
+    not (AssignedOnlyMember(T.Db,UserId,SubtaskBoard) and CardAssignedTo(T.Db,UserId,SubtaskBoard,SubtaskId)) then Exit(404);
+  if Rows[0][1]='cardType-linkedCard' then
+  begin
+    TargetId:=Rows[0][2];
+    if TargetId='' then Exit(404);
+    SubtaskScope:=SubtaskScope+' AND type=''cardType-linkedCard'' AND linkedId='+QuotedStr(TargetId);
+  end
+  else if Rows[0][1]='cardType-card' then
+  begin
+    TargetId:=SubtaskId;
+    SubtaskScope:=SubtaskScope+' AND COALESCE(type,''cardType-card'')=''cardType-card''';
+  end
+  else Exit(404);
+  SubtaskScope:=SubtaskScope+' AND boardId='+QuotedStr(SubtaskBoard);
+  TargetScope:='id='+QuotedStr(TargetId)+' AND archived=0 AND deletedAt IS NULL AND COALESCE(type,''cardType-card'')=''cardType-card''';
+  Rows:=T.Db.Query('SELECT boardId FROM cards WHERE '+TargetScope+';');
   if Length(Rows)<>1 then Exit(404);
   TargetBoard:=Rows[0][0];
   if not BoardCanWrite(T.Db,UserId,TargetBoard) then begin Error:='not-authorized';Exit(403);end;
   Policy:=TFieldPolicy.Create(T.Db,UserId,TargetBoard,'');
   try Guard:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
-  SubtaskScope:=SubtaskScope+' AND boardId='+QuotedStr(TargetBoard);
+  TargetScope:=TargetScope+' AND boardId='+QuotedStr(TargetBoard);
   Value:=IntToStr(Ord(Done));
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM cards WHERE '+ParentScope+
     ' AND boardId='+QuotedStr(ParentBoard)+') AND EXISTS(SELECT 1 FROM cards WHERE '+SubtaskScope+
-    ') THEN 1 ELSE json(''Subtask scope changed'') END; UPDATE cards SET dueComplete='+Value+
-    ',modifiedAt='+QuotedStr(NowIso)+' WHERE '+SubtaskScope+' AND COALESCE(dueComplete,0)<>'+Value+'; COMMIT;') then
+    ') AND EXISTS(SELECT 1 FROM cards WHERE '+TargetScope+') THEN 1 ELSE json(''Subtask scope changed'') END; UPDATE cards SET dueComplete='+Value+
+    ',modifiedAt='+QuotedStr(NowIso)+' WHERE '+TargetScope+' AND COALESCE(dueComplete,0)<>'+Value+'; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update subtask';Exit(500);end;
   Error:='';Result:=200;
 end;
