@@ -20,7 +20,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Selecting Subtasks preserves their completion state even when Dates are
   excluded, including when a subtask also appears in the main cards array.
   Dates controls the last edit and activity timestamps in JSON and ZIP,
-  and native board imports restore both timestamps when supplied.
+  and native board imports restore both timestamps when supplied. Board
+  imports also restore card stickers and locations, including legacy single
+  location fields, when the selected data includes them.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

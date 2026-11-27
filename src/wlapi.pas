@@ -3815,6 +3815,8 @@ begin
   Result:=True;
 end;
 
+function CardDecorations(Value:TJSONData;const Key:string):TJSONArray; forward;
+
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
@@ -3903,6 +3905,44 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         Sql:=Sql+'UPDATE cards SET extra_json=json_patch(extra_json,'+QuotedStr(Extra.AsJSON)+
           ') WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
     finally Extra.Free;Selected.Free;end;
+  end;
+  procedure ImportCardDecorations(Entry:TJSONObject;const Id:string);
+  var Extra:TJSONObject; Field:TJSONData; Key,Sets:string;
+  begin
+    Extra:=TJSONObject.Create;
+    try
+      Sets:='';
+      for Key in ['locations','stickers'] do
+      begin
+        Field:=Entry.Find(Key);
+        if (Field=nil) or (Field.JSONType=jtNull) then Continue;
+        try
+          Extra.Add(Key,CardDecorations(Field,Key));
+        except
+          on E:Exception do raise EConvertError.Create('Invalid imported card decoration');
+        end;
+      end;
+      if Extra.Count>0 then Sets:=',extra_json=json_patch(extra_json,'+QuotedStr(Extra.AsJSON)+')';
+      for Key in ['locationName','locationAddress','locationLatitude','locationLongitude'] do
+      begin
+        Field:=Entry.Find(Key);
+        if (Field=nil) or (Field.JSONType=jtNull) then Continue;
+        if (Key='locationName') or (Key='locationAddress') then
+        begin
+          if (Field.JSONType<>jtString) or (Pos(#0,Field.AsString)>0) then
+            raise EConvertError.Create('Invalid imported location text');
+          Sets:=Sets+','+Key+'='+QuotedStr(Field.AsString);
+        end
+        else
+        begin
+          if (Field.JSONType<>jtNumber) or IsNan(Field.AsFloat) or IsInfinite(Field.AsFloat) then
+            raise EConvertError.Create('Invalid imported location coordinate');
+          Sets:=Sets+','+Key+'='+Field.AsJSON;
+        end;
+      end;
+      if Sets<>'' then Sql:=Sql+'UPDATE cards SET '+Copy(Sets,2,Length(Sets))+
+        ' WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
+    finally Extra.Free;end;
   end;
   function Mapped(Index:Integer;const Id:string;Required:Boolean=False):string;
   begin
@@ -4641,6 +4681,7 @@ begin
           QuotedStr(Text(Row,'assignedBy'))+','+BooleanValue(Row,'archived')+','+ImportedColor(Row)+','+BooleanValue(Row,'dueComplete')+'); ';
         ImportParentLinks(Row,CardId);
         ImportCardPeople(Row,CardId);
+        ImportCardDecorations(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
         ImportCardDependencies(Row,CardId);
