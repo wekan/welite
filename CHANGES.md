@@ -578,6 +578,14 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board, opened by address and in the Archive; the board's activities are not
   theirs. `tests/view.py` checks each, and all six of WeKan's
   history-read-scope tests pass.
+- Add WeKan's board announcement (#1566): a board admin's text, from the
+  board menu, shown to every member above the board as plain text until they
+  dismiss it, and again after it is edited; in a shared store it is the board
+  document's own, its version a date WeKan reads. A member's own dismissal no
+  longer keeps the next change from reaching their page. Board settings an
+  assigned-only member keeps of their own (their dismissal among them) are
+  theirs to write. `tests/view.py` checks each; WeKan's board-announcement
+  passes, its four languages too.
 - Keep what was done in a custom field's editor opened before the last save
   is drawn: a box turned over is turned over from the new value, a changed
   text is kept (Weddy's weddy.js, as its fix of 03-cards-operations' checkbox

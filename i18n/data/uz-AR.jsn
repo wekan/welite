@@ -2311,5 +2311,7 @@
   "card-blocked": "بلاکلنگن",
   "class-of-service": "خذمت صنفی",
   "moscow-priority": "MoSCoW اوستووارلیگی",
-  "wsjf-score": "WSJF بالی"
+  "wsjf-score": "WSJF بالی",
+  "board-announcement": "تخته اعلانی",
+  "board-announcement-enabled": "اوشبو تخته‌دهگی هر کیمگه کۉرسه‌تیش"
 }

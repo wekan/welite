@@ -2311,5 +2311,7 @@
   "card-blocked": "অবরুদ্ধ",
   "class-of-service": "সেবার শ্রেণি",
   "moscow-priority": "MoSCoW অগ্রাধিকার",
-  "wsjf-score": "WSJF স্কোর"
+  "wsjf-score": "WSJF স্কোর",
+  "board-announcement": "বোর্ডের ঘোষণা",
+  "board-announcement-enabled": "এই বোর্ডের সবাইকে এটি দেখান"
 }

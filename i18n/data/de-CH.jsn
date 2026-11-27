@@ -2311,5 +2311,7 @@
   "card-blocked": "Blockiert",
   "class-of-service": "Serviceklasse",
   "moscow-priority": "MoSCoW-Priorität",
-  "wsjf-score": "WSJF-Wert"
+  "wsjf-score": "WSJF-Wert",
+  "board-announcement": "Mitteilung zur Arbeitstafel",
+  "board-announcement-enabled": "Allen auf dieser Arbeitstafel anzeigen"
 }

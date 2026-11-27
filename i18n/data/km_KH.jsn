@@ -2311,5 +2311,7 @@
   "card-blocked": "ត្រូវបានរារាំង",
   "class-of-service": "ថ្នាក់សេវាកម្ម",
   "moscow-priority": "អាទិភាព MoSCoW",
-  "wsjf-score": "ពិន្ទុ WSJF"
+  "wsjf-score": "ពិន្ទុ WSJF",
+  "board-announcement": "សេចក្តីប្រកាសក្តារ",
+  "board-announcement-enabled": "បង្ហាញវាដល់អ្នកទាំងអស់គ្នានៅលើក្តារនេះ"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokeatuta",
   "class-of-service": "Zerbitzu-klasea",
   "moscow-priority": "MoSCoW lehentasuna",
-  "wsjf-score": "WSJF puntuazioa"
+  "wsjf-score": "WSJF puntuazioa",
+  "board-announcement": "Arbelaren iragarkia",
+  "board-announcement-enabled": "Erakutsi arbel honetako guztiei"
 }

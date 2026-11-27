@@ -2311,5 +2311,7 @@
   "card-blocked": "Lettys",
   "class-of-service": "Klass gonis",
   "moscow-priority": "Ragwiryans MoSCoW",
-  "wsjf-score": "Skor WSJF"
+  "wsjf-score": "Skor WSJF",
+  "board-announcement": "Deklaryans an estyllen",
+  "board-announcement-enabled": "Diskwedh dhe bubonan war an estyllen ma"
 }

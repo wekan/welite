@@ -2311,5 +2311,7 @@
   "card-blocked": "Блокланған",
   "class-of-service": "Хеҙмәтләндереү класы",
   "moscow-priority": "MoSCoW өҫтөнлөгө",
-  "wsjf-score": "WSJF балы"
+  "wsjf-score": "WSJF балы",
+  "board-announcement": "Такта иғланы",
+  "board-announcement-enabled": "Уны был тактала барыһына ла күрһәтергә"
 }

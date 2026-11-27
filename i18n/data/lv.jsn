@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloķēta",
   "class-of-service": "Pakalpojuma klase",
   "moscow-priority": "MoSCoW prioritāte",
-  "wsjf-score": "WSJF vērtējums"
+  "wsjf-score": "WSJF vērtējums",
+  "board-announcement": "Dēļa paziņojums",
+  "board-announcement-enabled": "Rādīt visiem šajā dēlī"
 }

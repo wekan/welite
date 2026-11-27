@@ -2311,5 +2311,7 @@
   "card-blocked": "Tarovi",
   "class-of-service": "Mataqali veiqaravi",
   "moscow-priority": "Ka bibi MoSCoW",
-  "wsjf-score": "Maka WSJF"
+  "wsjf-score": "Maka WSJF",
+  "board-announcement": "Itukutuku ni vola",
+  "board-announcement-enabled": "Vakaraitaka vei ira kece ena vola oqo"
 }

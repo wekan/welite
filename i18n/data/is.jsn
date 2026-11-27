@@ -2311,5 +2311,7 @@
   "card-blocked": "Hindrað",
   "class-of-service": "Þjónustuflokkur",
   "moscow-priority": "MoSCoW forgangur",
-  "wsjf-score": "WSJF einkunn"
+  "wsjf-score": "WSJF einkunn",
+  "board-announcement": "Tilkynning á töflu",
+  "board-announcement-enabled": "Sýna öllum á þessari töflu"
 }

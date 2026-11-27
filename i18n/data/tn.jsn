@@ -2311,5 +2311,7 @@
   "card-blocked": "E thibetswe",
   "class-of-service": "Setlhopha sa tirelo",
   "moscow-priority": "Botlhokwa jwa MoSCoW",
-  "wsjf-score": "Maduo a WSJF"
+  "wsjf-score": "Maduo a WSJF",
+  "board-announcement": "Kitsiso ya boto",
+  "board-announcement-enabled": "E bontsha mongwe le mongwe mo botong e"
 }

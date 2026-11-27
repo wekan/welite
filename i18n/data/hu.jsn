@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokkolva",
   "class-of-service": "Szolgáltatási osztály",
   "moscow-priority": "MoSCoW prioritás",
-  "wsjf-score": "WSJF pontszám"
+  "wsjf-score": "WSJF pontszám",
+  "board-announcement": "Táblahirdetmény",
+  "board-announcement-enabled": "Megjelenítés mindenkinek ezen a táblán"
 }

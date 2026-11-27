@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokeeritud",
   "class-of-service": "Teenindusklass",
   "moscow-priority": "MoSCoW prioriteet",
-  "wsjf-score": "WSJF skoor"
+  "wsjf-score": "WSJF skoor",
+  "board-announcement": "Tahvli teadaanne",
+  "board-announcement-enabled": "Näita kõigile sellel tahvlil"
 }

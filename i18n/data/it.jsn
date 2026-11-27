@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloccata",
   "class-of-service": "Classe di servizio",
   "moscow-priority": "Priorità MoSCoW",
-  "wsjf-score": "Punteggio WSJF"
+  "wsjf-score": "Punteggio WSJF",
+  "board-announcement": "Annuncio della bacheca",
+  "board-announcement-enabled": "Mostra a tutti su questa bacheca"
 }

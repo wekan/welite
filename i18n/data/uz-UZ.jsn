@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloklangan",
   "class-of-service": "Xizmat sinfi",
   "moscow-priority": "MoSCoW ustuvorligi",
-  "wsjf-score": "WSJF bali"
+  "wsjf-score": "WSJF bali",
+  "board-announcement": "Taxta eʼloni",
+  "board-announcement-enabled": "Bu taxtadagi hammaga koʻrsatish"
 }

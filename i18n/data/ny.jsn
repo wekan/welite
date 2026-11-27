@@ -2311,5 +2311,7 @@
   "card-blocked": "Zatsekedwa",
   "class-of-service": "Gulu la utumiki",
   "moscow-priority": "Kufunika kwa MoSCoW",
-  "wsjf-score": "Mapointi a WSJF"
+  "wsjf-score": "Mapointi a WSJF",
+  "board-announcement": "Chilengezo cha bolodi",
+  "board-announcement-enabled": "Chionetseni kwa aliyense pa bolodi ili"
 }

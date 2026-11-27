@@ -2311,5 +2311,7 @@
   "card-blocked": "Чарӑнтарнӑ",
   "class-of-service": "Пулӑшу класӗ",
   "moscow-priority": "MoSCoW малтанлӑхӗ",
-  "wsjf-score": "WSJF балӗ"
+  "wsjf-score": "WSJF балӗ",
+  "board-announcement": "Хӑма пӗлтерӗвӗ",
+  "board-announcement-enabled": "Ӑна ҫак хӑмари пур ҫынна та кӑтартас"
 }

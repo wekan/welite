@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloccada",
   "class-of-service": "Classa da servetsch",
   "moscow-priority": "Prioritad MoSCoW",
-  "wsjf-score": "Puntaziun WSJF"
+  "wsjf-score": "Puntaziun WSJF",
+  "board-announcement": "Annunzia da la tabella",
+  "board-announcement-enabled": "Mussar a tuts sin questa tabella"
 }

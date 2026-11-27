@@ -2693,6 +2693,10 @@ begin
     '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div>' +
     '<div class="content"><ul class="pop-over-list"><li><a class="js-open-archives" href="#"><i class="fa fa-archive"></i> ' +
     E(Words.Text('archived-items', 'Archived Items')) + '</a></li>' +
+    // WeKan's Board announcement (#1566), for a board admin.
+    IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), '<li><a class="js-open-board-announcement" href="#" ' +
+      'data-pop="board-announcement" title="' + HtmlAttr(Words.Text('board-announcement', 'Board announcement')) + '"><i class="fa fa-bullhorn"></i> ' +
+      E(Words.Text('board-announcement', 'Board announcement')) + '</a></li>', '') +
     // Board Settings / Card (sidebar.jade boardMenuPopup), for a member.
     IfThen(S.UserId <> '', '<li><a class="js-open-board-card-settings" href="#" title="' + HtmlAttr(Words.Text('card-settings', 'Card Settings')) +
       '"><i class="fa fa-id-card-o"></i> ' + E(Words.Text('card-settings', 'Card Settings')) + '</a></li>', '') +
@@ -3377,6 +3381,42 @@ begin
   Result := Result + '</div></div>';
 end;
 
+// WeKan's boardAnnouncement (#1566): the board's announcement, plain text,
+// above the canvas - so nothing lies over its close button - until this member
+// dismisses it at its version; and boardAnnouncementPopup, a board admin's.
+function AnnouncementHtml(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string): string;
+var Enabled: Boolean; Body, Version, Seen: string; R: TWLRows;
+begin
+  Result := '';
+  ReadBoardAnnouncement(Db, BoardId, Enabled, Body, Version);
+  if Enabled and (Trim(Body) <> '') then
+  begin
+    Seen := '';
+    if S.UserId <> '' then
+    begin
+      R := Db.Query('SELECT COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END,' +
+        QuotedStr('$.dismissedBoardAnnouncements."' + BoardId + '"') + '),'''') FROM users WHERE id=' + QuotedStr(S.UserId) + ';');
+      if Length(R) = 1 then Seen := R[0][0];
+    end;
+    if (Version = '') or (Seen <> Version) then
+      Result := '<div class="announcement board-announcement js-board-announcement" role="status" aria-live="polite"><ul><li>' +
+        '<i class="fa fa-bullhorn" aria-hidden="true"></i> ' + E(Body) + '<a class="js-close-board-announcement" href="#" aria-label="' +
+        HtmlAttr(Words.Text('close', 'Close')) + '" title="' + HtmlAttr(Words.Text('close', 'Close')) +
+        '"><i class="fa fa-times-thin" aria-hidden="true">&times;</i></a></li></ul></div>';
+  end;
+  if (S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId) then
+    Result := Result + '<template class="js-pop-over-template" data-pop="board-announcement" data-popup="boardAnnouncementPopup" data-title="' +
+      HtmlAttr(Words.Text('board-announcement', 'Board announcement')) + '"><div class="header"><span class="header-title">' +
+      E(Words.Text('board-announcement', 'Board announcement')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+      HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><form class="js-board-announcement-form" method="post" ' +
+      'action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/announcement" up-submit up-target=".board-wrapper"><label for="board-announcement-text">' +
+      E(Words.Text('board-announcement', 'Board announcement')) + '</label><textarea class="js-board-announcement-text" id="board-announcement-text" ' +
+      'name="body" rows="5" maxlength="2000">' + E(Body) + '</textarea><input class="js-board-announcement-enabled-value" type="hidden" name="enabled" value="' +
+      IfThen(Enabled, 'true', '') + '"><a class="flex js-board-announcement-enabled' + IfThen(Enabled, ' is-checked', '') + '" href="#"><div class="materialCheckBox' +
+      IfThen(Enabled, ' is-checked', '') + '"></div><span>' + E(Words.Text('board-announcement-enabled', 'Show it to everyone on this board')) +
+      '</span></a><button class="primary wide js-board-announcement-save" type="submit">' + E(Words.Text('save', 'Save')) + '</button></form></div></template>';
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
@@ -3711,6 +3751,7 @@ begin
       HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) + '" aria-label="' + HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) +
       '">&#9745;</a>', '') + '</div>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
+    AnnouncementHtml(Db, Words, S, BoardId) +
     '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
 end;
@@ -3969,7 +4010,7 @@ end;
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   Limit: Double;
-  CardTitle, NewBoard: string;
+  CardTitle, NewBoard: string; Enabled_: Boolean;
   // The values of a copy that its copier may not read: not kept.
   procedure RedactCopiedFields(const CardId, BoardId: string);
   var Policy: TFieldPolicy; V: TWLRows; k: Integer; Sql: string;
@@ -4388,6 +4429,37 @@ begin
     AnnounceToAll;
     SendJsonAnswer(Response, 200, '{"result":{"success":true,"attachmentId":"' + StringToJSONString(Id) + '","fileName":"' +
       StringToJSONString(R[0][2]) + '","message":"Attachment deleted successfully"}}');
+    Exit;
+  end;
+  // models/users.js dismissBoardAnnouncement [boardId]: the version this member
+  // has seen, on a board they can see; null when it has none.
+  if Name = 'dismissBoardAnnouncement' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":"Match.Error","reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Strings[0];
+    finally
+      Args.Free;
+    end;
+    if (Pos(#0, Id) > 0) or not (BoardCanRead(T.Db, S.UserId, Id) or AssignedOnlyMember(T.Db, S.UserId, Id)) then
+    begin SendJsonAnswer(Response, 404, '{"error":"not-found","reason":"Board not found"}'); Exit; end;
+    Enabled_ := False;
+    ReadBoardAnnouncement(T.Db, Id, Enabled_, CardTitle, NewBoard);
+    if NewBoard = '' then begin SendJsonAnswer(Response, 200, '{"result":null}'); Exit; end;
+    Code := SetViewProfileValue(T, S.UserId, 'dismissedBoardAnnouncements', Id, '', '"' + StringToJSONString(NewBoard) + '"', Error);
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    // A member's own dismissal changes nothing on the board: the next change,
+    // somebody else's, is announced to this page too.
+    AnnounceToAll;
+    SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(NewBoard) + '"}');
     Exit;
   end;
   // server/routes/universalFileServer.js searchAttachmentDocumentText
@@ -5479,7 +5551,7 @@ type
 // What the board is now, as a short text that changes when the board does:
 // its cards, lists, swimlanes, activities and rules.
 function BoardSignature(Db: TWLDb; const BoardId: string): string;
-var R: TWLRows; B: string;
+var R: TWLRows; B, AnnBody, AnnVersion: string; AnnOn: Boolean;
 begin
   B := QuotedStr(BoardId);
   // A soft delete and its undo change neither modifiedAt nor archived: the
@@ -5493,6 +5565,9 @@ begin
     '(SELECT COALESCE(modifiedAt,'''')||length(settings_json)||settings_json FROM boards WHERE id=' + B + ');');
   Result := '';
   if Length(R) = 1 then Result := R[0][0] + '|' + R[0][1] + '|' + R[0][2] + '|' + R[0][3] + '|' + R[0][4];
+  // The announcement, read where it is kept (a shared store's board document).
+  ReadBoardAnnouncement(Db, BoardId, AnnOn, AnnBody, AnnVersion);
+  Result := Result + '|' + IfThen(AnnOn, '1', '0') + AnnVersion + ':' + AnnBody;
   Result := Result + '|' + RulesSignature(Db, BoardId) +
     // Admin Panel's date format draws every board's dates (wldatef).
     '|' + SharedSettingText(Db, 'globalDateFormat') + IfThen(SharedSettingOn(Db, 'hideDateFormat'), '+', '-');
@@ -5822,12 +5897,13 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or ((P[2] = 'announcement') and (n = 3)) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
   else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
   else if (n = 3) and (P[2] = 'title') then Action := 'rename-board'
+  else if (n = 3) and (P[2] = 'announcement') then Action := 'announcement'
   else if (n = 4) and (P[2] = 'archive') and (P[3] = 'restore-all-cards') then Action := 'restore-all'
   else if (n = 4) and (P[2] = 'archive') then Action := 'restore'
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
@@ -5891,6 +5967,17 @@ begin
     // the card's "restore it to another list" open.
     if (Code = 409) and (Error = 'restore-blocked') then
     begin ViewRestoreBlocked := Request.ContentFields.Values['id']; Code := 200; end;
+  end
+  else if Action = 'announcement' then
+  begin
+    // A board admin's, as WeKan's board.setAnnouncement under its allow rule:
+    // at most 2000 characters, enabled only with text.
+    if not BoardCanAdmin(T.Db, S.UserId, BoardId) then begin Code := 403; Error := 'Only a board admin may change the announcement'; end
+    else if Length(UTF8Decode(Trim(Request.ContentFields.Values['body']))) > 2000 then
+    begin Code := 400; Error := 'The announcement is longer than 2000 characters'; end
+    else if WriteBoardAnnouncement(T.Db, BoardId, Request.ContentFields.Values['enabled'] = 'true', Request.ContentFields.Values['body']) then
+    begin Code := 200; AnnounceToAll; end
+    else begin Code := 500; Error := 'Could not save'; end;
   end
   else if Action = 'restore-all' then
     Code := RestoreAllViewCards(T, S.UserId, BoardId, ViewRestoreSkipped, Error)

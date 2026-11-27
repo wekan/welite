@@ -2311,5 +2311,7 @@
   "card-blocked": "Bluccatu",
   "class-of-service": "Classa di serviziu",
   "moscow-priority": "Priurità MoSCoW",
-  "wsjf-score": "Puntu WSJF"
+  "wsjf-score": "Puntu WSJF",
+  "board-announcement": "Annunziu di a tavula",
+  "board-announcement-enabled": "Mustrà lu à tutti nant'à sta tavula"
 }

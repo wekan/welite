@@ -2311,5 +2311,7 @@
   "card-blocked": "Бөгөттөлгөн",
   "class-of-service": "Кызмат классы",
   "moscow-priority": "MoSCoW артыкчылыгы",
-  "wsjf-score": "WSJF упайы"
+  "wsjf-score": "WSJF упайы",
+  "board-announcement": "Тактанын жарыясы",
+  "board-announcement-enabled": "Аны ушул тактадагы бардыгына көрсөтүү"
 }

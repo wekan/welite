@@ -1328,6 +1328,28 @@ def http_checks(server, tmp, backend):
         assert status == 200 and json.loads(body)['result'] == {'archived': 1}, 'their own card'
         assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': mine_card}, cookie=owner)[0] == 200
         assert convert(mine_card, worker, '')[0] == 200, 'their own card, named after itself'
+        # WeKan's board announcement (#1566): a board admin's, plain text, shown
+        # until a member dismisses it, and again after an edit. Negative: a
+        # member who is not an admin, a text over 2000 characters, a stranger.
+        announce = lambda body, who=owner, enabled='true': request('POST', '/b/%s/announcement' % board_id,
+                                                                  {'body': body, 'enabled': enabled}, cookie=who)
+        assert announce('<b>Freeze</b> on Friday')[0] == 200
+        page = request('GET', route, cookie=worker)[2]
+        assert b'class="announcement board-announcement js-board-announcement"' in page and b'&lt;b&gt;Freeze&lt;/b&gt; on Friday' in page and b'<b>Freeze</b>' not in page
+        assert b'data-popup="boardAnnouncementPopup"' not in page, 'the editor is an admin\'s'
+        assert b'data-popup="boardAnnouncementPopup"' in request('GET', route, cookie=owner)[2]
+        assert announce('Not yours', worker)[0] == 403 and announce('x' * 2001)[0] == 400
+        assert b'Not yours' not in request('GET', route, cookie=owner)[2]
+        dismiss = lambda who=worker: request('POST', '/_methods/dismissBoardAnnouncement', [board_id], cookie=who, as_json=True)
+        status, _, body, _ = dismiss()
+        assert status == 200 and json.loads(body)['result'], body
+        assert b'class="announcement board-announcement js-board-announcement"' not in request('GET', route, cookie=worker)[2], 'dismissed'
+        assert b'class="announcement board-announcement js-board-announcement"' in request('GET', route, cookie=owner)[2], 'only for the member who dismissed it'
+        assert dismiss(stranger)[0] == 404
+        time.sleep(0.01)
+        assert announce('Freeze moved to Monday')[0] == 200
+        assert b'Freeze moved to Monday' in request('GET', route, cookie=worker)[2], 'shown again after an edit'
+        assert announce('   ')[0] == 200 and b'class="announcement board-announcement js-board-announcement"' not in request('GET', route, cookie=owner)[2], 'no text: off'
         board_db('UPDATE board_members SET isWorker=1, isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])
         board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
         page = card_page()

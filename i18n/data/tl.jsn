@@ -2311,5 +2311,7 @@
   "card-blocked": "Naka-block",
   "class-of-service": "Klase ng serbisyo",
   "moscow-priority": "Priyoridad ng MoSCoW",
-  "wsjf-score": "Iskor ng WSJF"
+  "wsjf-score": "Iskor ng WSJF",
+  "board-announcement": "Anunsiyo ng pisara",
+  "board-announcement-enabled": "Ipakita ito sa lahat sa pisarang ito"
 }

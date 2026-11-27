@@ -2311,5 +2311,7 @@
   "card-blocked": "ブロック中",
   "class-of-service": "サービスクラス",
   "moscow-priority": "MoSCoW 優先度",
-  "wsjf-score": "WSJF スコア"
+  "wsjf-score": "WSJF スコア",
+  "board-announcement": "ボードのお知らせ",
+  "board-announcement-enabled": "このボードの全員に表示"
 }

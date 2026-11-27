@@ -2311,5 +2311,7 @@
   "card-blocked": "Бүөлэммит",
   "class-of-service": "Өҥөтүн кылааһа",
   "moscow-priority": "MoSCoW инники күөҥҥэ турааһына",
-  "wsjf-score": "WSJF сыаната"
+  "wsjf-score": "WSJF сыаната",
+  "board-announcement": "Дуоска биллэриитэ",
+  "board-announcement-enabled": "Бу дуоскаҕа баар бары дьоҥҥо көрдөр"
 }

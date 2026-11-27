@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokkert",
   "class-of-service": "Tjenesteklasse",
   "moscow-priority": "MoSCoW-prioritet",
-  "wsjf-score": "WSJF-poengsum"
+  "wsjf-score": "WSJF-poengsum",
+  "board-announcement": "Kunngjøring på tavlen",
+  "board-announcement-enabled": "Vis til alle på denne tavlen"
 }

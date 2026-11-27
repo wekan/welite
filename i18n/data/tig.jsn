@@ -2311,5 +2311,7 @@
   "card-blocked": "ተከልአ",
   "class-of-service": "ክፍል ኣገልግሎት",
   "moscow-priority": "ቀዳምነት MoSCoW",
-  "wsjf-score": "ነጥብ WSJF"
+  "wsjf-score": "ነጥብ WSJF",
+  "board-announcement": "አዋጅ ምዱድ",
+  "board-announcement-enabled": "ዲብ እሊ ምዱድ ንክሎም ኣርኤ"
 }

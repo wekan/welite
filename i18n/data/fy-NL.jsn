@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokkearre",
   "class-of-service": "Tsjinstklasse",
   "moscow-priority": "MoSCoW-prioriteit",
-  "wsjf-score": "WSJF-skoare"
+  "wsjf-score": "WSJF-skoare",
+  "board-announcement": "Boerdmelding",
+  "board-announcement-enabled": "Lit it oan elkenien op dit boerd sjen"
 }

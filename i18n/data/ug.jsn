@@ -2311,5 +2311,7 @@
   "card-blocked": "توسۇلغان",
   "class-of-service": "مۇلازىمەت تۈرى",
   "moscow-priority": "MoSCoW ئالدىنلىقى",
-  "wsjf-score": "WSJF نومۇرى"
+  "wsjf-score": "WSJF نومۇرى",
+  "board-announcement": "تاختا ئۇقتۇرۇشى",
+  "board-announcement-enabled": "بۇ تاختىدىكى ھەممەيلەنگە كۆرسىتىش"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloquiáu",
   "class-of-service": "Clase de serviciu",
   "moscow-priority": "Prioridá MoSCoW",
-  "wsjf-score": "Puntuación WSJF"
+  "wsjf-score": "Puntuación WSJF",
+  "board-announcement": "Anunciu del tableru",
+  "board-announcement-enabled": "Amosalu a toos nesti tableru"
 }

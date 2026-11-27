@@ -2311,5 +2311,7 @@
   "card-blocked": "بەربەستکراو",
   "class-of-service": "پۆلی خزمەتگوزاری",
   "moscow-priority": "ئەولەویەتی MoSCoW",
-  "wsjf-score": "خاڵی WSJF"
+  "wsjf-score": "خاڵی WSJF",
+  "board-announcement": "ڕاگەیاندنی تەختە",
+  "board-announcement-enabled": "پیشانی هەمووان بدە لەم تەختەیەدا"
 }

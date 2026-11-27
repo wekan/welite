@@ -2311,5 +2311,7 @@
   "card-blocked": "ਰੋਕਿਆ ਹੋਇਆ",
   "class-of-service": "ਸੇਵਾ ਸ਼੍ਰੇਣੀ",
   "moscow-priority": "MoSCoW ਤਰਜੀਹ",
-  "wsjf-score": "WSJF ਅੰਕ"
+  "wsjf-score": "WSJF ਅੰਕ",
+  "board-announcement": "ਬੋਰਡ ਘੋਸ਼ਣਾ",
+  "board-announcement-enabled": "ਇਸ ਬੋਰਡ 'ਤੇ ਸਾਰਿਆਂ ਨੂੰ ਦਿਖਾਓ"
 }

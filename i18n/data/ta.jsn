@@ -2311,5 +2311,7 @@
   "card-blocked": "தடுக்கப்பட்டது",
   "class-of-service": "சேவை வகுப்பு",
   "moscow-priority": "MoSCoW முன்னுரிமை",
-  "wsjf-score": "WSJF மதிப்பெண்"
+  "wsjf-score": "WSJF மதிப்பெண்",
+  "board-announcement": "பலகை அறிவிப்பு",
+  "board-announcement-enabled": "இந்தப் பலகையில் உள்ள அனைவருக்கும் இதைக் காட்டு"
 }

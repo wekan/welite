@@ -2311,5 +2311,7 @@
   "card-blocked": "חסום",
   "class-of-service": "סוג שירות",
   "moscow-priority": "עדיפות MoSCoW",
-  "wsjf-score": "ציון WSJF"
+  "wsjf-score": "ציון WSJF",
+  "board-announcement": "הודעת לוח",
+  "board-announcement-enabled": "הצגה לכל מי שבלוח הזה"
 }

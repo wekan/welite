@@ -2311,5 +2311,7 @@
   "card-blocked": "Blocáilte",
   "class-of-service": "Aicme seirbhíse",
   "moscow-priority": "Tosaíocht MoSCoW",
-  "wsjf-score": "Scór WSJF"
+  "wsjf-score": "Scór WSJF",
+  "board-announcement": "Fógra cláir",
+  "board-announcement-enabled": "Taispeáin é do gach duine ar an gclár seo"
 }

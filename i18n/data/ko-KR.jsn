@@ -2311,5 +2311,7 @@
   "card-blocked": "차단됨",
   "class-of-service": "서비스 클래스",
   "moscow-priority": "MoSCoW 우선순위",
-  "wsjf-score": "WSJF 점수"
+  "wsjf-score": "WSJF 점수",
+  "board-announcement": "보드 공지",
+  "board-announcement-enabled": "이 보드의 모든 사람에게 표시"
 }

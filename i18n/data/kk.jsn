@@ -2311,5 +2311,7 @@
   "card-blocked": "Бұғатталған",
   "class-of-service": "Қызмет класы",
   "moscow-priority": "MoSCoW басымдығы",
-  "wsjf-score": "WSJF ұпайы"
+  "wsjf-score": "WSJF ұпайы",
+  "board-announcement": "Тақта хабарландыруы",
+  "board-announcement-enabled": "Оны осы тақтадағы барлығына көрсету"
 }

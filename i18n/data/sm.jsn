@@ -2311,5 +2311,7 @@
   "card-blocked": "Poloka",
   "class-of-service": "Vasega o auaunaga",
   "moscow-priority": "Faamuamua MoSCoW",
-  "wsjf-score": "Togi WSJF"
+  "wsjf-score": "Togi WSJF",
+  "board-announcement": "Faasilasilaga o le laupapa",
+  "board-announcement-enabled": "Faaali i tagata uma i lenei laupapa"
 }

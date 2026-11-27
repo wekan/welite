@@ -2311,5 +2311,7 @@
   "card-blocked": "Terblokir",
   "class-of-service": "Kelas layanan",
   "moscow-priority": "Prioritas MoSCoW",
-  "wsjf-score": "Skor WSJF"
+  "wsjf-score": "Skor WSJF",
+  "board-announcement": "Pengumuman papan",
+  "board-announcement-enabled": "Tampilkan kepada semua orang di papan ini"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "ถูกบล็อก",
   "class-of-service": "ระดับบริการ",
   "moscow-priority": "ลำดับความสำคัญ MoSCoW",
-  "wsjf-score": "คะแนน WSJF"
+  "wsjf-score": "คะแนน WSJF",
+  "board-announcement": "ประกาศของบอร์ด",
+  "board-announcement-enabled": "แสดงให้ทุกคนในบอร์ดนี้เห็น"
 }

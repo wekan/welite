@@ -2311,5 +2311,7 @@
   "card-blocked": "Blocà",
   "class-of-service": "Clase de servisio",
   "moscow-priority": "Priorità MoSCoW",
-  "wsjf-score": "Pontejo WSJF"
+  "wsjf-score": "Pontejo WSJF",
+  "board-announcement": "Aviso del quadro",
+  "board-announcement-enabled": "Mostrało a tuti so sto quadro"
 }

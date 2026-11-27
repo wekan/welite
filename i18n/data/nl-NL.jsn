@@ -2311,5 +2311,7 @@
   "card-blocked": "Geblokkeerd",
   "class-of-service": "Serviceklasse",
   "moscow-priority": "MoSCoW-prioriteit",
-  "wsjf-score": "WSJF-score"
+  "wsjf-score": "WSJF-score",
+  "board-announcement": "Bordaankondiging",
+  "board-announcement-enabled": "Tonen aan iedereen op dit bord"
 }

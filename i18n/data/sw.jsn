@@ -2311,5 +2311,7 @@
   "card-blocked": "Imezuiwa",
   "class-of-service": "Daraja la huduma",
   "moscow-priority": "Kipaumbele cha MoSCoW",
-  "wsjf-score": "Alama ya WSJF"
+  "wsjf-score": "Alama ya WSJF",
+  "board-announcement": "Tangazo la bodi",
+  "board-announcement-enabled": "Lionyeshe kwa kila mtu kwenye bodi hii"
 }

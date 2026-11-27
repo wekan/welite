@@ -2311,5 +2311,7 @@
   "card-blocked": "E bllokuar",
   "class-of-service": "Klasa e shërbimit",
   "moscow-priority": "Prioriteti MoSCoW",
-  "wsjf-score": "Pikët WSJF"
+  "wsjf-score": "Pikët WSJF",
+  "board-announcement": "Njoftim në tabelë",
+  "board-announcement-enabled": "Shfaqja të gjithëve në këtë tabelë"
 }

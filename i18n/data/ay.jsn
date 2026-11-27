@@ -2311,5 +2311,7 @@
   "card-blocked": "Jark'ata",
   "class-of-service": "Yanapt'awi kasta",
   "moscow-priority": "MoSCoW nayrankañapa",
-  "wsjf-score": "WSJF jakhu"
+  "wsjf-score": "WSJF jakhu",
+  "board-announcement": "Pirqa yatiyäwi",
+  "board-announcement-enabled": "Aka pirqan taqiniru uñacht'ayaña"
 }

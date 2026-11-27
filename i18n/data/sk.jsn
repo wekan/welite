@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokovaná",
   "class-of-service": "Trieda služby",
   "moscow-priority": "Priorita MoSCoW",
-  "wsjf-score": "Skóre WSJF"
+  "wsjf-score": "Skóre WSJF",
+  "board-announcement": "Oznámenie na nástenke",
+  "board-announcement-enabled": "Zobraziť všetkým na tejto nástenke"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloklanan",
   "class-of-service": "Hyzmat synpy",
   "moscow-priority": "MoSCoW ileriligi",
-  "wsjf-score": "WSJF baly"
+  "wsjf-score": "WSJF baly",
+  "board-announcement": "Tagta bildirişi",
+  "board-announcement-enabled": "Ony şu tagtadaky hemmelere görkez"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Yo thivhiwa",
   "class-of-service": "Tshigwada tsha tshumelo",
   "moscow-priority": "Ndeme ya MoSCoW",
-  "wsjf-score": "Mbalo ya WSJF"
+  "wsjf-score": "Mbalo ya WSJF",
+  "board-announcement": "Nḓivhadzo ya bodo",
+  "board-announcement-enabled": "I sumbedzeni muthu muṅwe na muṅwe kha bodo iyi"
 }

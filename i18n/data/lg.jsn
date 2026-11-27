@@ -2311,5 +2311,7 @@
   "card-blocked": "Kiziyiddwa",
   "class-of-service": "Ekika ky'obuweereza",
   "moscow-priority": "Obukulu bwa MoSCoW",
-  "wsjf-score": "Obubonero bwa WSJF"
+  "wsjf-score": "Obubonero bwa WSJF",
+  "board-announcement": "Ekirango ky'olubaawo",
+  "board-announcement-enabled": "Kiraga buli muntu ali ku lubaawo luno"
 }

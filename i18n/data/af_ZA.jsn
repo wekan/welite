@@ -2311,5 +2311,7 @@
   "card-blocked": "Geblokkeer",
   "class-of-service": "Diensklas",
   "moscow-priority": "MoSCoW-prioriteit",
-  "wsjf-score": "WSJF-telling"
+  "wsjf-score": "WSJF-telling",
+  "board-announcement": "Raadaankondiging",
+  "board-announcement-enabled": "Wys dit aan almal op hierdie raad"
 }

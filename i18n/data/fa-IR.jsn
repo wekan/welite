@@ -2311,5 +2311,7 @@
   "card-blocked": "مسدود شده",
   "class-of-service": "کلاس خدمت",
   "moscow-priority": "اولویت MoSCoW",
-  "wsjf-score": "امتیاز WSJF"
+  "wsjf-score": "امتیاز WSJF",
+  "board-announcement": "اطلاعیه برد",
+  "board-announcement-enabled": "نمایش به همه افراد این برد"
 }

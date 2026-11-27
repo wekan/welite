@@ -2311,5 +2311,7 @@
   "card-blocked": "Unitsinneqarpoq",
   "class-of-service": "Kiffartuussinermi klassi",
   "moscow-priority": "MoSCoW pingaarnersiorneq",
-  "wsjf-score": "WSJF pointit"
+  "wsjf-score": "WSJF pointit",
+  "board-announcement": "Ilisarnaatip nalunaarutaa",
+  "board-announcement-enabled": "Ilisarnaammi matumani tamanut takutiguk"
 }

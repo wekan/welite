@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokiruidud",
   "class-of-service": "Holitusen klass",
   "moscow-priority": "MoSCoW-prioritet",
-  "wsjf-score": "WSJF-ballad"
+  "wsjf-score": "WSJF-ballad",
+  "board-announcement": "Laudan tedotuz",
+  "board-announcement-enabled": "Ozuta sidä kaikile necil laudal"
 }

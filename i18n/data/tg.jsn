@@ -2311,5 +2311,7 @@
   "card-blocked": "Масдуд",
   "class-of-service": "Синфи хизмат",
   "moscow-priority": "Афзалияти MoSCoW",
-  "wsjf-score": "Холи WSJF"
+  "wsjf-score": "Холи WSJF",
+  "board-announcement": "Эълони тахта",
+  "board-announcement-enabled": "Ба ҳама дар ин тахта нишон додан"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloqueyau",
   "class-of-service": "Clase de servicio",
   "moscow-priority": "Prioridat MoSCoW",
-  "wsjf-score": "Puntuación WSJF"
+  "wsjf-score": "Puntuación WSJF",
+  "board-announcement": "Anuncio d'o tablero",
+  "board-announcement-enabled": "Amostrar-lo a totz en este tablero"
 }

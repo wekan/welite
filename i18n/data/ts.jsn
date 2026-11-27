@@ -2311,5 +2311,7 @@
   "card-blocked": "Yi siviwile",
   "class-of-service": "Ntlawa wa vukorhokeri",
   "moscow-priority": "Nhlohlorhiso wa MoSCoW",
-  "wsjf-score": "Mpimo wa WSJF"
+  "wsjf-score": "Mpimo wa WSJF",
+  "board-announcement": "Xitiviso xa bodo",
+  "board-announcement-enabled": "Xi kombisa un'wana na un'wana eka bodo leyi"
 }

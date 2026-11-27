@@ -2311,5 +2311,7 @@
   "card-blocked": "Astengkirî",
   "class-of-service": "Pola xizmetê",
   "moscow-priority": "Pêşîniya MoSCoW",
-  "wsjf-score": "Pûana WSJF"
+  "wsjf-score": "Pûana WSJF",
+  "board-announcement": "Daxuyaniya depoyê",
+  "board-announcement-enabled": "Nîşanî her kesê li ser vê depoyê bide"
 }

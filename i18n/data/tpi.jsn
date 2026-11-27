@@ -2311,5 +2311,7 @@
   "card-blocked": "I pas",
   "class-of-service": "Kain sevis",
   "moscow-priority": "Namba MoSCoW",
-  "wsjf-score": "Skor WSJF"
+  "wsjf-score": "Skor WSJF",
+  "board-announcement": "Toksave bilong bot",
+  "board-announcement-enabled": "Soim long olgeta manmeri long dispela bot"
 }

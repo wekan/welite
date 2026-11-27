@@ -2311,5 +2311,7 @@
   "card-blocked": "I blok",
   "class-of-service": "Klas blong seves",
   "moscow-priority": "MoSCoW praeoriti",
-  "wsjf-score": "WSJF skoa"
+  "wsjf-score": "WSJF skoa",
+  "board-announcement": "Toktok blong bod",
+  "board-announcement-enabled": "Soem long evriwan long bod ia"
 }

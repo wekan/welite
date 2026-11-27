@@ -2311,5 +2311,7 @@
   "card-blocked": "Արգելափակված",
   "class-of-service": "Ծառայության դաս",
   "moscow-priority": "MoSCoW առաջնահերթություն",
-  "wsjf-score": "WSJF միավոր"
+  "wsjf-score": "WSJF միավոր",
+  "board-announcement": "Տախտակի հայտարարություն",
+  "board-announcement-enabled": "Ցույց տալ այն այս տախտակի բոլոր անդամներին"
 }

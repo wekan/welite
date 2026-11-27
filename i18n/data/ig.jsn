@@ -2311,5 +2311,7 @@
   "card-blocked": "Egbochiri",
   "class-of-service": "Klas ọrụ",
   "moscow-priority": "Ihe mbụ MoSCoW",
-  "wsjf-score": "Akara WSJF"
+  "wsjf-score": "Akara WSJF",
+  "board-announcement": "Ọkwa bọọdụ",
+  "board-announcement-enabled": "Gosi ya onye ọ bụla nọ na bọọdụ a"
 }

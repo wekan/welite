@@ -58,6 +58,13 @@ procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSO
 // restore(rowId), for the rule rows of a board one administers: 0 for any
 // other method name.
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+// WeKan's board announcement (#1566, models/lib/boardAnnouncement.js): read -
+// Version is when it was saved, as WeKan's toISOString, '' without one - and
+// written by a board admin, the text trimmed and enabled only with text. In a
+// shared store it is the board document's own announcement, its updatedAt a
+// date WeKan reads; in WeLite's own store, the board's settings.
+function ReadBoardAnnouncement(Db: TWLDb; const BoardId: string; out Enabled: Boolean; out Body, Version: string): Boolean;
+function WriteBoardAnnouncement(Db: TWLDb; const BoardId: string; Enabled: Boolean; const Body: string): Boolean;
 // WeKan's searchAttachmentDocumentText: the documents of the board whose
 // extracted text has Needle, as a JSON array of {attachmentId, cardId,
 // snippet}, at most 50; of an assigned-only member's own cards only.
@@ -2429,6 +2436,62 @@ begin
     Found.Free;
     Rows.Free;
   end;
+end;
+
+function AnnouncementIso(V: TJSONData): string;
+begin
+  Result := '';
+  if V = nil then Exit;
+  if V.JSONType = jtNumber then
+    Result := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', UnixToDateTime(V.AsInt64 div 1000, True) + (V.AsInt64 mod 1000) / MSecsPerDay)
+  else if V.JSONType = jtString then Result := V.AsString;
+end;
+
+function ReadBoardAnnouncement(Db: TWLDb; const BoardId: string; out Enabled: Boolean; out Body, Version: string): Boolean;
+var Doc: TJSONObject; A: TJSONData; R: TWLRows;
+begin
+  Enabled := False; Body := ''; Version := ''; Result := False;
+  if (BoardId = '') or (Pos(#0, BoardId) > 0) then Exit;
+  Doc := nil;
+  try
+    if IsShared(Db) then Doc := FindDoc(Db, 'boards', BoardId)
+    else
+    begin
+      R := Db.Query('SELECT CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END FROM boards WHERE id=' + Q(BoardId) + ';');
+      if Length(R) = 1 then Doc := TJSONObject(GetJSON(R[0][0]));
+    end;
+    if Doc = nil then Exit;
+    A := Doc.Find('announcement');
+    if not (A is TJSONObject) then Exit;
+    Enabled := (TJSONObject(A).Find('enabled') <> nil) and (TJSONObject(A).Find('enabled').JSONType = jtBoolean) and
+      TJSONObject(A).Booleans['enabled'];
+    if (TJSONObject(A).Find('body') <> nil) and (TJSONObject(A).Find('body').JSONType = jtString) then Body := TJSONObject(A).Strings['body'];
+    Version := AnnouncementIso(TJSONObject(A).Find('updatedAt'));
+    Result := True;
+  finally
+    Doc.Free;
+  end;
+end;
+
+function WriteBoardAnnouncement(Db: TWLDb; const BoardId: string; Enabled: Boolean; const Body: string): Boolean;
+var Fields: TJSONObject; Text: string;
+begin
+  Text := Trim(Body);
+  Enabled := Enabled and (Text <> '');
+  if IsShared(Db) then
+  begin
+    Fields := TJSONObject.Create(['announcement', TJSONObject.Create(['enabled', Enabled, 'body', Text, 'updatedAt', NowMs])]);
+    try
+      Result := Db.Exec('BEGIN IMMEDIATE; ' + UpdateDocSql(Db, 'boards', BoardId, Fields, '{"announcement":{"updatedAt":"date"}}') + 'COMMIT;');
+      if not Result then Db.Exec('ROLLBACK;');
+    finally
+      Fields.Free;
+    end;
+  end
+  else
+    Result := Db.Exec('UPDATE boards SET settings_json=json_set(CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END,' +
+      '''$.announcement'',json_object(''enabled'',json(' + Q(IfThen(Enabled, 'true', 'false')) + '),''body'',' + Q(Text) +
+      ',''updatedAt'',' + Q(NowIso) + ')),modifiedAt=' + Q(NowIso) + ' WHERE id=' + Q(BoardId) + ';');
 end;
 
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;

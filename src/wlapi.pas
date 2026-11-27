@@ -5371,7 +5371,9 @@ var Profile,Path,Target:string;
 begin
   Error:='';
   if not SafeMapKey(BoardId) or ((Key<>'') and not SafeFoldKey(Key)) then begin Error:='Invalid map key';Exit(400);end;
-  if not BoardCanRead(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  // The user's own setting of a board they can see - an assigned-only
+  // member's board too (WeKan's isVisibleBy).
+  if not (BoardCanRead(T.Db,UserId,BoardId) or AssignedOnlyMember(T.Db,UserId,BoardId)) then begin Error:='Board access forbidden';Exit(403);end;
   Profile:='CASE WHEN json_valid(profile_json) THEN profile_json ELSE ''{}'' END';
   Path:='$.'+Map+'."'+BoardId+'"';
   if Key='' then

@@ -2311,5 +2311,7 @@
   "card-blocked": "Engellendi",
   "class-of-service": "Hizmet sınıfı",
   "moscow-priority": "MoSCoW önceliği",
-  "wsjf-score": "WSJF puanı"
+  "wsjf-score": "WSJF puanı",
+  "board-announcement": "Pano duyurusu",
+  "board-announcement-enabled": "Bu panodaki herkese göster"
 }

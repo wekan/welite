@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokita",
   "class-of-service": "Servoklaso",
   "moscow-priority": "MoSCoW-prioritato",
-  "wsjf-score": "WSJF-poentaro"
+  "wsjf-score": "WSJF-poentaro",
+  "board-announcement": "Tabula anonco",
+  "board-announcement-enabled": "Montri ĝin al ĉiuj en ĉi tiu tabulo"
 }

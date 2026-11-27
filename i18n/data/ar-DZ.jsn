@@ -2311,5 +2311,7 @@
   "card-blocked": "معطّلة",
   "class-of-service": "فئة الخدمة",
   "moscow-priority": "أولوية MoSCoW",
-  "wsjf-score": "درجة WSJF"
+  "wsjf-score": "درجة WSJF",
+  "board-announcement": "إعلان اللوحة",
+  "board-announcement-enabled": "إظهاره للجميع في هذه اللوحة"
 }

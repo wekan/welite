@@ -2311,5 +2311,7 @@
   "card-blocked": "ᒪᑐᔭᐅᔪᖅ",
   "class-of-service": "ᐱᔨᑦᑎᕋᐅᑎᐅᑉ ᖃᓄᐃᓕᖓᓂᖓ",
   "moscow-priority": "MoSCoW ᓯᕗᓪᓕᐅᑎᑦᑕᐅᓂᖓ",
-  "wsjf-score": "WSJF ᓈᓴᐅᑎ"
+  "wsjf-score": "WSJF ᓈᓴᐅᑎ",
+  "board-announcement": "ᐊᓪᓚᕕᐅᑉ ᑐᓴᖅᑎᑦᓯᔾᔪᑖ",
+  "board-announcement-enabled": "ᐅᕙᓂ ᐊᓪᓚᕕᒻᒥ ᑭᒃᑯᓕᒫᓄᑦ ᑕᑯᑎᓪᓗᒍ"
 }

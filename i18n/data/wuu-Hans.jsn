@@ -2311,5 +2311,7 @@
   "card-blocked": "阻塞",
   "class-of-service": "服务类别",
   "moscow-priority": "MoSCoW 优先级",
-  "wsjf-score": "WSJF 分数"
+  "wsjf-score": "WSJF 分数",
+  "board-announcement": "看板公告",
+  "board-announcement-enabled": "畀搿块看板浪所有人看"
 }

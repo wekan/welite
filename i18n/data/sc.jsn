@@ -2311,5 +2311,7 @@
   "card-blocked": "Blocada",
   "class-of-service": "Classe de servìtziu",
   "moscow-priority": "Prioridade MoSCoW",
-  "wsjf-score": "Puntègiu WSJF"
+  "wsjf-score": "Puntègiu WSJF",
+  "board-announcement": "Annùntziu de sa tàula",
+  "board-announcement-enabled": "Ammustra·ddu a totus in custa tàula"
 }

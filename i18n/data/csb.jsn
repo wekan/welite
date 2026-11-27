@@ -2311,5 +2311,7 @@
   "card-blocked": "Zablokòwónô",
   "class-of-service": "Klasa ùsłëdżi",
   "moscow-priority": "Priorytet MoSCoW",
-  "wsjf-score": "Wënik WSJF"
+  "wsjf-score": "Wënik WSJF",
+  "board-announcement": "Òbwieszczenié tôflë",
+  "board-announcement-enabled": "Pòkôżë to wszëtczim na ti tôfli"
 }

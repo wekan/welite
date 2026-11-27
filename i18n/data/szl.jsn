@@ -2311,5 +2311,7 @@
   "card-blocked": "Zablokowane",
   "class-of-service": "Klasa usugi",
   "moscow-priority": "Priorytet MoSCoW",
-  "wsjf-score": "Wynik WSJF"
+  "wsjf-score": "Wynik WSJF",
+  "board-announcement": "Ôgłoszynie tabule",
+  "board-announcement-enabled": "Pokŏż to wszyskim na tyj tabuli"
 }

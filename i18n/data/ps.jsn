@@ -2311,5 +2311,7 @@
   "card-blocked": "بند شوی",
   "class-of-service": "د خدمت ټولګی",
   "moscow-priority": "د MoSCoW لومړیتوب",
-  "wsjf-score": "د WSJF نمره"
+  "wsjf-score": "د WSJF نمره",
+  "board-announcement": "د تختې اعلان",
+  "board-announcement-enabled": "دا د دې تختې ټولو ته وښایاست"
 }

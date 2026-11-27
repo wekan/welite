@@ -2311,5 +2311,7 @@
   "card-blocked": "Blokiá",
   "class-of-service": "Klase di servisio",
   "moscow-priority": "Prioridat MoSCoW",
-  "wsjf-score": "Puntuashon WSJF"
+  "wsjf-score": "Puntuashon WSJF",
+  "board-announcement": "Anunsio di tabla",
+  "board-announcement-enabled": "Mustra esaki na tur hende riba e tabla aki"
 }

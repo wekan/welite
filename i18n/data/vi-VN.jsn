@@ -2311,5 +2311,7 @@
   "card-blocked": "Bị chặn",
   "class-of-service": "Loại dịch vụ",
   "moscow-priority": "Độ ưu tiên MoSCoW",
-  "wsjf-score": "Điểm WSJF"
+  "wsjf-score": "Điểm WSJF",
+  "board-announcement": "Thông báo của bảng",
+  "board-announcement-enabled": "Hiển thị cho mọi người trên bảng này"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Peblokon",
   "class-of-service": "Klad dünota",
   "moscow-priority": "Büfüd MoSCoW",
-  "wsjf-score": "Num WSJF"
+  "wsjf-score": "Num WSJF",
+  "board-announcement": "Nunod taba",
+  "board-announcement-enabled": "Jonön oni valikanes su tab at"
 }

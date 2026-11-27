@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloke",
   "class-of-service": "Klas sèvis",
   "moscow-priority": "Priyorite MoSCoW",
-  "wsjf-score": "Nòt WSJF"
+  "wsjf-score": "Nòt WSJF",
+  "board-announcement": "Anons tablo a",
+  "board-announcement-enabled": "Montre li bay tout moun sou tablo sa a"
 }

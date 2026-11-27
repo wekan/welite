@@ -2311,5 +2311,7 @@
   "card-blocked": "Yakavharirwa",
   "class-of-service": "Rudzi rwebasa",
   "moscow-priority": "Kukosha kweMoSCoW",
-  "wsjf-score": "Zvibodzwa zveWSJF"
+  "wsjf-score": "Zvibodzwa zveWSJF",
+  "board-announcement": "Chiziviso chebhodhi",
+  "board-announcement-enabled": "Ratidza munhu wese ari pabhodhi rino"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Заблоковано",
   "class-of-service": "Клас обслуговування",
   "moscow-priority": "Пріоритет MoSCoW",
-  "wsjf-score": "Оцінка WSJF"
+  "wsjf-score": "Оцінка WSJF",
+  "board-announcement": "Оголошення дошки",
+  "board-announcement-enabled": "Показувати всім на цій дошці"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Bloklanıb",
   "class-of-service": "Xidmət sinfi",
   "moscow-priority": "MoSCoW prioriteti",
-  "wsjf-score": "WSJF balı"
+  "wsjf-score": "WSJF balı",
+  "board-announcement": "Lövhə elanı",
+  "board-announcement-enabled": "Bu lövhədəki hər kəsə göstərin"
 }

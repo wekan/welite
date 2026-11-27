@@ -2311,5 +2311,7 @@
   "card-blocked": "ታግዷል",
   "class-of-service": "የአገልግሎት ክፍል",
   "moscow-priority": "የMoSCoW ቅድሚያ",
-  "wsjf-score": "የWSJF ውጤት"
+  "wsjf-score": "የWSJF ውጤት",
+  "board-announcement": "የሰሌዳ ማስታወቂያ",
+  "board-announcement-enabled": "በዚህ ሰሌዳ ላይ ላሉ ሁሉ አሳይ"
 }

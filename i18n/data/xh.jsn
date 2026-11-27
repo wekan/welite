@@ -2311,5 +2311,7 @@
   "card-blocked": "Ivaliwe",
   "class-of-service": "Udidi lwenkonzo",
   "moscow-priority": "Ukubaluleka kwe-MoSCoW",
-  "wsjf-score": "Amanqaku e-WSJF"
+  "wsjf-score": "Amanqaku e-WSJF",
+  "board-announcement": "Isaziso sebhodi",
+  "board-announcement-enabled": "Sibonise kuye wonke umntu okule bhodi"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Diggettida",
   "class-of-service": "Maddaa shaahuwaa",
   "moscow-priority": "MoSCoW koyrotethaa",
-  "wsjf-score": "WSJF qooduwaa"
+  "wsjf-score": "WSJF qooduwaa",
+  "board-announcement": "Bookkiya erissuwaa",
+  "board-announcement-enabled": "Ha bookkiya bolla de'iya ubbaas bessa"
 }

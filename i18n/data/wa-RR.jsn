@@ -2311,5 +2311,7 @@
   "card-blocked": "Naka-block",
   "class-of-service": "Klase han serbisyo",
   "moscow-priority": "Prayoridad han MoSCoW",
-  "wsjf-score": "Iskor han WSJF"
+  "wsjf-score": "Iskor han WSJF",
+  "board-announcement": "Pahibaro han pisara",
+  "board-announcement-enabled": "Ipakita ha ngatanan ha ini nga pisara"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "अवरुद्ध",
   "class-of-service": "सेवाक श्रेणी",
   "moscow-priority": "MoSCoW प्राथमिकता",
-  "wsjf-score": "WSJF अंक"
+  "wsjf-score": "WSJF अंक",
+  "board-announcement": "पट्टक घोषणा",
+  "board-announcement-enabled": "एहि पट्ट पर सभकेँ देखाउ"
 }

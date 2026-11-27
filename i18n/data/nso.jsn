@@ -2311,5 +2311,7 @@
   "card-blocked": "E thibilwe",
   "class-of-service": "Legoro la tirelo",
   "moscow-priority": "Bohlokwa bja MoSCoW",
-  "wsjf-score": "Dintlha tša WSJF"
+  "wsjf-score": "Dintlha tša WSJF",
+  "board-announcement": "Tsebišo ya poto",
+  "board-announcement-enabled": "E bontšhe bohle go poto ye"
 }

@@ -2311,5 +2311,7 @@
   "card-blocked": "Blockerad",
   "class-of-service": "Tjänsteklass",
   "moscow-priority": "MoSCoW-prioritet",
-  "wsjf-score": "WSJF-poäng"
+  "wsjf-score": "WSJF-poäng",
+  "board-announcement": "Meddelande för tavlan",
+  "board-announcement-enabled": "Visa för alla på den här tavlan"
 }

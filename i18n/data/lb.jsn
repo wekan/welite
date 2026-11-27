@@ -2311,5 +2311,7 @@
   "card-blocked": "Blockéiert",
   "class-of-service": "Servicesklass",
   "moscow-priority": "MoSCoW-Prioritéit",
-  "wsjf-score": "WSJF-Wäertung"
+  "wsjf-score": "WSJF-Wäertung",
+  "board-announcement": "Tafel-Matdeelung",
+  "board-announcement-enabled": "Jidderengem op dëser Tafel weisen"
 }

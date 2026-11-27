@@ -2311,5 +2311,7 @@
   "card-blocked": "Kua ārai",
   "class-of-service": "Karaehe ratonga",
   "moscow-priority": "Whakaarotau MoSCoW",
-  "wsjf-score": "Kaute WSJF"
+  "wsjf-score": "Kaute WSJF",
+  "board-announcement": "Pānui papa",
+  "board-announcement-enabled": "Whakaaturia ki te katoa i runga i tēnei papa"
 }

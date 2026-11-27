@@ -2311,5 +2311,7 @@
   "card-blocked": "रोकल गइल",
   "class-of-service": "सेवा के वर्ग",
   "moscow-priority": "MoSCoW प्राथमिकता",
-  "wsjf-score": "WSJF अंक"
+  "wsjf-score": "WSJF अंक",
+  "board-announcement": "बोर्ड के घोषणा",
+  "board-announcement-enabled": "एह बोर्ड पर सभे के देखाईं"
 }
