@@ -123,6 +123,19 @@ begin
   Result:=Exists;
 end;
 
+function RootModelInput(Field:TJSONObject):string;
+var Kind:string;
+begin
+  Result:='NEW.'+Ident(Field.Get('name',''));
+  Kind:=Field.Get('kind','');
+  // Projected JSON TEXT must lose its SQLite JSON subtype before being wrapped.
+  if (Kind='json') or (Kind='extra') then Result:='('+Result+'||'+Q('')+')'
+  // json_object's default REAL formatting uses fewer digits than a double needs.
+  else if (Kind='scalar') and (Field.Get('type','')='REAL') then
+    Result:='CASE WHEN typeof('+Result+')=''real'' AND abs('+Result+')<=1.7976931348623157e308 '+
+      'THEN json(printf(''%!.26g'','+Result+')) ELSE '+Result+' END';
+end;
+
 function RootModelScript(Db:TWLDb):string;
 var Models:TJSONArray;Model,Field,Settings:TJSONObject;Fields,Managed:TJSONArray;
   Registry,Rows,Owner,Objects,Custom:TWLRows;Used,Roots,Tables:TStringList;
@@ -241,10 +254,7 @@ begin
           end;
           if j>0 then begin Body:=Body+',';Columns:=Columns+',';end;
           Body:=Body+ReadExpr+' AS '+Ident(Field.Get('name',''));
-          Incoming:='NEW.'+Ident(Field.Get('name',''));
-          // JSON expressions carry SQLite's subtype through NEW. These projected
-          // columns are TEXT; strip that subtype before wrapping patch JSON.
-          if (Field.Get('kind','')='json') or (Field.Get('kind','')='extra') then Incoming:='('+Incoming+'||'+Q('')+')';
+          Incoming:=RootModelInput(Field);
           Columns:=Columns+Q(Field.Get('name',''))+','+Incoming;
         end;
         Sql:=Sql+Body+',NULL AS _wl_source FROM '+Ident(TableName)+'; ';
@@ -257,8 +267,7 @@ begin
       for j:=0 to Fields.Count-1 do
       begin
         Field:=Fields.Objects[j];Root:=Field.Get('name','');
-        Incoming:='NEW.'+Ident(Root);
-        if (Field.Get('kind','')='json') or (Field.Get('kind','')='extra') then Incoming:='('+Incoming+'||'+Q('')+')';
+        Incoming:=RootModelInput(Field);
         Sql:=Sql+'CREATE TRIGGER '+Ident('_wl_'+ViewName+'_u_'+Root)+' INSTEAD OF UPDATE OF '+Ident(Root)+' ON '+Ident(ViewName)+' BEGIN '+
           ColumnReferenceChecks(Model,Root,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)',Tables)+
           UniqueChecks(Model,'(SELECT wl_model(json('+Ident(DocCol)+'),json_object('+Q(Root)+','+Incoming+'),'+Q(Spec)+',''update'') FROM '+Ident(TableName)+' WHERE '+Expr('_id')+'=OLD.id)','OLD.id',Root)+

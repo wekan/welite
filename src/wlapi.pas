@@ -7186,7 +7186,8 @@ begin
           not TryStrToFloat(Trim(Input.AsString),SpentHours,NumberFormat) or
           IsNan(SpentHours) or IsInfinite(SpentHours) or (SpentHours<0) then
         begin SendJson(aResponse,'{"error":"Invalid spentTime"}',400);Exit;end;
-        NewSpentTime:=FloatToStrF(SpentHours,ffGeneral,17,0,NumberFormat);
+        Str(SpentHours,NewSpentTime);
+        NewSpentTime:=Trim(NewSpentTime);
         FieldSets:=FieldSets+',spentTime='+NewSpentTime;
       end;
       Input:=Body.Find('isOverTime');

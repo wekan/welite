@@ -31,6 +31,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   values and support undo, redo and restore. REST spent-time corrections
   accept nonnegative hours and support the same history operations.
   Their previous-value snapshots read SQLite REAL values at full precision.
+  REST corrections and history replay preserve double precision in the
+  shared store.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
