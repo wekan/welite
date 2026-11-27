@@ -1542,7 +1542,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     p.querySelectorAll('a.js-export-fields').forEach(function (a) {
       var url = new URL(a.getAttribute('href'), location.href);
       var selected = fields;
-      if (url.pathname.endsWith('/exportExcel')) selected = fields.concat(documentOnly);
+      if (url.pathname.endsWith('/exportExcel') || url.pathname.endsWith('/exportZip')) selected = fields.concat(documentOnly);
       else if (url.pathname.endsWith('/exportPDF')) selected = fields.concat(documentOnly.filter(function (key) { return key !== 'activities'; }));
       url.searchParams.set('fields', selected.join(','));
       a.setAttribute('href', url.pathname + url.search);
@@ -1618,6 +1618,10 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     event.preventDefault();
     menuChecklist = el.getAttribute('data-checklist');
     openPopOver('checklist-actions');
+  });
+  up.on('click', '.js-pop-over .js-export-checklist', function (event) {
+    event.preventDefault();
+    if (menuChecklist) openScope('export', 'checklist', { checklistId: menuChecklist });
   });
   // checklistDeletePopup: the confirmation, for that checklist.
   up.on('click', '.js-pop-over .js-delete-checklist', function (event) {

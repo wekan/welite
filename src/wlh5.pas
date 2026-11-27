@@ -1558,12 +1558,13 @@ begin
   Result := Result + '</ul></form></template>';
 end;
 
-function ChecklistPopups(Words: TWLTranslator; const BoardId, CardId: string): string;
+function ChecklistPopups(Words: TWLTranslator; const BoardId, CardId: string; CanExport: Boolean): string;
 begin
   Result := '<template class="js-pop-over-template" data-pop="checklist-actions" data-title="' +
     HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"><div class="content"><ul class="pop-over-list"><li>' +
     '<a class="js-delete-checklist delete-checklist" href="#"><i class="fa fa-trash"></i> ' + E(Words.Text('delete', 'Delete')) +
-    ' ...</a></li></ul></div></template>' +
+    ' ...</a></li>' + IfThen(CanExport, '<li><a class="js-export-checklist" href="#">' +
+      E(Words.Text('export', 'Export')) + '</a></li>', '') + '</ul></div></template>' +
     '<template class="js-pop-over-template" data-pop="checklist-item-delete" data-title="' +
     HtmlAttr(Words.Text('delete', 'Delete')) + '"><div class="content"><p>' +
     E(Words.Text('confirm-checklist-item-delete-popup', 'Are you sure you want to delete the checklist item?')) +
@@ -2027,7 +2028,7 @@ end;
 // board.pug's cardDetailsActionsPopup - copy link, move, copy, archive - and
 // the moveCardPopup, copyCardPopup and cardArchivePopup it opens.
 function CardMenuPopups(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId, Slug, CardId, Title,
-  LaneId, ListId: string): string;
+  LaneId, ListId: string; CanExport: Boolean): string;
 var Lanes, Lists, Boards: TWLRows; Base, BoardOptions, CopyBoards: string; i: Integer;
   function Target(const Kind, Action, Extra, ButtonText: string; const Choices: string): string;
   begin
@@ -2056,8 +2057,8 @@ begin
     E(Words.Text('copy-card-link-to-clipboard', 'Copy card link to clipboard')) + '</a></li>' +
     '<li><a class="js-move-card" href="#"><i class="fa fa-arrow-right"></i> ' + E(Words.Text('moveCardPopup-title', 'Move Card')) + '</a></li>' +
     '<li><a class="js-copy-card" href="#"><i class="fa fa-copy"></i> ' + E(Words.Text('copyCardPopup-title', 'Copy Card')) + '</a></li>' +
-    '<li><a class="js-open-card-export" href="#"><i class="fa fa-file-excel-o"></i> ' +
-    E(Words.Text('export-card', 'Export card')) + '</a></li>' +
+    IfThen(CanExport, '<li><a class="js-open-card-export" href="#"><i class="fa fa-download"></i> ' +
+      E(Words.Text('export-card', 'Export card')) + '</a></li>', '') +
     IfThen(IsShared(Db), '<li><a class="js-open-card-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
       '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
@@ -2713,7 +2714,7 @@ end;
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardExportPopup(Words: TWLTranslator; const BoardId: string; const CardId: string = '';
-  const ListId: string = ''): string;
+  const ListId: string = ''; Scoped: Boolean = False): string;
 const
   Parts: array[0..16] of string = ('description','board-info','people','labels','dates','voting','custom-fields','board-header','activities','checklists','comments','attachments','subtasks',
     'poker','stickers','locations','dependencies');
@@ -2722,11 +2723,21 @@ const
     'poker-question','stickers','location','card-dependencies');
   Captions: array[0..16] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields','Board','Activities','Checklists','Comments','Attachments','Subtasks',
     'Planning Poker','Stickers','Location','Dependencies');
-var I: Integer; Base, Popup, Caption: string;
+var I: Integer; Base, BoardBase, Popup, Caption, Attributes: string;
 begin
-  Base := '/api/boards/' + HtmlAttr(HTTPEncode(BoardId));
+  BoardBase := '/api/boards/' + HtmlAttr(HTTPEncode(BoardId));
+  Base := BoardBase;
   Popup := 'export';
   Caption := Words.Text('export', 'Export');
+  Attributes := '';
+  if Scoped then
+  begin
+    Popup := 'export-scope';
+    Attributes := ' data-board="' + HtmlAttr(BoardId) + '" data-title-list="' +
+      HtmlAttr(Words.Text('export-list', 'Export list')) + '" data-title-swimlane="' +
+      HtmlAttr(Words.Text('export-swimlane', 'Export swimlane')) + '" data-title-checklist="' +
+      HtmlAttr(Words.Text('export', 'Export')) + '"';
+  end;
   if CardId <> '' then
   begin
     Popup := 'card-export';
@@ -2734,7 +2745,7 @@ begin
     Base := Base + '/lists/' + HtmlAttr(HTTPEncode(ListId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId));
   end;
   Result := '<template class="js-pop-over-template" data-pop="' + Popup + '" data-title="' +
-    HtmlAttr(Caption) + '"><div class="header"><span class="header-title">' +
+    HtmlAttr(Caption) + '"' + Attributes + '><div class="header"><span class="header-title js-scope-title">' +
     E(Caption) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
     HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list export-scope-select">';
   if CardId = '' then
@@ -2743,22 +2754,34 @@ begin
       E(Words.Text('export-card-details', 'Card details')) + '</span></a></li>';
   for I := Low(Parts) to High(Parts) do
   begin
-    if (CardId <> '') and ((Parts[I] = 'board-header') or (Parts[I] = 'activities')) then Continue;
+    if ((CardId <> '') or Scoped) and (Parts[I] = 'board-header') then Continue;
+    if (CardId <> '') and (Parts[I] = 'activities') then Continue;
     Result := Result + '<li><a class="flex js-export-field-toggle" href="#" data-field="' + Parts[I] +
       '"' + IfThen(I > 6, ' data-document-only="true"', '') +
       ' role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
       E(Words.Text(Keys[I], Captions[I])) + '</span></a></li>';
   end;
   Result := Result + '</ul><ul class="pop-over-list">';
-  if CardId = '' then Result := Result + '<li><a class="js-export-fields" download href="' + Base +
+  if (CardId = '') and not Scoped then Result := Result + '<li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
     '/exportZip">WeKan ZIP</a></li>';
-  Result := Result + '<li><a class="js-export-fields" download href="' + Base +
-    '/exportExcel?fields=">Excel (.xlsx)</a></li><li><a class="js-export-fields" download href="' + Base +
-    '/exportPDF?fields=">PDF (.pdf)</a></li></ul></div></template>';
+  if Scoped then
+    Result := Result + '<li><a class="js-export-fields js-scope-link" data-path="exportZip" download href="#">WeKan ZIP</a></li>' +
+      '<li><a class="js-export-fields js-scope-link" data-path="exportExcel" download href="#">Excel (.xlsx)</a></li>' +
+      '<li><a class="js-export-fields js-scope-link" data-path="exportPDF" download href="#">PDF (.pdf)</a></li>'
+  else
+  begin
+    if CardId <> '' then
+      Result := Result + '<li><a class="js-export-fields" download href="' + BoardBase +
+        '/exportZip?cardId=' + HtmlAttr(HTTPEncode(CardId)) + '">WeKan ZIP</a></li>';
+    Result := Result + '<li><a class="js-export-fields" download href="' + Base +
+      '/exportExcel?fields=">Excel (.xlsx)</a></li><li><a class="js-export-fields" download href="' + Base +
+      '/exportPDF?fields=">PDF (.pdf)</a></li>';
+  end;
+  Result := Result + '</ul></div></template>';
 end;
 
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
@@ -4071,7 +4094,7 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card, Reveal, WipCounts: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   RevealId, RevealLane, RevealList, CurrentList, CurrentLane, AssignedCond: string;
-  Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
+  Selector: TSelectionScope; Writable, CanExport, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup, WipBadges: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed, WipExceeded: Boolean;
@@ -4174,6 +4197,8 @@ begin
   if not (CalendarView or CalendarMode or MultiCalendar) then
     WipCounts := BoardWipGroupCounts(Db, BoardId, ViewAssignedOnly);
   if not (CalendarView or CalendarMode or MultiCalendar) then
+  CanExport := not AssignedOnlyMember(Db, S.UserId, BoardId) and BoardCanRead(Db, S.UserId, BoardId) and
+    not SharedSettingOn(Db, 'disableAllExport') and not SharedSettingOn(Db, 'anonymizeExportUsers');
   for i := 0 to High(Lanes) do
   begin
     // swimlaneHeader.jade: the caret folds the swimlane, for this user
@@ -4193,6 +4218,9 @@ begin
         '" aria-label="' + HtmlAttr(Words.Text('history', 'History')) + '" title="' + HtmlAttr(Words.Text('history', 'History')) +
         '"><i class="fa fa-history"></i></a>';
     Header := Header + '<span class="swimlane-header-name title">' + E(Lanes[i][1]) + '</span>';
+    if CanExport then
+      Header := Header + '<a class="js-open-swimlane-menu" href="#" data-swimlane="' + HtmlAttr(Lanes[i][0]) +
+        '" aria-label="' + HtmlAttr(Words.Text('export-swimlane', 'Export swimlane')) + '"><i class="fa fa-navicon"></i></a>';
     if Writable then
       Header := Header + '<a class="js-open-add-swimlane-menu swimlane-header-plus-icon" href="#" data-swimlane="' +
         HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('add-swimlane', 'Add Swimlane')) + '" aria-label="' +
@@ -4436,13 +4464,20 @@ begin
       '<i class="fa fa-caret-right"></i> ' + E(Words.Text('activities', 'Activities')) + '</h3>' +
       '<div class="card-details-section js-card-section is-hidden" data-section="activities"><div class="activities js-card-activities">' +
       ActivityRows(Db, Words, BoardId, CardId, 100, PlainLinks, PlainSource) + '</div></div></div>';
-    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + ChecklistAssigneePopup(Db, Words, BoardId) + MembersPopup(Db, Words, BoardId, CardId) +
+    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId, CanExport) + ChecklistAssigneePopup(Db, Words, BoardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
     Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);
     if Writable then
-      Details := Details + CardMenuPopups(Db, Words, S, BoardId, B[0][2], CardId, Card[0][0], Card[0][8], Card[0][9]) + BoardExportPopup(Words, BoardId, CardId, Card[0][9]);
+      Details := Details + CardMenuPopups(Db, Words, S, BoardId, B[0][2], CardId, Card[0][0], Card[0][8], Card[0][9], CanExport) +
+        IfThen(CanExport, BoardExportPopup(Words, BoardId, CardId, Card[0][9]), '');
   end;
   Details := Details + MemberPopups(Db, Words, S, BoardId);
+  if CanExport then
+    Details := Details + BoardExportPopup(Words, BoardId, '', '', True) +
+      '<template class="js-pop-over-template" data-pop="swimlane-menu" data-title="' +
+      HtmlAttr(Words.Text('swimlane', 'Swimlane')) + '"><ul class="pop-over-list"><li>' +
+      '<a class="js-export-swimlane" href="#">' + E(Words.Text('export-swimlane', 'Export swimlane')) +
+      '</a></li></ul></template>';
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
   if Writable then
     Details := Details + '<template class="js-pop-over-template" data-pop="add-swimlane" data-title="' +
@@ -4470,6 +4505,8 @@ begin
       '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li>' +
       '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li>' +
+      IfThen(CanExport, '<li><a class="js-export-list" href="#">' + E(Words.Text('export-list', 'Export list')) +
+        '</a></li>', '') +
       IfThen(IsShared(Db), '<li><a class="js-open-list-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
         '/history" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
         E(Words.Text('history', 'History')) + '</a></li>', '') + '</ul></template>';
