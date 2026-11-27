@@ -69,6 +69,8 @@ def run(request,database,administrator,member,base):
         con.execute("UPDATE boards SET createdAt=?, modifiedAt=? WHERE id='boardtxt'", container_dates)
         con.execute("UPDATE lists SET createdAt=?, modifiedAt=? WHERE id='txtlist'", container_dates)
         con.execute("UPDATE swimlanes SET createdAt=?, modifiedAt=? WHERE id='txtlane'", container_dates)
+        con.execute("UPDATE custom_fields SET sort=4.25, createdAt=?, modifiedAt=? WHERE id='port-field'",
+                    container_dates)
     for fields in ('dependencies,locations,stickers,people,labels,custom-fields', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
@@ -117,6 +119,10 @@ def run(request,database,administrator,member,base):
                            (imported_id,)).fetchone() == container_dates
         assert con.execute("SELECT createdAt,modifiedAt FROM swimlanes WHERE boardId=? AND title='txtlane'",
                            (imported_id,)).fetchone() == container_dates
+        assert con.execute(
+            "SELECT f.sort,f.createdAt,f.modifiedAt FROM custom_fields f JOIN custom_field_boards b "
+            "ON b.customFieldId=f.id WHERE b.boardId=? AND f.name='Port field'", (imported_id,)
+        ).fetchone() == (4.25, *container_dates)
         value, option = con.execute(
             "SELECT v.value,d.name FROM card_custom_field_values v "
             "JOIN cards c ON c.id=v.cardId JOIN custom_fields f ON f.id=v.customFieldId "

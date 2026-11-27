@@ -4081,6 +4081,25 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         ' AND type='+Kind+'); ';
     end;
   end;
+  function SortValue(Obj:TJSONObject;const Fallback:string='0'):string;
+  var Field:TJSONData;
+  begin
+    Result:=Fallback;Field:=Obj.Find('sort');
+    if (Field<>nil) and (Field.JSONType=jtNumber) and not IsNan(Field.AsFloat) and not IsInfinite(Field.AsFloat) then
+      Result:=Field.AsJSON;
+  end;
+  function ImportedDate(Obj:TJSONObject;const Key,Fallback:string;IgnoreInvalid:Boolean=False):string;
+  var Field:TJSONData;
+  begin
+    Result:=Fallback;Field:=Obj.Find(Key);
+    if (Field=nil) or (Field.JSONType=jtNull) then Exit;
+    if not CardDateSql(Field,Result) then
+    begin
+      if IgnoreInvalid then Exit(Fallback);
+      raise EConvertError.Create('Invalid imported date');
+    end;
+    if Result='NULL' then Result:=Fallback;
+  end;
   procedure ImportDefinitions;
   var Entry,Settings:TJSONObject;Id,FieldName,Kind,Dropdown,DropdownGuard:string;
     Flags:TDefinitionFlags;AlwaysOn,K,L:Integer;
@@ -4102,12 +4121,13 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         raise EConvertError.Create('Invalid imported custom-field settings');
       try
         Dropdown:=DropdownScript(T.Db,Mapped(10,Text(Entry,'_id'),True),Settings,DropdownGuard);
-        Sql:=Sql+Format('INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
+        Sql:=Sql+Format('INSERT INTO custom_fields(id,name,type,sort,showOnCard,automaticallyOnCard,'+
           'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,alwaysOnCard,createdAt,modifiedAt,'+
           'currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) '+
-          'VALUES(%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s); ',
-          [Id,QuotedStr(FieldName),QuotedStr(Kind),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],
-           AlwaysOn,Stamp,Stamp,SettingsLiteral(Settings,'currencyCode'),SettingsLiteral(Settings,'stringtemplateFormat'),
+          'VALUES(%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s); ',
+          [Id,QuotedStr(FieldName),QuotedStr(Kind),SortValue(Entry,'NULL'),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],
+           AlwaysOn,ImportedDate(Entry,'createdAt','NULL',True),ImportedDate(Entry,'modifiedAt',Stamp,True),
+           SettingsLiteral(Settings,'currencyCode'),SettingsLiteral(Settings,'stringtemplateFormat'),
            SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
           'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+Id+','+Board+'); '+Dropdown+DropdownGuard;
       finally Settings.Free;end;
@@ -4155,25 +4175,6 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     LaneKey:=ImportedListLanes.Get(ListKey,'');
     if (LaneKey='') and (TargetList='') then LaneKey:=Mapped(0,Text(Obj,'swimlaneId'));
     if LaneKey='' then LaneKey:=DefaultLane;
-  end;
-  function SortValue(Obj:TJSONObject):string;
-  var Field:TJSONData;
-  begin
-    Result:='0';Field:=Obj.Find('sort');
-    if (Field<>nil) and (Field.JSONType=jtNumber) and not IsNan(Field.AsFloat) and not IsInfinite(Field.AsFloat) then
-      Result:=Field.AsJSON;
-  end;
-  function ImportedDate(Obj:TJSONObject;const Key,Fallback:string;IgnoreInvalid:Boolean=False):string;
-  var Field:TJSONData;
-  begin
-    Result:=Fallback;Field:=Obj.Find(Key);
-    if (Field=nil) or (Field.JSONType=jtNull) then Exit;
-    if not CardDateSql(Field,Result) then
-    begin
-      if IgnoreInvalid then Exit(Fallback);
-      raise EConvertError.Create('Invalid imported date');
-    end;
-    if Result='NULL' then Result:=Fallback;
   end;
   procedure ImportCardVoting(Entry:TJSONObject;const Id:string);
   var Source,Field:TJSONData; Extra,Settings:TJSONObject; Group,Key,Deadline:string;
