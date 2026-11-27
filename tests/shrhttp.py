@@ -15,6 +15,7 @@ import time
 from urllib.parse import urlencode,urlsplit,parse_qs
 from wire import Client,DateMs,Long,Regex
 from layout import Forms
+from signin import signed_in
 from custapi import run_shared as check_custom_api
 from chkshare import run as check_shared_checklists
 from listsoft import run as check_list_soft_delete
@@ -203,10 +204,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                             dict(_id='first-user',username='first-user',services=dict(password=fresh_password))]})['n']==1
                         status,_,body=request('POST','/users/login',dict(username='first-user',password='test-password'))
                         assert status==200 and json.loads(body)['id']=='first-user',(status,body)
-                        status,headers,_=request('POST','/sign-in',urlencode(
+                        login=request('POST','/sign-in',urlencode(
                             dict(username='first-user',password='test-password')))
-                        assert status==302 and 'Set-Cookie' not in headers,(status,headers)
-                        assert request('GET',headers['Location'])[0]==200
+                        assert 'Set-Cookie' not in login[1]
+                        assert signed_in(login)
                         published=fresh_client.find('users','first-user')[0]['services']['resume']['loginTokens']
                         assert len(published)==1,published
                         if strict_shared:
@@ -263,9 +264,10 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 with sqlite3.connect(native_file) as con:
                     assert con.execute("SELECT type FROM sqlite_master WHERE name='integrations'").fetchone()==('table',)
                 form=urlencode(dict(username='native-user',password='test-password',confirm='test-password'))
-                status,headers,_=request('POST','/register',form)
-                assert status==302 and 'Set-Cookie' not in headers
-                native_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                registration=request('POST','/register',form)
+                assert 'Set-Cookie' not in registration[1]
+                native_session=signed_in(registration)
+                native_navigation=urlencode(dict(nav_view='1',sessionId=native_session))
                 status,_,body=request('POST','/users/login',dict(username='native-user',password='test-password'))
                 assert status==200,(status,body)
                 native_token=json.loads(body)['token']
@@ -289,7 +291,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 check_id=json.loads(body)['_id']
                 assert request('POST',checks_path+'/'+check_id+'/items',dict(title='Native & item'),native_token)[0]==200
                 details_path='/board/card?id='+native_boards[0]+'&card='+native_card
-                status,head,body=request('GET',details_path+'&sessionId='+native_session)
+                status,head,body=request('POST',details_path,native_navigation)
                 assert status==200 and 'Set-Cookie' not in head,(status,head)
                 assert b'Native &lt;steps&gt;' in body and b'Native &amp; item' in body
                 assert request('GET',details_path)[0]==404
@@ -313,8 +315,8 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 changes=dict(url='https://1.0.0.1/updated',title='Updated',enabled=False,activities=[])
                 assert request('PUT',integration,changes,native_token)[0]==200
                 assert json.loads(request('GET',integration_base,token=native_token)[2])==[dict(document,**changes)]
-                native_page='/board/webhooks?id='+native_boards[0]+'&sessionId='+native_session
-                status,headers,body=request('GET',native_page)
+                native_page='/board/webhooks?id='+native_boards[0]
+                status,headers,body=request('POST',native_page,native_navigation)
                 assert status==200 and 'Set-Cookie' not in headers and b'Updated' in body
                 assert request('DELETE',integration,token=native_token)[0]==200
                 assert request('GET',integration,token=native_token)[0]==404

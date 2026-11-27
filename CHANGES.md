@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## Shared storage tests
+
+- Verify that a running FerretDB (`10635f841e`) discovers a database newly
+  provisioned through WeLite HTTP. Update the bootstrap sign-in and native
+  registration checks in `tests/shrhttp.py` to use cookie-free form navigation.
+  The linked SQLite run passes these checks and proceeds through board import.
+
 ## 2026-11-26 The HTML5 view for modern browsers
 
 - Serve two views on one backend: modern browsers (Chromium 90+, Firefox 90+,

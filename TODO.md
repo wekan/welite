@@ -301,11 +301,11 @@ Next, after this goal:
 
 Found on the way, not part of this goal:
 
-- **`tests/shrhttp.py` fails at its line 198** (2026-11-26): the database
-  listing it reads from FerretDB has no `wekan` database at that point. It
-  fails the same way without the HTML5 view's changes of that day, so it is
-  older than them; `tests/view.py` and WeKan's specs through
-  `tests/wkui/run.sh` cover the shared store meanwhile.
+- **Finish updating `tests/shrhttp.py` for the current HTML4 view.** With
+  FerretDB `10635f841e`, fresh database discovery passes. The linked SQLite
+  run reaches the public board check after import and fails on the expected
+  markup for the green card. Check the markup and the later cookie-free
+  navigation assertions against the current view, then run the whole suite.
 
 Design questions for the maintainer (work goes on with the stated default):
 
