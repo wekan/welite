@@ -2119,10 +2119,15 @@ end;
 // A card's title or description row undone (previousContent back) or redone
 // (newContent back): only while the card still has the value the other side
 // left - a newer edit is never overwritten (history-conflict).
-function HistoryDateLiteral(Content: TJSONData; const Field: string; out Literal: string): Boolean;
+function HistoryDateLiteral(Content: TJSONData; const Field: string; out Literal: string; AllowAbsent: Boolean = False): Boolean;
 var V: TJSONData;
 begin
   Result := False;
+  if AllowAbsent and ((Content = nil) or (Content is TJSONNull)) then
+    case Field of
+      'receivedAt', 'startAt', 'dueAt', 'endAt':
+        begin Literal := 'NULL'; Exit(True); end;
+    end;
   if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> Field) then Exit;
   V := TJSONObject(Content).Find('value');
   if V = nil then Exit;
@@ -2241,8 +2246,12 @@ begin
   end;
   if CardHistoryDateField(Field) then
   begin
-    if (Str(Row, 'group') <> 'dates') or not HistoryDateLiteral(Put, Field, PutSql) or
-      not HistoryDateLiteral(Expect, Field, ExpectSql) then Exit;
+    if (Str(Row, 'group') <> 'dates') or not HistoryDateLiteral(Put, Field, PutSql,
+      ((Direction = 'undo') and (Str(Row, 'changeType') = 'added')) or
+      ((Direction = 'redo') and (Str(Row, 'changeType') = 'removed'))) or
+      not HistoryDateLiteral(Expect, Field, ExpectSql,
+      ((Direction = 'undo') and (Str(Row, 'changeType') = 'removed')) or
+      ((Direction = 'redo') and (Str(Row, 'changeType') = 'added'))) then Exit;
     Scope := 'id=' + Q(Str(Row, 'entityId')) + ' AND boardId=' + Q(Str(Row, 'boardId')) + ' AND deletedAt IS NULL';
     CurrentField := Field;
     if (Field = 'dueComplete') or (Field = 'isOvertime') then CurrentField := 'COALESCE(' + Field + ',0)';
