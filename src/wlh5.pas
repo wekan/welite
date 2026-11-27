@@ -5816,8 +5816,46 @@ begin
   if Pos(#0, Result) > 0 then Result := '';
 end;
 
-function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0): TWLRows;
-var Scope, Tail: string;
+function GlobalSearchOperatorSql(Words: TWLTranslator; const Text: string): string;
+var Op, Value, Column, Parent: string; Colon: Integer;
+  function IsOperator(const Key, Fallback: string): Boolean;
+  begin
+    Result := SameText(Op, Fallback) or SameText(Op, Words.Text(Key, Fallback));
+  end;
+  function Contains(const Field: string): string;
+  begin
+    Result := 'instr(lower(COALESCE(' + Field + ','''')),lower(' + QuotedStr(Value) + '))>0';
+  end;
+begin
+  Result := '';
+  Colon := Pos(':', Text);
+  if Colon <= 1 then Exit;
+  Op := Copy(Text, 1, Colon - 1);
+  Value := Trim(Copy(Text, Colon + 1, MaxInt));
+  if (Length(Value) >= 2) and (Value[1] = '"') and (Value[Length(Value)] = '"') then
+    Value := Copy(Value, 2, Length(Value) - 2);
+  if Value = '' then Exit;
+  if IsOperator('operator-due', 'due') then
+  begin
+    if SameText(Value, 'overdue') or SameText(Value, Words.Text('predicate-overdue', 'overdue')) then
+      Result := 'julianday(c.dueAt)<julianday(''now'')';
+    Exit;
+  end;
+  if IsOperator('operator-title', 'title') then Exit(Contains('c.title'));
+  if IsOperator('operator-board', 'board') then
+    Exit('EXISTS(SELECT 1 FROM boards named WHERE named.id=c.boardId AND ' + Contains('named.title') + ')');
+  if IsOperator('operator-list', 'list') then
+  begin Parent := 'lists'; Column := 'c.listId'; end
+  else if IsOperator('operator-swimlane', 'swimlane') then
+  begin Parent := 'swimlanes'; Column := 'c.swimlaneId'; end
+  else Exit;
+  Result := 'EXISTS(SELECT 1 FROM ' + Parent + ' named WHERE named.id=' + Column +
+    ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
+end;
+
+function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0;
+  const OperatorSql: string = ''): TWLRows;
+var Scope, Tail, Match: string;
 begin
   Result := nil;
   if Text = '' then Exit;
@@ -5829,9 +5867,11 @@ begin
   end;
   Tail := '';
   if Limit > 0 then Tail := ' LIMIT ' + IntToStr(Limit);
+  Match := OperatorSql;
+  if Match = '' then
+    Match := BoardTextMatchSql(Text) + BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text);
   Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
-    ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + BoardTextMatchSql(Text) +
-    BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text) + ')' +
+    ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + Match + ')' +
     ' ORDER BY c.createdAt DESC,c.id' + Tail + ';');
 end;
 
@@ -5860,7 +5900,7 @@ end;
 
 function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
 const PageSize = 25;
-var Text, Results, NextUrl: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
+var Text, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -5882,6 +5922,7 @@ var Text, Results, NextUrl: string; Boards, Cards: TWLRows; i, j, Skip, Shown: I
   end;
 begin
   Text := SearchTerm(Term);
+  OperatorSql := GlobalSearchOperatorSql(Words, Text);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
@@ -5897,7 +5938,7 @@ begin
     Shown := 0;
     for i := 0 to High(Boards) do
     begin
-      Cards := SearchBoardCards(Db, UserId, Boards[i][0], Text, Skip + PageSize + 1 - Shown);
+      Cards := SearchBoardCards(Db, UserId, Boards[i][0], Text, Skip + PageSize + 1 - Shown, OperatorSql);
       Writable := (Length(Cards) > 0) and BoardCanWrite(Db, UserId, Boards[i][0]);
       for j := 0 to High(Cards) do
       begin

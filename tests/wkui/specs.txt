@@ -9,6 +9,10 @@
 04-search.e2e.js: global search does not return cards from boards the user cannot access
 04-search.e2e.js: public boards are searchable only by their active members
 04-search.e2e.js: all seeded cards are findable via global search
+04-search.e2e.js: Latin overdue predicate excludes future cards
+04-search.e2e.js: Latin title operator finds a matching card and excludes other titles
+04-search.e2e.js: Veps overdue search uses the translated predicate and excludes future cards
+04-search.e2e.js: Corsican overdue search uses the translated predicate and excludes future cards
 02-cards-open-view.e2e.js: #3576: mobile Search back returns directly to the board
 02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
 02-cards-open-view.e2e.js: card opens without the maximized class by default (minimized view)

@@ -38,6 +38,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Move a card to another list in its current swimlane from Search All
   Boards. The move uses the card's existing write and destination checks
   and returns to the same search query and page.
+- Search All Boards accepts one title, board, list, or swimlane operator,
+  or the overdue predicate for due dates. It recognizes the operator names
+  in the viewer's locale and in English.
 
 ## HTML5 minicards
 
