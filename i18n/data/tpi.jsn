@@ -2307,5 +2307,9 @@
   "draggable": "Yu inap pulim",
   "restore-card-wip-limit-reached": "Lis __list__ i kamap pinis long mak bilong WIP. Kisim bek kat i go long narapela lis:",
   "restore-card-no-list-with-room": "Olgeta lis long bod hia i kamap pinis long mak bilong WIP. Litimapim wanpela mak, o muvim o putim ol kat long stua, bilong kisim bek dispela kat.",
-  "restore-all-skipped-wip-limit": "__count__ kat i no kam bek: ol lis bilong ol i kamap pinis long mak bilong WIP. Kisim bek ol wan wan bilong makim narapela lis."
+  "restore-all-skipped-wip-limit": "__count__ kat i no kam bek: ol lis bilong ol i kamap pinis long mak bilong WIP. Kisim bek ol wan wan bilong makim narapela lis.",
+  "card-blocked": "I pas",
+  "class-of-service": "Kain sevis",
+  "moscow-priority": "Namba MoSCoW",
+  "wsjf-score": "Skor WSJF"
 }

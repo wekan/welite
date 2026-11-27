@@ -2307,5 +2307,9 @@
   "draggable": "Zwi nga kokodzwa",
   "restore-card-wip-limit-reached": "Mutevhe wa __list__ wo swika kha mukano wawo wa WIP. Vhuyedzedzani garaṱa kha mutevhe muṅwe:",
   "restore-card-no-list-with-room": "Mutevhe muṅwe na muṅwe kha bodo iyi wo swika kha mukano wawo wa WIP. Gonyisani mukano, kana ni pfukise kana ni ise garaṱa fhethu ha u vhulunga, u itela u vhuyedzedza garaṱa iyi.",
-  "restore-all-skipped-wip-limit": "Garaṱa dza __count__ a dzo ngo vhuyedzedzwa: mitevhe yadzo yo swika kha mikano yayo ya WIP. Dzi vhuyedzedzeni nthihi nga nthihi u itela u nanga muṅwe mutevhe."
+  "restore-all-skipped-wip-limit": "Garaṱa dza __count__ a dzo ngo vhuyedzedzwa: mitevhe yadzo yo swika kha mikano yayo ya WIP. Dzi vhuyedzedzeni nthihi nga nthihi u itela u nanga muṅwe mutevhe.",
+  "card-blocked": "Yo thivhiwa",
+  "class-of-service": "Tshigwada tsha tshumelo",
+  "moscow-priority": "Ndeme ya MoSCoW",
+  "wsjf-score": "Mbalo ya WSJF"
 }

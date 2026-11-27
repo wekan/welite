@@ -2307,5 +2307,9 @@
   "draggable": "Kan trækkes",
   "restore-card-wip-limit-reached": "Listen __list__ har nået sin WIP-begrænsning. Genskab kortet til en anden liste:",
   "restore-card-no-list-with-room": "Alle lister på denne tavle har nået deres WIP-begrænsning. Hæv en begrænsning, eller flyt eller arkivér kort, for at genskabe dette kort.",
-  "restore-all-skipped-wip-limit": "__count__ kort blev ikke genskabt: deres lister har nået deres WIP-begrænsninger. Genskab dem ét ad gangen for at vælge en anden liste."
+  "restore-all-skipped-wip-limit": "__count__ kort blev ikke genskabt: deres lister har nået deres WIP-begrænsninger. Genskab dem ét ad gangen for at vælge en anden liste.",
+  "card-blocked": "Blokeret",
+  "class-of-service": "Serviceklasse",
+  "moscow-priority": "MoSCoW-prioritet",
+  "wsjf-score": "WSJF-score"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Sürüklənə bilən",
   "restore-card-wip-limit-reached": "__list__ siyahısı WIP limitinə çatıb. Kartı başqa siyahıya bərpa edin:",
   "restore-card-no-list-with-room": "Bu lövhədəki bütün siyahılar WIP limitinə çatıb. Bu kartı bərpa etmək üçün limiti artırın və ya kartları köçürün ya da arxivə köçürün.",
-  "restore-all-skipped-wip-limit": "__count__ kart bərpa olunmadı: onların siyahıları WIP limitlərinə çatıb. Başqa siyahı seçmək üçün onları bir-bir bərpa edin."
+  "restore-all-skipped-wip-limit": "__count__ kart bərpa olunmadı: onların siyahıları WIP limitlərinə çatıb. Başqa siyahı seçmək üçün onları bir-bir bərpa edin.",
+  "card-blocked": "Bloklanıb",
+  "class-of-service": "Xidmət sinfi",
+  "moscow-priority": "MoSCoW prioriteti",
+  "wsjf-score": "WSJF balı"
 }

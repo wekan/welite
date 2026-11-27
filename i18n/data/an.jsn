@@ -2307,5 +2307,9 @@
   "draggable": "Se puede arrocegar",
   "restore-card-wip-limit-reached": "A lista __list__ ha arribau a o suyo limite WIP. Restaura a tarcheta en unatra lista:",
   "restore-card-no-list-with-room": "Todas as listas d'iste tablero han arribau a o suyo limite WIP. Puya un limite, u mueve u archiva tarchetas, pa restaurar ista tarcheta.",
-  "restore-all-skipped-wip-limit": "__count__ tarcheta(s) no s'han restaurau: as suyas listas han arribau a os suyos limites WIP. Restauralas una per una pa trigar unatra lista."
+  "restore-all-skipped-wip-limit": "__count__ tarcheta(s) no s'han restaurau: as suyas listas han arribau a os suyos limites WIP. Restauralas una per una pa trigar unatra lista.",
+  "card-blocked": "Bloqueyau",
+  "class-of-service": "Clase de servicio",
+  "moscow-priority": "Prioridat MoSCoW",
+  "wsjf-score": "Puntuación WSJF"
 }

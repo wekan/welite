@@ -2307,5 +2307,9 @@
   "draggable": "Có thể kéo",
   "restore-card-wip-limit-reached": "Danh sách __list__ đã đạt giới hạn WIP. Hãy khôi phục thẻ vào một danh sách khác:",
   "restore-card-no-list-with-room": "Mọi danh sách trên bảng này đều đã đạt giới hạn WIP. Hãy tăng một giới hạn, hoặc di chuyển hay lưu trữ thẻ, để khôi phục thẻ này.",
-  "restore-all-skipped-wip-limit": "__count__ thẻ chưa được khôi phục: danh sách của chúng đã đạt giới hạn WIP. Hãy khôi phục từng thẻ một để chọn danh sách khác."
+  "restore-all-skipped-wip-limit": "__count__ thẻ chưa được khôi phục: danh sách của chúng đã đạt giới hạn WIP. Hãy khôi phục từng thẻ một để chọn danh sách khác.",
+  "card-blocked": "Bị chặn",
+  "class-of-service": "Loại dịch vụ",
+  "moscow-priority": "Độ ưu tiên MoSCoW",
+  "wsjf-score": "Điểm WSJF"
 }

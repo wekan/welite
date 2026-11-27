@@ -2307,5 +2307,9 @@
   "draggable": "Wotumi twe",
   "restore-card-wip-limit-reached": "Din a wɔahyehyɛ __list__ adu ne WIP ano. Fa kaad no san bra wɔ din foforo mu:",
   "restore-card-no-list-with-room": "Din biara a ɛwɔ bɔɔd yi so adu ne WIP ano. Ma ano no kɔ soro, anaa tu kaad anaa fa kɔ adekorabea, na wobɛtumi de kaad yi asan aba.",
-  "restore-all-skipped-wip-limit": "Kaad __count__ wɔamfa ansan amma: wɔn din adu wɔn WIP ano. Fa wɔn mu biara san bra baako baako na woapaw din foforo."
+  "restore-all-skipped-wip-limit": "Kaad __count__ wɔamfa ansan amma: wɔn din adu wɔn WIP ano. Fa wɔn mu biara san bra baako baako na woapaw din foforo.",
+  "card-blocked": "Wɔasiw ho",
+  "class-of-service": "Adwuma kuw",
+  "moscow-priority": "MoSCoW nhyehyɛe",
+  "wsjf-score": "WSJF akontaa"
 }

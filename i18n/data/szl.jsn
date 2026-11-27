@@ -2307,5 +2307,9 @@
   "draggable": "Do przeciōnganiŏ",
   "restore-card-wip-limit-reached": "Lista __list__ doszła do swojigo limitu WIP. Prziwrōć karta do inkszyj listy:",
   "restore-card-no-list-with-room": "Kŏżdŏ lista na tyj tabli doszła do swojigo limitu WIP. Podniyś limit, abo przeniyś abo zarchiwizuj karty, coby prziwrōcić ta karta.",
-  "restore-all-skipped-wip-limit": "__count__ kart(y) niy ôstało prziwrōcōnych: ich listy doszły do swojich limitōw WIP. Prziwrōć je po jednyj, coby ôbrać inksza lista."
+  "restore-all-skipped-wip-limit": "__count__ kart(y) niy ôstało prziwrōcōnych: ich listy doszły do swojich limitōw WIP. Prziwrōć je po jednyj, coby ôbrać inksza lista.",
+  "card-blocked": "Zablokowane",
+  "class-of-service": "Klasa usugi",
+  "moscow-priority": "Priorytet MoSCoW",
+  "wsjf-score": "Wynik WSJF"
 }

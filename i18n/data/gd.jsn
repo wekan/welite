@@ -2307,5 +2307,9 @@
   "draggable": "Gabhaidh a shlaodadh",
   "restore-card-wip-limit-reached": "Ràinig an liosta __list__ a crìoch WIP. Aisig a’ chairt gu liosta eile:",
   "restore-card-no-list-with-room": "Ràinig gach liosta air a’ bhòrd seo a crìoch WIP. Àrdaich crìoch, no gluais no cuir cairtean dhan tasglann, gus a’ chairt seo aiseag.",
-  "restore-all-skipped-wip-limit": "Cha deach __count__ cairt(ean) aiseag: ràinig na liostaichean aca an crìochan WIP. Aisig iad tè seach tè gus liosta eile a thaghadh."
+  "restore-all-skipped-wip-limit": "Cha deach __count__ cairt(ean) aiseag: ràinig na liostaichean aca an crìochan WIP. Aisig iad tè seach tè gus liosta eile a thaghadh.",
+  "card-blocked": "Bacte",
+  "class-of-service": "Seòrsa seirbheis",
+  "moscow-priority": "Prìomhachas MoSCoW",
+  "wsjf-score": "Sgòr WSJF"
 }

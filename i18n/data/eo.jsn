@@ -2307,5 +2307,9 @@
   "draggable": "Trenebla",
   "restore-card-wip-limit-reached": "La listo __list__ atingis sian WIP-limon. Restarigu la karton al alia listo:",
   "restore-card-no-list-with-room": "Ĉiu listo sur ĉi tiu tabulo atingis sian WIP-limon. Altigu limon, aŭ movu aŭ arkivu kartojn, por restarigi ĉi tiun karton.",
-  "restore-all-skipped-wip-limit": "__count__ karto(j) ne estis restarigitaj: iliaj listoj atingis siajn WIP-limojn. Restarigu ilin unu post la alia por elekti alian liston."
+  "restore-all-skipped-wip-limit": "__count__ karto(j) ne estis restarigitaj: iliaj listoj atingis siajn WIP-limojn. Restarigu ilin unu post la alia por elekti alian liston.",
+  "card-blocked": "Blokita",
+  "class-of-service": "Servoklaso",
+  "moscow-priority": "MoSCoW-prioritato",
+  "wsjf-score": "WSJF-poentaro"
 }

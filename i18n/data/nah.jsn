@@ -2307,5 +2307,9 @@
   "draggable": "Huel motilana",
   "restore-card-wip-limit-reached": "In tocatlahtolli __list__ ye oacic itlamian WIP. Xicuepa in amatlapalli occe tocatlahtolco:",
   "restore-card-no-list-with-room": "Mochi tocatlahtolli ipan inin huapalli ye oacic intlamian WIP. Xiquhueixti cē tlamiantli, nozo xiquinolini nozo xiquinhuica pixcalco amatlapaltin, inic ticcuepaz inin amatlapalli.",
-  "restore-all-skipped-wip-limit": "__count__ amatlapalli amo omocuepqueh: intocatlahtolhuan ye oacic intlamian WIP. Xiquincuepa cēcē inic ticpepenaz occe tocatlahtolli."
+  "restore-all-skipped-wip-limit": "__count__ amatlapalli amo omocuepqueh: intocatlahtolhuan ye oacic intlamian WIP. Xiquincuepa cēcē inic ticpepenaz occe tocatlahtolli.",
+  "card-blocked": "Tzacualli",
+  "class-of-service": "Tequitiliztli itlamantiliz",
+  "moscow-priority": "MoSCoW achtopa",
+  "wsjf-score": "WSJF tlapohualli"
 }

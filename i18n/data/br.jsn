@@ -2307,5 +2307,9 @@
   "draggable": "Gallout a reer riklañ",
   "restore-card-wip-limit-reached": "Ar roll __list__ en deus tizhet e vevenn WIP. Adsavit ar gartenn en ur roll all:",
   "restore-card-no-list-with-room": "Holl rolloù an daolenn-mañ o deus tizhet o bevenn WIP. Kreskit ur vevenn, pe dilec'hit pe diellit kartennoù, evit adsevel ar gartenn-mañ.",
-  "restore-all-skipped-wip-limit": "__count__ kartenn n'int ket bet adsavet: o rolloù o deus tizhet o bevennoù WIP. Adsavit anezho unan hag unan evit dibab ur roll all."
+  "restore-all-skipped-wip-limit": "__count__ kartenn n'int ket bet adsavet: o rolloù o deus tizhet o bevennoù WIP. Adsavit anezho unan hag unan evit dibab ur roll all.",
+  "card-blocked": "Stanket",
+  "class-of-service": "Rummad servij",
+  "moscow-priority": "Priorelezh MoSCoW",
+  "wsjf-score": "Skor WSJF"
 }

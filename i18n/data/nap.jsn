@@ -2307,5 +2307,9 @@
   "draggable": "Se pò trascinà",
   "restore-card-wip-limit-reached": "'A lista __list__ ha arrivato 'o limite WIP suojo. Ripristina 'a carta int'a n'ata lista:",
   "restore-card-no-list-with-room": "Ogne lista 'e chesta tavula ha arrivato 'o limite WIP suojo. Aiza nu limite, o sposta o archivia carte, pe' ripristinà chesta carta.",
-  "restore-all-skipped-wip-limit": "__count__ carta/e nun so' state ripristinate: 'e liste lloro hanno arrivato 'e limite WIP. Ripristinale na â vota pe' sceglie n'ata lista."
+  "restore-all-skipped-wip-limit": "__count__ carta/e nun so' state ripristinate: 'e liste lloro hanno arrivato 'e limite WIP. Ripristinale na â vota pe' sceglie n'ata lista.",
+  "card-blocked": "Bloccata",
+  "class-of-service": "Classe 'e servizio",
+  "moscow-priority": "Priorità MoSCoW",
+  "wsjf-score": "Punteggio WSJF"
 }

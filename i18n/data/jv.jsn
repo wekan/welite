@@ -2307,5 +2307,9 @@
   "draggable": "Bisa diseret",
   "restore-card-wip-limit-reached": "Dhaptar __list__ wis tekan wates WIP-e. Balekake kertu menyang dhaptar liyane:",
   "restore-card-no-list-with-room": "Saben dhaptar ing papan iki wis tekan wates WIP-e. Mundhakake wates, utawa pindhah utawa arsipake kertu, kanggo mbalekake kertu iki.",
-  "restore-all-skipped-wip-limit": "__count__ kertu ora dibalekake: dhaptare wis tekan wates WIP. Balekake siji-siji kanggo milih dhaptar liyane."
+  "restore-all-skipped-wip-limit": "__count__ kertu ora dibalekake: dhaptare wis tekan wates WIP. Balekake siji-siji kanggo milih dhaptar liyane.",
+  "card-blocked": "Diblokir",
+  "class-of-service": "Kelas layanan",
+  "moscow-priority": "Prioritas MoSCoW",
+  "wsjf-score": "Skor WSJF"
 }

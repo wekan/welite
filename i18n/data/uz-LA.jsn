@@ -2307,5 +2307,9 @@
   "draggable": "Sudrash mumkin",
   "restore-card-wip-limit-reached": "__list__ roʻyxati WIP chegarasiga yetdi. Kartani boshqa roʻyxatga qayta tiklang:",
   "restore-card-no-list-with-room": "Bu doskadagi har bir roʻyxat WIP chegarasiga yetdi. Bu kartani qayta tiklash uchun chegarani oshiring yoki kartalarni koʻchiring yoki arxivlang.",
-  "restore-all-skipped-wip-limit": "__count__ ta karta qayta tiklanmadi: ularning roʻyxatlari WIP chegaralariga yetdi. Boshqa roʻyxatni tanlash uchun ularni birma-bir qayta tiklang."
+  "restore-all-skipped-wip-limit": "__count__ ta karta qayta tiklanmadi: ularning roʻyxatlari WIP chegaralariga yetdi. Boshqa roʻyxatni tanlash uchun ularni birma-bir qayta tiklang.",
+  "card-blocked": "Bloklangan",
+  "class-of-service": "Xizmat sinfi",
+  "moscow-priority": "MoSCoW ustuvorligi",
+  "wsjf-score": "WSJF bali"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Inaweza kuburutwa",
   "restore-card-wip-limit-reached": "Orodha __list__ imefikia kikomo chake cha WIP. Rejesha kadi kwenye orodha nyingine:",
   "restore-card-no-list-with-room": "Kila orodha kwenye ubao huu imefikia kikomo chake cha WIP. Ongeza kikomo, au hamisha au weka kadi kwenye kumbukumbu, ili kurejesha kadi hii.",
-  "restore-all-skipped-wip-limit": "Kadi __count__ hazikurejeshwa: orodha zake zimefikia vikomo vyake vya WIP. Zirejeshe moja baada ya nyingine ili kuchagua orodha nyingine."
+  "restore-all-skipped-wip-limit": "Kadi __count__ hazikurejeshwa: orodha zake zimefikia vikomo vyake vya WIP. Zirejeshe moja baada ya nyingine ili kuchagua orodha nyingine.",
+  "card-blocked": "Imezuiwa",
+  "class-of-service": "Daraja la huduma",
+  "moscow-priority": "Kipaumbele cha MoSCoW",
+  "wsjf-score": "Alama ya WSJF"
 }

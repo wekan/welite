@@ -2307,5 +2307,9 @@
   "draggable": "Trascinabile",
   "restore-card-wip-limit-reached": "La lista __list__ ha raggiunto il suo limite Work In Progress. Ripristina la scheda in un'altra lista:",
   "restore-card-no-list-with-room": "Tutte le liste di questa bacheca hanno raggiunto il loro limite Work In Progress. Aumenta un limite, oppure sposta o archivia delle schede, per ripristinare questa scheda.",
-  "restore-all-skipped-wip-limit": "__count__ scheda/e non ripristinata/e: le loro liste hanno raggiunto il limite Work In Progress. Ripristinale una alla volta per scegliere un'altra lista."
+  "restore-all-skipped-wip-limit": "__count__ scheda/e non ripristinata/e: le loro liste hanno raggiunto il limite Work In Progress. Ripristinale una alla volta per scegliere un'altra lista.",
+  "card-blocked": "Bloccata",
+  "class-of-service": "Classe di servizio",
+  "moscow-priority": "Priorità MoSCoW",
+  "wsjf-score": "Punteggio WSJF"
 }

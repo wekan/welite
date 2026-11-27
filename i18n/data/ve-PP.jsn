@@ -2307,5 +2307,9 @@
   "draggable": "Saa vedada",
   "restore-card-wip-limit-reached": "Lugetiž __list__ om tulnu ičeze WIP-röunhasai. Endišta kart toižhe lugetišhe:",
   "restore-card-no-list-with-room": "Kaik lugetišed necil laudal oma tulnuded ičeze WIP-röunhasai. Libuta röun, vai sirdä vai pane kartad arhivaha, miše endištada nece kart.",
-  "restore-all-skipped-wip-limit": "__count__ kart(ad) ei endištadud: niiden lugetišed oma tulnuded ičeze WIP-röunhasai. Endišta niid ühthe kerdale, miše valita toine lugetiž."
+  "restore-all-skipped-wip-limit": "__count__ kart(ad) ei endištadud: niiden lugetišed oma tulnuded ičeze WIP-röunhasai. Endišta niid ühthe kerdale, miše valita toine lugetiž.",
+  "card-blocked": "Blokiruidud",
+  "class-of-service": "Holitusen klass",
+  "moscow-priority": "MoSCoW-prioritet",
+  "wsjf-score": "WSJF-ballad"
 }

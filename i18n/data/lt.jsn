@@ -2307,5 +2307,9 @@
   "draggable": "Tempiamas",
   "restore-card-wip-limit-reached": "Sąrašas __list__ pasiekė savo WIP limitą. Atkurkite kortelę į kitą sąrašą:",
   "restore-card-no-list-with-room": "Visi šios lentos sąrašai pasiekė savo WIP limitą. Padidinkite limitą arba perkelkite ar archyvuokite korteles, kad atkurtumėte šią kortelę.",
-  "restore-all-skipped-wip-limit": "__count__ kortelė(s) neatkurta(-os): jų sąrašai pasiekė savo WIP limitus. Atkurkite jas po vieną, kad pasirinktumėte kitą sąrašą."
+  "restore-all-skipped-wip-limit": "__count__ kortelė(s) neatkurta(-os): jų sąrašai pasiekė savo WIP limitus. Atkurkite jas po vieną, kad pasirinktumėte kitą sąrašą.",
+  "card-blocked": "Užblokuota",
+  "class-of-service": "Paslaugos klasė",
+  "moscow-priority": "MoSCoW prioritetas",
+  "wsjf-score": "WSJF balas"
 }

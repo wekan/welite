@@ -2307,5 +2307,9 @@
   "draggable": "Po vegnir tratg",
   "restore-card-wip-limit-reached": "La glista __list__ ha cuntanschì ses limit WIP. Restaurescha la carta en in'autra glista:",
   "restore-card-no-list-with-room": "Mintga glista da questa tabella ha cuntanschì ses limit WIP. Augmentescha in limit, u spustescha u archivescha cartas, per restaurar questa carta.",
-  "restore-all-skipped-wip-limit": "__count__ carta(s) n'èn betg vegnidas restauradas: lur glistas han cuntanschì lur limits WIP. Restaurescha ellas ina suenter l'autra per tscherner in'autra glista."
+  "restore-all-skipped-wip-limit": "__count__ carta(s) n'èn betg vegnidas restauradas: lur glistas han cuntanschì lur limits WIP. Restaurescha ellas ina suenter l'autra per tscherner in'autra glista.",
+  "card-blocked": "Bloccada",
+  "class-of-service": "Classa da servetsch",
+  "moscow-priority": "Prioritad MoSCoW",
+  "wsjf-score": "Puntaziun WSJF"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Waa la jiidi karaa",
   "restore-card-wip-limit-reached": "Liiska __list__ wuxuu gaaray xadkiisa WIP. Kaarka u soo celi liis kale:",
   "restore-card-no-list-with-room": "Liis kasta oo sabuuraddan ku jira wuxuu gaaray xadkiisa WIP. Kordhi xad, ama dhaqaaji ama u gudbi kaydka kaarar, si aad u soo celiso kaarkan.",
-  "restore-all-skipped-wip-limit": "__count__ kaar lama soo celin: liisaskoodu waxay gaareen xadkooda WIP. Mid mid u soo celi si aad u doorato liis kale."
+  "restore-all-skipped-wip-limit": "__count__ kaar lama soo celin: liisaskoodu waxay gaareen xadkooda WIP. Mid mid u soo celi si aad u doorato liis kale.",
+  "card-blocked": "La xannibay",
+  "class-of-service": "Heerka adeegga",
+  "moscow-priority": "Mudnaanta MoSCoW",
+  "wsjf-score": "Dhibcaha WSJF"
 }

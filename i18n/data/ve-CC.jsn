@@ -2307,5 +2307,9 @@
   "draggable": "Se pol strasinar",
   "restore-card-wip-limit-reached": "La lista __list__ la ga razonto el so łimite WIP. Ripristina la scheda inte n'altra lista:",
   "restore-card-no-list-with-room": "Ogni lista de sta bacheca la ga razonto el so łimite WIP. Alsa un łimite, o sposta o archivia de łe schede, par ripristinar sta scheda.",
-  "restore-all-skipped-wip-limit": "__count__ scheda/e no łe xe stàe ripristinàe: łe so liste łe ga razonto i so łimiti WIP. Ripristinałe una a ła volta par sernir n'altra lista."
+  "restore-all-skipped-wip-limit": "__count__ scheda/e no łe xe stàe ripristinàe: łe so liste łe ga razonto i so łimiti WIP. Ripristinałe una a ła volta par sernir n'altra lista.",
+  "card-blocked": "Blocà",
+  "class-of-service": "Clase de servisio",
+  "moscow-priority": "Priorità MoSCoW",
+  "wsjf-score": "Pontejo WSJF"
 }

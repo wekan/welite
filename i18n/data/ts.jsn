@@ -2307,5 +2307,9 @@
   "draggable": "Swi nga kokiwa",
   "restore-card-wip-limit-reached": "Nxaxamelo wa __list__ wu fikile eka ndzelekano wa wona wa WIP. Vuyisela khadi eka nxaxamelo wun'wana:",
   "restore-card-no-list-with-room": "Nxaxamelo wun'wana na wun'wana eka bodo leyi wu fikile eka ndzelekano wa wona wa WIP. Tlakusa ndzelekano, kumbe u rhurha kumbe u yisa tikhadi eka vuhlayiselo bya swa khale, leswaku u vuyisa khadi leri.",
-  "restore-all-skipped-wip-limit": "Tikhadi ta __count__ a ti vuyisiwanga: minxaxamelo ya tona yi fikile eka mindzelekano ya yona ya WIP. Ti vuyise yin'we hi yin'we leswaku u hlawula nxaxamelo wun'wana."
+  "restore-all-skipped-wip-limit": "Tikhadi ta __count__ a ti vuyisiwanga: minxaxamelo ya tona yi fikile eka mindzelekano ya yona ya WIP. Ti vuyise yin'we hi yin'we leswaku u hlawula nxaxamelo wun'wana.",
+  "card-blocked": "Yi siviwile",
+  "class-of-service": "Ntlawa wa vukorhokeri",
+  "moscow-priority": "Nhlohlorhiso wa MoSCoW",
+  "wsjf-score": "Mpimo wa WSJF"
 }

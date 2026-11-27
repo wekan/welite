@@ -2307,5 +2307,9 @@
   "draggable": "Arrossegable",
   "restore-card-wip-limit-reached": "La llista __list__ ha arribat al seu límit WIP. Restaura la fitxa a una altra llista:",
   "restore-card-no-list-with-room": "Totes les llistes d'este tauler han arribat al seu límit WIP. Augmenta un límit, o mou o arxiva fitxes, per a restaurar esta fitxa.",
-  "restore-all-skipped-wip-limit": "__count__ fitxa(es) no s'han restaurat: les seues llistes han arribat als seus límits WIP. Restaura-les d'una en una per a triar una altra llista."
+  "restore-all-skipped-wip-limit": "__count__ fitxa(es) no s'han restaurat: les seues llistes han arribat als seus límits WIP. Restaura-les d'una en una per a triar una altra llista.",
+  "card-blocked": "Bloquejada",
+  "class-of-service": "Classe de servei",
+  "moscow-priority": "Prioritat MoSCoW",
+  "wsjf-score": "Puntuació WSJF"
 }

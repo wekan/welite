@@ -2307,5 +2307,9 @@
   "draggable": "Dikare were kişandin",
   "restore-card-wip-limit-reached": "Lîsteya __list__ gihîşt sînorê xwe yê WIP. Kartê vegerîne lîsteyeke din:",
   "restore-card-no-list-with-room": "Her lîsteya li ser vê panelê gihîşt sînorê xwe yê WIP. Ji bo vegerandina vê kartê sînorekî bilind bike, an kartan bibe an bibe arşîvê.",
-  "restore-all-skipped-wip-limit": "__count__ kart nehatin vegerandin: lîsteyên wan gihîştin sînorê xwe yê WIP. Ji bo hilbijartina lîsteyeke din, wan yek bi yek vegerîne."
+  "restore-all-skipped-wip-limit": "__count__ kart nehatin vegerandin: lîsteyên wan gihîştin sînorê xwe yê WIP. Ji bo hilbijartina lîsteyeke din, wan yek bi yek vegerîne.",
+  "card-blocked": "Astengkirî",
+  "class-of-service": "Pola xizmetê",
+  "moscow-priority": "Pêşîniya MoSCoW",
+  "wsjf-score": "Pûana WSJF"
 }

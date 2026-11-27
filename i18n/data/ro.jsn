@@ -2307,5 +2307,9 @@
   "draggable": "Poate fi tras",
   "restore-card-wip-limit-reached": "Lista __list__ a atins limita lucrărilor în curs (WIP). Restaurează cardul în altă listă:",
   "restore-card-no-list-with-room": "Fiecare listă de pe acest panou a atins limita WIP. Mărește o limită, sau mută ori arhivează carduri, pentru a restaura acest card.",
-  "restore-all-skipped-wip-limit": "__count__ card(uri) nu au fost restaurate: listele lor au atins limitele WIP. Restaurează-le pe rând pentru a alege altă listă."
+  "restore-all-skipped-wip-limit": "__count__ card(uri) nu au fost restaurate: listele lor au atins limitele WIP. Restaurează-le pe rând pentru a alege altă listă.",
+  "card-blocked": "Blocat",
+  "class-of-service": "Clasă de serviciu",
+  "moscow-priority": "Prioritate MoSCoW",
+  "wsjf-score": "Scor WSJF"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Arrastável",
   "restore-card-wip-limit-reached": "A lista __list__ atingiu seu limite WIP. Restaure o cartão em outra lista:",
   "restore-card-no-list-with-room": "Todas as listas deste quadro atingiram seu limite WIP. Aumente um limite, ou mova ou arquive cartões, para restaurar este cartão.",
-  "restore-all-skipped-wip-limit": "__count__ cartão(ões) não foram restaurados: suas listas atingiram os limites WIP. Restaure-os um de cada vez para escolher outra lista."
+  "restore-all-skipped-wip-limit": "__count__ cartão(ões) não foram restaurados: suas listas atingiram os limites WIP. Restaure-os um de cada vez para escolher outra lista.",
+  "card-blocked": "Bloqueado",
+  "class-of-service": "Classe de serviço",
+  "moscow-priority": "Prioridade MoSCoW",
+  "wsjf-score": "Pontuação WSJF"
 }

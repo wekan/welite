@@ -2307,5 +2307,9 @@
   "draggable": "Ou ka trennen li",
   "restore-card-wip-limit-reached": "Lis __list__ la rive nan limit WIP li. Retabli kat la nan yon lòt lis:",
   "restore-card-no-list-with-room": "Chak lis sou tablo sa a rive nan limit WIP li. Ogmante yon limit, oswa deplase oswa achive kat, pou retabli kat sa a.",
-  "restore-all-skipped-wip-limit": "__count__ kat pa t retabli: lis yo rive nan limit WIP yo. Retabli yo youn pa youn pou chwazi yon lòt lis."
+  "restore-all-skipped-wip-limit": "__count__ kat pa t retabli: lis yo rive nan limit WIP yo. Retabli yo youn pa youn pou chwazi yon lòt lis.",
+  "card-blocked": "Bloke",
+  "class-of-service": "Klas sèvis",
+  "moscow-priority": "Priyorite MoSCoW",
+  "wsjf-score": "Nòt WSJF"
 }

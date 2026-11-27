@@ -2307,5 +2307,9 @@
   "draggable": "Kungahudulwa",
   "restore-card-wip-limit-reached": "Uhlu __list__ selufinyelele umkhawulo walo we-WIP. Buyisela ikhadi kolunye uhlu:",
   "restore-card-no-list-with-room": "Lonke uhlu kuleli bhodi selufinyelele umkhawulo walo we-WIP. Khuphula umkhawulo, noma uhambise noma ufake amakhadi kungobo yomlando, ukuze ubuyisele leli khadi.",
-  "restore-all-skipped-wip-limit": "Amakhadi angu-__count__ awabuyiselwanga: izinhlu zawo sezifinyelele imikhawulo yazo ye-WIP. Wabuyisele ngalinye ukuze ukhethe olunye uhlu."
+  "restore-all-skipped-wip-limit": "Amakhadi angu-__count__ awabuyiselwanga: izinhlu zawo sezifinyelele imikhawulo yazo ye-WIP. Wabuyisele ngalinye ukuze ukhethe olunye uhlu.",
+  "card-blocked": "Ivinjiwe",
+  "class-of-service": "Isigaba sesevisi",
+  "moscow-priority": "Ukubaluleka kwe-MoSCoW",
+  "wsjf-score": "Amaphuzu e-WSJF"
 }

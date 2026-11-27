@@ -2307,5 +2307,9 @@
   "draggable": "Versleepbaar",
   "restore-card-wip-limit-reached": "De lijst __list__ heeft haar WIP limiet bereikt. Herstel de kaart naar een andere lijst:",
   "restore-card-no-list-with-room": "Elke lijst op dit bord heeft haar WIP limiet bereikt. Verhoog een limiet, of verplaats of archiveer kaarten, om deze kaart te herstellen.",
-  "restore-all-skipped-wip-limit": "__count__ kaart(en) werden niet hersteld: hun lijsten hebben hun WIP limiet bereikt. Herstel ze één voor één om een andere lijst te kiezen."
+  "restore-all-skipped-wip-limit": "__count__ kaart(en) werden niet hersteld: hun lijsten hebben hun WIP limiet bereikt. Herstel ze één voor één om een andere lijst te kiezen.",
+  "card-blocked": "Geblokkeerd",
+  "class-of-service": "Serviceklasse",
+  "moscow-priority": "MoSCoW-prioriteit",
+  "wsjf-score": "WSJF-score"
 }

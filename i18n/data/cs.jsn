@@ -2307,5 +2307,9 @@
   "draggable": "Přetahovatelné",
   "restore-card-wip-limit-reached": "Seznam __list__ dosáhl svého WIP limitu. Obnovte kartu do jiného seznamu:",
   "restore-card-no-list-with-room": "Všechny seznamy na tomto tablu dosáhly svého WIP limitu. Pro obnovení této karty zvyšte limit nebo přesuňte či archivujte karty.",
-  "restore-all-skipped-wip-limit": "Neobnoveno karet: __count__ – jejich seznamy dosáhly WIP limitů. Obnovujte je po jedné, abyste mohli zvolit jiný seznam."
+  "restore-all-skipped-wip-limit": "Neobnoveno karet: __count__ – jejich seznamy dosáhly WIP limitů. Obnovujte je po jedné, abyste mohli zvolit jiný seznam.",
+  "card-blocked": "Blokováno",
+  "class-of-service": "Třída služby",
+  "moscow-priority": "Priorita MoSCoW",
+  "wsjf-score": "Skóre WSJF"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Jeuet teutarék",
   "restore-card-wip-limit-reached": "Dapeuta __list__ ka trôk bataih WIP. Peuwoe kad u dapeuta laén:",
   "restore-card-no-list-with-room": "Mandum dapeuta bak papan nyoe ka trôk bataih WIP. Peurayek bataih, atawa pinah atawa arsip kad, mangat jeuet geupeuwoe kad nyoe.",
-  "restore-all-skipped-wip-limit": "__count__ kad hana geupeuwoe: dapeuta jih ka trôk bataih WIP. Peuwoe saboh-saboh mangat jeuet pilih dapeuta laén."
+  "restore-all-skipped-wip-limit": "__count__ kad hana geupeuwoe: dapeuta jih ka trôk bataih WIP. Peuwoe saboh-saboh mangat jeuet pilih dapeuta laén.",
+  "card-blocked": "Meusangkot",
+  "class-of-service": "Kelas layanan",
+  "moscow-priority": "Prioritas MoSCoW",
+  "wsjf-score": "Skor WSJF"
 }

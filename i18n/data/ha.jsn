@@ -2307,5 +2307,9 @@
   "draggable": "Ana iya ja",
   "restore-card-wip-limit-reached": "Jerin __list__ ya kai iyakar WIP ɗinsa. Mayar da katin zuwa wani jerin:",
   "restore-card-no-list-with-room": "Kowane jerin a wannan allo ya kai iyakar WIP ɗinsa. Ƙara iyaka, ko matsar ko ajiye katuna a ma'ajiya, don mayar da wannan katin.",
-  "restore-all-skipped-wip-limit": "Ba a mayar da kati __count__ ba: jerinsu sun kai iyakar WIP ɗinsu. Mayar da su ɗaya bayan ɗaya don zaɓar wani jerin."
+  "restore-all-skipped-wip-limit": "Ba a mayar da kati __count__ ba: jerinsu sun kai iyakar WIP ɗinsu. Mayar da su ɗaya bayan ɗaya don zaɓar wani jerin.",
+  "card-blocked": "An toshe",
+  "class-of-service": "Rukunin sabis",
+  "moscow-priority": "Fifiko na MoSCoW",
+  "wsjf-score": "Makin WSJF"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "A yll bos draylys",
   "restore-card-wip-limit-reached": "An rol __list__ re dhrehedhas y fin WIP. Restor an karten dhe rol aral:",
   "restore-card-no-list-with-room": "Pub rol war an vordh ma re dhrehedhas aga fin WIP. Drehev fin, po gwaya po gorr kartennow dhe'n kovskrifva, rag restorya an karten ma.",
-  "restore-all-skipped-wip-limit": "__count__ karten na veu restorys: aga rolyow re dhrehedhas aga fin WIP. Restor anedha onan hag onan rag dewis rol aral."
+  "restore-all-skipped-wip-limit": "__count__ karten na veu restorys: aga rolyow re dhrehedhas aga fin WIP. Restor anedha onan hag onan rag dewis rol aral.",
+  "card-blocked": "Lettys",
+  "class-of-service": "Klass gonis",
+  "moscow-priority": "Ragwiryans MoSCoW",
+  "wsjf-score": "Skor WSJF"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Maaaring i-drag",
   "restore-card-wip-limit-reached": "Naabot na ng listahang __list__ ang WIP limitasyon nito. Ibalik ang kard sa ibang listahan:",
   "restore-card-no-list-with-room": "Naabot na ng bawat listahan sa board na ito ang WIP limitasyon nito. Itaas ang isang limitasyon, o ilipat o i-archive ang mga kard, upang maibalik ang kard na ito.",
-  "restore-all-skipped-wip-limit": "Hindi naibalik ang __count__ kard: naabot na ng kanilang mga listahan ang kanilang WIP limitasyon. Ibalik sila nang isa-isa upang pumili ng ibang listahan."
+  "restore-all-skipped-wip-limit": "Hindi naibalik ang __count__ kard: naabot na ng kanilang mga listahan ang kanilang WIP limitasyon. Ibalik sila nang isa-isa upang pumili ng ibang listahan.",
+  "card-blocked": "Naka-block",
+  "class-of-service": "Klase ng serbisyo",
+  "moscow-priority": "Priyoridad ng MoSCoW",
+  "wsjf-score": "Iskor ng WSJF"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "드래그 가능",
   "restore-card-wip-limit-reached": "목록 __list__이(가) WIP 제한에 도달했습니다. 카드를 다른 목록으로 복구하세요:",
   "restore-card-no-list-with-room": "이 보드의 모든 목록이 WIP 제한에 도달했습니다. 이 카드를 복구하려면 제한을 늘리거나 카드를 이동 또는 보관하세요.",
-  "restore-all-skipped-wip-limit": "카드 __count__개가 복구되지 않았습니다: 해당 목록이 WIP 제한에 도달했습니다. 다른 목록을 선택하려면 하나씩 복구하세요."
+  "restore-all-skipped-wip-limit": "카드 __count__개가 복구되지 않았습니다: 해당 목록이 WIP 제한에 도달했습니다. 다른 목록을 선택하려면 하나씩 복구하세요.",
+  "card-blocked": "차단됨",
+  "class-of-service": "서비스 클래스",
+  "moscow-priority": "MoSCoW 우선순위",
+  "wsjf-score": "WSJF 점수"
 }

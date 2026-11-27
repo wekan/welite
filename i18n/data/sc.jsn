@@ -2307,5 +2307,9 @@
   "draggable": "Trascinàbile",
   "restore-card-wip-limit-reached": "Sa lista __list__ at lòmpidu su lìmite WIP suo. Ripristina sa carta in un'àtera lista:",
   "restore-card-no-list-with-room": "Totu sas listas de custa tàula ant lòmpidu su lìmite WIP issoro. Àrtzia unu lìmite, o move o archìvia cartas, pro ripristinare custa carta.",
-  "restore-all-skipped-wip-limit": "__count__ carta/as no sunt istadas ripristinadas: sas listas issoro ant lòmpidu sos lìmites WIP. Ripristina·ddas una a sa borta pro seberare un'àtera lista."
+  "restore-all-skipped-wip-limit": "__count__ carta/as no sunt istadas ripristinadas: sas listas issoro ant lòmpidu sos lìmites WIP. Ripristina·ddas una a sa borta pro seberare un'àtera lista.",
+  "card-blocked": "Blocada",
+  "class-of-service": "Classe de servìtziu",
+  "moscow-priority": "Prioridade MoSCoW",
+  "wsjf-score": "Puntègiu WSJF"
 }

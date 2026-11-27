@@ -2307,5 +2307,9 @@
   "draggable": "E ka gogwa",
   "restore-card-wip-limit-reached": "Lelokelelo __list__ le fihlile mollwaneng wa lona wa WIP. Bušetša karata go lelokelelo le lengwe:",
   "restore-card-no-list-with-room": "Lelokelelo le lengwe le le lengwe mo potong ye le fihlile mollwaneng wa lona wa WIP. Oketša mollwane, goba šuthiša goba iša polokelong dikarata, gore o bušetše karata ye.",
-  "restore-all-skipped-wip-limit": "Dikarata tše __count__ ga se tša bušetšwa: malokelelo a tšona a fihlile mellwaneng ya ona ya WIP. Di bušetše e tee ka e tee gore o kgethe lelokelelo le lengwe."
+  "restore-all-skipped-wip-limit": "Dikarata tše __count__ ga se tša bušetšwa: malokelelo a tšona a fihlile mellwaneng ya ona ya WIP. Di bušetše e tee ka e tee gore o kgethe lelokelelo le lengwe.",
+  "card-blocked": "E thibilwe",
+  "class-of-service": "Legoro la tirelo",
+  "moscow-priority": "Bohlokwa bja MoSCoW",
+  "wsjf-score": "Dintlha tša WSJF"
 }

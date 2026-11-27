@@ -2307,5 +2307,9 @@
   "draggable": "HoqlaH vay'",
   "restore-card-wip-limit-reached": "WIP 'aqroS Sach __list__ tetlh. latlh tetlhDaq 'echletHom yIchelqa':",
   "restore-card-no-list-with-room": "WIP 'aqroS Sach Hoch tetlh Daq'e'Daq. 'echletHomvam Dachelqa'meH, 'aqroS yIDuH, pagh 'echletHommey yIvIHmoH pagh polmeH DaqDaq yIlan.",
-  "restore-all-skipped-wip-limit": "__count__ 'echletHommey chelqa'be'lu': WIP 'aqroS Sach chaj tetlhmey. latlh tetlh DawIvmeH, wa'DIch wa' yIchelqa'."
+  "restore-all-skipped-wip-limit": "__count__ 'echletHommey chelqa'be'lu': WIP 'aqroS Sach chaj tetlhmey. latlh tetlh DawIvmeH, wa'DIch wa' yIchelqa'.",
+  "card-blocked": "botlu'pu'",
+  "class-of-service": "QaH Segh",
+  "moscow-priority": "MoSCoW potlh",
+  "wsjf-score": "WSJF mI'"
 }

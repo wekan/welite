@@ -2307,5 +2307,9 @@
   "draggable": "ክጉተት ዝኽእል",
   "restore-card-wip-limit-reached": "ዝርዝር __list__ ደረት WIP በጺሑ ኣሎ። ነቲ ካርድ ናብ ካልእ ዝርዝር መልሶ:",
   "restore-card-no-list-with-room": "ኩሉ ዝርዝር ኣብዚ ሰሌዳ ደረት WIP በጺሑ ኣሎ። ነዚ ካርድ ንምምላስ፡ ደረት ኣልዕል፡ ወይ ካርድታት ኣግዕዝ ወይ ናብ መዝገብ ኣእቱ።",
-  "restore-all-skipped-wip-limit": "__count__ ካርድ(ታት) ኣይተመልሱን: ዝርዝራቶም ደረት WIP በጺሖም ኣለዉ። ካልእ ዝርዝር ንምምራጽ ሓደ ብሓደ መልሶም።"
+  "restore-all-skipped-wip-limit": "__count__ ካርድ(ታት) ኣይተመልሱን: ዝርዝራቶም ደረት WIP በጺሖም ኣለዉ። ካልእ ዝርዝር ንምምራጽ ሓደ ብሓደ መልሶም።",
+  "card-blocked": "ተዓጊቱ",
+  "class-of-service": "ደረጃ ኣገልግሎት",
+  "moscow-priority": "ቀዳምነት MoSCoW",
+  "wsjf-score": "ነጥቢ WSJF"
 }

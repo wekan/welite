@@ -2307,5 +2307,9 @@
   "draggable": "ᎬᏩᎵ ᎤᎾᏌᏁᏍᏗ",
   "restore-card-wip-limit-reached": "ᎠᏎᏊᎢ __list__ ᎤᏍᏆᏛ WIP ᎢᎦᎢ. ᎪᏪᎵ ᏔᎵᏁ ᎯᏟᏌ ᏐᎢ ᎠᏎᏊᎢ ᏫᏗᏢ:",
   "restore-card-no-list-with-room": "ᏂᎦᏛ ᏗᎠᏎᏊᎢ ᎯᎠ ᏗᏟᎶᏍᏙᏗ ᎤᏍᏆᏛ WIP ᎢᎦᎢ. ᎯᎠ ᎪᏪᎵ ᏔᎵᏁ ᎯᏟᏌᏍᏗ, ᎢᎦᎢ ᏫᏗᎯᏌ, ᎠᎴ ᏗᎪᏪᎵ ᎯᏘᏅᏍᏓ ᎠᎴ ᎠᏍᏆᏂᎪᏙᏗᏱ ᎯᏘᏅᏍᏓ.",
-  "restore-all-skipped-wip-limit": "__count__ ᏗᎪᏪᎵ ᏂᏓᏳᏟᏌᏅ: ᏗᎠᏎᏊᎢ ᎤᏍᏆᏛ WIP ᎢᎦᎢ. ᏌᏉ ᏌᏉ ᏔᎵᏁ ᎯᏟᏌ ᏐᎢ ᎠᏎᏊᎢ ᏘᏑᏰᏍᏗ."
+  "restore-all-skipped-wip-limit": "__count__ ᏗᎪᏪᎵ ᏂᏓᏳᏟᏌᏅ: ᏗᎠᏎᏊᎢ ᎤᏍᏆᏛ WIP ᎢᎦᎢ. ᏌᏉ ᏌᏉ ᏔᎵᏁ ᎯᏟᏌ ᏐᎢ ᎠᏎᏊᎢ ᏘᏑᏰᏍᏗ.",
+  "card-blocked": "ᎠᏍᏚᎢᏛ",
+  "class-of-service": "ᏗᏓᏍᏕᎸᏗ ᎤᎾᏓᏡᎬ",
+  "moscow-priority": "MoSCoW ᎢᎬᏱᏱ",
+  "wsjf-score": "WSJF ᎠᏎᏍᏗ"
 }

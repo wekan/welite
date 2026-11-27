@@ -2307,5 +2307,9 @@
   "draggable": "Chikhoza kukokedwa",
   "restore-card-wip-limit-reached": "Mndandanda __list__ wafika malire ake a WIP. Bwezerani khadi ku mndandanda wina:",
   "restore-card-no-list-with-room": "Mndandanda uliwonse pa bolodi ili wafika malire ake a WIP. Kwezani malire, kapena sunthani kapena sungani makhadi, kuti mubwezere khadi ili.",
-  "restore-all-skipped-wip-limit": "Makhadi __count__ sanabwezeredwe: mindandanda yawo yafika malire awo a WIP. Abwezereni limodzi limodzi kuti musankhe mndandanda wina."
+  "restore-all-skipped-wip-limit": "Makhadi __count__ sanabwezeredwe: mindandanda yawo yafika malire awo a WIP. Abwezereni limodzi limodzi kuti musankhe mndandanda wina.",
+  "card-blocked": "Zatsekedwa",
+  "class-of-service": "Gulu la utumiki",
+  "moscow-priority": "Kufunika kwa MoSCoW",
+  "wsjf-score": "Mapointi a WSJF"
 }

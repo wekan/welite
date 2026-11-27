@@ -2307,5 +2307,9 @@
   "draggable": "Boleh diseret",
   "restore-card-wip-limit-reached": "Senarai __list__ telah mencapai had WIP-nya. Pulihkan kad ke senarai lain:",
   "restore-card-no-list-with-room": "Setiap senarai di papan ini telah mencapai had WIP-nya. Naikkan had, atau pindahkan atau arkibkan kad, untuk memulihkan kad ini.",
-  "restore-all-skipped-wip-limit": "__count__ kad tidak dipulihkan: senarainya telah mencapai had WIP. Pulihkan satu demi satu untuk memilih senarai lain."
+  "restore-all-skipped-wip-limit": "__count__ kad tidak dipulihkan: senarainya telah mencapai had WIP. Pulihkan satu demi satu untuk memilih senarai lain.",
+  "card-blocked": "Disekat",
+  "class-of-service": "Kelas perkhidmatan",
+  "moscow-priority": "Keutamaan MoSCoW",
+  "wsjf-score": "Skor WSJF"
 }

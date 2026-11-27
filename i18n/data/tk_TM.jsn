@@ -2307,5 +2307,9 @@
   "draggable": "Süýräp bolýar",
   "restore-card-wip-limit-reached": "__list__ sanawy WIP çägine ýetdi. Karty başga sanawa dikelt:",
   "restore-card-no-list-with-room": "Bu tagtadaky her bir sanaw WIP çägine ýetdi. Bu karty dikeltmek üçin çägi ýokarlandyr ýa-da kartlary göçür ýa-da arhiwe geçir.",
-  "restore-all-skipped-wip-limit": "__count__ kart dikeldilmedi: olaryň sanawlary WIP çäklerine ýetdi. Başga sanaw saýlamak üçin olary birin-birin dikelt."
+  "restore-all-skipped-wip-limit": "__count__ kart dikeldilmedi: olaryň sanawlary WIP çäklerine ýetdi. Başga sanaw saýlamak üçin olary birin-birin dikelt.",
+  "card-blocked": "Bloklanan",
+  "class-of-service": "Hyzmat synpy",
+  "moscow-priority": "MoSCoW ileriligi",
+  "wsjf-score": "WSJF baly"
 }

@@ -2307,5 +2307,9 @@
   "draggable": "Kann dragast",
   "restore-card-wip-limit-reached": "Listin __list__ hevur rokkið sítt WIP-mark. Endurstovna kortið í ein annan lista:",
   "restore-card-no-list-with-room": "Allir listar á hesi talvuni hava rokkið sítt WIP-mark. Hækka eitt mark, ella flyt ella goym kort, fyri at endurstovna hetta kortið.",
-  "restore-all-skipped-wip-limit": "__count__ kort vórðu ikki endurstovnað: listar teirra hava rokkið WIP-mark sítt. Endurstovna tey eitt í senn fyri at velja ein annan lista."
+  "restore-all-skipped-wip-limit": "__count__ kort vórðu ikki endurstovnað: listar teirra hava rokkið WIP-mark sítt. Endurstovna tey eitt í senn fyri at velja ein annan lista.",
+  "card-blocked": "Blokerað",
+  "class-of-service": "Tænastuflokkur",
+  "moscow-priority": "MoSCoW raðfesting",
+  "wsjf-score": "WSJF stig"
 }

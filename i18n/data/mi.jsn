@@ -2307,5 +2307,9 @@
   "draggable": "Ka taea te tō",
   "restore-card-wip-limit-reached": "Kua tae te rārangi __list__ ki tōna tepe WIP. Whakaorangia te kāri ki tētahi atu rārangi:",
   "restore-card-no-list-with-room": "Kua tae ngā rārangi katoa o tēnei papa ki ō rātou tepe WIP. Whakanuia tētahi tepe, nekehia rānei, whakapūrangatia rānei ētahi kāri, kia whakaorangia tēnei kāri.",
-  "restore-all-skipped-wip-limit": "Kāore e __count__ kāri i whakaorangia: kua tae ō rātou rārangi ki ō rātou tepe WIP. Whakaorangia takitahi kia kōwhiria tētahi atu rārangi."
+  "restore-all-skipped-wip-limit": "Kāore e __count__ kāri i whakaorangia: kua tae ō rātou rārangi ki ō rātou tepe WIP. Whakaorangia takitahi kia kōwhiria tētahi atu rārangi.",
+  "card-blocked": "Kua ārai",
+  "class-of-service": "Karaehe ratonga",
+  "moscow-priority": "Whakaarotau MoSCoW",
+  "wsjf-score": "Kaute WSJF"
 }

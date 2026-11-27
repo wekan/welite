@@ -2307,5 +2307,9 @@
   "draggable": "Se possa tiré",
   "restore-card-wip-limit-reached": "La lista __list__ à rejont si limit WIP. Ristabilì la ciarta te n'autra lista:",
   "restore-card-no-list-with-room": "Duta la listes de chësta tofl à rejont si limit WIP. Auza n limit, o sposta o archivea ciartes, per ristabilì chësta ciarta.",
-  "restore-all-skipped-wip-limit": "__count__ ciarta(s) ne n'é nia states ristabilides: si listes à rejont si limic WIP. Ristabilëscele una ala ota per audì n'autra lista."
+  "restore-all-skipped-wip-limit": "__count__ ciarta(s) ne n'é nia states ristabilides: si listes à rejont si limic WIP. Ristabilëscele una ala ota per audì n'autra lista.",
+  "card-blocked": "Blocà",
+  "class-of-service": "Classa de servisc",
+  "moscow-priority": "Priorità MoSCoW",
+  "wsjf-score": "Punteggio WSJF"
 }

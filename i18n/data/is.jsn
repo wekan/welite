@@ -2307,5 +2307,9 @@
   "draggable": "Draganlegt",
   "restore-card-wip-limit-reached": "Listinn __list__ hefur náð WIP-mörkum sínum. Endurheimtu spjaldið í annan lista:",
   "restore-card-no-list-with-room": "Allir listar á þessari töflu hafa náð WIP-mörkum sínum. Hækkaðu mörk, eða færðu eða settu spjöld í safn, til að endurheimta þetta spjald.",
-  "restore-all-skipped-wip-limit": "__count__ spjöld voru ekki endurheimt: listar þeirra hafa náð WIP-mörkum sínum. Endurheimtu þau eitt í einu til að velja annan lista."
+  "restore-all-skipped-wip-limit": "__count__ spjöld voru ekki endurheimt: listar þeirra hafa náð WIP-mörkum sínum. Endurheimtu þau eitt í einu til að velja annan lista.",
+  "card-blocked": "Hindrað",
+  "class-of-service": "Þjónustuflokkur",
+  "moscow-priority": "MoSCoW forgangur",
+  "wsjf-score": "WSJF einkunn"
 }

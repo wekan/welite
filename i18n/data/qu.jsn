@@ -2307,5 +2307,9 @@
   "draggable": "Aysayta atikun",
   "restore-card-wip-limit-reached": "Sutisuyu __list__ WIP tukukuyninman chayanña. Kartata huk sutisuyuman kutichiy:",
   "restore-card-no-list-with-room": "Kay pirqapi tukuy sutisuyukuna WIP tukukuyninkuman chayanña. Kay kartata kutichinapaq huk tukukuyta yapay, utaq kartakunata kuyuchiy utaq waqaychanaman apay.",
-  "restore-all-skipped-wip-limit": "__count__ karta(kuna) mana kutichisqachu: sutisuyunkuna WIP tukukuyninkuman chayanña. Huk sutisuyuta akllanapaq sapankamanta kutichiy."
+  "restore-all-skipped-wip-limit": "__count__ karta(kuna) mana kutichisqachu: sutisuyunkuna WIP tukukuyninkuman chayanña. Huk sutisuyuta akllanapaq sapankamanta kutichiy.",
+  "card-blocked": "Hark'asqa",
+  "class-of-service": "Yanapay rikch'aq",
+  "moscow-priority": "MoSCoW ñawpaqchana",
+  "wsjf-score": "WSJF puntu"
 }

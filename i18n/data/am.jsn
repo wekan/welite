@@ -2307,5 +2307,9 @@
   "draggable": "ሊጎተት የሚችል",
   "restore-card-wip-limit-reached": "ዝርዝሩ __list__ የWIP ገደቡ ላይ ደርሷል። ካርዱን ወደ ሌላ ዝርዝር ይመልሱ፦",
   "restore-card-no-list-with-room": "በዚህ ሰሌዳ ላይ ያሉት ሁሉም ዝርዝሮች የWIP ገደባቸው ላይ ደርሰዋል። ይህን ካርድ ለመመለስ ገደብ ያሳድጉ፣ ወይም ካርዶችን ያንቀሳቅሱ ወይም ወደ መዝገብ ያስገቡ።",
-  "restore-all-skipped-wip-limit": "__count__ ካርድ(ዎች) አልተመለሱም፦ ዝርዝሮቻቸው የWIP ገደባቸው ላይ ደርሰዋል። ሌላ ዝርዝር ለመምረጥ አንድ በአንድ ይመልሷቸው።"
+  "restore-all-skipped-wip-limit": "__count__ ካርድ(ዎች) አልተመለሱም፦ ዝርዝሮቻቸው የWIP ገደባቸው ላይ ደርሰዋል። ሌላ ዝርዝር ለመምረጥ አንድ በአንድ ይመልሷቸው።",
+  "card-blocked": "ታግዷል",
+  "class-of-service": "የአገልግሎት ክፍል",
+  "moscow-priority": "የMoSCoW ቅድሚያ",
+  "wsjf-score": "የWSJF ውጤት"
 }
