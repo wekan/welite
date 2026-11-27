@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Restore a deleted list from History together with the cards deleted in
+  the same operation. Cards deleted separately stay deleted.
+
 - Restore selected card title, description and rule history rows from the
   History page. The form returns to the same search, contributor and page.
 

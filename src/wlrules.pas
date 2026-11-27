@@ -2150,20 +2150,23 @@ end;
 // back) or redone (the list and its live cards deleted again, in the same
 // batch). A card deleted on its own, in another batch, is not touched.
 function ApplyListHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var ListId, BoardId, Batch, Markers: string;
+var ListId, BoardId, Batch, Markers, ListScope: string;
 begin
   Result := False; Error := '';
   if Str(Row, 'group') <> 'lifecycle' then Exit;
   ListId := Str(Row, 'entityId'); BoardId := Str(Row, 'boardId'); Batch := Str(Row, 'batchId');
   if (ListId = '') or (Batch = '') then Exit;
+  ListScope := 'id=' + Q(ListId) + ' AND boardId=' + Q(BoardId);
   // A removal undone and a restore redone put it back; the other two delete it.
   if (Direction = 'undo') = (Str(Row, 'changeType') = 'removed') then
   begin
     if Length(Db.Query('SELECT 1 FROM lists WHERE id=' + Q(ListId) + ' AND boardId=' + Q(BoardId) + ' AND deleteBatchId=' + Q(Batch) + ';')) <> 1 then
     begin Error := 'history-conflict'; Exit; end;
-    Result := Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL WHERE listId=' + Q(ListId) +
+    Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM lists WHERE ' +
+      ListScope + ' AND deleteBatchId=' + Q(Batch) + ') THEN 1 ELSE json(''List deletion changed'') END; ' +
+      'UPDATE cards SET deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL WHERE listId=' + Q(ListId) +
       ' AND boardId=' + Q(BoardId) + ' AND deleteBatchId=' + Q(Batch) + '; UPDATE lists SET deletedAt=NULL,deletedBy=NULL,deleteBatchId=NULL ' +
-      'WHERE id=' + Q(ListId) + ' AND deleteBatchId=' + Q(Batch) + '; COMMIT;');
+      'WHERE ' + ListScope + ' AND deleteBatchId=' + Q(Batch) + '; COMMIT;');
   end
   else
   begin
@@ -2171,7 +2174,7 @@ begin
     begin Error := 'history-conflict'; Exit; end;
     Markers := 'deletedAt=' + Q(NowIso) + ',deletedBy=' + Q(UserId) + ',deleteBatchId=' + Q(Batch);
     Result := Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET ' + Markers + ' WHERE listId=' + Q(ListId) + ' AND boardId=' + Q(BoardId) +
-      ' AND deletedAt IS NULL; UPDATE lists SET ' + Markers + ' WHERE id=' + Q(ListId) + ' AND deletedAt IS NULL; COMMIT;');
+      ' AND deletedAt IS NULL; UPDATE lists SET ' + Markers + ' WHERE ' + ListScope + ' AND deletedAt IS NULL; COMMIT;');
   end;
   if not Result then Db.Exec('ROLLBACK;');
 end;
@@ -2524,7 +2527,7 @@ end;
 
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
   const RestoreBoard, RestoreCard: string): Integer;
-var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList;
+var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList; ListState: TWLRows;
   i, Restored, Skipped, Done: Integer; Applied: Boolean; Readable: THistoryScope;
 begin
   Answer := '';
@@ -2572,6 +2575,28 @@ begin
             Done := RestoreCardRow(T.Db, UserId, Row, Readable);
             if Done < 0 then Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));
             if Done = 0 then Inc(Skipped) else begin Inc(Restored); AnnounceToAll; end;
+            Continue;
+          end;
+          if (Str(Row, 'entityType') = 'list') and (Str(Row, 'group') = 'lifecycle') and
+            (Str(Row, 'changeType') = 'removed') then
+          begin
+            BoardId := Str(Row, 'boardId');
+            if not Readable.Readable(Row) or not BoardCanWrite(T.Db, UserId, BoardId) then
+              Exit(MethodError(403, 'not-authorized', 'You cannot restore this list.', Answer));
+            ListState := T.Db.Query('SELECT swimlaneId,deletedAt FROM lists WHERE id=' + Q(Str(Row, 'entityId')) +
+              ' AND boardId=' + Q(BoardId) + ' AND deleteBatchId=' + Q(Str(Row, 'batchId')) + ';');
+            Applied := ApplyListHistory(T.Db, UserId, Row, 'undo', Error);
+            if Error = 'history-conflict' then Exit(MethodError(409, Error, 'It changed after this history entry', Answer));
+            if not Applied then begin Inc(Skipped); Continue; end;
+            if Length(ListState) = 1 then
+              try
+                RecordListChange(T.Db, UserId, BoardId, Str(Row, 'entityId'), ListState[0][0], Str(Row, 'batchId'),
+                  ListState[0][1], True);
+              except
+                // History never fails the restore it records.
+              end;
+            AnnounceToAll;
+            Inc(Restored);
             Continue;
           end;
           if not BoardCanAdmin(T.Db, UserId, Str(Row, 'boardId')) then Exit(MethodError(403, 'not-authorized', 'Must be a board admin', Answer));

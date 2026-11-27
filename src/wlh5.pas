@@ -7693,7 +7693,7 @@ function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWL
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
   Reply: TJSONData; Answer, Route, CardId, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat: string;
   I, PageNumber, PageCount, Size: Integer;
-  CanRestoreCard, CanRestoreRule: Boolean;
+  CanRestoreCard, CanRestoreRule, CanRestoreList: Boolean;
   function LinkTo(const Contributor: string; Number: Integer): string;
   begin
     Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&user=' + HTTPEncode(Contributor) +
@@ -7738,7 +7738,8 @@ begin
     Size := Data.Integers['pageSize'];
     PageCount := Max(1, (Data.Integers['total'] + Size - 1) div Size);
     DateFormat := ViewDateFor(T.Db, S.UserId, BoardId);
-    CanRestoreCard := BoardCanWrite(T.Db, S.UserId, BoardId) or
+    CanRestoreList := BoardCanWrite(T.Db, S.UserId, BoardId);
+    CanRestoreCard := CanRestoreList or
       (Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(BoardId) +
         ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1);
     CanRestoreRule := BoardCanAdmin(T.Db, S.UserId, BoardId);
@@ -7801,6 +7802,8 @@ begin
         begin
           Content := Content + '<td class="history-select">';
           if (CanRestoreRule and (Row.Get('entityType', '') = 'rule')) or
+            (CanRestoreList and (Row.Get('entityType', '') = 'list') and (Row.Get('group', '') = 'lifecycle') and
+              (Row.Get('changeType', '') = 'removed')) or
             (CanRestoreCard and (Row.Get('entityType', '') = 'card') and
               ((Row.Get('group', '') = 'title') or (Row.Get('group', '') = 'description'))) then
             Content := Content + '<input class="js-history-select" type="checkbox" name="id" value="' +
