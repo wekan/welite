@@ -8160,6 +8160,11 @@ begin
         RowGroup := Row.Get('group', '');
         RowField := '';
         if Values <> nil then RowField := Values.Get('field', '');
+        if (RowGroup = 'dates') and (Row.Get('changeType', '') = 'removed') and
+          not (Row.Find('newContent') is TJSONObject) then
+          case RowField of
+            'receivedAt', 'startAt', 'dueAt', 'endAt': Summary := #$E2#$80#$94;
+          end;
         GroupLabel := HistoryGroupLabel(Words, RowGroup);
         if Values <> nil then
           case RowField of

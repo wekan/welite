@@ -35,6 +35,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   shared store. The FerretDB integration suite checks exact REAL writes
   through both the insert and update projections. REST edits to received,
   start, due and end dates now share the date editor’s History recording.
+  Date clears from the shared store show a dash even when the row has no
+  new snapshot.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
