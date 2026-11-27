@@ -40,6 +40,18 @@ def run(request,database,administrator,member,base):
             con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,parentId,archived,dateLastActivity,createdAt,modifiedAt) "
                         "VALUES(?,'boardtxt','txtlane','txtlist',?,?,'txtcard',?,'now','now','now')",
                         (identity,title,author,archived))
+        con.execute("INSERT INTO card_dependencies(cardId,targetCardId,type,color,icon) "
+                    "VALUES('txtcard','txtchild','blocks','#123456','link')")
+    for fields in ('dependencies', 'description'):
+        status, _, body = request('GET', '/api/boards/boardtxt/export?' +
+                                  urlencode(dict(token=administrator, fields=fields)))
+        assert status == 200, body
+        card = next(row for row in json.loads(body)['cards'] if row['_id'] == 'txtcard')
+        if fields == 'dependencies':
+            assert card['cardDependencies'] == [
+                dict(cardId='txtchild', type='blocks', color='#123456', icon='link')]
+        else:
+            assert 'cardDependencies' not in card
     status,_,published=request('GET','/boardtxt?lang=fi&sessionId='+administrator)
     assert status==200
     attachment_links=[(attrs['href'],text) for tag,attrs,text in BoardPage(published).items

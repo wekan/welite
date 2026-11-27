@@ -25,6 +25,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   location fields, when the selected data includes them. Imports restore
   the selected voting and Planning Poker settings, deadlines and estimates.
   Individual ballots require an explicit source-to-destination user mapping.
+  Native SQLite exports include card dependencies in JSON and ZIP when
+  selected, with the target, type, color and icon.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

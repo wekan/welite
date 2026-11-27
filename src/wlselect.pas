@@ -430,10 +430,10 @@ end;
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles,AllowPublicGuest,ExcelMetadata:Boolean):TJSONObject;
 const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments','activities');
   ExportKeys:array[0..8] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments','activities');
-var Params,UserIds:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
-  I,J,Index:Integer;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
+var Params,UserIds,Dependencies:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
+  I,J,Index:Integer;DependencyRows:TJSONArray;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
   function ExportRow(const TableName:string;Index:Integer):TJSONObject;
-  var Original:TJSONObject;Typed:string;Id:TJSONData;
+  var Original:TJSONObject;Typed:string;Id:TJSONData;DependencyIndex:Integer;
   begin
     Original:=TJSONArray(Audit.Find(TableName)).Objects[Index];
     Typed:=Original.Get('_wl_source','');
@@ -441,6 +441,12 @@ var Params,UserIds:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject
     Result:=TJSONObject(TJSONArray(Data.Find(TableName)).Objects[Index].Clone);
     Id:=Result.Find('id');
     if Id<>nil then begin Result.Add('_id',Id.Clone);Result.Delete('id');end;
+    if TableName='cards' then
+    begin
+      Result.Delete('cardDependencies');
+      if Dependencies.Find(Result.Get('_id',''),DependencyIndex) then
+        Result.Add('cardDependencies',TJSONArray(Dependencies.Objects[DependencyIndex]).Clone);
+    end;
   end;
   procedure Remember(Value:TJSONData);
   var K:Integer;
@@ -457,6 +463,8 @@ begin
   if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId,AllowPublicGuest) then Exit;
   Params:=TStringList.Create;
   UserIds:=TStringList.Create;UserIds.CaseSensitive:=True;UserIds.Sorted:=True;UserIds.Duplicates:=dupIgnore;
+  Dependencies:=TStringList.Create;
+  Dependencies.CaseSensitive:=True;Dependencies.Sorted:=True;Dependencies.OwnsObjects:=True;
   try
     Params.Values['boardId']:=BoardId;Params.Values['action']:='export';
     Graph:=SelectionGraph(T,Params,True);
@@ -466,6 +474,16 @@ begin
       not FieldExportRowsAllowed(T.Db,UserId,BoardId,TJSONArray(Data.Find('card_custom_field_values')),AllowPublicGuest) then Exit;
     if not SelectionBindingsValid(T.Db,TJSONArray(Graph.Find('_export_bindings'))) then
       raise Exception.Create('Board export source changed');
+    Source:=TJSONArray(Data.Find('card_dependencies'));
+    for I:=0 to Source.Count-1 do
+    begin
+      Row:=Source.Objects[I];
+      Key:=Row.Get('cardId','');
+      if not Dependencies.Find(Key,Index) then Dependencies.AddObject(Key,TJSONArray.Create);
+      DependencyRows:=TJSONArray(Dependencies.Objects[Dependencies.IndexOf(Key)]);
+      DependencyRows.Add(TJSONObject.Create(['cardId',Row.Get('targetCardId',''),
+        'type',Row.Get('type','related-to'),'color',Row.Get('color','#eb144c'),'icon',Row.Get('icon','link')]));
+    end;
     if IncludeFiles then
     begin
       ExportSelection(T,Graph);Source:=TJSONArray(Graph.Find('files'));Files:=TJSONObject.Create;
@@ -544,7 +562,7 @@ begin
         for I:=0 to High(Rows) do Target.Add(GetJSON(Rows[I][0]));
       end;
     except FreeAndNil(Result);raise;end;
-  finally UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
+  finally Dependencies.Free;UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
 end;
 
 function DeleteSelection(const T:TWLTenant;Graph:TJSONObject;const BoardId,UserId:string):Boolean;
