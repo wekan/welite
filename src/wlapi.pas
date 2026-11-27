@@ -5759,8 +5759,8 @@ end;
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
 var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql,OldTitle,NewTitle,OldColor,NewColor:string;
-  Body,Reply:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
-  Flag,i:Integer;Limit:Int64;Wide:UnicodeString;
+  Body,Reply,Before,After:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
+  Flag,i:Integer;Limit,OldLimit:Int64;Enabled,Soft,OldEnabled,OldSoft,HasWip:Boolean;Wide:UnicodeString;
   procedure SetColumn(const Column,Literal:string);
   begin
     if Sets<>'' then Sets:=Sets+',';
@@ -5772,9 +5772,10 @@ begin
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
   Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
-  Rows:=T.Db.Query('SELECT title,COALESCE(color,'''') FROM lists WHERE '+Scope+';');
+  Rows:=T.Db.Query('SELECT title,COALESCE(color,''''),COALESCE(wip_value,1),COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE '+Scope+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
   OldTitle:=Rows[0][0];NewTitle:=OldTitle;OldColor:=Rows[0][1];NewColor:=OldColor;
+  OldLimit:=StrToInt64Def(Rows[0][2],1);OldEnabled:=Rows[0][3]='1';OldSoft:=Rows[0][4]='1';
   Body:=nil;Policy:=nil;Sets:='';Permission:='1';
   try
     try
@@ -5816,7 +5817,8 @@ begin
         SetColumn('starred',IntToStr(Flag));
       end;
       Wip:=Body.Find('wipLimit');
-      if (Wip<>nil) and (Wip.JSONType<>jtNull) then
+      HasWip:=(Wip<>nil) and (Wip.JSONType<>jtNull);
+      if HasWip then
       begin
         if not (Wip is TJSONObject) then raise Exception.Create('Invalid WIP value');
         Field:=TJSONObject(Wip).Find('value');Limit:=1;
@@ -5824,8 +5826,10 @@ begin
           if not TryStrToInt64(Field.AsJSON,Limit) then raise Exception.Create('Invalid WIP limit');
         SetColumn('wip_value',IntToStr(Limit));
         if not DefinitionFlag(TJSONObject(Wip).Find('enabled'),Flag) then raise Exception.Create('Invalid WIP enabled flag');
+        Enabled:=Flag=1;
         SetColumn('wip_enabled',IntToStr(Flag));
         if not DefinitionFlag(TJSONObject(Wip).Find('soft'),Flag) then raise Exception.Create('Invalid WIP soft flag');
+        Soft:=Flag=1;
         SetColumn('wip_soft',IntToStr(Flag));
         Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
         Permission:=Policy.ScopeAdminExpression;
@@ -5844,6 +5848,19 @@ begin
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit list');Exit;end;
     RecordContainerText(T.Db,UserId,BoardId,'list',ListId,'title',OldTitle,NewTitle);
     RecordContainerText(T.Db,UserId,BoardId,'list',ListId,'color',OldColor,NewColor);
+    if HasWip and ((OldLimit<>Limit) or (OldEnabled<>Enabled) or (OldSoft<>Soft)) then
+    begin
+      Before:=TJSONObject.Create(['field','wipLimit','value',
+        TJSONObject.Create(['value',OldLimit,'enabled',OldEnabled,'soft',OldSoft])]);
+      After:=TJSONObject.Create(['field','wipLimit','value',
+        TJSONObject.Create(['value',Limit,'enabled',Enabled,'soft',Soft])]);
+      try
+        try RecordHistoryRow(T.Db,UserId,BoardId,'list',ListId,'title','edited',Before,After);
+        except
+          // History never fails the edit it records.
+        end;
+      finally Before.Free;After.Free;end;
+    end;
     Reply:=TJSONObject.Create(['_id',ListId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally Policy.Free;Body.Free;end;
