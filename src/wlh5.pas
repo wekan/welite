@@ -8024,6 +8024,14 @@ begin
                 'list': GroupLabel := Words.Text('list', 'List');
                 'swimlane': GroupLabel := Words.Text('swimlane', 'Swimlane');
               end;
+            'receivedAt', 'startAt', 'dueAt', 'endAt':
+              if Row.Get('entityType', '') = 'card' then
+                case Values.Get('field', '') of
+                  'receivedAt': GroupLabel := Words.Text('card-received', 'Received');
+                  'startAt': GroupLabel := Words.Text('card-start', 'Start');
+                  'dueAt': GroupLabel := Words.Text('card-due', 'Due');
+                  'endAt': GroupLabel := Words.Text('card-end', 'End');
+                end;
             'dueComplete':
               if Row.Get('entityType', '') = 'card' then
                 GroupLabel := Words.Text('due-complete', 'Due complete');

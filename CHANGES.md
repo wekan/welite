@@ -13,7 +13,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Dates group and support undo, redo and restore. History rows show the
   localized card color and due completion labels and values. The Title
   and Dates filters still include those rows. List and swimlane color
-  history rows show the translated entity labels and color names.
+  history rows show the translated entity labels and color names. Card
+  date rows use the translated Received, Start, Due and End labels.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
