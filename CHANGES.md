@@ -592,6 +592,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Verify Argon2d, Argon2i and Argon2id v16/v19 against the official C
+  reference at tag `20190702` (`62358ba2123abd17fccf2a108a301d4b52c01a7c`).
+  The standard and checked builds pass, including legacy PHC records,
+  secret and associated data, and varied lane and pass counts.
 - Verify the directory-free embedded server with the current cookieless
   sign-in and form navigation on both SQLite backends. The HTTP test
   checks translated pages, private SQL resources and clean shutdown.
