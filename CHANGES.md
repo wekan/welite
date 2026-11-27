@@ -10,7 +10,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   and can be undone, redone or restored. Undo and redo check the current
   field value and board scope again inside the write transaction. Card
   and subtask completion changes are recorded as Boolean values in the
-  Dates group and support undo, redo and restore.
+  Dates group and support undo, redo and restore. History rows show the
+  localized card color and due completion labels and values. The Title
+  and Dates filters still include those rows.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

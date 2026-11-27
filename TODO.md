@@ -274,7 +274,8 @@ Next, after this goal:
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
-  and remaining History restore types and row summaries.
+  and remaining History restore types and row summaries beyond
+  card color and due completion.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:

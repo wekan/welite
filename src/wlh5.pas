@@ -7863,7 +7863,7 @@ begin
   end;
 end;
 
-function HistoryContentSummary(Values: TJSONObject; const DateFormat: string): string;
+function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat: string): string;
 var Value, Document: TJSONData;
 begin
   Result := '';
@@ -7873,7 +7873,17 @@ begin
   begin
     if Value.JSONType = jtNull then Exit('—');
     if Values.Get('isDate', False) then Exit(HistoryDate(Value, DateFormat));
-    if Value.JSONType = jtString then Exit(Value.AsString);
+    if (Values.Get('field', '') = 'dueComplete') and (Value.JSONType = jtBoolean) then
+    begin
+      if Value.AsBoolean then Exit(Words.Text('yes', 'Yes'));
+      Exit(Words.Text('no', 'No'));
+    end;
+    if Value.JSONType = jtString then
+    begin
+      if Values.Get('field', '') = 'color' then
+        Exit(Words.Text('color-' + Value.AsString, Value.AsString));
+      Exit(Value.AsString);
+    end;
     Exit(Value.AsJSON);
   end;
   Document := Values.Find('document');
@@ -8004,8 +8014,13 @@ begin
         Values := nil;
         if Row.Find('newContent') is TJSONObject then Values := Row.Objects['newContent']
         else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
-        Summary := HistoryContentSummary(Values, DateFormat);
+        Summary := HistoryContentSummary(Values, Words, DateFormat);
         GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
+        if Values <> nil then
+          case Values.Get('field', '') of
+            'color': GroupLabel := Words.Text('card-settings-card-color', 'Card color');
+            'dueComplete': GroupLabel := Words.Text('due-complete', 'Due complete');
+          end;
         When_ := HistoryDate(Row.Find('createdAt'), DateFormat);
         Content := Content + '<tr class="js-history-row" data-id="' + HtmlAttr(Row.Get('_id', '')) +
           '">';
