@@ -1205,3 +1205,8 @@ html[dir='rtl'] .pop-over > button.js-date-popup-resize > span {
 .history-content { overflow-wrap: anywhere; }
 .history-when { white-space: nowrap; }
 .history-group { font-size: .85em; }
+.history-pop-over {
+  position: fixed; inset: 10px; width: auto; max-width: none;
+  max-height: none; overflow: auto;
+}
+.history-pop-over > .close-btn { float: inline-end; margin: 8px; }

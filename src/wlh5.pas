@@ -2057,7 +2057,7 @@ begin
     '<li><a class="js-move-card" href="#"><i class="fa fa-arrow-right"></i> ' + E(Words.Text('moveCardPopup-title', 'Move Card')) + '</a></li>' +
     '<li><a class="js-copy-card" href="#"><i class="fa fa-copy"></i> ' + E(Words.Text('copyCardPopup-title', 'Copy Card')) + '</a></li>' +
     IfThen(IsShared(Db), '<li><a class="js-open-card-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
-      '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '"><i class="fa fa-history"></i> ' +
+      '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
     '<li><a class="js-archive" href="#"><i class="fa fa-archive"></i> ' + E(Words.Text('archive', 'Archive')) + '</a></li></ul></template>' +
     Target('move-card', '/move-to', '', Words.Text('moveCardPopup-title', 'Move Card'), BoardOptions) +
@@ -2876,7 +2876,7 @@ begin
       RuleMenuLink('js-open-rules-workflow-view', '?view=workflow', 'fa-sitemap', 'r-workflow-view', 'Workflow view') +
       RuleMenuLink('js-open-rules-import-export', '?view=import', 'fa-exchange', 'rulesImportExportPopup-title', 'Import / Export'), '') +
     IfThen((S.UserId <> '') and IsShared(Db), '<li><a class="js-open-board-history" href="/b/' +
-      HtmlAttr(HTTPEncode(BoardId)) + '/history"><i class="fa fa-history"></i> ' +
+      HtmlAttr(HTTPEncode(BoardId)) + '/history" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
     '</ul></div></template>' + IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId) +
       CardSettingsPopup(Db, Words, S.UserId, BoardId, BoardOwnAdmin(Db, S.UserId, BoardId),
@@ -7792,7 +7792,8 @@ begin
         ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1);
     CanRestoreRule := BoardCanAdmin(T.Db, S.UserId, BoardId);
     Label_ := Words.Text('history', 'History');
-    Content := '<div class="history-table"><div class="history-header"><a class="js-history-back" href="' +
+    Content := '<div class="history-table" data-error="' + HtmlAttr(Words.Text('error', 'Error')) +
+      '"><div class="history-header"><a class="js-history-back" href="' +
       HtmlAttr(Back) + '">&larr; ' + E(Board[0][0]) + '</a><h2>' + E(Label_) + '</h2></div><nav class="history-nav">' +
       '<a class="history-nav-item js-history-all' + IfThen(Who = '', ' is-active') + '" href="' +
       LinkTo('', 1) + '">' + E(Label_) + '</a>';
