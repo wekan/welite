@@ -15,6 +15,7 @@ function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Grou
 
 procedure RecordCardRemoval(Db:TWLDb;const UserId,BoardId,ListId,LaneId,CardId,Title:string);
 procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
+procedure RecordSwimlaneArchiveBatch(Db:TWLDb;const UserId,BoardId,LaneId:string;Archive:Boolean;const Lists,Cards:TWLRows);
 procedure RecordArchiveHistory(Db:TWLDb;const UserId,BoardId,EntityType,EntityId:string;Archived:Boolean);
 procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
 // The default SQLite REAL-to-text conversion rounds before the snapshot is built.
@@ -537,6 +538,33 @@ begin
     if Old<>Done then RecordArchiveHistory(Db,UserId,BoardId,'card',CardId,Done);
   end
   else RecordBooleanHistory(Db,UserId,BoardId,'card',CardId,'dates',Field,Old,Done);
+end;
+
+procedure RecordSwimlaneArchiveBatch(Db:TWLDb;const UserId,BoardId,LaneId:string;Archive:Boolean;const Lists,Cards:TWLRows);
+var Before,After:TJSONObject; I:Integer;
+  function Ids(const Rows:TWLRows):TJSONArray;
+  var J:Integer;
+  begin
+    Result:=TJSONArray.Create;
+    for J:=0 to High(Rows) do Result.Add(Rows[J][0]);
+  end;
+  procedure RecordChild(const Entity,Id:string);
+  begin
+    RecordHistoryRow(Db,UserId,BoardId,Entity,Id,'lifecycle','edited',Before,After);
+  end;
+begin
+  Before:=TJSONObject.Create(['field','archived','value',not Archive]);
+  After:=TJSONObject.Create(['field','archived','value',Archive]);
+  try
+    After.Add('archiveLists',Ids(Lists));
+    After.Add('archiveCards',Ids(Cards));
+    if not RecordHistoryRow(Db,UserId,BoardId,'swimlane',LaneId,'lifecycle','edited',Before,After) then Exit;
+    After.Delete('archiveLists');
+    After.Delete('archiveCards');
+    After.Add('archiveCascadeChild',True);
+    for I:=0 to High(Lists) do RecordChild('list',Lists[I][0]);
+    for I:=0 to High(Cards) do RecordChild('card',Cards[I][0]);
+  finally Before.Free;After.Free;end;
 end;
 
 procedure RecordArchiveHistory(Db:TWLDb;const UserId,BoardId,EntityType,EntityId:string;Archived:Boolean);

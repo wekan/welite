@@ -2533,7 +2533,26 @@ begin
 end;
 
 function ApplyContainerArchiveHistory(Db:TWLDb;const UserId:string;Row:TJSONObject;const Direction:string;out Error:string):Boolean;
-var Entity,TableName,BoardId,EntityId,Scope,Before,After,Stamp:string;Current:TWLRows;
+var Entity,TableName,BoardId,EntityId,Scope,Before,After,Stamp,ChildSql,Assignment:string;Current:TWLRows; Snapshot,Recorded:TJSONObject;
+  function ChildUpdate(const TableName,Key:string):Boolean;
+  var Ids,Item:TJSONData; ChildScope,Count:string; I:Integer;
+  begin
+    Result:=False;
+    Ids:=Snapshot.Find(Key);
+    if not (Ids is TJSONArray) then Exit;
+    for I:=0 to Ids.Count-1 do
+    begin
+      Item:=Ids.Items[I];
+      if (Item.JSONType<>jtString) or (Item.AsString='') or (Pos(#0,Item.AsString)>0) then Exit;
+    end;
+    ChildScope:='boardId='+Q(BoardId)+' AND deletedAt IS NULL AND id IN (SELECT value FROM json_each('+Q(Ids.AsJSON)+'))';
+    Count:=IntToStr(Ids.Count);
+    ChildSql:=ChildSql+'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE '+ChildScope+
+      ' AND COALESCE(archived,0)='+Before+
+      IfThen(Before='1',' AND archivedAt IS (SELECT archivedAt FROM swimlanes WHERE '+Scope+')')+')='+Count+' THEN 1 ELSE json(''Archive batch changed'') END; '+
+      'UPDATE '+TableName+' SET '+Assignment+',modifiedAt='+Stamp+' WHERE '+ChildScope+'; ';
+    Result:=True;
+  end;
 begin
   Result:=False;Error:='';
   Entity:=Str(Row,'entityType');BoardId:=Str(Row,'boardId');EntityId:=Str(Row,'entityId');
@@ -2563,20 +2582,34 @@ begin
     if Before=After then Exit;
   end;
   Stamp:=Q(NowIso);
+  ChildSql:='';
+  Assignment:=ArchiveHistoryAssignment(After,Stamp);
+  Snapshot:=Row.Objects['newContent'];
+  if (Entity='swimlane') and ((Snapshot.Find('archiveLists')<>nil) or (Snapshot.Find('archiveCards')<>nil)) then
+  begin
+    if After='1' then Assignment:='archived=1,archivedAt='+Stamp;
+    if not ChildUpdate('lists','archiveLists') or not ChildUpdate('cards','archiveCards') then Exit;
+  end;
   Result:=Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
-    ' AND COALESCE(archived,0)='+Before+') THEN 1 ELSE json(''Archive state changed'') END; UPDATE '+TableName+
-    ' SET '+ArchiveHistoryAssignment(After,Stamp)+',modifiedAt='+Stamp+' WHERE '+Scope+
+    ' AND COALESCE(archived,0)='+Before+') THEN 1 ELSE json(''Archive state changed'') END; '+ChildSql+'UPDATE '+TableName+
+    ' SET '+Assignment+',modifiedAt='+Stamp+' WHERE '+Scope+
     '; SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+' AND archived='+After+
     ') THEN 1 ELSE json(''Archive replay failed'') END; COMMIT;');
   if not Result then
   begin Db.Exec('ROLLBACK;');Error:='history-conflict';Exit;end;
   if Direction='restore' then
+  begin
+    Recorded:=TJSONObject(Snapshot.Clone);
     try
-      RecordHistoryRow(Db,UserId,BoardId,Entity,EntityId,'lifecycle','restored',
-        Row.Find('previousContent'),Row.Find('newContent'),Str(Row,'_id'),UserId);
-    except
-      // History never fails the restore it records.
-    end;
+      Recorded.Delete('archiveCascadeChild');
+      try
+        RecordHistoryRow(Db,UserId,BoardId,Entity,EntityId,'lifecycle','restored',
+          Row.Find('previousContent'),Recorded,Str(Row,'_id'),UserId);
+      except
+        // History never fails the restore it records.
+      end;
+    finally Recorded.Free;end;
+  end;
 end;
 
 function ApplyListHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
@@ -2905,6 +2938,7 @@ begin
     Scope:=Scope+' AND COALESCE(archived,0)='+R[0][1];
     Before:=TJSONObject.Create(['field',Field,'value',R[0][1]='1']);
     After:=TJSONObject(Content.Clone);
+    After.Delete('archiveCascadeChild');
     ReadField:=ArchiveHistoryAssignment(Literal,Q(NowIso));
   end
   else
@@ -3229,6 +3263,7 @@ begin
   Rows := FindDocs(T.Db, 'changeHistory', DocField('boardId') + '=' + Q(BoardId) + ' AND ' + DocField('userId') + '=' + Q(UserId) +
     ' AND json_type(_ferretdb_sjson,''$.undone'')=' + IfThen(Direction = 'redo', '''true''', '''false''') +
     ' AND COALESCE(json_type(_ferretdb_sjson,''$.isCheckpoint''),'''')<>''true''' +
+    ' AND COALESCE(json_type(_ferretdb_sjson,''$.newContent.archiveCascadeChild''),'''')<>''true''' +
     ' AND COALESCE(json_type(_ferretdb_sjson,''$.superseded''),'''')<>''true''', DocField(Sort) + ' DESC LIMIT 1');
   try
     if Rows.Count = 0 then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;

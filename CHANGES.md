@@ -33,6 +33,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   previously archived cards in the archive. Each transition is recorded.
   Template swimlanes also archive and restore their lists and record
   each list transition.
+  Undo and Redo now replay new swimlane archive batches with all cards
+  and lists changed by the operation, retaining their individual History
+  entries. A changed batch member prevents partial replay.
   REST template-list archiving and unarchiving also record the resulting
   card archive transitions as individual history entries.
   The hourly shared-store scheduler honors the board’s inactivity archive

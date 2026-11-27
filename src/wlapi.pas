@@ -1962,7 +1962,7 @@ begin
 end;
 
 function SetViewSwimlaneArchived(const T:TWLTenant;const UserId,BoardId,LaneId:string;Archive:Boolean;out Error:string):Integer;
-var Scope,CardScope,ListScope,ListUpdate,Placement,Stamp,ArchivedAt,OldState,NewState:string;Rows,Changed,ChangedLists:TWLRows;I:Integer;
+var Scope,CardScope,ListScope,ListUpdate,Placement,Stamp,ArchivedAt,OldState,NewState:string;Rows,Changed,ChangedLists:TWLRows;
 begin
   Error:='';
   if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
@@ -2001,9 +2001,11 @@ begin
     T.Db.Exec('ROLLBACK;');
     raise;
   end;
-  RecordArchiveHistory(T.Db,UserId,BoardId,'swimlane',LaneId,Archive);
-  for I:=0 to High(ChangedLists) do RecordArchiveHistory(T.Db,UserId,BoardId,'list',ChangedLists[I][0],Archive);
-  for I:=0 to High(Changed) do RecordArchiveHistory(T.Db,UserId,BoardId,'card',Changed[I][0],Archive);
+  try
+    RecordSwimlaneArchiveBatch(T.Db,UserId,BoardId,LaneId,Archive,ChangedLists,Changed);
+  except
+    // History never fails the operation it records.
+  end;
   Result:=200;
 end;
 
