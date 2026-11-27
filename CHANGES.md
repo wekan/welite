@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Find exact card numbers with the localized `number:` operator. The
+  `org:` and `team:` filters match active board assignments by display name
+  or ID, and recognize group short names in the shared store.
+
 - Set the number of Search All Boards results per page with the localized
   `limit:` operator. The page size carries through next and previous links.
 
