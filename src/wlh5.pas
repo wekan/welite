@@ -3538,8 +3538,8 @@ var Rows: TWLRows; Row: TWLRow; AddTitle, Items, Toggle, Status, Kind: string; D
 begin
   Items := ''; Done := 0; Total := 0;
   Rows := Db.Query('SELECT c.id,c.title,c.boardId,b.slug,COALESCE(c.dueComplete,0),COALESCE(c.type,''cardType-card'') ' +
-    'FROM cards c JOIN boards b ON b.id=c.boardId WHERE c.parentId=' +
-    QuotedStr(CardId) + ' AND c.archived=0 AND c.deletedAt IS NULL AND b.archived=0 ORDER BY c.subtaskSort,c.sort,c.id;');
+    'FROM cards c JOIN boards b ON b.id=c.boardId WHERE ' +
+    SubtaskParentSql(CardId, 'c.') + ' AND c.archived=0 AND c.deletedAt IS NULL AND b.archived=0 ORDER BY c.subtaskSort,c.sort,c.id;');
   for Row in Rows do
     if BoardCanRead(Db, UserId, Row[2]) or
        (AssignedOnlyMember(Db, UserId, Row[2]) and CardAssignedTo(Db, UserId, Row[2], Row[0])) then

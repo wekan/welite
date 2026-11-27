@@ -95,6 +95,7 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // sends nothing; Error says why not.
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
+function SubtaskParentSql(const ParentId,ColumnPrefix:string):string;
 function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
 function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;InheritLabels:Boolean;out Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
@@ -5076,6 +5077,17 @@ begin
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
 end;
 
+function SubtaskParentSql(const ParentId,ColumnPrefix:string):string;
+var Parent,Extra,ArrayValue:string;
+begin
+  Parent:=QuotedStr(ParentId);
+  Extra:=ColumnPrefix+'extra_json';
+  ArrayValue:='CASE WHEN json_valid('+Extra+') THEN CASE WHEN json_type('+Extra+',''$.parentIds'')=''array'' '+
+    'THEN json_extract('+Extra+',''$.parentIds'') ELSE ''[]'' END ELSE ''[]'' END';
+  Result:='('+ColumnPrefix+'parentId='+Parent+' OR EXISTS(SELECT 1 FROM json_each('+ArrayValue+
+    ') parentLink WHERE parentLink.type=''text'' AND parentLink.value='+Parent+'))';
+end;
+
 function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
 var Rows:TWLRows; ParentScope,SubtaskScope,ParentBoard,TargetBoard,Guard,Value:string; Policy:TFieldPolicy;
 begin
@@ -5087,7 +5099,7 @@ begin
   ParentBoard:=Rows[0][0];
   if not BoardCanRead(T.Db,UserId,ParentBoard) and
     not (AssignedOnlyMember(T.Db,UserId,ParentBoard) and CardAssignedTo(T.Db,UserId,ParentBoard,ParentId)) then Exit(404);
-  SubtaskScope:='id='+QuotedStr(SubtaskId)+' AND parentId='+QuotedStr(ParentId)+
+  SubtaskScope:='id='+QuotedStr(SubtaskId)+' AND '+SubtaskParentSql(ParentId,'')+
     ' AND archived=0 AND deletedAt IS NULL AND COALESCE(type,''cardType-card'')=''cardType-card''';
   Rows:=T.Db.Query('SELECT boardId FROM cards WHERE '+SubtaskScope+';');
   if Length(Rows)<>1 then Exit(404);
