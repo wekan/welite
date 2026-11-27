@@ -2522,6 +2522,61 @@ begin
   Result := ApplyContainerTextHistory(Db, UserId, Row, Direction, Error);
 end;
 
+function ContainerArchiveHistory(Row:TJSONObject):Boolean;
+var Literal:string;
+begin
+  Result:=(Str(Row,'group')='lifecycle') and
+    HistoryArchiveLiteral(Row.Find('previousContent'),Literal) and
+    HistoryArchiveLiteral(Row.Find('newContent'),Literal);
+end;
+
+function ApplyContainerArchiveHistory(Db:TWLDb;const UserId:string;Row:TJSONObject;const Direction:string;out Error:string):Boolean;
+var Entity,TableName,BoardId,EntityId,Scope,Before,After,Stamp:string;Current:TWLRows;
+begin
+  Result:=False;Error:='';
+  Entity:=Str(Row,'entityType');BoardId:=Str(Row,'boardId');EntityId:=Str(Row,'entityId');
+  if not BoardCanWrite(Db,UserId,BoardId) or not ContainerArchiveHistory(Row) then Exit;
+  case Entity of
+    'list':TableName:='lists';
+    'swimlane':TableName:='swimlanes';
+  else Exit;
+  end;
+  Scope:='id='+Q(EntityId)+' AND boardId='+Q(BoardId);
+  if Entity='list' then Scope:=Scope+' AND deletedAt IS NULL';
+  if Direction='undo' then
+  begin
+    HistoryArchiveLiteral(Row.Find('newContent'),Before);
+    HistoryArchiveLiteral(Row.Find('previousContent'),After);
+  end
+  else
+  begin
+    HistoryArchiveLiteral(Row.Find('previousContent'),Before);
+    HistoryArchiveLiteral(Row.Find('newContent'),After);
+  end;
+  if Direction='restore' then
+  begin
+    Current:=Db.Query('SELECT COALESCE(archived,0) FROM '+TableName+' WHERE '+Scope+';');
+    if Length(Current)<>1 then Exit;
+    Before:=Current[0][0];
+    if Before=After then Exit;
+  end;
+  Stamp:=Q(NowIso);
+  Result:=Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+
+    ' AND COALESCE(archived,0)='+Before+') THEN 1 ELSE json(''Archive state changed'') END; UPDATE '+TableName+
+    ' SET '+ArchiveHistoryAssignment(After,Stamp)+',modifiedAt='+Stamp+' WHERE '+Scope+
+    '; SELECT CASE WHEN EXISTS(SELECT 1 FROM '+TableName+' WHERE '+Scope+' AND archived='+After+
+    ') THEN 1 ELSE json(''Archive replay failed'') END; COMMIT;');
+  if not Result then
+  begin Db.Exec('ROLLBACK;');Error:='history-conflict';Exit;end;
+  if Direction='restore' then
+    try
+      RecordHistoryRow(Db,UserId,BoardId,Entity,EntityId,'lifecycle','restored',
+        Row.Find('previousContent'),Row.Find('newContent'),Str(Row,'_id'),UserId);
+    except
+      // History never fails the restore it records.
+    end;
+end;
+
 function ApplyListHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
 var ListId, BoardId, Batch, Markers, ListScope: string;
 begin
@@ -3058,6 +3113,15 @@ begin
             if Done = 0 then Inc(Skipped) else begin Inc(Restored); AnnounceToAll; end;
             Continue;
           end;
+          if ((Str(Row,'entityType')='list') or (Str(Row,'entityType')='swimlane')) and ContainerArchiveHistory(Row) then
+          begin
+            if not Readable.Readable(Row) or not BoardCanWrite(T.Db,UserId,Str(Row,'boardId')) then
+              Exit(MethodError(403,'not-authorized','This history entry is outside your current access.',Answer));
+            Applied:=ApplyContainerArchiveHistory(T.Db,UserId,Row,'restore',Error);
+            if Error='history-conflict' then Exit(MethodError(409,Error,'It changed after this history entry',Answer));
+            if Applied then begin Inc(Restored);AnnounceToAll;end else Inc(Skipped);
+            Continue;
+          end;
           if ((Str(Row, 'entityType') = 'list') or (Str(Row, 'entityType') = 'swimlane')) and
             (Str(Row, 'group') = 'title') then
           begin
@@ -3132,6 +3196,8 @@ begin
     if Rows.Count = 0 then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
     Row := Rows.Objects[0];
     if Str(Row, 'entityType') = 'card' then Applied := ApplyCardHistory(T.Db, UserId, Row, Direction, Error)
+    else if ((Str(Row,'entityType')='list') or (Str(Row,'entityType')='swimlane')) and ContainerArchiveHistory(Row) then
+      Applied:=ApplyContainerArchiveHistory(T.Db,UserId,Row,Direction,Error)
     else if (Str(Row, 'entityType') = 'swimlane') and (Str(Row, 'group') = 'title') then
       Applied := ApplyContainerTextHistory(T.Db, UserId, Row, Direction, Error)
     else if Str(Row, 'entityType') = 'list' then Applied := ApplyListHistory(T.Db, UserId, Row, Direction, Error)
