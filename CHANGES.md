@@ -33,7 +33,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Their previous-value snapshots read SQLite REAL values at full precision.
   REST corrections and history replay preserve double precision in the
   shared store. The FerretDB integration suite checks exact REAL writes
-  through both the insert and update projections.
+  through both the insert and update projections. REST edits to received,
+  start, due and end dates now share the date editor’s History recording.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

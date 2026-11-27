@@ -7121,12 +7121,31 @@ begin
   finally Parsed.Free;end;
 end;
 
+procedure RecordCardDateHistory(Db:TWLDb;const UserId,BoardId,CardId,Field,OldDate,NewDate:string);
+var Previous,Next:TJSONObject; ChangeType:string;
+begin
+  if OldDate=NewDate then Exit;
+  if OldDate='' then ChangeType:='added'
+  else if NewDate='' then ChangeType:='removed'
+  else ChangeType:='edited';
+  Previous:=CardHistoryDateValue(Field,OldDate);
+  Next:=CardHistoryDateValue(Field,NewDate);
+  try
+    try
+      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,'dates',ChangeType,Previous,Next);
+    except
+      // History never fails the edit it records.
+    end;
+  finally Previous.Free;Next.Free;end;
+end;
+
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
+const DateFields:array[0..3] of string=('receivedAt','startAt','dueAt','endAt');
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber,SpentHours:Double;NumberFormat:TFormatSettings;
   Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done,OldOvertime,Overtime,HasSpentTime:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor,OldSpentTime,NewSpentTime:string;
-  BeforeTime,AfterTime:TJSONObject; TimeRows:TWLRows;
+  BeforeTime,AfterTime:TJSONObject; TimeRows,OldDates:TWLRows; DateIndex:Integer; DateWrites:array[0..3] of string;
 begin
   HasCompletion:=False;OldDone:=False;Done:=False;OldOvertime:=False;Overtime:=False;
   HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
@@ -7162,12 +7181,17 @@ begin
         NewTitle:=Trim(Input.AsString);
         FieldSets:=',title='+QuotedStr(NewTitle);
       end;
-      for FieldName in ['receivedAt','startAt','dueAt','endAt'] do
+      for DateIndex:=Low(DateFields) to High(DateFields) do
       begin
+        FieldName:=DateFields[DateIndex];
         Input:=Body.Find(FieldName);
         if Input=nil then Continue;
         HasDate:=True;
-        if CardDateSql(Input,Literal) then FieldSets:=FieldSets+','+FieldName+'='+Literal;
+        if CardDateSql(Input,Literal) then
+        begin
+          DateWrites[DateIndex]:=Literal;
+          FieldSets:=FieldSets+','+FieldName+'='+Literal;
+        end;
       end;
       Input:=Body.Find('sort');HasSort:=Input<>nil;
       if HasSort then
@@ -7291,6 +7315,7 @@ begin
     TimeRows:=T.Db.Query('SELECT '+HistorySpentTimeSql+' FROM cards WHERE '+Scope+';');
     if Length(TimeRows)=1 then OldSpentTime:=TimeRows[0][0];
   end;
+  if HasDate then OldDates:=T.Db.Query('SELECT receivedAt,startAt,dueAt,endAt FROM cards WHERE '+Scope+';');
   if HasCompletion then OldDone:=CardCompletionOf(T.Db,Scope);
   if HasOvertime then OldOvertime:=Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+' AND isOvertime=1;'))=1;
   if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
@@ -7304,6 +7329,15 @@ begin
     else SendError(aResponse,500,'Could not edit card');
     Exit;
   end;
+  if Length(OldDates)=1 then
+    for DateIndex:=Low(DateFields) to High(DateFields) do
+      if DateWrites[DateIndex]<>'' then
+      begin
+        Literal:=DateWrites[DateIndex];
+        Value:='';
+        if Literal<>'NULL' then Value:=Copy(Literal,2,Length(Literal)-2);
+        RecordCardDateHistory(T.Db,UserId,BoardId,CardId,DateFields[DateIndex],OldDates[0][DateIndex],Value);
+      end;
   if HasTitle then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',OldTitle,NewTitle);
   if HasDescription then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'description',OldDescription,NewDescription);
   if HasSpentTime then
@@ -8588,7 +8622,7 @@ end;
 function SetViewCardDate(const T:TWLTenant;const UserId,BoardId,CardId,Kind,At:string;Remove:Boolean;
   out Error:string):Integer;
 var Field,Setting,Literal,Scope,Stamp,Changed,Act,OldDate,NewDate:string;Input:TJSONData;Year:Integer;
-  Previous,Next:TJSONObject; Rows:TWLRows;
+  Rows:TWLRows;
 begin
   Error:='';
   if not ViewDateKindField(Kind,Field,Setting) then begin Error:='not found';Exit(404);end;
@@ -8632,19 +8666,7 @@ begin
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
   NewDate:='';
   if not Remove then NewDate:=Copy(Literal,2,Length(Literal)-2);
-  if OldDate<>NewDate then
-  begin
-    Previous:=CardHistoryDateValue(Field,OldDate);
-    Next:=CardHistoryDateValue(Field,NewDate);
-    try
-      try
-        RecordHistoryRow(T.Db,UserId,BoardId,'card',CardId,'dates',
-          IfThen(OldDate='', 'added', IfThen(Remove, 'removed', 'edited')),Previous,Next);
-      except
-        // History never fails the edit it records.
-      end;
-    finally Previous.Free;Next.Free;end;
-  end;
+  RecordCardDateHistory(T.Db,UserId,BoardId,CardId,Field,OldDate,NewDate);
 end;
 
 function ViewFieldNumber(const Raw:string;Currency:Boolean;out Literal:string):Boolean;
