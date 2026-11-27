@@ -25,7 +25,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Attachments include file type, byte size, upload time and uploader when
   available. Dependencies identify live cards on the same board and show
   their relationship type. The card layout groups cards under swimlane and
-  list headings in board order. Swimlane and list exports start at that
+  list headings in board order, including empty swimlanes and lists. Swimlane and list exports start at that
   level, and a card scope omits the group headings. The card layout uses
   A4 portrait printing with page breaks between card blocks.
 

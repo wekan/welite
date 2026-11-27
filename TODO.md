@@ -272,8 +272,7 @@ Next, after this goal:
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
   export-access (board PDF, chart exports and exports of individual cards),
-  scoped ZIP exports, Weddy’s remaining Excel card layout details (empty group headings
-  and inline attachment images), and the
+  scoped ZIP exports, inline attachment images in Excel card layouts, and the
   remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.

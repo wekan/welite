@@ -21,12 +21,17 @@ type
     CardDetails, ShowPoker, ShowStickers, ShowLocations: Boolean;
     Checklists, Items, Comments, Attachments, Subtasks, UsersById, Dependencies, CardsById: TFPHashObjectList;
     LaneRows, ListRows: TJSONArray;
-    LastLane, LastList: string;
+    CurrentLane, NextLane, NextList: Integer;
+    LaneScoped: Boolean;
     PageBreaks: TStringList;
     HasCard: Boolean;
     ShowLaneHeadings, ShowListHeadings: Boolean;
     procedure WriteHeading(const Text: string);
     procedure GroupHeadings(Card: TJSONObject);
+    procedure LaneHeading(Position: Integer);
+    procedure ListHeading(Position: Integer; Empty: Boolean);
+    procedure FinishGroupHeadings;
+    procedure EmptyListsBefore(Position: Integer);
     procedure PrintSetup;
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
@@ -342,29 +347,84 @@ begin
   TableRow(Row, True);
 end;
 
-procedure TSheetWriter.GroupHeadings(Card: TJSONObject);
-var Lane, List, Title: string;
+procedure TSheetWriter.LaneHeading(Position: Integer);
+var Lane: TJSONObject;
 begin
-  Lane := Card.Get('swimlaneId', '');
-  List := Card.Get('listId', '');
-  if Lane <> LastLane then
+  if Position >= LaneRows.Count then Exit;
+  Lane := LaneRows.Objects[Position];
+  if not ShowLaneHeadings or Lane.Get('archived', False) or
+    (Lane.Get('type', '') = 'template-swimlane') then Exit;
+  WriteHeading('Swimlane: ' + Lane.Get('title', ''));
+end;
+
+procedure TSheetWriter.ListHeading(Position: Integer; Empty: Boolean);
+var List, Lane: TJSONObject; Home: string;
+begin
+  if not ShowListHeadings or (Position >= ListRows.Count) then Exit;
+  List := ListRows.Objects[Position];
+  if List.Get('archived', False) then Exit;
+  if Empty then
   begin
-    LastLane := Lane;
-    LastList := '';
-    if ShowLaneHeadings then
-    begin
-      Title := TitleOf(LaneRows, Lane);
-      if Title <> '' then WriteHeading('Swimlane: ' + Title);
-    end;
+    if CurrentLane >= LaneRows.Count then Exit;
+    Lane := LaneRows.Objects[CurrentLane];
+    if Lane.Get('archived', False) or (Lane.Get('type', '') = 'template-swimlane') then Exit;
+    Home := List.Get('swimlaneId', '');
+    if (Home <> '') and (Home <> Lane.Get('_id', '')) then Exit;
   end;
-  if List <> LastList then
+  WriteHeading('List: ' + List.Get('title', ''));
+end;
+
+procedure TSheetWriter.EmptyListsBefore(Position: Integer);
+begin
+  while NextList < Position do
   begin
-    LastList := List;
-    if ShowListHeadings then
+    ListHeading(NextList, True);
+    Inc(NextList);
+  end;
+end;
+
+procedure TSheetWriter.GroupHeadings(Card: TJSONObject);
+var Lane, List: Integer;
+begin
+  if not ShowListHeadings then Exit;
+  Lane := PositionOf(LaneRows, Card.Get('swimlaneId', ''));
+  List := PositionOf(ListRows, Card.Get('listId', ''));
+  if Lane <> CurrentLane then
+  begin
+    if CurrentLane >= 0 then EmptyListsBefore(ListRows.Count);
+    while ShowLaneHeadings and (NextLane < Lane) do
     begin
-      Title := TitleOf(ListRows, List);
-      if Title <> '' then WriteHeading('List: ' + Title);
+      CurrentLane := NextLane;
+      LaneHeading(NextLane);
+      NextList := 0;
+      EmptyListsBefore(ListRows.Count);
+      Inc(NextLane);
     end;
+    CurrentLane := Lane;
+    LaneHeading(Lane);
+    NextLane := Lane + 1;
+    NextList := 0;
+  end;
+  EmptyListsBefore(List);
+  if NextList = List then
+  begin
+    ListHeading(List, False);
+    Inc(NextList);
+  end;
+end;
+
+procedure TSheetWriter.FinishGroupHeadings;
+begin
+  if not ShowListHeadings then Exit;
+  if (CurrentLane >= 0) and (CurrentLane < LaneRows.Count) then EmptyListsBefore(ListRows.Count);
+  if LaneScoped then Exit;
+  while ShowLaneHeadings and (NextLane < LaneRows.Count) do
+  begin
+    CurrentLane := NextLane;
+    LaneHeading(NextLane);
+    NextList := 0;
+    EmptyListsBefore(ListRows.Count);
+    Inc(NextLane);
   end;
 end;
 
@@ -660,6 +720,9 @@ begin
     Writer.LaneRows := Board.Arrays['swimlanes'];
     Writer.ListRows := Board.Arrays['lists'];
     Writer.ShowLaneHeadings := not Scoped;
+    Writer.CurrentLane := -1;
+    Writer.LaneScoped := LaneId <> '';
+    if Writer.LaneScoped then Writer.CurrentLane := PositionOf(Writer.LaneRows, LaneId);
     Writer.ShowListHeadings := not Scoped or ((LaneId <> '') and (ListId = ''));
     Writer.ShowPoker := WithPoker or not Known;
     Writer.ShowStickers := WithStickers or not Known;
@@ -712,6 +775,7 @@ begin
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;
     ReadBoardRows(Board, Fields, @Writer.Add, CardDetails, CardOrder);
+    if CardDetails then Writer.FinishGroupHeadings;
     EndSheet(CardDetails);
     if not CardDetails and not Scoped and BoardHeader then
     begin
