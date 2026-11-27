@@ -4829,6 +4829,10 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   // download token of its own, as WeKan's carry the login token.
   up.on('click', '.js-export-chart', function (event, el) {
     event.preventDefault();
+    if (el.dataset.localPopup) {
+      openPopOver(el.dataset.localPopup);
+      return;
+    }
     var board = (el.closest('[data-board]') || document.querySelector('[data-board]')).dataset.board;
     callAsync('exportDownloadToken').then(function (token) {
       closePopOvers();

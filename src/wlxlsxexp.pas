@@ -5,7 +5,7 @@ interface
 uses Classes, Types, fpjson;
 type
   TAttachmentPreview = function(Attachment: TJSONObject; Output: TStream; out Size: TPoint): Boolean is nested;
-procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean);
+procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean; Report: TJSONArray = nil);
 
 implementation
 uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect, wlpdfexp;
@@ -525,7 +525,7 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean);
+procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean; Report: TJSONArray);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
   I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies, WithBoardInfo: Boolean;
   Users: TJSONArray; User: TJSONObject;
@@ -543,6 +543,23 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
       if Card.Get('archived', False) or (Card.Get('deletedAt', '') <> '') or
         (Card.Get('linkedId', '') <> '') then Continue;
       Writer.CardsById.Add(Card.Get('_id', ''), Card);
+    end;
+  end;
+
+  procedure WriteReport;
+  var I, J: Integer; Entry: TJSONArray; Cells: TBoardRow;
+  begin
+    if not AsPdf then Writer.Line('<sheetData>');
+    for I := 0 to Report.Count - 1 do
+    begin
+      Entry := Report.Arrays[I];
+      SetLength(Cells, Entry.Count);
+      for J := 0 to Entry.Count - 1 do
+      begin
+        Cells[J].Text := Entry.Items[J].AsString;
+        Cells[J].LiteralText := Entry.Items[J].JSONType = jtString;
+      end;
+      Writer.TableRow(Cells, I = 0);
     end;
   end;
 
@@ -806,8 +823,17 @@ begin
         '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
         '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>' +
         '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
-      StartSheet('Cards');
+      if Report <> nil then StartSheet('Time') else StartSheet('Cards');
     end;
+    if Report <> nil then
+    begin
+      WriteReport;
+      CardDetails := False;
+      BoardHeader := False;
+      ActivitySheet := False;
+    end
+    else
+    begin
     Writer.CardDetails := CardDetails;
     if SingleCard and (WithBoardInfo or not Known) then Writer.BoardTitle := Board.Get('title', '');
     Writer.LaneRows := Board.Arrays['swimlanes'];
@@ -872,6 +898,7 @@ begin
     end;
     ReadBoardRows(Board, Fields, @Writer.Add, CardDetails and not SingleCard, CardOrder);
     if CardDetails then Writer.FinishGroupHeadings;
+    end;
     if AsPdf then
     begin
       Writer.Pdf.Save(Output);

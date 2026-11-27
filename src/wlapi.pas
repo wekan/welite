@@ -66,6 +66,7 @@ procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
@@ -3032,6 +3033,69 @@ begin
   if Length(Result) > 64 then Exit('');
   for C in Result do
     if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
+end;
+
+procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; Session: TWLSession; Words: TWLTranslator;
+  BoardId, UserId, Filename, CardId, Author: string; AsPdf: Boolean;
+  Report, Adjustments: TJSONArray; Row: TJSONObject; Output: TMemoryStream;
+  Person, Cards, Totals: TWLRows; I: Integer;
+begin
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, '') then Exit;
+  if AssignedOnlyMember(T.Db, UserId, BoardId) then
+  begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
+  Session := Default(TWLSession);
+  Session.UserId := UserId;
+  Words := TWLTranslator.Create(ViewerLanguage(T.Db, Session, aRequest));
+  Report := TJSONArray.Create;
+  Output := TMemoryStream.Create;
+  try
+    Report.Add(TJSONArray.Create([Words.Text('board-view-time', 'Time')]));
+    Totals := T.Db.Query('SELECT COALESCE(SUM(spentTime),0) FROM cards WHERE boardId=' + QuotedStr(BoardId) +
+      ' AND archived=0 AND deletedAt IS NULL;');
+    if Length(Totals) = 1 then
+      Report.Add(TJSONArray.Create([Words.Text('spent-time-hours', 'Spent time (hours)'), GetJSON(Totals[0][0])]));
+    Report.Add(TJSONArray.Create([Words.Text('time-adjustments', 'Time adjustments by author')]));
+    Report.Add(TJSONArray.Create([Words.Text('time-adjustment-note', 'Changes to recorded hours.')]));
+    Report.Add(TJSONArray.Create([Words.Text('card', 'Card'), Words.Text('username', 'Username'), UTF8String(#$CE#$94),
+      Words.Text('spent-time-hours', 'Spent time (hours)')]));
+    Adjustments := TimeAdjustmentRows(T.Db, UserId, BoardId);
+    try
+      for I := 0 to Adjustments.Count - 1 do
+      begin
+        Row := Adjustments.Objects[I];
+        CardId := Row.Get('cardId', '');
+        Author := Row.Get('userId', '');
+        Cards := T.Db.Query('SELECT title FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' + QuotedStr(BoardId) + ';');
+        if Length(Cards) = 1 then CardId := Cards[0][0];
+        Person := T.Db.Query('SELECT username FROM users WHERE id=' + QuotedStr(Author) + ';');
+        if Length(Person) = 1 then Author := Person[0][0];
+        Report.Add(TJSONArray.Create([CardId, Author, Row.Find('delta').Clone, Row.Find('value').Clone]));
+      end;
+    finally Adjustments.Free; end;
+    AsPdf := AnsiEndsStr('/exportPDF', aRequest.PathInfo);
+    try
+      WriteBoardDocument(Output, nil, '', True, nil, '', '', nil, False, AsPdf, Report);
+    except SendError(aResponse, 500, 'Could not export time report'); Exit; end;
+    if AsPdf then
+    begin
+      Filename := 'time.pdf';
+      aResponse.ContentType := 'application/pdf';
+    end
+    else
+    begin
+      Filename := 'time.xlsx';
+      aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    end;
+    aResponse.Code := 200;
+    aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Filename + '"');
+    aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
+    aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
+    Output.Position := 0;
+    aResponse.ContentLength := Output.Size;
+    aResponse.ContentStream := Output;
+    try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
+  finally Output.Free; Report.Free; Words.Free; end;
 end;
 
 procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);

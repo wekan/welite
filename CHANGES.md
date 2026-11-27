@@ -8,7 +8,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - The board’s Time view shows total hours and a correction ledger with
   the author, delta and updated hours. Assigned-only members see the
-  total for their visible cards.
+  total for their visible cards. The Time export menu downloads the
+  total and correction ledger as PDF or Excel.
 
 - The Move Card dialog saves the move reason and records one position
   change for a move within the board. Undo and redo replay the saved list,

@@ -4143,6 +4143,11 @@ begin
   Result:='<section class="time-view"><h2>'+E(Words.Text('board-view-time','Time'))+'</h2>';
   if Length(Totals)=1 then Result:=Result+'<p>'+E(Words.Text('spent-time-hours','Spent time (hours)'))+' '+E(Totals[0][0])+'</p>';
   if AssignedOnly<>'' then Exit(Result+'</section>');
+  if not SharedSettingOn(Db, 'disableAllExport') and not SharedSettingOn(Db, 'anonymizeExportUsers') then
+    Result := Result + '<button type="button" class="js-export-chart" data-chart-key="time" data-local-popup="time-export">' +
+      E(Words.Text('export', 'Export')) + '</button><template class="js-pop-over-template" data-pop="time-export"><ul class="pop-over-list">' +
+      '<li><a href="/api/boards/' + HTTPEncode(BoardId) + '/charts/time/exportPDF" download>PDF</a></li>' +
+      '<li><a href="/api/boards/' + HTTPEncode(BoardId) + '/charts/time/exportExcel" download>Excel</a></li></ul></template>';
   Result:=Result+'<section class="time-adjustments"><h3>'+E(Words.Text('time-adjustments','Time adjustments by author'))+
     '</h3><p>'+E(Words.Text('time-adjustment-note','Changes to recorded hours. Negative values are corrections.'))+
     '</p><table><thead><tr><th>'+E(Words.Text('card','Card'))+'</th><th>'+E(Words.Text('username','Username'))+
