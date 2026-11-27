@@ -7422,6 +7422,7 @@ begin
     '&page=' + IntToStr(StrToIntDef(Request.ContentFields.Values['page'], 1));
   if BoardId = '' then
     Back := '/profile/history?q=' + HTTPEncode(Request.ContentFields.Values['q']) +
+      '&group=' + HTTPEncode(Request.ContentFields.Values['group']) +
       '&page=' + IntToStr(StrToIntDef(Request.ContentFields.Values['page'], 1));
   Response.Code := 303;
   Response.SetCustomHeader('Location', Back);
@@ -8072,12 +8073,17 @@ begin
   if (Ref = '') or not IssueLoginToken(Db, UserId, LoginToken, Ref, 'api', ApiTokenLifetime(Db)) then LoginToken := '';
 end;
 
+const HistoryGroups:array[0..15] of string=('assignees','attachments','checklists','comments','customFields',
+  'dates','dependencies','description','labels','lifecycle','members','position','rules','scrum','subtasks',
+  'title');
+
 function HistoryGroupLabel(Words: TWLTranslator; const Group: string): string;
 begin
   case Group of
     'rules': Result := Words.Text('r-board-rules', 'Rules');
     'scrum': Result := Words.Text('scrum-settings', 'Scrum');
     'dates': Result := Words.Text('date', 'Date');
+    'lifecycle': Result := Words.Text('archives', 'Archive');
     'position': Result := Words.Text('sort', 'Sort');
     'customFields': Result := Words.Text('custom-fields', 'Custom Fields');
     'dependencies': Result := Words.Text('card-dependencies', 'Dependencies');
@@ -8347,7 +8353,7 @@ end;
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;
   const BoardId: string; MemberView: Boolean; Query: TStrings; out Content: string): Integer;
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
-  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel, RowField, RowGroup, BackTitle: string;
+  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel, GroupOption, RowField, RowGroup, BackTitle: string;
   I, PageNumber, PageCount, Size: Integer;
   CanRestoreCard, CanRestoreRule, CanRestoreList, ShowRestore: Boolean;
   RowBoard: string;
@@ -8361,7 +8367,7 @@ var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Va
   end;
   function LinkTo(const Contributor: string; Number: Integer): string;
   begin
-    if MemberView then Exit(HtmlAttr(Route + '?q=' + HTTPEncode(Search) + '&page=' + IntToStr(Number)));
+    if MemberView then Exit(HtmlAttr(Route + '?q=' + HTTPEncode(Search) + '&group=' + HTTPEncode(Group) + '&page=' + IntToStr(Number)));
     Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&list=' + HTTPEncode(ListId) +
       '&swimlane=' + HTTPEncode(LaneId) + '&user=' + HTTPEncode(Contributor) +
       '&q=' + HTTPEncode(Search) + '&group=' + HTTPEncode(Group) + '&page=' + IntToStr(Number));
@@ -8369,6 +8375,7 @@ var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Va
 begin
   Content := '';
   Search := Query.Values['q'];
+  Group := Query.Values['group'];
   if MemberView then
   begin
     Route := '/profile/history';
@@ -8408,7 +8415,6 @@ begin
           ' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId=' + QuotedStr(S.UserId) + ')') + ';')) <> 1 then Exit(404);
     end;
     Who := Query.Values['user'];
-    Group := Query.Values['group'];
     Route := '/b/' + HTTPEncode(BoardId) + '/history';
     Back := BoardRoute(BoardId, Board[0][1]);
     if Board[0][1] = 'history' then Back := '/b/' + HTTPEncode(BoardId);
@@ -8460,10 +8466,16 @@ begin
         '"><input type="hidden" name="list" value="' + HtmlAttr(ListId) +
         '"><input type="hidden" name="swimlane" value="' + HtmlAttr(LaneId) +
         '"><input type="hidden" name="user" value="' + HtmlAttr(Who) +
-        '"><input type="hidden" name="group" value="' + HtmlAttr(Group) + '">';
+        '">';
     Content := Content + '<div class="history-main"><form class="history-controls" method="get" action="' +
       HtmlAttr(Route) + '">' + ScopeFields + '<input class="js-history-search" type="search" name="q" value="' + HtmlAttr(Search) + '" aria-label="' +
-      HtmlAttr(Label_) + '"><button type="submit">' + E(Label_) + '</button></form><div class="history-pagination">';
+      HtmlAttr(Label_) + '"><select class="js-history-group" name="group" aria-label="' +
+      HtmlAttr(Words.Text('filter','Filter')) + '"><option value="">' + E(Words.Text('filter','Filter')) + '</option>';
+    for GroupOption in HistoryGroups do
+      Content := Content + '<option value="' + HtmlAttr(GroupOption) + '"' + IfThen(Group=GroupOption,' selected') +
+        '>' + E(HistoryGroupLabel(Words,GroupOption)) + '</option>';
+    Content := Content + '</select><button type="submit">' + E(Words.Text('apply','Apply')) +
+      '</button></form><div class="history-pagination">';
     if PageNumber > 1 then Content := Content + '<a class="js-history-prev" href="' + LinkTo(Who, PageNumber - 1) + '">&lt;</a> ';
     Content := Content + '<span class="history-page">' + IntToStr(PageNumber) + ' / ' + IntToStr(PageCount) + '</span>';
     if PageNumber < PageCount then Content := Content + ' <a class="js-history-next" href="' + LinkTo(Who, PageNumber + 1) + '">&gt;</a>';
@@ -8474,7 +8486,8 @@ begin
     begin
       if ShowRestore then
         Content := Content + '<form class="js-history-restore-form" method="post" action="' + HtmlAttr(Route + '/restore') +
-          '">' + ScopeFields + '<input type="hidden" name="q" value="' + HtmlAttr(Search) +
+          '">' + ScopeFields + '<input type="hidden" name="group" value="' + HtmlAttr(Group) +
+          '"><input type="hidden" name="q" value="' + HtmlAttr(Search) +
           '"><input type="hidden" name="page" value="' + IntToStr(PageNumber) + '">';
       Content := Content + '<div class="history-scroll"><table class="history-rows"><thead><tr>' +
         IfThen(ShowRestore, '<th class="history-select"></th>') + '<th>' +

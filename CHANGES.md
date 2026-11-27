@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Board and member History have a group filter, including archive and
+  removal entries. The filter stays selected when paging or restoring.
+
 - History uses saved document titles, comment text and attachment filenames
   in lifecycle summaries. Rows without saved text keep their status label.
   History renders label and active board-member names in card field
