@@ -4596,7 +4596,8 @@ begin
       Name:=Text(Input,'color','belize');if Name='' then Name:='belize';
       Sql:='INSERT INTO boards(id,title,slug,description,permission,color,createdAt,modifiedAt) VALUES('+
         Board+','+QuotedStr(Title)+','+QuotedStr(Slugify(Title))+','+QuotedStr(Text(Input,'description'))+
-        ',''private'','+QuotedStr(Name)+','+Stamp+','+Stamp+'); '+
+        ',''private'','+QuotedStr(Name)+','+ImportedDate(Input,'createdAt',Stamp,True)+','+
+        ImportedDate(Input,'modifiedAt',Stamp,True)+'); '+
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
       ImportInactiveMembers;
       end

@@ -38,7 +38,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   subtasks intact when SQLite exports their flags as 0 or 1. List collapse
   settings also round-trip, including explicitly expanded lists and lists
   that use the default state. Imports retain valid creation and modification
-  timestamps on lists and swimlanes.
+  timestamps on lists, swimlanes and newly imported boards.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

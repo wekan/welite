@@ -66,6 +66,7 @@ def run(request,database,administrator,member,base):
                     ('2024-01-01T00:00:00.000Z',) * 3)
         con.execute("UPDATE cards SET dueComplete=1 WHERE id='txtchild'")
         container_dates = ('2023-01-01T00:00:00.000Z', '2023-02-01T00:00:00.000Z')
+        con.execute("UPDATE boards SET createdAt=?, modifiedAt=? WHERE id='boardtxt'", container_dates)
         con.execute("UPDATE lists SET createdAt=?, modifiedAt=? WHERE id='txtlist'", container_dates)
         con.execute("UPDATE swimlanes SET createdAt=?, modifiedAt=? WHERE id='txtlane'", container_dates)
     for fields in ('dependencies,locations,stickers,people,labels,custom-fields', 'description'):
@@ -107,6 +108,8 @@ def run(request,database,administrator,member,base):
     assert status == 200, result
     imported_id = json.loads(result)['boardId']
     with sqlite3.connect(database) as con:
+        assert con.execute("SELECT createdAt,modifiedAt,permission FROM boards WHERE id=?",
+                           (imported_id,)).fetchone() == (*container_dates, 'private')
         assert con.execute(
             "SELECT collapsed FROM lists WHERE boardId=? ORDER BY collapsed DESC", (imported_id,)
         ).fetchall() == [(1,), (0,), (None,), (None,)]
