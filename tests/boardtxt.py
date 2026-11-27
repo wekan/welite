@@ -200,6 +200,27 @@ def run(request,database,administrator,member,base):
     status,headers,downloaded=request('GET',download)
     assert status==200 and downloaded==data and 'Set-Cookie' not in headers
     print('PASS: native multipart card upload scopes the action, rejects replay and downloads exact bytes')
+    original_timestamp = '2023-03-01T01:02:03.000Z'
+    with sqlite3.connect(database) as con:
+        con.execute("UPDATE attachments SET createdAt=? WHERE id=?", (original_timestamp, identity))
+    for include_files in ('true', 'false'):
+        status, _, archive = request('GET', '/api/boards/boardtxt/exportZip?' +
+                                    urlencode(dict(token=administrator, fields='attachments', attachments=include_files)))
+        assert status == 200, archive
+        with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+            attachment, = json.loads(bundle.read('wekan.json'))['attachments']
+            assert attachment['createdAt'] == original_timestamp and attachment['size'] == len(data)
+            assert bool(attachment['archivePath']) == (include_files == 'true')
+            if attachment['archivePath']:
+                assert bundle.read(attachment['archivePath']) == data
+        status, _, result = request('POST', '/api/import/zip?' +
+                                    urlencode(dict(token=administrator, newBoard=1)),
+                                    archive, content_type='application/zip')
+        assert status == 200, result
+        with sqlite3.connect(database) as con:
+            attachments = con.execute("SELECT createdAt,size FROM attachments WHERE boardId=?",
+                                      (json.loads(result)['boardId'],)).fetchall()
+        assert attachments == ([(original_timestamp, len(data))] if include_files == 'true' else [])
     forms=Forms()
     forms.feed(body_response.decode())
     delete_path='/board/attachment/delete?id=boardtxt&card=txtcard&file='+identity

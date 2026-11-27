@@ -86,6 +86,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate
   filenames numbered. The API also supports metadata-only ZIP downloads.
+  JSON and ZIP include attachment size and available timestamps. ZIP import
+  preserves the attachment timestamp when the file is included.
   The ZIP API can also scope the archive to a swimlane, list, card or
   checklist and filter optional fields. It retains the selected cards'
   containers and includes file bytes only for the exported attachments.

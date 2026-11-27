@@ -4417,7 +4417,8 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       Files.Add(Path);WriteFileBytes(Path,Bytes);
       Sql:=Sql+'INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,storageBackend,userId,createdAt) VALUES('+
         QuotedStr(Id)+','+Board+','+LaneKey+','+ListKey+','+CardKey+','+QuotedStr(Filename)+','+QuotedStr(Mime)+
-        ','+IntToStr(Length(Bytes))+',''filesystem'','+QuotedStr(ImportedAuthor(Entry))+','+Stamp+'); ';
+        ','+IntToStr(Length(Bytes))+',''filesystem'','+QuotedStr(ImportedAuthor(Entry))+','+
+        ImportedDate(Entry,'createdAt',ImportedDate(Entry,'uploadedAt',Stamp,True),True)+'); ';
       Sql:=Sql+'SELECT CASE WHEN EXISTS(SELECT 1 FROM attachments WHERE id='+QuotedStr(Id)+' AND boardId='+Board+
         ' AND size='+IntToStr(Length(Bytes))+') THEN 1 ELSE json(''Attachment import failed'') END; ';
       if (Card<>nil) and (Text(Card,'coverId')=Text(Entry,'_id')) then

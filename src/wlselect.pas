@@ -634,16 +634,13 @@ begin
             Value:=Row.FindPath('meta.cardId');if Value=nil then Value:=Row.Find('cardId');
             if Value<>nil then Attachment.Add('cardId',Value.Clone);
             Value:=Row.FindPath('meta.source');if Value<>nil then Attachment.Add('source',Value.Clone);
-            if ExcelMetadata then
+            for Key in ['size','uploadedAt','uploadedAtOstrio','createdAt','userId'] do
             begin
-              for Key in ['size','uploadedAt','uploadedAtOstrio','createdAt','userId'] do
-              begin
-                Value:=Row.Find(Key);
-                if (Value=nil) or (Value.JSONType=jtNull) then Value:=Row.FindPath('meta.'+Key);
-                if (Value<>nil) and (Value.JSONType in [jtString,jtNumber]) then Attachment.Add(Key,Value.Clone);
-              end;
-              Remember(Attachment.Find('userId'));
+              Value:=Row.Find(Key);
+              if (Value=nil) or (Value.JSONType=jtNull) then Value:=Row.FindPath('meta.'+Key);
+              if (Value<>nil) and (Value.JSONType in [jtString,jtNumber]) then Attachment.Add(Key,Value.Clone);
             end;
+            Remember(Attachment.Find('userId'));
             Target.Delete(Target.Count-1);Target.Add(Attachment);Row:=Attachment;
           end;
           if Name<>'attachments' then Remember(Row.Find('userId'));
