@@ -242,6 +242,7 @@ password-submit-event.e2e.js: password submit replay reaches the form handler af
 rest-checklist-not-found.e2e.js: missing and existing checklist IDs preserve board access and authentication errors
 rest-integration-update.e2e.js: integration PUT preserves authentication and board-admin requirements
 rest-list-archive.e2e.js: a list is archived and restored by REST, and not by someone without access
+weddy-specs/28-template-list-archive-history.e2e.js
 rest-user-update.e2e.js: user PUT preserves successful updates and hides session secrets
 rest-user-update.e2e.js: user PUT checks authentication and site-admin access before missing-user responses
 rtl-check-mark.e2e.js: a checked checkbox sits on its own square left-to-right and right-to-left

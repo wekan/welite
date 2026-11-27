@@ -25,7 +25,7 @@ const lines = fs.readFileSync(listFile, 'utf8').split('\n')
   });
 const all = choice === 'all';
 const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const listed = all ? ['tests/playwright/specs/**/*.e2e.js'] : [...new Set(lines.map(l => `tests/playwright/specs/${l.file}`))];
+const listed = all ? ['tests/playwright/specs/**/*.e2e.js'] : [...new Set(lines.map(l => l.file.startsWith('weddy-specs/') ? l.file : `tests/playwright/specs/${l.file}`))];
 const grep = all ? undefined : new RegExp(lines.map(l => escape(l.file) + (l.title ? (l.exact ? ' ' + escape(l.title) + '$' : '.*' + escape(l.title)) : '')).join('|'));
 
 module.exports = {
