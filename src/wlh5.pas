@@ -7688,10 +7688,58 @@ begin
   if (Ref = '') or not IssueLoginToken(Db, UserId, LoginToken, Ref, 'api', ApiTokenLifetime(Db)) then LoginToken := '';
 end;
 
+function HistoryGroupLabel(Words: TWLTranslator; const Group: string): string;
+begin
+  case Group of
+    'rules': Result := Words.Text('r-board-rules', 'Rules');
+    'scrum': Result := Words.Text('scrum-settings', 'Scrum');
+    'dates': Result := Words.Text('date', 'Date');
+    'position': Result := Words.Text('sort', 'Sort');
+    'customFields': Result := Words.Text('custom-fields', 'Custom Fields');
+    'dependencies': Result := Words.Text('card-dependencies', 'Dependencies');
+    'title', 'description', 'labels', 'members', 'assignees', 'checklists', 'subtasks', 'attachments', 'comments':
+      Result := Words.Text(Group, Group);
+  else Result := '';
+  end;
+end;
+
+function HistoryDate(Value: TJSONData; const DateFormat: string): string;
+var At: TDateTime;
+begin
+  Result := '';
+  if Value = nil then Exit;
+  if Value.JSONType = jtString then Exit(FormatShownDate(Value.AsString, DateFormat));
+  if Value.JSONType <> jtNumber then Exit;
+  try
+    At := UnixToDateTime(Value.AsInt64 div 1000, True) + (Value.AsInt64 mod 1000) / MSecsPerDay;
+    Result := FormatShownDate(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', At), DateFormat);
+  except
+    Result := '';
+  end;
+end;
+
+function HistoryContentSummary(Values: TJSONObject; const DateFormat: string): string;
+var Value, Document: TJSONData;
+begin
+  Result := '';
+  if Values = nil then Exit;
+  Value := Values.Find('value');
+  if Value <> nil then
+  begin
+    if Value.JSONType = jtNull then Exit('—');
+    if Values.Get('isDate', False) then Exit(HistoryDate(Value, DateFormat));
+    if Value.JSONType = jtString then Exit(Value.AsString);
+    Exit(Value.AsJSON);
+  end;
+  Document := Values.Find('document');
+  if Document is TJSONObject then Values := TJSONObject(Document);
+  Result := Values.Get('title', Values.Get('description', Values.Get('text', Values.Get('name', ''))));
+end;
+
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;
   const BoardId: string; Query: TStrings; out Content: string): Integer;
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
-  Reply: TJSONData; Answer, Route, CardId, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat: string;
+  Reply: TJSONData; Answer, Route, CardId, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel: string;
   I, PageNumber, PageCount, Size: Integer;
   CanRestoreCard, CanRestoreRule, CanRestoreList: Boolean;
   function LinkTo(const Contributor: string; Number: Integer): string;
@@ -7789,13 +7837,12 @@ begin
         Label_ := Row.Get('changeType', '');
         if Label_ = 'added' then Label_ := Words.Text('added', 'Added')
         else Label_ := Words.Text('history-change-' + Label_, Label_);
-        Summary := '';
         Values := nil;
         if Row.Find('newContent') is TJSONObject then Values := Row.Objects['newContent']
         else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
-        if Values <> nil then
-          Summary := Values.Get('value', Values.Get('title', Values.Get('description', Values.Get('name', ''))));
-        When_ := Row.Get('createdAt', '');
+        Summary := HistoryContentSummary(Values, DateFormat);
+        GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
+        When_ := HistoryDate(Row.Find('createdAt'), DateFormat);
         Content := Content + '<tr class="js-history-row" data-id="' + HtmlAttr(Row.Get('_id', '')) +
           '">';
         if CanRestoreCard or CanRestoreRule then
@@ -7810,8 +7857,9 @@ begin
               HtmlAttr(Row.Get('_id', '')) + '" aria-label="' + HtmlAttr(Label_) + '">';
           Content := Content + '</td>';
         end;
-        Content := Content + '<td class="history-change-type">' + E(Label_) + '</td><td class="history-content">' +
-          E(Summary) + '</td><td class="history-when">' + E(FormatShownDate(When_, DateFormat)) +
+        Content := Content + '<td class="history-change-type">' + E(Label_) +
+          IfThen(GroupLabel <> '', ' <span class="history-group quiet">' + E(GroupLabel) + '</span>') +
+          '</td><td class="history-content">' + E(Summary) + '</td><td class="history-when">' + E(When_) +
           '</td></tr>';
       end;
       Content := Content + '</tbody></table></div>';

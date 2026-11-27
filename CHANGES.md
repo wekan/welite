@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- History shows translated change groups, formatted timestamps and date
+  values, and readable numeric, text and document details. Search and
+  contributor controls wrap on narrow screens.
+
 - Restore a deleted list from History together with the cards deleted in
   the same operation. Cards deleted separately stay deleted.
 
