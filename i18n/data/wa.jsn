@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Eriter les etikètes del cåte parint",
   "subtask-mark-done": "Marker l' sos-bouye come fineye",
   "subtask-mark-not-done": "Marker l' sos-bouye come nén fineye",
-  "subtask-done-no-permission": "Vos n' poloz nén candjî si cisse sos-bouye ci est fineye"
+  "subtask-done-no-permission": "Vos n' poloz nén candjî si cisse sos-bouye ci est fineye",
+  "board-view-calendar-mode": "Môde calindrî"
 }

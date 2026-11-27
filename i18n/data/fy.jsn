@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Etiketten fan de âlderkaart erve",
   "subtask-mark-done": "Subtaak as dien markearje",
   "subtask-mark-not-done": "Subtaak as net dien markearje",
-  "subtask-done-no-permission": "Jo kinne net feroarje oft dizze subtaak dien is"
+  "subtask-done-no-permission": "Jo kinne net feroarje oft dizze subtaak dien is",
+  "board-view-calendar-mode": "Kalindermodus"
 }

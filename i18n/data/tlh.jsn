@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "vav 'e' De' rar",
   "subtask-mark-done": "Qu'Hom rInpu' 'e' yIper",
   "subtask-mark-not-done": "Qu'Hom rInbe' 'e' yIper",
-  "subtask-done-no-permission": "Qu'Homvam rInpu''a' 'e' DachoHlaHbe'"
+  "subtask-done-no-permission": "Qu'Homvam rInpu''a' 'e' DachoHlaHbe'",
+  "board-view-calendar-mode": "'ISjaH mIw"
 }

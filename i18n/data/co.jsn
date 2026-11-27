@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Eredità l'etichette di a carta parente",
   "subtask-mark-done": "Marcà u sottucompitu cum'è compiu",
   "subtask-mark-not-done": "Marcà u sottucompitu cum'è micca compiu",
-  "subtask-done-no-permission": "Ùn pudete micca cambià s'è stu sottucompitu hè compiu"
+  "subtask-done-no-permission": "Ùn pudete micca cambià s'è stu sottucompitu hè compiu",
+  "board-view-calendar-mode": "Modu calendariu"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Kisim ol lebol bilong kaad papamama",
   "subtask-mark-done": "Makim liklik wok olsem i pinis",
   "subtask-mark-not-done": "Makim liklik wok olsem i no pinis",
-  "subtask-done-no-permission": "Yu no inap senisim sapos dispela liklik wok i pinis o nogat"
+  "subtask-done-no-permission": "Yu no inap senisim sapos dispela liklik wok i pinis o nogat",
+  "board-view-calendar-mode": "Pasin bilong kalenda"
 }

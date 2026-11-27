@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "آته-کارت یارلیقلرینی میراث قیلیب آلیش",
   "subtask-mark-done": "قویی وظیفه‌نی بجریلدی دېب بیلگیلش",
   "subtask-mark-not-done": "قویی وظیفه‌نی بجریلمه‌دی دېب بیلگیلش",
-  "subtask-done-no-permission": "سیز بو قویی وظیفه بجریلگنلیگینی اۉزگرته آلمیسیز"
+  "subtask-done-no-permission": "سیز بو قویی وظیفه بجریلگنلیگینی اۉزگرته آلمیسیز",
+  "board-view-calendar-mode": "تقویم رژیمی"
 }

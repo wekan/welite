@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Angajoqqaap kaartaata nalunaaqutaanik kinguaassiuutaanik tigummineq",
   "subtask-mark-done": "Suliassaq immikkoortoq naammassisutut nalunaaqutseruk",
   "subtask-mark-not-done": "Suliassaq immikkoortoq naammassinngitsutut nalunaaqutseruk",
-  "subtask-done-no-permission": "Suliassap immikkoortup naammassineranik allanngortitsisinnaanngilatit"
+  "subtask-done-no-permission": "Suliassap immikkoortup naammassineranik allanngortitsisinnaanngilatit",
+  "board-view-calendar-mode": "Ullorsiutitut takutitsineq"
 }

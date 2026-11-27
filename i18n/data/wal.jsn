@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Aawaa kaardiyaa suudaa laattite",
   "subtask-mark-done": "Guutta oosuwaa wurssettidaagaa gidi malaata",
   "subtask-mark-not-done": "Guutta oosuwaa wurssettibeennaagaa gidi malaata",
-  "subtask-done-no-permission": "Ha guutta oosoy wurssettidaakko laammana danddayakka"
+  "subtask-done-no-permission": "Ha guutta oosoy wurssettidaakko laammana danddayakka",
+  "board-view-calendar-mode": "Wodiyaa qoodaa hanotaa"
 }

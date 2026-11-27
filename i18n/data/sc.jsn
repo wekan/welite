@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Eredare is etichetas de sa carta babbu",
   "subtask-mark-done": "Marca sa suta-atividade comente fata",
   "subtask-mark-not-done": "Marca sa suta-atividade comente no fata",
-  "subtask-done-no-permission": "Non podes cambiare si custa suta-atividade est fata"
+  "subtask-done-no-permission": "Non podes cambiare si custa suta-atividade est fata",
+  "board-view-calendar-mode": "Modalidade calendàriu"
 }

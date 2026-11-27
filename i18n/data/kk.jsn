@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Аталық карта белгілерін мұралау",
   "subtask-mark-done": "Ішкі тапсырманы орындалды деп белгілеу",
   "subtask-mark-not-done": "Ішкі тапсырманы орындалмады деп белгілеу",
-  "subtask-done-no-permission": "Бұл ішкі тапсырманың орындалуын өзгерте алмайсыз"
+  "subtask-done-no-permission": "Бұл ішкі тапсырманың орындалуын өзгерте алмайсыз",
+  "board-view-calendar-mode": "Күнтізбе режимі"
 }

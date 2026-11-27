@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Warisi label kertu induk",
   "subtask-mark-done": "Tandhani sub-tugas rampung",
   "subtask-mark-not-done": "Tandhani sub-tugas durung rampung",
-  "subtask-done-no-permission": "Kowe ora bisa ngowahi rampung orane sub-tugas iki"
+  "subtask-done-no-permission": "Kowe ora bisa ngowahi rampung orane sub-tugas iki",
+  "board-view-calendar-mode": "Mode Tanggalan"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "รับช่วงป้ายกำกับของการ์ดหลัก",
   "subtask-mark-done": "ทำเครื่องหมายงานย่อยว่าเสร็จแล้ว",
   "subtask-mark-not-done": "ทำเครื่องหมายงานย่อยว่ายังไม่เสร็จ",
-  "subtask-done-no-permission": "คุณไม่มีสิทธิ์เปลี่ยนสถานะเสร็จแล้วของงานย่อยนี้"
+  "subtask-done-no-permission": "คุณไม่มีสิทธิ์เปลี่ยนสถานะเสร็จแล้วของงานย่อยนี้",
+  "board-view-calendar-mode": "โหมดปฏิทิน"
 }

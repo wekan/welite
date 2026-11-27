@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Xɔ dzila ƒe kaad la ƒe agbalẽdzesiwo",
   "subtask-mark-done": "De dzesi dɔvi la be wowu enu",
   "subtask-mark-not-done": "De dzesi dɔvi la be mewu enu o",
-  "subtask-done-no-permission": "Màte ŋu atrɔ̃ ne wowu dɔvi sia nu alo mewu o"
+  "subtask-done-no-permission": "Màte ŋu atrɔ̃ ne wowu dɔvi sia nu alo mewu o",
+  "board-view-calendar-mode": "Kalenda ƒe mɔ"
 }

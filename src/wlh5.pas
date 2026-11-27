@@ -3644,14 +3644,64 @@ begin
   end;
 end;
 
+function BoardCalendarMode(Db: TWLDb; Words: TWLTranslator; const BoardId, Slug, FilterCond: string): string;
+var Cards: TJSONArray; Item: TJSONObject; Rows: TWLRows; Row: TWLRow; DueAt: TDateTime; NumberFormat: TFormatSettings;
+  function Button(const Classes, Key, Attributes: string): string;
+  begin
+    Result := '<button type="button" class="' + Classes + '"' + Attributes + '>' + E(Words.Text(Key, Key)) + '</button>';
+  end;
+begin
+  NumberFormat := DefaultFormatSettings;
+  NumberFormat.DecimalSeparator := '.';
+  Cards := TJSONArray.Create;
+  try
+    Rows := Db.Query('SELECT c.id,c.title,c.dueAt,COALESCE(l.sort,0),COALESCE(c.sort,0),COALESCE(c.color,''''),' +
+      '(SELECT json_group_array(json_object(''name'',COALESCE(lb.name,''''),''color'',lb.color)) FROM card_labels cl ' +
+      'JOIN board_labels lb ON lb.boardId=c.boardId AND lb.id=cl.labelId WHERE cl.cardId=c.id) FROM cards c ' +
+      'JOIN lists l ON l.id=c.listId AND l.boardId=c.boardId AND l.archived=0 AND l.deletedAt IS NULL ' +
+      'JOIN swimlanes sw ON sw.id=c.swimlaneId AND sw.boardId=c.boardId AND sw.archived=0 WHERE c.boardId=' +
+      QuotedStr(BoardId) + ' AND c.archived=0 AND c.deletedAt IS NULL AND c.dueAt IS NOT NULL' + FilterCond + ';');
+    for Row in Rows do
+      if TryISO8601ToDate(Row[2], DueAt, True) then
+      begin
+        Item := TJSONObject.Create;
+        Cards.Add(Item);
+        Item.Add('_id', Row[0]);
+        Item.Add('title', Row[1]);
+        Item.Add('dueAt', DateToISO8601(DueAt, True));
+        Item.Add('listSort', StrToFloatDef(Row[3], 0, NumberFormat));
+        Item.Add('sort', StrToFloatDef(Row[4], 0, NumberFormat));
+        Item.Add('color', Row[5]);
+        Item.Add('url', CardRoute(BoardId, Slug, Row[0]));
+        Item.Add('labels', GetJSON(Row[6]));
+      end;
+    Result := '<div class="calendar-mode-view js-calendar-mode-view" data-cards="' + HtmlAttr(Cards.AsJSON) +
+      '"><div class="calendar-mode-toolbar"><h2 class="calendar-mode-title"></h2><div class="calendar-mode-buttons">' +
+      Button('js-calendar-mode-today', 'today', '') + Button('js-calendar-mode-prev', 'previous', '') +
+      Button('js-calendar-mode-next', 'next', '') + Button('js-calendar-mode-range', 'week', ' data-range="week"') +
+      Button('js-calendar-mode-range', 'month', ' data-range="month"') +
+      '</div></div><div class="calendar-mode-grid" role="grid"></div></div>';
+  finally Cards.Free; end;
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   RevealId, RevealLane, RevealList, CurrentList, CurrentLane, AssignedCond: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
-  SharedRow, FirstLane, CalendarView: Boolean;
+  SharedRow, FirstLane, CalendarView, CalendarMode: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
+  function ViewLink(const View: string): string;
+  const Keys: array[0..6] of string = ('text', 'labels', 'xlabels', 'labelMode', 'advanced', 'last', 'sort');
+  var Key: string;
+  begin
+    Result := Route + '?view=' + View;
+    if Query <> nil then
+      for Key in Keys do
+        if Query.Values[Key] <> '' then Result := Result + '&' + Key + '=' + HTTPEncode(Query.Values[Key]);
+    Result := HtmlAttr(Result);
+  end;
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
@@ -3705,14 +3755,16 @@ begin
   FilterCond := FilterCond + AssignedCond;
   CardSort := ParseCardSort(Query);
   SortSql := CardSortSql(Db, BoardId, CardSort);
+  CalendarMode := (Query <> nil) and (Query.Values['view'] = 'calendar-mode');
   CalendarView := (Query <> nil) and (Query.Values['view'] = 'calendar');
   Canvas := '';
-  if CalendarView then Canvas := BoardCalendar(Db, Words, BoardId, B[0][2], FilterCond, Writable);
+  if CalendarView then Canvas := BoardCalendar(Db, Words, BoardId, B[0][2], FilterCond, Writable)
+  else if CalendarMode then Canvas := BoardCalendarMode(Db, Words, BoardId, B[0][2], FilterCond);
   SharedRow := BoardSettingFlag(Db, BoardId, 'sharedListHeaders', False);
   FirstLane := True;
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
-  if not CalendarView then
+  if not (CalendarView or CalendarMode) then
   for i := 0 to High(Lanes) do
   begin
     // swimlaneHeader.jade: the caret folds the swimlane, for this user
@@ -4025,10 +4077,13 @@ begin
     '<template class="js-pop-over-template" data-pop="board-view" data-title="' + HtmlAttr(Words.Text('board-view', 'Board View')) +
       '"><div class="header"><span class="header-title">' + E(Words.Text('board-view', 'Board View')) + '</span><a class="close-btn js-close-pop-over" ' +
       'href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list"><li>' +
-      '<a class="js-board-view-entry js-open-swimlanes-view" href="' + HtmlAttr(Route) + '?view=swimlanes"><i class="fa fa-th-large"></i> ' +
-      E(Words.Text('swimlanes', 'Swimlanes')) + IfThen(CalendarView, '', ' <i class="fa fa-check"></i>') + '</a></li><li>' +
-      '<a class="js-board-view-entry js-open-cal-view" href="' + HtmlAttr(Route) + '?view=calendar"><i class="fa fa-calendar"></i> ' +
-      E(Words.Text('calendar', 'Calendar')) + IfThen(CalendarView, ' <i class="fa fa-check"></i>', '') + '</a></li></ul></div></template>' +
+      '<a class="js-board-view-entry js-open-swimlanes-view" href="' + ViewLink('swimlanes') + '"><i class="fa fa-th-large"></i> ' +
+      E(Words.Text('swimlanes', 'Swimlanes')) + IfThen(CalendarView or CalendarMode, '', ' <i class="fa fa-check"></i>') + '</a></li><li>' +
+      '<a class="js-board-view-entry js-open-cal-view" href="' + ViewLink('calendar') + '"><i class="fa fa-calendar"></i> ' +
+      E(Words.Text('board-view-cal', 'Calendar')) + IfThen(CalendarView, ' <i class="fa fa-check"></i>', '') + '</a></li><li>' +
+      '<a class="js-board-view-entry js-open-calendar-mode-view" href="' + ViewLink('calendar-mode') +
+      '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-calendar-mode', 'Calendar Mode')) +
+      IfThen(CalendarMode, ' <i class="fa fa-check"></i>', '') + '</a></li></ul></div></template>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     AnnouncementHtml(Db, Words, S, BoardId) +
     '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas" data-search-reveal="' + HtmlAttr(RevealId) + '">' + Canvas + '</div>' + Details + '</div>';

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Kế thừa nhãn của thẻ cha",
   "subtask-mark-done": "Đánh dấu tác vụ con đã xong",
   "subtask-mark-not-done": "Đánh dấu tác vụ con chưa xong",
-  "subtask-done-no-permission": "Bạn không thể thay đổi trạng thái đã xong của tác vụ con này"
+  "subtask-done-no-permission": "Bạn không thể thay đổi trạng thái đã xong của tác vụ con này",
+  "board-view-calendar-mode": "Chế độ lịch"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Rua dilebele tsa karete ea motsoali",
   "subtask-mark-done": "Tshwaya mosebetsi o monyenyane o phethilwe",
   "subtask-mark-not-done": "Tshwaya mosebetsi o monyenyane o sa phethwa",
-  "subtask-done-no-permission": "O ke ke wa fetola hore na mosebetsi ona o monyenyane o phethilwe"
+  "subtask-done-no-permission": "O ke ke wa fetola hore na mosebetsi ona o monyenyane o phethilwe",
+  "board-view-calendar-mode": "Mokgwa wa khalendara"
 }

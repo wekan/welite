@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Notas cartae parentis hereditare",
   "subtask-mark-done": "Nota opus subiectum ut perfectum",
   "subtask-mark-not-done": "Nota opus subiectum ut imperfectum",
-  "subtask-done-no-permission": "Mutare non potes utrum hoc opus subiectum perfectum sit"
+  "subtask-done-no-permission": "Mutare non potes utrum hoc opus subiectum perfectum sit",
+  "board-view-calendar-mode": "Modus calendarii"
 }

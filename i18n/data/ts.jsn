@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Ndzhaka swifaniso swa khadi ra vatswari",
   "subtask-mark-done": "Fungha xintirhwana tanihi lexi hetiweke",
   "subtask-mark-not-done": "Fungha xintirhwana tanihi lexi nga hetiwangiki",
-  "subtask-done-no-permission": "A wu koti ku cinca loko xintirhwana lexi xi hetiwile"
+  "subtask-done-no-permission": "A wu koti ku cinca loko xintirhwana lexi xi hetiwile",
+  "board-view-calendar-mode": "Xiyimo xa Khalendara"
 }

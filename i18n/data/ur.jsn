@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "پیرنٹ کارڈ کے لیبل وراثت میں حاصل کریں",
   "subtask-mark-done": "ذیلی کام کو مکمل نشان زد کریں",
   "subtask-mark-not-done": "ذیلی کام کو نامکمل نشان زد کریں",
-  "subtask-done-no-permission": "آپ اس ذیلی کام کی تکمیل کی حالت نہیں بدل سکتے"
+  "subtask-done-no-permission": "آپ اس ذیلی کام کی تکمیل کی حالت نہیں بدل سکتے",
+  "board-view-calendar-mode": "تقویم کا انداز"
 }

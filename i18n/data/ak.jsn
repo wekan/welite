@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Gye agya krataa no agyirae",
   "subtask-mark-done": "Hyɛ adwuma ketewa no agyiraeɛ sɛ awie",
   "subtask-mark-not-done": "Hyɛ adwuma ketewa no agyiraeɛ sɛ ɛnwieeɛ",
-  "subtask-done-no-permission": "Wontumi nsesa sɛ adwuma ketewa yi awie anaa ɛnwieeɛ"
+  "subtask-done-no-permission": "Wontumi nsesa sɛ adwuma ketewa yi awie anaa ɛnwieeɛ",
+  "board-view-calendar-mode": "Kalenda kwan"
 }

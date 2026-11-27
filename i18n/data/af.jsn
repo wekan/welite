@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Erf ouerkaart se etikette",
   "subtask-mark-done": "Merk subtaak as voltooi",
   "subtask-mark-not-done": "Merk subtaak as onvoltooid",
-  "subtask-done-no-permission": "Jy kan nie verander of hierdie subtaak voltooi is nie"
+  "subtask-done-no-permission": "Jy kan nie verander of hierdie subtaak voltooi is nie",
+  "board-view-calendar-mode": "Kalendermodus"
 }

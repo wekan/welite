@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Etifeddu labelau'r cerdyn rhiant",
   "subtask-mark-done": "Nodi'r is-dasg fel wedi'i gwneud",
   "subtask-mark-not-done": "Nodi'r is-dasg fel heb ei gwneud",
-  "subtask-done-no-permission": "Ni allwch newid a yw'r is-dasg hon wedi'i gwneud"
+  "subtask-done-no-permission": "Ni allwch newid a yw'r is-dasg hon wedi'i gwneud",
+  "board-view-calendar-mode": "Modd Calendr"
 }

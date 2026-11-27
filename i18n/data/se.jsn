@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Árbe váhnenkoartta mearkkat",
   "subtask-mark-done": "Merke oassebarggu gárvvisin",
   "subtask-mark-not-done": "Merke oassebarggu gárvvekeahttun",
-  "subtask-done-no-permission": "It sáhte rievdadit lea go dát oassebargu gárvvis"
+  "subtask-done-no-permission": "It sáhte rievdadit lea go dát oassebargu gárvvis",
+  "board-view-calendar-mode": "Kaleanddardoaibma"
 }

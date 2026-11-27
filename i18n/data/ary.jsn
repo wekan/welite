@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "وراثة تيكيطات لكارط لي فوق",
   "subtask-mark-done": "علّم المهمة الفرعية بلي مدارة",
   "subtask-mark-not-done": "علّم المهمة الفرعية بلي ما مداراش",
-  "subtask-done-no-permission": "ما تقدرش تبدل واش هاد المهمة الفرعية مدارة"
+  "subtask-done-no-permission": "ما تقدرش تبدل واش هاد المهمة الفرعية مدارة",
+  "board-view-calendar-mode": "وضع اليومية"
 }

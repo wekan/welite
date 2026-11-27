@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "د پلرني کارت لیبلونه میراث یوسئ",
   "subtask-mark-done": "فرعي دنده بشپړه نښه کړئ",
   "subtask-mark-not-done": "فرعي دنده نابشپړه نښه کړئ",
-  "subtask-done-no-permission": "تاسو نشئ بدلولی چې دا فرعي دنده بشپړه ده که نه"
+  "subtask-done-no-permission": "تاسو نشئ بدلولی چې دا فرعي دنده بشپړه ده که نه",
+  "board-view-calendar-mode": "د جنتري حالت"
 }

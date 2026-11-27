@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Heredatu gurasoen txartelaren etiketak",
   "subtask-mark-done": "Markatu azpizeregina eginda",
   "subtask-mark-not-done": "Markatu azpizeregina egin gabe",
-  "subtask-done-no-permission": "Ezin duzu aldatu azpizeregin hau eginda dagoen ala ez"
+  "subtask-done-no-permission": "Ezin duzu aldatu azpizeregin hau eginda dagoen ala ez",
+  "board-view-calendar-mode": "Egutegi modua"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Rarikira utumenyetso tw'ikarita mubyeyi",
   "subtask-mark-done": "Shyira igikorwa gito nk'icyakozwe",
   "subtask-mark-not-done": "Shyira igikorwa gito nk'icyitarakorwa",
-  "subtask-done-no-permission": "Ntushobora guhindura niba iki gikorwa gito cyakozwe"
+  "subtask-done-no-permission": "Ntushobora guhindura niba iki gikorwa gito cyakozwe",
+  "board-view-calendar-mode": "Uburyo bwa Kalendari"
 }

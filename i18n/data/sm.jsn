@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Talia mai fa'ailoga o le kata matua",
   "subtask-mark-done": "Faailoga le galuega laiti ua maea",
   "subtask-mark-not-done": "Faailoga le galuega laiti e lei maea",
-  "subtask-done-no-permission": "E le mafai ona e suia pe ua maea lenei galuega laiti"
+  "subtask-done-no-permission": "E le mafai ona e suia pe ua maea lenei galuega laiti",
+  "board-view-calendar-mode": "Faiga o le Kalena"
 }

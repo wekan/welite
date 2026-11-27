@@ -471,3 +471,5 @@ title-bracket-label-6810.e2e.js
 44-rules.e2e.js: #6489: Rules Workflow view renders the palette and can add a rule
 
 subtask-done-4693.e2e.js
+
+calendar-mode.e2e.js

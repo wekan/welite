@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "親カードのラベルを継承する",
   "subtask-mark-done": "さぶたすくを かんりょうに する",
   "subtask-mark-not-done": "さぶたすくを みかんりょうに する",
-  "subtask-done-no-permission": "この さぶたすくの かんりょうじょうたいを かえる けんげんが ありません"
+  "subtask-done-no-permission": "この さぶたすくの かんりょうじょうたいを かえる けんげんが ありません",
+  "board-view-calendar-mode": "かれんだーもーど"
 }

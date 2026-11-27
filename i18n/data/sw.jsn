@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Rithi lebo za kadi ya mzazi",
   "subtask-mark-done": "Weka kazi ndogo kuwa imekamilika",
   "subtask-mark-not-done": "Weka kazi ndogo kuwa haijakamilika",
-  "subtask-done-no-permission": "Huwezi kubadilisha hali ya kukamilika kwa kazi hii ndogo"
+  "subtask-done-no-permission": "Huwezi kubadilisha hali ya kukamilika kwa kazi hii ndogo",
+  "board-view-calendar-mode": "Hali ya kalenda"
 }

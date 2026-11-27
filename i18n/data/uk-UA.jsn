@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Успадкувати мітки батьківської картки",
   "subtask-mark-done": "Позначити підзавдання як завершене",
   "subtask-mark-not-done": "Позначити підзавдання як незавершене",
-  "subtask-done-no-permission": "Ви не можете змінювати стан завершення цього підзавдання"
+  "subtask-done-no-permission": "Ви не можете змінювати стан завершення цього підзавдання",
+  "board-view-calendar-mode": "Режим календаря"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Naslijedi oznake nadređene kartice",
   "subtask-mark-done": "Označi podzadatak kao završen",
   "subtask-mark-not-done": "Označi podzadatak kao nezavršen",
-  "subtask-done-no-permission": "Ne možete promijeniti je li ovaj podzadatak završen"
+  "subtask-done-no-permission": "Ne možete promijeniti je li ovaj podzadatak završen",
+  "board-view-calendar-mode": "Kalendarski način rada"
 }

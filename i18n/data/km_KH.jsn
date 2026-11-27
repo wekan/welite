@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "ស្នងស្លាកកាតមេ",
   "subtask-mark-done": "សម្គាល់កិច្ចការរងថាបានធ្វើរួច",
   "subtask-mark-not-done": "សម្គាល់កិច្ចការរងថាមិនទាន់ធ្វើរួច",
-  "subtask-done-no-permission": "អ្នកមិនអាចផ្លាស់ប្តូរថាតើកិច្ចការរងនេះបានធ្វើរួចឬអត់ទេ"
+  "subtask-done-no-permission": "អ្នកមិនអាចផ្លាស់ប្តូរថាតើកិច្ចការរងនេះបានធ្វើរួចឬអត់ទេ",
+  "board-view-calendar-mode": "របៀបប្រតិទិន"
 }

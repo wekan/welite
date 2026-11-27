@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Faigh leubailean a' chairt phàrantail mar dhìleab",
   "subtask-mark-done": "Comharraich am fo-ghnìomh mar dheiseil",
   "subtask-mark-not-done": "Comharraich am fo-ghnìomh mar neo-dheiseil",
-  "subtask-done-no-permission": "Chan urrainn dhut atharrachadh a bheil am fo-ghnìomh seo deiseil"
+  "subtask-done-no-permission": "Chan urrainn dhut atharrachadh a bheil am fo-ghnìomh seo deiseil",
+  "board-view-calendar-mode": "Modh mìosachain"
 }

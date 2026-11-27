@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Szülőkártya címkéinek öröklése",
   "subtask-mark-done": "Részfeladat megjelölése befejezettként",
   "subtask-mark-not-done": "Részfeladat megjelölése befejezetlenként",
-  "subtask-done-no-permission": "Nem módosíthatja a részfeladat befejezettségét"
+  "subtask-done-no-permission": "Nem módosíthatja a részfeladat befejezettségét",
+  "board-view-calendar-mode": "Naptárnézet"
 }

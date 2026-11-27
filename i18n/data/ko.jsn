@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "상위 카드의 라벨 상속",
   "subtask-mark-done": "하위 작업을 완료로 표시",
   "subtask-mark-not-done": "하위 작업을 미완료로 표시",
-  "subtask-done-no-permission": "이 하위 작업의 완료 여부를 변경할 수 없습니다"
+  "subtask-done-no-permission": "이 하위 작업의 완료 여부를 변경할 수 없습니다",
+  "board-view-calendar-mode": "달력 모드"
 }

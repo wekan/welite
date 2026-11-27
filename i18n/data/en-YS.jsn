@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Inherit parent's labels",
   "subtask-mark-done": "Mark subtask as done",
   "subtask-mark-not-done": "Mark subtask as not done",
-  "subtask-done-no-permission": "You cannot change whether this subtask is done"
+  "subtask-done-no-permission": "You cannot change whether this subtask is done",
+  "board-view-calendar-mode": "Calendar Mode"
 }

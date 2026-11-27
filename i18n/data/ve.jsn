@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Dzhia dziḽeibuḽu dza khadi ḽa mubebi",
   "subtask-mark-done": "Swaya mushumo muṱuku sa wo fhela",
   "subtask-mark-not-done": "Swaya mushumo muṱuku sa u songo fhela",
-  "subtask-done-no-permission": "A ni koni u shandukisa uri mushumo muṱuku uyu wo fhela kana hai"
+  "subtask-done-no-permission": "A ni koni u shandukisa uri mushumo muṱuku uyu wo fhela kana hai",
+  "board-view-calendar-mode": "Tshiimo tsha Khalenda"
 }

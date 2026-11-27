@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Peri yläkortin tunnisteet",
   "subtask-mark-done": "Merkitse alitehtävä valmiiksi",
   "subtask-mark-not-done": "Merkitse alitehtävä keskeneräiseksi",
-  "subtask-done-no-permission": "Et voi muuttaa tämän alitehtävän valmistumistilaa"
+  "subtask-done-no-permission": "Et voi muuttaa tämän alitehtävän valmistumistilaa",
+  "board-view-calendar-mode": "Kalenteritila"
 }

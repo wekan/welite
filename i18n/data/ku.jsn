@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Etîketên karta dêûbav bimîratîne",
   "subtask-mark-done": "Erka biçûk wekî qediyayî nîşan bide",
   "subtask-mark-not-done": "Erka biçûk wekî neqediyayî nîşan bide",
-  "subtask-done-no-permission": "Tu nikarî biguherînî ka ev erka biçûk qediyaye an na"
+  "subtask-done-no-permission": "Tu nikarî biguherînî ka ev erka biçûk qediyaye an na",
+  "board-view-calendar-mode": "Moda salnameyê"
 }

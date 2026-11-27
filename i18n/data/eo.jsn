@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Heredi la etikedojn de la patra karto",
   "subtask-mark-done": "Marki subtaskon kiel finitan",
   "subtask-mark-not-done": "Marki subtaskon kiel nefinitan",
-  "subtask-done-no-permission": "Vi ne rajtas ŝanĝi ĉu ĉi tiu subtasko estas finita"
+  "subtask-done-no-permission": "Vi ne rajtas ŝanĝi ĉu ĉi tiu subtasko estas finita",
+  "board-view-calendar-mode": "Kalendara reĝimo"
 }

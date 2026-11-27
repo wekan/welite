@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Успадкаваць меткі бацькоўскай карткі",
   "subtask-mark-done": "Пазначыць падзадачу як завершаную",
   "subtask-mark-not-done": "Пазначыць падзадачу як незавершаную",
-  "subtask-done-no-permission": "Вы не можаце змяніць, ці завершана гэтая падзадача"
+  "subtask-done-no-permission": "Вы не можаце змяніць, ці завершана гэтая падзадача",
+  "board-view-calendar-mode": "Рэжым календара"
 }

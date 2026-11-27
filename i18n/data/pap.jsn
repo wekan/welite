@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Herda e etiketanan di e karchi mama",
   "subtask-mark-done": "Marka e subtarea komo kompletá",
   "subtask-mark-not-done": "Marka e subtarea komo no kompletá",
-  "subtask-done-no-permission": "Bo no por kambia si e subtarea aki ta kompletá"
+  "subtask-done-no-permission": "Bo no por kambia si e subtarea aki ta kompletá",
+  "board-view-calendar-mode": "Modo di kalènder"
 }

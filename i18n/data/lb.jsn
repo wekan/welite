@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Elteren-Kaart Etiketten iwwerhuelen",
   "subtask-mark-done": "Ënneraufgab als erleedegt markéieren",
   "subtask-mark-not-done": "Ënneraufgab als net erleedegt markéieren",
-  "subtask-done-no-permission": "Dir kënnt net änneren, ob dës Ënneraufgab erleedegt ass"
+  "subtask-done-no-permission": "Dir kënnt net änneren, ob dës Ënneraufgab erleedegt ass",
+  "board-view-calendar-mode": "Kalennermodus"
 }

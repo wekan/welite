@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Hériter des étiquettes de la carte parente",
   "subtask-mark-done": "Marquer la sous-tâche comme terminée",
   "subtask-mark-not-done": "Marquer la sous-tâche comme non terminée",
-  "subtask-done-no-permission": "Vous ne pouvez pas modifier l’état d’achèvement de cette sous-tâche"
+  "subtask-done-no-permission": "Vous ne pouvez pas modifier l’état d’achèvement de cette sous-tâche",
+  "board-view-calendar-mode": "Mode calendrier"
 }

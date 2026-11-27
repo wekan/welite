@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Panunda an mga etiketa han ginikanan nga kard",
   "subtask-mark-done": "Markahi an subtask nga nahuman",
   "subtask-mark-not-done": "Markahi an subtask nga diri pa nahuman",
-  "subtask-done-no-permission": "Diri nimo mababag-o kon nahuman na ini nga subtask"
+  "subtask-done-no-permission": "Diri nimo mababag-o kon nahuman na ini nga subtask",
+  "board-view-calendar-mode": "Moda han Kalendaryo"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Ôdziedziczyć etyketki nadrzyndnyj kartōw",
   "subtask-mark-done": "Ôznacz podzadanie jako zrobiōne",
   "subtask-mark-not-done": "Ôznacz podzadanie jako niyzrobiōne",
-  "subtask-done-no-permission": "Niy możesz zmiynić, eli to podzadanie je zrobiōne"
+  "subtask-done-no-permission": "Niy możesz zmiynić, eli to podzadanie je zrobiōne",
+  "board-view-calendar-mode": "Tryb kalyndŏrza"
 }

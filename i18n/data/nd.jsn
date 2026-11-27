@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Zuza amabhaji ekhadi labazali",
   "subtask-mark-done": "Phawula umsebenzi omncane njengoqediweyo",
   "subtask-mark-not-done": "Phawula umsebenzi omncane njengongaqediwanga",
-  "subtask-done-no-permission": "Kawungeke utshintshe ukuthi lo msebenzi omncane uqediwe yini"
+  "subtask-done-no-permission": "Kawungeke utshintshe ukuthi lo msebenzi omncane uqediwe yini",
+  "board-view-calendar-mode": "Indlela yekhalenda"
 }

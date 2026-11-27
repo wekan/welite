@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Mantot vecākkartes etiķetes",
   "subtask-mark-done": "Atzīmēt apakšuzdevumu kā pabeigtu",
   "subtask-mark-not-done": "Atzīmēt apakšuzdevumu kā nepabeigtu",
-  "subtask-done-no-permission": "Jūs nevarat mainīt, vai šis apakšuzdevums ir pabeigts"
+  "subtask-done-no-permission": "Jūs nevarat mainīt, vai šis apakšuzdevums ir pabeigts",
+  "board-view-calendar-mode": "Kalendāra režīms"
 }

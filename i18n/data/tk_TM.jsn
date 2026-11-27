@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Ene kartyň bellikerini miras almak",
   "subtask-mark-done": "Kiçi meseläni ýerine ýetirilen diýip belle",
   "subtask-mark-not-done": "Kiçi meseläni ýerine ýetirilmedik diýip belle",
-  "subtask-done-no-permission": "Bu kiçi meseläniň ýerine ýetirilendigini üýtgedip bilmeýärsiňiz"
+  "subtask-done-no-permission": "Bu kiçi meseläniň ýerine ýetirilendigini üýtgedip bilmeýärsiňiz",
+  "board-view-calendar-mode": "Senenama tertibi"
 }

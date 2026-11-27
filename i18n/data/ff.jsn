@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Roonu labeeje kaarti neene baaba",
   "subtask-mark-done": "Maanto gollel ngel no timmungel",
   "subtask-mark-not-done": "Maanto gollel ngel no timmaani",
-  "subtask-done-no-permission": "A waawaa waylude so gollel ngel timmii walla timmaani"
+  "subtask-done-no-permission": "A waawaa waylude so gollel ngel timmii walla timmaani",
+  "board-view-calendar-mode": "Mbaydi haatumeere"
 }

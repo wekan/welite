@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "ⴰⵡⵔⵜ ⵜⵉⵜⵉⴽⵉⵜⵉⵏ ⵏ ⵜⴽⴰⵕⴹⴰ ⵏ ⵢⵉⵎⴰⵡⵍⴰⵏ",
   "subtask-mark-done": "ⵙⵎⴰⵜⵔ ⵜⴰⵡⵓⵔⵉ ⴷⴷⴰⵡ ⵏ ⵜⵡⵓⵔⵉ ⴰⵎ ⵜⵜⵓⵙⵎⴷ",
   "subtask-mark-not-done": "ⵙⵎⴰⵜⵔ ⵜⴰⵡⵓⵔⵉ ⴷⴷⴰⵡ ⵏ ⵜⵡⵓⵔⵉ ⴰⵎ ⵓⵔ ⵜⵜⵓⵙⵎⴷ",
-  "subtask-done-no-permission": "ⵓⵔ ⵜⵣⵎⵔⴷ ⴰⴷ ⵜⵙⵏⴼⵍⴷ ⵎⴰ ⵜⵜⵓⵙⵎⴷ ⵜⵡⵓⵔⵉ ⴷⴷⴰⵡ ⵏ ⵜⵡⵓⵔⵉ ⴰⴷ ⵏⵖ ⵓⵀⵓ"
+  "subtask-done-no-permission": "ⵓⵔ ⵜⵣⵎⵔⴷ ⴰⴷ ⵜⵙⵏⴼⵍⴷ ⵎⴰ ⵜⵜⵓⵙⵎⴷ ⵜⵡⵓⵔⵉ ⴷⴷⴰⵡ ⵏ ⵜⵡⵓⵔⵉ ⴰⴷ ⵏⵖ ⵓⵀⵓ",
+  "board-view-calendar-mode": "ⵜⴰⵍⵖⴰ ⵏ ⵓⵙⵎⵍⵓⵙⵙⴰⵏ"
 }

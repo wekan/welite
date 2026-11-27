@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "親カードのラベルを継承する",
   "subtask-mark-done": "サブタスクを完了にする",
   "subtask-mark-not-done": "サブタスクを未完了にする",
-  "subtask-done-no-permission": "このサブタスクの完了状態を変更する権限がありません"
+  "subtask-done-no-permission": "このサブタスクの完了状態を変更する権限がありません",
+  "board-view-calendar-mode": "カレンダーモード"
 }

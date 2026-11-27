@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Paveldėti tėvinės kortelės žymas",
   "subtask-mark-done": "Pažymėti antrinę užduotį baigta",
   "subtask-mark-not-done": "Pažymėti antrinę užduotį nebaigta",
-  "subtask-done-no-permission": "Negalite keisti šios antrinės užduoties užbaigimo būsenos"
+  "subtask-done-no-permission": "Negalite keisti šios antrinės užduoties užbaigimo būsenos",
+  "board-view-calendar-mode": "Kalendoriaus režimas"
 }

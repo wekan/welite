@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Arv etikettene til overordnet kort",
   "subtask-mark-done": "Marker deloppgave som ferdig",
   "subtask-mark-not-done": "Marker deloppgave som ikke ferdig",
-  "subtask-done-no-permission": "Du kan ikke endre om denne deloppgaven er ferdig"
+  "subtask-done-no-permission": "Du kan ikke endre om denne deloppgaven er ferdig",
+  "board-view-calendar-mode": "Kalendermodus"
 }

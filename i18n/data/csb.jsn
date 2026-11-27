@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Dostac sztiże starszi kôrtë",
   "subtask-mark-done": "Òbznaczë pòdzadanié jakno zrobioné",
   "subtask-mark-not-done": "Òbznaczë pòdzadanié jakno niezrobioné",
-  "subtask-done-no-permission": "Nie mòżesz zmienic, czë to pòdzadanié je zrobioné"
+  "subtask-done-no-permission": "Nie mòżesz zmienic, czë to pòdzadanié je zrobioné",
+  "board-view-calendar-mode": "Trib kalãdarza"
 }

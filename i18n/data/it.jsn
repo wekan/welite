@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Eredita le etichette della scheda principale",
   "subtask-mark-done": "Segna la sottoattività come completata",
   "subtask-mark-not-done": "Segna la sottoattività come non completata",
-  "subtask-done-no-permission": "Non puoi modificare lo stato di completamento di questa sottoattività"
+  "subtask-done-no-permission": "Non puoi modificare lo stato di completamento di questa sottoattività",
+  "board-view-calendar-mode": "Modalità calendario"
 }

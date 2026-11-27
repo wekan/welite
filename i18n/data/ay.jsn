@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Awkin markaparu chhijllaña",
   "subtask-mark-done": "Subtarea tukuyatjam chimpuchaña",
   "subtask-mark-not-done": "Subtarea jan tukuyatjam chimpuchaña",
-  "subtask-done-no-permission": "Janiw aka subtarea tukuyatächi jan ukax janicha uk mayjt'ayksnati"
+  "subtask-done-no-permission": "Janiw aka subtarea tukuyatächi jan ukax janicha uk mayjt'ayksnati",
+  "board-view-calendar-mode": "Pachachimpu uñjaña"
 }

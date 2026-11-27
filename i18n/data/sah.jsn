@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Ийэ картаҕа хос сыттар билигиттэн ылын",
   "subtask-mark-done": "Эбии сорудаҕы бүттэ диэн бэлиэтээ",
   "subtask-mark-not-done": "Эбии сорудаҕы бүппэтэх диэн бэлиэтээ",
-  "subtask-done-no-permission": "Бу эбии сорудах бүппүтүн-бүппэтэҕин уларытар кыаҕыҥ суох"
+  "subtask-done-no-permission": "Бу эбии сорудах бүппүтүн-бүппэтэҕин уларытар кыаҕыҥ суох",
+  "board-view-calendar-mode": "Халандаар режима"
 }

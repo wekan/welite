@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Heritañ liñselioù ar gartenn c'henidik",
   "subtask-mark-done": "Merkañ an is-trevell evel graet",
   "subtask-mark-not-done": "Merkañ an is-trevell evel n'eo ket graet",
-  "subtask-done-no-permission": "Ne c'hallit ket kemmañ hag-eñ eo graet an is-trevell-mañ"
+  "subtask-done-no-permission": "Ne c'hallit ket kemmañ hag-eñ eo graet an is-trevell-mañ",
+  "board-view-calendar-mode": "Mod deiziadur"
 }

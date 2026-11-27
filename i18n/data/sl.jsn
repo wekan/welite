@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Podeduj oznake nadrejene kartice",
   "subtask-mark-done": "Označi podnalogo kot dokončano",
   "subtask-mark-not-done": "Označi podnalogo kot nedokončano",
-  "subtask-done-no-permission": "Ne morete spremeniti, ali je ta podnaloga dokončana"
+  "subtask-done-no-permission": "Ne morete spremeniti, ali je ta podnaloga dokončana",
+  "board-view-calendar-mode": "Koledarski način"
 }

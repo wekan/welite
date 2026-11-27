@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Jäl'gesta vanhemban kartan znamad",
   "subtask-mark-done": "Znamoita alategend tehtud",
   "subtask-mark-not-done": "Znamoita alategend tegematoi",
-  "subtask-done-no-permission": "Et voi vajehtada, om-ik nece alategend tehtud"
+  "subtask-done-no-permission": "Et voi vajehtada, om-ik nece alategend tehtud",
+  "board-view-calendar-mode": "Kalendarin režim"
 }

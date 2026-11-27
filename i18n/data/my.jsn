@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "မိဘကတ်၏ လေဘယ်များကို ဆက်ခံမည်",
   "subtask-mark-done": "လုပ်ငန်းခွဲကို ပြီးပြီဟု မှတ်ရန်",
   "subtask-mark-not-done": "လုပ်ငန်းခွဲကို မပြီးသေးဟု မှတ်ရန်",
-  "subtask-done-no-permission": "ဤလုပ်ငန်းခွဲ ပြီး၊ မပြီးကို သင်ပြောင်း၍ မရပါ"
+  "subtask-done-no-permission": "ဤလုပ်ငန်းခွဲ ပြီး၊ မပြီးကို သင်ပြောင်း၍ မရပါ",
+  "board-view-calendar-mode": "ပြက္ခဒိန် မုဒ်"
 }

@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Yindlala amalebeli ekhadi lomzali",
   "subtask-mark-done": "Phawula umsebenzi ongaphantsi njengogqityiweyo",
   "subtask-mark-not-done": "Phawula umsebenzi ongaphantsi njengongagqitywanga",
-  "subtask-done-no-permission": "Awunako ukutshintsha ukuba lo msebenzi ungaphantsi ugqityiwe na"
+  "subtask-done-no-permission": "Awunako ukutshintsha ukuba lo msebenzi ungaphantsi ugqityiwe na",
+  "board-view-calendar-mode": "Imowudi yekhalenda"
 }

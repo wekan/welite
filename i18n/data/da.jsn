@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Nedarv den overordnede korts etiketter",
   "subtask-mark-done": "Markér underopgave som færdig",
   "subtask-mark-not-done": "Markér underopgave som ikke færdig",
-  "subtask-done-no-permission": "Du kan ikke ændre, om denne underopgave er færdig"
+  "subtask-done-no-permission": "Du kan ikke ændre, om denne underopgave er færdig",
+  "board-view-calendar-mode": "Kalendertilstand"
 }

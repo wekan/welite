@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "ናይ ወላዲ ካርድ ስያመታት ውረስ",
   "subtask-mark-done": "ንኡስ ዕማም ከም ዝተወድአ ምልክት",
   "subtask-mark-not-done": "ንኡስ ዕማም ከም ዘይተወድአ ምልክት",
-  "subtask-done-no-permission": "እዚ ንኡስ ዕማም ተወዲኡ ድዩ ኣይተወድአን ክትቅይር ኣይትኽእልን"
+  "subtask-done-no-permission": "እዚ ንኡስ ዕማም ተወዲኡ ድዩ ኣይተወድአን ክትቅይር ኣይትኽእልን",
+  "board-view-calendar-mode": "ኣገባብ ዓውደ ኣዋርሕ"
 }

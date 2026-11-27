@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "به ارث بردن برچسب‌های کارت والد",
   "subtask-mark-done": "علامت‌گذاری زیر وظیفه به‌عنوان تکمیل‌شده",
   "subtask-mark-not-done": "علامت‌گذاری زیر وظیفه به‌عنوان تکمیل‌نشده",
-  "subtask-done-no-permission": "نمی‌توانید وضعیت تکمیل این زیر وظیفه را تغییر دهید"
+  "subtask-done-no-permission": "نمی‌توانید وضعیت تکمیل این زیر وظیفه را تغییر دهید",
+  "board-view-calendar-mode": "حالت تقویم"
 }

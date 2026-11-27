@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Moștenește etichetele cardului părinte",
   "subtask-mark-done": "Marchează subsarcina ca finalizată",
   "subtask-mark-not-done": "Marchează subsarcina ca nefinalizată",
-  "subtask-done-no-permission": "Nu puteți modifica starea de finalizare a acestei subsarcini"
+  "subtask-done-no-permission": "Nu puteți modifica starea de finalizare a acestei subsarcini",
+  "board-view-calendar-mode": "Mod calendar"
 }

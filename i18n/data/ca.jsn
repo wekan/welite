@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Hereta les etiquetes de la targeta pare",
   "subtask-mark-done": "Marca la subtasca com a completada",
   "subtask-mark-not-done": "Marca la subtasca com a no completada",
-  "subtask-done-no-permission": "No podeu canviar si aquesta subtasca està completada"
+  "subtask-done-no-permission": "No podeu canviar si aquesta subtasca està completada",
+  "board-view-calendar-mode": "Mode de calendari"
 }

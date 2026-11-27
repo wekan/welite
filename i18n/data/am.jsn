@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "የወላጅ ካርድ መለያዎችን ውረስ",
   "subtask-mark-done": "ንዑስ ተግባሩን እንደተጠናቀቀ ምልክት አድርግ",
   "subtask-mark-not-done": "ንዑስ ተግባሩን እንዳልተጠናቀቀ ምልክት አድርግ",
-  "subtask-done-no-permission": "ይህ ንዑስ ተግባር መጠናቀቁን መቀየር አይችሉም"
+  "subtask-done-no-permission": "ይህ ንዑስ ተግባር መጠናቀቁን መቀየር አይችሉም",
+  "board-view-calendar-mode": "የቀን መቁጠሪያ ሁነታ"
 }

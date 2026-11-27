@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "والدين جي ڪارڊ جا ليبل وارثي طور حاصل ڪريو",
   "subtask-mark-done": "ذيلي ڪم مڪمل نشان لڳايو",
   "subtask-mark-not-done": "ذيلي ڪم اڻپورو نشان لڳايو",
-  "subtask-done-no-permission": "توهان بدلائي نٿا سگهو ته هي ذيلي ڪم مڪمل آهي يا نه"
+  "subtask-done-no-permission": "توهان بدلائي نٿا سگهو ته هي ذيلي ڪم مڪمل آهي يا نه",
+  "board-view-calendar-mode": "ڪئلينڊر موڊ"
 }

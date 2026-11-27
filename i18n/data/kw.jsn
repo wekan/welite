@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Erita labennow an gartenn dassek",
   "subtask-mark-done": "Merkya an is-ober avel gwrys",
   "subtask-mark-not-done": "Merkya an is-ober avel anwrys",
-  "subtask-done-no-permission": "Ny yllowgh chanjya mars yw an is-ober ma gwrys po na"
+  "subtask-done-no-permission": "Ny yllowgh chanjya mars yw an is-ober ma gwrys po na",
+  "board-view-calendar-mode": "Modh dydhlyver"
 }

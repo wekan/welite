@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "მშობელი ბარათის ლეიბლების მემკვიდრეობა",
   "subtask-mark-done": "ქვეამოცანის შესრულებულად მონიშვნა",
   "subtask-mark-not-done": "ქვეამოცანის შეუსრულებლად მონიშვნა",
-  "subtask-done-no-permission": "ამ ქვეამოცანის შესრულების მდგომარეობის შეცვლა არ შეგიძლიათ"
+  "subtask-done-no-permission": "ამ ქვეამოცანის შესრულების მდგომარეობის შეცვლა არ შეგიძლიათ",
+  "board-view-calendar-mode": "კალენდრის რეჟიმი"
 }

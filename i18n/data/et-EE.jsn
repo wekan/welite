@@ -2321,5 +2321,6 @@
   "subtask-inherit-parent-labels": "Pärandada vanemkaardi sildid",
   "subtask-mark-done": "Märgi alaülesanne lõpetatuks",
   "subtask-mark-not-done": "Märgi alaülesanne lõpetamata olekusse",
-  "subtask-done-no-permission": "Sa ei saa muuta selle alaülesande lõpetatuse olekut"
+  "subtask-done-no-permission": "Sa ei saa muuta selle alaülesande lõpetatuse olekut",
+  "board-view-calendar-mode": "Kalendrirežiim"
 }
