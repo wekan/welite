@@ -1034,6 +1034,12 @@ def http_checks(server, tmp, backend):
         assert status == 200 and b'attachment-name">new &amp; name.png<' in page
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s?download=true' % att, cookie=owner)
         assert status == 200 and body == png and 'new & name.png' in unquote(headers['Content-Disposition'])
+        status, _, page, _ = upload('notes.txt', 'text/plain', 'Indexed résumé quartz'.encode(), owner)
+        assert status == 200
+        text_id, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - {att.encode()}
+        assert [match['id'] for match in search_cards('résumé quartz')[1]] == [card_id]
+        assert request('POST', '%s/attachments/%s/delete' % (card_path, text_id.decode()), {}, cookie=owner)[0] == 200
+        assert search_cards('résumé quartz') == (200, [])
         status, _, page, _ = upload('page.html', 'text/html', b'<script>alert(1)</script>', owner)
         html_att = [a for a in re.findall(rb'data-attachment="([^"]+)"', page) if a.decode() != att][0].decode()
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s' % html_att, cookie=owner)

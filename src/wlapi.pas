@@ -7778,7 +7778,8 @@ end;
 
 function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType:string; Content:TStream;
   out Id:string;RequireLiveCard:Boolean):Boolean;
-var Path,Sql,Guard:string;Policy:TFieldPolicy;OwnsPath:Boolean;FileSize:Int64;Destination:TFileStream;
+var Path,Sql,Guard,TextMime,SearchText:string;Policy:TFieldPolicy;OwnsPath:Boolean;FileSize:Int64;Destination:TFileStream;
+  Preview:TJSONObject;Separator:Integer;Stamp:TDateTime;
 begin
   Id:=NewId;
   Path:=StoreFilePath(T.FilesDir,'attachme',Id);
@@ -7803,6 +7804,30 @@ begin
      QuotedStr(FileName),QuotedStr(FileType),FileSize,QuotedStr(UserId),QuotedStr(NowIso)]);
   OwnsPath:=False;
   try
+    TextMime:=LowerCase(Trim(FileType));
+    Separator:=Pos(';',TextMime);
+    if Separator>0 then TextMime:=Trim(Copy(TextMime,1,Separator-1));
+    if (Crd<>'') and (TextMime='text/plain') and (FileSize>0) and (FileSize<=65536) then
+    begin
+      SetLength(SearchText,FileSize);
+      Content.Position:=0;
+      Content.ReadBuffer(SearchText[1],Length(SearchText));
+      if (Pos(#0,SearchText)=0) and (UTF8Encode(UTF8Decode(SearchText))=SearchText) then
+      begin
+        if IsShared(T.Db) then
+        begin
+          Stamp:=LocalTimeToUniversal(Now);
+          Preview:=TJSONObject.Create(['_id',NewId,'attachmentId',Id,'boardId',BoardId,'cardId',Crd,
+            'searchText',SearchText,'generatedAt',DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp)]);
+          try Sql:=Sql+InsertDocSql(T.Db,'documentPreviews',Preview,'{"generatedAt":"date"}');
+          finally Preview.Free;end;
+        end
+        else
+          Sql:=Sql+'CREATE TABLE IF NOT EXISTS attachment_search_text (attachmentId TEXT PRIMARY KEY '+
+            'REFERENCES attachments(id) ON DELETE CASCADE, searchText TEXT NOT NULL); '+
+            'INSERT INTO attachment_search_text(attachmentId,searchText) VALUES('+QuotedStr(Id)+','+QuotedStr(SearchText)+'); ';
+      end;
+    end;
     if FileExists(Path) then raise EInOutError.Create('Attachment path already exists');
     if not ForceDirectories(ExtractFileDir(Path)) then raise EInOutError.Create('Attachment directory unavailable');
     OwnsPath:=True;

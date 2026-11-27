@@ -23,6 +23,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Match text already indexed by WeKan for live attachments in a shared
   store. Board Search and the text filter check that each index entry still
   belongs to an attachment on the matching card and board.
+- Index UTF-8 plain-text card attachments up to 64 KiB on upload. The
+  attachment and its search entry are registered together. Shared stores
+  write WeKan's document preview collection, and native stores keep a local
+  index.
 
 ## HTML5 minicards
 

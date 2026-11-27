@@ -2418,7 +2418,15 @@ var Raw, Tbl: string;
   end;
 begin
   Result := '';
-  if (Needle = '') or not CollectionTable(Db, 'documentPreviews', Raw, Tbl) then Exit;
+  if Needle = '' then Exit;
+  if not IsShared(Db) then
+  begin
+    if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE type=''table'' AND name=''attachment_search_text'';')) = 1 then
+      Result := ' OR EXISTS(SELECT 1 FROM attachment_search_text p JOIN attachments ON attachments.id=p.attachmentId ' +
+        'WHERE attachments.cardId=c.id AND attachments.boardId=c.boardId AND instr(lower(p.searchText),lower(' + Q(Needle) + '))>0)';
+    Exit;
+  end;
+  if not CollectionTable(Db, 'documentPreviews', Raw, Tbl) then Exit;
   Result := ' OR EXISTS(SELECT 1 FROM ' + Tbl + ' p JOIN attachments ON attachments.id=' + Field('attachmentId') +
     ' AND attachments.cardId=c.id AND attachments.boardId=c.boardId WHERE ' + Field('cardId') + '=c.id AND ' +
     Field('boardId') + '=c.boardId AND ' + Field('"$s".p.attachmentId.t') + '=''string'' AND ' +
