@@ -2991,7 +2991,7 @@ type
   TMinicardShows = record
     Labels, Members, Assignees, Comments, Complete, ChecklistCount: Boolean;
     // Card Settings' minicard sides (wlcardst's table, each with its default).
-    RequestedBy, Location, LastActivity, DescriptionBadge, CardColor: Boolean;
+    RequestedBy, Location, LastActivity, DescriptionBadge, DescriptionText, DescriptionTitle, CardColor: Boolean;
     Dates: array[0..3] of Boolean;
     SetDates: Boolean;
   end;
@@ -3039,6 +3039,8 @@ begin
   Result.Location := BoardSettingFlag(Db, BoardId, 'allowsLocationOnMinicard', False);
   Result.LastActivity := BoardSettingFlag(Db, BoardId, 'allowsActivitiesOnMinicard', False);
   Result.DescriptionBadge := BoardSettingFlag(Db, BoardId, 'allowsDescriptionBadgeOnMinicard', True);
+  Result.DescriptionText := BoardSettingFlag(Db, BoardId, 'allowsDescriptionTextOnMinicard', False);
+  Result.DescriptionTitle := BoardSettingFlag(Db, BoardId, 'allowsDescriptionTitleOnMinicard', True);
   Result.CardColor := BoardSettingFlag(Db, BoardId, 'allowsCardColorOnMinicard', True);
   for i := 0 to 3 do
     Result.Dates[i] := BoardAllows(Db, BoardId, Settings[i]) and
@@ -3077,10 +3079,9 @@ begin
   for i := 1 to Length(Color) do if not (Color[i] in ['a'..'z']) then Exit(False);
 end;
 
-// A card's places: the names of its locations (WeKan's locations), else the
-// one location WeLite keeps (locationName).
+// A card's places: use each name or address, then the legacy single location.
 function LocationNames(const Json, Single: string): TStringArray;
-var D: TJSONData; i: Integer;
+var D: TJSONData; i: Integer; Location: TJSONObject; Caption: string;
 begin
   Result := nil;
   D := nil;
@@ -3092,10 +3093,14 @@ begin
     end;
     if D is TJSONArray then
       for i := 0 to TJSONArray(D).Count - 1 do
-        if (TJSONArray(D).Items[i] is TJSONObject) and (TJSONObject(TJSONArray(D).Items[i]).Get('name', '') <> '') then
+        if TJSONArray(D).Items[i] is TJSONObject then
         begin
+          Location := TJSONObject(TJSONArray(D).Items[i]);
+          Caption := Location.Get('name', '');
+          if Caption = '' then Caption := Location.Get('address', '');
+          if Caption = '' then Continue;
           SetLength(Result, Length(Result) + 1);
-          Result[High(Result)] := TJSONObject(TJSONArray(D).Items[i]).Get('name', '');
+          Result[High(Result)] := Caption;
         end;
   finally
     D.Free;
@@ -3108,7 +3113,7 @@ begin
 end;
 
 function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Shows: TMinicardShows;
-  const Dates: array of string; const Extra: array of string): string;
+  const Dates: array of string; const Extra: array of string; PlainLinks, PlainSource: Boolean): string;
 const
   Kinds: array[0..3] of string = ('received', 'start', 'due', 'end');
   Icons: array[0..3] of string = ('fa-sign-out', 'fa-hourglass-start', 'fa-clock-o', 'fa-hourglass-end');
@@ -3227,9 +3232,17 @@ begin
       Result := Result + '<div class="minicard-last-activity" title="' + HtmlAttr(Words.Text('activities', 'Activities')) +
         '"><i class="fa fa-history"></i>' + E(FormatShownDate(R[0][2], ViewDateFormat)) + '</div>';
     Piece('activities');
-    if Shows.DescriptionBadge and (Trim(R[0][1]) <> '') then
-      Result := Result + '<div class="badge badge-state-image-only" title="' + HtmlAttr(R[0][1]) +
-        '"><span class="badge-icon"><i class="fa fa-file-text-o"></i></span></div>';
+    if Trim(R[0][1]) <> '' then
+      if Shows.DescriptionText then
+      begin
+        if Shows.DescriptionTitle then
+          Result := Result + '<div class="minicard-description-title"><i class="fa fa-file-text-o"></i> ' +
+            E(Words.Text('description', 'Description')) + '</div>';
+        Result := Result + '<div class="minicard-description">' + MarkdownViewer(R[0][1], PlainLinks, PlainSource) + '</div>';
+      end
+      else if Shows.DescriptionBadge then
+        Result := Result + '<div class="badge badge-state-image-only" title="' + HtmlAttr(R[0][1]) +
+          '"><span class="badge-icon"><i class="fa fa-file-text-o"></i></span></div>';
     Piece('descriptionBadge');
   end;
   // Its newest three comments, each cut at 140 characters, each on a line
@@ -3600,7 +3613,8 @@ begin
         // LiveAttachmentSQL names the table attachments, unaliased.
         LiveAttachmentSQL(Db) + '),''''),COALESCE(c.dueComplete,0),COALESCE(c.color,''''),' +
         // The minicard's Card Settings sides (MinicardBadges' Extra).
-        'COALESCE(c.requestedBy,''''),COALESCE(c.description,''''),COALESCE(c.dateLastActivity,''''),COALESCE(c.locationName,''''),' +
+        'COALESCE(c.requestedBy,''''),COALESCE(c.description,''''),COALESCE(c.dateLastActivity,''''),' +
+        'COALESCE(NULLIF(c.locationName,''''),c.locationAddress,''''),' +
         'CASE WHEN json_valid(c.extra_json) AND json_type(c.extra_json,''$.locations'')=''array'' THEN ' +
         'json_extract(c.extra_json,''$.locations'') ELSE ''[]'' END FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
@@ -3623,7 +3637,7 @@ begin
           '<span class="minicard-title-text">' +
           MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]],
-          [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14]]) + '</div></div>';
+          [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14]], PlainLinks, PlainSource) + '</div></div>';
       Canvas := Canvas + '</div>';
       if Writable then
         Canvas := Canvas + '<template class="js-card-composer-template">' +

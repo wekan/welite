@@ -512,6 +512,26 @@ def http_checks(server, tmp, backend):
         page = shown()
         assert b'minicard-green' not in page and b'card-details-green' in opened() and b'minicard-requested-by' not in page
         assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsCardColorOnMinicard': True, 'allowsRequestedByOnMinicard': True}}])[0] == 200
+        card_set(description='**Minicard preview**', locationAddress='Fallback & address', dateLastActivity='2026-03-21T12:00:00.000Z')
+        page = shown()
+        assert b'badge-state-image-only" title="**Minicard preview**"' in page
+        assert b'class="minicard-location"' not in page and b'class="minicard-last-activity"' not in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {
+            'allowsDescriptionTextOnMinicard': True, 'allowsLocationOnMinicard': True,
+            'allowsActivitiesOnMinicard': True}}])[0] == 200
+        page = shown()
+        assert b'class="minicard-description-title"' in page and b'<strong>Minicard preview</strong>' in page
+        assert b'badge-state-image-only" title="**Minicard preview**"' not in page
+        assert b'Fallback &amp; address' in page and b'fa fa-history"></i>2026-03-21 12:00' in page
+        card_set(extra_json=json.dumps({'locations': [{'address': 'Current & address'}]}))
+        page = shown()
+        assert b'Current &amp; address' in page and b'Fallback &amp; address' not in page
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {'allowsDescriptionTitleOnMinicard': False}}])[0] == 200
+        assert b'class="minicard-description-title"' not in shown() and b'<strong>Minicard preview</strong>' in shown()
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {
+            'allowsDescriptionTitleOnMinicard': True, 'allowsDescriptionTextOnMinicard': False,
+            'allowsLocationOnMinicard': False, 'allowsActivitiesOnMinicard': False}}])[0] == 200
+        card_set(description='The card <b>text</b>', locationAddress=None, extra_json='{}')
         card_set(color=None, requestedBy='')
         assert b'js-card-collapse-toggle' in opened()
         assert method('setCardCollapsed', [True])[0] == 200 and b'card-details-collapsed' in opened()

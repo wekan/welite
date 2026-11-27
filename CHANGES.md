@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 minicards
 
+- Show the Markdown description preview with an optional heading when the
+  board enables description text. Otherwise the description badge follows
+  its own setting. Locations use their name or address, with a fallback to
+  the legacy location. HTTP checks cover these modes, the free-text requester
+  and the last-activity timestamp.
 - Show the optional finished/total checklist item badge in the board's
   configured minicard section order. An empty checklist shows `0/0`, and a
   nonempty set of fully checked items gets the finished style. The badge is
