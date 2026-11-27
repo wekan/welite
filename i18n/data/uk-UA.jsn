@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (кілька)",
   "operator-number": "номер",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картки, номер яких *<number>*",
-  "subtask-inherit-parent-labels": "Успадкувати мітки батьківської картки"
+  "subtask-inherit-parent-labels": "Успадкувати мітки батьківської картки",
+  "subtask-mark-done": "Позначити підзавдання як завершене",
+  "subtask-mark-not-done": "Позначити підзавдання як незавершене",
+  "subtask-done-no-permission": "Ви не можете змінювати стан завершення цього підзавдання"
 }

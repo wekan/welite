@@ -2318,5 +2318,8 @@
   "many-items": "__items__ mödik",
   "operator-number": "nüm",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kads kels labons numi kadik *<number>*",
-  "subtask-inherit-parent-labels": "Gerön lätilis kada palik"
+  "subtask-inherit-parent-labels": "Gerön lätilis kada palik",
+  "subtask-mark-done": "Mäkön donabligädi as pedunöl",
+  "subtask-mark-not-done": "Mäkön donabligädi as no pedunöl",
+  "subtask-done-no-permission": "No kanol votükön, va donabligäd at pedunon"
 }

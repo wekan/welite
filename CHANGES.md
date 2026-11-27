@@ -6,6 +6,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Mark subtasks done or undone on the parent card. The section reports the
+  completed and total counts and shows the state read-only to viewers.
 - Add and open subtasks from the card's Subtasks section. The title editor
   follows the member's Submit on Enter setting in both modes. Optionally
   copy the parent's current labels when creating a subtask.

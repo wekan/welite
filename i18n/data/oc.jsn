@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (mantuns)",
   "operator-number": "numèro",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartas que lor numèro de carta es *<number>*",
-  "subtask-inherit-parent-labels": "Eiretar las etiquetas de la carta parenta"
+  "subtask-inherit-parent-labels": "Eiretar las etiquetas de la carta parenta",
+  "subtask-mark-done": "Marcar la jos-tasca coma acabada",
+  "subtask-mark-not-done": "Marcar la jos-tasca coma pas acabada",
+  "subtask-done-no-permission": "Podètz pas cambiar se aquesta jos-tasca es acabada"
 }

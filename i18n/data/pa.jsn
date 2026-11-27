@@ -2318,5 +2318,8 @@
   "many-items": "ਕਈ __items__",
   "operator-number": "ਨੰਬਰ",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ਉਹ ਕਾਰਡ ਜਿਨ੍ਹਾਂ ਦਾ ਕਾਰਡ ਨੰਬਰ *<number>* ਹੈ",
-  "subtask-inherit-parent-labels": "ਪੇਰੈਂਟ ਕਾਰਡ ਦੇ ਲੇਬਲ ਵਿਰਾਸਤ ਵਿੱਚ ਲਵੋ"
+  "subtask-inherit-parent-labels": "ਪੇਰੈਂਟ ਕਾਰਡ ਦੇ ਲੇਬਲ ਵਿਰਾਸਤ ਵਿੱਚ ਲਵੋ",
+  "subtask-mark-done": "ਉਪ-ਕਾਰਜ ਨੂੰ ਮੁਕੰਮਲ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ",
+  "subtask-mark-not-done": "ਉਪ-ਕਾਰਜ ਨੂੰ ਅਧੂਰੇ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ",
+  "subtask-done-no-permission": "ਤੁਸੀਂ ਇਹ ਨਹੀਂ ਬਦਲ ਸਕਦੇ ਕਿ ਇਹ ਉਪ-ਕਾਰਜ ਮੁਕੰਮਲ ਹੈ ਜਾਂ ਨਹੀਂ"
 }

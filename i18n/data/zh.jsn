@@ -2318,5 +2318,8 @@
   "many-items": "多个__items__",
   "operator-number": "编号",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片编号为 *<number>* 的卡片",
-  "subtask-inherit-parent-labels": "继承父卡片的标签"
+  "subtask-inherit-parent-labels": "继承父卡片的标签",
+  "subtask-mark-done": "将子任务标记为已完成",
+  "subtask-mark-not-done": "将子任务标记为未完成",
+  "subtask-done-no-permission": "你无权更改此子任务的完成状态"
 }

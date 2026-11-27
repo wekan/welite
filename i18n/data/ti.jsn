@@ -2318,5 +2318,8 @@
   "many-items": "ብዙሓት __items__",
   "operator-number": "ቁጽሪ",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ቁጽሪ ካርደን *<number>* ዝኾነ ካርድታት",
-  "subtask-inherit-parent-labels": "ናይ ወላዲ ካርድ ስያመታት ውረስ"
+  "subtask-inherit-parent-labels": "ናይ ወላዲ ካርድ ስያመታት ውረስ",
+  "subtask-mark-done": "ንኡስ ዕማም ከም ዝተወድአ ምልክት",
+  "subtask-mark-not-done": "ንኡስ ዕማም ከም ዘይተወድአ ምልክት",
+  "subtask-done-no-permission": "እዚ ንኡስ ዕማም ተወዲኡ ድዩ ኣይተወድአን ክትቅይር ኣይትኽእልን"
 }

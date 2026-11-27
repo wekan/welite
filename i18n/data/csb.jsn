@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (wiele)",
   "operator-number": "lëczba",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kôrtë z numerã *<number>*",
-  "subtask-inherit-parent-labels": "Dostac sztiże starszi kôrtë"
+  "subtask-inherit-parent-labels": "Dostac sztiże starszi kôrtë",
+  "subtask-mark-done": "Òbznaczë pòdzadanié jakno zrobioné",
+  "subtask-mark-not-done": "Òbznaczë pòdzadanié jakno niezrobioné",
+  "subtask-done-no-permission": "Nie mòżesz zmienic, czë to pòdzadanié je zrobioné"
 }

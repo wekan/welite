@@ -2318,5 +2318,8 @@
   "many-items": "Meardere __items__",
   "operator-number": "nûmer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarten mei kaartnûmer *<number>*",
-  "subtask-inherit-parent-labels": "Etiketten fan de âlderkaart erve"
+  "subtask-inherit-parent-labels": "Etiketten fan de âlderkaart erve",
+  "subtask-mark-done": "Subtaak as dien markearje",
+  "subtask-mark-not-done": "Subtaak as net dien markearje",
+  "subtask-done-no-permission": "Jo kinne net feroarje oft dizze subtaak dien is"
 }

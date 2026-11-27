@@ -2318,5 +2318,8 @@
   "many-items": "__items__ badan",
   "operator-number": "tiro",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaararka lambarkooda kaarku yahay *<number>*",
-  "subtask-inherit-parent-labels": "Dhaxal siabooyinka kaadhka waalidka"
+  "subtask-inherit-parent-labels": "Dhaxal siabooyinka kaadhka waalidka",
+  "subtask-mark-done": "U calaamadee hawsha hoose la qabtay",
+  "subtask-mark-not-done": "U calaamadee hawsha hoose aan la qaban",
+  "subtask-done-no-permission": "Ma beddeli kartid in hawshan hoose la qabtay iyo in kale"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "Ma multi __items__",
   "operator-number": "numir",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carduri al cãror numãr este *<number>*",
-  "subtask-inherit-parent-labels": "Lja etichetili a cartãljei pãrinti"
+  "subtask-inherit-parent-labels": "Lja etichetili a cartãljei pãrinti",
+  "subtask-mark-done": "Semnu sub-lucrul ca bitisit",
+  "subtask-mark-not-done": "Semnu sub-lucrul ca nibitisit",
+  "subtask-done-no-permission": "Nu pots s-alãxeshti macã aestu sub-lucru easti bitisit i nu"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "واریاہ __items__",
   "operator-number": "نمبر",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - تِم کارڈ یِمن ہُنٛد کارڈ نمبر *<number>* چھُ",
-  "subtask-inherit-parent-labels": "پرینٹ کارڈ ہند لیبل وراثتہ منٛز حٲصل کریو"
+  "subtask-inherit-parent-labels": "پرینٹ کارڈ ہند لیبل وراثتہ منٛز حٲصل کریو",
+  "subtask-mark-done": "ذیلی کام مکمل نشان کریو",
+  "subtask-mark-not-done": "ذیلی کام نامکمل نشان کریو",
+  "subtask-done-no-permission": "تُہۍ ہؠکو نہٕ بدلٲوِتھ زِ یہ ذیلی کام مکمل چھا"
 }

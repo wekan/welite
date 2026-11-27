@@ -2318,5 +2318,8 @@
   "many-items": "Bir neçə __items__",
   "operator-number": "nömrə",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kart nömrəsi *<number>* olan kartlar",
-  "subtask-inherit-parent-labels": "Ana kartın etiketlərini miras al"
+  "subtask-inherit-parent-labels": "Ana kartın etiketlərini miras al",
+  "subtask-mark-done": "Alt tapşırığı tamamlanmış kimi işarələyin",
+  "subtask-mark-not-done": "Alt tapşırığı tamamlanmamış kimi işarələyin",
+  "subtask-done-no-permission": "Bu alt tapşırığın tamamlanma vəziyyətini dəyişə bilməzsiniz"
 }

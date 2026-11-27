@@ -2318,5 +2318,8 @@
   "many-items": "__items__ caman",
   "operator-number": "nimɔrɔ",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karata minnu ka karata nimɔrɔ ye *<number>*",
-  "subtask-inherit-parent-labels": "Ka fatiya karti mumɛ ka tagabiw ta"
+  "subtask-inherit-parent-labels": "Ka fatiya karti mumɛ ka tagabiw ta",
+  "subtask-mark-done": "Baara fitini taamasiyɛn ko a banna",
+  "subtask-mark-not-done": "Baara fitini taamasiyɛn ko a ma ban",
+  "subtask-done-no-permission": "I tɛ se ka nin baara fitini banni yɛlɛma"
 }

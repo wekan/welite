@@ -2318,5 +2318,8 @@
   "many-items": "Hainbat __items__",
   "operator-number": "zenbakia",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - txartel-zenbakia *<number>* duten txartelak",
-  "subtask-inherit-parent-labels": "Heredatu gurasoen txartelaren etiketak"
+  "subtask-inherit-parent-labels": "Heredatu gurasoen txartelaren etiketak",
+  "subtask-mark-done": "Markatu azpizeregina eginda",
+  "subtask-mark-not-done": "Markatu azpizeregina egin gabe",
+  "subtask-done-no-permission": "Ezin duzu aldatu azpizeregin hau eginda dagoen ala ez"
 }

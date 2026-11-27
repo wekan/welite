@@ -2318,5 +2318,8 @@
   "many-items": "__items__ law'",
   "operator-number": "mI'",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 'echletHommey mI' *<number>*",
-  "subtask-inherit-parent-labels": "vav 'e' De' rar"
+  "subtask-inherit-parent-labels": "vav 'e' De' rar",
+  "subtask-mark-done": "Qu'Hom rInpu' 'e' yIper",
+  "subtask-mark-not-done": "Qu'Hom rInbe' 'e' yIper",
+  "subtask-done-no-permission": "Qu'Homvam rInpu''a' 'e' DachoHlaHbe'"
 }

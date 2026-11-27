@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (parechji)",
   "operator-number": "numeru",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte chì anu u numeru di carta *<number>*",
-  "subtask-inherit-parent-labels": "Eredità l'etichette di a carta parente"
+  "subtask-inherit-parent-labels": "Eredità l'etichette di a carta parente",
+  "subtask-mark-done": "Marcà u sottucompitu cum'è compiu",
+  "subtask-mark-not-done": "Marcà u sottucompitu cum'è micca compiu",
+  "subtask-done-no-permission": "Ùn pudete micca cambià s'è stu sottucompitu hè compiu"
 }

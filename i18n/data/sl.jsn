@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (več)",
   "operator-number": "številka",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartice, katerih številka je *<number>*",
-  "subtask-inherit-parent-labels": "Podeduj oznake nadrejene kartice"
+  "subtask-inherit-parent-labels": "Podeduj oznake nadrejene kartice",
+  "subtask-mark-done": "Označi podnalogo kot dokončano",
+  "subtask-mark-not-done": "Označi podnalogo kot nedokončano",
+  "subtask-done-no-permission": "Ne morete spremeniti, ali je ta podnaloga dokončana"
 }

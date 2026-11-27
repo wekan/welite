@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (lokunyenti)",
   "operator-number": "inombolo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - emakhadi lanenombolo yelikhadi lengu-*<number>*",
-  "subtask-inherit-parent-labels": "Todlana emalebula ekhadi lomtali"
+  "subtask-inherit-parent-labels": "Todlana emalebula ekhadi lomtali",
+  "subtask-mark-done": "Beka umsebenti lomncane njengalophelile",
+  "subtask-mark-not-done": "Beka umsebenti lomncane njengalongakapheli",
+  "subtask-done-no-permission": "Awukhoni kushintja kutsi lomsebenti lomncane uphelile yini"
 }

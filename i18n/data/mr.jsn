@@ -2318,5 +2318,8 @@
   "many-items": "अनेक __items__",
   "operator-number": "संख्या",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड क्रमांक *<number>* असलेली कार्डे",
-  "subtask-inherit-parent-labels": "पालक कार्डाचे लेबल वारसा हक्काने मिळवा"
+  "subtask-inherit-parent-labels": "पालक कार्डाचे लेबल वारसा हक्काने मिळवा",
+  "subtask-mark-done": "उपकार्य पूर्ण म्हणून चिन्हांकित करा",
+  "subtask-mark-not-done": "उपकार्य अपूर्ण म्हणून चिन्हांकित करा",
+  "subtask-done-no-permission": "हे उपकार्य पूर्ण आहे की नाही हे तुम्ही बदलू शकत नाही"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "ብዙ __items__",
   "operator-number": "ቁጥር",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - የካርድ ቁጥራቸው *<number>* የሆኑ ካርዶች",
-  "subtask-inherit-parent-labels": "የወላጅ ካርድ መለያዎችን ውረስ"
+  "subtask-inherit-parent-labels": "የወላጅ ካርድ መለያዎችን ውረስ",
+  "subtask-mark-done": "ንዑስ ተግባሩን እንደተጠናቀቀ ምልክት አድርግ",
+  "subtask-mark-not-done": "ንዑስ ተግባሩን እንዳልተጠናቀቀ ምልክት አድርግ",
+  "subtask-done-no-permission": "ይህ ንዑስ ተግባር መጠናቀቁን መቀየር አይችሉም"
 }

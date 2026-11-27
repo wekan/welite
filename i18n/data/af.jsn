@@ -2318,5 +2318,8 @@
   "many-items": "Veelvuldige __items__",
   "operator-number": "nommer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarte waarvan die kaartnommer *<number>* is",
-  "subtask-inherit-parent-labels": "Erf ouerkaart se etikette"
+  "subtask-inherit-parent-labels": "Erf ouerkaart se etikette",
+  "subtask-mark-done": "Merk subtaak as voltooi",
+  "subtask-mark-not-done": "Merk subtaak as onvoltooid",
+  "subtask-done-no-permission": "Jy kan nie verander of hierdie subtaak voltooi is nie"
 }

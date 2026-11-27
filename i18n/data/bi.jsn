@@ -2318,5 +2318,8 @@
   "many-items": "Plante __items__",
   "operator-number": "namba",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kad whose kad number i *<number>*",
-  "subtask-inherit-parent-labels": "Tekem ol mak blong stamba kad"
+  "subtask-inherit-parent-labels": "Tekem ol mak blong stamba kad",
+  "subtask-mark-done": "Makem smol wok se i finis",
+  "subtask-mark-not-done": "Makem smol wok se i no finis",
+  "subtask-done-no-permission": "Yu no save jenisim sapos smol wok ia i finis o no"
 }

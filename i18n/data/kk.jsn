@@ -2318,5 +2318,8 @@
   "many-items": "Бірнеше __items__",
   "operator-number": "нөмір",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка нөмірі *<number>* болатын карточкалар",
-  "subtask-inherit-parent-labels": "Аталық карта белгілерін мұралау"
+  "subtask-inherit-parent-labels": "Аталық карта белгілерін мұралау",
+  "subtask-mark-done": "Ішкі тапсырманы орындалды деп белгілеу",
+  "subtask-mark-not-done": "Ішкі тапсырманы орындалмады деп белгілеу",
+  "subtask-done-no-permission": "Бұл ішкі тапсырманың орындалуын өзгерте алмайсыз"
 }

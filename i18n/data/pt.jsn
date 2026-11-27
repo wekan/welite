@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (vários)",
   "operator-number": "número",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartões cujo número de cartão é *<number>*",
-  "subtask-inherit-parent-labels": "Herdar etiquetas do cartão principal"
+  "subtask-inherit-parent-labels": "Herdar etiquetas do cartão principal",
+  "subtask-mark-done": "Marcar subtarefa como concluída",
+  "subtask-mark-not-done": "Marcar subtarefa como não concluída",
+  "subtask-done-no-permission": "Não pode alterar se esta subtarefa está concluída"
 }

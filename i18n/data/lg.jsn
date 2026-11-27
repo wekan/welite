@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (bingi)",
   "operator-number": "namba",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaadi whose kaadi namba kiri *<number>*",
-  "subtask-inherit-parent-labels": "Sika obubaka bwa kaadi ya muzadde"
+  "subtask-inherit-parent-labels": "Sika obubaka bwa kaadi ya muzadde",
+  "subtask-mark-done": "Teeka akabonero nti omulimu omutono guwedde",
+  "subtask-mark-not-done": "Teeka akabonero nti omulimu omutono tegunnaggwa",
+  "subtask-done-no-permission": "Tosobola kukyusa oba omulimu guno omutono guwedde"
 }

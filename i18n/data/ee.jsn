@@ -2318,5 +2318,8 @@
   "many-items": "__items__ geɖe",
   "operator-number": "xexlẽme",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaɖi siwo ƒe kaɖi ƒe xexlẽme nye *<number>*",
-  "subtask-inherit-parent-labels": "Xɔ dzila ƒe kaad la ƒe agbalẽdzesiwo"
+  "subtask-inherit-parent-labels": "Xɔ dzila ƒe kaad la ƒe agbalẽdzesiwo",
+  "subtask-mark-done": "De dzesi dɔvi la be wowu enu",
+  "subtask-mark-not-done": "De dzesi dɔvi la be mewu enu o",
+  "subtask-done-no-permission": "Màte ŋu atrɔ̃ ne wowu dɔvi sia nu alo mewu o"
 }

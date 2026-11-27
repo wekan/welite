@@ -2318,5 +2318,8 @@
   "many-items": "Meerdere __items__",
   "operator-number": "nummer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarten met kaartnummer *<number>*",
-  "subtask-inherit-parent-labels": "Labels van de bovenliggende kaart overnemen"
+  "subtask-inherit-parent-labels": "Labels van de bovenliggende kaart overnemen",
+  "subtask-mark-done": "Subtaak als klaar markeren",
+  "subtask-mark-not-done": "Subtaak als niet klaar markeren",
+  "subtask-done-no-permission": "U kunt niet wijzigen of deze subtaak klaar is"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "Няколко __items__",
   "operator-number": "номер",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карти, чийто номер е *<number>*",
-  "subtask-inherit-parent-labels": "Наследяване на етикетите на родителската карта"
+  "subtask-inherit-parent-labels": "Наследяване на етикетите на родителската карта",
+  "subtask-mark-done": "Отбележи подзадачата като завършена",
+  "subtask-mark-not-done": "Отбележи подзадачата като незавършена",
+  "subtask-done-no-permission": "Не можете да промените дали тази подзадача е завършена"
 }

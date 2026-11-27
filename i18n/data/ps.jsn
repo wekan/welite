@@ -2318,5 +2318,8 @@
   "many-items": "څو __items__",
   "operator-number": "شمېره",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - هغه کارتونه چې د کارت شمېره يې *<number>* ده",
-  "subtask-inherit-parent-labels": "د پلرني کارت لیبلونه میراث یوسئ"
+  "subtask-inherit-parent-labels": "د پلرني کارت لیبلونه میراث یوسئ",
+  "subtask-mark-done": "فرعي دنده بشپړه نښه کړئ",
+  "subtask-mark-not-done": "فرعي دنده نابشپړه نښه کړئ",
+  "subtask-done-no-permission": "تاسو نشئ بدلولی چې دا فرعي دنده بشپړه ده که نه"
 }

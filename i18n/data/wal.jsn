@@ -2318,5 +2318,8 @@
   "many-items": "Daro __items__",
   "operator-number": "qoodaa",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardiyaa payduwaa *<number>* gidiya kaardiyata",
-  "subtask-inherit-parent-labels": "Aawaa kaardiyaa suudaa laattite"
+  "subtask-inherit-parent-labels": "Aawaa kaardiyaa suudaa laattite",
+  "subtask-mark-done": "Guutta oosuwaa wurssettidaagaa gidi malaata",
+  "subtask-mark-not-done": "Guutta oosuwaa wurssettibeennaagaa gidi malaata",
+  "subtask-done-no-permission": "Ha guutta oosoy wurssettidaakko laammana danddayakka"
 }

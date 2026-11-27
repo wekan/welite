@@ -2318,5 +2318,8 @@
   "many-items": "__items__ múltiples",
   "operator-number": "número",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarchetas cuyo número de tarcheta es *<number>*",
-  "subtask-inherit-parent-labels": "Heredar as etiquetas d'a tarcheta pai"
+  "subtask-inherit-parent-labels": "Heredar as etiquetas d'a tarcheta pai",
+  "subtask-mark-done": "Marcar a subtarea como feita",
+  "subtask-mark-not-done": "Marcar a subtarea como no feita",
+  "subtask-done-no-permission": "No puetz cambiar si esta subtarea ye feita"
 }

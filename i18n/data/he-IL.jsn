@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (מרובים)",
   "operator-number": "מספר",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - כרטיסים שמספרם *<number>*",
-  "subtask-inherit-parent-labels": "ירושת התוויות של הכרטיס ההורה"
+  "subtask-inherit-parent-labels": "ירושת התוויות של הכרטיס ההורה",
+  "subtask-mark-done": "סימון תת משימה כהושלמה",
+  "subtask-mark-not-done": "סימון תת משימה כלא הושלמה",
+  "subtask-done-no-permission": "אינכם יכולים לשנות אם תת המשימה הזו הושלמה"
 }

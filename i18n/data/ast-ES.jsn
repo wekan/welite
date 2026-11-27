@@ -2318,5 +2318,8 @@
   "many-items": "__items__ múltiples",
   "operator-number": "númberu",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetes col númberu de tarxeta *<number>*",
-  "subtask-inherit-parent-labels": "Heredar les etiquetes de la tarxeta padre"
+  "subtask-inherit-parent-labels": "Heredar les etiquetes de la tarxeta padre",
+  "subtask-mark-done": "Marcar la subxera como fecha",
+  "subtask-mark-not-done": "Marcar la subxera como non fecha",
+  "subtask-done-no-permission": "Nun pues camudar si esta subxera ta fecha"
 }

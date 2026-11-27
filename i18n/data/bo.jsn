@@ -2318,5 +2318,8 @@
   "many-items": "__items__ མང་པོ།",
   "operator-number": "ཨང་གྲངས།",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - བྱང་བུ་ཆུང་བའི་ཨང་གྲངས་ *<number>* ཡིན་པའི་བྱང་བུ་ཆུང་བ།",
-  "subtask-inherit-parent-labels": "ཕ་མའི་ཡིག་ཐོག་གི་ལེབལ་ཤུགས་ལེན་བྱེད།"
+  "subtask-inherit-parent-labels": "ཕ་མའི་ཡིག་ཐོག་གི་ལེབལ་ཤུགས་ལེན་བྱེད།",
+  "subtask-mark-done": "ལས་ཕྲན་ལེགས་གྲུབ་ཏུ་རྟགས་འགོད།",
+  "subtask-mark-not-done": "ལས་ཕྲན་མ་གྲུབ་པར་རྟགས་འགོད།",
+  "subtask-done-no-permission": "ཁྱེད་ཀྱིས་ལས་ཕྲན་འདི་གྲུབ་མ་གྲུབ་བསྒྱུར་མི་ཐུབ།"
 }

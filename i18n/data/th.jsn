@@ -2318,5 +2318,8 @@
   "many-items": "__items__หลายรายการ",
   "operator-number": "หมายเลข",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - การ์ดที่มีหมายเลขการ์ดเป็น *<number>*",
-  "subtask-inherit-parent-labels": "รับช่วงป้ายกำกับของการ์ดหลัก"
+  "subtask-inherit-parent-labels": "รับช่วงป้ายกำกับของการ์ดหลัก",
+  "subtask-mark-done": "ทำเครื่องหมายงานย่อยว่าเสร็จแล้ว",
+  "subtask-mark-not-done": "ทำเครื่องหมายงานย่อยว่ายังไม่เสร็จ",
+  "subtask-done-no-permission": "คุณไม่มีสิทธิ์เปลี่ยนสถานะเสร็จแล้วของงานย่อยนี้"
 }

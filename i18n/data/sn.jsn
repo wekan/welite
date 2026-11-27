@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (zvakawanda)",
   "operator-number": "nhamba",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makadhi ane nhamba yekadhi *<number>*",
-  "subtask-inherit-parent-labels": "Gara mireza dzekadhi ravabereki"
+  "subtask-inherit-parent-labels": "Gara mireza dzekadhi ravabereki",
+  "subtask-mark-done": "Ratidza basa diki serakaitwa",
+  "subtask-mark-not-done": "Ratidza basa diki serisina kuitwa",
+  "subtask-done-no-permission": "Haugoni kuchinja kuti basa diki iri rapera here kana kuti kwete"
 }

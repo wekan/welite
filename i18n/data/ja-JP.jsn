@@ -2318,5 +2318,8 @@
   "many-items": "複数の__items__",
   "operator-number": "番号",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - カード番号が *<number>* のカード",
-  "subtask-inherit-parent-labels": "親カードのラベルを継承する"
+  "subtask-inherit-parent-labels": "親カードのラベルを継承する",
+  "subtask-mark-done": "サブタスクを完了にする",
+  "subtask-mark-not-done": "サブタスクを未完了にする",
+  "subtask-done-no-permission": "このサブタスクの完了状態を変更する権限がありません"
 }

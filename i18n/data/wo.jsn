@@ -2318,5 +2318,8 @@
   "many-items": "__items__ yu bari",
   "operator-number": "nimero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karta yi nimero bi di *<number>*",
-  "subtask-inherit-parent-labels": "Jël etiketi karta bu mag bi"
+  "subtask-inherit-parent-labels": "Jël etiketi karta bu mag bi",
+  "subtask-mark-done": "Màndargaal liggéey wu ndaw wi ni lu jeex",
+  "subtask-mark-not-done": "Màndargaal liggéey wu ndaw wi ni lu jeexul",
+  "subtask-done-no-permission": "Mënuloo soppi ndax liggéey wu ndaw wii jeex na walla deet"
 }

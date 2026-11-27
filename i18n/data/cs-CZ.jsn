@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (více)",
   "operator-number": "číslo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, jejichž číslo karty je *<number>*",
-  "subtask-inherit-parent-labels": "Zdědit štítky nadřazené karty"
+  "subtask-inherit-parent-labels": "Zdědit štítky nadřazené karty",
+  "subtask-mark-done": "Označit dílčí úkol jako dokončený",
+  "subtask-mark-not-done": "Označit dílčí úkol jako nedokončený",
+  "subtask-done-no-permission": "Nemůžete měnit, zda je tento dílčí úkol dokončený"
 }

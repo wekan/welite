@@ -2318,5 +2318,8 @@
   "many-items": "Beberapa __items__",
   "operator-number": "nombor",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad yang nombor kadnya *<number>*",
-  "subtask-inherit-parent-labels": "Warisi label kad induk"
+  "subtask-inherit-parent-labels": "Warisi label kad induk",
+  "subtask-mark-done": "Tandakan subtugas sebagai selesai",
+  "subtask-mark-not-done": "Tandakan subtugas sebagai belum selesai",
+  "subtask-done-no-permission": "Anda tidak boleh mengubah status penyelesaian subtugas ini"
 }

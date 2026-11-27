@@ -2318,5 +2318,8 @@
   "many-items": "Cchiù __items__",
   "operator-number": "numero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte 'o cui nummero è *<number>*",
-  "subtask-inherit-parent-labels": "Ereditá 'e ttichette d''a carta genitrice"
+  "subtask-inherit-parent-labels": "Ereditá 'e ttichette d''a carta genitrice",
+  "subtask-mark-done": "Segna 'o sotto-cumpito comme fatto",
+  "subtask-mark-not-done": "Segna 'o sotto-cumpito comme nun fatto",
+  "subtask-done-no-permission": "Nun può cagnà si stu sotto-cumpito è fatto o no"
 }

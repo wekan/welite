@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (iomadh)",
   "operator-number": "àireamh",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cairtean aig a bheil àireamh na cairt *<number>*",
-  "subtask-inherit-parent-labels": "Faigh leubailean a' chairt phàrantail mar dhìleab"
+  "subtask-inherit-parent-labels": "Faigh leubailean a' chairt phàrantail mar dhìleab",
+  "subtask-mark-done": "Comharraich am fo-ghnìomh mar dheiseil",
+  "subtask-mark-not-done": "Comharraich am fo-ghnìomh mar neo-dheiseil",
+  "subtask-done-no-permission": "Chan urrainn dhut atharrachadh a bheil am fo-ghnìomh seo deiseil"
 }

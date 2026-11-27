@@ -2318,5 +2318,8 @@
   "many-items": "Many __items__",
   "operator-number": "number",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cards whose card number is *<number>*",
-  "subtask-inherit-parent-labels": "Inherit parent's labels"
+  "subtask-inherit-parent-labels": "Inherit parent's labels",
+  "subtask-mark-done": "Mark subtask as done",
+  "subtask-mark-not-done": "Mark subtask as not done",
+  "subtask-done-no-permission": "You cannot change whether this subtask is done"
 }

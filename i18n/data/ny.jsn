@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (zambiri)",
   "operator-number": "nambala",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi omwe nambala yake ya khadi ndi *<number>*",
-  "subtask-inherit-parent-labels": "Landirani zizindikiro za khadi la kholo"
+  "subtask-inherit-parent-labels": "Landirani zizindikiro za khadi la kholo",
+  "subtask-mark-done": "Lembani kantchito kuti katha",
+  "subtask-mark-not-done": "Lembani kantchito kuti sikanathe",
+  "subtask-done-no-permission": "Simungasinthe ngati kantchito aka katha kapena ayi"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "Varios __items__",
   "operator-number": "número",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karchinan cuyo número di karchi ta *<number>*",
-  "subtask-inherit-parent-labels": "Herda e etiketanan di e karchi mama"
+  "subtask-inherit-parent-labels": "Herda e etiketanan di e karchi mama",
+  "subtask-mark-done": "Marka e subtarea komo kompletá",
+  "subtask-mark-not-done": "Marka e subtarea komo no kompletá",
+  "subtask-done-no-permission": "Bo no por kambia si e subtarea aki ta kompletá"
 }

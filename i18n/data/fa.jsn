@@ -2318,5 +2318,8 @@
   "many-items": "چندین __items__",
   "operator-number": "شماره",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - کارت‌هایی که شمارهٔ کارتشان *<number>* است",
-  "subtask-inherit-parent-labels": "به ارث بردن برچسب‌های کارت والد"
+  "subtask-inherit-parent-labels": "به ارث بردن برچسب‌های کارت والد",
+  "subtask-mark-done": "علامت‌گذاری زیر وظیفه به‌عنوان تکمیل‌شده",
+  "subtask-mark-not-done": "علامت‌گذاری زیر وظیفه به‌عنوان تکمیل‌نشده",
+  "subtask-done-no-permission": "نمی‌توانید وضعیت تکمیل این زیر وظیفه را تغییر دهید"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "Нумай __items__",
   "operator-number": "хисеп",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка хисепӗ *<number>* пулнӑ карточкӑсем",
-  "subtask-inherit-parent-labels": "Атте картин паллисене йышăнса илесси"
+  "subtask-inherit-parent-labels": "Атте картин паллисене йышăнса илесси",
+  "subtask-mark-done": "Аялти ӗҫе вӗҫленӗ тесе палӑртас",
+  "subtask-mark-not-done": "Аялти ӗҫе вӗҫленмен тесе палӑртас",
+  "subtask-done-no-permission": "Ҫак аялти ӗҫ вӗҫленнине эсир улӑштараймастӑр"
 }

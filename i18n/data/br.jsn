@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (meur a hini)",
   "operator-number": "niverenn",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ar c'hartennoù a zo o niverenn *<number>*",
-  "subtask-inherit-parent-labels": "Heritañ liñselioù ar gartenn c'henidik"
+  "subtask-inherit-parent-labels": "Heritañ liñselioù ar gartenn c'henidik",
+  "subtask-mark-done": "Merkañ an is-trevell evel graet",
+  "subtask-mark-not-done": "Merkañ an is-trevell evel n'eo ket graet",
+  "subtask-done-no-permission": "Ne c'hallit ket kemmañ hag-eñ eo graet an is-trevell-mañ"
 }

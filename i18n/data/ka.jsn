@@ -2318,5 +2318,8 @@
   "many-items": "რამდენიმე __items__",
   "operator-number": "ნომერი",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ბარათები, რომელთა ნომერია *<number>*",
-  "subtask-inherit-parent-labels": "მშობელი ბარათის ლეიბლების მემკვიდრეობა"
+  "subtask-inherit-parent-labels": "მშობელი ბარათის ლეიბლების მემკვიდრეობა",
+  "subtask-mark-done": "ქვეამოცანის შესრულებულად მონიშვნა",
+  "subtask-mark-not-done": "ქვეამოცანის შეუსრულებლად მონიშვნა",
+  "subtask-done-no-permission": "ამ ქვეამოცანის შესრულების მდგომარეობის შეცვლა არ შეგიძლიათ"
 }

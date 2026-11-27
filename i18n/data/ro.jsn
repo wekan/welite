@@ -2318,5 +2318,8 @@
   "many-items": "Mai multe __items__",
   "operator-number": "număr",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carduri al căror număr este *<number>*",
-  "subtask-inherit-parent-labels": "Moștenește etichetele cardului părinte"
+  "subtask-inherit-parent-labels": "Moștenește etichetele cardului părinte",
+  "subtask-mark-done": "Marchează subsarcina ca finalizată",
+  "subtask-mark-not-done": "Marchează subsarcina ca nefinalizată",
+  "subtask-done-no-permission": "Nu puteți modifica starea de finalizare a acestei subsarcini"
 }

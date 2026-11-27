@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (sacwants)",
   "operator-number": "limero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - les cåtes ki leu limero est *<number>*",
-  "subtask-inherit-parent-labels": "Eriter les etikètes del cåte parint"
+  "subtask-inherit-parent-labels": "Eriter les etikètes del cåte parint",
+  "subtask-mark-done": "Marker l' sos-bouye come fineye",
+  "subtask-mark-not-done": "Marker l' sos-bouye come nén fineye",
+  "subtask-done-no-permission": "Vos n' poloz nén candjî si cisse sos-bouye ci est fineye"
 }

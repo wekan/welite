@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (mitu)",
   "operator-number": "arvuline väärtus",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardid, mille kaardi number on *<number>*",
-  "subtask-inherit-parent-labels": "Pärandada vanemkaardi sildid"
+  "subtask-inherit-parent-labels": "Pärandada vanemkaardi sildid",
+  "subtask-mark-done": "Märgi alaülesanne lõpetatuks",
+  "subtask-mark-not-done": "Märgi alaülesanne lõpetamata olekusse",
+  "subtask-done-no-permission": "Sa ei saa muuta selle alaülesande lõpetatuse olekut"
 }

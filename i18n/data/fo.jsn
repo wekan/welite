@@ -2318,5 +2318,8 @@
   "many-items": "Fleiri __items__",
   "operator-number": "tal",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort, hvørs kortnummar er *<number>*",
-  "subtask-inherit-parent-labels": "Arva merki hjá foreldrakortinum"
+  "subtask-inherit-parent-labels": "Arva merki hjá foreldrakortinum",
+  "subtask-mark-done": "Merk undiruppgávu sum liðuga",
+  "subtask-mark-not-done": "Merk undiruppgávu sum óliðuga",
+  "subtask-done-no-permission": "Tú kanst ikki broyta, um henda undiruppgávan er liðug"
 }

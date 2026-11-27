@@ -2318,5 +2318,8 @@
   "many-items": "Մի քանի __items__",
   "operator-number": "համար",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - քարտեր, որոնց քարտի համարը *<number>* է",
-  "subtask-inherit-parent-labels": "Ժառանգել ծնողական քարտի պիտակները"
+  "subtask-inherit-parent-labels": "Ժառանգել ծնողական քարտի պիտակները",
+  "subtask-mark-done": "Նշել ենթաառաջադրանքը որպես կատարված",
+  "subtask-mark-not-done": "Նշել ենթաառաջադրանքը որպես չկատարված",
+  "subtask-done-no-permission": "Դուք չեք կարող փոխել, թե արդյոք այս ենթաառաջադրանքը կատարված է"
 }

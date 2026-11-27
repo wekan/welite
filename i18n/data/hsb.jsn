@@ -2318,5 +2318,8 @@
   "many-items": "Wjele __items__",
   "operator-number": "čízlo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, jejichž čízlo karty je *<number>*",
-  "subtask-inherit-parent-labels": "Etikety nadrjadowaneje karty dźědźić"
+  "subtask-inherit-parent-labels": "Etikety nadrjadowaneje karty dźědźić",
+  "subtask-mark-done": "Podnadawk jako hotowy markěrować",
+  "subtask-mark-not-done": "Podnadawk jako njehotowy markěrować",
+  "subtask-done-no-permission": "Njemóžeće změnić, hač je tutón podnadawk hotowy"
 }

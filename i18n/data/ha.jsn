@@ -2318,5 +2318,8 @@
   "many-items": "__items__ da yawa",
   "operator-number": "lamba",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - katunan da lambar katinsu take *<number>*",
-  "subtask-inherit-parent-labels": "Gaji lakabi na katin iyaye"
+  "subtask-inherit-parent-labels": "Gaji lakabi na katin iyaye",
+  "subtask-mark-done": "Alamta ƙaramin aiki a matsayin an gama",
+  "subtask-mark-not-done": "Alamta ƙaramin aiki a matsayin ba a gama ba",
+  "subtask-done-no-permission": "Ba za ka iya canza ko an gama wannan ƙaramin aiki ba"
 }

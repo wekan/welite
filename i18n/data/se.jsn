@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (máŋga)",
   "operator-number": "lohku",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - goarttat maid goartanummir lea *<number>*",
-  "subtask-inherit-parent-labels": "Árbe váhnenkoartta mearkkat"
+  "subtask-inherit-parent-labels": "Árbe váhnenkoartta mearkkat",
+  "subtask-mark-done": "Merke oassebarggu gárvvisin",
+  "subtask-mark-not-done": "Merke oassebarggu gárvvekeahttun",
+  "subtask-done-no-permission": "It sáhte rievdadit lea go dát oassebargu gárvvis"
 }

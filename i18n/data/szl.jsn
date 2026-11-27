@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (mocka)",
   "operator-number": "numer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, kerych numer je *<number>*",
-  "subtask-inherit-parent-labels": "Ôdziedziczyć etyketki nadrzyndnyj kartōw"
+  "subtask-inherit-parent-labels": "Ôdziedziczyć etyketki nadrzyndnyj kartōw",
+  "subtask-mark-done": "Ôznacz podzadanie jako zrobiōne",
+  "subtask-mark-not-done": "Ôznacz podzadanie jako niyzrobiōne",
+  "subtask-done-no-permission": "Niy możesz zmiynić, eli to podzadanie je zrobiōne"
 }

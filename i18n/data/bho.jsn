@@ -2318,5 +2318,8 @@
   "many-items": "कई __items__",
   "operator-number": "संख्या",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - जेकर कार्ड संख्या *<number>* बा ओह कार्डन के खोज",
-  "subtask-inherit-parent-labels": "पेरेंट कार्ड के लेबल विरासत में लीं"
+  "subtask-inherit-parent-labels": "पेरेंट कार्ड के लेबल विरासत में लीं",
+  "subtask-mark-done": "उपकार्य के पूरा चिह्नित करीं",
+  "subtask-mark-not-done": "उपकार्य के अधूरा चिह्नित करीं",
+  "subtask-done-no-permission": "रउआ एह उपकार्य के पूरा भइल बा कि ना, ई ना बदल सकीं"
 }

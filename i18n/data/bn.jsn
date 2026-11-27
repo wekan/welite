@@ -2318,5 +2318,8 @@
   "many-items": "একাধিক __items__",
   "operator-number": "সংখ্যা",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - যেসব কার্ডের কার্ড নম্বর *<number>*",
-  "subtask-inherit-parent-labels": "প্যারেন্ট কার্ডের লেবেল উত্তরাধিকার করুন"
+  "subtask-inherit-parent-labels": "প্যারেন্ট কার্ডের লেবেল উত্তরাধিকার করুন",
+  "subtask-mark-done": "উপকাজ সম্পন্ন চিহ্নিত করুন",
+  "subtask-mark-not-done": "উপকাজ অসম্পূর্ণ চিহ্নিত করুন",
+  "subtask-done-no-permission": "এই উপকাজ সম্পন্ন কি না তা আপনি বদলাতে পারবেন না"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (nyingi)",
   "operator-number": "nambari",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi ambazo nambari yake ya kadi ni *<number>*",
-  "subtask-inherit-parent-labels": "Rithi lebo za kadi ya mzazi"
+  "subtask-inherit-parent-labels": "Rithi lebo za kadi ya mzazi",
+  "subtask-mark-done": "Weka kazi ndogo kuwa imekamilika",
+  "subtask-mark-not-done": "Weka kazi ndogo kuwa haijakamilika",
+  "subtask-done-no-permission": "Huwezi kubadilisha hali ya kukamilika kwa kazi hii ndogo"
 }

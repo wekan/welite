@@ -2318,5 +2318,8 @@
   "many-items": "Méi __items__",
   "operator-number": "nummer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` – Kaarten mat den Kartennummer *<number>*",
-  "subtask-inherit-parent-labels": "Elteren-Kaart Etiketten iwwerhuelen"
+  "subtask-inherit-parent-labels": "Elteren-Kaart Etiketten iwwerhuelen",
+  "subtask-mark-done": "Ënneraufgab als erleedegt markéieren",
+  "subtask-mark-not-done": "Ënneraufgab als net erleedegt markéieren",
+  "subtask-done-no-permission": "Dir kënnt net änneren, ob dës Ënneraufgab erleedegt ass"
 }

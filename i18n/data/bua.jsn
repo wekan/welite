@@ -2318,5 +2318,8 @@
   "many-items": "Олон __items__",
   "operator-number": "дугаар",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картын дугаарынь *<number>* байһан картанууд",
-  "subtask-inherit-parent-labels": "Эсэгэ картын шошогуудые мүрдэхэ"
+  "subtask-inherit-parent-labels": "Эсэгэ картын шошогуудые мүрдэхэ",
+  "subtask-mark-done": "Бага даабариие дүүргэгдэһэн гэжэ тэмдэглэхэ",
+  "subtask-mark-not-done": "Бага даабариие дүүргэгдээгүй гэжэ тэмдэглэхэ",
+  "subtask-done-no-permission": "Таанар энэ бага даабариин дүүргэгдэһэн эсэхые хубилгажа шадахагүйт"
 }

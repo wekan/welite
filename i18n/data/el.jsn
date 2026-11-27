@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (πολλά)",
   "operator-number": "αριθμός",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - κάρτες με αριθμό κάρτας *<number>*",
-  "subtask-inherit-parent-labels": "Κληρονόμηση ετικετών γονικής κάρτας"
+  "subtask-inherit-parent-labels": "Κληρονόμηση ετικετών γονικής κάρτας",
+  "subtask-mark-done": "Επισήμανση υποεργασίας ως ολοκληρωμένης",
+  "subtask-mark-not-done": "Επισήμανση υποεργασίας ως μη ολοκληρωμένης",
+  "subtask-done-no-permission": "Δεν μπορείτε να αλλάξετε αν αυτή η υποεργασία έχει ολοκληρωθεί"
 }

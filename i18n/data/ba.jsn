@@ -2318,5 +2318,8 @@
   "many-items": "Бер нисә __items__",
   "operator-number": "һан",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка һаны *<number>* булған карточкалар",
-  "subtask-inherit-parent-labels": "Атай карта билдәләрен мираҫ итеп алыу"
+  "subtask-inherit-parent-labels": "Атай карта билдәләрен мираҫ итеп алыу",
+  "subtask-mark-done": "Өҫтәмә бурысты әҙер тип билдәләү",
+  "subtask-mark-not-done": "Өҫтәмә бурысты әҙер түгел тип билдәләү",
+  "subtask-done-no-permission": "Һеҙ был өҫтәмә бурыстың әҙерлеген үҙгәртә алмайһығыҙ"
 }

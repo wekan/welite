@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (kelios)",
   "operator-number": "numeris",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortelės, kurių kortelės numeris yra *<number>*",
-  "subtask-inherit-parent-labels": "Paveldėti tėvinės kortelės žymas"
+  "subtask-inherit-parent-labels": "Paveldėti tėvinės kortelės žymas",
+  "subtask-mark-done": "Pažymėti antrinę užduotį baigta",
+  "subtask-mark-not-done": "Pažymėti antrinę užduotį nebaigta",
+  "subtask-done-no-permission": "Negalite keisti šios antrinės užduoties užbaigimo būsenos"
 }

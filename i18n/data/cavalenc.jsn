@@ -2318,5 +2318,8 @@
   "many-items": "__items__ múltiples",
   "operator-number": "número",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - targetes amb el número de targeta *<number>*",
-  "subtask-inherit-parent-labels": "Hereta les etiquetes de la targeta pare"
+  "subtask-inherit-parent-labels": "Hereta les etiquetes de la targeta pare",
+  "subtask-mark-done": "Marca la subtasca com a completada",
+  "subtask-mark-not-done": "Marca la subtasca com a no completada",
+  "subtask-done-no-permission": "No podeu canviar si esta subtasca està completada"
 }

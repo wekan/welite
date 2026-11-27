@@ -2318,5 +2318,8 @@
   "many-items": "Plizyè __items__",
   "operator-number": "nimewo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kat ki gen nimewo kat *<number>*",
-  "subtask-inherit-parent-labels": "Erite etikèt kat paran an"
+  "subtask-inherit-parent-labels": "Erite etikèt kat paran an",
+  "subtask-mark-done": "Make sou-travay la kòm fini",
+  "subtask-mark-not-done": "Make sou-travay la kòm pa fini",
+  "subtask-done-no-permission": "Ou pa ka chanje si sou-travay sa a fini oswa non"
 }

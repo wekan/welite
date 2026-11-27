@@ -2318,5 +2318,8 @@
   "many-items": "Plu __items__",
   "operator-number": "numero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ciartes il cui numero ie *<number>*",
-  "subtask-inherit-parent-labels": "Tò sëura la etichetes dla ciarta paronda"
+  "subtask-inherit-parent-labels": "Tò sëura la etichetes dla ciarta paronda",
+  "subtask-mark-done": "Segné la sotlëur sciöche fata",
+  "subtask-mark-not-done": "Segné la sotlëur sciöche nia fata",
+  "subtask-done-no-permission": "Te ne pos nia mudé sce chësta sotlëur é fata"
 }

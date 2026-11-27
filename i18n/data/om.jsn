@@ -2318,5 +2318,8 @@
   "many-items": "__items__ hedduu",
   "operator-number": "lakkoofsa",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardiiwwan lakkoofsi kaardii isaanii *<number>* ta’e",
-  "subtask-inherit-parent-labels": "Labeelii kaardii maatii dhaalfachuu"
+  "subtask-inherit-parent-labels": "Labeelii kaardii maatii dhaalfachuu",
+  "subtask-mark-done": "Hojii xiqqaa akka raawwatameetti mallatteessi",
+  "subtask-mark-not-done": "Hojii xiqqaa akka hin raawwatamneetti mallatteessi",
+  "subtask-done-no-permission": "Hojiin xiqqaan kun raawwatamuu isaa jijjiiruu hin dandeessu"
 }

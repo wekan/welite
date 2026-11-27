@@ -3534,18 +3534,35 @@ end;
 
 function SubtasksSection(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string;
   Writable: Boolean): string;
-var Rows: TWLRows; Row: TWLRow; AddTitle: string;
+var Rows: TWLRows; Row: TWLRow; AddTitle, Items, Toggle, Status, Kind: string; Done, Total: Integer; Checked: Boolean;
 begin
-  Result := '<div class="card-details-item card-details-subtasks"><h3 class="card-details-item-title">' +
-    E(Words.Text('subtasks', 'Subtasks')) + '</h3><div class="card-subtasks-items">';
-  Rows := Db.Query('SELECT c.id,c.title,c.boardId,b.slug FROM cards c JOIN boards b ON b.id=c.boardId WHERE c.parentId=' +
+  Items := ''; Done := 0; Total := 0;
+  Rows := Db.Query('SELECT c.id,c.title,c.boardId,b.slug,COALESCE(c.dueComplete,0),COALESCE(c.type,''cardType-card'') ' +
+    'FROM cards c JOIN boards b ON b.id=c.boardId WHERE c.parentId=' +
     QuotedStr(CardId) + ' AND c.archived=0 AND c.deletedAt IS NULL AND b.archived=0 ORDER BY c.subtaskSort,c.sort,c.id;');
   for Row in Rows do
     if BoardCanRead(Db, UserId, Row[2]) or
        (AssignedOnlyMember(Db, UserId, Row[2]) and CardAssignedTo(Db, UserId, Row[2], Row[0])) then
-      Result := Result + '<div class="js-subtasks subtask"><a href="' + HtmlAttr(CardRoute(Row[2], Row[3], Row[0])) +
-        '" up-follow up-target=".board-wrapper">' + E(Row[1]) + '</a></div>';
-  Result := Result + '</div>';
+    begin
+      Checked := Row[4] = '1';
+      Inc(Total);
+      if Checked then Inc(Done);
+      Status := ' role="checkbox" aria-checked="' + IfThen(Checked, 'true', 'false') + '"';
+      Kind := '<div class="materialCheckBox' + IfThen(Checked, ' is-checked', '') + '"></div>';
+      if (Row[5] = 'cardType-card') and BoardCanWrite(Db, UserId, Row[2]) then
+        Toggle := '<a class="subtask-done-toggle js-toggle-subtask-done" href="#"' + Status + ' data-parent="' +
+          HtmlAttr(CardId) + '" data-subtask="' + HtmlAttr(Row[0]) + '" title="' +
+          HtmlAttr(IfThen(Checked, Words.Text('subtask-mark-not-done', 'Mark subtask not done'),
+            Words.Text('subtask-mark-done', 'Mark subtask done'))) + '">' + Kind + '</a>'
+      else Toggle := '<span class="subtask-done-toggle is-disabled"' + Status + ' aria-disabled="true" title="' +
+        HtmlAttr(Words.Text('subtask-done-no-permission', 'You cannot change this subtask')) + '">' + Kind + '</span>';
+      Items := Items + '<div class="js-subtasks subtask"><div class="subtask-title' + IfThen(Checked, ' is-done', '') + '">' +
+        Toggle + '<h2 class="title"><a href="' + HtmlAttr(CardRoute(Row[2], Row[3], Row[0])) +
+        '" up-follow up-target=".board-wrapper">' + E(Row[1]) + '</a></h2></div></div>';
+    end;
+  Result := '<div class="card-details-item card-details-subtasks"><h3 class="card-details-item-title js-toggle-card-section" data-section="subtasks">' +
+    E(Words.Text('subtasks', 'Subtasks')) + IfThen(Total > 0, ' <span class="card-details-item-count">(' +
+    IntToStr(Done) + '/' + IntToStr(Total) + ')</span>', '') + '</h3><div class="card-subtasks-items">' + Items + '</div>';
   if Writable then
   begin
     AddTitle := HtmlAttr(Words.Text('add-subtask', 'Add Subtask'));
@@ -4814,6 +4831,27 @@ begin
   if Name = 'isAvatarUploadBlocked' then
   begin
     SendJsonAnswer(Response, 200, '{"result":' + IfThen(AvatarUploadBlocked(T.Db), 'true', 'false') + '}');
+    Exit;
+  end;
+  if Name = 'setSubtaskDone' then
+  begin
+    Args := nil;
+    Code := 400;
+    Error := 'Match failed';
+    try
+      try Args := GetJSON(Request.Content); except Args := nil; end;
+      if (Args is TJSONArray) and (TJSONArray(Args).Count = 3) and
+         (TJSONArray(Args).Items[0].JSONType = jtString) and (TJSONArray(Args).Items[1].JSONType = jtString) and
+         (TJSONArray(Args).Items[2].JSONType = jtBoolean) then
+        Code := SetViewSubtaskDone(T, S.UserId, TJSONArray(Args).Strings[0], TJSONArray(Args).Strings[1],
+          TJSONArray(Args).Booleans[2], Error);
+      if Code = 200 then
+      begin
+        AnnounceToAll;
+        SendJsonAnswer(Response, 200, '{"result":' + IfThen(TJSONArray(Args).Booleans[2], 'true', 'false') + '}');
+      end
+      else SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '"}');
+    finally Args.Free; end;
     Exit;
   end;
   if Name = 'createCardWithDueDate' then

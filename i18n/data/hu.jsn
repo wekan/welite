@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (több)",
   "operator-number": "szám",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kártyák, amelyek kártyaszáma *<number>*",
-  "subtask-inherit-parent-labels": "Szülőkártya címkéinek öröklése"
+  "subtask-inherit-parent-labels": "Szülőkártya címkéinek öröklése",
+  "subtask-mark-done": "Részfeladat megjelölése befejezettként",
+  "subtask-mark-not-done": "Részfeladat megjelölése befejezetlenként",
+  "subtask-done-no-permission": "Nem módosíthatja a részfeladat befejezettségét"
 }

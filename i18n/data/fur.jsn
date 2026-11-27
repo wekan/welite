@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (plui)",
   "operator-number": "numar",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cjartis il cui numero è *<number>*",
-  "subtask-inherit-parent-labels": "Ereditâ lis etichetis de schede gjenitôr"
+  "subtask-inherit-parent-labels": "Ereditâ lis etichetis de schede gjenitôr",
+  "subtask-mark-done": "Segne la sot-ativitât come fate",
+  "subtask-mark-not-done": "Segne la sot-ativitât come no fate",
+  "subtask-done-no-permission": "No tu puedis cambiâ se cheste sot-ativitât e je fate"
 }

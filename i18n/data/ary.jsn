@@ -2318,5 +2318,8 @@
   "many-items": "__items__ بزاف",
   "operator-number": "رقم",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - البطاقات التي رقمها *<number>*",
-  "subtask-inherit-parent-labels": "وراثة تيكيطات لكارط لي فوق"
+  "subtask-inherit-parent-labels": "وراثة تيكيطات لكارط لي فوق",
+  "subtask-mark-done": "علّم المهمة الفرعية بلي مدارة",
+  "subtask-mark-not-done": "علّم المهمة الفرعية بلي ما مداراش",
+  "subtask-done-no-permission": "ما تقدرش تبدل واش هاد المهمة الفرعية مدارة"
 }

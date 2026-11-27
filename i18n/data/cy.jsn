@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (lluosog)",
   "operator-number": "rhif",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cardiau a'u rhif cerdyn yn *<number>*",
-  "subtask-inherit-parent-labels": "Etifeddu labelau'r cerdyn rhiant"
+  "subtask-inherit-parent-labels": "Etifeddu labelau'r cerdyn rhiant",
+  "subtask-mark-done": "Nodi'r is-dasg fel un wedi'i gwneud",
+  "subtask-mark-not-done": "Nodi'r is-dasg fel un heb ei gwneud",
+  "subtask-done-no-permission": "Ni allwch newid a yw'r is-dasg hon wedi'i gwneud"
 }

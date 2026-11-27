@@ -2318,5 +2318,8 @@
   "many-items": "Heta __items__",
   "operator-number": "papapy",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kuatia'i ipapapy ha'éva *<number>*",
-  "subtask-inherit-parent-labels": "Herohory umi mba'echichi karda ru"
+  "subtask-inherit-parent-labels": "Herohory umi mba'echichi karda ru",
+  "subtask-mark-done": "Emoĩ tembiapo'i opapyre ramo",
+  "subtask-mark-not-done": "Emoĩ tembiapo'i nahu'ãiva ramo",
+  "subtask-done-no-permission": "Ndaikatúi remoambue ko tembiapo'i opápa térã nahániri"
 }

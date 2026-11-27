@@ -2318,5 +2318,8 @@
   "many-items": "__items__ maro",
   "operator-number": "isa",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karatra manana laharana *<number>*",
-  "subtask-inherit-parent-labels": "Mandova ny mari-pamantarana ny karatra ray aman-dreny"
+  "subtask-inherit-parent-labels": "Mandova ny mari-pamantarana ny karatra ray aman-dreny",
+  "subtask-mark-done": "Mariho ho vita ny zana-asa",
+  "subtask-mark-not-done": "Mariho ho tsy vita ny zana-asa",
+  "subtask-done-no-permission": "Tsy afaka manova ny maha-vita na tsia an’ity zana-asa ity ianao"
 }

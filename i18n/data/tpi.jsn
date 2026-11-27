@@ -2318,5 +2318,8 @@
   "many-items": "Planti __items__",
   "operator-number": "namba",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kat i gat namba *<number>*",
-  "subtask-inherit-parent-labels": "Kisim ol lebol bilong kaad papamama"
+  "subtask-inherit-parent-labels": "Kisim ol lebol bilong kaad papamama",
+  "subtask-mark-done": "Makim liklik wok olsem i pinis",
+  "subtask-mark-not-done": "Makim liklik wok olsem i no pinis",
+  "subtask-done-no-permission": "Yu no inap senisim sapos dispela liklik wok i pinis o nogat"
 }

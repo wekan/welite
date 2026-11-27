@@ -2318,5 +2318,8 @@
   "many-items": "Plusieurs __items__",
   "operator-number": "numéro",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartes dont le numéro de carte est *<number>*",
-  "subtask-inherit-parent-labels": "Hériter des étiquettes de la carte parente"
+  "subtask-inherit-parent-labels": "Hériter des étiquettes de la carte parente",
+  "subtask-mark-done": "Marquer la sous-tâche comme terminée",
+  "subtask-mark-not-done": "Marquer la sous-tâche comme non terminée",
+  "subtask-done-no-permission": "Vous ne pouvez pas modifier l’état d’achèvement de cette sous-tâche"
 }

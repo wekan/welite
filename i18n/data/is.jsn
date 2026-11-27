@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (mörg)",
   "operator-number": "númer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - spjöld sem hafa spjaldsnúmerið *<number>*",
-  "subtask-inherit-parent-labels": "Erfa merki foreldrakorts"
+  "subtask-inherit-parent-labels": "Erfa merki foreldrakorts",
+  "subtask-mark-done": "Merkja undirverkefni sem lokið",
+  "subtask-mark-not-done": "Merkja undirverkefni sem ólokið",
+  "subtask-done-no-permission": "Þú getur ekki breytt því hvort þessu undirverkefni sé lokið"
 }

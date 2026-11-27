@@ -2318,5 +2318,8 @@
   "many-items": "بیر نیچه __items__",
   "operator-number": "رقم",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - کارت رقمی *<number>* بۉلگن کارتلر",
-  "subtask-inherit-parent-labels": "آته-کارت یارلیقلرینی میراث قیلیب آلیش"
+  "subtask-inherit-parent-labels": "آته-کارت یارلیقلرینی میراث قیلیب آلیش",
+  "subtask-mark-done": "قویی وظیفه‌نی بجریلدی دېب بیلگیلش",
+  "subtask-mark-not-done": "قویی وظیفه‌نی بجریلمه‌دی دېب بیلگیلش",
+  "subtask-done-no-permission": "سیز بو قویی وظیفه بجریلگنلیگینی اۉزگرته آلمیسیز"
 }

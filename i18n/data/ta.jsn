@@ -2318,5 +2318,8 @@
   "many-items": "பல __items__",
   "operator-number": "எண்",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - அட்டை எண் *<number>* உள்ள அட்டைகள்",
-  "subtask-inherit-parent-labels": "பெற்றோர் அட்டையின் லேபிள்களைப் பெறவும்"
+  "subtask-inherit-parent-labels": "பெற்றோர் அட்டையின் லேபிள்களைப் பெறவும்",
+  "subtask-mark-done": "துணைப் பணியை முடிந்ததாகக் குறி",
+  "subtask-mark-not-done": "துணைப் பணியை முடியாததாகக் குறி",
+  "subtask-done-no-permission": "இந்தத் துணைப் பணி முடிந்ததா என்பதை நீங்கள் மாற்ற முடியாது"
 }

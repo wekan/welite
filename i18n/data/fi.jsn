@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (useita)",
   "operator-number": "numero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortit joiden kortin numero on *<number>*",
-  "subtask-inherit-parent-labels": "Peri yläkortin tunnisteet"
+  "subtask-inherit-parent-labels": "Peri yläkortin tunnisteet",
+  "subtask-mark-done": "Merkitse alitehtävä valmiiksi",
+  "subtask-mark-not-done": "Merkitse alitehtävä keskeneräiseksi",
+  "subtask-done-no-permission": "Et voi muuttaa tämän alitehtävän valmistumistilaa"
 }

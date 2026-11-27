@@ -2318,5 +2318,8 @@
   "many-items": "Flere __items__",
   "operator-number": "nummer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort hvis kortnummer er *<number>*",
-  "subtask-inherit-parent-labels": "Nedarv den overordnede korts etiketter"
+  "subtask-inherit-parent-labels": "Nedarv den overordnede korts etiketter",
+  "subtask-mark-done": "Markér underopgave som færdig",
+  "subtask-mark-not-done": "Markér underopgave som ikke færdig",
+  "subtask-done-no-permission": "Du kan ikke ændre, om denne underopgave er færdig"
 }

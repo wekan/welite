@@ -2318,5 +2318,8 @@
   "many-items": "多個__items__",
   "operator-number": "編號",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片編號為 *<number>* 的卡片",
-  "subtask-inherit-parent-labels": "繼承母卡嘅標籤"
+  "subtask-inherit-parent-labels": "繼承母卡嘅標籤",
+  "subtask-mark-done": "將子任務標記做完成",
+  "subtask-mark-not-done": "將子任務標記做未完成",
+  "subtask-done-no-permission": "你唔可以改呢個子任務係咪完成"
 }

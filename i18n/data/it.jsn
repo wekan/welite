@@ -2318,5 +2318,8 @@
   "many-items": "Più __items__",
   "operator-number": "numero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede il cui numero è *<number>*",
-  "subtask-inherit-parent-labels": "Eredita le etichette della scheda principale"
+  "subtask-inherit-parent-labels": "Eredita le etichette della scheda principale",
+  "subtask-mark-done": "Segna la sottoattività come completata",
+  "subtask-mark-not-done": "Segna la sottoattività come non completata",
+  "subtask-done-no-permission": "Non puoi modificare lo stato di completamento di questa sottoattività"
 }

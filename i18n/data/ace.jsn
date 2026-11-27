@@ -2318,5 +2318,8 @@
   "many-items": "Le __items__",
   "operator-number": "angka",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad nyang lumboi kad jih *<number>*",
-  "subtask-inherit-parent-labels": "Turon lébel kad indok"
+  "subtask-inherit-parent-labels": "Turon lébel kad indok",
+  "subtask-mark-done": "Tanda subtugas ka leusoe",
+  "subtask-mark-not-done": "Tanda subtugas goh leusoe",
+  "subtask-done-no-permission": "Droeneueh h'an jeuet ubah peu subtugas nyoe ka leusoe atawa goh"
 }

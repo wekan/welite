@@ -2318,5 +2318,8 @@
   "many-items": "گهڻا __items__",
   "operator-number": "انگ",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - اهي ڪارڊ جن جو ڪارڊ نمبر *<number>* آهي",
-  "subtask-inherit-parent-labels": "والدين جي ڪارڊ جا ليبل وارثي طور حاصل ڪريو"
+  "subtask-inherit-parent-labels": "والدين جي ڪارڊ جا ليبل وارثي طور حاصل ڪريو",
+  "subtask-mark-done": "ذيلي ڪم مڪمل نشان لڳايو",
+  "subtask-mark-not-done": "ذيلي ڪم اڻپورو نشان لڳايو",
+  "subtask-done-no-permission": "توهان بدلائي نٿا سگهو ته هي ذيلي ڪم مڪمل آهي يا نه"
 }

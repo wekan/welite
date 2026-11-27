@@ -2318,5 +2318,8 @@
   "many-items": "Sawetara __items__",
   "operator-number": "nomer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kertu sing nomer kertuné *<number>*",
-  "subtask-inherit-parent-labels": "Warisi label kertu induk"
+  "subtask-inherit-parent-labels": "Warisi label kertu induk",
+  "subtask-mark-done": "Tandhani sub-tugas rampung",
+  "subtask-mark-not-done": "Tandhani sub-tugas durung rampung",
+  "subtask-done-no-permission": "Kowe ora bisa ngowahi rampung orane sub-tugas iki"
 }

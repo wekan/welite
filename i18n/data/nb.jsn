@@ -2318,5 +2318,8 @@
   "many-items": "Flere __items__",
   "operator-number": "nummer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort med kortnummer *<number>*",
-  "subtask-inherit-parent-labels": "Arv etikettene til overordnet kort"
+  "subtask-inherit-parent-labels": "Arv etikettene til overordnet kort",
+  "subtask-mark-done": "Marker deloppgave som ferdig",
+  "subtask-mark-not-done": "Marker deloppgave som ikke ferdig",
+  "subtask-done-no-permission": "Du kan ikke endre om denne deloppgaven er ferdig"
 }

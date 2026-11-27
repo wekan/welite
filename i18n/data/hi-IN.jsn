@@ -2318,5 +2318,8 @@
   "many-items": "कई __items__",
   "operator-number": "संख्या",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - वे कार्ड जिनकी कार्ड संख्या *<number>* है",
-  "subtask-inherit-parent-labels": "पैरेंट कार्ड के लेबल प्राप्त करें"
+  "subtask-inherit-parent-labels": "पैरेंट कार्ड के लेबल प्राप्त करें",
+  "subtask-mark-done": "उप-कार्य को पूरा चिह्नित करें",
+  "subtask-mark-not-done": "उप-कार्य को अधूरा चिह्नित करें",
+  "subtask-done-no-permission": "आप इस उप-कार्य की पूर्णता की स्थिति नहीं बदल सकते"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "بىرنەچچە __items__",
   "operator-number": "نومۇر",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - كارتا نومۇرى *<number>* بولغان كارتىلار",
-  "subtask-inherit-parent-labels": "ئاتا-ئانا كارتىسىنىڭ ئەنبەلگىلىرىگە ۋارىسلىق قىلىش"
+  "subtask-inherit-parent-labels": "ئاتا-ئانا كارتىسىنىڭ ئەنبەلگىلىرىگە ۋارىسلىق قىلىش",
+  "subtask-mark-done": "تارماق ۋەزىپىنى تامام دەپ بەلگىلەش",
+  "subtask-mark-not-done": "تارماق ۋەزىپىنى تامام ئەمەس دەپ بەلگىلەش",
+  "subtask-done-no-permission": "بۇ تارماق ۋەزىپىنىڭ تامام بولغان-بولمىغانلىقىنى ئۆزگەرتەلمەيسىز"
 }

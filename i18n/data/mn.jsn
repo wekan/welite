@@ -2318,5 +2318,8 @@
   "many-items": "Олон __items__",
   "operator-number": "дугаар",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картын дугаар нь *<number>* байгаа картууд",
-  "subtask-inherit-parent-labels": "Эцэг картын шошгыг өвлөх"
+  "subtask-inherit-parent-labels": "Эцэг картын шошгыг өвлөх",
+  "subtask-mark-done": "Дэд даалгаврыг хийгдсэн гэж тэмдэглэх",
+  "subtask-mark-not-done": "Дэд даалгаврыг хийгдээгүй гэж тэмдэглэх",
+  "subtask-done-no-permission": "Та энэ дэд даалгавар хийгдсэн эсэхийг өөрчлөх боломжгүй"
 }

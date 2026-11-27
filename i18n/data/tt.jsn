@@ -2318,5 +2318,8 @@
   "many-items": "Берничә __items__",
   "operator-number": "номер",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка номеры *<number>* булган карточкалар",
-  "subtask-inherit-parent-labels": "Ата-ана картасының этикеткаларын мирас итеп алу"
+  "subtask-inherit-parent-labels": "Ата-ана картасының этикеткаларын мирас итеп алу",
+  "subtask-mark-done": "Өстәмә биремне үтәлгән дип билгеләү",
+  "subtask-mark-not-done": "Өстәмә биремне үтәлмәгән дип билгеләү",
+  "subtask-done-no-permission": "Сез бу өстәмә биремнең үтәлгәнлеген үзгәртә алмыйсыз"
 }

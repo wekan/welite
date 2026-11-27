@@ -2318,5 +2318,8 @@
   "many-items": "Birden çok __items__",
   "operator-number": "numara",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kart numarası *<number>* olan kartlar",
-  "subtask-inherit-parent-labels": "Üst kartın etiketlerini devral"
+  "subtask-inherit-parent-labels": "Üst kartın etiketlerini devral",
+  "subtask-mark-done": "Alt görevi tamamlanmış olarak işaretle",
+  "subtask-mark-not-done": "Alt görevi tamamlanmamış olarak işaretle",
+  "subtask-done-no-permission": "Bu alt görevin tamamlanma durumunu değiştiremezsiniz"
 }

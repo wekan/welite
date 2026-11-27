@@ -2318,5 +2318,8 @@
   "many-items": "여러 __items__",
   "operator-number": "번호",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 카드 번호가 *<number>* 인 카드",
-  "subtask-inherit-parent-labels": "상위 카드의 라벨 상속"
+  "subtask-inherit-parent-labels": "상위 카드의 라벨 상속",
+  "subtask-mark-done": "하위 작업을 완료로 표시",
+  "subtask-mark-not-done": "하위 작업을 미완료로 표시",
+  "subtask-done-no-permission": "이 하위 작업의 완료 여부를 변경할 수 없습니다"
 }

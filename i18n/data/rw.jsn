@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (byinshi)",
   "operator-number": "umubare",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakarita afite nomero y'ikarita ingana na *<number>*",
-  "subtask-inherit-parent-labels": "Rarikira utumenyetso tw'ikarita mubyeyi"
+  "subtask-inherit-parent-labels": "Rarikira utumenyetso tw'ikarita mubyeyi",
+  "subtask-mark-done": "Shyira igikorwa gito nk'icyakozwe",
+  "subtask-mark-not-done": "Shyira igikorwa gito nk'icyitarakorwa",
+  "subtask-done-no-permission": "Ntushobora guhindura niba iki gikorwa gito cyakozwe"
 }

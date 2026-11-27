@@ -2318,5 +2318,8 @@
   "many-items": "__items__ lahi",
   "operator-number": "fika",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngaahi kaati ʻoku ko hono fika kaati ko e *<number>*",
-  "subtask-inherit-parent-labels": "Maʻu ʻae fakaʻilonga ʻoe kaati mātuʻa"
+  "subtask-inherit-parent-labels": "Maʻu ʻae fakaʻilonga ʻoe kaati mātuʻa",
+  "subtask-mark-done": "Fakaʻilongaʻi ʻa e ngāue iiki kuo ʻosi",
+  "subtask-mark-not-done": "Fakaʻilongaʻi ʻa e ngāue iiki kuo teʻeki ʻosi",
+  "subtask-done-no-permission": "ʻOku ʻikai te ke lava ʻo liliu pe kuo ʻosi ʻa e ngāue iiki ko ʻeni"
 }

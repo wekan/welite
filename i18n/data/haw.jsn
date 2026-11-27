@@ -2318,5 +2318,8 @@
   "many-items": "__items__ he nui",
   "operator-number": "numapela",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - nā kāleka wahoke kāleka numapela he *<number>*",
-  "subtask-inherit-parent-labels": "Hoʻoili i nā lepili o ka kāleka mākua"
+  "subtask-inherit-parent-labels": "Hoʻoili i nā lepili o ka kāleka mākua",
+  "subtask-mark-done": "Hōʻailona i ka hana liʻiliʻi ua pau",
+  "subtask-mark-not-done": "Hōʻailona i ka hana liʻiliʻi ʻaʻole i pau",
+  "subtask-done-no-permission": "ʻAʻole hiki iā ʻoe ke hoʻololi i ke kūlana pau o kēia hana liʻiliʻi"
 }

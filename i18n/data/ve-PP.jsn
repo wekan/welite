@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (äi)",
   "operator-number": "lugu",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartad, miččiden kartan nomer om *<number>*",
-  "subtask-inherit-parent-labels": "Jäl'gesta vanhemban kartan znamad"
+  "subtask-inherit-parent-labels": "Jäl'gesta vanhemban kartan znamad",
+  "subtask-mark-done": "Znamoita alategend tehtud",
+  "subtask-mark-not-done": "Znamoita alategend tegematoi",
+  "subtask-done-no-permission": "Et voi vajehtada, om-ik nece alategend tehtud"
 }

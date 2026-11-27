@@ -2318,5 +2318,8 @@
   "many-items": "ഒന്നിലധികം __items__",
   "operator-number": "സംഖ്യ",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - കാർഡ് നമ്പർ *<number>* ആയ കാർഡുകൾ",
-  "subtask-inherit-parent-labels": "രക്ഷാകർതൃ കാർഡിന്റെ ലേബലുകൾ പാരമ്പര്യമാക്കുക"
+  "subtask-inherit-parent-labels": "രക്ഷാകർതൃ കാർഡിന്റെ ലേബലുകൾ പാരമ്പര്യമാക്കുക",
+  "subtask-mark-done": "ഉപജോലി പൂർത്തിയായതായി അടയാളപ്പെടുത്തുക",
+  "subtask-mark-not-done": "ഉപജോലി പൂർത്തിയാകാത്തതായി അടയാളപ്പെടുത്തുക",
+  "subtask-done-no-permission": "ഈ ഉപജോലി പൂർത്തിയായോ എന്നത് നിങ്ങൾക്ക് മാറ്റാനാവില്ല"
 }

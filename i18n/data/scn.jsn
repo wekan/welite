@@ -2318,5 +2318,8 @@
   "many-items": "Cchiù __items__",
   "operator-number": "numero",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carti cu lu nùmmaru *<number>*",
-  "subtask-inherit-parent-labels": "Aredità i etichetti dâ carta matri"
+  "subtask-inherit-parent-labels": "Aredità i etichetti dâ carta matri",
+  "subtask-mark-done": "Marca lu sotto-compitu comu fattu",
+  "subtask-mark-not-done": "Marca lu sotto-compitu comu nun fattu",
+  "subtask-done-no-permission": "Nun poi canciari si stu sotto-compitu è fattu"
 }

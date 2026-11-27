@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (несколько)",
   "operator-number": "номер",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточки, номер которых *<number>*",
-  "subtask-inherit-parent-labels": "Наследовать метки родительской карточки"
+  "subtask-inherit-parent-labels": "Наследовать метки родительской карточки",
+  "subtask-mark-done": "Отметить подзадачу как завершённую",
+  "subtask-mark-not-done": "Отметить подзадачу как незавершённую",
+  "subtask-done-no-permission": "Вы не можете изменять состояние завершения этой подзадачи"
 }

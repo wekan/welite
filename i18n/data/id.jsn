@@ -2318,5 +2318,8 @@
   "many-items": "Beberapa __items__",
   "operator-number": "nomor",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartu yang nomor kartunya *<number>*",
-  "subtask-inherit-parent-labels": "Warisi label kartu induk"
+  "subtask-inherit-parent-labels": "Warisi label kartu induk",
+  "subtask-mark-done": "Tandai subtugas sebagai selesai",
+  "subtask-mark-not-done": "Tandai subtugas sebagai belum selesai",
+  "subtask-done-no-permission": "Anda tidak dapat mengubah status penyelesaian subtugas ini"
 }

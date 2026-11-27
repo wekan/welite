@@ -2318,5 +2318,8 @@
   "many-items": "Ymmodee __items__",
   "operator-number": "earroo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaartyn ta'n earroo kaart oc *<number>*",
-  "subtask-inherit-parent-labels": "Eiraghys labelyn y chard ard"
+  "subtask-inherit-parent-labels": "Eiraghys labelyn y chard ard",
+  "subtask-mark-done": "Cowree y far-obbyr myr jeant",
+  "subtask-mark-not-done": "Cowree y far-obbyr myr neuhjeant",
+  "subtask-done-no-permission": "Cha vod oo caghlaa vel y far-obbyr shoh jeant"
 }

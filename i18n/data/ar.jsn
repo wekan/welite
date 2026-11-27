@@ -2318,5 +2318,8 @@
   "many-items": "__items__ متعددة",
   "operator-number": "رقم",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - البطاقات التي رقمها *<number>*",
-  "subtask-inherit-parent-labels": "وراثة تسميات البطاقة الأصلية"
+  "subtask-inherit-parent-labels": "وراثة تسميات البطاقة الأصلية",
+  "subtask-mark-done": "وضع علامة مكتملة على المهمة الفرعية",
+  "subtask-mark-not-done": "وضع علامة غير مكتملة على المهمة الفرعية",
+  "subtask-done-no-permission": "لا يمكنك تغيير حالة اكتمال هذه المهمة الفرعية"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (vyinshi)",
   "operator-number": "igitigiri",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakarata afise inomero y'ikarata *<number>*",
-  "subtask-inherit-parent-labels": "Rarira uduhwenya kw'ikarata y'umuvyeyi"
+  "subtask-inherit-parent-labels": "Rarira uduhwenya kw'ikarata y'umuvyeyi",
+  "subtask-mark-done": "Shira ikimenyetso c'uko igikorwa gitoyi giheze",
+  "subtask-mark-not-done": "Shira ikimenyetso c'uko igikorwa gitoyi kitaraheza",
+  "subtask-done-no-permission": "Ntushobora guhindura nimba iki gikorwa gitoyi giheze"
 }

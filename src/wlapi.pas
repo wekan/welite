@@ -95,6 +95,7 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // sends nothing; Error says why not.
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
+function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
 function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;InheritLabels:Boolean;out Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
@@ -5073,6 +5074,35 @@ begin
     Relations+InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
+end;
+
+function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
+var Rows:TWLRows; ParentScope,SubtaskScope,ParentBoard,TargetBoard,Guard,Value:string; Policy:TFieldPolicy;
+begin
+  Error:='not-found';
+  if (ParentId='') or (SubtaskId='') or (Pos(#0,ParentId+SubtaskId)>0) then Exit(404);
+  ParentScope:='id='+QuotedStr(ParentId)+' AND archived=0 AND deletedAt IS NULL';
+  Rows:=T.Db.Query('SELECT boardId FROM cards WHERE '+ParentScope+';');
+  if Length(Rows)<>1 then Exit(404);
+  ParentBoard:=Rows[0][0];
+  if not BoardCanRead(T.Db,UserId,ParentBoard) and
+    not (AssignedOnlyMember(T.Db,UserId,ParentBoard) and CardAssignedTo(T.Db,UserId,ParentBoard,ParentId)) then Exit(404);
+  SubtaskScope:='id='+QuotedStr(SubtaskId)+' AND parentId='+QuotedStr(ParentId)+
+    ' AND archived=0 AND deletedAt IS NULL AND COALESCE(type,''cardType-card'')=''cardType-card''';
+  Rows:=T.Db.Query('SELECT boardId FROM cards WHERE '+SubtaskScope+';');
+  if Length(Rows)<>1 then Exit(404);
+  TargetBoard:=Rows[0][0];
+  if not BoardCanWrite(T.Db,UserId,TargetBoard) then begin Error:='not-authorized';Exit(403);end;
+  Policy:=TFieldPolicy.Create(T.Db,UserId,TargetBoard,'');
+  try Guard:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  SubtaskScope:=SubtaskScope+' AND boardId='+QuotedStr(TargetBoard);
+  Value:=IntToStr(Ord(Done));
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM cards WHERE '+ParentScope+
+    ' AND boardId='+QuotedStr(ParentBoard)+') AND EXISTS(SELECT 1 FROM cards WHERE '+SubtaskScope+
+    ') THEN 1 ELSE json(''Subtask scope changed'') END; UPDATE cards SET dueComplete='+Value+
+    ',modifiedAt='+QuotedStr(NowIso)+' WHERE '+SubtaskScope+' AND COALESCE(dueComplete,0)<>'+Value+'; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not update subtask';Exit(500);end;
+  Error:='';Result:=200;
 end;
 
 function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;InheritLabels:Boolean;out Error:string):Integer;

@@ -2318,5 +2318,8 @@
   "many-items": "__items__ e tele",
   "operator-number": "numera",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - pepa e tutusa le numera o le pepa ma le *<number>*",
-  "subtask-inherit-parent-labels": "Talia mai fa'ailoga o le kata matua"
+  "subtask-inherit-parent-labels": "Talia mai fa'ailoga o le kata matua",
+  "subtask-mark-done": "Faailoga le galuega laiti ua maea",
+  "subtask-mark-not-done": "Faailoga le galuega laiti e lei maea",
+  "subtask-done-no-permission": "E le mafai ona e suia pe ua maea lenei galuega laiti"
 }

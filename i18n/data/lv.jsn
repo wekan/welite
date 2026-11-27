@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (vairāki)",
   "operator-number": "numurs",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartītes, kuru kartītes numurs ir *<number>*",
-  "subtask-inherit-parent-labels": "Mantot vecākkartes etiķetes"
+  "subtask-inherit-parent-labels": "Mantot vecākkartes etiķetes",
+  "subtask-mark-done": "Atzīmēt apakšuzdevumu kā pabeigtu",
+  "subtask-mark-not-done": "Atzīmēt apakšuzdevumu kā nepabeigtu",
+  "subtask-done-no-permission": "Jūs nevarat mainīt, vai šis apakšuzdevums ir pabeigts"
 }

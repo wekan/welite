@@ -2318,5 +2318,8 @@
   "many-items": "Mehrere __items__",
   "operator-number": "nummer",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` – Karten mit der Kartennummer *<number>*",
-  "subtask-inherit-parent-labels": "Labels der übergeordneten Karte übernehmen"
+  "subtask-inherit-parent-labels": "Labels der übergeordneten Karte übernehmen",
+  "subtask-mark-done": "Unteraufgabe als erledigt markieren",
+  "subtask-mark-not-done": "Unteraufgabe als nicht erledigt markieren",
+  "subtask-done-no-permission": "Du kannst nicht ändern, ob diese Unteraufgabe erledigt ist"
 }

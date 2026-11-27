@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (више)",
   "operator-number": "број",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картице чији је број *<number>*",
-  "subtask-inherit-parent-labels": "Наследи ознаке родитељске картице"
+  "subtask-inherit-parent-labels": "Наследи ознаке родитељске картице",
+  "subtask-mark-done": "Означи подзадатак као завршен",
+  "subtask-mark-not-done": "Означи подзадатак као незавршен",
+  "subtask-done-no-permission": "Не можете да промените да ли је овај подзадатак завршен"
 }

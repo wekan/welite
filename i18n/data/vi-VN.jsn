@@ -2318,5 +2318,8 @@
   "many-items": "Nhiều __items__",
   "operator-number": "số",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - các thẻ có số thẻ là *<number>*",
-  "subtask-inherit-parent-labels": "Kế thừa nhãn của thẻ cha"
+  "subtask-inherit-parent-labels": "Kế thừa nhãn của thẻ cha",
+  "subtask-mark-done": "Đánh dấu tác vụ con đã xong",
+  "subtask-mark-not-done": "Đánh dấu tác vụ con chưa xong",
+  "subtask-done-no-permission": "Bạn không thể thay đổi trạng thái đã xong của tác vụ con này"
 }

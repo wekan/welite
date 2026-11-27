@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (iolracha)",
   "operator-number": "uimhir",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cártaí arb é *<number>* uimhir an chárta",
-  "subtask-inherit-parent-labels": "Faigh lipéid an chárta tuismitheora mar oidhreacht"
+  "subtask-inherit-parent-labels": "Faigh lipéid an chárta tuismitheora mar oidhreacht",
+  "subtask-mark-done": "Marcáil an fo-thasc mar dhéanta",
+  "subtask-mark-not-done": "Marcáil an fo-thasc mar neamhdhéanta",
+  "subtask-done-no-permission": "Ní féidir leat a athrú an bhfuil an fo-thasc seo déanta"
 }

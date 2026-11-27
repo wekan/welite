@@ -2318,5 +2318,8 @@
   "many-items": "Prus __items__",
   "operator-number": "nùmeru",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartas chi tenent su nùmeru *<number>*",
-  "subtask-inherit-parent-labels": "Eredare is etichetas de sa carta babbu"
+  "subtask-inherit-parent-labels": "Eredare is etichetas de sa carta babbu",
+  "subtask-mark-done": "Marca sa suta-atividade comente fata",
+  "subtask-mark-not-done": "Marca sa suta-atividade comente no fata",
+  "subtask-done-no-permission": "Non podes cambiare si custa suta-atividade est fata"
 }

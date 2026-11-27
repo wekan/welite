@@ -2318,5 +2318,8 @@
   "many-items": "একাধিক __items__",
   "operator-number": "সংখ্যা",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - যিবোৰ কাৰ্ডৰ কাৰ্ড সংখ্যা *<number>*",
-  "subtask-inherit-parent-labels": "উপৰি কাৰ্ডৰ লেবেলবোৰ উত্তৰাধিকাৰী কৰক"
+  "subtask-inherit-parent-labels": "উপৰি কাৰ্ডৰ লেবেলবোৰ উত্তৰাধিকাৰী কৰক",
+  "subtask-mark-done": "উপ-কাম সম্পন্ন বুলি চিহ্নিত কৰক",
+  "subtask-mark-not-done": "উপ-কাম সম্পন্ন নোহোৱা বুলি চিহ্নিত কৰক",
+  "subtask-done-no-permission": "এই উপ-কাম সম্পন্ন হৈছে নে নাই আপুনি সলনি কৰিব নোৱাৰে"
 }

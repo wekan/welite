@@ -2318,5 +2318,8 @@
   "many-items": "Ọ̀pọ̀ __items__",
   "operator-number": "nọ́mbà",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - àwọn kaadi tí nọ́mbà wọn jẹ́ *<number>*",
-  "subtask-inherit-parent-labels": "Jogún àmi kaadi òbí"
+  "subtask-inherit-parent-labels": "Jogún àmi kaadi òbí",
+  "subtask-mark-done": "Samisi iṣẹ-ṣiṣe kekere bi ti ṣe",
+  "subtask-mark-not-done": "Samisi iṣẹ-ṣiṣe kekere bi ko ti ṣe",
+  "subtask-done-no-permission": "O ko le yi pada boya iṣẹ-ṣiṣe kekere yii ti ṣe"
 }

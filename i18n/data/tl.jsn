@@ -2318,5 +2318,8 @@
   "many-items": "Maraming __items__",
   "operator-number": "bilang",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kards whose kard bilang ay *<number>*",
-  "subtask-inherit-parent-labels": "Manahin ang mga label ng magulang na kard"
+  "subtask-inherit-parent-labels": "Manahin ang mga label ng magulang na kard",
+  "subtask-mark-done": "Markahan ang subtask bilang tapos",
+  "subtask-mark-not-done": "Markahan ang subtask bilang hindi tapos",
+  "subtask-done-no-permission": "Hindi mo mababago kung tapos na ang subtask na ito"
 }

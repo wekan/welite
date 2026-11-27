@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (tše dintši)",
   "operator-number": "nomoro",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata tše nomoro ya tšona ya karata e lego *<number>*",
-  "subtask-inherit-parent-labels": "Rua dilebele tša karata ya motswadi"
+  "subtask-inherit-parent-labels": "Rua dilebele tša karata ya motswadi",
+  "subtask-mark-done": "Swaya mošomo-potlana o feditšwe",
+  "subtask-mark-not-done": "Swaya mošomo-potlana o sa fela",
+  "subtask-done-no-permission": "O ka se fetoše ge e ba mošomo-potlana wo o feditšwe"
 }

@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (zwinzhi)",
   "operator-number": "nomboro",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi ane nomboro ya khadi ya vha *<number>*",
-  "subtask-inherit-parent-labels": "Dzhia dziḽeibuḽu dza khadi ḽa mubebi"
+  "subtask-inherit-parent-labels": "Dzhia dziḽeibuḽu dza khadi ḽa mubebi",
+  "subtask-mark-done": "Swaya mushumo muṱuku sa wo fhela",
+  "subtask-mark-not-done": "Swaya mushumo muṱuku sa u songo fhela",
+  "subtask-done-no-permission": "A ni koni u shandukisa uri mushumo muṱuku uyu wo fhela kana hai"
 }

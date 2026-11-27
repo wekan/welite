@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (ezininzi)",
   "operator-number": "inombolo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakhadi anenombolo yekhadi engu-*<number>*",
-  "subtask-inherit-parent-labels": "Yindlala amalebeli ekhadi lomzali"
+  "subtask-inherit-parent-labels": "Yindlala amalebeli ekhadi lomzali",
+  "subtask-mark-done": "Phawula umsebenzi ongaphantsi njengogqityiweyo",
+  "subtask-mark-not-done": "Phawula umsebenzi ongaphantsi njengongagqitywanga",
+  "subtask-done-no-permission": "Awunako ukutshintsha ukuba lo msebenzi ungaphantsi ugqityiwe na"
 }

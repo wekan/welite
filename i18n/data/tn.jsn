@@ -2318,5 +2318,8 @@
   "many-items": "__items__ (tse dintsi)",
   "operator-number": "palo",
   "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata whose karata palo ke *<number>*",
-  "subtask-inherit-parent-labels": "Rua dikarata tsa motsadi"
+  "subtask-inherit-parent-labels": "Rua dikarata tsa motsadi",
+  "subtask-mark-done": "Tshwaya tiro-potlana e weditswe",
+  "subtask-mark-not-done": "Tshwaya tiro-potlana ga e a wediwa",
+  "subtask-done-no-permission": "Ga o kgone go fetola gore a tiro-potlana e e weditswe"
 }
