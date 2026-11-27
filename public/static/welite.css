@@ -256,3 +256,10 @@ body.has-hide-focus-outline :is(a, button, input, select, textarea, summary, [ta
 }
 
 .card-date-iso-week { margin-inline-start: 0.35em; }
+
+/* Board Search reveals the match in the canvas without opening the card. */
+.js-minicard.is-search-highlight .minicard {
+  outline: 3px solid var(--theme-accent, #01628c);
+  outline-offset: -3px;
+}
+.search-step { margin: 4px 0; }

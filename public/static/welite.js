@@ -6,6 +6,8 @@
 
   var searchBoard = null;
   var searchTerm = '';
+  var searchCardId = null;
+  var searchDirection = 1;
 
   function setBoardSearch(sidebar, open) {
     var search = sidebar.querySelector('.js-board-search');
@@ -35,13 +37,28 @@
     var sidebar = document.querySelector('.board-sidebar');
     searchBoard = null;
     searchTerm = '';
-    if (sidebar) setBoardSearch(sidebar, false);
+    searchCardId = null;
+    if (sidebar) {
+      setBoardSearch(sidebar, false);
+      sidebar.closest('.board-wrapper').querySelectorAll('.is-search-highlight').forEach(function (card) {
+        card.classList.remove('is-search-highlight');
+      });
+    }
   });
 
+  up.on('keydown', '.js-board-search input', function (event) {
+    if (event.key === 'Enter') searchDirection = event.shiftKey ? -1 : 1;
+  });
   up.on('submit', '.js-board-search .js-search-term-form', function (event, form) {
     event.preventDefault();
-    searchTerm = form.elements.searchTerm.value;
-    renderBoardSearch(form);
+    var term = form.elements.searchTerm.value.trim();
+    if (term !== searchTerm) searchCardId = null;
+    searchTerm = term;
+    renderBoardSearch(form, searchDirection);
+    searchDirection = 1;
+  });
+  up.on('click', '.js-board-search .js-search-step', function (event, button) {
+    renderBoardSearch(button.closest('.js-board-search').querySelector('form'), Number(button.dataset.direction));
   });
 
   up.compiler('.js-board-search', function (search) {
@@ -52,12 +69,16 @@
     renderBoardSearch(form);
   });
 
-  function renderBoardSearch(form) {
-    var term = searchTerm.trim().toLocaleLowerCase();
+  function renderBoardSearch(form, direction) {
+    var term = searchTerm.toLocaleLowerCase();
     var results = form.parentElement.querySelector('.js-board-search-results');
-    results.replaceChildren();
-    if (!term) return;
+    var counter = form.parentElement.querySelector('.search-step');
     var board = form.closest('.board-wrapper');
+    var cards = [];
+    results.replaceChildren();
+    counter.classList.add('is-hidden');
+    board.querySelectorAll('.is-search-highlight').forEach(function (card) { card.classList.remove('is-search-highlight'); });
+    if (!term) return;
     board.querySelectorAll('.board-canvas .list-header-name, .board-canvas .minicard-title-text').forEach(function (title) {
       if (!title.textContent.toLocaleLowerCase().includes(term)) return;
       var list = title.closest('.list');
@@ -68,6 +89,7 @@
       link.textContent = title.textContent;
       link.href = card ? card.getAttribute('up-href') : '#' + list.id;
       if (card) {
+        cards.push(card);
         link.setAttribute('up-follow', '');
         link.setAttribute('up-target', '.board-wrapper');
       }
@@ -75,6 +97,19 @@
       item.append(link);
       results.append(item);
     });
+    if (!cards.length) { searchCardId = null; return; }
+    var index = cards.findIndex(function (card) { return card.dataset.cardId === searchCardId; });
+    if (direction) {
+      index = index < 0 ? (direction > 0 ? 0 : cards.length - 1) : (index + direction + cards.length) % cards.length;
+    }
+    if (index < 0) return;
+    var chosen = cards[index];
+    searchCardId = chosen.dataset.cardId;
+    chosen.classList.add('is-search-highlight');
+    if (direction) chosen.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    var caption = counter.querySelector('.js-search-step-count');
+    caption.textContent = caption.dataset.caption.replace('%s', String(index + 1)).replace('%s', String(cards.length));
+    counter.classList.remove('is-hidden');
   }
 
   // A card's Requested By and Assigned By (cardDetails.jade): Edit or Add

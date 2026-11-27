@@ -9,6 +9,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Open board Search from the header. Search matches the titles of loaded
   lists and cards. On mobile, Back closes the sidebar and returns directly
   to the board, including after a board refresh.
+- Step through matched cards with Enter, Shift+Enter or the Previous and
+  Next buttons. The sidebar shows the position, and the board scrolls to
+  and highlights the selected card.
 
 ## HTML5 minicards
 
