@@ -592,6 +592,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Regenerate the shared SQLite model from the current schema. Preserve
+  list collapse as a BSON boolean and make the model freshness check pass.
 - Update the native keypad test to check the three-row control and its
   explicit left-to-right direction. The test passes on both SQLite backends.
 - Show ISO week numbers next to the dates on cards and minicards in the

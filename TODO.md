@@ -308,8 +308,8 @@ Found on the way, not part of this goal:
   `tests/wkui/run.sh` cover the shared store meanwhile.
 
 - **Older test failures** (2026-11-26; reproduced on ab0d9ac):
-  `tests/ferroot.py` (`releases/genmodel.py --check` reports the generated
-  model out of date), `tests/short.py` (the first
+  `tests/ferroot.py` (the model check passes, the full interoperability run
+  with the corrected model is pending), `tests/short.py` (the first
   domain's database is not at `domains/d0000001/files/db/wekan.db`) and
   `tests/pathid.py` (its path identity cases answer differently). Two more
   need something this sandbox lacks: `tests/embhttp.py` an `fpcres` beside
