@@ -240,6 +240,7 @@ CREATE TABLE checklist_items (
   isFinished  INTEGER NOT NULL DEFAULT 0,
   createdAt   TEXT,
   dueAt       TEXT,
+  assigneeId  TEXT,
   modifiedAt  TEXT NOT NULL
 );
 CREATE INDEX idx_checklist_items ON checklist_items(checklistId, sort);

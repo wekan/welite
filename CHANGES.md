@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Assign a checklist item to an active board member or clear its assignee.
+  The picker highlights the current assignee and the card shows their name.
+
 - Edit checklist and item titles in place on the open card, using the same
   inline forms as Weddy. Delete a single item from its editor after confirming
   the removal. Other items stay on the checklist.

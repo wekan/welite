@@ -1348,7 +1348,7 @@ end;
 // title line's "+" before there is one, the bottom one after), an item added
 // under its checklist, an item checked, and the checklist's menu.
 function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
-var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, ItemUrl, DueLabel: string;
+var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, ItemUrl, DueLabel, AssigneeLabel: string;
   ShowDue: Boolean;
   function InlinedForm(const Cls, Action, Label_: string; const Title: string = ''; Editing: Boolean = False; const DeleteUrl: string = ''): string;
   begin
@@ -1400,11 +1400,14 @@ begin
   Result := Result + '</h3></div><div class="card-checklist-items">';
   ShowDue := BoardAllows(Db, BoardId, 'allowsChecklistDueDate');
   DueLabel := HtmlAttr(Words.Text('card-due', 'Due'));
+  AssigneeLabel := HtmlAttr(Words.Text('checklist-item-assignee', 'Assignee'));
   for i := 0 to High(Lists) do
   begin
     ChecklistUrl := Base + '/' + HTTPEncode(Lists[i][0]);
-    Items := Db.Query('SELECT id,title,COALESCE(isFinished,0),COALESCE(dueAt,'''') FROM checklist_items WHERE checklistId=' + QuotedStr(Lists[i][0]) +
-      ' AND cardId=' + QuotedStr(CardId) + ' ORDER BY sort,id;');
+    Items := Db.Query('SELECT i.id,i.title,COALESCE(i.isFinished,0),COALESCE(i.dueAt,''''),COALESCE(i.assigneeId,''''),' +
+      'COALESCE(NULLIF(json_extract(u.profile_json,''$.fullname''),''''),u.username,'''') ' +
+      'FROM checklist_items i LEFT JOIN users u ON u.id=i.assigneeId ' +
+      'WHERE i.checklistId=' + QuotedStr(Lists[i][0]) + ' AND i.cardId=' + QuotedStr(CardId) + ' ORDER BY i.sort,i.id;');
     Done := 0;
     ItemsHtml := '';
     for k := 0 to High(Items) do
@@ -1427,7 +1430,16 @@ begin
       if Writable then
         ItemsHtml := ItemsHtml + InlinedForm('js-edit-checklist-item', ItemUrl + '/title',
           Words.Text('add-checklist-item', 'Checklist item'), Items[k][1], True, ItemUrl + '/delete');
-      ItemsHtml := ItemsHtml + Deadline(Items[k][3], ItemUrl, 'checklist-item') + '</div>';
+      ItemsHtml := ItemsHtml + Deadline(Items[k][3], ItemUrl, 'checklist-item');
+      if Writable then
+        ItemsHtml := ItemsHtml + '<a class="checklist-item-assignee js-checklist-item-assignee" href="#" title="' +
+          AssigneeLabel + '" aria-label="' + AssigneeLabel + '" data-url="' + HtmlAttr(ItemUrl + '/assignee') +
+          '" data-assignee="' + HtmlAttr(Items[k][4]) + '">' +
+          IfThen(Items[k][5] <> '', '<span class="member js-checklist-item-assignee-name">' + E(Items[k][5]) + '</span>',
+            '<i class="fa fa-user-plus"></i>') + '</a>'
+      else if Items[k][5] <> '' then
+        ItemsHtml := ItemsHtml + '<span class="checklist-item-assignee"><span class="member">' + E(Items[k][5]) + '</span></span>';
+      ItemsHtml := ItemsHtml + '</div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
     if Lists[i][2] = '' then
@@ -1520,6 +1532,24 @@ begin
 end;
 
 // board.pug's checklistActionsPopup and checklistDeletePopup, for the opened card.
+function ChecklistAssigneePopup(Db: TWLDb; Words: TWLTranslator; const BoardId: string): string;
+var Members: TWLRows; Member: TWLRow;
+begin
+  Members := Db.Query('SELECT u.id,COALESCE(NULLIF(json_extract(u.profile_json,''$.fullname''),''''),u.username) ' +
+    'FROM board_members m JOIN users u ON u.id=m.userId WHERE m.boardId=' + QuotedStr(BoardId) +
+    ' AND m.isActive=1 ORDER BY u.username,u.id;');
+  Result := '<template class="js-pop-over-template" data-pop="checklist-item-assignee" data-title="' +
+    HtmlAttr(Words.Text('checklist-item-assignee', 'Assignee')) + '">' +
+    '<form class="js-checklist-item-assignee-form" method="post" action="#" up-submit up-target=".board-wrapper">' +
+    '<ul class="pop-over-list"><li><button class="js-set-checklist-item-assignee" type="submit" name="userId" value="">' +
+    '<i class="fa fa-ban"></i> ' + E(Words.Text('checklist-item-assignee-none', 'Nobody')) + '</button></li>';
+  for Member in Members do
+    Result := Result + '<li><button class="js-set-checklist-item-assignee" type="submit" name="userId" value="' +
+      HtmlAttr(Member[0]) + '" data-user-id="' + HtmlAttr(Member[0]) + '"><span class="member">' +
+      E(Member[1]) + '</span></button></li>';
+  Result := Result + '</ul></form></template>';
+end;
+
 function ChecklistPopups(Words: TWLTranslator; const BoardId, CardId: string): string;
 begin
   Result := '<template class="js-pop-over-template" data-pop="checklist-actions" data-title="' +
@@ -4326,7 +4356,7 @@ begin
       '<i class="fa fa-caret-right"></i> ' + E(Words.Text('activities', 'Activities')) + '</h3>' +
       '<div class="card-details-section js-card-section is-hidden" data-section="activities"><div class="activities js-card-activities">' +
       ActivityRows(Db, Words, BoardId, CardId, 100) + '</div></div></div>';
-    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + MembersPopup(Db, Words, BoardId, CardId) +
+    if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + ChecklistAssigneePopup(Db, Words, BoardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
     Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);
     if Writable then
@@ -7302,6 +7332,7 @@ begin
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'title') then Action := 'checklist-title'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'due') then Action := 'checklist-due'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
+  else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'assignee') then Action := 'assign-item'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'delete') then Action := 'delete-item'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'title') then Action := 'checklist-title'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'due') then Action := 'checklist-due'
@@ -7452,6 +7483,8 @@ begin
     Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
   else if Action = 'add-item' then
     Code := AddViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, Title, NewId, Error)
+  else if Action = 'assign-item' then
+    Code := AssignViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Request.ContentFields.Values['userId'], Error)
   else if Action = 'delete-item' then
     Code := DeleteViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Error)
   else if Action = 'toggle-item' then

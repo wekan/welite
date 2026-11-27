@@ -192,6 +192,8 @@ function RenameViewChecklist(const T: TWLTenant; const UserId, BoardId, CardId, 
   out Error: string): Integer;
 function DeleteViewChecklistItem(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId: string;
   out Error: string): Integer;
+function AssignViewChecklistItem(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, Assignee: string;
+  out Error: string): Integer;
 function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, At: string;
   Remove: Boolean; out Error: string): Integer;
 // Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
@@ -6248,7 +6250,7 @@ begin
 end;
 
 function WriteViewChecklistField(const T: TWLTenant; const BoardId, CardId, ChecklistId, ItemId, Field, Literal: string;
-  out Error: string): Integer;
+  out Error: string; const ExtraScope: string = ''): Integer;
 var Scope, TableName: string;
 begin
   Result := 200;
@@ -6264,6 +6266,7 @@ begin
       ' AND cardId=' + QuotedStr(CardId) + ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) +
       ') AND EXISTS(SELECT 1 FROM checklists WHERE ' + Scope + ')';
   end;
+  Scope := Scope + ExtraScope;
   if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE ' + TableName + ' SET ' + Field + '=' + Literal +
     ',modifiedAt=' + QuotedStr(NowIso) + ' WHERE ' + Scope +
     '; SELECT CASE WHEN (SELECT count(*) FROM ' + TableName + ' WHERE ' + Scope + ' AND ' + Field + ' IS ' + Literal +
@@ -6300,6 +6303,28 @@ begin
     finally Input.Free; end;
   end;
   Result := WriteViewChecklistField(T, BoardId, CardId, ChecklistId, ItemId, 'dueAt', Literal, Error);
+end;
+
+function AssignViewChecklistItem(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, Assignee: string;
+  out Error: string): Integer;
+var Literal, Guard: string;
+begin
+  if (ChecklistId = '') or (ItemId = '') then begin Error := 'Item not found'; Exit(404); end;
+  Result := ViewChecklistScope(T, UserId, BoardId, CardId, ChecklistId, ItemId, Error);
+  if Result <> 200 then Exit;
+  Literal := 'NULL';
+  Guard := '';
+  if Assignee <> '' then
+  begin
+    if Pos(#0, Assignee) > 0 then begin Error := 'Invalid assignee'; Exit(400); end;
+    Literal := QuotedStr(Assignee);
+    Guard := 'EXISTS(SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(BoardId) +
+      ' AND userId=' + Literal + ' AND isActive=1)';
+    if Length(T.Db.Query('SELECT 1 WHERE ' + Guard + ';')) <> 1 then
+    begin Error := 'Not an active member of this board'; Exit(400); end;
+    Guard := ' AND ' + Guard;
+  end;
+  Result := WriteViewChecklistField(T, BoardId, CardId, ChecklistId, ItemId, 'assigneeId', Literal, Error, Guard);
 end;
 
 // GET checklists of a card / POST create a checklist

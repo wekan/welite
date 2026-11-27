@@ -138,7 +138,8 @@ begin
 end;
 function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
 begin
-  Result:=EnsureNullableTextColumns(Db,['checklists','checklist_items'],['dueAt']);
+  Result:=EnsureNullableTextColumns(Db,['checklists','checklist_items'],['dueAt']) and
+    EnsureNullableTextColumns(Db,['checklist_items'],['assigneeId']);
 end;
 
 function EnsureDeleteMarkers(Db:TWLDb):Boolean;
