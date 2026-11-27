@@ -8266,6 +8266,20 @@ begin
     if Result = '' then Result := ListId;
     Exit;
   end;
+  Document := Values.Find('document');
+  if Document is TJSONObject then
+  begin
+    Result := TJSONObject(Document).Get('title', '');
+    if Result = '' then Result := TJSONObject(Document).Get('text', '');
+    if Result = '' then Result := TJSONObject(Document).Get('name', '');
+    if Result = '' then Result := TJSONObject(Document).Get('description', '');
+    if Result <> '' then Exit;
+  end;
+  Result := Values.Get('title', '');
+  if Result = '' then Result := Values.Get('description', '');
+  if Result = '' then Result := Values.Get('text', '');
+  if Result = '' then Result := Values.Get('name', '');
+  if Result <> '' then Exit;
   if Row.Get('group', '') = 'lifecycle' then
   begin
     Value := Values.Find('deleted');
@@ -8275,12 +8289,6 @@ begin
       Exit(Words.Text('history-change-restored', 'Restored'));
     end;
   end;
-  Document := Values.Find('document');
-  if Document is TJSONObject then Values := TJSONObject(Document);
-  Result := Values.Get('title', '');
-  if Result = '' then Result := Values.Get('description', '');
-  if Result = '' then Result := Values.Get('text', '');
-  if Result = '' then Result := Values.Get('name', '');
 end;
 
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;

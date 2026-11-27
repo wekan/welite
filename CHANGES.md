@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- History uses saved document titles, comment text and attachment filenames
+  in lifecycle summaries. Rows without saved text keep their status label.
+
 - The card archive and unarchive REST routes record the previous and new
   archive status in the board’s lifecycle history.
   Card archive status supports undo, redo and Restore from History.
