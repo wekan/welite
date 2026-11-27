@@ -64,9 +64,8 @@ font to the glyphs used in the document. Set `WELITE_PDF_TTF` to override
 the bundled font with a TrueType file. Installations without the resource or the adjacent font file
 use the standard PDF Courier fonts and WinAnsi encoding when no font is
 configured. Embedded builds and disk builds also include Unifont Upper for the
-supplementary Unicode characters it covers. The PDF records the original
-supplementary text in ActualText spans. PDF readers need ActualText
-support to extract it from those spans.
+supplementary Unicode characters it covers. The PDF preserves the original supplementary text in its ToUnicode map
+and ActualText spans.
 
 The bundled file is GNU Unifont 15.0.05 from the
 [GNU release archive](https://mirrors.ibiblio.org/gnu/unifont/unifont-15.0.05/).

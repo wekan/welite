@@ -37,7 +37,107 @@ type
 
 implementation
 
-uses SysUtils, Math, FPReadPNG, ZStream, wltmp;
+uses SysUtils, Math, FPReadPNG, ZStream, wltmp, FPFontTextMapping;
+
+type
+  TPdfExportDocument = class(TPDFDocument)
+  private
+    UpperMapId: Integer;
+  protected
+    procedure CreateToUnicode(const AFontNum: Integer); override;
+  public
+    UpperFontIndex: Integer;
+    UpperMap: array of TPdfUpperRange;
+    procedure SaveToStream(const AStream: TStream); override;
+  end;
+
+procedure TPdfExportDocument.CreateToUnicode(const AFontNum: Integer);
+begin
+  if AFontNum = UpperFontIndex then UpperMapId := GlobalXRefCount;
+  inherited CreateToUnicode(AFontNum);
+end;
+
+procedure TPdfExportDocument.SaveToStream(const AStream: TStream);
+const LF = #10;
+var PDF: TMemoryStream; CMap, Tail, Entry: RawByteString; Mappings: TTextMappingList;
+  I, J, Count, Code, Index: Integer; Point, Supplementary: Cardinal;
+  OriginalXRef, ObjectOffset, NewXRef: Int64;
+  procedure Write(const Value: RawByteString);
+  begin
+    PDF.WriteBuffer(Value[1], Length(Value));
+  end;
+begin
+  if UpperFontIndex < 0 then
+  begin
+    inherited SaveToStream(AStream);
+    Exit;
+  end;
+  PDF := TMemoryStream.Create;
+  try
+    inherited SaveToStream(PDF);
+    if UpperMapId > 0 then
+    begin
+      // Replace the generated 16-bit CMap with an incremental PDF update.
+      // The existing page streams, glyph IDs and cross-reference offsets stay valid.
+      Count := Min(PDF.Size, 128);
+      SetLength(Tail, Count);
+      PDF.Position := PDF.Size - Count;
+      PDF.ReadBuffer(Tail[1], Count);
+      Index := Pos('startxref', Tail);
+      if Index = 0 then raise EPDF.Create('Could not locate generated PDF cross-reference');
+      Tail := Trim(Copy(Tail, Index + Length('startxref'), MaxInt));
+      Index := Pos('%%EOF', Tail);
+      OriginalXRef := StrToInt64(Trim(Copy(Tail, 1, Index - 1)));
+
+      CMap := '/CIDInit /ProcSet findresource begin' + LF + '12 dict begin' + LF +
+        'begincmap' + LF + '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def' + LF +
+        '/CMapName /WeLiteUpper def' + LF + '/CMapType 2 def' + LF +
+        '1 begincodespacerange' + LF + '<0000> <FFFF>' + LF + 'endcodespacerange' + LF;
+      Mappings := Fonts[UpperFontIndex].TextMapping;
+      Entry := '';
+      Count := 0;
+      for I := 0 to Mappings.Count - 1 do
+      begin
+        Code := Mappings[I].CharID;
+        Point := 0;
+        for J := 0 to High(UpperMap) do
+          if (Code >= UpperMap[J].FontCode) and
+            (Cardinal(Code - UpperMap[J].FontCode) <= UpperMap[J].Last - UpperMap[J].First) then
+          begin
+            Point := UpperMap[J].First + Cardinal(Code - UpperMap[J].FontCode);
+            Break;
+          end;
+        if Point < $10000 then Continue;
+        Supplementary := Point - $10000;
+        Entry := Entry + '<' + IntToHex(Mappings[I].GlyphID, 4) + '> <' +
+          IntToHex($D800 + (Supplementary shr 10), 4) + IntToHex($DC00 + (Supplementary and $3FF), 4) + '>' + LF;
+        Inc(Count);
+        if Count = 100 then
+        begin
+          CMap := CMap + IntToStr(Count) + ' beginbfchar' + LF + Entry + 'endbfchar' + LF;
+          Entry := '';
+          Count := 0;
+        end;
+      end;
+      if Count > 0 then CMap := CMap + IntToStr(Count) + ' beginbfchar' + LF + Entry + 'endbfchar' + LF;
+      CMap := CMap + 'endcmap' + LF + 'CMapName currentdict /CMap defineresource pop' + LF + 'end' + LF + 'end' + LF;
+      PDF.Position := PDF.Size;
+      Write(LF);
+      ObjectOffset := PDF.Position;
+      Write(IntToStr(UpperMapId) + ' 0 obj' + LF + '<< /Length ' + IntToStr(Length(CMap)) + ' >>' + LF +
+        'stream' + LF + CMap + 'endstream' + LF + 'endobj' + LF);
+      NewXRef := PDF.Position;
+      Write('xref' + LF + IntToStr(UpperMapId) + ' 1' + LF +
+        Format('%.10d 00000 n ', [ObjectOffset]) + LF + 'trailer' + LF +
+        '<< /Size ' + IntToStr(GlobalXRefCount) + ' /Root ' + IntToStr(TPDFReference(Trailer.ValueByName('Root')).Value) +
+        ' 0 R /Prev ' + IntToStr(OriginalXRef) + ' >>' + LF +
+        'startxref' + LF + IntToStr(NewXRef) + LF + '%%EOF' + LF);
+    end;
+    PDF.Position := 0;
+    AStream.Position := 0;
+    AStream.CopyFrom(PDF, PDF.Size);
+  finally PDF.Free; end;
+end;
 
 const
   Margin = 15;
@@ -113,6 +213,8 @@ begin
       Info := TTFFileInfo.Create;
       Info.LoadFromFile(Path);
       UpperFont := Document.AddFont(Path, 'UnifontUpper');
+      TPdfExportDocument(Document).UpperFontIndex := UpperFont;
+      TPdfExportDocument(Document).UpperMap := UpperRanges;
       UpperMetrics := Info;
       Info := nil;
     except
@@ -130,7 +232,8 @@ var FontPath: string; Resource: TStream; Compressed: TGZipDecompressionStream;
 begin
   inherited Create;
   UpperFont := -1;
-  Document := TPDFDocument.Create(nil);
+  Document := TPdfExportDocument.Create(nil);
+  TPdfExportDocument(Document).UpperFontIndex := -1;
   Document.Options := [poPageOriginAtTop, poCompressImages, poUseImageTransparency];
   Document.DefaultPaperType := ptA4;
   Document.DefaultOrientation := ppoPortrait;

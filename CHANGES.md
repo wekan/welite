@@ -60,7 +60,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   falls back to a question mark. Embedded and disk builds now include
   Unifont Upper to render covered supplementary characters alongside
   ordinary text. The PDF carries the original supplementary text in
-  ActualText spans.
+  both its ToUnicode map and ActualText spans. PDF.js extracts the
+  original Japanese text and supplementary characters from the map.
 
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and
