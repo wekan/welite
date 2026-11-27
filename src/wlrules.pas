@@ -2118,8 +2118,18 @@ end;
 // A card's title or description row undone (previousContent back) or redone
 // (newContent back): only while the card still has the value the other side
 // left - a newer edit is never overwritten (history-conflict).
+function HistoryDateLiteral(Content: TJSONData; const Field: string; out Literal: string): Boolean;
+var V: TJSONData;
+begin
+  Result := False;
+  if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> Field) then Exit;
+  V := TJSONObject(Content).Find('value');
+  if V = nil then Exit;
+  Result := CardDateSql(V, Literal);
+end;
+
 function ApplyCardHistory(Db: TWLDb; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var Prev, Next, Put, Expect: TJSONData; Field, CardId: string; R: TWLRows;
+var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope: string; R: TWLRows;
   function ValueOf(Content: TJSONData): string;
   var V: TJSONData;
   begin
@@ -2135,6 +2145,19 @@ begin
   if Put is TJSONObject then Field := Str(TJSONObject(Put), 'field')
   else if Expect is TJSONObject then Field := Str(TJSONObject(Expect), 'field')
   else Field := '';
+  if CardHistoryDateField(Field) then
+  begin
+    if (Str(Row, 'group') <> 'dates') or not HistoryDateLiteral(Put, Field, PutSql) or
+      not HistoryDateLiteral(Expect, Field, ExpectSql) then Exit;
+    Scope := 'id=' + Q(Str(Row, 'entityId')) + ' AND boardId=' + Q(Str(Row, 'boardId')) + ' AND deletedAt IS NULL';
+    if Length(Db.Query('SELECT 1 FROM cards WHERE ' + Scope + ' AND ' + Field + ' IS ' + ExpectSql + ';')) <> 1 then
+    begin Error := 'history-conflict'; Exit; end;
+    Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' +
+      Scope + ' AND ' + Field + ' IS ' + ExpectSql + ') THEN 1 ELSE json(''Card date changed'') END; ' +
+      'UPDATE cards SET ' + Field + '=' + PutSql + ',modifiedAt=' + Q(NowIso) + ' WHERE ' + Scope + '; COMMIT;');
+    if not Result then Db.Exec('ROLLBACK;');
+    Exit;
+  end;
   if (Field <> 'title') and (Field <> 'description') then Exit;
   CardId := Str(Row, 'entityId');
   R := Db.Query('SELECT COALESCE(' + Field + ','''') FROM cards WHERE id=' + Q(CardId) + ' AND boardId=' + Q(Str(Row, 'boardId')) +
@@ -2378,7 +2401,7 @@ end;
 // writer's own card (canEditCardOrLinkedCard). The answer: 1 restored, 0
 // nothing to put back, -1 refused.
 function RestoreCardRow(Db: TWLDb; const UserId: string; Row: TJSONObject; Readable: THistoryScope): Integer;
-var Content: TJSONData; Field, CardId, Value: string; R: TWLRows; Before, After: TJSONObject;
+var Content: TJSONData; Field, CardId, Value, Literal, Group, Scope: string; R: TWLRows; Before, After: TJSONObject;
   function MayChange(const BoardId: string): Boolean;
   begin
     Result := BoardCanWrite(Db, UserId, BoardId) or (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId=' + Q(BoardId) +
@@ -2395,16 +2418,33 @@ begin
   if not (Content is TJSONObject) then Content := Row.Find('previousContent');
   if not (Content is TJSONObject) then Exit(0);
   Field := Str(TJSONObject(Content), 'field');
-  if (Field <> 'title') and (Field <> 'description') then Exit(0);
-  if (TJSONObject(Content).Find('value') = nil) or (TJSONObject(Content).Find('value').JSONType <> jtString) then Exit(0);
-  Value := TJSONObject(Content).Strings['value'];
-  if not Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET ' + Field + '=' + Q(Value) + ',modifiedAt=' + Q(NowIso) + ' WHERE id=' + Q(CardId) +
-    '; COMMIT;') then begin Db.Exec('ROLLBACK;'); Exit(0); end;
-  Before := TJSONObject.Create(['field', Field, 'value', IfThen(Field = 'title', R[0][1], R[0][2])]);
-  After := TJSONObject.Create(['field', Field, 'value', Value]);
+  Group := Str(Row, 'group');
+  Scope := 'id=' + Q(CardId) + ' AND boardId=' + Q(R[0][0]) + ' AND deletedAt IS NULL';
+  if CardHistoryDateField(Field) then
+  begin
+    if (Group <> 'dates') or not HistoryDateLiteral(Content, Field, Literal) then Exit(0);
+    R := Db.Query('SELECT boardId,COALESCE(' + Field + ','''') FROM cards WHERE ' + Scope + ';');
+    if Length(R) <> 1 then Exit(0);
+    Before := CardHistoryDateValue(Field, R[0][1]);
+    After := TJSONObject(Content.Clone);
+  end
+  else
+  begin
+    if (Field <> 'title') and (Field <> 'description') then Exit(0);
+    if (TJSONObject(Content).Find('value') = nil) or (TJSONObject(Content).Find('value').JSONType <> jtString) then Exit(0);
+    Value := TJSONObject(Content).Strings['value'];
+    Literal := Q(Value);
+    Before := TJSONObject.Create(['field', Field, 'value', IfThen(Field = 'title', R[0][1], R[0][2])]);
+    After := TJSONObject.Create(['field', Field, 'value', Value]);
+    Group := Field;
+  end;
   try
+    if not Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' + Scope +
+      ') THEN 1 ELSE json(''Card scope changed'') END; UPDATE cards SET ' + Field + '=' + Literal +
+      ',modifiedAt=' + Q(NowIso) + ' WHERE ' + Scope + '; COMMIT;') then
+    begin Db.Exec('ROLLBACK;'); Exit(0); end;
     try
-      RecordHistoryRow(Db, UserId, R[0][0], 'card', CardId, Field, 'restored', Before, After, Str(Row, '_id'), UserId);
+      RecordHistoryRow(Db, UserId, R[0][0], 'card', CardId, Group, 'restored', Before, After, Str(Row, '_id'), UserId);
     except
       // History never fails the restore it records.
     end;
@@ -2570,7 +2610,7 @@ begin
         Before := nil; After := nil;
         try
           // A card's title or description: whoever may edit that card now.
-          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description')) then
+          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description') or (Str(Row, 'group') = 'dates')) then
           begin
             Done := RestoreCardRow(T.Db, UserId, Row, Readable);
             if Done < 0 then Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));

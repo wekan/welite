@@ -224,6 +224,7 @@ function BoardCanCreateLabel(Db:TWLDb;const UserId,BoardId:string):Boolean;
 // the HTML5 view's date picker: set to At, or cleared, by whoever may change
 // the card but a Worker, on a board that uses that date; with WeKan's
 // a-<field> activity (server/lib/timingChangeActivity.js).
+function CardDateSql(Value:TJSONData;out Literal:string):Boolean;
 function SetViewCardDate(const T:TWLTenant;const UserId,BoardId,CardId,Kind,At:string;Remove:Boolean;
   out Error:string):Integer;
 function ViewDateKindField(const Kind:string;out Field,Setting:string):Boolean;
@@ -3006,7 +3007,6 @@ begin
   Result:=200;
 end;
 
-function CardDateSql(Value:TJSONData;out Literal:string):Boolean; forward;
 
 procedure WriteFileBytes(const Path,Data:string); forward;
 
@@ -7419,7 +7419,8 @@ end;
 
 function SetViewCardDate(const T:TWLTenant;const UserId,BoardId,CardId,Kind,At:string;Remove:Boolean;
   out Error:string):Integer;
-var Field,Setting,Literal,Scope,Stamp,Changed,Act:string;Input:TJSONData;Year:Integer;
+var Field,Setting,Literal,Scope,Stamp,Changed,Act,OldDate,NewDate:string;Input:TJSONData;Year:Integer;
+  Previous,Next:TJSONObject; Rows:TWLRows;
 begin
   Error:='';
   if not ViewDateKindField(Kind,Field,Setting) then begin Error:='not found';Exit(404);end;
@@ -7442,6 +7443,9 @@ begin
     finally Input.Free;end;
   end;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  Rows:=T.Db.Query('SELECT COALESCE('+Field+', '''') FROM cards WHERE '+Scope+';');
+  if Length(Rows)<>1 then begin Error:='Card not found';Exit(404);end;
+  OldDate:=Rows[0][0];
   Stamp:=QuotedStr(NowIso);
   // timingChangeActivity.js: a date set carries timeValue, a date cleared
   // timeOldValue alone, and clearing a date the card did not have records nothing.
@@ -7458,6 +7462,21 @@ begin
     ')=1 THEN 1 ELSE json(''Card scope changed'') END; '+Act+'UPDATE cards SET '+Field+'='+Literal+
     ',modifiedAt='+Stamp+',dateLastActivity='+Stamp+' WHERE '+Scope+'; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
+  NewDate:='';
+  if not Remove then NewDate:=Copy(Literal,2,Length(Literal)-2);
+  if OldDate<>NewDate then
+  begin
+    Previous:=CardHistoryDateValue(Field,OldDate);
+    Next:=CardHistoryDateValue(Field,NewDate);
+    try
+      try
+        RecordHistoryRow(T.Db,UserId,BoardId,'card',CardId,'dates',
+          IfThen(OldDate='', 'added', IfThen(Remove, 'removed', 'edited')),Previous,Next);
+      except
+        // History never fails the edit it records.
+      end;
+    finally Previous.Free;Next.Free;end;
+  end;
 end;
 
 function ViewFieldNumber(const Raw:string;Currency:Boolean;out Literal:string):Boolean;

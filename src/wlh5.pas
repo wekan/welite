@@ -91,7 +91,7 @@ implementation
 
 uses wlboard, wlthumb, Math,
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, wlchhist, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
   wlcrypt;
 
 const
@@ -7852,7 +7852,8 @@ begin
             (CanRestoreList and (Row.Get('entityType', '') = 'list') and (Row.Get('group', '') = 'lifecycle') and
               (Row.Get('changeType', '') = 'removed')) or
             (CanRestoreCard and (Row.Get('entityType', '') = 'card') and
-              ((Row.Get('group', '') = 'title') or (Row.Get('group', '') = 'description'))) then
+              ((Row.Get('group', '') = 'title') or (Row.Get('group', '') = 'description') or
+                ((Row.Get('group', '') = 'dates') and (Values <> nil) and CardHistoryDateField(Values.Get('field', ''))))) then
             Content := Content + '<input class="js-history-select" type="checkbox" name="id" value="' +
               HtmlAttr(Row.Get('_id', '')) + '" aria-label="' + HtmlAttr(Label_) + '">';
           Content := Content + '</td>';

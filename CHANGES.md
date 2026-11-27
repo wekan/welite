@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Card date edits from the date picker appear in History. Undo, redo and
+  selected-row restore preserve the stored instant and BSON date type.
+
 - History shows translated change groups, formatted timestamps and date
   values, and readable numeric, text and document details. Search and
   contributor controls wrap on narrow screens.

@@ -13,8 +13,29 @@ procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,Ca
 function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Group,ChangeType:string;
   Previous,Next:TJSONData;const RestoredFromId:string='';const RestoredByUserId:string=''):Boolean;
 
+function CardHistoryDateField(const Field: string): Boolean;
+function CardHistoryDateValue(const Field, Value: string): TJSONObject;
+
 implementation
 uses SysUtils,DateUtils,wlchhash,wlsjson,wlferr;
+
+function CardHistoryDateField(const Field: string): Boolean;
+begin
+  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt');
+end;
+
+function CardHistoryDateValue(const Field, Value: string): TJSONObject;
+var At: TDateTime; Ms: Int64;
+begin
+  Result := TJSONObject.Create(['field', Field]);
+  if TryStrToInt64(Value, Ms) or TryISO8601ToDate(Value, At, True) then
+  begin
+    if not TryStrToInt64(Value, Ms) then Ms := DateTimeToUnix(At, True) * 1000 + MilliSecondOf(At);
+    Result.Add('value', Ms);
+    Result.Add('isDate', True);
+  end
+  else Result.Add('value', TJSONNull.Create);
+end;
 
 function Milliseconds(const Text:string):Int64;
 var Date:TDateTime;Stamp,Epoch:TTimeStamp;
