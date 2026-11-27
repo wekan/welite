@@ -2223,7 +2223,7 @@ begin
 end;
 
 // ' AND ...' on cards c: the cards the filter matches; '' for no filter.
-function BoardFilterSql(const F: TBoardFilter): string;
+function BoardFilterSql(Db: TWLDb; const F: TBoardFilter): string;
 var Alts, Has: string;
 begin
   Result := '';
@@ -2247,7 +2247,7 @@ begin
     if Length(F.AdvancedIds) = 0 then Result := Result + ' AND 0'
     else Result := Result + ' AND c.id IN (' + SqlList(F.AdvancedIds) + ')';
   end;
-  if F.Text <> '' then Result := Result + ' AND ' + BoardTextMatchSql(F.Text);
+  if F.Text <> '' then Result := Result + ' AND (' + BoardTextMatchSql(F.Text) + IndexedAttachmentMatchSql(Db, F.Text) + ')';
 end;
 
 // boardHeader.jade's Filter button - on, with its reset, while a filter is -
@@ -3558,7 +3558,7 @@ begin
   PlainLinks := SharedSettingOn(Db, 'renderLinksAsPlainText');
   PlainSource := SharedSettingOn(Db, 'alwaysShowCodeAsText');
   Filter := ParseBoardFilter(Db, BoardId, Query);
-  FilterCond := BoardFilterSql(Filter);
+  FilterCond := BoardFilterSql(Db, Filter);
   if ViewAssignedOnly <> '' then
     FilterCond := FilterCond + ' AND EXISTS(SELECT 1 FROM card_assignees ao WHERE ao.cardId=c.id AND ao.userId=' + QuotedStr(ViewAssignedOnly) + ')';
   CardSort := ParseCardSort(Query);
@@ -5830,7 +5830,7 @@ begin
     begin
       Cards := Db.Query('SELECT c.id,c.title FROM cards c WHERE c.boardId=' + Board +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + BoardTextMatchSql(Text) +
-        BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + ')' +
+        BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text) + ')' +
         ' ORDER BY c.createdAt DESC,c.id;');
       for i := 0 to High(Cards) do
       begin

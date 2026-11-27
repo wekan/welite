@@ -69,6 +69,8 @@ function WriteBoardAnnouncement(Db: TWLDb; const BoardId: string; Enabled: Boole
 // extracted text has Needle, as a JSON array of {attachmentId, cardId,
 // snippet}, at most 50; of an assigned-only member's own cards only.
 function SearchDocumentText(Db: TWLDb; const UserId, BoardId, Needle: string; AssignedOnly: Boolean): string;
+// A search condition on cards c using the shared attachment text index.
+function IndexedAttachmentMatchSql(Db: TWLDb; const Needle: string): string;
 
 // The engine's hooks: arm at the start of a request, flush before it answers.
 procedure ArmRules(Request: TRequest);
@@ -2406,6 +2408,23 @@ begin
     Before.Free; After.Free;
   end;
   Result := 1;
+end;
+
+function IndexedAttachmentMatchSql(Db: TWLDb; const Needle: string): string;
+var Raw, Tbl: string;
+  function Field(const Name: string): string;
+  begin
+    Result := 'json_extract(p._ferretdb_sjson,''$.' + Name + ''')';
+  end;
+begin
+  Result := '';
+  if (Needle = '') or not CollectionTable(Db, 'documentPreviews', Raw, Tbl) then Exit;
+  Result := ' OR EXISTS(SELECT 1 FROM ' + Tbl + ' p JOIN attachments ON attachments.id=' + Field('attachmentId') +
+    ' AND attachments.cardId=c.id AND attachments.boardId=c.boardId WHERE ' + Field('cardId') + '=c.id AND ' +
+    Field('boardId') + '=c.boardId AND ' + Field('"$s".p.attachmentId.t') + '=''string'' AND ' +
+    Field('"$s".p.cardId.t') + '=''string'' AND ' + Field('"$s".p.boardId.t') + '=''string'' AND ' +
+    Field('"$s".p.searchText.t') + '=''string'' AND instr(lower(' + Field('searchText') + '),lower(' + Q(Needle) + '))>0 AND ' +
+    LiveAttachmentSQL(Db) + ')';
 end;
 
 function SearchDocumentText(Db: TWLDb; const UserId, BoardId, Needle: string; AssignedOnly: Boolean): string;

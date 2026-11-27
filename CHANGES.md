@@ -20,6 +20,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Find cards by readable custom-field text and exact number or currency
   values, including search terms with a decimal comma. Admin-only field
   values contribute matches only for viewers who can read them.
+- Match text already indexed by WeKan for live attachments in a shared
+  store. Board Search and the text filter check that each index entry still
+  belongs to an attachment on the matching card and board.
 
 ## HTML5 minicards
 
