@@ -8,7 +8,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Download the board as an Excel workbook. Card details presents each card
   as labeled values, and the table layout puts one card on each row. Both
-  use the selected field groups from the Export menu.
+  use the selected field groups from the Export menu. The API can limit
+  either layout to a swimlane, list, card, or the card containing a checklist.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

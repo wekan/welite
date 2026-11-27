@@ -2922,18 +2922,55 @@ begin
 end;
 
 procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Key: string; Payload: TJSONObject; Output: TMemoryStream;
+var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
+  Payload, Card, Checklist: TJSONObject; Cards, Checklists: TJSONArray;
+  Output: TMemoryStream; I: Integer; Matches: Boolean;
+  function ScopeId(const Key: string): string;
+  var C: Char;
+  begin
+    Result := aRequest.QueryFields.Values[Key];
+    if Length(Result) > 64 then Exit('');
+    for C in Result do
+      if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
+  end;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True) then Exit;
-  for Key in ['swimlaneId','listId','cardId','checklistId'] do
-    if aRequest.QueryFields.IndexOfName(Key) >= 0 then
-    begin SendError(aResponse, 400, 'Scoped Excel export is unavailable'); Exit; end;
+  CardId := ScopeId('cardId');
+  ChecklistId := ScopeId('checklistId');
+  LaneId := ScopeId('swimlaneId');
+  ListId := ScopeId('listId');
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   Output := TMemoryStream.Create;
   try
+    if (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '') then
+    begin
+      if (CardId = '') and (ChecklistId <> '') then
+      begin
+        Checklists := Payload.Arrays['checklists'];
+        for I := 0 to Checklists.Count - 1 do
+        begin
+          Checklist := Checklists.Objects[I];
+          if Checklist.Get('_id', '') = ChecklistId then
+          begin
+            CardId := Checklist.Get('cardId', '');
+            Break;
+          end;
+        end;
+      end;
+      Cards := Payload.Arrays['cards'];
+      for I := Cards.Count - 1 downto 0 do
+      begin
+        Card := Cards.Objects[I];
+        if CardId <> '' then Matches := Card.Get('_id', '') = CardId
+        else Matches := (ChecklistId = '') and
+          ((LaneId = '') or (Card.Get('swimlaneId', '') = LaneId)) and
+          ((ListId = '') or (Card.Get('listId', '') = ListId));
+        if not Matches or (Card.Get('linkedId', '') <> '') then Cards.Delete(I);
+      end;
+    end;
     try
       WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields']);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
