@@ -2933,18 +2933,19 @@ begin
   finally Output.Free; Payload.Free; end;
 end;
 
+function DownloadScopeId(Request: TRequest; const Key: string): string;
+var C: Char;
+begin
+  Result := Request.QueryFields.Values[Key];
+  if Length(Result) > 64 then Exit('');
+  for C in Result do
+    if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
+end;
+
 procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId, RouteCardId, RouteListId, Filename: string;
   Payload, Card, Checklist: TJSONObject; Cards, Checklists, OtherCards: TJSONArray;
   Output: TMemoryStream; I: Integer; Matches, Scoped, SingleCard, AsPdf: Boolean;
-  function ScopeId(const Key: string): string;
-  var C: Char;
-  begin
-    Result := aRequest.QueryFields.Values[Key];
-    if Length(Result) > 64 then Exit('');
-    for C in Result do
-      if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
-  end;
   function LoadPreview(Attachment: TJSONObject; Target: TStream; out Size: TPoint): Boolean;
   var Mime, Id, OutputType: string; Metadata: TWLRows;
   begin
@@ -2975,10 +2976,10 @@ begin
   end
   else
   begin
-    CardId := ScopeId('cardId');
-    ChecklistId := ScopeId('checklistId');
-    LaneId := ScopeId('swimlaneId');
-    ListId := ScopeId('listId');
+    CardId := DownloadScopeId(aRequest, 'cardId');
+    ChecklistId := DownloadScopeId(aRequest, 'checklistId');
+    LaneId := DownloadScopeId(aRequest, 'swimlaneId');
+    ListId := DownloadScopeId(aRequest, 'listId');
     Filename := 'board';
   end;
   Scoped := (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '');
@@ -3045,8 +3046,180 @@ begin
   finally OtherCards.Free; Output.Free; Payload.Free; end;
 end;
 
+procedure FilterBoardZipFields(Board: TJSONObject; const Fields: string);
+const Known = '|card-details|board-header|activities|labels|people|board-info|dates|' +
+  'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|';
+var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
+
+  procedure RemoveCardFields(const PartName: string; const Keys: array of string);
+  var J: Integer; FieldName: string;
+  begin
+    if Selected.IndexOf(PartName) >= 0 then Exit;
+    for J := 0 to Rows.Count - 1 do
+      for FieldName in Keys do Rows.Objects[J].Delete(FieldName);
+  end;
+
+begin
+  Selected := TStringList.Create;
+  try
+    Selected.CaseSensitive := True;
+    for Part in Fields.Split([',']) do
+    begin
+      Key := Trim(Part);
+      if (Key <> '') and (Pos('|' + Key + '|', Known) > 0) then Selected.Add(Key);
+    end;
+    if Selected.Count = 0 then Exit;
+    for Key in ['activities','attachments','comments','checklists'] do
+      if Selected.IndexOf(Key) < 0 then Board.Arrays[Key].Clear;
+    if Selected.IndexOf('checklists') < 0 then Board.Arrays['checklistItems'].Clear;
+    if Selected.IndexOf('custom-fields') < 0 then Board.Arrays['customFields'].Clear;
+    if Selected.IndexOf('labels') < 0 then Board.Delete('labels');
+    Rows := Board.Arrays['cards'];
+    RemoveCardFields('description', ['description']);
+    RemoveCardFields('custom-fields', ['customFields']);
+    RemoveCardFields('labels', ['labelIds']);
+    RemoveCardFields('people', ['members','assignees','requesters','assigners','requestedBy','assignedBy']);
+    RemoveCardFields('dates', ['receivedAt','startAt','dueAt','endAt','dueComplete','spentTime','isOvertime','isOverTime']);
+    RemoveCardFields('voting', ['vote']);
+    RemoveCardFields('poker', ['poker']);
+    RemoveCardFields('stickers', ['stickers']);
+    RemoveCardFields('locations', ['locations','locationName','locationAddress','locationLatitude','locationLongitude']);
+    RemoveCardFields('dependencies', ['cardDependencies','dependencies']);
+    if Selected.IndexOf('board-header') < 0 then Board.Delete('description');
+    if Selected.IndexOf('scrum') < 0 then
+    begin
+      for Key in ['scrum','scrumRevision','scrumTransfer','scrumTransferLosses'] do Board.Delete(Key);
+      RemoveCardFields('scrum', ['scrum','scrumRevision']);
+      for Key in ['lists','swimlanes'] do
+      begin
+        Rows := Board.Arrays[Key];
+        for I := 0 to Rows.Count - 1 do
+        begin
+          Rows.Objects[I].Delete('scrum');
+          Rows.Objects[I].Delete('scrumRevision');
+        end;
+      end;
+    end;
+  finally
+    Selected.Free;
+  end;
+end;
+
+procedure ScopeBoardZip(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string);
+var Cards, Checklists, Items, Entries: TJSONArray; Entry: TJSONObject;
+  CardIds, ListIds, LaneIds, CheckIds, UserIds: TStringList;
+  SelectedCard, Key: string; I: Integer; Matches: Boolean;
+
+  function NewIds: TStringList;
+  begin
+    Result := TStringList.Create;
+    Result.Sorted := True;
+    Result.CaseSensitive := True;
+    Result.Duplicates := dupIgnore;
+  end;
+
+  procedure RememberUser(Value: TJSONData);
+  var J: Integer;
+  begin
+    if Value is TJSONArray then
+      for J := 0 to Value.Count - 1 do RememberUser(Value.Items[J])
+    else if Value is TJSONObject then RememberUser(TJSONObject(Value).Find('userId'))
+    else if (Value is TJSONString) and (Value.AsString <> '') then UserIds.Add(Value.AsString);
+  end;
+
+  procedure KeepRows(const Collection, PropertyName: string; Ids: TStringList);
+  var Rows: TJSONArray; J: Integer; Row: TJSONObject;
+  begin
+    Rows := Board.Arrays[Collection];
+    for J := Rows.Count - 1 downto 0 do
+    begin
+      Row := Rows.Objects[J];
+      if Ids.IndexOf(Row.Get(PropertyName, '')) < 0 then Rows.Delete(J)
+      else RememberUser(Row.Find('userId'));
+    end;
+  end;
+
+begin
+  if (LaneId = '') and (ListId = '') and (CardId = '') and (ChecklistId = '') then Exit;
+  CardIds := NewIds;
+  ListIds := NewIds;
+  LaneIds := NewIds;
+  CheckIds := NewIds;
+  UserIds := NewIds;
+  try
+    RememberUser(Board.Find('members'));
+    SelectedCard := CardId;
+    Checklists := Board.Arrays['checklists'];
+    if (SelectedCard = '') and (ChecklistId <> '') then
+      for I := 0 to Checklists.Count - 1 do
+      begin
+        Entry := Checklists.Objects[I];
+        if Entry.Get('_id', '') <> ChecklistId then Continue;
+        SelectedCard := Entry.Get('cardId', '');
+        Break;
+      end;
+
+    Cards := Board.Arrays['cards'];
+    for I := Cards.Count - 1 downto 0 do
+    begin
+      Entry := Cards.Objects[I];
+      if SelectedCard <> '' then Matches := Entry.Get('_id', '') = SelectedCard
+      else Matches := (ChecklistId = '') and
+        ((LaneId = '') or (LaneId = Entry.Get('swimlaneId', ''))) and
+        ((ListId = '') or (ListId = Entry.Get('listId', '')));
+      if not Matches or (Entry.Get('linkedId', '') <> '') or (Entry.Get('deletedAt', '') <> '') then
+      begin
+        Cards.Delete(I);
+        Continue;
+      end;
+      CardIds.Add(Entry.Get('_id', ''));
+      LaneIds.Add(Entry.Get('swimlaneId', ''));
+      ListIds.Add(Entry.Get('listId', ''));
+      for Key in ['userId','members','assignees','requesters','assigners'] do RememberUser(Entry.Find(Key));
+    end;
+    if LaneId <> '' then LaneIds.Add(LaneId);
+    if ListId <> '' then ListIds.Add(ListId);
+    KeepRows('lists', '_id', ListIds);
+    KeepRows('swimlanes', '_id', LaneIds);
+    KeepRows('attachments', 'cardId', CardIds);
+    KeepRows('comments', 'cardId', CardIds);
+    KeepRows('activities', 'cardId', CardIds);
+    for I := Checklists.Count - 1 downto 0 do
+    begin
+      Entry := Checklists.Objects[I];
+      if (CardIds.IndexOf(Entry.Get('cardId', '')) < 0) or
+        ((ChecklistId <> '') and (Entry.Get('_id', '') <> ChecklistId)) then Checklists.Delete(I)
+      else
+      begin
+        CheckIds.Add(Entry.Get('_id', ''));
+        RememberUser(Entry.Find('userId'));
+      end;
+    end;
+    Items := Board.Arrays['checklistItems'];
+    for I := Items.Count - 1 downto 0 do
+    begin
+      Entry := Items.Objects[I];
+      if (CardIds.IndexOf(Entry.Get('cardId', '')) < 0) or
+        (CheckIds.IndexOf(Entry.Get('checklistId', '')) < 0) then Items.Delete(I)
+      else RememberUser(Entry.Find('assigneeId'));
+    end;
+    KeepRows('users', '_id', UserIds);
+    for Key in ['rules','triggers','actions'] do
+    begin
+      Entries := Board.Arrays[Key];
+      Entries.Clear;
+    end;
+  finally
+    UserIds.Free;
+    CheckIds.Free;
+    LaneIds.Free;
+    ListIds.Free;
+    CardIds.Free;
+  end;
+end;
+
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Key, Id, Name, Stem, Extension, Candidate, Path: string;
+var T: TWLTenant; BoardId, UserId, Id, Name, Stem, Extension, Candidate, Path: string;
   Payload, Attachment: TJSONObject; Attachments: TJSONData; Metadata: TWLRows;
   Output: TMemoryStream; Document: TStringStream; Archive: TZipper; Used: TStringList;
   I, N, Dot: Integer; C: Char;
@@ -3065,13 +3238,19 @@ var T: TWLTenant; BoardId, UserId, Key, Id, Name, Stem, Extension, Candidate, Pa
   end;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
-  for Key in ['swimlaneId','listId','cardId','checklistId','fields'] do
-    if aRequest.QueryFields.IndexOfName(Key) >= 0 then
-    begin SendError(aResponse, 400, 'Scoped ZIP export is unavailable'); Exit; end;
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
+  try
+    ScopeBoardZip(Payload, DownloadScopeId(aRequest, 'swimlaneId'), DownloadScopeId(aRequest, 'listId'),
+      DownloadScopeId(aRequest, 'cardId'), DownloadScopeId(aRequest, 'checklistId'));
+    FilterBoardZipFields(Payload, aRequest.QueryFields.Values['fields']);
+  except
+    Payload.Free;
+    SendError(aResponse, 500, 'Could not scope board export');
+    Exit;
+  end;
   Archive := TZipper.Create;
   Output := TMemoryStream.Create;
   Document := TStringStream.Create(Payload.AsJSON + #10);
