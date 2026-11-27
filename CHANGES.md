@@ -19,6 +19,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   The swimlane menu archives the swimlane and its active cards. The
   archive sidebar restores cards from that archive operation and keeps
   previously archived cards in the archive. Each transition is recorded.
+  Template swimlanes also archive and restore their lists and record
+  each list transition.
   REST template-list archiving and unarchiving also record the resulting
   card archive transitions as individual history entries.
   The hourly shared-store scheduler honors the board’s inactivity archive

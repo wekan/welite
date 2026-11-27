@@ -1962,7 +1962,7 @@ begin
 end;
 
 function SetViewSwimlaneArchived(const T:TWLTenant;const UserId,BoardId,LaneId:string;Archive:Boolean;out Error:string):Integer;
-var Scope,CardScope,Stamp,ArchivedAt,OldState,NewState:string;Rows,Changed:TWLRows;I:Integer;
+var Scope,CardScope,ListScope,ListUpdate,Placement,Stamp,ArchivedAt,OldState,NewState:string;Rows,Changed,ChangedLists:TWLRows;I:Integer;
 begin
   Error:='';
   if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
@@ -1971,18 +1971,30 @@ begin
   Scope:='id='+QuotedStr(LaneId)+' AND boardId='+QuotedStr(BoardId)+' AND archived='+OldState;
   if not T.Db.Exec('BEGIN IMMEDIATE;') then begin Error:='Could not change archive state';Exit(500);end;
   try
-    Rows:=T.Db.Query('SELECT COALESCE(archivedAt,'''') FROM swimlanes WHERE '+Scope+';');
+    Rows:=T.Db.Query('SELECT COALESCE(archivedAt,''''),type FROM swimlanes WHERE '+Scope+';');
     if Length(Rows)<>1 then
     begin T.Db.Exec('ROLLBACK;');Error:='Not found';Exit(404);end;
     Stamp:=QuotedStr(NowIso);
-    CardScope:='boardId='+QuotedStr(BoardId)+' AND swimlaneId='+QuotedStr(LaneId)+
-      ' AND deletedAt IS NULL AND archived='+OldState;
+    Placement:='swimlaneId='+QuotedStr(LaneId);
+    ListUpdate:='';
+    ChangedLists:=nil;
     ArchivedAt:='NULL';
-    if Archive then ArchivedAt:=Stamp
-    else CardScope:=CardScope+' AND archivedAt='+QuotedStr(Rows[0][0]);
+    if Archive then ArchivedAt:=Stamp;
+    if Rows[0][1]='template-swimlane' then
+    begin
+      ListScope:='boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL AND archived='+OldState+
+        ' AND ('+Placement+' OR COALESCE(swimlaneId,'''')='''')';
+      if not Archive then ListScope:=ListScope+' AND archivedAt='+QuotedStr(Rows[0][0]);
+      ChangedLists:=T.Db.Query('SELECT id FROM lists WHERE '+ListScope+' ORDER BY id;');
+      ListUpdate:='UPDATE lists SET archived='+NewState+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+
+        ' WHERE '+ListScope+'; ';
+      Placement:=Placement+' OR listId IN (SELECT id FROM lists WHERE '+ListScope+' AND type=''template-list'')';
+    end;
+    CardScope:='boardId='+QuotedStr(BoardId)+' AND ('+Placement+') AND deletedAt IS NULL AND archived='+OldState;
+    if not Archive then CardScope:=CardScope+' AND archivedAt='+QuotedStr(Rows[0][0]);
     Changed:=T.Db.Query('SELECT id FROM cards WHERE '+CardScope+' ORDER BY id;');
     if not T.Db.Exec('UPDATE cards SET archived='+NewState+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+
-      ' WHERE '+CardScope+'; UPDATE swimlanes SET archived='+NewState+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+
+      ' WHERE '+CardScope+'; '+ListUpdate+'UPDATE swimlanes SET archived='+NewState+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+
       ' WHERE '+Scope+'; COMMIT;') then
     begin T.Db.Exec('ROLLBACK;');Error:='Could not change archive state';Exit(500);end;
   except
@@ -1990,6 +2002,7 @@ begin
     raise;
   end;
   RecordArchiveHistory(T.Db,UserId,BoardId,'swimlane',LaneId,Archive);
+  for I:=0 to High(ChangedLists) do RecordArchiveHistory(T.Db,UserId,BoardId,'list',ChangedLists[I][0],Archive);
   for I:=0 to High(Changed) do RecordArchiveHistory(T.Db,UserId,BoardId,'card',Changed[I][0],Archive);
   Result:=200;
 end;
