@@ -20,6 +20,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   attachment names. A checklist scope includes only that checklist. The
   card layout also shows same-board subtasks with their completion state,
   and includes the comment author and creation time when available.
+  Planning Poker exports the question and estimate. Stickers export their
+  names, and locations export their names, addresses and coordinates.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

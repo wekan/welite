@@ -18,7 +18,7 @@ type
     Output: TStream;
     Head: TBoardRow;
     RowNumber: Integer;
-    CardDetails: Boolean;
+    CardDetails, ShowPoker, ShowStickers, ShowLocations: Boolean;
     Checklists, Items, Comments, Attachments, Subtasks, UsersById: TFPHashObjectList;
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
@@ -152,15 +152,25 @@ begin
 end;
 
 procedure TSheetWriter.DetailRows(Card: TJSONObject);
-var Pair: TBoardRow; CardId, State, Author, Created: string; Group, Children: TFPList;
-  Entry, Child, User: TJSONObject; I, J: Integer;
+var Pair: TBoardRow; CardId, State, Author, Created, Name: string; Group, Children: TFPList;
+  Entry, Child, User: TJSONObject; Data: TJSONData; I, J: Integer;
 
-  procedure AddDetail(const Caption, Value: string);
+  procedure AddDetail(const Caption, Value: string; LiteralText: Boolean = True);
   begin
     Pair[0].Text := Caption;
     Pair[1].Text := Value;
+    Pair[1].LiteralText := LiteralText;
     TableRow(Pair, False, True);
   end;
+
+  procedure AddValue(Obj: TJSONObject; const Key, Caption: string);
+  var Value: TJSONData;
+  begin
+    Value := Obj.Find(Key);
+    if (Value <> nil) and (Value.JSONType in [jtString, jtNumber, jtBoolean]) and
+      (Value.AsString <> '') then AddDetail(Caption, Value.AsString, Value.JSONType = jtString);
+  end;
+
 
 begin
   SetLength(Pair, 2);
@@ -221,6 +231,51 @@ begin
       for I := 0 to Group.Count - 1 do
         AddDetail('Attachment', TJSONObject(Group[I]).Get('name', ''));
   end;
+  if ShowPoker then
+  begin
+    Data := Card.Find('poker');
+    if Data is TJSONObject then
+    begin
+      AddValue(TJSONObject(Data), 'question', 'Planning Poker');
+      AddValue(TJSONObject(Data), 'estimation', 'Estimation');
+    end;
+  end;
+  if ShowStickers then
+  begin
+    Data := Card.Find('stickers');
+    if Data is TJSONArray then
+      for I := 0 to Data.Count - 1 do
+        if Data.Items[I] is TJSONObject then
+        begin
+          Entry := TJSONObject(Data.Items[I]);
+          Name := Entry.Get('name', '');
+          if Name = '' then Name := Entry.Get('icon', '');
+          if Name <> '' then AddDetail('Sticker', Name);
+        end;
+  end;
+  if ShowLocations then
+  begin
+    Data := Card.Find('locations');
+    if (Data is TJSONArray) and (Data.Count > 0) then
+    begin
+      for I := 0 to Data.Count - 1 do
+        if Data.Items[I] is TJSONObject then
+        begin
+          Entry := TJSONObject(Data.Items[I]);
+          AddValue(Entry, 'name', 'Location');
+          AddValue(Entry, 'address', 'Address');
+          AddValue(Entry, 'latitude', 'Latitude');
+          AddValue(Entry, 'longitude', 'Longitude');
+        end;
+    end
+    else
+    begin
+      AddValue(Card, 'locationName', 'Location');
+      AddValue(Card, 'locationAddress', 'Address');
+      AddValue(Card, 'locationLatitude', 'Latitude');
+      AddValue(Card, 'locationLongitude', 'Longitude');
+    end;
+  end;
 end;
 
 procedure TSheetWriter.Add(const Row: TBoardRow; Card: TJSONObject);
@@ -241,7 +296,7 @@ end;
 
 procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
-  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks: Boolean;
+  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations: Boolean;
   Users: TJSONArray; User: TJSONObject;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
@@ -408,6 +463,9 @@ begin
   WithComments := False;
   WithAttachments := False;
   WithSubtasks := False;
+  WithPoker := False;
+  WithStickers := False;
+  WithLocations := False;
   SheetCount := 0;
   CardDetails := False;
   for Part in Fields.Split([',']) do
@@ -415,6 +473,9 @@ begin
     Section := Trim(Part);
     if Section = 'checklists' then WithChecklists := True;
     if Section = 'comments' then WithComments := True;
+    if Section = 'poker' then WithPoker := True;
+    if Section = 'stickers' then WithStickers := True;
+    if Section = 'locations' then WithLocations := True;
     if Section = 'subtasks' then WithSubtasks := True;
     if Section = 'attachments' then WithAttachments := True;
     if Section = 'board-header' then BoardHeader := True;
@@ -445,6 +506,9 @@ begin
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
     StartSheet('Cards');
     Writer.CardDetails := CardDetails;
+    Writer.ShowPoker := WithPoker or not Known;
+    Writer.ShowStickers := WithStickers or not Known;
+    Writer.ShowLocations := WithLocations or not Known;
     if CardDetails then BoardColumns
     else
       Writer.Line('<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" ' +
