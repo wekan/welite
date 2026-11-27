@@ -430,10 +430,10 @@ end;
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles,AllowPublicGuest,ExcelMetadata:Boolean):TJSONObject;
 const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments','activities');
   ExportKeys:array[0..8] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments','activities');
-var Params,UserIds,Dependencies:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
-  I,J,Index:Integer;DependencyRows:TJSONArray;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
+var Params,UserIds,CardRelations:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
+  I,J,Index:Integer;Relation:TJSONArray;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
   function ExportRow(const TableName:string;Index:Integer):TJSONObject;
-  var Original:TJSONObject;Typed,FieldName:string;Id,Extra,Field:TJSONData;DependencyIndex:Integer;
+  var Original:TJSONObject;Typed,FieldName:string;Id,Extra,Field:TJSONData;RelationIndex,K:Integer; Relations:TJSONObject;
   begin
     Original:=TJSONArray(Audit.Find(TableName)).Objects[Index];
     Typed:=Original.Get('_wl_source','');
@@ -459,10 +459,27 @@ var Params,UserIds,Dependencies:TStringList;Graph,Data,Audit,Row,Files,Attachmen
             if (Field<>nil) and (Result.Find(FieldName)=nil) then Result.Add(FieldName,Field.Clone);
           end;
       finally Extra.Free;end;
-      Result.Delete('cardDependencies');
-      if Dependencies.Find(Result.Get('_id',''),DependencyIndex) then
-        Result.Add('cardDependencies',TJSONArray(Dependencies.Objects[DependencyIndex]).Clone);
+      if CardRelations.Find(Result.Get('_id',''),RelationIndex) then
+      begin
+        Relations:=TJSONObject(CardRelations.Objects[RelationIndex]);
+        for K:=0 to Relations.Count-1 do
+        begin
+          Result.Delete(Relations.Names[K]);
+          Result.Add(Relations.Names[K],Relations.Items[K].Clone);
+        end;
+      end;
     end;
+  end;
+  function CardRelation(const CardId,FieldName:string):TJSONArray;
+  var K:Integer; Card:TJSONObject; Value:TJSONData;
+  begin
+    if not CardRelations.Find(CardId,K) then
+      K:=CardRelations.AddObject(CardId,TJSONObject.Create);
+    Card:=TJSONObject(CardRelations.Objects[K]);
+    Value:=Card.Find(FieldName);
+    if Value<>nil then Exit(TJSONArray(Value));
+    Result:=TJSONArray.Create;
+    Card.Add(FieldName,Result);
   end;
   procedure Remember(Value:TJSONData);
   var K:Integer;
@@ -479,8 +496,8 @@ begin
   if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId,AllowPublicGuest) then Exit;
   Params:=TStringList.Create;
   UserIds:=TStringList.Create;UserIds.CaseSensitive:=True;UserIds.Sorted:=True;UserIds.Duplicates:=dupIgnore;
-  Dependencies:=TStringList.Create;
-  Dependencies.CaseSensitive:=True;Dependencies.Sorted:=True;Dependencies.OwnsObjects:=True;
+  CardRelations:=TStringList.Create;
+  CardRelations.CaseSensitive:=True;CardRelations.Sorted:=True;CardRelations.OwnsObjects:=True;
   try
     Params.Values['boardId']:=BoardId;Params.Values['action']:='export';
     Graph:=SelectionGraph(T,Params,True);
@@ -490,14 +507,22 @@ begin
       not FieldExportRowsAllowed(T.Db,UserId,BoardId,TJSONArray(Data.Find('card_custom_field_values')),AllowPublicGuest) then Exit;
     if not SelectionBindingsValid(T.Db,TJSONArray(Graph.Find('_export_bindings'))) then
       raise Exception.Create('Board export source changed');
+    for Name in ['members','assignees'] do
+    begin
+      Source:=TJSONArray(Data.Find('card_'+Name));
+      for I:=0 to Source.Count-1 do
+      begin
+        Row:=Source.Objects[I];
+        Relation:=CardRelation(Row.Get('cardId',''),Name);
+        Relation.Add(Row.Get('userId',''));
+      end;
+    end;
     Source:=TJSONArray(Data.Find('card_dependencies'));
     for I:=0 to Source.Count-1 do
     begin
       Row:=Source.Objects[I];
-      Key:=Row.Get('cardId','');
-      if not Dependencies.Find(Key,Index) then Dependencies.AddObject(Key,TJSONArray.Create);
-      DependencyRows:=TJSONArray(Dependencies.Objects[Dependencies.IndexOf(Key)]);
-      DependencyRows.Add(TJSONObject.Create(['cardId',Row.Get('targetCardId',''),
+      Relation:=CardRelation(Row.Get('cardId',''),'cardDependencies');
+      Relation.Add(TJSONObject.Create(['cardId',Row.Get('targetCardId',''),
         'type',Row.Get('type','related-to'),'color',Row.Get('color','#eb144c'),'icon',Row.Get('icon','link')]));
     end;
     if IncludeFiles then
@@ -578,7 +603,7 @@ begin
         for I:=0 to High(Rows) do Target.Add(GetJSON(Rows[I][0]));
       end;
     except FreeAndNil(Result);raise;end;
-  finally Dependencies.Free;UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
+  finally CardRelations.Free;UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
 end;
 
 function DeleteSelection(const T:TWLTenant;Graph:TJSONObject;const BoardId,UserId:string):Boolean;
