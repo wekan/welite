@@ -1627,6 +1627,8 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     event.preventDefault();
     menuLane = el.getAttribute('data-swimlane');
     openPopOver('swimlane-menu');
+    var lane = document.querySelector('.js-pop-over input[name=lane]');
+    if (lane) lane.value = menuLane;
   });
   up.on('click', '.js-pop-over .js-export-swimlane, .js-pop-over .js-import-swimlane', function (event, el) {
     event.preventDefault();

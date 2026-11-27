@@ -277,7 +277,7 @@ Next, after this goal:
   Also left are additional History field restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
-  saved card move reasons and same-board destination names, archive history for swimlane archiving,
+  saved card move reasons and same-board destination names, template-swimlane list cascades and grouped replay of swimlane archive history,
   rule configuration summaries,
   rendering existing Scrum history records, basic multivalue summaries, and document text summaries.
   An assigned-only member: the attachment API, the file routes, the

@@ -137,6 +137,7 @@ function ToggleViewBoardStar(Db:TWLDb;const UserId,BoardId:string;out Error:stri
 // only while a hard WIP limit has not filled it (#6772, wipRestore.js), else
 // to ToList when that open list of the board has room: 409 and
 // 'restore-blocked' when its own list is full and no ToList was given.
+function SetViewSwimlaneArchived(const T:TWLTenant;const UserId,BoardId,LaneId:string;Archive:Boolean;out Error:string):Integer;
 function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId,ToList:string;out Error:string):Integer;
 // Is ListId an open list of BoardId that a hard WIP limit has not filled?
 // Every open card of the list counts, in every swimlane (#2095). Title is
@@ -1960,6 +1961,39 @@ begin
   Result:=200;
 end;
 
+function SetViewSwimlaneArchived(const T:TWLTenant;const UserId,BoardId,LaneId:string;Archive:Boolean;out Error:string):Integer;
+var Scope,CardScope,Stamp,ArchivedAt,OldState,NewState:string;Rows,Changed:TWLRows;I:Integer;
+begin
+  Error:='';
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if (LaneId='') or (Pos(#0,LaneId)>0) then begin Error:='Not found';Exit(404);end;
+  OldState:=IntToStr(Ord(not Archive));NewState:=IntToStr(Ord(Archive));
+  Scope:='id='+QuotedStr(LaneId)+' AND boardId='+QuotedStr(BoardId)+' AND archived='+OldState;
+  if not T.Db.Exec('BEGIN IMMEDIATE;') then begin Error:='Could not change archive state';Exit(500);end;
+  try
+    Rows:=T.Db.Query('SELECT COALESCE(archivedAt,'''') FROM swimlanes WHERE '+Scope+';');
+    if Length(Rows)<>1 then
+    begin T.Db.Exec('ROLLBACK;');Error:='Not found';Exit(404);end;
+    Stamp:=QuotedStr(NowIso);
+    CardScope:='boardId='+QuotedStr(BoardId)+' AND swimlaneId='+QuotedStr(LaneId)+
+      ' AND deletedAt IS NULL AND archived='+OldState;
+    ArchivedAt:='NULL';
+    if Archive then ArchivedAt:=Stamp
+    else CardScope:=CardScope+' AND archivedAt='+QuotedStr(Rows[0][0]);
+    Changed:=T.Db.Query('SELECT id FROM cards WHERE '+CardScope+' ORDER BY id;');
+    if not T.Db.Exec('UPDATE cards SET archived='+NewState+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+
+      ' WHERE '+CardScope+'; UPDATE swimlanes SET archived='+NewState+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+
+      ' WHERE '+Scope+'; COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;');Error:='Could not change archive state';Exit(500);end;
+  except
+    T.Db.Exec('ROLLBACK;');
+    raise;
+  end;
+  RecordArchiveHistory(T.Db,UserId,BoardId,'swimlane',LaneId,Archive);
+  for I:=0 to High(Changed) do RecordArchiveHistory(T.Db,UserId,BoardId,'card',Changed[I][0],Archive);
+  Result:=200;
+end;
+
 function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId,ToList:string;out Error:string):Integer;
 var Table,Scope,Extra,Move,ListTitle:string;R:TWLRows;
 begin
@@ -1969,7 +2003,7 @@ begin
   Extra:='';
   if Kind='cards' then begin Table:='cards';Extra:=' AND deletedAt IS NULL';end
   else if Kind='lists' then begin Table:='lists';Extra:=' AND deletedAt IS NULL';end
-  else if Kind='swimlanes' then Table:='swimlanes'
+  else if Kind='swimlanes' then Exit(SetViewSwimlaneArchived(T,UserId,BoardId,ItemId,False,Error))
   else begin Error:='Not found';Exit(404);end;
   Scope:='id='+QuotedStr(ItemId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=1'+Extra;
   if Length(T.Db.Query('SELECT 1 FROM '+Table+' WHERE '+Scope+';'))<>1 then begin Error:='Not found';Exit(404);end;
@@ -2003,8 +2037,7 @@ begin
     '; SELECT CASE WHEN (SELECT count(*) FROM '+Table+' WHERE id='+QuotedStr(ItemId)+' AND archived=0)=1 THEN 1 '+
     'ELSE json(''Restore failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not restore';Exit(500);end;
-  if Table='lists' then RecordArchiveHistory(T.Db,UserId,BoardId,'list',ItemId,False)
-  else RecordArchiveHistory(T.Db,UserId,BoardId,'swimlane',ItemId,False);
+  RecordArchiveHistory(T.Db,UserId,BoardId,'list',ItemId,False);
   Result:=200;
 end;
 

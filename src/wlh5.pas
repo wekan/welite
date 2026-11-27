@@ -4367,7 +4367,7 @@ begin
         '" aria-label="' + HtmlAttr(Words.Text('history', 'History')) + '" title="' + HtmlAttr(Words.Text('history', 'History')) +
         '"><i class="fa fa-history"></i></a>';
     Header := Header + '<span class="swimlane-header-name title">' + E(Lanes[i][1]) + '</span>';
-    if CanExport then
+    if CanExport or Writable then
       Header := Header + '<a class="js-open-swimlane-menu" href="#" data-swimlane="' + HtmlAttr(Lanes[i][0]) +
         '" aria-label="' + HtmlAttr(Words.Text('export-swimlane', 'Export swimlane')) + '"><i class="fa fa-navicon"></i></a>';
     if Writable then
@@ -4621,12 +4621,17 @@ begin
         IfThen(CanExport, BoardExportPopup(Words, BoardId, CardId, Card[0][9]), '');
   end;
   Details := Details + MemberPopups(Db, Words, S, BoardId);
-  if CanExport then
-    Details := Details + BoardExportPopup(Words, BoardId, '', '', True) +
-      '<template class="js-pop-over-template" data-pop="swimlane-menu" data-title="' +
-      HtmlAttr(Words.Text('swimlane', 'Swimlane')) + '"><ul class="pop-over-list"><li>' +
-      '<a class="js-export-swimlane" href="#">' + E(Words.Text('export-swimlane', 'Export swimlane')) +
-      '</a></li></ul></template>';
+  if CanExport then Details := Details + BoardExportPopup(Words, BoardId, '', '', True);
+  if CanExport or Writable then
+    Details := Details + '<template class="js-pop-over-template" data-pop="swimlane-menu" data-title="' +
+      HtmlAttr(Words.Text('swimlane', 'Swimlane')) + '"><ul class="pop-over-list">' +
+      IfThen(CanExport, '<li><a class="js-export-swimlane" href="#">' +
+        E(Words.Text('export-swimlane', 'Export swimlane')) + '</a></li>', '') +
+      IfThen(Writable, '<li><form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+        '/swimlanes/archive" up-submit up-target=".board-wrapper"><input type="hidden" name="lane">' +
+        '<button type="submit" class="js-close-swimlane">' +
+        E(Words.Text('archive-swimlane', 'Move Swimlane to Archive')) + '</button></form></li>', '') +
+      '</ul></template>';
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.
   if Writable then
     Details := Details + '<template class="js-pop-over-template" data-pop="add-swimlane" data-title="' +
@@ -7764,7 +7769,7 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or (((P[2] = 'announcement') or (P[2] = 'auto-archive')) and (n = 3)) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((n = 4) and (P[2] = 'swimlanes') and (P[3] = 'archive')) or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or (((P[2] = 'announcement') or (P[2] = 'auto-archive')) and (n = 3)) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
@@ -7774,6 +7779,7 @@ begin
   else if (n = 3) and (P[2] = 'announcement') then Action := 'announcement'
   else if (n = 4) and (P[2] = 'archive') and (P[3] = 'restore-all-cards') then Action := 'restore-all'
   else if (n = 4) and (P[2] = 'archive') then Action := 'restore'
+  else if (n = 4) and (P[2] = 'swimlanes') then Action := 'archive-swimlane'
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
   else if (n = 3) and (P[2] = 'watch') then Action := 'watch-board'
@@ -7868,6 +7874,8 @@ begin
     begin Code := 200; AnnounceToAll; end
     else begin Code := 500; Error := 'Could not save'; end;
   end
+  else if Action = 'archive-swimlane' then
+    Code:=SetViewSwimlaneArchived(T,S.UserId,BoardId,Request.ContentFields.Values['lane'],True,Error)
   else if Action = 'restore-all' then
     Code := RestoreAllViewCards(T, S.UserId, BoardId, ViewRestoreSkipped, Error)
   else if Action = 'add-custom-field' then

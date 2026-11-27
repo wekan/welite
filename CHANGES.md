@@ -16,6 +16,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   REST list archive and unarchive and archive-sidebar list and swimlane
   restores record the container’s archive status in lifecycle history.
   List and swimlane archive states support Undo, Redo and Restore.
+  The swimlane menu archives the swimlane and its active cards. The
+  archive sidebar restores cards from that archive operation and keeps
+  previously archived cards in the archive. Each transition is recorded.
   REST template-list archiving and unarchiving also record the resulting
   card archive transitions as individual history entries.
   The hourly shared-store scheduler honors the board’s inactivity archive
