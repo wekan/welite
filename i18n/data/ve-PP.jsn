@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "i tevhela zwe bammbi ḽa ita",
   "drag-to-reorder": "Veda, miše vajehtada järgendust. Ülähäks da alahaks ozutajad nol’klavišad sirdadas ühten sijan verran.",
   "ask-move-reason": "Sirdä kart → Kirjutuz?",
-  "draggable": "Saa vedada"
+  "draggable": "Saa vedada",
+  "restore-card-wip-limit-reached": "Lugetiž __list__ om tulnu ičeze WIP-röunhasai. Endišta kart toižhe lugetišhe:",
+  "restore-card-no-list-with-room": "Kaik lugetišed necil laudal oma tulnuded ičeze WIP-röunhasai. Libuta röun, vai sirdä vai pane kartad arhivaha, miše endištada nece kart.",
+  "restore-all-skipped-wip-limit": "__count__ kart(ad) ei endištadud: niiden lugetišed oma tulnuded ičeze WIP-röunhasai. Endišta niid ühthe kerdale, miše valita toine lugetiž."
 }

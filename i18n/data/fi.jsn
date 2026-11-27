@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "noudattaa taulun oletusta",
   "drag-to-reorder": "Järjestä uudelleen vetämällä. Ylä- ja alanuolinäppäimet siirtävät yhden askeleen.",
   "ask-move-reason": "Kysy syy korttia siirrettäessä",
-  "draggable": "Vedettävissä"
+  "draggable": "Vedettävissä",
+  "restore-card-wip-limit-reached": "Lista __list__ on saavuttanut WIP-rajansa. Palauta kortti toiseen listaan:",
+  "restore-card-no-list-with-room": "Tämän taulun jokainen lista on saavuttanut WIP-rajansa. Nosta rajaa tai siirrä tai arkistoi kortteja palauttaaksesi tämän kortin.",
+  "restore-all-skipped-wip-limit": "__count__ korttia ei palautettu: niiden listat ovat saavuttaneet WIP-rajansa. Palauta ne yksi kerrallaan valitaksesi toisen listan."
 }

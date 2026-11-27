@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ilandzela lokujwayelekile kwelibhodi",
   "drag-to-reorder": "Hudvula kuze ushintje kulandzelana. Tinkinobho temicibisholo yetulu naphansi tihambisa indzawo yinye.",
   "ask-move-reason": "Khweshisa likhadi → Inchazelo?",
-  "draggable": "Kungadvonswa"
+  "draggable": "Kungadvonswa",
+  "restore-card-wip-limit-reached": "Luhla __list__ selufike emkhawulweni walo we-WIP. Buyisela likhadi kulolunye luhla:",
+  "restore-card-no-list-with-room": "Luhla ngalunye kulelibhodi selufike emkhawulweni walo we-WIP. Khulisa umkhawulo, nome uhambise nome uyise esigcinweni emakhadi, kute ubuyisele lelikhadi.",
+  "restore-all-skipped-wip-limit": "Emakhadi langu-__count__ akakabuyiselwa: tinhla tawo setifike emikhawulweni yato ye-WIP. Wabuyisele ngalinye kute ukhetse lolunye luhla."
 }

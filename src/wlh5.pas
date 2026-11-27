@@ -482,6 +482,11 @@ threadvar
   // The order of the minicard's pieces and of the card's dates on this
   // board (Card Settings' panes, wlcardst).
   ViewMinicardPieces, ViewCardDates: TStringArray;
+  // The Archive's answer to the restore just made (#6772): the card whose
+  // list was full - its "restore to another list" opened at once - and how
+  // many cards Restore all left out.
+  ViewRestoreBlocked: string;
+  ViewRestoreSkipped: Integer;
 
 // WeKan's resolveDateFormat for this viewer on this board: the member's own
 // format while their override is on, the board's, Admin Panel's.
@@ -2546,19 +2551,52 @@ end;
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
   const FilterView: string): string;
-var R: TWLRows; i: Integer; Archived: string;
-  function Item(const Kind, Id, Title: string; Card: Boolean): string;
-  var Restore: string;
+var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards: Boolean;
+  // WeKan's restoreArchivedCardToListPopup (#6772): the card's list is gone,
+  // or full at a hard WIP limit - one of the lists with room instead.
+  function BlockedPopup(const Id, ListId: string): string;
+  var k: Integer; Options: string;
   begin
-    Restore := '';
+    Options := '';
+    for k := 0 to High(Rooms) do
+      Options := Options + '<option value="' + HtmlAttr(Rooms[k][0]) + '">' + E(Rooms[k][1]) + '</option>';
+    Result := '<template class="js-pop-over-template" data-pop="restore-card-' + HtmlAttr(Id) + '" data-title="' +
+      HtmlAttr(Words.Text('restore', 'Restore')) + '"><div class="content"><p class="js-restore-wip-reached">';
+    if ListTitle <> '' then
+      Result := Result + E(StringReplace(Words.Text('restore-card-wip-limit-reached',
+        'The list __list__ has reached its WIP limit. Restore the card to another list:'), '__list__', ListTitle, [rfReplaceAll]))
+    else
+      Result := Result + E(Words.Text('error-list-doesNotExist', 'This list does not exist'));
+    Result := Result + '</p>';
+    if Options <> '' then
+      Result := Result + '<form method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/archive/restore" up-submit ' +
+        'up-target=".board-wrapper"><input type="hidden" name="kind" value="cards"><input type="hidden" name="id" value="' +
+        HtmlAttr(Id) + '"><select class="js-select-restore-target-list" name="toList" autofocus>' + Options + '</select>' +
+        '<div class="edit-controls clearfix"><button class="primary confirm js-restore-card-to-list" type="submit">' +
+        E(Words.Text('restore', 'Restore')) + '</button></div></form>'
+    else
+      Result := Result + '<p class="js-restore-no-list-with-room">' + E(Words.Text('restore-card-no-list-with-room',
+        'Every list on this board has reached its WIP limit. Raise a limit, or move or archive cards, to restore this card.')) + '</p>';
+    Result := Result + '</div></template>';
+    if ViewRestoreBlocked = Id then
+      Result := Result + '<span class="js-open-pop-on-load" data-pop="restore-card-' + HtmlAttr(Id) + '" hidden></span>';
+  end;
+  function Item(const Kind, Id, Title: string; Card: Boolean; const ListId: string = ''): string;
+  var Restore, Pop: string; Blocked: Boolean;
+  begin
+    Restore := ''; Pop := '';
+    Blocked := Card and Writable and not ListHasRoom(Db, BoardId, ListId, ListTitle);
     if Writable then
       Restore := '<form class="js-restore-form" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
         '/archive/restore" up-submit up-target=".board-wrapper"><input type="hidden" name="kind" value="' + Kind +
         '"><input type="hidden" name="id" value="' + HtmlAttr(Id) + '"><a class="' + IfThen(Card, 'js-restore-card', 'js-restore') +
+        // No data-pop: the page may be older than the list's limit, so the
+        // server decides, and answers a full list with this popup open.
         '" href="#">' + E(Words.Text('restore', 'Restore')) + '</a></form>';
+    if Blocked then Pop := BlockedPopup(Id, ListId);
     if Card then
       Result := '<div class="minicard-wrapper archived-item archived-card-item" data-kind="cards" data-id="' + HtmlAttr(Id) +
-        '"><div class="minicard"><div class="minicard-title">' + E(Title) + '</div></div>' + Restore + '</div>'
+        '"><div class="minicard"><div class="minicard-title">' + E(Title) + '</div></div>' + Restore + Pop + '</div>'
     else
       Result := '<div class="archived-item" data-kind="' + Kind + '" data-id="' + HtmlAttr(Id) + '"><span class="archived-item-title">' +
         E(Title) + '</span>' + Restore + '</div>';
@@ -2571,14 +2609,32 @@ var R: TWLRows; i: Integer; Archived: string;
   end;
 begin
   Archived := '';
-  R := Db.Query('SELECT id,title FROM cards WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 AND deletedAt IS NULL ORDER BY archivedAt DESC,id;');
-  for i := 0 to High(R) do Archived := Archived + Item('cards', R[i][0], R[i][1], True);
+  // The open lists a card can be restored into: not full at a hard limit.
+  Rooms := Db.Query('SELECT l.id,l.title FROM lists l WHERE l.boardId=' + QuotedStr(BoardId) + ' AND l.archived=0 AND l.deletedAt IS NULL ' +
+    'AND NOT (COALESCE(l.wip_enabled,0)=1 AND COALESCE(l.wip_soft,0)=0 AND (SELECT count(*) FROM cards c WHERE c.listId=l.id AND ' +
+    'c.archived=0 AND c.deletedAt IS NULL)>=COALESCE(l.wip_value,1)) ORDER BY l.sort,l.title;');
+  R := Db.Query('SELECT id,title,COALESCE(listId,'''') FROM cards WHERE boardId=' + QuotedStr(BoardId) +
+    ' AND archived=1 AND deletedAt IS NULL ORDER BY archivedAt DESC,id;');
+  HasCards := Length(R) > 0;
+  for i := 0 to High(R) do Archived := Archived + Item('cards', R[i][0], R[i][1], True, R[i][2]);
   R := Db.Query('SELECT id,title FROM lists WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 AND deletedAt IS NULL ORDER BY sort,id;');
   for i := 0 to High(R) do Archived := Archived + Item('lists', R[i][0], R[i][1], False);
   R := Db.Query('SELECT id,title FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 ORDER BY sort,id;');
   for i := 0 to High(R) do Archived := Archived + Item('swimlanes', R[i][0], R[i][1], False);
   if Archived = '' then
-    Archived := '<p class="no-items-message">' + E(Words.Text('no-archived-cards', 'No archived cards.')) + '</p>';
+    Archived := '<p class="no-items-message">' + E(Words.Text('no-archived-cards', 'No archived cards.')) + '</p>'
+  else if HasCards and Writable then
+    // archivesSidebar's Restore all, of the cards.
+    Archived := '<form class="js-restore-all-form" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+      '/archive/restore-all-cards" up-submit up-target=".board-wrapper"><a class="js-restore-all-cards" href="#">' +
+      E(Words.Text('restore-all', 'Restore all')) + '</a></form>' + Archived;
+  // WeKan's restoreAllSkippedPopup: Restore all left cards out (#6772).
+  if ViewRestoreSkipped > 0 then
+    Archived := Archived + '<template class="js-pop-over-template" data-pop="restore-all-skipped" data-title="' +
+      HtmlAttr(Words.Text('restore-all', 'Restore all')) + '"><div class="content"><p class="js-restore-all-skipped">' +
+      E(StringReplace(Words.Text('restore-all-skipped-wip-limit', '__count__ card(s) were not restored: their lists have reached ' +
+      'their WIP limits. Restore them one at a time to choose another list.'), '__count__', IntToStr(ViewRestoreSkipped), [rfReplaceAll])) +
+      '</p></div></template><span class="js-open-pop-on-load" data-pop="restore-all-skipped" hidden></span>';
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
     HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a><div class="sidebar-content js-board-sidebar-content">' +
     FilterView +
@@ -3878,6 +3934,7 @@ end;
 
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
+  Limit: Double;
   // The values of a copy that its copier may not read: not kept.
   procedure RedactCopiedFields(const CardId, BoardId: string);
   var Policy: TFieldPolicy; V: TWLRows; k: Integer; Sql: string;
@@ -4267,6 +4324,52 @@ begin
       if (Name = '/boards/update') or (Name = '/customFields/update') or (Name = 'setBoardDragging') then AnnounceToAll;
       SendJsonAnswer(Response, 200, '{"result":1}');
     end;
+    Exit;
+  end;
+  // server/models/lists.js's WIP limit methods, a board admin's: applyWipLimit
+  // [listId, limit] sets the value - 1 when it is no number of at least one -
+  // enableWipLimit [listId] turns the limit on or off (a value of 0 becoming
+  // 1), and enableSoftLimit [listId] between hard and soft.
+  if (Name = 'applyWipLimit') or (Name = 'enableWipLimit') or (Name = 'enableSoftLimit') then
+  begin
+    Args := nil;
+    Limit := 0;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (((Name = 'applyWipLimit') and (TJSONArray(Args).Count = 2)) or ((Name <> 'applyWipLimit') and (TJSONArray(Args).Count = 1))) and
+        (TJSONArray(Args).Items[0].JSONType = jtString) and
+        ((Name <> 'applyWipLimit') or (TJSONArray(Args).Items[1].JSONType = jtNumber))) then
+      begin SendJsonAnswer(Response, 400, '{"error":"Match.Error","reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Strings[0];
+      if Name = 'applyWipLimit' then Limit := TJSONArray(Args).Floats[1];
+    finally
+      Args.Free;
+    end;
+    R := T.Db.Query('SELECT boardId,COALESCE(wip_value,0),COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE id=' +
+      QuotedStr(Id) + ' AND deletedAt IS NULL;');
+    if Length(R) <> 1 then begin SendJsonAnswer(Response, 404, '{"error":"list-not-found","reason":"List not found"}'); Exit; end;
+    if not BoardOwnAdmin(T.Db, S.UserId, R[0][0]) then
+    begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"You must be a board admin to modify WIP limits."}'); Exit; end;
+    if Name = 'applyWipLimit' then
+    begin
+      // NaN and Infinity fail both comparisons: they become 1, as in WeKan.
+      if not ((Limit >= 1) and (Limit <= 1.7e308)) then Limit := 1;
+      Id := 'wip_value=' + FloatToStr(Limit, DefaultFormatSettings) + ' WHERE id=' + QuotedStr(Id);
+    end
+    else if Name = 'enableWipLimit' then
+      Id := 'wip_enabled=' + IfThen(R[0][2] = '1', '0', '1') + IfThen(R[0][1] = '0', ',wip_value=1', '') + ' WHERE id=' + QuotedStr(Id)
+    else
+      Id := 'wip_soft=' + IfThen(R[0][3] = '1', '0', '1') + ' WHERE id=' + QuotedStr(Id);
+    if not T.Db.Exec('UPDATE lists SET modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) +
+      ',' + Id + ';') then
+    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    // The board's pages draw the list's limit again.
+    AnnounceToAll;
+    SendJsonAnswer(Response, 200, '{"result":null}');
     Exit;
   end;
   // server/models/lists.js lists.softRemove(listId): the list and its cards
@@ -5529,7 +5632,8 @@ begin
   //   /b/:id/swimlanes                                a swimlane below (or above) after=
   //   /b/:id/custom-fields                            a new custom field of the board (card= to return to)
   //   /b/:id/title                                    the board renamed, by its admin (a page form: answered 303)
-  //   /b/:id/archive/restore                          an archived card, list or swimlane back (kind=, id=)
+  //   /b/:id/archive/restore                          an archived card, list or swimlane back (kind=, id=, toList=)
+  //   /b/:id/archive/restore-all-cards                every archived card whose list has room back
   //   /b/:id/cards/:card/dates/:kind                  its received, start, due or end date (delete=1 clears)
   //   /b/:id/cards/:card/custom-fields/:field         a custom field's value
   //   /b/:id/cards/:card/custom-fields/:field/toggle  the field onto the card or off it
@@ -5547,12 +5651,13 @@ begin
   P := PathParts(Path);
   n := Length(P);
   if (n < 3) or (P[0] <> 'b') or (P[1] = '') or
-    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and (P[3] = 'restore')) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
+    not ((P[2] = 'cards') or ((P[2] = 'archive') and (n = 4) and ((P[3] = 'restore') or (P[3] = 'restore-all-cards'))) or ((P[2] = 'title') and (n = 3)) or ((P[2] = 'watch') and (n = 3)) or ((P[2] = 'visibility') and (n = 3)) or ((P[2] = 'members') and ((n = 3) or ((n = 5) and (P[4] = 'remove')))) or (((P[2] = 'lists') or (P[2] = 'labels') or (P[2] = 'swimlanes') or (P[2] = 'custom-fields')) and (n = 3))) then Exit;
   BoardId := P[1]; CardId := ''; ChecklistId := ''; ItemId := '';
   Title := Request.ContentFields.Values['title'];
   if (n = 3) and (P[2] = 'lists') then Action := 'add-list'
   else if (n = 3) and (P[2] = 'labels') then Action := 'add-label'
   else if (n = 3) and (P[2] = 'title') then Action := 'rename-board'
+  else if (n = 4) and (P[2] = 'archive') and (P[3] = 'restore-all-cards') then Action := 'restore-all'
   else if (n = 4) and (P[2] = 'archive') then Action := 'restore'
   else if (n = 3) and (P[2] = 'swimlanes') then Action := 'add-swimlane'
   else if (n = 3) and (P[2] = 'custom-fields') then Action := 'add-custom-field'
@@ -5608,7 +5713,16 @@ begin
   else if Action = 'rename-board' then
     Code := RenameBoard(T, S.UserId, BoardId, Title, Error)
   else if Action = 'restore' then
-    Code := RestoreViewItem(T, S.UserId, BoardId, Request.ContentFields.Values['kind'], Request.ContentFields.Values['id'], Error)
+  begin
+    Code := RestoreViewItem(T, S.UserId, BoardId, Request.ContentFields.Values['kind'], Request.ContentFields.Values['id'],
+      Request.ContentFields.Values['toList'], Error);
+    // Its list filled up since the page was drawn: the board again, with
+    // the card's "restore it to another list" open.
+    if (Code = 409) and (Error = 'restore-blocked') then
+    begin ViewRestoreBlocked := Request.ContentFields.Values['id']; Code := 200; end;
+  end
+  else if Action = 'restore-all' then
+    Code := RestoreAllViewCards(T, S.UserId, BoardId, ViewRestoreSkipped, Error)
   else if Action = 'add-custom-field' then
   begin
     Code := CreateViewCustomField(T, S.UserId, BoardId, Request.ContentFields.Values['name'],
@@ -6035,6 +6149,8 @@ begin
   ViewBoardId := '';
   ViewMinicardPieces := nil;
   ViewCardDates := nil;
+  ViewRestoreBlocked := '';
+  ViewRestoreSkipped := 0;
 end;
 
 end.

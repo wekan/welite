@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "跟随看板默认设置",
   "drag-to-reorder": "拖动以调整顺序。按向上和向下箭头键可移动一个位置。",
   "ask-move-reason": "移动卡片 → 描述?",
-  "draggable": "可拖动"
+  "draggable": "可拖动",
+  "restore-card-wip-limit-reached": "列表 __list__ 已达到其最大任务数。请将卡片还原到其他列表：",
+  "restore-card-no-list-with-room": "此看板上的每个列表都已达到其最大任务数。请提高某个限制，或移动或归档卡片，以还原此卡片。",
+  "restore-all-skipped-wip-limit": "__count__ 张卡片未还原：其所在列表已达到最大任务数。请逐张还原以选择其他列表。"
 }

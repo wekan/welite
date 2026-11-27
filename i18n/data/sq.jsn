@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ndjek parazgjedhjen e tabelës",
   "drag-to-reorder": "Tërhiqeni për të ndryshuar rendin. Tastet me shigjeta lart dhe poshtë zhvendosin me një pozicion.",
   "ask-move-reason": "Zhvendos kartën → Përshkrimi?",
-  "draggable": "I tërheqshëm"
+  "draggable": "I tërheqshëm",
+  "restore-card-wip-limit-reached": "Lista __list__ ka arritur kufirin e saj WIP. Riktheje kartën në një listë tjetër:",
+  "restore-card-no-list-with-room": "Çdo listë në këtë tabelë ka arritur kufirin e saj WIP. Rrit një kufi, ose zhvendos ose arkivo karta, për ta rikthyer këtë kartë.",
+  "restore-all-skipped-wip-limit": "__count__ kartë/a nuk u rikthyen: listat e tyre kanë arritur kufijtë WIP. Riktheji një nga një për të zgjedhur një listë tjetër."
 }

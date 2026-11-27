@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "li gorî standarda text-textê ye",
   "drag-to-reorder": "Ji bo guherandina rêzê bikişîne. Bişkokên tîrê ber bi jor û ber bi jêr yek cihê diguhezînin.",
   "ask-move-reason": "Kartê bar bike → Danasîn?",
-  "draggable": "Dikare were kişandin"
+  "draggable": "Dikare were kişandin",
+  "restore-card-wip-limit-reached": "Lîsteya __list__ gihîşt sînorê xwe yê WIP. Kartê vegerîne lîsteyeke din:",
+  "restore-card-no-list-with-room": "Her lîsteya li ser vê panelê gihîşt sînorê xwe yê WIP. Ji bo vegerandina vê kartê sînorekî bilind bike, an kartan bibe an bibe arşîvê.",
+  "restore-all-skipped-wip-limit": "__count__ kart nehatin vegerandin: lîsteyên wan gihîştin sînorê xwe yê WIP. Ji bo hilbijartina lîsteyeke din, wan yek bi yek vegerîne."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "raS DichmoH tlha'",
   "drag-to-reorder": "patlhmey DachoHmeH yIHoq. Dung bIng je 'angbogh leQmey Dalo'DI', Daq wa' vIHmoHlu'.",
   "ask-move-reason": "'echletHommey vIHmoHlu'DI' meq yItlhob",
-  "draggable": "HoqlaH vay'"
+  "draggable": "HoqlaH vay'",
+  "restore-card-wip-limit-reached": "WIP 'aqroS Sach __list__ tetlh. latlh tetlhDaq 'echletHom yIchelqa':",
+  "restore-card-no-list-with-room": "WIP 'aqroS Sach Hoch tetlh Daq'e'Daq. 'echletHomvam Dachelqa'meH, 'aqroS yIDuH, pagh 'echletHommey yIvIHmoH pagh polmeH DaqDaq yIlan.",
+  "restore-all-skipped-wip-limit": "__count__ 'echletHommey chelqa'be'lu': WIP 'aqroS Sach chaj tetlhmey. latlh tetlh DawIvmeH, wa'DIch wa' yIchelqa'."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ndherek standar papan",
   "drag-to-reorder": "Seret kanggo ngganti urutan. Tombol panah munggah lan mudhun mindhah siji posisi.",
   "ask-move-reason": "Pindhah kertu → Katrangan?",
-  "draggable": "Bisa diseret"
+  "draggable": "Bisa diseret",
+  "restore-card-wip-limit-reached": "Dhaptar __list__ wis tekan wates WIP-e. Balekake kertu menyang dhaptar liyane:",
+  "restore-card-no-list-with-room": "Saben dhaptar ing papan iki wis tekan wates WIP-e. Mundhakake wates, utawa pindhah utawa arsipake kertu, kanggo mbalekake kertu iki.",
+  "restore-all-skipped-wip-limit": "__count__ kertu ora dibalekake: dhaptare wis tekan wates WIP. Balekake siji-siji kanggo milih dhaptar liyane."
 }

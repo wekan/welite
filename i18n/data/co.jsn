@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "seguita u valore predefinitu di a tavula",
   "drag-to-reorder": "Trascina per cambià l’ordine. I tasti à freccia in sù è in ghjò movenu d’una pusizione.",
   "ask-move-reason": "Dumandà una ragione quandu si spostanu e carte",
-  "draggable": "Trascinabile"
+  "draggable": "Trascinabile",
+  "restore-card-wip-limit-reached": "A lista __list__ hà righjuntu a so limita WIP. Ristabilisce a carta in un'altra lista:",
+  "restore-card-no-list-with-room": "Tutte e liste di sta tavula anu righjuntu a so limita WIP. Alzate una limita, o spustate o archiviate carte, per ristabilisce sta carta.",
+  "restore-all-skipped-wip-limit": "__count__ carta(e) ùn sò micca state ristabilite: e so liste anu righjuntu e so limite WIP. Ristabilitele una à una per sceglie un'altra lista."
 }

@@ -257,8 +257,18 @@ Next, after this goal:
   that Weddy does not yet pass. Work the lists toward the same set, then add
   each new feature to both.
   Later on 2026-11-26 WeLite passed 137 more of Weddy's lines (most of them
-  REST API specs) and spec 14's vote, Planning Poker and watch; Weddy's
-  remaining lines are the next to port.
+  REST API specs) and spec 14's vote, Planning Poker and watch. On
+  2026-11-27 a run of all of Weddy's remaining 298 lines passed 101 more
+  reliably (REST API, viewport, RTL, stability and notification specs among
+  them, and restore-wip-limit once the WIP limit methods and the Archive's
+  restore at a hard limit were in); 197 are left. activity-viewer's two
+  lines pass in one run and not in the next - the sidebar's activity is not
+  always drawn yet - so they are not listed. By what they wait for: Scrum
+  (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
+  the import page's format audit (75), structural-selection (18),
+  editor-enter-preference (17), export-access (11), the History page
+  (changeHistory.page), WIP limit groups, the calendar view and the board
+  announcement.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
   the card's other sections (an attachment's rename and its thumbnail route (attachment-thumbnail); Markdown in comments and checklists; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's

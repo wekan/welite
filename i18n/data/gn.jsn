@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ohupyty tabla ypy",
   "drag-to-reorder": "Embotyryry emohenda jey hag̃ua. Yvate ha yvýgotyo ohechaukáva votõ omongu'e peteĩ guatánte.",
   "ask-move-reason": "Emyanda kuatia'i → Ñemombe'u?",
-  "draggable": "Ikatúva ojegueraha mbotyryrýpe"
+  "draggable": "Ikatúva ojegueraha mbotyryrýpe",
+  "restore-card-wip-limit-reached": "Ysaja __list__ ohupyty hi'WIP paha. Emyengovia kuatia'i ambue ysajápe:",
+  "restore-card-no-list-with-room": "Opaite ysaja ko tablero-pegua ohupyty hi'WIP paha. Embotuichave peteĩ paha, térã emyanda térã eñongatu kuatia'i, emyengovia hag̃ua ko kuatia'i.",
+  "restore-all-skipped-wip-limit": "__count__ kuatia'i ndojeyengoviái: hysaja ohupyty hi'WIP paha. Emyengovia peteĩteĩ eiporavo hag̃ua ambue ysaja."
 }

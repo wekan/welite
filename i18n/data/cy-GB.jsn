@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "yn dilyn rhagosodiad y bwrdd",
   "drag-to-reorder": "Llusgwch i newid y drefn. Mae’r bysellau saeth i fyny ac i lawr yn symud un safle.",
   "ask-move-reason": "Cerdyn Symud → Disgrifiad?",
-  "draggable": "Gellir ei lusgo"
+  "draggable": "Gellir ei lusgo",
+  "restore-card-wip-limit-reached": "Mae'r rhestr __list__ wedi cyrraedd ei therfyn WIP. Adferwch y cerdyn i restr arall:",
+  "restore-card-no-list-with-room": "Mae pob rhestr ar y bwrdd hwn wedi cyrraedd ei therfyn WIP. Codwch derfyn, neu symudwch neu archifwch gardiau, i adfer y cerdyn hwn.",
+  "restore-all-skipped-wip-limit": "Ni adferwyd __count__ cerdyn: mae eu rhestrau wedi cyrraedd eu terfynau WIP. Adferwch nhw fesul un i ddewis rhestr arall."
 }

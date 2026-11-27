@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "allattaviup atuutsissutaanik malinnippoq",
   "drag-to-reorder": "Tulleriinnerat allanngortinniarlugu uniaruk. Toortakkat qummut ammullu tikkuutillit ataatsimik nuussissapput.",
   "ask-move-reason": "Kortsi nuuguk → Nassuiaat?",
-  "draggable": "Uniarneqarsinnaavoq"
+  "draggable": "Uniarneqarsinnaavoq",
+  "restore-card-wip-limit-reached": "Allattorsimaffik __list__ WIP-ip killissaanut anguvoq. Kortsi allattorsimaffimmut allamut utertiguk:",
+  "restore-card-no-list-with-room": "Allattorsimaffiit tamarmik qarasaasiami matumani WIP-ip killissaanut angupput. Kortsi una utertinniarlugu killissaq qaffassiguk, imaluunniit kortsit nuukkit toqqorsivimmulluunniit nuukkit.",
+  "restore-all-skipped-wip-limit": "Kortsit __count__ utertinneqanngillat: allattorsimaffii WIP-ip killissaanut angupput. Allattorsimaffimmik allamik toqqaaniarlutit ataasiakkaarlugit utertikkit."
 }

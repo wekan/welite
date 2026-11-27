@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "보드의 기본값을 따름",
   "drag-to-reorder": "드래그하여 순서를 바꾸세요. 위쪽 및 아래쪽 화살표 키로 한 칸씩 이동합니다.",
   "ask-move-reason": "카드 이동 → 설명?",
-  "draggable": "드래그 가능"
+  "draggable": "드래그 가능",
+  "restore-card-wip-limit-reached": "목록 __list__이(가) WIP 제한에 도달했습니다. 카드를 다른 목록으로 복구하세요:",
+  "restore-card-no-list-with-room": "이 보드의 모든 목록이 WIP 제한에 도달했습니다. 이 카드를 복구하려면 제한을 늘리거나 카드를 이동 또는 보관하세요.",
+  "restore-all-skipped-wip-limit": "카드 __count__개가 복구되지 않았습니다: 해당 목록이 WIP 제한에 도달했습니다. 다른 목록을 선택하려면 하나씩 복구하세요."
 }

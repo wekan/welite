@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ya landzelela xiyimo xa bodo",
   "drag-to-reorder": "Koka ku cinca nandzelelano. Tikunupu ta miseve ya le henhla ni le hansi ti fambisa ndhawu yin’we.",
   "ask-move-reason": "Rhurhisa khadi → Nhlamuselo?",
-  "draggable": "Swi nga kokiwa"
+  "draggable": "Swi nga kokiwa",
+  "restore-card-wip-limit-reached": "Nxaxamelo wa __list__ wu fikile eka ndzelekano wa wona wa WIP. Vuyisela khadi eka nxaxamelo wun'wana:",
+  "restore-card-no-list-with-room": "Nxaxamelo wun'wana na wun'wana eka bodo leyi wu fikile eka ndzelekano wa wona wa WIP. Tlakusa ndzelekano, kumbe u rhurha kumbe u yisa tikhadi eka vuhlayiselo bya swa khale, leswaku u vuyisa khadi leri.",
+  "restore-all-skipped-wip-limit": "Tikhadi ta __count__ a ti vuyisiwanga: minxaxamelo ya tona yi fikile eka mindzelekano ya yona ya WIP. Ti vuyise yin'we hi yin'we leswaku u hlawula nxaxamelo wun'wana."
 }

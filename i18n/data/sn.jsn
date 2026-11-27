@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "inotevera zvakajairika zvebhodhi",
   "drag-to-reorder": "Dhonza kuti uchinje kurongeka. Mabhatani emiseve yokumusoro neyokuzasi anofambisa nzvimbo imwe.",
   "ask-move-reason": "Fambisa kadhi → Tsanangudzo?",
-  "draggable": "Zvinogona kudhonzwa"
+  "draggable": "Zvinogona kudhonzwa",
+  "restore-card-wip-limit-reached": "Rondedzero __list__ rasvika pamuganhu waro weWIP. Dzorera kadhi kune imwe rondedzero:",
+  "restore-card-no-list-with-room": "Rondedzero yega yega pabhodhi rino yasvika pamuganhu wayo weWIP. Wedzera muganhu, kana kufambisa kana kuendesa makadhi kudura, kuti udzorere kadhi iri.",
+  "restore-all-skipped-wip-limit": "Makadhi __count__ haana kudzorerwa: marondedzero awo asvika pamiganhu yawo yeWIP. Adzorere rimwe nerimwe kuti usarudze imwe rondedzero."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "e latela tlhaelo ya boto",
   "drag-to-reorder": "Goga go fetoša tatelano. Dikonopo tša mesebe ya godimo le fase di šuthiša lefelo le tee.",
   "ask-move-reason": "Šuthiša karata → Tlhalošo?",
-  "draggable": "E ka gogwa"
+  "draggable": "E ka gogwa",
+  "restore-card-wip-limit-reached": "Lelokelelo __list__ le fihlile mollwaneng wa lona wa WIP. Bušetša karata go lelokelelo le lengwe:",
+  "restore-card-no-list-with-room": "Lelokelelo le lengwe le le lengwe mo potong ye le fihlile mollwaneng wa lona wa WIP. Oketša mollwane, goba šuthiša goba iša polokelong dikarata, gore o bušetše karata ye.",
+  "restore-all-skipped-wip-limit": "Dikarata tše __count__ ga se tša bušetšwa: malokelelo a tšona a fihlile mellwaneng ya ona ya WIP. Di bušetše e tee ka e tee gore o kgethe lelokelelo le lengwe."
 }

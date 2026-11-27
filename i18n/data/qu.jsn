@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "pizarrapa ñawpaq kamachiynin qatin",
   "drag-to-reorder": "Watiqmanta ñiqichanapaq aysay. Hananman hinallataq urayman wach'i ñit'inakuna huk tatkillamanta kuyuchinku.",
   "ask-move-reason": "Kartata astay → Willakuy?",
-  "draggable": "Aysayta atikun"
+  "draggable": "Aysayta atikun",
+  "restore-card-wip-limit-reached": "Sutisuyu __list__ WIP tukukuyninman chayanña. Kartata huk sutisuyuman kutichiy:",
+  "restore-card-no-list-with-room": "Kay pirqapi tukuy sutisuyukuna WIP tukukuyninkuman chayanña. Kay kartata kutichinapaq huk tukukuyta yapay, utaq kartakunata kuyuchiy utaq waqaychanaman apay.",
+  "restore-all-skipped-wip-limit": "__count__ karta(kuna) mana kutichisqachu: sutisuyunkuna WIP tukukuyninkuman chayanña. Huk sutisuyuta akllanapaq sapankamanta kutichiy."
 }

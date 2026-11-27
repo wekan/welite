@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "urmează setarea implicită a panoului",
   "drag-to-reorder": "Trageți pentru a schimba ordinea. Tastele săgeată în sus și în jos deplasează cu o poziție.",
   "ask-move-reason": "Cere un motiv la mutarea cardurilor",
-  "draggable": "Poate fi tras"
+  "draggable": "Poate fi tras",
+  "restore-card-wip-limit-reached": "Lista __list__ a atins limita lucrărilor în curs (WIP). Restaurează cardul în altă listă:",
+  "restore-card-no-list-with-room": "Fiecare listă de pe acest panou a atins limita WIP. Mărește o limită, sau mută ori arhivează carduri, pentru a restaura acest card.",
+  "restore-all-skipped-wip-limit": "__count__ card(uri) nu au fost restaurate: listele lor au atins limitele WIP. Restaurează-le pe rând pentru a alege altă listă."
 }

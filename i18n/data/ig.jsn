@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "na-eso ndabara bọọdụ",
   "drag-to-reorder": "Dọrọ ka ị gbanwee usoro. Igodo akụ elu na ala na-ebugharị otu ọnọdụ.",
   "ask-move-reason": "Bugharịa Kaadị → Nkọwa?",
-  "draggable": "Enwere ike ịdọrọ ya"
+  "draggable": "Enwere ike ịdọrọ ya",
+  "restore-card-wip-limit-reached": "Ndepụta __list__ eruola oke WIP ya. Weghachite kaadị ahụ na ndepụta ọzọ:",
+  "restore-card-no-list-with-room": "Ndepụta ọ bụla na bọọdụ a eruola oke WIP ya. Bulie oke, ma ọ bụ bugharịa ma ọ bụ chekwaa kaadị, iji weghachite kaadị a.",
+  "restore-all-skipped-wip-limit": "Eweghachighị kaadị __count__: ndepụta ha eruola oke WIP ha. Weghachite ha otu otu iji họrọ ndepụta ọzọ."
 }

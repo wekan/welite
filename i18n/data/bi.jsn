@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "i folem seting blong bod",
   "drag-to-reorder": "Pulum blong jenisim oda. Ol ki blong aro blong go antap mo daon oli muv wan ples.",
   "ask-move-reason": "Muvum kad → Stori?",
-  "draggable": "Yu save pulum"
+  "draggable": "Yu save pulum",
+  "restore-card-wip-limit-reached": "Lis __list__ i kasem WIP limit blong hem. Putum bak kad long narafala lis:",
+  "restore-card-no-list-with-room": "Evri lis long bod ya i kasem WIP limit blong olgeta. Blong putum bak kad ya, leftemap wan limit, o muvum o putum ol kad i go long stoa.",
+  "restore-all-skipped-wip-limit": "__count__ kad oli no putum bak: ol lis blong olgeta i kasem WIP limit. Putum bak olgeta wan wan blong jusum narafala lis."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "seko dēļa noklusējumam",
   "drag-to-reorder": "Velciet, lai mainītu secību. Augšupvērstās un lejupvērstās bultiņas taustiņi pārvieto par vienu pozīciju.",
   "ask-move-reason": "Pārvietot kartiņu → Apraksts?",
-  "draggable": "Velkams"
+  "draggable": "Velkams",
+  "restore-card-wip-limit-reached": "Saraksts __list__ ir sasniedzis savu WIP limitu. Atjaunojiet kartiņu citā sarakstā:",
+  "restore-card-no-list-with-room": "Visi šī dēļa saraksti ir sasnieguši savu WIP limitu. Palieliniet limitu vai pārvietojiet vai arhivējiet kartiņas, lai atjaunotu šo kartiņu.",
+  "restore-all-skipped-wip-limit": "__count__ kartiņa(s) netika atjaunota(s): to saraksti ir sasnieguši savus WIP limitus. Atjaunojiet tās pa vienai, lai izvēlētos citu sarakstu."
 }

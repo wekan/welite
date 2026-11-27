@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "leanann sé réamhshocrú an chláir",
   "drag-to-reorder": "Tarraing chun an t-ord a athrú. Bogann na heochracha saighde suas agus síos áit amháin.",
   "ask-move-reason": "Iarr cúis agus cártaí á mbogadh",
-  "draggable": "Intarraingthe"
+  "draggable": "Intarraingthe",
+  "restore-card-wip-limit-reached": "Tá a teorainn WIP sroichte ag an liosta __list__. Athchóirigh an cárta chuig liosta eile:",
+  "restore-card-no-list-with-room": "Tá a dteorainn WIP sroichte ag gach liosta ar an gclár seo. Ardaigh teorainn, nó bog nó cartlannaigh cártaí, chun an cárta seo a athchóiriú.",
+  "restore-all-skipped-wip-limit": "Níor athchóiríodh __count__ cárta: tá a dteorainneacha WIP sroichte ag a liostaí. Athchóirigh iad ceann ar cheann chun liosta eile a roghnú."
 }

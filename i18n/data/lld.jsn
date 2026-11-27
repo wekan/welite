@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "va do l standard dla tofl",
   "drag-to-reorder": "Strasciné per mudé l orden. I tasc cun les freces in su y in ju sposta de na posizion.",
   "ask-move-reason": "Dumandé na rejon canche se sposta ciartes",
-  "draggable": "Se possa tiré"
+  "draggable": "Se possa tiré",
+  "restore-card-wip-limit-reached": "La lista __list__ à rejont si limit WIP. Ristabilì la ciarta te n'autra lista:",
+  "restore-card-no-list-with-room": "Duta la listes de chësta tofl à rejont si limit WIP. Auza n limit, o sposta o archivea ciartes, per ristabilì chësta ciarta.",
+  "restore-all-skipped-wip-limit": "__count__ ciarta(s) ne n'é nia states ristabilides: si listes à rejont si limic WIP. Ristabilëscele una ala ota per audì n'autra lista."
 }

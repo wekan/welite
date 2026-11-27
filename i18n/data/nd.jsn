@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ilandela okuzenzakalelayo kwebhodi",
   "drag-to-reorder": "Donsa ukuze untshintshe ukulandelana. Amankinobho emitshoko yaphezulu laphansi ahambisa indawo eyodwa.",
   "ask-move-reason": "Thuthela ikhadi → Incazelo?",
-  "draggable": "Kungadonswa"
+  "draggable": "Kungadonswa",
+  "restore-card-wip-limit-reached": "Uluhlu __list__ selufike emkhawulweni walo we-WIP. Buyisela ikhadi kolunye uluhlu:",
+  "restore-card-no-list-with-room": "Zonke izinhlu kulelibhodi sezifike emkhawulweni wazo we-WIP. Phakamisa umkhawulo, kumbe uthuthe kumbe uyise esiphaleni amakhadi, ukuze ubuyisele lelikhadi.",
+  "restore-all-skipped-wip-limit": "Amakhadi angu-__count__ kawabuyiselwanga: izinhlu zawo sezifike emikhawulweni yazo we-WIP. Wabuyisele ngalinye ukuze ukhethe olunye uluhlu."
 }

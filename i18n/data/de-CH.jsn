@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "folgt der Board-Standardeinstellung",
   "drag-to-reorder": "Zum Umordnen ziehen. Die Pfeiltasten nach oben und unten verschieben um einen Schritt.",
   "ask-move-reason": "Karte verschieben → Beschreibung?",
-  "draggable": "Verschiebbar"
+  "draggable": "Verschiebbar",
+  "restore-card-wip-limit-reached": "Die Liste __list__ hat ihr WIP-Limit erreicht. Stelle die Karte in einer anderen Liste wieder her:",
+  "restore-card-no-list-with-room": "Alle Listen dieser Arbeitstafel haben ihr WIP-Limit erreicht. Erhöhe ein Limit oder verschiebe oder archiviere Karten, um diese Karte wiederherzustellen.",
+  "restore-all-skipped-wip-limit": "__count__ Karte(n) wurden nicht wiederhergestellt: Ihre Listen haben ihre WIP-Limits erreicht. Stelle sie einzeln wieder her, um eine andere Liste zu wählen."
 }

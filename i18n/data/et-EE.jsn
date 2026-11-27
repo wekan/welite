@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "järgib tahvli vaikeseadet",
   "drag-to-reorder": "Järjekorra muutmiseks lohista. Üles- ja allanooleklahvid liigutavad ühe koha võrra.",
   "ask-move-reason": "Liikumiskaart → Kirjeldus?",
-  "draggable": "Lohistatav"
+  "draggable": "Lohistatav",
+  "restore-card-wip-limit-reached": "Loetelu __list__ on jõudnud oma WIP limiidini. Taasta kaart teise loetellu:",
+  "restore-card-no-list-with-room": "Selle tahvli kõik loetelud on jõudnud oma WIP limiidini. Tõsta limiiti või liiguta või arhiveeri kaarte, et see kaart taastada.",
+  "restore-all-skipped-wip-limit": "__count__ kaarti ei taastatud: nende loetelud on jõudnud oma WIP limiidini. Taasta need ükshaaval, et valida teine loetelu."
 }

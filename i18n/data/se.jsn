@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "čuovvu fáktu standárda",
   "drag-to-reorder": "Gease ođđa ortnegii. Bajás- ja vulosnjuollaboalut sirdit ovtta lávkki.",
   "ask-move-reason": "Sirdde goartta → Válddahus?",
-  "draggable": "Sáhttá geassit"
+  "draggable": "Sáhttá geassit",
+  "restore-card-wip-limit-reached": "Listu __list__ lea olahan iežas WIP-ráji. Máhcat goartta eará listui:",
+  "restore-card-no-list-with-room": "Juohke listu dán távvalis lea olahan iežas WIP-ráji. Lasit ráji, dahje sirdde dahje vurke goarttaid, vai sáhtát máhcahit dán goartta.",
+  "restore-all-skipped-wip-limit": "__count__ goartta eai máhcahuvvon: sin listtut leat olahan iežaset WIP-rájiid. Máhcat daid ovttaid mielde vai sáhtát válljet eará listtu."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "የሰሌዳውን ነባሪ ይከተላል",
   "drag-to-reorder": "ቅደም ተከተሉን ለመቀየር ይጎትቱ። ወደ ላይ እና ወደ ታች የቀስት ቁልፎች በአንድ ቦታ ያንቀሳቅሳሉ።",
   "ask-move-reason": "ካርድ አንቀሳቅስ → መግለጫ?",
-  "draggable": "ሊጎተት የሚችል"
+  "draggable": "ሊጎተት የሚችል",
+  "restore-card-wip-limit-reached": "ዝርዝሩ __list__ የWIP ገደቡ ላይ ደርሷል። ካርዱን ወደ ሌላ ዝርዝር ይመልሱ፦",
+  "restore-card-no-list-with-room": "በዚህ ሰሌዳ ላይ ያሉት ሁሉም ዝርዝሮች የWIP ገደባቸው ላይ ደርሰዋል። ይህን ካርድ ለመመለስ ገደብ ያሳድጉ፣ ወይም ካርዶችን ያንቀሳቅሱ ወይም ወደ መዝገብ ያስገቡ።",
+  "restore-all-skipped-wip-limit": "__count__ ካርድ(ዎች) አልተመለሱም፦ ዝርዝሮቻቸው የWIP ገደባቸው ላይ ደርሰዋል። ሌላ ዝርዝር ለመምረጥ አንድ በአንድ ይመልሷቸው።"
 }

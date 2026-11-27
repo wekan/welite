@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "mengikut lalai papan",
   "drag-to-reorder": "Seret untuk menyusun semula. Kekunci anak panah atas dan bawah menggerakkan satu langkah.",
   "ask-move-reason": "Pindah Kad → Penerangan?",
-  "draggable": "Boleh diseret"
+  "draggable": "Boleh diseret",
+  "restore-card-wip-limit-reached": "Senarai __list__ telah mencapai had WIP-nya. Pulihkan kad ke senarai lain:",
+  "restore-card-no-list-with-room": "Setiap senarai di papan ini telah mencapai had WIP-nya. Naikkan had, atau pindahkan atau arkibkan kad, untuk memulihkan kad ini.",
+  "restore-all-skipped-wip-limit": "__count__ kad tidak dipulihkan: senarainya telah mencapai had WIP. Pulihkan satu demi satu untuk memilih senarai lain."
 }

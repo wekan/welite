@@ -1114,6 +1114,78 @@ def http_checks(server, tmp, backend):
                         out = con.execute(sql, args).fetchone()
             return out
         card_watchers = lambda: json.loads(card_db("SELECT COALESCE(json_extract(extra_json,'$.watchers'),'[]') FROM cards WHERE id=?", card_id)[0])
+        # WIP limits (server/models/lists.js: applyWipLimit, enableWipLimit,
+        # enableSoftLimit - a board admin's), and the Archive's restore at a
+        # hard limit (#6772, wipRestore.js): a card goes back to its own list
+        # only while it has room, else to a list with room the user chooses;
+        # Restore all leaves the rest and says how many. A soft limit only warns.
+        def wip_card(list_, title):
+            return json.loads(request('POST', '/api/boards/%s/lists/%s/cards' % (board_id, list_),
+                                      {'title': title, 'authorId': login['id'], 'swimlaneId': lane}, headers=auth, as_json=True)[2])['_id']
+        wip_full = json.loads(request('POST', '/api/boards/%s/lists' % board_id, {'title': 'WIP Full', 'swimlaneId': lane}, headers=auth,
+                                      as_json=True)[2])['_id']
+        wip_room = json.loads(request('POST', '/api/boards/%s/lists' % board_id, {'title': 'WIP Room', 'swimlaneId': lane}, headers=auth,
+                                      as_json=True)[2])['_id']
+        wip_of = lambda l: card_db('SELECT wip_value, wip_enabled, wip_soft FROM lists WHERE id=?', l)
+        method = lambda name, args, who=owner: request('POST', '/_methods/' + name, args, cookie=who, as_json=True)
+        archived_one, other_one = wip_card(wip_full, 'WIP archived'), wip_card(wip_full, 'WIP other')
+        assert request('POST', '/b/%s/cards/%s/archive' % (board_id, archived_one), {}, cookie=owner)[0] == 200
+        filler = wip_card(wip_full, 'WIP filler')
+        assert request('POST', '/b/%s/cards/%s/archive' % (board_id, other_one), {}, cookie=owner)[0] == 200
+        # Negative: a non-admin member, a stranger, an anonymous caller, a
+        # list that is not there, and arguments of the wrong shape.
+        for who in (worker, stranger):
+            status, _, body, _ = method('applyWipLimit', [wip_full, 1], who)
+            assert status == 403 and b'not-authorized' in body, (status, body)
+        assert method('enableWipLimit', [wip_full], worker)[0] == 403
+        assert method('enableSoftLimit', [wip_full], worker)[0] == 403
+        assert method('applyWipLimit', [wip_full, 1], None)[0] in (401, 403)
+        assert method('applyWipLimit', ['no-such-list', 1])[0] == 404
+        for args in ([wip_full, '1'], [wip_full], [wip_full, 1, 2], [1, 1]):
+            assert method('applyWipLimit', args)[0] == 400, args
+        assert wip_of(wip_full) == (1, 0, 0), 'nothing refused was written'
+        # The value: what was typed, and 1 for anything below one.
+        assert method('applyWipLimit', [wip_full, 3])[0] == 200 and wip_of(wip_full)[0] == 3
+        assert method('applyWipLimit', [wip_full, -5])[0] == 200 and wip_of(wip_full)[0] == 1
+        assert method('applyWipLimit', [wip_full, 0])[0] == 200 and wip_of(wip_full)[0] == 1
+        assert method('enableWipLimit', [wip_full])[0] == 200 and wip_of(wip_full) == (1, 1, 0)
+        # Hard limit 1, one open card: the archived cards' list is full.
+        page = request('GET', route, cookie=owner)[2]
+        assert ('data-pop="restore-card-%s"' % archived_one).encode() in page and b'js-restore-wip-reached' in page
+        # The link itself submits: the server, not a page drawn before the
+        # limit changed, decides whether the list has room.
+        assert ('<a class="js-restore-card" href="#" data-pop=').encode() not in page
+        assert b'js-restore-all-cards' in page and b'js-select-restore-target-list' in page
+        pop = page.split(('data-pop="restore-card-%s"' % archived_one).encode(), 1)[1].split(b'</template>')[0]
+        assert b'WIP Room' in pop and b'WIP Full' not in pop.split(b'js-restore-wip-reached')[1].split(b'</p>', 1)[1], \
+            'the full list is not offered'
+        # Restore to its own full list: refused, the board drawn with its popup open.
+        status, _, body, _ = request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': archived_one}, cookie=owner)
+        assert status == 200 and ('js-open-pop-on-load" data-pop="restore-card-%s"' % archived_one).encode() in body
+        assert card_db('SELECT archived FROM cards WHERE id=?', archived_one)[0] == 1, 'still archived'
+        # Negative: the full list named as the target, and a list of no board.
+        for to in (wip_full, 'no-such-list'):
+            assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': archived_one, 'toList': to},
+                           cookie=owner)[0] == 409, to
+        assert card_db("SELECT COUNT(*) FROM cards WHERE listId=? AND archived=0", wip_full)[0] == 1
+        # To a list with room: restored there.
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': archived_one, 'toList': wip_room},
+                       cookie=owner)[0] == 200
+        assert card_db('SELECT archived, listId FROM cards WHERE id=?', archived_one) == (0, wip_room)
+        # Restore all: the other card's list is still full - left out, counted.
+        status, _, body, _ = request('POST', '/b/%s/archive/restore-all-cards' % board_id, {}, cookie=owner)
+        assert status == 200 and b'js-restore-all-skipped' in body and b'data-pop="restore-all-skipped"' in body
+        assert card_db('SELECT archived FROM cards WHERE id=?', other_one)[0] == 1
+        assert request('POST', '/b/%s/archive/restore-all-cards' % board_id, {}, cookie=stranger)[0] == 403
+        # A soft limit only warns: the card goes back to its own list at once.
+        assert method('enableSoftLimit', [wip_full])[0] == 200 and wip_of(wip_full) == (1, 1, 1)
+        assert b'data-pop="restore-card-%s"' % other_one.encode() not in request('GET', route, cookie=owner)[2]
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': other_one}, cookie=owner)[0] == 200
+        assert card_db('SELECT archived, listId FROM cards WHERE id=?', other_one) == (0, wip_full)
+        # Off again, and the test's lists gone.
+        assert method('enableWipLimit', [wip_full])[0] == 200 and wip_of(wip_full)[1] == 0
+        for l in (wip_full, wip_room):
+            assert method('lists.softRemove', [l])[0] == 200
         board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
         page = card_page()
         assert ('class="js-toggle-watch-card" href="%s/watch"' % card_path).encode() in page

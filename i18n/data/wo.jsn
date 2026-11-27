@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "moo topp njëkk bu tablo bi",
   "drag-to-reorder": "Xëccal ngir soppi toftal gi. Butoŋu fett yi jëm ci kaw ak ci suuf dañuy yëngal benn barab.",
   "ask-move-reason": "Yóbbu karta → Melokaan?",
-  "draggable": "Mën nañu koo diri"
+  "draggable": "Mën nañu koo diri",
+  "restore-card-wip-limit-reached": "Limu __list__ bi jot na kemu WIP bi. Delloo karta bi ci beneen limu:",
+  "restore-card-no-list-with-room": "Limu yépp ci tabal bii jot nañu seen kemu WIP. Yokkal benn kem, walla nga toxal walla yóbbu ay karta ci àrsiw bi, ngir delloo karta bii.",
+  "restore-all-skipped-wip-limit": "__count__ karta delloowuñu leen: seeni limu jot nañu seen kemu WIP. Delloo leen benn-benn ngir tànn beneen limu."
 }

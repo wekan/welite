@@ -541,6 +541,18 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   for one that is not there (RelicAvatarBleed); a page or an SVG named a PNG,
   a file too large, and a choice or delete of somebody else's avatar are
   refused. `tests/view.py` checks each.
+- Add WeKan's WIP limit methods, a board admin's: applyWipLimit (1 for a
+  value below one, NaN or infinite), enableWipLimit and enableSoftLimit.
+  Restore a card from the Archive into its own list only while a hard limit
+  has not filled it - every open card of the list counts, in every swimlane
+  (#2095) - else let the user choose a list with room (#6772, WeKan's
+  restoreArchivedCardToListPopup); Restore all leaves the rest in the
+  Archive and says how many. A soft limit only warns. `tests/view.py` checks
+  the methods' refusals and each restore, and WeKan's restore-wip-limit spec
+  passes.
+- Run 87 more of WeKan's own tests that Weddy passes, in
+  `tests/wkui/specs.txt`: the REST API, viewport, RTL, stability,
+  notification and board-action specs among them, and shared-list-row-6902.
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

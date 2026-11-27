@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "swiv reglaj pa defo tablo a",
   "drag-to-reorder": "Trennen pou chanje lòd la. Touch flèch monte ak desann yo deplase yon pozisyon.",
   "ask-move-reason": "Mande yon rezon lè yo deplase kat",
-  "draggable": "Ou ka trennen li"
+  "draggable": "Ou ka trennen li",
+  "restore-card-wip-limit-reached": "Lis __list__ la rive nan limit WIP li. Retabli kat la nan yon lòt lis:",
+  "restore-card-no-list-with-room": "Chak lis sou tablo sa a rive nan limit WIP li. Ogmante yon limit, oswa deplase oswa achive kat, pou retabli kat sa a.",
+  "restore-all-skipped-wip-limit": "__count__ kat pa t retabli: lis yo rive nan limit WIP yo. Retabli yo youn pa youn pou chwazi yon lòt lis."
 }

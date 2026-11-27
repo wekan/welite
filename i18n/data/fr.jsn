@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "suit le réglage par défaut du tableau",
   "drag-to-reorder": "Faites glisser pour réorganiser. Les touches fléchées Haut et Bas déplacent d’un cran.",
   "ask-move-reason": "Déplacer la carte → Texte descriptif?",
-  "draggable": "Déplaçable par glisser-déposer"
+  "draggable": "Déplaçable par glisser-déposer",
+  "restore-card-wip-limit-reached": "La liste __list__ a atteint sa limite WIP. Restaurez la carte dans une autre liste :",
+  "restore-card-no-list-with-room": "Toutes les listes de ce tableau ont atteint leur limite WIP. Augmentez une limite, ou déplacez ou archivez des cartes, pour restaurer cette carte.",
+  "restore-all-skipped-wip-limit": "__count__ carte(s) n'ont pas été restaurées : leurs listes ont atteint leur limite WIP. Restaurez-les une par une pour choisir une autre liste."
 }

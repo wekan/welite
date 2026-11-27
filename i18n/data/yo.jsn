@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ó ń tẹ̀lé àṣàyàn ìpìlẹ̀ pátákó náà",
   "drag-to-reorder": "Fà á láti yí ìtòlẹ́sẹẹsẹ padà. Àwọn bọ́tìnì ọfà sókè àti sísàlẹ̀ ń gbé e ní ipò kan.",
   "ask-move-reason": "Gbe Kaadi → Apejuwe?",
-  "draggable": "Ó ṣeé fà"
+  "draggable": "Ó ṣeé fà",
+  "restore-card-wip-limit-reached": "Akojọ __list__ ti dé ìwọ̀n WIP rẹ̀. Mu kaadi náà pada sí akojọ mìíràn:",
+  "restore-card-no-list-with-room": "Gbogbo akojọ lórí pátákó yìí ti dé ìwọ̀n WIP wọn. Gbé ìwọ̀n kan sókè, tàbí gbé tàbí fi àwọn kaadi sí Ifipamọ, láti mu kaadi yìí pada.",
+  "restore-all-skipped-wip-limit": "A kò mú kaadi __count__ padà: àwọn akojọ wọn ti dé ìwọ̀n WIP wọn. Mu wọn pada lọ́kọ̀ọ̀kan láti yan akojọ mìíràn."
 }

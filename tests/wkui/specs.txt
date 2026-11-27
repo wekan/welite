@@ -337,3 +337,90 @@ card-settings-both-sides.e2e.js: new sides render where chosen, and nothing chan
 card-settings-both-sides.e2e.js: rows for what had none: card color and the description badge, each side on its own
 list-delete-undo.e2e.js: #1023: undo restores a deleted list and its cards
 list-delete-undo.e2e.js: #1023: a read-only member cannot undo a list deletion
+17-rest-api.e2e.js: #1437 logout revokes the presented REST token
+23-rest-api-more.e2e.js: swimlanes: create, get, edit, delete
+23-rest-api-more.e2e.js: lists: create, get, edit, delete
+23-rest-api-more.e2e.js: checklists and items: create, get, delete
+23-rest-api-more.e2e.js: comments: create and list
+17-rest-api.e2e.js: #5819 bulk labels merge (add keeps existing, remove drops, dedupe)
+17-rest-api.e2e.js: #5819 bulk labels rejects a label not on the board
+17-rest-api.e2e.js: #5819 label creation is BoardAdmin-gated (non-admin member denied)
+17-rest-api.e2e.js: #5998 add board member with named role=admin sets isAdmin
+17-rest-api.e2e.js: #5998 add board member rejects an invalid role
+17-rest-api.e2e.js: #5998 adding a board member requires board admin (non-admin member denied)
+17-rest-api.e2e.js: #5998 add card member: board member allowed, non-member rejected
+17-rest-api.e2e.js: #5846 set then clear a card due date
+17-rest-api.e2e.js: #3697 clearing members via REST stores an array, never null
+17-rest-api.e2e.js: #2875 create a card with no / empty members stores [] not null
+17-rest-api.e2e.js: #5650 board created via REST without owner is owned by the caller
+17-rest-api.e2e.js: #1894 a disabled user cannot be added to a board
+17-rest-api.e2e.js: user deletion confirms removal and reports a repeat as 404
+17-rest-api.e2e.js: #4743/#5813 bulk create assigns unique card numbers, bulk delete removes them
+17-rest-api.e2e.js: #4743 bulk create rejects an oversized array (>500)
+17-rest-api.e2e.js: #3252 deleting a card removes its children and adds one delete activity
+17-rest-api.e2e.js: copy a card to position 0 of another list
+17-rest-api.e2e.js: #3062 get and update board card settings
+17-rest-api.e2e.js: #4815 GET /api/user/cards returns the user's cards, with a due filter
+17-rest-api.e2e.js: unauthenticated request cannot read user cards
+17-rest-api.e2e.js: #5688 copying a card copies its checklist and all items
+23-rest-api-more.e2e.js: card PUT sets stickers, locations and the complete checkbox
+28-dependencies-rest.e2e.js
+23-rest-api-more.e2e.js: rules: create, list, get, edit and delete
+23-rest-api-more.e2e.js: whole-board import recreates the board together with its rules
+23-rest-api-more.e2e.js: rules: unauthenticated request is rejected
+23-rest-api-more.e2e.js: export with attachments=false returns the board without attachment file data
+17-rest-api.e2e.js: copying a card cross-board re-homes its subtasks onto the destination board
+17-rest-api.e2e.js: #5166 copied comments get the destination boardId and keep their author
+17-rest-api.e2e.js: #5592/#5627 copying a board copies its webhooks and rules
+17-rest-api.e2e.js: #5897 create a linked card referencing an existing card
+08-notifications-activity.e2e.js: #1658 opening a card Activities section shows its persisted history
+08-notifications-activity.e2e.js: activity log shows board-level activities
+08-notifications-activity.e2e.js: working (time) log fields are accessible on a card
+08-notifications-activity.e2e.js: @mention in a comment is stored in the activity DB
+08-notifications-activity.e2e.js: #6658: assigning a muted board member creates no notification
+08-notifications-activity.e2e.js: #6658 explicit list watching receives comments on a muted board
+08-notifications-activity.e2e.js: notification indicator appears after a watching member is mentioned
+card-settings-both-sides.e2e.js
+10-stability.e2e.js: automated 90-day archive rule: cards modified > 90 days ago are archived by cron
+10-stability.e2e.js: login link is visible on 5 consecutive fresh page loads
+10-stability.e2e.js: multiple simultaneous board views by different users stay independent
+10-stability.e2e.js: offline warning element exists in the DOM (for surfacing disconnection)
+10-stability.e2e.js: page does not emit JS errors on initial board load
+15-board-actions.e2e.js: filter sidebar opens when filter button is clicked
+15-board-actions.e2e.js: sort cards popup opens without JS errors
+18-rtl-layout.e2e.js: board view: direction, visible cards, first list on leading side
+18-rtl-layout.e2e.js: card details panel: direction and visible title
+19-accessibility.e2e.js: the html element declares its language and text direction
+24-feature-issues.e2e.js: #4266 deleting a board removes its rules, triggers and actions
+38-fixed-list-width.e2e.js: anonymous/public-board: fixed width lives in localStorage and does not leak across boards
+38-fixed-list-width.e2e.js: logged-in: enabling fixed width makes all lists share one width; resize updates all
+38-fixed-list-width.e2e.js: logged-in NEGATIVE: width < 200 rejected; OFF means per-list widths are independent
+41-admin-newest-features.e2e.js: NEGATIVE: board Table view column headers are not clickable-sortable
+42-board-comments-attachments.e2e.js: NEGATIVE: a comment on a different board is not published into this board
+assist-due-from-title.e2e.js: Board Settings / Card turns it off for the add-card form (negative)
+due-date-keyboard-shortcut.e2e.js: negative: Space on a focused button activates the button, not the Space shortcut (#6755)
+due-date-keyboard-shortcut.e2e.js: negative: d over a minicard does nothing when shortcuts are disabled (#6755)
+issue-6793-comments-follow-card-move.e2e.js: NEGATIVE: a refused REST move moves neither the card nor its comment
+minicard-requested-by-6872.e2e.js: Show on Minicard off hides a picked member
+minicard-requested-by-6872.e2e.js: negative: nothing picked and nothing typed draws no line
+viewport-matrix.e2e.js: board header: icons and texts on screen, no sideways page scroll
+15-board-actions.e2e.js: header collapse sits beside Home and keeps Home and title visible
+02-cards-open-view.e2e.js: #6639: a markdown link in a minicard title opens instead of editing
+10-stability.e2e.js: #6654: a private-board session survives a full page refresh
+10-stability.e2e.js: comment is not lost when the page is refreshed immediately after saving
+30-ldap-orgs-teams.e2e.js: non-admin client call is rejected and creates nothing
+36-fixed-bug-regressions.e2e.js: #5892 a collapsed list with a custom width still shrinks to the rail
+36-fixed-bug-regressions.e2e.js: #6420 voting buttons render without a currentUser ReferenceError
+42-board-comments-attachments.e2e.js: a card comment (carrying boardId) is published and shown when the card is opened
+03-cards-operations.e2e.js: multi-selection archives every selected card
+default-avatar.e2e.js
+avatar-sub-path.e2e.js
+29-card-settings-avatar.e2e.js
+card-creation-activity.e2e.js
+07-attachments-links.e2e.js: card description can contain a link that renders as a clickable anchor
+board-invite-tray.e2e.js
+list-delete-undo.e2e.js
+password-change-other-sessions.e2e.js
+password-submit-event.e2e.js
+restore-wip-limit.e2e.js
+shared-list-row-6902.e2e.js

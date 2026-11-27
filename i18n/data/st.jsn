@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "e latela tlhophiso ya tlwaelo ya boto",
   "drag-to-reorder": "Hula ho fetola tatellano. Dikonopo tsa metsu e yang hodimo le tlase di suthisa sebaka se le seng.",
   "ask-move-reason": "Botsa lebaka ha ho suthiswa dikarete",
-  "draggable": "E ka hulwa"
+  "draggable": "E ka hulwa",
+  "restore-card-wip-limit-reached": "Lenane __list__ le fihlile moeding wa lona wa WIP. Kgutlisetsa karete lenaneng le leng:",
+  "restore-card-no-list-with-room": "Lenane le leng le le leng boroto ena le fihlile moeding wa lona wa WIP. Phahamisa moedi, kapa o tsamaise kapa o ise dikarete polokelong, ho kgutlisa karete ena.",
+  "restore-all-skipped-wip-limit": "Dikarete tse __count__ ha di a kgutliswa: manane a tsona a fihlile meeding ya ona ya WIP. Di kgutlise e nngwe ka e nngwe ho kgetha lenane le leng."
 }

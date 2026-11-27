@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "jokki teelte kartal",
   "drag-to-reorder": "Daas ngam feewtinde deggondiral kadi. Butoŋaaji piaali dow e les eggina feere wooto.",
   "ask-move-reason": "Eggin kartal → Sifaa?",
-  "draggable": "Ena waawi daaseede"
+  "draggable": "Ena waawi daaseede",
+  "restore-card-wip-limit-reached": "Doggol __list__ hewtii keerol mum WIP. Artir kartal ngal e doggol goɗngol:",
+  "restore-card-no-list-with-room": "Doggol kala e ndee alluwal hewtii keerol mum WIP. Ɓeydu keerol, walla dirtin walla eggin kartal-ji e mooftirde, ngam artirde kartal ngal.",
+  "restore-all-skipped-wip-limit": "Kartal-ji __count__ artiraaka: doggol-ji majji hewtii keerol WIP majji. Artir ɗi gooto gooto ngam suɓaade doggol goɗngol."
 }

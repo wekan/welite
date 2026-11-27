@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "prati zadanu postavku table",
   "drag-to-reorder": "Prevucite za promjenu redoslijeda. Tipke sa strelicama gore i dolje pomjeraju za jedno mjesto.",
   "ask-move-reason": "Premjesti karticu → Opis?",
-  "draggable": "Može se prevlačiti"
+  "draggable": "Može se prevlačiti",
+  "restore-card-wip-limit-reached": "Lista __list__ je dostigla svoje WIP ograničenje. Vratite karticu u drugu listu:",
+  "restore-card-no-list-with-room": "Sve liste na ovoj tabli su dostigle svoje WIP ograničenje. Povećajte ograničenje ili premjestite ili arhivirajte kartice da biste vratili ovu karticu.",
+  "restore-all-skipped-wip-limit": "__count__ kartica nije vraćeno: njihove liste su dostigle WIP ograničenja. Vraćajte ih jednu po jednu da biste odabrali drugu listu."
 }

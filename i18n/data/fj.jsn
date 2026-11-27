@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "muria na ivakarau ni iVola",
   "drag-to-reorder": "Dreta mo veisautaka na veitaravi. Na ibulukau ni gasau cake kei ra e tosoya e dua na itutu.",
   "ask-move-reason": "Toso na kadi → Vakamacala?",
-  "draggable": "E rawa ni yaraki"
+  "draggable": "E rawa ni yaraki",
+  "restore-card-wip-limit-reached": "Na lisi __list__ e yaco sara ki na iyalayala WIP. Vakalesuya na kadi ki na dua tale na lisi:",
+  "restore-card-no-list-with-room": "Na lisi kece ena papa oqo era yaco sara ki na nodra iyalayala WIP. Vakalevulevutaka e dua na iyalayala, se toso se maroroya na kadi, me vakalesui kina na kadi oqo.",
+  "restore-all-skipped-wip-limit": "Na kadi e __count__ era sega ni vakalesui: na nodra lisi era yaco sara ki na iyalayala WIP. Vakalesuya yadua me digitaka kina e dua tale na lisi."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "a tábla alapértelmezését követi",
   "drag-to-reorder": "Húzza az átrendezéshez. A fel és le nyílbillentyűk egy hellyel mozgatnak.",
   "ask-move-reason": "Kártya áthelyezése → Leírás?",
-  "draggable": "Húzással mozgatható"
+  "draggable": "Húzással mozgatható",
+  "restore-card-wip-limit-reached": "A(z) __list__ lista elérte a WIP korlátját. Állítsa vissza a kártyát egy másik listába:",
+  "restore-card-no-list-with-room": "A tábla minden listája elérte a WIP korlátját. A kártya visszaállításához emeljen egy korlátot, vagy mozgasson, illetve archiváljon kártyákat.",
+  "restore-all-skipped-wip-limit": "__count__ kártya nem lett visszaállítva: a listáik elérték a WIP korlátjukat. Állítsa vissza őket egyenként, hogy másik listát válasszon."
 }

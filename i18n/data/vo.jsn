@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "sökon stabi taba",
   "drag-to-reorder": "Tränön ad votükön sökaleodi. Tastats sagitas sui e donio mufükons bosi me step bal.",
   "ask-move-reason": "Begön kodi ven kads pamufükons",
-  "draggable": "Tirovik"
+  "draggable": "Tirovik",
+  "restore-card-wip-limit-reached": "Lised __list__ erivon miedi WIP oka. Geükolös kadi lü lised votik:",
+  "restore-card-no-list-with-room": "Lised alik su tab at erivon miedi WIP oka. Löpükolös miedi, u topätükolös u ragivolös kadis, ad geükön kadi at.",
+  "restore-all-skipped-wip-limit": "Kads __count__ no pegeükons: lised onas erivons miedis WIP okas. Geükolös onis balatimo ad välön lisedi votik."
 }

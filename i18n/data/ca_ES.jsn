@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "segueix el valor per defecte del tauler",
   "drag-to-reorder": "Arrossegueu per canviar l’ordre. Les tecles de fletxa amunt i avall mouen una posició.",
   "ask-move-reason": "Moure fitxa → Descripció?",
-  "draggable": "Arrossegable"
+  "draggable": "Arrossegable",
+  "restore-card-wip-limit-reached": "La llista __list__ ha arribat al seu límit WIP. Restaura la fitxa a una altra llista:",
+  "restore-card-no-list-with-room": "Totes les llistes d'aquest tauler han arribat al seu límit WIP. Augmenta un límit, o mou o arxiva fitxes, per restaurar aquesta fitxa.",
+  "restore-all-skipped-wip-limit": "__count__ fitxa(es) no s'han restaurat: les seves llistes han arribat als seus límits WIP. Restaura-les d'una en una per triar una altra llista."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "tagtanyň öýjük sazlamasyna eýerýär",
   "drag-to-reorder": "Tertibi üýtgetmek üçin süýräň. Ýokary we aşak ok düwmeleri bir orun süýşürýär.",
   "ask-move-reason": "Kart göçüriň → Düşündiriş?",
-  "draggable": "Süýräp bolýar"
+  "draggable": "Süýräp bolýar",
+  "restore-card-wip-limit-reached": "__list__ sanawy WIP çägine ýetdi. Karty başga sanawa dikelt:",
+  "restore-card-no-list-with-room": "Bu tagtadaky her bir sanaw WIP çägine ýetdi. Bu karty dikeltmek üçin çägi ýokarlandyr ýa-da kartlary göçür ýa-da arhiwe geçir.",
+  "restore-all-skipped-wip-limit": "__count__ kart dikeldilmedi: olaryň sanawlary WIP çäklerine ýetdi. Başga sanaw saýlamak üçin olary birin-birin dikelt."
 }

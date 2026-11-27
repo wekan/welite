@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "jidze za domëslnym ùstôwã tôfli",
   "drag-to-reorder": "Przecygni, bë zmienic pòréńdã. Klawisze strzałków w górã i w dół przesëwają ò jedno môl.",
   "ask-move-reason": "Przeniesc kôrtã → Òpisënk?",
-  "draggable": "Mòże bëc przecygóné"
+  "draggable": "Mòże bëc przecygóné",
+  "restore-card-wip-limit-reached": "Lësta __list__ doszła do swòjegò ògrańczeniô WIP. Doprowadzë kôrtã nazôd do jinszi lëstë:",
+  "restore-card-no-list-with-room": "Wszëtczé lëstë na ti tôflë doszłë do swòjegò ògrańczeniô WIP. Bë doprowadzëc nazôd tã kôrtã, zwikszë ògrańczenié abò przeniesë czë zarchiwizuj kôrtë.",
+  "restore-all-skipped-wip-limit": "__count__ kôrt(ë) nie òstałë doprowadzoné nazôd: jich lëstë doszłë do ògrańczeniów WIP. Doprowadzë je nazôd pò jedny, bë wëbrac jinszą lëstã."
 }

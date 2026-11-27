@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "riadi sa predvoleným nastavením tabule",
   "drag-to-reorder": "Potiahnutím zmeňte poradie. Klávesy so šípkami nahor a nadol posunú položku o jednu pozíciu.",
   "ask-move-reason": "Pýtať sa na dôvod pri presúvaní kariet",
-  "draggable": "Presúvateľné potiahnutím"
+  "draggable": "Presúvateľné potiahnutím",
+  "restore-card-wip-limit-reached": "Zoznam __list__ dosiahol svoj WIP limit. Obnovte kartu do iného zoznamu:",
+  "restore-card-no-list-with-room": "Každý zoznam na tejto nástenke dosiahol svoj WIP limit. Zvýšte limit alebo presuňte či archivujte karty, aby ste obnovili túto kartu.",
+  "restore-all-skipped-wip-limit": "__count__ kariet nebolo obnovených: ich zoznamy dosiahli svoje WIP limity. Obnovujte ich po jednej, aby ste vybrali iný zoznam."
 }

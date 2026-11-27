@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "volgt de standaard van het bord",
   "drag-to-reorder": "Sleep om de volgorde te wijzigen. De pijltoetsen omhoog en omlaag verplaatsen één stap.",
   "ask-move-reason": "Verplaats kaart → Beschrijving?",
-  "draggable": "Versleepbaar"
+  "draggable": "Versleepbaar",
+  "restore-card-wip-limit-reached": "De lijst __list__ heeft haar WIP limiet bereikt. Herstel de kaart naar een andere lijst:",
+  "restore-card-no-list-with-room": "Elke lijst op dit bord heeft haar WIP limiet bereikt. Verhoog een limiet, of verplaats of archiveer kaarten, om deze kaart te herstellen.",
+  "restore-all-skipped-wip-limit": "__count__ kaart(en) werden niet hersteld: hun lijsten hebben hun WIP limiet bereikt. Herstel ze één voor één om een andere lijst te kiezen."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "mengikuti default papan",
   "drag-to-reorder": "Seret untuk mengubah urutan. Tombol panah atas dan bawah memindahkan satu langkah.",
   "ask-move-reason": "Pindahkan kartu → Deskripsi?",
-  "draggable": "Dapat diseret"
+  "draggable": "Dapat diseret",
+  "restore-card-wip-limit-reached": "Daftar __list__ telah mencapai batas WIP-nya. Pulihkan kartu ke daftar lain:",
+  "restore-card-no-list-with-room": "Setiap daftar di papan ini telah mencapai batas WIP-nya. Naikkan batas, atau pindahkan atau arsipkan kartu, untuk memulihkan kartu ini.",
+  "restore-all-skipped-wip-limit": "__count__ kartu tidak dipulihkan: daftarnya telah mencapai batas WIP. Pulihkan satu per satu untuk memilih daftar lain."
 }

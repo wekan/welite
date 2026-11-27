@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "egoberera olubaawo",
   "drag-to-reorder": "Sika okukyusa ensengeka. Amapeesa g’obusaale obw’okugenda waggulu ne wansi gasimbula ekifo kimu.",
   "ask-move-reason": "Simbula ekaadi → Ennyonyola?",
-  "draggable": "Kisobola okusikibwa"
+  "draggable": "Kisobola okusikibwa",
+  "restore-card-wip-limit-reached": "Olukalala __list__ lutuuse ku kkomo lyalwo erya WIP. Zzaawo ekaadi ku lukalala olulala:",
+  "restore-card-no-list-with-room": "Buli lukalala ku lubaawo luno lutuuse ku kkomo lyalwo erya WIP. Yongeza ekkomo, oba kyusa oba twala amakaadi mu tterekero, okuzzaawo ekaadi eno.",
+  "restore-all-skipped-wip-limit": "Amakaadi __count__ tegazziddwawo: enkalala zaago zituuse ku kkomo lyazo erya WIP. Gazzeewo limu limu okulonda olukalala olulala."
 }

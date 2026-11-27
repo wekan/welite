@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "zikutsatira zolinga za bolodi",
   "drag-to-reorder": "Kokani kuti musinthe dongosolo. Mabatani a mivi yokwera ndi yotsika amasuntha malo amodzi.",
   "ask-move-reason": "Sunthirani khadi → Kufotokoza?",
-  "draggable": "Chikhoza kukokedwa"
+  "draggable": "Chikhoza kukokedwa",
+  "restore-card-wip-limit-reached": "Mndandanda __list__ wafika malire ake a WIP. Bwezerani khadi ku mndandanda wina:",
+  "restore-card-no-list-with-room": "Mndandanda uliwonse pa bolodi ili wafika malire ake a WIP. Kwezani malire, kapena sunthani kapena sungani makhadi, kuti mubwezere khadi ili.",
+  "restore-all-skipped-wip-limit": "Makhadi __count__ sanabwezeredwe: mindandanda yawo yafika malire awo a WIP. Abwezereni limodzi limodzi kuti musankhe mndandanda wina."
 }

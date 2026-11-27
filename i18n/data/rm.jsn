@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "suonda il standard da la tabella",
   "drag-to-reorder": "Trair per midar la successiun. Las tastas da frizza ensi ed engiu spustan per in pass.",
   "ask-move-reason": "Dumandar in motiv cura che cartas vegnan spustadas",
-  "draggable": "Po vegnir tratg"
+  "draggable": "Po vegnir tratg",
+  "restore-card-wip-limit-reached": "La glista __list__ ha cuntanschì ses limit WIP. Restaurescha la carta en in'autra glista:",
+  "restore-card-no-list-with-room": "Mintga glista da questa tabella ha cuntanschì ses limit WIP. Augmentescha in limit, u spustescha u archivescha cartas, per restaurar questa carta.",
+  "restore-all-skipped-wip-limit": "__count__ carta(s) n'èn betg vegnidas restauradas: lur glistas han cuntanschì lur limits WIP. Restaurescha ellas ina suenter l'autra per tscherner in'autra glista."
 }

@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "edze nubablã ƒe kpɔɖeŋu la yome",
   "drag-to-reorder": "Hee be nàɖoe ɖe ɖoɖo yeye me. Dzi kple te ƒe aŋutrɔ dzesi ƒe dzesiƒuƒuwo ɖea nu la ɖe teƒe ɖeka.",
   "ask-move-reason": "Ʋu agbalẽvi la → Numeɖeɖe?",
-  "draggable": "Woate ŋu ahe e"
+  "draggable": "Woate ŋu ahe e",
+  "restore-card-wip-limit-reached": "Xexlẽdzesi __list__ ɖo eƒe WIP ƒe seƒoƒo gbɔ. Gbugbɔ agbalẽvia ɖo te ɖe xexlẽdzesi bubu me:",
+  "restore-card-no-list-with-room": "Xexlẽdzesi ɖesiaɖe le ŋɔŋlɔkpe sia dzi ɖo eƒe WIP ƒe seƒoƒo gbɔ. Na seƒoƒo aɖe nadzi, alo ʋu alo ʋu agbalẽviwo yi dzraɖoƒe, be nàgbugbɔ agbalẽvi sia aɖo te.",
+  "restore-all-skipped-wip-limit": "Womegbugbɔ agbalẽvi __count__ ɖo te o: woƒe xexlẽdzesiwo ɖo woƒe WIP ƒe seƒoƒowo gbɔ. Gbugbɔ wo ɖo te ɖeka ɖeka be nàtia xexlẽdzesi bubu."
 }

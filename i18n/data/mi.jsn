@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "e whai ana i te taunoa papa",
   "drag-to-reorder": "Tōia hei huri i te raupapa. Ka neke ngā pātuhi pere whakarunga, whakararo hoki kia kotahi te tūranga.",
   "ask-move-reason": "Nekehia te kāri → Whakaahuatanga?",
-  "draggable": "Ka taea te tō"
+  "draggable": "Ka taea te tō",
+  "restore-card-wip-limit-reached": "Kua tae te rārangi __list__ ki tōna tepe WIP. Whakaorangia te kāri ki tētahi atu rārangi:",
+  "restore-card-no-list-with-room": "Kua tae ngā rārangi katoa o tēnei papa ki ō rātou tepe WIP. Whakanuia tētahi tepe, nekehia rānei, whakapūrangatia rānei ētahi kāri, kia whakaorangia tēnei kāri.",
+  "restore-all-skipped-wip-limit": "Kāore e __count__ kāri i whakaorangia: kua tae ō rātou rārangi ki ō rātou tepe WIP. Whakaorangia takitahi kia kōwhiria tētahi atu rārangi."
 }

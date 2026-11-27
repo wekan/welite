@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "segue o valor por defecto do taboleiro",
   "drag-to-reorder": "Arrastre para cambiar a orde. As teclas de frecha arriba e abaixo moven unha posición.",
   "ask-move-reason": "Mover tarxeta → Descrición?",
-  "draggable": "Arrastrable"
+  "draggable": "Arrastrable",
+  "restore-card-wip-limit-reached": "A lista __list__ alcanzou o seu límite WIP. Restaura a tarxeta noutra lista:",
+  "restore-card-no-list-with-room": "Todas as listas deste taboleiro alcanzaron o seu límite WIP. Aumenta un límite, ou move ou arquiva tarxetas, para restaurar esta tarxeta.",
+  "restore-all-skipped-wip-limit": "__count__ tarxeta(s) non se restauraron: as súas listas alcanzaron os seus límites WIP. Restáuraas unha a unha para escoller outra lista."
 }

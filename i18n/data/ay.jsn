@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "pisan nayrïr apnaqäwipa arkta",
   "drag-to-reorder": "Wasitata siqichañataki wayuña. Alayaru ukhamaraki aynacharu uñachayiri micht'anakaxa mä chillqiki unxtayapxi.",
   "ask-move-reason": "Karta apaña → Qhananchawi?",
-  "draggable": "Jiyt'añjamawa"
+  "draggable": "Jiyt'añjamawa",
+  "restore-card-wip-limit-reached": "__list__ sutinakaxa WIP limitepar purxi. Kartaxa yaqha sutinakar kutt'ayam:",
+  "restore-card-no-list-with-room": "Aka pirqan taqi sutinakapax WIP limitepar purxi. Aka karta kutt'ayañatakix mä limite jilxatayam, jan ukax kartanak apanukum jan ukax imañaru apam.",
+  "restore-all-skipped-wip-limit": "__count__ kartanakax janiw kutt'ayatäkiti: sutinakapax WIP limitenakapar purxi. Yaqha sutinaka ajlliñatakix mayat mayat kutt'ayam."
 }

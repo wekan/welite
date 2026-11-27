@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "quitoca tlapechtli neneuhcayotl",
   "drag-to-reorder": "Xictilana inic occeppa ticahuipana. In huehcapa ihuan tlani mitl tlapacholoni quicuica san ce tlatlalilli.",
   "ask-move-reason": "Xicolini amatlapalli → Tlahtolli?",
-  "draggable": "Huel motilana"
+  "draggable": "Huel motilana",
+  "restore-card-wip-limit-reached": "In tocatlahtolli __list__ ye oacic itlamian WIP. Xicuepa in amatlapalli occe tocatlahtolco:",
+  "restore-card-no-list-with-room": "Mochi tocatlahtolli ipan inin huapalli ye oacic intlamian WIP. Xiquhueixti cē tlamiantli, nozo xiquinolini nozo xiquinhuica pixcalco amatlapaltin, inic ticcuepaz inin amatlapalli.",
+  "restore-all-skipped-wip-limit": "__count__ amatlapalli amo omocuepqueh: intocatlahtolhuan ye oacic intlamian WIP. Xiquincuepa cēcē inic ticpepenaz occe tocatlahtolli."
 }

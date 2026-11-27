@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "follegt der Standardastellung vum Bord",
   "drag-to-reorder": "Zitt fir d’Reiefolleg ze änneren. D’Feiltasten no uewen an no ënne réckelen ëm eng Plaz.",
   "ask-move-reason": "Kaart réckelen → Beschreiwung?",
-  "draggable": "Verréckelbar"
+  "draggable": "Verréckelbar",
+  "restore-card-wip-limit-reached": "D'Lëscht __list__ huet hir WIP-Limit erreecht. Setzt d'Kaart an eng aner Lëscht zréck:",
+  "restore-card-no-list-with-room": "All Lëscht op dëser Tafel huet hir WIP-Limit erreecht. Erhéicht eng Limit, oder réckelt Kaarten oder setzt se an d'Archiv, fir dës Kaart zréckzesetzen.",
+  "restore-all-skipped-wip-limit": "__count__ Kaart(en) goufen net zréckgesat: hir Lëschte hunn hir WIP-Limitten erreecht. Setzt se eenzeln zréck, fir eng aner Lëscht ze wielen."
 }

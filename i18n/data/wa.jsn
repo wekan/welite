@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "shuve li prémetou do tåvlea",
   "drag-to-reorder": "Saetchîz po candjî l’ ôre. Les tapes di fletche pa dzeu et pa dzo bodjèt d’ ene plaece.",
   "ask-move-reason": "Dimander ene råjhon cwand on bodje des cåtes",
-  "draggable": "On pout l' saetchî"
+  "draggable": "On pout l' saetchî",
+  "restore-card-wip-limit-reached": "Li djivêye __list__ a arivé a s' lïmite WIP. Rimetoz l' cåte dins ene ôte djivêye:",
+  "restore-card-no-list-with-room": "Totes les djivêyes di ç' tåvlea ont arivé a leu lïmite WIP. Hossîz ene lïmite, oudonbén bodjîz ou metoz des cåtes e l' årtchive, po rimete cisse cåte chal.",
+  "restore-all-skipped-wip-limit": "__count__ cåte(s) n' ont nén stî rimetowes: leus djivêyes ont arivé a leus lïmites WIP. Rimetoz-les ene a ene po tchoezi ene ôte djivêye."
 }

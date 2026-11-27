@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "ን ቀደም ምድላው ምዱድ ይስዕብ",
   "drag-to-reorder": "ለስርዐት እግል ትቀይር ሰሐብ። መፍትሕ ህንጎራ ናይ ላዕል ወታሐት ሐቴ ከጥወት ለልትሐረክ።",
   "ask-move-reason": "ወረቀት ካርድ ኣንቀሳቕስ → ዋስፎ?",
-  "draggable": "ለይትጀረር ቀድር"
+  "draggable": "ለይትጀረር ቀድር",
+  "restore-card-wip-limit-reached": "ዝርዝር __list__ ደረት WIP በጽሐ። ወረቀት ካርድ ናብ ካልእ ዝርዝር መልስ:",
+  "restore-card-no-list-with-room": "ኩሉ ዝርዝር ኣብዚ ምዱድ ደረት WIP በጽሐ። እዚ ወረቀት ካርድ ንምምላስ ደረት ኣልዕል፡ ወይ ወረቀት ካርድ ውስድ ወይ ናብ መዕቀቢ ውስድ።",
+  "restore-all-skipped-wip-limit": "__count__ ወረቀት ካርድ ኣይተመልሳን: ዝርዝሮም ደረት WIP በጽሐ። ካልእ ዝርዝር ንምሕራይ ሓደ ብሓደ መልሶም።"
 }

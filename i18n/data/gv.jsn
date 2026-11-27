@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "geiyrt er y vun-choyrle voayrd",
   "drag-to-reorder": "Tayrn dy chur ayns oardagh noa. Ta ogheryn side seose as sheese gleashaghey un cheim.",
   "ask-move-reason": "Gleashagh y kaart → Coontey?",
-  "draggable": "Foddee oo tayrn eh"
+  "draggable": "Foddee oo tayrn eh",
+  "restore-card-wip-limit-reached": "Ta'n rolley __list__ er roshtyn e eallagh WIP. Aa-choyrt y kaart gys rolley elley:",
+  "restore-card-no-list-with-room": "Ta dagh rolley er y vuird shoh er roshtyn e eallagh WIP. Troggal eallagh, ny gleashagh ny tashtey kaartyn, dy aa-choyrt y kaart shoh.",
+  "restore-all-skipped-wip-limit": "Cha row __count__ kaart(yn) aa-choyrt: ta ny rolleeyn oc er roshtyn nyn eallagh WIP. Aa-choyrt ad fer as fer dy reih rolley elley."
 }

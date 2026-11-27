@@ -123,7 +123,18 @@ function RenameBoard(const T:TWLTenant;const UserId,BoardId,Title:string;out Err
 function ToggleViewBoardStar(Db:TWLDb;const UserId,BoardId:string;out Error:string):Integer;
 // archivesSidebar's restore of an archived card, list or swimlane (Kind
 // cards, lists or swimlanes) of the board.
-function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId:string;out Error:string):Integer;
+// An archived card, list or swimlane back. A card goes back to its own list
+// only while a hard WIP limit has not filled it (#6772, wipRestore.js), else
+// to ToList when that open list of the board has room: 409 and
+// 'restore-blocked' when its own list is full and no ToList was given.
+function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId,ToList:string;out Error:string):Integer;
+// Is ListId an open list of BoardId that a hard WIP limit has not filled?
+// Every open card of the list counts, in every swimlane (#2095). Title is
+// the list's, '' when it is not an open list of the board.
+function ListHasRoom(Db:TWLDb;const BoardId,ListId:string;out Title:string):Boolean;
+// The Archive's Restore all: every archived card whose list has room goes
+// back, each restored card counting for the next; Skipped the ones left out.
+function RestoreAllViewCards(const T:TWLTenant;const UserId,BoardId:string;out Skipped:Integer;out Error:string):Integer;
 // A swimlane added from a view (WeKan's swimlaneAddPopup): with board write
 // access, below - or above - AfterId, between it and its neighbour, or last
 // without one; a template-swimlane on a templates board.
@@ -1790,8 +1801,37 @@ end;
 
 // archivesSidebar's restore: an archived card, list or swimlane of the board
 // back on it, by whoever may change the board.
-function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId:string;out Error:string):Integer;
-var Table,Scope,Extra:string;
+function ListHasRoom(Db:TWLDb;const BoardId,ListId:string;out Title:string):Boolean;
+var R:TWLRows;
+begin
+  Title:='';
+  if (ListId='') or (Pos(#0,BoardId+ListId)>0) then Exit(False);
+  R:=Db.Query('SELECT title,CASE WHEN COALESCE(wip_enabled,0)=1 AND COALESCE(wip_soft,0)=0 AND (SELECT count(*) FROM cards c WHERE '+
+    'c.listId=l.id AND c.archived=0 AND c.deletedAt IS NULL)>=COALESCE(wip_value,1) THEN 0 ELSE 1 END FROM lists l WHERE id='+
+    QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL;');
+  if Length(R)<>1 then Exit(False);
+  Title:=R[0][0];
+  Result:=R[0][1]='1';
+end;
+
+function RestoreAllViewCards(const T:TWLTenant;const UserId,BoardId:string;out Skipped:Integer;out Error:string):Integer;
+var R:TWLRows;i:Integer;Title:string;
+begin
+  Error:='';Skipped:=0;
+  if (BoardId='') or (Pos(#0,BoardId)>0) then begin Error:='Not found';Exit(404);end;
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  R:=T.Db.Query('SELECT id,listId FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND archived=1 AND deletedAt IS NULL ORDER BY sort,id;');
+  for i:=0 to High(R) do
+  begin
+    if not ListHasRoom(T.Db,BoardId,R[i][1],Title) then begin Inc(Skipped);Continue;end;
+    if not T.Db.Exec('UPDATE cards SET archived=0,archivedAt=NULL,modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(R[i][0])+
+      ' AND boardId='+QuotedStr(BoardId)+' AND archived=1;') then begin Error:='Could not restore';Exit(500);end;
+  end;
+  Result:=200;
+end;
+
+function RestoreViewItem(const T:TWLTenant;const UserId,BoardId,Kind,ItemId,ToList:string;out Error:string):Integer;
+var Table,Scope,Extra,Move,ListTitle:string;R:TWLRows;
 begin
   Error:='';
   if (BoardId='') or (ItemId='') or (Pos(#0,BoardId+ItemId)>0) then begin Error:='Not found';Exit(404);end;
@@ -1803,7 +1843,29 @@ begin
   else begin Error:='Not found';Exit(404);end;
   Scope:='id='+QuotedStr(ItemId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=1'+Extra;
   if Length(T.Db.Query('SELECT 1 FROM '+Table+' WHERE '+Scope+';'))<>1 then begin Error:='Not found';Exit(404);end;
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE '+Table+' SET archived=0,archivedAt=NULL,modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+
+  Move:='';
+  if Kind='cards' then
+  begin
+    R:=T.Db.Query('SELECT listId,COALESCE(swimlaneId,'''') FROM cards WHERE '+Scope+';');
+    if ToList='' then
+    begin
+      // Its own list filled up since the page was drawn: choose another.
+      if not ListHasRoom(T.Db,BoardId,R[0][0],ListTitle) then begin Error:='restore-blocked';Exit(409);end;
+    end
+    else if not ListHasRoom(T.Db,BoardId,ToList,ListTitle) then
+    begin Error:='That list has reached its WIP limit';Exit(409);end
+    else if ToList<>R[0][0] then
+    begin
+      Move:=',listId='+QuotedStr(ToList);
+      // Its swimlane, while it is still open; the board's first otherwise.
+      if Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id='+QuotedStr(R[0][1])+' AND boardId='+QuotedStr(BoardId)+' AND archived=0;'))<>1 then
+      begin
+        R:=T.Db.Query('SELECT id FROM swimlanes WHERE boardId='+QuotedStr(BoardId)+' AND archived=0 ORDER BY sort,id LIMIT 1;');
+        if Length(R)=1 then Move:=Move+',swimlaneId='+QuotedStr(R[0][0]);
+      end;
+    end;
+  end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE '+Table+' SET archived=0,archivedAt=NULL'+Move+',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+
     '; SELECT CASE WHEN (SELECT count(*) FROM '+Table+' WHERE id='+QuotedStr(ItemId)+' AND archived=0)=1 THEN 1 '+
     'ELSE json(''Restore failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not restore';Exit(500);end;

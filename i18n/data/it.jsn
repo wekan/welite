@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "segue l'impostazione predefinita della bacheca",
   "drag-to-reorder": "Trascina per riordinare. I tasti freccia su e giù spostano di una posizione.",
   "ask-move-reason": "Sposta scheda → Descrizione?",
-  "draggable": "Trascinabile"
+  "draggable": "Trascinabile",
+  "restore-card-wip-limit-reached": "La lista __list__ ha raggiunto il suo limite Work In Progress. Ripristina la scheda in un'altra lista:",
+  "restore-card-no-list-with-room": "Tutte le liste di questa bacheca hanno raggiunto il loro limite Work In Progress. Aumenta un limite, oppure sposta o archivia delle schede, per ripristinare questa scheda.",
+  "restore-all-skipped-wip-limit": "__count__ scheda/e non ripristinata/e: le loro liste hanno raggiunto il limite Work In Progress. Ripristinale una alla volta per scegliere un'altra lista."
 }

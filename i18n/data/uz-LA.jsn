@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "doskaning standart sozlamasiga amal qiladi",
   "drag-to-reorder": "Tartibni oʻzgartirish uchun sudrang. Yuqoriga va pastga yoʻnalish tugmalari bir oʻringa siljitadi.",
   "ask-move-reason": "Kartani ko'chirish → Tavsif?",
-  "draggable": "Sudrash mumkin"
+  "draggable": "Sudrash mumkin",
+  "restore-card-wip-limit-reached": "__list__ roʻyxati WIP chegarasiga yetdi. Kartani boshqa roʻyxatga qayta tiklang:",
+  "restore-card-no-list-with-room": "Bu doskadagi har bir roʻyxat WIP chegarasiga yetdi. Bu kartani qayta tiklash uchun chegarani oshiring yoki kartalarni koʻchiring yoki arxivlang.",
+  "restore-all-skipped-wip-limit": "__count__ ta karta qayta tiklanmadi: ularning roʻyxatlari WIP chegaralariga yetdi. Boshqa roʻyxatni tanlash uchun ularni birma-bir qayta tiklang."
 }

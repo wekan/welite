@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "sègue lo defaut del tablèu",
   "drag-to-reorder": "Lisatz per cambiar l’òrdre. Las tòcas de flècha cap amont e cap aval desplaçan d’una posicion.",
   "ask-move-reason": "Bolegar la carta → Descripcion?",
-  "draggable": "Se pòt far lisar"
+  "draggable": "Se pòt far lisar",
+  "restore-card-wip-limit-reached": "La lista __list__ a atench son limit WIP. Restablissètz la carta dins una autra lista:",
+  "restore-card-no-list-with-room": "Cada lista d'aqueste tablèu a atench son limit WIP. Aumentatz un limit, o desplaçatz o archivatz de cartas, per restablir aquesta carta.",
+  "restore-all-skipped-wip-limit": "__count__ carta(s) son pas estadas restablidas: lors listas an atench lors limits WIP. Restablissètz-las una per una per causir una autra lista."
 }

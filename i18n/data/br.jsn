@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "heuliañ dre-ziouer ar follenn",
   "drag-to-reorder": "Sachit evit cheñch an urzh. An touchennoù biroù d’an nec’h ha d’an traoñ a zilec’h a ul lec’h.",
   "ask-move-reason": "Dilec’hiañ ar gartenn → Deskrivadur?",
-  "draggable": "Gallout a reer riklañ"
+  "draggable": "Gallout a reer riklañ",
+  "restore-card-wip-limit-reached": "Ar roll __list__ en deus tizhet e vevenn WIP. Adsavit ar gartenn en ur roll all:",
+  "restore-card-no-list-with-room": "Holl rolloù an daolenn-mañ o deus tizhet o bevenn WIP. Kreskit ur vevenn, pe dilec'hit pe diellit kartennoù, evit adsevel ar gartenn-mañ.",
+  "restore-all-skipped-wip-limit": "__count__ kartenn n'int ket bet adsavet: o rolloù o deus tizhet o bevennoù WIP. Adsavit anezho unan hag unan evit dibab ur roll all."
 }

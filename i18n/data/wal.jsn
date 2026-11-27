@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "bookkiyaa gishetaa kaalliya",
   "drag-to-reorder": "Maaruwaa laammanawu goochcha. Pude kiyiyoogaanne duge wodhdhiyoogaa bessiya wonttafetu qulfeti issi tangguwaa qaassees.",
   "ask-move-reason": "Kaardiyaa laammissa → Qonccissuwaa?",
-  "draggable": "Goochchanaw danddayettees"
+  "draggable": "Goochchanaw danddayettees",
+  "restore-card-wip-limit-reached": "__list__ mazgabay ba WIP dorttaa gakkiis. Kaardiyaa hara mazgabaa zaara:",
+  "restore-card-no-list-with-room": "Ha sanqqaa bolla de7iya mazgabay ubbay bantta WIP dorttaa gakkiis. Ha kaardiyaa zaarana mala, dorttaa dhoqqu oottarkka, woykko kaardiyaa shiftta woykko naago sohuwaa efa.",
+  "restore-all-skipped-wip-limit": "__count__ kaardiyaa zaarettibeenna: eta mazgabay bantta WIP dorttaa gakkiis. Hara mazgabaa doorana mala, eta issuwaa issuwaa zaara."
 }

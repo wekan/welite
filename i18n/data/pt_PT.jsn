@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "segue a predefinição do quadro",
   "drag-to-reorder": "Arraste para reordenar. As teclas de seta para cima e para baixo movem uma posição.",
   "ask-move-reason": "Mover o Cartão → Descrição?",
-  "draggable": "Arrastável"
+  "draggable": "Arrastável",
+  "restore-card-wip-limit-reached": "A lista __list__ atingiu o seu limite WIP. Restaure o cartão para outra lista:",
+  "restore-card-no-list-with-room": "Todas as listas deste quadro atingiram o seu limite WIP. Aumente um limite, ou mova ou arquive cartões, para restaurar este cartão.",
+  "restore-all-skipped-wip-limit": "__count__ cartão(ões) não foram restaurados: as suas listas atingiram os limites WIP. Restaure-os um de cada vez para escolher outra lista."
 }

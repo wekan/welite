@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "sigui lu predefinutu dâ tavula",
   "drag-to-reorder": "Strascina pi canciari l’òrdini. Li tasti a freccia ’n susu e ’n giusu mòvinu di na pusizzioni.",
   "ask-move-reason": "Spusta la carta → Discrizzioni?",
-  "draggable": "Trascinàbbili"
+  "draggable": "Trascinàbbili",
+  "restore-card-wip-limit-reached": "La lista __list__ arrivò ô so limiti WIP. Ripristina la carta nta n'àutra lista:",
+  "restore-card-no-list-with-room": "Ogni lista di sta tavula arrivò ô so limiti WIP. Isa un limiti, o sposta o archivia carti, pi ripristinari sta carta.",
+  "restore-all-skipped-wip-limit": "__count__ carta/i nun foru ripristinati: li so listi arrivaru ê so limiti WIP. Ripristinali una â vota pi sciègghiri n'àutra lista."
 }

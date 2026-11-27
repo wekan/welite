@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "sedi il predefinît de bachece",
   "drag-to-reorder": "Strissine par cambiâ l’ordin. I tascj cu lis frecis in sù e in jù a spostin di une posizion.",
   "ask-move-reason": "Sposte la cjarte → Descrizion?",
-  "draggable": "Si pues strissinâ"
+  "draggable": "Si pues strissinâ",
+  "restore-card-wip-limit-reached": "La liste __list__ e à rivât il so limit WIP. Ripristine la cjarte suntune altre liste:",
+  "restore-card-no-list-with-room": "Dutis lis listis di cheste tabele a àn rivât il lôr limit WIP. Alce un limit, o sposte o archivie cjartis, par ripristinâ cheste cjarte.",
+  "restore-all-skipped-wip-limit": "__count__ cjarte(is) no son stadis ripristinadis: lis lôr listis a àn rivât i lôr limits WIP. Ripristinilis une a la volte par sielzi une altre liste."
 }

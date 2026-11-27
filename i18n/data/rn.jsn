@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "gukurikira ivyagenywe n'imbaho",
   "drag-to-reorder": "Kurura kugira uhindure urukurikirane. Utubuto tw’imyampi ija hejuru no hasi twimura ikibanza kimwe.",
   "ask-move-reason": "Kwimura ikarata → Insiguro?",
-  "draggable": "Gishobora gukwegerwa"
+  "draggable": "Gishobora gukwegerwa",
+  "restore-card-wip-limit-reached": "Urutonde __list__ rwashitse ku rugero rwarwo rwa WIP. Garura ikarata ku rundi rutonde:",
+  "restore-card-no-list-with-room": "Urutonde rwose kuri iki capa rwashitse ku rugero rwarwo rwa WIP. Duza urugero, canke wimure canke ujane amakarata mu bubiko, kugira ugarure iyi karata.",
+  "restore-all-skipped-wip-limit": "Amakarata __count__ ntiyagaruwe: intonde zayo zashitse ku ngero zazo za WIP. Yagarure imwe imwe kugira uhitemwo urundi rutonde."
 }

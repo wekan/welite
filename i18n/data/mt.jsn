@@ -2304,5 +2304,8 @@
   "label-text-follows-board": "isegwi l-valur default tal-bord",
   "drag-to-reorder": "Iddreggja biex tibdel l-ordni. It-tasti bil-vleġeġ ’il fuq u ’l isfel iċaqalqu b’pożizzjoni waħda.",
   "ask-move-reason": "Mexxi l-karta → Deskrizzjoni?",
-  "draggable": "Jista’ jitkaxkar"
+  "draggable": "Jista’ jitkaxkar",
+  "restore-card-wip-limit-reached": "Il-lista __list__ laħqet il-limitu WIP tagħha. Irrestawra l-karta f'lista oħra:",
+  "restore-card-no-list-with-room": "Kull lista f'dan il-bord laħqet il-limitu WIP tagħha. Għolli limitu, jew mexxi jew arkivja karti, biex tirrestawra din il-karta.",
+  "restore-all-skipped-wip-limit": "__count__ karta/i ma ġewx irrestawrati: il-listi tagħhom laħqu l-limiti WIP tagħhom. Irrestawrahom waħda waħda biex tagħżel lista oħra."
 }
