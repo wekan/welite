@@ -29,7 +29,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   selected, with the target, type, color and icon. They export stickers,
   locations, voting and Planning Poker under their regular field names
   so the selected field groups apply to those values. The People field
-  group also includes card members and assignees from native SQLite.
+  group also includes card members and assignees from native SQLite. The
+  Labels group includes the board’s label definitions and card label IDs,
+  even when some board labels have yet to be used.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

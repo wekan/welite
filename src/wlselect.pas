@@ -266,7 +266,10 @@ begin
     Table('swimlanes',BoardScope('swimlanes')+' AND id IN ('+IdSet(Lanes)+')');
     Table('lists',BoardScope('lists')+' AND id IN ('+IdSet(Lists)+')');
     Table('cards',BoardScope('cards')+' AND id IN ('+IdSet(Cards)+')');
-    Table('board_labels','boardId='+q(BoardId)+' AND id IN (SELECT labelId FROM card_labels WHERE '+CardScope+' AND '+Link('card_labels','labelId')+')');
+    if WholeBoard and (Params.Values['action']='export') then
+      Table('board_labels','boardId='+q(BoardId))
+    else
+      Table('board_labels','boardId='+q(BoardId)+' AND id IN (SELECT labelId FROM card_labels WHERE '+CardScope+' AND '+Link('card_labels','labelId')+')');
     Table('custom_fields','id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+' AND '+Link('custom_field_boards','boardId')+
       ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+'))');
     Table('custom_field_boards',Scope+' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+')');
@@ -517,6 +520,13 @@ begin
         Relation.Add(Row.Get('userId',''));
       end;
     end;
+    Source:=TJSONArray(Data.Find('card_labels'));
+    for I:=0 to Source.Count-1 do
+    begin
+      Row:=Source.Objects[I];
+      Relation:=CardRelation(Row.Get('cardId',''),'labelIds');
+      Relation.Add(Row.Get('labelId',''));
+    end;
     Source:=TJSONArray(Data.Find('card_dependencies'));
     for I:=0 to Source.Count-1 do
     begin
@@ -538,6 +548,17 @@ begin
     try
       Result.Delete('stars');Result.Delete('_format');Result.Add('_format','wekan-board-1.0.0');
       if Result.Find('members')=nil then Result.Add('members',Data.Find('board_members').Clone);
+      if Result.Find('labels')=nil then
+      begin
+        Target:=TJSONArray.Create;
+        Result.Add('labels',Target);
+        Source:=TJSONArray(Data.Find('board_labels'));
+        for I:=0 to Source.Count-1 do
+        begin
+          Row:=Source.Objects[I];
+          Target.Add(TJSONObject.Create(['_id',Row.Get('id',''),'name',Row.Get('name',''),'color',Row.Get('color','')]));
+        end;
+      end;
       Remember(Result.Find('members'));
       for I:=0 to High(Roots) do
       begin

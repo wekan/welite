@@ -47,19 +47,26 @@ def run(request,database,administrator,member,base):
         con.execute("UPDATE cards SET extra_json=? WHERE id='txtcard'", (json.dumps(decorations),))
         for relation in ('card_members', 'card_assignees'):
             con.execute(f"INSERT INTO {relation}(cardId,userId) VALUES('txtcard',?)", (author,))
-    for fields in ('dependencies,locations,stickers,people', 'description'):
+        con.execute("INSERT INTO board_labels(boardId,id,name,color) VALUES "
+                    "('boardtxt','port','Port','blue'),('boardtxt','unused','Unused','green')")
+        con.execute("INSERT INTO card_labels(cardId,labelId) VALUES('txtcard','port')")
+    for fields in ('dependencies,locations,stickers,people,labels', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
         assert status == 200, body
-        card = next(row for row in json.loads(body)['cards'] if row['_id'] == 'txtcard')
+        payload = json.loads(body)
+        card = next(row for row in payload['cards'] if row['_id'] == 'txtcard')
         assert 'extra_json' not in card and 'internalOnly' not in card
         if fields.startswith('dependencies'):
+            assert {row['_id']: row['name'] for row in payload['labels']} == {'port': 'Port', 'unused': 'Unused'}
+            assert card['labelIds'] == ['port']
             assert card['members'] == card['assignees'] == [author]
             assert card['locations'] == decorations['locations']
             assert card['stickers'] == decorations['stickers']
             assert card['cardDependencies'] == [
                 dict(cardId='txtchild', type='blocks', color='#123456', icon='link')]
         else:
+            assert 'labels' not in payload and 'labelIds' not in card
             assert not {'cardDependencies', 'locations', 'stickers', 'members', 'assignees'}.intersection(card)
     status,_,published=request('GET','/boardtxt?lang=fi&sessionId='+administrator)
     assert status==200
