@@ -3154,6 +3154,7 @@ var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
 
   procedure RemoveCardFields(const PartName: string; const Keys: array of string);
   var J: Integer; FieldName, CollectionName: string; ChildRows: TJSONArray;
+    Card: TJSONObject; Parents: TJSONData; PreserveCompletion: Boolean;
   begin
     if Selected.IndexOf(PartName) >= 0 then Exit;
     for CollectionName in ['cards','subtaskItems'] do
@@ -3163,7 +3164,14 @@ var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
       begin
         if not (ChildRows.Items[J] is TJSONObject) then
           raise EConvertError.Create('Invalid board export row');
-        for FieldName in Keys do ChildRows.Objects[J].Delete(FieldName);
+        Card := ChildRows.Objects[J];
+        // dueComplete also represents completion in the parent's Subtasks list.
+        Parents := Card.Find('parentIds');
+        PreserveCompletion := (PartName = 'dates') and (Selected.IndexOf('subtasks') >= 0) and
+          ((CollectionName = 'subtaskItems') or (Card.Get('parentId', '') <> '') or
+          ((Parents is TJSONArray) and (Parents.Count > 0)));
+        for FieldName in Keys do
+          if (FieldName <> 'dueComplete') or not PreserveCompletion then Card.Delete(FieldName);
       end;
     end;
   end;

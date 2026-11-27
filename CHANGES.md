@@ -17,6 +17,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   collection types encountered during field filtering. Filtered exports
   keep user records referenced by the remaining data, including board
   members and authors, and omit users referenced only by excluded fields.
+  Selecting Subtasks preserves their completion state even when Dates are
+  excluded, including when a subtask also appears in the main cards array.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
