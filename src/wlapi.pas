@@ -7178,7 +7178,7 @@ end;
 
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 const DateFields:array[0..3] of string=('receivedAt','startAt','dueAt','endAt');
-var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
+var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value,RestMoveReason:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber,SpentHours:Double;NumberFormat:TFormatSettings;
   Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done,OldOvertime,Overtime,HasSpentTime:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor,OldSpentTime,NewSpentTime:string;
@@ -7201,7 +7201,7 @@ begin
       else
       begin
         Body:=TJSONObject.Create;
-        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','spentTime','sort','description','title'] do
+        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','spentTime','moveReason','sort','description','title'] do
           if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
             Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
       end;
@@ -7209,6 +7209,10 @@ begin
       if (Body.Find('customFields')<>nil) and
         AdminFieldForgery(T.Db,UserId,BoardId,CardId,Body.Find('customFields'),'rest:PUT card') then
       begin SendError(aResponse,403,'Custom-field write forbidden');Exit;end;
+      Input:=Body.Find('moveReason');
+      if (Input<>nil) and (Input.JSONType=jtString) then RestMoveReason:=Trim(Input.AsString);
+      if (Length(RestMoveReason)>4096) or (Pos(#0,RestMoveReason)>0) then
+      begin SendJson(aResponse,'{"error":"Invalid move reason"}',400);Exit;end;
       Input:=Body.Find('title');HasTitle:=Input<>nil;
       if HasTitle then
       begin
@@ -7399,7 +7403,7 @@ begin
   begin
     Value:=BodyField(aRequest,'listId');
     if Value='' then Value:=aRequest.RouteParams['listId'];
-    Code:=MoveViewCard(T,UserId,BoardId,CardId,BodyField(aRequest,'boardId'),BodyField(aRequest,'swimlaneId'),Value,MoveError);
+    Code:=MoveViewCard(T,UserId,BoardId,CardId,BodyField(aRequest,'boardId'),BodyField(aRequest,'swimlaneId'),Value,MoveError,RestMoveReason);
     if Code<>200 then begin SendError(aResponse,Code,MoveError);Exit;end;
   end;
   if HasSort or HasOvertime or HasTitle then SendJson(aResponse,'{"_id":"'+StringToJSONString(CardId)+'"}')

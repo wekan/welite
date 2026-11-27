@@ -274,8 +274,9 @@ Next, after this goal:
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
-  The remaining time-history cases need verification and implementation
-  where they fail.
+  The English time-history test reaches the board view menu after the
+  REST corrections, then stops because the Time view is missing. The
+  Time view, its reports and exports still need implementation.
   Also left are additional History field restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
