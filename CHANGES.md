@@ -26,7 +26,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   available. Dependencies identify live cards on the same board and show
   their relationship type. The card layout groups cards under swimlane and
   list headings in board order. Swimlane and list exports start at that
-  level, and a card scope omits the group headings.
+  level, and a card scope omits the group headings. The card layout uses
+  A4 portrait printing with page breaks between card blocks.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

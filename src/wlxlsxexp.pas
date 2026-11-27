@@ -22,9 +22,12 @@ type
     Checklists, Items, Comments, Attachments, Subtasks, UsersById, Dependencies, CardsById: TFPHashObjectList;
     LaneRows, ListRows: TJSONArray;
     LastLane, LastList: string;
+    PageBreaks: TStringList;
+    HasCard: Boolean;
     ShowLaneHeadings, ShowListHeadings: Boolean;
     procedure WriteHeading(const Text: string);
     procedure GroupHeadings(Card: TJSONObject);
+    procedure PrintSetup;
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
     destructor Destroy; override;
@@ -147,6 +150,7 @@ end;
 
 destructor TSheetWriter.Destroy;
 begin
+  PageBreaks.Free;
   CardsById.Free;
   Dependencies.Free;
   UsersById.Free;
@@ -364,11 +368,26 @@ begin
   end;
 end;
 
+procedure TSheetWriter.PrintSetup;
+var Boundary: string;
+begin
+  Line('<pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.2" footer="0.2"/>' +
+    '<pageSetup paperSize="9" orientation="portrait"/>');
+  if PageBreaks.Count = 0 then Exit;
+  Line('<rowBreaks count="' + IntToStr(PageBreaks.Count) +
+    '" manualBreakCount="' + IntToStr(PageBreaks.Count) + '">');
+  for Boundary in PageBreaks do
+    Line('<brk id="' + Boundary + '" min="0" max="16383" man="1"/>');
+  Line('</rowBreaks>');
+end;
+
 procedure TSheetWriter.Add(const Row: TBoardRow; Card: TJSONObject);
 var Pair: TBoardRow; I: Integer;
 begin
   if not CardDetails then begin TableRow(Row, RowNumber = 0); Exit; end;
   if Card = nil then begin Head := Copy(Row); Exit; end;
+  if HasCard then PageBreaks.Add(IntToStr(RowNumber));
+  HasCard := True;
   GroupHeadings(Card);
   SetLength(Pair, 2);
   for I := 0 to High(Row) do
@@ -428,9 +447,11 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
     Writer.Line('<worksheet xmlns="' + MainNs + '">');
   end;
 
-  procedure EndSheet;
+  procedure EndSheet(CardPrintLayout: Boolean = False);
   begin
-    Writer.Line('</sheetData></worksheet>');
+    Writer.Line('</sheetData>');
+    if CardPrintLayout then Writer.PrintSetup;
+    Writer.Line('</worksheet>');
     Sheet.Position := 0;
   end;
 
@@ -643,7 +664,11 @@ begin
     Writer.ShowPoker := WithPoker or not Known;
     Writer.ShowStickers := WithStickers or not Known;
     Writer.ShowLocations := WithLocations or not Known;
-    if CardDetails then BoardColumns
+    if CardDetails then
+    begin
+      Writer.PageBreaks := TStringList.Create;
+      BoardColumns;
+    end
     else
       Writer.Line('<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" ' +
         'activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/>' +
@@ -687,7 +712,7 @@ begin
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;
     ReadBoardRows(Board, Fields, @Writer.Add, CardDetails, CardOrder);
-    EndSheet;
+    EndSheet(CardDetails);
     if not CardDetails and not Scoped and BoardHeader then
     begin
       StartSheet('Board');
