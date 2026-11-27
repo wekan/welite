@@ -4,6 +4,11 @@
   'use strict';
   if (!window.up) return;
 
+  up.on('change', '.js-search-move-card select', function (event, list) {
+    if (list.form.requestSubmit) list.form.requestSubmit();
+    else list.form.submit();
+  });
+
   var searchBoard = null;
   var searchTerm = '';
   var searchCardId = null;

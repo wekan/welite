@@ -35,6 +35,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Search All Boards uses the same text search across the signed-in user's
   active board memberships. The page links to matching cards and shows 25
   results at a time.
+- Move a card to another list in its current swimlane from Search All
+  Boards. The move uses the card's existing write and destination checks
+  and returns to the same search query and page.
 
 ## HTML5 minicards
 

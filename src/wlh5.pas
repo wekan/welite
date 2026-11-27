@@ -5829,7 +5829,7 @@ begin
   end;
   Tail := '';
   if Limit > 0 then Tail := ' LIMIT ' + IntToStr(Limit);
-  Result := Db.Query('SELECT c.id,c.title FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+  Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
     ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + BoardTextMatchSql(Text) +
     BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text) + ')' +
     ' ORDER BY c.createdAt DESC,c.id' + Tail + ';');
@@ -5860,10 +5860,25 @@ end;
 
 function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
 const PageSize = 25;
-var Text, Results, NextUrl: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext: Boolean;
+var Text, Results, NextUrl: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
+  end;
+  function ListControl(const BoardId: string; const Card: TWLRow): string;
+  var Lanes, Lists: TWLRows; k: Integer;
+  begin
+    Result := '';
+    BoardPlaces(Db, BoardId, Card[2], Lanes, Lists);
+    if Length(Lists) < 2 then Exit;
+    Result := '<form class="js-search-move-card" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+      '/cards/' + HtmlAttr(HTTPEncode(Card[0])) + '/move-to"><input type="hidden" name="returnSearch" value="1">' +
+      '<input type="hidden" name="q" value="' + HtmlAttr(Text) + '"><input type="hidden" name="page" value="' +
+      IntToStr(PageNumber) + '"><label>' + E(Words.Text('list', 'List')) + ' <select name="listId">';
+    for k := 0 to High(Lists) do
+      Result := Result + '<option value="' + HtmlAttr(Lists[k][0]) + '"' + IfThen(Lists[k][0] = Card[3], ' selected', '') +
+        '>' + E(Lists[k][1]) + '</option>';
+    Result := Result + '</select></label> <button type="submit">' + E(Words.Text('move', 'Move')) + '</button></form>';
   end;
 begin
   Text := SearchTerm(Term);
@@ -5883,13 +5898,16 @@ begin
     for i := 0 to High(Boards) do
     begin
       Cards := SearchBoardCards(Db, UserId, Boards[i][0], Text, Skip + PageSize + 1 - Shown);
+      Writable := (Length(Cards) > 0) and BoardCanWrite(Db, UserId, Boards[i][0]);
       for j := 0 to High(Cards) do
       begin
         if Skip > 0 then begin Dec(Skip); Continue; end;
         if Shown = PageSize then begin HasNext := True; Break; end;
         Results := Results + '<div class="result-card-wrapper"><a class="minicard-wrapper js-minicard js-board-search-card card-title" href="' +
           HtmlAttr(CardRoute(Boards[i][0], Boards[i][2], Cards[j][0])) + '"><span class="minicard-title">' +
-          E(Cards[j][1]) + '</span></a><span class="quiet">' + E(Boards[i][1]) + '</span></div>';
+          E(Cards[j][1]) + '</span></a><span class="quiet">' + E(Boards[i][1]) + '</span>';
+        if Writable then Results := Results + ListControl(Boards[i][0], Cards[j]);
+        Results := Results + '</div>';
         Inc(Shown);
       end;
       if HasNext then Break;
@@ -6420,6 +6438,14 @@ begin
         else Error := Words.Text('error', 'Error');
       SendPage(Response, Code, Page(Request, Language, Words, S, Error, '',
         '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
+      Exit;
+    end;
+    if (Action = 'move-card') and (Request.ContentFields.Values['returnSearch'] = '1') then
+    begin
+      Response.Code := 303;
+      Response.SetCustomHeader('Location', '/global-search?q=' + HTTPEncode(SearchTerm(Request.ContentFields.Values['q'])) +
+        '&page=' + IntToStr(Max(1, StrToIntDef(Request.ContentFields.Values['page'], 1))));
+      SendResponse(Response);
       Exit;
     end;
     // boardChangeTitlePopup is a plain form: back to the board, renamed.
