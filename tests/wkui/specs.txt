@@ -188,9 +188,7 @@
 41-admin-newest-features.e2e.js: Admin – newest features › NEGATIVE: board Table view column headers are not clickable-sortable
 42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › a card comment (carrying boardId) is published and shown when the card is opened
 42-board-comments-attachments.e2e.js: Board publication – comments/attachments (#6480) › NEGATIVE: a comment on a different board is not published into this board
-44-calendar-date-display.e2e.js: gregorian popup opens a full-width calendar with only hour/minute controls
-44-calendar-date-display.e2e.js: buddhist popup opens a full-width calendar with only hour/minute controls
-44-calendar-date-display.e2e.js: RTL date popup keeps its bottom-left grip and moves with physical pointer coordinates
+44-calendar-date-display.e2e.js
 45-profile-email.e2e.js
 70-rest-board-management.e2e.js: normal member cannot rename a board through REST
 72-invitation-profile.e2e.js
@@ -210,10 +208,7 @@ board-view-titles.e2e.js: opened card title honors plain-source
 board-view-titles.e2e.js: opened card List dropdown title honors formatted
 board-view-titles.e2e.js: opened card List dropdown title honors plain-links
 board-view-titles.e2e.js: opened card List dropdown title honors plain-source
-calendar-today-marker.e2e.js: due-date popup marks today, and only today
-calendar-today-marker.e2e.js: due-date popup fills today green on the wisteria theme
-calendar-today-marker.e2e.js: due-date popup fills today green on the dark theme
-calendar-today-marker.e2e.js: due-date popup fills today green on the appleglasspastel theme
+calendar-today-marker.e2e.js
 card-copy-boundary.e2e.js: the copy dialog still creates a renamed card
 checklist-single-submit.e2e.js: #6700 one checklist persists after click
 checklist-single-submit.e2e.js: #6700 one checklist persists after Control+Enter
@@ -324,9 +319,8 @@ admin-only-custom-fields.e2e.js: ordinary member copying retains public values a
 admin-only-custom-fields.e2e.js: blocked field attacks appear as a Problems summary without secret values
 password-length-report.e2e.js
 password-min-length-signup-login.e2e.js
-global-date-format.e2e.js: Date settings cascade from global to board to member through their own controls
-change-settings-popup-6835.e2e.js: Change Settings: aligned icons, compact wrapped lines, divided rows (fa)
-change-settings-popup-6835.e2e.js: Change Settings: aligned icons, compact wrapped lines, divided rows (en)
+global-date-format.e2e.js
+change-settings-popup-6835.e2e.js
 card-settings-both-sides.e2e.js: both Show sides list every row of the table
 card-settings-sections-order.e2e.js: a default board: the opened card draws the Card pane's sections in its order, Labels first
 card-settings-sections-order.e2e.js: dragging a section in the Card pane reorders the card, not the minicard
@@ -475,7 +469,5 @@ subtask-done-4693.e2e.js
 
 calendar-mode.e2e.js
 
-44-calendar-date-display.e2e.js: Jalali board-view-cal has actual month boundaries and a single calendar title
-44-calendar-date-display.e2e.js: Jalali board-view-multiboard-cal has actual month boundaries and a single calendar title
 
 wip-limit-group-selection.e2e.js

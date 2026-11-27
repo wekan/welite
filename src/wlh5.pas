@@ -1086,15 +1086,18 @@ function ChangeAvatarPopup(Db: TWLDb; Words: TWLTranslator; const UserId, Error:
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
-var Dir, Header, ProfilePopup, Drawer: string; SiteAdmin: Boolean; T: TWLTenant;
+var Dir, Header, ProfilePopup, Drawer, DateAttributes: string; SiteAdmin: Boolean; T: TWLTenant;
 begin
   SiteAdmin := (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and IsSiteAdmin(T.Db, S.UserId);
-  ProfilePopup := ''; Drawer := '';
+  ProfilePopup := ''; Drawer := ''; DateAttributes := '';
   if (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) then
   begin
     ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId) + MemberSettingsPopups(T.Db, Words, S.UserId, ViewBoardId) +
       ChangeAvatarPopup(T.Db, Words, S.UserId, Request.QueryFields.Values['avatarError']);
     Drawer := DrawerItems(T.Db, Words, S.UserId);
+    DateAttributes := ' data-calendar-system="' + HtmlAttr(ProfileField(T.Db, S.UserId, 'calendarSystem')) +
+      '" data-start-day="' + HtmlAttr(ProfileField(T.Db, S.UserId, 'startDayOfWeek')) +
+      '" data-date-format="' + HtmlAttr(ViewDateFor(T.Db, S.UserId, ViewBoardId)) + '"';
   end;
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
   Header := '';
@@ -1173,7 +1176,7 @@ begin
     Header := '<div id="header" class="header-bar">' +
       Html5ViewToggle(PathAndQuery(Request), Words.Text('html4-html5-toggle', 'Toggle between HTML4 and HTML5 view')) + '</div>';
   Result := '<!DOCTYPE html>' + LineEnding +
-    '<html lang="' + HtmlAttr(StringReplace(Language.Tag, '_', '-', [rfReplaceAll])) + '" dir="' + Dir + '"' +
+    '<html lang="' + HtmlAttr(StringReplace(Language.Tag, '_', '-', [rfReplaceAll])) + '" dir="' + Dir + '"' + DateAttributes +
     // No language chosen: welite.js tells the server the browser's own.
     IfThen(not ((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and ProfileLanguageSet(T.Db, S)),
       ' data-language-source="browser" data-language-tags="' + E(LanguageTags) + '"', '') + '>' +

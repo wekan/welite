@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Apply the member’s saved calendar and first weekday to card dates and date
+  pickers when the page opens. WeLite now runs the same complete calendar
+  display, Today marker, date-format and Change Settings specs as Weddy.
+
 - Set, edit or clear deadlines for checklists and individual checklist items
   with the same calendar as Weddy. The board’s checklist due-date setting
   controls display and edits. The eight shared WeKan checklist tests and an
