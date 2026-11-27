@@ -221,6 +221,22 @@ def run(request,database,administrator,member,base):
             attachments = con.execute("SELECT createdAt,size FROM attachments WHERE boardId=?",
                                       (json.loads(result)['boardId'],)).fetchall()
         assert attachments == ([(original_timestamp, len(data))] if include_files == 'true' else [])
+    status, _, metadata = request('GET', '/api/boards/boardtxt/export?' +
+                                  urlencode(dict(token=administrator, attachments='false')))
+    assert status == 200, metadata
+    payload = json.loads(metadata)
+    assert 'file' not in payload['attachments'][0]
+    for value, expected in ((None, 200), (False, 400)):
+        if value is not None:
+            payload['attachments'][0]['file'] = value
+        status, _, result = request('POST', '/api/boards/import?' + urlencode(dict(token=administrator)),
+                                    json.dumps(dict(board=payload)).encode())
+        assert status == expected, result
+        if status == 200:
+            with sqlite3.connect(database) as con:
+                imported = json.loads(result)['_id']
+                assert con.execute("SELECT count(*) FROM attachments WHERE boardId=?", (imported,)).fetchone() == (0,)
+                assert con.execute("SELECT count(*) FROM cards WHERE boardId=?", (imported,)).fetchone() == (3,)
     forms=Forms()
     forms.feed(body_response.decode())
     delete_path='/board/attachment/delete?id=boardtxt&card=txtcard&file='+identity

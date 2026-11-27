@@ -4389,7 +4389,11 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     if Arrays[9]=nil then Exit;
     for K:=0 to Arrays[9].Count-1 do
     begin
-      Entry:=Arrays[9].Objects[K];Id:=Mapped(9,Text(Entry,'_id'),True);
+      Entry:=Arrays[9].Objects[K];
+      FileField:=Entry.Find('file');
+      if (FileField=nil) or (FileField.JSONType=jtNull) then Continue;
+      if not (FileField is TJSONString) then raise EConvertError.Create('Invalid attachment data');
+      Id:=Mapped(9,Text(Entry,'_id'),True);
       Card:=nil;CardId:=Text(Entry,'cardId');CardKey:='NULL';ListKey:='NULL';LaneKey:='NULL';
       if CardId<>'' then
       begin
@@ -4405,8 +4409,6 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       if Mime='' then Mime:='application/octet-stream';
       if (Pos(#13,Filename+Mime)>0) or (Pos(#10,Filename+Mime)>0) then
         raise EConvertError.Create('Invalid attachment name or type');
-      FileField:=Entry.Find('file');
-      if not (FileField is TJSONString) then raise EConvertError.Create('Attachment bytes missing');
       Encoded:=FileField.AsString;
       try Bytes:=DecodeStringBase64(Encoded,True);
       except raise EConvertError.Create('Invalid attachment encoding');end;
