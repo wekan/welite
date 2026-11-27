@@ -140,7 +140,10 @@ begin
     begin
       I := Count;
       while (I > 0) and (Text[Offset + I - 1] <> ' ') do Dec(I);
-      if I > 0 then Count := I;
+      if I > 0 then Count := I
+      else if (Offset + Count <= Length(Text)) and
+        (Ord(Text[Offset + Count - 1]) >= $D800) and (Ord(Text[Offset + Count - 1]) <= $DBFF) and
+        (Ord(Text[Offset + Count]) >= $DC00) and (Ord(Text[Offset + Count]) <= $DFFF) then Dec(Count);
     end;
     Chunk := Copy(Text, Offset, Count);
     for I := 1 to Length(Chunk) do

@@ -49,7 +49,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the card layout, supports selected fields and scopes, and includes image
   previews from local attachments. It uses standard PDF fonts and WinAnsi
   text encoding by default. Set `WELITE_PDF_TTF` to a TrueType font
-  path to embed the subset needed for text covered by that font.
+  path to embed the subset needed for text covered by that font. PDF line
+  wrapping keeps UTF-16 surrogate pairs together, so an unsupported
+  supplementary character at a wrap boundary produces one fallback glyph
+  with the default font.
 
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and
