@@ -2534,7 +2534,7 @@ end;
 
 function ApplyContainerArchiveHistory(Db:TWLDb;const UserId:string;Row:TJSONObject;const Direction:string;out Error:string):Boolean;
 var Entity,TableName,BoardId,EntityId,Scope,Before,After,Stamp,ChildSql,Assignment:string;Current:TWLRows; Snapshot,Recorded:TJSONObject;
-  function ChildUpdate(const TableName,Key:string):Boolean;
+  function ChildUpdate(const ChildTable,Key:string):Boolean;
   var Ids,Item:TJSONData; ChildScope,Count:string; I:Integer;
   begin
     Result:=False;
@@ -2547,10 +2547,10 @@ var Entity,TableName,BoardId,EntityId,Scope,Before,After,Stamp,ChildSql,Assignme
     end;
     ChildScope:='boardId='+Q(BoardId)+' AND deletedAt IS NULL AND id IN (SELECT value FROM json_each('+Q(Ids.AsJSON)+'))';
     Count:=IntToStr(Ids.Count);
-    ChildSql:=ChildSql+'SELECT CASE WHEN (SELECT count(*) FROM '+TableName+' WHERE '+ChildScope+
+    ChildSql:=ChildSql+'SELECT CASE WHEN (SELECT count(*) FROM '+ChildTable+' WHERE '+ChildScope+
       ' AND COALESCE(archived,0)='+Before+
-      IfThen(Before='1',' AND archivedAt IS (SELECT archivedAt FROM swimlanes WHERE '+Scope+')')+')='+Count+' THEN 1 ELSE json(''Archive batch changed'') END; '+
-      'UPDATE '+TableName+' SET '+Assignment+',modifiedAt='+Stamp+' WHERE '+ChildScope+'; ';
+      IfThen(Before='1',' AND archivedAt IS (SELECT archivedAt FROM '+TableName+' WHERE '+Scope+')')+')='+Count+' THEN 1 ELSE json(''Archive batch changed'') END; '+
+      'UPDATE '+ChildTable+' SET '+Assignment+',modifiedAt='+Stamp+' WHERE '+ChildScope+'; ';
     Result:=True;
   end;
 begin
@@ -2585,8 +2585,10 @@ begin
   ChildSql:='';
   Assignment:=ArchiveHistoryAssignment(After,Stamp);
   Snapshot:=Row.Objects['newContent'];
-  if (Entity='swimlane') and ((Snapshot.Find('archiveLists')<>nil) or (Snapshot.Find('archiveCards')<>nil)) then
+  if (Snapshot.Find('archiveLists')<>nil) or (Snapshot.Find('archiveCards')<>nil) then
   begin
+    if Entity='list' then
+      if not (Snapshot.Find('archiveLists') is TJSONArray) or (Snapshot.Find('archiveLists').Count<>0) then Exit;
     if After='1' then Assignment:='archived=1,archivedAt='+Stamp;
     if not ChildUpdate('lists','archiveLists') or not ChildUpdate('cards','archiveCards') then Exit;
   end;

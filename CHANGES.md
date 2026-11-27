@@ -38,6 +38,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   entries. A changed batch member prevents partial replay.
   REST template-list archiving and unarchiving also record the resulting
   card archive transitions as individual history entries.
+  Undo and Redo replay new template-list archive batches with the cards
+  changed by each operation.
   The hourly shared-store scheduler honors the board’s inactivity archive
   setting and records the resulting card transitions in History.
   Board admins can set or clear the inactivity threshold in Board Settings.

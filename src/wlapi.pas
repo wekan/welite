@@ -2002,7 +2002,7 @@ begin
     raise;
   end;
   try
-    RecordSwimlaneArchiveBatch(T.Db,UserId,BoardId,LaneId,Archive,ChangedLists,Changed);
+    RecordContainerArchiveBatch(T.Db,UserId,BoardId,'swimlane',LaneId,Archive,ChangedLists,Changed);
   except
     // History never fails the operation it records.
   end;
@@ -6012,7 +6012,7 @@ end;
 procedure ApiListArchive(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
 var T:TWLTenant;UserId,BoardId,BoardKey,ListId,Scope,Predicate,Stamp,CardArchivedAt,Sql,CardScope,CardIdQuery:string;
-  Archive:Boolean;Target:string;Rows:TWLRows;Reply:TJSONObject;ChangedCards:TJSONData;I:Integer;
+  Archive:Boolean;Target:string;Rows,CardIds:TWLRows;Reply:TJSONObject;ChangedCards:TJSONData;I:Integer;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -6040,11 +6040,23 @@ begin
     ' AND archived='+Target+')=1 THEN 1 ELSE json(''List archive failed'') END; COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change list archive state');Exit;end;
-  RecordArchiveHistory(T.Db,UserId,BoardId,'list',ListId,Archive);
   ChangedCards:=GetJSON(Rows[0][0]);
   try
-    for I:=0 to ChangedCards.Count-1 do
-      RecordArchiveHistory(T.Db,UserId,BoardId,'card',ChangedCards.Items[I].AsString,Archive);
+    if ChangedCards.Count=0 then RecordArchiveHistory(T.Db,UserId,BoardId,'list',ListId,Archive)
+    else
+    begin
+      SetLength(CardIds,ChangedCards.Count);
+      for I:=0 to High(CardIds) do
+      begin
+        SetLength(CardIds[I],1);
+        CardIds[I][0]:=ChangedCards.Items[I].AsString;
+      end;
+      try
+        RecordContainerArchiveBatch(T.Db,UserId,BoardId,'list',ListId,Archive,nil,CardIds);
+      except
+        // History never fails the operation it records.
+      end;
+    end;
   finally ChangedCards.Free;end;
   Reply:=TJSONObject.Create(['_id',ListId,'archived',Archive]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
