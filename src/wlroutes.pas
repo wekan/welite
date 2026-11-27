@@ -122,6 +122,7 @@ begin
     Exit(True);
   end;
   if not SplitBoardRoute(Path, BoardId, Slug, CardId) then Exit;
+  if (Slug = 'history') and (CardId = '') then Exit;
   Request.QueryFields.Values['id'] := BoardId;
   // WeKan's /b/:id/:slug/rules: the board's Rules page (wlrules).
   if CardId = 'rules' then

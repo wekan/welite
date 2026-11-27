@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Open the shared-store History view from the board or card menu. Browse
+  authorized history rows by contributor, search and page. The six shared
+  History scope tests and the board History navigation test pass in Chromium.
+
 - Board Settings appends new custom fields and saves the order set by mouse
   or keyboard. Open cards follow that order. Turning on Show on Card adds
   the field to existing cards while preserving their values.

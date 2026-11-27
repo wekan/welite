@@ -425,14 +425,9 @@ password-change-other-sessions.e2e.js
 password-submit-event.e2e.js
 restore-wip-limit.e2e.js
 shared-list-row-6902.e2e.js
-history-read-scope.e2e.js: own member history no longer exposes a private board after access is removed
-history-read-scope.e2e.js: assigned-only writers cannot restore hidden card history by guessing a row ID
-history-read-scope.e2e.js: an assigned-only writer can restore currently assigned card history
-history-read-scope.e2e.js: History cannot edit a card moved to a board the former owner cannot access
-history-read-scope.e2e.js: History scans multiple batches before paging readable search matches
+history-read-scope.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member reads only their own cards' attachments over REST
 unassigned-attach-bleed.e2e.js: an unassigned assigned-only member can no longer upload to or delete from the card
-history-read-scope.e2e.js: history filters assigned-only rows before search, counts and contributor summaries
 assigned-card-methods.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member gets neither the file nor the text of a card not assigned to them
 board-announcement.e2e.js

@@ -2056,6 +2056,9 @@ begin
     E(Words.Text('copy-card-link-to-clipboard', 'Copy card link to clipboard')) + '</a></li>' +
     '<li><a class="js-move-card" href="#"><i class="fa fa-arrow-right"></i> ' + E(Words.Text('moveCardPopup-title', 'Move Card')) + '</a></li>' +
     '<li><a class="js-copy-card" href="#"><i class="fa fa-copy"></i> ' + E(Words.Text('copyCardPopup-title', 'Copy Card')) + '</a></li>' +
+    IfThen(IsShared(Db), '<li><a class="js-open-card-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+      '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '"><i class="fa fa-history"></i> ' +
+      E(Words.Text('history', 'History')) + '</a></li>', '') +
     '<li><a class="js-archive" href="#"><i class="fa fa-archive"></i> ' + E(Words.Text('archive', 'Archive')) + '</a></li></ul></template>' +
     Target('move-card', '/move-to', '', Words.Text('moveCardPopup-title', 'Move Card'), BoardOptions) +
     Target('copy-card', '/copy-to', '<label for="copy-card-title">' + E(Words.Text('title', 'Title')) +
@@ -2872,6 +2875,9 @@ begin
       RuleMenuLink('js-open-rules-list-view', '?view=list', 'fa-list', 'r-list-view', 'List view') +
       RuleMenuLink('js-open-rules-workflow-view', '?view=workflow', 'fa-sitemap', 'r-workflow-view', 'Workflow view') +
       RuleMenuLink('js-open-rules-import-export', '?view=import', 'fa-exchange', 'rulesImportExportPopup-title', 'Import / Export'), '') +
+    IfThen((S.UserId <> '') and IsShared(Db), '<li><a class="js-open-board-history" href="/b/' +
+      HtmlAttr(HTTPEncode(BoardId)) + '/history"><i class="fa fa-history"></i> ' +
+      E(Words.Text('history', 'History')) + '</a></li>', '') +
     '</ul></div></template>' + IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId) +
       CardSettingsPopup(Db, Words, S.UserId, BoardId, BoardOwnAdmin(Db, S.UserId, BoardId),
         ProfileField(Db, S.UserId, 'showDesktopDragHandles') = '1'), '');
@@ -7639,9 +7645,115 @@ begin
   if (Ref = '') or not IssueLoginToken(Db, UserId, LoginToken, Ref, 'api', ApiTokenLifetime(Db)) then LoginToken := '';
 end;
 
+function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;
+  const BoardId: string; Query: TStrings; out Content: string): Integer;
+var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
+  Reply: TJSONData; Answer, Route, CardId, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat: string;
+  I, PageNumber, PageCount, Size: Integer;
+  function LinkTo(const Contributor: string; Number: Integer): string;
+  begin
+    Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&user=' + HTTPEncode(Contributor) +
+      '&q=' + HTTPEncode(Search) + '&group=' + HTTPEncode(Group) + '&page=' + IntToStr(Number));
+  end;
+begin
+  Content := '';
+  if (BoardId = '') or (Pos(#0, BoardId) > 0) then Exit(404);
+  Board := T.Db.Query('SELECT title,slug FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
+  if Length(Board) <> 1 then Exit(404);
+  CardId := Query.Values['card'];
+  if CardId <> '' then
+  begin
+    if Pos(#0, CardId) > 0 then Exit(404);
+    if Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
+      ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL' +
+      IfThen(AssignedOnlyMember(T.Db, S.UserId, BoardId),
+        ' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId=' + QuotedStr(S.UserId) + ')') + ';')) <> 1 then Exit(404);
+  end;
+  Who := Query.Values['user'];
+  Search := Query.Values['q'];
+  Group := Query.Values['group'];
+  Route := '/b/' + HTTPEncode(BoardId) + '/history';
+  Back := BoardRoute(BoardId, Board[0][1]);
+  if Board[0][1] = 'history' then Back := '/b/' + HTTPEncode(BoardId);
+  Args := TJSONArray.Create;
+  try
+    Options := TJSONObject.Create(['scope', IfThen(CardId = '', 'board', 'card'),
+      'scopeId', IfThen(CardId = '', BoardId, CardId), 'userId', Who, 'search', Search, 'group', Group,
+      'page', StrToIntDef(Query.Values['page'], 1)]);
+    Args.Add(Options);
+    Result := HistoryMethod(T, S.UserId, 'changeHistory.page', Args, Answer);
+  finally Args.Free; end;
+  if Result <> 200 then Exit;
+  if CardId <> '' then Back := CardRoute(BoardId, Board[0][1], CardId);
+  Reply := GetJSON(Answer);
+  try
+    Data := TJSONObject(Reply).Objects['result'];
+    Rows := Data.Arrays['rows'];
+    Contributors := Data.Arrays['contributors'];
+    PageNumber := Data.Integers['page'];
+    Size := Data.Integers['pageSize'];
+    PageCount := Max(1, (Data.Integers['total'] + Size - 1) div Size);
+    DateFormat := ViewDateFor(T.Db, S.UserId, BoardId);
+    Label_ := Words.Text('history', 'History');
+    Content := '<div class="history-table"><div class="history-header"><a class="js-history-back" href="' +
+      HtmlAttr(Back) + '">&larr; ' + E(Board[0][0]) + '</a><h2>' + E(Label_) + '</h2></div><nav class="history-nav">' +
+      '<a class="history-nav-item js-history-all' + IfThen(Who = '', ' is-active') + '" href="' +
+      LinkTo('', 1) + '">' + E(Label_) + '</a>';
+    for I := 0 to Contributors.Count - 1 do
+    begin
+      Row := Contributors.Objects[I];
+      Name := Row.Get('userId', '');
+      if Name = '' then Continue;
+      Content := Content + '<a class="history-nav-item js-history-contributor' + IfThen(Name = Who, ' is-active') +
+        '" data-user-id="' + HtmlAttr(Name) + '" href="' + LinkTo(Name, 1) + '">' + E(UserName(T.Db, Name)) +
+        ' <span class="history-nav-count">' + IntToStr(Row.Integers['count']) + '</span></a>';
+    end;
+    Label_ := Words.Text('search', 'Search');
+    Content := Content + '</nav><div class="history-main"><form class="history-controls" method="get" action="' +
+      HtmlAttr(Route) + '"><input type="hidden" name="card" value="' + HtmlAttr(CardId) +
+      '"><input type="hidden" name="user" value="' + HtmlAttr(Who) +
+      '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
+      '"><input class="js-history-search" type="search" name="q" value="' + HtmlAttr(Search) + '" aria-label="' +
+      HtmlAttr(Label_) + '"><button type="submit">' + E(Label_) + '</button></form><div class="history-pagination">';
+    if PageNumber > 1 then Content := Content + '<a class="js-history-prev" href="' + LinkTo(Who, PageNumber - 1) + '">&lt;</a> ';
+    Content := Content + '<span class="history-page">' + IntToStr(PageNumber) + ' / ' + IntToStr(PageCount) + '</span>';
+    if PageNumber < PageCount then Content := Content + ' <a class="js-history-next" href="' + LinkTo(Who, PageNumber + 1) + '">&gt;</a>';
+    Content := Content + '</div>';
+    if Rows.Count = 0 then
+      Content := Content + '<p class="quiet js-history-empty">' + E(Words.Text('no-results', 'No results')) + '</p>'
+    else
+    begin
+      Content := Content + '<div class="history-scroll"><table class="history-rows"><thead><tr><th>' +
+        E(Words.Text('action', 'Action')) + '</th><th>' + E(Words.Text('details', 'Details')) + '</th><th>' +
+        E(Words.Text('date', 'Date')) + '</th></tr></thead><tbody>';
+      for I := 0 to Rows.Count - 1 do
+      begin
+        Row := Rows.Objects[I];
+        Label_ := Row.Get('changeType', '');
+        if Label_ = 'added' then Label_ := Words.Text('added', 'Added')
+        else Label_ := Words.Text('history-change-' + Label_, Label_);
+        Summary := '';
+        Values := nil;
+        if Row.Find('newContent') is TJSONObject then Values := Row.Objects['newContent']
+        else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
+        if Values <> nil then
+          Summary := Values.Get('value', Values.Get('title', Values.Get('description', Values.Get('name', ''))));
+        When_ := Row.Get('createdAt', '');
+        Content := Content + '<tr class="js-history-row" data-id="' + HtmlAttr(Row.Get('_id', '')) +
+          '"><td class="history-change-type">' + E(Label_) + '</td><td class="history-content">' +
+          E(Summary) + '</td><td class="history-when">' + E(FormatShownDate(When_, DateFormat)) +
+          '</td></tr>';
+      end;
+      Content := Content + '</tbody></table></div>';
+    end;
+    Content := Content + '</div></div>';
+  finally Reply.Free; end;
+end;
+
 function ServeHtml5(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
-  Path, Title, BoardTitle, Content, Section, Verified, LoginToken: string; Found, SignedIn: Boolean;
+  Path, Title, BoardTitle, Content, Section, Verified, LoginToken, HistoryBoard: string; Found, SignedIn: Boolean;
+  Parts: TStringArray; Code: Integer;
   procedure Send(Code: Integer; const Html: string);
   begin
     Response.Code := Code;
@@ -7705,7 +7817,10 @@ begin
   end;
   // The root arrives as an empty PathInfo.
   if Path = '' then Path := '/';
-  if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
+  HistoryBoard := '';
+  Parts := PathParts(Path);
+  if (Length(Parts) = 3) and (Parts[0] = 'b') and (Parts[2] = 'history') then HistoryBoard := Parts[1];
+  if not ((HistoryBoard <> '') or (Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/global-search') or (Path = '/people') or (Path = '/admin/people') or
     (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
     (Path = '/admin/problems/password-length') or (Path = '/admin/settings/appearance') or (Path = '/admin/settings/visibility') or
@@ -7849,6 +7964,17 @@ begin
       end
       else
         Send(404, Page(Request, Language, Words, S, Words.Text('board-not-found', 'Board not found'), '', NotFoundContent(Words)));
+      Exit;
+    end;
+    if HistoryBoard <> '' then
+    begin
+      Code := 500;
+      if T.Db.BeginRead then
+      try
+        Code := BoardHistoryContent(T, S, Words, HistoryBoard, Request.QueryFields, Content);
+      finally T.Db.EndRead; end;
+      if Code <> 200 then Content := NotFoundContent(Words);
+      Send(Code, Page(Request, Language, Words, S, Words.Text('history', 'History'), '', Content));
       Exit;
     end;
     // WeKan's rulesMain: the board's Rules page (wlrules).
