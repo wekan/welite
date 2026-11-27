@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- REST card color edits are recorded in the board's History Title group
+  and can be undone, redone or restored. Undo and redo check the current
+  field value and board scope again inside the write transaction.
+
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
   lists, swimlanes and their related records. Both Chromium archive cases

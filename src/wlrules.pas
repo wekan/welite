@@ -2239,14 +2239,17 @@ begin
     if not Result then Db.Exec('ROLLBACK;');
     Exit;
   end;
-  if (Field <> 'title') and (Field <> 'description') then Exit;
+  if (Field <> 'title') and (Field <> 'description') and
+    ((Field <> 'color') or (Str(Row, 'group') <> 'title')) then Exit;
   CardId := Str(Row, 'entityId');
-  R := Db.Query('SELECT COALESCE(' + Field + ','''') FROM cards WHERE id=' + Q(CardId) + ' AND boardId=' + Q(Str(Row, 'boardId')) +
-    ' AND deletedAt IS NULL;');
+  Scope := 'id=' + Q(CardId) + ' AND boardId=' + Q(Str(Row, 'boardId')) + ' AND deletedAt IS NULL';
+  R := Db.Query('SELECT COALESCE(' + Field + ','''') FROM cards WHERE ' + Scope + ';');
   if Length(R) <> 1 then Exit;
   if R[0][0] <> ValueOf(Expect) then begin Error := 'history-conflict'; Exit; end;
-  Result := Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET ' + Field + '=' + Q(ValueOf(Put)) + ',modifiedAt=' + Q(NowIso) +
-    ' WHERE id=' + Q(CardId) + '; COMMIT;');
+  Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' +
+    Scope + ' AND COALESCE(' + Field + ','''')=' + Q(ValueOf(Expect)) +
+    ') THEN 1 ELSE json(''Card field changed'') END; UPDATE cards SET ' + Field + '=' + Q(ValueOf(Put)) +
+    ',modifiedAt=' + Q(NowIso) + ' WHERE ' + Scope + '; COMMIT;');
   if not Result then Db.Exec('ROLLBACK;');
 end;
 
@@ -2474,7 +2477,7 @@ begin
   end;
 end;
 
-// changeHistory.restore of a card's title or description row: its
+// changeHistory.restore of a supported card field: its
 // newContent made current (previousContent for a removal), as WeKan's
 // applyFieldContent does - only while the row is the caller's to read
 // (requireHistoryRowAccess), on a board they may change, and the card,
@@ -2491,7 +2494,7 @@ var Content: TJSONData; Field, CardId, Value, Literal, Group, Scope: string; R: 
 begin
   if not Readable.Readable(Row) or not MayChange(Str(Row, 'boardId')) then Exit(-1);
   CardId := HistoryRowCard(Row);
-  R := Db.Query('SELECT boardId,COALESCE(title,''''),COALESCE(description,'''') FROM cards WHERE id=' + Q(CardId) + ' AND deletedAt IS NULL;');
+  R := Db.Query('SELECT boardId FROM cards WHERE id=' + Q(CardId) + ' AND deletedAt IS NULL;');
   if Length(R) <> 1 then Exit(0);
   if not (BoardCanWrite(Db, UserId, R[0][0]) or (MayChange(R[0][0]) and (Length(Db.Query('SELECT 1 FROM card_assignees WHERE cardId=' +
     Q(CardId) + ' AND userId=' + Q(UserId) + ';')) = 1))) then Exit(-1);
@@ -2525,13 +2528,16 @@ begin
   end
   else
   begin
-    if (Field <> 'title') and (Field <> 'description') then Exit(0);
+    if (Field <> 'title') and (Field <> 'description') and
+      ((Field <> 'color') or (Group <> 'title')) then Exit(0);
     if (TJSONObject(Content).Find('value') = nil) or (TJSONObject(Content).Find('value').JSONType <> jtString) then Exit(0);
     Value := TJSONObject(Content).Strings['value'];
     Literal := Q(Value);
-    Before := TJSONObject.Create(['field', Field, 'value', IfThen(Field = 'title', R[0][1], R[0][2])]);
+    R := Db.Query('SELECT boardId,COALESCE(' + Field + ','''') FROM cards WHERE ' + Scope + ';');
+    if Length(R) <> 1 then Exit(0);
+    Before := TJSONObject.Create(['field', Field, 'value', R[0][1]]);
     After := TJSONObject.Create(['field', Field, 'value', Value]);
-    Group := Field;
+    if Field <> 'color' then Group := Field;
   end;
   try
     if not Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' + Scope +

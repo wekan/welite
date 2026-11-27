@@ -6417,30 +6417,32 @@ begin
     ') FROM cards WHERE '+Scope+' AND COALESCE('+Column+','''')<>'+QuotedStr(Value)+'; ';
 end;
 
-// A card's title or description now, as text ('' when it has none).
+// A card's title, description or color now, as text ('' when it has none).
 function CardTextOf(Db:TWLDb;const CardId,Column:string):string;
 var R:TWLRows;
 begin
   Result:='';
-  if (Column<>'title') and (Column<>'description') then Exit;
+  if (Column<>'title') and (Column<>'description') and (Column<>'color') then Exit;
   R:=Db.Query('SELECT COALESCE('+Column+','''') FROM cards WHERE id='+QuotedStr(CardId)+';');
   if Length(R)=1 then Result:=R[0][0];
 end;
 
-// WeKan's History of a card's title or description (models/lib/changeHistoryGroups.js
-// diffFields): one row, its group the field's, 'added' from empty, 'removed'
+// WeKan's History of a card's title, description or color (changeHistoryGroups.js):
+// one row in the field's group, 'added' from empty, 'removed'
 // to empty, else 'edited'; nothing when the value did not change. In a
 // shared store, as every History row (wlchhist).
 procedure RecordCardTextHistory(Db:TWLDb;const UserId,BoardId,CardId,Column,Old,New:string);
-var Before,After:TJSONObject;Kind:string;
+var Before,After:TJSONObject;Kind,Group:string;
 begin
-  if (Old=New) or ((Column<>'title') and (Column<>'description')) then Exit;
+  if (Old=New) or ((Column<>'title') and (Column<>'description') and (Column<>'color')) then Exit;
+  Group:=Column;
+  if Column='color' then Group:='title';
   if Old='' then Kind:='added' else if New='' then Kind:='removed' else Kind:='edited';
   Before:=TJSONObject.Create(['field',Column,'value',Old]);
   After:=TJSONObject.Create(['field',Column,'value',New]);
   try
     try
-      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,Column,Kind,Before,After);
+      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,Group,Kind,Before,After);
     except
       // History never fails the edit it records.
     end;
@@ -7113,14 +7115,15 @@ procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
-  Code:Integer;MoveError:string;HasDescription:Boolean;NewTitle,NewDescription,OldTitle,OldDescription:string;
+  Code:Integer;MoveError:string;HasDescription,HasColor:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor:string;
 begin
   HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   CardId:=aRequest.RouteParams['cardId'];BoardId:=aRequest.RouteParams['boardId'];
   HasArchive:=BodyHasField(aRequest,'archive');
-  HasEdits:=BodyHasField(aRequest,'color') or BodyHasField(aRequest,'labelIds') or
+  HasColor:=BodyHasField(aRequest,'color');
+  HasEdits:=HasColor or BodyHasField(aRequest,'labelIds') or
     BodyHasField(aRequest,'members') or BodyHasField(aRequest,'assignees');
   FieldSets:='';HasDate:=False;Body:=nil;Decorations:=nil;
   try
@@ -7247,7 +7250,12 @@ begin
   if not HasArchive or HasEdits then
   begin
     Sets:='modifiedAt='+Stamp+',dateLastActivity='+Stamp+FieldSets;
-    if BodyHasField(aRequest,'color') then Sets:=Sets+',color='+QuotedStr(BodyField(aRequest,'color'));
+    if HasColor then
+    begin
+      NewColor:=BodyField(aRequest,'color');
+      OldColor:=CardTextOf(T.Db,CardId,'color');
+      Sets:=Sets+',color='+QuotedStr(NewColor);
+    end;
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;
   if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
@@ -7263,6 +7271,7 @@ begin
   end;
   if HasTitle then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',OldTitle,NewTitle);
   if HasDescription then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'description',OldDescription,NewDescription);
+  if HasColor then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'color',OldColor,NewColor);
   // #6423: a listId or swimlaneId in the body moves the card there, within
   // its board, with WeKan's moveCard activity (MoveViewCard's checks).
   if BodyHasField(aRequest,'listId') or BodyHasField(aRequest,'swimlaneId') then
