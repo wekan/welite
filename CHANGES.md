@@ -14,7 +14,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   older rows that identify the container as the changed entity. REST list
   and swimlane title changes can be undone, redone and restored from their
   scoped History views. REST list color edits also support undo, redo
-  and restoration.
+  and restoration. Shared list and swimlane color snapshots can replay
+  an explicit null as no color.
 
 - REST card color edits are recorded in the board's History Title group
   and can be undone, redone or restored. Undo and redo check the current

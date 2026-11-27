@@ -2283,8 +2283,21 @@ end;
 // back) or redone (the list and its live cards deleted again, in the same
 // batch). A card deleted on its own, in another batch, is not touched.
 function ApplyContainerTextHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var Prior, Next, Put, Expect, Value: TJSONData; BoardId, Scope, Guard, Title, Entity, TableName, Field, ColumnValue, Literal: string;
+var Prior, Next, Put, Expect: TJSONData; BoardId, Scope, Guard, Title, Entity, TableName, Field, ColumnValue, Literal, ExpectedText: string;
   Current: TWLRows; Before, After: TJSONObject;
+  function SnapshotText(Content: TJSONData; out Text: string): Boolean;
+  var Value: TJSONData;
+  begin
+    Result := False;
+    Text := '';
+    if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> Field) then Exit;
+    Value := TJSONObject(Content).Find('value');
+    if Value = nil then Exit;
+    if (Field = 'color') and (Value.JSONType = jtNull) then Exit(True);
+    if Value.JSONType <> jtString then Exit;
+    Text := Value.AsString;
+    Result := Pos(#0, Text) = 0;
+  end;
 begin
   Result := False; Error := '';
   Entity := Str(Row, 'entityType');
@@ -2301,9 +2314,7 @@ begin
   if not (Put is TJSONObject) then Exit;
   Field := Str(TJSONObject(Put), 'field');
   if (Field <> 'title') and (Field <> 'color') then Exit;
-  Value := TJSONObject(Put).Find('value');
-  if (Value = nil) or (Value.JSONType <> jtString) or (Pos(#0, Value.AsString) > 0) then Exit;
-  Title := Value.AsString;
+  if not SnapshotText(Put, Title) then Exit;
   Scope := 'id=' + Q(Str(Row, 'entityId')) + ' AND boardId=' + Q(BoardId);
   if Entity = 'list' then Scope := Scope + ' AND deletedAt IS NULL';
   ColumnValue := Field;
@@ -2318,10 +2329,8 @@ begin
   Guard := Scope + ' AND ' + ColumnValue + '=' + Q(Current[0][0]);
   if Direction <> 'restore' then
   begin
-    if not (Expect is TJSONObject) or (Str(TJSONObject(Expect), 'field') <> Field) then Exit;
-    Value := TJSONObject(Expect).Find('value');
-    if (Value = nil) or (Value.JSONType <> jtString) then Exit;
-    if Current[0][0] <> Value.AsString then begin Error := 'history-conflict'; Exit; end;
+    if not SnapshotText(Expect, ExpectedText) then Exit;
+    if Current[0][0] <> ExpectedText then begin Error := 'history-conflict'; Exit; end;
   end;
   Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM ' + TableName + ' WHERE ' + Guard +
     ') THEN 1 ELSE json(''Container field changed'') END; UPDATE ' + TableName + ' SET ' + Field + '=' + Literal +
