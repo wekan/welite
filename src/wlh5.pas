@@ -5227,8 +5227,8 @@ end;
 function MoveSelectedBoardCards(Db: TWLDb; const UserId: string; Args: TJSONData; out Answer: string): Integer;
 const OpenCard = 'archived=0 AND deletedAt IS NULL';
 var Selection, Entry, Target, Options: TJSONObject; Selected: TJSONArray; Value: TJSONData;
-  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql: string;
-  Rows: TWLRows; I, Count: Integer; Drag: Boolean;
+  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql, Moved, CrossBoardSql: string;
+  Rows: TWLRows; I, Count: Integer; Drag, CrossBoard: Boolean;
   function Failure(Status: Integer; const Reason: string): Integer;
   begin
     Answer := '{"error":"' + Reason + '","reason":"' + Reason + '"}';
@@ -5260,7 +5260,8 @@ begin
   if (Source = '') or (Pos(#0, Source) > 0) or (Board = '') or
     ((Position <> '') and (Position <> 'before') and (Position <> 'after')) then Exit;
   if not BoardCanWrite(Db, UserId, Source) or not BoardCanWrite(Db, UserId, Board) then Exit(Failure(403, 'not-authorized'));
-  if (Board <> Source) or (Lane = '') or (ListId = '') or (Target.Get('checklistId', '') <> '') or
+  CrossBoard := Board <> Source;
+  if (Lane = '') or (ListId = '') or (Target.Get('checklistId', '') <> '') or
     (Target.Get('itemId', '') <> '') then Exit(Failure(400, 'invalid-destination'));
   if Drag and not BoardAllows(Db, Source, 'allowsCardDragging') then Exit(Failure(403, 'drag-disabled'));
   if (Selected.Count = 0) or (Selected.Count > 200) then Exit(Failure(400, 'invalid-selection'));
@@ -5286,8 +5287,8 @@ begin
   Board := QuotedStr(Board);
   Lane := QuotedStr(Lane);
   ListId := QuotedStr(ListId);
-  CardScope := 'boardId=' + Board + ' AND ' + OpenCard;
-  Destination := CardScope + ' AND swimlaneId=' + Lane + ' AND listId=' + ListId;
+  CardScope := 'boardId=' + QuotedStr(Source) + ' AND ' + OpenCard;
+  Destination := 'boardId=' + Board + ' AND ' + OpenCard + ' AND swimlaneId=' + Lane + ' AND listId=' + ListId;
   if AssignedOnlyMember(Db, UserId, Source) then
     CardScope := CardScope + ' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId=' + QuotedStr(UserId) + ')';
   Rows := Db.Query('SELECT 1 FROM cards WHERE ' + CardScope + ' AND id IN (' + Ids + ');');
@@ -5304,21 +5305,44 @@ begin
   if Anchor <> '' then
   begin
     Anchor := QuotedStr(Anchor);
-    if Length(Db.Query('SELECT 1 FROM cards WHERE ' + CardScope + ' AND swimlaneId=' + Lane +
-      ' AND listId=' + ListId + ' AND id=' + Anchor)) <> 1 then Exit(Failure(400, 'invalid-destination'));
+    if Length(Db.Query('SELECT 1 FROM cards WHERE ' + Destination + ' AND id=' + Anchor)) <> 1 then Exit(Failure(400, 'invalid-destination'));
     SortKey := 'CASE WHEN id IN (' + Ids + ') THEN 1 WHEN (sort,id) ' +
       IfThen(Position = 'before', '<', '<=') + ' (SELECT sort,id FROM cards WHERE id=' + Anchor + ') THEN 0 ELSE 2 END';
   end
   else
     SortKey := 'CASE WHEN id IN (' + Ids + ') THEN 1 ELSE 0 END';
+  Moved := 'cardId IN (' + Ids + ')';
+  CrossBoardSql := '';
+  if CrossBoard then
+    CrossBoardSql :=
+      'CREATE TEMP TABLE structural_card_numbers AS SELECT id, (SELECT COALESCE(max(cardNumber),0) FROM cards WHERE boardId=' +
+      Board + ')+row_number() OVER (ORDER BY position) AS number FROM structural_card_order WHERE id IN (' + Ids + '); ' +
+      'UPDATE cards SET cardNumber=(SELECT number FROM structural_card_numbers WHERE structural_card_numbers.id=cards.id), ' +
+      'extra_json=json_set(json_remove(extra_json,''$.scrum'',''$.scrumRevision''),''$.watchers'',json((SELECT json_group_array(w.value) ' +
+      'FROM json_each(cards.extra_json,''$.watchers'') w JOIN board_members m ON m.userId=w.value AND m.isActive=1 AND m.boardId=' +
+      Board + '))) WHERE id IN (' + Ids + '); DROP TABLE structural_card_numbers; ' +
+      'CREATE TEMP TABLE structural_card_labels AS SELECT DISTINCT l.cardId,(SELECT d.id FROM board_labels d WHERE d.boardId=' + Board +
+      ' AND d.color=s.color AND COALESCE(d.name,'''')=COALESCE(s.name,'''') ORDER BY d.id LIMIT 1) AS labelId ' +
+      'FROM card_labels l JOIN board_labels s ON s.id=l.labelId AND s.boardId=' + QuotedStr(Source) + ' WHERE l.' + Moved + '; ' +
+      'DELETE FROM card_labels WHERE ' + Moved + '; INSERT INTO card_labels(cardId,labelId) ' +
+      'SELECT cardId,labelId FROM structural_card_labels WHERE labelId IS NOT NULL; DROP TABLE structural_card_labels; ' +
+      'DELETE FROM card_custom_field_values WHERE ' + Moved + ' AND NOT EXISTS(SELECT 1 FROM custom_field_boards ' +
+      'WHERE customFieldId=card_custom_field_values.customFieldId AND boardId=' + Board + '); ' +
+      'DELETE FROM card_members WHERE ' + Moved + ' AND userId NOT IN (SELECT userId FROM board_members WHERE isActive=1 AND boardId=' + Board + '); ' +
+      'DELETE FROM card_assignees WHERE ' + Moved + ' AND userId NOT IN (SELECT userId FROM board_members WHERE isActive=1 AND boardId=' + Board + '); ' +
+      'UPDATE card_comments SET boardId=' + Board + ' WHERE ' + Moved + '; ' +
+      'UPDATE checklists SET boardId=' + Board + ' WHERE ' + Moved + '; ' +
+      'UPDATE checklist_items SET boardId=' + Board + ' WHERE ' + Moved + '; ';
   Sql := 'BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE ' + CardScope + ' AND id IN (' + Ids +
     '))=' + IntToStr(Count) + ' AND ' + Capacity +
     IfThen(Anchor <> '', ' AND EXISTS(SELECT 1 FROM cards WHERE ' + Destination + ' AND id=' + Anchor + ')', '') +
     ' THEN 1 ELSE json(''Move scope changed'') END; ' +
     'CREATE TEMP TABLE structural_card_order AS SELECT id,row_number() OVER (ORDER BY ' + SortKey + ',sort,id)-1 AS position ' +
     'FROM cards WHERE (' + Destination + ') OR (' + CardScope + ' AND id IN (' + Ids + ')); ' +
+    CrossBoardSql +
     'UPDATE cards SET sort=(SELECT position FROM structural_card_order WHERE structural_card_order.id=cards.id), ' +
-    'swimlaneId=' + Lane + ',listId=' + ListId + ' WHERE id IN (SELECT id FROM structural_card_order); ' +
+    'boardId=' + Board + ',swimlaneId=' + Lane + ',listId=' + ListId + ' WHERE id IN (SELECT id FROM structural_card_order); ' +
+    'UPDATE attachments SET boardId=' + Board + ',swimlaneId=' + Lane + ',listId=' + ListId + ' WHERE ' + Moved + '; ' +
     'DROP TABLE structural_card_order; COMMIT;';
   if not Db.Exec(Sql) then
   begin

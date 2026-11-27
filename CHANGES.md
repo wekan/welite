@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Card-only selections can move between boards. Comments, checklists, items,
+  and attachment references move with the cards. Destination card numbers,
+  matching existing labels, and board membership are applied in the same transaction.
+
 - Selected cards can move together within a board, before or after a
   destination card. The move checks hard list limits and commits as one transaction.
 
