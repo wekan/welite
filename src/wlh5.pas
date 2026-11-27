@@ -8124,6 +8124,15 @@ var Current, State, Rule, Part: TJSONObject;
     if Description = '' then Description := Item.Get(TypeKey, '');
     Append(Description);
   end;
+  procedure AppendExtras(const Key,TypeKey:string);
+  var Items:TJSONData; I:Integer;
+  begin
+    if State=nil then Exit;
+    Items:=State.Find(Key);
+    if not (Items is TJSONArray) then Exit;
+    for I:=0 to Items.Count-1 do
+      if Items.Items[I] is TJSONObject then AppendDescription(TJSONObject(Items.Items[I]),TypeKey);
+  end;
 begin
   Result := '';
   Current := ObjectField(Row, 'newContent');
@@ -8133,7 +8142,9 @@ begin
   Part := ObjectField(State, 'rule');
   if Part <> nil then Append(Part.Get('title', ''));
   AppendDescription(ObjectField(State, 'trigger'), 'activityType');
+  AppendExtras('extraTriggers','activityType');
   AppendDescription(ObjectField(State, 'action'), 'actionType');
+  AppendExtras('extraActions','actionType');
   if Rule = nil then Append(Words.Text('history-change-removed', 'Removed'))
   else if Rule.Get('enabled', True) then Append(Words.Text('r-rule-enabled', 'Enabled'))
   else Append(Words.Text('r-rule-disabled', 'Disabled'));

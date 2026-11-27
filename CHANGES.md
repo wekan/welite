@@ -12,6 +12,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   lists and keeps the saved ID if a name is unavailable.
   Scrum history shows saved sprint and release details and names removed
   records from their previous snapshot.
+  Rule history shows all saved triggers and actions, including those of
+  deleted rules.
 
 - The card archive and unarchive REST routes record the previous and new
   archive status in the board’s lifecycle history.
