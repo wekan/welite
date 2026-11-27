@@ -3358,7 +3358,7 @@ begin
   if (Id = '') or (Length(Id) > 64) then Exit;
   for i := 1 to Length(Id) do if not (Id[i] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '-']) then Exit;
   if Length(Db.Query('SELECT 1 FROM attachments WHERE id=' + QuotedStr(Id) + ' AND boardId=' + QuotedStr(BoardId) +
-    ' AND type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/bmp'',''image/svg+xml'') AND ' + LiveAttachmentSQL(Db) + ';')) <> 1 then Exit;
+    ' AND type IN (''image/png'',''image/jpeg'',''image/pjpeg'',''image/gif'',''image/webp'',''image/bmp'',''image/svg+xml'') AND ' + LiveAttachmentSQL(Db) + ';')) <> 1 then Exit;
   Result := ' style="background-image: url(' + Prefix + Id + '); background-size: cover;"';
 end;
 
@@ -3649,7 +3649,7 @@ begin
         'CASE WHEN json_valid(c.extra_json) THEN CASE WHEN json_type(c.extra_json,''$.requesters'')=''array'' THEN ' +
         'json_extract(c.extra_json,''$.requesters'') ELSE ''[]'' END ELSE ''[]'' END,COALESCE(attachments.type,'''') ' +
         'FROM cards c LEFT JOIN attachments ON attachments.id=c.coverId AND attachments.cardId=c.id AND attachments.boardId=c.boardId AND ' +
-        'attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/bmp'',''image/svg+xml'') AND ' +
+        'attachments.type IN (''image/png'',''image/jpeg'',''image/pjpeg'',''image/gif'',''image/webp'',''image/bmp'',''image/svg+xml'') AND ' +
         LiveAttachmentSQL(Db) + ' WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');

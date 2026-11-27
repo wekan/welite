@@ -7,6 +7,7 @@ cookie. Linked and CLI SQLite.
 """
 import html
 import ctypes
+import base64
 import http.client
 import json
 import os
@@ -982,6 +983,24 @@ def http_checks(server, tmp, backend):
         else:
             assert headers['Content-Type'] == 'image/png' and struct.unpack('>II', thumbnail[16:24]) == (3, 2)
         assert request('POST', '%s/attachments/%s/delete' % (card_path, bmp_id.decode()), {}, cookie=owner)[0] == 200
+        jpeg = base64.b64decode(
+            '/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYxLjE5LjEwMQD/2wBDAAgEBAQEBAUFBQUFBQYGBgYGBgYGBgYGBgYHBwcICAgHBwcGBgcH'
+            'CAgICAkJCQgICAgJCQoKCgwMCwsODg4RERT/xABMAAEBAAAAAAAAAAAAAAAAAAAABwEBAQAAAAAAAAAAAAAAAAAABQcQAQAAAAAAAAAAAAAAAAAA'
+            'AAARAQAAAAAAAAAAAAAAAAAAAAD/wAARCAAEAAgDASIAAhEAAxEA/9oADAMBAAIRAxEAPwCOAL+Lf//Z')
+        exif = (b'Exif\0\0II' + struct.pack('<HIH', 42, 8, 1)
+                + struct.pack('<HHIHHI', 0x112, 3, 1, 6, 0, 0))
+        portrait = jpeg[:2] + b'\xff\xe1' + struct.pack('>H', len(exif) + 2) + exif + jpeg[2:]
+        for mime, source, expected in [('image/jpeg', jpeg, (8, 4)), ('image/pjpeg', portrait, (4, 8))]:
+            status, _, page, _ = upload('photo.jpg', mime, source, owner)
+            assert status == 200
+            jpg_id, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - {att.encode()}
+            status, headers, thumbnail, _ = request('GET', '/cdn/storage/attachments/%s/thumbnail' % jpg_id.decode(), cookie=owner)
+            assert status == 200, (status, headers)
+            if webp:
+                assert headers['Content-Type'] == 'image/webp' and webp_size(thumbnail) == expected
+            else:
+                assert headers['Content-Type'] == 'image/png' and struct.unpack('>II', thumbnail[16:24]) == expected
+            assert request('POST', '%s/attachments/%s/delete' % (card_path, jpg_id.decode()), {}, cookie=owner)[0] == 200
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png?download=true' % att, cookie=owner)
         assert status == 200 and headers.get('Content-Disposition', '').startswith('attachment'), headers
         rename = '/b/%s/cards/%s/attachments/%s/rename' % (board_id, card_id, att)

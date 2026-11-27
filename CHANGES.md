@@ -21,6 +21,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 card attachments
 
+- Honor JPEG EXIF orientation in thumbnails, including attachments stored
+  with the legacy `image/pjpeg` MIME type.
 - Preview uncompressed 24-bit BMP attachments in the gallery and on
   minicard covers. The decoder checks image dimensions and row lengths
   before reading pixels.

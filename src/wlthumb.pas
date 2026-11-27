@@ -154,7 +154,8 @@ var Input: TFileStream; Output: TMemoryStream; Source, Preview: TFPMemoryImage;
   Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor; OutputType: string;
 begin
   Result := False;
-  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/webp') and (MimeType <> 'image/bmp') then Exit;
+  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/pjpeg') and
+    (MimeType <> 'image/webp') and (MimeType <> 'image/bmp') then Exit;
   Input := nil;
   Output := nil;
   Source := nil;
@@ -191,6 +192,10 @@ begin
         Input.Position := 0;
         Source := TFPMemoryImage.Create(0, 0);
         Source.LoadFromStream(Input, Reader);
+        // The JPEG reader already applies EXIF orientation. Its header-size
+        // probe reports the unrotated dimensions.
+        if (Reader is TFPReaderJPEG) and (Source.Width = Size.Y) and (Source.Height = Size.X) then
+          Size := Point(Source.Width, Source.Height);
         if (Source.Width <> Size.X) or (Source.Height <> Size.Y) then Exit;
       end;
       W := Size.X;

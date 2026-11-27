@@ -16,7 +16,7 @@ function SendSvgImage(Response:TResponse;const Path,Name:string;Download:Boolean
 implementation
 function RasterAttachment(const FileType:string):Boolean;
 begin
-  Result:=(FileType='image/png') or (FileType='image/jpeg') or
+  Result:=(FileType='image/png') or (FileType='image/jpeg') or (FileType='image/pjpeg') or
     (FileType='image/gif') or (FileType='image/webp') or (FileType='image/bmp');
 end;
 function StoreFilePath(const FilesDir,Kind,Id:string):string;
