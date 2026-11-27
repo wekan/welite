@@ -2923,7 +2923,7 @@ end;
 
 procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
-  Payload, Card, Checklist: TJSONObject; Cards, Checklists: TJSONArray;
+  Payload, Card, Checklist: TJSONObject; Cards, Checklists, OtherCards: TJSONArray;
   Output: TMemoryStream; I: Integer; Matches, Scoped: Boolean;
   function ScopeId(const Key: string): string;
   var C: Char;
@@ -2945,6 +2945,7 @@ begin
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   Output := TMemoryStream.Create;
+  OtherCards := nil;
   try
     if Scoped then
     begin
@@ -2958,6 +2959,7 @@ begin
           else Checklists.Delete(I);
         end;
       end;
+      OtherCards := TJSONArray.Create;
       Cards := Payload.Arrays['cards'];
       for I := Cards.Count - 1 downto 0 do
       begin
@@ -2966,11 +2968,11 @@ begin
         else Matches := (ChecklistId = '') and
           ((LaneId = '') or (Card.Get('swimlaneId', '') = LaneId)) and
           ((ListId = '') or (Card.Get('listId', '') = ListId));
-        if not Matches or (Card.Get('linkedId', '') <> '') then Cards.Delete(I);
+        if not Matches or (Card.Get('linkedId', '') <> '') then OtherCards.Insert(0, Cards.Extract(I));
       end;
     end;
     try
-      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped);
+      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
     aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -2981,7 +2983,7 @@ begin
     aResponse.ContentLength := Output.Size;
     aResponse.ContentStream := Output;
     try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
-  finally Output.Free; Payload.Free; end;
+  finally OtherCards.Free; Output.Free; Payload.Free; end;
 end;
 
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);

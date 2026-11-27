@@ -3,7 +3,7 @@ unit wlxlsxexp;
 
 interface
 uses Classes, fpjson;
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray);
 
 implementation
 uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
@@ -19,7 +19,7 @@ type
     Head: TBoardRow;
     RowNumber: Integer;
     CardDetails: Boolean;
-    Checklists, Items, Comments, Attachments: TFPHashObjectList;
+    Checklists, Items, Comments, Attachments, Subtasks, UsersById: TFPHashObjectList;
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
     destructor Destroy; override;
@@ -93,8 +93,21 @@ begin
   Line('</row>');
 end;
 
+procedure GroupEntry(Groups: TFPHashObjectList; const Id: string; Entry: TJSONObject);
+var Group: TFPList;
+begin
+  if Id = '' then Exit;
+  Group := TFPList(Groups.Find(Id));
+  if Group = nil then
+  begin
+    Group := TFPList.Create;
+    Groups.Add(Id, Group);
+  end;
+  if Group.IndexOf(Entry) < 0 then Group.Add(Entry);
+end;
+
 function GroupRows(Board: TJSONObject; const Source, Key: string): TFPHashObjectList;
-var Rows: TJSONArray; Entry: TJSONObject; Group: TFPList; Id: string; I: Integer;
+var Rows: TJSONArray; Entry: TJSONObject; I: Integer;
 begin
   Result := TFPHashObjectList.Create(True);
   try
@@ -102,15 +115,7 @@ begin
     for I := 0 to Rows.Count - 1 do
     begin
       Entry := Rows.Objects[I];
-      Id := Entry.Get(Key, '');
-      if Id = '' then Continue;
-      Group := TFPList(Result.Find(Id));
-      if Group = nil then
-      begin
-        Group := TFPList.Create;
-        Result.Add(Id, Group);
-      end;
-      Group.Add(Entry);
+      GroupEntry(Result, Entry.Get(Key, ''), Entry);
     end;
   except
     Result.Free;
@@ -118,8 +123,27 @@ begin
   end;
 end;
 
+procedure GroupSubtasks(Groups: TFPHashObjectList; Cards: TJSONArray);
+var I, J: Integer; Card: TJSONObject; Parents: TJSONData;
+begin
+  if Cards = nil then Exit;
+  for I := 0 to Cards.Count - 1 do
+  begin
+    Card := Cards.Objects[I];
+    if Card.Get('archived', False) or (Card.Get('linkedId', '') <> '') or
+      (Card.Get('deletedAt', '') <> '') then Continue;
+    GroupEntry(Groups, Card.Get('parentId', ''), Card);
+    Parents := Card.Find('parentIds');
+    if Parents is TJSONArray then
+      for J := 0 to Parents.Count - 1 do
+        if Parents.Items[J] is TJSONString then GroupEntry(Groups, Parents.Items[J].AsString, Card);
+  end;
+end;
+
 destructor TSheetWriter.Destroy;
 begin
+  UsersById.Free;
+  Subtasks.Free;
   Attachments.Free;
   Comments.Free;
   Items.Free;
@@ -128,8 +152,8 @@ begin
 end;
 
 procedure TSheetWriter.DetailRows(Card: TJSONObject);
-var Pair: TBoardRow; CardId, State: string; Group, Children: TFPList;
-  Entry, Child: TJSONObject; I, J: Integer;
+var Pair: TBoardRow; CardId, State, Author, Created: string; Group, Children: TFPList;
+  Entry, Child, User: TJSONObject; I, J: Integer;
 
   procedure AddDetail(const Caption, Value: string);
   begin
@@ -162,12 +186,33 @@ begin
           end;
       end;
   end;
+  if Subtasks <> nil then
+  begin
+    Group := TFPList(Subtasks.Find(CardId));
+    if Group <> nil then
+      for I := 0 to Group.Count - 1 do
+      begin
+        Entry := TJSONObject(Group[I]);
+        State := '[ ] ';
+        if Entry.Get('dueComplete', False) or (Entry.Get('dueComplete', 0) = 1) then State := '[x] ';
+        AddDetail('Subtask', State + Entry.Get('title', ''));
+      end;
+  end;
   if Comments <> nil then
   begin
     Group := TFPList(Comments.Find(CardId));
     if Group <> nil then
       for I := 0 to Group.Count - 1 do
-        AddDetail('Comment', ExportPlainDescription(TJSONObject(Group[I]).Get('text', '')));
+      begin
+        Entry := TJSONObject(Group[I]);
+        Author := Entry.Get('userId', '');
+        User := TJSONObject(UsersById.Find(Author));
+        if User <> nil then Author := User.Get('username', Author);
+        Created := Entry.Get('createdAt', '');
+        AddDetail('Comment', ExportPlainDescription(Entry.Get('text', '')));
+        if Author <> '' then AddDetail('Author', Author);
+        if Created <> '' then AddDetail('Created at', Created);
+      end;
   end;
   if Attachments <> nil then
   begin
@@ -194,9 +239,10 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
-  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments: Boolean;
+  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks: Boolean;
+  Users: TJSONArray; User: TJSONObject;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
   procedure AddXml(const Path, Xml: string);
@@ -361,6 +407,7 @@ begin
   WithChecklists := False;
   WithComments := False;
   WithAttachments := False;
+  WithSubtasks := False;
   SheetCount := 0;
   CardDetails := False;
   for Part in Fields.Split([',']) do
@@ -368,6 +415,7 @@ begin
     Section := Trim(Part);
     if Section = 'checklists' then WithChecklists := True;
     if Section = 'comments' then WithComments := True;
+    if Section = 'subtasks' then WithSubtasks := True;
     if Section = 'attachments' then WithAttachments := True;
     if Section = 'board-header' then BoardHeader := True;
     if Section = 'activities' then ActivitySheet := True;
@@ -411,7 +459,23 @@ begin
         Writer.Checklists := GroupRows(Board, 'checklists', 'cardId');
         Writer.Items := GroupRows(Board, 'checklistItems', 'checklistId');
       end;
-      if WithComments or not Known then Writer.Comments := GroupRows(Board, 'comments', 'cardId');
+      if WithComments or not Known then
+      begin
+        Writer.Comments := GroupRows(Board, 'comments', 'cardId');
+        Writer.UsersById := TFPHashObjectList.Create(False);
+        Users := Board.Arrays['users'];
+        for I := 0 to Users.Count - 1 do
+        begin
+          User := Users.Objects[I];
+          Writer.UsersById.Add(User.Get('_id', ''), User);
+        end;
+      end;
+      if WithSubtasks or not Known then
+      begin
+        Writer.Subtasks := TFPHashObjectList.Create(True);
+        GroupSubtasks(Writer.Subtasks, Board.Arrays['cards']);
+        GroupSubtasks(Writer.Subtasks, OtherCards);
+      end;
       if WithAttachments or not Known then Writer.Attachments := GroupRows(Board, 'attachments', 'cardId');
       WriteBoardTitle;
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;

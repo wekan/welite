@@ -17,7 +17,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board’s description, members and timestamps in the card layout or on a
   separate Board worksheet in the table layout. In the card layout, each
   card can include its checklists with item completion, comments, and
-  attachment names. A checklist scope includes only that checklist.
+  attachment names. A checklist scope includes only that checklist. The
+  card layout also shows same-board subtasks with their completion state,
+  and includes the comment author and creation time when available.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate
