@@ -460,5 +460,33 @@ editor-enter-preference.e2e.js: comment editor follows submit-on-Enter=true
 editor-enter-preference.e2e.js: title editor follows submit-on-Enter=true
 editor-enter-preference.e2e.js: copy editor follows submit-on-Enter=true
 editor-enter-preference.e2e.js: Member Settings changes the shortcut to true without reloading
+editor-enter-preference.e2e.js: Member Settings changes the shortcut to false without reloading
 keep-add-card-form-open-6827.e2e.js
 title-bracket-label-6810.e2e.js
+
+# Verified against Weddy and WeLite in Chromium.
+14-voting-watchers.e2e.js: positive vote button is clickable and registers the voted state
+14-voting-watchers.e2e.js: negative vote button is clickable and registers the voted state
+14-voting-watchers.e2e.js: toggling watch on a card succeeds without errors
+14-voting-watchers.e2e.js: watching/unwatching the board works without errors
+14-voting-watchers.e2e.js: vote counts update in the card after voting
+14-voting-watchers.e2e.js: Latin positive vote label records the matching vote
+14-voting-watchers.e2e.js: Latin negative vote label records the matching vote
+14-voting-watchers.e2e.js: Corsican Planning Poker shows literal scores without progress prefixes
+01-boards-users.e2e.js: board admin can change a member role to admin
+01-boards-users.e2e.js: board loads within 10 seconds and renders lists
+01-boards-users.e2e.js: board renders all three seeded lists without freezing
+20-rules.e2e.js: Rules opens as a fullscreen page with the board rules header
+20-rules.e2e.js: can create an event rule and see it in the list
+20-rules.e2e.js: #6630: a current-date action stores its description only on the Action
+20-rules.e2e.js: a board button rule renders a runnable button in the board header
+20-rules.e2e.js: eu named-member rule trigger uses its own verb composition
+20-rules.e2e.js: th named-member rule trigger uses its own verb composition
+20-rules.e2e.js: Galician attachment rule actions agree with the attachment noun
+44-rules.e2e.js: #6490: Rules list — Delete and View act on the clicked rule, not the first
+44-rules.e2e.js: #6749: Rules list — Select all / Unselect all visibly tick and untick every rule
+20-rules.e2e.js: Import / Export dialog offers JSON and CSV export
+20-rules.e2e.js: can select all rules and switch to the workflow view
+20-rules.e2e.js: en named-member rule trigger uses its own verb composition
+20-rules.e2e.js: Import / Export applies a Wrike workflow as lists and rules, and exports one in
+44-rules.e2e.js: #6489: Rules Workflow view renders the palette and can add a rule

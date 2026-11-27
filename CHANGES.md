@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Run 28 more of WeKan's Chromium tests from Weddy's list. Coverage
+  includes board membership and rendering, card voting and watching,
+  Rules workflows and Wrike import and export. The list also now checks
+  disabling Submit on Enter from Member Settings without a reload.
+
 - Inspect global search with `debug:selector`, `debug:projection`, or
   `debug:all`. The diagnostics show the parsed filters and sort or the
   result fields and pagination, according to the selected mode.
