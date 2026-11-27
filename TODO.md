@@ -202,6 +202,9 @@ remaining platform and workflow verification.
 
 ## HTML4 and HTML5 views on one backend (2026-11-26)
 
+- **Add card from multiple lines (#6827):** offer one card per title line
+  and verify the shared spec, including both composer preferences.
+
 The goal, as the maintainer set it: WeLite serves **two user interfaces on its
 existing backend**. Retro browsers get the HTML4 view WeLite has now; modern
 browsers get **Weddy's HTML5 view** - WeKan's own markup, class names, CSS and
