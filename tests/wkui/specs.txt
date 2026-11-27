@@ -486,3 +486,4 @@ export-access.e2e.js: = assigned-only private member cannot read unfiltered expo
 export-access.e2e.js: = assigned-only member cannot export an unassigned card as PDF
 23-rest-api-more.e2e.js: = REST API: rules + card sub-resources + core CRUD board menu downloads complete JSON in both attachment modes
 export-without-archive-6946.e2e.js
+time-history.e2e.js: move dialog records reason and one reversible position
