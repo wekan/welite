@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Step to a board-search match even when the active filter hides it or its
+  list is closed. Search shows the selected card on the board and temporarily
+  opens the relevant swimlane and list. Closing Search restores the original
+  view and leaves the saved filters and folds intact.
+
 - Search All Boards accepts numeric day ranges for due dates, creation and
   modification. The search instructions describe these filters using the
   selected language. Signed day offsets and the localized week, month,

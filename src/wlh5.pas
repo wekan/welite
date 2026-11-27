@@ -3529,7 +3529,8 @@ end;
 
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
-var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
+var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
+  RevealId, RevealLane, RevealList, CurrentList, CurrentLane, AssignedCond: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   SharedRow, FirstLane: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
@@ -3562,8 +3563,29 @@ begin
   PlainSource := SharedSettingOn(Db, 'alwaysShowCodeAsText');
   Filter := ParseBoardFilter(Db, BoardId, Query);
   FilterCond := BoardFilterSql(Db, Filter);
+  AssignedCond := '';
   if ViewAssignedOnly <> '' then
-    FilterCond := FilterCond + ' AND EXISTS(SELECT 1 FROM card_assignees ao WHERE ao.cardId=c.id AND ao.userId=' + QuotedStr(ViewAssignedOnly) + ')';
+    AssignedCond := ' AND EXISTS(SELECT 1 FROM card_assignees ao WHERE ao.cardId=c.id AND ao.userId=' + QuotedStr(ViewAssignedOnly) + ')';
+  RevealId := ''; RevealLane := ''; RevealList := '';
+  CurrentList := BoardCurrentList; CurrentLane := BoardCurrentLane;
+  if Query <> nil then RevealId := Query.Values['searchReveal'];
+  if (RevealId <> '') and (Pos(#0, RevealId) = 0) then
+  begin
+    Reveal := Db.Query('SELECT c.swimlaneId,c.listId FROM cards c JOIN swimlanes sw ON sw.id=c.swimlaneId AND ' +
+      'sw.boardId=c.boardId AND sw.archived=0 JOIN lists l ON l.id=c.listId AND l.boardId=c.boardId AND ' +
+      'l.archived=0 AND l.deletedAt IS NULL WHERE c.id=' + QuotedStr(RevealId) + ' AND c.boardId=' + QuotedStr(BoardId) +
+      ' AND c.archived=0 AND c.deletedAt IS NULL' + AssignedCond + ' LIMIT 1;');
+    if Length(Reveal) = 1 then
+    begin
+      RevealLane := Reveal[0][0]; RevealList := Reveal[0][1];
+      CurrentLane := RevealLane; CurrentList := RevealList;
+      if FilterCond <> '' then
+        FilterCond := ' AND ((1=1' + FilterCond + ') OR c.id=' + QuotedStr(RevealId) + ')';
+    end
+    else RevealId := '';
+  end
+  else RevealId := '';
+  FilterCond := FilterCond + AssignedCond;
   CardSort := ParseCardSort(Query);
   SortSql := CardSortSql(Db, BoardId, CardSort);
   Canvas := '';
@@ -3577,7 +3599,7 @@ begin
     // (setSwimlaneCollapsedState); the "+" opens swimlaneAddPopup. A folded
     // swimlane keeps its header and shows nothing of its lists: it is no
     // .js-swimlane, and has no id.
-    Folded := (S.UserId <> '') and ProfileFold(Db, S.UserId, 'collapsedSwimlanes', BoardId, Lanes[i][0]);
+    Folded := (Lanes[i][0] <> RevealLane) and (S.UserId <> '') and ProfileFold(Db, S.UserId, 'collapsedSwimlanes', BoardId, Lanes[i][0]);
     Header := '<div class="swimlane-header js-swimlane-header" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
     if S.UserId <> '' then
       Header := Header + '<a class="swimlane-collapse-indicator js-collapse-swimlane swimlane-header-collapse" href="#" data-swimlane="' +
@@ -3611,14 +3633,14 @@ begin
     // opened inside its own swimlane, every other list of a swimlane a
     // compact row (miniList) that opens it.
     LaneHasCurrent := False;
-    if BoardMobile and (BoardCurrentList <> '') and (BoardCurrentLane = Lanes[i][0]) then
-      for j := 0 to High(Lists) do if Lists[j][0] = BoardCurrentList then LaneHasCurrent := True;
+    if BoardMobile and (CurrentList <> '') and (CurrentLane = Lanes[i][0]) then
+      for j := 0 to High(Lists) do if Lists[j][0] = CurrentList then LaneHasCurrent := True;
     if LaneHasCurrent then
       Canvas := Canvas + '<button type="button" class="js-close-mobile-list">' +
         E(Words.Text('back', 'Back')) + '</button>';
     for j := 0 to High(Lists) do
     begin
-      if BoardMobile and LaneHasCurrent and (Lists[j][0] <> BoardCurrentList) then Continue;
+      if BoardMobile and LaneHasCurrent and (Lists[j][0] <> CurrentList) then Continue;
       if BoardMobile and not LaneHasCurrent then
       begin
         Canvas := Canvas + '<a class="mini-list js-select-list js-list mobile-view" id="js-list-' + HtmlAttr(Lists[j][0]) +
@@ -3642,8 +3664,8 @@ begin
           HtmlAttr(Lanes[i][0]) + '" title="' + HtmlAttr(Words.Text('add-list', 'Add list')) + '" aria-label="' +
           HtmlAttr(Words.Text('add-list', 'Add list')) + '"><i class="fa fa-plus-square-o"></i></a>';
       // listHeader.jade's caret: per user, per list in this swimlane (#6712).
-      ListFolded := ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0] + ':' + Lanes[i][0]) or
-        ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0]);
+      ListFolded := ((Lists[j][0] <> RevealList) or (Lanes[i][0] <> RevealLane)) and (ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0] + ':' + Lanes[i][0]) or
+        ProfileFold(Db, S.UserId, 'collapsedLists', BoardId, Lists[j][0]));
       Width := ListWidthOf(Db, S.UserId, BoardId, Lists[j][0]);
       Canvas := Canvas + '<div class="list js-list' + IfThen(ListFolded, ' list-collapsed', '') + IfThen(BoardMobile, ' mobile-view', '') +
         '" id="js-list-' + HtmlAttr(Lists[j][0]) +
@@ -3886,7 +3908,7 @@ begin
       E(Words.Text('swimlanes', 'Swimlanes')) + ' <i class="fa fa-check"></i></a></li></ul></div></template>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     AnnouncementHtml(Db, Words, S, BoardId) +
-    '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
+    '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas" data-search-reveal="' + HtmlAttr(RevealId) + '">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
 end;
 

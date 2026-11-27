@@ -15,6 +15,32 @@
   var searchDirection = 1;
   var searchMatches = [];
   var searchRequest = 0;
+  var searchRedraw = null;
+
+  function drawSearchCanvas(board, id) {
+    var canvas = board.querySelector('.board-canvas');
+    if (!canvas || (!searchRedraw && canvas.dataset.searchReveal === id)) return;
+    if (searchRedraw && searchRedraw.id === id) return;
+    var url = new URL(window.location.href);
+    url.searchParams.delete('searchReveal');
+    if (id) url.searchParams.set('searchReveal', id);
+    var redraw = { id: id };
+    searchRedraw = redraw;
+    Promise.resolve(up.render({
+      url: url.pathname + url.search, target: '.board-canvas',
+      history: false, cache: false, focus: 'keep', scroll: false,
+    })).then(function () {
+      if (searchRedraw !== redraw) return;
+      var form = board.querySelector('.js-board-search .js-search-term-form');
+      if (form && searchBoard === board.dataset.board) {
+        renderBoardSearch(form);
+        var selected = board.querySelector('.board-canvas .is-search-highlight');
+        if (selected) selected.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    }).catch(function () { /* Sidebar links are still available. */ }).finally(function () {
+      if (searchRedraw === redraw) searchRedraw = null;
+    });
+  }
 
   function setBoardSearch(sidebar, open) {
     var search = sidebar.querySelector('.js-board-search');
@@ -54,7 +80,9 @@
     searchRequest++;
     if (sidebar) {
       setBoardSearch(sidebar, false);
-      sidebar.closest('.board-wrapper').querySelectorAll('.is-search-highlight').forEach(function (card) {
+      var board = sidebar.closest('.board-wrapper');
+      drawSearchCanvas(board, '');
+      board.querySelectorAll('.is-search-highlight').forEach(function (card) {
         card.classList.remove('is-search-highlight');
       });
     }
@@ -77,7 +105,10 @@
     searchMatches = [];
     var request = ++searchRequest;
     renderBoardSearch(form);
-    if (!term) return;
+    if (!term) {
+      drawSearchCanvas(form.closest('.board-wrapper'), '');
+      return;
+    }
     var boardId = searchBoard;
     fetch('/b/' + encodeURIComponent(boardId) + '/search/matches?q=' + encodeURIComponent(term))
       .then(function (response) { return response.ok ? response.json() : []; })
@@ -87,6 +118,7 @@
         if (!current || current.closest('.board-wrapper').dataset.board !== boardId) return;
         searchMatches = matches;
         renderBoardSearch(current, direction);
+        if (!matches.length) drawSearchCanvas(current.closest('.board-wrapper'), '');
       }).catch(function () { /* A failed search leaves the existing board visible. */ });
   });
   up.on('click', '.js-board-search .js-search-step', function (event, button) {
@@ -106,7 +138,6 @@
     var results = form.parentElement.querySelector('.js-board-search-results');
     var counter = form.parentElement.querySelector('.search-step');
     var board = form.closest('.board-wrapper');
-    var cards = [];
     results.replaceChildren();
     counter.classList.add('is-hidden');
     board.querySelectorAll('.is-search-highlight').forEach(function (card) { card.classList.remove('is-search-highlight'); });
@@ -141,22 +172,26 @@
     board.querySelectorAll('.board-canvas .minicard-wrapper').forEach(function (card) {
       visible.set(card.dataset.cardId, card);
     });
-    searchMatches.forEach(function (match) {
-      appendResult(match.title, match.url, true);
-      if (visible.has(match.id)) cards.push(visible.get(match.id));
-    });
-    if (!cards.length) { searchCardId = null; return; }
-    var index = cards.findIndex(function (card) { return card.dataset.cardId === searchCardId; });
+    searchMatches.forEach(function (match) { appendResult(match.title, match.url, true); });
+    var count = searchMatches.length;
+    if (!count) return;
+    var index = searchMatches.findIndex(function (match) { return match.id === searchCardId; });
     if (direction) {
-      index = index < 0 ? (direction > 0 ? 0 : cards.length - 1) : (index + direction + cards.length) % cards.length;
+      index = index < 0 ? (direction > 0 ? 0 : count - 1) : (index + direction + count) % count;
     }
     if (index < 0) return;
-    var chosen = cards[index];
-    searchCardId = chosen.dataset.cardId;
-    chosen.classList.add('is-search-highlight');
-    if (direction) chosen.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    searchCardId = searchMatches[index].id;
+    var chosen = visible.get(searchCardId);
+    if (chosen) chosen.classList.add('is-search-highlight');
+    if (direction) {
+      var canvas = board.querySelector('.board-canvas');
+      var needsReveal = !chosen || chosen.closest('.list-collapsed') ||
+        (canvas && canvas.dataset.searchReveal === searchCardId);
+      drawSearchCanvas(board, needsReveal ? searchCardId : '');
+      if (chosen && !searchRedraw) chosen.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
     var caption = counter.querySelector('.js-search-step-count');
-    caption.textContent = caption.dataset.caption.replace('%s', String(index + 1)).replace('%s', String(cards.length));
+    caption.textContent = caption.dataset.caption.replace('%s', String(index + 1)).replace('%s', String(count));
     counter.classList.remove('is-hidden');
   }
 
