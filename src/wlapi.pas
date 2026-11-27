@@ -4982,9 +4982,20 @@ begin
   SendJson(aResponse,'"'+StringToJSONString(NewBoard)+'"');
 end;
 
+procedure RecordContainerTitle(Db:TWLDb;const UserId,BoardId,Entity,Id,OldTitle,NewTitle:string);
+var Before,After:TJSONObject;
+begin
+  if OldTitle=NewTitle then Exit;
+  Before:=TJSONObject.Create(['field','title','value',OldTitle]);
+  After:=TJSONObject.Create(['field','title','value',NewTitle]);
+  try
+    try RecordHistoryRow(Db,UserId,BoardId,Entity,Id,'title','edited',Before,After);except end;
+  finally Before.Free;After.Free;end;
+end;
+
 procedure ApiSwimlane(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"Swimlane not found"}';
-var T:TWLTenant;UserId,BoardId,LaneId,Scope,Title,Permission,Sql:string;
+var T:TWLTenant;UserId,BoardId,LaneId,Scope,Title,OldTitle,Permission,Sql:string;
   Rows:TWLRows;Body:TJSONObject;Value:TJSONData;Policy:TFieldPolicy;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
@@ -5001,8 +5012,10 @@ begin
     else SendJson(aResponse,Rows[0][0]);
     Exit;
   end;
-  if Length(T.Db.Query('SELECT id FROM swimlanes WHERE '+Scope+';'))<>1 then
+  Rows:=T.Db.Query('SELECT title FROM swimlanes WHERE '+Scope+';');
+  if Length(Rows)<>1 then
   begin SendJson(aResponse,NotFound,404);Exit;end;
+  OldTitle:=Rows[0][0];
   Body:=nil;
   try
     try
@@ -5025,6 +5038,7 @@ begin
     ' AND title='+QuotedStr(Title)+') THEN 1 ELSE json(''Swimlane update failed'') END; COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit swimlane');Exit;end;
+  RecordContainerTitle(T.Db,UserId,BoardId,'swimlane',LaneId,OldTitle,Title);
   SendJson(aResponse,'{"_id":"'+StringToJSONString(LaneId)+'"}');
 end;
 
@@ -5745,7 +5759,7 @@ end;
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
 var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql,OldTitle,NewTitle:string;
-  Body,Reply,Before,After:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
+  Body,Reply:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
   Flag,i:Integer;Limit:Int64;Wide:UnicodeString;
   procedure SetColumn(const Column,Literal:string);
   begin
@@ -5827,14 +5841,7 @@ begin
       ')=1 THEN 1 ELSE json(''List edit scope changed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit list');Exit;end;
-    if OldTitle<>NewTitle then
-    begin
-      Before:=TJSONObject.Create(['field','title','value',OldTitle]);
-      After:=TJSONObject.Create(['field','title','value',NewTitle]);
-      try
-        try RecordHistoryRow(T.Db,UserId,BoardId,'list',ListId,'title','edited',Before,After);except end;
-      finally Before.Free;After.Free;end;
-    end;
+    RecordContainerTitle(T.Db,UserId,BoardId,'list',ListId,OldTitle,NewTitle);
     Reply:=TJSONObject.Create(['_id',ListId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally Policy.Free;Body.Free;end;

@@ -8264,6 +8264,8 @@ begin
           end;
           Content := Content + '<td class="history-select">';
           if (CanRestoreRule and (Row.Get('entityType', '') = 'rule')) or
+            (CanRestoreList and (Row.Get('entityType', '') = 'swimlane') and
+              (RowGroup = 'title') and (RowField = 'title')) or
             (CanRestoreList and (Row.Get('entityType', '') = 'list') and
               (((RowGroup = 'title') and (RowField = 'title')) or
                 ((RowGroup = 'lifecycle') and (Row.Get('changeType', '') = 'removed')))) or
