@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Include archived boards in explicit archive searches. Archived hits open
+  a read-only card preview with the title and description. Search and preview
+  both require active board membership and respect assigned-only access.
+
 - Scope Search All Boards text to descriptions, readable custom fields,
   live attachment filenames, or checklist and checklist-item titles. The
   search instructions show the operators in the selected language.

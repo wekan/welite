@@ -5846,7 +5846,8 @@ end;
 type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel,
   soUser, soMember, soAssignee, soCreator, soCreated, soModified, soArchiveState, soEndState, soBoardVisibility, soNumber, soOrg, soTeam, soDescription, soFieldText, soAttachmentName, soChecklistText);
 
-const SearchArchivedCard = '(c.archived=1 OR EXISTS(SELECT 1 FROM lists archivedList WHERE archivedList.id=c.listId ' +
+const SearchArchivedCard = '(c.archived=1 OR EXISTS(SELECT 1 FROM boards archivedBoard WHERE archivedBoard.id=c.boardId ' +
+  'AND archivedBoard.archived=1) OR EXISTS(SELECT 1 FROM lists archivedList WHERE archivedList.id=c.listId ' +
   'AND archivedList.boardId=c.boardId AND archivedList.archived=1) OR EXISTS(SELECT 1 FROM swimlanes archivedLane ' +
   'WHERE archivedLane.id=c.swimlaneId AND archivedLane.boardId=c.boardId AND archivedLane.archived=1))';
 
@@ -6126,6 +6127,31 @@ begin
   end;
 end;
 
+function ArchivedSearchAccess(const UserId: string): string;
+begin
+  Result := 'EXISTS(SELECT 1 FROM board_members m JOIN users u ON u.id=m.userId AND u.loginDisabled=0 ' +
+    'WHERE m.boardId=c.boardId AND m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1 AND ' +
+    '((COALESCE(m.isReadAssignedOnly,0)=0 AND COALESCE(m.isCommentAssignedOnly,0)=0 AND ' +
+    'COALESCE(m.isNormalAssignedOnly,0)=0) OR EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId=m.userId)))';
+end;
+
+function ArchivedSearchCardContent(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId, Term: string;
+  PageNumber: Integer; out Title: string): string;
+var Rows: TWLRows;
+begin
+  Result := '';
+  if (BoardId = '') or (CardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
+  Rows := Db.Query('SELECT c.title,c.description,b.title FROM cards c JOIN boards b ON b.id=c.boardId WHERE c.id=' +
+    QuotedStr(CardId) + ' AND c.boardId=' + QuotedStr(BoardId) + ' AND c.deletedAt IS NULL AND ' +
+    SearchArchivedCard + ' AND ' + ArchivedSearchAccess(UserId) + ' LIMIT 1;');
+  if Length(Rows) <> 1 then Exit;
+  Title := Rows[0][0];
+  Result := '<section class="global-search-page"><p><a href="/global-search?q=' + HtmlAttr(HTTPEncode(Term)) +
+    '&amp;page=' + IntToStr(PageNumber) + '">' + E(Words.Text('back', 'Back')) + '</a></p><article class="js-card-details">' +
+    '<p>' + E(Words.Text('archived-items', 'Archive')) + ' · ' + E(Rows[0][2]) +
+    '</p><h1>' + E(Title) + '</h1>' + MarkdownViewer(Rows[0][1], True) + '</article></section>';
+end;
+
 function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Int64 = 0;
   const OperatorSql: string = ''; const SortField: string = ''; Descending: Boolean = False; SearchArchive: Boolean = False): TWLRows;
 var Scope, Tail, Match, FieldMatch, SortValue, OrderBy: string;
@@ -6133,7 +6159,8 @@ begin
   Result := nil;
   if (Text = '') and (OperatorSql = '') and (SortField = '') then Exit;
   Scope := '';
-  if not BoardCanRead(Db, UserId, BoardId) then
+  if SearchArchive then Scope := ' AND ' + ArchivedSearchAccess(UserId)
+  else if not BoardCanRead(Db, UserId, BoardId) then
   begin
     if not AssignedOnlyMember(Db, UserId, BoardId) then Exit;
     Scope := ' AND EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId=' + QuotedStr(UserId) + ')';
@@ -6157,7 +6184,7 @@ begin
     SortValue := ',CAST(round(julianday(' + SortField + ')*86400000) AS INTEGER) AS searchDate';
     OrderBy := 'searchDate' + IfThen(Descending, ' DESC', ' ASC');
   end;
-  Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId' + SortValue + ' FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+  Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId,' + SearchArchivedCard + SortValue + ' FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
     IfThen(SearchArchive, '', ' AND c.archived=0') + ' AND c.deletedAt IS NULL' + Scope + ' AND (' + Match + ')' +
     ' ORDER BY ' + OrderBy + ',c.id' + Tail + ';');
 end;
@@ -6262,19 +6289,23 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
     Result := SearchBoardCards(Db, UserId, BoardId, BoardPlain, Limit, BoardPredicate, BoardSort, Reverse, Archive);
   end;
   procedure AppendCard(BoardIndex: Integer; const Card: TWLRow);
+  var Link: string;
   begin
+    if Card[4] = '1' then
+      Link := PageUrl(PageNumber) + '&archiveBoard=' + HTTPEncode(Boards[BoardIndex][0]) + '&archiveCard=' + HTTPEncode(Card[0])
+    else Link := CardRoute(Boards[BoardIndex][0], Boards[BoardIndex][2], Card[0]);
     Results := Results + '<div class="result-card-wrapper"><a class="minicard-wrapper js-minicard js-board-search-card card-title" href="' +
-      HtmlAttr(CardRoute(Boards[BoardIndex][0], Boards[BoardIndex][2], Card[0])) + '"><span class="minicard-title">' +
+      HtmlAttr(Link) + '"><span class="minicard-title">' +
       E(Card[1]) + '</span></a><span class="quiet">' + E(Boards[BoardIndex][1]) + '</span>';
-    if BoardCanWrite(Db, UserId, Boards[BoardIndex][0]) then Results := Results + ListControl(Boards[BoardIndex][0], Card);
+    if (Card[4] <> '1') and BoardCanWrite(Db, UserId, Boards[BoardIndex][0]) then Results := Results + ListControl(Boards[BoardIndex][0], Card);
     Results := Results + '</div>';
     Inc(Shown);
   end;
   function ComesFirst(const A, B: TWLRow): Boolean;
   var ADate, BDate: Int64;
   begin
-    ADate := StrToInt64Def(A[4], Low(Int64));
-    BDate := StrToInt64Def(B[4], Low(Int64));
+    ADate := StrToInt64Def(A[5], Low(Int64));
+    BDate := StrToInt64Def(B[5], Low(Int64));
     if ADate = BDate then Exit(CompareStr(A[0], B[0]) < 0);
     if Descending then Result := ADate > BDate else Result := ADate < BDate;
   end;
@@ -6291,7 +6322,7 @@ begin
   begin
     // Global Search covers active memberships, even when another board is public.
     Boards := Db.Query('SELECT b.id,b.title,b.slug FROM boards b JOIN board_members m ON m.boardId=b.id ' +
-      'WHERE m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1 AND b.archived=0 ORDER BY b.title,b.id;');
+      'WHERE m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1' + IfThen(SearchArchive, '', ' AND b.archived=0') + ' ORDER BY b.title,b.id;');
     Skip := Int64(PageNumber - 1) * PageSize;
     Shown := 0;
     if SortField = '' then
@@ -7040,6 +7071,19 @@ begin
     end;
     if Path = '/global-search' then
     begin
+      if Request.QueryFields.Values['archiveCard'] <> '' then
+      begin
+        Content := ArchivedSearchCardContent(T.Db, Words, S.UserId, Request.QueryFields.Values['archiveBoard'],
+          Request.QueryFields.Values['archiveCard'], SearchTerm(Request.QueryFields.Values['q']),
+          Min(Max(StrToIntDef(Request.QueryFields.Values['page'], 1), 1), 100000), Title);
+        if Content = '' then
+        begin
+          Title := Words.Text('card-not-found', 'Card not found');
+          Send(404, Page(Request, Language, Words, S, Title, '', '<h1>' + E(Title) + '</h1>'));
+        end
+        else Send(200, Page(Request, Language, Words, S, Title, '', Content));
+        Exit;
+      end;
       Title := Words.Text('globalSearch-title', 'Search All Boards');
       Content := GlobalSearchContent(T.Db, Words, S.UserId, Request.QueryFields.Values['q'],
         Min(Max(StrToIntDef(Request.QueryFields.Values['page'], 1), 1), 100000));
