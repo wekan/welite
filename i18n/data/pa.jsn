@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ਉਪ-ਕਾਰਜ ਨੂੰ ਮੁਕੰਮਲ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ",
   "subtask-mark-not-done": "ਉਪ-ਕਾਰਜ ਨੂੰ ਅਧੂਰੇ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ",
   "subtask-done-no-permission": "ਤੁਸੀਂ ਇਹ ਨਹੀਂ ਬਦਲ ਸਕਦੇ ਕਿ ਇਹ ਉਪ-ਕਾਰਜ ਮੁਕੰਮਲ ਹੈ ਜਾਂ ਨਹੀਂ",
-  "board-view-calendar-mode": "ਕੈਲੰਡਰ ਮੋਡ"
+  "board-view-calendar-mode": "ਕੈਲੰਡਰ ਮੋਡ",
+  "board-view-multiboard-cal": "ਕੈਲੰਡਰ (ਸਾਰੇ ਬੋਰਡ)"
 }

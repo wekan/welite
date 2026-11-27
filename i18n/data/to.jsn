@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Fakaʻilongaʻi ʻa e ngāue iiki kuo ʻosi",
   "subtask-mark-not-done": "Fakaʻilongaʻi ʻa e ngāue iiki kuo teʻeki ʻosi",
   "subtask-done-no-permission": "ʻOku ʻikai te ke lava ʻo liliu pe kuo ʻosi ʻa e ngāue iiki ko ʻeni",
-  "board-view-calendar-mode": "Founga Tohi māhina"
+  "board-view-calendar-mode": "Founga Tohi māhina",
+  "board-view-multiboard-cal": "Kalena ʻo e ngaahi papa lahi"
 }

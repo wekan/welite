@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Tanda subtugas ka leusoe",
   "subtask-mark-not-done": "Tanda subtugas goh leusoe",
   "subtask-done-no-permission": "Droeneueh h'an jeuet ubah peu subtugas nyoe ka leusoe atawa goh",
-  "board-view-calendar-mode": "Mode Almanak"
+  "board-view-calendar-mode": "Mode Almanak",
+  "board-view-multiboard-cal": "Almanak Le Papan"
 }

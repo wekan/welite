@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Swaya mošomo-potlana o feditšwe",
   "subtask-mark-not-done": "Swaya mošomo-potlana o sa fela",
   "subtask-done-no-permission": "O ka se fetoše ge e ba mošomo-potlana wo o feditšwe",
-  "board-view-calendar-mode": "Mokgwa wa khalendara"
+  "board-view-calendar-mode": "Mokgwa wa khalendara",
+  "board-view-multiboard-cal": "Khalentara (Dipoto ka moka)"
 }

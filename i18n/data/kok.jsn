@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "उपकाम पुराय म्हूण चिन्नीत करचें",
   "subtask-mark-not-done": "उपकाम अपुराय म्हूण चिन्नीत करचें",
   "subtask-done-no-permission": "हें उपकाम पुराय जालां काय ना तें तुमी बदलूंक शकनात",
-  "board-view-calendar-mode": "दिनदर्शिका मोड"
+  "board-view-calendar-mode": "दिनदर्शिका मोड",
+  "board-view-multiboard-cal": "दिनदर्शिका (सगळीं फळे)"
 }

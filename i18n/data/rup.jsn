@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Semnu sub-lucrul ca bitisit",
   "subtask-mark-not-done": "Semnu sub-lucrul ca nibitisit",
   "subtask-done-no-permission": "Nu pots s-alãxeshti macã aestu sub-lucru easti bitisit i nu",
-  "board-view-calendar-mode": "Modlu calendar"
+  "board-view-calendar-mode": "Modlu calendar",
+  "board-view-multiboard-cal": "Calendar (tuti tabelili)"
 }

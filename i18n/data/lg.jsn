@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Teeka akabonero nti omulimu omutono guwedde",
   "subtask-mark-not-done": "Teeka akabonero nti omulimu omutono tegunnaggwa",
   "subtask-done-no-permission": "Tosobola kukyusa oba omulimu guno omutono guwedde",
-  "board-view-calendar-mode": "Engeri ya Kalenda"
+  "board-view-calendar-mode": "Engeri ya Kalenda",
+  "board-view-multiboard-cal": "Kalenda y'embaawo ennyingi"
 }

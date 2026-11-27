@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "उपकार्य के पूरा चिह्नित करीं",
   "subtask-mark-not-done": "उपकार्य के अधूरा चिह्नित करीं",
   "subtask-done-no-permission": "रउआ एह उपकार्य के पूरा भइल बा कि ना, ई ना बदल सकीं",
-  "board-view-calendar-mode": "कैलेंडर मोड"
+  "board-view-calendar-mode": "कैलेंडर मोड",
+  "board-view-multiboard-cal": "कैलेंडर (सब बोर्ड)"
 }

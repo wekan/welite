@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Vakatakilakilataka na cakacaka lailai me sa oti",
   "subtask-mark-not-done": "Vakatakilakilataka na cakacaka lailai me se bera ni oti",
   "subtask-done-no-permission": "O sega ni rawa ni veisautaka se sa oti se sega na cakacaka lailai oqo",
-  "board-view-calendar-mode": "Ivakarau ni Kalada"
+  "board-view-calendar-mode": "Ivakarau ni Kalada",
+  "board-view-multiboard-cal": "Kaleda (Na vola kece)"
 }

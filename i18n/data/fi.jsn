@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Merkitse alitehtävä valmiiksi",
   "subtask-mark-not-done": "Merkitse alitehtävä keskeneräiseksi",
   "subtask-done-no-permission": "Et voi muuttaa tämän alitehtävän valmistumistilaa",
-  "board-view-calendar-mode": "Kalenteritila"
+  "board-view-calendar-mode": "Kalenteritila",
+  "board-view-multiboard-cal": "Kalenteri (Kaikki taulut)"
 }

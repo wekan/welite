@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marcáil an fo-thasc mar dhéanta",
   "subtask-mark-not-done": "Marcáil an fo-thasc mar neamhdhéanta",
   "subtask-done-no-permission": "Ní féidir leat a athrú an bhfuil an fo-thasc seo déanta",
-  "board-view-calendar-mode": "Mód féilire"
+  "board-view-calendar-mode": "Mód féilire",
+  "board-view-multiboard-cal": "Féilire (Gach clár)"
 }

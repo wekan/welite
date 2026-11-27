@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Multi Board Calendar shows dated cards from active board memberships in
+  one read-only view, with each event prefixed by its board name. It respects
+  card access, the current filters and the member's calendar preferences.
+
 - Open Calendar Mode from Board View for week and month grids of due
   cards. Each day shows the cards in list and card order, with labels
   and full titles. Switching board views preserves the current filters.

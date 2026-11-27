@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Өстәмә биремне үтәлгән дип билгеләү",
   "subtask-mark-not-done": "Өстәмә биремне үтәлмәгән дип билгеләү",
   "subtask-done-no-permission": "Сез бу өстәмә биремнең үтәлгәнлеген үзгәртә алмыйсыз",
-  "board-view-calendar-mode": "Календарь режимы"
+  "board-view-calendar-mode": "Календарь режимы",
+  "board-view-multiboard-cal": "Берничә такта календаре"
 }

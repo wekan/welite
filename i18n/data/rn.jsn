@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Shira ikimenyetso c'uko igikorwa gitoyi giheze",
   "subtask-mark-not-done": "Shira ikimenyetso c'uko igikorwa gitoyi kitaraheza",
   "subtask-done-no-permission": "Ntushobora guhindura nimba iki gikorwa gitoyi giheze",
-  "board-view-calendar-mode": "Uburyo bw'ikirangamisi"
+  "board-view-calendar-mode": "Uburyo bw'ikirangamisi",
+  "board-view-multiboard-cal": "Ikirangamisi (Ibicapa vyose)"
 }

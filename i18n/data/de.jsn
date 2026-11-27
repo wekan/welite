@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Unteraufgabe als erledigt markieren",
   "subtask-mark-not-done": "Unteraufgabe als nicht erledigt markieren",
   "subtask-done-no-permission": "Du kannst nicht ändern, ob diese Unteraufgabe erledigt ist",
-  "board-view-calendar-mode": "Kalendermodus"
+  "board-view-calendar-mode": "Kalendermodus",
+  "board-view-multiboard-cal": "Kalender (Alle Boards)"
 }

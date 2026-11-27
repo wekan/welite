@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Аялти ӗҫе вӗҫленӗ тесе палӑртас",
   "subtask-mark-not-done": "Аялти ӗҫе вӗҫленмен тесе палӑртас",
   "subtask-done-no-permission": "Ҫак аялти ӗҫ вӗҫленнине эсир улӑштараймастӑр",
-  "board-view-calendar-mode": "Календарь режимӗ"
+  "board-view-calendar-mode": "Календарь режимӗ",
+  "board-view-multiboard-cal": "Календарь (Пур хӑмасем)"
 }

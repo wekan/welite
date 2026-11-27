@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "U calaamadee hawsha hoose la qabtay",
   "subtask-mark-not-done": "U calaamadee hawsha hoose aan la qaban",
   "subtask-done-no-permission": "Ma beddeli kartid in hawshan hoose la qabtay iyo in kale",
-  "board-view-calendar-mode": "Habka kalandarka"
+  "board-view-calendar-mode": "Habka kalandarka",
+  "board-view-multiboard-cal": "Kalandar (Dhammaan sabuuradaha)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Quyi vazifani bajarilgan deb belgilash",
   "subtask-mark-not-done": "Quyi vazifani bajarilmagan deb belgilash",
   "subtask-done-no-permission": "Bu quyi vazifaning bajarilgan yoki bajarilmaganligini oʻzgartira olmaysiz",
-  "board-view-calendar-mode": "Kalendar rejimi"
+  "board-view-calendar-mode": "Kalendar rejimi",
+  "board-view-multiboard-cal": "Bir nechta taxta uchun taqvim"
 }

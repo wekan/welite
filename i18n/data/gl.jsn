@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marcar a subtarefa como completa",
   "subtask-mark-not-done": "Marcar a subtarefa como incompleta",
   "subtask-done-no-permission": "Non pode cambiar se esta subtarefa está completa",
-  "board-view-calendar-mode": "Modo de calendario"
+  "board-view-calendar-mode": "Modo de calendario",
+  "board-view-multiboard-cal": "Calendario (Todos os taboleiros)"
 }

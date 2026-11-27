@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Đánh dấu tác vụ con đã xong",
   "subtask-mark-not-done": "Đánh dấu tác vụ con chưa xong",
   "subtask-done-no-permission": "Bạn không thể thay đổi trạng thái đã xong của tác vụ con này",
-  "board-view-calendar-mode": "Chế độ lịch"
+  "board-view-calendar-mode": "Chế độ lịch",
+  "board-view-multiboard-cal": "Lịch (Tất cả các bảng)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Make sou-travay la kòm fini",
   "subtask-mark-not-done": "Make sou-travay la kòm pa fini",
   "subtask-done-no-permission": "Ou pa ka chanje si sou-travay sa a fini oswa non",
-  "board-view-calendar-mode": "Mòd kalandriye"
+  "board-view-calendar-mode": "Mòd kalandriye",
+  "board-view-multiboard-cal": "Kalandriye (Tout tablo yo)"
 }

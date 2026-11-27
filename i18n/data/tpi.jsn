@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Makim liklik wok olsem i pinis",
   "subtask-mark-not-done": "Makim liklik wok olsem i no pinis",
   "subtask-done-no-permission": "Yu no inap senisim sapos dispela liklik wok i pinis o nogat",
-  "board-view-calendar-mode": "Pasin bilong kalenda"
+  "board-view-calendar-mode": "Pasin bilong kalenda",
+  "board-view-multiboard-cal": "Kalenda (Olgeta bot)"
 }

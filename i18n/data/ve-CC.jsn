@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Segna el sotocompito come fato",
   "subtask-mark-not-done": "Segna el sotocompito come no fato",
   "subtask-done-no-permission": "No te pol canbiar se sto sotocompito el ze fato",
-  "board-view-calendar-mode": "Modo calendario"
+  "board-view-calendar-mode": "Modo calendario",
+  "board-view-multiboard-cal": "Całendario de pì quadri"
 }

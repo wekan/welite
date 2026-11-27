@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Pažymėti antrinę užduotį baigta",
   "subtask-mark-not-done": "Pažymėti antrinę užduotį nebaigta",
   "subtask-done-no-permission": "Negalite keisti šios antrinės užduoties užbaigimo būsenos",
-  "board-view-calendar-mode": "Kalendoriaus režimas"
+  "board-view-calendar-mode": "Kalendoriaus režimas",
+  "board-view-multiboard-cal": "Kalendorius (Visos lentos)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Επισήμανση υποεργασίας ως ολοκληρωμένης",
   "subtask-mark-not-done": "Επισήμανση υποεργασίας ως μη ολοκληρωμένης",
   "subtask-done-no-permission": "Δεν μπορείτε να αλλάξετε αν αυτή η υποεργασία έχει ολοκληρωθεί",
-  "board-view-calendar-mode": "Λειτουργία ημερολογίου"
+  "board-view-calendar-mode": "Λειτουργία ημερολογίου",
+  "board-view-multiboard-cal": "Ημερολόγιο (Όλοι οι πίνακες)"
 }

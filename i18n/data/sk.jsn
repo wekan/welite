@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Označiť čiastkovú úlohu ako dokončenú",
   "subtask-mark-not-done": "Označiť čiastkovú úlohu ako nedokončenú",
   "subtask-done-no-permission": "Nemôžete meniť, či je táto čiastková úloha dokončená",
-  "board-view-calendar-mode": "Režim kalendára"
+  "board-view-calendar-mode": "Režim kalendára",
+  "board-view-multiboard-cal": "Kalendár viacerých násteniek"
 }

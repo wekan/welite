@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Màndargaal liggéey wu ndaw wi ni lu jeex",
   "subtask-mark-not-done": "Màndargaal liggéey wu ndaw wi ni lu jeexul",
   "subtask-done-no-permission": "Mënuloo soppi ndax liggéey wu ndaw wii jeex na walla deet",
-  "board-view-calendar-mode": "Anam Kalandriye"
+  "board-view-calendar-mode": "Anam Kalandriye",
+  "board-view-multiboard-cal": "Kalandriye bu ay tablo"
 }

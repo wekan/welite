@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ทำเครื่องหมายงานย่อยว่าเสร็จแล้ว",
   "subtask-mark-not-done": "ทำเครื่องหมายงานย่อยว่ายังไม่เสร็จ",
   "subtask-done-no-permission": "คุณไม่มีสิทธิ์เปลี่ยนสถานะเสร็จแล้วของงานย่อยนี้",
-  "board-view-calendar-mode": "โหมดปฏิทิน"
+  "board-view-calendar-mode": "โหมดปฏิทิน",
+  "board-view-multiboard-cal": "Lịch (บอร์ดทั้งหมด)"
 }

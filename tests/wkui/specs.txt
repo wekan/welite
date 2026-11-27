@@ -473,3 +473,6 @@ title-bracket-label-6810.e2e.js
 subtask-done-4693.e2e.js
 
 calendar-mode.e2e.js
+
+44-calendar-date-display.e2e.js: Jalali board-view-cal has actual month boundaries and a single calendar title
+44-calendar-date-display.e2e.js: Jalali board-view-multiboard-cal has actual month boundaries and a single calendar title

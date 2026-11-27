@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "將子任務標記做完成",
   "subtask-mark-not-done": "將子任務標記做未完成",
   "subtask-done-no-permission": "你唔可以改呢個子任務係咪完成",
-  "board-view-calendar-mode": "日曆模式"
+  "board-view-calendar-mode": "日曆模式",
+  "board-view-multiboard-cal": "日曆 (所有板)"
 }

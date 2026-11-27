@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marcar la jos-tasca coma acabada",
   "subtask-mark-not-done": "Marcar la jos-tasca coma pas acabada",
   "subtask-done-no-permission": "Podètz pas cambiar se aquesta jos-tasca es acabada",
-  "board-view-calendar-mode": "Mòde calendièr"
+  "board-view-calendar-mode": "Mòde calendièr",
+  "board-view-multiboard-cal": "Calendièr (Totes los tablèus)"
 }

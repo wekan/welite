@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Segna la sottoattività come completata",
   "subtask-mark-not-done": "Segna la sottoattività come non completata",
   "subtask-done-no-permission": "Non puoi modificare lo stato di completamento di questa sottoattività",
-  "board-view-calendar-mode": "Modalità calendario"
+  "board-view-calendar-mode": "Modalità calendario",
+  "board-view-multiboard-cal": "Calendario (Tutte le bacheche)"
 }

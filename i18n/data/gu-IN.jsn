@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "સબટાસ્કને પૂર્ણ ચિહ્નિત કરો",
   "subtask-mark-not-done": "સબટાસ્કને અપૂર્ણ ચિહ્નિત કરો",
   "subtask-done-no-permission": "આ સબટાસ્ક પૂર્ણ છે કે નહીં તે તમે બદલી શકતા નથી",
-  "board-view-calendar-mode": "કૅલેન્ડર મોડ"
+  "board-view-calendar-mode": "કૅલેન્ડર મોડ",
+  "board-view-multiboard-cal": "કેલેન્ડર (બધા બોર્ડ)"
 }

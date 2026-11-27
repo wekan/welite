@@ -3585,21 +3585,21 @@ begin
   Result := Result + '</div>';
 end;
 
-function BoardCalendar(Db: TWLDb; Words: TWLTranslator; const BoardId, Slug, FilterCond: string;
-  Writable: Boolean): string;
+function BoardCalendar(Db: TWLDb; Words: TWLTranslator; const BoardId, Slug, UserId, FilterCond: string;
+  Writable, Multi: Boolean; Query: TStrings): string;
 const Keys: array[0..9] of string = ('previous', 'next', 'today', 'day', 'week', 'month', 'list', 'r-create-card', 'add-card', 'close');
-var Events: TJSONArray; Labels, Event: TJSONObject; Rows, Landing: TWLRows; Row: TWLRow;
-  Key, ListId, LaneId: string; StartAt, EndAt: TDateTime;
+var Events: TJSONArray; Labels, Event: TJSONObject; Rows, Landing, Boards: TWLRows; Row, Board: TWLRow;
+  Key, ListId, LaneId, EventBoard, EventSlug, Prefix, Conditions: string; StartAt, EndAt: TDateTime;
   procedure Push(const Caption, EventClass: string; StartDate, EndDate: TDateTime);
   begin
     Event := TJSONObject.Create;
     Events.Add(Event);
     Event.Add('id', Row[0]);
-    Event.Add('title', Caption);
+    Event.Add('title', Prefix + Caption);
     Event.Add('start', DateToISO8601(StartDate, True));
     Event.Add('end', DateToISO8601(EndDate, True));
     Event.Add('allDay', Abs(EndDate - StartDate - 1) < 0.00000001);
-    Event.Add('url', CardRoute(BoardId, Slug, Row[0]));
+    Event.Add('url', CardRoute(EventBoard, EventSlug, Row[0]));
     Event.Add('className', EventClass);
   end;
   procedure PushDate(const DateValue, DateKey, EventClass: string);
@@ -3608,9 +3608,25 @@ var Events: TJSONArray; Labels, Event: TJSONObject; Rows, Landing: TWLRows; Row:
     if TryISO8601ToDate(DateValue, At, True) then
       Push(Row[1] + ' ' + Words.Text(DateKey, DateKey), EventClass, At, IncHour(At));
   end;
+  procedure AppendEvents;
+  begin
+    Rows := Db.Query('SELECT c.id,c.title,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
+      'COALESCE(c.dueAt,''''),COALESCE(c.endAt,'''') FROM cards c ' +
+      'JOIN lists l ON l.id=c.listId AND l.boardId=c.boardId AND l.archived=0 AND l.deletedAt IS NULL ' +
+      'JOIN swimlanes sw ON sw.id=c.swimlaneId AND sw.boardId=c.boardId AND sw.archived=0 ' +
+      'WHERE c.boardId=' + QuotedStr(EventBoard) + ' AND c.archived=0 AND c.deletedAt IS NULL' + Conditions + ' ORDER BY c.id;');
+    for Row in Rows do
+    begin
+      if TryISO8601ToDate(Row[3], StartAt, True) and TryISO8601ToDate(Row[5], EndAt, True) and (EndAt > StartAt) then
+        Push(Row[1], '', StartAt, EndAt);
+      PushDate(Row[2], 'card-received', 'calendar-event-received');
+      PushDate(Row[4], 'card-due', 'calendar-event-due');
+      PushDate(Row[5], 'card-end', 'calendar-event-end');
+    end;
+  end;
 begin
   ListId := ''; LaneId := '';
-  if Writable then
+  if Writable and not Multi then
   begin
     Landing := Db.Query('SELECT l.id,sw.id FROM lists l JOIN swimlanes sw ON sw.boardId=l.boardId AND sw.archived=0 ' +
       'AND (l.swimlaneId='''' OR l.swimlaneId=sw.id) WHERE l.boardId=' + QuotedStr(BoardId) +
@@ -3621,22 +3637,34 @@ begin
   Labels := TJSONObject.Create;
   try
     for Key in Keys do Labels.Add(Key, Words.Text(Key, Key));
-    Rows := Db.Query('SELECT c.id,c.title,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
-      'COALESCE(c.dueAt,''''),COALESCE(c.endAt,'''') FROM cards c ' +
-      'JOIN lists l ON l.id=c.listId AND l.boardId=c.boardId AND l.archived=0 AND l.deletedAt IS NULL ' +
-      'JOIN swimlanes sw ON sw.id=c.swimlaneId AND sw.boardId=c.boardId AND sw.archived=0 ' +
-      'WHERE c.boardId=' + QuotedStr(BoardId) + ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY c.id;');
-    for Row in Rows do
+    if Multi then
     begin
-      if TryISO8601ToDate(Row[3], StartAt, True) and TryISO8601ToDate(Row[5], EndAt, True) and (EndAt > StartAt) then
-        Push(Row[1], '', StartAt, EndAt);
-      PushDate(Row[2], 'card-received', 'calendar-event-received');
-      PushDate(Row[4], 'card-due', 'calendar-event-due');
-      PushDate(Row[5], 'card-end', 'calendar-event-end');
+      Boards := Db.Query('SELECT b.id,b.slug,b.title FROM boards b JOIN board_members m ON m.boardId=b.id ' +
+        'WHERE m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1 AND b.archived=0 AND b.type=''board'' ' +
+        'AND NOT (length(b.title)>=2 AND substr(b.title,1,1)=''^'' AND substr(b.title,-1)=''^'') ORDER BY b.title,b.id;');
+      for Board in Boards do
+      begin
+        Conditions := BoardFilterSql(Db, ParseBoardFilter(Db, Board[0], Query));
+        if not BoardCanRead(Db, UserId, Board[0]) then
+        begin
+          if not AssignedOnlyMember(Db, UserId, Board[0]) then Continue;
+          Conditions := Conditions + ' AND EXISTS(SELECT 1 FROM card_assignees ca WHERE ca.cardId=c.id AND ca.userId=' +
+            QuotedStr(UserId) + ')';
+        end;
+        EventBoard := Board[0]; EventSlug := Board[1]; Prefix := '[' + Board[2] + '] ';
+        AppendEvents;
+      end;
+    end
+    else
+    begin
+      EventBoard := BoardId; EventSlug := Slug; Prefix := ''; Conditions := FilterCond;
+      AppendEvents;
     end;
-    Result := '<div class="calendar-view swimlane"><div id="calendar-view" data-board="' + HtmlAttr(BoardId) +
+    Result := '<div class="calendar-view swimlane"><div id="' + IfThen(Multi, 'multiboard-calendar-view', 'calendar-view') +
+      '" data-calendar-system="' + HtmlAttr(ProfileField(Db, UserId, 'calendarSystem')) +
+      '" data-start-day="' + HtmlAttr(ProfileField(Db, UserId, 'startDayOfWeek')) + '" data-board="' + HtmlAttr(BoardId) +
       '" data-list="' + HtmlAttr(ListId) + '" data-swimlane="' + HtmlAttr(LaneId) + '" data-readonly="' +
-      IfThen(Writable and (ListId <> ''), 'false', 'true') + '" data-events="' + HtmlAttr(Events.AsJSON) +
+      IfThen(not Multi and Writable and (ListId <> ''), 'false', 'true') + '" data-events="' + HtmlAttr(Events.AsJSON) +
       '" data-labels="' + HtmlAttr(Labels.AsJSON) + '"></div></div>';
   finally
     Labels.Free;
@@ -3689,9 +3717,9 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
 var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   RevealId, RevealLane, RevealList, CurrentList, CurrentLane, AssignedCond: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
-  SharedRow, FirstLane, CalendarView, CalendarMode: Boolean;
+  SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
-  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
   function ViewLink(const View: string): string;
   const Keys: array[0..6] of string = ('text', 'labels', 'xlabels', 'labelMode', 'advanced', 'last', 'sort');
   var Key: string;
@@ -3755,16 +3783,26 @@ begin
   FilterCond := FilterCond + AssignedCond;
   CardSort := ParseCardSort(Query);
   SortSql := CardSortSql(Db, BoardId, CardSort);
-  CalendarMode := (Query <> nil) and (Query.Values['view'] = 'calendar-mode');
-  CalendarView := (Query <> nil) and (Query.Values['view'] = 'calendar');
+  SelectedView := '';
+  if Query <> nil then SelectedView := Query.Values['view'];
+  if SelectedView = '' then
+    case ProfileField(Db, S.UserId, 'boardView') of
+      'board-view-cal': SelectedView := 'calendar';
+      'board-view-calendar-mode': SelectedView := 'calendar-mode';
+      'board-view-multiboard-cal': SelectedView := 'multiboard-calendar';
+    end;
+  CalendarMode := SelectedView = 'calendar-mode';
+  MultiCalendar := (S.UserId <> '') and (SelectedView = 'multiboard-calendar');
+  CalendarView := SelectedView = 'calendar';
   Canvas := '';
-  if CalendarView then Canvas := BoardCalendar(Db, Words, BoardId, B[0][2], FilterCond, Writable)
+  if CalendarView or MultiCalendar then
+    Canvas := BoardCalendar(Db, Words, BoardId, B[0][2], S.UserId, FilterCond, Writable, MultiCalendar, Query)
   else if CalendarMode then Canvas := BoardCalendarMode(Db, Words, BoardId, B[0][2], FilterCond);
   SharedRow := BoardSettingFlag(Db, BoardId, 'sharedListHeaders', False);
   FirstLane := True;
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
-  if not (CalendarView or CalendarMode) then
+  if not (CalendarView or CalendarMode or MultiCalendar) then
   for i := 0 to High(Lanes) do
   begin
     // swimlaneHeader.jade: the caret folds the swimlane, for this user
@@ -4078,12 +4116,15 @@ begin
       '"><div class="header"><span class="header-title">' + E(Words.Text('board-view', 'Board View')) + '</span><a class="close-btn js-close-pop-over" ' +
       'href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list"><li>' +
       '<a class="js-board-view-entry js-open-swimlanes-view" href="' + ViewLink('swimlanes') + '"><i class="fa fa-th-large"></i> ' +
-      E(Words.Text('swimlanes', 'Swimlanes')) + IfThen(CalendarView or CalendarMode, '', ' <i class="fa fa-check"></i>') + '</a></li><li>' +
+      E(Words.Text('swimlanes', 'Swimlanes')) + IfThen(CalendarView or CalendarMode or MultiCalendar, '', ' <i class="fa fa-check"></i>') + '</a></li><li>' +
       '<a class="js-board-view-entry js-open-cal-view" href="' + ViewLink('calendar') + '"><i class="fa fa-calendar"></i> ' +
       E(Words.Text('board-view-cal', 'Calendar')) + IfThen(CalendarView, ' <i class="fa fa-check"></i>', '') + '</a></li><li>' +
       '<a class="js-board-view-entry js-open-calendar-mode-view" href="' + ViewLink('calendar-mode') +
       '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-calendar-mode', 'Calendar Mode')) +
-      IfThen(CalendarMode, ' <i class="fa fa-check"></i>', '') + '</a></li></ul></div></template>' +
+      IfThen(CalendarMode, ' <i class="fa fa-check"></i>', '') + '</a></li>' +
+      IfThen(S.UserId <> '', '<li><a class="js-board-view-entry js-open-multiboard-cal-view" href="' + ViewLink('multiboard-calendar') +
+        '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-multiboard-cal', 'Multi Board Calendar')) +
+        IfThen(MultiCalendar, ' <i class="fa fa-check"></i>', '') + '</a></li>', '') + '</ul></div></template>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     AnnouncementHtml(Db, Words, S, BoardId) +
     '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas" data-search-reveal="' + HtmlAttr(RevealId) + '">' + Canvas + '</div>' + Details + '</div>';

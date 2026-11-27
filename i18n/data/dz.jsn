@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ལས་འགན་ཆུང་ཀུ་ མཇུག་བསྡུ་ཡི་ཟེར་རྟགས་བཀལ།",
   "subtask-mark-not-done": "ལས་འགན་ཆུང་ཀུ་ མཇུག་མ་བསྡུ་ཟེར་རྟགས་བཀལ།",
   "subtask-done-no-permission": "ལས་འགན་ཆུང་ཀུ་འདི་ མཇུག་བསྡུ་ཡོད་མེད་ ཁྱོད་ཀྱིས་བསྒྱུར་མི་ཚུགས།",
-  "board-view-calendar-mode": "ཟླ་ཐོའི་ཐབས་ལམ།"
+  "board-view-calendar-mode": "ཟླ་ཐོའི་ཐབས་ལམ།",
+  "board-view-multiboard-cal": "ཟླ་ཐོ། (པད་ཤིང་ཆ་མཉམ།)"
 }

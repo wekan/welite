@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Merkya an is-ober avel gwrys",
   "subtask-mark-not-done": "Merkya an is-ober avel anwrys",
   "subtask-done-no-permission": "Ny yllowgh chanjya mars yw an is-ober ma gwrys po na",
-  "board-view-calendar-mode": "Modh dydhlyver"
+  "board-view-calendar-mode": "Modh dydhlyver",
+  "board-view-multiboard-cal": "Kalender (Oll an estyll)"
 }

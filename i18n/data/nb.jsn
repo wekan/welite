@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marker deloppgave som ferdig",
   "subtask-mark-not-done": "Marker deloppgave som ikke ferdig",
   "subtask-done-no-permission": "Du kan ikke endre om denne deloppgaven er ferdig",
-  "board-view-calendar-mode": "Kalendermodus"
+  "board-view-calendar-mode": "Kalendermodus",
+  "board-view-multiboard-cal": "Kalender (Alle tavler)"
 }

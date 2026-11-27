@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Hōʻailona i ka hana liʻiliʻi ua pau",
   "subtask-mark-not-done": "Hōʻailona i ka hana liʻiliʻi ʻaʻole i pau",
   "subtask-done-no-permission": "ʻAʻole hiki iā ʻoe ke hoʻololi i ke kūlana pau o kēia hana liʻiliʻi",
-  "board-view-calendar-mode": "ʻAno ʻalemanaka"
+  "board-view-calendar-mode": "ʻAno ʻalemanaka",
+  "board-view-multiboard-cal": "ʻalemanaka (Nā papa a pau)"
 }

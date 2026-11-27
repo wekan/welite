@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Qu'Hom rInpu' 'e' yIper",
   "subtask-mark-not-done": "Qu'Hom rInbe' 'e' yIper",
   "subtask-done-no-permission": "Qu'Homvam rInpu''a' 'e' DachoHlaHbe'",
-  "board-view-calendar-mode": "'ISjaH mIw"
+  "board-view-calendar-mode": "'ISjaH mIw",
+  "board-view-multiboard-cal": "raSmey law' 'ISjaH"
 }

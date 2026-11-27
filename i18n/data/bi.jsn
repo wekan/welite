@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Makem smol wok se i finis",
   "subtask-mark-not-done": "Makem smol wok se i no finis",
   "subtask-done-no-permission": "Yu no save jenisim sapos smol wok ia i finis o no",
-  "board-view-calendar-mode": "Fasin blong kalenda"
+  "board-view-calendar-mode": "Fasin blong kalenda",
+  "board-view-multiboard-cal": "Kalenda blong plante bod"
 }

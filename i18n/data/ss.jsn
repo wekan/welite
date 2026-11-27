@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Beka umsebenti lomncane njengalophelile",
   "subtask-mark-not-done": "Beka umsebenti lomncane njengalongakapheli",
   "subtask-done-no-permission": "Awukhoni kushintja kutsi lomsebenti lomncane uphelile yini",
-  "board-view-calendar-mode": "Indlela yeKhalenda"
+  "board-view-calendar-mode": "Indlela yeKhalenda",
+  "board-view-multiboard-cal": "Likhalenda (Onkhe emabhodi)"
 }

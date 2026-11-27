@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Immarka l-kompitu sekondarju bħala lest",
   "subtask-mark-not-done": "Immarka l-kompitu sekondarju bħala mhux lest",
   "subtask-done-no-permission": "Ma tistax tibdel jekk dan il-kompitu sekondarju huwiex lest",
-  "board-view-calendar-mode": "Modalità tal-kalendarju"
+  "board-view-calendar-mode": "Modalità tal-kalendarju",
+  "board-view-multiboard-cal": "Kalendarju ta’ diversi bordijiet"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Cowree y far-obbyr myr jeant",
   "subtask-mark-not-done": "Cowree y far-obbyr myr neuhjeant",
   "subtask-done-no-permission": "Cha vod oo caghlaa vel y far-obbyr shoh jeant",
-  "board-view-calendar-mode": "Mod mealeyder"
+  "board-view-calendar-mode": "Mod mealeyder",
+  "board-view-multiboard-cal": "Feaillere (Ooilley ny boayrdyn)"
 }

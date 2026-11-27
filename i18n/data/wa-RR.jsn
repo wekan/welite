@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Markahi an subtask nga nahuman",
   "subtask-mark-not-done": "Markahi an subtask nga diri pa nahuman",
   "subtask-done-no-permission": "Diri nimo mababag-o kon nahuman na ini nga subtask",
-  "board-view-calendar-mode": "Moda han Kalendaryo"
+  "board-view-calendar-mode": "Moda han Kalendaryo",
+  "board-view-multiboard-cal": "Kalendaryo (Ngatanan nga Board)"
 }

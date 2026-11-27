@@ -275,7 +275,7 @@ Next, after this goal:
   the import page's format audit (75), structural-selection (18),
   export-access (10: the board's ZIP, CSV,
   ICS, PDF, Excel and chart exports, which WeLite has not got yet), the History page
-  itself, WIP limit groups and the multi-board calendar.
+  itself and WIP limit groups.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:

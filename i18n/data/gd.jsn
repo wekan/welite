@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Comharraich am fo-ghnìomh mar dheiseil",
   "subtask-mark-not-done": "Comharraich am fo-ghnìomh mar neo-dheiseil",
   "subtask-done-no-permission": "Chan urrainn dhut atharrachadh a bheil am fo-ghnìomh seo deiseil",
-  "board-view-calendar-mode": "Modh mìosachain"
+  "board-view-calendar-mode": "Modh mìosachain",
+  "board-view-multiboard-cal": "Mìosachan (Na bùird uile)"
 }

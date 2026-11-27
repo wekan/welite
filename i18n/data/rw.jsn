@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Shyira igikorwa gito nk'icyakozwe",
   "subtask-mark-not-done": "Shyira igikorwa gito nk'icyitarakorwa",
   "subtask-done-no-permission": "Ntushobora guhindura niba iki gikorwa gito cyakozwe",
-  "board-view-calendar-mode": "Uburyo bwa Kalendari"
+  "board-view-calendar-mode": "Uburyo bwa Kalendari",
+  "board-view-multiboard-cal": "Kalendari (Ibibaho byose)"
 }

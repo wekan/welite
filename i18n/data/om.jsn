@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Hojii xiqqaa akka raawwatameetti mallatteessi",
   "subtask-mark-not-done": "Hojii xiqqaa akka hin raawwatamneetti mallatteessi",
   "subtask-done-no-permission": "Hojiin xiqqaan kun raawwatamuu isaa jijjiiruu hin dandeessu",
-  "board-view-calendar-mode": "Haala Kaalaandarii"
+  "board-view-calendar-mode": "Haala Kaalaandarii",
+  "board-view-multiboard-cal": "Kaalaandarii (Gabatewwan hunda)"
 }

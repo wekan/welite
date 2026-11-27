@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "فرعي دنده بشپړه نښه کړئ",
   "subtask-mark-not-done": "فرعي دنده نابشپړه نښه کړئ",
   "subtask-done-no-permission": "تاسو نشئ بدلولی چې دا فرعي دنده بشپړه ده که نه",
-  "board-view-calendar-mode": "د جنتري حالت"
+  "board-view-calendar-mode": "د جنتري حالت",
+  "board-view-multiboard-cal": "جنتري (ټولې تختې)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Alt tapşırığı tamamlanmış kimi işarələyin",
   "subtask-mark-not-done": "Alt tapşırığı tamamlanmamış kimi işarələyin",
   "subtask-done-no-permission": "Bu alt tapşırığın tamamlanma vəziyyətini dəyişə bilməzsiniz",
-  "board-view-calendar-mode": "Təqvim rejimi"
+  "board-view-calendar-mode": "Təqvim rejimi",
+  "board-view-multiboard-cal": "Təqvim (Bütün lövhələr)"
 }

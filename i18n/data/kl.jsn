@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Suliassaq immikkoortoq naammassisutut nalunaaqutseruk",
   "subtask-mark-not-done": "Suliassaq immikkoortoq naammassinngitsutut nalunaaqutseruk",
   "subtask-done-no-permission": "Suliassap immikkoortup naammassineranik allanngortitsisinnaanngilatit",
-  "board-view-calendar-mode": "Ullorsiutitut takutitsineq"
+  "board-view-calendar-mode": "Ullorsiutitut takutitsineq",
+  "board-view-multiboard-cal": "Ullorsiut (Ilisarnaatit tamaasa)"
 }

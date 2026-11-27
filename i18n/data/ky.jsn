@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Кошумча тапшырманы аткарылды деп белгилөө",
   "subtask-mark-not-done": "Кошумча тапшырманы аткарылган жок деп белгилөө",
   "subtask-done-no-permission": "Бул кошумча тапшырманын аткарылганын өзгөртө албайсыз",
-  "board-view-calendar-mode": "Календар режими"
+  "board-view-calendar-mode": "Календар режими",
+  "board-view-multiboard-cal": "Жылнаама (Бардык такталар)"
 }

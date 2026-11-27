@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Alamta ƙaramin aiki a matsayin an gama",
   "subtask-mark-not-done": "Alamta ƙaramin aiki a matsayin ba a gama ba",
   "subtask-done-no-permission": "Ba za ka iya canza ko an gama wannan ƙaramin aiki ba",
-  "board-view-calendar-mode": "Yanayin Kalanda"
+  "board-view-calendar-mode": "Yanayin Kalanda",
+  "board-view-multiboard-cal": "Kalanda (Dukan alluna)"
 }

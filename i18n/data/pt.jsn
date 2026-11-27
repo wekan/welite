@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marcar subtarefa como concluída",
   "subtask-mark-not-done": "Marcar subtarefa como não concluída",
   "subtask-done-no-permission": "Não pode alterar se esta subtarefa está concluída",
-  "board-view-calendar-mode": "Modo de calendário"
+  "board-view-calendar-mode": "Modo de calendário",
+  "board-view-multiboard-cal": "Calendário (Todos os quadros)"
 }

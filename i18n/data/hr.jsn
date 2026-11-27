@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Označi podzadatak kao dovršen",
   "subtask-mark-not-done": "Označi podzadatak kao nedovršen",
   "subtask-done-no-permission": "Ne možete promijeniti je li ovaj podzadatak dovršen",
-  "board-view-calendar-mode": "Način kalendara"
+  "board-view-calendar-mode": "Način kalendara",
+  "board-view-multiboard-cal": "Kalendar (Sve ploče)"
 }

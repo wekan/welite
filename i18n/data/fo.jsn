@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Merk undiruppgávu sum liðuga",
   "subtask-mark-not-done": "Merk undiruppgávu sum óliðuga",
   "subtask-done-no-permission": "Tú kanst ikki broyta, um henda undiruppgávan er liðug",
-  "board-view-calendar-mode": "Kalendarastøða"
+  "board-view-calendar-mode": "Kalendarastøða",
+  "board-view-multiboard-cal": "Kalendari (Allar talvur)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Segne la sot-ativitât come fate",
   "subtask-mark-not-done": "Segne la sot-ativitât come no fate",
   "subtask-done-no-permission": "No tu puedis cambiâ se cheste sot-ativitât e je fate",
-  "board-view-calendar-mode": "Modalitât calendari"
+  "board-view-calendar-mode": "Modalitât calendari",
+  "board-view-multiboard-cal": "Calendario (Dutis lis taulis)"
 }

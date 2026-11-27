@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "துணைப் பணியை முடிந்ததாகக் குறி",
   "subtask-mark-not-done": "துணைப் பணியை முடியாததாகக் குறி",
   "subtask-done-no-permission": "இந்தத் துணைப் பணி முடிந்ததா என்பதை நீங்கள் மாற்ற முடியாது",
-  "board-view-calendar-mode": "நாள்காட்டி முறை"
+  "board-view-calendar-mode": "நாள்காட்டி முறை",
+  "board-view-multiboard-cal": "நாள்காட்டி (அனைத்துப் பலகைகள்)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Նշել ենթաառաջադրանքը որպես կատարված",
   "subtask-mark-not-done": "Նշել ենթաառաջադրանքը որպես չկատարված",
   "subtask-done-no-permission": "Դուք չեք կարող փոխել, թե արդյոք այս ենթաառաջադրանքը կատարված է",
-  "board-view-calendar-mode": "Օրացույցի ռեժիմ"
+  "board-view-calendar-mode": "Օրացույցի ռեժիմ",
+  "board-view-multiboard-cal": "Օրացույց (Բոլոր տախտակները)"
 }

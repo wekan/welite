@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Lembani kantchito kuti katha",
   "subtask-mark-not-done": "Lembani kantchito kuti sikanathe",
   "subtask-done-no-permission": "Simungasinthe ngati kantchito aka katha kapena ayi",
-  "board-view-calendar-mode": "Kaonekedwe ka Kalendala"
+  "board-view-calendar-mode": "Kaonekedwe ka Kalendala",
+  "board-view-multiboard-cal": "Kalendala (Mabolodi onse)"
 }

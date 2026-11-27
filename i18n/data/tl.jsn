@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Markahan ang subtask bilang tapos",
   "subtask-mark-not-done": "Markahan ang subtask bilang hindi tapos",
   "subtask-done-no-permission": "Hindi mo mababago kung tapos na ang subtask na ito",
-  "board-view-calendar-mode": "Mode ng Kalendaryo"
+  "board-view-calendar-mode": "Mode ng Kalendaryo",
+  "board-view-multiboard-cal": "Kalendaryo (Lahat ng pisara)"
 }

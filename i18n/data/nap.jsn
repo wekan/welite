@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Segna 'o sotto-cumpito comme fatto",
   "subtask-mark-not-done": "Segna 'o sotto-cumpito comme nun fatto",
   "subtask-done-no-permission": "Nun può cagnà si stu sotto-cumpito è fatto o no",
-  "board-view-calendar-mode": "Modo calannario"
+  "board-view-calendar-mode": "Modo calannario",
+  "board-view-multiboard-cal": "Calannàrio (Tutt' 'e tavule)"
 }

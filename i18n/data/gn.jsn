@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Emoĩ tembiapo'i opapyre ramo",
   "subtask-mark-not-done": "Emoĩ tembiapo'i nahu'ãiva ramo",
   "subtask-done-no-permission": "Ndaikatúi remoambue ko tembiapo'i opápa térã nahániri",
-  "board-view-calendar-mode": "Arapapaha reko"
+  "board-view-calendar-mode": "Arapapaha reko",
+  "board-view-multiboard-cal": "Arapapaha (Opaite peteĩcha)"
 }

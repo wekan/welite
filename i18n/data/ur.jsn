@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ذیلی کام کو مکمل نشان زد کریں",
   "subtask-mark-not-done": "ذیلی کام کو نامکمل نشان زد کریں",
   "subtask-done-no-permission": "آپ اس ذیلی کام کی تکمیل کی حالت نہیں بدل سکتے",
-  "board-view-calendar-mode": "تقویم کا انداز"
+  "board-view-calendar-mode": "تقویم کا انداز",
+  "board-view-multiboard-cal": "تقویم (تمام بورڈز)"
 }

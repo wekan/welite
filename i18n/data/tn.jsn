@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Tshwaya tiro-potlana e weditswe",
   "subtask-mark-not-done": "Tshwaya tiro-potlana ga e a wediwa",
   "subtask-done-no-permission": "Ga o kgone go fetola gore a tiro-potlana e e weditswe",
-  "board-view-calendar-mode": "Mokgwa wa Khalendara"
+  "board-view-calendar-mode": "Mokgwa wa Khalendara",
+  "board-view-multiboard-cal": "Khalendara (Diboto tsotlhe)"
 }

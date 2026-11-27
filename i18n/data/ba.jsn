@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Өҫтәмә бурысты әҙер тип билдәләү",
   "subtask-mark-not-done": "Өҫтәмә бурысты әҙер түгел тип билдәләү",
   "subtask-done-no-permission": "Һеҙ был өҫтәмә бурыстың әҙерлеген үҙгәртә алмайһығыҙ",
-  "board-view-calendar-mode": "Календарь режимы"
+  "board-view-calendar-mode": "Календарь режимы",
+  "board-view-multiboard-cal": "Календарь (Бөтә такталар)"
 }

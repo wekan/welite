@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "تارماق ۋەزىپىنى تامام دەپ بەلگىلەش",
   "subtask-mark-not-done": "تارماق ۋەزىپىنى تامام ئەمەس دەپ بەلگىلەش",
   "subtask-done-no-permission": "بۇ تارماق ۋەزىپىنىڭ تامام بولغان-بولمىغانلىقىنى ئۆزگەرتەلمەيسىز",
-  "board-view-calendar-mode": "كالېندار ھالىتى"
+  "board-view-calendar-mode": "كالېندار ھالىتى",
+  "board-view-multiboard-cal": "كالېندار (بارلىق تاختايلار)"
 }

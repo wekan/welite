@@ -623,7 +623,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   // drawn in it; Previous and Next step its months. Gregorian keeps
   // FullCalendar's own month.
   function nativeCalendarOptions(el) {
-    var system = document.documentElement.getAttribute('data-calendar-system') || 'gregorian';
+    var system = el.dataset.calendarSystem || document.documentElement.getAttribute('data-calendar-system') || 'gregorian';
     var cal = CALENDAR_INTL[system] || system;
     if (system === 'gregorian' || !calParts(new Date(), cal)) return {};
     var labels = {};
@@ -674,7 +674,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       if (gone) return;
       cal = new window.FullCalendar.Calendar(el, Object.assign({
         initialView: 'dayGridMonth',
-        firstDay: pickerFirstDay(), // the member's first day of the week
+        firstDay: el.dataset.startDay && /^[0-6]$/.test(el.dataset.startDay) ? Number(el.dataset.startDay) : pickerFirstDay(),
         weekNumbers: true,
         headerToolbar: { left: 'title', center: '', right: 'today prev,next timeGridDay,listDay timeGridWeek,listWeek dayGridMonth,listMonth' },
         buttonIcons: false,

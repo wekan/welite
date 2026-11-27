@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Mäkön donabligädi as pedunöl",
   "subtask-mark-not-done": "Mäkön donabligädi as no pedunöl",
   "subtask-done-no-permission": "No kanol votükön, va donabligäd at pedunon",
-  "board-view-calendar-mode": "Mod kaleda"
+  "board-view-calendar-mode": "Mod kaleda",
+  "board-view-multiboard-cal": "Kaled (Tabs valik)"
 }

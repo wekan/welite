@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Бага даабариие дүүргэгдэһэн гэжэ тэмдэглэхэ",
   "subtask-mark-not-done": "Бага даабариие дүүргэгдээгүй гэжэ тэмдэглэхэ",
   "subtask-done-no-permission": "Таанар энэ бага даабариин дүүргэгдэһэн эсэхые хубилгажа шадахагүйт",
-  "board-view-calendar-mode": "Хуанлиин горим"
+  "board-view-calendar-mode": "Хуанлиин горим",
+  "board-view-multiboard-cal": "Хуанли (Бүхы самбарнууд)"
 }

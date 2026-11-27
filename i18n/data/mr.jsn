@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "उपकार्य पूर्ण म्हणून चिन्हांकित करा",
   "subtask-mark-not-done": "उपकार्य अपूर्ण म्हणून चिन्हांकित करा",
   "subtask-done-no-permission": "हे उपकार्य पूर्ण आहे की नाही हे तुम्ही बदलू शकत नाही",
-  "board-view-calendar-mode": "दिनदर्शिका मोड"
+  "board-view-calendar-mode": "दिनदर्शिका मोड",
+  "board-view-multiboard-cal": "दिनदर्शिका (सर्व फलक)"
 }

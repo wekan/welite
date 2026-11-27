@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Baara fitini taamasiyɛn ko a banna",
   "subtask-mark-not-done": "Baara fitini taamasiyɛn ko a ma ban",
   "subtask-done-no-permission": "I tɛ se ka nin baara fitini banni yɛlɛma",
-  "board-view-calendar-mode": "Kalandiriye cogo"
+  "board-view-calendar-mode": "Kalandiriye cogo",
+  "board-view-multiboard-cal": "Donw kalandiriye (Walan bɛɛ)"
 }

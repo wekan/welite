@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Позначити підзавдання як завершене",
   "subtask-mark-not-done": "Позначити підзавдання як незавершене",
   "subtask-done-no-permission": "Ви не можете змінювати стан завершення цього підзавдання",
-  "board-view-calendar-mode": "Режим календаря"
+  "board-view-calendar-mode": "Режим календаря",
+  "board-view-multiboard-cal": "Календар (Всі дошки)"
 }

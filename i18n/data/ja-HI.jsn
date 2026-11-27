@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "さぶたすくを かんりょうに する",
   "subtask-mark-not-done": "さぶたすくを みかんりょうに する",
   "subtask-done-no-permission": "この さぶたすくの かんりょうじょうたいを かえる けんげんが ありません",
-  "board-view-calendar-mode": "かれんだーもーど"
+  "board-view-calendar-mode": "かれんだーもーど",
+  "board-view-multiboard-cal": "カレンダー (全てのボード)"
 }

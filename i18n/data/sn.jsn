@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Ratidza basa diki serakaitwa",
   "subtask-mark-not-done": "Ratidza basa diki serisina kuitwa",
   "subtask-done-no-permission": "Haugoni kuchinja kuti basa diki iri rapera here kana kuti kwete",
-  "board-view-calendar-mode": "Maitiro ekarenda"
+  "board-view-calendar-mode": "Maitiro ekarenda",
+  "board-view-multiboard-cal": "Karenda yemabhodhi akawanda"
 }

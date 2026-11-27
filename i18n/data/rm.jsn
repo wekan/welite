@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marcar la sutincumbensa sco fatga",
   "subtask-mark-not-done": "Marcar la sutincumbensa sco betg fatga",
   "subtask-done-no-permission": "Vus na pudais betg midar sche questa sutincumbensa è fatga",
-  "board-view-calendar-mode": "Modus chalender"
+  "board-view-calendar-mode": "Modus chalender",
+  "board-view-multiboard-cal": "Chalender da pliras tabellas"
 }

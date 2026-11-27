@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "উপকাজ সম্পন্ন চিহ্নিত করুন",
   "subtask-mark-not-done": "উপকাজ অসম্পূর্ণ চিহ্নিত করুন",
   "subtask-done-no-permission": "এই উপকাজ সম্পন্ন কি না তা আপনি বদলাতে পারবেন না",
-  "board-view-calendar-mode": "পঞ্জিকা মোড"
+  "board-view-calendar-mode": "পঞ্জিকা মোড",
+  "board-view-multiboard-cal": "পঞ্জিকা (সব বোর্ড)"
 }

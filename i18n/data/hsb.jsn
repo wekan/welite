@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Podnadawk jako hotowy markěrować",
   "subtask-mark-not-done": "Podnadawk jako njehotowy markěrować",
   "subtask-done-no-permission": "Njemóžeće změnić, hač je tutón podnadawk hotowy",
-  "board-view-calendar-mode": "Modus protyki"
+  "board-view-calendar-mode": "Modus protyki",
+  "board-view-multiboard-cal": "Protyka wjacorych taflow"
 }

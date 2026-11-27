@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ንኡስ ዕማም ከም ዝተወድአ ምልክት",
   "subtask-mark-not-done": "ንኡስ ዕማም ከም ዘይተወድአ ምልክት",
   "subtask-done-no-permission": "እዚ ንኡስ ዕማም ተወዲኡ ድዩ ኣይተወድአን ክትቅይር ኣይትኽእልን",
-  "board-view-calendar-mode": "ኣገባብ ዓውደ ኣዋርሕ"
+  "board-view-calendar-mode": "ኣገባብ ዓውደ ኣዋርሕ",
+  "board-view-multiboard-cal": "ዓውደ ኣዋርሕ (ኩሎም ሰሌዳታት)"
 }

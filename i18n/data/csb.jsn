@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Òbznaczë pòdzadanié jakno zrobioné",
   "subtask-mark-not-done": "Òbznaczë pòdzadanié jakno niezrobioné",
   "subtask-done-no-permission": "Nie mòżesz zmienic, czë to pòdzadanié je zrobioné",
-  "board-view-calendar-mode": "Trib kalãdarza"
+  "board-view-calendar-mode": "Trib kalãdarza",
+  "board-view-multiboard-cal": "Kalãdôrz wielu tôflów"
 }

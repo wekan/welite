@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ଉପ-କାର୍ଯ୍ୟକୁ ସମାପ୍ତ ଭାବରେ ଚିହ୍ନିତ କରନ୍ତୁ",
   "subtask-mark-not-done": "ଉପ-କାର୍ଯ୍ୟକୁ ଅସମାପ୍ତ ଭାବରେ ଚିହ୍ନିତ କରନ୍ତୁ",
   "subtask-done-no-permission": "ଏହି ଉପ-କାର୍ଯ୍ୟ ସମାପ୍ତ କି ନାହିଁ ତାହା ଆପଣ ବଦଳାଇପାରିବେ ନାହିଁ",
-  "board-view-calendar-mode": "କ୍ୟାଲେଣ୍ଡର ମୋଡ୍"
+  "board-view-calendar-mode": "କ୍ୟାଲେଣ୍ଡର ମୋଡ୍",
+  "board-view-multiboard-cal": "କ୍ୟାଲେଣ୍ଡର (ସମସ୍ତ ବୋର୍ଡ |)"
 }

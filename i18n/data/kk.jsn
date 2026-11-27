@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Ішкі тапсырманы орындалды деп белгілеу",
   "subtask-mark-not-done": "Ішкі тапсырманы орындалмады деп белгілеу",
   "subtask-done-no-permission": "Бұл ішкі тапсырманың орындалуын өзгерте алмайсыз",
-  "board-view-calendar-mode": "Күнтізбе режимі"
+  "board-view-calendar-mode": "Күнтізбе режимі",
+  "board-view-multiboard-cal": "Күнтізбе (Барлық тақталар)"
 }

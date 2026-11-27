@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Maka umsebenzi ongaphansi njengoqediwe",
   "subtask-mark-not-done": "Maka umsebenzi ongaphansi njengongaqediwe",
   "subtask-done-no-permission": "Awukwazi ukushintsha ukuthi lo msebenzi ongaphansi uqediwe yini",
-  "board-view-calendar-mode": "Imodi yekhalenda"
+  "board-view-calendar-mode": "Imodi yekhalenda",
+  "board-view-multiboard-cal": "Ikhalenda (Wonke Amabhodi)"
 }

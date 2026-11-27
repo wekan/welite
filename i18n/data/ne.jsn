@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "उपकार्य पूर्ण चिन्ह लगाउनुहोस्",
   "subtask-mark-not-done": "उपकार्य अपूर्ण चिन्ह लगाउनुहोस्",
   "subtask-done-no-permission": "यो उपकार्य पूर्ण छ कि छैन भन्ने कुरा तपाईंले बदल्न सक्नुहुन्न",
-  "board-view-calendar-mode": "पात्रो मोड"
+  "board-view-calendar-mode": "पात्रो मोड",
+  "board-view-multiboard-cal": "पात्रो (सबै बोर्डहरू)"
 }

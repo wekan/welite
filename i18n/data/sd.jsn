@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ذيلي ڪم مڪمل نشان لڳايو",
   "subtask-mark-not-done": "ذيلي ڪم اڻپورو نشان لڳايو",
   "subtask-done-no-permission": "توهان بدلائي نٿا سگهو ته هي ذيلي ڪم مڪمل آهي يا نه",
-  "board-view-calendar-mode": "ڪئلينڊر موڊ"
+  "board-view-calendar-mode": "ڪئلينڊر موڊ",
+  "board-view-multiboard-cal": "ڪئلينڊر (سڀ بورڊ)"
 }

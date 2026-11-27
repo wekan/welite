@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Зервазифаро иҷрошуда қайд кардан",
   "subtask-mark-not-done": "Зервазифаро иҷронашуда қайд кардан",
   "subtask-done-no-permission": "Шумо ҳолати иҷрои ин зервазифаро иваз карда наметавонед",
-  "board-view-calendar-mode": "Реҷаи тақвим"
+  "board-view-calendar-mode": "Реҷаи тақвим",
+  "board-view-multiboard-cal": "Тақвим (Ҳамаи тахтаҳо)"
 }

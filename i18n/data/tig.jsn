@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "ንኡስ ዕዮ ከም ዝተወድአ ምልክት ግበር",
   "subtask-mark-not-done": "ንኡስ ዕዮ ከም ዘይተወድአ ምልክት ግበር",
   "subtask-done-no-permission": "እዚ ንኡስ ዕዮ ተወዲኡ ወይ ዘይተወድአ ምዃኑ ክትቕይር ኣይትኽእልን",
-  "board-view-calendar-mode": "ኣገባብ አምዕል ለልተዐለብ"
+  "board-view-calendar-mode": "ኣገባብ አምዕል ለልተዐለብ",
+  "board-view-multiboard-cal": "ዓውደ ኣዋርሕ (ኩሎም ምዱዳት)"
 }

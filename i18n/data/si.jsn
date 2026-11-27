@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "උපකාර්යය නිම කළ ලෙස සලකුණු කරන්න",
   "subtask-mark-not-done": "උපකාර්යය නිම නොකළ ලෙස සලකුණු කරන්න",
   "subtask-done-no-permission": "මෙම උපකාර්යය නිම කළාද යන්න ඔබට වෙනස් කළ නොහැක",
-  "board-view-calendar-mode": "දින දසුන් ප්‍රකාරය"
+  "board-view-calendar-mode": "දින දසුන් ප්‍රකාරය",
+  "board-view-multiboard-cal": "දින දර්ශනය (සියලු පුවරු)"
 }

@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Tandhani sub-tugas rampung",
   "subtask-mark-not-done": "Tandhani sub-tugas durung rampung",
   "subtask-done-no-permission": "Kowe ora bisa ngowahi rampung orane sub-tugas iki",
-  "board-view-calendar-mode": "Mode Tanggalan"
+  "board-view-calendar-mode": "Mode Tanggalan",
+  "board-view-multiboard-cal": "Tanggalan (Kabeh papan)"
 }

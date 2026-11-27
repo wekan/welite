@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Uchuy llamk'ayta tukusqa hina unanchay",
   "subtask-mark-not-done": "Uchuy llamk'ayta mana tukusqa hina unanchay",
   "subtask-done-no-permission": "Manam kay uchuy llamk'aypa tukusqa kayninta tikrayta atinkichu",
-  "board-view-calendar-mode": "Watanqillqa rikch'ay"
+  "board-view-calendar-mode": "Watanqillqa rikch'ay",
+  "board-view-multiboard-cal": "Achka pirqakunapa watanqillqan"
 }

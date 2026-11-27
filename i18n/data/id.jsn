@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Tandai subtugas sebagai selesai",
   "subtask-mark-not-done": "Tandai subtugas sebagai belum selesai",
   "subtask-done-no-permission": "Anda tidak dapat mengubah status penyelesaian subtugas ini",
-  "board-view-calendar-mode": "Mode kalender"
+  "board-view-calendar-mode": "Mode kalender",
+  "board-view-multiboard-cal": "Kalender (Semua Panel)"
 }

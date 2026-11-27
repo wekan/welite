@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Marcà u sottucompitu cum'è compiu",
   "subtask-mark-not-done": "Marcà u sottucompitu cum'è micca compiu",
   "subtask-done-no-permission": "Ùn pudete micca cambià s'è stu sottucompitu hè compiu",
-  "board-view-calendar-mode": "Modu calendariu"
+  "board-view-calendar-mode": "Modu calendariu",
+  "board-view-multiboard-cal": "Calendariu di parechje tavule"
 }

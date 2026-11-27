@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Subtaak als voltooid markeren",
   "subtask-mark-not-done": "Subtaak als niet voltooid markeren",
   "subtask-done-no-permission": "Je kunt niet wijzigen of deze subtaak voltooid is",
-  "board-view-calendar-mode": "Kalendermodus"
+  "board-view-calendar-mode": "Kalendermodus",
+  "board-view-multiboard-cal": "Kalender (Alle borden)"
 }

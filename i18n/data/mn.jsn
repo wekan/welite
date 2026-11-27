@@ -2322,5 +2322,6 @@
   "subtask-mark-done": "Дэд даалгаврыг хийгдсэн гэж тэмдэглэх",
   "subtask-mark-not-done": "Дэд даалгаврыг хийгдээгүй гэж тэмдэглэх",
   "subtask-done-no-permission": "Та энэ дэд даалгавар хийгдсэн эсэхийг өөрчлөх боломжгүй",
-  "board-view-calendar-mode": "Хуанлийн горим"
+  "board-view-calendar-mode": "Хуанлийн горим",
+  "board-view-multiboard-cal": "Хуанли (Бүх самбарууд)"
 }
