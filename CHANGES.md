@@ -57,7 +57,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Excel card layouts embed 24-bit BMP attachments served as
   `image/x-ms-bmp` as PNG previews. They also support Netpbm bitmap,
-  graymap and pixmap attachments, subject to the thumbnail size limits.
+  graymap and pixmap attachments, subject to the thumbnail limits. HTTP
+  tests cover text and binary encodings for all three formats, plus
+  oversized dimensions and an invalid sample range.
 
 - Export one card to Excel from Card Actions with selectable fields. The
   download route checks that the card belongs to the requested board and list.

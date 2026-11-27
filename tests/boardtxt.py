@@ -277,6 +277,12 @@ def run(request,database,administrator,member,base):
     try:
         for mime, contents, expected in (
             ('image/x-ms-bmp', bmp, 1),
+            ('image/x-portable-bitmap', b'P1\n1 1\n1\n', 1),
+            ('image/x-portable-graymap', b'P2\n1 1\n255\n128\n', 1),
+            ('image/x-portable-pixmap', b'P3\n1 1\n255\n255 0 0\n', 1),
+            ('image/x-portable-bitmap', b'P4\n1 1\n\x80', 1),
+            ('image/x-portable-graymap', b'P5\n1 1\n65535\n\x80\x00', 1),
+            ('image/x-portable-anymap', b'P5\n1 1\n65536\n\x80\x00', 0),
             ('image/x-portable-pixmap', b'P6\n1 1\n255\n\xff\x00\x00', 1),
             ('image/x-portable-pixmap', b'P6\n999999 999999\n255\n', 0),
         ):
