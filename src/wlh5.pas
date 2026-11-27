@@ -6043,7 +6043,7 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Query: string; AllowArchivedBoard: Boolean; out Plain, Predicate, SortField: string; out Descending, SearchArchive, BoardScoped: Boolean; out PageSize: Integer);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Query: string; AllowArchivedBoard: Boolean; out Plain, Predicate, SortField: string; out Descending, SearchArchive, BoardScoped: Boolean; out PageSize: Integer; out DebugMode: string; Diagnostics: TJSONArray = nil);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes, HasPageOption: Boolean; Token, Sql: string;
   function ReadPageOption(const Arg: string): Boolean;
@@ -6066,6 +6066,14 @@ var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
       if Size > 0 then PageSize := Size;
       Exit(True);
     end;
+    if SameText(Op, 'debug') or SameText(Op, Words.Text('operator-debug', 'debug')) then
+    begin
+      if IsValue('all') then DebugMode := 'all'
+      else if IsValue('selector') then DebugMode := 'selector'
+      else if IsValue('projection') then DebugMode := 'projection'
+      else Exit;
+      Exit(True);
+    end;
     if not SameText(Op, 'sort') and not SameText(Op, Words.Text('operator-sort', 'sort')) then Exit;
     Reverse := StartsStr('-', Value);
     if Reverse then Delete(Value, 1, 1);
@@ -6079,7 +6087,7 @@ var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   end;
 begin
   Plain := '';
-  Predicate := '';
+  Predicate := ''; DebugMode := '';
   SortField := ''; Descending := False; PageSize := 25; HasPageOption := False;
   for Kind := Low(Kind) to High(Kind) do Groups[Kind] := '';
   i := 1;
@@ -6109,6 +6117,7 @@ begin
     begin
       if Groups[Kind] <> '' then Groups[Kind] := Groups[Kind] + ' OR ';
       Groups[Kind] := Groups[Kind] + Sql;
+      if Diagnostics <> nil then Diagnostics.Add(Token);
     end;
   end;
   for Kind := Low(Kind) to High(Kind) do
@@ -6248,6 +6257,10 @@ begin
   for Name in Statuses do
     Result := Result + '<li>' + Instruction('status-' + Name, '') + '</li>';
   Result := Result + '<li><code>' + E(Words.Text('predicate-open', 'open')) + '</code></li></ul></li>';
+  Result := Result + '<li><code>' + E(Words.Text('operator-debug', 'debug')) + ':' +
+    E(Words.Text('predicate-all', 'all')) + '</code>, <code>' + E(Words.Text('operator-debug', 'debug')) + ':' +
+    E(Words.Text('predicate-selector', 'selector')) + '</code>, <code>' + E(Words.Text('operator-debug', 'debug')) + ':' +
+    E(Words.Text('predicate-projection', 'projection')) + '</code></li>';
   Result := Result + '<li><code>' + E(Words.Text('operator-title', 'title')) + ':&quot;Alpha Card&quot;</code></li>' +
     '</ul><p>' +
     Instruction('notes-1', 'Multiple operators may be specified.') + '</p><p>' +
@@ -6260,6 +6273,7 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
   BoardCards: array of TWLRows; Positions: array of Integer;
   i, j, Shown, NextBoard, PageSize: Integer; Skip: Int64;
   HasNext, Descending, SearchArchive, BoardScoped: Boolean;
+  DebugMode: string; Filters: TJSONArray;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -6280,12 +6294,12 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
     Result := Result + '</select></label> <button type="submit">' + E(Words.Text('move', 'Move')) + '</button></form>';
   end;
   function CardsForBoard(BoardIndex: Integer; Limit: Int64): TWLRows;
-  var BoardId, BoardPlain, BoardPredicate, BoardSort: string; Reverse, Archive, Scoped: Boolean; Size: Integer;
+  var BoardId, BoardPlain, BoardPredicate, BoardSort, BoardDebug: string; Reverse, Archive, Scoped: Boolean; Size: Integer;
   begin
     BoardId := Boards[BoardIndex][0];
     if not BoardScoped then
       Exit(SearchBoardCards(Db, UserId, BoardId, Plain, Limit, OperatorSql, SortField, Descending, SearchArchive));
-    ParseGlobalSearch(Db, Words, UserId, BoardId, Text, SearchArchive, BoardPlain, BoardPredicate, BoardSort, Reverse, Archive, Scoped, Size);
+    ParseGlobalSearch(Db, Words, UserId, BoardId, Text, SearchArchive, BoardPlain, BoardPredicate, BoardSort, Reverse, Archive, Scoped, Size, BoardDebug);
     Result := SearchBoardCards(Db, UserId, BoardId, BoardPlain, Limit, BoardPredicate, BoardSort, Reverse, Archive);
   end;
   procedure AppendCard(BoardIndex: Integer; const Card: TWLRow);
@@ -6309,13 +6323,44 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
     if ADate = BDate then Exit(CompareStr(A[0], B[0]) < 0);
     if Descending then Result := ADate > BDate else Result := ADate < BDate;
   end;
+  function DebugContent(const ParsedFilters: string): string;
+  var Data: TJSONObject;
+  begin
+    Result := '';
+    if DebugMode = '' then Exit;
+    Data := TJSONObject.Create;
+    try
+      if DebugMode <> 'projection' then
+      begin
+        Data.Add('text', Plain);
+        Data.Add('filters', GetJSON(ParsedFilters));
+        Data.Add('includeArchive', SearchArchive);
+        Data.Add('sort', IfThen(SortField = '', 'board, createdAt descending', Copy(SortField, 3, MaxInt) +
+          IfThen(Descending, ' descending', ' ascending')));
+      end;
+      if DebugMode <> 'selector' then
+      begin
+        Data.Add('fields', GetJSON('["id","title","boardId","swimlaneId","listId","archived"]'));
+        Data.Add('page', PageNumber);
+        Data.Add('limit', PageSize);
+      end;
+      Result := '<details class="global-search-debug" open><summary>' + E(Words.Text('operator-debug', 'Debug')) +
+        '</summary><pre>' + E(Data.FormatJSON) + '</pre></details>';
+    finally Data.Free; end;
+  end;
+var Debug: string;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, UserId, '', Text, False, Plain, OperatorSql, SortField, Descending, SearchArchive, BoardScoped, PageSize);
+  Filters := TJSONArray.Create;
+  try
+    ParseGlobalSearch(Db, Words, UserId, '', Text, False, Plain, OperatorSql, SortField, Descending,
+      SearchArchive, BoardScoped, PageSize, DebugMode, Filters);
+    Debug := DebugContent(Filters.AsJSON);
+  finally Filters.Free; end;
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
-    '"><button type="submit">' + E(Words.Text('search', 'Search')) + '</button></form>' + GlobalSearchHelp(Words);
+    '"><button type="submit">' + E(Words.Text('search', 'Search')) + '</button></form>' + GlobalSearchHelp(Words) + Debug;
   Results := '';
   HasNext := False;
   if Text <> '' then

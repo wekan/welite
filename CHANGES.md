@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Inspect global search with `debug:selector`, `debug:projection`, or
+  `debug:all`. The diagnostics show the parsed filters and sort or the
+  result fields and pagination, according to the selected mode.
+
 - Search readable custom-field values on archived boards in an explicit
   archive search. Admin-only values remain visible to board admins only.
 
