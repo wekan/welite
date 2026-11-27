@@ -18,6 +18,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   List and swimlane archive states support Undo, Redo and Restore.
   REST template-list archiving and unarchiving also record the resulting
   card archive transitions as individual history entries.
+  The hourly shared-store scheduler honors the board’s inactivity archive
+  setting and records the resulting card transitions in History.
 
 - The Time view and its PDF and Excel exports show hours by assignee and
   card, mark overtime cards, and show the signed total time until open

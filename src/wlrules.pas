@@ -1462,7 +1462,7 @@ begin
     Db.Exec('ROLLBACK;');
 end;
 
-procedure RuleArchiveCard(Db:TWLDb;const Activity:TActivity;Archive:Boolean);
+procedure RuleArchiveCard(Db:TWLDb;const Activity:TActivity;Archive:Boolean;const Eligibility:string='');
 var Scope,Before,After,Stamp,ArchivedAt,Kind:string;
 begin
   Scope:='id='+Q(Activity.CardId)+' AND boardId='+Q(Activity.BoardId)+' AND deletedAt IS NULL';
@@ -1472,7 +1472,7 @@ begin
   ArchivedAt:='NULL';Kind:='restoredCard';
   if Archive then begin ArchivedAt:=Stamp;Kind:='archivedCard';end;
   if Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+
-    ' AND COALESCE(archived,0)='+Before+') THEN 1 ELSE json(''Card archive state changed'') END; '+
+    ' AND COALESCE(archived,0)='+Before+Eligibility+') THEN 1 ELSE json(''Card archive state changed'') END; '+
     'UPDATE cards SET archived='+After+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+' WHERE '+Scope+
     '; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+' AND archived='+After+
     ') THEN 1 ELSE json(''Rule archive failed'') END; '+ActivitySql(Kind,Activity.UserId,Activity.CardId,'{}')+'COMMIT;') then
@@ -3382,11 +3382,45 @@ begin
   end;
 end;
 
+// The shared board setting is opt-in. The hourly scan uses the same scoped
+// update and History writer as a rule-driven card archive.
+procedure RunInactiveCardArchive(Db:TWLDb;Utc:TDateTime);
+var Boards:TJSONArray; Board:TJSONObject; Setting:TJSONData; Days:Double; Cutoff,Eligibility:string;
+  Cards:TWLRows; I,J:Integer; A:TActivity;
+begin
+  Boards:=FindDocs(Db,'boards',DocField('type')+'=''board'' AND '+DocField('archived')+'=0 AND '+
+    DocField('autoArchiveInactiveDays')+'>=1',DocField('_id'));
+  try
+    for I:=0 to Boards.Count-1 do
+    begin
+      Board:=Boards.Objects[I];
+      Setting:=Board.Find('autoArchiveInactiveDays');
+      if (Setting=nil) or (Setting.JSONType<>jtNumber) then Continue;
+      Days:=Setting.AsFloat;
+      if IsNan(Days) or (Days<1) or (Days>3650) or (Frac(Days)<>0) then Continue;
+      A:=Default(TActivity);
+      A.BoardId:=Str(Board,'_id');
+      A.UserId:=BoardActor(Db,A.BoardId);
+      if (A.UserId='') or not BoardCanWrite(Db,A.UserId,A.BoardId) then Continue;
+      Cutoff:=Q(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Utc-Days));
+      Eligibility:=' AND COALESCE(type,'''')<>''template-card'' AND julianday(dateLastActivity)<julianday('+Cutoff+')';
+      Cards:=Db.Query('SELECT id FROM cards WHERE boardId='+Q(A.BoardId)+
+        ' AND archived=0 AND deletedAt IS NULL'+Eligibility+' ORDER BY dateLastActivity,id LIMIT 200;');
+      for J:=0 to High(Cards) do
+      begin
+        A.CardId:=Cards[J][0];
+        RuleArchiveCard(Db,A,True,Eligibility);
+      end;
+    end;
+  finally Boards.Free;end;
+end;
+
 procedure RunScheduledRules(const T: TWLTenant; Local, Utc: TDateTime);
 var Triggers, Rules: TJSONArray; Trig, Rule, Act, Fields: TJSONObject; i, j, k, c: Integer; Slot, Kind, At, Stamp, Sql: string;
   Cards, Ids: TStringArray; A: TActivity; NowMs: Int64; V: TJSONData; Ran: Boolean;
 begin
   if (T.Db = nil) or not IsShared(T.Db) then Exit;
+  if MinuteOf(Utc)=0 then RunInactiveCardArchive(T.Db,Utc);
   Triggers := FindDocs(T.Db, 'triggers', DocField('activityType') + '=''scheduledTrigger''', DocField('_id'));
   try
     if Triggers.Count = 0 then Exit;
