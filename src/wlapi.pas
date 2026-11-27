@@ -4982,12 +4982,12 @@ begin
   SendJson(aResponse,'"'+StringToJSONString(NewBoard)+'"');
 end;
 
-procedure RecordContainerTitle(Db:TWLDb;const UserId,BoardId,Entity,Id,OldTitle,NewTitle:string);
+procedure RecordContainerText(Db:TWLDb;const UserId,BoardId,Entity,Id,Field,OldTitle,NewTitle:string);
 var Before,After:TJSONObject;
 begin
   if OldTitle=NewTitle then Exit;
-  Before:=TJSONObject.Create(['field','title','value',OldTitle]);
-  After:=TJSONObject.Create(['field','title','value',NewTitle]);
+  Before:=TJSONObject.Create(['field',Field,'value',OldTitle]);
+  After:=TJSONObject.Create(['field',Field,'value',NewTitle]);
   try
     try RecordHistoryRow(Db,UserId,BoardId,Entity,Id,'title','edited',Before,After);except end;
   finally Before.Free;After.Free;end;
@@ -5038,7 +5038,7 @@ begin
     ' AND title='+QuotedStr(Title)+') THEN 1 ELSE json(''Swimlane update failed'') END; COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit swimlane');Exit;end;
-  RecordContainerTitle(T.Db,UserId,BoardId,'swimlane',LaneId,OldTitle,Title);
+  RecordContainerText(T.Db,UserId,BoardId,'swimlane',LaneId,'title',OldTitle,Title);
   SendJson(aResponse,'{"_id":"'+StringToJSONString(LaneId)+'"}');
 end;
 
@@ -5758,7 +5758,7 @@ end;
 
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
-var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql,OldTitle,NewTitle:string;
+var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql,OldTitle,NewTitle,OldColor,NewColor:string;
   Body,Reply:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
   Flag,i:Integer;Limit:Int64;Wide:UnicodeString;
   procedure SetColumn(const Column,Literal:string);
@@ -5772,9 +5772,9 @@ begin
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
   Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
-  Rows:=T.Db.Query('SELECT title FROM lists WHERE '+Scope+';');
+  Rows:=T.Db.Query('SELECT title,COALESCE(color,'''') FROM lists WHERE '+Scope+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
-  OldTitle:=Rows[0][0];NewTitle:=OldTitle;
+  OldTitle:=Rows[0][0];NewTitle:=OldTitle;OldColor:=Rows[0][1];NewColor:=OldColor;
   Body:=nil;Policy:=nil;Sets:='';Permission:='1';
   try
     try
@@ -5806,7 +5806,8 @@ begin
         if (ResolveColor(Value)='') or ((Value[1]='#') and (Length(Value)<>7)) or
           ((Value[1]<>'#') and (NormalizeHex(Value)<>'')) then
         begin SendJson(aResponse,'{"error":"Invalid list color. Use a named palette color or a #rrggbb hex value."}',400);Exit;end;
-        SetColumn('color',QuotedStr(Value));
+        NewColor:=Value;
+        SetColumn('color',QuotedStr(NewColor));
       end;
       Field:=Body.Find('starred');
       if Field<>nil then
@@ -5841,7 +5842,8 @@ begin
       ')=1 THEN 1 ELSE json(''List edit scope changed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit list');Exit;end;
-    RecordContainerTitle(T.Db,UserId,BoardId,'list',ListId,OldTitle,NewTitle);
+    RecordContainerText(T.Db,UserId,BoardId,'list',ListId,'title',OldTitle,NewTitle);
+    RecordContainerText(T.Db,UserId,BoardId,'list',ListId,'color',OldColor,NewColor);
     Reply:=TJSONObject.Create(['_id',ListId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally Policy.Free;Body.Free;end;

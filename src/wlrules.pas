@@ -2282,8 +2282,8 @@ end;
 // A list's lifecycle row undone (the list and the cards of its delete batch
 // back) or redone (the list and its live cards deleted again, in the same
 // batch). A card deleted on its own, in another batch, is not touched.
-function ApplyContainerTitleHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var Prior, Next, Put, Expect, Value: TJSONData; BoardId, Scope, Guard, Title, Entity, TableName: string;
+function ApplyContainerTextHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var Prior, Next, Put, Expect, Value: TJSONData; BoardId, Scope, Guard, Title, Entity, TableName, Field, ColumnValue, Literal: string;
   Current: TWLRows; Before, After: TJSONObject;
 begin
   Result := False; Error := '';
@@ -2298,30 +2298,39 @@ begin
   Prior := Row.Find('previousContent'); Next := Row.Find('newContent');
   if Direction = 'undo' then begin Put := Prior; Expect := Next; end
   else begin Put := Next; Expect := Prior; end;
-  if not (Put is TJSONObject) or (Str(TJSONObject(Put), 'field') <> 'title') then Exit;
+  if not (Put is TJSONObject) then Exit;
+  Field := Str(TJSONObject(Put), 'field');
+  if (Field <> 'title') and (Field <> 'color') then Exit;
   Value := TJSONObject(Put).Find('value');
   if (Value = nil) or (Value.JSONType <> jtString) or (Pos(#0, Value.AsString) > 0) then Exit;
   Title := Value.AsString;
   Scope := 'id=' + Q(Str(Row, 'entityId')) + ' AND boardId=' + Q(BoardId);
   if Entity = 'list' then Scope := Scope + ' AND deletedAt IS NULL';
-  Current := Db.Query('SELECT title FROM ' + TableName + ' WHERE ' + Scope + ';');
+  ColumnValue := Field;
+  Literal := Q(Title);
+  if Field = 'color' then
+  begin
+    ColumnValue := 'COALESCE(color,'''')';
+    if Title = '' then Literal := 'NULL';
+  end;
+  Current := Db.Query('SELECT ' + ColumnValue + ' FROM ' + TableName + ' WHERE ' + Scope + ';');
   if Length(Current) <> 1 then Exit;
-  Guard := Scope + ' AND title=' + Q(Current[0][0]);
+  Guard := Scope + ' AND ' + ColumnValue + '=' + Q(Current[0][0]);
   if Direction <> 'restore' then
   begin
-    if not (Expect is TJSONObject) or (Str(TJSONObject(Expect), 'field') <> 'title') then Exit;
+    if not (Expect is TJSONObject) or (Str(TJSONObject(Expect), 'field') <> Field) then Exit;
     Value := TJSONObject(Expect).Find('value');
     if (Value = nil) or (Value.JSONType <> jtString) then Exit;
     if Current[0][0] <> Value.AsString then begin Error := 'history-conflict'; Exit; end;
   end;
   Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM ' + TableName + ' WHERE ' + Guard +
-    ') THEN 1 ELSE json(''List title changed'') END; UPDATE ' + TableName + ' SET title=' + Q(Title) +
+    ') THEN 1 ELSE json(''Container field changed'') END; UPDATE ' + TableName + ' SET ' + Field + '=' + Literal +
     ',modifiedAt=' + Q(NowIso) + ' WHERE ' + Guard + '; COMMIT;');
   if not Result then begin Db.Exec('ROLLBACK;'); Exit; end;
   if Direction = 'restore' then
   begin
-    Before := TJSONObject.Create(['field', 'title', 'value', Current[0][0]]);
-    After := TJSONObject.Create(['field', 'title', 'value', Title]);
+    Before := TJSONObject.Create(['field', Field, 'value', Current[0][0]]);
+    After := TJSONObject.Create(['field', Field, 'value', Title]);
     try
       try
         RecordHistoryRow(Db, UserId, BoardId, Entity, Str(Row, 'entityId'), 'title', 'restored',
@@ -2337,7 +2346,7 @@ function ApplyListHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; con
 var ListId, BoardId, Batch, Markers, ListScope: string;
 begin
   Result := False; Error := '';
-  if Str(Row, 'group') = 'title' then Exit(ApplyContainerTitleHistory(Db, UserId, Row, Direction, Error));
+  if Str(Row, 'group') = 'title' then Exit(ApplyContainerTextHistory(Db, UserId, Row, Direction, Error));
   if Str(Row, 'group') <> 'lifecycle' then Exit;
   ListId := Str(Row, 'entityId'); BoardId := Str(Row, 'boardId'); Batch := Str(Row, 'batchId');
   if (ListId = '') or (Batch = '') then Exit;
@@ -2819,7 +2828,7 @@ begin
           begin
             if not Readable.Readable(Row) or not BoardCanWrite(T.Db, UserId, Str(Row, 'boardId')) then
               Exit(MethodError(403, 'not-authorized', 'You cannot restore this list.', Answer));
-            if ApplyContainerTitleHistory(T.Db, UserId, Row, 'restore', Error) then
+            if ApplyContainerTextHistory(T.Db, UserId, Row, 'restore', Error) then
             begin Inc(Restored); AnnounceToAll; end
             else Inc(Skipped);
             Continue;
@@ -2886,7 +2895,7 @@ begin
     Row := Rows.Objects[0];
     if Str(Row, 'entityType') = 'card' then Applied := ApplyCardHistory(T.Db, UserId, Row, Direction, Error)
     else if (Str(Row, 'entityType') = 'swimlane') and (Str(Row, 'group') = 'title') then
-      Applied := ApplyContainerTitleHistory(T.Db, UserId, Row, Direction, Error)
+      Applied := ApplyContainerTextHistory(T.Db, UserId, Row, Direction, Error)
     else if Str(Row, 'entityType') = 'list' then Applied := ApplyListHistory(T.Db, UserId, Row, Direction, Error)
     else if Str(Row, 'entityType') = 'rule' then Applied := ApplyRuleHistory(T.Db, UserId, Row, Direction, Error)
     else begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
