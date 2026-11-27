@@ -7124,8 +7124,9 @@ end;
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
-  FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
-  Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done,OldOvertime,Overtime:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor:string;
+  FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber,SpentHours:Double;NumberFormat:TFormatSettings;
+  Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done,OldOvertime,Overtime,HasSpentTime:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor,OldSpentTime,NewSpentTime:string;
+  BeforeTime,AfterTime:TJSONObject; TimeRows:TWLRows;
 begin
   HasCompletion:=False;OldDone:=False;Done:=False;OldOvertime:=False;Overtime:=False;
   HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
@@ -7144,7 +7145,7 @@ begin
       else
       begin
         Body:=TJSONObject.Create;
-        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','sort','description','title'] do
+        for FieldName in ['receivedAt','startAt','dueAt','endAt','dueComplete','stickers','locations','isOverTime','spentTime','sort','description','title'] do
           if aRequest.ContentFields.IndexOfName(FieldName)>=0 then
             Body.Add(FieldName,aRequest.ContentFields.Values[FieldName]);
       end;
@@ -7176,6 +7177,17 @@ begin
           not TryStrToFloat(Trim(Input.AsString),SortNumber,NumberFormat) or IsNan(SortNumber) or IsInfinite(SortNumber) then
         begin SendJson(aResponse,'{"error":"Invalid sort"}',400);Exit;end;
         FieldSets:=FieldSets+',sort='+FloatToStrF(SortNumber,ffGeneral,17,0,NumberFormat);
+      end;
+      Input:=Body.Find('spentTime');HasSpentTime:=Input<>nil;
+      if HasSpentTime then
+      begin
+        NumberFormat:=DefaultFormatSettings;NumberFormat.DecimalSeparator:='.';NumberFormat.ThousandSeparator:=#0;
+        if not (Input.JSONType in [jtNumber,jtString]) or
+          not TryStrToFloat(Trim(Input.AsString),SpentHours,NumberFormat) or
+          IsNan(SpentHours) or IsInfinite(SpentHours) or (SpentHours<0) then
+        begin SendJson(aResponse,'{"error":"Invalid spentTime"}',400);Exit;end;
+        NewSpentTime:=FloatToStrF(SpentHours,ffGeneral,17,0,NumberFormat);
+        FieldSets:=FieldSets+',spentTime='+NewSpentTime;
       end;
       Input:=Body.Find('isOverTime');
       HasOvertime:=Input<>nil;
@@ -7272,6 +7284,12 @@ begin
     end;
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;
+  OldSpentTime:='';
+  if HasSpentTime then
+  begin
+    TimeRows:=T.Db.Query('SELECT COALESCE(spentTime,'''') FROM cards WHERE '+Scope+';');
+    if Length(TimeRows)=1 then OldSpentTime:=TimeRows[0][0];
+  end;
   if HasCompletion then OldDone:=CardCompletionOf(T.Db,Scope);
   if HasOvertime then OldOvertime:=Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+' AND isOvertime=1;'))=1;
   if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
@@ -7287,6 +7305,19 @@ begin
   end;
   if HasTitle then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',OldTitle,NewTitle);
   if HasDescription then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'description',OldDescription,NewDescription);
+  if HasSpentTime then
+  begin
+    BeforeTime:=CardHistoryDateValue('spentTime',OldSpentTime);
+    AfterTime:=CardHistoryDateValue('spentTime',NewSpentTime);
+    try
+      if BeforeTime.AsJSON<>AfterTime.AsJSON then
+        try
+          RecordHistoryRow(T.Db,UserId,BoardId,'card',CardId,'dates','edited',BeforeTime,AfterTime);
+        except
+          // History never fails the edit it records.
+        end;
+    finally BeforeTime.Free;AfterTime.Free;end;
+  end;
   if HasOvertime and (Sets<>'') then RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'isOvertime',OldOvertime,Overtime);
   if HasCompletion then RecordCardCompletionHistory(T.Db,UserId,BoardId,CardId,OldDone,Done);
   if HasColor then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'color',OldColor,NewColor);

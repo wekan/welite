@@ -28,7 +28,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   empty titles and use the saved description, text or name. The History
   restore checkboxes distinguish supported card fields from other fields
   in the same group. REST overtime changes are recorded as Boolean
-  values and support undo, redo and restore.
+  values and support undo, redo and restore. REST spent-time corrections
+  accept nonnegative hours and support the same history operations.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

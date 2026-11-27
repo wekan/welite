@@ -23,14 +23,23 @@ uses SysUtils,DateUtils,wlchhash,wlsjson,wlferr;
 
 function CardHistoryDateField(const Field: string): Boolean;
 begin
-  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt') or (Field = 'dueComplete') or (Field = 'isOvertime');
+  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt') or (Field = 'dueComplete') or (Field = 'isOvertime') or (Field = 'spentTime');
 end;
 
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
-var At: TDateTime; Ms: Int64;
+var At: TDateTime; Ms: Int64; Number: Double; NumberFormat: TFormatSettings;
 begin
   if (Field = 'dueComplete') or (Field = 'isOvertime') then Exit(TJSONObject.Create(['field', Field, 'value', Value = '1']));
   Result := TJSONObject.Create(['field', Field]);
+  if Field = 'spentTime' then
+  begin
+    NumberFormat := DefaultFormatSettings;
+    NumberFormat.DecimalSeparator := '.';
+    NumberFormat.ThousandSeparator := #0;
+    if TryStrToFloat(Value, Number, NumberFormat) then Result.Add('value', Number)
+    else Result.Add('value', TJSONNull.Create);
+    Exit;
+  end;
   if TryStrToInt64(Value, Ms) or TryISO8601ToDate(Value, At, True) then
   begin
     if not TryStrToInt64(Value, Ms) then Ms := DateTimeToUnix(At, True) * 1000 + MilliSecondOf(At);

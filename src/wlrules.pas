@@ -2132,6 +2132,13 @@ begin
     Literal := IntToStr(Ord(V.AsBoolean));
     Exit(True);
   end;
+  if Field = 'spentTime' then
+  begin
+    if V.JSONType = jtNull then begin Literal := 'NULL'; Exit(True); end;
+    if (V.JSONType <> jtNumber) or IsNan(V.AsFloat) or IsInfinite(V.AsFloat) or (V.AsFloat < 0) then Exit;
+    Literal := CanonicalHistoryValue(V);
+    Exit(True);
+  end;
   Result := CardDateSql(V, Literal);
 end;
 
