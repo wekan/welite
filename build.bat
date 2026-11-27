@@ -98,6 +98,7 @@ exit /b
 
 :font
 copy /Y "src\fonts\unifont.ttf.gz" "%BINDIR%\unifont.gz" >nul
+copy /Y "src\fonts\unifont-upper.gz" "%BINDIR%\unifup.gz" >nul
 copy /Y "src\fonts\UNIFONT-LICENSE.txt" "%BINDIR%\unifont.txt" >nul
 exit /b
 

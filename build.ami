@@ -26,6 +26,7 @@ If NOT Exists build/bin
   MakeDir build/bin
 EndIf
 Copy src/fonts/unifont.ttf.gz $wlbin/unifont.gz
+Copy src/fonts/unifont-upper.gz $wlbin/unifup.gz
 Copy src/fonts/UNIFONT-LICENSE.txt $wlbin/unifont.txt
 If NOT Exists build/arch
   MakeDir build/arch

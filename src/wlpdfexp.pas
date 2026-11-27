@@ -3,17 +3,28 @@ unit wlpdfexp;
 
 interface
 
-uses Classes, Types, fppdf, wlcsvexp;
+uses Classes, Types, fppdf, fpparsettf, wlcsvexp;
 
 type
+  TPdfUpperRange = record
+    First, Last: Cardinal;
+    FontCode: Word;
+  end;
+
   TPdfCardWriter = class
   private
     Document: TPDFDocument;
     Page: TPDFPage;
     BodyFont, HeadingFont, WrapWidth: Integer;
     EmbeddedFont: Boolean;
-    BundledFontDir: string;
+    BundledFontDir, BodyFontPath: string;
+    UpperFont: Integer;
+    UpperFontTried: Boolean;
+    UpperRanges: array of TPdfUpperRange;
+    BodyMetrics, UpperMetrics: TTFFileInfo;
     Y: Single;
+    procedure LoadUpperFont;
+    procedure WriteEmbedded(const Original, Fallback: UnicodeString; FontSize: Integer);
     procedure RequireSpace(Height: Single);
   public
     constructor Create;
@@ -36,39 +47,89 @@ const
   EmbeddedFontWrapWidth = 44;
   MaxBundledFontSize = 16 * 1024 * 1024;
 
-function AddBundledFont(Document: TPDFDocument; out Directory: string): Integer;
-var Resource: TStream; Compressed: TGZipDecompressionStream; Font: TFileStream;
-  Buffer: array[0..16383] of Byte; Count: LongInt;
+function OpenBundledFont(const ResourceName, FileName: string): TStream;
 begin
   try
-    Resource := TResourceStream.Create(HInstance, 'WL_UNIFONT', RT_RCDATA);
+    Result := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
   except
     on EResNotFound do
-      Resource := TFileStream.Create(ExtractFilePath(ExpandFileName(ParamStr(0))) + 'unifont.gz', fmOpenRead or fmShareDenyWrite);
+      Result := TFileStream.Create(ExtractFilePath(ExpandFileName(ParamStr(0))) + FileName,
+        fmOpenRead or fmShareDenyWrite);
   end;
-  Compressed := nil;
+end;
+
+procedure ExtractBundledFont(Compressed: TStream; const Path: string);
+var Font: TFileStream; Buffer: array[0..16383] of Byte; Count: LongInt;
+begin
+  Font := TFileStream.Create(Path, fmCreate);
   try
-    Directory := NewTempDir;
-    Compressed := TGZipDecompressionStream.Create(Resource);
-    Font := TFileStream.Create(Directory + 'unifont.ttf', fmCreate);
+    repeat
+      Count := Compressed.Read(Buffer, SizeOf(Buffer));
+      if Font.Size + Count > MaxBundledFontSize then raise EReadError.Create('Bundled PDF font exceeds size limit');
+      if Count > 0 then Font.WriteBuffer(Buffer, Count);
+    until Count = 0;
+  finally Font.Free; end;
+end;
+
+procedure TPdfCardWriter.LoadUpperFont;
+var Resource: TStream; Compressed: TGZipDecompressionStream; Info: TTFFileInfo;
+  I, Count: Integer; SavedFonts: Integer; Path: string;
+  function ReadWord: Word;
+  var B: array[0..1] of Byte;
+  begin
+    Compressed.ReadBuffer(B, SizeOf(B));
+    Result := Word(B[0]) shl 8 or B[1];
+  end;
+  function ReadCardinal: Cardinal;
+  var B: array[0..3] of Byte;
+  begin
+    Compressed.ReadBuffer(B, SizeOf(B));
+    Result := Cardinal(B[0]) shl 24 or Cardinal(B[1]) shl 16 or Cardinal(B[2]) shl 8 or B[3];
+  end;
+begin
+  UpperFontTried := True;
+  Resource := nil;
+  Compressed := nil;
+  Info := nil;
+  SavedFonts := Document.Fonts.Count;
+  try
     try
-      repeat
-        Count := Compressed.Read(Buffer, SizeOf(Buffer));
-        if Font.Size + Count > MaxBundledFontSize then raise EReadError.Create('Bundled PDF font exceeds size limit');
-        if Count > 0 then Font.WriteBuffer(Buffer, Count);
-      until Count = 0;
-    finally Font.Free; end;
-    Result := Document.AddFont(Directory + 'unifont.ttf', 'Unifont');
+      Resource := OpenBundledFont('WL_UNIFONT_UPPER', 'unifup.gz');
+      Compressed := TGZipDecompressionStream.Create(Resource);
+      Count := ReadWord;
+      if (Count < 1) or (Count > 1024) then Exit;
+      SetLength(UpperRanges, Count);
+      for I := 0 to Count - 1 do
+      begin
+        UpperRanges[I].First := ReadCardinal;
+        UpperRanges[I].Last := ReadCardinal;
+        UpperRanges[I].FontCode := ReadWord;
+      end;
+      if BundledFontDir = '' then BundledFontDir := NewTempDir;
+      Path := BundledFontDir + 'unifup.ttf';
+      ExtractBundledFont(Compressed, Path);
+      BodyMetrics := TTFFileInfo.Create;
+      BodyMetrics.LoadFromFile(BodyFontPath);
+      Info := TTFFileInfo.Create;
+      Info.LoadFromFile(Path);
+      UpperFont := Document.AddFont(Path, 'UnifontUpper');
+      UpperMetrics := Info;
+      Info := nil;
+    except
+      while Document.Fonts.Count > SavedFonts do Document.Fonts.Delete(Document.Fonts.Count - 1);
+    end;
   finally
+    Info.Free;
     Compressed.Free;
     Resource.Free;
   end;
 end;
 
 constructor TPdfCardWriter.Create;
-var FontPath: string;
+var FontPath: string; Resource: TStream; Compressed: TGZipDecompressionStream;
 begin
   inherited Create;
+  UpperFont := -1;
   Document := TPDFDocument.Create(nil);
   Document.Options := [poPageOriginAtTop, poCompressImages, poUseImageTransparency];
   Document.DefaultPaperType := ptA4;
@@ -77,8 +138,19 @@ begin
   Document.StartDocument;
   Document.Sections.AddSection;
   try
-    if FontPath <> '' then BodyFont := Document.AddFont(ExpandFileName(FontPath), 'DocumentFont')
-    else BodyFont := AddBundledFont(Document, BundledFontDir);
+    if FontPath <> '' then BodyFontPath := ExpandFileName(FontPath)
+    else
+    begin
+      Resource := OpenBundledFont('WL_UNIFONT', 'unifont.gz');
+      try
+        BundledFontDir := NewTempDir;
+        BodyFontPath := BundledFontDir + 'unifont.ttf';
+        Compressed := TGZipDecompressionStream.Create(Resource);
+        try ExtractBundledFont(Compressed, BodyFontPath); finally Compressed.Free; end;
+      finally Resource.Free; end;
+    end;
+    if FontPath = '' then BodyFont := Document.AddFont(BodyFontPath, 'Unifont')
+    else BodyFont := Document.AddFont(BodyFontPath, 'DocumentFont');
     EmbeddedFont := True;
   except
     // AddFont creates a definition before it attempts to parse the file.
@@ -102,9 +174,12 @@ end;
 destructor TPdfCardWriter.Destroy;
 begin
   Document.Free;
+  BodyMetrics.Free;
+  UpperMetrics.Free;
   if BundledFontDir <> '' then
   begin
     DeleteFile(BundledFontDir + 'unifont.ttf');
+    DeleteFile(BundledFontDir + 'unifup.ttf');
     RemoveDir(BundledFontDir);
   end;
   inherited Destroy;
@@ -179,6 +254,60 @@ begin
   Result := Result + '> >> BDC' + LineEnding;
 end;
 
+procedure TPdfCardWriter.WriteEmbedded(const Original, Fallback: UnicodeString; FontSize: Integer);
+var I, K, RunFont, NextFont: Integer; CodePoint: Cardinal; Letter: WideChar;
+  Run: UnicodeString; Metrics: TTFFileInfo; X, RunWidth: Single;
+  procedure Flush;
+  begin
+    if Run = '' then Exit;
+    Page.SetFont(RunFont, FontSize);
+    Page.WriteText(X, Y + 4, UTF8Encode(Run));
+    X := X + RunWidth * FontSize * 25.4 / 72000;
+    Run := '';
+    RunWidth := 0;
+  end;
+begin
+  if not UpperFontTried then LoadUpperFont;
+  if UpperFont < 0 then
+  begin
+    Page.WriteText(Margin, Y + 4, UTF8Encode(Fallback));
+    Exit;
+  end;
+  X := Margin;
+  RunWidth := 0;
+  RunFont := BodyFont;
+  I := 1;
+  while I <= Length(Original) do
+  begin
+    Letter := Original[I];
+    NextFont := BodyFont;
+    if (I < Length(Original)) and (Ord(Letter) >= $D800) and (Ord(Letter) <= $DBFF) and
+      (Ord(Original[I + 1]) >= $DC00) and (Ord(Original[I + 1]) <= $DFFF) then
+    begin
+      CodePoint := $10000 + (Cardinal(Ord(Letter) - $D800) shl 10) + Ord(Original[I + 1]) - $DC00;
+      Inc(I);
+      Letter := '?';
+      for K := 0 to High(UpperRanges) do
+        if (CodePoint >= UpperRanges[K].First) and (CodePoint <= UpperRanges[K].Last) then
+        begin
+          Letter := WideChar(UpperRanges[K].FontCode + CodePoint - UpperRanges[K].First);
+          NextFont := UpperFont;
+          Break;
+        end;
+    end;
+    if NextFont <> RunFont then
+    begin
+      Flush;
+      RunFont := NextFont;
+    end;
+    if RunFont = UpperFont then Metrics := UpperMetrics else Metrics := BodyMetrics;
+    Run := Run + Letter;
+    RunWidth := RunWidth + Round(Metrics.GetAdvanceWidth(Metrics.GetGlyphIndex(Ord(Letter))) * 1000.0 / Max(1, Metrics.Head.UnitsPerEm));
+    Inc(I);
+  end;
+  Flush;
+end;
+
 procedure TPdfCardWriter.WriteRow(const Row: TBoardRow; Heading: Boolean);
 var Text, Chunk, Display: UnicodeString; Font, FontSize, I, Count, Offset: Integer;
   HasSupplementary: Boolean;
@@ -229,7 +358,11 @@ begin
       Display := PlainPDFGlyphs(Chunk, HasSupplementary);
       if HasSupplementary then
         Page.AddObject(TPDFFreeFormString.Create(Document, PDFActualText(Chunk)));
-      if EmbeddedFont then Page.WriteText(Margin, Y + 4, UTF8Encode(Display))
+      if EmbeddedFont then
+      begin
+        if HasSupplementary then WriteEmbedded(Chunk, Display, FontSize)
+        else Page.WriteText(Margin, Y + 4, UTF8Encode(Display));
+      end
       else Page.AddObject(TPDFFreeFormString.Create(Document,
         Format('BT %.3f %.3f Td <%s> Tj ET', [mmToPDF(Margin), Page.Paper.H - mmToPDF(Y + 4), WinAnsiHex(Display)], Fmt) + LineEnding));
       if HasSupplementary then

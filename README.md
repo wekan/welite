@@ -63,14 +63,20 @@ for disk builds. WeLite subsets the
 font to the glyphs used in the document. Set `WELITE_PDF_TTF` to override
 the bundled font with a TrueType file. Installations without the resource or the adjacent font file
 use the standard PDF Courier fonts and WinAnsi encoding when no font is
-configured. Embedded fonts currently cover the Unicode Basic Multilingual
-Plane.
+configured. Embedded builds and disk builds also include Unifont Upper for the
+supplementary Unicode characters it covers. The PDF records the original
+supplementary text in ActualText spans. PDF readers need ActualText
+support to extract it from those spans.
 
 The bundled file is GNU Unifont 15.0.05 from the
 [GNU release archive](https://mirrors.ibiblio.org/gnu/unifont/unifont-15.0.05/).
 Its [license](src/fonts/UNIFONT-LICENSE.txt) is also bundled in the executable.
-The uncompressed font's SHA-256 is
+The uncompressed main font's SHA-256 is
 `3caed31f928da7ff08935dbc5b0a612d6dd489589f8f89034a44757851a56898`.
+The Upper font's upstream TrueType SHA-256 is
+`4688ece732c07e8329d3646ece47126d131fae44e51bfd526f05924c84df65e4`.
+`releases/genpdfont.py` remaps its character codes for Free Pascal and
+packages the mapping and font in `src/fonts/unifont-upper.gz`.
 
 ## Read WeKan data folders
 

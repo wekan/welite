@@ -57,7 +57,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   with the default font. When the configured TrueType file cannot be
   loaded, PDF export uses the standard fonts. The PDF also records the
   original supplementary text with ActualText when its visible glyph
-  falls back to a question mark.
+  falls back to a question mark. Embedded and disk builds now include
+  Unifont Upper to render covered supplementary characters alongside
+  ordinary text. The PDF carries the original supplementary text in
+  ActualText spans.
 
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and

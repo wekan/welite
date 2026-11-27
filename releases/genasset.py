@@ -86,7 +86,7 @@ def main() -> int:
             return 1
         seeds.append((name, os.path.relpath(full, rc_dir).replace(os.sep, '/')))
 
-    fonts = {'WL_UNIFONT': 'unifont.ttf.gz', 'WL_UNIFONT_LICENSE': 'UNIFONT-LICENSE.txt'}
+    fonts = {'WL_UNIFONT': 'unifont.ttf.gz', 'WL_UNIFONT_UPPER': 'unifont-upper.gz', 'WL_UNIFONT_LICENSE': 'UNIFONT-LICENSE.txt'}
 
     # resource script: numeric id -> file path (relative to where fpcres runs, i.e. rc_dir)
     with open(out_rc, "w", encoding="utf-8") as f:
