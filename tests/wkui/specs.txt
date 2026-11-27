@@ -476,3 +476,4 @@ card-add-fields.e2e.js
 export-access.e2e.js: assigned-only private member cannot read unfiltered calendar.ics
 public-csv-export-fields.e2e.js
 export-access.e2e.js: assigned-only private member cannot read unfiltered export/csv
+export-access.e2e.js: assigned-only private member cannot read unfiltered exportZip

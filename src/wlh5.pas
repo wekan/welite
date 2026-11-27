@@ -2731,7 +2731,8 @@ begin
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
-    '/calendar.ics">iCalendar (.ics)</a></li></ul></div></template>';
+    '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
+    '/exportZip">WeKan ZIP</a></li></ul></div></template>';
 end;
 
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;

@@ -65,6 +65,7 @@ procedure BrowserIntegrations(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
+procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
@@ -403,7 +404,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp;
+uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,zipper;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -2843,10 +2844,11 @@ begin BoardExport(aRequest,aResponse,False);end;
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 begin BoardExport(aRequest,aResponse,True);end;
 
-procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Separator: string; Board: TWLRows; Session: TWLSession;
-  Payload: TJSONObject; Output: TMemoryStream;
+function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
+  out BoardId, UserId: string): Boolean;
+var Board: TWLRows; Session: TWLSession;
 begin
+  Result := False;
   if not ApiTenant(aRequest, aResponse, T) then Exit;
   if SharedSettingOn(T.Db, 'disableAllExport') or SharedSettingOn(T.Db, 'anonymizeExportUsers') then
   begin SendError(aResponse, 403, 'Board export restricted by instance settings'); Exit; end;
@@ -2868,6 +2870,13 @@ begin
     if not BoardHasMember(T.Db, UserId, BoardId) or AssignedOnlyMember(T.Db, UserId, BoardId) then
     begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
   end;
+  Result := True;
+end;
+
+procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Separator: string; Payload: TJSONObject; Output: TMemoryStream;
+begin
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
@@ -2897,6 +2906,87 @@ begin
     aResponse.ContentStream := Output;
     try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
   finally Output.Free; Payload.Free; end;
+end;
+
+procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Key, Id, Name, Stem, Extension, Candidate, Path: string;
+  Payload, Attachment: TJSONObject; Attachments: TJSONData; Metadata: TWLRows;
+  Output: TMemoryStream; Document: TStringStream; Archive: TZipper; Used: TStringList;
+  I, N, Dot: Integer; C: Char;
+  function SafeName(const Value: string): string;
+  var Ch: Char;
+  begin
+    Result := '';
+    for Ch in Value do
+    begin
+      if (Ch < ' ') or (Ch in ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127]) then Result := Result + '-'
+      else Result := Result + Ch;
+    end;
+    Result := Trim(Result);
+    while (Result <> '') and (Result[Length(Result)] = '.') do Delete(Result, Length(Result), 1);
+    if Result = '' then Result := 'download';
+  end;
+begin
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
+  for Key in ['swimlaneId','listId','cardId','checklistId','fields'] do
+    if aRequest.QueryFields.IndexOfName(Key) >= 0 then
+    begin SendError(aResponse, 400, 'Scoped ZIP export is unavailable'); Exit; end;
+  try
+    Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
+  except SendError(aResponse, 500, 'Could not export board'); Exit; end;
+  if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
+  Archive := TZipper.Create;
+  Output := TMemoryStream.Create;
+  Document := TStringStream.Create(Payload.AsJSON + #10);
+  Used := TStringList.Create;
+  try
+    Used.CaseSensitive := False;
+    Archive.Entries.AddFileEntry(Document, 'wekan.json');
+    Attachments := Payload.Find('attachments');
+    if (aRequest.QueryFields.Values['attachments'] <> 'false') and (Attachments is TJSONArray) then
+      for I := 0 to Attachments.Count - 1 do
+      begin
+        Attachment := TJSONArray(Attachments).Objects[I];
+        Id := Attachment.Get('_id', '');
+        if Id = '' then Continue;
+        Metadata := T.Db.Query('SELECT 1 FROM attachments a JOIN cards c ON c.id=a.cardId AND c.boardId=a.boardId ' +
+          'WHERE a.id=' + QuotedStr(Id) + ' AND a.boardId=' + QuotedStr(BoardId) +
+          ' AND a.cardId=' + QuotedStr(Attachment.Get('cardId', '')) +
+          ' AND c.deletedAt IS NULL AND COALESCE(a.storageBackend,''filesystem'')=''filesystem'';');
+        if Length(Metadata) <> 1 then Continue;
+        Path := StoreFilePath(T.FilesDir, 'attachme', Id);
+        if not FileExists(Path) then Continue;
+        Name := SafeName(Attachment.Get('name', ''));
+        Dot := RPos('.', Name);
+        if Dot > 1 then
+        begin Stem := Copy(Name, 1, Dot - 1); Extension := Copy(Name, Dot, MaxInt); end
+        else begin Stem := Name; Extension := ''; end;
+        Candidate := Name;
+        N := 0;
+        while Used.IndexOf(Candidate) >= 0 do
+        begin Inc(N); Candidate := Stem + '-' + IntToStr(N) + Extension; end;
+        Used.Add(Candidate);
+        Archive.Entries.AddFileEntry(Path, 'attachments/' + Candidate);
+      end;
+    try
+      Archive.SaveToStream(Output);
+    except SendError(aResponse, 500, 'Could not export board'); Exit; end;
+    Name := '';
+    for C in Payload.Get('title', '') do
+      if C in ['A'..'Z','a'..'z','0'..'9','_','-'] then Name := Name + C
+      else if (Name <> '') and (Name[Length(Name)] <> '-') then Name := Name + '-';
+    Name := Copy(Name, 1, 80);
+    if Name = '' then Name := 'board';
+    aResponse.Code := 200;
+    aResponse.ContentType := 'application/zip';
+    aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Name + '.zip"');
+    aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
+    aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
+    Output.Position := 0;
+    aResponse.ContentLength := Output.Size;
+    aResponse.ContentStream := Output;
+    try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
+  finally Used.Free; Archive.Free; Document.Free; Output.Free; Payload.Free; end;
 end;
 
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
