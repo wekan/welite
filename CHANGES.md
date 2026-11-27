@@ -67,7 +67,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   The board import API also accepts the ZIP directly and restores its
   attachment files, including distinct files that share a display name.
   Import board in the HTML5 header uploads the archive and opens the
-  newly created board.
+  newly created board. The ZIP API can also append a board archive to an
+  existing board, retaining the destination settings and assigning new
+  card numbers. It does not import source board automation into the
+  destination.
 
 - The board Export menu downloads comma- or semicolon-separated CSV, TSV
   and iCalendar. CSV and TSV honor the selected column groups on public

@@ -50,7 +50,9 @@ In the HTML5 header, choose **Import board** and select the WeKan ZIP.
 For API imports, send the archive as the request body to `POST /api/boards/import` with
 `Content-Type: application/zip` and the usual API credentials. The import
 creates a new board and returns its ID in `_id`. A metadata-only archive
-restores the board without its attachment files.
+restores the board without its attachment files. To append to an existing
+board instead, send the ZIP to `POST /api/import/zip?boardId=<id>` with
+credentials for a member who may edit that board.
 
 ## PDF export fonts
 

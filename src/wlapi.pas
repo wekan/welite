@@ -3768,9 +3768,9 @@ end;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId:string;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,NumberSql,SortSql:string;
   Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
-  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip:Boolean; Session:TWLSession;
+  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
   begin
@@ -4336,6 +4336,22 @@ begin
     (aRequest.Authorization = '') and (aRequest.QueryFields.Values['authToken'] = '') and
     (aRequest.QueryFields.Values['token'] = '') and Html5User(T.Db, aRequest, Session) then Actor := Session.UserId
   else if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  ZipRoute := aRequest.PathInfo = '/api/import/zip';
+  TargetBoard := '';
+  if ZipRoute then
+  begin
+    if not IsZip then begin SendError(aResponse, 400, 'Expected a board ZIP'); Exit; end;
+    if aRequest.QueryFields.Values['newBoard'] <> '1' then
+    begin
+      TargetBoard := DownloadScopeId(aRequest, 'boardId');
+      if TargetBoard = '' then begin SendError(aResponse, 400, 'Missing destination board'); Exit; end;
+      for Name in ['swimlaneId','listId','cardId','checklistId'] do
+        if aRequest.QueryFields.Values[Name] <> '' then
+        begin SendError(aResponse, 400, 'Import placement is unavailable'); Exit; end;
+      if not BoardCanWrite(T.Db, Actor, TargetBoard) then
+      begin SendError(aResponse, 403, 'Board import is restricted'); Exit; end;
+    end;
+  end;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
   MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedListLanes:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
@@ -4352,6 +4368,20 @@ begin
       if (Name<>'') and (Name<>'wekan-board-1.0.0') then raise EConvertError.Create('Invalid board export format');
       Title:=Text(Input,'title');
       if Trim(Title)='' then raise EConvertError.Create('Missing board title');
+      if TargetBoard <> '' then
+      begin
+        Input.Delete('rules');
+        Input.Delete('triggers');
+        Input.Delete('actions');
+      end;
+      if ZipRoute then
+      begin
+        if Input.Find('cards') = nil then Input.Add('cards', TJSONArray.Create);
+        if Input.Find('subtaskItems') = nil then Input.Add('subtaskItems', TJSONArray.Create);
+        for Name in ['activities','attachments','comments','checklists','checklistItems','customFields','lists','swimlanes'] do
+          if Input.Find(Name) = nil then Input.Add(Name, TJSONArray.Create);
+        FilterBoardExportFields(Input, aRequest.QueryFields.Values['fields']);
+      end;
       MergeSubtasks;
       for I:=0 to High(Maps) do
       begin
@@ -4367,23 +4397,49 @@ begin
           Maps[I].Add(Name,NewId);
         end;
       end;
-      AllocateCardNumbers;
+      if TargetBoard = '' then AllocateCardNumbers;
       IndexCardCreations;
-      BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
-      Permission:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
-        ' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+AdminOnly+'))';
+      if TargetBoard = '' then
+      begin
+        BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
+        Permission:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Actor)+
+          ' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+AdminOnly+'))';
+      end
+      else
+      begin
+        RegistryGuard := '1';
+        Policy := TFieldPolicy.Create(T.Db, Actor, TargetBoard, '');
+        try Permission := Policy.ScopeBoardExpression(True); finally Policy.Free; end;
+      end;
       ReadImportPolicy;
       Rows:=T.Db.Query('SELECT '+Permission+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
       begin SendError(aResponse,403,'Board import is restricted');Exit;end;
       ReadMemberMapping;
-      BoardId:=NewId;Board:=QuotedStr(BoardId);Stamp:=QuotedStr(NowIso);
+      Stamp:=QuotedStr(NowIso);
+      Sql := '';
+      if TargetBoard = '' then
+      begin
+        BoardId:=NewId;Board:=QuotedStr(BoardId);
       Name:=Text(Input,'color','belize');if Name='' then Name:='belize';
       Sql:='INSERT INTO boards(id,title,slug,description,permission,color,createdAt,modifiedAt) VALUES('+
         Board+','+QuotedStr(Title)+','+QuotedStr(Slugify(Title))+','+QuotedStr(Text(Input,'description'))+
         ',''private'','+QuotedStr(Name)+','+Stamp+','+Stamp+'); '+
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
       ImportInactiveMembers;
+      end
+      else
+      begin
+        BoardId := TargetBoard;
+        Board := QuotedStr(BoardId);
+        if (Arrays[10] <> nil) and (Arrays[10].Count > 0) and not BoardCanAdmin(T.Db, Actor, BoardId) then
+        begin SendError(aResponse,403,'Importing custom field definitions requires board administration');Exit;end;
+        if (Arrays[10] <> nil) and (Arrays[10].Count > 0) then
+        begin
+          Policy := TFieldPolicy.Create(T.Db, Actor, BoardId, '');
+          try Guard := Guard + ' AND ' + Policy.ScopeAdminExpression(True); finally Policy.Free; end;
+        end;
+      end;
       ImportDefinitions;
       ImportLabels;
       DefaultLane:='';DefaultList:='';
@@ -4391,9 +4447,21 @@ begin
       begin
         Row:=Arrays[0].Objects[J];LaneId:=Mapped(0,Text(Row,'_id'),True);
         if DefaultLane='' then DefaultLane:=LaneId;
+        SortSql := SortValue(Row);
+        if TargetBoard <> '' then
+          SortSql := '(SELECT COALESCE(MAX(sort),-1)+1 FROM swimlanes WHERE boardId='+Board+')';
         Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt,color,archived) VALUES('+QuotedStr(LaneId)+
-          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortValue(Row)+','+Stamp+','+
+          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortSql+','+Stamp+','+
           ImportedColor(Row)+','+BooleanValue(Row,'archived')+'); ';
+      end;
+      if (DefaultLane='') and (TargetBoard<>'') then
+      begin
+        Rows:=T.Db.Query('SELECT id FROM swimlanes WHERE boardId='+Board+' AND archived=0 ORDER BY sort,id LIMIT 1;');
+        if Length(Rows)=1 then
+        begin
+          DefaultLane:=Rows[0][0];
+          Guard:=Guard+' AND EXISTS(SELECT 1 FROM swimlanes WHERE boardId='+Board+' AND archived=0 AND id='+QuotedStr(DefaultLane)+')';
+        end;
       end;
       if DefaultLane='' then
       begin
@@ -4407,9 +4475,12 @@ begin
         LaneId:=Mapped(0,Text(Row,'swimlaneId'));
         if DefaultList='' then DefaultList:=ListId;
         ImportedListLanes.Add(ListId,LaneId);
+        SortSql := SortValue(Row);
+        if TargetBoard <> '' then
+          SortSql := '(SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId='+Board+')';
         Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived,collapsed) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
-          QuotedStr(Text(Row,'title'))+','+SortValue(Row)+','+Stamp+','+ImportedColor(Row)+','+
+          QuotedStr(Text(Row,'title'))+','+SortSql+','+Stamp+','+ImportedColor(Row)+','+
           ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+ImportedCollapse(Row)+'); ';
       end;
       if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
@@ -4425,12 +4496,14 @@ begin
         CardPlacement(Row,ListId,LaneId);
         Name:=Mapped(2,Text(Row,'parentId'));
         if Name=CardId then Name:='';
+        if TargetBoard = '' then NumberSql := IntToStr(CardNumbers[J])
+        else NumberSql := '(SELECT COALESCE(MAX(cardNumber),0)+1 FROM cards WHERE boardId='+Board+')';
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
           'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived,color,dueComplete) VALUES('+
           QuotedStr(CardId)+','+Board+','+
           QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
           Optional(Name)+','+QuotedStr(Text(Row,'title'))+','+
-          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+IntToStr(CardNumbers[J])+
+          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+NumberSql+
           ','+CardCreated+','+Stamp+','+Stamp+','+
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+
@@ -4455,6 +4528,15 @@ begin
       on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not import board');Exit;end;
     end;
     Reply:=TJSONObject.Create(['_id',BoardId]);
+    if ZipRoute then
+    begin
+      Reply.Add('ok', True);
+      Reply.Add('boardId', BoardId);
+      Row := TJSONObject.Create;
+      Reply.Add('counts', Row);
+      for I in [0,1,2,6,7,8,9] do
+        if Arrays[I] <> nil then Row.Add(Collections[I], Arrays[I].Count);
+    end;
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally
     if not Committed then for I:=0 to Files.Count-1 do DeleteFile(Files[I]);
