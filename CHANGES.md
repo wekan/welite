@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Add and open subtasks from the card's Subtasks section. The title editor
+  follows the member's Submit on Enter setting in both modes.
+
 - Run 28 more of WeKan's Chromium tests from Weddy's list. Coverage
   includes board membership and rendering, card voting and watching,
   Rules workflows and Wrike import and export. The list also now checks

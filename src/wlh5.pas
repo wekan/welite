@@ -3532,6 +3532,34 @@ begin
       '</span></a><button class="primary wide js-board-announcement-save" type="submit">' + E(Words.Text('save', 'Save')) + '</button></form></div></template>';
 end;
 
+function SubtasksSection(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string;
+  Writable: Boolean): string;
+var Rows: TWLRows; Row: TWLRow; AddTitle: string;
+begin
+  Result := '<div class="card-details-item card-details-subtasks"><h3 class="card-details-item-title">' +
+    E(Words.Text('subtasks', 'Subtasks')) + '</h3><div class="card-subtasks-items">';
+  Rows := Db.Query('SELECT c.id,c.title,c.boardId,b.slug FROM cards c JOIN boards b ON b.id=c.boardId WHERE c.parentId=' +
+    QuotedStr(CardId) + ' AND c.archived=0 AND c.deletedAt IS NULL AND b.archived=0 ORDER BY c.subtaskSort,c.sort,c.id;');
+  for Row in Rows do
+    if BoardCanRead(Db, UserId, Row[2]) or
+       (AssignedOnlyMember(Db, UserId, Row[2]) and CardAssignedTo(Db, UserId, Row[2], Row[0])) then
+      Result := Result + '<div class="js-subtasks subtask"><a href="' + HtmlAttr(CardRoute(Row[2], Row[3], Row[0])) +
+        '" up-follow up-target=".board-wrapper">' + E(Row[1]) + '</a></div>';
+  Result := Result + '</div>';
+  if Writable then
+  begin
+    AddTitle := HtmlAttr(Words.Text('add-subtask', 'Add Subtask'));
+    Result := Result + '<a class="js-open-inlined-form" href="#" data-opens="add-subtask" title="' + AddTitle +
+      '" aria-label="' + AddTitle + '">+</a><form class="js-add-subtask js-inlined-form is-hidden" method="post" action="/b/' +
+      HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/subtasks" up-submit up-target=".board-wrapper">' +
+      '<template class="js-inlined-form-body"><textarea class="js-add-subtask-item" name="title" rows="1" dir="auto" aria-label="' +
+      AddTitle + '" required></textarea><button class="primary confirm" type="submit">' + E(Words.Text('save', 'Save')) +
+      '</button><a class="js-close-inlined-form" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
+      '">&times;</a></template></form>';
+  end;
+  Result := Result + '</div>';
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
@@ -3839,6 +3867,8 @@ begin
     PutSection(Sections, 'poker', PokerSection(Db, Words, S.UserId, BoardId, CardId));
     PutSection(Sections, 'customFields', CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable));
     PutSection(Sections, 'attachments', AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId)));
+    if BoardAllows(Db, BoardId, 'allowsSubtasks') then
+      PutSection(Sections, 'subtasks', SubtasksSection(Db, Words, S.UserId, BoardId, CardId, Writable));
     PutSection(Sections, 'checklists', ChecklistsSection(Db, Words, BoardId, CardId, Writable, PlainLinks, PlainSource));
     PutSection(Sections, 'comments', CommentsSection(Db, Words, BoardId, CardId,
       (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId), PlainLinks, PlainSource));
@@ -6755,6 +6785,7 @@ begin
   else if (n = 5) and (P[2] = 'members') then Action := 'remove-member'
   else if n = 3 then Action := 'add-card'
   else if (n = 5) and (P[4] = 'title') then Action := 'rename-card'
+  else if (n = 5) and (P[4] = 'subtasks') then Action := 'add-subtask'
   else if (n = 5) and (P[4] = 'checklists') then Action := 'add-checklist'
   else if (n = 5) and (P[4] = 'comments') then Action := 'add-comment'
   else if (n = 5) and (P[4] = 'people') then Action := 'set-person'
@@ -6793,6 +6824,8 @@ begin
     Code := CreateViewCards(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
       Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'],
       Request.ContentFields.Values['titleMode'] = 'separate', ProfileFlag(T.Db, S.UserId, 'titleBracketLabel'), NewId, Error)
+  else if Action = 'add-subtask' then
+    Code := CreateViewSubtask(T, S.UserId, BoardId, CardId, Title, Error)
   else if Action = 'rename-card' then
     Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
   else if Action = 'set-person' then

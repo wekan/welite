@@ -95,6 +95,7 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // sends nothing; Error says why not.
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
+function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;out Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
 // A card's new title from a view (the HTML5 view's title editor), checked as
@@ -5072,6 +5073,54 @@ begin
     Relations+InitialFields+' COMMIT;') then
   begin T.Db.Exec('ROLLBACK;'); SendError(aResponse,500,'Could not create card'); Exit; end;
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
+end;
+
+function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;out Error:string):Integer;
+var Rows:TWLRows; Target,ListId,Lane,Id,ParentScope,Landing,Guard,Sort,Sql,Fields:string; Policy:TFieldPolicy;
+begin
+  Error:='Invalid subtask';
+  if (Trim(Title)='') or (Pos(#0,BoardId+ParentId+Title)>0) then Exit(400);
+  if not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='Board access forbidden';Exit(403);end;
+  if not BoardAllows(T.Db,BoardId,'allowsSubtasks') then begin Error:='Subtasks disabled';Exit(403);end;
+  ParentScope:='c.id='+QuotedStr(ParentId)+' AND c.boardId='+QuotedStr(BoardId)+' AND c.archived=0 AND c.deletedAt IS NULL';
+  Rows:=T.Db.Query('SELECT c.listId,c.swimlaneId,COALESCE(NULLIF(b.subtasksDefaultBoardId,''''),b.id),'+
+    'COALESCE(b.subtasksDefaultListId,''''),CASE WHEN json_valid(b.settings_json) THEN '+
+    'COALESCE(json_extract(b.settings_json,''$.subtasksDefaultSwimlaneId''),'''') ELSE '''' END '+
+    'FROM cards c JOIN boards b ON b.id=c.boardId WHERE '+ParentScope+';');
+  if Length(Rows)<>1 then begin Error:='Card not found';Exit(404);end;
+  Target:=Rows[0][2];ListId:=Rows[0][3];Lane:=Rows[0][4];
+  if not BoardCanWrite(T.Db,UserId,Target) then begin Error:='Board access forbidden';Exit(403);end;
+  if (ListId='') and (Target=BoardId) then
+  begin
+    ListId:=Rows[0][0];
+    if Lane='' then Lane:=Rows[0][1];
+  end;
+  Landing:='l.boardId='+QuotedStr(Target)+' AND l.archived=0 AND l.deletedAt IS NULL AND sw.archived=0 '+
+    'AND (l.swimlaneId='''' OR l.swimlaneId=sw.id)';
+  if ListId<>'' then Landing:=Landing+' AND l.id='+QuotedStr(ListId);
+  if Lane<>'' then Landing:=Landing+' AND sw.id='+QuotedStr(Lane);
+  Rows:=T.Db.Query('SELECT l.id,sw.id FROM lists l JOIN swimlanes sw ON sw.boardId=l.boardId WHERE '+
+    Landing+' ORDER BY l.sort,l.id,sw.sort,sw.id LIMIT 1;');
+  if Length(Rows)<>1 then begin Error:='Invalid subtask destination';Exit(400);end;
+  ListId:=Rows[0][0];Lane:=Rows[0][1];Id:=NewId;
+  Guard:='EXISTS(SELECT 1 FROM cards c WHERE '+ParentScope+') AND EXISTS(SELECT 1 FROM lists l '+
+    'JOIN swimlanes sw ON sw.boardId=l.boardId WHERE '+Landing+' AND l.id='+QuotedStr(ListId)+' AND sw.id='+QuotedStr(Lane)+')';
+  Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
+  try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  if Target<>BoardId then
+  begin
+    Policy:=TFieldPolicy.Create(T.Db,UserId,Target,'');
+    try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  end;
+  Sort:='(SELECT coalesce(max(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(Target)+' AND listId='+QuotedStr(ListId)+
+    ' AND swimlaneId='+QuotedStr(Lane)+' AND deletedAt IS NULL)';
+  try Fields:=InitializeCardFields(T.Db,Target,Id);
+  except Error:='Could not initialize custom fields';Exit(500);end;
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Subtask scope changed'') END; '+
+    CardCreateSql(Target,ListId,Lane,Id,UserId,Trim(Title),'',QuotedStr(ParentId),Sort)+Fields+' COMMIT;';
+  if not T.Db.Exec(Sql) then
+  begin T.Db.Exec('ROLLBACK;');Error:='Could not create subtask';Exit(500);end;
+  Error:='';Result:=200;
 end;
 
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
