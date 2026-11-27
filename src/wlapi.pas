@@ -7776,7 +7776,41 @@ begin
   finally fs.Free; end;
 end;
 
-// Match WeKan's bounded text indexing for common UTF-8 text formats.
+function DecodeAttachmentUtf16(const Bytes:string;BigEndian,Truncated:Boolean):string;
+var Text:UnicodeString; i,Count:Integer; UnitValue:Word; NeedsLow:Boolean;
+begin
+  Result:='';
+  if Odd(Length(Bytes)) and not Truncated then Exit;
+  SetLength(Text,(Length(Bytes)-2) div 2);
+  Count:=0;
+  NeedsLow:=False;
+  i:=3;
+  while i<Length(Bytes) do
+  begin
+    if BigEndian then UnitValue:=(Ord(Bytes[i]) shl 8) or Ord(Bytes[i+1])
+    else UnitValue:=Ord(Bytes[i]) or (Ord(Bytes[i+1]) shl 8);
+    if UnitValue=0 then Exit;
+    if NeedsLow then
+    begin
+      if (UnitValue<$DC00) or (UnitValue>$DFFF) then Exit;
+      NeedsLow:=False;
+    end
+    else if (UnitValue>=$D800) and (UnitValue<=$DBFF) then NeedsLow:=True
+    else if (UnitValue>=$DC00) and (UnitValue<=$DFFF) then Exit;
+    Inc(Count);
+    Text[Count]:=WideChar(UnitValue);
+    Inc(i,2);
+  end;
+  if NeedsLow then
+  begin
+    if not Truncated then Exit;
+    Dec(Count);
+  end;
+  SetLength(Text,Count);
+  Result:=UTF8Encode(Text);
+end;
+
+// Match WeKan's bounded indexing for common text formats.
 function AttachmentSearchText(Content:TStream;const FileType:string):string;
 const MaxSearchBytes=2*1024*1024;
 var Mime,Raw:string; Separator,Bytes,i,n,Last,TryCount:Integer; Space:Boolean; C:Char;
@@ -7792,16 +7826,21 @@ begin
   SetLength(Raw,Bytes);
   Content.Position:=0;
   Content.ReadBuffer(Raw[1],Bytes);
-  if Pos(#0,Raw)>0 then Exit;
-  // If the bounded read cuts a multibyte character, discard that suffix.
-  for TryCount:=0 to 3 do
+  if (Copy(Raw,1,2)=#$FF#$FE) or (Copy(Raw,1,2)=#$FE#$FF) then
+    Raw:=DecodeAttachmentUtf16(Raw,Raw[1]=#$FE,Content.Size>Bytes)
+  else
   begin
-    try
-      CheckUtf8(Raw);
-      Break;
-    except
-      if (Content.Size<=Bytes) or (TryCount=3) then Exit;
-      SetLength(Raw,Length(Raw)-1);
+    if Pos(#0,Raw)>0 then Exit;
+    // If the bounded read cuts a multibyte character, discard that suffix.
+    for TryCount:=0 to 3 do
+    begin
+      try
+        CheckUtf8(Raw);
+        Break;
+      except
+        if (Content.Size<=Bytes) or (TryCount=3) then Exit;
+        SetLength(Raw,Length(Raw)-1);
+      end;
     end;
   end;
   i:=1;
