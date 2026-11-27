@@ -17,7 +17,7 @@ for encoded,decoded in [('', ''),('plain','plain'),('漢字','漢字'),('%E6%BC%
 for encoded in ['%','%0','%xz','%0G','%00','%01','%0A','%0d','%7F','%80','%C0%AF',
                 '%ED%A0%80','%F4%90%80%80','%F0%80%80%80','%E6%BC','x%FF','\n']:
     cases.append((dict(value=encoded),[False,'']))
-cases.append((dict(mode='all',value='%E6%BC%A2%252F+'),[True,True]+['漢%2F+']*len(keys)))
+cases.append((dict(mode='all',value='%E6%BC%A2%252F+'),[True,True]+['漢%2F+']*len(known)))
 cases += [(dict(mode='request',board='b%20one',card='%252F'),[True,True,'b one','%2F']),
           (dict(mode='request',board='b%20one',card='%GG'),[False,False,'b%20one','%GG'])]
 with tempfile.TemporaryDirectory(prefix='wlpath-',dir=os.environ['TMPDIR']) as directory:

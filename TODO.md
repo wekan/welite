@@ -309,8 +309,7 @@ Found on the way, not part of this goal:
 
 - **Older test failures** (2026-11-26; reproduced on ab0d9ac):
   `tests/ferroot.py` (the model check passes, the full interoperability run
-  with the corrected model is pending) and `tests/pathid.py` (its path identity cases answer differently). Two more
-  need something this sandbox lacks: `tests/embhttp.py` an `fpcres` beside
+  with the corrected model is pending). Two more need additional test tools: `tests/embhttp.py` an `fpcres` beside
   `$FPC`, `tests/argonv.py` the reference Argon2 source in `ARGON2_SRC`.
 
 Design questions for the maintainer (work goes on with the stated default):
