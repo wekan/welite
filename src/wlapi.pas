@@ -3097,15 +3097,28 @@ const Known = '|card-details|board-header|activities|labels|people|board-info|da
   'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|';
 var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
 
+  function CheckedArray(const Name: string): TJSONArray;
+  var Value: TJSONData;
+  begin
+    Value := Board.Find(Name);
+    if not (Value is TJSONArray) then
+      raise EConvertError.Create('Invalid board export array');
+    Result := TJSONArray(Value);
+  end;
+
   procedure RemoveCardFields(const PartName: string; const Keys: array of string);
   var J: Integer; FieldName, CollectionName: string; ChildRows: TJSONArray;
   begin
     if Selected.IndexOf(PartName) >= 0 then Exit;
     for CollectionName in ['cards','subtaskItems'] do
     begin
-      ChildRows := Board.Arrays[CollectionName];
+      ChildRows := CheckedArray(CollectionName);
       for J := 0 to ChildRows.Count - 1 do
+      begin
+        if not (ChildRows.Items[J] is TJSONObject) then
+          raise EConvertError.Create('Invalid board export row');
         for FieldName in Keys do ChildRows.Objects[J].Delete(FieldName);
+      end;
     end;
   end;
 
@@ -3116,15 +3129,15 @@ begin
     for Part in Fields.Split([',']) do
     begin
       Key := Trim(Part);
-      if (Key <> '') and (Pos('|' + Key + '|', Known) > 0) then Selected.Add(Key);
+      if (Key <> '') and (Pos('|', Key) = 0) and (Pos('|' + Key + '|', Known) > 0) then Selected.Add(Key);
     end;
     if Selected.Count = 0 then Exit;
     for Key in ['activities','attachments','comments','checklists'] do
-      if Selected.IndexOf(Key) < 0 then Board.Arrays[Key].Clear;
-    if Selected.IndexOf('checklists') < 0 then Board.Arrays['checklistItems'].Clear;
-    if Selected.IndexOf('custom-fields') < 0 then Board.Arrays['customFields'].Clear;
+      if Selected.IndexOf(Key) < 0 then CheckedArray(Key).Clear;
+    if Selected.IndexOf('checklists') < 0 then CheckedArray('checklistItems').Clear;
+    if Selected.IndexOf('custom-fields') < 0 then CheckedArray('customFields').Clear;
     if Selected.IndexOf('labels') < 0 then Board.Delete('labels');
-    if Selected.IndexOf('subtasks') < 0 then Board.Arrays['subtaskItems'].Clear;
+    if Selected.IndexOf('subtasks') < 0 then CheckedArray('subtaskItems').Clear;
     RemoveCardFields('description', ['description']);
     RemoveCardFields('custom-fields', ['customFields']);
     RemoveCardFields('labels', ['labelIds']);
@@ -3142,9 +3155,11 @@ begin
       RemoveCardFields('scrum', ['scrum','scrumRevision']);
       for Key in ['lists','swimlanes'] do
       begin
-        Rows := Board.Arrays[Key];
+        Rows := CheckedArray(Key);
         for I := 0 to Rows.Count - 1 do
         begin
+          if not (Rows.Items[I] is TJSONObject) then
+            raise EConvertError.Create('Invalid board export row');
           Rows.Objects[I].Delete('scrum');
           Rows.Objects[I].Delete('scrumRevision');
         end;

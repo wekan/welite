@@ -11,7 +11,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   lists, swimlanes and their related records. Both Chromium archive cases
   run in the regular WeLite and Weddy test lists. Swimlane, list, card
   and checklist menus offer scoped JSON with field selection. Filtered JSON
-  exports read attachment files only for the selected records.
+  exports read attachment files only for the selected records. JSON and
+  ZIP field selection recognizes individual keys, preserving the full
+  export when none are recognized. ZIP import returns HTTP 400 for invalid
+  collection types encountered during field filtering.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
