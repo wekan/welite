@@ -6,13 +6,13 @@ type
   TBoardCell = record Text: string; LiteralText: Boolean; end;
   TBoardRow = array of TBoardCell;
   TBoardRowWriter = procedure(const Row: TBoardRow; Card: TJSONObject) of object;
-procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean = False);
+procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean = False; CardOrder: TFPList = nil);
 procedure WriteBoardCsv(Stream: TStream; Board: TJSONObject; const Fields, Separator: string);
 
 implementation
 uses SysUtils, StrUtils;
 
-procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean);
+procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean; CardOrder: TFPList);
 const
   Captions: array[0..19] of string = ('Title','Description','List','Swimlane','Owner','Requested By','Assigned By',
     'Members','Assignee','Labels','Start','Due','End','Overtime (hours)','Spent time (hours)',
@@ -21,7 +21,7 @@ const
     'people','people','labels','dates','dates','dates','dates','dates','dates','dates','dates','voting','');
 var Selected: TStringArray; All: Boolean; Row: TBoardRow; Cells: array[0..19] of string;
   Cards, Definitions, Users, Lists, Lanes, Labels, Values: TJSONData;
-  Card, Def, Field, Setting, Vote: TJSONObject; I, J, F: Integer;
+  Card, Def, Field, Setting, Vote: TJSONObject; I, J, F, CardCount: Integer;
 
   function ObjectAt(Values: TJSONData; const Id: string): TJSONObject;
   var K: Integer; Entry: TJSONData;
@@ -185,9 +185,10 @@ begin
     end;
   Flush(nil);
   if not (Cards is TJSONArray) then Exit;
-  for I := 0 to Cards.Count - 1 do
+  if CardOrder = nil then CardCount := Cards.Count else CardCount := CardOrder.Count;
+  for I := 0 to CardCount - 1 do
   begin
-    Card := TJSONArray(Cards).Objects[I];
+    if CardOrder = nil then Card := TJSONArray(Cards).Objects[I] else Card := TJSONObject(CardOrder[I]);
     if (Card.Get('linkedId', '') <> '') or (GetText(Card, 'deletedAt', '') <> '') or
       (SkipArchived and Card.Get('archived', False)) then Continue;
     Cells[0] := Card.Get('title', '');

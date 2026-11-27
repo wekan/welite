@@ -3,7 +3,7 @@ unit wlxlsxexp;
 
 interface
 uses Classes, fpjson;
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string);
 
 implementation
 uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
@@ -20,6 +20,11 @@ type
     RowNumber: Integer;
     CardDetails, ShowPoker, ShowStickers, ShowLocations: Boolean;
     Checklists, Items, Comments, Attachments, Subtasks, UsersById, Dependencies, CardsById: TFPHashObjectList;
+    LaneRows, ListRows: TJSONArray;
+    LastLane, LastList: string;
+    ShowLaneHeadings, ShowListHeadings: Boolean;
+    procedure WriteHeading(const Text: string);
+    procedure GroupHeadings(Card: TJSONObject);
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
     destructor Destroy; override;
@@ -309,11 +314,62 @@ begin
   end;
 end;
 
+function PositionOf(Rows: TJSONArray; const Id: string): Integer;
+var I: Integer;
+begin
+  for I := 0 to Rows.Count - 1 do
+    if Rows.Objects[I].Get('_id', '') = Id then Exit(I);
+  Result := Rows.Count;
+end;
+
+function TitleOf(Rows: TJSONArray; const Id: string): string;
+var Position: Integer;
+begin
+  Position := PositionOf(Rows, Id);
+  if Position < Rows.Count then Result := Rows.Objects[Position].Get('title', '') else Result := '';
+end;
+
+procedure TSheetWriter.WriteHeading(const Text: string);
+var Row: TBoardRow;
+begin
+  SetLength(Row, 1);
+  Row[0].Text := Text;
+  Row[0].LiteralText := True;
+  TableRow(Row, True);
+end;
+
+procedure TSheetWriter.GroupHeadings(Card: TJSONObject);
+var Lane, List, Title: string;
+begin
+  Lane := Card.Get('swimlaneId', '');
+  List := Card.Get('listId', '');
+  if Lane <> LastLane then
+  begin
+    LastLane := Lane;
+    LastList := '';
+    if ShowLaneHeadings then
+    begin
+      Title := TitleOf(LaneRows, Lane);
+      if Title <> '' then WriteHeading('Swimlane: ' + Title);
+    end;
+  end;
+  if List <> LastList then
+  begin
+    LastList := List;
+    if ShowListHeadings then
+    begin
+      Title := TitleOf(ListRows, List);
+      if Title <> '' then WriteHeading('List: ' + Title);
+    end;
+  end;
+end;
+
 procedure TSheetWriter.Add(const Row: TBoardRow; Card: TJSONObject);
 var Pair: TBoardRow; I: Integer;
 begin
   if not CardDetails then begin TableRow(Row, RowNumber = 0); Exit; end;
   if Card = nil then begin Head := Copy(Row); Exit; end;
+  GroupHeadings(Card);
   SetLength(Pair, 2);
   for I := 0 to High(Row) do
   begin
@@ -325,12 +381,14 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
   I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies: Boolean;
   Users: TJSONArray; User: TJSONObject;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
+  SortedCards: TStringList;
+  CardOrder: TFPList;
   procedure IndexCards(Cards: TJSONArray);
   var J: Integer; Card: TJSONObject;
   begin
@@ -383,12 +441,36 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
   end;
 
   procedure WriteBoardTitle;
-  var Row: TBoardRow;
+  var Title: string;
   begin
-    SetLength(Row, 1);
-    Row[0].Text := Board.Get('title', '');
-    Row[0].LiteralText := True;
-    Writer.TableRow(Row, True);
+    if ListId <> '' then
+    begin
+      Title := TitleOf(Writer.ListRows, ListId);
+      if Title = '' then Title := 'List' else Title := 'List: ' + Title;
+    end
+    else if LaneId <> '' then
+    begin
+      Title := TitleOf(Writer.LaneRows, LaneId);
+      if Title = '' then Title := 'Swimlane' else Title := 'Swimlane: ' + Title;
+    end
+    else Title := Board.Get('title', '');
+    Writer.WriteHeading(Title);
+  end;
+
+  procedure OrderCards;
+  var Cards: TJSONArray; Card: TJSONObject; J, Lane, List: Integer;
+  begin
+    Cards := Board.Arrays['cards'];
+    for J := 0 to Cards.Count - 1 do
+    begin
+      Card := Cards.Objects[J];
+      Lane := PositionOf(Writer.LaneRows, Card.Get('swimlaneId', ''));
+      List := PositionOf(Writer.ListRows, Card.Get('listId', ''));
+      SortedCards.AddObject(Format('%.10d/%.10d/%.10d', [Lane, List, J]), Card);
+    end;
+    SortedCards.Sort;
+    CardOrder := TFPList.Create;
+    for J := 0 to SortedCards.Count - 1 do CardOrder.Add(SortedCards.Objects[J]);
   end;
 
   procedure WriteBoardHeader;
@@ -535,6 +617,8 @@ begin
   Zip := TZipper.Create;
   Streams := TList.Create;
   Writer := TSheetWriter.Create;
+  SortedCards := TStringList.Create;
+  CardOrder := nil;
   try
     AddXml('xl/styles.xml', '<styleSheet xmlns="' + MainNs + '">' +
       '<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>' +
@@ -552,6 +636,10 @@ begin
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
     StartSheet('Cards');
     Writer.CardDetails := CardDetails;
+    Writer.LaneRows := Board.Arrays['swimlanes'];
+    Writer.ListRows := Board.Arrays['lists'];
+    Writer.ShowLaneHeadings := not Scoped;
+    Writer.ShowListHeadings := not Scoped or ((LaneId <> '') and (ListId = ''));
     Writer.ShowPoker := WithPoker or not Known;
     Writer.ShowStickers := WithStickers or not Known;
     Writer.ShowLocations := WithLocations or not Known;
@@ -594,10 +682,11 @@ begin
         IndexCards(Board.Arrays['cards']);
         IndexCards(OtherCards);
       end;
+      if Writer.ShowLaneHeadings or Writer.ShowListHeadings then OrderCards;
       WriteBoardTitle;
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;
-    ReadBoardRows(Board, Fields, @Writer.Add, CardDetails);
+    ReadBoardRows(Board, Fields, @Writer.Add, CardDetails, CardOrder);
     EndSheet;
     if not CardDetails and not Scoped and BoardHeader then
     begin
@@ -624,6 +713,8 @@ begin
       '<Relationship Id="styles" Type="' + OfficeRel + '/styles" Target="styles.xml"/></Relationships>');
     Zip.SaveToStream(Output);
   finally
+    CardOrder.Free;
+    SortedCards.Free;
     Writer.Free;
     Zip.Free;
     for I := 0 to Streams.Count - 1 do TObject(Streams[I]).Free;

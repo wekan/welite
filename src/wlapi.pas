@@ -2972,7 +2972,12 @@ begin
       end;
     end;
     try
-      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards);
+      if (CardId <> '') or (ChecklistId <> '') then
+      begin
+        LaneId := '';
+        ListId := '';
+      end;
+      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
     aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
