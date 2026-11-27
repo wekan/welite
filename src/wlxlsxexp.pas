@@ -1,9 +1,11 @@
 unit wlxlsxexp;
-{$mode objfpc}{$H+}{$CODEPAGE UTF8}
+{$mode objfpc}{$H+}{$modeswitch nestedprocvars}{$CODEPAGE UTF8}
 
 interface
-uses Classes, fpjson;
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string);
+uses Classes, Types, fpjson;
+type
+  TAttachmentPreview = function(Attachment: TJSONObject; Output: TStream; out Size: TPoint): Boolean is nested;
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview);
 
 implementation
 uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
@@ -11,6 +13,8 @@ uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
 const
   MainNs = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   OfficeRel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  DrawingNs = 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing';
+  DrawingMainNs = 'http://schemas.openxmlformats.org/drawingml/2006/main';
   PackageRel = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
 type
@@ -23,9 +27,13 @@ type
     LaneRows, ListRows: TJSONArray;
     CurrentLane, NextLane, NextList: Integer;
     LaneScoped: Boolean;
-    PageBreaks: TStringList;
+    PageBreaks, ImageAnchors, ImageRelationships: TStringList;
+    Zip: TZipper;
+    Streams: TList;
+    Preview: TAttachmentPreview;
     HasCard: Boolean;
     ShowLaneHeadings, ShowListHeadings: Boolean;
+    procedure AddImage(Attachment: TJSONObject);
     procedure WriteHeading(const Text: string);
     procedure GroupHeadings(Card: TJSONObject);
     procedure LaneHeading(Position: Integer);
@@ -155,6 +163,8 @@ end;
 
 destructor TSheetWriter.Destroy;
 begin
+  ImageRelationships.Free;
+  ImageAnchors.Free;
   PageBreaks.Free;
   CardsById.Free;
   Dependencies.Free;
@@ -165,6 +175,36 @@ begin
   Items.Free;
   Checklists.Free;
   inherited Destroy;
+end;
+
+procedure TSheetWriter.AddImage(Attachment: TJSONObject);
+var Picture: TMemoryStream; Size: TPoint; Id, Filename: string;
+  Fmt: TFormatSettings;
+begin
+  if not Assigned(Preview) then Exit;
+  Picture := TMemoryStream.Create;
+  try
+    if not Preview(Attachment, Picture, Size) then Exit;
+    Id := IntToStr(ImageAnchors.Count + 1);
+    Filename := 'image' + Id + '.png';
+    Zip.Entries.AddFileEntry(Picture, 'xl/media/' + Filename);
+    Streams.Add(Picture);
+    Picture := nil;
+    ImageRelationships.Add('<Relationship Id="rId' + Id + '" Type="' + OfficeRel +
+      '/image" Target="../media/' + Filename + '"/>');
+    ImageAnchors.Add('<xdr:oneCellAnchor><xdr:from><xdr:col>1</xdr:col><xdr:colOff>0</xdr:colOff>' +
+      '<xdr:row>' + IntToStr(RowNumber) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>' +
+      '<xdr:ext cx="' + IntToStr(Size.X * 9525) + '" cy="' + IntToStr(Size.Y * 9525) + '"/>' +
+      '<xdr:pic><xdr:nvPicPr><xdr:cNvPr id="' + Id + '" name="Attachment ' + Id + '"/><xdr:cNvPicPr/></xdr:nvPicPr>' +
+      '<xdr:blipFill><a:blip r:embed="rId' + Id + '"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill>' +
+      '<xdr:spPr><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>');
+    Inc(RowNumber);
+    Fmt := DefaultFormatSettings;
+    Fmt.DecimalSeparator := '.';
+    Line('<row r="' + IntToStr(RowNumber) + '" ht="' + FloatToStr(Size.Y * 0.75, Fmt) + '" customHeight="1"/>');
+  finally
+    Picture.Free;
+  end;
 end;
 
 procedure TSheetWriter.DetailRows(Card: TJSONObject);
@@ -261,6 +301,7 @@ begin
         if Created <> '' then AddDetail('Uploaded at', Created);
         Author := UserName(Entry.Get('userId', ''));
         if Author <> '' then AddDetail('Uploader', Author);
+        AddImage(Entry);
       end;
   end;
   if Dependencies <> nil then
@@ -460,7 +501,7 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
   I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies: Boolean;
   Users: TJSONArray; User: TJSONObject;
@@ -504,13 +545,28 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
     Zip.Entries.AddFileEntry(Sheet, 'xl/' + Path);
     Writer.Output := Sheet;
     Writer.RowNumber := 0;
-    Writer.Line('<worksheet xmlns="' + MainNs + '">');
+    Writer.Line('<worksheet xmlns="' + MainNs + '" xmlns:r="' + OfficeRel + '">');
   end;
 
   procedure EndSheet(CardPrintLayout: Boolean = False);
   begin
     Writer.Line('</sheetData>');
-    if CardPrintLayout then Writer.PrintSetup;
+    if CardPrintLayout then
+    begin
+      Writer.PrintSetup;
+      if Writer.ImageAnchors.Count > 0 then
+      begin
+        Writer.Line('<drawing r:id="rId1"/>');
+        AddXml('xl/worksheets/_rels/sheet1.xml.rels', '<Relationships xmlns="' + PackageRel + '">' +
+          '<Relationship Id="rId1" Type="' + OfficeRel + '/drawing" Target="../drawings/drawing1.xml"/></Relationships>');
+        AddXml('xl/drawings/drawing1.xml', '<xdr:wsDr xmlns:xdr="' + DrawingNs + '" xmlns:a="' + DrawingMainNs +
+          '" xmlns:r="' + OfficeRel + '">' + Writer.ImageAnchors.Text + '</xdr:wsDr>');
+        AddXml('xl/drawings/_rels/drawing1.xml.rels', '<Relationships xmlns="' + PackageRel + '">' +
+          Writer.ImageRelationships.Text + '</Relationships>');
+        SheetTypes := SheetTypes + '<Override PartName="/xl/drawings/drawing1.xml" ' +
+          'ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>';
+      end;
+    end;
     Writer.Line('</worksheet>');
     Sheet.Position := 0;
   end;
@@ -698,6 +754,11 @@ begin
   Zip := TZipper.Create;
   Streams := TList.Create;
   Writer := TSheetWriter.Create;
+  Writer.Zip := Zip;
+  Writer.Streams := Streams;
+  Writer.Preview := Preview;
+  Writer.ImageAnchors := TStringList.Create;
+  Writer.ImageRelationships := TStringList.Create;
   SortedCards := TStringList.Create;
   CardOrder := nil;
   try
@@ -790,6 +851,7 @@ begin
     AddXml('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
       '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Default Extension="png" ContentType="image/png"/>' +
       '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
       '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
       SheetTypes + '</Types>');

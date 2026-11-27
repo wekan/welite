@@ -27,7 +27,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   their relationship type. The card layout groups cards under swimlane and
   list headings in board order, including empty swimlanes and lists. Swimlane and list exports start at that
   level, and a card scope omits the group headings. The card layout uses
-  A4 portrait printing with page breaks between card blocks.
+  A4 portrait printing with page breaks between card blocks. Local PNG,
+  JPEG, BMP and supported WebP attachments also get inline thumbnails when
+  Attachments is selected in the card layout.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

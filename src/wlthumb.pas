@@ -2,13 +2,15 @@ unit wlthumb;
 {$mode objfpc}{$H+}
 interface
 
-uses HTTPDefs;
+uses HTTPDefs, Classes, Types;
 
+function RenderAttachmentThumbnail(Output: TStream; const Path, MimeType: string;
+  PreferWebP: Boolean; out Size: TPoint; out OutputType: string): Boolean;
 function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: string): Boolean;
 
 implementation
 
-uses Classes, SysUtils, Types, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPWritePNG, Dynlibs, CTypes;
+uses SysUtils, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPWritePNG, Dynlibs, CTypes;
 
 const
   MaxInputBytes = 32 * 1024 * 1024;
@@ -148,21 +150,22 @@ begin
   if Stride * Height <= Stream.Size - SizeOf(Header) then Result := Point(Width, Height);
 end;
 
-function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: string): Boolean;
-var Input: TFileStream; Output: TMemoryStream; Source, Preview: TFPMemoryImage;
-  Reader: TFPCustomImageReader; Writer: TFPWriterPNG; Size: TPoint; W, H, X, Y, SX, SY, Offset: Integer;
-  Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor; OutputType: string;
+function RenderAttachmentThumbnail(Output: TStream; const Path, MimeType: string;
+  PreferWebP: Boolean; out Size: TPoint; out OutputType: string): Boolean;
+var Input: TFileStream; Source, Preview: TFPMemoryImage;
+  Reader: TFPCustomImageReader; Writer: TFPWriterPNG; W, H, X, Y, SX, SY, Offset: Integer;
+  Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor;
 begin
   Result := False;
   if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/pjpeg') and
     (MimeType <> 'image/webp') and (MimeType <> 'image/bmp') then Exit;
   Input := nil;
-  Output := nil;
   Source := nil;
   Preview := nil;
   Reader := nil;
   Writer := nil;
-  Codec := LoadWebP;
+  Codec := Default(TWebPCodec);
+  if PreferWebP or (MimeType = 'image/webp') then Codec := LoadWebP;
   try
     try
       Input := TFileStream.Create(Path, fmOpenRead or fmShareDenyWrite);
@@ -222,8 +225,7 @@ begin
           end;
           Preview.Colors[X, Y] := Color;
         end;
-      Output := TMemoryStream.Create;
-      if WriteWebP(Codec, Preview, Output) then OutputType := 'image/webp'
+      if PreferWebP and WriteWebP(Codec, Preview, Output) then OutputType := 'image/webp'
       else
       begin
         OutputType := 'image/png';
@@ -234,6 +236,25 @@ begin
     except
       Exit;
     end;
+    Size := Point(W, H);
+    Output.Position := 0;
+    Result := True;
+  finally
+    Writer.Free;
+    Reader.Free;
+    Preview.Free;
+    Source.Free;
+    Input.Free;
+    if Codec.Lib <> NilHandle then UnloadLibrary(Codec.Lib);
+  end;
+end;
+
+function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: string): Boolean;
+var Output: TMemoryStream; Size: TPoint; OutputType: string;
+begin
+  Output := TMemoryStream.Create;
+  try
+    if not RenderAttachmentThumbnail(Output, Path, MimeType, True, Size, OutputType) then Exit(False);
     Output.Position := 0;
     Response.ContentType := OutputType;
     Response.Code := 200;
@@ -247,12 +268,6 @@ begin
     Result := True;
   finally
     Output.Free;
-    Writer.Free;
-    Reader.Free;
-    Preview.Free;
-    Source.Free;
-    Input.Free;
-    if Codec.Lib <> NilHandle then UnloadLibrary(Codec.Lib);
   end;
 end;
 

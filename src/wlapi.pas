@@ -29,7 +29,7 @@ unit wlapi;
   Password/OTP proofs and durable attempt limits are shared with the web sign-in.
 }
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$modeswitch nestedprocvars}
 {$CODEPAGE UTF8}
 
 interface
@@ -405,7 +405,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5;
+uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -2933,6 +2933,24 @@ var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
     for C in Result do
       if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
   end;
+  function LoadPreview(Attachment: TJSONObject; Target: TStream; out Size: TPoint): Boolean;
+  var Mime, Id, OutputType: string; Metadata: TWLRows;
+  begin
+    Result := False;
+    Mime := Attachment.Get('type', '');
+    if not ((Mime = 'image/png') or (Mime = 'image/jpeg') or (Mime = 'image/pjpeg') or
+      (Mime = 'image/bmp') or (Mime = 'image/webp')) then Exit;
+    Id := Attachment.Get('_id', '');
+    if Id = '' then Exit;
+    Metadata := T.Db.Query('SELECT 1 FROM attachments a JOIN cards c ON c.id=a.cardId AND c.boardId=a.boardId ' +
+      'WHERE a.id=' + QuotedStr(Id) + ' AND a.boardId=' + QuotedStr(BoardId) +
+      ' AND a.cardId=' + QuotedStr(Attachment.Get('cardId', '')) +
+      ' AND a.type=' + QuotedStr(Mime) +
+      ' AND c.archived=0 AND c.deletedAt IS NULL AND COALESCE(a.storageBackend,''filesystem'')=''filesystem'';');
+    if Length(Metadata) <> 1 then Exit;
+    Result := RenderAttachmentThumbnail(Target, StoreFilePath(T.FilesDir, 'attachme', Id), Mime, False, Size, OutputType);
+  end;
+
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True) then Exit;
   CardId := ScopeId('cardId');
@@ -2977,7 +2995,7 @@ begin
         LaneId := '';
         ListId := '';
       end;
-      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId);
+      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
     aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
