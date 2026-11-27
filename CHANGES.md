@@ -90,7 +90,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   preserves the attachment timestamp when the file is included. JSON
   imports also accept metadata-only exports and skip attachments without
   file contents. A ZIP that names a missing attachment file is rejected
-  before the destination board is created.
+  before the destination board is created. The Attachments field group
+  also controls card cover references. ZIP import reconnects the cover
+  to the new attachment ID when the file is present.
   The ZIP API can also scope the archive to a swimlane, list, card or
   checklist and filter optional fields. It retains the selected cards'
   containers and includes file bytes only for the exported attachments.

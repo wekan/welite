@@ -203,12 +203,15 @@ def run(request,database,administrator,member,base):
     original_timestamp = '2023-03-01T01:02:03.000Z'
     with sqlite3.connect(database) as con:
         con.execute("UPDATE attachments SET createdAt=? WHERE id=?", (original_timestamp, identity))
+        con.execute("UPDATE cards SET coverId=? WHERE id='txtcard'", (identity,))
     for include_files in ('true', 'false'):
         status, _, archive = request('GET', '/api/boards/boardtxt/exportZip?' +
                                     urlencode(dict(token=administrator, fields='attachments', attachments=include_files)))
         assert status == 200, archive
         with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
-            attachment, = json.loads(bundle.read('wekan.json'))['attachments']
+            document = json.loads(bundle.read('wekan.json'))
+            attachment, = document['attachments']
+            assert next(card for card in document['cards'] if card['_id'] == 'txtcard')['coverId'] == identity
             assert attachment['createdAt'] == original_timestamp and attachment['size'] == len(data)
             assert bool(attachment['archivePath']) == (include_files == 'true')
             if attachment['archivePath']:
@@ -218,9 +221,21 @@ def run(request,database,administrator,member,base):
                                     archive, content_type='application/zip')
         assert status == 200, result
         with sqlite3.connect(database) as con:
-            attachments = con.execute("SELECT createdAt,size FROM attachments WHERE boardId=?",
-                                      (json.loads(result)['boardId'],)).fetchall()
-        assert attachments == ([(original_timestamp, len(data))] if include_files == 'true' else [])
+            imported_board = json.loads(result)['boardId']
+            attachments = con.execute("SELECT id,createdAt,size FROM attachments WHERE boardId=?",
+                                      (imported_board,)).fetchall()
+            cover, = con.execute("SELECT coverId FROM cards WHERE boardId=? AND title='Hidden until expanded'",
+                                 (imported_board,)).fetchone()
+        if include_files == 'true':
+            new_id, timestamp, size = attachments[0]
+            assert (cover, timestamp, size) == (new_id, original_timestamp, len(data))
+            assert cover != identity
+        else:
+            assert not attachments and not cover
+    status, _, without_attachments = request('GET', '/api/boards/boardtxt/export?' +
+                                             urlencode(dict(token=administrator, fields='description')))
+    assert status == 200, without_attachments
+    assert all('coverId' not in card for card in json.loads(without_attachments)['cards'])
     incomplete = io.BytesIO()
     with zipfile.ZipFile(incomplete, 'w') as bundle:
         bundle.writestr('wekan.json', json.dumps(dict(
