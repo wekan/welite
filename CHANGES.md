@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Multi-selection shows checkboxes for swimlanes, lists, cards, and checklists
+  and items in the open card. Selections remain checked when opening a card.
+
 - The selection sidebar opens a Move selection dialog with dependent destination
   fields and before/after controls. Chromium verifies that changing a parent
   field clears the previous destination below it.

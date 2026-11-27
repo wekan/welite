@@ -112,6 +112,18 @@ begin
   Result := HtmlEncode(Value);
 end;
 
+function SelectionCheckbox(Words: TWLTranslator; const Kind, Id, Title: string): string;
+var Attributes: string;
+begin
+  if Kind = 'card' then
+    Attributes := 'js-toggle-multi-selection" data-card="' + HtmlAttr(Id) + '"'
+  else
+    Attributes := 'js-structural-selection" data-kind="' + Kind + '" data-id="' + HtmlAttr(Id) + '"';
+  Result := '<button type="button" class="materialCheckBox multi-selection-checkbox is-hidden ' + Attributes +
+    ' role="checkbox" aria-checked="false" aria-label="' +
+    HtmlAttr(Words.Text('multi-selection', 'Multi-Selection') + ': ' + Title) + '"></button>';
+end;
+
 // allowIsBoardAdmin: an admin of the board's own (WeKan's Boards allow rule).
 function BoardOwnAdmin(Db: TWLDb; const UserId, BoardId: string): Boolean;
 begin
@@ -1456,6 +1468,8 @@ begin
           '" type="submit" aria-label="' + HtmlAttr(Items[k][1]) + '"></button></form>'
       else
         ItemsHtml := ItemsHtml + '<div class="check-box-container"><div class="check-box materialCheckBox' + Finished + '"></div></div>';
+      if Writable then
+        ItemsHtml := ItemsHtml + SelectionCheckbox(Words, 'item', Items[k][0], Items[k][1]);
       if CanDrag and DragHandles then
         ItemsHtml := ItemsHtml + '<span class="fa fa-arrows checklistitem-handle" title="' +
           HtmlAttr(Words.Text('move-scope', 'Move')) + '"></span>';
@@ -1478,6 +1492,8 @@ begin
       ItemsHtml := ItemsHtml + '</div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
+    if Writable then
+      Checklist := Checklist + SelectionCheckbox(Words, 'checklist', Lists[i][0], Lists[i][1]);
     if Lists[i][2] = '' then
       Checklist := Checklist + Deadline('', ChecklistUrl, 'checklist');
     if Writable then
@@ -4392,6 +4408,8 @@ begin
         '/history?swimlane=' + HtmlAttr(HTTPEncode(Lanes[i][0])) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) +
         '" aria-label="' + HtmlAttr(Words.Text('history', 'History')) + '" title="' + HtmlAttr(Words.Text('history', 'History')) +
         '"><i class="fa fa-history"></i></a>';
+    if Writable and (ViewAssignedOnly = '') then
+      Header := Header + SelectionCheckbox(Words, 'swimlane', Lanes[i][0], Lanes[i][1]);
     Header := Header + '<span class="swimlane-header-name title">' + E(Lanes[i][1]) + '</span>';
     if CanExport or Writable then
       Header := Header + '<a class="js-open-swimlane-menu" href="#" data-swimlane="' + HtmlAttr(Lanes[i][0]) +
@@ -4467,6 +4485,7 @@ begin
           HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '" aria-label="' +
           HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '"><i class="fa ' +
           IfThen(ListFolded, 'fa-caret-right', 'fa-caret-down') + '"></i></a>', '') +
+        IfThen(Writable and (ViewAssignedOnly = ''), SelectionCheckbox(Words, 'list', Lists[j][0], Lists[j][1]), '') +
         '<span class="list-header-name' + IfThen(WipExceeded, ' highlight wip-group-exceeded', '') + '">' +
         E(Lists[j][1]) + '</span>' + WipBadges + Composer + '</div>' +
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
@@ -4489,8 +4508,9 @@ begin
         Canvas := Canvas + '<div class="minicard-wrapper js-minicard" up-href="' +
           HtmlAttr(CardRoute(BoardId, B[0][2], Cards[k][0])) + '" up-follow up-clickable up-target=".board-wrapper" data-card="' +
           HtmlAttr(Cards[k][0]) + '" data-card-id="' + HtmlAttr(Cards[k][0]) + '" data-sort="' + HtmlAttr(Cards[k][2]) +
+          '">' + IfThen(Writable, SelectionCheckbox(Words, 'card', Cards[k][0], Cards[k][1]), '') +
           // Card colour, Show on Minicard (WeKan's minicard-<color>).
-          '"><div class="minicard' + IfThen(Shows.CardColor and ColorName(Cards[k][9]), ' minicard-' + Cards[k][9], '') + '">' +
+          '<div class="minicard' + IfThen(Shows.CardColor and ColorName(Cards[k][9]), ' minicard-' + Cards[k][9], '') + '">' +
           // WeKan's minicard cover: the card's cover image.
           IfThen(Cards[k][7] <> '', '<div class="minicard-cover"><img src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Cards[k][7])) +
             IfThen(RasterAttachment(Cards[k][16]), '/thumbnail', '') + '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title">' +
