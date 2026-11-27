@@ -8,7 +8,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Board admins can create, edit, enable, disable and remove WIP limit
   groups in Board Settings. Pick lists individually with the mouse or
-  keyboard, or select the lists of a swimlane together.
+  keyboard, or select the lists of a swimlane together. Member list headers
+  show the combined count and highlight when the group exceeds its limit.
+  The highlighted group is advisory, and per-list limits govern adding cards.
 
 - Multi Board Calendar shows dated cards from active board memberships in
   one read-only view, with each event prefixed by its board name. It respects

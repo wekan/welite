@@ -33,7 +33,7 @@
     var lane = form.querySelector('.js-wip-limit-group-swimlane').value;
     if (!lane) return;
     form.querySelectorAll('input[name=listIds]').forEach(function (input) {
-      input.checked = !input.dataset.swimlane || input.dataset.swimlane === lane;
+      input.checked = input.dataset.swimlane === lane;
     });
   });
   up.on('submit', '.js-wip-group-form', function (event, form) {

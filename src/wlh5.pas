@@ -3717,6 +3717,25 @@ end;
 const WipGroupsJson = 'CASE WHEN json_valid(settings_json) THEN CASE WHEN json_type(settings_json,''$.wipLimitGroups'')=''array'' ' +
   'THEN json_extract(settings_json,''$.wipLimitGroups'') ELSE ''[]'' END ELSE ''[]'' END';
 
+function BoardWipGroupCounts(Db: TWLDb; const BoardId, AssignedUser: string): TWLRows;
+var Assigned: string;
+begin
+  Assigned := '';
+  if AssignedUser <> '' then
+    Assigned := ' AND EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId=' + QuotedStr(AssignedUser) + ')';
+  Result := Db.Query('WITH configs AS (SELECT j.key,CASE WHEN j.type=''object'' THEN j.value ELSE ''{}'' END AS doc ' +
+    'FROM boards b,json_each(' + WipGroupsJson + ') j WHERE b.id=' + QuotedStr(BoardId) + '),' +
+    'members AS (SELECT DISTINCT g.key,l.id AS listId,COALESCE(json_extract(g.doc,''$.name''),'''') AS name,' +
+    'json_extract(g.doc,''$.limit'') AS lim FROM configs g JOIN json_each(CASE WHEN json_type(g.doc,''$.listIds'')=''array'' ' +
+    'THEN json_extract(g.doc,''$.listIds'') ELSE ''[]'' END) m JOIN lists l ON m.type=''text'' AND m.value=l.id ' +
+    'AND l.boardId=' + QuotedStr(BoardId) + ' AND l.archived=0 AND l.deletedAt IS NULL ' +
+    'WHERE json_type(g.doc,''$.enabled'') IS NOT ''false'' AND json_type(g.doc,''$.limit'') IN (''integer'',''real'') ' +
+    'AND json_extract(g.doc,''$.limit'')>0),' +
+    'totals AS (SELECT m.key,count(c.id) AS n FROM members m LEFT JOIN cards c ON c.listId=m.listId AND c.boardId=' +
+    QuotedStr(BoardId) + ' AND c.archived=0 AND c.deletedAt IS NULL' + Assigned + ' GROUP BY m.key) ' +
+    'SELECT m.listId,m.name,t.n,m.lim,t.n>m.lim FROM members m JOIN totals t ON t.key=m.key ORDER BY m.key;');
+end;
+
 function WipGroupsPopup(Db: TWLDb; Words: TWLTranslator; const BoardId: string): string;
 var Lists, Lanes, Rows: TWLRows; Data: TJSONData; Title: string; i: Integer;
   function GroupForm(Group: TJSONObject): string;
@@ -3889,12 +3908,26 @@ end;
 
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
-var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
+var B, Lanes, Lists, Cards, Card, Reveal, WipCounts: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   RevealId, RevealLane, RevealList, CurrentList, CurrentLane, AssignedCond: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
-  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup, WipBadges: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed, WipExceeded: Boolean;
+  function WipGroupBadges(const ListId: string; out Exceeded: Boolean): string;
+  var Row: TWLRow; Caption: string;
+  begin
+    Result := ''; Exceeded := False;
+    for Row in WipCounts do
+      if Row[0] = ListId then
+      begin
+        if Row[4] = '1' then Exceeded := True;
+        Caption := Row[1];
+        if Caption = '' then Caption := Words.Text('wip-limit-groups', 'WIP Limit Groups');
+        Result := Result + '<span class="wip-group-count' + IfThen(Row[4] = '1', ' is-exceeded', '') +
+          '" title="' + HtmlAttr(Caption) + '">' + E(Row[2] + '/' + Row[3]) + '</span>';
+      end;
+  end;
   function ViewLink(const View: string): string;
   const Keys: array[0..6] of string = ('text', 'labels', 'xlabels', 'labelMode', 'advanced', 'last', 'sort');
   var Key: string;
@@ -3978,6 +4011,8 @@ begin
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
   if not (CalendarView or CalendarMode or MultiCalendar) then
+    WipCounts := BoardWipGroupCounts(Db, BoardId, ViewAssignedOnly);
+  if not (CalendarView or CalendarMode or MultiCalendar) then
   for i := 0 to High(Lanes) do
   begin
     // swimlaneHeader.jade: the caret folds the swimlane, for this user
@@ -4026,11 +4061,13 @@ begin
     for j := 0 to High(Lists) do
     begin
       if BoardMobile and LaneHasCurrent and (Lists[j][0] <> CurrentList) then Continue;
+      WipBadges := WipGroupBadges(Lists[j][0], WipExceeded);
       if BoardMobile and not LaneHasCurrent then
       begin
         Canvas := Canvas + '<a class="mini-list js-select-list js-list mobile-view" id="js-list-' + HtmlAttr(Lists[j][0]) +
           '" href="#" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) +
-          '"><div class="list-header"><span class="list-header-name">' + E(Lists[j][1]) + '</span></div></a>';
+          '"><div class="list-header"><span class="list-header-name' + IfThen(WipExceeded, ' highlight wip-group-exceeded', '') +
+          '">' + E(Lists[j][1]) + '</span>' + WipBadges + '</div></a>';
         Continue;
       end;
       Composer := '';
@@ -4061,7 +4098,8 @@ begin
           HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '" aria-label="' +
           HtmlAttr(IfThen(ListFolded, Words.Text('uncollapse', 'Uncollapse'), Words.Text('collapse', 'Collapse'))) + '"><i class="fa ' +
           IfThen(ListFolded, 'fa-caret-right', 'fa-caret-down') + '"></i></a>', '') +
-        '<span class="list-header-name">' + E(Lists[j][1]) + '</span>' + Composer + '</div>' +
+        '<span class="list-header-name' + IfThen(WipExceeded, ' highlight wip-group-exceeded', '') + '">' +
+        E(Lists[j][1]) + '</span>' + WipBadges + Composer + '</div>' +
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
       Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
         'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE(attachments.id,''''),COALESCE(c.dueComplete,0),COALESCE(c.color,''''),' +
