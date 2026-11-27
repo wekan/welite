@@ -43,13 +43,21 @@ begin
   Document.DefaultPaperType := ptA4;
   Document.DefaultOrientation := ppoPortrait;
   FontPath := GetEnvironmentVariable('WELITE_PDF_TTF');
-  EmbeddedFont := FontPath <> '';
-  if EmbeddedFont then Document.Options := Document.Options + [poSubsetFont, poCompressFonts];
   Document.StartDocument;
   Document.Sections.AddSection;
+  if FontPath <> '' then
+  begin
+    try
+      BodyFont := Document.AddFont(ExpandFileName(FontPath), 'DocumentFont');
+      EmbeddedFont := True;
+    except
+      // AddFont creates a definition before it attempts to parse the file.
+      Document.Fonts.Clear;
+    end;
+  end;
   if EmbeddedFont then
   begin
-    BodyFont := Document.AddFont(ExpandFileName(FontPath), 'DocumentFont');
+    Document.Options := Document.Options + [poSubsetFont, poCompressFonts];
     HeadingFont := BodyFont;
     WrapWidth := EmbeddedFontWrapWidth;
   end

@@ -52,7 +52,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   path to embed the subset needed for text covered by that font. PDF line
   wrapping keeps UTF-16 surrogate pairs together, so an unsupported
   supplementary character at a wrap boundary produces one fallback glyph
-  with the default font.
+  with the default font. When the configured TrueType file cannot be
+  loaded, PDF export uses the standard fonts.
 
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and
