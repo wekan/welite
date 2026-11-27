@@ -12,6 +12,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Step through matched cards with Enter, Shift+Enter or the Previous and
   Next buttons. The sidebar shows the position, and the board scrolls to
   and highlights the selected card.
+- Open a matching card from its minicard in the search sidebar. Search
+  results are excluded from board dragging and multi-selection.
 
 ## HTML5 minicards
 

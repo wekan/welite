@@ -2692,7 +2692,7 @@ begin
     HtmlAttr(Words.Text('previous', 'Previous')) + '">&#8249;</button> <span class="js-search-step-count" aria-live="polite" data-caption="' +
     HtmlAttr(Words.Text('search-step', '%s of %s - press Enter for the next')) + '"></span> ' +
     '<button class="js-search-step" type="button" data-direction="1" aria-label="' + HtmlAttr(Words.Text('next', 'Next')) +
-    '">&#8250;</button></p><ul class="js-board-search-results sidebar-list" aria-live="polite"></ul></div>' +
+    '">&#8250;</button></p><ul class="js-board-search-results sidebar-list js-minicards" aria-live="polite"></ul></div>' +
     '<div class="sidebar-content js-board-sidebar-content">' +
     FilterView +
     // sidebar.jade: an invitation to this board, to accept or decline.

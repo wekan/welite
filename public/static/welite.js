@@ -86,13 +86,20 @@
       if (!card && (!list || !list.id)) return;
       var item = document.createElement('li');
       var link = document.createElement('a');
-      link.textContent = title.textContent;
       link.href = card ? card.getAttribute('up-href') : '#' + list.id;
       if (card) {
         cards.push(card);
+        link.className = 'minicard-wrapper js-minicard js-board-search-card';
+        var preview = document.createElement('span');
+        preview.className = 'minicard';
+        var name = document.createElement('span');
+        name.className = 'minicard-title';
+        name.textContent = title.textContent;
+        preview.append(name);
+        link.append(preview);
         link.setAttribute('up-follow', '');
         link.setAttribute('up-target', '.board-wrapper');
-      }
+      } else link.textContent = title.textContent;
       link.addEventListener('click', function () { form.closest('.board-sidebar').querySelector('.js-close-sidebar').click(); });
       item.append(link);
       results.append(item);

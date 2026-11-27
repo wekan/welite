@@ -3127,7 +3127,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     if (sb) sb.classList.add('is-open');
     var view = wrapper.querySelector('.js-multiselection-view');
     if (view) view.classList.remove('is-hidden');
-    wrapper.querySelectorAll('.js-minicard').forEach(function (c) {
+    wrapper.querySelectorAll('.js-minicard:not(.js-board-search-card)').forEach(function (c) {
       c.classList.toggle('is-selected', !!multiSelection.cards[c.dataset.card]);
     });
     wrapper.querySelectorAll('.js-toggle-multi-selection').forEach(function (b) {
@@ -3470,7 +3470,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   });
 
   // Ctrl/Cmd-click selects cards for a drag that moves many.
-  up.on('click', '.js-minicard', function (event, el) {
+  up.on('click', '.js-minicard:not(.js-board-search-card)', function (event, el) {
     if (el.getAttribute('data-dragged') === '1') {
       el.removeAttribute('data-dragged');
       event.preventDefault();
@@ -3492,7 +3492,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       // The dragged cards are under the pointer too, still inside the list they
       // came from: look past them.
       if (moving.some(function (m) { return m.contains(stack[i]); })) continue;
-      var body = stack[i].closest && stack[i].closest('.js-minicards');
+      var body = stack[i].closest && stack[i].closest('.js-minicards:not(.js-board-search-results)');
       if (!body) continue;
       var cards = Array.prototype.filter.call(body.querySelectorAll('.js-minicard'), function (c) {
         return moving.indexOf(c) === -1;
@@ -3566,7 +3566,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
 
   if (window.interact) {
     interact.maxInteractions(Infinity); // MultiDrag: one interaction per pointer
-    interact('.js-minicard').draggable({
+    interact('.js-minicard:not(.js-board-search-card)').draggable({
       inertia: false,
       autoScroll: true,
       listeners: {

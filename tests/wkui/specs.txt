@@ -3,6 +3,7 @@
 # is a spec file - all of it - or "file: test title", one test of it. Add a
 # line when its page is done; WELITE_WEKAN_SPECS=all runs them all.
 01-boards-users.e2e.js
+04-search.e2e.js: board-level search returns only cards matching the query
 04-search.e2e.js: board search reveals the card found on the board, and Enter steps on
 02-cards-open-view.e2e.js: #3576: mobile Search back returns directly to the board
 02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
