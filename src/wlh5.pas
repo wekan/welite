@@ -2207,13 +2207,24 @@ begin
   end;
 end;
 
-// ' AND ...' on cards c: the cards the filter matches; '' for no filter.
-function BoardFilterSql(const F: TBoardFilter): string;
-var Alts, Q, Has: string;
+function BoardTextMatchSql(const Text: string): string;
+var Q: string;
   function Contains(const Column: string): string;
   begin
     Result := 'instr(lower(COALESCE(' + Column + ','''')),lower(' + Q + '))>0';
   end;
+begin
+  Q := QuotedStr(Text);
+  Result := '(' + Contains('c.title') + ' OR ' + Contains('c.description') +
+    ' OR EXISTS(SELECT 1 FROM card_comments m WHERE m.cardId=c.id AND (m.boardId IS NULL OR m.boardId=c.boardId) AND ' + Contains('m.text') + ')' +
+    ' OR EXISTS(SELECT 1 FROM checklists l WHERE l.cardId=c.id AND (l.boardId IS NULL OR l.boardId=c.boardId) AND ' + Contains('l.title') + ')' +
+    ' OR EXISTS(SELECT 1 FROM checklist_items i JOIN checklists l ON l.id=i.checklistId AND l.cardId=c.id ' +
+    'WHERE i.cardId=c.id AND (l.boardId IS NULL OR l.boardId=c.boardId) AND ' + Contains('i.title') + '))';
+end;
+
+// ' AND ...' on cards c: the cards the filter matches; '' for no filter.
+function BoardFilterSql(const F: TBoardFilter): string;
+var Alts, Has: string;
 begin
   Result := '';
   Alts := '';
@@ -2236,14 +2247,7 @@ begin
     if Length(F.AdvancedIds) = 0 then Result := Result + ' AND 0'
     else Result := Result + ' AND c.id IN (' + SqlList(F.AdvancedIds) + ')';
   end;
-  if F.Text <> '' then
-  begin
-    Q := QuotedStr(F.Text);
-    Result := Result + ' AND (' + Contains('c.title') + ' OR ' + Contains('c.description') +
-      ' OR EXISTS(SELECT 1 FROM card_comments m WHERE m.cardId=c.id AND ' + Contains('m.text') + ')' +
-      ' OR EXISTS(SELECT 1 FROM checklists l WHERE l.cardId=c.id AND ' + Contains('l.title') + ')' +
-      ' OR EXISTS(SELECT 1 FROM checklist_items i WHERE i.cardId=c.id AND ' + Contains('i.title') + '))';
-  end;
+  if F.Text <> '' then Result := Result + ' AND ' + BoardTextMatchSql(F.Text);
 end;
 
 // boardHeader.jade's Filter button - on, with its reset, while a filter is -
@@ -5773,6 +5777,43 @@ begin
   Response.SendContent;
 end;
 
+procedure ServeBoardSearch(Db: TWLDb; Response: TResponse; const UserId, BoardId, Term: string);
+var Boards, Cards: TWLRows; Scope, Board, Text: string; Wide: UnicodeString;
+  Matches: TJSONArray; Card: TJSONObject; i: Integer;
+begin
+  Board := QuotedStr(BoardId);
+  Scope := '';
+  if not BoardCanRead(Db, UserId, BoardId) then
+  begin
+    if not AssignedOnlyMember(Db, UserId, BoardId) then
+    begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+    Scope := ' AND EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId=' + QuotedStr(UserId) + ')';
+  end;
+  Boards := Db.Query('SELECT slug FROM boards WHERE id=' + Board + ' AND archived=0;');
+  if Length(Boards) <> 1 then
+  begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+  Wide := UTF8Decode(Trim(Term));
+  Text := UTF8Encode(Copy(Wide, 1, MAX_FILTER_TEXT));
+  Matches := TJSONArray.Create;
+  try
+    if (Text <> '') and (Pos(#0, Text) = 0) then
+    begin
+      Cards := Db.Query('SELECT c.id,c.title FROM cards c WHERE c.boardId=' + Board +
+        ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND ' + BoardTextMatchSql(Text) +
+        ' ORDER BY c.createdAt DESC,c.id;');
+      for i := 0 to High(Cards) do
+      begin
+        Card := TJSONObject.Create;
+        Matches.Add(Card);
+        Card.Add('id', Cards[i][0]);
+        Card.Add('title', Cards[i][1]);
+        Card.Add('url', CardRoute(BoardId, Boards[0][0], Cards[i][0]));
+      end;
+    end;
+    SendJsonAnswer(Response, 200, Matches.AsJSON);
+  finally Matches.Free; end;
+end;
+
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Lines: TStringList;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
@@ -5780,6 +5821,20 @@ var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Li
 begin
   ReadBoardView(Request);
   Result := False;
+  if (Request.Method = 'GET') and (Copy(Request.PathInfo, 1, 3) = '/b/') then
+  begin
+    P := PathParts(Request.PathInfo);
+    if (Length(P) = 4) and (P[2] = 'search') and (P[3] = 'matches') and
+      (P[1] <> '') and (Pos(#0, P[1]) = 0) and ResolveTenant(Request, T) and TenantOpen(T) then
+    begin
+      Result := True;
+      S := Default(TWLSession);
+      if (Request.CookieFields.Values[LOGIN_COOKIE] <> '') and not Html5User(T.Db, Request, S) then
+        SendJsonAnswer(Response, 404, '{"error":"not found"}')
+      else ServeBoardSearch(T.Db, Response, S.UserId, P[1], Request.QueryFields.Values['q']);
+      Exit;
+    end;
+  end;
   // weddy.js's GET /b/:id/places (the move and copy pop-overs' other board),
   // before WeKan's routes take /b/:id/:slug: the board's swimlanes and lists.
   // The date pop-overs as they stand now (welite.js asks when one opens): a

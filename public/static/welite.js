@@ -8,6 +8,8 @@
   var searchTerm = '';
   var searchCardId = null;
   var searchDirection = 1;
+  var searchMatches = [];
+  var searchRequest = 0;
 
   function setBoardSearch(sidebar, open) {
     var search = sidebar.querySelector('.js-board-search');
@@ -21,6 +23,11 @@
     event.preventDefault();
     var board = button.closest('.board-wrapper');
     var sidebar = board.querySelector('.board-sidebar');
+    if (searchBoard !== board.dataset.board) {
+      searchTerm = '';
+      searchCardId = null;
+      searchMatches = [];
+    }
     searchBoard = board.dataset.board;
     setBoardSearch(sidebar, true);
     sidebar.querySelector('.js-board-search input').focus();
@@ -38,6 +45,8 @@
     searchBoard = null;
     searchTerm = '';
     searchCardId = null;
+    searchMatches = [];
+    searchRequest++;
     if (sidebar) {
       setBoardSearch(sidebar, false);
       sidebar.closest('.board-wrapper').querySelectorAll('.is-search-highlight').forEach(function (card) {
@@ -52,10 +61,28 @@
   up.on('submit', '.js-board-search .js-search-term-form', function (event, form) {
     event.preventDefault();
     var term = form.elements.searchTerm.value.trim();
-    if (term !== searchTerm) searchCardId = null;
-    searchTerm = term;
-    renderBoardSearch(form, searchDirection);
+    var direction = searchDirection;
     searchDirection = 1;
+    if (term === searchTerm) {
+      renderBoardSearch(form, direction);
+      return;
+    }
+    searchTerm = term;
+    searchCardId = null;
+    searchMatches = [];
+    var request = ++searchRequest;
+    renderBoardSearch(form);
+    if (!term) return;
+    var boardId = searchBoard;
+    fetch('/b/' + encodeURIComponent(boardId) + '/search/matches?q=' + encodeURIComponent(term))
+      .then(function (response) { return response.ok ? response.json() : []; })
+      .then(function (matches) {
+        if (request !== searchRequest || boardId !== searchBoard) return;
+        var current = document.querySelector('.js-board-search .js-search-term-form');
+        if (!current || current.closest('.board-wrapper').dataset.board !== boardId) return;
+        searchMatches = matches;
+        renderBoardSearch(current, direction);
+      }).catch(function () { /* A failed search leaves the existing board visible. */ });
   });
   up.on('click', '.js-board-search .js-search-step', function (event, button) {
     renderBoardSearch(button.closest('.js-board-search').querySelector('form'), Number(button.dataset.direction));
@@ -79,30 +106,39 @@
     counter.classList.add('is-hidden');
     board.querySelectorAll('.is-search-highlight').forEach(function (card) { card.classList.remove('is-search-highlight'); });
     if (!term) return;
-    board.querySelectorAll('.board-canvas .list-header-name, .board-canvas .minicard-title-text').forEach(function (title) {
-      if (!title.textContent.toLocaleLowerCase().includes(term)) return;
-      var list = title.closest('.list');
-      var card = title.closest('.minicard-wrapper');
-      if (!card && (!list || !list.id)) return;
+    function appendResult(title, href, isCard) {
       var item = document.createElement('li');
       var link = document.createElement('a');
-      link.href = card ? card.getAttribute('up-href') : '#' + list.id;
-      if (card) {
-        cards.push(card);
+      link.href = href;
+      if (isCard) {
         link.className = 'minicard-wrapper js-minicard js-board-search-card';
         var preview = document.createElement('span');
         preview.className = 'minicard';
         var name = document.createElement('span');
         name.className = 'minicard-title';
-        name.textContent = title.textContent;
+        name.textContent = title;
         preview.append(name);
         link.append(preview);
         link.setAttribute('up-follow', '');
         link.setAttribute('up-target', '.board-wrapper');
-      } else link.textContent = title.textContent;
+      } else link.textContent = title;
       link.addEventListener('click', function () { form.closest('.board-sidebar').querySelector('.js-close-sidebar').click(); });
       item.append(link);
       results.append(item);
+    }
+    board.querySelectorAll('.board-canvas .list-header-name').forEach(function (title) {
+      var list = title.closest('.list');
+      if (list && list.id && title.textContent.toLocaleLowerCase().includes(term)) {
+        appendResult(title.textContent, '#' + list.id, false);
+      }
+    });
+    var visible = new Map();
+    board.querySelectorAll('.board-canvas .minicard-wrapper').forEach(function (card) {
+      visible.set(card.dataset.cardId, card);
+    });
+    searchMatches.forEach(function (match) {
+      appendResult(match.title, match.url, true);
+      if (visible.has(match.id)) cards.push(visible.get(match.id));
     });
     if (!cards.length) { searchCardId = null; return; }
     var index = cards.findIndex(function (card) { return card.dataset.cardId === searchCardId; });

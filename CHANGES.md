@@ -14,6 +14,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   and highlights the selected card.
 - Open a matching card from its minicard in the search sidebar. Search
   results are excluded from board dragging and multi-selection.
+- Search the board's stored cards by title, description, comments and
+  checklist text. Results include matching cards outside the rendered canvas
+  and follow the viewer's board and assigned-card permissions.
 
 ## HTML5 minicards
 

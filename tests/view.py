@@ -650,6 +650,12 @@ def http_checks(server, tmp, backend):
         cl = [c for c in checklists() if c['_id'] == cl['_id']][0]
         assert [i['title'] for i in cl['items']] == ['**First**', 'Second'], cl
         assert b'<strong>First</strong>' in opened()
+        def search_cards(term, cookie=owner):
+            url = '/b/%s/search/matches?%s' % (board_id, urlencode({'q': term}))
+            status, _, body, _ = request('GET', url, cookie=cookie)
+            return status, json.loads(body)
+        assert [match['id'] for match in search_cards('**first**')[1]] == [card_id]
+        assert [match['id'] for match in search_cards('**steps**')[1]] == [card_id]
         first = cl['items'][0]['_id']
         status, _, page, _ = request('POST', '%s/%s/items/%s/toggle' % (base, cl['_id'], first), {}, cookie=owner)
         assert status == 200 and b'checklist-progress-bar-container' in page and b'50%' in page
@@ -711,6 +717,9 @@ def http_checks(server, tmp, backend):
         texts = [c['comment'] for c in json.loads(request('GET', '/api/boards/%s/cards/%s/comments' % (board_id, card_id),
                                                           headers=auth)[2])]
         assert texts == ['**Owner** <i>note</i>', 'From comment only'], texts
+        status, matches = search_cards('from comment only')
+        assert status == 200 and matches == [{'id': card_id, 'title': 'Renamed Card', 'url': card_path}], matches
+        assert search_cards('from comment only', stranger)[0] == 404
 
         # Add a list: the swimlane's Add list form (last), and weddy.js's
         # createListAfter after a given list (server/models/lists.js).
