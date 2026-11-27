@@ -7254,11 +7254,11 @@ end;
 
 procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 const DateFields:array[0..3] of string=('receivedAt','startAt','dueAt','endAt');
-var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value,RestMoveReason:string;
-  HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
+var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,ArchiveGuard,ArchiveAt,Stamp,Value,RestMoveReason:string;
+  HasArchive,Archive,WasArchived,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber,SpentHours:Double;NumberFormat:TFormatSettings;
   Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done,OldOvertime,Overtime,HasSpentTime:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor,OldSpentTime,NewSpentTime:string;
-  BeforeTime,AfterTime:TJSONObject; TimeRows,OldDates:TWLRows; DateIndex:Integer; DateWrites:array[0..3] of string;
+  BeforeTime,AfterTime:TJSONObject; TimeRows,OldDates,ArchiveRows:TWLRows; DateIndex:Integer; DateWrites:array[0..3] of string;
 begin
   HasCompletion:=False;OldDone:=False;Done:=False;OldOvertime:=False;Overtime:=False;
   HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
@@ -7396,7 +7396,7 @@ begin
   begin SendJson(aResponse,'{"message":"Error"}',404);Exit;end;
   if not CardRelationSql(T,aRequest,aResponse,BoardId,CardId,Relations) then Exit;
   Stamp:=QuotedStr(NowIso);
-  ArchiveSql:='';
+  ArchiveSql:='';ArchiveGuard:='';Archive:=False;WasArchived:=False;
   if HasArchive then
   begin
     Value:=aRequest.ContentFields.Values['archive'];
@@ -7411,8 +7411,16 @@ begin
       finally Body.Free;end;
     end;
     Archive:=SameText(Value,'true');
-    ArchiveSql:='UPDATE cards SET archived='+IntToStr(Ord(Archive))+' WHERE '+Scope+
-      ' AND archived='+IntToStr(Ord(not Archive))+'; ';
+    ArchiveRows:=T.Db.Query('SELECT COALESCE(archived,0) FROM cards WHERE '+Scope+';');
+    if Length(ArchiveRows)<>1 then begin SendJson(aResponse,CardNotFound,404);Exit;end;
+    WasArchived:=ArchiveRows[0][0]='1';
+    ArchiveGuard:=' AND COALESCE(archived,0)='+IntToStr(Ord(WasArchived));
+    if Archive<>WasArchived then
+    begin
+      ArchiveAt:='NULL';
+      if Archive then ArchiveAt:=Stamp;
+      ArchiveSql:='UPDATE cards SET archived='+IntToStr(Ord(Archive))+',archivedAt='+ArchiveAt+' WHERE '+Scope+'; ';
+    end;
   end;
   Sets:='';
   if not HasArchive or HasEdits then
@@ -7437,7 +7445,7 @@ begin
   if HasOvertime then OldOvertime:=Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+' AND isOvertime=1;'))=1;
   if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
   if HasDescription then OldDescription:=CardTextOf(T.Db,CardId,'description');
-  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+ArchiveGuard+
     ')=1 THEN 1 ELSE json(''Card edit scope changed'') END; '+Sets+ArchiveSql+Relations+' COMMIT;') then
   begin
     T.Db.Exec('ROLLBACK;');
@@ -7470,6 +7478,7 @@ begin
         end;
     finally BeforeTime.Free;AfterTime.Free;end;
   end;
+  if HasArchive then RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'archived',WasArchived,Archive);
   if HasOvertime and (Sets<>'') then RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'isOvertime',OldOvertime,Overtime);
   if HasCompletion then RecordCardCompletionHistory(T.Db,UserId,BoardId,CardId,OldDone,Done);
   if HasColor then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'color',OldColor,NewColor);
@@ -9041,9 +9050,11 @@ begin
   if not T.Db.Exec('BEGIN IMMEDIATE; INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
     'SELECT '+QuotedStr(ActivityId)+',''archivedCard'','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+Stamp+','+Stamp+
     ',json_object(''cardTitle'',title) FROM cards WHERE '+Scope+'; UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
-    ' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE id='+QuotedStr(CardId)+' AND archived=1)=1 THEN 1 '+
+    ' WHERE '+Scope+'; SELECT CASE WHEN EXISTS(SELECT 1 FROM activities WHERE id='+QuotedStr(ActivityId)+
+    ') AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=1) THEN 1 '+
     'ELSE json(''Archive write failed'') END; '+NotificationsSql(T.Db,UserId,BoardId,R[0][0],CardId,'',ActivityId,'archivedCard')+'COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not change card archive state';Exit(500);end;
+  RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'archived',False,True);
 end;
 
 function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
