@@ -221,6 +221,18 @@ def run(request,database,administrator,member,base):
             attachments = con.execute("SELECT createdAt,size FROM attachments WHERE boardId=?",
                                       (json.loads(result)['boardId'],)).fetchall()
         assert attachments == ([(original_timestamp, len(data))] if include_files == 'true' else [])
+    incomplete = io.BytesIO()
+    with zipfile.ZipFile(incomplete, 'w') as bundle:
+        bundle.writestr('wekan.json', json.dumps(dict(
+            title='Missing attachment archive entry',
+            attachments=[dict(_id='missing', name='missing.bin', archivePath='attachments/missing.bin')],
+        )))
+    status, _, result = request('POST', '/api/import/zip?' +
+                                urlencode(dict(token=administrator, newBoard=1)),
+                                incomplete.getvalue(), content_type='application/zip')
+    assert status == 400, result
+    with sqlite3.connect(database) as con:
+        assert con.execute("SELECT count(*) FROM boards WHERE title='Missing attachment archive entry'").fetchone() == (0,)
     status, _, metadata = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, attachments='false')))
     assert status == 200, metadata

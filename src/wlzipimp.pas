@@ -140,7 +140,7 @@ begin
 end;
 
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
-var Archive: TUnZipper; Reader: TBoardZipReader; Parsed, Data: TJSONData;
+var Archive: TUnZipper; Reader: TBoardZipReader; Parsed, Data, ArchivePath: TJSONData;
   Board, Entry: TJSONObject; Attachments: TJSONArray; Used: TStringList;
   I: Integer; Content: RawByteString; Member, LegacyName: string;
 begin
@@ -169,14 +169,18 @@ begin
       begin
         Entry := Attachments.Objects[I];
         LegacyName := AttachmentPrefix + ZipAttachmentName(Entry.Get('name', ''), Used);
-        Member := Entry.Get('archivePath', LegacyName);
+        ArchivePath := Entry.Find('archivePath');
+        if ArchivePath = nil then Member := LegacyName
+        else if ArchivePath is TJSONString then Member := ArchivePath.AsString
+        else raise EConvertError.Create('Invalid attachment archive path');
         if Member = '' then Continue;
         if not AnsiStartsStr(AttachmentPrefix, Member) then raise EConvertError.Create('Invalid attachment archive path');
         if Reader.ReadEntry(Member, Content) then
         begin
           Entry.Delete('file');
           Entry.Add('file', EncodeStringBase64(Content));
-        end;
+        end
+        else if ArchivePath <> nil then raise EConvertError.Create('Missing attachment archive entry');
       end;
       for I := Attachments.Count - 1 downto 0 do
         if not (Attachments.Objects[I].Find('file') is TJSONString) then Attachments.Delete(I);
