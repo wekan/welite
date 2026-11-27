@@ -8057,6 +8057,7 @@ var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Va
   end;
   function LinkTo(const Contributor: string; Number: Integer): string;
   begin
+    if MemberView then Exit(HtmlAttr(Route + '?q=' + HTTPEncode(Search) + '&page=' + IntToStr(Number)));
     Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&list=' + HTTPEncode(ListId) +
       '&swimlane=' + HTTPEncode(LaneId) + '&user=' + HTTPEncode(Contributor) +
       '&q=' + HTTPEncode(Search) + '&group=' + HTTPEncode(Group) + '&page=' + IntToStr(Number));
@@ -8132,27 +8133,32 @@ begin
     Label_ := Words.Text('history', 'History');
     Content := '<div class="history-table" data-error="' + HtmlAttr(Words.Text('error', 'Error')) +
       '"><div class="history-header"><a class="js-history-back" href="' +
-      HtmlAttr(Back) + '">&larr; ' + E(BackTitle) + '</a><h2>' + E(Label_) + '</h2></div><nav class="history-nav">' +
-      '<a class="history-nav-item js-history-all' + IfThen(Who = '', ' is-active') + '" href="' +
-      LinkTo('', 1) + '">' + E(Label_) + '</a>';
+      HtmlAttr(Back) + '">&larr; ' + E(BackTitle) + '</a><h2>' + E(Label_) + '</h2></div>';
     if not MemberView then
-    for I := 0 to Contributors.Count - 1 do
     begin
-      Row := Contributors.Objects[I];
-      Name := Row.Get('userId', '');
-      if Name = '' then Continue;
-      Content := Content + '<a class="history-nav-item js-history-contributor' + IfThen(Name = Who, ' is-active') +
-        '" data-user-id="' + HtmlAttr(Name) + '" href="' + LinkTo(Name, 1) + '">' + E(UserName(T.Db, Name)) +
-        ' <span class="history-nav-count">' + IntToStr(Row.Integers['count']) + '</span></a>';
+      Content := Content + '<nav class="history-nav"><a class="history-nav-item js-history-all' +
+        IfThen(Who = '', ' is-active') + '" href="' + LinkTo('', 1) + '">' + E(Label_) + '</a>';
+      for I := 0 to Contributors.Count - 1 do
+      begin
+        Row := Contributors.Objects[I];
+        Name := Row.Get('userId', '');
+        if Name = '' then Continue;
+        Content := Content + '<a class="history-nav-item js-history-contributor' + IfThen(Name = Who, ' is-active') +
+          '" data-user-id="' + HtmlAttr(Name) + '" href="' + LinkTo(Name, 1) + '">' + E(UserName(T.Db, Name)) +
+          ' <span class="history-nav-count">' + IntToStr(Row.Integers['count']) + '</span></a>';
+      end;
+      Content := Content + '</nav>';
     end;
     Label_ := Words.Text('search', 'Search');
-    ScopeFields := '<input type="hidden" name="card" value="' + HtmlAttr(CardId) +
-      '"><input type="hidden" name="list" value="' + HtmlAttr(ListId) +
-      '"><input type="hidden" name="swimlane" value="' + HtmlAttr(LaneId) + '">';
-    Content := Content + '</nav><div class="history-main"><form class="history-controls" method="get" action="' +
-      HtmlAttr(Route) + '">' + ScopeFields + '<input type="hidden" name="user" value="' + HtmlAttr(Who) +
-      '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
-      '"><input class="js-history-search" type="search" name="q" value="' + HtmlAttr(Search) + '" aria-label="' +
+    ScopeFields := '';
+    if not MemberView then
+      ScopeFields := '<input type="hidden" name="card" value="' + HtmlAttr(CardId) +
+        '"><input type="hidden" name="list" value="' + HtmlAttr(ListId) +
+        '"><input type="hidden" name="swimlane" value="' + HtmlAttr(LaneId) +
+        '"><input type="hidden" name="user" value="' + HtmlAttr(Who) +
+        '"><input type="hidden" name="group" value="' + HtmlAttr(Group) + '">';
+    Content := Content + '<div class="history-main"><form class="history-controls" method="get" action="' +
+      HtmlAttr(Route) + '">' + ScopeFields + '<input class="js-history-search" type="search" name="q" value="' + HtmlAttr(Search) + '" aria-label="' +
       HtmlAttr(Label_) + '"><button type="submit">' + E(Label_) + '</button></form><div class="history-pagination">';
     if PageNumber > 1 then Content := Content + '<a class="js-history-prev" href="' + LinkTo(Who, PageNumber - 1) + '">&lt;</a> ';
     Content := Content + '<span class="history-page">' + IntToStr(PageNumber) + ' / ' + IntToStr(PageCount) + '</span>';
@@ -8164,9 +8170,7 @@ begin
     begin
       if ShowRestore then
         Content := Content + '<form class="js-history-restore-form" method="post" action="' + HtmlAttr(Route + '/restore') +
-          '">' + ScopeFields + '<input type="hidden" name="user" value="' + HtmlAttr(Who) +
-          '"><input type="hidden" name="q" value="' + HtmlAttr(Search) +
-          '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
+          '">' + ScopeFields + '<input type="hidden" name="q" value="' + HtmlAttr(Search) +
           '"><input type="hidden" name="page" value="' + IntToStr(PageNumber) + '">';
       Content := Content + '<div class="history-scroll"><table class="history-rows"><thead><tr>' +
         IfThen(ShowRestore, '<th class="history-select"></th>') + '<th>' +
