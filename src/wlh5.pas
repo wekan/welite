@@ -7885,7 +7885,7 @@ begin
     if Values.Get('isDate', False) then Exit(HistoryDate(Value, DateFormat));
     if Value.JSONType = jtBoolean then
       case Values.Get('field', '') of
-        'dueComplete', 'isOvertime', 'isFinished', 'hideCheckedChecklistItems', 'hideAllChecklistItems':
+        'dueComplete', 'isOvertime', 'isFinished', 'hideCheckedChecklistItems', 'hideAllChecklistItems', 'archived':
           begin
             if Value.AsBoolean then Exit(Words.Text('yes', 'Yes'));
             Exit(Words.Text('no', 'No'));
@@ -7923,6 +7923,15 @@ begin
     Result := Values.Get('lastMoveReason', '');
     if Result = '' then Result := Values.Get('listId', '');
     Exit;
+  end;
+  if Group = 'lifecycle' then
+  begin
+    Value := Values.Find('deleted');
+    if (Value <> nil) and (Value.JSONType = jtBoolean) then
+    begin
+      if Value.AsBoolean then Exit(Words.Text('history-change-removed', 'Removed'));
+      Exit(Words.Text('history-change-restored', 'Restored'));
+    end;
   end;
   Document := Values.Find('document');
   if Document is TJSONObject then Values := TJSONObject(Document);
@@ -8070,6 +8079,9 @@ begin
                   'dueAt': GroupLabel := Words.Text('card-due', 'Due');
                   'endAt': GroupLabel := Words.Text('card-end', 'End');
                 end;
+            'archived':
+              if Row.Get('group', '') = 'lifecycle' then
+                GroupLabel := Words.Text('archived', 'Archived');
             'wipLimit':
               if Row.Get('entityType', '') = 'list' then
                 GroupLabel := Words.Text('edit-wip-limit', 'Edit WIP Limit');
