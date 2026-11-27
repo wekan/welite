@@ -91,7 +91,8 @@ implementation
 
 uses
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
-  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst;
+  wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
+  wlcrypt;
 
 const
   STATIC_HEAD =
@@ -1058,6 +1059,9 @@ begin
   Error := '';
   Result := 200;
 end;
+
+// What the board is now (below, with the live board).
+function BoardSignature(Db: TWLDb; const BoardId: string): string; forward;
 
 // WeKan's changeAvatarPopup (below, with the avatar upload).
 function ChangeAvatarPopup(Db: TWLDb; Words: TWLTranslator; const UserId, Error: string): string; forward;
@@ -3372,6 +3376,7 @@ function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; cons
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
+  SharedRow, FirstLane: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
 begin
@@ -3397,6 +3402,8 @@ begin
   CardSort := ParseCardSort(Query);
   SortSql := CardSortSql(Db, BoardId, CardSort);
   Canvas := '';
+  SharedRow := BoardSettingFlag(Db, BoardId, 'sharedListHeaders', False);
+  FirstLane := True;
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
   for i := 0 to High(Lanes) do
@@ -3423,10 +3430,18 @@ begin
       Canvas := Canvas + '<div class="swimlane swimlane-collapsed" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">' + Header + '</div>';
       Continue;
     end;
-    Canvas := Canvas + '<div class="swimlane js-swimlane" id="swimlane-' + HtmlAttr(Lanes[i][0]) + '" data-swimlane="' +
-      HtmlAttr(Lanes[i][0]) + '">' + Header + '<div class="list-group js-lists">';
-    Lists := Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId=' + QuotedStr(BoardId) +
-      ' AND (swimlaneId=' + QuotedStr(Lanes[i][0]) + ' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+    Canvas := Canvas + '<div class="swimlane js-swimlane' + IfThen(FirstLane, ' is-first-swimlane', '') + '" id="swimlane-' +
+      HtmlAttr(Lanes[i][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">' + Header + '<div class="list-group js-lists">';
+    FirstLane := False;
+    // #6902, Board Settings / Swimlane / One shared list header row: every
+    // swimlane shows every list of the board, in its order, each with the
+    // cards of the swimlane it is shown in; nothing is written to a list.
+    if SharedRow then
+      Lists := Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId=' + QuotedStr(BoardId) +
+        ' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;')
+    else
+      Lists := Db.Query('SELECT id,title,color,collapsed FROM lists WHERE boardId=' + QuotedStr(BoardId) +
+        ' AND (swimlaneId=' + QuotedStr(Lanes[i][0]) + ' OR swimlaneId='''') AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
     // WeKan's mobile view (swimlanes.jade, isMiniScreen): the current list
     // opened inside its own swimlane, every other list of a swimlane a
     // compact row (miniList) that opens it.
@@ -3664,7 +3679,10 @@ begin
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li>' +
       '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li></ul></template>';
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
-    ' data-board="' + HtmlAttr(BoardId) + '" data-live="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/live?v=1">' +
+    ' data-board="' + HtmlAttr(BoardId) + '" data-live="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/live?v=1&amp;s=' +
+    // The board as this page drew it: a change made before its live
+    // connection opens is sent as soon as it does, not missed.
+    Sha256Hex(BoardSignature(Db, BoardId)) + '">' +
     '<div class="board-header"><h1 class="header-board-name js-board-title">' + E(BoardTitle) + '</h1>' +
     BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) +
     // WeKan's boardButtons: the board's button rules, for whoever may change it.
@@ -3677,7 +3695,7 @@ begin
       HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) + '" aria-label="' + HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) +
       '">&#9745;</a>', '') + '</div>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
-    '<div class="board-canvas" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
+    '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
 end;
 
@@ -5365,7 +5383,7 @@ end;
 // "board-changed <page that changed it>" whenever the board changes, so every
 // open page of the board draws it again - another user's change, or a rule's.
 // The stream ends after five minutes; EventSource opens it again.
-procedure ServeLiveBoard(const T: TWLTenant; Response: TResponse; const BoardId: string);
+procedure ServeLiveBoard(const T: TWLTenant; Response: TResponse; const BoardId: string; const Drawn: string = '');
 var Last, Now_: string; i: Integer; Line: string; Socket: TSocketStream; Waits: Boolean; B: Byte;
 begin
   Response.Code := 200;
@@ -5390,6 +5408,11 @@ begin
   end;
   try
     Line := 'retry: 2000'#10': live'#10#10;
+    // The page drew another board than this: it changed between the page
+    // and its connection - a REST write right after the page loaded - and
+    // the page draws it again now.
+    if (Length(Drawn) = 64) and (Sha256Hex(Last) <> LowerCase(Drawn)) then
+      Line := Line + 'event: board-changed'#10'data: board-changed ' + RecentWriterPage + #10#10;
     Socket.WriteBuffer(Line[1], Length(Line));
     for i := 1 to 300 do
     begin
@@ -5461,7 +5484,7 @@ begin
     if (Length(P) = 3) and (P[2] = 'live') and ResolveTenant(Request, T) and TenantOpen(T) and BoardCanRead(T.Db, '', P[1]) then
     begin
       Result := True;
-      ServeLiveBoard(T, Response, P[1]);
+      ServeLiveBoard(T, Response, P[1], Request.QueryFields.Values['s']);
       Exit;
     end;
   end;
@@ -5472,7 +5495,7 @@ begin
     if (Length(P) = 3) and (P[2] = 'live') and ResolveTenant(Request, T) and TenantOpen(T) and Html5User(T.Db, Request, S) then
     begin
       Result := True;
-      if BoardCanRead(T.Db, S.UserId, P[1]) then ServeLiveBoard(T, Response, P[1])
+      if BoardCanRead(T.Db, S.UserId, P[1]) then ServeLiveBoard(T, Response, P[1], Request.QueryFields.Values['s'])
       else SendJsonAnswer(Response, 404, '{"error":"not found"}');
       Exit;
     end;

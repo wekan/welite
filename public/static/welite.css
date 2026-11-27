@@ -224,3 +224,18 @@
   transform: rotate(40deg);
   transform-origin: 100% 100%;
 }
+
+/* #6902, One shared list header row: the first swimlane's list headers are the
+   row; the others show none (WeKan's swimlanes.css - !important, as the list
+   headers' own rules are). */
+.board-canvas.shared-list-headers .js-swimlane:not(.is-first-swimlane) .list-header {
+  display: none !important;
+}
+/* ...and each swimlane is its own sideways scroll, as WeKan's .swimlane
+   (swimlanes.css: overflow-x auto, the vertical axis visible), so the rows can
+   be kept together; without the setting the canvas scrolls them all. */
+.board-canvas.shared-list-headers .js-swimlane {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+}

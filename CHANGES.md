@@ -573,6 +573,17 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   card, as in WeKan. A raw upload takes any body but JSON, as WeKan's does.
   `tests/view.py` checks each allowed and refused call; WeKan's
   assigned-only-reads list test and unassigned-attach-bleed pass.
+- Add Board Settings / Swimlane / One shared list header row (#6902,
+  sharedListHeaders): every swimlane shows every list of the board, each with
+  the cards of the swimlane it is shown in, under the first swimlane's
+  headers, and the swimlanes scroll sideways together; nothing is written to
+  a list. Without it each swimlane shows its own lists as before.
+- Draw a board again when it changed between its page and its live
+  connection: the page names the board as it drew it, and the connection
+  sends the change at once. A REST write right after the page loaded was
+  never shown (rules-history's REST button test, now and then).
+- Give WeKan's scripts and tests Blaze.getData(element): a list's or card's
+  id, from the element, and nothing else.
 - Run 87 more of WeKan's own tests that Weddy passes, in
   `tests/wkui/specs.txt`: the REST API, viewport, RTL, stability,
   notification and board-action specs among them, and shared-list-row-6902.

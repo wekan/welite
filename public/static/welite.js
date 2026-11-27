@@ -317,6 +317,43 @@
 // page is drawn signed in already, so it never is.
 if (window.Meteor && !window.Meteor.loggingIn) window.Meteor.loggingIn = function () { return false; };
 
+// #6902, One shared list header row: the swimlanes of such a board scroll
+// sideways together (WeKan's sharedListRow.js installSharedSwimlaneScroll).
+// What each was set to is remembered, so the scroll that setting fires is not
+// passed on again - a shorter row would pull the others back to its limit.
+(function () {
+  if (document.__wekanSharedSwimlaneScroll) return;
+  document.__wekanSharedSwimlaneScroll = true;
+  var recent = new WeakMap();
+  document.addEventListener('scroll', function (event) {
+    var lane = event.target;
+    if (!lane || typeof lane.matches !== 'function' || !lane.matches('.board-canvas.shared-list-headers .js-swimlane')) return;
+    if (recent.has(lane)) {
+      var expected = recent.get(lane);
+      recent.delete(lane);
+      if (expected === lane.scrollLeft) return;
+    }
+    lane.closest('.board-canvas').querySelectorAll('.js-swimlane').forEach(function (other) {
+      if (other === lane || other.scrollLeft === lane.scrollLeft) return;
+      other.scrollLeft = lane.scrollLeft;
+      recent.set(other, other.scrollLeft);
+    });
+  }, { capture: true, passive: true });
+})();
+
+// Blaze.getData(element), as WeKan's scripts and tests read a list's or a
+// card's document from its element: the HTML5 view has no Blaze, so the
+// element's own id is the document's, from its data-list or data-card-id.
+// Nothing else of the document is there, and none is invented.
+if (!window.Blaze) {
+  window.Blaze = {
+    getData: function (el) {
+      var id = el && el.dataset && (el.dataset.list || el.dataset.cardId);
+      return id ? { _id: id } : null;
+    },
+  };
+}
+
 // A date pop-over opens with what stands now: its template was drawn with the
 // page, and Admin Panel's or the board's format may have changed since.
 (function () {

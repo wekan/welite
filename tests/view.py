@@ -284,7 +284,27 @@ def http_checks(server, tmp, backend):
         # The live board (weddy.js' EventSource): an event stream for a member,
         # announced in the board's data-live; a change to the board is an event.
         # Negative: a stranger gets no stream, and nothing about the board.
-        assert ('data-live="/b/%s/live?v=1"' % board_id).encode() in request('GET', route, cookie=owner)[2]
+        drawn = re.search(('data-live="/b/%s/live\\?v=1&amp;s=([0-9a-f]{64})"' % board_id).encode(),
+                          request('GET', route, cookie=owner)[2])
+        assert drawn, 'the page names the board as it drew it'
+        # A change between the page and its connection (a REST write right
+        # after the page loaded) is sent as soon as the connection opens; a
+        # page that drew the board as it is gets nothing.
+        def first_event(seen_hash):
+            c = http.client.HTTPConnection('127.0.0.1', listen, timeout=3)
+            c.request('GET', '/b/%s/live?v=1&p=pagestamp&s=%s' % (board_id, seen_hash), None,
+                      {'Host': 'localhost', 'User-Agent': CHROME, 'Cookie': owner})
+            r = c.getresponse()
+            got = b''
+            try:
+                for _ in range(5):
+                    got += r.fp.readline()
+            except (socket.timeout, TimeoutError):
+                pass
+            c.close()
+            return b'event: board-changed' in got
+        assert first_event('0' * 64), 'a board changed since the page: sent at once'
+        assert not first_event(drawn.group(1).decode()), 'negative: the board as the page drew it'
         conn = http.client.HTTPConnection('127.0.0.1', listen, timeout=10)
         conn.request('GET', '/b/%s/live?v=1&p=pagetest' % board_id, None, {'Host': 'localhost', 'User-Agent': CHROME, 'Cookie': owner})
         live = conn.getresponse()
@@ -1221,6 +1241,25 @@ def http_checks(server, tmp, backend):
         assert request('DELETE', '/api/attachment/delete/%s' % mine_att, headers=worker_auth)[0] == 200, 'their own card\'s file'
         assert request('DELETE', '/api/attachment/delete/%s' % hidden_att, headers=auth)[0] == 200
         board_db('UPDATE board_members SET isWorker=1, isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])
+        # #6902, One shared list header row (sharedListHeaders): every
+        # swimlane shows every list of the board, the first swimlane's headers
+        # are the row; without it a list stays in its own swimlane.
+        lane2 = json.loads(request('POST', '/api/boards/%s/swimlanes' % board_id, {'title': 'Second lane'}, headers=auth,
+                                   as_json=True)[2])['_id']
+        own_list = json.loads(request('POST', '/api/boards/%s/lists' % board_id, {'title': 'Lane two list', 'swimlaneId': lane2},
+                                      headers=auth, as_json=True)[2])['_id']
+        card_db('UPDATE lists SET swimlaneId=? WHERE id=?', lane2, own_list)
+        shown = lambda: request('GET', route, cookie=owner)[2].count(('id="js-list-%s"' % own_list).encode())
+        assert shown() == 1 and b'shared-list-headers' not in request('GET', route, cookie=owner)[2], 'negative: its own swimlane only'
+        card_db("UPDATE boards SET settings_json=json_set(CASE WHEN json_valid(settings_json) THEN settings_json ELSE '{}' END,"
+                "'$.sharedListHeaders',json('true')) WHERE id=?", board_id)
+        page = request('GET', route, cookie=owner)[2]
+        lanes = card_db('SELECT COUNT(*) FROM swimlanes WHERE boardId=? AND archived=0', board_id)[0]
+        assert shown() == lanes and lanes >= 2, (shown(), lanes)
+        assert b'class="board-canvas shared-list-headers"' in page and page.count(b'is-first-swimlane') == 1
+        assert card_db('SELECT swimlaneId FROM lists WHERE id=?', own_list)[0] == lane2, 'nothing written to the list'
+        card_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.sharedListHeaders') WHERE id=?", board_id)
+        assert shown() == 1
         board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
         page = card_page()
         assert ('class="js-toggle-watch-card" href="%s/watch"' % card_path).encode() in page
