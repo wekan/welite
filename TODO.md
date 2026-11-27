@@ -267,7 +267,8 @@ Next, after this goal:
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
-  editor-enter-preference (17), export-access (11), the History page
+  editor-enter-preference (17), export-access (10: the board's ZIP, CSV,
+  ICS, PDF, Excel and chart exports, which WeLite has not got yet), the History page
   itself, WIP limit groups and the calendar view.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.

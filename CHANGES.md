@@ -578,6 +578,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board, opened by address and in the Archive; the board's activities are not
   theirs. `tests/view.py` checks each, and all six of WeKan's
   history-read-scope tests pass.
+- Read an API token from WeKan's authToken query parameter too, as WeKan's
+  export links carry it; an assigned-only member's unfiltered board export is
+  refused with 403, as WeKan's export-access tests.
 - Add WeKan's board announcement (#1566): a board admin's text, from the
   board menu, shown to every member above the board as plain text until they
   dismiss it, and again after it is edited; in a shared store it is the board

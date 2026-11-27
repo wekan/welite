@@ -453,6 +453,10 @@ begin
   if (Token='') and (Pos('Bearer ',aRequest.Authorization)<>1) and
     (Pos('Bearer ',aRequest.CustomHeaders.Values['Authorization'])<>1) then
     Token:=Trim(aRequest.QueryFields.Values['token']);
+  // WeKan's export links carry it as authToken (server/authentication.js).
+  if (Token='') and (Pos('Bearer ',aRequest.Authorization)<>1) and
+    (Pos('Bearer ',aRequest.CustomHeaders.Values['Authorization'])<>1) then
+    Token:=Trim(aRequest.QueryFields.Values['authToken']);
   if Token = '' then begin SendError(aResponse, 401, 'No token'); Exit; end;
 
   Result:=ValidateLoginToken(T.Db,aRequest,Token,UserId);

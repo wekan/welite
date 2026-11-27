@@ -435,3 +435,4 @@ history-read-scope.e2e.js: history filters assigned-only rows before search, cou
 assigned-card-methods.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member gets neither the file nor the text of a card not assigned to them
 board-announcement.e2e.js
+export-access.e2e.js: assigned-only private member cannot read unfiltered export
