@@ -307,9 +307,8 @@ Found on the way, not part of this goal:
   older than them; `tests/view.py` and WeKan's specs through
   `tests/wkui/run.sh` cover the shared store meanwhile.
 
-- **Test tool dependencies:** `tests/embhttp.py` needs an `fpcres`
-  beside `$FPC`. `tests/argonv.py` needs the reference Argon2 source in
-  `ARGON2_SRC`.
+- **Argon2 reference test:** `tests/argonv.py` needs the reference Argon2
+  source in `ARGON2_SRC`.
 
 Design questions for the maintainer (work goes on with the stated default):
 

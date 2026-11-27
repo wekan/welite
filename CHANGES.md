@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Verify the directory-free embedded server with the current cookieless
+  sign-in and form navigation on both SQLite backends. The HTTP test
+  checks translated pages, private SQL resources and clean shutdown.
 - Verify path decoding across every declared route key, including keys
   used outside the main API unit. The regular and checked builds pass.
 - Run the short-path provisioning and offline migration tests in native

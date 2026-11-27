@@ -10,7 +10,8 @@ import sqlite3
 import subprocess
 import tempfile
 import time
-from urllib.parse import urlencode,parse_qs,urlsplit
+from urllib.parse import urlencode
+from signin import signed_in
 from layout import Forms
 root=Path(__file__).resolve().parents[1]
 fpc=os.environ.get('FPC','fpc');resource=os.environ.get('FPCRES',str(Path(fpc).with_name('fpcres')))
@@ -89,15 +90,17 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 status,headers,body=request('GET','/sign-in?lang=fi')
                 assert status==200 and headers['Content-Language']=='fi'
                 assert json.loads((root/'i18n/data/fi.jsn').read_text())['username'].encode() in body
-                status,headers,_=request('POST','/register?lang=fi',dict(username='embedded-user',password='test-password',confirm='test-password'))
-                assert status==302 and 'Set-Cookie' not in headers
-                session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
-                status,_,body=request('GET','/designer?sessionId='+session+'&lang=fi');assert status==200
+                registration=request('POST','/register',dict(username='embedded-user',password='test-password',
+                                     confirm='test-password',lang='fi'))
+                assert 'Set-Cookie' not in registration[1]
+                session=signed_in(registration)
+                status,_,body=request('POST','/designer',dict(sessionId=session,nav_view='1',lang='fi'))
+                assert status==200
                 parser=Forms();parser.feed(body.decode())
                 fields=next(fields for action,fields in parser.forms if action=='/designer/page/save')
                 fields.update(action='save',url='/embedded',title='Embedded page',cols='1',doctype='html4',dir='auto',minRole='admin')
                 assert request('POST','/designer/page/save',fields)[0]==302
-                status,headers,body=request('GET','/embedded?sessionId='+session+'&lang=ar')
+                status,headers,body=request('POST','/embedded',dict(sessionId=session,nav_view='1',lang='ar'))
                 assert status==200 and headers['Content-Language']=='ar' and b'dir="rtl"' in body
                 with sqlite3.connect(work/'data/local/files/db/wekan.db') as con:
                     con.execute("INSERT INTO boards(id,title,slug,permission,createdAt) "
@@ -113,7 +116,7 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 assert b'dir="rtl"' in body and b'<h1>Embedded board</h1>' in body
                 attachment_page='/board/attachments?id=embedded-board'
                 assert request('GET',attachment_page+'&lang=ar')[0]==404
-                status,headers,body=request('GET',attachment_page+'&lang=ar&sessionId='+session)
+                status,headers,body=request('POST',attachment_page,dict(sessionId=session,nav_view='1',lang='ar'))
                 assert status==200 and headers['Content-Language']=='ar' and 'Set-Cookie' not in headers
                 words=json.loads((root/'i18n/data/ar.jsn').read_text())
                 assert all(words[key].encode() in body for key in ('attachments','no-items-message'))
@@ -121,10 +124,9 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
 
                 for path in ['/schema.sql','/designer.sql','/src/schema.sql','/_seed/schema.sql']:
                     status,_,body=request('GET',path);assert status==404 and b'CREATE TABLE' not in body,path
-                login=request('POST','/sign-in?lang=ar',dict(username='embedded-admin',password='test-password'),host='admin')
-                assert login[0]==302
-                admin=parse_qs(urlsplit(login[1]['Location']).query)['sessionId'][0]
-                assert request('GET','/admin/domains?sessionId='+admin+'&lang=ar',host='admin')[0]==200
+                login=request('POST','/sign-in',dict(username='embedded-admin',password='test-password',lang='ar'),host='admin')
+                admin=signed_in(login)
+                assert request('POST','/admin/domains',dict(sessionId=admin,nav_view='1',lang='ar'),host='admin')[0]==200
                 for name in ['public','i18n','src','schema.sql','designer.sql','absent-public','absent-i18n']:assert not (work/name).exists(),name
                 with sqlite3.connect(work/'data/local/files/db/wekan.db') as con:
                     assert con.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('users','pages','page_widgets')").fetchone()==(3,)
