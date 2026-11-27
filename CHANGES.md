@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Apply Member Settings' Show focus outline choice in the HTML5 view.
+  The focus ring is on by default, and a saved choice to hide it takes
+  effect immediately and after reload.
 - Add WeKan's Create Board to the header (header.jade's createBoardForm):
   one private board with a Default swimlane, or one a line when the title
   has many lines and "Add many lines as separate items" is chosen, for a user

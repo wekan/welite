@@ -1168,7 +1168,9 @@ begin
     // Member Settings / Change Settings / Submit editors with Enter, as
     // Weddy's body: weddy.js reads it for every editor of the page.
     '<body data-submit-on-enter="' + IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
-      ProfileFlag(T.Db, S.UserId, 'submitOnEnter'), 'true', '') + '">' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
+      ProfileFlag(T.Db, S.UserId, 'submitOnEnter'), 'true', '') + '"' +
+    IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
+      ProfileFlag(T.Db, S.UserId, 'hideFocusOutline'), ' class="has-hide-focus-outline"', '') + '>' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
 end;
 
 // signin.pug
