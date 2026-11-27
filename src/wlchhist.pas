@@ -15,6 +15,7 @@ function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Grou
 
 procedure RecordCardRemoval(Db:TWLDb;const UserId,BoardId,ListId,LaneId,CardId,Title:string);
 procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
+procedure RecordArchiveHistory(Db:TWLDb;const UserId,BoardId,EntityType,EntityId:string;Archived:Boolean);
 procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
 // The default SQLite REAL-to-text conversion rounds before the snapshot is built.
 const HistorySpentTimeSql = 'CASE WHEN spentTime IS NOT NULL THEN printf(''%!.26g'', spentTime) ELSE '''' END';
@@ -514,21 +515,33 @@ begin
   RecordCardBooleanHistory(Db,UserId,BoardId,CardId,'dueComplete',Old,Done);
 end;
 
-procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
-var Before,After:TJSONObject; Group:string;
+procedure RecordBooleanHistory(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Group,Field:string;Old,Done:Boolean);
+var Before,After:TJSONObject;
 begin
   if Old=Done then Exit;
-  Group:='dates';
-  if Field='archived' then Group:='lifecycle';
   Before:=TJSONObject.Create(['field',Field,'value',Old]);
   After:=TJSONObject.Create(['field',Field,'value',Done]);
   try
     try
-      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,Group,'edited',Before,After);
+      RecordHistoryRow(Db,UserId,BoardId,EntityType,EntityId,Group,'edited',Before,After);
     except
       // History never fails the edit it records.
     end;
   finally Before.Free;After.Free;end;
+end;
+
+procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
+begin
+  if Field='archived' then
+  begin
+    if Old<>Done then RecordArchiveHistory(Db,UserId,BoardId,'card',CardId,Done);
+  end
+  else RecordBooleanHistory(Db,UserId,BoardId,'card',CardId,'dates',Field,Old,Done);
+end;
+
+procedure RecordArchiveHistory(Db:TWLDb;const UserId,BoardId,EntityType,EntityId:string;Archived:Boolean);
+begin
+  RecordBooleanHistory(Db,UserId,BoardId,EntityType,EntityId,'lifecycle','archived',not Archived,Archived);
 end;
 
 procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;

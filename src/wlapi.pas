@@ -1998,10 +1998,13 @@ begin
     if not RestoreArchivedCard(T,UserId,BoardId,ItemId,Move) then begin Error:='Could not restore';Exit(500);end;
     Exit(200);
   end;
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE '+Table+' SET archived=0,archivedAt=NULL'+Move+',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM '+Table+' WHERE '+Scope+
+    ') THEN 1 ELSE json(''Archive scope changed'') END; UPDATE '+Table+' SET archived=0,archivedAt=NULL'+Move+',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+
     '; SELECT CASE WHEN (SELECT count(*) FROM '+Table+' WHERE id='+QuotedStr(ItemId)+' AND archived=0)=1 THEN 1 '+
     'ELSE json(''Restore failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not restore';Exit(500);end;
+  if Table='lists' then RecordArchiveHistory(T.Db,UserId,BoardId,'list',ItemId,False)
+  else RecordArchiveHistory(T.Db,UserId,BoardId,'swimlane',ItemId,False);
   Result:=200;
 end;
 
@@ -5960,16 +5963,16 @@ end;
 
 procedure ApiListArchive(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
-var T:TWLTenant;UserId,BoardId,ListId,Scope,Predicate,Stamp,CardArchivedAt,Sql:string;
+var T:TWLTenant;UserId,BoardId,BoardKey,ListId,Scope,Predicate,Stamp,CardArchivedAt,Sql:string;
   Archive:Boolean;Target:string;Rows:TWLRows;Reply:TJSONObject;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
-  BoardId:=QuotedStr(aRequest.RouteParams['boardId']);ListId:=aRequest.RouteParams['listId'];
+  BoardId:=aRequest.RouteParams['boardId'];BoardKey:=QuotedStr(BoardId);ListId:=aRequest.RouteParams['listId'];
   Archive:=Copy(aRequest.PathInfo,Length(aRequest.PathInfo)-9,10)<>'/unarchive';
   Target:=IntToStr(Ord(Archive));
-  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardId+' AND deletedAt IS NULL';
+  Scope:='id='+QuotedStr(ListId)+' AND boardId='+BoardKey+' AND deletedAt IS NULL';
   Predicate:=Scope+' AND archived='+IntToStr(Ord(not Archive));
   Rows:=T.Db.Query('SELECT id FROM lists WHERE '+Predicate+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
@@ -5978,7 +5981,7 @@ begin
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Predicate+
     ')=1 THEN 1 ELSE json(''List archive scope changed'') END; '+
     'UPDATE cards SET archived='+Target+',archivedAt='+CardArchivedAt+' WHERE listId='+QuotedStr(ListId)+
-    ' AND boardId='+BoardId+' AND deletedAt IS NULL AND archived<> '+Target+
+    ' AND boardId='+BoardKey+' AND deletedAt IS NULL AND archived<> '+Target+
     ' AND EXISTS(SELECT 1 FROM lists WHERE '+Predicate+' AND type=''template-list''); '+
     'UPDATE lists SET archived='+Target+',modifiedAt='+Stamp;
   if Archive then Sql:=Sql+',archivedAt='+Stamp;
@@ -5986,6 +5989,7 @@ begin
     ' AND archived='+Target+')=1 THEN 1 ELSE json(''List archive failed'') END; COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change list archive state');Exit;end;
+  RecordArchiveHistory(T.Db,UserId,BoardId,'list',ListId,Archive);
   Reply:=TJSONObject.Create(['_id',ListId,'archived',Archive]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
