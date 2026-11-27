@@ -2611,6 +2611,7 @@ begin
         if Length(Titles)=1 then Title:=Titles[0][0];
         Result.Add(TJSONObject.Create(['cardId',CardId,'title',Title,'userId',Str(Row,'userId'),
           'delta',After-Before,'value',After]));
+        if Row.Find('createdAt')<>nil then Result.Objects[Result.Count-1].Add('at',Row.Find('createdAt').Clone);
       end;
     finally Rows.Free;end;
   finally Reader.Free;end;

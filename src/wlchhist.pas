@@ -538,7 +538,7 @@ end;
 procedure RecordCardRemoval(Db:TWLDb;const UserId,BoardId,ListId,LaneId,CardId,Title:string);
 var Before:TJSONObject;
 begin
-  Before:=TJSONObject.Create(['document',TJSONObject.Create(['_id',CardId,'title',Title])]);
+  Before:=TJSONObject.Create(['document',TJSONObject.Create(['_id',CardId,'boardId',BoardId,'title',Title])]);
   try
     RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,'','','card',CardId,CardId,'',
       False,'lifecycle','removed',Before,nil);

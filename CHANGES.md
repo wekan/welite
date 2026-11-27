@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The Time report method returns corrections grouped by author, hours by
+  card and assignee, and the sum of time until open cards are due. The
+  regular WeKan browser test list covers the English correction workflow,
+  including the report after card deletion.
+
 - REST card deletion keeps the card title, list and swimlane in the board’s
   lifecycle history. The Time view and its PDF and Excel exports use the
   retained delete activity to show the title on earlier corrections.

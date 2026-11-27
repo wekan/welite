@@ -4928,12 +4928,79 @@ begin
   end;
 end;
 
+function TimeChartReport(Db:TWLDb; const BoardId,UserId:string):TJSONObject;
+const UserLabel='COALESCE(NULLIF(CASE WHEN json_valid(u.profile_json) THEN '+
+  'json_extract(u.profile_json,''$.fullname'') END,''''),NULLIF(u.username,''''),u.id)';
+var Scope, Timed, Id:string; Rows:TWLRows; Changes, Entries:TJSONArray;
+  Row, Group, Authors:TJSONObject; I:Integer;
+  function SqlJson(const Sql:string):TJSONData;
+  var Data:TWLRows;
+  begin
+    Data:=Db.Query(Sql);
+    if Length(Data)<>1 then raise Exception.Create('Invalid time report result');
+    Result:=GetJSON(Data[0][0]);
+  end;
+begin
+  Result:=TJSONObject.Create;
+  Changes:=TimeAdjustmentRows(Db,UserId,BoardId);
+  Authors:=TJSONObject.Create;
+  try
+    try
+      Entries:=TJSONArray.Create;
+      Result.Add('adjustments',TJSONObject.Create(['entries',Entries]));
+      for I:=0 to Changes.Count-1 do
+      begin
+        Row:=Changes.Objects[I];
+        Id:=Row.Strings['userId'];
+        Group:=Authors.Find(Id) as TJSONObject;
+        if Group=nil then
+        begin
+          Group:=TJSONObject.Create(['userId',Id,'label',Id,'hours',0,'count',0]);
+          Authors.Add(Id,Group);
+          Rows:=Db.Query('SELECT '+UserLabel+' FROM users u WHERE u.id='+QuotedStr(Id)+';');
+          if Length(Rows)=1 then Group.Strings['label']:=Rows[0][0];
+        end;
+        Group.Floats['hours']:=Group.Floats['hours']+Row.Floats['delta'];
+        Group.Integers['count']:=Group.Integers['count']+1;
+        Entries.Add(TJSONObject.Create(['cardId',Row.Strings['cardId'],'title',Row.Strings['title'],
+          'author',Group.Strings['label'],'hours',Row.Floats['delta'],'total',Row.Floats['value']]));
+        if Row.Find('at')<>nil then Entries.Objects[Entries.Count-1].Add('at',Row.Find('at').Clone);
+      end;
+      Result.Objects['adjustments'].Add('groups',SqlJson('SELECT json_group_array(json(value)) FROM '+
+        '(SELECT value FROM json_each('+QuotedStr(Authors.AsJSON)+') ORDER BY json_extract(value,''$.hours'') DESC);'));
+      Scope:='c.boardId='+QuotedStr(BoardId)+' AND c.archived=0 AND c.deletedAt IS NULL';
+      Timed:='WITH timed AS (SELECT c.id,c.title,c.spentTime,c.isOvertime FROM cards c WHERE '+Scope+
+        ' AND c.spentTime>0) ';
+      Result.Add('byCard',SqlJson(Timed+
+        'SELECT json_group_array(json_object(''key'',id,''title'',COALESCE(NULLIF(title,''''),id),'+
+        '''hours'',round(spentTime,2),''isOvertime'',json(CASE WHEN isOvertime=1 THEN ''true'' ELSE ''false'' END))) '+
+        'FROM (SELECT * FROM timed ORDER BY spentTime DESC,id);'));
+      Result.Add('byAssignee',SqlJson(Timed+
+        ', grouped AS (SELECT COALESCE(a.userId,''__no_assignee__'') AS id,sum(t.spentTime) AS hours,count(*) AS cards '+
+        'FROM timed t LEFT JOIN (SELECT DISTINCT cardId,userId FROM card_assignees) a ON a.cardId=t.id '+
+        'GROUP BY COALESCE(a.userId,''__no_assignee__'') ORDER BY hours DESC,id) '+
+        'SELECT json_group_array(json_object(''key'',g.id,''label'',COALESCE('+UserLabel+',g.id),'+
+        '''hours'',round(g.hours,2),''cards'',g.cards,''percent'',round(100*g.hours/(SELECT sum(spentTime) FROM timed),1))) '+
+        'FROM grouped g LEFT JOIN users u ON u.id=g.id;'));
+      Result.Add('remaining',SqlJson(
+        'WITH duration AS (SELECT count(*) AS cards,COALESCE(sum((julianday(c.dueAt)-julianday(''now''))*24),0) '+
+        'AS hours FROM cards c WHERE '+Scope+' AND julianday(c.dueAt) IS NOT NULL AND COALESCE(c.endAt,'''')='''' '+
+        'AND COALESCE(c.archivedAt,'''')=''''), parts AS (SELECT *,CAST(round(hours) AS INTEGER) AS whole FROM duration) '+
+        'SELECT json_object(''totalHours'',round(hours,2),''days'',whole/24,''hours'',whole%24,''cardCount'',cards) FROM parts;'));
+    except
+      Result.Free;
+      raise;
+    end;
+  finally Authors.Free; Changes.Free; end;
+end;
+
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   Limit: Double;
   WipListId, WipBoardId, WipLiteral: string;
   BeforeWip, AfterWip: TJSONObject;
   CardTitle, NewBoard: string; Enabled_: Boolean;
+  Chart: TJSONObject;
   // The values of a copy that its copier may not read: not kept.
   procedure RedactCopiedFields(const CardId, BoardId: string);
   var Policy: TFieldPolicy; V: TWLRows; k: Integer; Sql: string;
@@ -5049,6 +5116,26 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  if Name = 'boardChartData' then
+  begin
+    Args := nil;
+    try
+      try Args := GetJSON(Request.Content); except end;
+      if not (Args is TJSONArray) or (Args.Count < 2) or (Args.Count > 3) or
+        (Args.Items[0].JSONType <> jtString) or (Args.Items[1].JSONType <> jtString) or
+        ((Args.Count = 3) and (Args.Items[2].JSONType <> jtObject)) then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"Match failed"}'); Exit; end;
+      Id := Args.Items[0].AsString;
+      if (Id = '') or (Pos(#0, Id) > 0) or not BoardCanRead(T.Db, S.UserId, Id) or
+        AssignedOnlyMember(T.Db, S.UserId, Id) then
+      begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"not-authorized"}'); Exit; end;
+      if Args.Items[1].AsString <> 'time' then
+      begin SendJsonAnswer(Response, 400, '{"error":400,"reason":"unknown chartKey"}'); Exit; end;
+      Chart := TimeChartReport(T.Db, Id, S.UserId);
+      try SendJsonAnswer(Response, 200, '{"result":'+Chart.AsJSON+'}'); finally Chart.Free; end;
+    finally Args.Free; end;
+    Exit;
+  end;
   // WeKan's changeHistory.page, undoLast, redoLast and restore (wlrules).
   if Copy(Name, 1, 14) = 'changeHistory.' then
   begin
