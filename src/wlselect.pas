@@ -433,8 +433,8 @@ end;
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles,AllowPublicGuest,ExcelMetadata:Boolean):TJSONObject;
 const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments','activities');
   ExportKeys:array[0..8] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments','activities');
-var Params,UserIds,CardRelations:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
-  I,J,Index:Integer;Relation:TJSONArray;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
+var Params,UserIds,CardRelations,FieldTypes:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
+  I,J,Index:Integer;Relation,Options:TJSONArray;OptionRow,Settings:TJSONObject;FieldValue:TJSONData;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
   function ExportRow(const TableName:string;Index:Integer):TJSONObject;
   var Original:TJSONObject;Typed,FieldName:string;Id,Extra,Field:TJSONData;RelationIndex,K:Integer; Relations:TJSONObject;
   begin
@@ -499,6 +499,7 @@ begin
   if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId,AllowPublicGuest) then Exit;
   Params:=TStringList.Create;
   UserIds:=TStringList.Create;UserIds.CaseSensitive:=True;UserIds.Sorted:=True;UserIds.Duplicates:=dupIgnore;
+  FieldTypes:=TStringList.Create;FieldTypes.CaseSensitive:=True;
   CardRelations:=TStringList.Create;
   CardRelations.CaseSensitive:=True;CardRelations.Sorted:=True;CardRelations.OwnsObjects:=True;
   try
@@ -526,6 +527,39 @@ begin
       Row:=Source.Objects[I];
       Relation:=CardRelation(Row.Get('cardId',''),'labelIds');
       Relation.Add(Row.Get('labelId',''));
+    end;
+    Source:=TJSONArray(Data.Find('custom_fields'));
+    for I:=0 to Source.Count-1 do
+      FieldTypes.Values[Source.Objects[I].Get('id','')]:=Source.Objects[I].Get('type','');
+    Source:=TJSONArray(Data.Find('card_custom_field_values'));
+    for I:=0 to Source.Count-1 do
+    begin
+      Row:=Source.Objects[I];Key:=Row.Get('customFieldId','');
+      Name:=FieldTypes.Values[Key];
+      if Name='' then Continue;
+      FieldValue:=Row.Find('value');
+      if FieldValue=nil then Continue;
+      Attachment:=TJSONObject.Create(['_id',Key]);
+      CardRelation(Row.Get('cardId',''),'customFields').Add(Attachment);
+      if FieldValue.JSONType=jtString then
+        case Name of
+          'checkbox': if (FieldValue.AsString='0') or (FieldValue.AsString='1') then
+            begin Attachment.Add('value',FieldValue.AsString='1');Continue;end;
+          'number','currency','dropdown':
+            begin
+              Value:=nil;
+              try
+                Value:=GetJSON(FieldValue.AsString);
+              except
+                on E:Exception do Value:=nil;
+              end;
+              if (Value<>nil) and (((Name='dropdown') and (Value is TJSONArray)) or
+                ((Name<>'dropdown') and (Value.JSONType=jtNumber))) then
+              begin Attachment.Add('value',Value);Continue;end;
+              Value.Free;
+            end;
+        end;
+      Attachment.Add('value',FieldValue.Clone);
     end;
     Source:=TJSONArray(Data.Find('card_dependencies'));
     for I:=0 to Source.Count-1 do
@@ -567,6 +601,30 @@ begin
         for J:=0 to Source.Count-1 do
         begin
           Row:=ExportRow(Name,J);
+          Target.Add(Row);
+          if (Name='custom_fields') and (Row.Find('settings_json')<>nil) then
+          begin
+            Settings:=TJSONObject(GetJSON(Row.Get('settings_json','{}')));
+            Row.Add('settings',Settings);
+            Row.Delete('settings_json');
+            for Key in ['currencyCode','stringtemplateFormat','stringtemplateSeparator'] do
+            begin
+              Value:=Row.Find(Key);
+              if (Value<>nil) and (Value.JSONType<>jtNull) then Settings.Add(Key,Value.Clone);
+              Row.Delete(Key);
+            end;
+            Options:=TJSONArray(Data.Find('custom_field_dropdown_items'));
+            Relation:=TJSONArray.Create;
+            Settings.Add('dropdownItems',Relation);
+            for Index:=0 to Options.Count-1 do
+            begin
+              OptionRow:=Options.Objects[Index];
+              if OptionRow.Get('customFieldId','')=Row.Get('_id','') then
+                Relation.Add(TJSONObject.Create(['_id',OptionRow.Get('id',''),'name',OptionRow.Get('name','')]));
+            end;
+            if (Relation.Count=0) and (Row.Get('dropdownItemsPresent',0)=0) then Settings.Delete('dropdownItems');
+            Row.Delete('dropdownItemsPresent');
+          end;
           if Name='attachments' then
           begin
             Attachment:=TJSONObject.Create(['_id',Row.Get('_id',''),'name',Row.Get('name',''),'type',Row.Get('type','')]);
@@ -583,9 +641,8 @@ begin
               end;
               Remember(Attachment.Find('userId'));
             end;
-            Row.Free;Row:=Attachment;
+            Target.Delete(Target.Count-1);Target.Add(Attachment);Row:=Attachment;
           end;
-          Target.Add(Row);
           if Name<>'attachments' then Remember(Row.Find('userId'));
           if Name='cards' then
             for FileData in ['members','assignees','requesters','assigners'] do Remember(Row.Find(FileData));
@@ -624,7 +681,7 @@ begin
         for I:=0 to High(Rows) do Target.Add(GetJSON(Rows[I][0]));
       end;
     except FreeAndNil(Result);raise;end;
-  finally CardRelations.Free;UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
+  finally FieldTypes.Free;CardRelations.Free;UserIds.Free;Files.Free;Graph.Free;Params.Free;end;
 end;
 
 function DeleteSelection(const T:TWLTenant;Graph:TJSONObject;const BoardId,UserId:string):Boolean;

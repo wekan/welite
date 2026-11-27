@@ -50,7 +50,13 @@ def run(request,database,administrator,member,base):
         con.execute("INSERT INTO board_labels(boardId,id,name,color) VALUES "
                     "('boardtxt','port','Port','blue'),('boardtxt','unused','Unused','green')")
         con.execute("INSERT INTO card_labels(cardId,labelId) VALUES('txtcard','port')")
-    for fields in ('dependencies,locations,stickers,people,labels', 'description'):
+        con.execute("INSERT INTO custom_fields(id,name,type,modifiedAt,dropdownItemsPresent) "
+                    "VALUES('port-field','Port field','dropdown','now',1)")
+        con.execute("INSERT INTO custom_field_boards VALUES('port-field','boardtxt')")
+        con.execute("INSERT INTO custom_field_dropdown_items VALUES('port-field','pier','Pier',0)")
+        con.execute("INSERT INTO card_custom_field_values VALUES('txtcard','port-field',?)",
+                    (json.dumps(['pier']),))
+    for fields in ('dependencies,locations,stickers,people,labels,custom-fields', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
         assert status == 200, body
@@ -60,12 +66,16 @@ def run(request,database,administrator,member,base):
         if fields.startswith('dependencies'):
             assert {row['_id']: row['name'] for row in payload['labels']} == {'port': 'Port', 'unused': 'Unused'}
             assert card['labelIds'] == ['port']
+            assert card['customFields'] == [{'_id': 'port-field', 'value': ['pier']}]
+            field = next(row for row in payload['customFields'] if row['_id'] == 'port-field')
+            assert field['settings']['dropdownItems'] == [{'_id': 'pier', 'name': 'Pier'}]
             assert card['members'] == card['assignees'] == [author]
             assert card['locations'] == decorations['locations']
             assert card['stickers'] == decorations['stickers']
             assert card['cardDependencies'] == [
                 dict(cardId='txtchild', type='blocks', color='#123456', icon='link')]
         else:
+            assert payload['customFields'] == [] and 'customFields' not in card
             assert 'labels' not in payload and 'labelIds' not in card
             assert not {'cardDependencies', 'locations', 'stickers', 'members', 'assignees'}.intersection(card)
     status,_,published=request('GET','/boardtxt?lang=fi&sessionId='+administrator)
