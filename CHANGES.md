@@ -15,7 +15,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Activity adds a worksheet with comments on the exported cards. The Export
   menu now offers Board and Activities for Excel. Board includes the whole
   board’s description, members and timestamps in the card layout or on a
-  separate Board worksheet in the table layout.
+  separate Board worksheet in the table layout. In the card layout, each
+  card can include its checklists with item completion, comments, and
+  attachment names. A checklist scope includes only that checklist.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

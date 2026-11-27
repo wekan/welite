@@ -6,7 +6,7 @@ uses Classes, fpjson;
 procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean);
 
 implementation
-uses SysUtils, zipper, wlcsvexp, wlselect;
+uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
 
 const
   MainNs = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -19,9 +19,12 @@ type
     Head: TBoardRow;
     RowNumber: Integer;
     CardDetails: Boolean;
+    Checklists, Items, Comments, Attachments: TFPHashObjectList;
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
-    procedure Add(const Row: TBoardRow);
+    destructor Destroy; override;
+    procedure DetailRows(Card: TJSONObject);
+    procedure Add(const Row: TBoardRow; Card: TJSONObject);
   end;
 
 function XmlText(const Value: string): string;
@@ -90,11 +93,96 @@ begin
   Line('</row>');
 end;
 
-procedure TSheetWriter.Add(const Row: TBoardRow);
+function GroupRows(Board: TJSONObject; const Source, Key: string): TFPHashObjectList;
+var Rows: TJSONArray; Entry: TJSONObject; Group: TFPList; Id: string; I: Integer;
+begin
+  Result := TFPHashObjectList.Create(True);
+  try
+    Rows := Board.Arrays[Source];
+    for I := 0 to Rows.Count - 1 do
+    begin
+      Entry := Rows.Objects[I];
+      Id := Entry.Get(Key, '');
+      if Id = '' then Continue;
+      Group := TFPList(Result.Find(Id));
+      if Group = nil then
+      begin
+        Group := TFPList.Create;
+        Result.Add(Id, Group);
+      end;
+      Group.Add(Entry);
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+destructor TSheetWriter.Destroy;
+begin
+  Attachments.Free;
+  Comments.Free;
+  Items.Free;
+  Checklists.Free;
+  inherited Destroy;
+end;
+
+procedure TSheetWriter.DetailRows(Card: TJSONObject);
+var Pair: TBoardRow; CardId, State: string; Group, Children: TFPList;
+  Entry, Child: TJSONObject; I, J: Integer;
+
+  procedure AddDetail(const Caption, Value: string);
+  begin
+    Pair[0].Text := Caption;
+    Pair[1].Text := Value;
+    TableRow(Pair, False, True);
+  end;
+
+begin
+  SetLength(Pair, 2);
+  Pair[0].LiteralText := True;
+  Pair[1].LiteralText := True;
+  CardId := Card.Get('_id', '');
+  if Checklists <> nil then
+  begin
+    Group := TFPList(Checklists.Find(CardId));
+    if Group <> nil then
+      for I := 0 to Group.Count - 1 do
+      begin
+        Entry := TJSONObject(Group[I]);
+        AddDetail('Checklist', Entry.Get('title', ''));
+        Children := TFPList(Items.Find(Entry.Get('_id', '')));
+        if Children <> nil then
+          for J := 0 to Children.Count - 1 do
+          begin
+            Child := TJSONObject(Children[J]);
+            State := '[ ] ';
+            if Child.Get('isFinished', False) or (Child.Get('isFinished', 0) = 1) then State := '[x] ';
+            AddDetail('', State + Child.Get('title', ''));
+          end;
+      end;
+  end;
+  if Comments <> nil then
+  begin
+    Group := TFPList(Comments.Find(CardId));
+    if Group <> nil then
+      for I := 0 to Group.Count - 1 do
+        AddDetail('Comment', ExportPlainDescription(TJSONObject(Group[I]).Get('text', '')));
+  end;
+  if Attachments <> nil then
+  begin
+    Group := TFPList(Attachments.Find(CardId));
+    if Group <> nil then
+      for I := 0 to Group.Count - 1 do
+        AddDetail('Attachment', TJSONObject(Group[I]).Get('name', ''));
+  end;
+end;
+
+procedure TSheetWriter.Add(const Row: TBoardRow; Card: TJSONObject);
 var Pair: TBoardRow; I: Integer;
 begin
   if not CardDetails then begin TableRow(Row, RowNumber = 0); Exit; end;
-  if Length(Head) = 0 then begin Head := Copy(Row); Exit; end;
+  if Card = nil then begin Head := Copy(Row); Exit; end;
   SetLength(Pair, 2);
   for I := 0 to High(Row) do
   begin
@@ -102,12 +190,13 @@ begin
     Pair[1] := Row[I];
     TableRow(Pair, I = 0, True);
   end;
+  DetailRows(Card);
   TableRow(nil);
 end;
 
 procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
-  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader: Boolean;
+  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments: Boolean;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
   procedure AddXml(const Path, Xml: string);
@@ -269,11 +358,17 @@ begin
   Known := False;
   ActivitySheet := False;
   BoardHeader := False;
+  WithChecklists := False;
+  WithComments := False;
+  WithAttachments := False;
   SheetCount := 0;
   CardDetails := False;
   for Part in Fields.Split([',']) do
   begin
     Section := Trim(Part);
+    if Section = 'checklists' then WithChecklists := True;
+    if Section = 'comments' then WithComments := True;
+    if Section = 'attachments' then WithAttachments := True;
     if Section = 'board-header' then BoardHeader := True;
     if Section = 'activities' then ActivitySheet := True;
     if Section = 'card-details' then CardDetails := True;
@@ -311,6 +406,13 @@ begin
     Writer.Line('<sheetData>');
     if CardDetails then
     begin
+      if WithChecklists or not Known then
+      begin
+        Writer.Checklists := GroupRows(Board, 'checklists', 'cardId');
+        Writer.Items := GroupRows(Board, 'checklistItems', 'checklistId');
+      end;
+      if WithComments or not Known then Writer.Comments := GroupRows(Board, 'comments', 'cardId');
+      if WithAttachments or not Known then Writer.Attachments := GroupRows(Board, 'attachments', 'cardId');
       WriteBoardTitle;
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;

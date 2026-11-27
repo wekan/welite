@@ -5,7 +5,7 @@ uses Classes, fpjson;
 type
   TBoardCell = record Text: string; LiteralText: Boolean; end;
   TBoardRow = array of TBoardCell;
-  TBoardRowWriter = procedure(const Row: TBoardRow) of object;
+  TBoardRowWriter = procedure(const Row: TBoardRow; Card: TJSONObject) of object;
 procedure ReadBoardRows(Board: TJSONObject; const Fields: string; Write: TBoardRowWriter; SkipArchived: Boolean = False);
 procedure WriteBoardCsv(Stream: TStream; Board: TJSONObject; const Fields, Separator: string);
 
@@ -59,9 +59,9 @@ var Selected: TStringArray; All: Boolean; Row: TBoardRow; Cells: array[0..19] of
     Row[N].LiteralText := EscapeFormula;
   end;
 
-  procedure Flush;
+  procedure Flush(Source: TJSONObject);
   begin
-    Write(Row);
+    Write(Row, Source);
     Row := nil;
   end;
 
@@ -183,7 +183,7 @@ begin
       end;
       Add(Heading);
     end;
-  Flush;
+  Flush(nil);
   if not (Cards is TJSONArray) then Exit;
   for I := 0 to Cards.Count - 1 do
   begin
@@ -220,17 +220,17 @@ begin
         AddCustom(Def, Field);
       end;
     end;
-    Flush;
+    Flush(Card);
   end;
 end;
 
 type TCsvWriter = class
   Stream: TStream;
   Separator: string;
-  procedure Write(const Row: TBoardRow);
+  procedure Write(const Row: TBoardRow; Card: TJSONObject);
 end;
 
-procedure TCsvWriter.Write(const Row: TBoardRow);
+procedure TCsvWriter.Write(const Row: TBoardRow; Card: TJSONObject);
 var I: Integer; Cell, Line: string;
 begin
   Line := '';

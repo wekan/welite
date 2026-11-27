@@ -2951,14 +2951,11 @@ begin
       if (CardId = '') and (ChecklistId <> '') then
       begin
         Checklists := Payload.Arrays['checklists'];
-        for I := 0 to Checklists.Count - 1 do
+        for I := Checklists.Count - 1 downto 0 do
         begin
           Checklist := Checklists.Objects[I];
-          if Checklist.Get('_id', '') = ChecklistId then
-          begin
-            CardId := Checklist.Get('cardId', '');
-            Break;
-          end;
+          if Checklist.Get('_id', '') = ChecklistId then CardId := Checklist.Get('cardId', '')
+          else Checklists.Delete(I);
         end;
       end;
       Cards := Payload.Arrays['cards'];

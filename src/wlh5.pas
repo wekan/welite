@@ -2712,10 +2712,10 @@ end;
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardExportPopup(Words: TWLTranslator; const BoardId: string): string;
 const
-  Parts: array[0..8] of string = ('description','board-info','people','labels','dates','voting','custom-fields','board-header','activities');
-  Keys: array[0..8] of string = ('description','export-card-field-board-info','export-card-field-people',
-    'labels','export-card-field-dates','voting','custom-fields','board','activities');
-  Captions: array[0..8] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields','Board','Activities');
+  Parts: array[0..11] of string = ('description','board-info','people','labels','dates','voting','custom-fields','board-header','activities','checklists','comments','attachments');
+  Keys: array[0..11] of string = ('description','export-card-field-board-info','export-card-field-people',
+    'labels','export-card-field-dates','voting','custom-fields','board','activities','checklists','comments','attachments');
+  Captions: array[0..11] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields','Board','Activities','Checklists','Comments','Attachments');
 var I: Integer; Base: string;
 begin
   Base := '/api/boards/' + HtmlAttr(HTTPEncode(BoardId));
