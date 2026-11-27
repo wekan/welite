@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Search readable custom-field values on archived boards in an explicit
+  archive search. Admin-only values remain visible to board admins only.
+
 - Include archived boards in explicit archive searches. Archived hits open
   a read-only card preview with the title and description. Search and preview
   both require active board membership and respect assigned-only access.

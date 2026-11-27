@@ -10,12 +10,12 @@ type
     FShared:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
-    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False;CardColumn:Boolean=False;AllowSiteAdmin:Boolean=False):string;
+    function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False;CardColumn:Boolean=False;AllowSiteAdmin:Boolean=False;AllowArchivedBoard:Boolean=False):string;
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
     // Read policy for a correlated card_custom_field_values row aliased v.
-    function ValueReadExpression:string;
+    function ValueReadExpression(AllowArchivedBoard:Boolean=False):string;
     function Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
     function DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
     function HistoryExpression(const FieldId:string):string;
@@ -68,7 +68,7 @@ begin
     FTables[2]:=Source('custom_fields','customFields');FTables[3]:=Source('cards','cards');
   end;
 end;
-function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn,CardColumn,AllowSiteAdmin:Boolean):string;
+function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn,CardColumn,AllowSiteAdmin,AllowArchivedBoard:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
 var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql,CardSql:string;i,Last:Integer;HasField:Boolean;
@@ -85,7 +85,8 @@ begin
     if not WriteAccess then Access:=Access+' OR b.permission=''public''';Access:=Access+')';
     Flags:='typeof(f.adminOnly)=''integer'' AND f.adminOnly IN (0,1) AND (f.adminOnly=0 OR '+Admin+')';
     if WriteAccess then Flags:=Flags+' AND typeof(f.readOnly)=''integer'' AND f.readOnly IN (0,1) AND (f.readOnly=0 OR '+Admin+')';
-    Tables:='boards b,users u';WhereSql:='b.id='+QuotedStr(FBoard)+' AND b.archived=0 AND u.id='+QuotedStr(FUser)+' AND u.loginDisabled=0 AND '+Access;
+    Tables:='boards b,users u';WhereSql:='b.id='+QuotedStr(FBoard)+' AND u.id='+QuotedStr(FUser)+' AND u.loginDisabled=0 AND '+Access;
+    if not AllowArchivedBoard then WhereSql:=WhereSql+' AND b.archived=0';
     if HasField then
     begin
       Tables:=Tables+',custom_fields f';WhereSql:=WhereSql+' AND f.id='+FieldSql+
@@ -127,7 +128,8 @@ begin
   Flags:='('+FalseFlag('f.d','adminOnly')+' OR (json_type(f.d,''$.adminOnly'')=''true'' AND '+Admin+'))';
   if WriteAccess then Flags:=Flags+' AND ('+FalseFlag('f.d','readOnly')+' OR (json_type(f.d,''$.readOnly'')=''true'' AND '+Admin+'))';
   Ids:=StringId('u',FUser)+' AND '+StringId('b',FBoard);Tables:='u,b';
-  WhereSql:=Ids+' AND '+FalseFlag('u.d','loginDisabled')+' AND '+FalseFlag('b.d','archived')+' AND '+Access;
+  WhereSql:=Ids+' AND '+FalseFlag('u.d','loginDisabled')+' AND '+Access;
+  if not AllowArchivedBoard then WhereSql:=WhereSql+' AND '+FalseFlag('b.d','archived');
   if HasField then
   begin
     Tables:=Tables+',f';
@@ -156,8 +158,8 @@ begin
 end;
 function TFieldPolicy.Expression(const FieldId:string;WriteAccess:Boolean):string;
 begin Result:=Build(FieldId,WriteAccess,False,False);end;
-function TFieldPolicy.ValueReadExpression:string;
-begin Result:=Build('',False,False,False,False,False,True,True);end;
+function TFieldPolicy.ValueReadExpression(AllowArchivedBoard:Boolean):string;
+begin Result:=Build('',False,False,False,False,False,True,True,False,AllowArchivedBoard);end;
 function TFieldPolicy.DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
 begin Result:=Build(FieldId,True,True,AdminRequired);end;
 function TFieldPolicy.HistoryExpression(const FieldId:string):string;

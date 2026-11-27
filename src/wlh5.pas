@@ -5807,7 +5807,7 @@ begin
   Response.SendContent;
 end;
 
-function BoardFieldTextMatchSql(Db: TWLDb; const UserId, BoardId, Text: string): string;
+function BoardFieldTextMatchSql(Db: TWLDb; const UserId, BoardId, Text: string; AllowArchivedBoard: Boolean): string;
 var Policy: TFieldPolicy; Decimal, Match: string; i, Digits: Integer; Dot: Boolean;
 begin
   Result := '';
@@ -5833,7 +5833,7 @@ begin
   Policy := TFieldPolicy.Create(Db, UserId, BoardId, '');
   try
     Result := 'EXISTS(SELECT 1 FROM card_custom_field_values v JOIN custom_fields definition ON definition.id=v.customFieldId ' +
-      'WHERE v.cardId=c.id AND (' + Match + ') AND ' + Policy.ValueReadExpression + ')';
+      'WHERE v.cardId=c.id AND (' + Match + ') AND ' + Policy.ValueReadExpression(AllowArchivedBoard) + ')';
   finally Policy.Free; end;
 end;
 
@@ -5851,7 +5851,7 @@ const SearchArchivedCard = '(c.archived=1 OR EXISTS(SELECT 1 FROM boards archive
   'AND archivedList.boardId=c.boardId AND archivedList.archived=1) OR EXISTS(SELECT 1 FROM swimlanes archivedLane ' +
   'WHERE archivedLane.id=c.swimlaneId AND archivedLane.boardId=c.boardId AND archivedLane.archived=1))';
 
-function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Text: string; out Kind: TSearchOperator): string;
+function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Text: string; AllowArchivedBoard: Boolean; out Kind: TSearchOperator): string;
 var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; Days, CardNumber: Int64; Digit: Char;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
@@ -5940,7 +5940,7 @@ begin
   begin
     Kind := soFieldText;
     if BoardId = '' then Exit('0');
-    Exit(BoardFieldTextMatchSql(Db, UserId, BoardId, Value));
+    Exit(BoardFieldTextMatchSql(Db, UserId, BoardId, Value, AllowArchivedBoard));
   end;
   if IsOperator('operator-attachment-text', 'attachment') or SameText(Op, 'attachment-text') then
   begin
@@ -6043,7 +6043,7 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Query: string; out Plain, Predicate, SortField: string; out Descending, SearchArchive, BoardScoped: Boolean; out PageSize: Integer);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Query: string; AllowArchivedBoard: Boolean; out Plain, Predicate, SortField: string; out Descending, SearchArchive, BoardScoped: Boolean; out PageSize: Integer);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes, HasPageOption: Boolean; Token, Sql: string;
   function ReadPageOption(const Arg: string): Boolean;
@@ -6099,7 +6099,7 @@ begin
     Sql := '';
     if not InQuotes and ReadPageOption(Token) then
     begin HasPageOption := True; Continue; end;
-    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, BoardId, Token, Kind);
+    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, BoardId, Token, AllowArchivedBoard, Kind);
     if Sql = '' then
     begin
       if Plain <> '' then Plain := Plain + ' ';
@@ -6171,7 +6171,7 @@ begin
   if Text <> '' then
   begin
     if Match <> '' then Match := Match + ' AND ';
-    FieldMatch := BoardFieldTextMatchSql(Db, UserId, BoardId, Text);
+    FieldMatch := BoardFieldTextMatchSql(Db, UserId, BoardId, Text, SearchArchive);
     if FieldMatch <> '' then FieldMatch := ' OR ' + FieldMatch;
     Match := Match + '(' + BoardTextMatchSql(Text) + FieldMatch +
       IndexedAttachmentMatchSql(Db, Text) + ')';
@@ -6285,7 +6285,7 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
     BoardId := Boards[BoardIndex][0];
     if not BoardScoped then
       Exit(SearchBoardCards(Db, UserId, BoardId, Plain, Limit, OperatorSql, SortField, Descending, SearchArchive));
-    ParseGlobalSearch(Db, Words, UserId, BoardId, Text, BoardPlain, BoardPredicate, BoardSort, Reverse, Archive, Scoped, Size);
+    ParseGlobalSearch(Db, Words, UserId, BoardId, Text, SearchArchive, BoardPlain, BoardPredicate, BoardSort, Reverse, Archive, Scoped, Size);
     Result := SearchBoardCards(Db, UserId, BoardId, BoardPlain, Limit, BoardPredicate, BoardSort, Reverse, Archive);
   end;
   procedure AppendCard(BoardIndex: Integer; const Card: TWLRow);
@@ -6311,7 +6311,7 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
   end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, UserId, '', Text, Plain, OperatorSql, SortField, Descending, SearchArchive, BoardScoped, PageSize);
+  ParseGlobalSearch(Db, Words, UserId, '', Text, False, Plain, OperatorSql, SortField, Descending, SearchArchive, BoardScoped, PageSize);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
