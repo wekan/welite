@@ -63,7 +63,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   TGA attachments also render as PNG, with HTTP checks for both MIME
   spellings and truncated image data. On Linux, TIFF renders as PNG when
   libtiff provides per-allocation and cumulative memory limits. HTTP tests
-  verify an embedded TIFF preview and that a truncated TIFF is skipped.
+  verify embedded uncompressed and Deflate-compressed TIFF previews,
+  including the `image/x-tiff` MIME type. A truncated TIFF is skipped.
 
 - Export one card to Excel from Card Actions with selectable fields. The
   download route checks that the card belongs to the requested board and list.

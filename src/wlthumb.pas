@@ -264,6 +264,11 @@ begin
 end;
 
 {$IFDEF LINUX}
+function IsTIFF(const MimeType: string): Boolean;
+begin
+  Result := (MimeType = 'image/tiff') or (MimeType = 'image/x-tiff');
+end;
+
 function ReadTIFF(const Path: string; out Size: TPoint; out Pixels: TBytes): Boolean;
 var Lib: TLibHandle; Options, Image: Pointer; W, H, I, A, ColorWord: Cardinal; P: PCardinal;
   NewOptions: function: Pointer; cdecl;
@@ -327,7 +332,7 @@ end;
 function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
 begin
   Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
-    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) or IsTarga(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') or (MimeType = 'image/tiff') {$ENDIF};
+    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) or IsTarga(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') or IsTIFF(MimeType) {$ENDIF};
 end;
 
 function ReadBE32(Stream: TStream): Cardinal;
@@ -413,7 +418,7 @@ begin
       begin
         if not ReadGif(Path, Size, Source) then Exit;
       end
-      else if MimeType = 'image/tiff' then
+      else if IsTIFF(MimeType) then
       begin
         if not ReadTIFF(Path, Size, Pixels) then Exit;
       end

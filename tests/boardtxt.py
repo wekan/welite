@@ -5,6 +5,7 @@ import hashlib
 import struct
 import io
 import zipfile
+import zlib
 import re
 import json
 import os
@@ -273,13 +274,17 @@ def run(request,database,administrator,member,base):
         + bytes((0, 0, 255, 0))
     )
     tga = struct.pack('<BBBHHBHHHHBB', 0, 0, 2, 0, 0, 0, 0, 0, 1, 1, 24, 32) + bytes((0, 0, 255))
-    tiff_tags = [
-        (256, 4, 1), (257, 4, 1), (258, 3, 8), (259, 3, 1),
-        (262, 3, 1), (273, 4, 122), (277, 3, 1), (278, 4, 1), (279, 4, 1),
-    ]
-    tiff = (b'II' + struct.pack('<HIH', 42, 8, len(tiff_tags))
-            + b''.join(struct.pack('<HHII', tag, kind, 1, value) for tag, kind, value in tiff_tags)
-            + bytes((0, 0, 0, 0, 128)))
+    def make_tiff(pixels, compression):
+        tags = [
+            (256, 4, 1), (257, 4, 1), (258, 3, 8), (259, 3, compression),
+            (262, 3, 1), (273, 4, 122), (277, 3, 1), (278, 4, 1), (279, 4, len(pixels)),
+        ]
+        return (b'II' + struct.pack('<HIH', 42, 8, len(tags))
+                + b''.join(struct.pack('<HHII', tag, kind, 1, value) for tag, kind, value in tags)
+                + bytes(4) + pixels)
+
+    tiff = make_tiff(bytes((128,)), 1)
+    compressed_tiff = make_tiff(zlib.compress(bytes((128,))), 8)
     try:
         tiff_preview = int(hasattr(ctypes.CDLL('libtiff.so.6'), 'TIFFOpenOptionsSetMaxCumulatedMemAlloc'))
     except OSError:
@@ -291,6 +296,7 @@ def run(request,database,administrator,member,base):
         for mime, contents, expected in (
             ('image/x-ms-bmp', bmp, 1),
             ('image/tiff', tiff, tiff_preview),
+            ('image/x-tiff', compressed_tiff, tiff_preview),
             ('image/tiff', tiff[:-1], 0),
             ('image/x-tga', tga, 1),
             ('image/x-targa', tga, 1),
