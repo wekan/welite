@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Filter Search All Boards by archived or all cards, open or ended cards,
+  and public or private boards. Within active boards, archive searches
+  include cards in archived lists and swimlanes.
+
 - Sort Search All Boards results by due, created or modified date, in either
   direction. The selected order applies across boards and result pages.
 

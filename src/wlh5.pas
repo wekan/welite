@@ -5839,7 +5839,11 @@ begin
 end;
 
 type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel,
-  soUser, soMember, soAssignee, soCreator, soCreated, soModified);
+  soUser, soMember, soAssignee, soCreator, soCreated, soModified, soArchiveState, soEndState, soBoardVisibility);
+
+const SearchArchivedCard = '(c.archived=1 OR EXISTS(SELECT 1 FROM lists archivedList WHERE archivedList.id=c.listId ' +
+  'AND archivedList.boardId=c.boardId AND archivedList.archived=1) OR EXISTS(SELECT 1 FROM swimlanes archivedLane ' +
+  'WHERE archivedLane.id=c.swimlaneId AND archivedLane.boardId=c.boardId AND archivedLane.archived=1))';
 
 function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, Text: string; out Kind: TSearchOperator): string;
 var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; Days: Int64;
@@ -5907,6 +5911,23 @@ begin
   if (Length(Value) >= 2) and (Value[1] = '"') and (Value[Length(Value)] = '"') then
     Value := Copy(Value, 2, Length(Value) - 2);
   if Value = '' then Exit;
+  if IsOperator('operator-status', 'status') then
+  begin
+    Kind := soArchiveState;
+    if IsField('archived') then Exit(SearchArchivedCard);
+    if IsField('all') then Exit('1=1');
+    if IsField('open') or IsField('ended') then
+    begin
+      Kind := soEndState;
+      if IsField('ended') then Exit('COALESCE(c.endAt,'''')<>''''');
+      Exit('COALESCE(c.endAt,'''')=''''');
+    end;
+    Kind := soBoardVisibility;
+    if IsField('public') then Exit('EXISTS(SELECT 1 FROM boards visible WHERE visible.id=c.boardId AND visible.permission=''public'')');
+    if IsField('private') then Exit('EXISTS(SELECT 1 FROM boards visible WHERE visible.id=c.boardId AND ' +
+      'COALESCE(visible.permission,''private'')=''private'')');
+    Exit;
+  end;
   if IsOperator('operator-user', 'user') then
   begin Kind := soUser; Exit('(' + RoleMatches('card_members') + ' OR ' + RoleMatches('card_assignees') + ')'); end;
   if IsOperator('operator-member', 'member') then
@@ -5983,7 +6004,7 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate, SortField: string; out Descending: Boolean);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate, SortField: string; out Descending, SearchArchive: Boolean);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes: Boolean; Token, Sql: string;
   function ReadSort(const Arg: string): Boolean;
@@ -6049,10 +6070,16 @@ begin
       Predicate := Predicate + '(' + Groups[Kind] + ')';
     end;
   if (Predicate = '') and (SortField = '') then Plain := Query;
+  SearchArchive := Groups[soArchiveState] <> '';
+  if (Query <> '') and not SearchArchive then
+  begin
+    if Predicate <> '' then Predicate := Predicate + ' AND ';
+    Predicate := Predicate + 'NOT ' + SearchArchivedCard;
+  end;
 end;
 
 function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0;
-  const OperatorSql: string = ''; const SortField: string = ''; Descending: Boolean = False): TWLRows;
+  const OperatorSql: string = ''; const SortField: string = ''; Descending: Boolean = False; SearchArchive: Boolean = False): TWLRows;
 var Scope, Tail, Match, SortValue, OrderBy: string;
 begin
   Result := nil;
@@ -6081,7 +6108,7 @@ begin
     OrderBy := 'searchDate' + IfThen(Descending, ' DESC', ' ASC');
   end;
   Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId' + SortValue + ' FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
-    ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + Match + ')' +
+    IfThen(SearchArchive, '', ' AND c.archived=0') + ' AND c.deletedAt IS NULL' + Scope + ' AND (' + Match + ')' +
     ' ORDER BY ' + OrderBy + ',c.id' + Tail + ';');
 end;
 
@@ -6110,12 +6137,13 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..16] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
-    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort');
-  Fields: array[0..14] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
-    'assignee', 'member', 'week', 'month', 'quarter', 'year', 'created', 'modified');
-  Described: array[0..15] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
-    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort');
+  Operators: array[0..17] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
+    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort', 'status');
+  Fields: array[0..20] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
+    'assignee', 'member', 'week', 'month', 'quarter', 'year', 'created', 'modified', 'archived', 'all', 'open', 'ended', 'public', 'private');
+  Described: array[0..16] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
+    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort', 'status');
+  Statuses: array[0..4] of string = ('archived', 'all', 'ended', 'public', 'private');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
   begin
@@ -6135,6 +6163,10 @@ begin
     Instruction('description', 'Use a colon between the operator and its value. Quote values containing spaces.') + '</p><ul>';
   for Name in Described do
     Result := Result + '<li>' + Instruction('operator-' + Name, '') + '</li>';
+  Result := Result + '<li><ul>';
+  for Name in Statuses do
+    Result := Result + '<li>' + Instruction('status-' + Name, '') + '</li>';
+  Result := Result + '<li><code>' + E(Words.Text('predicate-open', 'open')) + '</code></li></ul></li>';
   Result := Result + '<li><code>' + E(Words.Text('operator-title', 'title')) + ':&quot;Alpha Card&quot;</code></li>' +
     '</ul><p>' +
     Instruction('notes-1', 'Multiple operators may be specified.') + '</p><p>' +
@@ -6146,7 +6178,7 @@ function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term
 const PageSize = 25;
 var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards: TWLRows;
   BoardCards: array of TWLRows; Positions: array of Integer;
-  i, j, Skip, Shown, NextBoard: Integer; HasNext, Descending: Boolean;
+  i, j, Skip, Shown, NextBoard: Integer; HasNext, Descending, SearchArchive: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -6185,7 +6217,7 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
   end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql, SortField, Descending);
+  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql, SortField, Descending, SearchArchive);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
@@ -6203,7 +6235,7 @@ begin
     begin
       for i := 0 to High(Boards) do
       begin
-        Cards := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1 - Shown, OperatorSql);
+        Cards := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1 - Shown, OperatorSql, '', False, SearchArchive);
         for j := 0 to High(Cards) do
         begin
           if Skip > 0 then begin Dec(Skip); Continue; end;
@@ -6220,7 +6252,7 @@ begin
       SetLength(Positions, Length(Boards));
       for i := 0 to High(Boards) do
         BoardCards[i] := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1,
-          OperatorSql, SortField, Descending);
+          OperatorSql, SortField, Descending, SearchArchive);
       while True do
       begin
         NextBoard := -1;
