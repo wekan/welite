@@ -1084,6 +1084,27 @@ function BoardSignature(Db: TWLDb; const BoardId: string): string; forward;
 // WeKan's changeAvatarPopup (below, with the avatar upload).
 function ChangeAvatarPopup(Db: TWLDb; Words: TWLTranslator; const UserId, Error: string): string; forward;
 
+function BoardZipImportPopup(Words: TWLTranslator; const BoardId: string): string;
+var Action, Popup, Caption: string;
+begin
+  Action := '/api/boards/import';
+  Popup := 'board-zip-import';
+  Caption := Words.Text('import-board-c', 'Import board');
+  if BoardId <> '' then
+  begin
+    Action := '/api/import/zip?boardId=' + HTTPEncode(BoardId);
+    Popup := 'existing-board-zip-import';
+    Caption := Words.Text('import', 'Import');
+  end;
+  Result := '<template class="js-pop-over-template" data-pop="' + Popup + '" data-title="' +
+    HtmlAttr(Caption) + '"><form class="js-board-zip-import-form" method="post" action="' + HtmlAttr(Action) +
+    '" data-board="' + HtmlAttr(BoardId) + '" data-failed="' + HtmlAttr(Words.Text('import-scoped-failed', 'Import failed')) +
+    '" data-progress="' + HtmlAttr(Words.Text('importing', 'Importing...')) + '"><label>WeKan ZIP' +
+    '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
+    '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
+    E(Words.Text('import', 'Import')) + '</button></form></template>';
+end;
+
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
 var Dir, Header, ProfilePopup, Drawer, DateAttributes: string; SiteAdmin: Boolean; T: TWLTenant;
@@ -1127,13 +1148,7 @@ begin
         Header := Header + '<a class="board-header-btn js-open-board-zip-import" href="#" title="' +
           HtmlAttr(Words.Text('import-board-c', 'Import board')) + '" aria-label="' +
           HtmlAttr(Words.Text('import-board-c', 'Import board')) + '"><i class="fa fa-upload"></i></a>' +
-          '<template class="js-pop-over-template" data-pop="board-zip-import" data-title="' +
-          HtmlAttr(Words.Text('import-board-c', 'Import board')) + '"><form class="js-board-zip-import-form" ' +
-          'data-failed="' + HtmlAttr(Words.Text('import-scoped-failed', 'Import failed')) + '" data-progress="' +
-          HtmlAttr(Words.Text('importing', 'Importing...')) + '"><label>WeKan ZIP' +
-          '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
-          '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
-          E(Words.Text('import', 'Import')) + '</button></form></template>';
+          BoardZipImportPopup(Words, '');
     end;
     // header.jade's quick access: the board's title, renamed by its admin.
     if QuickAccess <> '' then Header := Header + QuickAccess
@@ -2809,7 +2824,7 @@ end;
 
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
   const FilterView: string; PlainLinks, PlainSource: Boolean): string;
-var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards, CanExport: Boolean;
+var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards, CanExport, CanImport: Boolean;
   // WeKan's restoreArchivedCardToListPopup (#6772): the card's list is gone,
   // or full at a hard WIP limit - one of the lists with room instead.
   function BlockedPopup(const Id, ListId: string): string;
@@ -2894,6 +2909,7 @@ begin
       E(StringReplace(Words.Text('restore-all-skipped-wip-limit', '__count__ card(s) were not restored: their lists have reached ' +
       'their WIP limits. Restore them one at a time to choose another list.'), '__count__', IntToStr(ViewRestoreSkipped), [rfReplaceAll])) +
       '</p></div></template><span class="js-open-pop-on-load" data-pop="restore-all-skipped" hidden></span>';
+  CanImport := Writable and BoardCanWrite(Db, S.UserId, BoardId) and not SharedSettingOn(Db, 'disableAllImport');
   CanExport := (ViewAssignedOnly = '') and BoardCanRead(Db, S.UserId, BoardId) and
     not SharedSettingOn(Db, 'disableAllExport') and not SharedSettingOn(Db, 'anonymizeExportUsers');
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
@@ -2978,7 +2994,10 @@ begin
       HtmlAttr(HTTPEncode(BoardId)) + '/history" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
     IfThen(CanExport, '<li><a class="js-export-board" href="#">' + E(Words.Text('export', 'Export')) + '</a></li>', '') +
+    IfThen(CanImport, '<li><a class="js-open-board-zip-import" data-pop="existing-board-zip-import" href="#">' +
+      E(Words.Text('import', 'Import')) + '</a></li>', '') +
     '</ul></div></template>' + IfThen(CanExport, BoardExportPopup(Words, BoardId), '') +
+    IfThen(CanImport, BoardZipImportPopup(Words, BoardId), '') +
     IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId) +
       CardSettingsPopup(Db, Words, S.UserId, BoardId, BoardOwnAdmin(Db, S.UserId, BoardId),
         ProfileField(Db, S.UserId, 'showDesktopDragHandles') = '1'), '');

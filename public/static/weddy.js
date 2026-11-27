@@ -799,9 +799,9 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     var t = document.querySelector('.js-pop-over .js-new-board-title');
     if (t) t.focus();
   });
-  up.on('click', '.js-open-board-zip-import', function (event) {
+  up.on('click', '.js-open-board-zip-import', function (event, el) {
     event.preventDefault();
-    openPopOver('board-zip-import');
+    openPopOver(el.dataset.pop || 'board-zip-import');
   });
   up.on('submit', '.js-board-zip-import-form', function (event, form) {
     event.preventDefault();
@@ -812,7 +812,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     submit.disabled = true;
     status.hidden = false;
     status.textContent = form.dataset.progress;
-    fetch('/api/boards/import', {
+    fetch(form.action, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/zip', 'X-Requested-With': 'XMLHttpRequest' },
@@ -822,7 +822,8 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       return response.json();
     }).then(function (board) {
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
-      window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
+      if (form.dataset.board === board._id) window.location.reload();
+      else window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
     }).catch(function () {
       status.textContent = form.dataset.failed;
       submit.disabled = false;

@@ -47,6 +47,7 @@ SQLite requirements.
 ## Import a board ZIP
 
 In the HTML5 header, choose **Import board** and select the WeKan ZIP.
+To add the archive to a board you can edit, choose **Import** in that board’s menu.
 For API imports, send the archive as the request body to `POST /api/boards/import` with
 `Content-Type: application/zip` and the usual API credentials. The import
 creates a new board and returns its ID in `_id`. A metadata-only archive
