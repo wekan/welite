@@ -11,7 +11,7 @@ function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: stri
 
 implementation
 
-uses SysUtils, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPWritePNG, Dynlibs, CTypes;
+uses SysUtils, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPReadPNM, FPWritePNG, Dynlibs, CTypes;
 
 const
   MaxInputBytes = 32 * 1024 * 1024;
@@ -19,6 +19,15 @@ const
   Edge = 512;
 
 type
+  TBoundedPNMImage = class(TFPMemoryImage)
+    procedure SetSize(AWidth, AHeight: Integer); override;
+  end;
+
+  TBoundedPNMReader = class(TFPReaderPNM)
+  protected
+    procedure ReadHeader(Stream: TStream); override;
+  end;
+
   TWebPCodec = record
     Lib: TLibHandle;
     GetInfo: function(Data: PByte; Length: SizeUInt; W, H: Pcint): cint; cdecl;
@@ -48,6 +57,25 @@ end;
 function ValidSize(const Size: TPoint): Boolean;
 begin
   Result := (Size.X > 0) and (Size.Y > 0) and (Int64(Size.X) * Size.Y <= MaxPixels);
+end;
+
+procedure TBoundedPNMImage.SetSize(AWidth, AHeight: Integer);
+begin
+  if ((AWidth <> 0) or (AHeight <> 0)) and not ValidSize(Point(AWidth, AHeight)) then
+    raise EReadError.Create('Invalid Netpbm dimensions');
+  inherited SetSize(AWidth, AHeight);
+end;
+
+procedure TBoundedPNMReader.ReadHeader(Stream: TStream);
+begin
+  inherited ReadHeader(Stream);
+  if FMaxVal > 65535 then raise EReadError.Create('Invalid Netpbm sample range');
+end;
+
+function IsNetpbm(const MimeType: string): Boolean;
+begin
+  Result := (MimeType = 'image/x-portable-anymap') or (MimeType = 'image/x-portable-bitmap') or
+    (MimeType = 'image/x-portable-graymap') or (MimeType = 'image/x-portable-pixmap');
 end;
 
 function ReadWebP(const Codec: TWebPCodec; Stream: TStream; out Size: TPoint; out Pixels: TBytes): Boolean;
@@ -220,7 +248,7 @@ end;
 function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
 begin
   Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
-    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
+    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
 end;
 
 function ReadBE32(Stream: TStream): Cardinal;
@@ -311,6 +339,14 @@ begin
       if MimeType = 'image/webp' then
       begin
         if not ReadWebP(Codec, Input, Size, Pixels) then Exit;
+      end
+      else if IsNetpbm(MimeType) then
+      begin
+        Reader := TBoundedPNMReader.Create;
+        Source := TBoundedPNMImage.Create(0, 0);
+        Source.LoadFromStream(Input, Reader);
+        Size := Point(Source.Width, Source.Height);
+        if not ValidSize(Size) then Exit;
       end
       else
       begin

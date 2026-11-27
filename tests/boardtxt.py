@@ -274,16 +274,23 @@ def run(request,database,administrator,member,base):
     digest = hashlib.sha256(identity.encode()).hexdigest()
     segments = [digest[i:i+8] for i in range(0, len(digest), 8)]
     stored = Path(database).parent.parent.joinpath('attachme', *segments[:-1], segments[-1] + '.bin')
-    stored.write_bytes(bmp)
     try:
-        with sqlite3.connect(database) as con:
-            con.execute("UPDATE attachments SET type='image/x-ms-bmp',size=? WHERE id=?", (len(bmp), identity))
-        status, _, workbook = request('GET', '/api/boards/boardtxt/exportExcel?' +
-                                       urlencode(dict(token=administrator, fields='card-details,attachments')))
-        assert status == 200, workbook
-        with zipfile.ZipFile(io.BytesIO(workbook)) as bundle:
-            images = [name for name in bundle.namelist() if name.startswith('xl/media/')]
-            assert len(images) == 1 and bundle.read(images[0]).startswith(bytes.fromhex('89504e470d0a1a0a'))
+        for mime, contents, expected in (
+            ('image/x-ms-bmp', bmp, 1),
+            ('image/x-portable-pixmap', b'P6\n1 1\n255\n\xff\x00\x00', 1),
+            ('image/x-portable-pixmap', b'P6\n999999 999999\n255\n', 0),
+        ):
+            stored.write_bytes(contents)
+            with sqlite3.connect(database) as con:
+                con.execute("UPDATE attachments SET type=?,size=? WHERE id=?", (mime, len(contents), identity))
+            status, _, workbook = request('GET', '/api/boards/boardtxt/exportExcel?' +
+                                          urlencode(dict(token=administrator, fields='card-details,attachments')))
+            assert status == 200, workbook
+            with zipfile.ZipFile(io.BytesIO(workbook)) as bundle:
+                images = [name for name in bundle.namelist() if name.startswith('xl/media/')]
+                assert len(images) == expected
+                for image in images:
+                    assert bundle.read(image).startswith(bytes.fromhex('89504e470d0a1a0a'))
     finally:
         stored.write_bytes(data)
         with sqlite3.connect(database) as con:
