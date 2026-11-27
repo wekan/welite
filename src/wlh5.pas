@@ -1054,6 +1054,9 @@ begin
   Result := 200;
 end;
 
+// WeKan's changeAvatarPopup (below, with the avatar upload).
+function ChangeAvatarPopup(Db: TWLDb; Words: TWLTranslator; const UserId, Error: string): string; forward;
+
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
   const S: TWLSession; const Title, BoardTitle, Content: string; const QuickAccess: string = ''): string;
 var Dir, Header, ProfilePopup, Drawer: string; SiteAdmin: Boolean; T: TWLTenant;
@@ -1062,7 +1065,8 @@ begin
   ProfilePopup := ''; Drawer := '';
   if (S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) then
   begin
-    ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId) + MemberSettingsPopups(T.Db, Words, S.UserId, ViewBoardId);
+    ProfilePopup := EditProfilePopup(T.Db, Words, S.UserId) + MemberSettingsPopups(T.Db, Words, S.UserId, ViewBoardId) +
+      ChangeAvatarPopup(T.Db, Words, S.UserId, Request.QueryFields.Values['avatarError']);
     Drawer := DrawerItems(T.Db, Words, S.UserId);
   end;
   if Language.Rtl then Dir := 'rtl' else Dir := 'ltr';
@@ -1113,6 +1117,8 @@ begin
       '<li><a class="js-member-date-settings" href="#"><i class="fa fa-calendar"></i> ' + E(Words.Text('date', 'Date')) + '</a></li>' +
       '<li><a class="js-change-settings" href="#"><i class="fa fa-cog"></i> ' +
       E(Words.Text('change-settings', 'Change Settings')) + '</a></li>' +
+      '<li><a class="js-change-avatar" href="#"><i class="fa fa-picture-o"></i> ' +
+      E(Words.Text('change-avatar', 'Change Avatar')) + '</a></li>' +
       // The Admin Panel, for a site admin (memberMenuPopup's js-go-setting).
       IfThen(SiteAdmin, '<li><a class="js-go-setting" href="/admin/people"><i class="fa fa-lock"></i> ' +
         E(Words.Text('admin-panel', 'Admin Panel')) + '</a></li>', '') + '</ul></div></template>' + ProfilePopup +
@@ -4945,6 +4951,216 @@ begin
   Result := 200;
 end;
 
+const
+  // WeKan's avatarServer.js: an uploaded avatar is at most 72 KB.
+  MAX_AVATAR_BYTES = 72000;
+
+// The picture a file's first bytes are, by their magic (PNG, JPEG, GIF,
+// WebP); '' for anything else - an SVG or a page among them.
+function AvatarImageType(const Head: RawByteString): string;
+begin
+  Result := '';
+  if Copy(Head, 1, 8) = #$89'PNG'#13#10#26#10 then Result := 'image/png'
+  else if Copy(Head, 1, 3) = #$FF#$D8#$FF then Result := 'image/jpeg'
+  else if (Copy(Head, 1, 6) = 'GIF87a') or (Copy(Head, 1, 6) = 'GIF89a') then Result := 'image/gif'
+  else if (Copy(Head, 1, 4) = 'RIFF') and (Copy(Head, 9, 4) = 'WEBP') then Result := 'image/webp';
+end;
+
+procedure EnsureAvatarTable(Db: TWLDb);
+begin
+  Db.Exec('CREATE TABLE IF NOT EXISTS _wl_avatars(id TEXT PRIMARY KEY, userId TEXT NOT NULL, type TEXT NOT NULL, name TEXT NOT NULL, createdAt TEXT NOT NULL);');
+end;
+
+// POST /profile/avatar: the user's own new avatar (Member Settings / Edit
+// Profile, Weddy's uploadAvatar): one raster image, by its content, of at
+// most 72 KB, unless Admin Panel blocks avatar uploads. Stored in the file
+// store, recorded for serving, in a shared store as WeKan's avatars row too,
+// and made the profile's avatarUrl. 200, or a code and the reason.
+function UploadAvatar(const T: TWLTenant; const UserId: string; Request: TRequest; out Error: string): Integer;
+var Upload: TUploadedFile; Data: RawByteString; Typ, Id, Path, Name, Ext: string; F: TFileStream; Doc: TJSONObject; i: Integer;
+begin
+  Error := '';
+  if AvatarUploadBlocked(T.Db) then begin Error := 'avatars-upload-blocked-description'; Exit(403); end;
+  if (Request.Files.Count <> 1) or (Request.Files[0].FieldName <> 'avatar') then begin Error := 'avatar-too-big'; Exit(400); end;
+  Upload := Request.Files[0];
+  if (Upload.Size > MAX_AVATAR_BYTES) or (Upload.Size <= 0) then begin Error := 'avatar-too-big'; Exit(400); end;
+  SetLength(Data, Upload.Size);
+  Upload.Stream.Position := 0;
+  Upload.Stream.ReadBuffer(Data[1], Upload.Size);
+  Typ := AvatarImageType(Data);
+  if Typ = '' then begin Error := 'avatar-too-big'; Exit(400); end;
+  Id := NewId;
+  Path := StoreFilePath(T.FilesDir, 'avatars', Id);
+  ForceDirectories(ExtractFilePath(Path));
+  F := TFileStream.Create(Path, fmCreate);
+  try
+    F.WriteBuffer(Data[1], Length(Data));
+  finally
+    F.Free;
+  end;
+  // The name kept only for the download's filename, safe characters only.
+  Name := '';
+  for i := 1 to Length(Upload.FileName) do
+    if Upload.FileName[i] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.'] then Name := Name + Upload.FileName[i];
+  if Name = '' then Name := 'avatar';
+  Ext := Copy(Typ, 7, MaxInt);
+  EnsureAvatarTable(T.Db);
+  if not T.Db.Exec('INSERT INTO _wl_avatars(id,userId,type,name,createdAt) VALUES(' + QuotedStr(Id) + ',' + QuotedStr(UserId) + ',' +
+    QuotedStr(Typ) + ',' + QuotedStr(Name) + ',' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) + ');') then
+  begin DeleteFile(Path); Error := 'Could not save'; Exit(500); end;
+  if IsShared(T.Db) then
+  begin
+    Doc := TJSONObject.Create(['_id', Id, 'name', Name, 'extension', Ext, 'ext', Ext, 'extensionWithDot', '.' + Ext, 'type', Typ,
+      'mime', Typ, 'mime-type', Typ, 'size', Length(Data), 'userId', UserId, 'isImage', True, 'path', Path, '_collectionName', 'avatars',
+      '_downloadRoute', '/cdn/storage', 'public', False, 'meta', TJSONObject.Create,
+      'versions', TJSONObject.Create(['original', TJSONObject.Create(['path', Path, 'size', Length(Data), 'type', Typ, 'extension', Ext,
+        'storage', 'fs'])])]);
+    try
+      try
+        T.Db.Exec(InsertDocSql(T.Db, 'avatars', Doc, ''));
+      except
+        // WeLite serves it from _wl_avatars either way.
+      end;
+    finally
+      Doc.Free;
+    end;
+  end;
+  if not SetProfileField(T.Db, UserId, 'avatarUrl', '"/cdn/storage/avatars/' + Id + '"') then begin Error := 'Could not save'; Exit(500); end;
+  Result := 200;
+end;
+
+// WeKan's changeAvatarPopup (userAvatar.jade): the user's uploaded avatars,
+// each to choose or delete, the initials, and the upload unless Admin Panel
+// blocks it. Error: a refused upload's reason, shown with the pop-over
+// opened at once.
+function ChangeAvatarPopup(Db: TWLDb; Words: TWLTranslator; const UserId, Error: string): string;
+var R: TWLRows; Current, Item, Msg: string; i: Integer;
+begin
+  EnsureAvatarTable(Db);
+  Current := ProfileField(Db, UserId, 'avatarUrl');
+  R := Db.Query('SELECT id,name FROM _wl_avatars WHERE userId=' + QuotedStr(UserId) + ' ORDER BY createdAt,id;');
+  Result := '<template class="js-pop-over-template" data-pop="change-avatar" data-popup="changeAvatarPopup" data-title="' +
+    HtmlAttr(Words.Text('changeAvatarPopup-title', 'Change Avatar')) + '"><div class="content">';
+  if Error <> '' then
+  begin
+    Msg := StringReplace(Words.Text(Error, Error), '__size__', '72 KB', [rfReplaceAll]);
+    Result := Result + '<div class="warning">' + E(Msg) + '</div>';
+  end;
+  Result := Result + '<ul class="pop-over-list avatar-list">';
+  for i := 0 to High(R) do
+  begin
+    Item := '/cdn/storage/avatars/' + R[i][0];
+    Result := Result + '<li class="avatar-list-item' + IfThen(Item = Current, ' selected', '') + '">' +
+      '<form method="post" action="/profile/avatar/select" class="js-avatar-select-form"><input type="hidden" name="avatarId" value="' +
+      HtmlAttr(R[i][0]) + '"><button type="submit" class="js-select-avatar avatar-list-select" title="' + HtmlAttr(R[i][1]) +
+      '"><span class="member"><img class="avatar avatar-image" src="' + HtmlAttr(Item) + '" alt=""></span><span class="avatar-list-info">' +
+      '<span class="avatar-list-name">' + E(R[i][1]) + '</span></span>' + IfThen(Item = Current, '<i class="fa fa-check avatar-list-check"></i>', '') +
+      '</button></form><form method="post" action="/profile/avatar/delete" class="js-avatar-delete-form"><input type="hidden" name="avatarId" value="' +
+      HtmlAttr(R[i][0]) + '"><button type="submit" class="js-delete-avatar avatar-list-delete" data-avatar-id="' + HtmlAttr(R[i][0]) +
+      '" title="' + HtmlAttr(Words.Text('delete', 'Delete')) + '" data-confirm="' + HtmlAttr(Words.Text('delete-avatar-confirm',
+      'Are you sure you want to delete this avatar?')) + '"><i class="fa fa-trash"></i></button></form></li>';
+  end;
+  Result := Result + '<li class="avatar-list-item' + IfThen(Current = '', ' selected', '') + '"><form method="post" action="/profile/avatar/select" ' +
+    'class="js-avatar-select-form"><input type="hidden" name="avatarId" value=""><button type="submit" class="js-select-initials avatar-list-select">' +
+    '<span class="avatar-list-info"><span class="avatar-list-name">' + E(Words.Text('initials', 'Initials')) + '</span> <span class="sub-name">' +
+    E(Words.Text('default-avatar', 'Default avatar')) + '</span></span>' + IfThen(Current = '', '<i class="fa fa-check avatar-list-check"></i>', '') +
+    '</button></form></li></ul>';
+  if not AvatarUploadBlocked(Db) then
+    Result := Result + '<form method="post" action="/profile/avatar" enctype="multipart/form-data" class="js-avatar-upload-form">' +
+      '<input class="js-upload-avatar-input" type="file" name="avatar" accept="image/png,image/jpeg,image/gif,image/webp" required>' +
+      '<p class="avatar-upload-hints">' + E(Words.Text('max-avatar-filesize', 'Max avatar filesize in bytes:')) + ' ' + IntToStr(MAX_AVATAR_BYTES) +
+      '<br>' + E(Words.Text('allowed-avatar-filetypes', 'Allowed avatar filetypes:')) + ' PNG, JPEG, GIF, WebP</p>' +
+      '<button type="submit" class="full primary js-upload-avatar"><i class="fa fa-upload"></i> ' + E(Words.Text('upload-avatar', 'Upload an avatar')) +
+      '</button></form>';
+  Result := Result + '</div></template>';
+  if Error <> '' then Result := Result + '<span class="js-open-pop-on-load" data-pop="change-avatar" hidden></span>';
+end;
+
+// changeAvatarPopup's choice: one of the user's own avatars, or '' for the
+// initials (WeKan's setAvatarUrl / setAvatarUrl('')).
+function SelectAvatar(Db: TWLDb; const UserId, AvatarId: string): Boolean;
+begin
+  EnsureAvatarTable(Db);
+  if AvatarId = '' then Exit(SetProfileField(Db, UserId, 'avatarUrl', ''));
+  if (Pos(#0, AvatarId) > 0) or (Length(Db.Query('SELECT 1 FROM _wl_avatars WHERE id=' + QuotedStr(AvatarId) + ' AND userId=' +
+    QuotedStr(UserId) + ';')) <> 1) then Exit(False);
+  Result := SetProfileField(Db, UserId, 'avatarUrl', '"/cdn/storage/avatars/' + AvatarId + '"');
+end;
+
+// deleteAvatarPopup's Delete: one of the user's own avatars, its file and its
+// row; the profile back to the initials when it was the one shown.
+function DeleteAvatar(const T: TWLTenant; const UserId, AvatarId: string): Boolean;
+var Raw, Tbl: string;
+begin
+  EnsureAvatarTable(T.Db);
+  if (AvatarId = '') or (Pos(#0, AvatarId) > 0) or (Length(T.Db.Query('SELECT 1 FROM _wl_avatars WHERE id=' + QuotedStr(AvatarId) +
+    ' AND userId=' + QuotedStr(UserId) + ';')) <> 1) then Exit(False);
+  if not T.Db.Exec('DELETE FROM _wl_avatars WHERE id=' + QuotedStr(AvatarId) + ';') then Exit(False);
+  DeleteFile(StoreFilePath(T.FilesDir, 'avatars', AvatarId));
+  if IsShared(T.Db) then
+  try
+    T.Db.Exec('DELETE FROM avatars WHERE id=' + QuotedStr(AvatarId) + ';');
+  except
+  end;
+  if ProfileField(T.Db, UserId, 'avatarUrl') = '/cdn/storage/avatars/' + AvatarId then SetProfileField(T.Db, UserId, 'avatarUrl', '');
+  Result := True;
+end;
+
+// /cdn/storage/avatars/:id[/original/:name]: an uploaded avatar, for a
+// signed-in user - or for anybody when its owner is on a public board
+// (WeKan's Avatars.protected; refused otherwise, as PortraitBleed). Only the picture it is, never
+// a page (nosniff, sandboxed). An anonymous request for an avatar there is
+// none of is refused and recorded (RelicAvatarBleed).
+function ServeAvatarFile(Request: TRequest; Response: TResponse; const Path: string): Boolean;
+var T: TWLTenant; S: TWLSession; P: TStringArray; Id: string; R: TWLRows; Signed: Boolean; i: Integer;
+begin
+  Result := False;
+  P := PathParts(Path);
+  if (Length(P) < 4) or (P[0] <> 'cdn') or (P[1] <> 'storage') or (P[2] <> 'avatars') then Exit;
+  if not ((Length(P) = 4) or ((Length(P) = 6) and (P[4] = 'original'))) then Exit;
+  if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+  Result := True;
+  Id := P[3];
+  i := Pos('-original-', Id);
+  if i > 0 then Id := Copy(Id, 1, i - 1);
+  for i := 1 to Length(Id) do
+    if not (Id[i] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_']) then begin SendJsonAnswer(Response, 404, '{"error":"Avatar not found"}'); Exit; end;
+  Signed := Html5User(T.Db, Request, S);
+  EnsureAvatarTable(T.Db);
+  R := T.Db.Query('SELECT userId,type,name FROM _wl_avatars WHERE id=' + QuotedStr(Id) + ';');
+  if Length(R) <> 1 then
+  begin
+    if not Signed then
+    begin
+      try
+        RecordSecurityEvent(T.Db, '', 'RelicAvatarBleed', '/cdn/storage/avatars/:fileName', 'authz', 'high', 'CWE-862', 'blocked',
+          'refused an unauthenticated request for an avatar that is not there');
+      except
+        // logging must never break the guard
+      end;
+      SendJsonAnswer(Response, 401, '{"error":"Authentication required"}');
+    end
+    else SendJsonAnswer(Response, 404, '{"error":"Avatar not found"}');
+    Exit;
+  end;
+  // Avatars.protected: anybody, when the owner is on a public board.
+  if not Signed and (Length(T.Db.Query('SELECT 1 FROM boards b JOIN board_members m ON m.boardId=b.id WHERE b.permission=''public'' AND ' +
+    'm.userId=' + QuotedStr(R[0][0]) + ' AND m.isActive=1 LIMIT 1;')) = 0) then
+  begin
+    try
+      RecordSecurityEvent(T.Db, '', 'PortraitBleed', 'Avatars.protected', 'authz', 'high', 'CWE-862', 'blocked',
+        'refused an anonymous download of a non-public avatar');
+    except
+      // logging must never break the guard
+    end;
+    SendJsonAnswer(Response, 401, '{"error":"Authentication required"}');
+    Exit;
+  end;
+  Response.SetCustomHeader('Content-Security-Policy', 'default-src ''none''; style-src ''unsafe-inline''; sandbox');
+  if not SendStoredDownload(Response, StoreFilePath(T.FilesDir, 'avatars', Id), R[0][2], R[0][1]) then
+    SendJsonAnswer(Response, 404, '{"error":"Avatar file not found in storage"}');
+end;
+
 // WeKan's file route, /cdn/storage/attachments/:id[/original/:name or
 // /thumbnail]: an attachment of a live card on a board the signed-in user may
 // read. Only a raster image is shown inline (SendStoredDownload); ?download=
@@ -5208,6 +5424,38 @@ begin
     else Found := DeleteAllNotifications(T.Db, S.UserId);
     if Found then SendJsonAnswer(Response, 200, '{"ok":true}')
     else SendJsonAnswer(Response, 500, '{"error":"Internal Server Error"}');
+    Exit;
+  end;
+  // changeAvatarPopup's forms: an upload, a choice, a delete; back where
+  // they were sent from, a refused upload with its reason.
+  if (Path = '/profile/avatar') or (Path = '/profile/avatar/select') or (Path = '/profile/avatar/delete') then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    Error := '';
+    if Path = '/profile/avatar' then
+    begin
+      UploadAvatar(T, S.UserId, Request, Error);
+    end
+    else if Path = '/profile/avatar/select' then
+    begin
+      if not SelectAvatar(T.Db, S.UserId, Request.ContentFields.Values['avatarId']) then Error := 'error-undefined';
+    end
+    else if not DeleteAvatar(T, S.UserId, Request.ContentFields.Values['avatarId']) then Error := 'error-undefined';
+    Back := SafeReturnPath(Request.Referer);
+    if Back = '' then Back := '/';
+    if Pos('avatarError=', Back) > 0 then Back := Copy(Back, 1, Pos('avatarError=', Back) - 2);
+    if Back = '' then Back := '/';
+    if Error <> '' then
+    begin
+      if Pos('?', Back) > 0 then Back := Back + '&' else Back := Back + '?';
+      Back := Back + 'avatarError=' + HTTPEncode(Error);
+    end;
+    Response.Code := 303;
+    Response.SetCustomHeader('Location', Back);
+    Response.SetCustomHeader('Cache-Control', 'no-store');
+    SendResponse(Response);
     Exit;
   end;
   // editProfilePopup's form: the user's own name and initials, and the
@@ -5561,6 +5809,11 @@ begin
   if Copy(Path, 1, 25) = '/cdn/storage/attachments/' then
   begin
     Result := ServeAttachmentFile(Request, Response, Path);
+    Exit;
+  end;
+  if Copy(Path, 1, 21) = '/cdn/storage/avatars/' then
+  begin
+    Result := ServeAvatarFile(Request, Response, Path);
     Exit;
   end;
   // An address's verification link: verified and signed in, or to sign-in.

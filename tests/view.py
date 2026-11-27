@@ -1916,6 +1916,73 @@ def http_checks(server, tmp, backend):
         stranger = 'meteor_login_token=' + json.loads(request('POST', '/users/login',
             {'username': 'stranger', 'password': 'Changed-pass-1'})[2])['token']
         assert request('GET', '/', cookie=stranger)[0] == 200
+        # Member Settings / Change Avatar (changeAvatarPopup): an upload of
+        # one raster picture of at most 72 KB, by its content, made the
+        # profile's avatar; served to a signed-in user, to anybody only while
+        # its owner is on a public board; chosen, put back to the initials,
+        # deleted. Negative: a page, an SVG, a too-large file, a choice or a
+        # delete of somebody else's avatar, an anonymous download.
+        def avatar_upload(name, mime, content, cookie, field='avatar'):
+            boundary = 'welitetestboundary'
+            body = ('--%s\r\nContent-Disposition: form-data; name="%s"; filename="%s"\r\nContent-Type: %s\r\n\r\n'
+                    % (boundary, field, name, mime)).encode() + content + ('\r\n--%s--\r\n' % boundary).encode()
+            return request('POST', '/profile/avatar', body, cookie=cookie,
+                           headers={'Content-Type': 'multipart/form-data; boundary=' + boundary, 'Referer': 'http://localhost/'})
+        avatar_url = lambda: card_db("SELECT COALESCE(json_extract(profile_json,'$.avatarUrl'),'') FROM users WHERE id=?",
+                                     users['owner'])[0]
+        page = request('GET', '/', cookie=owner)[2]
+        assert b'js-change-avatar' in page and b'data-popup="changeAvatarPopup"' in page and b'js-avatar-upload-form' in page
+        status, headers, _, _ = avatar_upload('me.png', 'image/png', png, owner)
+        assert status == 303 and headers['Location'] == '/', headers
+        url = avatar_url()
+        assert url.startswith('/cdn/storage/avatars/'), url
+        avatar_id = url.rsplit('/', 1)[1]
+        status, headers, body, _ = request('GET', url, cookie=stranger)
+        assert status == 200 and body == png and headers.get('Content-Type') == 'image/png', headers
+        assert headers.get('X-Content-Type-Options') == 'nosniff' and 'sandbox' in headers.get('Content-Security-Policy', '')
+        assert request('GET', url + '/original/me.png', cookie=stranger)[2] == png
+        page = request('GET', '/', cookie=owner)[2]
+        assert ('src="%s"' % url).encode() in page and b'avatar-list-item selected' in page
+        # Negative: a page or an SVG named a PNG, and a picture too large.
+        for name, mime, content in (('page.png', 'image/png', b'<html><script>alert(1)</script></html>'),
+                                    ('evil.svg', 'image/svg+xml', evil),
+                                    ('big.png', 'image/png', png + b'\0' * 72001),
+                                    ('me.png', 'image/png', b'')):
+            status, headers, _, _ = avatar_upload(name, mime, content, owner)
+            assert status == 303 and 'avatarError=avatar-too-big' in headers['Location'], (name, headers)
+            assert avatar_url() == url, 'the avatar stays: ' + name
+        status, headers, _, _ = avatar_upload('me.png', 'image/png', png, owner, field='file')
+        assert 'avatarError=' in headers['Location'], 'only the avatar field'
+        page = request('GET', '/?avatarError=avatar-too-big', cookie=owner)[2]
+        assert b'72 KB' in page and b'js-open-pop-on-load" data-pop="change-avatar"' in page
+        assert card_db('SELECT COUNT(*) FROM _wl_avatars WHERE userId=?', users['owner'])[0] == 1, 'nothing refused is kept'
+        # Anonymous: refused while the owner is on no public board, recorded.
+        status, _, body, _ = request('GET', url)
+        assert status == 401 and body != png, 'negative: an anonymous download'
+        status, _, body, _ = request('GET', '/cdn/storage/avatars/nosuchavatar')
+        assert status == 401, 'negative: an anonymous guess'
+        assert request('GET', '/cdn/storage/avatars/nosuchavatar', cookie=owner)[0] == 404
+        assert request('GET', '/cdn/storage/avatars/..%2f..%2fwekan.db', cookie=owner)[0] == 404
+        card_db("UPDATE boards SET permission='public' WHERE id=?", board_id)
+        status, _, body, _ = request('GET', url)
+        assert status == 200 and body == png, 'the owner is on a public board'
+        card_db("UPDATE boards SET permission='private' WHERE id=?", board_id)
+        assert request('GET', url)[0] == 401
+        # Somebody else's avatar is neither chosen nor deleted.
+        status, headers, _, _ = request('POST', '/profile/avatar/select', {'avatarId': avatar_id}, cookie=stranger,
+                                        headers={'Referer': 'http://localhost/'})
+        assert 'avatarError=' in headers['Location']
+        assert card_db("SELECT COALESCE(json_extract(profile_json,'$.avatarUrl'),'') FROM users WHERE id=?", users['stranger'])[0] == ''
+        status, headers, _, _ = request('POST', '/profile/avatar/delete', {'avatarId': avatar_id}, cookie=stranger,
+                                        headers={'Referer': 'http://localhost/'})
+        assert 'avatarError=' in headers['Location'] and request('GET', url, cookie=owner)[0] == 200
+        assert request('POST', '/profile/avatar/select', {'avatarId': ''})[0] in (302, 303, 401, 404) and avatar_url() == url
+        # The initials, the avatar again, and its delete.
+        assert request('POST', '/profile/avatar/select', {'avatarId': ''}, cookie=owner)[0] == 303 and avatar_url() == ''
+        assert request('POST', '/profile/avatar/select', {'avatarId': avatar_id}, cookie=owner)[0] == 303 and avatar_url() == url
+        assert request('POST', '/profile/avatar/delete', {'avatarId': avatar_id}, cookie=owner)[0] == 303
+        assert avatar_url() == '' and request('GET', url, cookie=owner)[0] == 404, 'deleted, and the profile back to the initials'
+        assert card_db('SELECT COUNT(*) FROM _wl_avatars WHERE userId=?', users['owner'])[0] == 0
         # WeKan's setPassword: a site admin's, and it signs that user out too.
         status, _, body, _ = request('POST', '/_methods/setPassword', ['Admin-set-pass-1', users['stranger']], cookie=worker, as_json=True)
         assert status == 403, body

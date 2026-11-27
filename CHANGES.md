@@ -531,6 +531,16 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   without the spaces around it, as WeKan keeps it. Add lists.softRemove, and
   undo and redo of a deleted list with the cards of its batch only (#1023); a
   soft delete and its undo draw the board's pages again.
+- Add Member Settings / Change Avatar (WeKan's changeAvatarPopup): upload one
+  PNG, JPEG, GIF or WebP picture of at most 72 KB, judged by its content, unless
+  Admin Panel blocks avatar uploads; choose between the uploaded ones and the
+  initials, and delete one. `/cdn/storage/avatars/:id` serves it to a
+  signed-in user, and to anybody only while its owner is on a public board,
+  as a picture only (nosniff, sandboxed). An anonymous download of any other
+  avatar is refused and recorded (PortraitBleed), as is an anonymous request
+  for one that is not there (RelicAvatarBleed); a page or an SVG named a PNG,
+  a file too large, and a choice or delete of somebody else's avatar are
+  refused. `tests/view.py` checks each.
 - End the live board's stream as soon as its page closes it, rather than at
   the next ping up to 15 seconds later, so a stopping server no longer waits
   for it.

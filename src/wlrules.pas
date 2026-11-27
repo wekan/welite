@@ -82,6 +82,11 @@ procedure RunRulesSince(const T: TWLTenant; const Stamp: string);
 // the minute of Local (atTime, calendar) or Utc (cron) runs its rules' actions
 // on the cards it chooses, once in that minute.
 procedure RunScheduledRules(const T: TWLTenant; Local, Utc: TDateTime);
+// A 17-character Meteor-style id; whether the store is a shared FerretDB one;
+// the SQL that inserts Doc into Collection there.
+function NewId: string;
+function IsShared(Db: TWLDb): Boolean;
+function InsertDocSql(Db: TWLDb; const Collection: string; Doc: TJSONObject; const Hints: string): string;
 
 const
   MAX_RULE_DEPTH = 5;

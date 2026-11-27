@@ -345,4 +345,14 @@ if (window.Meteor && !window.Meteor.loggingIn) window.Meteor.loggingIn = functio
   }
   up.on('click', '.js-member-date-settings', function () { setTimeout(function () { refresh('member'); }, 0); });
   up.on('click', '.js-open-board-date-settings', function () { setTimeout(function () { refresh('board'); }, 0); });
+
+  // Member Settings / Change Avatar (WeKan's changeAvatarPopup): opened from
+  // the member menu; a delete asks first (deleteAvatarPopup).
+  up.on('click', '.js-change-avatar', function (event) {
+    event.preventDefault();
+    if (window.Popup) window.Popup.open('changeAvatar')();
+  });
+  up.on('click', '.js-delete-avatar', function (event, el) {
+    if (!window.confirm(el.getAttribute('data-confirm') || '')) event.preventDefault();
+  });
 })();
