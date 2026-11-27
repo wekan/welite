@@ -2257,6 +2257,23 @@ begin
   if not Result then begin Db.Exec('ROLLBACK;'); Error:='history-conflict'; end;
 end;
 
+function HistoryArchiveLiteral(Content:TJSONData; out Literal:string):Boolean;
+var Value:TJSONData;
+begin
+  Result:=False;
+  if not (Content is TJSONObject) or (Str(TJSONObject(Content),'field')<>'archived') then Exit;
+  Value:=TJSONObject(Content).Find('value');
+  if (Value=nil) or (Value.JSONType<>jtBoolean) then Exit;
+  Literal:=IntToStr(Ord(Value.AsBoolean));
+  Result:=True;
+end;
+
+function ArchiveHistoryAssignment(const Literal,Stamp:string):string;
+begin
+  Result:='archived='+Literal+',archivedAt=NULL';
+  if Literal='1' then Result:='archived=1,archivedAt=COALESCE(archivedAt,'+Stamp+')';
+end;
+
 function ApplyCardHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
 var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope, CurrentField: string; R: TWLRows; Current: TJSONObject;
   function ValueOf(Content: TJSONData): string;
@@ -2283,6 +2300,20 @@ begin
       if (Expect = nil) or (Current.AsJSON <> Expect.AsJSON) then begin Error := 'history-conflict'; Exit; end;
     finally Current.Free; end;
     Exit(RestoreCustomFieldSnapshot(Db, UserId, Str(Row, 'boardId'), CardId, Put) = 1);
+  end;
+  if (Field='archived') and (Str(Row,'group')='lifecycle') then
+  begin
+    if not HistoryArchiveLiteral(Put,PutSql) or not HistoryArchiveLiteral(Expect,ExpectSql) then Exit;
+    Scope:='id='+Q(Str(Row,'entityId'))+' AND boardId='+Q(Str(Row,'boardId'))+' AND deletedAt IS NULL';
+    CurrentField:=Q(NowIso);
+    Result:=Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+
+      ' AND COALESCE(archived,0)='+ExpectSql+') THEN 1 ELSE json(''Card archive state changed'') END; '+
+      'UPDATE cards SET '+ArchiveHistoryAssignment(PutSql,CurrentField)+',modifiedAt='+CurrentField+' WHERE '+Scope+
+      '; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+' AND archived='+PutSql+
+      ') THEN 1 ELSE json(''Card archive replay failed'') END; COMMIT;');
+    if not Result then
+    begin Db.Exec('ROLLBACK;'); Error:='history-conflict'; end;
+    Exit;
   end;
   if CardHistoryDateField(Field) then
   begin
@@ -2796,6 +2827,17 @@ begin
     finally Before.Free; end;
     Exit;
   end;
+  if (Field='archived') and (Group='lifecycle') then
+  begin
+    if (R[0][0]<>Str(Row,'boardId')) or not HistoryArchiveLiteral(Content,Literal) then Exit(0);
+    R:=Db.Query('SELECT boardId,COALESCE(archived,0) FROM cards WHERE '+Scope+';');
+    if Length(R)<>1 then Exit(0);
+    Scope:=Scope+' AND COALESCE(archived,0)='+R[0][1];
+    Before:=TJSONObject.Create(['field',Field,'value',R[0][1]='1']);
+    After:=TJSONObject(Content.Clone);
+    ReadField:=ArchiveHistoryAssignment(Literal,Q(NowIso));
+  end
+  else
   if CardHistoryDateField(Field) then
   begin
     if (Group <> 'dates') or not HistoryDateLiteral(Content, Field, Literal) then Exit(0);
@@ -2819,9 +2861,10 @@ begin
     After := TJSONObject.Create(['field', Field, 'value', Value]);
     if Field <> 'color' then Group := Field;
   end;
+  if Field<>'archived' then ReadField:=Field+'='+Literal;
   try
     if not Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' + Scope +
-      ') THEN 1 ELSE json(''Card scope changed'') END; UPDATE cards SET ' + Field + '=' + Literal +
+      ') THEN 1 ELSE json(''Card scope changed'') END; UPDATE cards SET ' + ReadField +
       ',modifiedAt=' + Q(NowIso) + ' WHERE ' + Scope + '; COMMIT;') then
     begin Db.Exec('ROLLBACK;'); Exit(0); end;
     try
@@ -2994,7 +3037,8 @@ begin
         Before := nil; After := nil;
         try
           // A card's title or description: whoever may edit that card now.
-          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description') or (Str(Row, 'group') = 'dates') or (Str(Row, 'group') = 'customFields')) then
+          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description') or (Str(Row, 'group') = 'dates') or (Str(Row, 'group') = 'customFields') or
+            (Str(Row, 'group') = 'lifecycle')) then
           begin
             Done := RestoreCardRow(T.Db, UserId, Row, Readable);
             if Done < 0 then Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));

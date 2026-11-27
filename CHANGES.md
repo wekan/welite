@@ -8,6 +8,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - The card archive and unarchive REST routes record the previous and new
   archive status in the board’s lifecycle history.
+  Card archive status supports undo, redo and Restore from History.
 
 - The Time view and its PDF and Excel exports show hours by assignee and
   card, mark overtime cards, and show the signed total time until open

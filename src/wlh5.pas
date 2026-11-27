@@ -8472,6 +8472,7 @@ begin
             (CanRestoreCard and (Row.Get('entityType', '') = 'card') and
               ((RowField = 'title') or (RowField = 'description') or
                 ((RowGroup = 'title') and (RowField = 'color')) or
+                ((RowGroup = 'lifecycle') and (RowField = 'archived')) or
                 ((RowGroup = 'dates') and CardHistoryDateField(RowField)))) then
             Content := Content + '<input class="js-history-select" type="checkbox" name="id" value="' +
               HtmlAttr(Row.Get('_id', '')) + '" aria-label="' + HtmlAttr(Label_) + '">';
