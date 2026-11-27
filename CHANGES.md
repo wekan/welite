@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Run the short-path provisioning and offline migration tests in native
+  storage mode. Both SQLite backends verify persistent tenant paths and
+  reopening the migrated data.
 - Regenerate the shared SQLite model from the current schema. Preserve
   list collapse as a BSON boolean and make the model freshness check pass.
 - Update the native keypad test to check the three-row control and its

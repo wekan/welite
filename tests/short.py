@@ -24,7 +24,7 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
         out=tmp/backend;out.mkdir();data=out/'data'
         built=subprocess.run([os.environ.get('FPC','fpc'),*flags,'-B','-Fu'+str(root/'src'),'-FU'+str(out),'-FE'+str(out),str(root/'tests/short.lpr')],capture_output=True,text=True)
         assert built.returncode==0,built.stdout+built.stderr
-        env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql'))
+        env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_SHARED='0')
         # An ordinary SQLite build must refuse strict operation rather than silently
         # create long journal names. The strict run below uses consistently built tools.
         if os.environ.get('WELITE_SHORT_NAMES')!='1':
@@ -40,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
                 if line.strip()=='READY':break
                 lines.append(line.strip())
             assert len(lines)==6,lines
-            assert Path(lines[0])==data/'domains/d0000001/files/db/wekan.db'
+            assert Path(lines[0])==data/'domains/d0000001/files/db/wekan.db',lines[0]
             assert Path(lines[1])==data/'certs/d0000001'
             assert lines[2]!=lines[3] and all(Path(p).is_dir() for p in lines[2:4])
             framework=Path(lines[4]);assert framework.name=='upload.tmp' and framework.parent.is_dir() and data in framework.parents
@@ -79,7 +79,7 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
     files=tenant/'files/attachments';files.mkdir(parents=True)
     (files/'LongCaseSensitiveIdentifier').write_bytes(b'legacy\0bytes')
     probe_path=tmp/next(iter(backends))/'short'
-    legacy=subprocess.run([str(probe_path),str(old)],capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql')))
+    legacy=subprocess.run([str(probe_path),str(old)],capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_SHARED='0'))
     assert legacy.returncode!=0 and 'Legacy paths detected' in legacy.stderr
     assert not (old/'admin/files').exists(),'Startup modified legacy storage'
     target=tmp/'new';migration.migrate(old,target);assert_short(target)
@@ -87,7 +87,7 @@ with tempfile.TemporaryDirectory(prefix='wlpaths-',dir=os.environ['TMPDIR']) as 
     with sqlite3.connect(copied) as db:assert db.execute('SELECT value FROM durable').fetchone()==('original',)
     expected=migration.file_path(copied.parents[1],'attachme','LongCaseSensitiveIdentifier')
     assert expected.read_bytes()==b'legacy\0bytes' and (files/'LongCaseSensitiveIdentifier').read_bytes()==b'legacy\0bytes'
-    restarted=subprocess.run([str(probe_path),str(target)],input='\n',capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql')),timeout=20)
+    restarted=subprocess.run([str(probe_path),str(target)],input='\n',capture_output=True,text=True,env=dict(os.environ,WELITE_SCHEMA=str(root/'src/schema.sql'),WELITE_SHARED='0'),timeout=20)
     assert restarted.returncode==0,restarted.stderr
     with sqlite3.connect(copied) as db:assert db.execute('SELECT value FROM durable ORDER BY rowid').fetchall()==[('original',),('retained',)]
     for suffix in ['existing','symlink','invalid']:
