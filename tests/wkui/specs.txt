@@ -490,3 +490,4 @@ export-without-archive-6946.e2e.js
 time-history.e2e.js: move dialog records reason and one reversible position
 time-history.e2e.js: = REST time corrections, move reasons, retained activity and report authors in en
 weddy-specs/29-checklist-item-cross-drag.e2e.js
+weddy-specs/30-checklist-text-selection.e2e.js

@@ -8,6 +8,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Checklist items can be dragged between checklists on the same card.
   A shared Chromium test covers dropping into an empty checklist.
+  Clicking the board canvas closes the card opened by the current route
+  unless text inside the card is selected. A shared browser test covers both paths.
 
 - Board and member History have a group filter, including archive and
   removal entries. The filter stays selected when paging or restoring.
