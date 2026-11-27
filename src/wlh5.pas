@@ -2056,6 +2056,8 @@ begin
     E(Words.Text('copy-card-link-to-clipboard', 'Copy card link to clipboard')) + '</a></li>' +
     '<li><a class="js-move-card" href="#"><i class="fa fa-arrow-right"></i> ' + E(Words.Text('moveCardPopup-title', 'Move Card')) + '</a></li>' +
     '<li><a class="js-copy-card" href="#"><i class="fa fa-copy"></i> ' + E(Words.Text('copyCardPopup-title', 'Copy Card')) + '</a></li>' +
+    '<li><a class="js-open-card-excel" href="#"><i class="fa fa-file-excel-o"></i> ' +
+    E(Words.Text('export-card-excel', 'Export card to Excel')) + '</a></li>' +
     IfThen(IsShared(Db), '<li><a class="js-open-card-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
       '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
@@ -2710,7 +2712,8 @@ end;
 
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
-function BoardExportPopup(Words: TWLTranslator; const BoardId: string): string;
+function BoardExportPopup(Words: TWLTranslator; const BoardId: string; const CardId: string = '';
+  const ListId: string = ''): string;
 const
   Parts: array[0..16] of string = ('description','board-info','people','labels','dates','voting','custom-fields','board-header','activities','checklists','comments','attachments','subtasks',
     'poker','stickers','locations','dependencies');
@@ -2719,27 +2722,41 @@ const
     'poker-question','stickers','location','card-dependencies');
   Captions: array[0..16] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields','Board','Activities','Checklists','Comments','Attachments','Subtasks',
     'Planning Poker','Stickers','Location','Dependencies');
-var I: Integer; Base: string;
+var I: Integer; Base, Popup, Caption: string;
 begin
   Base := '/api/boards/' + HtmlAttr(HTTPEncode(BoardId));
-  Result := '<template class="js-pop-over-template" data-pop="export" data-title="' +
-    HtmlAttr(Words.Text('export', 'Export')) + '"><div class="header"><span class="header-title">' +
-    E(Words.Text('export', 'Export')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
-    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list export-scope-select">' +
-    '<li><a class="flex js-export-card-details-toggle" href="#" role="checkbox" aria-checked="true">' +
-    '<span class="materialCheckBox is-checked"></span><span>' +
-    E(Words.Text('export-card-details', 'Card details')) + '</span></a></li>';
+  Popup := 'export';
+  Caption := Words.Text('export', 'Export');
+  if CardId <> '' then
+  begin
+    Popup := 'card-excel';
+    Caption := Words.Text('export-card-excel', 'Export card to Excel');
+    Base := Base + '/lists/' + HtmlAttr(HTTPEncode(ListId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId));
+  end;
+  Result := '<template class="js-pop-over-template" data-pop="' + Popup + '" data-title="' +
+    HtmlAttr(Caption) + '"><div class="header"><span class="header-title">' +
+    E(Caption) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list export-scope-select">';
+  if CardId = '' then
+    Result := Result + '<li><a class="flex js-export-card-details-toggle" href="#" role="checkbox" aria-checked="true">' +
+      '<span class="materialCheckBox is-checked"></span><span>' +
+      E(Words.Text('export-card-details', 'Card details')) + '</span></a></li>';
   for I := Low(Parts) to High(Parts) do
+  begin
+    if (CardId <> '') and ((Parts[I] = 'board-header') or (Parts[I] = 'activities')) then Continue;
     Result := Result + '<li><a class="flex js-export-field-toggle" href="#" data-field="' + Parts[I] +
       '"' + IfThen(I > 6, ' data-excel-only="true"', '') +
       ' role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
       E(Words.Text(Keys[I], Captions[I])) + '</span></a></li>';
-  Result := Result + '</ul><ul class="pop-over-list"><li><a class="js-export-fields" download href="' + Base +
+  end;
+  Result := Result + '</ul><ul class="pop-over-list">';
+  if CardId = '' then Result := Result + '<li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
-    '/exportZip">WeKan ZIP</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/exportZip">WeKan ZIP</a></li>';
+  Result := Result + '<li><a class="js-export-fields" download href="' + Base +
     '/exportExcel?fields=">Excel (.xlsx)</a></li></ul></div></template>';
 end;
 
@@ -4422,7 +4439,7 @@ begin
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
     Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);
     if Writable then
-      Details := Details + CardMenuPopups(Db, Words, S, BoardId, B[0][2], CardId, Card[0][0], Card[0][8], Card[0][9]);
+      Details := Details + CardMenuPopups(Db, Words, S, BoardId, B[0][2], CardId, Card[0][0], Card[0][8], Card[0][9]) + BoardExportPopup(Words, BoardId, CardId, Card[0][9]);
   end;
   Details := Details + MemberPopups(Db, Words, S, BoardId);
   // swimlaneAddPopup, drawn once: weddy.js sets the swimlane it was opened from.

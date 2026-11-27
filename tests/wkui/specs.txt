@@ -479,3 +479,5 @@ export-access.e2e.js: assigned-only private member cannot read unfiltered export
 export-access.e2e.js: assigned-only private member cannot read unfiltered exportZip
 board-excel-export.e2e.js
 export-access.e2e.js: assigned-only private member cannot read unfiltered exportExcel
+card-excel-field-selection.e2e.js
+export-access.e2e.js: assigned-only member cannot export an unassigned card as Excel

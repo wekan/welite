@@ -1551,6 +1551,11 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     openPopOver('export');
     applyExportSelection(document.querySelector('.js-pop-over'));
   });
+  up.on('click', '.js-open-card-excel', function (event) {
+    event.preventDefault();
+    openPopOver('card-excel');
+    applyExportSelection(document.querySelector('.js-pop-over'));
+  });
   // #1173: a swimlane's, a list's or a card's Export and Import pop-overs
   // (exportScopeBody): the same selection, the scope's files, or a WeKan
   // export brought in beside it.

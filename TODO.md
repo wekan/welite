@@ -271,7 +271,7 @@ Next, after this goal:
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
-  export-access (board PDF, chart exports and exports of individual cards),
+  export-access (board PDF, card PDF and chart exports),
   scoped ZIP exports, inline Excel previews for other image formats when their
   decoders are available, and the
   remaining History restore types and row summaries.

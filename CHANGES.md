@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export one card to Excel from Card Actions with selectable fields. The
+  download route checks that the card belongs to the requested board and list.
+
 - Download the board as an Excel workbook. Card details presents each card
   as labeled values, and the table layout puts one card on each row. Both
   use the selected field groups from the Export menu. The API can limit

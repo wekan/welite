@@ -5,7 +5,7 @@ interface
 uses Classes, Types, fpjson;
 type
   TAttachmentPreview = function(Attachment: TJSONObject; Output: TStream; out Size: TPoint): Boolean is nested;
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard: Boolean);
 
 implementation
 uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
@@ -22,6 +22,7 @@ type
     Output: TStream;
     Head: TBoardRow;
     RowNumber: Integer;
+    BoardTitle: string;
     CardDetails, ShowPoker, ShowStickers, ShowLocations: Boolean;
     Checklists, Items, Comments, Attachments, Subtasks, UsersById, Dependencies, CardsById: TFPHashObjectList;
     LaneRows, ListRows: TJSONArray;
@@ -496,14 +497,22 @@ begin
     Pair[0] := Head[I];
     Pair[1] := Row[I];
     TableRow(Pair, I = 0, True);
+    if (I = 0) and (BoardTitle <> '') then
+    begin
+      Pair[0].Text := 'Board';
+      Pair[1].Text := BoardTitle;
+      Pair[0].LiteralText := True;
+      Pair[1].LiteralText := True;
+      TableRow(Pair, False, True);
+    end;
   end;
   DetailRows(Card);
   TableRow(nil);
 end;
 
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard: Boolean);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
-  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies: Boolean;
+  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies, WithBoardInfo: Boolean;
   Users: TJSONArray; User: TJSONObject;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
@@ -730,6 +739,7 @@ begin
   WithStickers := False;
   WithLocations := False;
   WithDependencies := False;
+  WithBoardInfo := False;
   SheetCount := 0;
   CardDetails := False;
   for Part in Fields.Split([',']) do
@@ -743,6 +753,7 @@ begin
     if Section = 'locations' then WithLocations := True;
     if Section = 'subtasks' then WithSubtasks := True;
     if Section = 'attachments' then WithAttachments := True;
+    if Section = 'board-info' then WithBoardInfo := True;
     if Section = 'board-header' then BoardHeader := True;
     if Section = 'activities' then ActivitySheet := True;
     if Section = 'card-details' then CardDetails := True;
@@ -750,7 +761,8 @@ begin
       'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|') > 0 then
       Known := True;
   end;
-  CardDetails := CardDetails or not Known;
+  CardDetails := SingleCard or CardDetails or not Known;
+  if SingleCard then ActivitySheet := False;
   Zip := TZipper.Create;
   Streams := TList.Create;
   Writer := TSheetWriter.Create;
@@ -778,6 +790,7 @@ begin
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
     StartSheet('Cards');
     Writer.CardDetails := CardDetails;
+    if SingleCard and (WithBoardInfo or not Known) then Writer.BoardTitle := Board.Get('title', '');
     Writer.LaneRows := Board.Arrays['swimlanes'];
     Writer.ListRows := Board.Arrays['lists'];
     Writer.ShowLaneHeadings := not Scoped;
@@ -832,10 +845,10 @@ begin
         IndexCards(OtherCards);
       end;
       if Writer.ShowLaneHeadings or Writer.ShowListHeadings then OrderCards;
-      WriteBoardTitle;
+      if not SingleCard then WriteBoardTitle;
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;
-    ReadBoardRows(Board, Fields, @Writer.Add, CardDetails, CardOrder);
+    ReadBoardRows(Board, Fields, @Writer.Add, CardDetails and not SingleCard, CardOrder);
     if CardDetails then Writer.FinishGroupHeadings;
     EndSheet(CardDetails);
     if not CardDetails and not Scoped and BoardHeader then

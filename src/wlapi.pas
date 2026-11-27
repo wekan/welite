@@ -2845,20 +2845,30 @@ begin BoardExport(aRequest,aResponse,False);end;
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 begin BoardExport(aRequest,aResponse,True);end;
 
+procedure DownloadNotFound(Response: TResponse; const MessageText: RawByteString; Plain: Boolean);
+begin
+  if not Plain then begin SendError(Response, 404, MessageText); Exit; end;
+  Response.Code := 404;
+  Response.ContentType := 'text/plain; charset=utf-8';
+  Response.Content := MessageText;
+  Response.ContentLength := Length(MessageText);
+  Response.SendContent;
+end;
+
+function DownloadCardExists(Db: TWLDb; const BoardId, ListId, CardId: string): Boolean;
+begin
+  Result := False;
+  if (ListId = '') or (Pos(#0, ListId + CardId) > 0) then Exit;
+  Result := Length(Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
+    ' AND boardId=' + QuotedStr(BoardId) + ' AND listId=' + QuotedStr(ListId) +
+    ' AND deletedAt IS NULL AND COALESCE(linkedId,'''')='''';')) = 1;
+end;
+
 function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
-  out BoardId, UserId: string; PlainNotFound: Boolean = False): Boolean;
+  out BoardId, UserId: string; PlainNotFound: Boolean = False;
+  const RouteCardId: string = ''): Boolean;
 var Board: TWLRows; Session: TWLSession;
-  procedure NotFound;
-  var MessageText: RawByteString;
-  begin
-    if not PlainNotFound then begin SendError(aResponse, 404, 'Board not found'); Exit; end;
-    aResponse.Code := 404;
-    aResponse.ContentType := 'text/plain; charset=utf-8';
-    MessageText := 'Board not found';
-    aResponse.Content := MessageText;
-    aResponse.ContentLength := Length(MessageText);
-    aResponse.SendContent;
-  end;
+
 begin
   Result := False;
   if not ApiTenant(aRequest, aResponse, T) then Exit;
@@ -2866,9 +2876,11 @@ begin
   begin SendError(aResponse, 403, 'Board export restricted by instance settings'); Exit; end;
   BoardId := aRequest.RouteParams['boardId'];
   if (BoardId = '') or (Pos(#0, BoardId) > 0) then
-  begin NotFound; Exit; end;
+  begin DownloadNotFound(aResponse, 'Board not found', PlainNotFound); Exit; end;
   Board := T.Db.Query('SELECT permission FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
-  if Length(Board) <> 1 then begin NotFound; Exit; end;
+  if Length(Board) <> 1 then begin DownloadNotFound(aResponse, 'Board not found', PlainNotFound); Exit; end;
+  if (RouteCardId <> '') and not DownloadCardExists(T.Db, BoardId, aRequest.RouteParams['listId'], RouteCardId) then
+  begin DownloadNotFound(aResponse, 'Card not found', PlainNotFound); Exit; end;
   UserId := '';
   if (aRequest.Authorization <> '') or (aRequest.QueryFields.Values['authToken'] <> '') or
     (aRequest.QueryFields.Values['token'] <> '') then
@@ -2922,9 +2934,9 @@ begin
 end;
 
 procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
+var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId, RouteCardId, RouteListId, Filename: string;
   Payload, Card, Checklist: TJSONObject; Cards, Checklists, OtherCards: TJSONArray;
-  Output: TMemoryStream; I: Integer; Matches, Scoped: Boolean;
+  Output: TMemoryStream; I: Integer; Matches, Scoped, SingleCard: Boolean;
   function ScopeId(const Key: string): string;
   var C: Char;
   begin
@@ -2951,11 +2963,23 @@ var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
   end;
 
 begin
-  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True) then Exit;
-  CardId := ScopeId('cardId');
-  ChecklistId := ScopeId('checklistId');
-  LaneId := ScopeId('swimlaneId');
-  ListId := ScopeId('listId');
+  RouteCardId := aRequest.RouteParams['cardId'];
+  RouteListId := aRequest.RouteParams['listId'];
+  SingleCard := RouteCardId <> '';
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, RouteCardId) then Exit;
+  if SingleCard then
+  begin
+    CardId := RouteCardId;
+    Filename := 'card.xlsx';
+  end
+  else
+  begin
+    CardId := ScopeId('cardId');
+    ChecklistId := ScopeId('checklistId');
+    LaneId := ScopeId('swimlaneId');
+    ListId := ScopeId('listId');
+    Filename := 'board.xlsx';
+  end;
   Scoped := (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '');
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True, True);
@@ -2985,8 +3009,11 @@ begin
         else Matches := (ChecklistId = '') and
           ((LaneId = '') or (Card.Get('swimlaneId', '') = LaneId)) and
           ((ListId = '') or (Card.Get('listId', '') = ListId));
+        if SingleCard then Matches := Matches and (Card.Get('listId', '') = RouteListId);
         if not Matches or (Card.Get('linkedId', '') <> '') then OtherCards.Insert(0, Cards.Extract(I));
       end;
+      if SingleCard and (Cards.Count <> 1) then
+      begin DownloadNotFound(aResponse, 'Card not found', True); Exit; end;
     end;
     try
       if (CardId <> '') or (ChecklistId <> '') then
@@ -2994,11 +3021,11 @@ begin
         LaneId := '';
         ListId := '';
       end;
-      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview);
+      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview, SingleCard);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
     aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.xlsx"');
+    aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Filename + '"');
     aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
     aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
     Output.Position := 0;
