@@ -263,7 +263,13 @@ Next, after this goal:
   them, and restore-wip-limit once the WIP limit methods and the Archive's
   restore at a hard limit were in); 197 are left. activity-viewer's two
   lines pass in one run and not in the next - the sidebar's activity is not
-  always drawn yet - so they are not listed. By what they wait for: Scrum
+  always drawn yet - so they are not listed.
+  An assigned-only member: the attachment API and History follow WeKan's
+  rules for them; left are the board itself (WeLite draws no board for an
+  assigned-only member yet, which history-read-scope's first test and
+  assigned-card-methods need), the file routes /cdn/storage/attachments and
+  /cfs/files/attachments with a Bearer token, and
+  searchAttachmentDocumentText (assigned-only-reads' second test). By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
   editor-enter-preference (17), export-access (11), the History page
