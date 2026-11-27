@@ -10,7 +10,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   readable boards, with search and pagination. Members can restore their
   own supported rows on boards where they have permission, and return to
   the same search and page. Member History links and forms keep only the
-  parameters used by that view.
+  parameters used by that view. List and swimlane History also include
+  older rows that identify the container as the changed entity.
 
 - REST card color edits are recorded in the board's History Title group
   and can be undone, redone or restored. Undo and redo check the current

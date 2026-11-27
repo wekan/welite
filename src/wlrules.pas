@@ -2400,6 +2400,15 @@ end;
 // list or card and what is in it, a user's, an entity's - newest first, with
 // search, the total and each author's count, of the rows the caller may read
 // (server/models/changeHistory.js, server/lib/historyPageScan.js).
+// Older container rows may identify the container only as the changed entity.
+function HistoryContainerMatches(Row: TJSONObject; const Entity, Column, Id: string): Boolean;
+var ScopeId: string;
+begin
+  ScopeId := Str(Row, Column);
+  Result := (ScopeId = Id) or ((ScopeId = '') and (Str(Row, 'entityType') = Entity) and
+    (Str(Row, 'entityId') = Id));
+end;
+
 function HistoryPage(Db: TWLDb; const UserId: string; Request: TJSONObject; out Answer: string): Integer;
 const Keys: array[0..6] of string = ('scope', 'scopeId', 'group', 'userId', 'entityType', 'entityId', 'search');
 var V: TJSONData; i, Size, Want, Total, Last0, Page, Pages: Integer; Scope, ScopeId, Column, Where, Owner, Needle, Who: string;
@@ -2467,7 +2476,11 @@ begin
     Want := Trunc(Num);
     Needle := LowerCase(Trim(Field('search')));
     Where := '1=1';
-    if Column <> '' then Where := Where + Eq(Column, ScopeId);
+    if (Scope = 'list') or (Scope = 'swimlane') then
+      Where := Where + ' AND (' + DocField(Column) + '=' + Q(ScopeId) + ' OR (COALESCE(' +
+        DocField(Column) + ','''')='''' AND ' + DocField('entityType') + '=' + Q(Scope) +
+        ' AND ' + DocField('entityId') + '=' + Q(ScopeId) + ' AND ' + DocField('boardId') + '=' + Q(Owner) + '))'
+    else if Column <> '' then Where := Where + Eq(Column, ScopeId);
     Where := Where + Eq('entityType', Field('entityType')) + Eq('entityId', Field('entityId')) + Eq('group', Field('group')) +
       Eq('userId', Field('userId'));
     Rows := FindDocs(Db, 'changeHistory', Where, DocField('createdAt') + ' DESC');
@@ -2728,8 +2741,8 @@ begin
             if (Row = nil) or ((RestoreBoard <> '') and (Str(Row, 'boardId') <> RestoreBoard)) or
               (MemberRestore and (Str(Row, 'userId') <> UserId)) or
               ((RestoreCard <> '') and (HistoryRowCard(Row) <> RestoreCard)) or
-              ((RestoreList <> '') and (Str(Row, 'listId') <> RestoreList)) or
-              ((RestoreLane <> '') and (Str(Row, 'swimlaneId') <> RestoreLane)) or not Readable.Readable(Row) then
+              ((RestoreList <> '') and (not HistoryContainerMatches(Row, 'list', 'listId', RestoreList))) or
+              ((RestoreLane <> '') and (not HistoryContainerMatches(Row, 'swimlane', 'swimlaneId', RestoreLane))) or not Readable.Readable(Row) then
               Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));
           finally Row.Free; end;
         end;
