@@ -93,6 +93,8 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // list, the board's custom fields initialized. Position 'top' puts it first in
 // its list, anything else last. Returns the HTTP status (200 when added) and
 // sends nothing; Error says why not.
+function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
+  Separate:Boolean;out CardId,Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
 // A card's new title from a view (the HTML5 view's title editor), checked as
@@ -5072,7 +5074,13 @@ end;
 
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
-var Lane,Sort,InitialFields:string;
+begin
+  Result:=CreateViewCards(T,UserId,BoardId,ListId,Swimlane,Title,Position,False,CardId,Error);
+end;
+
+function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
+  Separate:Boolean;out CardId,Error:string):Integer;
+var Lane,Sort,Sql,Id:string; Titles:TStringList; i,Index:Integer;
 begin
   CardId:='';Error:='';
   if (BoardId='') or (ListId='') or (Trim(Title)='') or (Pos(#0,BoardId+ListId+Swimlane+Title)>0) then
@@ -5091,12 +5099,33 @@ begin
   else
     Sort:='(SELECT coalesce(max(sort),-1)+1 FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND listId='+
       QuotedStr(ListId)+' AND swimlaneId='+QuotedStr(Lane)+' AND deletedAt IS NULL)';
-  CardId:=NewId;
-  try InitialFields:=InitializeCardFields(T.Db,BoardId,CardId);
-  except Error:='Could not initialize custom fields';Exit(500);end;
-  if not T.Db.Exec('BEGIN IMMEDIATE; '+CardCreateSql(BoardId,ListId,Lane,CardId,UserId,Title,'',QuotedStr(''),Sort)+
-    InitialFields+' COMMIT;') then
-  begin T.Db.Exec('ROLLBACK;');CardId:='';Error:='Could not create card';Exit(500);end;
+  Titles:=TStringList.Create;
+  try
+    if Separate then
+    begin
+      Titles.Text:=StringReplace(StringReplace(Title,#13#10,#10,[rfReplaceAll]),#13,#10,[rfReplaceAll]);
+      for i:=Titles.Count-1 downto 0 do
+        if Trim(Titles[i])='' then Titles.Delete(i) else Titles[i]:=Trim(Titles[i]);
+    end
+    else Titles.Add(Title);
+    if Titles.Count=0 then begin Error:='Invalid card';Exit(400);end;
+    Sql:='BEGIN IMMEDIATE; ';
+    try
+      for i:=0 to Titles.Count-1 do
+      begin
+        Index:=i;
+        if Position='top' then Index:=Titles.Count-1-i;
+        Id:=NewId;
+        Sql:=Sql+CardCreateSql(BoardId,ListId,Lane,Id,UserId,Titles[Index],'',QuotedStr(''),Sort)+
+          InitializeCardFields(T.Db,BoardId,Id);
+        if Index=0 then CardId:=Id;
+      end;
+    except CardId:='';Error:='Could not initialize custom fields';Exit(500);end;
+    if not T.Db.Exec(Sql+' COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;');CardId:='';Error:='Could not create card';Exit(500);end;
+  finally
+    Titles.Free;
+  end;
   Result:=200;
 end;
 

@@ -3609,6 +3609,10 @@ begin
           '<input class="js-card-position" type="hidden" name="position" value="bottom">' +
           '<div class="minicard minicard-composer js-composer"><textarea class="minicard-composer-textarea js-card-title" name="title" dir="auto" aria-label="' +
           HtmlAttr(Words.Text('title', 'Title')) + '" required></textarea></div>' +
+          '<fieldset class="multiline-title-choice"><legend>' + E(Words.Text('add-many-lines-as', 'Add many lines as')) + '</legend>' +
+          '<label><input class="js-multiline-title-mode" type="radio" name="titleMode" value="one" checked> 1 ' + E(Words.Text('card', 'Card')) +
+          '</label><label><input class="js-multiline-title-mode" type="radio" name="titleMode" value="separate"> ' +
+          E(StringReplace(Words.Text('many-items', '__items__'), '__items__', Words.Text('cards', 'Cards'), [rfReplaceAll])) + '</label></fieldset>' +
           '<div class="add-controls clearfix"><button class="primary confirm" type="submit">' +
           E(Words.Text('add-card', 'Add Card')) + '</button><a class="js-close-inlined-form" href="#" aria-label="' +
           HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></form></template>' +
@@ -6027,8 +6031,9 @@ begin
   if Action = 'add-list' then
     Code := CreateViewList(T, S.UserId, BoardId, Request.ContentFields.Values['swimlaneId'], '', Title, NewId, Error)
   else if Action = 'add-card' then
-    Code := CreateViewCard(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
-      Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'], NewId, Error)
+    Code := CreateViewCards(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
+      Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'],
+      Request.ContentFields.Values['titleMode'] = 'separate', NewId, Error)
   else if Action = 'rename-card' then
     Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
   else if Action = 'set-person' then

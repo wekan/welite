@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Add one card per nonempty title line when separate cards are selected.
+  The batch uses one SQLite transaction and preserves title order at the
+  top or bottom of the list. The shared #6827 browser scenario passes.
 - Respect Keep the Add card form open in the HTML5 view. The composer
   closes by default. With the preference on, a successful save opens an
   empty, focused composer in the same list and position.
