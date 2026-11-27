@@ -3768,7 +3768,7 @@ end;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,LaneGuard,LanePosition,NumberSql,SortSql:string;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,ListLane,LaneGuard,LanePosition,ListPosition,NumberSql,SortSql:string;
   Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
@@ -4049,12 +4049,20 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   begin
     if TextValue='' then Result:='NULL' else Result:=QuotedStr(TextValue);
   end;
+  function ReserveSortSlots(const TableName, Scope, Anchor: string; Count: Integer): string;
+  begin
+    Result := 'WITH ordered AS MATERIALIZED (SELECT id, ROW_NUMBER() OVER (ORDER BY sort,id) AS position '+
+      'FROM '+TableName+' WHERE '+Scope+'), destination AS MATERIALIZED (SELECT position FROM ordered WHERE id='+
+      QuotedStr(Anchor)+') UPDATE '+TableName+' SET sort=(SELECT position+CASE WHEN position>'+
+      '(SELECT position FROM destination) THEN '+IntToStr(Count)+' ELSE 0 END FROM ordered '+
+      'WHERE ordered.id='+TableName+'.id) WHERE '+Scope+'; ';
+  end;
   procedure CardPlacement(Obj:TJSONObject;out ListKey,LaneKey:string);
   begin
     ListKey:=Mapped(1,Text(Obj,'listId'));
     if ListKey='' then ListKey:=DefaultList;
     LaneKey:=ImportedListLanes.Get(ListKey,'');
-    if LaneKey='' then LaneKey:=Mapped(0,Text(Obj,'swimlaneId'));
+    if (LaneKey='') and (TargetList='') then LaneKey:=Mapped(0,Text(Obj,'swimlaneId'));
     if LaneKey='' then LaneKey:=DefaultLane;
   end;
   function SortValue(Obj:TJSONObject):string;
@@ -4339,6 +4347,7 @@ begin
   ZipRoute := aRequest.PathInfo = '/api/import/zip';
   TargetBoard := '';
   TargetLane := '';
+  TargetList := '';
   if ZipRoute then
   begin
     if not IsZip then begin SendError(aResponse, 400, 'Expected a board ZIP'); Exit; end;
@@ -4349,7 +4358,10 @@ begin
       TargetLane := DownloadScopeId(aRequest, 'swimlaneId');
       if (TargetLane = '') and (aRequest.QueryFields.Values['swimlaneId'] <> '') then
       begin SendError(aResponse, 400, 'Invalid destination swimlane'); Exit; end;
-      for Name in ['listId','cardId','checklistId'] do
+      TargetList := DownloadScopeId(aRequest, 'listId');
+      if (TargetList = '') and (aRequest.QueryFields.Values['listId'] <> '') then
+      begin SendError(aResponse, 400, 'Invalid destination list'); Exit; end;
+      for Name in ['cardId','checklistId'] do
         if aRequest.QueryFields.Values[Name] <> '' then
         begin SendError(aResponse, 400, 'Import placement is unavailable'); Exit; end;
       if not BoardCanWrite(T.Db, Actor, TargetBoard) then
@@ -4447,6 +4459,27 @@ begin
       ImportDefinitions;
       ImportLabels;
       DefaultLane:='';DefaultList:='';
+      if TargetList <> '' then
+      begin
+        ListPosition := ' FROM lists WHERE boardId='+Board+' AND archived=0 AND deletedAt IS NULL AND id='+QuotedStr(TargetList);
+        Rows := T.Db.Query('SELECT COALESCE(swimlaneId,'''')'+ListPosition+';');
+        if Length(Rows)<>1 then
+        begin SendError(aResponse,404,'Destination list not found');Exit;end;
+        ListLane := Rows[0][0];
+        if (ListLane<>'') and (TargetLane<>'') and (ListLane<>TargetLane) then
+        begin SendError(aResponse,404,'Destination list not found in swimlane');Exit;end;
+        Guard := Guard+' AND EXISTS(SELECT 1'+ListPosition+
+          ' AND COALESCE(swimlaneId,'''')='+QuotedStr(ListLane)+')';
+        ListPosition := '(SELECT sort'+ListPosition+')';
+        if TargetLane='' then TargetLane:=ListLane;
+        Arrays[0]:=nil;
+        DefaultList:=TargetList;
+        if (Arrays[1]<>nil) and (Arrays[1].Count>0) then
+        begin
+          Sql := Sql+ReserveSortSlots('lists','boardId='+Board,TargetList,Arrays[1].Count);
+          DefaultList:='';
+        end;
+      end;
       if TargetLane <> '' then
       begin
         LaneGuard := 'EXISTS(SELECT 1 FROM swimlanes WHERE boardId='+Board+
@@ -4457,11 +4490,7 @@ begin
         Guard := Guard+' AND '+LaneGuard;
         LanePosition := '(SELECT sort FROM swimlanes WHERE id='+QuotedStr(TargetLane)+')';
         if (Arrays[0]<>nil) and (Arrays[0].Count>0) then
-          Sql := Sql+'WITH ordered AS MATERIALIZED (SELECT id, ROW_NUMBER() OVER (ORDER BY sort,id) AS position '+
-            'FROM swimlanes WHERE boardId='+Board+'), destination AS MATERIALIZED (SELECT position FROM ordered WHERE id='+
-            QuotedStr(TargetLane)+') UPDATE swimlanes SET sort=(SELECT position+CASE WHEN position>'+
-            '(SELECT position FROM destination) THEN '+IntToStr(Arrays[0].Count)+' ELSE 0 END FROM ordered '+
-            'WHERE ordered.id=swimlanes.id) WHERE boardId='+Board+'; '
+          Sql := Sql+ReserveSortSlots('swimlanes','boardId='+Board,TargetLane,Arrays[0].Count)
         else DefaultLane := TargetLane;
       end;
       if Arrays[0]<>nil then for J:=0 to Arrays[0].Count-1 do
@@ -4494,12 +4523,14 @@ begin
       if Arrays[1]<>nil then for J:=0 to Arrays[1].Count-1 do
       begin
         Row:=Arrays[1].Objects[J];ListId:=Mapped(1,Text(Row,'_id'),True);
-        LaneId:=Mapped(0,Text(Row,'swimlaneId'));
+        if TargetList<>'' then LaneId:=TargetLane
+        else LaneId:=Mapped(0,Text(Row,'swimlaneId'));
         if (LaneId='') and (DefaultLane=TargetLane) then LaneId:=TargetLane;
         if DefaultList='' then DefaultList:=ListId;
         ImportedListLanes.Add(ListId,LaneId);
         SortSql := SortValue(Row);
-        if TargetBoard <> '' then
+        if TargetList <> '' then SortSql := ListPosition+'+'+IntToStr(J+1)
+        else if TargetBoard <> '' then
           SortSql := '(SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId='+Board+')';
         Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived,collapsed) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+

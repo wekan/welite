@@ -74,6 +74,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board and refreshes it after import. The ZIP API accepts a destination
   swimlane and places the imported swimlanes immediately after it. A ZIP
   without swimlanes places its lists and cards in the destination swimlane.
+  A destination list places imported lists directly after it without adding
+  swimlanes. A ZIP containing cards without lists uses the destination list.
 
 - The board Export menu downloads comma- or semicolon-separated CSV, TSV
   and iCalendar. CSV and TSV honor the selected column groups on public
