@@ -57,6 +57,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   subtaskItems section and respect field and archive selection. Board JSON
   import also restores this section, remaps all imported parents, and
   preserves completion without duplicating a card already in the main list.
+  The board import API also accepts the ZIP directly and restores its
+  attachment files, including distinct files that share a display name.
 
 - The board Export menu downloads comma- or semicolon-separated CSV, TSV
   and iCalendar. CSV and TSV honor the selected column groups on public

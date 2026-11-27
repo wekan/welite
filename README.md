@@ -44,6 +44,13 @@ so it can load the SQL, assets, and catalogs. Plain HTTP is the default.
 The [cross-build record](docs/cross.md) gives target-specific compiler and
 SQLite requirements.
 
+## Import a board ZIP
+
+Send the archive as the request body to `POST /api/boards/import` with
+`Content-Type: application/zip` and the usual API credentials. The import
+creates a new board and returns its ID in `_id`. A metadata-only archive
+restores the board without its attachment files.
+
 ## PDF export fonts
 
 Set `WELITE_PDF_TTF` to the path of a TrueType font with the glyphs needed

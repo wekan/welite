@@ -1,0 +1,195 @@
+unit wlzipimp;
+{$mode objfpc}{$H+}{$CODEPAGE UTF8}
+
+interface
+
+uses Classes, fpjson;
+
+function ZipAttachmentName(const Value: string; Used: TStringList): string;
+function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
+
+implementation
+
+uses SysUtils, StrUtils, zipper, jsonparser, base64;
+
+const
+  MaxArchive = 64 * 1024 * 1024;
+  MaxEntry = 32 * 1024 * 1024;
+  MaxEntries = 4096;
+  AttachmentPrefix = 'attachments/';
+
+type
+  TZipEntryStream = class(TMemoryStream)
+    Limit: Int64;
+    function Write(const Buffer; Count: Longint): Longint; override;
+  end;
+
+  TBoardZipReader = class
+    Input: TStringStream;
+    Files: TStringList;
+    Total: Int64;
+    constructor Create(const Bytes: RawByteString);
+    destructor Destroy; override;
+    procedure OpenInput(Sender: TObject; var Stream: TStream);
+    procedure CloseInput(Sender: TObject; var Stream: TStream);
+    procedure CreateEntry(Sender: TObject; var Stream: TStream; Item: TFullZipFileEntry);
+    procedure FinishEntry(Sender: TObject; var Stream: TStream; Item: TFullZipFileEntry);
+    function ReadEntry(const Name: string; out Bytes: RawByteString): Boolean;
+  end;
+
+function ZipAttachmentName(const Value: string; Used: TStringList): string;
+var C: Char; Name, Stem, Extension: string; Dot, Number: Integer;
+begin
+  Name := '';
+  for C in Value do
+    if (C < ' ') or (C in ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127]) then Name := Name + '-'
+    else Name := Name + C;
+  Name := Trim(Name);
+  while (Name <> '') and (Name[Length(Name)] = '.') do Delete(Name, Length(Name), 1);
+  if Name = '' then Name := 'download';
+  Dot := RPos('.', Name);
+  if Dot > 1 then
+  begin
+    Stem := Copy(Name, 1, Dot - 1);
+    Extension := Copy(Name, Dot, MaxInt);
+  end
+  else
+  begin
+    Stem := Name;
+    Extension := '';
+  end;
+  Result := Name;
+  Number := 0;
+  while Used.IndexOf(Result) >= 0 do
+  begin
+    Inc(Number);
+    Result := Stem + '-' + IntToStr(Number) + Extension;
+  end;
+  Used.Add(Result);
+end;
+
+function TZipEntryStream.Write(const Buffer; Count: Longint): Longint;
+begin
+  if (Count < 0) or (Position + Count > Limit) then raise EConvertError.Create('ZIP entry exceeds its size');
+  Result := inherited Write(Buffer, Count);
+end;
+
+constructor TBoardZipReader.Create(const Bytes: RawByteString);
+begin
+  inherited Create;
+  Input := TStringStream.Create(Bytes);
+  Files := TStringList.Create;
+  Files.OwnsObjects := True;
+  Files.CaseSensitive := True;
+  Files.Sorted := True;
+end;
+
+destructor TBoardZipReader.Destroy;
+begin
+  Files.Free;
+  Input.Free;
+  inherited Destroy;
+end;
+
+procedure TBoardZipReader.OpenInput(Sender: TObject; var Stream: TStream);
+begin
+  Input.Position := 0;
+  Stream := Input;
+end;
+
+procedure TBoardZipReader.CloseInput(Sender: TObject; var Stream: TStream);
+begin
+  Stream := nil;
+end;
+
+procedure TBoardZipReader.CreateEntry(Sender: TObject; var Stream: TStream; Item: TFullZipFileEntry);
+var Name, Leaf: string; Data: TZipEntryStream;
+begin
+  Name := Item.ArchiveFileName;
+  Leaf := Copy(Name, Length(AttachmentPrefix) + 1, MaxInt);
+  if Item.IsLink or (Pos(#0, Name) > 0) or
+    ((Name <> 'wekan.json') and (Name <> AttachmentPrefix) and
+      (not AnsiStartsStr(AttachmentPrefix, Name) or (Leaf = '') or
+        (Leaf = '.') or (Leaf = '..') or (Pos('/', Leaf) > 0) or
+        (Pos('\', Leaf) > 0) or (Pos(':', Leaf) > 0))) then raise EConvertError.Create('Invalid ZIP entry');
+  if (Item.Size < 0) or (Item.Size > MaxEntry) or (Files.Count >= MaxEntries) or
+    (Total + Item.Size > MaxArchive) or (Files.IndexOf(Name) >= 0) then
+    raise EConvertError.Create('Invalid ZIP entry size or name');
+  Inc(Total, Item.Size);
+  Data := TZipEntryStream.Create;
+  Data.Limit := Item.Size;
+  Files.AddObject(Name, Data);
+  // The reader must never fall back to extracting an entry to disk.
+  Stream := Data;
+end;
+
+procedure TBoardZipReader.FinishEntry(Sender: TObject; var Stream: TStream; Item: TFullZipFileEntry);
+begin
+  if (Stream <> nil) and (Stream.Size <> Item.Size) then raise EConvertError.Create('Incomplete ZIP entry');
+end;
+
+function TBoardZipReader.ReadEntry(const Name: string; out Bytes: RawByteString): Boolean;
+var Index: Integer; Data: TMemoryStream;
+begin
+  Bytes := '';
+  if not Files.Find(Name, Index) then Exit(False);
+  Data := TMemoryStream(Files.Objects[Index]);
+  SetLength(Bytes, Data.Size);
+  if Data.Size > 0 then Move(Data.Memory^, Bytes[1], Data.Size);
+  Result := True;
+end;
+
+function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
+var Archive: TUnZipper; Reader: TBoardZipReader; Parsed, Data: TJSONData;
+  Board, Entry: TJSONObject; Attachments: TJSONArray; Used: TStringList;
+  I: Integer; Content: RawByteString; Member, LegacyName: string;
+begin
+  Result := nil;
+  if (Length(Bytes) = 0) or (Length(Bytes) > MaxArchive) then raise EConvertError.Create('Invalid ZIP size');
+  Archive := TUnZipper.Create;
+  Reader := TBoardZipReader.Create(Bytes);
+  Used := TStringList.Create;
+  Parsed := nil;
+  try
+    Archive.OnOpenInputStream := @Reader.OpenInput;
+    Archive.OnCloseInputStream := @Reader.CloseInput;
+    Archive.OnCreateStream := @Reader.CreateEntry;
+    Archive.OnDoneStream := @Reader.FinishEntry;
+    Archive.UnZipAllFiles;
+    if not Reader.ReadEntry('wekan.json', Content) then raise EConvertError.Create('Missing board JSON');
+    Parsed := GetJSON(Content);
+    if not (Parsed is TJSONObject) then raise EConvertError.Create('Invalid board JSON');
+    Board := TJSONObject(Parsed);
+    Data := Board.Find('attachments');
+    if Data <> nil then
+    begin
+      if not (Data is TJSONArray) then raise EConvertError.Create('Invalid board attachments');
+      Attachments := TJSONArray(Data);
+      for I := 0 to Attachments.Count - 1 do
+      begin
+        Entry := Attachments.Objects[I];
+        LegacyName := AttachmentPrefix + ZipAttachmentName(Entry.Get('name', ''), Used);
+        Member := Entry.Get('archivePath', LegacyName);
+        if Member = '' then Continue;
+        if not AnsiStartsStr(AttachmentPrefix, Member) then raise EConvertError.Create('Invalid attachment archive path');
+        if Reader.ReadEntry(Member, Content) then
+        begin
+          Entry.Delete('file');
+          Entry.Add('file', EncodeStringBase64(Content));
+        end;
+      end;
+      for I := Attachments.Count - 1 downto 0 do
+        if not (Attachments.Objects[I].Find('file') is TJSONString) then Attachments.Delete(I);
+    end;
+    Result := TJSONObject.Create;
+    Result.Add('board', Board);
+    Parsed := nil;
+  finally
+    Parsed.Free;
+    Archive.Free;
+    Reader.Free;
+    Used.Free;
+  end;
+end;
+
+end.

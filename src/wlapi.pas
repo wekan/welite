@@ -405,7 +405,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types;
+uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -3312,23 +3312,11 @@ begin
 end;
 
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Id, Name, Stem, Extension, Candidate, Path: string;
+var T: TWLTenant; BoardId, UserId, Id, Name, Candidate, Path: string;
   Payload, Attachment: TJSONObject; Attachments: TJSONData; Metadata: TWLRows;
   Output: TMemoryStream; Document: TStringStream; Archive: TZipper; Used: TStringList;
-  I, N, Dot: Integer; C: Char;
-  function SafeName(const Value: string): string;
-  var Ch: Char;
-  begin
-    Result := '';
-    for Ch in Value do
-    begin
-      if (Ch < ' ') or (Ch in ['/', '\', ':', '*', '?', '"', '<', '>', '|', #127]) then Result := Result + '-'
-      else Result := Result + Ch;
-    end;
-    Result := Trim(Result);
-    while (Result <> '') and (Result[Length(Result)] = '.') do Delete(Result, Length(Result), 1);
-    if Result = '' then Result := 'download';
-  end;
+  I: Integer; C: Char;
+
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
   try
@@ -3347,16 +3335,19 @@ begin
   end;
   Archive := TZipper.Create;
   Output := TMemoryStream.Create;
-  Document := TStringStream.Create(Payload.AsJSON + #10);
+  Document := TStringStream.Create('');
   Used := TStringList.Create;
   try
     Used.CaseSensitive := False;
     Archive.Entries.AddFileEntry(Document, 'wekan.json');
     Attachments := Payload.Find('attachments');
-    if (aRequest.QueryFields.Values['attachments'] <> 'false') and (Attachments is TJSONArray) then
+    if Attachments is TJSONArray then
       for I := 0 to Attachments.Count - 1 do
       begin
         Attachment := TJSONArray(Attachments).Objects[I];
+        Attachment.Delete('archivePath');
+        Attachment.Add('archivePath', '');
+        if aRequest.QueryFields.Values['attachments'] = 'false' then Continue;
         Id := Attachment.Get('_id', '');
         if Id = '' then Continue;
         Metadata := T.Db.Query('SELECT 1 FROM attachments a JOIN cards c ON c.id=a.cardId AND c.boardId=a.boardId ' +
@@ -3366,18 +3357,12 @@ begin
         if Length(Metadata) <> 1 then Continue;
         Path := StoreFilePath(T.FilesDir, 'attachme', Id);
         if not FileExists(Path) then Continue;
-        Name := SafeName(Attachment.Get('name', ''));
-        Dot := RPos('.', Name);
-        if Dot > 1 then
-        begin Stem := Copy(Name, 1, Dot - 1); Extension := Copy(Name, Dot, MaxInt); end
-        else begin Stem := Name; Extension := ''; end;
-        Candidate := Name;
-        N := 0;
-        while Used.IndexOf(Candidate) >= 0 do
-        begin Inc(N); Candidate := Stem + '-' + IntToStr(N) + Extension; end;
-        Used.Add(Candidate);
-        Archive.Entries.AddFileEntry(Path, 'attachments/' + Candidate);
+        Candidate := 'attachments/' + ZipAttachmentName(Attachment.Get('name', ''), Used);
+        Attachment.Strings['archivePath'] := Candidate;
+        Archive.Entries.AddFileEntry(Path, Candidate);
       end;
+    Document.WriteString(Payload.AsJSON + #10);
+    Document.Position := 0;
     try
       Archive.SaveToStream(Output);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
@@ -4306,8 +4291,10 @@ begin
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
-      try Body:=ExactObject(aRequest.Content);
-      except raise EConvertError.Create('Invalid board export JSON');end;
+      try
+        if SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip') then Body:=ReadBoardZip(aRequest.Content)
+        else Body:=ExactObject(aRequest.Content);
+      except raise EConvertError.Create('Invalid board export');end;
       Value:=Body.Find('board');
       if not (Value is TJSONObject) then raise EConvertError.Create('Missing board export');
       Input:=TJSONObject(Value);
