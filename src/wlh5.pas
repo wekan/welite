@@ -7941,7 +7941,7 @@ begin
 end;
 
 function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat, Group: string): string;
-var Value, Document: TJSONData; NumberFormat: TFormatSettings;
+var Value, Document, Item: TJSONData; NumberFormat: TFormatSettings; I: Integer;
   procedure AppendWipFlag(const Field, Key, Fallback: string);
   var Flag: TJSONData;
   begin
@@ -7992,6 +7992,17 @@ begin
       if Values.Get('field', '') = 'color' then
         Exit(Words.Text('color-' + Value.AsString, Value.AsString));
       Exit(Value.AsString);
+    end;
+    if Value is TJSONArray then
+    begin
+      for I := 0 to TJSONArray(Value).Count - 1 do
+      begin
+        if I > 0 then Result := Result + ', ';
+        Item := TJSONArray(Value).Items[I];
+        if Item.JSONType = jtString then Result := Result + Item.AsString
+        else Result := Result + Item.AsJSON;
+      end;
+      Exit;
     end;
     Exit(Value.AsJSON);
   end;

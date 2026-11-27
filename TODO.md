@@ -278,7 +278,7 @@ Next, after this goal:
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
   saved card move reasons, archive states, rule configuration summaries,
-  and rendering existing Scrum history records.
+  rendering existing Scrum history records, and basic multivalue summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
