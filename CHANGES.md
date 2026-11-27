@@ -55,7 +55,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   wrapping keeps UTF-16 surrogate pairs together, so an unsupported
   supplementary character at a wrap boundary produces one fallback glyph
   with the default font. When the configured TrueType file cannot be
-  loaded, PDF export uses the standard fonts.
+  loaded, PDF export uses the standard fonts. The PDF also records the
+  original supplementary text with ActualText when its visible glyph
+  falls back to a question mark.
 
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and

@@ -148,8 +148,40 @@ begin
   end;
 end;
 
+function PlainPDFGlyphs(const Text: UnicodeString; out HasSupplementary: Boolean): UnicodeString;
+var I, N: Integer;
+begin
+  HasSupplementary := False;
+  SetLength(Result, Length(Text));
+  I := 1;
+  N := 0;
+  while I <= Length(Text) do
+  begin
+    Inc(N);
+    if (I < Length(Text)) and (Ord(Text[I]) >= $D800) and (Ord(Text[I]) <= $DBFF) and
+      (Ord(Text[I + 1]) >= $DC00) and (Ord(Text[I + 1]) <= $DFFF) then
+    begin
+      HasSupplementary := True;
+      Result[N] := '?';
+      Inc(I);
+    end
+    else Result[N] := Text[I];
+    Inc(I);
+  end;
+  SetLength(Result, N);
+end;
+
+function PDFActualText(const Text: UnicodeString): string;
+var I: Integer;
+begin
+  Result := '/Span << /ActualText <FEFF';
+  for I := 1 to Length(Text) do Result := Result + IntToHex(Ord(Text[I]), 4);
+  Result := Result + '> >> BDC' + LineEnding;
+end;
+
 procedure TPdfCardWriter.WriteRow(const Row: TBoardRow; Heading: Boolean);
-var Text, Chunk: UnicodeString; Font, FontSize, I, Count, Offset: Integer;
+var Text, Chunk, Display: UnicodeString; Font, FontSize, I, Count, Offset: Integer;
+  HasSupplementary: Boolean;
   Fmt: TFormatSettings;
 begin
   if Length(Row) = 0 then
@@ -193,9 +225,16 @@ begin
     RequireSpace(LineHeight);
     Page.SetFont(Font, FontSize);
     if Chunk <> '' then
-      if EmbeddedFont then Page.WriteText(Margin, Y + 4, UTF8Encode(Chunk))
+    begin
+      Display := PlainPDFGlyphs(Chunk, HasSupplementary);
+      if HasSupplementary then
+        Page.AddObject(TPDFFreeFormString.Create(Document, PDFActualText(Chunk)));
+      if EmbeddedFont then Page.WriteText(Margin, Y + 4, UTF8Encode(Display))
       else Page.AddObject(TPDFFreeFormString.Create(Document,
-        Format('BT %.3f %.3f Td <%s> Tj ET', [mmToPDF(Margin), Page.Paper.H - mmToPDF(Y + 4), WinAnsiHex(Chunk)], Fmt) + LineEnding));
+        Format('BT %.3f %.3f Td <%s> Tj ET', [mmToPDF(Margin), Page.Paper.H - mmToPDF(Y + 4), WinAnsiHex(Display)], Fmt) + LineEnding));
+      if HasSupplementary then
+        Page.AddObject(TPDFFreeFormString.Create(Document, 'EMC' + LineEnding));
+    end;
     Y := Y + LineHeight;
     Inc(Offset, Count);
     if (Offset <= Length(Text)) and (Text[Offset] = #13) then Inc(Offset);
