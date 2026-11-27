@@ -947,6 +947,7 @@ begin
     // The submit-on-enter check keeps weddy.js's own class: it toggles it.
     Result := Result + '<li><a class="' + ROWS[i].Cls + IfThen(ROWS[i].Method = 'toggleSubmitOnEnter', '', ' js-welite-setting') +
       '" href="#" data-method="' + ROWS[i].Method + '"' +
+      IfThen(ROWS[i].Method = 'toggleChecklistDingSound', ' role="switch" aria-checked="' + IfThen(On_, 'true', 'false') + '"', '') +
       IfThen(ROWS[i].Hint <> '', ' title="' + HtmlAttr(Words.Text(ROWS[i].Hint, '')) + '"', '') + '><i class="fa ' + ROWS[i].Icon + '"></i>' +
       E(Words.Text(ROWS[i].Key, ROWS[i].Fallback)) + '<i class="fa fa-check' +
       IfThen(ROWS[i].Method = 'toggleSubmitOnEnter', ' js-submit-on-enter-check', ' js-setting-check') + '"' +
@@ -1184,6 +1185,8 @@ begin
       ProfileFlag(T.Db, S.UserId, 'submitOnEnter'), 'true', '') + '"' +
     IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
       ProfileFlag(T.Db, S.UserId, 'keepAddCardFormOpen'), ' data-keep-add-card-form-open="true"', '') +
+    IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
+      ProfileFlag(T.Db, S.UserId, 'checklistDingSound'), ' data-checklist-ding-sound="true"', '') +
     IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
       ProfileFlag(T.Db, S.UserId, 'hideFocusOutline'), ' class="has-hide-focus-outline"', '') + '>' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
 end;

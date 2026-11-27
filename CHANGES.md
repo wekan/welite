@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Play the optional checklist chime when an item is checked off. The
+  member's Change Settings preference applies immediately and after reload.
+
 - Board admins can create, edit, enable, disable and remove WIP limit
   groups in Board Settings. Pick lists individually with the mouse or
   keyboard, or select the lists of a swimlane together. Member list headers
