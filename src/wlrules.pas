@@ -2126,6 +2126,12 @@ begin
   if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> Field) then Exit;
   V := TJSONObject(Content).Find('value');
   if V = nil then Exit;
+  if Field = 'dueComplete' then
+  begin
+    if not (V is TJSONBoolean) then Exit;
+    Literal := IntToStr(Ord(V.AsBoolean));
+    Exit(True);
+  end;
   Result := CardDateSql(V, Literal);
 end;
 
@@ -2201,7 +2207,7 @@ begin
 end;
 
 function ApplyCardHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope: string; R: TWLRows; Current: TJSONObject;
+var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope, CurrentField: string; R: TWLRows; Current: TJSONObject;
   function ValueOf(Content: TJSONData): string;
   var V: TJSONData;
   begin
@@ -2231,10 +2237,12 @@ begin
     if (Str(Row, 'group') <> 'dates') or not HistoryDateLiteral(Put, Field, PutSql) or
       not HistoryDateLiteral(Expect, Field, ExpectSql) then Exit;
     Scope := 'id=' + Q(Str(Row, 'entityId')) + ' AND boardId=' + Q(Str(Row, 'boardId')) + ' AND deletedAt IS NULL';
-    if Length(Db.Query('SELECT 1 FROM cards WHERE ' + Scope + ' AND ' + Field + ' IS ' + ExpectSql + ';')) <> 1 then
+    CurrentField := Field;
+    if Field = 'dueComplete' then CurrentField := 'COALESCE(dueComplete,0)';
+    if Length(Db.Query('SELECT 1 FROM cards WHERE ' + Scope + ' AND ' + CurrentField + ' IS ' + ExpectSql + ';')) <> 1 then
     begin Error := 'history-conflict'; Exit; end;
     Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' +
-      Scope + ' AND ' + Field + ' IS ' + ExpectSql + ') THEN 1 ELSE json(''Card date changed'') END; ' +
+      Scope + ' AND ' + CurrentField + ' IS ' + ExpectSql + ') THEN 1 ELSE json(''Card date changed'') END; ' +
       'UPDATE cards SET ' + Field + '=' + PutSql + ',modifiedAt=' + Q(NowIso) + ' WHERE ' + Scope + '; COMMIT;');
     if not Result then Db.Exec('ROLLBACK;');
     Exit;

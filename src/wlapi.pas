@@ -6207,8 +6207,16 @@ begin
     ') parentLink WHERE parentLink.type=''text'' AND parentLink.value='+Parent+'))';
 end;
 
+function CardCompletionOf(Db:TWLDb;const Scope:string):Boolean;
+var Rows:TWLRows;
+begin
+  Rows:=Db.Query('SELECT COALESCE(dueComplete,0) FROM cards WHERE '+Scope+';');
+  Result:=(Length(Rows)=1) and (Rows[0][0]='1');
+end;
+
 function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
 var Rows:TWLRows; ParentScope,SubtaskScope,TargetScope,ParentBoard,SubtaskBoard,TargetBoard,TargetId,Guard,Value:string; Policy:TFieldPolicy;
+  OldDone:Boolean;
 begin
   Error:='not-found';
   if (ParentId='') or (SubtaskId='') or (Pos(#0,ParentId+SubtaskId)>0) then Exit(404);
@@ -6246,12 +6254,14 @@ begin
   Policy:=TFieldPolicy.Create(T.Db,UserId,TargetBoard,'');
   try Guard:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
   TargetScope:=TargetScope+' AND boardId='+QuotedStr(TargetBoard);
+  OldDone:=CardCompletionOf(T.Db,TargetScope);
   Value:=IntToStr(Ord(Done));
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' AND EXISTS(SELECT 1 FROM cards WHERE '+ParentScope+
     ' AND boardId='+QuotedStr(ParentBoard)+') AND EXISTS(SELECT 1 FROM cards WHERE '+SubtaskScope+
     ') AND EXISTS(SELECT 1 FROM cards WHERE '+TargetScope+') THEN 1 ELSE json(''Subtask scope changed'') END; UPDATE cards SET dueComplete='+Value+
     ',modifiedAt='+QuotedStr(NowIso)+' WHERE '+TargetScope+' AND COALESCE(dueComplete,0)<>'+Value+'; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update subtask';Exit(500);end;
+  RecordCardCompletionHistory(T.Db,UserId,TargetBoard,TargetId,OldDone,Done);
   Error:='';Result:=200;
 end;
 
@@ -7115,8 +7125,9 @@ procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
-  Code:Integer;MoveError:string;HasDescription,HasColor:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor:string;
+  Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor:string;
 begin
+  HasCompletion:=False;OldDone:=False;Done:=False;
   HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -7190,11 +7201,13 @@ begin
         HasDescription:=True;NewDescription:=Value;
       end;
       Input:=Body.Find('dueComplete');
-      if Input<>nil then
+      HasCompletion:=Input<>nil;
+      if HasCompletion then
       begin
         Value:='';
         if Input.JSONType in [jtBoolean,jtString] then Value:=Input.AsString;
-        FieldSets:=FieldSets+',dueComplete='+IntToStr(Ord(SameText(Value,'true')));
+        Done:=SameText(Value,'true');
+        FieldSets:=FieldSets+',dueComplete='+IntToStr(Ord(Done));
       end;
       Decorations:=TJSONObject.Create;
       for FieldName in ['stickers','locations'] do
@@ -7258,6 +7271,7 @@ begin
     end;
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;
+  if HasCompletion then OldDone:=CardCompletionOf(T.Db,Scope);
   if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
   if HasDescription then OldDescription:=CardTextOf(T.Db,CardId,'description');
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
@@ -7271,6 +7285,7 @@ begin
   end;
   if HasTitle then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',OldTitle,NewTitle);
   if HasDescription then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'description',OldDescription,NewDescription);
+  if HasCompletion then RecordCardCompletionHistory(T.Db,UserId,BoardId,CardId,OldDone,Done);
   if HasColor then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'color',OldColor,NewColor);
   // #6423: a listId or swimlaneId in the body moves the card there, within
   // its board, with WeKan's moveCard activity (MoveViewCard's checks).
@@ -8291,16 +8306,18 @@ begin
 end;
 
 function SetViewCardComplete(const T:TWLTenant;const UserId,BoardId,CardId:string;Done:Boolean;out Error:string):Integer;
-var Scope,Stamp:string;
+var Scope,Stamp:string;OldDone:Boolean;
 begin
   Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
   if Result<>200 then Exit;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  OldDone:=CardCompletionOf(T.Db,Scope);
   Stamp:=QuotedStr(NowIso);
   if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET dueComplete='+IntToStr(Ord(Done))+',modifiedAt='+Stamp+' WHERE '+Scope+
     ' AND COALESCE(dueComplete,0)<>'+IntToStr(Ord(Done))+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
     ' AND COALESCE(dueComplete,0)='+IntToStr(Ord(Done))+')=1 THEN 1 ELSE json(''Complete failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not update card';Exit(500);end;
+  RecordCardCompletionHistory(T.Db,UserId,BoardId,CardId,OldDone,Done);
 end;
 
 function AccountSettingOn(Db:TWLDb;const Id:string):Boolean;

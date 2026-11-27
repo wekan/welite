@@ -13,6 +13,7 @@ procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,Ca
 function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Group,ChangeType:string;
   Previous,Next:TJSONData;const RestoredFromId:string='';const RestoredByUserId:string=''):Boolean;
 
+procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
 function CardHistoryDateField(const Field: string): Boolean;
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
 
@@ -21,12 +22,13 @@ uses SysUtils,DateUtils,wlchhash,wlsjson,wlferr;
 
 function CardHistoryDateField(const Field: string): Boolean;
 begin
-  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt');
+  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt') or (Field = 'dueComplete');
 end;
 
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
 var At: TDateTime; Ms: Int64;
 begin
+  if Field = 'dueComplete' then Exit(TJSONObject.Create(['field', Field, 'value', Value = '1']));
   Result := TJSONObject.Create(['field', Field]);
   if TryStrToInt64(Value, Ms) or TryISO8601ToDate(Value, At, True) then
   begin
@@ -459,6 +461,21 @@ begin
   if (UserId='') or (BoardId='') or (EntityId='') or (Group='') or (ChangeType='') then Exit;
   RecordLifecycleChange(Db,UserId,BoardId,'','','','',EntityType,EntityId,'','',False,Group,ChangeType,Previous,Next,
     RestoredFromId,RestoredByUserId,@Result);
+end;
+
+procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
+var Before,After:TJSONObject;
+begin
+  if Old=Done then Exit;
+  Before:=TJSONObject.Create(['field','dueComplete','value',Old]);
+  After:=TJSONObject.Create(['field','dueComplete','value',Done]);
+  try
+    try
+      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,'dates','edited',Before,After);
+    except
+      // History never fails the edit it records.
+    end;
+  finally Before.Free;After.Free;end;
 end;
 
 procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,DeletedAt:string;
