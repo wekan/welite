@@ -2938,8 +2938,7 @@ var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
   begin
     Result := False;
     Mime := Attachment.Get('type', '');
-    if not ((Mime = 'image/png') or (Mime = 'image/jpeg') or (Mime = 'image/pjpeg') or
-      (Mime = 'image/bmp') or (Mime = 'image/webp')) then Exit;
+    if not SupportsAttachmentThumbnail(Mime) then Exit;
     Id := Attachment.Get('_id', '');
     if Id = '' then Exit;
     Metadata := T.Db.Query('SELECT 1 FROM attachments a JOIN cards c ON c.id=a.cardId AND c.boardId=a.boardId ' +

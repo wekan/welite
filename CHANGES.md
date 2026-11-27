@@ -28,7 +28,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   list headings in board order, including empty swimlanes and lists. Swimlane and list exports start at that
   level, and a card scope omits the group headings. The card layout uses
   A4 portrait printing with page breaks between card blocks. Local PNG,
-  JPEG, BMP and supported WebP attachments also get inline thumbnails when
+  JPEG, BMP, and supported GIF and WebP attachments get inline thumbnails when
   Attachments is selected in the card layout.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
@@ -242,6 +242,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Honor JPEG EXIF orientation in thumbnails, including attachments stored
   with the legacy `image/pjpeg` MIME type.
+- On Linux with `libgif.so.7`, preview the first frame of GIF attachments
+  in the card gallery and Excel exports.
+
 - Preview uncompressed 24-bit BMP attachments in the gallery and on
   minicard covers. The decoder checks image dimensions and row lengths
   before reading pixels.

@@ -4,6 +4,7 @@ interface
 
 uses HTTPDefs, Classes, Types;
 
+function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
 function RenderAttachmentThumbnail(Output: TStream; const Path, MimeType: string;
   PreferWebP: Boolean; out Size: TPoint; out OutputType: string): Boolean;
 function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: string): Boolean;
@@ -91,6 +92,137 @@ begin
   end;
 end;
 
+{$IFDEF LINUX}
+{$PUSH}
+{$PACKRECORDS C}
+type
+  TGifColor = record Red, Green, Blue: Byte; end;
+  PGifPalette = ^TGifPalette;
+  TGifPalette = record
+    Count, BitsPerPixel: cint;
+    Sorted: Boolean;
+    Colors: ^TGifColor;
+  end;
+  TGifImage = record
+    Left, Top, Width, Height: cint;
+    Interlace: Boolean;
+    Palette: PGifPalette;
+  end;
+  PGifFile = ^TGifFile;
+  TGifFile = record
+    ScreenWidth, ScreenHeight, Resolution, Background: cint;
+    Aspect: Byte;
+    Palette: PGifPalette;
+    ImageCount: cint;
+    Image: TGifImage;
+  end;
+{$POP}
+
+function ReadGif(const Path: string; out Size: TPoint; out Image: TFPMemoryImage): Boolean;
+const Starts: array[0..3] of Integer = (0, 4, 2, 1);
+  Steps: array[0..3] of Integer = (8, 8, 4, 2);
+var Lib: TLibHandle; Gif: PGifFile; Palette: PGifPalette;
+  OpenFile: function(Name: PChar; Error: Pcint): PGifFile; cdecl;
+  CloseFile: function(FileHandle: PGifFile; Error: Pcint): cint; cdecl;
+  ReadRecord: function(FileHandle: PGifFile; Kind: Pcint): cint; cdecl;
+  ReadImage: function(FileHandle: PGifFile): cint; cdecl;
+  ReadLine: function(FileHandle: PGifFile; Pixels: PByte; Width: cint): cint; cdecl;
+  ReadExtension: function(FileHandle: PGifFile; Kind: Pcint; out Block: PByte): cint; cdecl;
+  ReadExtensionNext: function(FileHandle: PGifFile; out Block: PByte): cint; cdecl;
+  Error, Kind, ExtensionKind: cint; Block: PByte;
+  Scan: TBytes; Pass, Y, Transparent: Integer;
+
+  function LoadRow(Row: Integer): Boolean;
+  var X, Index: Integer; Color: TFPColor; GifColor: TGifColor;
+  begin
+    if ReadLine(Gif, @Scan[0], Size.X) <> 1 then Exit(False);
+    for X := 0 to Size.X - 1 do
+    begin
+      Index := Scan[X];
+      if Index >= Palette^.Count then Exit(False);
+      GifColor := Palette^.Colors[Index];
+      Color.Red := GifColor.Red * 257;
+      Color.Green := GifColor.Green * 257;
+      Color.Blue := GifColor.Blue * 257;
+      if Index = Transparent then Color.Alpha := 0 else Color.Alpha := $FFFF;
+      Image.Colors[X, Row] := Color;
+    end;
+    Result := True;
+  end;
+
+begin
+  Result := False;
+  Lib := LoadLibrary('libgif.so.7');
+  if Lib = NilHandle then Exit;
+  Gif := nil;
+  try
+    Pointer(OpenFile) := GetProcedureAddress(Lib, 'DGifOpenFileName');
+    Pointer(CloseFile) := GetProcedureAddress(Lib, 'DGifCloseFile');
+    Pointer(ReadRecord) := GetProcedureAddress(Lib, 'DGifGetRecordType');
+    Pointer(ReadImage) := GetProcedureAddress(Lib, 'DGifGetImageDesc');
+    Pointer(ReadLine) := GetProcedureAddress(Lib, 'DGifGetLine');
+    Pointer(ReadExtension) := GetProcedureAddress(Lib, 'DGifGetExtension');
+    Pointer(ReadExtensionNext) := GetProcedureAddress(Lib, 'DGifGetExtensionNext');
+    if not (Assigned(OpenFile) and Assigned(CloseFile) and Assigned(ReadRecord) and Assigned(ReadImage) and
+      Assigned(ReadLine) and Assigned(ReadExtension) and Assigned(ReadExtensionNext)) then Exit;
+    Gif := OpenFile(PChar(Path), @Error);
+    if Gif = nil then Exit;
+    Transparent := -1;
+    repeat
+      if ReadRecord(Gif, @Kind) <> 1 then Exit;
+      case Kind of
+        2: Break;
+        3: begin
+          if ReadExtension(Gif, @ExtensionKind, Block) <> 1 then Exit;
+          if (ExtensionKind = $F9) and (Block <> nil) and (Block[0] = 4) then
+          begin
+            Transparent := -1;
+            if Block[1] and 1 <> 0 then Transparent := Block[4];
+          end;
+          while Block <> nil do
+            if ReadExtensionNext(Gif, Block) <> 1 then Exit;
+        end;
+      else
+        Exit;
+      end;
+    until False;
+    if ReadImage(Gif) <> 1 then Exit;
+    Size := Point(Gif^.Image.Width, Gif^.Image.Height);
+    if not ValidSize(Size) then Exit;
+    Palette := Gif^.Image.Palette;
+    if Palette = nil then Palette := Gif^.Palette;
+    if (Palette = nil) or (Palette^.Colors = nil) then Exit;
+    Image := TFPMemoryImage.Create(Size.X, Size.Y);
+    SetLength(Scan, Size.X);
+    if Gif^.Image.Interlace then
+    begin
+      for Pass := Low(Starts) to High(Starts) do
+      begin
+        Y := Starts[Pass];
+        while Y < Size.Y do
+        begin
+          if not LoadRow(Y) then Exit;
+          Inc(Y, Steps[Pass]);
+        end;
+      end;
+    end
+    else
+      for Y := 0 to Size.Y - 1 do
+        if not LoadRow(Y) then Exit;
+    Result := True;
+  finally
+    if Gif <> nil then CloseFile(Gif, @Error);
+    UnloadLibrary(Lib);
+  end;
+end;
+{$ENDIF}
+
+function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
+begin
+  Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
+    (MimeType = 'image/webp') or (MimeType = 'image/bmp') {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
+end;
+
 function ReadBE32(Stream: TStream): Cardinal;
 var B: array[0..3] of Byte;
 begin
@@ -157,8 +289,7 @@ var Input: TFileStream; Source, Preview: TFPMemoryImage;
   Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor;
 begin
   Result := False;
-  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/pjpeg') and
-    (MimeType <> 'image/webp') and (MimeType <> 'image/bmp') then Exit;
+  if not SupportsAttachmentThumbnail(MimeType) then Exit;
   Input := nil;
   Source := nil;
   Preview := nil;
@@ -170,6 +301,13 @@ begin
     try
       Input := TFileStream.Create(Path, fmOpenRead or fmShareDenyWrite);
       if (Input.Size = 0) or (Input.Size > MaxInputBytes) then Exit;
+      {$IFDEF LINUX}
+      if MimeType = 'image/gif' then
+      begin
+        if not ReadGif(Path, Size, Source) then Exit;
+      end
+      else
+      {$ENDIF}
       if MimeType = 'image/webp' then
       begin
         if not ReadWebP(Codec, Input, Size, Pixels) then Exit;
