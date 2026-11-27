@@ -106,6 +106,8 @@
 12-checklists.e2e.js: deleting a checklist removes it from the card
 12-checklists.e2e.js: checklist deadline uses the visible shared calendar and can be cleared
 12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items
+checklist-item-reorder.e2e.js: #6723 third-position drop follows placeholder (handles false)
+checklist-item-reorder.e2e.js: #6723 third-position drop follows placeholder (handles true)
 13-swimlanes.e2e.js: board renders with a visible swimlane section
 13-swimlanes.e2e.js: swimlane header shows the seeded "Default" title
 13-swimlanes.e2e.js: swimlane action popup opens without JS errors

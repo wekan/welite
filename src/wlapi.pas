@@ -194,6 +194,8 @@ function DeleteViewChecklistItem(const T: TWLTenant; const UserId, BoardId, Card
   out Error: string): Integer;
 function AssignViewChecklistItem(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, Assignee: string;
   out Error: string): Integer;
+function SortViewChecklistItems(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId: string;
+  Fields: TStrings; out Error: string): Integer;
 function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, At: string;
   Remove: Boolean; out Error: string): Integer;
 // Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
@@ -6325,6 +6327,45 @@ begin
     Guard := ' AND ' + Guard;
   end;
   Result := WriteViewChecklistField(T, BoardId, CardId, ChecklistId, ItemId, 'assigneeId', Literal, Error, Guard);
+end;
+
+function SortViewChecklistItems(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId: string;
+  Fields: TStrings; out Error: string): Integer;
+var Order: TJSONArray; I: Integer; Id, Scope, Entries, Valid, Positions: string;
+begin
+  if ChecklistId = '' then begin Error := 'Checklist not found'; Exit(404); end;
+  Result := ViewChecklistScope(T, UserId, BoardId, CardId, ChecklistId, '', Error);
+  if Result <> 200 then Exit;
+  if not BoardAllows(T.Db, BoardId, 'allowsChecklistItemDragging') then
+  begin Error := 'This board does not allow checklist item dragging'; Exit(403); end;
+  Order := TJSONArray.Create;
+  try
+    for I := 0 to Fields.Count - 1 do
+      if Fields.Names[I] = 'item' then
+      begin
+        Id := Fields.ValueFromIndex[I];
+        if (Id = '') or (Pos(#0, Id) > 0) then begin Error := 'Invalid checklist item order'; Exit(400); end;
+        Order.Add(Id);
+      end;
+    Entries := 'json_each(' + QuotedStr(Order.AsJSON) + ')';
+  finally Order.Free; end;
+  Scope := 'checklistId=' + QuotedStr(ChecklistId) + ' AND cardId=' + QuotedStr(CardId) +
+    ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ')';
+  Valid := 'EXISTS(SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' + QuotedStr(BoardId) +
+    ' AND deletedAt IS NULL) AND EXISTS(SELECT 1 FROM checklists WHERE id=' + QuotedStr(ChecklistId) +
+    ' AND cardId=' + QuotedStr(CardId) + ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) +
+    ')) AND (SELECT count(*) FROM ' + Entries + ')=(SELECT count(*) FROM checklist_items WHERE ' + Scope +
+    ') AND (SELECT count(*) FROM checklist_items WHERE ' + Scope + ' AND id IN (SELECT value FROM ' + Entries +
+    '))=(SELECT count(*) FROM ' + Entries + ')';
+  if Length(T.Db.Query('SELECT 1 WHERE ' + Valid + ';')) <> 1 then
+  begin Error := 'Invalid checklist item order'; Exit(400); end;
+  Positions := '(SELECT key FROM ' + Entries + ' WHERE value=checklist_items.id)';
+  if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN ' + Valid +
+    ' THEN 1 ELSE json(''Checklist scope changed'') END; UPDATE checklist_items SET sort=' + Positions +
+    ',modifiedAt=' + QuotedStr(NowIso) + ' WHERE ' + Scope +
+    '; SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM checklist_items WHERE ' + Scope +
+    ' AND sort IS NOT ' + Positions + ') THEN 1 ELSE json(''Checklist sort failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); Error := 'Could not reorder checklist items'; Exit(500); end;
 end;
 
 // GET checklists of a card / POST create a checklist

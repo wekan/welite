@@ -1347,9 +1347,9 @@ end;
 // progress and items; for whoever may change the card, a checklist added (the
 // title line's "+" before there is one, the bottom one after), an item added
 // under its checklist, an item checked, and the checklist's menu.
-function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
+function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource, DragHandles: Boolean): string;
 var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, ItemUrl, DueLabel, AssigneeLabel: string;
-  ShowDue: Boolean;
+  ShowDue, CanDrag: Boolean;
   function InlinedForm(const Cls, Action, Label_: string; const Title: string = ''; Editing: Boolean = False; const DeleteUrl: string = ''): string;
   begin
     // Its fields are on the page only while it is open (WeKan's inlinedForm).
@@ -1399,6 +1399,7 @@ begin
       '"><i class="fa fa-plus"></i></a>';
   Result := Result + '</h3></div><div class="card-checklist-items">';
   ShowDue := BoardAllows(Db, BoardId, 'allowsChecklistDueDate');
+  CanDrag := Writable and BoardAllows(Db, BoardId, 'allowsChecklistItemDragging');
   DueLabel := HtmlAttr(Words.Text('card-due', 'Due'));
   AssigneeLabel := HtmlAttr(Words.Text('checklist-item-assignee', 'Assignee'));
   for i := 0 to High(Lists) do
@@ -1423,6 +1424,9 @@ begin
           '" type="submit" aria-label="' + HtmlAttr(Items[k][1]) + '"></button></form>'
       else
         ItemsHtml := ItemsHtml + '<div class="check-box-container"><div class="check-box materialCheckBox' + Finished + '"></div></div>';
+      if CanDrag and DragHandles then
+        ItemsHtml := ItemsHtml + '<span class="fa fa-arrows checklistitem-handle" title="' +
+          HtmlAttr(Words.Text('move-scope', 'Move')) + '"></span>';
       ItemUrl := ChecklistUrl + '/items/' + HTTPEncode(Items[k][0]);
       ItemsHtml := ItemsHtml + '<div class="item-title' + Finished +
         IfThen(Writable, ' js-open-inlined-form is-editable" data-opens="edit-checklist-item', '') + '">' +
@@ -1465,7 +1469,11 @@ begin
         IntToStr(Percent) + '" aria-label="' + HtmlAttr(Lists[i][1]) + '"><div class="checklist-progress" style="width:' +
         IntToStr(Percent) + '%"></div></div></div>';
     end;
-    Checklist := Checklist + '<div class="checklist-items js-checklist-items">' + ItemsHtml + '</div>';
+    Checklist := Checklist + '<div class="checklist-items js-checklist-items"';
+    if CanDrag then
+      Checklist := Checklist + ' data-sort-url="' + HtmlAttr(ChecklistUrl + '/items/sort') +
+        '" data-handles="' + IfThen(DragHandles, 'true', 'false') + '"';
+    Checklist := Checklist + '>' + ItemsHtml + '</div>';
     if Writable then
       Checklist := Checklist + '<a class="add-checklist-item js-open-inlined-form" href="#" data-opens="add-checklist-item" title="' +
         HtmlAttr(Words.Text('add-checklist-item', 'Add an item to checklist')) + '" aria-label="' +
@@ -4346,7 +4354,8 @@ begin
     PutSection(Sections, 'attachments', AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId)));
     if BoardAllows(Db, BoardId, 'allowsSubtasks') then
       PutSection(Sections, 'subtasks', SubtasksSection(Db, Words, S.UserId, BoardId, CardId, Writable));
-    PutSection(Sections, 'checklists', ChecklistsSection(Db, Words, BoardId, CardId, Writable, PlainLinks, PlainSource));
+    PutSection(Sections, 'checklists', ChecklistsSection(Db, Words, BoardId, CardId, Writable, PlainLinks, PlainSource,
+      ProfileFlag(Db, S.UserId, 'showDesktopDragHandles')));
     PutSection(Sections, 'comments', CommentsSection(Db, Words, BoardId, CardId,
       (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId), PlainLinks, PlainSource));
     Details := Details + CardSectionsHtml(Db, Words, BoardId, Sections);
@@ -7332,6 +7341,7 @@ begin
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'title') then Action := 'checklist-title'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'due') then Action := 'checklist-due'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
+  else if (n = 8) and (P[4] = 'checklists') and (P[6] = 'items') and (P[7] = 'sort') then Action := 'sort-items'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'assignee') then Action := 'assign-item'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'delete') then Action := 'delete-item'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'title') then Action := 'checklist-title'
@@ -7483,6 +7493,16 @@ begin
     Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
   else if Action = 'add-item' then
     Code := AddViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, Title, NewId, Error)
+  else if Action = 'sort-items' then
+  begin
+    Code := SortViewChecklistItems(T, S.UserId, BoardId, CardId, ChecklistId, Request.ContentFields, Error);
+    if Code = 200 then
+    begin
+      Response.Code := 204;
+      SendResponse(Response);
+      Exit;
+    end;
+  end
   else if Action = 'assign-item' then
     Code := AssignViewChecklistItem(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Request.ContentFields.Values['userId'], Error)
   else if Action = 'delete-item' then

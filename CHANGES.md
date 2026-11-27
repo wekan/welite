@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Drag items to reorder them within a checklist. The server saves the order
+  shown by the drop placeholder, with or without desktop drag handles.
+
 - Assign a checklist item to an active board member or clear its assignee.
   The picker highlights the current assignee and the card shows their name.
 
