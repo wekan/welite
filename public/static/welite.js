@@ -202,6 +202,10 @@
     if (before !== drawnMobile()) setTimeout(function () { up.reload('.board-wrapper'); }, 0);
   });
   up.on('click', '.js-mobile-mode-toggle', function () { setTimeout(function () { syncMobile(true); }, 0); });
+  up.on('click', '.js-close-mobile-list', function () {
+    setCookie('welite-list', '');
+    up.reload('.board-wrapper');
+  });
   up.on('click', '.js-select-list', function (event, row) {
     event.preventDefault();
     setCookie('welite-list', encodeURIComponent(row.getAttribute('data-list') + ':' + row.getAttribute('data-swimlane')));

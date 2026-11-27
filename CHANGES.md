@@ -589,6 +589,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   assigned-only member keeps of their own (their dismissal among them) are
   theirs to write. `tests/view.py` checks each; WeKan's board-announcement
   passes, its four languages too.
+- In the HTML5 mobile view, Back returns from an open list to its
+  swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
+  and Weddy.
 - Add WeKan's Create Board to the header (header.jade's createBoardForm):
   one private board with a Default swimlane, or one a line when the title
   has many lines and "Add many lines as separate items" is chosen, for a user

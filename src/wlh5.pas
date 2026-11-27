@@ -3522,6 +3522,9 @@ begin
     LaneHasCurrent := False;
     if BoardMobile and (BoardCurrentList <> '') and (BoardCurrentLane = Lanes[i][0]) then
       for j := 0 to High(Lists) do if Lists[j][0] = BoardCurrentList then LaneHasCurrent := True;
+    if LaneHasCurrent then
+      Canvas := Canvas + '<button type="button" class="js-close-mobile-list">' +
+        E(Words.Text('back', 'Back')) + '</button>';
     for j := 0 to High(Lists) do
     begin
       if BoardMobile and LaneHasCurrent and (Lists[j][0] <> BoardCurrentList) then Continue;
