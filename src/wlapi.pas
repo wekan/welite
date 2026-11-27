@@ -5963,8 +5963,8 @@ end;
 
 procedure ApiListArchive(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
-var T:TWLTenant;UserId,BoardId,BoardKey,ListId,Scope,Predicate,Stamp,CardArchivedAt,Sql:string;
-  Archive:Boolean;Target:string;Rows:TWLRows;Reply:TJSONObject;
+var T:TWLTenant;UserId,BoardId,BoardKey,ListId,Scope,Predicate,Stamp,CardArchivedAt,Sql,CardScope,CardIdQuery:string;
+  Archive:Boolean;Target:string;Rows:TWLRows;Reply:TJSONObject;ChangedCards:TJSONData;I:Integer;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -5978,11 +5978,14 @@ begin
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
   Stamp:=QuotedStr(NowIso);CardArchivedAt:='NULL';
   if Archive then CardArchivedAt:=Stamp;
+  CardScope:='listId='+QuotedStr(ListId)+' AND boardId='+BoardKey+' AND deletedAt IS NULL AND archived<> '+Target+
+    ' AND EXISTS(SELECT 1 FROM lists WHERE '+Predicate+' AND type=''template-list'')';
+  CardIdQuery:='SELECT json_group_array(id) FROM (SELECT id FROM cards WHERE '+CardScope+' ORDER BY id)';
+  Rows:=T.Db.Query(CardIdQuery+';');
+  if Length(Rows)<>1 then begin SendError(aResponse,500,'Could not read archive scope');Exit;end;
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Predicate+
-    ')=1 THEN 1 ELSE json(''List archive scope changed'') END; '+
-    'UPDATE cards SET archived='+Target+',archivedAt='+CardArchivedAt+' WHERE listId='+QuotedStr(ListId)+
-    ' AND boardId='+BoardKey+' AND deletedAt IS NULL AND archived<> '+Target+
-    ' AND EXISTS(SELECT 1 FROM lists WHERE '+Predicate+' AND type=''template-list''); '+
+    ')=1 AND ('+CardIdQuery+')='+QuotedStr(Rows[0][0])+' THEN 1 ELSE json(''List archive scope changed'') END; '+
+    'UPDATE cards SET archived='+Target+',archivedAt='+CardArchivedAt+' WHERE '+CardScope+'; '+
     'UPDATE lists SET archived='+Target+',modifiedAt='+Stamp;
   if Archive then Sql:=Sql+',archivedAt='+Stamp;
   Sql:=Sql+' WHERE '+Predicate+'; SELECT CASE WHEN (SELECT count(*) FROM lists WHERE '+Scope+
@@ -5990,6 +5993,11 @@ begin
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change list archive state');Exit;end;
   RecordArchiveHistory(T.Db,UserId,BoardId,'list',ListId,Archive);
+  ChangedCards:=GetJSON(Rows[0][0]);
+  try
+    for I:=0 to ChangedCards.Count-1 do
+      RecordArchiveHistory(T.Db,UserId,BoardId,'card',ChangedCards.Items[I].AsString,Archive);
+  finally ChangedCards.Free;end;
   Reply:=TJSONObject.Create(['_id',ListId,'archived',Archive]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;

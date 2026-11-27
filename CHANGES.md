@@ -16,6 +16,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   REST list archive and unarchive and archive-sidebar list and swimlane
   restores record the container’s archive status in lifecycle history.
   List and swimlane archive states support Undo, Redo and Restore.
+  REST template-list archiving and unarchiving also record the resulting
+  card archive transitions as individual history entries.
 
 - The Time view and its PDF and Excel exports show hours by assignee and
   card, mark overtime cards, and show the signed total time until open
