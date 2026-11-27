@@ -7,7 +7,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 // Returns true when it sent the action response; false for an ordinary arrow move.
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
-function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean;AllowPublicGuest:Boolean=False):TJSONObject;
+function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean;AllowPublicGuest:Boolean=False; ExcelMetadata:Boolean=False):TJSONObject;
 function ExportPlainDescription(const Text:string):string;
 procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
 function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
@@ -427,11 +427,11 @@ begin
   end;
 end;
 
-function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles,AllowPublicGuest:Boolean):TJSONObject;
+function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles,AllowPublicGuest,ExcelMetadata:Boolean):TJSONObject;
 const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments','activities');
   ExportKeys:array[0..8] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments','activities');
 var Params,UserIds:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
-  I,J,Index:Integer;Name,FileData:string;Value:TJSONData;Rows:TWLRows;
+  I,J,Index:Integer;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
   function ExportRow(const TableName:string;Index:Integer):TJSONObject;
   var Original:TJSONObject;Typed:string;Id:TJSONData;
   begin
@@ -493,6 +493,16 @@ begin
             Value:=Row.FindPath('meta.cardId');if Value=nil then Value:=Row.Find('cardId');
             if Value<>nil then Attachment.Add('cardId',Value.Clone);
             Value:=Row.FindPath('meta.source');if Value<>nil then Attachment.Add('source',Value.Clone);
+            if ExcelMetadata then
+            begin
+              for Key in ['size','uploadedAt','uploadedAtOstrio','createdAt','userId'] do
+              begin
+                Value:=Row.Find(Key);
+                if (Value=nil) or (Value.JSONType=jtNull) then Value:=Row.FindPath('meta.'+Key);
+                if (Value<>nil) and (Value.JSONType in [jtString,jtNumber]) then Attachment.Add(Key,Value.Clone);
+              end;
+              Remember(Attachment.Find('userId'));
+            end;
             Row.Free;Row:=Attachment;
           end;
           Target.Add(Row);
@@ -514,6 +524,11 @@ begin
             if Files.Find(FileData)<>nil then Row.Add('file',Files.Strings[FileData]);
           end else if Name='attachments' then Row.Delete('file');
         end;
+      end;
+      if ExcelMetadata then
+      begin
+        Result.Delete('cardDependencies');
+        Result.Add('cardDependencies',Data.Find('card_dependencies').Clone);
       end;
       for Name in ['rules','triggers','actions'] do
       begin

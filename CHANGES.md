@@ -22,6 +22,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   and includes the comment author and creation time when available.
   Planning Poker exports the question and estimate. Stickers export their
   names, and locations export their names, addresses and coordinates.
+  Attachments include file type, byte size, upload time and uploader when
+  available. Dependencies identify live cards on the same board and show
+  their relationship type.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

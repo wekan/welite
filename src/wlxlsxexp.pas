@@ -19,7 +19,7 @@ type
     Head: TBoardRow;
     RowNumber: Integer;
     CardDetails, ShowPoker, ShowStickers, ShowLocations: Boolean;
-    Checklists, Items, Comments, Attachments, Subtasks, UsersById: TFPHashObjectList;
+    Checklists, Items, Comments, Attachments, Subtasks, UsersById, Dependencies, CardsById: TFPHashObjectList;
     procedure Line(const Xml: string);
     procedure TableRow(const Row: TBoardRow; Heading: Boolean = False; LabelFirst: Boolean = False);
     destructor Destroy; override;
@@ -142,6 +142,8 @@ end;
 
 destructor TSheetWriter.Destroy;
 begin
+  CardsById.Free;
+  Dependencies.Free;
   UsersById.Free;
   Subtasks.Free;
   Attachments.Free;
@@ -161,6 +163,13 @@ var Pair: TBoardRow; CardId, State, Author, Created, Name: string; Group, Childr
     Pair[1].Text := Value;
     Pair[1].LiteralText := LiteralText;
     TableRow(Pair, False, True);
+  end;
+
+  function UserName(const Id: string): string;
+  begin
+    Result := Id;
+    User := TJSONObject(UsersById.Find(Id));
+    if User <> nil then Result := User.Get('username', Id);
   end;
 
   procedure AddValue(Obj: TJSONObject; const Key, Caption: string);
@@ -215,9 +224,7 @@ begin
       for I := 0 to Group.Count - 1 do
       begin
         Entry := TJSONObject(Group[I]);
-        Author := Entry.Get('userId', '');
-        User := TJSONObject(UsersById.Find(Author));
-        if User <> nil then Author := User.Get('username', Author);
+        Author := UserName(Entry.Get('userId', ''));
         Created := Entry.Get('createdAt', '');
         AddDetail('Comment', ExportPlainDescription(Entry.Get('text', '')));
         if Author <> '' then AddDetail('Author', Author);
@@ -229,7 +236,31 @@ begin
     Group := TFPList(Attachments.Find(CardId));
     if Group <> nil then
       for I := 0 to Group.Count - 1 do
-        AddDetail('Attachment', TJSONObject(Group[I]).Get('name', ''));
+      begin
+        Entry := TJSONObject(Group[I]);
+        AddValue(Entry, 'name', 'Attachment');
+        AddValue(Entry, 'type', 'File type');
+        AddValue(Entry, 'size', 'Size (bytes)');
+        Created := Entry.Get('uploadedAt', '');
+        if Created = '' then Created := Entry.Get('uploadedAtOstrio', '');
+        if Created = '' then Created := Entry.Get('createdAt', '');
+        if Created <> '' then AddDetail('Uploaded at', Created);
+        Author := UserName(Entry.Get('userId', ''));
+        if Author <> '' then AddDetail('Uploader', Author);
+      end;
+  end;
+  if Dependencies <> nil then
+  begin
+    Group := TFPList(Dependencies.Find(CardId));
+    if Group <> nil then
+      for I := 0 to Group.Count - 1 do
+      begin
+        Entry := TJSONObject(Group[I]);
+        Child := TJSONObject(CardsById.Find(Entry.Get('targetCardId', '')));
+        if Child = nil then Continue;
+        AddValue(Child, 'title', 'Dependency');
+        AddValue(Entry, 'type', 'Relationship');
+      end;
   end;
   if ShowPoker then
   begin
@@ -296,10 +327,23 @@ end;
 
 procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
-  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations: Boolean;
+  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies: Boolean;
   Users: TJSONArray; User: TJSONObject;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
+  procedure IndexCards(Cards: TJSONArray);
+  var J: Integer; Card: TJSONObject;
+  begin
+    if Cards = nil then Exit;
+    for J := 0 to Cards.Count - 1 do
+    begin
+      Card := Cards.Objects[J];
+      if Card.Get('archived', False) or (Card.Get('deletedAt', '') <> '') or
+        (Card.Get('linkedId', '') <> '') then Continue;
+      Writer.CardsById.Add(Card.Get('_id', ''), Card);
+    end;
+  end;
+
   procedure AddXml(const Path, Xml: string);
   var Data: TStringStream;
   begin
@@ -466,6 +510,7 @@ begin
   WithPoker := False;
   WithStickers := False;
   WithLocations := False;
+  WithDependencies := False;
   SheetCount := 0;
   CardDetails := False;
   for Part in Fields.Split([',']) do
@@ -475,6 +520,7 @@ begin
     if Section = 'comments' then WithComments := True;
     if Section = 'poker' then WithPoker := True;
     if Section = 'stickers' then WithStickers := True;
+    if Section = 'dependencies' then WithDependencies := True;
     if Section = 'locations' then WithLocations := True;
     if Section = 'subtasks' then WithSubtasks := True;
     if Section = 'attachments' then WithAttachments := True;
@@ -523,9 +569,9 @@ begin
         Writer.Checklists := GroupRows(Board, 'checklists', 'cardId');
         Writer.Items := GroupRows(Board, 'checklistItems', 'checklistId');
       end;
-      if WithComments or not Known then
+      if WithComments or not Known then Writer.Comments := GroupRows(Board, 'comments', 'cardId');
+      if WithComments or WithAttachments or not Known then
       begin
-        Writer.Comments := GroupRows(Board, 'comments', 'cardId');
         Writer.UsersById := TFPHashObjectList.Create(False);
         Users := Board.Arrays['users'];
         for I := 0 to Users.Count - 1 do
@@ -541,6 +587,13 @@ begin
         GroupSubtasks(Writer.Subtasks, OtherCards);
       end;
       if WithAttachments or not Known then Writer.Attachments := GroupRows(Board, 'attachments', 'cardId');
+      if WithDependencies or not Known then
+      begin
+        Writer.Dependencies := GroupRows(Board, 'cardDependencies', 'cardId');
+        Writer.CardsById := TFPHashObjectList.Create(False);
+        IndexCards(Board.Arrays['cards']);
+        IndexCards(OtherCards);
+      end;
       WriteBoardTitle;
       if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;

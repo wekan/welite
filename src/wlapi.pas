@@ -2941,7 +2941,7 @@ begin
   ListId := ScopeId('listId');
   Scoped := (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '');
   try
-    Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
+    Payload := ReadRestBoardExport(T, UserId, BoardId, False, True, True);
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   Output := TMemoryStream.Create;
