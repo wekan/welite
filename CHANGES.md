@@ -4,6 +4,13 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## HTML5 minicards
+
+- Show the optional finished/total checklist item badge in the board's
+  configured minicard section order. An empty checklist shows `0/0`, and a
+  nonempty set of fully checked items gets the finished style. The badge is
+  off by default.
+
 ## Shared storage tests
 
 - Verify that a running FerretDB (`10635f841e`) discovers a database newly

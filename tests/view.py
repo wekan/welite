@@ -601,6 +601,11 @@ def http_checks(server, tmp, backend):
         def checklists():
             return json.loads(request('GET', '/api/boards/%s/cards/%s/checklists' % (board_id, card_id), headers=auth)[2])
         cl = [c for c in checklists() if c['title'] == 'Steps'][0]
+        badge_setting = 'allowsChecklistCountBadgeOnMinicard'
+        badge_text = b'class="badge-text check-list-text"'
+        assert badge_text not in shown()
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {badge_setting: True}}])[0] == 200
+        assert badge_text + b'>0/0</span>' in shown()
         for title in ['First', 'Second']:
             assert request('POST', '%s/%s/items' % (base, cl['_id']), {'title': title}, cookie=owner)[0] == 200
         cl = [c for c in checklists() if c['_id'] == cl['_id']][0]
@@ -609,6 +614,14 @@ def http_checks(server, tmp, backend):
         status, _, page, _ = request('POST', '%s/%s/items/%s/toggle' % (base, cl['_id'], first), {}, cookie=owner)
         assert status == 200 and b'checklist-progress-bar-container' in page and b'50%' in page
         assert [i['isFinished'] for i in [c for c in checklists() if c['_id'] == cl['_id']][0]['items']] == [True, False]
+        assert badge_text + b'>1/2</span>' in shown()
+        second_toggle = '%s/%s/items/%s/toggle' % (base, cl['_id'], cl['items'][1]['_id'])
+        assert request('POST', second_toggle, {}, cookie=owner)[0] == 200
+        completed = shown()
+        assert b'class="badge is-finished"' in completed and badge_text + b'>2/2</span>' in completed
+        assert request('POST', second_toggle, {}, cookie=owner)[0] == 200
+        assert method('/boards/update', [{'_id': board_id}, {'$set': {badge_setting: False}}])[0] == 200
+        assert badge_text not in shown()
         # Negative: a non-member, another card's checklist and an empty title change nothing.
         assert request('POST', base, {'title': 'Stranger'}, cookie=stranger)[0] == 403
         assert request('POST', '%s/%s/items/%s/toggle' % (base, cl['_id'], first), {}, cookie=stranger)[0] == 403

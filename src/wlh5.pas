@@ -2989,7 +2989,7 @@ end;
 // and its members.
 type
   TMinicardShows = record
-    Labels, Members, Assignees, Comments, Complete: Boolean;
+    Labels, Members, Assignees, Comments, Complete, ChecklistCount: Boolean;
     // Card Settings' minicard sides (wlcardst's table, each with its default).
     RequestedBy, Location, LastActivity, DescriptionBadge, CardColor: Boolean;
     Dates: array[0..3] of Boolean;
@@ -3033,6 +3033,7 @@ begin
   Result.Assignees := BoardSettingFlag(Db, BoardId, 'allowsAssigneeOnMinicard', BoardSettingFlag(Db, BoardId, 'allowsAssignee', True));
   // Off unless the board turns them on.
   Result.Comments := BoardSettingFlag(Db, BoardId, 'allowsCommentsOnMinicard', False);
+  Result.ChecklistCount := BoardSettingFlag(Db, BoardId, 'allowsChecklistCountBadgeOnMinicard', False);
   Result.Complete := SetDates and BoardSettingFlag(Db, BoardId, 'allowsDueCompleteOnMinicard', False);
   Result.RequestedBy := BoardSettingFlag(Db, BoardId, 'allowsRequestedByOnMinicard', True);
   Result.Location := BoardSettingFlag(Db, BoardId, 'allowsLocationOnMinicard', False);
@@ -3189,6 +3190,19 @@ begin
     end;
   end;
   Piece('assignees');
+  if Shows.ChecklistCount then
+  begin
+    R := Db.Query('SELECT COUNT(i.id),COALESCE(SUM(CASE WHEN i.isFinished=1 THEN 1 ELSE 0 END),0) ' +
+      'FROM checklists l LEFT JOIN checklist_items i ON i.checklistId=l.id AND i.cardId=l.cardId ' +
+      'WHERE l.cardId=' + QuotedStr(CardId) + ' AND (l.boardId IS NULL OR l.boardId=' + QuotedStr(BoardId) + ') ' +
+      'HAVING COUNT(l.id)>0;');
+    if Length(R) > 0 then
+      Result := Result + '<div class="badge' + IfThen((R[0][0] <> '0') and (R[0][0] = R[0][1]), ' is-finished', '') +
+        '" title="' + HtmlAttr(Words.Text('checklists', 'Checklists')) + '"><span class="badge-icon">' +
+        '<i class="fa fa-check-square-o"></i></span><span class="badge-text check-list-text">' +
+        E(R[0][1]) + '/' + E(R[0][0]) + '</span></div>';
+  end;
+  Piece('checklistCount');
   // Requested By, its location, its last activity and the description's
   // badge, as Card Settings shows them on the minicard (board.pug).
   // Extra, from the board's cards query: requestedBy, description,
