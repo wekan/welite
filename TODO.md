@@ -303,10 +303,9 @@ Found on the way, not part of this goal:
 
 - **Finish updating `tests/shrhttp.py` for the current HTML4 view.** With
   FerretDB `10635f841e`, fresh database discovery passes. The linked SQLite
-  run passes the public board checks after import and reaches the webhook
-  settings tests, where the sign-in assertion still expects a redirect.
-  Update the remaining cookie-free navigation assertions against the current
-  view, then run the whole suite.
+  run passes the HTML4 webhook checks and reaches the selection export tests.
+  `tests/clroots.py` expects HTTP 400 for a non-string list identity and gets
+  HTTP 200. Resolve that mismatch and rerun the whole suite.
 
 Design questions for the maintainer (work goes on with the stated default):
 

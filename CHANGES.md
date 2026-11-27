@@ -13,6 +13,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Verify that the public HTML4 board renders imported named and hexadecimal
   card colors around its navigation forms, reveals subtasks on request, and
   reflects a REST sort update on subsequent requests.
+- Exercise the HTML4 webhook settings after cookie-free sign-in, including
+  localized errors, board access checks and webhook creation, editing and
+  deletion. The linked SQLite run passes these HTTP checks.
 
 ## 2026-11-26 The HTML5 view for modern browsers
 

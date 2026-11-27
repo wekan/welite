@@ -1026,16 +1026,16 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                 print('PASS: shared REST bulk creation saves valid entries, assignment arrays and distinct card numbers')
 
                 check_shared_checklists(request,client,token,card)
-                status,headers,_=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
-                assert status in [302,303] and 'Set-Cookie' not in headers,(status,headers)
-                assert request('GET',headers['Location'])[0]==200
-                web_session=parse_qs(urlsplit(headers['Location']).query)['sessionId'][0]
+                login_response=request('POST','/sign-in',urlencode(dict(username='user',password='test-password')))
+                assert 'Set-Cookie' not in login_response[1]
+                web_session=signed_in(login_response)
+                web_navigation=urlencode(dict(nav_view='1',sessionId=web_session,lang='en'))
                 webhook_page='/board/webhooks?id=b&lang=en&sessionId='+web_session
                 assert request('GET','/board/webhooks?id=b')[0]==401
                 status,head,body=request('GET',webhook_page)
                 assert status==200 and 'Set-Cookie' not in head and 'no-store' in head['Cache-Control']
                 assert b'Outgoing Webhooks' in body and b'fixture-secret' not in body
-                assert b'/board/webhooks?id=b' in request('GET','/board?id=b&sessionId='+web_session)[2]
+                assert b'/board/webhooks?id=b' in request('POST','/board?id=b',web_navigation)[2]
                 hook_members=client.find('boards','b')[0]['members']
                 def set_webhook_members(members):
                     assert client.command({'update':'boards','updates':[
@@ -1045,7 +1045,7 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                                      for member in hook_members])
                 try:
                     assert request('GET',webhook_page)[0]==403
-                    assert b'/board/webhooks?id=b' not in request('GET','/board?id=b&sessionId='+web_session)[2]
+                    assert b'/board/webhooks?id=b' not in request('POST','/board?id=b',web_navigation)[2]
                 finally:
                     set_webhook_members(hook_members)
                 assert request('PUT',integration_path,dict(title='Refreshed <name>',enabled=False),token)[0]==200
