@@ -263,10 +263,71 @@ begin
     Result := Size;
 end;
 
+{$IFDEF LINUX}
+function ReadTIFF(const Path: string; out Size: TPoint; out Pixels: TBytes): Boolean;
+var Lib: TLibHandle; Options, Image: Pointer; W, H, I, A, ColorWord: Cardinal; P: PCardinal;
+  NewOptions: function: Pointer; cdecl;
+  FreeOptions: procedure(Options: Pointer); cdecl;
+  SetSingleLimit, SetTotalLimit: procedure(Options: Pointer; Limit: PtrInt); cdecl;
+  OpenImage: function(Path, Mode: PChar; Options: Pointer): Pointer; cdecl;
+  CloseImage: procedure(Image: Pointer); cdecl;
+  GetField: function(Image: Pointer; Tag: Cardinal; Value: PCardinal): cint; cdecl;
+  ReadRGBA: function(Image: Pointer; W, H: Cardinal; Raster: PCardinal; Orientation, StopOnError: cint): cint; cdecl;
+begin
+  Result := False;
+  Lib := LoadLibrary('libtiff.so.6');
+  if Lib = NilHandle then Exit;
+  try
+    Pointer(NewOptions) := GetProcedureAddress(Lib, 'TIFFOpenOptionsAlloc');
+    Pointer(FreeOptions) := GetProcedureAddress(Lib, 'TIFFOpenOptionsFree');
+    Pointer(SetSingleLimit) := GetProcedureAddress(Lib, 'TIFFOpenOptionsSetMaxSingleMemAlloc');
+    Pointer(SetTotalLimit) := GetProcedureAddress(Lib, 'TIFFOpenOptionsSetMaxCumulatedMemAlloc');
+    Pointer(OpenImage) := GetProcedureAddress(Lib, 'TIFFOpenExt');
+    Pointer(CloseImage) := GetProcedureAddress(Lib, 'TIFFClose');
+    Pointer(GetField) := GetProcedureAddress(Lib, 'TIFFGetField');
+    Pointer(ReadRGBA) := GetProcedureAddress(Lib, 'TIFFReadRGBAImageOriented');
+    if not (Assigned(NewOptions) and Assigned(FreeOptions) and Assigned(SetSingleLimit) and
+      Assigned(SetTotalLimit) and Assigned(OpenImage) and Assigned(CloseImage) and
+      Assigned(GetField) and Assigned(ReadRGBA)) then Exit;
+    Options := NewOptions();
+    if Options = nil then Exit;
+    try
+      SetSingleLimit(Options, 32 * 1024 * 1024);
+      SetTotalLimit(Options, 64 * 1024 * 1024);
+      Image := OpenImage(PChar(Path), 'rm', Options);
+    finally FreeOptions(Options); end;
+    if Image = nil then Exit;
+    try
+      if (GetField(Image, 256, @W) = 0) or (GetField(Image, 257, @H) = 0) or
+        (W > MaxPixels) or (H > MaxPixels) then Exit;
+      Size := Point(W, H);
+      if not ValidSize(Size) then Exit;
+      SetLength(Pixels, W * H * 4);
+      if ReadRGBA(Image, W, H, PCardinal(@Pixels[0]), 1, 1) = 0 then Exit;
+      // libtiff returns native-endian ABGR words with associated alpha.
+      for I := 0 to W * H - 1 do
+      begin
+        P := PCardinal(@Pixels[I * 4]);
+        A := P^ shr 24;
+        if A > 0 then
+        begin
+          ColorWord := P^;
+          Pixels[I * 4] := Min(255, (ColorWord and 255) * 255 div A);
+          Pixels[I * 4 + 1] := Min(255, ((ColorWord shr 8) and 255) * 255 div A);
+          Pixels[I * 4 + 2] := Min(255, ((ColorWord shr 16) and 255) * 255 div A);
+        end;
+        Pixels[I * 4 + 3] := A;
+      end;
+      Result := True;
+    finally CloseImage(Image); end;
+  finally UnloadLibrary(Lib); end;
+end;
+{$ENDIF}
+
 function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
 begin
   Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
-    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) or IsTarga(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
+    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) or IsTarga(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') or (MimeType = 'image/tiff') {$ENDIF};
 end;
 
 function ReadBE32(Stream: TStream): Cardinal;
@@ -351,6 +412,10 @@ begin
       if MimeType = 'image/gif' then
       begin
         if not ReadGif(Path, Size, Source) then Exit;
+      end
+      else if MimeType = 'image/tiff' then
+      begin
+        if not ReadTIFF(Path, Size, Pixels) then Exit;
       end
       else
       {$ENDIF}

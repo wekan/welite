@@ -275,7 +275,7 @@ Next, after this goal:
   remaining field-group parity for JSON and ZIP payloads, bundled Unicode
   font coverage for PDF (configurable TrueType subsetting is in), inline
   Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
-  WebP, Netpbm and uncompressed 24-bit TGA decoder support,
+  WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
   and remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.

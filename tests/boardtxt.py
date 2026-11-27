@@ -1,5 +1,6 @@
 """Native board links, titles and empty/not-found states over real HTTP."""
 import html
+import ctypes
 import hashlib
 import struct
 import io
@@ -272,12 +273,25 @@ def run(request,database,administrator,member,base):
         + bytes((0, 0, 255, 0))
     )
     tga = struct.pack('<BBBHHBHHHHBB', 0, 0, 2, 0, 0, 0, 0, 0, 1, 1, 24, 32) + bytes((0, 0, 255))
+    tiff_tags = [
+        (256, 4, 1), (257, 4, 1), (258, 3, 8), (259, 3, 1),
+        (262, 3, 1), (273, 4, 122), (277, 3, 1), (278, 4, 1), (279, 4, 1),
+    ]
+    tiff = (b'II' + struct.pack('<HIH', 42, 8, len(tiff_tags))
+            + b''.join(struct.pack('<HHII', tag, kind, 1, value) for tag, kind, value in tiff_tags)
+            + bytes((0, 0, 0, 0, 128)))
+    try:
+        tiff_preview = int(hasattr(ctypes.CDLL('libtiff.so.6'), 'TIFFOpenOptionsSetMaxCumulatedMemAlloc'))
+    except OSError:
+        tiff_preview = 0
     digest = hashlib.sha256(identity.encode()).hexdigest()
     segments = [digest[i:i+8] for i in range(0, len(digest), 8)]
     stored = Path(database).parent.parent.joinpath('attachme', *segments[:-1], segments[-1] + '.bin')
     try:
         for mime, contents, expected in (
             ('image/x-ms-bmp', bmp, 1),
+            ('image/tiff', tiff, tiff_preview),
+            ('image/tiff', tiff[:-1], 0),
             ('image/x-tga', tga, 1),
             ('image/x-targa', tga, 1),
             ('image/x-tga', tga[:-1], 0),
