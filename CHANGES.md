@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The card archive and unarchive REST routes record the previous and new
+  archive status in the board’s lifecycle history.
+
 - The Time view and its PDF and Excel exports show hours by assignee and
   card, mark overtime cards, and show the signed total time until open
   cards are due. The board view applies its card filter to these totals.

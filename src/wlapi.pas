@@ -9062,7 +9062,7 @@ end;
 // POST card archive — archives by default; body isArchive=false unarchives.
 procedure ApiCardArchive(aRequest: TRequest; aResponse: TResponse);
 var T:TWLTenant;UserId,CardId,BoardId,LegacyValue,Scope,Predicate,Stamp,ArchivedAt:string;
-  Legacy,Archive:Boolean;Rows:TWLRows;Reply:TJSONObject;
+  Legacy,Archive,WasArchived:Boolean;Rows:TWLRows;Reply:TJSONObject;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -9075,8 +9075,10 @@ begin
     ' AND listId='+QuotedStr(aRequest.RouteParams['listId']);
   Predicate:=Scope;
   if not Legacy then Predicate:=Predicate+' AND archived='+IntToStr(Ord(not Archive));
-  Rows:=T.Db.Query('SELECT id FROM cards WHERE '+Predicate+';');
+  Rows:=T.Db.Query('SELECT archived FROM cards WHERE '+Predicate+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,CardNotFound,404);Exit;end;
+  WasArchived:=Rows[0][0]='1';
+  if Legacy then Predicate:=Predicate+' AND archived='+IntToStr(Ord(WasArchived));
   Stamp:=NowIso;ArchivedAt:='NULL';
   if Archive then ArchivedAt:=QuotedStr(Stamp);
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Predicate+
@@ -9085,6 +9087,7 @@ begin
     '; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+' AND archived='+IntToStr(Ord(Archive))+
     ')=1 THEN 1 ELSE json(''Archive write failed'') END; COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not change card archive state');Exit;end;
+  RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'archived',WasArchived,Archive);
   if Legacy then SendCardById(aResponse,T.Db,CardId,UserId,False,BoardId)
   else
   begin

@@ -515,14 +515,16 @@ begin
 end;
 
 procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
-var Before,After:TJSONObject;
+var Before,After:TJSONObject; Group:string;
 begin
   if Old=Done then Exit;
+  Group:='dates';
+  if Field='archived' then Group:='lifecycle';
   Before:=TJSONObject.Create(['field',Field,'value',Old]);
   After:=TJSONObject.Create(['field',Field,'value',Done]);
   try
     try
-      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,'dates','edited',Before,After);
+      RecordHistoryRow(Db,UserId,BoardId,'card',CardId,Group,'edited',Before,After);
     except
       // History never fails the edit it records.
     end;
