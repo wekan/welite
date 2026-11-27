@@ -277,7 +277,7 @@ Next, after this goal:
   Also left are additional History field restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
-  saved card move reasons and same-board destination names, and grouped replay of swimlane archive history.
+  and grouped replay of swimlane archive history.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:

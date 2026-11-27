@@ -8305,18 +8305,18 @@ begin
     Reason := Values.Get('lastMoveReason', '');
     ListId := Values.Get('listId', '');
     SourceBoard := Row.Get('boardId', '');
-    if (ListId <> '') and (SourceBoard <> '') and (Pos(#0, ListId + SourceBoard) = 0) then
+    if (ListId <> '') and (SourceBoard <> '') and (Values.Get('boardId', SourceBoard) = SourceBoard) and (Pos(#0, ListId + SourceBoard) = 0) then
     begin
       Lists := Db.Query('SELECT title FROM lists WHERE id=' + QuotedStr(ListId) +
         ' AND boardId=' + QuotedStr(SourceBoard) + ';');
       if Length(Lists) = 1 then Result := Lists[0][0];
     end;
+    if Result = '' then Result := ListId;
     if Reason <> '' then
     begin
       if Result <> '' then Result := Result + ' '#$E2#$80#$94' ';
       Result := Result + Reason;
     end;
-    if Result = '' then Result := ListId;
     Exit;
   end;
   Document := Values.Find('document');

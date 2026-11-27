@@ -58,7 +58,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   total and correction ledger as PDF or Excel.
 
 - The Move Card dialog saves the move reason and records one position
-  change for a move within the board. Undo and redo replay the saved list,
+  change for a move within the board. History shows the saved reason with
+  the destination list name on the same board, or its saved ID. Undo and
+  redo replay the saved list,
   swimlane, sort position and reason. The shared move-history browser test
   runs in the regular WeLite and Weddy test lists. REST card moves within
   a board also save the optional move reason on the card and in History.
