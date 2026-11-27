@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Search All Boards accepts numeric day ranges for due dates, creation and
+  modification. The search instructions describe these filters using the
+  selected language.
+
 - Open board Search from the header. Search matches the titles of loaded
   lists and cards. On mobile, Back closes the sidebar and returns directly
   to the board, including after a board refresh.

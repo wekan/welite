@@ -5817,10 +5817,10 @@ begin
 end;
 
 type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel,
-  soUser, soMember, soAssignee, soCreator);
+  soUser, soMember, soAssignee, soCreator, soCreated, soModified);
 
 function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, Text: string; out Kind: TSearchOperator): string;
-var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean;
+var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; Days: Int64;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
     Result := SameText(Op, Fallback) or SameText(Op, Words.Text(Key, Fallback));
@@ -5913,7 +5913,19 @@ begin
   begin
     Kind := soDue;
     if SameText(Value, 'overdue') or SameText(Value, Words.Text('predicate-overdue', 'overdue')) then
-      Result := 'julianday(c.dueAt)<julianday(''now'')';
+      Result := 'julianday(c.dueAt)<julianday(''now'')'
+    else if TryStrToInt64(Value, Days) and (Days >= 0) then
+      Result := 'julianday(c.dueAt)<julianday(''now'',''localtime'',''start of day'')+' + IntToStr(Days) + '+2';
+    Exit;
+  end;
+  if IsOperator('operator-created', 'created') or IsOperator('operator-modified', 'modified') then
+  begin
+    if IsOperator('operator-created', 'created') then
+    begin Kind := soCreated; Column := 'c.createdAt'; end
+    else
+    begin Kind := soModified; Column := 'c.modifiedAt'; end;
+    if TryStrToInt64(Value, Days) and (Days >= 0) then
+      Result := 'julianday(' + Column + ')>=julianday(''now'',''localtime'',''start of day'')-' + IntToStr(Days);
     Exit;
   end;
   if IsOperator('operator-title', 'title') then
@@ -6026,11 +6038,11 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..13] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
-    'user', 'user-abbrev', 'member', 'assignee', 'creator');
+  Operators: array[0..15] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
+    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified');
   Fields: array[0..8] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end', 'assignee', 'member');
-  Described: array[0..11] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
-    'user', 'at', 'member', 'assignee', 'creator');
+  Described: array[0..14] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
+    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
   begin
@@ -6051,7 +6063,7 @@ begin
   for Name in Described do
     Result := Result + '<li>' + Instruction('operator-' + Name, '') + '</li>';
   Result := Result + '<li><code>' + E(Words.Text('operator-title', 'title')) + ':&quot;Alpha Card&quot;</code></li>' +
-    '<li><code>' + E(Words.Text('operator-due', 'due')) + ':' + E(Words.Text('predicate-overdue', 'overdue')) + '</code></li></ul><p>' +
+    '</ul><p>' +
     Instruction('notes-1', 'Multiple operators may be specified.') + '</p><p>' +
     Instruction('notes-5', 'By default archived cards are not searched.') + '</p></details>';
 end;
