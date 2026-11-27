@@ -265,9 +265,9 @@ Next, after this goal:
   lines pass in one run and not in the next - the sidebar's activity is not
   always drawn yet - so they are not listed.
   An assigned-only member: the attachment API and History follow WeKan's
-  rules for them; left are the board itself (WeLite draws no board for an
-  assigned-only member yet, which history-read-scope's first test and
-  assigned-card-methods need), the file routes /cdn/storage/attachments and
+  rules for them, the board shows them their own cards only, and they
+  archive and convert only those; left are the file routes
+  /cdn/storage/attachments and
   /cfs/files/attachments with a Bearer token, and
   searchAttachmentDocumentText (assigned-only-reads' second test). By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
@@ -279,7 +279,7 @@ Next, after this goal:
   the card's other sections (an attachment's rename and its thumbnail route (attachment-thumbnail); Markdown in comments and checklists; a custom field's edit and
   delete from the picker, as WeKan's Card Settings has them), the minicard's
   other badges (checklists, description, Requested By, location, last activity),
-  the rest of WeKan's mobile layout (the lists as mini-lists pass 13-swimlanes; left are 02-cards-open-view's mobile Search back, 37-card-drag-sort's mobile card controls and touch drags, card-window-touch-drag and the card over the header, card-popup-over-header and card-over-header-ios-stacking, which need the card opened as a window, as WeKan's Card Settings has it), the rest of WeKan's Rules (the page, its methods, the engine, button rules, Copy Card, the advanced-filter trigger and the Wrike import and exports are in, `src/wlrules.pas`; left: a trigger list name read from a custom field (rule-trigger-vars); the sendEmail action (WeLite has no mail sender yet, as spec 73); the Blocks and Bots views; the History page of the board itself - undo, redo and restore of rule rows, undo and redo of a card's title and description and of a deleted list, changeHistory.page and Restore of a card's title and description rows are in; left: the History page and popups themselves, restore of list rows, the other fields and kinds, and history-read-scope's first test, which opens the board as a Read assigned only member - WeLite does not draw a board for an assigned-only member yet),
+  the rest of WeKan's mobile layout (the lists as mini-lists pass 13-swimlanes; left are 02-cards-open-view's mobile Search back, 37-card-drag-sort's mobile card controls and touch drags, card-window-touch-drag and the card over the header, card-popup-over-header and card-over-header-ios-stacking, which need the card opened as a window, as WeKan's Card Settings has it), the rest of WeKan's Rules (the page, its methods, the engine, button rules, Copy Card, the advanced-filter trigger and the Wrike import and exports are in, `src/wlrules.pas`; left: a trigger list name read from a custom field (rule-trigger-vars); the sendEmail action (WeLite has no mail sender yet, as spec 73); the Blocks and Bots views; the History page of the board itself - undo, redo and restore of rule rows, undo and redo of a card's title and description and of a deleted list, changeHistory.page and Restore of a card's title and description rows are in; left: the History page and popups themselves, restore of list rows, the other fields and kinds,),
   multi-selection's labels, members and move, notifications of the board's and list's own activities (a card's notify already), the board views, the rest of the Admin Panel (Organizations, Teams, the rest of Settings - Appearance's date format and Hide Logo are in; and of Problems the Recovery - the Security Report and Password length are in), the rest of Card Settings - the popup, its panes, drags and writes are in; left: the Scrum rows' scrum.configure (WeKan's Scrum, its sprints and history, is not in the HTML5 view yet), and card-settings-sections-order's second test, which reads Minimongo.
   Two that wait on something WeLite does not have yet: instance-board-visibility's
   last three tests subscribe to the board with `Meteor.subscribe` and read

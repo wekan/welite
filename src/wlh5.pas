@@ -488,6 +488,10 @@ threadvar
   // many cards Restore all left out.
   ViewRestoreBlocked: string;
   ViewRestoreSkipped: Integer;
+  // The board is drawn for an assigned-only member (WeKan's Boards.isVisibleBy
+  // with assignedOnlyCardScope): their id, and only the cards assigned to
+  // them are on the page; '' for everybody else.
+  ViewAssignedOnly: string;
 
 // WeKan's resolveDateFormat for this viewer on this board: the member's own
 // format while their override is on, the board's, Admin Panel's.
@@ -2618,7 +2622,8 @@ begin
     'AND NOT (COALESCE(l.wip_enabled,0)=1 AND COALESCE(l.wip_soft,0)=0 AND (SELECT count(*) FROM cards c WHERE c.listId=l.id AND ' +
     'c.archived=0 AND c.deletedAt IS NULL)>=COALESCE(l.wip_value,1)) ORDER BY l.sort,l.title;');
   R := Db.Query('SELECT id,title,COALESCE(listId,'''') FROM cards WHERE boardId=' + QuotedStr(BoardId) +
-    ' AND archived=1 AND deletedAt IS NULL ORDER BY archivedAt DESC,id;');
+    ' AND archived=1 AND deletedAt IS NULL' + IfThen(ViewAssignedOnly <> '', ' AND EXISTS(SELECT 1 FROM card_assignees ao WHERE ' +
+    'ao.cardId=cards.id AND ao.userId=' + QuotedStr(ViewAssignedOnly) + ')', '') + ' ORDER BY archivedAt DESC,id;');
   HasCards := Length(R) > 0;
   for i := 0 to High(R) do Archived := Archived + Item('cards', R[i][0], R[i][1], True, R[i][2]);
   R := Db.Query('SELECT id,title FROM lists WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=1 AND deletedAt IS NULL ORDER BY sort,id;');
@@ -2678,7 +2683,7 @@ begin
     HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) + '">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '</a></h3>' +
     // The board's activities, for a board admin, put on the page when opened.
-    IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), '<hr><h3 class="activity-title js-toggle-show-activities" role="button" tabindex="0" title="' +
+    IfThen((S.UserId <> '') and (ViewAssignedOnly = '') and BoardCanAdmin(Db, S.UserId, BoardId), '<hr><h3 class="activity-title js-toggle-show-activities" role="button" tabindex="0" title="' +
       HtmlAttr(Words.Text('activities', 'Activities')) + '"><i class="fa fa-caret-right"></i><i class="fa fa-comment-o"></i> ' +
       E(Words.Text('activities', 'Activities')) + '</h3><div class="activities js-sidebar-activities is-hidden"><template class="js-stamp-on-open">' +
       ActivityRows(Db, Words, BoardId, '', 50) + '</template></div>', '') +
@@ -3382,7 +3387,14 @@ var B, Lanes, Lists, Cards, Card: TWLRows; i, j, k: Integer; Route, Canvas, Deta
 begin
   Result := ''; BoardTitle := ''; Found := False;
   if (BoardId = '') or (Pos(#0, BoardId + CardId) > 0) then Exit;
-  if not BoardCanRead(Db, S.UserId, BoardId) then Exit;
+  // An assigned-only member sees the board, and of its cards only those
+  // assigned to them (WeKan's isVisibleBy and assignedOnlyCardScope).
+  ViewAssignedOnly := '';
+  if not BoardCanRead(Db, S.UserId, BoardId) then
+  begin
+    if not AssignedOnlyMember(Db, S.UserId, BoardId) then Exit;
+    ViewAssignedOnly := S.UserId;
+  end;
   B := Db.Query('SELECT title,color,slug,COALESCE(backgroundImageURL,''''),COALESCE(permission,''private'') FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 LIMIT 1;');
   if Length(B) <> 1 then Exit;
   BoardTitle := B[0][0];
@@ -3399,6 +3411,8 @@ begin
   PlainSource := SharedSettingOn(Db, 'alwaysShowCodeAsText');
   Filter := ParseBoardFilter(Db, BoardId, Query);
   FilterCond := BoardFilterSql(Filter);
+  if ViewAssignedOnly <> '' then
+    FilterCond := FilterCond + ' AND EXISTS(SELECT 1 FROM card_assignees ao WHERE ao.cardId=c.id AND ao.userId=' + QuotedStr(ViewAssignedOnly) + ')';
   CardSort := ParseCardSort(Query);
   SortSql := CardSortSql(Db, BoardId, CardSort);
   Canvas := '';
@@ -3554,7 +3568,9 @@ begin
     Canvas := Canvas + '</div></div>';
   end;
   Details := '';
-  if CardId <> '' then
+  // An assigned-only member opens only a card assigned to them; another is
+  // not drawn, as if it were not there.
+  if (CardId <> '') and ((ViewAssignedOnly = '') or CardAssignedTo(Db, ViewAssignedOnly, BoardId, CardId)) then
   begin
     Selector := TSelectionScope.Create(Db);
     try
@@ -3953,6 +3969,7 @@ end;
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   Limit: Double;
+  CardTitle, NewBoard: string;
   // The values of a copy that its copier may not read: not kept.
   procedure RedactCopiedFields(const CardId, BoardId: string);
   var Policy: TFieldPolicy; V: TWLRows; k: Integer; Sql: string;
@@ -4707,7 +4724,45 @@ begin
     end;
     if Code <> 200 then
     begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
-    SendJsonAnswer(Response, 200, '{"result":null}');
+    // WeKan's answer: how many were archived.
+    AnnounceToAll;
+    // Each card once, as the selection was taken.
+    n := 0;
+    for Code := 0 to High(Ids) do
+      if not AnsiMatchStr(Ids[Code], Copy(Ids, 0, Code)) then Inc(n);
+    SendJsonAnswer(Response, 200, '{"result":{"archived":' + IntToStr(n) + '}}');
+    Exit;
+  end;
+  if Name = 'createBoardFromCard' then
+  begin
+    // server/models/cards.js: [cardId, title?].
+    Args := nil;
+    CardTitle := '';
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count >= 1) and (TJSONArray(Args).Count <= 2) and
+        (TJSONArray(Args).Items[0].JSONType = jtString) and ((TJSONArray(Args).Count = 1) or
+        (TJSONArray(Args).Items[1].JSONType in [jtString, jtNull]))) then
+      begin SendJsonAnswer(Response, 400, '{"error":"Match.Error","reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Strings[0];
+      if (TJSONArray(Args).Count = 2) and (TJSONArray(Args).Items[1].JSONType = jtString) then CardTitle := TJSONArray(Args).Strings[1];
+    finally
+      Args.Free;
+    end;
+    RulesWords := TWLTranslator.Create(ViewerLanguage(T.Db, S, Request));
+    try
+      Code := CreateBoardFromViewCard(T, S.UserId, Id, CardTitle, RulesWords.Text('default', 'Default'), NewBoard, Error);
+    finally
+      RulesWords.Free;
+    end;
+    if Code <> 200 then
+    begin SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '","reason":"' + StringToJSONString(Error) + '"}'); Exit; end;
+    AnnounceToAll;
+    SendJsonAnswer(Response, 200, '{"result":"' + StringToJSONString(NewBoard) + '"}');
     Exit;
   end;
   if (Name = 'updateListSort') or (Name = '/lists/update') then
@@ -6203,6 +6258,7 @@ begin
   ViewCardDates := nil;
   ViewRestoreBlocked := '';
   ViewRestoreSkipped := 0;
+  ViewAssignedOnly := '';
 end;
 
 end.

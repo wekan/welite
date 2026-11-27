@@ -431,3 +431,5 @@ history-read-scope.e2e.js: History cannot edit a card moved to a board the forme
 history-read-scope.e2e.js: History scans multiple batches before paging readable search matches
 assigned-only-reads.e2e.js: an assigned-only member reads only their own cards' attachments over REST
 unassigned-attach-bleed.e2e.js: an unassigned assigned-only member can no longer upload to or delete from the card
+history-read-scope.e2e.js: history filters assigned-only rows before search, counts and contributor summaries
+assigned-card-methods.e2e.js

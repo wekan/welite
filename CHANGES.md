@@ -573,6 +573,17 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   card, as in WeKan. A raw upload takes any body but JSON, as WeKan's does.
   `tests/view.py` checks each allowed and refused call; WeKan's
   assigned-only-reads list test and unassigned-attach-bleed pass.
+- Draw the board for an assigned-only member (WeKan's isVisibleBy and
+  assignedOnlyCardScope): of its cards only those assigned to them, on the
+  board, opened by address and in the Archive; the board's activities are not
+  theirs. `tests/view.py` checks each, and all six of WeKan's
+  history-read-scope tests pass.
+- Add WeKan's createBoardFromCard: a card becomes a link to a new board of
+  the caller's, as private as the policy wants, by a writer of its board or
+  an assigned-only writer on their own card; archiveSelectedCards lets that
+  writer archive their own cards and answers how many. A card not theirs is
+  refused and recorded as UnassignedArchiveBleed (GHSA-6xqf-jh8x-4wxc).
+  `tests/view.py` checks each; WeKan's assigned-card-methods passes.
 - Add Board Settings / Swimlane / One shared list header row (#6902,
   sharedListHeaders): every swimlane shows every list of the board, each with
   the cards of the swimlane it is shown in, under the first swimlane's

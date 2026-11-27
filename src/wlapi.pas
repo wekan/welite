@@ -317,6 +317,10 @@ function ViewSetOwnProfile(const T:TWLTenant;const UserId,Fullname,Initials:stri
 // member's only when assigned to them (GHSA-6xqf-jh8x-4wxc) - and only then
 // is each archived, with its archivedCard activity.
 function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Ids:array of string;out Error:string):Integer;
+// WeKan's createBoardFromCard: the card becomes a link to a new board of its
+// own, made by the caller - a writer of the card's board, or an assigned-only
+// writer on a card assigned to them (UnassignedArchiveBleed otherwise).
+function CreateBoardFromViewCard(const T:TWLTenant;const UserId,CardId,Title,DefaultLane:string;out BoardId,Error:string):Integer;
 // boardChangeVisibilityPopup: a board admin makes the board private, visible
 // to the instance's signed-in users (#3249) or public.
 function SetViewBoardVisibility(const T:TWLTenant;const UserId,BoardId,Visibility:string;out Error:string):Integer;
@@ -359,6 +363,8 @@ function AttachmentWriteAllowed(Db:TWLDb;const UserId,BoardId,CardId,Source:stri
 // models/lib/boardCardScope.js isAssignedOnlyMember: an active member whose
 // role sees only the cards assigned to them.
 function AssignedOnlyMember(Db:TWLDb;const UserId,BoardId:string):Boolean;
+// A live card of BoardId that is assigned to UserId.
+function CardAssignedTo(Db:TWLDb;const UserId,BoardId,CardId:string):Boolean;
 procedure ApiBoardAttachments(aRequest: TRequest; aResponse: TResponse);   // GET  /api/boards/:boardId/attachments
 procedure ApiCardAttachmentsList(aRequest: TRequest; aResponse: TResponse);// GET /api/attachment/list/:b/:s/:l/:c
 procedure ApiCardMember(aRequest: TRequest; aResponse: TResponse);     // POST/DELETE card member
@@ -503,10 +509,17 @@ begin
     ' AND a.userId='+QuotedStr(UserId)+'))';
 end;
 
+// allowIsBoardMemberWithWriteAccess: a writer of the board, or an active
+// assigned-only writer (isNormalAssignedOnly), whose cards are checked apart.
+function AssignedWriterOn(Db:TWLDb;const UserId,BoardId:string):Boolean;
+begin
+  Result:=BoardCanWrite(Db,UserId,BoardId) or (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+
+    ' AND userId='+QuotedStr(UserId)+' AND isActive=1 AND COALESCE(isNormalAssignedOnly,0)=1;'))=1);
+end;
+
 function AttachmentWriteAllowed(Db:TWLDb;const UserId,BoardId,CardId,Source:string):Integer;
 begin
-  if not (BoardCanWrite(Db,UserId,BoardId) or (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+
-    ' AND userId='+QuotedStr(UserId)+' AND isActive=1 AND COALESCE(isNormalAssignedOnly,0)=1;'))=1)) then Exit(403);
+  if not AssignedWriterOn(Db,UserId,BoardId) then Exit(403);
   if AssignedOnlyMember(Db,UserId,BoardId) and not CardAssignedTo(Db,UserId,BoardId,CardId) then
   begin
     try
@@ -2859,6 +2872,61 @@ begin
   begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not create board');Exit;end;
   Reply:=TJSONObject.Create(['_id',BoardId,'defaultSwimlaneId',LaneId]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
+end;
+
+function CreateBoardFromViewCard(const T:TWLTenant;const UserId,CardId,Title,DefaultLane:string;out BoardId,Error:string):Integer;
+var R:TWLRows;Src,BoardTitle,Board,Lane,Stamp,Sql,AdminOnly,PrivateOnly,RegistryGuard,Actor,Permission,Visibility:string;
+begin
+  Error:='';BoardId:='';
+  if (CardId='') or (Pos(#0,CardId+Title)>0) then begin Error:='not-found';Exit(404);end;
+  R:=T.Db.Query('SELECT boardId,COALESCE(title,''''),archived,COALESCE(type,''cardType-card'') FROM cards WHERE id='+QuotedStr(CardId)+
+    ' AND deletedAt IS NULL;');
+  if Length(R)<>1 then begin Error:='not-found';Exit(404);end;
+  if R[0][2]='1' then begin Error:='invalid-card';Exit(400);end;
+  // Already a link, or a template card: nothing sensible to convert.
+  if (R[0][3]='template-card') or (R[0][3]='cardType-linkedCard') or (R[0][3]='cardType-linkedBoard') then
+  begin Error:='invalid-linked-card';Exit(400);end;
+  Src:=R[0][0];
+  if not AssignedWriterOn(T.Db,UserId,Src) then begin Error:='not-authorized';Exit(403);end;
+  // GHSA-6xqf-jh8x-4wxc: an assigned-only member converts only their own card.
+  if AssignedOnlyMember(T.Db,UserId,Src) and not CardAssignedTo(T.Db,UserId,Src,CardId) then
+  begin
+    try
+      RecordSecurityEvent(T.Db,UserId,'UnassignedArchiveBleed','method:createBoardFromCard','authz','medium','CWE-863','blocked',
+        'Assigned-only member tried to turn a card not assigned to them into a board.');
+    except
+      // logging must never break the guard
+    end;
+    Error:='not-authorized';Exit(403);
+  end;
+  BoardTitle:=Trim(Title);
+  if BoardTitle='' then BoardTitle:=Trim(R[0][1]);
+  if BoardTitle='' then begin Error:='invalid-title';Exit(400);end;
+  try BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
+  except Error:='Could not read board creation policy';Exit(500);end;
+  Actor:=QuotedStr(UserId);
+  // CreateBleed: the card becomes a new working board.
+  Permission:='EXISTS(SELECT 1 FROM users WHERE id='+Actor+' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+AdminOnly+'))';
+  if T.Db.Query('SELECT '+Permission+';')[0][0]<>'1' then begin Error:='not-authorized';Exit(403);end;
+  // The source board's visibility when it is open, private otherwise - and
+  // private whenever Admin Panel allows private boards only.
+  R:=T.Db.Query('SELECT COALESCE(permission,''private''),COALESCE(color,''belize'') FROM boards WHERE id='+QuotedStr(Src)+';');
+  Visibility:=R[0][0];
+  if (Visibility<>'public') and (Visibility<>'instance') then Visibility:='private';
+  BoardId:=NewId;Board:=QuotedStr(BoardId);Lane:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+RegistryGuard+' AND '+Permission+' THEN 1 ELSE json(''Board creation policy changed'') END; '+
+    'INSERT INTO boards(id,title,slug,permission,color,createdAt,modifiedAt) VALUES('+Board+','+QuotedStr(BoardTitle)+','+
+    QuotedStr(Slugify(BoardTitle))+',CASE WHEN '+PrivateOnly+' THEN ''private'' ELSE '+QuotedStr(Visibility)+' END,'+QuotedStr(R[0][1])+','+
+    Stamp+','+Stamp+'); '+
+    'INSERT INTO board_members(boardId,userId,isAdmin,isActive,isNoComments,isCommentOnly,isWorker) VALUES('+Board+','+Actor+',1,1,0,0,0); '+
+    'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+Lane+','+Board+','+QuotedStr(DefaultLane)+',0,'+Stamp+'); '+
+    // The same two fields the "Link to board" flow sets; nothing else changes.
+    'UPDATE cards SET type=''cardType-linkedBoard'',linkedId='+Board+',modifiedAt='+Stamp+' WHERE id='+QuotedStr(CardId)+
+    ' AND archived=0 AND deletedAt IS NULL; '+
+    'SELECT CASE WHEN (SELECT linkedId FROM cards WHERE id='+QuotedStr(CardId)+')='+Board+' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+Lane+
+    ') THEN 1 ELSE json(''Board creation incomplete'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then begin T.Db.Exec('ROLLBACK;');BoardId:='';Error:='Could not create board';Exit(500);end;
+  Result:=200;
 end;
 
 function CardDateSql(Value:TJSONData;out Literal:string):Boolean; forward;
@@ -6792,6 +6860,8 @@ begin
   Result:=200;
 end;
 
+function ArchiveCheckedCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer; forward;
+
 function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Ids:array of string;out Error:string):Integer;
 var Unique:array of string;i,j:Integer;Seen:Boolean;List,U:string;
 begin
@@ -6804,7 +6874,8 @@ begin
     if not Seen then begin SetLength(Unique,Length(Unique)+1);Unique[High(Unique)]:=Ids[i];end;
   end;
   if (Length(Unique)=0) or (Length(Unique)>5000) then begin Error:='invalid-card-selection';Exit(400);end;
-  if (BoardId='') or (Pos(#0,BoardId)>0) or not BoardCanWrite(T.Db,UserId,BoardId) then begin Error:='not-authorized';Exit(403);end;
+  // allowIsBoardMemberWithWriteAccess: a writer, an assigned-only writer too.
+  if (BoardId='') or (Pos(#0,BoardId)>0) or not AssignedWriterOn(T.Db,UserId,BoardId) then begin Error:='not-authorized';Exit(403);end;
   List:='';
   for i:=0 to High(Unique) do begin if List<>'' then List:=List+',';List:=List+QuotedStr(Unique[i]);end;
   if StrToIntDef(T.Db.Query('SELECT count(*) FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL AND id IN ('+
@@ -6813,10 +6884,19 @@ begin
   if Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+U+' AND isActive=1 AND '+
     '(COALESCE(isNormalAssignedOnly,0)=1 OR COALESCE(isCommentAssignedOnly,0)=1 OR COALESCE(isReadAssignedOnly,0)=1) AND EXISTS(SELECT 1 FROM cards c '+
     'WHERE c.id IN ('+List+') AND NOT EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId='+U+'));'))>0 then
-  begin Error:='not-authorized';Exit(403);end;
+  begin
+    // GHSA-6xqf-jh8x-4wxc: a selection with a card not theirs changes none of it.
+    try
+      RecordSecurityEvent(T.Db,UserId,'UnassignedArchiveBleed','method:archiveSelectedCards','authz','medium','CWE-863','blocked',
+        'Assigned-only member tried to archive a card not assigned to them.');
+    except
+      // logging must never break the guard
+    end;
+    Error:='not-authorized';Exit(403);
+  end;
   for i:=0 to High(Unique) do
   begin
-    Result:=ArchiveViewCard(T,UserId,BoardId,Unique[i],Error);
+    Result:=ArchiveCheckedCard(T,UserId,BoardId,Unique[i],Error);
     if Result<>200 then Exit;
   end;
   Result:=200;
@@ -7198,11 +7278,11 @@ begin
   if Trim(Title)<>'' then Result:=RenameViewCard(T,UserId,Board,NewCard,Title,Error) else Result:=200;
 end;
 
-function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+// The archive itself, once the caller's right to it is checked.
+function ArchiveCheckedCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
 var Scope,Stamp,ActivityId:string;R:TWLRows;
 begin
-  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
-  if Result<>200 then Exit;
+  Error:='';Result:=200;
   Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
   R:=T.Db.Query('SELECT COALESCE(listId,'''') FROM cards WHERE '+Scope+';');
   if Length(R)<>1 then begin Error:='Card not found';Exit(404);end;
@@ -7215,6 +7295,13 @@ begin
     ' WHERE '+Scope+'; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE id='+QuotedStr(CardId)+' AND archived=1)=1 THEN 1 '+
     'ELSE json(''Archive write failed'') END; '+NotificationsSql(T.Db,UserId,BoardId,R[0][0],CardId,'',ActivityId,'archivedCard')+'COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not change card archive state';Exit(500);end;
+end;
+
+function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
+begin
+  Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
+  if Result<>200 then Exit;
+  Result:=ArchiveCheckedCard(T,UserId,BoardId,CardId,Error);
 end;
 
 function SetViewCardDescription(const T:TWLTenant;const UserId,BoardId,CardId,Text:string;out Error:string):Integer;

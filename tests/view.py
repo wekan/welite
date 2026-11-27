@@ -1260,6 +1260,56 @@ def http_checks(server, tmp, backend):
         assert card_db('SELECT swimlaneId FROM lists WHERE id=?', own_list)[0] == lane2, 'nothing written to the list'
         card_db("UPDATE boards SET settings_json=json_remove(settings_json,'$.sharedListHeaders') WHERE id=?", board_id)
         assert shown() == 1
+        # An assigned-only member sees the board, and of its cards only those
+        # assigned to them (WeKan's isVisibleBy, assignedOnlyCardScope):
+        # another card is neither on the board, nor opened from its address,
+        # nor in the Archive. Negative: a stranger still sees no board.
+        board_db('UPDATE board_members SET isWorker=0, isReadAssignedOnly=1 WHERE boardId=? AND userId=?', board_id, users['worker'])
+        archived_hidden = wip_card(list_id, 'AO archived hidden')
+        assert request('POST', '/b/%s/cards/%s/archive' % (board_id, archived_hidden), {}, cookie=owner)[0] == 200
+        page = request('GET', route, cookie=worker)[2]
+        assert b'AO mine' in page and b'class="board-canvas' in page, 'their own card, on the board'
+        assert b'AO hidden' not in page and b'AO archived hidden' not in page and b'View Card' not in page, 'no other card'
+        assert b'js-sidebar-activities' not in page
+        opened = request('GET', '%s/%s' % (route, hidden_card), cookie=worker)[2]
+        assert b'AO hidden' not in opened and ('data-card="%s"' % hidden_card).encode() not in opened, 'nor opened by its address'
+        opened = request('GET', '%s/%s' % (route, mine_card), cookie=worker)[2]
+        assert ('class="card-details js-card-details" data-card="%s"' % mine_card).encode() in opened or \
+            ('data-card="%s"' % mine_card).encode() in opened, 'their own card opens'
+        assert b'AO mine' not in request('GET', route, cookie=stranger)[2], 'negative: a stranger sees no board'
+        assert request('POST', '/b/%s/cards/%s/title' % (board_id, mine_card), {'title': 'Renamed by reader'}, cookie=worker)[0] == 403, \
+            'negative: a reader changes nothing'
+        board_db('UPDATE board_members SET isWorker=1, isReadAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])
+        # WeKan's createBoardFromCard: the card becomes a link to a new board of
+        # the caller's. Negative: a stranger, a card not theirs for an
+        # assigned-only writer, one already a link, an archived one.
+        arch_ao = lambda ids, who=owner: request('POST', '/_methods/archiveSelectedCards', [board_id, ids], cookie=who, as_json=True)
+        convert = lambda cid, who=owner, title='From a card': request('POST', '/_methods/createBoardFromCard', [cid, title], cookie=who,
+                                                                      as_json=True)
+        to_board = wip_card(list_id, 'To be a board')
+        assert convert(to_board, stranger)[0] == 403
+        status, _, body, _ = convert(to_board)
+        assert status == 200, body
+        made = json.loads(body)['result']
+        assert card_db('SELECT type, linkedId FROM cards WHERE id=?', to_board) == ('cardType-linkedBoard', made)
+        assert board_db('SELECT title FROM boards WHERE id=?', made)[0] == 'From a card'
+        assert board_db('SELECT isAdmin FROM board_members WHERE boardId=? AND userId=?', made, login['id'])[0] == 1
+        assert board_db('SELECT COUNT(*) FROM swimlanes WHERE boardId=?', made)[0] == 1
+        status, _, body, _ = convert(to_board)
+        assert status == 400 and b'invalid-linked-card' in body, 'already a link'
+        archived_conv = wip_card(list_id, 'Archived conv')
+        assert request('POST', '/b/%s/cards/%s/archive' % (board_id, archived_conv), {}, cookie=owner)[0] == 200
+        assert convert(archived_conv)[0] == 400
+        board_db('UPDATE board_members SET isWorker=0, isNormalAssignedOnly=1 WHERE boardId=? AND userId=?', board_id, users['worker'])
+        assert convert(hidden_card, worker)[0] == 403
+        assert card_db('SELECT type FROM cards WHERE id=?', hidden_card)[0] == 'cardType-card', 'not theirs: not converted'
+        assert arch_ao([hidden_card], worker)[0] == 403 and arch_ao([mine_card, hidden_card], worker)[0] == 403
+        assert card_db('SELECT archived FROM cards WHERE id=?', mine_card)[0] == 0, 'a refused selection archives none'
+        status, _, body, _ = arch_ao([mine_card], worker)
+        assert status == 200 and json.loads(body)['result'] == {'archived': 1}, 'their own card'
+        assert request('POST', '/b/%s/archive/restore' % board_id, {'kind': 'cards', 'id': mine_card}, cookie=owner)[0] == 200
+        assert convert(mine_card, worker, '')[0] == 200, 'their own card, named after itself'
+        board_db('UPDATE board_members SET isWorker=1, isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])
         board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
         page = card_page()
         assert ('class="js-toggle-watch-card" href="%s/watch"' % card_path).encode() in page
@@ -1663,7 +1713,8 @@ def http_checks(server, tmp, backend):
         assert arch(pair, stranger)[0] == 403 and arch(pair + ['nope'])[0] == 400 and arch([])[0] == 400
         assert arch([pair[0], 5])[0] == 400
         assert card_db('SELECT count(*) FROM cards WHERE id IN (?,?) AND archived=0', *pair)[0] == 2, 'nothing archived by a refused selection'
-        assert arch(pair + [pair[0]])[0] == 200, 'each card once'
+        status, _, body, _ = arch(pair + [pair[0]])
+        assert status == 200 and json.loads(body)['result'] == {'archived': 2}, ('each card once', body)
         assert card_db('SELECT count(*) FROM cards WHERE id IN (?,?) AND archived=1', *pair)[0] == 2
         assert card_db("SELECT count(*) FROM activities WHERE activityType='archivedCard' AND cardId IN (?,?)", *pair)[0] == 2
         assert arch(pair)[0] == 400, 'not archived twice'
