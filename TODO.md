@@ -303,9 +303,10 @@ Found on the way, not part of this goal:
 
 - **Finish updating `tests/shrhttp.py` for the current HTML4 view.** With
   FerretDB `10635f841e`, fresh database discovery passes. The linked SQLite
-  run reaches the public board check after import and fails on the expected
-  markup for the green card. Check the markup and the later cookie-free
-  navigation assertions against the current view, then run the whole suite.
+  run passes the public board checks after import and reaches the webhook
+  settings tests, where the sign-in assertion still expects a redirect.
+  Update the remaining cookie-free navigation assertions against the current
+  view, then run the whole suite.
 
 Design questions for the maintainer (work goes on with the stated default):
 

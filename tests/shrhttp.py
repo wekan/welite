@@ -820,20 +820,20 @@ with tempfile.TemporaryDirectory(prefix='wshared-',dir=os.environ['TMPDIR']) as 
                     {'q':{'_id':imported_id},'u':{'$set':{'permission':'public'}}}]})
                 status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
                 assert status==200 and 'Set-Cookie' not in headers
-                assert re.search(rb'bgcolor="#3cb500"><a [^>]+>Green card</a>',body)
-                assert re.search(rb'bgcolor="#123abc"><a [^>]+>Hex card</a>',body)
-                assert b'>Uncolored card</a></p>' in body
+                assert re.search(rb'bgcolor="#3cb500"><form [^<]+(?:<input [^>]+>)*<input type="submit" value="Green card"></form></p>',body)
+                assert re.search(rb'bgcolor="#123abc"><form [^<]+(?:<input [^>]+>)*<input type="submit" value="Hex card"></form></p>',body)
+                assert b'value="Uncolored card"></form></p>' in body
                 assert b'<li>Uncolored card</li>' not in body
                 status,headers,body=request('GET','/board?id='+imported_id+'&view=all&subtasks='+green['_id'])
                 assert status==200 and 'Set-Cookie' not in headers and b'<li>Uncolored card</li>' in body
                 print('PASS: cookie-free board HTML reveals a card’s same-board subtasks on request')
-                assert body.index(b'>Green card</a></p>')<body.index(b'>Hex card</a></p>')
+                assert body.index(b'value="Green card"')<body.index(b'value="Hex card"')
                 hex_path='/api/boards/'+imported_id+'/lists/'+hexa['listId']+'/cards/'+hexa['_id']
                 assert request('PUT',hex_path,dict(sort=0),token)[0]==200
                 for _ in range(2):
                     status,headers,body=request('GET','/board?id='+imported_id+'&view=all')
                     assert status==200 and 'Set-Cookie' not in headers
-                    assert body.index(b'>Hex card</a></p>')<body.index(b'>Green card</a></p>')
+                    assert body.index(b'value="Hex card"')<body.index(b'value="Green card"')
                 print('PASS: cookie-free board HTML renders REST sort zero ahead of the prior first card')
                 assert request('DELETE','/api/boards/'+imported_id,token=token)[0]==200
                 print('PASS: board import preserves list width, card/list/swimlane colors and archived state')

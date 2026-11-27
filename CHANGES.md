@@ -10,6 +10,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   provisioned through WeLite HTTP. Update the bootstrap sign-in and native
   registration checks in `tests/shrhttp.py` to use cookie-free form navigation.
   The linked SQLite run passes these checks and proceeds through board import.
+- Verify that the public HTML4 board renders imported named and hexadecimal
+  card colors around its navigation forms, reveals subtasks on request, and
+  reflects a REST sort update on subsequent requests.
 
 ## 2026-11-26 The HTML5 view for modern browsers
 
