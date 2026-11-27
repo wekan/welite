@@ -14,7 +14,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   localized card color and due completion labels and values. The Title
   and Dates filters still include those rows. List and swimlane color
   history rows show the translated entity labels and color names. Card
-  date rows use the translated Received, Start, Due and End labels.
+  date rows use the translated Received, Start, Due and End labels. Time
+  rows identify hours and show overtime as a translated Yes or No.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

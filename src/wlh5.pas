@@ -7864,7 +7864,7 @@ begin
 end;
 
 function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat: string): string;
-var Value, Document: TJSONData;
+var Value, Document: TJSONData; NumberFormat: TFormatSettings;
 begin
   Result := '';
   if Values = nil then Exit;
@@ -7873,10 +7873,17 @@ begin
   begin
     if Value.JSONType = jtNull then Exit('—');
     if Values.Get('isDate', False) then Exit(HistoryDate(Value, DateFormat));
-    if (Values.Get('field', '') = 'dueComplete') and (Value.JSONType = jtBoolean) then
+    if (Value.JSONType = jtBoolean) and
+      ((Values.Get('field', '') = 'dueComplete') or (Values.Get('field', '') = 'isOvertime')) then
     begin
       if Value.AsBoolean then Exit(Words.Text('yes', 'Yes'));
       Exit(Words.Text('no', 'No'));
+    end;
+    if (Values.Get('field', '') = 'spentTime') and (Value.JSONType = jtNumber) then
+    begin
+      NumberFormat := DefaultFormatSettings;
+      NumberFormat.DecimalSeparator := '.';
+      Exit(FloatToStr(Value.AsFloat, NumberFormat));
     end;
     if Value.JSONType = jtString then
     begin
@@ -8032,6 +8039,12 @@ begin
                   'dueAt': GroupLabel := Words.Text('card-due', 'Due');
                   'endAt': GroupLabel := Words.Text('card-end', 'End');
                 end;
+            'spentTime':
+              if Row.Get('entityType', '') = 'card' then
+                GroupLabel := Words.Text('spent-time-hours', 'Spent time (hours)');
+            'isOvertime':
+              if Row.Get('entityType', '') = 'card' then
+                GroupLabel := Words.Text('overtime', 'Overtime');
             'dueComplete':
               if Row.Get('entityType', '') = 'card' then
                 GroupLabel := Words.Text('due-complete', 'Due complete');
