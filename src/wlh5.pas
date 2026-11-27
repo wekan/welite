@@ -4050,7 +4050,7 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
-  // WeKan's changeHistory.undoLast, redoLast and restore, for rule rows (wlrules).
+  // WeKan's changeHistory.page, undoLast, redoLast and restore (wlrules).
   if Copy(Name, 1, 14) = 'changeHistory.' then
   begin
     Args := nil;

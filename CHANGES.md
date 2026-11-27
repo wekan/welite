@@ -550,6 +550,20 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Archive and says how many. A soft limit only warns. `tests/view.py` checks
   the methods' refusals and each restore, and WeKan's restore-wip-limit spec
   passes.
+- Add WeKan's changeHistory.page, the read every History view makes: a
+  board's, swimlane's, list's or card's rows and what is in them, a user's or
+  an entity's, newest first, searched (the change, its kind and the text of
+  both contents), paged - past the end, the last page - with each author's
+  count. Only the rows the caller may read are in it, and counted: on a
+  board they can see, and for an assigned-only member about a card assigned
+  to them; a board they cannot see answers not-authorized, a row holding card
+  custom fields is a board or site admin's only. Restore a card's title or
+  description row as WeKan does, for whoever may edit that card where it is
+  now - an assigned-only writer their own card - and record the restore.
+  A card's own History rows now carry its card, list and swimlane, as
+  WeKan's do, so the card's, list's and swimlane's History find them.
+  `tests/rules.py` checks the page and the restore, and five of WeKan's
+  history-read-scope tests pass.
 - Run 87 more of WeKan's own tests that Weddy passes, in
   `tests/wkui/specs.txt`: the REST API, viewport, RTL, stability,
   notification and board-action specs among them, and shared-list-row-6902.

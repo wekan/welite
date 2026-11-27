@@ -342,6 +342,43 @@ def main():
             # And a stranger undoes nothing on the board.
             assert call('stranger', 'changeHistory.undoLast', texts)[0] == 403
             print('PASS: a card\'s title and description History: cleared, undone, redone, trimmed, nothing for no change, conflicts refused')
+            # changeHistory.page (WeKan's History views): the board's rows,
+            # newest first, searched, paged, each author counted; and Restore
+            # of a card's description row puts that value back. Negative: a
+            # board the caller cannot see, a scope without its id, a request
+            # with no scope or user, wrong types, and a stranger's restore.
+            status, page = call('owner', 'changeHistory.page', {'scope': 'board', 'scopeId': texts})
+            assert status == 200, page
+            page = page['result']
+            assert page['total'] == len(page['rows']) >= 4 and page['page'] == 1, page
+            stamps = [r['createdAt'] for r in page['rows']]
+            assert stamps == sorted(stamps, reverse=True), 'newest first'
+            assert page['contributors'] == [{'userId': ids['owner'], 'count': page['total']}], page['contributors']
+            status, found = call('owner', 'changeHistory.page', {'scope': 'board', 'scopeId': texts, 'search': 'KEPT IN history'})
+            assert status == 200 and found['result']['total'] >= 1, found
+            assert all('Kept in History' in json.dumps(r) for r in found['result']['rows'])
+            status, paged = call('owner', 'changeHistory.page', {'scope': 'board', 'scopeId': texts, 'pageSize': 1, 'page': 999})
+            assert paged['result']['page'] == page['total'] and len(paged['result']['rows']) == 1, 'past the end: the last page'
+            assert paged['result']['rows'][0]['_id'] == page['rows'][-1]['_id']
+            assert call('owner', 'changeHistory.page', {'scope': 'card', 'scopeId': note})[1]['result']['total'] == page['total']
+            status, mine = call('owner', 'changeHistory.page', {'userId': ids['owner']})
+            assert status == 200 and mine['result']['total'] >= page['total']
+            status, denied = call('stranger', 'changeHistory.page', {'scope': 'board', 'scopeId': texts})
+            assert status == 403 and denied['error'] == 'not-authorized', denied
+            status, theirs = call('stranger', 'changeHistory.page', {'userId': ids['owner']})
+            assert status == 200 and not any(r.get('boardId') == texts for r in theirs['result']['rows']), 'never another board\'s rows'
+            for bad in ({'scope': 'board'}, {'scopeId': texts}, {}, {'scope': 'nowhere', 'scopeId': texts},
+                        {'scope': 'board', 'scopeId': texts, 'search': 5}, {'scope': 'board', 'scopeId': texts, 'page': '2'}):
+                assert call('owner', 'changeHistory.page', bad)[0] == 400, bad
+            assert call('owner', 'changeHistory.page', {'scope': 'card', 'scopeId': 'no-such-card'})[0] == 404
+            kept = next(r for r in page['rows'] if (r.get('newContent') or {}).get('value') == 'Kept in History')
+            assert call('stranger', 'changeHistory.restore', [kept['_id']])[0] == 403
+            assert current('description') == ''
+            status, restored = call('owner', 'changeHistory.restore', [kept['_id']])
+            assert status == 200 and restored['result']['restored'] == 1, restored
+            assert current('description') == 'Kept in History'
+            assert any(r['changeType'] == 'restored' and r.get('restoredFromId') == kept['_id'] for r in rows('description'))
+            print('PASS: History page: scoped, newest first, searched, paged, counted, refused outside access; a card row restored')
         finally:
             for proc in (app, ferret):
                 if proc is not None and proc.poll() is None:

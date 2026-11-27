@@ -424,3 +424,8 @@ password-change-other-sessions.e2e.js
 password-submit-event.e2e.js
 restore-wip-limit.e2e.js
 shared-list-row-6902.e2e.js
+history-read-scope.e2e.js: own member history no longer exposes a private board after access is removed
+history-read-scope.e2e.js: assigned-only writers cannot restore hidden card history by guessing a row ID
+history-read-scope.e2e.js: an assigned-only writer can restore currently assigned card history
+history-read-scope.e2e.js: History cannot edit a card moved to a board the former owner cannot access
+history-read-scope.e2e.js: History scans multiple batches before paging readable search matches

@@ -37,7 +37,7 @@ const GateCollections:array[0..1] of string=('historyWriterGates','historyChainH
     ' AND json_extract(_ferretdb_sjson,''$.version'')=1';
   MigrationId='json_extract(_ferretdb_sjson,''$.migrationId'')';
   HeadHash='json_extract(_ferretdb_sjson,''$.hash'')';
-var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows:TWLRows;
+var Row,BeforeState,AfterState,DateState,Hints:TJSONObject;Rows,Place:TWLRows;
   BoardSql,UserSql,Lookup,LookupSource,Previous,Stamp,Id,ChangeType,DateKey,Hash,Doc,Sql,
     TableName,TableSql,Gate,GateTable,Guard,BoardScope,RedoSql,InsertSql,HeadTable,HeadScope,HeadWrite,HeadValue,GateScope,AlreadyRecorded:string;
   Attempt:Integer;Shared,Coordinated:Boolean;
@@ -333,12 +333,23 @@ begin
     begin
       // A row with its own content: no list lifecycle in it.
       ChangeType:=OwnChange;
+      // A card's own row carries the card and where it is, as WeKan writes
+      // every applicable id: the card's, list's and swimlane's History find it.
+      Place:=nil;
+      if EntityType='card' then
+        Place:=Db.Query('SELECT COALESCE(swimlaneId,''''),COALESCE(listId,'''') FROM cards WHERE id='+QuotedStr(EntityId)+';');
       Row:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'swimlaneId',TJSONNull.Create,'listId',TJSONNull.Create,
         'entityType',EntityType,'entityId',EntityId,'group',OwnGroup,'changeType',ChangeType,
         'userId',UserId,'createdAt',Stamp,'undone',False,'superseded',False,'isCheckpoint',False]);
       Hints:=TJSONObject.Create(['createdAt','date']);
       try
         Row.Add('cardId',TJSONNull.Create);
+        if Length(Place)=1 then
+        begin
+          Row.Delete('cardId');Row.Add('cardId',EntityId);
+          if Place[0][0]<>'' then begin Row.Delete('swimlaneId');Row.Add('swimlaneId',Place[0][0]);end;
+          if Place[0][1]<>'' then begin Row.Delete('listId');Row.Add('listId',Place[0][1]);end;
+        end;
         if RestoredFromId='' then Row.Add('restoredFromId',TJSONNull.Create) else Row.Add('restoredFromId',RestoredFromId);
         if RestoredByUserId='' then Row.Add('restoredByUserId',TJSONNull.Create) else Row.Add('restoredByUserId',RestoredByUserId);
         Row.Add('undoneAt',TJSONNull.Create);

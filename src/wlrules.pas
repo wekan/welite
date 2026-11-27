@@ -2162,13 +2162,254 @@ begin
   if not Result then Db.Exec('ROLLBACK;');
 end;
 
+// WeKan's server/lib/historyReadScope.js, for one caller: a row is readable
+// on a board they can see - BoardCanRead, or an active member's, an
+// assigned-only one too (Boards.isVisibleBy) - and, for an assigned-only
+// member, only about a card assigned to them. A row whose content holds card
+// custom fields is a board or site admin's only: WeKan redacts admin-only
+// fields there, and WeLite does not tell them apart in History yet.
+type
+  THistoryScope = class
+    Db: TWLDb;
+    UserId: string;
+    SiteAdmin: Boolean;
+    Boards: TStringList; // boardId=V(isible)A(ssigned only)D(board admin) flags
+    constructor Create(ADb: TWLDb; const AUserId: string);
+    destructor Destroy; override;
+    function Flags(const BoardId: string): string;
+    function Readable(Row: TJSONObject): Boolean;
+  end;
+
+constructor THistoryScope.Create(ADb: TWLDb; const AUserId: string);
+begin
+  Db := ADb; UserId := AUserId; SiteAdmin := IsSiteAdmin(Db, UserId);
+  Boards := TStringList.Create;
+end;
+
+destructor THistoryScope.Destroy;
+begin
+  Boards.Free;
+  inherited Destroy;
+end;
+
+function THistoryScope.Flags(const BoardId: string): string;
+var i: Integer; M: TWLRows;
+begin
+  i := Boards.IndexOfName(BoardId);
+  if i >= 0 then Exit(Boards.ValueFromIndex[i]);
+  Result := '';
+  if (BoardId <> '') and (Pos(#0, BoardId) = 0) then
+  begin
+    M := Db.Query('SELECT COALESCE(isNormalAssignedOnly,0)+COALESCE(isCommentAssignedOnly,0)+COALESCE(isReadAssignedOnly,0) ' +
+      'FROM board_members WHERE boardId=' + Q(BoardId) + ' AND userId=' + Q(UserId) + ' AND isActive=1;');
+    if BoardCanRead(Db, UserId, BoardId) or (Length(M) = 1) then Result := 'V';
+    if (Length(M) = 1) and (M[0][0] <> '0') then Result := Result + 'A';
+    if SiteAdmin or BoardCanAdmin(Db, UserId, BoardId) then Result := Result + 'D';
+  end;
+  Boards.Add(BoardId + '=' + Result);
+end;
+
+function HistoryRowCard(Row: TJSONObject): string;
+begin
+  Result := Str(Row, 'cardId');
+  if (Result = '') and (Str(Row, 'entityType') = 'card') then Result := Str(Row, 'entityId');
+end;
+
+function THistoryScope.Readable(Row: TJSONObject): Boolean;
+var F, CardId: string;
+begin
+  F := Flags(Str(Row, 'boardId'));
+  if Pos('V', F) = 0 then Exit(False);
+  if (Pos('D', F) = 0) and (Pos('"customFields"', Row.AsJSON) > 0) then Exit(False);
+  if Pos('A', F) = 0 then Exit(True);
+  CardId := HistoryRowCard(Row);
+  Result := (CardId <> '') and (Length(Db.Query('SELECT 1 FROM card_assignees WHERE cardId=' + Q(CardId) + ' AND userId=' + Q(UserId) + ';')) = 1);
+end;
+
+// models/lib/changeHistoryQuery.js matchesSearch: the change type, group,
+// entity type and the text of both contents, up to four levels deep.
+function HistoryMatches(Row: TJSONObject; const Needle: string): Boolean;
+var Text: string;
+  procedure Collect(V: TJSONData; Depth: Integer);
+  var k: Integer;
+  begin
+    if (V = nil) or (Depth > 4) then Exit;
+    case V.JSONType of
+      jtString: Text := Text + #10 + V.AsString;
+      jtNumber, jtBoolean: Text := Text + #10 + V.AsString;
+      jtArray, jtObject: for k := 0 to V.Count - 1 do Collect(V.Items[k], Depth + 1);
+    end;
+  end;
+begin
+  if Needle = '' then Exit(True);
+  Text := Str(Row, 'changeType') + #10 + Str(Row, 'group') + #10 + Str(Row, 'entityType');
+  Collect(Row.Find('newContent'), 0);
+  Collect(Row.Find('previousContent'), 0);
+  Result := Pos(Needle, LowerCase(Text)) > 0;
+end;
+
+// changeHistory.page: one page of the History of a scope - a board, swimlane,
+// list or card and what is in it, a user's, an entity's - newest first, with
+// search, the total and each author's count, of the rows the caller may read
+// (server/models/changeHistory.js, server/lib/historyPageScan.js).
+function HistoryPage(Db: TWLDb; const UserId: string; Request: TJSONObject; out Answer: string): Integer;
+const Keys: array[0..6] of string = ('scope', 'scopeId', 'group', 'userId', 'entityType', 'entityId', 'search');
+var V: TJSONData; i, Size, Want, Total, Last0, Page, Pages: Integer; Scope, ScopeId, Column, Where, Owner, Needle, Who: string;
+  Rows: TJSONArray; Row: TJSONObject; Readable: THistoryScope; Selected, LastRows, Contributors: TJSONArray; Counts: TStringList;
+  O: TWLRows; Num: Double;
+  function Field(const Name: string): string;
+  begin
+    V := Request.Find(Name);
+    if (V <> nil) and (V.JSONType = jtString) then Result := V.AsString else Result := '';
+  end;
+  function Eq(const Name, Value: string): string;
+  begin
+    if Value = '' then Result := '' else Result := ' AND ' + DocField(Name) + '=' + Q(Value);
+  end;
+begin
+  for i := 0 to High(Keys) do
+  begin
+    V := Request.Find(Keys[i]);
+    if (V <> nil) and not (V.JSONType in [jtString, jtNull]) then Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
+    if (V <> nil) and (V.JSONType = jtString) and (Pos(#0, V.AsString) > 0) then Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
+  end;
+  for i := 0 to 1 do
+  begin
+    V := Request.Find(IfThen(i = 0, 'page', 'pageSize'));
+    if (V <> nil) and (V.JSONType <> jtNumber) then Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
+  end;
+  Scope := Field('scope'); ScopeId := Field('scopeId');
+  if Scope = 'board' then Column := 'boardId'
+  else if Scope = 'swimlane' then Column := 'swimlaneId'
+  else if Scope = 'list' then Column := 'listId'
+  else if Scope = 'card' then Column := 'cardId'
+  else if Scope <> '' then Exit(MethodError(400, 'bad-scope', 'changeHistory: unknown scope', Answer))
+  else Column := '';
+  if (Column <> '') and (ScopeId = '') then Exit(MethodError(400, 'bad-scope', 'changeHistory: the scope needs a scopeId', Answer));
+  if (Column = '') and (ScopeId <> '') then Exit(MethodError(400, 'bad-scope', 'changeHistory: scopeId without a scope', Answer));
+  if (Column = '') and (Field('userId') = '') then Exit(MethodError(400, 'bad-scope', 'Ask for a scope or a user.', Answer));
+  Readable := THistoryScope.Create(Db, UserId);
+  Counts := TStringList.Create;
+  Selected := TJSONArray.Create; LastRows := TJSONArray.Create; Contributors := TJSONArray.Create;
+  Rows := nil;
+  try
+    // A scope is checked on its board: whoever cannot see it learns nothing,
+    // not even how many rows there are.
+    if Scope = 'board' then Owner := ScopeId
+    else if Column <> '' then
+    begin
+      O := Db.Query('SELECT boardId FROM ' + IfThen(Scope = 'card', 'cards', IfThen(Scope = 'list', 'lists', 'swimlanes')) +
+        ' WHERE id=' + Q(ScopeId) + ';');
+      if Length(O) <> 1 then Exit(MethodError(404, 'not-found', 'No such scope.', Answer));
+      Owner := O[0][0];
+    end
+    else Owner := '';
+    if (Column <> '') and (Pos('V', Readable.Flags(Owner)) = 0) then
+      Exit(MethodError(403, 'not-authorized', 'You do not have access to this board.', Answer));
+    Num := 25;
+    V := Request.Find('pageSize');
+    if (V <> nil) and (V.AsFloat <> 0) then Num := V.AsFloat;
+    if not (Num >= 1) then Num := 1;
+    if Num > 200 then Num := 200;
+    Size := Trunc(Num);
+    Num := 1;
+    V := Request.Find('page');
+    if (V <> nil) and (V.AsFloat <> 0) then Num := V.AsFloat;
+    if not ((Num >= 1) and (Num <= MaxInt)) then if Num > MaxInt then Num := MaxInt else Num := 1;
+    Want := Trunc(Num);
+    Needle := LowerCase(Trim(Field('search')));
+    Where := '1=1';
+    if Column <> '' then Where := Where + Eq(Column, ScopeId);
+    Where := Where + Eq('entityType', Field('entityType')) + Eq('entityId', Field('entityId')) + Eq('group', Field('group')) +
+      Eq('userId', Field('userId'));
+    Rows := FindDocs(Db, 'changeHistory', Where, DocField('createdAt') + ' DESC');
+    Total := 0;
+    for i := 0 to Rows.Count - 1 do
+    begin
+      Row := Rows.Objects[i];
+      if not Readable.Readable(Row) or not HistoryMatches(Row, Needle) then Continue;
+      if Total mod Size = 0 then LastRows.Clear;
+      LastRows.Add(Row.Clone);
+      if (Int64(Total) >= Int64(Want - 1) * Size) and (Int64(Total) < Int64(Want) * Size) then Selected.Add(Row.Clone);
+      Inc(Total);
+      Who := Str(Row, 'userId');
+      if Counts.IndexOfName(Who) < 0 then Counts.Add(Who + '=0');
+      Counts.Values[Who] := IntToStr(StrToInt(Counts.Values[Who]) + 1);
+    end;
+    Pages := Max(1, (Total + Size - 1) div Size);
+    Page := Min(Want, Pages);
+    // Each author's count, most first; equal counts in the order first met.
+    for Last0 := 0 to Counts.Count - 1 do
+      for i := Counts.Count - 1 downto Last0 + 1 do
+        if StrToInt(Counts.ValueFromIndex[i]) > StrToInt(Counts.ValueFromIndex[i - 1]) then Counts.Exchange(i, i - 1);
+    for i := 0 to Counts.Count - 1 do
+      Contributors.Add(TJSONObject.Create(['userId', Counts.Names[i], 'count', StrToInt(Counts.ValueFromIndex[i])]));
+    if Page = Want then V := Selected else V := LastRows;
+    Answer := '{"result":{"rows":' + V.AsJSON + ',"total":' + IntToStr(Total) + ',"page":' + IntToStr(Page) + ',"pageSize":' +
+      IntToStr(Size) + ',"contributors":' + Contributors.AsJSON + '}}';
+    Result := 200;
+  finally
+    Rows.Free; Selected.Free; LastRows.Free; Contributors.Free; Counts.Free; Readable.Free;
+  end;
+end;
+
+// changeHistory.restore of a card's title or description row: its
+// newContent made current (previousContent for a removal), as WeKan's
+// applyFieldContent does - only while the row is the caller's to read
+// (requireHistoryRowAccess), on a board they may change, and the card,
+// where it is NOW, one they may edit: a writer's, or an assigned-only
+// writer's own card (canEditCardOrLinkedCard). The answer: 1 restored, 0
+// nothing to put back, -1 refused.
+function RestoreCardRow(Db: TWLDb; const UserId: string; Row: TJSONObject; Readable: THistoryScope): Integer;
+var Content: TJSONData; Field, CardId, Value: string; R: TWLRows; Before, After: TJSONObject;
+  function MayChange(const BoardId: string): Boolean;
+  begin
+    Result := BoardCanWrite(Db, UserId, BoardId) or (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId=' + Q(BoardId) +
+      ' AND userId=' + Q(UserId) + ' AND isActive=1 AND COALESCE(isNormalAssignedOnly,0)=1;')) = 1);
+  end;
+begin
+  if not Readable.Readable(Row) or not MayChange(Str(Row, 'boardId')) then Exit(-1);
+  CardId := HistoryRowCard(Row);
+  R := Db.Query('SELECT boardId,COALESCE(title,''''),COALESCE(description,'''') FROM cards WHERE id=' + Q(CardId) + ' AND deletedAt IS NULL;');
+  if Length(R) <> 1 then Exit(0);
+  if not (BoardCanWrite(Db, UserId, R[0][0]) or (MayChange(R[0][0]) and (Length(Db.Query('SELECT 1 FROM card_assignees WHERE cardId=' +
+    Q(CardId) + ' AND userId=' + Q(UserId) + ';')) = 1))) then Exit(-1);
+  Content := Row.Find('newContent');
+  if not (Content is TJSONObject) then Content := Row.Find('previousContent');
+  if not (Content is TJSONObject) then Exit(0);
+  Field := Str(TJSONObject(Content), 'field');
+  if (Field <> 'title') and (Field <> 'description') then Exit(0);
+  if (TJSONObject(Content).Find('value') = nil) or (TJSONObject(Content).Find('value').JSONType <> jtString) then Exit(0);
+  Value := TJSONObject(Content).Strings['value'];
+  if not Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET ' + Field + '=' + Q(Value) + ',modifiedAt=' + Q(NowIso) + ' WHERE id=' + Q(CardId) +
+    '; COMMIT;') then begin Db.Exec('ROLLBACK;'); Exit(0); end;
+  Before := TJSONObject.Create(['field', Field, 'value', IfThen(Field = 'title', R[0][1], R[0][2])]);
+  After := TJSONObject.Create(['field', Field, 'value', Value]);
+  try
+    try
+      RecordHistoryRow(Db, UserId, R[0][0], 'card', CardId, Field, 'restored', Before, After, Str(Row, '_id'), UserId);
+    except
+      // History never fails the restore it records.
+    end;
+  finally
+    Before.Free; After.Free;
+  end;
+  Result := 1;
+end;
+
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
 var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList;
-  i, Restored, Skipped: Integer; Applied: Boolean;
+  i, Restored, Skipped, Done: Integer; Applied: Boolean; Readable: THistoryScope;
 begin
   Answer := '';
-  if (Name <> 'changeHistory.undoLast') and (Name <> 'changeHistory.redoLast') and (Name <> 'changeHistory.restore') then Exit(0);
+  if (Name <> 'changeHistory.undoLast') and (Name <> 'changeHistory.redoLast') and (Name <> 'changeHistory.restore') and
+    (Name <> 'changeHistory.page') then Exit(0);
   if not IsShared(T.Db) then Exit(MethodError(501, 'not-supported', 'History needs the shared store', Answer));
+  if Name = 'changeHistory.page' then
+  begin
+    if (Args.Count < 1) or not (Args.Items[0] is TJSONObject) then Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
+    Exit(HistoryPage(T.Db, UserId, TJSONObject(Args.Items[0]), Answer));
+  end;
   if Name = 'changeHistory.restore' then
   begin
     Ids := TStringList.Create;
@@ -2181,12 +2422,22 @@ begin
       end
       else Exit(MethodError(400, 'Match.Error', 'Match failed', Answer));
       Restored := 0; Skipped := 0;
+      Readable := THistoryScope.Create(T.Db, UserId);
+      try
       for i := 0 to Ids.Count - 1 do
       begin
         Row := FindDoc(T.Db, 'changeHistory', Ids[i]);
         if Row = nil then begin Inc(Skipped); Continue; end;
         Before := nil; After := nil;
         try
+          // A card's title or description: whoever may edit that card now.
+          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description')) then
+          begin
+            Done := RestoreCardRow(T.Db, UserId, Row, Readable);
+            if Done < 0 then Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));
+            if Done = 0 then Inc(Skipped) else begin Inc(Restored); AnnounceToAll; end;
+            Continue;
+          end;
           if not BoardCanAdmin(T.Db, UserId, Str(Row, 'boardId')) then Exit(MethodError(403, 'not-authorized', 'Must be a board admin', Answer));
           if Str(Row, 'entityType') <> 'rule' then begin Inc(Skipped); Continue; end;
           Before := RuleSnapshot(T.Db, Str(Row, 'entityId'));
@@ -2201,6 +2452,9 @@ begin
         finally
           After.Free; Before.Free; Row.Free;
         end;
+      end;
+      finally
+        Readable.Free;
       end;
     finally
       Ids.Free;
