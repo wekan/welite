@@ -89,7 +89,7 @@ procedure ResetViewState;
 
 implementation
 
-uses wlboard, wlthumb,
+uses wlboard, wlthumb, Math,
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
   wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
   wlcrypt;
@@ -1101,6 +1101,9 @@ begin
   begin
     Header := '<div id="header" class="header-bar">' +
       '<a class="header-all-boards js-all-boards" href="/" up-follow>' + E(Words.Text('all-boards', 'All Boards')) + '</a>';
+    Header := Header + '<a class="board-header-btn js-global-search" href="/global-search" title="' +
+      HtmlAttr(Words.Text('globalSearch-title', 'Search All Boards')) + '" aria-label="' +
+      HtmlAttr(Words.Text('globalSearch-title', 'Search All Boards')) + '"><i class="fa fa-search"></i></a>';
     // header.jade's Create Board pop-over (createBoardForm), for whoever may
     // make a board - checked, not attempted, so nothing is recorded.
     if ResolveTenant(Request, T) and TenantOpen(T) and MayCreateBoard(T.Db, S.UserId) then
@@ -5807,42 +5810,101 @@ begin
   finally Policy.Free; end;
 end;
 
-procedure ServeBoardSearch(Db: TWLDb; Response: TResponse; const UserId, BoardId, Term: string);
-var Boards, Cards: TWLRows; Scope, Board, Text: string; Wide: UnicodeString;
-  Matches: TJSONArray; Card: TJSONObject; i: Integer;
+function SearchTerm(const Term: string): string;
 begin
-  Board := QuotedStr(BoardId);
+  Result := UTF8Encode(Copy(UTF8Decode(Trim(Term)), 1, MAX_FILTER_TEXT));
+  if Pos(#0, Result) > 0 then Result := '';
+end;
+
+function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0): TWLRows;
+var Scope, Tail: string;
+begin
+  Result := nil;
+  if Text = '' then Exit;
   Scope := '';
   if not BoardCanRead(Db, UserId, BoardId) then
   begin
-    if not AssignedOnlyMember(Db, UserId, BoardId) then
-    begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+    if not AssignedOnlyMember(Db, UserId, BoardId) then Exit;
     Scope := ' AND EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id AND a.userId=' + QuotedStr(UserId) + ')';
   end;
-  Boards := Db.Query('SELECT slug FROM boards WHERE id=' + Board + ' AND archived=0;');
+  Tail := '';
+  if Limit > 0 then Tail := ' LIMIT ' + IntToStr(Limit);
+  Result := Db.Query('SELECT c.id,c.title FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+    ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + BoardTextMatchSql(Text) +
+    BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text) + ')' +
+    ' ORDER BY c.createdAt DESC,c.id' + Tail + ';');
+end;
+
+procedure ServeBoardSearch(Db: TWLDb; Response: TResponse; const UserId, BoardId, Term: string);
+var Boards, Cards: TWLRows; Matches: TJSONArray; Card: TJSONObject; i: Integer;
+begin
+  if not BoardCanRead(Db, UserId, BoardId) and not AssignedOnlyMember(Db, UserId, BoardId) then
+  begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
+  Boards := Db.Query('SELECT slug FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
   if Length(Boards) <> 1 then
   begin SendJsonAnswer(Response, 404, '{"error":"not found"}'); Exit; end;
-  Wide := UTF8Decode(Trim(Term));
-  Text := UTF8Encode(Copy(Wide, 1, MAX_FILTER_TEXT));
   Matches := TJSONArray.Create;
   try
-    if (Text <> '') and (Pos(#0, Text) = 0) then
+    Cards := SearchBoardCards(Db, UserId, BoardId, SearchTerm(Term));
+    for i := 0 to High(Cards) do
     begin
-      Cards := Db.Query('SELECT c.id,c.title FROM cards c WHERE c.boardId=' + Board +
-        ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + BoardTextMatchSql(Text) +
-        BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text) + ')' +
-        ' ORDER BY c.createdAt DESC,c.id;');
-      for i := 0 to High(Cards) do
-      begin
-        Card := TJSONObject.Create;
-        Matches.Add(Card);
-        Card.Add('id', Cards[i][0]);
-        Card.Add('title', Cards[i][1]);
-        Card.Add('url', CardRoute(BoardId, Boards[0][0], Cards[i][0]));
-      end;
+      Card := TJSONObject.Create;
+      Matches.Add(Card);
+      Card.Add('id', Cards[i][0]);
+      Card.Add('title', Cards[i][1]);
+      Card.Add('url', CardRoute(BoardId, Boards[0][0], Cards[i][0]));
     end;
     SendJsonAnswer(Response, 200, Matches.AsJSON);
   finally Matches.Free; end;
+end;
+
+function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
+const PageSize = 25;
+var Text, Results, NextUrl: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext: Boolean;
+  function PageUrl(Number: Integer): string;
+  begin
+    Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
+  end;
+begin
+  Text := SearchTerm(Term);
+  Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
+    '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
+    'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
+    '"><button type="submit">' + E(Words.Text('search', 'Search')) + '</button></form>';
+  Results := '';
+  HasNext := False;
+  if Text <> '' then
+  begin
+    // Global Search covers active memberships, even when another board is public.
+    Boards := Db.Query('SELECT b.id,b.title,b.slug FROM boards b JOIN board_members m ON m.boardId=b.id ' +
+      'WHERE m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1 AND b.archived=0 ORDER BY b.title,b.id;');
+    Skip := (PageNumber - 1) * PageSize;
+    Shown := 0;
+    for i := 0 to High(Boards) do
+    begin
+      Cards := SearchBoardCards(Db, UserId, Boards[i][0], Text, Skip + PageSize + 1 - Shown);
+      for j := 0 to High(Cards) do
+      begin
+        if Skip > 0 then begin Dec(Skip); Continue; end;
+        if Shown = PageSize then begin HasNext := True; Break; end;
+        Results := Results + '<div class="result-card-wrapper"><a class="minicard-wrapper js-minicard js-board-search-card card-title" href="' +
+          HtmlAttr(CardRoute(Boards[i][0], Boards[i][2], Cards[j][0])) + '"><span class="minicard-title">' +
+          E(Cards[j][1]) + '</span></a><span class="quiet">' + E(Boards[i][1]) + '</span></div>';
+        Inc(Shown);
+      end;
+      if HasNext then Break;
+    end;
+  end;
+  if Results <> '' then Result := Result + '<div class="global-search-results-list-wrapper">' + Results + '</div>'
+  else if Text <> '' then Result := Result + '<p class="global-search-help">' + E(Words.Text('no-results', 'No results')) + '</p>';
+  if PageNumber > 1 then
+    Result := Result + '<a href="' + HtmlAttr(PageUrl(PageNumber - 1)) + '">' + E(Words.Text('previous', 'Previous')) + '</a> ';
+  if HasNext then
+  begin
+    NextUrl := PageUrl(PageNumber + 1);
+    Result := Result + '<a href="' + HtmlAttr(NextUrl) + '">' + E(Words.Text('next', 'Next')) + '</a>';
+  end;
+  Result := Result + '</section>';
 end;
 
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
@@ -6485,7 +6547,7 @@ begin
   // The root arrives as an empty PathInfo.
   if Path = '' then Path := '/';
   if not ((Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
-    (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/people') or (Path = '/admin/people') or
+    (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/global-search') or (Path = '/people') or (Path = '/admin/people') or
     (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
     (Path = '/admin/problems/password-length') or (Path = '/admin/settings/appearance') or (Path = '/admin/settings/visibility') or
     (Path = '/profile/password') or (Path = '/language/popup')) then Exit;
@@ -6531,6 +6593,14 @@ begin
     begin
       Send(200, Page(Request, Language, Words, S, Words.Text('password-change-required-title', 'Change your password'), '',
         PasswordChangeRequiredContent(T.Db, Words)));
+      Exit;
+    end;
+    if Path = '/global-search' then
+    begin
+      Title := Words.Text('globalSearch-title', 'Search All Boards');
+      Content := GlobalSearchContent(T.Db, Words, S.UserId, Request.QueryFields.Values['q'],
+        Min(Max(StrToIntDef(Request.QueryFields.Values['page'], 1), 1), 100000));
+      Send(200, Page(Request, Language, Words, S, Title, '', Content));
       Exit;
     end;
     // Admin Panel / Problems / Password length (wlprob), a site admin's.

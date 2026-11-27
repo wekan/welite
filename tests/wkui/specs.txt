@@ -5,6 +5,10 @@
 01-boards-users.e2e.js
 04-search.e2e.js: board-level search returns only cards matching the query
 04-search.e2e.js: board search reveals the card found on the board, and Enter steps on
+04-search.e2e.js: global search returns cards matching the query and excludes non-matching cards
+04-search.e2e.js: global search does not return cards from boards the user cannot access
+04-search.e2e.js: public boards are searchable only by their active members
+04-search.e2e.js: all seeded cards are findable via global search
 02-cards-open-view.e2e.js: #3576: mobile Search back returns directly to the board
 02-cards-open-view.e2e.js: clicking a minicard opens the card detail panel
 02-cards-open-view.e2e.js: card opens without the maximized class by default (minimized view)

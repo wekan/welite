@@ -263,3 +263,7 @@ body.has-hide-focus-outline :is(a, button, input, select, textarea, summary, [ta
   outline-offset: -3px;
 }
 .search-step { margin: 4px 0; }
+.global-search-page { max-width: 52rem; margin: 1rem auto; padding: 0 1rem; }
+.global-search-results-list-wrapper { margin-block: 1rem; }
+.global-search-page .result-card-wrapper { margin-block: 0.5rem; padding: 0.5rem; border: 1px solid var(--line, #ccc); }
+.js-board-search-card { touch-action: auto; }

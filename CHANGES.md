@@ -32,6 +32,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   can match across line breaks and tabs.
 - Decode BOM-marked UTF-16LE and UTF-16BE text attachments for the same
   index, including characters represented by surrogate pairs.
+- Search All Boards uses the same text search across the signed-in user's
+  active board memberships. The page links to matching cards and shows 25
+  results at a time.
 
 ## HTML5 minicards
 
