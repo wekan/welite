@@ -61,6 +61,9 @@ def run(request,database,administrator,member,base):
         con.execute("INSERT INTO custom_field_dropdown_items VALUES('port-field','pier','Pier',0)")
         con.execute("INSERT INTO card_custom_field_values VALUES('txtcard','port-field',?)",
                     (json.dumps(['pier']),))
+        con.execute("UPDATE cards SET createdAt=?, modifiedAt=?, dateLastActivity=? WHERE boardId='boardtxt'",
+                    ('2024-01-01T00:00:00.000Z',) * 3)
+        con.execute("UPDATE cards SET dueComplete=1 WHERE id='txtchild'")
     for fields in ('dependencies,locations,stickers,people,labels,custom-fields', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
@@ -91,6 +94,26 @@ def run(request,database,administrator,member,base):
             assert payload['customFields'] == [] and 'customFields' not in card
             assert 'labels' not in payload and 'labelIds' not in card
             assert not {'cardDependencies', 'locations', 'stickers', 'members', 'assignees'}.intersection(card)
+    status, _, archive = request('GET', '/api/boards/boardtxt/exportZip?' +
+                                 urlencode(dict(token=administrator, fields='custom-fields,dates,subtasks')))
+    assert status == 200, archive
+    status, _, result = request('POST', '/api/import/zip?' +
+                                urlencode(dict(token=administrator, newBoard=1)),
+                                archive, content_type='application/zip')
+    assert status == 200, result
+    imported_id = json.loads(result)['boardId']
+    with sqlite3.connect(database) as con:
+        value, option = con.execute(
+            "SELECT v.value,d.name FROM card_custom_field_values v "
+            "JOIN cards c ON c.id=v.cardId JOIN custom_fields f ON f.id=v.customFieldId "
+            "JOIN custom_field_dropdown_items d ON d.customFieldId=f.id "
+            "WHERE c.boardId=? AND f.name='Port field' AND d.id='pier'", (imported_id,)
+        ).fetchone()
+        assert json.loads(value) == ['pier'] and option == 'Pier'
+        assert con.execute(
+            "SELECT title,archived,dueComplete FROM cards WHERE boardId=? AND parentId IS NOT NULL ORDER BY title",
+            (imported_id,)
+        ).fetchall() == [('Archived subtask', 1, 0), ('Subtask <child>', 0, 1)]
     status,_,published=request('GET','/boardtxt?lang=fi&sessionId='+administrator)
     assert status==200
     attachment_links=[(attrs['href'],text) for tag,attrs,text in BoardPage(published).items

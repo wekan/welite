@@ -4234,7 +4234,9 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   var Field:TJSONData;
   begin
     Field:=Obj.Find(Key);
-    Result:=IntToStr(Ord((Field is TJSONBoolean) and Field.AsBoolean));
+    Result:='0';
+    if ((Field is TJSONBoolean) and Field.AsBoolean) or
+       ((Field<>nil) and (Field.JSONType=jtNumber) and (Field.AsFloat=1)) then Result:='1';
   end;
   function ImportedCollapse(Entry:TJSONObject):string;
   var Field:TJSONData;
