@@ -4171,6 +4171,65 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     if not CardDateSql(Field,Result) then raise EConvertError.Create('Invalid imported date');
     if Result='NULL' then Result:=Fallback;
   end;
+  procedure ImportCardVoting(Entry:TJSONObject;const Id:string);
+  var Source,Field:TJSONData; Extra,Settings:TJSONObject; Group,Key,Deadline:string;
+    procedure ImportBallots(const Choice:string);
+    var Values:TJSONData; Mapped:TJSONArray; LocalId:string; K,J:Integer; Seen:Boolean;
+    begin
+      Values:=Source.FindPath(Choice);
+      if (Values=nil) or (Values.JSONType=jtNull) then Exit;
+      if not (Values is TJSONArray) then raise EConvertError.Create('Invalid imported ballots');
+      Mapped:=TJSONArray.Create;
+      Settings.Add(Choice,Mapped);
+      for K:=0 to Values.Count-1 do
+      begin
+        if not (Values.Items[K] is TJSONString) then raise EConvertError.Create('Invalid imported voter');
+        LocalId:=MemberMap.Get(Values.Items[K].AsString,'');
+        if LocalId='' then Continue;
+        Seen:=False;
+        for J:=0 to Mapped.Count-1 do
+          if Mapped.Strings[J]=LocalId then Seen:=True;
+        if not Seen then Mapped.Add(LocalId);
+      end;
+    end;
+  begin
+    Extra:=TJSONObject.Create;
+    try
+      for Group in ['vote','poker'] do
+      begin
+        Source:=Entry.Find(Group);
+        if (Source=nil) or (Source.JSONType=jtNull) then Continue;
+        if not (Source is TJSONObject) then raise EConvertError.Create('Invalid imported voting settings');
+        Settings:=TJSONObject.Create;
+        Extra.Add(Group,Settings);
+        Field:=Source.FindPath('question');
+        if (Field is TJSONString) or ((Group='poker') and (Field is TJSONBoolean)) then
+          Settings.Add('question',Field.Clone);
+        for Key in ['public','allowNonBoardMembers'] do
+        begin
+          Field:=Source.FindPath(Key);
+          if Field is TJSONBoolean then Settings.Add(Key,Field.Clone);
+        end;
+        Deadline:=ImportedDate(TJSONObject(Source),'end','NULL');
+        if Deadline<>'NULL' then Settings.Add('end',Copy(Deadline,2,Length(Deadline)-2));
+        if Group='vote' then
+        begin
+          ImportBallots('positive');
+          ImportBallots('negative');
+        end
+        else
+        begin
+          Field:=Source.FindPath('estimation');
+          if (Field<>nil) and (Field.JSONType=jtNumber) and not IsNan(Field.AsFloat) and not IsInfinite(Field.AsFloat) then
+            Settings.Add('estimation',Field.Clone);
+          for Key in POKER_FIELDS do ImportBallots(Key);
+        end;
+      end;
+      if Extra.Count>0 then
+        Sql:=Sql+'UPDATE cards SET extra_json=json_patch(extra_json,'+QuotedStr(Extra.AsJSON)+
+          ') WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
+    finally Extra.Free;end;
+  end;
   function BooleanValue(Obj:TJSONObject;const Key:string):string;
   var Field:TJSONData;
   begin
@@ -4682,6 +4741,7 @@ begin
         ImportParentLinks(Row,CardId);
         ImportCardPeople(Row,CardId);
         ImportCardDecorations(Row,CardId);
+        ImportCardVoting(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
         ImportCardDependencies(Row,CardId);
