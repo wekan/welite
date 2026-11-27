@@ -432,7 +432,7 @@ unassigned-attach-bleed.e2e.js: an unassigned assigned-only member can no longer
 assigned-card-methods.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member gets neither the file nor the text of a card not assigned to them
 board-announcement.e2e.js
-export-access.e2e.js: assigned-only private member cannot read unfiltered export
+export-access.e2e.js: = assigned-only private member cannot read unfiltered export
 keep-add-card-form-open-6827.e2e.js
 title-bracket-label-6810.e2e.js
 
@@ -473,11 +473,11 @@ activity-viewer.e2e.js: card and sidebar activities obey formatted in en
 activity-viewer.e2e.js: card and sidebar activities obey plain-links in en
 activity-viewer.e2e.js: card and sidebar activities obey formatted in st
 card-add-fields.e2e.js
-export-access.e2e.js: assigned-only private member cannot read unfiltered calendar.ics
+export-access.e2e.js: = assigned-only private member cannot read unfiltered calendar.ics
 public-csv-export-fields.e2e.js
-export-access.e2e.js: assigned-only private member cannot read unfiltered export/csv
-export-access.e2e.js: assigned-only private member cannot read unfiltered exportZip
+export-access.e2e.js: = assigned-only private member cannot read unfiltered export/csv
+export-access.e2e.js: = assigned-only private member cannot read unfiltered exportZip
 board-excel-export.e2e.js
-export-access.e2e.js: assigned-only private member cannot read unfiltered exportExcel
+export-access.e2e.js: = assigned-only private member cannot read unfiltered exportExcel
 card-excel-field-selection.e2e.js
-export-access.e2e.js: assigned-only member cannot export an unassigned card as Excel
+export-access.e2e.js: = assigned-only member cannot export an unassigned card as Excel

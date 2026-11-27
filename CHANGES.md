@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The shared Chromium manifest now selects the six implemented export
+  access checks by full title. Alongside the board and card Excel and
+  CSV/TSV specs, 17 export cases pass in both WeLite and Weddy.
+
 - Export one card to Excel from Card Actions with selectable fields. The
   download route checks that the card belongs to the requested board and list.
 
