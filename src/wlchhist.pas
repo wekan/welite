@@ -14,6 +14,7 @@ function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Grou
   Previous,Next:TJSONData;const RestoredFromId:string='';const RestoredByUserId:string=''):Boolean;
 
 procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
+procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
 function CardHistoryDateField(const Field: string): Boolean;
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
 
@@ -22,13 +23,13 @@ uses SysUtils,DateUtils,wlchhash,wlsjson,wlferr;
 
 function CardHistoryDateField(const Field: string): Boolean;
 begin
-  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt') or (Field = 'dueComplete');
+  Result := (Field = 'receivedAt') or (Field = 'startAt') or (Field = 'dueAt') or (Field = 'endAt') or (Field = 'dueComplete') or (Field = 'isOvertime');
 end;
 
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
 var At: TDateTime; Ms: Int64;
 begin
-  if Field = 'dueComplete' then Exit(TJSONObject.Create(['field', Field, 'value', Value = '1']));
+  if (Field = 'dueComplete') or (Field = 'isOvertime') then Exit(TJSONObject.Create(['field', Field, 'value', Value = '1']));
   Result := TJSONObject.Create(['field', Field]);
   if TryStrToInt64(Value, Ms) or TryISO8601ToDate(Value, At, True) then
   begin
@@ -464,11 +465,16 @@ begin
 end;
 
 procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
+begin
+  RecordCardBooleanHistory(Db,UserId,BoardId,CardId,'dueComplete',Old,Done);
+end;
+
+procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
 var Before,After:TJSONObject;
 begin
   if Old=Done then Exit;
-  Before:=TJSONObject.Create(['field','dueComplete','value',Old]);
-  After:=TJSONObject.Create(['field','dueComplete','value',Done]);
+  Before:=TJSONObject.Create(['field',Field,'value',Old]);
+  After:=TJSONObject.Create(['field',Field,'value',Done]);
   try
     try
       RecordHistoryRow(Db,UserId,BoardId,'card',CardId,'dates','edited',Before,After);

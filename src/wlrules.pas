@@ -2126,7 +2126,7 @@ begin
   if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> Field) then Exit;
   V := TJSONObject(Content).Find('value');
   if V = nil then Exit;
-  if Field = 'dueComplete' then
+  if (Field = 'dueComplete') or (Field = 'isOvertime') then
   begin
     if not (V is TJSONBoolean) then Exit;
     Literal := IntToStr(Ord(V.AsBoolean));
@@ -2238,7 +2238,7 @@ begin
       not HistoryDateLiteral(Expect, Field, ExpectSql) then Exit;
     Scope := 'id=' + Q(Str(Row, 'entityId')) + ' AND boardId=' + Q(Str(Row, 'boardId')) + ' AND deletedAt IS NULL';
     CurrentField := Field;
-    if Field = 'dueComplete' then CurrentField := 'COALESCE(dueComplete,0)';
+    if (Field = 'dueComplete') or (Field = 'isOvertime') then CurrentField := 'COALESCE(' + Field + ',0)';
     if Length(Db.Query('SELECT 1 FROM cards WHERE ' + Scope + ' AND ' + CurrentField + ' IS ' + ExpectSql + ';')) <> 1 then
     begin Error := 'history-conflict'; Exit; end;
     Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE ' +

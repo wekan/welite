@@ -27,7 +27,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   with string values shown without JSON quotes. Document summaries skip
   empty titles and use the saved description, text or name. The History
   restore checkboxes distinguish supported card fields from other fields
-  in the same group.
+  in the same group. REST overtime changes are recorded as Boolean
+  values and support undo, redo and restore.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

@@ -7125,9 +7125,9 @@ procedure ApiCardEdit(aRequest:TRequest; aResponse:TResponse);
 var T:TWLTenant; UserId,CardId,BoardId,Sets,Relations,Scope,ArchiveSql,Stamp,Value:string;
   HasArchive,Archive,HasEdits,HasOvertime,HasSort,HasTitle:Boolean;Body,Decorations:TJSONObject;Input:TJSONData;
   FieldName,FieldSets,Literal:string;HasDate:Boolean;SortNumber:Double;NumberFormat:TFormatSettings;
-  Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor:string;
+  Code:Integer;MoveError:string;HasDescription,HasColor,HasCompletion,OldDone,Done,OldOvertime,Overtime:Boolean;NewTitle,NewDescription,OldTitle,OldDescription,NewColor,OldColor:string;
 begin
-  HasCompletion:=False;OldDone:=False;Done:=False;
+  HasCompletion:=False;OldDone:=False;Done:=False;OldOvertime:=False;Overtime:=False;
   HasDescription:=False;NewTitle:='';NewDescription:='';OldTitle:='';OldDescription:='';
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
@@ -7184,7 +7184,8 @@ begin
         if not (Input.JSONType in [jtBoolean,jtString]) or
           ((Input.AsString<>'true') and (Input.AsString<>'false')) then
         begin SendJson(aResponse,'{"error":"Invalid isOverTime"}',400);Exit;end;
-        FieldSets:=FieldSets+',isOvertime='+IntToStr(Ord(Input.AsString='true'));
+        Overtime:=Input.AsString='true';
+        FieldSets:=FieldSets+',isOvertime='+IntToStr(Ord(Overtime));
       end;
       Input:=Body.Find('description');
       if Input<>nil then
@@ -7272,6 +7273,7 @@ begin
     Sets:='UPDATE cards SET '+Sets+' WHERE '+Scope+'; ';
   end;
   if HasCompletion then OldDone:=CardCompletionOf(T.Db,Scope);
+  if HasOvertime then OldOvertime:=Length(T.Db.Query('SELECT 1 FROM cards WHERE '+Scope+' AND isOvertime=1;'))=1;
   if HasTitle then OldTitle:=CardTextOf(T.Db,CardId,'title');
   if HasDescription then OldDescription:=CardTextOf(T.Db,CardId,'description');
   if not T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE '+Scope+
@@ -7285,6 +7287,7 @@ begin
   end;
   if HasTitle then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'title',OldTitle,NewTitle);
   if HasDescription then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'description',OldDescription,NewDescription);
+  if HasOvertime and (Sets<>'') then RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'isOvertime',OldOvertime,Overtime);
   if HasCompletion then RecordCardCompletionHistory(T.Db,UserId,BoardId,CardId,OldDone,Done);
   if HasColor then RecordCardTextHistory(T.Db,UserId,BoardId,CardId,'color',OldColor,NewColor);
   // #6423: a listId or swimlaneId in the body moves the card there, within
