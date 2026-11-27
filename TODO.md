@@ -264,9 +264,11 @@ Next, after this goal:
   restore at a hard limit were in); 197 are left. activity-viewer's two
   lines pass in one run and not in the next - the sidebar's activity is not
   always drawn yet - so they are not listed.
-  Status at the end of 2026-11-27: the last full run of
-  `tests/wkui/specs.txt` passed 459 (2 skipped). rules-history's REST button
-  test failed once in 3 full runs after the live-stamp fix - watch it.
+  On 2026-11-27 the full run of `tests/wkui/specs.txt` passed 478
+  (2 skipped, 4 failed). The ZIP, CSV, PDF and Excel export routes return
+  404 because they are missing. The assigned-only tests expect a 403 from
+  each implemented route. The rules-history REST button test passed this run
+  after failing once in three earlier runs.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
