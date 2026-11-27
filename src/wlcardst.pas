@@ -789,6 +789,7 @@ begin
     'assignee': Result := 'assignees';
     'comments': Result := 'comments';
     'checklistCount': Result := 'checklistCount';
+    'checklists': Result := 'checklists';
     'requestedBy': Result := 'requestedBy';
     'location': Result := 'location';
     'activities': Result := 'activities';

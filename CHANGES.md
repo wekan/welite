@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Minicards display checklists configured to appear there. Their checklists and
+  items can be selected directly on the board, and checklist folds persist.
+
 - Multi-selection shows checkboxes for swimlanes, lists, cards, and checklists
   and items in the open card. Selections remain checked when opening a card.
 

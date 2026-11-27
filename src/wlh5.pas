@@ -3451,7 +3451,48 @@ begin
   end;
 end;
 
-function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; const Shows: TMinicardShows;
+function MinicardChecklists(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string;
+  Writable: Boolean): string;
+var Rows: TWLRows; Row: TWLRow; ChecklistId, LabelText: string; Folded, Finished: Boolean;
+begin
+  Result := '';
+  ChecklistId := '';
+  Folded := False;
+  Rows := Db.Query('SELECT c.id,c.title,i.id,i.title,i.isFinished FROM checklists c LEFT JOIN checklist_items i ' +
+    'ON i.checklistId=c.id AND i.cardId=c.cardId WHERE c.cardId=' + QuotedStr(CardId) +
+    ' AND (c.boardId IS NULL OR c.boardId=' + QuotedStr(BoardId) + ') AND c.showChecklistAtMinicard=1 ORDER BY c.sort,c.id,i.sort,i.id;');
+  for Row in Rows do
+  begin
+    if Row[0] <> ChecklistId then
+    begin
+      if ChecklistId <> '' then Result := Result + IfThen(Folded, '</div>', '</div></div>');
+      ChecklistId := Row[0];
+      Folded := ProfileFold(Db, UserId, 'collapsedCardSections', CardId, 'checklist-' + ChecklistId);
+      Result := Result + '<div class="minicard-checklist" data-checklist="' + HtmlAttr(ChecklistId) +
+        '"><div class="checklist-header">' +
+        IfThen(Writable, SelectionCheckbox(Words, 'checklist', ChecklistId, Row[1]), '');
+      if UserId <> '' then
+      begin
+        LabelText := IfThen(Folded, Words.Text('expand-checklist', 'Expand checklist'), Words.Text('collapse-checklist', 'Collapse checklist'));
+        Result := Result + '<a href="#" role="button" class="fa checklist-collapse js-collapse-checklist ' +
+          IfThen(Folded, 'fa-caret-right', 'fa-caret-down') + '" data-checklist="' + HtmlAttr(ChecklistId) +
+          '" data-collapsed="' + IfThen(Folded, 'true', '') + '" aria-expanded="' + IfThen(Folded, 'false', 'true') +
+          '" aria-label="' + HtmlAttr(LabelText) + '" title="' + HtmlAttr(LabelText) + '"></a>';
+      end;
+      Result := Result + '<h4 class="checklist-title">' + E(Row[1]) + '</h4></div>';
+      if not Folded then Result := Result + '<div class="minicard-checklist-items js-checklist-items">';
+    end;
+    if Folded or (Row[2] = '') then Continue;
+    Finished := Row[4] = '1';
+    Result := Result + '<div class="minicard-checklist-item js-checklist-item' + IfThen(Finished, ' is-checked', '') +
+      '" data-item="' + HtmlAttr(Row[2]) + '">' + IfThen(Writable, SelectionCheckbox(Words, 'item', Row[2], Row[3]), '') +
+      '<span aria-hidden="true" class="materialCheckBox' + IfThen(Finished, ' is-checked', '') +
+      '"></span><span class="item-title">' + E(Row[3]) + '</span></div>';
+  end;
+  if ChecklistId <> '' then Result := Result + IfThen(Folded, '</div>', '</div></div>');
+end;
+
+function MinicardBadges(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, CardId: string; Writable: Boolean; const Shows: TMinicardShows;
   const Dates: array of string; const Extra: array of string; PlainLinks, PlainSource: Boolean): string;
 const
   Kinds: array[0..3] of string = ('received', 'start', 'due', 'end');
@@ -3547,6 +3588,8 @@ begin
         E(R[0][1]) + '/' + E(R[0][0]) + '</span></div>';
   end;
   Piece('checklistCount');
+  Result := Result + MinicardChecklists(Db, Words, UserId, BoardId, CardId, Writable);
+  Piece('checklists');
   // Requested By, its location, its last activity and the description's
   // badge, as Card Settings shows them on the minicard (board.pug).
   // Extra, from the board's cards query: requestedBy, description,
@@ -4520,7 +4563,7 @@ begin
             HtmlAttr(IfThen(Cards[k][8] = '1', Words.Text('card-mark-incomplete', 'Mark as incomplete'), Words.Text('card-mark-complete', 'Mark as complete'))) +
             '"><div class="materialCheckBox' + IfThen(Cards[k][8] = '1', ' is-checked', '') + '"></div></a>', '') +
           '<span class="minicard-title-text">' +
-          MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, BoardId, Cards[k][0], Shows,
+          MarkdownViewer(Cards[k][1], PlainLinks, PlainSource) + '</span></div>' + MinicardBadges(Db, Words, S.UserId, BoardId, Cards[k][0], Writable, Shows,
           [Cards[k][3], Cards[k][4], Cards[k][5], Cards[k][6]],
           [Cards[k][10], Cards[k][11], Cards[k][12], Cards[k][13], Cards[k][14], Cards[k][15]], PlainLinks, PlainSource) + '</div></div>';
       Canvas := Canvas + '</div>';
