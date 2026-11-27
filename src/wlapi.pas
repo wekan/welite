@@ -3828,6 +3828,66 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     Result:=Maps[Index].Get(Id,'');
     if Required and (Result='') then raise EConvertError.Create('Invalid import reference');
   end;
+  procedure MergeSubtasks;
+  var Source, Existing: TJSONData; Cards: TJSONArray; Subtask: TJSONObject;
+    Id: string; K: Integer; Seen: TStringList;
+  begin
+    Source := Input.Find('subtaskItems');
+    if Source = nil then Exit;
+    if not (Source is TJSONArray) then raise EConvertError.Create('Invalid imported subtasks');
+    if Source.Count = 0 then Exit;
+    Existing := Input.Find('cards');
+    if Existing = nil then
+    begin
+      Cards := TJSONArray.Create;
+      Input.Add('cards', Cards);
+    end
+    else if Existing is TJSONArray then Cards := TJSONArray(Existing)
+    else raise EConvertError.Create('Invalid imported cards');
+    Seen := TStringList.Create;
+    try
+      Seen.CaseSensitive := True;
+      Seen.Sorted := True;
+      Seen.Duplicates := dupIgnore;
+      for K := 0 to Cards.Count - 1 do
+        if Cards.Items[K] is TJSONObject then Seen.Add(Text(Cards.Objects[K], '_id'));
+      for K := 0 to Source.Count - 1 do
+      begin
+        if not (Source.Items[K] is TJSONObject) then raise EConvertError.Create('Invalid imported subtask');
+        Subtask := TJSONObject(Source.Items[K]);
+        Id := Text(Subtask, '_id');
+        if Id = '' then raise EConvertError.Create('Missing imported subtask ID');
+        if Seen.IndexOf(Id) >= 0 then Continue;
+        Seen.Add(Id);
+        Cards.Add(Subtask.Clone);
+      end;
+    finally Seen.Free; end;
+  end;
+
+  procedure ImportParentLinks(Entry: TJSONObject; const Id: string);
+  var Source: TJSONData; Parents: TJSONArray; Parent: string; K, J: Integer;
+    Duplicate: Boolean;
+  begin
+    Source := Entry.Find('parentIds');
+    if (Source = nil) or (Source.JSONType = jtNull) then Exit;
+    if not (Source is TJSONArray) then raise EConvertError.Create('Invalid imported parent IDs');
+    Parents := TJSONArray.Create;
+    try
+      for K := 0 to Source.Count - 1 do
+      begin
+        if not (Source.Items[K] is TJSONString) then raise EConvertError.Create('Invalid imported parent ID');
+        Parent := Mapped(2, Source.Items[K].AsString);
+        if (Parent = '') or (Parent = Id) then Continue;
+        Duplicate := False;
+        for J := 0 to Parents.Count - 1 do
+          if Parents.Strings[J] = Parent then begin Duplicate := True; Break; end;
+        if not Duplicate then Parents.Add(Parent);
+      end;
+      Sql := Sql + 'UPDATE cards SET extra_json=json_set(extra_json,''$.parentIds'',json(' +
+        QuotedStr(Parents.AsJSON) + ')) WHERE id=' + QuotedStr(Id) + ' AND boardId=' + Board + '; ';
+    finally Parents.Free; end;
+  end;
+
   procedure ImportLabels;
   var Entry:TJSONObject;K:Integer;
   begin
@@ -4255,6 +4315,7 @@ begin
       if (Name<>'') and (Name<>'wekan-board-1.0.0') then raise EConvertError.Create('Invalid board export format');
       Title:=Text(Input,'title');
       if Trim(Title)='' then raise EConvertError.Create('Missing board title');
+      MergeSubtasks;
       for I:=0 to High(Maps) do
       begin
         Maps[I]:=TJSONObject.Create;Arrays[I]:=nil;
@@ -4325,17 +4386,20 @@ begin
         Row:=Arrays[2].Objects[J];CardId:=Mapped(2,Text(Row,'_id'),True);
         CardCreation(Row,CardId,CardAuthor,CardCreated);
         CardPlacement(Row,ListId,LaneId);
+        Name:=Mapped(2,Text(Row,'parentId'));
+        if Name=CardId then Name:='';
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
-          'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived,color) VALUES('+
+          'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived,color,dueComplete) VALUES('+
           QuotedStr(CardId)+','+Board+','+
           QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
-          Optional(Mapped(2,Text(Row,'parentId')))+','+QuotedStr(Text(Row,'title'))+','+
+          Optional(Name)+','+QuotedStr(Text(Row,'title'))+','+
           QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+IntToStr(CardNumbers[J])+
           ','+CardCreated+','+Stamp+','+Stamp+','+
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+
           ImportedSpentTime(Row)+','+BooleanValue(Row,'isOvertime')+','+QuotedStr(Text(Row,'requestedBy'))+','+
-          QuotedStr(Text(Row,'assignedBy'))+','+BooleanValue(Row,'archived')+','+ImportedColor(Row)+'); ';
+          QuotedStr(Text(Row,'assignedBy'))+','+BooleanValue(Row,'archived')+','+ImportedColor(Row)+','+BooleanValue(Row,'dueComplete')+'); ';
+        ImportParentLinks(Row,CardId);
         ImportCardPeople(Row,CardId);
         ImportCardFields(Row,CardId);
         ImportCardLabels(Row,CardId);
