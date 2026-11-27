@@ -433,7 +433,7 @@ const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','
 var Params,UserIds,Dependencies:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
   I,J,Index:Integer;DependencyRows:TJSONArray;Name,FileData,Key:string;Value:TJSONData;Rows:TWLRows;
   function ExportRow(const TableName:string;Index:Integer):TJSONObject;
-  var Original:TJSONObject;Typed:string;Id:TJSONData;DependencyIndex:Integer;
+  var Original:TJSONObject;Typed,FieldName:string;Id,Extra,Field:TJSONData;DependencyIndex:Integer;
   begin
     Original:=TJSONArray(Audit.Find(TableName)).Objects[Index];
     Typed:=Original.Get('_wl_source','');
@@ -443,6 +443,22 @@ var Params,UserIds,Dependencies:TStringList;Graph,Data,Audit,Row,Files,Attachmen
     if Id<>nil then begin Result.Add('_id',Id.Clone);Result.Delete('id');end;
     if TableName='cards' then
     begin
+      Extra:=nil;
+      try
+        try
+          Extra:=GetJSON(Result.Get('extra_json','{}'));
+        except
+          on E:Exception do Extra:=nil;
+        end;
+        Result.Delete('extra_json');
+        if Extra is TJSONObject then
+          for FieldName in ['vote','poker','stickers','locations','parentIds','attachedCardIds',
+            'requesters','assigners','targetId_gantt','linkType_gantt','linkId_gantt'] do
+          begin
+            Field:=TJSONObject(Extra).Find(FieldName);
+            if (Field<>nil) and (Result.Find(FieldName)=nil) then Result.Add(FieldName,Field.Clone);
+          end;
+      finally Extra.Free;end;
       Result.Delete('cardDependencies');
       if Dependencies.Find(Result.Get('_id',''),DependencyIndex) then
         Result.Add('cardDependencies',TJSONArray(Dependencies.Objects[DependencyIndex]).Clone);

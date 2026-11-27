@@ -26,7 +26,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the selected voting and Planning Poker settings, deadlines and estimates.
   Individual ballots require an explicit source-to-destination user mapping.
   Native SQLite exports include card dependencies in JSON and ZIP when
-  selected, with the target, type, color and icon.
+  selected, with the target, type, color and icon. They export stickers,
+  locations, voting and Planning Poker under their regular field names
+  so the selected field groups apply to those values.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

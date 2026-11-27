@@ -42,16 +42,22 @@ def run(request,database,administrator,member,base):
                         (identity,title,author,archived))
         con.execute("INSERT INTO card_dependencies(cardId,targetCardId,type,color,icon) "
                     "VALUES('txtcard','txtchild','blocks','#123456','link')")
-    for fields in ('dependencies', 'description'):
+        decorations=dict(locations=[dict(_id='pier', name='Pier')],
+                         stickers=[dict(icon='star', name='Star')], internalOnly='storage metadata')
+        con.execute("UPDATE cards SET extra_json=? WHERE id='txtcard'", (json.dumps(decorations),))
+    for fields in ('dependencies,locations,stickers', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
         assert status == 200, body
         card = next(row for row in json.loads(body)['cards'] if row['_id'] == 'txtcard')
-        if fields == 'dependencies':
+        assert 'extra_json' not in card and 'internalOnly' not in card
+        if fields.startswith('dependencies'):
+            assert card['locations'] == decorations['locations']
+            assert card['stickers'] == decorations['stickers']
             assert card['cardDependencies'] == [
                 dict(cardId='txtchild', type='blocks', color='#123456', icon='link')]
         else:
-            assert 'cardDependencies' not in card
+            assert not {'cardDependencies', 'locations', 'stickers'}.intersection(card)
     status,_,published=request('GET','/boardtxt?lang=fi&sessionId='+administrator)
     assert status==200
     attachment_links=[(attrs['href'],text) for tag,attrs,text in BoardPage(published).items
