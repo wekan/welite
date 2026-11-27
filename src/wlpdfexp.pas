@@ -34,12 +34,18 @@ const
   LineHeight = 5;
   BaseFontWrapWidth = 72;
   EmbeddedFontWrapWidth = 44;
+  MaxBundledFontSize = 16 * 1024 * 1024;
 
 function AddBundledFont(Document: TPDFDocument; out Directory: string): Integer;
-var Resource: TResourceStream; Compressed: TGZipDecompressionStream; Font: TFileStream;
+var Resource: TStream; Compressed: TGZipDecompressionStream; Font: TFileStream;
   Buffer: array[0..16383] of Byte; Count: LongInt;
 begin
-  Resource := TResourceStream.Create(HInstance, 'WL_UNIFONT', RT_RCDATA);
+  try
+    Resource := TResourceStream.Create(HInstance, 'WL_UNIFONT', RT_RCDATA);
+  except
+    on EResNotFound do
+      Resource := TFileStream.Create(ExtractFilePath(ExpandFileName(ParamStr(0))) + 'unifont.gz', fmOpenRead or fmShareDenyWrite);
+  end;
   Compressed := nil;
   try
     Directory := NewTempDir;
@@ -48,6 +54,7 @@ begin
     try
       repeat
         Count := Compressed.Read(Buffer, SizeOf(Buffer));
+        if Font.Size + Count > MaxBundledFontSize then raise EReadError.Create('Bundled PDF font exceeds size limit');
         if Count > 0 then Font.WriteBuffer(Buffer, Count);
       until Count = 0;
     finally Font.Free; end;

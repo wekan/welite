@@ -57,9 +57,11 @@ credentials for a member who may edit that board.
 
 ## PDF export fonts
 
-Embedded builds use bundled GNU Unifont for PDF exports. WeLite subsets the
+Builds use bundled GNU Unifont for PDF exports. The font is embedded in
+resource builds and copied beside the executable by the build scripts
+for disk builds. WeLite subsets the
 font to the glyphs used in the document. Set `WELITE_PDF_TTF` to override
-the bundled font with a TrueType file. Builds without the font resource
+the bundled font with a TrueType file. Installations without the resource or the adjacent font file
 use the standard PDF Courier fonts and WinAnsi encoding when no font is
 configured. Embedded fonts currently cover the Unicode Basic Multilingual
 Plane.

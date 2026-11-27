@@ -63,6 +63,7 @@ if not exist "%ARCHROOT%\current" mkdir "%ARCHROOT%\current"
 if not exist "%BINDIR%" mkdir "%BINDIR%"
 echo ^>^> Building for current platform  -^> %ARCHROOT%\current\wcurrent.exe
 "%FPC%" %BASEFLAGS% %FPCFLAGS% -FU"%ARCHROOT%\current" -FE"%ARCHROOT%\current" -o"%ARCHROOT%\current\wcurrent.exe" "%SRC%"
+if exist "%ARCHROOT%\current\wcurrent.exe" call :font
 if exist "%ARCHROOT%\current\wcurrent.exe" copy /Y "%ARCHROOT%\current\wcurrent.exe" "%BINDIR%\wcurrent.exe" >nul
 goto menu
 
@@ -91,7 +92,13 @@ if not exist "!ARCH!" mkdir "!ARCH!"
 if not exist "%BINDIR%" mkdir "%BINDIR%"
 echo ^>^> Building !LBL%i!  (-P!CPU%i! -T!OS%i! !FLAGS%i!)  -^> !ARCH!\!BIN!
 "%FPC%" %BASEFLAGS% %FPCFLAGS% -P!CPU%i! -T!OS%i! !FLAGS%i! -FU"!ARCH!" -FE"!ARCH!" -o"!ARCH!\!BIN!" "%SRC%"
+if exist "!ARCH!\!BIN!" call :font
 if exist "!ARCH!\!BIN!" copy /Y "!ARCH!\!BIN!" "%BINDIR%\!BIN!" >nul
+exit /b
+
+:font
+copy /Y "src\fonts\unifont.ttf.gz" "%BINDIR%\unifont.gz" >nul
+copy /Y "src\fonts\UNIFONT-LICENSE.txt" "%BINDIR%\unifont.txt" >nul
 exit /b
 
 :end

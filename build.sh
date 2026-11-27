@@ -127,6 +127,8 @@ do_build() {  # $1=code  $2=label  $3.. = fpc target/flags
     else
       rm -f "$BINDIR/$resource" || return 1
     fi
+    cp -f src/fonts/unifont.ttf.gz "$BINDIR/unifont.gz" || return 1
+    cp -f src/fonts/UNIFONT-LICENSE.txt "$BINDIR/unifont.txt" || return 1
     cp -f "$arch/$bin" "$BINDIR/$bin" || return 1
     echo "   copied -> $BINDIR/$bin"
   else
