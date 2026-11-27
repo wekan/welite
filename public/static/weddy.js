@@ -3465,6 +3465,8 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     event.preventDefault();
     menuList = el.closest('.js-list');
     openPopOver('list-menu');
+    var history = document.querySelector('.js-pop-over .js-open-list-history');
+    if (history) history.href += '?list=' + encodeURIComponent(el.dataset.list);
     var w = document.querySelector('.js-pop-over .js-toggle-watch-list');
     if (w) w.textContent = menuList.dataset.watching ? w.dataset.unwatch : w.dataset.watch;
   });
@@ -4958,7 +4960,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     });
   }
   var historyOpen = 0;
-  up.on('click', '.js-open-board-history, .js-open-card-history, .js-scrum-history', function (event, el) {
+  up.on('click', '.js-open-board-history, .js-open-card-history, .js-open-list-history, .js-open-swimlane-history, .js-scrum-history', function (event, el) {
     if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     var request = ++historyOpen;
@@ -4971,7 +4973,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       pop.className = 'pop-over js-pop-over history-pop-over';
       pop.setAttribute('role', 'dialog');
       pop.setAttribute('data-popup', 'historyPopup');
-      pop.setAttribute('aria-label', el.textContent.trim());
+      pop.setAttribute('aria-label', el.getAttribute('aria-label') || el.textContent.trim());
       var close = document.createElement('button');
       close.type = 'button';
       close.className = 'close-btn js-close-pop-over';

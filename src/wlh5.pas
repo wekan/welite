@@ -4132,6 +4132,11 @@ begin
         HtmlAttr(Lanes[i][0]) + '" data-collapsed="' + IfThen(Folded, 'true', '') + '" title="' +
         HtmlAttr(Words.Text('collapse', 'Collapse')) + '" aria-label="' + HtmlAttr(Words.Text('collapse', 'Collapse')) +
         '"><i class="fa ' + IfThen(Folded, 'fa-caret-right', 'fa-caret-down') + '"></i></a>';
+    if (S.UserId <> '') and IsShared(Db) then
+      Header := Header + '<a class="js-open-swimlane-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+        '/history?swimlane=' + HtmlAttr(HTTPEncode(Lanes[i][0])) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) +
+        '" aria-label="' + HtmlAttr(Words.Text('history', 'History')) + '" title="' + HtmlAttr(Words.Text('history', 'History')) +
+        '"><i class="fa fa-history"></i></a>';
     Header := Header + '<span class="swimlane-header-name title">' + E(Lanes[i][1]) + '</span>';
     if Writable then
       Header := Header + '<a class="js-open-add-swimlane-menu swimlane-header-plus-icon" href="#" data-swimlane="' +
@@ -4409,7 +4414,10 @@ begin
       E(Words.Text('add-card-to-top-of-list', 'Add card to top of list')) + '</a></li>' +
       '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li>' +
-      '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li></ul></template>';
+      '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li>' +
+      IfThen(IsShared(Db), '<li><a class="js-open-list-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
+        '/history" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
+        E(Words.Text('history', 'History')) + '</a></li>', '') + '</ul></template>';
   WipPopup := '';
   if BoardCanAdmin(Db, S.UserId, BoardId) then WipPopup := WipGroupsPopup(Db, Words, BoardId);
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
@@ -7035,25 +7043,28 @@ end;
 
 procedure RestoreHistoryForm(const T: TWLTenant; const S: TWLSession; Request: TRequest;
   Response: TResponse; const BoardId: string);
-var Args, Ids: TJSONArray; I, Code: Integer; Field, CardId, Answer, Back: string;
+var Args, Ids: TJSONArray; I, Code: Integer; Field, CardId, ListId, LaneId, Answer, Back: string;
 begin
   Args := TJSONArray.Create;
   try
     Ids := TJSONArray.Create;
     Args.Add(Ids);
     CardId := Request.ContentFields.Values['card'];
+    ListId := Request.ContentFields.Values['list'];
+    LaneId := Request.ContentFields.Values['swimlane'];
     for I := 0 to Request.ContentFields.Count - 1 do
       if Request.ContentFields.Names[I] = 'id' then
       begin
         Field := Request.ContentFields.ValueFromIndex[I];
         if (Field <> '') and (Pos(#0, Field) = 0) then Ids.Add(Field);
       end;
-    if (Pos(#0, CardId) > 0) or (Ids.Count > 200) then
+    if (Pos(#0, CardId + ListId + LaneId) > 0) or (Ids.Count > 200) then
     begin SendJsonAnswer(Response, 400, '{"error":"Invalid history selection"}'); Exit; end;
-    Code := HistoryMethod(T, S.UserId, 'changeHistory.restore', Args, Answer, BoardId, CardId);
+    Code := HistoryMethod(T, S.UserId, 'changeHistory.restore', Args, Answer, BoardId, CardId, ListId, LaneId);
   finally Args.Free; end;
   if Code <> 200 then begin SendJsonAnswer(Response, Code, Answer); Exit; end;
   Back := '/b/' + HTTPEncode(BoardId) + '/history?card=' + HTTPEncode(CardId) +
+    '&list=' + HTTPEncode(ListId) + '&swimlane=' + HTTPEncode(LaneId) +
     '&user=' + HTTPEncode(Request.ContentFields.Values['user']) +
     '&q=' + HTTPEncode(Request.ContentFields.Values['q']) +
     '&group=' + HTTPEncode(Request.ContentFields.Values['group']) +
@@ -7739,12 +7750,13 @@ end;
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;
   const BoardId: string; Query: TStrings; out Content: string): Integer;
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
-  Reply: TJSONData; Answer, Route, CardId, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel: string;
+  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel: string;
   I, PageNumber, PageCount, Size: Integer;
   CanRestoreCard, CanRestoreRule, CanRestoreList: Boolean;
   function LinkTo(const Contributor: string; Number: Integer): string;
   begin
-    Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&user=' + HTTPEncode(Contributor) +
+    Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&list=' + HTTPEncode(ListId) +
+      '&swimlane=' + HTTPEncode(LaneId) + '&user=' + HTTPEncode(Contributor) +
       '&q=' + HTTPEncode(Search) + '&group=' + HTTPEncode(Group) + '&page=' + IntToStr(Number));
   end;
 begin
@@ -7753,9 +7765,26 @@ begin
   Board := T.Db.Query('SELECT title,slug FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
   if Length(Board) <> 1 then Exit(404);
   CardId := Query.Values['card'];
+  ListId := Query.Values['list'];
+  LaneId := Query.Values['swimlane'];
+  if Pos(#0, CardId + ListId + LaneId) > 0 then Exit(404);
+  if Ord(CardId <> '') + Ord(ListId <> '') + Ord(LaneId <> '') > 1 then Exit(400);
+  ScopeKind := 'board'; ScopeId := BoardId;
+  if ListId <> '' then
+  begin
+    ScopeKind := 'list'; ScopeId := ListId;
+    if Length(T.Db.Query('SELECT 1 FROM lists WHERE id=' + QuotedStr(ListId) +
+      ' AND boardId=' + QuotedStr(BoardId) + ';')) <> 1 then Exit(404);
+  end
+  else if LaneId <> '' then
+  begin
+    ScopeKind := 'swimlane'; ScopeId := LaneId;
+    if Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id=' + QuotedStr(LaneId) +
+      ' AND boardId=' + QuotedStr(BoardId) + ';')) <> 1 then Exit(404);
+  end;
   if CardId <> '' then
   begin
-    if Pos(#0, CardId) > 0 then Exit(404);
+    ScopeKind := 'card'; ScopeId := CardId;
     if Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
       ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL' +
       IfThen(AssignedOnlyMember(T.Db, S.UserId, BoardId),
@@ -7769,8 +7798,7 @@ begin
   if Board[0][1] = 'history' then Back := '/b/' + HTTPEncode(BoardId);
   Args := TJSONArray.Create;
   try
-    Options := TJSONObject.Create(['scope', IfThen(CardId = '', 'board', 'card'),
-      'scopeId', IfThen(CardId = '', BoardId, CardId), 'userId', Who, 'search', Search, 'group', Group,
+    Options := TJSONObject.Create(['scope', ScopeKind, 'scopeId', ScopeId, 'userId', Who, 'search', Search, 'group', Group,
       'page', StrToIntDef(Query.Values['page'], 1)]);
     Args.Add(Options);
     Result := HistoryMethod(T, S.UserId, 'changeHistory.page', Args, Answer);
@@ -7807,9 +7835,11 @@ begin
         ' <span class="history-nav-count">' + IntToStr(Row.Integers['count']) + '</span></a>';
     end;
     Label_ := Words.Text('search', 'Search');
+    ScopeFields := '<input type="hidden" name="card" value="' + HtmlAttr(CardId) +
+      '"><input type="hidden" name="list" value="' + HtmlAttr(ListId) +
+      '"><input type="hidden" name="swimlane" value="' + HtmlAttr(LaneId) + '">';
     Content := Content + '</nav><div class="history-main"><form class="history-controls" method="get" action="' +
-      HtmlAttr(Route) + '"><input type="hidden" name="card" value="' + HtmlAttr(CardId) +
-      '"><input type="hidden" name="user" value="' + HtmlAttr(Who) +
+      HtmlAttr(Route) + '">' + ScopeFields + '<input type="hidden" name="user" value="' + HtmlAttr(Who) +
       '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
       '"><input class="js-history-search" type="search" name="q" value="' + HtmlAttr(Search) + '" aria-label="' +
       HtmlAttr(Label_) + '"><button type="submit">' + E(Label_) + '</button></form><div class="history-pagination">';
@@ -7823,8 +7853,7 @@ begin
     begin
       if CanRestoreCard or CanRestoreRule then
         Content := Content + '<form class="js-history-restore-form" method="post" action="' + HtmlAttr(Route + '/restore') +
-          '"><input type="hidden" name="card" value="' + HtmlAttr(CardId) +
-          '"><input type="hidden" name="user" value="' + HtmlAttr(Who) +
+          '">' + ScopeFields + '<input type="hidden" name="user" value="' + HtmlAttr(Who) +
           '"><input type="hidden" name="q" value="' + HtmlAttr(Search) +
           '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
           '"><input type="hidden" name="page" value="' + IntToStr(PageNumber) + '">';

@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Open History for a single list or swimlane from the board. Search,
+  contributor, pagination and restore requests retain that scope.
+
 - Open History in a pop-over from the board or card menu. Search, page,
   filter by contributor and restore selected changes without leaving the
   board. The same links still open the standalone History page in a new tab.

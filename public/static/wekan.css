@@ -1210,3 +1210,7 @@ html[dir='rtl'] .pop-over > button.js-date-popup-resize > span {
   max-height: none; overflow: auto;
 }
 .history-pop-over > .close-btn { float: inline-end; margin: 8px; }
+.swimlane-header .js-open-swimlane-history {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-inline-size: 24px; min-block-size: 20px; color: inherit;
+}
