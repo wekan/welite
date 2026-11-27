@@ -6033,7 +6033,7 @@ begin
   else if Action = 'add-card' then
     Code := CreateViewCards(T, S.UserId, BoardId, Request.ContentFields.Values['listId'],
       Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'],
-      Request.ContentFields.Values['titleMode'] = 'separate', NewId, Error)
+      Request.ContentFields.Values['titleMode'] = 'separate', ProfileFlag(T.Db, S.UserId, 'titleBracketLabel'), NewId, Error)
   else if Action = 'rename-card' then
     Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
   else if Action = 'set-person' then

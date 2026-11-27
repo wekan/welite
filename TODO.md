@@ -202,8 +202,8 @@ remaining platform and workflow verification.
 
 ## HTML4 and HTML5 views on one backend (2026-11-26)
 
-- **Bracket labels in new card titles (#6810):** apply the saved member
-  preference when creating cards. Weddy's browser scenario now passes.
+- **Unicode case matching for bracket labels:** match names beyond
+  SQLite NOCASE's ASCII range in linked and CLI SQLite.
 
 The goal, as the maintainer set it: WeLite serves **two user interfaces on its
 existing backend**. Retro browsers get the HTML4 view WeLite has now; modern

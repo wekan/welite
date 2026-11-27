@@ -450,3 +450,4 @@ editor-enter-preference.e2e.js: title editor follows submit-on-Enter=true
 editor-enter-preference.e2e.js: copy editor follows submit-on-Enter=true
 editor-enter-preference.e2e.js: Member Settings changes the shortcut to true without reloading
 keep-add-card-form-open-6827.e2e.js
+title-bracket-label-6810.e2e.js

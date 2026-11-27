@@ -94,7 +94,7 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // its list, anything else last. Returns the HTTP status (200 when added) and
 // sends nothing; Error says why not.
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
-  Separate:Boolean;out CardId,Error:string):Integer;
+  Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
 // A card's new title from a view (the HTML5 view's title editor), checked as
@@ -111,7 +111,7 @@ function CreateViewList(const T:TWLTenant;const UserId,BoardId,SwimlaneId,AfterL
 // The board's admins (a site admin too): who renames the board.
 // The SQL of a new card (and WeKan's createCard activity of it); a linked
 // card with LinkedId.
-function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string=''):string;
+function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string='';const TitleExpression:string=''):string;
 // AdminFieldBleed (#3141): whether Fields (a card's customFields, as a
 // client sent them) names a field of the board the user may not write - an
 // admin-only one, for anybody but a board admin. True is an attempt, refused
@@ -387,7 +387,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist;
+uses wlstore,wlsjson,Math,StrUtils,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -4740,13 +4740,15 @@ begin
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
 end;
 
-function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string=''):string;
-var Stamp,Board:string;
+function CardCreateSql(const BoardId,ListId,Lane,CardId,Author,Title,Descr,Parent,Sort:string;const LinkedId:string='';const TitleExpression:string=''):string;
+var Stamp,Board,TitleSql:string;
 begin
   Stamp:=QuotedStr(NowIso);Board:=QuotedStr(BoardId);
+  TitleSql:=TitleExpression;
+  if TitleSql='' then TitleSql:=QuotedStr(Title);
   Result:='INSERT INTO cards(id,boardId,listId,swimlaneId,title,description,userId,parentId,'+
     'dateLastActivity,createdAt,modifiedAt,sort,cardNumber,type,linkedId) SELECT '+QuotedStr(CardId)+','+Board+','+
-    QuotedStr(ListId)+','+QuotedStr(Lane)+','+QuotedStr(Title)+','+QuotedStr(Descr)+','+
+    QuotedStr(ListId)+','+QuotedStr(Lane)+','+TitleSql+','+QuotedStr(Descr)+','+
     QuotedStr(Author)+','+Parent+','+Stamp+','+Stamp+','+Stamp+','+Sort+
     ',(SELECT max(0,coalesce(max(cardNumber),0))+1 FROM cards WHERE boardId='+Board+'),';
   if LinkedId='' then Result:=Result+'''cardType-card'',NULL; '
@@ -5075,12 +5077,13 @@ end;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
 begin
-  Result:=CreateViewCards(T,UserId,BoardId,ListId,Swimlane,Title,Position,False,CardId,Error);
+  Result:=CreateViewCards(T,UserId,BoardId,ListId,Swimlane,Title,Position,False,False,CardId,Error);
 end;
 
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
-  Separate:Boolean;out CardId,Error:string):Integer;
-var Lane,Sort,Sql,Id:string; Titles:TStringList; i,Index:Integer;
+  Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
+var Lane,Sort,Sql,Id,TitleSql,LabelSql,Name,Rest,Raw,Permission,ColorSql,Color:string;
+  Titles:TStringList; i,Index,CloseAt:Integer;
 begin
   CardId:='';Error:='';
   if (BoardId='') or (ListId='') or (Trim(Title)='') or (Pos(#0,BoardId+ListId+Swimlane+Title)>0) then
@@ -5109,6 +5112,18 @@ begin
     end
     else Titles.Add(Title);
     if Titles.Count=0 then begin Error:='Invalid card';Exit(400);end;
+    Permission:='';
+    if BracketLabels and (BoardLabelPermission(T.Db,UserId,BoardId,Permission,Error)<>200) then
+    begin Permission:='';Error:='';end;
+    if Permission<>'' then
+    begin
+      ColorSql:='CASE';
+      for Color in SplitString(LabelColors,'|') do
+        if (Color<>'') and (Color<>'white') then
+          ColorSql:=ColorSql+' WHEN NOT EXISTS(SELECT 1 FROM board_labels WHERE boardId='+QuotedStr(BoardId)+
+            ' AND color='+QuotedStr(Color)+') THEN '+QuotedStr(Color);
+      ColorSql:=ColorSql+' ELSE ''green'' END';
+    end;
     Sql:='BEGIN IMMEDIATE; ';
     try
       for i:=0 to Titles.Count-1 do
@@ -5116,8 +5131,30 @@ begin
         Index:=i;
         if Position='top' then Index:=Titles.Count-1-i;
         Id:=NewId;
-        Sql:=Sql+CardCreateSql(BoardId,ListId,Lane,Id,UserId,Titles[Index],'',QuotedStr(''),Sort)+
+        Raw:=Titles[Index];TitleSql:='';LabelSql:='';
+        if BracketLabels and (Copy(Trim(Raw),1,1)='[') then
+        begin
+          Rest:=Trim(Raw); CloseAt:=Pos(']',Rest);
+          if (CloseAt>2) and (CloseAt<Length(Rest)) and (Rest[CloseAt+1] in [#9,#10,#13,' ']) then
+          begin
+            Name:=Trim(Copy(Rest,2,CloseAt-2));
+            Rest:=Trim(Copy(Rest,CloseAt+1,MaxInt));
+            if (Name<>'') and (Rest<>'') and (Pos('[',Name)=0) then
+            begin
+              LabelSql:='SELECT id FROM board_labels WHERE boardId='+QuotedStr(BoardId)+
+                ' AND name='+QuotedStr(Name)+' COLLATE NOCASE ORDER BY id LIMIT 1';
+              if (Permission<>'') and (Length(Name)<=200) then
+                Sql:=Sql+'INSERT INTO board_labels(boardId,id,name,color) SELECT '+QuotedStr(BoardId)+
+                  ',lower(hex(randomblob(3))),'+QuotedStr(Name)+','+ColorSql+' WHERE '+Permission+
+                  ' AND NOT EXISTS('+LabelSql+'); ';
+              TitleSql:='CASE WHEN EXISTS('+LabelSql+') THEN '+QuotedStr(Rest)+' ELSE '+QuotedStr(Raw)+' END';
+            end;
+          end;
+        end;
+        Sql:=Sql+CardCreateSql(BoardId,ListId,Lane,Id,UserId,Raw,'',QuotedStr(''),Sort,'',TitleSql)+
           InitializeCardFields(T.Db,BoardId,Id);
+        if LabelSql<>'' then
+          Sql:=Sql+'INSERT INTO card_labels(cardId,labelId) SELECT '+QuotedStr(Id)+',id FROM ('+LabelSql+'); ';
         if Index=0 then CardId:=Id;
       end;
     except CardId:='';Error:='Could not initialize custom fields';Exit(500);end;
