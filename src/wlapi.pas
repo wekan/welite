@@ -7287,7 +7287,7 @@ begin
   OldSpentTime:='';
   if HasSpentTime then
   begin
-    TimeRows:=T.Db.Query('SELECT COALESCE(spentTime,'''') FROM cards WHERE '+Scope+';');
+    TimeRows:=T.Db.Query('SELECT '+HistorySpentTimeSql+' FROM cards WHERE '+Scope+';');
     if Length(TimeRows)=1 then OldSpentTime:=TimeRows[0][0];
   end;
   if HasCompletion then OldDone:=CardCompletionOf(T.Db,Scope);

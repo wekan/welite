@@ -30,6 +30,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   in the same group. REST overtime changes are recorded as Boolean
   values and support undo, redo and restore. REST spent-time corrections
   accept nonnegative hours and support the same history operations.
+  Their previous-value snapshots read SQLite REAL values at full precision.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

@@ -2500,7 +2500,7 @@ end;
 // writer's own card (canEditCardOrLinkedCard). The answer: 1 restored, 0
 // nothing to put back, -1 refused.
 function RestoreCardRow(Db: TWLDb; const UserId: string; Row: TJSONObject; Readable: THistoryScope): Integer;
-var Content: TJSONData; Field, CardId, Value, Literal, Group, Scope: string; R: TWLRows; Before, After: TJSONObject;
+var Content: TJSONData; Field, CardId, Value, Literal, Group, Scope, ReadField: string; R: TWLRows; Before, After: TJSONObject;
   function MayChange(const BoardId: string): Boolean;
   begin
     Result := BoardCanWrite(Db, UserId, BoardId) or (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId=' + Q(BoardId) +
@@ -2536,7 +2536,9 @@ begin
   if CardHistoryDateField(Field) then
   begin
     if (Group <> 'dates') or not HistoryDateLiteral(Content, Field, Literal) then Exit(0);
-    R := Db.Query('SELECT boardId,COALESCE(' + Field + ','''') FROM cards WHERE ' + Scope + ';');
+    if Field = 'spentTime' then ReadField := HistorySpentTimeSql
+    else ReadField := 'COALESCE(' + Field + ','''')';
+    R := Db.Query('SELECT boardId,' + ReadField + ' FROM cards WHERE ' + Scope + ';');
     if Length(R) <> 1 then Exit(0);
     Before := CardHistoryDateValue(Field, R[0][1]);
     After := TJSONObject(Content.Clone);

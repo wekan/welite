@@ -15,6 +15,9 @@ function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Grou
 
 procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
 procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
+// The default SQLite REAL-to-text conversion rounds before the snapshot is built.
+const HistorySpentTimeSql = 'CASE WHEN spentTime IS NOT NULL THEN printf(''%!.26g'', spentTime) ELSE '''' END';
+
 function CardHistoryDateField(const Field: string): Boolean;
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
 
