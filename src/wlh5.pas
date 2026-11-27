@@ -7033,6 +7033,36 @@ begin
   Result := Result + '</section>';
 end;
 
+procedure RestoreHistoryForm(const T: TWLTenant; const S: TWLSession; Request: TRequest;
+  Response: TResponse; const BoardId: string);
+var Args, Ids: TJSONArray; I, Code: Integer; Field, CardId, Answer, Back: string;
+begin
+  Args := TJSONArray.Create;
+  try
+    Ids := TJSONArray.Create;
+    Args.Add(Ids);
+    CardId := Request.ContentFields.Values['card'];
+    for I := 0 to Request.ContentFields.Count - 1 do
+      if Request.ContentFields.Names[I] = 'id' then
+      begin
+        Field := Request.ContentFields.ValueFromIndex[I];
+        if (Field <> '') and (Pos(#0, Field) = 0) then Ids.Add(Field);
+      end;
+    if (Pos(#0, CardId) > 0) or (Ids.Count > 200) then
+    begin SendJsonAnswer(Response, 400, '{"error":"Invalid history selection"}'); Exit; end;
+    Code := HistoryMethod(T, S.UserId, 'changeHistory.restore', Args, Answer, BoardId, CardId);
+  finally Args.Free; end;
+  if Code <> 200 then begin SendJsonAnswer(Response, Code, Answer); Exit; end;
+  Back := '/b/' + HTTPEncode(BoardId) + '/history?card=' + HTTPEncode(CardId) +
+    '&user=' + HTTPEncode(Request.ContentFields.Values['user']) +
+    '&q=' + HTTPEncode(Request.ContentFields.Values['q']) +
+    '&group=' + HTTPEncode(Request.ContentFields.Values['group']) +
+    '&page=' + IntToStr(StrToIntDef(Request.ContentFields.Values['page'], 1));
+  Response.Code := 303;
+  Response.SetCustomHeader('Location', Back);
+  SendResponse(Response);
+end;
+
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
 var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Lines: TStringList;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
@@ -7126,6 +7156,19 @@ begin
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
+  if (Request.Method = 'POST') and (Copy(Path, 1, 3) = '/b/') then
+  begin
+    P := PathParts(Path);
+    if (Length(P) = 4) and (P[2] = 'history') and (P[3] = 'restore') and
+      (P[1] <> '') and (Pos(#0, P[1]) = 0) then
+    begin
+      if not (ResolveTenant(Request, T) and TenantOpen(T) and Html5User(T.Db, Request, S)) then Exit;
+      Result := True;
+      RestoreHistoryForm(T, S, Request, Response, P[1]);
+      Exit;
+    end;
+  end;
+
   // Member Settings' Change Password: the password now, then the new one
   // twice. Every session ends with it, this one too (WeKan's
   // passwordChangeRequired.js), so the viewer goes to sign in again.
@@ -7650,6 +7693,7 @@ function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWL
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
   Reply: TJSONData; Answer, Route, CardId, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat: string;
   I, PageNumber, PageCount, Size: Integer;
+  CanRestoreCard, CanRestoreRule: Boolean;
   function LinkTo(const Contributor: string; Number: Integer): string;
   begin
     Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&user=' + HTTPEncode(Contributor) +
@@ -7694,6 +7738,10 @@ begin
     Size := Data.Integers['pageSize'];
     PageCount := Max(1, (Data.Integers['total'] + Size - 1) div Size);
     DateFormat := ViewDateFor(T.Db, S.UserId, BoardId);
+    CanRestoreCard := BoardCanWrite(T.Db, S.UserId, BoardId) or
+      (Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(BoardId) +
+        ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1);
+    CanRestoreRule := BoardCanAdmin(T.Db, S.UserId, BoardId);
     Label_ := Words.Text('history', 'History');
     Content := '<div class="history-table"><div class="history-header"><a class="js-history-back" href="' +
       HtmlAttr(Back) + '">&larr; ' + E(Board[0][0]) + '</a><h2>' + E(Label_) + '</h2></div><nav class="history-nav">' +
@@ -7723,7 +7771,15 @@ begin
       Content := Content + '<p class="quiet js-history-empty">' + E(Words.Text('no-results', 'No results')) + '</p>'
     else
     begin
-      Content := Content + '<div class="history-scroll"><table class="history-rows"><thead><tr><th>' +
+      if CanRestoreCard or CanRestoreRule then
+        Content := Content + '<form class="js-history-restore-form" method="post" action="' + HtmlAttr(Route + '/restore') +
+          '"><input type="hidden" name="card" value="' + HtmlAttr(CardId) +
+          '"><input type="hidden" name="user" value="' + HtmlAttr(Who) +
+          '"><input type="hidden" name="q" value="' + HtmlAttr(Search) +
+          '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
+          '"><input type="hidden" name="page" value="' + IntToStr(PageNumber) + '">';
+      Content := Content + '<div class="history-scroll"><table class="history-rows"><thead><tr>' +
+        IfThen(CanRestoreCard or CanRestoreRule, '<th class="history-select"></th>') + '<th>' +
         E(Words.Text('action', 'Action')) + '</th><th>' + E(Words.Text('details', 'Details')) + '</th><th>' +
         E(Words.Text('date', 'Date')) + '</th></tr></thead><tbody>';
       for I := 0 to Rows.Count - 1 do
@@ -7740,11 +7796,25 @@ begin
           Summary := Values.Get('value', Values.Get('title', Values.Get('description', Values.Get('name', ''))));
         When_ := Row.Get('createdAt', '');
         Content := Content + '<tr class="js-history-row" data-id="' + HtmlAttr(Row.Get('_id', '')) +
-          '"><td class="history-change-type">' + E(Label_) + '</td><td class="history-content">' +
+          '">';
+        if CanRestoreCard or CanRestoreRule then
+        begin
+          Content := Content + '<td class="history-select">';
+          if (CanRestoreRule and (Row.Get('entityType', '') = 'rule')) or
+            (CanRestoreCard and (Row.Get('entityType', '') = 'card') and
+              ((Row.Get('group', '') = 'title') or (Row.Get('group', '') = 'description'))) then
+            Content := Content + '<input class="js-history-select" type="checkbox" name="id" value="' +
+              HtmlAttr(Row.Get('_id', '')) + '" aria-label="' + HtmlAttr(Label_) + '">';
+          Content := Content + '</td>';
+        end;
+        Content := Content + '<td class="history-change-type">' + E(Label_) + '</td><td class="history-content">' +
           E(Summary) + '</td><td class="history-when">' + E(FormatShownDate(When_, DateFormat)) +
           '</td></tr>';
       end;
       Content := Content + '</tbody></table></div>';
+      if CanRestoreCard or CanRestoreRule then
+        Content := Content + '<button class="js-history-restore primary" type="submit">' +
+          E(Words.Text('restore', 'Restore')) + '</button></form>';
     end;
     Content := Content + '</div></div>';
   finally Reply.Free; end;

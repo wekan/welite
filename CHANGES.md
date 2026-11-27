@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Restore selected card title, description and rule history rows from the
+  History page. The form returns to the same search, contributor and page.
+
 - Open the shared-store History view from the board or card menu. Browse
   authorized history rows by contributor, search and page. The six shared
   History scope tests and the board History navigation test pass in Chromium.

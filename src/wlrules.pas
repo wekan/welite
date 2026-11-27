@@ -57,7 +57,8 @@ procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSO
 // WeKan's changeHistory.undoLast(boardId), redoLast(boardId) and
 // restore(rowId), for the rule rows of a board one administers: 0 for any
 // other method name.
-function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
+  const RestoreBoard: string = ''; const RestoreCard: string = ''): Integer;
 // WeKan's board announcement (#1566, models/lib/boardAnnouncement.js): read -
 // Version is when it was saved, as WeKan's toISOString, '' without one - and
 // written by a board admin, the text trimmed and enabled only with text. In a
@@ -2521,7 +2522,8 @@ begin
       ',''updatedAt'',' + Q(NowIso) + ')),modifiedAt=' + Q(NowIso) + ' WHERE id=' + Q(BoardId) + ';');
 end;
 
-function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string): Integer;
+function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
+  const RestoreBoard, RestoreCard: string): Integer;
 var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList;
   i, Restored, Skipped, Done: Integer; Applied: Boolean; Readable: THistoryScope;
 begin
@@ -2548,6 +2550,16 @@ begin
       Restored := 0; Skipped := 0;
       Readable := THistoryScope.Create(T.Db, UserId);
       try
+      if RestoreBoard <> '' then
+        for i := 0 to Ids.Count - 1 do
+        begin
+          Row := FindDoc(T.Db, 'changeHistory', Ids[i]);
+          try
+            if (Row = nil) or (Str(Row, 'boardId') <> RestoreBoard) or
+              ((RestoreCard <> '') and (HistoryRowCard(Row) <> RestoreCard)) or not Readable.Readable(Row) then
+              Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));
+          finally Row.Free; end;
+        end;
       for i := 0 to Ids.Count - 1 do
       begin
         Row := FindDoc(T.Db, 'changeHistory', Ids[i]);
