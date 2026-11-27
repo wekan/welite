@@ -7949,8 +7949,8 @@ begin
   end;
 end;
 
-function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat, Group: string): string;
-var Value, Document, Item: TJSONData; NumberFormat: TFormatSettings; I: Integer;
+function HistoryContentSummary(Db: TWLDb; Row, Values: TJSONObject; Words: TWLTranslator; const DateFormat: string): string;
+var Value, Document, Item: TJSONData; NumberFormat: TFormatSettings; I: Integer; Lists: TWLRows; ListId, Reason, SourceBoard: string;
   procedure AppendWipFlag(const Field, Key, Fallback: string);
   var Flag: TJSONData;
   begin
@@ -8019,13 +8019,26 @@ begin
     end;
     Exit(Value.AsJSON);
   end;
-  if Group = 'position' then
+  if Row.Get('group', '') = 'position' then
   begin
-    Result := Values.Get('lastMoveReason', '');
-    if Result = '' then Result := Values.Get('listId', '');
+    Reason := Values.Get('lastMoveReason', '');
+    ListId := Values.Get('listId', '');
+    SourceBoard := Row.Get('boardId', '');
+    if (ListId <> '') and (SourceBoard <> '') and (Pos(#0, ListId + SourceBoard) = 0) then
+    begin
+      Lists := Db.Query('SELECT title FROM lists WHERE id=' + QuotedStr(ListId) +
+        ' AND boardId=' + QuotedStr(SourceBoard) + ';');
+      if Length(Lists) = 1 then Result := Lists[0][0];
+    end;
+    if Reason <> '' then
+    begin
+      if Result <> '' then Result := Result + ' '#$E2#$80#$94' ';
+      Result := Result + Reason;
+    end;
+    if Result = '' then Result := ListId;
     Exit;
   end;
-  if Group = 'lifecycle' then
+  if Row.Get('group', '') = 'lifecycle' then
   begin
     Value := Values.Find('deleted');
     if (Value <> nil) and (Value.JSONType = jtBoolean) then
@@ -8190,7 +8203,7 @@ begin
         case Row.Get('entityType', '') of
           'rule': Summary := HistoryRuleSummary(Row, Words);
           'scrum': Summary := HistoryScrumSummary(Values, Words);
-        else Summary := HistoryContentSummary(Values, Words, DateFormat, Row.Get('group', ''));
+        else Summary := HistoryContentSummary(T.Db, Row, Values, Words, DateFormat);
         end;
         RowGroup := Row.Get('group', '');
         RowField := '';

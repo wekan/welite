@@ -26,7 +26,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Checklist history displays the translated visibility settings and item
   completion, with Yes or No values. List WIP history shows the limit
   and whether it is enabled and soft. Card position history shows the saved
-  move reason and falls back to the destination list ID. History displays
+  move reason and the destination list title when it belongs to the row’s
+  board. A missing title or reason falls back to the destination ID when
+  neither is available. History displays
   archive states and identifies deletion and restoration. Rule rows show
   the title, trigger, action and enabled, disabled or removed state. Scrum
   rows received from shared history show record names or IDs, states,
