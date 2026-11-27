@@ -10,6 +10,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   as labeled values, and the table layout puts one card on each row. Both
   use the selected field groups from the Export menu. The API can limit
   either layout to a swimlane, list, card, or the card containing a checklist.
+  Both layouts wrap long values and style headings. The table freezes its
+  header row, and the card layout gives values a wider column.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate
