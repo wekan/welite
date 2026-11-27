@@ -220,7 +220,7 @@ end;
 function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
 begin
   Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
-    (MimeType = 'image/webp') or (MimeType = 'image/bmp') {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
+    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
 end;
 
 function ReadBE32(Stream: TStream): Cardinal;
@@ -319,7 +319,7 @@ begin
           Size := PNGSize(Input);
           Reader := TFPReaderPNG.Create;
         end
-        else if MimeType = 'image/bmp' then
+        else if (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') then
         begin
           Size := BMPSize(Input);
           Reader := TFPReaderBMP.Create;

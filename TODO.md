@@ -274,7 +274,8 @@ Next, after this goal:
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, bundled Unicode
   font coverage for PDF (configurable TrueType subsetting is in), inline
-  Excel previews for other image formats when their decoders are available,
+  Excel previews for formats outside the existing PNG, JPEG, BMP, GIF and
+  WebP decoder support,
   and remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.

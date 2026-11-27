@@ -55,6 +55,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   access checks by full title. Alongside the board and card Excel and
   CSV/TSV specs, 17 export cases pass in both WeLite and Weddy.
 
+- Excel card layouts embed 24-bit BMP attachments served as
+  `image/x-ms-bmp` as PNG previews.
+
 - Export one card to Excel from Card Actions with selectable fields. The
   download route checks that the card belongs to the requested board and list.
 
