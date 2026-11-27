@@ -4,6 +4,79 @@
   'use strict';
   if (!window.up) return;
 
+  var searchBoard = null;
+  var searchTerm = '';
+
+  function setBoardSearch(sidebar, open) {
+    var search = sidebar.querySelector('.js-board-search');
+    if (!search) return;
+    search.classList.toggle('is-hidden', !open);
+    sidebar.querySelector('.js-board-sidebar-content').classList.toggle('is-hidden', open);
+    if (open) sidebar.classList.add('is-open');
+  }
+
+  up.on('click', '.js-open-search-view', function (event, button) {
+    event.preventDefault();
+    var board = button.closest('.board-wrapper');
+    var sidebar = board.querySelector('.board-sidebar');
+    searchBoard = board.dataset.board;
+    setBoardSearch(sidebar, true);
+    sidebar.querySelector('.js-board-search input').focus();
+  });
+
+  up.on('click', '.js-board-search .js-back-home', function (event, link) {
+    event.preventDefault();
+    var sidebar = link.closest('.board-sidebar');
+    sidebar.querySelector('.js-close-sidebar').click();
+    sidebar.closest('.board-wrapper').querySelector('.js-open-search-view').focus();
+  });
+
+  up.on('click', '.board-sidebar .js-close-sidebar, .js-open-filter-view, .js-toggle-page-sidebar', function (event, button) {
+    var sidebar = document.querySelector('.board-sidebar');
+    searchBoard = null;
+    searchTerm = '';
+    if (sidebar) setBoardSearch(sidebar, false);
+  });
+
+  up.on('submit', '.js-board-search .js-search-term-form', function (event, form) {
+    event.preventDefault();
+    searchTerm = form.elements.searchTerm.value;
+    renderBoardSearch(form);
+  });
+
+  up.compiler('.js-board-search', function (search) {
+    if (searchBoard === null || search.closest('.board-wrapper').dataset.board !== searchBoard) return;
+    setBoardSearch(search.closest('.board-sidebar'), true);
+    var form = search.querySelector('form');
+    form.elements.searchTerm.value = searchTerm;
+    renderBoardSearch(form);
+  });
+
+  function renderBoardSearch(form) {
+    var term = searchTerm.trim().toLocaleLowerCase();
+    var results = form.parentElement.querySelector('.js-board-search-results');
+    results.replaceChildren();
+    if (!term) return;
+    var board = form.closest('.board-wrapper');
+    board.querySelectorAll('.board-canvas .list-header-name, .board-canvas .minicard-title-text').forEach(function (title) {
+      if (!title.textContent.toLocaleLowerCase().includes(term)) return;
+      var list = title.closest('.list');
+      var card = title.closest('.minicard-wrapper');
+      if (!card && (!list || !list.id)) return;
+      var item = document.createElement('li');
+      var link = document.createElement('a');
+      link.textContent = title.textContent;
+      link.href = card ? card.getAttribute('up-href') : '#' + list.id;
+      if (card) {
+        link.setAttribute('up-follow', '');
+        link.setAttribute('up-target', '.board-wrapper');
+      }
+      link.addEventListener('click', function () { form.closest('.board-sidebar').querySelector('.js-close-sidebar').click(); });
+      item.append(link);
+      results.append(item);
+    });
+  }
+
   // A card's Requested By and Assigned By (cardDetails.jade): Edit or Add
   // opens the field's inlined form, and its x closes it again.
   up.on('click', '.card-details-item-name .js-open-inlined-form', function (event, el) {

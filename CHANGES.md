@@ -4,6 +4,12 @@ WeKan-Lite — the FreePascal reimplementation of WeKan: one native binary, SQLi
 no-cookie capable, runs where Meteor cannot (Amiga 68k/PPC, MorphOS, AROS, Haiku, BSD, …).
 Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https://github.com/wekan/omi) prototypes against the portable contract in `docs/`.
 
+## HTML5 mobile board navigation
+
+- Open board Search from the header. Search matches the titles of loaded
+  lists and cards. On mobile, Back closes the sidebar and returns directly
+  to the board, including after a board refresh.
+
 ## HTML5 minicards
 
 - Show picked requesters alongside the free-text requester on a minicard,

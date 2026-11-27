@@ -2683,7 +2683,13 @@ begin
       'their WIP limits. Restore them one at a time to choose another list.'), '__count__', IntToStr(ViewRestoreSkipped), [rfReplaceAll])) +
       '</p></div></template><span class="js-open-pop-on-load" data-pop="restore-all-skipped" hidden></span>';
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
-    HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a><div class="sidebar-content js-board-sidebar-content">' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a>' +
+    '<div class="sidebar-content js-board-search is-hidden"><a class="fa fa-arrow-left js-back-home" href="#" aria-label="' +
+    HtmlAttr(Words.Text('go-back', 'Go back')) + '">&#8592;</a><form class="js-search-term-form"><input type="search" name="searchTerm" dir="auto" ' +
+    'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) + '" placeholder="' +
+    HtmlAttr(Words.Text('search-example', 'Search')) + '"><button type="submit">' + E(Words.Text('search', 'Search')) +
+    '</button></form><ul class="js-board-search-results sidebar-list" aria-live="polite"></ul></div>' +
+    '<div class="sidebar-content js-board-sidebar-content">' +
     FilterView +
     // sidebar.jade: an invitation to this board, to accept or decline.
     IfThen(ViewInvited(Db, S.UserId, BoardId), '<div class="js-board-invitation"><p><i class="fa fa-exclamation-triangle"></i> ' +
@@ -3848,6 +3854,8 @@ begin
     BoardStarButton(Db, Words, S, BoardId) + BoardWatchButton(Db, Words, S, BoardId) +
     // WeKan's boardButtons: the board's button rules, for whoever may change it.
     IfThen((S.UserId <> '') and BoardCanWrite(Db, S.UserId, BoardId), RuleButtonsHtml(Db, BoardId, 'board', Words), '') +
+    '<a class="board-header-btn js-open-search-view" href="#" title="' + HtmlAttr(Words.Text('search', 'Search')) +
+    '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) + '"><i class="fa fa-search"></i></a>' +
     FilterButton(Words, Filter) + SortButton(Words, CardSort) +
     // WeKan's visibility button and boardVisibilityList, for a board admin.
     IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), VisibilityButton(Words, BoardId, B[0][4]), '') +
