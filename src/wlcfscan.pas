@@ -3,7 +3,7 @@ unit wlcfscan;
 interface
 uses SysUtils,Classes,fpjson,wldb;
 // Inspect encoded export payloads without changing their bytes or source data.
-function ExportPayloadAllowed(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData):Boolean;
+function ExportPayloadAllowed(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData;AllowPublicGuest:Boolean=False):Boolean;
 function PayloadCopyGuards(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData;out Sql:string):Boolean;
 implementation
 uses wlcfpol,wlsjson;
@@ -11,6 +11,7 @@ type
   TPayloadPolicy=class
     Db:TWLDb;
     UserId,Guards:string;
+    AllowPublicGuest:Boolean;
     WriteAccess,Collect:Boolean;
     Keys,Answers:TStringList;
     function Permitted(const BoardId,FieldId:string;Admin:Boolean):Boolean;
@@ -67,7 +68,7 @@ begin
   Result:=False;if (BoardId='') or ((FieldId='') and not Admin) then Exit;
   Tuple:=TJSONArray.Create;try Tuple.Add(BoardId);Tuple.Add(FieldId);Tuple.Add(Admin);Key:=Tuple.AsJSON;finally Tuple.Free;end;
   Index:=Keys.IndexOf(Key);if Index>=0 then Exit(Answers[Index]='1');
-  Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
+  Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'',AllowPublicGuest);
   try
     if Admin then Sql:=Policy.ScopeAdminExpression
     else if WriteAccess then Sql:=Policy.ScopeWriteExpression(FieldId) else Sql:=Policy.HistoryExpression(FieldId);
@@ -158,19 +159,19 @@ begin
   end;
   Result:=True;
 end;
-function InspectPayload(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData;CopyAccess:Boolean;out Sql:string):Boolean;
+function InspectPayload(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData;CopyAccess,AllowPublicGuest:Boolean;out Sql:string):Boolean;
 var Policy:TPayloadPolicy;
 begin
   Result:=False;Sql:='';Policy:=TPayloadPolicy.Create;
   Policy.Keys:=TStringList.Create;Policy.Keys.CaseSensitive:=True;Policy.Answers:=TStringList.Create;
   try
-    Policy.Db:=Db;Policy.UserId:=UserId;Policy.WriteAccess:=CopyAccess;Policy.Collect:=CopyAccess;
+    Policy.Db:=Db;Policy.UserId:=UserId;Policy.AllowPublicGuest:=AllowPublicGuest;Policy.WriteAccess:=CopyAccess;Policy.Collect:=CopyAccess;
     try Result:=Policy.Visit(Data,BoardId,0);if Result then Sql:=Policy.Guards;except Result:=False;end;
   finally Policy.Answers.Free;Policy.Keys.Free;Policy.Free;end;
 end;
-function ExportPayloadAllowed(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData):Boolean;
+function ExportPayloadAllowed(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData;AllowPublicGuest:Boolean):Boolean;
 var Ignored:string;
-begin Result:=InspectPayload(Db,UserId,BoardId,Data,False,Ignored);end;
+begin Result:=InspectPayload(Db,UserId,BoardId,Data,False,AllowPublicGuest,Ignored);end;
 function PayloadCopyGuards(Db:TWLDb;const UserId,BoardId:string;Data:TJSONData;out Sql:string):Boolean;
-begin Result:=InspectPayload(Db,UserId,BoardId,Data,True,Sql);end;
+begin Result:=InspectPayload(Db,UserId,BoardId,Data,True,False,Sql);end;
 end.

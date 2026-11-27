@@ -7,7 +7,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 // Returns true when it sent the action response; false for an ordinary arrow move.
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
-function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
+function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean;AllowPublicGuest:Boolean=False):TJSONObject;
 procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
 function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
   Position:Int64;out NewId:string):Boolean;
@@ -426,7 +426,7 @@ begin
   end;
 end;
 
-function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean):TJSONObject;
+function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles,AllowPublicGuest:Boolean):TJSONObject;
 const Roots:array[0..8] of string=('swimlanes','lists','cards','card_comments','checklists','checklist_items','custom_fields','attachments','activities');
   ExportKeys:array[0..8] of string=('swimlanes','lists','cards','comments','checklists','checklistItems','customFields','attachments','activities');
 var Params,UserIds:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject;Source,Target:TJSONArray;
@@ -453,16 +453,16 @@ var Params,UserIds:TStringList;Graph,Data,Audit,Row,Files,Attachment:TJSONObject
   end;
 begin
   Result:=nil;Graph:=nil;Files:=nil;
-  if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId) then Exit;
+  if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId,AllowPublicGuest) then Exit;
   Params:=TStringList.Create;
   UserIds:=TStringList.Create;UserIds.CaseSensitive:=True;UserIds.Sorted:=True;UserIds.Duplicates:=dupIgnore;
   try
     Params.Values['boardId']:=BoardId;Params.Values['action']:='export';
     Graph:=SelectionGraph(T,Params,True);
     Data:=TJSONObject(Graph.Find('data'));Audit:=TJSONObject(Graph.Find('_export_audit'));
-    if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId) or
-      not ExportPayloadAllowed(T.Db,UserId,BoardId,Audit) or
-      not FieldExportRowsAllowed(T.Db,UserId,BoardId,TJSONArray(Data.Find('card_custom_field_values'))) then Exit;
+    if not BoardCanRead(T.Db,UserId,BoardId) or not BoardFieldExportAllowed(T.Db,UserId,BoardId,AllowPublicGuest) or
+      not ExportPayloadAllowed(T.Db,UserId,BoardId,Audit,AllowPublicGuest) or
+      not FieldExportRowsAllowed(T.Db,UserId,BoardId,TJSONArray(Data.Find('card_custom_field_values')),AllowPublicGuest) then Exit;
     if not SelectionBindingsValid(T.Db,TJSONArray(Graph.Find('_export_bindings'))) then
       raise Exception.Create('Board export source changed');
     if IncludeFiles then

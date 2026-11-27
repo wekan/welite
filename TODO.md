@@ -264,14 +264,14 @@ Next, after this goal:
   them, and restore-wip-limit once the WIP limit methods and the Archive's
   restore at a hard limit were in).
   On 2026-11-27 the full run of `tests/wkui/specs.txt` passed 478
-  (2 skipped, 4 failed). The ZIP, CSV, PDF and Excel export routes return
+  (2 skipped, 4 failed). In that run the ZIP, CSV, PDF and Excel export routes returned
   404 because they are missing. The assigned-only tests expect a 403 from
   each implemented route. The rules-history REST button test passed this run
   after failing once in three earlier runs.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
-  export-access (the board's ZIP, CSV, PDF, Excel and chart exports), and the
+  export-access (the board's ZIP, PDF, Excel and chart exports), and the
   remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.

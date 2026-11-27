@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The board Export menu downloads comma- or semicolon-separated CSV, TSV
+  and iCalendar. CSV and TSV honor the selected column groups on public
+  and private boards. Spreadsheet formula prefixes in text are escaped.
+
 - Export a board’s dated cards as an iCalendar feed. Public boards support
   subscriptions without a token. Private boards require a full board member.
   Archived, deleted and linked cards are excluded.

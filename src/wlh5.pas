@@ -2710,9 +2710,33 @@ end;
 
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
+function BoardExportPopup(Words: TWLTranslator; const BoardId: string): string;
+const
+  Parts: array[0..6] of string = ('description','board-info','people','labels','dates','voting','custom-fields');
+  Keys: array[0..6] of string = ('description','export-card-field-board-info','export-card-field-people',
+    'labels','export-card-field-dates','voting','custom-fields');
+  Captions: array[0..6] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields');
+var I: Integer; Base: string;
+begin
+  Base := '/api/boards/' + HtmlAttr(HTTPEncode(BoardId));
+  Result := '<template class="js-pop-over-template" data-pop="export" data-title="' +
+    HtmlAttr(Words.Text('export', 'Export')) + '"><div class="header"><span class="header-title">' +
+    E(Words.Text('export', 'Export')) + '</span><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list export-scope-select">';
+  for I := Low(Parts) to High(Parts) do
+    Result := Result + '<li><a class="flex js-export-field-toggle" href="#" data-field="' + Parts[I] +
+      '" role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
+      E(Words.Text(Keys[I], Captions[I])) + '</span></a></li>';
+  Result := Result + '</ul><ul class="pop-over-list"><li><a class="js-export-fields" download href="' + Base +
+    '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
+    '/calendar.ics">iCalendar (.ics)</a></li></ul></div></template>';
+end;
+
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
   const FilterView: string; PlainLinks, PlainSource: Boolean): string;
-var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards: Boolean;
+var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards, CanExport: Boolean;
   // WeKan's restoreArchivedCardToListPopup (#6772): the card's list is gone,
   // or full at a hard WIP limit - one of the lists with room instead.
   function BlockedPopup(const Id, ListId: string): string;
@@ -2797,6 +2821,8 @@ begin
       E(StringReplace(Words.Text('restore-all-skipped-wip-limit', '__count__ card(s) were not restored: their lists have reached ' +
       'their WIP limits. Restore them one at a time to choose another list.'), '__count__', IntToStr(ViewRestoreSkipped), [rfReplaceAll])) +
       '</p></div></template><span class="js-open-pop-on-load" data-pop="restore-all-skipped" hidden></span>';
+  CanExport := (ViewAssignedOnly = '') and BoardCanRead(Db, S.UserId, BoardId) and
+    not SharedSettingOn(Db, 'disableAllExport') and not SharedSettingOn(Db, 'anonymizeExportUsers');
   Result := '<div class="board-sidebar sidebar"><a class="sidebar-xmark js-close-sidebar" href="#" aria-label="' +
     HtmlAttr(Words.Text('close', 'Close')) + '">&#10005;</a>' +
     '<div class="sidebar-content js-board-search is-hidden"><a class="fa fa-arrow-left js-back-home" href="#" aria-label="' +
@@ -2878,7 +2904,9 @@ begin
     IfThen((S.UserId <> '') and IsShared(Db), '<li><a class="js-open-board-history" href="/b/' +
       HtmlAttr(HTTPEncode(BoardId)) + '/history" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
-    '</ul></div></template>' + IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId) +
+    IfThen(CanExport, '<li><a class="js-export-board" href="#">' + E(Words.Text('export', 'Export')) + '</a></li>', '') +
+    '</ul></div></template>' + IfThen(CanExport, BoardExportPopup(Words, BoardId), '') +
+    IfThen(S.UserId <> '', BoardDateSettingsPopup(Db, Words, S.UserId, BoardId) +
       CardSettingsPopup(Db, Words, S.UserId, BoardId, BoardOwnAdmin(Db, S.UserId, BoardId),
         ProfileField(Db, S.UserId, 'showDesktopDragHandles') = '1'), '');
 end;

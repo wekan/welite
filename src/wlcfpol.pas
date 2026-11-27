@@ -7,12 +7,12 @@ type
   private
     FDb:TWLDb;
     FUser,FBoard,FCard,FBinding:string;
-    FShared:Boolean;
+    FShared,FPublicGuest:Boolean;
     FTables:array[0..3] of string;
     function Source(const Model,Collection:string):string;
     function Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired:Boolean;HistoryAccess:Boolean=False;CardOnly:Boolean=False;FieldColumn:Boolean=False;CardColumn:Boolean=False;AllowSiteAdmin:Boolean=False;AllowArchivedBoard:Boolean=False):string;
   public
-    constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
+    constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string;AllowPublicGuest:Boolean=False);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
     // Read policy for a correlated card_custom_field_values row aliased v.
     function ValueReadExpression(AllowArchivedBoard:Boolean=False):string;
@@ -26,8 +26,8 @@ type
     function Guard(const FieldId:string):string;
     procedure Redact(Fields:TJSONArray);
   end;
-function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
-function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray):Boolean;
+function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string;AllowPublicGuest:Boolean=False):Boolean;
+function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray;AllowPublicGuest:Boolean=False):Boolean;
 implementation
 uses wlcfspec,wlcfjson;
 function FalseFlag(const Doc,Name:string):string;
@@ -54,10 +54,10 @@ begin
     QuotedStr(Model)+' AND c.name='+QuotedStr(Collection)+' AND m.table_name='+QuotedStr(Name)+')=1';
   Result:='"'+StringReplace(Name,'"','""',[rfReplaceAll])+'"';
 end;
-constructor TFieldPolicy.Create(Db:TWLDb;const UserId,BoardId,CardId:string);
+constructor TFieldPolicy.Create(Db:TWLDb;const UserId,BoardId,CardId:string;AllowPublicGuest:Boolean);
 var Rows:TWLRows;
 begin
-  inherited Create;FDb:=Db;FUser:=UserId;FBoard:=BoardId;FCard:=CardId;
+  inherited Create;FDb:=Db;FUser:=UserId;FBoard:=BoardId;FCard:=CardId;FPublicGuest:=AllowPublicGuest and (UserId='');
   Rows:=Db.Query('SELECT type FROM sqlite_master WHERE name=''custom_fields'';');
   if (Length(Rows)<>1) or ((Rows[0][0]<>'table') and (Rows[0][0]<>'view')) then
     raise Exception.Create('Missing field policy definitions');
@@ -71,8 +71,9 @@ end;
 function TFieldPolicy.Build(const FieldId:string;WriteAccess,DefinitionAccess,AdminRequired,HistoryAccess,CardOnly,FieldColumn,CardColumn,AllowSiteAdmin,AllowArchivedBoard:Boolean):string;
 const Roles:array[0..5] of string=('isReadOnly','isCommentOnly','isReadAssignedOnly','isCommentAssignedOnly','isNormalAssignedOnly','isWorker');
   Aliases:array[0..3] of string=('u','b','f','c');
-var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql,CardSql:string;i,Last:Integer;HasField:Boolean;
+var Admin,Member,Access,Flags,Prefix,Ids,Value,UserSchema,Tables,WhereSql,FieldSql,ValueSql,CardSql:string;i,Last:Integer;HasField,Guest:Boolean;
 begin
+  Guest:=FPublicGuest and not WriteAccess and not AdminRequired;
   HasField:=not CardOnly and (not DefinitionAccess or (FieldId<>''));
   FieldSql:=QuotedStr(FieldId);if FieldColumn then FieldSql:='v.customFieldId';
   CardSql:=QuotedStr(FCard);if CardColumn then CardSql:='v.cardId';
@@ -86,6 +87,13 @@ begin
     Flags:='typeof(f.adminOnly)=''integer'' AND f.adminOnly IN (0,1) AND (f.adminOnly=0 OR '+Admin+')';
     if WriteAccess then Flags:=Flags+' AND typeof(f.readOnly)=''integer'' AND f.readOnly IN (0,1) AND (f.readOnly=0 OR '+Admin+')';
     Tables:='boards b,users u';WhereSql:='b.id='+QuotedStr(FBoard)+' AND u.id='+QuotedStr(FUser)+' AND u.loginDisabled=0 AND '+Access;
+    if Guest then
+    begin
+      Tables:='boards b';
+      WhereSql:='b.id='+QuotedStr(FBoard)+' AND b.permission=''public''';
+      Admin:='0';
+      Flags:='typeof(f.adminOnly)=''integer'' AND f.adminOnly=0';
+    end;
     if not AllowArchivedBoard then WhereSql:=WhereSql+' AND b.archived=0';
     if HasField then
     begin
@@ -102,10 +110,10 @@ begin
     Exit('(SELECT count(*)=1 FROM '+Tables+' WHERE '+WhereSql+')');
   end;
   Last:=High(Aliases);if DefinitionAccess then begin Last:=1;if HasField then Last:=2;end else if HistoryAccess then Last:=2;
-  Prefix:='WITH ';
+  if Guest then Prefix:='WITH u AS (SELECT 1) ' else Prefix:='WITH ';
   for i:=0 to Last do
   begin
-    if CardOnly and (i=2) then Continue;
+    if (Guest and (i=0)) or (CardOnly and (i=2)) then Continue;
     case i of 0:Value:=FUser;1:Value:=FBoard;2:Value:=FieldId;3:Value:=FCard;end;
     ValueSql:=QuotedStr(Value);if (i=2) and FieldColumn then ValueSql:=FieldSql;
     if (i=3) and CardColumn then ValueSql:=CardSql;
@@ -129,6 +137,13 @@ begin
   if WriteAccess then Flags:=Flags+' AND ('+FalseFlag('f.d','readOnly')+' OR (json_type(f.d,''$.readOnly'')=''true'' AND '+Admin+'))';
   Ids:=StringId('u',FUser)+' AND '+StringId('b',FBoard);Tables:='u,b';
   WhereSql:=Ids+' AND '+FalseFlag('u.d','loginDisabled')+' AND '+Access;
+  if Guest then
+  begin
+    Tables:='b';
+    WhereSql:=StringId('b',FBoard)+' AND json_extract(b.d,''$.permission'')=''public''';
+    Admin:='0';
+    Flags:=FalseFlag('f.d','adminOnly');
+  end;
   if not AllowArchivedBoard then WhereSql:=WhereSql+' AND '+FalseFlag('b.d','archived');
   if HasField then
   begin
@@ -211,14 +226,15 @@ begin
     i:=Last+1;
   end;
 end;
-function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string):Boolean;
+function BoardFieldExportAllowed(Db:TWLDb;const UserId,BoardId:string;AllowPublicGuest:Boolean):Boolean;
 var Policy:TFieldPolicy;Values:TWLRows;
 begin
   Result:=False;Policy:=nil;
   try
     try
-      Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'');
-      Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',False)+';');
+      Policy:=TFieldPolicy.Create(Db,UserId,BoardId,'',AllowPublicGuest);
+      if AllowPublicGuest then Values:=Db.Query('SELECT '+Policy.ScopeBoardExpression(False)+';')
+      else Values:=Db.Query('SELECT '+Policy.DefinitionExpression('',False)+';');
       if (Length(Values)<>1) or (Values[0][0]<>'1') then Exit;
       if BoardDefinitionAdminRequired(Db,BoardId) then
       begin
@@ -237,7 +253,7 @@ begin
     except Result:=False;end;
   finally Policy.Free;end;
 end;
-function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray):Boolean;
+function FieldExportRowsAllowed(Db:TWLDb;const UserId,BoardId:string;Rows:TJSONArray;AllowPublicGuest:Boolean):Boolean;
 var Policy:TFieldPolicy;Row:TJSONObject;Card,Field,Value:TJSONData;LastCard:string;i:Integer;
 begin
   Result:=False;Policy:=nil;LastCard:='';
@@ -255,7 +271,7 @@ begin
         if (Policy=nil) or (Card.AsString<>LastCard) then
         begin
           FreeAndNil(Policy);LastCard:=Card.AsString;
-          Policy:=TFieldPolicy.Create(Db,UserId,BoardId,LastCard);
+          Policy:=TFieldPolicy.Create(Db,UserId,BoardId,LastCard,AllowPublicGuest);
         end;
         if not Policy.Allowed(Field.AsString,False) then Exit;
       end;
