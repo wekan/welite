@@ -188,6 +188,8 @@ function AddViewComment(const T:TWLTenant;const UserId,BoardId,CardId,Text:strin
 function CreateViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,Title:string;out ChecklistId,Error:string):Integer;
 function AddViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,Title:string;out ItemId,Error:string):Integer;
 function ToggleViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,ItemId:string;out Error:string):Integer;
+function RenameViewChecklist(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, Title: string;
+  out Error: string): Integer;
 function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, At: string;
   Remove: Boolean; out Error: string): Integer;
 // Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
@@ -6226,9 +6228,43 @@ begin
   except Result:=False;end;
 end;
 
+function WriteViewChecklistField(const T: TWLTenant; const BoardId, CardId, ChecklistId, ItemId, Field, Literal: string;
+  out Error: string): Integer;
+var Scope, TableName: string;
+begin
+  Result := 200;
+  Scope := 'id=' + QuotedStr(ChecklistId) + ' AND cardId=' + QuotedStr(CardId) +
+    ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ')' +
+    ' AND EXISTS(SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
+    ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL)';
+  TableName := 'checklists';
+  if ItemId <> '' then
+  begin
+    TableName := 'checklist_items';
+    Scope := 'id=' + QuotedStr(ItemId) + ' AND checklistId=' + QuotedStr(ChecklistId) +
+      ' AND cardId=' + QuotedStr(CardId) + ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) +
+      ') AND EXISTS(SELECT 1 FROM checklists WHERE ' + Scope + ')';
+  end;
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE ' + TableName + ' SET ' + Field + '=' + Literal +
+    ',modifiedAt=' + QuotedStr(NowIso) + ' WHERE ' + Scope +
+    '; SELECT CASE WHEN (SELECT count(*) FROM ' + TableName + ' WHERE ' + Scope + ' AND ' + Field + ' IS ' + Literal +
+    ')=1 THEN 1 ELSE json(''Checklist field write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); Error := 'Could not update checklist'; Exit(500); end;
+end;
+
+function RenameViewChecklist(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, Title: string;
+  out Error: string): Integer;
+begin
+  if ChecklistId = '' then begin Error := 'Checklist not found'; Exit(404); end;
+  Result := ViewChecklistScope(T, UserId, BoardId, CardId, ChecklistId, ItemId, Error);
+  if Result <> 200 then Exit;
+  if not ValidViewTitle(Title) then begin Error := 'Invalid title'; Exit(400); end;
+  Result := WriteViewChecklistField(T, BoardId, CardId, ChecklistId, ItemId, 'title', QuotedStr(Title), Error);
+end;
+
 function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, ItemId, At: string;
   Remove: Boolean; out Error: string): Integer;
-var Input: TJSONData; Literal, Scope, TableName: string;
+var Input: TJSONData; Literal: string;
 begin
   if ChecklistId = '' then begin Error := 'Checklist not found'; Exit(404); end;
   Result := ViewChecklistScope(T, UserId, BoardId, CardId, ChecklistId, ItemId, Error);
@@ -6244,23 +6280,7 @@ begin
       begin Error := 'Invalid checklist deadline'; Exit(400); end;
     finally Input.Free; end;
   end;
-  Scope := 'id=' + QuotedStr(ChecklistId) + ' AND cardId=' + QuotedStr(CardId) +
-    ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ')' +
-    ' AND EXISTS(SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
-    ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL)';
-  TableName := 'checklists';
-  if ItemId <> '' then
-  begin
-    TableName := 'checklist_items';
-    Scope := 'id=' + QuotedStr(ItemId) + ' AND checklistId=' + QuotedStr(ChecklistId) +
-      ' AND cardId=' + QuotedStr(CardId) + ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) +
-      ') AND EXISTS(SELECT 1 FROM checklists WHERE ' + Scope + ')';
-  end;
-  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE ' + TableName + ' SET dueAt=' + Literal +
-    ',modifiedAt=' + QuotedStr(NowIso) + ' WHERE ' + Scope +
-    '; SELECT CASE WHEN (SELECT count(*) FROM ' + TableName + ' WHERE ' + Scope + ' AND dueAt IS ' + Literal +
-    ')=1 THEN 1 ELSE json(''Checklist deadline write failed'') END; COMMIT;') then
-  begin T.Db.Exec('ROLLBACK;'); Error := 'Could not update checklist deadline'; Exit(500); end;
+  Result := WriteViewChecklistField(T, BoardId, CardId, ChecklistId, ItemId, 'dueAt', Literal, Error);
 end;
 
 // GET checklists of a card / POST create a checklist

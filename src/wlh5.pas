@@ -1348,15 +1348,16 @@ end;
 // title line's "+" before there is one, the bottom one after), an item added
 // under its checklist, an item checked, and the checklist's menu.
 function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
-var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, DueLabel: string;
+var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, ItemUrl, DueLabel: string;
   ShowDue: Boolean;
-  function InlinedForm(const Cls, Action, Label_: string): string;
+  function InlinedForm(const Cls, Action, Label_: string; const Title: string = ''; Editing: Boolean = False): string;
   begin
     // Its fields are on the page only while it is open (WeKan's inlinedForm).
     Result := '<form class="' + Cls + ' js-inlined-form is-hidden" method="post" action="' + HtmlAttr(Action) +
       '" up-submit up-target=".board-wrapper"><template class="js-inlined-form-body">' +
-      '<textarea class="js-add-checklist-item" name="title" rows="1" aria-label="' + HtmlAttr(Label_) + '" required></textarea>' +
-      '<div class="edit-controls clearfix"><button class="primary confirm js-submit-add-checklist-item-form" type="submit">' +
+      '<textarea class="js-' + IfThen(Editing, 'edit', 'add') + '-checklist-item" name="title" rows="1" dir="auto" aria-label="' +
+      HtmlAttr(Label_) + '" required>' + E(Title) + '</textarea>' +
+      '<div class="edit-controls clearfix"><button class="primary confirm js-submit-' + IfThen(Editing, 'edit', 'add') + '-checklist-item-form" type="submit">' +
       E(Words.Text('save', 'Save')) + '</button><a class="js-close-inlined-form" href="#" aria-label="' +
       HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></template></form>';
   end;
@@ -1415,8 +1416,14 @@ begin
           '" type="submit" aria-label="' + HtmlAttr(Items[k][1]) + '"></button></form>'
       else
         ItemsHtml := ItemsHtml + '<div class="check-box-container"><div class="check-box materialCheckBox' + Finished + '"></div></div>';
-      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div>' +
-        Deadline(Items[k][3], ChecklistUrl + '/items/' + HTTPEncode(Items[k][0]), 'checklist-item') + '</div>';
+      ItemUrl := ChecklistUrl + '/items/' + HTTPEncode(Items[k][0]);
+      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished +
+        IfThen(Writable, ' js-open-inlined-form is-editable" data-opens="edit-checklist-item', '') + '">' +
+        MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div>';
+      if Writable then
+        ItemsHtml := ItemsHtml + InlinedForm('js-edit-checklist-item', ItemUrl + '/title',
+          Words.Text('add-checklist-item', 'Checklist item'), Items[k][1], True);
+      ItemsHtml := ItemsHtml + Deadline(Items[k][3], ItemUrl, 'checklist-item') + '</div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
     if Lists[i][2] = '' then
@@ -1425,7 +1432,12 @@ begin
       Checklist := Checklist + '<a class="fa fa-navicon checklist-details-menu js-open-checklist-details-menu" href="#" data-checklist="' +
         HtmlAttr(Lists[i][0]) + '" title="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) +
         '" aria-label="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"></a>';
-    Checklist := Checklist + '<h4 class="title">' + MarkdownViewer(Lists[i][1], PlainLinks, PlainSource) + '</h4></div>';
+    Checklist := Checklist + '<h4 class="title' +
+      IfThen(Writable, ' js-open-inlined-form is-editable" data-opens="edit-checklist-title', '') + '">' +
+      MarkdownViewer(Lists[i][1], PlainLinks, PlainSource) + '</h4></div>';
+    if Writable then
+      Checklist := Checklist + InlinedForm('js-edit-checklist-title', ChecklistUrl + '/title',
+        Words.Text('checklist', 'Checklist'), Lists[i][1], True);
     if Lists[i][2] <> '' then
       Checklist := Checklist + Deadline(Lists[i][2], ChecklistUrl, 'checklist');
     // WeKan's progress: the share of its items checked, shown once one is.
@@ -7277,8 +7289,10 @@ begin
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'background') then Action := 'attachment-background'
   else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
+  else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'title') then Action := 'checklist-title'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'due') then Action := 'checklist-due'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
+  else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'title') then Action := 'checklist-title'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'due') then Action := 'checklist-due'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
   else Exit;
@@ -7418,6 +7432,8 @@ begin
     Code := ToggleViewCardMember(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'add-comment' then
     Code := AddViewComment(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['comment'], NewId, Error)
+  else if Action = 'checklist-title' then
+    Code := RenameViewChecklist(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Title, Error)
   else if Action = 'checklist-due' then
     Code := SetViewChecklistDue(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Request.ContentFields.Values['at'],
       Request.ContentFields.Values['delete'] = '1', Error)

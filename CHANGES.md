@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Edit checklist and item titles in place on the open card, using the same
+  inline forms as Weddy.
+
 - Apply the member’s saved calendar and first weekday to card dates and date
   pickers when the page opens. WeLite now runs the same complete calendar
   display, Today marker, date-format and Change Settings specs as Weddy.
