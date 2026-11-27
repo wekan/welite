@@ -1345,7 +1345,7 @@ end;
 // title line's "+" before there is one, the bottom one after), an item added
 // under its checklist, an item checked, and the checklist's menu.
 function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
-var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, DueUrl, DueLabel: string;
+var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, ChecklistUrl, DueLabel: string;
   ShowDue: Boolean;
   function InlinedForm(const Cls, Action, Label_: string): string;
   begin
@@ -1357,6 +1357,26 @@ var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsH
       E(Words.Text('save', 'Save')) + '</button><a class="js-close-inlined-form" href="#" aria-label="' +
       HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div></template></form>';
   end;
+  function Deadline(const Value, Url, Kind: string): string;
+  var Target: string;
+  begin
+    Result := '';
+    if not ShowDue then Exit;
+    Target := ' data-url="' + HtmlAttr(Url + '/due') + '"';
+    if Value <> '' then
+    begin
+      Result := '<a class="card-date due-date ' + Kind + '-due-date' +
+        IfThen(Writable, ' js-edit-date') + '" title="' + DueLabel + '"';
+      if Writable then
+        Result := Result + ' href="#"' + Target + ' data-date="' + HtmlAttr(Value) + '"';
+      Result := Result + '><time datetime="' + HtmlAttr(Value) + '">' +
+        E(FormatShownDate(Value, ViewDateFormat)) + '</time></a>';
+    end
+    else if Writable then
+      Result := '<button class="js-' + Kind + '-due-date ' + Kind + '-due-date-add" type="button" title="' +
+        DueLabel + '" aria-label="' + DueLabel + '"' + Target + '><i class="fa fa-clock-o"></i></button>';
+  end;
+
 begin
   Result := '';
   Base := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/checklists';
@@ -1374,7 +1394,8 @@ begin
   DueLabel := HtmlAttr(Words.Text('card-due', 'Due'));
   for i := 0 to High(Lists) do
   begin
-    Items := Db.Query('SELECT id,title,COALESCE(isFinished,0) FROM checklist_items WHERE checklistId=' + QuotedStr(Lists[i][0]) +
+    ChecklistUrl := Base + '/' + HTTPEncode(Lists[i][0]);
+    Items := Db.Query('SELECT id,title,COALESCE(isFinished,0),COALESCE(dueAt,'''') FROM checklist_items WHERE checklistId=' + QuotedStr(Lists[i][0]) +
       ' AND cardId=' + QuotedStr(CardId) + ' ORDER BY sort,id;');
     Done := 0;
     ItemsHtml := '';
@@ -1391,27 +1412,19 @@ begin
           '" type="submit" aria-label="' + HtmlAttr(Items[k][1]) + '"></button></form>'
       else
         ItemsHtml := ItemsHtml + '<div class="check-box-container"><div class="check-box materialCheckBox' + Finished + '"></div></div>';
-      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div></div>';
+      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div>' +
+        Deadline(Items[k][3], ChecklistUrl + '/items/' + HTTPEncode(Items[k][0]), 'checklist-item') + '</div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
-    DueUrl := HtmlAttr(Base + '/' + HTTPEncode(Lists[i][0]) + '/due');
-    if ShowDue and Writable and (Lists[i][2] = '') then
-      Checklist := Checklist + '<button class="js-checklist-due-date checklist-due-date-add" type="button" title="' +
-        DueLabel + '" aria-label="' + DueLabel + '" data-url="' + DueUrl + '"><i class="fa fa-clock-o"></i></button>';
+    if Lists[i][2] = '' then
+      Checklist := Checklist + Deadline('', ChecklistUrl, 'checklist');
     if Writable then
       Checklist := Checklist + '<a class="fa fa-navicon checklist-details-menu js-open-checklist-details-menu" href="#" data-checklist="' +
         HtmlAttr(Lists[i][0]) + '" title="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) +
         '" aria-label="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"></a>';
     Checklist := Checklist + '<h4 class="title">' + MarkdownViewer(Lists[i][1], PlainLinks, PlainSource) + '</h4></div>';
-    if ShowDue and (Lists[i][2] <> '') then
-    begin
-      Checklist := Checklist + '<a class="card-date due-date checklist-due-date' +
-        IfThen(Writable, ' js-edit-date') + '" title="' + DueLabel + '"';
-      if Writable then
-        Checklist := Checklist + ' href="#" data-url="' + DueUrl + '" data-date="' + HtmlAttr(Lists[i][2]) + '"';
-      Checklist := Checklist + '><time datetime="' + HtmlAttr(Lists[i][2]) + '">' +
-        E(FormatShownDate(Lists[i][2], ViewDateFormat)) + '</time></a>';
-    end;
+    if Lists[i][2] <> '' then
+      Checklist := Checklist + Deadline(Lists[i][2], ChecklistUrl, 'checklist');
     // WeKan's progress: the share of its items checked, shown once one is.
     if (Length(Items) > 0) and (Done > 0) then
     begin
@@ -7263,6 +7276,7 @@ begin
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'due') then Action := 'checklist-due'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
+  else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'due') then Action := 'checklist-due'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
   else Exit;
   if (n >= 4) and (P[2] = 'cards') then CardId := P[3];
@@ -7402,7 +7416,7 @@ begin
   else if Action = 'add-comment' then
     Code := AddViewComment(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['comment'], NewId, Error)
   else if Action = 'checklist-due' then
-    Code := SetViewChecklistDue(T, S.UserId, BoardId, CardId, ChecklistId, Request.ContentFields.Values['at'],
+    Code := SetViewChecklistDue(T, S.UserId, BoardId, CardId, ChecklistId, ItemId, Request.ContentFields.Values['at'],
       Request.ContentFields.Values['delete'] = '1', Error)
   else if Action = 'add-checklist' then
     Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
