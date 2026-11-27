@@ -12,10 +12,12 @@ import os
 import re
 import socket
 import sqlite3
+import struct
 import subprocess
 import sys
 import tempfile
 import time
+import zlib
 from pathlib import Path
 from urllib.parse import unquote, urlencode
 
@@ -927,6 +929,21 @@ def http_checks(server, tmp, backend):
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png' % att, cookie=owner)
         assert status == 200 and body == png and headers.get('Content-Type') == 'image/png', headers
         assert headers.get('Content-Disposition', '').startswith('inline') and headers.get('X-Content-Type-Options') == 'nosniff'
+        def png_chunk(kind, payload):
+            return struct.pack('>I', len(payload)) + kind + payload + struct.pack('>I', zlib.crc32(kind + payload))
+        large_png = (b'\x89PNG\r\n\x1a\n' + png_chunk(b'IHDR', struct.pack('>IIBBBBB', 640, 320, 8, 2, 0, 0, 0))
+                     + png_chunk(b'IDAT', zlib.compress((b'\0' + b'\x33\x66\x99' * 640) * 320)) + png_chunk(b'IEND', b''))
+        before = set(re.findall(rb'data-attachment="([^"]+)"', page))
+        status, _, page, _ = upload('wide.png', 'image/png', large_png, owner)
+        assert status == 200
+        wide, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - before
+        thumb_url = '/cdn/storage/attachments/%s/thumbnail' % wide.decode()
+        status, headers, thumbnail, _ = request('GET', thumb_url, cookie=owner)
+        assert status == 200 and headers['Content-Type'] == 'image/png'
+        assert headers['Cache-Control'] == 'private, no-store' and headers['X-Content-Type-Options'] == 'nosniff'
+        assert thumbnail.startswith(b'\x89PNG\r\n\x1a\n') and struct.unpack('>II', thumbnail[16:24]) == (512, 256)
+        assert request('GET', thumb_url, cookie=stranger)[0] == 404
+        assert request('POST', '%s/attachments/%s/delete' % (card_path, wide.decode()), {}, cookie=owner)[0] == 200
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png?download=true' % att, cookie=owner)
         assert status == 200 and headers.get('Content-Disposition', '').startswith('attachment'), headers
         rename = '/b/%s/cards/%s/attachments/%s/rename' % (board_id, card_id, att)
@@ -984,7 +1001,7 @@ def http_checks(server, tmp, backend):
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert ('data-pop="attachment-actions-%s"' % att).encode() in page and b'js-add-background-image' in page
         assert ('data-pop="attachment-actions-%s"' % html_att).encode() not in page, 'only an image'
-        cover_img = ('<div class="minicard-cover"><img src="/cdn/storage/attachments/%s"' % att).encode()
+        cover_img = ('<div class="minicard-cover"><img src="/cdn/storage/attachments/%s/thumbnail"' % att).encode()
         background = ('style="background-image: url(/cdn/storage/attachments/%s); background-size: cover;"' % att).encode()
         status, _, page, _ = request('POST', '%s/attachments/%s/cover' % (card_path, att), {}, cookie=owner)
         assert status == 200 and cover_img in page and b'js-remove-cover' in page

@@ -21,6 +21,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 card attachments
 
+- Serve 512-pixel previews of PNG and JPEG card attachments through the
+  existing attachment access checks. The gallery and raster minicard covers
+  request previews. Unsupported raster decoders and failed conversions fall
+  back to the original. SVG uses its sanitized original route.
 - Rename attachments in the open card using the same storage operation as
   HTML4. The rename changes the displayed and downloaded filename, retains
   the existing extension, and leaves the stored file bytes intact.

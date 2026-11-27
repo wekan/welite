@@ -89,7 +89,7 @@ procedure ResetViewState;
 
 implementation
 
-uses wlboard,
+uses wlboard, wlthumb,
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
   wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
   wlcrypt;
@@ -1809,7 +1809,7 @@ begin
       '" data-name="' + HtmlAttr(Name) + '" data-src="' + HtmlAttr(Src) + '">';
     if Kind = 'image' then
       Result := Result + '<img class="attachment-thumbnail" src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Id)) +
-        '/thumbnail" alt="' + HtmlAttr(Name) + '" title="' + HtmlAttr(Name) + '" loading="lazy">'
+        IfThen(RasterAttachment(R[i][2]), '/thumbnail', '') + '" alt="' + HtmlAttr(Name) + '" title="' + HtmlAttr(Name) + '" loading="lazy">'
     else
       Result := Result + '<span class="attachment-thumbnail-text">' + E(Ext) + '</span>';
     Result := Result + '</button><div class="attachment-details-container"><div class="attachment-details"><div>' +
@@ -3641,17 +3641,17 @@ begin
         '<span class="list-header-name">' + E(Lists[j][1]) + '</span>' + Composer + '</div>' +
         '<div class="list-body js-minicards" data-list="' + HtmlAttr(Lists[j][0]) + '" data-swimlane="' + HtmlAttr(Lanes[i][0]) + '">';
       Cards := Db.Query('SELECT c.id,c.title,c.sort,COALESCE(c.receivedAt,''''),COALESCE(c.startAt,''''),' +
-        'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE((SELECT attachments.id FROM attachments WHERE attachments.id=c.coverId AND ' +
-        'attachments.cardId=c.id AND attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/svg+xml'') AND ' +
-        // LiveAttachmentSQL names the table attachments, unaliased.
-        LiveAttachmentSQL(Db) + '),''''),COALESCE(c.dueComplete,0),COALESCE(c.color,''''),' +
+        'COALESCE(c.dueAt,''''),COALESCE(c.endAt,''''),COALESCE(attachments.id,''''),COALESCE(c.dueComplete,0),COALESCE(c.color,''''),' +
         // The minicard's Card Settings sides (MinicardBadges' Extra).
         'COALESCE(c.requestedBy,''''),COALESCE(c.description,''''),COALESCE(c.dateLastActivity,''''),' +
         'COALESCE(NULLIF(c.locationName,''''),c.locationAddress,''''),' +
         'CASE WHEN json_valid(c.extra_json) AND json_type(c.extra_json,''$.locations'')=''array'' THEN ' +
         'json_extract(c.extra_json,''$.locations'') ELSE ''[]'' END,' +
         'CASE WHEN json_valid(c.extra_json) THEN CASE WHEN json_type(c.extra_json,''$.requesters'')=''array'' THEN ' +
-        'json_extract(c.extra_json,''$.requesters'') ELSE ''[]'' END ELSE ''[]'' END FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+        'json_extract(c.extra_json,''$.requesters'') ELSE ''[]'' END ELSE ''[]'' END,COALESCE(attachments.type,'''') ' +
+        'FROM cards c LEFT JOIN attachments ON attachments.id=c.coverId AND attachments.cardId=c.id AND attachments.boardId=c.boardId AND ' +
+        'attachments.type IN (''image/png'',''image/jpeg'',''image/gif'',''image/webp'',''image/svg+xml'') AND ' +
+        LiveAttachmentSQL(Db) + ' WHERE c.boardId=' + QuotedStr(BoardId) +
         ' AND c.swimlaneId=' + QuotedStr(Lanes[i][0]) + ' AND c.listId=' + QuotedStr(Lists[j][0]) +
         ' AND c.archived=0 AND c.deletedAt IS NULL' + FilterCond + ' ORDER BY ' + SortSql + 'c.sort,c.id;');
       for k := 0 to High(Cards) do
@@ -3663,7 +3663,7 @@ begin
           '"><div class="minicard' + IfThen(Shows.CardColor and ColorName(Cards[k][9]), ' minicard-' + Cards[k][9], '') + '">' +
           // WeKan's minicard cover: the card's cover image.
           IfThen(Cards[k][7] <> '', '<div class="minicard-cover"><img src="/cdn/storage/attachments/' + HtmlAttr(HTTPEncode(Cards[k][7])) +
-            '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title">' +
+            IfThen(RasterAttachment(Cards[k][16]), '/thumbnail', '') + '" alt="" loading="lazy"></div>', '') + '<div class="minicard-title">' +
           // WeKan's "Mark as complete" on the minicard, when Card Settings shows it there.
           IfThen(Shows.Complete, '<a class="minicard-complete-toggle js-toggle-card-complete" href="#" data-card="' + HtmlAttr(Cards[k][0]) +
             '" data-complete="' + IfThen(Cards[k][8] = '1', 'false', 'true') + '" title="' +
@@ -5639,6 +5639,19 @@ begin
       end
       else Rows := nil;
     end;
+  end;
+  if (Length(P) = 5) then
+  begin
+    if (Length(Rows) <> 1) or not RasterAttachment(Rows[0][2]) then
+      SendJsonAnswer(Response, 404, '{"error":"No thumbnail for this attachment"}')
+    else if not SendAttachmentThumbnail(Response, StoreFilePath(T.FilesDir, 'attachme', P[3]), Rows[0][2]) then
+    begin
+      Response.Code := 302;
+      Response.SetCustomHeader('Cache-Control', 'private, no-store');
+      Response.SetCustomHeader('Location', '/cdn/storage/attachments/' + HTTPEncode(P[3]));
+      SendResponse(Response);
+    end;
+    Exit;
   end;
   // An SVG: sanitized again on its way out, whatever is stored
   // (server/lib/svgResponse.js); one stored with active content is recorded.
