@@ -1464,7 +1464,7 @@ begin
     Db.Exec('ROLLBACK;');
 end;
 
-procedure RuleArchiveCard(Db:TWLDb;const Activity:TActivity;Archive:Boolean;const Eligibility:string='');
+procedure RuleArchiveCard(Db:TWLDb;const Activity:TActivity;Archive:Boolean);
 var Scope,Before,After,Stamp,ArchivedAt,Kind:string;
 begin
   Scope:='id='+Q(Activity.CardId)+' AND boardId='+Q(Activity.BoardId)+' AND deletedAt IS NULL';
@@ -1474,7 +1474,7 @@ begin
   ArchivedAt:='NULL';Kind:='restoredCard';
   if Archive then begin ArchivedAt:=Stamp;Kind:='archivedCard';end;
   if Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+
-    ' AND COALESCE(archived,0)='+Before+Eligibility+') THEN 1 ELSE json(''Card archive state changed'') END; '+
+    ' AND COALESCE(archived,0)='+Before+') THEN 1 ELSE json(''Card archive state changed'') END; '+
     'UPDATE cards SET archived='+After+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+' WHERE '+Scope+
     '; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+' AND archived='+After+
     ') THEN 1 ELSE json(''Rule archive failed'') END; '+ActivitySql(Kind,Activity.UserId,Activity.CardId,'{}')+'COMMIT;') then
@@ -3420,6 +3420,31 @@ begin
   end;
 end;
 
+procedure ArchiveInactiveCard(Db:TWLDb;const Activity:TActivity;const Eligibility:string);
+var BoardScope,RootScope,Tree,Stamp,Sql:string;Changed:TWLRows;I:Integer;
+begin
+  BoardScope:='boardId='+Q(Activity.BoardId)+' AND deletedAt IS NULL AND COALESCE(type,'''')<>''template-card''';
+  RootScope:=BoardScope+' AND id='+Q(Activity.CardId)+' AND archived=0'+Eligibility;
+  Tree:='WITH RECURSIVE subtree(id) AS (SELECT id FROM cards WHERE '+RootScope+
+    ' UNION SELECT c.id FROM cards c JOIN subtree p ON c.parentId=p.id WHERE c.'+BoardScope+') ';
+  if not Db.Exec('BEGIN IMMEDIATE;') then Exit;
+  try
+    Changed:=Db.Query(Tree+'SELECT c.id FROM cards c JOIN subtree s ON s.id=c.id WHERE c.archived=0 ORDER BY c.id;');
+    if Length(Changed)=0 then begin Db.Exec('ROLLBACK;');Exit;end;
+    Stamp:=Q(NowIso);
+    Sql:=Tree+'UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
+      ' WHERE archived=0 AND '+BoardScope+' AND id IN (SELECT id FROM subtree); ';
+    for I:=0 to High(Changed) do
+      Sql:=Sql+ActivitySql('archivedCard',Activity.UserId,Changed[I][0],'{}');
+    if not Db.Exec(Sql+'COMMIT;') then begin Db.Exec('ROLLBACK;');Exit;end;
+  except
+    Db.Exec('ROLLBACK;');
+    raise;
+  end;
+  for I:=0 to High(Changed) do
+    RecordArchiveHistory(Db,Activity.UserId,Activity.BoardId,'card',Changed[I][0],True);
+end;
+
 // The shared board setting is opt-in. The hourly scan uses the same scoped
 // update and History writer as a rule-driven card archive.
 procedure RunInactiveCardArchive(Db:TWLDb;Utc:TDateTime);
@@ -3447,7 +3472,7 @@ begin
       for J:=0 to High(Cards) do
       begin
         A.CardId:=Cards[J][0];
-        RuleArchiveCard(Db,A,True,Eligibility);
+        ArchiveInactiveCard(Db,A,Eligibility);
       end;
     end;
   finally Boards.Free;end;

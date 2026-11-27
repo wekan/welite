@@ -21,6 +21,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   The hourly shared-store scheduler honors the board’s inactivity archive
   setting and records the resulting card transitions in History.
   Board admins can set or clear the inactivity threshold in Board Settings.
+  Inactivity archiving follows nested subtasks on the same board and
+  records one lifecycle transition per card that changes.
 
 - The Time view and its PDF and Excel exports show hours by assignee and
   card, mark overtime cards, and show the signed total time until open
