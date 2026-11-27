@@ -2799,6 +2799,51 @@ procedure ExcludeBoardArchive(Board: TJSONObject); forward;
 function DownloadScopeId(Request: TRequest; const Key: string): string; forward;
 procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string); forward;
 procedure ScopeBoardExport(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string); forward;
+
+procedure PruneBoardExportUsers(Board: TJSONObject);
+var Ids: TStringList; Rows: TJSONArray; Row: TJSONObject;
+  Collection, Key: string; I: Integer;
+
+  procedure Remember(Value: TJSONData);
+  var J: Integer;
+  begin
+    if Value is TJSONArray then
+      for J := 0 to Value.Count - 1 do Remember(Value.Items[J])
+    else if Value is TJSONObject then Remember(TJSONObject(Value).Find('userId'))
+    else if (Value is TJSONString) and (Value.AsString <> '') then Ids.Add(Value.AsString);
+  end;
+
+begin
+  Ids := TStringList.Create;
+  try
+    Ids.CaseSensitive := True;
+    Ids.Sorted := True;
+    Ids.Duplicates := dupIgnore;
+    Remember(Board.Find('members'));
+    for Collection in ['lists','swimlanes','cards','subtaskItems','attachments','comments','activities','checklists','checklistItems'] do
+    begin
+      Rows := Board.Arrays[Collection];
+      for I := 0 to Rows.Count - 1 do
+      begin
+        Row := Rows.Objects[I];
+        Remember(Row.Find('userId'));
+        if Collection = 'checklistItems' then Remember(Row.Find('assigneeId'));
+        if (Collection = 'cards') or (Collection = 'subtaskItems') then
+        begin
+          for Key in ['members','assignees','requesters','assigners'] do Remember(Row.Find(Key));
+          Remember(Row.FindPath('vote.positive'));
+          Remember(Row.FindPath('vote.negative'));
+        end;
+      end;
+    end;
+    Rows := Board.Arrays['users'];
+    for I := Rows.Count - 1 downto 0 do
+      if Ids.IndexOf(Rows.Objects[I].Get('_id', '')) < 0 then Rows.Delete(I);
+  finally
+    Ids.Free;
+  end;
+end;
+
 function ReadFileBytes(const Path: string): string; forward;
 
 procedure AddFilteredExportFiles(const T: TWLTenant; Board: TJSONObject; const BoardId: string);
@@ -2873,6 +2918,7 @@ begin
       if ExcludeArchive then ExcludeBoardArchive(Payload);
       ScopeBoardExport(Payload, LaneId, ListId, CardId, ChecklistId);
       if Fields <> '' then FilterBoardExportFields(Payload, Fields);
+      if Filtered then PruneBoardExportUsers(Payload);
       if Filtered and IncludeFiles then AddFilteredExportFiles(T, Payload, BoardId);
     except SendError(aResponse,500,'Could not scope board export');Exit;end;
     if Browser or Html5Download then
@@ -3230,7 +3276,7 @@ end;
 
 procedure ScopeBoardExport(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string);
 var Cards, Checklists, Items, Entries, OutsideCards, Subtasks: TJSONArray; Entry: TJSONObject;
-  CardIds, ListIds, LaneIds, CheckIds, UserIds: TStringList;
+  CardIds, ListIds, LaneIds, CheckIds: TStringList;
   SelectedCard, Key: string; I: Integer; Matches, Scoped: Boolean;
 
   function NewIds: TStringList;
@@ -3241,15 +3287,6 @@ var Cards, Checklists, Items, Entries, OutsideCards, Subtasks: TJSONArray; Entry
     Result.Duplicates := dupIgnore;
   end;
 
-  procedure RememberUser(Value: TJSONData);
-  var J: Integer;
-  begin
-    if Value is TJSONArray then
-      for J := 0 to Value.Count - 1 do RememberUser(Value.Items[J])
-    else if Value is TJSONObject then RememberUser(TJSONObject(Value).Find('userId'))
-    else if (Value is TJSONString) and (Value.AsString <> '') then UserIds.Add(Value.AsString);
-  end;
-
   procedure KeepRows(const Collection, PropertyName: string; Ids: TStringList);
   var Rows: TJSONArray; J: Integer; Row: TJSONObject;
   begin
@@ -3257,8 +3294,7 @@ var Cards, Checklists, Items, Entries, OutsideCards, Subtasks: TJSONArray; Entry
     for J := Rows.Count - 1 downto 0 do
     begin
       Row := Rows.Objects[J];
-      if Ids.IndexOf(Row.Get(PropertyName, '')) < 0 then Rows.Delete(J)
-      else RememberUser(Row.Find('userId'));
+      if Ids.IndexOf(Row.Get(PropertyName, '')) < 0 then Rows.Delete(J);
     end;
   end;
 
@@ -3282,7 +3318,6 @@ var Cards, Checklists, Items, Entries, OutsideCards, Subtasks: TJSONArray; Entry
     end;
     if Row.Get('deletedAt', '') <> '' then Exit;
     Subtasks.Add(Row.Clone);
-    for Parent in ['userId','members','assignees','requesters','assigners'] do RememberUser(Row.Find(Parent));
   end;
 
 begin
@@ -3291,10 +3326,8 @@ begin
   ListIds := NewIds;
   LaneIds := NewIds;
   CheckIds := NewIds;
-  UserIds := NewIds;
   OutsideCards := TJSONArray.Create;
   try
-    RememberUser(Board.Find('members'));
     SelectedCard := CardId;
     Checklists := Board.Arrays['checklists'];
     if (SelectedCard = '') and (ChecklistId <> '') then
@@ -3322,7 +3355,6 @@ begin
       CardIds.Add(Entry.Get('_id', ''));
       LaneIds.Add(Entry.Get('swimlaneId', ''));
       ListIds.Add(Entry.Get('listId', ''));
-      for Key in ['userId','members','assignees','requesters','assigners'] do RememberUser(Entry.Find(Key));
     end;
     Board.Delete('subtaskItems');
     Subtasks := TJSONArray.Create;
@@ -3342,21 +3374,15 @@ begin
       Entry := Checklists.Objects[I];
       if (CardIds.IndexOf(Entry.Get('cardId', '')) < 0) or
         ((ChecklistId <> '') and (Entry.Get('_id', '') <> ChecklistId)) then Checklists.Delete(I)
-      else
-      begin
-        CheckIds.Add(Entry.Get('_id', ''));
-        RememberUser(Entry.Find('userId'));
-      end;
+      else CheckIds.Add(Entry.Get('_id', ''));
     end;
     Items := Board.Arrays['checklistItems'];
     for I := Items.Count - 1 downto 0 do
     begin
       Entry := Items.Objects[I];
       if (CardIds.IndexOf(Entry.Get('cardId', '')) < 0) or
-        (CheckIds.IndexOf(Entry.Get('checklistId', '')) < 0) then Items.Delete(I)
-      else RememberUser(Entry.Find('assigneeId'));
+        (CheckIds.IndexOf(Entry.Get('checklistId', '')) < 0) then Items.Delete(I);
     end;
-    KeepRows('users', '_id', UserIds);
     for Key in ['rules','triggers','actions'] do
     begin
       Entries := Board.Arrays[Key];
@@ -3364,7 +3390,6 @@ begin
     end;
   finally
     OutsideCards.Free;
-    UserIds.Free;
     CheckIds.Free;
     LaneIds.Free;
     ListIds.Free;
@@ -3389,6 +3414,7 @@ begin
     ScopeBoardExport(Payload, DownloadScopeId(aRequest, 'swimlaneId'), DownloadScopeId(aRequest, 'listId'),
       DownloadScopeId(aRequest, 'cardId'), DownloadScopeId(aRequest, 'checklistId'));
     FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields']);
+    PruneBoardExportUsers(Payload);
   except
     Payload.Free;
     SendError(aResponse, 500, 'Could not scope board export');

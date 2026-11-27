@@ -14,7 +14,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   exports read attachment files only for the selected records. JSON and
   ZIP field selection recognizes individual keys, preserving the full
   export when none are recognized. ZIP import returns HTTP 400 for invalid
-  collection types encountered during field filtering.
+  collection types encountered during field filtering. Filtered exports
+  keep user records referenced by the remaining data, including board
+  members and authors, and omit users referenced only by excluded fields.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
