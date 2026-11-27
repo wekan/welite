@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Set the number of Search All Boards results per page with the localized
+  `limit:` operator. The page size carries through next and previous links.
+
 - Filter Search All Boards by archived or all cards, open or ended cards,
   and public or private boards. Within active boards, archive searches
   include cards in archived lists and swimlanes.

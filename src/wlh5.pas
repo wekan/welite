@@ -6004,11 +6004,11 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate, SortField: string; out Descending, SearchArchive: Boolean);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate, SortField: string; out Descending, SearchArchive: Boolean; out PageSize: Integer);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
-  i, Start: Integer; InQuotes: Boolean; Token, Sql: string;
-  function ReadSort(const Arg: string): Boolean;
-  var Colon: Integer; Op, Value, Field: string; Reverse: Boolean;
+  i, Start: Integer; InQuotes, HasPageOption: Boolean; Token, Sql: string;
+  function ReadPageOption(const Arg: string): Boolean;
+  var Colon, Size: Integer; Op, Value, Field: string; Reverse: Boolean; Digit: Char;
     function IsValue(const Name: string): Boolean;
     begin
       Result := SameText(Value, Name) or SameText(Value, Words.Text('predicate-' + Name, Name));
@@ -6018,8 +6018,16 @@ var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
     Colon := Pos(':', Arg);
     if Colon = 0 then Exit;
     Op := Copy(Arg, 1, Colon - 1);
-    if not SameText(Op, 'sort') and not SameText(Op, Words.Text('operator-sort', 'sort')) then Exit;
     Value := Copy(Arg, Colon + 1, MaxInt);
+    if SameText(Op, 'limit') or SameText(Op, Words.Text('operator-limit', 'limit')) then
+    begin
+      if Value = '' then Exit;
+      for Digit in Value do if not (Digit in ['0'..'9']) then Exit;
+      if not TryStrToInt(Value, Size) then Exit;
+      if Size > 0 then PageSize := Size;
+      Exit(True);
+    end;
+    if not SameText(Op, 'sort') and not SameText(Op, Words.Text('operator-sort', 'sort')) then Exit;
     Reverse := StartsStr('-', Value);
     if Reverse then Delete(Value, 1, 1);
     if IsValue('due') then Field := 'c.dueAt'
@@ -6033,7 +6041,7 @@ var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
 begin
   Plain := '';
   Predicate := '';
-  SortField := ''; Descending := False;
+  SortField := ''; Descending := False; PageSize := 25; HasPageOption := False;
   for Kind := Low(Kind) to High(Kind) do Groups[Kind] := '';
   i := 1;
   while i <= Length(Query) do
@@ -6050,7 +6058,8 @@ begin
     if i = Start then Break;
     Token := Copy(Query, Start, i - Start);
     Sql := '';
-    if not InQuotes and ReadSort(Token) then Continue;
+    if not InQuotes and ReadPageOption(Token) then
+    begin HasPageOption := True; Continue; end;
     if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, Token, Kind);
     if Sql = '' then
     begin
@@ -6069,7 +6078,7 @@ begin
       if Predicate <> '' then Predicate := Predicate + ' AND ';
       Predicate := Predicate + '(' + Groups[Kind] + ')';
     end;
-  if (Predicate = '') and (SortField = '') then Plain := Query;
+  if (Predicate = '') and not HasPageOption then Plain := Query;
   SearchArchive := Groups[soArchiveState] <> '';
   if (Query <> '') and not SearchArchive then
   begin
@@ -6078,7 +6087,7 @@ begin
   end;
 end;
 
-function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0;
+function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Int64 = 0;
   const OperatorSql: string = ''; const SortField: string = ''; Descending: Boolean = False; SearchArchive: Boolean = False): TWLRows;
 var Scope, Tail, Match, SortValue, OrderBy: string;
 begin
@@ -6137,12 +6146,12 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..17] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
-    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort', 'status');
+  Operators: array[0..18] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
+    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort', 'status', 'limit');
   Fields: array[0..20] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
     'assignee', 'member', 'week', 'month', 'quarter', 'year', 'created', 'modified', 'archived', 'all', 'open', 'ended', 'public', 'private');
-  Described: array[0..16] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
-    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort', 'status');
+  Described: array[0..17] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
+    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort', 'limit', 'status');
   Statuses: array[0..4] of string = ('archived', 'all', 'ended', 'public', 'private');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
@@ -6175,10 +6184,10 @@ begin
 end;
 
 function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
-const PageSize = 25;
 var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards: TWLRows;
   BoardCards: array of TWLRows; Positions: array of Integer;
-  i, j, Skip, Shown, NextBoard: Integer; HasNext, Descending, SearchArchive: Boolean;
+  i, j, Shown, NextBoard, PageSize: Integer; Skip: Int64;
+  HasNext, Descending, SearchArchive: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -6217,7 +6226,7 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
   end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql, SortField, Descending, SearchArchive);
+  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql, SortField, Descending, SearchArchive, PageSize);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
@@ -6229,7 +6238,7 @@ begin
     // Global Search covers active memberships, even when another board is public.
     Boards := Db.Query('SELECT b.id,b.title,b.slug FROM boards b JOIN board_members m ON m.boardId=b.id ' +
       'WHERE m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1 AND b.archived=0 ORDER BY b.title,b.id;');
-    Skip := (PageNumber - 1) * PageSize;
+    Skip := Int64(PageNumber - 1) * PageSize;
     Shown := 0;
     if SortField = '' then
     begin
