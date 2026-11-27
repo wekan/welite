@@ -7873,12 +7873,14 @@ begin
   begin
     if Value.JSONType = jtNull then Exit('—');
     if Values.Get('isDate', False) then Exit(HistoryDate(Value, DateFormat));
-    if (Value.JSONType = jtBoolean) and
-      ((Values.Get('field', '') = 'dueComplete') or (Values.Get('field', '') = 'isOvertime')) then
-    begin
-      if Value.AsBoolean then Exit(Words.Text('yes', 'Yes'));
-      Exit(Words.Text('no', 'No'));
-    end;
+    if Value.JSONType = jtBoolean then
+      case Values.Get('field', '') of
+        'dueComplete', 'isOvertime', 'isFinished', 'hideCheckedChecklistItems', 'hideAllChecklistItems':
+          begin
+            if Value.AsBoolean then Exit(Words.Text('yes', 'Yes'));
+            Exit(Words.Text('no', 'No'));
+          end;
+      end;
     if (Values.Get('field', '') = 'spentTime') and (Value.JSONType = jtNumber) then
     begin
       NumberFormat := DefaultFormatSettings;
@@ -8045,6 +8047,12 @@ begin
             'isOvertime':
               if Row.Get('entityType', '') = 'card' then
                 GroupLabel := Words.Text('overtime', 'Overtime');
+            'isFinished':
+              if Row.Get('entityType', '') = 'checklistItem' then
+                GroupLabel := Words.Text('completed', 'Completed');
+            'hideCheckedChecklistItems', 'hideAllChecklistItems':
+              if Row.Get('entityType', '') = 'checklist' then
+                GroupLabel := Words.Text(Values.Get('field', ''), GroupLabel);
             'dueComplete':
               if Row.Get('entityType', '') = 'card' then
                 GroupLabel := Words.Text('due-complete', 'Due complete');

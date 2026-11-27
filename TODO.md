@@ -275,7 +275,8 @@ Next, after this goal:
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
   and remaining History restore types and row summaries beyond
-  card, list and swimlane colors, card dates, completion and time tracking.
+  card, list and swimlane colors, card dates, completion and time tracking,
+  and checklist visibility and item completion.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
