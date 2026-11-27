@@ -5744,8 +5744,8 @@ end;
 
 procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
-var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql:string;
-  Body,Reply:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
+var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql,OldTitle,NewTitle:string;
+  Body,Reply,Before,After:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
   Flag,i:Integer;Limit:Int64;Wide:UnicodeString;
   procedure SetColumn(const Column,Literal:string);
   begin
@@ -5758,8 +5758,9 @@ begin
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
   Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
-  Rows:=T.Db.Query('SELECT id FROM lists WHERE '+Scope+';');
+  Rows:=T.Db.Query('SELECT title FROM lists WHERE '+Scope+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
+  OldTitle:=Rows[0][0];NewTitle:=OldTitle;
   Body:=nil;Policy:=nil;Sets:='';Permission:='1';
   try
     try
@@ -5781,7 +5782,8 @@ begin
           i:=1000;if Ord(Wide[i]) in [$D800..$DBFF] then Dec(i);
           Value:=UTF8Encode(Copy(Wide,1,i));
         end;
-        SetColumn('title',QuotedStr(Value));
+        NewTitle:=Value;
+        SetColumn('title',QuotedStr(NewTitle));
       end;
       Field:=Body.Find('color');
       if (Field<>nil) and (Field.JSONType<>jtNull) and (Field.AsString<>'') then
@@ -5825,6 +5827,14 @@ begin
       ')=1 THEN 1 ELSE json(''List edit scope changed'') END; COMMIT;';
     if not T.Db.Exec(Sql) then
     begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not edit list');Exit;end;
+    if OldTitle<>NewTitle then
+    begin
+      Before:=TJSONObject.Create(['field','title','value',OldTitle]);
+      After:=TJSONObject.Create(['field','title','value',NewTitle]);
+      try
+        try RecordHistoryRow(T.Db,UserId,BoardId,'list',ListId,'title','edited',Before,After);except end;
+      finally Before.Free;After.Free;end;
+    end;
     Reply:=TJSONObject.Create(['_id',ListId]);
     try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
   finally Policy.Free;Body.Free;end;

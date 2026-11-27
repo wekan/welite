@@ -11,7 +11,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   own supported rows on boards where they have permission, and return to
   the same search and page. Member History links and forms keep only the
   parameters used by that view. List and swimlane History also include
-  older rows that identify the container as the changed entity.
+  older rows that identify the container as the changed entity. REST list
+  title changes can be undone, redone and restored from list History.
 
 - REST card color edits are recorded in the board's History Title group
   and can be undone, redone or restored. Undo and redo check the current
