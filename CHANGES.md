@@ -21,6 +21,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 card attachments
 
+- On Linux with `libwebp.so.7`, decode WebP attachments and encode thumbnails
+  in WebP. PNG and JPEG attachments still produce PNG previews on builds
+  without the optional library.
 - Serve 512-pixel previews of PNG and JPEG card attachments through the
   existing attachment access checks. The gallery and raster minicard covers
   request previews. Unsupported raster decoders and failed conversions fall

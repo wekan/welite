@@ -8,12 +8,86 @@ function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: stri
 
 implementation
 
-uses Classes, SysUtils, Types, Math, FPImage, FPReadPNG, FPReadJPEG, FPWritePNG;
+uses Classes, SysUtils, Types, Math, FPImage, FPReadPNG, FPReadJPEG, FPWritePNG, Dynlibs, CTypes;
 
 const
   MaxInputBytes = 32 * 1024 * 1024;
   MaxPixels = 16000000;
   Edge = 512;
+
+type
+  TWebPCodec = record
+    Lib: TLibHandle;
+    GetInfo: function(Data: PByte; Length: SizeUInt; W, H: Pcint): cint; cdecl;
+    DecodeRGBA: function(Data: PByte; Length: SizeUInt; Pixels: PByte; Capacity: SizeUInt; Stride: cint): PByte; cdecl;
+    EncodeRGBA: function(Pixels: PByte; W, H, Stride: cint; Quality: cfloat; out Data: PByte): SizeUInt; cdecl;
+    Release: procedure(Data: Pointer); cdecl;
+  end;
+
+function LoadWebP: TWebPCodec;
+begin
+  Result := Default(TWebPCodec);
+  {$IFDEF LINUX}
+  Result.Lib := LoadLibrary('libwebp.so.7');
+  if Result.Lib = NilHandle then Exit;
+  Pointer(Result.GetInfo) := GetProcedureAddress(Result.Lib, 'WebPGetInfo');
+  Pointer(Result.DecodeRGBA) := GetProcedureAddress(Result.Lib, 'WebPDecodeRGBAInto');
+  Pointer(Result.EncodeRGBA) := GetProcedureAddress(Result.Lib, 'WebPEncodeRGBA');
+  Pointer(Result.Release) := GetProcedureAddress(Result.Lib, 'WebPFree');
+  if not (Assigned(Result.GetInfo) and Assigned(Result.DecodeRGBA) and Assigned(Result.EncodeRGBA) and Assigned(Result.Release)) then
+  begin
+    UnloadLibrary(Result.Lib);
+    Result := Default(TWebPCodec);
+  end;
+  {$ENDIF}
+end;
+
+function ValidSize(const Size: TPoint): Boolean;
+begin
+  Result := (Size.X > 0) and (Size.Y > 0) and (Int64(Size.X) * Size.Y <= MaxPixels);
+end;
+
+function ReadWebP(const Codec: TWebPCodec; Stream: TStream; out Size: TPoint; out Pixels: TBytes): Boolean;
+var Data: TBytes; W, H: cint;
+begin
+  Result := False;
+  if Codec.Lib = NilHandle then Exit;
+  SetLength(Data, Stream.Size);
+  Stream.ReadBuffer(Data[0], Length(Data));
+  if Codec.GetInfo(@Data[0], Length(Data), @W, @H) = 0 then Exit;
+  Size := Point(W, H);
+  if not ValidSize(Size) then Exit;
+  SetLength(Pixels, W * H * 4);
+  Result := Codec.DecodeRGBA(@Data[0], Length(Data), @Pixels[0], Length(Pixels), W * 4) <> nil;
+end;
+
+function WriteWebP(const Codec: TWebPCodec; Image: TFPMemoryImage; Output: TStream): Boolean;
+var Pixels: TBytes; Color: TFPColor; Data: PByte; Count: SizeUInt; X, Y, Offset: Integer;
+begin
+  Result := False;
+  if Codec.Lib = NilHandle then Exit;
+  SetLength(Pixels, Image.Width * Image.Height * 4);
+  Offset := 0;
+  for Y := 0 to Image.Height - 1 do
+    for X := 0 to Image.Width - 1 do
+    begin
+      Color := Image.Colors[X, Y];
+      Pixels[Offset] := Color.Red shr 8;
+      Pixels[Offset + 1] := Color.Green shr 8;
+      Pixels[Offset + 2] := Color.Blue shr 8;
+      Pixels[Offset + 3] := Color.Alpha shr 8;
+      Inc(Offset, 4);
+    end;
+  Data := nil;
+  try
+    Count := Codec.EncodeRGBA(@Pixels[0], Image.Width, Image.Height, Image.Width * 4, 80, Data);
+    if (Count = 0) or (Data = nil) then Exit;
+    Output.WriteBuffer(Data^, Count);
+    Result := True;
+  finally
+    if Data <> nil then Codec.Release(Data);
+  end;
+end;
 
 function ReadBE32(Stream: TStream): Cardinal;
 var B: array[0..3] of Byte;
@@ -54,35 +128,44 @@ end;
 
 function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: string): Boolean;
 var Input: TFileStream; Output: TMemoryStream; Source, Preview: TFPMemoryImage;
-  Reader: TFPCustomImageReader; Writer: TFPWriterPNG; Size: TPoint; W, H, X, Y: Integer;
+  Reader: TFPCustomImageReader; Writer: TFPWriterPNG; Size: TPoint; W, H, X, Y, SX, SY, Offset: Integer;
+  Codec: TWebPCodec; Pixels: TBytes; Color: TFPColor; OutputType: string;
 begin
   Result := False;
-  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') then Exit;
+  if (MimeType <> 'image/png') and (MimeType <> 'image/jpeg') and (MimeType <> 'image/webp') then Exit;
   Input := nil;
   Output := nil;
   Source := nil;
   Preview := nil;
   Reader := nil;
   Writer := nil;
+  Codec := LoadWebP;
   try
     try
       Input := TFileStream.Create(Path, fmOpenRead or fmShareDenyWrite);
       if (Input.Size = 0) or (Input.Size > MaxInputBytes) then Exit;
-      if MimeType = 'image/png' then
+      if MimeType = 'image/webp' then
       begin
-        Size := PNGSize(Input);
-        Reader := TFPReaderPNG.Create;
+        if not ReadWebP(Codec, Input, Size, Pixels) then Exit;
       end
       else
       begin
-        Size := TFPReaderJPEG.ImageSize(Input);
-        Reader := TFPReaderJPEG.Create;
+        if MimeType = 'image/png' then
+        begin
+          Size := PNGSize(Input);
+          Reader := TFPReaderPNG.Create;
+        end
+        else
+        begin
+          Size := TFPReaderJPEG.ImageSize(Input);
+          Reader := TFPReaderJPEG.Create;
+        end;
+        if not ValidSize(Size) then Exit;
+        Input.Position := 0;
+        Source := TFPMemoryImage.Create(0, 0);
+        Source.LoadFromStream(Input, Reader);
+        if (Source.Width <> Size.X) or (Source.Height <> Size.Y) then Exit;
       end;
-      if (Size.X < 1) or (Size.Y < 1) or (Int64(Size.X) * Size.Y > MaxPixels) then Exit;
-      Input.Position := 0;
-      Source := TFPMemoryImage.Create(0, 0);
-      Source.LoadFromStream(Input, Reader);
-      if (Source.Width <> Size.X) or (Source.Height <> Size.Y) then Exit;
       W := Size.X;
       H := Size.Y;
       if Max(W, H) > Edge then
@@ -93,16 +176,34 @@ begin
       Preview := TFPMemoryImage.Create(W, H);
       for Y := 0 to H - 1 do
         for X := 0 to W - 1 do
-          Preview.Colors[X,Y] := Source.Colors[X * Int64(Size.X) div W, Y * Int64(Size.Y) div H];
-      Writer := TFPWriterPNG.Create;
-      Writer.UseAlpha := True;
+        begin
+          SX := X * Int64(Size.X) div W;
+          SY := Y * Int64(Size.Y) div H;
+          if Source <> nil then Color := Source.Colors[SX, SY]
+          else
+          begin
+            Offset := (SY * Size.X + SX) * 4;
+            Color.Red := Pixels[Offset] * 257;
+            Color.Green := Pixels[Offset + 1] * 257;
+            Color.Blue := Pixels[Offset + 2] * 257;
+            Color.Alpha := Pixels[Offset + 3] * 257;
+          end;
+          Preview.Colors[X, Y] := Color;
+        end;
       Output := TMemoryStream.Create;
-      Preview.SaveToStream(Output, Writer);
+      if WriteWebP(Codec, Preview, Output) then OutputType := 'image/webp'
+      else
+      begin
+        OutputType := 'image/png';
+        Writer := TFPWriterPNG.Create;
+        Writer.UseAlpha := True;
+        Preview.SaveToStream(Output, Writer);
+      end;
     except
       Exit;
     end;
     Output.Position := 0;
-    Response.ContentType := 'image/png';
+    Response.ContentType := OutputType;
     Response.Code := 200;
     Response.SetCustomHeader('Cache-Control', 'private, no-store');
     Response.SetCustomHeader('X-Content-Type-Options', 'nosniff');
@@ -119,6 +220,7 @@ begin
     Preview.Free;
     Source.Free;
     Input.Free;
+    if Codec.Lib <> NilHandle then UnloadLibrary(Codec.Lib);
   end;
 end;
 

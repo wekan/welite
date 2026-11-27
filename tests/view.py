@@ -6,6 +6,7 @@ the welite-ui cookie. The HTML5 view signs in with WeKan's meteor_login_token
 cookie. Linked and CLI SQLite.
 """
 import html
+import ctypes
 import http.client
 import json
 import os
@@ -941,9 +942,30 @@ def http_checks(server, tmp, backend):
         wide, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - before
         thumb_url = '/cdn/storage/attachments/%s/thumbnail' % wide.decode()
         status, headers, thumbnail, _ = request('GET', thumb_url, cookie=owner)
-        assert status == 200 and headers['Content-Type'] == 'image/png'
+        assert status == 200
         assert headers['Cache-Control'] == 'private, no-store' and headers['X-Content-Type-Options'] == 'nosniff'
-        assert thumbnail.startswith(b'\x89PNG\r\n\x1a\n') and struct.unpack('>II', thumbnail[16:24]) == (512, 256)
+        try:
+            webp = ctypes.CDLL('libwebp.so.7') if sys.platform.startswith('linux') else None
+        except OSError:
+            webp = None
+        if webp:
+            webp.WebPGetInfo.argtypes = (ctypes.c_char_p, ctypes.c_size_t,
+                                        ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
+            def webp_size(data):
+                w, h = ctypes.c_int(), ctypes.c_int()
+                assert webp.WebPGetInfo(data, len(data), ctypes.byref(w), ctypes.byref(h)) == 1
+                return w.value, h.value
+            assert headers['Content-Type'] == 'image/webp' and webp_size(thumbnail) == (512, 256)
+            before = set(re.findall(rb'data-attachment="([^"]+)"', page))
+            status, _, page, _ = upload('preview.webp', 'image/webp', thumbnail, owner)
+            assert status == 200
+            webp_id, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - before
+            status, headers, converted, _ = request('GET', '/cdn/storage/attachments/%s/thumbnail' % webp_id.decode(), cookie=owner)
+            assert status == 200 and headers['Content-Type'] == 'image/webp' and webp_size(converted) == (512, 256)
+            assert request('POST', '%s/attachments/%s/delete' % (card_path, webp_id.decode()), {}, cookie=owner)[0] == 200
+        else:
+            assert headers['Content-Type'] == 'image/png'
+            assert thumbnail.startswith(b'\x89PNG\r\n\x1a\n') and struct.unpack('>II', thumbnail[16:24]) == (512, 256)
         assert request('GET', thumb_url, cookie=stranger)[0] == 404
         assert request('POST', '%s/attachments/%s/delete' % (card_path, wide.decode()), {}, cookie=owner)[0] == 200
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s/original/dot.png?download=true' % att, cookie=owner)
