@@ -7195,7 +7195,7 @@ begin
       end;
     if (Pos(#0, CardId + ListId + LaneId) > 0) or (Ids.Count > 200) then
     begin SendJsonAnswer(Response, 400, '{"error":"Invalid history selection"}'); Exit; end;
-    Code := HistoryMethod(T, S.UserId, 'changeHistory.restore', Args, Answer, BoardId, CardId, ListId, LaneId);
+    Code := HistoryMethod(T, S.UserId, 'changeHistory.restore', Args, Answer, BoardId, CardId, ListId, LaneId, BoardId = '');
   finally Args.Free; end;
   if Code <> 200 then begin SendJsonAnswer(Response, Code, Answer); Exit; end;
   Back := '/b/' + HTTPEncode(BoardId) + '/history?card=' + HTTPEncode(CardId) +
@@ -7204,6 +7204,9 @@ begin
     '&q=' + HTTPEncode(Request.ContentFields.Values['q']) +
     '&group=' + HTTPEncode(Request.ContentFields.Values['group']) +
     '&page=' + IntToStr(StrToIntDef(Request.ContentFields.Values['page'], 1));
+  if BoardId = '' then
+    Back := '/profile/history?q=' + HTTPEncode(Request.ContentFields.Values['q']) +
+      '&page=' + IntToStr(StrToIntDef(Request.ContentFields.Values['page'], 1));
   Response.Code := 303;
   Response.SetCustomHeader('Location', Back);
   SendResponse(Response);
@@ -7302,6 +7305,13 @@ begin
   if Request.Method <> 'POST' then Exit;
   if (Request.ContentFields.Values['sessionId'] <> '') or (Request.QueryFields.Values['sessionId'] <> '') then Exit;
   Path := Request.PathInfo;
+  if Path = '/profile/history/restore' then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T) and Html5User(T.Db, Request, S)) then Exit;
+    Result := True;
+    RestoreHistoryForm(T, S, Request, Response, '');
+    Exit;
+  end;
   if (Request.Method = 'POST') and (Copy(Path, 1, 3) = '/b/') then
   begin
     P := PathParts(Path);
@@ -8035,7 +8045,16 @@ function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWL
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
   Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel, RowField, RowGroup, BackTitle: string;
   I, PageNumber, PageCount, Size: Integer;
-  CanRestoreCard, CanRestoreRule, CanRestoreList: Boolean;
+  CanRestoreCard, CanRestoreRule, CanRestoreList, ShowRestore: Boolean;
+  RowBoard: string;
+  procedure RestorePermissions(const Id: string);
+  begin
+    CanRestoreList := BoardCanWrite(T.Db, S.UserId, Id);
+    CanRestoreCard := CanRestoreList or
+      (Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(Id) +
+        ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1);
+    CanRestoreRule := BoardCanAdmin(T.Db, S.UserId, Id);
+  end;
   function LinkTo(const Contributor: string; Number: Integer): string;
   begin
     Result := HtmlAttr(Route + '?card=' + HTTPEncode(CardId) + '&list=' + HTTPEncode(ListId) +
@@ -8108,11 +8127,8 @@ begin
     Size := Data.Integers['pageSize'];
     PageCount := Max(1, (Data.Integers['total'] + Size - 1) div Size);
     DateFormat := ViewDateFor(T.Db, S.UserId, BoardId);
-    CanRestoreList := not MemberView and BoardCanWrite(T.Db, S.UserId, BoardId);
-    CanRestoreCard := not MemberView and (CanRestoreList or
-      (Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(BoardId) +
-        ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1));
-    CanRestoreRule := not MemberView and BoardCanAdmin(T.Db, S.UserId, BoardId);
+    if not MemberView then RestorePermissions(BoardId);
+    ShowRestore := MemberView or CanRestoreCard or CanRestoreRule;
     Label_ := Words.Text('history', 'History');
     Content := '<div class="history-table" data-error="' + HtmlAttr(Words.Text('error', 'Error')) +
       '"><div class="history-header"><a class="js-history-back" href="' +
@@ -8146,14 +8162,14 @@ begin
       Content := Content + '<p class="quiet js-history-empty">' + E(Words.Text('no-results', 'No results')) + '</p>'
     else
     begin
-      if CanRestoreCard or CanRestoreRule then
+      if ShowRestore then
         Content := Content + '<form class="js-history-restore-form" method="post" action="' + HtmlAttr(Route + '/restore') +
           '">' + ScopeFields + '<input type="hidden" name="user" value="' + HtmlAttr(Who) +
           '"><input type="hidden" name="q" value="' + HtmlAttr(Search) +
           '"><input type="hidden" name="group" value="' + HtmlAttr(Group) +
           '"><input type="hidden" name="page" value="' + IntToStr(PageNumber) + '">';
       Content := Content + '<div class="history-scroll"><table class="history-rows"><thead><tr>' +
-        IfThen(CanRestoreCard or CanRestoreRule, '<th class="history-select"></th>') + '<th>' +
+        IfThen(ShowRestore, '<th class="history-select"></th>') + '<th>' +
         E(Words.Text('action', 'Action')) + '</th><th>' + E(Words.Text('details', 'Details')) + '</th><th>' +
         E(Words.Text('date', 'Date')) + '</th></tr></thead><tbody>';
       for I := 0 to Rows.Count - 1 do
@@ -8220,8 +8236,13 @@ begin
         When_ := HistoryDate(Row.Find('createdAt'), DateFormat);
         Content := Content + '<tr class="js-history-row" data-id="' + HtmlAttr(Row.Get('_id', '')) +
           '">';
-        if CanRestoreCard or CanRestoreRule then
+        if ShowRestore then
         begin
+          if MemberView then
+          begin
+            RowBoard := Row.Get('boardId', '');
+            RestorePermissions(RowBoard);
+          end;
           Content := Content + '<td class="history-select">';
           if (CanRestoreRule and (Row.Get('entityType', '') = 'rule')) or
             (CanRestoreList and (Row.Get('entityType', '') = 'list') and (Row.Get('group', '') = 'lifecycle') and
@@ -8242,7 +8263,7 @@ begin
           '</td></tr>';
       end;
       Content := Content + '</tbody></table></div>';
-      if CanRestoreCard or CanRestoreRule then
+      if ShowRestore then
         Content := Content + '<button class="js-history-restore primary" type="submit">' +
           E(Words.Text('restore', 'Restore')) + '</button></form>';
     end;

@@ -59,7 +59,7 @@ procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSO
 // other method name.
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
   const RestoreBoard: string = ''; const RestoreCard: string = '';
-  const RestoreList: string = ''; const RestoreLane: string = ''): Integer;
+  const RestoreList: string = ''; const RestoreLane: string = ''; MemberRestore: Boolean = False): Integer;
 // WeKan's board announcement (#1566, models/lib/boardAnnouncement.js): read -
 // Version is when it was saved, as WeKan's toISOString, '' without one - and
 // written by a board admin, the text trimmed and enabled only with text. In a
@@ -2693,7 +2693,7 @@ begin
 end;
 
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
-  const RestoreBoard, RestoreCard, RestoreList, RestoreLane: string): Integer;
+  const RestoreBoard, RestoreCard, RestoreList, RestoreLane: string; MemberRestore: Boolean): Integer;
 var BoardId, Direction, Key, Error, Sort: string; Rows: TJSONArray; Row, Fields, Before, After: TJSONObject; Ids: TStringList; ListState: TWLRows;
   i, Restored, Skipped, Done: Integer; Applied: Boolean; Readable: THistoryScope;
 begin
@@ -2720,12 +2720,13 @@ begin
       Restored := 0; Skipped := 0;
       Readable := THistoryScope.Create(T.Db, UserId);
       try
-      if RestoreBoard <> '' then
+      if (RestoreBoard <> '') or MemberRestore then
         for i := 0 to Ids.Count - 1 do
         begin
           Row := FindDoc(T.Db, 'changeHistory', Ids[i]);
           try
-            if (Row = nil) or (Str(Row, 'boardId') <> RestoreBoard) or
+            if (Row = nil) or ((RestoreBoard <> '') and (Str(Row, 'boardId') <> RestoreBoard)) or
+              (MemberRestore and (Str(Row, 'userId') <> UserId)) or
               ((RestoreCard <> '') and (HistoryRowCard(Row) <> RestoreCard)) or
               ((RestoreList <> '') and (Str(Row, 'listId') <> RestoreList)) or
               ((RestoreLane <> '') and (Str(Row, 'swimlaneId') <> RestoreLane)) or not Readable.Readable(Row) then

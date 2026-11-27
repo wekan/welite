@@ -7,7 +7,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 ## HTML5 mobile board navigation
 
 - Member Settings links to the signed-in member’s own History across
-  readable boards, with search and pagination.
+  readable boards, with search and pagination. Members can restore their
+  own supported rows on boards where they have permission, and return to
+  the same search and page.
 
 - REST card color edits are recorded in the board's History Title group
   and can be undone, redone or restored. Undo and redo check the current
