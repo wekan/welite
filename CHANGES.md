@@ -32,7 +32,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   group also includes card members and assignees from native SQLite. The
   Labels group includes the board’s label definitions and card label IDs,
   even when some board labels have yet to be used. Custom Fields includes
-  native card values and their definitions with dropdown options.
+  native card values and the board’s field definitions with dropdown
+  options, including definitions that have no card values yet.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image

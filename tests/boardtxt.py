@@ -1,5 +1,7 @@
 """Native board links, titles and empty/not-found states over real HTTP."""
 import html
+import io
+import zipfile
 import re
 import json
 import os
@@ -52,7 +54,10 @@ def run(request,database,administrator,member,base):
         con.execute("INSERT INTO card_labels(cardId,labelId) VALUES('txtcard','port')")
         con.execute("INSERT INTO custom_fields(id,name,type,modifiedAt,dropdownItemsPresent) "
                     "VALUES('port-field','Port field','dropdown','now',1)")
-        con.execute("INSERT INTO custom_field_boards VALUES('port-field','boardtxt')")
+        con.execute("INSERT INTO custom_fields(id,name,type,modifiedAt,dropdownItemsPresent) "
+                    "VALUES('unused-field','Unused field','dropdown','now',1)")
+        con.execute("INSERT INTO custom_field_boards VALUES('port-field','boardtxt'),('unused-field','boardtxt')")
+        con.execute("INSERT INTO custom_field_dropdown_items VALUES('unused-field','unassigned','Unassigned',0)")
         con.execute("INSERT INTO custom_field_dropdown_items VALUES('port-field','pier','Pier',0)")
         con.execute("INSERT INTO card_custom_field_values VALUES('txtcard','port-field',?)",
                     (json.dumps(['pier']),))
@@ -60,7 +65,13 @@ def run(request,database,administrator,member,base):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
         assert status == 200, body
+        options = urlencode(dict(token=administrator, fields=fields))
+        status, _, archive = request('GET', '/api/boards/boardtxt/exportZip?' + options)
+        assert status == 200, archive
         payload = json.loads(body)
+        with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
+            zipped = json.loads(bundle.read('wekan.json'))
+        assert zipped['customFields'] == payload['customFields']
         card = next(row for row in payload['cards'] if row['_id'] == 'txtcard')
         assert 'extra_json' not in card and 'internalOnly' not in card
         if fields.startswith('dependencies'):
@@ -68,6 +79,8 @@ def run(request,database,administrator,member,base):
             assert card['labelIds'] == ['port']
             assert card['customFields'] == [{'_id': 'port-field', 'value': ['pier']}]
             field = next(row for row in payload['customFields'] if row['_id'] == 'port-field')
+            unused = next(row for row in payload['customFields'] if row['_id'] == 'unused-field')
+            assert unused['settings']['dropdownItems'] == [{'_id': 'unassigned', 'name': 'Unassigned'}]
             assert field['settings']['dropdownItems'] == [{'_id': 'pier', 'name': 'Pier'}]
             assert card['members'] == card['assignees'] == [author]
             assert card['locations'] == decorations['locations']

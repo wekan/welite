@@ -180,7 +180,7 @@ begin
 end;
 
 function SelectionGraph(const T:TWLTenant; Params:TStrings;WholeBoard:Boolean=False):TJSONObject;
-var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
+var Lanes,Lists,Cards,Checks:TStringList; BoardId,Scope,CardScope,FieldScope:string; Previous,BindingIndex:Integer;TypedScope:TSelectionScope;
   Data,AuditData:TJSONObject;Bindings:TJSONArray;ReadHeld:Boolean;
   function Link(const Name,Column:string):string;
   begin
@@ -270,11 +270,14 @@ begin
       Table('board_labels','boardId='+q(BoardId))
     else
       Table('board_labels','boardId='+q(BoardId)+' AND id IN (SELECT labelId FROM card_labels WHERE '+CardScope+' AND '+Link('card_labels','labelId')+')');
-    Table('custom_fields','id IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+' AND '+Link('custom_field_boards','boardId')+
-      ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+'))');
-    Table('custom_field_boards',Scope+' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+')');
-    Table('custom_field_dropdown_items','customFieldId IN (SELECT customFieldId FROM custom_field_boards WHERE boardId='+q(BoardId)+' AND '+Link('custom_field_boards','boardId')+
-      ' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+CardScope+' AND '+Link('card_custom_field_values','customFieldId')+'))');
+    FieldScope:=Scope+' AND '+Link('custom_field_boards','boardId')+
+      ' AND '+Link('custom_field_boards','customFieldId');
+    if not (WholeBoard and (Params.Values['action']='export')) then
+      FieldScope:=FieldScope+' AND customFieldId IN (SELECT customFieldId FROM card_custom_field_values WHERE '+
+        CardScope+' AND '+Link('card_custom_field_values','customFieldId')+')';
+    Table('custom_fields','id IN (SELECT customFieldId FROM custom_field_boards WHERE '+FieldScope+')');
+    Table('custom_field_boards',FieldScope);
+    Table('custom_field_dropdown_items','customFieldId IN (SELECT customFieldId FROM custom_field_boards WHERE '+FieldScope+')');
     Table('card_members',CardScope); Table('card_assignees',CardScope); Table('card_labels',CardScope);
     Table('card_custom_field_values',CardScope); Table('card_dependencies',CardScope);
     Table('card_comments',BoardScope('card_comments')+' AND '+CardOwner('card_comments'));
