@@ -3040,6 +3040,8 @@ var T: TWLTenant; Session: TWLSession; Words: TWLTranslator;
   BoardId, UserId, Filename, CardId, Author: string; AsPdf: Boolean;
   Report, Adjustments: TJSONArray; Row: TJSONObject; Output: TMemoryStream;
   Person, Totals: TWLRows; I: Integer;
+  Breakdown:TJSONObject; Section:TJSONArray; Key:string;
+const Sections:array[0..1] of string=('assignees','card');
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, '') then Exit;
   if AssignedOnlyMember(T.Db, UserId, BoardId) then
@@ -3055,6 +3057,18 @@ begin
       ' AND archived=0 AND deletedAt IS NULL;');
     if Length(Totals) = 1 then
       Report.Add(TJSONArray.Create([Words.Text('spent-time-hours', 'Spent time (hours)'), GetJSON(Totals[0][0])]));
+    Breakdown:=TimeBreakdown(T.Db,Words,BoardId,'');
+    try
+      Report.Add(Breakdown.Find('remaining').Clone);
+      for Key in Sections do
+      begin
+        Section:=Breakdown.Arrays[Key];
+        if Section.Count=0 then Continue;
+        Report.Add(TJSONArray.Create([Words.Text(Key,Key)]));
+        Report.Add(TJSONArray.Create([Words.Text('name','Name'),Words.Text('hours','Hours')]));
+        for I:=0 to Section.Count-1 do Report.Add(Section.Items[I].Clone);
+      end;
+    finally Breakdown.Free;end;
     Report.Add(TJSONArray.Create([Words.Text('time-adjustments', 'Time adjustments by author')]));
     Report.Add(TJSONArray.Create([Words.Text('time-adjustment-note', 'Changes to recorded hours.')]));
     Report.Add(TJSONArray.Create([Words.Text('card', 'Card'), Words.Text('username', 'Username'), UTF8String(#$CE#$94),

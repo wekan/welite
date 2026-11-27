@@ -274,8 +274,6 @@ Next, after this goal:
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
-  Show the time breakdowns by assignee and card and the remaining-time
-  total in the Time view and its exports.
   Also left are additional History field restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,

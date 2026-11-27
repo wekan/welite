@@ -31,7 +31,7 @@ unit wlh5;
 interface
 
 uses
-  SysUtils, Classes, HTTPDefs, wldb, wlauth;
+  SysUtils, Classes, HTTPDefs, fpjson, wldb, wlauth, wli18n;
 
 const
   LOGIN_COOKIE = 'meteor_login_token';
@@ -87,10 +87,13 @@ procedure Html5LogoutEndpoint(Request: TRequest; Response: TResponse);
 // thread's earlier request leaves none behind.
 procedure ResetViewState;
 
+// Localized summary and breakdown rows shared by the Time view and export.
+function TimeBreakdown(Db:TWLDb; Words:TWLTranslator; const BoardId,Filter:string):TJSONObject;
+
 implementation
 
 uses wlboard, wlthumb, Math,
-  StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
+  StrUtils, wltenant, wlhtml, wllocale, wlaccess, wlroutes,
   wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, wlchhist, wlcfjson, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
   wlcrypt;
 
@@ -4134,8 +4137,44 @@ begin
   Result := 200;
 end;
 
+function TimeChartReport(Db:TWLDb; const BoardId,UserId:string; const Filter:string=''):TJSONObject; forward;
+
+function TimeBreakdown(Db:TWLDb; Words:TWLTranslator; const BoardId,Filter:string):TJSONObject;
+var Report, Row, Remaining:TJSONObject; Section:TJSONArray; I:Integer; LabelText,Duration:string;
+begin
+  Report:=TimeChartReport(Db,BoardId,'',Filter);
+  try
+    Result:=TJSONObject.Create;
+    Remaining:=Report.Objects['remaining'];
+    Duration:=IntToStr(Abs(Remaining.Integers['days']))+' '+Words.Text('days','Days')+', '+
+      IntToStr(Abs(Remaining.Integers['hours']))+' '+Words.Text('hours','Hours');
+    if (Remaining.Integers['days']<0) or (Remaining.Integers['hours']<0) then Duration:='-'+Duration;
+    Result.Add('remaining',TJSONArray.Create([Words.Text('board-status-remaining-time-total','Remaining time until due'),Duration]));
+    Section:=TJSONArray.Create;
+    Result.Add('assignees',Section);
+    for I:=0 to Report.Arrays['byAssignee'].Count-1 do
+    begin
+      Row:=Report.Arrays['byAssignee'].Objects[I];
+      LabelText:=Row.Strings['label'];
+      if Row.Strings['key']='__no_assignee__' then LabelText:=Words.Text('no-assignee','No assignee');
+      Section.Add(TJSONArray.Create([LabelText,Row.Find('hours').Clone]));
+    end;
+    Section:=TJSONArray.Create;
+    Result.Add('card',Section);
+    for I:=0 to Report.Arrays['byCard'].Count-1 do
+    begin
+      Row:=Report.Arrays['byCard'].Objects[I];
+      LabelText:=Row.Strings['title'];
+      if Row.Booleans['isOvertime'] then LabelText:=LabelText+' ('+Words.Text('overtime','Overtime')+')';
+      Section.Add(TJSONArray.Create([LabelText,Row.Find('hours').Clone]));
+    end;
+  finally Report.Free;end;
+end;
+
 function BoardTimeView(Db:TWLDb; Words:TWLTranslator; const BoardId,UserId,Filter,AssignedOnly:string):string;
 var Totals:TWLRows; Changes:TJSONArray; Row:TJSONObject; I:Integer; Fmt:TFormatSettings; CardTitle:string;
+  Breakdown:TJSONObject; Section, Cells:TJSONArray; Key:string;
+const Sections:array[0..1] of string=('assignees','card');
 begin
   Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';
   Totals:=Db.Query('SELECT COALESCE(SUM(c.spentTime),0) FROM cards c WHERE c.boardId='+QuotedStr(BoardId)+
@@ -4148,6 +4187,25 @@ begin
       E(Words.Text('export', 'Export')) + '</button><template class="js-pop-over-template" data-pop="time-export"><ul class="pop-over-list">' +
       '<li><a href="/api/boards/' + HTTPEncode(BoardId) + '/charts/time/exportPDF" download>PDF</a></li>' +
       '<li><a href="/api/boards/' + HTTPEncode(BoardId) + '/charts/time/exportExcel" download>Excel</a></li></ul></template>';
+  Breakdown:=TimeBreakdown(Db,Words,BoardId,Filter);
+  try
+    Cells:=Breakdown.Arrays['remaining'];
+    Result:=Result+'<p class="time-remaining">'+E(Cells.Strings[0])+' '+E(Cells.Strings[1])+'</p>';
+    for Key in Sections do
+    begin
+      Section:=Breakdown.Arrays[Key];
+      if Section.Count=0 then Continue;
+      Result:=Result+'<section class="stats-view-section time-by-'+Key+'"><h3>'+E(Words.Text(Key,Key))+
+        '</h3><table class="stats-view-table chart-data-table"><thead><tr><th>'+E(Words.Text('name','Name'))+
+        '</th><th>'+E(Words.Text('hours','Hours'))+'</th></tr></thead><tbody>';
+      for I:=0 to Section.Count-1 do
+      begin
+        Cells:=Section.Arrays[I];
+        Result:=Result+'<tr><td>'+E(Cells.Strings[0])+'</td><td>'+E(Cells.Items[1].AsJSON)+'</td></tr>';
+      end;
+      Result:=Result+'</tbody></table></section>';
+    end;
+  finally Breakdown.Free;end;
   Result:=Result+'<section class="time-adjustments"><h3>'+E(Words.Text('time-adjustments','Time adjustments by author'))+
     '</h3><p>'+E(Words.Text('time-adjustment-note','Changes to recorded hours. Negative values are corrections.'))+
     '</p><table><thead><tr><th>'+E(Words.Text('card','Card'))+'</th><th>'+E(Words.Text('username','Username'))+
@@ -4928,7 +4986,7 @@ begin
   end;
 end;
 
-function TimeChartReport(Db:TWLDb; const BoardId,UserId:string):TJSONObject;
+function TimeChartReport(Db:TWLDb; const BoardId,UserId:string; const Filter:string):TJSONObject;
 const UserLabel='COALESCE(NULLIF(CASE WHEN json_valid(u.profile_json) THEN '+
   'json_extract(u.profile_json,''$.fullname'') END,''''),NULLIF(u.username,''''),u.id)';
 var Scope, Timed, Id:string; Rows:TWLRows; Changes, Entries:TJSONArray;
@@ -4942,7 +5000,7 @@ var Scope, Timed, Id:string; Rows:TWLRows; Changes, Entries:TJSONArray;
   end;
 begin
   Result:=TJSONObject.Create;
-  Changes:=TimeAdjustmentRows(Db,UserId,BoardId);
+  if UserId='' then Changes:=TJSONArray.Create else Changes:=TimeAdjustmentRows(Db,UserId,BoardId);
   Authors:=TJSONObject.Create;
   try
     try
@@ -4968,7 +5026,7 @@ begin
       end;
       Result.Objects['adjustments'].Add('groups',SqlJson('SELECT json_group_array(json(value)) FROM '+
         '(SELECT value FROM json_each('+QuotedStr(Authors.AsJSON)+') ORDER BY json_extract(value,''$.hours'') DESC);'));
-      Scope:='c.boardId='+QuotedStr(BoardId)+' AND c.archived=0 AND c.deletedAt IS NULL';
+      Scope:='c.boardId='+QuotedStr(BoardId)+' AND c.archived=0 AND c.deletedAt IS NULL'+Filter;
       Timed:='WITH timed AS (SELECT c.id,c.title,c.spentTime,c.isOvertime FROM cards c WHERE '+Scope+
         ' AND c.spentTime>0) ';
       Result.Add('byCard',SqlJson(Timed+

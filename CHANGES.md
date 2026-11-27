@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The Time view and its PDF and Excel exports show hours by assignee and
+  card, mark overtime cards, and show the signed total time until open
+  cards are due. The board view applies its card filter to these totals.
+
 - The Time report method returns corrections grouped by author, hours by
   card and assignee, and the sum of time until open cards are due. The
   regular WeKan browser test list covers the English correction workflow,
