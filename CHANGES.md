@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Sort Search All Boards results by due, created or modified date, in either
+  direction. The selected order applies across boards and result pages.
+
 - Step to a board-search match even when the active filter hides it or its
   list is closed. Search shows the selected card on the board and temporarily
   opens the relevant swimlane and list. Closing Search restores the original

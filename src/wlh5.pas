@@ -5983,12 +5983,36 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate: string);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate, SortField: string; out Descending: Boolean);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes: Boolean; Token, Sql: string;
+  function ReadSort(const Arg: string): Boolean;
+  var Colon: Integer; Op, Value, Field: string; Reverse: Boolean;
+    function IsValue(const Name: string): Boolean;
+    begin
+      Result := SameText(Value, Name) or SameText(Value, Words.Text('predicate-' + Name, Name));
+    end;
+  begin
+    Result := False;
+    Colon := Pos(':', Arg);
+    if Colon = 0 then Exit;
+    Op := Copy(Arg, 1, Colon - 1);
+    if not SameText(Op, 'sort') and not SameText(Op, Words.Text('operator-sort', 'sort')) then Exit;
+    Value := Copy(Arg, Colon + 1, MaxInt);
+    Reverse := StartsStr('-', Value);
+    if Reverse then Delete(Value, 1, 1);
+    if IsValue('due') then Field := 'c.dueAt'
+    else if IsValue('created') then Field := 'c.createdAt'
+    else if IsValue('modified') then Field := 'c.modifiedAt'
+    else Exit;
+    SortField := Field;
+    Descending := Reverse;
+    Result := True;
+  end;
 begin
   Plain := '';
   Predicate := '';
+  SortField := ''; Descending := False;
   for Kind := Low(Kind) to High(Kind) do Groups[Kind] := '';
   i := 1;
   while i <= Length(Query) do
@@ -6005,6 +6029,7 @@ begin
     if i = Start then Break;
     Token := Copy(Query, Start, i - Start);
     Sql := '';
+    if not InQuotes and ReadSort(Token) then Continue;
     if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, Token, Kind);
     if Sql = '' then
     begin
@@ -6023,15 +6048,15 @@ begin
       if Predicate <> '' then Predicate := Predicate + ' AND ';
       Predicate := Predicate + '(' + Groups[Kind] + ')';
     end;
-  if Predicate = '' then Plain := Query;
+  if (Predicate = '') and (SortField = '') then Plain := Query;
 end;
 
 function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0;
-  const OperatorSql: string = ''): TWLRows;
-var Scope, Tail, Match: string;
+  const OperatorSql: string = ''; const SortField: string = ''; Descending: Boolean = False): TWLRows;
+var Scope, Tail, Match, SortValue, OrderBy: string;
 begin
   Result := nil;
-  if (Text = '') and (OperatorSql = '') then Exit;
+  if (Text = '') and (OperatorSql = '') and (SortField = '') then Exit;
   Scope := '';
   if not BoardCanRead(Db, UserId, BoardId) then
   begin
@@ -6047,9 +6072,17 @@ begin
     Match := Match + '(' + BoardTextMatchSql(Text) + BoardFieldTextMatchSql(Db, UserId, BoardId, Text) +
       IndexedAttachmentMatchSql(Db, Text) + ')';
   end;
-  Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
+  if Match = '' then Match := '1=1';
+  SortValue := '';
+  OrderBy := 'c.createdAt DESC';
+  if SortField <> '' then
+  begin
+    SortValue := ',CAST(round(julianday(' + SortField + ')*86400000) AS INTEGER) AS searchDate';
+    OrderBy := 'searchDate' + IfThen(Descending, ' DESC', ' ASC');
+  end;
+  Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId' + SortValue + ' FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
     ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + Match + ')' +
-    ' ORDER BY c.createdAt DESC,c.id' + Tail + ';');
+    ' ORDER BY ' + OrderBy + ',c.id' + Tail + ';');
 end;
 
 procedure ServeBoardSearch(Db: TWLDb; Response: TResponse; const UserId, BoardId, Term: string);
@@ -6077,12 +6110,12 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..15] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
-    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified');
-  Fields: array[0..12] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
-    'assignee', 'member', 'week', 'month', 'quarter', 'year');
-  Described: array[0..14] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
-    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified');
+  Operators: array[0..16] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
+    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort');
+  Fields: array[0..14] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
+    'assignee', 'member', 'week', 'month', 'quarter', 'year', 'created', 'modified');
+  Described: array[0..15] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
+    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
   begin
@@ -6111,7 +6144,9 @@ end;
 
 function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
 const PageSize = 25;
-var Text, Plain, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
+var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards: TWLRows;
+  BoardCards: array of TWLRows; Positions: array of Integer;
+  i, j, Skip, Shown, NextBoard: Integer; HasNext, Descending: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -6131,9 +6166,26 @@ var Text, Plain, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; 
         '>' + E(Lists[k][1]) + '</option>';
     Result := Result + '</select></label> <button type="submit">' + E(Words.Text('move', 'Move')) + '</button></form>';
   end;
+  procedure AppendCard(BoardIndex: Integer; const Card: TWLRow);
+  begin
+    Results := Results + '<div class="result-card-wrapper"><a class="minicard-wrapper js-minicard js-board-search-card card-title" href="' +
+      HtmlAttr(CardRoute(Boards[BoardIndex][0], Boards[BoardIndex][2], Card[0])) + '"><span class="minicard-title">' +
+      E(Card[1]) + '</span></a><span class="quiet">' + E(Boards[BoardIndex][1]) + '</span>';
+    if BoardCanWrite(Db, UserId, Boards[BoardIndex][0]) then Results := Results + ListControl(Boards[BoardIndex][0], Card);
+    Results := Results + '</div>';
+    Inc(Shown);
+  end;
+  function ComesFirst(const A, B: TWLRow): Boolean;
+  var ADate, BDate: Int64;
+  begin
+    ADate := StrToInt64Def(A[4], Low(Int64));
+    BDate := StrToInt64Def(B[4], Low(Int64));
+    if ADate = BDate then Exit(CompareStr(A[0], B[0]) < 0);
+    if Descending then Result := ADate > BDate else Result := ADate < BDate;
+  end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql);
+  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql, SortField, Descending);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
@@ -6147,22 +6199,41 @@ begin
       'WHERE m.userId=' + QuotedStr(UserId) + ' AND m.isActive=1 AND b.archived=0 ORDER BY b.title,b.id;');
     Skip := (PageNumber - 1) * PageSize;
     Shown := 0;
-    for i := 0 to High(Boards) do
+    if SortField = '' then
     begin
-      Cards := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1 - Shown, OperatorSql);
-      Writable := (Length(Cards) > 0) and BoardCanWrite(Db, UserId, Boards[i][0]);
-      for j := 0 to High(Cards) do
+      for i := 0 to High(Boards) do
       begin
-        if Skip > 0 then begin Dec(Skip); Continue; end;
-        if Shown = PageSize then begin HasNext := True; Break; end;
-        Results := Results + '<div class="result-card-wrapper"><a class="minicard-wrapper js-minicard js-board-search-card card-title" href="' +
-          HtmlAttr(CardRoute(Boards[i][0], Boards[i][2], Cards[j][0])) + '"><span class="minicard-title">' +
-          E(Cards[j][1]) + '</span></a><span class="quiet">' + E(Boards[i][1]) + '</span>';
-        if Writable then Results := Results + ListControl(Boards[i][0], Cards[j]);
-        Results := Results + '</div>';
-        Inc(Shown);
+        Cards := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1 - Shown, OperatorSql);
+        for j := 0 to High(Cards) do
+        begin
+          if Skip > 0 then begin Dec(Skip); Continue; end;
+          if Shown = PageSize then begin HasNext := True; Break; end;
+          AppendCard(i, Cards[j]);
+        end;
+        if HasNext then Break;
       end;
-      if HasNext then Break;
+    end
+    else
+    begin
+      // Merge each board's sorted prefix before applying the global page offset.
+      SetLength(BoardCards, Length(Boards));
+      SetLength(Positions, Length(Boards));
+      for i := 0 to High(Boards) do
+        BoardCards[i] := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1,
+          OperatorSql, SortField, Descending);
+      while True do
+      begin
+        NextBoard := -1;
+        for i := 0 to High(Boards) do
+          if Positions[i] < Length(BoardCards[i]) then
+            if (NextBoard < 0) or ComesFirst(BoardCards[i][Positions[i]], BoardCards[NextBoard][Positions[NextBoard]]) then
+              NextBoard := i;
+        if NextBoard < 0 then Break;
+        if Shown = PageSize then begin HasNext := True; Break; end;
+        if Skip > 0 then Dec(Skip)
+        else AppendCard(NextBoard, BoardCards[NextBoard][Positions[NextBoard]]);
+        Inc(Positions[NextBoard]);
+      end;
     end;
   end;
   if Results <> '' then Result := Result + '<div class="global-search-results-list-wrapper">' + Results + '</div>'
