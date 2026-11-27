@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Set, edit or clear a checklist deadline with the same calendar as Weddy.
+  The board’s checklist due-date setting controls display and edits. All eight
+  shared WeKan checklist tests passed in Chromium.
+
 - Play the optional checklist chime when an item is checked off. The
   member's Change Settings preference applies immediately and after reload.
 

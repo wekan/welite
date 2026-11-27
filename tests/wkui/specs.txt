@@ -104,6 +104,7 @@
 12-checklists.e2e.js: checking a checklist item adds the is-checked class
 12-checklists.e2e.js: checklist progress bar appears when items are checked
 12-checklists.e2e.js: deleting a checklist removes it from the card
+12-checklists.e2e.js: checklist deadline uses the visible shared calendar and can be cleared
 12-checklists.e2e.js: #6816: deleting a checklist deletes its items, and only its items
 13-swimlanes.e2e.js: board renders with a visible swimlane section
 13-swimlanes.e2e.js: swimlane header shows the seeded "Default" title

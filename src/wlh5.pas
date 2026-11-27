@@ -1345,7 +1345,8 @@ end;
 // title line's "+" before there is one, the bottom one after), an item added
 // under its checklist, an item checked, and the checklist's menu.
 function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
-var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished: string;
+var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished, DueUrl, DueLabel: string;
+  ShowDue: Boolean;
   function InlinedForm(const Cls, Action, Label_: string): string;
   begin
     // Its fields are on the page only while it is open (WeKan's inlinedForm).
@@ -1359,7 +1360,7 @@ var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsH
 begin
   Result := '';
   Base := '/b/' + HTTPEncode(BoardId) + '/cards/' + HTTPEncode(CardId) + '/checklists';
-  Lists := Db.Query('SELECT id,title FROM checklists WHERE cardId=' + QuotedStr(CardId) +
+  Lists := Db.Query('SELECT id,title,COALESCE(dueAt,'''') FROM checklists WHERE cardId=' + QuotedStr(CardId) +
     ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ') ORDER BY sort,id;');
   if (Length(Lists) = 0) and not Writable then Exit;
   Result := '<div class="card-checklist-attachmentGallery card-checklists js-checklists-section"><div class="checklists-title">' +
@@ -1369,6 +1370,8 @@ begin
       HtmlAttr(Words.Text('add-checklist', 'Add Checklist')) + '" aria-label="' + HtmlAttr(Words.Text('add-checklist', 'Add Checklist')) +
       '"><i class="fa fa-plus"></i></a>';
   Result := Result + '</h3></div><div class="card-checklist-items">';
+  ShowDue := BoardAllows(Db, BoardId, 'allowsChecklistDueDate');
+  DueLabel := HtmlAttr(Words.Text('card-due', 'Due'));
   for i := 0 to High(Lists) do
   begin
     Items := Db.Query('SELECT id,title,COALESCE(isFinished,0) FROM checklist_items WHERE checklistId=' + QuotedStr(Lists[i][0]) +
@@ -1391,11 +1394,24 @@ begin
       ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div></div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
+    DueUrl := HtmlAttr(Base + '/' + HTTPEncode(Lists[i][0]) + '/due');
+    if ShowDue and Writable and (Lists[i][2] = '') then
+      Checklist := Checklist + '<button class="js-checklist-due-date checklist-due-date-add" type="button" title="' +
+        DueLabel + '" aria-label="' + DueLabel + '" data-url="' + DueUrl + '"><i class="fa fa-clock-o"></i></button>';
     if Writable then
       Checklist := Checklist + '<a class="fa fa-navicon checklist-details-menu js-open-checklist-details-menu" href="#" data-checklist="' +
         HtmlAttr(Lists[i][0]) + '" title="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) +
         '" aria-label="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"></a>';
     Checklist := Checklist + '<h4 class="title">' + MarkdownViewer(Lists[i][1], PlainLinks, PlainSource) + '</h4></div>';
+    if ShowDue and (Lists[i][2] <> '') then
+    begin
+      Checklist := Checklist + '<a class="card-date due-date checklist-due-date' +
+        IfThen(Writable, ' js-edit-date') + '" title="' + DueLabel + '"';
+      if Writable then
+        Checklist := Checklist + ' href="#" data-url="' + DueUrl + '" data-date="' + HtmlAttr(Lists[i][2]) + '"';
+      Checklist := Checklist + '><time datetime="' + HtmlAttr(Lists[i][2]) + '">' +
+        E(FormatShownDate(Lists[i][2], ViewDateFormat)) + '</time></a>';
+    end;
     // WeKan's progress: the share of its items checked, shown once one is.
     if (Length(Items) > 0) and (Done > 0) then
     begin
@@ -7175,6 +7191,7 @@ begin
   //   /b/:id/cards/:card/checklists                   add a checklist
   //   /b/:id/cards/:card/checklists/:cl/items         add an item to it
   //   /b/:id/cards/:card/checklists/:cl/items/:it/toggle   check or uncheck the item
+  //   /b/:id/cards/:card/checklists/:cl/due           set or clear the deadline
   //   /b/:id/cards/:card/checklists/:cl/delete        delete the checklist and its items
   //   /b/:id/cards/:card/comments                     comment on the card
   //   /b/:id/cards/:card/people                       its Requested By or Assigned By
@@ -7244,6 +7261,7 @@ begin
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'background') then Action := 'attachment-background'
   else if (n = 7) and (P[4] = 'custom-fields') and (P[6] = 'toggle') then Action := 'toggle-field'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'items') then Action := 'add-item'
+  else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'due') then Action := 'checklist-due'
   else if (n = 7) and (P[4] = 'checklists') and (P[6] = 'delete') then Action := 'delete-checklist'
   else if (n = 9) and (P[4] = 'checklists') and (P[6] = 'items') and (P[8] = 'toggle') then Action := 'toggle-item'
   else Exit;
@@ -7383,6 +7401,9 @@ begin
     Code := ToggleViewCardMember(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'add-comment' then
     Code := AddViewComment(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['comment'], NewId, Error)
+  else if Action = 'checklist-due' then
+    Code := SetViewChecklistDue(T, S.UserId, BoardId, CardId, ChecklistId, Request.ContentFields.Values['at'],
+      Request.ContentFields.Values['delete'] = '1', Error)
   else if Action = 'add-checklist' then
     Code := CreateViewChecklist(T, S.UserId, BoardId, CardId, Title, NewId, Error)
   else if Action = 'add-item' then

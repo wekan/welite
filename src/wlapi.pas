@@ -190,6 +190,8 @@ function AddViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,Chec
 function ToggleViewChecklistItem(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId,ItemId:string;out Error:string):Integer;
 // Deletes the checklist and, through checklist_items' ON DELETE CASCADE, its
 // items and only its items.
+function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, At: string;
+  Remove: Boolean; out Error: string): Integer;
 function DeleteViewChecklist(const T:TWLTenant;const UserId,BoardId,CardId,ChecklistId:string;out Error:string):Integer;
 // A board's card setting (boards' allows*, kept in settings_json): on unless
 // the board turned it off, as WeKan's defaults are.
@@ -6222,6 +6224,35 @@ begin
     Literal:=QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',Stamp));
     Result:=True;
   except Result:=False;end;
+end;
+
+function SetViewChecklistDue(const T: TWLTenant; const UserId, BoardId, CardId, ChecklistId, At: string;
+  Remove: Boolean; out Error: string): Integer;
+var Input: TJSONData; Literal, Scope: string;
+begin
+  if ChecklistId = '' then begin Error := 'Checklist not found'; Exit(404); end;
+  Result := ViewChecklistScope(T, UserId, BoardId, CardId, ChecklistId, '', Error);
+  if Result <> 200 then Exit;
+  if not BoardAllows(T.Db, BoardId, 'allowsChecklistDueDate') then
+  begin Error := 'This board does not use checklist deadlines'; Exit(403); end;
+  if Remove then Literal := 'NULL'
+  else
+  begin
+    Input := TJSONString.Create(At);
+    try
+      if not ChecklistDeadlineSql(Input, Literal) then
+      begin Error := 'Invalid checklist deadline'; Exit(400); end;
+    finally Input.Free; end;
+  end;
+  Scope := 'id=' + QuotedStr(ChecklistId) + ' AND cardId=' + QuotedStr(CardId) +
+    ' AND (boardId IS NULL OR boardId=' + QuotedStr(BoardId) + ')' +
+    ' AND EXISTS(SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
+    ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL)';
+  if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE checklists SET dueAt=' + Literal +
+    ',modifiedAt=' + QuotedStr(NowIso) + ' WHERE ' + Scope +
+    '; SELECT CASE WHEN (SELECT count(*) FROM checklists WHERE ' + Scope + ' AND dueAt IS ' + Literal +
+    ')=1 THEN 1 ELSE json(''Checklist deadline write failed'') END; COMMIT;') then
+  begin T.Db.Exec('ROLLBACK;'); Error := 'Could not update checklist deadline'; Exit(500); end;
 end;
 
 // GET checklists of a card / POST create a checklist
