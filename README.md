@@ -57,11 +57,18 @@ credentials for a member who may edit that board.
 
 ## PDF export fonts
 
-Set `WELITE_PDF_TTF` to the path of a TrueType font with the glyphs needed
-in your exports. WeLite embeds only the used glyphs. With no configured
-font, PDF export uses the standard PDF Courier fonts and WinAnsi encoding.
-The embedded font path currently handles characters in the Unicode Basic
-Multilingual Plane.
+Embedded builds use bundled GNU Unifont for PDF exports. WeLite subsets the
+font to the glyphs used in the document. Set `WELITE_PDF_TTF` to override
+the bundled font with a TrueType file. Builds without the font resource
+use the standard PDF Courier fonts and WinAnsi encoding when no font is
+configured. Embedded fonts currently cover the Unicode Basic Multilingual
+Plane.
+
+The bundled file is GNU Unifont 15.0.05 from the
+[GNU release archive](https://mirrors.ibiblio.org/gnu/unifont/unifont-15.0.05/).
+Its [license](src/fonts/UNIFONT-LICENSE.txt) is also bundled in the executable.
+The uncompressed font's SHA-256 is
+`3caed31f928da7ff08935dbc5b0a612d6dd489589f8f89034a44757851a56898`.
 
 ## Read WeKan data folders
 

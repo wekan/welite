@@ -86,10 +86,15 @@ def main() -> int:
             return 1
         seeds.append((name, os.path.relpath(full, rc_dir).replace(os.sep, '/')))
 
+    fonts = {'WL_UNIFONT': 'unifont.ttf.gz', 'WL_UNIFONT_LICENSE': 'UNIFONT-LICENSE.txt'}
+
     # resource script: numeric id -> file path (relative to where fpcres runs, i.e. rc_dir)
     with open(out_rc, "w", encoding="utf-8") as f:
         for i, (_url, rc_path) in enumerate(entries + seeds, start=1):
             f.write(f'{i} RCDATA "{rc_path}"\n')
+        for resource, filename in fonts.items():
+            font_path = os.path.relpath(source / 'fonts' / filename, rc_dir).replace(os.sep, '/')
+            f.write(f'{resource} RCDATA "{font_path}"\n')
 
     # index unit: url key (full URL-relative path) -> resource id; reads via TResourceStream
     with open(out_pas, "w", encoding="utf-8") as f:

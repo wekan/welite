@@ -272,8 +272,8 @@ Next, after this goal:
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
   the remaining export-access cases for charts,
-  remaining field-group parity for JSON and ZIP payloads, bundled Unicode
-  font coverage for PDF (configurable TrueType subsetting is in), inline
+  remaining field-group parity for JSON and ZIP payloads, supplemental Unicode
+  plane coverage for PDF (embedded builds bundle a BMP font), inline
   Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
   and remaining History restore types and row summaries.

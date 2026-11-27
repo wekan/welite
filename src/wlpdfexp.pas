@@ -12,6 +12,7 @@ type
     Page: TPDFPage;
     BodyFont, HeadingFont, WrapWidth: Integer;
     EmbeddedFont: Boolean;
+    BundledFontDir: string;
     Y: Single;
     procedure RequireSpace(Height: Single);
   public
@@ -25,7 +26,7 @@ type
 
 implementation
 
-uses SysUtils, Math, FPReadPNG;
+uses SysUtils, Math, FPReadPNG, ZStream, wltmp;
 
 const
   Margin = 15;
@@ -33,6 +34,29 @@ const
   LineHeight = 5;
   BaseFontWrapWidth = 72;
   EmbeddedFontWrapWidth = 44;
+
+function AddBundledFont(Document: TPDFDocument; out Directory: string): Integer;
+var Resource: TResourceStream; Compressed: TGZipDecompressionStream; Font: TFileStream;
+  Buffer: array[0..16383] of Byte; Count: LongInt;
+begin
+  Resource := TResourceStream.Create(HInstance, 'WL_UNIFONT', RT_RCDATA);
+  Compressed := nil;
+  try
+    Directory := NewTempDir;
+    Compressed := TGZipDecompressionStream.Create(Resource);
+    Font := TFileStream.Create(Directory + 'unifont.ttf', fmCreate);
+    try
+      repeat
+        Count := Compressed.Read(Buffer, SizeOf(Buffer));
+        if Count > 0 then Font.WriteBuffer(Buffer, Count);
+      until Count = 0;
+    finally Font.Free; end;
+    Result := Document.AddFont(Directory + 'unifont.ttf', 'Unifont');
+  finally
+    Compressed.Free;
+    Resource.Free;
+  end;
+end;
 
 constructor TPdfCardWriter.Create;
 var FontPath: string;
@@ -45,15 +69,13 @@ begin
   FontPath := GetEnvironmentVariable('WELITE_PDF_TTF');
   Document.StartDocument;
   Document.Sections.AddSection;
-  if FontPath <> '' then
-  begin
-    try
-      BodyFont := Document.AddFont(ExpandFileName(FontPath), 'DocumentFont');
-      EmbeddedFont := True;
-    except
-      // AddFont creates a definition before it attempts to parse the file.
-      Document.Fonts.Clear;
-    end;
+  try
+    if FontPath <> '' then BodyFont := Document.AddFont(ExpandFileName(FontPath), 'DocumentFont')
+    else BodyFont := AddBundledFont(Document, BundledFontDir);
+    EmbeddedFont := True;
+  except
+    // AddFont creates a definition before it attempts to parse the file.
+    Document.Fonts.Clear;
   end;
   if EmbeddedFont then
   begin
@@ -73,6 +95,11 @@ end;
 destructor TPdfCardWriter.Destroy;
 begin
   Document.Free;
+  if BundledFontDir <> '' then
+  begin
+    DeleteFile(BundledFontDir + 'unifont.ttf');
+    RemoveDir(BundledFontDir);
+  end;
   inherited Destroy;
 end;
 

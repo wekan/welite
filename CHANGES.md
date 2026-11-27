@@ -47,8 +47,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
-  previews from local attachments. It uses standard PDF fonts and WinAnsi
-  text encoding by default. Set `WELITE_PDF_TTF` to a TrueType font
+  previews from local attachments. Embedded builds bundle GNU Unifont
+  15.0.05 for Basic Multilingual Plane text and subset it for each export.
+  Builds without the resource default to standard PDF fonts and WinAnsi. Set `WELITE_PDF_TTF` to a TrueType font
   path to embed the subset needed for text covered by that font. PDF line
   wrapping keeps UTF-16 surrogate pairs together, so an unsupported
   supplementary character at a wrap boundary produces one fallback glyph
