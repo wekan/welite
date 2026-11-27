@@ -351,6 +351,14 @@ procedure ApiAttachmentInfo(aRequest: TRequest; aResponse: TResponse);     // GE
 function DeleteStoredAttachment(const T:TWLTenant;const Actor,BoardId,AttachmentId:string;
   const CardId:string=''):Boolean;
 procedure ApiAttachmentDelete(aRequest: TRequest; aResponse: TResponse);   // DELETE /api/attachment/delete/:id
+// May UserId change the attachments of CardId on BoardId (WeKan's
+// userHasBoardWriteAccess, then mayWriteCardAttachment): a board writer, or an
+// assigned-only writer on a card assigned to them. 200, or 403 - an
+// assigned-only member's refusal recorded as UnassignedAttachBleed from Source.
+function AttachmentWriteAllowed(Db:TWLDb;const UserId,BoardId,CardId,Source:string):Integer;
+// models/lib/boardCardScope.js isAssignedOnlyMember: an active member whose
+// role sees only the cards assigned to them.
+function AssignedOnlyMember(Db:TWLDb;const UserId,BoardId:string):Boolean;
 procedure ApiBoardAttachments(aRequest: TRequest; aResponse: TResponse);   // GET  /api/boards/:boardId/attachments
 procedure ApiCardAttachmentsList(aRequest: TRequest; aResponse: TResponse);// GET /api/attachment/list/:b/:s/:l/:c
 procedure ApiCardMember(aRequest: TRequest; aResponse: TResponse);     // POST/DELETE card member
@@ -460,6 +468,73 @@ begin
   if NeedWrite then Result:=BoardCanWrite(T.Db,UserId,BoardId)
   else Result:=BoardCanRead(T.Db,UserId,BoardId);
   if not Result then SendError(aResponse,403,'Board access forbidden');
+end;
+
+// WeKan's board.hasMember: an active member, whatever the role.
+function BoardHasMember(Db:TWLDb;const UserId,BoardId:string):Boolean;
+begin
+  Result:=(UserId<>'') and (Pos(#0,BoardId)=0) and (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+
+    ' AND userId='+QuotedStr(UserId)+' AND isActive=1;'))=1);
+end;
+
+// models/lib/boardCardScope.js isAssignedOnlyMember.
+function AssignedOnlyMember(Db:TWLDb;const UserId,BoardId:string):Boolean;
+begin
+  Result:=Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+' AND userId='+QuotedStr(UserId)+
+    ' AND isActive=1 AND (COALESCE(isNormalAssignedOnly,0)=1 OR COALESCE(isCommentAssignedOnly,0)=1 OR '+
+    'COALESCE(isReadAssignedOnly,0)=1);'))=1;
+end;
+
+// A live card of BoardId that is assigned to UserId.
+function CardAssignedTo(Db:TWLDb;const UserId,BoardId,CardId:string):Boolean;
+begin
+  Result:=(CardId<>'') and (Pos(#0,CardId)=0) and (Length(Db.Query('SELECT 1 FROM cards c WHERE c.id='+QuotedStr(CardId)+
+    ' AND c.boardId='+QuotedStr(BoardId)+' AND c.deletedAt IS NULL AND EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId=c.id '+
+    'AND a.userId='+QuotedStr(UserId)+');'))=1);
+end;
+
+// The same as SQL, for a write's own transaction guard: an assigned-only
+// writer (isNormalAssignedOnly) of a live board, on their own card.
+function AssignedWriterSql(const UserId,BoardId,CardId:string):string;
+begin
+  Result:='(EXISTS(SELECT 1 FROM board_members m JOIN boards b ON b.id=m.boardId JOIN users u ON u.id=m.userId WHERE m.boardId='+
+    QuotedStr(BoardId)+' AND m.userId='+QuotedStr(UserId)+' AND m.isActive=1 AND COALESCE(m.isNormalAssignedOnly,0)=1 AND '+
+    'b.archived=0 AND u.loginDisabled=0) AND EXISTS(SELECT 1 FROM card_assignees a WHERE a.cardId='+QuotedStr(CardId)+
+    ' AND a.userId='+QuotedStr(UserId)+'))';
+end;
+
+function AttachmentWriteAllowed(Db:TWLDb;const UserId,BoardId,CardId,Source:string):Integer;
+begin
+  if not (BoardCanWrite(Db,UserId,BoardId) or (Length(Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+
+    ' AND userId='+QuotedStr(UserId)+' AND isActive=1 AND COALESCE(isNormalAssignedOnly,0)=1;'))=1)) then Exit(403);
+  if AssignedOnlyMember(Db,UserId,BoardId) and not CardAssignedTo(Db,UserId,BoardId,CardId) then
+  begin
+    try
+      RecordSecurityEvent(Db,UserId,'UnassignedAttachBleed',Source,'authz','medium','CWE-863','blocked',
+        'Assigned-only member tried to change an attachment of a card not assigned to them.');
+    except
+      // logging must never break the guard
+    end;
+    Exit(403);
+  end;
+  Result:=200;
+end;
+
+// May UserId read an attachment of CardId on BoardId (board.hasMember, then
+// mayReadBoardAttachment): a member or reader of the board, and an
+// assigned-only member only of a card assigned to them - the refusal recorded
+// as AssignedBleed from Source.
+function AttachmentReadAllowed(Db:TWLDb;const UserId,BoardId,CardId,Source:string):Boolean;
+begin
+  if not (BoardCanRead(Db,UserId,BoardId) or BoardHasMember(Db,UserId,BoardId)) then Exit(False);
+  Result:=not AssignedOnlyMember(Db,UserId,BoardId) or CardAssignedTo(Db,UserId,BoardId,CardId);
+  if not Result then
+  try
+    RecordSecurityEvent(Db,UserId,'AssignedBleed',Source,'authz','medium','CWE-863','blocked',
+      'Assigned-only member asked for an attachment of a card not assigned to them.');
+  except
+    // logging must never break the guard
+  end;
 end;
 
 // Common guard for board-scoped endpoints: boardId from the route, write = non-GET.
@@ -7503,7 +7578,7 @@ begin
   if RequireLiveCard then Guard:=Guard+' AND EXISTS(SELECT 1 FROM cards WHERE id='+QuotedStr(Crd)+
     ' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL)';
   Policy:=TFieldPolicy.Create(T.Db,UserId,BoardId,'');
-  try Guard:=Guard+' AND '+Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  try Guard:=Guard+' AND ('+Policy.ScopeBoardExpression(True)+' OR '+AssignedWriterSql(UserId,BoardId,Crd)+')';finally Policy.Free;end;
   FileSize:=Content.Size;
   Sql:=Format('INSERT INTO attachments(id,boardId,swimlaneId,listId,cardId,name,type,size,'+
     'storageBackend,userId,createdAt) VALUES(%s,%s,%s,%s,%s,%s,%s,%d,''filesystem'',%s,%s);',
@@ -7544,7 +7619,8 @@ begin
       ContentType:=LowerCase(aRequest.ContentType);
       Separator:=Pos(';',ContentType);
       if Separator>0 then SetLength(ContentType,Separator-1);
-      if Trim(ContentType)='application/octet-stream' then
+      // A raw upload: any body but JSON is the file itself (WeKan's raw branch).
+      if Trim(ContentType)<>'application/json' then
       begin
         BoardId:=aRequest.QueryFields.Values['boardId'];Sw:=aRequest.QueryFields.Values['swimlaneId'];
         Lst:=aRequest.QueryFields.Values['listId'];Crd:=aRequest.QueryFields.Values['cardId'];
@@ -7564,9 +7640,10 @@ begin
   finally Input.Free;end;
   if FileName='' then FileName:='file';
   if FileType='' then FileType:='application/octet-stream';
-  if not ApiAuthBoard(T,aResponse,UserId,BoardId,True) then Exit;
   if not ApiChildrenBelong(T.Db,BoardId,Sw,Lst,Crd,'','','','') then
   begin SendError(aResponse,400,'Invalid attachment parent');Exit;end;
+  if AttachmentWriteAllowed(T.Db,UserId,BoardId,Crd,'attachment-api:upload')<>200 then
+  begin SendError(aResponse,403,'You do not have permission to modify this card');Exit;end;
 
   Content:=TStringStream.Create(Bytes);
   try
@@ -7595,7 +7672,8 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   Id := aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse, T.Db, Id, R) then Exit;
-  if not ApiAuthBoard(T, aResponse, UserId, R[0][0], False) then Exit;
+  if not AttachmentReadAllowed(T.Db, UserId, R[0][0], R[0][3], 'attachment-api:read') then
+  begin SendError(aResponse, 403, 'You do not have permission to access this attachment'); Exit; end;
   Path:=StoreFilePath(T.FilesDir,'attachme',Id);
   if not FileExists(Path) then
   begin SendJson(aResponse,'{"success":false,"message":"Attachment bytes not found"}',404);Exit;end;
@@ -7618,7 +7696,8 @@ begin
   if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
   Id := aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse, T.Db, Id, R) then Exit;
-  if not ApiAuthBoard(T, aResponse, UserId, R[0][0], False) then Exit;
+  if not AttachmentReadAllowed(T.Db, UserId, R[0][0], R[0][3], 'attachment-api:read') then
+  begin SendError(aResponse, 403, 'You do not have permission to access this attachment'); Exit; end;
   O := TJSONObject.Create;
   try
     O.Add('success', True);          O.Add('attachmentId', Id);
@@ -7652,6 +7731,7 @@ begin
   finally Selector.Free;end;
   Policy:=TFieldPolicy.Create(Db,Actor,BoardId,'');
   try Permission:=Policy.ScopeBoardExpression(True);finally Policy.Free;end;
+  if CardId<>'' then Permission:='('+Permission+' OR '+AssignedWriterSql(Actor,BoardId,CardId)+')';
   if not SharedStore(Db) then
   begin
     Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Permission+
@@ -7678,14 +7758,19 @@ begin
 end;
 
 procedure ApiAttachmentDelete(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;UserId,Id:string;Rows:TWLRows;Reply:TJSONObject;
+var T:TWLTenant;UserId,Id:string;Rows:TWLRows;Reply:TJSONObject;Ok:Boolean;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   Id:=aRequest.RouteParams['attachmentId'];
   if not LoadAttachment(aResponse,T.Db,Id,Rows) then Exit;
-  if not ApiAuthBoard(T,aResponse,UserId,Rows[0][0],True) then Exit;
-  if not DeleteStoredAttachment(T,UserId,Rows[0][0],Id) then
+  if AttachmentWriteAllowed(T.Db,UserId,Rows[0][0],Rows[0][3],'attachment-api:delete')<>200 then
+  begin SendError(aResponse,403,'You do not have permission to delete this attachment');Exit;end;
+  // The card in the delete's own guard only for an assigned-only writer,
+  // whose write is that card's; a board writer deletes as before.
+  if AssignedOnlyMember(T.Db,UserId,Rows[0][0]) then Ok:=DeleteStoredAttachment(T,UserId,Rows[0][0],Id,Rows[0][3])
+  else Ok:=DeleteStoredAttachment(T,UserId,Rows[0][0],Id);
+  if not Ok then
   begin SendError(aResponse,500,'Could not delete attachment');Exit;end;
   Reply:=TJSONObject.Create(['success',True,'attachmentId',Id,'fileName',Rows[0][4]]);
   try SendJson(aResponse,Reply.AsJSON);finally Reply.Free;end;
@@ -7732,7 +7817,9 @@ begin
   if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
   Board:=aRequest.RouteParams['boardId'];Lane:=OptionalRouteId('swimlaneId');
   List:=OptionalRouteId('listId');Card:=OptionalRouteId('cardId');
-  if not ApiAuthBoard(T,aResponse,UserId,Board,False) then Exit;
+  // board.hasMember: an assigned-only member too, of their own cards only.
+  if not (BoardCanRead(T.Db,UserId,Board) or BoardHasMember(T.Db,UserId,Board)) then
+  begin SendError(aResponse,403,'You do not have permission to access this board');Exit;end;
   if not ApiChildrenBelong(T.Db,Board,Lane,List,Card,'','','','') then
   begin SendJson(aResponse,'{"success":false,"message":"Attachment scope not found"}',404);Exit;end;
   Selector:=TSelectionScope.Create(T.Db);
@@ -7740,6 +7827,8 @@ begin
     Scope:='boardId='+QuotedStr(Board)+' AND '+Selector.StringField('attachments','boardId')+
       ' AND '+Selector.StringField('attachments','id')+' AND '+LiveAttachmentSQL(T.Db);
     AddScope('swimlaneId',Lane);AddScope('listId',List);AddScope('cardId',Card);
+    if AssignedOnlyMember(T.Db,UserId,Board) then
+      Scope:=Scope+' AND cardId IN (SELECT a.cardId FROM card_assignees a WHERE a.userId='+QuotedStr(UserId)+')';
     Rows:=T.Db.Query('SELECT id,name,type,size,createdAt,storageBackend,boardId,swimlaneId,listId,cardId '+
       'FROM attachments WHERE '+Scope+' ORDER BY createdAt,id;');
   finally Selector.Free;end;

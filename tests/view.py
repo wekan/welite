@@ -1186,6 +1186,41 @@ def http_checks(server, tmp, backend):
         assert method('enableWipLimit', [wip_full])[0] == 200 and wip_of(wip_full)[1] == 0
         for l in (wip_full, wip_room):
             assert method('lists.softRemove', [l])[0] == 200
+        # The attachment API for an assigned-only member (WeKan's AssignedBleed
+        # read siblings and UnassignedAttachBleed): their own card's files
+        # listed, read, uploaded and deleted; another card's refused - info,
+        # download, upload, the REST delete and api.attachment.delete. A raw
+        # upload takes any body but JSON. Negative: the owner sees both.
+        worker_auth = {'Authorization': 'Bearer ' + json.loads(request('POST', '/users/login', {'username': 'worker',
+                                                                         'password': 'test-password'})[2])['token']}
+        board_db('UPDATE board_members SET isWorker=0, isNormalAssignedOnly=1 WHERE boardId=? AND userId=?', board_id, users['worker'])
+        mine_card, hidden_card = wip_card(list_id, 'AO mine'), wip_card(list_id, 'AO hidden')
+        card_db('INSERT INTO card_assignees(cardId,userId) VALUES(?,?)', mine_card, users['worker'])
+        def raw_upload(card, headers, name='a.txt'):
+            return request('POST', '/api/attachment/upload?boardId=%s&swimlaneId=%s&listId=%s&cardId=%s&fileName=%s&fileType=text/plain'
+                           % (board_id, lane, list_id, card, name), b'synthetic file', headers=dict(headers, **{'Content-Type': 'text/plain'}))
+        status, _, body, _ = raw_upload(mine_card, auth)
+        assert status == 200, body
+        mine_att = json.loads(body)['attachmentId']
+        hidden_att = json.loads(raw_upload(hidden_card, auth)[2])['attachmentId']
+        listed = json.loads(request('GET', '/api/attachment/list/%s' % board_id, headers=worker_auth)[2])
+        assert [a['attachmentId'] for a in listed['attachments'] if a['attachmentId'] in (mine_att, hidden_att)] == [mine_att], listed
+        assert request('GET', '/api/boards/%s/attachments' % board_id, headers=worker_auth)[0] == 403, 'the board-wide read refuses them'
+        assert request('GET', '/api/attachment/info/%s' % mine_att, headers=worker_auth)[0] == 200
+        for path in ('/api/attachment/info/%s', '/api/attachment/download/%s'):
+            status, _, body, _ = request('GET', path % hidden_att, headers=worker_auth)
+            assert status == 403 and b'synthetic' not in body, (path, status)
+        assert raw_upload(hidden_card, worker_auth)[0] == 403
+        assert raw_upload(mine_card, worker_auth, 'own.txt')[0] == 200
+        assert request('DELETE', '/api/attachment/delete/%s' % hidden_att, headers=worker_auth)[0] == 403
+        status, _, body, _ = request('POST', '/_methods/api.attachment.delete', [hidden_att], cookie=worker, as_json=True)
+        assert status == 403 and b'not-authorized' in body, body
+        assert card_db('SELECT COUNT(*) FROM attachments WHERE id=?', hidden_att)[0] == 1, 'the hidden file stays'
+        owner_listed = json.loads(request('GET', '/api/attachment/list/%s' % board_id, headers=auth)[2])
+        assert {mine_att, hidden_att} <= {a['attachmentId'] for a in owner_listed['attachments']}
+        assert request('DELETE', '/api/attachment/delete/%s' % mine_att, headers=worker_auth)[0] == 200, 'their own card\'s file'
+        assert request('DELETE', '/api/attachment/delete/%s' % hidden_att, headers=auth)[0] == 200
+        board_db('UPDATE board_members SET isWorker=1, isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])
         board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
         page = card_page()
         assert ('class="js-toggle-watch-card" href="%s/watch"' % card_path).encode() in page

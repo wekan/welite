@@ -4326,6 +4326,35 @@ begin
     end;
     Exit;
   end;
+  // server/attachmentApi.js api.attachment.delete [attachmentId]: the REST
+  // delete's checks - board write access, and an assigned-only writer's own
+  // card (UnassignedAttachBleed) - then the same soft delete.
+  if Name = 'api.attachment.delete' then
+  begin
+    Args := nil;
+    try
+      try
+        Args := GetJSON(Request.Content);
+      except
+        Args := nil;
+      end;
+      if not ((Args is TJSONArray) and (TJSONArray(Args).Count = 1) and (TJSONArray(Args).Items[0].JSONType = jtString)) then
+      begin SendJsonAnswer(Response, 400, '{"error":"Match.Error","reason":"Match failed"}'); Exit; end;
+      Id := TJSONArray(Args).Strings[0];
+    finally
+      Args.Free;
+    end;
+    R := T.Db.Query('SELECT boardId,COALESCE(cardId,''''),COALESCE(name,'''') FROM attachments WHERE id=' + QuotedStr(Id) + ';');
+    if Length(R) <> 1 then begin SendJsonAnswer(Response, 404, '{"error":"attachment-not-found","reason":"Attachment not found"}'); Exit; end;
+    if AttachmentWriteAllowed(T.Db, S.UserId, R[0][0], R[0][1], 'attachment-method:delete') <> 200 then
+    begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"You do not have permission to delete this attachment"}'); Exit; end;
+    if not DeleteStoredAttachment(T, S.UserId, R[0][0], Id, IfThen(AssignedOnlyMember(T.Db, S.UserId, R[0][0]), R[0][1], '')) then
+    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not delete attachment"}'); Exit; end;
+    AnnounceToAll;
+    SendJsonAnswer(Response, 200, '{"result":{"success":true,"attachmentId":"' + StringToJSONString(Id) + '","fileName":"' +
+      StringToJSONString(R[0][2]) + '","message":"Attachment deleted successfully"}}');
+    Exit;
+  end;
   // server/models/lists.js's WIP limit methods, a board admin's: applyWipLimit
   // [listId, limit] sets the value - 1 when it is no number of at least one -
   // enableWipLimit [listId] turns the limit on or off (a value of 0 becoming

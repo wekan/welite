@@ -429,3 +429,5 @@ history-read-scope.e2e.js: assigned-only writers cannot restore hidden card hist
 history-read-scope.e2e.js: an assigned-only writer can restore currently assigned card history
 history-read-scope.e2e.js: History cannot edit a card moved to a board the former owner cannot access
 history-read-scope.e2e.js: History scans multiple batches before paging readable search matches
+assigned-only-reads.e2e.js: an assigned-only member reads only their own cards' attachments over REST
+unassigned-attach-bleed.e2e.js: an unassigned assigned-only member can no longer upload to or delete from the card

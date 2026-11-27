@@ -564,6 +564,15 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   WeKan's do, so the card's, list's and swimlane's History find them.
   `tests/rules.py` checks the page and the restore, and five of WeKan's
   history-read-scope tests pass.
+- Give WeKan's attachment API an assigned-only member's rules (AssignedBleed's
+  read siblings, UnassignedAttachBleed): `/api/attachment/list` lets them in
+  and lists only their own cards' files; info and download refuse another
+  card's (403, recorded as AssignedBleed); upload, the REST delete and the
+  new api.attachment.delete method change only their own card's
+  (UnassignedAttachBleed otherwise) - an assigned-only writer may, on that
+  card, as in WeKan. A raw upload takes any body but JSON, as WeKan's does.
+  `tests/view.py` checks each allowed and refused call; WeKan's
+  assigned-only-reads list test and unassigned-attach-bleed pass.
 - Run 87 more of WeKan's own tests that Weddy passes, in
   `tests/wkui/specs.txt`: the REST API, viewport, RTL, stability,
   notification and board-action specs among them, and shared-list-row-6902.
