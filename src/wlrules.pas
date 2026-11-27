@@ -1462,6 +1462,24 @@ begin
     Db.Exec('ROLLBACK;');
 end;
 
+procedure RuleArchiveCard(Db:TWLDb;const Activity:TActivity;Archive:Boolean);
+var Scope,Before,After,Stamp,ArchivedAt,Kind:string;
+begin
+  Scope:='id='+Q(Activity.CardId)+' AND boardId='+Q(Activity.BoardId)+' AND deletedAt IS NULL';
+  Before:=IntToStr(Ord(not Archive));
+  After:=IntToStr(Ord(Archive));
+  Stamp:=Q(NowIso);
+  ArchivedAt:='NULL';Kind:='restoredCard';
+  if Archive then begin ArchivedAt:=Stamp;Kind:='archivedCard';end;
+  if Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+
+    ' AND COALESCE(archived,0)='+Before+') THEN 1 ELSE json(''Card archive state changed'') END; '+
+    'UPDATE cards SET archived='+After+',archivedAt='+ArchivedAt+',modifiedAt='+Stamp+' WHERE '+Scope+
+    '; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+Scope+' AND archived='+After+
+    ') THEN 1 ELSE json(''Rule archive failed'') END; '+ActivitySql(Kind,Activity.UserId,Activity.CardId,'{}')+'COMMIT;') then
+    RecordCardBooleanHistory(Db,Activity.UserId,Activity.BoardId,Activity.CardId,'archived',not Archive,Archive)
+  else Db.Exec('ROLLBACK;');
+end;
+
 procedure PerformAction(const T: TWLTenant; const A: TActivity; Act: TJSONObject);
 var Db: TWLDb; Kind, Field, Text, Id, Checklist, Scope, Stamp, Table, JoinKind, Key: string; Vars: TStringList;
   Card, R: TWLRows; Users: TStringArray; U: string; i: Integer; Items: TStringArray; Remove: Boolean;
@@ -1481,14 +1499,9 @@ begin
       'sortList': RuleSortList(Db, A, Act);
       'linkCard': RuleLinkCard(Db, A, Act);
       'createCard': RuleCreateCard(Db, A, Act, Vars);
-      'archive':
-        if Card[0][1] = '0' then
-          Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET archived=1,archivedAt=' + Stamp + ',modifiedAt=' + Stamp + Scope +
-            ActivitySql('archivedCard', A.UserId, A.CardId, '{}') + 'COMMIT;');
-      'unarchive':
-        if Card[0][1] <> '0' then
-          Db.Exec('BEGIN IMMEDIATE; UPDATE cards SET archived=0,archivedAt=NULL,modifiedAt=' + Stamp + Scope +
-            ActivitySql('restoredCard', A.UserId, A.CardId, '{}') + 'COMMIT;');
+      'archive', 'unarchive':
+        if (Card[0][0]=A.BoardId) and ((Card[0][1]='1')<>(Kind='archive')) then
+          RuleArchiveCard(Db,A,Kind='archive');
       'setColor':
         Db.Exec('UPDATE cards SET color=' + Q(Str(Act, 'selectedColor')) + ',modifiedAt=' + Stamp + Scope);
       'addLabel', 'removeLabel':
