@@ -8018,8 +8018,15 @@ begin
         GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
         if Values <> nil then
           case Values.Get('field', '') of
-            'color': GroupLabel := Words.Text('card-settings-card-color', 'Card color');
-            'dueComplete': GroupLabel := Words.Text('due-complete', 'Due complete');
+            'color':
+              case Row.Get('entityType', '') of
+                'card': GroupLabel := Words.Text('card-settings-card-color', 'Card color');
+                'list': GroupLabel := Words.Text('list', 'List');
+                'swimlane': GroupLabel := Words.Text('swimlane', 'Swimlane');
+              end;
+            'dueComplete':
+              if Row.Get('entityType', '') = 'card' then
+                GroupLabel := Words.Text('due-complete', 'Due complete');
           end;
         When_ := HistoryDate(Row.Find('createdAt'), DateFormat);
         Content := Content + '<tr class="js-history-row" data-id="' + HtmlAttr(Row.Get('_id', '')) +
