@@ -18,7 +18,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   rows identify hours and show overtime as a translated Yes or No.
   Checklist history displays the translated visibility settings and item
   completion, with Yes or No values. List WIP history shows the limit
-  and whether it is enabled and soft.
+  and whether it is enabled and soft. Card position history shows the saved
+  move reason and falls back to the destination list ID.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

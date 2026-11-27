@@ -7863,7 +7863,7 @@ begin
   end;
 end;
 
-function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat: string): string;
+function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat, Group: string): string;
 var Value, Document: TJSONData; NumberFormat: TFormatSettings;
   procedure AppendWipFlag(const Field, Key, Fallback: string);
   var Flag: TJSONData;
@@ -7917,6 +7917,12 @@ begin
       Exit(Value.AsString);
     end;
     Exit(Value.AsJSON);
+  end;
+  if Group = 'position' then
+  begin
+    Result := Values.Get('lastMoveReason', '');
+    if Result = '' then Result := Values.Get('listId', '');
+    Exit;
   end;
   Document := Values.Find('document');
   if Document is TJSONObject then Values := TJSONObject(Document);
@@ -8046,7 +8052,7 @@ begin
         Values := nil;
         if Row.Find('newContent') is TJSONObject then Values := Row.Objects['newContent']
         else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
-        Summary := HistoryContentSummary(Values, Words, DateFormat);
+        Summary := HistoryContentSummary(Values, Words, DateFormat, Row.Get('group', ''));
         GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
         if Values <> nil then
           case Values.Get('field', '') of
