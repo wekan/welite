@@ -11,6 +11,7 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Card archive status supports undo, redo and Restore from History.
   The general REST card update and the board’s single and multi-card
   archive actions also record successful state transitions.
+  The archive sidebar records each card restored by Restore or Restore all.
 
 - The Time view and its PDF and Excel exports show hours by assignee and
   card, mark overtime cards, and show the signed total time until open

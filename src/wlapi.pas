@@ -1932,6 +1932,19 @@ begin
   Result:=R[0][1]='1';
 end;
 
+function RestoreArchivedCard(const T:TWLTenant;const UserId,BoardId,CardId,Move:string):Boolean;
+var Scope,ArchivedScope:string;
+begin
+  Scope:='id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL';
+  ArchivedScope:=Scope+' AND archived=1';
+  Result:=T.Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+ArchivedScope+
+    ') THEN 1 ELSE json(''Archived card scope changed'') END; UPDATE cards SET archived=0,archivedAt=NULL'+Move+
+    ',modifiedAt='+QuotedStr(NowIso)+' WHERE '+ArchivedScope+'; SELECT CASE WHEN EXISTS(SELECT 1 FROM cards WHERE '+
+    Scope+' AND archived=0) THEN 1 ELSE json(''Restore failed'') END; COMMIT;');
+  if Result then RecordCardBooleanHistory(T.Db,UserId,BoardId,CardId,'archived',True,False)
+  else T.Db.Exec('ROLLBACK;');
+end;
+
 function RestoreAllViewCards(const T:TWLTenant;const UserId,BoardId:string;out Skipped:Integer;out Error:string):Integer;
 var R:TWLRows;i:Integer;Title:string;
 begin
@@ -1942,8 +1955,7 @@ begin
   for i:=0 to High(R) do
   begin
     if not ListHasRoom(T.Db,BoardId,R[i][1],Title) then begin Inc(Skipped);Continue;end;
-    if not T.Db.Exec('UPDATE cards SET archived=0,archivedAt=NULL,modifiedAt='+QuotedStr(NowIso)+' WHERE id='+QuotedStr(R[i][0])+
-      ' AND boardId='+QuotedStr(BoardId)+' AND archived=1;') then begin Error:='Could not restore';Exit(500);end;
+    if not RestoreArchivedCard(T,UserId,BoardId,R[i][0],'') then begin Error:='Could not restore';Exit(500);end;
   end;
   Result:=200;
 end;
@@ -1965,6 +1977,7 @@ begin
   if Kind='cards' then
   begin
     R:=T.Db.Query('SELECT listId,COALESCE(swimlaneId,'''') FROM cards WHERE '+Scope+';');
+    if Length(R)<>1 then begin Error:='Not found';Exit(404);end;
     if ToList='' then
     begin
       // Its own list filled up since the page was drawn: choose another.
@@ -1982,6 +1995,8 @@ begin
         if Length(R)=1 then Move:=Move+',swimlaneId='+QuotedStr(R[0][0]);
       end;
     end;
+    if not RestoreArchivedCard(T,UserId,BoardId,ItemId,Move) then begin Error:='Could not restore';Exit(500);end;
+    Exit(200);
   end;
   if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE '+Table+' SET archived=0,archivedAt=NULL'+Move+',modifiedAt='+QuotedStr(NowIso)+' WHERE '+Scope+
     '; SELECT CASE WHEN (SELECT count(*) FROM '+Table+' WHERE id='+QuotedStr(ItemId)+' AND archived=0)=1 THEN 1 '+
