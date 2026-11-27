@@ -31,7 +31,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   completion, with Yes or No values. List WIP history shows the limit
   and whether it is enabled and soft. REST WIP edits record one compound
   History entry when any of those settings changes, retaining a previously
-  stored fractional limit in the before value. Card position history shows the saved
+  stored fractional limit in the before value. Board admins can undo,
+  redo and restore all three WIP settings together. Card position history shows the saved
   move reason and the destination list title when it belongs to the row’s
   board. A missing title or reason falls back to the destination ID when
   neither is available. History displays

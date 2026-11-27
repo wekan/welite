@@ -8267,7 +8267,8 @@ begin
             (CanRestoreList and (Row.Get('entityType', '') = 'swimlane') and
               (RowGroup = 'title') and ((RowField = 'title') or (RowField = 'color'))) or
             (CanRestoreList and (Row.Get('entityType', '') = 'list') and
-              (((RowGroup = 'title') and ((RowField = 'title') or (RowField = 'color'))) or
+              (((RowGroup = 'title') and ((RowField = 'title') or (RowField = 'color') or
+                ((RowField = 'wipLimit') and CanRestoreRule))) or
                 ((RowGroup = 'lifecycle') and (Row.Get('changeType', '') = 'removed')))) or
             (CanRestoreCard and CanRestoreRule and (Row.Get('entityType', '') = 'card') and
               (RowGroup = 'customFields') and (RowField = 'customFields')) or

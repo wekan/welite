@@ -2351,11 +2351,78 @@ begin
   end;
 end;
 
+function ApplyListWipHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var Prior, Next, Put, Expect: TJSONData; BoardId, ListId, Scope, Guard, Sets, Expected, Current, Permission: string;
+  Policy: TFieldPolicy; Rows: TWLRows; Before: TJSONObject;
+  function WipValues(Content: TJSONData; out Sql: string): Boolean;
+  var Limit, Number, Enabled, Soft: TJSONData;
+  begin
+    Result := False;
+    if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> 'wipLimit') then Exit;
+    Limit := TJSONObject(Content).Find('value');
+    if not (Limit is TJSONObject) then Exit;
+    Number := TJSONObject(Limit).Find('value');
+    Enabled := TJSONObject(Limit).Find('enabled');
+    Soft := TJSONObject(Limit).Find('soft');
+    if (Number = nil) or (Number.JSONType <> jtNumber) or IsNan(Number.AsFloat) or
+      IsInfinite(Number.AsFloat) or not (Enabled is TJSONBoolean) or not (Soft is TJSONBoolean) then Exit;
+    Sql := CanonicalHistoryValue(Number) + ',' + IntToStr(Ord(Enabled.AsBoolean)) + ',' + IntToStr(Ord(Soft.AsBoolean));
+    Result := True;
+  end;
+begin
+  Result := False; Error := '';
+  BoardId := Str(Row, 'boardId'); ListId := Str(Row, 'entityId');
+  if not BoardCanAdmin(Db, UserId, BoardId) then Exit;
+  Prior := Row.Find('previousContent'); Next := Row.Find('newContent');
+  if Direction = 'undo' then begin Put := Prior; Expect := Next; end
+  else begin Put := Next; Expect := Prior; end;
+  if not WipValues(Put, Sets) then Exit;
+  Scope := 'id=' + Q(ListId) + ' AND boardId=' + Q(BoardId) + ' AND deletedAt IS NULL';
+  Rows := Db.Query('SELECT printf(''%!.26g'',COALESCE(wip_value,1)),COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE ' + Scope + ';');
+  if Length(Rows) <> 1 then Exit;
+  Current := Rows[0][0] + ',' + Rows[0][1] + ',' + Rows[0][2];
+  if (Direction <> 'restore') and not WipValues(Expect, Expected) then Exit;
+  Policy := TFieldPolicy.Create(Db, UserId, BoardId, '');
+  try Permission := Policy.ScopeAdminExpression; finally Policy.Free; end;
+  Guard := Scope + ' AND ' + Permission + ' AND (COALESCE(wip_value,1),COALESCE(wip_enabled,0),COALESCE(wip_soft,0))';
+  if Direction <> 'restore' then
+    if Length(Db.Query('SELECT 1 FROM lists WHERE ' + Guard + '=(' + Expected + ');')) <> 1 then
+    begin Error := 'history-conflict'; Exit; end;
+  Guard := Guard + '=(' + Current + ')';
+  Result := Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM lists WHERE ' + Guard +
+    ') THEN 1 ELSE json(''List WIP limit changed'') END; UPDATE lists SET (wip_value,wip_enabled,wip_soft)=(' +
+    Sets + '),modifiedAt=' + Q(NowIso) + ' WHERE ' + Guard + '; COMMIT;');
+  if not Result then begin Db.Exec('ROLLBACK;'); Exit; end;
+  if Direction = 'restore' then
+  begin
+    Before := TJSONObject.Create(['field', 'wipLimit', 'value', GetJSON(
+      '{"value":' + Rows[0][0] + ',"enabled":' + IfThen(Rows[0][1] = '1', 'true', 'false') +
+      ',"soft":' + IfThen(Rows[0][2] = '1', 'true', 'false') + '}')]);
+    try
+      try RecordHistoryRow(Db, UserId, BoardId, 'list', ListId, 'title', 'restored', Before, Put,
+        Str(Row, '_id'), UserId);
+      except
+        // History never fails the restore it records.
+      end;
+    finally Before.Free; end;
+  end;
+end;
+
+function ApplyListFieldHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var Content: TJSONData;
+begin
+  Content := Row.Find('newContent');
+  if not (Content is TJSONObject) then Content := Row.Find('previousContent');
+  if (Content is TJSONObject) and (Str(TJSONObject(Content), 'field') = 'wipLimit') then
+    Exit(ApplyListWipHistory(Db, UserId, Row, Direction, Error));
+  Result := ApplyContainerTextHistory(Db, UserId, Row, Direction, Error);
+end;
+
 function ApplyListHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
 var ListId, BoardId, Batch, Markers, ListScope: string;
 begin
   Result := False; Error := '';
-  if Str(Row, 'group') = 'title' then Exit(ApplyContainerTextHistory(Db, UserId, Row, Direction, Error));
+  if Str(Row, 'group') = 'title' then Exit(ApplyListFieldHistory(Db, UserId, Row, Direction, Error));
   if Str(Row, 'group') <> 'lifecycle' then Exit;
   ListId := Str(Row, 'entityId'); BoardId := Str(Row, 'boardId'); Batch := Str(Row, 'batchId');
   if (ListId = '') or (Batch = '') then Exit;
@@ -2837,7 +2904,10 @@ begin
           begin
             if not Readable.Readable(Row) or not BoardCanWrite(T.Db, UserId, Str(Row, 'boardId')) then
               Exit(MethodError(403, 'not-authorized', 'You cannot restore this list.', Answer));
-            if ApplyContainerTextHistory(T.Db, UserId, Row, 'restore', Error) then
+            if Str(Row, 'entityType') = 'list' then
+              Applied := ApplyListFieldHistory(T.Db, UserId, Row, 'restore', Error)
+            else Applied := ApplyContainerTextHistory(T.Db, UserId, Row, 'restore', Error);
+            if Applied then
             begin Inc(Restored); AnnounceToAll; end
             else Inc(Skipped);
             Continue;
