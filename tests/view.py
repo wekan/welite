@@ -893,6 +893,20 @@ def http_checks(server, tmp, backend):
         assert request('POST', fields + '/toggle', {}, cookie=owner)[0] == 200
         status, _, page, _ = request('POST', fields, {'value': '123,45'}, cookie=owner)
         assert status == 200 and b'card-details-item-customfield' in page and b'>123.45<' in page, page[-400:]
+        for term in ('123.45', '+123,450'):
+            assert [match['id'] for match in search_cards(term)[1]] == [card_id]
+        assert search_cards('123')[1] == []
+        assert search_cards('1.2345e2')[1] == []
+        def set_field_admin_only(value):
+            for path in data.glob('**/files/db/wekan.db'):
+                with sqlite3.connect(path) as con:
+                    if con.execute("SELECT 1 FROM sqlite_master WHERE name='custom_fields'").fetchone():
+                        con.execute('UPDATE custom_fields SET adminOnly=? WHERE id=?', (value, field_id))
+        assert [match['id'] for match in search_cards('123.45', commenter)[1]] == [card_id]
+        set_field_admin_only(1)
+        assert search_cards('123.45', commenter) == (200, [])
+        assert [match['id'] for match in search_cards('123.45')[1]] == [card_id]
+        set_field_admin_only(0)
         # Negative: a value that is no number, a field of no board, a
         # non-member, a type that is not one, an empty name.
         assert request('POST', fields, {'value': '1.2.3'}, cookie=owner)[0] == 400

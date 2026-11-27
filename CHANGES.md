@@ -17,6 +17,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Search the board's stored cards by title, description, comments and
   checklist text. Results include matching cards outside the rendered canvas
   and follow the viewer's board and assigned-card permissions.
+- Find cards by readable custom-field text and exact number or currency
+  values, including search terms with a decimal comma. Admin-only field
+  values contribute matches only for viewers who can read them.
 
 ## HTML5 minicards
 

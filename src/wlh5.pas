@@ -5777,6 +5777,36 @@ begin
   Response.SendContent;
 end;
 
+function BoardFieldTextMatchSql(Db: TWLDb; const UserId, BoardId, Text: string): string;
+var Policy: TFieldPolicy; Decimal, Match: string; i, Digits: Integer; Dot: Boolean;
+begin
+  Result := '';
+  if UserId = '' then Exit;
+  Match := '(definition.type IN (''text'',''stringtemplate'') AND typeof(v.value)=''text'' AND ' +
+    'instr(lower(v.value),lower(' + QuotedStr(Text) + '))>0)';
+  Decimal := StringReplace(Text, ',', '.', []);
+  i := 1;
+  if (Decimal <> '') and (Decimal[1] in ['+', '-']) then Inc(i);
+  Digits := 0;
+  Dot := False;
+  while i <= Length(Decimal) do
+  begin
+    if Decimal[i] in ['0'..'9'] then Inc(Digits)
+    else if (Decimal[i] = '.') and not Dot and (i < Length(Decimal)) then Dot := True
+    else Break;
+    Inc(i);
+  end;
+  if (i > Length(Decimal)) and (Digits > 0) then
+    Match := Match + ' OR (definition.type IN (''number'',''currency'') AND ' +
+      'CASE WHEN json_valid(v.value) THEN json_type(v.value) IN (''integer'',''real'') ELSE 0 END ' +
+      'AND CAST(v.value AS NUMERIC)=CAST(' + QuotedStr(Decimal) + ' AS NUMERIC))';
+  Policy := TFieldPolicy.Create(Db, UserId, BoardId, '');
+  try
+    Result := ' OR EXISTS(SELECT 1 FROM card_custom_field_values v JOIN custom_fields definition ON definition.id=v.customFieldId ' +
+      'WHERE v.cardId=c.id AND (' + Match + ') AND ' + Policy.ValueReadExpression + ')';
+  finally Policy.Free; end;
+end;
+
 procedure ServeBoardSearch(Db: TWLDb; Response: TResponse; const UserId, BoardId, Term: string);
 var Boards, Cards: TWLRows; Scope, Board, Text: string; Wide: UnicodeString;
   Matches: TJSONArray; Card: TJSONObject; i: Integer;
@@ -5799,7 +5829,8 @@ begin
     if (Text <> '') and (Pos(#0, Text) = 0) then
     begin
       Cards := Db.Query('SELECT c.id,c.title FROM cards c WHERE c.boardId=' + Board +
-        ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND ' + BoardTextMatchSql(Text) +
+        ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + BoardTextMatchSql(Text) +
+        BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + ')' +
         ' ORDER BY c.createdAt DESC,c.id;');
       for i := 0 to High(Cards) do
       begin

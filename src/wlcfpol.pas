@@ -14,6 +14,8 @@ type
   public
     constructor Create(Db:TWLDb;const UserId,BoardId,CardId:string);
     function Expression(const FieldId:string;WriteAccess:Boolean):string;
+    // Read policy for a correlated card_custom_field_values row aliased v.
+    function ValueReadExpression:string;
     function Allowed(const FieldId:string;WriteAccess:Boolean):Boolean;
     function DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
     function HistoryExpression(const FieldId:string):string;
@@ -154,6 +156,8 @@ begin
 end;
 function TFieldPolicy.Expression(const FieldId:string;WriteAccess:Boolean):string;
 begin Result:=Build(FieldId,WriteAccess,False,False);end;
+function TFieldPolicy.ValueReadExpression:string;
+begin Result:=Build('',False,False,False,False,False,True,True);end;
 function TFieldPolicy.DefinitionExpression(const FieldId:string;AdminRequired:Boolean):string;
 begin Result:=Build(FieldId,True,True,AdminRequired);end;
 function TFieldPolicy.HistoryExpression(const FieldId:string):string;
