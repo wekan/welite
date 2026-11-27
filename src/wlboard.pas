@@ -13,6 +13,7 @@ procedure BoardCardEndpoint(aRequest:TRequest; aResponse:TResponse);
 procedure BoardAttachmentsEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentUploadEndpoint(aRequest:TRequest;aResponse:TResponse);
+function RenameCardAttachment(Db:TWLDb; const UserId,Board,Card,Id,NewStem:string):Integer;
 procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardAttachmentDeleteEndpoint(aRequest:TRequest;aResponse:TResponse);
 procedure BoardDropdownEndpoint(aRequest:TRequest;aResponse:TResponse);
@@ -989,9 +990,48 @@ begin
   aResponse.SendContent;
 end;
 
+function ValidAttachmentStem(const Name:string):Boolean;
+var I:Integer;
+begin
+  if (Name='') or (Name='.') or (Name='..') or (Pos('/',Name)>0) or (Pos(#92,Name)>0) then Exit(False);
+  for I:=1 to Length(Name) do
+    if (Name[I]<#32) or (Name[I]=#127) then Exit(False);
+  Result:=True;
+end;
+
+function RenameCardAttachment(Db:TWLDb; const UserId,Board,Card,Id,NewStem:string):Integer;
+var Name,Scope,CardScope,Guard,Sql:string; Rows:TWLRows; Selector:TSelectionScope; Policy:TFieldPolicy; I:Integer;
+begin
+  Name:=Trim(NewStem);
+  if (Board='') or (Card='') or (Id='') or (Pos(#0,Board+Card+Id)>0) or not ValidAttachmentStem(Name) then Exit(400);
+  if not BoardCanWrite(Db,UserId,Board) then Exit(403);
+  Selector:=TSelectionScope.Create(Db);
+  Policy:=nil;
+  try
+    Policy:=TFieldPolicy.Create(Db,UserId,Board,'');
+    CardScope:='id='+QuotedStr(Card)+' AND boardId='+QuotedStr(Board)+
+      ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
+      ' AND '+Selector.StringField('cards','boardId');
+    Scope:='id='+QuotedStr(Id)+' AND '+ActiveCardAttachments(Db,Selector,Board,Card)+
+      ' AND (SELECT count(*) FROM cards WHERE '+CardScope+')=1';
+    Rows:=Db.Query('SELECT name FROM attachments WHERE '+Scope+';');
+    if Length(Rows)<>1 then Exit(404);
+    Name:=Name+ExtractFileExt(Rows[0][0]);
+    Scope:=Scope+' AND name='+QuotedStr(Rows[0][0]);
+    Guard:='';
+    for I:=0 to Selector.Bindings.Count-1 do Guard:=Guard+Selector.Bindings[I];
+    Sql:='BEGIN IMMEDIATE; '+Guard+'SELECT CASE WHEN '+Policy.ScopeBoardExpression(True)+
+      ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 '+
+      'ELSE json(''Attachment scope changed'') END; UPDATE attachments SET name='+QuotedStr(Name)+
+      ' WHERE '+Scope+'; COMMIT;';
+    if not Db.Exec(Sql) then
+    begin Db.Exec('ROLLBACK;');Exit(500);end;
+  finally Policy.Free;Selector.Free;end;
+  Result:=200;
+end;
+
 procedure BoardAttachmentRenameEndpoint(aRequest:TRequest;aResponse:TResponse);
-var T:TWLTenant;S:TWLSession;Board,Card,Id,Name,Scope,CardScope,Guard,Sql:string;
-  Rows:TWLRows;Selector:TSelectionScope;Policy:TFieldPolicy;I:Integer;
+var T:TWLTenant;S:TWLSession;Board,Card,Id,Name:string; Status:Integer;
   procedure Reject(Status:Integer;const Key:string='error';const Message:string='Error');
   var Language:TWLLanguage;Words:TWLTranslator;
   begin
@@ -1016,37 +1056,13 @@ begin
   Id:=aRequest.QueryFields.Values['file'];Name:=Trim(aRequest.ContentFields.Values['name']);
   if (Board='') or (Card='') or (Id='') or (Pos(#0,Board+Card+Id)>0) then
   begin Reject(400);Exit;end;
-  if (Name='') or (Name='.') or (Name='..') or (Pos('/',Name)>0) or (Pos(#92,Name)>0) then
+  if not ValidAttachmentStem(Name) then
   begin Reject(400,'invalid-file','If filename is invalid, upload or rename is cancelled.');Exit;end;
-  for I:=1 to Length(Name) do
-    if (Name[I]<#32) or (Name[I]=#127) then
-    begin Reject(400,'invalid-file','If filename is invalid, upload or rename is cancelled.');Exit;end;
   if not BoardCanWrite(T.Db,S.UserId,Board) or
     not VerifyActionToken(aRequest,S,AttachmentEditAction('rename',Board,Card,Id)) then
   begin Reject(403);Exit;end;
-  Selector:=TSelectionScope.Create(T.Db);
-  Policy:=nil;
-  try
-    Policy:=TFieldPolicy.Create(T.Db,S.UserId,Board,'');
-    CardScope:='id='+QuotedStr(Card)+' AND boardId='+QuotedStr(Board)+
-      ' AND archived=0 AND deletedAt IS NULL AND '+Selector.StringField('cards','id')+
-      ' AND '+Selector.StringField('cards','boardId');
-    Scope:='id='+QuotedStr(Id)+' AND '+ActiveCardAttachments(T.Db,Selector,Board,Card)+
-      ' AND (SELECT count(*) FROM cards WHERE '+CardScope+')=1';
-    Rows:=T.Db.Query('SELECT name FROM attachments WHERE '+Scope+';');
-    if Length(Rows)<>1 then
-    begin Reject(404);Exit;end;
-    Name:=Name+ExtractFileExt(Rows[0][0]);
-    Scope:=Scope+' AND name='+QuotedStr(Rows[0][0]);
-    Guard:='';
-    for I:=0 to Selector.Bindings.Count-1 do Guard:=Guard+Selector.Bindings[I];
-    Sql:='BEGIN IMMEDIATE; '+Guard+'SELECT CASE WHEN '+Policy.ScopeBoardExpression(True)+
-      ' AND (SELECT count(*) FROM attachments WHERE '+Scope+')=1 THEN 1 '+
-      'ELSE json(''Attachment scope changed'') END; UPDATE attachments SET name='+QuotedStr(Name)+
-      ' WHERE '+Scope+'; COMMIT;';
-    if not T.Db.Exec(Sql) then
-    begin T.Db.Exec('ROLLBACK;');Reject(500);Exit;end;
-  finally Policy.Free;Selector.Free;end;
+  Status:=RenameCardAttachment(T.Db,S.UserId,Board,Card,Id,Name);
+  if Status<>200 then begin Reject(Status);Exit;end;
   aResponse.Code:=303;
   aResponse.SetCustomHeader('Location',CardUrl(T.Db,Board,Card,S));
   aResponse.SendContent;

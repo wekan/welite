@@ -89,7 +89,7 @@ procedure ResetViewState;
 
 implementation
 
-uses
+uses wlboard,
   StrUtils, fpjson, wltenant, wlhtml, wli18n, wllocale, wlaccess, wlroutes,
   wlview, wlselscp, wlrevoke, wlapi, wlferr, wlstore, wlmd, wlshared, wlpasswd, wlattemp, DateUtils, wlflag, wladvf, wlsvg, wlrules, fphttpserver, ssockets, wlcfpol, wlprob, wlavatar, wldatef, wlcardst,
   wlcrypt;
@@ -1822,6 +1822,11 @@ begin
         HtmlAttr(HTTPEncode(CardId)) + '/attachments/' + HtmlAttr(HTTPEncode(Id)) + '/delete" up-submit up-target=".board-wrapper">' +
         '<button class="js-confirm-delete" type="submit" title="' + HtmlAttr(Words.Text('delete', 'Delete')) + '" aria-label="' +
         HtmlAttr(Words.Text('delete', 'Delete')) + '"><i class="fa fa-trash"></i></button></form>';
+    if Writable then
+      Result := Result + '<form class="js-attachment-rename" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/cards/' +
+        HtmlAttr(HTTPEncode(CardId)) + '/attachments/' + HtmlAttr(HTTPEncode(Id)) + '/rename" up-submit up-target=".board-wrapper">' +
+        '<label>' + E(Words.Text('rename', 'Rename')) + ' <input name="name" required value="' +
+        HtmlAttr(ChangeFileExt(Name, '')) + '"></label> <button type="submit">' + E(Words.Text('save', 'Save')) + '</button></form>';
     // attachmentActionsPopup: the card's cover, and the board's background
     // for a board admin.
     if Writable and (Kind = 'image') then
@@ -6082,6 +6087,7 @@ begin
   else if (n = 5) and (P[4] = 'complete') then Action := 'complete'
   else if (n = 5) and (P[4] = 'poker') then Action := 'poker'
   else if (n = 5) and (P[4] = 'watch') then Action := 'watch-card'
+  else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'rename') then Action := 'rename-attachment'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'delete') then Action := 'delete-attachment'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'cover') then Action := 'attachment-cover'
   else if (n = 7) and (P[4] = 'attachments') and (P[6] = 'background') then Action := 'attachment-background'
@@ -6205,6 +6211,11 @@ begin
     Code := SetViewCardCover(T, S.UserId, BoardId, CardId, P[5], Error)
   else if Action = 'attachment-background' then
     Code := SetViewBoardBackground(T, S.UserId, BoardId, CardId, P[5], Error)
+  else if Action = 'rename-attachment' then
+  begin
+    Code := RenameCardAttachment(T.Db, S.UserId, BoardId, CardId, P[5], Request.ContentFields.Values['name']);
+    Error := IfThen(Code = 400, 'invalid-file', 'error');
+  end
   else if Action = 'delete-attachment' then
     Code := DeleteViewAttachment(T, S.UserId, BoardId, CardId, P[5], Error)
   else if (Action = 'set-field') or (Action = 'toggle-field') then
@@ -6231,6 +6242,9 @@ begin
   try
     if Code <> 200 then
     begin
+      if Action = 'rename-attachment' then
+        if Code = 400 then Error := Words.Text('invalid-file', 'If filename is invalid, upload or rename is cancelled.')
+        else Error := Words.Text('error', 'Error');
       SendPage(Response, Code, Page(Request, Language, Words, S, Error, '',
         '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>'));
       Exit;

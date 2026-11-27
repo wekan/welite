@@ -19,6 +19,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   nonempty set of fully checked items gets the finished style. The badge is
   off by default.
 
+## HTML5 card attachments
+
+- Rename attachments in the open card using the same storage operation as
+  HTML4. The rename changes the displayed and downloaded filename, retains
+  the existing extension, and leaves the stored file bytes intact.
+
 ## Shared storage tests
 
 - Verify that a running FerretDB (`10635f841e`) discovers a database newly
