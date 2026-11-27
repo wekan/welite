@@ -271,12 +271,16 @@ def run(request,database,administrator,member,base):
         + struct.pack('<IiiHHIIiiII', 40, 1, 1, 1, 24, 0, 4, 0, 0, 0, 0)
         + bytes((0, 0, 255, 0))
     )
+    tga = struct.pack('<BBBHHBHHHHBB', 0, 0, 2, 0, 0, 0, 0, 0, 1, 1, 24, 32) + bytes((0, 0, 255))
     digest = hashlib.sha256(identity.encode()).hexdigest()
     segments = [digest[i:i+8] for i in range(0, len(digest), 8)]
     stored = Path(database).parent.parent.joinpath('attachme', *segments[:-1], segments[-1] + '.bin')
     try:
         for mime, contents, expected in (
             ('image/x-ms-bmp', bmp, 1),
+            ('image/x-tga', tga, 1),
+            ('image/x-targa', tga, 1),
+            ('image/x-tga', tga[:-1], 0),
             ('image/x-portable-bitmap', b'P1\n1 1\n1\n', 1),
             ('image/x-portable-graymap', b'P2\n1 1\n255\n128\n', 1),
             ('image/x-portable-pixmap', b'P3\n1 1\n255\n255 0 0\n', 1),

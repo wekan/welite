@@ -59,7 +59,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   `image/x-ms-bmp` as PNG previews. They also support Netpbm bitmap,
   graymap and pixmap attachments, subject to the thumbnail limits. HTTP
   tests cover text and binary encodings for all three formats, plus
-  oversized dimensions and an invalid sample range.
+  oversized dimensions and an invalid sample range. Uncompressed 24-bit
+  TGA attachments also render as PNG, with HTTP checks for both MIME
+  spellings and truncated image data.
 
 - Export one card to Excel from Card Actions with selectable fields. The
   download route checks that the card belongs to the requested board and list.

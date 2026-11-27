@@ -11,7 +11,7 @@ function SendAttachmentThumbnail(Response: TResponse; const Path, MimeType: stri
 
 implementation
 
-uses SysUtils, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPReadPNM, FPWritePNG, Dynlibs, CTypes;
+uses SysUtils, Math, FPImage, FPReadPNG, FPReadJPEG, FPReadBMP, FPReadPNM, FPReadTGA, FPWritePNG, Dynlibs, CTypes;
 
 const
   MaxInputBytes = 32 * 1024 * 1024;
@@ -245,10 +245,28 @@ begin
 end;
 {$ENDIF}
 
+function IsTarga(const MimeType: string): Boolean;
+begin
+  Result := (MimeType = 'image/x-tga') or (MimeType = 'image/x-targa');
+end;
+
+function TargaSize(Stream: TStream): TPoint;
+var Header: array[0..17] of Byte; Size: TPoint;
+begin
+  Result := Point(0, 0);
+  Stream.ReadBuffer(Header, SizeOf(Header));
+  // The reader gets only complete 24-bit truecolor images with no palette.
+  if (Header[1] <> 0) or (Header[2] <> 2) or (Header[16] <> 24) or
+    ((Header[17] and not $20) <> 0) then Exit;
+  Size := Point(Header[12] + 256 * Header[13], Header[14] + 256 * Header[15]);
+  if ValidSize(Size) and (Int64(Size.X) * Size.Y * 3 <= Stream.Size - SizeOf(Header) - Header[0]) then
+    Result := Size;
+end;
+
 function SupportsAttachmentThumbnail(const MimeType: string): Boolean;
 begin
   Result := (MimeType = 'image/png') or (MimeType = 'image/jpeg') or (MimeType = 'image/pjpeg') or
-    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
+    (MimeType = 'image/webp') or (MimeType = 'image/bmp') or (MimeType = 'image/x-ms-bmp') or IsNetpbm(MimeType) or IsTarga(MimeType) {$IFDEF LINUX} or (MimeType = 'image/gif') {$ENDIF};
 end;
 
 function ReadBE32(Stream: TStream): Cardinal;
@@ -359,6 +377,11 @@ begin
         begin
           Size := BMPSize(Input);
           Reader := TFPReaderBMP.Create;
+        end
+        else if IsTarga(MimeType) then
+        begin
+          Size := TargaSize(Input);
+          Reader := TFPReaderTarga.Create;
         end
         else
         begin
