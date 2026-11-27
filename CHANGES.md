@@ -47,6 +47,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Filter by the presence or absence of attachments, checklists,
   descriptions, start/due/end dates, assignees and members. An expandable
   help section shows the supported operators in the viewer's language.
+- Search specifically in card comments or match labels by name or color.
+  The label operator also accepts the `#` shorthand.
 
 ## HTML5 minicards
 

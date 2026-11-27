@@ -5816,10 +5816,10 @@ begin
   if Pos(#0, Result) > 0 then Result := '';
 end;
 
-type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas);
+type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel);
 
 function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const Text: string; out Kind: TSearchOperator): string;
-var Op, Value, Column, Parent: string; Colon: Integer; Absent: Boolean;
+var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
     Result := SameText(Op, Fallback) or SameText(Op, Words.Text(Key, Fallback));
@@ -5834,13 +5834,35 @@ var Op, Value, Column, Parent: string; Colon: Integer; Absent: Boolean;
   end;
 begin
   Result := '';
-  Colon := Pos(':', Text);
-  if Colon <= 1 then Exit;
-  Op := Copy(Text, 1, Colon - 1);
-  Value := Trim(Copy(Text, Colon + 1, MaxInt));
+  Abbrev := Words.Text('operator-label-abbrev', '#');
+  if not StartsStr(Abbrev, Text) then Abbrev := '#';
+  if StartsStr(Abbrev, Text) then
+  begin
+    Op := 'label';
+    Value := Copy(Text, Length(Abbrev) + 1, MaxInt);
+  end
+  else
+  begin
+    Colon := Pos(':', Text);
+    if Colon <= 1 then Exit;
+    Op := Copy(Text, 1, Colon - 1);
+    Value := Trim(Copy(Text, Colon + 1, MaxInt));
+  end;
   if (Length(Value) >= 2) and (Value[1] = '"') and (Value[Length(Value)] = '"') then
     Value := Copy(Value, 2, Length(Value) - 2);
   if Value = '' then Exit;
+  if IsOperator('operator-comment', 'comment') then
+  begin
+    Kind := soComment;
+    Exit('EXISTS(SELECT 1 FROM card_comments m WHERE m.cardId=c.id AND (m.boardId IS NULL OR m.boardId=c.boardId) AND ' +
+      Contains('m.text') + ')');
+  end;
+  if IsOperator('operator-label', 'label') then
+  begin
+    Kind := soLabel;
+    Exit('EXISTS(SELECT 1 FROM card_labels x JOIN board_labels named ON named.id=x.labelId AND named.boardId=c.boardId ' +
+      'WHERE x.cardId=c.id AND (' + Contains('named.name') + ' OR ' + Contains('named.color') + '))');
+  end;
   if IsOperator('operator-has', 'has') then
   begin
     Kind := soHas;
@@ -5975,15 +5997,16 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..5] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has');
+  Operators: array[0..8] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev');
   Fields: array[0..8] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end', 'assignee', 'member');
-  Described: array[0..3] of string = ('board', 'list', 'swimlane', 'has');
+  Described: array[0..6] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
   begin
     Result := Words.Text('globalSearch-instructions-' + Key, Fallback);
     for Name in Operators do
-      Result := StringReplace(Result, '__operator_' + Name + '__', Words.Text('operator-' + Name, Name), [rfReplaceAll]);
+      Result := StringReplace(Result, '__operator_' + StringReplace(Name, '-', '_', [rfReplaceAll]) + '__',
+        Words.Text('operator-' + Name, IfThen(Name = 'label-abbrev', '#', Name)), [rfReplaceAll]);
     for Name in Fields do
       Result := StringReplace(Result, '__predicate_' + Name + '__', Words.Text('predicate-' + Name, Name), [rfReplaceAll]);
     Result := StringReplace(Result, 'has:-due', Words.Text('operator-has', 'has') + ':-' + Words.Text('predicate-due', 'due'), [rfReplaceAll]);
