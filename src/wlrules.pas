@@ -3421,19 +3421,29 @@ begin
 end;
 
 procedure ArchiveInactiveCard(Db:TWLDb;const Activity:TActivity;const Eligibility:string);
-var BoardScope,RootScope,Tree,Stamp,Sql:string;Changed:TWLRows;I:Integer;
+var CardScope,RootScope,Tree,Stamp,Sql:string;Changed,Boards:TWLRows;Writable:TJSONArray;I:Integer;
 begin
-  BoardScope:='boardId='+Q(Activity.BoardId)+' AND deletedAt IS NULL AND COALESCE(type,'''')<>''template-card''';
-  RootScope:=BoardScope+' AND id='+Q(Activity.CardId)+' AND archived=0'+Eligibility;
-  Tree:='WITH RECURSIVE subtree(id) AS (SELECT id FROM cards WHERE '+RootScope+
-    ' UNION SELECT c.id FROM cards c JOIN subtree p ON c.parentId=p.id WHERE c.'+BoardScope+') ';
+  CardScope:='deletedAt IS NULL AND COALESCE(type,'''')<>''template-card''';
+  RootScope:=CardScope+' AND boardId='+Q(Activity.BoardId)+' AND id='+Q(Activity.CardId)+' AND archived=0'+Eligibility;
   if not Db.Exec('BEGIN IMMEDIATE;') then Exit;
   try
-    Changed:=Db.Query(Tree+'SELECT c.id FROM cards c JOIN subtree s ON s.id=c.id WHERE c.archived=0 ORDER BY c.id;');
+    Writable:=TJSONArray.Create;
+    try
+      Boards:=Db.Query('SELECT id FROM boards WHERE archived=0;');
+      for I:=0 to High(Boards) do
+        if BoardCanWrite(Db,Activity.UserId,Boards[I][0]) then Writable.Add(Boards[I][0]);
+      RootScope:=RootScope+' AND boardId IN (SELECT value FROM json_each('+Q(Writable.AsJSON)+'))';
+      Tree:='WITH RECURSIVE subtree(id) AS (SELECT id FROM cards WHERE '+RootScope+
+        ' UNION SELECT c.id FROM cards c JOIN subtree p ON c.parentId=p.id WHERE c.'+CardScope+
+        ' AND c.boardId IN (SELECT value FROM json_each('+Q(Writable.AsJSON)+'))'+
+        ' AND COALESCE(json_array_length(CASE WHEN json_valid(c.extra_json) THEN c.extra_json ELSE ''{}'' END,'+
+        '''$.parentIds''),0)<=1) ';
+    finally Writable.Free;end;
+    Changed:=Db.Query(Tree+'SELECT c.id,c.boardId FROM cards c JOIN subtree s ON s.id=c.id WHERE c.archived=0 ORDER BY c.id;');
     if Length(Changed)=0 then begin Db.Exec('ROLLBACK;');Exit;end;
     Stamp:=Q(NowIso);
     Sql:=Tree+'UPDATE cards SET archived=1,archivedAt='+Stamp+',modifiedAt='+Stamp+
-      ' WHERE archived=0 AND '+BoardScope+' AND id IN (SELECT id FROM subtree); ';
+      ' WHERE archived=0 AND ' +CardScope+' AND id IN (SELECT id FROM subtree); ';
     for I:=0 to High(Changed) do
       Sql:=Sql+ActivitySql('archivedCard',Activity.UserId,Changed[I][0],'{}');
     if not Db.Exec(Sql+'COMMIT;') then begin Db.Exec('ROLLBACK;');Exit;end;
@@ -3442,7 +3452,7 @@ begin
     raise;
   end;
   for I:=0 to High(Changed) do
-    RecordArchiveHistory(Db,Activity.UserId,Activity.BoardId,'card',Changed[I][0],True);
+    RecordArchiveHistory(Db,Activity.UserId,Changed[I][1],'card',Changed[I][0],True);
 end;
 
 // The shared board setting is opt-in. The hourly scan uses the same scoped
