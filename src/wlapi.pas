@@ -65,7 +65,7 @@ procedure BrowserIntegrations(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
-procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
@@ -2933,10 +2933,10 @@ begin
   finally Output.Free; Payload.Free; end;
 end;
 
-procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId, RouteCardId, RouteListId, Filename: string;
   Payload, Card, Checklist: TJSONObject; Cards, Checklists, OtherCards: TJSONArray;
-  Output: TMemoryStream; I: Integer; Matches, Scoped, SingleCard: Boolean;
+  Output: TMemoryStream; I: Integer; Matches, Scoped, SingleCard, AsPdf: Boolean;
   function ScopeId(const Key: string): string;
   var C: Char;
   begin
@@ -2966,11 +2966,12 @@ begin
   RouteCardId := aRequest.RouteParams['cardId'];
   RouteListId := aRequest.RouteParams['listId'];
   SingleCard := RouteCardId <> '';
+  AsPdf := AnsiEndsStr('/exportPDF', aRequest.PathInfo);
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, RouteCardId) then Exit;
   if SingleCard then
   begin
     CardId := RouteCardId;
-    Filename := 'card.xlsx';
+    Filename := 'card';
   end
   else
   begin
@@ -2978,7 +2979,7 @@ begin
     ChecklistId := ScopeId('checklistId');
     LaneId := ScopeId('swimlaneId');
     ListId := ScopeId('listId');
-    Filename := 'board.xlsx';
+    Filename := 'board';
   end;
   Scoped := (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '');
   try
@@ -3021,10 +3022,19 @@ begin
         LaneId := '';
         ListId := '';
       end;
-      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview, SingleCard);
+      WriteBoardDocument(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview, SingleCard, AsPdf);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
-    aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    if AsPdf then
+    begin
+      Filename := Filename + '.pdf';
+      aResponse.ContentType := 'application/pdf';
+    end
+    else
+    begin
+      Filename := Filename + '.xlsx';
+      aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    end;
     aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Filename + '"');
     aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
     aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');

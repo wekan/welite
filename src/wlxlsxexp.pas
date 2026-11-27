@@ -5,10 +5,10 @@ interface
 uses Classes, Types, fpjson;
 type
   TAttachmentPreview = function(Attachment: TJSONObject; Output: TStream; out Size: TPoint): Boolean is nested;
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard: Boolean);
+procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean);
 
 implementation
-uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect;
+uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect, wlpdfexp;
 
 const
   MainNs = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -20,6 +20,7 @@ const
 type
   TSheetWriter = class
     Output: TStream;
+    Pdf: TPdfCardWriter;
     Head: TBoardRow;
     RowNumber: Integer;
     BoardTitle: string;
@@ -93,6 +94,11 @@ end;
 procedure TSheetWriter.TableRow(const Row: TBoardRow; Heading, LabelFirst: Boolean);
 var I: Integer; Ref, Text, Style: string; N: Double; Fmt: TFormatSettings;
 begin
+  if Pdf <> nil then
+  begin
+    Pdf.WriteRow(Row, Heading);
+    Exit;
+  end;
   Inc(RowNumber);
   if (RowNumber > 1048576) or (Length(Row) > 16384) then raise Exception.Create('Excel worksheet is too large');
   Line('<row r="' + IntToStr(RowNumber) + '">');
@@ -164,6 +170,7 @@ end;
 
 destructor TSheetWriter.Destroy;
 begin
+  Pdf.Free;
   ImageRelationships.Free;
   ImageAnchors.Free;
   PageBreaks.Free;
@@ -186,6 +193,11 @@ begin
   Picture := TMemoryStream.Create;
   try
     if not Preview(Attachment, Picture, Size) then Exit;
+    if Pdf <> nil then
+    begin
+      Pdf.WriteImage(Picture, Size);
+      Exit;
+    end;
     Id := IntToStr(ImageAnchors.Count + 1);
     Filename := 'image' + Id + '.png';
     Zip.Entries.AddFileEntry(Picture, 'xl/media/' + Filename);
@@ -488,7 +500,10 @@ var Pair: TBoardRow; I: Integer;
 begin
   if not CardDetails then begin TableRow(Row, RowNumber = 0); Exit; end;
   if Card = nil then begin Head := Copy(Row); Exit; end;
-  if HasCard then PageBreaks.Add(IntToStr(RowNumber));
+  if HasCard then
+  begin
+    if Pdf <> nil then Pdf.NewPage else PageBreaks.Add(IntToStr(RowNumber));
+  end;
   HasCard := True;
   GroupHeadings(Card);
   SetLength(Pair, 2);
@@ -510,7 +525,7 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard: Boolean);
+procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
   I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies, WithBoardInfo: Boolean;
   Users: TJSONArray; User: TJSONObject;
@@ -761,7 +776,7 @@ begin
       'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|') > 0 then
       Known := True;
   end;
-  CardDetails := SingleCard or CardDetails or not Known;
+  CardDetails := AsPdf or SingleCard or CardDetails or not Known;
   if SingleCard then ActivitySheet := False;
   Zip := TZipper.Create;
   Streams := TList.Create;
@@ -774,21 +789,25 @@ begin
   SortedCards := TStringList.Create;
   CardOrder := nil;
   try
-    AddXml('xl/styles.xml', '<styleSheet xmlns="' + MainNs + '">' +
-      '<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>' +
-      '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
-      '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
-      '<fills count="3"><fill><patternFill patternType="none"/></fill>' +
-      '<fill><patternFill patternType="gray125"/></fill>' +
-      '<fill><patternFill patternType="solid"><fgColor rgb="FF24466B"/><bgColor indexed="64"/></patternFill></fill></fills>' +
-      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
-      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-      '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
-      '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
-      '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
-      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>' +
-      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
-    StartSheet('Cards');
+    if AsPdf then Writer.Pdf := TPdfCardWriter.Create
+    else
+    begin
+      AddXml('xl/styles.xml', '<styleSheet xmlns="' + MainNs + '">' +
+        '<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+        '<fills count="3"><fill><patternFill patternType="none"/></fill>' +
+        '<fill><patternFill patternType="gray125"/></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FF24466B"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+        '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+        '<cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+        '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+        '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
+        '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>' +
+        '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
+      StartSheet('Cards');
+    end;
     Writer.CardDetails := CardDetails;
     if SingleCard and (WithBoardInfo or not Known) then Writer.BoardTitle := Board.Get('title', '');
     Writer.LaneRows := Board.Arrays['swimlanes'];
@@ -801,17 +820,20 @@ begin
     Writer.ShowPoker := WithPoker or not Known;
     Writer.ShowStickers := WithStickers or not Known;
     Writer.ShowLocations := WithLocations or not Known;
-    if CardDetails then
+    if not AsPdf then
     begin
-      Writer.PageBreaks := TStringList.Create;
-      BoardColumns;
-    end
-    else
-      Writer.Line('<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" ' +
-        'activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/>' +
-        '</sheetView></sheetViews><sheetFormatPr defaultColWidth="22" defaultRowHeight="15"/>' +
-        '<cols><col min="1" max="1" width="32" customWidth="1"/></cols>');
-    Writer.Line('<sheetData>');
+      if CardDetails then
+      begin
+        Writer.PageBreaks := TStringList.Create;
+        BoardColumns;
+      end
+      else
+        Writer.Line('<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" ' +
+          'activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/>' +
+          '</sheetView></sheetViews><sheetFormatPr defaultColWidth="22" defaultRowHeight="15"/>' +
+          '<cols><col min="1" max="1" width="32" customWidth="1"/></cols>');
+      Writer.Line('<sheetData>');
+    end;
     if CardDetails then
     begin
       if WithChecklists or not Known then
@@ -850,6 +872,11 @@ begin
     end;
     ReadBoardRows(Board, Fields, @Writer.Add, CardDetails and not SingleCard, CardOrder);
     if CardDetails then Writer.FinishGroupHeadings;
+    if AsPdf then
+    begin
+      Writer.Pdf.Save(Output);
+      Exit;
+    end;
     EndSheet(CardDetails);
     if not CardDetails and not Scoped and BoardHeader then
     begin

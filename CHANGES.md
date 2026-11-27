@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Download a board or individual card as PDF from the Export menu. PDF uses
+  the card layout, supports selected fields and scopes, and includes image
+  previews from local attachments. It uses standard PDF fonts and WinAnsi
+  text encoding.
+
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and
   CSV/TSV specs, 17 export cases pass in both WeLite and Weddy.

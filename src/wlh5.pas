@@ -2056,8 +2056,8 @@ begin
     E(Words.Text('copy-card-link-to-clipboard', 'Copy card link to clipboard')) + '</a></li>' +
     '<li><a class="js-move-card" href="#"><i class="fa fa-arrow-right"></i> ' + E(Words.Text('moveCardPopup-title', 'Move Card')) + '</a></li>' +
     '<li><a class="js-copy-card" href="#"><i class="fa fa-copy"></i> ' + E(Words.Text('copyCardPopup-title', 'Copy Card')) + '</a></li>' +
-    '<li><a class="js-open-card-excel" href="#"><i class="fa fa-file-excel-o"></i> ' +
-    E(Words.Text('export-card-excel', 'Export card to Excel')) + '</a></li>' +
+    '<li><a class="js-open-card-export" href="#"><i class="fa fa-file-excel-o"></i> ' +
+    E(Words.Text('export-card', 'Export card')) + '</a></li>' +
     IfThen(IsShared(Db), '<li><a class="js-open-card-history" href="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
       '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
@@ -2729,8 +2729,8 @@ begin
   Caption := Words.Text('export', 'Export');
   if CardId <> '' then
   begin
-    Popup := 'card-excel';
-    Caption := Words.Text('export-card-excel', 'Export card to Excel');
+    Popup := 'card-export';
+    Caption := Words.Text('export-card', 'Export card');
     Base := Base + '/lists/' + HtmlAttr(HTTPEncode(ListId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId));
   end;
   Result := '<template class="js-pop-over-template" data-pop="' + Popup + '" data-title="' +
@@ -2745,7 +2745,7 @@ begin
   begin
     if (CardId <> '') and ((Parts[I] = 'board-header') or (Parts[I] = 'activities')) then Continue;
     Result := Result + '<li><a class="flex js-export-field-toggle" href="#" data-field="' + Parts[I] +
-      '"' + IfThen(I > 6, ' data-excel-only="true"', '') +
+      '"' + IfThen(I > 6, ' data-document-only="true"', '') +
       ' role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
       E(Words.Text(Keys[I], Captions[I])) + '</span></a></li>';
   end;
@@ -2757,7 +2757,8 @@ begin
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
     '/exportZip">WeKan ZIP</a></li>';
   Result := Result + '<li><a class="js-export-fields" download href="' + Base +
-    '/exportExcel?fields=">Excel (.xlsx)</a></li></ul></div></template>';
+    '/exportExcel?fields=">Excel (.xlsx)</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/exportPDF?fields=">PDF (.pdf)</a></li></ul></div></template>';
 end;
 
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;

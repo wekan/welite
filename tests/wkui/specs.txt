@@ -481,3 +481,6 @@ board-excel-export.e2e.js
 export-access.e2e.js: = assigned-only private member cannot read unfiltered exportExcel
 card-excel-field-selection.e2e.js
 export-access.e2e.js: = assigned-only member cannot export an unassigned card as Excel
+25-excel-pdf.e2e.js: = Excel import & board PDF export board PDF export returns a PDF document
+export-access.e2e.js: = assigned-only private member cannot read unfiltered exportPDF
+export-access.e2e.js: = assigned-only member cannot export an unassigned card as PDF

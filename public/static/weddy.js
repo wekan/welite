@@ -1530,18 +1530,20 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   function applyExportSelection(p) {
     if (!p) return;
     var fields = [];
-    var excelOnly = [];
+    var documentOnly = [];
     p.querySelectorAll('.js-export-card-details-toggle, .js-export-field-toggle').forEach(function (a) {
       var field = a.classList.contains('js-export-card-details-toggle') ? 'card-details' : a.dataset.field;
       var on = !exportOff[field];
       a.setAttribute('aria-checked', on ? 'true' : 'false');
       var box = a.querySelector('.materialCheckBox');
       if (box) box.classList.toggle('is-checked', on);
-      if (on) (a.dataset.excelOnly ? excelOnly : fields).push(field);
+      if (on) (a.dataset.documentOnly ? documentOnly : fields).push(field);
     });
     p.querySelectorAll('a.js-export-fields').forEach(function (a) {
       var url = new URL(a.getAttribute('href'), location.href);
-      var selected = url.pathname.endsWith('/exportExcel') ? fields.concat(excelOnly) : fields;
+      var selected = fields;
+      if (url.pathname.endsWith('/exportExcel')) selected = fields.concat(documentOnly);
+      else if (url.pathname.endsWith('/exportPDF')) selected = fields.concat(documentOnly.filter(function (key) { return key !== 'activities'; }));
       url.searchParams.set('fields', selected.join(','));
       a.setAttribute('href', url.pathname + url.search);
     });
@@ -1551,9 +1553,9 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     openPopOver('export');
     applyExportSelection(document.querySelector('.js-pop-over'));
   });
-  up.on('click', '.js-open-card-excel', function (event) {
+  up.on('click', '.js-open-card-export', function (event) {
     event.preventDefault();
-    openPopOver('card-excel');
+    openPopOver('card-export');
     applyExportSelection(document.querySelector('.js-pop-over'));
   });
   // #1173: a swimlane's, a list's or a card's Export and Import pop-overs
