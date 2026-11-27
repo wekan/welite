@@ -270,7 +270,8 @@ Next, after this goal:
   after failing once in three earlier runs.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
-  the import page's format audit (75), structural-selection (18),
+  the import page's format audit (75), structural-selection (18, including
+  the move dialog and the mutation for mixed selections),
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,

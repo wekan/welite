@@ -5071,6 +5071,70 @@ begin
   finally Authors.Free; Changes.Free; end;
 end;
 
+function StructuralMoveOptions(Db:TWLDb;const UserId:string;Args:TJSONData;out Answer:string):Integer;
+var Target,Data:TJSONObject; Key,BoardId,LaneId,ListId,CardId,ChecklistId,Scope,CardScope,RawId:string;
+  Boards:TWLRows; I:Integer; Options:TJSONArray;
+  procedure AddOptions(const Key,TableName,Conditions:string);
+  var Rows:TWLRows; J:Integer; Choices:TJSONArray;
+  begin
+    Choices:=TJSONArray.Create;
+    Data.Add(Key,Choices);
+    Rows:=Db.Query('SELECT id,title FROM '+TableName+' WHERE '+Conditions+' ORDER BY sort,id;');
+    for J:=0 to High(Rows) do Choices.Add(TJSONObject.Create(['_id',Rows[J][0],'title',Rows[J][1]]));
+  end;
+begin
+  Answer:='{"error":"Match.Error","reason":"Match failed"}';
+  if not (Args is TJSONArray) or (Args.Count<>1) or not (Args.Items[0] is TJSONObject) then Exit(400);
+  Target:=TJSONObject(Args.Items[0]);
+  for I:=0 to Target.Count-1 do
+  begin
+    Key:=Target.Names[I];
+    if (Target.Items[I].JSONType<>jtString) or (Pos(#0,Target.Items[I].AsString)>0) then Exit(400);
+    case Key of
+      'boardId','swimlaneId','listId','cardId','checklistId','itemId','position': ;
+    else Exit(400);
+    end;
+  end;
+  RawId:=Target.Get('boardId','');
+  if RawId='' then Exit(400);
+  BoardId:=QuotedStr(RawId);
+  if Length(Db.Query('SELECT 1 FROM boards WHERE id='+BoardId+' AND archived=0 AND EXISTS(SELECT 1 FROM board_members '+
+    'WHERE boardId=boards.id AND userId='+QuotedStr(UserId)+' AND isActive=1);'))<>1 then
+  begin Answer:='{"error":"not-authorized","reason":"not-authorized"}'; Exit(403);end;
+  Scope:='boardId='+BoardId+' AND archived=0';
+  CardScope:=Scope+' AND deletedAt IS NULL';
+  if AssignedOnlyMember(Db,UserId,RawId) then
+    CardScope:=CardScope+' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId='+QuotedStr(UserId)+')';
+  LaneId:=Target.Get('swimlaneId','');
+  ListId:=Target.Get('listId','');
+  CardId:=Target.Get('cardId','');
+  ChecklistId:=Target.Get('checklistId','');
+  Data:=TJSONObject.Create;
+  try
+    Options:=TJSONArray.Create;
+    Data.Add('boardId',Options);
+    Boards:=Db.Query('SELECT id,title FROM boards WHERE archived=0 AND EXISTS(SELECT 1 FROM board_members '+
+      'WHERE boardId=boards.id AND userId='+QuotedStr(UserId)+' AND isActive=1) ORDER BY sort,title,id;');
+    for I:=0 to High(Boards) do
+      if BoardCanWrite(Db,UserId,Boards[I][0]) then Options.Add(TJSONObject.Create(['_id',Boards[I][0],'title',Boards[I][1]]));
+    AddOptions('swimlaneId','swimlanes',Scope);
+    if (LaneId<>'') and (Length(Db.Query('SELECT 1 FROM swimlanes WHERE '+Scope+' AND id='+QuotedStr(LaneId)+';'))=1) then
+    begin
+      AddOptions('listId','lists',Scope+' AND deletedAt IS NULL AND (swimlaneId='+QuotedStr(LaneId)+' OR COALESCE(swimlaneId,'''')='''')');
+      if ListId<>'' then AddOptions('cardId','cards',CardScope+' AND listId='+QuotedStr(ListId)+' AND swimlaneId='+QuotedStr(LaneId));
+    end;
+    if (CardId<>'') and (Length(Db.Query('SELECT 1 FROM cards WHERE '+CardScope+' AND id='+QuotedStr(CardId)+';'))=1) then
+    begin
+      Scope:='cardId='+QuotedStr(CardId)+' AND (boardId IS NULL OR boardId='+BoardId+')';
+      AddOptions('checklistId','checklists',Scope);
+      if (ChecklistId<>'') and (Length(Db.Query('SELECT 1 FROM checklists WHERE '+Scope+' AND id='+QuotedStr(ChecklistId)+';'))=1) then
+        AddOptions('itemId','checklist_items',Scope+' AND checklistId='+QuotedStr(ChecklistId));
+    end;
+    Answer:='{"result":'+Data.AsJSON+'}';
+  finally Data.Free;end;
+  Result:=200;
+end;
+
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   Limit: Double;
@@ -5193,6 +5257,16 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
+  if Name='structuralMoveOptions' then
+  begin
+    Args:=nil;
+    try
+      try Args:=GetJSON(Request.Content);except end;
+      Code:=StructuralMoveOptions(T.Db,S.UserId,Args,Error);
+      SendJsonAnswer(Response,Code,Error);
+    finally Args.Free;end;
+    Exit;
+  end;
   if Name = 'boardChartData' then
   begin
     Args := nil;
