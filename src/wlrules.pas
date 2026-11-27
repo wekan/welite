@@ -2353,7 +2353,7 @@ end;
 
 function ApplyListWipHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
 var Prior, Next, Put, Expect: TJSONData; BoardId, ListId, Scope, Guard, Sets, Expected, Current, Permission, ChangeType: string;
-  Policy: TFieldPolicy; Rows: TWLRows; Before: TJSONObject;
+  Policy: TFieldPolicy; Rows: TWLRows; Before, After: TJSONObject;
   function WipValues(Content: TJSONData; out Sql: string; AllowAbsent: Boolean): Boolean;
   var Limit, Number, Enabled, Soft: TJSONData; CountSql: string;
   begin
@@ -2410,13 +2410,16 @@ begin
     Before := TJSONObject.Create(['field', 'wipLimit', 'value', GetJSON(
       '{"value":' + Rows[0][0] + ',"enabled":' + IfThen(Rows[0][1] = '1', 'true', 'false') +
       ',"soft":' + IfThen(Rows[0][2] = '1', 'true', 'false') + '}')]);
+    After := nil;
     try
-      try RecordHistoryRow(Db, UserId, BoardId, 'list', ListId, 'title', 'restored', Before, Put,
+      After := ListWipHistorySnapshot(Db, BoardId, ListId);
+      try
+        if After <> nil then RecordHistoryRow(Db, UserId, BoardId, 'list', ListId, 'title', 'restored', Before, After,
         Str(Row, '_id'), UserId);
       except
         // History never fails the restore it records.
       end;
-    finally Before.Free; end;
+    finally Before.Free; After.Free; end;
   end;
 end;
 
