@@ -25,7 +25,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   rows received from shared history show record names or IDs, states,
   metadata and removals. Multivalue changes display comma-separated items,
   with string values shown without JSON quotes. Document summaries skip
-  empty titles and use the saved description, text or name.
+  empty titles and use the saved description, text or name. The History
+  restore checkboxes distinguish supported card fields from other fields
+  in the same group.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

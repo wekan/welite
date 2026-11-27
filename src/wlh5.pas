@@ -8032,7 +8032,7 @@ end;
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;
   const BoardId: string; Query: TStrings; out Content: string): Integer;
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
-  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel: string;
+  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel, RowField, RowGroup: string;
   I, PageNumber, PageCount, Size: Integer;
   CanRestoreCard, CanRestoreRule, CanRestoreList: Boolean;
   function LinkTo(const Contributor: string; Number: Integer): string;
@@ -8157,9 +8157,12 @@ begin
           'scrum': Summary := HistoryScrumSummary(Values, Words);
         else Summary := HistoryContentSummary(Values, Words, DateFormat, Row.Get('group', ''));
         end;
-        GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
+        RowGroup := Row.Get('group', '');
+        RowField := '';
+        if Values <> nil then RowField := Values.Get('field', '');
+        GroupLabel := HistoryGroupLabel(Words, RowGroup);
         if Values <> nil then
-          case Values.Get('field', '') of
+          case RowField of
             'color':
               case Row.Get('entityType', '') of
                 'card': GroupLabel := Words.Text('card-settings-card-color', 'Card color');
@@ -8206,10 +8209,11 @@ begin
             (CanRestoreList and (Row.Get('entityType', '') = 'list') and (Row.Get('group', '') = 'lifecycle') and
               (Row.Get('changeType', '') = 'removed')) or
             (CanRestoreCard and CanRestoreRule and (Row.Get('entityType', '') = 'card') and
-              (Row.Get('group', '') = 'customFields')) or
+              (RowGroup = 'customFields') and (RowField = 'customFields')) or
             (CanRestoreCard and (Row.Get('entityType', '') = 'card') and
-              ((Row.Get('group', '') = 'title') or (Row.Get('group', '') = 'description') or
-                ((Row.Get('group', '') = 'dates') and (Values <> nil) and CardHistoryDateField(Values.Get('field', ''))))) then
+              ((RowField = 'title') or (RowField = 'description') or
+                ((RowGroup = 'title') and (RowField = 'color')) or
+                ((RowGroup = 'dates') and CardHistoryDateField(RowField)))) then
             Content := Content + '<input class="js-history-select" type="checkbox" name="id" value="' +
               HtmlAttr(Row.Get('_id', '')) + '" aria-label="' + HtmlAttr(Label_) + '">';
           Content := Content + '</td>';
