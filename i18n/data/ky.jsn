@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Бир нече сапты мындай кошуу:",
   "many-items": "Бир нече __items__",
   "operator-number": "сан",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка номери *<number>* болгон карточкалар"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка номери *<number>* болгон карточкалар",
+  "subtask-inherit-parent-labels": "Ата-эне картанын жарлыктарын мурастоо"
 }

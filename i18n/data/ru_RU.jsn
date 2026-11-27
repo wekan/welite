@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Добавить несколько строк как:",
   "many-items": "__items__ (несколько)",
   "operator-number": "номер",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточки, номер которых *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточки, номер которых *<number>*",
+  "subtask-inherit-parent-labels": "Наследовать метки родительской карточки"
 }

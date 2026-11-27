@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Fi ọ̀pọ̀ ìlà kún un gẹ́gẹ́ bí:",
   "many-items": "Ọ̀pọ̀ __items__",
   "operator-number": "nọ́mbà",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - àwọn kaadi tí nọ́mbà wọn jẹ́ *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - àwọn kaadi tí nọ́mbà wọn jẹ́ *<number>*",
+  "subtask-inherit-parent-labels": "Jogún àmi kaadi òbí"
 }

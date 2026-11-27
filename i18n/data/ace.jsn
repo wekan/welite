@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tamah le baris jeuet keu:",
   "many-items": "Le __items__",
   "operator-number": "angka",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad nyang lumboi kad jih *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad nyang lumboi kad jih *<number>*",
+  "subtask-inherit-parent-labels": "Turon lébel kad indok"
 }

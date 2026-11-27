@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "धेरै पङ्क्तिहरू यसरी थप्नुहोस्:",
   "many-items": "धेरै __items__",
   "operator-number": "सङ्ख्या",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड सङ्ख्या *<number>* भएका कार्डहरू"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड सङ्ख्या *<number>* भएका कार्डहरू",
+  "subtask-inherit-parent-labels": "अभिभावक कार्डको लेबलहरू उत्तराधिकारमा लिनुहोस्"
 }

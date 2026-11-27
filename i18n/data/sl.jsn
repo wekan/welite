@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Dodaj več vrstic kot:",
   "many-items": "__items__ (več)",
   "operator-number": "številka",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartice, katerih številka je *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartice, katerih številka je *<number>*",
+  "subtask-inherit-parent-labels": "Podeduj oznake nadrejene kartice"
 }

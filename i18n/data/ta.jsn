@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "பல வரிகளை இவ்வாறு சேர்க்கவும்:",
   "many-items": "பல __items__",
   "operator-number": "எண்",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - அட்டை எண் *<number>* உள்ள அட்டைகள்"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - அட்டை எண் *<number>* உள்ள அட்டைகள்",
+  "subtask-inherit-parent-labels": "பெற்றோர் அட்டையின் லேபிள்களைப் பெறவும்"
 }

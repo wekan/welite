@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Adem plante laen olsem:",
   "many-items": "Plante __items__",
   "operator-number": "namba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kad whose kad number i *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kad whose kad number i *<number>*",
+  "subtask-inherit-parent-labels": "Tekem ol mak blong stamba kad"
 }

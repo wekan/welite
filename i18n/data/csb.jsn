@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Dodac wiele rézów jakno:",
   "many-items": "__items__ (wiele)",
   "operator-number": "lëczba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kôrtë z numerã *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kôrtë z numerã *<number>*",
+  "subtask-inherit-parent-labels": "Dostac sztiże starszi kôrtë"
 }

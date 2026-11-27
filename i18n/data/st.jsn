@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Eketsa mela e mengata e le:",
   "many-items": "__items__ (tse ngata)",
   "operator-number": "nomoro",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarete tseo nomoro ya karete e leng *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarete tseo nomoro ya karete e leng *<number>*",
+  "subtask-inherit-parent-labels": "Rua dilebele tsa karete ea motsoali"
 }

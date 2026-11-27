@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tambah beberapa baris sebagai:",
   "many-items": "Beberapa __items__",
   "operator-number": "nombor",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad yang nombor kadnya *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad yang nombor kadnya *<number>*",
+  "subtask-inherit-parent-labels": "Warisi label kad induk"
 }

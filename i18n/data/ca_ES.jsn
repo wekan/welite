@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Afegeix diverses línies com a:",
   "many-items": "__items__ múltiples",
   "operator-number": "número",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - targetes amb el número de targeta *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - targetes amb el número de targeta *<number>*",
+  "subtask-inherit-parent-labels": "Hereta les etiquetes de la targeta pare"
 }

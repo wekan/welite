@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Dodaj wiele wierszy jako:",
   "many-items": "__items__ (wiele)",
   "operator-number": "numer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, których numer karty to *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, których numer karty to *<number>*",
+  "subtask-inherit-parent-labels": "Odziedzicz etykiety karty nadrzędnej"
 }

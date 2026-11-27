@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Lisää useita rivejä muodossa:",
   "many-items": "__items__ (useita)",
   "operator-number": "numero",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortit joiden kortin numero on *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortit joiden kortin numero on *<number>*",
+  "subtask-inherit-parent-labels": "Peri yläkortin tunnisteet"
 }

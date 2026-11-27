@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Több sor hozzáadása a következőként:",
   "many-items": "__items__ (több)",
   "operator-number": "szám",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kártyák, amelyek kártyaszáma *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kártyák, amelyek kártyaszáma *<number>*",
+  "subtask-inherit-parent-labels": "Szülőkártya címkéinek öröklése"
 }

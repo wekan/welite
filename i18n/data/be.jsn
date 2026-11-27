@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Дадаць некалькі радкоў як:",
   "many-items": "__items__ (некалькі)",
   "operator-number": "нумар",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карткі, нумар якіх *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карткі, нумар якіх *<number>*",
+  "subtask-inherit-parent-labels": "Успадкаваць меткі бацькоўскай карткі"
 }

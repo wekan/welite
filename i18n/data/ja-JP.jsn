@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "複数行を次の形式で追加：",
   "many-items": "複数の__items__",
   "operator-number": "番号",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - カード番号が *<number>* のカード"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - カード番号が *<number>* のカード",
+  "subtask-inherit-parent-labels": "親カードのラベルを継承する"
 }

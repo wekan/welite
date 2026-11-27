@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Agiunghe prus rigas comente:",
   "many-items": "Prus __items__",
   "operator-number": "nùmeru",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartas chi tenent su nùmeru *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartas chi tenent su nùmeru *<number>*",
+  "subtask-inherit-parent-labels": "Eredare is etichetas de sa carta babbu"
 }

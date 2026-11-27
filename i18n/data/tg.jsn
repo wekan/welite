@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Якчанд сатрро чунин илова кунед:",
   "many-items": "Якчанд __items__",
   "operator-number": "рақам",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - кортҳое, ки рақами корташон *<number>* аст"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - кортҳое, ки рақами корташон *<number>* аст",
+  "subtask-inherit-parent-labels": "Мероси тамғаҳои корти волидайнро гирифтан"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ychwanegu sawl llinell fel:",
   "many-items": "__items__ (lluosog)",
   "operator-number": "rhif",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cardiau a'u rhif cerdyn yn *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cardiau a'u rhif cerdyn yn *<number>*",
+  "subtask-inherit-parent-labels": "Etifeddu labelau'r cerdyn rhiant"
 }

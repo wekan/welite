@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Birden çok satırı şu şekilde ekle:",
   "many-items": "Birden çok __items__",
   "operator-number": "numara",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kart numarası *<number>* olan kartlar"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kart numarası *<number>* olan kartlar",
+  "subtask-inherit-parent-labels": "Üst kartın etiketlerini devral"
 }

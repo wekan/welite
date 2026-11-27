@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ližata äi rivid kut:",
   "many-items": "__items__ (äi)",
   "operator-number": "lugu",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartad, miččiden kartan nomer om *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartad, miččiden kartan nomer om *<number>*",
+  "subtask-inherit-parent-labels": "Jäl'gesta vanhemban kartan znamad"
 }

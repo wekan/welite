@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "რამდენიმე სტრიქონის დამატება როგორც:",
   "many-items": "რამდენიმე __items__",
   "operator-number": "ნომერი",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ბარათები, რომელთა ნომერია *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ბარათები, რომელთა ნომერია *<number>*",
+  "subtask-inherit-parent-labels": "მშობელი ბარათის ლეიბლების მემკვიდრეობა"
 }

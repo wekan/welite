@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tsenya mela e mentsi jaaka:",
   "many-items": "__items__ (tse dintsi)",
   "operator-number": "palo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata whose karata palo ke *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata whose karata palo ke *<number>*",
+  "subtask-inherit-parent-labels": "Rua dikarata tsa motsadi"
 }

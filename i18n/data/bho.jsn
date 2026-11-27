@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "कई लाइन अइसन जोड़ीं:",
   "many-items": "कई __items__",
   "operator-number": "संख्या",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - जेकर कार्ड संख्या *<number>* बा ओह कार्डन के खोज"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - जेकर कार्ड संख्या *<number>* बा ओह कार्डन के खोज",
+  "subtask-inherit-parent-labels": "पेरेंट कार्ड के लेबल विरासत में लीं"
 }

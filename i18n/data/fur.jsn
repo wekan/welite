@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Zonte plui riis come:",
   "many-items": "__items__ (plui)",
   "operator-number": "numar",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cjartis il cui numero è *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cjartis il cui numero è *<number>*",
+  "subtask-inherit-parent-labels": "Ereditâ lis etichetis de schede gjenitôr"
 }

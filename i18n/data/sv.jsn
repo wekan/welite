@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Lägg till flera rader som:",
   "many-items": "Flera __items__",
   "operator-number": "nummer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort vars kortnummer är *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort vars kortnummer är *<number>*",
+  "subtask-inherit-parent-labels": "Ärv förälderns etiketter"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Meerdere regels toevoegen als:",
   "many-items": "Meerdere __items__",
   "operator-number": "nummer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarten met kaartnummer *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarten met kaartnummer *<number>*",
+  "subtask-inherit-parent-labels": "Labels van bovenliggende kaart overnemen"
 }

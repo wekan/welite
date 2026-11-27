@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "tlheghmey law' tIchel; chovnatlh yIwIv:",
   "many-items": "__items__ law'",
   "operator-number": "mI'",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 'echletHommey mI' *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 'echletHommey mI' *<number>*",
+  "subtask-inherit-parent-labels": "vav 'e' De' rar"
 }

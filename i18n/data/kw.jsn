@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Keworra lies linenn avel:",
   "many-items": "Lies __items__",
   "operator-number": "niver",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartennow a'n niver karten yw *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartennow a'n niver karten yw *<number>*",
+  "subtask-inherit-parent-labels": "Erita labennow an gartenn dassek"
 }

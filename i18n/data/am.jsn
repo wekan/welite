@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "ብዙ መስመሮችን እንደዚህ ጨምር፦",
   "many-items": "ብዙ __items__",
   "operator-number": "ቁጥር",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - የካርድ ቁጥራቸው *<number>* የሆኑ ካርዶች"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - የካርድ ቁጥራቸው *<number>* የሆኑ ካርዶች",
+  "subtask-inherit-parent-labels": "የወላጅ ካርድ መለያዎችን ውረስ"
 }

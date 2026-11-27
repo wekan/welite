@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "ഒന്നിലധികം വരികൾ ഇങ്ങനെ ചേർക്കുക:",
   "many-items": "ഒന്നിലധികം __items__",
   "operator-number": "സംഖ്യ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - കാർഡ് നമ്പർ *<number>* ആയ കാർഡുകൾ"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - കാർഡ് നമ്പർ *<number>* ആയ കാർഡുകൾ",
+  "subtask-inherit-parent-labels": "രക്ഷാകർതൃ കാർഡിന്റെ ലേബലുകൾ പാരമ്പര്യമാക്കുക"
 }

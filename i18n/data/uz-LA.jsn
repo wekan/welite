@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Bir nechta qatorni quyidagicha qoʻshing:",
   "many-items": "Bir nechta __items__",
   "operator-number": "raqam",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karta raqami *<number>* bo'lgan kartalar"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karta raqami *<number>* bo'lgan kartalar",
+  "subtask-inherit-parent-labels": "Ota-karta yorliqlarini meros qilib olish"
 }

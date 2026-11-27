@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Lisa mitu rida järgmiselt:",
   "many-items": "__items__ (mitu)",
   "operator-number": "arvuline väärtus",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardid, mille kaardi number on *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardid, mille kaardi number on *<number>*",
+  "subtask-inherit-parent-labels": "Pärandada vanemkaardi sildid"
 }

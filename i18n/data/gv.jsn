@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Cur ymmodee linnaghyn rish myr:",
   "many-items": "Ymmodee __items__",
   "operator-number": "earroo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaartyn ta'n earroo kaart oc *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaartyn ta'n earroo kaart oc *<number>*",
+  "subtask-inherit-parent-labels": "Eiraghys labelyn y chard ard"
 }

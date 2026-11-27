@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "گهڻيون سٽون هن ريت شامل ڪريو:",
   "many-items": "گهڻا __items__",
   "operator-number": "انگ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - اهي ڪارڊ جن جو ڪارڊ نمبر *<number>* آهي"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - اهي ڪارڊ جن جو ڪارڊ نمبر *<number>* آهي",
+  "subtask-inherit-parent-labels": "والدين جي ڪارڊ جا ليبل وارثي طور حاصل ڪريو"
 }

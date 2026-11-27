@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Sɛbɛnni sira caman fara a kan nin cogo in na:",
   "many-items": "__items__ caman",
   "operator-number": "nimɔrɔ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karata minnu ka karata nimɔrɔ ye *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karata minnu ka karata nimɔrɔ ye *<number>*",
+  "subtask-inherit-parent-labels": "Ka fatiya karti mumɛ ka tagabiw ta"
 }

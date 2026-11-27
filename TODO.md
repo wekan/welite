@@ -274,7 +274,7 @@ Next, after this goal:
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
   editor-enter-preference's calendar editor (2 of 26 Chromium tests),
-  subtask completion and optional parent-label inheritance,
+  subtask completion,
   export-access (10: the board's ZIP, CSV,
   ICS, PDF, Excel and chart exports, which WeLite has not got yet), the History page
   itself, WIP limit groups and the calendar view.

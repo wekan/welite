@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "زيد سطور بزاف على شكل:",
   "many-items": "__items__ بزاف",
   "operator-number": "رقم",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - البطاقات التي رقمها *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - البطاقات التي رقمها *<number>*",
+  "subtask-inherit-parent-labels": "وراثة تيكيطات لكارط لي فوق"
 }

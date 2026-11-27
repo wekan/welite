@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ajoute plizyè liy kòm:",
   "many-items": "Plizyè __items__",
   "operator-number": "nimewo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kat ki gen nimewo kat *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kat ki gen nimewo kat *<number>*",
+  "subtask-inherit-parent-labels": "Erite etikèt kat paran an"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Adavgã ma multi linii ca:",
   "many-items": "Ma multi __items__",
   "operator-number": "numir",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carduri al cãror numãr este *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carduri al cãror numãr este *<number>*",
+  "subtask-inherit-parent-labels": "Lja etichetili a cartãljei pãrinti"
 }

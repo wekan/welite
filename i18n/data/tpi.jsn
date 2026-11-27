@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Putim planti lain olsem:",
   "many-items": "Planti __items__",
   "operator-number": "namba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kat i gat namba *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kat i gat namba *<number>*",
+  "subtask-inherit-parent-labels": "Kisim ol lebol bilong kaad papamama"
 }

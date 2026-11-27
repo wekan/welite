@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "একাধিক লাইন যোগ করুন এইভাবে:",
   "many-items": "একাধিক __items__",
   "operator-number": "সংখ্যা",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - যেসব কার্ডের কার্ড নম্বর *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - যেসব কার্ডের কার্ড নম্বর *<number>*",
+  "subtask-inherit-parent-labels": "প্যারেন্ট কার্ডের লেবেল উত্তরাধিকার করুন"
 }

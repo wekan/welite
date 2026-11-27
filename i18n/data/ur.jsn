@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "کئی سطریں اس طرح شامل کریں:",
   "many-items": "کئی __items__",
   "operator-number": "نمبر",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - وہ کارڈز جن کا کارڈ نمبر *<number>* ہے"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - وہ کارڈز جن کا کارڈ نمبر *<number>* ہے",
+  "subtask-inherit-parent-labels": "پیرنٹ کارڈ کے لیبل وراثت میں حاصل کریں"
 }

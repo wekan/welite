@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "कतेको पाँति एहि रूपमे जोड़ू:",
   "many-items": "कतेको __items__",
   "operator-number": "संख्या",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ओ कार्ड जकर कार्ड संख्या *<number>* अछि"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ओ कार्ड जकर कार्ड संख्या *<number>* अछि",
+  "subtask-inherit-parent-labels": "पेरेंट कार्ड के लेबल विरासत में लीं"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Aghjunghje parechje righe cum'è:",
   "many-items": "__items__ (parechji)",
   "operator-number": "numeru",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte chì anu u numeru di carta *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte chì anu u numeru di carta *<number>*",
+  "subtask-inherit-parent-labels": "Eredità l'etichette di a carta parente"
 }

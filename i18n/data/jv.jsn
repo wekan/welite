@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tambah sawetara larik minangka:",
   "many-items": "Sawetara __items__",
   "operator-number": "nomer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kertu sing nomer kertuné *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kertu sing nomer kertuné *<number>*",
+  "subtask-inherit-parent-labels": "Warisi label kertu induk"
 }

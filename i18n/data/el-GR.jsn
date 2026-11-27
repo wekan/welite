@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Προσθήκη πολλών γραμμών ως:",
   "many-items": "__items__ (πολλά)",
   "operator-number": "αριθμός",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - κάρτες με αριθμό κάρτας *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - κάρτες με αριθμό κάρτας *<number>*",
+  "subtask-inherit-parent-labels": "Κληρονόμηση ετικετών γονικής κάρτας"
 }

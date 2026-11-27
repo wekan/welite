@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Engeza imigqa eminingi njenge:",
   "many-items": "__items__ (eziningi)",
   "operator-number": "inombolo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakhadi anenombolo yekhadi engu-*<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakhadi anenombolo yekhadi engu-*<number>*",
+  "subtask-inherit-parent-labels": "Zuza amalebula ekhadi lomzali"
 }

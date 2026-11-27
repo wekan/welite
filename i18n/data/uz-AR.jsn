@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "بیر نیچه قطارنی قویداگیچه قوشینگ:",
   "many-items": "بیر نیچه __items__",
   "operator-number": "رقم",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - کارت رقمی *<number>* بۉلگن کارتلر"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - کارت رقمی *<number>* بۉلگن کارتلر",
+  "subtask-inherit-parent-labels": "آته-کارت یارلیقلرینی میراث قیلیب آلیش"
 }

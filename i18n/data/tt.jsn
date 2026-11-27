@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Берничә юлны болай өстәү:",
   "many-items": "Берничә __items__",
   "operator-number": "номер",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка номеры *<number>* булган карточкалар"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка номеры *<number>* булган карточкалар",
+  "subtask-inherit-parent-labels": "Ата-ана картасының этикеткаларын мирас итеп алу"
 }

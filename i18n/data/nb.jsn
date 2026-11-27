@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Legg til flere linjer som:",
   "many-items": "Flere __items__",
   "operator-number": "nummer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort med kortnummer *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort med kortnummer *<number>*",
+  "subtask-inherit-parent-labels": "Arv etikettene til overordnet kort"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "چەند دێڕێک زیاد بکە وەک:",
   "many-items": "چەندین __items__",
   "operator-number": "ژمارە",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ئەو کارتانەی ژمارەی کارتەکەیان *<number>*ە"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ئەو کارتانەی ژمارەی کارتەکەیان *<number>*ە",
+  "subtask-inherit-parent-labels": "میراتگرتنی نیشانەکانی کارتی باوان"
 }

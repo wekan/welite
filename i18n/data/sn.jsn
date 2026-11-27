@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Wedzera mitsetse yakawanda se:",
   "many-items": "__items__ (zvakawanda)",
   "operator-number": "nhamba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makadhi ane nhamba yekadhi *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makadhi ane nhamba yekadhi *<number>*",
+  "subtask-inherit-parent-labels": "Gara mireza dzekadhi ravabereki"
 }

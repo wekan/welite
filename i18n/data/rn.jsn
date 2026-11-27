@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ongerako imirongo myinshi nk'ibi:",
   "many-items": "__items__ (vyinshi)",
   "operator-number": "igitigiri",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakarata afise inomero y'ikarata *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakarata afise inomero y'ikarata *<number>*",
+  "subtask-inherit-parent-labels": "Rarira uduhwenya kw'ikarata y'umuvyeyi"
 }

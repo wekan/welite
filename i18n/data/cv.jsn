@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Нумай йӗрне ҫапла хушас:",
   "many-items": "Нумай __items__",
   "operator-number": "хисеп",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка хисепӗ *<number>* пулнӑ карточкӑсем"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка хисепӗ *<number>* пулнӑ карточкӑсем",
+  "subtask-inherit-parent-labels": "Атте картин паллисене йышăнса илесси"
 }

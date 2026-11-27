@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Azzecca cchiù righe comme:",
   "many-items": "Cchiù __items__",
   "operator-number": "numero",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte 'o cui nummero è *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte 'o cui nummero è *<number>*",
+  "subtask-inherit-parent-labels": "Ereditá 'e ttichette d''a carta genitrice"
 }

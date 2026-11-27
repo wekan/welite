@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "הוספת מספר שורות בתור:",
   "many-items": "__items__ (מרובים)",
   "operator-number": "מספר",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - כרטיסים שמספר הכרטיס שלהם הוא *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - כרטיסים שמספר הכרטיס שלהם הוא *<number>*",
+  "subtask-inherit-parent-labels": "ירושת התוויות של הכרטיס ההורה"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "לייג צו עטלעכע שורות ווי:",
   "many-items": "עטלעכע __items__",
   "operator-number": "נומער",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - קאַרטלעך וועמענס קאַרטל־נומער איז *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - קאַרטלעך וועמענס קאַרטל־נומער איז *<number>*",
+  "subtask-inherit-parent-labels": "ירשן די תוויות פונעם עלטערן קארטל"
 }

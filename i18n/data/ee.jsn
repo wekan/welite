@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tsɔ fli geɖe kpe ɖe eŋu abe:",
   "many-items": "__items__ geɖe",
   "operator-number": "xexlẽme",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaɖi siwo ƒe kaɖi ƒe xexlẽme nye *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaɖi siwo ƒe kaɖi ƒe xexlẽme nye *<number>*",
+  "subtask-inherit-parent-labels": "Xɔ dzila ƒe kaad la ƒe agbalẽdzesiwo"
 }

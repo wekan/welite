@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Элбэх устуруоканы маннык эбэр:",
   "many-items": "Элбэх __items__",
   "operator-number": "нүөмэр",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка нүөмэрэ *<number>* буолар карточкалар"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка нүөмэрэ *<number>* буолар карточкалар",
+  "subtask-inherit-parent-labels": "Ийэ картаҕа хос сыттар билигиттэн ылын"
 }

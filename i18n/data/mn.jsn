@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Олон мөрийг дараах байдлаар нэмэх:",
   "many-items": "Олон __items__",
   "operator-number": "дугаар",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картын дугаар нь *<number>* байгаа картууд"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картын дугаар нь *<number>* байгаа картууд",
+  "subtask-inherit-parent-labels": "Эцэг картын шошгыг өвлөх"
 }

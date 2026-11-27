@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Amestar delles llinies como:",
   "many-items": "__items__ múltiples",
   "operator-number": "númberu",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetes col númberu de tarxeta *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetes col númberu de tarxeta *<number>*",
+  "subtask-inherit-parent-labels": "Heredar les etiquetes de la tarxeta padre"
 }

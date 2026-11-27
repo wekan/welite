@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Engedzani mitaladzi minzhi sa:",
   "many-items": "__items__ (zwinzhi)",
   "operator-number": "nomboro",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi ane nomboro ya khadi ya vha *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi ane nomboro ya khadi ya vha *<number>*",
+  "subtask-inherit-parent-labels": "Dzhia dziḽeibuḽu dza khadi ḽa mubebi"
 }

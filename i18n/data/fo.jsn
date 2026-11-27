@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Legg fleiri reglur afturat sum:",
   "many-items": "Fleiri __items__",
   "operator-number": "tal",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort, hvørs kortnummar er *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort, hvørs kortnummar er *<number>*",
+  "subtask-inherit-parent-labels": "Arva merki hjá foreldrakortinum"
 }

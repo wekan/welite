@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ƙara layuka da yawa a matsayin:",
   "many-items": "__items__ da yawa",
   "operator-number": "lamba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - katunan da lambar katinsu take *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - katunan da lambar katinsu take *<number>*",
+  "subtask-inherit-parent-labels": "Gaji lakabi na katin iyaye"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Dodaj više redova kao:",
   "many-items": "__items__ (više)",
   "operator-number": "broj",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartice čiji je broj *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartice čiji je broj *<number>*",
+  "subtask-inherit-parent-labels": "Naslijedi oznake nadređene kartice"
 }

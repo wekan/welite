@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ongeza mistari mingi kama:",
   "many-items": "__items__ (nyingi)",
   "operator-number": "nambari",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi ambazo nambari yake ya kadi ni *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi ambazo nambari yake ya kadi ni *<number>*",
+  "subtask-inherit-parent-labels": "Rithi lebo za kadi ya mzazi"
 }

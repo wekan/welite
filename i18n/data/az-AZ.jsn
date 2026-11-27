@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Bir neçə sətri belə əlavə et:",
   "many-items": "Bir neçə __items__",
   "operator-number": "nömrə",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kart nömrəsi *<number>* olan kartlar"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kart nömrəsi *<number>* olan kartlar",
+  "subtask-inherit-parent-labels": "Ana kartın etiketlərini miras al"
 }

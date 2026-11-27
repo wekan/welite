@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "ઘણી પંક્તિઓ આ રીતે ઉમેરો:",
   "many-items": "ઘણા __items__",
   "operator-number": "ક્રમાંક",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - જે કાર્ડનો ક્રમાંક *<number>* છે તે કાર્ડ"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - જે કાર્ડનો ક્રમાંક *<number>* છે તે કાર્ડ",
+  "subtask-inherit-parent-labels": "પેરેન્ટ કાર્ડના લેબલ્સ વારસામાં મેળવો"
 }

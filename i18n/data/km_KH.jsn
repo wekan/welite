@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "បន្ថែមបន្ទាត់ច្រើនជា៖",
   "many-items": "__items__ ច្រើន",
   "operator-number": "លេខ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - កាតដែលមានលេខកាត *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - កាតដែលមានលេខកាត *<number>*",
+  "subtask-inherit-parent-labels": "ស្នងស្លាកកាតមេ"
 }

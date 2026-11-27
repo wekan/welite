@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tānaki ha ngaahi laine lahi ko e:",
   "many-items": "__items__ lahi",
   "operator-number": "fika",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngaahi kaati ʻoku ko hono fika kaati ko e *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngaahi kaati ʻoku ko hono fika kaati ko e *<number>*",
+  "subtask-inherit-parent-labels": "Maʻu ʻae fakaʻilonga ʻoe kaati mātuʻa"
 }

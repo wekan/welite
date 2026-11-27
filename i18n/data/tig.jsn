@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "ብዙሕ መስመር ከምዚ ወስክ፦",
   "many-items": "ብዙሕ __items__",
   "operator-number": "ቍጽሪ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ቍጽሪ ካርደን *<number>* ዝኾነ ወረቀት ካርዳት"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ቍጽሪ ካርደን *<number>* ዝኾነ ወረቀት ካርዳት",
+  "subtask-inherit-parent-labels": "ናይ ወላዲ ወረቀት ካርድ ስያመታት ውረስ"
 }

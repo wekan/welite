@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "ᐊᒥᓱᑦ ᑎᑎᖅᑲᓕᐊᑦ ᐃᓚᒃᑭᑦ ᐃᒪᓐᓇ:",
   "many-items": "ᐊᒥᓱᑦ __items__",
   "operator-number": "ᓈᓴᐅᑎ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ᐊᓪᓚᖅᓯᒪᔫᑉ ᓈᓴᐅᑎᖓ *<number>*-ᖑᔪᑦ ᐊᓪᓚᖅᓯᒪᔪᑦ"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ᐊᓪᓚᖅᓯᒪᔫᑉ ᓈᓴᐅᑎᖓ *<number>*-ᖑᔪᑦ ᐊᓪᓚᖅᓯᒪᔪᑦ",
+  "subtask-inherit-parent-labels": "ᐊᖓᔪᖅᑳᖅ ᑲᑦᑏᑉ ᓇᓗᓇᐃᑯᑖᖏᑦ ᑎᓴᒪᓐᓂᖅᓯᓂᖅ"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Titarnit arlallit ima ilanngukkit:",
   "many-items": "__items__ arlallit",
   "operator-number": "normu",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortsit normuat *<number>*-iusoq"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortsit normuat *<number>*-iusoq",
+  "subtask-inherit-parent-labels": "Angajoqqaap kaartaata nalunaaqutaanik kinguaassiuutaanik tigummineq"
 }

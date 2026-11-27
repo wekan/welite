@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Thêm nhiều dòng dưới dạng:",
   "many-items": "Nhiều __items__",
   "operator-number": "số",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - các thẻ có số thẻ là *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - các thẻ có số thẻ là *<number>*",
+  "subtask-inherit-parent-labels": "Kế thừa nhãn của thẻ cha"
 }

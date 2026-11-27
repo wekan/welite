@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Läükön lienis mödik as:",
   "many-items": "__items__ mödik",
   "operator-number": "nüm",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kads kels labons numi kadik *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kads kels labons numi kadik *<number>*",
+  "subtask-inherit-parent-labels": "Gerön lätilis kada palik"
 }

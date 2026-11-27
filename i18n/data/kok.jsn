@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "जायत्यो वळी अशें जोडात:",
   "many-items": "जायतीं __items__",
   "operator-number": "क्रमांक",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड क्रमांक *<number>* आशिल्लीं कार्डां"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड क्रमांक *<number>* आशिल्लीं कार्डां",
+  "subtask-inherit-parent-labels": "पालक कार्डाची लेबलां वारशान घे"
 }

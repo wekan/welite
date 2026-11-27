@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "將多行新增為：",
   "many-items": "多個__items__",
   "operator-number": "編號",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片編號為 *<number>* 的卡片"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片編號為 *<number>* 的卡片",
+  "subtask-inherit-parent-labels": "繼承母卡片嘅標籤"
 }

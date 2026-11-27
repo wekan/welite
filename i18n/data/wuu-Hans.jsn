@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "拿多行添加成：",
   "many-items": "多只 __items__",
   "operator-number": "编号",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片编号是 *<number>* 个卡片"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片编号是 *<number>* 个卡片",
+  "subtask-inherit-parent-labels": "继承父卡片个标签"
 }

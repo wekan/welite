@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ավելացնել մի քանի տող որպես՝",
   "many-items": "Մի քանի __items__",
   "operator-number": "համար",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - քարտեր, որոնց քարտի համարը *<number>* է"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - քարտեր, որոնց քարտի համարը *<number>* է",
+  "subtask-inherit-parent-labels": "Ժառանգել ծնողական քարտի պիտակները"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Oketša methalo ye mentši bjalo ka:",
   "many-items": "__items__ (tše dintši)",
   "operator-number": "nomoro",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata tše nomoro ya tšona ya karata e lego *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata tše nomoro ya tšona ya karata e lego *<number>*",
+  "subtask-inherit-parent-labels": "Rua dilebele tša karata ya motswadi"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Adicionar várias linhas como:",
   "many-items": "__items__ (vários)",
   "operator-number": "número",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartões cujo número do cartão é *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartões cujo número do cartão é *<number>*",
+  "subtask-inherit-parent-labels": "Herdar etiquetas do cartão principal"
 }

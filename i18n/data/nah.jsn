@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Xicaquiti miyac pantli iuhquin:",
   "many-items": "Miyac __items__",
   "operator-number": "tlapohualiztli",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amatlapaltin yej inamatlapal tlapohualiz ca *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amatlapaltin yej inamatlapal tlapohualiz ca *<number>*",
+  "subtask-inherit-parent-labels": "Tlacuiliztli itech in teotlahtolli tetahtin"
 }

@@ -3553,7 +3553,10 @@ begin
       '" aria-label="' + AddTitle + '">+</a><form class="js-add-subtask js-inlined-form is-hidden" method="post" action="/b/' +
       HtmlAttr(HTTPEncode(BoardId)) + '/cards/' + HtmlAttr(HTTPEncode(CardId)) + '/subtasks" up-submit up-target=".board-wrapper">' +
       '<template class="js-inlined-form-body"><textarea class="js-add-subtask-item" name="title" rows="1" dir="auto" aria-label="' +
-      AddTitle + '" required></textarea><button class="primary confirm" type="submit">' + E(Words.Text('save', 'Save')) +
+      AddTitle + '" required></textarea><label class="subtask-inherit-labels"><input type="checkbox" ' +
+      'class="js-add-subtask-inherit-labels" name="inheritLabels"> ' +
+      E(Words.Text('subtask-inherit-parent-labels', 'Inherit parent labels')) +
+      '</label><button class="primary confirm" type="submit">' + E(Words.Text('save', 'Save')) +
       '</button><a class="js-close-inlined-form" href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) +
       '">&times;</a></template></form>';
   end;
@@ -6825,7 +6828,8 @@ begin
       Request.ContentFields.Values['swimlaneId'], Title, Request.ContentFields.Values['position'],
       Request.ContentFields.Values['titleMode'] = 'separate', ProfileFlag(T.Db, S.UserId, 'titleBracketLabel'), NewId, Error)
   else if Action = 'add-subtask' then
-    Code := CreateViewSubtask(T, S.UserId, BoardId, CardId, Title, Error)
+    Code := CreateViewSubtask(T, S.UserId, BoardId, CardId, Title,
+      Request.ContentFields.Values['inheritLabels'] = 'on', Error)
   else if Action = 'rename-card' then
     Code := RenameViewCard(T, S.UserId, BoardId, CardId, Title, Error)
   else if Action = 'set-person' then

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Plures lineas adde ut:",
   "many-items": "__items__ (plura)",
   "operator-number": "numerus",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - chartae quarum numerus est *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - chartae quarum numerus est *<number>*",
+  "subtask-inherit-parent-labels": "Notas cartae parentis hereditare"
 }

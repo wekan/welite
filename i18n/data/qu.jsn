@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Achka siqikunata kayhinata yapay:",
   "many-items": "Achka __items__",
   "operator-number": "yupay",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartakuna kartapa yupaynin *<number>* kaptin"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartakuna kartapa yupaynin *<number>* kaptin",
+  "subtask-inherit-parent-labels": "Yayaq target rurichaykunata chaskiy"
 }

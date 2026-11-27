@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Добавяне на няколко реда като:",
   "many-items": "Няколко __items__",
   "operator-number": "номер",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карти, чийто номер е *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карти, чийто номер е *<number>*",
+  "subtask-inherit-parent-labels": "Наследяване на етикетите на родителската карта"
 }

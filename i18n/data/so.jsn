@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ku dar sadar badan sida:",
   "many-items": "__items__ badan",
   "operator-number": "tiro",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaararka lambarkooda kaarku yahay *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaararka lambarkooda kaarku yahay *<number>*",
+  "subtask-inherit-parent-labels": "Dhaxal siabooyinka kaadhka waalidka"
 }

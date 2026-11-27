@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Pridať viac riadkov ako:",
   "many-items": "__items__ (viac)",
   "operator-number": "číslo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, ktorých číslo karty je *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, ktorých číslo karty je *<number>*",
+  "subtask-inherit-parent-labels": "Zdediť štítky nadradenej karty"
 }

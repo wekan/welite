@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Mehrere Zeilen hinzufügen als:",
   "many-items": "Mehrere __items__",
   "operator-number": "nummer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` – Karten mit der Kartennummer *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` – Karten mit der Kartennummer *<number>*",
+  "subtask-inherit-parent-labels": "Labels der übergeordneten Karte übernehmen"
 }

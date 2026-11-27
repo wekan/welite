@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Cuir iomadh loidhne ris mar:",
   "many-items": "__items__ (iomadh)",
   "operator-number": "àireamh",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cairtean aig a bheil àireamh na cairt *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cairtean aig a bheil àireamh na cairt *<number>*",
+  "subtask-inherit-parent-labels": "Faigh leubailean a' chairt phàrantail mar dhìleab"
 }

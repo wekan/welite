@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Magdagdag ng maraming linya bilang:",
   "many-items": "Maraming __items__",
   "operator-number": "bilang",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kards whose kard bilang ay *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kards whose kard bilang ay *<number>*",
+  "subtask-inherit-parent-labels": "Manahin ang mga label ng magulang na kard"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "เพิ่มหลายบรรทัดเป็น:",
   "many-items": "__items__หลายรายการ",
   "operator-number": "หมายเลข",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - การ์ดที่มีหมายเลขการ์ดเป็น *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - การ์ดที่มีหมายเลขการ์ดเป็น *<number>*",
+  "subtask-inherit-parent-labels": "รับช่วงป้ายกำกับของการ์ดหลัก"
 }

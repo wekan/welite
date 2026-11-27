@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ajonté plu righes coche:",
   "many-items": "Plu __items__",
   "operator-number": "numero",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ciartes il cui numero ie *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ciartes il cui numero ie *<number>*",
+  "subtask-inherit-parent-labels": "Tò sëura la etichetes dla ciarta paronda"
 }

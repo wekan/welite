@@ -95,7 +95,7 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // sends nothing; Error says why not.
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
-function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;out Error:string):Integer;
+function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;InheritLabels:Boolean;out Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
   out CardId,Error:string):Integer;
 // A card's new title from a view (the HTML5 view's title editor), checked as
@@ -5075,8 +5075,8 @@ begin
   SendJson(aResponse, Format('{"_id":%s}', [AnsiQuotedStr(Id, '"')]));
 end;
 
-function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;out Error:string):Integer;
-var Rows:TWLRows; Target,ListId,Lane,Id,ParentScope,Landing,Guard,Sort,Sql,Fields:string; Policy:TFieldPolicy;
+function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;InheritLabels:Boolean;out Error:string):Integer;
+var Rows:TWLRows; Target,ListId,Lane,Id,ParentScope,Landing,Guard,Sort,Sql,Fields,Labels:string; Policy:TFieldPolicy;
 begin
   Error:='Invalid subtask';
   if (Trim(Title)='') or (Pos(#0,BoardId+ParentId+Title)>0) then Exit(400);
@@ -5116,8 +5116,12 @@ begin
     ' AND swimlaneId='+QuotedStr(Lane)+' AND deletedAt IS NULL)';
   try Fields:=InitializeCardFields(T.Db,Target,Id);
   except Error:='Could not initialize custom fields';Exit(500);end;
+  Labels:='';
+  if InheritLabels then
+    Labels:='INSERT INTO card_labels(cardId,labelId) SELECT '+QuotedStr(Id)+',labelId FROM card_labels WHERE cardId='+
+      QuotedStr(ParentId)+'; ';
   Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+Guard+' THEN 1 ELSE json(''Subtask scope changed'') END; '+
-    CardCreateSql(Target,ListId,Lane,Id,UserId,Trim(Title),'',QuotedStr(ParentId),Sort)+Fields+' COMMIT;';
+    CardCreateSql(Target,ListId,Lane,Id,UserId,Trim(Title),'',QuotedStr(ParentId),Sort)+Fields+Labels+' COMMIT;';
   if not T.Db.Exec(Sql) then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not create subtask';Exit(500);end;
   Error:='';Result:=200;

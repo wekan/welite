@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Żid diversi linji bħala:",
   "many-items": "Diversi __items__",
   "operator-number": "numru",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karti li n-numru tal-karta tagħhom huwa *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karti li n-numru tal-karta tagħhom huwa *<number>*",
+  "subtask-inherit-parent-labels": "Wirt it-tikketti tal-karta ġenitur"
 }

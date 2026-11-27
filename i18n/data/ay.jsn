@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Walja siqinaka akham yapam:",
   "many-items": "Walja __items__",
   "operator-number": "jakhu",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarjetanaka whose tarjeta jakhu awa *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarjetanaka whose tarjeta jakhu awa *<number>*",
+  "subtask-inherit-parent-labels": "Awkin markaparu chhijllaña"
 }

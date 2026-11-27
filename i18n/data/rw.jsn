@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ongeraho imirongo myinshi nka:",
   "many-items": "__items__ (byinshi)",
   "operator-number": "umubare",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakarita afite nomero y'ikarita ingana na *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakarita afite nomero y'ikarita ingana na *<number>*",
+  "subtask-inherit-parent-labels": "Rarikira utumenyetso tw'ikarita mubyeyi"
 }

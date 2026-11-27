@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Lasit máŋga ráiddu ná:",
   "many-items": "__items__ (máŋga)",
   "operator-number": "lohku",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - goarttat maid goartanummir lea *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - goarttat maid goartanummir lea *<number>*",
+  "subtask-inherit-parent-labels": "Árbe váhnenkoartta mearkkat"
 }

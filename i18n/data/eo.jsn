@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Aldoni plurajn liniojn kiel:",
   "many-items": "Pluraj __items__",
   "operator-number": "nombro",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartoj kies karta numero estas *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartoj kies karta numero estas *<number>*",
+  "subtask-inherit-parent-labels": "Heredi la etikedojn de la patra karto"
 }

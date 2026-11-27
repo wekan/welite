@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Idugang an damu nga linya sugad hin:",
   "many-items": "Damu nga __items__",
   "operator-number": "numero",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - mga kard nga an numero amo an *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - mga kard nga an numero amo an *<number>*",
+  "subtask-inherit-parent-labels": "Panunda an mga etiketa han ginikanan nga kard"
 }

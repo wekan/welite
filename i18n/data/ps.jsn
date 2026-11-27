@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "څو کرښې په دې بڼه ورزیاتې کړئ:",
   "many-items": "څو __items__",
   "operator-number": "شمېره",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - هغه کارتونه چې د کارت شمېره يې *<number>* ده"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - هغه کارتونه چې د کارت شمېره يې *<number>* ده",
+  "subtask-inherit-parent-labels": "د پلرني کارت لیبلونه میراث یوسئ"
 }

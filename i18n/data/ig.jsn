@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tinye ọtụtụ ahịrị dịka:",
   "many-items": "Ọtụtụ __items__",
   "operator-number": "nọmba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaadị nwere nọmba kaadị *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaadị nwere nọmba kaadị *<number>*",
+  "subtask-inherit-parent-labels": "Nweta akara mkpado nke kaadị nne na nna"
 }

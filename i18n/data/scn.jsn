@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Aggiunci cchiù righi comu:",
   "many-items": "Cchiù __items__",
   "operator-number": "numero",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carti cu lu nùmmaru *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carti cu lu nùmmaru *<number>*",
+  "subtask-inherit-parent-labels": "Aredità i etichetti dâ carta matri"
 }

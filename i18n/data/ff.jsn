@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ɓeydu gorɗi keewɗi no:",
   "many-items": "__items__ (keewɗi)",
   "operator-number": "limoore",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karte ɗe limoore kartal mum woni *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karte ɗe limoore kartal mum woni *<number>*",
+  "subtask-inherit-parent-labels": "Roonu labeeje kaarti neene baaba"
 }

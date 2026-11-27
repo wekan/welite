@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Aggiungi più righe come:",
   "many-items": "Più __items__",
   "operator-number": "numero",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede il cui numero è *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede il cui numero è *<number>*",
+  "subtask-inherit-parent-labels": "Eredita le etichette della scheda principale"
 }

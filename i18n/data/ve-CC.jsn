@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Zonta pì righe come:",
   "many-items": "Pì __items__",
   "operator-number": "inombolo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede che ga el nùmaro de scheda *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede che ga el nùmaro de scheda *<number>*",
+  "subtask-inherit-parent-labels": "Eredita le etichete del genitor"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Engetela tilayini to tala tani hi:",
   "many-items": "__items__ (swo tala)",
   "operator-number": "nhlayo",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi lama nomboro ya wona ya khadi yi nga *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi lama nomboro ya wona ya khadi yi nga *<number>*",
+  "subtask-inherit-parent-labels": "Ndzhaka swifaniso swa khadi ra vatswari"
 }

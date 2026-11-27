@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Shto disa rreshta si:",
   "many-items": "Disa __items__",
   "operator-number": "numër",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartat, numri i kartës së të cilave është *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartat, numri i kartës së të cilave është *<number>*",
+  "subtask-inherit-parent-labels": "Trashëgo etiketat e kartës prind"
 }

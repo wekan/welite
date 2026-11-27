@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Cuir línte iomadúla leis mar:",
   "many-items": "__items__ (iolracha)",
   "operator-number": "uimhir",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cártaí arb é *<number>* uimhir an chárta"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cártaí arb é *<number>* uimhir an chárta",
+  "subtask-inherit-parent-labels": "Faigh lipéid an chárta tuismitheora mar oidhreacht"
 }

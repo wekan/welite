@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Додати кілька рядків як:",
   "many-items": "__items__ (кілька)",
   "operator-number": "номер",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картки, номер яких *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картки, номер яких *<number>*",
+  "subtask-inherit-parent-labels": "Успадкувати мітки батьківської картки"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Agregá varios liña komo:",
   "many-items": "Varios __items__",
   "operator-number": "número",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karchinan cuyo número di karchi ta *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karchinan cuyo número di karchi ta *<number>*",
+  "subtask-inherit-parent-labels": "Herda e etiketanan di e karchi mama"
 }

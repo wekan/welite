@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Kuria e vica na laini me:",
   "many-items": "E levu na __items__",
   "operator-number": "naba",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi e *<number>* na naba ni kena kadi"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi e *<number>* na naba ni kena kadi",
+  "subtask-inherit-parent-labels": "Tauri na ivakatakilakili ni kaadi itubutubu"
 }

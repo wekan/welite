@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Onjezani mizere yambiri ngati:",
   "many-items": "__items__ (zambiri)",
   "operator-number": "nambala",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi omwe nambala yake ya khadi ndi *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi omwe nambala yake ya khadi ndi *<number>*",
+  "subtask-inherit-parent-labels": "Landirani zizindikiro za khadi la kholo"
 }

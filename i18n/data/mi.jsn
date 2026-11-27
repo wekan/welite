@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Tāpirihia ngā rārangi maha hei:",
   "many-items": "__items__ maha",
   "operator-number": "tau",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngā kāri he *<number>* tō rātou tau kāri"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngā kāri he *<number>* tō rātou tau kāri",
+  "subtask-inherit-parent-labels": "Tuku iho ngā tapanga o te kāri mātua"
 }

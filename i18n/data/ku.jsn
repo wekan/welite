@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Çend rêzan wekî vê zêde bike:",
   "many-items": "Çend __items__",
   "operator-number": "hejmar",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartên ku hejmara kartê wan *<number>* e"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartên ku hejmara kartê wan *<number>* e",
+  "subtask-inherit-parent-labels": "Etîketên karta dêûbav bimîratîne"
 }

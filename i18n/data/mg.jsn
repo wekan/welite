@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Ampio andalana maro ho:",
   "many-items": "__items__ maro",
   "operator-number": "isa",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karatra manana laharana *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karatra manana laharana *<number>*",
+  "subtask-inherit-parent-labels": "Mandova ny mari-pamantarana ny karatra ray aman-dreny"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "ಹಲವು ಸಾಲುಗಳನ್ನು ಈ ರೀತಿಯಾಗಿ ಸೇರಿಸಿ:",
   "many-items": "ಹಲವು __items__",
   "operator-number": "ಸಂಖ್ಯೆ",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ಕಾರ್ಡ್ ಸಂಖ್ಯೆ *<number>* ಆಗಿರುವ ಕಾರ್ಡ್‌ಗಳು"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ಕಾರ್ಡ್ ಸಂಖ್ಯೆ *<number>* ಆಗಿರುವ ಕಾರ್ಡ್‌ಗಳು",
+  "subtask-inherit-parent-labels": "ಪೋಷಕ ಕಾರ್ಡ್‌ನ ಲೇಬಲ್‌ಗಳನ್ನು ಆನುವಂಶಿಕವಾಗಿ ಪಡೆಯಿರಿ"
 }

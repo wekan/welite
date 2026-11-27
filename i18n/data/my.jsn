@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "စာကြောင်းများကို အောက်ပါအတိုင်း ထည့်ပါ:",
   "many-items": "__items__ အများအပြား",
   "operator-number": "နံပါတ်",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ကတ်နံပါတ် *<number>* ဖြစ်သော ကတ်များ"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ကတ်နံပါတ် *<number>* ဖြစ်သော ကတ်များ",
+  "subtask-inherit-parent-labels": "မိဘကတ်၏ လေဘယ်များကို ဆက်ခံမည်"
 }

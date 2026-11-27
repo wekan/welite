@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Bæta við mörgum línum sem:",
   "many-items": "__items__ (mörg)",
   "operator-number": "númer",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - spjöld sem hafa spjaldsnúmerið *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - spjöld sem hafa spjaldsnúmerið *<number>*",
+  "subtask-inherit-parent-labels": "Erfa merki foreldrakorts"
 }

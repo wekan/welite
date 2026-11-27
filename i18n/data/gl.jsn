@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Engadir varias liñas como:",
   "many-items": "__items__ múltiples",
   "operator-number": "número",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetas cuxo número de tarxeta é *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetas cuxo número de tarxeta é *<number>*",
+  "subtask-inherit-parent-labels": "Herdar as etiquetas da tarxeta pai"
 }

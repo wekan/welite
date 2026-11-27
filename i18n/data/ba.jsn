@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Бер нисә юлды ошолай өҫтәргә:",
   "many-items": "Бер нисә __items__",
   "operator-number": "һан",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка һаны *<number>* булған карточкалар"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка һаны *<number>* булған карточкалар",
+  "subtask-inherit-parent-labels": "Атай карта билдәләрен мираҫ итеп алыу"
 }

@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "පේළි කිහිපයක් මෙලෙස එක් කරන්න:",
   "many-items": "__items__ කිහිපයක්",
   "operator-number": "අංකය",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - කාඩ්පත් අංකය *<number>* වන කාඩ්පත්"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - කාඩ්පත් අංකය *<number>* වන කාඩ්පත්",
+  "subtask-inherit-parent-labels": "මාපිය කාඩ්පතෙහි ලේබල උරුම කරගන්න"
 }

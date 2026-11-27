@@ -2317,5 +2317,6 @@
   "add-many-lines-as": "Pridėti kelias eilutes kaip:",
   "many-items": "__items__ (kelios)",
   "operator-number": "numeris",
-  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortelės, kurių kortelės numeris yra *<number>*"
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortelės, kurių kortelės numeris yra *<number>*",
+  "subtask-inherit-parent-labels": "Paveldėti tėvinės kortelės žymas"
 }
