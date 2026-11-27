@@ -49,6 +49,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   help section shows the supported operators in the viewer's language.
 - Search specifically in card comments or match labels by name or color.
   The label operator also accepts the `#` shorthand.
+- Search for card members, assignees, or creators by username. `user` and
+  its `@` shorthand match a card member or assignee. `me` selects the
+  signed-in user.
 
 ## HTML5 minicards
 

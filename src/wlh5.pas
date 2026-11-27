@@ -5816,9 +5816,10 @@ begin
   if Pos(#0, Result) > 0 then Result := '';
 end;
 
-type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel);
+type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel,
+  soUser, soMember, soAssignee, soCreator);
 
-function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const Text: string; out Kind: TSearchOperator): string;
+function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, Text: string; out Kind: TSearchOperator): string;
 var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
@@ -5832,6 +5833,16 @@ var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean;
   begin
     Result := SameText(Value, Field) or SameText(Value, Words.Text('predicate-' + Field, Field));
   end;
+  function PersonMatches(const ColumnName: string): string;
+  begin
+    if SameText(Value, 'me') then Exit(ColumnName + '=' + QuotedStr(UserId));
+    Result := 'EXISTS(SELECT 1 FROM users person WHERE person.id=' + ColumnName +
+      ' AND lower(person.username)=lower(' + QuotedStr(Value) + '))';
+  end;
+  function RoleMatches(const Relation: string): string;
+  begin
+    Result := 'EXISTS(SELECT 1 FROM ' + Relation + ' role WHERE role.cardId=c.id AND ' + PersonMatches('role.userId') + ')';
+  end;
 begin
   Result := '';
   Abbrev := Words.Text('operator-label-abbrev', '#');
@@ -5843,14 +5854,32 @@ begin
   end
   else
   begin
-    Colon := Pos(':', Text);
-    if Colon <= 1 then Exit;
-    Op := Copy(Text, 1, Colon - 1);
-    Value := Trim(Copy(Text, Colon + 1, MaxInt));
+    Abbrev := Words.Text('operator-user-abbrev', '@');
+    if not StartsStr(Abbrev, Text) then Abbrev := '@';
+    if StartsStr(Abbrev, Text) then
+    begin
+      Op := 'user';
+      Value := Copy(Text, Length(Abbrev) + 1, MaxInt);
+    end
+    else
+    begin
+      Colon := Pos(':', Text);
+      if Colon <= 1 then Exit;
+      Op := Copy(Text, 1, Colon - 1);
+      Value := Trim(Copy(Text, Colon + 1, MaxInt));
+    end;
   end;
   if (Length(Value) >= 2) and (Value[1] = '"') and (Value[Length(Value)] = '"') then
     Value := Copy(Value, 2, Length(Value) - 2);
   if Value = '' then Exit;
+  if IsOperator('operator-user', 'user') then
+  begin Kind := soUser; Exit('(' + RoleMatches('card_members') + ' OR ' + RoleMatches('card_assignees') + ')'); end;
+  if IsOperator('operator-member', 'member') then
+  begin Kind := soMember; Exit(RoleMatches('card_members')); end;
+  if IsOperator('operator-assignee', 'assignee') then
+  begin Kind := soAssignee; Exit(RoleMatches('card_assignees')); end;
+  if IsOperator('operator-creator', 'creator') then
+  begin Kind := soCreator; Exit(PersonMatches('c.userId')); end;
   if IsOperator('operator-comment', 'comment') then
   begin
     Kind := soComment;
@@ -5903,7 +5932,7 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const Query: string; out Plain, Predicate: string);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate: string);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes: Boolean; Token, Sql: string;
 begin
@@ -5925,7 +5954,7 @@ begin
     if i = Start then Break;
     Token := Copy(Query, Start, i - Start);
     Sql := '';
-    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, Token, Kind);
+    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, Token, Kind);
     if Sql = '' then
     begin
       if Plain <> '' then Plain := Plain + ' ';
@@ -5997,16 +6026,18 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..8] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev');
+  Operators: array[0..13] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
+    'user', 'user-abbrev', 'member', 'assignee', 'creator');
   Fields: array[0..8] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end', 'assignee', 'member');
-  Described: array[0..6] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash');
+  Described: array[0..11] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
+    'user', 'at', 'member', 'assignee', 'creator');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
   begin
     Result := Words.Text('globalSearch-instructions-' + Key, Fallback);
     for Name in Operators do
       Result := StringReplace(Result, '__operator_' + StringReplace(Name, '-', '_', [rfReplaceAll]) + '__',
-        Words.Text('operator-' + Name, IfThen(Name = 'label-abbrev', '#', Name)), [rfReplaceAll]);
+        Words.Text('operator-' + Name, IfThen(Name = 'label-abbrev', '#', IfThen(Name = 'user-abbrev', '@', Name))), [rfReplaceAll]);
     for Name in Fields do
       Result := StringReplace(Result, '__predicate_' + Name + '__', Words.Text('predicate-' + Name, Name), [rfReplaceAll]);
     Result := StringReplace(Result, 'has:-due', Words.Text('operator-has', 'has') + ':-' + Words.Text('predicate-due', 'due'), [rfReplaceAll]);
@@ -6049,7 +6080,7 @@ var Text, Plain, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; 
   end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, Text, Plain, OperatorSql);
+  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
