@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Đánh dấu tác vụ con chưa xong",
   "subtask-done-no-permission": "Bạn không thể thay đổi trạng thái đã xong của tác vụ con này",
   "board-view-calendar-mode": "Chế độ lịch",
-  "board-view-multiboard-cal": "Lịch (Tất cả các bảng)"
+  "board-view-multiboard-cal": "Lịch (Tất cả các bảng)",
+  "wip-limit-groups": "Nhóm giới hạn WIP",
+  "wip-limit-group-name-placeholder": "Tên nhóm (tùy chọn)",
+  "wip-limit-group-add": "Thêm nhóm giới hạn WIP",
+  "wip-limit-group-select-swimlane": "Chọn Làn ngang",
+  "wip-limit-group-apply-swimlane": "Áp Dụng Làn ngang"
 }

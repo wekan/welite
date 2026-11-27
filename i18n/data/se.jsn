@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merke oassebarggu gárvvekeahttun",
   "subtask-done-no-permission": "It sáhte rievdadit lea go dát oassebargu gárvvis",
   "board-view-calendar-mode": "Kaleanddardoaibma",
-  "board-view-multiboard-cal": "Kaleanddar (Buot távvalat)"
+  "board-view-multiboard-cal": "Kaleanddar (Buot távvalat)",
+  "wip-limit-groups": "Bija WIP-ráji ala (Listu)",
+  "wip-limit-group-name-placeholder": "Namma (eaktodáhtolaš)",
+  "wip-limit-group-add": "Lasit Bija WIP-ráji ala",
+  "wip-limit-group-select-swimlane": "Vállje távvala Bálggis",
+  "wip-limit-group-apply-swimlane": "Geavat Bálggis"
 }

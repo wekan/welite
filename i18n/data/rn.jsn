@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Shira ikimenyetso c'uko igikorwa gitoyi kitaraheza",
   "subtask-done-no-permission": "Ntushobora guhindura nimba iki gikorwa gitoyi giheze",
   "board-view-calendar-mode": "Uburyo bw'ikirangamisi",
-  "board-view-multiboard-cal": "Ikirangamisi (Ibicapa vyose)"
+  "board-view-multiboard-cal": "Ikirangamisi (Ibicapa vyose)",
+  "wip-limit-groups": "Fungura urugero rwa WIP (Urutonde)",
+  "wip-limit-group-name-placeholder": "Izina (si ngombwa)",
+  "wip-limit-group-add": "Ongerako Fungura urugero rwa WIP",
+  "wip-limit-group-select-swimlane": "Hitamwo icapa Umurongo",
+  "wip-limit-group-apply-swimlane": "Shira mu ngiro Umurongo"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Unteraufgabe als nicht erledigt markieren",
   "subtask-done-no-permission": "Du kannst nicht ändern, ob diese Unteraufgabe erledigt ist",
   "board-view-calendar-mode": "Kalendermodus",
-  "board-view-multiboard-cal": "Kalender (Alle Boards)"
+  "board-view-multiboard-cal": "Kalender (Alle Boards)",
+  "wip-limit-groups": "WIP-Limit-Gruppen",
+  "wip-limit-group-name-placeholder": "Gruppenname (optional)",
+  "wip-limit-group-add": "WIP-Limit-Gruppe hinzufügen",
+  "wip-limit-group-select-swimlane": "Board auswählen Arbeitsbahn",
+  "wip-limit-group-apply-swimlane": "Übernehmen Arbeitsbahn"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Mariho ho tsy vita ny zana-asa",
   "subtask-done-no-permission": "Tsy afaka manova ny maha-vita na tsia an’ity zana-asa ity ianao",
   "board-view-calendar-mode": "Fomba kalandrie",
-  "board-view-multiboard-cal": "Kalandrie (Ny solaitra rehetra)"
+  "board-view-multiboard-cal": "Kalandrie (Ny solaitra rehetra)",
+  "wip-limit-groups": "Vondrona fetra WIP",
+  "wip-limit-group-name-placeholder": "Anaran’ny vondrona (tsy voatery)",
+  "wip-limit-group-add": "Ampio vondrona fetra WIP",
+  "wip-limit-group-select-swimlane": "Fidio ny lalana",
+  "wip-limit-group-apply-swimlane": "Ampiharo amin’ny lalana"
 }

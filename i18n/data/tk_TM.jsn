@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Kiçi meseläni ýerine ýetirilmedik diýip belle",
   "subtask-done-no-permission": "Bu kiçi meseläniň ýerine ýetirilendigini üýtgedip bilmeýärsiňiz",
   "board-view-calendar-mode": "Senenama tertibi",
-  "board-view-multiboard-cal": "Senenama (Allhli tagtalar)"
+  "board-view-multiboard-cal": "Senenama (Allhli tagtalar)",
+  "wip-limit-groups": "WIP çäklendirmesini açyň (Sanaw)",
+  "wip-limit-group-name-placeholder": "Ady (islege bagly)",
+  "wip-limit-group-add": "Goş WIP çäklendirmesini açyň",
+  "wip-limit-group-select-swimlane": "Tagtany saýlaň Swimüzmek",
+  "wip-limit-group-apply-swimlane": "Giriş Swimüzmek"
 }

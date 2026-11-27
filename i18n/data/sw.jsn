@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Weka kazi ndogo kuwa haijakamilika",
   "subtask-done-no-permission": "Huwezi kubadilisha hali ya kukamilika kwa kazi hii ndogo",
   "board-view-calendar-mode": "Hali ya kalenda",
-  "board-view-multiboard-cal": "Kalenda (Bodi Zote)"
+  "board-view-multiboard-cal": "Kalenda (Bodi Zote)",
+  "wip-limit-groups": "Vikundi vya Kikomo cha WIP",
+  "wip-limit-group-name-placeholder": "Jina la kikundi (hiari)",
+  "wip-limit-group-add": "Ongeza kikundi cha kikomo cha WIP",
+  "wip-limit-group-select-swimlane": "Chagua Njia",
+  "wip-limit-group-apply-swimlane": "Omba Njia"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Swaya mushumo muṱuku sa u songo fhela",
   "subtask-done-no-permission": "A ni koni u shandukisa uri mushumo muṱuku uyu wo fhela kana hai",
   "board-view-calendar-mode": "Tshiimo tsha Khalenda",
-  "board-view-multiboard-cal": "Khalenda ya bodo nnzhi dza Kanban"
+  "board-view-multiboard-cal": "Khalenda ya bodo nnzhi dza Kanban",
+  "wip-limit-groups": "Zwigwada zwa mukano wa WIP",
+  "wip-limit-group-name-placeholder": "Dzina ḽa tshigwada (a zwi kombetshedzwi)",
+  "wip-limit-group-add": "Engedza tshigwada tsha mukano wa WIP",
+  "wip-limit-group-select-swimlane": "Nanga ḽaini",
+  "wip-limit-group-apply-swimlane": "Shumisa kha ḽaini"
 }

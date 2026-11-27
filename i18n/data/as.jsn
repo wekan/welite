@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "উপ-কাম সম্পন্ন নোহোৱা বুলি চিহ্নিত কৰক",
   "subtask-done-no-permission": "এই উপ-কাম সম্পন্ন হৈছে নে নাই আপুনি সলনি কৰিব নোৱাৰে",
   "board-view-calendar-mode": "কেলেণ্ডাৰ ম'ড",
-  "board-view-multiboard-cal": "দিনপঞ্জী (সকলো ফলক)"
+  "board-view-multiboard-cal": "দিনপঞ্জী (সকলো ফলক)",
+  "wip-limit-groups": "WIP সীমা সক্ষম কৰক (তালিকা)",
+  "wip-limit-group-name-placeholder": "নাম (ঐচ্ছিক)",
+  "wip-limit-group-add": "যোগ কৰক WIP সীমা সক্ষম কৰক",
+  "wip-limit-group-select-swimlane": "ব'ৰ্ড বাছক পথ",
+  "wip-limit-group-apply-swimlane": "প্ৰয়োগ কৰক পথ"
 }

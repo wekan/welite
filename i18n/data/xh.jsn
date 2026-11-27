@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Phawula umsebenzi ongaphantsi njengongagqitywanga",
   "subtask-done-no-permission": "Awunako ukutshintsha ukuba lo msebenzi ungaphantsi ugqityiwe na",
   "board-view-calendar-mode": "Imowudi yekhalenda",
-  "board-view-multiboard-cal": "Ikhalenda (Zonke iibhodi)"
+  "board-view-multiboard-cal": "Ikhalenda (Zonke iibhodi)",
+  "wip-limit-groups": "Amaqela Omda we-WIP",
+  "wip-limit-group-name-placeholder": "Igama leqela (ngokukhetha)",
+  "wip-limit-group-add": "Yongeza iqela lomda we-WIP",
+  "wip-limit-group-select-swimlane": "Khetha iBhodi Ukuqubha",
+  "wip-limit-group-apply-swimlane": "Faka isicelo Ukuqubha"
 }

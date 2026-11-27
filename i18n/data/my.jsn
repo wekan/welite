@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "လုပ်ငန်းခွဲကို မပြီးသေးဟု မှတ်ရန်",
   "subtask-done-no-permission": "ဤလုပ်ငန်းခွဲ ပြီး၊ မပြီးကို သင်ပြောင်း၍ မရပါ",
   "board-view-calendar-mode": "ပြက္ခဒိန် မုဒ်",
-  "board-view-multiboard-cal": "ပြက္ခဒိန် (ဘုတ်အားလုံး)"
+  "board-view-multiboard-cal": "ပြက္ခဒိန် (ဘုတ်အားလုံး)",
+  "wip-limit-groups": "WIP ကန့်သတ်အုပ်စုများ",
+  "wip-limit-group-name-placeholder": "အုပ်စု အမည် (ရွေးချယ်နိုင်သည်)",
+  "wip-limit-group-add": "WIP ကန့်သတ်အုပ်စု ထည့်ရန်",
+  "wip-limit-group-select-swimlane": "ရွေးရန် လမ်းကြောင်း",
+  "wip-limit-group-apply-swimlane": "အသုံးချရန် လမ်းကြောင်း"
 }

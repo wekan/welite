@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Quyi vazifani bajarilmagan deb belgilash",
   "subtask-done-no-permission": "Bu quyi vazifaning bajarilgan yoki bajarilmaganligini oʻzgartira olmaysiz",
   "board-view-calendar-mode": "Kalendar rejimi",
-  "board-view-multiboard-cal": "Bir nechta taxta uchun taqvim"
+  "board-view-multiboard-cal": "Bir nechta taxta uchun taqvim",
+  "wip-limit-groups": "WIP chegarasini yoqing (Roʻyxat)",
+  "wip-limit-group-name-placeholder": "Ism (ixtiyoriy)",
+  "wip-limit-group-add": "Qo'shish WIP chegarasini yoqing",
+  "wip-limit-group-select-swimlane": "-ni tanlang Suzish chizig'i",
+  "wip-limit-group-apply-swimlane": "Murojaat qiling Suzish chizig'i"
 }

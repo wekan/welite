@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Tandakan subtugas sebagai belum selesai",
   "subtask-done-no-permission": "Anda tidak boleh mengubah status penyelesaian subtugas ini",
   "board-view-calendar-mode": "Mod kalendar",
-  "board-view-multiboard-cal": "Kalendar (Semua Papan)"
+  "board-view-multiboard-cal": "Kalendar (Semua Papan)",
+  "wip-limit-groups": "Kumpulan Had WIP",
+  "wip-limit-group-name-placeholder": "Nama kumpulan (pilihan)",
+  "wip-limit-group-add": "Tambah kumpulan had WIP",
+  "wip-limit-group-select-swimlane": "Pilih Aliran Renang",
+  "wip-limit-group-apply-swimlane": "Guna Aliran Renang"
 }

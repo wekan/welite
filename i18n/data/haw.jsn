@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Hōʻailona i ka hana liʻiliʻi ʻaʻole i pau",
   "subtask-done-no-permission": "ʻAʻole hiki iā ʻoe ke hoʻololi i ke kūlana pau o kēia hana liʻiliʻi",
   "board-view-calendar-mode": "ʻAno ʻalemanaka",
-  "board-view-multiboard-cal": "ʻalemanaka (Nā papa a pau)"
+  "board-view-multiboard-cal": "ʻalemanaka (Nā papa a pau)",
+  "wip-limit-groups": "hoʻā WIP limika (Papa inoa)",
+  "wip-limit-group-name-placeholder": "Inoa (koho)",
+  "wip-limit-group-add": "Hoʻohui hoʻā WIP limika",
+  "wip-limit-group-select-swimlane": "koho papa Ala",
+  "wip-limit-group-apply-swimlane": "hoʻohana Ala"
 }

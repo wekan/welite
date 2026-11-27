@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Ënneraufgab als net erleedegt markéieren",
   "subtask-done-no-permission": "Dir kënnt net änneren, ob dës Ënneraufgab erleedegt ass",
   "board-view-calendar-mode": "Kalennermodus",
-  "board-view-multiboard-cal": "Kalender (All Tafelen)"
+  "board-view-multiboard-cal": "Kalender (All Tafelen)",
+  "wip-limit-groups": "WIP-Limit einschalten (Lëscht)",
+  "wip-limit-group-name-placeholder": "Numm (fakultativ)",
+  "wip-limit-group-add": "Derbäisetzen WIP-Limit einschalten",
+  "wip-limit-group-select-swimlane": "Board auswielen Bunn",
+  "wip-limit-group-apply-swimlane": "Übernehmen Bunn"
 }

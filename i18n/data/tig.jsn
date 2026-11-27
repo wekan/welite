@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ንኡስ ዕዮ ከም ዘይተወድአ ምልክት ግበር",
   "subtask-done-no-permission": "እዚ ንኡስ ዕዮ ተወዲኡ ወይ ዘይተወድአ ምዃኑ ክትቕይር ኣይትኽእልን",
   "board-view-calendar-mode": "ኣገባብ አምዕል ለልተዐለብ",
-  "board-view-multiboard-cal": "ዓውደ ኣዋርሕ (ኩሎም ምዱዳት)"
+  "board-view-multiboard-cal": "ዓውደ ኣዋርሕ (ኩሎም ምዱዳት)",
+  "wip-limit-groups": "ደረት WIP ፍቐድ (ዝርዝር)",
+  "wip-limit-group-name-placeholder": "ስሜት (ብድልየት)",
+  "wip-limit-group-add": "ወስክ ደረት WIP ፍቐድ",
+  "wip-limit-group-select-swimlane": "ምረጽ መገዲ",
+  "wip-limit-group-apply-swimlane": "ተግብር መገዲ"
 }

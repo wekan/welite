@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marca sa suta-atividade comente no fata",
   "subtask-done-no-permission": "Non podes cambiare si custa suta-atividade est fata",
   "board-view-calendar-mode": "Modalidade calendàriu",
-  "board-view-multiboard-cal": "Calendàriu (totu sas tàulas)"
+  "board-view-multiboard-cal": "Calendàriu (totu sas tàulas)",
+  "wip-limit-groups": "Grupos de lìmite WIP",
+  "wip-limit-group-name-placeholder": "Nùmene de su grupu (optzionale)",
+  "wip-limit-group-add": "Agiunghe unu grupu de lìmite WIP",
+  "wip-limit-group-select-swimlane": "Seletziona sa corsia",
+  "wip-limit-group-apply-swimlane": "Àplica a sa corsia"
 }

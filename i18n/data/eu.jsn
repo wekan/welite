@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Markatu azpizeregina egin gabe",
   "subtask-done-no-permission": "Ezin duzu aldatu azpizeregin hau eginda dagoen ala ez",
   "board-view-calendar-mode": "Egutegi modua",
-  "board-view-multiboard-cal": "Egutegia (Arbel guztiak)"
+  "board-view-multiboard-cal": "Egutegia (Arbel guztiak)",
+  "wip-limit-groups": "WIP mugaren taldeak",
+  "wip-limit-group-name-placeholder": "Taldearen izena (aukerakoa)",
+  "wip-limit-group-add": "Gehitu WIP mugaren taldea",
+  "wip-limit-group-select-swimlane": "Hautatu arbela Carril",
+  "wip-limit-group-apply-swimlane": "Aplikatu Carril"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Означи ја подзадачата како незавршена",
   "subtask-done-no-permission": "Не можете да промените дали оваа подзадача е завршена",
   "board-view-calendar-mode": "Календарски режим",
-  "board-view-multiboard-cal": "Календар (Сите табли)"
+  "board-view-multiboard-cal": "Календар (Сите табли)",
+  "wip-limit-groups": "Групи со ограничување на WIP",
+  "wip-limit-group-name-placeholder": "Име на групата (не е задолжително)",
+  "wip-limit-group-add": "Додади група со ограничување на WIP",
+  "wip-limit-group-select-swimlane": "Изберете табло Поступак",
+  "wip-limit-group-apply-swimlane": "Приложи Поступак"
 }

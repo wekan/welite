@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merkitse alitehtävä keskeneräiseksi",
   "subtask-done-no-permission": "Et voi muuttaa tämän alitehtävän valmistumistilaa",
   "board-view-calendar-mode": "Kalenteritila",
-  "board-view-multiboard-cal": "Kalenteri (Kaikki taulut)"
+  "board-view-multiboard-cal": "Kalenteri (Kaikki taulut)",
+  "wip-limit-groups": "Keskeneräisen työn ryhmärajat",
+  "wip-limit-group-name-placeholder": "Ryhmän nimi (valinnainen)",
+  "wip-limit-group-add": "Lisää keskeneräisen työn ryhmäraja",
+  "wip-limit-group-select-swimlane": "Valitse taulu Uimarata",
+  "wip-limit-group-apply-swimlane": "Käytä Uimarata"
 }

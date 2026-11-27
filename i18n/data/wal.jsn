@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Guutta oosuwaa wurssettibeennaagaa gidi malaata",
   "subtask-done-no-permission": "Ha guutta oosoy wurssettidaakko laammana danddayakka",
   "board-view-calendar-mode": "Wodiyaa qoodaa hanotaa",
-  "board-view-multiboard-cal": "Wodiyaa qoodaa (Ubba bookkiyata)"
+  "board-view-multiboard-cal": "Wodiyaa qoodaa (Ubba bookkiyata)",
+  "wip-limit-groups": "WIP wurssettaa shiishshuwata",
+  "wip-limit-group-name-placeholder": "Sunttaa (dooruwaa)",
+  "wip-limit-group-add": "WIP wurssettaa shiishshuwaa gujja",
+  "wip-limit-group-select-swimlane": "Ogiyaa doora",
+  "wip-limit-group-apply-swimlane": "Ogiyaa bolla oosissa"
 }

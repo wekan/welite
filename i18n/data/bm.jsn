@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Baara fitini taamasiyɛn ko a ma ban",
   "subtask-done-no-permission": "I tɛ se ka nin baara fitini banni yɛlɛma",
   "board-view-calendar-mode": "Kalandiriye cogo",
-  "board-view-multiboard-cal": "Donw kalandiriye (Walan bɛɛ)"
+  "board-view-multiboard-cal": "Donw kalandiriye (Walan bɛɛ)",
+  "wip-limit-groups": "WIP dantigɛ da (Sɛbɛn)",
+  "wip-limit-group-name-placeholder": "Tɔgɔ (i sago)",
+  "wip-limit-group-add": "Fara a kan WIP dantigɛ da",
+  "wip-limit-group-select-swimlane": "Tabali sugandi Sira",
+  "wip-limit-group-apply-swimlane": "A kɛ Sira"
 }

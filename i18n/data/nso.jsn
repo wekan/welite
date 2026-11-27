@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Swaya mošomo-potlana o sa fela",
   "subtask-done-no-permission": "O ka se fetoše ge e ba mošomo-potlana wo o feditšwe",
   "board-view-calendar-mode": "Mokgwa wa khalendara",
-  "board-view-multiboard-cal": "Khalentara (Dipoto ka moka)"
+  "board-view-multiboard-cal": "Khalentara (Dipoto ka moka)",
+  "wip-limit-groups": "Dumelela moedi wa WIP (Lelokelelo)",
+  "wip-limit-group-name-placeholder": "Leina (ga se gapeletšo)",
+  "wip-limit-group-add": "Oketša Dumelela moedi wa WIP",
+  "wip-limit-group-select-swimlane": "Kgetha boto Tsela",
+  "wip-limit-group-apply-swimlane": "Diriša Tsela"
 }

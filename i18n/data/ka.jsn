@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ქვეამოცანის შეუსრულებლად მონიშვნა",
   "subtask-done-no-permission": "ამ ქვეამოცანის შესრულების მდგომარეობის შეცვლა არ შეგიძლიათ",
   "board-view-calendar-mode": "კალენდრის რეჟიმი",
-  "board-view-multiboard-cal": "კალენდარი (ყველა დაფა)"
+  "board-view-multiboard-cal": "კალენდარი (ყველა დაფა)",
+  "wip-limit-groups": "WIP ლიმიტის ჯგუფები",
+  "wip-limit-group-name-placeholder": "ჯგუფის სახელი (არასავალდებულო)",
+  "wip-limit-group-add": "WIP ლიმიტის ჯგუფის დამატება",
+  "wip-limit-group-select-swimlane": "აირჩიეთ ბილიკი",
+  "wip-limit-group-apply-swimlane": "გამოყენება ბილიკი"
 }

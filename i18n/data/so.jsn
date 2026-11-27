@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "U calaamadee hawsha hoose aan la qaban",
   "subtask-done-no-permission": "Ma beddeli kartid in hawshan hoose la qabtay iyo in kale",
   "board-view-calendar-mode": "Habka kalandarka",
-  "board-view-multiboard-cal": "Kalandar (Dhammaan sabuuradaha)"
+  "board-view-multiboard-cal": "Kalandar (Dhammaan sabuuradaha)",
+  "wip-limit-groups": "Awood sii Xadka WIP (Liis)",
+  "wip-limit-group-name-placeholder": "Magac (ikhtiyaari)",
+  "wip-limit-group-add": "Ku dar Awood sii Xadka WIP",
+  "wip-limit-group-select-swimlane": "Dooro da Waddo",
+  "wip-limit-group-apply-swimlane": "Codso Waddo"
 }

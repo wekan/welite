@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Označiť čiastkovú úlohu ako nedokončenú",
   "subtask-done-no-permission": "Nemôžete meniť, či je táto čiastková úloha dokončená",
   "board-view-calendar-mode": "Režim kalendára",
-  "board-view-multiboard-cal": "Kalendár viacerých násteniek"
+  "board-view-multiboard-cal": "Kalendár viacerých násteniek",
+  "wip-limit-groups": "Skupiny limitu WIP",
+  "wip-limit-group-name-placeholder": "Názov skupiny (voliteľné)",
+  "wip-limit-group-add": "Pridať skupinu limitu WIP",
+  "wip-limit-group-select-swimlane": "Zvoliť nástenku Dráha",
+  "wip-limit-group-apply-swimlane": "Použiť Dráha"
 }

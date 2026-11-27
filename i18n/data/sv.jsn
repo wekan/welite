@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Markera deluppgiften som inte klar",
   "subtask-done-no-permission": "Du kan inte ändra om den här deluppgiften är klar",
   "board-view-calendar-mode": "Kalenderläge",
-  "board-view-multiboard-cal": "Kalender (Alla tavlor)"
+  "board-view-multiboard-cal": "Kalender (Alla tavlor)",
+  "wip-limit-groups": "WIP-gränsgrupper",
+  "wip-limit-group-name-placeholder": "Gruppnamn (valfritt)",
+  "wip-limit-group-add": "Lägg till WIP-gränsgrupp",
+  "wip-limit-group-select-swimlane": "Välj tavla Simbana",
+  "wip-limit-group-apply-swimlane": "Tillämpa Simbana"
 }

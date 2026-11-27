@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Subtaak als niet klaar markeren",
   "subtask-done-no-permission": "U kunt niet wijzigen of deze subtaak klaar is",
   "board-view-calendar-mode": "Kalendermodus",
-  "board-view-multiboard-cal": "Kalender (Alle borden)"
+  "board-view-multiboard-cal": "Kalender (Alle borden)",
+  "wip-limit-groups": "Activeer WIP limiet (Lijst)",
+  "wip-limit-group-name-placeholder": "Naam (optioneel)",
+  "wip-limit-group-add": "Toevoegen Activeer WIP limiet",
+  "wip-limit-group-select-swimlane": "Selecteer Werkbaan",
+  "wip-limit-group-apply-swimlane": "Aanmelden Werkbaan"
 }

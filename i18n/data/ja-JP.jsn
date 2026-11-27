@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "サブタスクを未完了にする",
   "subtask-done-no-permission": "このサブタスクの完了状態を変更する権限がありません",
   "board-view-calendar-mode": "カレンダーモード",
-  "board-view-multiboard-cal": "カレンダー (全てのボード)"
+  "board-view-multiboard-cal": "カレンダー (全てのボード)",
+  "wip-limit-groups": "WIP制限グループ",
+  "wip-limit-group-name-placeholder": "グループ名(任意)",
+  "wip-limit-group-add": "WIP制限グループを追加",
+  "wip-limit-group-select-swimlane": "を選択 スイムレーン",
+  "wip-limit-group-apply-swimlane": "適用 スイムレーン"
 }

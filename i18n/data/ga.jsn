@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marcáil an fo-thasc mar neamhdhéanta",
   "subtask-done-no-permission": "Ní féidir leat a athrú an bhfuil an fo-thasc seo déanta",
   "board-view-calendar-mode": "Mód féilire",
-  "board-view-multiboard-cal": "Féilire (Gach clár)"
+  "board-view-multiboard-cal": "Féilire (Gach clár)",
+  "wip-limit-groups": "Grúpaí Teorainn WIP",
+  "wip-limit-group-name-placeholder": "Ainm an ghrúpa (roghnach)",
+  "wip-limit-group-add": "Cuir grúpa teorann WIP leis",
+  "wip-limit-group-select-swimlane": "Roghnaigh Lána",
+  "wip-limit-group-apply-swimlane": "Cuir i bhfeidhm ar an lána"
 }

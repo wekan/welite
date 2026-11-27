@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marcar la sutincumbensa sco betg fatga",
   "subtask-done-no-permission": "Vus na pudais betg midar sche questa sutincumbensa è fatga",
   "board-view-calendar-mode": "Modus chalender",
-  "board-view-multiboard-cal": "Chalender da pliras tabellas"
+  "board-view-multiboard-cal": "Chalender da pliras tabellas",
+  "wip-limit-groups": "Gruppas da limita WIP",
+  "wip-limit-group-name-placeholder": "Num da la gruppa (facultativ)",
+  "wip-limit-group-add": "Agiuntar ina gruppa da limita WIP",
+  "wip-limit-group-select-swimlane": "Tscherner la swimlane",
+  "wip-limit-group-apply-swimlane": "Applitgar a la swimlane"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merkja undirverkefni sem ólokið",
   "subtask-done-no-permission": "Þú getur ekki breytt því hvort þessu undirverkefni sé lokið",
   "board-view-calendar-mode": "Dagatalsstilling",
-  "board-view-multiboard-cal": "Dagatal (Allar töflur)"
+  "board-view-multiboard-cal": "Dagatal (Allar töflur)",
+  "wip-limit-groups": "WIP-markahópar",
+  "wip-limit-group-name-placeholder": "Nafn hóps (valfrjálst)",
+  "wip-limit-group-add": "Bæta við WIP-markahópi",
+  "wip-limit-group-select-swimlane": "Velja töflu Sundbraut",
+  "wip-limit-group-apply-swimlane": "Virkja Sundbraut"
 }

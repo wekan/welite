@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Өҫтәмә бурысты әҙер түгел тип билдәләү",
   "subtask-done-no-permission": "Һеҙ был өҫтәмә бурыстың әҙерлеген үҙгәртә алмайһығыҙ",
   "board-view-calendar-mode": "Календарь режимы",
-  "board-view-multiboard-cal": "Календарь (Бөтә такталар)"
+  "board-view-multiboard-cal": "Календарь (Бөтә такталар)",
+  "wip-limit-groups": "WIP сикләүен ҡабыҙырға (Исемлек)",
+  "wip-limit-group-name-placeholder": "Исем (мотлаҡ түгел)",
+  "wip-limit-group-add": "Өҫтәү WIP сикләүен ҡабыҙырға",
+  "wip-limit-group-select-swimlane": "Таҡтаны һайларға Юл",
+  "wip-limit-group-apply-swimlane": "Ҡулланырға Юл"
 }

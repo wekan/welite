@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Cowree y far-obbyr myr neuhjeant",
   "subtask-done-no-permission": "Cha vod oo caghlaa vel y far-obbyr shoh jeant",
   "board-view-calendar-mode": "Mod mealeyder",
-  "board-view-multiboard-cal": "Feaillere (Ooilley ny boayrdyn)"
+  "board-view-multiboard-cal": "Feaillere (Ooilley ny boayrdyn)",
+  "wip-limit-groups": "Cur eallagh WIP er (Rolley)",
+  "wip-limit-group-name-placeholder": "Ennym (reihyssagh)",
+  "wip-limit-group-add": "Cur rish Cur eallagh WIP er",
+  "wip-limit-group-select-swimlane": "Reih boayrd Cassan",
+  "wip-limit-group-apply-swimlane": "Cur rish Cassan"
 }

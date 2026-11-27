@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ذیلی کام کو نامکمل نشان زد کریں",
   "subtask-done-no-permission": "آپ اس ذیلی کام کی تکمیل کی حالت نہیں بدل سکتے",
   "board-view-calendar-mode": "تقویم کا انداز",
-  "board-view-multiboard-cal": "تقویم (تمام بورڈز)"
+  "board-view-multiboard-cal": "تقویم (تمام بورڈز)",
+  "wip-limit-groups": "WIP حد گروپس",
+  "wip-limit-group-name-placeholder": "گروپ کا نام (اختیاری)",
+  "wip-limit-group-add": "WIP حد گروپ شامل کریں",
+  "wip-limit-group-select-swimlane": "سویم لین منتخب کریں",
+  "wip-limit-group-apply-swimlane": "سویم لین پر لاگو کریں"
 }

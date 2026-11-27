@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Alt görevi tamamlanmamış olarak işaretle",
   "subtask-done-no-permission": "Bu alt görevin tamamlanma durumunu değiştiremezsiniz",
   "board-view-calendar-mode": "Takvim modu",
-  "board-view-multiboard-cal": "Takvim (Tüm panolar)"
+  "board-view-multiboard-cal": "Takvim (Tüm panolar)",
+  "wip-limit-groups": "WIP Limit Grupları",
+  "wip-limit-group-name-placeholder": "Grup adı (isteğe bağlı)",
+  "wip-limit-group-add": "WIP limit grubu ekle",
+  "wip-limit-group-select-swimlane": "yu Seçin Kulvar",
+  "wip-limit-group-apply-swimlane": "Uygula Kulvar"
 }

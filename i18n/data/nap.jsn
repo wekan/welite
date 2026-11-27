@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Segna 'o sotto-cumpito comme nun fatto",
   "subtask-done-no-permission": "Nun può cagnà si stu sotto-cumpito è fatto o no",
   "board-view-calendar-mode": "Modo calannario",
-  "board-view-multiboard-cal": "Calannàrio (Tutt' 'e tavule)"
+  "board-view-multiboard-cal": "Calannàrio (Tutt' 'e tavule)",
+  "wip-limit-groups": "Attiva limite Work In Progress (Lista)",
+  "wip-limit-group-name-placeholder": "Nomme (facultativo)",
+  "wip-limit-group-add": "Azzeccà Attiva limite Work In Progress",
+  "wip-limit-group-select-swimlane": "Sceglie tavula Corsia",
+  "wip-limit-group-apply-swimlane": "Applica Corsia"
 }

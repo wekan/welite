@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Màndargaal liggéey wu ndaw wi ni lu jeexul",
   "subtask-done-no-permission": "Mënuloo soppi ndax liggéey wu ndaw wii jeex na walla deet",
   "board-view-calendar-mode": "Anam Kalandriye",
-  "board-view-multiboard-cal": "Kalandriye bu ay tablo"
+  "board-view-multiboard-cal": "Kalandriye bu ay tablo",
+  "wip-limit-groups": "Activer la limite WIP (Limu)",
+  "wip-limit-group-name-placeholder": "Tur (optionnel)",
+  "wip-limit-group-add": "Yokk Activer la limite WIP",
+  "wip-limit-group-select-swimlane": "Sélectionner le tableau Yoon",
+  "wip-limit-group-apply-swimlane": "Appliquer Yoon"
 }

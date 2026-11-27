@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marchează subsarcina ca nefinalizată",
   "subtask-done-no-permission": "Nu puteți modifica starea de finalizare a acestei subsarcini",
   "board-view-calendar-mode": "Mod calendar",
-  "board-view-multiboard-cal": "Calendar (toate panourile)"
+  "board-view-multiboard-cal": "Calendar (toate panourile)",
+  "wip-limit-groups": "Grupuri de limită WIP",
+  "wip-limit-group-name-placeholder": "Nume grup (opțional)",
+  "wip-limit-group-add": "Adaugă grup de limită WIP",
+  "wip-limit-group-select-swimlane": "Selectează culoarul",
+  "wip-limit-group-apply-swimlane": "Aplică la culoar"
 }

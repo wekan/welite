@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Tohua te tūmahi-iti kāore anō kia oti",
   "subtask-done-no-permission": "Kāore e taea e koe te panoni mēnā kua oti tēnei tūmahi-iti",
   "board-view-calendar-mode": "Aratau maramataka",
-  "board-view-multiboard-cal": "Maramataka (Ngā papa katoa)"
+  "board-view-multiboard-cal": "Maramataka (Ngā papa katoa)",
+  "wip-limit-groups": "Whakahohe Tepe WIP (Rārangi)",
+  "wip-limit-group-name-placeholder": "Ingoa (kōwhiringa)",
+  "wip-limit-group-add": "Tāpiri Whakahohe Tepe WIP",
+  "wip-limit-group-select-swimlane": "Tīpako Ara",
+  "wip-limit-group-apply-swimlane": "Hoatu Ara"
 }

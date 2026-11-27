@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Fungha xintirhwana tanihi lexi nga hetiwangiki",
   "subtask-done-no-permission": "A wu koti ku cinca loko xintirhwana lexi xi hetiwile",
   "board-view-calendar-mode": "Xiyimo xa Khalendara",
-  "board-view-multiboard-cal": "khalendara (Tibodo hinkwato)"
+  "board-view-multiboard-cal": "khalendara (Tibodo hinkwato)",
+  "wip-limit-groups": "Mintlawa ya Mpimo wa WIP",
+  "wip-limit-group-name-placeholder": "Vito (swa ku tihlawulela)",
+  "wip-limit-group-add": "Engetela ntlawa wa mpimo wa WIP",
+  "wip-limit-group-select-swimlane": "hlawula bodo Ndlela",
+  "wip-limit-group-apply-swimlane": "Tirhisa eka ndlela"
 }

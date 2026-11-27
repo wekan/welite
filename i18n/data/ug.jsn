@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "تارماق ۋەزىپىنى تامام ئەمەس دەپ بەلگىلەش",
   "subtask-done-no-permission": "بۇ تارماق ۋەزىپىنىڭ تامام بولغان-بولمىغانلىقىنى ئۆزگەرتەلمەيسىز",
   "board-view-calendar-mode": "كالېندار ھالىتى",
-  "board-view-multiboard-cal": "كالېندار (بارلىق تاختايلار)"
+  "board-view-multiboard-cal": "كالېندار (بارلىق تاختايلار)",
+  "wip-limit-groups": "WIP چەكلىمىسىنى قوزغىتىڭ (تىزىملىك)",
+  "wip-limit-group-name-placeholder": "ئىسمى (ئىختىيارىي)",
+  "wip-limit-group-add": "قوش WIP چەكلىمىسىنى قوزغىتىڭ",
+  "wip-limit-group-select-swimlane": "ينى تاللاڭ يول",
+  "wip-limit-group-apply-swimlane": "ئىلتىماس قىلىڭ يول"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Fakaʻilongaʻi ʻa e ngāue iiki kuo teʻeki ʻosi",
   "subtask-done-no-permission": "ʻOku ʻikai te ke lava ʻo liliu pe kuo ʻosi ʻa e ngāue iiki ko ʻeni",
   "board-view-calendar-mode": "Founga Tohi māhina",
-  "board-view-multiboard-cal": "Kalena ʻo e ngaahi papa lahi"
+  "board-view-multiboard-cal": "Kalena ʻo e ngaahi papa lahi",
+  "wip-limit-groups": "Ngaahi kulupu ngataʻanga WIP",
+  "wip-limit-group-name-placeholder": "Hingoa (fili pē)",
+  "wip-limit-group-add": "Tānaki Faka-Tonga: Enable WIP Limit",
+  "wip-limit-group-select-swimlane": "Fili ha hala",
+  "wip-limit-group-apply-swimlane": "Fakahoko ki he hala"
 }

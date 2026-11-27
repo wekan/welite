@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ഉപജോലി പൂർത്തിയാകാത്തതായി അടയാളപ്പെടുത്തുക",
   "subtask-done-no-permission": "ഈ ഉപജോലി പൂർത്തിയായോ എന്നത് നിങ്ങൾക്ക് മാറ്റാനാവില്ല",
   "board-view-calendar-mode": "കലണ്ടർ മോഡ്",
-  "board-view-multiboard-cal": "കലണ്ടർ (എല്ലാ ബോർഡുകളും)"
+  "board-view-multiboard-cal": "കലണ്ടർ (എല്ലാ ബോർഡുകളും)",
+  "wip-limit-groups": "WIP പരിധി ഗ്രൂപ്പുകൾ",
+  "wip-limit-group-name-placeholder": "ഗ്രൂപ്പിന്റെ പേര് (ഐച്ഛികം)",
+  "wip-limit-group-add": "WIP പരിധി ഗ്രൂപ്പ് ചേർക്കുക",
+  "wip-limit-group-select-swimlane": "തിരഞ്ഞെടുക്കുക പാത",
+  "wip-limit-group-apply-swimlane": "പ്രയോഗിക്കുക പാത"
 }

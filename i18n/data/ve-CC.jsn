@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Segna el sotocompito come no fato",
   "subtask-done-no-permission": "No te pol canbiar se sto sotocompito el ze fato",
   "board-view-calendar-mode": "Modo calendario",
-  "board-view-multiboard-cal": "Całendario de pì quadri"
+  "board-view-multiboard-cal": "Całendario de pì quadri",
+  "wip-limit-groups": "Grupi de limiti WIP",
+  "wip-limit-group-name-placeholder": "Nome del grupo (facoltativo)",
+  "wip-limit-group-add": "Zonta un grupo de limiti WIP",
+  "wip-limit-group-select-swimlane": "Sernissi la corsia",
+  "wip-limit-group-apply-swimlane": "Àplica a la corsia"
 }

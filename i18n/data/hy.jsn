@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Նշել ենթաառաջադրանքը որպես չկատարված",
   "subtask-done-no-permission": "Դուք չեք կարող փոխել, թե արդյոք այս ենթաառաջադրանքը կատարված է",
   "board-view-calendar-mode": "Օրացույցի ռեժիմ",
-  "board-view-multiboard-cal": "Օրացույց (Բոլոր տախտակները)"
+  "board-view-multiboard-cal": "Օրացույց (Բոլոր տախտակները)",
+  "wip-limit-groups": "WIP սահմանի խմբեր",
+  "wip-limit-group-name-placeholder": "Խմբի անունը (ընտրովի)",
+  "wip-limit-group-add": "Ավելացնել WIP սահմանի խումբ",
+  "wip-limit-group-select-swimlane": "Ընտրեք տախտակ Լողավազան",
+  "wip-limit-group-apply-swimlane": "Դիմել Լողավազան"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Označi podnalogo kot nedokončano",
   "subtask-done-no-permission": "Ne morete spremeniti, ali je ta podnaloga dokončana",
   "board-view-calendar-mode": "Koledarski način",
-  "board-view-multiboard-cal": "Koledar (Vse table)"
+  "board-view-multiboard-cal": "Koledar (Vse table)",
+  "wip-limit-groups": "Skupine omejitev WIP",
+  "wip-limit-group-name-placeholder": "Ime skupine (neobvezno)",
+  "wip-limit-group-add": "Dodaj skupino omejitev WIP",
+  "wip-limit-group-select-swimlane": "Izberi plavalno stezo",
+  "wip-limit-group-apply-swimlane": "Uporabi za plavalno stezo"
 }

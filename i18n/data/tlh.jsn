@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Qu'Hom rInbe' 'e' yIper",
   "subtask-done-no-permission": "Qu'Homvam rInpu''a' 'e' DachoHlaHbe'",
   "board-view-calendar-mode": "'ISjaH mIw",
-  "board-view-multiboard-cal": "raSmey law' 'ISjaH"
+  "board-view-multiboard-cal": "raSmey law' 'ISjaH",
+  "wip-limit-groups": "WIP veH ghommey",
+  "wip-limit-group-name-placeholder": "ghom pong (DuH)",
+  "wip-limit-group-add": "WIP veH ghom yIchel",
+  "wip-limit-group-select-swimlane": "He yIwIv",
+  "wip-limit-group-apply-swimlane": "HevaD yIlo'"
 }

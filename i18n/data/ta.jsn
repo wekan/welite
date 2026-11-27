@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "துணைப் பணியை முடியாததாகக் குறி",
   "subtask-done-no-permission": "இந்தத் துணைப் பணி முடிந்ததா என்பதை நீங்கள் மாற்ற முடியாது",
   "board-view-calendar-mode": "நாள்காட்டி முறை",
-  "board-view-multiboard-cal": "நாள்காட்டி (அனைத்துப் பலகைகள்)"
+  "board-view-multiboard-cal": "நாள்காட்டி (அனைத்துப் பலகைகள்)",
+  "wip-limit-groups": "WIP வரம்பு குழுக்கள்",
+  "wip-limit-group-name-placeholder": "குழுவின் பெயர் (விருப்பத்தேர்வு)",
+  "wip-limit-group-add": "WIP வரம்பு குழு சேர்க்க",
+  "wip-limit-group-select-swimlane": "யைத் தேர்ந்தெடு நீச்சல்பாதை",
+  "wip-limit-group-apply-swimlane": "பயன்படுத்து நீச்சல்பாதை"
 }

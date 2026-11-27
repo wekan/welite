@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Faailoga le galuega laiti e lei maea",
   "subtask-done-no-permission": "E le mafai ona e suia pe ua maea lenei galuega laiti",
   "board-view-calendar-mode": "Faiga o le Kalena",
-  "board-view-multiboard-cal": "Kalena (Laupapa uma)"
+  "board-view-multiboard-cal": "Kalena (Laupapa uma)",
+  "wip-limit-groups": "Faaola le Tapulaa WIP (Lisi)",
+  "wip-limit-group-name-placeholder": "Igoa (e le faamalosia)",
+  "wip-limit-group-add": "Faaopoopo Faaola le Tapulaa WIP",
+  "wip-limit-group-select-swimlane": "Filifili le Ala",
+  "wip-limit-group-apply-swimlane": "Faaaoga Ala"
 }

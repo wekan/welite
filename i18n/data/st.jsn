@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Tshwaya mosebetsi o monyenyane o sa phethwa",
   "subtask-done-no-permission": "O ke ke wa fetola hore na mosebetsi ona o monyenyane o phethilwe",
   "board-view-calendar-mode": "Mokgwa wa khalendara",
-  "board-view-multiboard-cal": "Khalendara (Diboto tsohle)"
+  "board-view-multiboard-cal": "Khalendara (Diboto tsohle)",
+  "wip-limit-groups": "Dihlopha tsa moedi wa WIP",
+  "wip-limit-group-name-placeholder": "Lebitso la sehlopha (boikhethelo)",
+  "wip-limit-group-add": "Eketsa sehlopha sa moedi wa WIP",
+  "wip-limit-group-select-swimlane": "Kgetha tsela",
+  "wip-limit-group-apply-swimlane": "Sebedisa tseleng"
 }

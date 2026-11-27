@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Atzīmēt apakšuzdevumu kā nepabeigtu",
   "subtask-done-no-permission": "Jūs nevarat mainīt, vai šis apakšuzdevums ir pabeigts",
   "board-view-calendar-mode": "Kalendāra režīms",
-  "board-view-multiboard-cal": "Kalendārs (Visi dēļi)"
+  "board-view-multiboard-cal": "Kalendārs (Visi dēļi)",
+  "wip-limit-groups": "WIP limita grupas",
+  "wip-limit-group-name-placeholder": "Grupas nosaukums (nav obligāts)",
+  "wip-limit-group-add": "Pievienot WIP limita grupu",
+  "wip-limit-group-select-swimlane": "Izvēlēties joslu",
+  "wip-limit-group-apply-swimlane": "Saglabāt Josla"
 }

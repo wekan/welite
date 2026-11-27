@@ -9,6 +9,45 @@
     else list.form.submit();
   });
 
+  function openWipGroups() {
+    window.Popup.open('wipLimitGroups')();
+  }
+  function changeWipGroup(form, method, fields) {
+    if (form.dataset.saving) return;
+    form.dataset.saving = 'true';
+    var args = [method, form.dataset.board, form.dataset.group || ''];
+    if (fields) args.push(fields);
+    window.Meteor.callAsync.apply(null, args).then(function () {
+      window.Popup.close();
+      return up.reload('.board-wrapper').then(openWipGroups);
+    }).catch(function (err) {
+      form.querySelector('.js-wip-group-error').textContent = err.reason || err.message || String(err);
+    }).finally(function () { delete form.dataset.saving; });
+  }
+  up.on('click', '.js-open-board-wip-limit-groups', function (event) {
+    event.preventDefault();
+    openWipGroups();
+  });
+  up.on('click', '.js-wip-limit-group-apply-swimlane', function (event, button) {
+    var form = button.form;
+    var lane = form.querySelector('.js-wip-limit-group-swimlane').value;
+    if (!lane) return;
+    form.querySelectorAll('input[name=listIds]').forEach(function (input) {
+      input.checked = !input.dataset.swimlane || input.dataset.swimlane === lane;
+    });
+  });
+  up.on('submit', '.js-wip-group-form', function (event, form) {
+    event.preventDefault();
+    var data = new FormData(form);
+    changeWipGroup(form, form.dataset.group ? 'updateWipLimitGroup' : 'addWipLimitGroup', {
+      name: data.get('name'), limit: Number(data.get('limit')), listIds: data.getAll('listIds'),
+      enabled: data.get('enabled') !== 'false',
+    });
+  });
+  up.on('click', '.js-wip-group-delete', function (event, button) {
+    changeWipGroup(button.form, 'removeWipLimitGroup');
+  });
+
   var searchBoard = null;
   var searchTerm = '';
   var searchCardId = null;

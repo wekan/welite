@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Аялти ӗҫе вӗҫленмен тесе палӑртас",
   "subtask-done-no-permission": "Ҫак аялти ӗҫ вӗҫленнине эсир улӑштараймастӑр",
   "board-view-calendar-mode": "Календарь режимӗ",
-  "board-view-multiboard-cal": "Календарь (Пур хӑмасем)"
+  "board-view-multiboard-cal": "Календарь (Пур хӑмасем)",
+  "wip-limit-groups": "WIP чиккине хутас (Список)",
+  "wip-limit-group-name-placeholder": "Ят (кирлӗ мар)",
+  "wip-limit-group-add": "Хушас WIP чиккине хутас",
+  "wip-limit-group-select-swimlane": "суйлас Ҫул",
+  "wip-limit-group-apply-swimlane": "Усӑ курас Ҫул"
 }

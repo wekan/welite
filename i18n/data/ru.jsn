@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Отметить подзадачу как незавершённую",
   "subtask-done-no-permission": "Вы не можете изменять состояние завершения этой подзадачи",
   "board-view-calendar-mode": "Режим календаря",
-  "board-view-multiboard-cal": "Календарь (Все доски)"
+  "board-view-multiboard-cal": "Календарь (Все доски)",
+  "wip-limit-groups": "Группы лимита задач",
+  "wip-limit-group-name-placeholder": "Название группы (необязательно)",
+  "wip-limit-group-add": "Добавить группу лимита задач",
+  "wip-limit-group-select-swimlane": "Выбрать доску Дорожка",
+  "wip-limit-group-apply-swimlane": "Применить Дорожка"
 }

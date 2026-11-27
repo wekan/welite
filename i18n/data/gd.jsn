@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Comharraich am fo-ghnìomh mar neo-dheiseil",
   "subtask-done-no-permission": "Chan urrainn dhut atharrachadh a bheil am fo-ghnìomh seo deiseil",
   "board-view-calendar-mode": "Modh mìosachain",
-  "board-view-multiboard-cal": "Mìosachan (Na bùird uile)"
+  "board-view-multiboard-cal": "Mìosachan (Na bùird uile)",
+  "wip-limit-groups": "Buidhnean Cuingealachaidh WIP",
+  "wip-limit-group-name-placeholder": "Ainm a bhuidhinn (roghainneil)",
+  "wip-limit-group-add": "Cuir buidheann cuingealachaidh WIP ris",
+  "wip-limit-group-select-swimlane": "Tagh Slighe",
+  "wip-limit-group-apply-swimlane": "Cuir an sàs Slighe"
 }

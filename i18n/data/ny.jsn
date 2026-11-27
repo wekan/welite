@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Lembani kantchito kuti sikanathe",
   "subtask-done-no-permission": "Simungasinthe ngati kantchito aka katha kapena ayi",
   "board-view-calendar-mode": "Kaonekedwe ka Kalendala",
-  "board-view-multiboard-cal": "Kalendala (Mabolodi onse)"
+  "board-view-multiboard-cal": "Kalendala (Mabolodi onse)",
+  "wip-limit-groups": "Yatsani Malire a WIP (Mndandanda)",
+  "wip-limit-group-name-placeholder": "Dzina (mwakufuna)",
+  "wip-limit-group-add": "Onjezani Yatsani Malire a WIP",
+  "wip-limit-group-select-swimlane": "Sankhani bolodi Njira",
+  "wip-limit-group-apply-swimlane": "Gwiritsani ntchito Njira"
 }

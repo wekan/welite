@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merk undiruppgávu sum óliðuga",
   "subtask-done-no-permission": "Tú kanst ikki broyta, um henda undiruppgávan er liðug",
   "board-view-calendar-mode": "Kalendarastøða",
-  "board-view-multiboard-cal": "Kalendari (Allar talvur)"
+  "board-view-multiboard-cal": "Kalendari (Allar talvur)",
+  "wip-limit-groups": "Virkja WIP-mark (Listi)",
+  "wip-limit-group-name-placeholder": "Navn (valfrítt)",
+  "wip-limit-group-add": "Legg afturat Virkja WIP-mark",
+  "wip-limit-group-select-swimlane": "Vel talvu Bein",
+  "wip-limit-group-apply-swimlane": "Nýt Bein"
 }

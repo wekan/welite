@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ᎤᏍᏗ ᎠᏛᏁᏗ ᎾᎵᏍᏆᏛᎾ ᎯᏰᎸᏍᏓ",
   "subtask-done-no-permission": "Ꮭ ᏰᎵ ᏱᏣᏁᏟᏴᏍᏗ ᎯᎠ ᎤᏍᏗ ᎠᏛᏁᏗ ᎠᎵᏍᏆᏛ ᎨᏒ",
   "board-view-calendar-mode": "ᎢᎦ ᏗᎪᏪᎵ ᏄᏍᏛ",
-  "board-view-multiboard-cal": "ᎢᎦ ᏗᎪᏪᎵ (ᏂᎦᏛ ᏗᏟᎶᏍᏙᏗ)"
+  "board-view-multiboard-cal": "ᎢᎦ ᏗᎪᏪᎵ (ᏂᎦᏛ ᏗᏟᎶᏍᏙᏗ)",
+  "wip-limit-groups": "WIP ᎢᎦᎢ ᎤᏍᏚᎢᏍᏗ (ᎠᏎᏊᎢ)",
+  "wip-limit-group-name-placeholder": "ᏚᏙᎥ (ᎬᏩᏓᏓᏅᏖᏗ)",
+  "wip-limit-group-add": "ᎯᏟᏌ WIP ᎢᎦᎢ ᎤᏍᏚᎢᏍᏗ",
+  "wip-limit-group-select-swimlane": "ᎦᏍᎩᎸ ᎯᏑᏰᏍᏗ ᏅᏃᎯ",
+  "wip-limit-group-apply-swimlane": "ᎲᏗ ᏅᏃᎯ"
 }

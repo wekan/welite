@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merkya an is-ober avel anwrys",
   "subtask-done-no-permission": "Ny yllowgh chanjya mars yw an is-ober ma gwrys po na",
   "board-view-calendar-mode": "Modh dydhlyver",
-  "board-view-multiboard-cal": "Kalender (Oll an estyll)"
+  "board-view-multiboard-cal": "Kalender (Oll an estyll)",
+  "wip-limit-groups": "Ena fin WIP (Rol)",
+  "wip-limit-group-name-placeholder": "Hanow (dewisyadow)",
+  "wip-limit-group-add": "Keworra Ena fin WIP",
+  "wip-limit-group-select-swimlane": "Dewis estyllen Hyns",
+  "wip-limit-group-apply-swimlane": "Gorra yn ober Hyns"
 }

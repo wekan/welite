@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Märgi alaülesanne lõpetamata olekusse",
   "subtask-done-no-permission": "Sa ei saa muuta selle alaülesande lõpetatuse olekut",
   "board-view-calendar-mode": "Kalendrirežiim",
-  "board-view-multiboard-cal": "Kalender (Kõik lauad)"
+  "board-view-multiboard-cal": "Kalender (Kõik lauad)",
+  "wip-limit-groups": "WIP piirangugrupid",
+  "wip-limit-group-name-placeholder": "Rühma nimi (valikuline)",
+  "wip-limit-group-add": "Lisa WIP piirangugrupp",
+  "wip-limit-group-select-swimlane": "Valige ujumisrada",
+  "wip-limit-group-apply-swimlane": "Rakenda Ujumisrada"
 }

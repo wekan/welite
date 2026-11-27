@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Erka biçûk wekî neqediyayî nîşan bide",
   "subtask-done-no-permission": "Tu nikarî biguherînî ka ev erka biçûk qediyaye an na",
   "board-view-calendar-mode": "Moda salnameyê",
-  "board-view-multiboard-cal": "Salname (Hemû depo)"
+  "board-view-multiboard-cal": "Salname (Hemû depo)",
+  "wip-limit-groups": "Sînorê WIP çalak bike (Lîste)",
+  "wip-limit-group-name-placeholder": "Nav (bijare)",
+  "wip-limit-group-add": "Zêde bike Sînorê WIP çalak bike",
+  "wip-limit-group-select-swimlane": "hilbijêre Rêç",
+  "wip-limit-group-apply-swimlane": "Bisepîne Rêç"
 }

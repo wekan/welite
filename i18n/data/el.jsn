@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Επισήμανση υποεργασίας ως μη ολοκληρωμένης",
   "subtask-done-no-permission": "Δεν μπορείτε να αλλάξετε αν αυτή η υποεργασία έχει ολοκληρωθεί",
   "board-view-calendar-mode": "Λειτουργία ημερολογίου",
-  "board-view-multiboard-cal": "Ημερολόγιο (Όλοι οι πίνακες)"
+  "board-view-multiboard-cal": "Ημερολόγιο (Όλοι οι πίνακες)",
+  "wip-limit-groups": "Ομάδες ορίου WIP",
+  "wip-limit-group-name-placeholder": "Όνομα ομάδας (προαιρετικό)",
+  "wip-limit-group-add": "Προσθήκη ομάδας ορίου WIP",
+  "wip-limit-group-select-swimlane": "Επιλογή Πίνακα Διάδρομος",
+  "wip-limit-group-apply-swimlane": "Εφαρμογή Διάδρομος"
 }

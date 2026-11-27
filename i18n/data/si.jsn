@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "උපකාර්යය නිම නොකළ ලෙස සලකුණු කරන්න",
   "subtask-done-no-permission": "මෙම උපකාර්යය නිම කළාද යන්න ඔබට වෙනස් කළ නොහැක",
   "board-view-calendar-mode": "දින දසුන් ප්‍රකාරය",
-  "board-view-multiboard-cal": "දින දර්ශනය (සියලු පුවරු)"
+  "board-view-multiboard-cal": "දින දර්ශනය (සියලු පුවරු)",
+  "wip-limit-groups": "WIP සීමා කණ්ඩායම්",
+  "wip-limit-group-name-placeholder": "කණ්ඩායමේ නම (විකල්පයි)",
+  "wip-limit-group-add": "WIP සීමා කණ්ඩායමක් එක් කරන්න",
+  "wip-limit-group-select-swimlane": "තෝරන්න පථය",
+  "wip-limit-group-apply-swimlane": "යොදන්න පථය"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Kaa obere ọrụ ka emechaghị",
   "subtask-done-no-permission": "Ị nweghị ike ịgbanwe ma obere ọrụ a emechara",
   "board-view-calendar-mode": "Ụdị kalenda",
-  "board-view-multiboard-cal": "Kalenda (bọọdụ niile)"
+  "board-view-multiboard-cal": "Kalenda (bọọdụ niile)",
+  "wip-limit-groups": "Ìgùè Oke WIP",
+  "wip-limit-group-name-placeholder": "Aha ìgùè (nhọrọ)",
+  "wip-limit-group-add": "Tinye ìgùè oke WIP",
+  "wip-limit-group-select-swimlane": "Họrọ Ụgbọ mmiri",
+  "wip-limit-group-apply-swimlane": "Tinye Ụgbọ mmiri"
 }

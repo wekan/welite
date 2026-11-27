@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Board admins can create, edit, enable, disable and remove WIP limit
+  groups in Board Settings. Pick lists individually with the mouse or
+  keyboard, or select the lists of a swimlane together.
+
 - Multi Board Calendar shows dated cards from active board memberships in
   one read-only view, with each event prefixed by its board name. It respects
   card access, the current filters and the member's calendar preferences.

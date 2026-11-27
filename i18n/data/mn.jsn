@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Дэд даалгаврыг хийгдээгүй гэж тэмдэглэх",
   "subtask-done-no-permission": "Та энэ дэд даалгавар хийгдсэн эсэхийг өөрчлөх боломжгүй",
   "board-view-calendar-mode": "Хуанлийн горим",
-  "board-view-multiboard-cal": "Хуанли (Бүх самбарууд)"
+  "board-view-multiboard-cal": "Хуанли (Бүх самбарууд)",
+  "wip-limit-groups": "WIP хязгаарын бүлгүүд",
+  "wip-limit-group-name-placeholder": "Бүлгийн нэр (заавал биш)",
+  "wip-limit-group-add": "WIP хязгаарын бүлэг нэмэх",
+  "wip-limit-group-select-swimlane": "Усан зам сонгох",
+  "wip-limit-group-apply-swimlane": "Усан замд хэрэглэх"
 }

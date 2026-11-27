@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ಉಪಕಾರ್ಯವನ್ನು ಪೂರ್ಣಗೊಂಡಿಲ್ಲ ಎಂದು ಗುರುತಿಸಿ",
   "subtask-done-no-permission": "ಈ ಉಪಕಾರ್ಯ ಪೂರ್ಣಗೊಂಡಿದೆಯೇ ಎಂಬುದನ್ನು ನೀವು ಬದಲಾಯಿಸಲಾಗುವುದಿಲ್ಲ",
   "board-view-calendar-mode": "ಕ್ಯಾಲೆಂಡರ್ ಮೋಡ್",
-  "board-view-multiboard-cal": "ಕ್ಯಾಲೆಂಡರ್ (ಎಲ್ಲಾ ಫಲಕಗಳು)"
+  "board-view-multiboard-cal": "ಕ್ಯಾಲೆಂಡರ್ (ಎಲ್ಲಾ ಫಲಕಗಳು)",
+  "wip-limit-groups": "WIP ಮಿತಿ ಗುಂಪುಗಳು",
+  "wip-limit-group-name-placeholder": "ಗುಂಪಿನ ಹೆಸರು (ಐಚ್ಛಿಕ)",
+  "wip-limit-group-add": "WIP ಮಿತಿ ಗುಂಪು ಸೇರಿಸಿ",
+  "wip-limit-group-select-swimlane": "ಆಯ್ಕೆಮಾಡಿ ಪಥ",
+  "wip-limit-group-apply-swimlane": "ಅನ್ವಯಿಸಿ ಪಥ"
 }

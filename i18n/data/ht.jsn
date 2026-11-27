@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Make sou-travay la kòm pa fini",
   "subtask-done-no-permission": "Ou pa ka chanje si sou-travay sa a fini oswa non",
   "board-view-calendar-mode": "Mòd kalandriye",
-  "board-view-multiboard-cal": "Kalandriye (Tout tablo yo)"
+  "board-view-multiboard-cal": "Kalandriye (Tout tablo yo)",
+  "wip-limit-groups": "Gwoup limit WIP",
+  "wip-limit-group-name-placeholder": "Non gwoup la (opsyonèl)",
+  "wip-limit-group-add": "Ajoute yon gwoup limit WIP",
+  "wip-limit-group-select-swimlane": "Chwazi kouloir la",
+  "wip-limit-group-apply-swimlane": "Aplike nan kouloir la"
 }

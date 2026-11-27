@@ -476,3 +476,5 @@ calendar-mode.e2e.js
 
 44-calendar-date-display.e2e.js: Jalali board-view-cal has actual month boundaries and a single calendar title
 44-calendar-date-display.e2e.js: Jalali board-view-multiboard-cal has actual month boundaries and a single calendar title
+
+wip-limit-group-selection.e2e.js

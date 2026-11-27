@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "សម្គាល់កិច្ចការរងថាមិនទាន់ធ្វើរួច",
   "subtask-done-no-permission": "អ្នកមិនអាចផ្លាស់ប្តូរថាតើកិច្ចការរងនេះធ្វើរួចឬអត់បានទេ",
   "board-view-calendar-mode": "របៀបប្រតិទិន",
-  "board-view-multiboard-cal": "ប្រតិទិនសម្រាប់ក្តារច្រើន"
+  "board-view-multiboard-cal": "ប្រតិទិនសម្រាប់ក្តារច្រើន",
+  "wip-limit-groups": "ក្រុមកំណត់ WIP",
+  "wip-limit-group-name-placeholder": "ឈ្មោះក្រុម (ស្រេចចិត្ត)",
+  "wip-limit-group-add": "បន្ថែមក្រុមកំណត់ WIP",
+  "wip-limit-group-select-swimlane": "ជ្រើសរើសផ្លូវហែលទឹក",
+  "wip-limit-group-apply-swimlane": "អនុវត្ត ផ្លូវហែលទឹក"
 }

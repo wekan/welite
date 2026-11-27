@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Позначити підзавдання як незавершене",
   "subtask-done-no-permission": "Ви не можете змінювати стан завершення цього підзавдання",
   "board-view-calendar-mode": "Режим календаря",
-  "board-view-multiboard-cal": "Календар (Всі дошки)"
+  "board-view-multiboard-cal": "Календар (Всі дошки)",
+  "wip-limit-groups": "Групи ліміту завдань",
+  "wip-limit-group-name-placeholder": "Назва групи (необов'язково)",
+  "wip-limit-group-add": "Додати групу ліміту завдань",
+  "wip-limit-group-select-swimlane": "Обрати дошку Лінія",
+  "wip-limit-group-apply-swimlane": "Застосувати Лінія"
 }

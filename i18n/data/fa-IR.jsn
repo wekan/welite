@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "علامت‌گذاری زیر وظیفه به‌عنوان تکمیل‌نشده",
   "subtask-done-no-permission": "نمی‌توانید وضعیت تکمیل این زیر وظیفه را تغییر دهید",
   "board-view-calendar-mode": "حالت تقویم",
-  "board-view-multiboard-cal": "تقویم (همه بردها)"
+  "board-view-multiboard-cal": "تقویم (همه بردها)",
+  "wip-limit-groups": "گروه‌های محدودیت کار در جریان",
+  "wip-limit-group-name-placeholder": "نام گروه (اختیاری)",
+  "wip-limit-group-add": "افزودن گروه محدودیت",
+  "wip-limit-group-select-swimlane": "انتخاب مسیر",
+  "wip-limit-group-apply-swimlane": "اعمال مسیر"
 }

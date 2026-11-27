@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Markahan ang subtask bilang hindi tapos",
   "subtask-done-no-permission": "Hindi mo mababago kung tapos na ang subtask na ito",
   "board-view-calendar-mode": "Mode ng Kalendaryo",
-  "board-view-multiboard-cal": "Kalendaryo (Lahat ng pisara)"
+  "board-view-multiboard-cal": "Kalendaryo (Lahat ng pisara)",
+  "wip-limit-groups": "Mga Grupo ng Limitasyon ng WIP",
+  "wip-limit-group-name-placeholder": "Pangalan ng grupo (opsyonal)",
+  "wip-limit-group-add": "Magdagdag ng grupo ng limitasyon ng WIP",
+  "wip-limit-group-select-swimlane": "Piliin pisara Daanan",
+  "wip-limit-group-apply-swimlane": "Ilapat Daanan"
 }

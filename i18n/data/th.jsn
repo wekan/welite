@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ทำเครื่องหมายงานย่อยว่ายังไม่เสร็จ",
   "subtask-done-no-permission": "คุณไม่มีสิทธิ์เปลี่ยนสถานะเสร็จแล้วของงานย่อยนี้",
   "board-view-calendar-mode": "โหมดปฏิทิน",
-  "board-view-multiboard-cal": "Lịch (บอร์ดทั้งหมด)"
+  "board-view-multiboard-cal": "Lịch (บอร์ดทั้งหมด)",
+  "wip-limit-groups": "กลุ่มจำกัด WIP",
+  "wip-limit-group-name-placeholder": "ชื่อกลุ่ม (ไม่บังคับ)",
+  "wip-limit-group-add": "เพิ่มกลุ่มจำกัด WIP",
+  "wip-limit-group-select-swimlane": "เลือกบอร์ด สวิมเลน",
+  "wip-limit-group-apply-swimlane": "นำมาใช้ สวิมเลน"
 }

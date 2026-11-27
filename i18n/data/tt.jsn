@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Өстәмә биремне үтәлмәгән дип билгеләү",
   "subtask-done-no-permission": "Сез бу өстәмә биремнең үтәлгәнлеген үзгәртә алмыйсыз",
   "board-view-calendar-mode": "Календарь режимы",
-  "board-view-multiboard-cal": "Берничә такта календаре"
+  "board-view-multiboard-cal": "Берничә такта календаре",
+  "wip-limit-groups": "Башкарылучы эш күләмен чикләү төркемнәре",
+  "wip-limit-group-name-placeholder": "Төркем исеме (мәҗбүри түгел)",
+  "wip-limit-group-add": "Башкарылучы эш күләмен чикләү төркемен өстәү",
+  "wip-limit-group-select-swimlane": "Юлакны сайлау",
+  "wip-limit-group-apply-swimlane": "Юлакка куллану"
 }

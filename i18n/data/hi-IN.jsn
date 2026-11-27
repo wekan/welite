@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "उप-कार्य को अधूरा चिह्नित करें",
   "subtask-done-no-permission": "आप इस उप-कार्य की पूर्णता की स्थिति नहीं बदल सकते",
   "board-view-calendar-mode": "कैलेंडर मोड",
-  "board-view-multiboard-cal": "तिथि-पत्र (सभी बोर्ड)"
+  "board-view-multiboard-cal": "तिथि-पत्र (सभी बोर्ड)",
+  "wip-limit-groups": "WIP सीमा समूह",
+  "wip-limit-group-name-placeholder": "समूह का नाम (वैकल्पिक)",
+  "wip-limit-group-add": "WIP सीमा समूह जोड़ें",
+  "wip-limit-group-select-swimlane": "चुनें स्विमलेन",
+  "wip-limit-group-apply-swimlane": "लागू करें स्विमलेन"
 }

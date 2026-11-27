@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Oznacz podzadanie jako nieukończone",
   "subtask-done-no-permission": "Nie możesz zmienić stanu ukończenia tego podzadania",
   "board-view-calendar-mode": "Tryb kalendarza",
-  "board-view-multiboard-cal": "Kalendarz (Wszystkie tablice)"
+  "board-view-multiboard-cal": "Kalendarz (Wszystkie tablice)",
+  "wip-limit-groups": "Grupy limitu WIP",
+  "wip-limit-group-name-placeholder": "Nazwa grupy (opcjonalnie)",
+  "wip-limit-group-add": "Dodaj grupę limitu WIP",
+  "wip-limit-group-select-swimlane": "Wybierz tablicę Ścieżka",
+  "wip-limit-group-apply-swimlane": "Zastosuj Ścieżka"
 }

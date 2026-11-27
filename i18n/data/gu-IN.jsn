@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "સબટાસ્કને અપૂર્ણ ચિહ્નિત કરો",
   "subtask-done-no-permission": "આ સબટાસ્ક પૂર્ણ છે કે નહીં તે તમે બદલી શકતા નથી",
   "board-view-calendar-mode": "કૅલેન્ડર મોડ",
-  "board-view-multiboard-cal": "કેલેન્ડર (બધા બોર્ડ)"
+  "board-view-multiboard-cal": "કેલેન્ડર (બધા બોર્ડ)",
+  "wip-limit-groups": "WIP મર્યાદા જૂથો",
+  "wip-limit-group-name-placeholder": "જૂથનું નામ (વૈકલ્પિક)",
+  "wip-limit-group-add": "WIP મર્યાદા જૂથ ઉમેરો",
+  "wip-limit-group-select-swimlane": "પસંદ કરો સ્વિમલેન",
+  "wip-limit-group-apply-swimlane": "અરજી કરો સ્વિમલેન"
 }

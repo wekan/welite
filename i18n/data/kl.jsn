@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Suliassaq immikkoortoq naammassinngitsutut nalunaaqutseruk",
   "subtask-done-no-permission": "Suliassap immikkoortup naammassineranik allanngortitsisinnaanngilatit",
   "board-view-calendar-mode": "Ullorsiutitut takutitsineq",
-  "board-view-multiboard-cal": "Ullorsiut (Ilisarnaatit tamaasa)"
+  "board-view-multiboard-cal": "Ullorsiut (Ilisarnaatit tamaasa)",
+  "wip-limit-groups": "WIP-ip killissaa atulersiguk (Allattorsimaffik)",
+  "wip-limit-group-name-placeholder": "Ateq (piumasaqaataanngitsoq)",
+  "wip-limit-group-add": "Ilanngussuk WIP-ip killissaa atulersiguk",
+  "wip-limit-group-select-swimlane": "toqqaruk Aqqut",
+  "wip-limit-group-apply-swimlane": "Atoruk Aqqut"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ንዑስ ተግባሩን እንዳልተጠናቀቀ ምልክት አድርግ",
   "subtask-done-no-permission": "ይህ ንዑስ ተግባር መጠናቀቁን መቀየር አይችሉም",
   "board-view-calendar-mode": "የቀን መቁጠሪያ ሁነታ",
-  "board-view-multiboard-cal": "የቀን መቁጠሪያ (ሁሉም ሰሌዳዎች)"
+  "board-view-multiboard-cal": "የቀን መቁጠሪያ (ሁሉም ሰሌዳዎች)",
+  "wip-limit-groups": "የ WIP ገደብ ቡድኖች",
+  "wip-limit-group-name-placeholder": "የቡድን ስም (አማራጭ)",
+  "wip-limit-group-add": "የ WIP ገደብ ቡድን ጨምር",
+  "wip-limit-group-select-swimlane": "ይምረጡ መስመር",
+  "wip-limit-group-apply-swimlane": "ተግብር መስመር"
 }

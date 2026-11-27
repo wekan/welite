@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Бага даабариие дүүргэгдээгүй гэжэ тэмдэглэхэ",
   "subtask-done-no-permission": "Таанар энэ бага даабариин дүүргэгдэһэн эсэхые хубилгажа шадахагүйт",
   "board-view-calendar-mode": "Хуанлиин горим",
-  "board-view-multiboard-cal": "Хуанли (Бүхы самбарнууд)"
+  "board-view-multiboard-cal": "Хуанли (Бүхы самбарнууд)",
+  "wip-limit-groups": "WIP хизаар асааха (Жагсаалта)",
+  "wip-limit-group-name-placeholder": "Нэрэ (һайн дураараа)",
+  "wip-limit-group-add": "Нэмэхэ WIP хизаар асааха",
+  "wip-limit-group-select-swimlane": "шэлэхэ Зам",
+  "wip-limit-group-apply-swimlane": "Хэрэглэхэ Зам"
 }

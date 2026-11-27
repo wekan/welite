@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "علّم المهمة الفرعية بلي ما مداراش",
   "subtask-done-no-permission": "ما تقدرش تبدل واش هاد المهمة الفرعية مدارة",
   "board-view-calendar-mode": "وضع اليومية",
-  "board-view-multiboard-cal": "التقويم (كل اللوحات)"
+  "board-view-multiboard-cal": "التقويم (كل اللوحات)",
+  "wip-limit-groups": "مجموعات الحدّ ديال الخدمة الجارية (WIP)",
+  "wip-limit-group-name-placeholder": "اسم (اختياري)",
+  "wip-limit-group-add": "أضف تفعيل حد العمل الجاري (WIP)",
+  "wip-limit-group-select-swimlane": "ختار مسار",
+  "wip-limit-group-apply-swimlane": "طبّق على المسار"
 }

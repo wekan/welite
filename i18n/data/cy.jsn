@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Nodi'r is-dasg fel un heb ei gwneud",
   "subtask-done-no-permission": "Ni allwch newid a yw'r is-dasg hon wedi'i gwneud",
   "board-view-calendar-mode": "Modd calendr",
-  "board-view-multiboard-cal": "Calendr (Pob Bwrdd)"
+  "board-view-multiboard-cal": "Calendr (Pob Bwrdd)",
+  "wip-limit-groups": "Grwpiau Terfyn WIP",
+  "wip-limit-group-name-placeholder": "Enw'r grŵp (dewisol)",
+  "wip-limit-group-add": "Ychwanegu grŵp terfyn WIP",
+  "wip-limit-group-select-swimlane": "Dethol Lôn nofio",
+  "wip-limit-group-apply-swimlane": "Ymgeisiwch Lôn nofio"
 }

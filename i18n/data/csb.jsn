@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Òbznaczë pòdzadanié jakno niezrobioné",
   "subtask-done-no-permission": "Nie mòżesz zmienic, czë to pòdzadanié je zrobioné",
   "board-view-calendar-mode": "Trib kalãdarza",
-  "board-view-multiboard-cal": "Kalãdôrz wielu tôflów"
+  "board-view-multiboard-cal": "Kalãdôrz wielu tôflów",
+  "wip-limit-groups": "Włącz limit kôrtòw na liście (Lësta)",
+  "wip-limit-group-name-placeholder": "Miono (òpcjonalné)",
+  "wip-limit-group-add": "Dodac Włącz limit kôrtòw na liście",
+  "wip-limit-group-select-swimlane": "Wëbierzë stegnã",
+  "wip-limit-group-apply-swimlane": "Zastosëjë do stegnë"
 }

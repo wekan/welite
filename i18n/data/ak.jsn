@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Hyɛ adwuma ketewa no agyiraeɛ sɛ ɛnwieeɛ",
   "subtask-done-no-permission": "Wontumi nsesa sɛ adwuma ketewa yi awie anaa ɛnwieeɛ",
   "board-view-calendar-mode": "Kalenda kwan",
-  "board-view-multiboard-cal": "Kalenda (Bɔɔd nyinaa)"
+  "board-view-multiboard-cal": "Kalenda (Bɔɔd nyinaa)",
+  "wip-limit-groups": "WIP anohyeto akuw",
+  "wip-limit-group-name-placeholder": "Din (wobɛtumi apaw)",
+  "wip-limit-group-add": "Fa WIP anohyeto kuw ka ho",
+  "wip-limit-group-select-swimlane": "Paw Kwan",
+  "wip-limit-group-apply-swimlane": "Fa di dwuma wɔ adwuma kwan no mu"
 }

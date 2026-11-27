@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Maanto gollel ngel no timmaani",
   "subtask-done-no-permission": "A waawaa waylude so gollel ngel timmii walla timmaani",
   "board-view-calendar-mode": "Mbaydi haatumeere",
-  "board-view-multiboard-cal": "Haatumeere (Alluuje fof)"
+  "board-view-multiboard-cal": "Haatumeere (Alluuje fof)",
+  "wip-limit-groups": "Hurmin keerol WIP (Doggol)",
+  "wip-limit-group-name-placeholder": "Innde (suɓaaɗum)",
+  "wip-limit-group-add": "Ɓeydu Hurmin keerol WIP",
+  "wip-limit-group-select-swimlane": "Suɓo alluwal Laawol",
+  "wip-limit-group-apply-swimlane": "Huuwtin Laawol"
 }

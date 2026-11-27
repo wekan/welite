@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Shëno nëndetyrën si të papërfunduar",
   "subtask-done-no-permission": "Nuk mund të ndryshoni nëse kjo nëndetyrë është përfunduar",
   "board-view-calendar-mode": "Mënyra e kalendarit",
-  "board-view-multiboard-cal": "Kalendari (Të gjitha tabelat)"
+  "board-view-multiboard-cal": "Kalendari (Të gjitha tabelat)",
+  "wip-limit-groups": "Grupe kufiri WIP",
+  "wip-limit-group-name-placeholder": "Emri i grupit (opsionale)",
+  "wip-limit-group-add": "Shto grup kufiri WIP",
+  "wip-limit-group-select-swimlane": "Zgjidh tabelën Korsi",
+  "wip-limit-group-apply-swimlane": "Zbato Korsi"
 }

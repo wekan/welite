@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Immarka l-kompitu sekondarju bħala mhux lest",
   "subtask-done-no-permission": "Ma tistax tibdel jekk dan il-kompitu sekondarju huwiex lest",
   "board-view-calendar-mode": "Modalità tal-kalendarju",
-  "board-view-multiboard-cal": "Kalendarju ta’ diversi bordijiet"
+  "board-view-multiboard-cal": "Kalendarju ta’ diversi bordijiet",
+  "wip-limit-groups": "Gruppi tal-Limitu WIP",
+  "wip-limit-group-name-placeholder": "Isem tal-grupp (mhux obbligatorju)",
+  "wip-limit-group-add": "Żid grupp tal-limitu WIP",
+  "wip-limit-group-select-swimlane": "Agħżel Korsija",
+  "wip-limit-group-apply-swimlane": "Applika għall-korsija"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "סימון תת משימה כלא הושלמה",
   "subtask-done-no-permission": "אינכם יכולים לשנות אם תת המשימה הזו הושלמה",
   "board-view-calendar-mode": "מצב לוח שנה",
-  "board-view-multiboard-cal": "לוח שנה (כל הלוחות)"
+  "board-view-multiboard-cal": "לוח שנה (כל הלוחות)",
+  "wip-limit-groups": "קבוצות מגבלת עבודה בתהליך",
+  "wip-limit-group-name-placeholder": "שם הקבוצה (אופציונלי)",
+  "wip-limit-group-add": "הוספת קבוצת מגבלה",
+  "wip-limit-group-select-swimlane": "בחירת מסלול",
+  "wip-limit-group-apply-swimlane": "החלה מסלול"
 }

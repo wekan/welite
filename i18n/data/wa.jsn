@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marker l' sos-bouye come nén fineye",
   "subtask-done-no-permission": "Vos n' poloz nén candjî si cisse sos-bouye ci est fineye",
   "board-view-calendar-mode": "Môde calindrî",
-  "board-view-multiboard-cal": "Calindrî di pus d' on tåvlea"
+  "board-view-multiboard-cal": "Calindrî di pus d' on tåvlea",
+  "wip-limit-groups": "Groupes di limite WIP",
+  "wip-limit-group-name-placeholder": "No do groupe (optèn)",
+  "wip-limit-group-add": "Radjouter on groupe di limite WIP",
+  "wip-limit-group-select-swimlane": "Tchoezi on coridôr",
+  "wip-limit-group-apply-swimlane": "Mete en ouve sol coridôr"
 }

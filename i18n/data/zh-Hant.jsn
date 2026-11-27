@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "將子任務標記為未完成",
   "subtask-done-no-permission": "你無權變更此子任務的完成狀態",
   "board-view-calendar-mode": "行事曆模式",
-  "board-view-multiboard-cal": "多看板日曆"
+  "board-view-multiboard-cal": "多看板日曆",
+  "wip-limit-groups": "WIP 限制群組",
+  "wip-limit-group-name-placeholder": "群組名稱（選擇性）",
+  "wip-limit-group-add": "新增 WIP 限制群組",
+  "wip-limit-group-select-swimlane": "選取泳道",
+  "wip-limit-group-apply-swimlane": "套用至泳道"
 }

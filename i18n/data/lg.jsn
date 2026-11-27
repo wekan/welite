@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Teeka akabonero nti omulimu omutono tegunnaggwa",
   "subtask-done-no-permission": "Tosobola kukyusa oba omulimu guno omutono guwedde",
   "board-view-calendar-mode": "Engeri ya Kalenda",
-  "board-view-multiboard-cal": "Kalenda y'embaawo ennyingi"
+  "board-view-multiboard-cal": "Kalenda y'embaawo ennyingi",
+  "wip-limit-groups": "Sobozesa WIP Limit (Olukalala)",
+  "wip-limit-group-name-placeholder": "Erinnya (kya kwelonda)",
+  "wip-limit-group-add": "Yongerako Sobozesa WIP Limit",
+  "wip-limit-group-select-swimlane": "Londa Lubaawo Akakubo",
+  "wip-limit-group-apply-swimlane": "Kozesa ku kakubo"
 }

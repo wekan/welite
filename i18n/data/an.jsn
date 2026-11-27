@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marcar a subtarea como no feita",
   "subtask-done-no-permission": "No puetz cambiar si esta subtarea ye feita",
   "board-view-calendar-mode": "Modo calendario",
-  "board-view-multiboard-cal": "Calendario (Toz os tableros)"
+  "board-view-multiboard-cal": "Calendario (Toz os tableros)",
+  "wip-limit-groups": "Habilitar el límite d'o trabajo en proceso (Lista)",
+  "wip-limit-group-name-placeholder": "Nombre (opcional)",
+  "wip-limit-group-add": "Adhibir Habilitar el límite d'o trabajo en proceso",
+  "wip-limit-group-select-swimlane": "Triar un carril",
+  "wip-limit-group-apply-swimlane": "Aplicar Carril"
 }

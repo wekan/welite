@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Mark subtask as not done",
   "subtask-done-no-permission": "You cannot change whether this subtask is done",
   "board-view-calendar-mode": "Calendar Mode",
-  "board-view-multiboard-cal": "Multi Board Calendar"
+  "board-view-multiboard-cal": "Multi Board Calendar",
+  "wip-limit-groups": "Enable WIP Limit (List)",
+  "wip-limit-group-name-placeholder": "Name (optional)",
+  "wip-limit-group-add": "Add Enable WIP Limit",
+  "wip-limit-group-select-swimlane": "Select Swimlane",
+  "wip-limit-group-apply-swimlane": "Apply Swimlane"
 }

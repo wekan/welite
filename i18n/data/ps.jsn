@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "فرعي دنده نابشپړه نښه کړئ",
   "subtask-done-no-permission": "تاسو نشئ بدلولی چې دا فرعي دنده بشپړه ده که نه",
   "board-view-calendar-mode": "د جنتري حالت",
-  "board-view-multiboard-cal": "جنتري (ټولې تختې)"
+  "board-view-multiboard-cal": "جنتري (ټولې تختې)",
+  "wip-limit-groups": "د روان کار (WIP) حد ډلې",
+  "wip-limit-group-name-placeholder": "نوم (اختياري)",
+  "wip-limit-group-add": "د روان کار (WIP) حد ډله زياته کړئ",
+  "wip-limit-group-select-swimlane": "کرښه وټاکئ",
+  "wip-limit-group-apply-swimlane": "پر کرښه پلي کړئ"
 }

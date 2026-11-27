@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Xicmachioti tequitontli quen amo otlan",
   "subtask-done-no-permission": "Amo huel ticpatlaz intla inin tequitontli otlan",
   "board-view-calendar-mode": "Tonalamatl itlachializ",
-  "board-view-multiboard-cal": "Tonalamatl (Nochtin huapaltin)"
+  "board-view-multiboard-cal": "Tonalamatl (Nochtin huapaltin)",
+  "wip-limit-groups": "Xicpatlahua WIP nepantlaliztli (Tocatlahtolli)",
+  "wip-limit-group-name-placeholder": "Tocaitl (huelitiz)",
+  "wip-limit-group-add": "Xicaquiti Xicpatlahua WIP nepantlaliztli",
+  "wip-limit-group-select-swimlane": "Xicpehpena huapalli Ohtli",
+  "wip-limit-group-apply-swimlane": "Xictequihui Ohtli"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ਉਪ-ਕਾਰਜ ਨੂੰ ਅਧੂਰੇ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ",
   "subtask-done-no-permission": "ਤੁਸੀਂ ਇਹ ਨਹੀਂ ਬਦਲ ਸਕਦੇ ਕਿ ਇਹ ਉਪ-ਕਾਰਜ ਮੁਕੰਮਲ ਹੈ ਜਾਂ ਨਹੀਂ",
   "board-view-calendar-mode": "ਕੈਲੰਡਰ ਮੋਡ",
-  "board-view-multiboard-cal": "ਕੈਲੰਡਰ (ਸਾਰੇ ਬੋਰਡ)"
+  "board-view-multiboard-cal": "ਕੈਲੰਡਰ (ਸਾਰੇ ਬੋਰਡ)",
+  "wip-limit-groups": "WIP ਸੀਮਾ ਸਮੂਹ",
+  "wip-limit-group-name-placeholder": "ਸਮੂਹ ਦਾ ਨਾਮ (ਚੋਣਵਾਂ)",
+  "wip-limit-group-add": "WIP ਸੀਮਾ ਸਮੂਹ ਸ਼ਾਮਲ ਕਰੋ",
+  "wip-limit-group-select-swimlane": "ਸਵਿਮਲੇਨ ਚੁਣੋ",
+  "wip-limit-group-apply-swimlane": "ਸਵਿਮਲੇਨ 'ਤੇ ਲਾਗੂ ਕਰੋ"
 }

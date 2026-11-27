@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Beka umsebenti lomncane njengalongakapheli",
   "subtask-done-no-permission": "Awukhoni kushintja kutsi lomsebenti lomncane uphelile yini",
   "board-view-calendar-mode": "Indlela yeKhalenda",
-  "board-view-multiboard-cal": "Likhalenda (Onkhe emabhodi)"
+  "board-view-multiboard-cal": "Likhalenda (Onkhe emabhodi)",
+  "wip-limit-groups": "Vumela Umkhawulo we-WIP (Luhla)",
+  "wip-limit-group-name-placeholder": "Ligama (akuphocelelekile)",
+  "wip-limit-group-add": "Ngeta Vumela Umkhawulo we-WIP",
+  "wip-limit-group-select-swimlane": "Khetsa Umtsandvo",
+  "wip-limit-group-apply-swimlane": "Sebentisa Umtsandvo"
 }

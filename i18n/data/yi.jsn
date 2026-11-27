@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "באַצייכענען די אונטעראויפֿגאַבע ווי נישט פֿאַרענדיקט",
   "subtask-done-no-permission": "איר קענט נישט ענדערן צי די אונטעראויפֿגאַבע איז פֿאַרענדיקט",
   "board-view-calendar-mode": "קאַלענדאַר־מאָדוס",
-  "board-view-multiboard-cal": "קאַלענדאַר (אַלע באָרדז)"
+  "board-view-multiboard-cal": "קאַלענדאַר (אַלע באָרדז)",
+  "wip-limit-groups": "געבן WIP לימיט (רשימה)",
+  "wip-limit-group-name-placeholder": "נאָמען (אַפּשאַנאַל)",
+  "wip-limit-group-add": "לייג געבן WIP לימיט",
+  "wip-limit-group-select-swimlane": "אויסקלייַבן סווימלאַנע",
+  "wip-limit-group-apply-swimlane": "צולייגן סווימלאַנע"
 }

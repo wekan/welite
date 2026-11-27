@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Markér underopgave som ikke færdig",
   "subtask-done-no-permission": "Du kan ikke ændre, om denne underopgave er færdig",
   "board-view-calendar-mode": "Kalendertilstand",
-  "board-view-multiboard-cal": "Kalender (Alle tavler)"
+  "board-view-multiboard-cal": "Kalender (Alle tavler)",
+  "wip-limit-groups": "WIP-grænsegrupper",
+  "wip-limit-group-name-placeholder": "Gruppenavn (valgfrit)",
+  "wip-limit-group-add": "Tilføj WIP-grænsegruppe",
+  "wip-limit-group-select-swimlane": "Vælg tavle Svømmebaner",
+  "wip-limit-group-apply-swimlane": "Anvend Svømmebaner"
 }

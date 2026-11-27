@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "قویی وظیفه‌نی بجریلمه‌دی دېب بیلگیلش",
   "subtask-done-no-permission": "سیز بو قویی وظیفه بجریلگنلیگینی اۉزگرته آلمیسیز",
   "board-view-calendar-mode": "تقویم رژیمی",
-  "board-view-multiboard-cal": "بیر نیچه تخته تقویمی"
+  "board-view-multiboard-cal": "بیر نیچه تخته تقویمی",
+  "wip-limit-groups": "WIP چیگره‌سینی یاقینگ (رۉیخت)",
+  "wip-limit-group-name-placeholder": "اسم (اختیاری)",
+  "wip-limit-group-add": "قۉشیش WIP چیگره‌سینی یاقینگ",
+  "wip-limit-group-select-swimlane": "-نی تنلنگ ایش یۉلگی",
+  "wip-limit-group-apply-swimlane": "مراجعت قیلینگ ایش یۉلگی"
 }

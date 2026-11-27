@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marki subtaskon kiel nefinitan",
   "subtask-done-no-permission": "Vi ne rajtas ŝanĝi ĉu ĉi tiu subtasko estas finita",
   "board-view-calendar-mode": "Kalendara reĝimo",
-  "board-view-multiboard-cal": "Calendario (Ĉiuj tabuloj)"
+  "board-view-multiboard-cal": "Calendario (Ĉiuj tabuloj)",
+  "wip-limit-groups": "WIP-limaj grupoj",
+  "wip-limit-group-name-placeholder": "Grupa nomo (malnepra)",
+  "wip-limit-group-add": "Aldoni WIP-liman grupon",
+  "wip-limit-group-select-swimlane": "Elekti naĝlinion",
+  "wip-limit-group-apply-swimlane": "Apliki al naĝlinio"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marcar a subtarefa como incompleta",
   "subtask-done-no-permission": "Non pode cambiar se esta subtarefa está completa",
   "board-view-calendar-mode": "Modo de calendario",
-  "board-view-multiboard-cal": "Calendario (Todos os taboleiros)"
+  "board-view-multiboard-cal": "Calendario (Todos os taboleiros)",
+  "wip-limit-groups": "Grupos de límite WIP",
+  "wip-limit-group-name-placeholder": "Nome do grupo (opcional)",
+  "wip-limit-group-add": "Engadir grupo de límite WIP",
+  "wip-limit-group-select-swimlane": "Seleccionar carril",
+  "wip-limit-group-apply-swimlane": "Aplicar ao carril"
 }

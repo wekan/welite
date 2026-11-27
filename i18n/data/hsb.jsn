@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Podnadawk jako njehotowy markěrować",
   "subtask-done-no-permission": "Njemóžeće změnić, hač je tutón podnadawk hotowy",
   "board-view-calendar-mode": "Modus protyki",
-  "board-view-multiboard-cal": "Protyka wjacorych taflow"
+  "board-view-multiboard-cal": "Protyka wjacorych taflow",
+  "wip-limit-groups": "Skupiny WIP-limita",
+  "wip-limit-group-name-placeholder": "Mjeno skupiny (opcionalne)",
+  "wip-limit-group-add": "Skupinu WIP-limita přidać",
+  "wip-limit-group-select-swimlane": "Dróhu wubrać",
+  "wip-limit-group-apply-swimlane": "Na dróhu nałožić"
 }

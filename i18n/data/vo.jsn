@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Mäkön donabligädi as no pedunöl",
   "subtask-done-no-permission": "No kanol votükön, va donabligäd at pedunon",
   "board-view-calendar-mode": "Mod kaleda",
-  "board-view-multiboard-cal": "Kaled (Tabs valik)"
+  "board-view-multiboard-cal": "Kaled (Tabs valik)",
+  "wip-limit-groups": "Grups miedas WIP",
+  "wip-limit-group-name-placeholder": "Nem (no zesüdik)",
+  "wip-limit-group-add": "Läükön grupi miedas WIP",
+  "wip-limit-group-select-swimlane": "Välön dili horitätik",
+  "wip-limit-group-apply-swimlane": "Gebükön pro dil horitätik"
 }

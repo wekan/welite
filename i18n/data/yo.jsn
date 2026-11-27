@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Samisi iṣẹ-ṣiṣe kekere bi ko ti ṣe",
   "subtask-done-no-permission": "O ko le yi pada boya iṣẹ-ṣiṣe kekere yii ti ṣe",
   "board-view-calendar-mode": "Ipo Kalẹnda",
-  "board-view-multiboard-cal": "Kalẹnda (Gbogbo Boards)"
+  "board-view-multiboard-cal": "Kalẹnda (Gbogbo Boards)",
+  "wip-limit-groups": "Àwùjọ Ààlà WIP",
+  "wip-limit-group-name-placeholder": "Orúkọ àwùjọ (àṣàyàn)",
+  "wip-limit-group-add": "Fi àwùjọ ààlà WIP kún",
+  "wip-limit-group-select-swimlane": "Yan Board Ọ̀nà ìwẹ̀",
+  "wip-limit-group-apply-swimlane": "Waye Ọ̀nà ìwẹ̀"
 }

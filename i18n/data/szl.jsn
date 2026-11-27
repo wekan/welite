@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Ôznacz podzadanie jako niyzrobiōne",
   "subtask-done-no-permission": "Niy możesz zmiynić, eli to podzadanie je zrobiōne",
   "board-view-calendar-mode": "Tryb kalyndŏrza",
-  "board-view-multiboard-cal": "Kalendarz (Wszyskie tabule)"
+  "board-view-multiboard-cal": "Kalendarz (Wszyskie tabule)",
+  "wip-limit-groups": "Załōncz limit kart na liście (Lista)",
+  "wip-limit-group-name-placeholder": "Miano (ôpcyjōnalne)",
+  "wip-limit-group-add": "Przidać Załōncz limit kart na liście",
+  "wip-limit-group-select-swimlane": "Ôbier tabula Ślak",
+  "wip-limit-group-apply-swimlane": "Zastosuj Ślak"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Отбележи подзадачата като незавършена",
   "subtask-done-no-permission": "Не можете да промените дали тази подзадача е завършена",
   "board-view-calendar-mode": "Календарен режим",
-  "board-view-multiboard-cal": "Календар (Всички табла)"
+  "board-view-multiboard-cal": "Календар (Всички табла)",
+  "wip-limit-groups": "Групи с лимит на задачите",
+  "wip-limit-group-name-placeholder": "Име на групата (незадължително)",
+  "wip-limit-group-add": "Добавяне на група с лимит",
+  "wip-limit-group-select-swimlane": "Изберете коридор",
+  "wip-limit-group-apply-swimlane": "Прилагане към коридор"
 }

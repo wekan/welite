@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marka e subtarea komo no kompletá",
   "subtask-done-no-permission": "Bo no por kambia si e subtarea aki ta kompletá",
   "board-view-calendar-mode": "Modo di kalènder",
-  "board-view-multiboard-cal": "Calendario (Tur tabla)"
+  "board-view-multiboard-cal": "Calendario (Tur tabla)",
+  "wip-limit-groups": "Habilitá e límite di e trabaho den proseso (Lista)",
+  "wip-limit-group-name-placeholder": "Nòmber (opshonal)",
+  "wip-limit-group-add": "Agregá Habilitá e límite di e trabaho den proseso",
+  "wip-limit-group-select-swimlane": "Selektá tabla Kaminda",
+  "wip-limit-group-apply-swimlane": "Aplicar Kaminda"
 }

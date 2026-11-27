@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marquer la sous-tâche comme non terminée",
   "subtask-done-no-permission": "Vous ne pouvez pas modifier l’état d’achèvement de cette sous-tâche",
   "board-view-calendar-mode": "Mode calendrier",
-  "board-view-multiboard-cal": "Calendrier (Tous les tableaux)"
+  "board-view-multiboard-cal": "Calendrier (Tous les tableaux)",
+  "wip-limit-groups": "Groupes de limite WIP",
+  "wip-limit-group-name-placeholder": "Nom du groupe (optionnel)",
+  "wip-limit-group-add": "Ajouter un groupe de limite WIP",
+  "wip-limit-group-select-swimlane": "Sélectionner le tableau Couloir",
+  "wip-limit-group-apply-swimlane": "Appliquer Couloir"
 }

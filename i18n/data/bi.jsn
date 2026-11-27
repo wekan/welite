@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Makem smol wok se i no finis",
   "subtask-done-no-permission": "Yu no save jenisim sapos smol wok ia i finis o no",
   "board-view-calendar-mode": "Fasin blong kalenda",
-  "board-view-multiboard-cal": "Kalenda blong plante bod"
+  "board-view-multiboard-cal": "Kalenda blong plante bod",
+  "wip-limit-groups": "Ol Limit blong WIP (Lis)",
+  "wip-limit-group-name-placeholder": "Nem (yu save jusum)",
+  "wip-limit-group-add": "Adem Limit blong WIP",
+  "wip-limit-group-select-swimlane": "Jusum Rod",
+  "wip-limit-group-apply-swimlane": "Yusum long swimlane"
 }

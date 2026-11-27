@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ذيلي ڪم اڻپورو نشان لڳايو",
   "subtask-done-no-permission": "توهان بدلائي نٿا سگهو ته هي ذيلي ڪم مڪمل آهي يا نه",
   "board-view-calendar-mode": "ڪئلينڊر موڊ",
-  "board-view-multiboard-cal": "ڪئلينڊر (سڀ بورڊ)"
+  "board-view-multiboard-cal": "ڪئلينڊر (سڀ بورڊ)",
+  "wip-limit-groups": "جاري ڪم (WIP) جي حد جا گروپ",
+  "wip-limit-group-name-placeholder": "نالو (اختياري)",
+  "wip-limit-group-add": "جاري ڪم (WIP) جي حد جو گروپ شامل ڪريو",
+  "wip-limit-group-select-swimlane": "لڪير چونڊيو",
+  "wip-limit-group-apply-swimlane": "لڪير تي لاڳو ڪريو"
 }

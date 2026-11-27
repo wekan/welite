@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Tandhani sub-tugas durung rampung",
   "subtask-done-no-permission": "Kowe ora bisa ngowahi rampung orane sub-tugas iki",
   "board-view-calendar-mode": "Mode Tanggalan",
-  "board-view-multiboard-cal": "Tanggalan (Kabeh papan)"
+  "board-view-multiboard-cal": "Tanggalan (Kabeh papan)",
+  "wip-limit-groups": "Aktifake Wates WIP (Dhaptar)",
+  "wip-limit-group-name-placeholder": "Jeneng (opsional)",
+  "wip-limit-group-add": "Tambah Aktifake Wates WIP",
+  "wip-limit-group-select-swimlane": "Pilih Lajur",
+  "wip-limit-group-apply-swimlane": "Trapake Lajur"
 }

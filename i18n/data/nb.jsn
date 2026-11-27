@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marker deloppgave som ikke ferdig",
   "subtask-done-no-permission": "Du kan ikke endre om denne deloppgaven er ferdig",
   "board-view-calendar-mode": "Kalendermodus",
-  "board-view-multiboard-cal": "Kalender (Alle tavler)"
+  "board-view-multiboard-cal": "Kalender (Alle tavler)",
+  "wip-limit-groups": "WIP-grensegrupper",
+  "wip-limit-group-name-placeholder": "Gruppenavn (valgfritt)",
+  "wip-limit-group-add": "Legg til WIP-grensegruppe",
+  "wip-limit-group-select-swimlane": "Velg Svømmebane",
+  "wip-limit-group-apply-swimlane": "Lagre Svømmebane"
 }

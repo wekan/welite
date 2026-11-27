@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Označi podzadatak kao nedovršen",
   "subtask-done-no-permission": "Ne možete promijeniti je li ovaj podzadatak dovršen",
   "board-view-calendar-mode": "Način kalendara",
-  "board-view-multiboard-cal": "Kalendar (Sve ploče)"
+  "board-view-multiboard-cal": "Kalendar (Sve ploče)",
+  "wip-limit-groups": "Grupe WIP ograničenja",
+  "wip-limit-group-name-placeholder": "Naziv grupe (neobavezno)",
+  "wip-limit-group-add": "Dodaj grupu WIP ograničenja",
+  "wip-limit-group-select-swimlane": "Odaberi traku",
+  "wip-limit-group-apply-swimlane": "Primijeni na traku"
 }

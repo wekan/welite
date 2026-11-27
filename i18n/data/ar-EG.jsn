@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "وضع علامة غير مكتملة على المهمة الفرعية",
   "subtask-done-no-permission": "لا يمكنك تغيير حالة اكتمال هذه المهمة الفرعية",
   "board-view-calendar-mode": "وضع التقويم",
-  "board-view-multiboard-cal": "التقويم (كل اللوحات)"
+  "board-view-multiboard-cal": "التقويم (كل اللوحات)",
+  "wip-limit-groups": "مجموعات حد العمل الجاري",
+  "wip-limit-group-name-placeholder": "اسم المجموعة (اختياري)",
+  "wip-limit-group-add": "إضافة مجموعة حد العمل الجاري",
+  "wip-limit-group-select-swimlane": "اختيار مسار",
+  "wip-limit-group-apply-swimlane": "تطبيق على المسار"
 }

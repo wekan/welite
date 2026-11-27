@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Hojii xiqqaa akka hin raawwatamneetti mallatteessi",
   "subtask-done-no-permission": "Hojiin xiqqaan kun raawwatamuu isaa jijjiiruu hin dandeessu",
   "board-view-calendar-mode": "Haala Kaalaandarii",
-  "board-view-multiboard-cal": "Kaalaandarii (Gabatewwan hunda)"
+  "board-view-multiboard-cal": "Kaalaandarii (Gabatewwan hunda)",
+  "wip-limit-groups": "Daangaa WIP Bani (Tarree)",
+  "wip-limit-group-name-placeholder": "Maqaa (filannoo)",
+  "wip-limit-group-add": "Dabali Daangaa WIP Bani",
+  "wip-limit-group-select-swimlane": "Fili Karaa",
+  "wip-limit-group-apply-swimlane": "Hojiirra oolchi Karaa"
 }

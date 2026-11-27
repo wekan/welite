@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Ішкі тапсырманы орындалмады деп белгілеу",
   "subtask-done-no-permission": "Бұл ішкі тапсырманың орындалуын өзгерте алмайсыз",
   "board-view-calendar-mode": "Күнтізбе режимі",
-  "board-view-multiboard-cal": "Күнтізбе (Барлық тақталар)"
+  "board-view-multiboard-cal": "Күнтізбе (Барлық тақталар)",
+  "wip-limit-groups": "WIP шектеу топтары",
+  "wip-limit-group-name-placeholder": "Топ атауы (міндетті емес)",
+  "wip-limit-group-add": "WIP шектеу тобын қосу",
+  "wip-limit-group-select-swimlane": "ны таңдау Жолақ",
+  "wip-limit-group-apply-swimlane": "Қолдану Жолақ"
 }

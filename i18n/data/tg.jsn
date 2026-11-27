@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Зервазифаро иҷронашуда қайд кардан",
   "subtask-done-no-permission": "Шумо ҳолати иҷрои ин зервазифаро иваз карда наметавонед",
   "board-view-calendar-mode": "Реҷаи тақвим",
-  "board-view-multiboard-cal": "Тақвим (Ҳамаи тахтаҳо)"
+  "board-view-multiboard-cal": "Тақвим (Ҳамаи тахтаҳо)",
+  "wip-limit-groups": "Фаъол кардани ҳадди WIP (Рӯйхат)",
+  "wip-limit-group-name-placeholder": "Ном (ихтиёрӣ)",
+  "wip-limit-group-add": "Илова кардан Фаъол кардани ҳадди WIP",
+  "wip-limit-group-select-swimlane": "Интихоби тахта Хат",
+  "wip-limit-group-apply-swimlane": "Татбиқ кардан Хат"
 }

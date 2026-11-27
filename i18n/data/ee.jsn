@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "De dzesi dɔvi la be mewu enu o",
   "subtask-done-no-permission": "Màte ŋu atrɔ̃ ne wowu dɔvi sia nu alo mewu o",
   "board-view-calendar-mode": "Kalenda ƒe mɔ",
-  "board-view-multiboard-cal": "Kalenda (Ŋɔŋlɔkpewo katã)"
+  "board-view-multiboard-cal": "Kalenda (Ŋɔŋlɔkpewo katã)",
+  "wip-limit-groups": "Na mɔ WIP ƒe seƒoƒo (Xexlẽdzesi)",
+  "wip-limit-group-name-placeholder": "Ŋkɔ (ɖe wò lɔlɔ̃nu)",
+  "wip-limit-group-add": "Tsɔ kpe ɖe eŋu Na mɔ WIP ƒe seƒoƒo",
+  "wip-limit-group-select-swimlane": "Tia kpekpeɖeŋu Mɔ",
+  "wip-limit-group-apply-swimlane": "Zã Mɔ"
 }

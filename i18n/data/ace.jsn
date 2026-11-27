@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Tanda subtugas goh leusoe",
   "subtask-done-no-permission": "Droeneueh h'an jeuet ubah peu subtugas nyoe ka leusoe atawa goh",
   "board-view-calendar-mode": "Mode Almanak",
-  "board-view-multiboard-cal": "Almanak Le Papan"
+  "board-view-multiboard-cal": "Almanak Le Papan",
+  "wip-limit-groups": "Grup Bataih WIP",
+  "wip-limit-group-name-placeholder": "Nan grup (hana wajéb)",
+  "wip-limit-group-add": "Tamah grup bataih WIP",
+  "wip-limit-group-select-swimlane": "Pileh swimlane",
+  "wip-limit-group-apply-swimlane": "Ngui keu swimlane"
 }

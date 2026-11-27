@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Segné la sotlëur sciöche nia fata",
   "subtask-done-no-permission": "Te ne pos nia mudé sce chësta sotlëur é fata",
   "board-view-calendar-mode": "Modalité calënder",
-  "board-view-multiboard-cal": "Calënder de plu tofles"
+  "board-view-multiboard-cal": "Calënder de plu tofles",
+  "wip-limit-groups": "Grops de limit WIP",
+  "wip-limit-group-name-placeholder": "Inom dl grop (sce te ues)",
+  "wip-limit-group-add": "Ajonté n grop de limit WIP",
+  "wip-limit-group-select-swimlane": "Cernì la swimlane",
+  "wip-limit-group-apply-swimlane": "Apliché ala swimlane"
 }

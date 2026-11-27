@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Alamta ƙaramin aiki a matsayin ba a gama ba",
   "subtask-done-no-permission": "Ba za ka iya canza ko an gama wannan ƙaramin aiki ba",
   "board-view-calendar-mode": "Yanayin Kalanda",
-  "board-view-multiboard-cal": "Kalanda (Dukan alluna)"
+  "board-view-multiboard-cal": "Kalanda (Dukan alluna)",
+  "wip-limit-groups": "Ƙungiyoyin Iyakar WIP",
+  "wip-limit-group-name-placeholder": "Sunan ƙungiya (na zaɓi)",
+  "wip-limit-group-add": "Ƙara ƙungiyar iyakar WIP",
+  "wip-limit-group-select-swimlane": "Zaɓi allo Layi",
+  "wip-limit-group-apply-swimlane": "Aiwatar Layi"
 }

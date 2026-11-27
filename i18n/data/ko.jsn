@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "하위 작업을 미완료로 표시",
   "subtask-done-no-permission": "이 하위 작업의 완료 여부를 변경할 수 없습니다",
   "board-view-calendar-mode": "달력 모드",
-  "board-view-multiboard-cal": "달력 (전체 보드)"
+  "board-view-multiboard-cal": "달력 (전체 보드)",
+  "wip-limit-groups": "WIP 제한 그룹",
+  "wip-limit-group-name-placeholder": "그룹 이름(선택 사항)",
+  "wip-limit-group-add": "WIP 제한 그룹 추가",
+  "wip-limit-group-select-swimlane": "선택 스윔레인",
+  "wip-limit-group-apply-swimlane": "적용 스윔레인"
 }

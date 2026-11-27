@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Ratidza basa diki serisina kuitwa",
   "subtask-done-no-permission": "Haugoni kuchinja kuti basa diki iri rapera here kana kuti kwete",
   "board-view-calendar-mode": "Maitiro ekarenda",
-  "board-view-multiboard-cal": "Karenda yemabhodhi akawanda"
+  "board-view-multiboard-cal": "Karenda yemabhodhi akawanda",
+  "wip-limit-groups": "Mapoka emuganhu webasa riri kuitwa (WIP)",
+  "wip-limit-group-name-placeholder": "Zita (kusarudza)",
+  "wip-limit-group-add": "Wedzera boka remuganhu webasa riri kuitwa (WIP)",
+  "wip-limit-group-select-swimlane": "sarudza bhodhi Mugwagwa",
+  "wip-limit-group-apply-swimlane": "Shandisa pamutsetse wekuronga mabasa"
 }

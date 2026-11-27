@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "उपकाम अपुराय म्हूण चिन्नीत करचें",
   "subtask-done-no-permission": "हें उपकाम पुराय जालां काय ना तें तुमी बदलूंक शकनात",
   "board-view-calendar-mode": "दिनदर्शिका मोड",
-  "board-view-multiboard-cal": "दिनदर्शिका (सगळीं फळे)"
+  "board-view-multiboard-cal": "दिनदर्शिका (सगळीं फळे)",
+  "wip-limit-groups": "WIP मर्यादा सक्षम करात (वळेरी)",
+  "wip-limit-group-name-placeholder": "नांव (मर्जेन)",
+  "wip-limit-group-add": "जोडचें WIP मर्यादा सक्षम करात",
+  "wip-limit-group-select-swimlane": "निवडात वाट",
+  "wip-limit-group-apply-swimlane": "लागू करात वाट"
 }

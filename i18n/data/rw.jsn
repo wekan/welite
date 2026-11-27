@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Shyira igikorwa gito nk'icyitarakorwa",
   "subtask-done-no-permission": "Ntushobora guhindura niba iki gikorwa gito cyakozwe",
   "board-view-calendar-mode": "Uburyo bwa Kalendari",
-  "board-view-multiboard-cal": "Kalendari (Ibibaho byose)"
+  "board-view-multiboard-cal": "Kalendari (Ibibaho byose)",
+  "wip-limit-groups": "Amatsinda y'Urugero rwa WIP",
+  "wip-limit-group-name-placeholder": "Izina ry'itsinda (si ngombwa)",
+  "wip-limit-group-add": "Ongeraho itsinda ry'urugero rwa WIP",
+  "wip-limit-group-select-swimlane": "Hitamo umurongo",
+  "wip-limit-group-apply-swimlane": "Shyira ku murongo"
 }

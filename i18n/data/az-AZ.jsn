@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Alt tapşırığı tamamlanmamış kimi işarələyin",
   "subtask-done-no-permission": "Bu alt tapşırığın tamamlanma vəziyyətini dəyişə bilməzsiniz",
   "board-view-calendar-mode": "Təqvim rejimi",
-  "board-view-multiboard-cal": "Təqvim (Bütün lövhələr)"
+  "board-view-multiboard-cal": "Təqvim (Bütün lövhələr)",
+  "wip-limit-groups": "WIP limit qrupları",
+  "wip-limit-group-name-placeholder": "Qrup adı (isteğe bağlı)",
+  "wip-limit-group-add": "WIP limit qrupu əlavə et",
+  "wip-limit-group-select-swimlane": "Lövhəni seçin Üzgüçülük zolağı",
+  "wip-limit-group-apply-swimlane": "Müraciət edin Üzgüçülük zolağı"
 }

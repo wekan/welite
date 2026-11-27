@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Részfeladat megjelölése befejezetlenként",
   "subtask-done-no-permission": "Nem módosíthatja a részfeladat befejezettségét",
   "board-view-calendar-mode": "Naptárnézet",
-  "board-view-multiboard-cal": "Naptár (Összes tábla)"
+  "board-view-multiboard-cal": "Naptár (Összes tábla)",
+  "wip-limit-groups": "WIP-korlát csoportok",
+  "wip-limit-group-name-placeholder": "Csoport neve (opcionális)",
+  "wip-limit-group-add": "WIP-korlát csoport hozzáadása",
+  "wip-limit-group-select-swimlane": "Válassz Táblát Úszósáv",
+  "wip-limit-group-apply-swimlane": "Alkalmaz Úszósáv"
 }

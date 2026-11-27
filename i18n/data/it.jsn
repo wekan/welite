@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Segna la sottoattività come non completata",
   "subtask-done-no-permission": "Non puoi modificare lo stato di completamento di questa sottoattività",
   "board-view-calendar-mode": "Modalità calendario",
-  "board-view-multiboard-cal": "Calendario (Tutte le bacheche)"
+  "board-view-multiboard-cal": "Calendario (Tutte le bacheche)",
+  "wip-limit-groups": "Gruppi limite WIP",
+  "wip-limit-group-name-placeholder": "Nome del gruppo (opzionale)",
+  "wip-limit-group-add": "Aggiungi gruppo limite WIP",
+  "wip-limit-group-select-swimlane": "Seleziona bacheca Corsia",
+  "wip-limit-group-apply-swimlane": "Applica Corsia"
 }

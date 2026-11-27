@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Эбии сорудаҕы бүппэтэх диэн бэлиэтээ",
   "subtask-done-no-permission": "Бу эбии сорудах бүппүтүн-бүппэтэҕин уларытар кыаҕыҥ суох",
   "board-view-calendar-mode": "Халандаар режима",
-  "board-view-multiboard-cal": "Халандаар (Бары дуоскалар)"
+  "board-view-multiboard-cal": "Халандаар (Бары дуоскалар)",
+  "wip-limit-groups": "WIP хааччаҕын холбуу (Испииһэк)",
+  "wip-limit-group-name-placeholder": "Аат (баҕарар буоллаххына)",
+  "wip-limit-group-add": "Эбэр WIP хааччаҕын холбуу",
+  "wip-limit-group-select-swimlane": "ны тал Суол",
+  "wip-limit-group-apply-swimlane": "Тутун Суол"
 }

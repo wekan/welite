@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marcà u sottucompitu cum'è micca compiu",
   "subtask-done-no-permission": "Ùn pudete micca cambià s'è stu sottucompitu hè compiu",
   "board-view-calendar-mode": "Modu calendariu",
-  "board-view-multiboard-cal": "Calendariu di parechje tavule"
+  "board-view-multiboard-cal": "Calendariu di parechje tavule",
+  "wip-limit-groups": "Gruppi di limiti WIP",
+  "wip-limit-group-name-placeholder": "Nome di u gruppu (facultativu)",
+  "wip-limit-group-add": "Aghjunghje un gruppu di limiti WIP",
+  "wip-limit-group-select-swimlane": "Selezziunà una corsia",
+  "wip-limit-group-apply-swimlane": "Appiecà à a corsia"
 }

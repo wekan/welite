@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Segne la sot-ativitât come no fate",
   "subtask-done-no-permission": "No tu puedis cambiâ se cheste sot-ativitât e je fate",
   "board-view-calendar-mode": "Modalitât calendari",
-  "board-view-multiboard-cal": "Calendario (Dutis lis taulis)"
+  "board-view-multiboard-cal": "Calendario (Dutis lis taulis)",
+  "wip-limit-groups": "Attiva limite Work In Progress (Liste)",
+  "wip-limit-group-name-placeholder": "Non (opzionâl)",
+  "wip-limit-group-add": "Zonte Attiva limite Work In Progress",
+  "wip-limit-group-select-swimlane": "Selezione taule Corsie",
+  "wip-limit-group-apply-swimlane": "Applica Corsie"
 }

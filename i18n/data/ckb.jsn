@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ئەرکی لاوەکی وەک تەواونەبوو نیشان بکە",
   "subtask-done-no-permission": "ناتوانیت بگۆڕیت کە ئەم ئەرکە لاوەکییە تەواو بووە یان نا",
   "board-view-calendar-mode": "دۆخی ڕۆژژمێر",
-  "board-view-multiboard-cal": "ڕۆژژمێر (هەموو تەختەکان)"
+  "board-view-multiboard-cal": "ڕۆژژمێر (هەموو تەختەکان)",
+  "wip-limit-groups": "سنووری WIP چالاک بکە (لیست)",
+  "wip-limit-group-name-placeholder": "ناو (ئارەزوومەندانە)",
+  "wip-limit-group-add": "زیادکردن سنووری WIP چالاک بکە",
+  "wip-limit-group-select-swimlane": "هەڵبژێرە ڕێڕەو",
+  "wip-limit-group-apply-swimlane": "جێبەجێکردن ڕێڕەو"
 }

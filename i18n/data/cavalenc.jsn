@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marca la subtasca com a no completada",
   "subtask-done-no-permission": "No podeu canviar si esta subtasca està completada",
   "board-view-calendar-mode": "Mode de calendari",
-  "board-view-multiboard-cal": "Calendari (Tots els taulers)"
+  "board-view-multiboard-cal": "Calendari (Tots els taulers)",
+  "wip-limit-groups": "Grups de límit WIP",
+  "wip-limit-group-name-placeholder": "Nom del grup (opcional)",
+  "wip-limit-group-add": "Afegeix un grup de límit WIP",
+  "wip-limit-group-select-swimlane": "Selecciona tauler Carril",
+  "wip-limit-group-apply-swimlane": "Aplica Carril"
 }

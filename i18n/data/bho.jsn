@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "उपकार्य के अधूरा चिह्नित करीं",
   "subtask-done-no-permission": "रउआ एह उपकार्य के पूरा भइल बा कि ना, ई ना बदल सकीं",
   "board-view-calendar-mode": "कैलेंडर मोड",
-  "board-view-multiboard-cal": "कैलेंडर (सब बोर्ड)"
+  "board-view-multiboard-cal": "कैलेंडर (सब बोर्ड)",
+  "wip-limit-groups": "चालू काम के सीमा चालू करीं (सूची)",
+  "wip-limit-group-name-placeholder": "नाम (वैकल्पिक)",
+  "wip-limit-group-add": "जोड़ीं चालू काम के सीमा चालू करीं",
+  "wip-limit-group-select-swimlane": "चुनीं रस्ता",
+  "wip-limit-group-apply-swimlane": "लागू करीं रस्ता"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marca lu sotto-compitu comu nun fattu",
   "subtask-done-no-permission": "Nun poi canciari si stu sotto-compitu è fattu",
   "board-view-calendar-mode": "Modu calannariu",
-  "board-view-multiboard-cal": "Calendario (Tutti i tavuli)"
+  "board-view-multiboard-cal": "Calendario (Tutti i tavuli)",
+  "wip-limit-groups": "Attiva limite Work In Progress (Lista)",
+  "wip-limit-group-name-placeholder": "Nomu (facultativu)",
+  "wip-limit-group-add": "Aggiunciri Attiva limite Work In Progress",
+  "wip-limit-group-select-swimlane": "Scegghi tàvula Curseva",
+  "wip-limit-group-apply-swimlane": "Applica Curseva"
 }

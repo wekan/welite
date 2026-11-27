@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Marcar la jos-tasca coma pas acabada",
   "subtask-done-no-permission": "Podètz pas cambiar se aquesta jos-tasca es acabada",
   "board-view-calendar-mode": "Mòde calendièr",
-  "board-view-multiboard-cal": "Calendièr (Totes los tablèus)"
+  "board-view-multiboard-cal": "Calendièr (Totes los tablèus)",
+  "wip-limit-groups": "Activar la WIP limit (Liste)",
+  "wip-limit-group-name-placeholder": "Nom (opcional)",
+  "wip-limit-group-add": "Apondre Activar la WIP limit",
+  "wip-limit-group-select-swimlane": "Seleccionar un corredor",
+  "wip-limit-group-apply-swimlane": "Aplicar Couloir"
 }

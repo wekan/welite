@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Uchuy llamk'ayta mana tukusqa hina unanchay",
   "subtask-done-no-permission": "Manam kay uchuy llamk'aypa tukusqa kayninta tikrayta atinkichu",
   "board-view-calendar-mode": "Watanqillqa rikch'ay",
-  "board-view-multiboard-cal": "Achka pirqakunapa watanqillqan"
+  "board-view-multiboard-cal": "Achka pirqakunapa watanqillqan",
+  "wip-limit-groups": "WIP saywa huñukuna",
+  "wip-limit-group-name-placeholder": "Suti (akllanapaq)",
+  "wip-limit-group-add": "WIP saywa huñuta yapay",
+  "wip-limit-group-select-swimlane": "Ñanta akllay",
+  "wip-limit-group-apply-swimlane": "Ñanman churay"
 }

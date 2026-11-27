@@ -2757,6 +2757,8 @@ begin
     IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), '<li><a class="js-open-board-announcement" href="#" ' +
       'data-pop="board-announcement" title="' + HtmlAttr(Words.Text('board-announcement', 'Board announcement')) + '"><i class="fa fa-bullhorn"></i> ' +
       E(Words.Text('board-announcement', 'Board announcement')) + '</a></li>', '') +
+    IfThen((S.UserId <> '') and BoardCanAdmin(Db, S.UserId, BoardId), '<li><a class="js-open-board-wip-limit-groups" href="#">' +
+      E(Words.Text('wip-limit-groups', 'WIP Limit Groups')) + '</a></li>', '') +
     // Board Settings / Card (sidebar.jade boardMenuPopup), for a member.
     IfThen(S.UserId <> '', '<li><a class="js-open-board-card-settings" href="#" title="' + HtmlAttr(Words.Text('card-settings', 'Card Settings')) +
       '"><i class="fa fa-id-card-o"></i> ' + E(Words.Text('card-settings', 'Card Settings')) + '</a></li>', '') +
@@ -3712,6 +3714,179 @@ begin
   finally Cards.Free; end;
 end;
 
+const WipGroupsJson = 'CASE WHEN json_valid(settings_json) THEN CASE WHEN json_type(settings_json,''$.wipLimitGroups'')=''array'' ' +
+  'THEN json_extract(settings_json,''$.wipLimitGroups'') ELSE ''[]'' END ELSE ''[]'' END';
+
+function WipGroupsPopup(Db: TWLDb; Words: TWLTranslator; const BoardId: string): string;
+var Lists, Lanes, Rows: TWLRows; Data: TJSONData; Title: string; i: Integer;
+  function GroupForm(Group: TJSONObject): string;
+  var Row: TWLRow; Ids: TJSONData; Selected: Boolean; k: Integer;
+  begin
+    Result := '<form class="js-wip-group-form ' + IfThen(Group = nil, 'wip-limit-group-new', 'wip-limit-group') +
+      '" data-board="' + HtmlAttr(BoardId) + '"';
+    Ids := nil;
+    if Group <> nil then
+    begin
+      Result := Result + ' data-group="' + HtmlAttr(Group.Get('_id', '')) + '"';
+      Ids := Group.Find('listIds');
+    end;
+    Result := Result + '><textarea name="name" placeholder="' +
+      HtmlAttr(Words.Text('wip-limit-group-name-placeholder', 'Group name (optional)')) + '">';
+    if Group <> nil then Result := Result + E(Group.Get('name', ''));
+    Result := Result + '</textarea><input name="limit" type="number" min="1" step="any" required value="' +
+      IfThen(Group = nil, '1', '') ;
+    if Group <> nil then
+    begin
+      if (Group.Find('limit') <> nil) and (Group.Find('limit').JSONType = jtNumber) then
+        Result := Result + HtmlAttr(Group.Find('limit').AsJSON)
+      else Result := Result + '1';
+    end;
+    Result := Result + '" aria-label="' + HtmlAttr(Words.Text('wip-limit', 'WIP limit')) + '">';
+    if Group <> nil then
+      Result := Result + '<label>' + E(Words.Text('enable-wip-limit', 'Enable WIP Limit')) +
+        ' <select name="enabled"><option value="true"' + IfThen(Group.Get('enabled', True), ' selected', '') +
+        '>' + E(Words.Text('yes', 'Yes')) + '</option><option value="false"' + IfThen(Group.Get('enabled', True), '', ' selected') +
+        '>' + E(Words.Text('no', 'No')) + '</option></select></label>';
+    for Row in Lists do
+    begin
+      Selected := False;
+      if Ids is TJSONArray then
+        for k := 0 to TJSONArray(Ids).Count - 1 do
+          if TJSONArray(Ids).Strings[k] = Row[0] then Selected := True;
+      Result := Result + '<label><input type="checkbox" name="listIds" data-list-id="' + HtmlAttr(Row[0]) +
+        '" data-swimlane="' + HtmlAttr(Row[2]) + '" value="' + HtmlAttr(Row[0]) + '"' + IfThen(Selected, ' checked', '') +
+        '> ' + E(Row[1]) + '</label>';
+    end;
+    Result := Result + '<select class="js-wip-limit-group-swimlane"><option value="">' +
+      E(Words.Text('wip-limit-group-select-swimlane', 'Select swimlane')) + '</option>';
+    for Row in Lanes do Result := Result + '<option value="' + HtmlAttr(Row[0]) + '">' + E(Row[1]) + '</option>';
+    Result := Result + '</select><button type="button" class="js-wip-limit-group-apply-swimlane">' +
+      E(Words.Text('wip-limit-group-apply-swimlane', 'Apply to swimlane')) + '</button>';
+    if Group = nil then
+      Result := Result + '<input type="submit" class="primary js-wip-limit-group-new-save" value="' +
+        HtmlAttr(Words.Text('wip-limit-group-add', 'Add WIP limit group')) + '">'
+    else
+      Result := Result + '<button type="submit" class="primary js-wip-limit-group-save">' + E(Words.Text('apply', 'Apply')) +
+        '</button><button type="button" class="js-wip-group-delete">' + E(Words.Text('delete', 'Delete')) + '</button>';
+    Result := Result + '<p role="alert" class="js-wip-group-error"></p></form>';
+  end;
+begin
+  Lists := Db.Query('SELECT id,title,COALESCE(swimlaneId,'''') FROM lists WHERE boardId=' + QuotedStr(BoardId) +
+    ' AND archived=0 AND deletedAt IS NULL ORDER BY sort,id;');
+  Lanes := Db.Query('SELECT id,title FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) + ' AND archived=0 ORDER BY sort,id;');
+  Rows := Db.Query('SELECT ' + WipGroupsJson + ' FROM boards WHERE id=' + QuotedStr(BoardId) + ';');
+  Title := Words.Text('wip-limit-groups', 'WIP Limit Groups');
+  Result := '<template class="js-pop-over-template" data-pop="wipLimitGroups" data-popup="wipLimitGroupsPopup" data-title="' + HtmlAttr(Title) +
+    '"><div class="header"><span class="header-title">' + E(Title) + '</span><a href="#" class="close-btn js-close-pop-over" aria-label="' +
+    HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content">';
+  if Length(Rows) = 1 then
+  begin
+    Data := GetJSON(Rows[0][0]);
+    try
+      if Data is TJSONArray then
+        for i := 0 to TJSONArray(Data).Count - 1 do
+          if TJSONArray(Data).Items[i] is TJSONObject then
+            Result := Result + GroupForm(TJSONObject(TJSONArray(Data).Items[i]));
+    finally Data.Free; end;
+  end;
+  Result := Result + GroupForm(nil) + '</div></template>';
+end;
+
+function ChangeWipLimitGroup(Db: TWLDb; const UserId, Name: string; Args: TJSONArray; out Error: string): Integer;
+var BoardId, GroupId, Before, Checks, Id, PolicySql: string; Rows: TWLRows; Data, Item: TJSONData;
+  Fields, Group: TJSONObject; Groups, ListIds: TJSONArray; Policy: TFieldPolicy; i, k, Previous, Index: Integer;
+begin
+  Error := 'match-error';
+  if (Args.Count < 2) or (Args.Items[0].JSONType <> jtString) or (Args.Items[1].JSONType <> jtString) then Exit(400);
+  BoardId := Args.Strings[0]; GroupId := Args.Strings[1];
+  if (BoardId = '') or (Pos(#0, BoardId + GroupId) > 0) then Exit(400);
+  if not BoardCanAdmin(Db, UserId, BoardId) then begin Error := 'not-authorized'; Exit(403); end;
+  Fields := nil;
+  if Name <> 'removeWipLimitGroup' then
+  begin
+    if (Args.Count <> 3) or not (Args.Items[2] is TJSONObject) then Exit(400);
+    Fields := TJSONObject(Args.Items[2]);
+  end
+  else if Args.Count <> 2 then Exit(400);
+  Checks := '';
+  if Fields <> nil then
+    for i := 0 to Fields.Count - 1 do
+    begin
+      Item := Fields.Items[i];
+      case Fields.Names[i] of
+        'name': if (Item.JSONType <> jtString) or (Pos(#0, Item.AsString) > 0) then Exit(400);
+        'enabled': if Item.JSONType <> jtBoolean then Exit(400);
+        'limit':
+          begin
+            if (Item.JSONType <> jtNumber) or IsNan(Item.AsFloat) or IsInfinite(Item.AsFloat) or (Item.AsFloat < 1) then
+            begin Error := 'invalid-limit'; Exit(400); end;
+          end;
+        'listIds':
+          begin
+            Error := 'invalid-lists';
+            if not (Item is TJSONArray) then Exit(400);
+            ListIds := TJSONArray(Item);
+            if ListIds.Count < 2 then Exit(400);
+            for k := 0 to ListIds.Count - 1 do
+            begin
+              if ListIds.Items[k].JSONType <> jtString then Exit(400);
+              Id := ListIds.Strings[k];
+              if (Id = '') or (Pos(#0, Id) > 0) then Exit(400);
+              for Previous := 0 to k - 1 do if ListIds.Strings[Previous] = Id then Exit(400);
+            end;
+            Checks := ' AND (SELECT count(*) FROM lists WHERE boardId=' + QuotedStr(BoardId) +
+              ' AND archived=0 AND deletedAt IS NULL AND id IN (SELECT value FROM json_each(' +
+              QuotedStr(ListIds.AsJSON) + ')))=' + IntToStr(ListIds.Count);
+            if Length(Db.Query('SELECT 1 WHERE 1' + Checks + ';')) <> 1 then Exit(400);
+            Error := 'match-error';
+          end;
+      else Exit(400);
+      end;
+    end;
+  if (Name = 'addWipLimitGroup') and ((Fields.Find('listIds') = nil) or (Fields.Find('limit') = nil)) then Exit(400);
+  Rows := Db.Query('SELECT ' + WipGroupsJson + ' FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
+  if Length(Rows) <> 1 then begin Error := 'not-authorized'; Exit(403); end;
+  Before := Rows[0][0];
+  Data := GetJSON(Before);
+  try
+    Groups := TJSONArray(Data);
+    Index := -1;
+    for i := 0 to Groups.Count - 1 do
+      if (Groups.Items[i] is TJSONObject) and (TJSONObject(Groups.Items[i]).Get('_id', '') = GroupId) then Index := i;
+    if Name = 'addWipLimitGroup' then
+    begin
+      Group := TJSONObject.Create;
+      Groups.Add(Group);
+      Group.Add('_id', NewId);
+      Group.Add('name', '');
+      Group.Add('enabled', True);
+    end
+    else
+    begin
+      if Index < 0 then begin Error := 'group-not-found'; Exit(404); end;
+      Group := TJSONObject(Groups.Items[Index]);
+    end;
+    if Fields = nil then Groups.Delete(Index)
+    else
+      for i := 0 to Fields.Count - 1 do
+      begin
+        k := Group.IndexOfName(Fields.Names[i]);
+        if k >= 0 then Group.Delete(k);
+        Group.Add(Fields.Names[i], Fields.Items[i].Clone);
+      end;
+    Policy := TFieldPolicy.Create(Db, UserId, BoardId, '');
+    try PolicySql := Policy.ScopeAdminExpression(True); finally Policy.Free; end;
+    if not Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN ' + PolicySql + Checks +
+      ' AND EXISTS(SELECT 1 FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0 AND (' + WipGroupsJson + ')=' +
+      QuotedStr(Before) + ') THEN 1 ELSE json(''WIP group changed'') END; UPDATE boards SET settings_json=json_set(' +
+      'CASE WHEN json_valid(settings_json) THEN settings_json ELSE ''{}'' END,''$.wipLimitGroups'',json(' + QuotedStr(Groups.AsJSON) +
+      ')),modifiedAt=' + QuotedStr(DateToISO8601(LocalTimeToUniversal(Now), True)) + ' WHERE id=' + QuotedStr(BoardId) + '; COMMIT;') then
+    begin Db.Exec('ROLLBACK;'); Error := 'conflict'; Exit(409); end;
+  finally Data.Free; end;
+  Error := '';
+  Result := 200;
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
@@ -3719,7 +3894,7 @@ var B, Lanes, Lists, Cards, Card, Reveal: TWLRows; i, j, k: Integer; Route, Canv
   Selector: TSelectionScope; Writable, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
   SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
-  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
+  Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed: Boolean;
   function ViewLink(const View: string): string;
   const Keys: array[0..6] of string = ('text', 'labels', 'xlabels', 'labelMode', 'advanced', 'last', 'sort');
   var Key: string;
@@ -4090,6 +4265,8 @@ begin
       '<li><a class="js-add-card list-header-plus-bottom" href="#">&darr; ' +
       E(Words.Text('add-card-to-bottom-of-list', 'Add card to bottom of list')) + '</a></li>' +
       '<li><a class="js-select-cards" href="#">' + E(Words.Text('list-select-cards', 'Select all cards in this list')) + '</a></li></ul></template>';
+  WipPopup := '';
+  if BoardCanAdmin(Db, S.UserId, BoardId) then WipPopup := WipGroupsPopup(Db, Words, BoardId);
   Result := '<div class="board-wrapper board-color-' + HtmlAttr(B[0][1]) + '"' + BackgroundStyle(Db, BoardId, B[0][3]) +
     ' data-board="' + HtmlAttr(BoardId) + '" data-live="/b/' + HtmlAttr(HTTPEncode(BoardId)) + '/live?v=1&amp;s=' +
     // The board as this page drew it: a change made before its live
@@ -4126,6 +4303,7 @@ begin
         '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-multiboard-cal', 'Multi Board Calendar')) +
         IfThen(MultiCalendar, ' <i class="fa fa-check"></i>', '') + '</a></li>', '') + '</ul></div></template>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
+    WipPopup +
     AnnouncementHtml(Db, Words, S, BoardId) +
     '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas" data-search-reveal="' + HtmlAttr(RevealId) + '">' + Canvas + '</div>' + Details + '</div>';
   Found := True;
@@ -4995,6 +5173,20 @@ begin
   if Name = 'isAvatarUploadBlocked' then
   begin
     SendJsonAnswer(Response, 200, '{"result":' + IfThen(AvatarUploadBlocked(T.Db), 'true', 'false') + '}');
+    Exit;
+  end;
+  if (Name = 'addWipLimitGroup') or (Name = 'updateWipLimitGroup') or (Name = 'removeWipLimitGroup') then
+  begin
+    Args := nil;
+    Code := 400;
+    Error := 'match-error';
+    try
+      try Args := GetJSON(Request.Content); except Args := nil; end;
+      if Args is TJSONArray then Code := ChangeWipLimitGroup(T.Db, S.UserId, Name, TJSONArray(Args), Error);
+    finally Args.Free; end;
+    if Code = 200 then
+    begin AnnounceToAll; SendJsonAnswer(Response, 200, '{"result":true}'); end
+    else SendJsonAnswer(Response, Code, '{"error":"' + StringToJSONString(Error) + '"}');
     Exit;
   end;
   if Name = 'setSubtaskDone' then

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Nota opus subiectum ut imperfectum",
   "subtask-done-no-permission": "Mutare non potes utrum hoc opus subiectum perfectum sit",
   "board-view-calendar-mode": "Modus calendarii",
-  "board-view-multiboard-cal": "Calendarium plurium tabularum"
+  "board-view-multiboard-cal": "Calendarium plurium tabularum",
+  "wip-limit-groups": "Greges limitum WIP",
+  "wip-limit-group-name-placeholder": "Nomen (optativum)",
+  "wip-limit-group-add": "Adde gregem limitis WIP",
+  "wip-limit-group-select-swimlane": "Elige semitam",
+  "wip-limit-group-apply-swimlane": "Applica semitae"
 }

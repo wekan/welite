@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ذیلی کام نامکمل نشان کریو",
   "subtask-done-no-permission": "تُہۍ ہؠکو نہٕ بدلٲوِتھ زِ یہ ذیلی کام مکمل چھا",
   "board-view-calendar-mode": "کیلنڈر موڈ",
-  "board-view-multiboard-cal": "کیلنڈر (سٲری بورڈ)"
+  "board-view-multiboard-cal": "کیلنڈر (سٲری بورڈ)",
+  "wip-limit-groups": "WIP حد فعال کریو (فہرست)",
+  "wip-limit-group-name-placeholder": "ناو (اختیاری)",
+  "wip-limit-group-add": "شامل کریو WIP حد فعال کریو",
+  "wip-limit-group-select-swimlane": "ژٲریو وَتھ",
+  "wip-limit-group-apply-swimlane": "لاگو کریو وَتھ"
 }

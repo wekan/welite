@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Emoĩ tembiapo'i nahu'ãiva ramo",
   "subtask-done-no-permission": "Ndaikatúi remoambue ko tembiapo'i opápa térã nahániri",
   "board-view-calendar-mode": "Arapapaha reko",
-  "board-view-multiboard-cal": "Arapapaha (Opaite peteĩcha)"
+  "board-view-multiboard-cal": "Arapapaha (Opaite peteĩcha)",
+  "wip-limit-groups": "Emyendy WIP paha (Ysaja)",
+  "wip-limit-group-name-placeholder": "Téra (ikatúva)",
+  "wip-limit-group-add": "Mboja Emyendy WIP paha",
+  "wip-limit-group-select-swimlane": "Eiporavo peteĩcha Tape",
+  "wip-limit-group-apply-swimlane": "Emoañete Tape"
 }

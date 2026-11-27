@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Semnu sub-lucrul ca nibitisit",
   "subtask-done-no-permission": "Nu pots s-alãxeshti macã aestu sub-lucru easti bitisit i nu",
   "board-view-calendar-mode": "Modlu calendar",
-  "board-view-multiboard-cal": "Calendar (tuti tabelili)"
+  "board-view-multiboard-cal": "Calendar (tuti tabelili)",
+  "wip-limit-groups": "Grupuri di limitã WIP",
+  "wip-limit-group-name-placeholder": "Numa a grupului (cu vreari)",
+  "wip-limit-group-add": "Adavgã grup di limitã WIP",
+  "wip-limit-group-select-swimlane": "Aleadzi calea",
+  "wip-limit-group-apply-swimlane": "Aplicã la cali"
 }

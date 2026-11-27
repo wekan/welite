@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merkañ an is-trevell evel n'eo ket graet",
   "subtask-done-no-permission": "Ne c'hallit ket kemmañ hag-eñ eo graet an is-trevell-mañ",
   "board-view-calendar-mode": "Mod deiziadur",
-  "board-view-multiboard-cal": "Deiziadur meur a daolenn"
+  "board-view-multiboard-cal": "Deiziadur meur a daolenn",
+  "wip-limit-groups": "Strolladoù bevennoù WIP",
+  "wip-limit-group-name-placeholder": "Anv ar strollad (diret)",
+  "wip-limit-group-add": "Ouzhpennañ ur strollad bevennoù WIP",
+  "wip-limit-group-select-swimlane": "Dibab ur vandenn",
+  "wip-limit-group-apply-swimlane": "Arloañ ouzh ar vandenn"
 }

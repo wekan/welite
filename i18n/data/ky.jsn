@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Кошумча тапшырманы аткарылган жок деп белгилөө",
   "subtask-done-no-permission": "Бул кошумча тапшырманын аткарылганын өзгөртө албайсыз",
   "board-view-calendar-mode": "Календар режими",
-  "board-view-multiboard-cal": "Жылнаама (Бардык такталар)"
+  "board-view-multiboard-cal": "Жылнаама (Бардык такталар)",
+  "wip-limit-groups": "WIP чегин иштетүү (Тизме)",
+  "wip-limit-group-name-placeholder": "Аты (милдеттүү эмес)",
+  "wip-limit-group-add": "Кошуу WIP чегин иштетүү",
+  "wip-limit-group-select-swimlane": "ны тандоо Жол",
+  "wip-limit-group-apply-swimlane": "Колдонуу Жол"
 }

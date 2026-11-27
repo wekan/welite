@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Subtarea jan tukuyatjam chimpuchaña",
   "subtask-done-no-permission": "Janiw aka subtarea tukuyatächi jan ukax janicha uk mayjt'ayksnati",
   "board-view-calendar-mode": "Pachachimpu uñjaña",
-  "board-view-multiboard-cal": "Aymar aruna: Calendar (Taqi pirqanaka)"
+  "board-view-multiboard-cal": "Aymar aruna: Calendar (Taqi pirqanaka)",
+  "wip-limit-groups": "naktayaña WIP Limit (Sutinaka)",
+  "wip-limit-group-name-placeholder": "Suti (ajlliñataki)",
+  "wip-limit-group-add": "Yapaña naktayaña WIP Limit",
+  "wip-limit-group-select-swimlane": "ajlliña pirqa Thakhi",
+  "wip-limit-group-apply-swimlane": "Aymar aruna: Apply Thakhi"
 }

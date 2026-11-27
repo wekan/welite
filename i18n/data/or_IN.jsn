@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "ଉପ-କାର୍ଯ୍ୟକୁ ଅସମାପ୍ତ ଭାବରେ ଚିହ୍ନିତ କରନ୍ତୁ",
   "subtask-done-no-permission": "ଏହି ଉପ-କାର୍ଯ୍ୟ ସମାପ୍ତ କି ନାହିଁ ତାହା ଆପଣ ବଦଳାଇପାରିବେ ନାହିଁ",
   "board-view-calendar-mode": "କ୍ୟାଲେଣ୍ଡର ମୋଡ୍",
-  "board-view-multiboard-cal": "କ୍ୟାଲେଣ୍ଡର (ସମସ୍ତ ବୋର୍ଡ |)"
+  "board-view-multiboard-cal": "କ୍ୟାଲେଣ୍ଡର (ସମସ୍ତ ବୋର୍ଡ |)",
+  "wip-limit-groups": "WIP ସୀମା ଗୋଷ୍ଠୀ",
+  "wip-limit-group-name-placeholder": "ନାମ (ବୈକଳ୍ପିକ)",
+  "wip-limit-group-add": "ଯୋଡନ୍ତୁ। WIP ସୀମା ସକ୍ଷମ କରନ୍ତୁ",
+  "wip-limit-group-select-swimlane": "ବୋର୍ଡ ଚୟନ କରନ୍ତୁ। ସ୍ୱିମଲେନ୍",
+  "wip-limit-group-apply-swimlane": "ପ୍ରୟୋଗ କରନ୍ତୁ। ସ୍ୱିମଲେନ୍"
 }

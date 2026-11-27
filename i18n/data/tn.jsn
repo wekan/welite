@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Tshwaya tiro-potlana ga e a wediwa",
   "subtask-done-no-permission": "Ga o kgone go fetola gore a tiro-potlana e e weditswe",
   "board-view-calendar-mode": "Mokgwa wa Khalendara",
-  "board-view-multiboard-cal": "Khalendara (Diboto tsotlhe)"
+  "board-view-multiboard-cal": "Khalendara (Diboto tsotlhe)",
+  "wip-limit-groups": "Kgontsha tekanyo ya WIP (Lenaane)",
+  "wip-limit-group-name-placeholder": "Leina (boitlhophelo)",
+  "wip-limit-group-add": "Tsenya Kgontsha tekanyo ya WIP",
+  "wip-limit-group-select-swimlane": "Tlhopha Tsela",
+  "wip-limit-group-apply-swimlane": "Dirisa Tsela"
 }

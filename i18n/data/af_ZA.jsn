@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Merk subtaak as onvoltooid",
   "subtask-done-no-permission": "Jy kan nie verander of hierdie subtaak voltooi is nie",
   "board-view-calendar-mode": "Kalendermodus",
-  "board-view-multiboard-cal": "Kalender (Alle borde)"
+  "board-view-multiboard-cal": "Kalender (Alle borde)",
+  "wip-limit-groups": "WIP-perkgroepe",
+  "wip-limit-group-name-placeholder": "Groepnaam (opsioneel)",
+  "wip-limit-group-add": "Voeg WIP-perkgroep by",
+  "wip-limit-group-select-swimlane": "Kies Swembaan",
+  "wip-limit-group-apply-swimlane": "Doen aansoek Swembaan"
 }

@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Markahi an subtask nga diri pa nahuman",
   "subtask-done-no-permission": "Diri nimo mababag-o kon nahuman na ini nga subtask",
   "board-view-calendar-mode": "Moda han Kalendaryo",
-  "board-view-multiboard-cal": "Kalendaryo (Ngatanan nga Board)"
+  "board-view-multiboard-cal": "Kalendaryo (Ngatanan nga Board)",
+  "wip-limit-groups": "I-enable an WIP Limit (Lista)",
+  "wip-limit-group-name-placeholder": "Ngaran (opsyonal)",
+  "wip-limit-group-add": "Idugang I-enable an WIP Limit",
+  "wip-limit-group-select-swimlane": "Pili-a an Board Couloir",
+  "wip-limit-group-apply-swimlane": "Igbutang Couloir"
 }

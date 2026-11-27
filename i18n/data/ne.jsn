@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "उपकार्य अपूर्ण चिन्ह लगाउनुहोस्",
   "subtask-done-no-permission": "यो उपकार्य पूर्ण छ कि छैन भन्ने कुरा तपाईंले बदल्न सक्नुहुन्न",
   "board-view-calendar-mode": "पात्रो मोड",
-  "board-view-multiboard-cal": "पात्रो (सबै बोर्डहरू)"
+  "board-view-multiboard-cal": "पात्रो (सबै बोर्डहरू)",
+  "wip-limit-groups": "WIP सीमा समूहहरू",
+  "wip-limit-group-name-placeholder": "समूहको नाम (वैकल्पिक)",
+  "wip-limit-group-add": "WIP सीमा समूह थप्नुहोस्",
+  "wip-limit-group-select-swimlane": "चयन गर्नुहोस् मार्ग",
+  "wip-limit-group-apply-swimlane": "लागू गर्नुहोस् मार्ग"
 }

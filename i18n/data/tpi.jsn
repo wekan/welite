@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Makim liklik wok olsem i no pinis",
   "subtask-done-no-permission": "Yu no inap senisim sapos dispela liklik wok i pinis o nogat",
   "board-view-calendar-mode": "Pasin bilong kalenda",
-  "board-view-multiboard-cal": "Kalenda (Olgeta bot)"
+  "board-view-multiboard-cal": "Kalenda (Olgeta bot)",
+  "wip-limit-groups": "Ol grup bilong mak bilong WIP",
+  "wip-limit-group-name-placeholder": "Nem (yu ken makim)",
+  "wip-limit-group-add": "Putim Larim i wok WIP Limit",
+  "wip-limit-group-select-swimlane": "Makim bot Rot",
+  "wip-limit-group-apply-swimlane": "Yusim long rot bilong kat"
 }

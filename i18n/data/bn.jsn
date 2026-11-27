@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "উপকাজ অসম্পূর্ণ চিহ্নিত করুন",
   "subtask-done-no-permission": "এই উপকাজ সম্পন্ন কি না তা আপনি বদলাতে পারবেন না",
   "board-view-calendar-mode": "পঞ্জিকা মোড",
-  "board-view-multiboard-cal": "পঞ্জিকা (সব বোর্ড)"
+  "board-view-multiboard-cal": "পঞ্জিকা (সব বোর্ড)",
+  "wip-limit-groups": "WIP সীমা গ্রুপ",
+  "wip-limit-group-name-placeholder": "গ্রুপের নাম (ঐচ্ছিক)",
+  "wip-limit-group-add": "WIP সীমা গ্রুপ যোগ করুন",
+  "wip-limit-group-select-swimlane": "নির্বাচন করুন সাঁতারপথ",
+  "wip-limit-group-apply-swimlane": "প্রয়োগ করুন সাঁতারপথ"
 }

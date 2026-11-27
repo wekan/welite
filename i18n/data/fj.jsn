@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Vakatakilakilataka na cakacaka lailai me se bera ni oti",
   "subtask-done-no-permission": "O sega ni rawa ni veisautaka se sa oti se sega na cakacaka lailai oqo",
   "board-view-calendar-mode": "Ivakarau ni Kalada",
-  "board-view-multiboard-cal": "Kaleda (Na vola kece)"
+  "board-view-multiboard-cal": "Kaleda (Na vola kece)",
+  "wip-limit-groups": "Vakatara na iYalayala WIP (Lisi)",
+  "wip-limit-group-name-placeholder": "Yaca (e sega ni dodonu)",
+  "wip-limit-group-add": "Kuria Vakatara na iYalayala WIP",
+  "wip-limit-group-select-swimlane": "Digitaka na Sala",
+  "wip-limit-group-apply-swimlane": "Vakayagataka Sala"
 }

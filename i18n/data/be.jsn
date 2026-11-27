@@ -2323,5 +2323,10 @@
   "subtask-mark-not-done": "Пазначыць падзадачу як незавершаную",
   "subtask-done-no-permission": "Вы не можаце змяніць, ці завершана гэтая падзадача",
   "board-view-calendar-mode": "Рэжым календара",
-  "board-view-multiboard-cal": "Каляндар (Усе дошкі)"
+  "board-view-multiboard-cal": "Каляндар (Усе дошкі)",
+  "wip-limit-groups": "Групы ліміту WIP",
+  "wip-limit-group-name-placeholder": "Назва групы (неабавязкова)",
+  "wip-limit-group-add": "Дадаць групу ліміту WIP",
+  "wip-limit-group-select-swimlane": "Выберыце дошку Дарожка",
+  "wip-limit-group-apply-swimlane": "Ужыць Дарожка"
 }
