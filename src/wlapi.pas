@@ -5760,7 +5760,7 @@ procedure ApiListEdit(aRequest:TRequest;aResponse:TResponse);
 const NotFound='{"error":"List not found"}';
 var T:TWLTenant;UserId,BoardId,ListId,Scope,Sets,Permission,Value,Sql,OldTitle,NewTitle,OldColor,NewColor:string;
   Body,Reply,Before,After:TJSONObject;Field,Wip:TJSONData;Rows:TWLRows;Policy:TFieldPolicy;
-  Flag,i:Integer;Limit,OldLimit:Int64;Enabled,Soft,OldEnabled,OldSoft,HasWip:Boolean;Wide:UnicodeString;
+  Flag,i:Integer;Limit:Int64;OldLimit:Double;NumberFormat:TFormatSettings;Enabled,Soft,OldEnabled,OldSoft,HasWip:Boolean;Wide:UnicodeString;
   procedure SetColumn(const Column,Literal:string);
   begin
     if Sets<>'' then Sets:=Sets+',';
@@ -5772,10 +5772,11 @@ begin
   if not ApiBoardGuard(T,aRequest,aResponse,UserId,NotFound) then Exit;
   BoardId:=aRequest.RouteParams['boardId'];ListId:=aRequest.RouteParams['listId'];
   Scope:='id='+QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND archived=0 AND deletedAt IS NULL';
-  Rows:=T.Db.Query('SELECT title,COALESCE(color,''''),COALESCE(wip_value,1),COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE '+Scope+';');
+  Rows:=T.Db.Query('SELECT title,COALESCE(color,''''),CASE WHEN typeof(wip_value)=''real'' THEN printf(''%!.26g'',wip_value) ELSE COALESCE(wip_value,1) END,COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE '+Scope+';');
   if Length(Rows)<>1 then begin SendJson(aResponse,NotFound,404);Exit;end;
   OldTitle:=Rows[0][0];NewTitle:=OldTitle;OldColor:=Rows[0][1];NewColor:=OldColor;
-  OldLimit:=StrToInt64Def(Rows[0][2],1);OldEnabled:=Rows[0][3]='1';OldSoft:=Rows[0][4]='1';
+  NumberFormat:=DefaultFormatSettings;NumberFormat.DecimalSeparator:='.';NumberFormat.ThousandSeparator:=#0;
+  OldLimit:=StrToFloatDef(Rows[0][2],1,NumberFormat);OldEnabled:=Rows[0][3]='1';OldSoft:=Rows[0][4]='1';
   Body:=nil;Policy:=nil;Sets:='';Permission:='1';
   try
     try

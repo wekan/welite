@@ -30,7 +30,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   Checklist history displays the translated visibility settings and item
   completion, with Yes or No values. List WIP history shows the limit
   and whether it is enabled and soft. REST WIP edits record one compound
-  History entry when any of those settings changes. Card position history shows the saved
+  History entry when any of those settings changes, retaining a previously
+  stored fractional limit in the before value. Card position history shows the saved
   move reason and the destination list title when it belongs to the row’s
   board. A missing title or reason falls back to the destination ID when
   neither is available. History displays
