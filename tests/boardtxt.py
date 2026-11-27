@@ -65,6 +65,9 @@ def run(request,database,administrator,member,base):
         con.execute("UPDATE cards SET createdAt=?, modifiedAt=?, dateLastActivity=? WHERE boardId='boardtxt'",
                     ('2024-01-01T00:00:00.000Z',) * 3)
         con.execute("UPDATE cards SET dueComplete=1 WHERE id='txtchild'")
+        container_dates = ('2023-01-01T00:00:00.000Z', '2023-02-01T00:00:00.000Z')
+        con.execute("UPDATE lists SET createdAt=?, modifiedAt=? WHERE id='txtlist'", container_dates)
+        con.execute("UPDATE swimlanes SET createdAt=?, modifiedAt=? WHERE id='txtlane'", container_dates)
     for fields in ('dependencies,locations,stickers,people,labels,custom-fields', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
@@ -107,6 +110,10 @@ def run(request,database,administrator,member,base):
         assert con.execute(
             "SELECT collapsed FROM lists WHERE boardId=? ORDER BY collapsed DESC", (imported_id,)
         ).fetchall() == [(1,), (0,), (None,), (None,)]
+        assert con.execute("SELECT createdAt,modifiedAt FROM lists WHERE boardId=? AND collapsed=1",
+                           (imported_id,)).fetchone() == container_dates
+        assert con.execute("SELECT createdAt,modifiedAt FROM swimlanes WHERE boardId=? AND title='txtlane'",
+                           (imported_id,)).fetchone() == container_dates
         value, option = con.execute(
             "SELECT v.value,d.name FROM card_custom_field_values v "
             "JOIN cards c ON c.id=v.cardId JOIN custom_fields f ON f.id=v.customFieldId "

@@ -4163,12 +4163,16 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
     if (Field<>nil) and (Field.JSONType=jtNumber) and not IsNan(Field.AsFloat) and not IsInfinite(Field.AsFloat) then
       Result:=Field.AsJSON;
   end;
-  function ImportedDate(Obj:TJSONObject;const Key,Fallback:string):string;
+  function ImportedDate(Obj:TJSONObject;const Key,Fallback:string;IgnoreInvalid:Boolean=False):string;
   var Field:TJSONData;
   begin
     Result:=Fallback;Field:=Obj.Find(Key);
     if (Field=nil) or (Field.JSONType=jtNull) then Exit;
-    if not CardDateSql(Field,Result) then raise EConvertError.Create('Invalid imported date');
+    if not CardDateSql(Field,Result) then
+    begin
+      if IgnoreInvalid then Exit(Fallback);
+      raise EConvertError.Create('Invalid imported date');
+    end;
     if Result='NULL' then Result:=Fallback;
   end;
   procedure ImportCardVoting(Entry:TJSONObject;const Id:string);
@@ -4672,8 +4676,9 @@ begin
         if TargetLane <> '' then SortSql := LanePosition+'+'+IntToStr(J+1)
         else if TargetBoard <> '' then
           SortSql := '(SELECT COALESCE(MAX(sort),-1)+1 FROM swimlanes WHERE boardId='+Board+')';
-        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt,color,archived) VALUES('+QuotedStr(LaneId)+
-          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortSql+','+Stamp+','+
+        Sql:=Sql+'INSERT INTO swimlanes(id,boardId,title,sort,createdAt,modifiedAt,color,archived) VALUES('+QuotedStr(LaneId)+
+          ','+Board+','+QuotedStr(Text(Row,'title','Default'))+','+SortSql+','+ImportedDate(Row,'createdAt',Stamp,True)+','+
+          ImportedDate(Row,'modifiedAt','NULL',True)+','+
           ImportedColor(Row)+','+BooleanValue(Row,'archived')+'); ';
       end;
       if (DefaultLane='') and (TargetBoard<>'') then
@@ -4703,9 +4708,10 @@ begin
         if TargetList <> '' then SortSql := ListPosition+'+'+IntToStr(J+1)
         else if TargetBoard <> '' then
           SortSql := '(SELECT COALESCE(MAX(sort),-1)+1 FROM lists WHERE boardId='+Board+')';
-        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived,collapsed) VALUES('+
+        Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,modifiedAt,color,width,archived,collapsed) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
-          QuotedStr(Text(Row,'title'))+','+SortSql+','+Stamp+','+ImportedColor(Row)+','+
+          QuotedStr(Text(Row,'title'))+','+SortSql+','+ImportedDate(Row,'createdAt',Stamp,True)+','+
+          ImportedDate(Row,'modifiedAt','NULL',True)+','+ImportedColor(Row)+','+
           ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+BooleanValue(Row,'collapsed','NULL')+'); ';
       end;
       if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
