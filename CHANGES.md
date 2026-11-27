@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Member Settings links to the signed-in member’s own History across
+  readable boards, with search and pagination.
+
 - REST card color edits are recorded in the board's History Title group
   and can be undone, redone or restored. Undo and redo check the current
   field value and board scope again inside the write transaction. Card

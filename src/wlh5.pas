@@ -1184,6 +1184,7 @@ begin
       '<li><a class="board-header-btn js-open-archived-board" href="/allboards/archive"><i class="fa fa-archive"></i> ' +
       E(Words.Text('archives', 'Archives')) + '</a></li>' +
       '<li><a class="js-edit-profile" href="#"><i class="fa fa-user"></i> ' + E(Words.Text('edit-profile', 'Edit Profile')) + '</a></li>' +
+      '<li><a href="/profile/history"><i class="fa fa-history"></i> ' + E(Words.Text('history', 'History')) + '</a></li>' +
       '<li><a class="js-change-password" href="/profile/password"><i class="fa fa-key"></i> ' +
       E(Words.Text('changePasswordPopup-title', 'Change Password')) + '</a></li>' +
       '<li><a class="js-change-language" href="/language/popup"><i class="fa fa-globe"></i> ' +
@@ -8030,9 +8031,9 @@ begin
 end;
 
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;
-  const BoardId: string; Query: TStrings; out Content: string): Integer;
+  const BoardId: string; MemberView: Boolean; Query: TStrings; out Content: string): Integer;
 var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Values: TJSONObject;
-  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel, RowField, RowGroup: string;
+  Reply: TJSONData; Answer, Route, CardId, ListId, LaneId, ScopeKind, ScopeId, ScopeFields, Who, Search, Group, Label_, Summary, When_, Back, Name, DateFormat, GroupLabel, RowField, RowGroup, BackTitle: string;
   I, PageNumber, PageCount, Size: Integer;
   CanRestoreCard, CanRestoreRule, CanRestoreList: Boolean;
   function LinkTo(const Contributor: string; Number: Integer): string;
@@ -8043,41 +8044,52 @@ var Board: TWLRows; Args, Rows, Contributors: TJSONArray; Options, Data, Row, Va
   end;
 begin
   Content := '';
-  if (BoardId = '') or (Pos(#0, BoardId) > 0) then Exit(404);
-  Board := T.Db.Query('SELECT title,slug FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
-  if Length(Board) <> 1 then Exit(404);
-  CardId := Query.Values['card'];
-  ListId := Query.Values['list'];
-  LaneId := Query.Values['swimlane'];
-  if Pos(#0, CardId + ListId + LaneId) > 0 then Exit(404);
-  if Ord(CardId <> '') + Ord(ListId <> '') + Ord(LaneId <> '') > 1 then Exit(400);
-  ScopeKind := 'board'; ScopeId := BoardId;
-  if ListId <> '' then
-  begin
-    ScopeKind := 'list'; ScopeId := ListId;
-    if Length(T.Db.Query('SELECT 1 FROM lists WHERE id=' + QuotedStr(ListId) +
-      ' AND boardId=' + QuotedStr(BoardId) + ';')) <> 1 then Exit(404);
-  end
-  else if LaneId <> '' then
-  begin
-    ScopeKind := 'swimlane'; ScopeId := LaneId;
-    if Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id=' + QuotedStr(LaneId) +
-      ' AND boardId=' + QuotedStr(BoardId) + ';')) <> 1 then Exit(404);
-  end;
-  if CardId <> '' then
-  begin
-    ScopeKind := 'card'; ScopeId := CardId;
-    if Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
-      ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL' +
-      IfThen(AssignedOnlyMember(T.Db, S.UserId, BoardId),
-        ' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId=' + QuotedStr(S.UserId) + ')') + ';')) <> 1 then Exit(404);
-  end;
-  Who := Query.Values['user'];
   Search := Query.Values['q'];
-  Group := Query.Values['group'];
-  Route := '/b/' + HTTPEncode(BoardId) + '/history';
-  Back := BoardRoute(BoardId, Board[0][1]);
-  if Board[0][1] = 'history' then Back := '/b/' + HTTPEncode(BoardId);
+  if MemberView then
+  begin
+    Route := '/profile/history';
+    Back := '/';
+    BackTitle := Words.Text('all-boards', 'All Boards');
+    Who := S.UserId;
+  end
+  else
+  begin
+    if (BoardId = '') or (Pos(#0, BoardId) > 0) then Exit(404);
+    Board := T.Db.Query('SELECT title,slug FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
+    if Length(Board) <> 1 then Exit(404);
+    CardId := Query.Values['card'];
+    ListId := Query.Values['list'];
+    LaneId := Query.Values['swimlane'];
+    if Pos(#0, CardId + ListId + LaneId) > 0 then Exit(404);
+    if Ord(CardId <> '') + Ord(ListId <> '') + Ord(LaneId <> '') > 1 then Exit(400);
+    ScopeKind := 'board'; ScopeId := BoardId;
+    if ListId <> '' then
+    begin
+      ScopeKind := 'list'; ScopeId := ListId;
+      if Length(T.Db.Query('SELECT 1 FROM lists WHERE id=' + QuotedStr(ListId) +
+        ' AND boardId=' + QuotedStr(BoardId) + ';')) <> 1 then Exit(404);
+    end
+    else if LaneId <> '' then
+    begin
+      ScopeKind := 'swimlane'; ScopeId := LaneId;
+      if Length(T.Db.Query('SELECT 1 FROM swimlanes WHERE id=' + QuotedStr(LaneId) +
+        ' AND boardId=' + QuotedStr(BoardId) + ';')) <> 1 then Exit(404);
+    end;
+    if CardId <> '' then
+    begin
+      ScopeKind := 'card'; ScopeId := CardId;
+      if Length(T.Db.Query('SELECT 1 FROM cards WHERE id=' + QuotedStr(CardId) +
+        ' AND boardId=' + QuotedStr(BoardId) + ' AND deletedAt IS NULL' +
+        IfThen(AssignedOnlyMember(T.Db, S.UserId, BoardId),
+          ' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId=' + QuotedStr(S.UserId) + ')') + ';')) <> 1 then Exit(404);
+    end;
+    Who := Query.Values['user'];
+    Group := Query.Values['group'];
+    Route := '/b/' + HTTPEncode(BoardId) + '/history';
+    Back := BoardRoute(BoardId, Board[0][1]);
+    if Board[0][1] = 'history' then Back := '/b/' + HTTPEncode(BoardId);
+    BackTitle := Board[0][0];
+  end;
   Args := TJSONArray.Create;
   try
     Options := TJSONObject.Create(['scope', ScopeKind, 'scopeId', ScopeId, 'userId', Who, 'search', Search, 'group', Group,
@@ -8096,17 +8108,18 @@ begin
     Size := Data.Integers['pageSize'];
     PageCount := Max(1, (Data.Integers['total'] + Size - 1) div Size);
     DateFormat := ViewDateFor(T.Db, S.UserId, BoardId);
-    CanRestoreList := BoardCanWrite(T.Db, S.UserId, BoardId);
-    CanRestoreCard := CanRestoreList or
+    CanRestoreList := not MemberView and BoardCanWrite(T.Db, S.UserId, BoardId);
+    CanRestoreCard := not MemberView and (CanRestoreList or
       (Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId=' + QuotedStr(BoardId) +
-        ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1);
-    CanRestoreRule := BoardCanAdmin(T.Db, S.UserId, BoardId);
+        ' AND userId=' + QuotedStr(S.UserId) + ' AND isActive=1 AND isNormalAssignedOnly=1;')) = 1));
+    CanRestoreRule := not MemberView and BoardCanAdmin(T.Db, S.UserId, BoardId);
     Label_ := Words.Text('history', 'History');
     Content := '<div class="history-table" data-error="' + HtmlAttr(Words.Text('error', 'Error')) +
       '"><div class="history-header"><a class="js-history-back" href="' +
-      HtmlAttr(Back) + '">&larr; ' + E(Board[0][0]) + '</a><h2>' + E(Label_) + '</h2></div><nav class="history-nav">' +
+      HtmlAttr(Back) + '">&larr; ' + E(BackTitle) + '</a><h2>' + E(Label_) + '</h2></div><nav class="history-nav">' +
       '<a class="history-nav-item js-history-all' + IfThen(Who = '', ' is-active') + '" href="' +
       LinkTo('', 1) + '">' + E(Label_) + '</a>';
+    if not MemberView then
     for I := 0 to Contributors.Count - 1 do
     begin
       Row := Contributors.Objects[I];
@@ -8307,7 +8320,7 @@ begin
   HistoryBoard := '';
   Parts := PathParts(Path);
   if (Length(Parts) = 3) and (Parts[0] = 'b') and (Parts[2] = 'history') then HistoryBoard := Parts[1];
-  if not ((HistoryBoard <> '') or (Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
+  if not ((HistoryBoard <> '') or (Path = '/profile/history') or (Path = '/') or (Path = '/sign-in') or (Path = '/register') or (Path = '/board') or (Path = '/board/card') or
     (Path = '/allboards') or (Copy(Path, 1, 11) = '/allboards/') or (Path = '/global-search') or (Path = '/people') or (Path = '/admin/people') or
     (Path = '/board/rules') or (Path = '/board/rules/export') or (Path = '/admin/problems/security-report') or
     (Path = '/admin/problems/password-length') or (Path = '/admin/settings/appearance') or (Path = '/admin/settings/visibility') or
@@ -8453,12 +8466,12 @@ begin
         Send(404, Page(Request, Language, Words, S, Words.Text('board-not-found', 'Board not found'), '', NotFoundContent(Words)));
       Exit;
     end;
-    if HistoryBoard <> '' then
+    if (HistoryBoard <> '') or (Path = '/profile/history') then
     begin
       Code := 500;
       if T.Db.BeginRead then
       try
-        Code := BoardHistoryContent(T, S, Words, HistoryBoard, Request.QueryFields, Content);
+        Code := BoardHistoryContent(T, S, Words, HistoryBoard, Path = '/profile/history', Request.QueryFields, Content);
       finally T.Db.EndRead; end;
       if Code <> 200 then Content := NotFoundContent(Words);
       Send(Code, Page(Request, Language, Words, S, Words.Text('history', 'History'), '', Content));
