@@ -8023,7 +8023,10 @@ begin
   end;
   Document := Values.Find('document');
   if Document is TJSONObject then Values := TJSONObject(Document);
-  Result := Values.Get('title', Values.Get('description', Values.Get('text', Values.Get('name', ''))));
+  Result := Values.Get('title', '');
+  if Result = '' then Result := Values.Get('description', '');
+  if Result = '' then Result := Values.Get('text', '');
+  if Result = '' then Result := Values.Get('name', '');
 end;
 
 function BoardHistoryContent(const T: TWLTenant; const S: TWLSession; Words: TWLTranslator;

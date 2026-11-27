@@ -24,7 +24,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   the title, trigger, action and enabled, disabled or removed state. Scrum
   rows received from shared history show record names or IDs, states,
   metadata and removals. Multivalue changes display comma-separated items,
-  with string values shown without JSON quotes.
+  with string values shown without JSON quotes. Document summaries skip
+  empty titles and use the saved description, text or name.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
