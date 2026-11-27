@@ -34,6 +34,7 @@ def run(request,database,administrator,member,base):
         for lid,lane,order in [('txtlist','txtlane',0),('txtlist2','txtlane',1),('txtlist3','txtlane2',0),('txtlist4','txtlane2',1)]:
             con.execute("INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt) VALUES(?,'boardtxt',?,'List <user>',?,'now')",(lid,lane,order))
         con.execute("UPDATE lists SET collapsed=1 WHERE id='txtlist'")
+        con.execute("UPDATE lists SET collapsed=0 WHERE id='txtlist2'")
         author=con.execute("SELECT id FROM users WHERE username='administrator'").fetchone()[0]
         con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,dateLastActivity,createdAt,modifiedAt) "
                     "VALUES('txtcard','boardtxt','txtlane','txtlist','Hidden until expanded',?,'now','now','now')",(author,))
@@ -103,6 +104,9 @@ def run(request,database,administrator,member,base):
     assert status == 200, result
     imported_id = json.loads(result)['boardId']
     with sqlite3.connect(database) as con:
+        assert con.execute(
+            "SELECT collapsed FROM lists WHERE boardId=? ORDER BY collapsed DESC", (imported_id,)
+        ).fetchall() == [(1,), (0,), (None,), (None,)]
         value, option = con.execute(
             "SELECT v.value,d.name FROM card_custom_field_values v "
             "JOIN cards c ON c.id=v.cardId JOIN custom_fields f ON f.id=v.customFieldId "

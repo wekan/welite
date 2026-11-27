@@ -4230,20 +4230,17 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
           ') WHERE id='+QuotedStr(Id)+' AND boardId='+Board+'; ';
     finally Extra.Free;end;
   end;
-  function BooleanValue(Obj:TJSONObject;const Key:string):string;
+  function BooleanValue(Obj:TJSONObject;const Key:string;const Fallback:string='0'):string;
   var Field:TJSONData;
   begin
     Field:=Obj.Find(Key);
-    Result:='0';
-    if ((Field is TJSONBoolean) and Field.AsBoolean) or
-       ((Field<>nil) and (Field.JSONType=jtNumber) and (Field.AsFloat=1)) then Result:='1';
-  end;
-  function ImportedCollapse(Entry:TJSONObject):string;
-  var Field:TJSONData;
-  begin
-    Field:=Entry.Find('collapsed');
-    if not (Field is TJSONBoolean) then Exit('NULL');
-    Result:=BooleanValue(Entry,'collapsed');
+    if Field is TJSONBoolean then Exit(IntToStr(Ord(Field.AsBoolean)));
+    if (Field<>nil) and (Field.JSONType=jtNumber) then
+    begin
+      if Field.AsFloat=0 then Exit('0');
+      if Field.AsFloat=1 then Exit('1');
+    end;
+    Result:=Fallback;
   end;
   function ImportedColor(Entry:TJSONObject):string;
   var Field:TJSONData;Color:string;
@@ -4709,7 +4706,7 @@ begin
         Sql:=Sql+'INSERT INTO lists(id,boardId,swimlaneId,title,sort,createdAt,color,width,archived,collapsed) VALUES('+
           QuotedStr(ListId)+','+Board+','+QuotedStr(LaneId)+','+
           QuotedStr(Text(Row,'title'))+','+SortSql+','+Stamp+','+ImportedColor(Row)+','+
-          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+ImportedCollapse(Row)+'); ';
+          ImportedListWidth(Row)+','+BooleanValue(Row,'archived')+','+BooleanValue(Row,'collapsed','NULL')+'); ';
       end;
       if (DefaultList='') and (Arrays[2]<>nil) and (Arrays[2].Count>0) then
       begin

@@ -35,7 +35,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   native card values and the board’s field definitions with dropdown
   options, including definitions that have no card values yet. A native
   ZIP round trip restores dropdown values and keeps archived and completed
-  subtasks intact when SQLite exports their flags as 0 or 1.
+  subtasks intact when SQLite exports their flags as 0 or 1. List collapse
+  settings also round-trip, including explicitly expanded lists and lists
+  that use the default state.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
