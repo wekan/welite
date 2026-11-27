@@ -2315,5 +2315,7 @@
   "board-announcement": "Annunzio d'a tavula",
   "board-announcement-enabled": "Fallo vedé a tutte quante ncopp'a chesta tavula",
   "add-many-lines-as": "Azzecca cchiù righe comme:",
-  "many-items": "Cchiù __items__"
+  "many-items": "Cchiù __items__",
+  "operator-number": "numero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte 'o cui nummero è *<number>*"
 }

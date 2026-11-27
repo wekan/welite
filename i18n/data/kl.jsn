@@ -2315,5 +2315,7 @@
   "board-announcement": "Ilisarnaatip nalunaarutaa",
   "board-announcement-enabled": "Ilisarnaammi matumani tamanut takutiguk",
   "add-many-lines-as": "Titarnit arlallit ima ilanngukkit:",
-  "many-items": "__items__ arlallit"
+  "many-items": "__items__ arlallit",
+  "operator-number": "normu",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortsit normuat *<number>*-iusoq"
 }

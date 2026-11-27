@@ -2315,5 +2315,7 @@
   "board-announcement": "Съобщение на таблото",
   "board-announcement-enabled": "Показване на всички в това табло",
   "add-many-lines-as": "Добавяне на няколко реда като:",
-  "many-items": "Няколко __items__"
+  "many-items": "Няколко __items__",
+  "operator-number": "номер",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карти, чийто номер е *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Daxuyaniya depoyê",
   "board-announcement-enabled": "Nîşanî her kesê li ser vê depoyê bide",
   "add-many-lines-as": "Çend rêzan wekî vê zêde bike:",
-  "many-items": "Çend __items__"
+  "many-items": "Çend __items__",
+  "operator-number": "hejmar",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartên ku hejmara kartê wan *<number>* e"
 }

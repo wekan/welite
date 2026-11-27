@@ -2315,5 +2315,7 @@
   "board-announcement": "Yégleb tablo",
   "board-announcement-enabled": "Won ko ñépp ñi nekk ci tablo bii",
   "add-many-lines-as": "Yokk ay rëdd yu bari ni:",
-  "many-items": "__items__ yu bari"
+  "many-items": "__items__ yu bari",
+  "operator-number": "nimero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karta yi nimero bi di *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Simemetelo selibhodi",
   "board-announcement-enabled": "Kukhombise bonkhe labakulelibhodi",
   "add-many-lines-as": "Ngeta imigca leminyenti njenge:",
-  "many-items": "__items__ (lokunyenti)"
+  "many-items": "__items__ (lokunyenti)",
+  "operator-number": "inombolo",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - emakhadi lanenombolo yelikhadi lengu-*<number>*"
 }

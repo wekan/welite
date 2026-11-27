@@ -2315,5 +2315,7 @@
   "board-announcement": "Chilengezo cha bolodi",
   "board-announcement-enabled": "Chionetseni kwa aliyense pa bolodi ili",
   "add-many-lines-as": "Onjezani mizere yambiri ngati:",
-  "many-items": "__items__ (zambiri)"
+  "many-items": "__items__ (zambiri)",
+  "operator-number": "nambala",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi omwe nambala yake ya khadi ndi *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Anunci del tauler",
   "board-announcement-enabled": "Mostra’l a tothom d’aquest tauler",
   "add-many-lines-as": "Afegeix diverses línies com a:",
-  "many-items": "__items__ múltiples"
+  "many-items": "__items__ múltiples",
+  "operator-number": "número",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - targetes amb el número de targeta *<number>*"
 }

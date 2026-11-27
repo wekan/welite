@@ -2315,5 +2315,7 @@
   "board-announcement": "Տախտակի հայտարարություն",
   "board-announcement-enabled": "Ցույց տալ այն այս տախտակի բոլոր անդամներին",
   "add-many-lines-as": "Ավելացնել մի քանի տող որպես՝",
-  "many-items": "Մի քանի __items__"
+  "many-items": "Մի քանի __items__",
+  "operator-number": "համար",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - քարտեր, որոնց քարտի համարը *<number>* է"
 }

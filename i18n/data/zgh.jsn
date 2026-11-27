@@ -2315,5 +2315,7 @@
   "board-announcement": "ⴰⵍⵖⵓ ⵏ ⵜⴼⵍⵡⵉⵜ",
   "board-announcement-enabled": "ⵙⴽⵏ ⵜ ⵉ ⴽⵓⵍⵍⵓ ⵎⵉⴷⴷⵏ ⴳ ⵜⴼⵍⵡⵉⵜ ⴰⴷ",
   "add-many-lines-as": "ⵔⵏⵓ ⵎⵏⵏⴰⵡ ⵏ ⵉⵣⵔⵉⵔⵏ ⴰⵎ:",
-  "many-items": "ⵎⵏⵏⴰⵡ ⵏ __items__"
+  "many-items": "ⵎⵏⵏⴰⵡ ⵏ __items__",
+  "operator-number": "ⵓⵟⵟⵓⵏ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ⵜⵉⴽⴰⵕⴹⵉⵡⵉⵏ ⵍⵍⵉ ⵉⴳⴰ ⵓⵟⵟⵓⵏ ⵏⵏⵙⵏⵜ *<number>*"
 }

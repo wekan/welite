@@ -2315,5 +2315,7 @@
   "board-announcement": "Tahvli teadaanne",
   "board-announcement-enabled": "Näita kõigile sellel tahvlil",
   "add-many-lines-as": "Lisa mitu rida järgmiselt:",
-  "many-items": "__items__ (mitu)"
+  "many-items": "__items__ (mitu)",
+  "operator-number": "arvuline väärtus",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardid, mille kaardi number on *<number>*"
 }

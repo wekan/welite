@@ -2315,5 +2315,7 @@
   "board-announcement": "Известување на таблото",
   "board-announcement-enabled": "Прикажи им го на сите на ова табло",
   "add-many-lines-as": "Додај повеќе редови како:",
-  "many-items": "Повеќе __items__"
+  "many-items": "Повеќе __items__",
+  "operator-number": "број",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картички чиј број е *<number>*"
 }

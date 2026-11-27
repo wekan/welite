@@ -2315,5 +2315,7 @@
   "board-announcement": "Toksave bilong bot",
   "board-announcement-enabled": "Soim long olgeta manmeri long dispela bot",
   "add-many-lines-as": "Putim planti lain olsem:",
-  "many-items": "Planti __items__"
+  "many-items": "Planti __items__",
+  "operator-number": "namba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kat i gat namba *<number>*"
 }

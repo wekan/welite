@@ -2315,5 +2315,7 @@
   "board-announcement": "Kemenn an daolenn",
   "board-announcement-enabled": "Diskouez anezhañ d'an holl war an daolenn-mañ",
   "add-many-lines-as": "Ouzhpennañ meur a linenn evel:",
-  "many-items": "__items__ (meur a hini)"
+  "many-items": "__items__ (meur a hini)",
+  "operator-number": "niverenn",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ar c'hartennoù a zo o niverenn *<number>*"
 }

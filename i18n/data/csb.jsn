@@ -2315,5 +2315,7 @@
   "board-announcement": "Òbwieszczenié tôflë",
   "board-announcement-enabled": "Pòkôżë to wszëtczim na ti tôfli",
   "add-many-lines-as": "Dodac wiele rézów jakno:",
-  "many-items": "__items__ (wiele)"
+  "many-items": "__items__ (wiele)",
+  "operator-number": "lëczba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kôrtë z numerã *<number>*"
 }

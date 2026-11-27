@@ -2315,5 +2315,7 @@
   "board-announcement": "Nḓivhadzo ya bodo",
   "board-announcement-enabled": "I sumbedzeni muthu muṅwe na muṅwe kha bodo iyi",
   "add-many-lines-as": "Engedzani mitaladzi minzhi sa:",
-  "many-items": "__items__ (zwinzhi)"
+  "many-items": "__items__ (zwinzhi)",
+  "operator-number": "nomboro",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi ane nomboro ya khadi ya vha *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Isaziso sebhodi",
   "board-announcement-enabled": "Sibonise kuye wonke umntu okule bhodi",
   "add-many-lines-as": "Yongeza imigca emininzi njenge:",
-  "many-items": "__items__ (ezininzi)"
+  "many-items": "__items__ (ezininzi)",
+  "operator-number": "inombolo",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - amakhadi anenombolo yekhadi engu-*<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Itukutuku ni vola",
   "board-announcement-enabled": "Vakaraitaka vei ira kece ena vola oqo",
   "add-many-lines-as": "Kuria e vica na laini me:",
-  "many-items": "E levu na __items__"
+  "many-items": "E levu na __items__",
+  "operator-number": "naba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi e *<number>* na naba ni kena kadi"
 }

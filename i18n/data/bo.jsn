@@ -2315,5 +2315,7 @@
   "board-announcement": "ལས་སྒྲོམ་གྱི་གསལ་བསྒྲགས།",
   "board-announcement-enabled": "ལས་སྒྲོམ་འདིའི་མི་ཚང་མར་སྟོན།",
   "add-many-lines-as": "ཐིག་མང་པོ་འདི་ལྟར་སྣོན།",
-  "many-items": "__items__ མང་པོ།"
+  "many-items": "__items__ མང་པོ།",
+  "operator-number": "ཨང་གྲངས།",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - བྱང་བུ་ཆུང་བའི་ཨང་གྲངས་ *<number>* ཡིན་པའི་བྱང་བུ་ཆུང་བ།"
 }

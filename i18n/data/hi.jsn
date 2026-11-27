@@ -2315,5 +2315,7 @@
   "board-announcement": "बोर्ड की घोषणा",
   "board-announcement-enabled": "इसे इस बोर्ड के सभी लोगों को दिखाएँ",
   "add-many-lines-as": "कई पंक्तियाँ इस रूप में जोड़ें:",
-  "many-items": "कई __items__"
+  "many-items": "कई __items__",
+  "operator-number": "संख्या",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - वे कार्ड जिनकी कार्ड संख्या *<number>* है"
 }

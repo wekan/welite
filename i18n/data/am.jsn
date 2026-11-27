@@ -2315,5 +2315,7 @@
   "board-announcement": "የሰሌዳ ማስታወቂያ",
   "board-announcement-enabled": "በዚህ ሰሌዳ ላይ ላሉ ሁሉ አሳይ",
   "add-many-lines-as": "ብዙ መስመሮችን እንደዚህ ጨምር፦",
-  "many-items": "ብዙ __items__"
+  "many-items": "ብዙ __items__",
+  "operator-number": "ቁጥር",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - የካርድ ቁጥራቸው *<number>* የሆኑ ካርዶች"
 }

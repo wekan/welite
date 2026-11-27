@@ -2315,5 +2315,7 @@
   "board-announcement": "보드 공지",
   "board-announcement-enabled": "이 보드의 모든 사람에게 표시",
   "add-many-lines-as": "여러 줄을 다음으로 추가:",
-  "many-items": "여러 __items__"
+  "many-items": "여러 __items__",
+  "operator-number": "번호",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 카드 번호가 *<number>* 인 카드"
 }

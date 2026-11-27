@@ -2315,5 +2315,7 @@
   "board-announcement": "Avvisu dâ tavula",
   "board-announcement-enabled": "Mùstralu a tutti chiddi di sta tavula",
   "add-many-lines-as": "Aggiunci cchiù righi comu:",
-  "many-items": "Cchiù __items__"
+  "many-items": "Cchiù __items__",
+  "operator-number": "numero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carti cu lu nùmmaru *<number>*"
 }

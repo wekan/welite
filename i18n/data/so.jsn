@@ -2315,5 +2315,7 @@
   "board-announcement": "Ogeysiiska sabuuradda",
   "board-announcement-enabled": "U muuji qof kasta oo sabuuraddan jooga",
   "add-many-lines-as": "Ku dar sadar badan sida:",
-  "many-items": "__items__ badan"
+  "many-items": "__items__ badan",
+  "operator-number": "tiro",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaararka lambarkooda kaarku yahay *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Tintinol alluwal",
   "board-announcement-enabled": "Hollu ɗum kala neɗɗo e alluwal ngal",
   "add-many-lines-as": "Ɓeydu gorɗi keewɗi no:",
-  "many-items": "__items__ (keewɗi)"
+  "many-items": "__items__ (keewɗi)",
+  "operator-number": "limoore",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karte ɗe limoore kartal mum woni *<number>*"
 }

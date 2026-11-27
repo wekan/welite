@@ -2315,5 +2315,7 @@
   "board-announcement": "Anunțul panoului",
   "board-announcement-enabled": "Afișează tuturor persoanelor de pe acest panou",
   "add-many-lines-as": "Adaugă mai multe rânduri ca:",
-  "many-items": "Mai multe __items__"
+  "many-items": "Mai multe __items__",
+  "operator-number": "număr",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carduri al căror număr este *<number>*"
 }

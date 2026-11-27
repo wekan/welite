@@ -2315,5 +2315,7 @@
   "board-announcement": "Anuncio do taboleiro",
   "board-announcement-enabled": "Amosalo a todas as persoas deste taboleiro",
   "add-many-lines-as": "Engadir varias liñas como:",
-  "many-items": "__items__ múltiples"
+  "many-items": "__items__ múltiples",
+  "operator-number": "número",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetas cuxo número de tarxeta é *<number>*"
 }

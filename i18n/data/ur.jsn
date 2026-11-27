@@ -2315,5 +2315,7 @@
   "board-announcement": "بورڈ کا اعلان",
   "board-announcement-enabled": "اس بورڈ کے سب افراد کو دکھائیں",
   "add-many-lines-as": "کئی سطریں اس طرح شامل کریں:",
-  "many-items": "کئی __items__"
+  "many-items": "کئی __items__",
+  "operator-number": "نمبر",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - وہ کارڈز جن کا کارڈ نمبر *<number>* ہے"
 }

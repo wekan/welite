@@ -2315,5 +2315,7 @@
   "board-announcement": "Boerdmelding",
   "board-announcement-enabled": "Lit it oan elkenien op dit boerd sjen",
   "add-many-lines-as": "Foegje meardere rigels ta as:",
-  "many-items": "Meardere __items__"
+  "many-items": "Meardere __items__",
+  "operator-number": "nûmer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarten mei kaartnûmer *<number>*"
 }

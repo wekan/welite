@@ -2315,5 +2315,7 @@
   "board-announcement": "Fanongonongo ʻo e papa",
   "board-announcement-enabled": "Fakahā ia ki he tokotaha kotoa pē ʻi he papa ko ʻeni",
   "add-many-lines-as": "Tānaki ha ngaahi laine lahi ko e:",
-  "many-items": "__items__ lahi"
+  "many-items": "__items__ lahi",
+  "operator-number": "fika",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngaahi kaati ʻoku ko hono fika kaati ko e *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Эълони тахта",
   "board-announcement-enabled": "Ба ҳама дар ин тахта нишон додан",
   "add-many-lines-as": "Якчанд сатрро чунин илова кунед:",
-  "many-items": "Якчанд __items__"
+  "many-items": "Якчанд __items__",
+  "operator-number": "рақам",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - кортҳое, ки рақами корташон *<number>* аст"
 }

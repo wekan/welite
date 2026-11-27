@@ -2315,5 +2315,7 @@
   "board-announcement": "Comunicaziun dl tofl",
   "board-announcement-enabled": "Le mostré a dötes sön chësc tofl",
   "add-many-lines-as": "Ajonté plu righes coche:",
-  "many-items": "Plu __items__"
+  "many-items": "Plu __items__",
+  "operator-number": "numero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ciartes il cui numero ie *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Ekirango ky'olubaawo",
   "board-announcement-enabled": "Kiraga buli muntu ali ku lubaawo luno",
   "add-many-lines-as": "Yongerako ennyiriri nnyingi nga:",
-  "many-items": "__items__ (bingi)"
+  "many-items": "__items__ (bingi)",
+  "operator-number": "namba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaadi whose kaadi namba kiri *<number>*"
 }

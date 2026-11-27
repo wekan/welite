@@ -2315,5 +2315,7 @@
   "board-announcement": "Toktok blong bod",
   "board-announcement-enabled": "Soem long evriwan long bod ia",
   "add-many-lines-as": "Adem plante laen olsem:",
-  "many-items": "Plante __items__"
+  "many-items": "Plante __items__",
+  "operator-number": "namba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ol kad whose kad number i *<number>*"
 }

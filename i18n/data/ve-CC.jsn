@@ -2315,5 +2315,7 @@
   "board-announcement": "Aviso del quadro",
   "board-announcement-enabled": "Mostrało a tuti so sto quadro",
   "add-many-lines-as": "Zonta pì righe come:",
-  "many-items": "Pì __items__"
+  "many-items": "Pì __items__",
+  "operator-number": "inombolo",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede che ga el nùmaro de scheda *<number>*"
 }

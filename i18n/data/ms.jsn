@@ -2315,5 +2315,7 @@
   "board-announcement": "Pengumuman papan",
   "board-announcement-enabled": "Paparkan kepada semua orang pada papan ini",
   "add-many-lines-as": "Tambah beberapa baris sebagai:",
-  "many-items": "Beberapa __items__"
+  "many-items": "Beberapa __items__",
+  "operator-number": "nombor",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad yang nombor kadnya *<number>*"
 }

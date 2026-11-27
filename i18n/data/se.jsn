@@ -2315,5 +2315,7 @@
   "board-announcement": "Távvala almmuhus",
   "board-announcement-enabled": "Čájet dan buohkaide dán távvalis",
   "add-many-lines-as": "Lasit máŋga ráiddu ná:",
-  "many-items": "__items__ (máŋga)"
+  "many-items": "__items__ (máŋga)",
+  "operator-number": "lohku",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - goarttat maid goartanummir lea *<number>*"
 }

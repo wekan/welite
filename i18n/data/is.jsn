@@ -2315,5 +2315,7 @@
   "board-announcement": "Tilkynning á töflu",
   "board-announcement-enabled": "Sýna öllum á þessari töflu",
   "add-many-lines-as": "Bæta við mörgum línum sem:",
-  "many-items": "__items__ (mörg)"
+  "many-items": "__items__ (mörg)",
+  "operator-number": "númer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - spjöld sem hafa spjaldsnúmerið *<number>*"
 }

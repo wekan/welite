@@ -2315,5 +2315,7 @@
   "board-announcement": "பலகை அறிவிப்பு",
   "board-announcement-enabled": "இந்தப் பலகையில் உள்ள அனைவருக்கும் இதைக் காட்டு",
   "add-many-lines-as": "பல வரிகளை இவ்வாறு சேர்க்கவும்:",
-  "many-items": "பல __items__"
+  "many-items": "பல __items__",
+  "operator-number": "எண்",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - அட்டை எண் *<number>* உள்ள அட்டைகள்"
 }

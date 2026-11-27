@@ -2315,5 +2315,7 @@
   "board-announcement": "Xitiviso xa bodo",
   "board-announcement-enabled": "Xi kombisa un'wana na un'wana eka bodo leyi",
   "add-many-lines-as": "Engetela tilayini to tala tani hi:",
-  "many-items": "__items__ (swo tala)"
+  "many-items": "__items__ (swo tala)",
+  "operator-number": "nhlayo",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makhadi lama nomboro ya wona ya khadi yi nga *<number>*"
 }

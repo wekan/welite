@@ -2315,5 +2315,7 @@
   "board-announcement": "إعلان اللوحة",
   "board-announcement-enabled": "إظهاره للجميع في هذه اللوحة",
   "add-many-lines-as": "أضف عدة أسطر على شكل:",
-  "many-items": "__items__ متعددة"
+  "many-items": "__items__ متعددة",
+  "operator-number": "رقم",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - البطاقات التي رقمها *<number>*"
 }

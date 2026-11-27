@@ -2315,5 +2315,7 @@
   "board-announcement": "Ôgłoszynie tabule",
   "board-announcement-enabled": "Pokŏż to wszyskim na tyj tabuli",
   "add-many-lines-as": "Przidać mockã linijek jako:",
-  "many-items": "__items__ (mocka)"
+  "many-items": "__items__ (mocka)",
+  "operator-number": "numer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, kerych numer je *<number>*"
 }

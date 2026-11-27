@@ -2315,5 +2315,7 @@
   "board-announcement": "फळ्याची घोशणा",
   "board-announcement-enabled": "ह्या फळ्यावयल्या सगळ्यांक दाखोवचें",
   "add-many-lines-as": "जायत्यो वळी अशें जोडात:",
-  "many-items": "जायतीं __items__"
+  "many-items": "जायतीं __items__",
+  "operator-number": "क्रमांक",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड क्रमांक *<number>* आशिल्लीं कार्डां"
 }

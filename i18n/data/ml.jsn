@@ -2315,5 +2315,7 @@
   "board-announcement": "ബോർഡ് അറിയിപ്പ്",
   "board-announcement-enabled": "ഈ ബോർഡിലെ എല്ലാവർക്കും ഇത് കാണിക്കുക",
   "add-many-lines-as": "ഒന്നിലധികം വരികൾ ഇങ്ങനെ ചേർക്കുക:",
-  "many-items": "ഒന്നിലധികം __items__"
+  "many-items": "ഒന്നിലധികം __items__",
+  "operator-number": "സംഖ്യ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - കാർഡ് നമ്പർ *<number>* ആയ കാർഡുകൾ"
 }

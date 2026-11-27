@@ -2315,5 +2315,7 @@
   "board-announcement": "መግለጺ ሰሌዳ",
   "board-announcement-enabled": "ንኹሉ ኣብዚ ሰሌዳ ዘሎ ኣርኢ",
   "add-many-lines-as": "ብዙሓት መስመራት ከምዚ ወስኽ፦",
-  "many-items": "ብዙሓት __items__"
+  "many-items": "ብዙሓት __items__",
+  "operator-number": "ቁጽሪ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ቁጽሪ ካርደን *<number>* ዝኾነ ካርድታት"
 }

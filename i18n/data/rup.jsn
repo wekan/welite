@@ -2315,5 +2315,7 @@
   "board-announcement": "Anuntsu di tabelã",
   "board-announcement-enabled": "Aratã-l la tuti pi aestã tabelã",
   "add-many-lines-as": "Adavgã ma multi linii ca:",
-  "many-items": "Ma multi __items__"
+  "many-items": "Ma multi __items__",
+  "operator-number": "numir",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carduri al cãror numãr este *<number>*"
 }

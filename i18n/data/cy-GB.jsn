@@ -2315,5 +2315,7 @@
   "board-announcement": "Cyhoeddiad y bwrdd",
   "board-announcement-enabled": "Ei ddangos i bawb ar y bwrdd hwn",
   "add-many-lines-as": "Ychwanegu sawl llinell fel:",
-  "many-items": "__items__ (lluosog)"
+  "many-items": "__items__ (lluosog)",
+  "operator-number": "rhif",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cardiau a'u rhif cerdyn yn *<number>*"
 }

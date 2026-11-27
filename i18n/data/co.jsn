@@ -2315,5 +2315,7 @@
   "board-announcement": "Annunziu di a tavula",
   "board-announcement-enabled": "Mustrà lu à tutti nant'à sta tavula",
   "add-many-lines-as": "Aghjunghje parechje righe cum'è:",
-  "many-items": "__items__ (parechji)"
+  "many-items": "__items__ (parechji)",
+  "operator-number": "numeru",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - carte chì anu u numeru di carta *<number>*"
 }

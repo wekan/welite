@@ -2315,5 +2315,7 @@
   "board-announcement": "Brath a’ bhùird",
   "board-announcement-enabled": "Seall e dhan a h-uile duine air a’ bhòrd seo",
   "add-many-lines-as": "Cuir iomadh loidhne ris mar:",
-  "many-items": "__items__ (iomadh)"
+  "many-items": "__items__ (iomadh)",
+  "operator-number": "àireamh",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cairtean aig a bheil àireamh na cairt *<number>*"
 }

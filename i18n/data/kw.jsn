@@ -2315,5 +2315,7 @@
   "board-announcement": "Deklaryans an estyllen",
   "board-announcement-enabled": "Diskwedh dhe bubonan war an estyllen ma",
   "add-many-lines-as": "Keworra lies linenn avel:",
-  "many-items": "Lies __items__"
+  "many-items": "Lies __items__",
+  "operator-number": "niver",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartennow a'n niver karten yw *<number>*"
 }

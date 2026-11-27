@@ -2315,5 +2315,7 @@
   "board-announcement": "Tsebišo ya poto",
   "board-announcement-enabled": "E bontšhe bohle go poto ye",
   "add-many-lines-as": "Oketša methalo ye mentši bjalo ka:",
-  "many-items": "__items__ (tše dintši)"
+  "many-items": "__items__ (tše dintši)",
+  "operator-number": "nomoro",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarata tše nomoro ya tšona ya karata e lego *<number>*"
 }

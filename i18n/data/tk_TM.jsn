@@ -2315,5 +2315,7 @@
   "board-announcement": "Tagta bildirişi",
   "board-announcement-enabled": "Ony şu tagtadaky hemmelere görkez",
   "add-many-lines-as": "Birnäçe setiri şeýle goş:",
-  "many-items": "Birnäçe __items__"
+  "many-items": "Birnäçe __items__",
+  "operator-number": "belgi",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karta belgisi *<number>* bolan kartalar"
 }

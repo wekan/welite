@@ -5839,14 +5839,14 @@ begin
 end;
 
 type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel,
-  soUser, soMember, soAssignee, soCreator, soCreated, soModified, soArchiveState, soEndState, soBoardVisibility);
+  soUser, soMember, soAssignee, soCreator, soCreated, soModified, soArchiveState, soEndState, soBoardVisibility, soNumber, soOrg, soTeam);
 
 const SearchArchivedCard = '(c.archived=1 OR EXISTS(SELECT 1 FROM lists archivedList WHERE archivedList.id=c.listId ' +
   'AND archivedList.boardId=c.boardId AND archivedList.archived=1) OR EXISTS(SELECT 1 FROM swimlanes archivedLane ' +
   'WHERE archivedLane.id=c.swimlaneId AND archivedLane.boardId=c.boardId AND archivedLane.archived=1))';
 
 function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, Text: string; out Kind: TSearchOperator): string;
-var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; Days: Int64;
+var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; Days, CardNumber: Int64; Digit: Char;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
     Result := SameText(Op, Fallback) or SameText(Op, Words.Text(Key, Fallback));
@@ -5927,6 +5927,23 @@ begin
     if IsField('private') then Exit('EXISTS(SELECT 1 FROM boards visible WHERE visible.id=c.boardId AND ' +
       'COALESCE(visible.permission,''private'')=''private'')');
     Exit;
+  end;
+  if IsOperator('operator-number', 'number') then
+  begin
+    Kind := soNumber;
+    for Digit in Value do if not (Digit in ['0'..'9']) then Exit;
+    if TryStrToInt64(Value, CardNumber) and (CardNumber > 0) then Exit('c.cardNumber=' + IntToStr(CardNumber));
+    Exit;
+  end;
+  if IsOperator('operator-org', 'org') or IsOperator('operator-team', 'team') then
+  begin
+    if IsOperator('operator-org', 'org') then
+    begin Kind := soOrg; Column := 'org'; Parent := 'board_orgs'; end
+    else
+    begin Kind := soTeam; Column := 'team'; Parent := 'board_teams'; end;
+    Exit('EXISTS(SELECT 1 FROM ' + Parent + ' groupLink WHERE groupLink.boardId=c.boardId AND groupLink.isActive=1 AND ' +
+      '(lower(groupLink.' + Column + 'DisplayName)=lower(' + QuotedStr(Value) + ') OR groupLink.' +
+      Column + 'Id=' + QuotedStr(Value) + SharedGroupNameSQL(Db, Column, 'groupLink.' + Column + 'Id', Value) + '))');
   end;
   if IsOperator('operator-user', 'user') then
   begin Kind := soUser; Exit('(' + RoleMatches('card_members') + ' OR ' + RoleMatches('card_assignees') + ')'); end;
@@ -6146,12 +6163,12 @@ end;
 
 function GlobalSearchHelp(Words: TWLTranslator): string;
 const
-  Operators: array[0..18] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
-    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort', 'status', 'limit');
+  Operators: array[0..21] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
+    'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified', 'sort', 'status', 'limit', 'number', 'org', 'team');
   Fields: array[0..20] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
     'assignee', 'member', 'week', 'month', 'quarter', 'year', 'created', 'modified', 'archived', 'all', 'open', 'ended', 'public', 'private');
-  Described: array[0..17] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
-    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort', 'limit', 'status');
+  Described: array[0..20] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
+    'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort', 'limit', 'number', 'org', 'team', 'status');
   Statuses: array[0..4] of string = ('archived', 'all', 'ended', 'public', 'private');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;

@@ -2315,5 +2315,7 @@
   "board-announcement": "Raadaankondiging",
   "board-announcement-enabled": "Wys dit aan almal op hierdie raad",
   "add-many-lines-as": "Voeg veelvuldige reëls by as:",
-  "many-items": "Veelvuldige __items__"
+  "many-items": "Veelvuldige __items__",
+  "operator-number": "nommer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarte waarvan die kaartnommer *<number>* is"
 }

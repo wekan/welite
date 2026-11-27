@@ -2315,5 +2315,7 @@
   "board-announcement": "Meddelelse på tavlen",
   "board-announcement-enabled": "Vis til alle på denne tavle",
   "add-many-lines-as": "Tilføj flere linjer som:",
-  "many-items": "Flere __items__"
+  "many-items": "Flere __items__",
+  "operator-number": "nummer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kort hvis kortnummer er *<number>*"
 }

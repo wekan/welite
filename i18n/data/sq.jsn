@@ -2315,5 +2315,7 @@
   "board-announcement": "Njoftim në tabelë",
   "board-announcement-enabled": "Shfaqja të gjithëve në këtë tabelë",
   "add-many-lines-as": "Shto disa rreshta si:",
-  "many-items": "Disa __items__"
+  "many-items": "Disa __items__",
+  "operator-number": "numër",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartat, numri i kartës së të cilave është *<number>*"
 }

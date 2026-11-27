@@ -2315,5 +2315,7 @@
   "board-announcement": "Nuntius tabulae",
   "board-announcement-enabled": "Omnibus in hac tabula ostende",
   "add-many-lines-as": "Plures lineas adde ut:",
-  "many-items": "__items__ (plura)"
+  "many-items": "__items__ (plura)",
+  "operator-number": "numerus",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - chartae quarum numerus est *<number>*"
 }

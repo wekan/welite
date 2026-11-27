@@ -2315,5 +2315,7 @@
   "board-announcement": "Bookkiya erissuwaa",
   "board-announcement-enabled": "Ha bookkiya bolla de'iya ubbaas bessa",
   "add-many-lines-as": "Daro yafarata hagaadan gujja:",
-  "many-items": "Daro __items__"
+  "many-items": "Daro __items__",
+  "operator-number": "qoodaa",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardiyaa payduwaa *<number>* gidiya kaardiyata"
 }

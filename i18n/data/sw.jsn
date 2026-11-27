@@ -2315,5 +2315,7 @@
   "board-announcement": "Tangazo la bodi",
   "board-announcement-enabled": "Lionyeshe kwa kila mtu kwenye bodi hii",
   "add-many-lines-as": "Ongeza mistari mingi kama:",
-  "many-items": "__items__ (nyingi)"
+  "many-items": "__items__ (nyingi)",
+  "operator-number": "nambari",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kadi ambazo nambari yake ya kadi ni *<number>*"
 }

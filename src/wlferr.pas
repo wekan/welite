@@ -8,6 +8,7 @@ function InstallRootModels(Db:TWLDb;RequireEmpty:Boolean=False):Boolean;
 function RootModelScript(Db:TWLDb):string;
 function EnsureSharedCollection(Db:TWLDb;const Collection:string):Boolean;
 function LiveAttachmentSQL(Db:TWLDb):string;
+function SharedGroupNameSQL(Db:TWLDb;const Collection,GroupId,Name:string):string;
 implementation
 const DocCol='_ferretdb_sjson';
 function Q(const Text:string):string;
@@ -22,6 +23,19 @@ begin
   if Length(Rows)<>1 then Exit('0');
   Result:='EXISTS(SELECT 1 FROM '+Ident(Rows[0][0])+' a WHERE json_extract(a._ferretdb_sjson,''$._id'')=attachments.id'+
     ' AND COALESCE(json_type(a._ferretdb_sjson,''$.deletedAt''),''null'')=''null'')';
+end;
+
+function SharedGroupNameSQL(Db:TWLDb;const Collection,GroupId,Name:string):string;
+var Rows:TWLRows;
+begin
+  Result:='';
+  if Length(Db.Query('SELECT 1 FROM sqlite_master WHERE type=''table'' AND name=''_ferretdb_collections'';'))=0 then Exit;
+  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name='+Q(Collection)+';');
+  if Length(Rows)<>1 then Exit;
+  Result:=' OR EXISTS(SELECT 1 FROM '+Ident(Rows[0][0])+' namedGroup WHERE '+
+    'json_extract(namedGroup.'+DocCol+',''$._id'')='+GroupId+
+    ' AND (lower(json_extract(namedGroup.'+DocCol+','+Q('$.'+Collection+'ShortName')+'))=lower('+Q(Name)+') OR '+
+    'lower(json_extract(namedGroup.'+DocCol+','+Q('$.'+Collection+'DisplayName')+'))=lower('+Q(Name)+')))';
 end;
 
 function JsonPath(const Path:string):string;

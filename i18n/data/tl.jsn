@@ -2315,5 +2315,7 @@
   "board-announcement": "Anunsiyo ng pisara",
   "board-announcement-enabled": "Ipakita ito sa lahat sa pisarang ito",
   "add-many-lines-as": "Magdagdag ng maraming linya bilang:",
-  "many-items": "Maraming __items__"
+  "many-items": "Maraming __items__",
+  "operator-number": "bilang",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kards whose kard bilang ay *<number>*"
 }

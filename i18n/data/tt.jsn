@@ -2315,5 +2315,7 @@
   "board-announcement": "Такта игъланы",
   "board-announcement-enabled": "Аны бу тактадагы һәркемгә күрсәтергә",
   "add-many-lines-as": "Берничә юлны болай өстәү:",
-  "many-items": "Берничә __items__"
+  "many-items": "Берничә __items__",
+  "operator-number": "номер",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка номеры *<number>* булган карточкалар"
 }

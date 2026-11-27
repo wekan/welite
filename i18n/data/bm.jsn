@@ -2315,5 +2315,7 @@
   "board-announcement": "Walan kunnafoni",
   "board-announcement-enabled": "A jira mɔgɔ bɛɛ la nin walan kan",
   "add-many-lines-as": "Sɛbɛnni sira caman fara a kan nin cogo in na:",
-  "many-items": "__items__ caman"
+  "many-items": "__items__ caman",
+  "operator-number": "nimɔrɔ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karata minnu ka karata nimɔrɔ ye *<number>*"
 }

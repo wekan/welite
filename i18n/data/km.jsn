@@ -2315,5 +2315,7 @@
   "board-announcement": "សេចក្តីប្រកាសរបស់ក្តារ",
   "board-announcement-enabled": "បង្ហាញវាដល់អ្នកទាំងអស់គ្នានៅលើក្តារនេះ",
   "add-many-lines-as": "បន្ថែមបន្ទាត់ច្រើនជា៖",
-  "many-items": "__items__ ច្រើន"
+  "many-items": "__items__ ច្រើន",
+  "operator-number": "លេខ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - កាតដែលមានលេខកាត *<number>*"
 }

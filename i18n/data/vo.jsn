@@ -2315,5 +2315,7 @@
   "board-announcement": "Nunod taba",
   "board-announcement-enabled": "Jonön oni valikanes su tab at",
   "add-many-lines-as": "Läükön lienis mödik as:",
-  "many-items": "__items__ mödik"
+  "many-items": "__items__ mödik",
+  "operator-number": "nüm",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kads kels labons numi kadik *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Tabula anonco",
   "board-announcement-enabled": "Montri ĝin al ĉiuj en ĉi tiu tabulo",
   "add-many-lines-as": "Aldoni plurajn liniojn kiel:",
-  "many-items": "Pluraj __items__"
+  "many-items": "Pluraj __items__",
+  "operator-number": "nombro",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartoj kies karta numero estas *<number>*"
 }

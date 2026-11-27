@@ -2315,5 +2315,7 @@
   "board-announcement": "Beeksisa gabatee",
   "board-announcement-enabled": "Nama gabatee kana irra jiru hundaaf agarsiisi",
   "add-many-lines-as": "Sararoota hedduu akka kanaatti dabali:",
-  "many-items": "__items__ hedduu"
+  "many-items": "__items__ hedduu",
+  "operator-number": "lakkoofsa",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaardiiwwan lakkoofsi kaardii isaanii *<number>* ta’e"
 }

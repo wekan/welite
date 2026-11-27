@@ -2315,5 +2315,7 @@
   "board-announcement": "Pānui papa",
   "board-announcement-enabled": "Whakaaturia ki te katoa i runga i tēnei papa",
   "add-many-lines-as": "Tāpirihia ngā rārangi maha hei:",
-  "many-items": "__items__ maha"
+  "many-items": "__items__ maha",
+  "operator-number": "tau",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ngā kāri he *<number>* tō rātou tau kāri"
 }

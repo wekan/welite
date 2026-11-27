@@ -2315,5 +2315,7 @@
   "board-announcement": "Bordmededeling",
   "board-announcement-enabled": "Toon ze aan iedereen op dit bord",
   "add-many-lines-as": "Meerdere regels toevoegen als:",
-  "many-items": "Meerdere __items__"
+  "many-items": "Meerdere __items__",
+  "operator-number": "nummer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaarten met kaartnummer *<number>*"
 }

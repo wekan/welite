@@ -2315,5 +2315,7 @@
   "board-announcement": "Ọkwa bọọdụ",
   "board-announcement-enabled": "Gosi ya onye ọ bụla nọ na bọọdụ a",
   "add-many-lines-as": "Tinye ọtụtụ ahịrị dịka:",
-  "many-items": "Ọtụtụ __items__"
+  "many-items": "Ọtụtụ __items__",
+  "operator-number": "nọmba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kaadị nwere nọmba kaadị *<number>*"
 }

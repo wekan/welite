@@ -2315,5 +2315,7 @@
   "board-announcement": "Anuncio d'o tablero",
   "board-announcement-enabled": "Amostrar-lo a totz en este tablero",
   "add-many-lines-as": "Adhibir quantas linias como:",
-  "many-items": "__items__ múltiples"
+  "many-items": "__items__ múltiples",
+  "operator-number": "número",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarchetas cuyo número de tarcheta es *<number>*"
 }

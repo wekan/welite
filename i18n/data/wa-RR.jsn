@@ -2315,5 +2315,7 @@
   "board-announcement": "Pahibaro han pisara",
   "board-announcement-enabled": "Ipakita ha ngatanan ha ini nga pisara",
   "add-many-lines-as": "Idugang an damu nga linya sugad hin:",
-  "many-items": "Damu nga __items__"
+  "many-items": "Damu nga __items__",
+  "operator-number": "numero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - mga kard nga an numero amo an *<number>*"
 }

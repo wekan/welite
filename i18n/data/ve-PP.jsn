@@ -2315,5 +2315,7 @@
   "board-announcement": "Laudan tedotuz",
   "board-announcement-enabled": "Ozuta sidä kaikile necil laudal",
   "add-many-lines-as": "Ližata äi rivid kut:",
-  "many-items": "__items__ (äi)"
+  "many-items": "__items__ (äi)",
+  "operator-number": "lugu",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartad, miččiden kartan nomer om *<number>*"
 }

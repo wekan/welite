@@ -2315,5 +2315,7 @@
   "board-announcement": "بورڊ جو اعلان",
   "board-announcement-enabled": "هن بورڊ تي هر ڪنهن کي ڏيکاريو",
   "add-many-lines-as": "گهڻيون سٽون هن ريت شامل ڪريو:",
-  "many-items": "گهڻا __items__"
+  "many-items": "گهڻا __items__",
+  "operator-number": "انگ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - اهي ڪارڊ جن جو ڪارڊ نمبر *<number>* آهي"
 }

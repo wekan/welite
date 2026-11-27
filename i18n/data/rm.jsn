@@ -2315,5 +2315,7 @@
   "board-announcement": "Annunzia da la tabella",
   "board-announcement-enabled": "Mussar a tuts sin questa tabella",
   "add-many-lines-as": "Agiuntar pliras lingias sco:",
-  "many-items": "__items__ (plirs)"
+  "many-items": "__items__ (plirs)",
+  "operator-number": "numero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartas cun il numer da carta *<number>*"
 }

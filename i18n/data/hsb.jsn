@@ -2315,5 +2315,7 @@
   "board-announcement": "Wozjewjenje tafle",
   "board-announcement-enabled": "Wšěm na tutej tafli pokazać",
   "add-many-lines-as": "Wjacore linije přidać jako:",
-  "many-items": "Wjele __items__"
+  "many-items": "Wjele __items__",
+  "operator-number": "čízlo",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, jejichž čízlo karty je *<number>*"
 }

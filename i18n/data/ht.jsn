@@ -2315,5 +2315,7 @@
   "board-announcement": "Anons tablo a",
   "board-announcement-enabled": "Montre li bay tout moun sou tablo sa a",
   "add-many-lines-as": "Ajoute plizyè liy kòm:",
-  "many-items": "Plizyè __items__"
+  "many-items": "Plizyè __items__",
+  "operator-number": "nimewo",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kat ki gen nimewo kat *<number>*"
 }

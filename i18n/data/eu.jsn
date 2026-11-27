@@ -2315,5 +2315,7 @@
   "board-announcement": "Arbelaren iragarkia",
   "board-announcement-enabled": "Erakutsi arbel honetako guztiei",
   "add-many-lines-as": "Gehitu hainbat lerro honela:",
-  "many-items": "Hainbat __items__"
+  "many-items": "Hainbat __items__",
+  "operator-number": "zenbakia",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - txartel-zenbakia *<number>* duten txartelak"
 }

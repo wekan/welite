@@ -2315,5 +2315,7 @@
   "board-announcement": "બોર્ડની જાહેરાત",
   "board-announcement-enabled": "આ બોર્ડ પરના દરેકને બતાવો",
   "add-many-lines-as": "ઘણી પંક્તિઓ આ રીતે ઉમેરો:",
-  "many-items": "ઘણા __items__"
+  "many-items": "ઘણા __items__",
+  "operator-number": "ક્રમાંક",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - જે કાર્ડનો ક્રમાંક *<number>* છે તે કાર્ડ"
 }

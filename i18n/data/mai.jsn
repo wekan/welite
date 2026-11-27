@@ -2315,5 +2315,7 @@
   "board-announcement": "पट्टक घोषणा",
   "board-announcement-enabled": "एहि पट्ट पर सभकेँ देखाउ",
   "add-many-lines-as": "कतेको पाँति एहि रूपमे जोड़ू:",
-  "many-items": "कतेको __items__"
+  "many-items": "कतेको __items__",
+  "operator-number": "संख्या",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ओ कार्ड जकर कार्ड संख्या *<number>* अछि"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Peteĩcha momarandu",
   "board-announcement-enabled": "Ehechauka opavavépe ko peteĩchápe",
   "add-many-lines-as": "Embojoapy heta tairenda péicha:",
-  "many-items": "Heta __items__"
+  "many-items": "Heta __items__",
+  "operator-number": "papapy",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kuatia'i ipapapy ha'éva *<number>*"
 }

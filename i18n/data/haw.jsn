@@ -2315,5 +2315,7 @@
   "board-announcement": "Hoʻolaha o ka papa",
   "board-announcement-enabled": "Hōʻike i kēia i nā kānaka a pau ma kēia papa",
   "add-many-lines-as": "Hoʻohui i nā lālani he nui ma ke ʻano he:",
-  "many-items": "__items__ he nui"
+  "many-items": "__items__ he nui",
+  "operator-number": "numapela",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - nā kāleka wahoke kāleka numapela he *<number>*"
 }

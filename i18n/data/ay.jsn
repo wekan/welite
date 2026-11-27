@@ -2315,5 +2315,7 @@
   "board-announcement": "Pirqa yatiyäwi",
   "board-announcement-enabled": "Aka pirqan taqiniru uñacht'ayaña",
   "add-many-lines-as": "Walja siqinaka akham yapam:",
-  "many-items": "Walja __items__"
+  "many-items": "Walja __items__",
+  "operator-number": "jakhu",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarjetanaka whose tarjeta jakhu awa *<number>*"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "Anunciu del tableru",
   "board-announcement-enabled": "Amosalu a toos nesti tableru",
   "add-many-lines-as": "Amestar delles llinies como:",
-  "many-items": "__items__ múltiples"
+  "many-items": "__items__ múltiples",
+  "operator-number": "númberu",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - tarxetes col númberu de tarxeta *<number>*"
 }

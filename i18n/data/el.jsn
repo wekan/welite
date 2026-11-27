@@ -2315,5 +2315,7 @@
   "board-announcement": "Ανακοίνωση πίνακα",
   "board-announcement-enabled": "Εμφάνιση σε όλους σε αυτόν τον πίνακα",
   "add-many-lines-as": "Προσθήκη πολλών γραμμών ως:",
-  "many-items": "__items__ (πολλά)"
+  "many-items": "__items__ (πολλά)",
+  "operator-number": "αριθμός",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - κάρτες με αριθμό κάρτας *<number>*"
 }

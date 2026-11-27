@@ -2315,5 +2315,7 @@
   "board-announcement": "تخته اعلانی",
   "board-announcement-enabled": "اوشبو تخته‌دهگی هر کیمگه کۉرسه‌تیش",
   "add-many-lines-as": "بیر نیچه قطارنی قویداگیچه قوشینگ:",
-  "many-items": "بیر نیچه __items__"
+  "many-items": "بیر نیچه __items__",
+  "operator-number": "رقم",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - کارت رقمی *<number>* بۉلگن کارتلر"
 }

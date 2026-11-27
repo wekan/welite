@@ -2315,5 +2315,7 @@
   "board-announcement": "看板公告",
   "board-announcement-enabled": "畀搿块看板浪所有人看",
   "add-many-lines-as": "拿多行添加成：",
-  "many-items": "多只 __items__"
+  "many-items": "多只 __items__",
+  "operator-number": "编号",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 卡片编号是 *<number>* 个卡片"
 }

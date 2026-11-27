@@ -2315,5 +2315,7 @@
   "board-announcement": "Дуоска биллэриитэ",
   "board-announcement-enabled": "Бу дуоскаҕа баар бары дьоҥҥо көрдөр",
   "add-many-lines-as": "Элбэх устуруоканы маннык эбэр:",
-  "many-items": "Элбэх __items__"
+  "many-items": "Элбэх __items__",
+  "operator-number": "нүөмэр",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка нүөмэрэ *<number>* буолар карточкалар"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "ਬੋਰਡ ਘੋਸ਼ਣਾ",
   "board-announcement-enabled": "ਇਸ ਬੋਰਡ 'ਤੇ ਸਾਰਿਆਂ ਨੂੰ ਦਿਖਾਓ",
   "add-many-lines-as": "ਕਈ ਲਾਈਨਾਂ ਇਸ ਤਰ੍ਹਾਂ ਸ਼ਾਮਲ ਕਰੋ:",
-  "many-items": "ਕਈ __items__"
+  "many-items": "ਕਈ __items__",
+  "operator-number": "ਨੰਬਰ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ਉਹ ਕਾਰਡ ਜਿਨ੍ਹਾਂ ਦਾ ਕਾਰਡ ਨੰਬਰ *<number>* ਹੈ"
 }

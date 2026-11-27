@@ -2315,5 +2315,7 @@
   "board-announcement": "Ogłoszenie na tablicy",
   "board-announcement-enabled": "Pokaż wszystkim na tej tablicy",
   "add-many-lines-as": "Dodaj wiele wierszy jako:",
-  "many-items": "__items__ (wiele)"
+  "many-items": "__items__ (wiele)",
+  "operator-number": "numer",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karty, których numer karty to *<number>*"
 }

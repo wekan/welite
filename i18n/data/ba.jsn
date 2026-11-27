@@ -2315,5 +2315,7 @@
   "board-announcement": "Такта иғланы",
   "board-announcement-enabled": "Уны был тактала барыһына ла күрһәтергә",
   "add-many-lines-as": "Бер нисә юлды ошолай өҫтәргә:",
-  "many-items": "Бер нисә __items__"
+  "many-items": "Бер нисә __items__",
+  "operator-number": "һан",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` — карточка һаны *<number>* булған карточкалар"
 }

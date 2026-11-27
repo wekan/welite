@@ -2315,5 +2315,7 @@
   "board-announcement": "Annuncio della bacheca",
   "board-announcement-enabled": "Mostra a tutti su questa bacheca",
   "add-many-lines-as": "Aggiungi più righe come:",
-  "many-items": "Più __items__"
+  "many-items": "Più __items__",
+  "operator-number": "numero",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - schede il cui numero è *<number>*"
 }

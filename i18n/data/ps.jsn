@@ -2315,5 +2315,7 @@
   "board-announcement": "د تختې اعلان",
   "board-announcement-enabled": "دا د دې تختې ټولو ته وښایاست",
   "add-many-lines-as": "څو کرښې په دې بڼه ورزیاتې کړئ:",
-  "many-items": "څو __items__"
+  "many-items": "څو __items__",
+  "operator-number": "شمېره",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - هغه کارتونه چې د کارت شمېره يې *<number>* ده"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "बोर्ड के घोषणा",
   "board-announcement-enabled": "एह बोर्ड पर सभे के देखाईं",
   "add-many-lines-as": "कई लाइन अइसन जोड़ीं:",
-  "many-items": "कई __items__"
+  "many-items": "कई __items__",
+  "operator-number": "संख्या",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - जेकर कार्ड संख्या *<number>* बा ओह कार्डन के खोज"
 }

@@ -2315,5 +2315,7 @@
   "board-announcement": "አዋጅ ምዱድ",
   "board-announcement-enabled": "ዲብ እሊ ምዱድ ንክሎም ኣርኤ",
   "add-many-lines-as": "ብዙሕ መስመር ከምዚ ወስክ፦",
-  "many-items": "ብዙሕ __items__"
+  "many-items": "ብዙሕ __items__",
+  "operator-number": "ቍጽሪ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ቍጽሪ ካርደን *<number>* ዝኾነ ወረቀት ካርዳት"
 }

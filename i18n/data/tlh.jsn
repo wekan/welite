@@ -2315,5 +2315,7 @@
   "board-announcement": "raS maq",
   "board-announcement-enabled": "raSvamDaq Hoch yIcha'",
   "add-many-lines-as": "tlheghmey law' tIchel; chovnatlh yIwIv:",
-  "many-items": "__items__ law'"
+  "many-items": "__items__ law'",
+  "operator-number": "mI'",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - 'echletHommey mI' *<number>*"
 }

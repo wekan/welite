@@ -2315,5 +2315,7 @@
   "board-announcement": "Peunyata papan",
   "board-announcement-enabled": "Peuleumah u bandum ureueng bak papan nyoe",
   "add-many-lines-as": "Tamah le baris jeuet keu:",
-  "many-items": "Le __items__"
+  "many-items": "Le __items__",
+  "operator-number": "angka",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kad nyang lumboi kad jih *<number>*"
 }

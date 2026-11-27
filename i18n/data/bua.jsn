@@ -2315,5 +2315,7 @@
   "board-announcement": "Самбарай мэдээсэл",
   "board-announcement-enabled": "Энэ самбар дээрэхи бүхы хүнүүдтэ харуулха",
   "add-many-lines-as": "Олон мүр иигэжэ нэмэхэ:",
-  "many-items": "Олон __items__"
+  "many-items": "Олон __items__",
+  "operator-number": "дугаар",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - картын дугаарынь *<number>* байһан картанууд"
 }

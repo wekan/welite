@@ -2315,5 +2315,7 @@
   "board-announcement": "ประกาศของบอร์ด",
   "board-announcement-enabled": "แสดงให้ทุกคนในบอร์ดนี้เห็น",
   "add-many-lines-as": "เพิ่มหลายบรรทัดเป็น:",
-  "many-items": "__items__หลายรายการ"
+  "many-items": "__items__หลายรายการ",
+  "operator-number": "หมายเลข",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - การ์ดที่มีหมายเลขการ์ดเป็น *<number>*"
 }

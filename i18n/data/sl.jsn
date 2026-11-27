@@ -2315,5 +2315,7 @@
   "board-announcement": "Obvestilo table",
   "board-announcement-enabled": "Pokaži vsem na tej tabli",
   "add-many-lines-as": "Dodaj več vrstic kot:",
-  "many-items": "__items__ (več)"
+  "many-items": "__items__ (več)",
+  "operator-number": "številka",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kartice, katerih številka je *<number>*"
 }

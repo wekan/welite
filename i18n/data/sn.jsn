@@ -2315,5 +2315,7 @@
   "board-announcement": "Chiziviso chebhodhi",
   "board-announcement-enabled": "Ratidza munhu wese ari pabhodhi rino",
   "add-many-lines-as": "Wedzera mitsetse yakawanda se:",
-  "many-items": "__items__ (zvakawanda)"
+  "many-items": "__items__ (zvakawanda)",
+  "operator-number": "nhamba",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - makadhi ane nhamba yekadhi *<number>*"
 }

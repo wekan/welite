@@ -2315,5 +2315,7 @@
   "board-announcement": "Tsebiso ya boto",
   "board-announcement-enabled": "E bontshe bohle botong ena",
   "add-many-lines-as": "Eketsa mela e mengata e le:",
-  "many-items": "__items__ (tse ngata)"
+  "many-items": "__items__ (tse ngata)",
+  "operator-number": "nomoro",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - dikarete tseo nomoro ya karete e leng *<number>*"
 }

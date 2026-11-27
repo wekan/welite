@@ -2315,5 +2315,7 @@
   "board-announcement": "Lentos pranešimas",
   "board-announcement-enabled": "Rodyti visiems šioje lentoje",
   "add-many-lines-as": "Pridėti kelias eilutes kaip:",
-  "many-items": "__items__ (kelios)"
+  "many-items": "__items__ (kelios)",
+  "operator-number": "numeris",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - kortelės, kurių kortelės numeris yra *<number>*"
 }

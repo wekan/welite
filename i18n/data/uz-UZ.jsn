@@ -2315,5 +2315,7 @@
   "board-announcement": "Taxta eʼloni",
   "board-announcement-enabled": "Bu taxtadagi hammaga koʻrsatish",
   "add-many-lines-as": "Bir nechta qatorni quyidagicha qoʻshing:",
-  "many-items": "Bir nechta __items__"
+  "many-items": "Bir nechta __items__",
+  "operator-number": "raqam",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - karta raqami *<number>* bo'lgan kartalar"
 }

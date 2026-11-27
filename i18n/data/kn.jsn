@@ -2315,5 +2315,7 @@
   "board-announcement": "ಫಲಕದ ಪ್ರಕಟಣೆ",
   "board-announcement-enabled": "ಈ ಫಲಕದಲ್ಲಿರುವ ಎಲ್ಲರಿಗೂ ಇದನ್ನು ತೋರಿಸಿ",
   "add-many-lines-as": "ಹಲವು ಸಾಲುಗಳನ್ನು ಈ ರೀತಿಯಾಗಿ ಸೇರಿಸಿ:",
-  "many-items": "ಹಲವು __items__"
+  "many-items": "ಹಲವು __items__",
+  "operator-number": "ಸಂಖ್ಯೆ",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - ಕಾರ್ಡ್ ಸಂಖ್ಯೆ *<number>* ಆಗಿರುವ ಕಾರ್ಡ್‌ಗಳು"
 }

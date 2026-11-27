@@ -2315,5 +2315,7 @@
   "board-announcement": "फलकावरील घोषणा",
   "board-announcement-enabled": "या फलकावरील सर्वांना दाखवा",
   "add-many-lines-as": "अनेक ओळी या स्वरूपात जोडा:",
-  "many-items": "अनेक __items__"
+  "many-items": "अनेक __items__",
+  "operator-number": "संख्या",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - कार्ड क्रमांक *<number>* असलेली कार्डे"
 }

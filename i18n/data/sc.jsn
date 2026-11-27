@@ -2315,5 +2315,7 @@
   "board-announcement": "Annùntziu de sa tàula",
   "board-announcement-enabled": "Ammustra·ddu a totus in custa tàula",
   "add-many-lines-as": "Agiunghe prus rigas comente:",
-  "many-items": "Prus __items__"
+  "many-items": "Prus __items__",
+  "operator-number": "nùmeru",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartas chi tenent su nùmeru *<number>*"
 }

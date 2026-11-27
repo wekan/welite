@@ -2315,5 +2315,7 @@
   "board-announcement": "පුවරු නිවේදනය",
   "board-announcement-enabled": "මෙම පුවරුවේ සියලු දෙනාට එය පෙන්වන්න",
   "add-many-lines-as": "පේළි කිහිපයක් මෙලෙස එක් කරන්න:",
-  "many-items": "__items__ කිහිපයක්"
+  "many-items": "__items__ කිහිපයක්",
+  "operator-number": "අංකය",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - කාඩ්පත් අංකය *<number>* වන කාඩ්පත්"
 }

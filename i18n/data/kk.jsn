@@ -2315,5 +2315,7 @@
   "board-announcement": "Тақта хабарландыруы",
   "board-announcement-enabled": "Оны осы тақтадағы барлығына көрсету",
   "add-many-lines-as": "Бірнеше жолды мына түрде қосу:",
-  "many-items": "Бірнеше __items__"
+  "many-items": "Бірнеше __items__",
+  "operator-number": "нөмір",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карточка нөмірі *<number>* болатын карточкалар"
 }

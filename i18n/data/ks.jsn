@@ -2315,5 +2315,7 @@
   "board-announcement": "بورڈُک اعلان",
   "board-announcement-enabled": "یہ ہاوِو یتھ بورڈس پؠٹھ پرٛتھ کٲنٛسِہ",
   "add-many-lines-as": "واریاہ سطر یتھ کٔنۍ شامل کریو:",
-  "many-items": "واریاہ __items__"
+  "many-items": "واریاہ __items__",
+  "operator-number": "نمبر",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - تِم کارڈ یِمن ہُنٛد کارڈ نمبر *<number>* چھُ"
 }

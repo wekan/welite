@@ -2315,5 +2315,7 @@
   "board-announcement": "تاختا ئۇقتۇرۇشى",
   "board-announcement-enabled": "بۇ تاختىدىكى ھەممەيلەنگە كۆرسىتىش",
   "add-many-lines-as": "بىرنەچچە قۇرنى مۇنداق قوشۇڭ:",
-  "many-items": "بىرنەچچە __items__"
+  "many-items": "بىرنەچچە __items__",
+  "operator-number": "نومۇر",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - كارتا نومۇرى *<number>* بولغان كارتىلار"
 }

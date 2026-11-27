@@ -2315,5 +2315,7 @@
   "board-announcement": "Абвестка на дошцы",
   "board-announcement-enabled": "Паказваць усім на гэтай дошцы",
   "add-many-lines-as": "Дадаць некалькі радкоў як:",
-  "many-items": "__items__ (некалькі)"
+  "many-items": "__items__ (некалькі)",
+  "operator-number": "нумар",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - карткі, нумар якіх *<number>*"
 }

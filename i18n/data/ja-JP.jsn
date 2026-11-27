@@ -2315,5 +2315,7 @@
   "board-announcement": "ボードのお知らせ",
   "board-announcement-enabled": "このボードの全員に表示",
   "add-many-lines-as": "複数行を次の形式で追加：",
-  "many-items": "複数の__items__"
+  "many-items": "複数の__items__",
+  "operator-number": "番号",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - カード番号が *<number>* のカード"
 }

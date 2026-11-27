@@ -2315,5 +2315,7 @@
   "board-announcement": "Anúncio do quadro",
   "board-announcement-enabled": "Mostrar a todas as pessoas neste quadro",
   "add-many-lines-as": "Adicionar várias linhas como:",
-  "many-items": "__items__ (vários)"
+  "many-items": "__items__ (vários)",
+  "operator-number": "número",
+  "globalSearch-instructions-operator-number": "`__operator_number__:<number>` - cartões cujo número do cartão é *<number>*"
 }
