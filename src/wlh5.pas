@@ -2767,7 +2767,9 @@ begin
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
-    '/exportZip">WeKan ZIP</a></li>';
+    '/exportZip">WeKan ZIP</a></li><li><a download href="' + Base +
+    '/exportZip?archived=false">WeKan ZIP (' + E(Words.Text('export-board-without-archive', 'without archived items')) +
+    ')</a></li>';
   if Scoped then
     Result := Result + '<li><a class="js-export-fields js-scope-link" data-path="exportZip" download href="#">WeKan ZIP</a></li>' +
       '<li><a class="js-export-fields js-scope-link" data-path="exportExcel" download href="#">Excel (.xlsx)</a></li>' +

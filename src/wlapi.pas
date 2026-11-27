@@ -3105,6 +3105,64 @@ begin
   end;
 end;
 
+procedure ExcludeBoardZipArchive(Board: TJSONObject);
+var ArchivedLanes, ArchivedLists, LiveCards: TStringList;
+  Rows: TJSONArray; Row: TJSONObject; Collection, Owner: string; I: Integer;
+
+  procedure RemoveArchivedContainers(const Key: string; Removed: TStringList; ParentRemoved: TStringList);
+  var J: Integer; Containers: TJSONArray; Container: TJSONObject;
+  begin
+    Containers := Board.Arrays[Key];
+    for J := Containers.Count - 1 downto 0 do
+    begin
+      Container := Containers.Objects[J];
+      if Container.Get('archived', False) or
+        ((ParentRemoved <> nil) and (ParentRemoved.IndexOf(Container.Get('swimlaneId', '')) >= 0)) then
+      begin
+        Removed.Add(Container.Get('_id', ''));
+        Containers.Delete(J);
+      end;
+    end;
+  end;
+
+begin
+  ArchivedLanes := TStringList.Create;
+  ArchivedLists := TStringList.Create;
+  LiveCards := TStringList.Create;
+  try
+    ArchivedLanes.CaseSensitive := True;
+    ArchivedLanes.Sorted := True;
+    ArchivedLists.CaseSensitive := True;
+    ArchivedLists.Sorted := True;
+    LiveCards.CaseSensitive := True;
+    LiveCards.Sorted := True;
+    RemoveArchivedContainers('swimlanes', ArchivedLanes, nil);
+    RemoveArchivedContainers('lists', ArchivedLists, ArchivedLanes);
+    Rows := Board.Arrays['cards'];
+    for I := Rows.Count - 1 downto 0 do
+    begin
+      Row := Rows.Objects[I];
+      if Row.Get('archived', False) or (Row.Get('deletedAt', '') <> '') or
+        (ArchivedLists.IndexOf(Row.Get('listId', '')) >= 0) or
+        (ArchivedLanes.IndexOf(Row.Get('swimlaneId', '')) >= 0) then Rows.Delete(I)
+      else LiveCards.Add(Row.Get('_id', ''));
+    end;
+    for Collection in ['attachments','activities','comments','checklists','checklistItems'] do
+    begin
+      Rows := Board.Arrays[Collection];
+      for I := Rows.Count - 1 downto 0 do
+      begin
+        Owner := Rows.Objects[I].Get('cardId', '');
+        if (Owner <> '') and (LiveCards.IndexOf(Owner) < 0) then Rows.Delete(I);
+      end;
+    end;
+  finally
+    LiveCards.Free;
+    ArchivedLists.Free;
+    ArchivedLanes.Free;
+  end;
+end;
+
 procedure ScopeBoardZip(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string);
 var Cards, Checklists, Items, Entries: TJSONArray; Entry: TJSONObject;
   CardIds, ListIds, LaneIds, CheckIds, UserIds: TStringList;
@@ -3243,6 +3301,7 @@ begin
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   try
+    if aRequest.QueryFields.Values['archived'] = 'false' then ExcludeBoardZipArchive(Payload);
     ScopeBoardZip(Payload, DownloadScopeId(aRequest, 'swimlaneId'), DownloadScopeId(aRequest, 'listId'),
       DownloadScopeId(aRequest, 'cardId'), DownloadScopeId(aRequest, 'checklistId'));
     FilterBoardZipFields(Payload, aRequest.QueryFields.Values['fields']);

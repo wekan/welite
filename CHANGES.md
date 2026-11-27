@@ -51,7 +51,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   checklist and filter optional fields. It retains the selected cards'
   containers and includes file bytes only for the exported attachments.
   Swimlane, list, card and checklist menus offer the scoped ZIP, Excel and
-  PDF downloads with field selection.
+  PDF downloads with field selection. The board menu also offers a ZIP
+  without archived cards, lists, swimlanes or their attachment files.
 
 - The board Export menu downloads comma- or semicolon-separated CSV, TSV
   and iCalendar. CSV and TSV honor the selected column groups on public
