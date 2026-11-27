@@ -578,6 +578,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board, opened by address and in the Archive; the board's activities are not
   theirs. `tests/view.py` checks each, and all six of WeKan's
   history-read-scope tests pass.
+- Keep what was done in a custom field's editor opened before the last save
+  is drawn: a box turned over is turned over from the new value, a changed
+  text is kept (Weddy's weddy.js, as its fix of 03-cards-operations' checkbox
+  test).
 - Follow Admin Panel / Settings / Features / Turn off all webhooks
   (webhooksDisabled, as WeKan and Weddy set it in the shared store): while it
   is on, a board admin adds and changes no webhook - REST or the HTML4 view's
