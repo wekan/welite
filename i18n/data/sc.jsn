@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioridade MoSCoW",
   "wsjf-score": "Puntègiu WSJF",
   "board-announcement": "Annùntziu de sa tàula",
-  "board-announcement-enabled": "Ammustra·ddu a totus in custa tàula"
+  "board-announcement-enabled": "Ammustra·ddu a totus in custa tàula",
+  "add-many-lines-as": "Agiunghe prus rigas comente:",
+  "many-items": "Prus __items__"
 }

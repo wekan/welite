@@ -2313,5 +2313,7 @@
   "moscow-priority": "Nhlohlorhiso wa MoSCoW",
   "wsjf-score": "Mpimo wa WSJF",
   "board-announcement": "Xitiviso xa bodo",
-  "board-announcement-enabled": "Xi kombisa un'wana na un'wana eka bodo leyi"
+  "board-announcement-enabled": "Xi kombisa un'wana na un'wana eka bodo leyi",
+  "add-many-lines-as": "Engetela tilayini to tala tani hi:",
+  "many-items": "__items__ (swo tala)"
 }

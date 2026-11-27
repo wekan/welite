@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ಆದ್ಯತೆ",
   "wsjf-score": "WSJF ಅಂಕ",
   "board-announcement": "ಫಲಕದ ಪ್ರಕಟಣೆ",
-  "board-announcement-enabled": "ಈ ಫಲಕದಲ್ಲಿರುವ ಎಲ್ಲರಿಗೂ ಇದನ್ನು ತೋರಿಸಿ"
+  "board-announcement-enabled": "ಈ ಫಲಕದಲ್ಲಿರುವ ಎಲ್ಲರಿಗೂ ಇದನ್ನು ತೋರಿಸಿ",
+  "add-many-lines-as": "ಹಲವು ಸಾಲುಗಳನ್ನು ಈ ರೀತಿಯಾಗಿ ಸೇರಿಸಿ:",
+  "many-items": "ಹಲವು __items__"
 }

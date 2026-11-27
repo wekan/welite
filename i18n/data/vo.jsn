@@ -2313,5 +2313,7 @@
   "moscow-priority": "Büfüd MoSCoW",
   "wsjf-score": "Num WSJF",
   "board-announcement": "Nunod taba",
-  "board-announcement-enabled": "Jonön oni valikanes su tab at"
+  "board-announcement-enabled": "Jonön oni valikanes su tab at",
+  "add-many-lines-as": "Läükön lienis mödik as:",
+  "many-items": "__items__ mödik"
 }

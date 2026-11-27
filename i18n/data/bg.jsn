@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW приоритет",
   "wsjf-score": "WSJF оценка",
   "board-announcement": "Съобщение на таблото",
-  "board-announcement-enabled": "Показване на всички в това табло"
+  "board-announcement-enabled": "Показване на всички в това табло",
+  "add-many-lines-as": "Добавяне на няколко реда като:",
+  "many-items": "Няколко __items__"
 }

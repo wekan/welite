@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW forgangur",
   "wsjf-score": "WSJF einkunn",
   "board-announcement": "Tilkynning á töflu",
-  "board-announcement-enabled": "Sýna öllum á þessari töflu"
+  "board-announcement-enabled": "Sýna öllum á þessari töflu",
+  "add-many-lines-as": "Bæta við mörgum línum sem:",
+  "many-items": "__items__ (mörg)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ਤਰਜੀਹ",
   "wsjf-score": "WSJF ਅੰਕ",
   "board-announcement": "ਬੋਰਡ ਘੋਸ਼ਣਾ",
-  "board-announcement-enabled": "ਇਸ ਬੋਰਡ 'ਤੇ ਸਾਰਿਆਂ ਨੂੰ ਦਿਖਾਓ"
+  "board-announcement-enabled": "ਇਸ ਬੋਰਡ 'ਤੇ ਸਾਰਿਆਂ ਨੂੰ ਦਿਖਾਓ",
+  "add-many-lines-as": "ਕਈ ਲਾਈਨਾਂ ਇਸ ਤਰ੍ਹਾਂ ਸ਼ਾਮਲ ਕਰੋ:",
+  "many-items": "ਕਈ __items__"
 }

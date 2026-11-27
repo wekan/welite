@@ -2313,5 +2313,7 @@
   "moscow-priority": "Ihe mbụ MoSCoW",
   "wsjf-score": "Akara WSJF",
   "board-announcement": "Ọkwa bọọdụ",
-  "board-announcement-enabled": "Gosi ya onye ọ bụla nọ na bọọdụ a"
+  "board-announcement-enabled": "Gosi ya onye ọ bụla nọ na bọọdụ a",
+  "add-many-lines-as": "Tinye ọtụtụ ahịrị dịka:",
+  "many-items": "Ọtụtụ __items__"
 }

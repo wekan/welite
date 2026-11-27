@@ -2313,5 +2313,7 @@
   "moscow-priority": "የMoSCoW ቅድሚያ",
   "wsjf-score": "የWSJF ውጤት",
   "board-announcement": "የሰሌዳ ማስታወቂያ",
-  "board-announcement-enabled": "በዚህ ሰሌዳ ላይ ላሉ ሁሉ አሳይ"
+  "board-announcement-enabled": "በዚህ ሰሌዳ ላይ ላሉ ሁሉ አሳይ",
+  "add-many-lines-as": "ብዙ መስመሮችን እንደዚህ ጨምር፦",
+  "many-items": "ብዙ __items__"
 }

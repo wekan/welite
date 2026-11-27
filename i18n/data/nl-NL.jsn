@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-prioriteit",
   "wsjf-score": "WSJF-score",
   "board-announcement": "Bordaankondiging",
-  "board-announcement-enabled": "Tonen aan iedereen op dit bord"
+  "board-announcement-enabled": "Tonen aan iedereen op dit bord",
+  "add-many-lines-as": "Meerdere regels toevoegen als:",
+  "many-items": "Meerdere __items__"
 }

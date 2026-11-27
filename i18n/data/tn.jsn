@@ -2313,5 +2313,7 @@
   "moscow-priority": "Botlhokwa jwa MoSCoW",
   "wsjf-score": "Maduo a WSJF",
   "board-announcement": "Kitsiso ya boto",
-  "board-announcement-enabled": "E bontsha mongwe le mongwe mo botong e"
+  "board-announcement-enabled": "E bontsha mongwe le mongwe mo botong e",
+  "add-many-lines-as": "Tsenya mela e mentsi jaaka:",
+  "many-items": "__items__ (tse dintsi)"
 }

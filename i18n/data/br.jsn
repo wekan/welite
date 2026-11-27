@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorelezh MoSCoW",
   "wsjf-score": "Skor WSJF",
   "board-announcement": "Kemenn an daolenn",
-  "board-announcement-enabled": "Diskouez anezhañ d'an holl war an daolenn-mañ"
+  "board-announcement-enabled": "Diskouez anezhañ d'an holl war an daolenn-mañ",
+  "add-many-lines-as": "Ouzhpennañ meur a linenn evel:",
+  "many-items": "__items__ (meur a hini)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "اولویت MoSCoW",
   "wsjf-score": "امتیاز WSJF",
   "board-announcement": "اطلاعیه برد",
-  "board-announcement-enabled": "نمایش به همه افراد این برد"
+  "board-announcement-enabled": "نمایش به همه افراد این برد",
+  "add-many-lines-as": "چندین خط را اضافه کنید به‌صورت:",
+  "many-items": "چندین __items__"
 }

@@ -321,6 +321,11 @@ function ArchiveViewCards(const T:TWLTenant;const UserId,BoardId:string;const Id
 // own, made by the caller - a writer of the card's board, or an assigned-only
 // writer on a card assigned to them (UnassignedArchiveBleed otherwise).
 function CreateBoardFromViewCard(const T:TWLTenant;const UserId,CardId,Title,DefaultLane:string;out BoardId,Error:string):Integer;
+// WeKan's createBoardForm: a private board of the caller's with a Default
+// swimlane, unless Admin Panel lets only admins make boards; MayCreateBoard
+// answers whether they may, for the header's Create Board.
+function CreateViewBoard(const T:TWLTenant;const UserId,Title,DefaultLane:string;out BoardId,Error:string):Integer;
+function MayCreateBoard(Db:TWLDb;const UserId:string):Boolean;
 // boardChangeVisibilityPopup: a board admin makes the board private, visible
 // to the instance's signed-in users (#3249) or public.
 function SetViewBoardVisibility(const T:TWLTenant;const UserId,BoardId,Visibility:string;out Error:string):Integer;
@@ -2949,6 +2954,39 @@ begin
     ' AND archived=0 AND deletedAt IS NULL; '+
     'SELECT CASE WHEN (SELECT linkedId FROM cards WHERE id='+QuotedStr(CardId)+')='+Board+' AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+Lane+
     ') THEN 1 ELSE json(''Board creation incomplete'') END; COMMIT;';
+  if not T.Db.Exec(Sql) then begin T.Db.Exec('ROLLBACK;');BoardId:='';Error:='Could not create board';Exit(500);end;
+  Result:=200;
+end;
+
+function MayCreateBoard(Db:TWLDb;const UserId:string):Boolean;
+var AdminOnly,PrivateOnly,RegistryGuard:string;
+begin
+  Result:=False;
+  if UserId='' then Exit;
+  try BoardCreationSettings(Db,AdminOnly,PrivateOnly,RegistryGuard);except Exit;end;
+  Result:=Db.Query('SELECT EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(UserId)+' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+
+    AdminOnly+'));')[0][0]='1';
+end;
+
+function CreateViewBoard(const T:TWLTenant;const UserId,Title,DefaultLane:string;out BoardId,Error:string):Integer;
+var BoardTitle,Board,Lane,Stamp,Sql,AdminOnly,PrivateOnly,RegistryGuard,Actor,Permission:string;
+begin
+  Error:='';BoardId:='';
+  BoardTitle:=Trim(Title);
+  if (BoardTitle='') or (Pos(#0,BoardTitle)>0) then begin Error:='a board needs a title';Exit(400);end;
+  try BoardCreationSettings(T.Db,AdminOnly,PrivateOnly,RegistryGuard);
+  except Error:='Could not read board creation policy';Exit(500);end;
+  Actor:=QuotedStr(UserId);
+  // CreateBleed: Admin Panel may let only admins make boards.
+  Permission:='EXISTS(SELECT 1 FROM users WHERE id='+Actor+' AND COALESCE(loginDisabled,0)=0 AND (isAdmin=1 OR NOT '+AdminOnly+'))';
+  if T.Db.Query('SELECT '+Permission+';')[0][0]<>'1' then begin Error:='Board creation is restricted to admins';Exit(403);end;
+  BoardId:=NewId;Board:=QuotedStr(BoardId);Lane:=QuotedStr(NewId);Stamp:=QuotedStr(NowIso);
+  Sql:='BEGIN IMMEDIATE; SELECT CASE WHEN '+RegistryGuard+' AND '+Permission+' THEN 1 ELSE json(''Board creation policy changed'') END; '+
+    'INSERT INTO boards(id,title,slug,permission,color,createdAt,modifiedAt) VALUES('+Board+','+QuotedStr(BoardTitle)+','+
+    QuotedStr(Slugify(BoardTitle))+',''private'',''belize'','+Stamp+','+Stamp+'); '+
+    'INSERT INTO board_members(boardId,userId,isAdmin,isActive,isNoComments,isCommentOnly,isWorker) VALUES('+Board+','+Actor+',1,1,0,0,0); '+
+    'INSERT INTO swimlanes(id,boardId,title,sort,createdAt) VALUES('+Lane+','+Board+','+QuotedStr(DefaultLane)+',0,'+Stamp+'); '+
+    'SELECT CASE WHEN EXISTS(SELECT 1 FROM swimlanes WHERE id='+Lane+') THEN 1 ELSE json(''Board creation incomplete'') END; COMMIT;';
   if not T.Db.Exec(Sql) then begin T.Db.Exec('ROLLBACK;');BoardId:='';Error:='Could not create board';Exit(500);end;
   Result:=200;
 end;

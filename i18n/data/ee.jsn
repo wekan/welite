@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ŋgɔgbenɔnɔ",
   "wsjf-score": "WSJF xexlẽme",
   "board-announcement": "Kpekpeɖeŋu ƒe gbeƒãɖeɖe",
-  "board-announcement-enabled": "Fiae ame sia ame le kpekpeɖeŋu sia dzi"
+  "board-announcement-enabled": "Fiae ame sia ame le kpekpeɖeŋu sia dzi",
+  "add-many-lines-as": "Tsɔ fli geɖe kpe ɖe eŋu abe:",
+  "many-items": "__items__ geɖe"
 }

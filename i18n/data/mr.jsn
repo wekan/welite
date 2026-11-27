@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW प्राधान्य",
   "wsjf-score": "WSJF गुण",
   "board-announcement": "फलकावरील घोषणा",
-  "board-announcement-enabled": "या फलकावरील सर्वांना दाखवा"
+  "board-announcement-enabled": "या फलकावरील सर्वांना दाखवा",
+  "add-many-lines-as": "अनेक ओळी या स्वरूपात जोडा:",
+  "many-items": "अनेक __items__"
 }

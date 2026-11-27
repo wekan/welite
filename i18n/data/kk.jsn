@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW басымдығы",
   "wsjf-score": "WSJF ұпайы",
   "board-announcement": "Тақта хабарландыруы",
-  "board-announcement-enabled": "Оны осы тақтадағы барлығына көрсету"
+  "board-announcement-enabled": "Оны осы тақтадағы барлығына көрсету",
+  "add-many-lines-as": "Бірнеше жолды мына түрде қосу:",
+  "many-items": "Бірнеше __items__"
 }

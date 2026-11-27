@@ -2313,5 +2313,7 @@
   "moscow-priority": "ลำดับความสำคัญ MoSCoW",
   "wsjf-score": "คะแนน WSJF",
   "board-announcement": "ประกาศของบอร์ด",
-  "board-announcement-enabled": "แสดงให้ทุกคนในบอร์ดนี้เห็น"
+  "board-announcement-enabled": "แสดงให้ทุกคนในบอร์ดนี้เห็น",
+  "add-many-lines-as": "เพิ่มหลายบรรทัดเป็น:",
+  "many-items": "__items__หลายรายการ"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "Mudnaanta MoSCoW",
   "wsjf-score": "Dhibcaha WSJF",
   "board-announcement": "Ogeysiiska sabuuradda",
-  "board-announcement-enabled": "U muuji qof kasta oo sabuuraddan jooga"
+  "board-announcement-enabled": "U muuji qof kasta oo sabuuraddan jooga",
+  "add-many-lines-as": "Ku dar sadar badan sida:",
+  "many-items": "__items__ badan"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW өстенлеге",
   "wsjf-score": "WSJF баллы",
   "board-announcement": "Такта игъланы",
-  "board-announcement-enabled": "Аны бу тактадагы һәркемгә күрсәтергә"
+  "board-announcement-enabled": "Аны бу тактадагы һәркемгә күрсәтергә",
+  "add-many-lines-as": "Берничә юлны болай өстәү:",
+  "many-items": "Берничә __items__"
 }

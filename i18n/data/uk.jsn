@@ -2313,5 +2313,7 @@
   "moscow-priority": "Пріоритет MoSCoW",
   "wsjf-score": "Оцінка WSJF",
   "board-announcement": "Оголошення дошки",
-  "board-announcement-enabled": "Показувати всім на цій дошці"
+  "board-announcement-enabled": "Показувати всім на цій дошці",
+  "add-many-lines-as": "Додати кілька рядків як:",
+  "many-items": "__items__ (кілька)"
 }

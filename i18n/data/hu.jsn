@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW prioritás",
   "wsjf-score": "WSJF pontszám",
   "board-announcement": "Táblahirdetmény",
-  "board-announcement-enabled": "Megjelenítés mindenkinek ezen a táblán"
+  "board-announcement-enabled": "Megjelenítés mindenkinek ezen a táblán",
+  "add-many-lines-as": "Több sor hozzáadása a következőként:",
+  "many-items": "__items__ (több)"
 }

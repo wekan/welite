@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW түрүүлгэ",
   "wsjf-score": "WSJF оноо",
   "board-announcement": "Самбарай мэдээсэл",
-  "board-announcement-enabled": "Энэ самбар дээрэхи бүхы хүнүүдтэ харуулха"
+  "board-announcement-enabled": "Энэ самбар дээрэхи бүхы хүнүүдтэ харуулха",
+  "add-many-lines-as": "Олон мүр иигэжэ нэмэхэ:",
+  "many-items": "Олон __items__"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "Kukosha kweMoSCoW",
   "wsjf-score": "Zvibodzwa zveWSJF",
   "board-announcement": "Chiziviso chebhodhi",
-  "board-announcement-enabled": "Ratidza munhu wese ari pabhodhi rino"
+  "board-announcement-enabled": "Ratidza munhu wese ari pabhodhi rino",
+  "add-many-lines-as": "Wedzera mitsetse yakawanda se:",
+  "many-items": "__items__ (zvakawanda)"
 }

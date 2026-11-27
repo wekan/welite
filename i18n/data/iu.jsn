@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ᓯᕗᓪᓕᐅᑎᑦᑕᐅᓂᖓ",
   "wsjf-score": "WSJF ᓈᓴᐅᑎ",
   "board-announcement": "ᐊᓪᓚᕕᐅᑉ ᑐᓴᖅᑎᑦᓯᔾᔪᑖ",
-  "board-announcement-enabled": "ᐅᕙᓂ ᐊᓪᓚᕕᒻᒥ ᑭᒃᑯᓕᒫᓄᑦ ᑕᑯᑎᓪᓗᒍ"
+  "board-announcement-enabled": "ᐅᕙᓂ ᐊᓪᓚᕕᒻᒥ ᑭᒃᑯᓕᒫᓄᑦ ᑕᑯᑎᓪᓗᒍ",
+  "add-many-lines-as": "ᐊᒥᓱᑦ ᑎᑎᖅᑲᓕᐊᑦ ᐃᓚᒃᑭᑦ ᐃᒪᓐᓇ:",
+  "many-items": "ᐊᒥᓱᑦ __items__"
 }

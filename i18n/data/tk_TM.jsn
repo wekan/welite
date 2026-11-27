@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ileriligi",
   "wsjf-score": "WSJF baly",
   "board-announcement": "Tagta bildirişi",
-  "board-announcement-enabled": "Ony şu tagtadaky hemmelere görkez"
+  "board-announcement-enabled": "Ony şu tagtadaky hemmelere görkez",
+  "add-many-lines-as": "Birnäçe setiri şeýle goş:",
+  "many-items": "Birnäçe __items__"
 }

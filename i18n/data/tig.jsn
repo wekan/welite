@@ -2313,5 +2313,7 @@
   "moscow-priority": "ቀዳምነት MoSCoW",
   "wsjf-score": "ነጥብ WSJF",
   "board-announcement": "አዋጅ ምዱድ",
-  "board-announcement-enabled": "ዲብ እሊ ምዱድ ንክሎም ኣርኤ"
+  "board-announcement-enabled": "ዲብ እሊ ምዱድ ንክሎም ኣርኤ",
+  "add-many-lines-as": "ብዙሕ መስመር ከምዚ ወስክ፦",
+  "many-items": "ብዙሕ __items__"
 }

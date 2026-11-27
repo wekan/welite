@@ -2313,5 +2313,7 @@
   "moscow-priority": "Àkọ́kọ́ MoSCoW",
   "wsjf-score": "Àmì WSJF",
   "board-announcement": "Ikede pátákó",
-  "board-announcement-enabled": "Fi han fun gbogbo eniyan lori pátákó yii"
+  "board-announcement-enabled": "Fi han fun gbogbo eniyan lori pátákó yii",
+  "add-many-lines-as": "Fi ọ̀pọ̀ ìlà kún un gẹ́gẹ́ bí:",
+  "many-items": "Ọ̀pọ̀ __items__"
 }

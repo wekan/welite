@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW प्राधान्य",
   "wsjf-score": "WSJF गूण",
   "board-announcement": "फळ्याची घोशणा",
-  "board-announcement-enabled": "ह्या फळ्यावयल्या सगळ्यांक दाखोवचें"
+  "board-announcement-enabled": "ह्या फळ्यावयल्या सगळ्यांक दाखोवचें",
+  "add-many-lines-as": "जायत्यो वळी अशें जोडात:",
+  "many-items": "जायतीं __items__"
 }

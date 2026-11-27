@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorità MoSCoW",
   "wsjf-score": "Punteggio WSJF",
   "board-announcement": "Comunicaziun dl tofl",
-  "board-announcement-enabled": "Le mostré a dötes sön chësc tofl"
+  "board-announcement-enabled": "Le mostré a dötes sön chësc tofl",
+  "add-many-lines-as": "Ajonté plu righes coche:",
+  "many-items": "Plu __items__"
 }

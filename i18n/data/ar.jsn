@@ -2313,5 +2313,7 @@
   "moscow-priority": "أولوية MoSCoW",
   "wsjf-score": "درجة WSJF",
   "board-announcement": "إعلان اللوحة",
-  "board-announcement-enabled": "إظهاره للجميع في هذه اللوحة"
+  "board-announcement-enabled": "إظهاره للجميع في هذه اللوحة",
+  "add-many-lines-as": "أضف عدة أسطر على شكل:",
+  "many-items": "__items__ متعددة"
 }

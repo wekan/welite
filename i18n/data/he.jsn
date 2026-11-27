@@ -2313,5 +2313,7 @@
   "moscow-priority": "עדיפות MoSCoW",
   "wsjf-score": "ציון WSJF",
   "board-announcement": "הודעת לוח",
-  "board-announcement-enabled": "הצגה לכל מי שבלוח הזה"
+  "board-announcement-enabled": "הצגה לכל מי שבלוח הזה",
+  "add-many-lines-as": "הוספת מספר שורות בתור:",
+  "many-items": "__items__ (מרובים)"
 }

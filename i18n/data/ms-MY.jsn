@@ -2313,5 +2313,7 @@
   "moscow-priority": "Keutamaan MoSCoW",
   "wsjf-score": "Skor WSJF",
   "board-announcement": "Pengumuman papan",
-  "board-announcement-enabled": "Paparkan kepada semua orang pada papan ini"
+  "board-announcement-enabled": "Paparkan kepada semua orang pada papan ini",
+  "add-many-lines-as": "Tambah beberapa baris sebagai:",
+  "many-items": "Beberapa __items__"
 }

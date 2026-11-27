@@ -2313,5 +2313,7 @@
   "moscow-priority": "Kipaumbele cha MoSCoW",
   "wsjf-score": "Alama ya WSJF",
   "board-announcement": "Tangazo la bodi",
-  "board-announcement-enabled": "Lionyeshe kwa kila mtu kwenye bodi hii"
+  "board-announcement-enabled": "Lionyeshe kwa kila mtu kwenye bodi hii",
+  "add-many-lines-as": "Ongeza mistari mingi kama:",
+  "many-items": "__items__ (nyingi)"
 }

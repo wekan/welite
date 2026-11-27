@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW პრიორიტეტი",
   "wsjf-score": "WSJF ქულა",
   "board-announcement": "დაფის განცხადება",
-  "board-announcement-enabled": "ამ დაფაზე ყველასთვის ჩვენება"
+  "board-announcement-enabled": "ამ დაფაზე ყველასთვის ჩვენება",
+  "add-many-lines-as": "რამდენიმე სტრიქონის დამატება როგორც:",
+  "many-items": "რამდენიმე __items__"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioridade MoSCoW",
   "wsjf-score": "Puntuación WSJF",
   "board-announcement": "Anuncio do taboleiro",
-  "board-announcement-enabled": "Amosalo a todas as persoas deste taboleiro"
+  "board-announcement-enabled": "Amosalo a todas as persoas deste taboleiro",
+  "add-many-lines-as": "Engadir varias liñas como:",
+  "many-items": "__items__ múltiples"
 }

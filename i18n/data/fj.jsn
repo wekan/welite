@@ -2313,5 +2313,7 @@
   "moscow-priority": "Ka bibi MoSCoW",
   "wsjf-score": "Maka WSJF",
   "board-announcement": "Itukutuku ni vola",
-  "board-announcement-enabled": "Vakaraitaka vei ira kece ena vola oqo"
+  "board-announcement-enabled": "Vakaraitaka vei ira kece ena vola oqo",
+  "add-many-lines-as": "Kuria e vica na laini me:",
+  "many-items": "E levu na __items__"
 }

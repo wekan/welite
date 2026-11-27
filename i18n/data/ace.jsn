@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritas MoSCoW",
   "wsjf-score": "Skor WSJF",
   "board-announcement": "Peunyata papan",
-  "board-announcement-enabled": "Peuleumah u bandum ureueng bak papan nyoe"
+  "board-announcement-enabled": "Peuleumah u bandum ureueng bak papan nyoe",
+  "add-many-lines-as": "Tamah le baris jeuet keu:",
+  "many-items": "Le __items__"
 }

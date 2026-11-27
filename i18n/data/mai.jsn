@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW प्राथमिकता",
   "wsjf-score": "WSJF अंक",
   "board-announcement": "पट्टक घोषणा",
-  "board-announcement-enabled": "एहि पट्ट पर सभकेँ देखाउ"
+  "board-announcement-enabled": "एहि पट्ट पर सभकेँ देखाउ",
+  "add-many-lines-as": "कतेको पाँति एहि रूपमे जोड़ू:",
+  "many-items": "कतेको __items__"
 }

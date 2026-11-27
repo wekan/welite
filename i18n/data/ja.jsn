@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW 優先度",
   "wsjf-score": "WSJF スコア",
   "board-announcement": "ボードのお知らせ",
-  "board-announcement-enabled": "このボードの全員に表示"
+  "board-announcement-enabled": "このボードの全員に表示",
+  "add-many-lines-as": "複数行を次の形式で追加：",
+  "many-items": "複数の__items__"
 }

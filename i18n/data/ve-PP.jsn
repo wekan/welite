@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-prioritet",
   "wsjf-score": "WSJF-ballad",
   "board-announcement": "Laudan tedotuz",
-  "board-announcement-enabled": "Ozuta sidä kaikile necil laudal"
+  "board-announcement-enabled": "Ozuta sidä kaikile necil laudal",
+  "add-many-lines-as": "Ližata äi rivid kut:",
+  "many-items": "__items__ (äi)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ustuvorligi",
   "wsjf-score": "WSJF bali",
   "board-announcement": "Taxta eʼloni",
-  "board-announcement-enabled": "Bu taxtadagi hammaga koʻrsatish"
+  "board-announcement-enabled": "Bu taxtadagi hammaga koʻrsatish",
+  "add-many-lines-as": "Bir nechta qatorni quyidagicha qoʻshing:",
+  "many-items": "Bir nechta __items__"
 }

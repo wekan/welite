@@ -2313,5 +2313,7 @@
   "moscow-priority": "Bohlokwa bja MoSCoW",
   "wsjf-score": "Dintlha tša WSJF",
   "board-announcement": "Tsebišo ya poto",
-  "board-announcement-enabled": "E bontšhe bohle go poto ye"
+  "board-announcement-enabled": "E bontšhe bohle go poto ye",
+  "add-many-lines-as": "Oketša methalo ye mentši bjalo ka:",
+  "many-items": "__items__ (tše dintši)"
 }

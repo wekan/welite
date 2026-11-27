@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-prioritato",
   "wsjf-score": "WSJF-poentaro",
   "board-announcement": "Tabula anonco",
-  "board-announcement-enabled": "Montri ĝin al ĉiuj en ĉi tiu tabulo"
+  "board-announcement-enabled": "Montri ĝin al ĉiuj en ĉi tiu tabulo",
+  "add-many-lines-as": "Aldoni plurajn liniojn kiel:",
+  "many-items": "Pluraj __items__"
 }

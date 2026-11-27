@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorité MoSCoW",
   "wsjf-score": "Score WSJF",
   "board-announcement": "Annonce du tableau",
-  "board-announcement-enabled": "Afficher à toutes les personnes de ce tableau"
+  "board-announcement-enabled": "Afficher à toutes les personnes de ce tableau",
+  "add-many-lines-as": "Ajouter plusieurs lignes en tant que :",
+  "many-items": "Plusieurs __items__"
 }

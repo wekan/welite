@@ -2313,5 +2313,7 @@
   "moscow-priority": "د MoSCoW لومړیتوب",
   "wsjf-score": "د WSJF نمره",
   "board-announcement": "د تختې اعلان",
-  "board-announcement-enabled": "دا د دې تختې ټولو ته وښایاست"
+  "board-announcement-enabled": "دا د دې تختې ټولو ته وښایاست",
+  "add-many-lines-as": "څو کرښې په دې بڼه ورزیاتې کړئ:",
+  "many-items": "څو __items__"
 }

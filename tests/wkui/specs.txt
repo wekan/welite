@@ -436,3 +436,16 @@ assigned-card-methods.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member gets neither the file nor the text of a card not assigned to them
 board-announcement.e2e.js
 export-access.e2e.js: assigned-only private member cannot read unfiltered export
+editor-enter-preference.e2e.js: board editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: swimlane editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js: board editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: swimlane editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: list editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: card editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: description editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: checklist editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: item editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: comment editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: title editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: copy editor follows submit-on-Enter=true
+editor-enter-preference.e2e.js: Member Settings changes the shortcut to true without reloading

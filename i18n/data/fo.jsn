@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW raðfesting",
   "wsjf-score": "WSJF stig",
   "board-announcement": "Kunngerð á talvuni",
-  "board-announcement-enabled": "Vís hana fyri øllum á hesi talvuni"
+  "board-announcement-enabled": "Vís hana fyri øllum á hesi talvuni",
+  "add-many-lines-as": "Legg fleiri reglur afturat sum:",
+  "many-items": "Fleiri __items__"
 }

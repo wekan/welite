@@ -2313,5 +2313,7 @@
   "moscow-priority": "Obukulu bwa MoSCoW",
   "wsjf-score": "Obubonero bwa WSJF",
   "board-announcement": "Ekirango ky'olubaawo",
-  "board-announcement-enabled": "Kiraga buli muntu ali ku lubaawo luno"
+  "board-announcement-enabled": "Kiraga buli muntu ali ku lubaawo luno",
+  "add-many-lines-as": "Yongerako ennyiriri nnyingi nga:",
+  "many-items": "__items__ (bingi)"
 }

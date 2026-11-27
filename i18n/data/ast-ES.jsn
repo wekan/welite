@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioridá MoSCoW",
   "wsjf-score": "Puntuación WSJF",
   "board-announcement": "Anunciu del tableru",
-  "board-announcement-enabled": "Amosalu a toos nesti tableru"
+  "board-announcement-enabled": "Amosalu a toos nesti tableru",
+  "add-many-lines-as": "Amestar delles llinies como:",
+  "many-items": "__items__ múltiples"
 }

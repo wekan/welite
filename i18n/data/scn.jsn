@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorità MoSCoW",
   "wsjf-score": "Puntiggiu WSJF",
   "board-announcement": "Avvisu dâ tavula",
-  "board-announcement-enabled": "Mùstralu a tutti chiddi di sta tavula"
+  "board-announcement-enabled": "Mùstralu a tutti chiddi di sta tavula",
+  "add-many-lines-as": "Aggiunci cchiù righi comu:",
+  "many-items": "Cchiù __items__"
 }

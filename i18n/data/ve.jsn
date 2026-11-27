@@ -2313,5 +2313,7 @@
   "moscow-priority": "Ndeme ya MoSCoW",
   "wsjf-score": "Mbalo ya WSJF",
   "board-announcement": "Nḓivhadzo ya bodo",
-  "board-announcement-enabled": "I sumbedzeni muthu muṅwe na muṅwe kha bodo iyi"
+  "board-announcement-enabled": "I sumbedzeni muthu muṅwe na muṅwe kha bodo iyi",
+  "add-many-lines-as": "Engedzani mitaladzi minzhi sa:",
+  "many-items": "__items__ (zwinzhi)"
 }

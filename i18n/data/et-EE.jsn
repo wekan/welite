@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW prioriteet",
   "wsjf-score": "WSJF skoor",
   "board-announcement": "Tahvli teadaanne",
-  "board-announcement-enabled": "Näita kõigile sellel tahvlil"
+  "board-announcement-enabled": "Näita kõigile sellel tahvlil",
+  "add-many-lines-as": "Lisa mitu rida järgmiselt:",
+  "many-items": "__items__ (mitu)"
 }

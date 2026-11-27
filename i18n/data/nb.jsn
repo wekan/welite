@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-prioritet",
   "wsjf-score": "WSJF-poengsum",
   "board-announcement": "Kunngjøring på tavlen",
-  "board-announcement-enabled": "Vis til alle på denne tavlen"
+  "board-announcement-enabled": "Vis til alle på denne tavlen",
+  "add-many-lines-as": "Legg til flere linjer som:",
+  "many-items": "Flere __items__"
 }

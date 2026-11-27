@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW lehentasuna",
   "wsjf-score": "WSJF puntuazioa",
   "board-announcement": "Arbelaren iragarkia",
-  "board-announcement-enabled": "Erakutsi arbel honetako guztiei"
+  "board-announcement-enabled": "Erakutsi arbel honetako guztiei",
+  "add-many-lines-as": "Gehitu hainbat lerro honela:",
+  "many-items": "Hainbat __items__"
 }

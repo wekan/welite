@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW praeoriti",
   "wsjf-score": "WSJF skoa",
   "board-announcement": "Toktok blong bod",
-  "board-announcement-enabled": "Soem long evriwan long bod ia"
+  "board-announcement-enabled": "Soem long evriwan long bod ia",
+  "add-many-lines-as": "Adem plante laen olsem:",
+  "many-items": "Plante __items__"
 }

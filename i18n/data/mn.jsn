@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW тэргүүлэх ач холбогдол",
   "wsjf-score": "WSJF оноо",
   "board-announcement": "Самбарын зарлал",
-  "board-announcement-enabled": "Энэ самбарын бүх хүнд харуулах"
+  "board-announcement-enabled": "Энэ самбарын бүх хүнд харуулах",
+  "add-many-lines-as": "Олон мөрийг дараах байдлаар нэмэх:",
+  "many-items": "Олон __items__"
 }

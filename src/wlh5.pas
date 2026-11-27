@@ -1064,6 +1064,9 @@ begin
   Result := 200;
 end;
 
+// A user's own profile setting (below).
+function ProfileFlag(Db: TWLDb; const UserId, Name: string): Boolean; forward;
+
 // What the board is now (below, with the live board).
 function BoardSignature(Db: TWLDb; const BoardId: string): string; forward;
 
@@ -1088,6 +1091,20 @@ begin
   begin
     Header := '<div id="header" class="header-bar">' +
       '<a class="header-all-boards js-all-boards" href="/" up-follow>' + E(Words.Text('all-boards', 'All Boards')) + '</a>';
+    // header.jade's Create Board pop-over (createBoardForm), for whoever may
+    // make a board - checked, not attempted, so nothing is recorded.
+    if ResolveTenant(Request, T) and TenantOpen(T) and MayCreateBoard(T.Db, S.UserId) then
+      Header := Header + '<a id="header-new-board-icon" class="board-header-btn js-create-board" href="#" title="' +
+        HtmlAttr(Words.Text('add-board', 'Add Board')) + '" aria-label="' + HtmlAttr(Words.Text('add-board', 'Add Board')) +
+        '"><i class="fa fa-plus"></i></a><template class="js-pop-over-template" data-pop="create-board" data-title="' +
+        HtmlAttr(Words.Text('add-board', 'Add Board')) + '"><form class="js-create-board-form" method="post" action="/boards"><label>' +
+        E(Words.Text('title', 'Title')) + '<textarea class="js-new-board-title" name="title" rows="3" dir="auto" placeholder="' +
+        HtmlAttr(Words.Text('bucket-example', 'Like "Bucket List" for example')) + '" required></textarea></label>' +
+        '<fieldset class="multiline-title-choice"><legend>' + E(Words.Text('add-many-lines-as', 'Add many lines as')) + '</legend>' +
+        '<label><input class="js-multiline-title-mode" type="radio" name="titleMode" value="one" checked> 1 ' + E(Words.Text('board', 'Board')) +
+        '</label><label><input class="js-multiline-title-mode" type="radio" name="titleMode" value="separate"> ' +
+        E(StringReplace(Words.Text('many-items', '__items__'), '__items__', Words.Text('boards', 'Boards'), [rfReplaceAll])) + '</label></fieldset>' +
+        '<input class="primary wide" type="submit" value="' + HtmlAttr(Words.Text('create', 'Create')) + '"></form></template>';
     // header.jade's quick access: the board's title, renamed by its admin.
     if QuickAccess <> '' then Header := Header + QuickAccess
     else if BoardTitle <> '' then
@@ -1148,7 +1165,10 @@ begin
       ' data-language-source="browser" data-language-tags="' + E(LanguageTags) + '"', '') + '>' +
     '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">' +
     '<title>' + E(Title) + ' - WeKan</title>' + STATIC_HEAD + '</head>' +
-    '<body>' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
+    // Member Settings / Change Settings / Submit editors with Enter, as
+    // Weddy's body: weddy.js reads it for every editor of the page.
+    '<body data-submit-on-enter="' + IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
+      ProfileFlag(T.Db, S.UserId, 'submitOnEnter'), 'true', '') + '">' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
 end;
 
 // signin.pug
@@ -3749,7 +3769,17 @@ begin
     // WeKan's Multi-Selection: select cards, then act on all of them.
     IfThen(Writable, '<a class="board-header-btn js-multiselection-activate" href="#" title="' +
       HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) + '" aria-label="' + HtmlAttr(Words.Text('multi-selection', 'Multi-Selection')) +
-      '">&#9745;</a>', '') + '</div>' +
+      '">&#9745;</a>', '') +
+    // WeKan's Board View button (boardChangeViewPopup): the views WeLite draws
+    // - the swimlanes, so far.
+    '<a class="board-header-btn js-toggle-board-view" href="#" title="' + HtmlAttr(Words.Text('swimlanes', 'Swimlanes')) +
+      '"><i class="fa fa-th-large"></i><span class="board-header-btn-label">' + E(Words.Text('swimlanes', 'Swimlanes')) + '</span></a>' +
+    '</div>' +
+    '<template class="js-pop-over-template" data-pop="board-view" data-title="' + HtmlAttr(Words.Text('board-view', 'Board View')) +
+      '"><div class="header"><span class="header-title">' + E(Words.Text('board-view', 'Board View')) + '</span><a class="close-btn js-close-pop-over" ' +
+      'href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list"><li>' +
+      '<a class="js-board-view-entry js-open-swimlanes-view" href="' + HtmlAttr(Route) + '?view=swimlanes"><i class="fa fa-th-large"></i> ' +
+      E(Words.Text('swimlanes', 'Swimlanes')) + ' <i class="fa fa-check"></i></a></li></ul></div></template>' +
     BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
     AnnouncementHtml(Db, Words, S, BoardId) +
     '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas">' + Canvas + '</div>' + Details + '</div>';
@@ -5634,7 +5664,7 @@ begin
 end;
 
 function ServeHtml5Action(Request: TRequest; Response: TResponse): Boolean;
-var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator;
+var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Lines: TStringList;
   Path, BoardId, CardId, ChecklistId, ItemId, NewId, Action, Error, Content, BoardTitle, Title, Back, Columns, Values, Sets: string;
   P: TStringArray; Code, n: Integer; Found: Boolean; Proof: TWLLoginProof;
 begin
@@ -5773,6 +5803,48 @@ begin
     else Found := DeleteAllNotifications(T.Db, S.UserId);
     if Found then SendJsonAnswer(Response, 200, '{"ok":true}')
     else SendJsonAnswer(Response, 500, '{"error":"Internal Server Error"}');
+    Exit;
+  end;
+  // header.jade's Create Board pop-over (createBoardForm): one board, or -
+  // "Many" chosen - one a line, in order; the page goes to the last made.
+  if (Path = '/boards') and (Request.Method = 'POST') then
+  begin
+    if not (ResolveTenant(Request, T) and TenantOpen(T)) then Exit;
+    if not Html5User(T.Db, Request, S) then Exit;
+    Result := True;
+    Language := ViewerLanguage(T.Db, S, Request);
+    Words := TWLTranslator.Create(Language);
+    try
+      Title := StringReplace(StringReplace(Request.ContentFields.Values['title'], #13#10, #10, [rfReplaceAll]), #13, #10, [rfReplaceAll]);
+      Lines := TStringList.Create;
+      try
+        if Request.ContentFields.Values['titleMode'] = 'separate' then
+        begin
+          Lines.Text := Title;
+          for n := Lines.Count - 1 downto 0 do
+            if Trim(Lines[n]) = '' then Lines.Delete(n) else Lines[n] := Trim(Lines[n]);
+        end
+        else if Trim(Title) <> '' then Lines.Add(Trim(Title));
+        if Lines.Count = 0 then
+        begin SendPage(Response, 400, Page(Request, Language, Words, S, 'a board needs a title', '', '')); Exit; end;
+        Code := 200; BoardId := '';
+        for n := 0 to Lines.Count - 1 do
+        begin
+          Code := CreateViewBoard(T, S.UserId, Lines[n], Words.Text('default', 'Default'), BoardId, Error);
+          if Code <> 200 then Break;
+        end;
+      finally
+        Lines.Free;
+      end;
+      if Code <> 200 then
+      begin SendPage(Response, Code, Page(Request, Language, Words, S, Error, '', '<div class="big-message quiet"><h1>' + E(Error) + '</h1></div>')); Exit; end;
+      AnnounceToAll;
+      Response.Code := 303;
+      Response.SetCustomHeader('Location', BoardRoute(BoardId, BoardSlug(T.Db, BoardId)));
+      SendResponse(Response);
+    finally
+      Words.Free;
+    end;
     Exit;
   end;
   // changeAvatarPopup's forms: an upload, a choice, a delete; back where

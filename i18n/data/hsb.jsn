@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-priorita",
   "wsjf-score": "WSJF-hódnoćenje",
   "board-announcement": "Wozjewjenje tafle",
-  "board-announcement-enabled": "Wšěm na tutej tafli pokazać"
+  "board-announcement-enabled": "Wšěm na tutej tafli pokazać",
+  "add-many-lines-as": "Wjacore linije přidać jako:",
+  "many-items": "Wjele __items__"
 }

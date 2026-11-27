@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW potlh",
   "wsjf-score": "WSJF mI'",
   "board-announcement": "raS maq",
-  "board-announcement-enabled": "raSvamDaq Hoch yIcha'"
+  "board-announcement-enabled": "raSvamDaq Hoch yIcha'",
+  "add-many-lines-as": "tlheghmey law' tIchel; chovnatlh yIwIv:",
+  "many-items": "__items__ law'"
 }

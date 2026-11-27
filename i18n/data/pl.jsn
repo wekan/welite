@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorytet MoSCoW",
   "wsjf-score": "Wynik WSJF",
   "board-announcement": "Ogłoszenie na tablicy",
-  "board-announcement-enabled": "Pokaż wszystkim na tej tablicy"
+  "board-announcement-enabled": "Pokaż wszystkim na tej tablicy",
+  "add-many-lines-as": "Dodaj wiele wierszy jako:",
+  "many-items": "__items__ (wiele)"
 }

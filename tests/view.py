@@ -1350,6 +1350,23 @@ def http_checks(server, tmp, backend):
         assert announce('Freeze moved to Monday')[0] == 200
         assert b'Freeze moved to Monday' in request('GET', route, cookie=worker)[2], 'shown again after an edit'
         assert announce('   ')[0] == 200 and b'class="announcement board-announcement js-board-announcement"' not in request('GET', route, cookie=owner)[2], 'no text: off'
+        # header.jade's Create Board (createBoardForm): one board, or one a line;
+        # Member Settings' Submit editors with Enter on the page's body.
+        # Negative: no title, and a board an admin's only by Admin Panel.
+        page = request('GET', '/', cookie=stranger)[2]
+        assert b'id="header-new-board-icon"' in page and b'data-pop="create-board"' in page and b'data-submit-on-enter=""' in page
+        status, headers, _, _ = request('POST', '/boards', {'title': 'Made from the header'}, cookie=stranger)
+        assert status == 303 and '/b/' in headers['Location'], (status, headers)
+        made = board_db("SELECT id FROM boards WHERE title='Made from the header'")[0]
+        assert board_db('SELECT isAdmin FROM board_members WHERE boardId=? AND userId=?', made, users['stranger'])[0] == 1
+        assert board_db('SELECT permission FROM boards WHERE id=?', made)[0] == 'private'
+        assert request('POST', '/boards', {'title': 'Line one\n\nLine two\n', 'titleMode': 'separate'}, cookie=stranger)[0] == 303
+        assert board_db("SELECT COUNT(*) FROM boards WHERE title IN ('Line one','Line two')")[0] == 2, 'one board a line, no empty one'
+        assert request('POST', '/boards', {'title': '   '}, cookie=stranger)[0] == 400
+        assert request('POST', '/boards', {'title': 'Anonymous'})[0] != 303
+        card_db("UPDATE users SET profile_json=json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END,'$.submitOnEnter',json('true')) WHERE id=?",
+                users['stranger'])
+        assert b'data-submit-on-enter="true"' in request('GET', '/', cookie=stranger)[2]
         board_db('UPDATE board_members SET isWorker=1, isNormalAssignedOnly=0 WHERE boardId=? AND userId=?', board_id, users['worker'])
         board_watchers = lambda: json.loads(board_db("SELECT COALESCE(json_extract(settings_json,'$.watchers'),'[]') FROM boards WHERE id=?", board_id)[0])
         page = card_page()

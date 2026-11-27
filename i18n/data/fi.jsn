@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-prioriteetti",
   "wsjf-score": "WSJF-pisteet",
   "board-announcement": "Taulun tiedote",
-  "board-announcement-enabled": "Näytä kaikille tämän taulun käyttäjille"
+  "board-announcement-enabled": "Näytä kaikille tämän taulun käyttäjille",
+  "add-many-lines-as": "Lisää useita rivejä muodossa:",
+  "many-items": "__items__ (useita)"
 }

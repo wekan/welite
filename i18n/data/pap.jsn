@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioridat MoSCoW",
   "wsjf-score": "Puntuashon WSJF",
   "board-announcement": "Anunsio di tabla",
-  "board-announcement-enabled": "Mustra esaki na tur hende riba e tabla aki"
+  "board-announcement-enabled": "Mustra esaki na tur hende riba e tabla aki",
+  "add-many-lines-as": "Agregá varios liña komo:",
+  "many-items": "Varios __items__"
 }

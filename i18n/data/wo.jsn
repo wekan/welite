@@ -2313,5 +2313,7 @@
   "moscow-priority": "Jiitu MoSCoW",
   "wsjf-score": "Poñ WSJF",
   "board-announcement": "Yégleb tablo",
-  "board-announcement-enabled": "Won ko ñépp ñi nekk ci tablo bii"
+  "board-announcement-enabled": "Won ko ñépp ñi nekk ci tablo bii",
+  "add-many-lines-as": "Yokk ay rëdd yu bari ni:",
+  "many-items": "__items__ yu bari"
 }

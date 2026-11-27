@@ -2313,5 +2313,7 @@
   "moscow-priority": "Icyihutirwa cya MoSCoW",
   "wsjf-score": "Amanota ya WSJF",
   "board-announcement": "Itangazo ry'ikibaho",
-  "board-announcement-enabled": "Ryereke buri wese uri kuri iki kibaho"
+  "board-announcement-enabled": "Ryereke buri wese uri kuri iki kibaho",
+  "add-many-lines-as": "Ongeraho imirongo myinshi nka:",
+  "many-items": "__items__ (byinshi)"
 }

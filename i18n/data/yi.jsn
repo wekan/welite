@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW פּריאָריטעט",
   "wsjf-score": "WSJF פּונקטן",
   "board-announcement": "ברעט־אָנזאָג",
-  "board-announcement-enabled": "ווײַזן עס אַלעמען אויף דעם ברעט"
+  "board-announcement-enabled": "ווײַזן עס אַלעמען אויף דעם ברעט",
+  "add-many-lines-as": "לייג צו עטלעכע שורות ווי:",
+  "many-items": "עטלעכע __items__"
 }

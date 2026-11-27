@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW prioritāte",
   "wsjf-score": "WSJF vērtējums",
   "board-announcement": "Dēļa paziņojums",
-  "board-announcement-enabled": "Rādīt visiem šajā dēlī"
+  "board-announcement-enabled": "Rādīt visiem šajā dēlī",
+  "add-many-lines-as": "Pievienot vairākas rindas kā:",
+  "many-items": "__items__ (vairāki)"
 }

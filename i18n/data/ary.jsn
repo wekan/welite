@@ -2313,5 +2313,7 @@
   "moscow-priority": "الأولوية ديال MoSCoW",
   "wsjf-score": "النقطة ديال WSJF",
   "board-announcement": "إعلان اللوحة",
-  "board-announcement-enabled": "بيّنو لكاع اللي فهاد اللوحة"
+  "board-announcement-enabled": "بيّنو لكاع اللي فهاد اللوحة",
+  "add-many-lines-as": "زيد سطور بزاف على شكل:",
+  "many-items": "__items__ بزاف"
 }

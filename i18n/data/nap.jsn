@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorità MoSCoW",
   "wsjf-score": "Punteggio WSJF",
   "board-announcement": "Annunzio d'a tavula",
-  "board-announcement-enabled": "Fallo vedé a tutte quante ncopp'a chesta tavula"
+  "board-announcement-enabled": "Fallo vedé a tutte quante ncopp'a chesta tavula",
+  "add-many-lines-as": "Azzecca cchiù righe comme:",
+  "many-items": "Cchiù __items__"
 }

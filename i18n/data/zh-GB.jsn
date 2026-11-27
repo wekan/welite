@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW 优先级",
   "wsjf-score": "WSJF 分数",
   "board-announcement": "看板公告",
-  "board-announcement-enabled": "向此看板上的所有人显示"
+  "board-announcement-enabled": "向此看板上的所有人显示",
+  "add-many-lines-as": "将多行添加为：",
+  "many-items": "多个__items__"
 }

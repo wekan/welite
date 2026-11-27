@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prayoridad han MoSCoW",
   "wsjf-score": "Iskor han WSJF",
   "board-announcement": "Pahibaro han pisara",
-  "board-announcement-enabled": "Ipakita ha ngatanan ha ini nga pisara"
+  "board-announcement-enabled": "Ipakita ha ngatanan ha ini nga pisara",
+  "add-many-lines-as": "Idugang an damu nga linya sugad hin:",
+  "many-items": "Damu nga __items__"
 }

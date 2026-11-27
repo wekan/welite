@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritât MoSCoW",
   "wsjf-score": "Puntegjo WSJF",
   "board-announcement": "Avîs de taule",
-  "board-announcement-enabled": "Mostrilu a ducj su cheste taule"
+  "board-announcement-enabled": "Mostrilu a ducj su cheste taule",
+  "add-many-lines-as": "Zonte plui riis come:",
+  "many-items": "__items__ (plui)"
 }

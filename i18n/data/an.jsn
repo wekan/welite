@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioridat MoSCoW",
   "wsjf-score": "Puntuación WSJF",
   "board-announcement": "Anuncio d'o tablero",
-  "board-announcement-enabled": "Amostrar-lo a totz en este tablero"
+  "board-announcement-enabled": "Amostrar-lo a totz en este tablero",
+  "add-many-lines-as": "Adhibir quantas linias como:",
+  "many-items": "__items__ múltiples"
 }

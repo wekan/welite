@@ -2313,5 +2313,7 @@
   "moscow-priority": "Dursa MoSCoW",
   "wsjf-score": "Qabxii WSJF",
   "board-announcement": "Beeksisa gabatee",
-  "board-announcement-enabled": "Nama gabatee kana irra jiru hundaaf agarsiisi"
+  "board-announcement-enabled": "Nama gabatee kana irra jiru hundaaf agarsiisi",
+  "add-many-lines-as": "Sararoota hedduu akka kanaatti dabali:",
+  "many-items": "__items__ hedduu"
 }

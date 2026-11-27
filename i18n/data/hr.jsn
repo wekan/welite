@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW prioritet",
   "wsjf-score": "WSJF ocjena",
   "board-announcement": "Obavijest na ploči",
-  "board-announcement-enabled": "Prikaži svima na ovoj ploči"
+  "board-announcement-enabled": "Prikaži svima na ovoj ploči",
+  "add-many-lines-as": "Dodaj više redaka kao:",
+  "many-items": "__items__ (više)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "Tosaíocht MoSCoW",
   "wsjf-score": "Scór WSJF",
   "board-announcement": "Fógra cláir",
-  "board-announcement-enabled": "Taispeáin é do gach duine ar an gclár seo"
+  "board-announcement-enabled": "Taispeáin é do gach duine ar an gclár seo",
+  "add-many-lines-as": "Cuir línte iomadúla leis mar:",
+  "many-items": "__items__ (iolracha)"
 }

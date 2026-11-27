@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-Prioritéit",
   "wsjf-score": "WSJF-Wäertung",
   "board-announcement": "Tafel-Matdeelung",
-  "board-announcement-enabled": "Jidderengem op dëser Tafel weisen"
+  "board-announcement-enabled": "Jidderengem op dëser Tafel weisen",
+  "add-many-lines-as": "Méi Zeilen derbäisetzen als:",
+  "many-items": "Méi __items__"
 }

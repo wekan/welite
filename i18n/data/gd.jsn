@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prìomhachas MoSCoW",
   "wsjf-score": "Sgòr WSJF",
   "board-announcement": "Brath a’ bhùird",
-  "board-announcement-enabled": "Seall e dhan a h-uile duine air a’ bhòrd seo"
+  "board-announcement-enabled": "Seall e dhan a h-uile duine air a’ bhòrd seo",
+  "add-many-lines-as": "Cuir iomadh loidhne ris mar:",
+  "many-items": "__items__ (iomadh)"
 }

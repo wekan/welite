@@ -2313,5 +2313,7 @@
   "moscow-priority": "Ihutirwa rya MoSCoW",
   "wsjf-score": "Amanota ya WSJF",
   "board-announcement": "Itangazo ry'icapa",
-  "board-announcement-enabled": "Ryereke abantu bose bari kuri iki capa"
+  "board-announcement-enabled": "Ryereke abantu bose bari kuri iki capa",
+  "add-many-lines-as": "Ongerako imirongo myinshi nk'ibi:",
+  "many-items": "__items__ (vyinshi)"
 }

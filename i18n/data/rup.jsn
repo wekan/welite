@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritati MoSCoW",
   "wsjf-score": "Puntaj WSJF",
   "board-announcement": "Anuntsu di tabelã",
-  "board-announcement-enabled": "Aratã-l la tuti pi aestã tabelã"
+  "board-announcement-enabled": "Aratã-l la tuti pi aestã tabelã",
+  "add-many-lines-as": "Adavgã ma multi linii ca:",
+  "many-items": "Ma multi __items__"
 }

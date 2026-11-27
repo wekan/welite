@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW koyrotethaa",
   "wsjf-score": "WSJF qooduwaa",
   "board-announcement": "Bookkiya erissuwaa",
-  "board-announcement-enabled": "Ha bookkiya bolla de'iya ubbaas bessa"
+  "board-announcement-enabled": "Ha bookkiya bolla de'iya ubbaas bessa",
+  "add-many-lines-as": "Daro yafarata hagaadan gujja:",
+  "many-items": "Daro __items__"
 }

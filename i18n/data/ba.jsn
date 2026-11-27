@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW өҫтөнлөгө",
   "wsjf-score": "WSJF балы",
   "board-announcement": "Такта иғланы",
-  "board-announcement-enabled": "Уны был тактала барыһына ла күрһәтергә"
+  "board-announcement-enabled": "Уны был тактала барыһына ла күрһәтергә",
+  "add-many-lines-as": "Бер нисә юлды ошолай өҫтәргә:",
+  "many-items": "Бер нисә __items__"
 }

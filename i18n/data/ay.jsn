@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW nayrankañapa",
   "wsjf-score": "WSJF jakhu",
   "board-announcement": "Pirqa yatiyäwi",
-  "board-announcement-enabled": "Aka pirqan taqiniru uñacht'ayaña"
+  "board-announcement-enabled": "Aka pirqan taqiniru uñacht'ayaña",
+  "add-many-lines-as": "Walja siqinaka akham yapam:",
+  "many-items": "Walja __items__"
 }

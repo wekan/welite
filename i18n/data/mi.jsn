@@ -2313,5 +2313,7 @@
   "moscow-priority": "Whakaarotau MoSCoW",
   "wsjf-score": "Kaute WSJF",
   "board-announcement": "Pānui papa",
-  "board-announcement-enabled": "Whakaaturia ki te katoa i runga i tēnei papa"
+  "board-announcement-enabled": "Whakaaturia ki te katoa i runga i tēnei papa",
+  "add-many-lines-as": "Tāpirihia ngā rārangi maha hei:",
+  "many-items": "__items__ maha"
 }

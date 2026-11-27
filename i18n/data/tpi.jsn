@@ -2313,5 +2313,7 @@
   "moscow-priority": "Namba MoSCoW",
   "wsjf-score": "Skor WSJF",
   "board-announcement": "Toksave bilong bot",
-  "board-announcement-enabled": "Soim long olgeta manmeri long dispela bot"
+  "board-announcement-enabled": "Soim long olgeta manmeri long dispela bot",
+  "add-many-lines-as": "Putim planti lain olsem:",
+  "many-items": "Planti __items__"
 }

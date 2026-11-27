@@ -2313,5 +2313,7 @@
   "moscow-priority": "Fakamuʻomuʻa MoSCoW",
   "wsjf-score": "Maaka WSJF",
   "board-announcement": "Fanongonongo ʻo e papa",
-  "board-announcement-enabled": "Fakahā ia ki he tokotaha kotoa pē ʻi he papa ko ʻeni"
+  "board-announcement-enabled": "Fakahā ia ki he tokotaha kotoa pē ʻi he papa ko ʻeni",
+  "add-many-lines-as": "Tānaki ha ngaahi laine lahi ko e:",
+  "many-items": "__items__ lahi"
 }

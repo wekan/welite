@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priurità MoSCoW",
   "wsjf-score": "Puntu WSJF",
   "board-announcement": "Annunziu di a tavula",
-  "board-announcement-enabled": "Mustrà lu à tutti nant'à sta tavula"
+  "board-announcement-enabled": "Mustrà lu à tutti nant'à sta tavula",
+  "add-many-lines-as": "Aghjunghje parechje righe cum'è:",
+  "many-items": "__items__ (parechji)"
 }

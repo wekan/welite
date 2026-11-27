@@ -2313,5 +2313,7 @@
   "moscow-priority": "Ukubaluleka kwe-MoSCoW",
   "wsjf-score": "Amaphuzu e-WSJF",
   "board-announcement": "Isimemezelo sebhodi",
-  "board-announcement-enabled": "Sibonise kuwo wonke umuntu kuleli bhodi"
+  "board-announcement-enabled": "Sibonise kuwo wonke umuntu kuleli bhodi",
+  "add-many-lines-as": "Engeza imigqa eminingi njenge:",
+  "many-items": "__items__ (eziningi)"
 }

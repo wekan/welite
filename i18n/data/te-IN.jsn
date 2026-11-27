@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ప్రాధాన్యత",
   "wsjf-score": "WSJF స్కోరు",
   "board-announcement": "బోర్డు ప్రకటన",
-  "board-announcement-enabled": "ఈ బోర్డులోని అందరికీ చూపించు"
+  "board-announcement-enabled": "ఈ బోర్డులోని అందరికీ చూపించు",
+  "add-many-lines-as": "అనేక పంక్తులను ఇలా జోడించండి:",
+  "many-items": "అనేక __items__"
 }

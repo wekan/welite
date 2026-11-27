@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW prioritetas",
   "wsjf-score": "WSJF balas",
   "board-announcement": "Lentos pranešimas",
-  "board-announcement-enabled": "Rodyti visiems šioje lentoje"
+  "board-announcement-enabled": "Rodyti visiems šioje lentoje",
+  "add-many-lines-as": "Pridėti kelias eilutes kaip:",
+  "many-items": "__items__ (kelios)"
 }

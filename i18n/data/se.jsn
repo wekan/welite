@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-vuoruheapmi",
   "wsjf-score": "WSJF-čuoggát",
   "board-announcement": "Távvala almmuhus",
-  "board-announcement-enabled": "Čájet dan buohkaide dán távvalis"
+  "board-announcement-enabled": "Čájet dan buohkaide dán távvalis",
+  "add-many-lines-as": "Lasit máŋga ráiddu ná:",
+  "many-items": "__items__ (máŋga)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritate MoSCoW",
   "wsjf-score": "Scor WSJF",
   "board-announcement": "Anunțul panoului",
-  "board-announcement-enabled": "Afișează tuturor persoanelor de pe acest panou"
+  "board-announcement-enabled": "Afișează tuturor persoanelor de pe acest panou",
+  "add-many-lines-as": "Adaugă mai multe rânduri ca:",
+  "many-items": "Mai multe __items__"
 }

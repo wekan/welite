@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW артыкчылыгы",
   "wsjf-score": "WSJF упайы",
   "board-announcement": "Тактанын жарыясы",
-  "board-announcement-enabled": "Аны ушул тактадагы бардыгына көрсөтүү"
+  "board-announcement-enabled": "Аны ушул тактадагы бардыгына көрсөтүү",
+  "add-many-lines-as": "Бир нече сапты мындай кошуу:",
+  "many-items": "Бир нече __items__"
 }

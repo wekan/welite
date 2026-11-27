@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW སྔོན་འགྲོ།",
   "wsjf-score": "WSJF སྐར་གྲངས།",
   "board-announcement": "ལས་སྒྲོམ་གྱི་གསལ་བསྒྲགས།",
-  "board-announcement-enabled": "ལས་སྒྲོམ་འདིའི་མི་ཚང་མར་སྟོན།"
+  "board-announcement-enabled": "ལས་སྒྲོམ་འདིའི་མི་ཚང་མར་སྟོན།",
+  "add-many-lines-as": "ཐིག་མང་པོ་འདི་ལྟར་སྣོན།",
+  "many-items": "__items__ མང་པོ།"
 }

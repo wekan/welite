@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritas MoSCoW",
   "wsjf-score": "Skor WSJF",
   "board-announcement": "Wara-wara papan",
-  "board-announcement-enabled": "Tampilake marang kabeh wong ing papan iki"
+  "board-announcement-enabled": "Tampilake marang kabeh wong ing papan iki",
+  "add-many-lines-as": "Tambah sawetara larik minangka:",
+  "many-items": "Sawetara __items__"
 }

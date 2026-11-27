@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW प्राथमिकता",
   "wsjf-score": "WSJF अंक",
   "board-announcement": "बोर्ड के घोषणा",
-  "board-announcement-enabled": "एह बोर्ड पर सभे के देखाईं"
+  "board-announcement-enabled": "एह बोर्ड पर सभे के देखाईं",
+  "add-many-lines-as": "कई लाइन अइसन जोड़ीं:",
+  "many-items": "कई __items__"
 }

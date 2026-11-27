@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW-prioriteit",
   "wsjf-score": "WSJF-skoare",
   "board-announcement": "Boerdmelding",
-  "board-announcement-enabled": "Lit it oan elkenien op dit boerd sjen"
+  "board-announcement-enabled": "Lit it oan elkenien op dit boerd sjen",
+  "add-many-lines-as": "Foegje meardere rigels ta as:",
+  "many-items": "Meardere __items__"
 }

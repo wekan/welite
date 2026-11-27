@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritat MoSCoW",
   "wsjf-score": "Nòta WSJF",
   "board-announcement": "Anóncia del tablèu",
-  "board-announcement-enabled": "La mostrar a totes sus aqueste tablèu"
+  "board-announcement-enabled": "La mostrar a totes sus aqueste tablèu",
+  "add-many-lines-as": "Apondre mantuna linha coma:",
+  "many-items": "__items__ (mantuns)"
 }

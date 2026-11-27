@@ -2313,5 +2313,7 @@
   "moscow-priority": "Pêşîniya MoSCoW",
   "wsjf-score": "Pûana WSJF",
   "board-announcement": "Daxuyaniya depoyê",
-  "board-announcement-enabled": "Nîşanî her kesê li ser vê depoyê bide"
+  "board-announcement-enabled": "Nîşanî her kesê li ser vê depoyê bide",
+  "add-many-lines-as": "Çend rêzan wekî vê zêde bike:",
+  "many-items": "Çend __items__"
 }

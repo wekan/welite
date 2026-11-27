@@ -2313,5 +2313,7 @@
   "moscow-priority": "Độ ưu tiên MoSCoW",
   "wsjf-score": "Điểm WSJF",
   "board-announcement": "Thông báo của bảng",
-  "board-announcement-enabled": "Hiển thị cho mọi người trên bảng này"
+  "board-announcement-enabled": "Hiển thị cho mọi người trên bảng này",
+  "add-many-lines-as": "Thêm nhiều dòng dưới dạng:",
+  "many-items": "Nhiều __items__"
 }

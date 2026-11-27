@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW малтанлӑхӗ",
   "wsjf-score": "WSJF балӗ",
   "board-announcement": "Хӑма пӗлтерӗвӗ",
-  "board-announcement-enabled": "Ӑна ҫак хӑмари пур ҫынна та кӑтартас"
+  "board-announcement-enabled": "Ӑна ҫак хӑмари пур ҫынна та кӑтартас",
+  "add-many-lines-as": "Нумай йӗрне ҫапла хушас:",
+  "many-items": "Нумай __items__"
 }

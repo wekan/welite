@@ -2313,5 +2313,7 @@
   "moscow-priority": "Bohlokwa ba MoSCoW",
   "wsjf-score": "Dintlha tsa WSJF",
   "board-announcement": "Tsebiso ya boto",
-  "board-announcement-enabled": "E bontshe bohle botong ena"
+  "board-announcement-enabled": "E bontshe bohle botong ena",
+  "add-many-lines-as": "Eketsa mela e mengata e le:",
+  "many-items": "__items__ (tse ngata)"
 }

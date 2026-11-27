@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW achtopa",
   "wsjf-score": "WSJF tlapohualli",
   "board-announcement": "Huapalli itenahuatil",
-  "board-announcement-enabled": "Xicnexti ixquichtin ipan inin huapalli"
+  "board-announcement-enabled": "Xicnexti ixquichtin ipan inin huapalli",
+  "add-many-lines-as": "Xicaquiti miyac pantli iuhquin:",
+  "many-items": "Miyac __items__"
 }

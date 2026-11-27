@@ -589,6 +589,17 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   assigned-only member keeps of their own (their dismissal among them) are
   theirs to write. `tests/view.py` checks each; WeKan's board-announcement
   passes, its four languages too.
+- Add WeKan's Create Board to the header (header.jade's createBoardForm):
+  one private board with a Default swimlane, or one a line when the title
+  has many lines and "Add many lines as separate items" is chosen, for a user
+  the Admin Panel's board creation policy lets create one. Put Member
+  Settings' Submit editors with Enter on the page's body
+  (data-submit-on-enter), so every editor follows it, and add the board
+  header's board view switcher, with Swimlanes, the one view WeLite draws.
+  `tests/view.py` has checks for each (a title and a blank one, many lines,
+  a guest); 13 lines of WeKan's editor-enter-preference are in
+  `tests/wkui/specs.txt`. Neither was run after the last change: run them
+  before the next release (TODO.md).
 - Keep what was done in a custom field's editor opened before the last save
   is drawn: a box turned over is turned over from the new value, a changed
   text is kept (Weddy's weddy.js, as its fix of 03-cards-operations' checkbox

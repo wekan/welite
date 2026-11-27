@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorità MoSCoW",
   "wsjf-score": "Pontejo WSJF",
   "board-announcement": "Aviso del quadro",
-  "board-announcement-enabled": "Mostrało a tuti so sto quadro"
+  "board-announcement-enabled": "Mostrało a tuti so sto quadro",
+  "add-many-lines-as": "Zonta pì righe come:",
+  "many-items": "Pì __items__"
 }

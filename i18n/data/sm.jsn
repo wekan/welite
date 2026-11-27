@@ -2313,5 +2313,7 @@
   "moscow-priority": "Faamuamua MoSCoW",
   "wsjf-score": "Togi WSJF",
   "board-announcement": "Faasilasilaga o le laupapa",
-  "board-announcement-enabled": "Faaali i tagata uma i lenei laupapa"
+  "board-announcement-enabled": "Faaali i tagata uma i lenei laupapa",
+  "add-many-lines-as": "Faaopoopo laina e tele e pei o:",
+  "many-items": "__items__ e tele"
 }

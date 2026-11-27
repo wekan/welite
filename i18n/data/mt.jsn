@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prijorità MoSCoW",
   "wsjf-score": "Punteġġ WSJF",
   "board-announcement": "Avviż tal-bord",
-  "board-announcement-enabled": "Urih lil kulħadd fuq dan il-bord"
+  "board-announcement-enabled": "Urih lil kulħadd fuq dan il-bord",
+  "add-many-lines-as": "Żid diversi linji bħala:",
+  "many-items": "Diversi __items__"
 }

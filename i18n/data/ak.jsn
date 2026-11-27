@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW nhyehyɛe",
   "wsjf-score": "WSJF akontaa",
   "board-announcement": "Bɔɔd dawurubɔ",
-  "board-announcement-enabled": "Kyerɛ obiara a ɔwɔ bɔɔd yi so"
+  "board-announcement-enabled": "Kyerɛ obiara a ɔwɔ bɔɔd yi so",
+  "add-many-lines-as": "Fa nsensanee pii ka ho sɛ:",
+  "many-items": "__items__ pii"
 }

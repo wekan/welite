@@ -2313,5 +2313,7 @@
   "moscow-priority": "Kubaluleka kwe-MoSCoW",
   "wsjf-score": "Emaphuzu e-WSJF",
   "board-announcement": "Simemetelo selibhodi",
-  "board-announcement-enabled": "Kukhombise bonkhe labakulelibhodi"
+  "board-announcement-enabled": "Kukhombise bonkhe labakulelibhodi",
+  "add-many-lines-as": "Ngeta imigca leminyenti njenge:",
+  "many-items": "__items__ (lokunyenti)"
 }

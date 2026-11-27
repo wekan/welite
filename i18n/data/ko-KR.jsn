@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW 우선순위",
   "wsjf-score": "WSJF 점수",
   "board-announcement": "보드 공지",
-  "board-announcement-enabled": "이 보드의 모든 사람에게 표시"
+  "board-announcement-enabled": "이 보드의 모든 사람에게 표시",
+  "add-many-lines-as": "여러 줄을 다음으로 추가:",
+  "many-items": "여러 __items__"
 }

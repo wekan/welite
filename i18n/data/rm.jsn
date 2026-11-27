@@ -2313,5 +2313,7 @@
   "moscow-priority": "Prioritad MoSCoW",
   "wsjf-score": "Puntaziun WSJF",
   "board-announcement": "Annunzia da la tabella",
-  "board-announcement-enabled": "Mussar a tuts sin questa tabella"
+  "board-announcement-enabled": "Mussar a tuts sin questa tabella",
+  "add-many-lines-as": "Agiuntar pliras lingias sco:",
+  "many-items": "__items__ (plirs)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW prioriteti",
   "wsjf-score": "WSJF balı",
   "board-announcement": "Lövhə elanı",
-  "board-announcement-enabled": "Bu lövhədəki hər kəsə göstərin"
+  "board-announcement-enabled": "Bu lövhədəki hər kəsə göstərin",
+  "add-many-lines-as": "Bir neçə sətri belə əlavə et:",
+  "many-items": "Bir neçə __items__"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priyoridad ng MoSCoW",
   "wsjf-score": "Iskor ng WSJF",
   "board-announcement": "Anunsiyo ng pisara",
-  "board-announcement-enabled": "Ipakita ito sa lahat sa pisarang ito"
+  "board-announcement-enabled": "Ipakita ito sa lahat sa pisarang ito",
+  "add-many-lines-as": "Magdagdag ng maraming linya bilang:",
+  "many-items": "Maraming __items__"
 }

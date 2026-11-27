@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ဦးစားပေးမှု",
   "wsjf-score": "WSJF ရမှတ်",
   "board-announcement": "ဘုတ် ကြေညာချက်",
-  "board-announcement-enabled": "ဤဘုတ်ပေါ်ရှိ လူတိုင်းကို ပြရန်"
+  "board-announcement-enabled": "ဤဘုတ်ပေါ်ရှိ လူတိုင်းကို ပြရန်",
+  "add-many-lines-as": "စာကြောင်းများကို အောက်ပါအတိုင်း ထည့်ပါ:",
+  "many-items": "__items__ အများအပြား"
 }

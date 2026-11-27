@@ -2313,5 +2313,7 @@
   "moscow-priority": "Tosseeaght MoSCoW",
   "wsjf-score": "Scoar WSJF",
   "board-announcement": "Fockle-fys y voayrd",
-  "board-announcement-enabled": "Soilshee eh da dy chooilley pheiagh er y voayrd shoh"
+  "board-announcement-enabled": "Soilshee eh da dy chooilley pheiagh er y voayrd shoh",
+  "add-many-lines-as": "Cur ymmodee linnaghyn rish myr:",
+  "many-items": "Ymmodee __items__"
 }

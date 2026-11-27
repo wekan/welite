@@ -2313,5 +2313,7 @@
   "moscow-priority": "Афзалияти MoSCoW",
   "wsjf-score": "Холи WSJF",
   "board-announcement": "Эълони тахта",
-  "board-announcement-enabled": "Ба ҳама дар ин тахта нишон додан"
+  "board-announcement-enabled": "Ба ҳама дар ин тахта нишон додан",
+  "add-many-lines-as": "Якчанд сатрро чунин илова кунед:",
+  "many-items": "Якчанд __items__"
 }

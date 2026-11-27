@@ -2313,5 +2313,7 @@
   "moscow-priority": "Kūlana MoSCoW",
   "wsjf-score": "Helu WSJF",
   "board-announcement": "Hoʻolaha o ka papa",
-  "board-announcement-enabled": "Hōʻike i kēia i nā kānaka a pau ma kēia papa"
+  "board-announcement-enabled": "Hōʻike i kēia i nā kānaka a pau ma kēia papa",
+  "add-many-lines-as": "Hoʻohui i nā lālani he nui ma ke ʻano he:",
+  "many-items": "__items__ he nui"
 }

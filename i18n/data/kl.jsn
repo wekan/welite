@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW pingaarnersiorneq",
   "wsjf-score": "WSJF pointit",
   "board-announcement": "Ilisarnaatip nalunaarutaa",
-  "board-announcement-enabled": "Ilisarnaammi matumani tamanut takutiguk"
+  "board-announcement-enabled": "Ilisarnaammi matumani tamanut takutiguk",
+  "add-many-lines-as": "Titarnit arlallit ima ilanngukkit:",
+  "many-items": "__items__ arlallit"
 }

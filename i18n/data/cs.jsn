@@ -2313,5 +2313,7 @@
   "moscow-priority": "Priorita MoSCoW",
   "wsjf-score": "Skóre WSJF",
   "board-announcement": "Oznámení na tablu",
-  "board-announcement-enabled": "Zobrazit všem na tomto tablu"
+  "board-announcement-enabled": "Zobrazit všem na tomto tablu",
+  "add-many-lines-as": "Přidat více řádků jako:",
+  "many-items": "__items__ (více)"
 }

@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW ترجیح",
   "wsjf-score": "WSJF اسکور",
   "board-announcement": "بورڈ کا اعلان",
-  "board-announcement-enabled": "اس بورڈ کے سب افراد کو دکھائیں"
+  "board-announcement-enabled": "اس بورڈ کے سب افراد کو دکھائیں",
+  "add-many-lines-as": "کئی سطریں اس طرح شامل کریں:",
+  "many-items": "کئی __items__"
 }

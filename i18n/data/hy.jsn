@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW առաջնահերթություն",
   "wsjf-score": "WSJF միավոր",
   "board-announcement": "Տախտակի հայտարարություն",
-  "board-announcement-enabled": "Ցույց տալ այն այս տախտակի բոլոր անդամներին"
+  "board-announcement-enabled": "Ցույց տալ այն այս տախտակի բոլոր անդամներին",
+  "add-many-lines-as": "Ավելացնել մի քանի տող որպես՝",
+  "many-items": "Մի քանի __items__"
 }

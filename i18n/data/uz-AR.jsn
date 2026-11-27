@@ -2313,5 +2313,7 @@
   "moscow-priority": "MoSCoW اوستووارلیگی",
   "wsjf-score": "WSJF بالی",
   "board-announcement": "تخته اعلانی",
-  "board-announcement-enabled": "اوشبو تخته‌دهگی هر کیمگه کۉرسه‌تیش"
+  "board-announcement-enabled": "اوشبو تخته‌دهگی هر کیمگه کۉرسه‌تیش",
+  "add-many-lines-as": "بیر نیچه قطارنی قویداگیچه قوشینگ:",
+  "many-items": "بیر نیچه __items__"
 }
