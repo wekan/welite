@@ -65,6 +65,7 @@ procedure BrowserIntegrations(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
+procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 procedure ApiCreateBoard(aRequest:TRequest;aResponse:TResponse);
@@ -2840,6 +2841,127 @@ begin BoardExport(aRequest,aResponse,False);end;
 
 procedure BrowserBoardExport(aRequest:TRequest;aResponse:TResponse);
 begin BoardExport(aRequest,aResponse,True);end;
+
+procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Base, Slug, Stamp, StartAt, EndAt, Title, Description, Link: string;
+  Board, Cards: TWLRows; Card: TWLRow; Calendar: TStringStream; Session: TWLSession; C: Char;
+  function EscapeText(const Value: string): string;
+  begin
+    Result := StringReplace(Value, '\', '\\', [rfReplaceAll]);
+    Result := StringReplace(Result, ';', '\;', [rfReplaceAll]);
+    Result := StringReplace(Result, ',', '\,', [rfReplaceAll]);
+    Result := StringReplace(Result, #13#10, #10, [rfReplaceAll]);
+    Result := StringReplace(Result, #13, #10, [rfReplaceAll]);
+    Result := StringReplace(Result, #10, '\n', [rfReplaceAll]);
+  end;
+  function CalendarDate(const Value: string): string;
+  var At: TDateTime;
+  begin
+    Result := '';
+    if (Value <> '') and TryISO8601ToDate(Value, At, True) then
+      Result := FormatDateTime('yyyymmdd"T"hhnnss"Z"', At);
+  end;
+  procedure Line(const Value: string);
+  var First, Last, Width: Integer;
+  begin
+    First := 1; Width := 75;
+    while First + Width <= Length(Value) do
+    begin
+      Last := First + Width;
+      while (Last > First) and ((Ord(Value[Last]) and $C0) = $80) do Dec(Last);
+      Calendar.WriteString(Copy(Value, First, Last - First) + #13#10' ');
+      First := Last; Width := 74;
+    end;
+    Calendar.WriteString(Copy(Value, First, MaxInt) + #13#10);
+  end;
+  procedure Event(const Suffix, Starts, Ends, Summary: string);
+  begin
+    Line('BEGIN:VEVENT');
+    Line('UID:' + HTTPEncode(Card[0]) + '-' + Suffix + '@wekan');
+    Line('DTSTAMP:' + Stamp);
+    Line('DTSTART:' + Starts);
+    Line('DTEND:' + Ends);
+    Line('SUMMARY:' + EscapeText(Summary));
+    if Description <> '' then Line('DESCRIPTION:' + EscapeText(Description));
+    if Link <> '' then Line('URL:' + Link);
+    Line('END:VEVENT');
+  end;
+begin
+  if not ApiTenant(aRequest, aResponse, T) then Exit;
+  if SharedSettingOn(T.Db, 'disableAllExport') or SharedSettingOn(T.Db, 'anonymizeExportUsers') then
+  begin SendError(aResponse, 403, 'Board export restricted by instance settings'); Exit; end;
+  BoardId := aRequest.RouteParams['boardId'];
+  if (BoardId = '') or (Pos(#0, BoardId) > 0) then
+  begin SendError(aResponse, 404, 'Board not found'); Exit; end;
+  Board := T.Db.Query('SELECT title,slug,permission FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
+  if Length(Board) <> 1 then begin SendError(aResponse, 404, 'Board not found'); Exit; end;
+  if Board[0][2] <> 'public' then
+  begin
+    if (aRequest.Authorization = '') and (aRequest.QueryFields.Values['authToken'] = '') and
+      (aRequest.QueryFields.Values['token'] = '') and
+      ValidateSession(T.Db, aRequest, SessionIdFromRequest(aRequest), Session) then UserId := Session.UserId
+    else if not ApiAuth(T, aRequest, aResponse, UserId) then Exit;
+    if not BoardHasMember(T.Db, UserId, BoardId) or AssignedOnlyMember(T.Db, UserId, BoardId) then
+    begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
+  end;
+  if not T.Db.BeginRead then begin SendError(aResponse, 500, 'Could not export calendar'); Exit; end;
+  try
+    if SharedSettingOn(T.Db, 'disableAllExport') or SharedSettingOn(T.Db, 'anonymizeExportUsers') then
+    begin SendError(aResponse, 403, 'Board export restricted by instance settings'); Exit; end;
+    Board := T.Db.Query('SELECT title,slug,permission FROM boards WHERE id=' + QuotedStr(BoardId) + ' AND archived=0;');
+    if Length(Board) <> 1 then begin SendError(aResponse, 404, 'Board not found'); Exit; end;
+    if (Board[0][2] <> 'public') and
+      (not BoardHasMember(T.Db, UserId, BoardId) or AssignedOnlyMember(T.Db, UserId, BoardId)) then
+    begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
+    Cards := T.Db.Query('SELECT id,COALESCE(title,''''),COALESCE(description,''''),COALESCE(startAt,''''),' +
+      'COALESCE(endAt,''''),COALESCE(dueAt,''''),COALESCE(receivedAt,'''') FROM cards WHERE boardId=' +
+      QuotedStr(BoardId) + ' AND archived=0 AND deletedAt IS NULL AND COALESCE(linkedId,'''')='''' ORDER BY sort,id;');
+  finally T.Db.EndRead; end;
+  Slug := Board[0][1];
+  Base := GetEnvironmentVariable('ROOT_URL');
+  if Base = '' then
+  begin
+    Base := aRequest.Host;
+    for C in Base do
+      if not (C in ['A'..'Z','a'..'z','0'..'9','.',':','-','[',']']) then
+      begin Base := ''; Break; end;
+    if Base <> '' then Base := 'http://' + Base;
+  end;
+  if (Base <> '') and (Base[Length(Base)] = '/') then Delete(Base, Length(Base), 1);
+  if (Pos(#13, Base) > 0) or (Pos(#10, Base) > 0) then Base := '';
+  Stamp := FormatDateTime('yyyymmdd"T"hhnnss"Z"', LocalTimeToUniversal(Now));
+  Calendar := TStringStream.Create('');
+  try
+    Line('BEGIN:VCALENDAR'); Line('VERSION:2.0'); Line('PRODID:-//WeKan//iCal Export//EN');
+    Line('CALSCALE:GREGORIAN'); Line('METHOD:PUBLISH'); Line('X-WR-CALNAME:' + EscapeText('WeKan - ' + Board[0][0]));
+    for Card in Cards do
+    begin
+      Title := Card[1];
+      if Title = '' then Title := '(untitled card)';
+      Description := Card[2];
+      Link := '';
+      if Base <> '' then Link := Base + CardRoute(BoardId, Slug, Card[0]);
+      StartAt := CalendarDate(Card[3]); EndAt := CalendarDate(Card[4]);
+      if StartAt = '' then StartAt := EndAt;
+      if EndAt = '' then EndAt := StartAt;
+      if StartAt <> '' then Event('span', StartAt, EndAt, Title);
+      StartAt := CalendarDate(Card[5]);
+      if StartAt <> '' then Event('due', StartAt, StartAt, Title + ' (due)');
+      StartAt := CalendarDate(Card[6]);
+      if StartAt <> '' then Event('received', StartAt, StartAt, Title + ' (received)');
+    end;
+    Line('END:VCALENDAR');
+    aResponse.Code := 200;
+    aResponse.ContentType := 'text/calendar; charset=utf-8';
+    aResponse.SetCustomHeader('Content-Disposition', 'inline; filename="board.ics"');
+    aResponse.SetCustomHeader('Cache-Control', 'no-store');
+    aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
+    Calendar.Position := 0;
+    aResponse.ContentLength := Calendar.Size;
+    aResponse.ContentStream := Calendar;
+    try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
+  finally Calendar.Free; end;
+end;
 
 procedure BoardCreationSettings(Db:TWLDb;out AdminOnly,PrivateOnly,RegistryGuard:string);
 var Registry,TableName:string;Rows:TWLRows;

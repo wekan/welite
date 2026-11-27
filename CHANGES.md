@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export a board’s dated cards as an iCalendar feed. Public boards support
+  subscriptions without a token. Private boards require a full board member.
+  Archived, deleted and linked cards are excluded.
+
 - Record custom-field edits in shared-store History. Restoring a snapshot
   uses its date metadata to preserve BSON dates and date-looking text.
   The same nested-date History spec runs in WeLite and Weddy.
