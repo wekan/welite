@@ -8,6 +8,7 @@ uses SysUtils,Classes,HTTPDefs,fpjson,jsonparser,base64,wldb,wltenant,wlauth,wlh
 function HandleSelection(const T:TWLTenant; const S:TWLSession;
   Request:TRequest; Response:TResponse):Boolean;
 function ReadRestBoardExport(const T:TWLTenant;const UserId,BoardId:string;IncludeFiles:Boolean;AllowPublicGuest:Boolean=False):TJSONObject;
+function ExportPlainDescription(const Text:string):string;
 procedure ReadExportWorkflows(Db:TWLDb;const BoardId:string;Graph:TJSONObject);
 function CopyRestCard(const T:TWLTenant;const UserId,BoardId,ListId,CardId,DestBoard,DestList,DestLane:string;
   Position:Int64;out NewId:string):Boolean;

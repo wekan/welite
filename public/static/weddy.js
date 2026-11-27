@@ -1530,17 +1530,19 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   function applyExportSelection(p) {
     if (!p) return;
     var fields = [];
+    var excelOnly = [];
     p.querySelectorAll('.js-export-card-details-toggle, .js-export-field-toggle').forEach(function (a) {
       var field = a.classList.contains('js-export-card-details-toggle') ? 'card-details' : a.dataset.field;
       var on = !exportOff[field];
       a.setAttribute('aria-checked', on ? 'true' : 'false');
       var box = a.querySelector('.materialCheckBox');
       if (box) box.classList.toggle('is-checked', on);
-      if (on) fields.push(field);
+      if (on) (a.dataset.excelOnly ? excelOnly : fields).push(field);
     });
     p.querySelectorAll('a.js-export-fields').forEach(function (a) {
       var url = new URL(a.getAttribute('href'), location.href);
-      url.searchParams.set('fields', fields.join(','));
+      var selected = url.pathname.endsWith('/exportExcel') ? fields.concat(excelOnly) : fields;
+      url.searchParams.set('fields', selected.join(','));
       a.setAttribute('href', url.pathname + url.search);
     });
   }

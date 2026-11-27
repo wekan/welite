@@ -2712,10 +2712,10 @@ end;
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardExportPopup(Words: TWLTranslator; const BoardId: string): string;
 const
-  Parts: array[0..6] of string = ('description','board-info','people','labels','dates','voting','custom-fields');
-  Keys: array[0..6] of string = ('description','export-card-field-board-info','export-card-field-people',
-    'labels','export-card-field-dates','voting','custom-fields');
-  Captions: array[0..6] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields');
+  Parts: array[0..8] of string = ('description','board-info','people','labels','dates','voting','custom-fields','board-header','activities');
+  Keys: array[0..8] of string = ('description','export-card-field-board-info','export-card-field-people',
+    'labels','export-card-field-dates','voting','custom-fields','board','activities');
+  Captions: array[0..8] of string = ('Description','Board info','People','Labels','Dates','Voting','Custom Fields','Board','Activities');
 var I: Integer; Base: string;
 begin
   Base := '/api/boards/' + HtmlAttr(HTTPEncode(BoardId));
@@ -2728,7 +2728,8 @@ begin
     E(Words.Text('export-card-details', 'Card details')) + '</span></a></li>';
   for I := Low(Parts) to High(Parts) do
     Result := Result + '<li><a class="flex js-export-field-toggle" href="#" data-field="' + Parts[I] +
-      '" role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
+      '"' + IfThen(I > 6, ' data-excel-only="true"', '') +
+      ' role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
       E(Words.Text(Keys[I], Captions[I])) + '</span></a></li>';
   Result := Result + '</ul><ul class="pop-over-list"><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +

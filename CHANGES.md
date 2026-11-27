@@ -12,7 +12,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   either layout to a swimlane, list, card, or the card containing a checklist.
   Both layouts wrap long values and style headings. The table freezes its
   header row, and the card layout gives values a wider column. Selecting
-  Activity adds a worksheet with comments on the exported cards.
+  Activity adds a worksheet with comments on the exported cards. The Export
+  menu now offers Board and Activities for Excel. Board includes the whole
+  board’s description, members and timestamps in the card layout or on a
+  separate Board worksheet in the table layout.
 
 - Export a whole board as a WeKan ZIP from the board menu. The archive
   stores wekan.json and local attachment files separately, with duplicate

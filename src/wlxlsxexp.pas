@@ -3,10 +3,10 @@ unit wlxlsxexp;
 
 interface
 uses Classes, fpjson;
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean);
 
 implementation
-uses SysUtils, zipper, wlcsvexp;
+uses SysUtils, zipper, wlcsvexp, wlselect;
 
 const
   MainNs = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -105,9 +105,9 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string);
+procedure WriteBoardExcel(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
-  I: Integer; Known, CardDetails, ActivitySheet: Boolean; Banner: TBoardRow;
+  I: Integer; Known, CardDetails, ActivitySheet, BoardHeader: Boolean;
   SheetNames, SheetRelationships, SheetTypes: string;
   SheetCount: Integer;
   procedure AddXml(const Path, Xml: string);
@@ -140,6 +140,63 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
   begin
     Writer.Line('</sheetData></worksheet>');
     Sheet.Position := 0;
+  end;
+
+  procedure BoardColumns;
+  begin
+    Writer.Line('<cols><col min="1" max="1" width="28" customWidth="1"/>' +
+      '<col min="2" max="2" width="72" customWidth="1"/></cols>');
+  end;
+
+  procedure WriteBoardTitle;
+  var Row: TBoardRow;
+  begin
+    SetLength(Row, 1);
+    Row[0].Text := Board.Get('title', '');
+    Row[0].LiteralText := True;
+    Writer.TableRow(Row, True);
+  end;
+
+  procedure WriteBoardHeader;
+  var Row: TBoardRow; Members, Users: TJSONArray; Member, User: TJSONObject;
+    Names, Id, Name: string; J, K: Integer;
+
+    procedure Field(const LabelText, Value: string);
+    begin
+      if Value = '' then Exit;
+      Row[0].Text := LabelText;
+      Row[1].Text := Value;
+      Writer.TableRow(Row, False, True);
+    end;
+
+  begin
+    SetLength(Row, 2);
+    Row[0].LiteralText := True;
+    Row[1].LiteralText := True;
+    Members := Board.Arrays['members'];
+    Users := Board.Arrays['users'];
+    Names := '';
+    for J := 0 to Members.Count - 1 do
+    begin
+      Member := Members.Objects[J];
+      Id := Member.Get('userId', '');
+      if Id = '' then Continue;
+      Name := Id;
+      for K := 0 to Users.Count - 1 do
+      begin
+        User := Users.Objects[K];
+        if User.Get('_id', '') <> Id then Continue;
+        Name := User.Get('username', Id);
+        Break;
+      end;
+      if Names <> '' then Names := Names + ', ';
+      Names := Names + Name;
+    end;
+    Field('Members', Names);
+    Field('Created at', Board.Get('createdAt', ''));
+    Field('Last modified at', Board.Get('modifiedAt', ''));
+    Field('Description', ExportPlainDescription(Board.Get('description', '')));
+    Writer.TableRow(nil);
   end;
 
   procedure WriteActivity;
@@ -211,11 +268,13 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
 begin
   Known := False;
   ActivitySheet := False;
+  BoardHeader := False;
   SheetCount := 0;
   CardDetails := False;
   for Part in Fields.Split([',']) do
   begin
     Section := Trim(Part);
+    if Section = 'board-header' then BoardHeader := True;
     if Section = 'activities' then ActivitySheet := True;
     if Section = 'card-details' then CardDetails := True;
     if Pos('|' + Section + '|', '|card-details|board-header|activities|labels|people|board-info|dates|' +
@@ -243,9 +302,7 @@ begin
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
     StartSheet('Cards');
     Writer.CardDetails := CardDetails;
-    if CardDetails then
-      Writer.Line('<cols><col min="1" max="1" width="28" customWidth="1"/>' +
-        '<col min="2" max="2" width="72" customWidth="1"/></cols>')
+    if CardDetails then BoardColumns
     else
       Writer.Line('<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" ' +
         'activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft" activeCell="A2" sqref="A2"/>' +
@@ -254,13 +311,20 @@ begin
     Writer.Line('<sheetData>');
     if CardDetails then
     begin
-      SetLength(Banner, 1);
-      Banner[0].Text := Board.Get('title', '');
-      Banner[0].LiteralText := True;
-      Writer.TableRow(Banner, True);
+      WriteBoardTitle;
+      if not Scoped and (BoardHeader or not Known) then WriteBoardHeader;
     end;
     ReadBoardRows(Board, Fields, @Writer.Add, CardDetails);
     EndSheet;
+    if not CardDetails and not Scoped and BoardHeader then
+    begin
+      StartSheet('Board');
+      BoardColumns;
+      Writer.Line('<sheetData>');
+      WriteBoardTitle;
+      WriteBoardHeader;
+      EndSheet;
+    end;
     if ActivitySheet then WriteActivity;
     AddXml('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +

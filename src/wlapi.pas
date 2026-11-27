@@ -2924,7 +2924,7 @@ end;
 procedure ApiBoardExcel(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId: string;
   Payload, Card, Checklist: TJSONObject; Cards, Checklists: TJSONArray;
-  Output: TMemoryStream; I: Integer; Matches: Boolean;
+  Output: TMemoryStream; I: Integer; Matches, Scoped: Boolean;
   function ScopeId(const Key: string): string;
   var C: Char;
   begin
@@ -2939,13 +2939,14 @@ begin
   ChecklistId := ScopeId('checklistId');
   LaneId := ScopeId('swimlaneId');
   ListId := ScopeId('listId');
+  Scoped := (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '');
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   Output := TMemoryStream.Create;
   try
-    if (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '') then
+    if Scoped then
     begin
       if (CardId = '') and (ChecklistId <> '') then
       begin
@@ -2972,7 +2973,7 @@ begin
       end;
     end;
     try
-      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields']);
+      WriteBoardExcel(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
     aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
