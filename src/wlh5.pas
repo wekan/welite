@@ -5321,11 +5321,18 @@ begin
       'extra_json=json_set(json_remove(extra_json,''$.scrum'',''$.scrumRevision''),''$.watchers'',json((SELECT json_group_array(w.value) ' +
       'FROM json_each(cards.extra_json,''$.watchers'') w JOIN board_members m ON m.userId=w.value AND m.isActive=1 AND m.boardId=' +
       Board + '))) WHERE id IN (' + Ids + '); DROP TABLE structural_card_numbers; ' +
-      'CREATE TEMP TABLE structural_card_labels AS SELECT DISTINCT l.cardId,(SELECT d.id FROM board_labels d WHERE d.boardId=' + Board +
-      ' AND d.color=s.color AND COALESCE(d.name,'''')=COALESCE(s.name,'''') ORDER BY d.id LIMIT 1) AS labelId ' +
-      'FROM card_labels l JOIN board_labels s ON s.id=l.labelId AND s.boardId=' + QuotedStr(Source) + ' WHERE l.' + Moved + '; ' +
+      'CREATE TEMP TABLE structural_source_labels AS SELECT l.cardId,s.name,s.color,s.id FROM card_labels l ' +
+      'JOIN board_labels s ON s.id=l.labelId AND s.boardId=' + QuotedStr(Source) +
+      ' WHERE l.' + Moved + ' AND COALESCE(s.name,'''')<>''''; ' +
+      'INSERT INTO board_labels(boardId,id,name,color) SELECT ' + Board + ',lower(hex(randomblob(3))),name,color FROM (' +
+      'SELECT name,color,row_number() OVER (PARTITION BY name ORDER BY id) AS choice FROM structural_source_labels s ' +
+      'WHERE NOT EXISTS(SELECT 1 FROM board_labels d WHERE d.boardId=' + Board + ' AND d.name=s.name)) WHERE choice=1 ' +
+      'AND (EXISTS(SELECT 1 FROM board_members WHERE boardId=' + Board + ' AND isActive=1 AND isAdmin=1 AND userId=' +
+      QuotedStr(UserId) + ') OR EXISTS(SELECT 1 FROM users WHERE isAdmin=1 AND loginDisabled=0 AND id=' + QuotedStr(UserId) + ')); ' +
       'DELETE FROM card_labels WHERE ' + Moved + '; INSERT INTO card_labels(cardId,labelId) ' +
-      'SELECT cardId,labelId FROM structural_card_labels WHERE labelId IS NOT NULL; DROP TABLE structural_card_labels; ' +
+      'SELECT DISTINCT s.cardId,d.id FROM structural_source_labels s JOIN board_labels d ON d.boardId=' + Board +
+      ' AND d.id=(SELECT id FROM board_labels WHERE boardId=' + Board + ' AND name=s.name ORDER BY id LIMIT 1); ' +
+      'DROP TABLE structural_source_labels; ' +
       'DELETE FROM card_custom_field_values WHERE ' + Moved + ' AND NOT EXISTS(SELECT 1 FROM custom_field_boards ' +
       'WHERE customFieldId=card_custom_field_values.customFieldId AND boardId=' + Board + '); ' +
       'DELETE FROM card_members WHERE ' + Moved + ' AND userId NOT IN (SELECT userId FROM board_members WHERE isActive=1 AND boardId=' + Board + '); ' +

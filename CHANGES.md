@@ -8,7 +8,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Card-only selections can move between boards. Comments, checklists, items,
   and attachment references move with the cards. Destination card numbers,
-  matching existing labels, and board membership are applied in the same transaction.
+  labels matched by name, and board membership are applied in the same transaction.
+  A destination administrator can carry over missing named labels with their colors.
 
 - Selected cards can move together within a board, before or after a
   destination card. The move checks hard list limits and commits as one transaction.
