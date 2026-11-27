@@ -3196,7 +3196,8 @@ begin
     RemoveCardFields('custom-fields', ['customFields']);
     RemoveCardFields('labels', ['labelIds']);
     RemoveCardFields('people', ['members','assignees','requesters','assigners','requestedBy','assignedBy']);
-    RemoveCardFields('dates', ['receivedAt','startAt','dueAt','endAt','dueComplete','spentTime','isOvertime','isOverTime']);
+    RemoveCardFields('dates', ['modifiedAt','dateLastActivity','receivedAt','startAt','dueAt','endAt',
+      'dueComplete','spentTime','isOvertime','isOverTime']);
     RemoveCardFields('voting', ['vote']);
     RemoveCardFields('poker', ['poker']);
     RemoveCardFields('stickers', ['stickers']);
@@ -4632,7 +4633,8 @@ begin
           QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
           Optional(Name)+','+QuotedStr(Text(Row,'title'))+','+
           QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortSql+','+NumberSql+
-          ','+CardCreated+','+Stamp+','+Stamp+','+
+          ','+CardCreated+','+ImportedDate(Row,'modifiedAt',Stamp)+','+
+          ImportedDate(Row,'dateLastActivity',Stamp)+','+
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+
           ImportedSpentTime(Row)+','+BooleanValue(Row,'isOvertime')+','+QuotedStr(Text(Row,'requestedBy'))+','+
