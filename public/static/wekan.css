@@ -83,6 +83,18 @@ input[type=text], input[type=password], textarea { font: inherit; padding: 6px 8
 .pop-over .content { padding: .5em .8em; }
 .pop-over-list { list-style: none; margin: 0; padding: 0; }
 .pop-over-list a { display: block; padding: .3em .2em; }
+.pop-over-list .export-download-button {
+  display: block;
+  width: 100%;
+  padding: .3em .2em;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.pop-over-list .export-download-button:hover { text-decoration: underline; }
 .pop-over-list-subheading { margin: .5em 0 .2em; }
 
 /* Comments and activities. */

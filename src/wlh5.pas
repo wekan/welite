@@ -2779,14 +2779,16 @@ begin
     '/export?download=1">WeKan JSON</a></li><li><a download href="' + Base +
     '/export?download=1&amp;attachments=false">WeKan JSON (' +
     E(Words.Text('export-board-without-attachments', 'without attachments')) + ')</a></li>' +
+    '<li><a download href="' + Base + '/export?download=1&amp;archived=false">WeKan JSON (' +
+    E(Words.Text('export-board-without-archive', 'without archived items')) + ')</a></li>' +
     '<li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
-    '/exportZip">WeKan ZIP</a></li><li><a download href="' + Base +
-    '/exportZip?archived=false">WeKan ZIP (' + E(Words.Text('export-board-without-archive', 'without archived items')) +
-    ')</a></li>';
+    '/exportZip">WeKan ZIP</a></li><li><form method="get" action="' + Base + '/exportZip">' +
+    '<input type="hidden" name="archived" value="false"><button class="export-download-button" type="submit">WeKan ZIP (' +
+    E(Words.Text('export-board-without-archive', 'without archived items')) + ')</button></form></li>';
   if Scoped then
     Result := Result + '<li><a class="js-export-fields js-scope-link" data-path="export" data-query="download=1" download href="#">WeKan JSON</a></li>' +
       '<li><a class="js-export-fields js-scope-link" data-path="exportZip" download href="#">WeKan ZIP</a></li>' +

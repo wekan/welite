@@ -7,8 +7,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 ## HTML5 mobile board navigation
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
-  metadata only. The JSON API also accepts `archived=false` to omit archived
-  cards, lists, swimlanes and their related records. Swimlane, list, card
+  metadata only. The board menu and JSON API can omit archived cards,
+  lists, swimlanes and their related records. Both Chromium archive cases
+  run in the regular WeLite and Weddy test lists. Swimlane, list, card
   and checklist menus offer scoped JSON with field selection. Filtered JSON
   exports read attachment files only for the selected records.
 

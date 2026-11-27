@@ -485,4 +485,4 @@ export-access.e2e.js: = assigned-only member cannot export an unassigned card as
 export-access.e2e.js: = assigned-only private member cannot read unfiltered exportPDF
 export-access.e2e.js: = assigned-only member cannot export an unassigned card as PDF
 23-rest-api-more.e2e.js: = REST API: rules + card sub-resources + core CRUD board menu downloads complete JSON in both attachment modes
-export-without-archive-6946.e2e.js: = ?archived=false exports the board without its archive
+export-without-archive-6946.e2e.js
