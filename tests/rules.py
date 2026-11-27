@@ -379,6 +379,32 @@ def main():
             assert current('description') == 'Kept in History'
             assert any(r['changeType'] == 'restored' and r.get('restoredFromId') == kept['_id'] for r in rows('description'))
             print('PASS: History page: scoped, newest first, searched, paged, counted, refused outside access; a card row restored')
+            # Turn off all webhooks (WeKan's webhooksDisabled): while it is on a
+            # board admin adds and changes no webhook, each attempt recorded; a
+            # delete still works. Negative: a stranger's refusal is not this.
+            base = '/api/boards/%s/integrations' % home
+            status, _, body = request('POST', base, {'url': 'https://1.1.1.1/hook'}, token=tokens['owner'], as_json=True)
+            assert status == 200, body
+            hook = json.loads(body)['_id']
+            client.command({'update': 'settings', 'updates': [{'q': {}, 'u': {'$set': {'webhooksDisabled': True}}, 'multi': True}]})
+            if not find('settings', {}):
+                client.command({'insert': 'settings', 'documents': [{'_id': 'hook-switch', 'webhooksDisabled': True}]})
+            switched = lambda: sum(r.get('count', 1) for r in find('eventlog', {'bleed': 'Webhooks turned off'}))
+            before = switched()
+            status, _, body = request('POST', base, {'url': 'https://1.1.1.1/other'}, token=tokens['owner'], as_json=True)
+            assert status == 403 and b'webhooks-disabled' in body, (status, body)
+            status, _, body = request('PUT', base + '/' + hook, {'title': 'Renamed'}, token=tokens['owner'], as_json=True)
+            assert status == 403 and b'webhooks-disabled' in body, (status, body)
+            assert len(find('integrations', {'boardId': home})) == 1 and find('integrations', {'_id': hook})[0].get('title') != 'Renamed'
+            assert switched() >= before + 2, 'each refused write is in Admin Panel -> Problems'
+            was = switched()
+            assert request('POST', base, {'url': 'https://1.1.1.1/x'}, token=tokens['stranger'], as_json=True)[0] in (403, 404)
+            assert switched() == was, 'negative: a stranger, refused anyway, is not recorded'
+            assert request('DELETE', base + '/' + hook, token=tokens['owner'])[0] == 200, 'a delete is the cleanup'
+            client.command({'update': 'settings', 'updates': [{'q': {}, 'u': {'$unset': {'webhooksDisabled': ''}}, 'multi': True}]})
+            status, _, body = request('POST', base, {'url': 'https://1.1.1.1/back'}, token=tokens['owner'], as_json=True)
+            assert status == 200, ('turned on again', body)
+            print('PASS: Turn off all webhooks: no webhook added or changed while it is on, recorded; a delete allowed')
         finally:
             for proc in (app, ferret):
                 if proc is not None and proc.poll() is None:

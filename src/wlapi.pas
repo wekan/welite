@@ -2575,6 +2575,26 @@ begin
   end;
   if Browser and not Reading and not VerifyActionToken(aRequest,Session,FormAction(Operation,Id)) then
   begin BrowserError(403,'error-notAllowed','Invalid webhook action token');Exit;end;
+  // WeKan's Admin Panel / Settings / Features / Turn off all webhooks
+  // (models/lib/webhooksSwitch.js): while it is on no webhook is added or
+  // changed - asked after the board-admin check, so only somebody who could
+  // otherwise write it is told, and recorded, as no screen offers it then. A
+  // delete is the cleanup and is allowed. (WeLite sends no webhooks itself.)
+  if (Creating or Updating) and SharedSettingOn(T.Db,'webhooksDisabled') then
+  begin
+    if Browser then Source:='html4:webhooks'
+    else if Creating then Source:='rest:POST /api/boards/:boardId/integrations'
+    else Source:='rest:PUT /api/boards/:boardId/integrations/:intId';
+    try
+      RecordSecurityEvent(T.Db,Actor,'Webhooks turned off',Source,'authz','medium','CWE-284',
+        'blocked','A webhook written on board '+BoardId+' while webhooks are turned off.');
+    except
+      // logging must never break the guard
+    end;
+    if Browser then BrowserError(403,'error-notAllowed','Webhooks are turned off')
+    else SendJson(aResponse,'{"error":"webhooks-disabled","reason":"Webhooks are turned off"}',403);
+    Exit;
+  end;
   Shared:=Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1;
   if Creating and not PrepareCreation then begin RejectDestination;Exit;end;
   StorageGuard:='';

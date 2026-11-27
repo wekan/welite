@@ -578,6 +578,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   board, opened by address and in the Archive; the board's activities are not
   theirs. `tests/view.py` checks each, and all six of WeKan's
   history-read-scope tests pass.
+- Follow Admin Panel / Settings / Features / Turn off all webhooks
+  (webhooksDisabled, as WeKan and Weddy set it in the shared store): while it
+  is on, a board admin adds and changes no webhook - REST or the HTML4 view's
+  Outgoing Webhooks - each attempt recorded in Problems; a delete still
+  works. WeLite sends no webhooks itself. `tests/rules.py` checks each.
 - Serve a file at WeKan's older address too, /cfs/files/attachments/:id,
   and to an API client's Bearer token; an assigned-only member gets their own
   cards' files and a 403 for another card's, recorded as AssignedBleed. Add
