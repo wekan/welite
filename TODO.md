@@ -272,7 +272,7 @@ Next, after this goal:
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
   the remaining export-access cases for charts,
-  remaining field and scope parity for JSON and ZIP, and importing a ZIP into an existing scope (the new-board browser workflow is in), bundled Unicode font coverage for PDF (configurable TrueType subsetting is in), and inline Excel previews for other image formats when their
+  remaining field parity for JSON and ZIP, and importing a ZIP into an existing scope (the new-board browser workflow is in), bundled Unicode font coverage for PDF (configurable TrueType subsetting is in), and inline Excel previews for other image formats when their
   decoders are available, and the
   remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the

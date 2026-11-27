@@ -1571,7 +1571,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     p.querySelectorAll('a.js-export-fields').forEach(function (a) {
       var url = new URL(a.getAttribute('href'), location.href);
       var selected = fields;
-      if (url.pathname.endsWith('/exportExcel') || url.pathname.endsWith('/exportZip')) selected = fields.concat(documentOnly);
+      if (['/export', '/exportExcel', '/exportZip'].some(function (suffix) { return url.pathname.endsWith(suffix); })) selected = fields.concat(documentOnly);
       else if (url.pathname.endsWith('/exportPDF')) selected = fields.concat(documentOnly.filter(function (key) { return key !== 'activities'; }));
       url.searchParams.set('fields', selected.join(','));
       a.setAttribute('href', url.pathname + url.search);

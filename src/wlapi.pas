@@ -2796,8 +2796,32 @@ function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TW
   const RouteCardId: string = ''): Boolean; forward;
 procedure ExcludeBoardArchive(Board: TJSONObject); forward;
 
+function DownloadScopeId(Request: TRequest; const Key: string): string; forward;
+procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string); forward;
+procedure ScopeBoardExport(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string); forward;
+function ReadFileBytes(const Path: string): string; forward;
+
+procedure AddFilteredExportFiles(const T: TWLTenant; Board: TJSONObject; const BoardId: string);
+var Attachments: TJSONArray; Attachment: TJSONObject; I: Integer; Id, Owner, Path: string;
+begin
+  Attachments := Board.Arrays['attachments'];
+  for I := 0 to Attachments.Count - 1 do
+  begin
+    Attachment := Attachments.Objects[I];
+    Id := Attachment.Get('_id', '');
+    if Id = '' then Continue;
+    Owner := Attachment.Get('cardId', '');
+    if Length(T.Db.Query('SELECT 1 FROM attachments a WHERE a.id=' + QuotedStr(Id) +
+      ' AND a.boardId=' + QuotedStr(BoardId) + ' AND COALESCE(a.cardId,'''')=' + QuotedStr(Owner) +
+      ' AND COALESCE(a.storageBackend,''filesystem'')=''filesystem'' AND (COALESCE(a.cardId,'''')='''' OR ' +
+      'EXISTS(SELECT 1 FROM cards c WHERE c.id=a.cardId AND c.boardId=a.boardId AND c.deletedAt IS NULL));')) <> 1 then Continue;
+    Path := StoreFilePath(T.FilesDir, 'attachme', Id);
+    if FileExists(Path) then Attachment.Add('file', EncodeStringBase64(ReadFileBytes(Path)));
+  end;
+end;
+
 procedure BoardExport(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);
-var T:TWLTenant;UserId,BoardId,Key,TableName:string;Payload:TJSONObject;Rows:TWLRows;Session:TWLSession; Html5Download:Boolean;
+var T:TWLTenant;UserId,BoardId,TableName,LaneId,ListId,CardId,ChecklistId,Fields:string;Payload:TJSONObject;Rows:TWLRows;Session:TWLSession; Html5Download,Filtered,IncludeFiles,ExcludeArchive:Boolean;
 begin
   Html5Download := not Browser and (aRequest.QueryFields.Values['download'] = '1');
   if Html5Download then
@@ -2818,9 +2842,6 @@ begin
     BoardId:=aRequest.RouteParams['boardId'];
   end;
   if not Html5Download and not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
-  for Key in ['swimlaneId','listId','cardId','checklistId','fields'] do
-    if aRequest.QueryFields.IndexOfName(Key)>=0 then
-    begin SendError(aResponse,400,'Scoped export is unavailable');Exit;end;
   if Length(T.Db.Query('SELECT 1 FROM sqlite_master WHERE name=''_ferretdb_collections'';'))=1 then
   begin
     Rows:=T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''settings'';');
@@ -2834,12 +2855,26 @@ begin
     end else if Length(Rows)>1 then
     begin SendError(aResponse,500,'Ambiguous export settings source');Exit;end;
   end;
+  LaneId := DownloadScopeId(aRequest, 'swimlaneId');
+  ListId := DownloadScopeId(aRequest, 'listId');
+  CardId := DownloadScopeId(aRequest, 'cardId');
+  ChecklistId := DownloadScopeId(aRequest, 'checklistId');
+  Fields := aRequest.QueryFields.Values['fields'];
+  ExcludeArchive := aRequest.QueryFields.Values['archived'] = 'false';
+  Filtered := ExcludeArchive or (Fields <> '') or (LaneId <> '') or (ListId <> '') or
+    (CardId <> '') or (ChecklistId <> '');
+  IncludeFiles := aRequest.QueryFields.Values['attachments'] <> 'false';
   try
-    Payload:=ReadRestBoardExport(T,UserId,BoardId,aRequest.QueryFields.Values['attachments']<>'false',Html5Download);
+    Payload:=ReadRestBoardExport(T,UserId,BoardId,IncludeFiles and not Filtered,Html5Download);
   except SendError(aResponse,500,'Could not export board');Exit;end;
   if Payload=nil then begin SendError(aResponse,403,'Board export forbidden');Exit;end;
   try
-    if aRequest.QueryFields.Values['archived'] = 'false' then ExcludeBoardArchive(Payload);
+    try
+      if ExcludeArchive then ExcludeBoardArchive(Payload);
+      ScopeBoardExport(Payload, LaneId, ListId, CardId, ChecklistId);
+      if Fields <> '' then FilterBoardExportFields(Payload, Fields);
+      if Filtered and IncludeFiles then AddFilteredExportFiles(T, Payload, BoardId);
+    except SendError(aResponse,500,'Could not scope board export');Exit;end;
     if Browser or Html5Download then
     begin
       aResponse.SetCustomHeader('Content-Disposition','attachment; filename="board.json"');
@@ -3057,7 +3092,7 @@ begin
   finally OtherCards.Free; Output.Free; Payload.Free; end;
 end;
 
-procedure FilterBoardZipFields(Board: TJSONObject; const Fields: string);
+procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string);
 const Known = '|card-details|board-header|activities|labels|people|board-info|dates|' +
   'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|';
 var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
@@ -3178,7 +3213,7 @@ begin
   end;
 end;
 
-procedure ScopeBoardZip(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string);
+procedure ScopeBoardExport(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string);
 var Cards, Checklists, Items, Entries, OutsideCards, Subtasks: TJSONArray; Entry: TJSONObject;
   CardIds, ListIds, LaneIds, CheckIds, UserIds: TStringList;
   SelectedCard, Key: string; I: Integer; Matches, Scoped: Boolean;
@@ -3336,9 +3371,9 @@ begin
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   try
     if aRequest.QueryFields.Values['archived'] = 'false' then ExcludeBoardArchive(Payload);
-    ScopeBoardZip(Payload, DownloadScopeId(aRequest, 'swimlaneId'), DownloadScopeId(aRequest, 'listId'),
+    ScopeBoardExport(Payload, DownloadScopeId(aRequest, 'swimlaneId'), DownloadScopeId(aRequest, 'listId'),
       DownloadScopeId(aRequest, 'cardId'), DownloadScopeId(aRequest, 'checklistId'));
-    FilterBoardZipFields(Payload, aRequest.QueryFields.Values['fields']);
+    FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields']);
   except
     Payload.Free;
     SendError(aResponse, 500, 'Could not scope board export');

@@ -2788,14 +2788,16 @@ begin
     '/exportZip?archived=false">WeKan ZIP (' + E(Words.Text('export-board-without-archive', 'without archived items')) +
     ')</a></li>';
   if Scoped then
-    Result := Result + '<li><a class="js-export-fields js-scope-link" data-path="exportZip" download href="#">WeKan ZIP</a></li>' +
+    Result := Result + '<li><a class="js-export-fields js-scope-link" data-path="export" data-query="download=1" download href="#">WeKan JSON</a></li>' +
+      '<li><a class="js-export-fields js-scope-link" data-path="exportZip" download href="#">WeKan ZIP</a></li>' +
       '<li><a class="js-export-fields js-scope-link" data-path="exportExcel" download href="#">Excel (.xlsx)</a></li>' +
       '<li><a class="js-export-fields js-scope-link" data-path="exportPDF" download href="#">PDF (.pdf)</a></li>'
   else
   begin
     if CardId <> '' then
       Result := Result + '<li><a class="js-export-fields" download href="' + BoardBase +
-        '/exportZip?cardId=' + HtmlAttr(HTTPEncode(CardId)) + '">WeKan ZIP</a></li>';
+        '/export?download=1&amp;cardId=' + HtmlAttr(HTTPEncode(CardId)) + '">WeKan JSON</a></li>' +
+        '<li><a class="js-export-fields" download href="' + BoardBase + '/exportZip?cardId=' + HtmlAttr(HTTPEncode(CardId)) + '">WeKan ZIP</a></li>';
     Result := Result + '<li><a class="js-export-fields" download href="' + Base +
       '/exportExcel?fields=">Excel (.xlsx)</a></li><li><a class="js-export-fields" download href="' + Base +
       '/exportPDF?fields=">PDF (.pdf)</a></li>';
