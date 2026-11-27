@@ -2438,11 +2438,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
 
   // A section heading with a caret (WeKan's client/lib/sectionCaret.js): it
   // shows or hides the section after it, and the caret says which.
-  up.on('click', '.js-toggle-card-section, .js-toggle-show-activities', function (event, el) {
-    // A link or button in the heading does its own thing, not the fold.
-    var control = event.target.closest && event.target.closest('a, button');
-    if (control && control !== el && el.contains(control)) return;
-    event.preventDefault();
+  function toggleSection(el) {
     var section = el.nextElementSibling;
     if (!section) return;
     var open = section.classList.toggle('is-hidden') === false;
@@ -2468,6 +2464,13 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       caret.classList.toggle('fa-caret-down', open);
       caret.classList.toggle('fa-caret-right', !open);
     }
+  }
+  up.on('click', '.js-toggle-card-section, .js-toggle-show-activities', function (event, el) {
+    // A link or button in the heading does its own thing, not the fold.
+    var control = event.target.closest && event.target.closest('a, button');
+    if (control && control !== el && el.contains(control)) return;
+    event.preventDefault();
+    toggleSection(el);
   });
 
   // Meteor.user() and Meteor.userId() as Node.js WeKan's pages have them: the
@@ -2885,7 +2888,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     var archives = sb.querySelector('.js-archives-view');
     if (archives && sidebarState('archives')) archives.classList.remove('is-hidden');
     var toggle = sb.querySelector('.js-toggle-show-activities');
-    if (toggle && sidebarState('activities') && toggle.nextElementSibling.classList.contains('is-hidden')) toggle.click();
+    if (toggle && sidebarState('activities') && toggle.nextElementSibling.classList.contains('is-hidden')) toggleSection(toggle);
   });
   up.on('input', '.js-search-member-input', function (event, input) {
     clearTimeout(memberSearch);

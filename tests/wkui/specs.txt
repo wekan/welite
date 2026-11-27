@@ -473,3 +473,6 @@ calendar-mode.e2e.js
 
 
 wip-limit-group-selection.e2e.js
+activity-viewer.e2e.js: card and sidebar activities obey formatted in en
+activity-viewer.e2e.js: card and sidebar activities obey plain-links in en
+activity-viewer.e2e.js: card and sidebar activities obey formatted in st

@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Render title-change activities with the board’s text display settings on
+  cards and in the sidebar. The sidebar restores its expanded activities
+  after a board refresh. Three shared activity viewer tests passed in Chromium.
+
 - Drag items to reorder them within a checklist. The server saves the order
   shown by the drop placeholder, with or without desktop drag handles.
 

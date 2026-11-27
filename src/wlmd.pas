@@ -9,8 +9,8 @@ unit wlmd;
   quotes, lists, fenced code, **strong**, *emphasis*, ~~strike~~, `code`,
   [links](https://...) and bare http(s) addresses. A link goes only to an
   http, https or mailto address or a path of this site; anything else
-  (javascript:, data:, //host) is shown as its text. HTML a user wrote is
-  shown as the text it is, where WeKan's DOMPurify keeps its safe tags.
+  (javascript:, data:, //host) is shown as its text. Literal HTML is escaped
+  except for paired, attribute-free <strong> tags.
 
   Pure: tests/markdown.py checks it as plain data.
 }
@@ -158,6 +158,15 @@ begin
           Result := Result + Text;
           i := j + 1; Continue;
         end;
+      end;
+    end;
+    if Copy(S, i, 8) = '<strong>' then
+    begin
+      j := Closing(S, '</strong>', i + 8);
+      if j > 0 then
+      begin
+        Result := Result + '<strong>' + Inline(Copy(S, i + 8, j - i - 8)) + '</strong>';
+        i := j + 9; Continue;
       end;
     end;
     // **strong**, ~~strike~~, *emphasis*

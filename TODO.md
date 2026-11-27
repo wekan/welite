@@ -262,9 +262,7 @@ Next, after this goal:
   2026-11-27 a run of all of Weddy's remaining 298 lines passed 101 more
   reliably (REST API, viewport, RTL, stability and notification specs among
   them, and restore-wip-limit once the WIP limit methods and the Archive's
-  restore at a hard limit were in); 197 are left. activity-viewer's two
-  lines pass in one run and not in the next - the sidebar's activity is not
-  always drawn yet - so they are not listed.
+  restore at a hard limit were in).
   On 2026-11-27 the full run of `tests/wkui/specs.txt` passed 478
   (2 skipped, 4 failed). The ZIP, CSV, PDF and Excel export routes return
   404 because they are missing. The assigned-only tests expect a 403 from

@@ -2618,7 +2618,8 @@ end;
 // WeKan's activities (client/components/activities, Weddy's activities.go):
 // the newest first, each its member and its sentence in the reader's
 // language - the sentence escaped, each name in it escaped too.
-function ActivityRows(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Limit: Integer): string;
+function ActivityRows(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Limit: Integer;
+  PlainLinks, PlainSource: Boolean): string;
 var R: TWLRows; i, k: Integer; Key, Fallback, Board, Text, Sentence, Part: string; Args: array of string;
   function Data(const Field: string): string;
   begin
@@ -2689,7 +2690,11 @@ begin
     begin
       Part := Copy(Sentence, 1, Pos('%s', Sentence) - 1);
       Text := Text + E(Part);
-      if k <= High(Args) then Text := Text + E(Args[k]);
+      if k <= High(Args) then
+        if (k = 0) and (R[i][1] = 'a-changedTitle') then
+          Text := Text + MarkdownViewer(Args[k], PlainLinks, PlainSource)
+        else
+          Text := Text + E(Args[k]);
       Inc(k);
       Delete(Sentence, 1, Length(Part) + 2);
     end;
@@ -2703,7 +2708,7 @@ end;
 // board.pug's sidebar: the board's members, the board menu (boardMenuPopup,
 // its Archived Items) and the Archive (archivesSidebar) with its restore.
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
-  const FilterView: string): string;
+  const FilterView: string; PlainLinks, PlainSource: Boolean): string;
 var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards: Boolean;
   // WeKan's restoreArchivedCardToListPopup (#6772): the card's list is gone,
   // or full at a hard WIP limit - one of the lists with room instead.
@@ -2841,7 +2846,7 @@ begin
     IfThen((S.UserId <> '') and (ViewAssignedOnly = '') and BoardCanAdmin(Db, S.UserId, BoardId), '<hr><h3 class="activity-title js-toggle-show-activities" role="button" tabindex="0" title="' +
       HtmlAttr(Words.Text('activities', 'Activities')) + '"><i class="fa fa-caret-right"></i><i class="fa fa-comment-o"></i> ' +
       E(Words.Text('activities', 'Activities')) + '</h3><div class="activities js-sidebar-activities is-hidden"><template class="js-stamp-on-open">' +
-      ActivityRows(Db, Words, BoardId, '', 50) + '</template></div>', '') +
+      ActivityRows(Db, Words, BoardId, '', 50, PlainLinks, PlainSource) + '</template></div>', '') +
     '</div></div>' +
     '<template class="js-pop-over-template" data-pop="board-menu" data-title="' + HtmlAttr(Words.Text('boardMenuPopup-title', 'Board Settings')) +
     '"><div class="header"><span class="header-title">' + E(Words.Text('boardMenuPopup-title', 'Board Settings')) +
@@ -4364,7 +4369,7 @@ begin
       '<h3 class="card-details-item-title js-toggle-card-section" data-section="activities" role="button" tabindex="0">' +
       '<i class="fa fa-caret-right"></i> ' + E(Words.Text('activities', 'Activities')) + '</h3>' +
       '<div class="card-details-section js-card-section is-hidden" data-section="activities"><div class="activities js-card-activities">' +
-      ActivityRows(Db, Words, BoardId, CardId, 100) + '</div></div></div>';
+      ActivityRows(Db, Words, BoardId, CardId, 100, PlainLinks, PlainSource) + '</div></div></div>';
     if Writable then Details := Details + ChecklistPopups(Words, BoardId, CardId) + ChecklistAssigneePopup(Db, Words, BoardId) + MembersPopup(Db, Words, BoardId, CardId) +
       LabelsPopups(Db, Words, BoardId, CardId, CanCreateLabel) + CustomFieldsPopup(Db, Words, S, BoardId, CardId);
     Details := Details + AttachmentsPopups(Words, BoardId, CardId, Writable);
@@ -4436,7 +4441,7 @@ begin
       IfThen(S.UserId <> '', '<li><a class="js-board-view-entry js-open-multiboard-cal-view" href="' + ViewLink('multiboard-calendar') +
         '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-multiboard-cal', 'Multi Board Calendar')) +
         IfThen(MultiCalendar, ' <i class="fa fa-check"></i>', '') + '</a></li>', '') + '</ul></div></template>' +
-    BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter)) +
+    BoardSidebar(Db, Words, S, BoardId, Writable, FilterSidebar(Db, Words, BoardId, Filter), PlainLinks, PlainSource) +
     WipPopup +
     AnnouncementHtml(Db, Words, S, BoardId) +
     '<div class="board-canvas' + IfThen(SharedRow, ' shared-list-headers', '') + '" id="board-canvas" data-search-reveal="' + HtmlAttr(RevealId) + '">' + Canvas + '</div>' + Details + '</div>';
