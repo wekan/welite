@@ -2774,8 +2774,12 @@ begin
       ' role="checkbox" aria-checked="true"><span class="materialCheckBox is-checked"></span><span>' +
       E(Words.Text(Keys[I], Captions[I])) + '</span></a></li>';
   end;
-  Result := Result + '</ul><ul class="pop-over-list">';
-  if (CardId = '') and not Scoped then Result := Result + '<li><a class="js-export-fields" download href="' + Base +
+  Result := Result + '</ul><ul class="pop-over-list export-board-pane-formats">';
+  if (CardId = '') and not Scoped then Result := Result + '<li><a download href="' + Base +
+    '/export?download=1">WeKan JSON</a></li><li><a download href="' + Base +
+    '/export?download=1&amp;attachments=false">WeKan JSON (' +
+    E(Words.Text('export-board-without-attachments', 'without attachments')) + ')</a></li>' +
+    '<li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +

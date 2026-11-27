@@ -2791,10 +2791,20 @@ begin
   finally Reply.Free;Graph.Free;end;
 end;
 
+function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
+  out BoardId, UserId: string; PlainNotFound: Boolean = False;
+  const RouteCardId: string = ''): Boolean; forward;
+procedure ExcludeBoardArchive(Board: TJSONObject); forward;
+
 procedure BoardExport(aRequest:TRequest;aResponse:TResponse;Browser:Boolean);
-var T:TWLTenant;UserId,BoardId,Key,TableName:string;Payload:TJSONObject;Rows:TWLRows;Session:TWLSession;
+var T:TWLTenant;UserId,BoardId,Key,TableName:string;Payload:TJSONObject;Rows:TWLRows;Session:TWLSession; Html5Download:Boolean;
 begin
-  if not ApiTenant(aRequest,aResponse,T) then Exit;
+  Html5Download := not Browser and (aRequest.QueryFields.Values['download'] = '1');
+  if Html5Download then
+  begin
+    if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
+  end
+  else if not ApiTenant(aRequest,aResponse,T) then Exit;
   if Browser then
   begin
     if not ValidateSession(T.Db,aRequest,SessionIdFromRequest(aRequest),Session) then
@@ -2802,12 +2812,12 @@ begin
     UserId:=Session.UserId;BoardId:=aRequest.QueryFields.Values['id'];
     if (BoardId='') or (Pos(#0,BoardId)>0) then
     begin SendError(aResponse,400,'Invalid board ID');Exit;end;
-  end else
+  end else if not Html5Download then
   begin
     if not ApiAuth(T,aRequest,aResponse,UserId) then Exit;
     BoardId:=aRequest.RouteParams['boardId'];
   end;
-  if not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
+  if not Html5Download and not ApiAuthBoard(T,aResponse,UserId,BoardId,False) then Exit;
   for Key in ['swimlaneId','listId','cardId','checklistId','fields'] do
     if aRequest.QueryFields.IndexOfName(Key)>=0 then
     begin SendError(aResponse,400,'Scoped export is unavailable');Exit;end;
@@ -2825,11 +2835,12 @@ begin
     begin SendError(aResponse,500,'Ambiguous export settings source');Exit;end;
   end;
   try
-    Payload:=ReadRestBoardExport(T,UserId,BoardId,aRequest.QueryFields.Values['attachments']<>'false');
+    Payload:=ReadRestBoardExport(T,UserId,BoardId,aRequest.QueryFields.Values['attachments']<>'false',Html5Download);
   except SendError(aResponse,500,'Could not export board');Exit;end;
   if Payload=nil then begin SendError(aResponse,403,'Board export forbidden');Exit;end;
   try
-    if Browser then
+    if aRequest.QueryFields.Values['archived'] = 'false' then ExcludeBoardArchive(Payload);
+    if Browser or Html5Download then
     begin
       aResponse.SetCustomHeader('Content-Disposition','attachment; filename="board.json"');
       aResponse.SetCustomHeader('Cache-Control','private, no-store');
@@ -2865,8 +2876,8 @@ begin
 end;
 
 function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
-  out BoardId, UserId: string; PlainNotFound: Boolean = False;
-  const RouteCardId: string = ''): Boolean;
+  out BoardId, UserId: string; PlainNotFound: Boolean;
+  const RouteCardId: string): Boolean;
 var Board: TWLRows; Session: TWLSession;
 
 begin
@@ -3109,7 +3120,7 @@ begin
   end;
 end;
 
-procedure ExcludeBoardZipArchive(Board: TJSONObject);
+procedure ExcludeBoardArchive(Board: TJSONObject);
 var ArchivedLanes, ArchivedLists, LiveCards: TStringList;
   Rows: TJSONArray; Row: TJSONObject; Collection, Owner: string; I: Integer;
 
@@ -3324,7 +3335,7 @@ begin
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
   try
-    if aRequest.QueryFields.Values['archived'] = 'false' then ExcludeBoardZipArchive(Payload);
+    if aRequest.QueryFields.Values['archived'] = 'false' then ExcludeBoardArchive(Payload);
     ScopeBoardZip(Payload, DownloadScopeId(aRequest, 'swimlaneId'), DownloadScopeId(aRequest, 'listId'),
       DownloadScopeId(aRequest, 'cardId'), DownloadScopeId(aRequest, 'checklistId'));
     FilterBoardZipFields(Payload, aRequest.QueryFields.Values['fields']);

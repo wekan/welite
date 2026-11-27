@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Download WeKan JSON from the HTML5 board menu with attachment bytes or
+  metadata only. The JSON API also accepts `archived=false` to omit archived
+  cards, lists, swimlanes and their related records.
+
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
   previews from local attachments. It uses standard PDF fonts and WinAnsi
