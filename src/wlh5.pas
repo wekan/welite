@@ -2092,7 +2092,8 @@ begin
       '/history?card=' + HtmlAttr(HTTPEncode(CardId)) + '" data-close="' + HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-history"></i> ' +
       E(Words.Text('history', 'History')) + '</a></li>', '') +
     '<li><a class="js-archive" href="#"><i class="fa fa-archive"></i> ' + E(Words.Text('archive', 'Archive')) + '</a></li></ul></template>' +
-    Target('move-card', '/move-to', '', Words.Text('moveCardPopup-title', 'Move Card'), BoardOptions) +
+    Target('move-card', '/move-to', '<label for="move-card-reason">' + E(Words.Text('move-reason', 'Move reason')) +
+      '</label><input id="move-card-reason" name="reason" maxlength="1000">', Words.Text('moveCardPopup-title', 'Move Card'), BoardOptions) +
     Target('copy-card', '/copy-to', '<label for="copy-card-title">' + E(Words.Text('title', 'Title')) +
       '</label><textarea id="copy-card-title" name="title" rows="2">' + E(Title) + '</textarea>',
       Words.Text('copyCardPopup-title', 'Copy Card'), CopyBoards) +
@@ -7689,7 +7690,7 @@ begin
   end
   else if Action = 'move-card' then
     Code := MoveViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['boardId'],
-      Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['listId'], Error)
+      Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['listId'], Error, Request.ContentFields.Values['reason'])
   else if Action = 'copy-card' then
     Code := CopyViewCard(T, S.UserId, BoardId, CardId, Request.ContentFields.Values['boardId'],
       Request.ContentFields.Values['swimlaneId'], Request.ContentFields.Values['listId'], Title, NewId, Error)

@@ -2220,6 +2220,42 @@ begin
   finally Policy.Free; Ids.Free; end;
 end;
 
+function ReplayCardPosition(Db:TWLDb; Row:TJSONObject; Put, Expect:TJSONData; out Error:string):Boolean;
+var BoardId, CardId, ListId, LaneId, PutSort, ExpectedSort, Reason, Scope, Destination:string;
+  function SortLiteral(Content:TJSONObject):string;
+  var V:TJSONData;
+  begin
+    Result:='';
+    V:=Content.Find('sort');
+    if V=nil then Exit;
+    if V.JSONType=jtNull then Exit('NULL');
+    if (V.JSONType=jtNumber) and not IsNan(V.AsFloat) and not IsInfinite(V.AsFloat) then
+      Result:=CanonicalHistoryValue(V);
+  end;
+begin
+  Result:=False; Error:='';
+  if not (Put is TJSONObject) or not (Expect is TJSONObject) then Exit;
+  BoardId:=Str(Row,'boardId'); CardId:=Str(Row,'entityId');
+  if (Str(TJSONObject(Put),'boardId')<>BoardId) or (Str(TJSONObject(Expect),'boardId')<>BoardId) then Exit;
+  ListId:=Str(TJSONObject(Put),'listId'); LaneId:=Str(TJSONObject(Put),'swimlaneId');
+  Reason:=Str(TJSONObject(Put),'lastMoveReason');
+  if (ListId='') or (LaneId='') or (Pos(#0,ListId+LaneId+Reason)>0) then Exit;
+  PutSort:=SortLiteral(TJSONObject(Put)); ExpectedSort:=SortLiteral(TJSONObject(Expect));
+  if (PutSort='') or (ExpectedSort='') then Exit;
+  Scope:='id='+Q(CardId)+' AND boardId='+Q(BoardId)+' AND archived=0 AND deletedAt IS NULL'+
+    ' AND listId='+Q(Str(TJSONObject(Expect),'listId'))+' AND swimlaneId='+Q(Str(TJSONObject(Expect),'swimlaneId'))+
+    ' AND sort IS '+ExpectedSort+' AND COALESCE(json_extract(extra_json,''$.lastMoveReason''),'''')='+
+    Q(Str(TJSONObject(Expect),'lastMoveReason'));
+  Destination:='EXISTS(SELECT 1 FROM lists WHERE id='+Q(ListId)+' AND boardId='+Q(BoardId)+
+    ' AND archived=0 AND deletedAt IS NULL AND COALESCE(swimlaneId,'''') IN ('''','+Q(LaneId)+
+    ')) AND EXISTS(SELECT 1 FROM swimlanes WHERE id='+Q(LaneId)+' AND boardId='+Q(BoardId)+' AND archived=0)';
+  Result:=Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN '+Destination+' AND EXISTS(SELECT 1 FROM cards WHERE '+Scope+
+    ') THEN 1 ELSE json(''Card position changed'') END; UPDATE cards SET listId='+Q(ListId)+',swimlaneId='+Q(LaneId)+
+    ',sort='+PutSort+',extra_json=json_set(extra_json,''$.lastMoveReason'','+Q(Reason)+'),modifiedAt='+Q(NowIso)+
+    ' WHERE '+Scope+'; COMMIT;');
+  if not Result then begin Db.Exec('ROLLBACK;'); Error:='history-conflict'; end;
+end;
+
 function ApplyCardHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
 var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope, CurrentField: string; R: TWLRows; Current: TJSONObject;
   function ValueOf(Content: TJSONData): string;
@@ -2234,6 +2270,7 @@ begin
   Result := False; Error := '';
   Prev := Row.Find('previousContent'); Next := Row.Find('newContent');
   if Direction = 'undo' then begin Put := Prev; Expect := Next; end else begin Put := Next; Expect := Prev; end;
+  if Str(Row, 'group') = 'position' then Exit(ReplayCardPosition(Db, Row, Put, Expect, Error));
   if Put is TJSONObject then Field := Str(TJSONObject(Put), 'field')
   else if Expect is TJSONObject then Field := Str(TJSONObject(Expect), 'field')
   else Field := '';

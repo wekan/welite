@@ -249,7 +249,7 @@ function ViewFieldAllowed(Db:TWLDb;const UserId,BoardId,CardId,FieldId:string;Wr
 // swimlane of its board, with WeKan's moveCard activity and last in its new
 // place; copied - to this board or another the user may change - as POST
 // .../cards/:cardId/copy copies one, with copyCardPopup's title; archived.
-function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string):Integer;
+function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string;const Reason:string=''):Integer;
 function CopyViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList,Title:string;
   out NewCard,Error:string):Integer;
 function ArchiveViewCard(const T:TWLTenant;const UserId,BoardId,CardId:string;out Error:string):Integer;
@@ -8869,15 +8869,22 @@ begin
   Result:=200;
 end;
 
-function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string):Integer;
-var Card:TWLRows;Scope,Stamp,Sort,ActivityId:string;
+function MoveViewCard(const T:TWLTenant;const UserId,BoardId,CardId,DestBoard,DestLane,DestList:string;out Error:string;const Reason:string):Integer;
+var Card,Current:TWLRows;Scope,Stamp,Sort,ActivityId,MoveReason:string;Before,After:TJSONObject;
+  function Snapshot(const Row:TWLRow):TJSONObject;
+  begin
+    Result:=TJSONObject.Create(['boardId',BoardId,'swimlaneId',Row[0],'listId',Row[1],
+      'sort',GetJSON(Row[2]),'lastMoveReason',Row[3]]);
+  end;
 begin
   Result:=ViewCardScope(T,UserId,BoardId,CardId,Error);
   if Result<>200 then Exit;
   if (DestBoard<>'') and (DestBoard<>BoardId) then
   begin Error:='A card moves to another board from the HTML4 view only';Exit(400);end;
+  MoveReason:=Trim(Reason);
+  if (Pos(#0,MoveReason)>0) or (Length(MoveReason)>4096) then begin Error:='Invalid move reason';Exit(400);end;
   if (DestList='') or (Pos(#0,DestLane+DestList)>0) then begin Error:='Invalid card move destination';Exit(400);end;
-  Card:=T.Db.Query('SELECT swimlaneId,listId FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
+  Card:=T.Db.Query('SELECT swimlaneId,listId,json_quote(sort),COALESCE(json_extract(extra_json,''$.lastMoveReason''),'''') FROM cards WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+
     ' AND archived=0 AND deletedAt IS NULL;');
   if Length(Card)<>1 then begin Error:='Card not found';Exit(404);end;
   // The card keeps its swimlane unless another is chosen; the list is one of
@@ -8900,9 +8907,21 @@ begin
     '''listName'',(SELECT title FROM lists WHERE id='+QuotedStr(DestList)+'),''oldListName'',(SELECT title FROM lists WHERE id=cards.listId),'+
     '''swimlaneName'',(SELECT title FROM swimlanes WHERE id='+QuotedStr(Scope)+')) FROM cards WHERE id='+QuotedStr(CardId)+'; '+
     'UPDATE cards SET swimlaneId='+QuotedStr(Scope)+',listId='+QuotedStr(DestList)+',sort='+Sort+',modifiedAt='+Stamp+
-    ',dateLastActivity='+Stamp+' WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+'; '+
+    ',dateLastActivity='+Stamp+',extra_json=json_set(extra_json,''$.lastMoveReason'','+QuotedStr(MoveReason)+') WHERE id='+QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+'; '+
     NotificationsSql(T.Db,UserId,BoardId,DestList,CardId,'',ActivityId,'moveCard')+'COMMIT;') then
   begin T.Db.Exec('ROLLBACK;');Error:='Could not move card';Exit(500);end;
+  Current:=T.Db.Query('SELECT swimlaneId,listId,json_quote(sort),COALESCE(json_extract(extra_json,''$.lastMoveReason''),'''') FROM cards WHERE id='+
+    QuotedStr(CardId)+' AND boardId='+QuotedStr(BoardId)+';');
+  if Length(Current)=1 then
+  begin
+    Before:=Snapshot(Card[0]);After:=Snapshot(Current[0]);
+    try
+      try RecordHistoryRow(T.Db,UserId,BoardId,'card',CardId,'position','moved',Before,After);
+      except
+        // History never fails the move it records.
+      end;
+    finally Before.Free;After.Free;end;
+  end;
   Result:=200;
 end;
 

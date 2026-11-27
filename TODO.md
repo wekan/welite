@@ -274,11 +274,8 @@ Next, after this goal:
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
-  WeLite's Move Card dialog still needs the move reason field and must
-  record one reversible position change. A focused Chromium run on
-  2026-11-28 passed history-nested-dates and stopped at the first
-  time-history test because the dialog lacked the move reason field.
-  Other time-history cases were pending in that run.
+  The remaining time-history cases need verification and implementation
+  where they fail.
   Also left are additional History field restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
