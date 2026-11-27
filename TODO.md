@@ -272,7 +272,7 @@ Next, after this goal:
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
   the remaining export-access cases for charts,
-  remaining ZIP field parity (including subtask records), bundled Unicode font coverage for PDF (configurable TrueType subsetting is in), and inline Excel previews for other image formats when their
+  remaining ZIP field parity and subtask import round-tripping, bundled Unicode font coverage for PDF (configurable TrueType subsetting is in), and inline Excel previews for other image formats when their
   decoders are available, and the
   remaining History restore types and row summaries.
   An assigned-only member: the attachment API, the file routes, the

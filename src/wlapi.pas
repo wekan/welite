@@ -3052,11 +3052,15 @@ const Known = '|card-details|board-header|activities|labels|people|board-info|da
 var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
 
   procedure RemoveCardFields(const PartName: string; const Keys: array of string);
-  var J: Integer; FieldName: string;
+  var J: Integer; FieldName, CollectionName: string; ChildRows: TJSONArray;
   begin
     if Selected.IndexOf(PartName) >= 0 then Exit;
-    for J := 0 to Rows.Count - 1 do
-      for FieldName in Keys do Rows.Objects[J].Delete(FieldName);
+    for CollectionName in ['cards','subtaskItems'] do
+    begin
+      ChildRows := Board.Arrays[CollectionName];
+      for J := 0 to ChildRows.Count - 1 do
+        for FieldName in Keys do ChildRows.Objects[J].Delete(FieldName);
+    end;
   end;
 
 begin
@@ -3074,7 +3078,7 @@ begin
     if Selected.IndexOf('checklists') < 0 then Board.Arrays['checklistItems'].Clear;
     if Selected.IndexOf('custom-fields') < 0 then Board.Arrays['customFields'].Clear;
     if Selected.IndexOf('labels') < 0 then Board.Delete('labels');
-    Rows := Board.Arrays['cards'];
+    if Selected.IndexOf('subtasks') < 0 then Board.Arrays['subtaskItems'].Clear;
     RemoveCardFields('description', ['description']);
     RemoveCardFields('custom-fields', ['customFields']);
     RemoveCardFields('labels', ['labelIds']);
@@ -3164,9 +3168,9 @@ begin
 end;
 
 procedure ScopeBoardZip(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string);
-var Cards, Checklists, Items, Entries: TJSONArray; Entry: TJSONObject;
+var Cards, Checklists, Items, Entries, OutsideCards, Subtasks: TJSONArray; Entry: TJSONObject;
   CardIds, ListIds, LaneIds, CheckIds, UserIds: TStringList;
-  SelectedCard, Key: string; I: Integer; Matches: Boolean;
+  SelectedCard, Key: string; I: Integer; Matches, Scoped: Boolean;
 
   function NewIds: TStringList;
   begin
@@ -3197,13 +3201,37 @@ var Cards, Checklists, Items, Entries: TJSONArray; Entry: TJSONObject;
     end;
   end;
 
+  procedure AddSubtask(Row: TJSONObject);
+  var Parents: TJSONData; J: Integer; Parent: string;
+  begin
+    Parent := Row.Get('parentId', '');
+    if (Parent = '') or (CardIds.IndexOf(Parent) < 0) then
+    begin
+      Parents := Row.Find('parentIds');
+      if not (Parents is TJSONArray) then Exit;
+      Parent := '';
+      for J := 0 to Parents.Count - 1 do
+        if Parents.Items[J] is TJSONString then
+          if CardIds.IndexOf(Parents.Items[J].AsString) >= 0 then
+          begin
+            Parent := Parents.Items[J].AsString;
+            Break;
+          end;
+      if Parent = '' then Exit;
+    end;
+    if Row.Get('deletedAt', '') <> '' then Exit;
+    Subtasks.Add(Row.Clone);
+    for Parent in ['userId','members','assignees','requesters','assigners'] do RememberUser(Row.Find(Parent));
+  end;
+
 begin
-  if (LaneId = '') and (ListId = '') and (CardId = '') and (ChecklistId = '') then Exit;
+  Scoped := (LaneId <> '') or (ListId <> '') or (CardId <> '') or (ChecklistId <> '');
   CardIds := NewIds;
   ListIds := NewIds;
   LaneIds := NewIds;
   CheckIds := NewIds;
   UserIds := NewIds;
+  OutsideCards := TJSONArray.Create;
   try
     RememberUser(Board.Find('members'));
     SelectedCard := CardId;
@@ -3225,9 +3253,9 @@ begin
       else Matches := (ChecklistId = '') and
         ((LaneId = '') or (LaneId = Entry.Get('swimlaneId', ''))) and
         ((ListId = '') or (ListId = Entry.Get('listId', '')));
-      if not Matches or (Entry.Get('linkedId', '') <> '') or (Entry.Get('deletedAt', '') <> '') then
+      if Scoped and (not Matches or (Entry.Get('linkedId', '') <> '') or (Entry.Get('deletedAt', '') <> '')) then
       begin
-        Cards.Delete(I);
+        OutsideCards.Add(Cards.Extract(I));
         Continue;
       end;
       CardIds.Add(Entry.Get('_id', ''));
@@ -3235,6 +3263,12 @@ begin
       ListIds.Add(Entry.Get('listId', ''));
       for Key in ['userId','members','assignees','requesters','assigners'] do RememberUser(Entry.Find(Key));
     end;
+    Board.Delete('subtaskItems');
+    Subtasks := TJSONArray.Create;
+    Board.Add('subtaskItems', Subtasks);
+    for I := 0 to Cards.Count - 1 do AddSubtask(Cards.Objects[I]);
+    for I := OutsideCards.Count - 1 downto 0 do AddSubtask(OutsideCards.Objects[I]);
+    if not Scoped then Exit;
     if LaneId <> '' then LaneIds.Add(LaneId);
     if ListId <> '' then ListIds.Add(ListId);
     KeepRows('lists', '_id', ListIds);
@@ -3268,6 +3302,7 @@ begin
       Entries.Clear;
     end;
   finally
+    OutsideCards.Free;
     UserIds.Free;
     CheckIds.Free;
     LaneIds.Free;
