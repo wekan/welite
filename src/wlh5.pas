@@ -7902,6 +7902,44 @@ begin
   else Append(Words.Text('r-rule-disabled', 'Disabled'));
 end;
 
+function HistoryScrumSummary(Values: TJSONObject; Words: TWLTranslator): string;
+var Data, Entry, Detail: TJSONData; Records: TJSONArray; Document: TJSONObject;
+  I: Integer; Item, Name: string;
+  procedure AddDetail(const Text: string);
+  begin
+    if Text = '' then Exit;
+    if Item <> '' then Item := Item + ' '#$E2#$80#$94' ';
+    Item := Item + Text;
+  end;
+begin
+  Result := '';
+  if Values = nil then Exit;
+  Data := Values.Find('records');
+  if not (Data is TJSONArray) then Exit;
+  Records := TJSONArray(Data);
+  for I := 0 to Records.Count - 1 do
+  begin
+    Entry := Records.Items[I];
+    Data := nil;
+    if Entry is TJSONObject then Data := TJSONObject(Entry).Find('document');
+    Item := '';
+    if Data is TJSONObject then
+    begin
+      Document := TJSONObject(Data);
+      Name := Document.Get('name', '');
+      if Name = '' then Name := Document.Get('_id', '');
+      AddDetail(Name);
+      AddDetail(Document.Get('state', ''));
+      Detail := Document.Find('scrum');
+      if (Detail <> nil) and (Detail.JSONType <> jtNull) then AddDetail(Detail.AsJSON);
+    end
+    else AddDetail(Words.Text('history-change-removed', 'Removed'));
+    if Item = '' then Continue;
+    if Result <> '' then Result := Result + '; ';
+    Result := Result + Item;
+  end;
+end;
+
 function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat, Group: string): string;
 var Value, Document: TJSONData; NumberFormat: TFormatSettings;
   procedure AppendWipFlag(const Field, Key, Fallback: string);
@@ -8100,8 +8138,11 @@ begin
         Values := nil;
         if Row.Find('newContent') is TJSONObject then Values := Row.Objects['newContent']
         else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
-        if Row.Get('entityType', '') = 'rule' then Summary := HistoryRuleSummary(Row, Words)
+        case Row.Get('entityType', '') of
+          'rule': Summary := HistoryRuleSummary(Row, Words);
+          'scrum': Summary := HistoryScrumSummary(Values, Words);
         else Summary := HistoryContentSummary(Values, Words, DateFormat, Row.Get('group', ''));
+        end;
         GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
         if Values <> nil then
           case Values.Get('field', '') of

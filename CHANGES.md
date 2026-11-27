@@ -21,7 +21,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   and whether it is enabled and soft. Card position history shows the saved
   move reason and falls back to the destination list ID. History displays
   archive states and identifies deletion and restoration. Rule rows show
-  the title, trigger, action and enabled, disabled or removed state.
+  the title, trigger, action and enabled, disabled or removed state. Scrum
+  rows received from shared history show record names or IDs, states,
+  metadata and removals.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,
