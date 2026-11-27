@@ -8,7 +8,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Search All Boards accepts numeric day ranges for due dates, creation and
   modification. The search instructions describe these filters using the
-  selected language.
+  selected language. Signed day offsets and the localized week, month,
+  quarter and year filters are also available. Named periods use the start
+  of the following period as their upper bound.
 
 - Open board Search from the header. Search matches the titles of loaded
   lists and cards. On mobile, Back closes the sidebar and returns directly

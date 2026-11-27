@@ -5833,6 +5833,19 @@ var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; 
   begin
     Result := SameText(Value, Field) or SameText(Value, Words.Text('predicate-' + Field, Field));
   end;
+  function PeriodEnd: string;
+  begin
+    Result := '';
+    if IsField('week') then
+      Result := 'julianday(''now'',''localtime'',''start of day'',''+1 day'',''weekday 1'')'
+    else if IsField('month') then
+      Result := 'julianday(''now'',''localtime'',''start of month'',''+1 month'')'
+    else if IsField('quarter') then
+      Result := 'julianday(''now'',''localtime'',''start of month'',printf(''+%d months'',3-' +
+        '(CAST(strftime(''%m'',''now'',''localtime'') AS INTEGER)-1)%3))'
+    else if IsField('year') then
+      Result := 'julianday(''now'',''localtime'',''start of year'',''+1 year'')';
+  end;
   function PersonMatches(const ColumnName: string): string;
   begin
     if SameText(Value, 'me') then Exit(ColumnName + '=' + QuotedStr(UserId));
@@ -5909,23 +5922,27 @@ begin
     if Absent and (Result <> '') then Result := 'NOT (' + Result + ')';
     Exit;
   end;
-  if IsOperator('operator-due', 'due') then
+  if IsOperator('operator-due', 'due') or IsOperator('operator-created', 'created') or
+     IsOperator('operator-modified', 'modified') then
   begin
-    Kind := soDue;
-    if SameText(Value, 'overdue') or SameText(Value, Words.Text('predicate-overdue', 'overdue')) then
-      Result := 'julianday(c.dueAt)<julianday(''now'')'
-    else if TryStrToInt64(Value, Days) and (Days >= 0) then
-      Result := 'julianday(c.dueAt)<julianday(''now'',''localtime'',''start of day'')+' + IntToStr(Days) + '+2';
-    Exit;
-  end;
-  if IsOperator('operator-created', 'created') or IsOperator('operator-modified', 'modified') then
-  begin
-    if IsOperator('operator-created', 'created') then
+    if IsOperator('operator-due', 'due') then
+    begin Kind := soDue; Column := 'c.dueAt'; end
+    else if IsOperator('operator-created', 'created') then
     begin Kind := soCreated; Column := 'c.createdAt'; end
     else
     begin Kind := soModified; Column := 'c.modifiedAt'; end;
-    if TryStrToInt64(Value, Days) and (Days >= 0) then
-      Result := 'julianday(' + Column + ')>=julianday(''now'',''localtime'',''start of day'')-' + IntToStr(Days);
+    if (Kind = soDue) and IsField('overdue') then
+      Exit('julianday(c.dueAt)<julianday(''now'')');
+    Parent := PeriodEnd;
+    if Parent <> '' then
+      Exit('julianday(' + Column + ')<' + Parent);
+    if TryStrToInt64(Value, Days) then
+    begin
+      if Kind = soDue then
+        Result := 'julianday(c.dueAt)<julianday(''now'',''localtime'',''start of day'')+' + IntToStr(Days) + '+2'
+      else
+        Result := 'julianday(' + Column + ')>=julianday(''now'',''localtime'',''start of day'')-(' + IntToStr(Days) + ')';
+    end;
     Exit;
   end;
   if IsOperator('operator-title', 'title') then
@@ -6040,7 +6057,8 @@ function GlobalSearchHelp(Words: TWLTranslator): string;
 const
   Operators: array[0..15] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has', 'comment', 'label', 'label-abbrev',
     'user', 'user-abbrev', 'member', 'assignee', 'creator', 'created', 'modified');
-  Fields: array[0..8] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end', 'assignee', 'member');
+  Fields: array[0..12] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end',
+    'assignee', 'member', 'week', 'month', 'quarter', 'year');
   Described: array[0..14] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
     'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified');
   function Instruction(const Key, Fallback: string): string;
@@ -6065,6 +6083,7 @@ begin
   Result := Result + '<li><code>' + E(Words.Text('operator-title', 'title')) + ':&quot;Alpha Card&quot;</code></li>' +
     '</ul><p>' +
     Instruction('notes-1', 'Multiple operators may be specified.') + '</p><p>' +
+    Instruction('notes-3-2', 'Use a signed number of days or a named calendar period.') + '</p><p>' +
     Instruction('notes-5', 'By default archived cards are not searched.') + '</p></details>';
 end;
 
