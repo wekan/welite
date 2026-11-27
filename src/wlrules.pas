@@ -108,7 +108,7 @@ const
 
 implementation
 
-uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wltpl, wlcase, wlwrike, wlh5, wlchhist, wlchhash, wlsched;
+uses Math, StrUtils, DateUtils, jsonparser, wlsjson, wlcfjson, wlferr, wlapi, wlaccess, wlcfpol, wltpl, wlcase, wlwrike, wlh5, wlchhist, wlchhash, wlsched;
 
 threadvar
   ArmedRequest: TRequest;
@@ -2129,8 +2129,79 @@ begin
   Result := CardDateSql(V, Literal);
 end;
 
-function ApplyCardHistory(Db: TWLDb; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope: string; R: TWLRows;
+function RestoreCustomFieldSnapshot(Db: TWLDb; const UserId, BoardId, CardId: string; Content: TJSONData): Integer;
+var Policy: TFieldPolicy; Current, Def: TWLRows; Row: TWLRow; Values, Paths, Value: TJSONData;
+  Entry: TJSONObject; Id, Literal, Sql, Guards, Kind, ExpectedPath, RawName, TableName, Original: string; I, J, Dates: Integer;
+  Ids: TStringList; IsDate: Boolean;
+begin
+  if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> 'customFields') then Exit(0);
+  Values := TJSONObject(Content).Find('value');
+  Paths := TJSONObject(Content).Find('datePaths');
+  if not (Values is TJSONArray) or ((Paths <> nil) and not (Paths is TJSONArray)) then Exit(0);
+  Result := 0;
+  Policy := nil;
+  Ids := TStringList.Create;
+  Ids.CaseSensitive := True;
+  try
+    if not CollectionTable(Db, 'cards', RawName, TableName) then Exit;
+    Original := ReadModelSjson(Db, 'cards', 'cards', CardId);
+    Policy := TFieldPolicy.Create(Db, UserId, BoardId, CardId);
+    Current := Db.Query('SELECT customFieldId FROM card_custom_field_values WHERE cardId=' + Q(CardId) + ';');
+    Guards := ''; Sql := ''; Dates := 0;
+    for Row in Current do
+    begin
+      if not Policy.Allowed(Row[0], True) then Exit(-1);
+      Guards := Guards + Policy.Guard(Row[0]);
+    end;
+    for I := 0 to Values.Count - 1 do
+    begin
+      if not (Values.Items[I] is TJSONObject) then Exit;
+      Entry := TJSONObject(Values.Items[I]);
+      if (Entry.Count > 2) or ((Entry.Count = 2) and (Entry.Find('value') = nil)) then Exit;
+      Id := Str(Entry, '_id');
+      if (Id = '') or (Pos(#0, Id) > 0) or (Ids.IndexOf(Id) >= 0) then Exit;
+      Ids.Add(Id);
+      if not Policy.Allowed(Id, True) then Exit(-1);
+      Guards := Guards + Policy.Guard(Id);
+      Def := Db.Query('SELECT type FROM custom_fields WHERE id=' + Q(Id) + ';');
+      if Length(Def) <> 1 then Exit;
+      Kind := Def[0][0];
+      Value := Entry.Find('value');
+      ExpectedPath := '["' + IntToStr(I) + '","value"]';
+      IsDate := False;
+      if Paths <> nil then
+        for J := 0 to Paths.Count - 1 do
+          if (Paths.Items[J].JSONType = jtString) and (Paths.Items[J].AsString = ExpectedPath) then IsDate := True;
+      if IsDate then
+      begin
+        Inc(Dates);
+        if (Kind <> 'date') or (Value = nil) or (Value.JSONType <> jtNumber) or not CardDateSql(Value, Literal) then Exit;
+      end
+      else if (Value = nil) or (Value.JSONType = jtNull) then Literal := 'NULL'
+      else if Kind = 'date' then Exit
+      else if (Value.JSONType = jtBoolean) and (Kind = 'checkbox') then Literal := IfThen(Value.AsBoolean, '1', '0')
+      else if (Value.JSONType = jtNumber) and (Kind = 'number') then Literal := Value.AsJSON
+      else if Value.JSONType = jtString then
+      begin
+        if Pos(#0, Value.AsString) > 0 then Exit;
+        Literal := Q(Value.AsString);
+      end
+      else if (Value is TJSONArray) and ((Kind = 'dropdownMultiSelect') or (Kind = 'stringtemplate')) then Literal := Q(Value.AsJSON)
+      else Exit;
+      Sql := Sql + 'INSERT INTO card_custom_field_values(cardId,customFieldId,value) VALUES(' +
+        Q(CardId) + ',' + Q(Id) + ',' + Literal + '); ';
+    end;
+    if (Paths <> nil) and (Dates <> Paths.Count) then Exit;
+    if not Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN EXISTS(SELECT 1 FROM ' + TableName +
+      ' WHERE ' + DocField('_id') + '=' + Q(CardId) + ' AND json(_ferretdb_sjson)=' + Q(Original) +
+      ') THEN 1 ELSE json(''Card values changed'') END; ' + Guards + 'DELETE FROM card_custom_field_values WHERE cardId=' + Q(CardId) +
+      '; ' + Sql + Guards + 'COMMIT;') then begin Db.Exec('ROLLBACK;'); Exit; end;
+    Result := 1;
+  finally Policy.Free; Ids.Free; end;
+end;
+
+function ApplyCardHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
+var Prev, Next, Put, Expect: TJSONData; Field, CardId, PutSql, ExpectSql, Scope: string; R: TWLRows; Current: TJSONObject;
   function ValueOf(Content: TJSONData): string;
   var V: TJSONData;
   begin
@@ -2146,6 +2217,15 @@ begin
   if Put is TJSONObject then Field := Str(TJSONObject(Put), 'field')
   else if Expect is TJSONObject then Field := Str(TJSONObject(Expect), 'field')
   else Field := '';
+  if (Field = 'customFields') and (Str(Row, 'group') = 'customFields') then
+  begin
+    CardId := Str(Row, 'entityId');
+    Current := CustomFieldHistorySnapshot(Db, CardId);
+    try
+      if (Expect = nil) or (Current.AsJSON <> Expect.AsJSON) then begin Error := 'history-conflict'; Exit; end;
+    finally Current.Free; end;
+    Exit(RestoreCustomFieldSnapshot(Db, UserId, Str(Row, 'boardId'), CardId, Put) = 1);
+  end;
   if CardHistoryDateField(Field) then
   begin
     if (Str(Row, 'group') <> 'dates') or not HistoryDateLiteral(Put, Field, PutSql) or
@@ -2421,6 +2501,20 @@ begin
   Field := Str(TJSONObject(Content), 'field');
   Group := Str(Row, 'group');
   Scope := 'id=' + Q(CardId) + ' AND boardId=' + Q(R[0][0]) + ' AND deletedAt IS NULL';
+  if (Field = 'customFields') and (Group = 'customFields') then
+  begin
+    Before := CustomFieldHistorySnapshot(Db, CardId);
+    try
+      Result := RestoreCustomFieldSnapshot(Db, UserId, R[0][0], CardId, Content);
+      if Result = 1 then
+        try
+          RecordHistoryRow(Db, UserId, R[0][0], 'card', CardId, Group, 'restored', Before, Content, Str(Row, '_id'), UserId);
+        except
+          // History never fails the restore it records.
+        end;
+    finally Before.Free; end;
+    Exit;
+  end;
   if CardHistoryDateField(Field) then
   begin
     if (Group <> 'dates') or not HistoryDateLiteral(Content, Field, Literal) then Exit(0);
@@ -2613,7 +2707,7 @@ begin
         Before := nil; After := nil;
         try
           // A card's title or description: whoever may edit that card now.
-          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description') or (Str(Row, 'group') = 'dates')) then
+          if (Str(Row, 'entityType') = 'card') and ((Str(Row, 'group') = 'title') or (Str(Row, 'group') = 'description') or (Str(Row, 'group') = 'dates') or (Str(Row, 'group') = 'customFields')) then
           begin
             Done := RestoreCardRow(T.Db, UserId, Row, Readable);
             if Done < 0 then Exit(MethodError(403, 'not-authorized', 'This history entry is outside your current access.', Answer));
@@ -2680,7 +2774,7 @@ begin
   try
     if Rows.Count = 0 then begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;
     Row := Rows.Objects[0];
-    if Str(Row, 'entityType') = 'card' then Applied := ApplyCardHistory(T.Db, Row, Direction, Error)
+    if Str(Row, 'entityType') = 'card' then Applied := ApplyCardHistory(T.Db, UserId, Row, Direction, Error)
     else if Str(Row, 'entityType') = 'list' then Applied := ApplyListHistory(T.Db, UserId, Row, Direction, Error)
     else if Str(Row, 'entityType') = 'rule' then Applied := ApplyRuleHistory(T.Db, UserId, Row, Direction, Error)
     else begin Answer := '{"result":{"' + Key + '":false}}'; Exit(200); end;

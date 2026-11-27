@@ -7881,6 +7881,8 @@ begin
           if (CanRestoreRule and (Row.Get('entityType', '') = 'rule')) or
             (CanRestoreList and (Row.Get('entityType', '') = 'list') and (Row.Get('group', '') = 'lifecycle') and
               (Row.Get('changeType', '') = 'removed')) or
+            (CanRestoreCard and CanRestoreRule and (Row.Get('entityType', '') = 'card') and
+              (Row.Get('group', '') = 'customFields')) or
             (CanRestoreCard and (Row.Get('entityType', '') = 'card') and
               ((Row.Get('group', '') = 'title') or (Row.Get('group', '') = 'description') or
                 ((Row.Get('group', '') = 'dates') and (Values <> nil) and CardHistoryDateField(Values.Get('field', ''))))) then

@@ -7513,7 +7513,7 @@ end;
 function SetViewCardField(const T:TWLTenant;const UserId,BoardId,CardId,FieldId:string;Values:TStrings;Toggle:Boolean;
   out Error:string):Integer;
 var Def,Rows:TWLRows;Kind,Literal,Raw,Guard,At,Scope:string;Policy:TFieldPolicy;Allowed:Boolean;Items:TJSONArray;i:Integer;
-  Input:TJSONData;Year:Integer;Seen:TStringList;
+  Input:TJSONData;Year:Integer;Seen:TStringList;Previous,Next:TJSONObject;
   function Known(const ItemId:string):Boolean;
   begin
     Result:=Length(T.Db.Query('SELECT 1 FROM custom_field_dropdown_items WHERE customFieldId='+QuotedStr(FieldId)+
@@ -7613,19 +7613,32 @@ begin
   else begin Error:='not editable here';Exit(403);end;
   Rows:=T.Db.Query('SELECT CASE WHEN value IS NULL THEN char(0) ELSE CAST(value AS TEXT) END FROM card_custom_field_values WHERE '+Scope+';');
   if Length(Rows)=1 then Raw:=Rows[0][0] else Raw:=#0;
-  if not SaveCardFieldValue(T.Db,CardId,FieldId,Literal,Guard) then
-  begin Error:='Could not save custom-field value';Exit(500);end;
-  // WeKan's cardCustomFields hook: a changed value is an activity -
-  // setCustomField with the value, or unsetCustomField - which notifies the
-  // card's watchers and starts the board's rules (an advanced-filter
-  // trigger reads the card as it is now).
-  Rows:=T.Db.Query('SELECT CASE WHEN value IS NULL THEN char(0) ELSE CAST(value AS TEXT) END,'+
-    'CASE WHEN value IS NULL THEN ''unsetCustomField'' ELSE ''setCustomField'' END,'+
-    'json_object(''customFieldId'','+QuotedStr(FieldId)+',''value'',value) FROM card_custom_field_values WHERE '+Scope+';');
-  if (Length(Rows)=1) and (Rows[0][0]<>Raw) then
-    T.Db.Exec('INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
-      'SELECT '+QuotedStr(NewId)+','+QuotedStr(Rows[0][1])+','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+QuotedStr(NowIso)+','+
-      QuotedStr(NowIso)+','+QuotedStr(Rows[0][2])+' FROM cards WHERE id='+QuotedStr(CardId)+';');
+  Previous:=nil;Next:=nil;
+  try
+    if IsShared(T.Db) then
+      try Previous:=CustomFieldHistorySnapshot(T.Db,CardId); except end;
+    if not SaveCardFieldValue(T.Db,CardId,FieldId,Literal,Guard) then
+    begin Error:='Could not save custom-field value';Exit(500);end;
+    // WeKan's cardCustomFields hook: a changed value is an activity -
+    // setCustomField with the value, or unsetCustomField - which notifies the
+    // card's watchers and starts the board's rules (an advanced-filter
+    // trigger reads the card as it is now).
+    Rows:=T.Db.Query('SELECT CASE WHEN value IS NULL THEN char(0) ELSE CAST(value AS TEXT) END,'+
+      'CASE WHEN value IS NULL THEN ''unsetCustomField'' ELSE ''setCustomField'' END,'+
+      'json_object(''customFieldId'','+QuotedStr(FieldId)+',''value'',value) FROM card_custom_field_values WHERE '+Scope+';');
+    if (Length(Rows)=1) and (Rows[0][0]<>Raw) then
+      T.Db.Exec('INSERT INTO activities(id,activityType,userId,boardId,cardId,listId,swimlaneId,createdAt,modifiedAt,data_json) '+
+        'SELECT '+QuotedStr(NewId)+','+QuotedStr(Rows[0][1])+','+QuotedStr(UserId)+',boardId,id,listId,swimlaneId,'+QuotedStr(NowIso)+','+
+        QuotedStr(NowIso)+','+QuotedStr(Rows[0][2])+' FROM cards WHERE id='+QuotedStr(CardId)+';');
+    if Previous<>nil then
+      try
+        Next:=CustomFieldHistorySnapshot(T.Db,CardId);
+        if Previous.AsJSON<>Next.AsJSON then
+          RecordHistoryRow(T.Db,UserId,BoardId,'card',CardId,'customFields','edited',Previous,Next);
+      except
+        // History never fails the edit it records.
+      end;
+  finally Previous.Free;Next.Free;end;
   Result:=200;
 end;
 

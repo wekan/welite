@@ -426,6 +426,7 @@ password-submit-event.e2e.js
 restore-wip-limit.e2e.js
 shared-list-row-6902.e2e.js
 history-read-scope.e2e.js
+history-nested-dates.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member reads only their own cards' attachments over REST
 unassigned-attach-bleed.e2e.js: an unassigned assigned-only member can no longer upload to or delete from the card
 assigned-card-methods.e2e.js

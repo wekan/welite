@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Record custom-field edits in shared-store History. Restoring a snapshot
+  uses its date metadata to preserve BSON dates and date-looking text.
+  The same nested-date History spec runs in WeLite and Weddy.
+
 - Open History for a single list or swimlane from the board. Search,
   contributor, pagination and restore requests retain that scope.
 

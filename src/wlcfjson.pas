@@ -7,6 +7,7 @@ function DocumentJson(const Document:string):TJSONObject;
 function ReadModelSjson(Db:TWLDb;const Model,Collection,Identity:string):string;
 function CustomFieldsJson(const Document:string):TJSONArray;
 function ReadCustomFields(Db:TWLDb;const CardId:string):TJSONArray;
+function CustomFieldHistorySnapshot(Db: TWLDb; const CardId: string): TJSONObject;
 procedure ValidateBoardCustomFields(Db:TWLDb;const BoardId:string);
 implementation
 procedure Invalid;
@@ -126,6 +127,36 @@ begin
     except FreeAndNil(Result);raise;end;
   finally Reply.Free;Plain.Free;Typed.Free;end;
 end;
+function CustomFieldHistorySnapshot(Db: TWLDb; const CardId: string): TJSONObject;
+var Raw: string; Typed, Plain: TJSONObject; Values, Schemas, Schema, Paths: TJSONData; I: Integer;
+begin
+  Raw := ReadModelSjson(Db, 'cards', 'cards', CardId);
+  Typed := ExactObject(Raw);
+  Plain := nil;
+  Result := nil;
+  try
+    Plain := ExactObject(PlainDocument(Raw));
+    Values := Plain.Find('customFields');
+    Result := TJSONObject.Create(['field', 'customFields']);
+    if not (Values is TJSONArray) then
+    begin Result.Add('value', TJSONArray.Create); Exit; end;
+    Result.Add('value', Values.Clone);
+    Schemas := Typed.FindPath('$s.p.customFields.i');
+    if not (Schemas is TJSONArray) then Exit;
+    Paths := TJSONArray.Create;
+    for I := 0 to Schemas.Count - 1 do
+    begin
+      Schema := Schemas.Items[I].FindPath('$s.p.value.t');
+      if (Schema <> nil) and (Schema.AsString = 'date') then
+        TJSONArray(Paths).Add('["' + IntToStr(I) + '","value"]');
+    end;
+    if Paths.Count > 0 then Result.Add('datePaths', Paths) else Paths.Free;
+  finally
+    Plain.Free;
+    Typed.Free;
+  end;
+end;
+
 type
   TCardSourceScan=class
     SeenHeader:Boolean;
