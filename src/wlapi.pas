@@ -3768,7 +3768,7 @@ end;
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,ListLane,LaneGuard,LanePosition,ListPosition,NumberSql,SortSql:string;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql:string;
   Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
@@ -4059,7 +4059,8 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   end;
   procedure CardPlacement(Obj:TJSONObject;out ListKey,LaneKey:string);
   begin
-    ListKey:=Mapped(1,Text(Obj,'listId'));
+    ListKey:='';
+    if TargetCard='' then ListKey:=Mapped(1,Text(Obj,'listId'));
     if ListKey='' then ListKey:=DefaultList;
     LaneKey:=ImportedListLanes.Get(ListKey,'');
     if (LaneKey='') and (TargetList='') then LaneKey:=Mapped(0,Text(Obj,'swimlaneId'));
@@ -4348,6 +4349,7 @@ begin
   TargetBoard := '';
   TargetLane := '';
   TargetList := '';
+  TargetCard := '';
   if ZipRoute then
   begin
     if not IsZip then begin SendError(aResponse, 400, 'Expected a board ZIP'); Exit; end;
@@ -4361,9 +4363,11 @@ begin
       TargetList := DownloadScopeId(aRequest, 'listId');
       if (TargetList = '') and (aRequest.QueryFields.Values['listId'] <> '') then
       begin SendError(aResponse, 400, 'Invalid destination list'); Exit; end;
-      for Name in ['cardId','checklistId'] do
-        if aRequest.QueryFields.Values[Name] <> '' then
-        begin SendError(aResponse, 400, 'Import placement is unavailable'); Exit; end;
+      TargetCard := DownloadScopeId(aRequest, 'cardId');
+      if (TargetCard = '') and (aRequest.QueryFields.Values['cardId'] <> '') then
+      begin SendError(aResponse, 400, 'Invalid destination card'); Exit; end;
+      if aRequest.QueryFields.Values['checklistId'] <> '' then
+      begin SendError(aResponse, 400, 'Import placement is unavailable'); Exit; end;
       if not BoardCanWrite(T.Db, Actor, TargetBoard) then
       begin SendError(aResponse, 403, 'Board import is restricted'); Exit; end;
     end;
@@ -4459,6 +4463,25 @@ begin
       ImportDefinitions;
       ImportLabels;
       DefaultLane:='';DefaultList:='';
+      if TargetCard <> '' then
+      begin
+        CardScope := 'boardId='+Board+' AND archived=0 AND deletedAt IS NULL';
+        CardPosition := CardScope+' AND id='+QuotedStr(TargetCard);
+        Rows := T.Db.Query('SELECT listId,swimlaneId FROM cards WHERE '+CardPosition+';');
+        if (Length(Rows)<>1) or (Rows[0][0]='') or (Rows[0][1]='') or
+          ((TargetList<>'') and (TargetList<>Rows[0][0])) or
+          ((TargetLane<>'') and (TargetLane<>Rows[0][1])) then
+        begin SendError(aResponse,404,'Destination card not found');Exit;end;
+        TargetList := Rows[0][0];
+        TargetLane := Rows[0][1];
+        CardScope := CardScope+' AND listId='+QuotedStr(TargetList)+' AND swimlaneId='+QuotedStr(TargetLane);
+        CardPosition := ' FROM cards WHERE '+CardScope+' AND id='+QuotedStr(TargetCard);
+        Guard := Guard+' AND EXISTS(SELECT 1'+CardPosition+')';
+        CardPosition := '(SELECT sort'+CardPosition+')';
+        Arrays[1]:=nil;
+        if (Arrays[2]<>nil) and (Arrays[2].Count>0) then
+          Sql := Sql+ReserveSortSlots('cards',CardScope,TargetCard,Arrays[2].Count);
+      end;
       if TargetList <> '' then
       begin
         ListPosition := ' FROM lists WHERE boardId='+Board+' AND archived=0 AND deletedAt IS NULL AND id='+QuotedStr(TargetList);
@@ -4552,12 +4575,14 @@ begin
         if Name=CardId then Name:='';
         if TargetBoard = '' then NumberSql := IntToStr(CardNumbers[J])
         else NumberSql := '(SELECT COALESCE(MAX(cardNumber),0)+1 FROM cards WHERE boardId='+Board+')';
+        SortSql := SortValue(Row);
+        if TargetCard <> '' then SortSql := CardPosition+'+'+IntToStr(J+1);
         Sql:=Sql+'INSERT INTO cards(id,boardId,listId,swimlaneId,parentId,title,description,userId,sort,cardNumber,'+
           'createdAt,modifiedAt,dateLastActivity,receivedAt,startAt,dueAt,endAt,spentTime,isOvertime,requestedBy,assignedBy,archived,color,dueComplete) VALUES('+
           QuotedStr(CardId)+','+Board+','+
           QuotedStr(ListId)+','+QuotedStr(LaneId)+','+
           Optional(Name)+','+QuotedStr(Text(Row,'title'))+','+
-          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortValue(Row)+','+NumberSql+
+          QuotedStr(Text(Row,'description'))+','+QuotedStr(CardAuthor)+','+SortSql+','+NumberSql+
           ','+CardCreated+','+Stamp+','+Stamp+','+
           ImportedDate(Row,'receivedAt','NULL')+','+ImportedDate(Row,'startAt','NULL')+','+
           ImportedDate(Row,'dueAt','NULL')+','+ImportedDate(Row,'endAt','NULL')+','+

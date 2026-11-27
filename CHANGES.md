@@ -76,6 +76,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   without swimlanes places its lists and cards in the destination swimlane.
   A destination list places imported lists directly after it without adding
   swimlanes. A ZIP containing cards without lists uses the destination list.
+  A destination card places imported cards immediately after it in the
+  same list and swimlane, even when the ZIP includes lists and swimlanes.
 
 - The board Export menu downloads comma- or semicolon-separated CSV, TSV
   and iCalendar. CSV and TSV honor the selected column groups on public
