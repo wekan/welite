@@ -273,10 +273,9 @@ Next, after this goal:
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75), structural-selection (18),
-  editor-enter-preference's calendar editor (2 of 26 Chromium tests),
   export-access (10: the board's ZIP, CSV,
   ICS, PDF, Excel and chart exports, which WeLite has not got yet), the History page
-  itself, WIP limit groups and the calendar view.
+  itself, WIP limit groups, Calendar Mode and the multi-board calendar.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:

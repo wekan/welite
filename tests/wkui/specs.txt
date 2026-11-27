@@ -220,15 +220,7 @@ default-avatar.e2e.js: the default avatar route redirects to an http(s) address 
 due-date-keyboard-shortcut.e2e.js: #6750 due date keyboard shortcut › negative: Space on a focused button activates the button, not the Space shortcut (#6755)
 due-date-keyboard-shortcut.e2e.js: #6750 due date keyboard shortcut › negative: d over a minicard does nothing when shortcuts are disabled (#6755)
 duplicate-dependencies.e2e.js: REST accepts both duplicate types and retains board boundary validation
-editor-enter-preference.e2e.js: list editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: card editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: description editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: checklist editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: item editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: subtask editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: comment editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: title editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: copy editor follows submit-on-Enter=false
+editor-enter-preference.e2e.js
 editor-multiline-resize.e2e.js: card editor can be manually enlarged and keeps its size while typing (ltr)
 editor-multiline-resize.e2e.js: card editor can be manually enlarged and keeps its size while typing (rtl)
 hook-bleed.e2e.js: moving a card with a webhook enabled is no HookBleed, and the mover keeps their account
@@ -448,21 +440,6 @@ assigned-card-methods.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member gets neither the file nor the text of a card not assigned to them
 board-announcement.e2e.js
 export-access.e2e.js: assigned-only private member cannot read unfiltered export
-editor-enter-preference.e2e.js: board editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: swimlane editor follows submit-on-Enter=false
-editor-enter-preference.e2e.js: board editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: swimlane editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: list editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: card editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: description editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: checklist editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: item editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: subtask editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: comment editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: title editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: copy editor follows submit-on-Enter=true
-editor-enter-preference.e2e.js: Member Settings changes the shortcut to true without reloading
-editor-enter-preference.e2e.js: Member Settings changes the shortcut to false without reloading
 keep-add-card-form-open-6827.e2e.js
 title-bracket-label-6810.e2e.js
 

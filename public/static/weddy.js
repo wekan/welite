@@ -471,11 +471,11 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     if (window.FullCalendar) return Promise.resolve();
     if (fullCalendarLoad) return fullCalendarLoad;
     var css = document.createElement('link');
-    css.rel = 'stylesheet'; css.href = '/static/vendor/fullcalendar.min.css';
+    css.rel = 'stylesheet'; css.href = '/static/vendor/fullcal.css';
     document.head.appendChild(css);
     fullCalendarLoad = new Promise(function (resolve, reject) {
       var js = document.createElement('script');
-      js.src = '/static/vendor/fullcalendar.min.js';
+      js.src = '/static/vendor/fullcal.js';
       js.onload = function () { resolve(); };
       js.onerror = reject;
       document.head.appendChild(js);

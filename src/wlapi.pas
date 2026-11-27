@@ -94,12 +94,12 @@ procedure ApiCards(aRequest: TRequest; aResponse: TResponse);          // POST a
 // its list, anything else last. Returns the HTTP status (200 when added) and
 // sends nothing; Error says why not.
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
-  Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
+  Separate,BracketLabels:Boolean;out CardId,Error:string;const DueAt:string=''):Integer;
 function SubtaskParentSql(const ParentId,ColumnPrefix:string):string;
 function SetViewSubtaskDone(const T:TWLTenant;const UserId,ParentId,SubtaskId:string;Done:Boolean;out Error:string):Integer;
 function CreateViewSubtask(const T:TWLTenant;const UserId,BoardId,ParentId,Title:string;InheritLabels:Boolean;out Error:string):Integer;
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
-  out CardId,Error:string):Integer;
+  out CardId,Error:string;const DueAt:string=''):Integer;
 // A card's new title from a view (the HTML5 view's title editor), checked as
 // PUT /api/boards/:boardId/lists/:listId/cards/:cardId checks a title: board
 // write access, the card on that board, a title that is text. Returns the
@@ -5189,13 +5189,13 @@ begin
 end;
 
 function CreateViewCard(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
-  out CardId,Error:string):Integer;
+  out CardId,Error:string;const DueAt:string):Integer;
 begin
-  Result:=CreateViewCards(T,UserId,BoardId,ListId,Swimlane,Title,Position,False,False,CardId,Error);
+  Result:=CreateViewCards(T,UserId,BoardId,ListId,Swimlane,Title,Position,False,False,CardId,Error,DueAt);
 end;
 
 function CreateViewCards(const T:TWLTenant;const UserId,BoardId,ListId,Swimlane,Title,Position:string;
-  Separate,BracketLabels:Boolean;out CardId,Error:string):Integer;
+  Separate,BracketLabels:Boolean;out CardId,Error:string;const DueAt:string):Integer;
 var Lane,Sort,Sql,Id,TitleSql,LabelSql,Name,Rest,Raw,Permission,ColorSql,Color:string;
   Titles:TStringList; i,Index,CloseAt:Integer;
 begin
@@ -5267,6 +5267,7 @@ begin
         end;
         Sql:=Sql+CardCreateSql(BoardId,ListId,Lane,Id,UserId,Raw,'',QuotedStr(''),Sort,'',TitleSql)+
           InitializeCardFields(T.Db,BoardId,Id);
+        if DueAt<>'' then Sql:=Sql+'UPDATE cards SET dueAt='+QuotedStr(DueAt)+' WHERE id='+QuotedStr(Id)+'; ';
         if LabelSql<>'' then
           Sql:=Sql+'INSERT INTO card_labels(cardId,labelId) SELECT '+QuotedStr(Id)+',id FROM ('+LabelSql+'); ';
         if Index=0 then CardId:=Id;

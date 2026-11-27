@@ -6,6 +6,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Open Calendar from Board View to see card dates with the current filter
+  applied. Select a day to create a card due on that day. The title editor
+  uses the member's Submit on Enter preference. All 26 editor shortcut tests
+  now run against both Weddy and WeLite. Calendar assets come from
+  Weddy's bundled FullCalendar and use DOS 8.3 filenames.
+
 - Mark subtasks done or undone on the parent card. The section reports the
   completed and total counts and shows the state read-only to viewers.
   A subtask with multiple parents appears under each, with one shared status.
