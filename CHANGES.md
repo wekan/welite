@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Selected cards can move together within a board, before or after a
+  destination card. The move checks hard list limits and commits as one transaction.
+
 - Minicards display checklists configured to appear there. Their checklists and
   items can be selected directly on the board, and checklist folds persist.
 

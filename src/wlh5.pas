@@ -5224,6 +5224,111 @@ begin
   Result:=200;
 end;
 
+function MoveSelectedBoardCards(Db: TWLDb; const UserId: string; Args: TJSONData; out Answer: string): Integer;
+const OpenCard = 'archived=0 AND deletedAt IS NULL';
+var Selection, Entry, Target, Options: TJSONObject; Selected: TJSONArray; Value: TJSONData;
+  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql: string;
+  Rows: TWLRows; I, Count: Integer; Drag: Boolean;
+  function Failure(Status: Integer; const Reason: string): Integer;
+  begin
+    Answer := '{"error":"' + Reason + '","reason":"' + Reason + '"}';
+    Result := Status;
+  end;
+begin
+  Result := Failure(400, 'Match.Error');
+  if not (Args is TJSONArray) or (Args.Count < 3) or (Args.Count > 4) or
+    (Args.Items[0].JSONType <> jtString) or not (Args.Items[1] is TJSONArray) or not (Args.Items[2] is TJSONObject) then Exit;
+  Source := Args.Items[0].AsString;
+  Selected := TJSONArray(Args.Items[1]);
+  Target := TJSONObject(Args.Items[2]);
+  Drag := False;
+  if Args.Count = 4 then
+  begin
+    if not (Args.Items[3] is TJSONObject) then Exit;
+    Options := TJSONObject(Args.Items[3]);
+    Value := Options.Find('drag');
+    if (Value <> nil) and (Value.JSONType <> jtBoolean) then Exit;
+    Drag := Options.Get('drag', False);
+  end;
+  for I := 0 to Target.Count - 1 do
+    if (Target.Items[I].JSONType <> jtString) or (Pos(#0, Target.Items[I].AsString) > 0) then Exit;
+  Board := Target.Get('boardId', '');
+  Lane := Target.Get('swimlaneId', '');
+  ListId := Target.Get('listId', '');
+  Anchor := Target.Get('cardId', '');
+  Position := Target.Get('position', '');
+  if (Source = '') or (Pos(#0, Source) > 0) or (Board = '') or
+    ((Position <> '') and (Position <> 'before') and (Position <> 'after')) then Exit;
+  if not BoardCanWrite(Db, UserId, Source) or not BoardCanWrite(Db, UserId, Board) then Exit(Failure(403, 'not-authorized'));
+  if (Board <> Source) or (Lane = '') or (ListId = '') or (Target.Get('checklistId', '') <> '') or
+    (Target.Get('itemId', '') <> '') then Exit(Failure(400, 'invalid-destination'));
+  if Drag and not BoardAllows(Db, Source, 'allowsCardDragging') then Exit(Failure(403, 'drag-disabled'));
+  if (Selected.Count = 0) or (Selected.Count > 200) then Exit(Failure(400, 'invalid-selection'));
+  Selection := TJSONObject.Create;
+  try
+    Ids := '';
+    for I := 0 to Selected.Count - 1 do
+    begin
+      Value := Selected.Items[I];
+      if not (Value is TJSONObject) then Exit(Failure(400, 'invalid-selection'));
+      Entry := TJSONObject(Value);
+      if (Entry.Get('kind', '') <> 'card') or not (Entry.Find('id') is TJSONString) then Exit(Failure(400, 'invalid-selection'));
+      Id := Entry.Get('id', '');
+      if (Id = '') or (Pos(#0, Id) > 0) then Exit(Failure(400, 'invalid-selection'));
+      if Selection.Find(Id) <> nil then Continue;
+      Selection.Add(Id, True);
+      if Ids <> '' then Ids := Ids + ',';
+      Ids := Ids + QuotedStr(Id);
+    end;
+    if (Anchor <> '') and (Selection.Find(Anchor) <> nil) then Exit(Failure(400, 'invalid-destination'));
+    Count := Selection.Count;
+  finally Selection.Free; end;
+  Board := QuotedStr(Board);
+  Lane := QuotedStr(Lane);
+  ListId := QuotedStr(ListId);
+  CardScope := 'boardId=' + Board + ' AND ' + OpenCard;
+  Destination := CardScope + ' AND swimlaneId=' + Lane + ' AND listId=' + ListId;
+  if AssignedOnlyMember(Db, UserId, Source) then
+    CardScope := CardScope + ' AND EXISTS(SELECT 1 FROM card_assignees WHERE cardId=cards.id AND userId=' + QuotedStr(UserId) + ')';
+  Rows := Db.Query('SELECT 1 FROM cards WHERE ' + CardScope + ' AND id IN (' + Ids + ');');
+  if Length(Rows) <> Count then Exit(Failure(400, 'invalid-selection'));
+  ListScope := OpenCard + ' AND boardId=' + Board + ' AND id=' + ListId +
+    ' AND (COALESCE(swimlaneId,'''')='''' OR swimlaneId=' + Lane + ') AND EXISTS(SELECT 1 FROM swimlanes WHERE id=' +
+    Lane + ' AND boardId=' + Board + ' AND archived=0)';
+  if Length(Db.Query('SELECT 1 FROM lists WHERE ' + ListScope)) <> 1 then Exit(Failure(400, 'invalid-destination'));
+  Capacity := 'EXISTS(SELECT 1 FROM lists WHERE ' + ListScope + ' AND (COALESCE(wip_enabled,0)<>1 OR ' +
+    'COALESCE(wip_soft,0)<>0 OR NOT EXISTS(SELECT 1 FROM cards WHERE id IN (' + Ids + ') AND listId<>' + ListId +
+    ') OR (SELECT count(*) FROM cards WHERE ' + OpenCard + ' AND (listId=' + ListId + ' OR id IN (' + Ids +
+    ')))<=COALESCE(wip_value,1)))';
+  if Length(Db.Query('SELECT 1 WHERE ' + Capacity)) <> 1 then Exit(Failure(409, 'wip-limit'));
+  if Anchor <> '' then
+  begin
+    Anchor := QuotedStr(Anchor);
+    if Length(Db.Query('SELECT 1 FROM cards WHERE ' + CardScope + ' AND swimlaneId=' + Lane +
+      ' AND listId=' + ListId + ' AND id=' + Anchor)) <> 1 then Exit(Failure(400, 'invalid-destination'));
+    SortKey := 'CASE WHEN id IN (' + Ids + ') THEN 1 WHEN (sort,id) ' +
+      IfThen(Position = 'before', '<', '<=') + ' (SELECT sort,id FROM cards WHERE id=' + Anchor + ') THEN 0 ELSE 2 END';
+  end
+  else
+    SortKey := 'CASE WHEN id IN (' + Ids + ') THEN 1 ELSE 0 END';
+  Sql := 'BEGIN IMMEDIATE; SELECT CASE WHEN (SELECT count(*) FROM cards WHERE ' + CardScope + ' AND id IN (' + Ids +
+    '))=' + IntToStr(Count) + ' AND ' + Capacity +
+    IfThen(Anchor <> '', ' AND EXISTS(SELECT 1 FROM cards WHERE ' + Destination + ' AND id=' + Anchor + ')', '') +
+    ' THEN 1 ELSE json(''Move scope changed'') END; ' +
+    'CREATE TEMP TABLE structural_card_order AS SELECT id,row_number() OVER (ORDER BY ' + SortKey + ',sort,id)-1 AS position ' +
+    'FROM cards WHERE (' + Destination + ') OR (' + CardScope + ' AND id IN (' + Ids + ')); ' +
+    'UPDATE cards SET sort=(SELECT position FROM structural_card_order WHERE structural_card_order.id=cards.id), ' +
+    'swimlaneId=' + Lane + ',listId=' + ListId + ' WHERE id IN (SELECT id FROM structural_card_order); ' +
+    'DROP TABLE structural_card_order; COMMIT;';
+  if not Db.Exec(Sql) then
+  begin
+    Db.Exec('ROLLBACK;');
+    Exit(Failure(409, 'move-conflict'));
+  end;
+  Answer := '{"result":{"moved":' + IntToStr(Count) + '}}';
+  Result := 200;
+end;
+
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   Limit: Double;
@@ -5346,12 +5451,13 @@ begin
   end;
   if not Html5User(T.Db, Request, S) then
   begin SendJsonAnswer(Response, 401, '{"error":401,"reason":"Must be logged in"}'); Exit; end;
-  if Name='structuralMoveOptions' then
+  if (Name='structuralMoveOptions') or (Name='moveBoardObjects') then
   begin
     Args:=nil;
     try
       try Args:=GetJSON(Request.Content);except end;
-      Code:=StructuralMoveOptions(T.Db,S.UserId,Args,Error);
+      if Name='structuralMoveOptions' then Code:=StructuralMoveOptions(T.Db,S.UserId,Args,Error)
+      else Code:=MoveSelectedBoardCards(T.Db,S.UserId,Args,Error);
       SendJsonAnswer(Response,Code,Error);
     finally Args.Free;end;
     Exit;
