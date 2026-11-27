@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Match existing bracket labels with Unicode case folding, including
+  accented letters, Greek and multi-character folds such as ß and SS.
+  The comparison works in linked SQLite and the SQLite CLI.
 - Apply the optional bracket label from a new card title within the card
   composer transaction. Board admins can create a missing label with the
   first unused palette color. The shared #6810 browser scenario passes.

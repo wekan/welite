@@ -387,7 +387,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist;
+uses wlstore,wlsjson,Math,StrUtils,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -5142,7 +5142,7 @@ begin
             if (Name<>'') and (Rest<>'') and (Pos('[',Name)=0) then
             begin
               LabelSql:='SELECT id FROM board_labels WHERE boardId='+QuotedStr(BoardId)+
-                ' AND name='+QuotedStr(Name)+' COLLATE NOCASE ORDER BY id LIMIT 1';
+                ' AND '+LabelFoldMatch('board_labels.name',Name)+' ORDER BY id LIMIT 1';
               if (Permission<>'') and (Length(Name)<=200) then
                 Sql:=Sql+'INSERT INTO board_labels(boardId,id,name,color) SELECT '+QuotedStr(BoardId)+
                   ',lower(hex(randomblob(3))),'+QuotedStr(Name)+','+ColorSql+' WHERE '+Permission+
