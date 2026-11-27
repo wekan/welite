@@ -3204,7 +3204,8 @@ begin
     RemoveCardFields('locations', ['locations','locationName','locationAddress','locationLatitude','locationLongitude']);
     RemoveCardFields('dependencies', ['cardDependencies','dependencies']);
     RemoveCardFields('sort', ['sort']);
-    if Selected.IndexOf('board-header') < 0 then Board.Delete('description');
+    if Selected.IndexOf('board-header') < 0 then
+      for Key in ['description','members','createdAt','modifiedAt'] do Board.Delete(Key);
     if Selected.IndexOf('scrum') < 0 then
     begin
       for Key in ['scrum','scrumRevision','scrumTransfer','scrumTransferLosses'] do Board.Delete(Key);

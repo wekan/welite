@@ -71,7 +71,7 @@ def run(request,database,administrator,member,base):
         con.execute("UPDATE swimlanes SET createdAt=?, modifiedAt=? WHERE id='txtlane'", container_dates)
         con.execute("UPDATE custom_fields SET sort=4.25, createdAt=?, modifiedAt=? WHERE id='port-field'",
                     container_dates)
-    for fields in ('dependencies,locations,stickers,people,labels,custom-fields,sort', 'description'):
+    for fields in ('dependencies,locations,stickers,people,labels,custom-fields,sort,board-header', 'description'):
         status, _, body = request('GET', '/api/boards/boardtxt/export?' +
                                   urlencode(dict(token=administrator, fields=fields)))
         assert status == 200, body
@@ -82,6 +82,10 @@ def run(request,database,administrator,member,base):
         with zipfile.ZipFile(io.BytesIO(archive)) as bundle:
             zipped = json.loads(bundle.read('wekan.json'))
         assert zipped['customFields'] == payload['customFields']
+        for exported in (payload, zipped):
+            assert exported['title'] == 'Board <user>'
+            for key in ('description', 'members', 'createdAt', 'modifiedAt'):
+                assert (key in exported) == ('board-header' in fields.split(','))
         card = next(row for row in payload['cards'] if row['_id'] == 'txtcard')
         zipped_card = next(row for row in zipped['cards'] if row['_id'] == 'txtcard')
         assert ('sort' in card) == ('sort' in zipped_card) == ('sort' in fields.split(','))
@@ -104,7 +108,7 @@ def run(request,database,administrator,member,base):
             assert 'labels' not in payload and 'labelIds' not in card
             assert not {'cardDependencies', 'locations', 'stickers', 'members', 'assignees'}.intersection(card)
     status, _, archive = request('GET', '/api/boards/boardtxt/exportZip?' +
-                                 urlencode(dict(token=administrator, fields='custom-fields,dates,subtasks')))
+                                 urlencode(dict(token=administrator, fields='custom-fields,dates,subtasks,board-header')))
     assert status == 200, archive
     status, _, result = request('POST', '/api/import/zip?' +
                                 urlencode(dict(token=administrator, newBoard=1)),

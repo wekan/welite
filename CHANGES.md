@@ -41,7 +41,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   timestamps on lists, swimlanes and newly imported boards. Custom field
   definitions keep their sort values and valid timestamps on import. The
   Sort field group controls card sort values in JSON and ZIP. Imports use
-  file order for cards without a sort value.
+  file order for cards without a sort value. The Board field group controls
+  the board description, member list and timestamps in JSON and ZIP. The
+  title stays in the export so it can still be imported.
 
 - Download a board or individual card as PDF from the Export menu. PDF uses
   the card layout, supports selected fields and scopes, and includes image
