@@ -8179,6 +8179,24 @@ end;
 
 function HistoryContentSummary(Db: TWLDb; Row, Values: TJSONObject; Words: TWLTranslator; const DateFormat: string): string;
 var Value, Document, Item: TJSONData; NumberFormat: TFormatSettings; I: Integer; Lists: TWLRows; ListId, Reason, SourceBoard: string;
+  function ArrayItemText(Entry:TJSONData;const Field,BoardId:string):string;
+  var Id,Scope:string; Names:TWLRows;
+  begin
+    if Entry.JSONType<>jtString then Exit(Entry.AsJSON);
+    Id:=Entry.AsString;
+    Result:=Id;
+    if (Id='') or (BoardId='') or (Pos(#0,Id+BoardId)>0) then Exit;
+    Scope:='boardId='+QuotedStr(BoardId);
+    case Field of
+      'labelIds':
+        Names:=Db.Query('SELECT COALESCE(NULLIF(name,''''),color) FROM board_labels WHERE '+Scope+' AND id='+QuotedStr(Id)+';');
+      'members','assignees','requesters','assigners':
+        Names:=Db.Query('SELECT u.username FROM users u WHERE u.id='+QuotedStr(Id)+
+          ' AND EXISTS(SELECT 1 FROM board_members WHERE '+Scope+' AND userId=u.id AND isActive=1);');
+    else Exit;
+    end;
+    if (Length(Names)=1) and (Names[0][0]<>'') then Result:=Names[0][0];
+  end;
   procedure AppendWipFlag(const Field, Key, Fallback: string);
   var Flag: TJSONData;
   begin
@@ -8240,8 +8258,7 @@ begin
       begin
         if I > 0 then Result := Result + ', ';
         Item := TJSONArray(Value).Items[I];
-        if Item.JSONType = jtString then Result := Result + Item.AsString
-        else Result := Result + Item.AsJSON;
+        Result := Result + ArrayItemText(Item,Values.Get('field',''),Row.Get('boardId',''));
       end;
       Exit;
     end;

@@ -8,6 +8,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - History uses saved document titles, comment text and attachment filenames
   in lifecycle summaries. Rows without saved text keep their status label.
+  History renders label and active board-member names in card field
+  lists and keeps the saved ID if a name is unavailable.
 
 - The card archive and unarchive REST routes record the previous and new
   archive status in the board’s lifecycle history.
