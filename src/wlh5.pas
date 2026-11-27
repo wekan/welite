@@ -4895,6 +4895,8 @@ end;
 procedure ServeMethod(Request: TRequest; Response: TResponse; const Name: string);
 var RulesWords: TWLTranslator; FieldValues: TStringList; T: TWLTenant; S: TWLSession; Args: TJSONData; Selector: TJSONObject; Id, Error: string; R: TWLRows; Code, n: Integer; Lang: TWLLanguage; Ids: array of string; Enforce: Boolean;
   Limit: Double;
+  WipListId, WipBoardId, WipLiteral: string;
+  BeforeWip, AfterWip: TJSONObject;
   CardTitle, NewBoard: string; Enabled_: Boolean;
   // The values of a copy that its copier may not read: not kept.
   procedure RedactCopiedFields(const CardId, BoardId: string);
@@ -5411,19 +5413,33 @@ begin
     if Length(R) <> 1 then begin SendJsonAnswer(Response, 404, '{"error":"list-not-found","reason":"List not found"}'); Exit; end;
     if not BoardOwnAdmin(T.Db, S.UserId, R[0][0]) then
     begin SendJsonAnswer(Response, 403, '{"error":"not-authorized","reason":"You must be a board admin to modify WIP limits."}'); Exit; end;
+    WipListId := Id; WipBoardId := R[0][0];
     if Name = 'applyWipLimit' then
     begin
       // NaN and Infinity fail both comparisons: they become 1, as in WeKan.
       if not ((Limit >= 1) and (Limit <= 1.7e308)) then Limit := 1;
-      Id := 'wip_value=' + FloatToStr(Limit, DefaultFormatSettings) + ' WHERE id=' + QuotedStr(Id);
+      Str(Limit, WipLiteral);
+      Id := 'wip_value=' + Trim(WipLiteral) + ' WHERE id=' + QuotedStr(Id);
     end
     else if Name = 'enableWipLimit' then
       Id := 'wip_enabled=' + IfThen(R[0][2] = '1', '0', '1') + IfThen(R[0][1] = '0', ',wip_value=1', '') + ' WHERE id=' + QuotedStr(Id)
     else
       Id := 'wip_soft=' + IfThen(R[0][3] = '1', '0', '1') + ' WHERE id=' + QuotedStr(Id);
-    if not T.Db.Exec('UPDATE lists SET modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) +
-      ',' + Id + ';') then
-    begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+    BeforeWip := ListWipHistorySnapshot(T.Db, WipBoardId, WipListId);
+    try
+      if not T.Db.Exec('UPDATE lists SET modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"', LocalTimeToUniversal(Now))) +
+        ',' + Id + ';') then
+      begin SendJsonAnswer(Response, 500, '{"error":500,"reason":"Could not save"}'); Exit; end;
+      AfterWip := ListWipHistorySnapshot(T.Db, WipBoardId, WipListId);
+      try
+        if (BeforeWip <> nil) and (AfterWip <> nil) and (BeforeWip.AsJSON <> AfterWip.AsJSON) then
+          try
+            RecordHistoryRow(T.Db, S.UserId, WipBoardId, 'list', WipListId, 'title', 'edited', BeforeWip, AfterWip);
+          except
+            // History never fails the edit it records.
+          end;
+      finally AfterWip.Free; end;
+    finally BeforeWip.Free; end;
     // The board's pages draw the list's limit again.
     AnnounceToAll;
     SendJsonAnswer(Response, 200, '{"result":null}');

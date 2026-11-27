@@ -22,8 +22,21 @@ function CardHistoryDateField(const Field: string): Boolean;
 function CardHistoryDateValue(const Field, Value: string): TJSONObject;
 function HistoryDateMillis(Value: TJSONData; out Millis: Int64): Boolean;
 
+function ListWipHistorySnapshot(Db:TWLDb;const BoardId,ListId:string):TJSONObject;
+
 implementation
-uses SysUtils,Math,DateUtils,wlchhash,wlsjson,wlferr;
+uses SysUtils,Math,DateUtils,jsonparser,wlchhash,wlsjson,wlferr;
+
+function ListWipHistorySnapshot(Db:TWLDb;const BoardId,ListId:string):TJSONObject;
+var Rows:TWLRows;
+begin
+  Result:=nil;
+  Rows:=Db.Query('SELECT printf(''%!.26g'',COALESCE(wip_value,1)),COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE id='+
+    QuotedStr(ListId)+' AND boardId='+QuotedStr(BoardId)+' AND deletedAt IS NULL;');
+  if Length(Rows)<>1 then Exit;
+  Result:=TJSONObject.Create(['field','wipLimit','value',TJSONObject.Create([
+    'value',GetJSON(Rows[0][0]),'enabled',Rows[0][1]='1','soft',Rows[0][2]='1'])]);
+end;
 
 function HistoryDateMillis(Value: TJSONData; out Millis: Int64): Boolean;
 const TimeClip = 8640000000000000;
