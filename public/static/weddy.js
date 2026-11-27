@@ -3087,6 +3087,33 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     up.hello(form);
     form.querySelector('textarea').focus();
   }
+  document.addEventListener('submit', function (event) {
+    var form = event.target;
+    if (!form.matches('form.js-card-composer')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    var keepOpen = document.body.dataset.keepAddCardFormOpen === 'true';
+    if (form.dataset.saving) return;
+    var wrapper = form.closest('.board-wrapper');
+    var owner = form.closest('.js-list');
+    var board = wrapper.dataset.board;
+    var list = owner.dataset.list, lane = owner.dataset.swimlane;
+    var position = form.querySelector('.js-card-position').value;
+    form.dataset.saving = '1';
+    up.submit(form, { target: '.board-wrapper', submitButton: event.submitter }).then(function (result) {
+      if (!keepOpen) return;
+      var next = result.fragment;
+      if (!next || next === wrapper || next.dataset.board !== board) return;
+      var target = Array.from(next.querySelectorAll('.js-list')).find(function (entry) {
+        return entry.dataset.list === list && entry.dataset.swimlane === lane;
+      });
+      openComposer(target, position);
+    }, function (error) {
+      if (error.response && error.response.ok === false) {
+        window.alert(error.response.text.trim());
+      }
+    }).finally(function () { delete form.dataset.saving; });
+  }, true);
   // Multi-Selection: on, the sidebar shows what to do with the selection;
   // a list's menu selects all its cards; the selection goes to the Archive
   // with WeKan's archiveSelectedCards.

@@ -592,6 +592,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - In the HTML5 mobile view, Back returns from an open list to its
   swimlane's compact list rows. WeKan's mobile swimlane spec passes in WeLite
   and Weddy.
+- Respect Keep the Add card form open in the HTML5 view. The composer
+  closes by default. With the preference on, a successful save opens an
+  empty, focused composer in the same list and position.
 - Apply Member Settings' Show focus outline choice in the HTML5 view.
   The focus ring is on by default, and a saved choice to hide it takes
   effect immediately and after reload.

@@ -284,6 +284,7 @@
       inTemplate('change-settings', '[data-method="' + method + '"] .js-setting-check', function (c) {
         if (on) c.removeAttribute('hidden'); else c.setAttribute('hidden', '');
       });
+      if (method === 'toggleKeepAddCardFormOpen') document.body.dataset.keepAddCardFormOpen = String(on);
       if (method === 'toggleHideFocusOutline') document.body.classList.toggle('has-hide-focus-outline', !on);
       // The drag handles are drawn on the board itself.
       if (method === 'toggleDesktopDragHandles' && document.querySelector('.board-wrapper')) up.reload('.board-wrapper');

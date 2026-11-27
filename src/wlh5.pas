@@ -1170,6 +1170,8 @@ begin
     '<body data-submit-on-enter="' + IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
       ProfileFlag(T.Db, S.UserId, 'submitOnEnter'), 'true', '') + '"' +
     IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
+      ProfileFlag(T.Db, S.UserId, 'keepAddCardFormOpen'), ' data-keep-add-card-form-open="true"', '') +
+    IfThen((S.UserId <> '') and ResolveTenant(Request, T) and TenantOpen(T) and
       ProfileFlag(T.Db, S.UserId, 'hideFocusOutline'), ' class="has-hide-focus-outline"', '') + '>' + Header + '<main id="content">' + Content + '</main></body></html>' + LineEnding;
 end;
 
@@ -3601,7 +3603,7 @@ begin
       if Writable then
         Canvas := Canvas + '<template class="js-card-composer-template">' +
           '<form class="js-inlined-form js-card-composer" method="post" action="/b/' + HtmlAttr(HTTPEncode(BoardId)) +
-          '/cards" up-submit up-target=".board-wrapper">' +
+          '/cards" up-target=".board-wrapper">' +
           '<input type="hidden" name="listId" value="' + HtmlAttr(Lists[j][0]) + '">' +
           '<input type="hidden" name="swimlaneId" value="' + HtmlAttr(Lanes[i][0]) + '">' +
           '<input class="js-card-position" type="hidden" name="position" value="bottom">' +
