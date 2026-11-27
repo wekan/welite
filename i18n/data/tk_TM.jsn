@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ady (islege bagly)",
   "wip-limit-group-add": "Goş WIP çäklendirmesini açyň",
   "wip-limit-group-select-swimlane": "Tagtany saýlaň Swimüzmek",
-  "wip-limit-group-apply-swimlane": "Giriş Swimüzmek"
+  "wip-limit-group-apply-swimlane": "Giriş Swimüzmek",
+  "board-view-time": "Wagt",
+  "time-adjustments": "sagat — Δ — Ulanyjy ady",
+  "time-adjustment-note": "Taryh: Δ sagat; Ulanyjy ady ≠ Bellenenler."
 }

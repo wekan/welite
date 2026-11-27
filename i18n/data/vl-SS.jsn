@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Naam (optioneel)",
   "wip-limit-group-add": "Toevoegen Activeer WIP limiet",
   "wip-limit-group-select-swimlane": "Selecteer Werkbaan",
-  "wip-limit-group-apply-swimlane": "Aanmelden Werkbaan"
+  "wip-limit-group-apply-swimlane": "Aanmelden Werkbaan",
+  "board-view-time": "Tijd",
+  "time-adjustments": "uren — Δ — Gebruikersnaam",
+  "time-adjustment-note": "Historie: Δ uren; Gebruikersnaam ≠ Toegewezen personen."
 }

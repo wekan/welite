@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ŋkɔ (ɖe wò lɔlɔ̃nu)",
   "wip-limit-group-add": "Tsɔ kpe ɖe eŋu Na mɔ WIP ƒe seƒoƒo",
   "wip-limit-group-select-swimlane": "Tia kpekpeɖeŋu Mɔ",
-  "wip-limit-group-apply-swimlane": "Zã Mɔ"
+  "wip-limit-group-apply-swimlane": "Zã Mɔ",
+  "board-view-time": "Ɣeyiɣi",
+  "time-adjustments": "gaƒoƒowo — Δ — Zãla ŋkɔ",
+  "time-adjustment-note": "Ŋutinya: Δ gaƒoƒowo; Zãla ŋkɔ ≠ Ame siwo wotsɔ dɔ na."
 }

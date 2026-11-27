@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nùmene de su grupu (optzionale)",
   "wip-limit-group-add": "Agiunghe unu grupu de lìmite WIP",
   "wip-limit-group-select-swimlane": "Seletziona sa corsia",
-  "wip-limit-group-apply-swimlane": "Àplica a sa corsia"
+  "wip-limit-group-apply-swimlane": "Àplica a sa corsia",
+  "board-view-time": "Tempus",
+  "time-adjustments": "Acontzos de su tempus pro autore",
+  "time-adjustment-note": "Modìficas a sas oras registradas, agrupadas segundu sa persone chi modìficat su totale. Non sunt sessiones de traballu individuales. Sos valores negativos sunt curretziones. Su tempus de in antis non registradu non si podet atribuire a nemos."
 }

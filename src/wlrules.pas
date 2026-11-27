@@ -57,6 +57,7 @@ procedure RecordRuleHistory(Db: TWLDb; const UserId: string; Before, After: TJSO
 // WeKan's changeHistory.undoLast(boardId), redoLast(boardId) and
 // restore(rowId), for the rule rows of a board one administers: 0 for any
 // other method name.
+function TimeAdjustmentRows(Db:TWLDb; const UserId,BoardId:string):TJSONArray;
 function HistoryMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Answer: string;
   const RestoreBoard: string = ''; const RestoreCard: string = '';
   const RestoreList: string = ''; const RestoreLane: string = ''; MemberRestore: Boolean = False): Integer;
@@ -2574,6 +2575,41 @@ end;
 
 // models/lib/changeHistoryQuery.js matchesSearch: the change type, group,
 // entity type and the text of both contents, up to four levels deep.
+function TimeAdjustmentRows(Db:TWLDb; const UserId,BoardId:string):TJSONArray;
+var Rows:TJSONArray; Reader:THistoryScope; Row:TJSONObject; Before,After:Double; I:Integer;
+  function Hours(Content:TJSONData; out Number:Double):Boolean;
+  var Value:TJSONData;
+  begin
+    Number:=0;
+    if (Content=nil) or (Content is TJSONNull) then Exit(True);
+    if not (Content is TJSONObject) or (Str(TJSONObject(Content),'field')<>'spentTime') then Exit(False);
+    Value:=TJSONObject(Content).Find('value');
+    if Value is TJSONNull then Exit(True);
+    if (Value=nil) or (Value.JSONType<>jtNumber) then Exit(False);
+    Number:=Value.AsFloat;
+    Result:=not IsNan(Number) and not IsInfinite(Number);
+  end;
+begin
+  Result:=TJSONArray.Create;
+  Reader:=THistoryScope.Create(Db,UserId);
+  try
+    Rows:=FindDocs(Db,'changeHistory',DocField('boardId')+'='+Q(BoardId)+' AND '+DocField('entityType')+'=''card'' AND ('+
+      DocField('newContent.field')+'=''spentTime'' OR '+DocField('previousContent.field')+'=''spentTime'')',
+      DocField('createdAt')+' DESC');
+    try
+      for I:=0 to Rows.Count-1 do
+      begin
+        Row:=Rows.Objects[I];
+        if (Str(Row,'restoredByUserId')<>'') and (Str(Row,'restoredByUserId')<>Str(Row,'userId')) then Continue;
+        if not Reader.Readable(Row) or not Hours(Row.Find('previousContent'),Before) or
+          not Hours(Row.Find('newContent'),After) or (Before=After) then Continue;
+        Result.Add(TJSONObject.Create(['cardId',HistoryRowCard(Row),'userId',Str(Row,'userId'),
+          'delta',After-Before,'value',After]));
+      end;
+    finally Rows.Free;end;
+  finally Reader.Free;end;
+end;
+
 function HistoryMatches(Row: TJSONObject; const Needle: string): Boolean;
 var Text: string;
   procedure Collect(V: TJSONData; Depth: Integer);

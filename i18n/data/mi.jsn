@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ingoa (kōwhiringa)",
   "wip-limit-group-add": "Tāpiri Whakahohe Tepe WIP",
   "wip-limit-group-select-swimlane": "Tīpako Ara",
-  "wip-limit-group-apply-swimlane": "Hoatu Ara"
+  "wip-limit-group-apply-swimlane": "Hoatu Ara",
+  "board-view-time": "Wā",
+  "time-adjustments": "ngā hāora — Δ — Ingoa kaiwhakamahi",
+  "time-adjustment-note": "Hītori: Δ ngā hāora; Ingoa kaiwhakamahi ≠ Ngā kaiwhiwhi mahi."
 }

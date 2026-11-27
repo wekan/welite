@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Vito (swa ku tihlawulela)",
   "wip-limit-group-add": "Engetela ntlawa wa mpimo wa WIP",
   "wip-limit-group-select-swimlane": "hlawula bodo Ndlela",
-  "wip-limit-group-apply-swimlane": "Tirhisa eka ndlela"
+  "wip-limit-group-apply-swimlane": "Tirhisa eka ndlela",
+  "board-view-time": "Nkarhi",
+  "time-adjustments": "Ku lulamisiwa ka nkarhi hi mutsari",
+  "time-adjustment-note": "Ku cinca ka tiawara leti tsariweke, swi hlengeletiwile hi munhu loyi a lulamisaka nhlayo hinkwayo. Leswi a hi minkarhi ya ntirho yo hambana. Mimpimo ya le hansi ka zero i ku lulamisa. Nkarhi wa khale lowu nga tsariwangiki a wu koti ku nyikiwa munhu."
 }

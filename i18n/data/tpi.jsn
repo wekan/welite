@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nem (yu ken makim)",
   "wip-limit-group-add": "Putim Larim i wok WIP Limit",
   "wip-limit-group-select-swimlane": "Makim bot Rot",
-  "wip-limit-group-apply-swimlane": "Yusim long rot bilong kat"
+  "wip-limit-group-apply-swimlane": "Yusim long rot bilong kat",
+  "board-view-time": "Taim",
+  "time-adjustments": "Ol senis bilong taim long man i bin senisim",
+  "time-adjustment-note": "Ol senis long ol aua i gat rekot, bungim long wan wan man i editim olgeta namba. Dispela i no ol wan wan taim bilong mekim wok. Ol veliu i gat minus em ol stretim. Taim bilong bipo i no gat rekot, yu no inap makim husat i mekim."
 }

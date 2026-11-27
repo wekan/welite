@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Groepsnaam (optioneel)",
   "wip-limit-group-add": "WIP-limietgroep toevoegen",
   "wip-limit-group-select-swimlane": "Selecteer Werkbaan",
-  "wip-limit-group-apply-swimlane": "Aanmelden Werkbaan"
+  "wip-limit-group-apply-swimlane": "Aanmelden Werkbaan",
+  "board-view-time": "Tijd",
+  "time-adjustments": "uren — Δ — Gebruikersnaam",
+  "time-adjustment-note": "Wijzigingen in geregistreerde uren, gegroepeerd op de persoon die het totaal aanpast. Dit zijn geen afzonderlijke werksessies. Negatieve waarden zijn correcties. Eerdere niet-geregistreerde tijd kan niet aan iemand worden toegeschreven."
 }

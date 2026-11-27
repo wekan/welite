@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Namme (fakultatyf)",
   "wip-limit-group-add": "Tafoegje WIP Limit ynskeakelje",
   "wip-limit-group-select-swimlane": "Selektearje Board Swimbaan",
-  "wip-limit-group-apply-swimlane": "Tapasse Swimbaan"
+  "wip-limit-group-apply-swimlane": "Tapasse Swimbaan",
+  "board-view-time": "Tiid",
+  "time-adjustments": "oeren — Δ — Brûkersnamme",
+  "time-adjustment-note": "Feroarings oan registrearre oeren, groepearre neffens de persoan dy't it totaal bewurket. Dit binne gjin aparte wurksesjes. Negative wearden binne korreksjes. Eardere net-registrearre tiid kin net oan immen taskreaun wurde."
 }

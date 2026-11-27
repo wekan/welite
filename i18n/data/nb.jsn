@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Gruppenavn (valgfritt)",
   "wip-limit-group-add": "Legg til WIP-grensegruppe",
   "wip-limit-group-select-swimlane": "Velg Svømmebane",
-  "wip-limit-group-apply-swimlane": "Lagre Svømmebane"
+  "wip-limit-group-apply-swimlane": "Lagre Svømmebane",
+  "board-view-time": "Tid",
+  "time-adjustments": "timer — Δ — Brukernavn",
+  "time-adjustment-note": "Endringer i registrerte timer, gruppert etter personen som endrer totalsummen. Dette er ikke individuelle arbeidsøkter. Negative verdier er korrigeringer. Tid som ikke tidligere er registrert, kan ikke tilskrives noen."
 }

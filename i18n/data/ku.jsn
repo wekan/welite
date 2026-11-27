@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nav (bijare)",
   "wip-limit-group-add": "Zêde bike Sînorê WIP çalak bike",
   "wip-limit-group-select-swimlane": "hilbijêre Rêç",
-  "wip-limit-group-apply-swimlane": "Bisepîne Rêç"
+  "wip-limit-group-apply-swimlane": "Bisepîne Rêç",
+  "board-view-time": "Dem",
+  "time-adjustments": "saet — Δ — Navê bikarhêner",
+  "time-adjustment-note": "Guherînên saetên tomarkirî li gorî kesê ku tevahiyê diguherîne tên komkirin. Ev ne danişînên kar ên takekesî ne. Nirxên neyînî sererastkirin in. Dema berê ya ku nehatiye tomarkirin nikare ji kesekî re bê veqetandin."
 }

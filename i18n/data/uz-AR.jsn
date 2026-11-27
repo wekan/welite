@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "اسم (اختیاری)",
   "wip-limit-group-add": "قۉشیش WIP چیگره‌سینی یاقینگ",
   "wip-limit-group-select-swimlane": "-نی تنلنگ ایش یۉلگی",
-  "wip-limit-group-apply-swimlane": "مراجعت قیلینگ ایش یۉلگی"
+  "wip-limit-group-apply-swimlane": "مراجعت قیلینگ ایش یۉلگی",
+  "board-view-time": "وقت",
+  "time-adjustments": "ساعت — Δ — فایدلنووچی نامی",
+  "time-adjustment-note": "تاریخ: Δ ساعت؛ فایدلنووچی نامی ≠ تعیینلاوچیلر."
 }

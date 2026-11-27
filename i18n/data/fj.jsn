@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Yaca (e sega ni dodonu)",
   "wip-limit-group-add": "Kuria Vakatara na iYalayala WIP",
   "wip-limit-group-select-swimlane": "Digitaka na Sala",
-  "wip-limit-group-apply-swimlane": "Vakayagataka Sala"
+  "wip-limit-group-apply-swimlane": "Vakayagataka Sala",
+  "board-view-time": "Gauna",
+  "time-adjustments": "aua — Δ — Yaca ni dauvakayagataka",
+  "time-adjustment-note": "iTukutuku Makawa: Δ aua; Yaca ni dauvakayagataka ≠ O ira era lesi kina."
 }

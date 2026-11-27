@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Grupa nomo (malnepra)",
   "wip-limit-group-add": "Aldoni WIP-liman grupon",
   "wip-limit-group-select-swimlane": "Elekti naĝlinion",
-  "wip-limit-group-apply-swimlane": "Apliki al naĝlinio"
+  "wip-limit-group-apply-swimlane": "Apliki al naĝlinio",
+  "board-view-time": "Tempo",
+  "time-adjustments": "horoj — Δ — Uzantnomo",
+  "time-adjustment-note": "Ŝanĝoj de registritaj horoj, grupigitaj laŭ la persono redaktanta la sumon. Ĉi tiuj ne estas apartaj laborseancoj. Negativaj valoroj estas korektoj. Antaŭa neregistrita tempo ne povas esti atribuita al iu persono."
 }

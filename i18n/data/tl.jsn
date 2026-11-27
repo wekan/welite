@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Pangalan ng grupo (opsyonal)",
   "wip-limit-group-add": "Magdagdag ng grupo ng limitasyon ng WIP",
   "wip-limit-group-select-swimlane": "Piliin pisara Daanan",
-  "wip-limit-group-apply-swimlane": "Ilapat Daanan"
+  "wip-limit-group-apply-swimlane": "Ilapat Daanan",
+  "board-view-time": "Oras",
+  "time-adjustments": "mga oras — Δ — pangalan ng gumagamit",
+  "time-adjustment-note": "Mga pagbabago sa naitalang oras, na nakapangkat ayon sa taong nag-edit ng kabuuan. Hindi ito mga indibidwal na sesyon ng trabaho. Ang mga negatibong halaga ay mga pagwawasto. Hindi maaaring iugnay sa sinuman ang dating oras na hindi naitala."
 }

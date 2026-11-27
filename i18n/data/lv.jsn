@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Grupas nosaukums (nav obligāts)",
   "wip-limit-group-add": "Pievienot WIP limita grupu",
   "wip-limit-group-select-swimlane": "Izvēlēties joslu",
-  "wip-limit-group-apply-swimlane": "Saglabāt Josla"
+  "wip-limit-group-apply-swimlane": "Saglabāt Josla",
+  "board-view-time": "Laiks",
+  "time-adjustments": "stundas — Δ — Lietotājvārds",
+  "time-adjustment-note": "Reģistrēto stundu izmaiņas, sagrupētas pēc personas, kura rediģē kopējo skaitu. Tās nav atsevišķas darba sesijas. Negatīvās vērtības ir labojumi. Iepriekš nereģistrēto laiku nevar attiecināt uz kādu personu."
 }

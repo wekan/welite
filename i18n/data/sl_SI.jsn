@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ime skupine (neobvezno)",
   "wip-limit-group-add": "Dodaj skupino omejitev WIP",
   "wip-limit-group-select-swimlane": "Izberi plavalno stezo",
-  "wip-limit-group-apply-swimlane": "Uporabi za plavalno stezo"
+  "wip-limit-group-apply-swimlane": "Uporabi za plavalno stezo",
+  "board-view-time": "Čas",
+  "time-adjustments": "ure — Δ — Up. ime",
+  "time-adjustment-note": "Spremembe zabeleženih ur, združene po osebi, ki ureja skupno število. To niso posamezne delovne seje. Negativne vrednosti so popravki. Prejšnjega nezabeleženega časa ni mogoče pripisati osebi."
 }

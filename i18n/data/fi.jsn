@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ryhmän nimi (valinnainen)",
   "wip-limit-group-add": "Lisää keskeneräisen työn ryhmäraja",
   "wip-limit-group-select-swimlane": "Valitse taulu Uimarata",
-  "wip-limit-group-apply-swimlane": "Käytä Uimarata"
+  "wip-limit-group-apply-swimlane": "Käytä Uimarata",
+  "board-view-time": "Aika",
+  "time-adjustments": "Tuntimuutokset tekijöittäin",
+  "time-adjustment-note": "Kirjattujen tuntien muutokset summan muokkaajan mukaan. Nämä eivät ole yksittäisiä työjaksoja. Negatiiviset luvut ovat korjauksia. Aiemman kirjaamattoman ajan tekijää ei voida päätellä."
 }

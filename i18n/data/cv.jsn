@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ят (кирлӗ мар)",
   "wip-limit-group-add": "Хушас WIP чиккине хутас",
   "wip-limit-group-select-swimlane": "суйлас Ҫул",
-  "wip-limit-group-apply-swimlane": "Усӑ курас Ҫул"
+  "wip-limit-group-apply-swimlane": "Усӑ курас Ҫул",
+  "board-view-time": "Вăхăт",
+  "time-adjustments": "сехет — Δ — Усӑҫӑ ячӗ",
+  "time-adjustment-note": "Истори: Δ сехет; Усӑҫӑ ячӗ ≠ Яваплисем."
 }

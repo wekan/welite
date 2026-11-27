@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Suti (ajlliñataki)",
   "wip-limit-group-add": "Yapaña naktayaña WIP Limit",
   "wip-limit-group-select-swimlane": "ajlliña pirqa Thakhi",
-  "wip-limit-group-apply-swimlane": "Aymar aruna: Apply Thakhi"
+  "wip-limit-group-apply-swimlane": "Aymar aruna: Apply Thakhi",
+  "board-view-time": "Pacha",
+  "time-adjustments": "horanaka — Δ — Apnaqirin sutipa",
+  "time-adjustment-note": "Nayra sarawi: Δ horanaka; Apnaqirin sutipa ≠ Lurañataki churatanaka."
 }

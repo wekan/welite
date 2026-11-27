@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Dzina ḽa tshigwada (a zwi kombetshedzwi)",
   "wip-limit-group-add": "Engedza tshigwada tsha mukano wa WIP",
   "wip-limit-group-select-swimlane": "Nanga ḽaini",
-  "wip-limit-group-apply-swimlane": "Shumisa kha ḽaini"
+  "wip-limit-group-apply-swimlane": "Shumisa kha ḽaini",
+  "board-view-time": "Tshifhinga",
+  "time-adjustments": "Tshanduko dza tshifhinga nga muṅwali",
+  "time-adjustment-note": "Tshanduko kha awara dzo ṅwaliwaho, dzo vhumbanywa nga muthu o shandulaho ṱhanganyelo. A si zwifhinga zwa mushumo zwo fhambanaho. Ndeme dzi re fhasi ha zero ndi u lugisa. Tshifhinga tsha kale tsho songo ṅwaliwaho a tshi koni u avhelwa muthu."
 }

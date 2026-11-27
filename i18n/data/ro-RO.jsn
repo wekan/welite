@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nume grup (opțional)",
   "wip-limit-group-add": "Adaugă grup de limită WIP",
   "wip-limit-group-select-swimlane": "Selectează culoarul",
-  "wip-limit-group-apply-swimlane": "Aplică la culoar"
+  "wip-limit-group-apply-swimlane": "Aplică la culoar",
+  "board-view-time": "Timp",
+  "time-adjustments": "Ajustări de timp după autor",
+  "time-adjustment-note": "Modificări ale orelor înregistrate, grupate după persoana care editează totalul. Acestea nu sunt sesiuni de lucru individuale. Valorile negative sunt corecții. Timpul anterior neînregistrat nu poate fi atribuit unei persoane."
 }

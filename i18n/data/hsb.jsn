@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Mjeno skupiny (opcionalne)",
   "wip-limit-group-add": "Skupinu WIP-limita přidać",
   "wip-limit-group-select-swimlane": "Dróhu wubrać",
-  "wip-limit-group-apply-swimlane": "Na dróhu nałožić"
+  "wip-limit-group-apply-swimlane": "Na dróhu nałožić",
+  "board-view-time": "Čas",
+  "time-adjustments": "Časowe korektury po awtorje",
+  "time-adjustment-note": "Změny zapisanych hodźin, zeskupjene po wosobje, kotraž cyłkowny čas wobdźěłuje. To njejsu jednotliwe dźěłowe sesije. Negatiwne hódnoty su korektury. Prjedawši njezapisany čas njeda so přirjadować."
 }

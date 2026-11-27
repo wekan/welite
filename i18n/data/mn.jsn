@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Бүлгийн нэр (заавал биш)",
   "wip-limit-group-add": "WIP хязгаарын бүлэг нэмэх",
   "wip-limit-group-select-swimlane": "Усан зам сонгох",
-  "wip-limit-group-apply-swimlane": "Усан замд хэрэглэх"
+  "wip-limit-group-apply-swimlane": "Усан замд хэрэглэх",
+  "board-view-time": "Хугацаа",
+  "time-adjustments": "цаг — Δ — Хэрэглэгчийн нэр",
+  "time-adjustment-note": "Бүртгэсэн цагийн өөрчлөлтүүдийг нийт дүнг зассан хүнээр бүлэглэв. Эдгээр нь тус тусын ажлын сесс биш. Сөрөг утгууд нь залруулга юм. Өмнө нь бүртгээгүй хугацааг хэн нэгэнд хамааруулах боломжгүй."
 }

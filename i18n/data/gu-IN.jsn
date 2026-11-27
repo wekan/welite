@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "જૂથનું નામ (વૈકલ્પિક)",
   "wip-limit-group-add": "WIP મર્યાદા જૂથ ઉમેરો",
   "wip-limit-group-select-swimlane": "પસંદ કરો સ્વિમલેન",
-  "wip-limit-group-apply-swimlane": "અરજી કરો સ્વિમલેન"
+  "wip-limit-group-apply-swimlane": "અરજી કરો સ્વિમલેન",
+  "board-view-time": "સમય",
+  "time-adjustments": "કલાક — Δ — વપરાશકર્તા નામ",
+  "time-adjustment-note": "નોંધાયેલા કલાકોમાં ફેરફારો, કુલ સમય સંપાદિત કરનાર વ્યક્તિ અનુસાર જૂથબદ્ધ છે. આ અલગ-અલગ કામના સત્રો નથી. ઋણ મૂલ્યો સુધારા છે. અગાઉ નોંધાયો ન હોય એવો સમય કોઈ વ્યક્તિને સોંપી શકાતો નથી."
 }

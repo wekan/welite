@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Rühma nimi (valikuline)",
   "wip-limit-group-add": "Lisa WIP piirangugrupp",
   "wip-limit-group-select-swimlane": "Valige ujumisrada",
-  "wip-limit-group-apply-swimlane": "Rakenda Ujumisrada"
+  "wip-limit-group-apply-swimlane": "Rakenda Ujumisrada",
+  "board-view-time": "Aeg",
+  "time-adjustments": "tundi — Δ — Kasutajanimi",
+  "time-adjustment-note": "Kirjapandud tundide muudatused, rühmitatuna kogusummat muutnud isiku järgi. Need ei ole eraldi tööseansid. Negatiivsed väärtused on parandused. Varem kirjapanemata aega ei saa ühelegi isikule omistada."
 }

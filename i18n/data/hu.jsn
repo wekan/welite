@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Csoport neve (opcionális)",
   "wip-limit-group-add": "WIP-korlát csoport hozzáadása",
   "wip-limit-group-select-swimlane": "Válassz Táblát Úszósáv",
-  "wip-limit-group-apply-swimlane": "Alkalmaz Úszósáv"
+  "wip-limit-group-apply-swimlane": "Alkalmaz Úszósáv",
+  "board-view-time": "Idő",
+  "time-adjustments": "óra — Δ — Felhasználónév",
+  "time-adjustment-note": "A rögzített órák változásai az összesített értéket módosító személy szerint csoportosítva. Ezek nem különálló munkamenetek. A negatív értékek korrekciók. A korábban nem rögzített idő nem rendelhető személyhez."
 }

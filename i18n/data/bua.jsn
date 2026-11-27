@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Нэрэ (һайн дураараа)",
   "wip-limit-group-add": "Нэмэхэ WIP хизаар асааха",
   "wip-limit-group-select-swimlane": "шэлэхэ Зам",
-  "wip-limit-group-apply-swimlane": "Хэрэглэхэ Зам"
+  "wip-limit-group-apply-swimlane": "Хэрэглэхэ Зам",
+  "board-view-time": "Саг",
+  "time-adjustments": "часууд — Δ — Хэрэглэгшын нэрэ",
+  "time-adjustment-note": "Түүхэ: Δ часууд; Хэрэглэгшын нэрэ ≠ Харюусалгатанууд."
 }

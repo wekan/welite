@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Igoa (e le faamalosia)",
   "wip-limit-group-add": "Faaopoopo Faaola le Tapulaa WIP",
   "wip-limit-group-select-swimlane": "Filifili le Ala",
-  "wip-limit-group-apply-swimlane": "Faaaoga Ala"
+  "wip-limit-group-apply-swimlane": "Faaaoga Ala",
+  "board-view-time": "Taimi",
+  "time-adjustments": "itula — Δ — Igoa o le tagata faaaoga",
+  "time-adjustment-note": "Talafaasolopito: Δ itula; Igoa o le tagata faaaoga ≠ E tofia i ai."
 }

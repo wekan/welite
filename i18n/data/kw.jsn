@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Hanow (dewisyadow)",
   "wip-limit-group-add": "Keworra Ena fin WIP",
   "wip-limit-group-select-swimlane": "Dewis estyllen Hyns",
-  "wip-limit-group-apply-swimlane": "Gorra yn ober Hyns"
+  "wip-limit-group-apply-swimlane": "Gorra yn ober Hyns",
+  "board-view-time": "Termyn",
+  "time-adjustments": "ourys — Δ — Hanow devnydhyer",
+  "time-adjustment-note": "Istori: Δ ourys; Hanow devnydhyer ≠ Apoyntysi."
 }

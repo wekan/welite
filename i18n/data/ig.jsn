@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Aha ìgùè (nhọrọ)",
   "wip-limit-group-add": "Tinye ìgùè oke WIP",
   "wip-limit-group-select-swimlane": "Họrọ Ụgbọ mmiri",
-  "wip-limit-group-apply-swimlane": "Tinye Ụgbọ mmiri"
+  "wip-limit-group-apply-swimlane": "Tinye Ụgbọ mmiri",
+  "board-view-time": "Oge",
+  "time-adjustments": "elekere — Δ — Aha njirimara",
+  "time-adjustment-note": "Akụkọ ihe mere eme: Δ elekere; Aha njirimara ≠ Ndị ọrụ."
 }

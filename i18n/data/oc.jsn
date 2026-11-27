@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nom (opcional)",
   "wip-limit-group-add": "Apondre Activar la WIP limit",
   "wip-limit-group-select-swimlane": "Seleccionar un corredor",
-  "wip-limit-group-apply-swimlane": "Aplicar Couloir"
+  "wip-limit-group-apply-swimlane": "Aplicar Couloir",
+  "board-view-time": "Orodatatge",
+  "time-adjustments": "oras — Δ — Nom d’utilizaire",
+  "time-adjustment-note": "Cambiaments de las oras enregistradas, gropats segon la persona que modifica lo total. Son pas de sesilhas de trabalh individualas. Las valors negativas son de correccions. Lo temps anterior pas enregistrat pòt pas èsser atribuït a degun."
 }

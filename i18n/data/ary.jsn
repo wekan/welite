@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "اسم (اختياري)",
   "wip-limit-group-add": "أضف تفعيل حد العمل الجاري (WIP)",
   "wip-limit-group-select-swimlane": "ختار مسار",
-  "wip-limit-group-apply-swimlane": "طبّق على المسار"
+  "wip-limit-group-apply-swimlane": "طبّق على المسار",
+  "board-view-time": "الوقت",
+  "time-adjustments": "الساعات — Δ — اسم المستخدم",
+  "time-adjustment-note": "تاريخ: Δ الساعات; اسم المستخدم ≠ المكلَّفون."
 }

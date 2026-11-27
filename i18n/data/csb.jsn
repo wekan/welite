@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Miono (òpcjonalné)",
   "wip-limit-group-add": "Dodac Włącz limit kôrtòw na liście",
   "wip-limit-group-select-swimlane": "Wëbierzë stegnã",
-  "wip-limit-group-apply-swimlane": "Zastosëjë do stegnë"
+  "wip-limit-group-apply-swimlane": "Zastosëjë do stegnë",
+  "board-view-time": "Czas",
+  "time-adjustments": "Pòprawczi czasu wedle aùtora",
+  "time-adjustment-note": "Zmianë zapisónëch gòdzënów, pògrëpòwóné wedle òsobë editëjący sëmã. Nie są to òsóbné sesëje robòtë. Ùjemné wôrtnotë są pòprawkama. Wczasniészégò niezapisónégò czasu nie mòżna przëpisac òsobie."
 }

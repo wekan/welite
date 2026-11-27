@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nan grup (hana wajéb)",
   "wip-limit-group-add": "Tamah grup bataih WIP",
   "wip-limit-group-select-swimlane": "Pileh swimlane",
-  "wip-limit-group-apply-swimlane": "Ngui keu swimlane"
+  "wip-limit-group-apply-swimlane": "Ngui keu swimlane",
+  "board-view-time": "Watèe",
+  "time-adjustments": "Peuseusuai watèe lé ureueng tuléh",
+  "time-adjustment-note": "Ubah jeuem nyang ka geucatat, geukumpoi meunurôt ureueng nyang ubah jumeulah. Nyoe kon sesi buet sidroe-sidroe. Nilai negatif nakeuh peubeutôi. Watèe awai nyang hana geucatat hana jeuet geupeuhubong ngön soe pih."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Dzina (mwakufuna)",
   "wip-limit-group-add": "Onjezani Yatsani Malire a WIP",
   "wip-limit-group-select-swimlane": "Sankhani bolodi Njira",
-  "wip-limit-group-apply-swimlane": "Gwiritsani ntchito Njira"
+  "wip-limit-group-apply-swimlane": "Gwiritsani ntchito Njira",
+  "board-view-time": "Nthawi",
+  "time-adjustments": "maola — Δ — Dzina logwiritsa ntchito",
+  "time-adjustment-note": "Mbiri: Δ maola; Dzina logwiritsa ntchito ≠ Operekedwa ntchito."
 }

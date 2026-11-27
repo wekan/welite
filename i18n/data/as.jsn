@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "নাম (ঐচ্ছিক)",
   "wip-limit-group-add": "যোগ কৰক WIP সীমা সক্ষম কৰক",
   "wip-limit-group-select-swimlane": "ব'ৰ্ড বাছক পথ",
-  "wip-limit-group-apply-swimlane": "প্ৰয়োগ কৰক পথ"
+  "wip-limit-group-apply-swimlane": "প্ৰয়োগ কৰক পথ",
+  "board-view-time": "সময়",
+  "time-adjustments": "ঘণ্টা — Δ — ব্যৱহাৰকাৰীৰ নাম",
+  "time-adjustment-note": "নথিভুক্ত ঘণ্টাৰ পৰিৱৰ্তনবোৰ মুঠ সময় সম্পাদনা কৰা ব্যক্তিৰ ভিত্তিত গোট কৰা হৈছে। এইবোৰ পৃথক কামৰ অধিৱেশন নহয়। ঋণাত্মক মানবোৰ সংশোধন। আগতে নথিভুক্ত নকৰা সময় কোনো ব্যক্তিৰ নামত দেখুৱাব নোৱাৰি।"
 }

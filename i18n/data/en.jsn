@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Group name (optional)",
   "wip-limit-group-add": "Add WIP limit group",
   "wip-limit-group-select-swimlane": "Select swimlane",
-  "wip-limit-group-apply-swimlane": "Apply to swimlane"
+  "wip-limit-group-apply-swimlane": "Apply to swimlane",
+  "board-view-time": "Time",
+  "time-adjustments": "Time adjustments by author",
+  "time-adjustment-note": "Changes to recorded hours, grouped by the person editing the total. These are not individual work sessions. Negative values are corrections. Earlier unrecorded time cannot be attributed."
 }

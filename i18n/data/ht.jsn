@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Non gwoup la (opsyonèl)",
   "wip-limit-group-add": "Ajoute yon gwoup limit WIP",
   "wip-limit-group-select-swimlane": "Chwazi kouloir la",
-  "wip-limit-group-apply-swimlane": "Aplike nan kouloir la"
+  "wip-limit-group-apply-swimlane": "Aplike nan kouloir la",
+  "board-view-time": "Tan",
+  "time-adjustments": "Ajisteman tan selon otè",
+  "time-adjustment-note": "Chanjman nan kantite èdtan ki anrejistre yo, gwoupe selon moun ki modifye total la. Sa yo pa sesyon travay endividyèl. Valè negatif yo se koreksyon. Yo pa ka atribye tan anvan ki pa t anrejistre a okenn moun."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ስሜት (ብድልየት)",
   "wip-limit-group-add": "ወስክ ደረት WIP ፍቐድ",
   "wip-limit-group-select-swimlane": "ምረጽ መገዲ",
-  "wip-limit-group-apply-swimlane": "ተግብር መገዲ"
+  "wip-limit-group-apply-swimlane": "ተግብር መገዲ",
+  "board-view-time": "ወቅት",
+  "time-adjustments": "ሰዐታት — Δ — ስም ተጠቃማይ",
+  "time-adjustment-note": "ታሪኽ: Δ ሰዐታት; ስም ተጠቃማይ ≠ ሓለፍቲ."
 }

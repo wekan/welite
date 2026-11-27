@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Grupės pavadinimas (neprivaloma)",
   "wip-limit-group-add": "Pridėti WIP ribos grupę",
   "wip-limit-group-select-swimlane": "Pasirinkite lentą Plaukimo juosta",
-  "wip-limit-group-apply-swimlane": "Taikyti Plaukimo juosta"
+  "wip-limit-group-apply-swimlane": "Taikyti Plaukimo juosta",
+  "board-view-time": "Laikas",
+  "time-adjustments": "valandų — Δ — Vartotojo vardas",
+  "time-adjustment-note": "Užregistruotų valandų pakeitimai, sugrupuoti pagal bendrą sumą redaguojantį asmenį. Tai nėra atskiri darbo seansai. Neigiamos reikšmės yra pataisymai. Ankstesnio neužregistruoto laiko negalima priskirti jokiam asmeniui."
 }

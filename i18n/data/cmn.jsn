@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "姓名 (选修的)",
   "wip-limit-group-add": "添加 启用 WIP 限制",
   "wip-limit-group-select-swimlane": "选择主板 泳道",
-  "wip-limit-group-apply-swimlane": "申请 泳道"
+  "wip-limit-group-apply-swimlane": "申请 泳道",
+  "board-view-time": "时间",
+  "time-adjustments": "小时 — Δ — 用户名",
+  "time-adjustment-note": "历史: Δ 小时; 用户名 ≠ 受让人."
 }

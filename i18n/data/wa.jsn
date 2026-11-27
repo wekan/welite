@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "No do groupe (optèn)",
   "wip-limit-group-add": "Radjouter on groupe di limite WIP",
   "wip-limit-group-select-swimlane": "Tchoezi on coridôr",
-  "wip-limit-group-apply-swimlane": "Mete en ouve sol coridôr"
+  "wip-limit-group-apply-swimlane": "Mete en ouve sol coridôr",
+  "board-view-time": "Tins",
+  "time-adjustments": "Candjmints di tins pa oteur",
+  "time-adjustment-note": "Candjmints des eures eredjistrêyes, rassonlés pa l' djin ki candje li totå. Ci n' sont nén des sessions d' ovraedje individuweles. Les valixhances negatives sont des coridjaedjes. Do tins d' divant nén eredjistré ni pout nén esse dné a ene sakî."
 }

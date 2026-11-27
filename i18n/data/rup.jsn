@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Numa a grupului (cu vreari)",
   "wip-limit-group-add": "Adavgã grup di limitã WIP",
   "wip-limit-group-select-swimlane": "Aleadzi calea",
-  "wip-limit-group-apply-swimlane": "Aplicã la cali"
+  "wip-limit-group-apply-swimlane": "Aplicã la cali",
+  "board-view-time": "Chiro",
+  "time-adjustments": "Alãxiri di chiro dupã autor",
+  "time-adjustment-note": "Alãxiri la oarili ãnsimnati, adunati dupã omlu tsi alãxeashti totalu. Aesti nu suntu sesiuni di lucru singuri. Valorli negativi suntu ndreptãri. Chirolu di ma nãinti tsi nu fu ãnsimnat nu poati s-hibã dat a cuiva."
 }

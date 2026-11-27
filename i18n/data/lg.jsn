@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Erinnya (kya kwelonda)",
   "wip-limit-group-add": "Yongerako Sobozesa WIP Limit",
   "wip-limit-group-select-swimlane": "Londa Lubaawo Akakubo",
-  "wip-limit-group-apply-swimlane": "Kozesa ku kakubo"
+  "wip-limit-group-apply-swimlane": "Kozesa ku kakubo",
+  "board-view-time": "Muda",
+  "time-adjustments": "Enkyukakyuka z'ebiseera ng'omuwandiisi bw'ali",
+  "time-adjustment-note": "Enkyukakyuka mu ssaawa eziwandiikiddwa, nga zigattiddwa okusinziira ku muntu akyusizza omugatte. Bino si biseera bya mulimu kinnoomu. Emiwendo egiri wansi wa zeero kutereeza. Ebiseera eby'emabega ebitaawandiikibwa tebiyinza kuweebwa muntu."
 }

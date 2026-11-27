@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Назва групи (необов'язково)",
   "wip-limit-group-add": "Додати групу ліміту завдань",
   "wip-limit-group-select-swimlane": "Обрати дошку Лінія",
-  "wip-limit-group-apply-swimlane": "Застосувати Лінія"
+  "wip-limit-group-apply-swimlane": "Застосувати Лінія",
+  "board-view-time": "Час",
+  "time-adjustments": "години — Δ — Ім'я користувача",
+  "time-adjustment-note": "Зміни записаних годин, згруповані за особою, яка редагує загальну кількість. Це не окремі робочі сеанси. Від’ємні значення є виправленнями. Раніше незафіксований час не можна приписати жодній особі."
 }

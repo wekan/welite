@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Namma (eaktodáhtolaš)",
   "wip-limit-group-add": "Lasit Bija WIP-ráji ala",
   "wip-limit-group-select-swimlane": "Vállje távvala Bálggis",
-  "wip-limit-group-apply-swimlane": "Geavat Bálggis"
+  "wip-limit-group-apply-swimlane": "Geavat Bálggis",
+  "board-view-time": "Áigi",
+  "time-adjustments": "diimmut — Δ — Geavaheaddjinamma",
+  "time-adjustment-note": "Historjá: Δ diimmut; Geavaheaddjinamma ≠ Ovddasvástideaddjit."
 }

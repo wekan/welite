@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "組名（可選）",
   "wip-limit-group-add": "新增最大任務數限制組",
   "wip-limit-group-select-swimlane": "選擇 泳道流程圖",
-  "wip-limit-group-apply-swimlane": "應用 泳道流程圖"
+  "wip-limit-group-apply-swimlane": "應用 泳道流程圖",
+  "board-view-time": "時間",
+  "time-adjustments": "小時 — Δ — 使用者名稱",
+  "time-adjustment-note": "歷史紀錄: Δ 小時; 使用者名稱 ≠ 承辦人."
 }

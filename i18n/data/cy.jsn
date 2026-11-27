@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Enw'r grŵp (dewisol)",
   "wip-limit-group-add": "Ychwanegu grŵp terfyn WIP",
   "wip-limit-group-select-swimlane": "Dethol Lôn nofio",
-  "wip-limit-group-apply-swimlane": "Ymgeisiwch Lôn nofio"
+  "wip-limit-group-apply-swimlane": "Ymgeisiwch Lôn nofio",
+  "board-view-time": "Amser",
+  "time-adjustments": "oriau — Δ — Enw defnyddiwr",
+  "time-adjustment-note": "Newidiadau i'r oriau a gofnodwyd, wedi'u grwpio yn ôl y person sy'n golygu'r cyfanswm. Nid sesiynau gwaith unigol yw'r rhain. Cywiriadau yw gwerthoedd negyddol. Ni ellir priodoli amser blaenorol na chafodd ei gofnodi i unrhyw berson."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "नाम (वैकल्पिक)",
   "wip-limit-group-add": "जोड़ीं चालू काम के सीमा चालू करीं",
   "wip-limit-group-select-swimlane": "चुनीं रस्ता",
-  "wip-limit-group-apply-swimlane": "लागू करीं रस्ता"
+  "wip-limit-group-apply-swimlane": "लागू करीं रस्ता",
+  "board-view-time": "समय",
+  "time-adjustments": "घंटा — Δ — उपयोगकर्ता नाम",
+  "time-adjustment-note": "दर्ज कइल घंटा में बदलाव कुल समय बदले वाला व्यक्ति के हिसाब से समूह में रखल गइल बा। ई अलग-अलग काम के सत्र ना हउवें। ऋणात्मक मान सुधार हउवें। पहिले के दर्ज ना कइल समय केहू व्यक्ति के नामे ना जोड़ल जा सकेला।"
 }

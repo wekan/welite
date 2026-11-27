@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Izina (si ngombwa)",
   "wip-limit-group-add": "Ongerako Fungura urugero rwa WIP",
   "wip-limit-group-select-swimlane": "Hitamwo icapa Umurongo",
-  "wip-limit-group-apply-swimlane": "Shira mu ngiro Umurongo"
+  "wip-limit-group-apply-swimlane": "Shira mu ngiro Umurongo",
+  "board-view-time": "Igihe",
+  "time-adjustments": "amasaha — Δ — Izina ry'ukoresha",
+  "time-adjustment-note": "Amateka: Δ amasaha; Izina ry'ukoresha ≠ Abahawe igikorwa."
 }

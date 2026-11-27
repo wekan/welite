@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Joukun nimi (ei ole tarbhine)",
   "wip-limit-group-add": "Ližata WIP-röunan jouk",
   "wip-limit-group-select-swimlane": "Valiče ujundšoid",
-  "wip-limit-group-apply-swimlane": "Kävuta ujundšoidule"
+  "wip-limit-group-apply-swimlane": "Kävuta ujundšoidule",
+  "board-view-time": "Aig",
+  "time-adjustments": "časud — Δ — Kävutajan nimi",
+  "time-adjustment-note": "Istorii: Δ časud; Kävutajan nimi ≠ Märitud kävutajad."
 }

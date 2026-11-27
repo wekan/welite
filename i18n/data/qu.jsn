@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Suti (akllanapaq)",
   "wip-limit-group-add": "WIP saywa huñuta yapay",
   "wip-limit-group-select-swimlane": "Ñanta akllay",
-  "wip-limit-group-apply-swimlane": "Ñanman churay"
+  "wip-limit-group-apply-swimlane": "Ñanman churay",
+  "board-view-time": "Pacha",
+  "time-adjustments": "Qillqaqman hina pacha allichaykuna",
+  "time-adjustment-note": "Qillqasqa urakunapi tikraykuna, llapanta allichaq runaman huñusqa. Kaykunaqa manam sapanka llamk'ay tinkuykunachu. Mana kaq chaninkunaqa allichaykunam. Ñawpaq mana qillqasqa pachataqa manam pimanpas churayta atikunchu."
 }

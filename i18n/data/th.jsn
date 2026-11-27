@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ชื่อกลุ่ม (ไม่บังคับ)",
   "wip-limit-group-add": "เพิ่มกลุ่มจำกัด WIP",
   "wip-limit-group-select-swimlane": "เลือกบอร์ด สวิมเลน",
-  "wip-limit-group-apply-swimlane": "นำมาใช้ สวิมเลน"
+  "wip-limit-group-apply-swimlane": "นำมาใช้ สวิมเลน",
+  "board-view-time": "เวลา",
+  "time-adjustments": "ชั่วโมง — Δ — ชื่อผู้ใช้งาน",
+  "time-adjustment-note": "การเปลี่ยนแปลงชั่วโมงที่บันทึกไว้ จัดกลุ่มตามผู้ที่แก้ไขยอดรวม ข้อมูลเหล่านี้ไม่ใช่ช่วงการทำงานแต่ละครั้ง ค่าติดลบเป็นการแก้ไขข้อมูล ไม่สามารถระบุได้ว่าเวลาก่อนหน้าที่ไม่ได้บันทึกไว้เป็นของใคร"
 }

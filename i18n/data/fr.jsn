@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nom du groupe (optionnel)",
   "wip-limit-group-add": "Ajouter un groupe de limite WIP",
   "wip-limit-group-select-swimlane": "Sélectionner le tableau Couloir",
-  "wip-limit-group-apply-swimlane": "Appliquer Couloir"
+  "wip-limit-group-apply-swimlane": "Appliquer Couloir",
+  "board-view-time": "Temps",
+  "time-adjustments": "heures — Δ — Nom d'utilisateur",
+  "time-adjustment-note": "Modifications des heures enregistrées, regroupées par personne ayant modifié le total. Il ne s’agit pas de sessions de travail individuelles. Les valeurs négatives sont des corrections. Le temps antérieur non enregistré ne peut être attribué à personne."
 }

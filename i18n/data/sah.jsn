@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Аат (баҕарар буоллаххына)",
   "wip-limit-group-add": "Эбэр WIP хааччаҕын холбуу",
   "wip-limit-group-select-swimlane": "ны тал Суол",
-  "wip-limit-group-apply-swimlane": "Тутун Суол"
+  "wip-limit-group-apply-swimlane": "Тутун Суол",
+  "board-view-time": "Кэм",
+  "time-adjustments": "чаас — Δ — Туттааччы аата",
+  "time-adjustment-note": "Устуоруйа: Δ чаас; Туттааччы аата ≠ Эппиэттииллэр."
 }

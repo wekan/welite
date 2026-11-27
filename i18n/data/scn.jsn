@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nomu (facultativu)",
   "wip-limit-group-add": "Aggiunciri Attiva limite Work In Progress",
   "wip-limit-group-select-swimlane": "Scegghi tàvula Curseva",
-  "wip-limit-group-apply-swimlane": "Applica Curseva"
+  "wip-limit-group-apply-swimlane": "Applica Curseva",
+  "board-view-time": "Tempu",
+  "time-adjustments": "ore — Δ — Nomu di l'utenti",
+  "time-adjustment-note": "Canciamenti a l'uri riggistrati, raggruppati secunnu a pirsuna chi cancia lu tutali. Nun sunnu sissioni di travagghiu individuali. Li valuri nigativi sunnu currizzioni. Lu tempu pricidenti nun riggistratu nun si pò attribuiri a nuddu."
 }

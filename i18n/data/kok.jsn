@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "नांव (मर्जेन)",
   "wip-limit-group-add": "जोडचें WIP मर्यादा सक्षम करात",
   "wip-limit-group-select-swimlane": "निवडात वाट",
-  "wip-limit-group-apply-swimlane": "लागू करात वाट"
+  "wip-limit-group-apply-swimlane": "लागू करात वाट",
+  "board-view-time": "समय",
+  "time-adjustments": "वरां — Δ — वापरपी नांव",
+  "time-adjustment-note": "नोंद केल्ल्या वरांतले बदल एकूण वेळ बदलपी व्यक्तीप्रमाण गटांनी दाखयल्यात. हीं वेगवेगळीं कामाचीं सत्रां न्हय. शून्या सकयलीं मोलां हीं दुरुस्ती आसात. आदीं नोंद करूंक नाशिल्लो वेळ कोणाच्याच नांवान दाखोवंक मेळना."
 }

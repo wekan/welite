@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "اسم المجموعة (اختياري)",
   "wip-limit-group-add": "إضافة مجموعة حد العمل الجاري",
   "wip-limit-group-select-swimlane": "اختيار مسار",
-  "wip-limit-group-apply-swimlane": "تطبيق على المسار"
+  "wip-limit-group-apply-swimlane": "تطبيق على المسار",
+  "board-view-time": "الوقت",
+  "time-adjustments": "الساعات — Δ — اسم المستخدم",
+  "time-adjustment-note": "التغييرات في الساعات المسجلة، مجمّعة حسب الشخص الذي يعدّل المجموع. هذه ليست جلسات عمل فردية. القيم السالبة هي تصحيحات. لا يمكن إسناد الوقت السابق غير المسجل إلى أي شخص."
 }

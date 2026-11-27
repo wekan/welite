@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Jeneng (opsional)",
   "wip-limit-group-add": "Tambah Aktifake Wates WIP",
   "wip-limit-group-select-swimlane": "Pilih Lajur",
-  "wip-limit-group-apply-swimlane": "Trapake Lajur"
+  "wip-limit-group-apply-swimlane": "Trapake Lajur",
+  "board-view-time": "Wektu",
+  "time-adjustments": "jam — Δ — Jeneng panganggo",
+  "time-adjustment-note": "Owah-owahan jam sing dicathet, diklompokake miturut wong sing nyunting gunggung wektu. Iki dudu sesi kerja siji-siji. Nilai negatif iku koreksi. Wektu sadurunge sing ora dicathet ora bisa digandhengake karo sapa wae."
 }

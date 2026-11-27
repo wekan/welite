@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Gruppenname (optional)",
   "wip-limit-group-add": "WIP-Limit-Gruppe hinzufügen",
   "wip-limit-group-select-swimlane": "Board auswählen Arbeitsbahn",
-  "wip-limit-group-apply-swimlane": "Übernehmen Arbeitsbahn"
+  "wip-limit-group-apply-swimlane": "Übernehmen Arbeitsbahn",
+  "board-view-time": "Zeit",
+  "time-adjustments": "Stunden — Δ — Benutzername",
+  "time-adjustment-note": "Änderungen an erfassten Stunden, gruppiert nach der Person, die die Gesamtsumme bearbeitet. Dies sind keine einzelnen Arbeitssitzungen. Negative Werte sind Korrekturen. Zuvor nicht erfasste Zeit kann keiner Person zugeordnet werden."
 }

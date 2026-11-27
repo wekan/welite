@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nem (yu save jusum)",
   "wip-limit-group-add": "Adem Limit blong WIP",
   "wip-limit-group-select-swimlane": "Jusum Rod",
-  "wip-limit-group-apply-swimlane": "Yusum long swimlane"
+  "wip-limit-group-apply-swimlane": "Yusum long swimlane",
+  "board-view-time": "Taem",
+  "time-adjustments": "Ol jenis blong taem folem man we i raetem",
+  "time-adjustment-note": "Ol jenis long ol aoa we oli rekodem, grupum folem man we i jenisim totel. Hemia i no ol wanwan sesen blong wok. Ol negativ valiu oli blong stretem. I no save talem hu i mekem taem bifo we oli no rekodem."
 }

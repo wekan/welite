@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ligama (akuphocelelekile)",
   "wip-limit-group-add": "Ngeta Vumela Umkhawulo we-WIP",
   "wip-limit-group-select-swimlane": "Khetsa Umtsandvo",
-  "wip-limit-group-apply-swimlane": "Sebentisa Umtsandvo"
+  "wip-limit-group-apply-swimlane": "Sebentisa Umtsandvo",
+  "board-view-time": "Sikhatsi",
+  "time-adjustments": "ema-awa — Δ — Ligama lemsebentisi",
+  "time-adjustment-note": "Umlandvo: Δ ema-awa; Ligama lemsebentisi ≠ Labanikwe umsebenti."
 }

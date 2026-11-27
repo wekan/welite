@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Назва групы (неабавязкова)",
   "wip-limit-group-add": "Дадаць групу ліміту WIP",
   "wip-limit-group-select-swimlane": "Выберыце дошку Дарожка",
-  "wip-limit-group-apply-swimlane": "Ужыць Дарожка"
+  "wip-limit-group-apply-swimlane": "Ужыць Дарожка",
+  "board-view-time": "Час",
+  "time-adjustments": "гадзін — Δ — Імя карыстальніка",
+  "time-adjustment-note": "Змены запісаных гадзін, згрупаваныя паводле чалавека, які рэдагуе агульную колькасць. Гэта не асобныя працоўныя сеансы. Адмоўныя значэнні — выпраўленні. Раней незапісаны час нельга прыпісаць ніякаму чалавеку."
 }

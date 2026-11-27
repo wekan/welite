@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ghom pong (DuH)",
   "wip-limit-group-add": "WIP veH ghom yIchel",
   "wip-limit-group-select-swimlane": "He yIwIv",
-  "wip-limit-group-apply-swimlane": "HevaD yIlo'"
+  "wip-limit-group-apply-swimlane": "HevaD yIlo'",
+  "board-view-time": "poH",
+  "time-adjustments": "ghItlhwI'vaD poH choHmey",
+  "time-adjustment-note": "qonlu'pu'bogh repmey choHmey, Hoch choHwI'vaD ghomlu'. vum poHmey nIteb ghap bIH. pagh mI'mey tI'ghach 'oH. qonlu'be'pu'bogh poH ngo' vay'vaD nobHa'laHbe'lu'."
 }

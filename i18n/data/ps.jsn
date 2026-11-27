@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "نوم (اختياري)",
   "wip-limit-group-add": "د روان کار (WIP) حد ډله زياته کړئ",
   "wip-limit-group-select-swimlane": "کرښه وټاکئ",
-  "wip-limit-group-apply-swimlane": "پر کرښه پلي کړئ"
+  "wip-limit-group-apply-swimlane": "پر کرښه پلي کړئ",
+  "board-view-time": "وخت",
+  "time-adjustments": "ساعتونه — Δ — کارن نوم",
+  "time-adjustment-note": "په ثبت شویو ساعتونو کې بدلونونه د هغه کس له مخې ډلبندي شوي چې ټولیز وخت سموي. دا د کار جلا ناستې نه دي. منفي ارزښتونه سمونونه دي. پخوانی ناثبت شوی وخت هېڅ کس ته نه شي منسوب کېدای."
 }

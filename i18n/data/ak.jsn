@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Din (wobɛtumi apaw)",
   "wip-limit-group-add": "Fa WIP anohyeto kuw ka ho",
   "wip-limit-group-select-swimlane": "Paw Kwan",
-  "wip-limit-group-apply-swimlane": "Fa di dwuma wɔ adwuma kwan no mu"
+  "wip-limit-group-apply-swimlane": "Fa di dwuma wɔ adwuma kwan no mu",
+  "board-view-time": "Berɛ",
+  "time-adjustments": "Bere nsakrae a wɔakyekyɛ sɛnea nea ɔyɛe no te",
+  "time-adjustment-note": "Nsakrae wɔ nnɔnhwerew a wɔakyerɛw mu, a wɔakyekyɛ mu sɛnea nea ɔsesa akontaabom no te. Eyinom nyɛ bere biara a wɔde yɛɛ adwuma no mmiako mmiako. Botae a ɛba fam sen 0 yɛ nsiesie. Wɔrentumi nkyerɛ onipa a bere dedaw a wɔankyerɛw no yɛ ne de."
 }

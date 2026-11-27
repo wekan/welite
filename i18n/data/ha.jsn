@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Sunan ƙungiya (na zaɓi)",
   "wip-limit-group-add": "Ƙara ƙungiyar iyakar WIP",
   "wip-limit-group-select-swimlane": "Zaɓi allo Layi",
-  "wip-limit-group-apply-swimlane": "Aiwatar Layi"
+  "wip-limit-group-apply-swimlane": "Aiwatar Layi",
+  "board-view-time": "Lokaci",
+  "time-adjustments": "awanni — Δ — Sunan mai amfani",
+  "time-adjustment-note": "An haɗa canje-canje ga awannin da aka rubuta bisa ga mutumin da yake gyara jimillar. Waɗannan ba zaman aiki na ɗaiɗaiku ba ne. Ƙimomin da ke ƙasa da sifili gyare-gyare ne. Ba za a iya danganta lokacin da ba a rubuta a baya ga wani mutum ba."
 }

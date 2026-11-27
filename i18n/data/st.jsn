@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Lebitso la sehlopha (boikhethelo)",
   "wip-limit-group-add": "Eketsa sehlopha sa moedi wa WIP",
   "wip-limit-group-select-swimlane": "Kgetha tsela",
-  "wip-limit-group-apply-swimlane": "Sebedisa tseleng"
+  "wip-limit-group-apply-swimlane": "Sebedisa tseleng",
+  "board-view-time": "Nako",
+  "time-adjustments": "Ditokiso tsa nako ho ya ka motho ya di entseng",
+  "time-adjustment-note": "Diphetoho tsa dihora tse tlalehilweng, tse hlophisitsweng ho ya ka motho ya fetolang kakaretso. Tsena ha se dinako tsa mosebetsi ka bonngwe. Boleng bo ka tlase ho lefela ke ditokiso. Nako ya pele e sa tlalehwang e ke ke ya abelwa motho."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nem (no zesüdik)",
   "wip-limit-group-add": "Läükön grupi miedas WIP",
   "wip-limit-group-select-swimlane": "Välön dili horitätik",
-  "wip-limit-group-apply-swimlane": "Gebükön pro dil horitätik"
+  "wip-limit-group-apply-swimlane": "Gebükön pro dil horitätik",
+  "board-view-time": "Tempo",
+  "time-adjustments": "Düps — Δ — Gebananem",
+  "time-adjustment-note": "Jenotem: Δ Düps; Gebananem ≠ Gebans pejonidüköl."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ainm an ghrúpa (roghnach)",
   "wip-limit-group-add": "Cuir grúpa teorann WIP leis",
   "wip-limit-group-select-swimlane": "Roghnaigh Lána",
-  "wip-limit-group-apply-swimlane": "Cuir i bhfeidhm ar an lána"
+  "wip-limit-group-apply-swimlane": "Cuir i bhfeidhm ar an lána",
+  "board-view-time": "Am",
+  "time-adjustments": "uaireanta — Δ — Ainm úsáideora",
+  "time-adjustment-note": "Athruithe ar na huaireanta taifeadta, grúpáilte de réir an duine a chuireann an t-iomlán in eagar. Ní seisiúin oibre aonair iad seo. Is ceartúcháin iad luachanna diúltacha. Ní féidir am roimhe seo nár taifeadadh a lua le duine ar bith."
 }

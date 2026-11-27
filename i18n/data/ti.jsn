@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ስም (ኣማራጺ)",
   "wip-limit-group-add": "ወስኽ ደረት WIP ኣኽእል",
   "wip-limit-group-select-swimlane": "ምረጽ መስመር",
-  "wip-limit-group-apply-swimlane": "ተግብር መስመር"
+  "wip-limit-group-apply-swimlane": "ተግብር መስመር",
+  "board-view-time": "ግዜ",
+  "time-adjustments": "ሰዓታት — Δ — ስም ተጠቃሚ",
+  "time-adjustment-note": "ታሪኽ: Δ ሰዓታት; ስም ተጠቃሚ ≠ ሓለፍቲ."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nome di u gruppu (facultativu)",
   "wip-limit-group-add": "Aghjunghje un gruppu di limiti WIP",
   "wip-limit-group-select-swimlane": "Selezziunà una corsia",
-  "wip-limit-group-apply-swimlane": "Appiecà à a corsia"
+  "wip-limit-group-apply-swimlane": "Appiecà à a corsia",
+  "board-view-time": "Tempu",
+  "time-adjustments": "Aghjustamenti di tempu per autore",
+  "time-adjustment-note": "Mudifiche à l'ore arregistrate, raggruppate secondu a persona chì mudifica u tutale. Ùn sò micca sessioni di travagliu individuale. I valori negativi sò currezzioni. U tempu precedente micca arregistratu ùn pò esse attribuitu à nimu."
 }

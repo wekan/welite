@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Gruppnamn (valfritt)",
   "wip-limit-group-add": "Lägg till WIP-gränsgrupp",
   "wip-limit-group-select-swimlane": "Välj tavla Simbana",
-  "wip-limit-group-apply-swimlane": "Tillämpa Simbana"
+  "wip-limit-group-apply-swimlane": "Tillämpa Simbana",
+  "board-view-time": "Tid",
+  "time-adjustments": "timmar — Δ — Användarnamn",
+  "time-adjustment-note": "Ändringar av registrerade timmar, grupperade efter personen som ändrar totalsumman. Detta är inte enskilda arbetspass. Negativa värden är korrigeringar. Tid som inte registrerats tidigare kan inte tillskrivas någon."
 }

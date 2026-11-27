@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "समूह का नाम (वैकल्पिक)",
   "wip-limit-group-add": "WIP सीमा समूह जोड़ें",
   "wip-limit-group-select-swimlane": "चुनें स्विमलेन",
-  "wip-limit-group-apply-swimlane": "लागू करें स्विमलेन"
+  "wip-limit-group-apply-swimlane": "लागू करें स्विमलेन",
+  "board-view-time": "समय",
+  "time-adjustments": "घंटे — Δ — उपयोगकर्ता नाम",
+  "time-adjustment-note": "दर्ज किए गए घंटों में बदलाव, कुल समय में बदलाव करने वाले व्यक्ति के अनुसार समूहबद्ध हैं। ये अलग-अलग कार्य सत्र नहीं हैं। ऋणात्मक मान सुधार हैं। पहले दर्ज न किए गए समय को किसी व्यक्ति से नहीं जोड़ा जा सकता।"
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Téra (ikatúva)",
   "wip-limit-group-add": "Mboja Emyendy WIP paha",
   "wip-limit-group-select-swimlane": "Eiporavo peteĩcha Tape",
-  "wip-limit-group-apply-swimlane": "Emoañete Tape"
+  "wip-limit-group-apply-swimlane": "Emoañete Tape",
+  "board-view-time": "Ára",
+  "time-adjustments": "aravo — Δ — Puruhára réra",
+  "time-adjustment-note": "Tembiasakue: Δ aravo; Puruhára réra ≠ Omba'apótava kuéra."
 }

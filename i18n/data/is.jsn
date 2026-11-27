@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nafn hóps (valfrjálst)",
   "wip-limit-group-add": "Bæta við WIP-markahópi",
   "wip-limit-group-select-swimlane": "Velja töflu Sundbraut",
-  "wip-limit-group-apply-swimlane": "Virkja Sundbraut"
+  "wip-limit-group-apply-swimlane": "Virkja Sundbraut",
+  "board-view-time": "Tími",
+  "time-adjustments": "klukkustundir — Δ — Notandanafn",
+  "time-adjustment-note": "Breytingar á skráðum klukkustundum, flokkaðar eftir þeim sem breytir heildinni. Þetta eru ekki einstakar vinnulotur. Neikvæð gildi eru leiðréttingar. Ekki er hægt að eigna neinum tíma sem var ekki skráður áður."
 }

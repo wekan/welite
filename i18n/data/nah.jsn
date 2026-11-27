@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Tocaitl (huelitiz)",
   "wip-limit-group-add": "Xicaquiti Xicpatlahua WIP nepantlaliztli",
   "wip-limit-group-select-swimlane": "Xicpehpena huapalli Ohtli",
-  "wip-limit-group-apply-swimlane": "Xictequihui Ohtli"
+  "wip-limit-group-apply-swimlane": "Xictequihui Ohtli",
+  "board-view-time": "Tonalli",
+  "time-adjustments": "horas — Δ — Tequitini itoca",
+  "time-adjustment-note": "Yehuacayotl: Δ horas; Tequitini itoca ≠ Tlanahuatiltin."
 }

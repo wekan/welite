@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ناو (اختیاری)",
   "wip-limit-group-add": "شامل کریو WIP حد فعال کریو",
   "wip-limit-group-select-swimlane": "ژٲریو وَتھ",
-  "wip-limit-group-apply-swimlane": "لاگو کریو وَتھ"
+  "wip-limit-group-apply-swimlane": "لاگو کریو وَتھ",
+  "board-view-time": "وقت",
+  "time-adjustments": "گھنٹہٕ — Δ — استعمال کرن والٕک ناو",
+  "time-adjustment-note": "سابقہٕ: Δ گھنٹہٕ; استعمال کرن والٕک ناو ≠ ذمہ دار."
 }

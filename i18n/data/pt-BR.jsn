@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nome do grupo (opcional)",
   "wip-limit-group-add": "Adicionar grupo de limite WIP",
   "wip-limit-group-select-swimlane": "Selecionar Raia",
-  "wip-limit-group-apply-swimlane": "Aplicar Raia"
+  "wip-limit-group-apply-swimlane": "Aplicar Raia",
+  "board-view-time": "Tempo",
+  "time-adjustments": "horas — Δ — Nome de usuário",
+  "time-adjustment-note": "Alterações nas horas registradas, agrupadas pela pessoa que altera o total. Não são sessões de trabalho individuais. Os valores negativos são correções. O tempo anterior não registrado não pode ser atribuído a ninguém."
 }

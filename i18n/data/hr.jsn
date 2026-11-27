@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Naziv grupe (neobavezno)",
   "wip-limit-group-add": "Dodaj grupu WIP ograničenja",
   "wip-limit-group-select-swimlane": "Odaberi traku",
-  "wip-limit-group-apply-swimlane": "Primijeni na traku"
+  "wip-limit-group-apply-swimlane": "Primijeni na traku",
+  "board-view-time": "Vrijeme",
+  "time-adjustments": "sati — Δ — Korisničko ime",
+  "time-adjustment-note": "Promjene evidentiranih sati, grupirane prema osobi koja mijenja ukupni iznos. To nisu pojedinačne radne sesije. Negativne vrijednosti predstavljaju ispravke. Ranije neevidentirano vrijeme ne može se pripisati osobi."
 }

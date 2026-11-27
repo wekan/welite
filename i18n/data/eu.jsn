@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Taldearen izena (aukerakoa)",
   "wip-limit-group-add": "Gehitu WIP mugaren taldea",
   "wip-limit-group-select-swimlane": "Hautatu arbela Carril",
-  "wip-limit-group-apply-swimlane": "Aplikatu Carril"
+  "wip-limit-group-apply-swimlane": "Aplikatu Carril",
+  "board-view-time": "Ordua",
+  "time-adjustments": "ordu — Δ — Erabiltzaile-izena",
+  "time-adjustment-note": "Erregistratutako orduen aldaketak, guztizkoa editatzen duen pertsonaren arabera taldekatuta. Ez dira banakako lan-saioak. Balio negatiboak zuzenketak dira. Aurretik erregistratu gabeko denbora ezin zaio inori egotzi."
 }

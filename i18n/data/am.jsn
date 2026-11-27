@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "የቡድን ስም (አማራጭ)",
   "wip-limit-group-add": "የ WIP ገደብ ቡድን ጨምር",
   "wip-limit-group-select-swimlane": "ይምረጡ መስመር",
-  "wip-limit-group-apply-swimlane": "ተግብር መስመር"
+  "wip-limit-group-apply-swimlane": "ተግብር መስመር",
+  "board-view-time": "ጊዜ",
+  "time-adjustments": "ሰዓታት — Δ — የተጠቃሚ ስም",
+  "time-adjustment-note": "በተመዘገቡ ሰዓታት ላይ የተደረጉ ለውጦች ድምሩን በሚያስተካክለው ሰው መሠረት ይመደባሉ። እነዚህ የተናጠል የሥራ ጊዜያት አይደሉም። አሉታዊ እሴቶች ማስተካከያዎች ናቸው። ቀደም ሲል ያልተመዘገበ ጊዜ ለማንም ሰው ሊመደብ አይችልም።"
 }

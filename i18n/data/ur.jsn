@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "گروپ کا نام (اختیاری)",
   "wip-limit-group-add": "WIP حد گروپ شامل کریں",
   "wip-limit-group-select-swimlane": "سویم لین منتخب کریں",
-  "wip-limit-group-apply-swimlane": "سویم لین پر لاگو کریں"
+  "wip-limit-group-apply-swimlane": "سویم لین پر لاگو کریں",
+  "board-view-time": "وقت",
+  "time-adjustments": "مصنف کے لحاظ سے وقت میں ردوبدل",
+  "time-adjustment-note": "درج شدہ گھنٹوں میں تبدیلیاں، کُل وقت میں ترمیم کرنے والے شخص کے لحاظ سے گروہ بند ہیں۔ یہ انفرادی کام کے سیشن نہیں ہیں۔ منفی قدریں تصحیحات ہیں۔ پہلے درج نہ کیے گئے وقت کو کسی شخص سے منسوب نہیں کیا جا سکتا۔"
 }

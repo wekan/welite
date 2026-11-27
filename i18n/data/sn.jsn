@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Zita (kusarudza)",
   "wip-limit-group-add": "Wedzera boka remuganhu webasa riri kuitwa (WIP)",
   "wip-limit-group-select-swimlane": "sarudza bhodhi Mugwagwa",
-  "wip-limit-group-apply-swimlane": "Shandisa pamutsetse wekuronga mabasa"
+  "wip-limit-group-apply-swimlane": "Shandisa pamutsetse wekuronga mabasa",
+  "board-view-time": "Nguva",
+  "time-adjustments": "Kugadziriswa kwenguva nemunyori",
+  "time-adjustment-note": "Shanduko kumaawa akanyorwa, dzakarongwa nemunhu ari kugadzirisa huwandu hwese. Idzi hadzisi nguva dzebasa dzemunhu mumwe nemumwe. Nhamba dziri pasi pezero kugadzirisa. Nguva yekare isina kunyorwa haigoni kupihwa kumunhu."
 }

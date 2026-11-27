@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Miano (ôpcyjōnalne)",
   "wip-limit-group-add": "Przidać Załōncz limit kart na liście",
   "wip-limit-group-select-swimlane": "Ôbier tabula Ślak",
-  "wip-limit-group-apply-swimlane": "Zastosuj Ślak"
+  "wip-limit-group-apply-swimlane": "Zastosuj Ślak",
+  "board-view-time": "Czas",
+  "time-adjustments": "godzin — Δ — Miano używŏcza",
+  "time-adjustment-note": "Historia: Δ godzin; Miano używŏcza ≠ Ôdpowiedzialni."
 }

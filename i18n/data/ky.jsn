@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Аты (милдеттүү эмес)",
   "wip-limit-group-add": "Кошуу WIP чегин иштетүү",
   "wip-limit-group-select-swimlane": "ны тандоо Жол",
-  "wip-limit-group-apply-swimlane": "Колдонуу Жол"
+  "wip-limit-group-apply-swimlane": "Колдонуу Жол",
+  "board-view-time": "Убакыт",
+  "time-adjustments": "саат — Δ — Колдонуучунун аты",
+  "time-adjustment-note": "Катталган сааттардагы өзгөрүүлөр жалпы маанини оңдогон адам боюнча топтоштурулган. Булар өзүнчө иш сеанстары эмес. Терс маанилер — түзөтүүлөр. Мурда катталбаган убакытты кандайдыр бир адамга таандык кылууга болбойт."
 }

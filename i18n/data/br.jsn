@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Anv ar strollad (diret)",
   "wip-limit-group-add": "Ouzhpennañ ur strollad bevennoù WIP",
   "wip-limit-group-select-swimlane": "Dibab ur vandenn",
-  "wip-limit-group-apply-swimlane": "Arloañ ouzh ar vandenn"
+  "wip-limit-group-apply-swimlane": "Arloañ ouzh ar vandenn",
+  "board-view-time": "Amzer",
+  "time-adjustments": "eurvezhioù — Δ — Anv implijer",
+  "time-adjustment-note": "Istor: Δ eurvezhioù; Anv implijer ≠ Kepenniñ."
 }

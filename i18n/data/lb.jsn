@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Numm (fakultativ)",
   "wip-limit-group-add": "Derbäisetzen WIP-Limit einschalten",
   "wip-limit-group-select-swimlane": "Board auswielen Bunn",
-  "wip-limit-group-apply-swimlane": "Übernehmen Bunn"
+  "wip-limit-group-apply-swimlane": "Übernehmen Bunn",
+  "board-view-time": "Zäit",
+  "time-adjustments": "Stonnen — Δ — Benotzernumm",
+  "time-adjustment-note": "Ännerunge vun den erfaasste Stonnen, gruppéiert no der Persoun, déi den Total ännert. Dëst si keng eenzel Aarbechtssessiounen. Negativ Wäerter si Korrekturen. Zäit, déi virdrun net erfaasst gouf, kann kenger Persoun zougeuerdent ginn."
 }

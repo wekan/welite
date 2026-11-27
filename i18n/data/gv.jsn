@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ennym (reihyssagh)",
   "wip-limit-group-add": "Cur rish Cur eallagh WIP er",
   "wip-limit-group-select-swimlane": "Reih boayrd Cassan",
-  "wip-limit-group-apply-swimlane": "Cur rish Cassan"
+  "wip-limit-group-apply-swimlane": "Cur rish Cassan",
+  "board-view-time": "Traa",
+  "time-adjustments": "ooraghyn — Δ — Ennym ymmydeyr",
+  "time-adjustment-note": "Shennaghys: Δ ooraghyn; Ennym ymmydeyr ≠ Currit daue."
 }

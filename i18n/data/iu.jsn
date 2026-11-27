@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ᐊᑎᖅ (ᐱᔭᕆᐊᖃᙱᑦᑐᖅ)",
   "wip-limit-group-add": "ᐃᓚᒋᐊᖅᑕᐅᔪᖅ WIP ᑭᒡᓕᖓ ᐃᑭᑎᓪᓗᒍ",
   "wip-limit-group-select-swimlane": "ᐊᓪᓚᕕᒻᒥᒃ ᓂᕈᐊᕐᓗᑎᑦ ᐊᖅᑯᑎ",
-  "wip-limit-group-apply-swimlane": "ᐊᑐᓕᖅᑎᓪᓗᒍ ᐊᖅᑯᑎ"
+  "wip-limit-group-apply-swimlane": "ᐊᑐᓕᖅᑎᓪᓗᒍ ᐊᖅᑯᑎ",
+  "board-view-time": "ᐱᓯᖓ",
+  "time-adjustments": "ᐃᑲᕐᕋᑦ — Δ — ᐊᑐᖅᑎᐅᑉ ᐊᑎᖓ",
+  "time-adjustment-note": "ᐱᕙᓪᓕᐊᓂᖅ: Δ ᐃᑲᕐᕋᑦ; ᐊᑐᖅᑎᐅᑉ ᐊᑎᖓ ≠ ᐱᓕᕆᐊᖃᖅᑐᑦ."
 }

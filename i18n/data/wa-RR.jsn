@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ngaran (opsyonal)",
   "wip-limit-group-add": "Idugang I-enable an WIP Limit",
   "wip-limit-group-select-swimlane": "Pili-a an Board Couloir",
-  "wip-limit-group-apply-swimlane": "Igbutang Couloir"
+  "wip-limit-group-apply-swimlane": "Igbutang Couloir",
+  "board-view-time": "Oras",
+  "time-adjustments": "oras — Δ — Nom d'utilisateur",
+  "time-adjustment-note": "Kasaysayan: Δ oras; Nom d'utilisateur ≠ Mga Gin-asignaran."
 }

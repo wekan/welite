@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Sunttaa (dooruwaa)",
   "wip-limit-group-add": "WIP wurssettaa shiishshuwaa gujja",
   "wip-limit-group-select-swimlane": "Ogiyaa doora",
-  "wip-limit-group-apply-swimlane": "Ogiyaa bolla oosissa"
+  "wip-limit-group-apply-swimlane": "Ogiyaa bolla oosissa",
+  "board-view-time": "Wodiyaa",
+  "time-adjustments": "Xaafidaagaa baggaara wodiyaa laammuwata",
+  "time-adjustment-note": "Xaafettida saatiyatu laammuwata, ubbaa laammiya asaa baggaara shiishettidaagaa. Hayti dumma oosuwaa wodiyata gidokkona. Zaa'aa gatiyati giigissuwata. Kase xaafettibeenna wodiyaa oonakka immanau danddayettenna."
 }

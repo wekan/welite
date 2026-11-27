@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ainm a bhuidhinn (roghainneil)",
   "wip-limit-group-add": "Cuir buidheann cuingealachaidh WIP ris",
   "wip-limit-group-select-swimlane": "Tagh Slighe",
-  "wip-limit-group-apply-swimlane": "Cuir an sàs Slighe"
+  "wip-limit-group-apply-swimlane": "Cuir an sàs Slighe",
+  "board-view-time": "Ùine",
+  "time-adjustments": "uairean — Δ — Ainm-cleachdaiche",
+  "time-adjustment-note": "Atharrachaidhean air na h-uairean clàraichte, air an cruinneachadh a rèir an neach a dheasaicheas an t-suim iomlan. Chan e seiseanan obrach fa leth a tha seo. Tha luachan àicheil nan ceartachaidhean. Cha ghabh ùine roimhe nach deach a chlàradh a chur às leth duine sam bith."
 }

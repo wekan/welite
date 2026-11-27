@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Navn (valfrítt)",
   "wip-limit-group-add": "Legg afturat Virkja WIP-mark",
   "wip-limit-group-select-swimlane": "Vel talvu Bein",
-  "wip-limit-group-apply-swimlane": "Nýt Bein"
+  "wip-limit-group-apply-swimlane": "Nýt Bein",
+  "board-view-time": "Tíð",
+  "time-adjustments": "tímar — Δ — Brúkaranavn",
+  "time-adjustment-note": "Broytingar í skrásettum tímum, bólkaðar eftir tí persóni, sum broytir samlaða talið. Hetta eru ikki einstakar arbeiðsløtur. Negativ virði eru rættingar. Tíð, sum ikki varð skrásett áður, kann ikki knýtast at nøkrum persóni."
 }

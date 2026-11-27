@@ -4134,12 +4134,40 @@ begin
   Result := 200;
 end;
 
+function BoardTimeView(Db:TWLDb; Words:TWLTranslator; const BoardId,UserId,Filter,AssignedOnly:string):string;
+var Totals, Cards:TWLRows; Changes:TJSONArray; Row:TJSONObject; I:Integer; Fmt:TFormatSettings; CardTitle:string;
+begin
+  Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';
+  Totals:=Db.Query('SELECT COALESCE(SUM(c.spentTime),0) FROM cards c WHERE c.boardId='+QuotedStr(BoardId)+
+    ' AND c.archived=0 AND c.deletedAt IS NULL'+Filter+';');
+  Result:='<section class="time-view"><h2>'+E(Words.Text('board-view-time','Time'))+'</h2>';
+  if Length(Totals)=1 then Result:=Result+'<p>'+E(Words.Text('spent-time-hours','Spent time (hours)'))+' '+E(Totals[0][0])+'</p>';
+  if AssignedOnly<>'' then Exit(Result+'</section>');
+  Result:=Result+'<section class="time-adjustments"><h3>'+E(Words.Text('time-adjustments','Time adjustments by author'))+
+    '</h3><p>'+E(Words.Text('time-adjustment-note','Changes to recorded hours. Negative values are corrections.'))+
+    '</p><table><thead><tr><th>'+E(Words.Text('card','Card'))+'</th><th>'+E(Words.Text('username','Username'))+
+    '</th><th>&#916;</th><th>'+E(Words.Text('spent-time-hours','Spent time (hours)'))+'</th></tr></thead><tbody>';
+  Changes:=TimeAdjustmentRows(Db,UserId,BoardId);
+  try
+    for I:=0 to Changes.Count-1 do
+    begin
+      Row:=Changes.Objects[I];
+      CardTitle:=Row.Get('cardId','');
+      Cards:=Db.Query('SELECT title FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND id='+QuotedStr(CardTitle)+';');
+      if Length(Cards)=1 then CardTitle:=Cards[0][0];
+      Result:=Result+'<tr><td>'+E(CardTitle)+'</td><td>'+E(UserName(Db,Row.Get('userId','')))+
+        '</td><td>'+E(FloatToStr(Row.Floats['delta'],Fmt))+'</td><td>'+E(FloatToStr(Row.Floats['value'],Fmt))+'</td></tr>';
+    end;
+  finally Changes.Free;end;
+  Result:=Result+'</tbody></table></section></section>';
+end;
+
 function BoardContent(Db: TWLDb; const S: TWLSession; Words: TWLTranslator; const BoardId, CardId: string;
   out BoardTitle: string; out Found: Boolean; Query: TStrings = nil): string;
 var B, Lanes, Lists, Cards, Card, Reveal, WipCounts: TWLRows; i, j, k: Integer; Route, Canvas, Details, Composer: string;
   RevealId, RevealLane, RevealList, CurrentList, CurrentLane, AssignedCond: string;
   Selector: TSelectionScope; Writable, CanExport, Maximized, TextEditor, CanCreateLabel, BoardDates, Folded, ListFolded: Boolean;
-  SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar: Boolean;
+  SharedRow, FirstLane, CalendarView, CalendarMode, MultiCalendar, TimeView: Boolean;
   Width: Integer; PlainLinks, PlainSource, LaneHasCurrent: Boolean;
   Shows: TMinicardShows; Header, FilterCond, CardSort, SortSql, SelectedView, WipPopup, WipBadges: string; Filter: TBoardFilter; Sections: TSectionBodies; CardCollapse, CardCollapsed, WipExceeded: Boolean;
   function WipGroupBadges(const ListId: string; out Exceeded: Boolean): string;
@@ -4230,17 +4258,19 @@ begin
   CalendarMode := SelectedView = 'calendar-mode';
   MultiCalendar := (S.UserId <> '') and (SelectedView = 'multiboard-calendar');
   CalendarView := SelectedView = 'calendar';
+  TimeView := SelectedView = 'time';
   Canvas := '';
   if CalendarView or MultiCalendar then
     Canvas := BoardCalendar(Db, Words, BoardId, B[0][2], S.UserId, FilterCond, Writable, MultiCalendar, Query)
-  else if CalendarMode then Canvas := BoardCalendarMode(Db, Words, BoardId, B[0][2], FilterCond);
+  else if CalendarMode then Canvas := BoardCalendarMode(Db, Words, BoardId, B[0][2], FilterCond)
+  else if TimeView then Canvas := BoardTimeView(Db, Words, BoardId, S.UserId, FilterCond, ViewAssignedOnly);
   SharedRow := BoardSettingFlag(Db, BoardId, 'sharedListHeaders', False);
   FirstLane := True;
   Lanes := Db.Query('SELECT id,title,color FROM swimlanes WHERE boardId=' + QuotedStr(BoardId) +
     ' AND archived=0 ORDER BY sort,id;');
-  if not (CalendarView or CalendarMode or MultiCalendar) then
+  if not (CalendarView or CalendarMode or MultiCalendar or TimeView) then
     WipCounts := BoardWipGroupCounts(Db, BoardId, ViewAssignedOnly);
-  if not (CalendarView or CalendarMode or MultiCalendar) then
+  if not (CalendarView or CalendarMode or MultiCalendar or TimeView) then
   CanExport := not AssignedOnlyMember(Db, S.UserId, BoardId) and BoardCanRead(Db, S.UserId, BoardId) and
     not SharedSettingOn(Db, 'disableAllExport') and not SharedSettingOn(Db, 'anonymizeExportUsers');
   for i := 0 to High(Lanes) do
@@ -4582,12 +4612,14 @@ begin
       '"><div class="header"><span class="header-title">' + E(Words.Text('board-view', 'Board View')) + '</span><a class="close-btn js-close-pop-over" ' +
       'href="#" aria-label="' + HtmlAttr(Words.Text('close', 'Close')) + '">&times;</a></div><div class="content"><ul class="pop-over-list"><li>' +
       '<a class="js-board-view-entry js-open-swimlanes-view" href="' + ViewLink('swimlanes') + '"><i class="fa fa-th-large"></i> ' +
-      E(Words.Text('swimlanes', 'Swimlanes')) + IfThen(CalendarView or CalendarMode or MultiCalendar, '', ' <i class="fa fa-check"></i>') + '</a></li><li>' +
+      E(Words.Text('swimlanes', 'Swimlanes')) + IfThen(CalendarView or CalendarMode or MultiCalendar or TimeView, '', ' <i class="fa fa-check"></i>') + '</a></li><li>' +
       '<a class="js-board-view-entry js-open-cal-view" href="' + ViewLink('calendar') + '"><i class="fa fa-calendar"></i> ' +
       E(Words.Text('board-view-cal', 'Calendar')) + IfThen(CalendarView, ' <i class="fa fa-check"></i>', '') + '</a></li><li>' +
       '<a class="js-board-view-entry js-open-calendar-mode-view" href="' + ViewLink('calendar-mode') +
       '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-calendar-mode', 'Calendar Mode')) +
       IfThen(CalendarMode, ' <i class="fa fa-check"></i>', '') + '</a></li>' +
+      '<li><a class="js-board-view-entry js-open-time-view" href="' + ViewLink('time') + '"><i class="fa fa-clock-o"></i> ' +
+      E(Words.Text('board-view-time', 'Time')) + IfThen(TimeView, ' <i class="fa fa-check"></i>', '') + '</a></li>' +
       IfThen(S.UserId <> '', '<li><a class="js-board-view-entry js-open-multiboard-cal-view" href="' + ViewLink('multiboard-calendar') +
         '"><i class="fa fa-calendar"></i> ' + E(Words.Text('board-view-multiboard-cal', 'Multi Board Calendar')) +
         IfThen(MultiCalendar, ' <i class="fa fa-check"></i>', '') + '</a></li>', '') + '</ul></div></template>' +

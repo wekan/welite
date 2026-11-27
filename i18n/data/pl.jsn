@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nazwa grupy (opcjonalnie)",
   "wip-limit-group-add": "Dodaj grupę limitu WIP",
   "wip-limit-group-select-swimlane": "Wybierz tablicę Ścieżka",
-  "wip-limit-group-apply-swimlane": "Zastosuj Ścieżka"
+  "wip-limit-group-apply-swimlane": "Zastosuj Ścieżka",
+  "board-view-time": "Czas",
+  "time-adjustments": "godzin — Δ — Nazwa użytkownika",
+  "time-adjustment-note": "Zmiany zarejestrowanych godzin, pogrupowane według osoby edytującej łączny czas. Nie są to pojedyncze sesje pracy. Wartości ujemne są korektami. Wcześniejszego niezarejestrowanego czasu nie można przypisać żadnej osobie."
 }

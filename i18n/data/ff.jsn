@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Innde (suɓaaɗum)",
   "wip-limit-group-add": "Ɓeydu Hurmin keerol WIP",
   "wip-limit-group-select-swimlane": "Suɓo alluwal Laawol",
-  "wip-limit-group-apply-swimlane": "Huuwtin Laawol"
+  "wip-limit-group-apply-swimlane": "Huuwtin Laawol",
+  "board-view-time": "Saanga",
+  "time-adjustments": "waktuji — Δ — Innde kuutorɗo",
+  "time-adjustment-note": "Aslol: Δ waktuji; Innde kuutorɗo ≠ Halfinaaɓe."
 }

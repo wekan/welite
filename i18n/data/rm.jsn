@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Num da la gruppa (facultativ)",
   "wip-limit-group-add": "Agiuntar ina gruppa da limita WIP",
   "wip-limit-group-select-swimlane": "Tscherner la swimlane",
-  "wip-limit-group-apply-swimlane": "Applitgar a la swimlane"
+  "wip-limit-group-apply-swimlane": "Applitgar a la swimlane",
+  "board-view-time": "Temp",
+  "time-adjustments": "Adattaziuns dal temp tenor autur",
+  "time-adjustment-note": "Midadas da las uras registradas, gruppadas tenor la persuna che modifitgescha il total. Quai n'èn betg sesidas da lavur individualas. Valurs negativas èn correcturas. Temp pli baud betg registrà na po betg vegnir attribuì."
 }

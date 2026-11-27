@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "群組名稱（選擇性）",
   "wip-limit-group-add": "新增 WIP 限制群組",
   "wip-limit-group-select-swimlane": "選取泳道",
-  "wip-limit-group-apply-swimlane": "套用至泳道"
+  "wip-limit-group-apply-swimlane": "套用至泳道",
+  "board-view-time": "時間",
+  "time-adjustments": "小時 — Δ — 使用者名稱",
+  "time-adjustment-note": "歷史紀錄: Δ 小時; 使用者名稱 ≠ 承辦人."
 }

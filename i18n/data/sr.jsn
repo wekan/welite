@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Назив групе (опционо)",
   "wip-limit-group-add": "Додај групу ограничења WIP",
   "wip-limit-group-select-swimlane": "Изаберите поступак",
-  "wip-limit-group-apply-swimlane": "Примени Поступак"
+  "wip-limit-group-apply-swimlane": "Примени Поступак",
+  "board-view-time": "Време",
+  "time-adjustments": "сати — Δ — Кориснички налог",
+  "time-adjustment-note": "Промене евидентираних сати, груписане према особи која мења укупан износ. То нису појединачне радне сесије. Негативне вредности су исправке. Раније неевидентирано време не може се приписати ниједној особи."
 }

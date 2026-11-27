@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nome do grupo (opcional)",
   "wip-limit-group-add": "Engadir grupo de límite WIP",
   "wip-limit-group-select-swimlane": "Seleccionar carril",
-  "wip-limit-group-apply-swimlane": "Aplicar ao carril"
+  "wip-limit-group-apply-swimlane": "Aplicar ao carril",
+  "board-view-time": "Tempo",
+  "time-adjustments": "horas — Δ — Nome de usuario",
+  "time-adjustment-note": "Cambios nas horas rexistradas, agrupados pola persoa que modifica o total. Non son sesións de traballo individuais. Os valores negativos son correccións. O tempo anterior non rexistrado non se pode atribuír a ningunha persoa."
 }

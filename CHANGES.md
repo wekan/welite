@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The board’s Time view shows total hours and a correction ledger with
+  the author, delta and updated hours. Assigned-only members see the
+  total for their visible cards.
+
 - The Move Card dialog saves the move reason and records one position
   change for a move within the board. Undo and redo replay the saved list,
   swimlane, sort position and reason. The shared move-history browser test

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Grup adı (isteğe bağlı)",
   "wip-limit-group-add": "WIP limit grubu ekle",
   "wip-limit-group-select-swimlane": "yu Seçin Kulvar",
-  "wip-limit-group-apply-swimlane": "Uygula Kulvar"
+  "wip-limit-group-apply-swimlane": "Uygula Kulvar",
+  "board-view-time": "Zaman",
+  "time-adjustments": "saat — Δ — Kullanıcı adı",
+  "time-adjustment-note": "Kaydedilen saatlerdeki değişiklikler, toplamı düzenleyen kişiye göre gruplandırılır. Bunlar ayrı çalışma oturumları değildir. Negatif değerler düzeltmelerdir. Daha önce kaydedilmemiş süre herhangi bir kişiye atfedilemez."
 }

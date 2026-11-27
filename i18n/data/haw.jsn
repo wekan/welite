@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Inoa (koho)",
   "wip-limit-group-add": "Hoʻohui hoʻā WIP limika",
   "wip-limit-group-select-swimlane": "koho papa Ala",
-  "wip-limit-group-apply-swimlane": "hoʻohana Ala"
+  "wip-limit-group-apply-swimlane": "hoʻohana Ala",
+  "board-view-time": "Manawa",
+  "time-adjustments": "nā hola — Δ — Inoa mea hoʻohana",
+  "time-adjustment-note": "mōʻaukala: Δ nā hola; Inoa mea hoʻohana ≠ Nā mea i hāʻawi ʻia."
 }

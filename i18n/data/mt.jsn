@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Isem tal-grupp (mhux obbligatorju)",
   "wip-limit-group-add": "Żid grupp tal-limitu WIP",
   "wip-limit-group-select-swimlane": "Agħżel Korsija",
-  "wip-limit-group-apply-swimlane": "Applika għall-korsija"
+  "wip-limit-group-apply-swimlane": "Applika għall-korsija",
+  "board-view-time": "Ħin",
+  "time-adjustments": "Aġġustamenti tal-ħin skont l-awtur",
+  "time-adjustment-note": "Bidliet fis-sigħat irreġistrati, miġbura skont il-persuna li teditja t-total. Dawn mhumiex sessjonijiet individwali ta’ xogħol. Valuri negattivi huma korrezzjonijiet. Ħin preċedenti mhux irreġistrat ma jistax jiġi attribwit."
 }

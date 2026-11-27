@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Název skupiny (volitelné)",
   "wip-limit-group-add": "Přidat skupinu limitu WIP",
   "wip-limit-group-select-swimlane": "Vybrat tablo Dráha",
-  "wip-limit-group-apply-swimlane": "Použít Dráha"
+  "wip-limit-group-apply-swimlane": "Použít Dráha",
+  "board-view-time": "Čas",
+  "time-adjustments": "hodin — Δ — Uživatelské jméno",
+  "time-adjustment-note": "Změny zaznamenaných hodin, seskupené podle osoby, která upravuje celkový čas. Nejde o jednotlivé pracovní úseky. Záporné hodnoty jsou opravy. Dřívější nezaznamenaný čas nelze nikomu přiřadit."
 }

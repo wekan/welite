@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nomme (facultativo)",
   "wip-limit-group-add": "Azzeccà Attiva limite Work In Progress",
   "wip-limit-group-select-swimlane": "Sceglie tavula Corsia",
-  "wip-limit-group-apply-swimlane": "Applica Corsia"
+  "wip-limit-group-apply-swimlane": "Applica Corsia",
+  "board-view-time": "Tiempo",
+  "time-adjustments": "ore — Δ — Nomme 'e utente",
+  "time-adjustment-note": "Cronologgia: Δ ore; Nomme 'e utente ≠ Assignate."
 }

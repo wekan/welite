@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "ਸਮੂਹ ਦਾ ਨਾਮ (ਚੋਣਵਾਂ)",
   "wip-limit-group-add": "WIP ਸੀਮਾ ਸਮੂਹ ਸ਼ਾਮਲ ਕਰੋ",
   "wip-limit-group-select-swimlane": "ਸਵਿਮਲੇਨ ਚੁਣੋ",
-  "wip-limit-group-apply-swimlane": "ਸਵਿਮਲੇਨ 'ਤੇ ਲਾਗੂ ਕਰੋ"
+  "wip-limit-group-apply-swimlane": "ਸਵਿਮਲੇਨ 'ਤੇ ਲਾਗੂ ਕਰੋ",
+  "board-view-time": "ਸਮਾਂ",
+  "time-adjustments": "ਘੰਟੇ — Δ — ਯੂਜ਼ਰਨੇਮ",
+  "time-adjustment-note": "ਦਰਜ ਕੀਤੇ ਘੰਟਿਆਂ ਵਿੱਚ ਤਬਦੀਲੀਆਂ, ਕੁੱਲ ਸਮਾਂ ਸੋਧਣ ਵਾਲੇ ਵਿਅਕਤੀ ਅਨੁਸਾਰ ਸਮੂਹਬੱਧ ਹਨ। ਇਹ ਵੱਖਰੇ ਕੰਮ ਦੇ ਸੈਸ਼ਨ ਨਹੀਂ ਹਨ। ਰਿਣਾਤਮਕ ਮੁੱਲ ਸੋਧਾਂ ਹਨ। ਪਹਿਲਾਂ ਦਰਜ ਨਾ ਕੀਤੇ ਸਮੇਂ ਨੂੰ ਕਿਸੇ ਵਿਅਕਤੀ ਨਾਲ ਨਹੀਂ ਜੋੜਿਆ ਜਾ ਸਕਦਾ।"
 }

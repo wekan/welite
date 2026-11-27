@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Tên nhóm (tùy chọn)",
   "wip-limit-group-add": "Thêm nhóm giới hạn WIP",
   "wip-limit-group-select-swimlane": "Chọn Làn ngang",
-  "wip-limit-group-apply-swimlane": "Áp Dụng Làn ngang"
+  "wip-limit-group-apply-swimlane": "Áp Dụng Làn ngang",
+  "board-view-time": "Thời gian",
+  "time-adjustments": "giờ — Δ — Tài khoản",
+  "time-adjustment-note": "Các thay đổi về số giờ đã ghi nhận, được nhóm theo người chỉnh sửa tổng số giờ. Đây không phải là các phiên làm việc riêng lẻ. Giá trị âm là các lần điều chỉnh. Thời gian trước đây chưa được ghi nhận không thể quy cho bất kỳ ai."
 }

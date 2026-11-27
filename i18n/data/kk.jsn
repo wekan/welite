@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Топ атауы (міндетті емес)",
   "wip-limit-group-add": "WIP шектеу тобын қосу",
   "wip-limit-group-select-swimlane": "ны таңдау Жолақ",
-  "wip-limit-group-apply-swimlane": "Қолдану Жолақ"
+  "wip-limit-group-apply-swimlane": "Қолдану Жолақ",
+  "board-view-time": "Уақыт",
+  "time-adjustments": "сағат — Δ — Пайдаланушы аты",
+  "time-adjustment-note": "Тіркелген сағаттардағы өзгерістер жалпы мәнді өңдеген адам бойынша топтастырылған. Бұлар жеке жұмыс сеанстары емес. Теріс мәндер — түзетулер. Бұрын тіркелмеген уақытты қандай да бір адамға жатқызу мүмкін емес."
 }

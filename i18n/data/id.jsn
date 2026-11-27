@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nama grup (opsional)",
   "wip-limit-group-add": "Tambah grup batas WIP",
   "wip-limit-group-select-swimlane": "Pilih Jalur",
-  "wip-limit-group-apply-swimlane": "Terapkan Jalur"
+  "wip-limit-group-apply-swimlane": "Terapkan Jalur",
+  "board-view-time": "Waktu",
+  "time-adjustments": "m — Δ — Nama Pengguna",
+  "time-adjustment-note": "Perubahan pada jam yang tercatat, dikelompokkan berdasarkan orang yang menyunting totalnya. Ini bukan sesi kerja individual. Nilai negatif adalah koreksi. Waktu sebelumnya yang tidak tercatat tidak dapat dikaitkan dengan seseorang."
 }

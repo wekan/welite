@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "グループ名(任意)",
   "wip-limit-group-add": "WIP制限グループを追加",
   "wip-limit-group-select-swimlane": "を選択 スイムレーン",
-  "wip-limit-group-apply-swimlane": "適用 スイムレーン"
+  "wip-limit-group-apply-swimlane": "適用 スイムレーン",
+  "board-view-time": "時間",
+  "time-adjustments": "時間 — Δ — ユーザー名",
+  "time-adjustment-note": "記録済みの時間の変更を、合計を編集した人ごとにまとめています。個々の作業セッションを示すものではありません。負の値は修正を表します。過去に記録されなかった時間を特定の人に帰属させることはできません。"
 }

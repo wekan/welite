@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Qrup adı (isteğe bağlı)",
   "wip-limit-group-add": "WIP limit qrupu əlavə et",
   "wip-limit-group-select-swimlane": "Lövhəni seçin Üzgüçülük zolağı",
-  "wip-limit-group-apply-swimlane": "Müraciət edin Üzgüçülük zolağı"
+  "wip-limit-group-apply-swimlane": "Müraciət edin Üzgüçülük zolağı",
+  "board-view-time": "Vaxt",
+  "time-adjustments": "saat — Δ — İstifadəçi adı",
+  "time-adjustment-note": "Qeydə alınmış saatlardakı dəyişikliklər ümumi məbləği redaktə edən şəxsə görə qruplaşdırılır. Bunlar ayrı-ayrı iş sessiyaları deyil. Mənfi dəyərlər düzəlişlərdir. Əvvəllər qeydə alınmamış vaxtı hər hansı şəxsə aid etmək mümkün deyil."
 }

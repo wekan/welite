@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Non (opzionâl)",
   "wip-limit-group-add": "Zonte Attiva limite Work In Progress",
   "wip-limit-group-select-swimlane": "Selezione taule Corsie",
-  "wip-limit-group-apply-swimlane": "Applica Corsie"
+  "wip-limit-group-apply-swimlane": "Applica Corsie",
+  "board-view-time": "Timp",
+  "time-adjustments": "oris — Δ — Non utent",
+  "time-adjustment-note": "Cronologjie: Δ oris; Non utent ≠ Assegnâts."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nòmber (opshonal)",
   "wip-limit-group-add": "Agregá Habilitá e límite di e trabaho den proseso",
   "wip-limit-group-select-swimlane": "Selektá tabla Kaminda",
-  "wip-limit-group-apply-swimlane": "Aplicar Kaminda"
+  "wip-limit-group-apply-swimlane": "Aplicar Kaminda",
+  "board-view-time": "Tempu",
+  "time-adjustments": "horas — Δ — Nòmber di usuario",
+  "time-adjustment-note": "Historial: Δ horas; Nòmber di usuario ≠ Enkargánan."
 }

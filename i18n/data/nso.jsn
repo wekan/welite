@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Leina (ga se gapeletšo)",
   "wip-limit-group-add": "Oketša Dumelela moedi wa WIP",
   "wip-limit-group-select-swimlane": "Kgetha boto Tsela",
-  "wip-limit-group-apply-swimlane": "Diriša Tsela"
+  "wip-limit-group-apply-swimlane": "Diriša Tsela",
+  "board-view-time": "Nako",
+  "time-adjustments": "diiri — Δ — Leina la mošomiši",
+  "time-adjustment-note": "Histori: Δ diiri; Leina la mošomiši ≠ Bao ba filwego mošomo."
 }

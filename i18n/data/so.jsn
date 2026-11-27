@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Magac (ikhtiyaari)",
   "wip-limit-group-add": "Ku dar Awood sii Xadka WIP",
   "wip-limit-group-select-swimlane": "Dooro da Waddo",
-  "wip-limit-group-apply-swimlane": "Codso Waddo"
+  "wip-limit-group-apply-swimlane": "Codso Waddo",
+  "board-view-time": "Waqti",
+  "time-adjustments": "saacadood — Δ — Magaca isticmaalaha",
+  "time-adjustment-note": "Isbeddellada saacadaha la diiwaangeliyey waxaa loo kooxeeyaa qofka wax ka beddelaya wadarta. Kuwani ma aha kalfadhiyo shaqo oo gooni-gooni ah. Qiimayaasha taban waa sixitaanno. Waqti hore oo aan la diiwaangelin looma nisbayn karo qofna."
 }

@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Tur (optionnel)",
   "wip-limit-group-add": "Yokk Activer la limite WIP",
   "wip-limit-group-select-swimlane": "Sélectionner le tableau Yoon",
-  "wip-limit-group-apply-swimlane": "Appliquer Yoon"
+  "wip-limit-group-apply-swimlane": "Appliquer Yoon",
+  "board-view-time": "Waxtu",
+  "time-adjustments": "waxtu — Δ — Turu jëfandikukat bi",
+  "time-adjustment-note": "Jaar jaar: Δ waxtu; Turu jëfandikukat bi ≠ Ñi ñu sas."
 }

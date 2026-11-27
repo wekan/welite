@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Igama leqela (ngokukhetha)",
   "wip-limit-group-add": "Yongeza iqela lomda we-WIP",
   "wip-limit-group-select-swimlane": "Khetha iBhodi Ukuqubha",
-  "wip-limit-group-apply-swimlane": "Faka isicelo Ukuqubha"
+  "wip-limit-group-apply-swimlane": "Faka isicelo Ukuqubha",
+  "board-view-time": "Ixesha",
+  "time-adjustments": "iiyure — Δ — Igama lomsebenzisi",
+  "time-adjustment-note": "Imbali: Δ iiyure; Igama lomsebenzisi ≠ Abathunyiweyo."
 }

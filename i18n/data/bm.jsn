@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Tɔgɔ (i sago)",
   "wip-limit-group-add": "Fara a kan WIP dantigɛ da",
   "wip-limit-group-select-swimlane": "Tabali sugandi Sira",
-  "wip-limit-group-apply-swimlane": "A kɛ Sira"
+  "wip-limit-group-apply-swimlane": "A kɛ Sira",
+  "board-view-time": "Waati",
+  "time-adjustments": "lɛriw — Δ — Baarakɛla tɔgɔ",
+  "time-adjustment-note": "Tariku: Δ lɛriw; Baarakɛla tɔgɔ ≠ Baarakɛlaw."
 }

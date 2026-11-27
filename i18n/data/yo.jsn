@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Orúkọ àwùjọ (àṣàyàn)",
   "wip-limit-group-add": "Fi àwùjọ ààlà WIP kún",
   "wip-limit-group-select-swimlane": "Yan Board Ọ̀nà ìwẹ̀",
-  "wip-limit-group-apply-swimlane": "Waye Ọ̀nà ìwẹ̀"
+  "wip-limit-group-apply-swimlane": "Waye Ọ̀nà ìwẹ̀",
+  "board-view-time": "Akoko",
+  "time-adjustments": "wakati — Δ — Orukọ olumulo",
+  "time-adjustment-note": "Itan: Δ wakati; Orukọ olumulo ≠ Awọn ayanfunni."
 }

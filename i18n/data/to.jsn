@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Hingoa (fili pē)",
   "wip-limit-group-add": "Tānaki Faka-Tonga: Enable WIP Limit",
   "wip-limit-group-select-swimlane": "Fili ha hala",
-  "wip-limit-group-apply-swimlane": "Fakahoko ki he hala"
+  "wip-limit-group-apply-swimlane": "Fakahoko ki he hala",
+  "board-view-time": "Taimi",
+  "time-adjustments": "Ngaahi liliu taimi ʻo fakatatau ki he tokotaha faʻu",
+  "time-adjustment-note": "Ngaahi liliu ki he ngaahi houa kuo lēkooti, fakakulupu ʻo fakatatau ki he tokotaha ʻoku ne fakatonutonu ʻa e kotoa. ʻOku ʻikai ko ha ngaahi vahaʻa taimi ngāue fakafoʻituitui. Ko e ngaahi mahuʻinga ʻikai lelei ko e ngaahi fakatonutonu. ʻOku ʻikai lava ke fakafekauʻaki ki ha taha ʻa e taimi kimuʻa naʻe ʻikai lēkooti."
 }

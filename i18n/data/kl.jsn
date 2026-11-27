@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Ateq (piumasaqaataanngitsoq)",
   "wip-limit-group-add": "Ilanngussuk WIP-ip killissaa atulersiguk",
   "wip-limit-group-select-swimlane": "toqqaruk Aqqut",
-  "wip-limit-group-apply-swimlane": "Atoruk Aqqut"
+  "wip-limit-group-apply-swimlane": "Atoruk Aqqut",
+  "board-view-time": "Piffissaq",
+  "time-adjustments": "akunnerit — Δ — Atuisup aqqa",
+  "time-adjustment-note": "Oqaluttuarisaanera: Δ akunnerit; Atuisup aqqa ≠ Akisussaasut."
 }

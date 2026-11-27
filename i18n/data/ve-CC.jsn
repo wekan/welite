@@ -2328,5 +2328,8 @@
   "wip-limit-group-name-placeholder": "Nome del grupo (facoltativo)",
   "wip-limit-group-add": "Zonta un grupo de limiti WIP",
   "wip-limit-group-select-swimlane": "Sernissi la corsia",
-  "wip-limit-group-apply-swimlane": "Àplica a la corsia"
+  "wip-limit-group-apply-swimlane": "Àplica a la corsia",
+  "board-view-time": "Tenpo",
+  "time-adjustments": "Corezion del tenpo par autor",
+  "time-adjustment-note": "Canbiamenti a le ore registrade, ragrupà par la persona che modifica el totale. No le xe session de lavoro singole. I valori negativi i xe corezion. El tenpo de prima no registrà no se pol atribuirlo."
 }
