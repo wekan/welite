@@ -2210,19 +2210,24 @@ begin
   end;
 end;
 
-function BoardTextMatchSql(const Text: string): string;
-var Q: string;
-  function Contains(const Column: string): string;
-  begin
-    Result := 'instr(lower(COALESCE(' + Column + ','''')),lower(' + Q + '))>0';
-  end;
+function SearchColumnContains(const Column, Text: string): string;
 begin
-  Q := QuotedStr(Text);
-  Result := '(' + Contains('c.title') + ' OR ' + Contains('c.description') +
-    ' OR EXISTS(SELECT 1 FROM card_comments m WHERE m.cardId=c.id AND (m.boardId IS NULL OR m.boardId=c.boardId) AND ' + Contains('m.text') + ')' +
-    ' OR EXISTS(SELECT 1 FROM checklists l WHERE l.cardId=c.id AND (l.boardId IS NULL OR l.boardId=c.boardId) AND ' + Contains('l.title') + ')' +
-    ' OR EXISTS(SELECT 1 FROM checklist_items i JOIN checklists l ON l.id=i.checklistId AND l.cardId=c.id ' +
-    'WHERE i.cardId=c.id AND (l.boardId IS NULL OR l.boardId=c.boardId) AND ' + Contains('i.title') + '))';
+  Result := 'instr(lower(COALESCE(' + Column + ','''')),lower(' + QuotedStr(Text) + '))>0';
+end;
+
+function ChecklistTextMatchSql(const Text: string): string;
+begin
+  Result := '(EXISTS(SELECT 1 FROM checklists l WHERE l.cardId=c.id AND (l.boardId IS NULL OR l.boardId=c.boardId) AND ' +
+    SearchColumnContains('l.title', Text) + ') OR EXISTS(SELECT 1 FROM checklist_items i JOIN checklists l ON l.id=i.checklistId ' +
+    'AND l.cardId=c.id WHERE i.cardId=c.id AND (l.boardId IS NULL OR l.boardId=c.boardId) AND ' +
+    SearchColumnContains('i.title', Text) + '))';
+end;
+
+function BoardTextMatchSql(const Text: string): string;
+begin
+  Result := '(' + SearchColumnContains('c.title', Text) + ' OR ' + SearchColumnContains('c.description', Text) +
+    ' OR EXISTS(SELECT 1 FROM card_comments m WHERE m.cardId=c.id AND (m.boardId IS NULL OR m.boardId=c.boardId) AND ' +
+    SearchColumnContains('m.text', Text) + ') OR ' + ChecklistTextMatchSql(Text) + ')';
 end;
 
 // ' AND ...' on cards c: the cards the filter matches; '' for no filter.
@@ -5827,7 +5832,7 @@ begin
       'AND CAST(v.value AS NUMERIC)=CAST(' + QuotedStr(Decimal) + ' AS NUMERIC))';
   Policy := TFieldPolicy.Create(Db, UserId, BoardId, '');
   try
-    Result := ' OR EXISTS(SELECT 1 FROM card_custom_field_values v JOIN custom_fields definition ON definition.id=v.customFieldId ' +
+    Result := 'EXISTS(SELECT 1 FROM card_custom_field_values v JOIN custom_fields definition ON definition.id=v.customFieldId ' +
       'WHERE v.cardId=c.id AND (' + Match + ') AND ' + Policy.ValueReadExpression + ')';
   finally Policy.Free; end;
 end;
@@ -5839,13 +5844,13 @@ begin
 end;
 
 type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas, soComment, soLabel,
-  soUser, soMember, soAssignee, soCreator, soCreated, soModified, soArchiveState, soEndState, soBoardVisibility, soNumber, soOrg, soTeam);
+  soUser, soMember, soAssignee, soCreator, soCreated, soModified, soArchiveState, soEndState, soBoardVisibility, soNumber, soOrg, soTeam, soDescription, soFieldText, soAttachmentName, soChecklistText);
 
 const SearchArchivedCard = '(c.archived=1 OR EXISTS(SELECT 1 FROM lists archivedList WHERE archivedList.id=c.listId ' +
   'AND archivedList.boardId=c.boardId AND archivedList.archived=1) OR EXISTS(SELECT 1 FROM swimlanes archivedLane ' +
   'WHERE archivedLane.id=c.swimlaneId AND archivedLane.boardId=c.boardId AND archivedLane.archived=1))';
 
-function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, Text: string; out Kind: TSearchOperator): string;
+function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Text: string; out Kind: TSearchOperator): string;
 var Op, Value, Column, Parent, Abbrev: string; Colon: Integer; Absent: Boolean; Days, CardNumber: Int64; Digit: Char;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
@@ -5928,6 +5933,22 @@ begin
       'COALESCE(visible.permission,''private'')=''private'')');
     Exit;
   end;
+  if IsOperator('operator-description', 'description') then
+  begin Kind := soDescription; Exit(Contains('c.description')); end;
+  if IsOperator('operator-customfield', 'customfield') then
+  begin
+    Kind := soFieldText;
+    if BoardId = '' then Exit('0');
+    Exit(BoardFieldTextMatchSql(Db, UserId, BoardId, Value));
+  end;
+  if IsOperator('operator-attachment-text', 'attachment') or SameText(Op, 'attachment-text') then
+  begin
+    Kind := soAttachmentName;
+    Exit('EXISTS(SELECT 1 FROM attachments WHERE attachments.cardId=c.id AND attachments.boardId=c.boardId AND ' +
+      Contains('attachments.name') + ' AND ' + LiveAttachmentSQL(Db) + ')');
+  end;
+  if IsOperator('operator-checklist-text', 'checklist') or SameText(Op, 'checklist-text') then
+  begin Kind := soChecklistText; Exit(ChecklistTextMatchSql(Value)); end;
   if IsOperator('operator-number', 'number') then
   begin
     Kind := soNumber;
@@ -6021,7 +6042,7 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, Query: string; out Plain, Predicate, SortField: string; out Descending, SearchArchive: Boolean; out PageSize: Integer);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const UserId, BoardId, Query: string; out Plain, Predicate, SortField: string; out Descending, SearchArchive, BoardScoped: Boolean; out PageSize: Integer);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes, HasPageOption: Boolean; Token, Sql: string;
   function ReadPageOption(const Arg: string): Boolean;
@@ -6077,7 +6098,7 @@ begin
     Sql := '';
     if not InQuotes and ReadPageOption(Token) then
     begin HasPageOption := True; Continue; end;
-    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, Token, Kind);
+    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, UserId, BoardId, Token, Kind);
     if Sql = '' then
     begin
       if Plain <> '' then Plain := Plain + ' ';
@@ -6096,6 +6117,7 @@ begin
       Predicate := Predicate + '(' + Groups[Kind] + ')';
     end;
   if (Predicate = '') and not HasPageOption then Plain := Query;
+  BoardScoped := Groups[soFieldText] <> '';
   SearchArchive := Groups[soArchiveState] <> '';
   if (Query <> '') and not SearchArchive then
   begin
@@ -6106,7 +6128,7 @@ end;
 
 function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Int64 = 0;
   const OperatorSql: string = ''; const SortField: string = ''; Descending: Boolean = False; SearchArchive: Boolean = False): TWLRows;
-var Scope, Tail, Match, SortValue, OrderBy: string;
+var Scope, Tail, Match, FieldMatch, SortValue, OrderBy: string;
 begin
   Result := nil;
   if (Text = '') and (OperatorSql = '') and (SortField = '') then Exit;
@@ -6122,7 +6144,9 @@ begin
   if Text <> '' then
   begin
     if Match <> '' then Match := Match + ' AND ';
-    Match := Match + '(' + BoardTextMatchSql(Text) + BoardFieldTextMatchSql(Db, UserId, BoardId, Text) +
+    FieldMatch := BoardFieldTextMatchSql(Db, UserId, BoardId, Text);
+    if FieldMatch <> '' then FieldMatch := ' OR ' + FieldMatch;
+    Match := Match + '(' + BoardTextMatchSql(Text) + FieldMatch +
       IndexedAttachmentMatchSql(Db, Text) + ')';
   end;
   if Match = '' then Match := '1=1';
@@ -6169,6 +6193,7 @@ const
     'assignee', 'member', 'week', 'month', 'quarter', 'year', 'created', 'modified', 'archived', 'all', 'open', 'ended', 'public', 'private');
   Described: array[0..20] of string = ('board', 'list', 'swimlane', 'has', 'comment', 'label', 'hash',
     'user', 'at', 'member', 'assignee', 'creator', 'due', 'created', 'modified', 'sort', 'limit', 'number', 'org', 'team', 'status');
+  TextFields: array[0..3] of string = ('description', 'customfield', 'attachment-text', 'checklist-text');
   Statuses: array[0..4] of string = ('archived', 'all', 'ended', 'public', 'private');
   function Instruction(const Key, Fallback: string): string;
   var Name: string;
@@ -6189,6 +6214,9 @@ begin
     Instruction('description', 'Use a colon between the operator and its value. Quote values containing spaces.') + '</p><ul>';
   for Name in Described do
     Result := Result + '<li>' + Instruction('operator-' + Name, '') + '</li>';
+  for Name in TextFields do
+    Result := Result + '<li><code>' + E(Words.Text('operator-' + Name, StringReplace(Name, '-text', '', []))) +
+      ':&quot;' + E(Words.Text('search', 'Search')) + '&quot;</code></li>';
   Result := Result + '<li><ul>';
   for Name in Statuses do
     Result := Result + '<li>' + Instruction('status-' + Name, '') + '</li>';
@@ -6204,7 +6232,7 @@ function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term
 var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards: TWLRows;
   BoardCards: array of TWLRows; Positions: array of Integer;
   i, j, Shown, NextBoard, PageSize: Integer; Skip: Int64;
-  HasNext, Descending, SearchArchive: Boolean;
+  HasNext, Descending, SearchArchive, BoardScoped: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -6223,6 +6251,15 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
       Result := Result + '<option value="' + HtmlAttr(Lists[k][0]) + '"' + IfThen(Lists[k][0] = Card[3], ' selected', '') +
         '>' + E(Lists[k][1]) + '</option>';
     Result := Result + '</select></label> <button type="submit">' + E(Words.Text('move', 'Move')) + '</button></form>';
+  end;
+  function CardsForBoard(BoardIndex: Integer; Limit: Int64): TWLRows;
+  var BoardId, BoardPlain, BoardPredicate, BoardSort: string; Reverse, Archive, Scoped: Boolean; Size: Integer;
+  begin
+    BoardId := Boards[BoardIndex][0];
+    if not BoardScoped then
+      Exit(SearchBoardCards(Db, UserId, BoardId, Plain, Limit, OperatorSql, SortField, Descending, SearchArchive));
+    ParseGlobalSearch(Db, Words, UserId, BoardId, Text, BoardPlain, BoardPredicate, BoardSort, Reverse, Archive, Scoped, Size);
+    Result := SearchBoardCards(Db, UserId, BoardId, BoardPlain, Limit, BoardPredicate, BoardSort, Reverse, Archive);
   end;
   procedure AppendCard(BoardIndex: Integer; const Card: TWLRow);
   begin
@@ -6243,7 +6280,7 @@ var Text, Plain, Results, NextUrl, OperatorSql, SortField: string; Boards, Cards
   end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Db, Words, UserId, Text, Plain, OperatorSql, SortField, Descending, SearchArchive, PageSize);
+  ParseGlobalSearch(Db, Words, UserId, '', Text, Plain, OperatorSql, SortField, Descending, SearchArchive, BoardScoped, PageSize);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
@@ -6261,7 +6298,7 @@ begin
     begin
       for i := 0 to High(Boards) do
       begin
-        Cards := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1 - Shown, OperatorSql, '', False, SearchArchive);
+        Cards := CardsForBoard(i, Skip + PageSize + 1 - Shown);
         for j := 0 to High(Cards) do
         begin
           if Skip > 0 then begin Dec(Skip); Continue; end;
@@ -6277,8 +6314,7 @@ begin
       SetLength(BoardCards, Length(Boards));
       SetLength(Positions, Length(Boards));
       for i := 0 to High(Boards) do
-        BoardCards[i] := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1,
-          OperatorSql, SortField, Descending, SearchArchive);
+        BoardCards[i] := CardsForBoard(i, Skip + PageSize + 1);
       while True do
       begin
         NextBoard := -1;

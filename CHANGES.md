@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Scope Search All Boards text to descriptions, readable custom fields,
+  live attachment filenames, or checklist and checklist-item titles. The
+  search instructions show the operators in the selected language.
+
 - Find exact card numbers with the localized `number:` operator. The
   `org:` and `team:` filters match active board assignments by display name
   or ID, and recognize group short names in the shared store.
