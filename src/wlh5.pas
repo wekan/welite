@@ -8139,9 +8139,30 @@ begin
   else Append(Words.Text('r-rule-disabled', 'Disabled'));
 end;
 
-function HistoryScrumSummary(Values: TJSONObject; Words: TWLTranslator): string;
+function HistoryScrumSummary(Row, Values: TJSONObject; Words: TWLTranslator): string;
 var Data, Entry, Detail: TJSONData; Records: TJSONArray; Document: TJSONObject;
   I: Integer; Item, Name: string;
+  function PreviousName(const Removed:TJSONObject):string;
+  var Previous, History, Candidate, Snapshot:TJSONData; J:Integer; EntryId,EntryType:string;
+  begin
+    EntryId:=Removed.Get('id','');
+    EntryType:=Removed.Get('type','');
+    Result:=EntryId;
+    if (EntryId='') or (EntryType='') then Exit;
+    Previous:=Row.Find('previousContent');
+    if not (Previous is TJSONObject) then Exit;
+    History:=TJSONObject(Previous).Find('records');
+    if not (History is TJSONArray) then Exit;
+    for J:=0 to History.Count-1 do
+    begin
+      Candidate:=History.Items[J];
+      if not (Candidate is TJSONObject) or (TJSONObject(Candidate).Get('id','')<>EntryId) or
+        (TJSONObject(Candidate).Get('type','')<>EntryType) then Continue;
+      Snapshot:=TJSONObject(Candidate).Find('document');
+      if Snapshot is TJSONObject then Result:=TJSONObject(Snapshot).Get('name',EntryId);
+      Exit;
+    end;
+  end;
   procedure AddDetail(const Text: string);
   begin
     if Text = '' then Exit;
@@ -8170,7 +8191,11 @@ begin
       Detail := Document.Find('scrum');
       if (Detail <> nil) and (Detail.JSONType <> jtNull) then AddDetail(Detail.AsJSON);
     end
-    else AddDetail(Words.Text('history-change-removed', 'Removed'));
+    else if (Data<>nil) and (Data.JSONType=jtNull) and (Entry is TJSONObject) then
+    begin
+      AddDetail(PreviousName(TJSONObject(Entry)));
+      AddDetail(Words.Text('history-change-removed', 'Removed'));
+    end;
     if Item = '' then Continue;
     if Result <> '' then Result := Result + '; ';
     Result := Result + Item;
@@ -8455,7 +8480,7 @@ begin
         else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
         case Row.Get('entityType', '') of
           'rule': Summary := HistoryRuleSummary(Row, Words);
-          'scrum': Summary := HistoryScrumSummary(Values, Words);
+          'scrum': Summary := HistoryScrumSummary(Row, Values, Words);
         else Summary := HistoryContentSummary(T.Db, Row, Values, Words, DateFormat);
         end;
         RowGroup := Row.Get('group', '');
