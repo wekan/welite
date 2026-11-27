@@ -799,6 +799,35 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     var t = document.querySelector('.js-pop-over .js-new-board-title');
     if (t) t.focus();
   });
+  up.on('click', '.js-open-board-zip-import', function (event) {
+    event.preventDefault();
+    openPopOver('board-zip-import');
+  });
+  up.on('submit', '.js-board-zip-import-form', function (event, form) {
+    event.preventDefault();
+    var file = form.elements.archive.files[0];
+    var submit = form.querySelector('button[type="submit"]');
+    var status = form.querySelector('.js-board-zip-import-status');
+    if (!file || submit.disabled) return;
+    submit.disabled = true;
+    status.hidden = false;
+    status.textContent = form.dataset.progress;
+    fetch('/api/boards/import', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/zip', 'X-Requested-With': 'XMLHttpRequest' },
+      body: file
+    }).then(function (response) {
+      if (!response.ok) throw new Error('Import failed');
+      return response.json();
+    }).then(function (board) {
+      if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
+      window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
+    }).catch(function () {
+      status.textContent = form.dataset.failed;
+      submit.disabled = false;
+    });
+  });
   // WeKan's Popup.open(name) and Popup.close(), for what opens a pop-over by
   // its WeKan name: the Weddy pop-over whose template has that data-popup.
   if (!window.Popup) {

@@ -1111,6 +1111,7 @@ begin
     // header.jade's Create Board pop-over (createBoardForm), for whoever may
     // make a board - checked, not attempted, so nothing is recorded.
     if ResolveTenant(Request, T) and TenantOpen(T) and MayCreateBoard(T.Db, S.UserId) then
+    begin
       Header := Header + '<a id="header-new-board-icon" class="board-header-btn js-create-board" href="#" title="' +
         HtmlAttr(Words.Text('add-board', 'Add Board')) + '" aria-label="' + HtmlAttr(Words.Text('add-board', 'Add Board')) +
         '"><i class="fa fa-plus"></i></a><template class="js-pop-over-template" data-pop="create-board" data-title="' +
@@ -1122,6 +1123,18 @@ begin
         '</label><label><input class="js-multiline-title-mode" type="radio" name="titleMode" value="separate"> ' +
         E(StringReplace(Words.Text('many-items', '__items__'), '__items__', Words.Text('boards', 'Boards'), [rfReplaceAll])) + '</label></fieldset>' +
         '<input class="primary wide" type="submit" value="' + HtmlAttr(Words.Text('create', 'Create')) + '"></form></template>';
+      if not SharedSettingOn(T.Db, 'disableAllImport') then
+        Header := Header + '<a class="board-header-btn js-open-board-zip-import" href="#" title="' +
+          HtmlAttr(Words.Text('import-board-c', 'Import board')) + '" aria-label="' +
+          HtmlAttr(Words.Text('import-board-c', 'Import board')) + '"><i class="fa fa-upload"></i></a>' +
+          '<template class="js-pop-over-template" data-pop="board-zip-import" data-title="' +
+          HtmlAttr(Words.Text('import-board-c', 'Import board')) + '"><form class="js-board-zip-import-form" ' +
+          'data-failed="' + HtmlAttr(Words.Text('import-scoped-failed', 'Import failed')) + '" data-progress="' +
+          HtmlAttr(Words.Text('importing', 'Importing...')) + '"><label>WeKan ZIP' +
+          '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
+          '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
+          E(Words.Text('import', 'Import')) + '</button></form></template>';
+    end;
     // header.jade's quick access: the board's title, renamed by its admin.
     if QuickAccess <> '' then Header := Header + QuickAccess
     else if BoardTitle <> '' then

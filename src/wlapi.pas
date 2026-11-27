@@ -3724,7 +3724,7 @@ const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers'
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId:string;
   Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
-  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed:Boolean;
+  Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip:Boolean; Session:TWLSession;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
   begin
@@ -4285,14 +4285,18 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   end;
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
-  if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
+  IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
+  if IsZip and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
+    (aRequest.Authorization = '') and (aRequest.QueryFields.Values['authToken'] = '') and
+    (aRequest.QueryFields.Values['token'] = '') and Html5User(T.Db, aRequest, Session) then Actor := Session.UserId
+  else if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
   Body:=nil;Guard:='1';Committed:=False;Files:=TStringList.Create;
   MemberMap:=TJSONObject.Create;CardCreations:=TJSONObject.Create;ImportedListLanes:=TJSONObject.Create;ImportedMembers:=TStringList.Create;ImportedMembers.CaseSensitive:=True;
   for I:=0 to High(Maps) do Maps[I]:=nil;
   try
     try
       try
-        if SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip') then Body:=ReadBoardZip(aRequest.Content)
+        if IsZip then Body:=ReadBoardZip(aRequest.Content)
         else Body:=ExactObject(aRequest.Content);
       except raise EConvertError.Create('Invalid board export');end;
       Value:=Body.Find('board');
