@@ -307,10 +307,9 @@ Found on the way, not part of this goal:
   older than them; `tests/view.py` and WeKan's specs through
   `tests/wkui/run.sh` cover the shared store meanwhile.
 
-- **Older test failures** (2026-11-26; reproduced on ab0d9ac):
-  `tests/ferroot.py` (the model check passes, the full interoperability run
-  with the corrected model is pending). Two more need additional test tools: `tests/embhttp.py` an `fpcres` beside
-  `$FPC`, `tests/argonv.py` the reference Argon2 source in `ARGON2_SRC`.
+- **Test tool dependencies:** `tests/embhttp.py` needs an `fpcres`
+  beside `$FPC`. `tests/argonv.py` needs the reference Argon2 source in
+  `ARGON2_SRC`.
 
 Design questions for the maintainer (work goes on with the stated default):
 

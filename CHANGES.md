@@ -597,6 +597,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Run the short-path provisioning and offline migration tests in native
   storage mode. Both SQLite backends verify persistent tenant paths and
   reopening the migrated data.
+- Pass the full live FerretDB interoperability test on linked and CLI
+  SQLite with the regenerated model. It checks bidirectional BSON writes,
+  child projections, rollback and reopening existing stores.
 - Regenerate the shared SQLite model from the current schema. Preserve
   list collapse as a BSON boolean and make the model freshness check pass.
 - Update the native keypad test to check the three-row control and its
