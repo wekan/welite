@@ -29,6 +29,12 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   HTML4. The rename changes the displayed and downloaded filename, retains
   the existing extension, and leaves the stored file bytes intact.
 
+## HTML5 card comments and checklists
+
+- Render Markdown in card comments, checklist titles and checklist items
+  with the same viewer and plain-text settings as card descriptions. The
+  API continues to return the stored Markdown source.
+
 ## Shared storage tests
 
 - Verify that a running FerretDB (`10635f841e`) discovers a database newly

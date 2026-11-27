@@ -1338,7 +1338,7 @@ end;
 // progress and items; for whoever may change the card, a checklist added (the
 // title line's "+" before there is one, the bottom one after), an item added
 // under its checklist, an item checked, and the checklist's menu.
-function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable: Boolean): string;
+function ChecklistsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; Writable, PlainLinks, PlainSource: Boolean): string;
 var Lists, Items: TWLRows; i, k, Done, Percent: Integer; Base, Checklist, ItemsHtml, Finished: string;
   function InlinedForm(const Cls, Action, Label_: string): string;
   begin
@@ -1382,14 +1382,14 @@ begin
           '" type="submit" aria-label="' + HtmlAttr(Items[k][1]) + '"></button></form>'
       else
         ItemsHtml := ItemsHtml + '<div class="check-box-container"><div class="check-box materialCheckBox' + Finished + '"></div></div>';
-      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + E(Items[k][1]) + '</div></div>';
+      ItemsHtml := ItemsHtml + '<div class="item-title' + Finished + '">' + MarkdownViewer(Items[k][1], PlainLinks, PlainSource) + '</div></div>';
     end;
     Checklist := '<div class="js-checklist checklist" data-checklist="' + HtmlAttr(Lists[i][0]) + '"><div class="checklist-title">';
     if Writable then
       Checklist := Checklist + '<a class="fa fa-navicon checklist-details-menu js-open-checklist-details-menu" href="#" data-checklist="' +
         HtmlAttr(Lists[i][0]) + '" title="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) +
         '" aria-label="' + HtmlAttr(Words.Text('checklistActionsPopup-title', 'Checklist Actions')) + '"></a>';
-    Checklist := Checklist + '<h4 class="title">' + E(Lists[i][1]) + '</h4></div>';
+    Checklist := Checklist + '<h4 class="title">' + MarkdownViewer(Lists[i][1], PlainLinks, PlainSource) + '</h4></div>';
     // WeKan's progress: the share of its items checked, shown once one is.
     if (Length(Items) > 0) and (Done > 0) then
     begin
@@ -1441,7 +1441,7 @@ begin
   Result := Result + ']';
 end;
 
-function CommentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; CanComment: Boolean): string;
+function CommentsSection(Db: TWLDb; Words: TWLTranslator; const BoardId, CardId: string; CanComment, PlainLinks, PlainSource: Boolean): string;
 var R: TWLRows; i: Integer; Shown: string;
 begin
   Result := '<h3 class="card-details-item-title js-toggle-card-section" data-section="comments" role="button" tabindex="0">' +
@@ -1459,7 +1459,7 @@ begin
     // The stored time, as minutes: 2026-11-26T01:02:03.456Z -> 2026-11-26 01:02.
     Shown := FormatShownDate(R[i][2], ViewDateFormat);
     Result := Result + '<div class="comment" data-id="' + HtmlAttr(R[i][0]) + '"><span class="comment-member">' + E(R[i][3]) +
-      '</span><div class="comment-text"><div class="viewer">' + E(R[i][1]) + '</div></div><time class="activity-time" datetime="' +
+      '</span><div class="comment-text">' + MarkdownViewer(R[i][1], PlainLinks, PlainSource) + '</div><time class="activity-time" datetime="' +
       HtmlAttr(R[i][2]) + '">' + E(Shown) + '</time></div>';
   end;
   Result := Result + '</div>';
@@ -3796,8 +3796,9 @@ begin
     PutSection(Sections, 'poker', PokerSection(Db, Words, S.UserId, BoardId, CardId));
     PutSection(Sections, 'customFields', CustomFieldsSection(Db, Words, S, BoardId, CardId, Writable));
     PutSection(Sections, 'attachments', AttachmentsSection(Db, Words, BoardId, CardId, Writable, Writable and BoardCanAdmin(Db, S.UserId, BoardId)));
-    PutSection(Sections, 'checklists', ChecklistsSection(Db, Words, BoardId, CardId, Writable));
-    PutSection(Sections, 'comments', CommentsSection(Db, Words, BoardId, CardId, (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId)));
+    PutSection(Sections, 'checklists', ChecklistsSection(Db, Words, BoardId, CardId, Writable, PlainLinks, PlainSource));
+    PutSection(Sections, 'comments', CommentsSection(Db, Words, BoardId, CardId,
+      (S.UserId <> '') and BoardCanComment(Db, S.UserId, BoardId), PlainLinks, PlainSource));
     Details := Details + CardSectionsHtml(Db, Words, BoardId, Sections);
     Details := Details +
       // The card's activities, opened by their heading.

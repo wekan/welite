@@ -633,19 +633,21 @@ def http_checks(server, tmp, backend):
         base = '/b/%s/cards/%s/checklists' % (board_id, card_id)
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert b'class="add-checklist-top js-open-inlined-form"' in page and ('action="%s"' % base).encode() in page
-        assert request('POST', base, {'title': 'Steps'}, cookie=owner)[0] == 200
+        status, _, page, _ = request('POST', base, {'title': '**Steps**'}, cookie=owner)
+        assert status == 200 and b'<strong>Steps</strong>' in page
         def checklists():
             return json.loads(request('GET', '/api/boards/%s/cards/%s/checklists' % (board_id, card_id), headers=auth)[2])
-        cl = [c for c in checklists() if c['title'] == 'Steps'][0]
+        cl = [c for c in checklists() if c['title'] == '**Steps**'][0]
         badge_setting = 'allowsChecklistCountBadgeOnMinicard'
         badge_text = b'class="badge-text check-list-text"'
         assert badge_text not in shown()
         assert method('/boards/update', [{'_id': board_id}, {'$set': {badge_setting: True}}])[0] == 200
         assert badge_text + b'>0/0</span>' in shown()
-        for title in ['First', 'Second']:
+        for title in ['**First**', 'Second']:
             assert request('POST', '%s/%s/items' % (base, cl['_id']), {'title': title}, cookie=owner)[0] == 200
         cl = [c for c in checklists() if c['_id'] == cl['_id']][0]
-        assert [i['title'] for i in cl['items']] == ['First', 'Second'], cl
+        assert [i['title'] for i in cl['items']] == ['**First**', 'Second'], cl
+        assert b'<strong>First</strong>' in opened()
         first = cl['items'][0]['_id']
         status, _, page, _ = request('POST', '%s/%s/items/%s/toggle' % (base, cl['_id'], first), {}, cookie=owner)
         assert status == 200 and b'checklist-progress-bar-container' in page and b'50%' in page
@@ -693,8 +695,8 @@ def http_checks(server, tmp, backend):
         comments_path = '/b/%s/cards/%s/comments' % (board_id, card_id)
         page = request('GET', '%s/%s' % (route, card_id), cookie=owner)[2]
         assert ('action="%s"' % comments_path).encode() in page
-        status, _, page, _ = request('POST', comments_path, {'comment': 'Owner <i>note</i>'}, cookie=owner)
-        assert status == 200 and b'Owner &lt;i&gt;note&lt;/i&gt;' in page and b'<i>note</i>' not in page
+        status, _, page, _ = request('POST', comments_path, {'comment': '**Owner** <i>note</i>'}, cookie=owner)
+        assert status == 200 and b'<strong>Owner</strong> &lt;i&gt;note&lt;/i&gt;' in page and b'<i>note</i>' not in page
         assert request('POST', comments_path, {'comment': 'From comment only'}, cookie=commenter)[0] == 200
         # Comment only may comment but not change the card.
         assert request('POST', '/b/%s/cards/%s/title' % (board_id, card_id), {'title': 'X'}, cookie=commenter)[0] == 403
@@ -706,7 +708,7 @@ def http_checks(server, tmp, backend):
         assert request('POST', comments_path, {'comment': '  '}, cookie=owner)[0] == 400
         texts = [c['comment'] for c in json.loads(request('GET', '/api/boards/%s/cards/%s/comments' % (board_id, card_id),
                                                           headers=auth)[2])]
-        assert texts == ['Owner <i>note</i>', 'From comment only'], texts
+        assert texts == ['**Owner** <i>note</i>', 'From comment only'], texts
 
         # Add a list: the swimlane's Add list form (last), and weddy.js's
         # createListAfter after a given list (server/models/lists.js).
