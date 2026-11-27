@@ -45,8 +45,10 @@ begin
     Check(Pos('name="move_right" value="&gt;" dir="ltr"',Body)>0,'Missing right arrow');
     Check(Pos('name="move_up" value="^" dir="ltr"',Body)>0,'Missing up arrow');
     Check(Pos('name="move_down" value="v" dir="ltr"',Body)>0,'Missing down arrow');
-    Check(Pos('name="move_left"',Body)<Pos('name="move_down"',Body),'Wrong left/down order');
-    Check(Pos('name="move_down"',Body)<Pos('name="move_right"',Body),'Wrong down/right order');
+    Check(Pos('<table class="board-joystick" dir="ltr"',Body)>0,'Missing physical table direction');
+    Check(Pos('name="move_up"',Body)<Pos('name="move_left"',Body),'Missing upper row');
+    Check(Pos('name="move_left"',Body)<Pos('name="move_right"',Body),'Reversed horizontal controls');
+    Check(Pos('name="move_right"',Body)<Pos('name="move_down"',Body),'Missing lower row');
     Check(Pos('name="dir"',Body)=0,'Emitted caption-bound direction');
     Check(Pos('name="action_edit"',Body)>0,'Missing native edit');
     Check(Pos('name="action_clone"',Body)>0,'Missing native clone');

@@ -307,10 +307,9 @@ Found on the way, not part of this goal:
   older than them; `tests/view.py` and WeKan's specs through
   `tests/wkui/run.sh` cover the shared store meanwhile.
 
-- **Four older test failures** (2026-11-26; each fails the same way on
-  ab0d9ac, before that day's work): `tests/ferroot.py` (`releases/genmodel.py
-  --check` reports the generated model out of date), `tests/keypad.py` (the
-  test program stops with runtime error 217), `tests/short.py` (the first
+- **Older test failures** (2026-11-26; reproduced on ab0d9ac):
+  `tests/ferroot.py` (`releases/genmodel.py --check` reports the generated
+  model out of date), `tests/short.py` (the first
   domain's database is not at `domains/d0000001/files/db/wekan.db`) and
   `tests/pathid.py` (its path identity cases answer differently). Two more
   need something this sandbox lacks: `tests/embhttp.py` an `fpcres` beside
