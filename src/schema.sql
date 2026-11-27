@@ -249,6 +249,7 @@ CREATE INDEX idx_checklist_items ON checklist_items(checklistId, sort);
 CREATE TABLE custom_fields (
   id                  TEXT PRIMARY KEY,
   name                TEXT NOT NULL,
+  sort                REAL,
   type                TEXT NOT NULL,             -- text|number|date|dropdown|checkbox|currency|stringtemplate
   currencyCode        TEXT,
   stringtemplateFormat    TEXT,

@@ -508,7 +508,7 @@ begin
   end;
   Fields := Db.Query('SELECT f.id,f.name,COALESCE(f.showOnCard,0),COALESCE(f.automaticallyOnCard,0),COALESCE(f.alwaysOnCard,0),' +
     'COALESCE(f.showLabelOnMiniCard,0) FROM custom_fields f JOIN custom_field_boards b ON b.customFieldId=f.id WHERE b.boardId=' +
-    QuotedStr(BoardId) + IfThen(Admin, '', ' AND f.adminOnly=0') + ' ORDER BY f.createdAt,f.id;');
+    QuotedStr(BoardId) + IfThen(Admin, '', ' AND f.adminOnly=0') + ' ORDER BY f.sort IS NOT NULL,f.sort,f.createdAt,f.id;');
   try
     Folds := Obj(Obj(Profile, 'collapsedCardSections'), BoardId);
     Visibility := Obj(Obj(B, 'scrum'), 'visibility');

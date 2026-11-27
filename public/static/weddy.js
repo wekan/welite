@@ -1191,9 +1191,8 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   // each field's place written as its sort (WeKan's placeCustomFieldOrder).
   function cfSaveOrder(list) {
     var ids = Array.prototype.map.call(list.querySelectorAll('.js-card-settings-custom-field'), function (el) { return el.dataset.id; });
-    Promise.all(ids.map(function (id, i) {
-      return window.Meteor.callAsync('/customFields/update', { _id: id }, { $set: { sort: i } });
-    })).then(function () { reloadBoard(true); }, csFail);
+    var board = list.closest('.js-card-settings-pane').dataset.board;
+    window.Meteor.callAsync('setCustomFieldOrder', board, ids).then(function () { reloadBoard(true); }, csFail);
   }
   var cfDrag = null;
   document.addEventListener('pointerdown', function (event) {

@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Board Settings appends new custom fields and saves the order set by mouse
+  or keyboard. Open cards follow that order. Turning on Show on Card adds
+  the field to existing cards while preserving their values.
+
 - Render title-change activities with the board’s text display settings on
   cards and in the sidebar. The sidebar restores its expanded activities
   after a board refresh. Three shared activity viewer tests passed in Chromium.

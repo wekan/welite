@@ -17,6 +17,16 @@ with tempfile.TemporaryDirectory(prefix='wlcfup-',dir=os.environ['TMPDIR']) as d
             result=subprocess.run([str(out/'cfup'),str(db),mode],capture_output=True,text=True)
             assert result.returncode==0,result.stderr
             return result.stdout.strip()
+        ordering=out/'field-order.db'
+        with sqlite3.connect(ordering) as con:
+            con.executescript("CREATE TABLE custom_fields(id TEXT); INSERT INTO custom_fields VALUES('old');")
+        assert run(ordering,'sort')=='yes'
+        with sqlite3.connect(ordering) as con:
+            assert con.execute('SELECT id,sort FROM custom_fields').fetchall()==[('old',None)]
+            con.execute('UPDATE custom_fields SET sort=2.5')
+        assert run(ordering,'sort')=='yes'
+        with sqlite3.connect(ordering) as con:
+            assert con.execute('SELECT sort,typeof(sort) FROM custom_fields').fetchall()==[(2.5,'real')]
         deadlines=out/'deadlines.db'
         with sqlite3.connect(deadlines) as con:
             con.executescript("CREATE TABLE checklists(id TEXT); CREATE TABLE checklist_items(id TEXT); INSERT INTO checklists VALUES('old');")

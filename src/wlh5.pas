@@ -1691,7 +1691,7 @@ begin
   R := Db.Query('SELECT f.id,f.name,f.type,COALESCE(v.value,''''),COALESCE(f.currencyCode,''''),' +
     'COALESCE(f.stringtemplateFormat,''''),COALESCE(f.stringtemplateSeparator,'''') FROM card_custom_field_values v ' +
     'JOIN custom_fields f ON f.id=v.customFieldId JOIN custom_field_boards b ON b.customFieldId=f.id AND b.boardId=' +
-    QuotedStr(BoardId) + ' WHERE v.cardId=' + QuotedStr(CardId) + ' ORDER BY f.name,f.id;');
+    QuotedStr(BoardId) + ' WHERE v.cardId=' + QuotedStr(CardId) + ' ORDER BY f.sort IS NOT NULL,f.sort,f.createdAt,f.id;');
   Result := '<div class="card-details-group card-details-group-custom-fields">' +
     '<h3 class="card-details-item-title js-toggle-card-section" data-section="customFields" role="button" tabindex="0">' +
     '<i class="fa fa-caret-down"></i><i class="fa fa-list-alt"></i> ' + E(Words.Text('custom-fields', 'Custom Fields')) +
@@ -4485,12 +4485,46 @@ end;
 // /boards/update, the user's own through /users/update, setShowLabelTextOverride
 // and setCollapsedCardSection, a custom field's through /customFields/update.
 // 200, or a Meteor error's code and reason.
+function SetCustomFieldOrder(Db: TWLDb; const UserId: string; Args: TJSONArray; out Error: string): Integer;
+var BoardId, Entries, Scope, Guard, Position: string; Order: TJSONArray; Index: Integer; Item: TJSONData;
+begin
+  Error := 'Match failed';
+  if (Args.Count <> 2) or (Args.Items[0].JSONType <> jtString) or not (Args.Items[1] is TJSONArray) then Exit(400);
+  BoardId := Args.Strings[0];
+  Error := 'Access denied';
+  if not BoardOwnAdmin(Db, UserId, BoardId) then Exit(403);
+  Order := TJSONArray(Args.Items[1]);
+  if Order.Count = 0 then Exit(400);
+  for Index := 0 to Order.Count - 1 do
+  begin
+    Item := Order.Items[Index];
+    if (Item.JSONType <> jtString) or (Item.AsString = '') or (Pos(#0, Item.AsString) > 0) then Exit(400);
+  end;
+  Entries := 'json_each(' + QuotedStr(Order.AsJSON) + ')';
+  Scope := 'SELECT customFieldId FROM custom_field_boards WHERE boardId=' + QuotedStr(BoardId);
+  Guard := '(SELECT count(*) FROM (' + Scope + ') WHERE customFieldId IN (SELECT value FROM ' + Entries + '))=' +
+    IntToStr(Order.Count) + ' AND (SELECT count(*) FROM (' + Scope + '))=' + IntToStr(Order.Count) +
+    ' AND NOT EXISTS(SELECT 1 FROM custom_field_boards b WHERE b.customFieldId IN (SELECT value FROM ' + Entries +
+    ') AND NOT EXISTS(SELECT 1 FROM board_members m WHERE m.boardId=b.boardId AND m.userId=' + QuotedStr(UserId) +
+    ' AND m.isActive=1 AND m.isAdmin=1))';
+  if Length(Db.Query('SELECT 1 WHERE ' + Guard + ';')) <> 1 then Exit(403);
+  Position := '(SELECT key FROM ' + Entries + ' WHERE value=custom_fields.id)';
+  if not Db.Exec('BEGIN IMMEDIATE; SELECT CASE WHEN ' + Guard + ' THEN 1 ELSE json(''Field order scope changed'') END; ' +
+    'UPDATE custom_fields SET sort=' + Position + ' WHERE id IN (' + Scope + '); ' +
+    'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM custom_fields WHERE id IN (' + Scope + ') AND sort IS NOT ' + Position +
+    ') THEN 1 ELSE json(''Field order write failed'') END; COMMIT;') then
+  begin Db.Exec('ROLLBACK;'); Error := 'Could not save field order'; Exit(500); end;
+  Error := '';
+  Result := 200;
+end;
+
 function CardSettingsMethod(const T: TWLTenant; const UserId, Name: string; Args: TJSONArray; out Error: string): Integer;
 var Selector, Modifier, Clean, SetPart: TJSONObject; BoardId, Sql, Profile, Path, Id, Cols, Deposit: string; i: Integer; V: TJSONData;
   R: TWLRows; Refused: Boolean;
 begin
   Error := 'Match failed';
   Result := 400;
+  if Name = 'setCustomFieldOrder' then Exit(SetCustomFieldOrder(T.Db, UserId, Args, Error));
   if Name = '/boards/update' then
   begin
     if (Args.Count <> 2) or not (Args.Items[0] is TJSONObject) or not (Args.Items[1] is TJSONObject) then Exit;
@@ -4663,15 +4697,25 @@ begin
       Path := SetPart.Names[i]; V := SetPart.Items[i];
       if (Path = 'name') and (V.JSONType = jtString) and (Trim(V.AsString) <> '') and (Length(V.AsString) <= 200) then
         Cols := Cols + ',name=' + QuotedStr(V.AsString)
+      else if (Path = 'sort') and (V.JSONType = jtNumber) and
+        (V.AsFloat >= 0) and (V.AsFloat <= High(Integer)) and (V.AsFloat = V.AsInteger) then
+        Cols := Cols + ',sort=' + IntToStr(V.AsInteger)
       else if ((Path = 'showOnCard') or (Path = 'automaticallyOnCard') or (Path = 'alwaysOnCard') or (Path = 'showLabelOnMiniCard')) and
         (V.JSONType = jtBoolean) then
         Cols := Cols + ',' + Path + '=' + IfThen(V.AsBoolean, '1', '0')
       else begin Error := 'Access denied'; Exit(403); end;
     end;
     if Cols = '' then Exit;
-    if not T.Db.Exec('UPDATE custom_fields SET modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',
-      LocalTimeToUniversal(Now))) + Cols + ' WHERE id=' + QuotedStr(Id) + ';') then
-    begin Error := 'Could not save'; Exit(500); end;
+    Sql := '';
+    V := SetPart.Find('alwaysOnCard');
+    if (V <> nil) and V.AsBoolean then
+      Sql := 'INSERT INTO card_custom_field_values(cardId,customFieldId,value) SELECT c.id,' +
+        QuotedStr(Id) + ',NULL FROM cards c JOIN custom_field_boards b ON b.boardId=c.boardId AND b.customFieldId=' +
+        QuotedStr(Id) + ' WHERE NOT EXISTS(SELECT 1 FROM card_custom_field_values v WHERE v.cardId=c.id AND v.customFieldId=' +
+        QuotedStr(Id) + '); ';
+    if not T.Db.Exec('BEGIN IMMEDIATE; UPDATE custom_fields SET modifiedAt=' + QuotedStr(FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',
+      LocalTimeToUniversal(Now))) + Cols + ' WHERE id=' + QuotedStr(Id) + '; ' + Sql + 'COMMIT;') then
+    begin T.Db.Exec('ROLLBACK;'); Error := 'Could not save'; Exit(500); end;
   end
   else begin Error := 'Method not found'; Exit(404); end;
   Error := '';
@@ -5066,7 +5110,7 @@ begin
   // limitSettings.avatarsUploadBlocked; avatars stay enabled without it.
   // Board Settings / Card's writes (wlcardst).
   if (Name = '/boards/update') or (Name = 'setShowLabelTextOverride') or (Name = 'setBoardDragging') or
-    (Name = 'setCollapsedCardSection') or (Name = '/customFields/update') then
+    (Name = 'setCollapsedCardSection') or (Name = '/customFields/update') or (Name = 'setCustomFieldOrder') then
   begin
     Args := nil;
     try
@@ -5089,7 +5133,8 @@ begin
     else
     begin
       // The board's pages draw again, the writer's too: its cards change.
-      if (Name = '/boards/update') or (Name = '/customFields/update') or (Name = 'setBoardDragging') then AnnounceToAll;
+      if (Name = '/boards/update') or (Name = '/customFields/update') or (Name = 'setBoardDragging') or
+        (Name = 'setCustomFieldOrder') then AnnounceToAll;
       SendJsonAnswer(Response, 200, '{"result":1}');
     end;
     Exit;

@@ -11,6 +11,8 @@ begin
     begin if EnsureListCollapseColumn(Db) then Writeln('yes') else Writeln('no');end
     else if ParamStr(2)='deadline' then
     begin if EnsureChecklistDeadlineColumns(Db) then Writeln('yes') else Writeln('no');end
+    else if ParamStr(2)='sort' then
+    begin if EnsureCustomFieldSortColumn(Db) then Writeln('yes') else Writeln('no');end
     else if ParamStr(2)='policy' then
     begin if EnsureFieldPolicyColumns(Db) then Writeln('yes') else Writeln('no');end
     else if EnsureSettingsColumn(Db) and EnsureFieldPolicyColumns(Db) then Writeln('yes') else Writeln('no');

@@ -4090,7 +4090,7 @@ end;
 // status and why not.
 function WriteBoardField(const T:TWLTenant;const UserId,BoardId,Name,Typ:string;const Flags:TDefinitionFlags;
   Settings:TJSONObject;out Id,Error:string):Integer;
-var Stamp,Sql,GuardSql,DropdownSql,DropdownGuards:string;Data:TJSONObject;Rows:TWLRows;Policy:TFieldPolicy;
+var Stamp,Sql,GuardSql,DropdownSql,DropdownGuards,SortSql:string;Data:TJSONObject;Rows:TWLRows;Policy:TFieldPolicy;
 begin
   Id:='';Error:='';
   Policy:=nil;
@@ -4105,10 +4105,12 @@ begin
     try DropdownSql:=DropdownScript(T.Db,Id,Settings,DropdownGuards);
     except Error:='Could not prepare dropdown settings';Id:='';Exit(500);end;
     GuardSql:='SELECT CASE WHEN '+Policy.DefinitionExpression('',Flags[5]=1)+' THEN 1 ELSE json(''Field creation forbidden'') END; ';
+    SortSql:='(SELECT COALESCE(MAX(f.sort),-1)+1 FROM custom_fields f JOIN custom_field_boards b '+
+      'ON b.customFieldId=f.id WHERE b.boardId='+QuotedStr(BoardId)+')';
     Sql:='BEGIN IMMEDIATE; '+DropdownGuards+GuardSql+Format(
-      'INSERT INTO custom_fields(id,name,type,showOnCard,automaticallyOnCard,'+
-      'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) VALUES(%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s);',
-      [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],QuotedStr(Stamp),QuotedStr(Stamp),SettingsLiteral(Settings,'currencyCode'),
+      'INSERT INTO custom_fields(id,name,type,sort,showOnCard,automaticallyOnCard,'+
+      'showLabelOnMiniCard,showSumAtTopOfList,readOnly,adminOnly,createdAt,modifiedAt,currencyCode,stringtemplateFormat,stringtemplateSeparator,settings_json) VALUES(%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s);',
+      [QuotedStr(Id),QuotedStr(Name),QuotedStr(Typ),SortSql,Flags[0],Flags[1],Flags[2],Flags[3],Flags[4],Flags[5],QuotedStr(Stamp),QuotedStr(Stamp),SettingsLiteral(Settings,'currencyCode'),
        SettingsLiteral(Settings,'stringtemplateFormat'),SettingsLiteral(Settings,'stringtemplateSeparator'),SettingsRemainder(Settings)])+
       'INSERT INTO custom_field_boards(customFieldId,boardId) VALUES('+QuotedStr(Id)+','+QuotedStr(BoardId)+'); '+DropdownSql;
     Data:=TJSONObject.Create(['customFieldId',Id]);

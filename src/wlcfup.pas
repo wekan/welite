@@ -5,6 +5,7 @@ uses SysUtils,wldb;
 function EnsureSettingsColumn(Db:TWLDb):Boolean;
 function EnsureFieldPolicyColumns(Db:TWLDb):Boolean;
 function EnsureDropdownColumn(Db:TWLDb):Boolean;
+function EnsureCustomFieldSortColumn(Db: TWLDb): Boolean;
 function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
 function EnsureDeleteMarkers(Db:TWLDb):Boolean;
 function EnsureListCollapseColumn(Db:TWLDb):Boolean;
@@ -104,7 +105,7 @@ begin
   Result:=Inspect and Found;
 end;
 
-function EnsureNullableTextColumns(Db:TWLDb;const Tables,Columns:array of string):Boolean;
+function EnsureNullableColumns(Db:TWLDb;const Tables,Columns:array of string; const ColumnType: string = 'TEXT'):Boolean;
 var Sql:string;
   function Inspect(out AlterSql:string):Boolean;
   var TableName,ColumnName:string;Rows:TWLRows;Row:TWLRow;Found:Boolean;
@@ -122,10 +123,10 @@ var Sql:string;
         Found:=False;
         for Row in Rows do if SameText(Row[1],ColumnName) then
         begin
-          if (UpperCase(Row[2])<>'TEXT') or (Row[3]<>'0') or (Row[4]<>'') or (Row[5]<>'0') then Exit(False);
+          if (UpperCase(Row[2])<>ColumnType) or (Row[3]<>'0') or (Row[4]<>'') or (Row[5]<>'0') then Exit(False);
           Found:=True;
         end;
-        if not Found then AlterSql:=AlterSql+'ALTER TABLE '+TableName+' ADD COLUMN '+ColumnName+' TEXT; ';
+        if not Found then AlterSql:=AlterSql+'ALTER TABLE '+TableName+' ADD COLUMN '+ColumnName+' '+ColumnType+'; ';
       end;
     end;
     Result:=True;
@@ -136,15 +137,20 @@ begin
   if not Db.Exec('BEGIN IMMEDIATE; '+Sql+'COMMIT;') then Db.Exec('ROLLBACK;');
   Result:=Inspect(Sql) and (Sql='');
 end;
+function EnsureCustomFieldSortColumn(Db: TWLDb): Boolean;
+begin
+  Result := EnsureNullableColumns(Db, ['custom_fields'], ['sort'], 'REAL');
+end;
+
 function EnsureChecklistDeadlineColumns(Db:TWLDb):Boolean;
 begin
-  Result:=EnsureNullableTextColumns(Db,['checklists','checklist_items'],['dueAt']) and
-    EnsureNullableTextColumns(Db,['checklist_items'],['assigneeId']);
+  Result:=EnsureNullableColumns(Db,['checklists','checklist_items'],['dueAt']) and
+    EnsureNullableColumns(Db,['checklist_items'],['assigneeId']);
 end;
 
 function EnsureDeleteMarkers(Db:TWLDb):Boolean;
 begin
-  Result:=EnsureNullableTextColumns(Db,['lists','cards'],['deletedAt','deletedBy','deleteBatchId']);
+  Result:=EnsureNullableColumns(Db,['lists','cards'],['deletedAt','deletedBy','deleteBatchId']);
 end;
 function EnsureListCollapseColumn(Db:TWLDb):Boolean;
 var Rows:TWLRows;Row:TWLRow;Found:Boolean;
