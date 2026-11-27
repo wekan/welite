@@ -10,7 +10,8 @@ type
   private
     Document: TPDFDocument;
     Page: TPDFPage;
-    BodyFont, HeadingFont: Integer;
+    BodyFont, HeadingFont, WrapWidth: Integer;
+    EmbeddedFont: Boolean;
     Y: Single;
     procedure RequireSpace(Height: Single);
   public
@@ -30,19 +31,34 @@ const
   Margin = 15;
   Bottom = 282;
   LineHeight = 5;
-  LineWidth = 72;
+  BaseFontWrapWidth = 72;
+  EmbeddedFontWrapWidth = 44;
 
 constructor TPdfCardWriter.Create;
+var FontPath: string;
 begin
   inherited Create;
   Document := TPDFDocument.Create(nil);
   Document.Options := [poPageOriginAtTop, poCompressImages, poUseImageTransparency];
   Document.DefaultPaperType := ptA4;
   Document.DefaultOrientation := ppoPortrait;
+  FontPath := GetEnvironmentVariable('WELITE_PDF_TTF');
+  EmbeddedFont := FontPath <> '';
+  if EmbeddedFont then Document.Options := Document.Options + [poSubsetFont, poCompressFonts];
   Document.StartDocument;
   Document.Sections.AddSection;
-  BodyFont := Document.AddFont('Courier');
-  HeadingFont := Document.AddFont('Courier-Bold');
+  if EmbeddedFont then
+  begin
+    BodyFont := Document.AddFont(ExpandFileName(FontPath), 'DocumentFont');
+    HeadingFont := BodyFont;
+    WrapWidth := EmbeddedFontWrapWidth;
+  end
+  else
+  begin
+    BodyFont := Document.AddFont('Courier');
+    HeadingFont := Document.AddFont('Courier-Bold');
+    WrapWidth := BaseFontWrapWidth;
+  end;
   NewPage;
 end;
 
@@ -118,9 +134,9 @@ begin
   while Offset <= Length(Text) do
   begin
     Count := 0;
-    while (Offset + Count <= Length(Text)) and (Count < LineWidth) and
+    while (Offset + Count <= Length(Text)) and (Count < WrapWidth) and
       not (Text[Offset + Count] in [#10, #13]) do Inc(Count);
-    if Count = LineWidth then
+    if Count = WrapWidth then
     begin
       I := Count;
       while (I > 0) and (Text[Offset + I - 1] <> ' ') do Dec(I);
@@ -131,8 +147,10 @@ begin
       if Ord(Chunk[I]) < 32 then Chunk[I] := ' ';
     RequireSpace(LineHeight);
     Page.SetFont(Font, FontSize);
-    if Chunk <> '' then Page.AddObject(TPDFFreeFormString.Create(Document,
-      Format('BT %.3f %.3f Td <%s> Tj ET', [mmToPDF(Margin), Page.Paper.H - mmToPDF(Y + 4), WinAnsiHex(Chunk)], Fmt) + LineEnding));
+    if Chunk <> '' then
+      if EmbeddedFont then Page.WriteText(Margin, Y + 4, UTF8Encode(Chunk))
+      else Page.AddObject(TPDFFreeFormString.Create(Document,
+        Format('BT %.3f %.3f Td <%s> Tj ET', [mmToPDF(Margin), Page.Paper.H - mmToPDF(Y + 4), WinAnsiHex(Chunk)], Fmt) + LineEnding));
     Y := Y + LineHeight;
     Inc(Offset, Count);
     if (Offset <= Length(Text)) and (Text[Offset] = #13) then Inc(Offset);

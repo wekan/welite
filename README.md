@@ -44,6 +44,14 @@ so it can load the SQL, assets, and catalogs. Plain HTTP is the default.
 The [cross-build record](docs/cross.md) gives target-specific compiler and
 SQLite requirements.
 
+## PDF export fonts
+
+Set `WELITE_PDF_TTF` to the path of a TrueType font with the glyphs needed
+in your exports. WeLite embeds only the used glyphs. With no configured
+font, PDF export uses the standard PDF Courier fonts and WinAnsi encoding.
+The embedded font path currently handles characters in the Unicode Basic
+Multilingual Plane.
+
 ## Read WeKan data folders
 
 WeLite reads a WeKan's own folders read-only and shows them as HTML4 kanban
