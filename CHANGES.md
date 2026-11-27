@@ -33,7 +33,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   History entry when any of those settings changes, retaining a previously
   stored fractional limit in the before value. Board admins can undo,
   redo and restore all three WIP settings together. The board’s list WIP
-  controls also record compound snapshots. Card position history shows the saved
+  controls also record compound snapshots. Shared History can replay a first WIP
+  limit with no previous snapshot or with omitted default settings. Card position history shows the saved
   move reason and the destination list title when it belongs to the row’s
   board. A missing title or reason falls back to the destination ID when
   neither is available. History displays

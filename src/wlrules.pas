@@ -2352,21 +2352,30 @@ begin
 end;
 
 function ApplyListWipHistory(Db: TWLDb; const UserId: string; Row: TJSONObject; const Direction: string; out Error: string): Boolean;
-var Prior, Next, Put, Expect: TJSONData; BoardId, ListId, Scope, Guard, Sets, Expected, Current, Permission: string;
+var Prior, Next, Put, Expect: TJSONData; BoardId, ListId, Scope, Guard, Sets, Expected, Current, Permission, ChangeType: string;
   Policy: TFieldPolicy; Rows: TWLRows; Before: TJSONObject;
-  function WipValues(Content: TJSONData; out Sql: string): Boolean;
-  var Limit, Number, Enabled, Soft: TJSONData;
+  function WipValues(Content: TJSONData; out Sql: string; AllowAbsent: Boolean): Boolean;
+  var Limit, Number, Enabled, Soft: TJSONData; CountSql: string;
   begin
     Result := False;
+    if AllowAbsent and ((Content = nil) or (Content is TJSONNull)) then
+    begin Sql := '1,0,0'; Exit(True); end;
     if not (Content is TJSONObject) or (Str(TJSONObject(Content), 'field') <> 'wipLimit') then Exit;
     Limit := TJSONObject(Content).Find('value');
     if not (Limit is TJSONObject) then Exit;
     Number := TJSONObject(Limit).Find('value');
     Enabled := TJSONObject(Limit).Find('enabled');
     Soft := TJSONObject(Limit).Find('soft');
-    if (Number = nil) or (Number.JSONType <> jtNumber) or IsNan(Number.AsFloat) or
-      IsInfinite(Number.AsFloat) or not (Enabled is TJSONBoolean) or not (Soft is TJSONBoolean) then Exit;
-    Sql := CanonicalHistoryValue(Number) + ',' + IntToStr(Ord(Enabled.AsBoolean)) + ',' + IntToStr(Ord(Soft.AsBoolean));
+    CountSql := '1';
+    if Number <> nil then
+    begin
+      if (Number.JSONType <> jtNumber) or IsNan(Number.AsFloat) or IsInfinite(Number.AsFloat) then Exit;
+      CountSql := CanonicalHistoryValue(Number);
+    end;
+    if ((Enabled <> nil) and not (Enabled is TJSONBoolean)) or
+      ((Soft <> nil) and not (Soft is TJSONBoolean)) then Exit;
+    Sql := CountSql + ',' + IntToStr(Ord((Enabled <> nil) and Enabled.AsBoolean)) +
+      ',' + IntToStr(Ord((Soft <> nil) and Soft.AsBoolean));
     Result := True;
   end;
 begin
@@ -2376,12 +2385,15 @@ begin
   Prior := Row.Find('previousContent'); Next := Row.Find('newContent');
   if Direction = 'undo' then begin Put := Prior; Expect := Next; end
   else begin Put := Next; Expect := Prior; end;
-  if not WipValues(Put, Sets) then Exit;
+  ChangeType := Str(Row, 'changeType');
+  if not WipValues(Put, Sets, ((Direction = 'undo') and (ChangeType = 'added')) or
+    ((Direction = 'redo') and (ChangeType = 'removed'))) then Exit;
   Scope := 'id=' + Q(ListId) + ' AND boardId=' + Q(BoardId) + ' AND deletedAt IS NULL';
   Rows := Db.Query('SELECT printf(''%!.26g'',COALESCE(wip_value,1)),COALESCE(wip_enabled,0),COALESCE(wip_soft,0) FROM lists WHERE ' + Scope + ';');
   if Length(Rows) <> 1 then Exit;
   Current := Rows[0][0] + ',' + Rows[0][1] + ',' + Rows[0][2];
-  if (Direction <> 'restore') and not WipValues(Expect, Expected) then Exit;
+  if (Direction <> 'restore') and not WipValues(Expect, Expected,
+    ((Direction = 'undo') and (ChangeType = 'removed')) or ((Direction = 'redo') and (ChangeType = 'added'))) then Exit;
   Policy := TFieldPolicy.Create(Db, UserId, BoardId, '');
   try Permission := Policy.ScopeAdminExpression; finally Policy.Free; end;
   Guard := Scope + ' AND ' + Permission + ' AND (COALESCE(wip_value,1),COALESCE(wip_enabled,0),COALESCE(wip_soft,0))';
