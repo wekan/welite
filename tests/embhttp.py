@@ -2,6 +2,9 @@
 import http.client
 import json
 import os
+import re
+import struct
+import zlib
 from pathlib import Path
 import shutil
 import shlex
@@ -121,6 +124,28 @@ with tempfile.TemporaryDirectory(prefix='wlembhttp-',dir=os.environ['TMPDIR']) a
                 words=json.loads((root/'i18n/data/ar.jsn').read_text())
                 assert all(words[key].encode() in body for key in ('attachments','no-items-message'))
                 assert b'dir="rtl"' in body and b'/b/embedded-board/' in body
+
+                with sqlite3.connect(work/'data/local/files/db/wekan.db') as con:
+                    author, = con.execute("SELECT id FROM users WHERE username='embedded-user'").fetchone()
+                    con.execute("INSERT INTO cards(id,boardId,swimlaneId,listId,title,userId,dateLastActivity,createdAt,modifiedAt) "
+                                "VALUES('embedded-card','embedded-board','embedded-lane','embedded-list',?,?,'now','now','now')",
+                                ('日本😀語🚀X', author))
+                status, headers, pdf = request('GET', '/api/boards/embedded-board/exportPDF')
+                assert status == 200 and headers['Content-Type'] == 'application/pdf', (status, pdf[:100])
+                assert b'<D83DDE00>' in pdf and b'<D83DDE80>' in pdf
+                count = 0
+                for match in re.finditer(rb'/Length1\s+\d+[^>]*>>\s*stream\r?\n', pdf):
+                    font = zlib.decompress(pdf[match.end():])
+                    table_count, = struct.unpack_from('>H', font, 4)
+                    tables = {tag: (offset, size) for tag, _, offset, size in
+                              struct.iter_unpack('>4sIII', font[12:12 + table_count * 16])}
+                    assert all(offset + size <= len(font) for offset, size in tables.values())
+                    glyphs, = struct.unpack_from('>H', font, tables[b'maxp'][0] + 4)
+                    loca_format, = struct.unpack_from('>H', font, tables[b'head'][0] + 50)
+                    assert tables[b'loca'][1] == (glyphs + 1) * (4 if loca_format else 2)
+                    assert sum(word for word, in struct.iter_unpack('>I', font)) & 0xffffffff == 0xb1b0afba
+                    count += 1
+                assert count == 2, 'Expected both embedded Unifont subsets'
 
                 for path in ['/schema.sql','/designer.sql','/src/schema.sql','/_seed/schema.sql']:
                     status,_,body=request('GET',path);assert status==404 and b'CREATE TABLE' not in body,path

@@ -62,6 +62,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   ordinary text. The PDF carries the original supplementary text in
   both its ToUnicode map and ActualText spans. PDF.js extracts the
   original Japanese text and supplementary characters from the map.
+  WeLite repairs Free Pascal subsets that counted missing hinting tables
+  in their directory. HTTP regression checks both embedded fonts’ offsets,
+  glyph location lengths and checksums.
 
 - The shared Chromium manifest now selects the six implemented export
   access checks by full title. Alongside the board and card Excel and

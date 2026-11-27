@@ -45,11 +45,88 @@ type
     UpperMapId: Integer;
   protected
     procedure CreateToUnicode(const AFontNum: Integer); override;
+    procedure CreateFontFileEntry(const AFontNum: Integer); override;
   public
     UpperFontIndex: Integer;
     UpperMap: array of TPdfUpperRange;
     procedure SaveToStream(const AStream: TStream); override;
   end;
+
+// Some FPC versions include absent hinting tables in the directory count
+// and offsets, even though the subset omits their directory entries.
+procedure RepairFontDirectory(Font: TStream);
+var Data: RawByteString; Declared, Actual, I, Entry, Power, Selector, Head: Integer;
+  Next, Padding, TableOffset, TableSize: QWord; Sum: QWord;
+  function ReadBE(Offset, Bytes: Integer): Cardinal;
+  var J: Integer;
+  begin
+    Result := 0;
+    for J := 0 to Bytes - 1 do Result := (Result shl 8) or Ord(Data[Offset + J + 1]);
+  end;
+  procedure WriteBE(Offset, Bytes: Integer; Value: Cardinal);
+  var J: Integer;
+  begin
+    for J := Bytes - 1 downto 0 do
+    begin
+      Data[Offset + J + 1] := AnsiChar(Value and $FF);
+      Value := Value shr 8;
+    end;
+  end;
+begin
+  if (Font = nil) or (Font.Size < 28) or (Font.Size > 32 * 1024 * 1024) then Exit;
+  SetLength(Data, Font.Size);
+  Font.Position := 0;
+  Font.ReadBuffer(Data[1], Length(Data));
+  Font.Position := 0;
+  if ReadBE(0, 4) <> $00010000 then Exit;
+  Declared := ReadBE(4, 2);
+  if (Declared < 1) or (12 + Declared * 16 > Length(Data)) then Exit;
+  Actual := 0;
+  Next := 12 + Declared * 16;
+  Head := -1;
+  for I := 0 to Declared - 1 do
+  begin
+    Entry := 12 + I * 16;
+    TableOffset := ReadBE(Entry + 8, 4);
+    TableSize := ReadBE(Entry + 12, 4);
+    if (TableOffset <> Next) or (TableSize > QWord(Length(Data))) then Break;
+    if Copy(Data, Entry + 1, 4) = 'head' then Head := I;
+    Next := Next + ((TableSize + 3) and not QWord(3));
+    Inc(Actual);
+  end;
+  Padding := 16 * (Declared - Actual);
+  if (Actual = Declared) or (Head < 0) or (Next <> QWord(Length(Data)) + Padding) then Exit;
+  Power := 1;
+  Selector := 0;
+  while Power * 2 <= Actual do
+  begin
+    Power := Power * 2;
+    Inc(Selector);
+  end;
+  WriteBE(4, 2, Actual);
+  WriteBE(6, 2, Power * 16);
+  WriteBE(8, 2, Selector);
+  WriteBE(10, 2, (Actual - Power) * 16);
+  for I := 0 to Actual - 1 do
+  begin
+    Entry := 12 + I * 16 + 8;
+    WriteBE(Entry, 4, ReadBE(Entry, 4) - Padding);
+  end;
+  Entry := ReadBE(12 + Head * 16 + 8, 4);
+  if Entry > Length(Data) - 12 then Exit;
+  WriteBE(Entry + 8, 4, 0);
+  Sum := 0;
+  for I := 0 to Length(Data) div 4 - 1 do Sum := Sum + ReadBE(I * 4, 4);
+  WriteBE(Entry + 8, 4, Cardinal((QWord($1B1B0AFBA) - (Sum and $FFFFFFFF)) and $FFFFFFFF));
+  Font.WriteBuffer(Data[1], Length(Data));
+  Font.Position := 0;
+end;
+
+procedure TPdfExportDocument.CreateFontFileEntry(const AFontNum: Integer);
+begin
+  if poSubsetFont in Options then RepairFontDirectory(Fonts[AFontNum].SubsetFont);
+  inherited CreateFontFileEntry(AFontNum);
+end;
 
 procedure TPdfExportDocument.CreateToUnicode(const AFontNum: Integer);
 begin
