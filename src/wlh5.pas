@@ -5816,10 +5816,10 @@ begin
   if Pos(#0, Result) > 0 then Result := '';
 end;
 
-type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue);
+type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue, soHas);
 
-function GlobalSearchOperatorSql(Words: TWLTranslator; const Text: string; out Kind: TSearchOperator): string;
-var Op, Value, Column, Parent: string; Colon: Integer;
+function GlobalSearchOperatorSql(Db: TWLDb; Words: TWLTranslator; const Text: string; out Kind: TSearchOperator): string;
+var Op, Value, Column, Parent: string; Colon: Integer; Absent: Boolean;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
     Result := SameText(Op, Fallback) or SameText(Op, Words.Text(Key, Fallback));
@@ -5827,6 +5827,10 @@ var Op, Value, Column, Parent: string; Colon: Integer;
   function Contains(const Field: string): string;
   begin
     Result := 'instr(lower(COALESCE(' + Field + ','''')),lower(' + QuotedStr(Value) + '))>0';
+  end;
+  function IsField(const Field: string): Boolean;
+  begin
+    Result := SameText(Value, Field) or SameText(Value, Words.Text('predicate-' + Field, Field));
   end;
 begin
   Result := '';
@@ -5837,6 +5841,23 @@ begin
   if (Length(Value) >= 2) and (Value[1] = '"') and (Value[Length(Value)] = '"') then
     Value := Copy(Value, 2, Length(Value) - 2);
   if Value = '' then Exit;
+  if IsOperator('operator-has', 'has') then
+  begin
+    Kind := soHas;
+    Absent := Value[1] = '-';
+    if Absent then Delete(Value, 1, 1);
+    if IsField('description') then Result := 'trim(COALESCE(c.description,''''))<>'''''
+    else if IsField('start') then Result := 'julianday(c.startAt) IS NOT NULL'
+    else if IsField('due') then Result := 'julianday(c.dueAt) IS NOT NULL'
+    else if IsField('end') then Result := 'julianday(c.endAt) IS NOT NULL'
+    else if IsField('attachment') then Result := 'EXISTS(SELECT 1 FROM attachments WHERE attachments.cardId=c.id ' +
+      'AND attachments.boardId=c.boardId AND ' + LiveAttachmentSQL(Db) + ')'
+    else if IsField('checklist') then Result := 'EXISTS(SELECT 1 FROM checklists x WHERE x.cardId=c.id AND (x.boardId IS NULL OR x.boardId=c.boardId))'
+    else if IsField('assignee') then Result := 'EXISTS(SELECT 1 FROM card_assignees x WHERE x.cardId=c.id)'
+    else if IsField('member') then Result := 'EXISTS(SELECT 1 FROM card_members x WHERE x.cardId=c.id)';
+    if Absent and (Result <> '') then Result := 'NOT (' + Result + ')';
+    Exit;
+  end;
   if IsOperator('operator-due', 'due') then
   begin
     Kind := soDue;
@@ -5860,7 +5881,7 @@ begin
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
 end;
 
-procedure ParseGlobalSearch(Words: TWLTranslator; const Query: string; out Plain, Predicate: string);
+procedure ParseGlobalSearch(Db: TWLDb; Words: TWLTranslator; const Query: string; out Plain, Predicate: string);
 var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
   i, Start: Integer; InQuotes: Boolean; Token, Sql: string;
 begin
@@ -5882,7 +5903,7 @@ begin
     if i = Start then Break;
     Token := Copy(Query, Start, i - Start);
     Sql := '';
-    if not InQuotes then Sql := GlobalSearchOperatorSql(Words, Token, Kind);
+    if not InQuotes then Sql := GlobalSearchOperatorSql(Db, Words, Token, Kind);
     if Sql = '' then
     begin
       if Plain <> '' then Plain := Plain + ' ';
@@ -5952,6 +5973,35 @@ begin
   finally Matches.Free; end;
 end;
 
+function GlobalSearchHelp(Words: TWLTranslator): string;
+const
+  Operators: array[0..5] of string = ('title', 'board', 'list', 'swimlane', 'due', 'has');
+  Fields: array[0..8] of string = ('overdue', 'attachment', 'checklist', 'description', 'start', 'due', 'end', 'assignee', 'member');
+  Described: array[0..3] of string = ('board', 'list', 'swimlane', 'has');
+  function Instruction(const Key, Fallback: string): string;
+  var Name: string;
+  begin
+    Result := Words.Text('globalSearch-instructions-' + Key, Fallback);
+    for Name in Operators do
+      Result := StringReplace(Result, '__operator_' + Name + '__', Words.Text('operator-' + Name, Name), [rfReplaceAll]);
+    for Name in Fields do
+      Result := StringReplace(Result, '__predicate_' + Name + '__', Words.Text('predicate-' + Name, Name), [rfReplaceAll]);
+    Result := StringReplace(Result, 'has:-due', Words.Text('operator-has', 'has') + ':-' + Words.Text('predicate-due', 'due'), [rfReplaceAll]);
+    Result := MarkdownViewer(Result, True);
+  end;
+var Name: string;
+begin
+  Result := '<details class="global-search-instructions"><summary>' +
+    E(Words.Text('globalSearch-instructions-heading', 'Search Instructions')) + '</summary><p>' +
+    Instruction('description', 'Use a colon between the operator and its value. Quote values containing spaces.') + '</p><ul>';
+  for Name in Described do
+    Result := Result + '<li>' + Instruction('operator-' + Name, '') + '</li>';
+  Result := Result + '<li><code>' + E(Words.Text('operator-title', 'title')) + ':&quot;Alpha Card&quot;</code></li>' +
+    '<li><code>' + E(Words.Text('operator-due', 'due')) + ':' + E(Words.Text('predicate-overdue', 'overdue')) + '</code></li></ul><p>' +
+    Instruction('notes-1', 'Multiple operators may be specified.') + '</p><p>' +
+    Instruction('notes-5', 'By default archived cards are not searched.') + '</p></details>';
+end;
+
 function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
 const PageSize = 25;
 var Text, Plain, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
@@ -5976,11 +6026,11 @@ var Text, Plain, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; 
   end;
 begin
   Text := SearchTerm(Term);
-  ParseGlobalSearch(Words, Text, Plain, OperatorSql);
+  ParseGlobalSearch(Db, Words, Text, Plain, OperatorSql);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
-    '"><button type="submit">' + E(Words.Text('search', 'Search')) + '</button></form>';
+    '"><button type="submit">' + E(Words.Text('search', 'Search')) + '</button></form>' + GlobalSearchHelp(Words);
   Results := '';
   HasNext := False;
   if Text <> '' then

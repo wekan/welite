@@ -44,6 +44,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Combine supported operators with each other and with free text. Repeated
   operators match any of their values. Different operators and the free
   text must all match. Quote operator values that contain spaces.
+- Filter by the presence or absence of attachments, checklists,
+  descriptions, start/due/end dates, assignees and members. An expandable
+  help section shows the supported operators in the viewer's language.
 
 ## HTML5 minicards
 
