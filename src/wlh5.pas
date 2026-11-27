@@ -5816,7 +5816,9 @@ begin
   if Pos(#0, Result) > 0 then Result := '';
 end;
 
-function GlobalSearchOperatorSql(Words: TWLTranslator; const Text: string): string;
+type TSearchOperator = (soTitle, soBoard, soList, soSwimlane, soDue);
+
+function GlobalSearchOperatorSql(Words: TWLTranslator; const Text: string; out Kind: TSearchOperator): string;
 var Op, Value, Column, Parent: string; Colon: Integer;
   function IsOperator(const Key, Fallback: string): Boolean;
   begin
@@ -5837,20 +5839,68 @@ begin
   if Value = '' then Exit;
   if IsOperator('operator-due', 'due') then
   begin
+    Kind := soDue;
     if SameText(Value, 'overdue') or SameText(Value, Words.Text('predicate-overdue', 'overdue')) then
       Result := 'julianday(c.dueAt)<julianday(''now'')';
     Exit;
   end;
-  if IsOperator('operator-title', 'title') then Exit(Contains('c.title'));
+  if IsOperator('operator-title', 'title') then
+  begin Kind := soTitle; Exit(Contains('c.title')); end;
   if IsOperator('operator-board', 'board') then
+  begin
+    Kind := soBoard;
     Exit('EXISTS(SELECT 1 FROM boards named WHERE named.id=c.boardId AND ' + Contains('named.title') + ')');
+  end;
   if IsOperator('operator-list', 'list') then
-  begin Parent := 'lists'; Column := 'c.listId'; end
+  begin Kind := soList; Parent := 'lists'; Column := 'c.listId'; end
   else if IsOperator('operator-swimlane', 'swimlane') then
-  begin Parent := 'swimlanes'; Column := 'c.swimlaneId'; end
+  begin Kind := soSwimlane; Parent := 'swimlanes'; Column := 'c.swimlaneId'; end
   else Exit;
   Result := 'EXISTS(SELECT 1 FROM ' + Parent + ' named WHERE named.id=' + Column +
     ' AND named.boardId=c.boardId AND ' + Contains('named.title') + ')';
+end;
+
+procedure ParseGlobalSearch(Words: TWLTranslator; const Query: string; out Plain, Predicate: string);
+var Groups: array[TSearchOperator] of string; Kind: TSearchOperator;
+  i, Start: Integer; InQuotes: Boolean; Token, Sql: string;
+begin
+  Plain := '';
+  Predicate := '';
+  for Kind := Low(Kind) to High(Kind) do Groups[Kind] := '';
+  i := 1;
+  while i <= Length(Query) do
+  begin
+    while (i <= Length(Query)) and (Query[i] in [#9, #10, #13, ' ']) do Inc(i);
+    Start := i;
+    InQuotes := False;
+    while i <= Length(Query) do
+    begin
+      if Query[i] = '"' then InQuotes := not InQuotes;
+      if not InQuotes and (Query[i] in [#9, #10, #13, ' ']) then Break;
+      Inc(i);
+    end;
+    if i = Start then Break;
+    Token := Copy(Query, Start, i - Start);
+    Sql := '';
+    if not InQuotes then Sql := GlobalSearchOperatorSql(Words, Token, Kind);
+    if Sql = '' then
+    begin
+      if Plain <> '' then Plain := Plain + ' ';
+      Plain := Plain + Token;
+    end
+    else
+    begin
+      if Groups[Kind] <> '' then Groups[Kind] := Groups[Kind] + ' OR ';
+      Groups[Kind] := Groups[Kind] + Sql;
+    end;
+  end;
+  for Kind := Low(Kind) to High(Kind) do
+    if Groups[Kind] <> '' then
+    begin
+      if Predicate <> '' then Predicate := Predicate + ' AND ';
+      Predicate := Predicate + '(' + Groups[Kind] + ')';
+    end;
+  if Predicate = '' then Plain := Query;
 end;
 
 function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit: Integer = 0;
@@ -5858,7 +5908,7 @@ function SearchBoardCards(Db: TWLDb; const UserId, BoardId, Text: string; Limit:
 var Scope, Tail, Match: string;
 begin
   Result := nil;
-  if Text = '' then Exit;
+  if (Text = '') and (OperatorSql = '') then Exit;
   Scope := '';
   if not BoardCanRead(Db, UserId, BoardId) then
   begin
@@ -5868,8 +5918,12 @@ begin
   Tail := '';
   if Limit > 0 then Tail := ' LIMIT ' + IntToStr(Limit);
   Match := OperatorSql;
-  if Match = '' then
-    Match := BoardTextMatchSql(Text) + BoardFieldTextMatchSql(Db, UserId, BoardId, Text) + IndexedAttachmentMatchSql(Db, Text);
+  if Text <> '' then
+  begin
+    if Match <> '' then Match := Match + ' AND ';
+    Match := Match + '(' + BoardTextMatchSql(Text) + BoardFieldTextMatchSql(Db, UserId, BoardId, Text) +
+      IndexedAttachmentMatchSql(Db, Text) + ')';
+  end;
   Result := Db.Query('SELECT c.id,c.title,c.swimlaneId,c.listId FROM cards c WHERE c.boardId=' + QuotedStr(BoardId) +
     ' AND c.archived=0 AND c.deletedAt IS NULL' + Scope + ' AND (' + Match + ')' +
     ' ORDER BY c.createdAt DESC,c.id' + Tail + ';');
@@ -5900,7 +5954,7 @@ end;
 
 function GlobalSearchContent(Db: TWLDb; Words: TWLTranslator; const UserId, Term: string; PageNumber: Integer): string;
 const PageSize = 25;
-var Text, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
+var Text, Plain, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; i, j, Skip, Shown: Integer; HasNext, Writable: Boolean;
   function PageUrl(Number: Integer): string;
   begin
     Result := '/global-search?q=' + HTTPEncode(Text) + '&page=' + IntToStr(Number);
@@ -5922,7 +5976,7 @@ var Text, Results, NextUrl, OperatorSql: string; Boards, Cards: TWLRows; i, j, S
   end;
 begin
   Text := SearchTerm(Term);
-  OperatorSql := GlobalSearchOperatorSql(Words, Text);
+  ParseGlobalSearch(Words, Text, Plain, OperatorSql);
   Result := '<section class="global-search-page"><h1>' + E(Words.Text('globalSearch-title', 'Search All Boards')) + '</h1>' +
     '<form class="js-search-query-form" action="/global-search" method="get"><input class="global-search-query-input" type="search" name="q" ' +
     'maxlength="' + IntToStr(MAX_FILTER_TEXT) + '" value="' + HtmlAttr(Text) + '" aria-label="' + HtmlAttr(Words.Text('search', 'Search')) +
@@ -5938,7 +5992,7 @@ begin
     Shown := 0;
     for i := 0 to High(Boards) do
     begin
-      Cards := SearchBoardCards(Db, UserId, Boards[i][0], Text, Skip + PageSize + 1 - Shown, OperatorSql);
+      Cards := SearchBoardCards(Db, UserId, Boards[i][0], Plain, Skip + PageSize + 1 - Shown, OperatorSql);
       Writable := (Length(Cards) > 0) and BoardCanWrite(Db, UserId, Boards[i][0]);
       for j := 0 to High(Cards) do
       begin

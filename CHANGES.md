@@ -41,6 +41,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 - Search All Boards accepts one title, board, list, or swimlane operator,
   or the overdue predicate for due dates. It recognizes the operator names
   in the viewer's locale and in English.
+- Combine supported operators with each other and with free text. Repeated
+  operators match any of their values. Different operators and the free
+  text must all match. Quote operator values that contain spaces.
 
 ## HTML5 minicards
 
