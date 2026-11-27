@@ -3039,7 +3039,7 @@ procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; Session: TWLSession; Words: TWLTranslator;
   BoardId, UserId, Filename, CardId, Author: string; AsPdf: Boolean;
   Report, Adjustments: TJSONArray; Row: TJSONObject; Output: TMemoryStream;
-  Person, Cards, Totals: TWLRows; I: Integer;
+  Person, Totals: TWLRows; I: Integer;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, '') then Exit;
   if AssignedOnlyMember(T.Db, UserId, BoardId) then
@@ -3064,10 +3064,8 @@ begin
       for I := 0 to Adjustments.Count - 1 do
       begin
         Row := Adjustments.Objects[I];
-        CardId := Row.Get('cardId', '');
+        CardId := Row.Get('title', '');
         Author := Row.Get('userId', '');
-        Cards := T.Db.Query('SELECT title FROM cards WHERE id=' + QuotedStr(CardId) + ' AND boardId=' + QuotedStr(BoardId) + ';');
-        if Length(Cards) = 1 then CardId := Cards[0][0];
         Person := T.Db.Query('SELECT username FROM users WHERE id=' + QuotedStr(Author) + ';');
         if Length(Person) = 1 then Author := Person[0][0];
         Report.Add(TJSONArray.Create([CardId, Author, Row.Find('delta').Clone, Row.Find('value').Clone]));
@@ -9123,9 +9121,15 @@ begin
       'SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM cards WHERE '+Scope+
       ') THEN 1 ELSE json(''Card deletion failed'') END; '+Notify+'COMMIT;';
     if not Db.Exec(Sql) then begin Db.Exec('ROLLBACK;');Exit;end;
-    Removed:=Length(Db.Query('SELECT id FROM activities WHERE id='+Claim+';'))=1;
+    R:=Db.Query('SELECT COALESCE(listId,''''),COALESCE(swimlaneId,''''),'+
+      'COALESCE(json_extract(data_json,''$.cardTitle''),'''') FROM activities WHERE id='+Claim+';');
+    Removed:=Length(R)=1;
     Result:=True;
-    if Removed and (Attachments<>'') then RecordSharedAttachmentRemovals(Db,UserId,BoardId,BatchId);
+    if Removed then
+    begin
+      RecordCardRemoval(Db,UserId,BoardId,R[0][0],R[0][1],CardId,R[0][2]);
+      if Attachments<>'' then RecordSharedAttachmentRemovals(Db,UserId,BoardId,BatchId);
+    end;
   except Db.Exec('ROLLBACK;');end;
 end;
 

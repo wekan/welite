@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- REST card deletion keeps the card title, list and swimlane in the board’s
+  lifecycle history. The Time view and its PDF and Excel exports use the
+  retained delete activity to show the title on earlier corrections.
+
 - The board’s Time view shows total hours and a correction ledger with
   the author, delta and updated hours. Assigned-only members see the
   total for their visible cards. The Time export menu downloads the

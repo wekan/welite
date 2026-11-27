@@ -13,6 +13,7 @@ procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,Ca
 function RecordHistoryRow(Db:TWLDb;const UserId,BoardId,EntityType,EntityId,Group,ChangeType:string;
   Previous,Next:TJSONData;const RestoredFromId:string='';const RestoredByUserId:string=''):Boolean;
 
+procedure RecordCardRemoval(Db:TWLDb;const UserId,BoardId,ListId,LaneId,CardId,Title:string);
 procedure RecordCardCompletionHistory(Db:TWLDb;const UserId,BoardId,CardId:string;Old,Done:Boolean);
 procedure RecordCardBooleanHistory(Db:TWLDb;const UserId,BoardId,CardId,Field:string;Old,Done:Boolean);
 // The default SQLite REAL-to-text conversion rounds before the snapshot is built.
@@ -398,7 +399,7 @@ begin
       // A card's own row carries the card and where it is, as WeKan writes
       // every applicable id: the card's, list's and swimlane's History find it.
       Place:=nil;
-      if EntityType='card' then
+      if (EntityType='card') and (CardId='') then
         Place:=Db.Query('SELECT COALESCE(swimlaneId,''''),COALESCE(listId,'''') FROM cards WHERE id='+QuotedStr(EntityId)+';');
       Row:=TJSONObject.Create(['_id',Id,'boardId',BoardId,'swimlaneId',TJSONNull.Create,'listId',TJSONNull.Create,
         'entityType',EntityType,'entityId',EntityId,'group',OwnGroup,'changeType',ChangeType,
@@ -411,6 +412,12 @@ begin
           Row.Delete('cardId');Row.Add('cardId',EntityId);
           if Place[0][0]<>'' then begin Row.Delete('swimlaneId');Row.Add('swimlaneId',Place[0][0]);end;
           if Place[0][1]<>'' then begin Row.Delete('listId');Row.Add('listId',Place[0][1]);end;
+        end
+        else if (EntityType='card') and (CardId<>'') then
+        begin
+          Row.Delete('cardId');Row.Add('cardId',CardId);
+          if LaneId<>'' then begin Row.Delete('swimlaneId');Row.Add('swimlaneId',LaneId);end;
+          if ListId<>'' then begin Row.Delete('listId');Row.Add('listId',ListId);end;
         end;
         if RestoredFromId='' then Row.Add('restoredFromId',TJSONNull.Create) else Row.Add('restoredFromId',RestoredFromId);
         if RestoredByUserId='' then Row.Add('restoredByUserId',TJSONNull.Create) else Row.Add('restoredByUserId',RestoredByUserId);
@@ -526,6 +533,16 @@ procedure RecordListChange(Db:TWLDb;const UserId,BoardId,ListId,LaneId,BatchId,D
   Restored:Boolean);
 begin
   RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,BatchId,DeletedAt,'list',ListId,'','',Restored);
+end;
+
+procedure RecordCardRemoval(Db:TWLDb;const UserId,BoardId,ListId,LaneId,CardId,Title:string);
+var Before:TJSONObject;
+begin
+  Before:=TJSONObject.Create(['document',TJSONObject.Create(['_id',CardId,'title',Title])]);
+  try
+    RecordLifecycleChange(Db,UserId,BoardId,ListId,LaneId,'','','card',CardId,CardId,'',
+      False,'lifecycle','removed',Before,nil);
+  finally Before.Free;end;
 end;
 
 procedure RecordAttachmentRemoval(Db:TWLDb;const UserId,BoardId,LaneId,ListId,CardId,AttachmentId,Name,BatchId,DeletedAt:string);

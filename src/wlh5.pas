@@ -4135,7 +4135,7 @@ begin
 end;
 
 function BoardTimeView(Db:TWLDb; Words:TWLTranslator; const BoardId,UserId,Filter,AssignedOnly:string):string;
-var Totals, Cards:TWLRows; Changes:TJSONArray; Row:TJSONObject; I:Integer; Fmt:TFormatSettings; CardTitle:string;
+var Totals:TWLRows; Changes:TJSONArray; Row:TJSONObject; I:Integer; Fmt:TFormatSettings; CardTitle:string;
 begin
   Fmt:=DefaultFormatSettings;Fmt.DecimalSeparator:='.';
   Totals:=Db.Query('SELECT COALESCE(SUM(c.spentTime),0) FROM cards c WHERE c.boardId='+QuotedStr(BoardId)+
@@ -4157,9 +4157,7 @@ begin
     for I:=0 to Changes.Count-1 do
     begin
       Row:=Changes.Objects[I];
-      CardTitle:=Row.Get('cardId','');
-      Cards:=Db.Query('SELECT title FROM cards WHERE boardId='+QuotedStr(BoardId)+' AND id='+QuotedStr(CardTitle)+';');
-      if Length(Cards)=1 then CardTitle:=Cards[0][0];
+      CardTitle:=Row.Get('title','');
       Result:=Result+'<tr><td>'+E(CardTitle)+'</td><td>'+E(UserName(Db,Row.Get('userId','')))+
         '</td><td>'+E(FloatToStr(Row.Floats['delta'],Fmt))+'</td><td>'+E(FloatToStr(Row.Floats['value'],Fmt))+'</td></tr>';
     end;

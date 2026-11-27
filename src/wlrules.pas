@@ -2576,7 +2576,7 @@ end;
 // models/lib/changeHistoryQuery.js matchesSearch: the change type, group,
 // entity type and the text of both contents, up to four levels deep.
 function TimeAdjustmentRows(Db:TWLDb; const UserId,BoardId:string):TJSONArray;
-var Rows:TJSONArray; Reader:THistoryScope; Row:TJSONObject; Before,After:Double; I:Integer;
+var Rows:TJSONArray; Reader:THistoryScope; Row:TJSONObject; Before,After:Double; I:Integer; CardId,Title:string; Titles:TWLRows;
   function Hours(Content:TJSONData; out Number:Double):Boolean;
   var Value:TJSONData;
   begin
@@ -2603,7 +2603,13 @@ begin
         if (Str(Row,'restoredByUserId')<>'') and (Str(Row,'restoredByUserId')<>Str(Row,'userId')) then Continue;
         if not Reader.Readable(Row) or not Hours(Row.Find('previousContent'),Before) or
           not Hours(Row.Find('newContent'),After) or (Before=After) then Continue;
-        Result.Add(TJSONObject.Create(['cardId',HistoryRowCard(Row),'userId',Str(Row,'userId'),
+        CardId:=HistoryRowCard(Row);
+        Titles:=Db.Query('SELECT title FROM cards WHERE id='+Q(CardId)+' AND boardId='+Q(BoardId)+
+          ' UNION ALL SELECT json_extract(data_json,''$.cardTitle'') FROM activities WHERE cardId='+Q(CardId)+
+          ' AND boardId='+Q(BoardId)+' AND activityType=''deleteCard'' AND json_extract(data_json,''$.cardTitle'') IS NOT NULL LIMIT 1;');
+        Title:=CardId;
+        if Length(Titles)=1 then Title:=Titles[0][0];
+        Result.Add(TJSONObject.Create(['cardId',CardId,'title',Title,'userId',Str(Row,'userId'),
           'delta',After-Before,'value',After]));
       end;
     finally Rows.Free;end;

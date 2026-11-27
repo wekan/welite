@@ -274,10 +274,8 @@ Next, after this goal:
   the remaining export-access cases for charts,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
-  The English time-history test verifies the Time view, three corrections,
-  PDF and Excel downloads, and the REST move reason. It stops at the
-  missing card deletion snapshot. Time breakdowns by assignee and card
-  and the boardChartData time response remain.
+  The English time-history test now reaches the missing boardChartData time
+  response. Time breakdowns by assignee and card also remain.
   Also left are additional History field restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
