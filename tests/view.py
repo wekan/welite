@@ -1034,7 +1034,8 @@ def http_checks(server, tmp, backend):
         assert status == 200 and b'attachment-name">new &amp; name.png<' in page
         status, headers, body, _ = request('GET', '/cdn/storage/attachments/%s?download=true' % att, cookie=owner)
         assert status == 200 and body == png and 'new & name.png' in unquote(headers['Content-Disposition'])
-        status, _, page, _ = upload('notes.txt', 'text/plain', 'Indexed résumé quartz'.encode(), owner)
+        notes = b'x' * 70000 + '\nIndexed résumé\tquartz'.encode()
+        status, _, page, _ = upload('notes.csv', 'text/csv', notes, owner)
         assert status == 200
         text_id, = set(re.findall(rb'data-attachment="([^"]+)"', page)) - {att.encode()}
         assert [match['id'] for match in search_cards('résumé quartz')[1]] == [card_id]

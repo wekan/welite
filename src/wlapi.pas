@@ -7776,10 +7776,59 @@ begin
   finally fs.Free; end;
 end;
 
+// Match WeKan's bounded text indexing for common UTF-8 text formats.
+function AttachmentSearchText(Content:TStream;const FileType:string):string;
+const MaxSearchBytes=2*1024*1024;
+var Mime,Raw:string; Separator,Bytes,i,n,Last,TryCount:Integer; Space:Boolean; C:Char;
+begin
+  Result:='';
+  Mime:=LowerCase(Trim(FileType));
+  Separator:=Pos(';',Mime);
+  if Separator>0 then Mime:=Trim(Copy(Mime,1,Separator-1));
+  if (Mime<>'text/plain') and (Mime<>'text/csv') and (Mime<>'text/tab-separated-values') and
+    (Mime<>'text/markdown') and (Mime<>'application/json') then Exit;
+  Bytes:=Min(Content.Size,Int64(MaxSearchBytes));
+  if Bytes<=0 then Exit;
+  SetLength(Raw,Bytes);
+  Content.Position:=0;
+  Content.ReadBuffer(Raw[1],Bytes);
+  if Pos(#0,Raw)>0 then Exit;
+  // If the bounded read cuts a multibyte character, discard that suffix.
+  for TryCount:=0 to 3 do
+  begin
+    try
+      CheckUtf8(Raw);
+      Break;
+    except
+      if (Content.Size<=Bytes) or (TryCount=3) then Exit;
+      SetLength(Raw,Length(Raw)-1);
+    end;
+  end;
+  i:=1;
+  if Copy(Raw,1,3)=#$EF#$BB#$BF then i:=4;
+  n:=0;
+  Space:=False;
+  Last:=Length(Raw);
+  SetLength(Result,Last);
+  while i<=Last do
+  begin
+    C:=Raw[i];
+    if C in [#9,#10,#13,' '] then Space:=n>0
+    else if not (C in [#1..#8,#11,#12,#14..#31,#127]) then
+    begin
+      if Space then begin Inc(n);Result[n]:=' ';end;
+      Space:=False;
+      Inc(n);Result[n]:=C;
+    end;
+    Inc(i);
+  end;
+  SetLength(Result,n);
+end;
+
 function StoreAttachment(const T:TWLTenant;const UserId,BoardId,Sw,Lst,Crd,FileName,FileType:string; Content:TStream;
   out Id:string;RequireLiveCard:Boolean):Boolean;
-var Path,Sql,Guard,TextMime,SearchText:string;Policy:TFieldPolicy;OwnsPath:Boolean;FileSize:Int64;Destination:TFileStream;
-  Preview:TJSONObject;Separator:Integer;Stamp:TDateTime;
+var Path,Sql,Guard,SearchText:string;Policy:TFieldPolicy;OwnsPath:Boolean;FileSize:Int64;Destination:TFileStream;
+  Preview:TJSONObject;Stamp:TDateTime;
 begin
   Id:=NewId;
   Path:=StoreFilePath(T.FilesDir,'attachme',Id);
@@ -7804,29 +7853,21 @@ begin
      QuotedStr(FileName),QuotedStr(FileType),FileSize,QuotedStr(UserId),QuotedStr(NowIso)]);
   OwnsPath:=False;
   try
-    TextMime:=LowerCase(Trim(FileType));
-    Separator:=Pos(';',TextMime);
-    if Separator>0 then TextMime:=Trim(Copy(TextMime,1,Separator-1));
-    if (Crd<>'') and (TextMime='text/plain') and (FileSize>0) and (FileSize<=65536) then
+    if Crd<>'' then SearchText:=AttachmentSearchText(Content,FileType);
+    if SearchText<>'' then
     begin
-      SetLength(SearchText,FileSize);
-      Content.Position:=0;
-      Content.ReadBuffer(SearchText[1],Length(SearchText));
-      if (Pos(#0,SearchText)=0) and (UTF8Encode(UTF8Decode(SearchText))=SearchText) then
+      if IsShared(T.Db) then
       begin
-        if IsShared(T.Db) then
-        begin
-          Stamp:=LocalTimeToUniversal(Now);
-          Preview:=TJSONObject.Create(['_id',NewId,'attachmentId',Id,'boardId',BoardId,'cardId',Crd,
-            'searchText',SearchText,'generatedAt',DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp)]);
-          try Sql:=Sql+InsertDocSql(T.Db,'documentPreviews',Preview,'{"generatedAt":"date"}');
-          finally Preview.Free;end;
-        end
-        else
-          Sql:=Sql+'CREATE TABLE IF NOT EXISTS attachment_search_text (attachmentId TEXT PRIMARY KEY '+
-            'REFERENCES attachments(id) ON DELETE CASCADE, searchText TEXT NOT NULL); '+
-            'INSERT INTO attachment_search_text(attachmentId,searchText) VALUES('+QuotedStr(Id)+','+QuotedStr(SearchText)+'); ';
-      end;
+        Stamp:=LocalTimeToUniversal(Now);
+        Preview:=TJSONObject.Create(['_id',NewId,'attachmentId',Id,'boardId',BoardId,'cardId',Crd,
+          'searchText',SearchText,'generatedAt',DateTimeToUnix(Stamp,True)*1000+MilliSecondOf(Stamp)]);
+        try Sql:=Sql+InsertDocSql(T.Db,'documentPreviews',Preview,'{"generatedAt":"date"}');
+        finally Preview.Free;end;
+      end
+      else
+        Sql:=Sql+'CREATE TABLE IF NOT EXISTS attachment_search_text (attachmentId TEXT PRIMARY KEY '+
+          'REFERENCES attachments(id) ON DELETE CASCADE, searchText TEXT NOT NULL); '+
+          'INSERT INTO attachment_search_text(attachmentId,searchText) VALUES('+QuotedStr(Id)+','+QuotedStr(SearchText)+'); ';
     end;
     if FileExists(Path) then raise EInOutError.Create('Attachment path already exists');
     if not ForceDirectories(ExtractFileDir(Path)) then raise EInOutError.Create('Attachment directory unavailable');

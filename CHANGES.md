@@ -27,6 +27,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   attachment and its search entry are registered together. Shared stores
   write WeKan's document preview collection, and native stores keep a local
   index.
+- Index the first 2 MiB of UTF-8 plain text, CSV, TSV, Markdown and JSON
+  uploads. Strip the UTF-8 byte-order mark and collapse whitespace so phrases
+  can match across line breaks and tabs.
 
 ## HTML5 minicards
 
