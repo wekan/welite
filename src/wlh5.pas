@@ -7863,6 +7863,45 @@ begin
   end;
 end;
 
+function HistoryRuleSummary(Row: TJSONObject; Words: TWLTranslator): string;
+var Current, State, Rule, Part: TJSONObject;
+  function ObjectField(Parent: TJSONObject; const Key: string): TJSONObject;
+  var Value: TJSONData;
+  begin
+    Result := nil;
+    if Parent = nil then Exit;
+    Value := Parent.Find(Key);
+    if Value is TJSONObject then Result := TJSONObject(Value);
+  end;
+  procedure Append(const Item: string);
+  begin
+    if Item = '' then Exit;
+    if Result <> '' then Result := Result + ' '#$E2#$80#$94' ';
+    Result := Result + Item;
+  end;
+  procedure AppendDescription(Item: TJSONObject; const TypeKey: string);
+  var Description: string;
+  begin
+    if Item = nil then Exit;
+    Description := Item.Get('desc', '');
+    if Description = '' then Description := Item.Get(TypeKey, '');
+    Append(Description);
+  end;
+begin
+  Result := '';
+  Current := ObjectField(Row, 'newContent');
+  Rule := ObjectField(Current, 'rule');
+  State := Current;
+  if Rule = nil then State := ObjectField(Row, 'previousContent');
+  Part := ObjectField(State, 'rule');
+  if Part <> nil then Append(Part.Get('title', ''));
+  AppendDescription(ObjectField(State, 'trigger'), 'activityType');
+  AppendDescription(ObjectField(State, 'action'), 'actionType');
+  if Rule = nil then Append(Words.Text('history-change-removed', 'Removed'))
+  else if Rule.Get('enabled', True) then Append(Words.Text('r-rule-enabled', 'Enabled'))
+  else Append(Words.Text('r-rule-disabled', 'Disabled'));
+end;
+
 function HistoryContentSummary(Values: TJSONObject; Words: TWLTranslator; const DateFormat, Group: string): string;
 var Value, Document: TJSONData; NumberFormat: TFormatSettings;
   procedure AppendWipFlag(const Field, Key, Fallback: string);
@@ -8061,7 +8100,8 @@ begin
         Values := nil;
         if Row.Find('newContent') is TJSONObject then Values := Row.Objects['newContent']
         else if Row.Find('previousContent') is TJSONObject then Values := Row.Objects['previousContent'];
-        Summary := HistoryContentSummary(Values, Words, DateFormat, Row.Get('group', ''));
+        if Row.Get('entityType', '') = 'rule' then Summary := HistoryRuleSummary(Row, Words)
+        else Summary := HistoryContentSummary(Values, Words, DateFormat, Row.Get('group', ''));
         GroupLabel := HistoryGroupLabel(Words, Row.Get('group', ''));
         if Values <> nil then
           case Values.Get('field', '') of

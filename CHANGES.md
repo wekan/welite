@@ -20,7 +20,8 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
   completion, with Yes or No values. List WIP history shows the limit
   and whether it is enabled and soft. Card position history shows the saved
   move reason and falls back to the destination list ID. History displays
-  archive states and identifies deletion and restoration.
+  archive states and identifies deletion and restoration. Rule rows show
+  the title, trigger, action and enabled, disabled or removed state.
 
 - Download WeKan JSON from the HTML5 board menu with attachment bytes or
   metadata only. The board menu and JSON API can omit archived cards,

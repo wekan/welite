@@ -277,7 +277,7 @@ Next, after this goal:
   and remaining History restore types and row summaries beyond
   card, list and swimlane colors, card dates, completion and time tracking,
   checklist visibility and item completion, list WIP limit summaries,
-  saved card move reasons, and archive state summaries.
+  saved card move reasons, archive states, and rule configuration summaries.
   An assigned-only member: the attachment API, the file routes, the
   document search, History and the board follow WeKan's rules for them.
 - [ ] **The rest of the HTML5 view, page by page as WeKan's specs need it**:
