@@ -2830,6 +2830,31 @@ end;
 function BoardSidebar(Db: TWLDb; Words: TWLTranslator; const S: TWLSession; const BoardId: string; Writable: Boolean;
   const FilterView: string; PlainLinks, PlainSource: Boolean): string;
 var R, Rooms: TWLRows; i: Integer; Archived, ListTitle: string; HasCards, CanExport, CanImport: Boolean;
+  function MoveObjectsPopup: string;
+    function Destination(const Field, LabelText, EmptyText: string): string;
+    begin
+      Result := '<label>' + E(LabelText) + '<select class="js-object-destination" data-field="' + Field +
+        '" data-empty="' + HtmlAttr(EmptyText) + '" disabled></select></label>';
+    end;
+  var MoveTitle: string;
+  begin
+    MoveTitle := Words.Text('move-selection', 'Move selection');
+    Result := '<template class="js-pop-over-template" data-pop="move-objects" data-popup="moveObjects" data-title="' +
+      HtmlAttr(MoveTitle) + '"><div class="header"><a class="close-btn js-close-pop-over" href="#" aria-label="' +
+      HtmlAttr(Words.Text('close', 'Close')) + '"><i class="fa fa-times"></i></a><span class="header-title">' +
+      E(MoveTitle) + '</span></div><form class="content js-move-objects-form">' +
+      '<p class="warning js-move-objects-error is-hidden" role="alert"></p>' +
+      Destination('boardId', Words.Text('boards', 'Boards'), '') +
+      Destination('swimlaneId', Words.Text('swimlanes', 'Swimlanes'), '—') +
+      Destination('listId', Words.Text('lists', 'Lists'), '—') +
+      Destination('cardId', Words.Text('cards', 'Cards'), Words.Text('add-card', 'Add Card')) +
+      Destination('checklistId', Words.Text('checklists', 'Checklists'), Words.Text('add-checklist', 'Add Checklist')) +
+      Destination('itemId', Words.Text('r-item', 'Item'), '—') +
+      '<select class="js-object-position" aria-label="' + HtmlAttr(MoveTitle) + '"><option value="before">' +
+      E(Words.Text('move-selection-before', 'Before')) + '</option><option value="after">' +
+      E(Words.Text('move-selection-after', 'After')) + '</option></select><button type="submit" ' +
+      'class="primary js-move-objects" disabled>' + E(MoveTitle) + '</button></form></template>';
+  end;
   function AutoArchiveForm:string;
   begin
     Result:='';
@@ -2951,7 +2976,8 @@ begin
     // WeKan's multiselectionSidebar: what to do with the selected cards.
     IfThen(Writable, '<div class="multiselection-sidebar js-multiselection-view is-hidden"><h3>' +
       E(Words.Text('multi-selection-on', 'Multi-Selection is on')) + '</h3><ul class="pop-over-list"><li><a class="js-archive-selection" href="#">' +
-      E(Words.Text('archive-selection', 'Move selection to Archive')) + '</a></li></ul></div>', '') +
+      E(Words.Text('archive-selection', 'Move selection to Archive')) + '</a></li><li><a class="js-move-selection" href="#">' +
+      E(Words.Text('move-selection', 'Move selection')) + '</a></li></ul></div>' + MoveObjectsPopup, '') +
     '<div class="archives-sidebar js-archives-view is-hidden"><h3>' + E(Words.Text('archives', 'Archives')) + '</h3>' + Archived + '</div>' +
     '<div class="board-widget board-widget-members membersWidget"><h3 class="board-widget-title">' + E(Words.Text('members', 'Members')) +
     '</h3><div class="board-widget-content">';

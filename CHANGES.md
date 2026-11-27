@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The selection sidebar opens a Move selection dialog with dependent destination
+  fields and before/after controls. Chromium verifies that changing a parent
+  field clears the previous destination below it.
+
 - The structural move endpoint lists destination boards and filters swimlanes,
   lists, cards, checklists and checklist items by the chosen destination.
   Assigned-only members see only their assigned cards and their contents.

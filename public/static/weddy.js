@@ -3308,11 +3308,15 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
   }
   function loadMoveOptions(form) {
     var target = form._target;
+    var submit = form.querySelector('.js-move-objects');
+    submit.disabled = true;
     return callAsync('structuralMoveOptions', target).then(function (opts) {
+      if (form._target !== target || !form.isConnected) return;
       moveFields.forEach(function (key) {
         var sel = form.querySelector('.js-object-destination[data-field="' + key + '"]');
         if (!sel) return;
         sel.replaceChildren();
+        sel.disabled = !opts[key] || !opts[key].length;
         if (key !== 'boardId') {
           var empty = document.createElement('option');
           empty.value = '';
@@ -3327,7 +3331,10 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
           sel.appendChild(opt);
         });
       });
-    }, function (e) { showMoveError(form, e); });
+      submit.disabled = !opts.boardId || !opts.boardId.some(function (board) { return board._id === target.boardId; });
+    }, function (e) {
+      if (form._target === target && form.isConnected) showMoveError(form, e);
+    });
   }
   function showMoveError(form, e) {
     var w = form.querySelector('.js-move-objects-error');
@@ -3459,6 +3466,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     if (!board || !mixedSelection().length) return;
     openPopOver('move-objects');
     var form = document.querySelector('.js-pop-over .js-move-objects-form');
+    if (!form) return;
     form._target = { boardId: board.dataset.board };
     loadMoveOptions(form);
   });
@@ -3475,9 +3483,9 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     showMoveError(form, null);
     loadMoveOptions(form);
   });
-  up.on('click', '.js-move-objects', function (event, el) {
+  up.on('submit', '.js-move-objects-form', function (event, form) {
     event.preventDefault();
-    var form = el.closest('.js-move-objects-form');
+    var el = form.querySelector('.js-move-objects');
     var board = document.querySelector('.board-wrapper[data-board]');
     if (!form || !board || el.disabled) return;
     el.disabled = true;
