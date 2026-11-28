@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Super Productivity backups import projects as swimlanes and preserve task
+  states, tags, notes, dates, time spent and subtask links.
+
 - Tasks.org backups import calendar lists, task notes, tags, priorities,
   due and completion dates, and subtask links.
 

@@ -5820,10 +5820,107 @@ begin
   except Result.Free; raise; end;
 end;
 
+function SuperProductivityImport(const Source: TJSONData): TJSONObject;
+var Input, Projects, Tasks, LabelsById, Entry, Card, Board, Parents: TJSONObject;
+  Lanes, Lists, Cards, Labels, Tags: TJSONArray; Data, Value: TJSONData;
+  I,J: Integer; Id, Name, Stage, Lane, Parent, Title: string; Done: Boolean;
+  function ObjectField(Data:TJSONData; const Key:string):TJSONObject;
+  var Field:TJSONData;
+  begin
+    Result:=nil;
+    if not (Data is TJSONObject) then Exit;
+    Field:=TJSONObject(Data).Find(Key);
+    if Field is TJSONObject then Result:=TJSONObject(Field);
+  end;
+  procedure TimeField(const Key, Target:string);
+  var Number:TJSONData;
+  begin
+    Number:=Entry.Find(Key);
+    if (Number<>nil) and (Number.JSONType=jtNumber) and (Number.AsFloat>0) then Card.Add(Target,Number.Clone);
+  end;
+begin
+  Input:=ObjectField(Source,'data');
+  if Input=nil then raise EConvertError.Create('Invalid Super Productivity backup');
+  Tasks:=ObjectField(ObjectField(Input,'task'),'entities');
+  Projects:=ObjectField(ObjectField(Input,'project'),'entities');
+  LabelsById:=ObjectField(ObjectField(Input,'tag'),'entities');
+  if Tasks=nil then raise EConvertError.Create('Missing Super Productivity tasks');
+  Result:=TJSONObject.Create;
+  Parents:=TJSONObject.Create;
+  try
+    try
+      Title:='Super Productivity';
+      Board:=TJSONObject.Create; Result.Add('board',Board);
+      Result.Add('importedAuthors',TJSONObject.Create);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      if Projects<>nil then for I:=0 to Projects.Count-1 do
+      begin
+        if not (Projects.Items[I] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Projects.Items[I]); Name:=Entry.Get('title','Project');
+        if Lanes.Count=0 then Title:=Name;
+        Lanes.Add(TJSONObject.Create(['_id',Projects.Names[I],'title',Name,'sort',I]));
+      end;
+      Board.Add('title',Title);
+      Lists.Add(TJSONObject.Create(['_id','todo','title','To Do','sort',0]));
+      Lists.Add(TJSONObject.Create(['_id','doing','title','In Progress','sort',1]));
+      Lists.Add(TJSONObject.Create(['_id','done','title','Done','sort',2]));
+      if LabelsById<>nil then for I:=0 to LabelsById.Count-1 do
+      begin
+        Id:=LabelsById.Names[I];
+        if (Id='KANBAN_IN_PROGRESS') or not (LabelsById.Items[I] is TJSONObject) then Continue;
+        Entry:=TJSONObject(LabelsById.Items[I]);
+        Labels.Add(TJSONObject.Create(['_id',Id,'name',Entry.Get('title',Id),'color','blue']));
+      end;
+      for I:=0 to Tasks.Count-1 do
+      begin
+        if not (Tasks.Items[I] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Tasks.Items[I]);
+        Data:=Entry.Find('subTaskIds');
+        if Data is TJSONArray then for J:=0 to Data.Count-1 do
+          if (Data.Items[J] is TJSONString) and (Parents.Find(Data.Items[J].AsString)=nil) then
+            Parents.Add(Data.Items[J].AsString,Tasks.Names[I]);
+      end;
+      for I:=0 to Tasks.Count-1 do
+      begin
+        if not (Tasks.Items[I] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Tasks.Items[I]); Id:=Tasks.Names[I]; Name:=Entry.Get('title','');
+        if Name='' then Continue;
+        Done:=Entry.Get('isDone',False);
+        Stage:='todo';
+        Tags:=TJSONArray.Create;
+        Data:=Entry.Find('tagIds');
+        if Data is TJSONArray then for J:=0 to Data.Count-1 do
+        begin
+          if not (Data.Items[J] is TJSONString) then Continue;
+          Parent:=Data.Items[J].AsString;
+          if Parent='KANBAN_IN_PROGRESS' then Stage:='doing'
+          else if (LabelsById<>nil) and (LabelsById.Find(Parent) is TJSONObject) then Tags.Add(Parent);
+        end;
+        if Done then Stage:='done';
+        Card:=TJSONObject.Create(['_id',Id,'title',Name,'description',Entry.Get('notes',''),'sort',I,'listId',Stage,'dueComplete',Done]);
+        Cards.Add(Card); Card.Add('labelIds',Tags);
+        Lane:=Entry.Get('projectId','');
+        if (Projects<>nil) and (Projects.Find(Lane) is TJSONObject) then Card.Add('swimlaneId',Lane);
+        Parent:=Entry.Get('parentId',Parents.Get(Id,''));
+        if (Parent<>'') and (Parent<>Id) then Card.Add('parentId',Parent);
+        TimeField('created','createdAt'); TimeField('doneOn','endAt');
+        if Entry.Get('dueDay','')<>'' then Card.Add('dueAt',Entry.Get('dueDay',''))
+        else TimeField('dueWithTime','dueAt');
+        Value:=Entry.Find('timeSpent');
+        if (Value<>nil) and (Value.JSONType=jtNumber) and (Value.AsFloat>=0) then
+          Card.Add('spentTime',Value.AsFloat/3600000);
+      end;
+    except Result.Free; raise; end;
+  finally Parents.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6621,6 +6718,7 @@ begin
             else if SourceFormat='pivotal' then Body:=PivotalImport(Value)
             else if SourceFormat='redmine' then Body:=RedmineImport(Value)
             else if SourceFormat='tasksorg' then Body:=TasksOrgImport(Value)
+            else if SourceFormat='superproductivity' then Body:=SuperProductivityImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
