@@ -4679,9 +4679,9 @@ begin
 end;
 
 function OpenProjectImport(const Source: TJSONData): TJSONObject;
-var Board, Authors, Package, Card, Links, Embedded, Schema, Definition, Comment: TJSONObject;
-  Lists, Cards, Labels, Comments, Definitions, Tags, Fields: TJSONArray;
-  Packages, Activities, Data, Value: TJSONData; I,J: Integer; Id, ListId, ProjectTitle, Name, Key, Kind, Text: string;
+var Board, Authors, Package, Card, Links, Embedded, Schema, Definition, Comment, RelationLinks: TJSONObject;
+  Lists, Cards, Labels, Comments, Definitions, Tags, Fields, Dependencies: TJSONArray;
+  Packages, Activities, Relations, Data, Value: TJSONData; I,J: Integer; Id, ListId, ProjectTitle, Name, Key, Kind, Text, Target: string;
   Hours: Double;
   function Obj(Data: TJSONData; const Key: string): TJSONObject;
   var Field: TJSONData;
@@ -4695,6 +4695,17 @@ var Board, Authors, Package, Card, Links, Embedded, Schema, Definition, Comment:
   begin
     Result:='';
     if Data<>nil then Result:=Data.Get(Key,'');
+  end;
+  function Reference(Link: TJSONObject): string;
+  var Path: string; Slash, Delimiter: Integer;
+  begin
+    Path:=Str(Link,'href');
+    Delimiter:=Pos('?',Path);
+    if Delimiter>0 then SetLength(Path,Delimiter-1);
+    Delimiter:=Pos('#',Path);
+    if Delimiter>0 then SetLength(Path,Delimiter-1);
+    Slash:=LastDelimiter('/',Path);
+    Result:=Copy(Path,Slash+1,MaxInt);
   end;
   procedure AddNamed(Rows: TJSONArray; const Id, NameKey, Name, Kind: string);
   var K: Integer; Row: TJSONObject;
@@ -4816,6 +4827,33 @@ begin
         if Str(Definition,'type')='Integer' then Kind:='number'
         else if Str(Definition,'type')='Float' then Kind:='number';
         AddField(Key,Name,Kind,Value);
+      end;
+      Target:=Reference(Obj(Links,'parent'));
+      if (Target<>'') and (Target<>Id) then Card.Add('parentId',Target);
+      Data:=Obj(Embedded,'relations');
+      if Data<>nil then
+      begin
+        Relations:=TJSONObject(Data).Find('elements');
+        if Relations is TJSONArray then
+        begin
+          Dependencies:=TJSONArray.Create; Card.Add('cardDependencies',Dependencies);
+          for J:=0 to Relations.Count-1 do
+          begin
+            Data:=Relations.Items[J];
+            RelationLinks:=Obj(Data,'_links');
+            if Reference(Obj(RelationLinks,'from'))<>Id then Continue;
+            Target:=Reference(Obj(RelationLinks,'to'));
+            if (Target='') or (Target=Id) then Continue;
+            case Str(TJSONObject(Data),'type') of
+              'blocks': Kind:='blocks';
+              'blocked': Kind:='is-blocked-by';
+              'duplicates': Kind:='duplicates';
+              'duplicated': Kind:='is-duplicated-by';
+              else Kind:='related-to';
+            end;
+            Dependencies.Add(TJSONObject.Create(['cardId',Target,'type',Kind]));
+          end;
+        end;
       end;
       Data:=Obj(Embedded,'activities');
       if Data=nil then Continue;
