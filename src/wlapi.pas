@@ -4258,10 +4258,19 @@ end;
 function KanboardImport(const Source: TJSONObject): TJSONObject;
 var Meta, Board, Task, Entry, Card, Authors, Comment: TJSONObject; Columns, Lanes, Tasks, Lists, Swimlanes, Cards, Labels, Tags,
   Comments, Checklists, Items, Children: TJSONArray; I,J: Integer; Id, CheckId, LabelId, Text, Author: string; Hours: Double;
+  CardRefs,Pairs,Losses:TStringList;
+
+  function Reference(Obj:TJSONObject; const Key:string):string;
+  var Field:TJSONData;
+  begin
+    Result:='';
+    Field:=Obj.Find(Key);
+    if (Field<>nil) and (Field.JSONType in [jtString,jtNumber]) then Result:=Field.AsString;
+  end;
   procedure DateOf(const Input, Field: string);
   var Seconds: Int64;
   begin
-    if TryStrToInt64(Task.Get(Input,''),Seconds) and (Seconds>0) and (Seconds<=253402300799) then
+    if TryStrToInt64(Reference(Task,Input),Seconds) and (Seconds>0) and (Seconds<=253402300799) then
       Card.Add(Field,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',UnixToDateTime(Seconds)));
   end;
   function LabelFor(const Name: string): string;
@@ -4277,6 +4286,91 @@ var Meta, Board, Task, Entry, Card, Authors, Comment: TJSONObject; Columns, Lane
     Value:=Obj.Find(Field);
     if Value is TJSONArray then Result:=TJSONArray(Value) else Result:=nil;
   end;
+  procedure ReadLinks(TaskIndex:Integer; Links:TJSONArray; const Group:string);
+  const LabelsById:array[1..11] of string=('relates to','blocks','is blocked by',
+    'duplicates','is duplicated by','is a child of','is a parent of','targets milestone',
+    'is a milestone of','fixes','is fixed by');
+  var N,Other,KindNumber,D:Integer; Link,HereCard,OtherCard,Child,Parent:TJSONObject;
+    LinkLabel,Kind,Family,HereId,OtherId,LeftId,RightId,Pair,Path:string;
+    Dependencies:TJSONArray; Reversed,Milestone:Boolean;
+  begin
+    HereCard:=Cards.Objects[TaskIndex];
+    HereId:=HereCard.Get('_id','');
+    for N:=0 to Links.Count-1 do
+    begin
+      Path:='/tasks/'+IntToStr(TaskIndex)+'/links/';
+      if Group<>'' then Path:=Path+Group+'/';
+      Path:=Path+IntToStr(N);
+      if not (Links.Items[N] is TJSONObject) then
+      begin
+        Losses.Add(Path+': invalid task link');
+        Continue;
+      end;
+      Link:=Links.Objects[N];
+      LinkLabel:=LowerCase(Trim(Link.Get('label',Group)));
+      if LinkLabel='' then
+      begin
+        KindNumber:=StrToIntDef(Reference(Link,'link_id'),0);
+        if (KindNumber>=Low(LabelsById)) and (KindNumber<=High(LabelsById)) then
+          LinkLabel:=LabelsById[KindNumber];
+      end;
+      OtherId:=Reference(Link,'opposite_task_id');
+      if OtherId='' then OtherId:=Reference(Link,'task_id');
+      Other:=CardRefs.IndexOf(OtherId);
+      if Other<0 then
+      begin
+        Losses.Add(Path+': linked task '+OtherId+' is not part of this import');
+        Continue;
+      end;
+      if OtherId=HereId then Continue;
+      OtherCard:=TJSONObject(CardRefs.Objects[Other]);
+      if (LinkLabel='is a child of') or (LinkLabel='is a parent of') then
+      begin
+        Child:=HereCard; Parent:=OtherCard;
+        if LinkLabel='is a parent of' then
+        begin Child:=OtherCard; Parent:=HereCard; end;
+        OtherId:=Parent.Get('_id','');
+        if Child.Find('parentId')=nil then Child.Add('parentId',OtherId)
+        else if Child.Get('parentId','')<>OtherId then Losses.Add(Path+': child already has a parent');
+        Continue;
+      end;
+      Milestone:=(LinkLabel='targets milestone') or (LinkLabel='is a milestone of');
+      Reversed:=False;
+      case LinkLabel of
+        'relates to','targets milestone','is a milestone of': begin Kind:='related-to'; Family:=Kind; end;
+        'blocks': begin Kind:='blocks'; Family:='blocks'; end;
+        'is blocked by': begin Kind:='is-blocked-by'; Family:='blocks'; Reversed:=True; end;
+        'duplicates': begin Kind:='duplicates'; Family:='duplicates'; end;
+        'is duplicated by': begin Kind:='is-duplicated-by'; Family:='duplicates'; Reversed:=True; end;
+        'fixes': begin Kind:='fixes'; Family:='fixes'; end;
+        'is fixed by': begin Kind:='is-fixed-by'; Family:='fixes'; Reversed:=True; end;
+        else begin Losses.Add(Path+': unsupported task link '+LinkLabel); Continue; end;
+      end;
+      LeftId:=HereId; RightId:=OtherId;
+      if Reversed or ((Kind='related-to') and (CompareStr(LeftId,RightId)>0)) then
+      begin LeftId:=OtherId; RightId:=HereId; end;
+      Pair:=Family+':'+IntToStr(Length(LeftId))+':'+LeftId+RightId;
+      if Pairs.IndexOf(Pair)>=0 then Continue;
+      Pairs.Add(Pair);
+      Dependencies:=OptionalArray(HereCard,'cardDependencies');
+      if Dependencies=nil then
+      begin
+        Dependencies:=TJSONArray.Create;
+        HereCard.Add('cardDependencies',Dependencies);
+      end;
+      D:=0;
+      while (D<Dependencies.Count) and (Dependencies.Objects[D].Get('cardId','')<>OtherId) do Inc(D);
+      if D<Dependencies.Count then
+      begin
+        Losses.Add(Path+': only one dependency per target is kept');
+        Continue;
+      end;
+      Dependencies.Add(TJSONObject.Create(['cardId',OtherId,'type',Kind]));
+      if Milestone then Losses.Add(Path+': milestone link imported as a related task');
+    end;
+  end;
+var Links:TJSONData; Groups:TJSONObject;
+
 begin
   if not (Source.Find('board') is TJSONObject) or not (Source.Find('columns') is TJSONArray) or
     not (Source.Find('tasks') is TJSONArray) then raise EConvertError.Create('Invalid Kanboard export');
@@ -4285,6 +4379,10 @@ begin
   Tasks:=TJSONArray(Source.Find('tasks'));
   Lanes:=OptionalArray(Source,'swimlanes');
   Result:=TJSONObject.Create;
+  CardRefs:=TStringList.Create; Pairs:=TStringList.Create; Losses:=TStringList.Create;
+  CardRefs.CaseSensitive:=True; CardRefs.Sorted:=True;
+  Pairs.CaseSensitive:=True; Pairs.Sorted:=True;
+  try
   try
     Board:=TJSONObject.Create(['title',Meta.Get('name','')]); Result.Add('board',Board);
     Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
@@ -4298,37 +4396,39 @@ begin
     if Lanes<>nil then for I:=0 to Lanes.Count-1 do
     begin
       Entry:=Lanes.Objects[I];
-      Swimlanes.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'title',Entry.Get('name',''),'sort',I]));
+      Swimlanes.Add(TJSONObject.Create(['_id',Reference(Entry,'id'),'title',Entry.Get('name',''),'sort',I]));
     end;
     for I:=0 to Columns.Count-1 do
     begin
       Entry:=Columns.Objects[I];
-      Lists.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'title',Entry.Get('title',''),'sort',I]));
+      Lists.Add(TJSONObject.Create(['_id',Reference(Entry,'id'),'title',Entry.Get('title',''),'sort',I]));
     end;
     for I:=0 to Tasks.Count-1 do
     begin
-      Task:=Tasks.Objects[I]; Id:=Task.Get('id','');
+      Task:=Tasks.Objects[I]; Id:=Reference(Task,'id');
+      if Id='' then Id:='missing-task:'+IntToStr(I);
       Card:=TJSONObject.Create(['_id',Id,'title',Task.Get('title',''),'description',Task.Get('description',''),
-        'listId',Task.Get('column_id',''),'swimlaneId',Task.Get('swimlane_id',''),'sort',I,'archived',Task.Get('is_active','1')='0']);
+        'listId',Reference(Task,'column_id'),'swimlaneId',Reference(Task,'swimlane_id'),'sort',I,'archived',Reference(Task,'is_active')='0']);
       Cards.Add(Card);
+      if Reference(Task,'id')<>'' then CardRefs.AddObject(Id,Card);
       Author:=ImportAuthorIdentity(Authors,Task.Get('creator_username',''));
       if Author<>'' then Card.Add('userId',Author);
       Text:=MapImportColor('kanboard',Task.Get('color_id',''));
       if Task.Get('color_id','')='deep_orange' then Text:='crimson';
       if Text<>'' then Card.Add('color',Text);
       DateOf('date_due','dueAt'); DateOf('date_creation','createdAt'); DateOf('date_started','startAt'); DateOf('date_completed','endAt');
-      if TryStrToFloat(Task.Get('time_spent',''),Hours,DefaultFormatSettings) and (Hours>=0) then Card.Add('spentTime',Hours);
+      if TryStrToFloat(Reference(Task,'time_spent'),Hours,DefaultFormatSettings) and (Hours>=0) then Card.Add('spentTime',Hours);
       Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
       Children:=OptionalArray(Task,'tags');
       if Children<>nil then for J:=0 to Children.Count-1 do
         if Children.Items[J] is TJSONString then Tags.Add(LabelFor(Children.Strings[J]));
-      Text:=Task.Get('priority','');
+      Text:=Reference(Task,'priority');
       if (Text<>'') and (Text<>'0') then Tags.Add(LabelFor('priority:'+Text));
       Children:=OptionalArray(Source,'categories');
       if Children<>nil then for J:=0 to Children.Count-1 do
       begin
         Entry:=Children.Objects[J];
-        if Entry.Get('id','')<>Task.Get('category_id','') then Continue;
+        if Reference(Entry,'id')<>Reference(Task,'category_id') then Continue;
         LabelId:=LabelFor(Entry.Get('name',''));
         Tags.Add(LabelId);
       end;
@@ -4350,11 +4450,24 @@ begin
         begin
           Entry:=Children.Objects[J];
           Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(J),'checklistId',CheckId,
-            'title',Entry.Get('title',''),'sort',J,'isFinished',Entry.Get('status','')='2']));
+            'title',Entry.Get('title',''),'sort',J,'isFinished',Reference(Entry,'status')='2']));
         end;
       end;
     end;
+    for I:=0 to Tasks.Count-1 do
+    begin
+      Links:=Tasks.Objects[I].Find('links');
+      if Links is TJSONArray then ReadLinks(I,TJSONArray(Links),'')
+      else if Links is TJSONObject then
+      begin
+        Groups:=TJSONObject(Links);
+        for J:=0 to Groups.Count-1 do
+          if Groups.Items[J] is TJSONArray then ReadLinks(I,TJSONArray(Groups.Items[J]),Groups.Names[J]);
+      end;
+    end;
+    if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
   except Result.Free; raise; end;
+  finally Losses.Free; Pairs.Free; CardRefs.Free; end;
 end;
 
 function DeckImport(const Source: TJSONObject): TJSONObject;

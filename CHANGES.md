@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Kanboard task links import as parent relationships and dependencies,
+  deduplicating mirrored links and reporting links to tasks outside the export.
+  Numeric IDs work for Kanboard tasks, columns, swimlanes and categories.
+
 - The Board Settings menu saves the localized inactivity archive setting
   when it changes. Clearing the field or entering an out-of-range value
   turns the setting off.

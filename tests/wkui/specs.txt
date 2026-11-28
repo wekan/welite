@@ -499,7 +499,7 @@ import-export-format-audit.e2e.js: gitea: import adapter fixture text through th
 import-export-format-audit.e2e.js: gitea: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: forgejo: import adapter fixture text through the UI
 import-export-format-audit.e2e.js: forgejo: malformed JSON and wrong document shapes are rejected
-import-export-format-audit.e2e.js: github: an embedded issue comment becomes a card comment
+import-export-format-audit.e2e.js: github: an embedded issue comment becomes a card comment, not description text
 import-export-format-audit.e2e.js: asana: import adapter fixture text through the UI
 import-export-format-audit.e2e.js: asana: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: asana: comments, checklists and card fields survive a UI import
@@ -561,3 +561,4 @@ import-export-format-audit.e2e.js: Hawaiian orgmode import instructions render w
 import-export-format-audit.e2e.js: Focalboard: a board.jsonl imports with its lists, labels, description, checklist and comments
 import-export-format-audit.e2e.js: Todoist: a project template imports with its sections, labels, description, sub-tasks and notes
 auto-archive-setting.e2e.js
+import-export-format-audit.e2e.js: kanboard: task links import as a parent card and one dependency per link
