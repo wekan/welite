@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export a board as Nullboard .nbx with a stable board ID, empty and
+  same-named lists, raw notes and selected descriptions and checklists.
+  The shared Chromium audit checks private board access.
+
 - Org mode exports write selected custom fields as properties, resolving
   multiselect option names and preserving zero and false. The shared export
   audit covers administrator access to protected fields.

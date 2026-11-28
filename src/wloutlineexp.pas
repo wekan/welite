@@ -10,6 +10,7 @@ function OutlineBoard(Board: TJSONObject; Opml: Boolean): string;
 
 function TodoTxtBoard(Board: TJSONObject): string;
 function OrgModeBoard(Board: TJSONObject): string;
+function NullboardExport(Board: TJSONObject; const CreatedAt: string): string;
 
 implementation
 
@@ -570,6 +571,114 @@ begin
     LabelNames.Free;
     ListNames.Free;
     Lines.Free;
+  end;
+end;
+
+function NullboardExport(Board: TJSONObject; const CreatedAt: string): string;
+var Output, List, Card, Check, Item: TJSONObject;
+  Lists, Cards, Labels, Checklists, Items, Notes, OutputLists, CardLabels, Fallback: TJSONArray;
+  ListNotes, LabelNames: TStringList;
+  FoldLines, TrimEdges, TrimEnd: TRegExpr;
+  At: TDateTime;
+  Id: Int64;
+  I, J, K, Index: Integer;
+  Title, Text, Description, Block, Name, Box: string;
+  Raw: Boolean;
+
+  function AddList(const ListTitle: string): TJSONArray;
+  begin
+    Result := TJSONArray.Create;
+    OutputLists.Add(TJSONObject.Create(['title', ListTitle, 'notes', Result]));
+  end;
+
+begin
+  Id := 0;
+  if TryISO8601ToDate(CreatedAt, At, True) then
+    Id := DateTimeToUnix(At, True) * 1000 + MilliSecondOf(At);
+  if Id <= 0 then
+  begin
+    At := Now;
+    Id := DateTimeToUnix(At, False) * 1000 + MilliSecondOf(At);
+  end;
+  Title := Board.Get('title', '');
+  if Title = '' then Title := 'WeKan board';
+  OutputLists := TJSONArray.Create;
+  Output := TJSONObject.Create(['format', 20190412, 'id', Id, 'revision', 1, 'title', Title, 'lists', OutputLists]);
+  ListNotes := TStringList.Create;
+  LabelNames := TStringList.Create;
+  FoldLines := TRegExpr.Create('(' + WhiteSpace + ')*[\r\n]+(' + WhiteSpace + ')*');
+  TrimEdges := TRegExpr.Create('^(' + WhiteSpace + ')+|(' + WhiteSpace + ')+$');
+  TrimEnd := TRegExpr.Create('(' + WhiteSpace + ')+$');
+  try
+    ListNotes.CaseSensitive := True;
+    LabelNames.CaseSensitive := True;
+    Lists := Board.Arrays['lists'];
+    Cards := Board.Arrays['cards'];
+    Labels := Board.Get('labels', TJSONArray(nil));
+    Checklists := Board.Arrays['checklists'];
+    Items := Board.Arrays['checklistItems'];
+    IndexNames(LabelNames, Labels, 'name');
+    for I := 0 to Lists.Count - 1 do
+    begin
+      List := Lists.Objects[I];
+      if not List.Get('archived', False) then
+        ListNotes.AddObject(List.Get('_id', ''), AddList(List.Get('title', '')));
+    end;
+    Fallback := nil;
+    for I := 0 to Cards.Count - 1 do
+    begin
+      Card := Cards.Objects[I];
+      if Card.Get('archived', False) then Continue;
+      Index := ListNotes.IndexOf(Card.Get('listId', ''));
+      if Index >= 0 then Notes := TJSONArray(ListNotes.Objects[Index])
+      else
+      begin
+        if Fallback = nil then Fallback := AddList('List');
+        Notes := Fallback;
+      end;
+      Title := TrimEdges.Replace(FoldLines.Replace(Card.Get('title', ''), ' '), '');
+      if Title = '' then Title := 'Untitled';
+      Description := TrimEnd.Replace(Card.Get('description', ''), '');
+      Text := Title;
+      if Description <> '' then Text := Text + #10 + Description;
+      for J := 0 to Checklists.Count - 1 do
+      begin
+        Check := Checklists.Objects[J];
+        if Check.Get('cardId', '') <> Card.Get('_id', '') then Continue;
+        Block := '';
+        for K := 0 to Items.Count - 1 do
+        begin
+          Item := Items.Objects[K];
+          if Item.Get('checklistId', '') <> Check.Get('_id', '') then Continue;
+          Box := ' ';
+          if Item.Get('isFinished', False) then Box := 'x';
+          Block := Block + #10 + '[' + Box + '] ' + TrimEdges.Replace(Item.Get('title', ''), '');
+        end;
+        if Block = '' then Continue;
+        Name := TrimEdges.Replace(Check.Get('title', ''), '');
+        if Name = '' then Name := 'Checklist';
+        if Text = Title then Text := Text + #10 else Text := Text + #10#10;
+        Text := Text + Name + Block;
+      end;
+      Raw := False;
+      CardLabels := Card.Get('labelIds', TJSONArray(nil));
+      if CardLabels <> nil then
+        for J := 0 to CardLabels.Count - 1 do
+          if LabelNames.Values[CardLabels.Strings[J]] = 'raw' then
+          begin
+            Raw := True;
+            Break;
+          end;
+      Notes.Add(TJSONObject.Create(['text', Text, 'raw', Raw, 'min', False]));
+    end;
+    Result := Output.FormatJSON(AsCompressedJSON) + #10;
+  finally
+    TrimEnd.Free;
+    TrimEdges.Free;
+    FoldLines.Free;
+    LabelNames.Free;
+    ListNotes.Free;
+    Output.Free;
   end;
 end;
 

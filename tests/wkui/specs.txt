@@ -588,3 +588,4 @@ import-export-format-audit.e2e.js: OPML export preserves nested outlines, note w
 import-export-format-audit.e2e.js: todo.txt export preserves task dates, list names and priority syntax
 import-export-format-audit.e2e.js: Org mode export preserves planning, repeaters and checklist headings
 import-export-format-audit.e2e.js: Org mode export resolves custom field values and protects admin-only fields
+import-export-format-audit.e2e.js: Nullboard export preserves list identity, raw notes and selected content
