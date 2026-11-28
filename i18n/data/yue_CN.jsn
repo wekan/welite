@@ -2371,5 +2371,6 @@
   "csv-mapping-list-required": "輸入所有卡片都放入去嘅清單名，或者揀裝住清單嘅欄。",
   "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
   "import-board-instruction-vikunja": "喺 Vikunja 打開 Settings，揀「Data Export」，下載佢寄俾你嘅 .zip 檔，然後揀嗰個檔案，或者貼上入面嘅 data.json。Kanban buckets 會變成清單，任務會變成卡片，連埋標籤、負責人、日期、描述、任務清單做檢查清單同評論；優先次序、完成百分比同完成狀態會變成自訂欄位。附件唔會匯入。",
-  "import-board-instruction-notion": "喺 Notion 用全頁打開資料庫，揀 ••• 同 Export，揀 Markdown & CSV，然後揀佢下載嘅 .zip 檔，或者入面其中一個資料庫 CSV，又或者貼上嗰個 CSV。叫 Status 嘅欄會變成清單（冇嘅話，就用第一個似 select 嘅欄，匯入報告會講係邊個）；行會變成卡片，連埋標題、標籤、人做成員、日期，頁面文字做描述；其他欄會變成自訂欄位。關聯、圖片同附件唔會匯入。"
+  "import-board-instruction-notion": "喺 Notion 用全頁打開資料庫，揀 ••• 同 Export，揀 Markdown & CSV，然後揀佢下載嘅 .zip 檔，或者入面其中一個資料庫 CSV，又或者貼上嗰個 CSV。叫 Status 嘅欄會變成清單（冇嘅話，就用第一個似 select 嘅欄，匯入報告會講係邊個）；行會變成卡片，連埋標題、標籤、人做成員、日期，頁面文字做描述；其他欄會變成自訂欄位。關聯、圖片同附件唔會匯入。",
+  "import-board-instruction-plane": "喺 Plane 打開 Workspace Settings，揀 Exports，將專案匯出做 JSON、CSV 或者 Excel 再下載 .zip 檔，然後揀嗰個檔案，或者入面其中一個檔案，又或者貼上 JSON 或 CSV。狀態會變成清單，專案會變成泳道，issues 會變成卡片，連埋識別碼、上層、負責人、標籤、日期、連結同評論；優先次序、估算、週期同模組會變成自訂欄位。Plane 嘅匯出冇描述同附件，所以唔會匯入。"
 }

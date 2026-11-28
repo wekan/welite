@@ -6646,6 +6646,358 @@ end;
 
 type EExternalArchiveMissingData=class(EConvertError);
 
+function PlaneImport(const Source:TJSONData):TJSONObject;
+var Files,Issues,Lists,Lanes,Cards,Labels,Definitions,Fields,Tags,People,Comments,Links,Dependencies:TJSONArray;
+  Board,Authors,Issue,Card,Entry,Comment:TJSONObject;
+  Rows,Losses,RelationsSeen:TStringList;
+  Decimal:TFormatSettings;
+  Encoded,Input,Path,IssuePath,Title,Stage,Lane,Name,Id,Value,Kind,RelationType,Inverse,Ref,Pair,Reversed,
+    Description,Url,Author,ProjectTitle:string;
+  I,J:Integer; Number:Double; FoundExport,NumericEstimate:Boolean;
+
+  function FieldText(Obj:TJSONObject; const Key:string):string;
+  var Cell:TJSONData;
+  begin
+    Result:='';
+    Cell:=Obj.Find(Key);
+    if (Cell<>nil) and (Cell.JSONType in [jtString,jtNumber,jtBoolean]) then Result:=Trim(Cell.AsString);
+  end;
+
+  function IsListField(const Key:string):Boolean;
+  begin
+    case Key of
+      'assignees','subscribers','labels','cycles','modules','links','relations','comments': Exit(True);
+    end;
+    Result:=False;
+  end;
+
+  function ListOf(Obj:TJSONObject; const Key:string):TJSONArray;
+  var Data:TJSONData;
+  begin
+    Result:=nil;
+    Data:=Obj.Find(Key);
+    if Data is TJSONArray then Result:=TJSONArray(Data);
+  end;
+
+  function ItemName(Item:TJSONData):string;
+  begin
+    Result:='';
+    if Item is TJSONString then Result:=Trim(Item.AsString)
+    else if Item is TJSONObject then
+    begin
+      Result:=FieldText(TJSONObject(Item),'name');
+      if Result='' then Result:=FieldText(TJSONObject(Item),'title');
+    end;
+  end;
+
+  procedure LimitIssues;
+  begin
+    if Issues.Count>20000 then raise EConvertError.Create('Too many Plane issues');
+  end;
+
+  procedure ReadJson(const Text:string);
+  var Document:TJSONData; N:Integer;
+  begin
+    Document:=GetJSON(Text,True);
+    try
+      if not (Document is TJSONArray) then raise EConvertError.Create('Invalid Plane JSON export');
+      for N:=0 to Document.Count-1 do
+      begin
+        if not (Document.Items[N] is TJSONObject) then raise EConvertError.Create('Invalid Plane issue');
+        Issues.Add(Document.Items[N].Clone);
+        LimitIssues;
+      end;
+    finally Document.Free; end;
+  end;
+
+  procedure ReadTable(Table:TJSONArray);
+  var Head,Row:TJSONArray; N,C:Integer; Key,Text:string; Data:TJSONData; Item:TJSONObject;
+  begin
+    if Table.Count=0 then Exit;
+    Head:=Table.Arrays[0];
+    Rows.Clear;
+    for C:=0 to Head.Count-1 do
+      Rows.Add(StringReplace(LowerCase(Trim(Head.Strings[C])),' ','_',[rfReplaceAll]));
+    if Rows.IndexOf('name')<0 then raise EConvertError.Create('Missing Plane Name column');
+    for N:=1 to Table.Count-1 do
+    begin
+      Row:=Table.Arrays[N]; Item:=TJSONObject.Create; Issues.Add(Item);
+      LimitIssues;
+      for C:=0 to Min(Row.Count,Rows.Count)-1 do
+      begin
+        Key:=Rows[C]; Text:=Trim(Row.Strings[C]);
+        if (Key='') or (Text='') or (Item.Find(Key)<>nil) then Continue;
+        if not IsListField(Key) then
+        begin
+          if (Length(Text)>1) and (Text[1]=#39) and (Text[2] in ['=','+','-','@']) then Delete(Text,1,1);
+          Item.Add(Key,Text);
+          Continue;
+        end;
+        Data:=nil;
+        if AnsiStartsStr('[',Text) then
+          try Data:=GetJSON(Text,True); except end;
+        if Data is TJSONArray then Item.Add(Key,Data)
+        else
+        begin
+          Data.Free;
+          Losses.Add('/row/'+IntToStr(N+1)+'/'+Key+': invalid list value');
+        end;
+      end;
+    end;
+  end;
+
+  procedure ReadCsv(const Text:string);
+  var Csv:TCSVDocument; Table,Row:TJSONArray; N,C:Integer;
+  begin
+    Csv:=TCSVDocument.Create; Table:=TJSONArray.Create;
+    try
+      Csv.CSVText:=Text;
+      if Csv.RowCount>20001 then raise EConvertError.Create('Too many Plane issue rows');
+      for N:=0 to Csv.RowCount-1 do
+      begin
+        Row:=TJSONArray.Create; Table.Add(Row);
+        for C:=0 to Csv.ColCount[N]-1 do Row.Add(Csv.Cells[C,N]);
+      end;
+      ReadTable(Table);
+    finally Table.Free; Csv.Free; end;
+  end;
+
+  procedure ReadWorkbook(const Data:string);
+  var Sheets:TJSONArray; Names:TStringList; N:Integer;
+  begin
+    Names:=TStringList.Create; Sheets:=nil;
+    try
+      Sheets:=ReadWorkbookRows(DecodeStringBase64(Data,True),Names);
+      N:=Names.IndexOf('Issues');
+      if (N<0) or (N>=Sheets.Count) then N:=0;
+      ReadTable(Sheets.Arrays[N]);
+    finally Sheets.Free; Names.Free; end;
+  end;
+
+  procedure AddNamed(Table:TJSONArray; const Id,Key,Caption,Kind:string);
+  var N:Integer; Item:TJSONObject;
+  begin
+    for N:=0 to Table.Count-1 do if Table.Objects[N].Get('_id','')=Id then Exit;
+    Item:=TJSONObject.Create(['_id',Id,Key,Caption,'sort',Table.Count]);
+    if Kind<>'' then Item.Add('type',Kind);
+    if Table=Labels then Item.Add('color','blue');
+    Table.Add(Item);
+  end;
+
+  procedure AddDate(Destination,Source:TJSONObject; const Key,Target:string);
+  var Text:string; At:TDateTime;
+  begin
+    Text:=FieldText(Source,Key);
+    if Text='' then Exit;
+    if (Length(Text)>10) and (Text[11]=' ') then Text[11]:='T';
+    if TryISO8601ToDate(Text,At,True) then
+      Destination.Add(Target,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',At))
+    else Losses.Add(IssuePath+'/'+Key+': invalid date');
+  end;
+
+  procedure AddField(const Name,Kind:string; Data:TJSONData);
+  var Item:TJSONObject;
+  begin
+    AddNamed(Definitions,Name,'name',Name,Kind);
+    Item:=TJSONObject.Create(['_id',Name]); Fields.Add(Item); Item.Add('value',Data);
+  end;
+
+  function JoinNames(Items:TJSONArray):string;
+  var N:Integer; Text:string;
+  begin
+    Result:='';
+    if Items=nil then Exit;
+    for N:=0 to Items.Count-1 do
+    begin
+      Text:=ItemName(Items.Items[N]); if Text='' then Continue;
+      if Result<>'' then Result:=Result+', ';
+      Result:=Result+Text;
+    end;
+  end;
+
+  procedure ReadPeople(Items:TJSONArray; const Target:string);
+  var N:Integer; Key:string;
+  begin
+    if Items=nil then Exit;
+    People:=TJSONArray.Create; Card.Add(Target,People);
+    for N:=0 to Items.Count-1 do
+    begin
+      Key:=ImportAuthorIdentity(Authors,ItemName(Items.Items[N]));
+      if Key<>'' then People.Add(Key);
+    end;
+  end;
+
+begin
+  Files:=nil; Issues:=TJSONArray.Create;
+  Rows:=TStringList.Create; Losses:=TStringList.Create; RelationsSeen:=TStringList.Create;
+  RelationsSeen.Sorted:=True; RelationsSeen.CaseSensitive:=True;
+  Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.'; Decimal.ThousandSeparator:=#0;
+  try
+    if (Source is TJSONObject) and (TJSONObject(Source).Get('excelBase64','')<>'') then
+      ReadWorkbook(TJSONObject(Source).Get('excelBase64',''))
+    else if Source is TJSONObject then
+    begin
+      Encoded:=TJSONObject(Source).Get('zipBase64','');
+      if Encoded='' then raise EConvertError.Create('Missing Plane ZIP');
+      Files:=ReadMarkdownZip(DecodeStringBase64(Encoded,True),False,True);
+      FoundExport:=False;
+      for I:=0 to Files.Count-1 do
+      begin
+        Entry:=Files.Objects[I]; Path:=Entry.Get('name','');
+        Input:=Entry.Get('text','');
+        if Copy(Input,1,3)=#239#187#191 then Delete(Input,1,3);
+        if AnsiEndsText('.json',Path) then ReadJson(Input)
+        else if AnsiEndsText('.csv',Path) then ReadCsv(Input)
+        else if AnsiEndsText('.xlsx',Path) then ReadWorkbook(Entry.Get('zipBase64',''))
+        else Continue;
+        FoundExport:=True;
+      end;
+      if not FoundExport then raise EExternalArchiveMissingData.Create('Plane export has no .json, .csv or .xlsx file');
+    end
+    else if Source is TJSONArray then ReadJson(Source.AsJSON)
+    else if Source is TJSONString then
+    begin
+      Input:=Trim(Source.AsString);
+      if Copy(Input,1,3)=#239#187#191 then Input:=Trim(Copy(Input,4,MaxInt));
+      if AnsiStartsStr('[',Input) then ReadJson(Input) else ReadCsv(Input);
+    end
+    else raise EConvertError.Create('Invalid Plane export');
+    if Issues.Count=0 then raise EConvertError.Create('No Plane issues');
+    NumericEstimate:=True;
+    for I:=0 to Issues.Count-1 do
+    begin
+      Value:=FieldText(Issues.Objects[I],'estimate');
+      if (Value<>'') and (not TryStrToFloat(Value,Number,Decimal) or IsNan(Number) or IsInfinite(Number)) then
+      begin NumericEstimate:=False; Break; end;
+    end;
+    Losses.Add('/description: Plane issue exports do not include descriptions');
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create; Result.Add('board',Board);
+      Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      ProjectTitle:='';
+      for I:=0 to Issues.Count-1 do
+      begin
+        Issue:=Issues.Objects[I]; IssuePath:='/issues/'+IntToStr(I);
+        Title:=FieldText(Issue,'name');
+        if Title='' then begin Losses.Add(IssuePath+': issue without a name skipped'); Continue; end;
+        Stage:=FieldText(Issue,'state_name'); if Stage='' then Stage:='No state';
+        Lane:=FieldText(Issue,'project_identifier');
+        Name:=FieldText(Issue,'project_name'); if Name='' then Name:=Lane;
+        if Name='' then Name:='Default';
+        if Lane='' then Lane:=Name;
+        if ProjectTitle='' then ProjectTitle:=Name;
+        AddNamed(Lanes,Lane,'title',Name,'');
+        AddNamed(Lists,Stage,'title',Stage,'');
+        Id:=FieldText(Issue,'identifier'); if Id='' then Id:='row:'+IntToStr(I);
+        Card:=TJSONObject.Create(['_id',Id,'title',Title,'listId',Stage,'swimlaneId',Lane,'sort',I,
+          'requestedBy',FieldText(Issue,'created_by_name'),'archived',FieldText(Issue,'archived_at')<>'']);
+        Cards.Add(Card);
+        Ref:=FieldText(Issue,'parent'); if (Ref<>'') and (Ref<>Id) then Card.Add('parentId',Ref);
+        AddDate(Card,Issue,'start_date','startAt'); AddDate(Card,Issue,'target_date','dueAt');
+        AddDate(Card,Issue,'completed_at','endAt'); AddDate(Card,Issue,'created_at','createdAt'); AddDate(Card,Issue,'updated_at','modifiedAt');
+        Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+        Value:=LowerCase(FieldText(Issue,'priority'));
+        case Value of
+          'urgent','high','medium','low': AddField('Priority','text',TJSONString.Create(UpperCase(Value[1])+Copy(Value,2,MaxInt)));
+          '','none': ;
+          else Losses.Add(IssuePath+'/priority: unknown priority');
+        end;
+        Value:=FieldText(Issue,'estimate');
+        if Value<>'' then
+        begin
+          if NumericEstimate and TryStrToFloat(Value,Number,Decimal) then
+            AddField('Estimate','number',TJSONFloatNumber.Create(Number))
+          else AddField('Estimate','text',TJSONString.Create(Value));
+        end;
+        Value:=JoinNames(ListOf(Issue,'cycles')); if Value<>'' then AddField('Cycle','text',TJSONString.Create(Value));
+        Value:=JoinNames(ListOf(Issue,'modules')); if Value<>'' then AddField('Module','text',TJSONString.Create(Value));
+        ReadPeople(ListOf(Issue,'assignees'),'assignees');
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        Links:=ListOf(Issue,'labels');
+        if Links<>nil then
+          for J:=0 to Links.Count-1 do
+          begin
+            Value:=ItemName(Links.Items[J]); if Value='' then Continue;
+            AddNamed(Labels,Value,'name',Value,''); Tags.Add(Value);
+          end;
+        Description:=''; Links:=ListOf(Issue,'links');
+        if Links<>nil then
+          for J:=0 to Links.Count-1 do
+          begin
+            Name:=''; Url:='';
+            if Links.Items[J] is TJSONObject then
+            begin
+              Entry:=Links.Objects[J]; Url:=FieldText(Entry,'url'); Name:=FieldText(Entry,'title');
+            end
+            else if Links.Items[J] is TJSONString then Url:=Trim(Links.Strings[J]);
+            if not (AnsiStartsText('https://',Url) or AnsiStartsText('http://',Url) or AnsiStartsText('mailto:',Url)) or
+              (Pos(#10,Url)>0) or (Pos(#13,Url)>0) then
+            begin
+              if Url<>'' then Losses.Add(IssuePath+'/links/'+IntToStr(J)+': unsupported link');
+              Continue;
+            end;
+            if Name='' then Name:=Url;
+            Name:=StringReplace(Name,']','\]',[rfReplaceAll]);
+            Url:=StringReplace(StringReplace(Url,'(','%28',[rfReplaceAll]),')','%29',[rfReplaceAll]);
+            if Description='' then Description:='Links:';
+            Description:=Description+#10+'- ['+Name+']('+Url+')';
+          end;
+        Card.Add('description',Description);
+        Links:=ListOf(Issue,'comments');
+        if Links<>nil then
+          for J:=0 to Links.Count-1 do
+          begin
+            if not (Links.Items[J] is TJSONObject) then Continue;
+            Entry:=Links.Objects[J]; Value:=FieldText(Entry,'comment'); if Value='' then Continue;
+            Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Value]);
+            Comments.Add(Comment);
+            Author:=ImportAuthorIdentity(Authors,FieldText(Entry,'created_by'));
+            if Author<>'' then Comment.Add('userId',Author);
+            AddDate(Comment,Entry,'created_at','createdAt');
+          end;
+        Links:=ListOf(Issue,'relations');
+        if Links<>nil then
+        begin
+          Dependencies:=TJSONArray.Create; Card.Add('cardDependencies',Dependencies);
+          for J:=0 to Links.Count-1 do
+          begin
+            if not (Links.Items[J] is TJSONObject) then Continue;
+            Entry:=Links.Objects[J]; Kind:=LowerCase(FieldText(Entry,'type'));
+            Ref:=FieldText(Entry,'issue');
+            if (Ref='') or (Ref=Id) then Continue;
+            case Kind of
+              'blocked_by': begin RelationType:='is-blocked-by'; Inverse:='blocks'; end;
+              'relates_to': begin RelationType:='related-to'; Inverse:=RelationType; end;
+              'duplicate': begin RelationType:='duplicates'; Inverse:='is-duplicated-by'; end;
+              else begin Losses.Add(IssuePath+'/relations/'+IntToStr(J)+': unsupported relation'); Continue; end;
+            end;
+            if FieldText(Entry,'direction')='incoming' then
+            begin Value:=RelationType; RelationType:=Inverse; Inverse:=Value; end;
+            Pair:=RelationType+':'+IntToStr(Length(Id))+':'+Id+Ref;
+            Reversed:=Inverse+':'+IntToStr(Length(Ref))+':'+Ref+Id;
+            if (RelationsSeen.IndexOf(Pair)>=0) or (RelationsSeen.IndexOf(Reversed)>=0) then Continue;
+            RelationsSeen.Add(Pair);
+            Dependencies.Add(TJSONObject.Create(['cardId',Ref,'type',RelationType]));
+          end;
+        end;
+        if StrToIntDef(FieldText(Issue,'attachment_count'),0)>0 then Losses.Add(IssuePath+'/attachment_count: attachment bytes were not exported');
+        if SameText(FieldText(Issue,'is_draft'),'true') then Losses.Add(IssuePath+'/is_draft: imported as a normal card');
+      end;
+      if Cards.Count=0 then raise EConvertError.Create('No named Plane issues');
+      if Lanes.Count>1 then ProjectTitle:='Imported Plane issues';
+      Board.Add('title',ProjectTitle);
+      Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally RelationsSeen.Free; Losses.Free; Rows.Free; Issues.Free; Files.Free; end;
+end;
+
 function NotionImport(const Source:TJSONData):TJSONObject;
 var Files,Inner,Lists,Lanes,Cards,Labels,Definitions,Fields,Tags,People:TJSONArray;
   Board,Authors,Card,FileRow,Field:TJSONObject;
@@ -8908,7 +9260,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='excel') or (FormatName='csv') or (FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja') or (FormatName='notion');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist') or (FormatName='planner') or (FormatName='vikunja') or (FormatName='notion') or (FormatName='plane');
 end;
 
 const ImportRecoveryType='import-completed-with-warnings';
@@ -9767,6 +10119,7 @@ begin
             else if SourceFormat='planner' then Body:=PlannerImport(Value)
             else if SourceFormat='vikunja' then Body:=VikunjaImport(Value)
             else if SourceFormat='notion' then Body:=NotionImport(Value)
+            else if SourceFormat='plane' then Body:=PlaneImport(Value)
             else if SourceFormat='csv' then Body:=CsvMappedBoard(Value,nil)
             else if SourceFormat='wekan' then
             begin

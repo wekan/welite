@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Plane imports project exports as cards, with projects as swimlanes and
+  states as lists. Dates, people, labels, issue relationships, comments and
+  custom fields are mapped, and ZIPs may hold exports from multiple projects.
+
 - Notion imports database CSVs and Markdown/CSV export archives. It prefers
   the full database over a view export and pairs row pages with their Markdown
   bodies, keeping lists, labels, dates, people and checkbox fields.

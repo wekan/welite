@@ -2371,5 +2371,6 @@
   "csv-mapping-list-required": "輸入所有卡片都要放入的清單名稱，或選擇包含清單的欄。",
   "import-board-instruction-planner": "In Microsoft Planner, open the plan's menu and choose Export plan to Excel, then choose that .xlsx file. Buckets become lists and tasks become cards, with their assignees, dates, labels, checklist and description; Progress, Priority and Completed By become custom fields.",
   "import-board-instruction-vikunja": "在 Vikunja 中，開啟 Settings，選擇 Data Export 並下載寄給你的 .zip 檔案，然後選擇該檔案，或貼上其中的 data.json。看板群組會成為清單，任務會成為卡片，並保留標籤、承辦人、日期、描述、作為待辦清單的任務清單和留言；優先順序、完成百分比和完成狀態會成為自訂欄位。不匯入附件。",
-  "import-board-instruction-notion": "在 Notion 中，將資料庫作為完整頁面開啟，選擇 ••• 和 Export，選擇 Markdown & CSV，然後選擇下載的 .zip 檔案，或其中一個資料庫的 CSV 檔案，也可貼上該 CSV。名為 Status 的欄會成為清單（如果沒有，則使用第一個看起來像選擇欄位的欄，匯入報告會說明選擇了哪一欄）；每列會成為卡片，並保留標題、標籤、作為成員的人員、日期以及作為描述的頁面文字；其他欄會成為自訂欄位。不匯入關聯、圖片和附件。"
+  "import-board-instruction-notion": "在 Notion 中，將資料庫作為完整頁面開啟，選擇 ••• 和 Export，選擇 Markdown & CSV，然後選擇下載的 .zip 檔案，或其中一個資料庫的 CSV 檔案，也可貼上該 CSV。名為 Status 的欄會成為清單（如果沒有，則使用第一個看起來像選擇欄位的欄，匯入報告會說明選擇了哪一欄）；每列會成為卡片，並保留標題、標籤、作為成員的人員、日期以及作為描述的頁面文字；其他欄會成為自訂欄位。不匯入關聯、圖片和附件。",
+  "import-board-instruction-plane": "在 Plane 中，開啟 Workspace Settings，選擇 Exports，將專案匯出為 JSON、CSV 或 Excel 並下載 .zip 檔案，然後選擇該檔案或其中的一個檔案，也可貼上 JSON 或 CSV。狀態會成為清單，專案會成為泳道，議題會成為卡片，並保留識別碼、父項目、承辦人、標籤、日期、連結和留言；優先順序、估算、週期和模組會成為自訂欄位。Plane 的匯出不含描述和附件，因此不會匯入這些內容。"
 }

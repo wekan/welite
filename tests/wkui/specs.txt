@@ -577,3 +577,6 @@ import-export-format-audit.e2e.js: Vikunja: the export menu link returns a Vikun
 import-export-format-audit.e2e.js: Hawaiian notion import instructions render without an English fallback
 import-export-format-audit.e2e.js: Notion: an export .zip imports through the page with its status lists, page body, labels, date and checkbox
 import-export-format-audit.e2e.js: Notion: a pasted database CSV imports, and a zip without a database is refused
+import-export-format-audit.e2e.js: Hawaiian plane import instructions render without an English fallback
+import-export-format-audit.e2e.js: Plane: an export .zip imports through the page with its states, projects, parent, comment and fields
+import-export-format-audit.e2e.js: Plane: a pasted JSON export imports, and broken text or a zip without export files is refused

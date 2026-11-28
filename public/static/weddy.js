@@ -922,6 +922,9 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       var workbook = form.querySelector('.js-import-file');
       if (workbook && workbook.files.length) {
         var file = workbook.files[0];
+        if (form.dataset.source === 'plane' && /[.](csv|json)$/i.test(file.name)) {
+          return file.text().then(function (data) { return callAsync('importBoard', data, {}, 'plane'); });
+        }
         if (form.dataset.source === 'notion' && /[.]csv$/i.test(file.name)) {
           return file.text().then(function (data) { return callAsync('importBoard', data, {}, 'notion'); });
         }
@@ -933,7 +936,12 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
           reader.onload = function () { resolve(reader.result.split(',')[1]); };
           reader.onerror = reject;
           reader.readAsDataURL(file);
-        }).then(function (data) { return callAsync('importBoard', ['vikunja', 'notion'].includes(form.dataset.source) ? { zipBase64: data } : data, {}, form.dataset.source); });
+        }).then(function (data) {
+          var source = form.dataset.source;
+          if (source === 'plane' && /[.]xlsx$/i.test(file.name)) data = { excelBase64: data };
+          else if (['vikunja', 'notion', 'plane'].includes(source)) data = { zipBase64: data };
+          return callAsync('importBoard', data, {}, source);
+        });
       }
       var files = form.querySelector('.js-import-many-files');
       if (files && files.files.length) {
@@ -947,7 +955,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
         })).then(function (input) { return callAsync('importBoard', { files: input }, {}, form.dataset.source); });
       }
       var text = form.querySelector('textarea').value;
-      return callAsync('importBoard', ['markdown', 'pivotal', 'redmine', 'clickup', 'ticktick', 'linear', 'quire', 'obsidian', 'meistertask', 'opml', 'todotxt', 'taskwarrior', 'orgmode', 'focalboard', 'todoist', 'notion'].includes(form.dataset.source) ? text : JSON.parse(text), {}, form.dataset.source, options);
+      return callAsync('importBoard', ['markdown', 'pivotal', 'redmine', 'clickup', 'ticktick', 'linear', 'quire', 'obsidian', 'meistertask', 'opml', 'todotxt', 'taskwarrior', 'orgmode', 'focalboard', 'todoist', 'notion', 'plane'].includes(form.dataset.source) ? text : JSON.parse(text), {}, form.dataset.source, options);
     }).then(function (board) {
       if (Array.isArray(board.files)) {
         var results = form.parentElement.querySelector('.js-import-many-results');
