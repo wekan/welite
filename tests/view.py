@@ -2403,6 +2403,7 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/profile/avatar/delete', {'avatarId': avatar_id}, cookie=owner)[0] == 303
         assert avatar_url() == '' and request('GET', url, cookie=owner)[0] == 404, 'deleted, and the profile back to the initials'
         assert card_db('SELECT COUNT(*) FROM _wl_avatars WHERE userId=?', users['owner'])[0] == 0
+
         def import_nullboard(collapsed):
             payload = {'format': 20190412, 'title': 'Recovery test',
                        'lists': [{'title': 'List', 'notes': [{'text': 'Note', 'min': collapsed}]}]}
@@ -2439,6 +2440,30 @@ def http_checks(server, tmp, backend):
         card_db("DELETE FROM _wl_attempt WHERE bucket LIKE 'account:%'")
         got = request('POST', '/users/login', {'username': 'stranger', 'password': 'Admin-set-pass-1'})
         assert json.loads(got[2]).get('token'), got[:3]
+
+        # Archive and restore the lane and its live cards in either SQLite backend.
+        status, _, body, _ = request('POST', '/_methods/importBoard', [{
+            'title': 'Archive transaction test',
+            'swimlanes': [{'_id': 'lane', 'title': 'Lane'}],
+            'lists': [{'_id': 'list', 'title': 'List'}],
+            'cards': [
+                {'_id': 'live', 'title': 'Archive with lane', 'listId': 'list', 'swimlaneId': 'lane'},
+                {'_id': 'old', 'title': 'Already archived', 'listId': 'list', 'swimlaneId': 'lane', 'archived': True},
+            ],
+        }, {}, 'wekan'], cookie=owner, as_json=True)
+        assert status == 200, body
+        archive_board = json.loads(body)['result']['_id']
+        archive_lane = card_db('SELECT id FROM swimlanes WHERE boardId=?', archive_board)[0]
+        assert request('POST', '/b/%s/swimlanes/archive' % archive_board,
+                       {'lane': archive_lane}, cookie=owner)[0] == 200
+        assert card_db('SELECT archived FROM swimlanes WHERE id=?', archive_lane)[0] == 1
+        assert card_db("SELECT archived FROM cards WHERE boardId=? AND title='Archive with lane'", archive_board)[0] == 1
+        assert request('POST', '/b/%s/archive/restore' % archive_board,
+                       {'kind': 'swimlanes', 'id': archive_lane}, cookie=owner)[0] == 200
+        assert card_db('SELECT archived FROM swimlanes WHERE id=?', archive_lane)[0] == 0
+        assert card_db("SELECT archived FROM cards WHERE boardId=? AND title='Archive with lane'", archive_board)[0] == 0
+        assert card_db("SELECT archived FROM cards WHERE boardId=? AND title='Already archived'", archive_board)[0] == 1
+        print('PASS: swimlane archive and restore are atomic (%s SQLite)' % backend)
 
         # Log Out revokes the cookie's session.
         status, headers, _, cookies = request('POST', '/logout', {}, cookie=owner)
