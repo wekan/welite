@@ -6,17 +6,17 @@ interface
 
 uses fpjson;
 
-function TrelloExport(Board: TJSONObject): string;
+function TrelloExport(Board: TJSONObject; WithAttachments: Boolean = False): string;
 
 implementation
 
 uses SysUtils, DateUtils;
 
-function TrelloExport(Board: TJSONObject): string;
+function TrelloExport(Board: TJSONObject; WithAttachments: Boolean): string;
 const Epoch = '1970-01-01T00:00:00.000Z';
 var Output, Source, Card, Check, Comment, Entry: TJSONObject;
   Cards, Lists, Labels, Checks, Items, Comments, OutLists, OutCards, OutLabels, OutChecks,
-  Actions, CardChecks, CheckItems, Users, Members, CardMembers, IDs, Fields, Values, FieldItems: TJSONArray;
+  Actions, CardChecks, CheckItems, Users, Members, CardMembers, IDs, Fields, Values, FieldItems, Files, CardFiles: TJSONArray;
   Data: TJSONData;
   I, J, K, Count: Integer;
   BoardId, CardId, CheckId, Title, Stamp, Name, State, Key, Username: string;
@@ -246,6 +246,20 @@ begin
         IDs := Source.Get(Key, TJSONArray(nil));
         if IDs <> nil then
           for J := 0 to IDs.Count - 1 do AppendUnique(CardMembers, AddMember(IDs.Strings[J]));
+      end;
+      if WithAttachments then
+      begin
+        Files := Board.Arrays['attachments'];
+        CardFiles := TJSONArray.Create;
+        Card.Add('attachments', CardFiles);
+        for J := 0 to Files.Count - 1 do
+        begin
+          Entry := Files.Objects[J];
+          if (Entry.Get('cardId','') <> CardId) or (Entry.Get('archivePath','') = '') then Continue;
+          Name := Entry.Get('trelloFileName','');
+          CardFiles.Add(TJSONObject.Create(['id', Entry.Get('_id',''), 'name', Name,
+            'fileName', Name, 'bytes', Entry.Get('size', Int64(0)), 'mimeType', Entry.Get('type',''), 'isUpload', True]));
+        end;
       end;
       FieldItems := TJSONArray.Create;
       Card.Add('customFieldItems', FieldItems);

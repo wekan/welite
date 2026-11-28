@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello ZIP export includes the selected card attachments with ID-prefixed
+  filenames. Same-named files remain separate, and the Trello import reads
+  back those files and legacy ZIPs. Chromium verifies the bytes after reimport.
+
 - Trello JSON exports include selected custom fields as typed card values.
   The shared browser audit checks zero, false, dates, text and administrator
   access to protected fields.

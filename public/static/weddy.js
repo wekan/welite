@@ -1800,6 +1800,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       else if (url.pathname.endsWith('/exportPDF')) selected = fields.concat(documentOnly.filter(function (key) { return key !== 'activities'; }));
       else if (/\/export\/(markdown|opml|orgmode|nullboard|kanri)$/.test(url.pathname)) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists'; }));
       else if (url.pathname.endsWith('/export/trello')) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists' || key === 'comments'; }));
+      else if (url.pathname.endsWith('/export/trellozip')) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists' || key === 'comments' || key === 'attachments'; }));
       url.searchParams.set('fields', selected.join(','));
       a.setAttribute('href', url.pathname + url.search);
     });

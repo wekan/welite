@@ -3929,10 +3929,11 @@ procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; BoardId, UserId, Id, Name, Candidate, Path: string;
   Payload, Attachment: TJSONObject; Attachments: TJSONData; Metadata: TWLRows;
   Output: TMemoryStream; Document: TStringStream; Archive: TZipper; Used: TStringList;
-  I: Integer; C: Char;
+  I: Integer; C: Char; Trello: Boolean;
 
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
+  Trello := AnsiEndsStr('/trellozip', aRequest.PathInfo);
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
@@ -3954,7 +3955,8 @@ begin
   Used := TStringList.Create;
   try
     Used.CaseSensitive := False;
-    Archive.Entries.AddFileEntry(Document, 'wekan.json');
+    if Trello then Archive.Entries.AddFileEntry(Document, 'board.json')
+    else Archive.Entries.AddFileEntry(Document, 'wekan.json');
     Attachments := Payload.Find('attachments');
     if Attachments is TJSONArray then
       for I := 0 to Attachments.Count - 1 do
@@ -3972,11 +3974,21 @@ begin
         if Length(Metadata) <> 1 then Continue;
         Path := StoreFilePath(T.FilesDir, 'attachme', Id);
         if not FileExists(Path) then Continue;
-        Candidate := 'attachments/' + ZipAttachmentName(Attachment.Get('name', ''), Used);
+        if Trello then
+        begin
+          if (Pos('/', Id) > 0) or (Pos('\', Id) > 0) or (Pos(#0, Id) > 0) or (Pos(':', Id) > 0) then Continue;
+          Name := Attachment.Get('name', '');
+          if Name = '' then Name := Id;
+          Name := StringReplace(StringReplace(StringReplace(Name, '/', '_', [rfReplaceAll]), '\', '_', [rfReplaceAll]), #0, '_', [rfReplaceAll]);
+          Name := StringReplace(Name, ':', '_', [rfReplaceAll]);
+          Attachment.Add('trelloFileName', Name);
+          Candidate := 'attachments/' + Id + '_' + Name;
+        end else Candidate := 'attachments/' + ZipAttachmentName(Attachment.Get('name', ''), Used);
         Attachment.Strings['archivePath'] := Candidate;
         Archive.Entries.AddFileEntry(Path, Candidate);
       end;
-    Document.WriteString(Payload.AsJSON + #10);
+    if Trello then Document.WriteString(TrelloExport(Payload, True) + #10)
+    else Document.WriteString(Payload.AsJSON + #10);
     Document.Position := 0;
     try
       Archive.SaveToStream(Output);
@@ -3987,6 +3999,7 @@ begin
       else if (Name <> '') and (Name[Length(Name)] <> '-') then Name := Name + '-';
     Name := Copy(Name, 1, 80);
     if Name = '' then Name := 'board';
+    if Trello then Name := 'trello';
     aResponse.Code := 200;
     aResponse.ContentType := 'application/zip';
     aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Name + '.zip"');

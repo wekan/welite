@@ -322,7 +322,7 @@ end;
 
 function ReadTrelloZip(const Bytes: RawByteString): TJSONObject;
 var Archive: TUnZipper; Reader: TBoardZipReader; Raw: RawByteString; Data, Cards, Attachments, Files: TJSONData;
-  Card, Attachment: TJSONObject; I,J: Integer; Name: string; Used: TStringList;
+  Card, Attachment: TJSONObject; I,J: Integer; Name, Id: string; Used: TStringList;
 begin
   if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid Trello ZIP size');
   Archive:=TUnZipper.Create; Reader:=TBoardZipReader.Create(Bytes); Used:=TStringList.Create;
@@ -352,7 +352,9 @@ begin
         Name:=Attachment.Get('fileName',Attachment.Get('name',''));
         Attachment.Delete('file');
         if Name='' then Continue;
-        if Reader.ReadEntry(AttachmentPrefix+ZipAttachmentName(Name,Used),Raw) then
+        Id:=Attachment.Get('id','');
+        if ((Id<>'') and Reader.ReadEntry(AttachmentPrefix+Id+'_'+Name,Raw)) or
+          Reader.ReadEntry(AttachmentPrefix+ZipAttachmentName(Name,Used),Raw) then
           Attachment.Add('file',EncodeStringBase64(Raw));
       end;
     end;

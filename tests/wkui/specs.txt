@@ -592,3 +592,4 @@ import-export-format-audit.e2e.js: Nullboard export preserves list identity, raw
 import-export-format-audit.e2e.js: Kanri export preserves column identity, due dates, tags and tasks
 import-export-format-audit.e2e.js: Trello JSON export preserves archived cards, members, comments and checklists
 import-export-format-audit.e2e.js: Trello JSON export preserves typed custom fields and protected access
+import-export-format-audit.e2e.js: Trello ZIP export keeps same-named attachments separate and supports field selection
