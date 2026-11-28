@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Burndown and burnup data can be exported as PDF and Excel. These whole-board
+  charts require unrestricted board read access.
+
 - Cards moved between boards retain general Scrum fields and link to uniquely
   named eligible sprints and releases on the destination board. Old sprint
   history and backlog rank are removed, and the Scrum revision advances.

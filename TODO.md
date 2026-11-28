@@ -271,7 +271,7 @@ Next, after this goal:
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
   the import page's format audit (75),
-  the remaining export-access cases for charts,
+  the assigned-only Scrum velocity chart export,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
   Also left are additional History field restore types and row summaries beyond

@@ -66,6 +66,7 @@ procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
@@ -3099,6 +3100,65 @@ begin
   if Length(Result) > 64 then Exit('');
   for C in Result do
     if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
+end;
+
+procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; Session: TWLSession; Words: TWLTranslator; BoardId, UserId, Filename: string;
+  AsPdf, Burnup: Boolean; Rows: TWLRows; Row: TWLRow; Report: TJSONArray; Output: TMemoryStream;
+begin
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, '') then Exit;
+  if AssignedOnlyMember(T.Db, UserId, BoardId) then
+  begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
+  AsPdf := AnsiEndsStr('/exportPDF', aRequest.PathInfo);
+  Burnup := Pos('/charts/burnup/', aRequest.PathInfo) > 0;
+  Filename := IfThen(Burnup, 'burnup', 'burndown');
+  Session := Default(TWLSession);
+  Session.UserId := UserId;
+  Words := TWLTranslator.Create(ViewerLanguage(T.Db, Session, aRequest));
+  Report := TJSONArray.Create;
+  Output := TMemoryStream.Create;
+  try
+    if Burnup then
+      Report.Add(TJSONArray.Create([Words.Text('date', 'Date'), Words.Text('total', 'Total'), Words.Text('completed', 'Completed')]))
+    else
+      Report.Add(TJSONArray.Create([Words.Text('date', 'Date'), Words.Text('board-view-burndown', 'Burndown'), 'Ideal']));
+    Rows := T.Db.Query('WITH RECURSIVE records AS (SELECT COALESCE(date(createdAt),date(''now'')) AS created,' +
+      'COALESCE(date(endAt),date(archivedAt)) AS done FROM cards WHERE deletedAt IS NULL AND boardId=' + QuotedStr(BoardId) + '), ' +
+      'events AS (SELECT day,sum(created) AS created,sum(done) AS done FROM (' +
+      'SELECT created AS day,count(*) AS created,0 AS done FROM records GROUP BY created UNION ALL ' +
+      'SELECT done,0,count(*) FROM records WHERE done IS NOT NULL GROUP BY done) GROUP BY day), ' +
+      'bounds AS (SELECT min(COALESCE(min(created),date(''now'')),date(''now'')) AS first,date(''now'') AS last FROM records), ' +
+      'days(day) AS (SELECT first FROM bounds UNION ALL SELECT date(day,''+1 day'') FROM days,bounds WHERE day<last), ' +
+      'series AS (SELECT day,sum(COALESCE(created,0)) OVER(ORDER BY day) AS total,' +
+      'sum(COALESCE(done,0)) OVER(ORDER BY day) AS completed,first_value(COALESCE(created,0)) OVER(ORDER BY day) AS initial ' +
+      'FROM days LEFT JOIN events USING(day)) ' +
+      'SELECT day,total,completed,max(0,total-completed),COALESCE(round(initial * (julianday(last)-julianday(day))' +
+      '/NULLIF(julianday(last)-julianday(first),0),2),0) FROM series,bounds ORDER BY day;');
+    for Row in Rows do
+      if Burnup then Report.Add(TJSONArray.Create([Row[0], GetJSON(Row[1]), GetJSON(Row[2])]))
+      else Report.Add(TJSONArray.Create([Row[0], GetJSON(Row[3]), GetJSON(Row[4])]));
+    try
+      WriteBoardDocument(Output, nil, '', True, nil, '', '', nil, False, AsPdf, Report);
+    except SendError(aResponse, 500, 'Could not export chart'); Exit; end;
+    if AsPdf then
+    begin
+      Filename := Filename + '.pdf';
+      aResponse.ContentType := 'application/pdf';
+    end
+    else
+    begin
+      Filename := Filename + '.xlsx';
+      aResponse.ContentType := 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    end;
+    aResponse.Code := 200;
+    aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="' + Filename + '"');
+    aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
+    aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
+    Output.Position := 0;
+    aResponse.ContentLength := Output.Size;
+    aResponse.ContentStream := Output;
+    try aResponse.SendContent; finally aResponse.ContentStream := nil; end;
+  finally Output.Free; Report.Free; Words.Free; end;
 end;
 
 procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);

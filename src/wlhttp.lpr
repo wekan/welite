@@ -926,6 +926,10 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/calendar.ics', rmGet, @ApiBoardCalendar);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/csv', rmGet, @ApiBoardCsv);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportZip', rmGet, @ApiBoardZip);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burndown/exportPDF', rmGet, @ApiBoardBurnReport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burndown/exportExcel', rmGet, @ApiBoardBurnReport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burnup/exportPDF', rmGet, @ApiBoardBurnReport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burnup/exportExcel', rmGet, @ApiBoardBurnReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/time/exportExcel', rmGet, @ApiBoardTimeReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/time/exportPDF', rmGet, @ApiBoardTimeReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportExcel', rmGet, @ApiBoardDocument);
