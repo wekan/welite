@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export a board as a Microsoft Planner workbook from the export menu. The
+  Tasks sheet includes buckets, dates, assignments, labels and checklist totals.
+
 - Microsoft Planner workbooks import task buckets, dates, assignments,
   labels, checklists and progress fields. The report explains ambiguous
   dates and checklist totals that do not identify which items are complete.

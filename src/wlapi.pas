@@ -3465,7 +3465,7 @@ end;
 procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
 var T: TWLTenant; BoardId, UserId, CardId, ChecklistId, LaneId, ListId, RouteCardId, RouteListId, Filename: string;
   Payload, Card, Checklist: TJSONObject; Cards, Checklists, OtherCards: TJSONArray;
-  Output: TMemoryStream; I: Integer; Matches, Scoped, SingleCard, AsPdf: Boolean;
+  Output: TMemoryStream; I: Integer; Matches, Scoped, SingleCard, AsPdf, AsPlanner: Boolean;
   function LoadPreview(Attachment: TJSONObject; Target: TStream; out Size: TPoint): Boolean;
   var Mime, Id, OutputType: string; Metadata: TWLRows;
   begin
@@ -3488,6 +3488,7 @@ begin
   RouteListId := aRequest.RouteParams['listId'];
   SingleCard := RouteCardId <> '';
   AsPdf := AnsiEndsStr('/exportPDF', aRequest.PathInfo);
+  AsPlanner := AnsiEndsStr('/export/planner', aRequest.PathInfo);
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId, True, RouteCardId) then Exit;
   if SingleCard then
   begin
@@ -3500,7 +3501,7 @@ begin
     ChecklistId := DownloadScopeId(aRequest, 'checklistId');
     LaneId := DownloadScopeId(aRequest, 'swimlaneId');
     ListId := DownloadScopeId(aRequest, 'listId');
-    Filename := 'board';
+    Filename := IfThen(AsPlanner, 'planner', 'board');
   end;
   Scoped := (CardId <> '') or (ChecklistId <> '') or (LaneId <> '') or (ListId <> '');
   try
@@ -3543,7 +3544,8 @@ begin
         LaneId := '';
         ListId := '';
       end;
-      WriteBoardDocument(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview, SingleCard, AsPdf);
+      if AsPlanner then WritePlannerDocument(Output, Payload)
+      else WriteBoardDocument(Output, Payload, aRequest.QueryFields.Values['fields'], Scoped, OtherCards, LaneId, ListId, @LoadPreview, SingleCard, AsPdf);
     except SendError(aResponse, 500, 'Could not export board'); Exit; end;
     aResponse.Code := 200;
     if AsPdf then

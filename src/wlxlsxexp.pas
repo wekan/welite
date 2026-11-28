@@ -5,10 +5,11 @@ interface
 uses Classes, Types, fpjson;
 type
   TAttachmentPreview = function(Attachment: TJSONObject; Output: TStream; out Size: TPoint): Boolean is nested;
-procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean; Report: TJSONArray = nil);
+procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean; Report: TJSONArray = nil; const ReportSheet: string = 'Time'; ReportHeading: Integer = 0);
+procedure WritePlannerDocument(Output: TStream; Board: TJSONObject);
 
 implementation
-uses SysUtils, Contnrs, zipper, wlcsvexp, wlselect, wlpdfexp;
+uses SysUtils, StrUtils, DateUtils, Contnrs, zipper, wlcsvexp, wlselect, wlpdfexp;
 
 const
   MainNs = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -525,7 +526,7 @@ begin
   TableRow(nil);
 end;
 
-procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean; Report: TJSONArray);
+procedure WriteBoardDocument(Output: TStream; Board: TJSONObject; const Fields: string; Scoped: Boolean; OtherCards: TJSONArray; const LaneId, ListId: string; Preview: TAttachmentPreview; SingleCard, AsPdf: Boolean; Report: TJSONArray; const ReportSheet: string; ReportHeading: Integer);
 var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Part, Section: string;
   I: Integer; Known, CardDetails, ActivitySheet, BoardHeader, WithChecklists, WithComments, WithAttachments, WithSubtasks, WithPoker, WithStickers, WithLocations, WithDependencies, WithBoardInfo: Boolean;
   Users: TJSONArray; User: TJSONObject;
@@ -559,7 +560,7 @@ var Zip: TZipper; Writer: TSheetWriter; Streams: TList; Sheet: TMemoryStream; Pa
         Cells[J].Text := Entry.Items[J].AsString;
         Cells[J].LiteralText := Entry.Items[J].JSONType = jtString;
       end;
-      Writer.TableRow(Cells, I = 0);
+      Writer.TableRow(Cells, I = ReportHeading);
     end;
   end;
 
@@ -823,7 +824,7 @@ begin
         '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' +
         '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf></cellXfs>' +
         '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>');
-      if Report <> nil then StartSheet('Time') else StartSheet('Cards');
+      if Report <> nil then StartSheet(ReportSheet) else StartSheet('Cards');
     end;
     if Report <> nil then
     begin
@@ -939,4 +940,115 @@ begin
     Streams.Free;
   end;
 end;
+procedure WritePlannerDocument(Output: TStream; Board: TJSONObject);
+var Report, Cards: TJSONArray; Card, Entry: TJSONObject;
+  Lists, Users, Labels, Checklists, Items: TFPHashObjectList;
+  CardChecks, CheckItems: TFPList;
+  Id, Title, Bucket, Progress, Assignees, Creator, Completed, Late,
+    ChecklistCount, ChecklistText, LabelNames, AssignedNames: string;
+  NowUtc, Due: TDateTime; I,J,K,Done,Total: Integer;
+
+  function IndexById(const Key:string):TFPHashObjectList;
+  var Rows:TJSONArray; N:Integer;
+  begin
+    Result:=TFPHashObjectList.Create(False);
+    Rows:=Board.Arrays[Key];
+    for N:=0 to Rows.Count-1 do
+      Result.Add(Rows.Objects[N].Get('_id',''),Rows.Objects[N]);
+  end;
+
+  function Lookup(Index:TFPHashObjectList; const Key,Field:string):string;
+  var Item:TJSONObject;
+  begin
+    Result:='';
+    if Key='' then Exit;
+    Item:=TJSONObject(Index.Find(Key));
+    if Item<>nil then Result:=Item.Get(Field,'');
+  end;
+
+  procedure Append(var Values:string; const Value:string);
+  var Text:string;
+  begin
+    Text:=Trim(StringReplace(Value,';',',',[rfReplaceAll]));
+    if Text='' then Exit;
+    if Values<>'' then Values:=Values+';';
+    Values:=Values+Text;
+  end;
+
+  function JoinNames(Values:TJSONData; Index:TFPHashObjectList; const Field:string):string;
+  var N:Integer;
+  begin
+    Result:='';
+    if not (Values is TJSONArray) then Exit;
+    for N:=0 to Values.Count-1 do Append(Result,Lookup(Index,Values.Items[N].AsString,Field));
+  end;
+
+  function PlannerDay(const Key:string):string;
+  var At:TDateTime;
+  begin
+    Result:='';
+    if TryISO8601ToDate(Trim(Card.Get(Key,'')),At,True) then Result:=FormatDateTime('mm"/"dd"/"yyyy',At);
+  end;
+
+begin
+  NowUtc:=LocalTimeToUniversal(Now);
+  Report:=TJSONArray.Create;
+  Lists:=nil; Users:=nil; Labels:=nil; Checklists:=nil; Items:=nil;
+  try
+    Lists:=IndexById('lists'); Users:=IndexById('users'); Labels:=IndexById('labels');
+    Checklists:=GroupRows(Board,'checklists','cardId');
+    Items:=GroupRows(Board,'checklistItems','checklistId');
+    Title:=Board.Get('title','');
+    if Title='' then Title:='WeKan board';
+    Report.Add(TJSONArray.Create(['Plan name',Title]));
+    Report.Add(TJSONArray.Create(['Plan ID',Board.Get('_id','')]));
+    Report.Add(TJSONArray.Create(['Date of export',FormatDateTime('mm"/"dd"/"yyyy',NowUtc)]));
+    Report.Add(TJSONArray.Create);
+    Report.Add(TJSONArray.Create(['Task ID','Task Name','Bucket Name','Progress','Priority','Assigned To',
+      'Created By','Created Date','Start Date','Due Date','Late','Completed Date','Completed By',
+      'Description','Completed Checklist Items','Checklist Items','Labels']));
+    Cards:=Board.Arrays['cards'];
+    for I:=0 to Cards.Count-1 do
+    begin
+      Card:=Cards.Objects[I];
+      if Card.Get('archived',False) or (Card.Get('deletedAt','')<>'') or (Card.Get('linkedId','')<>'') then Continue;
+      Id:=Card.Get('_id','');
+      Title:=Trim(Card.Get('title','')); if Title='' then Title:='Untitled';
+      Bucket:=Lookup(Lists,Card.Get('listId',''),'title'); if Bucket='' then Bucket:='No bucket';
+      Completed:=PlannerDay('endAt');
+      Progress:=IfThen(Completed<>'','Completed','Not started');
+      Late:='false';
+      if (Completed='') and TryISO8601ToDate(Card.Get('dueAt',''),Due,True) and (Due<NowUtc) then Late:='true';
+      Creator:=Lookup(Users,Card.Get('userId',''),'username');
+      if Creator='' then Creator:=Card.Get('requestedBy','');
+      Assignees:='';
+      Append(Assignees,Lookup(Users,Card.Get('userId',''),'username'));
+      AssignedNames:=JoinNames(Card.Find('assignees'),Users,'username');
+      for LabelNames in AssignedNames.Split([';'],TStringSplitOptions.ExcludeEmpty) do
+        Append(Assignees,LabelNames);
+      LabelNames:=JoinNames(Card.Find('labelIds'),Labels,'name');
+      ChecklistCount:=''; ChecklistText:=''; Done:=0; Total:=0;
+      CardChecks:=TFPList(Checklists.Find(Id));
+      if CardChecks<>nil then
+        for J:=0 to CardChecks.Count-1 do
+        begin
+          CheckItems:=TFPList(Items.Find(TJSONObject(CardChecks[J]).Get('_id','')));
+          if CheckItems=nil then Continue;
+          for K:=0 to CheckItems.Count-1 do
+          begin
+            Entry:=TJSONObject(CheckItems[K]);
+            Inc(Total);
+            if Entry.Get('isFinished',False) then Inc(Done);
+            Append(ChecklistText,Entry.Get('title',''));
+          end;
+        end;
+      if Total>0 then ChecklistCount:=IntToStr(Done)+'/'+IntToStr(Total);
+      Report.Add(TJSONArray.Create([Id,Title,Bucket,Progress,'Medium',Assignees,Creator,
+        PlannerDay('createdAt'),PlannerDay('startAt'),PlannerDay('dueAt'),Late,Completed,'',
+        Card.Get('description',''),ChecklistCount,ChecklistText,LabelNames]));
+    end;
+    WriteBoardDocument(Output,nil,'',True,nil,'','',nil,False,False,Report,'Tasks',4);
+  finally Items.Free; Checklists.Free; Labels.Free; Users.Free; Lists.Free; Report.Free; end;
+end;
+
 end.
