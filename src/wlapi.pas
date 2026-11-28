@@ -6243,10 +6243,70 @@ begin
   finally Csv.Free; end;
 end;
 
+function NullboardImport(const Source:TJSONData):TJSONObject;
+var Input,Board,List,Note,Card:TJSONObject; Data,SourceLists,Notes:TJSONData; Lists,Cards,Labels:TJSONArray;
+  I,J,P,Collapsed,OtherBoards:Integer; Id,Title,Text,Description,Losses:string;
+begin
+  Data:=Source; OtherBoards:=0;
+  if Data is TJSONArray then
+  begin
+    if Data.Count=0 then raise EConvertError.Create('Empty Nullboard backup');
+    OtherBoards:=Data.Count-1;
+    Data:=Data.Items[0];
+  end;
+  if not (Data is TJSONObject) then raise EConvertError.Create('Invalid Nullboard backup');
+  Input:=TJSONObject(Data);
+  SourceLists:=Input.Find('lists');
+  if (Input.Get('format',0)<>20190412) or not (SourceLists is TJSONArray) then
+    raise EConvertError.Create('Invalid Nullboard format');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',Input.Get('title','Imported Nullboard')]); Result.Add('board',Board);
+    Result.Add('importedAuthors',TJSONObject.Create);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Collapsed:=0;
+    for I:=0 to SourceLists.Count-1 do
+    begin
+      if not (SourceLists.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Nullboard list');
+      List:=TJSONObject(SourceLists.Items[I]); Id:='list-'+IntToStr(I);
+      Lists.Add(TJSONObject.Create(['_id',Id,'title',List.Get('title','Untitled list'),'sort',I]));
+      Notes:=List.Find('notes');
+      if not (Notes is TJSONArray) then Continue;
+      for J:=0 to Notes.Count-1 do
+      begin
+        if not (Notes.Items[J] is TJSONObject) then Continue;
+        Note:=TJSONObject(Notes.Items[J]); Text:=Trim(Note.Get('text',''));
+        if Text='' then Continue;
+        P:=Pos(#10,Text); Title:=Text; Description:='';
+        if P>0 then
+        begin
+          Title:=Trim(Copy(Text,1,P-1));
+          Description:=Trim(Copy(Text,P+1,MaxInt));
+        end;
+        if Title='' then Continue;
+        Card:=TJSONObject.Create(['_id',Id+':note:'+IntToStr(J),'listId',Id,'title',Title,'description',Description,'sort',J]);
+        Cards.Add(Card);
+        if Note.Get('min',False) then Inc(Collapsed);
+        if Note.Get('raw',False) then
+        begin
+          if Labels.Count=0 then Labels.Add(TJSONObject.Create(['_id','raw','name','raw','color','blue']));
+          Card.Add('labelIds',TJSONArray.Create(['raw']));
+        end;
+      end;
+    end;
+    Losses:='';
+    if Collapsed>0 then Losses:='/lists/notes/min: '+IntToStr(Collapsed)+' collapsed note(s) imported expanded';
+    if OtherBoards>0 then Losses:=Losses+LineEnding+'/boards: '+IntToStr(OtherBoards)+' additional board(s) skipped';
+    if Trim(Losses)<>'' then Result.Add('importLosses',Trim(Losses));
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7049,6 +7109,7 @@ begin
             else if SourceFormat='ticktick' then Body:=TickTickImport(Value)
             else if SourceFormat='quire' then Body:=QuireImport(Value)
             else if SourceFormat='obsidian' then Body:=MarkdownBoardImport(Value,True)
+            else if SourceFormat='nullboard' then Body:=NullboardImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

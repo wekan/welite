@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Nullboard NBX imports lists and notes with separate titles and descriptions.
+  Raw notes retain a label, and the report lists collapsed notes imported expanded.
+
 - MeisterTask project CSV imports sections, task notes, dates, tags and
   completion or archive state.
 
