@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Lists can move between swimlanes and boards alongside independently
+  selected cards and checklists. Cards inside a selected list keep their
+  list and move with it. The shared cross-board Chromium test covers this.
+
 - Cards, checklists, and loose items can move together in one transaction.
   The shared move-dialog test covers positioning a card on another board
   while placing a selected checklist on the destination card.
