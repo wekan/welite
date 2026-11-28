@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Added 21 shared Chromium import cases to the regular audit, including
+  Kanri single-board and backup imports, multi-file and ZIP board imports,
+  Trello attachment round trips, and CSV, XLSX and text import coverage.
+
 - Export a board as Nextcloud Deck JSON. The shared Chromium audit verifies
   field selection, private board access, and reimport of same-named lists
   and completed cards without a due date.

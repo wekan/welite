@@ -598,3 +598,24 @@ import-export-format-audit.e2e.js: Trello import resolves existing usernames and
 import-export-format-audit.e2e.js: Trello ZIP member mapping overrides a username without granting board access
 import-export-format-audit.e2e.js: Trello JSON member mapping overrides a username without granting board access
 import-export-format-audit.e2e.js: Deck export separates same-named stacks and preserves completed cards
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1150:1 › Kanri: a board export imports with its columns, description, due date, tasks, tags and colors
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1195:1 › Kanri: an all-data export imports every board, one board per project; other documents are refused
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1517:1 › ClickUp: a task export imports with its status, list, tags, due date and subtask
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1571:1 › Linear: a CSV export imports with its statuses, team, labels, priority and parent issue
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1717:1 › monday.com: a board export imports with its group, status, person, date and update
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:292:1 › WeKan JSON import keeps each card creation date (#1992)
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:316:1 › Trello ZIP imports comment, checklist and exact attachment bytes; JSON round-trip preserves them
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1233:1 › Import many boards: several files and a .zip of them become one board each
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1296:1 › Pivotal Tracker: a stories CSV imports with its states, labels, comments and tasks
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1329:1 › Redmine: an issues CSV imports with its statuses, tracker, parent task and relations
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1363:1 › Tasks.org: a backup imports with its lists, notes, tags, priority, due date and subtask
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1405:1 › Super Productivity: a backup imports with its projects, lists, labels and sub-tasks
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1546:1 › TickTick: a backup imports with its list, column, tags, due date and checklist
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1599:1 › Quire: a project CSV imports with its statuses, subtask, tags, dates and priority
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1629:1 › Obsidian Kanban: a plugin board imports with its lanes, limit, tags, due date and done cards
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1659:1 › MeisterTask: a project CSV imports with its sections, notes, due date and tags
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1686:1 › Nullboard: a .nbx board imports with its lists, notes and raw note
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1749:1 › Wrike: an import template imports with its folder, status, dates and dependency
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1783:1 › Wrike: custom statuses of a workflow import as lists, the workflow as the board title
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1814:1 › Teamwork.com: an import template imports with its task list, fields and subtask
+import-export-format-audit.e2e.js: tests/playwright/specs/import-export-format-audit.e2e.js:1849:1 › Businessmap: a workbook imports with its column, lane, deadline, priority, comment and parent
