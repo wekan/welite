@@ -939,6 +939,7 @@ begin
   HTTPRouter.RegisterRoute('/import/linear', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/quire', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/obsidian', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/meistertask', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

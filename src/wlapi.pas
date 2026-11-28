@@ -5965,7 +5965,7 @@ end;
 
 function TaskExportCsvImport(const Source:TJSONData; const FormatName:string):TJSONObject;
 var Csv:TCSVDocument; Board,Card:TJSONObject; Lists,Lanes,Cards,Labels,Tags,Definitions:TJSONArray;
-  I:Integer; Id,Title,Stage,Lane,Parent,Name,TagText,Raw,Due,BoardTitle, IdColumn, TitleColumn, DescriptionColumn, LaneColumn, ParentColumn, TagColumn, Caption, Priority:string; Ms:Int64;
+  I:Integer; Id,Title,Stage,Lane,Parent,Name,TagText,Raw,Due,BoardTitle, IdColumn, TitleColumn, DescriptionColumn, LaneColumn, ParentColumn, TagColumn, Caption, Priority, StatusColumn, DueColumn, ProjectColumn, Status:string; Ms:Int64; MeisterTask:Boolean;
   function Cell(const Header:string):string;
   var C:Integer;
   begin
@@ -5980,7 +5980,15 @@ var Csv:TCSVDocument; Board,Card:TJSONObject; Lists,Lanes,Cards,Labels,Tags,Defi
     Rows.Add(TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]));
   end;
 begin
-  if FormatName='linear' then
+  MeisterTask:=FormatName='meistertask';
+  StatusColumn:='Status'; DueColumn:='Due date'; ProjectColumn:='Space Name';
+  if MeisterTask then
+  begin
+    Caption:='MeisterTask project'; IdColumn:='id'; TitleColumn:='name'; DescriptionColumn:='notes';
+    LaneColumn:=''; ParentColumn:=''; TagColumn:='tags'; StatusColumn:='section';
+    DueColumn:='due_date'; ProjectColumn:='project';
+  end
+  else if FormatName='linear' then
   begin
     Caption:='Linear issues'; IdColumn:='ID'; TitleColumn:='Title'; DescriptionColumn:='Description';
     LaneColumn:='Team'; ParentColumn:='Parent issue'; TagColumn:='Labels';
@@ -5999,7 +6007,7 @@ begin
     try
       Csv.CSVText:=Raw;
       I:=0;
-      if (Csv.RowCount=0) or not SameText(Cell(TitleColumn),TitleColumn) or not SameText(Cell(IdColumn),IdColumn) then
+      if (Csv.RowCount=0) or not SameText(Cell(TitleColumn),TitleColumn) or (not MeisterTask and not SameText(Cell(IdColumn),IdColumn)) then
         raise EConvertError.Create('Missing task CSV columns');
       Board:=TJSONObject.Create; Result.Add('board',Board);
       Result.Add('importedAuthors',TJSONObject.Create);
@@ -6014,15 +6022,27 @@ begin
         Title:=Cell(TitleColumn);
         if Title='' then Continue;
         Id:=Cell(IdColumn);
+        if MeisterTask and (Id='') then Id:='task-'+IntToStr(I);
         if Id='' then raise EConvertError.Create('Missing task ID');
-        if BoardTitle='' then BoardTitle:=Cell('Space Name');
-        Stage:=Cell('Status'); if Stage='' then Stage:='Tasks';
+        if BoardTitle='' then BoardTitle:=Cell(ProjectColumn);
+        Stage:=Cell(StatusColumn); if Stage='' then Stage:='Tasks';
         AddNamed(Lists,Stage,'title',Stage);
         Lane:=Cell(LaneColumn); if Lane='' then Lane:='Default';
         AddNamed(Lanes,Lane,'title',Lane);
         Card:=TJSONObject.Create(['_id',Id,'title',Title,'description',Cell(DescriptionColumn),'swimlaneId',Lane,
           'listId',Stage,'sort',I,'dueComplete',SameText(Stage,'complete') or SameText(Stage,'closed') or SameText(Stage,'done')]);
         Cards.Add(Card);
+        if MeisterTask then
+        begin
+          Status:=Cell('status');
+          Card.Delete('dueComplete');
+          Card.Add('dueComplete',Status='2');
+          Card.Add('archived',(Status='8') or (Status='16'));
+          ImportEnglishDate(Card,'createdAt',Cell('created_at'));
+          ImportEnglishDate(Card,'modifiedAt',Cell('updated_at'));
+          if (Status='2') and (Cell('completed_at')='') then ImportEnglishDate(Card,'endAt',Cell('status_updated_at'))
+          else ImportEnglishDate(Card,'endAt',Cell('completed_at'));
+        end;
         Priority:=Cell('Priority');
         if (FormatName='linear') and (Priority<>'') and not SameText(Priority,'No priority') then
         begin
@@ -6031,12 +6051,13 @@ begin
         end;
         Parent:=Cell(ParentColumn);
         if (Parent<>'') and (Parent<>Id) then Card.Add('parentId',Parent);
-        Due:=Cell('Due date');
+        Due:=Cell(DueColumn);
         if TryStrToInt64(Due,Ms) then begin if Ms>0 then Card.Add('dueAt',Ms); end
         else if Due<>'' then Card.Add('dueAt',Due);
         Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
         Raw:=Cell(TagColumn);
         if (Length(Raw)>=2) and (Raw[1]='[') and (Raw[Length(Raw)]=']') then Raw:=Copy(Raw,2,Length(Raw)-2);
+        if MeisterTask then Raw:=StringReplace(Raw,';',',',[rfReplaceAll]);
         for TagText in Raw.Split([',']) do
         begin
           Name:=Trim(TagText);
@@ -6225,7 +6246,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7024,7 +7045,7 @@ begin
             else if SourceFormat='redmine' then Body:=RedmineImport(Value)
             else if SourceFormat='tasksorg' then Body:=TasksOrgImport(Value)
             else if SourceFormat='superproductivity' then Body:=SuperProductivityImport(Value)
-            else if (SourceFormat='clickup') or (SourceFormat='linear') then Body:=TaskExportCsvImport(Value,SourceFormat)
+            else if (SourceFormat='clickup') or (SourceFormat='linear') or (SourceFormat='meistertask') then Body:=TaskExportCsvImport(Value,SourceFormat)
             else if SourceFormat='ticktick' then Body:=TickTickImport(Value)
             else if SourceFormat='quire' then Body:=QuireImport(Value)
             else if SourceFormat='obsidian' then Body:=MarkdownBoardImport(Value,True)

@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- MeisterTask project CSV imports sections, task notes, dates, tags and
+  completion or archive state.
+
 - Obsidian Kanban Markdown imports list limits, card notes, tags, due dates
   and completed cards. Obsidian metadata blocks stay out of card text.
 
