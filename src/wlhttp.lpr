@@ -918,6 +918,7 @@ begin
   HTTPRouter.RegisterRoute('/api/users/:userId', rmPut, @ApiChangeUser);
   HTTPRouter.RegisterRoute('/api/boards', rmGet, @ApiPublicBoards);
   HTTPRouter.RegisterRoute('/api/boards', rmPost, @ApiCreateBoard);
+  HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5KanboardImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);
   HTTPRouter.RegisterRoute('/api/import/zip', rmPost, @ApiImportBoard);
   HTTPRouter.RegisterRoute('/api/users/:userId/boards', rmGet, @ApiUserBoards);

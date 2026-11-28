@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The board import menu accepts pasted Kanboard JSON. The importer maps
+  lists, swimlanes, tasks, dates, labels and subtasks into WeLite. The shared
+  Chromium fixture verifies the imported card and its visible content.
+
 - Scrum velocity exports closed-sprint snapshot totals as PDF and Excel.
   Assigned-only members receive totals for their visible cards. All 11
   shared export access tests pass.

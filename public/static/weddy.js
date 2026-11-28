@@ -803,6 +803,29 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     event.preventDefault();
     openPopOver(el.dataset.pop || 'board-zip-import');
   });
+  up.on('submit', '.js-kanboard-import', function (event, form) {
+    event.preventDefault();
+    var submit = form.querySelector('button[type="submit"]');
+    var warning = form.querySelector('.warning');
+    if (submit.disabled) return;
+    submit.disabled = true;
+    warning.hidden = true;
+    fetch(form.action, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: form.querySelector('textarea').value
+    }).then(function (response) {
+      if (!response.ok) throw new Error('Import failed');
+      return response.json();
+    }).then(function (board) {
+      if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
+      window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');
+    }).catch(function () {
+      warning.hidden = false;
+      submit.disabled = false;
+    });
+  });
   up.on('submit', '.js-board-zip-import-form', function (event, form) {
     event.preventDefault();
     var file = form.elements.archive.files[0];

@@ -4232,11 +4232,105 @@ end;
 
 function CardDecorations(Value:TJSONData;const Key:string):TJSONArray; forward;
 
+// Kanboard JSON projects use numeric string IDs and Unix-second dates.
+function KanboardImport(const Source: TJSONObject): TJSONObject;
+var Meta, Board, Task, Entry, Card: TJSONObject; Columns, Lanes, Tasks, Lists, Swimlanes, Cards, Labels, Tags,
+  Comments, Checklists, Items, Children: TJSONArray; I,J: Integer; Id, CheckId, LabelId, Text: string; Hours: Double;
+  procedure DateOf(const Input, Field: string);
+  var Seconds: Int64;
+  begin
+    if TryStrToInt64(Task.Get(Input,''),Seconds) and (Seconds>0) and (Seconds<=253402300799) then
+      Card.Add(Field,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',UnixToDateTime(Seconds)));
+  end;
+  function LabelFor(const Name: string): string;
+  var K: Integer;
+  begin
+    for K:=0 to Labels.Count-1 do if Labels.Objects[K].Get('name','')=Name then Exit(Labels.Objects[K].Get('_id',''));
+    Result:='label-'+IntToStr(Labels.Count);
+    Labels.Add(TJSONObject.Create(['_id',Result,'name',Name,'color','blue']));
+  end;
+  function OptionalArray(Obj: TJSONObject; const Field: string): TJSONArray;
+  var Value: TJSONData;
+  begin
+    Value:=Obj.Find(Field);
+    if Value is TJSONArray then Result:=TJSONArray(Value) else Result:=nil;
+  end;
+begin
+  if not (Source.Find('board') is TJSONObject) or not (Source.Find('columns') is TJSONArray) or
+    not (Source.Find('tasks') is TJSONArray) then raise EConvertError.Create('Invalid Kanboard export');
+  Meta:=TJSONObject(Source.Find('board'));
+  Columns:=TJSONArray(Source.Find('columns'));
+  Tasks:=TJSONArray(Source.Find('tasks'));
+  Lanes:=OptionalArray(Source,'swimlanes');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',Meta.Get('name','')]); Result.Add('board',Board);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Swimlanes:=TJSONArray.Create; Board.Add('swimlanes',Swimlanes);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    Checklists:=TJSONArray.Create; Board.Add('checklists',Checklists);
+    Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+    if Lanes<>nil then for I:=0 to Lanes.Count-1 do
+    begin
+      Entry:=Lanes.Objects[I];
+      Swimlanes.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'title',Entry.Get('name',''),'sort',I]));
+    end;
+    for I:=0 to Columns.Count-1 do
+    begin
+      Entry:=Columns.Objects[I];
+      Lists.Add(TJSONObject.Create(['_id',Entry.Get('id',''),'title',Entry.Get('title',''),'sort',I]));
+    end;
+    for I:=0 to Tasks.Count-1 do
+    begin
+      Task:=Tasks.Objects[I]; Id:=Task.Get('id','');
+      Card:=TJSONObject.Create(['_id',Id,'title',Task.Get('title',''),'description',Task.Get('description',''),
+        'listId',Task.Get('column_id',''),'swimlaneId',Task.Get('swimlane_id',''),'sort',I,'archived',Task.Get('is_active','1')='0']);
+      Cards.Add(Card);
+      Text:=MapImportColor('kanboard',Task.Get('color_id',''));
+      if Task.Get('color_id','')='deep_orange' then Text:='crimson';
+      if Text<>'' then Card.Add('color',Text);
+      DateOf('date_due','dueAt'); DateOf('date_creation','createdAt'); DateOf('date_started','startAt'); DateOf('date_completed','endAt');
+      if TryStrToFloat(Task.Get('time_spent',''),Hours,DefaultFormatSettings) and (Hours>=0) then Card.Add('spentTime',Hours);
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      Children:=OptionalArray(Task,'tags');
+      if Children<>nil then for J:=0 to Children.Count-1 do
+        if Children.Items[J] is TJSONString then Tags.Add(LabelFor(Children.Strings[J]));
+      Text:=Task.Get('priority','');
+      if (Text<>'') and (Text<>'0') then Tags.Add(LabelFor('priority:'+Text));
+      Children:=OptionalArray(Source,'categories');
+      if Children<>nil then for J:=0 to Children.Count-1 do
+      begin
+        Entry:=Children.Objects[J];
+        if Entry.Get('id','')<>Task.Get('category_id','') then Continue;
+        LabelId:=LabelFor(Entry.Get('name',''));
+        Tags.Add(LabelId);
+      end;
+      Children:=OptionalArray(Task,'comments');
+      if Children<>nil then for J:=0 to Children.Count-1 do
+        Comments.Add(TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Children.Objects[J].Get('comment','')]));
+      Children:=OptionalArray(Task,'subtasks');
+      if (Children<>nil) and (Children.Count>0) then
+      begin
+        CheckId:=Id+':subtasks';
+        Checklists.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title','Subtasks','sort',0]));
+        for J:=0 to Children.Count-1 do
+        begin
+          Entry:=Children.Objects[J];
+          Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(J),'checklistId',CheckId,
+            'title',Entry.Get('title',''),'sort',J,'isFinished',Entry.Get('status','')='2']));
+        end;
+      end;
+    end;
+  except Result.Free; raise; end;
+end;
+
 procedure ApiImportBoard(aRequest:TRequest;aResponse:TResponse);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
-var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql:string;
-  Body,Input,Row,Reply,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
+var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat:string;
+  Body,Input,Row,Reply,SourceDocument,MemberMap,CardCreations,ImportedListLanes:TJSONObject;Maps:array[0..11] of TJSONObject;Arrays:array[0..11] of TJSONArray;
   Value:TJSONData;Rows:TWLRows;CardNumbers:array of Int64;I,J:Integer;Files,ImportedMembers:TStringList;Committed, IsZip, ZipRoute:Boolean; Session:TWLSession; Policy:TFieldPolicy;
   function Text(Obj:TJSONObject;const Key:string;const Fallback:string=''):string;
   var Field:TJSONData;
@@ -4912,7 +5006,10 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
 begin
   if not ApiTenant(aRequest,aResponse,T) then Exit;
   IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
-  if IsZip and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
+  SourceFormat := aRequest.QueryFields.Values['source'];
+  if (SourceFormat<>'') and ((SourceFormat<>'kanboard') or IsZip) then
+  begin SendError(aResponse,400,'Invalid import source'); Exit; end;
+  if (IsZip or (SourceFormat<>'')) and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
     (aRequest.Authorization = '') and (aRequest.QueryFields.Values['authToken'] = '') and
     (aRequest.QueryFields.Values['token'] = '') and Html5User(T.Db, aRequest, Session) then Actor := Session.UserId
   else if not ApiAuth(T,aRequest,aResponse,Actor) then Exit;
@@ -4950,6 +5047,11 @@ begin
     try
       try
         if IsZip then Body:=ReadBoardZip(aRequest.Content)
+        else if SourceFormat='kanboard' then
+        begin
+          SourceDocument:=ExactObject(aRequest.Content);
+          try Body:=KanboardImport(SourceDocument); finally SourceDocument.Free; end;
+        end
         else Body:=ExactObject(aRequest.Content);
       except raise EConvertError.Create('Invalid board export');end;
       Value:=Body.Find('board');
