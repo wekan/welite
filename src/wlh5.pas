@@ -2842,7 +2842,8 @@ begin
     '/calendar.ics">iCalendar (.ics)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/markdown?fields=">Markdown (.md)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/opml?fields=">OPML (.opml)</a></li><li><a class="js-export-fields" download href="' + Base +
-    '/export/todotxt?fields=">todo.txt (.txt)</a></li><li><a download href="' + Base +
+    '/export/todotxt?fields=">todo.txt (.txt)</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/export/orgmode?fields=">Org mode (.org)</a></li><li><a download href="' + Base +
     '/export/planner?download=1">Microsoft Planner (.xlsx)</a></li><li><a download href="' + Base +
     '/export/vikunja?download=1">Vikunja (.zip)</a></li><li><a download href="' + Base +
     '/exportZip">WeKan ZIP</a></li><li><form method="get" action="' + Base + '/exportZip">' +

@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export boards as Org mode outlines with planning dates, repeating deadlines,
+  labels, notes and checklist headings. The shared Chromium audit covers field
+  selection and private board access.
+
 - Export boards as todo.txt with list names, projects, contexts, priorities and
   task dates. Completed lists use the completed-task syntax. The shared
   Chromium test covers field selection, archived cards and access checks.

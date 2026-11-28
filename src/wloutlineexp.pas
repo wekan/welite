@@ -9,10 +9,11 @@ uses fpjson;
 function OutlineBoard(Board: TJSONObject; Opml: Boolean): string;
 
 function TodoTxtBoard(Board: TJSONObject): string;
+function OrgModeBoard(Board: TJSONObject): string;
 
 implementation
 
-uses Classes, SysUtils, DateUtils, RegExpr;
+uses Classes, SysUtils, DateUtils, RegExpr, Character;
 
 const WhiteSpace = '\s| | | | | | | | | | | | | | | | | |　|﻿';
   TerminalList = '(?i)done|closed|complete|archiv|finished';
@@ -330,6 +331,226 @@ begin
     Spaces.Free;
     Tags.Free;
     Words.Free;
+    LabelNames.Free;
+    ListNames.Free;
+    Lines.Free;
+  end;
+end;
+
+function OrgTag(const Value: string): string;
+var Text, Tag: UnicodeString; I, Size: Integer; Gap: Boolean;
+begin
+  Text := UTF8Decode(Value);
+  Tag := '';
+  I := 1;
+  Gap := False;
+  while I <= Length(Text) do
+  begin
+    Size := 1;
+    if TCharacter.IsSurrogatePair(Text, I) then Size := 2;
+    if (Text[I] in ['_','@','#','%']) or
+      TCharacter.IsLetter(Text, I) or TCharacter.IsNumber(Text, I) then
+    begin
+      if Gap then Tag := Tag + '_';
+      Tag := Tag + Copy(Text, I, Size);
+      Gap := False;
+    end else Gap := True;
+    Inc(I, Size);
+  end;
+  while (Tag <> '') and (Tag[1] = '_') do Delete(Tag, 1, 1);
+  while (Tag <> '') and (Tag[Length(Tag)] = '_') do SetLength(Tag, Length(Tag) - 1);
+  Result := UTF8Encode(Tag);
+end;
+
+function OrgStamp(const Value: string; Active: Boolean; const Repeater: string = ''): string;
+const Days: array[1..7] of string = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+var At: TDateTime; Clock: string;
+begin
+  Result := '';
+  if not TryISO8601ToDate(Value, At, True) then Exit;
+  Result := FormatDateTime('yyyy-mm-dd', At) + ' ' + Days[DayOfWeek(At)];
+  Clock := FormatDateTime('hh":"nn', At);
+  if Clock <> '00:00' then Result := Result + ' ' + Clock;
+  if Repeater <> '' then Result := Result + ' ' + Repeater;
+  if Active then Result := '<' + Result + '>' else Result := '[' + Result + ']';
+end;
+
+function OrgModeBoard(Board: TJSONObject): string;
+var Lines, ListNames, LabelNames, ListTitles: TStringList;
+  Spaces, ClosedList, PropertySeparators: TRegExpr;
+  Lists, Cards, CardLabels, Checklists, Items, Fields, Values, Options: TJSONArray;
+  Card, Checklist, Item, Field, Entry, Option, Settings: TJSONObject;
+  Value: TJSONData;
+  ListTitle, Title, Tag, Tags, Priority, State, Plan, Stamp, Repeater, Description, Line, Name, FieldText: string;
+  I, J, K, N, L, FirstItem, PropertyStart: Integer;
+  Done: Boolean;
+
+  function OneLine(const Text: string; const Fallback: string = ''): string;
+  begin
+    Result := Trim(Spaces.Replace(Text, ' '));
+    if Result = '' then Result := Fallback;
+  end;
+
+  procedure AddPlan(const Kind, Date: string);
+  begin
+    if Date = '' then Exit;
+    if Plan <> '' then Plan := Plan + ' ';
+    Plan := Plan + Kind + ': ' + Date;
+  end;
+
+begin
+  Lines := TStringList.Create;
+  ListNames := TStringList.Create;
+  LabelNames := TStringList.Create;
+  ListTitles := TStringList.Create;
+  Spaces := TRegExpr.Create('(' + WhiteSpace + ')+');
+  ClosedList := TRegExpr.Create(TerminalList);
+  PropertySeparators := TRegExpr.Create('(' + WhiteSpace + '|:)+');
+  try
+    ListNames.CaseSensitive := True;
+    LabelNames.CaseSensitive := True;
+    ListTitles.CaseSensitive := True;
+    Lists := Board.Arrays['lists'];
+    Cards := Board.Arrays['cards'];
+    Checklists := Board.Arrays['checklists'];
+    Items := Board.Arrays['checklistItems'];
+    Fields := Board.Arrays['customFields'];
+    IndexNames(ListNames, Lists, 'title');
+    IndexNames(LabelNames, Board.Get('labels', TJSONArray(nil)), 'name');
+    for I := 0 to Lists.Count - 1 do
+    begin
+      Item := Lists.Objects[I];
+      Title := Item.Get('title', '');
+      if not Item.Get('archived', False) and (ListTitles.IndexOf(Title) < 0) then ListTitles.Add(Title);
+    end;
+    Lines.Add('#+TITLE: ' + OneLine(Board.Get('title', '')));
+    Lines.Add('#+TODO: TODO | DONE');
+    Lines.Add('');
+    for I := 0 to ListTitles.Count do
+    begin
+      ListTitle := '';
+      if I < ListTitles.Count then
+      begin
+        ListTitle := ListTitles[I];
+        Lines.Add('* ' + OneLine(ListTitle, 'List'));
+      end;
+      for J := 0 to Cards.Count - 1 do
+      begin
+        Card := Cards.Objects[J];
+        if Card.Get('archived', False) then Continue;
+        L := ListNames.IndexOfName(Card.Get('listId', ''));
+        if L < 0 then
+        begin
+          if I < ListTitles.Count then Continue;
+        end else if (I = ListTitles.Count) or (ListNames.ValueFromIndex[L] <> ListTitle) then Continue;
+        Done := ClosedList.Exec(ListTitle);
+        Priority := '';
+        Tags := '';
+        CardLabels := Card.Get('labelIds', TJSONArray(nil));
+        if CardLabels <> nil then
+          for K := 0 to CardLabels.Count - 1 do
+          begin
+            Tag := LabelNames.Values[CardLabels.Strings[K]];
+            if Tag = 'done' then Done := True
+            else if (Length(Tag) = 10) and (Copy(Tag, 1, 9) = 'priority:') and (Tag[10] in ['A'..'Z','0'..'9']) then
+            begin
+              if Priority = '' then Priority := '[#' + Tag[10] + '] ';
+            end else
+            begin
+              Tag := OrgTag(Tag);
+              if Tag <> '' then Tags := Tags + ':' + Tag;
+            end;
+          end;
+        if Tags <> '' then Tags := ' ' + Tags + ':';
+        State := 'TODO';
+        if Done then State := 'DONE';
+        Lines.Add('** ' + State + ' ' + Priority + OneLine(Card.Get('title', ''), 'Untitled') + Tags);
+
+        Repeater := '';
+        if not Done then
+          case Card.Get('recurrenceInterval', '') of
+            'daily': Repeater := '+1d';
+            'weekly': Repeater := '+1w';
+            'monthly': Repeater := '+1m';
+          end;
+        Plan := '';
+        AddPlan('SCHEDULED', OrgStamp(Card.Get('startAt',''), True));
+        AddPlan('DEADLINE', OrgStamp(Card.Get('dueAt',''), True, Repeater));
+        if Done then AddPlan('CLOSED', OrgStamp(Card.Get('endAt',''), False));
+        if Plan <> '' then Lines.Add('   ' + Plan);
+        PropertyStart := Lines.Count;
+        Stamp := OrgStamp(Card.Get('createdAt', ''), False);
+        if Stamp <> '' then Lines.Add('   :CREATED:  ' + Stamp);
+        Values := Card.Get('customFields', TJSONArray(nil));
+        if Values <> nil then
+          for K := 0 to Values.Count - 1 do
+          begin
+            Entry := Values.Objects[K];
+            Value := Entry.Find('value');
+            if (Value = nil) or (Value.JSONType in [jtNull, jtArray, jtObject]) then Continue;
+            for N := 0 to Fields.Count - 1 do
+            begin
+              Field := Fields.Objects[N];
+              if Field.Get('_id','') <> Entry.Get('_id','') then Continue;
+              Name := PropertySeparators.Replace(Trim(Field.Get('name','')), '_');
+              if (Name = '') or SameText(Name, 'CREATED') or SameText(Name, 'ID') or SameText(Name, 'CUSTOM_ID') then Break;
+              FieldText := Value.AsString;
+              Settings := Field.Get('settings', TJSONObject(nil));
+              Options := nil;
+              if Settings <> nil then Options := Settings.Get('dropdownItems', TJSONArray(nil));
+              if (Field.Get('type','') = 'dropdown') and (Options <> nil) then
+                for L := 0 to Options.Count - 1 do
+                begin
+                  Option := Options.Objects[L];
+                  if Option.Get('_id','') = FieldText then
+                  begin
+                    FieldText := Option.Get('name','');
+                    Break;
+                  end;
+                end;
+              FieldText := OneLine(FieldText);
+              if FieldText <> '' then Lines.Add('   :' + Name + ': ' + FieldText);
+              Break;
+            end;
+          end;
+        if Lines.Count > PropertyStart then
+        begin
+          Lines.Insert(PropertyStart, '   :PROPERTIES:');
+          Lines.Add('   :END:');
+        end;
+        Description := Card.Get('description','');
+        if Description <> '' then
+        begin
+          Description := StringReplace(Description, #13#10, #10, [rfReplaceAll]);
+          Description := StringReplace(Description, #13, #10, [rfReplaceAll]);
+          for Line in Description.Split([#10]) do
+            if Line = '' then Lines.Add('') else Lines.Add('   ' + Line);
+        end;
+        for K := 0 to Checklists.Count - 1 do
+        begin
+          Checklist := Checklists.Objects[K];
+          if Checklist.Get('cardId','') <> Card.Get('_id','') then Continue;
+          FirstItem := Lines.Count;
+          for N := 0 to Items.Count - 1 do
+          begin
+            Item := Items.Objects[N];
+            if Item.Get('checklistId','') <> Checklist.Get('_id','') then Continue;
+            State := 'TODO';
+            if Item.Get('isFinished', False) then State := 'DONE';
+            Lines.Add('**** ' + State + ' ' + OneLine(Item.Get('title',''), 'Item'));
+          end;
+          if Lines.Count > FirstItem then
+            Lines.Insert(FirstItem, '*** ' + OneLine(Checklist.Get('title',''), 'Checklist'));
+        end;
+      end;
+    end;
+    Lines.LineBreak := #10;
+    Result := Lines.Text;
+  finally
+    PropertySeparators.Free;
+    ClosedList.Free;
+    Spaces.Free;
+    ListTitles.Free;
     LabelNames.Free;
     ListNames.Free;
     Lines.Free;

@@ -3078,18 +3078,20 @@ begin
 end;
 
 procedure ApiBoardTextExport(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Body, Extension: string; Payload: TJSONObject; Opml, TodoTxt: Boolean;
+var T: TWLTenant; BoardId, UserId, Body, Extension: string; Payload: TJSONObject; Opml, TodoTxt, OrgMode: Boolean;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
   Opml := AnsiEndsStr('/opml', aRequest.PathInfo);
   TodoTxt := AnsiEndsStr('/todotxt', aRequest.PathInfo);
+  OrgMode := AnsiEndsStr('/orgmode', aRequest.PathInfo);
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
     if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
     try
       if Payload.Find('subtaskItems') = nil then Payload.Add('subtaskItems', TJSONArray.Create);
-      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'], Opml or TodoTxt);
+      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'], Opml or TodoTxt or OrgMode);
       if TodoTxt then Body := TodoTxtBoard(Payload)
+      else if OrgMode then Body := OrgModeBoard(Payload)
       else Body := OutlineBoard(Payload, Opml);
     finally Payload.Free; end;
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
@@ -3098,6 +3100,10 @@ begin
   begin
     aResponse.ContentType := 'text/x-opml; charset=utf-8';
     Extension := 'opml';
+  end else if OrgMode then
+  begin
+    aResponse.ContentType := 'text/x-org; charset=utf-8';
+    Extension := 'org';
   end else if TodoTxt then
   begin
     aResponse.ContentType := 'text/plain; charset=utf-8';
