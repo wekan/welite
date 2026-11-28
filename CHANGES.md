@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Zenkit JSON and API entry imports preserve stages, cards, parent links,
+  checklist completion, custom values, and embedded comments with authors.
+
 - OpenProject JSON imports work packages by status, preserving dates, spent
   and estimated hours, progress, custom fields, and named comment authors.
 

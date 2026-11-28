@@ -924,6 +924,7 @@ begin
   HTTPRouter.RegisterRoute('/import/forgejo', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/asana', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/openproject', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/zenkit', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

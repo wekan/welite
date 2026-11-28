@@ -506,3 +506,7 @@ import-export-format-audit.e2e.js: asana: comments, checklists and card fields s
 import-export-format-audit.e2e.js: openproject: import adapter fixture text through the UI
 import-export-format-audit.e2e.js: openproject: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: openproject: comments, checklists and card fields survive a UI import
+import-export-format-audit.e2e.js: zenkit: import adapter fixture text through the UI
+import-export-format-audit.e2e.js: zenkit: malformed JSON and wrong document shapes are rejected
+import-export-format-audit.e2e.js: zenkit: comments, checklists and card fields survive a UI import
+import-export-format-audit.e2e.js: zenkit: API entries import stages, checklists, fields and hierarchy

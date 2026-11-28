@@ -4837,10 +4837,186 @@ begin
   except Result.Free; raise; end;
 end;
 
+function ZenkitImport(const Source: TJSONData): TJSONObject;
+var Input, Board, Authors, Entry, Card, Element, Check, Child, Field: TJSONObject;
+  Lists, Cards, Labels, Comments, Checks, Items, Definitions, Tags, Fields: TJSONArray;
+  Entries, Schema, Data, Value, Row: TJSONData; I,J,K: Integer; IsApi: Boolean;
+  Title, Id, Stage, Name, Key, CheckId, Author, Kind: string;
+  procedure AddNamed(Rows: TJSONArray; const Id, NameKey, Name, Kind: string);
+  var A: Integer; Added: TJSONObject;
+  begin
+    for A:=0 to Rows.Count-1 do if Rows.Objects[A].Get('_id','')=Id then Exit;
+    Added:=TJSONObject.Create(['_id',Id,NameKey,Name,'sort',Rows.Count]);
+    if Kind<>'' then Added.Add('type',Kind);
+    Rows.Add(Added);
+  end;
+  procedure AddTag(const Name: string);
+  begin
+    if Name='' then Exit;
+    AddNamed(Labels,Name,'name',Name,'');
+    Tags.Add(Name);
+  end;
+  procedure AddField(const Key, Name: string; Value: TJSONData);
+  begin
+    if (Name='') or (Value=nil) or not (Value.JSONType in [jtNumber,jtString,jtBoolean]) then Exit;
+    Kind:='text';
+    if Value.JSONType=jtNumber then Kind:='number';
+    if Value.JSONType=jtBoolean then Kind:='checkbox';
+    AddNamed(Definitions,Key,'name',Name,Kind);
+    Field:=TJSONObject.Create(['_id',Key]); Fields.Add(Field); Field.Add('value',Value.Clone);
+  end;
+  procedure CopyText(FromRow, ToRow: TJSONObject; const FromKey, ToKey: string);
+  var Text: string;
+  begin
+    Text:=FromRow.Get(FromKey,'');
+    if Text<>'' then ToRow.Add(ToKey,Text);
+  end;
+  procedure ReadApiEntry;
+  var A,B, Category: Integer; Suffix, Column, Semantic: string; V, CategoryRow: TJSONData;
+  begin
+    for A:=0 to Schema.Count-1 do
+    begin
+      if not (Schema.Items[A] is TJSONObject) then Continue;
+      Element:=TJSONObject(Schema.Items[A]);
+      Column:=Element.Get('uuid','');
+      if Column='' then Continue;
+      Semantic:=LowerCase(Element.Get('name',''));
+      Category:=Element.Get('elementcategory',0);
+      if Element.Get('isPrimary',False) then
+      begin
+        if Entry.Get(Column+'_text','')<>'' then
+        begin Card.Delete('title'); Card.Add('title',Entry.Get(Column+'_text','')); end;
+        Continue;
+      end;
+      if (Category=1) and (Semantic='description') then
+      begin CopyText(Entry,Card,Column+'_text','description'); Continue; end;
+      if (Category=4) and ((Semantic='due date') or (Semantic='due')) then
+      begin CopyText(Entry,Card,Column+'_date','dueAt'); Continue; end;
+      if Category=6 then
+      begin
+        V:=Entry.Find(Column+'_categories_sort');
+        if not (V is TJSONArray) then Continue;
+        for B:=0 to V.Count-1 do
+        begin
+          CategoryRow:=V.Items[B];
+          if not (CategoryRow is TJSONObject) then Continue;
+          Name:=TJSONObject(CategoryRow).Get('name','');
+          if (Name<>'') and ((Semantic='stage') or (Semantic='status')) then
+          begin Stage:=Name; Break; end;
+          if (Semantic='labels') or (Semantic='tags') then AddTag(Name);
+        end;
+        Continue;
+      end;
+      if (Category=17) and (Semantic='parent') then
+      begin
+        V:=Entry.Find(Column+'_references_sort');
+        if (V is TJSONArray) and (V.Count>0) and (V.Items[0] is TJSONObject) then
+          CopyText(TJSONObject(V.Items[0]),Card,'uuid','parentId');
+        Continue;
+      end;
+      case Category of
+        1: Suffix:='_text';
+        2: Suffix:='_number';
+        4: Suffix:='_date';
+        else Continue;
+      end;
+      AddField(Column,Element.Get('name',''),Entry.Find(Column+Suffix));
+    end;
+  end;
+begin
+  if not (Source is TJSONObject) then raise EConvertError.Create('Invalid Zenkit export');
+  Input:=TJSONObject(Source);
+  Entries:=Input.Find('items'); Schema:=Input.Find('elements');
+  IsApi:=not (Entries is TJSONArray);
+  Title:=Input.Get('title','');
+  if IsApi then
+  begin
+    Entries:=Input.Find('entries');
+    Data:=Input.Find('list');
+    if not (Schema is TJSONArray) or not (Data is TJSONObject) then raise EConvertError.Create('Invalid Zenkit API export');
+    Title:=TJSONObject(Data).Get('name','');
+  end;
+  if not (Entries is TJSONArray) or (Trim(Title)='') then raise EConvertError.Create('Invalid Zenkit export');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+    Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+    Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+    Data:=Input.Find('stages');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+      if Data.Items[I] is TJSONObject then
+      begin
+        Name:=TJSONObject(Data.Items[I]).Get('name','');
+        if Name<>'' then AddNamed(Lists,Name,'title',Name,'');
+      end;
+    for I:=0 to Entries.Count-1 do
+    begin
+      if not (Entries.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Zenkit item');
+      Entry:=TJSONObject(Entries.Items[I]);
+      if Entry.Get('deprecated_at','')<>'' then Continue;
+      Id:=Entry.Get('id',Entry.Get('uuid',''));
+      if Id='' then raise EConvertError.Create('Missing Zenkit item identity');
+      Card:=TJSONObject.Create(['_id',Id,'title',Entry.Get('title',Entry.Get('displayString','')),
+        'sort',Entry.Get('sortOrder',I)]);
+      Cards.Add(Card);
+      Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      Stage:=Entry.Get('stage_name','Tasks');
+      CopyText(Entry,Card,'created_at','createdAt');
+      if IsApi then ReadApiEntry
+      else
+      begin
+        CopyText(Entry,Card,'description','description');
+        CopyText(Entry,Card,'due','dueAt');
+        Data:=Entry.Find('tags');
+        if Data is TJSONArray then for J:=0 to Data.Count-1 do
+          if Data.Items[J] is TJSONString then AddTag(Data.Items[J].AsString);
+        Data:=Entry.Find('fields');
+        if Data is TJSONObject then for J:=0 to Data.Count-1 do
+        begin
+          Key:=TJSONObject(Data).Names[J];
+          AddField(Key,Key,Data.Items[J]);
+        end;
+      end;
+      AddNamed(Lists,Stage,'title',Stage,''); Card.Add('listId',Stage);
+      Data:=Entry.Find('checklists');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Check:=TJSONObject(Data.Items[J]); CheckId:=Id+':checklist:'+IntToStr(J);
+        Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title',Check.Get('name','Checklist'),'sort',J]));
+        Row:=Check.Find('items');
+        if Row is TJSONArray then for K:=0 to Row.Count-1 do
+        begin
+          if not (Row.Items[K] is TJSONObject) then Continue;
+          Child:=TJSONObject(Row.Items[K]);
+          Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(K),'checklistId',CheckId,'title',Child.Get('text',''),
+            'isFinished',Child.Get('checked',False),'sort',K]));
+        end;
+      end;
+      Data:=Entry.Find('comments');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Child:=TJSONObject(Data.Items[J]);
+        Author:=ImportAuthorIdentity(Authors,Child.Get('author',''));
+        Value:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Child.Get('text',''),'userId',Author]);
+        Comments.Add(Value); CopyText(Child,TJSONObject(Value),'date','createdAt');
+      end;
+    end;
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit');
 end;
 
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
@@ -5602,6 +5778,7 @@ begin
             end
             else if SourceFormat='asana' then Body:=AsanaImport(Value)
             else if SourceFormat='openproject' then Body:=OpenProjectImport(Value)
+            else if SourceFormat='zenkit' then Body:=ZenkitImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end
