@@ -70,7 +70,7 @@ procedure ApiScrumVelocityReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
-procedure ApiBoardMarkdown(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardOutline(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardVikunja(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
@@ -416,7 +416,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wlmdexp,DOM,XMLRead,RegExpr;
+uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wloutlineexp,DOM,XMLRead,RegExpr;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -2884,7 +2884,7 @@ function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TW
 procedure ExcludeBoardArchive(Board: TJSONObject); forward;
 
 function DownloadScopeId(Request: TRequest; const Key: string): string; forward;
-procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string); forward;
+procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string; FilterCreationDate: Boolean = False); forward;
 procedure ScopeBoardExport(Board: TJSONObject; const LaneId, ListId, CardId, ChecklistId: string); forward;
 
 procedure PruneBoardExportUsers(Board: TJSONObject);
@@ -3077,22 +3077,31 @@ begin
   Result := True;
 end;
 
-procedure ApiBoardMarkdown(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Body: string; Payload: TJSONObject;
+procedure ApiBoardOutline(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Body, Extension: string; Payload: TJSONObject; Opml: Boolean;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
+  Opml := AnsiEndsStr('/opml', aRequest.PathInfo);
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
     if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
     try
       if Payload.Find('subtaskItems') = nil then Payload.Add('subtaskItems', TJSONArray.Create);
-      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields']);
-      Body := MarkdownBoard(Payload);
+      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields'], Opml);
+      Body := OutlineBoard(Payload, Opml);
     finally Payload.Free; end;
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
   aResponse.Code := 200;
-  aResponse.ContentType := 'text/markdown; charset=utf-8';
-  aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.md"');
+  if Opml then
+  begin
+    aResponse.ContentType := 'text/x-opml; charset=utf-8';
+    Extension := 'opml';
+  end else
+  begin
+    aResponse.ContentType := 'text/markdown; charset=utf-8';
+    Extension := 'md';
+  end;
+  aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.' + Extension + '"');
   aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
   aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
   aResponse.Content := Body;
@@ -3616,7 +3625,7 @@ begin
   finally OtherCards.Free; Output.Free; Payload.Free; end;
 end;
 
-procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string);
+procedure FilterBoardExportFields(Board: TJSONObject; const Fields: string; FilterCreationDate: Boolean);
 const Known = '|card-details|board-header|activities|labels|people|board-info|dates|' +
   'description|custom-fields|checklists|subtasks|comments|attachments|voting|poker|stickers|locations|dependencies|sort|scrum|';
 var Selected: TStringList; Part, Key: string; Rows: TJSONArray; I: Integer;
@@ -3674,6 +3683,7 @@ begin
     RemoveCardFields('custom-fields', ['customFields']);
     RemoveCardFields('labels', ['labelIds']);
     RemoveCardFields('people', ['members','assignees','requesters','assigners','requestedBy','assignedBy']);
+    if FilterCreationDate then RemoveCardFields('dates', ['createdAt']);
     RemoveCardFields('dates', ['modifiedAt','dateLastActivity','receivedAt','startAt','dueAt','endAt',
       'dueComplete','spentTime','isOvertime','isOverTime']);
     RemoveCardFields('voting', ['vote']);

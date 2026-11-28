@@ -1798,7 +1798,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
       var selected = fields;
       if (['/export', '/exportExcel', '/exportZip'].some(function (suffix) { return url.pathname.endsWith(suffix); })) selected = fields.concat(documentOnly);
       else if (url.pathname.endsWith('/exportPDF')) selected = fields.concat(documentOnly.filter(function (key) { return key !== 'activities'; }));
-      else if (url.pathname.endsWith('/export/markdown')) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists'; }));
+      else if (/\/export\/(markdown|opml)$/.test(url.pathname)) selected = fields.concat(documentOnly.filter(function (key) { return key === 'checklists'; }));
       url.searchParams.set('fields', selected.join(','));
       a.setAttribute('href', url.pathname + url.search);
     });

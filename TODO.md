@@ -266,7 +266,7 @@ Next, after this goal:
   Inactivity archive settings pass the shared browser audit on WeLite.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
-  the rest of the shared external export menu audit beyond Markdown and the
+  the rest of the shared external export menu audit beyond the
   formats recorded in [CHANGES.md](CHANGES.md), plus the remaining import audit cases,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,

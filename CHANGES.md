@@ -6,6 +6,11 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export boards as OPML outlines with empty lists, card notes, creation dates,
+  categories and nested checklists. The selector controls which card details
+  appear. Shared Chromium checks cover escaping, completed items and private
+  board access.
+
 - Export a board from the HTML5 menu as Markdown task lists. The field
   selector controls descriptions, labels, dates and checklist items. The
   shared browser test also verifies that private board downloads require access.
