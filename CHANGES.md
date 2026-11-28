@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- TickTick backup CSV imports lists, columns, tags and due dates. Checklist
+  rows retain their text and completion state.
+
 - ClickUp task CSV imports lists as swimlanes and retains statuses,
   descriptions, tags, due dates and subtask links.
 

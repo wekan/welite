@@ -5987,10 +5987,104 @@ begin
   finally Csv.Free; end;
 end;
 
+function TickTickImport(const Source:TJSONData):TJSONObject;
+const CheckedMark: UTF8String = '▪'; UncheckedMark: UTF8String = '▫';
+var Csv:TCSVDocument; Board,Card:TJSONObject; Lists,Lanes,Cards,Labels,Tags,Checks,Items:TJSONArray;
+  Header,I,J,Offset:Integer; Id,Title,Stage,Lane,Parent,Name,Part,Content,Description,CheckId,Due,Status:string;
+  Checked:Boolean;
+  function Cell(const Column:string):string;
+  var C:Integer;
+  begin
+    Result:='';
+    for C:=0 to Csv.ColCount[Header]-1 do
+      if SameText(Trim(Csv.Cells[C,Header]),Column) then Exit(Trim(Csv.Cells[C,I]));
+  end;
+  procedure AddNamed(Rows:TJSONArray;const Id,Key,Value:string);
+  var C:Integer;
+  begin
+    for C:=0 to Rows.Count-1 do if Rows.Objects[C].Get('_id','')=Id then Exit;
+    Rows.Add(TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]));
+  end;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Invalid TickTick CSV');
+  Csv:=TCSVDocument.Create;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Csv.CSVText:=Source.AsString;
+      Header:=0;
+      while Header<Csv.RowCount do
+      begin
+        I:=Header;
+        if SameText(Cell('Title'),'Title') and SameText(Cell('List Name'),'List Name') then Break;
+        Inc(Header);
+      end;
+      if Header>=Csv.RowCount then raise EConvertError.Create('Missing TickTick CSV header');
+      Board:=TJSONObject.Create(['title','TickTick tasks']); Result.Add('board',Board);
+      Result.Add('importedAuthors',TJSONObject.Create);
+      Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      for I:=Header+1 to Csv.RowCount-1 do
+      begin
+        Title:=Cell('Title'); if Title='' then Continue;
+        Id:=Cell('taskId'); if Id='' then Id:='row-'+IntToStr(I);
+        Lane:=Cell('List Name'); if Lane='' then Lane:='Tasks';
+        Stage:=Cell('Column Name'); if Stage='' then Stage:='To Do';
+        Status:=Cell('Status');
+        AddNamed(Lanes,Lane,'title',Lane); AddNamed(Lists,Stage,'title',Stage);
+        Card:=TJSONObject.Create(['_id',Id,'title',Title,'listId',Stage,'swimlaneId',Lane,'sort',I,
+          'archived',Status='2','dueComplete',Status='1']);
+        Cards.Add(Card);
+        Parent:=Cell('parentId'); if (Parent<>'') and (Parent<>Id) then Card.Add('parentId',Parent);
+        Due:=Cell('Due Date'); Offset:=Length(Due)-4;
+        if (Offset>10) and (Due[Offset] in ['+','-']) and (Pos(':',Copy(Due,Offset,MaxInt))=0) then Insert(':',Due,Offset+3);
+        if Due<>'' then Card.Add('dueAt',Due);
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        for Part in Cell('Tags').Split([',']) do
+        begin
+          Name:=Trim(Part); if Name='' then Continue;
+          AddNamed(Labels,Name,'name',Name); Tags.Add(Name);
+        end;
+        Content:=Cell('Content');
+        if not (SameText(Cell('Kind'),'CHECKLIST') or SameText(Cell('Is Check list'),'Y')) then
+        begin Card.Add('description',Content); Continue; end;
+        Description:=''; CheckId:=''; J:=0;
+        for Part in Content.Split([#10]) do
+        begin
+          Name:=Trim(Part);
+          Checked:=AnsiStartsStr(CheckedMark,Name);
+          if Checked or AnsiStartsStr(UncheckedMark,Name) then
+          begin
+            Name:=Trim(Copy(Name,Length(CheckedMark)+1,MaxInt));
+            if CheckId='' then
+            begin
+              CheckId:=Id+':checklist';
+              Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title','Checklist','sort',0]));
+            end;
+            Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(J),'checklistId',CheckId,
+              'title',Name,'isFinished',Checked,'sort',J]));
+            Inc(J);
+          end
+          else if Name<>'' then
+          begin
+            if Description<>'' then Description:=Description+LineEnding;
+            Description:=Description+Name;
+          end;
+        end;
+        Card.Add('description',Description);
+      end;
+    except Result.Free; raise; end;
+  finally Csv.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6790,6 +6884,7 @@ begin
             else if SourceFormat='tasksorg' then Body:=TasksOrgImport(Value)
             else if SourceFormat='superproductivity' then Body:=SuperProductivityImport(Value)
             else if SourceFormat='clickup' then Body:=ClickUpImport(Value)
+            else if SourceFormat='ticktick' then Body:=TickTickImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

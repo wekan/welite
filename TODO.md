@@ -270,7 +270,7 @@ Next, after this goal:
   after failing once in three earlier runs.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
-  the remaining import format audit cases (Kanboard, Deck, GitHub, GitLab, Gitea, Forgejo, Asana, OpenProject, Zenkit and Jira fixture and invalid input cases pass, as do Kanri board and backup imports, Markdown multi-file imports, WeKan JSON creation dates, the Trello ZIP round trip, Pivotal Tracker, Redmine and ClickUp CSV, Tasks.org and Super Productivity backups, and the Deck loss report),
+  the remaining import format audit cases (Kanboard, Deck, GitHub, GitLab, Gitea, Forgejo, Asana, OpenProject, Zenkit and Jira fixture and invalid input cases pass, as do Kanri board and backup imports, Markdown multi-file imports, WeKan JSON creation dates, the Trello ZIP round trip, Pivotal Tracker, Redmine, ClickUp and TickTick CSV, Tasks.org and Super Productivity backups, and the Deck loss report),
   the assigned-only Scrum velocity chart export,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,

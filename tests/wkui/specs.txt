@@ -525,3 +525,4 @@ import-export-format-audit.e2e.js: Redmine: an issues CSV imports
 import-export-format-audit.e2e.js: Tasks.org: a backup imports
 import-export-format-audit.e2e.js: Super Productivity: a backup imports
 import-export-format-audit.e2e.js: ClickUp: a task export imports
+import-export-format-audit.e2e.js: TickTick: a backup imports
