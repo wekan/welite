@@ -558,3 +558,4 @@ import-export-format-audit.e2e.js: Hawaiian businessmap import instructions rend
 import-export-format-audit.e2e.js: Hawaiian redmine import instructions render without an English fallback
 import-export-format-audit.e2e.js: Org mode: headings import with their keyword, priority, tags, deadline, body and checkboxes
 import-export-format-audit.e2e.js: Hawaiian orgmode import instructions render without an English fallback
+import-export-format-audit.e2e.js: Focalboard: a board.jsonl imports with its lists, labels, description, checklist and comments

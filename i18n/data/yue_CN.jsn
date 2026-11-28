@@ -2355,5 +2355,6 @@
   "import-board-instruction-teamwork": "喺 Teamwork.com 填好 Excel 任務匯入範本（Tasklist、Task、Description、Assign to、Start date、Due date、Priority、Estimated time、Tags、Status），存做 .xlsx，然後揀嗰個檔案。任務清單會變成清單，任務會變成卡片；以 -、# 或者 > 開頭嘅任務會變成上面嗰個任務嘅子任務（--、## 或者 >> 再深一層）。負責人、日期同標籤會留喺原位；Priority、Estimated time 同 Complete 會變成自訂欄位。",
   "import-board-instruction-businessmap": "喺 Businessmap（以前叫 Kanbanize）打開 Advanced Search，揀「Configure results」揀欄，下載 Excel 檔，然後揀嗰個 .xlsx 檔。欄係用英文名讀嘅（Title、Column、Lane、Owner、Deadline ...）：如果你嘅帳戶用其他語言，請先將標題行改做英文。Column 會變成清單，Lane 會變成泳道；擁有人、標籤、顏色、日期、評論同上層連結會留喺原位，Priority、Size、Type 同其他欄會變成自訂欄位。",
   "import-board-instruction-redmine": "喺 Redmine 打開專案嘅 Issues，喺清單底部揀「Also available in: CSV」，揀欄（All columns，連 Description）再匯出，然後貼上 CSV。Redmine 會用你嘅語言幫欄改名，所以匯出之前請喺 My account 將語言設做英文。每個狀態會變成清單，issues 會變成卡片，tracker 做標籤，連埋負責人、作者、日期、上層任務同相關 issues；優先次序、類別、目標版本、估計時間、% Done 同自訂欄位會變成自訂欄位。",
-  "import-board-instruction-orgmode": "貼上 Org mode 檔案，即係 Emacs、Orgzly 或者 Beorg 寫出嚟嘅格式。最頂層標題會變成清單，第二層標題會變成卡片。TODO 同 DONE、優先次序、標籤、SCHEDULED、DEADLINE 同 CLOSED 都會保留，核取方塊同更深層嘅標題會變成檢查清單。"
+  "import-board-instruction-orgmode": "貼上 Org mode 檔案，即係 Emacs、Orgzly 或者 Beorg 寫出嚟嘅格式。最頂層標題會變成清單，第二層標題會變成卡片。TODO 同 DONE、優先次序、標籤、SCHEDULED、DEADLINE 同 CLOSED 都會保留，核取方塊同更深層嘅標題會變成檢查清單。",
+  "import-board-instruction-focalboard": "解壓 .boardarchive 檔案，再貼上看板嘅 board.jsonl 內容，可以有或者冇版本嗰行。看板檢視嘅分組屬性會變成列表，其他選擇屬性會變成標籤，文字同核取方塊區塊會變成描述同清單，留言會保留。圖片同附件唔會匯入。"
 }

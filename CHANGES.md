@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Focalboard board.jsonl imports lists, labels, dates, custom fields, card
+  descriptions, checklists and comments. The report identifies unsupported
+  records and content blocks.
+
 - Org outlines import headings as lists and cards, retaining task state,
   priorities, tags, planning dates, notes and checklists. Import instructions
   use WeKan’s translations and the Hawaiian instructions pass the shared audit.

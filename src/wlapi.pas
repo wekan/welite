@@ -6598,6 +6598,335 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function FocalboardImport(const Source:TJSONData):TJSONObject;
+var Rows,Lists,Cards,Labels,Checks,Items,Comments,Defs,Tags,Values:TJSONArray;
+  Board,InputBoard,BoardFields,Row,Block,Fields,Props,PropertyDef,Group,Card:TJSONObject;
+  Data,PropertyList,Options,Value:TJSONData;
+  ById,Children,PropertyIds,SeenContent,Losses:TStringList;
+  Input,RawLine,Line,Kind,BoardId,Id,Parent,Name,Key,Column,Description,StartDate,DueDate:string;
+  Number,I,J,K,ChildIndex:Integer;
+
+  function Obj(Node:TJSONObject; const Field:string):TJSONObject;
+  var Item:TJSONData;
+  begin
+    Result:=nil;
+    if Node=nil then Exit;
+    Item:=Node.Find(Field);
+    if Item is TJSONObject then Result:=TJSONObject(Item);
+  end;
+
+  function Caption(Node:TJSONObject; const Field:string):string;
+  begin
+    Result:='';
+    if Node<>nil then Result:=Node.Get(Field,'');
+  end;
+
+  function Millis(Node:TJSONObject; const Field:string):string;
+  var N:Int64; Value:TJSONData;
+  begin
+    Result:='';
+    if Node=nil then Exit;
+    Value:=Node.Find(Field);
+    if (Value=nil) or not (Value.JSONType in [jtNumber,jtString]) then Exit;
+    N:=StrToInt64Def(Value.AsString,0);
+    if (N>0) and (N<=253402300799999) then
+      Result:=FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz"Z"',UnixToDateTime(N div 1000)+(N mod 1000)/86400000);
+  end;
+
+  function OptionName(Definition:TJSONObject; const OptionId:string):string;
+  var Data:TJSONData; Index:Integer; Option:TJSONObject;
+  begin
+    Result:='';
+    Data:=Definition.Find('options');
+    if not (Data is TJSONArray) then Exit;
+    for Index:=0 to Data.Count-1 do
+      if Data.Items[Index] is TJSONObject then
+      begin
+        Option:=TJSONObject(Data.Items[Index]);
+        if Option.Get('id','')=OptionId then Exit(Option.Get('value',''));
+      end;
+  end;
+
+  procedure AddNamed(ArrayData:TJSONArray; const CaptionField,EntryName:string);
+  var Index:Integer; Entry:TJSONObject;
+  begin
+    if EntryName='' then Exit;
+    for Index:=0 to ArrayData.Count-1 do
+      if ArrayData.Objects[Index].Get('_id','')=EntryName then Exit;
+    Entry:=TJSONObject.Create(['_id',EntryName,CaptionField,EntryName,'sort',ArrayData.Count]);
+    if ArrayData=Labels then Entry.Add('color','blue');
+    if ArrayData=Defs then Entry.Add('type','text');
+    ArrayData.Add(Entry);
+  end;
+
+  procedure AddTag(Definition:TJSONObject; const OptionId:string);
+  var Tag,PropertyName:string;
+  begin
+    Tag:=OptionName(Definition,OptionId);
+    if Tag='' then Exit;
+    PropertyName:=Trim(Definition.Get('name',''));
+    if not SameText(PropertyName,'Labels') then Tag:=PropertyName+':'+Tag;
+    AddNamed(Labels,'name',Tag);
+    Tags.Add(Tag);
+  end;
+
+  procedure AddCustom(const FieldName,FieldValue:string);
+  begin
+    if (FieldName='') or (FieldValue='') then Exit;
+    AddNamed(Defs,'name',FieldName);
+    Values.Add(TJSONObject.Create(['_id',FieldName,'value',FieldValue]));
+  end;
+
+  procedure ReadRange(DateValue:TJSONData; const FieldName:string);
+  var Parsed:TJSONObject; FromDate,ToDate:string;
+  begin
+    Parsed:=nil;
+    try
+      if DateValue is TJSONObject then
+      begin
+        FromDate:=Millis(TJSONObject(DateValue),'from');
+        ToDate:=Millis(TJSONObject(DateValue),'to');
+      end
+      else
+      begin
+        try
+          if DateValue is TJSONString then Parsed:=ExactObject(DateValue.AsString);
+        except on E:EConvertError do Parsed:=nil; end;
+        FromDate:=Millis(Parsed,'from'); ToDate:=Millis(Parsed,'to');
+      end;
+      if FromDate='' then Losses.Add('/card/'+Id+'/'+FieldName+': invalid date')
+      else if DueDate<>'' then AddCustom(FieldName,FromDate)
+      else if ToDate='' then DueDate:=FromDate
+      else begin StartDate:=FromDate; DueDate:=ToDate; end;
+    finally Parsed.Free; end;
+  end;
+
+  procedure ReadContent(Content:TJSONObject);
+  var ContentId,Text,ContentType,CheckId,DateText:string; Entry:TJSONObject; Done:Boolean;
+  begin
+    ContentId:=Content.Get('id','');
+    if SeenContent.IndexOf(ContentId)>=0 then Exit;
+    SeenContent.Add(ContentId);
+    ContentType:=Content.Get('type',''); Text:=Content.Get('title','');
+    case ContentType of
+      'text','h1','h2','h3','divider':
+        begin
+          if ContentType='divider' then Text:='---'
+          else if (Text<>'') and (ContentType<>'text') then
+            Text:=StringOfChar('#',StrToInt(ContentType[2]))+' '+Text;
+          if Text='' then Exit;
+          if Description<>'' then Description:=Description+#10#10;
+          Description:=Description+Text;
+        end;
+      'checkbox':
+        begin
+          if Text='' then Exit;
+          CheckId:=Id+':checklist';
+          if (Checks.Count=0) or (Checks.Objects[Checks.Count-1].Get('_id','')<>CheckId) then
+            Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title','Checklist','sort',0]));
+          Entry:=Obj(Content,'fields'); Done:=(Entry<>nil) and Entry.Get('value',False);
+          Items.Add(TJSONObject.Create(['_id',ContentId,'checklistId',CheckId,'title',Text,
+            'isFinished',Done,'sort',Items.Count]));
+        end;
+      'comment':
+        begin
+          if Text='' then Exit;
+          Entry:=TJSONObject.Create(['_id',ContentId,'cardId',Id,'text',Text]);
+          Comments.Add(Entry);
+          DateText:=Millis(Content,'createAt');
+          if DateText<>'' then Entry.Add('createdAt',DateText);
+        end;
+      else Losses.Add('/card/'+Id+'/'+ContentId+': unsupported '+ContentType+' block');
+    end;
+  end;
+
+  procedure ReadOrder(Order:TJSONData; Depth:Integer);
+  var Index:Integer; Content:TJSONObject;
+  begin
+    if Depth>64 then raise EConvertError.Create('Focalboard content order is too deeply nested');
+    if Order is TJSONArray then
+      for Index:=0 to Order.Count-1 do ReadOrder(Order.Items[Index],Depth+1)
+    else if Order is TJSONString then
+    begin
+      Index:=ById.IndexOf(Order.AsString);
+      if Index<0 then Exit;
+      Content:=TJSONObject(ById.Objects[Index]);
+      if Content.Get('parentId','')=Id then ReadContent(Content);
+    end;
+  end;
+
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Focalboard archive');
+  Input:=Source.AsString;
+  if Copy(Input,1,3)=#239#187#191 then Delete(Input,1,3);
+  Rows:=TJSONArray.Create;
+  ById:=TStringList.Create; Children:=TStringList.Create;
+  PropertyIds:=TStringList.Create; SeenContent:=TStringList.Create; Losses:=TStringList.Create;
+  try
+    ById.CaseSensitive:=True; ById.Sorted:=True;
+    Children.CaseSensitive:=True; Children.Sorted:=True; Children.Duplicates:=dupAccept;
+    PropertyIds.CaseSensitive:=True; PropertyIds.Sorted:=True;
+    SeenContent.CaseSensitive:=True; SeenContent.Sorted:=True;
+    Number:=0; InputBoard:=nil; BoardFields:=nil;
+    for RawLine in Input.Split([#10,#13],TStringSplitOptions.ExcludeEmpty) do
+    begin
+      Line:=Trim(RawLine);
+      if Line='' then Continue;
+      Inc(Number);
+      if Number>50000 then raise EConvertError.Create('Too many Focalboard archive lines');
+      Row:=ExactObject(Line); Rows.Add(Row);
+      Kind:=Row.Get('type','');
+      if (Number=1) and (Kind='') and (Row.Find('version') is TJSONNumber) then Continue;
+      Data:=Row.Find('data');
+      if (Kind='') or (not (Data is TJSONObject) and not (Data is TJSONArray)) then
+        raise EConvertError.Create('Invalid Focalboard archive line');
+      if (Kind='board') or ((Kind='block') and (Caption(Obj(Row,'data'),'type')='board')) then
+      begin
+        if InputBoard<>nil then
+          Losses.Add('/line/'+IntToStr(Number)+': additional board skipped')
+        else
+        begin
+          InputBoard:=Obj(Row,'data');
+          BoardFields:=InputBoard;
+          if Kind='block' then BoardFields:=Obj(InputBoard,'fields');
+        end;
+      end
+      else if Kind='block' then
+      begin
+        Block:=Obj(Row,'data');
+        Id:=Caption(Block,'id');
+        if (Id='') or (Millis(Block,'deleteAt')<>'') then Continue;
+        if ById.IndexOf(Id)>=0 then raise EConvertError.Create('Duplicate Focalboard block ID');
+        ById.AddObject(Id,Block);
+        Parent:=Block.Get('parentId','');
+        if Parent<>'' then Children.AddObject(Parent,Block);
+      end
+      else Losses.Add('/line/'+IntToStr(Number)+': unsupported '+Kind+' record');
+    end;
+    if InputBoard=nil then raise EConvertError.Create('Focalboard archive has no board');
+    BoardId:=InputBoard.Get('id','');
+    PropertyList:=nil;
+    if BoardFields<>nil then PropertyList:=BoardFields.Find('cardProperties');
+    Group:=nil;
+    if PropertyList is TJSONArray then
+      for I:=0 to PropertyList.Count-1 do
+        if PropertyList.Items[I] is TJSONObject then
+        begin
+          PropertyDef:=TJSONObject(PropertyList.Items[I]);
+          Id:=PropertyDef.Get('id','');
+          if (Id='') or (PropertyDef.Get('name','')='') then Continue;
+          PropertyIds.AddObject(Id,PropertyDef);
+          if (Group=nil) and (PropertyDef.Get('type','')='select') then Group:=PropertyDef;
+        end;
+    for I:=0 to Rows.Count-1 do
+    begin
+      Block:=Obj(Rows.Objects[I],'data');
+      if (Caption(Block,'type')<>'view') or (Caption(Block,'parentId')<>BoardId) or
+        (Millis(Block,'deleteAt')<>'') then Continue;
+      Fields:=Obj(Block,'fields');
+      if Caption(Fields,'viewType')<>'board' then Continue;
+      J:=PropertyIds.IndexOf(Caption(Fields,'groupById'));
+      if J<0 then Continue;
+      PropertyDef:=TJSONObject(PropertyIds.Objects[J]);
+      if PropertyDef.Get('type','')<>'select' then Continue;
+      Group:=PropertyDef;
+      Break;
+    end;
+    Result:=TJSONObject.Create;
+    try
+      Name:=Trim(InputBoard.Get('title',''));
+      if Name='' then Name:='Imported Focalboard';
+      Board:=TJSONObject.Create(['title',Name,'description',Caption(BoardFields,'description')]); Result.Add('board',Board);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      Defs:=TJSONArray.Create; Board.Add('customFields',Defs);
+      if Group<>nil then
+      begin
+        Options:=Group.Find('options');
+        if Options is TJSONArray then
+          for I:=0 to Options.Count-1 do
+            if Options.Items[I] is TJSONObject then
+              AddNamed(Lists,'title',TJSONObject(Options.Items[I]).Get('value',''));
+      end;
+      for I:=0 to Rows.Count-1 do
+      begin
+        Block:=Obj(Rows.Objects[I],'data');
+        if (Caption(Block,'type')<>'card') or (Caption(Block,'parentId')<>BoardId) then Continue;
+        Id:=Block.Get('id','');
+        if ById.IndexOf(Id)<0 then Continue;
+        Fields:=Obj(Block,'fields');
+        if (Fields<>nil) and Fields.Get('isTemplate',False) then
+        begin
+          Losses.Add('/card/'+Id+': template skipped');
+          Continue;
+        end;
+        Column:='Cards';
+        if Group<>nil then Column:='No '+Group.Get('name','');
+        Name:=Trim(Block.Get('title',''));
+        if Name='' then Name:='Imported card';
+        Card:=TJSONObject.Create(['_id',Id,'title',Name,'sort',Cards.Count]); Cards.Add(Card);
+        DueDate:=''; StartDate:=''; Description:='';
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        Values:=TJSONArray.Create; Card.Add('customFields',Values);
+        Props:=Obj(Fields,'properties');
+        if Props<>nil then
+          for J:=0 to Props.Count-1 do
+          begin
+            Key:=Props.Names[J]; Value:=Props.Items[J]; K:=PropertyIds.IndexOf(Key);
+            if K<0 then
+            begin
+              Losses.Add('/card/'+Id+'/properties/'+Key+': undefined property');
+              Continue;
+            end;
+            PropertyDef:=TJSONObject(PropertyIds.Objects[K]);
+            if PropertyDef=Group then
+            begin
+              Name:=OptionName(Group,Value.AsString);
+              if Name<>'' then Column:=Name;
+              Continue;
+            end;
+            Name:=PropertyDef.Get('name','');
+            case PropertyDef.Get('type','') of
+              'select': AddTag(PropertyDef,Value.AsString);
+              'multiSelect':
+                if Value is TJSONArray then
+                  for K:=0 to Value.Count-1 do AddTag(PropertyDef,Value.Items[K].AsString)
+                else AddTag(PropertyDef,Value.AsString);
+              'date': ReadRange(Value,Name);
+              'text','number','email','url','phone','checkbox':
+                if Value.JSONType in [jtString,jtNumber,jtBoolean] then AddCustom(Name,Value.AsString);
+              'createdTime','updatedTime','createdBy','updatedBy': ;
+              else Losses.Add('/card/'+Id+'/properties/'+Key+': unsupported property');
+            end;
+          end;
+        AddNamed(Lists,'title',Column); Card.Add('listId',Column);
+        Name:=Millis(Block,'createAt'); if Name<>'' then Card.Add('createdAt',Name);
+        if StartDate<>'' then Card.Add('startAt',StartDate);
+        if DueDate<>'' then Card.Add('dueAt',DueDate);
+        SeenContent.Clear;
+        if Fields<>nil then ReadOrder(Fields.Find('contentOrder'),0);
+        if Children.Find(Id,ChildIndex) then
+        begin
+          while (ChildIndex>0) and (Children[ChildIndex-1]=Id) do Dec(ChildIndex);
+          while (ChildIndex<Children.Count) and (Children[ChildIndex]=Id) do
+          begin
+            ReadContent(TJSONObject(Children.Objects[ChildIndex]));
+            Inc(ChildIndex);
+          end;
+        end;
+        Card.Add('description',Description);
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except Result.Free; raise; end;
+  finally
+    Losses.Free; SeenContent.Free; PropertyIds.Free; Children.Free; ById.Free; Rows.Free;
+  end;
+end;
+
 function OrgModeImport(const Source:TJSONData):TJSONObject;
 type THeading=record
   Level,Line:Integer;
@@ -7449,7 +7778,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -8261,6 +8590,7 @@ begin
             else if SourceFormat='todotxt' then Body:=TodoTxtImport(Value)
             else if SourceFormat='taskwarrior' then Body:=TaskwarriorImport(Value)
             else if SourceFormat='orgmode' then Body:=OrgModeImport(Value)
+            else if SourceFormat='focalboard' then Body:=FocalboardImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
