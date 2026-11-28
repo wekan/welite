@@ -503,3 +503,6 @@ import-export-format-audit.e2e.js: github: an embedded issue comment becomes a c
 import-export-format-audit.e2e.js: asana: import adapter fixture text through the UI
 import-export-format-audit.e2e.js: asana: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: asana: comments, checklists and card fields survive a UI import
+import-export-format-audit.e2e.js: openproject: import adapter fixture text through the UI
+import-export-format-audit.e2e.js: openproject: malformed JSON and wrong document shapes are rejected
+import-export-format-audit.e2e.js: openproject: comments, checklists and card fields survive a UI import

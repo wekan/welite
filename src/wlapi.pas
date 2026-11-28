@@ -4678,10 +4678,169 @@ begin
   except Result.Free; raise; end;
 end;
 
+function OpenProjectImport(const Source: TJSONData): TJSONObject;
+var Board, Authors, Package, Card, Links, Embedded, Schema, Definition, Comment: TJSONObject;
+  Lists, Cards, Labels, Comments, Definitions, Tags, Fields: TJSONArray;
+  Packages, Activities, Data, Value: TJSONData; I,J: Integer; Id, ListId, ProjectTitle, Name, Key, Kind, Text: string;
+  Hours: Double;
+  function Obj(Data: TJSONData; const Key: string): TJSONObject;
+  var Field: TJSONData;
+  begin
+    Result:=nil;
+    if not (Data is TJSONObject) then Exit;
+    Field:=TJSONObject(Data).Find(Key);
+    if Field is TJSONObject then Result:=TJSONObject(Field);
+  end;
+  function Str(Data: TJSONObject; const Key: string): string;
+  begin
+    Result:='';
+    if Data<>nil then Result:=Data.Get(Key,'');
+  end;
+  procedure AddNamed(Rows: TJSONArray; const Id, NameKey, Name, Kind: string);
+  var K: Integer; Row: TJSONObject;
+  begin
+    for K:=0 to Rows.Count-1 do if Rows.Objects[K].Get('_id','')=Id then Exit;
+    Row:=TJSONObject.Create(['_id',Id,NameKey,Name,'sort',Rows.Count]);
+    if Kind<>'' then Row.Add('type',Kind);
+    Rows.Add(Row);
+  end;
+  procedure AddField(const Key, Name, Kind: string; Value: TJSONData);
+  var Field: TJSONObject;
+  begin
+    if (Name='') or (Value=nil) or (Value.JSONType=jtNull) then Exit;
+    AddNamed(Definitions,Key,'name',Name,Kind);
+    Field:=TJSONObject.Create(['_id',Key]); Fields.Add(Field); Field.Add('value',Value.Clone);
+  end;
+  procedure AddDate(FromRow, ToRow: TJSONObject; const SourceKey, TargetKey: string);
+  begin
+    if Str(FromRow,SourceKey)<>'' then ToRow.Add(TargetKey,Str(FromRow,SourceKey));
+  end;
+  function Duration(const Value: string; out Total: Double): Boolean;
+  var K, Start: Integer; Number, Factor: Double; InTime: Boolean; Decimal: TFormatSettings;
+  begin
+    Total:=0; Result:=False;
+    if (Length(Value)<2) or (Value[1]<>'P') then Exit;
+    Decimal:=DefaultFormatSettings; Decimal.DecimalSeparator:='.';
+    K:=2; InTime:=False;
+    while K<=Length(Value) do
+    begin
+      if (Value[K]='T') and not InTime then begin InTime:=True; Inc(K); end;
+      Start:=K;
+      while (K<=Length(Value)) and (Value[K] in ['0'..'9','.']) do Inc(K);
+      if (K>Length(Value)) or (K=Start) or not TryStrToFloat(Copy(Value,Start,K-Start),Number,Decimal) then Exit(False);
+      case Value[K] of
+        'D': if InTime then Exit(False) else Factor:=24;
+        'H': if not InTime then Exit(False) else Factor:=1;
+        'M': if not InTime then Exit(False) else Factor:=1/60;
+        'S': if not InTime then Exit(False) else Factor:=1/3600;
+        else Exit(False);
+      end;
+      Total:=Total+Number*Factor;
+      Inc(K);
+    end;
+    Result:=not IsInfinite(Total) and not IsNan(Total);
+  end;
+begin
+  Packages:=Source;
+  if Source is TJSONObject then
+  begin
+    Embedded:=Obj(Source,'_embedded');
+    if Embedded=nil then raise EConvertError.Create('Invalid OpenProject collection');
+    Packages:=Embedded.Find('elements');
+  end;
+  if not (Packages is TJSONArray) then raise EConvertError.Create('Invalid OpenProject export');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create; Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+    ProjectTitle:='';
+    for I:=0 to Packages.Count-1 do
+    begin
+      if not (Packages.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid work package');
+      Package:=TJSONObject(Packages.Items[I]);
+      Value:=Package.Find('id');
+      if (Value=nil) or not (Value.JSONType in [jtString,jtNumber]) or (Trim(Str(Package,'subject'))='') then
+        raise EConvertError.Create('Invalid work package identity');
+      Id:=Value.AsString;
+      Links:=Obj(Package,'_links'); Embedded:=Obj(Package,'_embedded'); Schema:=Obj(Embedded,'schema');
+      if ProjectTitle='' then ProjectTitle:=Str(Obj(Links,'project'),'title');
+      Name:=Str(Obj(Links,'status'),'title');
+      if Name='' then Name:='Work packages';
+      ListId:=Str(Obj(Links,'status'),'href');
+      if ListId='' then ListId:=Name;
+      AddNamed(Lists,ListId,'title',Name,'');
+      Card:=TJSONObject.Create(['_id',Id,'listId',ListId,'title',Str(Package,'subject'),
+        'description',Str(Obj(Package,'description'),'raw'),'sort',I]);
+      Cards.Add(Card);
+      Name:=ImportAuthorIdentity(Authors,Str(Obj(Links,'author'),'title'));
+      if Name<>'' then Card.Add('userId',Name);
+      AddDate(Package,Card,'dueDate','dueAt'); AddDate(Package,Card,'startDate','startAt');
+      AddDate(Package,Card,'createdAt','createdAt'); AddDate(Package,Card,'updatedAt','modifiedAt');
+      if Duration(Str(Package,'spentTime'),Hours) then Card.Add('spentTime',Hours);
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      for Key in ['type','priority'] do
+      begin
+        Name:=Str(Obj(Links,Key),'title');
+        if Name='' then Continue;
+        if Key='priority' then Name:='priority:'+Name;
+        AddNamed(Labels,Name,'name',Name,''); Tags.Add(Name);
+      end;
+      Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+      if Duration(Str(Package,'estimatedTime'),Hours) then
+      begin
+        Value:=TJSONFloatNumber.Create(Hours);
+        try AddField('estimatedTime','Estimated time (hours)','number',Value); finally Value.Free; end;
+      end;
+      AddField('percentageDone','Progress (%)','number',Package.Find('percentageDone'));
+      if Schema<>nil then for J:=0 to Schema.Count-1 do
+      begin
+        Key:=Schema.Names[J];
+        if not AnsiStartsStr('customField',Key) then Continue;
+        Definition:=Obj(Schema,Key); Name:=Str(Definition,'name');
+        Kind:='text'; Value:=Package.Find(Key);
+        if Str(Definition,'type')='CustomOption' then
+        begin
+          Text:=Str(Obj(Links,Key),'title');
+          if Text<>'' then
+          begin
+            Value:=TJSONString.Create(Text);
+            try AddField(Key,Name,Kind,Value); finally Value.Free; end;
+          end;
+          Continue;
+        end;
+        if Str(Definition,'type')='Integer' then Kind:='number'
+        else if Str(Definition,'type')='Float' then Kind:='number';
+        AddField(Key,Name,Kind,Value);
+      end;
+      Data:=Obj(Embedded,'activities');
+      if Data=nil then Continue;
+      Activities:=TJSONObject(Data).Find('elements');
+      if Activities is TJSONArray then for J:=0 to Activities.Count-1 do
+      begin
+        if not (Activities.Items[J] is TJSONObject) then Continue;
+        Data:=Activities.Items[J];
+        Text:=Str(Obj(Data,'comment'),'raw');
+        if Text='' then Continue;
+        Name:=ImportAuthorIdentity(Authors,Str(Obj(Obj(Data,'_links'),'user'),'title'));
+        Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Text,'userId',Name]);
+        Comments.Add(Comment);
+        AddDate(TJSONObject(Data),Comment,'createdAt','createdAt');
+      end;
+    end;
+    if ProjectTitle='' then ProjectTitle:='OpenProject work packages';
+    Board.Add('title',ProjectTitle);
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject');
 end;
 
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
@@ -5442,6 +5601,7 @@ begin
               Body:=KanboardImport(TJSONObject(Value));
             end
             else if SourceFormat='asana' then Body:=AsanaImport(Value)
+            else if SourceFormat='openproject' then Body:=OpenProjectImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end

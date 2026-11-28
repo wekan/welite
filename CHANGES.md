@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- OpenProject JSON imports work packages by status, preserving dates, spent
+  and estimated hours, progress, custom fields, and named comment authors.
+
 - Asana JSON imports sections, tasks, dates, tags, subtasks, custom-field
   values, and comments with author names.
 
