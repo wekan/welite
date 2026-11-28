@@ -5224,10 +5224,98 @@ begin
   except Result.Free; raise; end;
 end;
 
+function KanriImport(const Source: TJSONData): TJSONObject;
+var Input, Board, Column, Entry, Card, Tag, Task: TJSONObject;
+  Lists, Cards, Labels, Checks, Items, Tags: TJSONArray;
+  Columns, ColumnCards, Data: TJSONData; I,J,K: Integer;
+  CardId, ListId, CheckId, Color, Name: string;
+  function KanriColor(const Raw: string): string;
+  var Parts: TStringArray;
+  begin
+    Result:=LowerCase(Trim(Raw));
+    if AnsiStartsStr('bg-',Result) then
+    begin
+      Parts:=Result.Split(['-']);
+      if Length(Parts)>1 then Result:=Parts[1];
+    end;
+    if ResolveColor(Result)='' then Result:='';
+  end;
+  function LabelFor(Tag: TJSONObject): string;
+  var K: Integer; Title, Color: string;
+  begin
+    Title:=Tag.Get('text','');
+    if Title='' then Exit('');
+    Result:=Tag.Get('id',Title);
+    for K:=0 to Labels.Count-1 do if Labels.Objects[K].Get('_id','')=Result then Exit;
+    Color:=KanriColor(Tag.Get('color',''));
+    if Color='' then Color:='blue';
+    Labels.Add(TJSONObject.Create(['_id',Result,'name',Title,'color',Color]));
+  end;
+begin
+  if not (Source is TJSONObject) then raise EConvertError.Create('Invalid Kanri board export');
+  Input:=TJSONObject(Source); Columns:=Input.Find('columns');
+  if not (Columns is TJSONArray) or (Trim(Input.Get('title',''))='') then
+    raise EConvertError.Create('Invalid Kanri board export');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',Input.Get('title','')]); Result.Add('board',Board);
+    Result.Add('importedAuthors',TJSONObject.Create);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+    Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+    Data:=Input.Find('globalTags');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+      if Data.Items[I] is TJSONObject then LabelFor(TJSONObject(Data.Items[I]));
+    for I:=0 to Columns.Count-1 do
+    begin
+      if not (Columns.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Kanri column');
+      Column:=TJSONObject(Columns.Items[I]);
+      ListId:=Column.Get('id','column-'+IntToStr(I));
+      Lists.Add(TJSONObject.Create(['_id',ListId,'title',Column.Get('title','List'),'sort',I]));
+      ColumnCards:=Column.Find('cards');
+      if not (ColumnCards is TJSONArray) then Continue;
+      for J:=0 to ColumnCards.Count-1 do
+      begin
+        if not (ColumnCards.Items[J] is TJSONObject) then raise EConvertError.Create('Invalid Kanri card');
+        Entry:=TJSONObject(ColumnCards.Items[J]);
+        CardId:=Entry.Get('id','column-'+IntToStr(I)+'-card-'+IntToStr(J));
+        Card:=TJSONObject.Create(['_id',CardId,'listId',ListId,'title',Entry.Get('name',''),
+          'description',Entry.Get('description',''),'sort',J,'dueComplete',Entry.Get('isDueDateCompleted',False)]);
+        Cards.Add(Card);
+        Color:=KanriColor(Entry.Get('color','')); if Color<>'' then Card.Add('color',Color);
+        if Entry.Get('dueDate','')<>'' then Card.Add('dueAt',Entry.Get('dueDate',''));
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        Data:=Entry.Find('tags');
+        if Data is TJSONArray then for K:=0 to Data.Count-1 do
+        begin
+          if not (Data.Items[K] is TJSONObject) then Continue;
+          Tag:=TJSONObject(Data.Items[K]); Name:=LabelFor(Tag);
+          if Name<>'' then Tags.Add(Name);
+        end;
+        Data:=Entry.Find('tasks');
+        if (Data is TJSONArray) and (Data.Count>0) then
+        begin
+          CheckId:=CardId+':tasks';
+          Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',CardId,'title','Tasks','sort',0]));
+          for K:=0 to Data.Count-1 do
+          begin
+            if not (Data.Items[K] is TJSONObject) then Continue;
+            Task:=TJSONObject(Data.Items[K]);
+            Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(K),'checklistId',CheckId,
+              'title',Task.Get('name',''),'isFinished',Task.Get('finished',False),'sort',K]));
+          end;
+        end;
+      end;
+    end;
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6013,6 +6101,7 @@ begin
             else if SourceFormat='openproject' then Body:=OpenProjectImport(Value)
             else if SourceFormat='zenkit' then Body:=ZenkitImport(Value)
             else if SourceFormat='jira' then Body:=JiraImport(Value)
+            else if SourceFormat='kanri' then Body:=KanriImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end

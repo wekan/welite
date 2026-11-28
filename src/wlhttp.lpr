@@ -926,6 +926,7 @@ begin
   HTTPRouter.RegisterRoute('/import/openproject', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/zenkit', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/jira', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/kanri', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- A single Kanri JSON board imports with columns, card colors, descriptions,
+  due dates, tags and checklist task states.
+
 - Deck imports report skipped sharing rules, deleted records, and attachments.
   Shared stores retain a Recovery event visible to site administrators and
   let the importer retrieve their own recent report.
