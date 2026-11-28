@@ -416,7 +416,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wloutlineexp,wlkanriexp,DOM,XMLRead,RegExpr;
+uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wloutlineexp,wlkanriexp,wltrelloexp,DOM,XMLRead,RegExpr;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -3078,7 +3078,7 @@ begin
 end;
 
 procedure ApiBoardTextExport(aRequest: TRequest; aResponse: TResponse);
-var T: TWLTenant; BoardId, UserId, Body, Extension, CreatedAt, ModifiedAt: string; Payload: TJSONObject; Opml, TodoTxt, OrgMode, Nullboard, Kanri: Boolean;
+var T: TWLTenant; BoardId, UserId, Body, Extension, CreatedAt, ModifiedAt: string; Payload: TJSONObject; Opml, TodoTxt, OrgMode, Nullboard, Kanri, Trello: Boolean;
 begin
   if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
   Opml := AnsiEndsStr('/opml', aRequest.PathInfo);
@@ -3086,6 +3086,7 @@ begin
   OrgMode := AnsiEndsStr('/orgmode', aRequest.PathInfo);
   Nullboard := AnsiEndsStr('/nullboard', aRequest.PathInfo);
   Kanri := AnsiEndsStr('/kanri', aRequest.PathInfo);
+  Trello := AnsiEndsStr('/trello', aRequest.PathInfo);
   try
     Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
     if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
@@ -3098,6 +3099,7 @@ begin
       else if OrgMode then Body := OrgModeBoard(Payload)
       else if Nullboard then Body := NullboardExport(Payload, CreatedAt)
       else if Kanri then Body := KanriExport(Payload, CreatedAt, ModifiedAt)
+      else if Trello then Body := TrelloExport(Payload)
       else Body := OutlineBoard(Payload, Opml);
     finally Payload.Free; end;
   except SendError(aResponse, 500, 'Could not export board'); Exit; end;
@@ -3110,7 +3112,7 @@ begin
   begin
     aResponse.ContentType := 'text/x-org; charset=utf-8';
     Extension := 'org';
-  end else if Kanri then
+  end else if Kanri or Trello then
   begin
     aResponse.ContentType := 'application/json; charset=utf-8';
     Extension := 'json';

@@ -590,3 +590,4 @@ import-export-format-audit.e2e.js: Org mode export preserves planning, repeaters
 import-export-format-audit.e2e.js: Org mode export resolves custom field values and protects admin-only fields
 import-export-format-audit.e2e.js: Nullboard export preserves list identity, raw notes and selected content
 import-export-format-audit.e2e.js: Kanri export preserves column identity, due dates, tags and tasks
+import-export-format-audit.e2e.js: Trello JSON export preserves archived cards, members, comments and checklists

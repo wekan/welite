@@ -985,6 +985,7 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/orgmode', rmGet, @ApiBoardTextExport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/nullboard', rmGet, @ApiBoardTextExport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/export/kanri', rmGet, @ApiBoardTextExport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/export/trello', rmGet, @ApiBoardTextExport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/exportExcel', rmGet, @ApiBoardDocument);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportPDF', rmGet, @ApiBoardDocument);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/lists/:listId/cards/:cardId/exportPDF', rmGet, @ApiBoardDocument);

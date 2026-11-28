@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export boards as Trello JSON with archived lists and cards, card
+  activity dates, members, comments and checklists. The shared Chromium
+  audit checks field selection and private board access.
+
 - Export a board as Kanri JSON with separate same-named columns, completed
   due dates, card colors, accessible tag colors and checklist tasks. The
   shared Chromium audit checks field selection and private board access.
