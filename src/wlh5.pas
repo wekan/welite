@@ -67,7 +67,7 @@ procedure Html5SignInFailed(Request: TRequest; Response: TResponse; const Userna
 
 // The HTML5 view's sign-up form (Weddy's signup.pug), with an error by its
 // translation key when there is one, and what was typed.
-procedure Html5KanboardImport(Request: TRequest; Response: TResponse);
+procedure Html5ExternalImport(Request: TRequest; Response: TResponse);
 procedure Html5SignUpPage(Request: TRequest; Response: TResponse; Code: Integer; const ErrorKey, Fallback, Username, Email: string);
 
 // The HTML4 view's toggle is a POST of ?ui=html5 with the page's session: put
@@ -1119,7 +1119,7 @@ begin
     '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
     '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
     E(Words.Text('import', 'Import')) + '</button></form>' +
-    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p>', '') + '</template>';
+    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p>', '') + '</template>';
 end;
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
@@ -9489,18 +9489,20 @@ begin
   end;
 end;
 
-procedure Html5KanboardImport(Request: TRequest; Response: TResponse);
-var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Title: string;
+procedure Html5ExternalImport(Request: TRequest; Response: TResponse);
+var T: TWLTenant; S: TWLSession; Language: TWLLanguage; Words: TWLTranslator; Title, Source, FormatName: string;
 begin
   if not ResolveTenant(Request,T) or not TenantOpen(T) then begin SendPage(Response,404,''); Exit; end;
   if not Html5User(T.Db,Request,S) then begin SendPage(Response,401,''); Exit; end;
   Language:=ViewerLanguage(T.Db,S,Request);
   Words:=TWLTranslator.Create(Language);
   try
-    Title:=Words.Text('import-board-c','Import board')+' (Kanboard)';
+    if Request.PathInfo='/import/deck' then begin Source:='deck'; FormatName:='Nextcloud Deck'; end
+    else begin Source:='kanboard'; FormatName:='Kanboard'; end;
+    Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
-      '<main><h1>'+E(Title)+'</h1><form class="js-kanboard-import" method="post" action="/api/boards/import?source=kanboard">' +
-      '<label for="import-textarea">Kanboard JSON</label><textarea id="import-textarea" required></textarea>' +
+      '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
+      '<label for="import-textarea">' + E(FormatName) + ' JSON</label><textarea id="import-textarea" required></textarea>' +
       '<p class="warning" role="alert" hidden>'+E(Words.Text('import-scoped-failed','Import failed'))+'</p>' +
       '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form></main>'));
   finally Words.Free; end;

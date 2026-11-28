@@ -4233,6 +4233,14 @@ end;
 
 function CardDecorations(Value:TJSONData;const Key:string):TJSONArray; forward;
 
+function ImportAuthorIdentity(Authors: TJSONObject; const Name: string): string;
+begin
+  Result:=Authors.Get(Name,'');
+  if (Name='') or (Result<>'') then Exit;
+  Result:='author-'+IntToStr(Authors.Count);
+  Authors.Add(Name,Result);
+end;
+
 // Kanboard JSON projects use numeric string IDs and Unix-second dates.
 function KanboardImport(const Source: TJSONObject): TJSONObject;
 var Meta, Board, Task, Entry, Card, Authors, Comment: TJSONObject; Columns, Lanes, Tasks, Lists, Swimlanes, Cards, Labels, Tags,
@@ -4242,13 +4250,6 @@ var Meta, Board, Task, Entry, Card, Authors, Comment: TJSONObject; Columns, Lane
   begin
     if TryStrToInt64(Task.Get(Input,''),Seconds) and (Seconds>0) and (Seconds<=253402300799) then
       Card.Add(Field,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',UnixToDateTime(Seconds)));
-  end;
-  function AuthorFor(const Name: string): string;
-  begin
-    Result:=Authors.Get(Name,'');
-    if (Name='') or (Result<>'') then Exit;
-    Result:='author-'+IntToStr(Authors.Count);
-    Authors.Add(Name,Result);
   end;
   function LabelFor(const Name: string): string;
   var K: Integer;
@@ -4297,7 +4298,7 @@ begin
       Card:=TJSONObject.Create(['_id',Id,'title',Task.Get('title',''),'description',Task.Get('description',''),
         'listId',Task.Get('column_id',''),'swimlaneId',Task.Get('swimlane_id',''),'sort',I,'archived',Task.Get('is_active','1')='0']);
       Cards.Add(Card);
-      Author:=AuthorFor(Task.Get('creator_username',''));
+      Author:=ImportAuthorIdentity(Authors,Task.Get('creator_username',''));
       if Author<>'' then Card.Add('userId',Author);
       Text:=MapImportColor('kanboard',Task.Get('color_id',''));
       if Task.Get('color_id','')='deep_orange' then Text:='crimson';
@@ -4324,7 +4325,7 @@ begin
         Entry:=Children.Objects[J];
         Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Entry.Get('comment','')]);
         Comments.Add(Comment);
-        Author:=AuthorFor(Entry.Get('username',''));
+        Author:=ImportAuthorIdentity(Authors,Entry.Get('username',''));
         if Author<>'' then Comment.Add('userId',Author);
       end;
       Children:=OptionalArray(Task,'subtasks');
@@ -4337,6 +4338,115 @@ begin
           Entry:=Children.Objects[J];
           Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(J),'checklistId',CheckId,
             'title',Entry.Get('title',''),'sort',J,'isFinished',Entry.Get('status','')='2']));
+        end;
+      end;
+    end;
+  except Result.Free; raise; end;
+end;
+
+function DeckImport(const Source: TJSONObject): TJSONObject;
+var Meta, Board, Stack, Entry, Card, Comment, Authors: TJSONObject; Stacks, StackCards, Lists, Cards, Labels,
+  Comments, Tags: TJSONArray; Child, Value: TJSONData; I,J,K: Integer; CardId,ListId,Name,Author,LabelId: string;
+  function Identity(Obj: TJSONObject): string;
+  var Field: TJSONData;
+  begin
+    Field:=Obj.Find('id');
+    if (Field=nil) or not (Field.JSONType in [jtString,jtNumber]) then
+      raise EConvertError.Create('Invalid Deck identity');
+    Result:=Field.AsString;
+  end;
+  function Deleted(Obj: TJSONObject): Boolean;
+  var DateValue: TJSONData;
+  begin
+    DateValue:=Obj.Find('deletedAt');
+    Result:=(DateValue<>nil) and (DateValue.JSONType<>jtNull) and (DateValue.AsString<>'') and (DateValue.AsString<>'0');
+  end;
+  procedure CopyDate(FromRow, ToRow: TJSONObject; const SourceKey, Key: string);
+  var DateValue: TJSONData; Seconds: Int64;
+  begin
+    DateValue:=FromRow.Find(SourceKey);
+    if (DateValue=nil) or (DateValue.JSONType=jtNull) then Exit;
+    if TryStrToInt64(DateValue.AsString,Seconds) then
+    begin
+      if (Seconds>0) and (Seconds<=253402300799) then
+        ToRow.Add(Key,FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"',UnixToDateTime(Seconds)));
+    end
+    else if DateValue is TJSONString then ToRow.Add(Key,DateValue.AsString);
+  end;
+  function LabelFor(const Title: string): string;
+  var L: Integer;
+  begin
+    for L:=0 to Labels.Count-1 do if Labels.Objects[L].Get('name','')=Title then Exit(Labels.Objects[L].Get('_id',''));
+    Result:='label-'+IntToStr(Labels.Count);
+    Labels.Add(TJSONObject.Create(['_id',Result,'name',Title,'color','blue']));
+  end;
+begin
+  Meta:=Source;
+  if Source.Find('board') is TJSONObject then Meta:=TJSONObject(Source.Find('board'));
+  Value:=Meta.Find('stacks');
+  if Value=nil then Value:=Source.Find('stacks');
+  if not (Value is TJSONArray) or (Trim(Meta.Get('title',''))='') then raise EConvertError.Create('Invalid Deck export');
+  Stacks:=TJSONArray(Value);
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create(['title',Meta.Get('title','')]); Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    for I:=0 to Stacks.Count-1 do
+    begin
+      Stack:=Stacks.Objects[I];
+      if Deleted(Stack) then Continue;
+      ListId:=Identity(Stack);
+      Lists.Add(TJSONObject.Create(['_id',ListId,'title',Stack.Get('title',''),'sort',StrToIntDef(Stack.Get('order',''),I)]));
+      Child:=Stack.Find('cards');
+      if not (Child is TJSONArray) then Continue;
+      StackCards:=TJSONArray(Child);
+      for J:=0 to StackCards.Count-1 do
+      begin
+        Entry:=StackCards.Objects[J];
+        if Deleted(Entry) then Continue;
+        CardId:=Identity(Entry);
+        Card:=TJSONObject.Create(['_id',CardId,'listId',ListId,'title',Entry.Get('title',''),
+          'description',Entry.Get('description',''),'sort',StrToIntDef(Entry.Get('order',''),J),'archived',Entry.Get('archived',False)]);
+        Cards.Add(Card);
+        CopyDate(Entry,Card,'duedate','dueAt'); CopyDate(Entry,Card,'createdAt','createdAt');
+        Child:=Entry.Find('done');
+        if (Child<>nil) and (((Child.JSONType=jtBoolean) and Child.AsBoolean) or
+          ((Child is TJSONString) and (Child.AsString<>''))) then
+        begin
+          Card.Add('dueComplete',True);
+          if Child is TJSONString then CopyDate(Entry,Card,'done','endAt');
+        end;
+        Child:=Entry.Find('owner');
+        if Child is TJSONObject then
+        begin
+          Name:=TJSONObject(Child).Get('displayname',TJSONObject(Child).Get('uid',''));
+          Author:=ImportAuthorIdentity(Authors,Name);
+          if Author<>'' then Card.Add('userId',Author);
+        end;
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        Child:=Entry.Find('labels');
+        if Child is TJSONArray then for K:=0 to Child.Count-1 do
+        begin
+          Value:=Child.Items[K];
+          if Value is TJSONObject then Name:=TJSONObject(Value).Get('title','')
+          else if Value is TJSONString then Name:=Value.AsString else Continue;
+          if Name='' then Continue;
+          LabelId:=LabelFor(Name);
+          Tags.Add(LabelId);
+        end;
+        Child:=Entry.Find('comments');
+        if Child is TJSONArray then for K:=0 to Child.Count-1 do
+        begin
+          if not (Child.Items[K] is TJSONObject) then Continue;
+          Comment:=TJSONObject(Child.Items[K]);
+          Author:=ImportAuthorIdentity(Authors,Comment.Get('actorId',Comment.Get('actorDisplayName','')));
+          Value:=TJSONObject.Create(['_id',CardId+':comment:'+IntToStr(K),'cardId',CardId,'text',Comment.Get('message',''),'userId',Author]);
+          Comments.Add(Value);
+          CopyDate(Comment,TJSONObject(Value),'creationDateTime','createdAt');
         end;
       end;
     end;
@@ -4386,7 +4496,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   procedure CreateImportedAuthors;
   var Authors: TJSONObject; K: Integer; Id: string;
   begin
-    if SourceFormat<>'kanboard' then Exit;
+    if SourceFormat='' then Exit;
     Authors:=Body.Objects['importedAuthors'];
     for K:=0 to Authors.Count-1 do
     begin
@@ -4887,7 +4997,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       Sql:=Sql+'INSERT INTO card_comments(id,boardId,cardId,userId,text,parentId,createdAt,modifiedAt) VALUES('+
         Id+','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+QuotedStr(Text(Entry,'text'))+','+QuotedStr(Parent)+','+
         ImportedDate(Entry,'createdAt',Stamp)+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
-      if SourceFormat='kanboard' then
+      if SourceFormat<>'' then
         Sql:=Sql+'INSERT INTO activities(id,activityType,boardId,cardId,userId,createdAt,modifiedAt,data_json) VALUES('+
           QuotedStr(NewId)+',''addComment'','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+
           ImportedDate(Entry,'createdAt',Stamp)+','+Stamp+',json_object(''commentId'','+Id+')); ';
@@ -5044,7 +5154,7 @@ begin
   IsZip := SameText(Trim(aRequest.ContentType.Split([';'])[0]), 'application/zip');
   SourceFormat := aRequest.QueryFields.Values['source'];
   if MethodActor<>'' then SourceFormat:=MethodFormat;
-  if (SourceFormat<>'') and ((SourceFormat<>'kanboard') or IsZip) then
+  if (SourceFormat<>'') and (((SourceFormat<>'kanboard') and (SourceFormat<>'deck')) or IsZip) then
   begin SendError(aResponse,400,'Invalid import source'); Exit; end;
   if MethodActor<>'' then Actor:=MethodActor
   else if (IsZip or (SourceFormat<>'')) and SameText(aRequest.HTTPXRequestedWith, 'XMLHttpRequest') and
@@ -5085,10 +5195,13 @@ begin
     try
       try
         if IsZip then Body:=ReadBoardZip(aRequest.Content)
-        else if SourceFormat='kanboard' then
+        else if SourceFormat<>'' then
         begin
           SourceDocument:=ExactObject(IfThen(MethodActor<>'',MethodBody,aRequest.Content));
-          try Body:=KanboardImport(SourceDocument); finally SourceDocument.Free; end;
+          try
+            if SourceFormat='deck' then Body:=DeckImport(SourceDocument)
+            else Body:=KanboardImport(SourceDocument);
+          finally SourceDocument.Free; end;
         end
         else Body:=ExactObject(aRequest.Content);
       except raise EConvertError.Create('Invalid board export');end;
@@ -5364,11 +5477,11 @@ begin
   if not (Args is TJSONArray) or (Args.Count<>3) or not (Args.Items[0] is TJSONObject) or
     not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
   begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
-  if Args.Items[2].AsString<>'kanboard' then
+  if (Args.Items[2].AsString<>'kanboard') and (Args.Items[2].AsString<>'deck') then
   begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Unknown import source"}',400); Exit; end;
   if Args.Items[1].Count<>0 then
-  begin SendJson(aResponse,'{"error":"invalid-member-mapping","reason":"Kanboard member mapping is unavailable"}',400); Exit; end;
-  ImportBoardRequest(aRequest,aResponse,Tenant,Actor,Args.Items[0].AsJSON,'kanboard');
+  begin SendJson(aResponse,'{"error":"invalid-member-mapping","reason":"External import member mapping is unavailable"}',400); Exit; end;
+  ImportBoardRequest(aRequest,aResponse,Tenant,Actor,Args.Items[0].AsJSON,Args.Items[2].AsString);
 end;
 
 function CopyBoardWorkflows(Db:TWLDb;const Source,Destination,Actor:string):string;

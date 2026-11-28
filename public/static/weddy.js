@@ -803,7 +803,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     event.preventDefault();
     openPopOver(el.dataset.pop || 'board-zip-import');
   });
-  up.on('submit', '.js-kanboard-import', function (event, form) {
+  up.on('submit', '.js-external-board-import', function (event, form) {
     event.preventDefault();
     var submit = form.querySelector('button[type="submit"]');
     var warning = form.querySelector('.warning');
@@ -811,7 +811,7 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     submit.disabled = true;
     warning.hidden = true;
     Promise.resolve().then(function () {
-      return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, 'kanboard');
+      return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, form.dataset.source);
     }).then(function (board) {
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
       window.location.assign('/b/' + encodeURIComponent(board._id) + '/board');

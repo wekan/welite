@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Nextcloud Deck JSON imports live cards, stacks, labels, dates, and comments
+  with their original author names. Trashed cards and stacks are skipped.
+
 - The Kanboard import form uses the authenticated importBoard method. Invalid
   JSON stays on the form, and documents of the wrong shape return the shared
   invalid-import-format error. All three of these shared Kanboard cases pass.

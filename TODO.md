@@ -270,7 +270,7 @@ Next, after this goal:
   after failing once in three earlier runs.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
-  the remaining import format audit cases (Kanboard fixture, content preservation and invalid input cases pass),
+  the remaining import format audit cases (Kanboard and Deck fixture, content preservation and invalid input cases pass),
   the assigned-only Scrum velocity chart export,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
