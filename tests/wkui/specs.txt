@@ -522,3 +522,4 @@ import-export-format-audit.e2e.js: WeKan JSON import keeps each card creation da
 import-export-format-audit.e2e.js: Trello ZIP imports comment, checklist and exact attachment bytes
 import-export-format-audit.e2e.js: Pivotal Tracker: a stories CSV imports
 import-export-format-audit.e2e.js: Redmine: an issues CSV imports
+import-export-format-audit.e2e.js: Tasks.org: a backup imports

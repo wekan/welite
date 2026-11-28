@@ -5726,10 +5726,104 @@ begin
   finally Seen.Free; Csv.Free; end;
 end;
 
+function TasksOrgImport(const Source: TJSONData): TJSONObject;
+const Priorities: array[0..2] of string=('High','Medium','Low');
+var Input, Board, Entry, Task, Card, Calendar, Tag: TJSONObject;
+  Lists,Cards,Labels,Definitions,Tags,Fields: TJSONArray; Data,Tasks,Row: TJSONData;
+  I,J,P: Integer; Id,Name,Title,ListId,ParentId,LabelId: string;
+  procedure AddNamed(Rows:TJSONArray; const Id, Field, Name, Kind:string);
+  var K: Integer; O:TJSONObject;
+  begin
+    for K:=0 to Rows.Count-1 do if Rows.Objects[K].Get('_id','')=Id then Exit;
+    O:=TJSONObject.Create(['_id',Id,Field,Name,'sort',Rows.Count]);
+    if Kind<>'' then O.Add('type',Kind);
+    Rows.Add(O);
+  end;
+  procedure DateField(const Key, Target:string; AllDayAware:Boolean);
+  var Value:TJSONData; Ms, Remainder:Int64;
+  begin
+    Value:=Task.Find(Key);
+    if (Value=nil) or (Value.JSONType<>jtNumber) or not TryStrToInt64(Value.AsString,Ms) or
+      (Ms<=0) or (Ms>253402300799999) then Exit;
+    if AllDayAware then
+    begin
+      Remainder:=Ms mod 60000;
+      if Remainder>0 then Dec(Ms,Remainder) else Ms:=Ms-(Ms mod 86400000)+43200000;
+    end;
+    Card.Add(Target,Ms);
+  end;
+begin
+  if not (Source is TJSONObject) then raise EConvertError.Create('Invalid Tasks.org backup');
+  Data:=TJSONObject(Source).Find('data');
+  if not (Data is TJSONObject) then raise EConvertError.Create('Missing Tasks.org backup data');
+  Input:=TJSONObject(Data); Tasks:=Input.Find('tasks');
+  if not (Tasks is TJSONArray) then raise EConvertError.Create('Missing Tasks.org tasks');
+  Result:=TJSONObject.Create;
+  try
+    Title:='Tasks.org';
+    Data:=Input.Find('caldavAccounts');
+    if (Data is TJSONArray) and (Data.Count>0) and (Data.Items[0] is TJSONObject) then
+      Title:=TJSONObject(Data.Items[0]).Get('name',Title);
+    Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+    Result.Add('importedAuthors',TJSONObject.Create);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+    Data:=Input.Find('caldavCalendars');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+    begin
+      if not (Data.Items[I] is TJSONObject) then Continue;
+      Calendar:=TJSONObject(Data.Items[I]); ListId:=Calendar.Get('uuid','');
+      if ListId<>'' then AddNamed(Lists,ListId,'title',Calendar.Get('name','Tasks'),'');
+    end;
+    for I:=0 to Tasks.Count-1 do
+    begin
+      if not (Tasks.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Tasks.org entry');
+      Entry:=TJSONObject(Tasks.Items[I]); Row:=Entry.Find('task');
+      if not (Row is TJSONObject) then raise EConvertError.Create('Missing Tasks.org task');
+      Task:=TJSONObject(Row); Name:=Task.Get('title','');
+      if Name='' then Continue;
+      Id:=Task.Get('remoteId','task-'+IntToStr(I));
+      ListId:='tasks'; ParentId:='';
+      Data:=Entry.Find('caldavTasks');
+      if (Data is TJSONArray) and (Data.Count>0) and (Data.Items[0] is TJSONObject) then
+      begin
+        Calendar:=TJSONObject(Data.Items[0]);
+        ListId:=Calendar.Get('calendar',ListId); ParentId:=Calendar.Get('remoteParent','');
+      end;
+      AddNamed(Lists,ListId,'title','Tasks','');
+      Card:=TJSONObject.Create(['_id',Id,'title',Name,'description',Task.Get('notes',''),'listId',ListId,'sort',I]);
+      Cards.Add(Card);
+      if (ParentId<>'') and (ParentId<>Id) then Card.Add('parentId',ParentId);
+      DateField('creationDate','createdAt',False); DateField('dueDate','dueAt',True);
+      DateField('startDate','startAt',True); DateField('completionDate','endAt',False);
+      Card.Add('dueComplete',Card.Find('endAt')<>nil);
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      Data:=Entry.Find('tags');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Tag:=TJSONObject(Data.Items[J]); Name:=Tag.Get('name','');
+        if Name='' then Continue;
+        LabelId:=Tag.Get('tagUid',Name);
+        AddNamed(Labels,LabelId,'name',Name,''); Tags.Add(LabelId);
+      end;
+      P:=Task.Get('priority',3);
+      if (P>=Low(Priorities)) and (P<=High(Priorities)) then
+      begin
+        AddNamed(Definitions,'priority','name','Priority','text');
+        Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+        Fields.Add(TJSONObject.Create(['_id','priority','value',Priorities[P]]));
+      end;
+    end;
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6526,6 +6620,7 @@ begin
             else if SourceFormat='trello' then Body:=TrelloImport(Value)
             else if SourceFormat='pivotal' then Body:=PivotalImport(Value)
             else if SourceFormat='redmine' then Body:=RedmineImport(Value)
+            else if SourceFormat='tasksorg' then Body:=TasksOrgImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');

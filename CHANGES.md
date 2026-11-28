@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Tasks.org backups import calendar lists, task notes, tags, priorities,
+  due and completion dates, and subtask links.
+
 - Redmine issues CSV imports statuses, trackers, parent tasks, dates,
   priorities, estimates and issue relations. Reciprocal relations are imported once.
 
