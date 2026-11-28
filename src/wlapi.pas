@@ -70,6 +70,7 @@ procedure ApiScrumVelocityReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
+procedure ApiBoardMarkdown(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardVikunja(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCsv(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardCalendar(aRequest: TRequest; aResponse: TResponse);
@@ -415,7 +416,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,DOM,XMLRead,RegExpr;
+uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,wlvikexp,wlmdexp,DOM,XMLRead,RegExpr;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -3074,6 +3075,29 @@ begin
     begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
   end;
   Result := True;
+end;
+
+procedure ApiBoardMarkdown(aRequest: TRequest; aResponse: TResponse);
+var T: TWLTenant; BoardId, UserId, Body: string; Payload: TJSONObject;
+begin
+  if not BoardDownloadAccess(aRequest, aResponse, T, BoardId, UserId) then Exit;
+  try
+    Payload := ReadRestBoardExport(T, UserId, BoardId, False, True);
+    if Payload = nil then begin SendError(aResponse, 403, 'Board export forbidden'); Exit; end;
+    try
+      if Payload.Find('subtaskItems') = nil then Payload.Add('subtaskItems', TJSONArray.Create);
+      FilterBoardExportFields(Payload, aRequest.QueryFields.Values['fields']);
+      Body := MarkdownBoard(Payload);
+    finally Payload.Free; end;
+  except SendError(aResponse, 500, 'Could not export board'); Exit; end;
+  aResponse.Code := 200;
+  aResponse.ContentType := 'text/markdown; charset=utf-8';
+  aResponse.SetCustomHeader('Content-Disposition', 'attachment; filename="board.md"');
+  aResponse.SetCustomHeader('Cache-Control', 'private, no-store');
+  aResponse.SetCustomHeader('Referrer-Policy', 'no-referrer');
+  aResponse.Content := Body;
+  aResponse.ContentLength := Length(Body);
+  aResponse.SendContent;
 end;
 
 procedure ApiBoardVikunja(aRequest: TRequest; aResponse: TResponse);

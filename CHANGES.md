@@ -6,6 +6,15 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export a board from the HTML5 menu as Markdown task lists. The field
+  selector controls descriptions, labels, dates and checklist items. The
+  shared browser test also verifies that private board downloads require access.
+
+- Chromium reruns confirm 18 existing import cases for Kanri, Nullboard,
+  Obsidian Kanban, MeisterTask, Linear, TickTick, ClickUp, Pivotal Tracker,
+  Redmine, Tasks.org, Quire, Super Productivity, monday.com, Wrike,
+  Teamwork.com and Businessmap.
+
 - Taiga project dumps import stories, tasks, epics and issues, with comments,
   custom fields, relationships, blocked status and planned sprints. Hawaiian
   import instructions are verified for all 22 HTML5 formats in the audit.
@@ -186,7 +195,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 - Scrum velocity exports closed-sprint snapshot totals as PDF and Excel.
   Assigned-only members receive totals for their visible cards. All 11
-  shared export access tests pass.
+  shared export access tests pass. Shared Chromium coverage also confirms that
+  assigned-only private members cannot download unrestricted board exports
+  or PDF and Excel exports of cards outside their assignments.
 
 - Burndown and burnup data can be exported as PDF and Excel. These whole-board
   charts require unrestricted board read access.

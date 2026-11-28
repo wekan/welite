@@ -583,3 +583,4 @@ import-export-format-audit.e2e.js: Plane: a pasted JSON export imports, and brok
 import-export-format-audit.e2e.js: Taiga: a project dump imports with its stories, tasks, epics, issues, comments, fields and sprint
 import-export-format-audit.e2e.js: Taiga: malformed JSON and a document that is not a dump are rejected
 import-export-format-audit.e2e.js: Hawaiian taiga import instructions render without an English fallback
+import-export-format-audit.e2e.js: Markdown export preserves task details and honors the export selection

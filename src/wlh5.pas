@@ -2839,7 +2839,8 @@ begin
     '/export/csv?delimiter=%2C">CSV (,)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%3B">CSV (;)</a></li><li><a class="js-export-fields" download href="' + Base +
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
-    '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
+    '/calendar.ics">iCalendar (.ics)</a></li><li><a class="js-export-fields" download href="' + Base +
+    '/export/markdown?fields=">Markdown (.md)</a></li><li><a download href="' + Base +
     '/export/planner?download=1">Microsoft Planner (.xlsx)</a></li><li><a download href="' + Base +
     '/export/vikunja?download=1">Vikunja (.zip)</a></li><li><a download href="' + Base +
     '/exportZip">WeKan ZIP</a></li><li><form method="get" action="' + Base + '/exportZip">' +

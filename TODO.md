@@ -263,16 +263,11 @@ Next, after this goal:
   reliably (REST API, viewport, RTL, stability and notification specs among
   them, and restore-wip-limit once the WIP limit methods and the Archive's
   restore at a hard limit were in).
-  On 2026-11-27 the full run of `tests/wkui/specs.txt` passed 478
-  (2 skipped, 4 failed). In that run the ZIP, CSV, PDF and Excel export routes returned
-  404 because they are missing. The assigned-only tests expect a 403 from
-  each implemented route. The rules-history REST button test passed this run
-  after failing once in three earlier runs.
   Inactivity archive settings pass the shared browser audit on WeLite.
   By what they wait for: Scrum
   (scrum.updateCard, saveSprint, saveRelease, configure - about 80 tests),
-  the remaining import format audit cases (Kanboard, Deck, GitHub, GitLab, Gitea, Forgejo, Asana, OpenProject, Zenkit and Jira fixture and invalid input cases pass, as do Kanboard task links, Kanri board and backup imports, Markdown multi-file and Obsidian Kanban imports, WeKan JSON creation dates, the Trello ZIP round trip, Pivotal Tracker, Redmine, ClickUp, TickTick, Linear, Quire and MeisterTask CSV, Tasks.org and Super Productivity backups, Nullboard NBX, monday.com, Wrike, Teamwork.com, Businessmap and Microsoft Planner XLSX, OPML and Org mode outlines, todo.txt, Taskwarrior, Focalboard JSONL, Todoist CSV, CSV and TSV column mapping, Excel workbook round trips, Microsoft Planner workbook export, Vikunja ZIP export and ZIP/JSON import, Notion ZIP and CSV import, Plane project imports, and Recovery entries for imports with warnings),
-  the assigned-only Scrum velocity chart export,
+  the rest of the shared external export menu audit beyond Markdown and the
+  formats recorded in [CHANGES.md](CHANGES.md), plus the remaining import audit cases,
   remaining field-group parity for JSON and ZIP payloads, inline Excel previews for formats outside the existing PNG, JPEG, BMP, GIF,
   WebP, Netpbm, uncompressed 24-bit TGA and Linux TIFF decoder support,
   Also left are additional History field restore types and row summaries beyond
