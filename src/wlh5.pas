@@ -5371,6 +5371,45 @@ begin
   Result := 200;
 end;
 
+function CrossBoardCardScrumSql(Db: TWLDb; const Source, Destination: string): string;
+  function Counterparts(const Collection, TableName, Usable: string): string;
+  var Rows: TWLRows; SourceTable: string;
+  begin
+    Rows := nil;
+    if IsShared(Db) then Rows := Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=' + QuotedStr(Collection));
+    if Length(Rows) <> 1 then Exit('CREATE TEMP TABLE ' + TableName + '(oldId TEXT,newId TEXT); ');
+    SourceTable := '"' + StringReplace(Rows[0][0], '"', '""', [rfReplaceAll]) + '"';
+    Result := 'CREATE TEMP TABLE ' + TableName + ' AS WITH planning AS (SELECT json_extract(_ferretdb_sjson,''$._id'') AS id,' +
+      'json_extract(_ferretdb_sjson,''$.boardId'') AS board,trim(json_extract(_ferretdb_sjson,''$.name''),char(9,10,13,32)) AS name,' +
+      'json_extract(_ferretdb_sjson,''$.state'') AS state FROM ' + SourceTable + ') ' +
+      'SELECT s.id AS oldId,min(d.id) AS newId FROM planning s JOIN planning d ON d.name=s.name AND d.board=' + Destination +
+      ' AND ' + Usable + ' WHERE s.board=' + Source + ' AND s.name<>'''' GROUP BY s.id HAVING count(*)=1; ';
+  end;
+begin
+  Result := Counterparts('scrumSprints','structural_sprint_map','d.state IN (''planned'',''active'')') +
+    Counterparts('scrumReleases','structural_release_map','d.state IS NOT ''cancelled''') +
+    'CREATE TEMP TABLE structural_scrum AS WITH scoped AS (SELECT c.id,json_extract(c.extra_json,''$.scrum'') AS old,' +
+    'max(0,CAST(COALESCE(json_extract(c.extra_json,''$.scrumRevision''),0) AS INTEGER))+1 AS revision ' +
+    'FROM cards c JOIN structural_moving_cards m ON m.id=c.id WHERE json_type(c.extra_json,''$.scrum'')=''object'' ' +
+    'AND EXISTS(SELECT 1 FROM json_each(c.extra_json,''$.scrum'') WHERE key IN (''sprintId'',''pastSprintIds'',''releaseId'',''releaseIds'',''backlogRank''))), ' +
+    'release_ids AS (SELECT s.id,r.newId,min(r.ordinal) AS ordinal FROM scoped s JOIN (' +
+    'SELECT s.id,m.newId,-1 AS ordinal FROM scoped s JOIN structural_release_map m ON m.oldId=json_extract(s.old,''$.releaseId'') ' +
+    'UNION ALL SELECT s.id,m.newId,j.key FROM scoped s JOIN json_each(s.old,''$.releaseIds'') j ' +
+    'JOIN structural_release_map m ON m.oldId=j.value WHERE json_type(s.old,''$.releaseIds'')=''array'' AND j.type=''text'') r ' +
+    'ON s.id=r.id GROUP BY s.id,r.newId), ' +
+    'mapped AS (SELECT s.id,s.revision,json_type(s.old,''$.releaseIds'') AS releaseType,' +
+    'json_remove(s.old,''$.sprintId'',''$.pastSprintIds'',''$.releaseId'',''$.releaseIds'',''$.backlogRank'') AS metadata,' +
+    '(SELECT newId FROM structural_sprint_map WHERE oldId=json_extract(s.old,''$.sprintId'')) AS sprint,' +
+    '(SELECT json_group_array(newId) FROM (SELECT newId FROM release_ids WHERE id=s.id ORDER BY ordinal)) AS releases FROM scoped s), ' +
+    'with_sprint AS (SELECT id,revision,releaseType,releases,CASE WHEN sprint IS NULL THEN metadata ' +
+    'ELSE json_set(metadata,''$.sprintId'',sprint) END AS metadata FROM mapped) ' +
+    'SELECT id,revision,CASE WHEN releaseType=''array'' THEN json_set(metadata,''$.releaseIds'',json(releases),''$.releaseId'',json_extract(releases,''$[0]'')) ' +
+    'WHEN json_array_length(releases)>0 THEN json_set(metadata,''$.releaseId'',json_extract(releases,''$[0]'')) ELSE metadata END AS metadata FROM with_sprint; ' +
+    'UPDATE cards SET extra_json=json_set(extra_json,''$.scrum'',json((SELECT metadata FROM structural_scrum WHERE id=cards.id)),' +
+    '''$.scrumRevision'',(SELECT revision FROM structural_scrum WHERE id=cards.id)) WHERE id IN (SELECT id FROM structural_scrum); ' +
+    'DROP TABLE structural_scrum; DROP TABLE structural_release_map; DROP TABLE structural_sprint_map; ';
+end;
+
 function MoveSelectedBoardCards(Db: TWLDb; const UserId: string; Args: TJSONData; out Answer: string): Integer;
 const OpenCard = 'archived=0 AND deletedAt IS NULL';
 var Selection, Entry, Target, Options: TJSONObject; Selected: TJSONArray; Value: TJSONData;
@@ -5558,11 +5597,11 @@ begin
   Moved := 'cardId IN (SELECT id FROM structural_moving_cards)';
   CrossBoardSql := '';
   if CrossBoard then
-    CrossBoardSql :=
+    CrossBoardSql := CrossBoardCardScrumSql(Db, QuotedStr(Source), Board) +
       'CREATE TEMP TABLE structural_card_numbers AS SELECT id, (SELECT COALESCE(max(cardNumber),0) FROM cards WHERE boardId=' +
       Board + ')+row_number() OVER (ORDER BY id) AS number FROM structural_moving_cards; ' +
       'UPDATE cards SET cardNumber=(SELECT number FROM structural_card_numbers WHERE structural_card_numbers.id=cards.id), ' +
-      'extra_json=json_set(json_remove(extra_json,''$.scrum'',''$.scrumRevision''),''$.watchers'',json((SELECT json_group_array(w.value) ' +
+      'extra_json=json_set(extra_json,''$.watchers'',json((SELECT json_group_array(w.value) ' +
       'FROM json_each(cards.extra_json,''$.watchers'') w JOIN board_members m ON m.userId=w.value AND m.isActive=1 AND m.boardId=' +
       Board + '))) WHERE id IN (SELECT id FROM structural_moving_cards); DROP TABLE structural_card_numbers; ' +
       'CREATE TEMP TABLE structural_source_labels AS SELECT l.cardId,s.name,s.color,s.id FROM card_labels l ' +

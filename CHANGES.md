@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Cards moved between boards retain general Scrum fields and link to uniquely
+  named eligible sprints and releases on the destination board. Old sprint
+  history and backlog rank are removed, and the Scrum revision advances.
+
 - Minicards have a personal fold control. Folded cards still work as drag
   sources and destinations for mixed selections. All 18 shared structural
   selection browser cases pass in WeLite.
