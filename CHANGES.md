@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Cards, checklists, and loose items can move together in one transaction.
+  The shared move-dialog test covers positioning a card on another board
+  while placing a selected checklist on the destination card.
+
 - Selected checklists and loose items can move together. A list-only
   destination creates one card for them, and items already inside a selected
   checklist move with their checklist once. Shared Chromium coverage exercises

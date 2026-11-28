@@ -5224,11 +5224,12 @@ begin
   Result:=200;
 end;
 
-function MoveSelectedChecklistObjects(Db: TWLDb; const UserId, Source, Board, Lane, ListId, CardId,
-  ChecklistId, ItemId, Position: string; Selected: TJSONArray; Drag: Boolean; out Answer: string): Integer;
+function PrepareChecklistMove(Db: TWLDb; const UserId, Source, Board, Lane, ListId, CardId,
+  ChecklistId, ItemId, Position, CardIds: string; Selected: TJSONArray; Drag: Boolean;
+  out Sql, NewCard, Answer: string; out MovedCount: Integer): Integer;
 var Seen, Entry: TJSONObject; Choice: TJSONData; I, Count: Integer; Rows: TWLRows;
   Kind, Id, Checks, Items, SourceCards, TargetCards, SourceChecks, SourceItems, DestCard, DestCheck,
-  DestBoard, Stamp, Title, Sql, CardSql, ChecklistSql, ItemSort, CheckSort, Guard, TargetGuard, NewCard, NewChecklist: string;
+  DestBoard, Stamp, Title, CardSql, ChecklistSql, ItemSort, CheckSort, Guard, TargetGuard, NewChecklist: string;
   function Fail(Code: Integer; const Reason: string): Integer;
   begin
     Answer := '{"error":"' + Reason + '","reason":"' + Reason + '"}';
@@ -5240,6 +5241,9 @@ var Seen, Entry: TJSONObject; Choice: TJSONData; I, Count: Integer; Rows: TWLRow
     Ids := Ids + QuotedStr(Value);
   end;
 begin
+  Sql := '';
+  NewCard := '';
+  MovedCount := 0;
   Checks := '';
   Items := '';
   Seen := TJSONObject.Create;
@@ -5249,6 +5253,7 @@ begin
       Choice := Selected.Items[I];
       if not (Choice is TJSONObject) then Exit(Fail(400, 'invalid-selection'));
       Entry := TJSONObject(Choice);
+      if Entry.Get('kind', '') = 'card' then Continue;
       if not (Entry.Find('id') is TJSONString) then Exit(Fail(400, 'invalid-selection'));
       Id := Entry.Get('id', '');
       Kind := Entry.Get('kind', '');
@@ -5260,6 +5265,7 @@ begin
     end;
     Count := Seen.Count;
   finally Seen.Free; end;
+  if Count = 0 then Exit(200);
   if Checks = '' then Checks := 'NULL';
   if Items = '' then Items := 'NULL';
   if Drag and (((Checks <> 'NULL') and not BoardAllows(Db, Source, 'allowsChecklistDragging')) or
@@ -5269,10 +5275,17 @@ begin
   TargetCards := 'SELECT id FROM cards WHERE boardId=' + DestBoard + ' AND archived=0 AND deletedAt IS NULL AND swimlaneId=' +
     QuotedStr(Lane) + ' AND listId=' + QuotedStr(ListId);
   SourceChecks := 'SELECT id,title,cardId FROM checklists WHERE id IN (' + Checks + ') AND cardId IN (' + SourceCards + ')';
-  SourceItems := 'SELECT i.id,i.title,i.checklistId FROM checklist_items i JOIN checklists c ON c.id=i.checklistId AND c.cardId=i.cardId ' +
+  SourceItems := 'SELECT i.id,i.title,i.checklistId,i.cardId FROM checklist_items i JOIN checklists c ON c.id=i.checklistId AND c.cardId=i.cardId ' +
     'WHERE i.id IN (' + Items + ') AND i.cardId IN (' + SourceCards + ')';
   Guard := '(SELECT count(*) FROM (' + SourceChecks + '))+(SELECT count(*) FROM (' + SourceItems + '))=' + IntToStr(Count);
   if Length(Db.Query('SELECT 1 WHERE ' + Guard)) <> 1 then Exit(Fail(400, 'invalid-selection'));
+  SourceChecks := SourceChecks + ' AND NOT COALESCE(cardId IN (' + CardIds + '),0)';
+  SourceItems := SourceItems + ' AND NOT COALESCE(i.cardId IN (' + CardIds + '),0)';
+  Rows := Db.Query('SELECT (SELECT count(*) FROM (' + SourceChecks + '))+(SELECT count(*) FROM (' + SourceItems +
+    ') WHERE checklistId NOT IN (SELECT id FROM (' + SourceChecks + ')));');
+  if Length(Rows) <> 1 then Exit(Fail(409, 'move-conflict'));
+  MovedCount := StrToIntDef(Rows[0][0], 0);
+  if MovedCount = 0 then Exit(200);
   if ((ChecklistId <> '') and (CardId = '')) or ((ItemId <> '') and (ChecklistId = '')) then Exit(Fail(400, 'invalid-destination'));
   TargetGuard := '1=1';
   if ChecklistId <> '' then
@@ -5300,7 +5313,8 @@ begin
     if Length(Db.Query('SELECT 1 WHERE ' + Guard)) <> 1 then Exit(Fail(400, 'invalid-destination'));
     Guard := Guard + ' AND EXISTS(SELECT 1 FROM lists WHERE id=' + QuotedStr(ListId) +
       ' AND (COALESCE(wip_enabled,0)<>1 OR COALESCE(wip_soft,0)<>0 OR (SELECT count(*) FROM cards WHERE listId=' +
-      QuotedStr(ListId) + ' AND archived=0 AND deletedAt IS NULL)<COALESCE(wip_value,1)))';
+      QuotedStr(ListId) + ' AND archived=0 AND deletedAt IS NULL)+(SELECT count(*) FROM cards WHERE id IN (' + CardIds +
+      ') AND listId<>' + QuotedStr(ListId) + ')<COALESCE(wip_value,1)))';
     if Length(Db.Query('SELECT 1 WHERE ' + Guard)) <> 1 then Exit(Fail(409, 'wip-limit'));
     Title := 'COALESCE((SELECT title FROM (' + SourceChecks + ') ORDER BY id LIMIT 1),(SELECT title FROM (' +
       SourceItems + ') ORDER BY id LIMIT 1),''Checklist'')';
@@ -5320,47 +5334,40 @@ begin
       '),' + Stamp + ',' + Stamp + ' FROM checklist_items WHERE id IN (SELECT id FROM structural_loose_items) ORDER BY sort,id LIMIT 1; ';
   end;
   DestCheck := QuotedStr(NewChecklist);
-  CheckSort := 'CASE WHEN id IN (' + Checks + ') THEN 1 ELSE 0 END';
+  CheckSort := 'CASE WHEN id IN (SELECT id FROM structural_moving_checks) THEN 1 ELSE 0 END';
   if ChecklistId <> '' then
-    CheckSort := 'CASE WHEN id IN (' + Checks + ') THEN 1 WHEN (sort,id) ' +
+    CheckSort := 'CASE WHEN id IN (SELECT id FROM structural_moving_checks) THEN 1 WHEN (sort,id) ' +
       IfThen(Position = 'before', '<', '<=') + ' (SELECT sort,id FROM checklists WHERE id=' + DestCheck + ') THEN 0 ELSE 2 END';
   ItemSort := 'CASE WHEN id IN (SELECT id FROM structural_loose_items) THEN 1 ELSE 0 END';
   if ItemId <> '' then
     ItemSort := 'CASE WHEN id IN (SELECT id FROM structural_loose_items) THEN 1 WHEN (sort,id) ' +
       IfThen(Position = 'before', '<', '<=') + ' (SELECT sort,id FROM checklist_items WHERE id=' + QuotedStr(ItemId) + ') THEN 0 ELSE 2 END';
-  Rows := Db.Query('SELECT count(*) FROM (' + SourceItems + ') WHERE checklistId IN (SELECT id FROM (' + SourceChecks + '));');
-  if Length(Rows) <> 1 then Exit(Fail(409, 'move-conflict'));
-  Sql := 'BEGIN IMMEDIATE; SELECT CASE WHEN ' + Guard + ' THEN 1 ELSE json(''Move scope changed'') END; ' +
+  Sql := 'SELECT CASE WHEN ' + Guard + ' THEN 1 ELSE json(''Move scope changed'') END; ' +
+    'CREATE TEMP TABLE structural_moving_checks AS SELECT id FROM (' + SourceChecks + '); ' +
     'CREATE TEMP TABLE structural_loose_items AS SELECT id FROM (' + SourceItems + ') WHERE checklistId NOT IN (SELECT id FROM (' +
     SourceChecks + ')); ' + CardSql +
     'CREATE TEMP TABLE structural_check_order AS SELECT id,row_number() OVER (ORDER BY ' + CheckSort +
-    ',sort,id)-1 AS position FROM checklists WHERE (cardId=' + DestCard + ' OR id IN (' + Checks +
-    ')) AND EXISTS(SELECT 1 FROM checklists WHERE id IN (' + Checks + ')); ' +
+    ',sort,id)-1 AS position FROM checklists WHERE (cardId=' + DestCard + ' OR id IN (SELECT id FROM structural_moving_checks)) ' +
+    'AND EXISTS(SELECT 1 FROM structural_moving_checks); ' +
     'UPDATE checklists SET cardId=' + DestCard + ',boardId=' + DestBoard + ',modifiedAt=' + Stamp +
     ',sort=(SELECT position FROM structural_check_order WHERE id=checklists.id) WHERE id IN (SELECT id FROM structural_check_order); ' +
     'UPDATE checklist_items SET cardId=' + DestCard + ',boardId=' + DestBoard + ',modifiedAt=' + Stamp +
-    ' WHERE checklistId IN (' + Checks + '); ' + ChecklistSql +
+    ' WHERE checklistId IN (SELECT id FROM structural_moving_checks); ' + ChecklistSql +
     'CREATE TEMP TABLE structural_item_order AS SELECT id,row_number() OVER (ORDER BY ' + ItemSort +
     ',sort,id)-1 AS position FROM checklist_items WHERE (checklistId=' + DestCheck +
     ' OR id IN (SELECT id FROM structural_loose_items)) AND EXISTS(SELECT 1 FROM structural_loose_items); ' +
     'UPDATE checklist_items SET checklistId=' + DestCheck + ',cardId=' + DestCard + ',boardId=' + DestBoard +
     ',modifiedAt=' + Stamp + ',sort=(SELECT position FROM structural_item_order WHERE id=checklist_items.id) ' +
     'WHERE id IN (SELECT id FROM structural_item_order); DROP TABLE structural_item_order; DROP TABLE structural_check_order; ' +
-    'DROP TABLE structural_loose_items; COMMIT;';
-  if not Db.Exec(Sql) then
-  begin
-    Db.Exec('ROLLBACK;');
-    Exit(Fail(409, 'move-conflict'));
-  end;
-  Answer := '{"result":{"moved":' + IntToStr(Count - StrToIntDef(Rows[0][0], 0)) + ',"cardId":"' + StringToJSONString(NewCard) + '"}}';
+    'DROP TABLE structural_loose_items; DROP TABLE structural_moving_checks;';
   Result := 200;
 end;
 
 function MoveSelectedBoardCards(Db: TWLDb; const UserId: string; Args: TJSONData; out Answer: string): Integer;
 const OpenCard = 'archived=0 AND deletedAt IS NULL';
 var Selection, Entry, Target, Options: TJSONObject; Selected: TJSONArray; Value: TJSONData;
-  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql, Moved, CrossBoardSql: string;
-  Rows: TWLRows; I, Count: Integer; Drag, CrossBoard: Boolean;
+  Source, Board, Lane, ListId, Anchor, Position, Id, CardScope, Destination, Ids, SortKey, ListScope, Capacity, Sql, Moved, CrossBoardSql, ChecklistSql, ChecklistCard: string;
+  Rows: TWLRows; I, Count, ChecklistCount, Code: Integer; Drag, CrossBoard: Boolean;
   function Failure(Status: Integer; const Reason: string): Integer;
   begin
     Answer := '{"error":"' + Reason + '","reason":"' + Reason + '"}';
@@ -5394,12 +5401,6 @@ begin
   if not BoardCanWrite(Db, UserId, Source) or not BoardCanWrite(Db, UserId, Board) then Exit(Failure(403, 'not-authorized'));
   CrossBoard := Board <> Source;
   if (Lane = '') or (ListId = '') then Exit(Failure(400, 'invalid-destination'));
-  if (Selected.Count > 0) and (Selected.Count <= 200) and (Selected.Items[0] is TJSONObject) and
-    ((TJSONObject(Selected.Items[0]).Get('kind', '') = 'checklist') or (TJSONObject(Selected.Items[0]).Get('kind', '') = 'item')) then
-    Exit(MoveSelectedChecklistObjects(Db, UserId, Source, Board, Lane, ListId, Anchor, Target.Get('checklistId', ''),
-      Target.Get('itemId', ''), Position, Selected, Drag, Answer));
-  if (Target.Get('checklistId', '') <> '') or (Target.Get('itemId', '') <> '') then Exit(Failure(400, 'invalid-destination'));
-  if Drag and not BoardAllows(Db, Source, 'allowsCardDragging') then Exit(Failure(403, 'drag-disabled'));
   if (Selected.Count = 0) or (Selected.Count > 200) then Exit(Failure(400, 'invalid-selection'));
   Selection := TJSONObject.Create;
   try
@@ -5409,6 +5410,7 @@ begin
       Value := Selected.Items[I];
       if not (Value is TJSONObject) then Exit(Failure(400, 'invalid-selection'));
       Entry := TJSONObject(Value);
+      if (Entry.Get('kind', '') = 'checklist') or (Entry.Get('kind', '') = 'item') then Continue;
       if (Entry.Get('kind', '') <> 'card') or not (Entry.Find('id') is TJSONString) then Exit(Failure(400, 'invalid-selection'));
       Id := Entry.Get('id', '');
       if (Id = '') or (Pos(#0, Id) > 0) then Exit(Failure(400, 'invalid-selection'));
@@ -5420,6 +5422,23 @@ begin
     if (Anchor <> '') and (Selection.Find(Anchor) <> nil) then Exit(Failure(400, 'invalid-destination'));
     Count := Selection.Count;
   finally Selection.Free; end;
+  if Ids = '' then Ids := 'NULL';
+  if (Count > 0) and Drag and not BoardAllows(Db, Source, 'allowsCardDragging') then Exit(Failure(403, 'drag-disabled'));
+  Code := PrepareChecklistMove(Db, UserId, Source, Board, Lane, ListId, Anchor, Target.Get('checklistId', ''),
+    Target.Get('itemId', ''), Position, Ids, Selected, Drag, ChecklistSql, ChecklistCard, Answer, ChecklistCount);
+  if Code <> 200 then Exit(Code);
+  if (Count > 0) and (ChecklistSql = '') and ((Target.Get('checklistId', '') <> '') or
+    (Target.Get('itemId', '') <> '')) then Exit(Failure(400, 'invalid-destination'));
+  if Count = 0 then
+  begin
+    if not Db.Exec('BEGIN IMMEDIATE; ' + ChecklistSql + 'COMMIT;') then
+    begin
+      Db.Exec('ROLLBACK;');
+      Exit(Failure(409, 'move-conflict'));
+    end;
+    Answer := '{"result":{"moved":' + IntToStr(ChecklistCount) + ',"cardId":"' + StringToJSONString(ChecklistCard) + '"}}';
+    Exit(200);
+  end;
   Board := QuotedStr(Board);
   Lane := QuotedStr(Lane);
   ListId := QuotedStr(ListId);
@@ -5480,6 +5499,7 @@ begin
     '))=' + IntToStr(Count) + ' AND ' + Capacity +
     IfThen(Anchor <> '', ' AND EXISTS(SELECT 1 FROM cards WHERE ' + Destination + ' AND id=' + Anchor + ')', '') +
     ' THEN 1 ELSE json(''Move scope changed'') END; ' +
+    ChecklistSql +
     'CREATE TEMP TABLE structural_card_order AS SELECT id,row_number() OVER (ORDER BY ' + SortKey + ',sort,id)-1 AS position ' +
     'FROM cards WHERE (' + Destination + ') OR (' + CardScope + ' AND id IN (' + Ids + ')); ' +
     CrossBoardSql +
@@ -5492,7 +5512,8 @@ begin
     Db.Exec('ROLLBACK;');
     Exit(Failure(409, 'move-conflict'));
   end;
-  Answer := '{"result":{"moved":' + IntToStr(Count) + '}}';
+  Answer := '{"result":{"moved":' + IntToStr(Count + ChecklistCount) +
+    IfThen(ChecklistCard <> '', ',"cardId":"' + StringToJSONString(ChecklistCard) + '"', '') + '}}';
   Result := 200;
 end;
 
