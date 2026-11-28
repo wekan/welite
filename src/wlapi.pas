@@ -5363,10 +5363,61 @@ begin
   except Result.Free; raise; end;
 end;
 
+function MarkdownBoardImport(const Source: TJSONData): TJSONObject;
+var Lines: TStringList; Board, Card: TJSONObject; Lists, Cards: TJSONArray;
+  Line, Title, ListId, Name: string; I: Integer; Done: Boolean;
+begin
+  if not (Source is TJSONString) or (Trim(Source.AsString)='') then
+    raise EConvertError.Create('Invalid Markdown board');
+  Lines:=TStringList.Create;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Lines.Text:=Source.AsString;
+      Board:=TJSONObject.Create; Result.Add('board',Board);
+      Result.Add('importedAuthors',TJSONObject.Create);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Title:=''; ListId:=''; Card:=nil;
+      for I:=0 to Lines.Count-1 do
+      begin
+        Line:=Trim(Lines[I]);
+        if AnsiStartsStr('# ',Line) and (Title='') then
+        begin Title:=Trim(Copy(Line,3,MaxInt)); Continue; end;
+        if AnsiStartsStr('## ',Line) then
+        begin
+          ListId:='list-'+IntToStr(Lists.Count);
+          Lists.Add(TJSONObject.Create(['_id',ListId,'title',Trim(Copy(Line,4,MaxInt)),'sort',Lists.Count]));
+          Card:=nil;
+          Continue;
+        end;
+        if AnsiStartsStr('- [ ] ',Line) or AnsiStartsText('- [x] ',Line) then
+        begin
+          Done:=AnsiStartsText('- [x] ',Line);
+          Name:=Trim(Copy(Line,7,MaxInt));
+          if Name='' then Continue;
+          if ListId='' then
+          begin ListId:='list-0'; Lists.Add(TJSONObject.Create(['_id',ListId,'title','Tasks','sort',0])); end;
+          Card:=TJSONObject.Create(['_id','card-'+IntToStr(Cards.Count),'listId',ListId,'title',Name,'sort',Cards.Count,'dueComplete',Done]);
+          Cards.Add(Card);
+        end
+        else if (Card<>nil) and (Line<>'') then
+        begin
+          Name:=Card.Get('description','');
+          if Name<>'' then Name:=Name+LineEnding;
+          Card.Delete('description'); Card.Add('description',Name+Line);
+        end;
+      end;
+      if Title='' then raise EConvertError.Create('Missing Markdown board title');
+      Board.Add('title',Title);
+    except Result.Free; raise; end;
+  finally Lines.Free; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -5391,7 +5442,7 @@ begin
     else Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1]]));
 end;
 
-procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil);
+procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string; BatchSql: TStrings = nil; BatchIds: TJSONArray = nil; Quiet: Boolean = False);
 const Collections:array[0..11] of string=('swimlanes','lists','cards','triggers','actions','rules',
   'comments','checklists','checklistItems','attachments','customFields','labels');
 var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Permission,Stamp,Guard,Sql,Name,CardId,CardAuthor,CardCreated,DefaultLane,DefaultList,ListId,LaneId,TargetBoard,TargetLane,TargetList,TargetCard,ListLane,LaneGuard,LanePosition,ListPosition,CardScope,CardPosition,NumberSql,SortSql,SourceFormat,LossDetail:string;
@@ -6153,6 +6204,7 @@ begin
             else if SourceFormat='zenkit' then Body:=ZenkitImport(Value)
             else if SourceFormat='jira' then Body:=JiraImport(Value)
             else if SourceFormat='kanri' then Body:=KanriProjectImport(Value)
+            else if SourceFormat='markdown' then Body:=MarkdownBoardImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end
@@ -6211,7 +6263,7 @@ begin
       ReadImportPolicy;
       Rows:=T.Db.Query('SELECT '+Permission+';');
       if (Length(Rows)<>1) or (Rows[0][0]<>'1') then
-      begin SendError(aResponse,403,'Board import is restricted');Exit;end;
+      begin if not Quiet then SendError(aResponse,403,'Board import is restricted'); Exit; end;
       ReadMemberMapping;
       Stamp:=QuotedStr(NowIso);
       Sql := '';
@@ -6396,11 +6448,14 @@ begin
     except
       on E:EConvertError do
       begin
-        if MethodActor<>'' then SendJson(aResponse,'{"error":"invalid-import-format","reason":"Invalid board export"}',400)
-        else SendError(aResponse,400,'Invalid board export');
+        if not Quiet then
+        begin
+          if MethodActor<>'' then SendJson(aResponse,'{"error":"invalid-import-format","reason":"Invalid board export"}',400)
+          else SendError(aResponse,400,'Invalid board export');
+        end;
         Exit;
       end;
-      on E:Exception do begin T.Db.Exec('ROLLBACK;');SendError(aResponse,500,'Could not import board');Exit;end;
+      on E:Exception do begin T.Db.Exec('ROLLBACK;'); if not Quiet then SendError(aResponse,500,'Could not import board'); Exit;end;
     end;
     LossDetail:=Body.Get('importLosses','');
     if (SourceFormat<>'') and (LossDetail<>'') and IsShared(T.Db) then
@@ -6445,15 +6500,66 @@ begin
 end;
 
 procedure ImportBoardMethod(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const Actor: string; Args: TJSONData);
-var Projects, Options: TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I: Integer;
+var Projects, Options, FileData: TJSONData; BatchSql: TStringList; Ids: TJSONArray; Reply: TJSONObject; I,J: Integer;
+  Files, Members, Results: TJSONArray; FileRow, ResultRow: TJSONObject; Filename, Text, Encoded: string;
+  procedure ImportOne(const Name, Content: string);
+  var Payload: TJSONString;
+  begin
+    BatchSql.Clear; Ids.Clear;
+    Payload:=TJSONString.Create(Content);
+    try ImportBoardRequest(aRequest,aResponse,Tenant,Actor,Payload.AsJSON,'markdown',BatchSql,Ids,True);
+    finally Payload.Free; end;
+    ResultRow:=TJSONObject.Create(['name',Name]); Results.Add(ResultRow);
+    if (Ids.Count=1) and Tenant.Db.Exec('BEGIN IMMEDIATE; '+BatchSql.Text+'COMMIT;') then
+      ResultRow.Add('boardId',Ids.Strings[0])
+    else if Ids.Count=1 then Tenant.Db.Exec('ROLLBACK;');
+  end;
 begin
-  if not (Args is TJSONArray) or ((Args.Count<>3) and (Args.Count<>4)) or not (Args.Items[0].JSONType in [jtObject,jtArray]) or
+  if not (Args is TJSONArray) or ((Args.Count<>3) and (Args.Count<>4)) or not (Args.Items[0].JSONType in [jtObject,jtArray,jtString]) or
     not (Args.Items[1] is TJSONObject) or (Args.Items[2].JSONType<>jtString) then
   begin SendJson(aResponse,'{"error":"Match.Error","reason":"Match failed"}',400); Exit; end;
   if not ExternalImportSupported(Args.Items[2].AsString) then
   begin SendJson(aResponse,'{"error":"invalid-import-format","reason":"Unknown import source"}',400); Exit; end;
   if Args.Items[1].Count<>0 then
   begin SendJson(aResponse,'{"error":"invalid-member-mapping","reason":"External import member mapping is unavailable"}',400); Exit; end;
+  if (Args.Items[2].AsString='markdown') and (Args.Items[0] is TJSONObject) then
+  begin
+    FileData:=TJSONObject(Args.Items[0]).Find('files');
+    if (FileData is TJSONArray) and (FileData.Count>0) and (FileData.Count<=4096) then
+    begin
+      Files:=TJSONArray(FileData); Results:=TJSONArray.Create;
+      BatchSql:=TStringList.Create; Ids:=TJSONArray.Create;
+      try
+        for I:=0 to Files.Count-1 do
+        begin
+          if not (Files.Items[I] is TJSONObject) then Continue;
+          FileRow:=Files.Objects[I]; Filename:=FileRow.Get('name',''); Encoded:=FileRow.Get('data','');
+          if AnsiEndsText('.zip',Filename) then
+          begin
+            Members:=nil;
+            try
+              try Members:=ReadMarkdownZip(DecodeStringBase64(Encoded,True)); except end;
+              if (Members=nil) or (Members.Count=0) then Results.Add(TJSONObject.Create(['name',Filename]))
+              else for J:=0 to Members.Count-1 do
+                ImportOne(Members.Objects[J].Get('name',''),Members.Objects[J].Get('text',''));
+            finally Members.Free; end;
+          end
+          else
+          begin
+            Text:='';
+            try Text:=DecodeStringBase64(Encoded,True); except end;
+            ImportOne(Filename,Text);
+          end;
+        end;
+        Reply:=TJSONObject.Create;
+        try
+          Reply.Add('files',Results.Clone);
+          SendJson(aResponse,'{"result":'+Reply.AsJSON+'}');
+        finally Reply.Free; end;
+      finally Ids.Free; BatchSql.Free; Results.Free; end;
+      Exit;
+    end;
+  end;
   if Args.Count=4 then
   begin
     Options:=Args.Items[3];

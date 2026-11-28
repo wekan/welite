@@ -1135,7 +1135,7 @@ begin
     '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
     '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
     E(Words.Text('import', 'Import')) + '</button></form>' +
-    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p>', '') + '</template>';
+    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p>', '') + '</template>';
 end;
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
@@ -9550,19 +9550,22 @@ begin
       'zenkit': FormatName:='Zenkit';
       'jira': FormatName:='Jira';
       'kanri': FormatName:='Kanri';
+      'markdown': FormatName:='Markdown';
       else FormatName:='Kanboard';
     end;
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
-      '<label for="import-textarea">' + E(FormatName) + ' JSON</label><textarea id="import-textarea" required></textarea>' +
+      '<label for="import-textarea">' + E(FormatName) + ' JSON</label><textarea id="import-textarea"></textarea>' +
+      IfThen(Source='markdown','<label>'+E(Words.Text('import-board-c','Import board'))+
+        '<input type="file" class="js-import-many-files" accept=".md,.markdown,.zip" multiple></label>','')+
       IfThen(Source='kanri','<button type="button" class="js-import-split-toggle"><span class="materialCheckBox"></span> '+
         E(Words.Text('import-one-board-per-project','One board per project'))+
         '</button><input type="hidden" class="js-import-split-value">','')+
       '<p class="warning" role="alert" hidden>'+E(Words.Text('import-scoped-failed','Import failed'))+'</p>' +
       '<button class="primary js-import-without-mapping" type="submit">'+E(Words.Text('import','Import'))+'</button></form><section class="js-import-report" hidden><h2>'+
       E(Words.Text('import-report-heading','Import report'))+'</h2><ul></ul><a class="js-open-imported-board">'+
-      E(Words.Text('import-report-open-board','Open imported board'))+'</a></section></main>'));
+      E(Words.Text('import-report-open-board','Open imported board'))+'</a></section><section class="js-import-many-results" hidden><ul></ul><a class="js-import-many-all-boards" href="/">'+E(Words.Text('all-boards','All Boards'))+'</a></section></main>'));
   finally Words.Free; end;
 end;
 

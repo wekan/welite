@@ -813,8 +813,38 @@ window.__meteor_runtime_config__ = window.__meteor_runtime_config__ || {
     Promise.resolve().then(function () {
       var split = form.querySelector('.js-import-split-value');
       var options = split && split.value ? { splitBy: split.value } : {};
-      return callAsync('importBoard', JSON.parse(form.querySelector('textarea').value), {}, form.dataset.source, options);
+      var files = form.querySelector('.js-import-many-files');
+      if (files && files.files.length) {
+        return Promise.all(Array.from(files.files, function (file) {
+          return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function () { resolve({ name: file.name, data: reader.result.split(',')[1] }); };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        })).then(function (input) { return callAsync('importBoard', { files: input }, {}, form.dataset.source); });
+      }
+      var text = form.querySelector('textarea').value;
+      return callAsync('importBoard', form.dataset.source === 'markdown' ? text : JSON.parse(text), {}, form.dataset.source, options);
     }).then(function (board) {
+      if (Array.isArray(board.files)) {
+        var results = form.parentElement.querySelector('.js-import-many-results');
+        var list = results.querySelector('ul');
+        board.files.forEach(function (file) {
+          var item = document.createElement('li');
+          item.className = file.boardId ? 'is-imported' : 'is-failed';
+          if (file.boardId) {
+            var link = document.createElement('a');
+            link.href = '/b/' + encodeURIComponent(file.boardId) + '/board';
+            link.textContent = file.name;
+            item.appendChild(link);
+          } else item.textContent = file.name;
+          list.appendChild(item);
+        });
+        form.hidden = true;
+        results.hidden = false;
+        return;
+      }
       if (typeof board._id !== 'string' || !board._id) throw new Error('Missing board ID');
       var href = '/b/' + encodeURIComponent(board._id) + '/board';
       if (!board.importLosses || !board.importLosses.length) {

@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Markdown files and ZIPs of Markdown boards can be imported together. Each
+  board gets its own result and link, and a failed file does not stop the others.
+
 - Kanri backups import as one board with a swimlane per project or as
   separate boards. The split import commits all boards together.
 

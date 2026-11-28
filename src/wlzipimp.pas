@@ -7,6 +7,7 @@ uses Classes, fpjson;
 
 function ZipAttachmentName(const Value: string; Used: TStringList): string;
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;
+function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
 
 implementation
 
@@ -28,6 +29,7 @@ type
     Input: TStringStream;
     Files: TStringList;
     Total: Int64;
+    Markdown: Boolean;
     constructor Create(const Bytes: RawByteString);
     destructor Destroy; override;
     procedure OpenInput(Sender: TObject; var Stream: TStream);
@@ -106,12 +108,20 @@ procedure TBoardZipReader.CreateEntry(Sender: TObject; var Stream: TStream; Item
 var Name, Leaf: string; Data: TZipEntryStream;
 begin
   Name := Item.ArchiveFileName;
-  Leaf := Copy(Name, Length(AttachmentPrefix) + 1, MaxInt);
-  if Item.IsLink or (Pos(#0, Name) > 0) or
-    ((Name <> 'wekan.json') and (Name <> AttachmentPrefix) and
-      (not AnsiStartsStr(AttachmentPrefix, Name) or (Leaf = '') or
-        (Leaf = '.') or (Leaf = '..') or (Pos('/', Leaf) > 0) or
-        (Pos('\', Leaf) > 0) or (Pos(':', Leaf) > 0))) then raise EConvertError.Create('Invalid ZIP entry');
+  if Markdown then
+  begin
+    if Item.IsLink or (Pos(#0,Name)>0) or (Pos('\',Name)>0) or AnsiStartsStr('/',Name) or
+      (Pos('/../','/'+Name+'/')>0) then raise EConvertError.Create('Invalid ZIP entry');
+  end
+  else
+  begin
+    Leaf := Copy(Name, Length(AttachmentPrefix) + 1, MaxInt);
+    if Item.IsLink or (Pos(#0, Name) > 0) or
+      ((Name <> 'wekan.json') and (Name <> AttachmentPrefix) and
+        (not AnsiStartsStr(AttachmentPrefix, Name) or (Leaf = '') or
+          (Leaf = '.') or (Leaf = '..') or (Pos('/', Leaf) > 0) or
+          (Pos('\', Leaf) > 0) or (Pos(':', Leaf) > 0))) then raise EConvertError.Create('Invalid ZIP entry');
+  end;
   if (Item.Size < 0) or (Item.Size > MaxEntry) or (Files.Count >= MaxEntries) or
     (Total + Item.Size > MaxArchive) or (Files.IndexOf(Name) >= 0) then
     raise EConvertError.Create('Invalid ZIP entry size or name');
@@ -137,6 +147,32 @@ begin
   SetLength(Bytes, Data.Size);
   if Data.Size > 0 then Move(Data.Memory^, Bytes[1], Data.Size);
   Result := True;
+end;
+
+function ReadMarkdownZip(const Bytes: RawByteString): TJSONArray;
+var Archive: TUnZipper; Reader: TBoardZipReader; I: Integer; Name, Content: RawByteString;
+begin
+  if (Length(Bytes)=0) or (Length(Bytes)>MaxArchive) then raise EConvertError.Create('Invalid ZIP size');
+  Archive:=TUnZipper.Create;
+  Reader:=TBoardZipReader.Create(Bytes);
+  Result:=TJSONArray.Create;
+  try
+    try
+      Reader.Markdown:=True;
+      Archive.OnOpenInputStream:=@Reader.OpenInput;
+      Archive.OnCloseInputStream:=@Reader.CloseInput;
+      Archive.OnCreateStream:=@Reader.CreateEntry;
+      Archive.OnDoneStream:=@Reader.FinishEntry;
+      Archive.UnZipAllFiles;
+      for I:=0 to Reader.Files.Count-1 do
+      begin
+        Name:=Reader.Files[I];
+        if AnsiStartsStr('__MACOSX/',Name) or AnsiStartsStr('._',ExtractFileName(Name)) then Continue;
+        if not (AnsiEndsText('.md',Name) or AnsiEndsText('.markdown',Name)) then Continue;
+        if Reader.ReadEntry(Name,Content) then Result.Add(TJSONObject.Create(['name',Name,'text',Content]));
+      end;
+    except Result.Free; raise; end;
+  finally Archive.Free; Reader.Free; end;
 end;
 
 function ReadBoardZip(const Bytes: RawByteString): TJSONObject;

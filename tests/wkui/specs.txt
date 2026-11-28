@@ -517,3 +517,4 @@ import-export-format-audit.e2e.js: openproject: parent hierarchy and relations l
 import-export-format-audit.e2e.js: imports with losses record one Recovery row
 import-export-format-audit.e2e.js: Kanri: a board export imports with its columns
 import-export-format-audit.e2e.js: Kanri: an all-data export imports every board
+import-export-format-audit.e2e.js: Import many boards: several files and a .zip
