@@ -2403,6 +2403,31 @@ def http_checks(server, tmp, backend):
         assert request('POST', '/profile/avatar/delete', {'avatarId': avatar_id}, cookie=owner)[0] == 303
         assert avatar_url() == '' and request('GET', url, cookie=owner)[0] == 404, 'deleted, and the profile back to the initials'
         assert card_db('SELECT COUNT(*) FROM _wl_avatars WHERE userId=?', users['owner'])[0] == 0
+        def import_nullboard(collapsed):
+            payload = {'format': 20190412, 'title': 'Recovery test',
+                       'lists': [{'title': 'List', 'notes': [{'text': 'Note', 'min': collapsed}]}]}
+            status, _, body, _ = request('POST', '/_methods/importBoard',
+                                         [payload, {}, 'nullboard'], cookie=owner, as_json=True)
+            assert status == 200, body
+            return json.loads(body)['result']
+
+        def recovery_report(board, cookie):
+            status, _, body, _ = request('POST', '/_methods/importReportForBoard',
+                                         [board['_id']], cookie=cookie, as_json=True)
+            assert status == 200, body
+            return json.loads(body)['result']
+
+        incomplete_import = import_nullboard(True)
+        complete_import = import_nullboard(False)
+        assert [row['detail'] for row in recovery_report(incomplete_import, owner)] == incomplete_import['importLosses']
+        assert recovery_report(complete_import, owner) == []
+        assert recovery_report(incomplete_import, stranger) == []
+        assert b'import-completed-with-warnings' not in request('GET', '/admin/problems/recovery',
+                                                                cookie=stranger)[2]
+        assert b'import-completed-with-warnings' in request('GET', '/admin/problems/recovery',
+                                                            cookie=owner)[2]
+        print('PASS: import Recovery is saved and scoped to its importer (%s SQLite)' % backend)
+
         # WeKan's setPassword: a site admin's, and it signs that user out too.
         status, _, body, _ = request('POST', '/_methods/setPassword', ['Admin-set-pass-1', users['stranger']], cookie=worker, as_json=True)
         assert status == 403, body

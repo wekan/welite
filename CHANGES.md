@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Imports with warnings save the Recovery entry in the same transaction as
+  the board on both standalone SQLite and shared stores. The importing user
+  can reopen the report, and administrators can see the entry in Recovery.
+
 - Todoist project CSV imports sections, task descriptions, labels, priority
   and calendar dates. Subtasks become checklist items and notes become comments.
 

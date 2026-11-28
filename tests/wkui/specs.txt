@@ -514,7 +514,7 @@ import-export-format-audit.e2e.js: jira: import adapter fixture text through the
 import-export-format-audit.e2e.js: jira: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: jira: comments, checklists and card fields survive a UI import
 import-export-format-audit.e2e.js: openproject: parent hierarchy and relations link the imported cards
-import-export-format-audit.e2e.js: imports with losses record one Recovery row
+import-export-format-audit.e2e.js: imports with losses record one Recovery row; a complete import records none
 import-export-format-audit.e2e.js: Kanri: a board export imports with its columns
 import-export-format-audit.e2e.js: Kanri: an all-data export imports every board
 import-export-format-audit.e2e.js: Import many boards: several files and a .zip

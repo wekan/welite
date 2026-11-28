@@ -7947,23 +7947,62 @@ begin
     (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior') or (FormatName='orgmode') or (FormatName='focalboard') or (FormatName='todoist');
 end;
 
+const ImportRecoveryType='import-completed-with-warnings';
+
+function ImportRecoverySql(Db:TWLDb; const UserId,BoardId,Title,Source,Detail:string):string;
+var Event:TJSONObject; Stamp:Int64;
+begin
+  Stamp:=DateTimeToUnix(Now,False)*1000;
+  if IsShared(Db) then
+  begin
+    Event:=TJSONObject.Create(['_id',NewId,'type',ImportRecoveryType,'severity','warning',
+      'source','import:'+Source,'detail',Detail,'userId',UserId,'createdAt',Stamp,'done',True,'deletedData',False]);
+    try
+      Event.Add('boardIds',TJSONArray.Create([BoardId]));
+      Event.Add('boardTitles',TJSONArray.Create([Title]));
+      Result:=InsertDocSql(Db,'recoveryEvents',Event,'{"createdAt":"date"}');
+    finally Event.Free; end;
+  end
+  else
+    Result:='CREATE TABLE IF NOT EXISTS _wl_import_recovery('+
+      'boardId TEXT PRIMARY KEY,userId TEXT NOT NULL,source TEXT NOT NULL,detail TEXT NOT NULL,createdAt INTEGER NOT NULL); '+
+      'INSERT INTO _wl_import_recovery(boardId,userId,source,detail,createdAt) VALUES('+
+      QuotedStr(BoardId)+','+QuotedStr(UserId)+','+QuotedStr('import:'+Source)+','+QuotedStr(Detail)+','+IntToStr(Stamp)+'); ';
+end;
+
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
-var Rows: TWLRows; Row: TWLRow; Physical, Scope: string;
+var Rows:TWLRows; Row:TWLRow; Physical,Scope,Timestamp,Detail,Owner,BoardScope,Kind,Filter:string;
 begin
   Result:=TJSONArray.Create;
-  if not IsShared(Db) then Exit;
-  Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''recoveryEvents'';');
-  if Length(Rows)<>1 then Exit;
-  Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+  if IsShared(Db) then
+  begin
+    Rows:=Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=''recoveryEvents'';');
+    if Length(Rows)<>1 then Exit;
+    Physical:='"'+StringReplace(Rows[0][0],'"','""',[rfReplaceAll])+'"';
+    Timestamp:='json_extract(e._ferretdb_sjson,''$.createdAt'')';
+    Detail:='json_extract(e._ferretdb_sjson,''$.detail'')';
+    Owner:='json_extract(e._ferretdb_sjson,''$.userId'')';
+    Kind:='json_extract(e._ferretdb_sjson,''$.type'')';
+    BoardScope:='EXISTS(SELECT 1 FROM json_each(e._ferretdb_sjson,''$.boardIds'') WHERE value='+QuotedStr(BoardId)+')';
+    Filter:=Kind+'='+QuotedStr(ImportRecoveryType);
+  end
+  else
+  begin
+    Rows:=Db.Query('SELECT 1 FROM sqlite_master WHERE type=''table'' AND name=''_wl_import_recovery'';');
+    if Length(Rows)<>1 then Exit;
+    Physical:='_wl_import_recovery';
+    Timestamp:='e.createdAt'; Detail:='e.detail'; Owner:='e.userId';
+    Kind:=QuotedStr(ImportRecoveryType);
+    BoardScope:='e.boardId='+QuotedStr(BoardId);
+    Filter:='1';
+  end;
   Scope:='';
   if UserId<>'' then
-    Scope:=' AND json_extract(e._ferretdb_sjson,''$.userId'')='+QuotedStr(UserId)+
-      ' AND EXISTS(SELECT 1 FROM json_each(e._ferretdb_sjson,''$.boardIds'') WHERE value='+QuotedStr(BoardId)+')'+
-      ' AND datetime(json_extract(e._ferretdb_sjson,''$.createdAt'')/1000,''unixepoch'')>=datetime(''now'',''-1 hour'')';
-  Rows:=Db.Query('SELECT json_extract(e._ferretdb_sjson,''$.detail''),strftime(''%Y-%m-%dT%H:%M:%fZ'',json_extract(e._ferretdb_sjson,''$.createdAt'')/1000.0,''unixepoch''),' +
-    'json_extract(e._ferretdb_sjson,''$.type'') FROM '+Physical+' e WHERE '+
-    'json_extract(e._ferretdb_sjson,''$.type'')=''import-completed-with-warnings'''+Scope+
-    ' ORDER BY json_extract(e._ferretdb_sjson,''$.createdAt'') DESC LIMIT '+IfThen(UserId='','100','5')+';');
+    Scope:=' AND '+Owner+'='+QuotedStr(UserId)+' AND '+BoardScope+
+      ' AND datetime('+Timestamp+'/1000,''unixepoch'')>=datetime(''now'',''-1 hour'')';
+  Rows:=Db.Query('SELECT '+Detail+',strftime(''%Y-%m-%dT%H:%M:%fZ'','+Timestamp+
+    '/1000.0,''unixepoch''),'+Kind+' FROM '+Physical+' e WHERE '+Filter+Scope+
+    ' ORDER BY '+Timestamp+' DESC LIMIT '+IfThen(UserId='','100','5')+';');
   for Row in Rows do
     if UserId='' then Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1],'type',Row[2]]))
     else Result.Add(TJSONObject.Create(['detail',Row[0],'createdAt',Row[1]]));
@@ -8998,6 +9037,9 @@ begin
       ImportCardChildren;
       ImportAttachments;
       for I:=3 to 5 do ImportWorkflow(I);
+      LossDetail:=Body.Get('importLosses','');
+      if (SourceFormat<>'') and (LossDetail<>'') then
+        Sql:=Sql+ImportRecoverySql(T.Db,Actor,BoardId,Title,SourceFormat,LossDetail);
       Sql:='SELECT CASE WHEN '+AuthSourceCondition(T.Db)+' AND '+RegistryGuard+
         ' AND '+Guard+' AND '+Permission+' THEN 1 ELSE json(''Board import policy changed'') END; '+Sql;
       if BatchSql<>nil then
@@ -9020,17 +9062,6 @@ begin
         Exit;
       end;
       on E:Exception do begin T.Db.Exec('ROLLBACK;'); if not Quiet then SendError(aResponse,500,'Could not import board'); Exit;end;
-    end;
-    LossDetail:=Body.Get('importLosses','');
-    if (SourceFormat<>'') and (LossDetail<>'') and IsShared(T.Db) then
-    begin
-      Row:=TJSONObject.Create(['_id',NewId,'type','import-completed-with-warnings','severity','warning',
-        'source','import:'+SourceFormat,'detail',LossDetail,'userId',Actor,'createdAt',DateTimeToUnix(Now,False)*1000,'done',True,'deletedData',False]);
-      try
-        Row.Add('boardIds',TJSONArray.Create([BoardId]));
-        Row.Add('boardTitles',TJSONArray.Create([Title]));
-        try if not T.Db.Exec(InsertDocSql(T.Db,'recoveryEvents',Row,'{"createdAt":"date"}')) then WriteLn(StdErr,'Recovery SQL failed'); except on E:Exception do WriteLn(StdErr,'Recovery event could not be recorded'); end;
-      finally Row.Free; end;
     end;
     if MethodActor<>'' then
     begin
