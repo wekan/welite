@@ -2841,6 +2841,7 @@ begin
     '/export/csv?delimiter=%09">TSV</a></li><li><a download href="' + Base +
     '/calendar.ics">iCalendar (.ics)</a></li><li><a download href="' + Base +
     '/export/planner?download=1">Microsoft Planner (.xlsx)</a></li><li><a download href="' + Base +
+    '/export/vikunja?download=1">Vikunja (.zip)</a></li><li><a download href="' + Base +
     '/exportZip">WeKan ZIP</a></li><li><form method="get" action="' + Base + '/exportZip">' +
     '<input type="hidden" name="archived" value="false"><button class="export-download-button" type="submit">WeKan ZIP (' +
     E(Words.Text('export-board-without-archive', 'without archived items')) + ')</button></form></li>';

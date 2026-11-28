@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Export a board as a Vikunja ZIP. Swimlanes become projects, lists become
+  kanban buckets, and tasks carry dates, assignments, labels, comments,
+  checklists and parent links.
+
 - Vikunja ZIP and JSON imports preserve buckets, tasks, dates, labels,
   checklists, comments, parent links and supported dependencies. The importer
   refuses archives missing data.json and reports skipped attachments.
