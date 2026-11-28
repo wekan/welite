@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello import matches existing usernames and preserves other people as
+  sign-in-disabled placeholders. Card assignments and comment authors
+  retain the imported identities with inactive board memberships.
+
 - Trello ZIP can import several boards in one archive. Each board gets its
   own attachments, even when the source cards and files reuse IDs and names.
 

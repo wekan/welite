@@ -5687,8 +5687,8 @@ begin
 end;
 
 function TrelloImport(const Source: TJSONData): TJSONObject;
-var Input, Board, Entry, Card, Check, Item, Owner, ActionData, Authors, FieldKinds, Settings, Display, Field, ValuesByKind, Choice: TJSONObject;
-  Lists,Cards,Labels,Checks,Items,Comments,Attachments,Definitions,Values,Options: TJSONArray;
+var Input, Board, Entry, Card, Check, Item, Owner, ActionData, Authors, FieldKinds, Settings, Display, Field, ValuesByKind, Choice, People: TJSONObject;
+  Lists,Cards,Labels,Checks,Items,Comments,Attachments,Definitions,Values,Options,Members,Assignees: TJSONArray;
   SourceLists,SourceCards,Data,Child,Value,OptionData: TJSONData;
   I,J: Integer; Id,CardId,Name,Color,Kind: string; Front: Boolean;
   function Obj(Row: TJSONObject; const Key: string): TJSONObject;
@@ -5696,6 +5696,12 @@ var Input, Board, Entry, Card, Check, Item, Owner, ActionData, Authors, FieldKin
   begin
     Field:=Row.Find(Key);
     if Field is TJSONObject then Result:=TJSONObject(Field) else Result:=nil;
+  end;
+  procedure RememberPerson(const Key, Username, FullName: string);
+  begin
+    if (Key='') or (People.Find(Key)<>nil) then Exit;
+    People.Add(Key,TJSONObject.Create(['username',Username,'fullName',FullName]));
+    Members.Add(TJSONObject.Create(['userId',Key]));
   end;
   function TypedValue(Row: TJSONObject; const Kind: string): TJSONData;
   var Raw: TJSONData; Fields: TJSONObject; Number: Double; Format: TFormatSettings;
@@ -5749,6 +5755,15 @@ begin
   try
     Board:=TJSONObject.Create(['title',Input.Get('name',''),'description',Input.Get('desc','')]); Result.Add('board',Board);
     Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    People:=TJSONObject.Create; Result.Add('trelloPeople',People);
+    Members:=TJSONArray.Create; Board.Add('members',Members);
+    Data:=Input.Find('members');
+    if Data is TJSONArray then for I:=0 to Data.Count-1 do
+    begin
+      if not (Data.Items[I] is TJSONObject) then Continue;
+      Entry:=TJSONObject(Data.Items[I]);
+      RememberPerson(Entry.Get('id',''),Entry.Get('username',''),Entry.Get('fullName',''));
+    end;
     Lists:=TJSONArray.Create; Board.Add('lists',Lists);
     Cards:=TJSONArray.Create; Board.Add('cards',Cards);
     Labels:=TJSONArray.Create; Board.Add('labels',Labels);
@@ -5812,6 +5827,18 @@ begin
       if Entry.Get('start','')<>'' then Card.Add('startAt',Entry.Get('start',''));
       Data:=Entry.Find('idLabels');
       if Data is TJSONArray then Card.Add('labelIds',Data.Clone);
+      Data:=Entry.Find('idMembers');
+      if Data is TJSONArray then
+      begin
+        Assignees:=TJSONArray.Create; Card.Add('assignees',Assignees);
+        for J:=0 to Data.Count-1 do
+          if (Data.Items[J] is TJSONString) and (Data.Items[J].AsString<>'') then
+          begin
+            Id:=Data.Items[J].AsString;
+            RememberPerson(Id,'',Id);
+            Assignees.Add(Id);
+          end;
+      end;
       Data:=Entry.Find('customFieldItems');
       if Data is TJSONArray then
       begin
@@ -5863,8 +5890,13 @@ begin
       ActionData:=Obj(Entry,'data');
       if ActionData=nil then Continue;
       Item:=Obj(ActionData,'card'); if Item=nil then Continue;
-      Owner:=Obj(Entry,'memberCreator'); Name:='';
-      if Owner<>nil then Name:=ImportAuthorIdentity(Authors,Owner.Get('fullName',Owner.Get('username','')));
+      Owner:=Obj(Entry,'memberCreator'); Name:=Entry.Get('idMemberCreator','');
+      if Owner<>nil then
+      begin
+        if Name='' then Name:=Owner.Get('username','');
+        if Name='' then Name:=Owner.Get('fullName','');
+        RememberPerson(Name,Owner.Get('username',''),Owner.Get('fullName',''));
+      end else RememberPerson(Name,'',Name);
       Item:=TJSONObject.Create(['_id',Entry.Get('id',''),'cardId',Item.Get('id',''),'text',ActionData.Get('text',''),'userId',Name]);
       Comments.Add(Item);
       if Entry.Get('date','')<>'' then Item.Add('createdAt',Entry.Get('date',''));
@@ -9872,6 +9904,39 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
         QuotedStr(Authors.Names[K])+'),1,0); ';
     end;
   end;
+  procedure MapTrelloPeople;
+  var People, Person:TJSONObject; K: Integer; Key, Id, Username, FullName, Condition:string; Matches:TWLRows;
+  begin
+    if (SourceFormat<>'trello') or not (Body.Find('trelloPeople') is TJSONObject) then Exit;
+    People:=Body.Objects['trelloPeople'];
+    for K:=0 to People.Count-1 do
+    begin
+      Key:=People.Names[K];
+      if MemberMap.Find(Key)<>nil then Continue;
+      Person:=People.Objects[Key];
+      Username:=Person.Get('username','');
+      Matches:=nil;
+      if Username<>'' then
+        Matches:=T.Db.Query('SELECT id FROM users WHERE username='+QuotedStr(Username)+' AND COALESCE(loginDisabled,0)=0;');
+      if Length(Matches)=1 then
+      begin
+        Id:=Matches[0][0];
+        Condition:='EXISTS(SELECT 1 FROM users WHERE id='+QuotedStr(Id)+' AND username='+QuotedStr(Username)+
+          ' AND COALESCE(loginDisabled,0)=0)';
+        Guard:=Guard+' AND '+Condition;
+      end else
+      begin
+        Id:=NewId;
+        FullName:=Person.Get('fullName','');
+        if FullName='' then FullName:=Username;
+        if FullName='' then FullName:=Key;
+        Sql:=Sql+'INSERT INTO users(id,username,createdAt,modifiedAt,profile_json,loginDisabled,isAdmin) VALUES('+
+          QuotedStr(Id)+','+QuotedStr('imported-'+Id)+','+Stamp+','+Stamp+',json_object(''fullname'','+
+          QuotedStr(FullName)+'),1,0); ';
+      end;
+      MemberMap.Add(Key,Id);
+    end;
+  end;
   procedure ImportInactiveMembers;
   var Members,Entry:TJSONData;LocalId:string;K:Integer;
   begin
@@ -10785,6 +10850,7 @@ begin
         ImportedDate(Input,'modifiedAt',Stamp,True)+'); '+
         'INSERT INTO board_members(boardId,userId,isActive,isAdmin) VALUES('+Board+','+QuotedStr(Actor)+',1,1); ';
       CreateImportedAuthors;
+      MapTrelloPeople;
       ImportInactiveMembers;
       end
       else
