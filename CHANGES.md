@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Trello JSON exports include selected custom fields as typed card values.
+  The shared browser audit checks zero, false, dates, text and administrator
+  access to protected fields.
+
 - Export boards as Trello JSON with archived lists and cards, card
   activity dates, members, comments and checklists. The shared Chromium
   audit checks field selection and private board access.
