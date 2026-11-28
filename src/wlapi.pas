@@ -4553,10 +4553,135 @@ begin
   except Result.Free; raise; end;
 end;
 
+function AsanaImport(const Source: TJSONData): TJSONObject;
+var Board, Authors, Task, Card, Entry, Comment, Field: TJSONObject;
+  Lists, Cards, Labels, Comments, Checks, Items, Definitions, Tags, Fields: TJSONArray;
+  Tasks, Data, Value, Child: TJSONData; I,J: Integer; Id, ListId, Title, Name, CheckId, FieldId, Kind: string;
+  function ChildObject(Obj: TJSONObject; const Key: string): TJSONObject;
+  var V: TJSONData;
+  begin
+    V:=Obj.Find(Key);
+    if V is TJSONObject then Result:=TJSONObject(V) else Result:=nil;
+  end;
+  procedure AddNamed(Rows: TJSONArray; const Id, NameKey, Name, Kind: string);
+  var K: Integer; Row: TJSONObject;
+  begin
+    for K:=0 to Rows.Count-1 do if Rows.Objects[K].Get('_id','')=Id then Exit;
+    Row:=TJSONObject.Create(['_id',Id,NameKey,Name,'sort',Rows.Count]);
+    if Kind<>'' then Row.Add('type',Kind);
+    Rows.Add(Row);
+  end;
+  procedure CopyDate(Obj, Target: TJSONObject; const SourceKey, TargetKey: string);
+  begin
+    if Obj.Get(SourceKey,'')<>'' then Target.Add(TargetKey,Obj.Get(SourceKey,''));
+  end;
+begin
+  Tasks:=Source;
+  if Source is TJSONObject then Tasks:=TJSONObject(Source).Find('data');
+  if not (Tasks is TJSONArray) then raise EConvertError.Create('Invalid Asana task export');
+  Result:=TJSONObject.Create;
+  try
+    Board:=TJSONObject.Create; Result.Add('board',Board);
+    Authors:=TJSONObject.Create; Result.Add('importedAuthors',Authors);
+    Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+    Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+    Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+    Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+    Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+    Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+    Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
+    Title:='';
+    for I:=0 to Tasks.Count-1 do
+    begin
+      if not (Tasks.Items[I] is TJSONObject) then raise EConvertError.Create('Invalid Asana task');
+      Task:=TJSONObject(Tasks.Items[I]);
+      Id:=Task.Get('gid','');
+      if (Id='') or (Trim(Task.Get('name',''))='') then raise EConvertError.Create('Invalid Asana task identity');
+      ListId:='unsectioned'; Name:='Tasks';
+      Data:=Task.Find('memberships');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Data.Items[J]);
+        Field:=ChildObject(Entry,'project');
+        if (Title='') and (Field<>nil) then Title:=Field.Get('name','');
+        Field:=ChildObject(Entry,'section');
+        if (Field=nil) or (Field.Get('gid','')='') then Continue;
+        ListId:=Field.Get('gid',''); Name:=Field.Get('name','Tasks'); Break;
+      end;
+      AddNamed(Lists,ListId,'title',Name,'');
+      Card:=TJSONObject.Create(['_id',Id,'listId',ListId,'title',Task.Get('name',''),
+        'description',Task.Get('notes',''),'dueComplete',Task.Get('completed',False),'sort',I]);
+      Cards.Add(Card);
+      if Task.Get('due_at','')<>'' then CopyDate(Task,Card,'due_at','dueAt') else CopyDate(Task,Card,'due_on','dueAt');
+      if Task.Get('start_at','')<>'' then CopyDate(Task,Card,'start_at','startAt') else CopyDate(Task,Card,'start_on','startAt');
+      CopyDate(Task,Card,'created_at','createdAt'); CopyDate(Task,Card,'completed_at','endAt');
+      Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+      Data:=Task.Find('tags');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Data.Items[J]); Name:=Entry.Get('name','');
+        if Name='' then Continue;
+        FieldId:=Entry.Get('gid',Name);
+        AddNamed(Labels,FieldId,'name',Name,''); Tags.Add(FieldId);
+      end;
+      Data:=Task.Find('subtasks');
+      if (Data is TJSONArray) and (Data.Count>0) then
+      begin
+        CheckId:=Id+':subtasks';
+        Checks.Add(TJSONObject.Create(['_id',CheckId,'cardId',Id,'title','Subtasks','sort',0]));
+        for J:=0 to Data.Count-1 do
+        begin
+          if not (Data.Items[J] is TJSONObject) then Continue;
+          Entry:=TJSONObject(Data.Items[J]);
+          Items.Add(TJSONObject.Create(['_id',CheckId+':'+IntToStr(J),'checklistId',CheckId,
+            'title',Entry.Get('name',''),'isFinished',Entry.Get('completed',False),'sort',J]));
+        end;
+      end;
+      Fields:=TJSONArray.Create; Card.Add('customFields',Fields);
+      Data:=Task.Find('custom_fields');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Data.Items[J]); FieldId:=Entry.Get('gid',''); Name:=Entry.Get('name','');
+        if (FieldId='') or (Name='') then Continue;
+        Kind:='text';
+        case Entry.Get('resource_subtype','') of
+          'number': begin Kind:='number'; Value:=Entry.Find('number_value'); end;
+          'enum': begin
+            Child:=Entry.Find('enum_value'); Value:=nil;
+            if Child is TJSONObject then Value:=TJSONObject(Child).Find('name');
+          end;
+          'text': Value:=Entry.Find('text_value');
+          else Value:=Entry.Find('display_value');
+        end;
+        if (Value=nil) or (Value.JSONType=jtNull) then Continue;
+        AddNamed(Definitions,FieldId,'name',Name,Kind);
+        Field:=TJSONObject.Create(['_id',FieldId]); Fields.Add(Field); Field.Add('value',Value.Clone);
+      end;
+      Data:=Task.Find('stories');
+      if Data is TJSONArray then for J:=0 to Data.Count-1 do
+      begin
+        if not (Data.Items[J] is TJSONObject) then Continue;
+        Entry:=TJSONObject(Data.Items[J]);
+        if Entry.Get('resource_subtype','')<>'comment_added' then Continue;
+        Comment:=TJSONObject.Create(['_id',Id+':comment:'+IntToStr(J),'cardId',Id,'text',Entry.Get('text','')]);
+        Comments.Add(Comment);
+        Field:=ChildObject(Entry,'created_by');
+        if Field<>nil then Comment.Add('userId',ImportAuthorIdentity(Authors,Field.Get('name','')));
+        CopyDate(Entry,Comment,'created_at','createdAt');
+      end;
+    end;
+    if Title='' then Title:='Asana tasks';
+    Board.Add('title',Title);
+  except Result.Free; raise; end;
+end;
+
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana');
 end;
 
 procedure ImportBoardRequest(aRequest:TRequest;aResponse:TResponse; const Tenant: TWLTenant; const MethodActor, MethodBody, MethodFormat: string);
@@ -5316,6 +5441,7 @@ begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid Kanboard export');
               Body:=KanboardImport(TJSONObject(Value));
             end
+            else if SourceFormat='asana' then Body:=AsanaImport(Value)
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end

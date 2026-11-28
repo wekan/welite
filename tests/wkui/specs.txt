@@ -500,3 +500,6 @@ import-export-format-audit.e2e.js: gitea: malformed JSON and wrong document shap
 import-export-format-audit.e2e.js: forgejo: import adapter fixture text through the UI
 import-export-format-audit.e2e.js: forgejo: malformed JSON and wrong document shapes are rejected
 import-export-format-audit.e2e.js: github: an embedded issue comment becomes a card comment
+import-export-format-audit.e2e.js: asana: import adapter fixture text through the UI
+import-export-format-audit.e2e.js: asana: malformed JSON and wrong document shapes are rejected
+import-export-format-audit.e2e.js: asana: comments, checklists and card fields survive a UI import

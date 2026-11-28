@@ -922,6 +922,7 @@ begin
   HTTPRouter.RegisterRoute('/import/gitlab', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/gitea', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/forgejo', rmGet, @Html5ExternalImport);
+  HTTPRouter.RegisterRoute('/import/asana', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/deck', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/import/kanboard', rmGet, @Html5ExternalImport);
   HTTPRouter.RegisterRoute('/api/boards/import', rmPost, @ApiImportBoard);

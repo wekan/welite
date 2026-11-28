@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Asana JSON imports sections, tasks, dates, tags, subtasks, custom-field
+  values, and comments with author names.
+
 - GitHub, GitLab, Gitea and Forgejo issue JSON imports preserve issue text,
   state, due dates, labels, source links and embedded comments.
 
