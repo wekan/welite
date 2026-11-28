@@ -5417,7 +5417,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -5486,6 +5486,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
   var Authors: TJSONObject; K: Integer; Id: string;
   begin
     if SourceFormat='' then Exit;
+    if not (Body.Find('importedAuthors') is TJSONObject) then Exit;
     Authors:=Body.Objects['importedAuthors'];
     for K:=0 to Authors.Count-1 do
     begin
@@ -5986,7 +5987,7 @@ var T:TWLTenant;Actor,BoardId,Board,Title,AdminOnly,PrivateOnly,RegistryGuard,Pe
       Sql:=Sql+'INSERT INTO card_comments(id,boardId,cardId,userId,text,parentId,createdAt,modifiedAt) VALUES('+
         Id+','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+QuotedStr(Text(Entry,'text'))+','+QuotedStr(Parent)+','+
         ImportedDate(Entry,'createdAt',Stamp)+','+ImportedDate(Entry,'modifiedAt',Stamp)+'); ';
-      if SourceFormat<>'' then
+      if (SourceFormat<>'') and (SourceFormat<>'wekan') then
         Sql:=Sql+'INSERT INTO activities(id,activityType,boardId,cardId,userId,createdAt,modifiedAt,data_json) VALUES('+
           QuotedStr(NewId)+',''addComment'','+Board+','+CardKey+','+QuotedStr(ImportedAuthor(Entry))+','+
           ImportedDate(Entry,'createdAt',Stamp)+','+Stamp+',json_object(''commentId'','+Id+')); ';
@@ -6205,6 +6206,12 @@ begin
             else if SourceFormat='jira' then Body:=JiraImport(Value)
             else if SourceFormat='kanri' then Body:=KanriProjectImport(Value)
             else if SourceFormat='markdown' then Body:=MarkdownBoardImport(Value)
+            else if SourceFormat='wekan' then
+            begin
+              if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
+              Body:=TJSONObject.Create;
+              Body.Add('board',Value.Clone);
+            end
             else Body:=IssueImport(Value,SourceFormat);
           finally SourceDocument.Free; end;
         end

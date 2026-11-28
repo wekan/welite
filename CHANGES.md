@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- The import menu accepts pasted WeKan JSON exports. Cards retain their
+  original creation dates and receive a valid date when the export lacks one.
+
 - Markdown files and ZIPs of Markdown boards can be imported together. Each
   board gets its own result and link, and a failed file does not stop the others.
 
