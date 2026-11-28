@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- OPML outlines import lists, card notes, grouped checklists and completed items.
+  The import report lists skipped list notes, URL attributes and branches deeper
+  than 64 levels.
+
 - Businessmap workbooks import columns, swimlanes, deadlines, priorities,
   colors, tags, comments and parent-child links.
 

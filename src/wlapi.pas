@@ -411,7 +411,7 @@ procedure ApiSwimlaneDelete(aRequest: TRequest; aResponse: TResponse); // DELETE
 // A list soft-deleted with its cards in one batch (lists.softRemove).
 function SoftRemoveViewList(const T:TWLTenant;const UserId,BoardId,ListId:string;out Error:string):Integer;
 implementation
-uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp;
+uses wlstore,wlsjson,Math,StrUtils,csvdocument,wlfold,wlcfjson,wlcfpol,wlpath,wlcfspec,wlselscp,wlcolors,wlposhis,wlrevoke,wlautsrc,wli18n,wllocale,wlselect,wlferr,wlwhurl,wlhtml,wlshared,wlattdel,wlroutes,wlrules,wlchhist,wlcsvexp,wlxlsxexp,zipper,wlh5,wlthumb,Types,wlzipimp,DOM,XMLRead;
 
 // 17-char Mongo-style id (schema.sql convention)
 function NewId: string;
@@ -6598,6 +6598,164 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function OpmlImport(const Source:TJSONData):TJSONObject;
+var Document:TXMLDocument; Stream:TStringStream; Root,Head,TitleNode,Body,OutlineList,OutlineCard,Child:TDOMNode;
+  Board,Card:TJSONObject; Lists,Cards,Checks,Items,Labels:TJSONArray;
+  Text,Title,ListId,CardId,CheckId,LooseId:string;
+  NodeCount,ItemOrder,CheckOrder,ListNotes,OutlineLinks,Truncated:Integer;
+
+  function NextOutline(Node:TDOMNode):TDOMNode;
+  begin
+    while (Node<>nil) and ((Node.NodeType<>ELEMENT_NODE) or (Node.NodeName<>'outline')) do
+      Node:=Node.NextSibling;
+    Result:=Node;
+  end;
+
+  function OutlineTitle(Node:TDOMElement; const Fallback:string):string;
+  begin
+    if Node.HasAttribute('text') then Result:=Trim(UTF8Encode(Node.GetAttribute('text')))
+    else Result:=Trim(UTF8Encode(Node.GetAttribute('title')));
+    if Result='' then Result:=Fallback;
+  end;
+
+  function IsDone(Node:TDOMElement):Boolean;
+  begin
+    Result:=SameText(UTF8Encode(Node.GetAttribute('_complete')),'true') or
+      SameText(UTF8Encode(Node.GetAttribute('complete')),'true');
+  end;
+
+  procedure CountNode(Node:TDOMElement);
+  begin
+    Inc(NodeCount);
+    if Node.GetAttribute('url')<>'' then Inc(OutlineLinks);
+    if Node.GetAttribute('htmlUrl')<>'' then Inc(OutlineLinks);
+    if Node.GetAttribute('xmlUrl')<>'' then Inc(OutlineLinks);
+    if NodeCount>100000 then raise EConvertError.Create('OPML outline has too many items');
+  end;
+
+  function AddChecklist(const Name:string):string;
+  begin
+    Result:=CardId+':checklist:'+IntToStr(CheckOrder);
+    Checks.Add(TJSONObject.Create(['_id',Result,'cardId',CardId,'title',Name,'sort',CheckOrder]));
+    Inc(CheckOrder);
+  end;
+
+  procedure AddItem(Node:TDOMElement; const ChecklistId:string; Depth:Integer);
+  var Nested:TDOMNode;
+  begin
+    if Depth>64 then
+    begin
+      Inc(Truncated);
+      Exit;
+    end;
+    CountNode(Node);
+    Items.Add(TJSONObject.Create(['_id',CardId+':item:'+IntToStr(ItemOrder),
+      'checklistId',ChecklistId,'title',OutlineTitle(Node,'Imported item'),
+      'isFinished',IsDone(Node),'sort',ItemOrder]));
+    Inc(ItemOrder);
+    Nested:=NextOutline(Node.FirstChild);
+    while Nested<>nil do
+    begin
+      AddItem(TDOMElement(Nested),ChecklistId,Depth+1);
+      Nested:=NextOutline(Nested.NextSibling);
+    end;
+  end;
+
+var Nested:TDOMNode;
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing OPML outline');
+  Text:=Source.AsString;
+  if (Length(Text)>16*1024*1024) or (Pos(#0,Text)>0) or (Pos('<!DOCTYPE',Text)>0) then
+    raise EConvertError.Create('Invalid OPML outline');
+  Document:=nil;
+  Result:=TJSONObject.Create;
+  try
+    try
+      Stream:=TStringStream.Create(Text);
+      try ReadXMLFile(Document,Stream); finally Stream.Free; end;
+      Root:=Document.DocumentElement;
+      if (Root=nil) or (Root.NodeName<>'opml') then raise EConvertError.Create('Missing OPML root');
+      Body:=Root.FindNode('body');
+      if Body=nil then raise EConvertError.Create('Missing OPML body');
+      Title:='';
+      Head:=Root.FindNode('head');
+      if Head<>nil then
+      begin
+        TitleNode:=Head.FindNode('title');
+        if TitleNode<>nil then Title:=Trim(UTF8Encode(TitleNode.TextContent));
+      end;
+      if Title='' then Title:='Imported OPML outline';
+      Board:=TJSONObject.Create(['title',Title]); Result.Add('board',Board);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Checks:=TJSONArray.Create; Board.Add('checklists',Checks);
+      Items:=TJSONArray.Create; Board.Add('checklistItems',Items);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      NodeCount:=0; ListNotes:=0; OutlineLinks:=0; Truncated:=0;
+      OutlineList:=NextOutline(Body.FirstChild);
+      while OutlineList<>nil do
+      begin
+        CountNode(TDOMElement(OutlineList));
+        if Trim(UTF8Encode(TDOMElement(OutlineList).GetAttribute('_note')))<>'' then Inc(ListNotes);
+        ListId:='list-'+IntToStr(Lists.Count);
+        Lists.Add(TJSONObject.Create(['_id',ListId,'title',OutlineTitle(TDOMElement(OutlineList),'Imported'),'sort',Lists.Count]));
+        OutlineCard:=NextOutline(OutlineList.FirstChild);
+        while OutlineCard<>nil do
+        begin
+          CountNode(TDOMElement(OutlineCard));
+          Title:=OutlineTitle(TDOMElement(OutlineCard),'Imported item');
+          CardId:='card-'+IntToStr(Cards.Count);
+          Card:=TJSONObject.Create(['_id',CardId,'title',Title,'listId',ListId,'sort',Cards.Count,
+            'description',UTF8Encode(TDOMElement(OutlineCard).GetAttribute('_note'))]);
+          Cards.Add(Card);
+          if IsDone(TDOMElement(OutlineCard)) then
+          begin
+            if Labels.Count=0 then Labels.Add(TJSONObject.Create(['_id','done','name','done','color','green']));
+            Card.Add('labelIds',TJSONArray.Create(['done']));
+          end;
+          CheckOrder:=0; ItemOrder:=0; LooseId:='';
+          Child:=NextOutline(OutlineCard.FirstChild);
+          while Child<>nil do
+          begin
+            if NextOutline(Child.FirstChild)=nil then
+            begin
+              if LooseId='' then LooseId:=AddChecklist(OutlineTitle(TDOMElement(OutlineCard),'Checklist'));
+              AddItem(TDOMElement(Child),LooseId,3);
+            end;
+            Child:=NextOutline(Child.NextSibling);
+          end;
+          Child:=NextOutline(OutlineCard.FirstChild);
+          while Child<>nil do
+          begin
+            Nested:=NextOutline(Child.FirstChild);
+            if Nested<>nil then
+            begin
+              CountNode(TDOMElement(Child));
+              CheckId:=AddChecklist(OutlineTitle(TDOMElement(Child),'Checklist'));
+              while Nested<>nil do
+              begin
+                AddItem(TDOMElement(Nested),CheckId,4);
+                Nested:=NextOutline(Nested.NextSibling);
+              end;
+            end;
+            Child:=NextOutline(Child.NextSibling);
+          end;
+          OutlineCard:=NextOutline(OutlineCard.NextSibling);
+        end;
+        OutlineList:=NextOutline(OutlineList.NextSibling);
+      end;
+      Text:='';
+      if ListNotes>0 then Text:=Text+LineEnding+'/outline: '+IntToStr(ListNotes)+' list note(s) skipped';
+      if OutlineLinks>0 then Text:=Text+LineEnding+'/outline: '+IntToStr(OutlineLinks)+' URL attribute(s) skipped';
+      if Truncated>0 then Text:=Text+LineEnding+'/outline: '+IntToStr(Truncated)+' branch(es) truncated at 64 levels';
+      if Text<>'' then Result.Add('importLosses',Trim(Text));
+    except
+      Result.Free;
+      raise;
+    end;
+  finally Document.Free; end;
+end;
+
 function BusinessmapImport(const Source:TJSONData):TJSONObject;
 var Workbook,Sheet,Header,Row,Lanes,Lists,Cards,Definitions,Fields,Labels,Tags,Comments:TJSONArray;
   Board,Card,Parents:TJSONObject; I,Y,M,D:Integer; Id,Title,BoardTitle,Stage,Lane,Text,Name,Tag,Parent,Child,Color:string;
@@ -6722,7 +6880,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7530,6 +7688,7 @@ begin
             else if SourceFormat='wrike' then Body:=WrikeImport(Value)
             else if SourceFormat='teamwork' then Body:=TeamworkImport(Value)
             else if SourceFormat='businessmap' then Body:=BusinessmapImport(Value)
+            else if SourceFormat='opml' then Body:=OpmlImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
