@@ -6,6 +6,9 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Linear issue CSV imports teams as swimlanes, status lists, labels,
+  priorities and parent issue links.
+
 - TickTick backup CSV imports lists, columns, tags and due dates. Checklist
   rows retain their text and completion state.
 

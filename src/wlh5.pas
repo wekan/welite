@@ -1135,7 +1135,7 @@ begin
     '<input type="file" name="archive" accept=".zip,application/zip" required></label>' +
     '<p class="js-board-zip-import-status" role="status" hidden></p><button class="primary wide" type="submit">' +
     E(Words.Text('import', 'Import')) + '</button></form>' +
-    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p><p><a href="/import/wekan">WeKan JSON</a></p><p><a href="/import/trello">Trello</a></p><p><a href="/import/pivotal">Pivotal Tracker CSV</a></p><p><a href="/import/redmine">Redmine CSV</a></p><p><a href="/import/tasksorg">Tasks.org JSON</a></p><p><a href="/import/superproductivity">Super Productivity JSON</a></p><p><a href="/import/clickup">ClickUp CSV</a></p><p><a href="/import/ticktick">TickTick CSV</a></p>', '') + '</template>';
+    IfThen(BoardId='', '<p><a href="/import/kanboard">Kanboard JSON</a></p><p><a href="/import/deck">Nextcloud Deck JSON</a></p><p><a href="/import/github">GitHub JSON</a></p><p><a href="/import/gitlab">GitLab JSON</a></p><p><a href="/import/gitea">Gitea JSON</a></p><p><a href="/import/forgejo">Forgejo JSON</a></p><p><a href="/import/asana">Asana JSON</a></p><p><a href="/import/openproject">OpenProject JSON</a></p><p><a href="/import/zenkit">Zenkit JSON</a></p><p><a href="/import/jira">Jira JSON</a></p><p><a href="/import/kanri">Kanri JSON</a></p><p><a href="/import/markdown">Markdown</a></p><p><a href="/import/wekan">WeKan JSON</a></p><p><a href="/import/trello">Trello</a></p><p><a href="/import/pivotal">Pivotal Tracker CSV</a></p><p><a href="/import/redmine">Redmine CSV</a></p><p><a href="/import/tasksorg">Tasks.org JSON</a></p><p><a href="/import/superproductivity">Super Productivity JSON</a></p><p><a href="/import/clickup">ClickUp CSV</a></p><p><a href="/import/ticktick">TickTick CSV</a></p><p><a href="/import/linear">Linear CSV</a></p>', '') + '</template>';
 end;
 
 function Page(Request: TRequest; const Language: TWLLanguage; Words: TWLTranslator;
@@ -9559,12 +9559,13 @@ begin
       'superproductivity': FormatName:='Super Productivity';
       'clickup': FormatName:='ClickUp';
       'ticktick': FormatName:='TickTick';
+      'linear': FormatName:='Linear';
       else FormatName:='Kanboard';
     end;
     Title:=Words.Text('import-board-c','Import board')+' ('+FormatName+')';
     SendPage(Response,200,Page(Request,Language,Words,S,Title,'',
       '<main><h1>'+E(Title)+'</h1><form class="js-external-board-import" data-source="'+Source+'" method="post" action="/api/boards/import?source='+Source+'">' +
-      '<label for="import-textarea">' + E(FormatName) + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick'),' CSV',' JSON') + '</label><textarea id="import-textarea"></textarea>' +
+      '<label for="import-textarea">' + E(FormatName) + IfThen((Source='pivotal') or (Source='redmine') or (Source='clickup') or (Source='ticktick') or (Source='linear'),' CSV',' JSON') + '</label><textarea id="import-textarea"></textarea>' +
       IfThen(Source='trello','<label>Trello ZIP<input type="file" class="js-import-zip-file" accept=".zip,application/zip"></label>','')+
       IfThen(Source='markdown','<label>'+E(Words.Text('import-board-c','Import board'))+
         '<input type="file" class="js-import-many-files" accept=".md,.markdown,.zip" multiple></label>','')+

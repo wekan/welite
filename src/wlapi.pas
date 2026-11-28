@@ -5917,9 +5917,9 @@ begin
   finally Parents.Free; end;
 end;
 
-function ClickUpImport(const Source:TJSONData):TJSONObject;
-var Csv:TCSVDocument; Board,Card:TJSONObject; Lists,Lanes,Cards,Labels,Tags:TJSONArray;
-  I:Integer; Id,Title,Stage,Lane,Parent,Name,TagText,Raw,Due,BoardTitle:string; Ms:Int64;
+function TaskExportCsvImport(const Source:TJSONData; const FormatName:string):TJSONObject;
+var Csv:TCSVDocument; Board,Card:TJSONObject; Lists,Lanes,Cards,Labels,Tags,Definitions:TJSONArray;
+  I:Integer; Id,Title,Stage,Lane,Parent,Name,TagText,Raw,Due,BoardTitle, IdColumn, TitleColumn, DescriptionColumn, LaneColumn, ParentColumn, TagColumn, Caption, Priority:string; Ms:Int64;
   function Cell(const Header:string):string;
   var C:Integer;
   begin
@@ -5934,7 +5934,17 @@ var Csv:TCSVDocument; Board,Card:TJSONObject; Lists,Lanes,Cards,Labels,Tags:TJSO
     Rows.Add(TJSONObject.Create(['_id',Id,Key,Value,'sort',Rows.Count]));
   end;
 begin
-  if not (Source is TJSONString) then raise EConvertError.Create('Invalid ClickUp CSV');
+  if FormatName='linear' then
+  begin
+    Caption:='Linear issues'; IdColumn:='ID'; TitleColumn:='Title'; DescriptionColumn:='Description';
+    LaneColumn:='Team'; ParentColumn:='Parent issue'; TagColumn:='Labels';
+  end
+  else
+  begin
+    Caption:='ClickUp tasks'; IdColumn:='Task ID'; TitleColumn:='Task Name'; DescriptionColumn:='Task Content';
+    LaneColumn:='List Name'; ParentColumn:='Parent ID'; TagColumn:='Tags';
+  end;
+  if not (Source is TJSONString) then raise EConvertError.Create('Invalid task CSV');
   Raw:=Source.AsString;
   if Copy(Raw,1,3)=#$EF#$BB#$BF then Delete(Raw,1,3);
   Csv:=TCSVDocument.Create;
@@ -5943,36 +5953,43 @@ begin
     try
       Csv.CSVText:=Raw;
       I:=0;
-      if (Csv.RowCount=0) or not SameText(Cell('Task Name'),'Task Name') or not SameText(Cell('Task ID'),'Task ID') then
-        raise EConvertError.Create('Missing ClickUp CSV columns');
+      if (Csv.RowCount=0) or not SameText(Cell(TitleColumn),TitleColumn) or not SameText(Cell(IdColumn),IdColumn) then
+        raise EConvertError.Create('Missing task CSV columns');
       Board:=TJSONObject.Create; Result.Add('board',Board);
       Result.Add('importedAuthors',TJSONObject.Create);
       Lanes:=TJSONArray.Create; Board.Add('swimlanes',Lanes);
       Lists:=TJSONArray.Create; Board.Add('lists',Lists);
       Cards:=TJSONArray.Create; Board.Add('cards',Cards);
       Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Definitions:=TJSONArray.Create; Board.Add('customFields',Definitions);
       BoardTitle:='';
       for I:=1 to Csv.RowCount-1 do
       begin
-        Title:=Cell('Task Name');
+        Title:=Cell(TitleColumn);
         if Title='' then Continue;
-        Id:=Cell('Task ID');
-        if Id='' then raise EConvertError.Create('Missing ClickUp task ID');
+        Id:=Cell(IdColumn);
+        if Id='' then raise EConvertError.Create('Missing task ID');
         if BoardTitle='' then BoardTitle:=Cell('Space Name');
         Stage:=Cell('Status'); if Stage='' then Stage:='Tasks';
         AddNamed(Lists,Stage,'title',Stage);
-        Lane:=Cell('List Name'); if Lane='' then Lane:='Default';
+        Lane:=Cell(LaneColumn); if Lane='' then Lane:='Default';
         AddNamed(Lanes,Lane,'title',Lane);
-        Card:=TJSONObject.Create(['_id',Id,'title',Title,'description',Cell('Task Content'),'swimlaneId',Lane,
+        Card:=TJSONObject.Create(['_id',Id,'title',Title,'description',Cell(DescriptionColumn),'swimlaneId',Lane,
           'listId',Stage,'sort',I,'dueComplete',SameText(Stage,'complete') or SameText(Stage,'closed') or SameText(Stage,'done')]);
         Cards.Add(Card);
-        Parent:=Cell('Parent ID');
+        Priority:=Cell('Priority');
+        if (FormatName='linear') and (Priority<>'') and not SameText(Priority,'No priority') then
+        begin
+          if Definitions.Count=0 then Definitions.Add(TJSONObject.Create(['_id','priority','name','Priority','type','text']));
+          Card.Add('customFields',TJSONArray.Create([TJSONObject.Create(['_id','priority','value',Priority])]));
+        end;
+        Parent:=Cell(ParentColumn);
         if (Parent<>'') and (Parent<>Id) then Card.Add('parentId',Parent);
         Due:=Cell('Due date');
         if TryStrToInt64(Due,Ms) then begin if Ms>0 then Card.Add('dueAt',Ms); end
         else if Due<>'' then Card.Add('dueAt',Due);
         Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
-        Raw:=Cell('Tags');
+        Raw:=Cell(TagColumn);
         if (Length(Raw)>=2) and (Raw[1]='[') and (Raw[Length(Raw)]=']') then Raw:=Copy(Raw,2,Length(Raw)-2);
         for TagText in Raw.Split([',']) do
         begin
@@ -5981,7 +5998,7 @@ begin
           AddNamed(Labels,Name,'name',Name); Tags.Add(Name);
         end;
       end;
-      if BoardTitle='' then BoardTitle:='ClickUp tasks';
+      if BoardTitle='' then BoardTitle:=Caption;
       Board.Add('title',BoardTitle);
     except Result.Free; raise; end;
   finally Csv.Free; end;
@@ -6084,7 +6101,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -6883,7 +6900,7 @@ begin
             else if SourceFormat='redmine' then Body:=RedmineImport(Value)
             else if SourceFormat='tasksorg' then Body:=TasksOrgImport(Value)
             else if SourceFormat='superproductivity' then Body:=SuperProductivityImport(Value)
-            else if SourceFormat='clickup' then Body:=ClickUpImport(Value)
+            else if (SourceFormat='clickup') or (SourceFormat='linear') then Body:=TaskExportCsvImport(Value,SourceFormat)
             else if SourceFormat='ticktick' then Body:=TickTickImport(Value)
             else if SourceFormat='wekan' then
             begin
