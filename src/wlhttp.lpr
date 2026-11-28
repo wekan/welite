@@ -930,6 +930,8 @@ begin
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burndown/exportExcel', rmGet, @ApiBoardBurnReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burnup/exportPDF', rmGet, @ApiBoardBurnReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/burnup/exportExcel', rmGet, @ApiBoardBurnReport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/scrumVelocity/exportExcel', rmGet, @ApiScrumVelocityReport);
+  HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/scrumVelocity/exportPDF', rmGet, @ApiScrumVelocityReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/time/exportExcel', rmGet, @ApiBoardTimeReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/charts/time/exportPDF', rmGet, @ApiBoardTimeReport);
   HTTPRouter.RegisterRoute('/api/boards/:boardId/exportExcel', rmGet, @ApiBoardDocument);

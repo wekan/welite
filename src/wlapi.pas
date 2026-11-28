@@ -66,6 +66,7 @@ procedure ApiCreateRule(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardRules(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardExport(aRequest:TRequest;aResponse:TResponse);
 procedure ApiBoardDocument(aRequest: TRequest; aResponse: TResponse);
+procedure ApiScrumVelocityReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardTimeReport(aRequest: TRequest; aResponse: TResponse);
 procedure ApiBoardZip(aRequest: TRequest; aResponse: TResponse);
@@ -2861,7 +2862,7 @@ end;
 
 function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
   out BoardId, UserId: string; PlainNotFound: Boolean = False;
-  const RouteCardId: string = ''): Boolean; forward;
+  const RouteCardId: string = ''; ScopedScrum: Boolean = False): Boolean; forward;
 procedure ExcludeBoardArchive(Board: TJSONObject); forward;
 
 function DownloadScopeId(Request: TRequest; const Key: string): string; forward;
@@ -3026,7 +3027,7 @@ end;
 
 function BoardDownloadAccess(aRequest: TRequest; aResponse: TResponse; out T: TWLTenant;
   out BoardId, UserId: string; PlainNotFound: Boolean;
-  const RouteCardId: string): Boolean;
+  const RouteCardId: string; ScopedScrum: Boolean): Boolean;
 var Board: TWLRows; Session: TWLSession;
 
 begin
@@ -3052,7 +3053,7 @@ begin
   if Board[0][0] <> 'public' then
   begin
     if UserId = '' then begin SendError(aResponse, 401, 'Sign in to download a board'); Exit; end;
-    if not BoardHasMember(T.Db, UserId, BoardId) or AssignedOnlyMember(T.Db, UserId, BoardId) then
+    if not BoardHasMember(T.Db, UserId, BoardId) or (not ScopedScrum and AssignedOnlyMember(T.Db, UserId, BoardId)) then
     begin SendError(aResponse, 403, 'Board access forbidden'); Exit; end;
   end;
   Result := True;
@@ -3100,6 +3101,215 @@ begin
   if Length(Result) > 64 then Exit('');
   for C in Result do
     if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-']) then Exit('');
+end;
+
+procedure ApiScrumVelocityReport(aRequest: TRequest; aResponse: TResponse);
+const Groups: array[0..5] of string = ('committed','completed','added','removed','incomplete','completedCommitment');
+type TTotals = record
+  Count, Unknown: Integer;
+  Estimate: Double;
+end;
+var T: TWLTenant; Session: TWLSession; Words: TWLTranslator; BoardId, UserId, SprintTable, ChunkTable, PendingTable,
+  Scope, Name, Caption, Filename, EstimateField: string; Restricted, AsPdf, Admin: Boolean;
+  Report, Header, Row, StartRows, CloseRows: TJSONArray; Sprint: TJSONObject; CloseSnap: TJSONData;
+  Sprints, Cards: TWLRows; Raw: TWLRow; Totals: array[0..5] of TTotals; I: Integer;
+  Visible, StartIds, CloseIds, DoneIds: TStringList; Output: TMemoryStream;
+  function Collection(const Name: string): string;
+  var Rows: TWLRows;
+  begin
+    Result := '';
+    if not IsShared(T.Db) then Exit;
+    Rows := T.Db.Query('SELECT table_name FROM _ferretdb_collections WHERE name=' + QuotedStr(Name));
+    if Length(Rows)=1 then Result := '"' + StringReplace(Rows[0][0], '"', '""', [rfReplaceAll]) + '"';
+  end;
+  function Snapshot(const Key, Kind: string): TJSONArray;
+  var Data, Part: TJSONData; Snap, Chunk: TJSONObject; Chunks: TWLRows; N, J: Integer; Expected: TJSONData;
+  begin
+    Result := TJSONArray.Create;
+    try
+      Data := Sprint.Find(Key);
+      if not (Data is TJSONObject) then Exit;
+      Snap := TJSONObject(Data);
+      if Snap.Get('stored','') <> 'rows' then
+      begin
+        Data := Snap.Find('cards');
+        if Data is TJSONArray then
+          for J:=0 to Data.Count-1 do if Data.Items[J] is TJSONObject then Result.Add(Data.Items[J].Clone);
+        Exit;
+      end;
+      Chunks := nil;
+      Expected := Snap.Find('at');
+      if (ChunkTable<>'') and (Expected<>nil) then
+        Chunks := T.Db.Query('SELECT json(_ferretdb_sjson) FROM ' + ChunkTable +
+          ' WHERE json_extract(_ferretdb_sjson,''$.boardId'')=' + QuotedStr(BoardId) +
+          ' AND json_extract(_ferretdb_sjson,''$.sprintId'')=' + QuotedStr(Sprint.Get('_id','')) +
+          ' AND json_extract(_ferretdb_sjson,''$.kind'')=' + QuotedStr(Kind) +
+          ' AND json_extract(_ferretdb_sjson,''$.at'')=(SELECT json_extract(_ferretdb_sjson,' +
+          QuotedStr('$.'+Key+'.at') + ') FROM '+SprintTable+' WHERE json_extract(_ferretdb_sjson,''$._id'')=' +
+          QuotedStr(Sprint.Get('_id','')) + ') ORDER BY CAST(COALESCE(json_extract(_ferretdb_sjson,''$.chunk.$i''),' +
+          'json_extract(_ferretdb_sjson,''$.chunk'')) AS INTEGER);');
+      if Length(Chunks)<>Snap.Get('chunks',-1) then raise Exception.Create('Incomplete sprint snapshot');
+      for N:=0 to High(Chunks) do
+      begin
+        Chunk:=ExactObject(PlainDocument(Chunks[N][0]));
+        try
+          Part:=Chunk.Find('rows');
+          if (Chunk.Get('chunk',-1)<>N) or not (Part is TJSONArray) then raise Exception.Create('Incomplete sprint snapshot');
+          for J:=0 to Part.Count-1 do if Part.Items[J] is TJSONObject then Result.Add(Part.Items[J].Clone);
+        finally Chunk.Free; end;
+      end;
+      if Result.Count<>Snap.Get('rowCount',-1) then raise Exception.Create('Incomplete sprint snapshot');
+    except Result.Free; raise; end;
+  end;
+  function CanCount(const Id: string): Boolean;
+  begin
+    Result := not Restricted or (Visible.IndexOf(Id)>=0);
+  end;
+  procedure AddTotal(Group: Integer; Card: TJSONObject);
+  var Estimate: TJSONData;
+  begin
+    Inc(Totals[Group].Count);
+    Estimate := Card.Find('estimate');
+    if (Estimate<>nil) and (Estimate.JSONType=jtNumber) and (Estimate.AsFloat>=0) then
+      Totals[Group].Estimate := Totals[Group].Estimate+Estimate.AsFloat
+    else Inc(Totals[Group].Unknown);
+  end;
+  function SnapshotField(const Field: string): string;
+  var StartSnap: TJSONData;
+  begin
+    Result:=TJSONObject(CloseSnap).Get(Field,'');
+    if Result<>'' then Exit;
+    StartSnap:=Sprint.Find('startSnapshot');
+    if StartSnap is TJSONObject then Result:=TJSONObject(StartSnap).Get(Field,'');
+  end;
+  procedure AddSprint;
+  var J: Integer; Card: TJSONObject; Id: string;
+  begin
+    FillChar(Totals,SizeOf(Totals),0);
+    StartIds.Clear; CloseIds.Clear; DoneIds.Clear;
+    for J:=0 to StartRows.Count-1 do
+    begin
+      Card:=StartRows.Objects[J]; Id:=Card.Get('cardId','');
+      if not CanCount(Id) then Continue;
+      StartIds.Add(Id);
+      AddTotal(0,Card);
+    end;
+    for J:=0 to CloseRows.Count-1 do
+    begin
+      Card:=CloseRows.Objects[J]; Id:=Card.Get('cardId','');
+      if not CanCount(Id) then Continue;
+      CloseIds.Add(Id);
+      if Card.Get('done',False) then begin DoneIds.Add(Id); AddTotal(1,Card); end
+      else AddTotal(4,Card);
+      if StartIds.IndexOf(Id)<0 then AddTotal(2,Card);
+    end;
+    for J:=0 to StartRows.Count-1 do
+    begin
+      Card:=StartRows.Objects[J]; Id:=Card.Get('cardId','');
+      if not CanCount(Id) then Continue;
+      if CloseIds.IndexOf(Id)<0 then AddTotal(3,Card);
+      if DoneIds.IndexOf(Id)>=0 then AddTotal(5,Card);
+    end;
+    EstimateField:=SnapshotField('estimateCustomFieldId');
+    if (SnapshotField('estimateSource')='customField') and ((EstimateField='') or
+      (Length(T.Db.Query('SELECT 1 FROM custom_fields f JOIN custom_field_boards x ON x.customFieldId=f.id ' +
+      'WHERE x.boardId='+QuotedStr(BoardId)+' AND f.id='+QuotedStr(EstimateField) +
+      IfThen(Admin,'',' AND COALESCE(f.adminOnly,1)=0')))<>1)) then
+      raise Exception.Create('Sprint estimate field is inaccessible');
+    Name:=Sprint.Get('name','');
+    if Restricted then Name:=Name+' — '+Words.Text('scrum-partial-snapshot','Partial snapshot');
+    if AsPdf then
+    begin
+      Report.Add(TJSONArray.Create([Name,SnapshotField('unit')]));
+      for J:=0 to High(Totals) do
+      begin
+        Caption:=Words.Text('scrum-'+Groups[J],Groups[J]);
+        if J=High(Groups) then Caption:=Words.Text('scrum-completed','Completed')+' / '+Words.Text('scrum-committed','Committed');
+        Report.Add(TJSONArray.Create([Caption, Format('%d / %.2f / %d',[Totals[J].Count,Totals[J].Estimate,Totals[J].Unknown])]));
+      end;
+      Exit;
+    end;
+    Row:=TJSONArray.Create([Name,SnapshotField('unit')]);
+    for J:=0 to High(Totals) do
+    begin
+      Row.Add(Totals[J].Count); Row.Add(Totals[J].Estimate); Row.Add(Totals[J].Unknown);
+    end;
+    Report.Add(Row);
+  end;
+begin
+  if not BoardDownloadAccess(aRequest,aResponse,T,BoardId,UserId,True,'',True) then Exit;
+  Restricted:=AssignedOnlyMember(T.Db,UserId,BoardId);
+  AsPdf:=AnsiEndsStr('/exportPDF',aRequest.PathInfo);
+  Admin:=Length(T.Db.Query('SELECT 1 FROM board_members WHERE boardId='+QuotedStr(BoardId)+
+    ' AND userId='+QuotedStr(UserId)+' AND isActive=1 AND isAdmin=1'))=1;
+  if not Admin and (Length(T.Db.Query('SELECT 1 FROM custom_fields f JOIN custom_field_boards x ON x.customFieldId=f.id ' +
+    'WHERE x.boardId='+QuotedStr(BoardId)+' AND COALESCE(f.adminOnly,1)<>0 LIMIT 1'))>0) then
+  begin SendError(aResponse,403,'This export requires board administrator access'); Exit; end;
+  SprintTable:=Collection('scrumSprints');
+  ChunkTable:=Collection('scrumSnapshotRows');
+  PendingTable:=Collection('scrumImportPending');
+  if (PendingTable<>'') and (Length(T.Db.Query('SELECT 1 FROM '+PendingTable+
+    ' WHERE json_extract(_ferretdb_sjson,''$._id'')='+QuotedStr(BoardId)))>0) then
+  begin SendError(aResponse,409,'The Scrum import is incomplete. Report exports are unavailable.'); Exit; end;
+  Session:=Default(TWLSession); Session.UserId:=UserId;
+  Words:=TWLTranslator.Create(ViewerLanguage(T.Db,Session,aRequest));
+  Report:=TJSONArray.Create;
+  Output:=TMemoryStream.Create;
+  Visible:=TStringList.Create; StartIds:=TStringList.Create; CloseIds:=TStringList.Create; DoneIds:=TStringList.Create;
+  try
+    Visible.Sorted:=True; Visible.CaseSensitive:=True;
+    StartIds.Sorted:=True; StartIds.CaseSensitive:=True;
+    CloseIds.Sorted:=True; CloseIds.CaseSensitive:=True;
+    DoneIds.Sorted:=True; DoneIds.CaseSensitive:=True;
+    if Restricted then
+    begin
+      Scope:='SELECT c.id FROM cards c JOIN card_assignees a ON a.cardId=c.id WHERE c.boardId='+QuotedStr(BoardId)+
+        ' AND c.deletedAt IS NULL AND a.userId='+QuotedStr(UserId);
+      Cards:=T.Db.Query(Scope);
+      for Raw in Cards do Visible.Add(Raw[0]);
+    end;
+    Header:=TJSONArray.Create([Words.Text('scrum-sprint','Sprint'),Words.Text('scrum-estimate-unit','Estimate unit')]);
+    Report.Add(Header);
+    for I:=0 to High(Groups) do
+    begin
+      Caption:=Words.Text('scrum-'+Groups[I],Groups[I]);
+      if I=High(Groups) then Caption:=Words.Text('scrum-completed','Completed')+' / '+Words.Text('scrum-committed','Committed');
+      Header.Add(Caption+': '+Words.Text('cards','Cards'));
+      Header.Add(Caption+': '+Words.Text('scrum-estimate','Estimate'));
+      Header.Add(Caption+': '+Words.Text('scrum-unknown-estimate','Unknown estimate'));
+    end;
+    try
+      if SprintTable<>'' then
+      begin
+        Sprints:=T.Db.Query('SELECT json(_ferretdb_sjson) FROM '+SprintTable+' WHERE json_extract(_ferretdb_sjson,''$.boardId'')='+
+          QuotedStr(BoardId)+' AND json_extract(_ferretdb_sjson,''$.state'')=''closed'' ORDER BY '+
+          'COALESCE(json_extract(_ferretdb_sjson,''$.closeSnapshot.at.$d''),json_extract(_ferretdb_sjson,''$.closeSnapshot.at'')), '+
+          'json_extract(_ferretdb_sjson,''$._id'');');
+        for Raw in Sprints do
+        begin
+          Sprint:=ExactObject(PlainDocument(Raw[0]));
+          try
+            CloseSnap:=Sprint.Find('closeSnapshot');
+            if not (CloseSnap is TJSONObject) then Continue;
+            StartRows:=Snapshot('startSnapshot','start');
+            try
+              CloseRows:=Snapshot('closeSnapshot','close');
+              try AddSprint; finally CloseRows.Free; end;
+            finally StartRows.Free; end;
+          finally Sprint.Free; end;
+        end;
+      end;
+      WriteBoardDocument(Output,nil,'',True,nil,'','',nil,False,AsPdf,Report);
+    except SendError(aResponse,409,'Could not export Scrum velocity report'); Exit; end;
+    if AsPdf then begin Filename:='scrumVelocity.pdf'; aResponse.ContentType:='application/pdf'; end
+    else begin Filename:='scrumVelocity.xlsx'; aResponse.ContentType:='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; end;
+    aResponse.Code:=200;
+    aResponse.SetCustomHeader('Content-Disposition','attachment; filename="'+Filename+'"');
+    aResponse.SetCustomHeader('Cache-Control','private, no-store');
+    aResponse.SetCustomHeader('Referrer-Policy','no-referrer');
+    Output.Position:=0; aResponse.ContentLength:=Output.Size; aResponse.ContentStream:=Output;
+    try aResponse.SendContent; finally aResponse.ContentStream:=nil; end;
+  finally DoneIds.Free; CloseIds.Free; StartIds.Free; Visible.Free; Output.Free; Report.Free; Words.Free; end;
 end;
 
 procedure ApiBoardBurnReport(aRequest: TRequest; aResponse: TResponse);

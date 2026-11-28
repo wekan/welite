@@ -433,7 +433,6 @@ unassigned-attach-bleed.e2e.js: an unassigned assigned-only member can no longer
 assigned-card-methods.e2e.js
 assigned-only-reads.e2e.js: an assigned-only member gets neither the file nor the text of a card not assigned to them
 board-announcement.e2e.js
-export-access.e2e.js: = assigned-only private member cannot read unfiltered export
 keep-add-card-form-open-6827.e2e.js
 title-bracket-label-6810.e2e.js
 
@@ -474,17 +473,10 @@ activity-viewer.e2e.js: card and sidebar activities obey formatted in en
 activity-viewer.e2e.js: card and sidebar activities obey plain-links in en
 activity-viewer.e2e.js: card and sidebar activities obey formatted in st
 card-add-fields.e2e.js
-export-access.e2e.js: = assigned-only private member cannot read unfiltered calendar.ics
 public-csv-export-fields.e2e.js
-export-access.e2e.js: = assigned-only private member cannot read unfiltered export/csv
-export-access.e2e.js: = assigned-only private member cannot read unfiltered exportZip
 board-excel-export.e2e.js
-export-access.e2e.js: = assigned-only private member cannot read unfiltered exportExcel
 card-excel-field-selection.e2e.js
-export-access.e2e.js: = assigned-only member cannot export an unassigned card as Excel
 25-excel-pdf.e2e.js: = Excel import & board PDF export board PDF export returns a PDF document
-export-access.e2e.js: = assigned-only private member cannot read unfiltered exportPDF
-export-access.e2e.js: = assigned-only member cannot export an unassigned card as PDF
 23-rest-api-more.e2e.js: = REST API: rules + card sub-resources + core CRUD board menu downloads complete JSON in both attachment modes
 export-without-archive-6946.e2e.js
 time-history.e2e.js: move dialog records reason and one reversible position
@@ -492,4 +484,4 @@ time-history.e2e.js: = REST time corrections, move reasons, retained activity an
 weddy-specs/29-checklist-item-cross-drag.e2e.js
 weddy-specs/30-checklist-text-selection.e2e.js
 structural-selection.e2e.js
-export-access.e2e.js: assigned-only private member cannot read unfiltered charts/burndown
+export-access.e2e.js
