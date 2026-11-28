@@ -6,6 +6,10 @@ Distilled from the [`wami/`](https://github.com/wekan/wami) and [`omi/`](https:/
 
 ## HTML5 mobile board navigation
 
+- Taskwarrior JSON arrays and line exports import tasks with lists, tags,
+  dates, annotations as comments and card dependencies. The import report
+  lists skipped tasks and unsupported attributes.
+
 - todo.txt imports tasks into lists with project, context and priority labels,
   plus creation, threshold, due and completion dates. Invalid due and threshold
   dates are reported.

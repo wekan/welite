@@ -6598,6 +6598,182 @@ begin
   finally Workbook.Free; SheetNames.Free; end;
 end;
 
+function TaskwarriorImport(const Source:TJSONData):TJSONObject;
+var Document,Entry,Notes,Note:TJSONData; Tasks,Lists,Cards,Labels,Comments,Tags,Dependencies:TJSONArray;
+  Task,Board,Card,Comment:TJSONObject;
+  ListNames,LabelNames,CardIds,Losses:TStringList;
+  Input,RawLine,Line,Id,Status,Stage,Title,Name,Ref,Path:string;
+  I,J:Integer;
+
+  function ReadDate(Obj:TJSONObject; const Key:string):string;
+  var Value:string; Stamp:TDateTime;
+  begin
+    Value:=Obj.Get(Key,'');
+    if (Length(Value)=16) and (Value[9]='T') and (Value[16]='Z') then
+      Value:=Copy(Value,1,4)+'-'+Copy(Value,5,2)+'-'+Copy(Value,7,5)+':'+
+        Copy(Value,12,2)+':'+Copy(Value,14,3);
+    if TryISO8601ToDate(Value,Stamp,True) then Exit(Value);
+    if Obj.Find(Key)<>nil then Losses.Add(Path+'/'+Key+': invalid Taskwarrior date');
+    Result:='';
+  end;
+
+  procedure AddDate(Target,Origin:TJSONObject; const Field,Key:string);
+  var Value:string;
+  begin
+    Value:=ReadDate(Origin,Key);
+    if Value<>'' then Target.Add(Field,Value);
+  end;
+
+  function Values(Obj:TJSONObject; const Key:string):TStringArray;
+  var Field:TJSONData; K:Integer; Text:string;
+  begin
+    Result:=nil;
+    Field:=Obj.Find(Key);
+    if Field is TJSONString then
+    begin
+      Text:=Field.AsString;
+      Result:=Text.Split([',']);
+    end
+    else if Field is TJSONArray then
+    begin
+      SetLength(Result,Field.Count);
+      for K:=0 to Field.Count-1 do
+        if Field.Items[K] is TJSONString then Result[K]:=Field.Items[K].AsString;
+    end;
+  end;
+
+  procedure AddTag(const Tag:string);
+  begin
+    if Tag='' then Exit;
+    if LabelNames.IndexOf(Tag)<0 then
+    begin
+      LabelNames.Add(Tag);
+      Labels.Add(TJSONObject.Create(['_id',Tag,'name',Tag,'color','blue']));
+    end;
+    Tags.Add(Tag);
+  end;
+
+begin
+  if not (Source is TJSONString) then raise EConvertError.Create('Missing Taskwarrior export');
+  Input:=Trim(Source.AsString);
+  if Copy(Input,1,3)=#239#187#191 then Input:=Trim(Copy(Input,4,MaxInt));
+  Document:=nil;
+  ListNames:=TStringList.Create; LabelNames:=TStringList.Create;
+  CardIds:=TStringList.Create; Losses:=TStringList.Create;
+  try
+    ListNames.CaseSensitive:=True; ListNames.Sorted:=True;
+    LabelNames.CaseSensitive:=True; LabelNames.Sorted:=True;
+    CardIds.CaseSensitive:=True; CardIds.Sorted:=True;
+    if (Input<>'') and (Input[1]='[') then Document:=GetJSON(Input)
+    else
+    begin
+      Tasks:=TJSONArray.Create; Document:=Tasks;
+      for RawLine in Input.Split([#10,#13],TStringSplitOptions.ExcludeEmpty) do
+      begin
+        Line:=Trim(RawLine);
+        if Line='' then Continue;
+        if Line[Length(Line)]=',' then Delete(Line,Length(Line),1);
+        Tasks.Add(ExactObject(Line));
+        if Tasks.Count>10000 then raise EConvertError.Create('Too many Taskwarrior tasks');
+      end;
+    end;
+    if not (Document is TJSONArray) or (Document.Count>10000) then
+      raise EConvertError.Create('Invalid Taskwarrior export');
+    Result:=TJSONObject.Create;
+    try
+      Board:=TJSONObject.Create(['title','Imported Taskwarrior']); Result.Add('board',Board);
+      Lists:=TJSONArray.Create; Board.Add('lists',Lists);
+      Cards:=TJSONArray.Create; Board.Add('cards',Cards);
+      Labels:=TJSONArray.Create; Board.Add('labels',Labels);
+      Comments:=TJSONArray.Create; Board.Add('comments',Comments);
+      for I:=0 to Document.Count-1 do
+      begin
+        Path:='/'+IntToStr(I);
+        Entry:=Document.Items[I];
+        if not (Entry is TJSONObject) then
+        begin
+          Losses.Add(Path+': not a task object');
+          Continue;
+        end;
+        Task:=TJSONObject(Entry);
+        Status:=Task.Get('status','');
+        if (Status='deleted') or (Status='recurring') then
+        begin
+          Losses.Add(Path+'/status: '+Status+' task skipped');
+          Continue;
+        end;
+        for J:=0 to Task.Count-1 do
+        begin
+          Name:=Task.Names[J];
+          case Name of
+            'uuid','status','description','entry','due','scheduled','end','project','priority',
+            'tags','annotations','depends','wekanlist','wekandescription','id','urgency','modified',
+            'mask','imask','start': ;
+            else Losses.Add(Path+'/'+Name+': unsupported Taskwarrior attribute');
+          end;
+        end;
+        Id:=Task.Get('uuid','');
+        if Id='' then Id:='task-'+IntToStr(I);
+        if CardIds.IndexOf(Id)>=0 then raise EConvertError.Create('Duplicate Taskwarrior task ID');
+        CardIds.Add(Id);
+        Stage:=Trim(Task.Get('wekanlist',''));
+        if Stage='' then
+          case Status of
+            'completed': Stage:='Done';
+            'waiting': Stage:='Waiting';
+            else Stage:=IfThen(Task.Get('start','')<>'','In Progress','To Do');
+          end;
+        if ListNames.IndexOf(Stage)<0 then
+        begin
+          ListNames.Add(Stage);
+          Lists.Add(TJSONObject.Create(['_id',Stage,'title',Stage,'sort',Lists.Count]));
+        end;
+        Title:=Trim(Task.Get('description',''));
+        if Title='' then Title:='Imported task';
+        Card:=TJSONObject.Create(['_id',Id,'title',Title,'description',Task.Get('wekandescription',''),
+          'listId',Stage,'sort',Cards.Count]);
+        Cards.Add(Card);
+        AddDate(Card,Task,'createdAt','entry');
+        AddDate(Card,Task,'dueAt','due');
+        AddDate(Card,Task,'startAt','scheduled');
+        if Status='completed' then AddDate(Card,Task,'endAt','end')
+        else if Task.Find('end')<>nil then ReadDate(Task,'end');
+        Tags:=TJSONArray.Create; Card.Add('labelIds',Tags);
+        Name:=Task.Get('project',''); if Name<>'' then AddTag('project:'+Name);
+        Name:=Task.Get('priority','');
+        if (Name='H') or (Name='M') or (Name='L') then AddTag('priority:'+Name);
+        for Name in Values(Task,'tags') do AddTag(Trim(Name));
+        Dependencies:=TJSONArray.Create; Card.Add('cardDependencies',Dependencies);
+        for Name in Values(Task,'depends') do
+        begin
+          Ref:=Trim(Name);
+          if (Ref<>'') and (Ref<>Id) then
+            Dependencies.Add(TJSONObject.Create(['cardId',Ref,'type','is-blocked-by']));
+        end;
+        Notes:=Task.Find('annotations');
+        if Notes is TJSONArray then
+          for J:=0 to Notes.Count-1 do
+          begin
+            Note:=Notes.Items[J];
+            if not (Note is TJSONObject) then Continue;
+            Name:=TJSONObject(Note).Get('description','');
+            if Trim(Name)='' then Continue;
+            Comment:=TJSONObject.Create(['_id',Id+':note:'+IntToStr(J),'cardId',Id,'text',Name]);
+            Comments.Add(Comment);
+            Path:='/'+IntToStr(I)+'/annotations/'+IntToStr(J);
+            AddDate(Comment,TJSONObject(Note),'createdAt','entry');
+          end;
+      end;
+      if Losses.Count>0 then Result.Add('importLosses',Trim(Losses.Text));
+    except
+      Result.Free;
+      raise;
+    end;
+  finally
+    Losses.Free; CardIds.Free; LabelNames.Free; ListNames.Free; Document.Free;
+  end;
+end;
+
 function TodoTxtImport(const Source:TJSONData):TJSONObject;
 var Board,Card:TJSONObject; Lists,Cards,Labels,Tags:TJSONArray;
   Lines,Words:TStringArray;
@@ -7012,7 +7188,7 @@ end;
 function ExternalImportSupported(const FormatName: string): Boolean;
 begin
   Result:=(FormatName='kanboard') or (FormatName='deck') or (FormatName='github') or
-    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt');
+    (FormatName='gitlab') or (FormatName='gitea') or (FormatName='forgejo') or (FormatName='asana') or (FormatName='openproject') or (FormatName='zenkit') or (FormatName='jira') or (FormatName='kanri') or (FormatName='markdown') or (FormatName='wekan') or (FormatName='trello') or (FormatName='pivotal') or (FormatName='redmine') or (FormatName='tasksorg') or (FormatName='superproductivity') or (FormatName='clickup') or (FormatName='ticktick') or (FormatName='linear') or (FormatName='quire') or (FormatName='obsidian') or (FormatName='meistertask') or (FormatName='nullboard') or (FormatName='monday') or (FormatName='wrike') or (FormatName='teamwork') or (FormatName='businessmap') or (FormatName='opml') or (FormatName='todotxt') or (FormatName='taskwarrior');
 end;
 
 function ImportRecoveryRows(Db: TWLDb; const UserId, BoardId: string): TJSONArray;
@@ -7822,6 +7998,7 @@ begin
             else if SourceFormat='businessmap' then Body:=BusinessmapImport(Value)
             else if SourceFormat='opml' then Body:=OpmlImport(Value)
             else if SourceFormat='todotxt' then Body:=TodoTxtImport(Value)
+            else if SourceFormat='taskwarrior' then Body:=TaskwarriorImport(Value)
             else if SourceFormat='wekan' then
             begin
               if not (Value is TJSONObject) then raise EConvertError.Create('Invalid WeKan board export');
